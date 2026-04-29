@@ -1,7 +1,7 @@
 """Reset + seed dev Directus with a wide range of toy examples.
 
 Covers the scenarios the workspaces release needs to demo:
-- Multiple teams at different tiers
+- Multiple organisations at different tiers
 - Workspaces across pilot → changemaker, including at-cap + approaching
 - Role diversity (admin / billing / member + external guest)
 - Pending access requests + workspace invites
@@ -128,7 +128,7 @@ def fetch_all(
 
 def reset_seed_data(session: requests.Session, dry_run: bool) -> None:
     """Soft-delete everything in RESET_SOFT. Skip any rows owned by the
-    admin user so we don't nuke the operator's own team."""
+    admin user so we don't nuke the operator's own organisation."""
     print("=== RESET ===")
 
     # Resolve admin's app_user + home org so we preserve them.
@@ -421,7 +421,7 @@ def create_workspace(
     org_id: str,
     name: str,
     tier: str = "pioneer",
-    visibility: str = "open_to_team",
+    visibility: str = "open_to_organisation",
     downgraded_at: Optional[str] = None,
     downgraded_from_tier: Optional[str] = None,
 ) -> str:
@@ -596,25 +596,25 @@ def seed(session: requests.Session, dry_run: bool) -> None:
     )
     admin_app_id = admin_rows[0]["id"] if admin_rows else None
 
-    # Teams
+    # Organisations
     acme = create_org(session, "Acme Research")
     add_org_member(session, acme, au("anna@seed.dembrane.dev"),   "owner")
     add_org_member(session, acme, au("ben@seed.dembrane.dev"),    "admin")
     add_org_member(session, acme, au("cara@seed.dembrane.dev"),   "member")
     add_org_member(session, acme, au("dan@seed.dembrane.dev"),    "billing")
-    print(f"  team Acme Research → {acme[:8]}")
+    print(f"  organisation Acme Research → {acme[:8]}")
 
     partner = create_org(session, "Partner Consulting")
     add_org_member(session, partner, au("emma@seed.dembrane.dev"), "owner")
-    print(f"  team Partner Consulting → {partner[:8]}")
+    print(f"  organisation Partner Consulting → {partner[:8]}")
 
     alpha = create_org(session, "Alpha Inc")
     add_org_member(session, alpha, au("hank@seed.dembrane.dev"), "owner")
-    print(f"  team Alpha Inc → {alpha[:8]}")
+    print(f"  organisation Alpha Inc → {alpha[:8]}")
 
     studio = create_org(session, "Solo Studio")
     add_org_member(session, studio, au("finn@seed.dembrane.dev"), "owner")
-    print(f"  team Solo Studio → {studio[:8]}")
+    print(f"  organisation Solo Studio → {studio[:8]}")
 
     # ─ Workspaces ─
 
@@ -718,7 +718,7 @@ def seed(session: requests.Session, dry_run: bool) -> None:
     print(f"  guest grace@external on Acme/Default")
 
     # Pending access request — cara requesting access to Acme Q1 Discovery
-    # (she's team member; workspace is open).
+    # (she's organisation member; workspace is open).
     # Q1 Discovery doesn't have cara as member yet — perfect scenario.
     # Actually she was added to Default earlier; for Q1 she's not a member.
     create_access_request(session, acme_q1, au("cara@seed.dembrane.dev"))

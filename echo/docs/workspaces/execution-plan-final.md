@@ -68,7 +68,7 @@ Frontend is a separate effort AFTER backend is solid. Not covered here.
 6. Map the Directus client/wrapper used by Python
 7. Check: what fields does `directus_users` have that `app_user` is missing?
 8. Check: what Directus roles exist and what permissions are configured?
-9. Check: does the project collection already have any sharing/team fields?
+9. Check: does the project collection already have any sharing/organisation fields?
 10. Check: is there an existing `deleted_at` or archive pattern anywhere?
 
 Then reconcile with PRD and produce updated version.
@@ -119,7 +119,7 @@ Produce a report (`codebase-exploration-report.md`) covering:
    - How is error handling done?
 
 6. EXISTING PATTERNS
-   - Any existing multi-user, sharing, or team concepts?
+   - Any existing multi-user, sharing, or organisation concepts?
    - Any existing soft delete or archive patterns?
    - How is the Directus schema synced (show the config/setup)?
 
@@ -582,7 +582,7 @@ docs/codebase-exploration-report.md) that maps:
 FINALLY: Compare the codebase against the PRD and note:
 - What fields does directus_users have that PRD's app_user is missing?
 - What collection names or patterns in the PRD don't match reality?
-- Any existing concepts that overlap with workspaces (sharing, teams, etc.)?
+- Any existing concepts that overlap with workspaces (sharing, organisations, etc.)?
 - What's the exact code pattern for calling Directus from Python?
 
 Save the reconciliation notes at the end of the report.

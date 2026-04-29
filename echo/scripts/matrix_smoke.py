@@ -127,7 +127,7 @@ def check_tier_capacity(report: Report) -> None:
 
 
 def check_role_policies(report: Report) -> None:
-    """Section 4 (workspace) + 5 (team) role x capability."""
+    """Section 4 (workspace) + 5 (organisation) role x capability."""
     try:
         from dembrane.policies import ORG_ROLE_PRESETS, WORKSPACE_ROLE_PRESETS
     except Exception as e:
@@ -173,8 +173,8 @@ def check_role_policies(report: Report) -> None:
                 "present (should not be)" if p in preset else "",
             )
 
-    # Matrix §5 team role expectations
-    team_expect = {
+    # Matrix §5 organisation role expectations
+    organisation_expect = {
         "member": {
             "has": ["org:view"],
             "hasnt": ["org:create_workspace", "org:manage_users"],
@@ -190,18 +190,18 @@ def check_role_policies(report: Report) -> None:
             "hasnt": ["org:create_workspace", "org:manage_users"],
         },
     }
-    for role, spec in team_expect.items():
+    for role, spec in organisation_expect.items():
         preset = set(ORG_ROLE_PRESETS.get(role) or [])
         for p in spec["has"]:
             report.add(
-                "5. Team roles",
+                "5. Organisation roles",
                 f"{role} has {p}",
                 p in preset,
                 "missing" if p not in preset else "",
             )
         for p in spec["hasnt"]:
             report.add(
-                "5. Team roles",
+                "5. Organisation roles",
                 f"{role} does NOT have {p}",
                 p not in preset,
                 "present (should not be)" if p in preset else "",
@@ -246,11 +246,11 @@ def check_visibility_enum(url: str, token: str, report: Report) -> None:
         (data.get("meta") or {}).get("options") or {}
     ).get("choices") or []
     values = [c.get("value") for c in choices if isinstance(c, dict)]
-    want = {"open_to_team", "private"}
+    want = {"open_to_organisation", "private"}
     got = set(values)
     report.add(
         "6. Visibility",
-        "enum is {open_to_team, private}",
+        "enum is {open_to_organisation, private}",
         want == got,
         f"got {sorted(got)}" if want != got else "",
     )

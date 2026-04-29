@@ -6,7 +6,7 @@ Full QA evidence — including screenshots, API responses, and the blocker's roo
 
 ## Context in one paragraph
 
-Solo user registers → verifies email → logs in → names their team on `/en-US/onboarding` → `POST /api/v2/onboarding/complete` creates an `org`, `org_membership` (owner), and a `workspace` (tier `"pioneer"`) → then calls `on_workspace_created(...)` to insert the creator's `workspace_membership` row → on success, frontend navigates to `/w/<ws-id>/projects`. A session-blocker bug in the call to `on_workspace_created` (already patched live) left `solo1` in a partial state where the workspace exists but no `workspace_membership` row was inserted; on retry the endpoint took the "workspace already exists" branch and never re-attempted the membership insert. `GET /api/v2/workspaces` then short-circuits to `{workspaces: [], teams: []}` and `/en-US/w` renders "No workspaces yet." Sameer also confirmed three product decisions that need code changes.
+Solo user registers → verifies email → logs in → names their organisation on `/en-US/onboarding` → `POST /api/v2/onboarding/complete` creates an `org`, `org_membership` (owner), and a `workspace` (tier `"pioneer"`) → then calls `on_workspace_created(...)` to insert the creator's `workspace_membership` row → on success, frontend navigates to `/w/<ws-id>/projects`. A session-blocker bug in the call to `on_workspace_created` (already patched live) left `solo1` in a partial state where the workspace exists but no `workspace_membership` row was inserted; on retry the endpoint took the "workspace already exists" branch and never re-attempted the membership insert. `GET /api/v2/workspaces` then short-circuits to `{workspaces: [], organisations: []}` and `/en-US/w` renders "No workspaces yet." Sameer also confirmed three product decisions that need code changes.
 
 ## Changes
 
@@ -44,7 +44,7 @@ Currently shows `SA` for "Sameer" (`.slice(0,2)` of the first name). Should show
 
 ### 3. Post-onboarding landing goes to `/w`, not `/w/<id>/projects`
 
-Sameer's call: a user coming out of onboarding should land on the workspace home page so they see the team + workspace grid, not be dropped straight into an empty project list.
+Sameer's call: a user coming out of onboarding should land on the workspace home page so they see the organisation + workspace grid, not be dropped straight into an empty project list.
 
 - `echo/frontend/src/routes/onboarding/OnboardingRoute.tsx:79-85` — the `goToProjects` helper currently does `navigate(\`/w/${workspaceId}/projects\`)` when it has a workspace id. Change it to always `navigate("/w")`. Rename the function too (`goToHome`) to match the new behavior — the old name is a lie.
 
@@ -54,28 +54,28 @@ Root cause of the blocker I hit: when `complete_onboarding` re-runs for a user w
 
 - `echo/server/dembrane/api/v2/onboarding.py:279-318` — after the if/else that resolves `personal_ws_id`, add an **unconditional** idempotent upsert of the creator's `workspace_membership` row (check existing by `(workspace_id, user_id, deleted_at IS NULL)`, insert if missing with `role="owner"`, `source="direct"`, `is_external=False`). Keep the existing `on_workspace_created(...)` call inside the new-workspace `else` branch so it only runs on genuine workspace creation. The new upsert should mirror what `on_workspace_created` writes so reruns converge to the same row shape.
 
-- `echo/server/dembrane/api/v2/workspaces.py:165-192` (listing endpoint) — the early return at line 191-192 drops the user to `{workspaces: [], teams: []}` whenever they have zero workspace memberships, even if they own a team via `org_membership`. Change the contract: always compute `teams` from `org_memberships` (moved out of the block starting at line 310), then return workspaces (possibly empty) alongside teams. A team-owner with zero workspace rows should still see their team rollup so they can create a workspace there. The frontend empty-state logic at `WorkspaceSelectorRoute.tsx:548` already handles `workspaces.length === 0 && teams.length === 0` separately from the `teams.length > 0` path, so this change will naturally reveal the existing team-hero + `AddWorkspace` card for the stuck user.
+- `echo/server/dembrane/api/v2/workspaces.py:165-192` (listing endpoint) — the early return at line 191-192 drops the user to `{workspaces: [], organisations: []}` whenever they have zero workspace memberships, even if they own a organisation via `org_membership`. Change the contract: always compute `organisations` from `org_memberships` (moved out of the block starting at line 310), then return workspaces (possibly empty) alongside organisations. A organisation-owner with zero workspace rows should still see their organisation rollup so they can create a workspace there. The frontend empty-state logic at `WorkspaceSelectorRoute.tsx:548` already handles `workspaces.length === 0 && organisations.length === 0` separately from the `organisations.length > 0` path, so this change will naturally reveal the existing organisation-hero + `AddWorkspace` card for the stuck user.
 
 After both fixes, re-running `POST /api/v2/onboarding/complete` for a broken user should un-stick them.
 
 ### 5. Repair the `solo1` test account
 
-The `solo1` account is currently in the partial-write state this brief fixes. Once changes #4 land, call `POST /api/v2/onboarding/complete` as that user (body `{"org_name": "Sameer's Team"}`) — the new upsert branch will insert the missing `workspace_membership` row. Confirm by hitting `GET /api/v2/workspaces` and seeing the `Default` workspace in the response.
+The `solo1` account is currently in the partial-write state this brief fixes. Once changes #4 land, call `POST /api/v2/onboarding/complete` as that user (body `{"org_name": "Sameer's Organisation"}`) — the new upsert branch will insert the missing `workspace_membership` row. Confirm by hitting `GET /api/v2/workspaces` and seeing the `Default` workspace in the response.
 
 Account details:
 - email `sam.pashikanti+solo1@gmail.com`, password `demo1234`
 - directus_user `623ef97f-03f3-4c3b-8923-1dc43f5b338e`
 - app_user `8842e94f-1b88-4fc2-b785-70a944e0df0b`
-- org `3160f520-087c-41c8-9938-90dbd395bd73` "Sameer's Team"
+- org `3160f520-087c-41c8-9938-90dbd395bd73` "Sameer's Organisation"
 - workspace `a41f59dd-7384-40b1-895b-51779dc64d60` "Default"
 
 If #4 is landing in a separate PR, repair `solo1` manually in Directus by inserting one `workspace_membership` row with the values above (role `owner`, source `direct`, is_external `false`) so QA can keep running.
 
 ### 6. Onboarding page layout polish
 
-This one is visual, flagged by Sameer during QA (screenshot at [qa/\_shots/04-onboarding-team-full.png](_shots/04-onboarding-team-full.png)).
+This one is visual, flagged by Sameer during QA (screenshot at [qa/\_shots/04-onboarding-organisation-full.png](_shots/04-onboarding-organisation-full.png)).
 
-Two specific complaints on the `/en-US/onboarding` team-name step:
+Two specific complaints on the `/en-US/onboarding` organisation-name step:
 - The decorative illustration sits pinned to the top-left of the viewport, visually orphaned from the form card further down. It reads as a header that got left behind.
 - The "Use default" button sits next to the primary "Get started" button with near-equal weight, but the input is pre-filled with the default value — so the button is a no-op on page load and its affordance is misleading.
 
@@ -90,10 +90,10 @@ Do #6 last — #1-#5 unblock QA, #6 is polish.
 1. Register a fresh account `sam.pashikanti+solo-verify@gmail.com` via `/en-US/register`.
 2. Click the verification link.
 3. Log in. You should land on `/en-US/onboarding` with avatar initials matching `first_name[0] + last_name[0]`.
-4. Name the team, click "Get started".
+4. Name the organisation, click "Get started".
 5. Expect redirect to `/en-US/w` (not `/w/<id>/projects`).
-6. `/en-US/w` should show a team hero card "Sameer's Team" with one workspace card "Default" marked as pilot tier.
-7. Hit `GET /api/v2/workspaces` — verify `workspaces[0].tier === "pilot"`, `workspaces[0].role === "owner"`, and `teams[0].name === "Sameer's Team"`.
+6. `/en-US/w` should show a organisation hero card "Sameer's Organisation" with one workspace card "Default" marked as pilot tier.
+7. Hit `GET /api/v2/workspaces` — verify `workspaces[0].tier === "pilot"`, `workspaces[0].role === "owner"`, and `organisations[0].name === "Sameer's Organisation"`.
 8. Repeat `POST /api/v2/onboarding/complete` with body `{"org_name": "Anything"}` — it should return 200 without creating duplicate memberships (idempotency check — count rows before and after, should be identical).
 
 ## Out of scope for this brief

@@ -12,16 +12,16 @@ Missing a top level breadcrumb
 
 // These badges are not WCAG compliant i think. Try full color pill + graphite text
 
-Team seats vs workspace seats need to be figured out
-- Wrong: Pick teammates to bring into this workspace. They'll keep their team seat — no extra cost.
+Organisation seats vs workspace seats need to be figured out
+- Wrong: Pick members to bring into this workspace. They'll keep their organisation seat — no extra cost.
 
 In general the grey text is hard to read
 
-+ New team workspace = + New team
++ New organisation workspace = + New organisation
 Remove: tap to see what's included
 
 Entitiy that holds billing for multiple workspaces = Organisation
-Team -> Organisation
+Organisation -> Organisation
 
 ws manage from /w = guest?
 

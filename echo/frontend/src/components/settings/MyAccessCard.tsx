@@ -29,7 +29,7 @@ interface Workspace {
 	member_count: number;
 }
 
-interface TeamRollup {
+interface OrganisationRollup {
 	id: string;
 	name: string;
 	role: string;
@@ -40,7 +40,7 @@ interface TeamRollup {
 
 interface WorkspacesResponse {
 	workspaces: Workspace[];
-	teams: TeamRollup[];
+	organisations: OrganisationRollup[];
 }
 
 async function fetchAccess(): Promise<WorkspacesResponse | null> {
@@ -53,7 +53,7 @@ async function fetchAccess(): Promise<WorkspacesResponse | null> {
 
 /**
  * "My access" card on user settings. Gives the caller a complete read
- * of what they can reach across teams + workspaces + where they stand
+ * of what they can reach across organisations + workspaces + where they stand
  * in each. Uses the same /v2/workspaces response the selector uses, so
  * the cache warms the other surface and vice versa.
  *
@@ -70,20 +70,20 @@ export const MyAccessCard = () => {
 		staleTime: 60_000,
 	});
 
-	// Group workspaces under their team so the list reads as
-	// "team → workspaces in that team with your role."
-	const byTeam = useMemo(() => {
+	// Group workspaces under their organisation so the list reads as
+	// "organisation → workspaces in that organisation with your role."
+	const byOrganisation = useMemo(() => {
 		const out = new Map<
 			string,
-			{ team: TeamRollup | null; workspaces: Workspace[] }
+			{ organisation: OrganisationRollup | null; workspaces: Workspace[] }
 		>();
 		if (!data) return out;
 		for (const ws of data.workspaces) {
 			const key = ws.org_id || "__orphan__";
-			const team = data.teams.find((t) => t.id === ws.org_id) ?? null;
+			const organisation = data.organisations.find((t) => t.id === ws.org_id) ?? null;
 			const existing = out.get(key);
 			if (existing) existing.workspaces.push(ws);
-			else out.set(key, { team, workspaces: [ws] });
+			else out.set(key, { organisation, workspaces: [ws] });
 		}
 		return out;
 	}, [data]);
@@ -98,7 +98,7 @@ export const MyAccessCard = () => {
 		);
 	}
 
-	const totalTeams = data?.teams.length ?? 0;
+	const totalOrganisations = data?.organisations.length ?? 0;
 	const totalWorkspaces = data?.workspaces.length ?? 0;
 
 	return (
@@ -111,9 +111,9 @@ export const MyAccessCard = () => {
 						</Title>
 						<Text size="sm" c="dimmed">
 							<Plural
-								value={totalTeams}
-								one="# team"
-								other="# teams"
+								value={totalOrganisations}
+								one="# organisation"
+								other="# organisations"
 							/>
 							{" · "}
 							<Plural
@@ -129,47 +129,47 @@ export const MyAccessCard = () => {
 						leftSection={<IconPlus size={14} />}
 						onClick={() => navigate("/w/new")}
 					>
-						<Trans>New team workspace</Trans>
+						<Trans>New organisation workspace</Trans>
 					</Button>
 				</Group>
 
-				{byTeam.size === 0 ? (
+				{byOrganisation.size === 0 ? (
 					<Text size="sm" c="dimmed" ta="center" py="md">
 						<Trans>
-							You're not in any team yet. Create a workspace to start a
-							team, or ask a teammate for an invite.
+							You're not in any organisation yet. Create a workspace to start a
+							organisation, or ask a member for an invite.
 						</Trans>
 					</Text>
 				) : (
 					<Stack gap="md">
-						{Array.from(byTeam.values()).map(({ team, workspaces }) => (
-							<Stack key={team?.id ?? "orphan"} gap={8}>
-								{/* Team header sits flush-left so the eye reads
-								    "team → workspaces" as a hierarchy. Only the
+						{Array.from(byOrganisation.values()).map(({ organisation, workspaces }) => (
+							<Stack key={organisation?.id ?? "orphan"} gap={8}>
+								{/* Organisation header sits flush-left so the eye reads
+								    "organisation → workspaces" as a hierarchy. Only the
 								    workspace rows are indented + rule'd. */}
 								<Group gap="xs" justify="space-between" align="center">
 									<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
 										<Text fw={500} size="sm" lineClamp={1}>
-											{team?.name ?? t`(direct workspace access)`}
+											{organisation?.name ?? t`(direct workspace access)`}
 										</Text>
-										{team && (
+										{organisation && (
 											<Badge
 												size="xs"
 												variant="light"
-												color={roleColor(team.role)}
+												color={roleColor(organisation.role)}
 											>
-												{displayRole(team.role)}
+												{displayRole(organisation.role)}
 											</Badge>
 										)}
 									</Group>
-									{team && (
+									{organisation && (
 										<Button
 											size="compact-xs"
 											variant="subtle"
 											rightSection={<IconExternalLink size={12} />}
-											onClick={() => navigate(`/t/${team.id}`)}
+											onClick={() => navigate(`/o/${organisation.id}`)}
 										>
-											<Trans>Open team</Trans>
+											<Trans>Open organisation</Trans>
 										</Button>
 									)}
 								</Group>

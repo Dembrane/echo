@@ -23,7 +23,7 @@ import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { avatarUrl, memberInitials } from "@/lib/avatar";
 
-interface TeamMember {
+interface OrganisationMember {
 	user_id: string;
 	app_user_id: string;
 	email: string;
@@ -32,7 +32,7 @@ interface TeamMember {
 	role: string;
 }
 
-async function fetchTeamMembers(orgId: string): Promise<TeamMember[]> {
+async function fetchOrganisationMembers(orgId: string): Promise<OrganisationMember[]> {
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/members`, {
 		credentials: "include",
 	});
@@ -73,7 +73,7 @@ interface Props {
 	onClose: () => void;
 	workspaceId: string;
 	orgId: string;
-	// Existing workspace members — so we can filter team members who
+	// Existing workspace members — so we can filter organisation members who
 	// are already in and hide them from the picker.
 	existingMemberAppUserIds: Set<string>;
 }
@@ -81,15 +81,15 @@ interface Props {
 /**
  * Workspace-level invite wizard (2026-04-24 ask).
  *
- * Two steps: pick team members → add externals.
+ * Two steps: pick organisation members → add externals.
  *
  * The old modal was a single email-at-a-time form. This wizard lets
- * admins bring in multiple team members in one go (the common case —
+ * admins bring in multiple organisation members in one go (the common case —
  * "add Alice and Bob to this workspace") and still lets them invite
  * externals through a similar add-rows UI in step 2.
  *
  * Submit fans out to the existing per-email invite endpoint; the
- * backend already handles "already team member? skip org_membership"
+ * backend already handles "already organisation member? skip org_membership"
  * and guest-clamp-to-member, so nothing new is needed on the server.
  */
 export function WorkspaceInviteWizard({
@@ -101,30 +101,30 @@ export function WorkspaceInviteWizard({
 }: Props) {
 	const queryClient = useQueryClient();
 	const [step, setStep] = useState(0);
-	const [selectedTeamMembers, setSelectedTeamMembers] = useState<Set<string>>(
+	const [selectedOrganisationMembers, setSelectedOrganisationMembers] = useState<Set<string>>(
 		new Set(),
 	);
 	const [role, setRole] = useState<"member" | "billing" | "admin">("member");
 	const [externals, setExternals] = useState<ExternalRow[]>([]);
 
-	const { data: teamMembers, isLoading } = useQuery({
-		queryKey: ["v2", "team-members", orgId],
-		queryFn: () => fetchTeamMembers(orgId),
+	const { data: organisationMembers, isLoading } = useQuery({
+		queryKey: ["v2", "organisation-members", orgId],
+		queryFn: () => fetchOrganisationMembers(orgId),
 		enabled: opened && Boolean(orgId),
 		staleTime: 30_000,
 	});
 
-	const availableTeamMembers = useMemo(() => {
-		if (!teamMembers) return [];
+	const availableOrganisationMembers = useMemo(() => {
+		if (!organisationMembers) return [];
 		// People not already in this workspace.
-		return teamMembers.filter(
+		return organisationMembers.filter(
 			(m) => !existingMemberAppUserIds.has(m.app_user_id),
 		);
-	}, [teamMembers, existingMemberAppUserIds]);
+	}, [organisationMembers, existingMemberAppUserIds]);
 
 	const reset = () => {
 		setStep(0);
-		setSelectedTeamMembers(new Set());
+		setSelectedOrganisationMembers(new Set());
 		setRole("member");
 		setExternals([]);
 	};
@@ -134,11 +134,11 @@ export function WorkspaceInviteWizard({
 		onClose();
 	};
 
-	const toggleTeamMember = (email: string) => {
-		const next = new Set(selectedTeamMembers);
+	const toggleOrganisationMember = (email: string) => {
+		const next = new Set(selectedOrganisationMembers);
 		if (next.has(email)) next.delete(email);
 		else next.add(email);
-		setSelectedTeamMembers(next);
+		setSelectedOrganisationMembers(next);
 	};
 
 	const addExternalRow = () => {
@@ -164,17 +164,17 @@ export function WorkspaceInviteWizard({
 
 	const submit = useMutation({
 		mutationFn: async () => {
-			const teamEmails = Array.from(selectedTeamMembers);
+			const organisationEmails = Array.from(selectedOrganisationMembers);
 			const externalEmails = externals
 				.map((r) => r.email.trim())
 				.filter((e) => e.length > 0 && e.includes("@"));
 
-			if (teamEmails.length + externalEmails.length === 0) {
-				throw new Error(t`Pick at least one teammate or add an email.`);
+			if (organisationEmails.length + externalEmails.length === 0) {
+				throw new Error(t`Pick at least one member or add an email.`);
 			}
 
 			const calls: Promise<unknown>[] = [];
-			for (const email of teamEmails) {
+			for (const email of organisationEmails) {
 				calls.push(inviteToWorkspace(workspaceId, email, role, true));
 			}
 			for (const email of externalEmails) {
@@ -190,7 +190,7 @@ export function WorkspaceInviteWizard({
 		},
 		onSuccess: ({ ok, failed, total }) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
-			queryClient.invalidateQueries({ queryKey: ["v2", "team-members", orgId] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "organisation-members", orgId] });
 			if (failed === 0) {
 				toast.success(
 					ok === 1
@@ -210,7 +210,7 @@ export function WorkspaceInviteWizard({
 	});
 
 	const canSubmit =
-		selectedTeamMembers.size > 0 ||
+		selectedOrganisationMembers.size > 0 ||
 		externals.some((r) => r.email.trim().length > 0 && r.email.includes("@"));
 
 	return (
@@ -230,41 +230,41 @@ export function WorkspaceInviteWizard({
 					size="sm"
 					iconSize={28}
 				>
-					<Stepper.Step label={t`Your team`}>
+					<Stepper.Step label={t`Your organisation`}>
 						<Stack gap={12} mt="md">
 							<Text size="sm" c="dimmed">
 								<Trans>
-									Pick teammates to bring into this workspace. They'll keep
-									their team seat — no extra cost.
+									Pick members to bring into this workspace. They'll keep
+									their organisation seat — no extra cost.
 								</Trans>
 							</Text>
 
 							{isLoading && (
 								<Text size="sm" c="dimmed">
-									<Trans>Loading your team…</Trans>
+									<Trans>Loading your organisation…</Trans>
 								</Text>
 							)}
 
-							{!isLoading && availableTeamMembers.length === 0 && (
+							{!isLoading && availableOrganisationMembers.length === 0 && (
 								<Alert color="gray" variant="light">
 									<Trans>
-										Everyone on your team is already in this workspace.
+										Everyone on your organisation is already in this workspace.
 										Invite externals in the next step.
 									</Trans>
 								</Alert>
 							)}
 
-							{availableTeamMembers.length > 0 && (
+							{availableOrganisationMembers.length > 0 && (
 								<Stack gap={6}>
-									{availableTeamMembers.map((m) => {
-										const checked = selectedTeamMembers.has(m.email);
+									{availableOrganisationMembers.map((m) => {
+										const checked = selectedOrganisationMembers.has(m.email);
 										return (
 											<Paper
 												key={m.user_id}
 												withBorder
 												p="sm"
 												radius="sm"
-												onClick={() => toggleTeamMember(m.email)}
+												onClick={() => toggleOrganisationMember(m.email)}
 												style={{
 													cursor: "pointer",
 													borderColor: checked
@@ -278,7 +278,7 @@ export function WorkspaceInviteWizard({
 												<Group gap={12} wrap="nowrap">
 													<Checkbox
 														checked={checked}
-														onChange={() => toggleTeamMember(m.email)}
+														onChange={() => toggleOrganisationMember(m.email)}
 														onClick={(e) => e.stopPropagation()}
 														aria-label={t`Select ${m.display_name}`}
 													/>
@@ -314,11 +314,11 @@ export function WorkspaceInviteWizard({
 
 							{/* Role picker — applies to everyone selected in step 1.
 							    Externals in step 2 are always 'member' (guest clamp). */}
-							{selectedTeamMembers.size > 0 && (
+							{selectedOrganisationMembers.size > 0 && (
 								<Paper withBorder p="sm" radius="sm">
 									<Radio.Group
 										label={t`Workspace role`}
-										description={t`Applies to the teammates you picked.`}
+										description={t`Applies to the members you picked.`}
 										value={role}
 										onChange={(v) =>
 											setRole(v as "member" | "billing" | "admin")
@@ -358,12 +358,12 @@ export function WorkspaceInviteWizard({
 								</Paper>
 							)}
 
-							{selectedTeamMembers.size > 0 && (
+							{selectedOrganisationMembers.size > 0 && (
 								<Text size="xs" c="dimmed">
 									<Plural
-										value={selectedTeamMembers.size}
-										one="# teammate selected"
-										other="# teammates selected"
+										value={selectedOrganisationMembers.size}
+										one="# member selected"
+										other="# members selected"
 									/>
 								</Text>
 							)}
@@ -374,8 +374,8 @@ export function WorkspaceInviteWizard({
 						<Stack gap={12} mt="md">
 							<Text size="sm" c="dimmed">
 								<Trans>
-									Invite people outside your team. They get workspace-only
-									access and don't use a team seat.
+									Invite people outside your organisation. They get workspace-only
+									access and don't use a organisation seat.
 								</Trans>
 							</Text>
 
@@ -383,7 +383,7 @@ export function WorkspaceInviteWizard({
 								<Alert color="gray" variant="light">
 									<Trans>
 										No externals yet. Add one if you want someone outside
-										your team to join this workspace.
+										your organisation to join this workspace.
 									</Trans>
 								</Alert>
 							) : (

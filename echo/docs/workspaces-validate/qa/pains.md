@@ -23,17 +23,17 @@ Tags: `[block]` blocks the flow · `[hurt]` causes user harm / data risk · `[ro
 - Screenshot: qa/\_shots/01-register-verify.png
 
 ### [block→fixed] 500 on `POST /api/v2/onboarding/complete` — signature mismatch, fixed during session — Onboarding · 2026-04-23
-- Where: server — `echo/server/dembrane/api/v2/onboarding.py:308-312` calls `on_workspace_created(workspace_id=…, creator_app_user_id=…, inherit_team_admins=True, inherit_team_members=False)` but the target function in `inheritance.py:315` only accepts `workspace_id` and `creator_app_user_id`. The `inherit_team_*` kwargs were retired per matrix v1.1 §6 ("No settings-flag writes anymore … The inherit_team_members concept retired") but this caller wasn't updated.
+- Where: server — `echo/server/dembrane/api/v2/onboarding.py:308-312` calls `on_workspace_created(workspace_id=…, creator_app_user_id=…, inherit_organisation_admins=True, inherit_organisation_members=False)` but the target function in `inheritance.py:315` only accepts `workspace_id` and `creator_app_user_id`. The `inherit_organisation_*` kwargs were retired per matrix v1.1 §6 ("No settings-flag writes anymore … The inherit_organisation_members concept retired") but this caller wasn't updated.
 - Symptom: `POST /api/v2/onboarding/complete` returns `500 Internal Server Error`, solo onboarding is completely blocked, user stuck on onboarding page with no feedback.
 - No client-side toast / inline error on the 500 — just silent failure + re-enabled button. That's a secondary `[rough]`.
 - Sameer patched this mid-session in the devcontainer, re-testing after fix.
 
-### [note] Team page and workspace cards rollup "people" differently — 4 vs 7 — Home vs Team · 2026-04-23
-- Where: `/en-US/w` team hero says "7 people", `/en-US/t/<id>/overview` team heading says "4 people"
-- Observed: same team Acme Research, two different counts
-  - Home rollup `teams[].total_members` = count of unique user_ids across all workspaces including externals (7: Anna, Ben, Cara, Dan, Emma, Finn, Grace)
-  - Team page count = team members only, excluding externals (4: Anna, Ben, Cara, Emma)
-- Both are useful numbers but using the same label ("people") in both places is confusing. Suggest: home rollup should clarify "7 total" or "4 teammates + 3 guests", or both pages should agree on a definition
+### [note] Organisation page and workspace cards rollup "people" differently — 4 vs 7 — Home vs Organisation · 2026-04-23
+- Where: `/en-US/w` organisation hero says "7 people", `/en-US/o/<id>/overview` organisation heading says "4 people"
+- Observed: same organisation Acme Research, two different counts
+  - Home rollup `organisations[].total_members` = count of unique user_ids across all workspaces including externals (7: Anna, Ben, Cara, Dan, Emma, Finn, Grace)
+  - Organisation page count = organisation members only, excluding externals (4: Anna, Ben, Cara, Emma)
+- Both are useful numbers but using the same label ("people") in both places is confusing. Suggest: home rollup should clarify "7 total" or "4 members + 3 guests", or both pages should agree on a definition
 
 ### [rough] Billing user sees a Projects tab with "Create" button but no projects and no explanation — Billing role · 2026-04-23
 - Where: as Emma (workspace role = billing on Default), visiting `/en-US/w/<ws-id>/projects`
@@ -78,14 +78,14 @@ Tags: `[block]` blocks the flow · `[hurt]` causes user harm / data risk · `[ro
 - Where: sharing modal copy reads: "Only people already in this workspace can be added. Invite them to the workspace first if they aren't here yet."
 - Matches the matrix model — you can't share a private project with a stranger, they must be workspace members first. Boundary enforced by API too.
 
-### [note] Team page Usage panel is the right home for cap warnings — Team · 2026-04-23
-- Where: `/en-US/t/<id>/usage` has a "NEEDS ATTENTION" panel with live entries: "Q1 Discovery near pioneer hour limit (22.2/25h) [Review]", "Default at seat cap (4/3) [Upgrade]", "Whitelabel Project was downgraded recently — verify limits [Review]"
-- This answers the earlier pain about missing cap/downgrade indicators on home workspace cards — the info isn't missing, it just lives at team level. But the home still offers no breadcrumb to it. Suggest a small "3 issues" badge on the team hero card linking to `/t/<id>/usage`
-- Screenshot: qa/\_shots/19-team-usage.png
+### [note] Organisation page Usage panel is the right home for cap warnings — Organisation · 2026-04-23
+- Where: `/en-US/o/<id>/usage` has a "NEEDS ATTENTION" panel with live entries: "Q1 Discovery near pioneer hour limit (22.2/25h) [Review]", "Default at seat cap (4/3) [Upgrade]", "Whitelabel Project was downgraded recently — verify limits [Review]"
+- This answers the earlier pain about missing cap/downgrade indicators on home workspace cards — the info isn't missing, it just lives at organisation level. But the home still offers no breadcrumb to it. Suggest a small "3 issues" badge on the organisation hero card linking to `/o/<id>/usage`
+- Screenshot: qa/\_shots/19-organisation-usage.png
 
 ### [rough] Workspace cards don't surface "approaching cap" or "downgraded" state — Home / Workspaces list · 2026-04-23
 - Where: `/en-US/w` workspace cards
-- Observed: Anna's seed team "Acme Research" has:
+- Observed: Anna's seed organisation "Acme Research" has:
   - **Q1 Discovery**: 22.2/25 hrs (88.8%) — API returns `approaching_cap: true`, `hours_pct: 0.888` — card shows "22.2 h total" but no visual warning chip/bar/color
   - **Whitelabel Project**: `downgraded_from_tier: "changemaker"`, current `tier: "innovator"`, `downgraded_at: "2026-04-20T14:00:07.186Z"` — card shows "Innovator" tier label but nothing indicates it was recently downgraded (user lost changemaker features)
 - Expected per matrix §8 / §9: visual signal on cards that are near caps or just-downgraded so users know before they try to record
@@ -117,25 +117,25 @@ Tags: `[block]` blocks the flow · `[hurt]` causes user harm / data risk · `[ro
 - Where: `/api/v2/me/notifications` after being auto-added as an invitee
 - Observed: Cara's `/api/v2/me/notifications` returns `[]` and `unread-count` returns `{"unread":0}` after Anna added her as admin to Default. No email equivalent checked. Cara's inbox badge shows "1" but that's an **announcement** (the "What's new in dembrane" release post), not a personal notification.
 - Related pain: the `[hurt?]` about silent auto-add above. If the current product decision is "auto-accept for registered users", the absence of a personal notification makes that decision worse — the user has no breadcrumb back to "how did I get into this workspace?"
-- Suggest: fire an in-app notification `TEAM_MEMBER_ADDED` / `WORKSPACE_MEMBER_ADDED` to the invitee (similar to `INVITE_ACCEPTED` that's sent to the inviter per `onboarding.py:166`). Use the same `action: NAVIGATE_WORKSPACE_SETTINGS` pattern
+- Suggest: fire an in-app notification `ORGANISATION_MEMBER_ADDED` / `WORKSPACE_MEMBER_ADDED` to the invitee (similar to `INVITE_ACCEPTED` that's sent to the inviter per `onboarding.py:166`). Use the same `action: NAVIGATE_WORKSPACE_SETTINGS` pattern
 
 ### [note] `/me.orgs` doesn't include orgs reached via `is_external=false` workspace memberships — Invitations & access · 2026-04-23
 - Where: `GET /api/v2/me` for user `hank@seed.dembrane.dev`
-- Observed: Hank's `me.orgs` returns only `[{name: "Alpha Inc", role: "owner"}]`. But `/api/v2/workspaces` returns a workspace `Client Beta` in org `Partner Consulting` with `is_external: false` on Hank's membership — meaning he IS a team member of Partner Consulting per the workspace row, yet that org is absent from `/me.orgs`
+- Observed: Hank's `me.orgs` returns only `[{name: "Alpha Inc", role: "owner"}]`. But `/api/v2/workspaces` returns a workspace `Client Beta` in org `Partner Consulting` with `is_external: false` on Hank's membership — meaning he IS a organisation member of Partner Consulting per the workspace row, yet that org is absent from `/me.orgs`
 - Reading the schema: `is_external: false` seems to imply org_membership exists, but in this seed there's no `org_membership` row for Hank in Partner Consulting. Either (a) the seed data is inconsistent, (b) the schema treats `is_external: false` as "implicitly an org member" without requiring the row, or (c) the `/me` endpoint is missing a backfill query
 - Need Sameer to confirm the intended invariant between `workspace_membership.is_external` and `org_membership`
 
-### [note] Multi-team home `/w`: "Add workspace" button under a team where the user isn't a team admin — Invitations & access · 2026-04-23
-- Where: `/en-US/w` as user Hank (workspace admin of Client Beta in Partner Consulting, but **not a team admin of Partner Consulting**)
+### [note] Multi-organisation home `/w`: "Add workspace" button under a organisation where the user isn't a organisation admin — Invitations & access · 2026-04-23
+- Where: `/en-US/w` as user Hank (workspace admin of Client Beta in Partner Consulting, but **not a organisation admin of Partner Consulting**)
 - Observed: The Partner Consulting section on Hank's `/w` shows his one accessible workspace card plus an **"Add workspace"** dotted card alongside it
-- Expected: A non-team-admin shouldn't see the "Add workspace" affordance for that team. They can only add workspaces under teams they admin (e.g., Hank's own Alpha Inc team)
+- Expected: A non-organisation-admin shouldn't see the "Add workspace" affordance for that organisation. They can only add workspaces under organisations they admin (e.g., Hank's own Alpha Inc organisation)
 - Could also be: server rejects the create anyway (TypeError 403), so the UI is optimistic. Either way UX is misleading — they see an action they can't actually do
 - Haven't tested the POST yet to see if the server actually accepts it
 
 ### [rough] `include_org_membership` alias not honored by the invite endpoint — Invitations & access · 2026-04-23
 - Where: `POST /api/v2/workspaces/<ws-id>/invite`
 - Schema (`echo/server/dembrane/api/v2/schemas.py:154-172`) declares `is_org_member` with `validation_alias=AliasChoices("is_org_member", "include_org_membership")` and a docstring saying it takes either name. Comment even says that was added "because the 'Guests can't be …' error was the root cause of testing the billing role"
-- Observed: posting `{"email": "...", "role": "billing", "include_org_membership": true}` is rejected with `400 "Guests can't be admins, owners, or billing. Invite them as a team member first, or choose member."` — as if `is_org_member` defaulted to `false`
+- Observed: posting `{"email": "...", "role": "billing", "include_org_membership": true}` is rejected with `400 "Guests can't be admins, owners, or billing. Invite them as a organisation member first, or choose member."` — as if `is_org_member` defaulted to `false`
 - With canonical `is_org_member: true` the same request succeeds (`status: "added"`)
 - Either the dev server wasn't restarted after the schema change, or Pydantic's `populate_by_name=True` + `AliasChoices` doesn't actually map `include_org_membership` on incoming requests. The frontend probably uses the canonical name and is unaffected — so the bug only bites API-direct callers and anyone writing a doc that follows the DB column name
 - Easy verification: try both names against a fresh server boot. If the alias fails, either fix the schema or drop the dual-name promise from the docstring.
@@ -143,7 +143,7 @@ Tags: `[block]` blocks the flow · `[hurt]` causes user harm / data risk · `[ro
 
 ### [rough] "Usage and Tier" tab label doesn't match its URL segment `/settings/billing` — Workspace settings · 2026-04-23
 - Where: `/en-US/w/<ws>/settings/billing` route, but the tab shows "Usage and Tier"
-- Inconsistency: the label was moved away from "Billing" (likely because true billing = team-level now), but the URL stayed on the old `/billing` segment. Either rename the URL segment to `usage-and-tier` / `tier` and redirect old one, or rename the tab back to "Billing"
+- Inconsistency: the label was moved away from "Billing" (likely because true billing = organisation-level now), but the URL stayed on the old `/billing` segment. Either rename the URL segment to `usage-and-tier` / `tier` and redirect old one, or rename the tab back to "Billing"
 - Screenshot: qa/\_shots/17-ws-usage-tier.png
 
 ### [rough] Seats 4/3 on Pioneer shown as plain text with no overage signal — Workspace settings · Usage and Tier · 2026-04-23
@@ -155,18 +155,18 @@ Tags: `[block]` blocks the flow · `[hurt]` causes user harm / data risk · `[ro
 
 ### [note] Access tab's Private radio is correctly gated by tier — Workspace settings · Access · 2026-04-23
 - Where: `/en-US/w/<ws>/settings/access`
-- On Pioneer: "Private" radio is disabled with the hint "Available on innovator and above." No separate "Request upgrade" button on this tab (the upgrade path lives on Usage and Tier). Copy is honest: "Only invited participants. Team admins can still find and join." — matches the matrix-honesty rule.
+- On Pioneer: "Private" radio is disabled with the hint "Available on innovator and above." No separate "Request upgrade" button on this tab (the upgrade path lives on Usage and Tier). Copy is honest: "Only invited participants. Organisation admins can still find and join." — matches the matrix-honesty rule.
 - Screenshot: qa/\_shots/16-ws-access.png
 
 ### [note] Role protection rules verified working — Role changes · 2026-04-23
 All tested via `PATCH /api/v2/workspaces/<id>/members/<membership_id>` as Anna (owner):
-- Promote external → admin: `400 "Guests can't be admins, owners, or billing. Add them to the team first (via invite with is_org_member=true), then promote."` ✓
+- Promote external → admin: `400 "Guests can't be admins, owners, or billing. Add them to the organisation first (via invite with is_org_member=true), then promote."` ✓
 - Self-remove last owner: `400 "Cannot remove the last owner. Transfer ownership first."` ✓
 - Self-demote last owner: `400 "Cannot demote the last owner. Promote someone else first."` ✓
 - Demote another admin → member: `200 success`, WORKSPACE_REMOVED / role-change notification emitted per code
-- Invite billing role + team seat: `200 "added"` (after fixing the alias issue above)
+- Invite billing role + organisation seat: `200 "added"` (after fixing the alias issue above)
 
-The backend rule set is in good shape. UI-side, the role dropdown didn't trigger a confirmation dialog on demote admin→member — if matrix v1.1 §4 expects confirmation for that change, it's missing. If only *cross-team* role changes need confirmation, this is fine as-is (need Sameer's call).
+The backend rule set is in good shape. UI-side, the role dropdown didn't trigger a confirmation dialog on demote admin→member — if matrix v1.1 §4 expects confirmation for that change, it's missing. If only *cross-organisation* role changes need confirmation, this is fine as-is (need Sameer's call).
 
 ### [rough] Members list may be stale until full navigation — Invitations & access · 2026-04-23
 - Where: `/en-US/w/<ws-id>/settings/members`
@@ -190,27 +190,27 @@ The backend rule set is in good shape. UI-side, the role dropdown didn't trigger
   - Either: send an invite, let Cara explicitly accept (standard SaaS model — GitHub org invites work this way)
   - Or: auto-add is fine, but at minimum surface a notification to Cara so she knows ("Anna Bakker added you to Default in Acme Research")
   - Current state: silent auto-add with zero signal to the invitee feels like [hurt] (workspace additions without consent could expose shared info they didn't opt into). Asking Sameer to weigh in.
-- Matrix implications: the distinction in the modal is "Member (gets a team seat)" vs "External (workspace-only)". The team-seat variant definitely implies consumption of the org's plan seats — so the inviter commits budget on Cara's behalf without Cara approving.
+- Matrix implications: the distinction in the modal is "Member (gets a organisation seat)" vs "External (workspace-only)". The organisation-seat variant definitely implies consumption of the org's plan seats — so the inviter commits budget on Cara's behalf without Cara approving.
 - Need Sameer's call on intended UX
 
 ### [rough] Joining a workspace doesn't refetch the list — Invitations & access · 2026-04-23
 - Source: Sameer flagged during live QA
-- Symptom: after a user accepts a workspace invite (or the server side completes a join — e.g., team admin one-click join, access request approval), the `/w` home doesn't refetch; the newly-joined workspace doesn't appear until a manual page reload
-- Likely cause: missing `queryClient.invalidateQueries` on the mutation that completes the join. Candidates to inspect: `useAcceptInvite`, `useRequestAccess`, and whatever drives the team-admin "join workspace" button on `/w`
+- Symptom: after a user accepts a workspace invite (or the server side completes a join — e.g., organisation admin one-click join, access request approval), the `/w` home doesn't refetch; the newly-joined workspace doesn't appear until a manual page reload
+- Likely cause: missing `queryClient.invalidateQueries` on the mutation that completes the join. Candidates to inspect: `useAcceptInvite`, `useRequestAccess`, and whatever drives the organisation-admin "join workspace" button on `/w`
 - I'll verify the exact trigger points during the Invitations & access module tonight and add repro steps here
 
 ### [block] Home page `/en-US/w` shows "No workspaces yet" for a user who just completed onboarding — Onboarding · 2026-04-23
 - Where: `/en-US/w` (Workspaces home) after finishing onboarding as solo `solo1`
-- Expected: One card showing the "Default" workspace under team "Sameer's Team" with an owner chip + pioneer tier badge, per the watch list ("Home page: 2–3 workspaces, pinned, role chip, tier badge")
+- Expected: One card showing the "Default" workspace under organisation "Sameer's Organisation" with an owner chip + pioneer tier badge, per the watch list ("Home page: 2–3 workspaces, pinned, role chip, tier badge")
 - Observed: Empty hero: **"Workspaces" / "No workspaces yet. Create your first one to get started."** with no "Create" CTA button visible. Direct URL `/en-US/w/<ws-id>/projects` still works so the workspace *exists*
 - Root cause (verified via API + code read):
-  - `GET /api/v2/me` returns `orgs: [{name: "Sameer's Team", role: "owner"}]` and `onboarding_completed: true`
-  - `GET /api/v2/workspaces` returns `{workspaces: [], teams: []}`
+  - `GET /api/v2/me` returns `orgs: [{name: "Sameer's Organisation", role: "owner"}]` and `onboarding_completed: true`
+  - `GET /api/v2/workspaces` returns `{workspaces: [], organisations: []}`
   - Listing logic at `echo/server/dembrane/api/v2/workspaces.py:165-192` queries `workspace_membership` rows for the caller and short-circuits to empty when none exist. The creator's `workspace_membership` row was never written.
   - Why it wasn't written: during my first attempt the 500 bug above crashed after `org`, `org_membership`, and `workspace` rows were already created but before `on_workspace_created` wrote the `workspace_membership`. On retry, the onboarding code at `onboarding.py:279-345` takes the "workspace already exists" branch (line 295-296), skipping the `on_workspace_created` call that lives inside the `else` at line 297-318. Result: partial-state users are permanently stuck.
 - Two bugs stacked:
   1. **Onboarding is not idempotent across a partial failure** — if `workspace_membership` was never inserted, a retry silently leaves it missing. Fix candidates: always upsert `workspace_membership` on the existing-workspace branch, or move the membership write out of the `else` into an unconditional block.
-  2. **Workspace list short-circuits when orgs exist but memberships don't** — a team-owner with zero `workspace_membership` rows gets an empty `teams: []` response and can't see or reach their team. Fix candidate: fall through to build `teams` from `org_memberships` independently of workspace rows, so at minimum the team rollup renders.
+  2. **Workspace list short-circuits when orgs exist but memberships don't** — a organisation-owner with zero `workspace_membership` rows gets an empty `organisations: []` response and can't see or reach their organisation. Fix candidate: fall through to build `organisations` from `org_memberships` independently of workspace rows, so at minimum the organisation rollup renders.
 - Screenshot: qa/\_shots/06-home-empty.png
 - Also: no visible "Create workspace" button on the empty state, so a user in this broken state can't even create a new one to un-stick themselves
 
@@ -219,11 +219,11 @@ The backend rule set is in good shape. UI-side, the role dropdown didn't trigger
 - Observed:
   - Decorative illustration sits in the top-left corner, visually detached from the form card below — large vertical gap between them makes it look like a header that got left behind
   - Form card is left-aligned in a wide viewport — most of the right side and everything below is empty beige space, so the page reads as half-finished rather than minimal
-  - "Use default" sits next to "Get started" with near-equal visual weight but it's a no-op when the input is already pre-filled with the default ("Sameer's Team"). It doesn't feel like a real option — feels like a button that does nothing until you've edited the field
+  - "Use default" sits next to "Get started" with near-equal visual weight but it's a no-op when the input is already pre-filled with the default ("Sameer's Organisation"). It doesn't feel like a real option — feels like a button that does nothing until you've edited the field
 - Suggest:
   - Either center the form card and pull the illustration into its header, or put the illustration as a full-width banner / on the opposite side of a 2-col layout
   - Drop "Use default" entirely and show a subtle "Reset" link only after the user has dirtied the input (or just trust the pre-fill and remove the button)
-- Screenshot: qa/\_shots/04-onboarding-team-full.png
+- Screenshot: qa/\_shots/04-onboarding-organisation-full.png
 
 ### [rough] Post-verify redirect drops user at generic login, `?new=true` ignored by UI — Onboarding · 2026-04-23
 - Where: `/verify-email?token=…` → redirects to `/en-US/login?new=true`

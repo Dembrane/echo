@@ -10,38 +10,38 @@ Mounted at /api/v2/ in main.py.
 from fastapi import APIRouter
 
 from dembrane.api.v2.me import router as me_router
-from dembrane.api.v2.notifications import router as notifications_router
 from dembrane.api.v2.orgs import router as orgs_router
-from dembrane.api.v2.onboarding import router as onboarding_router
+from dembrane.api.v2.admin import router as admin_router
 from dembrane.api.v2.invites import router as invites_router
+from dembrane.api.v2.bff.tags import (
+    router as bff_tags_router,
+    run_router as bff_analysis_runs_router,
+    project_router as bff_projects_write_router,
+)
 from dembrane.api.v2.projects import router as projects_router
-from dembrane.api.v2.project_sharing import router as project_sharing_router
+from dembrane.api.v2.bff.chats import (
+    router as bff_chats_router,
+    message_router as bff_chat_message_router,
+)
+from dembrane.api.v2.onboarding import router as onboarding_router
 from dembrane.api.v2.workspaces import router as workspaces_router
-from dembrane.api.v2.workspace_projects import router as workspace_projects_router
-from dembrane.api.v2.workspace_settings import router as workspace_settings_router
+from dembrane.api.v2.bff.reports import (
+    router as bff_reports_router,
+    metric_router as bff_report_metric_router,
+)
+from dembrane.api.v2.notifications import router as notifications_router
 from dembrane.api.v2.access_requests import (
     router as access_requests_router,
     discover_router as access_requests_discover_router,
 )
-from dembrane.api.v2.admin import router as admin_router
+from dembrane.api.v2.project_sharing import router as project_sharing_router
 from dembrane.api.v2.bff.conversations import (
+    router as bff_conversations_router,
     chunk_router as bff_chunk_router,
     junction_router as bff_conv_tag_router,
-    router as bff_conversations_router,
 )
-from dembrane.api.v2.bff.chats import (
-    message_router as bff_chat_message_router,
-    router as bff_chats_router,
-)
-from dembrane.api.v2.bff.reports import (
-    metric_router as bff_report_metric_router,
-    router as bff_reports_router,
-)
-from dembrane.api.v2.bff.tags import (
-    project_router as bff_projects_write_router,
-    router as bff_tags_router,
-    run_router as bff_analysis_runs_router,
-)
+from dembrane.api.v2.workspace_projects import router as workspace_projects_router
+from dembrane.api.v2.workspace_settings import router as workspace_settings_router
 
 v2_router = APIRouter()
 
@@ -51,26 +51,24 @@ v2_router.include_router(
 )
 v2_router.include_router(onboarding_router, prefix="/onboarding", tags=["v2:onboarding"])
 
-# Team (org) management — user-facing word is "team", internal is "org" (see D1).
+# Organisation (org) management — user-facing word is "organisation", internal is "org" (see D1).
 v2_router.include_router(orgs_router, prefix="/orgs", tags=["v2:orgs"])
-v2_router.include_router(
-    access_requests_discover_router, prefix="/orgs", tags=["v2:discover"]
-)
+v2_router.include_router(access_requests_discover_router, prefix="/orgs", tags=["v2:discover"])
 
 # Workspace-scoped: /workspaces, /workspaces/{id}/invite, /workspaces/{id}/projects
 v2_router.include_router(workspaces_router, prefix="/workspaces", tags=["v2:workspaces"])
 v2_router.include_router(invites_router, prefix="/workspaces", tags=["v2:invites"])
-v2_router.include_router(workspace_projects_router, prefix="/workspaces", tags=["v2:workspace-projects"])
-v2_router.include_router(workspace_settings_router, prefix="/workspaces", tags=["v2:workspace-settings"])
 v2_router.include_router(
-    access_requests_router, prefix="/workspaces", tags=["v2:access-requests"]
+    workspace_projects_router, prefix="/workspaces", tags=["v2:workspace-projects"]
 )
+v2_router.include_router(
+    workspace_settings_router, prefix="/workspaces", tags=["v2:workspace-settings"]
+)
+v2_router.include_router(access_requests_router, prefix="/workspaces", tags=["v2:access-requests"])
 
 # Project-level: /projects/{id}/move + /projects/{id}/members (private sharing)
 v2_router.include_router(projects_router, prefix="/projects", tags=["v2:projects"])
-v2_router.include_router(
-    project_sharing_router, prefix="/projects", tags=["v2:project-sharing"]
-)
+v2_router.include_router(project_sharing_router, prefix="/projects", tags=["v2:project-sharing"])
 
 # BFF endpoints — funnel the old direct-Directus frontend calls through
 # an access-aware layer (see api/v2/bff/_access.py). Everything under
@@ -95,9 +93,7 @@ v2_router.include_router(
     prefix="/bff/chat-messages",
     tags=["v2:bff:chat-messages"],
 )
-v2_router.include_router(
-    bff_reports_router, prefix="/bff/reports", tags=["v2:bff:reports"]
-)
+v2_router.include_router(bff_reports_router, prefix="/bff/reports", tags=["v2:bff:reports"])
 v2_router.include_router(
     bff_report_metric_router,
     prefix="/bff/report-metrics",

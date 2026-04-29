@@ -1855,7 +1855,7 @@ export const createPromptTemplate = async (payload: {
 	content: string;
 	icon?: string | null;
 	// Default scope is 'user' — pass 'workspace' + workspace_id to
-	// create a shared team template.
+	// create a shared organisation template.
 	scope?: "user" | "workspace";
 	workspace_id?: string | null;
 }): Promise<PromptTemplateResponse> => {

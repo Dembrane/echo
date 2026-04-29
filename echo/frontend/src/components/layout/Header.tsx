@@ -95,9 +95,9 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const { workspaceId, workspaceName, workspaces, setWorkspace } = useWorkspace();
 	const location = useLocation();
 	// Workspace breadcrumb in the header is noise on pages that ARE the
-	// selector or team canvas — those pages own the workspace pick / team
+	// selector or organisation canvas — those pages own the workspace pick / organisation
 	// context directly. Hide it on /w (selector), /w/new (create wizard),
-	// and /t/:teamId (team surfaces). Path-match is locale-aware (prefix
+	// and /o/:organisationId (organisation surfaces). Path-match is locale-aware (prefix
 	// may include /en or similar).
 	const pathNoLocale = location.pathname.replace(
 		/^\/[a-z]{2}(-[A-Z]{2})?(?=\/)/,
@@ -107,7 +107,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 		pathNoLocale === "/w" ||
 		pathNoLocale === "/w/" ||
 		pathNoLocale.startsWith("/w/new") ||
-		pathNoLocale.startsWith("/t/") ||
+		pathNoLocale.startsWith("/o/") ||
 		pathNoLocale.startsWith("/admin");
 	const navigate = useI18nNavigate();
 	const { runTransition } = useTransitionCurtain();
@@ -176,7 +176,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 						{/* Logo click: inside a workspace → that workspace's project
 						    list. Outside any workspace context → the workspace
 						    selector (/w). Previously fell back to /projects, which
-						    was the legacy dembrane home and confusing once teams
+						    was the legacy dembrane home and confusing once organisations
 						    existed. */}
 						<I18nLink to="/w">
 							<Group align="center">
@@ -222,10 +222,10 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 										<Trans>Switch workspace</Trans>
 									</Menu.Label>
 									<ScrollArea.Autosize mah={320}>
-										{/* Sort by team, then workspace name (2026-04-24).
+										{/* Sort by organisation, then workspace name (2026-04-24).
 										    Before: API order, which made the list feel
 										    random. Now: predictable alphabetical grouping
-										    so users can find "the X workspace on team Y". */}
+										    so users can find "the X workspace on organisation Y". */}
 										{[...workspaces]
 											.sort((a, b) => {
 												const t = (a.org_name || "").localeCompare(

@@ -12,8 +12,8 @@ Append-only. One decision per entry. Dated. Short.
 - **D4.** `00-DOC-AUDIT.md` carries the "Repo conventions" header per brief; `02-DELTA.md` references it rather than repeating.
 - **D5.** Do not touch the uncommitted working tree until Q4 is answered. Build only on top of the last commit (`cfa758e`) for now.
 - **D6.** Session 1 outputs: audit, delta, plan, questions, decisions, progress. No implementation until Sameer clears the first gate.
-- **D7.** [Q1] `billing` role lands in schema this release. Fifth `workspace_membership.role` value with its own preset. Mirror at team level too (matrix §5 lists three team roles: Admin / Billing / Member).
-- **D8.** [Q2] Add `workspace.visibility` enum (`open_to_team | private`). **Remove** `workspace.settings.inherit_team_admins` and `inherit_team_members` directly — Sameer confirms not in prod yet. Also purge `sticky_removed` tombstones as part of the same walkback.
+- **D7.** [Q1] `billing` role lands in schema this release. Fifth `workspace_membership.role` value with its own preset. Mirror at organisation level too (matrix §5 lists three organisation roles: Admin / Billing / Member).
+- **D8.** [Q2] Add `workspace.visibility` enum (`open_to_organisation | private`). **Remove** `workspace.settings.inherit_organisation_admins` and `inherit_organisation_members` directly — Sameer confirms not in prod yet. Also purge `sticky_removed` tombstones as part of the same walkback.
 - **D9.** [Q3] Hour meter = derived. Sum `conversation.duration` where `workspace_id=X AND deleted_at IS NULL AND created_at` within current calendar month. Expose via `/v2/workspaces/:id/usage`. No new `usage_event` table. Pilot hard-block = read-time check against 10h cap before host-side endpoints run.
 - **D10.** [Q4] Commit the uncommitted in-flight work as a single coherent commit. **Exclude** `docs/workspaces/` and `docs/workspaces-validate/` from upcoming code commits — docs get their own commits, separated from feature work.
 - **D11.** [Q5] Remove `viewer` role. No migration — rely on robust error handling for any stray rows. Drop the preset; if a DB read returns `role='viewer'`, treat as `member` + log a warning.

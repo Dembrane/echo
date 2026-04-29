@@ -82,7 +82,7 @@ async def invalidate_workspace_usage(workspace_id: str) -> None:
 
 
 async def invalidate_org_usage(org_id: str) -> None:
-    """Bust the cached team-wide rollup. Call alongside
+    """Bust the cached organisation-wide rollup. Call alongside
     invalidate_workspace_usage on tier changes since the aggregate
     depends on per-workspace caps."""
     await cache_delete(org_usage_cache_key(org_id))

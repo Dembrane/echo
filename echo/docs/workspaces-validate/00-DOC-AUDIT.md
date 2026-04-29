@@ -38,17 +38,17 @@ Implemented as `auth.is_admin` (Directus Administrator JWT claim), surfaced to f
 ### Visibility / discovery model — the big divergence
 
 Code stores two booleans in `workspace.settings`:
-- `inherit_team_admins` (default true) — drives derived admin access
-- `inherit_team_members` (default false) — drives derived member access
+- `inherit_organisation_admins` (default true) — drives derived admin access
+- `inherit_organisation_members` (default false) — drives derived member access
 - `sticky_removed` — JSON tombstones in `workspace.settings`
 
 Plus `dembrane/inheritance.py` with `user_can_access` that walks org membership to derive access at query time. Migration + audit rounds already hardened this path (see `docs/workspaces/inheritance-rules.md` and `scripts/migrate_inherited_to_derived.py`).
 
 Matrix v1.1 retires all of this. Replacement model:
-- Single `workspace.visibility` enum: `open_to_team | private`.
+- Single `workspace.visibility` enum: `open_to_organisation | private`.
 - Access is direct-only — no derivation walker.
-- Team admins "Join" an open/private workspace via explicit action → writes `source='direct', role='admin'` row.
-- Team members "Request access" on open workspaces → admin approves → writes `source='direct', role='member'`.
+- Organisation admins "Join" an open/private workspace via explicit action → writes `source='direct', role='admin'` row.
+- Organisation members "Request access" on open workspaces → admin approves → writes `source='direct', role='member'`.
 - `sticky_removed` retires; rejoins are normal explicit actions.
 
 **Prerequisite:** backfill explicit Admin rows for anyone currently surviving on derived access. Stop-condition work — Sameer confirms affected row count before apply. See `flows/derivation-walkback.md` (to be written).
@@ -59,8 +59,8 @@ Grep'd from `server/dembrane/` — emit sites across `invites.py / me.py / onboa
 
 ```
 WORKSPACE_CREATED          WORKSPACE_ADDED             WORKSPACE_REMOVED
-WORKSPACE_ROLE_CHANGED     TEAM_MEMBER_ADDED           TEAM_ROLE_CHANGED
-TEAM_REMOVED               INVITE_ACCEPTED             INVITE_DECLINED
+WORKSPACE_ROLE_CHANGED     ORGANISATION_MEMBER_ADDED           ORGANISATION_ROLE_CHANGED
+ORGANISATION_REMOVED               INVITE_ACCEPTED             INVITE_DECLINED
 INVITE_CANCELLED           PROJECT_NOW_PRIVATE         PROJECT_NOW_WORKSPACE
 PROJECT_SHARE_ADDED        PROJECT_SHARE_ROLE_CHANGED  PROJECT_SHARE_REVOKED
 REPORT_READY               REPORT_FAILED               UPGRADE_REQUEST_SENT
@@ -93,8 +93,8 @@ Keep wiring through `emit()` / `emit_to_audience()` (`notifications.py:102-272`)
 ### Frontend route shape
 
 - `/:locale/w/:workspaceId/...` — workspace-scoped (routes under `frontend/src/routes/`)
-- `/:locale/t/:teamId` — team admin page (matrix view, `TeamRoute.tsx`, 534 lines)
-- Workspace selector (home) — `WorkspaceSelectorRoute.tsx`, 442 lines. Already has team hero, avatar bubbles, per-row manage (Ask 5 shipped).
+- `/:locale/o/:organisationId` — organisation admin page (matrix view, `OrganisationRoute.tsx`, 534 lines)
+- Workspace selector (home) — `WorkspaceSelectorRoute.tsx`, 442 lines. Already has organisation hero, avatar bubbles, per-row manage (Ask 5 shipped).
 - Workspace settings — `WorkspaceSettingsRoute.tsx`, 893 lines, one page (tabs not yet split).
 - Workspace create — `CreateWorkspaceRoute.tsx`, 271 lines, **single-step form** (wizard not yet built).
 - Inbox drawer — `frontend/src/components/inbox/Inbox.tsx`, 420 lines.
@@ -117,17 +117,17 @@ On top (brief's "8 prior" is out of date — these shipped too):
 ```
 001ef0a feat: S10 private project sharing UI + visibility toggle endpoint
 d042a85 feat: S11 tier-gate FeatureGate + UpgradeModal components
-f2cf0a0 feat: S12 selector polish — team hero + hover-manage + guest-of pills
+f2cf0a0 feat: S12 selector polish — organisation hero + hover-manage + guest-of pills
 8aba15d fix: round-2 audit — 7 of 8 critical/high findings addressed
 4646825 feat: private projects — read-time enforcement on common surfaces
 deb6597 fix(workspace): security + footgun pass from audits
-a85d2fe feat(workspace): team page, sharing tab, access bubbles, /w URL, hard rules
-997ab26 feat(workspace): /t/ team route, settings pages, emails in lists, audit fixes
+a85d2fe feat(workspace): organisation page, sharing tab, access bubbles, /w URL, hard rules
+997ab26 feat(workspace): /o/ organisation route, settings pages, emails in lists, audit fixes
 505ba73 feat(ux): dotted +workspace card, /w sweep, audit fixes
 b71a2d7 feat(inbox): notifications table + service + emit backfill
 1b2ed00 feat(inbox): notifications drawer + more emit coverage
 00b3218 feat(inbox): more emit sites + dead-code sweep
-cfa758e feat(inbox): close INVITE_ACCEPTED + TEAM_MEMBER_ADDED on remaining paths
+cfa758e feat(inbox): close INVITE_ACCEPTED + ORGANISATION_MEMBER_ADDED on remaining paths
 ```
 
 **Uncommitted work (tree state at session start):**
@@ -139,7 +139,7 @@ Modified (in-flight — do not disturb without checking with Sameer):
 - `frontend/src/components/project/ProjectListItem.tsx / ProjectSharingModal.tsx / ProjectSharingStrip.tsx`
 - `frontend/src/components/layout/Header.tsx`
 - `frontend/src/hooks/useNotifications.ts`, `frontend/src/routes/auth/Register.tsx`, `CheckYourEmail.tsx`
-- `frontend/src/routes/team/TeamRoute.tsx` (3 lines)
+- `frontend/src/routes/organisation/OrganisationRoute.tsx` (3 lines)
 - `frontend/src/components/auth/hooks/index.ts`
 - `scripts/create_schema.py` (~136 lines), `scripts/preseed_workspace.py`
 - `docs/workspaces/release-checklist.md`
@@ -151,7 +151,7 @@ Deleted:
 New (untracked):
 - `docs/workspaces-validate/` — this dir
 - `frontend/src/components/inbox/` — new inbox dir (`Inbox.tsx` committed in `b71a2d7`; directory itself looks untracked because index files may be)
-- `frontend/src/lib/avatar.ts` — used by `TeamRoute.tsx` and `WorkspaceSelectorRoute.tsx`
+- `frontend/src/lib/avatar.ts` — used by `OrganisationRoute.tsx` and `WorkspaceSelectorRoute.tsx`
 
 `git diff --stat` shows -1921 / +703 — net -1218 lines. Announcement + old-drawer removal dominates. **Confirm with Sameer whether this uncommitted tree represents "in progress, resume" or "abandoned, revert" before I build on top of it.**
 
@@ -167,7 +167,7 @@ New (untracked):
 | `docs/workspaces/release-checklist.md` | Engineering ground truth for build status |
 | `brand/STYLE_GUIDE.md` | Copy + color + component conventions |
 | `brand/README.md` | Short brand summary |
-| `CLAUDE.md` (repo root) | Standing team instructions — overrides briefs on conflict |
+| `CLAUDE.md` (repo root) | Standing organisation instructions — overrides briefs on conflict |
 
 ### Live companion design docs (referenced from matrix + checklist)
 
@@ -226,7 +226,7 @@ Server:
 - `server/dembrane/api/v2/me.py` — `/v2/me`, `is_staff`, pending invites, notifications list
 - `server/dembrane/api/v2/workspaces.py` — CRUD + tier PATCH + upgrade-request
 - `server/dembrane/api/v2/workspace_settings.py` — member mgmt, invites, role change
-- `server/dembrane/api/v2/orgs.py` — team endpoints
+- `server/dembrane/api/v2/orgs.py` — organisation endpoints
 - `server/dembrane/api/v2/project_sharing.py` — per-project CRUD (innovator+)
 - `server/dembrane/api/v2/onboarding.py` — onboarding-complete
 - `server/dembrane/api/v2/invites.py` — HMAC token invites
@@ -238,8 +238,8 @@ Frontend:
 - `frontend/src/routes/workspaces/WorkspaceSelectorRoute.tsx` — home
 - `frontend/src/routes/workspaces/WorkspaceSettingsRoute.tsx` — one-page settings
 - `frontend/src/routes/workspaces/CreateWorkspaceRoute.tsx` — single-step create
-- `frontend/src/routes/team/TeamRoute.tsx` — team admin matrix
-- `frontend/src/routes/team/TeamSettingsRoute.tsx` — team settings
+- `frontend/src/routes/organisation/OrganisationRoute.tsx` — organisation admin matrix
+- `frontend/src/routes/organisation/OrganisationSettingsRoute.tsx` — organisation settings
 - `frontend/src/routes/onboarding/OnboardingRoute.tsx` — new-vs-legacy onboarding
 - `frontend/src/components/workspace/FeatureGate.tsx` — tier-gate overlay + upgrade modal
 - `frontend/src/components/inbox/Inbox.tsx` — notifications drawer

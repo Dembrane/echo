@@ -14,7 +14,7 @@ Two classes of legacy rows to handle:
      any user still deserving it.
 
   2. Soft-deleted inherited rows (`source='inherited' AND deleted_at IS
-     NOT NULL`): these represent "workspace admin removed this team
+     NOT NULL`): these represent "workspace admin removed this organisation
      admin". Without a tombstone, derivation would silently re-grant
      access. Convert each to a `sticky_removed` entry on
      `workspace.settings`.
@@ -41,7 +41,7 @@ import requests
 # Simple filesystem lock to block concurrent --apply runs. `--apply`
 # against the same Directus instance from two shells would race the
 # read-modify-write of workspace.settings.sticky_removed (round-2 audit,
-# Red-team H2). This guard isn't distributed — it's per-host. Good
+# Red-organisation H2). This guard isn't distributed — it's per-host. Good
 # enough for single-operator migrations; if we ever run from a CI
 # runner + a human shell at the same moment, this breaks down and we'd
 # need a Directus-level flag.
@@ -172,7 +172,7 @@ def main() -> int:
 
     # 2. Soft-deleted inherited rows → convert to sticky tombstones.
     # ONLY rows soft-deleted BEFORE this run started — these are the
-    # pre-existing "workspace admin revoked this team admin" tombstones.
+    # pre-existing "workspace admin revoked this organisation admin" tombstones.
     # Rows soft-deleted after script_start_iso are our own archive output
     # and must NOT be converted (derivation should continue granting them).
     soft_inherited = fetch_all(

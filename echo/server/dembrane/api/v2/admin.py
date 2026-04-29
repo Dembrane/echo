@@ -509,7 +509,7 @@ async def billing_rollup(
 
 
 class ReferralLedgerRow(BaseModel):
-    """Flattened referral_ledger row with workspace + team names enriched."""
+    """Flattened referral_ledger row with workspace + organisation names enriched."""
     id: str
     workspace_id: Optional[str] = None
     workspace_name: Optional[str] = None
@@ -518,7 +518,7 @@ class ReferralLedgerRow(BaseModel):
     from_org_id: Optional[str] = None
     from_org_name: Optional[str] = None
     partner_kickback_percent: Optional[int] = None
-    to_team_discount_percent: Optional[int] = None
+    to_organisation_discount_percent: Optional[int] = None
     eur_cap_kickback: Optional[float] = None
     starts_at: Optional[str] = None
     expires_at: Optional[str] = None
@@ -529,7 +529,7 @@ class ReferralLedgerRow(BaseModel):
 async def list_referral_ledger(
     auth: DependencyDirectusSession,
 ) -> list[ReferralLedgerRow]:
-    """Every row in referral_ledger, enriched with workspace + team names
+    """Every row in referral_ledger, enriched with workspace + organisation names
     so staff can read the table without cross-referencing ids."""
     if not auth.is_admin:
         raise HTTPException(status_code=403, detail="Staff-only")
@@ -539,7 +539,7 @@ async def list_referral_ledger(
         {"query": {
             "fields": [
                 "id", "workspace_id", "partner_team_id", "from_org_id",
-                "partner_kickback_percent", "to_team_discount_percent",
+                "partner_kickback_percent", "to_organisation_discount_percent",
                 "eur_cap_kickback", "starts_at", "expires_at", "notes",
             ],
             "sort": ["-starts_at"],
@@ -592,7 +592,7 @@ async def list_referral_ledger(
             from_org_id=r.get("from_org_id"),
             from_org_name=org_names.get(r.get("from_org_id") or ""),
             partner_kickback_percent=r.get("partner_kickback_percent"),
-            to_team_discount_percent=r.get("to_team_discount_percent"),
+            to_organisation_discount_percent=r.get("to_organisation_discount_percent"),
             eur_cap_kickback=r.get("eur_cap_kickback"),
             starts_at=r.get("starts_at"),
             expires_at=r.get("expires_at"),

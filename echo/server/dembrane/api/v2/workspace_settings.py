@@ -1,18 +1,17 @@
 """Workspace settings: detail, update, members, and invite (from settings)."""
 
-from logging import getLogger
 from typing import Optional
+from logging import getLogger
 from datetime import datetime, timezone
 
 import requests
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import Depends, APIRouter, UploadFile, HTTPException
 from pydantic import BaseModel
 
 from dembrane.directus import directus
-from dembrane.directus_async import async_directus
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.directus_async import async_directus
 from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
-from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
 logger = getLogger("api.v2.workspace_settings")
@@ -58,8 +57,8 @@ class WorkspaceDetailResponse(BaseModel):
     my_policies: list[str] = []
     # Privacy + settings context for the settings page controls.
     # `description` lives above (shared with legacy consumers).
-    inherit_team_admins: bool = True
-    inherit_team_members: bool = False
+    inherit_organisation_admins: bool = True
+    inherit_organisation_members: bool = False
     logo_url: Optional[str] = None
 
 
@@ -91,18 +90,29 @@ async def get_workspace_settings(
     # Full member list
     memberships = await async_directus.get_items(
         "workspace_membership",
-        {"query": {
-            "filter": {"workspace_id": {"_eq": ctx.workspace_id}, "deleted_at": {"_null": True}},
-            "fields": ["id", "user_id", "role", "source", "is_external"],
-            "limit": -1,
-        }},
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": ctx.workspace_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id", "user_id", "role", "source", "is_external"],
+                "limit": -1,
+            }
+        },
     )
     members: list[WorkspaceMember] = []
     if isinstance(memberships, list) and len(memberships) > 0:
         user_ids = [m["user_id"] for m in memberships if m.get("user_id")]
         app_users = await async_directus.get_items(
             "app_user",
-            {"query": {"filter": {"id": {"_in": user_ids}}, "fields": ["id", "display_name", "email", "directus_user_id"], "limit": -1}},
+            {
+                "query": {
+                    "filter": {"id": {"_in": user_ids}},
+                    "fields": ["id", "display_name", "email", "directus_user_id"],
+                    "limit": -1,
+                }
+            },
         )
         user_map = {u["id"]: u for u in (app_users if isinstance(app_users, list) else [])}
 
@@ -111,7 +121,13 @@ async def get_workspace_settings(
         avatar_map: dict[str, Optional[str]] = {}
         if du_ids:
             profiles = await async_directus.get_users(
-                {"query": {"filter": {"id": {"_in": du_ids}}, "fields": ["id", "avatar"], "limit": -1}},
+                {
+                    "query": {
+                        "filter": {"id": {"_in": du_ids}},
+                        "fields": ["id", "avatar"],
+                        "limit": -1,
+                    }
+                },
             )
             if isinstance(profiles, list):
                 avatar_map = {u["id"]: u.get("avatar") for u in profiles}
@@ -124,16 +140,18 @@ async def get_workspace_settings(
             # always shows own email — users already know their own.
             is_self = m.get("user_id") == ctx.app_user_id
             show_email = can_manage or is_self
-            members.append(WorkspaceMember(
-                id=m["id"],
-                user_id=m["user_id"],
-                display_name=user.get("display_name", ""),
-                email=user.get("email", "") if show_email else "",
-                avatar=avatar_map.get(user.get("directus_user_id", "")),
-                role=m.get("role", ""),
-                source=m.get("source", ""),
-                is_external=m.get("is_external", False),
-            ))
+            members.append(
+                WorkspaceMember(
+                    id=m["id"],
+                    user_id=m["user_id"],
+                    display_name=user.get("display_name", ""),
+                    email=user.get("email", "") if show_email else "",
+                    avatar=avatar_map.get(user.get("directus_user_id", "")),
+                    role=m.get("role", ""),
+                    source=m.get("source", ""),
+                    is_external=m.get("is_external", False),
+                )
+            )
 
     # Pending invites — management-only. Emails of not-yet-members aren't
     # anyone else's business.
@@ -142,31 +160,37 @@ async def get_workspace_settings(
     if can_manage:
         pending_invites_raw_result = await async_directus.get_items(
             "workspace_invite",
-            {"query": {
-                "filter": {
-                    "workspace_id": {"_eq": ctx.workspace_id},
-                    "accepted_at": {"_null": True},
-                    "expires_at": {"_gt": datetime.now(timezone.utc).isoformat()},
-                },
-                "fields": ["id", "email", "role", "created_at", "invited_by", "expires_at"],
-                "sort": ["-created_at"],
-                "limit": 50,
-            }},
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_eq": ctx.workspace_id},
+                        "accepted_at": {"_null": True},
+                        "expires_at": {"_gt": datetime.now(timezone.utc).isoformat()},
+                    },
+                    "fields": ["id", "email", "role", "created_at", "invited_by", "expires_at"],
+                    "sort": ["-created_at"],
+                    "limit": 50,
+                }
+            },
         )
         if isinstance(pending_invites_raw_result, list):
             pending_invites_raw = pending_invites_raw_result
     if len(pending_invites_raw) > 0:
         # Resolve inviter names
-        inviter_ids = list({inv.get("invited_by") for inv in pending_invites_raw if inv.get("invited_by")})
+        inviter_ids = list(
+            {inv.get("invited_by") for inv in pending_invites_raw if inv.get("invited_by")}
+        )
         inviter_name_map: dict[str, str] = {}
         if inviter_ids:
             inviters = await async_directus.get_items(
                 "app_user",
-                {"query": {
-                    "filter": {"id": {"_in": inviter_ids}},
-                    "fields": ["id", "display_name"],
-                    "limit": -1,
-                }},
+                {
+                    "query": {
+                        "filter": {"id": {"_in": inviter_ids}},
+                        "fields": ["id", "display_name"],
+                        "limit": -1,
+                    }
+                },
             )
             if isinstance(inviters, list):
                 inviter_name_map = {u["id"]: u.get("display_name") or "" for u in inviters}
@@ -184,7 +208,8 @@ async def get_workspace_settings(
         ]
 
     # Current user's effective policies — expand "*" into all known policies
-    from dembrane.policies import get_effective_policies, WORKSPACE_ROLE_PRESETS
+    from dembrane.policies import WORKSPACE_ROLE_PRESETS, get_effective_policies
+
     effective = get_effective_policies(ctx.role, ctx.custom_policies, WORKSPACE_ROLE_PRESETS)
     if "*" in effective:
         # Owner gets all policies — show them explicitly instead of "*"
@@ -209,12 +234,16 @@ async def get_workspace_settings(
         pending_invites=pending_invites,
         my_role=ctx.role,
         my_policies=effective,
-        inherit_team_admins=bool(
-            (ws.get("settings") or {}).get("inherit_team_admins", True)
-        ) if isinstance(ws.get("settings"), dict) else True,
-        inherit_team_members=bool(
-            (ws.get("settings") or {}).get("inherit_team_members", False)
-        ) if isinstance(ws.get("settings"), dict) else False,
+        inherit_organisation_admins=bool(
+            (ws.get("settings") or {}).get("inherit_organisation_admins", True)
+        )
+        if isinstance(ws.get("settings"), dict)
+        else True,
+        inherit_organisation_members=bool(
+            (ws.get("settings") or {}).get("inherit_organisation_members", False)
+        )
+        if isinstance(ws.get("settings"), dict)
+        else False,
         logo_url=ws.get("logo_url"),
     )
 
@@ -228,10 +257,10 @@ class UpdateWorkspaceRequest(BaseModel):
     logo_url: Optional[str] = None
     # Privacy flags — wizard step 2 equivalents. Flipping true→false makes
     # the workspace private; derivation stops on next access check.
-    # Flipping false→true re-enables team-admin derivation (subject to the
+    # Flipping false→true re-enables organisation-admin derivation (subject to the
     # per-user sticky_removed tombstones).
-    inherit_team_admins: Optional[bool] = None
-    inherit_team_members: Optional[bool] = None
+    inherit_organisation_admins: Optional[bool] = None
+    inherit_organisation_members: Optional[bool] = None
 
 
 # Only http/https logos allowed — blocks javascript:/data:/file:// URIs
@@ -254,9 +283,7 @@ def _validate_logo_url(value: str) -> str:
         raise HTTPException(status_code=400, detail="Logo URL is too long")
     lower = cleaned.lower()
     if not lower.startswith(_LOGO_URL_SCHEMES):
-        raise HTTPException(
-            status_code=400, detail="Logo URL must start with http:// or https://"
-        )
+        raise HTTPException(status_code=400, detail="Logo URL must start with http:// or https://")
     return cleaned
 
 
@@ -290,24 +317,27 @@ async def update_workspace_settings(
         payload["logo_url"] = cleaned_logo or None
 
     # Privacy flags write into workspace.settings (existing JSON column).
-    if body.inherit_team_admins is not None or body.inherit_team_members is not None:
+    if (
+        body.inherit_organisation_admins is not None
+        or body.inherit_organisation_members is not None
+    ):
         # Normalise NULL settings (legacy rows) to {} before dict ops.
         current_settings = ctx.workspace.get("settings") or {}
         if not isinstance(current_settings, dict):
             current_settings = {}
-        # Setting inherit_team_admins=false makes the workspace private — gated.
+        # Setting inherit_organisation_admins=false makes the workspace private — gated.
         going_private = (
-            body.inherit_team_admins is False
-            and current_settings.get("inherit_team_admins", True) is not False
+            body.inherit_organisation_admins is False
+            and current_settings.get("inherit_organisation_admins", True) is not False
         )
         if going_private:
             ctx.require_policy("workspace:set_private")
 
         merged = dict(current_settings)
-        if body.inherit_team_admins is not None:
-            merged["inherit_team_admins"] = bool(body.inherit_team_admins)
-        if body.inherit_team_members is not None:
-            merged["inherit_team_members"] = bool(body.inherit_team_members)
+        if body.inherit_organisation_admins is not None:
+            merged["inherit_organisation_admins"] = bool(body.inherit_organisation_admins)
+        if body.inherit_organisation_members is not None:
+            merged["inherit_organisation_members"] = bool(body.inherit_organisation_members)
         payload["settings"] = merged
 
     if not payload:
@@ -474,25 +504,39 @@ async def remove_workspace_member(
     if membership.get("role") == "owner":
         owners = await async_directus.get_items(
             "workspace_membership",
-            {"query": {"filter": {
-                "workspace_id": {"_eq": ctx.workspace_id},
-                "role": {"_eq": "owner"},
-                "deleted_at": {"_null": True},
-            }, "fields": ["id"], "limit": 2}},
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_eq": ctx.workspace_id},
+                        "role": {"_eq": "owner"},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": 2,
+                }
+            },
         )
         if isinstance(owners, list) and len(owners) <= 1:
-            raise HTTPException(status_code=400, detail="Cannot remove the last owner. Transfer ownership first.")
+            raise HTTPException(
+                status_code=400, detail="Cannot remove the last owner. Transfer ownership first."
+            )
 
     # Last-admin protection (matrix §4: last admin cannot be removed).
     # Applies to both self-leave and admin-removes-admin.
     if membership.get("role") == "admin":
         admins = await async_directus.get_items(
             "workspace_membership",
-            {"query": {"filter": {
-                "workspace_id": {"_eq": ctx.workspace_id},
-                "role": {"_in": ["admin", "owner"]},
-                "deleted_at": {"_null": True},
-            }, "fields": ["id"], "limit": 2}},
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_eq": ctx.workspace_id},
+                        "role": {"_in": ["admin", "owner"]},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": 2,
+                }
+            },
         )
         if isinstance(admins, list) and len(admins) <= 1:
             raise HTTPException(
@@ -513,6 +557,7 @@ async def remove_workspace_member(
     removed_user_id = membership.get("user_id")
     if removed_user_id and removed_user_id != ctx.app_user_id:
         from dembrane.notifications import emit
+
         await emit(
             audience_user_id=removed_user_id,
             actor_user_id=ctx.app_user_id,
@@ -525,18 +570,25 @@ async def remove_workspace_member(
 
     # Sticky-remove: if this user would otherwise re-derive admin/member
     # access via their org role (rule-of-system inheritance), tombstone
-    # them so team-role changes don't silently re-grant access. Only
+    # them so organisation-role changes don't silently re-grant access. Only
     # applies when the removed user has an active org_membership.
     from dembrane.inheritance import sticky_remove
+
     if removed_user_id and ctx.workspace.get("org_id"):
         # Check if they'd re-derive via org role — only tombstone if yes.
         org_rows = await async_directus.get_items(
             "org_membership",
-            {"query": {"filter": {
-                "org_id": {"_eq": ctx.workspace["org_id"]},
-                "user_id": {"_eq": removed_user_id},
-                "deleted_at": {"_null": True},
-            }, "fields": ["role"], "limit": 1}},
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": ctx.workspace["org_id"]},
+                        "user_id": {"_eq": removed_user_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["role"],
+                    "limit": 1,
+                }
+            },
         )
         if isinstance(org_rows, list) and org_rows:
             await sticky_remove(
@@ -583,16 +635,16 @@ async def change_member_role(
         raise HTTPException(status_code=404, detail="Membership already removed")
 
     # Hard rule: a guest (is_external=true) can never be admin, owner, or
-    # billing. Guests live inside one workspace without team-level presence;
+    # billing. Guests live inside one workspace without organisation-level presence;
     # promoting them into management or financial roles mixes access layers
-    # that should stay separate. To promote, add them to the team first, then
+    # that should stay separate. To promote, add them to the organisation first, then
     # change role.
     if membership.get("is_external") and body.role in ("admin", "owner", "billing"):
         raise HTTPException(
             status_code=400,
             detail=(
                 "Guests can't be admins, owners, or billing. Add them to the "
-                "team first (via invite with is_org_member=true), then promote."
+                "organisation first (via invite with is_org_member=true), then promote."
             ),
         )
 
@@ -600,14 +652,22 @@ async def change_member_role(
     if membership.get("role") == "owner" and body.role != "owner":
         owners = await async_directus.get_items(
             "workspace_membership",
-            {"query": {"filter": {
-                "workspace_id": {"_eq": ctx.workspace_id},
-                "role": {"_eq": "owner"},
-                "deleted_at": {"_null": True},
-            }, "fields": ["id"], "limit": 2}},
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_eq": ctx.workspace_id},
+                        "role": {"_eq": "owner"},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": 2,
+                }
+            },
         )
         if isinstance(owners, list) and len(owners) <= 1:
-            raise HTTPException(status_code=400, detail="Cannot demote the last owner. Promote someone else first.")
+            raise HTTPException(
+                status_code=400, detail="Cannot demote the last owner. Promote someone else first."
+            )
 
     await async_directus.update_item(
         "workspace_membership",
@@ -618,6 +678,7 @@ async def change_member_role(
     # Notify the affected user (unless they're the one making the change).
     if membership.get("user_id") and membership["user_id"] != ctx.app_user_id:
         from dembrane.notifications import emit
+
         await emit(
             audience_user_id=membership["user_id"],
             actor_user_id=ctx.app_user_id,
@@ -643,8 +704,10 @@ async def resend_workspace_invite(
     ctx.require_policy("member:invite")
 
     from datetime import timedelta
+
     from dembrane.email import send_email
     from dembrane.settings import get_settings
+
     settings = get_settings()
 
     invite = await async_directus.get_item("workspace_invite", invite_id)
@@ -662,7 +725,7 @@ async def resend_workspace_invite(
     )
 
     # Get inviter name
-    inviter_name = "Your team"
+    inviter_name = "Your organisation"
     try:
         inviter = await async_directus.get_item("app_user", ctx.app_user_id)
         if inviter and inviter.get("display_name"):
@@ -671,15 +734,19 @@ async def resend_workspace_invite(
         pass
 
     # Build invite URL with HMAC hash + display context
-    from dembrane.api.v2.invites import compute_invite_hash
     from urllib.parse import urlencode
+
+    from dembrane.api.v2.invites import compute_invite_hash
+
     invite_hash = compute_invite_hash(invite_id)
-    ctx_params = urlencode({
-        "iss": inviter_name,
-        "ws": ctx.workspace.get("name", ""),
-        "role": invite.get("role", "member"),
-        "h": invite_hash,
-    })
+    ctx_params = urlencode(
+        {
+            "iss": inviter_name,
+            "ws": ctx.workspace.get("name", ""),
+            "role": invite.get("role", "member"),
+            "h": invite_hash,
+        }
+    )
     invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
     email_sent = await send_email(
         to=invite["email"],
@@ -715,6 +782,7 @@ async def cancel_workspace_invite(
     # email invites have no in-app target — email would be the only
     # channel and we deliberately don't chase those.
     from dembrane.app_user import resolve_app_user
+
     invitee_directus = await async_directus.get_users(
         {
             "query": {
@@ -728,14 +796,12 @@ async def cancel_workspace_invite(
         invitee_app_user = await resolve_app_user(invitee_directus[0]["id"])
         if invitee_app_user:
             from dembrane.notifications import emit
+
             await emit(
                 audience_user_id=invitee_app_user["id"],
                 actor_user_id=ctx.app_user_id,
                 event_code="INVITE_CANCELLED",
-                title=(
-                    f"An invite to {ctx.workspace.get('name', 'a workspace')} "
-                    "was cancelled"
-                ),
+                title=(f"An invite to {ctx.workspace.get('name', 'a workspace')} was cancelled"),
                 message="The admin withdrew your pending invite.",
                 action="NONE",
                 ref_workspace_id=ctx.workspace_id,

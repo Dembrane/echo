@@ -1,4 +1,4 @@
-# Designer brief — Workspaces & Teams release
+# Designer brief — Workspaces & Organisations release
 
 **For:** the designer joining us
 **From:** Sameer
@@ -9,7 +9,7 @@
 
 ## TL;DR
 
-We're adding two new layers above projects: **Organizations** (internally called "teams") and **Workspaces**. The core app you see today — projects, conversations, chats, reports — doesn't change. What changes is the container around it: who can access what, who pays, and how teams collaborate.
+We're adding two new layers above projects: **Organizations** (internally called "organisations") and **Workspaces**. The core app you see today — projects, conversations, chats, reports — doesn't change. What changes is the container around it: who can access what, who pays, and how organisations collaborate.
 
 Most of the plumbing is done. What I need from you is design for the flows that are either missing or currently too barebones to ship.
 
@@ -24,7 +24,7 @@ Please spend 30 minutes clicking around before reading further. You'll understan
 3. You'll be taken to a **workspace dashboard** (`/w/.../projects`)
 4. Click the gear icon → **workspace settings**
 5. Click the logo → **workspace selector** (`/select-workspace`)
-6. In settings, invite a teammate → observe the **invite modal**
+6. In settings, invite a member → observe the **invite modal**
 7. Create a second account, accept the invite → observe **accept invite** flow
 
 Everything above already works. It's what's *there* that needs polish, plus several screens that don't exist yet.
@@ -36,7 +36,7 @@ Everything above already works. It's what's *there* that needs polish, plus seve
 ### Real-world picture
 
 ```
-An organization (a.k.a. "team")
+An organization
 ├── is the billing entity — one bill, one tier, one set of seat limits
 ├── contains one or more workspaces
 └── has members with org-level roles (owner, admin, member)
@@ -55,18 +55,18 @@ A project (already exists)
 
 ### Example
 
-> **"Human Collective"** is a consultancy (an **organization / team**).
+> **"Human Collective"** is a consultancy (an **organization**).
 > They have three workspaces inside:
 > - *Default* — their own internal projects
 > - *City of Amsterdam* — projects they run for the Amsterdam municipality
 > - *Province of Utrecht* — projects they run for Utrecht
 >
-> Their three consultants are **team members** — they automatically see all three workspaces as admins.
-> An Amsterdam civil servant has been invited as a **direct member** only to the Amsterdam workspace. She's marked **external** because she's not on the Human Collective team.
+> Their three consultants are **organisation members** — they automatically see all three workspaces as admins.
+> An Amsterdam civil servant has been invited as a **direct member** only to the Amsterdam workspace. She's marked **external** because she's not on the Human Collective organisation.
 
 ### Access inheritance — the rule
 
-When you're added as a **team (org) member** with admin or owner role, you're automatically added to **all current and future workspaces** in that team as an inherited member. This is the magic that makes partner consultancies work — adding one person grants access to every client engagement.
+When you're added as a **organisation (org) member** with admin or owner role, you're automatically added to **all current and future workspaces** in that organisation as an inherited member. This is the magic that makes partner consultancies work — adding one person grants access to every client engagement.
 
 A workspace admin can *remove* an inherited member from their specific workspace. That removal sticks (no re-add).
 
@@ -78,8 +78,8 @@ These flows exist and work. Style them if needed, but the structure is settled:
 
 | Screen | Route | State |
 |---|---|---|
-| Onboarding | `/onboarding` | Works. Asks for org name + optional team invites on signup. Slightly brand-thin. |
-| Workspace selector | `/select-workspace` | Works. Card grid. Shows workspaces + team rollups. **Visually flat, needs hierarchy.** |
+| Onboarding | `/onboarding` | Works. Asks for org name + optional organisation invites on signup. Slightly brand-thin. |
+| Workspace selector | `/select-workspace` | Works. Card grid. Shows workspaces + organisation rollups. **Visually flat, needs hierarchy.** |
 | Workspace dashboard | `/w/:id/projects` | Project list. Already shipped. |
 | Workspace settings | `/w/:id/settings` | Single page with general info, members, pending invites. **Crammed — needs tabs or better structure.** |
 | Invite modal | Inside settings | Works. Email + role. |
@@ -95,25 +95,25 @@ Please work *from* these screens, not from a blank page. We don't want a rebuild
 
 Five asks, in priority order. For each I've noted current state, the job-to-be-done, and key constraints.
 
-### 1. Team (Org) admin page — **the big new surface area**
+### 1. Organisation (Org) admin page — **the big new surface area**
 
 **Current state:** doesn't exist.
-**Route it will live at:** `/org/:orgId/...` (name TBD — could be `/team/:teamId`)
-**Who sees it:** team owners and admins
+**Route it will live at:** `/org/:orgId/...` (name TBD — could be `/organisation/:organisationId`)
+**Who sees it:** organisation owners and admins
 
 **Job-to-be-done:**
 As an admin of a consultancy, I need one place to see everyone who has access to *any* of our workspaces, and manage their access. I want to answer:
-- Who's on my team? What's their role?
+- Who's on my organisation? What's their role?
 - Which workspaces can each person access?
 - Who's external (invited into one of our workspaces from outside)?
-- How do I add someone to the whole team at once?
+- How do I add someone to the whole organisation at once?
 
 **Key content:**
-- Member list. Each row: name, email (on hover only), team role, workspace access (compact indicator — e.g. "3 of 3 workspaces" or a small icon grid)
-- A clear split or filter between **team members** and **externals**
+- Member list. Each row: name, email (on hover only), organisation role, workspace access (compact indicator — e.g. "3 of 3 workspaces" or a small icon grid)
+- A clear split or filter between **organisation members** and **externals**
 - Row action: change role, remove, view workspaces they access
-- "Invite to team" primary action
-- Empty state when team has just one person: nudge toward inviting
+- "Invite to organisation" primary action
+- Empty state when organisation has just one person: nudge toward inviting
 
 **Think about:**
 - What's the right default view when someone has 50+ members?
@@ -129,7 +129,7 @@ As an admin of a consultancy, I need one place to see everyone who has access to
 **Current state:** tier is stored on each workspace (`pilot / pioneer / innovator / changemaker / guardian`) but there's no UI to change it. Right now I change it in the database manually.
 
 **Job-to-be-done:**
-A team admin needs to see what tier each workspace is on, and needs to request an upgrade (or for internal dembrane admins, set it directly).
+A organisation admin needs to see what tier each workspace is on, and needs to request an upgrade (or for internal dembrane admins, set it directly).
 
 **Two views needed:**
 
@@ -200,7 +200,7 @@ Show users what they're missing without making them feel blocked. Invite them to
 **What I want:**
 
 **Selector polish:**
-- Stronger visual hierarchy when the user is a team admin (team-level context at top, workspaces below)
+- Stronger visual hierarchy when the user is a organisation admin (organisation-level context at top, workspaces below)
 - Clearer treatment for **external** workspaces (where the user is a guest)
 - Empty state when user has just one workspace — right now it auto-redirects, but if they somehow land here, the page feels underused
 - Search / filter when they have many workspaces (10+)
@@ -208,7 +208,7 @@ Show users what they're missing without making them feel blocked. Invite them to
 **Settings polish:**
 - Split into tabs: **General** / **Members** / **Branding** / **Legal** / **Billing**
 - "Branding" and "Legal" are mostly empty for now — design the shell, we'll fill content later
-- Members tab should feel distinct from the team admin page — this is workspace-scoped only
+- Members tab should feel distinct from the organisation admin page — this is workspace-scoped only
 
 ---
 
@@ -223,7 +223,7 @@ From our style guide (`brand/STYLE_GUIDE.md`) — these are non-negotiable:
 - **Never use bold for emphasis** — use our Royal Blue (`#4169e1`) or italics
 - **Don't stack multiple alert banners** — show one at a time
 - **Primary font + spacing** — follow what's already in the app; we use Mantine
-- **Logos / loading spinners** — there's a whitelabel system; use the `alwaysDembrane` variant only where the dembrane brand itself is appropriate (login, billing, team admin). Use the workspace's branded logo everywhere inside a workspace.
+- **Logos / loading spinners** — there's a whitelabel system; use the `alwaysDembrane` variant only where the dembrane brand itself is appropriate (login, billing, organisation admin). Use the workspace's branded logo everywhere inside a workspace.
 
 Tone: warm but not gushing. Direct but not cold. Think IKEA meets Patagonia. We're a trusted colleague, not a corporate announcement.
 
@@ -243,8 +243,8 @@ Tone: warm but not gushing. Direct but not cold. Think IKEA meets Patagonia. We'
 | Day | You | Me |
 |---|---|---|
 | Mon | Explore the app, read this brief, ask questions | Build migration script + org API |
-| Tue | Deliver wires for **team admin page** (#1) | Build org endpoints, review your wires |
-| Wed | Deliver **tier management** + **project sharing** (#2, #3) | Implement team admin page frontend |
+| Tue | Deliver wires for **organisation admin page** (#1) | Build org endpoints, review your wires |
+| Wed | Deliver **tier management** + **project sharing** (#2, #3) | Implement organisation admin page frontend |
 | Thu | Deliver **upgrade prompts** + **selector/settings polish** (#4, #5) | Build tier UI + sharing modal |
 | Fri | Final review, polish pass on anything I implemented | Bug bash, migration dry-run |
 
@@ -252,8 +252,8 @@ Tone: warm but not gushing. Direct but not cold. Think IKEA meets Patagonia. We'
 
 ## Questions I expect you'll have
 
-**"Why 'teams' and not 'organizations'?"**
-Internally we call it `org` in the code and schema. Externally, "team" is warmer and clearer — most of our users don't run formal organizations. Use "team" in all user-facing copy.
+**"Why 'organisations' and not 'organizations'?"**
+Internally we call it `org` in the code and schema. Externally, "organisation" is warmer and clearer — most of our users don't run formal organizations. Use "organisation" in all user-facing copy.
 
 **"What happens when someone has access to 20 workspaces?"**
 They see a searchable list view on the selector. We've got a visual treatment partly built but it's barebones — include this in ask #5.

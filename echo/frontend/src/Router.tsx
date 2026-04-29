@@ -139,9 +139,9 @@ const MyInvitesRoute = createLazyNamedRoute(
 	() => import("./routes/invite/MyInvitesRoute"),
 	"MyInvitesRoute",
 );
-const TeamRoute = createLazyNamedRoute(
-	() => import("./routes/team/TeamRoute"),
-	"TeamRoute",
+const OrganisationRoute = createLazyNamedRoute(
+	() => import("./routes/organisation/OrganisationRoute"),
+	"OrganisationRoute",
 );
 const AdminSettingsRoute = createLazyNamedRoute(
 	() => import("./routes/admin/AdminSettingsRoute"),
@@ -375,15 +375,15 @@ export const mainRouter = createBrowserRouter([
 				path: "w",
 			},
 			{
-				// Team (org) admin surface. Canonical path is /t/:teamId —
+				// Organisation (org) admin surface. Canonical path is /o/:organisationId —
 				// matches the /w/:workspaceId pattern.
 				children: [
 					{
 						// Splat so tab state lives in the path
-						// (/t/:teamId/:tab) — matches the project-tab pattern.
+						// (/o/:organisationId/:tab) — matches the project-tab pattern.
 						// The component parses the trailing segment itself.
-						element: <TeamRoute />,
-						path: ":teamId/*",
+						element: <OrganisationRoute />,
+						path: ":organisationId/*",
 					},
 				],
 				element: (
@@ -391,7 +391,7 @@ export const mainRouter = createBrowserRouter([
 						<BaseLayout />
 					</Protected>
 				),
-				path: "t",
+				path: "o",
 			},
 			{
 				// Host Guide - standalone page, protected but no header/layout

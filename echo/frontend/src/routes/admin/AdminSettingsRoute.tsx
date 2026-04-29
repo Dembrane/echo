@@ -139,7 +139,7 @@ type ReferralLedgerRow = {
 	from_org_id: string | null;
 	from_org_name: string | null;
 	partner_kickback_percent: number | null;
-	to_team_discount_percent: number | null;
+	to_organisation_discount_percent: number | null;
 	eur_cap_kickback: number | null;
 	starts_at: string | null;
 	expires_at: string | null;
@@ -341,8 +341,8 @@ function WorkspaceActionsModal({
 			hint: t`Back out this cycle's hour count after a support incident.`,
 		},
 		{
-			label: t`Transfer workspace to another team`,
-			hint: t`Partner handoff. Writes billed_to_team_id and notifies both teams.`,
+			label: t`Transfer workspace to another organisation`,
+			hint: t`Partner handoff. Writes billed_to_team_id and notifies both organisations.`,
 		},
 		{
 			label: t`Delete workspace`,
@@ -487,8 +487,8 @@ function BillingTable({
 		getFilteredRowModel: getFilteredRowModel(),
 		getGroupedRowModel: getGroupedRowModel(),
 		getExpandedRowModel: getExpandedRowModel(),
-		// 'reorder' (default) moves grouped columns to the front so team
-		// renders first when group-by-team is active; being explicit here
+		// 'reorder' (default) moves grouped columns to the front so organisation
+		// renders first when group-by-organisation is active; being explicit here
 		// makes that contract impossible to miss during future edits.
 		groupedColumnMode: "reorder",
 		autoResetExpanded: false,
@@ -585,16 +585,16 @@ function BillingTable({
 							if (row.getIsGrouped()) {
 								const groupValue = String(row.getValue(row.groupingColumnId ?? ""));
 								const descendants = row.getLeafRows();
-								const teamBase = descendants.reduce(
+								const organisationBase = descendants.reduce(
 									(s, r) => s + (r.original.base_price_eur ?? 0),
 									0,
 								);
-								const teamOverage = descendants.reduce(
+								const organisationOverage = descendants.reduce(
 									(s, r) =>
 										s + r.original.hour_overage_eur + r.original.seat_overage_eur,
 									0,
 								);
-								const teamTotal = descendants.reduce(
+								const organisationTotal = descendants.reduce(
 									(s, r) => s + (r.original.total_forecast_eur ?? 0),
 									0,
 								);
@@ -616,7 +616,7 @@ function BillingTable({
 															<IconChevronRight size={14} />
 														)}
 														<Text size="sm" fw={500}>
-															{groupValue || t`Unassigned team`}
+															{groupValue || t`Unassigned organisation`}
 														</Text>
 														<Text size="xs" c="dimmed">
 															{descendants.length}{" "}
@@ -627,13 +627,13 @@ function BillingTable({
 													</Group>
 													<Group gap="md">
 														<Text size="xs" c="dimmed">
-															<Trans>Base</Trans> {formatEur(teamBase)}
+															<Trans>Base</Trans> {formatEur(organisationBase)}
 														</Text>
 														<Text size="xs" c="dimmed">
-															<Trans>Overage</Trans> {formatEur(teamOverage)}
+															<Trans>Overage</Trans> {formatEur(organisationOverage)}
 														</Text>
 														<Text size="xs" fw={500}>
-															<Trans>Total</Trans> {formatEur(teamTotal)}
+															<Trans>Total</Trans> {formatEur(organisationTotal)}
 														</Text>
 													</Group>
 												</Group>
@@ -677,7 +677,7 @@ function BillingTable({
 								const key = col.id;
 								// Render "Total" label under the first visible
 								// column (works with / without grouping which
-								// moves team to leaf[0]).
+								// moves organisation to leaf[0]).
 								if (i === 0) {
 									return (
 										<Table.Td key={col.id}>
@@ -929,9 +929,9 @@ function UsageAndBillingPanel() {
 				},
 			},
 			{
-				id: "team",
+				id: "organisation",
 				accessorFn: (r) => r.billed_to_team_name ?? r.org_name,
-				header: t`Team`,
+				header: t`Organisation`,
 				// Used for grouping; the grouped-row renderer in BillingTable
 				// reads this to label the header.
 				getGroupingValue: (r) => r.billed_to_team_name ?? r.org_name,
@@ -939,7 +939,7 @@ function UsageAndBillingPanel() {
 					<Group gap={4} wrap="nowrap">
 						<Anchor
 							component={I18nLink}
-							to={`/t/${row.original.org_id}`}
+							to={`/o/${row.original.org_id}`}
 							size="xs"
 							c="dimmed"
 						>
@@ -1166,7 +1166,7 @@ function UsageAndBillingPanel() {
 		const headers = [
 			"workspace_id",
 			"workspace_name",
-			"team",
+			"organisation",
 			"tier",
 			"audio_hours",
 			"audio_hours_included",
@@ -1226,7 +1226,7 @@ function UsageAndBillingPanel() {
 			label: typeof c.header === "string" ? (c.header as string) : (c.id ?? ""),
 		}));
 
-	const isGrouped = grouping.includes("team");
+	const isGrouped = grouping.includes("organisation");
 
 	return (
 		<Stack gap="md">
@@ -1248,7 +1248,7 @@ function UsageAndBillingPanel() {
 			<Group gap="sm" wrap="wrap" align="center">
 				<TextInput
 					leftSection={<IconSearch size={14} />}
-					placeholder={t`Search workspace, team, email, tier`}
+					placeholder={t`Search workspace, organisation, email, tier`}
 					value={globalFilter}
 					onChange={(e) => setGlobalFilter(e.currentTarget.value)}
 					size="sm"
@@ -1302,9 +1302,9 @@ function UsageAndBillingPanel() {
 					variant={isGrouped ? "filled" : "default"}
 					color={isGrouped ? "blue" : "gray"}
 					leftSection={<IconUsersGroup size={14} />}
-					onClick={() => setGrouping(isGrouped ? [] : ["team"])}
+					onClick={() => setGrouping(isGrouped ? [] : ["organisation"])}
 				>
-					<Trans>Group by team</Trans>
+					<Trans>Group by organisation</Trans>
 				</Button>
 				<Menu shadow="md" width={220} position="bottom-end">
 					<Menu.Target>
@@ -1546,12 +1546,12 @@ function PartnersPanel() {
 			{
 				id: "partner_team_name",
 				accessorFn: (r) => r.partner_team_name ?? "",
-				header: t`Partner team`,
+				header: t`Partner organisation`,
 				cell: ({ row }) =>
 					row.original.partner_team_id ? (
 						<Anchor
 							component={I18nLink}
-							to={`/t/${row.original.partner_team_id}`}
+							to={`/o/${row.original.partner_team_id}`}
 							size="xs"
 						>
 							{row.original.partner_team_name ?? ""}
@@ -1565,12 +1565,12 @@ function PartnersPanel() {
 			{
 				id: "from_org_name",
 				accessorFn: (r) => r.from_org_name ?? "",
-				header: t`Client team`,
+				header: t`Client organisation`,
 				cell: ({ row }) =>
 					row.original.from_org_id ? (
 						<Anchor
 							component={I18nLink}
-							to={`/t/${row.original.from_org_id}`}
+							to={`/o/${row.original.from_org_id}`}
 							size="xs"
 						>
 							{row.original.from_org_name ?? ""}
@@ -1592,12 +1592,12 @@ function PartnersPanel() {
 				},
 			},
 			{
-				id: "to_team_discount_percent",
-				accessorKey: "to_team_discount_percent",
+				id: "to_organisation_discount_percent",
+				accessorKey: "to_organisation_discount_percent",
 				header: t`Client discount %`,
 				meta: { align: "right" },
 				cell: ({ row }) => {
-					const v = row.original.to_team_discount_percent;
+					const v = row.original.to_organisation_discount_percent;
 					return v == null ? "" : `${v}%`;
 				},
 			},
@@ -1694,7 +1694,7 @@ function UpgradesPanel() {
 			{
 				id: "org_name",
 				accessorKey: "org_name",
-				header: t`Team`,
+				header: t`Organisation`,
 				cell: ({ row }) => (
 					<Text size="xs" c="dimmed">
 						{row.original.org_name}
@@ -1785,7 +1785,7 @@ function UpgradesPanel() {
 				</Text>
 				<TextInput
 					leftSection={<IconSearch size={14} />}
-					placeholder={t`Search workspace, team, tier`}
+					placeholder={t`Search workspace, organisation, tier`}
 					value={globalFilter}
 					onChange={(e) => setGlobalFilter(e.currentTarget.value)}
 					size="xs"

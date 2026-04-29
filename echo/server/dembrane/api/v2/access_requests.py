@@ -2,12 +2,12 @@
 
 Two paths into a workspace the user doesn't currently belong to:
 
-  1. Team admin → "Join" → immediate `source='direct', role='admin'` row.
+  1. Organisation admin → "Join" → immediate `source='direct', role='admin'` row.
      No approval. Workspace visibility (open or private) doesn't matter;
-     team admins can join either.
+     organisation admins can join either.
 
-  2. Team member → "Request access" → pending access_request row →
-     workspace admin OR team admin approves → `source='direct',
+  2. Organisation member → "Request access" → pending access_request row →
+     workspace admin OR organisation admin approves → `source='direct',
      role='member'` row. Rejection is silent (matrix §6 — no notification
      to the requester).
 
@@ -18,25 +18,25 @@ access yet. We authenticate their org membership instead.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from logging import getLogger
 from typing import Literal, Optional
+from logging import getLogger
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
-from dembrane.app_user import get_app_user_or_raise
-from dembrane.directus_async import async_directus
-from dembrane.api.rate_limit import create_user_rate_limiter
-from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.utils import generate_uuid
+from dembrane.app_user import get_app_user_or_raise
+from dembrane.api.rate_limit import create_user_rate_limiter
+from dembrane.directus_async import async_directus
+from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
 logger = getLogger("api.v2.access_requests")
 
-# Modest rate limit on both join + request-access. Prevents a team admin
-# bot from flooding workspace_membership; prevents a curious team member
-# from spamming requests across every workspace in a large team.
+# Modest rate limit on both join + request-access. Prevents a organisation admin
+# bot from flooding workspace_membership; prevents a curious organisation member
+# from spamming requests across every workspace in a large organisation.
 _join_rate_limiter = create_user_rate_limiter(
     name="workspace_join", capacity=30, window_seconds=3600
 )
@@ -86,9 +86,7 @@ async def _has_direct_row(workspace_id: str, user_id: str) -> bool:
     return isinstance(rows, list) and bool(rows)
 
 
-async def _pending_request(
-    workspace_id: str, user_id: str
-) -> Optional[dict]:
+async def _pending_request(workspace_id: str, user_id: str) -> Optional[dict]:
     rows = await async_directus.get_items(
         "access_request",
         {
@@ -116,20 +114,18 @@ async def _load_workspace_or_404(workspace_id: str) -> dict:
     return ws
 
 
-async def _require_can_action_requests(
-    workspace: dict, app_user_id: str
-) -> None:
+async def _require_can_action_requests(workspace: dict, app_user_id: str) -> None:
     """Guard for approve/reject endpoints.
 
-    Matrix v1.1 §6: either a workspace admin OR a team admin/owner can
+    Matrix v1.1 §6: either a workspace admin OR a organisation admin/owner can
     action a pending request. We accept either — otherwise, post-walkback,
-    a team admin receiving MEMBERSHIP_REQUESTED would click Approve and
+    a organisation admin receiving MEMBERSHIP_REQUESTED would click Approve and
     hit 403 because they don't have a direct workspace row yet.
 
     Checks (short-circuit on first pass):
       1. Direct workspace_membership with role in (admin, owner) or any
          role whose preset grants `member:manage`.
-      2. Team admin/owner on the workspace's org.
+      2. Organisation admin/owner on the workspace's org.
 
     Raises 403 otherwise.
     """
@@ -163,9 +159,9 @@ async def _require_can_action_requests(
         ):
             return
 
-    # Pass 2: team admin or owner in the workspace's org.
+    # Pass 2: organisation admin or owner in the workspace's org.
     if org_id:
-        team_rows = await async_directus.get_items(
+        organisation_rows = await async_directus.get_items(
             "org_membership",
             {
                 "query": {
@@ -180,13 +176,13 @@ async def _require_can_action_requests(
                 }
             },
         )
-        if isinstance(team_rows, list) and team_rows:
+        if isinstance(organisation_rows, list) and organisation_rows:
             return
 
     raise HTTPException(status_code=403, detail="Access denied")
 
 
-# ── Join (team admin, immediate) ───────────────────────────────────────
+# ── Join (organisation admin, immediate) ───────────────────────────────────────
 
 
 class JoinResponse(BaseModel):
@@ -200,13 +196,13 @@ async def join_workspace(
     workspace_id: str,
     auth: DependencyDirectusSession,
 ) -> JoinResponse:
-    """Team admin (or owner) self-joins a workspace in their team.
+    """Organisation admin (or owner) self-joins a workspace in their organisation.
 
-    Matrix v1.1 §6: team admins can discover and join any workspace in
-    the team, open or private. The action is explicit and reversible.
+    Matrix v1.1 §6: organisation admins can discover and join any workspace in
+    the organisation, open or private. The action is explicit and reversible.
     Writes a direct Admin row.
 
-    403 if the caller is not a team admin/owner on the workspace's org.
+    403 if the caller is not a organisation admin/owner on the workspace's org.
     404 if the workspace doesn't exist or is soft-deleted.
     200 + status='already_member' if a direct row already exists —
         idempotent, not an error.
@@ -223,7 +219,7 @@ async def join_workspace(
 
     role = await _org_role(org_id, app_user_id)
     if role not in ("admin", "owner"):
-        raise HTTPException(status_code=403, detail="Team admins only")
+        raise HTTPException(status_code=403, detail="Organisation admins only")
 
     # Check existing direct row separately from the insert so the "already
     # joined" response is precise rather than a unique-constraint 500.
@@ -247,14 +243,17 @@ async def join_workspace(
     )
 
     logger.info(
-        "workspace_join workspace=%s user=%s (team role=%s)",
-        workspace_id, app_user_id, role,
+        "workspace_join workspace=%s user=%s (organisation role=%s)",
+        workspace_id,
+        app_user_id,
+        role,
     )
 
     # Quiet self-notification — "You joined {ws}" — for the activity feed.
-    # No broadcast to co-admins: team admin joining their own team's
+    # No broadcast to co-admins: organisation admin joining their own organisation's
     # workspace isn't news (matrix §6 treats it as a mundane action).
     from dembrane.notifications import emit
+
     await emit(
         audience_user_id=app_user_id,
         actor_user_id=app_user_id,
@@ -273,7 +272,7 @@ async def join_workspace(
     )
 
 
-# ── Request access (team member, goes pending) ─────────────────────────
+# ── Request access (organisation member, goes pending) ─────────────────────────
 
 
 class RequestAccessResponse(BaseModel):
@@ -289,15 +288,15 @@ async def request_workspace_access(
     workspace_id: str,
     auth: DependencyDirectusSession,
 ) -> RequestAccessResponse:
-    """Team member requests to join an open-to-team workspace.
+    """Organisation member requests to join an open-to-organisation workspace.
 
     Matrix v1.1 §6:
-      - Allowed only when workspace.visibility = 'open_to_team'.
-      - Allowed only for team members (org role 'member'). Admins/owners
+      - Allowed only when workspace.visibility = 'open_to_organisation'.
+      - Allowed only for organisation members (org role 'member'). Admins/owners
         use /join directly (they don't need approval).
       - If the caller is already a direct member → 200 already_member.
       - If a pending request already exists → 200 already_pending.
-      - Notifies workspace admins + team admins (audience_action_required).
+      - Notifies workspace admins + organisation admins (audience_action_required).
     """
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
@@ -309,7 +308,7 @@ async def request_workspace_access(
     if not org_id:
         raise HTTPException(status_code=500, detail="Workspace has no org")
 
-    # Visibility gate. Private workspaces are invisible to team members in
+    # Visibility gate. Private workspaces are invisible to organisation members in
     # discovery; no request path exists for them.
     if workspace.get("visibility") == "private":
         raise HTTPException(
@@ -319,13 +318,11 @@ async def request_workspace_access(
 
     org_role = await _org_role(org_id, app_user_id)
     if org_role is None:
-        raise HTTPException(
-            status_code=403, detail="Not a member of this team"
-        )
+        raise HTTPException(status_code=403, detail="Not a member of this organisation")
     if org_role in ("admin", "owner"):
         raise HTTPException(
             status_code=400,
-            detail="Team admins can join directly — no approval needed",
+            detail="Organisation admins can join directly — no approval needed",
         )
 
     if await _has_direct_row(workspace_id, app_user_id):
@@ -333,9 +330,7 @@ async def request_workspace_access(
 
     existing = await _pending_request(workspace_id, app_user_id)
     if existing:
-        return RequestAccessResponse(
-            status="already_pending", request_id=existing["id"]
-        )
+        return RequestAccessResponse(status="already_pending", request_id=existing["id"])
 
     req_id = generate_uuid()
     await async_directus.create_item(
@@ -348,28 +343,24 @@ async def request_workspace_access(
         },
     )
 
-    # Audience: workspace admins + team admins. Either can approve.
+    # Audience: workspace admins + organisation admins. Either can approve.
     from dembrane.notifications import (
         emit_to_audience,
         audience_workspace_admins,
-        audience_team_admins,
+        audience_organisation_admins,
     )
+
     ws_admins = await audience_workspace_admins(workspace_id)
-    team_admins = await audience_team_admins(org_id)
-    audience = sorted(set(ws_admins) | set(team_admins))
-    requester_name = (
-        app_user.get("display_name") or app_user.get("email") or "Someone"
-    )
+    organisation_admins = await audience_organisation_admins(org_id)
+    audience = sorted(set(ws_admins) | set(organisation_admins))
+    requester_name = app_user.get("display_name") or app_user.get("email") or "Someone"
     ws_name = workspace.get("name") or "a workspace"
     await emit_to_audience(
         audience,
         actor_user_id=app_user_id,
         event_code="MEMBERSHIP_REQUESTED",
         title=f"{requester_name} wants to join {ws_name}",
-        message=(
-            f"{requester_name} requested access. Approve from the "
-            f"workspace members tab."
-        ),
+        message=(f"{requester_name} requested access. Approve from the workspace members tab."),
         action="NAVIGATE_WORKSPACE_SETTINGS",
         ref_workspace_id=workspace_id,
         ref_org_id=org_id,
@@ -377,7 +368,9 @@ async def request_workspace_access(
 
     logger.info(
         "access_request_submitted workspace=%s user=%s id=%s",
-        workspace_id, app_user_id, req_id,
+        workspace_id,
+        app_user_id,
+        req_id,
     )
 
     return RequestAccessResponse(status="submitted", request_id=req_id)
@@ -411,8 +404,8 @@ async def list_access_requests(
     """Pending access requests on this workspace.
 
     Guard: workspace admin (via direct membership's `member:manage`) OR
-    team admin/owner on the workspace's org. The latter is what makes
-    the UX work post-walkback — team admins can approve without first
+    organisation admin/owner on the workspace's org. The latter is what makes
+    the UX work post-walkback — organisation admins can approve without first
     having to /join the workspace.
     """
     app_user = await get_app_user_or_raise(auth.user_id)
@@ -500,7 +493,7 @@ async def approve_access_request(
     """Approve: write a direct Member row + mark request approved + notify
     the requester.
 
-    Guard: workspace admin OR team admin/owner (see
+    Guard: workspace admin OR organisation admin/owner (see
     `_require_can_action_requests`).
     """
     app_user = await get_app_user_or_raise(auth.user_id)
@@ -538,6 +531,7 @@ async def approve_access_request(
     )
 
     from dembrane.notifications import emit
+
     ws_name = workspace.get("name") or "a workspace"
     await emit(
         audience_user_id=requester_id,
@@ -552,7 +546,10 @@ async def approve_access_request(
 
     logger.info(
         "access_request_approved workspace=%s req=%s requester=%s by=%s",
-        workspace_id, req_id, requester_id, actor_id,
+        workspace_id,
+        req_id,
+        requester_id,
+        actor_id,
     )
     return ActionRequestResponse(status="approved")
 
@@ -570,7 +567,7 @@ async def reject_access_request(
     receives no notification. They learn of it only by noticing nothing
     happened.
 
-    Guard: workspace admin OR team admin/owner.
+    Guard: workspace admin OR organisation admin/owner.
     """
     app_user = await get_app_user_or_raise(auth.user_id)
     actor_id = app_user["id"]
@@ -591,12 +588,14 @@ async def reject_access_request(
 
     logger.info(
         "access_request_rejected workspace=%s req=%s by=%s",
-        workspace_id, req_id, actor_id,
+        workspace_id,
+        req_id,
+        actor_id,
     )
     return ActionRequestResponse(status="rejected")
 
 
-# ── Discovery (team member sees open workspaces; admin sees all) ───────
+# ── Discovery (organisation member sees open workspaces; admin sees all) ───────
 
 
 class DiscoverableWorkspace(BaseModel):
@@ -622,29 +621,29 @@ async def list_discoverable_workspaces(
     org_id: str,
     auth: DependencyDirectusSession,
 ) -> DiscoverResponse:
-    """Workspaces in this team that the caller could join or request.
+    """Workspaces in this organisation that the caller could join or request.
 
-    - Team admin / owner: sees every workspace (open + private). Action
+    - Organisation admin / owner: sees every workspace (open + private). Action
       is 'join' (unless already a direct member).
-    - Team member: sees every workspace in the team (open + private).
+    - Organisation member: sees every workspace in the organisation (open + private).
       For open ones the action is 'request-access'; for private ones
       the action is also 'request-access' so members can flag interest
       even on restricted workspaces. An admin still has to approve the
       request — the privacy model protects content, not names.
-    - Not a team member: 403.
+    - Not a organisation member: 403.
     """
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
 
     org_role = await _org_role(org_id, app_user_id)
     if org_role is None:
-        raise HTTPException(status_code=403, detail="Not a member of this team")
+        raise HTTPException(status_code=403, detail="Not a member of this organisation")
 
     can_see_private = org_role in ("admin", "owner")
 
     # Matrix change 2026-04-24: members now see private workspaces too,
     # so the visibility filter is gone. Admin and member both get every
-    # workspace in the team back; the per-role difference is the action
+    # workspace in the organisation back; the per-role difference is the action
     # assigned below (admins Join directly, members Request access).
     filters: dict = {
         "org_id": {"_eq": org_id},
@@ -710,7 +709,7 @@ async def list_discoverable_workspaces(
     out: list[DiscoverableWorkspace] = []
     for w in workspaces:
         wid = w["id"]
-        visibility = w.get("visibility") or "open_to_team"
+        visibility = w.get("visibility") or "open_to_organisation"
         if wid in existing_direct:
             action: Literal["join", "request-access", "pending", "member"] = "member"
             pending_id = None

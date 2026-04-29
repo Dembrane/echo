@@ -204,9 +204,9 @@ function SortableHeader({
 }
 
 /**
- * Team-level usage rollup (matrix §8 team scope).
+ * Organisation-level usage rollup (matrix §8 organisation scope).
  *
- * Rendered on the Team settings Usage and Tier tab for team admins +
+ * Rendered on the Organisation settings Usage and Tier tab for organisation admins +
  * billing + members. Members see raw numbers; admin/billing see the
  * same (this table intentionally hides euro amounts — the admin
  * surface at /admin is where price/overage figures live).
@@ -216,7 +216,7 @@ function SortableHeader({
  * filter, status filter, column visibility, inline progress bars,
  * per-project drill-down on expand.
  */
-export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
+export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 	const queryClient = useQueryClient();
 	const navigate = useI18nNavigate();
 	const [refreshing, setRefreshing] = useState(false);
@@ -421,7 +421,7 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 				id: "guest_count",
 				accessorKey: "guest_count",
 				// Matrix §1: guest caps live per-tier. Surfacing them here
-				// lets team admins see when their workspaces are close to
+				// lets organisation admins see when their workspaces are close to
 				// hitting the external-collaborator ceiling.
 				header: t`Guests`,
 				meta: { align: "right" },
@@ -522,7 +522,7 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 			<Stack gap={12}>
 				<Group justify="space-between" wrap="nowrap" gap="xs">
 					<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
-						<Trans>Team usage</Trans>
+						<Trans>Organisation usage</Trans>
 					</Text>
 					<PeriodSelect value={monthOffset} onChange={setMonthOffset} />
 				</Group>

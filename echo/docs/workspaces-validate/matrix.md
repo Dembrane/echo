@@ -1,6 +1,6 @@
 # dembrane workspaces — capacity, permissions, migration
 
-Single source of truth for the workspaces + teams + tiers release.
+Single source of truth for the workspaces + organisations + tiers release.
 Engineering builds from this. Design references it. Sales quotes from it.
 
 Version 1.1 · Slack-style discovery model (replaces derivation); workshop pass 2026-04-23.
@@ -67,7 +67,7 @@ Clarity is the job. Don't try to soften freeze-vs-revert with vague copy — use
 
 ## 4. Role × capability matrix
 
-Four roles. Apply at workspace level. Team-level admin/billing mirror workspace-level for team operations.
+Four roles. Apply at workspace level. Organisation-level admin/billing mirror workspace-level for organisation operations.
 
 | Capability | Admin | Billing | Member | Guest |
 |---|:---:|:---:|:---:|:---:|
@@ -99,62 +99,62 @@ Four roles. Apply at workspace level. Team-level admin/billing mirror workspace-
 | Request tier upgrade | ✓ | ✓ | | |
 | **Destructive** | | | | |
 | Delete workspace | ✓² | | | |
-| Transfer workspace (between teams) | staff only | | | |
+| Transfer workspace (between organisations) | staff only | | | |
 
-¹ Guest permissions are identical to member within the workspaces they're invited to. Difference is they have no team-level presence and are tier-capped, not billed.
+¹ Guest permissions are identical to member within the workspaces they're invited to. Difference is they have no organisation-level presence and are tier-capped, not billed.
 
 ² Delete workspace requires confirmation. Last admin cannot demote self or be removed.
 
-## 5. Team-level roles
+## 5. Organisation-level roles
 
-Same names as workspace roles: **Admin / Billing / Member** (no team-level Guest — guests exist only at the workspace level). Scope disambiguated by UI context ("Team admin" vs "Workspace admin").
+Same names as workspace roles: **Admin / Billing / Member** (no organisation-level Guest — guests exist only at the workspace level). Scope disambiguated by UI context ("Organisation admin" vs "Workspace admin").
 
-| Capability | Team admin | Team billing | Team member |
+| Capability | Organisation admin | Organisation billing | Organisation member |
 |---|:---:|:---:|:---:|
-| Invite people to the team | ✓ | | |
+| Invite people to the organisation | ✓ | | |
 | Create workspaces | ✓ | | |
-| See every workspace in team (open + private) | ✓ | ✓ | Open only |
-| Join any team workspace explicitly | ✓ (becomes Admin) | — | Request access to open WS only |
-| View team-level usage rollup | ✓ | ✓ | Raw numbers only (no €) |
-| Change team settings | ✓ | | |
-| Delete team | ✓² | | |
+| See every workspace in organisation (open + private) | ✓ | ✓ | Open only |
+| Join any organisation workspace explicitly | ✓ (becomes Admin) | — | Request access to open WS only |
+| View organisation-level usage rollup | ✓ | ✓ | Raw numbers only (no €) |
+| Change organisation settings | ✓ | | |
+| Delete organisation | ✓² | | |
 
-**Team-level access is direct-only. No derivation.** Being a team admin does not automatically make you an admin on every workspace — it just lets you *discover and join* them. Every join is an explicit action and writes a `source='direct'` membership row. Last-admin protection applies at both the team level and the workspace level.
+**Organisation-level access is direct-only. No derivation.** Being a organisation admin does not automatically make you an admin on every workspace — it just lets you *discover and join* them. Every join is an explicit action and writes a `source='direct'` membership row. Last-admin protection applies at both the organisation level and the workspace level.
 
 ## 6. Workspace visibility & discovery (Slack-style)
 
-Every workspace has a `visibility` field: `open_to_team` | `private`.
+Every workspace has a `visibility` field: `open_to_organisation` | `private`.
 
-- `open_to_team` — **UI label: "Open to team"**. Visible in discovery to all team members and team admins.
-- `private` — **UI label: "Private"** (tier-gated: innovator+). Visible in discovery only to team admins. Completely invisible to team members.
+- `open_to_organisation` — **UI label: "Open to organisation"**. Visible in discovery to all organisation members and organisation admins.
+- `private` — **UI label: "Private"** (tier-gated: innovator+). Visible in discovery only to organisation admins. Completely invisible to organisation members.
 
-**Who sees what in team discovery:**
+**Who sees what in organisation discovery:**
 
 | Viewer | Open workspace | Private workspace | Default action |
 |---|---|---|---|
-| Team admin | ✓ visible | ✓ visible | "Join" button — auto-grants Admin role |
-| Team billing | ✓ visible | ✓ visible | View-only (usage); cannot join unless explicitly added |
-| Team member | ✓ visible | ✗ hidden | "Request access" on open WS — approval writes Member row |
-| Guest | Only WS they were invited to | Only WS they were invited to | No discovery — no team-level visibility |
+| Organisation admin | ✓ visible | ✓ visible | "Join" button — auto-grants Admin role |
+| Organisation billing | ✓ visible | ✓ visible | View-only (usage); cannot join unless explicitly added |
+| Organisation member | ✓ visible | ✗ hidden | "Request access" on open WS — approval writes Member row |
+| Guest | Only WS they were invited to | Only WS they were invited to | No discovery — no organisation-level visibility |
 
-**Honesty disclosure when creating private workspaces:** the create-workspace flow must show the creator a clear line: "Team admins can still discover and join this workspace." Private protects from team members, not from team admins. Don't hide this.
+**Honesty disclosure when creating private workspaces:** the create-workspace flow must show the creator a clear line: "Organisation admins can still discover and join this workspace." Private protects from organisation members, not from organisation admins. Don't hide this.
 
 **Request-to-join approval (open workspaces only, members only):**
 
-- A team member clicks "Request access" on an open workspace.
-- Notification fires to every workspace admin on that workspace AND every team admin. Either can approve.
+- A organisation member clicks "Request access" on an open workspace.
+- Notification fires to every workspace admin on that workspace AND every organisation admin. Either can approve.
 - On approval, the member gets a `source='direct'` Member row on the workspace.
 - Rejection is silent from the member's perspective (no explanation surfaced).
 
-**Team admin joining a workspace:**
+**Organisation admin joining a workspace:**
 
-- Team admin clicks "Join" on any workspace (open or private).
+- Organisation admin clicks "Join" on any workspace (open or private).
 - Immediately gets a `source='direct'` Admin row. No approval gate.
 - They can leave the workspace at any time — like Slack, joining and leaving are explicit and reversible.
 
-**Sticky removal is retired.** If a person is removed from a workspace and later rejoins the team or discovers the workspace again, they rejoin normally by explicit action. No tombstones.
+**Sticky removal is retired.** If a person is removed from a workspace and later rejoins the organisation or discovers the workspace again, they rejoin normally by explicit action. No tombstones.
 
-**Default for a new workspace:** `open_to_team`. Private is a deliberate, tier-gated choice.
+**Default for a new workspace:** `open_to_organisation`. Private is a deliberate, tier-gated choice.
 
 ## 7. Seats & billing
 
@@ -162,7 +162,7 @@ Every workspace has a `visibility` field: `open_to_team` | `private`.
 
 - Same person in 3 workspaces = 3 seats.
 - Guests are not billed but count against tier's guest cap.
-- Team membership alone is not billable — only workspace access is.
+- Organisation membership alone is not billable — only workspace access is.
 
 ## 8. Hours & usage
 
@@ -180,7 +180,7 @@ Every workspace has a `visibility` field: `open_to_team` | `private`.
 
 1. **Project level** — hours consumed by conversations in this project, current cycle.
 2. **Workspace level** — total hours + seat count + guest count, current cycle, per-project breakdown, overage warnings.
-3. **Team level** — rollup across all workspaces in the team. Shows which workspaces are over, which tier each is on, aggregate spend.
+3. **Organisation level** — rollup across all workspaces in the organisation. Shows which workspaces are over, which tier each is on, aggregate spend.
 
 **Visibility by role:**
 
@@ -192,8 +192,8 @@ Member transparency on raw numbers is intentional — members should be able to 
 ## 9. New workspace defaults
 
 - **Tier:** Pilot.
-- **Visibility:** `open_to_team`.
-- Admin on create: the creator gets a `source='direct'` Admin row. No other rows are written at creation time. Other team members and admins discover the workspace through the Slack-style discovery model (Section 6).
+- **Visibility:** `open_to_organisation`.
+- Admin on create: the creator gets a `source='direct'` Admin row. No other rows are written at creation time. Other organisation members and admins discover the workspace through the Slack-style discovery model (Section 6).
 - Tier upgrade requires explicit request (admin or billing → staff).
 - **Exception:** seeded workspaces (migration, internal demo, staff-created special cases) bypass this — tier set at creation by staff per M1.
 
@@ -234,7 +234,7 @@ referral_ledger
 - **Mechanism:** `POST /v2/workspaces/:id/upgrade-request` → email to upgrade inbox.
 - **Upgrade inbox:** `upgrades@dembrane.com`. Configured via `UPGRADE_REQUEST_INBOX` env var. Set up before cutover.
 - **The upgrade-request modal must show the full tier capacity matrix** (Section 1). Customers should never have to guess what a tier includes when deciding to upgrade.
-- **Members see:** "Ask one of your team admins to upgrade." No CTA, no mailto, no admin list. The friction is the gate, not a missing button.
+- **Members see:** "Ask one of your organisation admins to upgrade." No CTA, no mailto, no admin list. The friction is the gate, not a missing button.
 
 ---
 
@@ -260,14 +260,14 @@ Build a CSV export tool (internal only):
 - Customer name, current usage (last 90 days hours + seats), current feature usage (private/whitelabel/API/export), proposed tier, notes field for staff override.
 - Review manually before cutover. No automated tier assignment ships without human sign-off per customer.
 
-## M2. Team mapping
+## M2. Organisation mapping
 
-Every current customer account becomes a team at cutover.
+Every current customer account becomes a organisation at cutover.
 
-- Existing users → team admins (their current account is effectively admin today).
-- Each customer's projects → grouped into one workspace within that team by default.
+- Existing users → organisation admins (their current account is effectively admin today).
+- Each customer's projects → grouped into one workspace within that organisation by default.
 - If a customer clearly has multiple distinct engagements (different clients, different contexts), staff can pre-split into multiple workspaces before cutover.
-- Team name defaults to customer/org name; user can rename.
+- Organisation name defaults to customer/org name; user can rename.
 
 Edge case: shared accounts (multiple people using one login). Flag in the CSV. Contact directly — need to split into real accounts before workspace migration or they'll fight over admin seat.
 
@@ -289,12 +289,12 @@ Release is not a silent deploy. Staged rollout prevents the "everyone hit with P
 
 **Phase 0 (pre-cutover, -7 days):**
 - Staff reviews every customer in the internal CSV tool.
-- Tiers seeded per M1. Teams and workspaces created per M2.
+- Tiers seeded per M1. Organisations and workspaces created per M2.
 - Partner calls completed per M3.
 - Nothing user-visible changes.
 
 **Phase 1 (cutover day):**
-- New UI ships. Users see teams, workspaces, tier indicator.
+- New UI ships. Users see organisations, workspaces, tier indicator.
 - All existing customers are on their seeded tier (Pioneer or higher). **No one is on Pilot.**
 - In-app announcement: "Workspaces are here. Here's what's new." Links to short doc.
 
@@ -315,14 +315,14 @@ Release is not a silent deploy. Staged rollout prevents the "everyone hit with P
 
 ## M5. Comms
 
-- **Email to all existing customers** 3 days before cutover. Plain language. "We're adding team collaboration. Nothing you do today changes. Here's what's new for you." Link to doc + video.
+- **Email to all existing customers** 3 days before cutover. Plain language. "We're adding organisation collaboration. Nothing you do today changes. Here's what's new for you." Link to doc + video.
 - **In-app banner** on cutover day for 7 days.
 - **Partner-specific email** separately, with their kickback terms attached.
 
 ## M6. Rollback plan
 
 If cutover goes sideways:
-- Workspaces feature can be hidden behind a feature flag per team.
+- Workspaces feature can be hidden behind a feature flag per organisation.
 - Underlying data model is additive — no destructive migration.
 - Rollback = flip the flag, users see the old UI, data remains in new structure, no loss.
 
@@ -334,7 +334,7 @@ If cutover goes sideways:
 - [ ] Self-serve billing (v2 — staff-executed upgrades are fine for v1).
 - [ ] Decision on whether Guardian's "unlimited" has soft internal caps for capacity planning.
 - [ ] Library / analysis views — stays invite-gated for now; revisit once usage patterns are clearer.
-- [ ] **v3**: team + workspace admins can mandate MFA for their members. Setting stored on `org` / `workspace` with a grace window; members without MFA get a forced-setup screen on next login and can't use the workspace until it's configured. Enterprise ask — not for cutover.
+- [ ] **v3**: organisation + workspace admins can mandate MFA for their members. Setting stored on `org` / `workspace` with a grace window; members without MFA get a forced-setup screen on next login and can't use the workspace until it's configured. Enterprise ask — not for cutover.
 
 ## Locked decisions reference
 
@@ -342,6 +342,6 @@ This document reflects decisions from:
 1. Resolution doc (Q1–Q8 answered) + role model (Admin, Billing, Member, Guest — no Owner, no Viewer).
 2. Pricing strategy doc (Pilot → Guardian, hours + seats primitives).
 3. First follow-up pass: referral ledger with optional expiry, usage rollups at every level, migration strategy.
-4. **Workshop pass 2026-04-23:** Slack-style workspace discovery replacing derived inheritance; sticky removal dropped; last-admin protection (block); cross-team admin allowed freely; downgrade comms pattern (dialog + 7-day banner + email); member raw-usage visibility; calendar-month quota reset; `upgrades@dembrane.com` inbox; new `staff:can_set_tier` policy; seats = direct members only (guests excluded); tier names ship as-is with taglines + visible capacity matrix in product; partner full-visibility on owned workspaces pre-handoff.
+4. **Workshop pass 2026-04-23:** Slack-style workspace discovery replacing derived inheritance; sticky removal dropped; last-admin protection (block); cross-organisation admin allowed freely; downgrade comms pattern (dialog + 7-day banner + email); member raw-usage visibility; calendar-month quota reset; `upgrades@dembrane.com` inbox; new `staff:can_set_tier` policy; seats = direct members only (guests excluded); tier names ship as-is with taglines + visible capacity matrix in product; partner full-visibility on owned workspaces pre-handoff.
 
 Changes to this document require sign-off from Sameer + Jorim.

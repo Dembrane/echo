@@ -900,7 +900,7 @@ def step_9_notifications():
                     {"text": "Navigate to report", "value": "NAVIGATE_REPORT"},
                     {"text": "Navigate to chat", "value": "NAVIGATE_CHAT"},
                     {"text": "Navigate to invite", "value": "NAVIGATE_INVITE"},
-                    {"text": "Navigate to team settings", "value": "NAVIGATE_TEAM_SETTINGS"},
+                    {"text": "Navigate to organisation settings", "value": "NAVIGATE_ORGANISATION_SETTINGS"},
                     {"text": "Navigate to workspace settings", "value": "NAVIGATE_WORKSPACE_SETTINGS"},
                 ]},
                 "note": "Codified nav target. UI resolves the URL from ref_* fields.",
@@ -992,19 +992,19 @@ def step_9_notifications():
 # ---------------------------------------------------------------------------
 
 def step_10_workspace_visibility():
-    """Add workspace.visibility enum (open_to_team | private).
+    """Add workspace.visibility enum (open_to_organisation | private).
 
-    Matrix v1.1 §6 replaces the two-boolean inherit_team_admins /
-    inherit_team_members model with a single visibility enum. This step:
+    Matrix v1.1 §6 replaces the two-boolean inherit_organisation_admins /
+    inherit_organisation_members model with a single visibility enum. This step:
 
       1. Adds the column (nullable for transition).
-      2. Backfills existing rows from settings.inherit_team_admins:
-             inherit_team_admins == True  → 'open_to_team'  (default)
-             inherit_team_admins == False → 'private'
+      2. Backfills existing rows from settings.inherit_organisation_admins:
+             inherit_organisation_admins == True  → 'open_to_organisation'  (default)
+             inherit_organisation_admins == False → 'private'
 
     What it does NOT do (those happen after the backfill_direct_memberships
     script runs --apply in prod):
-      - Drop settings.inherit_team_admins / inherit_team_members flags.
+      - Drop settings.inherit_organisation_admins / inherit_organisation_members flags.
       - Drop settings.sticky_removed tombstones.
       - Simplify inheritance.user_can_access to direct-only.
 
@@ -1014,17 +1014,17 @@ def step_10_workspace_visibility():
 
     add_field("workspace", "visibility", {
         "type": "string",
-        "schema": {"is_nullable": True, "default_value": "open_to_team"},
+        "schema": {"is_nullable": True, "default_value": "open_to_organisation"},
         "meta": {
             "interface": "select-dropdown",
             "options": {"choices": [
-                {"text": "Open to team", "value": "open_to_team"},
+                {"text": "Open to organisation", "value": "open_to_organisation"},
                 {"text": "Private", "value": "private"},
             ]},
             "note": (
-                "Matrix v1.1 §6. open_to_team = discoverable by team admins "
+                "Matrix v1.1 §6. open_to_organisation = discoverable by organisation admins "
                 "(join) and members (request access). private = visible only "
-                "to team admins in discovery. Innovator+ tier to create."
+                "to organisation admins in discovery. Innovator+ tier to create."
             ),
         },
     })
@@ -1051,8 +1051,8 @@ def step_10_workspace_visibility():
         settings = row.get("settings") or {}
         if not isinstance(settings, dict):
             settings = {}
-        follows_admins = settings.get("inherit_team_admins", True)
-        visibility = "open_to_team" if follows_admins else "private"
+        follows_admins = settings.get("inherit_organisation_admins", True)
+        visibility = "open_to_organisation" if follows_admins else "private"
         result = api(
             "PATCH",
             f"/items/workspace/{row['id']}",
@@ -1115,8 +1115,8 @@ def step_12_access_requests():
     """Create the access_request collection for Slack-style discovery
     (matrix v1.1 §6).
 
-    Flow: a team member clicks "Request access" on an open workspace →
-    writes a pending row here → audience (workspace admins + team admins)
+    Flow: a organisation member clicks "Request access" on an open workspace →
+    writes a pending row here → audience (workspace admins + organisation admins)
     is notified → admin approves (writes a workspace_membership direct
     row + marks request approved) or rejects (marks request rejected;
     no notification to requester per matrix §6 "silent rejection").
@@ -1139,7 +1139,7 @@ def step_12_access_requests():
             "meta": {
                 "icon": "meeting_room",
                 "note": (
-                    "Pending join requests from team members on open-to-team "
+                    "Pending join requests from organisation members on open-to-organisation "
                     "workspaces. Matrix v1.1 §6 Slack-style discovery."
                 ),
                 "display_template": "{{user_id}} → {{workspace_id}} ({{status}})",
@@ -1226,9 +1226,9 @@ def step_13_partner_model():
     """Matrix §10 partner-client model.
 
     Adds two nullable FKs on workspace + a referral_ledger collection.
-    billed_to_team_id tracks which team pays the subscription (partner
+    billed_to_team_id tracks which organisation pays the subscription (partner
     pre-handoff, client post-handoff). effective_client_team_id is
-    set when there's a client distinct from the paying team.
+    set when there's a client distinct from the paying organisation.
 
     The referral ledger records partner kickback agreements (20%
     default, per-workspace, optional expiry).
@@ -1244,7 +1244,7 @@ def step_13_partner_model():
         "meta": {
             "interface": "input",
             "note": (
-                "FK to org. Which team pays the subscription. NULL for "
+                "FK to org. Which organisation pays the subscription. NULL for "
                 "pre-migration workspaces. Partner-owned workspaces point "
                 "here pre-handoff."
             ),
@@ -1292,7 +1292,7 @@ def step_13_partner_model():
         "meta": {
             "interface": "input",
             "note": (
-                "Target client team during a pending handoff. Cleared on "
+                "Target client organisation during a pending handoff. Cleared on "
                 "accept."
             ),
         },
@@ -1337,7 +1337,7 @@ def step_13_partner_model():
     add_field("referral_ledger", "partner_team_id", {
         "type": "uuid",
         "schema": {"is_nullable": False},
-        "meta": {"interface": "input", "note": "The team receiving the kickback."},
+        "meta": {"interface": "input", "note": "The organisation receiving the kickback."},
     })
     create_relation("referral_ledger", "partner_team_id", "org",
                     schema={"on_delete": "CASCADE"})
@@ -1394,7 +1394,7 @@ def step_14_kickback_extensions():
       from Client X across all their workspaces?" Snapshotted at
       creation; does not update if workspace ownership moves later —
       a handoff would produce a new ledger row.
-    - `to_team_discount_percent`: optional parallel benefit — the
+    - `to_organisation_discount_percent`: optional parallel benefit — the
       partner's own subscription gets N% off. Null = no discount.
       Independent of `partner_kickback_percent`.
     - `eur_cap_kickback`: optional cap on total lifetime kickback in
@@ -1425,13 +1425,13 @@ def step_14_kickback_extensions():
     create_relation("referral_ledger", "from_org_id", "org",
                     schema={"on_delete": "SET NULL"})
 
-    add_field("referral_ledger", "to_team_discount_percent", {
+    add_field("referral_ledger", "to_organisation_discount_percent", {
         "type": "integer",
         "schema": {"is_nullable": True},
         "meta": {
             "interface": "input",
             "note": (
-                "Optional. Discount % applied to the partner team's own "
+                "Optional. Discount % applied to the partner organisation's own "
                 "subscription. Independent of the kickback percent. "
                 "Null = no discount."
             ),

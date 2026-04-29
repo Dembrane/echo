@@ -2,7 +2,7 @@
 
 The frontend used to read project-scoped data directly via Directus SDK.
 Directus row-level ACL doesn't know about our v2 inheritance/sharing
-model — a workspace member reaching a workspace through a derived team
+model — a workspace member reaching a workspace through a derived organisation
 admin row was 403'ing on item reads. These helpers centralize the
 access check so every BFF route funnels through the same logic:
 
@@ -51,22 +51,22 @@ Design choices worth knowing about:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from typing import Optional
 from logging import getLogger
-from typing import Any, Optional
+from dataclasses import field, dataclass
 
 from fastapi import HTTPException
 
 from dembrane.app_user import get_app_user_or_raise
-from dembrane.directus_async import async_directus
-from dembrane.inheritance import get_user_project_access
 from dembrane.policies import (
     PROJECT_ROLE_PRESETS,
-    TIER_REQUIRED_FOR_POLICY,
     WORKSPACE_ROLE_PRESETS,
+    TIER_REQUIRED_FOR_POLICY,
     has_policy,
     meets_tier,
 )
+from dembrane.inheritance import get_user_project_access
+from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 logger = getLogger("api.v2.bff.access")
@@ -99,11 +99,7 @@ class ResourceAccess:
     def _presets(self) -> dict[str, list[str]]:
         # Private-project shares (viewer/editor) have their own preset
         # table. Everything else evaluates against the workspace preset.
-        return (
-            PROJECT_ROLE_PRESETS
-            if self.source == "project_share"
-            else WORKSPACE_ROLE_PRESETS
-        )
+        return PROJECT_ROLE_PRESETS if self.source == "project_share" else WORKSPACE_ROLE_PRESETS
 
     def allows(self, policy: str) -> bool:
         """Does this role (+tier) grant `policy`? Silent — returns bool."""
@@ -129,17 +125,10 @@ class ResourceAccess:
         if self.allows(policy):
             return
         required_tier = TIER_REQUIRED_FOR_POLICY.get(policy)
-        if (
-            required_tier
-            and self.tier is not None
-            and not meets_tier(self.tier, required_tier)
-        ):
+        if required_tier and self.tier is not None and not meets_tier(self.tier, required_tier):
             raise HTTPException(
                 status_code=403,
-                detail=(
-                    f"This action requires the {required_tier} tier "
-                    f"(currently {self.tier})."
-                ),
+                detail=(f"This action requires the {required_tier} tier (currently {self.tier})."),
             )
         raise HTTPException(status_code=403, detail="Not allowed")
 
@@ -163,7 +152,7 @@ async def _get_workspace_bits(
     tier: Optional[str] = (workspace or {}).get("tier")
 
     # Caller's direct row, if any. This is where custom_policies +
-    # is_external live; derived rows (team admin inheritance) don't
+    # is_external live; derived rows (organisation admin inheritance) don't
     # carry custom policies.
     mem = await async_directus.get_items(
         "workspace_membership",

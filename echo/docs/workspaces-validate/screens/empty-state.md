@@ -26,14 +26,14 @@
 - Centered vertically within its container. Don't make the user scroll past whitespace to find the CTA.
 - Illustration (when used): from `brand/illustrations/` — real, hand-drawn quality per brand. Never stock. Never AI-generated.
 - Headline: two lines max. First = state. Second = invitation.
-- One primary action. If no action is role-appropriate (member landing on a full-admin-only surface), show a read-only friendly line instead — e.g. "A team admin will set this up."
+- One primary action. If no action is role-appropriate (member landing on a full-admin-only surface), show a read-only friendly line instead — e.g. "A organisation admin will set this up."
 
 ## Copy patterns (brand guide verbatim)
 
 - "No conversations yet. Start your first one." (not "You have not created any conversations")
 - "No projects yet. Start your first one."
-- "No team members here yet. Invite someone."
-- "Nothing to see yet — come back once your team runs a session."
+- "No organisation members here yet. Invite someone."
+- "Nothing to see yet — come back once your organisation runs a session."
 
 Never:
 - "You haven't…" — focuses on absence, not opportunity.
@@ -43,7 +43,7 @@ Never:
 ## Role + tier awareness
 
 - **Can do the thing** → primary CTA button.
-- **Can't do the thing because of role** → read-only explanatory line: "Only team admins can invite members." No CTA. No "ask an admin" link — matrix §11 pattern.
+- **Can't do the thing because of role** → read-only explanatory line: "Only organisation admins can invite members." No CTA. No "ask an admin" link — matrix §11 pattern.
 - **Can't do the thing because of tier** → show screen 1 (feature-locked) variant, NOT this screen. Empty + gated is not the same mood as empty + ready.
 
 ## Event-driven platform context

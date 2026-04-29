@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 
 /**
- * Workspace + team role display rules (matrix v1.1 §5).
+ * Workspace + organisation role display rules (matrix v1.1 §5).
  *
  * Matrix collapses "owner" and "admin" into a single visible role
  * ("Admin") so the UI reads as one group of privileged people rather
@@ -35,7 +35,7 @@ export function displayRole(role: string | null | undefined): string {
 }
 
 /**
- * Color for Mantine Badge rendering of a role. Keeps the team/workspace
+ * Color for Mantine Badge rendering of a role. Keeps the organisation/workspace
  * admin cohort visually distinct from rank-and-file members.
  */
 export function roleColor(role: string | null | undefined): string {

@@ -22,15 +22,17 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 
 from dembrane.utils import generate_uuid
-from dembrane.app_user import resolve_app_user, create_app_user, get_directus_user_profile
-from dembrane.directus_async import async_directus
-from dembrane.api.v2.schemas import OnboardingCompleteRequest, OnboardingCompleteResponse
-from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.app_user import create_app_user, resolve_app_user, get_directus_user_profile
 from dembrane.api.rate_limit import create_user_rate_limiter
+from dembrane.api.v2.schemas import OnboardingCompleteRequest, OnboardingCompleteResponse
+from dembrane.directus_async import async_directus
+from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
 logger = getLogger("api.v2.onboarding")
-_onboarding_rate_limiter = create_user_rate_limiter(name="onboarding", capacity=5, window_seconds=3600)
+_onboarding_rate_limiter = create_user_rate_limiter(
+    name="onboarding", capacity=5, window_seconds=3600
+)
 
 
 @router.post("/complete", response_model=OnboardingCompleteResponse)
@@ -87,8 +89,11 @@ async def complete_onboarding(
                     "expires_at": {"_gt": now},
                 },
                 "fields": [
-                    "id", "workspace_id", "role",
-                    "include_org_membership", "expires_at",
+                    "id",
+                    "workspace_id",
+                    "role",
+                    "include_org_membership",
+                    "expires_at",
                 ],
                 "limit": -1,
             }
@@ -114,40 +119,56 @@ async def complete_onboarding(
                 org_id = ws["org_id"]
                 existing_org_mem = await async_directus.get_items(
                     "org_membership",
-                    {"query": {"filter": {
-                        "org_id": {"_eq": org_id},
-                        "user_id": {"_eq": app_user_id},
-                        "deleted_at": {"_null": True},
-                    }, "limit": 1}},
+                    {
+                        "query": {
+                            "filter": {
+                                "org_id": {"_eq": org_id},
+                                "user_id": {"_eq": app_user_id},
+                                "deleted_at": {"_null": True},
+                            },
+                            "limit": 1,
+                        }
+                    },
                 )
                 if not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0):
-                    await async_directus.create_item("org_membership", {
-                        "id": generate_uuid(),
-                        "org_id": org_id,
-                        "user_id": app_user_id,
-                        "role": "member",
-                    })
+                    await async_directus.create_item(
+                        "org_membership",
+                        {
+                            "id": generate_uuid(),
+                            "org_id": org_id,
+                            "user_id": app_user_id,
+                            "role": "member",
+                        },
+                    )
                     logger.info(f"Auto-added {app_user_email} to org {org_id} via invite")
                 joined_an_org = True
 
             # Create workspace membership
             existing_ws_mem = await async_directus.get_items(
                 "workspace_membership",
-                {"query": {"filter": {
-                    "workspace_id": {"_eq": ws_id},
-                    "user_id": {"_eq": app_user_id},
-                    "deleted_at": {"_null": True},
-                }, "limit": 1}},
+                {
+                    "query": {
+                        "filter": {
+                            "workspace_id": {"_eq": ws_id},
+                            "user_id": {"_eq": app_user_id},
+                            "deleted_at": {"_null": True},
+                        },
+                        "limit": 1,
+                    }
+                },
             )
             if not (isinstance(existing_ws_mem, list) and len(existing_ws_mem) > 0):
-                await async_directus.create_item("workspace_membership", {
-                    "id": generate_uuid(),
-                    "workspace_id": ws_id,
-                    "user_id": app_user_id,
-                    "role": invite.get("role", "member"),
-                    "source": "direct",
-                    "is_external": is_external,
-                })
+                await async_directus.create_item(
+                    "workspace_membership",
+                    {
+                        "id": generate_uuid(),
+                        "workspace_id": ws_id,
+                        "user_id": app_user_id,
+                        "role": invite.get("role", "member"),
+                        "source": "direct",
+                        "is_external": is_external,
+                    },
+                )
                 logger.info(
                     f"Auto-accepted invite: {app_user_email} → workspace {ws_id} "
                     f"(role: {invite.get('role')}, external: {is_external})"
@@ -157,9 +178,13 @@ async def complete_onboarding(
                 first_workspace_id = ws_id
 
             # Mark invite as accepted
-            await async_directus.update_item("workspace_invite", invite["id"], {
-                "accepted_at": now,
-            })
+            await async_directus.update_item(
+                "workspace_invite",
+                invite["id"],
+                {
+                    "accepted_at": now,
+                },
+            )
 
             # Notify the inviter (INVITE_ACCEPTED #3). Mirrors the
             # notification fired by me.accept_my_invite — same event
@@ -168,9 +193,11 @@ async def complete_onboarding(
             inviter_id = invite.get("invited_by")
             if inviter_id and inviter_id != app_user_id:
                 from dembrane.notifications import emit
+
                 display = (
-                    (await get_directus_user_profile(directus_user_id) or {})
-                    .get("display_name") or app_user_email or "Someone"
+                    (await get_directus_user_profile(directus_user_id) or {}).get("display_name")
+                    or app_user_email
+                    or "Someone"
                 )
                 await emit(
                     audience_user_id=inviter_id,
@@ -183,32 +210,36 @@ async def complete_onboarding(
                     ref_org_id=ws.get("org_id"),
                 )
 
-            # Notify team admins when a new person joins the team
-            # (TEAM_MEMBER_ADDED #16). Only fires when the invite
+            # Notify organisation admins when a new person joins the organisation
+            # (ORGANISATION_MEMBER_ADDED #16). Only fires when the invite
             # included an org_membership grant AND the user didn't
-            # already belong to the team.
-            if is_org_invite and ws.get("org_id") and not (
-                isinstance(existing_org_mem, list) and len(existing_org_mem) > 0
+            # already belong to the organisation.
+            if (
+                is_org_invite
+                and ws.get("org_id")
+                and not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0)
             ):
                 from dembrane.notifications import (
-                    audience_team_admins,
                     emit_to_audience,
+                    audience_organisation_admins,
                 )
-                team_admins = await audience_team_admins(ws["org_id"])
+
+                organisation_admins = await audience_organisation_admins(ws["org_id"])
                 # Skip the actor (inviter) — they already know.
-                team_row = await async_directus.get_item("org", ws["org_id"])
-                team_name = (team_row or {}).get("name") or "the team"
+                organisation_row = await async_directus.get_item("org", ws["org_id"])
+                organisation_name = (organisation_row or {}).get("name") or "the organisation"
                 new_member_name = (
-                    (await get_directus_user_profile(directus_user_id) or {})
-                    .get("display_name") or app_user_email or "A new member"
+                    (await get_directus_user_profile(directus_user_id) or {}).get("display_name")
+                    or app_user_email
+                    or "A new member"
                 )
                 await emit_to_audience(
-                    team_admins,
+                    organisation_admins,
                     actor_user_id=inviter_id,
-                    event_code="TEAM_MEMBER_ADDED",
-                    title=f"{new_member_name} joined {team_name}",
-                    message="They're now a team member.",
-                    action="NAVIGATE_TEAM_SETTINGS",
+                    event_code="ORGANISATION_MEMBER_ADDED",
+                    title=f"{new_member_name} joined {organisation_name}",
+                    message="They're now a organisation member.",
+                    action="NAVIGATE_ORGANISATION_SETTINGS",
                     ref_org_id=ws["org_id"],
                 )
 
@@ -263,17 +294,23 @@ async def complete_onboarding(
             org_id = existing_orgs[0]["org_id"]
         else:
             org_id = generate_uuid()
-            await async_directus.create_item("org", {
-                "id": org_id,
-                "name": org_name,
-                "created_by": app_user_id,
-            })
-            await async_directus.create_item("org_membership", {
-                "id": generate_uuid(),
-                "org_id": org_id,
-                "user_id": app_user_id,
-                "role": "owner",
-            })
+            await async_directus.create_item(
+                "org",
+                {
+                    "id": org_id,
+                    "name": org_name,
+                    "created_by": app_user_id,
+                },
+            )
+            await async_directus.create_item(
+                "org_membership",
+                {
+                    "id": generate_uuid(),
+                    "org_id": org_id,
+                    "user_id": app_user_id,
+                    "role": "owner",
+                },
+            )
             logger.info(f"Created personal org {org_id} '{org_name}' for {app_user_email}")
 
         # Create default workspace in personal org
@@ -296,14 +333,17 @@ async def complete_onboarding(
             personal_ws_id = existing_ws[0]["id"]
         else:
             personal_ws_id = generate_uuid()
-            await async_directus.create_item("workspace", {
-                "id": personal_ws_id,
-                "org_id": org_id,
-                "name": "Default",
-                "is_default": True,
-                "tier": "pilot",
-                "created_by": app_user_id,
-            })
+            await async_directus.create_item(
+                "workspace",
+                {
+                    "id": personal_ws_id,
+                    "org_id": org_id,
+                    "name": "Default",
+                    "is_default": True,
+                    "tier": "pilot",
+                    "created_by": app_user_id,
+                },
+            )
             logger.info(f"Created default workspace {personal_ws_id} for org {org_id}")
 
         # Make sure the creator has a workspace_membership — even when
@@ -314,14 +354,20 @@ async def complete_onboarding(
         # on /w forever. Pains doc entry: [block] 2026-04-23.
         existing_self_mem = await async_directus.get_items(
             "workspace_membership",
-            {"query": {"filter": {
-                "workspace_id": {"_eq": personal_ws_id},
-                "user_id": {"_eq": app_user_id},
-                "deleted_at": {"_null": True},
-            }, "limit": 1}},
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_eq": personal_ws_id},
+                        "user_id": {"_eq": app_user_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "limit": 1,
+                }
+            },
         )
         if not (isinstance(existing_self_mem, list) and len(existing_self_mem) > 0):
             from dembrane.inheritance import on_workspace_created
+
             await on_workspace_created(
                 workspace_id=personal_ws_id,
                 creator_app_user_id=app_user_id,
@@ -345,9 +391,13 @@ async def complete_onboarding(
             moved = 0
             if isinstance(all_projects, list):
                 for p in all_projects:
-                    await async_directus.update_item("project", p["id"], {
-                        "workspace_id": personal_ws_id,
-                    })
+                    await async_directus.update_item(
+                        "project",
+                        p["id"],
+                        {
+                            "workspace_id": personal_ws_id,
+                        },
+                    )
                     moved += 1
             if moved > 0:
                 logger.info(f"Moved {moved} projects into workspace {personal_ws_id}")

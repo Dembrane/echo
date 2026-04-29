@@ -12,7 +12,7 @@ interface Props {
 
 /**
  * Dotted-border card that lives as the first row in a Members list.
- * Clicking opens the scope-specific invite flow (TeamInviteWizard,
+ * Clicking opens the scope-specific invite flow (OrganisationInviteWizard,
  * WorkspaceInviteWizard, ProjectSharingModal). Sits in the list so the
  * invite affordance has the same visual weight as a member row —
  * replaces the old "Invite member" button floating in the header.

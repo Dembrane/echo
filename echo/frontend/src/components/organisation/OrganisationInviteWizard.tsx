@@ -24,7 +24,7 @@ import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { avatarUrl, memberInitials } from "@/lib/avatar";
 
-export interface TeamInviteWizardWorkspace {
+export interface OrganisationInviteWizardWorkspace {
 	id: string;
 	name: string;
 	tier: string;
@@ -32,7 +32,7 @@ export interface TeamInviteWizardWorkspace {
 	is_private?: boolean;
 }
 
-export interface TeamInviteWizardMember {
+export interface OrganisationInviteWizardMember {
 	app_user_id: string;
 	display_name: string;
 	avatar: string | null;
@@ -44,10 +44,10 @@ export interface TeamInviteWizardMember {
 interface Props {
 	opened: boolean;
 	onClose: () => void;
-	workspaces: TeamInviteWizardWorkspace[];
-	// Existing team members — used to paint avatar bubbles on each
+	workspaces: OrganisationInviteWizardWorkspace[];
+	// Existing organisation members — used to paint avatar bubbles on each
 	// workspace card so the admin can eyeball who's already in.
-	members: TeamInviteWizardMember[];
+	members: OrganisationInviteWizardMember[];
 }
 
 async function inviteToWorkspace(
@@ -76,21 +76,21 @@ async function inviteToWorkspace(
 }
 
 /**
- * Team-level invite wizard (2026-04-24 ask).
+ * Organisation-level invite wizard (2026-04-24 ask).
  *
- * Two steps: email + team role → pick workspaces.
+ * Two steps: email + organisation role → pick workspaces.
  *
- * Team-scope invites don't exist as a single backend endpoint — the
- * matrix §3 model is that someone "joins the team" by joining their
+ * Organisation-scope invites don't exist as a single backend endpoint — the
+ * matrix §3 model is that someone "joins the organisation" by joining their
  * first workspace. So this wizard fans out: it calls the workspace
  * invite endpoint with is_org_member=true for every selected workspace.
- * The first call creates the team membership; subsequent calls reuse it.
+ * The first call creates the organisation membership; subsequent calls reuse it.
  *
  * Step 2 cards show tier + member count + a few avatar bubbles of
  * current members so the admin can eyeball who's already in without
  * leaving the flow.
  */
-export function TeamInviteWizard({ opened, onClose, workspaces, members }: Props) {
+export function OrganisationInviteWizard({ opened, onClose, workspaces, members }: Props) {
 	const queryClient = useQueryClient();
 	const [step, setStep] = useState(0);
 	const [email, setEmail] = useState("");
@@ -116,10 +116,10 @@ export function TeamInviteWizard({ opened, onClose, workspaces, members }: Props
 		setSelected(next);
 	};
 
-	// Build "who's already in each workspace" previews from the team
+	// Build "who's already in each workspace" previews from the organisation
 	// members list. We take up to 4 avatars per workspace — one glance.
 	const previewsByWorkspace = useMemo(() => {
-		const map = new Map<string, TeamInviteWizardMember[]>();
+		const map = new Map<string, OrganisationInviteWizardMember[]>();
 		for (const ws of workspaces) {
 			const people = members
 				.filter((m) => m.direct_workspace_roles?.[ws.id])
@@ -145,7 +145,7 @@ export function TeamInviteWizard({ opened, onClose, workspaces, members }: Props
 			return { ok, failed };
 		},
 		onSuccess: ({ ok, failed }) => {
-			queryClient.invalidateQueries({ queryKey: ["v2", "team"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "organisation"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			if (failed.length === 0) {
@@ -175,7 +175,7 @@ export function TeamInviteWizard({ opened, onClose, workspaces, members }: Props
 		<Modal
 			opened={opened}
 			onClose={handleClose}
-			title={<Trans>Invite someone to the team</Trans>}
+			title={<Trans>Invite someone to the organisation</Trans>}
 			centered
 			size="lg"
 		>
@@ -204,8 +204,8 @@ export function TeamInviteWizard({ opened, onClose, workspaces, members }: Props
 								}}
 							/>
 							<Radio.Group
-								label={t`Team role`}
-								description={t`You can change this later on the team People tab.`}
+								label={t`Organisation role`}
+								description={t`You can change this later on the organisation People tab.`}
 								value={role}
 								onChange={(v) => setRole(v as "member" | "admin")}
 							>
@@ -236,7 +236,7 @@ export function TeamInviteWizard({ opened, onClose, workspaces, members }: Props
 												<Text size="xs" c="dimmed">
 													<Trans>
 														Can invite others, manage workspaces, and
-														change roles across the team.
+														change roles across the organisation.
 													</Trans>
 												</Text>
 											</Box>
@@ -252,7 +252,7 @@ export function TeamInviteWizard({ opened, onClose, workspaces, members }: Props
 							<Text size="sm" c="dimmed">
 								<Trans>
 									Pick which workspaces this person should land in. They'll
-									join the team through their first workspace.
+									join the organisation through their first workspace.
 								</Trans>
 							</Text>
 

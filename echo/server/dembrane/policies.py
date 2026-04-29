@@ -63,9 +63,9 @@ ORG_ROLE_PRESETS: dict[str, list[str]] = {
         "org:view_all_workspaces",
         "org:view_usage",
     ],
-    # Billing role at the team level — matrix v1.1 §5. Sees every workspace
+    # Billing role at the organisation level — matrix v1.1 §5. Sees every workspace
     # for usage + invoicing but cannot invite, create workspaces, or change
-    # team settings.
+    # organisation settings.
     "billing": [
         "org:view",
         "org:view_all_workspaces",

@@ -61,7 +61,7 @@ export const OnboardingRoute = () => {
 	const { data: meV2, isLoading: meLoading } = useV2Me();
 	const { setWorkspace } = useWorkspace();
 
-	// Invited users see a different flow — they're not creating a team,
+	// Invited users see a different flow — they're not creating a organisation,
 	// they're joining one (or several). Pull the invite list so we can
 	// show them which workspaces they're about to land in.
 	const { data: pendingInvites } = useMyInvites({
@@ -69,15 +69,15 @@ export const OnboardingRoute = () => {
 	});
 	const displayName = (user.data as Record<string, string>)?.first_name || "";
 	const hasInvites = meV2?.has_pending_invites === true;
-	const inviteTeams = Array.from(
+	const inviteOrganisations = Array.from(
 		new Set((pendingInvites ?? []).map((i) => i.org_name).filter(Boolean)),
 	);
 	// The designer's onboarding split (docs/workspaces/designer-return.html):
 	// users with projects from before workspaces existed see the "migration"
 	// copy; users with no legacy projects see the fresh-setup copy. hasInvites
-	// takes precedence over both (they're here to join a team, not set one up).
+	// takes precedence over both (they're here to join a organisation, not set one up).
 	const isLegacyUser = meV2?.has_legacy_projects === true;
-	const defaultOrgName = displayName ? `${displayName}'s Team` : "";
+	const defaultOrgName = displayName ? `${displayName}'s Organisation` : "";
 
 	const [orgName, setOrgName] = useState(defaultOrgName);
 	const [inviteEmails, setInviteEmails] = useState<string[]>([""]);
@@ -129,7 +129,7 @@ export const OnboardingRoute = () => {
 			setWorkspaceId(data.workspace_id);
 			setWorkspace(data.workspace_id);
 
-			// Invited users skip the invite step — they don't have a team to invite
+			// Invited users skip the invite step — they don't have a organisation to invite
 			if (hasInvites) {
 				goToProjects();
 				return;
@@ -233,7 +233,7 @@ export const OnboardingRoute = () => {
 					<Stack gap={24}>
 						<Stack gap={6}>
 							<Title order={3} fw={500}>
-								<Trans>Invite your team</Trans>
+								<Trans>Invite your organisation</Trans>
 							</Title>
 							<Text size="sm" c="dimmed" lh={1.6}>
 								<Trans>
@@ -355,45 +355,45 @@ export const OnboardingRoute = () => {
 								) : displayName ? (
 									<Trans>Welcome, {displayName}</Trans>
 								) : (
-									<Trans>Set up your team</Trans>
+									<Trans>Set up your organisation</Trans>
 								)}
 							</Title>
 							<Text size="sm" c="dimmed" lh={1.6}>
 								{hasInvites ? (
-									inviteTeams.length === 1 ? (
+									inviteOrganisations.length === 1 ? (
 										<Trans>
-											You've been invited to join <em>{inviteTeams[0]}</em>.
+											You've been invited to join <em>{inviteOrganisations[0]}</em>.
 											We'll take you there in a moment.
 										</Trans>
-									) : inviteTeams.length > 1 ? (
+									) : inviteOrganisations.length > 1 ? (
 										<Trans>
-											You've been invited to join {inviteTeams.length}
+											You've been invited to join {inviteOrganisations.length}
 											{" "}
-											teams. We'll take you in once you continue.
+											organisations. We'll take you in once you continue.
 										</Trans>
 									) : (
 										<Trans>
-											Your team is waiting for you. Click continue to join.
+											Your organisation is waiting for you. Click continue to join.
 										</Trans>
 									)
 								) : isLegacyUser ? (
 									<Trans>
-										We've added teams so you can organize projects and share
+										We've added organisations so you can organize projects and share
 										them with colleagues. Everything you had before is still
-										here. We just need a name for your team.
+										here. We just need a name for your organisation.
 									</Trans>
 								) : (
 									<Trans>
-										Name your team to get started. You can invite teammates
-										right after, or join other teams later from settings.
+										Name your organisation to get started. You can invite members
+										right after, or join other organisations later from settings.
 									</Trans>
 								)}
 							</Text>
 						</Stack>
 
-						{/* Invited users don't create a team — they're joining
-						    existing ones. Swap the "Team name" form for a single
-						    Continue button so the copy ("Your team is waiting")
+						{/* Invited users don't create a organisation — they're joining
+						    existing ones. Swap the "Organisation name" form for a single
+						    Continue button so the copy ("Your organisation is waiting")
 						    matches the action. The backend /onboarding/complete
 						    call still runs; it just skips the personal-org
 						    branch when has_pending_invites is true. */}
@@ -419,8 +419,8 @@ export const OnboardingRoute = () => {
 									<TextInput
 										autoFocus
 										description={t`You can change this anytime in settings.`}
-										label={t`Team name`}
-										placeholder={defaultOrgName || t`Your team or company`}
+										label={t`Organisation name`}
+										placeholder={defaultOrgName || t`Your organisation or company`}
 										size="sm"
 										value={orgName}
 										onChange={(e) => setOrgName(e.currentTarget.value)}

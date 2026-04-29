@@ -22,8 +22,8 @@ user channel preferences live in the delivery layer, not here.
 
 from __future__ import annotations
 
-from logging import getLogger
 from typing import Any, Literal, Optional
+from logging import getLogger
 
 from dembrane.utils import generate_uuid
 from dembrane.directus_async import async_directus
@@ -38,7 +38,7 @@ NotificationAction = Literal[
     "NAVIGATE_REPORT",
     "NAVIGATE_CHAT",
     "NAVIGATE_INVITE",
-    "NAVIGATE_TEAM_SETTINGS",
+    "NAVIGATE_ORGANISATION_SETTINGS",
     "NAVIGATE_WORKSPACE_SETTINGS",
 ]
 
@@ -51,7 +51,7 @@ NotificationSeverity = Literal["info", "action_required", "destructive"]
 _SEVERITY_BY_EVENT: dict[str, NotificationSeverity] = {
     # Access revoked / data lost / feature downgraded
     "WORKSPACE_REMOVED": "destructive",
-    "TEAM_REMOVED": "destructive",
+    "ORGANISATION_REMOVED": "destructive",
     "PROJECT_NOW_PRIVATE": "destructive",
     "PROJECT_SHARE_REVOKED": "destructive",
     "TIER_DOWNGRADED": "destructive",
@@ -139,9 +139,7 @@ async def emit(
     `params` is forward-compat metadata for client-rendered i18n.
     """
     try:
-        resolved_severity: NotificationSeverity = (
-            severity or severity_for(event_code)
-        )
+        resolved_severity: NotificationSeverity = severity or severity_for(event_code)
         # Silently accept `level=` from legacy callers.
         if level and not severity:
             # Old "urgent" maps onto action_required in the new spec.
@@ -183,25 +181,26 @@ async def emit(
     except Exception as exc:  # noqa: BLE001 — notifications must never raise
         logger.warning(
             "emit notification failed (event=%s audience=%s): %s",
-            event_code, audience_user_id, exc,
+            event_code,
+            audience_user_id,
+            exc,
         )
         return None
 
 
 # ── Audience derivation helpers ─────────────────────────────────────────
 
+
 async def audience_workspace_admins(workspace_id: str) -> list[str]:
     """Return app_user.id for every admin/owner on a workspace (direct
-    + derived team admins). Use for "someone joined your workspace"-
+    + derived organisation admins). Use for "someone joined your workspace"-
     shaped notifications.
     """
     from dembrane.inheritance import get_effective_members
 
     members = await get_effective_members(workspace_id)
     return [
-        m["user_id"]
-        for m in members
-        if m.get("user_id") and m.get("role") in ("admin", "owner")
+        m["user_id"] for m in members if m.get("user_id") and m.get("role") in ("admin", "owner")
     ]
 
 
@@ -229,40 +228,46 @@ async def audience_workspace_admins_and_billing(workspace_id: str) -> list[str]:
     ]
 
 
-async def audience_team_admins(org_id: str) -> list[str]:
-    rows = await async_directus.get_items(
-        "org_membership",
-        {
-            "query": {
-                "filter": {
-                    "org_id": {"_eq": org_id},
-                    "role": {"_in": ["admin", "owner"]},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["user_id"],
-                "limit": -1,
-            }
-        },
-    ) or []
+async def audience_organisation_admins(org_id: str) -> list[str]:
+    rows = (
+        await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "role": {"_in": ["admin", "owner"]},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["user_id"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
     if not isinstance(rows, list):
         return []
     return [r["user_id"] for r in rows if r.get("user_id")]
 
 
-async def audience_team(org_id: str) -> list[str]:
-    rows = await async_directus.get_items(
-        "org_membership",
-        {
-            "query": {
-                "filter": {
-                    "org_id": {"_eq": org_id},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["user_id"],
-                "limit": -1,
-            }
-        },
-    ) or []
+async def audience_organisation(org_id: str) -> list[str]:
+    rows = (
+        await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["user_id"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
     if not isinstance(rows, list):
         return []
     return [r["user_id"] for r in rows if r.get("user_id")]
@@ -270,7 +275,7 @@ async def audience_team(org_id: str) -> list[str]:
 
 async def emit_to_audience(
     audience_user_ids: list[str],
-    **emit_kwargs,
+    **emit_kwargs: Any,
 ) -> list[str]:
     """Fan out the same notification to every user in `audience_user_ids`.
 
@@ -291,7 +296,7 @@ async def emit_to_audience(
 # ── Sync bridge for Dramatiq actors ──────────────────────────────────────
 
 
-def emit_sync(**emit_kwargs) -> Optional[str]:
+def emit_sync(**emit_kwargs: Any) -> Optional[str]:
     """Blocking variant for Dramatiq actors that can't await.
 
     Dramatiq workers run sync code; async frameworks can't be called
@@ -301,6 +306,7 @@ def emit_sync(**emit_kwargs) -> Optional[str]:
     """
     try:
         from dembrane.async_helpers import run_async_in_new_loop
+
         return run_async_in_new_loop(emit(**emit_kwargs))
     except Exception as exc:  # noqa: BLE001
         logger.warning(

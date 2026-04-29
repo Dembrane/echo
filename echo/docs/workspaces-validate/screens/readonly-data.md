@@ -2,9 +2,9 @@
 
 **Intent:** surface data-dense information for the user to scan, filter, and optionally export. No edit affordances in the primary surface — editing happens via a row drill-in that opens screen 5 or an inline form.
 
-**Used by:** usage rollup (project / workspace / team), referral ledger, member list in view-only contexts, audit log (post-release), tier capacity matrix in billing tab + upgrade modal, access request history.
+**Used by:** usage rollup (project / workspace / organisation), referral ledger, member list in view-only contexts, audit log (post-release), tier capacity matrix in billing tab + upgrade modal, access request history.
 
-**Reference:** matrix §1 (capacity matrix visible in product), §8 (usage rollups at project / workspace / team), §10 (referral ledger), brief pattern 7.
+**Reference:** matrix §1 (capacity matrix visible in product), §8 (usage rollups at project / workspace / organisation), §10 (referral ledger), brief pattern 7.
 
 ---
 
@@ -44,7 +44,7 @@ Used by: referral ledger, member list (read-only), access request history.
 
 Users × workspaces × (role). Filter on role, source (direct vs derivation retires post-walkback). Click cell → drawer with detail + row-menu actions (if admin).
 
-Used by: team admin page (Ask 1). Hidden ≤768px with toast "Switch to list view" (`designer-return.html`).
+Used by: organisation admin page (Ask 1). Hidden ≤768px with toast "Switch to list view" (`designer-return.html`).
 
 ## Rollup levels (matrix §8)
 
@@ -54,7 +54,7 @@ The same data shape renders at three scopes. Pick by route:
 |---|---|---|
 | Project | `/w/:wsId/projects/:pid` overview tab | Hours consumed by conversations in this project, current cycle. |
 | Workspace | `/w/:wsId/settings?tab=billing` | Total hours + seat count + guest count, current cycle + per-project breakdown. |
-| Team | `/t/:orgId/usage` | Aggregate across workspaces. Table: ws_name / tier / hours / status / aggregate spend. |
+| Organisation | `/o/:orgId/usage` | Aggregate across workspaces. Table: ws_name / tier / hours / status / aggregate spend. |
 
 ## Role differentiation (matrix §8)
 

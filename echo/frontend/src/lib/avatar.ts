@@ -18,7 +18,7 @@ export function avatarUrl(
 }
 
 /**
- * Resolve a workspace/team `logo_url` value → displayable URL.
+ * Resolve a workspace/organisation `logo_url` value → displayable URL.
  *
  * The column can hold two shapes:
  *   - Bare Directus file_id (new upload endpoint writes this)

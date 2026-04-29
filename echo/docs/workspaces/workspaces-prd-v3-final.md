@@ -501,7 +501,7 @@ IF user has exactly 1 workspace AND is not org admin/owner:
   → Auto-redirect to workspace dashboard
   → Topbar shows ONLY logo + user avatar (no workspace name, no "change workspace")
   → Settings gear goes to workspace settings (no "org" language)
-  → Subtle prompt: "Invite your team →" in sidebar footer
+  → Subtle prompt: "Invite your organisation →" in sidebar footer
   → The word "workspace" never appears
 
 IF user has 2+ workspaces OR is org admin/owner:
@@ -805,7 +805,7 @@ async def migrate_existing_users(dry_run: bool = True):
 
 | Scenario | Handling |
 |---|---|
-| Solo user, 1 workspace | Progressive: no workspace language shown. "Invite your team →" prompt. |
+| Solo user, 1 workspace | Progressive: no workspace language shown. "Invite your organisation →" prompt. |
 | Delete workspace with projects | Blocked. "Delete or move all projects first." |
 | Last owner leaves workspace | Blocked. "Transfer ownership first." |
 | Invite to unregistered email | Create workspace_invite, send email. On signup, auto-add. Expire 7 days. |
@@ -840,7 +840,7 @@ async def migrate_existing_users(dry_run: bool = True):
 | `ui-flows-mockdown.md` | Complete screen-by-screen specs (Flows 1-24) |
 | `b2b2b-strategy.md` | Partner model, Path A/B, billing, onboarding |
 | `architecture-review.md` | Detailed security/performance/compliance recommendations |
-| `failure-analysis.md` | 8-perspective red team analysis |
+| `failure-analysis.md` | 8-perspective red organisation analysis |
 
 ---
 

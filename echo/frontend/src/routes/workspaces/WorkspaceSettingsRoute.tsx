@@ -73,8 +73,8 @@ interface WorkspaceDetail {
 	}>;
 	my_role: string;
 	my_policies: string[];
-	inherit_team_admins: boolean;
-	inherit_team_members: boolean;
+	inherit_organisation_admins: boolean;
+	inherit_organisation_members: boolean;
 	description: string | null;
 	logo_url: string | null;
 }
@@ -168,8 +168,8 @@ async function updateWorkspace(
 		name?: string;
 		description?: string;
 		logo_url?: string;
-		inherit_team_admins?: boolean;
-		inherit_team_members?: boolean;
+		inherit_organisation_admins?: boolean;
+		inherit_organisation_members?: boolean;
 	},
 ) {
 	const res = await fetch(
@@ -322,7 +322,7 @@ export const WorkspaceSettingsRoute = () => {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
-			queryClient.invalidateQueries({ queryKey: ["v2", "team"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "organisation"] });
 			toast.success(t`Workspace deleted`);
 			navigate("/w");
 		},
@@ -373,7 +373,7 @@ export const WorkspaceSettingsRoute = () => {
 
 	// Members list order (2026-04-24): internals first — sorted by role
 	// (owner → admin → billing → member) — then externals at the bottom.
-	// Matches the mental model "who's in your team, then your guests."
+	// Matches the mental model "who's in your organisation, then your guests."
 	// Stable within each tier by display_name so the list doesn't shuffle
 	// when roles change.
 	const MEMBERS_ROLE_WEIGHT: Record<string, number> = {
@@ -439,9 +439,9 @@ export const WorkspaceSettingsRoute = () => {
 
 	return (
 		<>
-		{/* Container size matches TeamRoute (size="xl") so the two settings
+		{/* Container size matches OrganisationRoute (size="xl") so the two settings
 		    pages feel like siblings — they used to diverge (workspace "sm"
-		    = 720px; team "xl" = 1320px) which made workspace settings
+		    = 720px; organisation "xl" = 1320px) which made workspace settings
 		    feel cramped on desktop. */}
 		<Container size="xl" py="xl" px="lg" pb={80}>
 			<Stack gap={32}>
@@ -457,7 +457,7 @@ export const WorkspaceSettingsRoute = () => {
 							{settings.name}
 						</Title>
 						{/* Header stays minimal — tier pill only, tagline lives on
-						    the Billing tab where it's next to the price. Team name
+						    the Billing tab where it's next to the price. Organisation name
 						    is already in the nav breadcrumb; duplicating it here
 						    was audit noise (2026-04-23). */}
 						<Group gap={8} wrap="nowrap">
@@ -523,11 +523,11 @@ export const WorkspaceSettingsRoute = () => {
 										</Text>
 										<Text size="xs" c="dimmed">
 											<Trans>
-												Every teammate with <em>Admin</em>,{" "}
+												Every member with <em>Admin</em>,{" "}
 												<em>Billing</em>, or <em>Member</em> role on
 												this workspace counts as one seat. One person
 												never takes more than one seat per workspace,
-												even if they're on multiple teams.
+												even if they're on multiple organisations.
 											</Trans>
 										</Text>
 										<Text size="xs" c="dimmed">
@@ -643,7 +643,7 @@ export const WorkspaceSettingsRoute = () => {
 							<InviteMemberCard
 								label={<Trans>Invite member</Trans>}
 								helperText={
-									<Trans>Add teammates or a guest to this workspace.</Trans>
+									<Trans>Add members or a guest to this workspace.</Trans>
 								}
 								onClick={openInviteModal}
 							/>
@@ -655,7 +655,7 @@ export const WorkspaceSettingsRoute = () => {
 								</Text>
 								<Text size="xs" c="dimmed" ta="center" maw={360}>
 									<Trans>
-										Invite teammates to collaborate on projects and
+										Invite members to collaborate on projects and
 										conversations in this workspace.
 									</Trans>
 								</Text>
@@ -701,14 +701,14 @@ export const WorkspaceSettingsRoute = () => {
 														<>
 															{" · "}
 															<Text component="span" fs="italic">
-																<Trans>inherited from team</Trans>
+																<Trans>inherited from organisation</Trans>
 															</Text>
 														</>
 													)}
 												</Text>
 											) : (
 												<Text size="xs" c="dimmed" style={{ textTransform: "capitalize" }}>
-													{member.source === "inherited" ? t`inherited from team` : member.source}
+													{member.source === "inherited" ? t`inherited from organisation` : member.source}
 												</Text>
 											)}
 										</Box>
@@ -752,7 +752,7 @@ export const WorkspaceSettingsRoute = () => {
 													if (!v || v === member.role) return;
 													// Footgun guard: demoting yourself out of
 													// admin/owner is a one-way street without a
-													// teammate's help. Confirm first.
+													// member's help. Confirm first.
 													const isSelf = member.user_id === myAppUserId;
 													const isDemotion =
 														(member.role === "owner" ||
@@ -962,7 +962,7 @@ export const WorkspaceSettingsRoute = () => {
 					</>
 				)}
 
-				{/* Matrix §6 access requests from team members. Hides itself
+				{/* Matrix §6 access requests from organisation members. Hides itself
 				    when nothing is pending. */}
 				{canManage && workspaceId && (
 					<AccessRequestsList workspaceId={workspaceId} />
@@ -1161,11 +1161,11 @@ function PrivacyAndDefaultsSection({
 		settings.description ?? "",
 	);
 	const [name, setName] = useState<string>(settings.name ?? "");
-	// Matrix §6 retired derivation — `inherit_team_admins` is now just
+	// Matrix §6 retired derivation — `inherit_organisation_admins` is now just
 	// "Open vs Private." Legacy rows still read through this flag.
 	const [isOpen, setIsOpen] = useState<boolean | null>(null);
 
-	const effectiveIsOpen = isOpen ?? settings.inherit_team_admins;
+	const effectiveIsOpen = isOpen ?? settings.inherit_organisation_admins;
 	const privacyDirty = isOpen !== null;
 
 	const descriptionMutation = useMutation({
@@ -1203,7 +1203,7 @@ function PrivacyAndDefaultsSection({
 	const privacyMutation = useMutation({
 		mutationFn: async () => {
 			if (isOpen === null) return;
-			await updateWorkspace(workspaceId, { inherit_team_admins: isOpen });
+			await updateWorkspace(workspaceId, { inherit_organisation_admins: isOpen });
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
@@ -1386,12 +1386,12 @@ function PrivacyAndDefaultsSection({
 								label={
 									<Stack gap={0}>
 										<Text size="sm">
-											<Trans>Open to the team</Trans>
+											<Trans>Open to the organisation</Trans>
 										</Text>
 										<Text size="xs" c="dimmed">
 											<Trans>
-												Anyone in your team can find this workspace. Team
-												admins can join; team members can request access.
+												Anyone in your organisation can find this workspace. Organisation
+												admins can join; organisation members can request access.
 											</Trans>
 										</Text>
 									</Stack>
@@ -1411,7 +1411,7 @@ function PrivacyAndDefaultsSection({
 										</Text>
 										<Text size="xs" c="dimmed">
 											<Trans>
-												Only invited participants. Team admins can still
+												Only invited participants. Organisation admins can still
 												find and join.
 											</Trans>
 										</Text>
@@ -1427,7 +1427,7 @@ function PrivacyAndDefaultsSection({
 					</Radio.Group>
 				);
 			})()}
-			{/* inherit_team_members toggle removed per matrix §6 — team members
+			{/* inherit_organisation_members toggle removed per matrix §6 — organisation members
 			    now go through the explicit Request-access flow; no automatic
 			    derivation. Backend still accepts the flag for legacy rows
 			    but we don't expose it. */}

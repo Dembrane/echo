@@ -31,7 +31,7 @@ export type NotificationAction =
 	| "NAVIGATE_REPORT"
 	| "NAVIGATE_CHAT"
 	| "NAVIGATE_INVITE"
-	| "NAVIGATE_TEAM_SETTINGS"
+	| "NAVIGATE_ORGANISATION_SETTINGS"
 	| "NAVIGATE_WORKSPACE_SETTINGS";
 
 export type NotificationSeverity = "info" | "action_required" | "destructive";
@@ -155,8 +155,8 @@ export function resolveNotificationHref(
 				: null;
 		case "NAVIGATE_INVITE":
 			return "/invites";
-		case "NAVIGATE_TEAM_SETTINGS":
-			return refs.org_id ? `/t/${refs.org_id}/overview` : null;
+		case "NAVIGATE_ORGANISATION_SETTINGS":
+			return refs.org_id ? `/o/${refs.org_id}/overview` : null;
 		case "NAVIGATE_WORKSPACE_SETTINGS":
 			return refs.workspace_id
 				? `/w/${refs.workspace_id}/settings/general`

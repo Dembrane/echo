@@ -24,7 +24,7 @@ What it checks:
 - `deleted_at IS NULL` on reads; destructive paths set the timestamp
 - Migration safety — dry-run default, lockfile for `--apply`, `script_start_iso` cutoff, corrupted-JSON tolerance
 - **Participant portal never blocks** — recording / upload / transcription survive any tier state, including Pilot hard-block
-- **Last-admin protection** — cannot demote self or be removed if last admin at workspace or team
+- **Last-admin protection** — cannot demote self or be removed if last admin at workspace or organisation
 - `staff:can_set_tier` narrower than `auth.is_admin` where matrix requires
 
 ### Human-first design
@@ -39,7 +39,7 @@ What it checks:
 - Role change UX: toast + notification + first-visit banner; no affordance disappears mid-click
 - State is URL-driven where shareable — tabs, filters, selected entity
 - Confirmation gravity matches action: type-to-confirm for delete-workspace; plain confirm for role change; no confirm for idempotent settings
-- Honesty disclosures present — private-workspace create shows "Team admins can still discover and join this workspace"
+- Honesty disclosures present — private-workspace create shows "Organisation admins can still discover and join this workspace"
 - Request/wait states exist for async actions — upgrade request, join request, handoff pending each render a "submitted, waiting" screen
 - Member / Admin / Billing / Guest views are genuinely differentiated, not labelled
 - Progressive solo experience — 1-workspace user doesn't see "workspaces" language

@@ -19,9 +19,9 @@ interface Props {
 }
 
 /**
- * Shared toolbar for Members surfaces (Team / Workspace / Project).
+ * Shared toolbar for Members surfaces (Organisation / Workspace / Project).
  *
- * Matches the pattern from the Team tab so the three scopes look the
+ * Matches the pattern from the Organisation tab so the three scopes look the
  * same. Search width is constrained so the filter + count stay on the
  * right edge on wide screens and collapse beneath on narrow ones.
  */

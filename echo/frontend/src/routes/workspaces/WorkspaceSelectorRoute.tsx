@@ -63,7 +63,7 @@ interface Workspace {
 	usage: WorkspaceUsage;
 }
 
-interface TeamRollup {
+interface OrganisationRollup {
 	id: string;
 	name: string;
 	role: string;
@@ -77,12 +77,12 @@ interface TeamRollup {
 
 async function fetchWorkspaces(): Promise<{
 	workspaces: Workspace[];
-	teams: TeamRollup[];
+	organisations: OrganisationRollup[];
 }> {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		credentials: "include",
 	});
-	if (!res.ok) return { workspaces: [], teams: [] };
+	if (!res.ok) return { workspaces: [], organisations: [] };
 	return res.json();
 }
 
@@ -122,18 +122,18 @@ function WorkspaceCard({
 	const isAdminOrOwner = workspace.role === "admin" || workspace.role === "owner";
 	const [hovered, setHovered] = useState(false);
 	const wsLogo = resolveLogoUrl(workspace.logo_url);
-	const teamLogo = resolveLogoUrl(workspace.org_logo_url);
+	const organisationLogo = resolveLogoUrl(workspace.org_logo_url);
 	// Logo rules (2026-04-24 ask, refined):
-	//   - Guest workspace: ws logo if set, else team logo. A guest's
-	//     anchor is the team that invited them — always show something
+	//   - Guest workspace: ws logo if set, else organisation logo. A guest's
+	//     anchor is the organisation that invited them — always show something
 	//     so the card has a visual hook.
 	//   - Internal workspace: only show the ws logo. No ws logo → no
 	//     logo at all. The selector grid is already grouped under the
-	//     team, so repeating the team logo on every internal card is
+	//     organisation, so repeating the organisation logo on every internal card is
 	//     just visual noise ("see here there is no special workspace
 	//     icon so no need to show").
 	const headerLogo = workspace.is_external
-		? wsLogo || teamLogo
+		? wsLogo || organisationLogo
 		: wsLogo;
 	// Calmer meta-line: role + tier as a single dimmed string, no
 	// colored badges. The old design stacked two blue pills which made
@@ -251,14 +251,14 @@ function WorkspaceCard({
 }
 
 /**
- * Dashed placeholder card that lives at the end of each team's workspace
- * grid for admins/owners. Clicking it navigates to /w/new?teamId=<org>
- * so the create form knows which team to create inside.
+ * Dashed placeholder card that lives at the end of each organisation's workspace
+ * grid for admins/owners. Clicking it navigates to /w/new?organisationId=<org>
+ * so the create form knows which organisation to create inside.
  *
  * Solves the "create workspace BUT WHERE?" ambiguity — the card sits
- * physically under the team it belongs to, no confusion.
+ * physically under the organisation it belongs to, no confusion.
  */
-function AddWorkspaceCard({ teamId }: { teamId: string }) {
+function AddWorkspaceCard({ organisationId }: { organisationId: string }) {
 	const navigate = useI18nNavigate();
 	return (
 		<Paper
@@ -284,11 +284,11 @@ function AddWorkspaceCard({ teamId }: { teamId: string }) {
 				e.currentTarget.style.borderColor = "var(--mantine-color-gray-4)";
 				e.currentTarget.style.background = "transparent";
 			}}
-			onClick={() => navigate(`/w/new?teamId=${teamId}`)}
+			onClick={() => navigate(`/w/new?organisationId=${organisationId}`)}
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
-					navigate(`/w/new?teamId=${teamId}`);
+					navigate(`/w/new?organisationId=${organisationId}`);
 				}
 			}}
 		>
@@ -317,35 +317,35 @@ async function fetchOrgUsageLite(orgId: string): Promise<OrgUsageLite | null> {
 	return res.json();
 }
 
-function TeamHeroCard({
-	team,
+function OrganisationHeroCard({
+	organisation,
 	onManage,
 }: {
-	team: TeamRollup;
+	organisation: OrganisationRollup;
 	onManage: () => void;
 }) {
-	const isAdminOrOwner = team.role === "admin" || team.role === "owner";
+	const isAdminOrOwner = organisation.role === "admin" || organisation.role === "owner";
 
 	// Health hint — hours this cycle + at-cap count. Admin/billing get €
 	// (server-gated). Non-admins still see cap warnings: knowing "2
 	// workspaces are at limit" is actionable even for a plain member (they
 	// can ask an admin for a different workspace to work in).
 	const { data: usage } = useQuery({
-		queryKey: ["v2", "org-usage", team.id],
-		queryFn: () => fetchOrgUsageLite(team.id),
+		queryKey: ["v2", "org-usage", organisation.id],
+		queryFn: () => fetchOrgUsageLite(organisation.id),
 		staleTime: 60_000,
 	});
 
-	const teamLogo = resolveLogoUrl(team.logo_url);
+	const organisationLogo = resolveLogoUrl(organisation.logo_url);
 
 	return (
 		<Paper p="lg" radius="md" withBorder>
 			<Group justify="space-between" align="flex-start" wrap="nowrap">
 				<Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-					{teamLogo && (
+					{organisationLogo && (
 						<Image
-							src={teamLogo}
-							alt={t`${team.name} logo`}
+							src={organisationLogo}
+							alt={t`${organisation.name} logo`}
 							h={40}
 							w="auto"
 							fit="contain"
@@ -354,23 +354,23 @@ function TeamHeroCard({
 					)}
 					<Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
 						<Text fw={500} size="lg" lineClamp={1}>
-							{team.name}
+							{organisation.name}
 						</Text>
 					<Text size="xs" c="dimmed">
 						<Plural
-							value={team.workspace_count}
+							value={organisation.workspace_count}
 							one="# workspace"
 							other="# workspaces"
 						/>
 						{" · "}
 						<Plural
-							value={team.total_members}
+							value={organisation.total_members}
 							one="# person"
 							other="# people"
 						/>
 						{" · "}
 						<Plural
-							value={team.total_projects}
+							value={organisation.total_projects}
 							one="# project"
 							other="# projects"
 						/>
@@ -400,7 +400,7 @@ function TeamHeroCard({
 						leftSection={<IconSettings size={14} />}
 						onClick={onManage}
 					>
-						<Trans>Manage team</Trans>
+						<Trans>Manage organisation</Trans>
 					</Button>
 				)}
 			</Group>
@@ -422,7 +422,7 @@ export const WorkspaceSelectorRoute = () => {
 	});
 
 	const workspaces = data?.workspaces ?? [];
-	const teams = data?.teams ?? [];
+	const organisations = data?.organisations ?? [];
 
 	const filtered = search
 		? workspaces.filter(
@@ -432,16 +432,16 @@ export const WorkspaceSelectorRoute = () => {
 			)
 		: workspaces;
 
-	// Group by team (org)
+	// Group by organisation (org)
 	const internalWorkspaces = filtered.filter((w) => !w.is_external);
 	const externalWorkspaces = filtered.filter((w) => w.is_external);
 
-	// Seed groups from `teams` first — that way a team with zero workspaces
+	// Seed groups from `organisations` first — that way a organisation with zero workspaces
 	// still renders a hero card + AddWorkspace affordance instead of getting
 	// swallowed by the "no workspaces yet" empty state.
 	const orgGroups = new Map<string, { name: string; role: string; workspaces: Workspace[] }>();
-	for (const team of teams) {
-		orgGroups.set(team.id, { name: team.name, role: team.role, workspaces: [] });
+	for (const organisation of organisations) {
+		orgGroups.set(organisation.id, { name: organisation.name, role: organisation.role, workspaces: [] });
 	}
 	for (const w of internalWorkspaces) {
 		const existing = orgGroups.get(w.org_id);
@@ -475,7 +475,7 @@ export const WorkspaceSelectorRoute = () => {
 		<Container size="md" py="xl" px="lg">
 				<Stack gap={32}>
 					{/* Header — create-workspace is NOT up here. We put
-					    "Add workspace" dashed cards inside each team's grid
+					    "Add workspace" dashed cards inside each organisation's grid
 					    so the placement answers "create where?" by itself. */}
 					<Title order={3} fw={400}>
 						<Trans>Workspaces</Trans>
@@ -491,21 +491,21 @@ export const WorkspaceSelectorRoute = () => {
 						/>
 					)}
 
-					{/* Team groups — team hero card tops each group when a rollup
+					{/* Organisation groups — organisation hero card tops each group when a rollup
 					    exists; falls back to a plain heading otherwise (designer
-					    Ask 5: team-level context at top). Dividers between groups
-					    (2026-04-24 ask) so each team/guest section reads as a
+					    Ask 5: organisation-level context at top). Dividers between groups
+					    (2026-04-24 ask) so each organisation/guest section reads as a
 					    distinct block instead of one big stream. */}
 					{Array.from(orgGroups.entries()).map(([orgId, group], idx) => {
-						const team = teams.find((t) => t.id === orgId);
+						const organisation = organisations.find((t) => t.id === orgId);
 
 						return (
 							<Stack key={orgId} gap={16}>
 								{idx > 0 && <Divider />}
-								{team ? (
-									<TeamHeroCard
-										team={team}
-										onManage={() => navigate(`/t/${orgId}`)}
+								{organisation ? (
+									<OrganisationHeroCard
+										organisation={organisation}
+										onManage={() => navigate(`/o/${orgId}`)}
 									/>
 								) : (
 									<Text size="sm" fw={500}>
@@ -523,11 +523,11 @@ export const WorkspaceSelectorRoute = () => {
 										/>
 									))}
 									{/* Dashed "+ new workspace" placeholder — admin/
-									    owner only. Lives under the team it belongs
+									    owner only. Lives under the organisation it belongs
 									    to so create-where is answered by placement. */}
 									{(group.role === "owner" ||
 										group.role === "admin") && (
-										<AddWorkspaceCard teamId={orgId} />
+										<AddWorkspaceCard organisationId={orgId} />
 									)}
 								</SimpleGrid>
 
@@ -562,10 +562,10 @@ export const WorkspaceSelectorRoute = () => {
 						</Stack>
 					)}
 
-					{/* Empty state — only when the user has no teams AND no workspaces.
-					    If they have a team but no workspace, the orgGroups loop above
-					    already renders a team hero + AddWorkspace card. */}
-					{workspaces.length === 0 && teams.length === 0 && !isLoading && (
+					{/* Empty state — only when the user has no organisations AND no workspaces.
+					    If they have a organisation but no workspace, the orgGroups loop above
+					    already renders a organisation hero + AddWorkspace card. */}
+					{workspaces.length === 0 && organisations.length === 0 && !isLoading && (
 						<Stack align="center" gap={16} mt="10vh">
 							<Text c="dimmed" size="sm">
 								<Trans>No workspaces yet. Create your first one to get started.</Trans>

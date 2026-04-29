@@ -2,7 +2,7 @@
 
 **Intent:** make the user pause exactly as long as the consequence deserves, and spell out the consequence so they can't miss it. No "Successfully deleted" — the phrasing throughout is factual.
 
-**Used by:** delete workspace, remove member, demote (including self), transfer workspace, tier downgrade, delete team, delete project (admin-only).
+**Used by:** delete workspace, remove member, demote (including self), transfer workspace, tier downgrade, delete organisation, delete project (admin-only).
 
 **Reference:** matrix §4 (delete workspace requires confirmation), §3 (downgrade dialog lists frozen/reverted features), brief pattern 5.
 
@@ -18,7 +18,7 @@
 | Tier downgrade | Modal + "Downgrade to {tier}" button | Lists every frozen + reverted feature. Staff-only action. |
 | Delete project | Modal + "Delete project" button | If project has conversations, show count. Irreversible. |
 | Delete workspace | Modal + **type-to-confirm** | Requires typing workspace name. Blocked if non-deleted projects exist. |
-| Delete team | Modal + type-to-confirm | Same friction as delete workspace. |
+| Delete organisation | Modal + type-to-confirm | Same friction as delete workspace. |
 | Transfer workspace | Modal + "Transfer" | Staff-only. Lists billing + access impact. |
 
 ## Shape — standard modal
@@ -45,7 +45,7 @@
 ┌─ Delete {workspace} ────────────────────────────┐
 │                                                 │
 │  This permanently removes the workspace from    │
-│  your team. Direct members will lose access.    │
+│  your organisation. Direct members will lose access.    │
 │                                                 │
 │  Any projects must be deleted first.            │
 │  You have 3 projects here.                      │
@@ -58,7 +58,7 @@
 ```
 
 - Button is disabled until input matches workspace name exactly (case-sensitive).
-- If a precondition blocks the action (projects present), the button is disabled + input is disabled. Primary CTA becomes `[See projects]` linking to the team-page project view (checklist decision 2026-04-20 + matrix §4 delete-workspace requires empty).
+- If a precondition blocks the action (projects present), the button is disabled + input is disabled. Primary CTA becomes `[See projects]` linking to the organisation-page project view (checklist decision 2026-04-20 + matrix §4 delete-workspace requires empty).
 
 ## Tier downgrade — special case (matrix §3)
 
@@ -90,7 +90,7 @@ Downgrading to pioneer will:
 
 ## Last-admin protection
 
-Any attempt to demote or remove the last admin (at workspace or team level) is not a confirmation — it's a refusal. Show inline error, not this modal:
+Any attempt to demote or remove the last admin (at workspace or organisation level) is not a confirmation — it's a refusal. Show inline error, not this modal:
 
 > You are the only admin of {workspace}. Add another admin before changing your role.
 

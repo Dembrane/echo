@@ -60,15 +60,15 @@ async function postRequestAccess(workspaceId: string) {
 /**
  * Matrix §6 Slack-style discovery surface for the home page.
  *
- * Shows workspaces in the team that the user has NO direct membership
- * to (filtered server-side). Team admins see all with Join; team
+ * Shows workspaces in the organisation that the user has NO direct membership
+ * to (filtered server-side). Organisation admins see all with Join; organisation
  * members see open workspaces with Request access (or Pending when a
  * request is already out).
  */
 export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 	const queryClient = useQueryClient();
 	// Collapsed by default (2026-04-24 ask). The list can be long on
-	// bigger teams and most of the time the user isn't here to discover
+	// bigger organisations and most of the time the user isn't here to discover
 	// new workspaces — they're here to enter one they already belong to.
 	const [open, setOpen] = useState(false);
 
@@ -128,7 +128,7 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 					}}
 				/>
 				<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.5}>
-					<Trans>Discoverable in this team</Trans>
+					<Trans>Discoverable in this organisation</Trans>
 				</Text>
 				<Text size="xs" c="dimmed">
 					<Plural

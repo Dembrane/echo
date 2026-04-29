@@ -67,9 +67,9 @@ function formatDate(iso: string | null): string {
 }
 
 /**
- * Team-wide projects view (matrix §4 delete-workspace workflow).
+ * Organisation-wide projects view (matrix §4 delete-workspace workflow).
  *
- * Team admins can scan every project across every team workspace and
+ * Organisation admins can scan every project across every organisation workspace and
  * soft-delete from one surface. Prereq for winding down a workspace:
  * delete-workspace is blocked while any project exists, and admins
  * don't want to walk into 20 workspaces one by one.
@@ -77,7 +77,7 @@ function formatDate(iso: string | null): string {
  * Filter + search are client-side — volume is small enough to render
  * everything.
  */
-export const TeamProjectsTable = ({ orgId }: { orgId: string }) => {
+export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 	const queryClient = useQueryClient();
 	const [search, setSearch] = useUrlSearch();
 	const [workspaceFilter, setWorkspaceFilter] = useState<string | null>(null);
@@ -169,7 +169,7 @@ export const TeamProjectsTable = ({ orgId }: { orgId: string }) => {
 			<Stack gap={12}>
 				<Group justify="space-between" wrap="wrap">
 					<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
-						<Trans>Projects across team · {projects.length}</Trans>
+						<Trans>Projects across organisation · {projects.length}</Trans>
 					</Text>
 					<Group gap="xs">
 						<TextInput

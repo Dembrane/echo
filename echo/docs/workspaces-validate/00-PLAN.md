@@ -59,7 +59,7 @@ Priority 0 first (derivation walkback — backend, not UI but spec it); then 1�
 Work release blockers + remaining checklist tasks in dependency order. Small commits, one session tag per commit (e.g. `S9: workspace creation wizard — visibility step`). Update `05-PROGRESS.md` after each commit.
 
 Release blockers (brief §"Release blockers"):
-1. Teams admin page expansion (Ask 1 list ⇄ matrix ⇄ projects) — S7
+1. Organisations admin page expansion (Ask 1 list ⇄ matrix ⇄ projects) — S7
 2. Tier set/change staff inline (Ask 2s) — S8
 3. Workspace suspend — **per matrix reconciliation, not this release.** Drop from blocker list; access-blocking is covered by tier downgrade + soft-delete + membership removal.
 4. Delete workspace endpoint + UI — endpoint done; UI needs wiring to settings tab + project-exists error

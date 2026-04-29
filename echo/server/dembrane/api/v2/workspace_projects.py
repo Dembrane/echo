@@ -1,9 +1,9 @@
 """Workspace-scoped project endpoints: list and create."""
 
-from logging import getLogger
 from typing import Optional
+from logging import getLogger
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import Query, Depends, APIRouter
 from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
@@ -21,6 +21,7 @@ logger = getLogger("api.v2.workspace_projects")
 
 class ProjectAccessPreview(BaseModel):
     """A single avatar bubble on the project list card."""
+
     display_name: str
     avatar: Optional[str] = None
 
@@ -36,16 +37,19 @@ async def _enrich_previews(
     if not user_ids:
         return {}
 
-    app_users = await async_directus.get_items(
-        "app_user",
-        {
-            "query": {
-                "filter": {"id": {"_in": user_ids}},
-                "fields": ["id", "display_name", "directus_user_id"],
-                "limit": -1,
-            }
-        },
-    ) or []
+    app_users = (
+        await async_directus.get_items(
+            "app_user",
+            {
+                "query": {
+                    "filter": {"id": {"_in": user_ids}},
+                    "fields": ["id", "display_name", "directus_user_id"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
     if not isinstance(app_users, list):
         return {}
 
@@ -83,7 +87,7 @@ async def _build_access_previews(
 
     Access model mirrors inheritance.get_user_project_access:
       - visibility='workspace' → every effective workspace member
-        (direct + derived team admins/owners/members) has access.
+        (direct + derived organisation admins/owners/members) has access.
       - visibility='private' → workspace admins/owners + users with a
         project_membership row.
 
@@ -92,43 +96,40 @@ async def _build_access_previews(
     if not project_ids:
         return {}
 
-    # Effective workspace members — includes derived team admins/owners.
+    # Effective workspace members — includes derived organisation admins/owners.
     # One source of truth, matches what user_can_access would return per
     # user. This replaces the naive "only direct workspace_membership"
-    # read which undercounted teams with inheritance.
+    # read which undercounted organisations with inheritance.
     from dembrane.inheritance import get_effective_members
 
     effective = await get_effective_members(workspace_id)
     # Stable ordering so bubble preview is deterministic across requests:
     # direct rows first (they have real created_at), then derived.
-    effective.sort(
-        key=lambda m: (0 if m.get("source") == "direct" else 1, m.get("user_id", ""))
-    )
+    effective.sort(key=lambda m: (0 if m.get("source") == "direct" else 1, m.get("user_id", "")))
     ws_user_ids_full = [m["user_id"] for m in effective if m.get("user_id")]
     ws_member_count = len(ws_user_ids_full)
     # Admins/owners subset — for the private-project fallback bubble set.
     ws_admin_user_ids = [
-        m["user_id"]
-        for m in effective
-        if m.get("user_id") and m.get("role") in ("admin", "owner")
+        m["user_id"] for m in effective if m.get("user_id") and m.get("role") in ("admin", "owner")
     ]
 
     # Per-private-project share rows.
-    private_ids = [
-        pid for pid in project_ids if project_visibilities.get(pid) == "private"
-    ]
+    private_ids = [pid for pid in project_ids if project_visibilities.get(pid) == "private"]
     private_shares: dict[str, list[str]] = {}
     if private_ids:
-        rows = await async_directus.get_items(
-            "project_membership",
-            {
-                "query": {
-                    "filter": {"project_id": {"_in": private_ids}},
-                    "fields": ["project_id", "user_id"],
-                    "limit": -1,
-                }
-            },
-        ) or []
+        rows = (
+            await async_directus.get_items(
+                "project_membership",
+                {
+                    "query": {
+                        "filter": {"project_id": {"_in": private_ids}},
+                        "fields": ["project_id", "user_id"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
         if isinstance(rows, list):
             for row in rows:
                 pid = row.get("project_id")
@@ -199,19 +200,22 @@ async def _project_audio_hours(project_ids: list[str]) -> dict[str, float]:
     """
     if not project_ids:
         return {}
-    convs = await async_directus.get_items(
-        "conversation",
-        {
-            "query": {
-                "filter": {
-                    "project_id": {"_in": project_ids},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["project_id", "duration"],
-                "limit": -1,
-            }
-        },
-    ) or []
+    convs = (
+        await async_directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {
+                        "project_id": {"_in": project_ids},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["project_id", "duration"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
     if not isinstance(convs, list):
         return {}
     seconds: dict[str, float] = {}
@@ -307,9 +311,7 @@ async def list_workspace_projects(
         "deleted_at": {"_null": True},
     }
     effective_filter = (
-        {**base_filter, **visibility_clause}
-        if visibility_clause is not None
-        else base_filter
+        {**base_filter, **visibility_clause} if visibility_clause is not None else base_filter
     )
 
     query: dict = {
@@ -339,9 +341,7 @@ async def list_workspace_projects(
     page_rows = projects_raw[:limit]
 
     page_ids = [p["id"] for p in page_rows]
-    page_visibilities = {
-        p["id"]: (p.get("visibility") or "workspace") for p in page_rows
-    }
+    page_visibilities = {p["id"]: (p.get("visibility") or "workspace") for p in page_rows}
     preview_map = await _build_access_previews(
         workspace_id=ctx.workspace_id,
         project_ids=page_ids,
@@ -383,26 +383,29 @@ async def list_workspace_projects(
 
     # Pinned list uses the same visibility filter so members don't see a
     # pinned private project they can't reach.
-    pinned_raw = await async_directus.get_items("project", {"query": {
-        "fields": [
-            "id",
-            "name",
-            "updated_at",
-            "language",
-            "pin_order",
-            "visibility",
-            "directus_user_id",
-            "count(conversations)",
-        ],
-        "filter": {**effective_filter, "pin_order": {"_nnull": True}},
-        "sort": ["pin_order"],
-        "limit": 3,
-    }})
+    pinned_raw = await async_directus.get_items(
+        "project",
+        {
+            "query": {
+                "fields": [
+                    "id",
+                    "name",
+                    "updated_at",
+                    "language",
+                    "pin_order",
+                    "visibility",
+                    "directus_user_id",
+                    "count(conversations)",
+                ],
+                "filter": {**effective_filter, "pin_order": {"_nnull": True}},
+                "sort": ["pin_order"],
+                "limit": 3,
+            }
+        },
+    )
     pinned_rows = pinned_raw if isinstance(pinned_raw, list) else []
     pinned_ids = [p["id"] for p in pinned_rows]
-    pinned_visibilities = {
-        p["id"]: (p.get("visibility") or "workspace") for p in pinned_rows
-    }
+    pinned_visibilities = {p["id"]: (p.get("visibility") or "workspace") for p in pinned_rows}
     pinned_preview_map = await _build_access_previews(
         workspace_id=ctx.workspace_id,
         project_ids=pinned_ids,
@@ -461,17 +464,22 @@ async def create_workspace_project(
     await require_no_pilot_block(ctx)
 
     project_id = generate_uuid()
-    result = await async_directus.create_item("project", {
-        "id": project_id,
-        "name": body.name,
-        "language": body.language,
-        "workspace_id": ctx.workspace_id,
-        "directus_user_id": auth.user_id,
-        "is_conversation_allowed": True,
-    })
+    result = await async_directus.create_item(
+        "project",
+        {
+            "id": project_id,
+            "name": body.name,
+            "language": body.language,
+            "workspace_id": ctx.workspace_id,
+            "directus_user_id": auth.user_id,
+            "is_conversation_allowed": True,
+        },
+    )
     project = result["data"]
 
-    logger.info(f"Created project {project_id} in workspace {ctx.workspace_id} by {ctx.app_user_id}")
+    logger.info(
+        f"Created project {project_id} in workspace {ctx.workspace_id} by {ctx.app_user_id}"
+    )
 
     return V2CreateProjectResponse(
         id=project["id"],

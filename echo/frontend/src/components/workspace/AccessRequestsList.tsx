@@ -55,7 +55,7 @@ async function postAction(
 /**
  * Pending access-requests list on the workspace settings page (matrix §6).
  *
- * Shows team-member requests-to-join that need admin approval. Hides
+ * Shows organisation-member requests-to-join that need admin approval. Hides
  * itself when there are no pending rows — no empty-state clutter next
  * to the members table. Approve writes a direct Member row; Reject is
  * silent to the requester.
@@ -110,7 +110,7 @@ export const AccessRequestsList = ({ workspaceId }: { workspaceId: string }) => 
 							<Group justify="space-between" wrap="nowrap">
 								<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
 									<Text size="sm" lineClamp={1}>
-										{r.user_display_name || r.user_email || t`Team member`}
+										{r.user_display_name || r.user_email || t`Organisation member`}
 									</Text>
 									{r.user_email && r.user_display_name && (
 										<Tooltip label={r.user_email}>

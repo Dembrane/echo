@@ -282,7 +282,7 @@ async def list_my_projects(
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
 
-    # Direct rows — plus any workspace the user can derive into (team
+    # Direct rows — plus any workspace the user can derive into (organisation
     # admin/owner inheritance). Simpler: pull workspace ids via
     # get_effective_members... actually the cheapest read is
     # workspace_membership rows the user has.
@@ -305,7 +305,7 @@ async def list_my_projects(
         if row.get("workspace_id")
     ]
 
-    # Also include workspaces the user reaches by team admin/owner
+    # Also include workspaces the user reaches by organisation admin/owner
     # derivation. Org rows where role in (admin, owner) grant access to
     # every workspace under that org.
     org_rows = await async_directus.get_items(

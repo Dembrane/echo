@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Workspaces & Teams — v2 chosen directions</title>
+<title>Workspaces & Organisations — v2 chosen directions</title>
 <link rel="stylesheet" href="assets/colors_and_type.css" />
 <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -160,12 +160,12 @@
 <body data-role="admin" data-tier="innovator" data-density="5">
 <div class="shell">
   <aside class="toc">
-    <h1>Workspaces &amp; Teams</h1>
+    <h1>Workspaces &amp; Organisations</h1>
     <div class="sub">v2 · chosen directions</div>
     <div class="v">← v1 wires linked below</div>
     <nav>
       <a href="#intro"><span class="n">·</span>Intro</a>
-      <a href="#ask1"><span class="n">1</span>Team admin · 1B ⇄ 1C</a>
+      <a href="#ask1"><span class="n">1</span>Organisation admin · 1B ⇄ 1C</a>
       <a href="#ask2"><span class="n">2</span>Tier management · 2B</a>
       <a href="#ask3"><span class="n">3</span>Private sharing · 3B + strip</a>
       <a href="#ask4"><span class="n">4</span>Upgrade prompts · 4B+4C</a>
@@ -197,8 +197,8 @@
     </div>
 
     <!-- ════════════════════ ASK 1 ════════════════════ -->
-    <section class="ask" id="ask1" data-screen-label="Ask 1 — Team admin">
-      <header><span class="tag">ask 01</span><h3>Team admin · list ⇄ matrix</h3></header>
+    <section class="ask" id="ask1" data-screen-label="Ask 1 — Organisation admin">
+      <header><span class="tag">ask 01</span><h3>Organisation admin · list ⇄ matrix</h3></header>
       <div class="lede">
         Same page, two views. 1B (list) is the default — friendly, readable, search-forward. 1C (matrix) is a
         one-click alternate for admins who want the full access grid.
@@ -209,18 +209,18 @@
       </div>
 
       <div class="frame">
-        <h4><span class="num">1.</span>Team admin page</h4>
+        <h4><span class="num">1.</span>Organisation admin page</h4>
         <p class="why">/org/:orgId/members — owners &amp; admins. Toggle view with the switcher top-right.</p>
         <div class="mock wide">
           <div class="topbar">
-            <div class="crumb">human collective › team · members</div>
-            <div class="hz"><span class="bar sec">🔍 name, email</span><span class="bar pri">+ Invite to team</span></div>
+            <div class="crumb">human collective › organisation · members</div>
+            <div class="hz"><span class="bar sec">🔍 name, email</span><span class="bar pri">+ Invite to organisation</span></div>
           </div>
 
           <div class="spread" style="margin-bottom:6px">
             <div>
               <h5 class="hdg" style="margin:0">Everyone with access · 12</h5>
-              <div class="mini">9 on the team · 3 external · 3 workspaces</div>
+              <div class="mini">9 on the organisation · 3 external · 3 workspaces</div>
             </div>
             <div class="view-switch">
               <button class="on" onclick="setView('list')">List</button>
@@ -231,11 +231,11 @@
           <!-- LIST VIEW (1B) -->
           <div class="view-pane on" id="view-list">
             <div class="hz" style="margin-bottom:6px;flex-wrap:wrap">
-              <span class="bar">All</span><span class="bar ghost">Team</span><span class="bar ghost">External</span>
+              <span class="bar">All</span><span class="bar ghost">Organisation</span><span class="bar ghost">External</span>
               <span class="mini" style="margin-left:auto">sort: recent · role ▾</span>
             </div>
 
-            <h5 class="hdg" style="margin-top:4px">Team · <span class="mini" style="font-family:var(--font-sans)">inherited to all workspaces</span></h5>
+            <h5 class="hdg" style="margin-top:4px">Organisation · <span class="mini" style="font-family:var(--font-sans)">inherited to all workspaces</span></h5>
             <div class="density-1">
               <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:64px"></span>
                 <span class="pill mute" style="margin-left:auto">owner</span>
@@ -254,7 +254,7 @@
               <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:76px"></span><span class="pill mute" style="margin-left:auto">admin</span><span class="pill blue">+2</span></div>
               <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:62px"></span><span class="pill mute" style="margin-left:auto">member</span><span class="pill blue">+1</span></div>
               <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:54px"></span><span class="pill mute" style="margin-left:auto">member</span><span class="pill blue">+1</span></div>
-              <div class="mini" style="text-align:center;padding:4px 0">…44 more team members</div>
+              <div class="mini" style="text-align:center;padding:4px 0">…44 more organisation members</div>
             </div>
 
             <h5 class="hdg" style="margin-top:10px">External <span class="pill ext" style="font-size:9px;font-family:var(--font-sans)">guest</span></h5>
@@ -265,7 +265,7 @@
 
           <!-- MATRIX VIEW (1C) -->
           <div class="view-pane" id="view-matrix">
-            <div class="hz" style="margin-bottom:6px"><span class="bar ghost">group: team</span><span class="mini" style="margin-left:auto">click a cell to change access</span></div>
+            <div class="hz" style="margin-bottom:6px"><span class="bar ghost">group: organisation</span><span class="mini" style="margin-left:auto">click a cell to change access</span></div>
             <div style="display:grid;grid-template-columns:1.5fr repeat(3,.7fr);gap:3px;font-size:11px">
               <div class="mini" style="padding:4px">&nbsp;</div>
               <div class="cell" style="text-align:center;background:#ece8e0">Default</div>
@@ -456,7 +456,7 @@
     <!-- ════════════════════ ASK 4 ════════════════════ -->
     <section class="ask" id="ask4" data-screen-label="Ask 4 — Upgrade prompts">
       <header><span class="tag">ask 04</span><h3>Upgrade prompts · 4B (feature card) + 4C (modal)</h3></header>
-      <div class="lede">4B gates whole feature surfaces. 4C is the modal that opens from any gate. Both check tier <em>and</em> role — only team admins + owners see "Request upgrade" as primary; members get a softer "Ask an admin" CTA.</div>
+      <div class="lede">4B gates whole feature surfaces. 4C is the modal that opens from any gate. Both check tier <em>and</em> role — only organisation admins + owners see "Request upgrade" as primary; members get a softer "Ask an admin" CTA.</div>
       <div class="changenote"><b>v2:</b> added the tier + role gate. Non-admins see "Ask an admin" instead of "Request upgrade". Try flipping role=member + tier=pilot in Tweaks.</div>
 
       <div class="two">
@@ -498,7 +498,7 @@
               <div class="spread" style="margin-top:4px"><span class="mini">Needed</span><span class="pill soft-blue">innovator</span></div>
             </div>
             <div class="mini role-admin-only">We'll email you about pricing and next steps.</div>
-            <div class="mini" style="display:none" class="if-member">Ask a team admin to upgrade. We'll prefill the request for them.</div>
+            <div class="mini" style="display:none" class="if-member">Ask a organisation admin to upgrade. We'll prefill the request for them.</div>
             <div class="spread" style="margin-top:14px">
               <span class="bar ghost">Not now</span>
               <span class="bar pri role-admin-only">Request upgrade</span>
@@ -514,13 +514,13 @@
     <!-- ════════════════════ ASK 5 ════════════════════ -->
     <section class="ask" id="ask5" data-screen-label="Ask 5 — Selector + settings">
       <header><span class="tag">ask 05</span><h3>Selector + settings polish · 5B with per-workspace manage</h3></header>
-      <div class="lede">5B's team header on top, workspaces as a list — but with a per-row "manage" affordance so admins can jump straight into workspace settings without opening it first.</div>
-      <div class="changenote"><b>v2:</b> added a hover "⚙ manage" affordance on each workspace row, plus the team-level "manage team" as before. Externals stay in their own quieter section. Settings tabs view (5C) kept for reference.</div>
+      <div class="lede">5B's organisation header on top, workspaces as a list — but with a per-row "manage" affordance so admins can jump straight into workspace settings without opening it first.</div>
+      <div class="changenote"><b>v2:</b> added a hover "⚙ manage" affordance on each workspace row, plus the organisation-level "manage organisation" as before. Externals stay in their own quieter section. Settings tabs view (5C) kept for reference.</div>
 
       <div class="two">
         <div class="frame">
           <h4><span class="num">5.1</span>Workspace selector</h4>
-          <p class="why">/select-workspace — team hero on top, workspaces below, externals quieter.</p>
+          <p class="why">/select-workspace — organisation hero on top, workspaces below, externals quieter.</p>
           <div class="mock wide">
             <div class="topbar"><div class="crumb">choose a workspace</div><span class="bar sec">🔍</span></div>
 
@@ -533,7 +533,7 @@
                 <div class="hz">
                   <span class="dot blue sm"></span><span class="dot blue sm"></span><span class="dot blue sm"></span>
                   <span class="mini">+9</span>
-                  <span class="bar sec" style="margin-left:8px">Manage team</span>
+                  <span class="bar sec" style="margin-left:8px">Manage organisation</span>
                 </div>
               </div>
             </div>
@@ -585,7 +585,7 @@
               <span class="t">Billing</span>
             </div>
             <div class="spread" style="margin-bottom:6px">
-              <span class="mini">Workspace-scoped. Team admins are inherited.</span>
+              <span class="mini">Workspace-scoped. Organisation admins are inherited.</span>
               <span class="bar pri">+ Invite</span>
             </div>
             <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:60px"></span><span class="pill soft-blue" style="margin-left:auto">admin · inherited</span></div>
@@ -596,7 +596,7 @@
         </div>
       </div>
 
-      <div class="mobile-note"><span class="m">mobile</span><div>Team hero collapses to a single-row strip; ⚙ manage on each workspace moves to a row kebab menu.</div></div>
+      <div class="mobile-note"><span class="m">mobile</span><div>Organisation hero collapses to a single-row strip; ⚙ manage on each workspace moves to a row kebab menu.</div></div>
     </section>
 
     <!-- ════════════════════ ONBOARDING ════════════════════ -->
@@ -604,13 +604,13 @@
       <header><span class="tag">fix</span><h3>Onboarding — new users shouldn't see the migration screen</h3></header>
       <div class="lede">
         The current <em>Welcome back, John</em> screen is a <strong><span style="color:var(--accent)">migration</span></strong> prompt — it assumes you already have projects from before workspaces existed.
-        A freshly-registered account has nothing to migrate, so this copy is confusing and the "Use default" / "Team name" step is jarring.
+        A freshly-registered account has nothing to migrate, so this copy is confusing and the "Use default" / "Organisation name" step is jarring.
       </div>
-      <div class="changenote"><b>v2:</b> split into two explicit paths. <em>New user → ask team name during registration, then land in their empty default workspace.</em> <em>Existing user (no team yet) → current screen, re-copied as a migration.</em></div>
+      <div class="changenote"><b>v2:</b> split into two explicit paths. <em>New user → ask organisation name during registration, then land in their empty default workspace.</em> <em>Existing user (no organisation yet) → current screen, re-copied as a migration.</em></div>
 
       <div class="two">
         <div class="frame">
-          <h4><span class="num">A</span>New user · team name at signup</h4>
+          <h4><span class="num">A</span>New user · organisation name at signup</h4>
           <p class="why">One extra field on the signup form. No separate onboarding route.</p>
           <div class="mock">
             <div class="topbar"><div class="crumb">sign up</div></div>
@@ -620,12 +620,12 @@
             <div class="box dashed" style="margin-bottom:6px"><div class="mini">Password</div><div class="fake-text lg" style="width:60%"></div></div>
             <div class="box dashed" style="margin-bottom:6px"><div class="mini">Your name</div><div class="fake-text lg" style="width:50%"></div></div>
             <div class="box dashed" style="border-color:var(--accent);margin-bottom:10px">
-              <div class="mini" style="color:var(--accent)">Team name · optional</div>
+              <div class="mini" style="color:var(--accent)">Organisation name · optional</div>
               <div class="fake-text lg" style="width:65%"></div>
-              <div class="mini" style="margin-top:4px">If you're joining teammates later, skip this — they'll invite you in.</div>
+              <div class="mini" style="margin-top:4px">If you're joining members later, skip this — they'll invite you in.</div>
             </div>
             <div class="spread"><span class="mini">By signing up…</span><span class="bar pri">Create account</span></div>
-            <div class="annotation">on submit: auto-create team (fallback "John's team"), default workspace, land in /w/:id/projects empty state.</div>
+            <div class="annotation">on submit: auto-create organisation (fallback "John's organisation"), default workspace, land in /w/:id/projects empty state.</div>
           </div>
         </div>
 
@@ -635,20 +635,20 @@
           <div class="mock">
             <div class="topbar"><div class="crumb">welcome back</div></div>
             <h5 class="hdg" style="margin:4px 0">Welcome back, john</h5>
-            <div class="mini" style="margin-bottom:10px">We've added teams so you can organise projects and share them with colleagues. Everything you had before is still here — we just need a name for your team.</div>
+            <div class="mini" style="margin-bottom:10px">We've added organisations so you can organise projects and share them with colleagues. Everything you had before is still here — we just need a name for your organisation.</div>
             <div class="box dashed" style="margin-bottom:8px">
-              <div class="mini">Team name</div>
+              <div class="mini">Organisation name</div>
               <div class="fake-text lg" style="width:60%"></div>
               <div class="mini" style="margin-top:4px">Change this anytime in settings.</div>
             </div>
             <div class="hz" style="margin-top:10px"><span class="bar ghost">Use default</span><span class="bar pri">Get started</span></div>
-            <div class="annotation">gate: only shown if user.createdAt &lt; workspaces-launch AND has no team yet. everyone else goes straight in.</div>
+            <div class="annotation">gate: only shown if user.createdAt &lt; workspaces-launch AND has no organisation yet. everyone else goes straight in.</div>
           </div>
         </div>
       </div>
 
       <div class="changenote" style="margin-top:20px">
-        <b>the rule:</b> the current screen is the <em>migration</em> screen. New accounts should never see it — they should land in an empty default workspace after signup, with team name already captured. Detection is trivial: <em>if the user has no team membership AND their account predates the launch timestamp, show B; otherwise skip.</em>
+        <b>the rule:</b> the current screen is the <em>migration</em> screen. New accounts should never see it — they should land in an empty default workspace after signup, with organisation name already captured. Detection is trivial: <em>if the user has no organisation membership AND their account predates the launch timestamp, show B; otherwise skip.</em>
       </div>
 
       <div class="mobile-note"><span class="m">mobile</span><div>Both screens are identical on mobile — single column, CTAs stack full-width.</div></div>
@@ -657,7 +657,7 @@
     <div class="intro" style="margin-top:24px">
       <div class="eyebrow">next</div>
       <p style="color:var(--ink)">
-        When you're happy with these, I'll push the team admin page (ask 1) to mid-fi using Mantine — that's the heaviest surface. Rest can follow in parallel.
+        When you're happy with these, I'll push the organisation admin page (ask 1) to mid-fi using Mantine — that's the heaviest surface. Rest can follow in parallel.
       </p>
     </div>
   </main>

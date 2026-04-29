@@ -14,7 +14,7 @@ export interface V2MeData {
 	// Derived from Directus Administrator role / JWT admin_access claim.
 	is_staff: boolean;
 	// True if the user has projects from before workspaces existed. Drives
-	// the onboarding split: new users (false) see signup-time team name;
+	// the onboarding split: new users (false) see signup-time organisation name;
 	// legacy users (true) see the migration screen copy.
 	has_legacy_projects: boolean;
 }

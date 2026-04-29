@@ -11,10 +11,10 @@ Scope: ran through the Workspaces validation plan using seed users (Anna, Ben, C
 | 3 | Role changes — promote / demote / remove + last-admin protection | ✅ verified backend rules all hold | shot 15 |
 | 4 | Tier gates — pilot-only features, request-upgrade flow | ✅ verified on Access + Usage and Tier tabs; upgrade dialog works | shots 16, 17 |
 | 5 | Workspace settings — every tab | ✅ walked General / Members / Access / Usage and Tier / Danger | shots 11, 12, 16, 17, 18 |
-| 6 | Team page — Overview, Usage, People | ✅ walked all 3 tabs; Needs Attention panel surfaces all 3 seed-data cap/downgrade conditions correctly | shots 19, 20 |
+| 6 | Organisation page — Overview, Usage, People | ✅ walked all 3 tabs; Needs Attention panel surfaces all 3 seed-data cap/downgrade conditions correctly | shots 19, 20 |
 | 7 | Billing role — login as Emma | ✅ verified what billing sees vs hides; 2 fresh pains | shots 23, 24, 25 |
 | 8 | Projects — private project + sharing modal | ✅ walked end-to-end on "Brand Rollout" (Whitelabel Project, Innovator tier) | shots 21, 22 |
-| 9 | Multi-team — two teams, grouping, switching | ✅ verified via Hank (owner Alpha Inc + member of Partner Consulting) and Emma (owner Partner Consulting + member Acme Research) | shot 25 |
+| 9 | Multi-organisation — two organisations, grouping, switching | ✅ verified via Hank (owner Alpha Inc + member of Partner Consulting) and Emma (owner Partner Consulting + member Acme Research) | shot 25 |
 | 10 | Pilot hour block | ⏸ deferred — needs a dev shortcut to burn hours fast |
 | 11 | Participant portal | ⏸ deferred — QR/device flow |
 | 12 | Onboarding redo with fresh user | ⏸ deferred — email verification needs Sameer to paste the link |
@@ -31,11 +31,11 @@ These are the ones worth triaging first — they hit flows that are supposed to 
 2. **`[rough]` Join/members/projects list all suffer from stale cache.** First mount renders old or empty data; a reload fixes it. Saw it on: Cara's first projects page after invite, Members tab before/after Cara was added, Share modal after adding Ben. Common cause = missing `invalidateQueries`. Same family as Sameer's own "joining a ws doesnt refetch" observation.
 3. **`[rough]` Billing user sees a broken Projects tab.** Emma lands on `/w/<id>/projects` with "All projects" + "Create" button but empty list. Either redirect billing to `/settings/billing`, or empty-state with copy "Billing accounts don't see projects."
 4. **`[rough]` Billing-role workspace card on `/w` has no "Manage" button.** Emma has no one-click path into the one place she needs (Usage and Tier).
-5. **`[rough]` Seats 4/3 on Pioneer shown as plain text** with no overage warning on the workspace-level Usage and Tier card. The team-level Usage "Needs Attention" panel catches it, but the workspace card itself is silent.
+5. **`[rough]` Seats 4/3 on Pioneer shown as plain text** with no overage warning on the workspace-level Usage and Tier card. The organisation-level Usage "Needs Attention" panel catches it, but the workspace card itself is silent.
 6. **`[rough]` "Usage and Tier" tab label sits at `/settings/billing`.** Either rename URL segment or rename tab.
 7. **`[rough]` Private-project share modal doesn't refresh after Add.** Same refetch family as above. Add succeeded server-side (verified via API) but the dialog still said "Just you, for now."
 8. **`[rough]` `include_org_membership` alias not honored by the invite endpoint** despite the schema + docstring claim. Canonical `is_org_member` works; the declared alias silently defaults to `false` and rejects billing invites with a misleading "Guests can't…" message.
-9. **`[note]` Team rollup counts "people" differently on Home (7, includes externals) vs Team page (4, team seats only).** Same label, different numbers.
+9. **`[note]` Organisation rollup counts "people" differently on Home (7, includes externals) vs Organisation page (4, organisation seats only).** Same label, different numbers.
 
 The full pain list is in [pains.md](pains.md), grouped by severity tag (`[block]`, `[hurt]`, `[rough]`, `[note]`).
 
@@ -55,9 +55,9 @@ So you don't re-test these tomorrow:
   - Admin sees 5 tabs (General, Members, Access, Usage and Tier, Danger)
   - Billing sees 3 (General read-only, Members read-only, Usage and Tier full-access including Request Upgrade)
 - Private project flow: `Make private` → modal → add workspace-member-only people with `viewer` role. API boundary enforces workspace-scoped sharing.
-- Tier gate honesty on Access tab: Pioneer shows "Private" radio disabled with "Available on innovator and above"; team-admins-can-still-find-and-join disclosure present.
-- Team → Usage "Needs Attention" panel correctly lists: Q1 Discovery approaching hour cap, Default at seat cap, Whitelabel downgraded recently.
-- Multi-team home layout: Emma sees Acme Research + Partner Consulting teams grouped, with correct per-team Manage/Add affordances based on her role.
+- Tier gate honesty on Access tab: Pioneer shows "Private" radio disabled with "Available on innovator and above"; organisation-admins-can-still-find-and-join disclosure present.
+- Organisation → Usage "Needs Attention" panel correctly lists: Q1 Discovery approaching hour cap, Default at seat cap, Whitelabel downgraded recently.
+- Multi-organisation home layout: Emma sees Acme Research + Partner Consulting organisations grouped, with correct per-organisation Manage/Add affordances based on her role.
 
 ## Accounts state (for resuming)
 

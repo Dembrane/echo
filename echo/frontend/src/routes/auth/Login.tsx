@@ -130,7 +130,7 @@ export const LoginRoute = () => {
 			let needsOnboarding = false;
 			let workspaceCount = 0;
 			let firstWorkspaceId: string | null = null;
-			let isTeamAdmin = false;
+			let isOrganisationAdmin = false;
 			try {
 				await new Promise((r) => setTimeout(r, 300));
 				const meResponse = await fetch(`${API_BASE_URL}/v2/me`, {
@@ -139,7 +139,7 @@ export const LoginRoute = () => {
 				if (meResponse.ok) {
 					const meData = await meResponse.json();
 					needsOnboarding = meData.onboarding_completed === false;
-					isTeamAdmin = (meData.orgs ?? []).some(
+					isOrganisationAdmin = (meData.orgs ?? []).some(
 						(o: { role: string }) => o.role === "owner" || o.role === "admin",
 					);
 				}
@@ -190,7 +190,7 @@ export const LoginRoute = () => {
 				navigate(`/w/${firstWorkspaceId}/projects`);
 			} else if (lastStillValid) {
 				navigate(`/w/${lastUsedId}/projects`);
-			} else if (workspaceCount > 1 || isTeamAdmin) {
+			} else if (workspaceCount > 1 || isOrganisationAdmin) {
 				navigate("/w");
 			} else if (firstWorkspaceId) {
 				navigate(`/w/${firstWorkspaceId}/projects`);

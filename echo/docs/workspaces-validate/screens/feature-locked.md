@@ -47,7 +47,7 @@ Two variants, used together:
 │  [Cancel]                [Request upgrade]   │
 │                                              │
 │  (member-role)                               │
-│  Ask one of your team admins to upgrade.     │
+│  Ask one of your organisation admins to upgrade.     │
 │  [Close]                                     │
 └──────────────────────────────────────────────┘
 ```
@@ -59,7 +59,7 @@ Two variants, used together:
 - Availability: "Available on {tier} and up." — **tier name lowercase**, per matrix taglines.
 - Matrix reference row: inline tier-capacity row from matrix §1 pairs a name with a tagline.
 - Admin CTA: "Request upgrade" (primary). Optional free-text textarea labeled "Tell us what you need" — submitted with the request.
-- Member CTA: **no button**. Body copy reads "Ask one of your team admins to upgrade." Only a close affordance.
+- Member CTA: **no button**. Body copy reads "Ask one of your organisation admins to upgrade." Only a close affordance.
 - Never "Successfully requested" — toast reads "Upgrade request sent." on admin submission.
 
 ## Role awareness

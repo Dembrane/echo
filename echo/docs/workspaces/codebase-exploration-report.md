@@ -698,9 +698,9 @@ DirectusBadRequest          # 4xx responses
 
 ## 7. EXISTING PATTERNS
 
-### Multi-User / Sharing / Team Concepts
+### Multi-User / Sharing / Organisation Concepts
 
-**None exist.** Projects are owned by a single user via `project.directus_user_id`. All Directus permissions for "Basic User" filter by `directus_user_id = $CURRENT_USER`. No `shared_with`, `collaborators`, `team_id`, or `workspace` fields exist anywhere.
+**None exist.** Projects are owned by a single user via `project.directus_user_id`. All Directus permissions for "Basic User" filter by `directus_user_id = $CURRENT_USER`. No `shared_with`, `collaborators`, `organisation_id`, or `workspace` fields exist anywhere.
 
 ### Soft Delete / Archive Patterns
 

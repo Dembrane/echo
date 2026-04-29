@@ -30,7 +30,7 @@ Two render modes — inline card and dedicated page, depending on context.
 
 - Replaces the submit form / modal on success. Does not dismiss or toast-and-vanish.
 - Status indicator visible: `pending` (default), `approved`, `rejected`, `cancelled`.
-- SLA: "within 1 business day" for upgrade requests; "your team admins will review" for join requests (no hard SLA since team admins are the humans in the loop).
+- SLA: "within 1 business day" for upgrade requests; "your organisation admins will review" for join requests (no hard SLA since organisation admins are the humans in the loop).
 - Primary affordance: "Cancel request" for upgrade requests. Join requests are uncancellable once sent — they simply expire.
 
 ### Dedicated page (rare)
@@ -55,7 +55,7 @@ For flows where the wait is the whole experience — e.g. partner handoff pendin
 ## Role awareness
 
 - Requester sees the full card — their own request.
-- Workspace admin / team admin sees the *incoming* request in a separate list (screen 5 manage-list), not this screen.
+- Workspace admin / organisation admin sees the *incoming* request in a separate list (screen 5 manage-list), not this screen.
 - Member-as-requester only exists for join requests (matrix §11 locks upgrade-request to admin/billing).
 
 ## Non-goals

@@ -1,16 +1,16 @@
 """V2 project endpoints — non-workspace-scoped operations."""
 
-from logging import getLogger
 from typing import Literal, Optional
+from logging import getLogger
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from dembrane.app_user import get_app_user_or_raise
-from dembrane.directus_async import async_directus
-from dembrane.inheritance import get_user_project_access, user_can_access
 from dembrane.policies import has_policy
+from dembrane.inheritance import user_can_access, get_user_project_access
 from dembrane.api.v2.schemas import MoveProjectRequest, MoveProjectResponse
+from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
@@ -123,17 +123,20 @@ async def get_project_bff(
     project["_source"] = source
 
     if include_tags:
-        tags = await async_directus.get_items(
-            "project_tag",
-            {
-                "query": {
-                    "filter": {"project_id": {"_eq": project_id}},
-                    "fields": ["id", "created_at", "text", "sort"],
-                    "sort": ["sort"],
-                    "limit": -1,
-                }
-            },
-        ) or []
+        tags = (
+            await async_directus.get_items(
+                "project_tag",
+                {
+                    "query": {
+                        "filter": {"project_id": {"_eq": project_id}},
+                        "fields": ["id", "created_at", "text", "sort"],
+                        "sort": ["sort"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
         project["tags"] = tags if isinstance(tags, list) else []
 
     return project
@@ -167,16 +170,14 @@ async def move_project(
             raise HTTPException(status_code=403, detail="Not the owner of this project")
 
     # Source + target access must both resolve as admin/owner. Using
-    # user_can_access honors derived inheritance — a team owner who has
+    # user_can_access honors derived inheritance — a organisation owner who has
     # no direct workspace row still legitimately administers the
     # workspace. The previous raw workspace_membership lookup 403'd them
     # incorrectly. (Audit round 2026-04-21, HIGH.)
     if source_workspace_id:
         src = await user_can_access(source_workspace_id, app_user_id)
         if src is None:
-            raise HTTPException(
-                status_code=403, detail="No access to source workspace"
-            )
+            raise HTTPException(status_code=403, detail="No access to source workspace")
         if src[0] not in ("admin", "owner"):
             raise HTTPException(
                 status_code=403,
@@ -185,21 +186,21 @@ async def move_project(
 
     tgt = await user_can_access(target_workspace_id, app_user_id)
     if tgt is None:
-        raise HTTPException(
-            status_code=403, detail="No access to target workspace"
-        )
+        raise HTTPException(status_code=403, detail="No access to target workspace")
     if tgt[0] not in ("admin", "owner"):
-        raise HTTPException(
-            status_code=403, detail="Must be admin or owner of target workspace"
-        )
+        raise HTTPException(status_code=403, detail="Must be admin or owner of target workspace")
 
     target_workspace = await async_directus.get_item("workspace", target_workspace_id)
     if not target_workspace or target_workspace.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Target workspace not found")
 
-    await async_directus.update_item("project", project_id, {
-        "workspace_id": target_workspace_id,
-    })
+    await async_directus.update_item(
+        "project",
+        project_id,
+        {
+            "workspace_id": target_workspace_id,
+        },
+    )
 
     logger.info(
         f"Moved project {project_id} from workspace {source_workspace_id} "
@@ -312,18 +313,16 @@ async def set_project_visibility(
                 detail="Private projects require innovator tier or above.",
             )
 
-    await async_directus.update_item(
-        "project", project_id, {"visibility": body.visibility}
-    )
+    await async_directus.update_item("project", project_id, {"visibility": body.visibility})
     logger.info(
-        f"Project {project_id} visibility: {current} → {body.visibility} "
-        f"by {app_user['id']}"
+        f"Project {project_id} visibility: {current} → {body.visibility} by {app_user['id']}"
     )
 
     # Notify workspace members so they understand why a project they
     # could see yesterday is suddenly gone (or why a new one appeared).
     # Skip the actor so they don't see "you changed the visibility".
     from dembrane.notifications import emit_to_audience, audience_workspace_members
+
     project_name = project.get("name") or "A project"
     audience = await audience_workspace_members(workspace_id)
     if body.visibility == "private":
@@ -346,10 +345,7 @@ async def set_project_visibility(
             actor_user_id=app_user["id"],
             event_code="PROJECT_NOW_WORKSPACE",
             title=f"{project_name} is now shared with the workspace",
-            message=(
-                f"Everyone in {workspace.get('name', 'this workspace')} "
-                "can see it."
-            ),
+            message=(f"Everyone in {workspace.get('name', 'this workspace')} can see it."),
             action="NAVIGATE_PROJECT",
             ref_workspace_id=workspace_id,
             ref_project_id=project_id,
@@ -395,16 +391,19 @@ async def get_project_conversation_usage(
         raise HTTPException(status_code=404, detail="Project not found")
 
     # No deleted_at filter — we want both buckets in one fetch.
-    convs = await async_directus.get_items(
-        "conversation",
-        {
-            "query": {
-                "filter": {"project_id": {"_eq": project_id}},
-                "fields": ["id", "title", "duration", "deleted_at"],
-                "limit": -1,
-            }
-        },
-    ) or []
+    convs = (
+        await async_directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {"project_id": {"_eq": project_id}},
+                    "fields": ["id", "title", "duration", "deleted_at"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
     if not isinstance(convs, list):
         convs = []
 

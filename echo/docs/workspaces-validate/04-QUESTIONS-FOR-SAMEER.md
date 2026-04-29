@@ -27,15 +27,15 @@ Answered questions keep their body for context. Answer goes inline right under t
 - `server/dembrane/policies.py:53-93` — `WORKSPACE_ROLE_PRESETS`: `viewer / member / admin / owner`
 - `workspace_membership.role` is a free-text field in Directus (not a DB-enum), so adding values is cheap.
 
-**Sub-question (open):** Is "Billing" at the *team* level a rename of the team `admin` role's billing capabilities, or a separate preset? Matrix §5 lists three team roles (Admin / Billing / Member). Default: treat as separate preset, mirror workspace approach. Revisit if it breaks on implementation.
+**Sub-question (open):** Is "Billing" at the *organisation* level a rename of the organisation `admin` role's billing capabilities, or a separate preset? Matrix §5 lists three organisation roles (Admin / Billing / Member). Default: treat as separate preset, mirror workspace approach. Revisit if it breaks on implementation.
 
 ---
 
 ### [Q2 · ✅ answered 2026-04-23] Visibility schema — enum vs keep booleans?
 
-**Answer:** Option A. Add `workspace.visibility` enum (`open_to_team | private`). Remove old columns directly — not in prod yet. See D8.
+**Answer:** Option A. Add `workspace.visibility` enum (`open_to_organisation | private`). Remove old columns directly — not in prod yet. See D8.
 
-**Context:** Matrix §6 uses a single `workspace.visibility` enum. Code stores two booleans in `workspace.settings` JSON (`inherit_team_admins`, `inherit_team_members`). Matrix v1.1 retires the inheritance model entirely, so the second boolean becomes meaningless.
+**Context:** Matrix §6 uses a single `workspace.visibility` enum. Code stores two booleans in `workspace.settings` JSON (`inherit_organisation_admins`, `inherit_organisation_members`). Matrix v1.1 retires the inheritance model entirely, so the second boolean becomes meaningless.
 
 Also purge `sticky_removed` tombstones as part of the walkback.
 

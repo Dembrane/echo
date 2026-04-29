@@ -262,7 +262,7 @@ export const ProjectsHomeRoute = () => {
 							{isExternalGuest ? (
 								<Trans>
 									You're a guest in this workspace. Projects will show up
-									here once someone on the team shares one with you.
+									here once someone on the organisation shares one with you.
 								</Trans>
 							) : (
 								<Trans>

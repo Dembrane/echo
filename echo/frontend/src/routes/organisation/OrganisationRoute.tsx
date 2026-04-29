@@ -40,8 +40,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { InviteMemberCard, MembersToolbar } from "@/components/members";
-import { TeamInviteWizard } from "@/components/team/TeamInviteWizard";
-import { TeamUsageRollup } from "@/components/workspace/TeamUsageRollup";
+import { OrganisationInviteWizard } from "@/components/organisation/OrganisationInviteWizard";
+import { OrganisationUsageRollup } from "@/components/workspace/OrganisationUsageRollup";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -51,7 +51,7 @@ import { avatarUrl, logoUrl as resolveLogoUrl, memberInitials } from "@/lib/avat
 import { displayRole, roleColor } from "@/lib/roles";
 
 /**
- * Team admin page — single-page matrix view.
+ * Organisation admin page — single-page matrix view.
  *
  * Design call (2026-04-21): collapse the previous 3-tab layout (Members /
  * Matrix / Workspaces) into one canvas with the matrix as primary content.
@@ -60,7 +60,7 @@ import { displayRole, roleColor } from "@/lib/roles";
  * else is inline.
  */
 
-interface TeamDetail {
+interface OrganisationDetail {
 	id: string;
 	name: string;
 	logo_url: string | null;
@@ -70,7 +70,7 @@ interface TeamDetail {
 	external_count: number;
 }
 
-interface TeamMember {
+interface OrganisationMember {
 	user_id: string;
 	app_user_id: string;
 	email: string;
@@ -80,8 +80,8 @@ interface TeamMember {
 	accessible_workspace_count: number;
 	is_pending: boolean;
 	// True when the person is only reachable via external workspace
-	// memberships — no org_membership. Admins see them in the team
-	// Members list with a Guest badge; no team-role picker is shown.
+	// memberships — no org_membership. Admins see them in the organisation
+	// Members list with a Guest badge; no organisation-role picker is shown.
 	is_external?: boolean;
 	// workspace_id → role for direct memberships (not derived).
 	direct_workspace_roles?: Record<string, string>;
@@ -90,7 +90,7 @@ interface TeamMember {
 	direct_workspace_membership_ids?: Record<string, string>;
 }
 
-interface TeamWorkspace {
+interface OrganisationWorkspace {
 	id: string;
 	name: string;
 	tier: string;
@@ -100,23 +100,23 @@ interface TeamWorkspace {
 	is_private: boolean;
 }
 
-async function fetchTeam(teamId: string): Promise<TeamDetail | null> {
-	const res = await fetch(`${API_BASE_URL}/v2/orgs/${teamId}`, {
+async function fetchOrganisation(organisationId: string): Promise<OrganisationDetail | null> {
+	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}`, {
 		credentials: "include",
 	});
 	if (!res.ok) return null;
 	return res.json();
 }
 
-async function fetchTeamMembers(teamId: string): Promise<TeamMember[]> {
-	const res = await fetch(`${API_BASE_URL}/v2/orgs/${teamId}/members`, {
+async function fetchOrganisationMembers(organisationId: string): Promise<OrganisationMember[]> {
+	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}/members`, {
 		credentials: "include",
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
 		// Bubble up the error instead of silently falling through to an
 		// empty list — the "0 of 0" symptom in the 2026-04-23 audit was
-		// a swallowed 500 masquerading as an empty team.
+		// a swallowed 500 masquerading as an empty organisation.
 		throw new Error(
 			typeof data.detail === "string"
 				? data.detail
@@ -126,8 +126,8 @@ async function fetchTeamMembers(teamId: string): Promise<TeamMember[]> {
 	return res.json();
 }
 
-async function fetchTeamWorkspaces(teamId: string): Promise<TeamWorkspace[]> {
-	const res = await fetch(`${API_BASE_URL}/v2/orgs/${teamId}/workspaces`, {
+async function fetchOrganisationWorkspaces(organisationId: string): Promise<OrganisationWorkspace[]> {
+	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}/workspaces`, {
 		credentials: "include",
 	});
 	if (!res.ok) return [];
@@ -136,14 +136,14 @@ async function fetchTeamWorkspaces(teamId: string): Promise<TeamWorkspace[]> {
 
 type RoleFilter = "all" | "admins" | "members" | "guests";
 
-// Role options by scope + caller role. Team-level doesn't include
+// Role options by scope + caller role. Organisation-level doesn't include
 // Matrix §5 retires "owner" as a user-facing role — it's a backend-only
 // distinction kept for last-admin protection + ownership transfer
 // mechanics. The UI offers only Admin and Member (+ Billing on
 // workspaces), and any "owner" record displays as "Admin" through
 // displayRole(). Ownership transfer is a separate staff/support flow,
 // not a role picker.
-const TEAM_ROLE_OPTIONS = ["member", "admin"] as const;
+const ORGANISATION_ROLE_OPTIONS = ["member", "admin"] as const;
 const WS_ROLE_OPTIONS = ["member", "billing", "admin"] as const;
 
 interface RoleBadgeMenuProps {
@@ -196,7 +196,7 @@ function RoleBadgeMenu({
 	);
 }
 
-async function changeTeamRole(
+async function changeOrganisationRole(
 	orgId: string,
 	userId: string,
 	role: string,
@@ -241,9 +241,9 @@ async function changeWorkspaceMemberRole(
 }
 
 
-export const TeamRoute = () => {
-	const { teamId, "*": splat } = useParams<{
-		teamId: string;
+export const OrganisationRoute = () => {
+	const { organisationId, "*": splat } = useParams<{
+		organisationId: string;
 		"*": string;
 	}>();
 	const navigate = useI18nNavigate();
@@ -252,7 +252,7 @@ export const TeamRoute = () => {
 	const [inviteOpen, setInviteOpen] = useState(false);
 	const queryClient = useQueryClient();
 	// URL-driven tab state. Tab lives in the path segment
-	// (`/t/:teamId/<tab>`) so browser back steps between tabs and URLs
+	// (`/o/:organisationId/<tab>`) so browser back steps between tabs and URLs
 	// are shareable.
 	const allowedTabs = ["overview", "usage", "people"] as const;
 	type TabValue = (typeof allowedTabs)[number];
@@ -262,65 +262,65 @@ export const TeamRoute = () => {
 		: "overview";
 
 	useEffect(() => {
-		// Bounce bare /t/:id to /t/:id/overview so the URL always
+		// Bounce bare /o/:id to /o/:id/overview so the URL always
 		// matches the active tab.
-		if (!teamId) return;
+		if (!organisationId) return;
 		if (segment !== viewRaw) {
-			navigate(`/t/${teamId}/${viewRaw}`, { replace: true });
+			navigate(`/o/${organisationId}/${viewRaw}`, { replace: true });
 		}
-	}, [teamId, viewRaw, segment, navigate]);
+	}, [organisationId, viewRaw, segment, navigate]);
 
 	const setView = (value: string | null) => {
-		if (!value || !teamId) return;
-		navigate(`/t/${teamId}/${value}`, { replace: true });
+		if (!value || !organisationId) return;
+		navigate(`/o/${organisationId}/${value}`, { replace: true });
 	};
 
-	useDocumentTitle(t`Team | dembrane`);
+	useDocumentTitle(t`Organisation | dembrane`);
 
-	const { data: team, isLoading: teamLoading } = useQuery({
-		queryKey: ["v2", "team", teamId],
-		queryFn: () => fetchTeam(teamId as string),
-		enabled: Boolean(teamId),
+	const { data: organisation, isLoading: organisationLoading } = useQuery({
+		queryKey: ["v2", "organisation", organisationId],
+		queryFn: () => fetchOrganisation(organisationId as string),
+		enabled: Boolean(organisationId),
 		staleTime: 30_000,
 	});
 	const { data: members = [], error: membersError } = useQuery({
-		queryKey: ["v2", "team", teamId, "members"],
-		queryFn: () => fetchTeamMembers(teamId as string),
-		enabled: Boolean(teamId),
+		queryKey: ["v2", "organisation", organisationId, "members"],
+		queryFn: () => fetchOrganisationMembers(organisationId as string),
+		enabled: Boolean(organisationId),
 		retry: 1,
 	});
 	const { data: workspaces = [] } = useQuery({
-		queryKey: ["v2", "team", teamId, "workspaces"],
-		queryFn: () => fetchTeamWorkspaces(teamId as string),
-		enabled: Boolean(teamId),
+		queryKey: ["v2", "organisation", organisationId, "workspaces"],
+		queryFn: () => fetchOrganisationWorkspaces(organisationId as string),
+		enabled: Boolean(organisationId),
 	});
 
-	const isAdmin = team?.role === "owner" || team?.role === "admin";
-	const isOwner = team?.role === "owner";
+	const isAdmin = organisation?.role === "owner" || organisation?.role === "admin";
+	const isOwner = organisation?.role === "owner";
 	// Admin-only views fall back to People for other roles so landing
 	// state is never an empty panel for them.
 	const view: TabValue =
 		!isAdmin && viewRaw === "usage" ? "people" : viewRaw;
 
-	// Team-level role change — admin + owner can edit; owner-only offers
+	// Organisation-level role change — admin + owner can edit; owner-only offers
 	// the "owner" option (only owners can grant owner).
-	const teamRoleMutation = useMutation({
+	const organisationRoleMutation = useMutation({
 		mutationFn: ({ userId, role }: { userId: string; role: string }) => {
-			if (!teamId) throw new Error("No team");
-			return changeTeamRole(teamId, userId, role);
+			if (!organisationId) throw new Error("No organisation");
+			return changeOrganisationRole(organisationId, userId, role);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: ["v2", "team", teamId, "members"],
+				queryKey: ["v2", "organisation", organisationId, "members"],
 			});
 			toast.success(t`Role changed`);
 		},
 		onError: (e: Error) => toast.error(e.message),
 	});
 
-	// Per-workspace role change triggered from the team People tab's
+	// Per-workspace role change triggered from the organisation People tab's
 	// expanded card. Works on direct memberships (backend returns the
-	// membership id alongside the role). Invalidates both the team
+	// membership id alongside the role). Invalidates both the organisation
 	// members query and the target workspace's settings query so any
 	// open surface reflects the new role.
 	const workspaceRoleMutation = useMutation({
@@ -335,7 +335,7 @@ export const TeamRoute = () => {
 		}) => changeWorkspaceMemberRole(workspaceId, membershipId, role),
 		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({
-				queryKey: ["v2", "team", teamId, "members"],
+				queryKey: ["v2", "organisation", organisationId, "members"],
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "workspace-settings", variables.workspaceId],
@@ -345,11 +345,11 @@ export const TeamRoute = () => {
 		onError: (e: Error) => toast.error(e.message),
 	});
 
-	const removeTeamMemberMutation = useMutation({
+	const removeOrganisationMemberMutation = useMutation({
 		mutationFn: async ({ userId }: { userId: string }) => {
-			if (!teamId) throw new Error("No team");
+			if (!organisationId) throw new Error("No organisation");
 			const res = await fetch(
-				`${API_BASE_URL}/v2/orgs/${teamId}/members/${userId}`,
+				`${API_BASE_URL}/v2/orgs/${organisationId}/members/${userId}`,
 				{ method: "DELETE", credentials: "include" },
 			);
 			if (!res.ok) {
@@ -363,15 +363,15 @@ export const TeamRoute = () => {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: ["v2", "team", teamId, "members"],
+				queryKey: ["v2", "organisation", organisationId, "members"],
 			});
-			toast.success(t`Removed from team`);
+			toast.success(t`Removed from organisation`);
 		},
 		onError: (e: Error) => toast.error(e.message),
 	});
 
-	// Add-to-workspace from the Team Members tab. Reuses the workspace
-	// invite endpoint — the target is an existing team member, so the
+	// Add-to-workspace from the Organisation Members tab. Reuses the workspace
+	// invite endpoint — the target is an existing organisation member, so the
 	// server treats it as a direct workspace grant rather than an email
 	// invite (is_org_member=true).
 	const addToWorkspaceMutation = useMutation({
@@ -405,7 +405,7 @@ export const TeamRoute = () => {
 		},
 		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({
-				queryKey: ["v2", "team", teamId, "members"],
+				queryKey: ["v2", "organisation", organisationId, "members"],
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "workspace-settings", variables.workspaceId],
@@ -426,7 +426,7 @@ export const TeamRoute = () => {
 	const filteredMembers = useMemo(() => {
 		const q = search.trim().toLowerCase();
 		return members.filter((m) => {
-			// Matrix §5: internal team roles are Admin / Billing / Member.
+			// Matrix §5: internal organisation roles are Admin / Billing / Member.
 			// Externals show up as a fourth bucket ("guests") — they have
 			// no org_membership, only per-workspace external rows. The
 			// admins/members filters exclude externals; "guests" isolates
@@ -448,7 +448,7 @@ export const TeamRoute = () => {
 		});
 	}, [members, search, roleFilter]);
 
-	if (teamLoading) {
+	if (organisationLoading) {
 		return (
 			<Center style={{ height: "60vh" }}>
 				<Loader size="sm" color="gray" />
@@ -456,12 +456,12 @@ export const TeamRoute = () => {
 		);
 	}
 
-	if (!team) {
+	if (!organisation) {
 		return (
 			<Center style={{ height: "60vh" }}>
 				<Stack align="center">
 					<Title order={3} fw={400}>
-						<Trans>Team not found</Trans>
+						<Trans>Organisation not found</Trans>
 					</Title>
 					<Button variant="default" onClick={() => navigate("/w")}>
 						<Trans>Back</Trans>
@@ -479,10 +479,10 @@ export const TeamRoute = () => {
 				    per-workspace concept, shown in the column headers). */}
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Group gap="md" wrap="nowrap" align="center" style={{ minWidth: 0 }}>
-						{team.logo_url && (
+						{organisation.logo_url && (
 							<Image
-								src={resolveLogoUrl(team.logo_url)}
-								alt={t`${team.name} logo`}
+								src={resolveLogoUrl(organisation.logo_url)}
+								alt={t`${organisation.name} logo`}
 								h={48}
 								w="auto"
 								fit="contain"
@@ -491,21 +491,21 @@ export const TeamRoute = () => {
 						)}
 						<Stack gap={2} style={{ minWidth: 0 }}>
 							<Title order={3} fw={400}>
-								{team.name}
+								{organisation.name}
 							</Title>
 							<Text size="sm" c="dimmed">
-								{team.workspace_count}{" "}
-								{team.workspace_count === 1 ? t`workspace` : t`workspaces`} ·{" "}
-								{team.member_count}{" "}
-								{team.member_count === 1 ? t`person` : t`people`}
+								{organisation.workspace_count}{" "}
+								{organisation.workspace_count === 1 ? t`workspace` : t`workspaces`} ·{" "}
+								{organisation.member_count}{" "}
+								{organisation.member_count === 1 ? t`person` : t`people`}
 							</Text>
-							{/* Matrix §5: team-level role set is Admin / Billing /
-							    Member — no team-level Guest. Guest count intentionally
+							{/* Matrix §5: organisation-level role set is Admin / Billing /
+							    Member — no organisation-level Guest. Guest count intentionally
 							    dropped from the header summary (HCD audit). */}
 						</Stack>
 					</Group>
 					{/* Back link top-right per the canonical header pattern
-					    (design review 2026-04-23). No gear icon — team-name
+					    (design review 2026-04-23). No gear icon — organisation-name
 					    + logo editing live inline in the Overview tab. */}
 					<Button
 						variant="subtle"
@@ -517,8 +517,8 @@ export const TeamRoute = () => {
 					</Button>
 				</Group>
 
-				{/* Tabbed canvas per demo feedback. Overview holds team name
-				    + logo (no more hunting for /t/:id/settings). Usage pulls
+				{/* Tabbed canvas per demo feedback. Overview holds organisation name
+				    + logo (no more hunting for /o/:id/settings). Usage pulls
 				    up the rollup + per-project table. People is the matrix.
 				    Workspaces and Projects tabs retired — projects fold into
 				    Usage; workspaces are reachable via the home selector. */}
@@ -543,8 +543,8 @@ export const TeamRoute = () => {
 
 					<Tabs.Panel value="overview" pt="md">
 						<OverviewPanel
-							team={team}
-							teamId={teamId!}
+							organisation={organisation}
+							organisationId={organisationId!}
 							canEdit={isAdmin}
 							queryClient={queryClient}
 						/>
@@ -553,7 +553,7 @@ export const TeamRoute = () => {
 					{isAdmin && (
 						<Tabs.Panel value="usage" pt="md">
 							<Stack gap="md">
-								{teamId && <TeamUsageRollup orgId={teamId} />}
+								{organisationId && <OrganisationUsageRollup orgId={organisationId} />}
 							</Stack>
 						</Tabs.Panel>
 					)}
@@ -578,24 +578,24 @@ export const TeamRoute = () => {
 					count={{ shown: filteredMembers.length, total: members.length }}
 					error={
 						membersError
-							? t`Couldn't load team members. Try refreshing, and if it keeps failing, contact support.`
+							? t`Couldn't load organisation members. Try refreshing, and if it keeps failing, contact support.`
 							: null
 					}
 				/>
 
 				{/* Hero empty state — matches ProjectsHome pattern (audit §7).
-				    A team with zero members is vanishingly rare in practice
-				    (the team creator is always the first admin), but the
+				    A organisation with zero members is vanishingly rare in practice
+				    (the organisation creator is always the first admin), but the
 				    matrix rendered silently when it happened; surface that
 				    instead so the state isn't "app looks broken." */}
 				{!membersError && members.length === 0 && (
 					<Stack align="center" gap={6} py={48}>
 						<Title order={4} fw={400}>
-							<Trans>No one on the team yet.</Trans>
+							<Trans>No one on the organisation yet.</Trans>
 						</Title>
 						<Text size="sm" c="dimmed" ta="center" maw={400}>
 							<Trans>
-								Team members appear here once they join a workspace.
+								Organisation members appear here once they join a workspace.
 								Invites are sent from each workspace's Members tab.
 							</Trans>
 						</Text>
@@ -603,7 +603,7 @@ export const TeamRoute = () => {
 				)}
 
 				{/* Members list: dotted invite card as the first row (same
-				    shape as any other member), then one TeamPersonCard per
+				    shape as any other member), then one OrganisationPersonCard per
 				    person. Externals render inline with a Guest badge so
 				    admins see everyone reaching their data in one list. */}
 				{!membersError && (
@@ -620,24 +620,24 @@ export const TeamRoute = () => {
 						{members.length === 0 && (
 							<Stack align="center" gap={6} py={48}>
 								<Title order={4} fw={400}>
-									<Trans>No one on the team yet.</Trans>
+									<Trans>No one on the organisation yet.</Trans>
 								</Title>
 								<Text size="sm" c="dimmed" ta="center" maw={400}>
 									<Trans>
-										Team members appear here once they join a workspace.
+										Organisation members appear here once they join a workspace.
 									</Trans>
 								</Text>
 							</Stack>
 						)}
 						{filteredMembers.map((m) => (
-							<TeamPersonCard
+							<OrganisationPersonCard
 								key={m.user_id}
 								member={m}
 								workspaces={workspaces}
 								isAdmin={isAdmin}
 								isSelf={m.app_user_id === myAppUserId}
-								onTeamRoleChange={(next) =>
-									teamRoleMutation.mutate({
+								onOrganisationRoleChange={(next) =>
+									organisationRoleMutation.mutate({
 										userId: m.user_id,
 										role: next,
 									})
@@ -657,7 +657,7 @@ export const TeamRoute = () => {
 									})
 								}
 								onRemove={() =>
-									removeTeamMemberMutation.mutate({ userId: m.user_id })
+									removeOrganisationMemberMutation.mutate({ userId: m.user_id })
 								}
 							/>
 						))}
@@ -668,8 +668,8 @@ export const TeamRoute = () => {
 						)}
 					</Stack>
 				)}
-				{teamId && (
-					<TeamInviteWizard
+				{organisationId && (
+					<OrganisationInviteWizard
 						opened={inviteOpen}
 						onClose={() => setInviteOpen(false)}
 						workspaces={workspaces}
@@ -679,7 +679,7 @@ export const TeamRoute = () => {
 
 				<Text size="xs" c="dimmed">
 					<Trans>
-						Admins can reach every workspace in this team. Members and
+						Admins can reach every workspace in this organisation. Members and
 						guests only see the workspaces they've been given access to.
 					</Trans>
 				</Text>
@@ -692,13 +692,13 @@ export const TeamRoute = () => {
 	);
 };
 
-// ── Overview panel — team name + logo edit + counts ─────────────────
+// ── Overview panel — organisation name + logo edit + counts ─────────────────
 
-async function updateTeamFromOverview(
-	teamId: string,
+async function updateOrganisationFromOverview(
+	organisationId: string,
 	body: { name?: string },
 ) {
-	const res = await fetch(`${API_BASE_URL}/v2/orgs/${teamId}`, {
+	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}`, {
 		body: JSON.stringify(body),
 		credentials: "include",
 		headers: { "Content-Type": "application/json" },
@@ -713,10 +713,10 @@ async function updateTeamFromOverview(
 	return res.json();
 }
 
-async function uploadTeamLogoInline(teamId: string, file: Blob, filename = "logo.png") {
+async function uploadOrganisationLogoInline(organisationId: string, file: Blob, filename = "logo.png") {
 	const body = new FormData();
 	body.append("file", file, filename);
-	const res = await fetch(`${API_BASE_URL}/v2/orgs/${teamId}/logo`, {
+	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}/logo`, {
 		method: "POST",
 		credentials: "include",
 		body,
@@ -731,8 +731,8 @@ async function uploadTeamLogoInline(teamId: string, file: Blob, filename = "logo
 	return data.file_id as string;
 }
 
-async function removeTeamLogoInline(teamId: string) {
-	const res = await fetch(`${API_BASE_URL}/v2/orgs/${teamId}/logo`, {
+async function removeOrganisationLogoInline(organisationId: string) {
+	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}/logo`, {
 		method: "DELETE",
 		credentials: "include",
 	});
@@ -745,31 +745,31 @@ async function removeTeamLogoInline(teamId: string) {
 }
 
 function OverviewPanel({
-	team,
-	teamId,
+	organisation,
+	organisationId,
 	canEdit,
 	queryClient,
 }: {
-	team: TeamDetail;
-	teamId: string;
+	organisation: OrganisationDetail;
+	organisationId: string;
 	canEdit: boolean;
 	queryClient: ReturnType<typeof useQueryClient>;
 }) {
 	// Autosave on blur — matches the inline-edit pattern elsewhere in the
 	// app (HostGuide titles, project portal). Local state lets the user
 	// type without every keystroke round-tripping; blur commits.
-	const [name, setName] = useState(team.name);
+	const [name, setName] = useState(organisation.name);
 	const logoResetRef = useRef<() => void>(null);
 
 	const invalidate = () => {
-		queryClient.invalidateQueries({ queryKey: ["v2", "team", teamId] });
+		queryClient.invalidateQueries({ queryKey: ["v2", "organisation", organisationId] });
 		queryClient.invalidateQueries({ queryKey: ["v2", "orgs"] });
 		queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 	};
 
 	const saveMutation = useMutation({
 		mutationFn: (body: { name?: string }) =>
-			updateTeamFromOverview(teamId, body),
+			updateOrganisationFromOverview(organisationId, body),
 		onSuccess: () => {
 			invalidate();
 			toast.success(t`Saved`);
@@ -777,13 +777,13 @@ function OverviewPanel({
 		onError: (err: Error) => {
 			// Roll back local state on failure so what's shown matches
 			// what's actually stored.
-			setName(team.name);
+			setName(organisation.name);
 			toast.error(err.message);
 		},
 	});
 	const uploadLogoMutation = useMutation({
 		mutationFn: (file: File) =>
-			uploadTeamLogoInline(teamId, file, file.name || "logo.png"),
+			uploadOrganisationLogoInline(organisationId, file, file.name || "logo.png"),
 		onSuccess: () => {
 			invalidate();
 			toast.success(t`Logo updated`);
@@ -791,14 +791,14 @@ function OverviewPanel({
 		onError: (err: Error) => toast.error(err.message),
 	});
 	const removeLogoMutation = useMutation({
-		mutationFn: () => removeTeamLogoInline(teamId),
+		mutationFn: () => removeOrganisationLogoInline(organisationId),
 		onSuccess: () => {
 			invalidate();
 			toast.success(t`Logo removed`);
 		},
 		onError: (err: Error) => toast.error(err.message),
 	});
-	const currentTeamLogoUrl = resolveLogoUrl(team.logo_url);
+	const currentOrganisationLogoUrl = resolveLogoUrl(organisation.logo_url);
 
 	const handleLogoSelect = (file: File | null) => {
 		logoResetRef.current?.();
@@ -808,26 +808,26 @@ function OverviewPanel({
 
 	return (
 		<Stack gap="lg">
-			{/* Team identity — name + logo. Admins edit inline; others read. */}
+			{/* Organisation identity — name + logo. Admins edit inline; others read. */}
 			<Stack gap="md">
 				<TextInput
-					label={t`Team name`}
-					description={t`Shown in the team header and in email subject lines.`}
+					label={t`Organisation name`}
+					description={t`Shown in the organisation header and in email subject lines.`}
 					value={name}
 					disabled={!canEdit || saveMutation.isPending}
 					onChange={(e) => setName(e.currentTarget.value)}
 					onBlur={() => {
 						const next = name.trim();
-						if (next && next !== team.name) {
+						if (next && next !== organisation.name) {
 							saveMutation.mutate({ name: next });
 						} else if (!next) {
-							setName(team.name);
+							setName(organisation.name);
 						}
 					}}
 					onKeyDown={(e) => {
 						if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
 						if (e.key === "Escape") {
-							setName(team.name);
+							setName(organisation.name);
 							(e.currentTarget as HTMLInputElement).blur();
 						}
 					}}
@@ -838,13 +838,13 @@ function OverviewPanel({
 						<Trans>Logo</Trans>
 					</Text>
 					<Text size="xs" c="dimmed">
-						<Trans>Workspace-level logo overrides the team logo when set.</Trans>
+						<Trans>Workspace-level logo overrides the organisation logo when set.</Trans>
 					</Text>
-					{currentTeamLogoUrl ? (
+					{currentOrganisationLogoUrl ? (
 						<Group gap="sm" align="center">
 							<Image
-								src={currentTeamLogoUrl}
-								alt={t`Team logo`}
+								src={currentOrganisationLogoUrl}
+								alt={t`Organisation logo`}
 								h={72}
 								w="auto"
 								fit="contain"
@@ -868,7 +868,7 @@ function OverviewPanel({
 						</Text>
 					)}
 					{/* No single-click "Replace" — destructive step is explicit. */}
-					{!currentTeamLogoUrl && (
+					{!currentOrganisationLogoUrl && (
 						<FileButton
 							resetRef={logoResetRef}
 							onChange={handleLogoSelect}
@@ -892,13 +892,13 @@ function OverviewPanel({
 				</Stack>
 			</Stack>
 
-			{/* Count tiles dropped 2026-04-23: the team header subtitle
+			{/* Count tiles dropped 2026-04-23: the organisation header subtitle
 			    already says "N workspaces · M people", and the Usage /
 			    People tabs hold the detailed views. Repeating the same
 			    numbers on Overview was just noise. */}
 
 			{/* Danger section — not wired to a self-serve delete yet
-			    (no backend endpoint; ownership transfer + team delete
+			    (no backend endpoint; ownership transfer + organisation delete
 			    are support flows for now). Primes the audit §3 pattern
 			    without offering a fake affordance. Admin only. */}
 			{canEdit && (
@@ -908,7 +908,7 @@ function OverviewPanel({
 					</Text>
 					<Text size="sm" c="dimmed">
 						<Trans>
-							Deleting a team is a support-assisted operation. Email{" "}
+							Deleting a organisation is a support-assisted operation. Email{" "}
 							<Anchor href="mailto:support@dembrane.com">
 								support@dembrane.com
 							</Anchor>{" "}
@@ -923,32 +923,32 @@ function OverviewPanel({
 }
 
 
-export default TeamRoute;
+export default OrganisationRoute;
 
 /**
- * One row on the team People tab. Summarizes a person's team role +
+ * One row on the organisation People tab. Summarizes a person's organisation role +
  * their per-workspace access, expands to let an admin change
- * per-workspace roles or remove the person from the team.
+ * per-workspace roles or remove the person from the organisation.
  *
  * Role changes go through a confirm modal (never silent). Uniform
  * per-workspace role shows as a single "Admin across all" pill
  * instead of listing each workspace — common case, less noise.
  */
-function TeamPersonCard({
+function OrganisationPersonCard({
 	member,
 	workspaces,
 	isAdmin,
 	isSelf,
-	onTeamRoleChange,
+	onOrganisationRoleChange,
 	onWorkspaceRoleChange,
 	onAddToWorkspace,
 	onRemove,
 }: {
-	member: TeamMember;
-	workspaces: TeamWorkspace[];
+	member: OrganisationMember;
+	workspaces: OrganisationWorkspace[];
 	isAdmin: boolean;
 	isSelf: boolean;
-	onTeamRoleChange: (next: string) => void;
+	onOrganisationRoleChange: (next: string) => void;
 	onWorkspaceRoleChange: (
 		workspaceId: string,
 		membershipId: string,
@@ -1004,21 +1004,21 @@ function TeamPersonCard({
 			.join(" · ");
 	}, [reached, workspaces.length]);
 
-	const handleTeamRoleChange = (next: string) => {
+	const handleOrganisationRoleChange = (next: string) => {
 		const person = member.display_name || member.email || t`this person`;
 		modals.openConfirmModal({
-			title: t`Change team role?`,
+			title: t`Change organisation role?`,
 			children: (
 				<Text size="sm">
 					<Trans>
-						Change {person}'s team role from{" "}
+						Change {person}'s organisation role from{" "}
 						<em>{displayRole(member.role)}</em> to{" "}
 						<em>{displayRole(next)}</em>?
 					</Trans>
 				</Text>
 			),
 			labels: { confirm: t`Change role`, cancel: t`Cancel` },
-			onConfirm: () => onTeamRoleChange(next),
+			onConfirm: () => onOrganisationRoleChange(next),
 		});
 	};
 
@@ -1049,13 +1049,13 @@ function TeamPersonCard({
 	const handleRemove = () => {
 		const person = member.display_name || member.email || t`this person`;
 		modals.openConfirmModal({
-			title: t`Remove from team?`,
+			title: t`Remove from organisation?`,
 			children: (
 				<Stack gap={8}>
 					<Text size="sm">
 						<Trans>
 							{person} will lose access to every workspace in this
-							team. Direct-only workspace invites stay intact.
+							organisation. Direct-only workspace invites stay intact.
 						</Trans>
 					</Text>
 					<Text size="xs" c="dimmed">
@@ -1096,7 +1096,7 @@ function TeamPersonCard({
 					</Group>
 					<Group gap="xs" wrap="nowrap">
 						{member.is_external ? (
-							<Tooltip label={t`No team role. Access via workspace invites.`}>
+							<Tooltip label={t`No organisation role. Access via workspace invites.`}>
 								<Badge size="sm" variant="light" color="gray">
 									<Trans>Guest</Trans>
 								</Badge>
@@ -1104,9 +1104,9 @@ function TeamPersonCard({
 						) : (
 							<RoleBadgeMenu
 								currentRole={member.role}
-								options={TEAM_ROLE_OPTIONS}
+								options={ORGANISATION_ROLE_OPTIONS}
 								disabled={!isAdmin || isSelf}
-								onChange={handleTeamRoleChange}
+								onChange={handleOrganisationRoleChange}
 							/>
 						)}
 						<ActionIcon
@@ -1170,7 +1170,7 @@ function TeamPersonCard({
 												label={
 													isDirect
 														? t`Change in workspace settings`
-														: t`Admin here via team role`
+														: t`Admin here via organisation role`
 												}
 											>
 												<Badge
@@ -1241,7 +1241,7 @@ function TeamPersonCard({
 									color="red"
 									onClick={handleRemove}
 								>
-									<Trans>Remove from team</Trans>
+									<Trans>Remove from organisation</Trans>
 								</Button>
 							</Group>
 						)}

@@ -481,7 +481,7 @@ export const useProjectById = ({
 		// BFF migration (2026-04-24): the frontend used to call Directus
 		// directly via readItem("project", ...), but Directus row-level
 		// ACL doesn't know about our v2 inheritance/sharing model — a
-		// workspace member reaching a project through a derived team
+		// workspace member reaching a project through a derived organisation
 		// admin row was 403'ing on the Directus read. The /bff endpoint
 		// runs the access check through get_user_project_access and
 		// returns the full project row (with sorted tags) under the

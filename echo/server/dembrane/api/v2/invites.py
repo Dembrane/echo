@@ -5,24 +5,25 @@ from __future__ import annotations
 import hmac
 import hashlib
 from logging import getLogger
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException
-from dembrane.api.rate_limit import create_user_rate_limiter
+from fastapi import Depends, APIRouter, HTTPException
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import resolve_app_user
-from dembrane.directus_async import async_directus
-from dembrane.api.v2.schemas import WorkspaceInviteRequest, WorkspaceInviteResponse
-from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
-from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.settings import get_settings
+from dembrane.api.rate_limit import create_user_rate_limiter
+from dembrane.api.v2.schemas import WorkspaceInviteRequest, WorkspaceInviteResponse
+from dembrane.directus_async import async_directus
+from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 
 router = APIRouter()
 logger = getLogger("api.v2.invites")
 
 settings = get_settings()
-_invite_rate_limiter = create_user_rate_limiter(name="workspace_invite", capacity=20, window_seconds=3600)
+_invite_rate_limiter = create_user_rate_limiter(
+    name="workspace_invite", capacity=20, window_seconds=3600
+)
 
 
 def compute_invite_hash(invite_id: str) -> str:
@@ -58,9 +59,7 @@ def _enqueue_invite_email(
     except Exception:
         # If Redis / the broker is down, log and move on — the membership
         # / invite row is already written, so the admin can resend later.
-        logger.exception(
-            f"Couldn't enqueue invite email for {to} ({failure_context})"
-        )
+        logger.exception(f"Couldn't enqueue invite email for {to} ({failure_context})")
 
 
 @router.post("/{workspace_id}/invite", response_model=WorkspaceInviteResponse)
@@ -87,9 +86,7 @@ async def invite_to_workspace(
     role = body.role
 
     if role not in ("admin", "member", "billing"):
-        raise HTTPException(
-            status_code=400, detail="Role must be admin, member, or billing"
-        )
+        raise HTTPException(status_code=400, detail="Role must be admin, member, or billing")
 
     # Prevent role escalation — can only grant roles at or below your own level.
     # Billing sits between member and admin: it's more than a member (financial
@@ -100,17 +97,17 @@ async def invite_to_workspace(
     if requested_level > inviter_level:
         raise HTTPException(status_code=403, detail="Cannot grant a role higher than your own")
 
-    # Hard rule: externals (guests — non-team members on a workspace) can
+    # Hard rule: externals (guests — non-organisation members on a workspace) can
     # only ever be member. Admin/owner/billing roles imply management or
     # financial responsibility that doesn't make sense for a guest of
-    # another team. If the caller isn't inviting this person as a team
+    # another organisation. If the caller isn't inviting this person as a organisation
     # member (is_org_member=false), clamp to member.
     if not body.is_org_member and role in ("admin", "owner", "billing"):
         raise HTTPException(
             status_code=400,
             detail=(
                 "Guests can't be admins, owners, or billing. "
-                "Invite them as a team member first, or choose member."
+                "Invite them as a organisation member first, or choose member."
             ),
         )
 
@@ -172,36 +169,47 @@ async def invite_to_workspace(
             ws_org_id = ctx.workspace.get("org_id")
 
             # If marked as org member, add them to the org too. Track
-            # whether we freshly added them so the TEAM_MEMBER_ADDED
-            # notification only fires for genuinely new team joiners.
-            newly_joined_team = False
+            # whether we freshly added them so the ORGANISATION_MEMBER_ADDED
+            # notification only fires for genuinely new organisation joiners.
+            newly_joined_organisation = False
             if body.is_org_member and ws_org_id:
                 existing_org_mem = await async_directus.get_items(
                     "org_membership",
-                    {"query": {"filter": {
-                        "org_id": {"_eq": ws_org_id},
-                        "user_id": {"_eq": app_user["id"]},
-                        "deleted_at": {"_null": True},
-                    }, "limit": 1}},
+                    {
+                        "query": {
+                            "filter": {
+                                "org_id": {"_eq": ws_org_id},
+                                "user_id": {"_eq": app_user["id"]},
+                                "deleted_at": {"_null": True},
+                            },
+                            "limit": 1,
+                        }
+                    },
                 )
                 if not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0):
-                    await async_directus.create_item("org_membership", {
-                        "id": generate_uuid(),
-                        "org_id": ws_org_id,
-                        "user_id": app_user["id"],
-                        "role": "member",
-                    })
+                    await async_directus.create_item(
+                        "org_membership",
+                        {
+                            "id": generate_uuid(),
+                            "org_id": ws_org_id,
+                            "user_id": app_user["id"],
+                            "role": "member",
+                        },
+                    )
                     logger.info(f"Added {email} to org {ws_org_id} as member")
-                    newly_joined_team = True
+                    newly_joined_organisation = True
 
-            await async_directus.create_item("workspace_membership", {
-                "id": generate_uuid(),
-                "workspace_id": workspace_id,
-                "user_id": app_user["id"],
-                "role": role,
-                "source": "direct",
-                "is_external": is_external,
-            })
+            await async_directus.create_item(
+                "workspace_membership",
+                {
+                    "id": generate_uuid(),
+                    "workspace_id": workspace_id,
+                    "user_id": app_user["id"],
+                    "role": role,
+                    "source": "direct",
+                    "is_external": is_external,
+                },
+            )
 
             logger.info(
                 f"Added {email} to workspace {workspace_id} as {role} "
@@ -212,50 +220,47 @@ async def invite_to_workspace(
             # on their next page load without having to wait for the
             # email to land.
             from dembrane.notifications import emit
+
             await emit(
                 audience_user_id=app_user["id"],
                 actor_user_id=ctx.app_user_id,
                 event_code="WORKSPACE_ADDED",
                 title=f"You're in {ctx.workspace.get('name', 'a workspace')}",
-                message=(
-                    f"You were added to **{ctx.workspace.get('name', '')}** "
-                    f"as {role}."
-                ),
+                message=(f"You were added to **{ctx.workspace.get('name', '')}** as {role}."),
                 action="NAVIGATE_WS",
                 ref_workspace_id=workspace_id,
                 ref_org_id=ws_org_id,
             )
 
-            # TEAM_MEMBER_ADDED to team admins when the invitee is new
-            # to the team. Kept out of the workspace-only path (they're
-            # still a guest there, no team-roster change to announce).
-            if newly_joined_team and ws_org_id:
+            # ORGANISATION_MEMBER_ADDED to organisation admins when the invitee is new
+            # to the organisation. Kept out of the workspace-only path (they're
+            # still a guest there, no organisation-roster change to announce).
+            if newly_joined_organisation and ws_org_id:
                 from dembrane.notifications import (
-                    audience_team_admins,
+                    audience_organisation_admins,
                     emit_to_audience,
                 )
-                team_admin_ids = await audience_team_admins(ws_org_id)
-                team_row = await async_directus.get_item("org", ws_org_id)
-                team_name = (team_row or {}).get("name") or "the team"
-                new_member_name = (
-                    app_user.get("display_name") or email or "A new member"
-                )
+
+                organisation_admin_ids = await audience_organisation_admins(ws_org_id)
+                organisation_row = await async_directus.get_item("org", ws_org_id)
+                organisation_name = (organisation_row or {}).get("name") or "the organisation"
+                new_member_name = app_user.get("display_name") or email or "A new member"
                 await emit_to_audience(
-                    team_admin_ids,
+                    organisation_admin_ids,
                     actor_user_id=ctx.app_user_id,
-                    event_code="TEAM_MEMBER_ADDED",
-                    title=f"{new_member_name} joined {team_name}",
-                    message="They're now a team member.",
-                    action="NAVIGATE_TEAM_SETTINGS",
+                    event_code="ORGANISATION_MEMBER_ADDED",
+                    title=f"{new_member_name} joined {organisation_name}",
+                    message="They're now a organisation member.",
+                    action="NAVIGATE_ORGANISATION_SETTINGS",
                     ref_org_id=ws_org_id,
                 )
 
             # Send a notification email
-            inviter_name = "Your team"
+            inviter_name = "Your organisation"
             try:
                 inviter_data = await async_directus.get_item("app_user", ctx.app_user_id)
                 if inviter_data:
-                    inviter_name = inviter_data.get("display_name") or "Your team"
+                    inviter_name = inviter_data.get("display_name") or "Your organisation"
             except Exception:
                 pass
 
@@ -306,35 +311,47 @@ async def invite_to_workspace(
         raise HTTPException(status_code=409, detail="An invite is already pending for this email")
 
     # Get inviter name
-    inviter_name = "Your team"
+    inviter_name = "Your organisation"
     inviter_app_user_data = await async_directus.get_items(
         "app_user",
-        {"query": {"filter": {"id": {"_eq": ctx.app_user_id}}, "fields": ["display_name"], "limit": 1}},
+        {
+            "query": {
+                "filter": {"id": {"_eq": ctx.app_user_id}},
+                "fields": ["display_name"],
+                "limit": 1,
+            }
+        },
     )
     if isinstance(inviter_app_user_data, list) and len(inviter_app_user_data) > 0:
-        inviter_name = inviter_app_user_data[0].get("display_name") or "Your team"
+        inviter_name = inviter_app_user_data[0].get("display_name") or "Your organisation"
 
     invite_id = generate_uuid()
-    await async_directus.create_item("workspace_invite", {
-        "id": invite_id,
-        "workspace_id": workspace_id,
-        "email": email,
-        "role": role,
-        "invited_by": ctx.app_user_id,
-        "expires_at": expires_at,
-        "include_org_membership": body.is_org_member,
-    })
+    await async_directus.create_item(
+        "workspace_invite",
+        {
+            "id": invite_id,
+            "workspace_id": workspace_id,
+            "email": email,
+            "role": role,
+            "invited_by": ctx.app_user_id,
+            "expires_at": expires_at,
+            "include_org_membership": body.is_org_member,
+        },
+    )
 
     # Email URL: HMAC hash is the pointer to the invite (opaque, unforgeable),
     # iss/ws/role are display-only context. Security = email ownership + HMAC.
     from urllib.parse import urlencode
+
     invite_hash = compute_invite_hash(invite_id)
-    ctx_params = urlencode({
-        "iss": inviter_name,
-        "ws": ctx.workspace.get("name", ""),
-        "role": role,
-        "h": invite_hash,
-    })
+    ctx_params = urlencode(
+        {
+            "iss": inviter_name,
+            "ws": ctx.workspace.get("name", ""),
+            "role": role,
+            "h": invite_hash,
+        }
+    )
     invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
 
     _enqueue_invite_email(

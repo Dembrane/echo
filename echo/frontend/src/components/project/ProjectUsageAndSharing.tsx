@@ -444,7 +444,7 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 				workspaceName={workspace?.name ?? undefined}
 			/>
 
-			{/* Members — same shape as Team + Workspace: toolbar, dotted
+			{/* Members — same shape as Organisation + Workspace: toolbar, dotted
 			    invite card as first row, then one Paper per person. The
 			    "Make private / Manage" toggle lives on the strip above;
 			    this list is read-only for workspace-visible projects and
@@ -523,7 +523,7 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 									This project is visible to everyone in the workspace.
 								</Trans>
 							) : (
-								<Trans>Add a teammate and pick their access.</Trans>
+								<Trans>Add a member and pick their access.</Trans>
 							)
 						}
 						onClick={() => setInviteOpen(true)}

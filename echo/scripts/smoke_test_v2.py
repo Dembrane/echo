@@ -138,8 +138,8 @@ def first_of(data: Any, key: str, default: str | None = None) -> str | None:
         return data[0][key]
     if isinstance(data, dict) and isinstance(data.get("workspaces"), list):
         return first_of(data["workspaces"], key, default)
-    if isinstance(data, dict) and isinstance(data.get("teams"), list):
-        return first_of(data["teams"], key, default)
+    if isinstance(data, dict) and isinstance(data.get("organisations"), list):
+        return first_of(data["organisations"], key, default)
     return default
 
 
@@ -183,7 +183,7 @@ def main() -> int:
     try:
         body = session.get(f"{args.api}/api/v2/workspaces", timeout=10).json()
         workspace_id = first_of(body.get("workspaces"), "id")
-        org_id = first_of(body.get("workspaces"), "org_id") or first_of(body.get("teams"), "id")
+        org_id = first_of(body.get("workspaces"), "org_id") or first_of(body.get("organisations"), "id")
     except Exception:
         pass
 

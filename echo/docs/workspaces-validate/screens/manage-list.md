@@ -2,7 +2,7 @@
 
 **Intent:** a table / list of things the admin manages, with inline actions per row and bulk actions on selection. Scan-first, act-on-row.
 
-**Used by:** members (workspace + team), invites, workspace settings rows, projects on the team page, access requests, referral ledger entries.
+**Used by:** members (workspace + organisation), invites, workspace settings rows, projects on the organisation page, access requests, referral ledger entries.
 
 **Reference:** brief pattern 1. Matrix doesn't spell out list shape — convention from `designer-return.html` Ask 1.
 
@@ -31,15 +31,15 @@
 - Checkbox (bulk select).
 - Primary identifier — display name.
 - Email shown only on hover (brand rule). Mobile: long-press or dedicated "Show details" action.
-- Role chip — `Admin` / `Billing` / `Member` / `Guest` for workspace; `Team admin` / `Team billing` / `Team member` at team scope.
+- Role chip — `Admin` / `Billing` / `Member` / `Guest` for workspace; `Organisation admin` / `Organisation billing` / `Organisation member` at organisation scope.
 - Scope metadata — joined/invited date, source pill when informative (`direct` / `external`; derivation retires per matrix §6 so `inherited` pill goes away after walkback).
-- Row menu `⋯` — change role, view workspaces (team page), remove / cancel invite.
+- Row menu `⋯` — change role, view workspaces (organisation page), remove / cancel invite.
 
 ## Affordances
 
 - **Per-row menu (`⋯`):** opens a dropdown with the actions. Destructive items open screen 4.
 - **Bulk actions bar:** appears at the top when rows are selected. Actions limited to idempotent ones — "Change role to Member" OK; "Delete" needs per-row confirm and belongs in row menu.
-- **Click row:** opens a drawer with full detail (team page only — matrix view needs this for workspace access breakdown).
+- **Click row:** opens a drawer with full detail (organisation page only — matrix view needs this for workspace access breakdown).
 
 ## Filter + sort
 

@@ -95,9 +95,9 @@ type TemplatesModalProps = {
 	onToggleAiSuggestions?: (hide: boolean) => void;
 	saveAsTemplateContent?: string | null;
 	onClearSaveAsTemplate?: () => void;
-	// When true, the create form shows a "Share with team" toggle. Set
+	// When true, the create form shows a "Share with organisation" toggle. Set
 	// false for contexts without a workspace (e.g. agentic playground) or
-	// when the caller is an external guest who can't create team templates.
+	// when the caller is an external guest who can't create organisation templates.
 	canCreateWorkspaceTemplate?: boolean;
 };
 
@@ -197,7 +197,7 @@ export const TemplatesModal = ({
 	const [animateList, enableAnimations] = useAutoAnimate();
 	const [formTitle, setFormTitle] = useState("");
 	const [formContent, setFormContent] = useState("");
-	// Defaults to 'workspace' when the caller can create team templates —
+	// Defaults to 'workspace' when the caller can create organisation templates —
 	// that's the more useful setting in most chats. User can flip to
 	// personal via the switch.
 	const [formScope, setFormScope] = useState<"user" | "workspace">("user");
@@ -477,11 +477,11 @@ export const TemplatesModal = ({
 									<Group justify="space-between" wrap="nowrap" gap="sm">
 										<Stack gap={2} style={{ minWidth: 0 }}>
 											<Text size="sm">
-												<Trans>Share with team</Trans>
+												<Trans>Share with organisation</Trans>
 											</Text>
 											<Text size="xs" c="dimmed" lineClamp={2}>
 												<Trans>
-													Team templates are visible to everyone in this
+													Organisation templates are visible to everyone in this
 													workspace. Leave off to keep it personal.
 												</Trans>
 											</Text>
@@ -493,7 +493,7 @@ export const TemplatesModal = ({
 													e.currentTarget.checked ? "workspace" : "user",
 												)
 											}
-											aria-label={t`Share with team`}
+											aria-label={t`Share with organisation`}
 										/>
 									</Group>
 								</Paper>

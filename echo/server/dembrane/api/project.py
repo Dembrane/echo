@@ -20,7 +20,6 @@ from dembrane.api.exceptions import (
 )
 from dembrane.service.project import (
     ProjectService,
-    ProjectServiceException,
     ProjectNotFoundException,
     get_allowed_languages,
 )
@@ -223,7 +222,7 @@ async def toggle_project_pin(
     on the workspace home, so permission follows workspace membership:
       - workspace admin / owner / member: allowed
       - external guest (is_external=true): blocked (403) — guests see the
-        project they were invited to, they don't curate the team view.
+        project they were invited to, they don't curate the organisation view.
       - legacy projects without a workspace_id: fall back to the pre-matrix
         "project owner" check so unmigrated projects still pin for the owner.
     """
@@ -250,11 +249,17 @@ async def toggle_project_pin(
 
         mems = await async_directus.get_items(
             "workspace_membership",
-            {"query": {"filter": {
-                "workspace_id": {"_eq": workspace_id},
-                "user_id": {"_eq": app_user["id"]},
-                "deleted_at": {"_null": True},
-            }, "fields": ["role", "is_external"], "limit": 1}},
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_eq": workspace_id},
+                        "user_id": {"_eq": app_user["id"]},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["role", "is_external"],
+                    "limit": 1,
+                }
+            },
         )
         if not isinstance(mems, list) or len(mems) == 0:
             raise HTTPException(status_code=403, detail="Not a member of this workspace")
@@ -381,7 +386,7 @@ class DeleteConversationTagsRequest(BaseModel):
 @ProjectRouter.post("/{project_id}/conversations/{conversation_id}/tags/delete")
 async def delete_conversation_tags(
     project_id: str,
-    conversation_id: str,
+    conversation_id: str,  # noqa: ARG001 — required by FastAPI route binding
     body: DeleteConversationTagsRequest,
     auth: DependencyDirectusSession,
 ) -> dict:
@@ -391,9 +396,7 @@ async def delete_conversation_tags(
     from dembrane.directus import directus
 
     for tag_id in body.tag_ids:
-        await run_in_thread_pool(
-            directus.delete_item, "conversation_project_tag", str(tag_id)
-        )
+        await run_in_thread_pool(directus.delete_item, "conversation_project_tag", str(tag_id))
     return {"status": "success", "deleted": len(body.tag_ids)}
 
 
@@ -567,7 +570,7 @@ async def post_create_project_library(
     project_id: str,
     body: CreateLibraryRequestBodySchema,
 ) -> None:
-    project = await _verify_project_access(auth, project_id)
+    await _verify_project_access(auth, project_id)
 
     # analysis_run = get_latest_project_analysis_run(project.id)
 
@@ -640,8 +643,8 @@ async def create_report(
     # v2-aware access gate (inheritance + sharing + tier). Replaces the
     # old double-check (ProjectService.get_by_id_or_raise through the
     # user's Directus client + legacy-creator equality) that was
-    # blocking the "Generate report" button for every teammate.
-    project = await _verify_project_access(auth, project_id)
+    # blocking the "Generate report" button for every member.
+    await _verify_project_access(auth, project_id)
     language = body.language or "en"
 
     from dembrane.directus import directus
@@ -705,6 +708,7 @@ async def create_report(
 
     # Create report record
     initial_status = "scheduled" if is_scheduled else "draft"
+    project_service = ProjectService(directus_client=auth.client)
     report = await run_in_thread_pool(
         project_service.create_report, project_id, language, "", initial_status
     )
@@ -746,11 +750,11 @@ async def _verify_project_access(auth: DependencyDirectusSession, project_id: st
     was a legacy-creator equality check (directus_user_id == auth.user_id),
     which excluded every workspace member who didn't originally create
     the project. Compounded by the Directus lockdown, that made the
-    whole v1 report surface return 403 for non-admin teammates.
+    whole v1 report surface return 403 for non-admin members.
     """
     from dembrane.app_user import get_app_user_or_raise
-    from dembrane.directus_async import async_directus
     from dembrane.inheritance import get_user_project_access
+    from dembrane.directus_async import async_directus
 
     project = await async_directus.get_item("project", project_id)
     if not project or project.get("deleted_at"):
@@ -765,7 +769,7 @@ async def _verify_project_access(auth: DependencyDirectusSession, project_id: st
     except HTTPException:
         # Not onboarded → no way to express project access. Treat as 404
         # so we don't confirm the project's existence to an anon caller.
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise HTTPException(status_code=404, detail="Project not found") from None
 
     access = await get_user_project_access(
         project_id=project_id,
@@ -903,9 +907,17 @@ async def update_report(
                 status_code=422,
                 detail="scheduled_at must be a valid ISO 8601 datetime string",
             )
-        normalized = body.scheduled_at.replace("Z", "+00:00") if isinstance(body.scheduled_at, str) else body.scheduled_at.isoformat()
+        normalized = (
+            body.scheduled_at.replace("Z", "+00:00")
+            if isinstance(body.scheduled_at, str)
+            else body.scheduled_at.isoformat()
+        )
         try:
-            scheduled_dt = datetime.fromisoformat(normalized) if isinstance(normalized, str) else body.scheduled_at
+            scheduled_dt = (
+                datetime.fromisoformat(normalized)
+                if isinstance(normalized, str)
+                else body.scheduled_at
+            )
         except (ValueError, TypeError) as e:
             raise HTTPException(
                 status_code=422,

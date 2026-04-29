@@ -1,8 +1,8 @@
 # Flow 0 — Derivation walkback (backend)
 
-**Priority:** blocker. Prerequisite for flows 1 (upgrade-request reassurance), 4 (home-per-team discovery), 6 (invite-and-join). Not a UI flow — a schema + resolver simplification.
+**Priority:** blocker. Prerequisite for flows 1 (upgrade-request reassurance), 4 (home-per-organisation discovery), 6 (invite-and-join). Not a UI flow — a schema + resolver simplification.
 
-**Matrix reference:** §5 "Team-level access is direct-only. No derivation." §6 "Slack-style discovery."
+**Matrix reference:** §5 "Organisation-level access is direct-only. No derivation." §6 "Slack-style discovery."
 
 **Code reference:** `server/dembrane/inheritance.py` (full derivation resolver to retire), `docs/workspaces/inheritance-rules.md` (spec to archive after this flow lands).
 
@@ -11,15 +11,15 @@
 ## What changes
 
 **Before (today):**
-- Access to a workspace is computed at read time via `user_can_access()` walking `org_membership` + `workspace.settings.inherit_team_admins / inherit_team_members / sticky_removed`.
-- Team admins auto-have admin role on every open workspace in their team.
-- Team owners auto-have admin role on every workspace (private included).
+- Access to a workspace is computed at read time via `user_can_access()` walking `org_membership` + `workspace.settings.inherit_organisation_admins / inherit_organisation_members / sticky_removed`.
+- Organisation admins auto-have admin role on every open workspace in their organisation.
+- Organisation owners auto-have admin role on every workspace (private included).
 - Removing a derived user writes a `sticky_removed` tombstone.
 
 **After:**
-- Single `workspace.visibility` enum: `open_to_team | private`.
+- Single `workspace.visibility` enum: `open_to_organisation | private`.
 - Access is stored-direct-only. `workspace_membership` is the source of truth; `user_can_access()` does a single row lookup.
-- Team admins see all team workspaces in discovery. Team members see `open_to_team` only.
+- Organisation admins see all organisation workspaces in discovery. Organisation members see `open_to_organisation` only.
 - Joining is always an explicit action → writes `source='direct', role='admin'` (admin click) or `source='direct', role='member'` (member request + admin approval).
 - `sticky_removed` retires. Rejoins are normal explicit actions.
 
@@ -30,11 +30,11 @@
 ### 1. Schema migration (scripts/create_schema.py)
 
 Idempotent Python additions:
-- `workspace.visibility` enum column: `open_to_team | private`, nullable initially, will flip to required after backfill.
+- `workspace.visibility` enum column: `open_to_organisation | private`, nullable initially, will flip to required after backfill.
 - `access_request` collection: `id, workspace_id, user_id, status, requested_at, actioned_at, actioned_by, deleted_at`.
 
 Directus data migration (single SQL via REST API):
-- `UPDATE workspace SET visibility = CASE WHEN (settings->>'inherit_team_admins')::bool IS NOT FALSE THEN 'open_to_team' ELSE 'private' END WHERE visibility IS NULL AND deleted_at IS NULL`.
+- `UPDATE workspace SET visibility = CASE WHEN (settings->>'inherit_organisation_admins')::bool IS NOT FALSE THEN 'open_to_organisation' ELSE 'private' END WHERE visibility IS NULL AND deleted_at IS NULL`.
 
 ### 2. Backfill script — the stop condition
 
@@ -78,19 +78,19 @@ Shrinks to:
 - `get_user_project_access` — unchanged except `source` is always `'direct' | 'project_share' | 'legacy'`, never `'inherited'`.
 
 Deletes:
-- `workspace_follows_team_admins`, `workspace_follows_team_members`, `is_sticky_removed`.
+- `workspace_follows_organisation_admins`, `workspace_follows_organisation_members`, `is_sticky_removed`.
 - `sticky_remove`, `sticky_unremove`.
-- Team-owner carve-out (no longer needed — owners write a direct row via migration, not implicit derivation).
+- Organisation-owner carve-out (no longer needed — owners write a direct row via migration, not implicit derivation).
 
 Keeps (simplified):
 - `on_workspace_created` — still writes creator as direct owner. No settings flags written (visibility is a column).
-- `on_team_member_removed` — still soft-deletes the user's direct rows across the team's workspaces. Matches Slack "kicked from Slack → out of every channel." If product disagrees, separate decision.
+- `on_organisation_member_removed` — still soft-deletes the user's direct rows across the organisation's workspaces. Matches Slack "kicked from Slack → out of every channel." If product disagrees, separate decision.
 
 ### 4. Settings purge
 
 Once the resolver no longer reads them, strip from `workspace.settings` JSON:
-- `inherit_team_admins`
-- `inherit_team_members`
+- `inherit_organisation_admins`
+- `inherit_organisation_members`
 - `sticky_removed`
 
 Single UPDATE via Directus, plus future-workspace `on_workspace_created` no longer writes these keys.
@@ -99,21 +99,21 @@ Tombstones that exist today are naturally orphaned — the backfill already deci
 
 ### 5. New endpoints (unlock flows 4 + 6)
 
-**`POST /v2/workspaces/:id/join`** — team admin self-join.
+**`POST /v2/workspaces/:id/join`** — organisation admin self-join.
 - Guard: caller is `org_membership` admin/owner in this workspace's org. No workspace-level policy (you can't require a policy you don't have yet).
 - Rate-limited (5/hr/user).
 - Idempotent: 409 if direct row already exists.
 - Writes `workspace_membership (role='admin', source='direct')`.
 - Emits `WORKSPACE_ADDED` to joiner; no broadcast.
 
-**`POST /v2/workspaces/:id/access-requests`** — team member request-to-join, open workspaces only.
-- Guard: caller is `org_membership` member in org; workspace is `visibility='open_to_team'`.
+**`POST /v2/workspaces/:id/access-requests`** — organisation member request-to-join, open workspaces only.
+- Guard: caller is `org_membership` member in org; workspace is `visibility='open_to_organisation'`.
 - Idempotent: 409 if pending request exists.
 - Writes `access_request (status='pending')`.
-- Emits `MEMBERSHIP_REQUESTED` to audience = workspace admins + team admins.
+- Emits `MEMBERSHIP_REQUESTED` to audience = workspace admins + organisation admins.
 
 **`GET /v2/workspaces/:id/access-requests`** — admin view.
-- Guard: `member:manage` policy on workspace OR team admin.
+- Guard: `member:manage` policy on workspace OR organisation admin.
 - Returns pending requests.
 
 **`POST /v2/workspaces/:id/access-requests/:req_id/approve`**
@@ -138,7 +138,7 @@ Add event codes to `_SEVERITY_BY_EVENT` in `notifications.py`:
 ### 7. Surface changes (UI flows downstream — not this flow)
 
 Listed here for dependency clarity:
-- Home page (`flows/home-per-team.md`): discovery section with Join / Request-access CTAs.
+- Home page (`flows/home-per-organisation.md`): discovery section with Join / Request-access CTAs.
 - Workspace settings → Members tab: pending access requests list, approve/reject buttons.
 - Workspace create wizard (`flows/workspace-creation.md`): visibility radio + honesty disclosure on Private.
 
@@ -148,8 +148,8 @@ Listed here for dependency clarity:
 
 1. `SELECT count(*) FROM workspace_membership WHERE source='inherited' AND deleted_at IS NULL` = 0.
 2. `user_can_access` never reads `org_membership` or `workspace.settings`.
-3. `workspace.settings` contains no `inherit_team_admins | inherit_team_members | sticky_removed` keys for any active row.
-4. Team admin promotion/demotion does NOT change workspace access — workspace rows are explicit.
+3. `workspace.settings` contains no `inherit_organisation_admins | inherit_organisation_members | sticky_removed` keys for any active row.
+4. Organisation admin promotion/demotion does NOT change workspace access — workspace rows are explicit.
 5. External user (is_external=true) is always direct; derivation never produced externals anyway. Post-walkback, externals can be freely invited without any reconciliation logic.
 6. Last-admin protection holds — `DELETE /v2/workspaces/:id/members/:uid` refuses if the target is the last `role='admin'` row with `deleted_at IS NULL`.
 
@@ -181,5 +181,5 @@ Copy + brand: N/A — backend-only flow until the UI flows consume it.
 
 - UI for join / request-access / approve-reject (covered in flows 4 + 6 + 9).
 - `access_request` model deeper fields (reason text, expiry) — not in matrix; add post-release if we see abuse.
-- Bulk re-join (former employees returning to a team) — out of scope; they rejoin per workspace.
-- Cross-team workspace discovery — matrix §6 restricts discovery to team scope; don't widen.
+- Bulk re-join (former employees returning to a organisation) — out of scope; they rejoin per workspace.
+- Cross-organisation workspace discovery — matrix §6 restricts discovery to organisation scope; don't widen.

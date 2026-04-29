@@ -353,7 +353,7 @@ export const ProjectChatRoute = () => {
 
 	// User templates & preferences. Fetch the project's workspace_id so
 	// the templates hook can return BOTH personal (scope='user') and
-	// team-shared (scope='workspace') templates for this workspace.
+	// organisation-shared (scope='workspace') templates for this workspace.
 	const projectForWorkspace = useProjectById({
 		projectId: projectId ?? "",
 		query: { fields: ["id", "workspace_id"] },

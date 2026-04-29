@@ -1,32 +1,38 @@
 """V2 workspace endpoints — list, create, manage workspaces."""
 
 import asyncio
-from datetime import datetime, timezone
+from typing import Literal, Optional, Annotated
 from logging import getLogger
-from typing import Literal, Optional
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from fastapi import Depends, APIRouter, HTTPException
+from pydantic import Field, BaseModel
 
+from dembrane.email import send_email
 from dembrane.utils import generate_uuid
 from dembrane.app_user import resolve_app_user, get_app_user_or_raise
-from dembrane.directus_async import async_directus
-from dembrane.email import send_email
 from dembrane.policies import TIER_ORDER
 from dembrane.settings import get_settings
-from dembrane.tier_downgrade import preview_downgrade, apply_downgrade_effects
 from dembrane.api.rate_limit import create_user_rate_limiter
-from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 from dembrane.api.v2.schemas import (
+    MemberPreview,
+    WorkspaceUsage,
+    WorkspaceSummary,
+    OrganisationRollup,
+    WorkspaceListResponse,
     CreateWorkspaceRequest,
     CreateWorkspaceResponse,
-    MemberPreview,
-    TeamRollup,
-    WorkspaceListResponse,
-    WorkspaceSummary,
-    WorkspaceUsage,
 )
+from dembrane.directus_async import async_directus
+from dembrane.tier_downgrade import preview_downgrade, apply_downgrade_effects
+from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 from dembrane.api.dependency_auth import DependencyDirectusSession
+
+# Reusable Annotated alias mirrors the convention in
+# dembrane/api/dependency_auth.py (DependencyDirectusSession). Avoids
+# Ruff B008 "Depends() in arg defaults" while keeping handler signatures
+# readable.
+DependencyWorkspaceContext = Annotated[WorkspaceContext, Depends(get_workspace_context)]
 
 settings = get_settings()
 
@@ -47,6 +53,7 @@ def _strip_header_unsafe(value: str) -> str:
     if not value:
         return ""
     return value.replace("\r", " ").replace("\n", " ").strip()
+
 
 router = APIRouter()
 logger = getLogger("api.v2.workspaces")
@@ -115,7 +122,7 @@ async def _get_workspace_usage(ws_id: str) -> WorkspaceUsage:
 async def _get_member_previews(ws_id: str) -> list[MemberPreview]:
     """Get first 4 member avatars for a workspace.
 
-    Uses get_effective_members so derived team admins are represented.
+    Uses get_effective_members so derived organisation admins are represented.
     Raw workspace_membership reads would show only direct rows and lie
     about who's on open workspaces. (Audit round 2026-04-21, MEDIUM.)
     """
@@ -166,10 +173,10 @@ async def _get_member_previews(ws_id: str) -> list[MemberPreview]:
 async def list_workspaces(
     auth: DependencyDirectusSession,
 ) -> WorkspaceListResponse:
-    """List all accessible workspaces with usage stats and team rollups."""
+    """List all accessible workspaces with usage stats and organisation rollups."""
     app_user = await resolve_app_user(auth.user_id)
     if not app_user:
-        return WorkspaceListResponse(workspaces=[], teams=[])
+        return WorkspaceListResponse(workspaces=[], organisations=[])
 
     app_user_id = app_user["id"]
 
@@ -191,10 +198,10 @@ async def list_workspaces(
     if not isinstance(memberships, list):
         memberships = []
 
-    # Org memberships are fetched up front so a user with team access but
-    # zero direct workspace memberships (e.g. joined the team but hasn't
-    # been granted any workspace yet) still gets their teams back. Without
-    # this the selector shows "no workspaces yet" and hides the team they
+    # Org memberships are fetched up front so a user with organisation access but
+    # zero direct workspace memberships (e.g. joined the organisation but hasn't
+    # been granted any workspace yet) still gets their organisations back. Without
+    # this the selector shows "no workspaces yet" and hides the organisation they
     # can actually manage.
     org_membership_data = await async_directus.get_items(
         "org_membership",
@@ -210,7 +217,7 @@ async def list_workspaces(
         org_membership_data = []
 
     if len(memberships) == 0 and len(org_membership_data) == 0:
-        return WorkspaceListResponse(workspaces=[], teams=[])
+        return WorkspaceListResponse(workspaces=[], organisations=[])
 
     workspace_ids = [m["workspace_id"] for m in memberships if m.get("workspace_id")]
 
@@ -227,8 +234,14 @@ async def list_workspaces(
                         "deleted_at": {"_null": True},
                     },
                     "fields": [
-                        "id", "name", "org_id", "is_default", "tier",
-                        "downgraded_at", "downgraded_from_tier", "logo_url",
+                        "id",
+                        "name",
+                        "org_id",
+                        "is_default",
+                        "tier",
+                        "downgraded_at",
+                        "downgraded_from_tier",
+                        "logo_url",
                     ],
                     "limit": -1,
                 }
@@ -239,23 +252,27 @@ async def list_workspaces(
 
     ws_map = {ws["id"]: ws for ws in workspaces}
 
-    # Fetch org names + logos (logo powers the TeamHeroCard on /w).
-    # Union the workspaces' orgs with the user's org_memberships so teams
+    # Fetch org names + logos (logo powers the OrganisationHeroCard on /w).
+    # Union the workspaces' orgs with the user's org_memberships so organisations
     # without any workspace yet still show up with a name + logo.
-    org_ids = list({
-        *(ws.get("org_id") for ws in workspaces if ws.get("org_id")),
-        *(om.get("org_id") for om in org_membership_data if om.get("org_id")),
-    })
+    org_ids = list(
+        {
+            *(ws.get("org_id") for ws in workspaces if ws.get("org_id")),
+            *(om.get("org_id") for om in org_membership_data if om.get("org_id")),
+        }
+    )
     org_map: dict[str, str] = {}
     org_logo_map: dict[str, Optional[str]] = {}
     if org_ids:
         orgs = await async_directus.get_items(
             "org",
-            {"query": {
-                "filter": {"id": {"_in": org_ids}},
-                "fields": ["id", "name", "logo_url"],
-                "limit": -1,
-            }},
+            {
+                "query": {
+                    "filter": {"id": {"_in": org_ids}},
+                    "fields": ["id", "name", "logo_url"],
+                    "limit": -1,
+                }
+            },
         )
         if isinstance(orgs, list):
             org_map = {o["id"]: o.get("name", "") for o in orgs}
@@ -263,17 +280,31 @@ async def list_workspaces(
 
     # Build workspace summaries with usage — parallelize per-workspace queries
     # Filter to valid memberships first
-    valid_memberships = [(m, ws_map[m["workspace_id"]]) for m in memberships if ws_map.get(m.get("workspace_id"))]
+    valid_memberships = [
+        (m, ws_map[m["workspace_id"]]) for m in memberships if ws_map.get(m.get("workspace_id"))
+    ]
 
-    async def _get_workspace_aggregates(ws_id: str) -> tuple[int, int, WorkspaceUsage, list[MemberPreview]]:
+    async def _get_workspace_aggregates(
+        ws_id: str,
+    ) -> tuple[int, int, WorkspaceUsage, list[MemberPreview]]:
         """Fetch project count, member count, usage, and member previews in parallel."""
         proj_task = async_directus.get_items(
             "project",
-            {"query": {"filter": {"workspace_id": {"_eq": ws_id}, "deleted_at": {"_null": True}}, "aggregate": {"count": ["id"]}}},
+            {
+                "query": {
+                    "filter": {"workspace_id": {"_eq": ws_id}, "deleted_at": {"_null": True}},
+                    "aggregate": {"count": ["id"]},
+                }
+            },
         )
         mem_task = async_directus.get_items(
             "workspace_membership",
-            {"query": {"filter": {"workspace_id": {"_eq": ws_id}, "deleted_at": {"_null": True}}, "aggregate": {"count": ["id"]}}},
+            {
+                "query": {
+                    "filter": {"workspace_id": {"_eq": ws_id}, "deleted_at": {"_null": True}},
+                    "aggregate": {"count": ["id"]},
+                }
+            },
         )
         usage_task = _get_workspace_usage(ws_id)
         previews_task = _get_member_previews(ws_id)
@@ -298,75 +329,86 @@ async def list_workspaces(
 
     results: list[WorkspaceSummary] = []
     from dembrane.tier_capacity import get_capacity
-    for (membership, ws), (project_count, member_count, usage, previews) in zip(valid_memberships, all_aggregates):
+
+    for (membership, ws), (project_count, member_count, usage, previews) in zip(
+        valid_memberships, all_aggregates, strict=True
+    ):
         # Fill in matrix §8 cap signals on the usage object so card-level
         # rendering doesn't need to join tier → cap client-side.
         tier = ws.get("tier") or ""
         cap = get_capacity(tier)
         if cap and cap.included_hours is not None:
             usage.hours_included = cap.included_hours
-            pct = (
-                usage.audio_hours_this_month / cap.included_hours
-                if cap.included_hours
-                else 0.0
-            )
+            pct = usage.audio_hours_this_month / cap.included_hours if cap.included_hours else 0.0
             usage.hours_pct = round(pct, 3)
-            if (
-                cap.hard_block_on_hours
-                and usage.audio_hours_this_month >= cap.included_hours
-            ):
+            if cap.hard_block_on_hours and usage.audio_hours_this_month >= cap.included_hours:
                 usage.at_cap = True
             elif pct >= 0.8:
                 usage.approaching_cap = True
-        results.append(WorkspaceSummary(
-            id=ws["id"],
-            name=ws.get("name", ""),
-            org_id=ws.get("org_id", ""),
-            org_name=org_map.get(ws.get("org_id", ""), ""),
-            role=membership.get("role", ""),
-            is_default=ws.get("is_default", False),
-            tier=ws.get("tier", "pioneer"),
-            logo_url=ws.get("logo_url"),
-            org_logo_url=org_logo_map.get(ws.get("org_id", "")),
-            project_count=project_count,
-            member_count=member_count,
-            is_external=membership.get("is_external", False),
-            members_preview=previews,
-            usage=usage,
-            downgraded_at=ws.get("downgraded_at"),
-            downgraded_from_tier=ws.get("downgraded_from_tier"),
-        ))
+        results.append(
+            WorkspaceSummary(
+                id=ws["id"],
+                name=ws.get("name", ""),
+                org_id=ws.get("org_id", ""),
+                org_name=org_map.get(ws.get("org_id", ""), ""),
+                role=membership.get("role", ""),
+                is_default=ws.get("is_default", False),
+                tier=ws.get("tier", "pioneer"),
+                logo_url=ws.get("logo_url"),
+                org_logo_url=org_logo_map.get(ws.get("org_id", "")),
+                project_count=project_count,
+                member_count=member_count,
+                is_external=membership.get("is_external", False),
+                members_preview=previews,
+                usage=usage,
+                downgraded_at=ws.get("downgraded_at"),
+                downgraded_from_tier=ws.get("downgraded_from_tier"),
+            )
+        )
 
-    # Build team rollups (org_membership_data was fetched up front).
-    teams: list[TeamRollup] = []
+    # Build organisation rollups (org_membership_data was fetched up front).
+    organisations: list[OrganisationRollup] = []
     if org_membership_data:
         # Build org-to-workspaces map and collect all workspace IDs for member queries
-        org_team_workspaces: dict[str, list[WorkspaceSummary]] = {}
-        all_team_ws_ids: list[str] = []
+        org_organisation_workspaces: dict[str, list[WorkspaceSummary]] = {}
+        all_organisation_ws_ids: list[str] = []
         valid_org_memberships = []
         for om in org_membership_data:
             oid = om.get("org_id")
             if not oid:
                 continue
-            team_ws = [w for w in results if w.org_id == oid]
-            org_team_workspaces[oid] = team_ws
-            all_team_ws_ids.extend(tw.id for tw in team_ws)
+            organisation_ws = [w for w in results if w.org_id == oid]
+            org_organisation_workspaces[oid] = organisation_ws
+            all_organisation_ws_ids.extend(tw.id for tw in organisation_ws)
             valid_org_memberships.append(om)
 
-        # Fetch all workspace memberships for team rollups in parallel
-        all_team_mems = await asyncio.gather(
-            *[
-                async_directus.get_items(
-                    "workspace_membership",
-                    {"query": {"filter": {"workspace_id": {"_eq": ws_id}, "deleted_at": {"_null": True}}, "fields": ["user_id"], "limit": -1}},
-                )
-                for ws_id in all_team_ws_ids
-            ]
-        ) if all_team_ws_ids else []
+        # Fetch all workspace memberships for organisation rollups in parallel
+        all_organisation_mems = (
+            await asyncio.gather(
+                *[
+                    async_directus.get_items(
+                        "workspace_membership",
+                        {
+                            "query": {
+                                "filter": {
+                                    "workspace_id": {"_eq": ws_id},
+                                    "deleted_at": {"_null": True},
+                                },
+                                "fields": ["user_id"],
+                                "limit": -1,
+                            }
+                        },
+                    )
+                    for ws_id in all_organisation_ws_ids
+                ]
+            )
+            if all_organisation_ws_ids
+            else []
+        )
 
         # Build ws_id -> member user_ids map
         ws_member_map: dict[str, set[str]] = {}
-        for ws_id, mems in zip(all_team_ws_ids, all_team_mems):
+        for ws_id, mems in zip(all_organisation_ws_ids, all_organisation_mems, strict=True):
             member_ids: set[str] = set()
             if isinstance(mems, list):
                 member_ids = {m["user_id"] for m in mems if m.get("user_id")}
@@ -374,26 +416,36 @@ async def list_workspaces(
 
         for om in valid_org_memberships:
             oid = om["org_id"]
-            team_workspaces = org_team_workspaces[oid]
+            organisation_workspaces = org_organisation_workspaces[oid]
             all_member_ids: set[str] = set()
-            for tw in team_workspaces:
+            for tw in organisation_workspaces:
                 all_member_ids.update(ws_member_map.get(tw.id, set()))
 
-            teams.append(TeamRollup(
-                id=oid,
-                name=org_map.get(oid, ""),
-                role=om.get("role", ""),
-                logo_url=org_logo_map.get(oid),
-                total_projects=sum(w.project_count for w in team_workspaces),
-                total_members=len(all_member_ids),
-                total_audio_hours=round(sum(w.usage.audio_hours for w in team_workspaces), 1),
-                total_conversations=sum(w.usage.conversation_count for w in team_workspaces),
-                workspace_count=len(team_workspaces),
-                total_audio_hours_this_month=round(sum(w.usage.audio_hours_this_month for w in team_workspaces), 1),
-                total_conversations_this_month=sum(w.usage.conversations_this_month for w in team_workspaces),
-            ))
+            organisations.append(
+                OrganisationRollup(
+                    id=oid,
+                    name=org_map.get(oid, ""),
+                    role=om.get("role", ""),
+                    logo_url=org_logo_map.get(oid),
+                    total_projects=sum(w.project_count for w in organisation_workspaces),
+                    total_members=len(all_member_ids),
+                    total_audio_hours=round(
+                        sum(w.usage.audio_hours for w in organisation_workspaces), 1
+                    ),
+                    total_conversations=sum(
+                        w.usage.conversation_count for w in organisation_workspaces
+                    ),
+                    workspace_count=len(organisation_workspaces),
+                    total_audio_hours_this_month=round(
+                        sum(w.usage.audio_hours_this_month for w in organisation_workspaces), 1
+                    ),
+                    total_conversations_this_month=sum(
+                        w.usage.conversations_this_month for w in organisation_workspaces
+                    ),
+                )
+            )
 
-    return WorkspaceListResponse(workspaces=results, teams=teams)
+    return WorkspaceListResponse(workspaces=results, organisations=organisations)
 
 
 @router.post("", response_model=CreateWorkspaceResponse)
@@ -401,7 +453,7 @@ async def create_workspace(
     body: CreateWorkspaceRequest,
     auth: DependencyDirectusSession,
 ) -> CreateWorkspaceResponse:
-    """Create a new workspace in the user's team."""
+    """Create a new workspace in the user's organisation."""
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
 
@@ -411,39 +463,67 @@ async def create_workspace(
         # Use user's primary org (where they're owner)
         orgs = await async_directus.get_items(
             "org_membership",
-            {"query": {"filter": {"user_id": {"_eq": app_user_id}, "role": {"_in": ["owner", "admin"]}, "deleted_at": {"_null": True}}, "fields": ["org_id"], "limit": 1}},
+            {
+                "query": {
+                    "filter": {
+                        "user_id": {"_eq": app_user_id},
+                        "role": {"_in": ["owner", "admin"]},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["org_id"],
+                    "limit": 1,
+                }
+            },
         )
         if not isinstance(orgs, list) or len(orgs) == 0:
-            raise HTTPException(status_code=403, detail="No team found. Complete onboarding first.")
+            raise HTTPException(
+                status_code=403, detail="No organisation found. Complete onboarding first."
+            )
         org_id = orgs[0]["org_id"]
 
     # Verify user has admin/owner on this org
     org_access = await async_directus.get_items(
         "org_membership",
-        {"query": {"filter": {"org_id": {"_eq": org_id}, "user_id": {"_eq": app_user_id}, "role": {"_in": ["owner", "admin"]}, "deleted_at": {"_null": True}}, "limit": 1}},
+        {
+            "query": {
+                "filter": {
+                    "org_id": {"_eq": org_id},
+                    "user_id": {"_eq": app_user_id},
+                    "role": {"_in": ["owner", "admin"]},
+                    "deleted_at": {"_null": True},
+                },
+                "limit": 1,
+            }
+        },
     )
     if not isinstance(org_access, list) or len(org_access) == 0:
-        raise HTTPException(status_code=403, detail="Must be team admin or owner to create workspaces")
+        raise HTTPException(
+            status_code=403, detail="Must be organisation admin or owner to create workspaces"
+        )
 
     # Tier is always "pioneer" on creation — plan changes happen via admin/billing
     # Matrix v1.1 §6 visibility: stored on workspace.visibility. The enum
     # is the sole source of truth on new workspaces; legacy settings flags
     # are no longer written (resolver still reads them for pre-enum rows).
-    visibility = "open_to_team" if body.inherit_team_admins else "private"
+    visibility = "open_to_organisation" if body.inherit_organisation_admins else "private"
     ws_id = generate_uuid()
-    await async_directus.create_item("workspace", {
-        "id": ws_id,
-        "org_id": org_id,
-        "name": body.name.strip(),
-        "tier": "pilot",
-        "visibility": visibility,
-        "is_default": False,
-        "created_by": app_user_id,
-    })
+    await async_directus.create_item(
+        "workspace",
+        {
+            "id": ws_id,
+            "org_id": org_id,
+            "name": body.name.strip(),
+            "tier": "pilot",
+            "visibility": visibility,
+            "is_default": False,
+            "created_by": app_user_id,
+        },
+    )
 
     # Insert the creator as source='direct', role='owner'. No settings
     # flags (matrix v1.1 §6 — derivation is retired for new rows).
     from dembrane.inheritance import on_workspace_created
+
     await on_workspace_created(
         workspace_id=ws_id,
         creator_app_user_id=app_user_id,
@@ -454,23 +534,24 @@ async def create_workspace(
         f"(visibility={visibility})"
     )
 
-    # Tell the team's other admins/owners that a new workspace exists.
+    # Tell the organisation's other admins/owners that a new workspace exists.
     # Open workspaces are discoverable via the discovery endpoint so they
     # can explicitly join; private workspaces are still discoverable to
-    # team admins per matrix §6.
-    from dembrane.notifications import emit_to_audience, audience_team_admins
+    # organisation admins per matrix §6.
+    from dembrane.notifications import emit_to_audience, audience_organisation_admins
+
     creator_row = await async_directus.get_item("app_user", app_user_id)
-    creator_name = (creator_row or {}).get("display_name") or "A team admin"
-    team_admin_ids = await audience_team_admins(org_id)
+    creator_name = (creator_row or {}).get("display_name") or "A organisation admin"
+    organisation_admin_ids = await audience_organisation_admins(org_id)
     await emit_to_audience(
-        team_admin_ids,
+        organisation_admin_ids,
         actor_user_id=app_user_id,
         event_code="WORKSPACE_CREATED",
         title=f"{creator_name} created {body.name.strip()}",
         message=(
-            "The new workspace is open to the team — discover it from your team page."
-            if visibility == "open_to_team"
-            else "The new workspace is private — only explicitly invited people and team admins have access."
+            "The new workspace is open to the organisation — discover it from your organisation page."
+            if visibility == "open_to_organisation"
+            else "The new workspace is private — only explicitly invited people and organisation admins have access."
         ),
         action="NAVIGATE_WS",
         ref_workspace_id=ws_id,
@@ -490,10 +571,10 @@ async def create_workspace(
 
 @router.delete("/{workspace_id}")
 async def delete_workspace(
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> dict:
     """Soft-delete a workspace. Admin or owner. Blocked if workspace has
-    any non-deleted project — partners wind projects down via the team
+    any non-deleted project — partners wind projects down via the organisation
     admin page's Projects view (matrix §4 + S7).
 
     Matrix §4 delete-workspace row is ✓ on Admin (with confirmation
@@ -526,18 +607,13 @@ async def delete_workspace(
             status_code=409,
             detail=(
                 f"This workspace has {project_count} project(s). "
-                "Delete or move them first — you can do this from the team's Projects view."
+                "Delete or move them first — you can do this from the organisation's Projects view."
             ),
         )
 
     now_iso = datetime.now(timezone.utc).isoformat()
-    await async_directus.update_item(
-        "workspace", ctx.workspace_id, {"deleted_at": now_iso}
-    )
-    logger.info(
-        f"Deleted workspace {ctx.workspace_id} by {ctx.app_user_id} "
-        f"(role={ctx.role})"
-    )
+    await async_directus.update_item("workspace", ctx.workspace_id, {"deleted_at": now_iso})
+    logger.info(f"Deleted workspace {ctx.workspace_id} by {ctx.app_user_id} (role={ctx.role})")
     return {"status": "deleted"}
 
 
@@ -586,8 +662,8 @@ async def set_workspace_tier(
         direction: Literal["upgrade", "downgrade", "no-change"]
         from_idx = TIER_ORDER.index(from_tier)
         to_idx = TIER_ORDER.index(to_tier)
-    except ValueError:
-        raise HTTPException(status_code=500, detail="Unknown tier value")
+    except ValueError as exc:
+        raise HTTPException(status_code=500, detail="Unknown tier value") from exc
 
     if from_idx == to_idx:
         direction = "no-change"
@@ -623,9 +699,10 @@ async def set_workspace_tier(
     # the org-scope aggregate depend on tier info, so bust both.
     if direction != "no-change":
         from dembrane.cache_utils import (
-            invalidate_workspace_usage,
             invalidate_org_usage,
+            invalidate_workspace_usage,
         )
+
         await invalidate_workspace_usage(workspace_id)
         ws_org_id = workspace.get("org_id")
         if ws_org_id:
@@ -646,6 +723,7 @@ async def set_workspace_tier(
             emit_to_audience,
             audience_workspace_admins_and_billing,
         )
+
         ws_name = workspace.get("name", "your workspace")
         if direction == "upgrade":
             title = f"{ws_name} upgraded to {to_tier}"
@@ -661,9 +739,7 @@ async def set_workspace_tier(
         audience = await audience_workspace_admins_and_billing(workspace_id)
         await emit_to_audience(
             audience,
-            event_code=(
-                "TIER_UPGRADED" if direction == "upgrade" else "TIER_DOWNGRADED"
-            ),
+            event_code=("TIER_UPGRADED" if direction == "upgrade" else "TIER_DOWNGRADED"),
             title=title,
             message=message,
             action="NAVIGATE_WS",
@@ -677,6 +753,7 @@ async def set_workspace_tier(
         # holds comfortably under normal queue latency.
         if direction == "downgrade" and audience:
             from dembrane.tasks import task_send_downgrade_email
+
             task_send_downgrade_email.send(
                 audience,
                 ws_name,
@@ -699,7 +776,7 @@ async def set_workspace_tier(
 @router.get("/{workspace_id}/tier/preview-downgrade")
 async def preview_workspace_downgrade(
     to_tier: Literal["pilot", "pioneer", "innovator", "changemaker", "guardian"],
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> dict:
     """What would a downgrade to `to_tier` do? Read-only — powers the W5
     confirmation dialog copy. Anyone with settings:manage can preview.
@@ -717,16 +794,14 @@ async def preview_workspace_downgrade(
 
 
 class UpgradeRequestBody(BaseModel):
-    target_tier: Optional[
-        Literal["pioneer", "innovator", "changemaker", "guardian"]
-    ] = None
+    target_tier: Optional[Literal["pioneer", "innovator", "changemaker", "guardian"]] = None
     message: Optional[str] = Field(default=None, max_length=1000)
 
 
 @router.post("/{workspace_id}/upgrade-request")
 async def request_upgrade(
     body: UpgradeRequestBody,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> dict:
     """Admin or billing clicks "Request upgrade" in the tier compare view.
     Sends an email to settings.email.upgrade_request_inbox with context.
@@ -750,7 +825,8 @@ async def request_upgrade(
 
     workspace_name = ctx.workspace.get("name", "")
     current_tier = ctx.workspace.get("tier", "pioneer")
-    org = await async_directus.get_item("org", ctx.workspace.get("org_id"))
+    org_id = ctx.workspace.get("org_id")
+    org = await async_directus.get_item("org", org_id) if org_id else None
     org_name = (org or {}).get("name", "")
 
     target = body.target_tier or "(not specified)"
@@ -772,10 +848,7 @@ async def request_upgrade(
     # that end up there.
     safe_org = _strip_header_unsafe(org_name)
     safe_workspace = _strip_header_unsafe(workspace_name)
-    subject = (
-        f"Upgrade request: {safe_org} / {safe_workspace} "
-        f"({current_tier} → {target})"
-    )
+    subject = f"Upgrade request: {safe_org} / {safe_workspace} ({current_tier} → {target})"
 
     sent = await send_email(
         to=settings.email.upgrade_request_inbox,
@@ -785,9 +858,7 @@ async def request_upgrade(
     )
     if not sent:
         # Don't silently drop — mirrors the pattern from 9021900.
-        logger.error(
-            f"Upgrade request email failed for workspace {ctx.workspace_id}"
-        )
+        logger.error(f"Upgrade request email failed for workspace {ctx.workspace_id}")
         raise HTTPException(
             status_code=502,
             detail="Couldn't send the request. Please try again or email us directly.",
@@ -801,16 +872,14 @@ async def request_upgrade(
     # Tell co-admins that a request is out so two of them don't both
     # email the billing inbox with the same ask. Skips the requester.
     from dembrane.notifications import emit_to_audience, audience_workspace_admins
+
     audience = await audience_workspace_admins(ctx.workspace_id)
     await emit_to_audience(
         audience,
         actor_user_id=ctx.app_user_id,
         event_code="UPGRADE_REQUEST_SENT",
-        title=f"{requester_name or 'A team admin'} requested an upgrade",
-        message=(
-            f"**{workspace_name}** · {current_tier} → {target}. "
-            "We'll follow up over email."
-        ),
+        title=f"{requester_name or 'A organisation admin'} requested an upgrade",
+        message=(f"**{workspace_name}** · {current_tier} → {target}. We'll follow up over email."),
         action="NAVIGATE_WS",
         ref_workspace_id=ctx.workspace_id,
         ref_org_id=ctx.workspace.get("org_id"),
@@ -830,9 +899,7 @@ def _calendar_month_bounds(now: datetime, month_offset: int = 0) -> tuple[str, s
     `month_offset=0` is the current month, `1` is last month, etc.
     Month-end is exclusive."""
     # Normalise to the first of this month, then back up N months.
-    month_start = now.replace(
-        day=1, hour=0, minute=0, second=0, microsecond=0
-    )
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     year, month = month_start.year, month_start.month
     remaining = month_offset
     while remaining > 0:
@@ -873,14 +940,14 @@ class WorkspaceUsageResponse(BaseModel):
     tier: str
     tier_tagline: str
     audio_hours: float
-    audio_hours_included: Optional[int]          # None = unlimited
+    audio_hours_included: Optional[int]  # None = unlimited
     seat_count: int
     seat_count_included: Optional[int]
     guest_count: int
     guest_cap: Optional[int]
     project_count: int
     projects: list[ProjectUsageItem]
-    pilot_hard_block_active: bool                 # informational for members too
+    pilot_hard_block_active: bool  # informational for members too
 
     # Admin + billing only — None for members.
     overage_forecast_eur: Optional[float] = None
@@ -939,7 +1006,7 @@ async def list_tier_capacities() -> list[TierCapacityItem]:
     response_model=WorkspaceUsageResponse,
 )
 async def get_workspace_usage(
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
     refresh: bool = False,
     month_offset: int = 0,
 ) -> WorkspaceUsageResponse:
@@ -965,10 +1032,10 @@ async def get_workspace_usage(
         usage_cache_key,
     )
     from dembrane.tier_capacity import (
+        next_tier as tier_next,
+        get_capacity,
         compute_hour_overage_eur,
         compute_seat_overage_eur,
-        get_capacity,
-        next_tier as tier_next,
     )
 
     ctx.require_policy("workspace:view_usage")
@@ -1142,7 +1209,8 @@ async def get_workspace_usage(
             if role in ("admin", "billing", "owner"):
                 logger.warning(
                     "external_with_elevated_role workspace=%s role=%s",
-                    ctx.workspace_id, role,
+                    ctx.workspace_id,
+                    role,
                 )
             guest_count += 1
             continue
@@ -1223,12 +1291,14 @@ async def get_workspace_usage(
     await cache_set_json(cache_key, full.model_dump(), USAGE_TTL_SECONDS)
 
     if not sees_financials:
-        return WorkspaceUsageResponse(**{
-            **full.model_dump(),
-            "overage_forecast_eur": None,
-            "seat_overage_eur": None,
-            "next_tier": None,
-        })
+        return WorkspaceUsageResponse(
+            **{
+                **full.model_dump(),
+                "overage_forecast_eur": None,
+                "seat_overage_eur": None,
+                "next_tier": None,
+            }
+        )
 
     return full
 
@@ -1239,7 +1309,7 @@ async def get_workspace_usage(
 
 
 class HandoffInitiateBody(BaseModel):
-    target_team_id: str
+    target_organisation_id: str
     message: Optional[str] = Field(default=None, max_length=1000)
 
 
@@ -1249,7 +1319,7 @@ class HandoffResponse(BaseModel):
     handoff_target_team_id: Optional[str] = None
 
 
-async def _caller_admins_team(org_id: str, app_user_id: str) -> bool:
+async def _caller_admins_organisation(org_id: str, app_user_id: str) -> bool:
     """Helper — is the caller admin/owner on a specific org?"""
     rows = await async_directus.get_items(
         "org_membership",
@@ -1275,42 +1345,40 @@ async def _caller_admins_team(org_id: str, app_user_id: str) -> bool:
 )
 async def initiate_handoff(
     body: HandoffInitiateBody,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> HandoffResponse:
-    """Partner admin initiates a handoff to a client team.
+    """Partner admin initiates a handoff to a client organisation.
 
     Matrix §10: "Partner initiates → client accepts → billing attribution
-    flips." This sets the pending state; the target team's admins get a
+    flips." This sets the pending state; the target organisation's admins get a
     PARTNER_HANDOFF_PENDING notification and can accept via /handoff/accept.
 
-    Guards: caller must be an admin/owner of the team that currently bills
+    Guards: caller must be an admin/owner of the organisation that currently bills
     the workspace (billed_to_team_id if set, else org_id). Workspace
     admin/owner role is not sufficient — handoff is a billing action.
     """
     ws = ctx.workspace
-    billing_team_id = ws.get("billed_to_team_id") or ws.get("org_id")
-    if not billing_team_id:
-        raise HTTPException(
-            status_code=500, detail="Workspace has no billing team set"
-        )
+    billing_organisation_id = ws.get("billed_to_team_id") or ws.get("org_id")
+    if not billing_organisation_id:
+        raise HTTPException(status_code=500, detail="Workspace has no billing organisation set")
 
-    # Caller authority: admin/owner on the billing team.
-    if not await _caller_admins_team(billing_team_id, ctx.app_user_id):
+    # Caller authority: admin/owner on the billing organisation.
+    if not await _caller_admins_organisation(billing_organisation_id, ctx.app_user_id):
         raise HTTPException(
             status_code=403,
-            detail="Only the billing team's admins can initiate handoff",
+            detail="Only the billing organisation's admins can initiate handoff",
         )
 
-    if body.target_team_id == billing_team_id:
+    if body.target_organisation_id == billing_organisation_id:
         raise HTTPException(
             status_code=400,
-            detail="Target team is already the billing team",
+            detail="Target organisation is already the billing organisation",
         )
 
-    # Target team must exist (not soft-deleted).
-    target = await async_directus.get_item("org", body.target_team_id)
+    # Target organisation must exist (not soft-deleted).
+    target = await async_directus.get_item("org", body.target_organisation_id)
     if not target or target.get("deleted_at"):
-        raise HTTPException(status_code=404, detail="Target team not found")
+        raise HTTPException(status_code=404, detail="Target organisation not found")
 
     if ws.get("handoff_status") == "pending":
         raise HTTPException(
@@ -1323,37 +1391,41 @@ async def initiate_handoff(
         ctx.workspace_id,
         {
             "handoff_status": "pending",
-            "handoff_target_team_id": body.target_team_id,
+            "handoff_target_team_id": body.target_organisation_id,
         },
     )
 
-    # Notify target team admins — they're the ones who action it.
-    from dembrane.notifications import emit_to_audience, audience_team_admins
+    # Notify target organisation admins — they're the ones who action it.
+    from dembrane.notifications import emit_to_audience, audience_organisation_admins
+
     ws_name = ws.get("name") or "a workspace"
-    target_admins = await audience_team_admins(body.target_team_id)
+    target_admins = await audience_organisation_admins(body.target_organisation_id)
     await emit_to_audience(
         target_admins,
         actor_user_id=ctx.app_user_id,
         event_code="PARTNER_HANDOFF_PENDING",
-        title=f"{ws_name} is being handed to your team",
+        title=f"{ws_name} is being handed to your organisation",
         message=(
             f"A partner wants to hand {ws_name} over. "
             "Review the workspace and accept the handoff to start billing."
         ),
         action="NAVIGATE_WS",
         ref_workspace_id=ctx.workspace_id,
-        ref_org_id=body.target_team_id,
+        ref_org_id=body.target_organisation_id,
     )
 
     logger.info(
         "handoff_initiated workspace=%s from=%s to=%s by=%s",
-        ctx.workspace_id, billing_team_id, body.target_team_id, ctx.app_user_id,
+        ctx.workspace_id,
+        billing_organisation_id,
+        body.target_organisation_id,
+        ctx.app_user_id,
     )
 
     return HandoffResponse(
         status="pending",
         workspace_id=ctx.workspace_id,
-        handoff_target_team_id=body.target_team_id,
+        handoff_target_team_id=body.target_organisation_id,
     )
 
 
@@ -1362,82 +1434,82 @@ async def initiate_handoff(
     response_model=HandoffResponse,
 )
 async def accept_handoff(
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> HandoffResponse:
-    """Client team admin accepts a pending handoff. Flips the billing
+    """Client organisation admin accepts a pending handoff. Flips the billing
     attribution and clears the pending state."""
     ws = ctx.workspace
     if ws.get("handoff_status") != "pending":
-        raise HTTPException(
-            status_code=409, detail="No pending handoff on this workspace"
-        )
+        raise HTTPException(status_code=409, detail="No pending handoff on this workspace")
 
-    target_team_id = ws.get("handoff_target_team_id")
-    if not target_team_id:
+    target_organisation_id = ws.get("handoff_target_team_id")
+    if not target_organisation_id:
         raise HTTPException(
             status_code=500,
-            detail="Pending handoff has no target team — inconsistent state",
+            detail="Pending handoff has no target organisation — inconsistent state",
         )
 
-    if not await _caller_admins_team(target_team_id, ctx.app_user_id):
+    if not await _caller_admins_organisation(target_organisation_id, ctx.app_user_id):
         raise HTTPException(
             status_code=403,
-            detail="Only the target team's admins can accept this handoff",
+            detail="Only the target organisation's admins can accept this handoff",
         )
 
-    prior_billing_team = ws.get("billed_to_team_id") or ws.get("org_id")
+    prior_billing_organisation = ws.get("billed_to_team_id") or ws.get("org_id")
 
     await async_directus.update_item(
         "workspace",
         ctx.workspace_id,
         {
-            "billed_to_team_id": target_team_id,
-            "effective_client_team_id": target_team_id,
+            "billed_to_team_id": target_organisation_id,
+            "effective_client_team_id": target_organisation_id,
             "handoff_status": "completed",
             "handoff_target_team_id": None,
         },
     )
 
     # Notify both sides: partner loses billing, client gains ownership.
-    from dembrane.notifications import emit_to_audience, audience_team_admins
+    from dembrane.notifications import emit_to_audience, audience_organisation_admins
+
     ws_name = ws.get("name") or "a workspace"
 
-    if prior_billing_team:
-        partner_admins = await audience_team_admins(prior_billing_team)
+    if prior_billing_organisation:
+        partner_admins = await audience_organisation_admins(prior_billing_organisation)
         await emit_to_audience(
             partner_admins,
             actor_user_id=ctx.app_user_id,
             event_code="PARTNER_HANDOFF_ACCEPTED",
             title=f"{ws_name} handoff completed",
             message=(
-                "The client accepted. Billing has flipped; your team no "
+                "The client accepted. Billing has flipped; your organisation no "
                 "longer pays this workspace's subscription."
             ),
             action="NAVIGATE_WS",
             ref_workspace_id=ctx.workspace_id,
-            ref_org_id=prior_billing_team,
+            ref_org_id=prior_billing_organisation,
         )
 
-    target_admins = await audience_team_admins(target_team_id)
+    target_admins = await audience_organisation_admins(target_organisation_id)
     await emit_to_audience(
         [uid for uid in target_admins if uid != ctx.app_user_id],
         actor_user_id=ctx.app_user_id,
         event_code="PARTNER_HANDOFF_ACCEPTED",
         title=f"{ws_name} is now yours",
-        message="Your team now owns this workspace's subscription.",
+        message="Your organisation now owns this workspace's subscription.",
         action="NAVIGATE_WS",
         ref_workspace_id=ctx.workspace_id,
-        ref_org_id=target_team_id,
+        ref_org_id=target_organisation_id,
     )
 
     logger.info(
         "handoff_accepted workspace=%s from=%s to=%s by=%s",
-        ctx.workspace_id, prior_billing_team, target_team_id, ctx.app_user_id,
+        ctx.workspace_id,
+        prior_billing_organisation,
+        target_organisation_id,
+        ctx.app_user_id,
     )
 
-    return HandoffResponse(
-        status="completed", workspace_id=ctx.workspace_id
-    )
+    return HandoffResponse(status="completed", workspace_id=ctx.workspace_id)
 
 
 @router.post(
@@ -1445,22 +1517,20 @@ async def accept_handoff(
     response_model=HandoffResponse,
 )
 async def cancel_handoff(
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> HandoffResponse:
-    """Initiating team (current billing team) can cancel a pending handoff."""
+    """Initiating organisation (current billing organisation) can cancel a pending handoff."""
     ws = ctx.workspace
     if ws.get("handoff_status") != "pending":
-        raise HTTPException(
-            status_code=409, detail="No pending handoff to cancel"
-        )
+        raise HTTPException(status_code=409, detail="No pending handoff to cancel")
 
-    billing_team_id = ws.get("billed_to_team_id") or ws.get("org_id")
-    if not billing_team_id or not await _caller_admins_team(
-        billing_team_id, ctx.app_user_id
+    billing_organisation_id = ws.get("billed_to_team_id") or ws.get("org_id")
+    if not billing_organisation_id or not await _caller_admins_organisation(
+        billing_organisation_id, ctx.app_user_id
     ):
         raise HTTPException(
             status_code=403,
-            detail="Only the initiating team's admins can cancel",
+            detail="Only the initiating organisation's admins can cancel",
         )
 
     await async_directus.update_item(
@@ -1471,9 +1541,8 @@ async def cancel_handoff(
 
     logger.info(
         "handoff_cancelled workspace=%s by=%s",
-        ctx.workspace_id, ctx.app_user_id,
+        ctx.workspace_id,
+        ctx.app_user_id,
     )
 
-    return HandoffResponse(
-        status="cancelled", workspace_id=ctx.workspace_id
-    )
+    return HandoffResponse(status="cancelled", workspace_id=ctx.workspace_id)

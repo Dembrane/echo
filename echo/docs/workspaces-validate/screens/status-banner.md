@@ -22,7 +22,7 @@ Copy shape: raw numbers or a short label. No CTA. No dismissal — it reappears 
 
 ### Level 2 — Banner (noticed)
 
-Persistent strip under the header, inside a context (workspace, team). Visible on every route within the context until dismissed or until the state clears.
+Persistent strip under the header, inside a context (workspace, organisation). Visible on every route within the context until dismissed or until the state clears.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

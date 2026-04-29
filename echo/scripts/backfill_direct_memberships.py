@@ -8,7 +8,7 @@ access at cutover.
 
 Two passes after the inserts land:
   1. Simplify `inheritance.user_can_access` to a direct-row lookup.
-  2. Purge `workspace.settings.{inherit_team_admins, inherit_team_members,
+  2. Purge `workspace.settings.{inherit_organisation_admins, inherit_organisation_members,
      sticky_removed}` — the resolver no longer reads them.
 
 Both follow in a separate commit. This script only writes rows.
@@ -118,11 +118,11 @@ def _settings_of(ws: dict) -> dict:
 
 
 def _follows_admins(ws: dict) -> bool:
-    return _settings_of(ws).get("inherit_team_admins", True)
+    return _settings_of(ws).get("inherit_organisation_admins", True)
 
 
 def _follows_members(ws: dict) -> bool:
-    return _settings_of(ws).get("inherit_team_members", False)
+    return _settings_of(ws).get("inherit_organisation_members", False)
 
 
 def _sticky_user_ids(ws: dict) -> set[str]:
@@ -164,18 +164,18 @@ def derive_access_for_org(
 
             role = om.get("role")
 
-            # Team owners always derive admin (team-owner carve-out in
+            # Organisation owners always derive admin (organisation-owner carve-out in
             # inheritance.user_can_access).
             if role == "owner":
                 out.append({"workspace_id": ws_id, "user_id": uid, "role": "admin"})
                 continue
 
-            # Team admins derive admin on open workspaces only.
+            # Organisation admins derive admin on open workspaces only.
             if role == "admin" and follows_admins:
                 out.append({"workspace_id": ws_id, "user_id": uid, "role": "admin"})
                 continue
 
-            # Team members derive member only when the workspace opts in.
+            # Organisation members derive member only when the workspace opts in.
             if role == "member" and follows_admins and follows_members:
                 out.append({"workspace_id": ws_id, "user_id": uid, "role": "member"})
 

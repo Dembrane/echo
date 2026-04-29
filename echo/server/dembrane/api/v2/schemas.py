@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import AliasChoices, BaseModel, EmailStr, Field
-
+from pydantic import Field, EmailStr, BaseModel, AliasChoices
 
 # ── /v2/me ──
 
@@ -34,8 +33,8 @@ class MeResponse(BaseModel):
     is_staff: bool = False
     # True if the user has projects that predate workspaces (no workspace_id).
     # Drives the onboarding split: new users (false) get a signup-time
-    # team-name field; existing users (true) get the "Welcome back, we've
-    # added teams" migration screen. Independent of onboarding_completed.
+    # organisation-name field; existing users (true) get the "Welcome back, we've
+    # added organisations" migration screen. Independent of onboarding_completed.
     has_legacy_projects: bool = False
 
 
@@ -73,8 +72,8 @@ class WorkspaceUsage(BaseModel):
     # Matrix §8 cap signals for card-level rendering. Populated from
     # tier_capacity at serialisation time so clients don't need to join
     # tier → cap themselves.
-    hours_included: Optional[int] = None    # None = unlimited tier
-    hours_pct: Optional[float] = None       # 0..1; null when unlimited
+    hours_included: Optional[int] = None  # None = unlimited tier
+    hours_pct: Optional[float] = None  # 0..1; null when unlimited
     at_cap: bool = False
     approaching_cap: bool = False
 
@@ -88,8 +87,8 @@ class WorkspaceSummary(BaseModel):
     is_default: bool
     tier: str
     logo_url: Optional[str] = None
-    # Parent team's logo — handy for card rendering so the client doesn't
-    # need a second lookup. Nullable because teams without a logo exist.
+    # Parent organisation's logo — handy for card rendering so the client doesn't
+    # need a second lookup. Nullable because organisations without a logo exist.
     org_logo_url: Optional[str] = None
     project_count: int
     member_count: int
@@ -104,8 +103,8 @@ class WorkspaceSummary(BaseModel):
     downgraded_from_tier: Optional[str] = None
 
 
-class TeamRollup(BaseModel):
-    """Aggregated stats across all workspaces in a team."""
+class OrganisationRollup(BaseModel):
+    """Aggregated stats across all workspaces in a organisation."""
 
     id: str
     name: str
@@ -123,7 +122,7 @@ class TeamRollup(BaseModel):
 
 class WorkspaceListResponse(BaseModel):
     workspaces: list[WorkspaceSummary]
-    teams: list[TeamRollup] = []
+    organisations: list[OrganisationRollup] = []
 
 
 # ── /v2/workspaces CRUD ──
@@ -133,14 +132,14 @@ class CreateWorkspaceRequest(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     org_id: Optional[str] = None  # defaults to user's primary org
     # Visibility choice on the create form. Maps to workspace.visibility
-    # (matrix v1.1 §6). True → 'open_to_team', False → 'private'.
+    # (matrix v1.1 §6). True → 'open_to_organisation', False → 'private'.
     # Private requires innovator+ tier — solo users can still pick it but
     # the set_private policy enforces at mutation time.
-    inherit_team_admins: bool = True
-    # Accepted for backward compatibility; ignored on write. Team members
+    inherit_organisation_admins: bool = True
+    # Accepted for backward compatibility; ignored on write. Organisation members
     # no longer auto-inherit access (matrix §6 retires derivation). They
     # use Request access.
-    inherit_team_members: bool = False
+    inherit_organisation_members: bool = False
     # tier is always "pioneer" on creation — upgrades happen via billing/admin
 
 

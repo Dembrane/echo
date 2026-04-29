@@ -29,7 +29,7 @@ import { avatarUrl } from "@/lib/avatar";
  *   - Gate affordance = modal only, no hover tooltip (hover reads as
  *     marketing pressure).
  *   - Role-aware: admin/owner sees "Request upgrade" primary. Member
- *     sees no primary CTA — only dismiss ("ask a team admin" is the
+ *     sees no primary CTA — only dismiss ("ask a organisation admin" is the
  *     message, not a button).
  *   - "dembrane" lowercase, no "AI", no "successfully" per brand rules.
  *
@@ -190,11 +190,11 @@ interface UpgradeModalProps {
  * Ask 4C — one feature, one benefit, one tier, one CTA.
  *
  * Admin path: "Request upgrade" posts to /v2/workspaces/:id/upgrade-request.
- * Member path: informational only; the copy says "ask a team admin" but
+ * Member path: informational only; the copy says "ask a organisation admin" but
  * there's no button — Q3 decision (D9). Keeping the message honest:
  * there's nothing we can do for them, only their admin can.
  */
-interface TeamAdminRow {
+interface OrganisationAdminRow {
 	user_id: string;
 	display_name: string | null;
 	avatar: string | null;
@@ -203,24 +203,24 @@ interface TeamAdminRow {
 
 /**
  * Renders the matrix §11 member-path copy with actual admin faces +
- * names so "ask a team admin" is concrete, not abstract.
+ * names so "ask a organisation admin" is concrete, not abstract.
  *
  * Silent fallback to the generic message if the org lookup fails — no
  * broken state.
  */
-function TeamAdminChips() {
+function OrganisationAdminChips() {
 	const { workspace } = useWorkspace();
 	const orgId = workspace?.org_id;
 
 	const { data } = useQuery({
-		queryKey: ["v2", "team-admins", orgId],
-		queryFn: async (): Promise<TeamAdminRow[]> => {
+		queryKey: ["v2", "organisation-admins", orgId],
+		queryFn: async (): Promise<OrganisationAdminRow[]> => {
 			if (!orgId) return [];
 			const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/members`, {
 				credentials: "include",
 			});
 			if (!res.ok) return [];
-			const rows = (await res.json()) as TeamAdminRow[];
+			const rows = (await res.json()) as OrganisationAdminRow[];
 			return Array.isArray(rows)
 				? rows.filter((r) => r.role === "admin" || r.role === "owner")
 				: [];
@@ -235,7 +235,7 @@ function TeamAdminChips() {
 		return (
 			<Text size="sm" c="dimmed">
 				<Trans>
-					A team admin can request this upgrade. Ask someone with the admin
+					A organisation admin can request this upgrade. Ask someone with the admin
 					role.
 				</Trans>
 			</Text>
@@ -244,7 +244,7 @@ function TeamAdminChips() {
 
 	const firstThree = admins.slice(0, 3);
 	const names = firstThree
-		.map((a) => a.display_name || t`a team admin`)
+		.map((a) => a.display_name || t`a organisation admin`)
 		.join(", ");
 	const more =
 		admins.length > firstThree.length
@@ -254,12 +254,12 @@ function TeamAdminChips() {
 	return (
 		<Stack gap={6}>
 			<Text size="sm" c="dimmed">
-				<Trans>Ask a team admin to request this upgrade.</Trans>
+				<Trans>Ask a organisation admin to request this upgrade.</Trans>
 			</Text>
 			<Group gap={6}>
 				<Avatar.Group spacing="sm">
 					{firstThree.map((a) => (
-						<Tooltip key={a.user_id} label={a.display_name || t`team admin`}>
+						<Tooltip key={a.user_id} label={a.display_name || t`organisation admin`}>
 							<Avatar
 								src={avatarUrl(a.avatar)}
 								name={a.display_name || "?"}
@@ -371,7 +371,7 @@ export function UpgradeModal({
 						</Text>
 					</>
 				) : (
-					<TeamAdminChips />
+					<OrganisationAdminChips />
 				)}
 
 				{/* Role-aware footer: admin gets primary, member gets close-only (D9) */}

@@ -197,7 +197,7 @@ if (redirect) {
 
 **The fix:**
 - First login after migration: show a one-time explainer modal
-- "We've upgraded your account! Your projects are right where you left them, now inside your workspace. Here's what's new: [collaborate with team members, manage client projects, ...]"
+- "We've upgraded your account! Your projects are right where you left them, now inside your workspace. Here's what's new: [collaborate with organisation members, manage client projects, ...]"
 - Include a "Learn more" link to documentation
 - Make it dismissible but not skippable on first appearance
 
