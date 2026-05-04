@@ -76,6 +76,9 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 		queryKey: ["v2", "discoverable-workspaces", orgId],
 		queryFn: () => fetchDiscoverable(orgId),
 		staleTime: 30_000,
+		// Privacy toggles elsewhere don't invalidate this query on other users'
+		// clients — refetch when the tab regains focus so lists catch up quickly.
+		refetchOnWindowFocus: "always",
 	});
 
 	const joinable = (data ?? []).filter(

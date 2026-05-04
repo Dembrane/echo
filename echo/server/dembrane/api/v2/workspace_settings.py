@@ -9,6 +9,10 @@ from fastapi import Depends, APIRouter, UploadFile, HTTPException
 from pydantic import BaseModel
 
 from dembrane.directus import directus
+from dembrane.inheritance import (
+    workspace_follows_organisation_admins,
+    workspace_follows_organisation_members,
+)
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
@@ -234,16 +238,8 @@ async def get_workspace_settings(
         pending_invites=pending_invites,
         my_role=ctx.role,
         my_policies=effective,
-        inherit_organisation_admins=bool(
-            (ws.get("settings") or {}).get("inherit_organisation_admins", True)
-        )
-        if isinstance(ws.get("settings"), dict)
-        else True,
-        inherit_organisation_members=bool(
-            (ws.get("settings") or {}).get("inherit_organisation_members", False)
-        )
-        if isinstance(ws.get("settings"), dict)
-        else False,
+        inherit_organisation_admins=workspace_follows_organisation_admins(ws),
+        inherit_organisation_members=workspace_follows_organisation_members(ws),
         logo_url=ws.get("logo_url"),
     )
 
@@ -339,6 +335,11 @@ async def update_workspace_settings(
         if body.inherit_organisation_members is not None:
             merged["inherit_organisation_members"] = bool(body.inherit_organisation_members)
         payload["settings"] = merged
+        # Same mapping as workspace create (workspaces.py): discovery and
+        # POST /access-requests filter on workspace.visibility — it must move
+        # whenever Open↔Private toggles, not only settings JSON.
+        inherit_admins_effective = bool(merged.get("inherit_organisation_admins", True))
+        payload["visibility"] = "open_to_organisation" if inherit_admins_effective else "private"
 
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")

@@ -1208,6 +1208,9 @@ function PrivacyAndDefaultsSection({
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "discoverable-workspaces", settings.org_id],
+			});
 			setIsOpen(null);
 			toast.success(t`Saved`);
 		},

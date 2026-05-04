@@ -135,9 +135,9 @@ export const useMarkAllNotificationsRead = () => {
  * server side.
  */
 export function resolveNotificationHref(
-	row: Pick<NotificationRow, "action" | "refs">,
+	row: Pick<NotificationRow, "action" | "refs" | "event_code">,
 ): string | null {
-	const { action, refs } = row;
+	const { action, refs, event_code } = row;
 	switch (action) {
 		case "NAVIGATE_WS":
 			return refs.workspace_id ? `/w/${refs.workspace_id}/projects` : null;
@@ -158,9 +158,12 @@ export function resolveNotificationHref(
 		case "NAVIGATE_ORGANISATION_SETTINGS":
 			return refs.org_id ? `/o/${refs.org_id}/overview` : null;
 		case "NAVIGATE_WORKSPACE_SETTINGS":
-			return refs.workspace_id
-				? `/w/${refs.workspace_id}/settings/general`
-				: null;
+			if (!refs.workspace_id) return null;
+			// Workspace access requests are approved on the Members tab.
+			if (event_code === "MEMBERSHIP_REQUESTED") {
+				return `/w/${refs.workspace_id}/settings/members`;
+			}
+			return `/w/${refs.workspace_id}/settings/general`;
 		default:
 			return null;
 	}

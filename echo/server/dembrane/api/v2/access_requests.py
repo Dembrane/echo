@@ -308,8 +308,7 @@ async def request_workspace_access(
     if not org_id:
         raise HTTPException(status_code=500, detail="Workspace has no org")
 
-    # Visibility gate. Private workspaces are invisible to organisation members in
-    # discovery; no request path exists for them.
+    # Private workspaces: only invited participants and org admins.
     if workspace.get("visibility") == "private":
         raise HTTPException(
             status_code=404,
@@ -625,12 +624,11 @@ async def list_discoverable_workspaces(
 
     - Organisation admin / owner: sees every workspace (open + private). Action
       is 'join' (unless already a direct member).
-    - Organisation member: sees every workspace in the organisation (open + private).
-      For open ones the action is 'request-access'; for private ones
-      the action is also 'request-access' so members can flag interest
-      even on restricted workspaces. An admin still has to approve the
-      request — the privacy model protects content, not names.
-    - Not a organisation member: 403.
+    - Organisation member / billing: sees only open workspaces. Action is
+      'request-access' (or 'pending' when a request is already out).
+      Private workspaces are hidden — only invited participants and org
+      admins can find them.
+    - Not an organisation member: 403.
     """
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
@@ -639,16 +637,14 @@ async def list_discoverable_workspaces(
     if org_role is None:
         raise HTTPException(status_code=403, detail="Not a member of this organisation")
 
-    can_see_private = org_role in ("admin", "owner")
+    is_org_admin = org_role in ("admin", "owner")
 
-    # Matrix change 2026-04-24: members now see private workspaces too,
-    # so the visibility filter is gone. Admin and member both get every
-    # workspace in the organisation back; the per-role difference is the action
-    # assigned below (admins Join directly, members Request access).
     filters: dict = {
         "org_id": {"_eq": org_id},
         "deleted_at": {"_null": True},
     }
+    if not is_org_admin:
+        filters["visibility"] = {"_neq": "private"}
 
     workspaces = await async_directus.get_items(
         "workspace",
@@ -685,9 +681,9 @@ async def list_discoverable_workspaces(
         if isinstance(mems, list):
             existing_direct = {m["workspace_id"] for m in mems}
 
-    # Caller's pending access requests (relevant for members).
+    # Caller's pending access requests (relevant for non-admin members).
     pending_map: dict[str, str] = {}
-    if not can_see_private and ws_ids:
+    if not is_org_admin and ws_ids:
         reqs = await async_directus.get_items(
             "access_request",
             {
@@ -713,7 +709,7 @@ async def list_discoverable_workspaces(
         if wid in existing_direct:
             action: Literal["join", "request-access", "pending", "member"] = "member"
             pending_id = None
-        elif can_see_private:
+        elif is_org_admin:
             action = "join"
             pending_id = None
         elif wid in pending_map:
