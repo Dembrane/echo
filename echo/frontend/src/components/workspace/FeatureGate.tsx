@@ -14,13 +14,13 @@ import {
 } from "@mantine/core";
 import { IconLock } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 import { avatarUrl } from "@/lib/avatar";
+import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 
 /**
  * Tier-gating UI primitives for the ECHO platform.
@@ -47,11 +47,11 @@ export type Tier =
 	| "guardian";
 
 const TIER_LABEL: Record<Tier, string> = {
-	pilot: "pilot",
-	pioneer: "pioneer",
-	innovator: "innovator",
 	changemaker: "changemaker",
 	guardian: "guardian",
+	innovator: "innovator",
+	pilot: "pilot",
+	pioneer: "pioneer",
 };
 
 interface FeatureGateProps {
@@ -124,15 +124,15 @@ export function FeatureGate({
 				pos="relative"
 				onClick={openModal}
 				style={{
-					cursor: "pointer",
-					minHeight: 160,
-					borderRadius: 8,
+					alignItems: "center",
 					// Soft hatched background — subtle, not alarming.
 					background:
 						"repeating-linear-gradient(45deg, rgba(65,105,225,0.04) 0 8px, rgba(65,105,225,0.08) 8px 16px)",
+					borderRadius: 8,
+					cursor: "pointer",
 					display: "flex",
-					alignItems: "center",
 					justifyContent: "center",
+					minHeight: 160,
 				}}
 				role="button"
 				tabIndex={0}
@@ -213,7 +213,7 @@ function OrganisationAdminChips() {
 	const orgId = workspace?.org_id;
 
 	const { data } = useQuery({
-		queryKey: ["v2", "organisation-admins", orgId],
+		enabled: Boolean(orgId),
 		queryFn: async (): Promise<OrganisationAdminRow[]> => {
 			if (!orgId) return [];
 			const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/members`, {
@@ -225,7 +225,7 @@ function OrganisationAdminChips() {
 				? rows.filter((r) => r.role === "admin" || r.role === "owner")
 				: [];
 		},
-		enabled: Boolean(orgId),
+		queryKey: ["v2", "organisation-admins", orgId],
 		staleTime: 5 * 60 * 1000,
 	});
 
@@ -235,8 +235,8 @@ function OrganisationAdminChips() {
 		return (
 			<Text size="sm" c="dimmed">
 				<Trans>
-					A organisation admin can request this upgrade. Ask someone with the admin
-					role.
+					A organisation admin can request this upgrade. Ask someone with the
+					admin role.
 				</Trans>
 			</Text>
 		);
@@ -259,7 +259,10 @@ function OrganisationAdminChips() {
 			<Group gap={6}>
 				<Avatar.Group spacing="sm">
 					{firstThree.map((a) => (
-						<Tooltip key={a.user_id} label={a.display_name || t`organisation admin`}>
+						<Tooltip
+							key={a.user_id}
+							label={a.display_name || t`organisation admin`}
+						>
 							<Avatar
 								src={avatarUrl(a.avatar)}
 								name={a.display_name || "?"}
@@ -278,7 +281,6 @@ function OrganisationAdminChips() {
 		</Stack>
 	);
 }
-
 
 export function UpgradeModal({
 	opened,
@@ -304,8 +306,8 @@ export function UpgradeModal({
 				`${API_BASE_URL}/v2/workspaces/${workspaceId}/upgrade-request`,
 				{
 					body: JSON.stringify({
-						target_tier: requiredTier,
 						message: message.trim() || undefined,
+						target_tier: requiredTier,
 					}),
 					credentials: "include",
 					headers: { "Content-Type": "application/json" },
@@ -314,9 +316,10 @@ export function UpgradeModal({
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				const detail = typeof data.detail === "string"
-					? data.detail
-					: t`Couldn't send the request`;
+				const detail =
+					typeof data.detail === "string"
+						? data.detail
+						: t`Couldn't send the request`;
 				throw new Error(detail);
 			}
 			toast.success(t`Request sent. We'll be in touch.`);
@@ -375,8 +378,8 @@ export function UpgradeModal({
 				)}
 
 				{/* Role-aware footer: admin gets primary, member gets close-only (D9) */}
-				<Box style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-					<Button variant="default" onClick={onClose}>
+				<Box style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+					<Button variant="subtle" onClick={onClose}>
 						<Trans>Close</Trans>
 					</Button>
 					{canRequestUpgrade && (

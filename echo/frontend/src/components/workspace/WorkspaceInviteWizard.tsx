@@ -32,7 +32,9 @@ interface OrganisationMember {
 	role: string;
 }
 
-async function fetchOrganisationMembers(orgId: string): Promise<OrganisationMember[]> {
+async function fetchOrganisationMembers(
+	orgId: string,
+): Promise<OrganisationMember[]> {
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/members`, {
 		credentials: "include",
 	});
@@ -49,7 +51,7 @@ async function inviteToWorkspace(
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`,
 		{
-			body: JSON.stringify({ email, role, is_org_member: isOrgMember }),
+			body: JSON.stringify({ email, is_org_member: isOrgMember, role }),
 			credentials: "include",
 			headers: { "Content-Type": "application/json" },
 			method: "POST",
@@ -76,6 +78,19 @@ interface Props {
 	// Existing workspace members — so we can filter organisation members who
 	// are already in and hide them from the picker.
 	existingMemberAppUserIds: Set<string>;
+	// Cap-blocked flags from the workspace usage endpoint. When true, the
+	// corresponding step is disabled with an upgrade prompt instead of
+	// letting the user fill the form only to fail at submit.
+	memberInviteBlocked?: boolean;
+	guestInviteBlocked?: boolean;
+	// True when the workspace is on a Pioneer+ tier and already at or over
+	// included seats. Picker stays enabled (overage is allowed), but we
+	// surface a soft warning so admins know each new member adds to the
+	// monthly bill.
+	memberOverageActive?: boolean;
+	// Per-seat overage rate (€/month). Null on tiers that don't bill
+	// overage (Pilot, Guardian).
+	seatOverageRate?: number | null;
 }
 
 /**
@@ -98,19 +113,22 @@ export function WorkspaceInviteWizard({
 	workspaceId,
 	orgId,
 	existingMemberAppUserIds,
+	memberInviteBlocked = false,
+	guestInviteBlocked = false,
+	memberOverageActive = false,
+	seatOverageRate = null,
 }: Props) {
 	const queryClient = useQueryClient();
 	const [step, setStep] = useState(0);
-	const [selectedOrganisationMembers, setSelectedOrganisationMembers] = useState<Set<string>>(
-		new Set(),
-	);
+	const [selectedOrganisationMembers, setSelectedOrganisationMembers] =
+		useState<Set<string>>(new Set());
 	const [role, setRole] = useState<"member" | "billing" | "admin">("member");
 	const [externals, setExternals] = useState<ExternalRow[]>([]);
 
 	const { data: organisationMembers, isLoading } = useQuery({
-		queryKey: ["v2", "organisation-members", orgId],
-		queryFn: () => fetchOrganisationMembers(orgId),
 		enabled: opened && Boolean(orgId),
+		queryFn: () => fetchOrganisationMembers(orgId),
+		queryKey: ["v2", "organisation-members", orgId],
 		staleTime: 30_000,
 	});
 
@@ -145,8 +163,8 @@ export function WorkspaceInviteWizard({
 		setExternals((prev) => [
 			...prev,
 			{
-				id: Math.random().toString(36).slice(2),
 				email: "",
+				id: Math.random().toString(36).slice(2),
 				role: "member",
 			},
 		]);
@@ -186,17 +204,20 @@ export function WorkspaceInviteWizard({
 			const results = await Promise.allSettled(calls);
 			const ok = results.filter((r) => r.status === "fulfilled").length;
 			const failed = results.length - ok;
-			return { ok, failed, total: results.length };
+			return { failed, ok, total: results.length };
 		},
+		onError: (err: Error) => toast.error(err.message),
 		onSuccess: ({ ok, failed, total }) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
-			queryClient.invalidateQueries({ queryKey: ["v2", "organisation-members", orgId] });
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "organisation-members", orgId],
+			});
+			// Refresh seat / guest cap flags after invites land.
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "workspace-usage", workspaceId, 0],
+			});
 			if (failed === 0) {
-				toast.success(
-					ok === 1
-						? t`Invite sent.`
-						: t`${ok} invites sent.`,
-				);
+				toast.success(ok === 1 ? t`Invite sent.` : t`${ok} invites sent.`);
 				handleClose();
 			} else if (ok === 0) {
 				toast.error(t`Couldn't send any of the invites. Try again.`);
@@ -206,12 +227,19 @@ export function WorkspaceInviteWizard({
 				);
 			}
 		},
-		onError: (err: Error) => toast.error(err.message),
 	});
 
+	const hasMemberPicks = selectedOrganisationMembers.size > 0;
+	const hasExternalPicks = externals.some(
+		(r) => r.email.trim().length > 0 && r.email.includes("@"),
+	);
+	// Pre-flight: don't even let them submit picks the backend will 402 on.
+	const memberPicksWillFail = hasMemberPicks && memberInviteBlocked;
+	const guestPicksWillFail = hasExternalPicks && guestInviteBlocked;
 	const canSubmit =
-		selectedOrganisationMembers.size > 0 ||
-		externals.some((r) => r.email.trim().length > 0 && r.email.includes("@"));
+		(hasMemberPicks || hasExternalPicks) &&
+		!memberPicksWillFail &&
+		!guestPicksWillFail;
 
 	return (
 		<Modal
@@ -234,10 +262,46 @@ export function WorkspaceInviteWizard({
 						<Stack gap={12} mt="md">
 							<Text size="sm" c="dimmed">
 								<Trans>
-									Pick members to bring into this workspace. They'll keep
-									their organisation seat — no extra cost.
+									Pick members to bring into this workspace. They'll keep their
+									organisation seat — no extra cost.
 								</Trans>
 							</Text>
+
+							{memberInviteBlocked && (
+								<Alert color="yellow" variant="light">
+									<Text size="sm" fw={500}>
+										<Trans>Member seats full on this tier</Trans>
+									</Text>
+									<Text size="xs" c="dimmed" mt={4}>
+										<Trans>
+											Free a seat by removing someone, or upgrade to add more
+											members. You can still invite guests in the next step.
+										</Trans>
+									</Text>
+								</Alert>
+							)}
+
+							{!memberInviteBlocked && memberOverageActive && (
+								<Alert color="blue" variant="light">
+									<Text size="sm" fw={500}>
+										<Trans>Heads up: overage applies</Trans>
+									</Text>
+									<Text size="xs" c="dimmed" mt={4}>
+										{seatOverageRate != null ? (
+											<Trans>
+												You're over your included seats. Each new member adds €
+												{seatOverageRate}/month to next bill. Upgrade to a
+												higher tier if you'd rather not pay overage.
+											</Trans>
+										) : (
+											<Trans>
+												You're over your included seats. Overage applies on the
+												next bill.
+											</Trans>
+										)}
+									</Text>
+								</Alert>
+							)}
 
 							{isLoading && (
 								<Text size="sm" c="dimmed">
@@ -245,76 +309,79 @@ export function WorkspaceInviteWizard({
 								</Text>
 							)}
 
-							{!isLoading && availableOrganisationMembers.length === 0 && (
-								<Alert color="gray" variant="light">
-									<Trans>
-										Everyone on your organisation is already in this workspace.
-										Invite externals in the next step.
-									</Trans>
-								</Alert>
-							)}
+							{!isLoading &&
+								availableOrganisationMembers.length === 0 &&
+								!memberInviteBlocked && (
+									<Alert color="gray" variant="light">
+										<Trans>
+											Everyone on your organisation is already in this
+											workspace. Invite externals in the next step.
+										</Trans>
+									</Alert>
+								)}
 
-							{availableOrganisationMembers.length > 0 && (
-								<Stack gap={6}>
-									{availableOrganisationMembers.map((m) => {
-										const checked = selectedOrganisationMembers.has(m.email);
-										return (
-											<Paper
-												key={m.user_id}
-												withBorder
-												p="sm"
-												radius="sm"
-												onClick={() => toggleOrganisationMember(m.email)}
-												style={{
-													cursor: "pointer",
-													borderColor: checked
-														? "var(--mantine-color-blue-5)"
-														: undefined,
-													backgroundColor: checked
-														? "var(--mantine-color-blue-0)"
-														: undefined,
-												}}
-											>
-												<Group gap={12} wrap="nowrap">
-													<Checkbox
-														checked={checked}
-														onChange={() => toggleOrganisationMember(m.email)}
-														onClick={(e) => e.stopPropagation()}
-														aria-label={t`Select ${m.display_name}`}
-													/>
-													<Avatar
-														size={32}
-														radius="xl"
-														src={avatarUrl(m.avatar, 48)}
-													>
-														{memberInitials(m.display_name, m.email)}
-													</Avatar>
-													<Box style={{ flex: 1, minWidth: 0 }}>
-														<Text size="sm" lineClamp={1}>
-															{m.display_name || m.email}
-														</Text>
-														<Text size="xs" c="dimmed" lineClamp={1}>
-															{m.email}
-														</Text>
-													</Box>
-													<Badge
-														size="xs"
-														variant="light"
-														color="gray"
-														style={{ textTransform: "capitalize" }}
-													>
-														{m.role}
-													</Badge>
-												</Group>
-											</Paper>
-										);
-									})}
-								</Stack>
-							)}
+							{availableOrganisationMembers.length > 0 &&
+								!memberInviteBlocked && (
+									<Stack gap={6}>
+										{availableOrganisationMembers.map((m) => {
+											const checked = selectedOrganisationMembers.has(m.email);
+											return (
+												<Paper
+													key={m.user_id}
+													withBorder
+													p="sm"
+													radius="sm"
+													onClick={() => toggleOrganisationMember(m.email)}
+													style={{
+														backgroundColor: checked
+															? "var(--mantine-color-blue-0)"
+															: undefined,
+														borderColor: checked
+															? "var(--mantine-color-blue-5)"
+															: undefined,
+														cursor: "pointer",
+													}}
+												>
+													<Group gap={12} wrap="nowrap">
+														<Checkbox
+															checked={checked}
+															onChange={() => toggleOrganisationMember(m.email)}
+															onClick={(e) => e.stopPropagation()}
+															aria-label={t`Select ${m.display_name}`}
+														/>
+														<Avatar
+															size={32}
+															radius="xl"
+															src={avatarUrl(m.avatar, 48)}
+														>
+															{memberInitials(m.display_name, m.email)}
+														</Avatar>
+														<Box style={{ flex: 1, minWidth: 0 }}>
+															<Text size="sm" lineClamp={1}>
+																{m.display_name || m.email}
+															</Text>
+															<Text size="xs" c="dimmed" lineClamp={1}>
+																{m.email}
+															</Text>
+														</Box>
+														<Badge
+															size="xs"
+															variant="light"
+															color="gray"
+															style={{ textTransform: "capitalize" }}
+														>
+															{m.role}
+														</Badge>
+													</Group>
+												</Paper>
+											);
+										})}
+									</Stack>
+								)}
 
 							{/* Role picker — applies to everyone selected in step 1.
 							    Externals in step 2 are always 'member' (guest clamp). */}
-							{selectedOrganisationMembers.size > 0 && (
+							{selectedOrganisationMembers.size > 0 && !memberInviteBlocked && (
 								<Paper withBorder p="sm" radius="sm">
 									<Radio.Group
 										label={t`Workspace role`}
@@ -358,7 +425,7 @@ export function WorkspaceInviteWizard({
 								</Paper>
 							)}
 
-							{selectedOrganisationMembers.size > 0 && (
+							{selectedOrganisationMembers.size > 0 && !memberInviteBlocked && (
 								<Text size="xs" c="dimmed">
 									<Plural
 										value={selectedOrganisationMembers.size}
@@ -374,19 +441,35 @@ export function WorkspaceInviteWizard({
 						<Stack gap={12} mt="md">
 							<Text size="sm" c="dimmed">
 								<Trans>
-									Invite people outside your organisation. They get workspace-only
-									access and don't use a organisation seat.
+									Invite people outside your organisation. They get
+									workspace-only access and don't use a organisation seat.
 								</Trans>
 							</Text>
 
-							{externals.length === 0 ? (
+							{guestInviteBlocked && (
+								<Alert color="yellow" variant="light">
+									<Text size="sm" fw={500}>
+										<Trans>Guest cap reached on this tier</Trans>
+									</Text>
+									<Text size="xs" c="dimmed" mt={4}>
+										<Trans>
+											Remove a guest or upgrade to invite more externals. The
+											guest cap is hard at every tier; there's no overage.
+										</Trans>
+									</Text>
+								</Alert>
+							)}
+
+							{!guestInviteBlocked && externals.length === 0 && (
 								<Alert color="gray" variant="light">
 									<Trans>
-										No externals yet. Add one if you want someone outside
-										your organisation to join this workspace.
+										No externals yet. Add one if you want someone outside your
+										organisation to join this workspace.
 									</Trans>
 								</Alert>
-							) : (
+							)}
+
+							{!guestInviteBlocked && externals.length > 0 && (
 								<Stack gap={8}>
 									{externals.map((row) => (
 										<Group key={row.id} gap={8} wrap="nowrap">
@@ -412,14 +495,16 @@ export function WorkspaceInviteWizard({
 								</Stack>
 							)}
 
-							<Button
-								size="sm"
-								variant="default"
-								leftSection={<IconPlus size={14} />}
-								onClick={addExternalRow}
-							>
-								<Trans>Add an external</Trans>
-							</Button>
+							{!guestInviteBlocked && (
+								<Button
+									size="sm"
+									variant="default"
+									leftSection={<IconPlus size={14} />}
+									onClick={addExternalRow}
+								>
+									<Trans>Add an external</Trans>
+								</Button>
+							)}
 						</Stack>
 					</Stepper.Step>
 				</Stepper>

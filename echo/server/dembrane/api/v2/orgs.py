@@ -20,6 +20,7 @@ Endpoints here cover organisation-level management:
 
 from __future__ import annotations
 
+import asyncio
 from typing import Optional
 from logging import getLogger
 from datetime import datetime, timezone
@@ -32,6 +33,11 @@ from dembrane.app_user import get_app_user_or_raise
 from dembrane.directus import directus
 from dembrane.inheritance import on_organisation_member_removed
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.seat_capacity import (
+    tier_hard_blocks_seats,
+    compute_effective_seat_state,
+)
+from dembrane.tier_capacity import get_capacity
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
@@ -239,6 +245,49 @@ async def _count_external_in_organisation(org_id: str) -> int:
     if not isinstance(rows, list):
         return 0
     return len({r["user_id"] for r in rows if r.get("user_id")})
+
+
+async def _invalidate_org_workspace_usage(org_id: str) -> None:
+    """Bust the cached usage rollup for every workspace in an org plus the
+    org-level rollup. Call after any org-membership mutation (role change,
+    removal, on_organisation_member_removed) since derived seat counts on
+    every workspace shift the moment org roles change.
+
+    Best-effort — fails-quiet if Redis is down. The 30-min TTL is a
+    backstop.
+    """
+    from dembrane.cache_utils import (
+        invalidate_org_usage,
+        invalidate_workspace_usage,
+    )
+
+    workspaces = (
+        await async_directus.get_items(
+            "workspace",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
+    # Org rollup once, per-workspace cache once each. Aggregating the
+    # invalidations avoids the N×org_invalidate redundancy of calling the
+    # combined helper inside the loop.
+    await invalidate_org_usage(org_id)
+    if not isinstance(workspaces, list):
+        return
+    for ws in workspaces:
+        wid = ws.get("id")
+        if not wid:
+            continue
+        await invalidate_workspace_usage(wid)
 
 
 # ── Endpoints ───────────────────────────────────────────────────────────
@@ -799,6 +848,13 @@ class OrgWorkspaceSummary(BaseModel):
     project_count: int = 0
     member_count: int = 0
     is_private: bool = False  # settings.inherit_organisation_admins == false
+    # Cap-blocked flags so the organisation invite wizard can disable
+    # workspaces that wouldn't accept a new direct member or guest. Mirror
+    # of the same flags on `WorkspaceUsageResponse`. member_invite_blocked
+    # is only True on hard-block tiers (Pilot); guest_invite_blocked is
+    # True at every finite-cap tier when at cap.
+    member_invite_blocked: bool = False
+    guest_invite_blocked: bool = False
 
 
 @router.get("/{org_id}/workspaces", response_model=list[OrgWorkspaceSummary])
@@ -905,6 +961,35 @@ async def list_organisation_workspaces(
         is_private = (settings or {}).get("inherit_organisation_admins") is False
         if is_private and not caller_is_manager:
             continue
+
+        # Cap-blocked flags. Compute lazily — only call get_effective_members
+        # when the tier has finite caps, since the whole point of the wizard
+        # disabling cards is hard-block tiers (Pilot) and finite guest caps.
+        # Skip for Guardian (unlimited) and unknown tiers. Counts pending
+        # workspace_invite rows on top of effective members so the wizard
+        # disables a card the moment outstanding invites have saturated
+        # the cap, not only after they're accepted.
+        tier = (ws.get("tier") or "").lower()
+        cap = get_capacity(tier)
+        member_blocked = False
+        guest_blocked = False
+        if cap is not None and (cap.included_seats is not None or cap.guest_cap is not None):
+            from dembrane.seat_capacity import count_pending_invites
+
+            seat_count, guest_count = await compute_effective_seat_state(ws["id"])
+            member_pending, guest_pending = await count_pending_invites(ws["id"])
+            if (
+                cap.included_seats is not None
+                and tier_hard_blocks_seats(tier)
+                and (seat_count + member_pending) >= cap.included_seats
+            ):
+                member_blocked = True
+            if (
+                cap.guest_cap is not None
+                and (guest_count + guest_pending) >= cap.guest_cap
+            ):
+                guest_blocked = True
+
         out.append(
             OrgWorkspaceSummary(
                 id=ws["id"],
@@ -914,6 +999,8 @@ async def list_organisation_workspaces(
                 project_count=project_counts.get(ws["id"], 0),
                 member_count=member_counts.get(ws["id"], 0),
                 is_private=is_private,
+                member_invite_blocked=member_blocked,
+                guest_invite_blocked=guest_blocked,
             )
         )
     return out
@@ -1046,6 +1133,13 @@ async def change_member_role(
     await async_directus.update_item("org_membership", target["id"], {"role": body.role})
     # Note: derived model means no membership fan-out needed — next access
     # check on any workspace re-derives from the new role.
+
+    # Bust workspace-usage cache for every workspace in the org. Org
+    # admins/owners are derived seats; promoting/demoting changes the
+    # effective seat count on every workspace they can reach. Without
+    # this, /v2/workspaces/:id/usage shows stale numbers for up to
+    # USAGE_TTL_SECONDS after a role change.
+    await _invalidate_org_workspace_usage(org_id)
 
     # Notify the affected user (unless they changed their own role).
     if user_id != app_user["id"]:
@@ -1197,6 +1291,11 @@ async def remove_organisation_member(
     await async_directus.update_item("org_membership", target["id"], {"deleted_at": now_iso})
 
     affected = await on_organisation_member_removed(org_id, user_id)
+
+    # Bust workspace + org usage caches: derived seat counts shift the
+    # moment an org-level role disappears. Without this, /v2/.../usage
+    # serves stale numbers for up to USAGE_TTL_SECONDS.
+    await _invalidate_org_workspace_usage(org_id)
 
     # Notify the removed user — they'll see workspaces drop from their
     # selector; this gives them the honest explanation.
@@ -1418,59 +1517,32 @@ async def get_org_usage(
                             int(c.get("duration") or 0) / 3600.0
                         )
 
-    # Memberships — dedupe by (workspace_id, user_id). Pre-walkback data
-    # can carry both a direct and an inherited row for the same pair
-    # (matrix §7: "one seat per person per workspace"). Row-count alone
-    # would double-bill the same human.
+    # Effective seat + guest counts per workspace. Uses
+    # compute_effective_seat_state (which delegates to
+    # inheritance.get_effective_members) so derived org admins/owners
+    # count as seats, matching /v2/workspaces/:id/usage. The previous
+    # implementation walked workspace_membership directly and missed
+    # derived rows, producing a stale "seat_count" on the org rollup
+    # that didn't match the per-workspace UI.
     total_seat_count = 0
     total_guest_count = 0
     per_ws_seats: dict[str, int] = {wid: 0 for wid in ws_ids}
     per_ws_guests: dict[str, int] = {wid: 0 for wid in ws_ids}
     if ws_ids:
-        memberships = (
-            await async_directus.get_items(
-                "workspace_membership",
-                {
-                    "query": {
-                        "filter": {
-                            "workspace_id": {"_in": ws_ids},
-                            "deleted_at": {"_null": True},
-                        },
-                        "fields": ["workspace_id", "user_id", "role", "source", "is_external"],
-                        "limit": -1,
-                    }
-                },
-            )
-            or []
+        # Parallel fan-out: one compute_effective_seat_state per workspace.
+        # For an org with a few dozen workspaces this is the same shape as
+        # the existing per-workspace cap-flag computation in
+        # list_organisation_workspaces above — acceptable cost.
+        seat_state_results = await asyncio.gather(
+            *[compute_effective_seat_state(wid) for wid in ws_ids]
         )
-        if isinstance(memberships, list):
-            # Dedupe: prefer direct over inherited, then seat-worthy over not.
-            by_pair: dict[tuple[str, str], dict] = {}
-            seat_roles = {"owner", "admin", "member", "billing"}
-            for m in memberships:
-                wid = m.get("workspace_id")
-                uid = m.get("user_id")
-                if not wid or not uid:
-                    continue
-                key = (wid, uid)
-                existing = by_pair.get(key)
-                if existing is None:
-                    by_pair[key] = m
-                    continue
-                existing_direct = existing.get("source") == "direct"
-                this_direct = m.get("source") == "direct"
-                if this_direct and not existing_direct:
-                    by_pair[key] = m
-                elif this_direct == existing_direct:
-                    if m.get("role") in seat_roles and existing.get("role") not in seat_roles:
-                        by_pair[key] = m
-            for (wid, _uid), m in by_pair.items():
-                if m.get("is_external"):
-                    total_guest_count += 1
-                    per_ws_guests[wid] = per_ws_guests.get(wid, 0) + 1
-                elif m.get("role") in seat_roles:
-                    total_seat_count += 1
-                    per_ws_seats[wid] = per_ws_seats.get(wid, 0) + 1
+        for wid, (seat_count, guest_count) in zip(
+            ws_ids, seat_state_results, strict=True
+        ):
+            per_ws_seats[wid] = seat_count
+            per_ws_guests[wid] = guest_count
+            total_seat_count += seat_count
+            total_guest_count += guest_count
 
     # Per-workspace rows + aggregation. We build the rows even when the
     # caller doesn't see financials — the €-field is stripped below.

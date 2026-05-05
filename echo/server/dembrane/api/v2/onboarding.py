@@ -23,6 +23,7 @@ from fastapi import APIRouter, HTTPException
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import create_app_user, resolve_app_user, get_directus_user_profile
+from dembrane.seat_capacity import assert_can_add_guest, assert_can_add_member
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.schemas import OnboardingCompleteRequest, OnboardingCompleteResponse
 from dembrane.directus_async import async_directus
@@ -77,6 +78,19 @@ async def complete_onboarding(
 
     now = datetime.now(timezone.utc).isoformat()
     joined_an_org = False
+    # Distinct from joined_an_org: tracks whether the user picked up *any*
+    # workspace_membership during auto-accept, including guest (external)
+    # rows. The personal-org gate below uses this so a user whose only
+    # invites were guest invites doesn't get a stray personal organisation —
+    # matrix §4 says guests have no team-level presence at all.
+    joined_any_workspace = False
+    # Tracks whether the user *had* a valid pending invite at signup, even
+    # if we couldn't honour it right now (cap reached). The personal-org
+    # gate uses this so a blocked invite doesn't trigger a stray personal
+    # organisation — the user's intent was to join someone else's setup,
+    # and creating a parallel personal organisation while their invite is
+    # still pending creates confusing dual-presence state.
+    had_pending_invite = False
     first_workspace_id = None
 
     pending_invites = await async_directus.get_items(
@@ -111,8 +125,79 @@ async def complete_onboarding(
             if not ws or ws.get("deleted_at"):
                 continue
 
+            # Mark "had a valid pending invite" before the cap check —
+            # so a blocked invite still suppresses the personal-org branch.
+            had_pending_invite = True
+
             is_org_invite = invite.get("include_org_membership", False)
             is_external = not is_org_invite
+
+            # Cap gate. Race-protection on auto-accept: if the workspace
+            # filled up between invite-send and signup, don't fail
+            # onboarding — skip this one invite, leave it pending so the
+            # admin can free a seat, and notify the inviter so they know
+            # to act. The user finishes onboarding without that workspace.
+            try:
+                if is_org_invite:
+                    await assert_can_add_member(ws, audience="invitee")
+                else:
+                    await assert_can_add_guest(ws, audience="invitee")
+            except HTTPException as cap_err:
+                if cap_err.status_code != 402:
+                    raise
+                logger.warning(
+                    f"Skipping auto-accept of invite {invite.get('id')} "
+                    f"for {app_user_email} → workspace {ws_id}: "
+                    f"cap reached ({cap_err.detail})"
+                )
+                inviter_id = invite.get("invited_by")
+                ws_name = ws.get("name") or "the workspace"
+                from dembrane.notifications import emit
+
+                if inviter_id and inviter_id != app_user_id:
+                    try:
+                        await emit(
+                            audience_user_id=inviter_id,
+                            actor_user_id=app_user_id,
+                            event_code="INVITE_BLOCKED_AT_CAP",
+                            title=f"Invite to {ws_name} couldn't be honoured",
+                            message=(
+                                f"{app_user_email} signed up but your workspace is at its "
+                                f"{'guest' if is_external else 'seat'} limit. "
+                                "Free a seat or upgrade so they can join."
+                            ),
+                            action="NAVIGATE_WORKSPACE_SETTINGS",
+                            ref_workspace_id=ws_id,
+                            ref_org_id=ws.get("org_id"),
+                        )
+                    except Exception:
+                        logger.exception("Failed to emit INVITE_BLOCKED_AT_CAP")
+
+                # Also notify the invitee (the new signup). Without this
+                # they finish onboarding silently and the only signal is
+                # the "pending invites" hint in the user menu — easy to
+                # miss. The bell + inbox row makes the stuck state
+                # discoverable. Action takes them to /me/invites where
+                # they can hit "Try again" once a seat opens up.
+                try:
+                    await emit(
+                        audience_user_id=app_user_id,
+                        actor_user_id=inviter_id,
+                        event_code="INVITE_PENDING_AT_CAP",
+                        title=f"Your invite to {ws_name} is still pending",
+                        message=(
+                            f"The workspace is at its "
+                            f"{'guest' if is_external else 'seat'} limit. "
+                            "We've notified the admin. Once they free a seat or "
+                            "upgrade, you can join from your invites."
+                        ),
+                        action="NAVIGATE_INVITE",
+                        ref_workspace_id=ws_id,
+                        ref_org_id=ws.get("org_id"),
+                    )
+                except Exception:
+                    logger.exception("Failed to emit INVITE_PENDING_AT_CAP")
+                continue
 
             # If org member invite, add to that org
             if is_org_invite and ws.get("org_id"):
@@ -169,6 +254,10 @@ async def complete_onboarding(
                         "is_external": is_external,
                     },
                 )
+                from dembrane.cache_utils import invalidate_workspace_and_org_usage
+
+                await invalidate_workspace_and_org_usage(ws_id, ws.get("org_id"))
+                joined_any_workspace = True
                 logger.info(
                     f"Auto-accepted invite: {app_user_email} → workspace {ws_id} "
                     f"(role: {invite.get('role')}, external: {is_external})"
@@ -176,6 +265,11 @@ async def complete_onboarding(
 
             if not first_workspace_id:
                 first_workspace_id = ws_id
+            # Idempotent re-run: existing membership still counts toward
+            # "this user is in someone else's workspace, no personal org
+            # needed". Without this flip, a retry where the row already
+            # exists would treat them as having joined nothing.
+            joined_any_workspace = True
 
             # Mark invite as accepted
             await async_directus.update_item(
@@ -243,6 +337,38 @@ async def complete_onboarding(
                     ref_org_id=ws["org_id"],
                 )
 
+            # WORKSPACE_GUEST_ADDED → workspace admins when the auto-accept
+            # creates a guest membership. Mirrors the notification on the
+            # me.py accept paths so admins see guest joins regardless of
+            # whether the invitee came through onboarding or the inbox.
+            if is_external:
+                from dembrane.notifications import (
+                    emit_to_audience,
+                    audience_workspace_admins,
+                )
+
+                admin_ids = await audience_workspace_admins(ws_id)
+                admin_ids = [a for a in admin_ids if a != app_user_id and a != inviter_id]
+                guest_name = (
+                    (await get_directus_user_profile(directus_user_id) or {}).get("display_name")
+                    or app_user_email
+                    or "A guest"
+                )
+                ws_name = ws.get("name") or "your workspace"
+                await emit_to_audience(
+                    admin_ids,
+                    actor_user_id=app_user_id,
+                    event_code="WORKSPACE_GUEST_ADDED",
+                    title=f"{guest_name} joined {ws_name} as a guest",
+                    message=(
+                        f"{app_user_email} now has guest access. "
+                        "Guests count against your tier's guest cap."
+                    ),
+                    action="NAVIGATE_WORKSPACE_SETTINGS",
+                    ref_workspace_id=ws_id,
+                    ref_org_id=ws.get("org_id"),
+                )
+
     # ── Step 3: Check if user has their own projects ──
 
     user_projects = await async_directus.get_items(
@@ -263,15 +389,28 @@ async def complete_onboarding(
     # ── Step 4: Decide whether to create personal org + workspace ──
     #
     # Create personal org if:
-    #   - User has their own projects (need somewhere to put them)
-    #   - User has NO internal org invites (they need their own org)
+    #   - User has their own projects (need somewhere to put them), OR
+    #   - User has NO inbound invite of any kind — truly new signup, they
+    #     need their own organisation to do anything useful.
     # Skip personal org if:
-    #   - User joined an org via invite AND has no projects of their own
+    #   - User joined an org via invite (joined_an_org), OR
+    #   - User joined any workspace at all, including as a guest, OR
+    #   - User had a pending invite that we couldn't honour right now
+    #     (cap reached). Matrix §4 + product call 2026-05-04: the user's
+    #     intent was to join someone else's setup. Spinning up a parallel
+    #     personal organisation while their invite is still pending
+    #     creates a confusing dual-presence state where they're both
+    #     "admin of their own org" and "waiting to join the inviter's
+    #     org" — surfaces a bogus "Manage organisation" + Add-workspace
+    #     surface they didn't ask for. Once admin frees a seat, the
+    #     pending invite can still be accepted via /me/invites.
 
     org_id = None
     workspace_id = first_workspace_id  # default to first invited workspace
 
-    needs_personal_org = has_own_projects or not joined_an_org
+    needs_personal_org = has_own_projects or (
+        not joined_an_org and not joined_any_workspace and not had_pending_invite
+    )
 
     if needs_personal_org:
         # Check if already has a personal org

@@ -555,6 +555,11 @@ async def remove_workspace_member(
         {"deleted_at": datetime.now(timezone.utc).isoformat()},
     )
 
+    # Bust cached usage so seat / guest counts refresh on next read.
+    from dembrane.cache_utils import invalidate_workspace_and_org_usage
+
+    await invalidate_workspace_and_org_usage(ctx.workspace_id, ctx.workspace.get("org_id"))
+
     removed_user_id = membership.get("user_id")
     if removed_user_id and removed_user_id != ctx.app_user_id:
         from dembrane.notifications import emit
@@ -675,6 +680,13 @@ async def change_member_role(
         membership_id,
         {"role": body.role},
     )
+
+    # Role change can flip a row between seat-worthy and not (member ↔
+    # billing keep counting; demotion to a non-seat role would shrink
+    # the count). Bust the cache so the next read reflects it.
+    from dembrane.cache_utils import invalidate_workspace_and_org_usage
+
+    await invalidate_workspace_and_org_usage(ctx.workspace_id, ctx.workspace.get("org_id"))
 
     # Notify the affected user (unless they're the one making the change).
     if membership.get("user_id") and membership["user_id"] != ctx.app_user_id:

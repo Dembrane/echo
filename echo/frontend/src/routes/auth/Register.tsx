@@ -18,6 +18,7 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useSearchParams } from "react-router";
 import { useRegisterMutation } from "@/components/auth/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ADMIN_BASE_URL } from "@/config";
@@ -25,13 +26,23 @@ import { testId } from "@/lib/testUtils";
 
 export const RegisterRoute = () => {
 	useDocumentTitle(t`Register | dembrane`);
+	const [searchParams] = useSearchParams();
+	// Email pre-filled from an invite link's `email` query param. When
+	// present, the email field is locked to prevent accidental typos that
+	// would orphan the user's signup from the inviter's workspace (the
+	// invite is matched by email, so a mismatch means the invite never
+	// auto-accepts and the user gets a stray personal organisation).
+	const invitedEmail = (searchParams.get("email") || "").toLowerCase().trim();
+	const lockedEmail = invitedEmail.length > 0 && invitedEmail.includes("@");
 	const { register, handleSubmit, trigger, getValues, watch } = useForm<{
 		email: string;
 		password: string;
 		confirmPassword: string;
 		first_name: string;
 		last_name: string;
-	}>();
+	}>({
+		defaultValues: lockedEmail ? { email: invitedEmail } : undefined,
+	});
 
 	const [step, setStep] = useState(0);
 	const [error, setError] = useState("");
@@ -79,15 +90,12 @@ export const RegisterRoute = () => {
 		const lastName = data.last_name?.trim();
 		if (lastName) extras.last_name = lastName;
 
-		registerMutation.mutate(
-			[data.email, data.password, extras],
-			{
-				onSuccess: () => {
-					setSubmittedEmail(data.email);
-					setStep(2);
-				},
+		registerMutation.mutate([data.email, data.password, extras], {
+			onSuccess: () => {
+				setSubmittedEmail(data.email);
+				setStep(2);
 			},
-		);
+		});
 	});
 
 	const emailWatch = watch("email");
@@ -142,6 +150,21 @@ export const RegisterRoute = () => {
 									{...testId("auth-register-email-input")}
 									placeholder={t`john@doe.com`}
 									type="email"
+									readOnly={lockedEmail}
+									description={
+										lockedEmail
+											? t`Locked to match the invite. To use a different address, ask the admin to re-invite that email.`
+											: undefined
+									}
+									styles={
+										lockedEmail
+											? {
+													input: {
+														backgroundColor: "var(--mantine-color-gray-1)",
+													},
+												}
+											: undefined
+									}
 								/>
 								<Button size="md" onClick={handleNext}>
 									<Trans>Continue</Trans>
@@ -156,7 +179,7 @@ export const RegisterRoute = () => {
 									autoFocus
 									label={t`Password`}
 									description={t`At least 8 characters`}
-									{...register("password", { required: true, minLength: 8 })}
+									{...register("password", { minLength: 8, required: true })}
 									{...testId("auth-register-password-input")}
 								/>
 								<PasswordInput
@@ -210,8 +233,8 @@ export const RegisterRoute = () => {
 								<Stack gap={6}>
 									<Text size="xs" c="dimmed">
 										<Trans>
-											Didn't get it? Check spam or junk. The message comes
-											from dembrane.com.
+											Didn't get it? Check spam or junk. The message comes from
+											dembrane.com.
 										</Trans>
 									</Text>
 									<Anchor

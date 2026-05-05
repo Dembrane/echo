@@ -14,7 +14,7 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import { IconPlus, IconX } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
@@ -86,13 +86,17 @@ export const OnboardingRoute = () => {
 	const [sendingInvites, setSendingInvites] = useState(false);
 	const [ready, setReady] = useState(false);
 
-	const goToProjects = () => {
+	// useCallback so the effect below can list goToProjects as a dep
+	// without re-firing on every render. workspaceId / navigate are the
+	// real triggers — wrapping them via this callback satisfies the
+	// exhaustive-deps lint without hiding an actual dependency.
+	const goToProjects = useCallback(() => {
 		if (workspaceId) {
 			navigate(`/w/${workspaceId}/projects`);
 		} else {
 			navigate("/w");
 		}
-	};
+	}, [workspaceId, navigate]);
 
 	useDocumentTitle(t`Set up your workspace | dembrane`);
 
@@ -116,7 +120,7 @@ export const OnboardingRoute = () => {
 		}, 1200);
 
 		return () => clearTimeout(timer);
-	}, [meV2, meLoading, navigate, step]);
+	}, [meV2, meLoading, step, goToProjects]);
 
 	const onboardingMutation = useMutation({
 		mutationFn: () => completeOnboarding(orgName.trim() || defaultOrgName),
@@ -126,6 +130,18 @@ export const OnboardingRoute = () => {
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
+			// Onboarding's auto-accept loop can fire personal notifications
+			// at the new user — INVITE_PENDING_AT_CAP when their invite was
+			// blocked by a full workspace. Without this invalidation the
+			// bell polls every 60s, so the row only appears after a refresh
+			// or page nav. Invalidate both the list and the unread badge so
+			// the icon goes red immediately when there's something to act on.
+			queryClient.invalidateQueries({ queryKey: ["v2", "notifications"] });
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "notifications", "unread-count"],
+			});
+			// Pending invites query too — the dropdown / inbox uses this.
+			queryClient.invalidateQueries({ queryKey: ["v2", "me", "invites"] });
 			setWorkspaceId(data.workspace_id);
 			setWorkspace(data.workspace_id);
 
@@ -268,10 +284,8 @@ export const OnboardingRoute = () => {
 							))}
 							<Box>
 								<Button
-									color="gray"
 									leftSection={<IconPlus size={14} />}
-									px={0}
-									size="xs"
+									size="sm"
 									variant="subtle"
 									onClick={addEmailField}
 								>
@@ -282,8 +296,8 @@ export const OnboardingRoute = () => {
 
 						<Group gap={12}>
 							<Button
-								size="sm"
-								variant="default"
+								size="md"
+								variant="outline"
 								onClick={() => goToProjects()}
 							>
 								<Trans>Skip</Trans>
@@ -291,7 +305,7 @@ export const OnboardingRoute = () => {
 							<Button
 								flex={1}
 								loading={sendingInvites}
-								size="sm"
+								size="md"
 								onClick={handleSendInvites}
 							>
 								<Trans>Send invites</Trans>
@@ -362,30 +376,32 @@ export const OnboardingRoute = () => {
 								{hasInvites ? (
 									inviteOrganisations.length === 1 ? (
 										<Trans>
-											You've been invited to join <em>{inviteOrganisations[0]}</em>.
-											We'll take you there in a moment.
+											You've been invited to join{" "}
+											<em>{inviteOrganisations[0]}</em>. We'll take you there in
+											a moment.
 										</Trans>
 									) : inviteOrganisations.length > 1 ? (
 										<Trans>
-											You've been invited to join {inviteOrganisations.length}
-											{" "}
+											You've been invited to join {inviteOrganisations.length}{" "}
 											organisations. We'll take you in once you continue.
 										</Trans>
 									) : (
 										<Trans>
-											Your organisation is waiting for you. Click continue to join.
+											Your organisation is waiting for you. Click continue to
+											join.
 										</Trans>
 									)
 								) : isLegacyUser ? (
 									<Trans>
-										We've added organisations so you can organize projects and share
-										them with colleagues. Everything you had before is still
-										here. We just need a name for your organisation.
+										We've added organisations so you can organize projects and
+										share them with colleagues. Everything you had before is
+										still here. We just need a name for your organisation.
 									</Trans>
 								) : (
 									<Trans>
-										Name your organisation to get started. You can invite members
-										right after, or join other organisations later from settings.
+										Name your organisation to get started. You can invite
+										members right after, or join other organisations later from
+										settings.
 									</Trans>
 								)}
 							</Text>
@@ -402,7 +418,7 @@ export const OnboardingRoute = () => {
 								<Button
 									fullWidth
 									loading={onboardingMutation.isPending}
-									size="sm"
+									size="lg"
 									onClick={() => onboardingMutation.mutate()}
 								>
 									<Trans>Continue</Trans>
@@ -420,7 +436,9 @@ export const OnboardingRoute = () => {
 										autoFocus
 										description={t`You can change this anytime in settings.`}
 										label={t`Organisation name`}
-										placeholder={defaultOrgName || t`Your organisation or company`}
+										placeholder={
+											defaultOrgName || t`Your organisation or company`
+										}
 										size="sm"
 										value={orgName}
 										onChange={(e) => setOrgName(e.currentTarget.value)}
@@ -429,7 +447,7 @@ export const OnboardingRoute = () => {
 									<Button
 										fullWidth
 										loading={onboardingMutation.isPending}
-										size="sm"
+										size="lg"
 										type="submit"
 									>
 										<Trans>Get started</Trans>

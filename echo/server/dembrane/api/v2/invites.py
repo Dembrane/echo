@@ -12,6 +12,7 @@ from fastapi import Depends, APIRouter, HTTPException
 from dembrane.utils import generate_uuid
 from dembrane.app_user import resolve_app_user
 from dembrane.settings import get_settings
+from dembrane.seat_capacity import assert_can_add_guest, assert_can_add_member
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.schemas import WorkspaceInviteRequest, WorkspaceInviteResponse
 from dembrane.directus_async import async_directus
@@ -120,6 +121,24 @@ async def invite_to_workspace(
         if inviter_app_user[0].get("email", "").lower() == email:
             raise HTTPException(status_code=400, detail="Cannot invite yourself")
 
+    # Seat / guest cap gate. "Gate the host, not the invitee" — block the
+    # invite from being sent rather than letting an invitee click a link
+    # only to hit a wall. include_pending=True so outstanding
+    # workspace_invite rows count too — without this an admin at 0/2
+    # could fire 5 guest invites and only 2 would actually succeed at
+    # accept-time, leaving 3 invitees with friendly-but-confusing 402s.
+    # assert_can_add_* is still a no-op on tiers that allow overage
+    # (Pioneer+ for member seats), unlimited tiers (Guardian), and
+    # unknown legacy tiers.
+    if body.is_org_member:
+        await assert_can_add_member(
+            ctx.workspace, audience="admin", include_pending=True
+        )
+    else:
+        await assert_can_add_guest(
+            ctx.workspace, audience="admin", include_pending=True
+        )
+
     # Check if already a member
     existing_membership = await async_directus.get_items(
         "workspace_membership",
@@ -211,6 +230,14 @@ async def invite_to_workspace(
                 },
             )
 
+            # Bust cached usage so seat / guest counts refresh on next read.
+            # Bust BOTH layers — workspace-scope and org-scope — since the
+            # /v2/orgs/:id/usage rollup aggregates over every workspace and
+            # would otherwise stay stale for up to USAGE_TTL_SECONDS.
+            from dembrane.cache_utils import invalidate_workspace_and_org_usage
+
+            await invalidate_workspace_and_org_usage(workspace_id, ws_org_id)
+
             logger.info(
                 f"Added {email} to workspace {workspace_id} as {role} "
                 f"(external: {is_external}) by {ctx.app_user_id}"
@@ -237,8 +264,8 @@ async def invite_to_workspace(
             # still a guest there, no organisation-roster change to announce).
             if newly_joined_organisation and ws_org_id:
                 from dembrane.notifications import (
-                    audience_organisation_admins,
                     emit_to_audience,
+                    audience_organisation_admins,
                 )
 
                 organisation_admin_ids = await audience_organisation_admins(ws_org_id)
@@ -252,6 +279,34 @@ async def invite_to_workspace(
                     title=f"{new_member_name} joined {organisation_name}",
                     message="They're now a organisation member.",
                     action="NAVIGATE_ORGANISATION_SETTINGS",
+                    ref_org_id=ws_org_id,
+                )
+
+            # WORKSPACE_GUEST_ADDED → workspace admins/owners when a guest
+            # joins. Guests don't trigger ORGANISATION_MEMBER_ADDED (they're
+            # not org members), so without this branch admins never hear
+            # about them. Excludes the inviter (they already know) and the
+            # invitee themselves.
+            if is_external:
+                from dembrane.notifications import (
+                    emit_to_audience,
+                    audience_workspace_admins,
+                )
+
+                admin_ids = await audience_workspace_admins(workspace_id)
+                admin_ids = [a for a in admin_ids if a != ctx.app_user_id and a != app_user["id"]]
+                guest_name = app_user.get("display_name") or email or "A guest"
+                ws_name = ctx.workspace.get("name", "your workspace")
+                await emit_to_audience(
+                    admin_ids,
+                    actor_user_id=ctx.app_user_id,
+                    event_code="WORKSPACE_GUEST_ADDED",
+                    title=f"{guest_name} joined {ws_name} as a guest",
+                    message=(
+                        f"{email} now has guest access. Guests count against your tier's guest cap."
+                    ),
+                    action="NAVIGATE_WORKSPACE_SETTINGS",
+                    ref_workspace_id=workspace_id,
                     ref_org_id=ws_org_id,
                 )
 
@@ -340,7 +395,10 @@ async def invite_to_workspace(
     )
 
     # Email URL: HMAC hash is the pointer to the invite (opaque, unforgeable),
-    # iss/ws/role are display-only context. Security = email ownership + HMAC.
+    # iss/ws/role/email are display-only context. Security = email ownership +
+    # HMAC. The `email` param lets the registration form pre-fill the field
+    # and lock it, so an invitee can't accidentally sign up with a typo'd
+    # address that wouldn't match the invite at acceptance time.
     from urllib.parse import urlencode
 
     invite_hash = compute_invite_hash(invite_id)
@@ -349,6 +407,7 @@ async def invite_to_workspace(
             "iss": inviter_name,
             "ws": ctx.workspace.get("name", ""),
             "role": role,
+            "email": email,
             "h": invite_hash,
         }
     )

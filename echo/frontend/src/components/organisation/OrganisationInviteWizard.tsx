@@ -16,6 +16,7 @@ import {
 	Stepper,
 	Text,
 	TextInput,
+	Tooltip,
 } from "@mantine/core";
 import { IconLock, IconUserPlus } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -30,6 +31,11 @@ export interface OrganisationInviteWizardWorkspace {
 	tier: string;
 	member_count: number;
 	is_private?: boolean;
+	// Cap-blocked flags from /v2/orgs/:id/workspaces. Org-level invites are
+	// always is_org_member=true, so member_invite_blocked is the relevant
+	// signal for whether this workspace card should be disabled.
+	member_invite_blocked?: boolean;
+	guest_invite_blocked?: boolean;
 }
 
 export interface OrganisationInviteWizardMember {
@@ -58,7 +64,7 @@ async function inviteToWorkspace(
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`,
 		{
-			body: JSON.stringify({ email, role, is_org_member: true }),
+			body: JSON.stringify({ email, is_org_member: true, role }),
 			credentials: "include",
 			headers: { "Content-Type": "application/json" },
 			method: "POST",
@@ -66,7 +72,7 @@ async function inviteToWorkspace(
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || `Failed to invite to workspace`);
+		throw new Error(data.detail || "Failed to invite to workspace");
 	}
 	return res.json() as Promise<{
 		status: string;
@@ -90,18 +96,30 @@ async function inviteToWorkspace(
  * current members so the admin can eyeball who's already in without
  * leaving the flow.
  */
-export function OrganisationInviteWizard({ opened, onClose, workspaces, members }: Props) {
+export function OrganisationInviteWizard({
+	opened,
+	onClose,
+	workspaces,
+	members,
+}: Props) {
 	const queryClient = useQueryClient();
 	const [step, setStep] = useState(0);
 	const [email, setEmail] = useState("");
 	const [role, setRole] = useState<"member" | "admin">("member");
 	const [selected, setSelected] = useState<Set<string>>(new Set());
+	// Per-workspace error messages from the last submit attempt. Keyed by
+	// workspace_id. Lets us paint a red strip with the actual reason on
+	// each failing card instead of the generic "couldn't send any" toast.
+	const [errorByWorkspace, setErrorByWorkspace] = useState<
+		Record<string, string>
+	>({});
 
 	const reset = () => {
 		setStep(0);
 		setEmail("");
 		setRole("member");
 		setSelected(new Set());
+		setErrorByWorkspace({});
 	};
 
 	const handleClose = () => {
@@ -109,11 +127,22 @@ export function OrganisationInviteWizard({ opened, onClose, workspaces, members 
 		onClose();
 	};
 
-	const toggle = (id: string) => {
+	const toggle = (id: string, disabled = false) => {
+		if (disabled) return;
 		const next = new Set(selected);
 		if (next.has(id)) next.delete(id);
 		else next.add(id);
 		setSelected(next);
+		// Clear any stale per-workspace error on the row the user just
+		// re-toggled so they don't see a red strip for a row they're no
+		// longer about to submit (or have re-armed for a retry).
+		if (errorByWorkspace[id]) {
+			setErrorByWorkspace((prev) => {
+				const copy = { ...prev };
+				delete copy[id];
+				return copy;
+			});
+		}
 	};
 
 	// Build "who's already in each workspace" previews from the organisation
@@ -138,16 +167,39 @@ export function OrganisationInviteWizard({ opened, onClose, workspaces, members 
 			const results = await Promise.allSettled(
 				targets.map((ws) => inviteToWorkspace(ws, email.trim(), role)),
 			);
+			// Capture {workspaceId, message} for every rejection so the
+			// caller can show actual reasons (e.g. "An invite is already
+			// pending for this email", "User is already a member") instead
+			// of a generic try-again.
 			const failed = results
-				.map((r, i) => (r.status === "rejected" ? targets[i] : null))
-				.filter((x): x is string => Boolean(x));
+				.map((r, i) =>
+					r.status === "rejected"
+						? {
+								message:
+									r.reason instanceof Error
+										? r.reason.message
+										: "Failed to invite",
+								workspaceId: targets[i],
+							}
+						: null,
+				)
+				.filter((x): x is { workspaceId: string; message: string } =>
+					Boolean(x),
+				);
 			const ok = results.length - failed.length;
-			return { ok, failed };
+			return { failed, ok };
 		},
+		onError: (err: Error) => toast.error(err.message),
 		onSuccess: ({ ok, failed }) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "organisation"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			// Persist per-workspace failures on the wizard so the cards
+			// show the specific reason inline.
+			const errMap: Record<string, string> = {};
+			for (const f of failed) errMap[f.workspaceId] = f.message;
+			setErrorByWorkspace(errMap);
+
 			if (failed.length === 0) {
 				toast.success(
 					ok === 1
@@ -155,15 +207,26 @@ export function OrganisationInviteWizard({ opened, onClose, workspaces, members 
 						: t`Invites sent to ${ok} workspaces.`,
 				);
 				handleClose();
-			} else if (ok === 0) {
-				toast.error(t`Couldn't send any of the invites. Try again.`);
+				return;
+			}
+
+			// Build a concrete toast that says *why* things failed instead of
+			// "try again". If every failure shares the same reason (the
+			// common case: "already pending" / "already a member"), surface
+			// that reason directly.
+			const distinctReasons = Array.from(new Set(failed.map((f) => f.message)));
+			const reason =
+				distinctReasons.length === 1
+					? distinctReasons[0]
+					: t`Multiple reasons (see workspace list).`;
+			if (ok === 0) {
+				toast.error(t`Couldn't send the invite. ${reason}`);
 			} else {
 				toast.error(
-					t`Sent ${ok} of ${ok + failed.length} invites — check the list and retry.`,
+					t`Sent ${ok} of ${ok + failed.length}. ${failed.length === 1 ? failed[0].message : reason}`,
 				);
 			}
 		},
-		onError: (err: Error) => toast.error(err.message),
 	});
 
 	const emailTrimmed = email.trim();
@@ -219,8 +282,8 @@ export function OrganisationInviteWizard({ opened, onClose, workspaces, members 
 												</Text>
 												<Text size="xs" c="dimmed">
 													<Trans>
-														Can see and work inside the workspaces you
-														give them access to.
+														Can see and work inside the workspaces you give them
+														access to.
 													</Trans>
 												</Text>
 											</Box>
@@ -235,8 +298,8 @@ export function OrganisationInviteWizard({ opened, onClose, workspaces, members 
 												</Text>
 												<Text size="xs" c="dimmed">
 													<Trans>
-														Can invite others, manage workspaces, and
-														change roles across the organisation.
+														Can invite others, manage workspaces, and change
+														roles across the organisation.
 													</Trans>
 												</Text>
 											</Box>
@@ -251,8 +314,8 @@ export function OrganisationInviteWizard({ opened, onClose, workspaces, members 
 						<Stack gap={10} mt="md">
 							<Text size="sm" c="dimmed">
 								<Trans>
-									Pick which workspaces this person should land in. They'll
-									join the organisation through their first workspace.
+									Pick which workspaces this person should land in. They'll join
+									the organisation through their first workspace.
 								</Trans>
 							</Text>
 
@@ -269,84 +332,121 @@ export function OrganisationInviteWizard({ opened, onClose, workspaces, members 
 								{workspaces.map((ws) => {
 									const isSelected = selected.has(ws.id);
 									const avatars = previewsByWorkspace.get(ws.id) ?? [];
-									return (
+									// Org invites add an organisation member to the workspace —
+									// always a non-guest. Member cap is what matters here. The
+									// guest cap doesn't gate org invites.
+									const capBlocked = !!ws.member_invite_blocked;
+									const wsError = errorByWorkspace[ws.id];
+									const card = (
 										<Paper
 											key={ws.id}
 											withBorder
 											p="sm"
 											radius="sm"
-											onClick={() => toggle(ws.id)}
+											onClick={() => toggle(ws.id, capBlocked)}
 											style={{
-												cursor: "pointer",
-												borderColor: isSelected
-													? "var(--mantine-color-blue-5)"
-													: undefined,
 												backgroundColor: isSelected
 													? "var(--mantine-color-blue-0)"
 													: undefined,
+												borderColor: wsError
+													? "var(--mantine-color-yellow-5)"
+													: isSelected
+														? "var(--mantine-color-blue-5)"
+														: undefined,
+												cursor: capBlocked ? "not-allowed" : "pointer",
+												opacity: capBlocked ? 0.6 : 1,
 											}}
 										>
-											<Group justify="space-between" wrap="nowrap">
-												<Group gap={12} wrap="nowrap" style={{ minWidth: 0 }}>
-													<Checkbox
-														checked={isSelected}
-														onChange={() => toggle(ws.id)}
-														onClick={(e) => e.stopPropagation()}
-														aria-label={t`Select ${ws.name}`}
-													/>
-													<Stack gap={2} style={{ minWidth: 0 }}>
-														<Group gap={6} wrap="nowrap">
-															<Text size="sm" fw={500} lineClamp={1}>
-																{ws.name}
-															</Text>
-															{ws.is_private && (
-																<IconLock
-																	size={12}
-																	style={{
-																		color: "var(--mantine-color-gray-6)",
-																	}}
-																/>
-															)}
-														</Group>
-														<Group gap={6} wrap="nowrap">
-															<Badge
-																size="xs"
-																variant="light"
-																color="gray"
-															>
-																<span
-																	style={{ textTransform: "capitalize" }}
+											<Stack gap={6}>
+												<Group justify="space-between" wrap="nowrap">
+													<Group gap={12} wrap="nowrap" style={{ minWidth: 0 }}>
+														<Checkbox
+															checked={isSelected}
+															disabled={capBlocked}
+															onChange={() => toggle(ws.id, capBlocked)}
+															onClick={(e) => e.stopPropagation()}
+															aria-label={t`Select ${ws.name}`}
+														/>
+														<Stack gap={2} style={{ minWidth: 0 }}>
+															<Group gap={6} wrap="nowrap">
+																<Text size="sm" fw={500} lineClamp={1}>
+																	{ws.name}
+																</Text>
+																{ws.is_private && (
+																	<IconLock
+																		size={12}
+																		style={{
+																			color: "var(--mantine-color-gray-6)",
+																		}}
+																	/>
+																)}
+															</Group>
+															<Group gap={6} wrap="nowrap">
+																<Badge size="xs" variant="light" color="gray">
+																	<span style={{ textTransform: "capitalize" }}>
+																		{ws.tier}
+																	</span>
+																</Badge>
+																<Text size="xs" c="dimmed">
+																	<Plural
+																		value={ws.member_count}
+																		one="# member"
+																		other="# members"
+																	/>
+																</Text>
+																{capBlocked && (
+																	<Badge
+																		size="xs"
+																		variant="light"
+																		color="yellow"
+																	>
+																		<Trans>Seats full</Trans>
+																	</Badge>
+																)}
+															</Group>
+														</Stack>
+													</Group>
+													{avatars.length > 0 && (
+														<Avatar.Group spacing="xs">
+															{avatars.map((p) => (
+																<Avatar
+																	key={p.app_user_id}
+																	size="sm"
+																	radius="xl"
+																	src={avatarUrl(p.avatar, 48)}
+																	title={p.display_name}
 																>
-																	{ws.tier}
-																</span>
-															</Badge>
-															<Text size="xs" c="dimmed">
-																<Plural
-																	value={ws.member_count}
-																	one="# member"
-																	other="# members"
-																/>
-															</Text>
-														</Group>
-													</Stack>
+																	{memberInitials(p.display_name)}
+																</Avatar>
+															))}
+														</Avatar.Group>
+													)}
 												</Group>
-												{avatars.length > 0 && (
-													<Avatar.Group spacing="xs">
-														{avatars.map((p) => (
-															<Avatar
-																key={p.app_user_id}
-																size="sm"
-																radius="xl"
-																src={avatarUrl(p.avatar, 48)}
-																title={p.display_name}
-															>
-																{memberInitials(p.display_name)}
-															</Avatar>
-														))}
-													</Avatar.Group>
+												{wsError && (
+													<Text
+														size="xs"
+														c="yellow.8"
+														style={{ paddingLeft: 32 }}
+													>
+														{wsError}
+													</Text>
 												)}
-											</Group>
+											</Stack>
 										</Paper>
+									);
+									if (!capBlocked) return <Box key={ws.id}>{card}</Box>;
+									return (
+										<Tooltip
+											key={ws.id}
+											label={t`This workspace is at its seat limit on the ${ws.tier} tier. Free a seat by removing someone, or upgrade the workspace tier to invite more members.`}
+											withArrow
+											multiline
+											w={300}
+											position="top"
+											events={{ focus: true, hover: true, touch: true }}
+										>
+											<Box>{card}</Box>
+										</Tooltip>
 									);
 								})}
 							</Stack>

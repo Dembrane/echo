@@ -13,6 +13,8 @@ from dembrane.utils import generate_uuid
 from dembrane.app_user import resolve_app_user, get_app_user_or_raise
 from dembrane.policies import TIER_ORDER
 from dembrane.settings import get_settings
+from dembrane.inheritance import get_effective_members
+from dembrane.seat_capacity import tier_hard_blocks_seats
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.schemas import (
     MemberPreview,
@@ -501,10 +503,11 @@ async def create_workspace(
             status_code=403, detail="Must be organisation admin or owner to create workspaces"
         )
 
-    # Tier is always "pioneer" on creation — plan changes happen via admin/billing
-    # Matrix v1.1 §6 visibility: stored on workspace.visibility. The enum
-    # is the sole source of truth on new workspaces; legacy settings flags
-    # are no longer written (resolver still reads them for pre-enum rows).
+    # Matrix §9: new workspaces default to Pilot. Tier upgrades go through
+    # the staff upgrade-request flow (matrix §11), never client-driven.
+    # Visibility (matrix v1.1 §6) is stored on workspace.visibility — the
+    # enum is the sole source of truth on new rows; legacy settings flags
+    # are no longer written (resolver still reads them for pre-enum data).
     visibility = "open_to_organisation" if body.inherit_organisation_admins else "private"
     ws_id = generate_uuid()
     await async_directus.create_item(
@@ -562,7 +565,7 @@ async def create_workspace(
         id=ws_id,
         name=body.name.strip(),
         org_id=org_id,
-        tier="pioneer",  # Matches what we actually stored
+        tier="pilot",  # Matrix §9: new workspaces default to Pilot.
     )
 
 
@@ -948,6 +951,12 @@ class WorkspaceUsageResponse(BaseModel):
     project_count: int
     projects: list[ProjectUsageItem]
     pilot_hard_block_active: bool  # informational for members too
+    # Cap-blocked signals for invite UI gating. member_invite_blocked is
+    # only True on tiers that hard-block seats (Pilot); Pioneer+ accrue
+    # overage instead. guest_invite_blocked is True at every finite-cap
+    # tier when at cap — guests have no overage mechanism.
+    member_invite_blocked: bool = False
+    guest_invite_blocked: bool = False
 
     # Admin + billing only — None for members.
     overage_forecast_eur: Optional[float] = None
@@ -1142,70 +1151,25 @@ async def get_workspace_usage(
 
     audio_hours = round(total_seconds / 3600, 2)
 
-    # Seat + guest count. Members + admin + billing count as seats; guest
-    # (is_external=true) is its own bucket and is not billed (matrix §7).
-    # NOTE: `user_id` and `source` are required by the dedup loop below —
-    # dropping them from this fields list silently zeroes the seat count
-    # (the 2026-04-23 audit "0 of 3 seats used" bug).
-    members = await async_directus.get_items(
-        "workspace_membership",
-        {
-            "query": {
-                "filter": {
-                    "workspace_id": {"_eq": ctx.workspace_id},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["user_id", "role", "source", "is_external"],
-                "limit": -1,
-            }
-        },
-    )
-    if not isinstance(members, list):
-        members = []
-
-    # Seat + guest count — deduplicated by user_id. Matrix §7 says "one
-    # seat per person per workspace", so we count distinct users, not
-    # distinct rows. Pre-walkback data can carry both a source='direct'
-    # row and a legacy source='inherited' row for the same (workspace,
-    # user) pair, and a naive row-count would double-bill the same
-    # human.
-    #
-    # Direct rows take priority over inherited (matches inheritance.py
-    # get_effective_members: a user's direct role supersedes their
-    # derived one). is_external is read from the winning row.
-    by_user: dict[str, dict] = {}
-    for m in members:
-        uid = m.get("user_id")
-        if not uid:
-            continue
-        # Skip rows with no role or with a retired role value that
-        # wouldn't count either way.
-        role = m.get("role")
-        existing = by_user.get(uid)
-        if existing is None:
-            by_user[uid] = m
-            continue
-        # Prefer direct over inherited. If both are direct (shouldn't
-        # happen, but guard), keep the one with a seat-worthy role over
-        # a non-seat one.
-        existing_direct = existing.get("source") == "direct"
-        this_direct = m.get("source") == "direct"
-        if this_direct and not existing_direct:
-            by_user[uid] = m
-        elif this_direct and existing_direct:
-            # Double-direct: prefer the seat-worthy role.
-            seat_roles = {"owner", "admin", "member", "billing"}
-            if role in seat_roles and existing.get("role") not in seat_roles:
-                by_user[uid] = m
+    # Seat + guest count. Reuses inheritance.get_effective_members so the
+    # count includes derived org admins/owners — they consume a seat just
+    # like direct members ("admin should consume a seat" per matrix §7
+    # + product call 2026-05-04). get_effective_members already dedups by
+    # user_id with direct-wins-over-derived precedence, so we just bucket
+    # the rows here.
+    effective_members = await get_effective_members(ctx.workspace_id)
 
     seat_count = 0
     guest_count = 0
-    for m in by_user.values():
+    seat_roles = {"owner", "admin", "member", "billing"}
+    for m in effective_members:
         role = m.get("role")
         if m.get("is_external"):
             # Guest bucket. A guest with an elevated role (admin/billing/
-            # owner) shouldn't exist — blocked at invite + change-role — but
-            # log if we ever see one so ops can spot it.
+            # owner) shouldn't exist — blocked at invite + change-role —
+            # but log if we ever see one so ops can spot it. Derived rows
+            # are never external (inheritance.py:303), so this only fires
+            # on direct rows.
             if role in ("admin", "billing", "owner"):
                 logger.warning(
                     "external_with_elevated_role workspace=%s role=%s",
@@ -1214,7 +1178,7 @@ async def get_workspace_usage(
                 )
             guest_count += 1
             continue
-        if role in ("owner", "admin", "member", "billing"):
+        if role in seat_roles:
             seat_count += 1
 
     # Tier capacity lookup. Legacy rows with NULL tier fall through to the
@@ -1267,6 +1231,24 @@ async def get_workspace_usage(
                 included_seats=rcap.included_seats,
             )
 
+    # Cap-blocked flags for invite UI gating. Mirrors seat_capacity
+    # assert_can_add_member / assert_can_add_guest with include_pending=True
+    # so the UI disables the invite button as soon as the cap is taken
+    # (by actuals + outstanding workspace_invite rows). Otherwise admins
+    # can still click Invite while pending invites already saturate the
+    # cap, only to hit a 402 at submit.
+    from dembrane.seat_capacity import count_pending_invites
+
+    member_pending, guest_pending = await count_pending_invites(ctx.workspace_id)
+    member_invite_blocked = (
+        included_seats is not None
+        and tier_hard_blocks_seats(tier)
+        and (seat_count + member_pending) >= included_seats
+    )
+    guest_invite_blocked = (
+        guest_cap is not None and (guest_count + guest_pending) >= guest_cap
+    )
+
     full = WorkspaceUsageResponse(
         cycle_start=cycle_start,
         cycle_end_exclusive=cycle_end_exclusive,
@@ -1281,6 +1263,8 @@ async def get_workspace_usage(
         project_count=len(projects),
         projects=per_project_items,
         pilot_hard_block_active=hard_block,
+        member_invite_blocked=member_invite_blocked,
+        guest_invite_blocked=guest_invite_blocked,
         overage_forecast_eur=overage_forecast,
         seat_overage_eur=seat_overage,
         next_tier=next_rec,

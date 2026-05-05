@@ -6,11 +6,11 @@ from logging import getLogger
 
 from fastapi import HTTPException
 
-from dembrane.policies import has_policy, meets_tier
 from dembrane.app_user import resolve_app_user
-from dembrane.api.dependency_auth import DependencyDirectusSession
-from dembrane.directus_async import async_directus
+from dembrane.policies import has_policy, meets_tier, effective_workspace_role
 from dembrane.inheritance import user_can_access
+from dembrane.directus_async import async_directus
+from dembrane.api.dependency_auth import DependencyDirectusSession
 
 logger = getLogger("api.v2.middleware")
 
@@ -43,9 +43,11 @@ class WorkspaceContext:
     def has_policy(self, required: str) -> bool:
         # Tier auto-wiring is in policies.has_policy — workspace_tier is
         # forwarded so tier gates fire without per-endpoint require_tier
-        # calls.
+        # calls. Guests run through the strictly scoped 'guest' preset
+        # via effective_workspace_role; raw self.role stays untouched
+        # for UI display + role-hierarchy compares.
         return has_policy(
-            self.role,
+            effective_workspace_role(self.role, self.is_external),
             self.custom_policies,
             required,
             workspace_tier=self.workspace.get("tier"),
@@ -124,6 +126,7 @@ async def get_workspace_context(
     # check — has_policy, role-hierarchy compares, UI serialisation — sees
     # the current role set. D11: viewer → member.
     from dembrane.policies import _normalize_legacy_role
+
     normalized_role = _normalize_legacy_role(role) or role
 
     return WorkspaceContext(
@@ -149,9 +152,7 @@ async def _current_cycle_hours(workspace_id: str) -> float:
     from datetime import datetime, timezone
 
     now = datetime.now(timezone.utc)
-    month_start = now.replace(
-        day=1, hour=0, minute=0, second=0, microsecond=0
-    )
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     if now.month == 12:
         next_start = month_start.replace(year=now.year + 1, month=1)
     else:
@@ -217,14 +218,10 @@ async def require_no_pilot_block(
     verbatim per matrix — the UI's level-3 modal (screens/status-banner)
     lifts this text for the hard-block screen.
     """
-    await check_no_pilot_block_for(
-        ctx.workspace_id, tier=ctx.workspace.get("tier")
-    )
+    await check_no_pilot_block_for(ctx.workspace_id, tier=ctx.workspace.get("tier"))
 
 
-async def check_no_pilot_block_for(
-    workspace_id: str, tier: str | None = None
-) -> None:
+async def check_no_pilot_block_for(workspace_id: str, tier: str | None = None) -> None:
     """workspace_id-only variant of require_no_pilot_block, for v1 routes
     that don't build a WorkspaceContext. Accepts an optional tier arg to
     skip the workspace read when the caller already has it.

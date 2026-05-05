@@ -14,7 +14,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
-import { UpgradeModal, type Tier } from "@/components/workspace/FeatureGate";
+import { type Tier, UpgradeModal } from "@/components/workspace/FeatureGate";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -42,6 +42,8 @@ interface UsageResponse {
 	project_count: number;
 	projects: ProjectUsage[];
 	pilot_hard_block_active: boolean;
+	member_invite_blocked?: boolean;
+	guest_invite_blocked?: boolean;
 	overage_forecast_eur?: number | null;
 	seat_overage_eur?: number | null;
 	next_tier?: {
@@ -81,7 +83,6 @@ function formatEur(value: number | null | undefined): string {
 	return `€${Math.round(value)}`;
 }
 
-
 /**
  * Workspace usage card (matrix v1.1 §8).
  *
@@ -101,8 +102,17 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const [monthOffset, setMonthOffset] = useState(0);
 
 	const { data, isLoading, dataUpdatedAt } = useQuery({
-		queryKey: ["v2", "workspace-usage", workspaceId, monthOffset],
 		queryFn: () => fetchUsage(workspaceId, monthOffset),
+		queryKey: ["v2", "workspace-usage", workspaceId, monthOffset],
+		// Always refetch when the billing tab mounts, even if the cached
+		// payload is still within staleTime. Users expect fresh seat/guest
+		// counts every time they land on this surface — without this, a
+		// member added in another tab or by another admin doesn't show
+		// until a manual click on the refresh icon. The server-side cache
+		// (30-min Redis TTL) still does its job; we're only overriding
+		// React Query's "fresh = skip" optimization.
+		refetchOnMount: "always",
+		refetchOnWindowFocus: "always",
 		staleTime: 60_000,
 	});
 
@@ -290,11 +300,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 								)}
 							</Text>
 							{canRequestUpgrade && (
-								<Button
-									size="compact-xs"
-									variant="light"
-									onClick={() => setUpgradeOpen(true)}
-								>
+								<Button onClick={() => setUpgradeOpen(true)}>
 									<Trans>Request upgrade</Trans>
 								</Button>
 							)}

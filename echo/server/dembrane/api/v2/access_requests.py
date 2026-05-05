@@ -27,6 +27,7 @@ from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import get_app_user_or_raise
+from dembrane.seat_capacity import assert_can_add_member
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
@@ -507,6 +508,11 @@ async def approve_access_request(
     # manually invited them), just close the request approved without
     # duplicating the membership.
     if not await _has_direct_row(workspace_id, requester_id):
+        # Seat cap gate. Access requests always create direct members
+        # (never guests), so only the member cap applies. On 402 the
+        # request stays pending so the approving admin sees an upgrade
+        # prompt and can act later.
+        await assert_can_add_member(workspace, audience="admin")
         await async_directus.create_item(
             "workspace_membership",
             {
@@ -518,6 +524,9 @@ async def approve_access_request(
                 "is_external": False,
             },
         )
+        from dembrane.cache_utils import invalidate_workspace_and_org_usage
+
+        await invalidate_workspace_and_org_usage(workspace_id, workspace.get("org_id"))
 
     await async_directus.update_item(
         "access_request",

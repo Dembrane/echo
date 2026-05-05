@@ -42,9 +42,9 @@ TIER_REQUIRED_FOR_POLICY: dict[str, str] = {
 # on app_user or JWT). Until then, literals live here for reference and
 # future-you can grep.
 STAFF_POLICIES: set[str] = {
-    "staff:can_set_tier",       # PATCH /v2/workspaces/:id/tier
-    "staff:can_set_visibility", # Force workspace visibility, bypass tier check
-    "staff:can_transfer",       # Workspace transfer (partner handoff flips)
+    "staff:can_set_tier",  # PATCH /v2/workspaces/:id/tier
+    "staff:can_set_visibility",  # Force workspace visibility, bypass tier check
+    "staff:can_transfer",  # Workspace transfer (partner handoff flips)
 }
 
 
@@ -83,9 +83,12 @@ ORG_ROLE_PRESETS: dict[str, list[str]] = {
 # - Admin (code: admin + owner) — full workspace control + billing.
 # - Billing — financial surface only; no project capabilities.
 # - Member — content author.
-# - Guest (code: is_external=true on a direct row + 'member' role preset with
-#   one edge: guests cannot delete conversations). Enforced at the endpoint
-#   layer; preset is shared with member for simplicity.
+# - Guest (code: is_external=true on a direct row, role='member' on disk,
+#   served from the dedicated 'guest' preset below by effective_workspace_role
+#   at the middleware layer). The preset is strictly scoped per matrix §4:
+#   edit projects, capture conversations, run chat, generate reports —
+#   nothing else. No invite, no settings, no usage, no publish, no
+#   org-level visibility.
 #
 # Retired: 'viewer' (matrix has no viewer role; D11). If any stray rows
 # surface with role='viewer', _normalize_legacy_role treats them as 'member'.
@@ -100,7 +103,19 @@ WORKSPACE_ROLE_PRESETS: dict[str, list[str]] = {
         "chat:use",
         "report:view",
         "report:generate",
+        "report:publish",
         "workspace:view_usage",  # matrix §4: members see usage (raw, no €).
+    ],
+    # Matrix §4 guest scope — explicit allowlist. Anything not here is
+    # implicitly denied (workspace:view_usage, member:invite, settings:manage,
+    # report:publish, project:create, conversation:delete, etc.).
+    "guest": [
+        "project:read",
+        "project:update",
+        "conversation:read",
+        "chat:use",
+        "report:view",
+        "report:generate",
     ],
     "admin": [
         "project:read",
@@ -115,6 +130,7 @@ WORKSPACE_ROLE_PRESETS: dict[str, list[str]] = {
         "chat:use",
         "report:view",
         "report:generate",
+        "report:publish",
         "report:delete",
         "member:invite",
         "member:manage",
@@ -197,6 +213,25 @@ def get_effective_policies(
     base = presets.get(role, [])
     extras = custom_policies or []
     return base + extras
+
+
+def effective_workspace_role(role: str | None, is_external: bool) -> str:
+    """Resolve the role used for policy lookups on workspace-scope checks.
+
+    Guests have role='member' on disk (the storage convention from before
+    the dedicated 'guest' preset existed). Treating them as 'member' for
+    policy purposes leaks settings, invite, usage, and publish capabilities
+    they shouldn't have per matrix §4. This helper swaps role='member' +
+    is_external=True to 'guest' so every downstream has_policy / preset
+    lookup pulls from the strictly scoped guest preset.
+
+    Direct callers (UI display, role hierarchy compares) keep using the
+    raw `role` field — only policy enforcement runs through this helper.
+    """
+    role = _normalize_legacy_role(role) or role or ""
+    if is_external:
+        return "guest"
+    return role
 
 
 def has_policy(

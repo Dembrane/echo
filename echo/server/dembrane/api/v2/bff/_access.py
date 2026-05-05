@@ -64,6 +64,7 @@ from dembrane.policies import (
     TIER_REQUIRED_FOR_POLICY,
     has_policy,
     meets_tier,
+    effective_workspace_role,
 )
 from dembrane.inheritance import get_user_project_access
 from dembrane.directus_async import async_directus
@@ -102,13 +103,20 @@ class ResourceAccess:
         return PROJECT_ROLE_PRESETS if self.source == "project_share" else WORKSPACE_ROLE_PRESETS
 
     def allows(self, policy: str) -> bool:
-        """Does this role (+tier) grant `policy`? Silent — returns bool."""
-        if self.is_guest and policy == "conversation:delete":
-            # Matrix §4 hard rule: guests never delete conversations,
-            # even though they share the member preset otherwise.
-            return False
+        """Does this role (+tier) grant `policy`? Silent — returns bool.
+
+        Project-share access (source='project_share') uses its own
+        viewer/editor preset, so the guest swap doesn't apply there —
+        a guest with a project-share row is treated by the share role.
+        Workspace-scope access (source='workspace' or 'direct') swaps
+        is_guest=True to the strictly scoped 'guest' preset per matrix §4.
+        """
+        if self.source == "project_share":
+            role_for_policy = self.role
+        else:
+            role_for_policy = effective_workspace_role(self.role, self.is_guest)
         return has_policy(
-            role=self.role,
+            role=role_for_policy,
             custom_policies=self.custom_policies,
             required=policy,
             presets=self._presets,

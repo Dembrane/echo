@@ -888,8 +888,27 @@ async def update_report(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Update a report's fields."""
-    await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
+
+    # Single access resolution covers both the existence/access check and
+    # the report:publish gate. Status transitions to `published` /
+    # `scheduled` (the publishing surface) are gated on `report:publish`,
+    # which is in the member/admin presets but not in the guest preset
+    # (matrix §4: guests can generate reports but never publish them).
+    # Other status changes (draft, archived) and content edits flow
+    # through unblocked for any project-accessor.
+    #
+    # Staff (auth.is_admin) bypasses both — they can publish on behalf
+    # of any project. The `_verify_project_access` legacy helper short-
+    # circuits on auth.is_admin, so we mirror that here.
+    if auth.is_admin:
+        await _verify_project_access(auth, project_id)
+    else:
+        from dembrane.api.v2.bff._access import resolve_project_access
+
+        access = await resolve_project_access(project_id, auth)
+        if body.status in ("published", "scheduled"):
+            access.require("report:publish")
 
     payload: dict = {}
     if body.status is not None:

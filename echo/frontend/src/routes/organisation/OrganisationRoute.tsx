@@ -1,11 +1,10 @@
 import { t } from "@lingui/core/macro";
-import { Plural, Trans } from "@lingui/react/macro";
+import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Anchor,
 	Avatar,
 	Badge,
-	Box,
 	Button,
 	Center,
 	Container,
@@ -16,38 +15,39 @@ import {
 	Menu,
 	Paper,
 	Stack,
-	Table,
 	Tabs,
 	Text,
 	TextInput,
 	Title,
 	Tooltip,
 } from "@mantine/core";
-import { modals } from "@mantine/modals";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "@/components/common/Toaster";
 import { useDocumentTitle } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
 import {
 	IconChevronDown,
 	IconChevronRight,
 	IconLock,
 	IconPlus,
-	IconSettings,
 	IconTrash,
 	IconUpload,
 } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
+import { toast } from "@/components/common/Toaster";
 import { InviteMemberCard, MembersToolbar } from "@/components/members";
+import { OrganisationCapBanner } from "@/components/organisation/OrganisationCapBanner";
 import { OrganisationInviteWizard } from "@/components/organisation/OrganisationInviteWizard";
 import { OrganisationUsageRollup } from "@/components/workspace/OrganisationUsageRollup";
-import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useV2Me } from "@/hooks/useV2Me";
-import { avatarUrl, logoUrl as resolveLogoUrl, memberInitials } from "@/lib/avatar";
+import {
+	avatarUrl,
+	memberInitials,
+	logoUrl as resolveLogoUrl,
+} from "@/lib/avatar";
 import { displayRole, roleColor } from "@/lib/roles";
 
 /**
@@ -98,9 +98,13 @@ interface OrganisationWorkspace {
 	project_count: number;
 	member_count: number;
 	is_private: boolean;
+	member_invite_blocked?: boolean;
+	guest_invite_blocked?: boolean;
 }
 
-async function fetchOrganisation(organisationId: string): Promise<OrganisationDetail | null> {
+async function fetchOrganisation(
+	organisationId: string,
+): Promise<OrganisationDetail | null> {
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}`, {
 		credentials: "include",
 	});
@@ -108,7 +112,9 @@ async function fetchOrganisation(organisationId: string): Promise<OrganisationDe
 	return res.json();
 }
 
-async function fetchOrganisationMembers(organisationId: string): Promise<OrganisationMember[]> {
+async function fetchOrganisationMembers(
+	organisationId: string,
+): Promise<OrganisationMember[]> {
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}/members`, {
 		credentials: "include",
 	});
@@ -126,10 +132,15 @@ async function fetchOrganisationMembers(organisationId: string): Promise<Organis
 	return res.json();
 }
 
-async function fetchOrganisationWorkspaces(organisationId: string): Promise<OrganisationWorkspace[]> {
-	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}/workspaces`, {
-		credentials: "include",
-	});
+async function fetchOrganisationWorkspaces(
+	organisationId: string,
+): Promise<OrganisationWorkspace[]> {
+	const res = await fetch(
+		`${API_BASE_URL}/v2/orgs/${organisationId}/workspaces`,
+		{
+			credentials: "include",
+		},
+	);
 	if (!res.ok) return [];
 	return res.json();
 }
@@ -240,7 +251,6 @@ async function changeWorkspaceMemberRole(
 	}
 }
 
-
 export const OrganisationRoute = () => {
 	const { organisationId, "*": splat } = useParams<{
 		organisationId: string;
@@ -278,29 +288,28 @@ export const OrganisationRoute = () => {
 	useDocumentTitle(t`Organisation | dembrane`);
 
 	const { data: organisation, isLoading: organisationLoading } = useQuery({
-		queryKey: ["v2", "organisation", organisationId],
-		queryFn: () => fetchOrganisation(organisationId as string),
 		enabled: Boolean(organisationId),
+		queryFn: () => fetchOrganisation(organisationId as string),
+		queryKey: ["v2", "organisation", organisationId],
 		staleTime: 30_000,
 	});
 	const { data: members = [], error: membersError } = useQuery({
-		queryKey: ["v2", "organisation", organisationId, "members"],
-		queryFn: () => fetchOrganisationMembers(organisationId as string),
 		enabled: Boolean(organisationId),
+		queryFn: () => fetchOrganisationMembers(organisationId as string),
+		queryKey: ["v2", "organisation", organisationId, "members"],
 		retry: 1,
 	});
 	const { data: workspaces = [] } = useQuery({
-		queryKey: ["v2", "organisation", organisationId, "workspaces"],
-		queryFn: () => fetchOrganisationWorkspaces(organisationId as string),
 		enabled: Boolean(organisationId),
+		queryFn: () => fetchOrganisationWorkspaces(organisationId as string),
+		queryKey: ["v2", "organisation", organisationId, "workspaces"],
 	});
 
-	const isAdmin = organisation?.role === "owner" || organisation?.role === "admin";
-	const isOwner = organisation?.role === "owner";
+	const isAdmin =
+		organisation?.role === "owner" || organisation?.role === "admin";
 	// Admin-only views fall back to People for other roles so landing
 	// state is never an empty panel for them.
-	const view: TabValue =
-		!isAdmin && viewRaw === "usage" ? "people" : viewRaw;
+	const view: TabValue = !isAdmin && viewRaw === "usage" ? "people" : viewRaw;
 
 	// Organisation-level role change — admin + owner can edit; owner-only offers
 	// the "owner" option (only owners can grant owner).
@@ -309,13 +318,13 @@ export const OrganisationRoute = () => {
 			if (!organisationId) throw new Error("No organisation");
 			return changeOrganisationRole(organisationId, userId, role);
 		},
+		onError: (e: Error) => toast.error(e.message),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
 			});
 			toast.success(t`Role changed`);
 		},
-		onError: (e: Error) => toast.error(e.message),
 	});
 
 	// Per-workspace role change triggered from the organisation People tab's
@@ -333,6 +342,7 @@ export const OrganisationRoute = () => {
 			membershipId: string;
 			role: string;
 		}) => changeWorkspaceMemberRole(workspaceId, membershipId, role),
+		onError: (e: Error) => toast.error(e.message),
 		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
@@ -342,7 +352,6 @@ export const OrganisationRoute = () => {
 			});
 			toast.success(t`Role changed`);
 		},
-		onError: (e: Error) => toast.error(e.message),
 	});
 
 	const removeOrganisationMemberMutation = useMutation({
@@ -350,7 +359,7 @@ export const OrganisationRoute = () => {
 			if (!organisationId) throw new Error("No organisation");
 			const res = await fetch(
 				`${API_BASE_URL}/v2/orgs/${organisationId}/members/${userId}`,
-				{ method: "DELETE", credentials: "include" },
+				{ credentials: "include", method: "DELETE" },
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
@@ -361,13 +370,13 @@ export const OrganisationRoute = () => {
 				);
 			}
 		},
+		onError: (e: Error) => toast.error(e.message),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
 			});
 			toast.success(t`Removed from organisation`);
 		},
-		onError: (e: Error) => toast.error(e.message),
 	});
 
 	// Add-to-workspace from the Organisation Members tab. Reuses the workspace
@@ -387,7 +396,7 @@ export const OrganisationRoute = () => {
 			const res = await fetch(
 				`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`,
 				{
-					body: JSON.stringify({ email, role, is_org_member: true }),
+					body: JSON.stringify({ email, is_org_member: true, role }),
 					credentials: "include",
 					headers: { "Content-Type": "application/json" },
 					method: "POST",
@@ -403,6 +412,7 @@ export const OrganisationRoute = () => {
 			}
 			return res.json();
 		},
+		onError: (e: Error) => toast.error(e.message),
 		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
@@ -412,7 +422,6 @@ export const OrganisationRoute = () => {
 			});
 			toast.success(t`Added to workspace`);
 		},
-		onError: (e: Error) => toast.error(e.message),
 	});
 
 	const { data: meV2 } = useV2Me();
@@ -473,6 +482,12 @@ export const OrganisationRoute = () => {
 
 	return (
 		<Container size="xl" py="xl" px="lg">
+			{organisationId && (
+				<OrganisationCapBanner
+					organisationId={organisationId}
+					workspaces={workspaces}
+				/>
+			)}
 			<Stack gap={24}>
 				{/* Header — minimal. Name + counts on the left, action cluster
 				    on the right. Tier is intentionally absent (it's a
@@ -486,7 +501,7 @@ export const OrganisationRoute = () => {
 								h={48}
 								w="auto"
 								fit="contain"
-								style={{ maxWidth: 160, flexShrink: 0 }}
+								style={{ flexShrink: 0, maxWidth: 160 }}
 							/>
 						)}
 						<Stack gap={2} style={{ minWidth: 0 }}>
@@ -495,8 +510,10 @@ export const OrganisationRoute = () => {
 							</Title>
 							<Text size="sm" c="dimmed">
 								{organisation.workspace_count}{" "}
-								{organisation.workspace_count === 1 ? t`workspace` : t`workspaces`} ·{" "}
-								{organisation.member_count}{" "}
+								{organisation.workspace_count === 1
+									? t`workspace`
+									: t`workspaces`}{" "}
+								· {organisation.member_count}{" "}
 								{organisation.member_count === 1 ? t`person` : t`people`}
 							</Text>
 							{/* Matrix §5: organisation-level role set is Admin / Billing /
@@ -522,11 +539,7 @@ export const OrganisationRoute = () => {
 				    up the rollup + per-project table. People is the matrix.
 				    Workspaces and Projects tabs retired — projects fold into
 				    Usage; workspaces are reachable via the home selector. */}
-				<Tabs
-					value={view}
-					onChange={setView}
-					keepMounted={false}
-				>
+				<Tabs value={view} onChange={setView} keepMounted={false}>
 					<Tabs.List>
 						<Tabs.Tab value="overview">
 							<Trans>Overview</Trans>
@@ -553,141 +566,149 @@ export const OrganisationRoute = () => {
 					{isAdmin && (
 						<Tabs.Panel value="usage" pt="md">
 							<Stack gap="md">
-								{organisationId && <OrganisationUsageRollup orgId={organisationId} />}
+								{organisationId && (
+									<OrganisationUsageRollup orgId={organisationId} />
+								)}
 							</Stack>
 						</Tabs.Panel>
 					)}
 
 					<Tabs.Panel value="people" pt="md">
 						<Stack gap="md">
-				<MembersToolbar
-					search={search}
-					onSearchChange={setSearch}
-					filter={{
-						value: roleFilter,
-						onChange: (v) => setRoleFilter(v as RoleFilter),
-						options: [
-							{ value: "all", label: t`All` },
-							{ value: "admins", label: t`Admins` },
-							{ value: "members", label: t`Members` },
-							...(hasGuests
-								? [{ value: "guests", label: t`Guests` }]
-								: []),
-						],
-					}}
-					count={{ shown: filteredMembers.length, total: members.length }}
-					error={
-						membersError
-							? t`Couldn't load organisation members. Try refreshing, and if it keeps failing, contact support.`
-							: null
-					}
-				/>
+							<MembersToolbar
+								search={search}
+								onSearchChange={setSearch}
+								filter={{
+									onChange: (v) => setRoleFilter(v as RoleFilter),
+									options: [
+										{ label: t`All`, value: "all" },
+										{ label: t`Admins`, value: "admins" },
+										{ label: t`Members`, value: "members" },
+										...(hasGuests
+											? [{ label: t`Guests`, value: "guests" }]
+											: []),
+									],
+									value: roleFilter,
+								}}
+								count={{ shown: filteredMembers.length, total: members.length }}
+								error={
+									membersError
+										? t`Couldn't load organisation members. Try refreshing, and if it keeps failing, contact support.`
+										: null
+								}
+							/>
 
-				{/* Hero empty state — matches ProjectsHome pattern (audit §7).
+							{/* Hero empty state — matches ProjectsHome pattern (audit §7).
 				    A organisation with zero members is vanishingly rare in practice
 				    (the organisation creator is always the first admin), but the
 				    matrix rendered silently when it happened; surface that
 				    instead so the state isn't "app looks broken." */}
-				{!membersError && members.length === 0 && (
-					<Stack align="center" gap={6} py={48}>
-						<Title order={4} fw={400}>
-							<Trans>No one on the organisation yet.</Trans>
-						</Title>
-						<Text size="sm" c="dimmed" ta="center" maw={400}>
-							<Trans>
-								Organisation members appear here once they join a workspace.
-								Invites are sent from each workspace's Members tab.
-							</Trans>
-						</Text>
-					</Stack>
-				)}
+							{!membersError && members.length === 0 && (
+								<Stack align="center" gap={6} py={48}>
+									<Title order={4} fw={400}>
+										<Trans>No one on the organisation yet.</Trans>
+									</Title>
+									<Text size="sm" c="dimmed" ta="center" maw={400}>
+										<Trans>
+											Organisation members appear here once they join a
+											workspace. Invites are sent from each workspace's Members
+											tab.
+										</Trans>
+									</Text>
+								</Stack>
+							)}
 
-				{/* Members list: dotted invite card as the first row (same
+							{/* Members list: dotted invite card as the first row (same
 				    shape as any other member), then one OrganisationPersonCard per
 				    person. Externals render inline with a Guest badge so
 				    admins see everyone reaching their data in one list. */}
-				{!membersError && (
-					<Stack gap="xs">
-						{isAdmin && workspaces.length > 0 && (
-							<InviteMemberCard
-								label={<Trans>Invite someone</Trans>}
-								helperText={
-									<Trans>Pick one or more workspaces and we'll send the email.</Trans>
-								}
-								onClick={() => setInviteOpen(true)}
-							/>
-						)}
-						{members.length === 0 && (
-							<Stack align="center" gap={6} py={48}>
-								<Title order={4} fw={400}>
-									<Trans>No one on the organisation yet.</Trans>
-								</Title>
-								<Text size="sm" c="dimmed" ta="center" maw={400}>
-									<Trans>
-										Organisation members appear here once they join a workspace.
-									</Trans>
-								</Text>
-							</Stack>
-						)}
-						{filteredMembers.map((m) => (
-							<OrganisationPersonCard
-								key={m.user_id}
-								member={m}
-								workspaces={workspaces}
-								isAdmin={isAdmin}
-								isSelf={m.app_user_id === myAppUserId}
-								onOrganisationRoleChange={(next) =>
-									organisationRoleMutation.mutate({
-										userId: m.user_id,
-										role: next,
-									})
-								}
-								onWorkspaceRoleChange={(ws, membershipId, next) =>
-									workspaceRoleMutation.mutate({
-										workspaceId: ws,
-										membershipId,
-										role: next,
-									})
-								}
-								onAddToWorkspace={(ws, role) =>
-									addToWorkspaceMutation.mutate({
-										workspaceId: ws,
-										email: m.email,
-										role,
-									})
-								}
-								onRemove={() =>
-									removeOrganisationMemberMutation.mutate({ userId: m.user_id })
-								}
-							/>
-						))}
-						{members.length > 0 && filteredMembers.length === 0 && (
-							<Text size="sm" c="dimmed" ta="center" py="md">
-								<Trans>No one matches that filter.</Trans>
-							</Text>
-						)}
-					</Stack>
-				)}
-				{organisationId && (
-					<OrganisationInviteWizard
-						opened={inviteOpen}
-						onClose={() => setInviteOpen(false)}
-						workspaces={workspaces}
-						members={members}
-					/>
-				)}
+							{!membersError && (
+								<Stack gap="xs">
+									{isAdmin && workspaces.length > 0 && (
+										<InviteMemberCard
+											label={<Trans>Invite someone</Trans>}
+											helperText={
+												<Trans>
+													Pick one or more workspaces and we'll send the email.
+												</Trans>
+											}
+											onClick={() => setInviteOpen(true)}
+										/>
+									)}
+									{members.length === 0 && (
+										<Stack align="center" gap={6} py={48}>
+											<Title order={4} fw={400}>
+												<Trans>No one on the organisation yet.</Trans>
+											</Title>
+											<Text size="sm" c="dimmed" ta="center" maw={400}>
+												<Trans>
+													Organisation members appear here once they join a
+													workspace.
+												</Trans>
+											</Text>
+										</Stack>
+									)}
+									{filteredMembers.map((m) => (
+										<OrganisationPersonCard
+											key={m.user_id}
+											member={m}
+											workspaces={workspaces}
+											isAdmin={isAdmin}
+											isSelf={m.app_user_id === myAppUserId}
+											onOrganisationRoleChange={(next) =>
+												organisationRoleMutation.mutate({
+													role: next,
+													userId: m.user_id,
+												})
+											}
+											onWorkspaceRoleChange={(ws, membershipId, next) =>
+												workspaceRoleMutation.mutate({
+													membershipId,
+													role: next,
+													workspaceId: ws,
+												})
+											}
+											onAddToWorkspace={(ws, role) =>
+												addToWorkspaceMutation.mutate({
+													email: m.email,
+													role,
+													workspaceId: ws,
+												})
+											}
+											onRemove={() =>
+												removeOrganisationMemberMutation.mutate({
+													userId: m.user_id,
+												})
+											}
+										/>
+									))}
+									{members.length > 0 && filteredMembers.length === 0 && (
+										<Text size="sm" c="dimmed" ta="center" py="md">
+											<Trans>No one matches that filter.</Trans>
+										</Text>
+									)}
+								</Stack>
+							)}
+							{organisationId && (
+								<OrganisationInviteWizard
+									opened={inviteOpen}
+									onClose={() => setInviteOpen(false)}
+									workspaces={workspaces}
+									members={members}
+								/>
+							)}
 
-				<Text size="xs" c="dimmed">
-					<Trans>
-						Admins can reach every workspace in this organisation. Members and
-						guests only see the workspaces they've been given access to.
-					</Trans>
-				</Text>
+							<Text size="xs" c="dimmed">
+								<Trans>
+									Admins can reach every workspace in this organisation. Members
+									and guests only see the workspaces they've been given access
+									to.
+								</Trans>
+							</Text>
 						</Stack>
 					</Tabs.Panel>
 				</Tabs>
 			</Stack>
-
 		</Container>
 	);
 };
@@ -713,13 +734,17 @@ async function updateOrganisationFromOverview(
 	return res.json();
 }
 
-async function uploadOrganisationLogoInline(organisationId: string, file: Blob, filename = "logo.png") {
+async function uploadOrganisationLogoInline(
+	organisationId: string,
+	file: Blob,
+	filename = "logo.png",
+) {
 	const body = new FormData();
 	body.append("file", file, filename);
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}/logo`, {
-		method: "POST",
-		credentials: "include",
 		body,
+		credentials: "include",
+		method: "POST",
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
@@ -733,8 +758,8 @@ async function uploadOrganisationLogoInline(organisationId: string, file: Blob, 
 
 async function removeOrganisationLogoInline(organisationId: string) {
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}/logo`, {
-		method: "DELETE",
 		credentials: "include",
+		method: "DELETE",
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
@@ -762,7 +787,9 @@ function OverviewPanel({
 	const logoResetRef = useRef<() => void>(null);
 
 	const invalidate = () => {
-		queryClient.invalidateQueries({ queryKey: ["v2", "organisation", organisationId] });
+		queryClient.invalidateQueries({
+			queryKey: ["v2", "organisation", organisationId],
+		});
 		queryClient.invalidateQueries({ queryKey: ["v2", "orgs"] });
 		queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 	};
@@ -770,33 +797,37 @@ function OverviewPanel({
 	const saveMutation = useMutation({
 		mutationFn: (body: { name?: string }) =>
 			updateOrganisationFromOverview(organisationId, body),
-		onSuccess: () => {
-			invalidate();
-			toast.success(t`Saved`);
-		},
 		onError: (err: Error) => {
 			// Roll back local state on failure so what's shown matches
 			// what's actually stored.
 			setName(organisation.name);
 			toast.error(err.message);
 		},
+		onSuccess: () => {
+			invalidate();
+			toast.success(t`Saved`);
+		},
 	});
 	const uploadLogoMutation = useMutation({
 		mutationFn: (file: File) =>
-			uploadOrganisationLogoInline(organisationId, file, file.name || "logo.png"),
+			uploadOrganisationLogoInline(
+				organisationId,
+				file,
+				file.name || "logo.png",
+			),
+		onError: (err: Error) => toast.error(err.message),
 		onSuccess: () => {
 			invalidate();
 			toast.success(t`Logo updated`);
 		},
-		onError: (err: Error) => toast.error(err.message),
 	});
 	const removeLogoMutation = useMutation({
 		mutationFn: () => removeOrganisationLogoInline(organisationId),
+		onError: (err: Error) => toast.error(err.message),
 		onSuccess: () => {
 			invalidate();
 			toast.success(t`Logo removed`);
 		},
-		onError: (err: Error) => toast.error(err.message),
 	});
 	const currentOrganisationLogoUrl = resolveLogoUrl(organisation.logo_url);
 
@@ -838,7 +869,9 @@ function OverviewPanel({
 						<Trans>Logo</Trans>
 					</Text>
 					<Text size="xs" c="dimmed">
-						<Trans>Workspace-level logo overrides the organisation logo when set.</Trans>
+						<Trans>
+							Workspace-level logo overrides the organisation logo when set.
+						</Trans>
 					</Text>
 					{currentOrganisationLogoUrl ? (
 						<Group gap="sm" align="center">
@@ -912,8 +945,8 @@ function OverviewPanel({
 							<Anchor href="mailto:support@dembrane.com">
 								support@dembrane.com
 							</Anchor>{" "}
-							and we'll walk through it with you — all workspaces must
-							be empty and deleted first.
+							and we'll walk through it with you — all workspaces must be empty
+							and deleted first.
 						</Trans>
 					</Text>
 				</Stack>
@@ -921,7 +954,6 @@ function OverviewPanel({
 		</Stack>
 	);
 }
-
 
 export default OrganisationRoute;
 
@@ -976,13 +1008,18 @@ function OrganisationPersonCard({
 					? "admin"
 					: null;
 			return {
-				ws,
-				role,
 				isDirect: Boolean(directRole),
 				membershipId: membershipId ?? null,
+				role,
+				ws,
 			};
 		});
-	}, [workspaces, member.direct_workspace_roles, member.direct_workspace_membership_ids, member.role]);
+	}, [
+		workspaces,
+		member.direct_workspace_roles,
+		member.direct_workspace_membership_ids,
+		member.role,
+	]);
 
 	// Summary line: "Admin across all" when uniform, otherwise a short
 	// breakdown. Ignore workspaces they don't appear on at all.
@@ -1007,18 +1044,17 @@ function OrganisationPersonCard({
 	const handleOrganisationRoleChange = (next: string) => {
 		const person = member.display_name || member.email || t`this person`;
 		modals.openConfirmModal({
-			title: t`Change organisation role?`,
 			children: (
 				<Text size="sm">
 					<Trans>
 						Change {person}'s organisation role from{" "}
-						<em>{displayRole(member.role)}</em> to{" "}
-						<em>{displayRole(next)}</em>?
+						<em>{displayRole(member.role)}</em> to <em>{displayRole(next)}</em>?
 					</Trans>
 				</Text>
 			),
-			labels: { confirm: t`Change role`, cancel: t`Cancel` },
+			labels: { cancel: t`Cancel`, confirm: t`Change role` },
 			onConfirm: () => onOrganisationRoleChange(next),
+			title: t`Change organisation role?`,
 		});
 	};
 
@@ -1031,43 +1067,40 @@ function OrganisationPersonCard({
 	) => {
 		const person = member.display_name || member.email || t`this person`;
 		modals.openConfirmModal({
-			title: t`Change workspace role?`,
 			children: (
 				<Text size="sm">
 					<Trans>
 						Change {person}'s role on {wsName} from{" "}
-						<em>{displayRole(currentRole)}</em> to{" "}
-						<em>{displayRole(next)}</em>?
+						<em>{displayRole(currentRole)}</em> to <em>{displayRole(next)}</em>?
 					</Trans>
 				</Text>
 			),
-			labels: { confirm: t`Change role`, cancel: t`Cancel` },
+			labels: { cancel: t`Cancel`, confirm: t`Change role` },
 			onConfirm: () => onWorkspaceRoleChange(wsId, membershipId, next),
+			title: t`Change workspace role?`,
 		});
 	};
 
 	const handleRemove = () => {
 		const person = member.display_name || member.email || t`this person`;
 		modals.openConfirmModal({
-			title: t`Remove from organisation?`,
 			children: (
 				<Stack gap={8}>
 					<Text size="sm">
 						<Trans>
-							{person} will lose access to every workspace in this
-							organisation. Direct-only workspace invites stay intact.
+							{person} will lose access to every workspace in this organisation.
+							Direct-only workspace invites stay intact.
 						</Trans>
 					</Text>
 					<Text size="xs" c="dimmed">
-						<Trans>
-							You can re-invite them later from any workspace.
-						</Trans>
+						<Trans>You can re-invite them later from any workspace.</Trans>
 					</Text>
 				</Stack>
 			),
-			labels: { confirm: t`Remove`, cancel: t`Cancel` },
 			confirmProps: { color: "red" },
+			labels: { cancel: t`Cancel`, confirm: t`Remove` },
 			onConfirm: onRemove,
+			title: t`Remove from organisation?`,
 		});
 	};
 
@@ -1075,7 +1108,7 @@ function OrganisationPersonCard({
 		<Paper withBorder radius="md" p="md">
 			<Stack gap={open ? 12 : 0}>
 				<Group justify="space-between" wrap="nowrap" gap="md">
-					<Group gap="sm" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
+					<Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
 						<Avatar src={avatarUrl(member.avatar, 64)} size="md" radius="xl">
 							{memberInitials(member.display_name, member.email)}
 						</Avatar>
@@ -1083,12 +1116,11 @@ function OrganisationPersonCard({
 							<Text size="sm" fw={500} truncate>
 								{member.display_name || member.email || t`Unknown member`}
 							</Text>
-							{member.email &&
-								member.email !== member.display_name && (
-									<Text size="xs" c="dimmed" truncate>
-										{member.email}
-									</Text>
-								)}
+							{member.email && member.email !== member.display_name && (
+								<Text size="xs" c="dimmed" truncate>
+									{member.email}
+								</Text>
+							)}
 							<Text size="xs" c="dimmed" mt={4}>
 								{summary}
 							</Text>
@@ -1096,7 +1128,9 @@ function OrganisationPersonCard({
 					</Group>
 					<Group gap="xs" wrap="nowrap">
 						{member.is_external ? (
-							<Tooltip label={t`No organisation role. Access via workspace invites.`}>
+							<Tooltip
+								label={t`No organisation role. Access via workspace invites.`}
+							>
 								<Badge size="sm" variant="light" color="gray">
 									<Trans>Guest</Trans>
 								</Badge>
@@ -1140,10 +1174,7 @@ function OrganisationPersonCard({
 								>
 									<Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
 										{ws.is_private && (
-											<IconLock
-												size={12}
-												color="var(--mantine-color-gray-6)"
-											/>
+											<IconLock size={12} color="var(--mantine-color-gray-6)" />
 										)}
 										<Text size="sm" truncate>
 											{ws.name}
@@ -1197,7 +1228,6 @@ function OrganisationPersonCard({
 													? "guest"
 													: "member";
 												modals.openConfirmModal({
-													title: t`Add to ${ws.name}?`,
 													children: (
 														<Text size="sm">
 															<Trans>
@@ -1205,17 +1235,17 @@ function OrganisationPersonCard({
 																{member.display_name ||
 																	member.email ||
 																	t`this person`}{" "}
-																to {ws.name} as{" "}
-																<em>{displayRole(nextRole)}</em>?
+																to {ws.name} as <em>{displayRole(nextRole)}</em>
+																?
 															</Trans>
 														</Text>
 													),
 													labels: {
-														confirm: t`Add`,
 														cancel: t`Cancel`,
+														confirm: t`Add`,
 													},
-													onConfirm: () =>
-														onAddToWorkspace(ws.id, nextRole),
+													onConfirm: () => onAddToWorkspace(ws.id, nextRole),
+													title: t`Add to ${ws.name}?`,
 												});
 											}}
 										>

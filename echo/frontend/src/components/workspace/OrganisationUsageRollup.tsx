@@ -24,6 +24,7 @@ import {
 	IconArrowsSort,
 	IconChevronDown,
 	IconChevronRight,
+	IconInfoCircle,
 	IconLock,
 	IconSearch,
 	IconSortAscending,
@@ -32,19 +33,19 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	type ColumnDef,
-	type SortingState,
-	type VisibilityState,
 	flexRender,
 	getCoreRowModel,
 	getFilteredRowModel,
 	getSortedRowModel,
+	type SortingState,
 	useReactTable,
+	type VisibilityState,
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
-import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { API_BASE_URL } from "@/config";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
+import { API_BASE_URL } from "@/config";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { formatDurationFromHours } from "@/lib/time";
 
 const TIER_ORDER = [
@@ -58,11 +59,11 @@ const tierRank = (tier: string): number =>
 	TIER_ORDER.indexOf(tier as (typeof TIER_ORDER)[number]);
 
 const tierColors: Record<string, string> = {
-	pilot: "gray",
-	pioneer: "blue",
-	innovator: "violet",
 	changemaker: "grape",
 	guardian: "orange",
+	innovator: "violet",
+	pilot: "gray",
+	pioneer: "primary",
 };
 
 interface OrgUsageWorkspaceRow {
@@ -101,6 +102,13 @@ interface OrgUsage {
 	workspaces: OrgUsageWorkspaceRow[];
 	total_overage_forecast_eur: number | null;
 }
+
+// Active = any activity this period. Matches the admin surface. Hoisted
+// to module scope so it's a stable reference for the useMemo dep arrays
+// below — defining inline would trigger react-hooks/exhaustive-deps and
+// re-allocate on every render for no reason.
+const isActive = (w: OrgUsageWorkspaceRow): boolean =>
+	w.audio_hours > 0 || w.seat_count > 0;
 
 async function fetchOrgUsage(
 	orgId: string,
@@ -197,7 +205,11 @@ function SortableHeader({
 			) : sorted === "desc" ? (
 				<IconSortDescending size={12} color="var(--mantine-color-dark-6)" />
 			) : (
-				<IconArrowsSort size={12} color="var(--mantine-color-gray-4)" aria-hidden />
+				<IconArrowsSort
+					size={12}
+					color="var(--mantine-color-gray-4)"
+					aria-hidden
+				/>
 			)}
 		</Group>
 	);
@@ -223,15 +235,22 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 	const [monthOffset, setMonthOffset] = useState(0);
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [tierFilter, setTierFilter] = useState<string[]>([]);
-	const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
-		"all",
-	);
+	const [statusFilter, setStatusFilter] = useState<
+		"all" | "active" | "inactive"
+	>("all");
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
 	const { data, isLoading, dataUpdatedAt } = useQuery({
-		queryKey: ["v2", "org-usage", orgId, monthOffset],
 		queryFn: () => fetchOrgUsage(orgId, monthOffset),
+		queryKey: ["v2", "org-usage", orgId, monthOffset],
+		// Always refetch when the usage tab mounts. Org admins navigate
+		// here specifically to see live seat / hour state across every
+		// workspace; React Query's "fresh = skip" optimization made
+		// numbers go stale between page visits even after server-side
+		// invalidations had landed.
+		refetchOnMount: "always",
+		refetchOnWindowFocus: "always",
 		staleTime: 60_000,
 	});
 
@@ -254,10 +273,10 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 		() => (data ? buildAttention(data.workspaces) : []),
 		[data],
 	);
-
-	// Active = any activity this period. Matches the admin surface.
-	const isActive = (w: OrgUsageWorkspaceRow): boolean =>
-		w.audio_hours > 0 || w.seat_count > 0;
+	const overage = useMemo(
+		() => (data ? buildOverage(data.workspaces) : []),
+		[data],
+	);
 
 	const prefiltered = useMemo(() => {
 		const rows = data?.workspaces ?? [];
@@ -272,10 +291,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 	const columns = useMemo<ColumnDef<OrgUsageWorkspaceRow, unknown>[]>(
 		() => [
 			{
-				id: "expander",
-				header: "",
-				enableSorting: false,
-				enableHiding: false,
 				cell: ({ row }) => (
 					<ActionIcon
 						size="xs"
@@ -293,12 +308,13 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						)}
 					</ActionIcon>
 				),
+				enableHiding: false,
+				enableSorting: false,
+				header: "",
+				id: "expander",
 			},
 			{
-				id: "workspace_name",
 				accessorKey: "name",
-				header: t`Workspace`,
-				enableHiding: false,
 				cell: ({ row }) => (
 					<Group gap={6} wrap="nowrap">
 						{(row.original.at_cap || row.original.seat_cap_hit) && (
@@ -340,12 +356,12 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						</UnstyledButton>
 					</Group>
 				),
+				enableHiding: false,
+				header: t`Workspace`,
+				id: "workspace_name",
 			},
 			{
-				id: "tier",
 				accessorFn: (r) => r.tier,
-				sortingFn: (a, b) => tierRank(a.original.tier) - tierRank(b.original.tier),
-				header: t`Tier`,
 				cell: ({ row }) => (
 					<Badge
 						size="xs"
@@ -356,12 +372,13 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						{row.original.tier}
 					</Badge>
 				),
+				header: t`Tier`,
+				id: "tier",
+				sortingFn: (a, b) =>
+					tierRank(a.original.tier) - tierRank(b.original.tier),
 			},
 			{
-				id: "audio_hours",
 				accessorKey: "audio_hours",
-				header: t`Hours`,
-				meta: { align: "right" },
 				cell: ({ row }) => (
 					<UsageBar
 						used={row.original.audio_hours}
@@ -370,12 +387,12 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						block={row.original.at_cap}
 					/>
 				),
+				header: t`Hours`,
+				id: "audio_hours",
+				meta: { align: "right" },
 			},
 			{
-				id: "hours_over",
 				accessorKey: "hours_over",
-				header: t`Over hrs`,
-				meta: { align: "right" },
 				cell: ({ row }) => {
 					const v = row.original.hours_over;
 					return (
@@ -384,12 +401,12 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						</Text>
 					);
 				},
+				header: t`Over hrs`,
+				id: "hours_over",
+				meta: { align: "right" },
 			},
 			{
-				id: "seat_count",
 				accessorKey: "seat_count",
-				header: t`Seats`,
-				meta: { align: "right" },
 				cell: ({ row }) => (
 					<UsageBar
 						used={row.original.seat_count}
@@ -397,15 +414,15 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						block={row.original.seat_cap_hit}
 					/>
 				),
+				header: t`Seats`,
+				id: "seat_count",
+				meta: { align: "right" },
 			},
 			{
-				id: "seats_over",
 				accessorFn: (r) => {
 					if (r.seats_included == null) return 0;
 					return Math.max(0, r.seat_count - r.seats_included);
 				},
-				header: t`Over seats`,
-				meta: { align: "right" },
 				cell: ({ row }) => {
 					const cap = row.original.seats_included;
 					const over =
@@ -416,15 +433,12 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						</Text>
 					);
 				},
+				header: t`Over seats`,
+				id: "seats_over",
+				meta: { align: "right" },
 			},
 			{
-				id: "guest_count",
 				accessorKey: "guest_count",
-				// Matrix §1: guest caps live per-tier. Surfacing them here
-				// lets organisation admins see when their workspaces are close to
-				// hitting the external-collaborator ceiling.
-				header: t`Guests`,
-				meta: { align: "right" },
 				cell: ({ row }) => (
 					<UsageBar
 						used={row.original.guest_count}
@@ -432,11 +446,15 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						block={row.original.guest_cap_hit}
 					/>
 				),
+				// Matrix §1: guest caps live per-tier. Surfacing them here
+				// lets organisation admins see when their workspaces are close to
+				// hitting the external-collaborator ceiling.
+				header: t`Guests`,
+				id: "guest_count",
+				meta: { align: "right" },
 			},
 			{
-				id: "is_active",
 				accessorFn: (r) => (isActive(r) ? "active" : "inactive"),
-				header: t`Status`,
 				cell: ({ row }) =>
 					isActive(row.original) ? (
 						<Badge size="xs" color="green" variant="light">
@@ -447,6 +465,8 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 							<Trans>Inactive</Trans>
 						</Badge>
 					),
+				header: t`Status`,
+				id: "is_active",
 			},
 		],
 		[expanded, navigate],
@@ -477,16 +497,16 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 	const table = useReactTable<OrgUsageWorkspaceRow>({
 		columns,
 		data: initialSorted,
-		state: { sorting, globalFilter, columnVisibility },
-		onSortingChange: setSorting,
-		onGlobalFilterChange: setGlobalFilter,
+		getCoreRowModel: getCoreRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
+		getSortedRowModel: getSortedRowModel(),
 		onColumnVisibilityChange: (updater) =>
 			setColumnVisibility((prev) =>
 				typeof updater === "function" ? updater(prev) : updater,
 			),
-		getCoreRowModel: getCoreRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
+		onGlobalFilterChange: setGlobalFilter,
+		onSortingChange: setSorting,
+		state: { columnVisibility, globalFilter, sorting },
 	});
 
 	const rows = table.getRowModel().rows;
@@ -507,8 +527,8 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 	if (isLoading || !data) return null;
 
 	const tierOptions = TIER_ORDER.map((x) => ({
-		value: x,
 		label: x.charAt(0).toUpperCase() + x.slice(1),
+		value: x,
 	}));
 	const visibilityMenuItems = columns
 		.filter((c) => c.id && !["expander", "workspace_name"].includes(c.id))
@@ -534,6 +554,14 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 					/>
 				)}
 
+				{overage.length > 0 && (
+					<OverageThisCyclePanel
+						items={overage}
+						totalForecastEur={data.total_overage_forecast_eur ?? null}
+						onOpen={(id) => navigate(`/w/${id}/settings/billing`)}
+					/>
+				)}
+
 				<Text size="sm" c="dimmed">
 					<Trans>
 						{data.workspace_count} workspaces · {data.total_seat_count} seats ·{" "}
@@ -549,7 +577,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						value={globalFilter}
 						onChange={(e) => setGlobalFilter(e.currentTarget.value)}
 						size="xs"
-						style={{ flex: 1, minWidth: 200, maxWidth: 280 }}
+						style={{ flex: 1, maxWidth: 280, minWidth: 200 }}
 					/>
 					<MultiSelect
 						data={tierOptions}
@@ -564,7 +592,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						<Button
 							size="xs"
 							variant={statusFilter === "all" ? "filled" : "default"}
-							color={statusFilter === "all" ? "blue" : "gray"}
+							color={statusFilter === "all" ? "primary" : "gray"}
 							onClick={() => setStatusFilter("all")}
 						>
 							<Trans>All</Trans>
@@ -633,25 +661,23 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 											const canSort = h.column.getCanSort();
 											const sorted = h.column.getIsSorted();
 											const align =
-												(h.column.columnDef.meta as
-													| { align?: "left" | "right" }
-													| undefined)?.align ?? "left";
+												(
+													h.column.columnDef.meta as
+														| { align?: "left" | "right" }
+														| undefined
+												)?.align ?? "left";
 											return (
-												<Table.Th
-													key={h.id}
-													ta={align}
-													style={{ padding: 0 }}
-												>
+												<Table.Th key={h.id} ta={align} style={{ padding: 0 }}>
 													{canSort ? (
 														<UnstyledButton
 															onClick={h.column.getToggleSortingHandler()}
 															title={t`Click to sort`}
 															style={{
-																width: "100%",
+																cursor: "pointer",
 																display: "block",
 																padding: "8px 12px",
-																cursor: "pointer",
 																transition: "background 0.1s ease",
+																width: "100%",
 															}}
 															onMouseEnter={(e) => {
 																e.currentTarget.style.background =
@@ -681,7 +707,10 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 																tt="uppercase"
 																lts={0.3}
 															>
-																{flexRender(h.column.columnDef.header, h.getContext())}
+																{flexRender(
+																	h.column.columnDef.header,
+																	h.getContext(),
+																)}
 															</Text>
 														</Box>
 													)}
@@ -716,7 +745,10 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 											// column. With workspace_name always visible + pinned
 											// via enableHiding=false, this lands consistently.
 											const isFirstData = i === 1 && key === "workspace_name";
-											if (key === "expander" || (i === 0 && key !== "workspace_name")) {
+											if (
+												key === "expander" ||
+												(i === 0 && key !== "workspace_name")
+											) {
 												return <Table.Td key={col.id} />;
 											}
 											if (isFirstData) {
@@ -732,6 +764,11 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 												audio_hours: (
 													<Text size="xs" fw={600} ta="right">
 														{formatDurationFromHours(totalsHours)}
+													</Text>
+												),
+												guest_count: (
+													<Text size="xs" fw={600} ta="right">
+														{totalsGuests}
 													</Text>
 												),
 												hours_over: (
@@ -761,14 +798,11 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 														{totalsSeatsOver}
 													</Text>
 												),
-												guest_count: (
-													<Text size="xs" fw={600} ta="right">
-														{totalsGuests}
-													</Text>
-												),
 											};
 											return (
-												<Table.Td key={col.id}>{footerById[key] ?? null}</Table.Td>
+												<Table.Td key={col.id}>
+													{footerById[key] ?? null}
+												</Table.Td>
 											);
 										})}
 									</Table.Tr>
@@ -822,34 +856,47 @@ function WorkspaceRow({
 	expanded,
 	monthOffset,
 }: {
-	row: { id: string; original: OrgUsageWorkspaceRow; getVisibleCells: () => unknown[] };
+	row: {
+		id: string;
+		original: OrgUsageWorkspaceRow;
+		getVisibleCells: () => unknown[];
+	};
 	leafCount: number;
 	expanded: boolean;
 	monthOffset: number;
 }) {
 	const { data: wsUsage, isLoading } = useQuery({
-		queryKey: ["v2", "workspace-usage", row.original.id, monthOffset],
-		queryFn: () => fetchWorkspaceUsage(row.original.id, monthOffset),
 		enabled: expanded,
+		queryFn: () => fetchWorkspaceUsage(row.original.id, monthOffset),
+		queryKey: ["v2", "workspace-usage", row.original.id, monthOffset],
+		// Same rationale as the parent rollup: collapse + re-expand should
+		// give the user the latest workspace breakdown, not the cached one.
+		refetchOnMount: "always",
+		refetchOnWindowFocus: "always",
 		staleTime: 60_000,
 	});
 	const projects = wsUsage?.projects ?? [];
 
-	const cells = (row as unknown as {
-		getVisibleCells: () => Array<{
-			id: string;
-			column: { columnDef: ColumnDef<OrgUsageWorkspaceRow, unknown> };
-			getContext: () => unknown;
-		}>;
-	}).getVisibleCells();
+	const cells = (
+		row as unknown as {
+			getVisibleCells: () => Array<{
+				id: string;
+				column: { columnDef: ColumnDef<OrgUsageWorkspaceRow, unknown> };
+				getContext: () => unknown;
+			}>;
+		}
+	).getVisibleCells();
 
 	return (
 		<>
 			<Table.Tr>
 				{cells.map((cell) => {
 					const align =
-						(cell.column.columnDef.meta as { align?: "left" | "right" } | undefined)
-							?.align ?? "left";
+						(
+							cell.column.columnDef.meta as
+								| { align?: "left" | "right" }
+								| undefined
+						)?.align ?? "left";
 					const rendered = flexRender(
 						cell.column.columnDef.cell,
 						cell.getContext() as never,
@@ -909,7 +956,7 @@ function WorkspaceRow({
 	);
 }
 
-// ── Needs attention panel ─────────────────────────────────────────────
+// ── Needs attention + Overage panels ──────────────────────────────────
 
 interface AttentionItem {
 	id: string;
@@ -925,6 +972,23 @@ interface AttentionItem {
 	workspaceId: string;
 }
 
+interface OverageItem {
+	id: string;
+	key: string;
+	reason: "seats_overage" | "hours_overage";
+	message: string;
+	subline: string | null;
+	workspaceId: string;
+}
+
+// Matrix v1.1 §8: Pilot is the only tier that hard-blocks. Pioneer+ allow
+// overage with monthly billing. Hard-block tiers go in "Needs attention",
+// overage tiers go in "Overage this cycle" — different urgency, different
+// treatment.
+function isHardBlockTier(tier: string): boolean {
+	return tier === "pilot";
+}
+
 function formatSeatFraction(
 	seat_count: number,
 	seats_included: number | null,
@@ -936,64 +1000,127 @@ function formatHourFraction(hours: number, cap: number | null): string {
 	return cap != null ? `${hours.toFixed(1)}/${cap}h` : `${hours.toFixed(1)}h`;
 }
 
-function buildAttention(
-	workspaces: OrgUsageWorkspaceRow[],
-): AttentionItem[] {
+function formatEur(value: number | null | undefined): string {
+	if (value == null) return "—";
+	if (value === 0) return "€0";
+	return `€${Math.round(value)}`;
+}
+
+// Items that genuinely need admin action: hard-block tiers at cap,
+// approaching-cap on hard-block tiers, recently-downgraded workspaces.
+// Pioneer+ over-cap rows are intentionally excluded — they accrue
+// overage but nothing is broken; those rows live in OverageItem below.
+function buildAttention(workspaces: OrgUsageWorkspaceRow[]): AttentionItem[] {
 	const out: AttentionItem[] = [];
 	const SEVEN_DAYS_MS = 7 * 24 * 3600 * 1000;
 	const now = Date.now();
 
 	for (const ws of workspaces) {
-		if (ws.seat_cap_hit) {
+		const hardBlock = isHardBlockTier(ws.tier);
+
+		if (ws.seat_cap_hit && hardBlock) {
 			out.push({
+				actionLabel: "Upgrade",
 				id: ws.id,
 				key: `${ws.id}:seats_full`,
+				message: `${ws.name} at seat cap (${formatSeatFraction(ws.seat_count, ws.seats_included)}) on ${ws.tier}. Invites blocked.`,
 				reason: "seats_full",
-				message: `${ws.name} at seat cap (${formatSeatFraction(ws.seat_count, ws.seats_included)})`,
-				actionLabel: "Upgrade",
 				workspaceId: ws.id,
 			});
-		} else if (ws.approaching_seat_cap) {
+		} else if (ws.approaching_seat_cap && hardBlock) {
+			// Approaching cap is only actionable on hard-block tiers; on
+			// Pioneer+ "near included" doesn't trigger anything bad so it
+			// shouldn't read as a warning.
 			out.push({
+				actionLabel: "Review",
 				id: ws.id,
 				key: `${ws.id}:seats_near`,
+				message: `${ws.name} near seat cap (${formatSeatFraction(ws.seat_count, ws.seats_included)}) on ${ws.tier}`,
 				reason: "seats_near",
-				message: `${ws.name} near seat cap (${formatSeatFraction(ws.seat_count, ws.seats_included)})`,
-				actionLabel: "Review",
 				workspaceId: ws.id,
 			});
 		}
+
+		// at_cap on hours is only set server-side when the tier
+		// hard-blocks hours (Pilot per matrix §8). It's always actionable.
 		if (ws.at_cap) {
 			out.push({
+				actionLabel: "Upgrade",
 				id: ws.id,
 				key: `${ws.id}:hours_full`,
+				message: `${ws.name} at ${ws.tier} hour limit (${formatHourFraction(ws.audio_hours, ws.hours_included)}). Host-side tools paused.`,
 				reason: "hours_full",
-				message: `${ws.name} at ${ws.tier} hour limit (${formatHourFraction(ws.audio_hours, ws.hours_included)})`,
-				actionLabel: "Upgrade",
 				workspaceId: ws.id,
 			});
-		} else if (ws.approaching_cap) {
+		} else if (ws.approaching_cap && hardBlock) {
 			out.push({
+				actionLabel: "Review",
 				id: ws.id,
 				key: `${ws.id}:hours_near`,
-				reason: "hours_near",
 				message: `${ws.name} near ${ws.tier} hour limit (${formatHourFraction(ws.audio_hours, ws.hours_included)})`,
-				actionLabel: "Review",
+				reason: "hours_near",
 				workspaceId: ws.id,
 			});
 		}
+
 		if (ws.downgraded_at) {
 			const dtMs = new Date(ws.downgraded_at).getTime();
 			if (!Number.isNaN(dtMs) && now - dtMs < SEVEN_DAYS_MS) {
 				out.push({
+					actionLabel: "Review",
 					id: ws.id,
 					key: `${ws.id}:recently_downgraded`,
-					reason: "recently_downgraded",
 					message: `${ws.name} was downgraded recently, verify limits`,
-					actionLabel: "Review",
+					reason: "recently_downgraded",
 					workspaceId: ws.id,
 				});
 			}
+		}
+	}
+	return out;
+}
+
+// Pioneer+ rows that are over included seats / hours. Informational, not
+// action-required — admin chose this tier knowing overage applies.
+// Subline carries the per-workspace forecast in € when available.
+function buildOverage(workspaces: OrgUsageWorkspaceRow[]): OverageItem[] {
+	const out: OverageItem[] = [];
+	for (const ws of workspaces) {
+		const hardBlock = isHardBlockTier(ws.tier);
+		if (hardBlock) continue;
+
+		// Seat overage: count exceeds included on a non-hard-block tier.
+		if (ws.seat_cap_hit && ws.seats_included != null) {
+			const over = Math.max(0, ws.seat_count - ws.seats_included);
+			out.push({
+				id: ws.id,
+				key: `${ws.id}:seats_overage`,
+				message: `${ws.name} is ${over} seat${over === 1 ? "" : "s"} over included (${formatSeatFraction(ws.seat_count, ws.seats_included)}) on ${ws.tier}`,
+				reason: "seats_overage",
+				subline:
+					ws.overage_forecast_eur != null && ws.overage_forecast_eur > 0
+						? `Forecasted overage this cycle: ${formatEur(ws.overage_forecast_eur)}`
+						: "Overage applies. Check billing for the per-seat rate.",
+				workspaceId: ws.id,
+			});
+		}
+
+		// Hours overage on Pioneer+: no hard block, just billed. We don't
+		// have a server-side `hours_cap_hit`, so use the audio_hours vs
+		// hours_included comparison.
+		if (ws.hours_included != null && ws.audio_hours > ws.hours_included) {
+			const over = ws.audio_hours - ws.hours_included;
+			out.push({
+				id: ws.id,
+				key: `${ws.id}:hours_overage`,
+				message: `${ws.name} is ${over.toFixed(1)}h over included (${formatHourFraction(ws.audio_hours, ws.hours_included)}) on ${ws.tier}`,
+				reason: "hours_overage",
+				subline:
+					ws.overage_forecast_eur != null && ws.overage_forecast_eur > 0
+						? `Forecasted overage this cycle: ${formatEur(ws.overage_forecast_eur)}`
+						: null,
+				workspaceId: ws.id,
+			});
 		}
 	}
 	return out;
@@ -1037,13 +1164,91 @@ function NeedsAttentionPanel({
 							<Text size="sm" style={{ flex: 1 }} lineClamp={1}>
 								{item.message}
 							</Text>
+							<Button onClick={() => onOpen(item.workspaceId)}>
+								{item.actionLabel}
+							</Button>
+						</Group>
+					))}
+				</Stack>
+				{hidden > 0 && !showAll && (
+					<UnstyledButton onClick={() => setShowAll(true)}>
+						<Text size="xs" c="dimmed">
+							<Trans>Show {hidden} more</Trans>
+						</Text>
+					</UnstyledButton>
+				)}
+			</Stack>
+		</Paper>
+	);
+}
+
+// ── Overage this cycle panel ───────────────────────────────────────────
+//
+// Pioneer+ workspaces over their included caps. Distinct from the
+// "Needs attention" panel because matrix §8 says these tiers bill
+// overage and keep going — there's nothing to "fix", just to be aware
+// of. Neutral primary styling, info icon, "View billing" CTA (no upgrade
+// nag — the admin already knowingly accepted the overage rate when
+// they picked the tier).
+
+function OverageThisCyclePanel({
+	items,
+	totalForecastEur,
+	onOpen,
+}: {
+	items: OverageItem[];
+	totalForecastEur: number | null;
+	onOpen: (workspaceId: string) => void;
+}) {
+	const [showAll, setShowAll] = useState(false);
+	const visible = showAll ? items : items.slice(0, MAX_ATTENTION_VISIBLE);
+	const hidden = items.length - visible.length;
+
+	return (
+		<Paper
+			withBorder
+			p="sm"
+			radius="sm"
+			style={{ borderColor: "var(--mantine-color-primary-3)" }}
+		>
+			<Stack gap={6}>
+				<Group gap="xs" wrap="nowrap" justify="space-between">
+					<Group gap="xs" wrap="nowrap">
+						<IconInfoCircle size={14} color="var(--mantine-color-primary-7)" />
+						<Text size="xs" fw={500} tt="uppercase" lts={0.5}>
+							<Trans>Overage this cycle</Trans>
+						</Text>
+					</Group>
+					{totalForecastEur != null && totalForecastEur > 0 && (
+						<Text size="xs" c="dimmed">
+							<Trans>Forecast: ~{formatEur(totalForecastEur)}</Trans>
+						</Text>
+					)}
+				</Group>
+				<Stack gap={4}>
+					{visible.map((item) => (
+						<Group
+							key={item.key}
+							gap="xs"
+							wrap="nowrap"
+							justify="space-between"
+							align="flex-start"
+						>
+							<Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+								<Text size="sm" lineClamp={1}>
+									{item.message}
+								</Text>
+								{item.subline && (
+									<Text size="xs" c="dimmed">
+										{item.subline}
+									</Text>
+								)}
+							</Stack>
 							<Button
-								size="compact-xs"
-								variant="light"
-								color="gray"
+								variant="outline"
 								onClick={() => onOpen(item.workspaceId)}
 							>
-								{item.actionLabel}
+								<Trans>View billing</Trans>
 							</Button>
 						</Group>
 					))}

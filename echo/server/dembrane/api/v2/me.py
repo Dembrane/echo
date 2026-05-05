@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
 from dembrane.app_user import resolve_app_user, get_app_user_or_raise, get_directus_user_profile
+from dembrane.seat_capacity import assert_can_add_guest, assert_can_add_member
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.invites import compute_invite_hash
 from dembrane.api.v2.schemas import MeResponse, OrgSummary
@@ -18,7 +19,15 @@ router = APIRouter()
 logger = getLogger("api.v2.me")
 
 _accept_rate_limiter = create_user_rate_limiter(
-    name="invite_accept", capacity=30, window_seconds=3600
+    # 60 attempts/hour. Was 30, raised after a tester locked themselves
+    # out clicking "Try again" while waiting for an admin to free a seat
+    # — each cap-blocked retry burned a slot. accept_my_invite now runs
+    # the rate limiter AFTER the cap check so 402s don't count, but the
+    # accept-by-hash path still increments on the brute-force gate, so
+    # 60 keeps that path generous for legit retries.
+    name="invite_accept",
+    capacity=60,
+    window_seconds=3600,
 )
 
 _ROLE_LEVEL = {"member": 1, "billing": 2, "admin": 3, "owner": 4}
@@ -295,7 +304,6 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
 
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
-    await _accept_rate_limiter.check(app_user_id)
     email = (app_user.get("email") or "").lower()
 
     invite = await async_directus.get_item("workspace_invite", invite_id)
@@ -306,6 +314,12 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
     if invite.get("accepted_at"):
         raise HTTPException(status_code=400, detail="Invite already accepted")
 
+    # Hoist inviter_id once so every notification block below can reference
+    # it without depending on the assignment landing inside a conditional
+    # earlier in the function. Cheap insurance against a future refactor
+    # that would otherwise NameError on the WORKSPACE_GUEST_ADDED branch.
+    inviter_id = invite.get("invited_by")
+
     now_iso = datetime.now(timezone.utc).isoformat()
     if invite.get("expires_at") and invite["expires_at"] < now_iso:
         raise HTTPException(status_code=400, detail="Invite has expired")
@@ -314,6 +328,22 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
     ws = await async_directus.get_item("workspace", invite["workspace_id"])
     if not ws or ws.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Workspace no longer exists")
+
+    # Race-protection: cap may have shrunk between invite-send and accept
+    # (e.g. tier downgrade mid-flight, another user accepted in parallel).
+    # Don't mark accepted_at on 402 — admin can free a seat and the
+    # invitee can retry.
+    if invite.get("include_org_membership"):
+        await assert_can_add_member(ws, audience="invitee")
+    else:
+        await assert_can_add_guest(ws, audience="invitee")
+
+    # Rate-limit AFTER the cap check so a user retrying while waiting for
+    # an admin to free a seat doesn't burn through their quota on attempts
+    # that never had a chance to succeed. The brute-force concern this
+    # limiter exists for (guessing invite_ids) still applies because the
+    # invalid-invite checks above run first.
+    await _accept_rate_limiter.check(app_user_id)
 
     # Add org membership if requested. Track whether we freshly created
     # the row so the ORGANISATION_MEMBER_ADDED notification only fires once per
@@ -372,6 +402,9 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
                 "is_external": not invite.get("include_org_membership", False),
             },
         )
+        from dembrane.cache_utils import invalidate_workspace_and_org_usage
+
+        await invalidate_workspace_and_org_usage(invite["workspace_id"], ws.get("org_id"))
 
     # Mark invite as accepted
     await async_directus.update_item(
@@ -382,8 +415,9 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
         },
     )
 
-    # Notify the inviter that their invite was accepted.
-    inviter_id = invite.get("invited_by")
+    # Notify the inviter that their invite was accepted. inviter_id is
+    # already hoisted at the top of the function (defensive — see comment
+    # there) so we just gate the emit, not the assignment.
     if inviter_id and inviter_id != app_user_id:
         from dembrane.notifications import emit
 
@@ -403,8 +437,8 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
     # organisation. Announces the new member to organisation admins.
     if newly_joined_organisation and ws.get("org_id"):
         from dembrane.notifications import (
-            audience_organisation_admins,
             emit_to_audience,
+            audience_organisation_admins,
         )
 
         organisation_admin_ids = await audience_organisation_admins(ws["org_id"])
@@ -419,6 +453,34 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
             message="They're now a organisation member.",
             action="NAVIGATE_ORGANISATION_SETTINGS",
             ref_org_id=ws["org_id"],
+        )
+
+    # WORKSPACE_GUEST_ADDED → workspace admins when a guest accepts.
+    # Guests don't fire ORGANISATION_MEMBER_ADDED, so without this admins
+    # never hear about them joining. Excludes the inviter (already
+    # notified by INVITE_ACCEPTED) and the invitee.
+    if not invite.get("include_org_membership"):
+        from dembrane.notifications import (
+            emit_to_audience,
+            audience_workspace_admins,
+        )
+
+        admin_ids = await audience_workspace_admins(invite["workspace_id"])
+        admin_ids = [a for a in admin_ids if a != app_user_id and a != inviter_id]
+        guest_name = app_user.get("display_name") or app_user.get("email") or "A guest"
+        ws_name = ws.get("name") or "your workspace"
+        await emit_to_audience(
+            admin_ids,
+            actor_user_id=app_user_id,
+            event_code="WORKSPACE_GUEST_ADDED",
+            title=f"{guest_name} joined {ws_name} as a guest",
+            message=(
+                f"{app_user.get('email') or 'A guest'} now has guest access. "
+                "Guests count against your tier's guest cap."
+            ),
+            action="NAVIGATE_WORKSPACE_SETTINGS",
+            ref_workspace_id=invite["workspace_id"],
+            ref_org_id=ws.get("org_id"),
         )
 
     return {"status": "success", "workspace_id": invite["workspace_id"]}
@@ -481,12 +543,12 @@ async def accept_invite_by_hash(
       - HMAC of invite_id (unforgeable without server secret)
       - Honeypot: if URL-claimed role > actual role, return 418
     """
-    from dembrane.utils import generate_uuid
     import hmac as _hmac
+
+    from dembrane.utils import generate_uuid
 
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
-    await _accept_rate_limiter.check(app_user_id)
     my_email = (app_user.get("email") or "").lower()
     if not my_email:
         raise HTTPException(status_code=400, detail="User has no email")
@@ -582,6 +644,15 @@ async def accept_invite_by_hash(
                     f"for user={app_user_id} invite={inv['id']} ws={inv['workspace_id']}"
                 )
 
+                # Race-protection on the heal write. accepted_at is already
+                # set in this branch so we can't unmark — just refuse the
+                # heal and surface the friendly error so the user sees an
+                # upgrade prompt instead of a half-broken join.
+                if include_org:
+                    await assert_can_add_member(ws, audience="invitee")
+                else:
+                    await assert_can_add_guest(ws, audience="invitee")
+
                 if include_org and ws.get("org_id"):
                     existing_org_mem = await async_directus.get_items(
                         "org_membership",
@@ -618,6 +689,9 @@ async def accept_invite_by_hash(
                         "is_external": not include_org,
                     },
                 )
+                from dembrane.cache_utils import invalidate_workspace_and_org_usage
+
+                await invalidate_workspace_and_org_usage(inv["workspace_id"], ws.get("org_id"))
 
                 # accepted_at is already set (that's why we're in the
                 # fallback); no need to touch it again.
@@ -652,6 +726,21 @@ async def accept_invite_by_hash(
     ws = await async_directus.get_item("workspace", target_invite["workspace_id"])
     if not ws or ws.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Workspace no longer exists")
+
+    # Race-protection: cap may have shrunk between invite-send and accept.
+    # On 402 we return without touching accepted_at, so admin can free a
+    # seat and the invitee can retry the same link.
+    if target_invite.get("include_org_membership"):
+        await assert_can_add_member(ws, audience="invitee")
+    else:
+        await assert_can_add_guest(ws, audience="invitee")
+
+    # Rate-limit AFTER all the validation gates above (HMAC match, honeypot,
+    # workspace exists, cap check). Brute-force protection still works
+    # because guess attempts get a 404 at the HMAC compare stage and never
+    # reach this counter; legit invitees retrying past a 402 cap-block
+    # don't burn quota waiting for an admin to free a seat.
+    await _accept_rate_limiter.check(app_user_id)
 
     # Add to org if requested
     if target_invite.get("include_org_membership") and ws.get("org_id"):
@@ -705,6 +794,9 @@ async def accept_invite_by_hash(
                 "is_external": not target_invite.get("include_org_membership", False),
             },
         )
+        from dembrane.cache_utils import invalidate_workspace_and_org_usage
+
+        await invalidate_workspace_and_org_usage(target_invite["workspace_id"], ws.get("org_id"))
 
     await async_directus.update_item(
         "workspace_invite",
@@ -742,8 +834,8 @@ async def accept_invite_by_hash(
         and not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0)
     ):
         from dembrane.notifications import (
-            audience_organisation_admins,
             emit_to_audience,
+            audience_organisation_admins,
         )
 
         organisation_admin_ids = await audience_organisation_admins(ws["org_id"])
@@ -758,6 +850,32 @@ async def accept_invite_by_hash(
             message="They're now a organisation member.",
             action="NAVIGATE_ORGANISATION_SETTINGS",
             ref_org_id=ws["org_id"],
+        )
+
+    # WORKSPACE_GUEST_ADDED → workspace admins when a guest accepts via
+    # the email-link path. Mirror of the same notification on the
+    # accept-by-id path. Excludes the inviter and the invitee themselves.
+    if not target_invite.get("include_org_membership"):
+        from dembrane.notifications import (
+            emit_to_audience,
+            audience_workspace_admins,
+        )
+
+        admin_ids = await audience_workspace_admins(target_invite["workspace_id"])
+        admin_ids = [a for a in admin_ids if a != app_user_id and a != inviter_id]
+        guest_name = app_user.get("display_name") or my_email or "A guest"
+        ws_name = ws.get("name") or "your workspace"
+        await emit_to_audience(
+            admin_ids,
+            actor_user_id=app_user_id,
+            event_code="WORKSPACE_GUEST_ADDED",
+            title=f"{guest_name} joined {ws_name} as a guest",
+            message=(
+                f"{my_email} now has guest access. Guests count against your tier's guest cap."
+            ),
+            action="NAVIGATE_WORKSPACE_SETTINGS",
+            ref_workspace_id=target_invite["workspace_id"],
+            ref_org_id=ws.get("org_id"),
         )
 
     return {

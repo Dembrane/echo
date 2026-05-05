@@ -18,8 +18,8 @@ Caller conventions:
 from __future__ import annotations
 
 import json
-from logging import getLogger
 from typing import Any, Optional
+from logging import getLogger
 
 from dembrane.redis_async import get_redis_client
 
@@ -86,3 +86,17 @@ async def invalidate_org_usage(org_id: str) -> None:
     invalidate_workspace_usage on tier changes since the aggregate
     depends on per-workspace caps."""
     await cache_delete(org_usage_cache_key(org_id))
+
+
+async def invalidate_workspace_and_org_usage(workspace_id: str, org_id: Optional[str]) -> None:
+    """Bust both the workspace-scope and org-scope usage caches.
+
+    Call from any path that mutates `workspace_membership` (invite accept,
+    role change, remove, access-request approve). Org-scope cache aggregates
+    over every workspace in the org, so a single seat / guest change must
+    invalidate both layers — otherwise org-level guest counts go stale for
+    up to USAGE_TTL_SECONDS after the workspace-level count refreshes.
+    """
+    await invalidate_workspace_usage(workspace_id)
+    if org_id:
+        await invalidate_org_usage(org_id)

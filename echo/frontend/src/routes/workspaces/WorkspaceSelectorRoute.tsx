@@ -23,14 +23,13 @@ import { IconPlus, IconSettings } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
-import { TierBadge } from "@/components/workspace/TierBadge";
+import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { displayRole, roleColor } from "@/lib/roles";
-import { logoUrl as resolveLogoUrl } from "@/lib/avatar";
-import { formatDurationFromHours } from "@/lib/time";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
+import { logoUrl as resolveLogoUrl } from "@/lib/avatar";
+import { displayRole } from "@/lib/roles";
+import { formatDurationFromHours } from "@/lib/time";
 
 interface MemberPreview {
 	display_name: string;
@@ -82,22 +81,34 @@ async function fetchWorkspaces(): Promise<{
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		credentials: "include",
 	});
-	if (!res.ok) return { workspaces: [], organisations: [] };
+	if (!res.ok) return { organisations: [], workspaces: [] };
 	return res.json();
 }
 
-function AvatarBubbles({ members, count }: { members: MemberPreview[]; count: number }) {
+function AvatarBubbles({
+	members,
+	count,
+}: {
+	members: MemberPreview[];
+	count: number;
+}) {
 	const overflow = count - members.length;
 
 	return (
 		<Tooltip.Group>
 			<Avatar.Group spacing="sm">
 				{members.map((m, i) => (
-					<Tooltip key={`${m.display_name}-${i}`} label={m.display_name} withArrow>
+					<Tooltip
+						key={`${m.display_name}-${i}`}
+						label={m.display_name}
+						withArrow
+					>
 						<Avatar
 							size={28}
 							radius="xl"
-							src={m.avatar ? `${DIRECTUS_PUBLIC_URL}/assets/${m.avatar}` : null}
+							src={
+								m.avatar ? `${DIRECTUS_PUBLIC_URL}/assets/${m.avatar}` : null
+							}
 							color="blue"
 						>
 							{m.display_name?.charAt(0)?.toUpperCase()}
@@ -118,8 +129,13 @@ function WorkspaceCard({
 	workspace,
 	onSelect,
 	onManage,
-}: { workspace: Workspace; onSelect: () => void; onManage?: () => void }) {
-	const isAdminOrOwner = workspace.role === "admin" || workspace.role === "owner";
+}: {
+	workspace: Workspace;
+	onSelect: () => void;
+	onManage?: () => void;
+}) {
+	const isAdminOrOwner =
+		workspace.role === "admin" || workspace.role === "owner";
 	const [hovered, setHovered] = useState(false);
 	const wsLogo = resolveLogoUrl(workspace.logo_url);
 	const organisationLogo = resolveLogoUrl(workspace.org_logo_url);
@@ -151,9 +167,9 @@ function WorkspaceCard({
 			radius="md"
 			withBorder
 			style={{
+				boxShadow: hovered ? "0 2px 12px rgba(0,0,0,0.08)" : undefined,
 				cursor: "pointer",
 				transition: "box-shadow 0.15s ease, transform 0.15s ease",
-				boxShadow: hovered ? "0 2px 12px rgba(0,0,0,0.08)" : undefined,
 			}}
 			onClick={onSelect}
 			onMouseEnter={() => setHovered(true)}
@@ -173,7 +189,7 @@ function WorkspaceCard({
 								h={36}
 								w="auto"
 								fit="contain"
-								style={{ maxWidth: 80, flexShrink: 0 }}
+								style={{ flexShrink: 0, maxWidth: 80 }}
 							/>
 						</Tooltip>
 					)}
@@ -267,11 +283,11 @@ function AddWorkspaceCard({ organisationId }: { organisationId: string }) {
 			role="button"
 			tabIndex={0}
 			style={{
-				cursor: "pointer",
-				border: "1px dashed var(--mantine-color-gray-4)",
-				background: "transparent",
-				display: "flex",
 				alignItems: "center",
+				background: "transparent",
+				border: "1px dashed var(--mantine-color-gray-4)",
+				cursor: "pointer",
+				display: "flex",
 				justifyContent: "center",
 				minHeight: 140,
 				transition: "border-color 0.15s ease, background 0.15s ease",
@@ -324,15 +340,21 @@ function OrganisationHeroCard({
 	organisation: OrganisationRollup;
 	onManage: () => void;
 }) {
-	const isAdminOrOwner = organisation.role === "admin" || organisation.role === "owner";
+	const isAdminOrOwner =
+		organisation.role === "admin" || organisation.role === "owner";
 
 	// Health hint — hours this cycle + at-cap count. Admin/billing get €
 	// (server-gated). Non-admins still see cap warnings: knowing "2
 	// workspaces are at limit" is actionable even for a plain member (they
 	// can ask an admin for a different workspace to work in).
 	const { data: usage } = useQuery({
-		queryKey: ["v2", "org-usage", organisation.id],
 		queryFn: () => fetchOrgUsageLite(organisation.id),
+		queryKey: ["v2", "org-usage", organisation.id],
+		// Same rationale as the full rollup: re-entering /w should show
+		// fresh numbers on the org hero cards. Without this the at-limit
+		// badges go stale until a manual hard-refresh.
+		refetchOnMount: "always",
+		refetchOnWindowFocus: "always",
 		staleTime: 60_000,
 	});
 
@@ -349,54 +371,54 @@ function OrganisationHeroCard({
 							h={40}
 							w="auto"
 							fit="contain"
-							style={{ maxWidth: 120, flexShrink: 0 }}
+							style={{ flexShrink: 0, maxWidth: 120 }}
 						/>
 					)}
 					<Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
 						<Text fw={500} size="lg" lineClamp={1}>
 							{organisation.name}
 						</Text>
-					<Text size="xs" c="dimmed">
-						<Plural
-							value={organisation.workspace_count}
-							one="# workspace"
-							other="# workspaces"
-						/>
-						{" · "}
-						<Plural
-							value={organisation.total_members}
-							one="# person"
-							other="# people"
-						/>
-						{" · "}
-						<Plural
-							value={organisation.total_projects}
-							one="# project"
-							other="# projects"
-						/>
-						{usage && (
-							<>
-								{" · "}
-								{formatDurationFromHours(usage.total_audio_hours)} {t`this month`}
-							</>
-						)}
-					</Text>
-					{/* Only at-cap Pilot blocks surface as a warning; the rest
+						<Text size="xs" c="dimmed">
+							<Plural
+								value={organisation.workspace_count}
+								one="# workspace"
+								other="# workspaces"
+							/>
+							{" · "}
+							<Plural
+								value={organisation.total_members}
+								one="# person"
+								other="# people"
+							/>
+							{" · "}
+							<Plural
+								value={organisation.total_projects}
+								one="# project"
+								other="# projects"
+							/>
+							{usage && (
+								<>
+									{" · "}
+									{formatDurationFromHours(usage.total_audio_hours)}{" "}
+									{t`this month`}
+								</>
+							)}
+						</Text>
+						{/* Only at-cap Pilot blocks surface as a warning; the rest
 					    is billed overage, not a hard limit. */}
-					{usage && usage.workspaces_at_cap > 0 && (
-						<Group gap={6} mt={4}>
-							<Badge size="xs" color="red" variant="light">
-								<Trans>{usage.workspaces_at_cap} at limit</Trans>
-							</Badge>
-						</Group>
-					)}
+						{usage && usage.workspaces_at_cap > 0 && (
+							<Group gap={6} mt={4}>
+								<Badge size="xs" color="red" variant="light">
+									<Trans>{usage.workspaces_at_cap} at limit</Trans>
+								</Badge>
+							</Group>
+						)}
 					</Stack>
 				</Group>
 				{isAdminOrOwner && (
 					<Button
 						variant="subtle"
 						size="xs"
-						color="blue"
 						leftSection={<IconSettings size={14} />}
 						onClick={onManage}
 					>
@@ -416,8 +438,8 @@ export const WorkspaceSelectorRoute = () => {
 	useDocumentTitle(t`Workspaces | dembrane`);
 
 	const { data, isLoading } = useQuery({
-		queryKey: ["v2", "workspaces"],
 		queryFn: fetchWorkspaces,
+		queryKey: ["v2", "workspaces"],
 		staleTime: 30_000,
 	});
 
@@ -439,9 +461,16 @@ export const WorkspaceSelectorRoute = () => {
 	// Seed groups from `organisations` first — that way a organisation with zero workspaces
 	// still renders a hero card + AddWorkspace affordance instead of getting
 	// swallowed by the "no workspaces yet" empty state.
-	const orgGroups = new Map<string, { name: string; role: string; workspaces: Workspace[] }>();
+	const orgGroups = new Map<
+		string,
+		{ name: string; role: string; workspaces: Workspace[] }
+	>();
 	for (const organisation of organisations) {
-		orgGroups.set(organisation.id, { name: organisation.name, role: organisation.role, workspaces: [] });
+		orgGroups.set(organisation.id, {
+			name: organisation.name,
+			role: organisation.role,
+			workspaces: [],
+		});
 	}
 	for (const w of internalWorkspaces) {
 		const existing = orgGroups.get(w.org_id);
@@ -473,106 +502,109 @@ export const WorkspaceSelectorRoute = () => {
 
 	return (
 		<Container size="md" py="xl" px="lg">
-				<Stack gap={32}>
-					{/* Header — create-workspace is NOT up here. We put
+			<Stack gap={32}>
+				{/* Header — create-workspace is NOT up here. We put
 					    "Add workspace" dashed cards inside each organisation's grid
 					    so the placement answers "create where?" by itself. */}
-					<Title order={3} fw={400}>
-						<Trans>Workspaces</Trans>
-					</Title>
+				<Title order={3} fw={400}>
+					<Trans>Workspaces</Trans>
+				</Title>
 
-					{/* Search (show when >3 workspaces) */}
-					{workspaces.length > 3 && (
-						<TextInput
-							placeholder={t`Search workspaces...`}
-							size="sm"
-							value={search}
-							onChange={(e) => setSearch(e.currentTarget.value)}
-						/>
-					)}
+				{/* Search (show when >3 workspaces) */}
+				{workspaces.length > 3 && (
+					<TextInput
+						placeholder={t`Search workspaces...`}
+						size="sm"
+						value={search}
+						onChange={(e) => setSearch(e.currentTarget.value)}
+					/>
+				)}
 
-					{/* Organisation groups — organisation hero card tops each group when a rollup
+				{/* Organisation groups — organisation hero card tops each group when a rollup
 					    exists; falls back to a plain heading otherwise (designer
 					    Ask 5: organisation-level context at top). Dividers between groups
 					    (2026-04-24 ask) so each organisation/guest section reads as a
 					    distinct block instead of one big stream. */}
-					{Array.from(orgGroups.entries()).map(([orgId, group], idx) => {
-						const organisation = organisations.find((t) => t.id === orgId);
+				{Array.from(orgGroups.entries()).map(([orgId, group], idx) => {
+					const organisation = organisations.find((t) => t.id === orgId);
 
-						return (
-							<Stack key={orgId} gap={16}>
-								{idx > 0 && <Divider />}
-								{organisation ? (
-									<OrganisationHeroCard
-										organisation={organisation}
-										onManage={() => navigate(`/o/${orgId}`)}
-									/>
-								) : (
-									<Text size="sm" fw={500}>
-										{group.name}
-									</Text>
-								)}
+					return (
+						<Stack key={orgId} gap={16}>
+							{idx > 0 && <Divider />}
+							{organisation ? (
+								<OrganisationHeroCard
+									organisation={organisation}
+									onManage={() => navigate(`/o/${orgId}`)}
+								/>
+							) : (
+								<Text size="sm" fw={500}>
+									{group.name}
+								</Text>
+							)}
 
-								<SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-									{group.workspaces.map((ws) => (
-										<WorkspaceCard
-											key={ws.id}
-											workspace={ws}
-											onSelect={() => handleSelect(ws)}
-											onManage={() => navigate(`/w/${ws.id}/settings`)}
-										/>
-									))}
-									{/* Dashed "+ new workspace" placeholder — admin/
-									    owner only. Lives under the organisation it belongs
-									    to so create-where is answered by placement. */}
-									{(group.role === "owner" ||
-										group.role === "admin") && (
-										<AddWorkspaceCard organisationId={orgId} />
-									)}
-								</SimpleGrid>
-
-								{/* Matrix §6: Slack-style discovery. Renders only
-								    when there's something joinable/requestable and
-								    hides itself otherwise. */}
-								<DiscoverableWorkspaces orgId={orgId} />
-							</Stack>
-						);
-					})}
-
-					{/* External workspaces — quieter section, individual "guest of"
-					    labels live on each card (designer Ask 5). */}
-					{externalWorkspaces.length > 0 && (
-						<Stack gap={12}>
-							{orgGroups.size > 0 && <Divider />}
-							<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.5}>
-								<Trans>As a guest</Trans>
-							</Text>
-							<SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-								{externalWorkspaces.map((ws) => (
+							<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
+								{group.workspaces.map((ws) => (
 									<WorkspaceCard
 										key={ws.id}
 										workspace={ws}
 										onSelect={() => handleSelect(ws)}
-										// External guests don't manage the workspace they visit
-										// — suppress the affordance.
-										onManage={undefined}
+										onManage={() => navigate(`/w/${ws.id}/settings`)}
 									/>
 								))}
+								{/* Dashed "+ new workspace" placeholder — admin/
+									    owner only. Lives under the organisation it belongs
+									    to so create-where is answered by placement. */}
+								{(group.role === "owner" || group.role === "admin") && (
+									<AddWorkspaceCard organisationId={orgId} />
+								)}
 							</SimpleGrid>
-						</Stack>
-					)}
 
-					{/* Empty state — only when the user has no organisations AND no workspaces.
+							{/* Matrix §6: Slack-style discovery. Renders only
+								    when there's something joinable/requestable and
+								    hides itself otherwise. */}
+							<DiscoverableWorkspaces orgId={orgId} />
+						</Stack>
+					);
+				})}
+
+				{/* External workspaces — quieter section, individual "guest of"
+					    labels live on each card (designer Ask 5). */}
+				{externalWorkspaces.length > 0 && (
+					<Stack gap={12}>
+						{orgGroups.size > 0 && <Divider />}
+						<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.5}>
+							<Trans>As a guest</Trans>
+						</Text>
+						<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
+							{externalWorkspaces.map((ws) => (
+								<WorkspaceCard
+									key={ws.id}
+									workspace={ws}
+									onSelect={() => handleSelect(ws)}
+									// External guests don't manage the workspace they visit
+									// — suppress the affordance.
+									onManage={undefined}
+								/>
+							))}
+						</SimpleGrid>
+					</Stack>
+				)}
+
+				{/* Empty state — only when the user has no organisations AND no workspaces.
 					    If they have a organisation but no workspace, the orgGroups loop above
 					    already renders a organisation hero + AddWorkspace card. */}
-					{workspaces.length === 0 && organisations.length === 0 && !isLoading && (
+				{workspaces.length === 0 &&
+					organisations.length === 0 &&
+					!isLoading && (
 						<Stack align="center" gap={16} mt="10vh">
 							<Text c="dimmed" size="sm">
-								<Trans>No workspaces yet. Create your first one to get started.</Trans>
+								<Trans>
+									No workspaces yet. Create your first one to get started.
+								</Trans>
 							</Text>
 						</Stack>
 					)}
-				</Stack>
-			</Container>
+			</Stack>
+		</Container>
 	);
 };

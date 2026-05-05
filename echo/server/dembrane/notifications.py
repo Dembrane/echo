@@ -59,6 +59,15 @@ _SEVERITY_BY_EVENT: dict[str, NotificationSeverity] = {
     "REPORT_FAILED": "destructive",
     # Requires user action.
     "MEMBERSHIP_REQUESTED": "action_required",
+    # Cap-blocked invites: invitee can't proceed until the admin frees a
+    # seat. Marked action_required on the admin side so they see the
+    # "you need to act" styling; the invitee side surfaces the stuck
+    # state and the retry path.
+    "INVITE_BLOCKED_AT_CAP": "action_required",
+    "INVITE_PENDING_AT_CAP": "action_required",
+    # WORKSPACE_GUEST_ADDED is intentionally NOT in this map — it's a
+    # passive "FYI a guest joined your workspace" event with no action
+    # required, so it falls through to the default "info" tint.
     # NB: MEMBERSHIP_REQUEST_REJECTED is deliberately absent — matrix §6
     # specifies silent rejection, and emit() is never called for that code.
     # Matrix §10 partner handoff.
