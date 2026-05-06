@@ -521,6 +521,115 @@ async def decline_my_invite(invite_id: str, auth: DependencyDirectusSession) -> 
     return {"status": "success"}
 
 
+class InviteByHashState(BaseModel):
+    """Status enum: not_found / expired / workspace_deleted / accepted / pending.
+    On `accepted`, read `is_member` to tell live vs orphaned membership."""
+
+    status: str
+    workspace_id: Optional[str] = None
+    workspace_name: Optional[str] = None
+    role: Optional[str] = None
+    is_member: Optional[bool] = None
+    expires_at: Optional[str] = None
+
+
+@router.get("/invites/by-hash", response_model=InviteByHashState)
+async def inspect_invite_by_hash(
+    h: str,
+    auth: DependencyDirectusSession,
+) -> InviteByHashState:
+    """Read-only inspect for /invite/accept page load — surfaces
+    already-used links as `accepted` instead of letting the accept
+    endpoint silently re-consume them. Same security model as
+    accept-by-hash: session email scopes the lookup, HMAC gates."""
+    import hmac as _hmac
+
+    app_user = await get_app_user_or_raise(auth.user_id)
+    app_user_id = app_user["id"]
+    my_email = (app_user.get("email") or "").lower()
+    if not my_email:
+        raise HTTPException(status_code=400, detail="User has no email")
+
+    invites = await async_directus.get_items(
+        "workspace_invite",
+        {
+            "query": {
+                "filter": {"email": {"_eq": my_email}},
+                "fields": [
+                    "id",
+                    "workspace_id",
+                    "role",
+                    "accepted_at",
+                    "expires_at",
+                ],
+                "limit": -1,
+            }
+        },
+    )
+
+    target = None
+    if isinstance(invites, list):
+        for inv in invites:
+            if _hmac.compare_digest(compute_invite_hash(inv["id"]), h):
+                target = inv
+                break
+
+    if target is None:
+        return InviteByHashState(status="not_found")
+
+    ws = await async_directus.get_item("workspace", target["workspace_id"])
+    if not ws or ws.get("deleted_at"):
+        return InviteByHashState(
+            status="workspace_deleted",
+            workspace_name=(ws or {}).get("name") or "",
+        )
+
+    existing_mem = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": target["workspace_id"]},
+                    "user_id": {"_eq": app_user_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": 1,
+            }
+        },
+    )
+    is_member = isinstance(existing_mem, list) and len(existing_mem) > 0
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    if target.get("accepted_at"):
+        return InviteByHashState(
+            status="accepted",
+            workspace_id=target["workspace_id"],
+            workspace_name=ws.get("name") or "",
+            role=target.get("role"),
+            is_member=is_member,
+        )
+
+    if target.get("expires_at") and target["expires_at"] < now_iso:
+        return InviteByHashState(
+            status="expired",
+            workspace_id=target["workspace_id"],
+            workspace_name=ws.get("name") or "",
+            role=target.get("role"),
+            expires_at=target.get("expires_at"),
+        )
+
+    return InviteByHashState(
+        status="pending",
+        workspace_id=target["workspace_id"],
+        workspace_name=ws.get("name") or "",
+        role=target.get("role"),
+        is_member=is_member,
+        expires_at=target.get("expires_at"),
+    )
+
+
 class AcceptByHashRequest(BaseModel):
     hash: str
     claimed_role: Optional[str] = None  # honeypot — URL-claimed role
@@ -693,10 +802,11 @@ async def accept_invite_by_hash(
 
                 await invalidate_workspace_and_org_usage(inv["workspace_id"], ws.get("org_id"))
 
-                # accepted_at is already set (that's why we're in the
-                # fallback); no need to touch it again.
+                # accepted_at already set; "healed" tells the frontend to
+                # skip the "Joined!" toast (this is a partial-write patch,
+                # not a fresh accept).
                 return {
-                    "status": "success",
+                    "status": "healed",
                     "workspace_id": inv["workspace_id"],
                     "workspace_name": ws.get("name", ""),
                 }

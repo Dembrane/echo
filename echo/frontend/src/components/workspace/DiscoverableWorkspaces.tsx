@@ -185,7 +185,7 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 							{ws.action === "request-access" && (
 								<Button
 									size="compact-xs"
-									variant="default"
+									variant="outline"
 									loading={
 										requestMutation.isPending &&
 										requestMutation.variables === ws.id

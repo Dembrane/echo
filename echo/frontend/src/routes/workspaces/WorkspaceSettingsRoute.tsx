@@ -1044,9 +1044,9 @@ export const WorkspaceSettingsRoute = () => {
 
 								{/* Pending invites */}
 								{settings.pending_invites.length > 0 && (
-									<>
+									<Box mt="xl">
 										<Divider />
-										<Stack gap={12}>
+										<Stack gap={12} my="lg">
 											<Title order={5} fw={400}>
 												<Trans>Pending invites</Trans>
 											</Title>
@@ -1124,7 +1124,7 @@ export const WorkspaceSettingsRoute = () => {
 												))}
 											</Stack>
 										</Stack>
-									</>
+									</Box>
 								)}
 
 								{/* Matrix §6 access requests from organisation members. Hides itself

@@ -1,6 +1,6 @@
 import { LoadingOverlay } from "@mantine/core";
 import { type PropsWithChildren, useEffect } from "react";
-import { Outlet, useSearchParams } from "react-router";
+import { Outlet, useLocation, useSearchParams } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Toaster } from "../common/Toaster";
@@ -10,6 +10,10 @@ import {
 	TransitionCurtainProvider,
 	useTransitionCurtain,
 } from "./TransitionCurtainProvider";
+
+// Token-consuming routes render their own auth-aware UI; redirecting
+// authed users away would race the token call (verify-email infinite-loading bug).
+const SKIP_REDIRECT_PATHS = ["/verify-email", "/password-reset"];
 
 export const AuthLayout = (props: PropsWithChildren) => (
 	<TransitionCurtainProvider>
@@ -22,20 +26,30 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 	const navigate = useI18nNavigate();
 	const auth = useAuthenticated();
 	const { isActive } = useTransitionCurtain();
+	const location = useLocation();
+	const skipRedirect = SKIP_REDIRECT_PATHS.some((p) =>
+		location.pathname.endsWith(p),
+	);
 
 	useEffect(() => {
-		if (auth.isAuthenticated && !isActive) {
+		if (auth.isAuthenticated && !isActive && !skipRedirect) {
 			const nextLink = query.get("next") ?? "/projects";
 			navigate(nextLink);
 		}
-	}, [auth.isAuthenticated, isActive, navigate, query]);
+	}, [auth.isAuthenticated, isActive, navigate, query, skipRedirect]);
 
 	return (
 		<>
-			<div className="relative flex min-h-dvh flex-col overflow-hidden lg:h-screen lg:flex lg:flex-row lg:items-stretch" style={{ backgroundColor: "var(--app-background)" }}>
+			<div
+				className="relative flex min-h-dvh flex-col overflow-hidden lg:h-screen lg:flex lg:flex-row lg:items-stretch"
+				style={{ backgroundColor: "var(--app-background)" }}
+			>
 				<LoadingOverlay visible={auth.loading} zIndex={2000} />
 				<div className="flex w-full flex-1 flex-col lg:w-1/2 lg:min-h-screen lg:overflow-y-auto">
-					<div className="border-b border-slate-200/60" style={{ backgroundColor: "var(--app-background)" }}>
+					<div
+						className="border-b border-slate-200/60"
+						style={{ backgroundColor: "var(--app-background)" }}
+					>
 						<HeaderView
 							isAuthenticated={auth.isAuthenticated}
 							loading={auth.loading}

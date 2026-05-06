@@ -73,6 +73,92 @@ export const useDeclineInvite = () => {
 	});
 };
 
+// success = fresh accept; already_member = no-op (row + membership both
+// existed); healed = row accepted but membership was missing (rare race) —
+// treat visually as already_member.
+export type AcceptInviteResult = {
+	status?: "success" | "already_member" | "healed";
+	workspace_id: string;
+	workspace_name: string;
+};
+
+// Read-only inspect (does not consume). `is_member` is only meaningful
+// when status is `pending` or `accepted`.
+export type InviteByHashState = {
+	status:
+		| "pending"
+		| "accepted"
+		| "expired"
+		| "workspace_deleted"
+		| "not_found";
+	workspace_id?: string;
+	workspace_name?: string;
+	role?: string;
+	is_member?: boolean;
+	expires_at?: string;
+};
+
+// Public probe used by the unauthenticated invite landing — without
+// this, dead hashes fall through into register → stray personal org.
+// No is_member field; there's no session to compare against.
+export type PublicInviteStatus = {
+	status:
+		| "pending"
+		| "accepted"
+		| "expired"
+		| "workspace_deleted"
+		| "not_found";
+	workspace_name?: string;
+	role?: string;
+	expires_at?: string;
+};
+
+export const usePublicInviteStatus = (
+	email: string,
+	hash: string,
+	{ enabled = true }: { enabled?: boolean } = {},
+) =>
+	useQuery({
+		enabled: enabled && hash.length > 0 && email.length > 0,
+		queryFn: async (): Promise<PublicInviteStatus> => {
+			const params = new URLSearchParams({ email, h: hash });
+			const res = await fetch(
+				`${API_BASE_URL}/v2/auth/invite-status?${params.toString()}`,
+			);
+			if (!res.ok) {
+				// Failures degrade to not_found so the UI never lets the user
+				// proceed into register on a probably-dead invite.
+				return { status: "not_found" };
+			}
+			return res.json();
+		},
+		queryKey: ["v2", "auth", "invite-status", email, hash],
+		staleTime: 60_000,
+	});
+
+export const useInviteByHash = (
+	hash: string,
+	{ enabled = true }: { enabled?: boolean } = {},
+) =>
+	useQuery({
+		enabled: enabled && hash.length > 0,
+		queryFn: async (): Promise<InviteByHashState> => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/me/invites/by-hash?h=${encodeURIComponent(hash)}`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) {
+				// Failures degrade to not_found so the UI never gets stuck.
+				return { status: "not_found" };
+			}
+			return res.json();
+		},
+		// State changes only via accept (which invalidates this key), so
+		// long staleTime is safe and avoids refetch flicker.
+		queryKey: ["v2", "me", "invites", "by-hash", hash],
+		staleTime: 60_000,
+	});
+
 export const useAcceptInviteByHash = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -82,7 +168,7 @@ export const useAcceptInviteByHash = () => {
 		}: {
 			hash: string;
 			claimedRole?: string | null;
-		}) => {
+		}): Promise<AcceptInviteResult> => {
 			const res = await fetch(`${API_BASE_URL}/v2/me/invites/accept-by-hash`, {
 				body: JSON.stringify({ claimed_role: claimedRole ?? null, hash }),
 				credentials: "include",
@@ -95,10 +181,7 @@ export const useAcceptInviteByHash = () => {
 				(err as Error & { status?: number }).status = res.status;
 				throw err;
 			}
-			return res.json() as Promise<{
-				workspace_id: string;
-				workspace_name: string;
-			}>;
+			return res.json();
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });

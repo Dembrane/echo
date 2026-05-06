@@ -60,9 +60,7 @@ export const useResetPasswordMutation = () => {
 			}
 		},
 		onSuccess: () => {
-			toast.success(
-				"Password reset. Log in with your new password.",
-			);
+			toast.success("Password reset. Log in with your new password.");
 			navigate("/login");
 		},
 	});
@@ -96,8 +94,19 @@ export const useVerifyMutation = (doRedirect = true) => {
 
 	return useMutation({
 		mutationFn: async (data: { token: string }) => {
+			// 15s ceiling — without it, a hung Directus / proxy would
+			// leave the page spinning forever (original infinite-loading bug).
+			const timeout = new Promise<never>((_, reject) =>
+				setTimeout(
+					() => reject(new Error("Verification timed out. Try again.")),
+					15_000,
+				),
+			);
 			try {
-				const response = await directus.request(registerUserVerify(data.token));
+				const response = await Promise.race([
+					directus.request(registerUserVerify(data.token)),
+					timeout,
+				]);
 				return response;
 			} catch (e) {
 				throwWithMessage(e);
@@ -115,6 +124,33 @@ export const useVerifyMutation = (doRedirect = true) => {
 				setTimeout(() => {
 					navigate("/login?verified=1");
 				}, 1500);
+			}
+		},
+	});
+};
+
+// Probes whether an email is already registered, so Register.tsx can
+// block before Directus's anti-enumeration silent-200 traps the user on
+// "Check your email" forever. Failures collapse to "available" so an
+// outage of the probe never blocks a legit signup.
+export const useCheckEmailMutation = () => {
+	return useMutation({
+		mutationFn: async (
+			email: string,
+		): Promise<{ status: "available" | "registered" | "invalid" }> => {
+			try {
+				const res = await fetch(`${API_BASE_URL}/v2/auth/check-email`, {
+					body: JSON.stringify({ email }),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				});
+				if (!res.ok) {
+					return { status: "available" };
+				}
+				return res.json();
+			} catch (_e) {
+				return { status: "available" };
 			}
 		},
 	});

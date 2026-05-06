@@ -131,13 +131,9 @@ async def invite_to_workspace(
     # (Pioneer+ for member seats), unlimited tiers (Guardian), and
     # unknown legacy tiers.
     if body.is_org_member:
-        await assert_can_add_member(
-            ctx.workspace, audience="admin", include_pending=True
-        )
+        await assert_can_add_member(ctx.workspace, audience="admin", include_pending=True)
     else:
-        await assert_can_add_guest(
-            ctx.workspace, audience="admin", include_pending=True
-        )
+        await assert_can_add_guest(ctx.workspace, audience="admin", include_pending=True)
 
     # Check if already a member
     existing_membership = await async_directus.get_items(
@@ -326,7 +322,8 @@ async def invite_to_workspace(
                 template_data={
                     "inviter_name": inviter_name,
                     "workspace_name": ctx.workspace.get("name", "a workspace"),
-                    "invite_url": f"{settings.urls.admin_base_url}/workspaces",
+                    # Direct link to the workspace, not the picker.
+                    "invite_url": f"{settings.urls.admin_base_url}/w/{workspace_id}/projects",
                 },
                 failure_context=f"workspace_added / workspace {workspace_id}",
             )

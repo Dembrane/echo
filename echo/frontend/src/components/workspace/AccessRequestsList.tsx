@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Badge,
+	Box,
 	Divider,
 	Group,
 	Paper,
@@ -98,9 +99,9 @@ export const AccessRequestsList = ({ workspaceId }: { workspaceId: string }) => 
 	if (rows.length === 0) return null;
 
 	return (
-		<>
+		<Box mt="xl">
 			<Divider />
-			<Stack gap={12}>
+			<Stack gap={12} my="lg">
 				<Title order={5} fw={400}>
 					<Trans>Access requests</Trans>
 				</Title>
@@ -160,6 +161,6 @@ export const AccessRequestsList = ({ workspaceId }: { workspaceId: string }) => 
 					))}
 				</Stack>
 			</Stack>
-		</>
+		</Box>
 	);
 };

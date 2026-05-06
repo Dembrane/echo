@@ -10,6 +10,7 @@ Mounted at /api/v2/ in main.py.
 from fastapi import APIRouter
 
 from dembrane.api.v2.me import router as me_router
+from dembrane.api.v2.auth import router as auth_router
 from dembrane.api.v2.orgs import router as orgs_router
 from dembrane.api.v2.admin import router as admin_router
 from dembrane.api.v2.invites import router as invites_router
@@ -46,6 +47,9 @@ from dembrane.api.v2.workspace_settings import router as workspace_settings_rout
 v2_router = APIRouter()
 
 v2_router.include_router(me_router, prefix="/me", tags=["v2:me"])
+# Public auth helpers (email-availability check). No auth — the
+# registration form needs to call this before the user has a session.
+v2_router.include_router(auth_router, prefix="/auth", tags=["v2:auth"])
 v2_router.include_router(
     notifications_router, prefix="/me/notifications", tags=["v2:notifications"]
 )

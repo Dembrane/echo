@@ -16,12 +16,16 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
-import { useRegisterMutation } from "@/components/auth/hooks";
+import {
+	useCheckEmailMutation,
+	useRegisterMutation,
+} from "@/components/auth/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ADMIN_BASE_URL } from "@/config";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 
 export const RegisterRoute = () => {
@@ -47,12 +51,29 @@ export const RegisterRoute = () => {
 	const [step, setStep] = useState(0);
 	const [error, setError] = useState("");
 	const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
+	// Holds the email that conflicted with /v2/auth/check-email so the
+	// alert can render a Log-in link pre-filled with it. Cleared on edit.
+	const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
 	const registerMutation = useRegisterMutation();
+	const checkEmailMutation = useCheckEmailMutation();
 	const posthog = usePostHog();
+	const navigate = useI18nNavigate();
+
+	// Preserve ?next= through the conflict → login pivot so an invitee
+	// still ends up back at /invite/accept after auth.
+	const nextParam = searchParams.get("next");
+	const buildLoginUrl = (email: string) => {
+		const params = new URLSearchParams();
+		if (email) params.set("email", email);
+		if (nextParam) params.set("next", nextParam);
+		const qs = params.toString();
+		return qs ? `/login?${qs}` : "/login";
+	};
 
 	const handleNext = async () => {
 		setError("");
+		setRegisteredEmail(null);
 		// Step 0 requires first_name + email
 		const valid = await trigger(["first_name", "email"]);
 		if (!valid) return;
@@ -61,6 +82,22 @@ export const RegisterRoute = () => {
 			setError(t`Enter a valid email address`);
 			return;
 		}
+
+		// Pre-flight check — Directus silently 200s existing emails
+		// without queuing a verify, so without this the user gets stuck
+		// on "Check your email" forever. Falls through on probe failure.
+		const probe = await checkEmailMutation
+			.mutateAsync(email.trim())
+			.catch(() => ({ status: "available" as const }));
+		if (probe.status === "registered") {
+			setRegisteredEmail(email.trim().toLowerCase());
+			return;
+		}
+		if (probe.status === "invalid") {
+			setError(t`Enter a valid email address`);
+			return;
+		}
+
 		setStep(1);
 	};
 
@@ -71,6 +108,17 @@ export const RegisterRoute = () => {
 		}
 		if (data.password !== data.confirmPassword) {
 			setError(t`Passwords do not match`);
+			return;
+		}
+
+		// Re-check — covers the back-button-then-direct-submit case
+		// where step 0's gate was bypassed.
+		const probe = await checkEmailMutation
+			.mutateAsync(data.email.trim())
+			.catch(() => ({ status: "available" as const }));
+		if (probe.status === "registered") {
+			setRegisteredEmail(data.email.trim().toLowerCase());
+			setStep(0);
 			return;
 		}
 
@@ -100,6 +148,17 @@ export const RegisterRoute = () => {
 
 	const emailWatch = watch("email");
 
+	// Clear the conflict alert as soon as the user types a different
+	// email — otherwise the warning lingers past the typo fix.
+	useEffect(() => {
+		if (
+			registeredEmail &&
+			(emailWatch || "").trim().toLowerCase() !== registeredEmail
+		) {
+			setRegisteredEmail(null);
+		}
+	}, [emailWatch, registeredEmail]);
+
 	return (
 		<Container size="sm" className="!h-full" py="xl">
 			<Stack gap="lg">
@@ -123,6 +182,31 @@ export const RegisterRoute = () => {
 						{error && <Alert color="red">{error}</Alert>}
 						{registerMutation.error && (
 							<Alert color="red">{registerMutation.error.message}</Alert>
+						)}
+
+						{/* Email-already-registered alert — pivots the user to
+						    login before they waste effort on the password step. */}
+						{registeredEmail && (
+							<Alert color="yellow" variant="light">
+								<Stack gap={6}>
+									<Text size="sm" fw={500}>
+										<Trans>This email is already registered</Trans>
+									</Text>
+									<Text size="xs">
+										<Trans>
+											{registeredEmail} already has an account. Log in instead —
+											no need to create a new one.
+										</Trans>
+									</Text>
+									<Anchor
+										size="xs"
+										onClick={() => navigate(buildLoginUrl(registeredEmail))}
+										style={{ cursor: "pointer" }}
+									>
+										<Trans>Log in as {registeredEmail}</Trans>
+									</Anchor>
+								</Stack>
+							</Alert>
 						)}
 
 						{step === 0 && (
@@ -166,7 +250,11 @@ export const RegisterRoute = () => {
 											: undefined
 									}
 								/>
-								<Button size="md" onClick={handleNext}>
+								<Button
+									size="md"
+									onClick={handleNext}
+									loading={checkEmailMutation.isPending}
+								>
 									<Trans>Continue</Trans>
 								</Button>
 							</>
