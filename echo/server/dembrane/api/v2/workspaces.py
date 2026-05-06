@@ -62,15 +62,17 @@ logger = getLogger("api.v2.workspaces")
 
 
 async def _get_workspace_usage(ws_id: str) -> WorkspaceUsage:
-    """Get audio hours + conversation count for a workspace (all-time and current month)."""
-    # Get all projects in this workspace
+    """Audio hours + conversation count (all-time and current month).
+
+    Hours include soft-deleted rows (PRD §270: delete preserves billable
+    duration); counts exclude them.
+    """
     projects = await async_directus.get_items(
         "project",
         {
             "query": {
                 "filter": {
                     "workspace_id": {"_eq": ws_id},
-                    "deleted_at": {"_null": True},
                 },
                 "fields": ["id"],
                 "limit": -1,
@@ -82,16 +84,14 @@ async def _get_workspace_usage(ws_id: str) -> WorkspaceUsage:
 
     project_ids = [p["id"] for p in projects]
 
-    # Get all conversations across those projects (include created_at for monthly filtering)
     conversations = await async_directus.get_items(
         "conversation",
         {
             "query": {
                 "filter": {
                     "project_id": {"_in": project_ids},
-                    "deleted_at": {"_null": True},
                 },
-                "fields": ["duration", "created_at"],
+                "fields": ["duration", "created_at", "deleted_at"],
                 "limit": -1,
             }
         },
@@ -99,25 +99,26 @@ async def _get_workspace_usage(ws_id: str) -> WorkspaceUsage:
     if not isinstance(conversations, list):
         return WorkspaceUsage()
 
-    # All-time totals
     total_seconds = sum(c.get("duration") or 0 for c in conversations)
+    live_count = sum(1 for c in conversations if not c.get("deleted_at"))
 
-    # Current month totals
     now = datetime.now(timezone.utc)
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
     monthly_seconds = 0
-    monthly_count = 0
+    monthly_live_count = 0
     for c in conversations:
         created_at = c.get("created_at")
-        if created_at and created_at >= month_start:
-            monthly_seconds += c.get("duration") or 0
-            monthly_count += 1
+        if not created_at or created_at < month_start:
+            continue
+        monthly_seconds += c.get("duration") or 0
+        if not c.get("deleted_at"):
+            monthly_live_count += 1
 
     return WorkspaceUsage(
         audio_hours=round(total_seconds / 3600, 1),
-        conversation_count=len(conversations),
+        conversation_count=live_count,
         audio_hours_this_month=round(monthly_seconds / 3600, 1),
-        conversations_this_month=monthly_count,
+        conversations_this_month=monthly_live_count,
     )
 
 
@@ -447,7 +448,83 @@ async def list_workspaces(
                 )
             )
 
-    return WorkspaceListResponse(workspaces=results, organisations=organisations)
+    # Recent removals — only meaningful when the user has no live access
+    # (otherwise /w doesn't render the empty state). Skip the query in
+    # the common case to keep this endpoint cheap.
+    recent_removals: list = []
+    if not results and not organisations:
+        from datetime import timedelta
+
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+        removed = await async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "filter": {
+                        "user_id": {"_eq": app_user_id},
+                        "deleted_at": {"_gte": cutoff},
+                    },
+                    "fields": ["workspace_id", "deleted_at"],
+                    "sort": ["-deleted_at"],
+                    "limit": 5,
+                }
+            },
+        )
+        if isinstance(removed, list) and removed:
+            removed_ws_ids = list({r["workspace_id"] for r in removed if r.get("workspace_id")})
+            removed_ws = await async_directus.get_items(
+                "workspace",
+                {
+                    "query": {
+                        "filter": {"id": {"_in": removed_ws_ids}},
+                        "fields": ["id", "name", "org_id"],
+                        "limit": -1,
+                    }
+                },
+            )
+            removed_ws_map = (
+                {w["id"]: w for w in removed_ws} if isinstance(removed_ws, list) else {}
+            )
+            # Pull org names for any orgs we didn't already fetch above.
+            extra_org_ids = [
+                w["org_id"]
+                for w in removed_ws_map.values()
+                if w.get("org_id") and w["org_id"] not in org_map
+            ]
+            if extra_org_ids:
+                extra_orgs = await async_directus.get_items(
+                    "org",
+                    {
+                        "query": {
+                            "filter": {"id": {"_in": extra_org_ids}},
+                            "fields": ["id", "name"],
+                            "limit": -1,
+                        }
+                    },
+                )
+                if isinstance(extra_orgs, list):
+                    for o in extra_orgs:
+                        org_map[o["id"]] = o.get("name", "")
+            from dembrane.api.v2.schemas import RecentRemoval
+
+            for r in removed:
+                ws = removed_ws_map.get(r.get("workspace_id"))
+                if not ws:
+                    continue
+                recent_removals.append(
+                    RecentRemoval(
+                        workspace_id=ws["id"],
+                        workspace_name=ws.get("name") or "",
+                        org_name=org_map.get(ws.get("org_id") or "", ""),
+                        ended_at=r.get("deleted_at") or "",
+                    )
+                )
+
+    return WorkspaceListResponse(
+        workspaces=results,
+        organisations=organisations,
+        recent_removals=recent_removals,
+    )
 
 
 @router.post("", response_model=CreateWorkspaceResponse)
@@ -1083,16 +1160,18 @@ async def get_workspace_usage(
     now = datetime.now(timezone.utc)
     cycle_start, cycle_end_exclusive = _calendar_month_bounds(now, month_offset)
 
-    # Projects in workspace (also used for per-project breakdown).
+    # Soft-deleted rows stay in the rollup — PRD §270, delete preserves
+    # billable duration. project_count below excludes them.
+    # TODO: PRD §218 usage_event table replaces this scan path; until
+    # then this fetches every project the workspace has ever had.
     projects = await async_directus.get_items(
         "project",
         {
             "query": {
                 "filter": {
                     "workspace_id": {"_eq": ctx.workspace_id},
-                    "deleted_at": {"_null": True},
                 },
-                "fields": ["id", "name"],
+                "fields": ["id", "name", "deleted_at"],
                 "limit": -1,
             }
         },
@@ -1102,7 +1181,6 @@ async def get_workspace_usage(
 
     project_ids = [p["id"] for p in projects if p.get("id")]
 
-    # Conversations in this workspace, this cycle.
     if project_ids:
         conversations = await async_directus.get_items(
             "conversation",
@@ -1110,7 +1188,6 @@ async def get_workspace_usage(
                 "query": {
                     "filter": {
                         "project_id": {"_in": project_ids},
-                        "deleted_at": {"_null": True},
                         "created_at": {
                             "_gte": cycle_start,
                             "_lt": cycle_end_exclusive,
@@ -1139,6 +1216,8 @@ async def get_workspace_usage(
         per_project_seconds[pid] = per_project_seconds.get(pid, 0) + sec
         per_project_count[pid] = per_project_count.get(pid, 0) + 1
 
+    # Show deleted projects in the breakdown only if they had cycle
+    # activity — keeps the bill reconcilable without listing empty rows.
     per_project_items = [
         ProjectUsageItem(
             id=p["id"],
@@ -1147,7 +1226,10 @@ async def get_workspace_usage(
             conversation_count=per_project_count.get(p["id"], 0),
         )
         for p in projects
+        if not p.get("deleted_at") or per_project_count.get(p["id"], 0) > 0
     ]
+
+    live_project_count = sum(1 for p in projects if not p.get("deleted_at"))
 
     audio_hours = round(total_seconds / 3600, 2)
 
@@ -1260,7 +1342,7 @@ async def get_workspace_usage(
         seat_count_included=included_seats,
         guest_count=guest_count,
         guest_cap=guest_cap,
-        project_count=len(projects),
+        project_count=live_project_count,
         projects=per_project_items,
         pilot_hard_block_active=hard_block,
         member_invite_blocked=member_invite_blocked,

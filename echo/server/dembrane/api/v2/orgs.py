@@ -984,10 +984,7 @@ async def list_organisation_workspaces(
                 and (seat_count + member_pending) >= cap.included_seats
             ):
                 member_blocked = True
-            if (
-                cap.guest_cap is not None
-                and (guest_count + guest_pending) >= cap.guest_cap
-            ):
+            if cap.guest_cap is not None and (guest_count + guest_pending) >= cap.guest_cap:
                 guest_blocked = True
 
         out.append(
@@ -1458,7 +1455,10 @@ async def get_org_usage(
 
     ws_ids = [w["id"] for w in workspaces if w.get("id")]
 
-    # Projects + conversations (this cycle) across all workspaces — batch.
+    # Soft-deleted rows stay in the rollup (PRD §270, delete preserves
+    # billable duration). project_count below is the live count.
+    # TODO: PRD §218 usage_event table replaces this scan path; until
+    # then this fetches every project across every workspace in the org.
     project_count = 0
     per_ws_hours: dict[str, float] = {w["id"]: 0.0 for w in workspaces if w.get("id")}
     if ws_ids:
@@ -1469,9 +1469,8 @@ async def get_org_usage(
                     "query": {
                         "filter": {
                             "workspace_id": {"_in": ws_ids},
-                            "deleted_at": {"_null": True},
                         },
-                        "fields": ["id", "workspace_id"],
+                        "fields": ["id", "workspace_id", "deleted_at"],
                         "limit": -1,
                     }
                 },
@@ -1479,7 +1478,7 @@ async def get_org_usage(
             or []
         )
         if isinstance(projects, list):
-            project_count = len(projects)
+            project_count = sum(1 for p in projects if not p.get("deleted_at"))
             ws_by_project = {
                 p["id"]: p["workspace_id"]
                 for p in projects
@@ -1494,7 +1493,6 @@ async def get_org_usage(
                             "query": {
                                 "filter": {
                                     "project_id": {"_in": pids},
-                                    "deleted_at": {"_null": True},
                                     "created_at": {
                                         "_gte": cycle_start,
                                         "_lt": cycle_end_exclusive,
@@ -1536,9 +1534,7 @@ async def get_org_usage(
         seat_state_results = await asyncio.gather(
             *[compute_effective_seat_state(wid) for wid in ws_ids]
         )
-        for wid, (seat_count, guest_count) in zip(
-            ws_ids, seat_state_results, strict=True
-        ):
+        for wid, (seat_count, guest_count) in zip(ws_ids, seat_state_results, strict=True):
             per_ws_seats[wid] = seat_count
             per_ws_guests[wid] = guest_count
             total_seat_count += seat_count

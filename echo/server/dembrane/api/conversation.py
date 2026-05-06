@@ -38,6 +38,28 @@ def conversation_service_for_auth(auth: DirectusSession) -> ConversationService:
     return build_conversation_service(auth.client)
 
 
+async def _invalidate_usage_cache_for_conversation(conversation_id: str) -> None:
+    """Bust workspace + org usage cache. No-op on any missing link."""
+    from dembrane.cache_utils import invalidate_workspace_and_org_usage
+    from dembrane.directus_async import async_directus
+
+    # Single round-trip via Directus relational expansion — avoids
+    # walking conversation -> project -> workspace as 3 separate GETs.
+    conv = await async_directus.get_item(
+        "conversation",
+        conversation_id,
+        params={"fields": "project_id.workspace_id.id,project_id.workspace_id.org_id"},
+    )
+    project = (conv or {}).get("project_id") if isinstance(conv, dict) else None
+    workspace = (project or {}).get("workspace_id") if isinstance(project, dict) else None
+    if not isinstance(workspace, dict):
+        return
+    workspace_id = workspace.get("id")
+    if not workspace_id:
+        return
+    await invalidate_workspace_and_org_usage(workspace_id, workspace.get("org_id"))
+
+
 async def get_conversation(
     conversation_id: str,
     load_chunks: bool = True,
@@ -140,8 +162,8 @@ async def raise_if_conversation_not_found_or_not_authorized(
     # conversation.project_id.directus_user_id, which excluded every
     # workspace member who didn't originally create the project.
     from dembrane.app_user import get_app_user_or_raise
-    from dembrane.directus_async import async_directus
     from dembrane.inheritance import get_user_project_access
+    from dembrane.directus_async import async_directus
 
     conversation = await async_directus.get_item("conversation", conversation_id)
     if not conversation or conversation.get("deleted_at"):
@@ -320,6 +342,17 @@ async def get_conversation_content(
                 "duration": duration,
             },
         )
+
+        # New duration → bust usage cache so /w + billing don't wait
+        # 30 min (TTL) for the hours to surface.
+        try:
+            await _invalidate_usage_cache_for_conversation(conversation_id)
+        except Exception as exc:
+            logger.warning(
+                "usage cache invalidation failed for conversation %s: %s",
+                conversation_id,
+                exc,
+            )
 
         return return_url_or_redirect(merged_path, signed=signed, return_url=return_url)
 

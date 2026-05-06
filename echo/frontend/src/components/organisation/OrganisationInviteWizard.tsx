@@ -456,7 +456,7 @@ export function OrganisationInviteWizard({
 
 				<Group justify="space-between">
 					<Button
-						variant="default"
+						variant="outline"
 						size="sm"
 						onClick={step === 0 ? handleClose : () => setStep(step - 1)}
 					>

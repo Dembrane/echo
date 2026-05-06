@@ -146,9 +146,11 @@ async def get_workspace_context(
 
 
 async def _current_cycle_hours(workspace_id: str) -> float:
-    """Sum of conversation.duration across this workspace's projects for
-    the current calendar month (UTC). Respects soft-delete on both
-    project and conversation."""
+    """Cycle hours for the Pilot hard-block.
+
+    Soft-deleted rows count — PRD §270, otherwise admins could reclaim
+    the cap by deleting a project.
+    """
     from datetime import datetime, timezone
 
     now = datetime.now(timezone.utc)
@@ -164,7 +166,6 @@ async def _current_cycle_hours(workspace_id: str) -> float:
             "query": {
                 "filter": {
                     "workspace_id": {"_eq": workspace_id},
-                    "deleted_at": {"_null": True},
                 },
                 "fields": ["id"],
                 "limit": -1,
@@ -184,7 +185,6 @@ async def _current_cycle_hours(workspace_id: str) -> float:
             "query": {
                 "filter": {
                     "project_id": {"_in": ids},
-                    "deleted_at": {"_null": True},
                     "created_at": {
                         "_gte": month_start.isoformat(),
                         "_lt": next_start.isoformat(),

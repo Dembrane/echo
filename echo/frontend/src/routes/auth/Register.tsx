@@ -188,16 +188,17 @@ export const RegisterRoute = () => {
 									{...register("confirmPassword", { required: true })}
 									{...testId("auth-register-confirm-password-input")}
 								/>
-								<Box>
+								<Box className="flex gap-x-5">
 									<Button
-										variant="default"
+										variant="outline"
 										size="md"
 										onClick={() => setStep(0)}
-										mr={8}
+										className="shrink-0"
 									>
 										<Trans>Back</Trans>
 									</Button>
 									<Button
+										fullWidth
 										size="md"
 										type="submit"
 										loading={registerMutation.isPending}

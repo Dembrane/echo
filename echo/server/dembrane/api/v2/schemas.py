@@ -120,9 +120,20 @@ class OrganisationRollup(BaseModel):
     total_conversations_this_month: int = 0
 
 
+class RecentRemoval(BaseModel):
+    workspace_id: str
+    workspace_name: str
+    org_name: str
+    ended_at: str  # ISO timestamp from workspace_membership.deleted_at
+
+
 class WorkspaceListResponse(BaseModel):
     workspaces: list[WorkspaceSummary]
     organisations: list[OrganisationRollup] = []
+    # Memberships soft-deleted in the last 30 days. Powers the empty-state
+    # message on /w so a removed guest sees "your access ended" instead of
+    # "create your first workspace".
+    recent_removals: list[RecentRemoval] = []
 
 
 # ── /v2/workspaces CRUD ──

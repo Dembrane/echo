@@ -352,7 +352,7 @@ export const CreateProjectRoute = () => {
 
 				<Group justify="space-between" mt="sm">
 					<Button
-						variant="default"
+						variant="outline"
 						size="sm"
 						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
 					>

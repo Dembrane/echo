@@ -91,6 +91,10 @@ export const useWorkspaceProjects = ({
 			if (!workspaceId) return { pinned: [], projects: [], total_count: 0, has_more: false, is_admin: false };
 			return fetchWorkspaceProjects(workspaceId, pageParam * limit, limit, search);
 		},
+		// Other members' creates/deletes show up within 30s without
+		// needing a manual refresh. Idle tabs skip the poll.
+		refetchInterval: 30_000,
+		refetchIntervalInBackground: false,
 	});
 };
 

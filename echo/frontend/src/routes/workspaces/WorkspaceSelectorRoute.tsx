@@ -25,6 +25,7 @@ import { useState } from "react";
 import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useMyInvites } from "@/hooks/useMyInvites";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { logoUrl as resolveLogoUrl } from "@/lib/avatar";
@@ -74,14 +75,23 @@ interface OrganisationRollup {
 	workspace_count: number;
 }
 
+interface RecentRemoval {
+	workspace_id: string;
+	workspace_name: string;
+	org_name: string;
+	ended_at: string;
+}
+
 async function fetchWorkspaces(): Promise<{
 	workspaces: Workspace[];
 	organisations: OrganisationRollup[];
+	recent_removals: RecentRemoval[];
 }> {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		credentials: "include",
 	});
-	if (!res.ok) return { organisations: [], workspaces: [] };
+	if (!res.ok)
+		return { organisations: [], recent_removals: [], workspaces: [] };
 	return res.json();
 }
 
@@ -443,8 +453,15 @@ export const WorkspaceSelectorRoute = () => {
 		staleTime: 30_000,
 	});
 
+	// Pending invites for this user. Used by the empty state so a guest
+	// who got bounced at the cap (or hasn't accepted yet) doesn't see the
+	// "create your first workspace" copy that they can't act on.
+	const { data: pendingInvites } = useMyInvites();
+
 	const workspaces = data?.workspaces ?? [];
 	const organisations = data?.organisations ?? [];
+	const recentRemovals = data?.recent_removals ?? [];
+	const invites = pendingInvites ?? [];
 
 	const filtered = search
 		? workspaces.filter(
@@ -590,20 +607,54 @@ export const WorkspaceSelectorRoute = () => {
 					</Stack>
 				)}
 
-				{/* Empty state — only when the user has no organisations AND no workspaces.
-					    If they have a organisation but no workspace, the orgGroups loop above
-					    already renders a organisation hero + AddWorkspace card. */}
+				{/* Empty-state branches: pending invite (cap-bounced guest),
+				    recent removal (admin freed a seat), or generic fallback. */}
 				{workspaces.length === 0 &&
 					organisations.length === 0 &&
-					!isLoading && (
-						<Stack align="center" gap={16} mt="10vh">
-							<Text c="dimmed" size="sm">
+					!isLoading &&
+					(invites.length > 0 ? (
+						<Stack align="center" gap={12} mt="10vh">
+							<Text c="dimmed" size="sm" ta="center">
 								<Trans>
-									No workspaces yet. Create your first one to get started.
+									You have a pending invite to {invites[0].workspace_name}.
+									The admin needs to free a seat before you can join.
+								</Trans>
+							</Text>
+							<Button
+								variant="default"
+								size="sm"
+								onClick={() => navigate("/invites")}
+							>
+								<Trans>View invite</Trans>
+							</Button>
+						</Stack>
+					) : recentRemovals.length > 0 ? (
+						<Stack align="center" gap={8} mt="10vh">
+							<Text c="dimmed" size="sm" ta="center">
+								<Trans>
+									Your access to {recentRemovals[0].workspace_name} ended on{" "}
+									{new Date(recentRemovals[0].ended_at).toLocaleDateString()}.
+								</Trans>
+							</Text>
+							<Text c="dimmed" size="xs" ta="center">
+								<Trans>
+									Contact the admin if this was unexpected.
 								</Trans>
 							</Text>
 						</Stack>
-					)}
+					) : (
+						<Stack align="center" gap={8} mt="10vh">
+							<Text c="dimmed" size="sm" ta="center">
+								<Trans>You don't have access to any workspace right now.</Trans>
+							</Text>
+							<Text c="dimmed" size="sm" ta="center">
+								<Trans>
+									If you were expecting one, please ask the person who invited
+									you to send it again.
+								</Trans>
+							</Text>
+						</Stack>
+					))}
 			</Stack>
 		</Container>
 	);

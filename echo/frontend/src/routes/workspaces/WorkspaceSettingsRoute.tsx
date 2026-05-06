@@ -271,6 +271,9 @@ export const WorkspaceSettingsRoute = () => {
 		enabled: !!workspaceId,
 		queryFn: () => (workspaceId ? fetchSettings(workspaceId) : null),
 		queryKey: ["v2", "workspace-settings", workspaceId],
+		// Other admins' member changes show up within 30s. Idle tabs skip.
+		refetchInterval: 30_000,
+		refetchIntervalInBackground: false,
 	});
 
 	// Lightweight usage probe so the Members tab can disable the invite
@@ -377,6 +380,8 @@ export const WorkspaceSettingsRoute = () => {
 		onError: (err: Error) => toast.error(err.message),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			// Frees a pending-counted slot — re-enable invite button.
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 			toast.success(t`Invite canceled`);
 		},
 	});
@@ -389,6 +394,8 @@ export const WorkspaceSettingsRoute = () => {
 		onError: (err: Error) => toast.error(err.message),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			// Frees a seat / guest slot — re-enable invite button.
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 			toast.success(t`Member removed`);
 		},
 	});
