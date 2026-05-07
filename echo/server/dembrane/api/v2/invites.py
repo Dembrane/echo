@@ -45,22 +45,17 @@ def _enqueue_invite_email(
     template: str,
     template_data: dict,
     failure_context: str,
-) -> None:
-    """Queue an invite email on the Dramatiq network queue.
-
-    Lives here (not in tasks.py) only for the one-line enqueue wrapper —
-    the actor itself is `task_send_invite_email` in tasks.py. Keeping the
-    caller-side import lazy avoids pulling Dramatiq into the request path
-    at module load (the broker connects on first .send()).
-    """
+) -> bool:
+    """Returns False on broker failure so callers can set email_sent=False."""
+    # Lazy import to avoid pulling Dramatiq into the request path at module load.
     from dembrane.tasks import task_send_invite_email
 
     try:
         task_send_invite_email.send(to, subject, template, template_data, failure_context)
+        return True
     except Exception:
-        # If Redis / the broker is down, log and move on — the membership
-        # / invite row is already written, so the admin can resend later.
         logger.exception(f"Couldn't enqueue invite email for {to} ({failure_context})")
+        return False
 
 
 @router.post("/{workspace_id}/invite", response_model=WorkspaceInviteResponse)
@@ -315,7 +310,7 @@ async def invite_to_workspace(
             except Exception:
                 pass
 
-            _enqueue_invite_email(
+            email_queued = _enqueue_invite_email(
                 to=email,
                 subject=f"You've been added to {ctx.workspace.get('name', 'a workspace')}",
                 template="workspace_added",
@@ -332,9 +327,8 @@ async def invite_to_workspace(
                 status="added",
                 email=email,
                 user_existed=True,
-                # email_sent here means "queued for send" — the actor
-                # reports its own success/failure via logs + Sentry.
-                email_sent=True,
+                # False = broker refused; SendGrid outcome is on the actor's logs.
+                email_sent=email_queued,
             )
 
     # User doesn't exist or doesn't have app_user — create an invite.
@@ -410,7 +404,7 @@ async def invite_to_workspace(
     )
     invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
 
-    _enqueue_invite_email(
+    email_queued = _enqueue_invite_email(
         to=email,
         subject=f"{inviter_name} invited you to collaborate on dembrane",
         template="workspace_invite",
@@ -424,14 +418,13 @@ async def invite_to_workspace(
 
     logger.info(
         f"Invited {email} to workspace {workspace_id} as {role} by {ctx.app_user_id} "
-        f"(user_existed: {user_existed}, email_queued: True)"
+        f"(user_existed: {user_existed}, email_queued: {email_queued})"
     )
 
     return WorkspaceInviteResponse(
         status="invited",
         email=email,
         user_existed=user_existed,
-        # email_sent=True means "queued"; actor logs + Sentry cover the
-        # actual SendGrid outcome.
-        email_sent=True,
+        # False = broker refused; SendGrid outcome is on the actor's logs.
+        email_sent=email_queued,
     )

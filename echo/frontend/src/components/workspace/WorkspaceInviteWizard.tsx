@@ -38,7 +38,14 @@ async function fetchOrganisationMembers(
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/members`, {
 		credentials: "include",
 	});
-	if (!res.ok) return [];
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string"
+				? data.detail
+				: `Members request failed (${res.status})`,
+		);
+	}
 	return res.json();
 }
 
@@ -47,7 +54,7 @@ async function inviteToWorkspace(
 	email: string,
 	role: string,
 	isOrgMember: boolean,
-) {
+): Promise<{ status: string; email: string; email_sent: boolean }> {
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`,
 		{
@@ -125,7 +132,12 @@ export function WorkspaceInviteWizard({
 	const [role, setRole] = useState<"member" | "billing" | "admin">("member");
 	const [externals, setExternals] = useState<ExternalRow[]>([]);
 
-	const { data: organisationMembers, isLoading } = useQuery({
+	const {
+		data: organisationMembers,
+		isLoading,
+		isError: membersError,
+		refetch: refetchMembers,
+	} = useQuery({
 		enabled: opened && Boolean(orgId),
 		queryFn: () => fetchOrganisationMembers(orgId),
 		queryKey: ["v2", "organisation-members", orgId],
@@ -191,7 +203,7 @@ export function WorkspaceInviteWizard({
 				throw new Error(t`Pick at least one member or add an email.`);
 			}
 
-			const calls: Promise<unknown>[] = [];
+			const calls: ReturnType<typeof inviteToWorkspace>[] = [];
 			for (const email of organisationEmails) {
 				calls.push(inviteToWorkspace(workspaceId, email, role, true));
 			}
@@ -204,10 +216,14 @@ export function WorkspaceInviteWizard({
 			const results = await Promise.allSettled(calls);
 			const ok = results.filter((r) => r.status === "fulfilled").length;
 			const failed = results.length - ok;
-			return { failed, ok, total: results.length };
+			// Row was created but the broker refused the email — admin must resend.
+			const emailFailed = results.filter(
+				(r) => r.status === "fulfilled" && r.value.email_sent === false,
+			).length;
+			return { emailFailed, failed, ok, total: results.length };
 		},
 		onError: (err: Error) => toast.error(err.message),
-		onSuccess: ({ ok, failed, total }) => {
+		onSuccess: ({ ok, failed, emailFailed, total }) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation-members", orgId],
@@ -216,8 +232,20 @@ export function WorkspaceInviteWizard({
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "workspace-usage", workspaceId, 0],
 			});
-			if (failed === 0) {
+			if (failed === 0 && emailFailed === 0) {
 				toast.success(ok === 1 ? t`Invite sent.` : t`${ok} invites sent.`);
+				handleClose();
+			} else if (failed === 0 && emailFailed > 0) {
+				// Two static variants instead of inline `s` — non-English plurals don't survive that.
+				const partialMsg =
+					emailFailed === 1
+						? t`Added ${ok}, but 1 email didn't go out. Resend from the Members tab.`
+						: t`Added ${ok}, but ${emailFailed} emails didn't go out. Resend from the Members tab.`;
+				toast.error(
+					emailFailed === ok
+						? t`Added, but the invite email didn't go out. Resend it from the Members tab.`
+						: partialMsg,
+				);
 				handleClose();
 			} else if (ok === 0) {
 				toast.error(t`Couldn't send any of the invites. Try again.`);
@@ -309,7 +337,28 @@ export function WorkspaceInviteWizard({
 								</Text>
 							)}
 
+							{/* Otherwise the empty-picker copy below masks a real fetch failure. */}
+							{membersError && (
+								<Alert color="red" variant="light">
+									<Stack gap="xs">
+										<Text size="sm">
+											<Trans>
+												We couldn't load your organisation's members.
+											</Trans>
+										</Text>
+										<Button
+											size="xs"
+											variant="default"
+											onClick={() => refetchMembers()}
+										>
+											<Trans>Retry</Trans>
+										</Button>
+									</Stack>
+								</Alert>
+							)}
+
 							{!isLoading &&
+								!membersError &&
 								availableOrganisationMembers.length === 0 &&
 								!memberInviteBlocked && (
 									<Alert color="gray" variant="light">

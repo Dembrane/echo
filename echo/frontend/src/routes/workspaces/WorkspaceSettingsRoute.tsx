@@ -30,6 +30,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
+import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
 import { InviteMemberCard, MembersToolbar } from "@/components/members";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
@@ -110,7 +111,15 @@ async function fetchSettings(
 	if (res.status === 401 || res.status === 403 || res.status === 404) {
 		throw new WorkspaceAccessDeniedError(res.status);
 	}
-	if (!res.ok) return null;
+	// Throw rather than null — null falls into the loader branch and spins forever.
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string"
+				? data.detail
+				: t`Couldn't load workspace settings (${res.status})`,
+		);
+	}
 	return res.json();
 }
 
@@ -540,13 +549,34 @@ export const WorkspaceSettingsRoute = () => {
 		return <AccessDeniedPanel testId="workspace-settings-access-denied" />;
 	}
 
-	if (isLoading || !settings) {
+	if (isLoading) {
 		return (
 			<Container size="sm" py="xl">
 				<Stack align="center" mt="20vh">
 					<Loader size="sm" color="gray" />
 				</Stack>
 			</Container>
+		);
+	}
+
+	// Without this, !settings falls into the loader branch and spins forever.
+	if (settingsError || !settings) {
+		return (
+			<FetchErrorPanel
+				onRetry={() =>
+					queryClient.invalidateQueries({
+						queryKey: ["v2", "workspace-settings", workspaceId],
+					})
+				}
+				detail={
+					settingsError instanceof Error ? settingsError.message : null
+				}
+				message={
+					<Trans>
+						We couldn't load this workspace. Try again in a moment.
+					</Trans>
+				}
+			/>
 		);
 	}
 

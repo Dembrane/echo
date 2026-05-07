@@ -26,6 +26,9 @@ export interface WorkspaceContextValue {
 	workspace: WorkspaceSummary | null;
 	workspaces: WorkspaceSummary[];
 	isLoading: boolean;
+	// Distinct from "0 workspaces" so callers can show an error banner.
+	isError: boolean;
+	refetch: () => void;
 	setWorkspace: (id: string) => void;
 	clearWorkspace: () => void;
 }
@@ -38,6 +41,8 @@ export const WorkspaceContext = createContext<WorkspaceContextValue>({
 	workspace: null,
 	workspaces: [],
 	isLoading: true,
+	isError: false,
+	refetch: () => {},
 	setWorkspace: () => {},
 	clearWorkspace: () => {},
 });
@@ -47,16 +52,14 @@ export const useWorkspace = () => useContext(WorkspaceContext);
 // ── Provider hook ──
 
 async function fetchWorkspaces(): Promise<WorkspaceSummary[]> {
-	try {
-		const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
-			credentials: "include",
-		});
-		if (!res.ok) return [];
-		const data = await res.json();
-		return data.workspaces ?? [];
-	} catch {
-		return [];
+	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
+		credentials: "include",
+	});
+	if (!res.ok) {
+		throw new Error(`Workspaces request failed (${res.status})`);
 	}
+	const data = await res.json();
+	return data.workspaces ?? [];
 }
 
 const SESSION_KEY = "dembrane_ws_selected";
@@ -91,12 +94,18 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 			: null;
 	});
 
-	const { data: workspaces = [], isLoading } = useQuery({
+	const {
+		data: workspaces = [],
+		isLoading,
+		isError,
+		refetch,
+	} = useQuery({
 		queryKey: ["v2", "workspaces-context"],
 		queryFn: fetchWorkspaces,
 		enabled,
 		staleTime: 60_000,
-		retry: false,
+		// One retry — this query wraps the entire app, so retry: false was app-wide brittle.
+		retry: 1,
 	});
 
 	const resolved = useMemo(() => {
@@ -136,6 +145,10 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 		workspace: resolved,
 		workspaces,
 		isLoading,
+		isError,
+		refetch: () => {
+			refetch();
+		},
 		setWorkspace,
 		clearWorkspace,
 	};

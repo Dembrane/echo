@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
+	Alert,
 	Anchor,
 	Avatar,
 	Badge,
@@ -34,6 +35,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
+import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
 import { InviteMemberCard, MembersToolbar } from "@/components/members";
 import { OrganisationCapBanner } from "@/components/organisation/OrganisationCapBanner";
@@ -108,7 +110,22 @@ async function fetchOrganisation(
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}`, {
 		credentials: "include",
 	});
-	if (!res.ok) return null;
+	// 401/403/404 → null feeds the "not found" UI; other failures must throw so 5xx isn't masked as 404.
+	if (
+		res.status === 401 ||
+		res.status === 403 ||
+		res.status === 404
+	) {
+		return null;
+	}
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string"
+				? data.detail
+				: t`Couldn't load organisation (${res.status})`,
+		);
+	}
 	return res.json();
 }
 
@@ -141,7 +158,15 @@ async function fetchOrganisationWorkspaces(
 			credentials: "include",
 		},
 	);
-	if (!res.ok) return [];
+	// Throw rather than [] — empty list is indistinguishable from a real "0 workspaces".
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string"
+				? data.detail
+				: `Workspaces request failed (${res.status})`,
+		);
+	}
 	return res.json();
 }
 
@@ -287,7 +312,11 @@ export const OrganisationRoute = () => {
 
 	useDocumentTitle(t`Organisation | dembrane`);
 
-	const { data: organisation, isLoading: organisationLoading } = useQuery({
+	const {
+		data: organisation,
+		isLoading: organisationLoading,
+		error: organisationError,
+	} = useQuery({
 		enabled: Boolean(organisationId),
 		queryFn: () => fetchOrganisation(organisationId as string),
 		queryKey: ["v2", "organisation", organisationId],
@@ -299,7 +328,7 @@ export const OrganisationRoute = () => {
 		queryKey: ["v2", "organisation", organisationId, "members"],
 		retry: 1,
 	});
-	const { data: workspaces = [] } = useQuery({
+	const { data: workspaces = [], error: workspacesError } = useQuery({
 		enabled: Boolean(organisationId),
 		queryFn: () => fetchOrganisationWorkspaces(organisationId as string),
 		queryKey: ["v2", "organisation", organisationId, "workspaces"],
@@ -476,6 +505,33 @@ export const OrganisationRoute = () => {
 		);
 	}
 
+	// Distinct from the "not found" branch below — a 5xx is not a 404.
+	if (organisationError) {
+		return (
+			<FetchErrorPanel
+				onRetry={() =>
+					queryClient.invalidateQueries({
+						queryKey: ["v2", "organisation", organisationId],
+					})
+				}
+				detail={
+					organisationError instanceof Error
+						? organisationError.message
+						: null
+				}
+				message={
+					<Trans>
+						We couldn't load this organisation. Try again in a moment.
+					</Trans>
+				}
+				secondaryAction={{
+					label: <Trans>Back</Trans>,
+					onClick: () => navigate("/w"),
+				}}
+			/>
+		);
+	}
+
 	if (!organisation) {
 		return (
 			<Center style={{ height: "60vh" }}>
@@ -550,6 +606,16 @@ export const OrganisationRoute = () => {
 				    up the rollup + per-project table. People is the matrix.
 				    Workspaces and Projects tabs retired — projects fold into
 				    Usage; workspaces are reachable via the home selector. */}
+				{/* Add-to-workspace and the cap banner both read from this list. */}
+				{workspacesError && (
+					<Alert color="red" variant="light" mb="md">
+						<Trans>
+							We couldn't load this organisation's workspaces. Some controls
+							may be missing. Try refreshing.
+						</Trans>
+					</Alert>
+				)}
+
 				<Tabs value={view} onChange={setView} keepMounted={false}>
 					<Tabs.List>
 						<Tabs.Tab value="overview">

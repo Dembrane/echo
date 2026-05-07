@@ -42,6 +42,7 @@ import {
 	type VisibilityState,
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
+import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
 import { API_BASE_URL } from "@/config";
@@ -114,14 +115,21 @@ async function fetchOrgUsage(
 	orgId: string,
 	monthOffset = 0,
 	refresh = false,
-): Promise<OrgUsage | null> {
+): Promise<OrgUsage> {
 	const params = new URLSearchParams();
 	if (monthOffset > 0) params.set("month_offset", String(monthOffset));
 	if (refresh) params.set("refresh", "true");
 	const qs = params.toString();
 	const url = `${API_BASE_URL}/v2/orgs/${orgId}/usage${qs ? `?${qs}` : ""}`;
 	const res = await fetch(url, { credentials: "include" });
-	if (!res.ok) return null;
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string"
+				? data.detail
+				: t`Couldn't load usage (${res.status})`,
+		);
+	}
 	return res.json();
 }
 
@@ -241,7 +249,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-	const { data, isLoading, dataUpdatedAt } = useQuery({
+	const { data, isLoading, isError, refetch, dataUpdatedAt } = useQuery({
 		queryFn: () => fetchOrgUsage(orgId, monthOffset),
 		queryKey: ["v2", "org-usage", orgId, monthOffset],
 		// Always refetch when the usage tab mounts. Org admins navigate
@@ -258,12 +266,16 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 		setRefreshing(true);
 		try {
 			const fresh = await fetchOrgUsage(orgId, monthOffset, true);
-			if (fresh) {
-				queryClient.setQueryData(
-					["v2", "org-usage", orgId, monthOffset],
-					fresh,
-				);
-			}
+			queryClient.setQueryData(
+				["v2", "org-usage", orgId, monthOffset],
+				fresh,
+			);
+		} catch (err) {
+			toast.error(
+				err instanceof Error
+					? err.message
+					: t`Couldn't refresh usage. Try again.`,
+			);
 		} finally {
 			setRefreshing(false);
 		}
@@ -524,7 +536,29 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 	}, 0);
 	const totalsGuests = rows.reduce((s, r) => s + r.original.guest_count, 0);
 
-	if (isLoading || !data) return null;
+	if (isLoading) return null;
+
+	if (isError || !data) {
+		return (
+			<Paper p="md" radius="md" withBorder>
+				<Stack gap="xs">
+					<Text size="sm" c="red">
+						<Trans>We couldn't load this organisation's usage.</Trans>
+					</Text>
+					<Group>
+						<Button
+							size="xs"
+							variant="default"
+							loading={refreshing}
+							onClick={() => refetch()}
+						>
+							<Trans>Retry</Trans>
+						</Button>
+					</Group>
+				</Stack>
+			</Paper>
+		);
+	}
 
 	const tierOptions = TIER_ORDER.map((x) => ({
 		label: x.charAt(0).toUpperCase() + x.slice(1),

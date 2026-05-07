@@ -16,6 +16,7 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { useState } from "react";
+import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
@@ -27,7 +28,7 @@ import { displayRole } from "@/lib/roles";
 
 export const MyInvitesRoute = () => {
 	const navigate = useI18nNavigate();
-	const { data: invites, isLoading } = useMyInvites();
+	const { data: invites, isLoading, isError, refetch } = useMyInvites();
 	const acceptMutation = useAcceptInvite();
 	const declineMutation = useDeclineInvite();
 	// Per-invite error map. Toasts are easy to miss — when an accept fails
@@ -88,6 +89,20 @@ export const MyInvitesRoute = () => {
 					<Loader size="sm" color="gray" />
 				</Stack>
 			</Container>
+		);
+	}
+
+	// Distinct from the empty-state branch below — a 5xx is not "no invites."
+	if (isError) {
+		return (
+			<FetchErrorPanel
+				onRetry={() => refetch()}
+				message={
+					<Trans>
+						We couldn't load your pending invites. Try again in a moment.
+					</Trans>
+				}
+			/>
 		);
 	}
 

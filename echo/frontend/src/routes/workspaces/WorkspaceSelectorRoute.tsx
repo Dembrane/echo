@@ -22,6 +22,7 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { IconPlus, IconSettings } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -90,8 +91,10 @@ async function fetchWorkspaces(): Promise<{
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		credentials: "include",
 	});
-	if (!res.ok)
-		return { organisations: [], recent_removals: [], workspaces: [] };
+	// Throw rather than [] — empty list is indistinguishable from "no workspaces".
+	if (!res.ok) {
+		throw new Error(`Workspaces request failed (${res.status})`);
+	}
 	return res.json();
 }
 
@@ -459,7 +462,7 @@ export const WorkspaceSelectorRoute = () => {
 
 	useDocumentTitle(t`Workspaces | dembrane`);
 
-	const { data, isLoading } = useQuery({
+	const { data, isLoading, isError, refetch } = useQuery({
 		queryFn: fetchWorkspaces,
 		queryKey: ["v2", "workspaces"],
 		staleTime: 30_000,
@@ -526,6 +529,21 @@ export const WorkspaceSelectorRoute = () => {
 					<Loader size="sm" color="gray" />
 				</Stack>
 			</Container>
+		);
+	}
+
+	// Distinct from the empty-state branch below — a 5xx is not "no workspaces."
+	if (isError) {
+		return (
+			<FetchErrorPanel
+				onRetry={() => refetch()}
+				message={
+					<Trans>
+						We couldn't load your workspaces. Check your connection and try
+						again.
+					</Trans>
+				}
+			/>
 		);
 	}
 

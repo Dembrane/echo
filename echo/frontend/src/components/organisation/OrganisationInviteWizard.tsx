@@ -187,10 +187,14 @@ export function OrganisationInviteWizard({
 					Boolean(x),
 				);
 			const ok = results.length - failed.length;
-			return { failed, ok };
+			// Row was created but the broker refused the email — admin must resend.
+			const emailFailed = results.filter(
+				(r) => r.status === "fulfilled" && r.value.email_sent === false,
+			).length;
+			return { emailFailed, failed, ok };
 		},
 		onError: (err: Error) => toast.error(err.message),
-		onSuccess: ({ ok, failed }) => {
+		onSuccess: ({ ok, failed, emailFailed }) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "organisation"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
@@ -200,11 +204,26 @@ export function OrganisationInviteWizard({
 			for (const f of failed) errMap[f.workspaceId] = f.message;
 			setErrorByWorkspace(errMap);
 
-			if (failed.length === 0) {
+			if (failed.length === 0 && emailFailed === 0) {
 				toast.success(
 					ok === 1
 						? t`Invite sent to 1 workspace.`
 						: t`Invites sent to ${ok} workspaces.`,
+				);
+				handleClose();
+				return;
+			}
+
+			if (failed.length === 0 && emailFailed > 0) {
+				// Two static variants instead of inline `s` — non-English plurals don't survive that.
+				const partialMsg =
+					emailFailed === 1
+						? t`Added ${ok}, but 1 email didn't go out. Resend from the Members tab.`
+						: t`Added ${ok}, but ${emailFailed} emails didn't go out. Resend from the Members tab.`;
+				toast.error(
+					emailFailed === ok
+						? t`Added, but the invite email didn't go out. Resend it from the workspace's Members tab.`
+						: partialMsg,
 				);
 				handleClose();
 				return;

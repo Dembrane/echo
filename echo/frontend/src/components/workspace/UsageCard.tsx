@@ -13,6 +13,7 @@ import {
 } from "@mantine/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { type Tier, UpgradeModal } from "@/components/workspace/FeatureGate";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
@@ -60,14 +61,21 @@ async function fetchUsage(
 	workspaceId: string,
 	monthOffset = 0,
 	refresh = false,
-): Promise<UsageResponse | null> {
+): Promise<UsageResponse> {
 	const params = new URLSearchParams();
 	if (monthOffset > 0) params.set("month_offset", String(monthOffset));
 	if (refresh) params.set("refresh", "true");
 	const qs = params.toString();
 	const url = `${API_BASE_URL}/v2/workspaces/${workspaceId}/usage${qs ? `?${qs}` : ""}`;
 	const res = await fetch(url, { credentials: "include" });
-	if (!res.ok) return null;
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string"
+				? data.detail
+				: t`Couldn't load usage (${res.status})`,
+		);
+	}
 	return res.json();
 }
 
@@ -101,7 +109,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const [upgradeOpen, setUpgradeOpen] = useState(false);
 	const [monthOffset, setMonthOffset] = useState(0);
 
-	const { data, isLoading, dataUpdatedAt } = useQuery({
+	const { data, isLoading, isError, refetch, dataUpdatedAt } = useQuery({
 		queryFn: () => fetchUsage(workspaceId, monthOffset),
 		queryKey: ["v2", "workspace-usage", workspaceId, monthOffset],
 		// Always refetch when the billing tab mounts, even if the cached
@@ -123,18 +131,44 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 		setRefreshing(true);
 		try {
 			const fresh = await fetchUsage(workspaceId, monthOffset, true);
-			if (fresh) {
-				queryClient.setQueryData(
-					["v2", "workspace-usage", workspaceId, monthOffset],
-					fresh,
-				);
-			}
+			queryClient.setQueryData(
+				["v2", "workspace-usage", workspaceId, monthOffset],
+				fresh,
+			);
+		} catch (err) {
+			toast.error(
+				err instanceof Error
+					? err.message
+					: t`Couldn't refresh usage. Try again.`,
+			);
 		} finally {
 			setRefreshing(false);
 		}
 	};
 
-	if (isLoading || !data) return null;
+	if (isLoading) return null;
+
+	if (isError || !data) {
+		return (
+			<Paper p="md" radius="md" withBorder>
+				<Stack gap="xs">
+					<Text size="sm" c="red">
+						<Trans>We couldn't load this workspace's usage.</Trans>
+					</Text>
+					<Group>
+						<Button
+							size="xs"
+							variant="default"
+							loading={refreshing}
+							onClick={() => refetch()}
+						>
+							<Trans>Retry</Trans>
+						</Button>
+					</Group>
+				</Stack>
+			</Paper>
+		);
+	}
 
 	// Matrix §11: admin + billing + owner can request upgrades. Role comes
 	// from the workspace context (the selector response includes role).

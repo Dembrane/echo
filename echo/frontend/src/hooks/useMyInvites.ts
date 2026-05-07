@@ -16,7 +16,10 @@ async function fetchMyInvites(): Promise<MyPendingInvite[]> {
 	const res = await fetch(`${API_BASE_URL}/v2/me/invites`, {
 		credentials: "include",
 	});
-	if (!res.ok) return [];
+	// Throw rather than [] — empty list is indistinguishable from "no invites".
+	if (!res.ok) {
+		throw new Error(`Invites request failed (${res.status})`);
+	}
 	return res.json();
 }
 
