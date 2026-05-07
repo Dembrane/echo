@@ -35,6 +35,8 @@ import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
+import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
+import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { Icons } from "@/icons";
 import { getDirectusErrorString } from "@/lib/directus";
 import { testId } from "@/lib/testUtils";
@@ -195,6 +197,11 @@ export const ProjectsHomeRoute = () => {
 		allProjects.length === 0 &&
 		debouncedSearchValue === "" &&
 		status === "success";
+
+	// Without this, a 403 falls through to the empty-state and reads as "no projects yet."
+	if (isError && error instanceof WorkspaceAccessDeniedError) {
+		return <AccessDeniedPanel testId="workspace-projects-access-denied" />;
+	}
 
 	return (
 		<Container>

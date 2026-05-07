@@ -3,6 +3,7 @@ import { t } from "@lingui/core/macro";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 
 export interface ProjectAccessPreview {
 	display_name: string;
@@ -45,6 +46,9 @@ async function fetchWorkspaceProjects(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/projects?${params}`,
 		{ credentials: "include" },
 	);
+	if (res.status === 401 || res.status === 403 || res.status === 404) {
+		throw new WorkspaceAccessDeniedError(res.status);
+	}
 	if (!res.ok) {
 		return { pinned: [], projects: [], total_count: 0, has_more: false, is_admin: false };
 	}
@@ -95,6 +99,9 @@ export const useWorkspaceProjects = ({
 		// needing a manual refresh. Idle tabs skip the poll.
 		refetchInterval: 30_000,
 		refetchIntervalInBackground: false,
+		// 403/404 is stable — skip retries so the panel surfaces instantly.
+		retry: (failureCount, err) =>
+			err instanceof WorkspaceAccessDeniedError ? false : failureCount < 3,
 	});
 };
 

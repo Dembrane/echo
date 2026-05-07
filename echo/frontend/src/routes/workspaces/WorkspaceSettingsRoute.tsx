@@ -29,6 +29,7 @@ import { IconRefresh, IconTrash, IconUpload, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
+import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { toast } from "@/components/common/Toaster";
 import { InviteMemberCard, MembersToolbar } from "@/components/members";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
@@ -41,6 +42,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { logoUrl, memberInitials } from "@/lib/avatar";
 import { displayRole } from "@/lib/roles";
 import { seatOverageRateFor } from "@/lib/tiers";
@@ -105,6 +107,9 @@ async function fetchSettings(
 			credentials: "include",
 		},
 	);
+	if (res.status === 401 || res.status === 403 || res.status === 404) {
+		throw new WorkspaceAccessDeniedError(res.status);
+	}
 	if (!res.ok) return null;
 	return res.json();
 }
@@ -254,7 +259,7 @@ export const WorkspaceSettingsRoute = () => {
 		{ open: openInviteModal, close: closeInviteModal },
 	] = useDisclosure(false);
 	const [memberSearch, setMemberSearch] = useUrlSearch();
-	type WsRoleFilter = "all" | "admins" | "members" | "guests";
+	type WsRoleFilter = "all" | "admins" | "billing" | "members" | "guests";
 	const [memberRoleFilter, setMemberRoleFilter] = useState<WsRoleFilter>("all");
 
 	// Tab state — path-driven (/w/:id/settings/<tab>). Declared BEFORE
@@ -267,13 +272,21 @@ export const WorkspaceSettingsRoute = () => {
 
 	useDocumentTitle(t`Workspace settings | dembrane`);
 
-	const { data: settings, isLoading } = useQuery({
+	const {
+		data: settings,
+		isLoading,
+		error: settingsError,
+	} = useQuery({
 		enabled: !!workspaceId,
 		queryFn: () => (workspaceId ? fetchSettings(workspaceId) : null),
 		queryKey: ["v2", "workspace-settings", workspaceId],
 		// Other admins' member changes show up within 30s. Idle tabs skip.
 		refetchInterval: 30_000,
 		refetchIntervalInBackground: false,
+		// 403/404 is stable, not flaky — skip retries so the panel surfaces
+		// instantly instead of waiting ~30s for retries to exhaust.
+		retry: (failureCount, err) =>
+			err instanceof WorkspaceAccessDeniedError ? false : failureCount < 3,
 	});
 
 	// Lightweight usage probe so the Members tab can disable the invite
@@ -489,6 +502,10 @@ export const WorkspaceSettingsRoute = () => {
 				if (m.is_external) return false;
 				if (m.role !== "member") return false;
 			}
+			if (memberRoleFilter === "billing") {
+				if (m.is_external) return false;
+				if (m.role !== "billing") return false;
+			}
 			if (memberRoleFilter === "guests" && !m.is_external) return false;
 			if (!q) return true;
 			return (
@@ -502,6 +519,26 @@ export const WorkspaceSettingsRoute = () => {
 		() => sortedMembers.some((m) => m.is_external),
 		[sortedMembers],
 	);
+
+	// Show Billing chip only when ≥1 billing-role member exists (mirrors hasGuestMembers).
+	const hasBillingMembers = useMemo(
+		() => sortedMembers.some((m) => !m.is_external && m.role === "billing"),
+		[sortedMembers],
+	);
+
+	// Used to lock the role picker for the only admin so they can't trap themselves.
+	const adminLikeCount = useMemo(
+		() =>
+			sortedMembers.filter(
+				(m) => !m.is_external && (m.role === "admin" || m.role === "owner"),
+			).length,
+		[sortedMembers],
+	);
+
+	// Must come before the loading branch — otherwise a 403 reads as "loading forever."
+	if (settingsError instanceof WorkspaceAccessDeniedError) {
+		return <AccessDeniedPanel testId="workspace-settings-access-denied" />;
+	}
 
 	if (isLoading || !settings) {
 		return (
@@ -712,6 +749,9 @@ export const WorkspaceSettingsRoute = () => {
 											options: [
 												{ label: t`All`, value: "all" },
 												{ label: t`Admins`, value: "admins" },
+												...(hasBillingMembers
+													? [{ label: t`Billing`, value: "billing" }]
+													: []),
 												{ label: t`Members`, value: "members" },
 												...(hasGuestMembers
 													? [{ label: t`Guests`, value: "guests" }]
@@ -871,6 +911,18 @@ export const WorkspaceSettingsRoute = () => {
 															// support flow, matrix §5.
 															<Tooltip
 																label={t`Ownership is locked. Contact support to transfer.`}
+															>
+																<Badge size="sm" variant="light" color="blue">
+																	<Trans>Admin</Trans>
+																</Badge>
+															</Tooltip>
+														) : canManage &&
+															member.user_id === myAppUserId &&
+															member.role === "admin" &&
+															adminLikeCount === 1 ? (
+															// Sole admin: lock so they can't strand the workspace by demoting themselves.
+															<Tooltip
+																label={t`You're the only admin. Promote someone else before changing your role.`}
 															>
 																<Badge size="sm" variant="light" color="blue">
 																	<Trans>Admin</Trans>

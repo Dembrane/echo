@@ -145,7 +145,7 @@ async function fetchOrganisationWorkspaces(
 	return res.json();
 }
 
-type RoleFilter = "all" | "admins" | "members" | "guests";
+type RoleFilter = "all" | "admins" | "billing" | "members" | "guests";
 
 // Role options by scope + caller role. Organisation-level doesn't include
 // Matrix §5 retires "owner" as a user-facing role — it's a backend-only
@@ -432,6 +432,13 @@ export const OrganisationRoute = () => {
 		[members],
 	);
 
+	// Org picker only offers admin/member but rows can still hold "billing"
+	// via legacy/future flows — show the chip only when ≥1 such row exists.
+	const hasBilling = useMemo(
+		() => members.some((m) => !m.is_external && m.role === "billing"),
+		[members],
+	);
+
 	const filteredMembers = useMemo(() => {
 		const q = search.trim().toLowerCase();
 		return members.filter((m) => {
@@ -447,6 +454,10 @@ export const OrganisationRoute = () => {
 			if (roleFilter === "members") {
 				if (m.is_external) return false;
 				if (m.role !== "member") return false;
+			}
+			if (roleFilter === "billing") {
+				if (m.is_external) return false;
+				if (m.role !== "billing") return false;
 			}
 			if (roleFilter === "guests" && !m.is_external) return false;
 			if (!q) return true;
@@ -583,6 +594,9 @@ export const OrganisationRoute = () => {
 									options: [
 										{ label: t`All`, value: "all" },
 										{ label: t`Admins`, value: "admins" },
+										...(hasBilling
+											? [{ label: t`Billing`, value: "billing" }]
+											: []),
 										{ label: t`Members`, value: "members" },
 										...(hasGuests
 											? [{ label: t`Guests`, value: "guests" }]

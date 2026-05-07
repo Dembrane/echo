@@ -675,6 +675,29 @@ async def change_member_role(
                 status_code=400, detail="Cannot demote the last owner. Promote someone else first."
             )
 
+    # Mirrors the last-owner guard so a direct API call can't strand the
+    # workspace; the frontend lock alone isn't enough (matrix §4).
+    if membership.get("role") == "admin" and body.role not in ("admin", "owner"):
+        admins = await async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_eq": ctx.workspace_id},
+                        "role": {"_in": ["admin", "owner"]},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": 2,
+                }
+            },
+        )
+        if isinstance(admins, list) and len(admins) <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot demote the last admin. Promote someone else first.",
+            )
+
     await async_directus.update_item(
         "workspace_membership",
         membership_id,

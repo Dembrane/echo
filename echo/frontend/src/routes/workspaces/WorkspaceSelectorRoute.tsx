@@ -389,23 +389,35 @@ function OrganisationHeroCard({
 							{organisation.name}
 						</Text>
 						<Text size="xs" c="dimmed">
-							<Plural
-								value={organisation.workspace_count}
-								one="# workspace"
-								other="# workspaces"
-							/>
-							{" · "}
-							<Plural
-								value={organisation.total_members}
-								one="# person"
-								other="# people"
-							/>
-							{" · "}
-							<Plural
-								value={organisation.total_projects}
-								one="# project"
-								other="# projects"
-							/>
+							{isAdminOrOwner ? (
+								<>
+									<Plural
+										value={organisation.workspace_count}
+										one="# workspace"
+										other="# workspaces"
+									/>
+									{" · "}
+									<Plural
+										value={organisation.total_members}
+										one="# person"
+										other="# people"
+									/>
+									{" · "}
+									<Plural
+										value={organisation.total_projects}
+										one="# project"
+										other="# projects"
+									/>
+								</>
+							) : (
+								// Server scopes counts to caller's memberships, so for
+								// non-admins "0 workspaces" looks like "org is empty" — make scope explicit.
+								<Plural
+									value={organisation.workspace_count}
+									one="# workspace you can access"
+									other="# workspaces you can access"
+								/>
+							)}
 							{usage && (
 								<>
 									{" · "}
