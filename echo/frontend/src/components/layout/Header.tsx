@@ -119,6 +119,11 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const { setLogoUrl } = useWhitelabelLogo();
 
 	useEffect(() => {
+		if (!isAuthenticated) {
+			setLogoUrl(null);
+			return;
+		}
+
 		const insideWorkspace = !hideWorkspaceBreadcrumb;
 
 		// Wait for workspace data before resolving — avoids logo flash on refresh.
@@ -134,6 +139,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 				: null);
 		setLogoUrl(resolved ?? null);
 	}, [
+		isAuthenticated,
 		hideWorkspaceBreadcrumb,
 		workspaceLoading,
 		workspace?.logo_url,
@@ -160,7 +166,6 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 			message: t`See you soon`,
 		});
 
-		// Preserve location so re-login lands back here, not on the lastStillValid auto-resume.
 		const path = location.pathname + location.search + location.hash;
 
 		await logoutMutation.mutateAsync({
