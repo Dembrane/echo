@@ -25,12 +25,20 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import { IconRefresh, IconTrash, IconUpload, IconX } from "@tabler/icons-react";
+import {
+	IconLock,
+	IconRefresh,
+	IconTrash,
+	IconUpload,
+	IconX,
+} from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { ImageCropModal } from "@/components/common/ImageCropModal";
 import { toast } from "@/components/common/Toaster";
 import { InviteMemberCard, MembersToolbar } from "@/components/members";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
@@ -1381,15 +1389,7 @@ export const WorkspaceSettingsRoute = () => {
 	);
 };
 
-/**
- * Workspace settings form — split across two tabs per 2026-04-23 audit.
- *
- * `section="general"` renders description + logo.
- * `section="access"` renders the Open/Private radio + its upgrade gate.
- *
- * State lives in this component and is shared between the two instances
- * so both tabs hit the same mutations and query cache.
- */
+/** `section="general"` renders name + description + logo; `section="access"` renders the Open/Private radio. */
 function PrivacyAndDefaultsSection({
 	settings,
 	canEdit,
@@ -1402,16 +1402,12 @@ function PrivacyAndDefaultsSection({
 	section?: "general" | "access";
 }) {
 	const queryClient = useQueryClient();
-	// Description autosaves on blur (non-critical text). Privacy keeps
-	// explicit Save — flipping Open↔Private changes who can see the
-	// workspace's data and is the one thing in this form where "oops"
-	// is expensive.
+	const navigate = useI18nNavigate();
+	// Description autosaves on blur; privacy keeps explicit Save.
 	const [description, setDescription] = useState<string>(
 		settings.description ?? "",
 	);
 	const [name, setName] = useState<string>(settings.name ?? "");
-	// Matrix §6 retired derivation — `inherit_organisation_admins` is now just
-	// "Open vs Private." Legacy rows still read through this flag.
 	const [isOpen, setIsOpen] = useState<boolean | null>(null);
 
 	const effectiveIsOpen = isOpen ?? settings.inherit_organisation_admins;
@@ -1432,9 +1428,6 @@ function PrivacyAndDefaultsSection({
 		},
 	});
 
-	// Name edit moved into the General tab (2026-04-24). Autosaves on
-	// blur like description — the header still shows the name but is no
-	// longer the edit surface. Read-only for members (canEdit=false).
 	const nameMutation = useMutation({
 		mutationFn: (value: string) =>
 			updateWorkspace(workspaceId, { name: value }),
@@ -1469,17 +1462,22 @@ function PrivacyAndDefaultsSection({
 		},
 	});
 
-	// Logo upload lives on its own mutation so it commits immediately —
-	// mirrors the user-settings whitelabel flow. Save button doesn't need
-	// to wait on an image round-trip.
 	const logoResetRef = useRef<() => void>(null);
+	const [cropSrc, setCropSrc] = useState<string | null>(null);
+	const [cropOpened, { open: openCrop, close: closeCrop }] =
+		useDisclosure(false);
+	const [
+		removeLogoConfirmOpened,
+		{ open: openRemoveLogoConfirm, close: closeRemoveLogoConfirm },
+	] = useDisclosure(false);
 	const uploadLogoMutation = useMutation({
-		mutationFn: (file: File) =>
-			uploadWorkspaceLogo(workspaceId, file, file.name || "logo.png"),
+		mutationFn: (blob: Blob) =>
+			uploadWorkspaceLogo(workspaceId, blob, "logo.png"),
 		onError: (err: Error) => toast.error(err.message),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
 			toast.success(t`Logo updated`);
 		},
 	});
@@ -1489,6 +1487,7 @@ function PrivacyAndDefaultsSection({
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
 			toast.success(t`Logo removed`);
 		},
 	});
@@ -1498,11 +1497,23 @@ function PrivacyAndDefaultsSection({
 	const handleLogoSelect = (file: File | null) => {
 		logoResetRef.current?.();
 		if (!file) return;
-		uploadLogoMutation.mutate(file);
+		const reader = new FileReader();
+		reader.onload = () => {
+			setCropSrc(reader.result as string);
+			openCrop();
+		};
+		reader.readAsDataURL(file);
+	};
+
+	const handleCropComplete = (blob: Blob) => {
+		uploadLogoMutation.mutate(blob);
+		setCropSrc(null);
+		closeCrop();
 	};
 
 	if (section === "general")
 		return (
+			<>
 			<Stack gap={16}>
 				<TextInput
 					label={t`Name`}
@@ -1552,67 +1563,208 @@ function PrivacyAndDefaultsSection({
 					disabled={!canEdit || descriptionMutation.isPending}
 					maxLength={500}
 				/>
-				<Stack gap={6}>
-					<Text size="sm" fw={500}>
-						<Trans>Logo</Trans>
-					</Text>
-					<Text size="xs" c="dimmed">
-						<Trans>
-							Custom workspace logo. Requires changemaker tier or above.
-						</Trans>
-					</Text>
-					{currentLogoUrl ? (
-						<Group gap="sm" align="center">
-							<Image
-								src={currentLogoUrl}
-								alt={t`Workspace logo`}
-								h={48}
-								w="auto"
-								fit="contain"
-								style={{ maxWidth: 200 }}
-							/>
-							<Button
-								variant="subtle"
-								color="red"
-								size="compact-sm"
-								leftSection={<IconTrash size={14} />}
-								loading={removeLogoMutation.isPending}
-								disabled={!canEdit}
-								onClick={() => removeLogoMutation.mutate()}
+				{(() => {
+					// Whitelabel branding is changemaker+
+					const whitelabelTiers = ["changemaker", "guardian"];
+					const canWhitelabel = whitelabelTiers.includes(settings.tier);
+					const canRequestUpgrade =
+						settings.my_role === "owner" ||
+						settings.my_role === "admin" ||
+						settings.my_role === "billing";
+
+					if (canWhitelabel) {
+						return (
+							<Stack gap={6}>
+								<Text size="sm" fw={500}>
+									<Trans>Logo</Trans>
+								</Text>
+								<Text size="xs" c="dimmed">
+									<Trans>Custom workspace logo shown to participants.</Trans>
+								</Text>
+								{currentLogoUrl ? (
+									<Group gap="sm" align="center">
+										<Image
+											src={currentLogoUrl}
+											alt={t`Workspace logo`}
+											h={48}
+											w="auto"
+											fit="contain"
+											style={{ maxWidth: 200 }}
+										/>
+										<Button
+											variant="subtle"
+											color="red"
+											size="compact-sm"
+											leftSection={<IconTrash size={14} />}
+											loading={removeLogoMutation.isPending}
+											disabled={!canEdit}
+											onClick={openRemoveLogoConfirm}
+										>
+											<Trans>Remove</Trans>
+										</Button>
+									</Group>
+								) : (
+									<Text size="xs" c="dimmed" fs="italic">
+										<Trans>No logo set. dembrane default will be used.</Trans>
+									</Text>
+								)}
+								{!currentLogoUrl && (
+									<FileButton
+										resetRef={logoResetRef}
+										onChange={handleLogoSelect}
+										accept="image/png,image/jpeg,image/webp"
+										disabled={!canEdit}
+									>
+										{(props) => (
+											<Button
+												variant="light"
+												size="compact-sm"
+												leftSection={<IconUpload size={14} />}
+												loading={uploadLogoMutation.isPending}
+												style={{ alignSelf: "flex-start" }}
+												disabled={!canEdit}
+												{...props}
+											>
+												<Trans>Upload logo</Trans>
+											</Button>
+										)}
+									</FileButton>
+								)}
+							</Stack>
+						);
+					}
+
+					return (
+						<Stack gap={0}>
+							<Divider />
+							<Group
+								justify="space-between"
+								align="center"
+								gap="xl"
+								py="md"
+								wrap="nowrap"
 							>
-								<Trans>Remove</Trans>
-							</Button>
-						</Group>
-					) : (
-						<Text size="xs" c="dimmed" fs="italic">
-							<Trans>No logo set. dembrane default will be used.</Trans>
-						</Text>
-					)}
-					{/* No single-click "Replace" — destructive step is explicit.
-				    Remove, then the slot re-opens to upload again. */}
-					{!currentLogoUrl && (
-						<FileButton
-							resetRef={logoResetRef}
-							onChange={handleLogoSelect}
-							accept="image/png,image/jpeg,image/webp"
-							disabled={!canEdit}
-						>
-							{(props) => (
-								<Button
-									variant="light"
-									size="compact-sm"
-									leftSection={<IconUpload size={14} />}
-									loading={uploadLogoMutation.isPending}
-									style={{ alignSelf: "flex-start" }}
-									{...props}
+								<Stack gap={6}>
+									<Text size="sm" fw={500}>
+										<Trans>Logo</Trans>
+									</Text>
+									{currentLogoUrl ? (
+										<>
+											<Group gap="sm" align="center">
+												<Image
+													src={currentLogoUrl}
+													alt={t`Workspace logo`}
+													h={48}
+													w="auto"
+													fit="contain"
+													style={{ maxWidth: 200 }}
+												/>
+												<Button
+													variant="subtle"
+													color="red"
+													size="compact-sm"
+													leftSection={<IconTrash size={14} />}
+													loading={removeLogoMutation.isPending}
+													disabled={!canEdit}
+													onClick={openRemoveLogoConfirm}
+												>
+													<Trans>Remove</Trans>
+												</Button>
+											</Group>
+											<Text size="xs" c="dimmed" fs="italic">
+												<Trans>
+													Your logo is still active but can't be changed on
+													this tier.
+												</Trans>
+											</Text>
+										</>
+									) : (
+										<>
+											<Text size="xs" c="dimmed" fs="italic">
+												<Trans>
+													No logo set. dembrane default will be used.
+												</Trans>
+											</Text>
+											<Button
+												variant="light"
+												size="compact-sm"
+												leftSection={<IconUpload size={14} />}
+												style={{ alignSelf: "flex-start" }}
+												disabled
+											>
+												<Trans>Upload logo</Trans>
+											</Button>
+										</>
+									)}
+								</Stack>
+
+								<Box
+									p="sm"
+									style={{
+										background: "rgba(65, 105, 225, 0.06)",
+										border: "1px solid rgba(65, 105, 225, 0.2)",
+										borderRadius: 8,
+									}}
 								>
-									<Trans>Upload logo</Trans>
-								</Button>
-							)}
-						</FileButton>
-					)}
-				</Stack>
+									<Stack align="center" gap="xs" maw={260} ta="center">
+										<IconLock
+											size={24}
+											stroke={1.5}
+											color="var(--mantine-color-blue-6)"
+										/>
+										<Text size="sm" fw={600}>
+											<Trans>Requires changemaker tier or above</Trans>
+										</Text>
+										<Button
+											color="blue"
+											size="xs"
+											disabled={!canRequestUpgrade}
+											onClick={() =>
+												navigate(`/w/${workspaceId}/settings/billing`)
+											}
+										>
+											<Trans>Upgrade to unlock</Trans>
+										</Button>
+									</Stack>
+								</Box>
+							</Group>
+							<Divider />
+						</Stack>
+					);
+				})()}
 			</Stack>
+			{cropSrc && (
+				<ImageCropModal
+					opened={cropOpened}
+					onClose={() => {
+						closeCrop();
+						setCropSrc(null);
+					}}
+					imageSrc={cropSrc}
+					onCropComplete={handleCropComplete}
+					aspect={3}
+					title={t`Crop logo`}
+				/>
+			)}
+			<ConfirmModal
+				opened={removeLogoConfirmOpened}
+				onClose={closeRemoveLogoConfirm}
+				onConfirm={() => {
+					removeLogoMutation.mutate();
+					closeRemoveLogoConfirm();
+				}}
+				title={t`Remove logo`}
+				message={
+					<Trans>
+						Remove the custom logo? The dembrane default will be used instead.
+					</Trans>
+				}
+				confirmLabel={<Trans>Remove</Trans>}
+				confirmColor="red"
+				loading={removeLogoMutation.isPending}
+				data-testid="workspace-logo-remove-modal"
+			/>
+			</>
 		);
 
 	// section === "access"

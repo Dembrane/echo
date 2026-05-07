@@ -46,6 +46,7 @@ import {
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { analytics } from "@/lib/analytics";
+import { logoUrl } from "@/lib/avatar";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
 import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";
@@ -93,13 +94,16 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const needsOnboarding = meV2?.onboarding_completed === false;
 	const hasPendingInvites = meV2?.has_pending_invites === true;
 	const isStaff = meV2?.is_staff === true;
-	const { workspaceId, workspaceName, workspaces, setWorkspace } = useWorkspace();
+	const {
+		workspaceId,
+		workspaceName,
+		workspace,
+		workspaces,
+		isLoading: workspaceLoading,
+		setWorkspace,
+	} = useWorkspace();
 	const location = useLocation();
-	// Workspace breadcrumb in the header is noise on pages that ARE the
-	// selector or organisation canvas — those pages own the workspace pick / organisation
-	// context directly. Hide it on /w (selector), /w/new (create wizard),
-	// and /o/:organisationId (organisation surfaces). Path-match is locale-aware (prefix
-	// may include /en or similar).
+	// Hide workspace breadcrumb on selector, create-wizard, org, and admin pages.
 	const pathNoLocale = location.pathname.replace(
 		/^\/[a-z]{2}(-[A-Z]{2})?(?=\/)/,
 		"",
@@ -115,12 +119,28 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const { setLogoUrl } = useWhitelabelLogo();
 
 	useEffect(() => {
-		if (user?.whitelabel_logo) {
-			setLogoUrl(`${DIRECTUS_PUBLIC_URL}/assets/${user.whitelabel_logo}`);
-		} else {
-			setLogoUrl(null);
-		}
-	}, [user?.whitelabel_logo, setLogoUrl]);
+		const insideWorkspace = !hideWorkspaceBreadcrumb;
+
+		// Wait for workspace data before resolving — avoids logo flash on refresh.
+		if (insideWorkspace && workspaceLoading) return;
+
+		const workspaceLogo = insideWorkspace
+			? (logoUrl(workspace?.logo_url) ?? logoUrl(workspace?.org_logo_url))
+			: undefined;
+		const resolved =
+			workspaceLogo ??
+			(user?.whitelabel_logo
+				? `${DIRECTUS_PUBLIC_URL}/assets/${user.whitelabel_logo}`
+				: null);
+		setLogoUrl(resolved ?? null);
+	}, [
+		hideWorkspaceBreadcrumb,
+		workspaceLoading,
+		workspace?.logo_url,
+		workspace?.org_logo_url,
+		user?.whitelabel_logo,
+		setLogoUrl,
+	]);
 
 	let docUrl: string;
 	switch (language) {

@@ -30,7 +30,6 @@ import { FontSizeSettingsCard } from "@/components/settings/FontSizeSettingsCard
 import { LegalBasisSettingsCard } from "@/components/settings/LegalBasisSettingsCard";
 import { MyAccessCard } from "@/components/settings/MyAccessCard";
 import { TwoFactorSettingsCard } from "@/components/settings/TwoFactorSettingsCard";
-import { WhitelabelLogoCard } from "@/components/settings/WhitelabelLogoCard";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
@@ -185,7 +184,6 @@ export const UserSettingsRoute = () => {
 										<Trans>Project Defaults</Trans>
 									</Title>
 
-									<WhitelabelLogoCard />
 									<LegalBasisSettingsCard />
 								</Stack>
 							)}

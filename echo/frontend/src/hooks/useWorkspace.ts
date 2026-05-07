@@ -12,6 +12,8 @@ interface WorkspaceSummary {
 	role: string;
 	is_default: boolean;
 	tier: string;
+	logo_url: string | null;
+	org_logo_url: string | null;
 	project_count: number;
 	member_count: number;
 	is_external: boolean;

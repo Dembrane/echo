@@ -9,7 +9,6 @@ import {
 	Button,
 	Center,
 	Container,
-	FileButton,
 	Group,
 	Image,
 	Loader,
@@ -29,11 +28,9 @@ import {
 	IconChevronRight,
 	IconLock,
 	IconPlus,
-	IconTrash,
-	IconUpload,
 } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
@@ -814,41 +811,6 @@ async function updateOrganisationFromOverview(
 	return res.json();
 }
 
-async function uploadOrganisationLogoInline(
-	organisationId: string,
-	file: Blob,
-	filename = "logo.png",
-) {
-	const body = new FormData();
-	body.append("file", file, filename);
-	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}/logo`, {
-		body,
-		credentials: "include",
-		method: "POST",
-	});
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string" ? data.detail : "Failed to upload logo",
-		);
-	}
-	const data = await res.json();
-	return data.file_id as string;
-}
-
-async function removeOrganisationLogoInline(organisationId: string) {
-	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}/logo`, {
-		credentials: "include",
-		method: "DELETE",
-	});
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string" ? data.detail : "Failed to remove logo",
-		);
-	}
-}
-
 function OverviewPanel({
 	organisation,
 	organisationId,
@@ -864,7 +826,6 @@ function OverviewPanel({
 	// app (HostGuide titles, project portal). Local state lets the user
 	// type without every keystroke round-tripping; blur commits.
 	const [name, setName] = useState(organisation.name);
-	const logoResetRef = useRef<() => void>(null);
 
 	const invalidate = () => {
 		queryClient.invalidateQueries({
@@ -888,34 +849,6 @@ function OverviewPanel({
 			toast.success(t`Saved`);
 		},
 	});
-	const uploadLogoMutation = useMutation({
-		mutationFn: (file: File) =>
-			uploadOrganisationLogoInline(
-				organisationId,
-				file,
-				file.name || "logo.png",
-			),
-		onError: (err: Error) => toast.error(err.message),
-		onSuccess: () => {
-			invalidate();
-			toast.success(t`Logo updated`);
-		},
-	});
-	const removeLogoMutation = useMutation({
-		mutationFn: () => removeOrganisationLogoInline(organisationId),
-		onError: (err: Error) => toast.error(err.message),
-		onSuccess: () => {
-			invalidate();
-			toast.success(t`Logo removed`);
-		},
-	});
-	const currentOrganisationLogoUrl = resolveLogoUrl(organisation.logo_url);
-
-	const handleLogoSelect = (file: File | null) => {
-		logoResetRef.current?.();
-		if (!file) return;
-		uploadLogoMutation.mutate(file);
-	};
 
 	return (
 		<Stack gap="lg">
@@ -944,65 +877,6 @@ function OverviewPanel({
 					}}
 					maxLength={100}
 				/>
-				<Stack gap={6}>
-					<Text size="sm" fw={500}>
-						<Trans>Logo</Trans>
-					</Text>
-					<Text size="xs" c="dimmed">
-						<Trans>
-							Workspace-level logo overrides the organisation logo when set.
-						</Trans>
-					</Text>
-					{currentOrganisationLogoUrl ? (
-						<Group gap="sm" align="center">
-							<Image
-								src={currentOrganisationLogoUrl}
-								alt={t`Organisation logo`}
-								h={72}
-								w="auto"
-								fit="contain"
-								style={{ maxWidth: 320 }}
-							/>
-							<Button
-								variant="subtle"
-								color="red"
-								size="compact-sm"
-								leftSection={<IconTrash size={14} />}
-								loading={removeLogoMutation.isPending}
-								disabled={!canEdit}
-								onClick={() => removeLogoMutation.mutate()}
-							>
-								<Trans>Remove</Trans>
-							</Button>
-						</Group>
-					) : (
-						<Text size="xs" c="dimmed" fs="italic">
-							<Trans>No logo set. dembrane default will be used.</Trans>
-						</Text>
-					)}
-					{/* No single-click "Replace" — destructive step is explicit. */}
-					{!currentOrganisationLogoUrl && (
-						<FileButton
-							resetRef={logoResetRef}
-							onChange={handleLogoSelect}
-							accept="image/png,image/jpeg,image/webp"
-							disabled={!canEdit}
-						>
-							{(props) => (
-								<Button
-									variant="light"
-									size="compact-sm"
-									leftSection={<IconUpload size={14} />}
-									loading={uploadLogoMutation.isPending}
-									style={{ alignSelf: "flex-start" }}
-									{...props}
-								>
-									<Trans>Upload logo</Trans>
-								</Button>
-							)}
-						</FileButton>
-					)}
-				</Stack>
 			</Stack>
 
 			{/* Count tiles dropped 2026-04-23: the organisation header subtitle
