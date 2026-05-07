@@ -1,13 +1,10 @@
+import { Loader, Stack } from "@mantine/core";
 import { Navigate } from "react-router";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { Loader, Stack } from "@mantine/core";
 
-/**
- * Redirects /projects to /w/:workspaceId/projects when workspace context exists.
- * Falls through to old behavior if no workspace (un-onboarded user).
- */
+// Routes legacy /projects: resolved workspace → /w/:id/projects, multi-workspace → /w, none → fall through.
 export const WorkspaceRedirect = () => {
-	const { workspaceId, isLoading } = useWorkspace();
+	const { workspaceId, workspaces, isLoading } = useWorkspace();
 
 	if (isLoading) {
 		return (
@@ -21,6 +18,9 @@ export const WorkspaceRedirect = () => {
 		return <Navigate to={`/w/${workspaceId}/projects`} replace />;
 	}
 
-	// No workspace — fall through to legacy /projects
+	if (workspaces.length > 0) {
+		return <Navigate to="/w" replace />;
+	}
+
 	return null;
 };

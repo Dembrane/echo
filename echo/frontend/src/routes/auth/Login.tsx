@@ -21,12 +21,31 @@ import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
-import { toast } from "@/components/common/Toaster";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
-import { useCreateProjectMutation } from "@/components/project/hooks";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
+
+// Same-origin path guard against open-redirect via ?next=//evil.com.
+const isSafeNextPath = (next: string | null | undefined): next is string => {
+	if (!next) return false;
+	if (!next.startsWith("/")) return false;
+	if (next.startsWith("//") || next.startsWith("/\\")) return false;
+	return true;
+};
+
+const UUID_RE =
+	/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+// Returns the workspace UUID from /w/:id/... (locale-prefix tolerant), else null.
+const extractWorkspaceIdFromPath = (path: string): string | null => {
+	const segments = path.split(/[?#]/)[0].split("/").filter(Boolean);
+	if (segments[0] && /^[a-z]{2}(-[A-Z]{2})?$/.test(segments[0])) {
+		segments.shift();
+	}
+	if (segments[0] !== "w" || !segments[1]) return null;
+	return UUID_RE.test(segments[1]) ? segments[1] : null;
+};
 
 // const LoginWithProvider = ({
 // 	provider,
@@ -80,7 +99,6 @@ export const LoginRoute = () => {
 	});
 
 	const navigate = useI18nNavigate();
-	const createProjectMutation = useCreateProjectMutation();
 	const { runTransition } = useTransitionCurtain();
 
 	const [error, setError] = useState("");
@@ -131,6 +149,7 @@ export const LoginRoute = () => {
 			let workspaceCount = 0;
 			let firstWorkspaceId: string | null = null;
 			let isOrganisationAdmin = false;
+			let wsList: { id: string }[] = [];
 			try {
 				await new Promise((r) => setTimeout(r, 300));
 				const meResponse = await fetch(`${API_BASE_URL}/v2/me`, {
@@ -151,7 +170,7 @@ export const LoginRoute = () => {
 					});
 					if (wsResponse.ok) {
 						const wsData = await wsResponse.json();
-						const wsList = wsData.workspaces ?? [];
+						wsList = wsData.workspaces ?? [];
 						workspaceCount = wsList.length;
 						if (wsList.length > 0) {
 							firstWorkspaceId = wsList[0].id;
@@ -169,8 +188,12 @@ export const LoginRoute = () => {
 				return;
 			}
 
-			// Deep link takes priority
-			if (!!next && next !== "/login") {
+			// Deep-link priority — but block cross-user leaks via workspace access check.
+			const nextWsId = isSafeNextPath(next)
+				? extractWorkspaceIdFromPath(next)
+				: null;
+			const nextHasAccess = !nextWsId || wsList.some((w) => w.id === nextWsId);
+			if (isSafeNextPath(next) && next !== "/login" && nextHasAccess) {
 				navigate(next);
 				return;
 			}
@@ -180,11 +203,8 @@ export const LoginRoute = () => {
 			// - Returning multi-workspace user → last-used workspace (if still valid)
 			// - First-time multi-workspace user → selector
 			const lastUsedId = localStorage.getItem("dembrane_last_workspace_id");
-			const lastStillValid = lastUsedId && workspaceCount > 0 &&
-				(await fetch(`${API_BASE_URL}/v2/workspaces`, { credentials: "include" })
-					.then((r) => r.ok ? r.json() : null)
-					.then((d) => d?.workspaces?.some((w: { id: string }) => w.id === lastUsedId))
-					.catch(() => false));
+			const lastStillValid =
+				!!lastUsedId && wsList.some((w) => w.id === lastUsedId);
 
 			if (workspaceCount === 1 && firstWorkspaceId) {
 				navigate(`/w/${firstWorkspaceId}/projects`);

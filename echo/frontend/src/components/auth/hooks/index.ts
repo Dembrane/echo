@@ -12,7 +12,22 @@ import { toast } from "@/components/common/Toaster";
 import { ADMIN_BASE_URL, API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { directus } from "@/lib/directus";
+import { isAuthPath } from "../utils/authPaths";
 import { throwWithMessage } from "../utils/errorUtils";
+
+const buildLoginQuery = ({
+	next,
+	reason,
+}: {
+	next?: string;
+	reason?: string;
+}): string => {
+	const params = new URLSearchParams();
+	if (next) params.set("next", next);
+	if (reason) params.set("reason", reason);
+	const qs = params.toString();
+	return qs ? `?${qs}` : "";
+};
 
 export const useCurrentUser = ({
 	enabled = true,
@@ -246,17 +261,20 @@ export const useLogoutMutation = () => {
 		},
 		onError: (_error, { next, reason, doRedirect }) => {
 			if (doRedirect) {
-				navigate(
-					"/login" +
-						(next ? `?next=${encodeURIComponent(next)}` : "") +
-						(reason ? `&reason=${reason}` : ""),
-				);
+				navigate(`/login${buildLoginQuery({ next, reason })}`);
 			}
 		},
 		onMutate: async () => {
 			await queryClient.cancelQueries();
+			// Wipe cache before re-setting session=false — prevents the next user
+			// from briefly seeing the previous user's workspaces/projects.
+			queryClient.removeQueries();
 			queryClient.setQueryData(["auth", "session"], false);
-			queryClient.removeQueries({ exact: false, queryKey: ["users", "me"] });
+			if (typeof window !== "undefined") {
+				try {
+					sessionStorage.removeItem("dembrane_ws_selected");
+				} catch {}
+			}
 		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
@@ -265,11 +283,7 @@ export const useLogoutMutation = () => {
 			posthog?.capture("user_logged_out");
 			posthog?.reset();
 			if (doRedirect) {
-				navigate(
-					"/login" +
-						(next ? `?next=${encodeURIComponent(next)}` : "") +
-						(reason ? `&reason=${reason}` : ""),
-				);
+				navigate(`/login${buildLoginQuery({ next, reason })}`);
 			}
 		},
 	});
@@ -294,15 +308,21 @@ export const useAuthenticated = (doRedirect = false) => {
 	useEffect(() => {
 		if (sessionQuery.isError && doRedirect && !hasLoggedOutRef.current) {
 			hasLoggedOutRef.current = true;
+			// Preserve full URL through /login; skip auth pages to avoid loops.
+			const nextUrl = isAuthPath(location.pathname)
+				? undefined
+				: location.pathname + location.search + location.hash;
 			logoutMutation.mutate({
 				doRedirect,
-				next: location.pathname,
+				next: nextUrl,
 				reason: searchParams.get("reason") ?? "",
 			});
 		}
 	}, [
 		doRedirect,
+		location.hash,
 		location.pathname,
+		location.search,
 		logoutMutation,
 		searchParams,
 		sessionQuery.isError,

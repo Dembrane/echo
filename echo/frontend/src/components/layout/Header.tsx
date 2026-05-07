@@ -34,6 +34,7 @@ import {
 	useCurrentUser,
 	useLogoutMutation,
 } from "@/components/auth/hooks";
+import { isAuthPath } from "@/components/auth/utils/authPaths";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -139,8 +140,12 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 			message: t`See you soon`,
 		});
 
+		// Preserve location so re-login lands back here, not on the lastStillValid auto-resume.
+		const path = location.pathname + location.search + location.hash;
+
 		await logoutMutation.mutateAsync({
 			doRedirect: true,
+			next: isAuthPath(location.pathname) ? undefined : path,
 		});
 	};
 
