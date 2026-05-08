@@ -615,7 +615,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						<Button
 							size="xs"
 							variant={statusFilter === "all" ? "filled" : "default"}
-							color={statusFilter === "all" ? "primary" : "gray"}
+							color={statusFilter === "all" ? "primary" : undefined}
 							onClick={() => setStatusFilter("all")}
 						>
 							<Trans>All</Trans>
@@ -623,7 +623,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						<Button
 							size="xs"
 							variant={statusFilter === "active" ? "filled" : "default"}
-							color={statusFilter === "active" ? "green" : "gray"}
+							color={statusFilter === "active" ? "primary" : undefined}
 							onClick={() => setStatusFilter("active")}
 						>
 							<Trans>Active</Trans>
@@ -631,7 +631,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						<Button
 							size="xs"
 							variant={statusFilter === "inactive" ? "filled" : "default"}
-							color="gray"
+							color={statusFilter === "inactive" ? "primary" : undefined}
 							onClick={() => setStatusFilter("inactive")}
 						>
 							<Trans>Inactive</Trans>
@@ -1177,7 +1177,7 @@ function NeedsAttentionPanel({
 							<Text size="sm" style={{ flex: 1 }} lineClamp={1}>
 								{item.message}
 							</Text>
-							<Button onClick={() => onOpen(item.workspaceId)}>
+							<Button size="xs" onClick={() => onOpen(item.workspaceId)}>
 								{item.actionLabel}
 							</Button>
 						</Group>
@@ -1185,7 +1185,7 @@ function NeedsAttentionPanel({
 				</Stack>
 				{hidden > 0 && !showAll && (
 					<UnstyledButton onClick={() => setShowAll(true)}>
-						<Text size="xs" c="dimmed">
+						<Text size="xs" c="primary">
 							<Trans>Show {hidden} more</Trans>
 						</Text>
 					</UnstyledButton>
@@ -1258,6 +1258,7 @@ function OverageThisCyclePanel({
 								)}
 							</Stack>
 							<Button
+								size="xs"
 								variant="outline"
 								onClick={() => onOpen(item.workspaceId)}
 							>
@@ -1268,7 +1269,7 @@ function OverageThisCyclePanel({
 				</Stack>
 				{hidden > 0 && !showAll && (
 					<UnstyledButton onClick={() => setShowAll(true)}>
-						<Text size="xs" c="dimmed">
+						<Text size="xs" c="primary">
 							<Trans>Show {hidden} more</Trans>
 						</Text>
 					</UnstyledButton>

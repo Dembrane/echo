@@ -591,7 +591,6 @@ export const OrganisationRoute = () => {
 					<Button
 						variant="subtle"
 						size="xs"
-						color="gray"
 						onClick={() => navigate("/w")}
 					>
 						<Trans>Back to workspaces</Trans>
