@@ -47,7 +47,8 @@ NotificationSeverity = Literal["info", "action_required", "destructive"]
 
 # Event → severity map. Controls client-side row styling (background
 # tint, button style, unread-dot color). Anything not listed defaults
-# to "info". Keep in sync with the designer's spec in inbox.html.
+# to "info". Keep in sync with the inbox renderer in
+# frontend/src/components/inbox/Inbox.tsx.
 _SEVERITY_BY_EVENT: dict[str, NotificationSeverity] = {
     # Access revoked / data lost / feature downgraded
     "WORKSPACE_REMOVED": "destructive",

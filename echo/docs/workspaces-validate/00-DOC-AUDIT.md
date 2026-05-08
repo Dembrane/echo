@@ -184,7 +184,6 @@ New (untracked):
 | `docs/workspaces/failure-analysis.md` | Risk register — check before shipping |
 | `docs/workspaces/gate-check-protocol.md` | Session-by-session ship criteria |
 | `docs/workspaces/gripes.md` | Designer/developer complaints — useful signal |
-| `docs/workspaces/inbox.html` | Designer spec for inbox — implementation in `frontend/src/components/inbox/` |
 | `docs/workspaces/reference.md` | Feature tree reference |
 
 ### Supporting engineering docs

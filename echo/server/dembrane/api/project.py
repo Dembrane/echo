@@ -1,6 +1,7 @@
 import os
 import asyncio
 import zipfile
+import tempfile
 from http import HTTPStatus
 from typing import Any, List, Optional, Generator, AsyncGenerator
 from logging import getLogger
@@ -484,10 +485,16 @@ async def generate_transcript_file(conversation: dict) -> Optional[str]:
     return await run_in_thread_pool(_generate_transcript_file_sync, conversation)
 
 
-async def cleanup_files(zip_file_name: str, filenames: List[str]) -> None:
-    os.remove(zip_file_name)
+async def cleanup_files(zip_file_path: str, filenames: List[str]) -> None:
+    try:
+        os.remove(zip_file_path)
+    except OSError as exc:
+        logger.warning("Failed to remove zip %s: %s", zip_file_path, exc)
     for filename in filenames:
-        os.remove(filename)
+        try:
+            os.remove(filename)
+        except OSError as exc:
+            logger.warning("Failed to remove transcript %s: %s", filename, exc)
 
 
 @ProjectRouter.get("/{project_id}/transcripts")
@@ -537,9 +544,16 @@ async def get_project_transcripts(
 
     project_name_or_id = project.get("name") if project.get("name") is not None else project_id
     safe_project_name = get_safe_filename(str(project_name_or_id))
-    zip_file_name = f"{safe_project_name}_transcripts.zip"
+    download_filename = f"{safe_project_name}_transcripts.zip"
 
-    with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED) as zipf:
+    # Create the zip on disk under an OS-controlled temp path. The download
+    # filename surfaced to the browser is derived from the project name, but
+    # the on-disk path is never built from user input — closes
+    # CodeQL py/path-injection on the open() / ZipFile() calls below.
+    tmp_fd, zip_file_path = tempfile.mkstemp(prefix="dembrane_transcripts_", suffix=".zip")
+    os.close(tmp_fd)
+
+    with zipfile.ZipFile(zip_file_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for filename in filenames:
             if not filename:
                 continue
@@ -547,17 +561,17 @@ async def get_project_transcripts(
             zipf.write(filename, arcname)
 
     def iterfile() -> Generator[bytes, None, None]:
-        with open(zip_file_name, "rb") as file:
+        with open(zip_file_path, "rb") as file:
             yield from file
 
     response = StreamingResponse(iterfile(), media_type="application/zip")
-    response.headers["Content-Disposition"] = f"attachment; filename={zip_file_name}"
+    response.headers["Content-Disposition"] = f'attachment; filename="{download_filename}"'
 
     # Schedule cleanup task to run after the response has been sent
     background_tasks.add_task(
         cleanup_files,
-        zip_file_name,  # Pass the actual zip filename
-        filenames,  # Pass the actual list of generated transcript files
+        zip_file_path,
+        filenames,
     )
 
     return response

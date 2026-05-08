@@ -52,9 +52,9 @@ import { avatarUrl } from "@/lib/avatar";
  *
  *   For you        Personal notifications — events that target this user
  *                  specifically (workspace added, role changed, report
- *                  ready, destructive events). Rendered with severity
- *                  styling per the designer spec in `docs/workspaces/
- *                  inbox.html`.
+ *                  ready, destructive events). Severity styling is driven
+ *                  by `_SEVERITY_BY_EVENT` in
+ *                  `server/dembrane/notifications.py`.
  *
  *   Announcements  Admin broadcasts — existing `announcement` collection.
  *                  Never action-required, never destructive by design.
