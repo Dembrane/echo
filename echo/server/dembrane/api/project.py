@@ -462,7 +462,13 @@ def _generate_transcript_file_sync(conversation: dict) -> Optional[str]:
     if conversation_id:
         name_for_file += f"_{conversation_id[:8]}"
 
-    conversation_dir = os.path.join(BASE_DIR, "transcripts", conversation_id or "unknown")
+    # Sanitize conversation_id before it touches the filesystem — even though
+    # it's a Directus UUID in practice, CodeQL flags it as path-traversal
+    # input. _sanitize_for_filename strips anything outside [A-Za-z0-9_].
+    safe_conversation_id = (
+        _sanitize_for_filename(conversation_id, max_length=64) if conversation_id else ""
+    )
+    conversation_dir = os.path.join(BASE_DIR, "transcripts", safe_conversation_id or "unknown")
     os.makedirs(conversation_dir, exist_ok=True)
 
     file_path = os.path.join(conversation_dir, f"{name_for_file}-transcript.md")

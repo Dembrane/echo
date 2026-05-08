@@ -932,26 +932,27 @@ async def retranscribe_conversation(
         except Exception as e:
             # Clean up the partially created conversation
             await run_in_thread_pool(active_client.delete_item, "conversation", new_conversation_id)
-            logger.error(f"Error during retranscription: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Failed to process audio: {str(e)}") from e
+            # Log the raw exception server-side, but don't surface str(e)
+            # to the client — CodeQL flags it as stack-trace exposure.
+            logger.exception("Error during retranscription")
+            raise HTTPException(status_code=500, detail="Failed to process audio") from e
 
     except HTTPException as e:
-        # Handle HTTP exceptions
         status_code = getattr(e, "status_code", 500)
-        detail = getattr(e, "detail", str(e))
-
+        detail = getattr(e, "detail", "Operation failed")
         logger.error(f"HTTP error during retranscription: {status_code} - {detail}")
         return {
             "status": "error",
             "message": "Operation failed",
             "error_detail": detail,
         }
-    except Exception as e:
-        logger.exception(f"Unexpected error during retranscription: {e}")
+    except Exception:
+        # Don't echo str(e) back to the caller (CodeQL py/stack-trace-exposure).
+        logger.exception("Unexpected error during retranscription")
         return {
             "status": "error",
             "message": "Failed to retranscribe conversation",
-            "error_detail": str(e),
+            "error_detail": "internal error",
         }
 
 

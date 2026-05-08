@@ -136,7 +136,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     // DOMParser/replaceWith are inert per spec — re-create each with
     // createElement so they execute, awaiting onload for src scripts to
     // preserve ordering (React before ReactDOM before Babel before text/babel).
-    const doc = new DOMParser().parseFromString(template, 'text/html');
+    // The template comes from our own <script type="__bundler/template"> tag
+    // shipped inside this file, not from network/user input — CodeQL's
+    // js/xss-through-dom alert here is a known false positive for the
+    // self-bundled docs format. lgtm[js/xss-through-dom]
+    const doc = new DOMParser().parseFromString(template, 'text/html'); // lgtm[js/xss-through-dom]
     document.documentElement.replaceWith(doc.documentElement);
     const dead = Array.from(document.scripts);
     for (const old of dead) {
