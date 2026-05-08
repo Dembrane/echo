@@ -21,22 +21,21 @@ Endpoints:
 
 from __future__ import annotations
 
-from logging import getLogger
 from typing import Literal, Optional
+from logging import getLogger
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr
+from pydantic import EmailStr, BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import get_app_user_or_raise
-from dembrane.directus_async import async_directus
-from dembrane.inheritance import user_can_access
 from dembrane.policies import (
-    WORKSPACE_ROLE_PRESETS,
     TIER_REQUIRED_FOR_POLICY,
     has_policy,
     meets_tier,
 )
+from dembrane.inheritance import user_can_access
+from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()

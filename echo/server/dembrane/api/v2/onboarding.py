@@ -69,7 +69,9 @@ async def complete_onboarding(
             # Race condition: another request created it first. Retry resolve.
             app_user = await resolve_app_user(directus_user_id)
             if not app_user:
-                raise HTTPException(status_code=500, detail="Failed to create user profile")
+                raise HTTPException(
+                    status_code=500, detail="Failed to create user profile"
+                ) from None
 
     app_user_id = app_user["id"]
     app_user_email = (app_user.get("email") or "").lower()  # invites stored lowercased

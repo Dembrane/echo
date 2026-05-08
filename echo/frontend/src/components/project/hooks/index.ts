@@ -512,7 +512,7 @@ export const useProjectById = ({
 			const res = await fetch(url.toString(), { credentials: "include" });
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || `Failed to load project`);
+				throw new Error(data.detail || "Failed to load project");
 			}
 			return (await res.json()) as Project;
 		},

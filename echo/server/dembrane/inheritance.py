@@ -19,9 +19,9 @@ Settings shape on workspace.settings (JSON):
 
 from __future__ import annotations
 
+from typing import Optional
 from logging import getLogger
 from datetime import datetime, timezone
-from typing import Optional
 
 from dembrane.utils import generate_uuid
 from dembrane.directus_async import async_directus

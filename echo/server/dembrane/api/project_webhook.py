@@ -15,7 +15,6 @@ from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.async_helpers import run_in_thread_pool
-from dembrane.service.project import ProjectService, ProjectNotFoundException
 from dembrane.api.dependency_auth import DependencyDirectusSession, require_directus_client
 
 logger = getLogger("api.project_webhook")
@@ -85,8 +84,8 @@ async def _check_project_access(project_id: str, auth: DependencyDirectusSession
     ACL lockdown blocked webhooks configuration for anyone else.
     """
     from dembrane.app_user import get_app_user_or_raise
-    from dembrane.directus_async import async_directus
     from dembrane.inheritance import get_user_project_access
+    from dembrane.directus_async import async_directus
 
     project = await async_directus.get_item("project", project_id)
     if not project or project.get("deleted_at"):
@@ -98,7 +97,7 @@ async def _check_project_access(project_id: str, auth: DependencyDirectusSession
     try:
         app_user = await get_app_user_or_raise(auth.user_id)
     except HTTPException:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise HTTPException(status_code=404, detail="Project not found") from None
 
     access = await get_user_project_access(
         project_id=project_id,

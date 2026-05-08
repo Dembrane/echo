@@ -1,6 +1,6 @@
 """Workspace-scoped project endpoints: list and create."""
 
-from typing import Optional
+from typing import Optional, Annotated
 from logging import getLogger
 
 from fastapi import Query, Depends, APIRouter
@@ -17,6 +17,12 @@ from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
 logger = getLogger("api.v2.workspace_projects")
+
+
+# Reusable Annotated alias keeps handler signatures readable and avoids
+# Ruff B008 ("Depends() in arg defaults"). Mirrors the convention in
+# dembrane/api/v2/workspaces.py.
+DependencyWorkspaceContext = Annotated[WorkspaceContext, Depends(get_workspace_context)]
 
 
 class ProjectAccessPreview(BaseModel):
@@ -285,7 +291,7 @@ def _visibility_filter_for_caller(
 @router.get("/{workspace_id}/projects", response_model=V2ProjectsListResponse)
 async def list_workspace_projects(
     auth: DependencyDirectusSession,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
     search: Optional[str] = Query(None),
     offset: int = Query(0, ge=0),
     limit: int = Query(15, ge=1, le=100),
@@ -452,7 +458,7 @@ class V2CreateProjectResponse(BaseModel):
 async def create_workspace_project(
     body: V2CreateProjectRequest,
     auth: DependencyDirectusSession,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> V2CreateProjectResponse:
     """Create a project in a workspace. Requires project:create policy.
 

@@ -165,7 +165,9 @@ async def _assert_project_owner(project: dict, auth: DependencyDirectusSession) 
     try:
         app_user = await get_app_user_or_raise(auth.user_id)
     except HTTPException:
-        raise HTTPException(status_code=403, detail="Not authorized for this project")
+        raise HTTPException(
+            status_code=403, detail="Not authorized for this project"
+        ) from None
 
     access = await get_user_project_access(
         project_id=project["id"],

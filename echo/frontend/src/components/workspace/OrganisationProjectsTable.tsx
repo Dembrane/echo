@@ -225,7 +225,7 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 										<Trans>Created</Trans>
 									</Text>
 								</Table.Th>
-								<Table.Th style={{ width: 48 }}></Table.Th>
+								<Table.Th style={{ width: 48 }} />
 							</Table.Tr>
 						</Table.Thead>
 						<Table.Tbody>

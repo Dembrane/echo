@@ -331,12 +331,16 @@ function renderInlineMarkdown(text: string): React.ReactNode {
 	return parts.map((part, i) => {
 		if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
 			return (
+				// biome-ignore lint/suspicious/noArrayIndexKey: parts array is derived from a static text split and never reorders
 				<strong key={i} style={{ fontWeight: 600 }}>
 					{part.slice(2, -2)}
 				</strong>
 			);
 		}
-		return <span key={i}>{part}</span>;
+		return (
+			// biome-ignore lint/suspicious/noArrayIndexKey: parts array is derived from a static text split and never reorders
+			<span key={i}>{part}</span>
+		);
 	});
 }
 
@@ -349,7 +353,6 @@ function NotificationRowItem({
 	onClick: () => void;
 	onMarkRead: () => void;
 }) {
-	const hasAction = resolveNotificationHref(row) !== null;
 	const createdLabel = row.created_at
 		? formatRelative(new Date(row.created_at), new Date())
 		: "";

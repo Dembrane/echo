@@ -20,11 +20,11 @@ the canonical mapping.
 
 from __future__ import annotations
 
-from logging import getLogger
 from typing import Literal
+from logging import getLogger
 
-from dembrane.directus_async import async_directus
 from dembrane.policies import TIER_REQUIRED_FOR_POLICY, meets_tier
+from dembrane.directus_async import async_directus
 
 logger = getLogger("dembrane.tier_downgrade")
 
@@ -69,7 +69,9 @@ _HUMAN: dict[str, str] = {
 
 
 async def preview_downgrade(
-    workspace_id: str, from_tier: str, to_tier: str
+    workspace_id: str,  # noqa: ARG001 — kept for signature parity with apply_downgrade_effects
+    from_tier: str,
+    to_tier: str,
 ) -> list[dict]:
     """What will happen if we downgrade this workspace? Pure read.
 

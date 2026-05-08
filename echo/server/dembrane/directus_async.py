@@ -24,18 +24,15 @@ Return value contract (matches sync client):
 
 from __future__ import annotations
 
-import asyncio
 import json
+import asyncio
 import logging
 from typing import Any
-from urllib.parse import urljoin
 
 import httpx
 
 from dembrane.directus import (
-    DirectusAuthError,
     DirectusBadRequest,
-    DirectusGenericException,
     DirectusServerError,
 )
 from dembrane.settings import get_settings

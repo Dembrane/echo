@@ -332,7 +332,7 @@ async def set_project_visibility(
             event_code="PROJECT_NOW_PRIVATE",
             title=f"{project_name} is now private",
             message=(
-                f"It's no longer visible to the whole workspace. "
+                "It's no longer visible to the whole workspace. "
                 "Only the people explicitly shared can see it."
             ),
             action="NONE",

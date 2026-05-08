@@ -582,7 +582,7 @@ async def reject_access_request(
     workspace = await _load_workspace_or_404(workspace_id)
     await _require_can_action_requests(workspace, actor_id)
 
-    req = await _load_pending_or_404(workspace_id, req_id)
+    await _load_pending_or_404(workspace_id, req_id)
 
     await async_directus.update_item(
         "access_request",

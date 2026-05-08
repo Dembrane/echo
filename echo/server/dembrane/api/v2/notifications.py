@@ -6,9 +6,9 @@ or activity sidecars to join. Read state lives inline as `read_at`.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from logging import getLogger
 from typing import Any, Optional
+from logging import getLogger
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel

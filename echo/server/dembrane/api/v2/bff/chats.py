@@ -12,19 +12,19 @@ Same design rules as conversations.py:
 
 from __future__ import annotations
 
-from logging import getLogger
 from typing import Optional
+from logging import getLogger
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.bff._access import (
-    filter_exclude_deleted,
     resolve_chat_access,
-    resolve_chat_message_access,
+    filter_exclude_deleted,
     resolve_project_access,
+    resolve_chat_message_access,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
 

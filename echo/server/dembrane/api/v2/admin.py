@@ -16,15 +16,15 @@ don't need Directus admin access to do the job.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from typing import Optional
 from logging import getLogger
-from typing import Any, Optional
+from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 
-from dembrane.directus_async import async_directus
 from dembrane.tier_capacity import get_capacity
+from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()

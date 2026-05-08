@@ -14,6 +14,7 @@ from fastapi.openapi.utils import get_openapi
 from starlette.middleware.cors import CORSMiddleware
 
 from dembrane.seed import seed_default_languages, reconcile_default_verification_topics
+from dembrane.api.v2 import v2_router
 from dembrane.sentry import init_sentry
 from dembrane.api.api import api
 from dembrane.settings import get_settings
@@ -107,8 +108,6 @@ async def add_process_time_header(
 
 logger.info("mounting api on /api")
 app.include_router(api, prefix="/api")
-
-from dembrane.api.v2 import v2_router
 
 logger.info("mounting v2 api on /api/v2")
 app.include_router(v2_router, prefix="/api/v2")

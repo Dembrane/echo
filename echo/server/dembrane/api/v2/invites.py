@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hmac
 import hashlib
+from typing import Annotated
 from logging import getLogger
 from datetime import datetime, timezone, timedelta
 
@@ -20,6 +21,12 @@ from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 
 router = APIRouter()
 logger = getLogger("api.v2.invites")
+
+
+# Reusable Annotated alias keeps handler signatures readable and avoids
+# Ruff B008 ("Depends() in arg defaults"). Mirrors the convention in
+# dembrane/api/v2/workspaces.py.
+DependencyWorkspaceContext = Annotated[WorkspaceContext, Depends(get_workspace_context)]
 
 settings = get_settings()
 _invite_rate_limiter = create_user_rate_limiter(
@@ -62,7 +69,7 @@ def _enqueue_invite_email(
 async def invite_to_workspace(
     workspace_id: str,
     body: WorkspaceInviteRequest,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> WorkspaceInviteResponse:
     """Invite a user to a workspace by email.
 

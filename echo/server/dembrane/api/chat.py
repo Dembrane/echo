@@ -167,6 +167,7 @@ async def delete_chat(chat_id: str, auth: DependencyDirectusSession) -> dict:
     await raise_if_chat_not_found_or_not_authorized(chat_id, auth)
 
     from datetime import datetime
+
     from dembrane.directus import directus
 
     await run_in_thread_pool(

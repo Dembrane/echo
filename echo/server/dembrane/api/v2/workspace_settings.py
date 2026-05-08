@@ -1,6 +1,6 @@
 """Workspace settings: detail, update, members, and invite (from settings)."""
 
-from typing import Optional
+from typing import Optional, Annotated
 from logging import getLogger
 from datetime import datetime, timezone
 
@@ -19,6 +19,12 @@ from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 
 router = APIRouter()
 logger = getLogger("api.v2.workspace_settings")
+
+
+# Reusable Annotated alias keeps handler signatures readable and avoids
+# Ruff B008 ("Depends() in arg defaults"). Mirrors the convention in
+# dembrane/api/v2/workspaces.py.
+DependencyWorkspaceContext = Annotated[WorkspaceContext, Depends(get_workspace_context)]
 
 
 # ── Detail ──
@@ -68,7 +74,7 @@ class WorkspaceDetailResponse(BaseModel):
 
 @router.get("/{workspace_id}/settings", response_model=WorkspaceDetailResponse)
 async def get_workspace_settings(
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> WorkspaceDetailResponse:
     """Get workspace details + full member list.
 
@@ -286,7 +292,7 @@ def _validate_logo_url(value: str) -> str:
 @router.patch("/{workspace_id}/settings")
 async def update_workspace_settings(
     body: UpdateWorkspaceRequest,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> dict:
     """Update workspace name/description/logo/privacy flags.
 
@@ -392,7 +398,7 @@ def _get_or_create_custom_logos_folder_id() -> str | None:
 @router.post("/{workspace_id}/logo")
 async def upload_workspace_logo(
     file: UploadFile,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> dict:
     """Upload a workspace logo file.
 
@@ -452,7 +458,7 @@ async def upload_workspace_logo(
 
 @router.delete("/{workspace_id}/logo")
 async def remove_workspace_logo(
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> dict:
     """Clear the workspace logo and delete the underlying file if we own it."""
     ctx.require_policy("settings:manage")
@@ -479,7 +485,7 @@ async def remove_workspace_logo(
 @router.delete("/{workspace_id}/members/{membership_id}")
 async def remove_workspace_member(
     membership_id: str,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> dict:
     """Soft-delete a workspace membership.
 
@@ -620,7 +626,7 @@ class ChangeRoleRequest(BaseModel):
 async def change_member_role(
     membership_id: str,
     body: ChangeRoleRequest,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> dict:
     """Change a member's role. Requires member:manage."""
     ctx.require_policy("member:manage")
@@ -734,7 +740,7 @@ async def change_member_role(
 @router.post("/{workspace_id}/invites/{invite_id}/resend")
 async def resend_workspace_invite(
     invite_id: str,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> dict:
     """Resend a pending invite email. Extends expiration by 7 days."""
     ctx.require_policy("member:invite")
@@ -803,7 +809,7 @@ async def resend_workspace_invite(
 @router.delete("/{workspace_id}/invites/{invite_id}")
 async def cancel_workspace_invite(
     invite_id: str,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    ctx: DependencyWorkspaceContext,
 ) -> dict:
     """Cancel a pending invite. Requires member:invite."""
     ctx.require_policy("member:invite")

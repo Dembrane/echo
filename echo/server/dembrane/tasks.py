@@ -1345,8 +1345,8 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
             # spam inboxes. If we want a wider broadcast later, derive
             # audience via project visibility + project_membership.
             try:
-                from dembrane.notifications import emit_sync
                 from dembrane.app_user import resolve_app_user
+                from dembrane.notifications import emit_sync
                 with directus_client_context() as client:
                     report_row = client.get_item("project_report", report_id_str)
                     project_row = client.get_item("project", project_id) if project_id else None
@@ -1392,8 +1392,8 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
             publish_report_progress(report_id, "failed", str(e))
             # Non-retriable — tell the creator so they don't keep waiting.
             try:
-                from dembrane.notifications import emit_sync
                 from dembrane.app_user import resolve_app_user
+                from dembrane.notifications import emit_sync
                 with directus_client_context() as client:
                     report_row = client.get_item("project_report", report_id_str)
                 report_data = (report_row or {}).get("data") or report_row or {}

@@ -6,8 +6,8 @@ Maps directus_users.id → app_user.id. Used by all v2 endpoints.
 
 from __future__ import annotations
 
-from logging import getLogger
 from typing import Optional
+from logging import getLogger
 
 from dembrane.utils import generate_uuid
 from dembrane.directus_async import async_directus

@@ -34,13 +34,13 @@ Usage:
 
 from __future__ import annotations
 
+from typing import Optional
 from logging import getLogger
 from pathlib import Path
-from typing import Optional
 
 import jinja2
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content
+from sendgrid.helpers.mail import To, Mail, Email, Content
 
 from dembrane.settings import get_settings
 

@@ -181,7 +181,7 @@ async def raise_if_conversation_not_found_or_not_authorized(
     try:
         app_user = await get_app_user_or_raise(auth.user_id)
     except HTTPException:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        raise HTTPException(status_code=404, detail="Conversation not found") from None
 
     access = await get_user_project_access(
         project_id=project_id,
