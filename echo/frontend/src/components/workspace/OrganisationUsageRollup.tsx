@@ -187,18 +187,12 @@ function UsageBar({
 function SortableHeader({
 	label,
 	sorted,
-	align = "left",
 }: {
 	label: string;
 	sorted: false | "asc" | "desc";
-	align?: "left" | "right";
 }) {
 	return (
-		<Group
-			gap={4}
-			wrap="nowrap"
-			justify={align === "right" ? "flex-end" : "flex-start"}
-		>
+		<Group gap={4} wrap="nowrap">
 			<Text
 				size="xs"
 				fw={sorted ? 600 : 500}
@@ -401,7 +395,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				),
 				header: t`Hours`,
 				id: "audio_hours",
-				meta: { align: "right" },
 			},
 			{
 				accessorKey: "hours_over",
@@ -415,7 +408,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				},
 				header: t`Over hrs`,
 				id: "hours_over",
-				meta: { align: "right" },
 			},
 			{
 				accessorKey: "seat_count",
@@ -428,7 +420,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				),
 				header: t`Seats`,
 				id: "seat_count",
-				meta: { align: "right" },
 			},
 			{
 				accessorFn: (r) => {
@@ -447,7 +438,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				},
 				header: t`Over seats`,
 				id: "seats_over",
-				meta: { align: "right" },
 			},
 			{
 				accessorKey: "guest_count",
@@ -463,7 +453,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				// hitting the external-collaborator ceiling.
 				header: t`Guests`,
 				id: "guest_count",
-				meta: { align: "right" },
 			},
 			{
 				accessorFn: (r) => (isActive(r) ? "active" : "inactive"),
@@ -665,19 +654,25 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 							{visibilityMenuItems.map((c) => (
 								<Menu.Item
 									key={c.id}
-									onClick={(e) => e.preventDefault()}
 									closeMenuOnClick={false}
+									onClick={() =>
+										setColumnVisibility((v) => ({
+											...v,
+											[c.id]: v[c.id] === false,
+										}))
+									}
 								>
 									<Checkbox
 										size="xs"
 										label={c.label}
 										checked={columnVisibility[c.id] !== false}
-										onChange={(e) =>
+										onChange={() =>
 											setColumnVisibility((v) => ({
 												...v,
-												[c.id]: e.currentTarget.checked,
+												[c.id]: v[c.id] === false,
 											}))
 										}
+										onClick={(e) => e.stopPropagation()}
 									/>
 								</Menu.Item>
 							))}
@@ -694,14 +689,8 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 										{hg.headers.map((h) => {
 											const canSort = h.column.getCanSort();
 											const sorted = h.column.getIsSorted();
-											const align =
-												(
-													h.column.columnDef.meta as
-														| { align?: "left" | "right" }
-														| undefined
-												)?.align ?? "left";
 											return (
-												<Table.Th key={h.id} ta={align} style={{ padding: 0 }}>
+												<Table.Th key={h.id} style={{ padding: 0 }}>
 													{canSort ? (
 														<UnstyledButton
 															onClick={h.column.getToggleSortingHandler()}
@@ -729,7 +718,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 																		: ""
 																}
 																sorted={sorted}
-																align={align}
 															/>
 														</UnstyledButton>
 													) : (
@@ -759,7 +747,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 									<WorkspaceRow
 										key={row.id}
 										row={row}
-										leafCount={leafColumns.length}
+										visibleColumnIds={leafColumns.map((c) => c.id)}
 										expanded={expanded[row.id] ?? false}
 										monthOffset={monthOffset}
 									/>
@@ -796,12 +784,12 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 											}
 											const footerById: Record<string, React.ReactNode> = {
 												audio_hours: (
-													<Text size="xs" fw={600} ta="right">
+													<Text size="xs" fw={600}>
 														{formatDurationFromHours(totalsHours)}
 													</Text>
 												),
 												guest_count: (
-													<Text size="xs" fw={600} ta="right">
+													<Text size="xs" fw={600}>
 														{totalsGuests}
 													</Text>
 												),
@@ -809,7 +797,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 													<Text
 														size="xs"
 														fw={600}
-														ta="right"
 														c={totalsHoursOver > 0 ? "orange" : "dimmed"}
 													>
 														{totalsHoursOver > 0
@@ -818,7 +805,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 													</Text>
 												),
 												seat_count: (
-													<Text size="xs" fw={600} ta="right">
+													<Text size="xs" fw={600}>
 														{totalsSeats}
 													</Text>
 												),
@@ -826,7 +813,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 													<Text
 														size="xs"
 														fw={600}
-														ta="right"
 														c={totalsSeatsOver > 0 ? "orange" : "dimmed"}
 													>
 														{totalsSeatsOver}
@@ -886,7 +872,7 @@ async function fetchWorkspaceUsage(
 
 function WorkspaceRow({
 	row,
-	leafCount,
+	visibleColumnIds,
 	expanded,
 	monthOffset,
 }: {
@@ -895,7 +881,7 @@ function WorkspaceRow({
 		original: OrgUsageWorkspaceRow;
 		getVisibleCells: () => unknown[];
 	};
-	leafCount: number;
+	visibleColumnIds: string[];
 	expanded: boolean;
 	monthOffset: number;
 }) {
@@ -911,41 +897,34 @@ function WorkspaceRow({
 	});
 	const projects = wsUsage?.projects ?? [];
 
-	const cells = (
+	const visibleSet = useMemo(() => new Set(visibleColumnIds), [visibleColumnIds]);
+	const allCells = (
 		row as unknown as {
-			getVisibleCells: () => Array<{
+			getAllCells: () => Array<{
 				id: string;
-				column: { columnDef: ColumnDef<OrgUsageWorkspaceRow, unknown> };
+				column: { id: string; columnDef: ColumnDef<OrgUsageWorkspaceRow, unknown> };
 				getContext: () => unknown;
 			}>;
 		}
-	).getVisibleCells();
+	).getAllCells();
+	const cells = allCells.filter((cell) => visibleSet.has(cell.column.id));
 
 	return (
 		<>
 			<Table.Tr>
-				{cells.map((cell) => {
-					const align =
-						(
-							cell.column.columnDef.meta as
-								| { align?: "left" | "right" }
-								| undefined
-						)?.align ?? "left";
-					const rendered = flexRender(
-						cell.column.columnDef.cell,
-						cell.getContext() as never,
-					);
-					return (
-						<Table.Td key={cell.id} ta={align}>
-							{rendered as React.ReactNode}
-						</Table.Td>
-					);
-				})}
+				{cells.map((cell) => (
+					<Table.Td key={cell.id}>
+						{flexRender(
+							cell.column.columnDef.cell,
+							cell.getContext() as never,
+						) as React.ReactNode}
+					</Table.Td>
+				))}
 			</Table.Tr>
 			{expanded && (
 				<Table.Tr>
 					<Table.Td />
-					<Table.Td colSpan={leafCount - 1}>
+					<Table.Td colSpan={visibleColumnIds.length - 1}>
 						{isLoading ? (
 							<Text size="xs" c="dimmed" py={4}>
 								<Trans>Loading projects...</Trans>
@@ -975,7 +954,7 @@ function WorkspaceRow({
 										</Text>
 										<Text
 											size="xs"
-											style={{ minWidth: 60, textAlign: "right" }}
+											style={{ minWidth: 60 }}
 										>
 											{formatDurationFromHours(p.audio_hours)}
 										</Text>
