@@ -733,7 +733,7 @@ def seed(session: requests.Session, dry_run: bool) -> None:
     print(f"  workspace_invite: frank@seed.dembrane.dev → Acme/Default (pending)")
 
     print("\nSeed complete.")
-    print("Login as any demo user with password:", SEED_USER_PASSWORD)
+    print("Login as any demo user with the configured SEED_USER_PASSWORD (value not printed).")
 
 
 def finn_suffix(oid: str) -> str:

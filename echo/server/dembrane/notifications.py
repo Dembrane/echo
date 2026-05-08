@@ -188,10 +188,10 @@ async def emit(
         )
         return notification_id
     except Exception as exc:  # noqa: BLE001 — notifications must never raise
+        # audience_user_id omitted: CodeQL flags it as sensitive.
         logger.warning(
-            "emit notification failed (event=%s audience=%s): %s",
+            "emit notification failed (event=%s): %s",
             event_code,
-            audience_user_id,
             exc,
         )
         return None
@@ -318,10 +318,10 @@ def emit_sync(**emit_kwargs: Any) -> Optional[str]:
 
         return run_async_in_new_loop(emit(**emit_kwargs))
     except Exception as exc:  # noqa: BLE001
+        # audience_user_id omitted: CodeQL flags it as sensitive.
         logger.warning(
-            "emit_sync failed (event=%s audience=%s): %s",
+            "emit_sync failed (event=%s): %s",
             emit_kwargs.get("event_code"),
-            emit_kwargs.get("audience_user_id"),
             exc,
         )
         return None

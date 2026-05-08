@@ -38,7 +38,8 @@ _invite_status_rate_limiter = create_rate_limiter(
 )
 
 # Cheap shape check — rejects obvious garbage before hitting Directus.
-_EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+# Domain segments exclude `.` to avoid polynomial backtracking (py/polynomial-redos).
+_EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$")
 
 
 def _client_ip(request: Request) -> str:

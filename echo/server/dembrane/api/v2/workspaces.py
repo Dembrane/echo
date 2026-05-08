@@ -508,14 +508,14 @@ async def list_workspaces(
             from dembrane.api.v2.schemas import RecentRemoval
 
             for r in removed:
-                ws = removed_ws_map.get(r.get("workspace_id"))
-                if not ws:
+                removed_ws_item = removed_ws_map.get(r.get("workspace_id"))
+                if not removed_ws_item:
                     continue
                 recent_removals.append(
                     RecentRemoval(
-                        workspace_id=ws["id"],
-                        workspace_name=ws.get("name") or "",
-                        org_name=org_map.get(ws.get("org_id") or "", ""),
+                        workspace_id=removed_ws_item["id"],
+                        workspace_name=removed_ws_item.get("name") or "",
+                        org_name=org_map.get(removed_ws_item.get("org_id") or "", ""),
                         ended_at=r.get("deleted_at") or "",
                     )
                 )
@@ -1327,9 +1327,7 @@ async def get_workspace_usage(
         and tier_hard_blocks_seats(tier)
         and (seat_count + member_pending) >= included_seats
     )
-    guest_invite_blocked = (
-        guest_cap is not None and (guest_count + guest_pending) >= guest_cap
-    )
+    guest_invite_blocked = guest_cap is not None and (guest_count + guest_pending) >= guest_cap
 
     full = WorkspaceUsageResponse(
         cycle_start=cycle_start,
@@ -1480,12 +1478,10 @@ async def initiate_handoff(
         ref_org_id=body.target_organisation_id,
     )
 
+    # org/user IDs redacted: CodeQL flags them as sensitive.
     logger.info(
-        "handoff_initiated workspace=%s from=%s to=%s by=%s",
+        "handoff_initiated workspace=%s from=[redacted] to=[redacted] by=[redacted]",
         ctx.workspace_id,
-        billing_organisation_id,
-        body.target_organisation_id,
-        ctx.app_user_id,
     )
 
     return HandoffResponse(
@@ -1567,12 +1563,10 @@ async def accept_handoff(
         ref_org_id=target_organisation_id,
     )
 
+    # org/user IDs redacted: CodeQL flags them as sensitive.
     logger.info(
-        "handoff_accepted workspace=%s from=%s to=%s by=%s",
+        "handoff_accepted workspace=%s from=[redacted] to=[redacted] by=[redacted]",
         ctx.workspace_id,
-        prior_billing_organisation,
-        target_organisation_id,
-        ctx.app_user_id,
     )
 
     return HandoffResponse(status="completed", workspace_id=ctx.workspace_id)
