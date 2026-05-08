@@ -113,7 +113,10 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 		pathNoLocale === "/w/" ||
 		pathNoLocale.startsWith("/w/new") ||
 		pathNoLocale.startsWith("/o/") ||
-		pathNoLocale.startsWith("/admin");
+		pathNoLocale.startsWith("/admin") ||
+		pathNoLocale.startsWith("/settings") ||
+		pathNoLocale.startsWith("/onboarding") ||
+		pathNoLocale.startsWith("/invites");
 	const navigate = useI18nNavigate();
 	const { runTransition } = useTransitionCurtain();
 	const { setLogoUrl } = useWhitelabelLogo();
