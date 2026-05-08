@@ -92,6 +92,8 @@ class ResourceAccess:
     source: str
     custom_policies: list[str] = field(default_factory=list)
     is_guest: bool = False
+    # Cached so cache-invalidation paths skip a second workspace fetch.
+    org_id: Optional[str] = None
     # project dict cached from the initial fetch; sub-resource resolvers
     # reuse it instead of re-fetching.
     project: dict = field(default_factory=dict)
@@ -147,17 +149,18 @@ class ResourceAccess:
 async def _get_workspace_bits(
     workspace_id: Optional[str],
     app_user_id: str,
-) -> tuple[Optional[str], list[str], bool]:
-    """Fetch (tier, custom_policies, is_external) for this workspace.
+) -> tuple[Optional[str], list[str], bool, Optional[str]]:
+    """Fetch (tier, custom_policies, is_external, org_id) for this workspace.
 
-    Legacy projects (workspace_id=None) return (None, [], False) — no
+    Legacy projects (workspace_id=None) return (None, [], False, None) — no
     tier gates apply to those; they're pre-workspaces data.
     """
     if not workspace_id:
-        return None, [], False
+        return None, [], False, None
 
     workspace = await async_directus.get_item("workspace", workspace_id)
     tier: Optional[str] = (workspace or {}).get("tier")
+    org_id: Optional[str] = (workspace or {}).get("org_id")
 
     # Caller's direct row, if any. This is where custom_policies +
     # is_external live; derived rows (organisation admin inheritance) don't
@@ -184,7 +187,7 @@ async def _get_workspace_bits(
             custom = [p for p in raw if isinstance(p, str)]
         is_guest = bool(mem[0].get("is_external"))
 
-    return tier, custom, is_guest
+    return tier, custom, is_guest, org_id
 
 
 async def resolve_project_access(
@@ -216,7 +219,7 @@ async def resolve_project_access(
     role, source = access
 
     workspace_id = project.get("workspace_id")
-    tier, custom, is_guest = await _get_workspace_bits(workspace_id, app_user_id)
+    tier, custom, is_guest, org_id = await _get_workspace_bits(workspace_id, app_user_id)
 
     return ResourceAccess(
         app_user_id=app_user_id,
@@ -228,6 +231,7 @@ async def resolve_project_access(
         source=source,
         custom_policies=custom,
         is_guest=is_guest,
+        org_id=org_id,
         project=project,
     )
 

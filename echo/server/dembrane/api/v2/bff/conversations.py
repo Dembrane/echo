@@ -27,19 +27,19 @@ Design notes:
 
 from __future__ import annotations
 
+from typing import Literal, Optional
 from logging import getLogger
-from typing import Any, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.bff._access import (
     filter_exclude_deleted,
+    resolve_project_access,
     resolve_conversation_access,
     resolve_conversation_chunk_access,
-    resolve_project_access,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
@@ -113,18 +113,21 @@ async def list_conversations(
         if "id" not in field_list:
             field_list.insert(0, "id")
 
-    convs = await async_directus.get_items(
-        "conversation",
-        {
-            "query": {
-                "filter": conv_filter,
-                "fields": field_list,
-                "sort": ["-updated_at"],
-                "limit": limit,
-                "offset": offset,
-            }
-        },
-    ) or []
+    convs = (
+        await async_directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": conv_filter,
+                    "fields": field_list,
+                    "sort": ["-updated_at"],
+                    "limit": limit,
+                    "offset": offset,
+                }
+            },
+        )
+        or []
+    )
     if not isinstance(convs, list):
         return []
 
@@ -133,19 +136,22 @@ async def list_conversations(
         # client-side after the fetch so we don't need Directus `_some`
         # semantics (not exposed reliably via the admin SDK).
         conv_ids = [c["id"] for c in convs]
-        hit = await async_directus.get_items(
-            "conversation_chunk",
-            {
-                "query": {
-                    "filter": {
-                        "conversation_id": {"_in": conv_ids},
-                        "transcript": {"_nempty": True},
-                    },
-                    "fields": ["conversation_id"],
-                    "limit": -1,
-                }
-            },
-        ) or []
+        hit = (
+            await async_directus.get_items(
+                "conversation_chunk",
+                {
+                    "query": {
+                        "filter": {
+                            "conversation_id": {"_in": conv_ids},
+                            "transcript": {"_nempty": True},
+                        },
+                        "fields": ["conversation_id"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
         kept: set[str] = set()
         if isinstance(hit, list):
             for row in hit:
@@ -158,26 +164,29 @@ async def list_conversations(
         conv_ids = [c["id"] for c in convs]
 
         if include_chunks:
-            chunks = await async_directus.get_items(
-                "conversation_chunk",
-                {
-                    "query": {
-                        "filter": {"conversation_id": {"_in": conv_ids}},
-                        "fields": [
-                            "id",
-                            "conversation_id",
-                            "transcript",
-                            "source",
-                            "path",
-                            "timestamp",
-                            "created_at",
-                            "error",
-                        ],
-                        "sort": ["-timestamp", "-created_at"],
-                        "limit": -1,
-                    }
-                },
-            ) or []
+            chunks = (
+                await async_directus.get_items(
+                    "conversation_chunk",
+                    {
+                        "query": {
+                            "filter": {"conversation_id": {"_in": conv_ids}},
+                            "fields": [
+                                "id",
+                                "conversation_id",
+                                "transcript",
+                                "source",
+                                "path",
+                                "timestamp",
+                                "created_at",
+                                "error",
+                            ],
+                            "sort": ["-timestamp", "-created_at"],
+                            "limit": -1,
+                        }
+                    },
+                )
+                or []
+            )
             chunk_map: dict[str, list[dict]] = {}
             if isinstance(chunks, list):
                 for ch in chunks:
@@ -188,20 +197,23 @@ async def list_conversations(
                 conv["chunks"] = chunk_map.get(conv["id"], [])
 
         if include_tags:
-            tags = await async_directus.get_items(
-                "conversation_project_tag",
-                {
-                    "query": {
-                        "filter": {"conversation_id": {"_in": conv_ids}},
-                        "fields": [
-                            "id",
-                            "conversation_id",
-                            {"project_tag_id": ["id", "text", "created_at"]},
-                        ],
-                        "limit": -1,
-                    }
-                },
-            ) or []
+            tags = (
+                await async_directus.get_items(
+                    "conversation_project_tag",
+                    {
+                        "query": {
+                            "filter": {"conversation_id": {"_in": conv_ids}},
+                            "fields": [
+                                "id",
+                                "conversation_id",
+                                {"project_tag_id": ["id", "text", "created_at"]},
+                            ],
+                            "limit": -1,
+                        }
+                    },
+                )
+                or []
+            )
             tag_map: dict[str, list[dict]] = {}
             if isinstance(tags, list):
                 for tg in tags:
@@ -256,14 +268,12 @@ async def count_live_conversations(
     which (a) broke for workspace members once we locked the ACL down
     and (b) leaked aggregate query shape across the client boundary.
     """
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timezone, timedelta
 
     access = await resolve_project_access(project_id, auth)
     access.require("conversation:read")
 
-    cutoff = (
-        datetime.now(timezone.utc) - timedelta(seconds=window_seconds)
-    ).isoformat()
+    cutoff = (datetime.now(timezone.utc) - timedelta(seconds=window_seconds)).isoformat()
 
     agg = await async_directus.get_items(
         "conversation_chunk",
@@ -353,33 +363,39 @@ async def get_conversation(
     access, conv = await resolve_conversation_access(conversation_id, auth)
 
     if include_chunks:
-        chunks = await async_directus.get_items(
-            "conversation_chunk",
-            {
-                "query": {
-                    "filter": {"conversation_id": {"_eq": conversation_id}},
-                    "fields": ["*"],
-                    "sort": ["timestamp"],
-                    "limit": -1,
-                }
-            },
-        ) or []
+        chunks = (
+            await async_directus.get_items(
+                "conversation_chunk",
+                {
+                    "query": {
+                        "filter": {"conversation_id": {"_eq": conversation_id}},
+                        "fields": ["*"],
+                        "sort": ["timestamp"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
         conv["chunks"] = chunks if isinstance(chunks, list) else []
 
     if include_tags:
-        tags = await async_directus.get_items(
-            "conversation_project_tag",
-            {
-                "query": {
-                    "filter": {"conversation_id": {"_eq": conversation_id}},
-                    "fields": [
-                        "id",
-                        {"project_tag_id": ["id", "text", "created_at"]},
-                    ],
-                    "limit": -1,
-                }
-            },
-        ) or []
+        tags = (
+            await async_directus.get_items(
+                "conversation_project_tag",
+                {
+                    "query": {
+                        "filter": {"conversation_id": {"_eq": conversation_id}},
+                        "fields": [
+                            "id",
+                            {"project_tag_id": ["id", "text", "created_at"]},
+                        ],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
         conv["tags"] = tags if isinstance(tags, list) else []
 
     # The ResourceAccess bundle already enforced conversation:read, but
@@ -420,9 +436,7 @@ async def update_conversation(
     if not payload:
         raise HTTPException(status_code=400, detail="No fields to update")
 
-    updated = await async_directus.update_item(
-        "conversation", conversation_id, payload
-    )
+    updated = await async_directus.update_item("conversation", conversation_id, payload)
     # Directus update returns {"data": {...}} — unwrap.
     if isinstance(updated, dict) and "data" in updated:
         return updated["data"]
@@ -456,6 +470,16 @@ async def move_conversation(
         conversation_id,
         {"project_id": body.target_project_id},
     )
+
+    from dembrane.cache_utils import invalidate_workspace_and_org_usage
+
+    src_ws_id = src_access.workspace_id
+    dst_ws_id = dst_access.workspace_id
+    if src_ws_id:
+        await invalidate_workspace_and_org_usage(src_ws_id, src_access.org_id)
+    if dst_ws_id and dst_ws_id != src_ws_id:
+        await invalidate_workspace_and_org_usage(dst_ws_id, dst_access.org_id)
+
     if isinstance(updated, dict) and "data" in updated:
         return updated["data"]
     return updated or {}
@@ -496,11 +520,7 @@ async def list_chunks(
         "source",
         "created_at",
     ]
-    field_list = (
-        [f.strip() for f in fields.split(",") if f.strip()]
-        if fields
-        else default_fields
-    )
+    field_list = [f.strip() for f in fields.split(",") if f.strip()] if fields else default_fields
 
     chunks = await async_directus.get_items(
         "conversation_chunk",
@@ -644,19 +664,22 @@ async def replace_conversation_tags(
             valid_ids = {row["id"] for row in valid if row.get("id")}
 
     # Current junction rows.
-    existing = await async_directus.get_items(
-        "conversation_project_tag",
-        {
-            "query": {
-                "filter": {"conversation_id": {"_eq": body.conversation_id}},
-                "fields": [
-                    "id",
-                    {"project_tag_id": ["id"]},
-                ],
-                "limit": -1,
-            }
-        },
-    ) or []
+    existing = (
+        await async_directus.get_items(
+            "conversation_project_tag",
+            {
+                "query": {
+                    "filter": {"conversation_id": {"_eq": body.conversation_id}},
+                    "fields": [
+                        "id",
+                        {"project_tag_id": ["id"]},
+                    ],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
     existing_list = existing if isinstance(existing, list) else []
 
     current_tag_ids: set[str] = set()
@@ -689,9 +712,7 @@ async def replace_conversation_tags(
         try:
             await async_directus.delete_item("conversation_project_tag", row_id)
         except Exception:  # noqa: BLE001 — per-row best effort
-            logger.exception(
-                "conversation_project_tag delete failed id=%s", row_id
-            )
+            logger.exception("conversation_project_tag delete failed id=%s", row_id)
 
     for tag_id in to_add:
         try:

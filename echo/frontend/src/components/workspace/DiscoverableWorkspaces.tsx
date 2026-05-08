@@ -90,6 +90,9 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({
+				queryKey: ["v2", "workspaces-context"],
+			});
+			queryClient.invalidateQueries({
 				queryKey: ["v2", "discoverable-workspaces", orgId],
 			});
 			toast.success(t`Joined`);

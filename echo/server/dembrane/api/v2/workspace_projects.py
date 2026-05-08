@@ -477,6 +477,10 @@ async def create_workspace_project(
     )
     project = result["data"]
 
+    from dembrane.cache_utils import invalidate_workspace_and_org_usage
+
+    await invalidate_workspace_and_org_usage(ctx.workspace_id, ctx.workspace.get("org_id"))
+
     logger.info(
         f"Created project {project_id} in workspace {ctx.workspace_id} by {ctx.app_user_id}"
     )

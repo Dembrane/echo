@@ -913,6 +913,17 @@ async def retranscribe_conversation(
 
             task_process_conversation_chunk.send(chunk_id, use_pii_redaction=use_pii_redaction)
 
+            # Clone duplicates `duration` into the workspace rollup.
+            try:
+                await _invalidate_usage_cache_for_conversation(new_conversation_id)
+            except Exception as exc:
+                logger.warning(
+                    "usage cache invalidation failed after retranscribe of %s (clone=%s): %s",
+                    conversation_id,
+                    new_conversation_id,
+                    exc,
+                )
+
             return {
                 "status": "success",
                 "message": "Retranscription in progress",
@@ -959,6 +970,16 @@ async def delete_conversation(
     try:
         conversation_service = conversation_service_for_auth(auth)
         await run_in_thread_pool(conversation_service.delete, conversation_id)
+
+        try:
+            await _invalidate_usage_cache_for_conversation(conversation_id)
+        except Exception as exc:
+            logger.warning(
+                "usage cache invalidation failed after deleting conversation %s: %s",
+                conversation_id,
+                exc,
+            )
+
         return {"status": "success", "message": "Conversation deleted successfully"}
     except Exception as e:
         logger.exception(f"Error deleting conversation {conversation_id}: {e}")

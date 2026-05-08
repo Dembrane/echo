@@ -228,6 +228,9 @@ export function WorkspaceInviteWizard({
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation-members", orgId],
 			});
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "organisation", orgId, "members"],
+			});
 			// Refresh seat / guest cap flags after invites land.
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "workspace-usage", workspaceId, 0],

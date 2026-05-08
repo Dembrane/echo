@@ -830,7 +830,6 @@ function OverviewPanel({
 		queryClient.invalidateQueries({
 			queryKey: ["v2", "organisation", organisationId],
 		});
-		queryClient.invalidateQueries({ queryKey: ["v2", "orgs"] });
 		queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 	};
 
