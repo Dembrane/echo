@@ -854,6 +854,9 @@ export const getProjectConversationCounts = async (projectId: string) => {
 				project_id: {
 					_eq: projectId,
 				},
+				deleted_at: {
+					_null: true,
+				},
 			},
 		}),
 	);
@@ -1622,6 +1625,46 @@ export const submitNotificationParticipant = async (
 	}
 };
 
+export const deleteTagById = async (
+	projectId: string,
+	tagId: string,
+) => {
+	return api.delete(`/projects/${projectId}/tags/${tagId}`);
+};
+
+export const deleteConversationTags = async (
+	projectId: string,
+	conversationId: string,
+	tagIds: number[],
+) => {
+	return api.post(
+		`/projects/${projectId}/conversations/${conversationId}/tags/delete`,
+		{ tag_ids: tagIds },
+	);
+};
+
+export const deleteChatById = async (chatId: string) => {
+	try {
+		const response = await api.delete(`/chats/${chatId}`);
+		return response;
+	} catch (error: any) {
+		const message =
+			error?.response?.data?.detail || "Failed to delete chat";
+		throw new Error(message);
+	}
+};
+
+export const deleteProjectById = async (projectId: string) => {
+	try {
+		const response = await api.delete(`/projects/${projectId}`);
+		return response;
+	} catch (error: any) {
+		const message =
+			error?.response?.data?.detail || "Failed to delete project";
+		throw new Error(message);
+	}
+};
+
 export const deleteConversationById = async (conversationId: string) => {
 	try {
 		const response = await api.delete(`/conversations/${conversationId}`);
@@ -1781,6 +1824,14 @@ export type PromptTemplateResponse = {
 	copied_from: string | null;
 	date_created: string | null;
 	date_updated: string | null;
+	// Workspace-scope (matrix v1.1). scope='user' = private template
+	// (legacy). scope='workspace' = shared with every workspace member.
+	scope: "user" | "workspace";
+	workspace_id: string | null;
+	// Derived server-side: true if the caller is allowed to edit this
+	// template (creator for scope='user', or non-external workspace
+	// member for scope='workspace').
+	can_edit: boolean;
 };
 
 // -- Quick-Access Preferences --
@@ -1790,11 +1841,12 @@ export type QuickAccessPreference = {
 	id: string;
 };
 
-export const getPromptTemplates = async (): Promise<
-	PromptTemplateResponse[]
-> => {
+export const getPromptTemplates = async (
+	workspaceId?: string | null,
+): Promise<PromptTemplateResponse[]> => {
+	const qs = workspaceId ? `?workspace_id=${encodeURIComponent(workspaceId)}` : "";
 	return api.get<unknown, PromptTemplateResponse[]>(
-		"/templates/prompt-templates",
+		`/templates/prompt-templates${qs}`,
 	);
 };
 
@@ -1802,6 +1854,10 @@ export const createPromptTemplate = async (payload: {
 	title: string;
 	content: string;
 	icon?: string | null;
+	// Default scope is 'user' — pass 'workspace' + workspace_id to
+	// create a shared organisation template.
+	scope?: "user" | "workspace";
+	workspace_id?: string | null;
 }): Promise<PromptTemplateResponse> => {
 	return api.post<unknown, PromptTemplateResponse>(
 		"/templates/prompt-templates",

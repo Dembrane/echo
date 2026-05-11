@@ -45,6 +45,7 @@ class ProjectService:
                         "query": {
                             "filter": {
                                 "id": project_id,
+                                "deleted_at": {"_null": True},
                             },
                             "fields": fields,
                         }

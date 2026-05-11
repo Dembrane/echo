@@ -15,7 +15,6 @@ from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.async_helpers import run_in_thread_pool
-from dembrane.service.project import ProjectService, ProjectNotFoundException
 from dembrane.api.dependency_auth import DependencyDirectusSession, require_directus_client
 
 logger = getLogger("api.project_webhook")
@@ -77,16 +76,37 @@ class WebhookTestResponseSchema(BaseModel):
 
 
 async def _check_project_access(project_id: str, auth: DependencyDirectusSession) -> dict:
-    """Helper to verify project access and return the project."""
-    project_service = ProjectService(directus_client=auth.client)
+    """Helper to verify project access and return the project.
+
+    Uses the v2 access ladder (get_user_project_access) so every
+    workspace member with read reach passes — previously this gate
+    only admitted the legacy creator, which combined with the Directus
+    ACL lockdown blocked webhooks configuration for anyone else.
+    """
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.inheritance import get_user_project_access
+    from dembrane.directus_async import async_directus
+
+    project = await async_directus.get_item("project", project_id)
+    if not project or project.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    if auth.is_admin:
+        return project
+
     try:
-        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-    except ProjectNotFoundException as exc:
-        raise HTTPException(status_code=404, detail="Project not found") from exc
+        app_user = await get_app_user_or_raise(auth.user_id)
+    except HTTPException:
+        raise HTTPException(status_code=404, detail="Project not found") from None
 
-    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
-        raise HTTPException(status_code=403, detail="User does not have access to this project")
-
+    access = await get_user_project_access(
+        project_id=project_id,
+        user_id=app_user["id"],
+        directus_user_id=auth.user_id,
+        project=project,
+    )
+    if access is None:
+        raise HTTPException(status_code=404, detail="Project not found")
     return project
 
 
@@ -121,7 +141,10 @@ async def list_webhooks(
                 "project_webhook",
                 {
                     "query": {
-                        "filter": {"project_id": {"_eq": project_id}},
+                        "filter": {
+                            "project_id": {"_eq": project_id},
+                            "deleted_at": {"_null": True},
+                        },
                         "fields": [
                             "id",
                             "name",
@@ -183,6 +206,7 @@ async def list_copyable_webhooks(
                         "filter": {
                             "project_id": {"_neq": project_id},
                             "status": {"_eq": "published"},
+                            "deleted_at": {"_null": True},
                         },
                         "fields": [
                             "id",
@@ -387,7 +411,7 @@ async def delete_webhook(
     webhook_id: str,
     auth: DependencyDirectusSession,
 ) -> None:
-    """Delete a webhook."""
+    """Soft-delete a webhook by setting deleted_at."""
     await _check_project_access(project_id, auth)
 
     from dembrane.directus import directus_client_context
@@ -409,7 +433,11 @@ async def delete_webhook(
             if not existing:
                 raise HTTPException(status_code=404, detail="Webhook not found")
 
-            client.delete_item("project_webhook", webhook_id)
+            client.update_item(
+                "project_webhook",
+                webhook_id,
+                {"deleted_at": datetime.utcnow().isoformat()},
+            )
 
     except HTTPException:
         raise

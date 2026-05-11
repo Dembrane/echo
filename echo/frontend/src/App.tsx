@@ -4,8 +4,11 @@ import "@mantine/dates/styles.css";
 import "@mantine/dropzone/styles.css";
 
 import { MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
 import { DatesProvider } from "@mantine/dates";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ModalsProvider } from "@mantine/modals";
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { detectAndEmitPilotBlock } from "./lib/pilotBlock";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useEffect } from "react";
 import { RouterProvider } from "react-router/dom";
@@ -13,11 +16,40 @@ import { I18nProvider } from "./components/layout/I18nProvider";
 import { USE_PARTICIPANT_ROUTER } from "./config";
 import { AppPreferencesProvider } from "./hooks/useAppPreferences";
 import { WhitelabelLogoProvider } from "./hooks/useWhitelabelLogo";
+import type { PropsWithChildren } from "react";
+import {
+	WorkspaceContext,
+	useWorkspaceProvider,
+} from "./hooks/useWorkspace";
+
+function WorkspaceProvider({ children }: PropsWithChildren) {
+	const value = useWorkspaceProvider(true);
+	return (
+		<WorkspaceContext.Provider value={value}>
+			{children}
+		</WorkspaceContext.Provider>
+	);
+}
 import { analytics } from "./lib/analytics";
 import { mainRouter, participantRouter } from "./Router";
 import { theme } from "./theme";
 
-const queryClient = new QueryClient();
+// Pilot hard-block (matrix §8): intercept 402 + copy-locked body from
+// host-side mutations and fan out a level-3 modal. Detection is
+// copy-substring since we control both the backend body and the frontend
+// match — see lib/pilotBlock.ts.
+const queryClient = new QueryClient({
+	mutationCache: new MutationCache({
+		onError: (error) => {
+			detectAndEmitPilotBlock(error);
+		},
+	}),
+	queryCache: new QueryCache({
+		onError: (error) => {
+			detectAndEmitPilotBlock(error);
+		},
+	}),
+});
 
 const router = USE_PARTICIPANT_ROUTER ? participantRouter : mainRouter;
 
@@ -86,9 +118,18 @@ export const App = () => {
 				<DatesProvider settings={{ consistentWeeks: true }}>
 					<AppPreferencesProvider>
 						<WhitelabelLogoProvider>
-							<I18nProvider>
-								<RouterProvider router={router} />
-							</I18nProvider>
+							<WorkspaceProvider>
+								{/* I18nProvider must wrap ModalsProvider: Mantine's
+								    modal portal re-enters the tree outside any
+								    non-context-aware ancestor, so <Trans> inside
+								    modals.openConfirmModal children needs Lingui
+								    context available from this level down. */}
+								<I18nProvider>
+									<ModalsProvider>
+										<RouterProvider router={router} />
+									</ModalsProvider>
+								</I18nProvider>
+							</WorkspaceProvider>
 						</WhitelabelLogoProvider>
 					</AppPreferencesProvider>
 				</DatesProvider>

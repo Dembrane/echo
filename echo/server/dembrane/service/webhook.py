@@ -74,6 +74,7 @@ class WebhookService:
                             "filter": {
                                 "project_id": {"_eq": project_id},
                                 "status": {"_eq": "published"},
+                                "deleted_at": {"_null": True},
                             },
                             "fields": ["id", "name", "url", "secret", "events", "project_id"],
                         }

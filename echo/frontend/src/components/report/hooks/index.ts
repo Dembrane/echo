@@ -1,4 +1,3 @@
-import { readItem, readItems } from "@directus/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	cancelScheduledReport,
@@ -16,7 +15,7 @@ import {
 	listProjectReports,
 	updateProjectReport,
 } from "@/lib/api";
-import { directus } from "@/lib/directus";
+import { bff } from "@/lib/bff";
 
 export const useUpdateProjectReportMutation = () => {
 	const queryClient = useQueryClient();
@@ -197,93 +196,38 @@ export const useLatestProjectReport = (projectId: string) => {
 export const useProjectReportTimelineData = (projectReportId: string) => {
 	return useQuery({
 		queryFn: async () => {
-			const projectReport = await directus.request<ProjectReport>(
-				readItem("project_report", projectReportId, {
-					fields: ["id", "date_created", "project_id"],
-				}),
-			);
-
-			if (!projectReport?.project_id) {
-				throw new Error("No project_id found on this report");
-			}
-
-			const allProjectReports = await directus.request(
-				readItems("project_report", {
-					fields: ["id", "date_created"],
-					filter: {
-						project_id: { _eq: projectReport.project_id },
-					},
-					limit: 1000,
-					sort: "date_created",
-				}),
-			);
-
-			const project = await directus.request<Project>(
-				readItem("project", projectReport.project_id.toString(), {
-					fields: ["id", "created_at"],
-				}),
-			);
-
-			const conversations = await directus.request<Conversation[]>(
-				readItems("conversation", {
-					fields: ["id", "created_at"],
-					filter: {
-						project_id: { _eq: projectReport.project_id },
-					},
-					limit: 1000,
-				}),
-			);
-
-			let conversationChunkAgg: { conversation_id: string; count: number }[] =
-				[];
-			if (conversations.length > 0) {
-				const conversationIds = conversations.map((c) => c.id);
-				const chunkCountsAgg = await directus.request<
-					Array<{ conversation_id: string; count: number }>
-				>(
-					readItems("conversation_chunk", {
-						aggregate: { count: "*" },
-						filter: { conversation_id: { _in: conversationIds } },
-						groupBy: ["conversation_id"],
-					}),
-				);
-				conversationChunkAgg = chunkCountsAgg;
-			}
-
-			const projectReportMetrics = await directus.request<
-				ProjectReportMetric[]
-			>(
-				readItems("project_report_metric", {
-					fields: ["id", "date_created", "project_report_id"],
-					filter: {
-						project_report_id: {
-							project_id: { _eq: project.id },
-						},
-					},
-					limit: 1000,
-					sort: "date_created",
-				}),
-			);
+			// One BFF round-trip replaces the old 6-query sequence —
+			// server-side access-checks the report then aggregates
+			// siblings + conversations + chunk counts + metrics.
+			const data = await bff.get<{
+				report: { id: string; date_created: string; project_id: string };
+				all_reports: { id: string; date_created: string }[];
+				project_created_at: string | null;
+				conversations: {
+					id: string;
+					created_at: string;
+					chunk_count: number;
+				}[];
+				metrics: ProjectReportMetric[];
+			}>(`/reports/${projectReportId}/timeline`);
 
 			return {
-				allReports: allProjectReports.map((r) => ({
+				allReports: data.all_reports.map((r) => ({
 					createdAt: r.date_created,
 					id: r.id,
 				})),
-				conversationChunks: conversations.map((conv) => {
-					const aggRow = conversationChunkAgg.find(
-						(row) => row.conversation_id === conv.id,
-					);
-					return {
-						chunkCount: aggRow?.count ?? 0,
-						conversationId: conv.id,
-						createdAt: conv.created_at,
-					};
-				}),
-				conversations: conversations,
-				projectCreatedAt: project.created_at,
-				projectReportMetrics,
-				reportCreatedAt: projectReport.date_created,
+				conversationChunks: data.conversations.map((conv) => ({
+					chunkCount: conv.chunk_count,
+					conversationId: conv.id,
+					createdAt: conv.created_at,
+				})),
+				conversations: data.conversations.map((c) => ({
+					id: c.id,
+					created_at: c.created_at,
+				})) as unknown as Conversation[],
+				projectCreatedAt: data.project_created_at,
+				projectReportMetrics: data.metrics,
+				reportCreatedAt: data.report.date_created,
 			};
 		},
 		queryKey: ["reports", projectReportId, "timelineData"],

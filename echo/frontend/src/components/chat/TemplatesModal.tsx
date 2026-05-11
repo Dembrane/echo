@@ -71,10 +71,13 @@ type TemplatesModalProps = {
 		title: string;
 		content: string;
 		icon: string | null;
+		scope?: "user" | "workspace";
+		can_edit?: boolean;
 	}>;
 	onCreateUserTemplate?: (payload: {
 		title: string;
 		content: string;
+		scope?: "user" | "workspace";
 	}) => Promise<unknown> | void;
 	onUpdateUserTemplate?: (payload: {
 		id: string;
@@ -92,6 +95,10 @@ type TemplatesModalProps = {
 	onToggleAiSuggestions?: (hide: boolean) => void;
 	saveAsTemplateContent?: string | null;
 	onClearSaveAsTemplate?: () => void;
+	// When true, the create form shows a "Share with organisation" toggle. Set
+	// false for contexts without a workspace (e.g. agentic playground) or
+	// when the caller is an external guest who can't create organisation templates.
+	canCreateWorkspaceTemplate?: boolean;
 };
 
 type UnifiedTemplate = {
@@ -99,6 +106,10 @@ type UnifiedTemplate = {
 	title: string;
 	content: string;
 	source: "dembrane" | "user";
+	// Only meaningful for source='user': distinguishes personal from
+	// workspace-shared templates. Undefined for 'dembrane' (built-in).
+	scope?: "user" | "workspace";
+	canEdit?: boolean;
 	key: string;
 };
 
@@ -178,6 +189,7 @@ export const TemplatesModal = ({
 	onToggleAiSuggestions,
 	saveAsTemplateContent,
 	onClearSaveAsTemplate,
+	canCreateWorkspaceTemplate = false,
 }: TemplatesModalProps) => {
 	const [view, setView] = useState<ModalView>("browse");
 	const [searchQuery, setSearchQuery] = useState("");
@@ -185,6 +197,10 @@ export const TemplatesModal = ({
 	const [animateList, enableAnimations] = useAutoAnimate();
 	const [formTitle, setFormTitle] = useState("");
 	const [formContent, setFormContent] = useState("");
+	// Defaults to 'workspace' when the caller can create organisation templates —
+	// that's the more useful setting in most chats. User can flip to
+	// personal via the switch.
+	const [formScope, setFormScope] = useState<"user" | "workspace">("user");
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [deletingTemplateId, setDeletingTemplateId] = useState<string | null>(
 		null,
@@ -261,12 +277,14 @@ export const TemplatesModal = ({
 	const handleStartCreate = () => {
 		setFormTitle("");
 		setFormContent("");
+		setFormScope(canCreateWorkspaceTemplate ? "workspace" : "user");
 		setView("create");
 	};
 
 	const handleDuplicate = (title: string, content: string) => {
 		setFormTitle(`${title} (${t`copy`})`);
 		setFormContent(content);
+		setFormScope(canCreateWorkspaceTemplate ? "workspace" : "user");
 		setView("create");
 	};
 
@@ -286,6 +304,7 @@ export const TemplatesModal = ({
 		try {
 			await onCreateUserTemplate?.({
 				content: formContent.trim(),
+				scope: canCreateWorkspaceTemplate ? formScope : "user",
 				title: formTitle.trim(),
 			});
 			setView("browse");
@@ -337,9 +356,11 @@ export const TemplatesModal = ({
 		}
 		for (const tmpl of userTemplates) {
 			items.push({
+				canEdit: tmpl.can_edit ?? true,
 				content: tmpl.content,
 				id: tmpl.id,
 				key: encodeTemplateKey("user", tmpl.id),
+				scope: tmpl.scope ?? "user",
 				source: "user",
 				title: tmpl.title,
 			});
@@ -451,6 +472,32 @@ export const TemplatesModal = ({
 								maxRows={14}
 								autosize
 							/>
+							{view === "create" && canCreateWorkspaceTemplate && (
+								<Paper withBorder radius="sm" p="xs">
+									<Group justify="space-between" wrap="nowrap" gap="sm">
+										<Stack gap={2} style={{ minWidth: 0 }}>
+											<Text size="sm">
+												<Trans>Share with organisation</Trans>
+											</Text>
+											<Text size="xs" c="dimmed" lineClamp={2}>
+												<Trans>
+													Organisation templates are visible to everyone in this
+													workspace. Leave off to keep it personal.
+												</Trans>
+											</Text>
+										</Stack>
+										<Switch
+											checked={formScope === "workspace"}
+											onChange={(e) =>
+												setFormScope(
+													e.currentTarget.checked ? "workspace" : "user",
+												)
+											}
+											aria-label={t`Share with organisation`}
+										/>
+									</Group>
+								</Paper>
+							)}
 							{view === "create" && (
 								<Text size="xs" c="dimmed" fs="italic">
 									<Trans>

@@ -278,6 +278,9 @@ interface Project {
 	language: "en" | "nl" | "multi" | null;
 	name: string | null;
 	updated_at: string | null;
+	// Workspace-level privacy toggle — one of two legal values,
+	// matches server/dembrane/api/v2/workspace_projects.py.
+	visibility: "workspace" | "private" | null;
 	is_verify_enabled: boolean | null;
 	is_verify_on_finish_enabled: boolean | null;
 	selected_verification_key_list: string | null;
@@ -290,6 +293,10 @@ interface Project {
 	custom_verification_topics: string[] | VerificationTopic[];
 	conversations_count?: number | null;
 	pin_order: number | null;
+	// Added by matrix v1.1 (workspaces migration) — step 6 on the
+	// Directus schema. Nullable for legacy rows that haven't been
+	// attached to a workspace yet.
+	workspace_id: string | null;
 }
 
 interface ParticipantProject extends Project {

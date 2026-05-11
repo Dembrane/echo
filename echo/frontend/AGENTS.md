@@ -10,7 +10,7 @@
 - Saw a pattern (≥3 uses)? Ask: “Document this pattern?”
 - Fixed a bug? Ask: “Add this to warnings?”
 - Completed a repeatable workflow? Ask: “Document this workflow?”
-- Resolved confusion for the team? Ask: “Add this clarification?”
+- Resolved confusion for the organisation? Ask: “Add this clarification?”
 - Skip documenting secrets, temporary hacks, or anything explicitly excluded.
 
 ## Project Snapshot

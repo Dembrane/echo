@@ -13,34 +13,39 @@ import {
 
 // ── Prompt Templates CRUD ──
 
-export const useUserTemplates = () => {
+export const useUserTemplates = (workspaceId?: string | null) => {
 	return useQuery({
-		queryFn: getPromptTemplates,
-		queryKey: ["prompt_templates"],
+		queryFn: () => getPromptTemplates(workspaceId),
+		queryKey: ["prompt_templates", workspaceId ?? "__personal__"],
 	});
 };
 
-export const useCreateUserTemplate = () => {
+export const useCreateUserTemplate = (workspaceId?: string | null) => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (payload: {
 			title: string;
 			content: string;
 			icon?: string | null;
-		}) => createPromptTemplate(payload),
+			scope?: "user" | "workspace";
+		}) =>
+			createPromptTemplate({
+				...payload,
+				workspace_id: payload.scope === "workspace" ? workspaceId : null,
+			}),
 		onSuccess: async (newTemplate) => {
-			// Optimistically add the new template to the cache for instant UI feedback
 			queryClient.setQueryData<PromptTemplateResponse[]>(
-				["prompt_templates"],
+				["prompt_templates", workspaceId ?? "__personal__"],
 				(old) => (old ? [...old, newTemplate] : [newTemplate]),
 			);
-			// Force refetch to get the canonical data from the server
-			await queryClient.refetchQueries({ queryKey: ["prompt_templates"] });
+			await queryClient.refetchQueries({
+				queryKey: ["prompt_templates", workspaceId ?? "__personal__"],
+			});
 		},
 	});
 };
 
-export const useUpdateUserTemplate = () => {
+export const useUpdateUserTemplate = (workspaceId?: string | null) => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (payload: {
@@ -53,23 +58,26 @@ export const useUpdateUserTemplate = () => {
 			return updatePromptTemplate(id, data);
 		},
 		onSuccess: async () => {
-			await queryClient.refetchQueries({ queryKey: ["prompt_templates"] });
+			await queryClient.refetchQueries({
+				queryKey: ["prompt_templates", workspaceId ?? "__personal__"],
+			});
 		},
 	});
 };
 
-export const useDeleteUserTemplate = () => {
+export const useDeleteUserTemplate = (workspaceId?: string | null) => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (id: string) => deletePromptTemplate(id),
 		onSuccess: async (_, deletedId) => {
-			// Remove immediately from cache
 			queryClient.setQueryData<PromptTemplateResponse[]>(
-				["prompt_templates"],
+				["prompt_templates", workspaceId ?? "__personal__"],
 				(old) => old?.filter((t) => t.id !== deletedId) ?? [],
 			);
 			queryClient.invalidateQueries({ queryKey: ["quick_access_preferences"] });
-			await queryClient.refetchQueries({ queryKey: ["prompt_templates"] });
+			await queryClient.refetchQueries({
+				queryKey: ["prompt_templates", workspaceId ?? "__personal__"],
+			});
 		},
 	});
 };

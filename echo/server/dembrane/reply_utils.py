@@ -241,6 +241,7 @@ async def generate_reply_for_conversation(
                 "filter": {
                     "id": {"_neq": current_conversation.id},
                     "project_id": {"_eq": conversation["project_id"]["id"]},
+                    "deleted_at": {"_null": True},
                 },
                 "fields": adjacent_fields,
                 "deep": {

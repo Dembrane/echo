@@ -72,6 +72,7 @@ def _fetch_projects(admin_user_ids: List[str]) -> List[dict[str, Any]]:
         filter_conditions.append(
             {"directus_user_id": {"_nin": admin_user_ids}},
         )
+    filter_conditions.append({"deleted_at": {"_null": True}})
 
     return directus.get_items(
         "project",
@@ -98,7 +99,10 @@ def _fetch_conversation_stats(project_ids: List[str]) -> tuple[int, float]:
         "conversation",
         {
             "query": {
-                "filter": {"project_id": {"_in": project_ids}},
+                "filter": {
+                    "project_id": {"_in": project_ids},
+                    "deleted_at": {"_null": True},
+                },
                 "fields": ["duration"],
                 "limit": -1,
             }

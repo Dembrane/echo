@@ -910,7 +910,7 @@ def generate_pdf_report(
         follow_up_ratio = metrics.chat.total_chats / metrics.audio.total_conversations
         story.append(
             Paragraph(
-                f"Follow-up cadence: {follow_up_ratio:.2f} chat sessions per recorded conversation, which can indicate how often teams continue analysis in chat after live work.",
+                f"Follow-up cadence: {follow_up_ratio:.2f} chat sessions per recorded conversation, which can indicate how often organisations continue analysis in chat after live work.",
                 styles["SmallText"],
             )
         )

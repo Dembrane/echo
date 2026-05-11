@@ -1,6 +1,7 @@
 import os
 import asyncio
 import zipfile
+import tempfile
 from http import HTTPStatus
 from typing import Any, List, Optional, Generator, AsyncGenerator
 from logging import getLogger
@@ -20,7 +21,6 @@ from dembrane.api.exceptions import (
 )
 from dembrane.service.project import (
     ProjectService,
-    ProjectServiceException,
     ProjectNotFoundException,
     get_allowed_languages,
 )
@@ -94,10 +94,15 @@ async def get_projects_home(
     search: Optional[str] = Query(None, description="Search term, supports owner:<email> prefix"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
     limit: int = Query(15, ge=1, le=100, description="Page size"),
+    workspace_id: Optional[str] = Query(None, description="Scope to a single workspace"),
 ) -> BffProjectsHomeResponse:
     """
     Aggregated endpoint for the projects home page.
     Returns pinned projects and a paginated project list in one call.
+
+    `workspace_id` scopes both lists when present. Without it, the response
+    spans every project the caller can see (used on the legacy /projects
+    landing, not on /w/:id/projects).
     """
     client = auth.client
 
@@ -108,9 +113,11 @@ async def get_projects_home(
 
     # Fetch pinned projects (always, regardless of search)
     # Admins see only their own pins; non-admins see all (Directus permissions handle scoping)
-    pin_filter: dict[str, Any] = {"pin_order": {"_nnull": True}}
+    pin_filter: dict[str, Any] = {"pin_order": {"_nnull": True}, "deleted_at": {"_null": True}}
     if auth.is_admin:
         pin_filter["directus_user_id"] = {"_eq": auth.user_id}
+    if workspace_id:
+        pin_filter["workspace_id"] = {"_eq": workspace_id}
 
     pinned_raw = await run_in_thread_pool(
         client.get_items,
@@ -150,16 +157,21 @@ async def get_projects_home(
         }
 
     # Build query for paginated project list
+    base_filter: dict[str, Any] = {"deleted_at": {"_null": True}}
+    if workspace_id:
+        base_filter["workspace_id"] = {"_eq": workspace_id}
+    if owner_filter:
+        base_filter.update(owner_filter)
+
     query: dict = {
         "fields": fields,
         "sort": ["-updated_at"],
         "limit": limit + 1,
         "offset": offset,
+        "filter": base_filter,
     }
     if text_search:
         query["search"] = text_search
-    if owner_filter:
-        query["filter"] = owner_filter
 
     projects_raw = await run_in_thread_pool(
         client.get_items,
@@ -179,7 +191,7 @@ async def get_projects_home(
         count_result = await run_in_thread_pool(
             client.get_items,
             "project",
-            {"query": {"aggregate": {"count": ["id"]}}},
+            {"query": {"aggregate": {"count": ["id"]}, "filter": {"deleted_at": {"_null": True}}}},
         )
         if isinstance(count_result, list) and len(count_result) > 0:
             total_count = int(count_result[0].get("count", {}).get("id", 0))
@@ -205,25 +217,64 @@ async def toggle_project_pin(
     body: PinProjectRequest,
     auth: DependencyDirectusSession,
 ) -> dict:
-    """Pin or unpin a project. Admins can only pin projects they own."""
+    """Pin or unpin a project.
+
+    Pinning is a workspace-level signal — it changes what every member sees
+    on the workspace home, so permission follows workspace membership:
+      - workspace admin / owner / member: allowed
+      - external guest (is_external=true): blocked (403) — guests see the
+        project they were invited to, they don't curate the organisation view.
+      - legacy projects without a workspace_id: fall back to the pre-matrix
+        "project owner" check so unmigrated projects still pin for the owner.
+    """
     if body.pin_order is not None and body.pin_order not in (1, 2, 3):
         raise HTTPException(status_code=400, detail="pin_order must be 1, 2, or 3")
 
     client = auth.client
 
-    # Ownership check: admins can only pin/unpin projects they own
-    if auth.is_admin:
-        project_service = ProjectService(directus_client=client)
-        try:
-            project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-        except ProjectNotFoundException as e:
-            raise HTTPException(status_code=404, detail="Project not found") from e
+    project_service = ProjectService(directus_client=client)
+    try:
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
+    except ProjectNotFoundException as e:
+        raise HTTPException(status_code=404, detail="Project not found") from e
 
-        if project.get("directus_user_id") != auth.user_id:
+    workspace_id = project.get("workspace_id")
+
+    if workspace_id:
+        from dembrane.app_user import resolve_app_user
+        from dembrane.directus_async import async_directus
+
+        app_user = await resolve_app_user(auth.user_id)
+        if not app_user:
+            raise HTTPException(status_code=403, detail="Not a member of this workspace")
+
+        mems = await async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_eq": workspace_id},
+                        "user_id": {"_eq": app_user["id"]},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["role", "is_external"],
+                    "limit": 1,
+                }
+            },
+        )
+        if not isinstance(mems, list) or len(mems) == 0:
+            raise HTTPException(status_code=403, detail="Not a member of this workspace")
+        if mems[0].get("is_external"):
             raise HTTPException(
                 status_code=403,
-                detail="Admins can only pin projects they own",
+                detail="Guests cannot pin projects",
             )
+    else:
+        # Legacy path: project not yet attached to a workspace. Fall back to
+        # "the user who created it" so a fresh upload still pins for its
+        # author before onboarding moves it into a workspace.
+        if project.get("directus_user_id") != auth.user_id:
+            raise HTTPException(status_code=403, detail="Not the project owner")
 
     await run_in_thread_pool(
         client.update_item,
@@ -288,6 +339,68 @@ async def create_project(
     return project
 
 
+@ProjectRouter.delete("/{project_id}")
+async def delete_project(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Soft-delete a project by setting deleted_at.
+
+    The project and all its data (conversations, chats, etc.) are preserved
+    in the database. Read queries filter deleted_at IS NULL so the project
+    disappears from all views. S3 audio files are kept for the grace period.
+    """
+    await _verify_project_access(auth, project_id)
+
+    from dembrane.directus import directus
+
+    await run_in_thread_pool(
+        directus.update_item,
+        "project",
+        project_id,
+        {"deleted_at": datetime.utcnow().isoformat()},
+    )
+
+    logger.info(f"Soft-deleted project {project_id} by user {auth.user_id}")
+    return {"status": "success"}
+
+
+@ProjectRouter.delete("/{project_id}/tags/{tag_id}")
+async def delete_tag(
+    project_id: str,
+    tag_id: str,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Delete a project tag (hard delete — no billing relevance)."""
+    await _verify_project_access(auth, project_id)
+
+    from dembrane.directus import directus
+
+    await run_in_thread_pool(directus.delete_item, "project_tag", tag_id)
+    return {"status": "success"}
+
+
+class DeleteConversationTagsRequest(BaseModel):
+    tag_ids: List[int]
+
+
+@ProjectRouter.post("/{project_id}/conversations/{conversation_id}/tags/delete")
+async def delete_conversation_tags(
+    project_id: str,
+    conversation_id: str,  # noqa: ARG001 — required by FastAPI route binding
+    body: DeleteConversationTagsRequest,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Delete conversation-tag junction records (hard delete)."""
+    await _verify_project_access(auth, project_id)
+
+    from dembrane.directus import directus
+
+    for tag_id in body.tag_ids:
+        await run_in_thread_pool(directus.delete_item, "conversation_project_tag", str(tag_id))
+    return {"status": "success", "deleted": len(body.tag_ids)}
+
+
 def _parse_iso_datetime(value: Any) -> datetime:
     if isinstance(value, datetime):
         return value
@@ -350,7 +463,13 @@ def _generate_transcript_file_sync(conversation: dict) -> Optional[str]:
     if conversation_id:
         name_for_file += f"_{conversation_id[:8]}"
 
-    conversation_dir = os.path.join(BASE_DIR, "transcripts", conversation_id or "unknown")
+    # Sanitize conversation_id before it touches the filesystem — even though
+    # it's a Directus UUID in practice, CodeQL flags it as path-traversal
+    # input. _sanitize_for_filename strips anything outside [A-Za-z0-9_].
+    safe_conversation_id = (
+        _sanitize_for_filename(conversation_id, max_length=64) if conversation_id else ""
+    )
+    conversation_dir = os.path.join(BASE_DIR, "transcripts", safe_conversation_id or "unknown")
     os.makedirs(conversation_dir, exist_ok=True)
 
     file_path = os.path.join(conversation_dir, f"{name_for_file}-transcript.md")
@@ -366,10 +485,16 @@ async def generate_transcript_file(conversation: dict) -> Optional[str]:
     return await run_in_thread_pool(_generate_transcript_file_sync, conversation)
 
 
-async def cleanup_files(zip_file_name: str, filenames: List[str]) -> None:
-    os.remove(zip_file_name)
+async def cleanup_files(zip_file_path: str, filenames: List[str]) -> None:
+    try:
+        os.remove(zip_file_path)
+    except OSError as exc:
+        logger.warning("Failed to remove zip %s: %s", zip_file_path, exc)
     for filename in filenames:
-        os.remove(filename)
+        try:
+            os.remove(filename)
+        except OSError as exc:
+            logger.warning("Failed to remove transcript %s: %s", filename, exc)
 
 
 @ProjectRouter.get("/{project_id}/transcripts")
@@ -378,17 +503,11 @@ async def get_project_transcripts(
     auth: DependencyDirectusSession,
     background_tasks: BackgroundTasks,
 ) -> StreamingResponse:
-    from dembrane.service.project import ProjectNotFoundException
-
-    project_service = ProjectService(directus_client=auth.client)
-
-    try:
-        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-    except ProjectNotFoundException as exc:
-        raise HTTPException(status_code=404, detail="Project not found") from exc
-
-    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
-        raise HTTPException(status_code=403, detail="User does not have access to this project")
+    # Single v2-aware access gate — replaces the previous pattern of
+    # (1) ProjectService loading through auth.client (broken post
+    # Directus lockdown) + (2) legacy directus_user_id equality (broken
+    # for every non-creator workspace member).
+    project = await _verify_project_access(auth, project_id)
 
     conversation_service_auth = build_conversation_service(auth.client)
 
@@ -425,9 +544,16 @@ async def get_project_transcripts(
 
     project_name_or_id = project.get("name") if project.get("name") is not None else project_id
     safe_project_name = get_safe_filename(str(project_name_or_id))
-    zip_file_name = f"{safe_project_name}_transcripts.zip"
+    download_filename = f"{safe_project_name}_transcripts.zip"
 
-    with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED) as zipf:
+    # Create the zip on disk under an OS-controlled temp path. The download
+    # filename surfaced to the browser is derived from the project name, but
+    # the on-disk path is never built from user input — closes
+    # CodeQL py/path-injection on the open() / ZipFile() calls below.
+    tmp_fd, zip_file_path = tempfile.mkstemp(prefix="dembrane_transcripts_", suffix=".zip")
+    os.close(tmp_fd)
+
+    with zipfile.ZipFile(zip_file_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for filename in filenames:
             if not filename:
                 continue
@@ -435,17 +561,17 @@ async def get_project_transcripts(
             zipf.write(filename, arcname)
 
     def iterfile() -> Generator[bytes, None, None]:
-        with open(zip_file_name, "rb") as file:
+        with open(zip_file_path, "rb") as file:
             yield from file
 
     response = StreamingResponse(iterfile(), media_type="application/zip")
-    response.headers["Content-Disposition"] = f"attachment; filename={zip_file_name}"
+    response.headers["Content-Disposition"] = f'attachment; filename="{download_filename}"'
 
     # Schedule cleanup task to run after the response has been sent
     background_tasks.add_task(
         cleanup_files,
-        zip_file_name,  # Pass the actual zip filename
-        filenames,  # Pass the actual list of generated transcript files
+        zip_file_path,
+        filenames,
     )
 
     return response
@@ -464,15 +590,7 @@ async def post_create_project_library(
     project_id: str,
     body: CreateLibraryRequestBodySchema,
 ) -> None:
-    project_service = ProjectService(directus_client=auth.client)
-
-    try:
-        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-    except ProjectServiceException as e:
-        raise HTTPException(status_code=404, detail="Project not found") from e
-
-    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
-        raise HTTPException(status_code=403, detail="User does not have access to this project")
+    await _verify_project_access(auth, project_id)
 
     # analysis_run = get_latest_project_analysis_run(project.id)
 
@@ -506,6 +624,10 @@ async def post_create_view(
     body: CreateViewRequestBodySchema,
     auth: DependencyDirectusSession,
 ) -> None:
+    # Access gate first — lets callers without reach bail early before
+    # we even look at the analysis run.
+    await _verify_project_access(auth, project_id)
+
     project_service = ProjectService(directus_client=auth.client)
     project_analysis_run = await run_in_thread_pool(
         project_service.get_latest_analysis_run, project_id
@@ -513,14 +635,6 @@ async def post_create_view(
 
     if not project_analysis_run:
         raise HTTPException(status_code=404, detail="No analysis found for this project")
-
-    try:
-        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-    except ProjectNotFoundException as e:
-        raise HTTPException(status_code=404, detail="Project not found") from e
-
-    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
-        raise HTTPException(status_code=403, detail="User does not have access to this project")
 
     task_create_view.send(
         project_analysis_run["id"],
@@ -546,16 +660,12 @@ async def create_report(
     body: CreateReportRequestBodySchema,
     auth: DependencyDirectusSession,
 ) -> dict:
-    project_service = ProjectService(directus_client=auth.client)
+    # v2-aware access gate (inheritance + sharing + tier). Replaces the
+    # old double-check (ProjectService.get_by_id_or_raise through the
+    # user's Directus client + legacy-creator equality) that was
+    # blocking the "Generate report" button for every member.
+    await _verify_project_access(auth, project_id)
     language = body.language or "en"
-
-    try:
-        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-    except ProjectNotFoundException as e:
-        raise HTTPException(status_code=404, detail="Project not found") from e
-
-    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
-        raise HTTPException(status_code=403, detail="User does not have access to this project")
 
     from dembrane.directus import directus
 
@@ -604,6 +714,7 @@ async def create_report(
                     "filter": {
                         "project_id": {"_eq": project_id},
                         "status": {"_eq": "draft"},
+                        "deleted_at": {"_null": True},
                     },
                     "limit": 1,
                 }
@@ -617,6 +728,7 @@ async def create_report(
 
     # Create report record
     initial_status = "scheduled" if is_scheduled else "draft"
+    project_service = ProjectService(directus_client=auth.client)
     report = await run_in_thread_pool(
         project_service.create_report, project_id, language, "", initial_status
     )
@@ -651,29 +763,41 @@ async def create_report(
 
 
 async def _verify_project_access(auth: DependencyDirectusSession, project_id: str) -> dict:
-    """Verify the authenticated user has access to the given project. Returns the project dict."""
-    try:
-        projects = await run_in_thread_pool(
-            auth.client.get_items,
-            "project",
-            {
-                "query": {
-                    "filter": {"id": {"_eq": project_id}},
-                    "fields": ["id", "directus_user_id"],
-                    "limit": 1,
-                }
-            },
-        )
-    except Exception as err:
-        logger.warning("Failed to fetch project %s: %s", project_id, err)
-        raise HTTPException(status_code=404, detail="Project not found") from err
+    """Verify the caller can reach this project. Returns the project dict.
 
-    if not isinstance(projects, list) or not projects:
+    Uses the v2 access ladder (get_user_project_access) so the full
+    inheritance + sharing + tier model decides — previously this gate
+    was a legacy-creator equality check (directus_user_id == auth.user_id),
+    which excluded every workspace member who didn't originally create
+    the project. Compounded by the Directus lockdown, that made the
+    whole v1 report surface return 403 for non-admin members.
+    """
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.inheritance import get_user_project_access
+    from dembrane.directus_async import async_directus
+
+    project = await async_directus.get_item("project", project_id)
+    if not project or project.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Project not found")
 
-    project = projects[0]
-    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
-        raise HTTPException(status_code=403, detail="User does not have access to this project")
+    # Staff short-circuit — existing contract.
+    if auth.is_admin:
+        return project
+
+    try:
+        app_user = await get_app_user_or_raise(auth.user_id)
+    except HTTPException:
+        # Not onboarded → no way to express project access. Treat as 404
+        # so we don't confirm the project's existence to an anon caller.
+        raise HTTPException(status_code=404, detail="Project not found") from None
+
+    access = await get_user_project_access(
+        project_id=project_id,
+        user_id=app_user["id"],
+        directus_user_id=auth.user_id,
+    )
+    if access is None:
+        raise HTTPException(status_code=404, detail="Project not found")
     return project
 
 
@@ -704,6 +828,7 @@ async def list_project_reports(
                 "filter": {
                     "project_id": {"_eq": project_id},
                     "status": {"_in": ["archived", "published", "scheduled", "draft"]},
+                    "deleted_at": {"_null": True},
                 },
                 "fields": [
                     "id",
@@ -750,6 +875,7 @@ async def get_latest_report(
             "query": {
                 "filter": {
                     "project_id": {"_eq": project_id},
+                    "deleted_at": {"_null": True},
                 },
                 "fields": [
                     "id",
@@ -782,8 +908,27 @@ async def update_report(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Update a report's fields."""
-    await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
+
+    # Single access resolution covers both the existence/access check and
+    # the report:publish gate. Status transitions to `published` /
+    # `scheduled` (the publishing surface) are gated on `report:publish`,
+    # which is in the member/admin presets but not in the guest preset
+    # (matrix §4: guests can generate reports but never publish them).
+    # Other status changes (draft, archived) and content edits flow
+    # through unblocked for any project-accessor.
+    #
+    # Staff (auth.is_admin) bypasses both — they can publish on behalf
+    # of any project. The `_verify_project_access` legacy helper short-
+    # circuits on auth.is_admin, so we mirror that here.
+    if auth.is_admin:
+        await _verify_project_access(auth, project_id)
+    else:
+        from dembrane.api.v2.bff._access import resolve_project_access
+
+        access = await resolve_project_access(project_id, auth)
+        if body.status in ("published", "scheduled"):
+            access.require("report:publish")
 
     payload: dict = {}
     if body.status is not None:
@@ -801,9 +946,17 @@ async def update_report(
                 status_code=422,
                 detail="scheduled_at must be a valid ISO 8601 datetime string",
             )
-        normalized = body.scheduled_at.replace("Z", "+00:00") if isinstance(body.scheduled_at, str) else body.scheduled_at.isoformat()
+        normalized = (
+            body.scheduled_at.replace("Z", "+00:00")
+            if isinstance(body.scheduled_at, str)
+            else body.scheduled_at.isoformat()
+        )
         try:
-            scheduled_dt = datetime.fromisoformat(normalized) if isinstance(normalized, str) else body.scheduled_at
+            scheduled_dt = (
+                datetime.fromisoformat(normalized)
+                if isinstance(normalized, str)
+                else body.scheduled_at
+            )
         except (ValueError, TypeError) as e:
             raise HTTPException(
                 status_code=422,
@@ -833,6 +986,7 @@ async def update_report(
                         "project_id": {"_eq": project_id},
                         "status": {"_eq": "published"},
                         "id": {"_neq": report_id},
+                        "deleted_at": {"_null": True},
                     },
                     "fields": ["id"],
                     "limit": -1,
@@ -863,7 +1017,7 @@ async def delete_report(
     report_id: int,
     auth: DependencyDirectusSession,
 ) -> dict:
-    """Delete a report permanently."""
+    """Soft-delete a report by setting deleted_at."""
     await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
 
@@ -877,9 +1031,10 @@ async def delete_report(
         raise HTTPException(status_code=404, detail="Report not found")
 
     await run_in_thread_pool(
-        directus.delete_item,
+        directus.update_item,
         "project_report",
         str(report_id),
+        {"deleted_at": datetime.utcnow().isoformat()},
     )
     return {"deleted": True}
 
@@ -1018,7 +1173,10 @@ async def check_report_needs_update(
         "conversation",
         {
             "query": {
-                "filter": {"project_id": {"_eq": report.get("project_id")}},
+                "filter": {
+                    "project_id": {"_eq": report.get("project_id")},
+                    "deleted_at": {"_null": True},
+                },
                 "fields": ["id", "created_at"],
                 "sort": ["-created_at"],
                 "limit": 1,

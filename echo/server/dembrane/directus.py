@@ -378,10 +378,14 @@ class DirectusClient(DirectusClientProtocol):
             )
 
             try:
-                return response.json()["data"]
+                resp_json = response.json()
+                if "errors" in resp_json:
+                    logger.warning("Directus SEARCH returned errors: %s", resp_json["errors"])
+                    return []
+                return resp_json["data"]
             except Exception:  # noqa: BLE001 - want best-effort fallback
                 logger.exception("Failed to parse SEARCH response JSON")
-                return {"error": "No data found for this request"}
+                return []
         except requests.exceptions.ConnectionError as exc:
             raise DirectusServerError(exc) from exc
         except AssertionError as exc:

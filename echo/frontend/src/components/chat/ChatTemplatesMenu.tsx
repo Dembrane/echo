@@ -52,8 +52,14 @@ type ChatTemplatesMenuProps = {
 		title: string;
 		content: string;
 		icon: string | null;
+		scope?: "user" | "workspace";
+		can_edit?: boolean;
 	}>;
-	onCreateUserTemplate?: (payload: { title: string; content: string }) => void;
+	onCreateUserTemplate?: (payload: {
+		title: string;
+		content: string;
+		scope?: "user" | "workspace";
+	}) => void;
 	onUpdateUserTemplate?: (payload: {
 		id: string;
 		title: string;
@@ -63,6 +69,9 @@ type ChatTemplatesMenuProps = {
 	isCreatingTemplate?: boolean;
 	isUpdatingTemplate?: boolean;
 	isDeletingTemplate?: boolean;
+	// Passed through to the TemplatesModal create form. True when the
+	// caller has a workspace and membership lets them share templates.
+	canCreateWorkspaceTemplate?: boolean;
 	// Quick access
 	quickAccessItems?: QuickAccessItem[];
 	onSaveQuickAccess?: (items: QuickAccessItem[]) => void;
@@ -165,6 +174,7 @@ export const ChatTemplatesMenu = ({
 	onExternalClose,
 	saveAsTemplateContent,
 	onClearSaveAsTemplate,
+	canCreateWorkspaceTemplate = false,
 }: ChatTemplatesMenuProps) => {
 	const [opened, { open, close }] = useDisclosure(false);
 
@@ -381,6 +391,7 @@ export const ChatTemplatesMenu = ({
 				onToggleAiSuggestions={onToggleAiSuggestions}
 				saveAsTemplateContent={saveAsTemplateContent}
 				onClearSaveAsTemplate={onClearSaveAsTemplate}
+				canCreateWorkspaceTemplate={canCreateWorkspaceTemplate}
 			/>
 		</>
 	);

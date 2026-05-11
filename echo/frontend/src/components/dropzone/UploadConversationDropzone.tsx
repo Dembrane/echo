@@ -15,6 +15,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { usePostHog } from "@posthog/react";
 import {
 	IconAlertCircle,
 	IconArrowRight,
@@ -253,6 +254,7 @@ export const UploadConversationDropzone = (
 ) => {
 	// Modal state
 	const [opened, { open, close }] = useDisclosure(false);
+	const posthog = usePostHog();
 
 	// File selection and upload tracking state
 	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -477,6 +479,11 @@ export const UploadConversationDropzone = (
 	const handleUpload = useCallback(() => {
 		if (selectedFiles.length === 0) return;
 
+		posthog?.capture("conversation_upload_started", {
+			file_count: selectedFiles.length,
+			project_id: props.projectId,
+		});
+
 		// Start the upload process using our uploader hook
 		uploader.uploadFiles({
 			chunks: selectedFiles,
@@ -487,7 +494,7 @@ export const UploadConversationDropzone = (
 			tagIdList: [],
 			timestamps: selectedFiles.map(() => new Date()),
 		});
-	}, [selectedFiles, props.projectId, uploader]);
+	}, [selectedFiles, props.projectId, uploader, posthog]);
 
 	if (projectQuery.isLoading) {
 		return <LoadingOverlay visible />;

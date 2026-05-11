@@ -1340,6 +1340,36 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
             publish_report_progress(report_id, "completed", "Report ready")
             logger.info(f"Report {report_id} generated for project {project_id}")
 
+            # Notify the report's creator. Keep the audience tight —
+            # fanning to every workspace member on every report would
+            # spam inboxes. If we want a wider broadcast later, derive
+            # audience via project visibility + project_membership.
+            try:
+                from dembrane.app_user import resolve_app_user
+                from dembrane.notifications import emit_sync
+                with directus_client_context() as client:
+                    report_row = client.get_item("project_report", report_id_str)
+                    project_row = client.get_item("project", project_id) if project_id else None
+                report_data = (report_row or {}).get("data") or report_row or {}
+                creator_directus_id = report_data.get("user_created")
+                if creator_directus_id:
+                    creator = run_async_in_new_loop(
+                        resolve_app_user(creator_directus_id)
+                    )
+                    if creator:
+                        project_name = (project_row or {}).get("name") or "your project"
+                        emit_sync(
+                            audience_user_id=creator["id"],
+                            event_code="REPORT_READY",
+                            title="Your report is ready",
+                            message=f"**{project_name}** — open to review.",
+                            action="NAVIGATE_REPORT",
+                            ref_project_id=project_id,
+                            ref_report_id=report_id_str,
+                        )
+            except Exception as e:
+                logger.warning(f"Failed to emit REPORT_READY notification: {e}")
+
             # Dispatch report.generated webhook
             try:
                 from dembrane.service.webhook import dispatch_webhooks_for_report_event
@@ -1360,7 +1390,28 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
             except Exception as update_err:
                 logger.error(f"Failed to update report status to error: {update_err}")
             publish_report_progress(report_id, "failed", str(e))
-            # Non-retriable
+            # Non-retriable — tell the creator so they don't keep waiting.
+            try:
+                from dembrane.app_user import resolve_app_user
+                from dembrane.notifications import emit_sync
+                with directus_client_context() as client:
+                    report_row = client.get_item("project_report", report_id_str)
+                report_data = (report_row or {}).get("data") or report_row or {}
+                creator_directus_id = report_data.get("user_created")
+                if creator_directus_id:
+                    creator = run_async_in_new_loop(resolve_app_user(creator_directus_id))
+                    if creator:
+                        emit_sync(
+                            audience_user_id=creator["id"],
+                            event_code="REPORT_FAILED",
+                            title="Report generation ran into a problem",
+                            message="Open the report to retry or check details.",
+                            action="NAVIGATE_REPORT",
+                            ref_project_id=project_id,
+                            ref_report_id=report_id_str,
+                        )
+            except Exception as notif_err:
+                logger.warning(f"Failed to emit REPORT_FAILED: {notif_err}")
             return
 
         except Exception as e:
@@ -1477,6 +1528,7 @@ def task_check_scheduled_reports() -> None:
                         "filter": {
                             "status": {"_eq": "scheduled"},
                             "scheduled_at": {"_lte": now},
+                            "deleted_at": {"_null": True},
                         },
                         "fields": ["id", "project_id", "language", "user_instructions", "scheduled_at"],
                         "limit": 50,
@@ -1513,3 +1565,140 @@ def task_check_scheduled_reports() -> None:
     except Exception as e:
         logger.error(f"Error checking scheduled reports: {e}")
         raise
+
+
+@dramatiq.actor(queue_name="network", priority=30)
+def task_send_downgrade_email(
+    audience_app_user_ids: list[str],
+    ws_name: str,
+    workspace_id: str,
+    from_tier: str,
+    to_tier: str,
+    effects: list[dict],
+    downgraded_at_iso: str,
+) -> None:
+    """Send the matrix §3 post-downgrade email to a list of app_user ids.
+
+    Runs in the network queue (SendGrid is network-bound). Silent on
+    missing addresses; SendGrid misconfig is logged but never raises.
+    """
+    from datetime import datetime
+
+    from dembrane.email import send_email_sync
+    from dembrane.settings import get_settings as _get_settings
+
+    logger = getLogger("dembrane.tasks.task_send_downgrade_email")
+
+    if not audience_app_user_ids:
+        return
+
+    settings = _get_settings()
+
+    with directus_client_context() as client:
+        rows = client.get_items(
+            "app_user",
+            {
+                "query": {
+                    "filter": {"id": {"_in": audience_app_user_ids}},
+                    "fields": ["email"],
+                    "limit": -1,
+                }
+            },
+        ) or []
+
+    emails = sorted({
+        (r.get("email") or "").strip()
+        for r in rows
+        if isinstance(r, dict) and r.get("email")
+    })
+    if not emails:
+        logger.info(
+            "downgrade_email_skipped workspace=%s — no recipient addresses",
+            workspace_id,
+        )
+        return
+
+    freeze_items = [
+        e["human"] for e in effects
+        if isinstance(e, dict) and e.get("effect") == "freeze" and e.get("human")
+    ]
+    revert_items = [
+        e["human"] for e in effects
+        if isinstance(e, dict) and e.get("effect") == "revert" and e.get("human")
+    ]
+
+    try:
+        when = datetime.fromisoformat(downgraded_at_iso.replace("Z", "+00:00"))
+        downgraded_at_human = when.strftime("%d %B %Y")
+    except Exception:
+        downgraded_at_human = "today"
+
+    base = (settings.urls.admin_base_url or "").rstrip("/")
+    workspace_url = f"{base}/w/{workspace_id}" if base else f"/w/{workspace_id}"
+
+    subject = f"{ws_name} moved to {to_tier}".replace("\r", " ").replace("\n", " ")
+
+    ok = send_email_sync(
+        to=emails,
+        subject=subject,
+        template="tier_downgraded",
+        template_data={
+            "workspace_name": ws_name,
+            "from_tier": from_tier,
+            "to_tier": to_tier,
+            "downgraded_at_human": downgraded_at_human,
+            "freeze_items": freeze_items,
+            "revert_items": revert_items,
+            "workspace_url": workspace_url,
+        },
+    )
+
+    logger.info(
+        "downgrade_email workspace=%s recipients=%d sent=%s",
+        workspace_id, len(emails), ok,
+    )
+
+
+@dramatiq.actor(queue_name="network", priority=10, max_retries=3)
+def task_send_invite_email(
+    to: str,
+    subject: str,
+    template: str,
+    template_data: dict,
+    failure_context: str,
+) -> None:
+    """Send a workspace invite / workspace-added email.
+
+    Called via invites.py's _enqueue_invite_email so the HTTP response
+    returns before SendGrid round-trips. Runs on the network queue
+    (SendGrid is a network I/O call). Retries with dramatiq defaults on
+    failure — we raise from here when SendGrid returns non-2xx so the
+    retry logic actually triggers (send_email_sync swallows exceptions
+    and returns False, which wouldn't retry on its own).
+    """
+    from dembrane.email import send_email_sync
+
+    task_logger = getLogger("dembrane.tasks.task_send_invite_email")
+
+    ok = send_email_sync(
+        to=to,
+        subject=subject,
+        template=template,
+        template_data=template_data,
+    )
+    if not ok:
+        task_logger.error(
+            "invite_email_failed to=%s context=%s — will retry",
+            to, failure_context,
+        )
+        try:
+            import sentry_sdk
+            sentry_sdk.capture_message(
+                f"Invite email failed: {to} / {failure_context}",
+                level="error",
+            )
+        except Exception:
+            pass
+        # Raise so dramatiq retries. The worker's retry middleware
+        # applies exponential backoff (default 15s → minutes).
+        raise RuntimeError(f"invite email send failed: {to}")

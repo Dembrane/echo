@@ -15,6 +15,7 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import {
 	IconArrowLeft,
+	IconBuildingCommunity,
 	IconPalette,
 	IconScale,
 	IconShieldLock,
@@ -27,12 +28,16 @@ import { ChangePasswordCard } from "@/components/settings/ChangePasswordCard";
 import { FontSettingsCard } from "@/components/settings/FontSettingsCard";
 import { FontSizeSettingsCard } from "@/components/settings/FontSizeSettingsCard";
 import { LegalBasisSettingsCard } from "@/components/settings/LegalBasisSettingsCard";
+import { MyAccessCard } from "@/components/settings/MyAccessCard";
 import { TwoFactorSettingsCard } from "@/components/settings/TwoFactorSettingsCard";
-import { WhitelabelLogoCard } from "@/components/settings/WhitelabelLogoCard";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
-type SectionId = "account" | "appearance" | "project-defaults";
+type SectionId =
+	| "account"
+	| "access"
+	| "appearance"
+	| "project-defaults";
 
 const SECTIONS: Array<{
 	id: SectionId;
@@ -43,6 +48,11 @@ const SECTIONS: Array<{
 		id: "account",
 		icon: IconShieldLock,
 		label: () => t`Account & Security`,
+	},
+	{
+		id: "access",
+		icon: IconBuildingCommunity,
+		label: () => t`My access`,
 	},
 	{ id: "appearance", icon: IconPalette, label: () => t`Appearance` },
 	{
@@ -148,6 +158,15 @@ export const UserSettingsRoute = () => {
 								</Stack>
 							)}
 
+							{activeSection === "access" && (
+								<Stack gap="lg">
+									<Title order={3}>
+										<Trans>My access</Trans>
+									</Title>
+									<MyAccessCard />
+								</Stack>
+							)}
+
 							{activeSection === "appearance" && (
 								<Stack gap="lg">
 									<Title order={3}>
@@ -165,7 +184,6 @@ export const UserSettingsRoute = () => {
 										<Trans>Project Defaults</Trans>
 									</Title>
 
-									<WhitelabelLogoCard />
 									<LegalBasisSettingsCard />
 								</Stack>
 							)}

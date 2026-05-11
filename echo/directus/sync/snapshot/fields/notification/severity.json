@@ -1,0 +1,59 @@
+{
+  "collection": "notification",
+  "field": "severity",
+  "type": "string",
+  "meta": {
+    "collection": "notification",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "severity",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": "Server-derived from event_code. Controls row styling.",
+    "options": {
+      "choices": [
+        {
+          "text": "Info",
+          "value": "info"
+        },
+        {
+          "text": "Action required",
+          "value": "action_required"
+        },
+        {
+          "text": "Destructive",
+          "value": "destructive"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 5,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "severity",
+    "table": "notification",
+    "data_type": "character varying",
+    "default_value": "info",
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": false,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

@@ -1,11 +1,4 @@
-import {
-	createItem,
-	deleteItem,
-	type Query,
-	readItem,
-	readItems,
-	updateItem,
-} from "@directus/sdk";
+import type { Query } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import {
 	useInfiniteQuery,
@@ -15,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
 import { useAddChatContextMutation } from "@/components/conversation/hooks";
+import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	api,
@@ -22,13 +16,14 @@ import {
 	cloneProjectById,
 	createCustomVerificationTopic,
 	deleteCustomVerificationTopic,
+	deleteProjectById,
+	deleteTagById,
 	getLatestProjectAnalysisRunByProjectId,
 	getVerificationTopics,
 	type UpdateCustomTopicPayload,
 	updateCustomVerificationTopic,
 	type VerificationTopicsResponse,
 } from "@/lib/api";
-import { directus } from "@/lib/directus";
 
 // ── BFF: Projects Home ──────────────────────────────────────────────────
 
@@ -54,18 +49,21 @@ interface BffProjectsHomeResponse {
 export const useProjectsHome = ({
 	search,
 	limit = 15,
+	workspaceId,
 }: {
 	search?: string;
 	limit?: number;
+	workspaceId?: string | null;
 }) => {
 	return useInfiniteQuery({
-		queryKey: ["projects", "home", search],
+		queryKey: ["projects", "home", workspaceId ?? null, search],
 		initialPageParam: 0,
 		getNextPageParam: (lastPage: BffProjectsHomeResponse, _allPages, lastPageParam) =>
 			lastPage.has_more ? lastPageParam + 1 : undefined,
 		queryFn: async ({ pageParam = 0 }) => {
 			const params = new URLSearchParams();
 			if (search) params.set("search", search);
+			if (workspaceId) params.set("workspace_id", workspaceId);
 			params.set("offset", String(pageParam * limit));
 			params.set("limit", String(limit));
 			const resp = await api.get<unknown, BffProjectsHomeResponse>(
@@ -88,12 +86,92 @@ export const useTogglePinMutation = () => {
 		}) => {
 			return api.patch(`/projects/${projectId}/pin`, { pin_order });
 		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["projects"] });
+		// Optimistic update: move the project between pinned / list
+		// immediately so the UI responds to the click. Without this the
+		// user waits on the full refetch before the card jumps — on a
+		// slow connection it looks like nothing happened. Rolls back
+		// on error. Applies to BOTH the v1 (/projects/home) cache and
+		// the v2 workspace-projects cache — pre-fix the mutation only
+		// invalidated v1, so pinning on /w/:id/projects looked broken.
+		onMutate: async ({ projectId, pin_order }) => {
+			await queryClient.cancelQueries({ queryKey: ["projects", "home"] });
+			await queryClient.cancelQueries({ queryKey: ["v2", "workspace-projects"] });
+
+			type PageShape = {
+				pinned: Array<{ id: string; pin_order: number | null } & Record<string, unknown>>;
+				projects: Array<{ id: string; pin_order: number | null } & Record<string, unknown>>;
+			};
+			type CacheShape = { pages: PageShape[]; pageParams: unknown[] };
+
+			const applyOptimistic = (data: CacheShape | undefined): CacheShape | undefined => {
+				if (!data?.pages?.length) return data;
+				const firstPage = data.pages[0];
+				const moving =
+					firstPage.pinned.find((p) => p.id === projectId) ??
+					data.pages.flatMap((p) => p.projects).find((p) => p.id === projectId);
+				if (!moving) return data;
+
+				const nextFirst: PageShape = {
+					...firstPage,
+					pinned:
+						pin_order == null
+							? firstPage.pinned.filter((p) => p.id !== projectId)
+							: [
+									...firstPage.pinned.filter((p) => p.id !== projectId),
+									{ ...moving, pin_order },
+								].sort(
+									(a, b) => (a.pin_order ?? 0) - (b.pin_order ?? 0),
+								),
+					projects: firstPage.projects.map((p) =>
+						p.id === projectId ? { ...p, pin_order } : p,
+					),
+				};
+				const nextPages = [nextFirst, ...data.pages.slice(1)].map((page, i) =>
+					i === 0
+						? page
+						: {
+								...page,
+								projects: page.projects.map((p) =>
+									p.id === projectId ? { ...p, pin_order } : p,
+								),
+							},
+				);
+				return { ...data, pages: nextPages };
+			};
+
+			const snapshots: Array<[readonly unknown[], CacheShape | undefined]> = [];
+			for (const [key, data] of queryClient.getQueriesData<CacheShape>({
+				queryKey: ["projects", "home"],
+			})) {
+				snapshots.push([key, data]);
+				queryClient.setQueryData(key, applyOptimistic(data));
+			}
+			for (const [key, data] of queryClient.getQueriesData<CacheShape>({
+				queryKey: ["v2", "workspace-projects"],
+			})) {
+				snapshots.push([key, data]);
+				queryClient.setQueryData(key, applyOptimistic(data));
+			}
+			return { snapshots };
 		},
-		onError: (error: any) => {
+		onError: (error: any, _vars, ctx) => {
+			if (ctx?.snapshots) {
+				for (const [key, data] of ctx.snapshots) {
+					queryClient.setQueryData(key, data);
+				}
+			}
 			const detail = error?.response?.data?.detail;
 			toast.error(detail ?? t`Failed to update pin`);
+		},
+		onSettled: () => {
+			// Reconcile with the server regardless — optimistic state is a
+			// guess; this is the ground truth. Both caches must be busted;
+			// the v1 invalidate-alone version pre-fix missed the v2 key
+			// and was the reported "pinned projects doesn't work without
+			// refresh" bug.
+			queryClient.invalidateQueries({ queryKey: ["projects", "home"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
+			queryClient.invalidateQueries({ queryKey: ["projects"] });
 		},
 	});
 };
@@ -101,14 +179,16 @@ export const useTogglePinMutation = () => {
 export const useDeleteProjectByIdMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (projectId: string) =>
-			directus.request(deleteItem("project", projectId)),
+		mutationFn: (projectId: string) => deleteProjectById(projectId),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects"],
 			});
 			queryClient.resetQueries();
-			toast.success("Project deleted successfully");
+			toast.success(t`Project deleted`);
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || t`Failed to delete project`);
 		},
 	});
 };
@@ -149,14 +229,33 @@ export const useCloneProjectByIdMutation = () => {
 export const useCreateProjectTagMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (payload: {
+		mutationFn: async (payload: {
 			project_id: {
 				id: string;
 				directus_user_id: string;
 			};
 			text: string;
 			sort?: number;
-		}) => directus.request(createItem("project_tag", payload as any)),
+		}) => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/bff/tags`,
+				{
+					body: JSON.stringify({
+						project_id: payload.project_id.id,
+						text: payload.text,
+						sort: payload.sort,
+					}),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to create tag");
+			}
+			return res.json();
+		},
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.project_id.id],
@@ -169,14 +268,26 @@ export const useCreateProjectTagMutation = () => {
 export const useUpdateProjectTagByIdMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: ({
+		mutationFn: async ({
 			id,
 			payload,
 		}: {
 			id: string;
 			project_id: string;
 			payload: Partial<ProjectTag>;
-		}) => directus.request<ProjectTag>(updateItem("project_tag", id, payload)),
+		}) => {
+			const res = await fetch(`${API_BASE_URL}/v2/bff/tags/${id}`, {
+				body: JSON.stringify(payload),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "PATCH",
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to update tag");
+			}
+			return (await res.json()) as ProjectTag;
+		},
 		onSuccess: (_values, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.project_id],
@@ -189,13 +300,16 @@ export const useDeleteTagByIdMutation = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (tagId: string) =>
-			directus.request(deleteItem("project_tag", tagId)),
+		mutationFn: (payload: { tagId: string; projectId: string }) =>
+			deleteTagById(payload.projectId, payload.tagId),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects"],
 			});
-			toast.success("Tag deleted successfully");
+			toast.success(t`Tag deleted`);
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || t`Failed to delete tag`);
 		},
 	});
 };
@@ -212,25 +326,25 @@ export const useCreateChatMutation = () => {
 				id: string;
 			};
 		}) => {
-			const project = await directus.request(
-				readItem("project", payload.project_id.id, {
-					fields: ["is_enhanced_audio_processing_enabled"],
+			// BFF picks up auto_select default from the project's enhanced
+			// audio flag when we don't force a value. Only override when a
+			// specific conversation was passed — same rule as before.
+			const res = await fetch(`${API_BASE_URL}/v2/bff/chats`, {
+				body: JSON.stringify({
+					project_id: payload.project_id.id,
+					auto_select: payload.conversationId ? false : undefined,
 				}),
-			);
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "POST",
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to create chat");
+			}
+			const chat = (await res.json()) as { id: string };
 
-			const chat = await directus.request(
-				createItem("project_chat", {
-					// Don't set chat_mode here - use initialize-mode endpoint instead
-					auto_select:
-						payload.conversationId &&
-						project.is_enhanced_audio_processing_enabled
-							? false
-							: !!project.is_enhanced_audio_processing_enabled,
-					project_id: payload.project_id,
-				}),
-			);
-
-			if (payload.navigateToNewChat && chat && chat.id) {
+			if (payload.navigateToNewChat && chat?.id) {
 				navigate(`/projects/${payload.project_id.id}/chats/${chat.id}`);
 			}
 
@@ -263,8 +377,25 @@ export const useLatestProjectAnalysisRunByProjectId = (projectId: string) => {
 export const useUpdateProjectByIdMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: ({ id, payload }: { id: string; payload: Partial<Project> }) =>
-			directus.request<Project>(updateItem("project", id, payload)),
+		mutationFn: async ({
+			id,
+			payload,
+		}: {
+			id: string;
+			payload: Partial<Project>;
+		}) => {
+			const res = await fetch(`${API_BASE_URL}/v2/bff/projects/${id}`, {
+				body: JSON.stringify(payload),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "PATCH",
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to update project");
+			}
+			return (await res.json()) as Project;
+		},
 		onSuccess: (_values, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.id],
@@ -309,20 +440,18 @@ export const useInfiniteProjects = ({
 			lastPage.nextOffset,
 		initialPageParam: 0,
 		queryFn: async ({ pageParam = 0 }) => {
-			const response = await directus.request(
-				readItems("project", {
-					...query,
-					limit: initialLimit,
-					offset: pageParam * initialLimit,
-				}),
+			void query; // advanced filter shapes not forwarded to BFF
+			const response = await fetch(
+				`${API_BASE_URL}/v2/bff/projects?limit=${initialLimit}&offset=${pageParam * initialLimit}`,
+				{ credentials: "include" },
 			);
-
+			if (!response.ok) {
+				return { nextOffset: undefined, projects: [] as Project[] };
+			}
+			const data = (await response.json()) as Project[];
 			return {
-				nextOffset:
-					response.length === initialLimit ? pageParam + 1 : undefined,
-				projects: response.map((r) => ({
-					...r,
-				})),
+				nextOffset: data.length === initialLimit ? pageParam + 1 : undefined,
+				projects: data,
 			};
 		},
 		queryKey: ["projects", query],
@@ -349,8 +478,44 @@ export const useProjectById = ({
 	query?: Partial<Query<CustomDirectusTypes, Project>>;
 }) => {
 	return useQuery({
-		queryFn: () =>
-			directus.request<Project>(readItem("project", projectId, query)),
+		// BFF migration (2026-04-24): the frontend used to call Directus
+		// directly via readItem("project", ...), but Directus row-level
+		// ACL doesn't know about our v2 inheritance/sharing model — a
+		// workspace member reaching a project through a derived organisation
+		// admin row was 403'ing on the Directus read. The /bff endpoint
+		// runs the access check through get_user_project_access and
+		// returns the full project row (with sorted tags) under the
+		// admin client. Keeps the same return shape so callers don't
+		// change.
+		queryFn: async () => {
+			const rawFields = Array.isArray(query?.fields) ? query.fields : [];
+			const includeTags = rawFields.some(
+				(f) =>
+					(typeof f === "string" && f === "tags") ||
+					(typeof f === "object" && f !== null && "tags" in f),
+			);
+			// Collect scalar field names (ignore wildcard `*` and tag
+			// relation entries). When a caller passes a narrow list we
+			// forward it to the BFF so the response stays small — used
+			// by summary-card callers who just need one boolean. Empty
+			// or `*` means "give me everything".
+			const scalarFields = rawFields
+				.filter((f): f is string => typeof f === "string" && f !== "*" && f !== "tags");
+			const url = new URL(
+				`${API_BASE_URL}/v2/projects/${projectId}/bff`,
+				window.location.origin,
+			);
+			if (!includeTags) url.searchParams.set("include_tags", "false");
+			if (scalarFields.length > 0) {
+				url.searchParams.set("fields", scalarFields.join(","));
+			}
+			const res = await fetch(url.toString(), { credentials: "include" });
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to load project");
+			}
+			return (await res.json()) as Project;
+		},
 		queryKey: ["projects", projectId, query],
 	});
 };

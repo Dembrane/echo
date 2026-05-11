@@ -190,28 +190,60 @@ async def get_project(
         if project.get("is_conversation_allowed", False) is False:
             raise HTTPException(status_code=403, detail="Conversation not open for participation")
 
-        # Resolve whitelabel logo, legal basis, and privacy policy URL from project owner
-        directus_user_id = project.get("directus_user_id")
-        if directus_user_id:
+        # Resolve whitelabel logo, legal basis, and privacy policy URL.
+        # PREFERRED: from workspace (new model). FALLBACK: from project owner (legacy).
+        workspace_id = project.get("workspace_id")
+        resolved_from_workspace = False
+
+        if workspace_id:
             try:
-                user_data = await run_in_thread_pool(
-                    directus.get_users,
+                ws_data = await run_in_thread_pool(
+                    directus.get_items,
+                    "workspace",
                     {
                         "query": {
-                            "filter": {"id": {"_eq": directus_user_id}},
-                            "fields": ["whitelabel_logo", "legal_basis", "privacy_policy_url"],
+                            "filter": {"id": {"_eq": workspace_id}, "deleted_at": {"_null": True}},
+                            "fields": ["logo_url", "legal_basis", "privacy_policy_url"],
+                            "limit": 1,
                         }
                     },
                 )
-                if user_data and len(user_data) > 0:
-                    owner = user_data[0]
-                    logo_file_id = owner.get("whitelabel_logo")
-                    if logo_file_id:
-                        project["whitelabel_logo_url"] = logo_file_id
-                    project["legal_basis"] = owner.get("legal_basis") or "client-managed"
-                    project["privacy_policy_url"] = owner.get("privacy_policy_url")
+                if isinstance(ws_data, list) and len(ws_data) > 0:
+                    ws = ws_data[0]
+                    if ws.get("logo_url"):
+                        project["whitelabel_logo_url"] = ws["logo_url"]
+                    if ws.get("legal_basis"):
+                        project["legal_basis"] = ws["legal_basis"]
+                        resolved_from_workspace = True
+                    if ws.get("privacy_policy_url"):
+                        project["privacy_policy_url"] = ws["privacy_policy_url"]
             except Exception as e:
-                logger.warning(f"Failed to resolve owner settings for project {project_id}: {e}")
+                logger.warning(f"Failed to resolve workspace settings for project {project_id}: {e}")
+
+        # Fallback to owner's user settings if workspace didn't provide legal_basis
+        if not resolved_from_workspace:
+            directus_user_id = project.get("directus_user_id")
+            if directus_user_id:
+                try:
+                    user_data = await run_in_thread_pool(
+                        directus.get_users,
+                        {
+                            "query": {
+                                "filter": {"id": {"_eq": directus_user_id}},
+                                "fields": ["whitelabel_logo", "legal_basis", "privacy_policy_url"],
+                            }
+                        },
+                    )
+                    if user_data and len(user_data) > 0:
+                        owner = user_data[0]
+                        if not project.get("whitelabel_logo_url") and owner.get("whitelabel_logo"):
+                            project["whitelabel_logo_url"] = owner["whitelabel_logo"]
+                        if not project.get("legal_basis"):
+                            project["legal_basis"] = owner.get("legal_basis") or "client-managed"
+                        if not project.get("privacy_policy_url"):
+                            project["privacy_policy_url"] = owner.get("privacy_policy_url")
+                except Exception as e:
+                    logger.warning(f"Failed to resolve owner settings for project {project_id}: {e}")
 
         return project
 

@@ -42,7 +42,10 @@ import {
 	useUpdateProjectTagByIdMutation,
 } from "./hooks";
 
-export const ProjectTagPill = ({ tag }: { tag: ProjectTag }) => {
+export const ProjectTagPill = ({
+	tag,
+	projectId,
+}: { tag: ProjectTag; projectId: string }) => {
 	const deleteTagMutation = useDeleteTagByIdMutation();
 	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
 		useDisclosure(false);
@@ -115,7 +118,7 @@ export const ProjectTagPill = ({ tag }: { tag: ProjectTag }) => {
 				confirmLabel={<Trans>Delete</Trans>}
 				confirmColor="red"
 				onConfirm={() => {
-					deleteTagMutation.mutate(tag.id);
+					deleteTagMutation.mutate({ tagId: tag.id, projectId });
 					closeConfirm();
 				}}
 			/>
@@ -298,6 +301,7 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 										<ProjectTagPill
 											key={(tag as ProjectTag).id}
 											tag={tag as ProjectTag}
+											projectId={props.project.id}
 										/>
 									))}
 								</SortableContext>
