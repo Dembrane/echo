@@ -1,138 +1,63 @@
-# AGENTS Log
+# AGENTS — frontend
 
-## Maintenance Protocol
-- Read this file before making changes; keep structure consistent and fix stale links/paths immediately.
-- Rely on git history for timing; no manual timestamps necessary.
-- Auto-correct typos and formatting without asking; escalate only for new patterns or major warnings.
-- Ensure instructions stay aligned with repo reality—if something drifts, repair it and note the fix in context.
+Cross-cutting rules (brand, UI, Directus, BFF, architecture, translations) live in @../AGENTS.md, which also defines the maintenance protocol for these files. This file only adds frontend-specific patterns and non-obvious gotchas.
 
-## When to Ask
-- Saw a pattern (≥3 uses)? Ask: “Document this pattern?”
-- Fixed a bug? Ask: “Add this to warnings?”
-- Completed a repeatable workflow? Ask: “Document this workflow?”
-- Resolved confusion for the organisation? Ask: “Add this clarification?”
-- Skip documenting secrets, temporary hacks, or anything explicitly excluded.
+## Patterns
 
-## Project Snapshot
-- React 19 + Vite 6 + TypeScript frontend managed with pnpm; Mantine, TanStack Query, and Lingui power UI/data/localization (package.json).
-- Directus SDK configured in `src/lib/directus.ts` for both app and participant APIs; `src/lib/api.ts` centralizes custom REST helpers.
-- Tailwind is layered on top of Mantine components (see `src/routes/project/conversation/ProjectConversationOverview.tsx` and peers) for fine-grained styling.
-- Account security lives under `src/routes/settings/UserSettingsRoute.tsx`, with Directus TFA mutations in `src/components/settings/hooks/index.ts`.
+- **React Query hook hubs**: each feature owns a `hooks/index.ts` exposing `useQuery`/`useMutation` wrappers with shared `useQueryClient` invalidation. See `src/components/{conversation,project,chat,participant,...}/hooks/index.ts`
+- **Lingui macros**: routed screens import `t` from `@lingui/core/macro` and `Trans` from `@lingui/react/macro` — not the runtime imports
+- **Mantine + Tailwind blend**: compose with Mantine primitives (`Stack`, `Group`, `ActionIcon`) and layer Tailwind utility classes via `className` on the same element
+- **Custom Directus POSTs** (e.g. 2FA) use `directus.request` with a function signature, not `restRequest`. Reuse `postDirectus` from `src/components/settings/hooks/index.ts`
+- **Auth session state** lives under the `['auth','session']` React Query key. Invalidate it on login/logout before fetching `['users','me']`
+- **2FA flow**: Directus surfaces it by returning `INVALID_OTP` — toggle a Mantine `PinInput` field and retry the same mutation. See `src/routes/auth/Login.tsx`
+- **Transitions**: login/logout flows call `useTransitionCurtain().runTransition()` before navigation — animations expect the Directus mutation promise to be awaited
 
-## Build / Run / Tooling
-- Install: `pnpm install`
-- Dev (full app): `pnpm dev` (sets `VITE_DISABLE_SENTRY` and `VITE_PARTICIPANT_BASE_URL`)
-- Dev (participant router): `pnpm participant:dev`
-- Build: `pnpm build` (runs `tsc` then `vite build`)
-- Preview: `pnpm preview`
-- Lint/format: `pnpm lint`, `pnpm lint:fix`, `pnpm format`, `pnpm format:check`
-- i18n: `pnpm messages:extract`, `pnpm messages:compile`
-- No automated test script defined in package.json.
+## Analytics (PostHog)
 
-## Repeating Patterns (3+ sightings)
-- **React Query hook hubs**: Each feature owns a `hooks/index.ts` exposing `useQuery`/`useMutation` wrappers with shared `useQueryClient` invalidation logic (`src/components/{conversation,project,chat,participant,...}/hooks/index.ts`).
-- **Lingui macros for copy**: Most routed screens import `t` from `@lingui/core/macro` and `Trans` from `@lingui/react/macro` to localize UI strings (e.g. `src/routes/auth/Login.tsx`, `src/routes/project/conversation/ProjectConversationOverview.tsx`).
-- **Mantine + Tailwind blend**: Screens compose Mantine primitives (`Stack`, `Group`, `ActionIcon`, etc.) while layering Tailwind utility classes via `className`, alongside toast feedback via `@/components/common/Toaster` (e.g. `src/components/conversation/ConversationDangerZone.tsx`, `src/components/dropzone/UploadConversationDropzone.tsx`).
-- **ConfirmModal for destructive/irreversible actions**: Never use `window.confirm()`. Always use `ConfirmModal` from `@/components/common/ConfirmModal`. Pass `confirmColor="red"` for destructive actions and always include a `data-testid` prop. Manage open/close state with `useDisclosure` from `@mantine/hooks`. Used in 12+ components (delete chat, delete conversation, delete project, delete template, delete report, delete tag, remove avatar, remove logo, regenerate summary, generate library, disable anonymization, change language during chat).
-- **InputModal for text input prompts**: Never use `window.prompt()`. Always use `InputModal` from `@/components/common/InputModal`. It auto-focuses, validates empty input, and supports form submit via Enter. Used for chat rename and similar single-field prompts.
-- **Toast for status messages**: Never use `window.alert()` or `alert()`. Always use `toast.error()` / `toast.success()` from `@/components/common/Toaster` for transient status feedback (e.g. permission denied, invalid token, clipboard failure).
-- **Confirm dialog button layout**: Right-aligned `Group` with `variant="subtle"` cancel button on the left, primary action button on the right. This is handled automatically by `ConfirmModal` and `InputModal`.
-- **`data-testid` convention for modals**: Use kebab-case like `"chat-delete-modal"`, `"tag-delete-modal"`. `ConfirmModal` and `InputModal` automatically append `-cancel` and `-confirm` suffixes on their buttons.
+- `posthog-js` + `@posthog/react` are initialized in `src/main.tsx`; the app is wrapped in `PostHogProvider`
+- Call `posthog.identify(email)` on login and registration, `posthog.reset()` on logout — never identify by Directus user id
+- Event naming: `snake_case` past-tense verb (`user_logged_in`, `project_created`, `chat_message_sent`)
+- Current tracked events — grep for `posthog.capture(` to verify the live set:
+  - `user_logged_in`, `user_login_failed`, `user_registered`, `user_logged_out`
+  - `project_created`
+  - `chat_mode_selected`, `chat_message_sent`
+  - `report_generated`
+  - `conversation_upload_started`
+- Dashboard + insights live in the PostHog EU project (id 160282). Don't add new dashboards from code — wire the event and let analytics own the visualization
 
-## Change Hotspots (git history)
-- Translation bundles dominate churn: `src/locales/{en-US,de-DE,es-ES,fr-FR,nl-NL}.{po,ts}` appear in 50–60 commits each (`git log` frequency).
-- Core API glue in `src/lib/api.ts` shows ~20 touches, indicating frequent iteration.
-- UI wiring files under `src/components/**/hooks/index.ts` and participant flows see regular updates alongside translations.
+## Modal conventions
 
-## Slow-Moving Files
-- Configuration and workflow guides under `.cursor/rules/` show single commits each.
-- Build tooling such as `vite.config.ts` (3 commits) and `tailwind.config.js` rarely change compared to feature code.
+- `ConfirmModal` / `InputModal` already handle button layout (subtle cancel left, primary right)
+- Use kebab-case `data-testid` on modals (`"chat-delete-modal"`); the components auto-append `-cancel` / `-confirm` to the buttons
+- Manage open/close with `useDisclosure` from `@mantine/hooks`
 
-## TODO / FIXME / HACK Inventory
-- `src/routes/project/conversation/ProjectConversationOverview.tsx`: TODO improve links component design.
-- `src/routes/project/conversation/ProjectConversationTranscript.tsx`: TODO consider reusable conversation flags hook.
-- `src/routes/participant/ParticipantStart.tsx`: FIXME limit lucide icon bundle for onboarding cards.
-- `src/lib/directus.ts`: TODO standardize Directus error handling and add localization polish.
-- `src/lib/api.ts`: FIXME decompose monolithic API helper into feature-scoped modules.
-- `src/components/conversation/OngoingConversationsSummaryCard.tsx`: FIXME evaluate using Aggregate API for counts.
-- `src/routes/project/library/ProjectLibrary.tsx`: TODO move permission checks server-side.
-- `src/components/conversation/ConversationLink.tsx`: TODO drop redundant prop.
-- `src/components/announcement/hooks/useProcessedAnnouncements.ts`: FIXME flatten hook into utility.
-- `src/components/common/Markdown.tsx`: FIXME remove Tally embed workaround when possible.
+## Dynamic theming
 
-## Gotchas & Notes
-- README references `docs/getting_started.md`, but that file is missing in this workspace—expect setup details elsewhere.
-- Toast notifications are the primary success/error surface; missing translations or wrong toast copy stands out quickly.
-- Localization workflow is active: keep Lingui extract/compile scripts in mind when touching `t`/`Trans` strings.
-- Directus client instances expect environment-configured URLs (`DIRECTUS_PUBLIC_URL`, `DIRECTUS_CONTENT_PUBLIC_URL`); local dev needs these in `.env`.
-- Custom Directus POSTs (like 2FA) call `directus.request` with a function signature rather than `restRequest`; reuse `postDirectus` from `src/components/settings/hooks/index.ts` to stay consistent.
-- UI mutations should surface inline feedback: pair toasts with contextual Mantine `Alert` components inside modals/forms for errors or warnings.
-- Directus login surfaces 2FA by responding with `INVALID_OTP`; `src/routes/auth/Login.tsx` toggles an OTP field and retries using `useLoginMutation`. Reuse that pattern when touching other auth entry points.
-- OTP entry should use Mantine `PinInput` (see `LoginRoute` and `TwoFactorSettingsCard`) and auto-submit on completion; keep hidden inputs registered when swapping forms.
-- Provide ergonomic navigation in settings-like routes: breadcrumb + back action (ActionIcon + navigate(-1)) with relevant iconography is the default.
-- Auth surfaces reuse `HeaderView` by passing `isAuthenticated`/`loading` props—avoid rolling bespoke headers inside layouts.
-- Auth session state depends on the shared `['auth','session']` React Query key; invalidate it on login/logout before fetching `['users','me']`.
-- Auth hero uses `/public/video/auth-hero.mp4` with `/public/video/auth-hero-poster.jpg` as poster; keep the bright blur overlay consistent when iterating on onboarding screens.
-- Gentle login/logout flows use `useTransitionCurtain().runTransition()` before navigation—animations expect Directus session mutations to await that promise.
+Theme is driven by CSS variables, not Tailwind tokens, so `dark:` classes don't propagate. Use the variables when colors need to follow the active theme.
 
-## Directus Type Gotcha
-- If there's a type error with `<relationship_name>.count` in Directus responses, add the type to `typesDirectus.d.ts`. Use `count("<relationship_name>")` in fields to get `<relationship_name>_count` in the response.
-
-## Architecture Preferences
-- **BFF pattern**: Prefer backend `/bff/` routes over making multiple Directus SDK calls from the frontend. Example: `/bff/projects/home` aggregates pinned projects, paginated list, search, and admin info.
-- **URL-driven state**: Filters, search queries, and selected tabs should be stored in URL search params (not React state) so state is shareable and persistent.
-- **Conversations come from QR codes or audio uploads** — never add "new conversation" creation buttons in the UI.
-- **Loading spinners**: Always use `alwaysDembrane` prop on `DembraneLoadingSpinner` for whitelabel safety. Never use `animate-spin` on custom logos.
-
-## Collaboration
-- When a user request feels ambiguous, pause and confirm the intended action before touching code or docs.
-
-## Brand Guidelines
-
-All UI copy, colors, and visual decisions should follow `../brand/STYLE_GUIDE.md`:
-
-- Shortest possible, highest clarity
-- "dembrane" always lowercase
-- Say "language model" not "AI" for platform features
-- Never use bold for emphasis (use Royal Blue `#4169e1` or italics)
-- Colors: Parchment `#f6f4f1` (background), Graphite `#2d2d2c` (text), Royal Blue `#4169e1` (action)
-- Typography: DM Sans with stylistic alternates (ss01-ss06)
-- Dutch localization: use "je/jij" not "u/uw"
-
-Machine-readable tokens in `../brand/colors.json`. Logo files in `../brand/logos/`.
-
-## Theming & Styling Patterns
-
-### CSS Variables for Dynamic Theming
-- Global CSS variables are defined in `src/index.css` and dynamically updated by `src/hooks/useAppPreferences.tsx`:
-  - `--app-background`: Page/component background color
-  - `--app-text`: Default text color
-  - `--app-font-family`: Font family
-- Use `var(--app-background)` and `var(--app-text)` instead of hardcoded colors like `#F6F4F1` or `#2D2D2C` to ensure theme changes propagate.
-
-### Font-Color Theme Linking
-- Font preference is linked to a color scheme in `useAppPreferences`:
-  - **DM Sans** → Parchment (`#F6F4F1`) background + Graphite (`#2D2D2C`) text
-  - **Space Grotesk** → White (`#FFFFFF`) background + Black (`#000000`) text
-- User preferences persist in localStorage under key `dembrane-app-preferences`.
-
-### Mode-Specific Colors (Chat)
-- Chat modes have dedicated accent colors defined in `src/components/chat/ChatModeSelector.tsx` (`MODE_COLORS`):
-  - **Overview mode**: Spring Green (`#1EFFA1`)
-  - **Deep Dive mode**: Cyan (`#00FFFF`)
-- These colors are intentionally hardcoded (not theme-dependent) for consistent mode identification.
-
-### Mantine Theme Configuration
-- Global Mantine theme lives in `src/theme.tsx` with:
-  - Custom `primary` color palette (Royal Blue based)
-  - Component defaults (Modal, Drawer, Popover backgrounds use `var(--app-background)`)
-  - `white` and `black` overrides for Mantine's internal color references
-- When adding new components, prefer referencing CSS variables in styles over hardcoded hex values.
-
-### Hybrid Styling Pattern
-- For Tailwind classes that need dynamic values, replace with inline `style` props:
+- Variables defined in `src/index.css`, updated at runtime by `src/hooks/useAppPreferences.tsx`:
+  - `--app-background` — page/component background
+  - `--app-text` — default text color
+  - `--app-font-family` — font family
+- Font preference is **linked** to a color scheme — switching font also switches the palette:
+  - DM Sans → Parchment `#F6F4F1` background + Graphite `#2D2D2C` text
+  - Space Grotesk → White background + Black text
+- Mantine theme (`src/theme.tsx`) overrides `white` and `black` and pins Modal/Drawer/Popover backgrounds to `var(--app-background)`
+- For Tailwind classes that need theme values, replace with inline `style`:
   ```tsx
   // Instead of: className="bg-parchment"
-  // Use: style={{ backgroundColor: "var(--app-background)" }}
+  style={{ backgroundColor: "var(--app-background)" }}
   ```
-- Keep static utility classes (borders, spacing, layout) in Tailwind; move theme-dependent colors to CSS variables.
+- User preferences persist in `localStorage` under `dembrane-app-preferences`
+
+## Mode-specific colors (intentionally hardcoded)
+
+Chat mode accents are theme-independent (consistent identification across themes), defined in `src/components/chat/ChatModeSelector.tsx` `MODE_COLORS`:
+
+- Overview: Spring Green `#1EFFA1`
+- Deep Dive: Cyan `#00FFFF`
+
+## Local dev gotchas
+
+- Directus clients need `DIRECTUS_PUBLIC_URL` and `DIRECTUS_CONTENT_PUBLIC_URL` in `.env`
+- `pnpm dev` sets `VITE_DISABLE_SENTRY` and `VITE_PARTICIPANT_BASE_URL`; the participant subtree has its own dev server via `pnpm participant:dev`
