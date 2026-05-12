@@ -47,6 +47,7 @@ Follow `brand/STYLE_GUIDE.md` for all user-facing text.
 - Never use bold for emphasis — use Royal Blue (`#4169e1`) or italics
 - Say "participants/hosts", not "users"
 - Dutch translations use informal "je/jij"; keep English terms when they sound better (Dashboard, Upload, Chat)
+- Italian translations use informal "tu", target A2 reading level, sentence case for titles, active voice over passive — see `brand/STYLE_GUIDE.md` for the glossary
 
 ## UI Rules
 

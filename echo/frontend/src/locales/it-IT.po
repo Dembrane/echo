@@ -3325,7 +3325,7 @@ msgstr "Failed to remove logo"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:583
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
-msgstr "Riprogrammazione fallita. Scegli un orario piu lontano e riprova."
+msgstr "Riprogrammazione non riuscita. Scegli un orario più avanti e riprova."
 
 #: src/components/conversation/hooks/index.ts:645
 msgid "Failed to retranscribe conversation. Please try again."
@@ -4764,7 +4764,7 @@ msgstr "No conversations were processed. This may happen if all conversations ar
 
 #: src/components/report/CreateReportForm.tsx:149
 msgid "No conversations yet. You can schedule a report now and conversations will be included once they are added."
-msgstr "Ancora nessuna conversazione. Puoi programmare un report ora e le conversazioni verranno incluse una volta aggiunte."
+msgstr "Ancora nessuna conversazione. Puoi programmare un report ora. Le aggiungiamo quando arrivano."
 
 #: src/components/chat/TemplatesModal.tsx:686
 #~ msgid "No custom templates yet. Create one to get started."
@@ -8497,7 +8497,7 @@ msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:638
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
-msgstr "Benvenuto in dembrane Chat! Usa la barra laterale per selezionare le risorse e le conversazioni che vuoi analizzare. Poi potrai fare domande sulle risorse e conversazioni selezionate."
+msgstr "Benvenuto in dembrane Chat. Usa la barra laterale per scegliere risorse e conversazioni da analizzare. Poi puoi fare domande su quello che hai selezionato."
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:23
 msgid "Welcome to Dembrane!"
@@ -8509,7 +8509,7 @@ msgstr "Welcome to Dembrane!"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:637
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
-msgstr "Benvenuto nella modalità Panoramica! Ho caricato i riassunti di tutte le tue conversazioni. Chiedimi di schemi, temi e approfondimenti nei tuoi dati. Per citazioni esatte, avvia una nuova chat in modalità Contesto Specifico."
+msgstr "Benvenuto nella modalità Panoramica. Ho caricato i riassunti di tutte le tue conversazioni. Chiedimi schemi, temi o approfondimenti nei tuoi dati. Per citazioni esatte, apri una nuova chat in modalità Contesto Specifico."
 
 #: src/components/report/CreateReportForm.tsx:80
 #~ msgid "Welcome to Reports!"
