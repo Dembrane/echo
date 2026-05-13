@@ -35,7 +35,7 @@ export const ProjectOverviewLayout = () => {
 		},
 	});
 
-	useDocumentTitle(t`Project Overview | Dembrane`);
+	useDocumentTitle(t`Project Overview | dembrane`);
 	const project = projectQuery.data;
 	const isPrivate = project?.visibility === "private";
 	// The project name already lives in the sidebar title (ProjectSidebar).

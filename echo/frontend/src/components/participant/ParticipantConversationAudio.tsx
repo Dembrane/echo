@@ -445,13 +445,13 @@ export const ParticipantConversationAudio = () => {
 
 	const getRefineInfoText = () => {
 		if (showVerify && showEcho) {
-			return t`Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation.`;
+			return t`Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation.`;
 		}
 		if (showVerify) {
 			return t`Take some time to create an outcome that makes your contribution concrete.`;
 		}
 		if (showEcho) {
-			return t`Get an immediate reply from Dembrane to help you deepen the conversation.`;
+			return t`Get an immediate reply from dembrane to help you deepen the conversation.`;
 		}
 		return "";
 	};

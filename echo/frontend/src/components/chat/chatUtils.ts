@@ -3,7 +3,7 @@ import { formatDate } from "date-fns";
 export const formatMessage = (
 	message: ChatHistory[number],
 	userName = "User",
-	assistantName = "Dembrane",
+	assistantName = "dembrane",
 ) => {
 	let date = "Unknown";
 	try {

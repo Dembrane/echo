@@ -1143,7 +1143,7 @@ msgstr "Aspectos"
 msgid "At least 8 characters"
 msgstr ""
 
-#~ msgid "At least one topic must be selected to enable Dembrane Verify"
+#~ msgid "At least one topic must be selected to enable dembrane Verify"
 #~ msgstr "At least one topic must be selected to enable Verify"
 
 #: src/components/project/ProjectPortalEditor.tsx:879
@@ -1542,8 +1542,8 @@ msgid "Chat"
 msgstr "Chat"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:318
-msgid "Chat | Dembrane"
-msgstr "Chat | Dembrane"
+msgid "Chat | dembrane"
+msgstr "Chat | dembrane"
 
 #: src/components/chat/hooks/index.ts:82
 msgid "Chat deleted"
@@ -2306,10 +2306,10 @@ msgstr "Eliminado con éxito"
 msgid "Deleting a team is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 msgstr ""
 
-#~ msgid "Dembrane Echo"
+#~ msgid "dembrane Echo"
 #~ msgstr "Echo"
 
-#~ msgid "Dembrane ECHO"
+#~ msgid "dembrane ECHO"
 #~ msgstr "ECHO"
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:115
@@ -2318,10 +2318,10 @@ msgstr "dembrane events"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:903
 #: src/routes/project/chat/ProjectChatRoute.tsx:935
-msgid "Dembrane is powered by AI. Please double-check responses."
+msgid "dembrane is powered by AI. Please double-check responses."
 msgstr "dembrane funciona con IA. Revisa bien las respuestas."
 
-#~ msgid "Dembrane Reply"
+#~ msgid "dembrane Reply"
 #~ msgstr "Respuesta"
 
 #: src/components/chat/PublishTemplateForm.tsx:102
@@ -2632,8 +2632,8 @@ msgid "Email Verification | dembrane"
 msgstr ""
 
 #: src/routes/auth/VerifyEmail.tsx:11
-#~ msgid "Email Verification | Dembrane"
-#~ msgstr "Verificación de Correo Electrónico | Dembrane"
+#~ msgid "Email Verification | dembrane"
+#~ msgstr "Verificación de Correo Electrónico | dembrane"
 
 #: src/routes/auth/VerifyEmail.tsx:53
 msgid "Email verified successfully. You will be redirected to the login page in 5 seconds. If you are not redirected, please click <0>here</0>."
@@ -2659,16 +2659,16 @@ msgstr "Vacío"
 msgid "Enable 2FA"
 msgstr "Activar 2FA"
 
-#~ msgid "Enable Dembrane Echo"
+#~ msgid "Enable dembrane Echo"
 #~ msgstr "Habilitar Echo"
 
-#~ msgid "Enable Dembrane ECHO"
+#~ msgid "Enable dembrane ECHO"
 #~ msgstr "Habilitar ECHO"
 
-#~ msgid "Enable Dembrane Reply"
+#~ msgid "Enable dembrane Reply"
 #~ msgstr "Habilitar Respuesta"
 
-#~ msgid "Enable Dembrane Verify"
+#~ msgid "Enable dembrane Verify"
 #~ msgstr "Activar Verify"
 
 #: src/components/project/ProjectPortalEditor.tsx:828
@@ -3348,7 +3348,7 @@ msgid "German"
 msgstr "Alemán"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:454
-msgid "Get an immediate reply from Dembrane to help you deepen the conversation."
+msgid "Get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Obtén una respuesta inmediata de dembrane para ayudarte a profundizar en la conversación."
 
 #. js-lingui-explicit-id
@@ -3804,8 +3804,8 @@ msgid "Join"
 msgstr ""
 
 #: src/components/project/ProjectQRCode.tsx:103
-#~ msgid "Join {0} on Dembrane"
-#~ msgstr "Únete a {0} en Dembrane"
+#~ msgid "Join {0} on dembrane"
+#~ msgstr "Únete a {0} en dembrane"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:43
 msgid "Join {workspaceName} | dembrane"
@@ -4072,8 +4072,8 @@ msgid "Login | dembrane"
 msgstr ""
 
 #: src/routes/auth/Login.tsx:58
-#~ msgid "Login | Dembrane"
-#~ msgstr "Iniciar sesión | Dembrane"
+#~ msgid "Login | dembrane"
+#~ msgstr "Iniciar sesión | dembrane"
 
 #: src/routes/auth/Register.tsx:136
 #~ msgid "Login as an existing user"
@@ -5527,8 +5527,8 @@ msgid "Project is now visible to the workspace"
 msgstr ""
 
 #: src/components/layout/ProjectLibraryLayout.tsx:6
-msgid "Project Library | Dembrane"
-msgstr "Biblioteca del Proyecto | Dembrane"
+msgid "Project Library | dembrane"
+msgstr "Biblioteca del Proyecto | dembrane"
 
 #: src/components/chat/templates.ts:94
 msgid "Project Meta Summary"
@@ -5551,8 +5551,8 @@ msgid "Project not found"
 msgstr "Proyecto no encontrado"
 
 #: src/components/layout/ProjectOverviewLayout.tsx:40
-msgid "Project Overview | Dembrane"
-msgstr "Vista General del Proyecto | Dembrane"
+msgid "Project Overview | dembrane"
+msgstr "Vista General del Proyecto | dembrane"
 
 #: src/components/layout/ProjectOverviewLayout.tsx:84
 msgid "Project Settings"
@@ -5574,8 +5574,8 @@ msgid "Projects | dembrane"
 msgstr ""
 
 #: src/routes/project/ProjectsHome.tsx:45
-#~ msgid "Projects | Dembrane"
-#~ msgstr "Proyectos | Dembrane"
+#~ msgid "Projects | dembrane"
+#~ msgstr "Proyectos | dembrane"
 
 #. placeholder {0}: projects.length
 #: src/components/workspace/TeamProjectsTable.tsx:171
@@ -5794,8 +5794,8 @@ msgid "Register | dembrane"
 msgstr ""
 
 #: src/routes/auth/Register.tsx:23
-#~ msgid "Register | Dembrane"
-#~ msgstr "Registrar | Dembrane"
+#~ msgid "Register | dembrane"
+#~ msgstr "Registrar | dembrane"
 
 #: src/routes/auth/Login.tsx:305
 #~ msgid "Register as a new user"
@@ -6015,8 +6015,8 @@ msgid "Request Password Reset | dembrane"
 msgstr ""
 
 #: src/routes/auth/RequestPasswordReset.tsx:10
-#~ msgid "Request Password Reset | Dembrane"
-#~ msgstr "Solicitar Restablecimiento de Contraseña | Dembrane"
+#~ msgid "Request Password Reset | dembrane"
+#~ msgstr "Solicitar Restablecimiento de Contraseña | dembrane"
 
 #: src/components/workspace/DiscoverableWorkspaces.tsx:90
 #: src/components/workspace/DiscoverableWorkspaces.tsx:157
@@ -6081,8 +6081,8 @@ msgid "Reset Password | dembrane"
 msgstr ""
 
 #: src/routes/auth/PasswordReset.tsx:18
-#~ msgid "Reset Password | Dembrane"
-#~ msgstr "Restablecer Contraseña | Dembrane"
+#~ msgid "Reset Password | dembrane"
+#~ msgstr "Restablecer Contraseña | dembrane"
 
 #: src/components/conversation/ConversationAccordion.tsx:1388
 #: src/components/conversation/ConversationAccordion.tsx:1393
@@ -6513,8 +6513,8 @@ msgid "participant.settings.modal.title"
 msgstr "Configuración"
 
 #: src/routes/settings/UserSettingsRoute.tsx:67
-msgid "Settings | Dembrane"
-msgstr "Configuración | Dembrane"
+msgid "Settings | dembrane"
+msgstr "Configuración | dembrane"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1042
 #~ msgid "Share"
@@ -6984,7 +6984,7 @@ msgstr "Etiquetas"
 #~ msgstr "Tags (máx. 3)"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:448
-msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
+msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Tómate un tiempo para crear un resultado que haga tu contribución concreta u obtén una respuesta inmediata de dembrane para ayudarte a profundizar en la conversación."
 
 #: src/components/participant/ParticipantConversationAudio.tsx:451
@@ -7804,7 +7804,7 @@ msgid "Upload"
 msgstr "Subir"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:121
-msgid "Upload a custom logo to replace the Dembrane logo across the portal, dashboard, reports, and host guide."
+msgid "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide."
 msgstr "Sube un logo personalizado para reemplazar el logo de dembrane en el portal, panel de control, informes y guía de host."
 
 #~ msgid "Upload Audio"
@@ -7909,7 +7909,7 @@ msgid "Username"
 msgstr "Nombre de usuario"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:155
-msgid "Using default Dembrane logo"
+msgid "Using default dembrane logo"
 msgstr "Usando el logo de dembrane por defecto"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1057
@@ -8038,8 +8038,8 @@ msgstr "Esperando a que terminen las conversaciones antes de generar un informe.
 #~ msgstr "¿Desea estructuras de informe personalizadas?"
 
 #: src/components/chat/TemplatesModal.tsx:118
-#~ msgid "Want to add a template to \"Dembrane\"?"
-#~ msgstr "¿Quieres añadir una plantilla a \"Dembrane\"?"
+#~ msgid "Want to add a template to \"dembrane\"?"
+#~ msgstr "¿Quieres añadir una plantilla a \"dembrane\"?"
 
 #~ msgid "Want to add a template to ECHO?"
 #~ msgstr "Quieres añadir una plantilla a ECHO?"
@@ -8176,12 +8176,12 @@ msgid "Welcome to dembrane"
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:638
-msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
+msgid "Welcome to dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 msgstr "¡Bienvenido a dembrane Chat! Usa la barra lateral para seleccionar recursos y conversaciones que quieras analizar. Luego, puedes hacer preguntas sobre los recursos y conversaciones seleccionados."
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:23
-msgid "Welcome to Dembrane!"
-msgstr "¡Bienvenido a Dembrane!"
+msgid "Welcome to dembrane!"
+msgstr "¡Bienvenido a dembrane!"
 
 #~ msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
 #~ msgstr "Bienvenido al modo Overview. Tengo cargados resúmenes de todas tus conversaciones. Pregúntame por patrones, temas e insights en tus datos. Para citas exactas, empieza un chat nuevo en el modo Deep Dive."

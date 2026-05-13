@@ -10,7 +10,7 @@ export const Footer = () => (
 			</Anchor>
 		</Group>
 		<Text size="sm">
-			Dembrane B.V. {new Date().getFullYear()}, all rights reserved.
+			dembrane B.V. {new Date().getFullYear()}, all rights reserved.
 		</Text>
 	</Stack>
 );

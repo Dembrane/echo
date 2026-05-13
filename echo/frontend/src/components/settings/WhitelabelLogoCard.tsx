@@ -119,7 +119,7 @@ export const WhitelabelLogoCard = () => {
 					</Group>
 					<Text size="sm" c="dimmed">
 						<Trans>
-							Upload a custom logo to replace the Dembrane logo across the
+							Upload a custom logo to replace the dembrane logo across the
 							portal, dashboard, reports, and host guide.
 						</Trans>
 					</Text>
@@ -152,7 +152,7 @@ export const WhitelabelLogoCard = () => {
 						</Stack>
 					) : (
 						<Text size="sm" c="dimmed" fs="italic">
-							<Trans>Using default Dembrane logo</Trans>
+							<Trans>Using default dembrane logo</Trans>
 						</Text>
 					)}
 

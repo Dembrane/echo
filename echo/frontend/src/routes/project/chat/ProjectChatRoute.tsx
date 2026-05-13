@@ -316,7 +316,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 };
 
 export const ProjectChatRoute = () => {
-	useDocumentTitle(t`Chat | Dembrane`);
+	useDocumentTitle(t`Chat | dembrane`);
 
 	const { chatId, projectId } = useParams();
 	const posthog = usePostHog();
@@ -509,7 +509,7 @@ export const ProjectChatRoute = () => {
 	const computedChatForCopy = useMemo(() => {
 		const messagesList = messages.map((message) =>
 			// @ts-expect-error chatHistoryQuery.data is not typed
-			formatMessage(message, "User", "Dembrane"),
+			formatMessage(message, "User", "dembrane"),
 		);
 		return messagesList.join("\n\n\n\n");
 	}, [messages]);
@@ -645,7 +645,7 @@ export const ProjectChatRoute = () => {
 							content:
 								chatMode === "overview"
 									? t`Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode.`
-									: t`Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations.`,
+									: t`Welcome to dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations.`,
 							id: "init",
 							role: "assistant",
 						}}
@@ -912,7 +912,7 @@ export const ProjectChatRoute = () => {
 									</Text>
 									<Text size="xs" className="italic" c="dimmed">
 										<Trans>
-											Dembrane is powered by AI. Please double-check responses.
+											dembrane is powered by AI. Please double-check responses.
 										</Trans>
 									</Text>
 								</Group>
@@ -944,7 +944,7 @@ export const ProjectChatRoute = () => {
 							</Text>
 							<Text size="xs" className="italic" c="dimmed">
 								<Trans>
-									Dembrane is powered by AI. Please double-check responses.
+									dembrane is powered by AI. Please double-check responses.
 								</Trans>
 							</Text>
 						</Stack>
