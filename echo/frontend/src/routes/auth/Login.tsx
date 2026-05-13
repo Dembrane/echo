@@ -15,16 +15,37 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
+import { usePostHog } from "@posthog/react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
-import { toast } from "@/components/common/Toaster";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
-import { useCreateProjectMutation } from "@/components/project/hooks";
+import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
+
+// Same-origin path guard against open-redirect via ?next=//evil.com.
+const isSafeNextPath = (next: string | null | undefined): next is string => {
+	if (!next) return false;
+	if (!next.startsWith("/")) return false;
+	if (next.startsWith("//") || next.startsWith("/\\")) return false;
+	return true;
+};
+
+const UUID_RE =
+	/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+// Returns the workspace UUID from /w/:id/... (locale-prefix tolerant), else null.
+const extractWorkspaceIdFromPath = (path: string): string | null => {
+	const segments = path.split(/[?#]/)[0].split("/").filter(Boolean);
+	if (segments[0] && /^[a-z]{2}(-[A-Z]{2})?$/.test(segments[0])) {
+		segments.shift();
+	}
+	if (segments[0] !== "w" || !segments[1]) return null;
+	return UUID_RE.test(segments[1]) ? segments[1] : null;
+};
 
 // const LoginWithProvider = ({
 // 	provider,
@@ -55,22 +76,29 @@ import { testId } from "@/lib/testUtils";
 // };
 
 export const LoginRoute = () => {
-	useDocumentTitle(t`Login | Dembrane`);
+	useDocumentTitle(t`Login | dembrane`);
+	const [searchParams, _setSearchParams] = useSearchParams();
+
+	// When we arrive from /register with ?email=..., pre-seed the email
+	// and lock the input. Prevents Chrome's password manager from quietly
+	// swapping in a saved account on submit — the scenario reported in
+	// 2026-04-23 QA audit where a fresh signup ended up logged in as a
+	// different seeded user.
+	const lockedEmail = searchParams.get("email");
+
 	const { register, handleSubmit, setValue, getValues } = useForm<{
 		email: string;
 		password: string;
 		otp: string;
 	}>({
 		defaultValues: {
+			email: lockedEmail ?? "",
 			otp: "",
 		},
 		shouldUnregister: false,
 	});
 
-	const [searchParams, _setSearchParams] = useSearchParams();
-
 	const navigate = useI18nNavigate();
-	const createProjectMutation = useCreateProjectMutation();
 	const { runTransition } = useTransitionCurtain();
 
 	const [error, setError] = useState("");
@@ -79,6 +107,7 @@ export const LoginRoute = () => {
 	const [formParent] = useAutoAnimate();
 	const pinInputRef = useRef<HTMLDivElement | null>(null);
 	const loginMutation = useLoginMutation();
+	const posthog = usePostHog();
 
 	const submitLogin = async (data: {
 		email: string;
@@ -103,25 +132,88 @@ export const LoginRoute = () => {
 				password: data.password,
 			});
 
+			posthog?.identify(data.email);
+			posthog?.capture("user_logged_in", { email: data.email });
+
 			const isNewUser = searchParams.get("new") === "true";
 			const next = searchParams.get("next");
+
+			// Start transition immediately — user sees smooth curtain right away
 			const transitionPromise = runTransition({
-				message: isNewUser ? t`Setting up your first project` : t`Welcome back`,
+				message: isNewUser ? t`Welcome to dembrane` : t`Welcome back`,
 			});
 
-			if (isNewUser) {
-				toast(t`Setting up your first project`);
-				const project = await createProjectMutation.mutateAsync({
-					name: t`New Project`,
+			// Check onboarding + workspace count in parallel with transition.
+			// Small delay ensures the session cookie from login is available.
+			let needsOnboarding = false;
+			let workspaceCount = 0;
+			let firstWorkspaceId: string | null = null;
+			let isOrganisationAdmin = false;
+			let wsList: { id: string }[] = [];
+			try {
+				await new Promise((r) => setTimeout(r, 300));
+				const meResponse = await fetch(`${API_BASE_URL}/v2/me`, {
+					credentials: "include",
 				});
-				await transitionPromise;
-				navigate(`/projects/${project.id}`);
-				return;
+				if (meResponse.ok) {
+					const meData = await meResponse.json();
+					needsOnboarding = meData.onboarding_completed === false;
+					isOrganisationAdmin = (meData.orgs ?? []).some(
+						(o: { role: string }) => o.role === "owner" || o.role === "admin",
+					);
+				}
+
+				// If onboarded, check workspace count for routing
+				if (!needsOnboarding) {
+					const wsResponse = await fetch(`${API_BASE_URL}/v2/workspaces`, {
+						credentials: "include",
+					});
+					if (wsResponse.ok) {
+						const wsData = await wsResponse.json();
+						wsList = wsData.workspaces ?? [];
+						workspaceCount = wsList.length;
+						if (wsList.length > 0) {
+							firstWorkspaceId = wsList[0].id;
+						}
+					}
+				}
+			} catch {
+				// Swallow — never block login for onboarding check
 			}
 
 			await transitionPromise;
-			if (!!next && next !== "/login") {
+
+			if (needsOnboarding) {
+				navigate("/onboarding");
+				return;
+			}
+
+			// Deep-link priority — but block cross-user leaks via workspace access check.
+			const nextWsId = isSafeNextPath(next)
+				? extractWorkspaceIdFromPath(next)
+				: null;
+			const nextHasAccess = !nextWsId || wsList.some((w) => w.id === nextWsId);
+			if (isSafeNextPath(next) && next !== "/login" && nextHasAccess) {
 				navigate(next);
+				return;
+			}
+
+			// Routing:
+			// - Solo user (1 workspace) → straight to projects
+			// - Returning multi-workspace user → last-used workspace (if still valid)
+			// - First-time multi-workspace user → selector
+			const lastUsedId = localStorage.getItem("dembrane_last_workspace_id");
+			const lastStillValid =
+				!!lastUsedId && wsList.some((w) => w.id === lastUsedId);
+
+			if (workspaceCount === 1 && firstWorkspaceId) {
+				navigate(`/w/${firstWorkspaceId}/projects`);
+			} else if (lastStillValid) {
+				navigate(`/w/${lastUsedId}/projects`);
+			} else if (workspaceCount > 1 || isOrganisationAdmin) {
+				navigate("/w");
+			} else if (firstWorkspaceId) {
+				navigate(`/w/${firstWorkspaceId}/projects`);
 			} else {
 				navigate("/projects");
 			}
@@ -134,6 +226,11 @@ export const LoginRoute = () => {
 				firstError?.message && firstError.message !== ""
 					? firstError.message
 					: undefined;
+
+			posthog?.capture("user_login_failed", {
+				email: data.email,
+				error_code: code,
+			});
 
 			if (code === "INVALID_OTP") {
 				setOtpRequired(true);
@@ -192,10 +289,18 @@ export const LoginRoute = () => {
 						<Trans>Welcome!</Trans>
 					</Title>
 
+					{searchParams.get("verified") === "1" && (
+						<Alert color="green" variant="light">
+							<Trans>
+								Your email is verified. Log in to continue.
+							</Trans>
+						</Alert>
+					)}
+
 					{(searchParams.get("new") === "true" ||
 						!!searchParams.get("next")) && (
 						<Text>
-							<Trans>Please login to continue.</Trans>
+							<Trans>Please log in to continue.</Trans>
 						</Text>
 					)}
 
@@ -255,6 +360,11 @@ export const LoginRoute = () => {
 										placeholder={t`Email`}
 										required
 										type="email"
+										// When arriving from /register, the email is
+										// locked. Defends against password-manager
+										// autofill swapping in a different account.
+										readOnly={Boolean(lockedEmail)}
+										autoComplete={lockedEmail ? "off" : "email"}
 									/>
 									<PasswordInput
 										label={<Trans>Password</Trans>}
@@ -263,6 +373,10 @@ export const LoginRoute = () => {
 										{...testId("auth-login-password-input")}
 										placeholder={t`Password`}
 										required
+										// new-password is the standard escape hatch to
+										// stop Chrome/Firefox auto-filling a saved
+										// password into this form.
+										autoComplete={lockedEmail ? "new-password" : "current-password"}
 									/>
 								</>
 							)}
@@ -293,7 +407,7 @@ export const LoginRoute = () => {
 						</Stack>
 					</form>
 
-					<Divider variant="dashed" label="or" labelPosition="center" />
+					<Divider variant="dashed" label={t`or`} labelPosition="center" />
 
 					<I18nLink to="/register">
 						<Button
@@ -302,7 +416,7 @@ export const LoginRoute = () => {
 							fullWidth
 							{...testId("auth-login-register-button")}
 						>
-							<Trans>Register as a new user</Trans>
+							<Trans>Create an account</Trans>
 						</Button>
 					</I18nLink>
 

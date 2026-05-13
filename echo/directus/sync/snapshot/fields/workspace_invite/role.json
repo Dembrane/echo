@@ -1,0 +1,59 @@
+{
+  "collection": "workspace_invite",
+  "field": "role",
+  "type": "string",
+  "meta": {
+    "collection": "workspace_invite",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "role",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": "Role to assign on acceptance",
+    "options": {
+      "choices": [
+        {
+          "text": "Admin",
+          "value": "admin"
+        },
+        {
+          "text": "Member",
+          "value": "member"
+        },
+        {
+          "text": "Viewer",
+          "value": "viewer"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": true,
+    "searchable": true,
+    "sort": 4,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "role",
+    "table": "workspace_invite",
+    "data_type": "character varying",
+    "default_value": null,
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": false,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

@@ -1,13 +1,5 @@
-import {
-	aggregate,
-	createItems,
-	deleteItems,
-	type Query,
-	type QueryFields,
-	readItem,
-	readItems,
-	updateItem,
-} from "@directus/sdk";
+import { readItem } from "@directus/sdk";
+import type { Query, QueryFields } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import * as Sentry from "@sentry/react";
 import {
@@ -32,6 +24,7 @@ import {
 	retranscribeConversation,
 	selectAllContext,
 } from "@/lib/api";
+import { bff } from "@/lib/bff";
 import { directus } from "@/lib/directus";
 
 export const useInfiniteConversationChunks = (
@@ -53,25 +46,14 @@ export const useInfiniteConversationChunks = (
 			lastPage.nextOffset,
 		initialPageParam: 0,
 		queryFn: async ({ pageParam = 0 }) => {
-			const response = await directus.request(
-				readItems("conversation_chunk", {
-					fields: [
-						"id",
-						"conversation_id",
-						"transcript",
-						"path",
-						"timestamp",
-						"error",
-					],
-					filter: {
-						conversation_id: {
-							_eq: conversationId,
-						},
-					},
+			const response = await bff.get<ConversationChunk[]>(
+				`/conversations/${conversationId}/chunks`,
+				{
 					limit: initialLimit,
 					offset: pageParam * initialLimit,
-					sort: ["timestamp"],
-				}),
+					sort: "timestamp",
+					fields: "id,conversation_id,transcript,path,timestamp,error",
+				},
 			);
 
 			return {
@@ -95,7 +77,7 @@ export const useUpdateConversationByIdMutation = () => {
 			id: string;
 			payload: Partial<Conversation>;
 		}) =>
-			directus.request<Conversation>(updateItem("conversation", id, payload)),
+			bff.patch<Conversation>(`/conversations/${id}`, payload),
 		onSuccess: (values, variables) => {
 			queryClient.setQueryData(
 				["conversations", variables.id],
@@ -127,96 +109,17 @@ export const useUpdateConversationTagsMutation = () => {
 			conversationId: string;
 			projectTagIdList: string[];
 		}) => {
-			let validTagsIds: string[] = [];
-			try {
-				const validTags = await directus.request<ProjectTag[]>(
-					readItems("project_tag", {
-						fields: ["id"],
-						filter: {
-							id: {
-								_in: projectTagIdList,
-							},
-							project_id: {
-								_eq: projectId,
-							},
-						},
-					}),
-				);
-
-				validTagsIds = validTags.map((tag) => tag.id);
-			} catch (_error) {
-				validTagsIds = [];
-			}
-
-			const tagsRequest = await directus.request(
-				readItems("conversation_project_tag", {
-					fields: [
-						"id",
-						{
-							project_tag_id: ["id"],
-						},
-					],
-					filter: {
-						conversation_id: { _eq: conversationId },
-					},
-				}),
-			);
-
-			const needToDelete = tagsRequest.filter(
-				(conversationProjectTag) =>
-					conversationProjectTag.project_tag_id &&
-					!validTagsIds.includes(
-						(conversationProjectTag.project_tag_id as ProjectTag).id,
-					),
-			);
-
-			const needToCreate = validTagsIds.filter(
-				(tagId) =>
-					!tagsRequest.some(
-						(conversationProjectTag) =>
-							(conversationProjectTag.project_tag_id as ProjectTag).id ===
-							tagId,
-					),
-			);
-
-			// slightly esoteric, but basically we only want to delete if there are any tags to delete
-			// otherwise, directus doesn't accept an empty array
-			const deletePromise =
-				needToDelete.length > 0
-					? directus.request(
-							deleteItems(
-								"conversation_project_tag",
-								needToDelete.map((tag) => tag.id),
-							),
-						)
-					: Promise.resolve();
-
-			// same deal for creating
-			const createPromise =
-				needToCreate.length > 0
-					? directus.request(
-							createItems(
-								"conversation_project_tag",
-								needToCreate.map((tagId) => ({
-									conversation_id: {
-										id: conversationId,
-									} as Conversation,
-									project_tag_id: {
-										id: tagId,
-									} as ProjectTag,
-								})),
-							),
-						)
-					: Promise.resolve();
-
-			// await both promises
-			await Promise.all([deletePromise, createPromise]);
-
-			return directus.request<Conversation>(
-				readItem("conversation", conversationId, {
-					fields: ["*"],
-				}),
-			);
+			// Delegates add + remove delta to the server — it validates
+			// every tag belongs to the project, computes the diff, and
+			// returns the fresh junction list.
+			await bff.post("/conversation-project-tags/replace", {
+				conversation_id: conversationId,
+				project_tag_ids: projectTagIdList,
+			});
+			// Project id is a side-channel for cache invalidation; the
+			// server doesn't need it but we keep the arg name stable.
+			void projectId;
+			return bff.get<Conversation>(`/conversations/${conversationId}`);
 		},
 		onSuccess: (_values, variables) => {
 			queryClient.invalidateQueries({
@@ -259,11 +162,9 @@ export const useMoveConversationMutation = () => {
 			targetProjectId: string;
 		}) => {
 			try {
-				await directus.request(
-					updateItem("conversation", conversationId, {
-						project_id: targetProjectId,
-					}),
-				);
+				await bff.post(`/conversations/${conversationId}/move`, {
+					target_project_id: targetProjectId,
+				});
 			} catch (_error) {
 				toast.error("Failed to move conversation.");
 			}
@@ -670,18 +571,11 @@ export const useConversationChunks = (
 ) => {
 	return useQuery({
 		queryFn: () =>
-			directus.request(
-				readItems("conversation_chunk", {
-					fields: fields as any,
-					filter: {
-						conversation_id: {
-							_eq: conversationId,
-						},
-					},
-					limit: 1, // Only need to check if chunks exist
-					sort: "timestamp",
-				}),
-			),
+			bff.get<unknown[]>(`/conversations/${conversationId}/chunks`, {
+				limit: 1,
+				sort: "timestamp",
+				fields: fields.join(","),
+			}),
 		queryKey: ["conversations", conversationId, "chunks"],
 		refetchInterval,
 	});
@@ -710,62 +604,15 @@ export const useConversationsByProjectId = (
 
 	return useQuery({
 		queryFn: async () => {
-			const conversations = await directus.request(
-				readItems("conversation", {
-					deep: {
-						chunks: {
-							_limit: loadChunks ? 1000 : 1,
-							_sort: ["-timestamp", "-created_at"],
-						},
-					},
-					fields: [
-						...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
-						{
-							tags: [
-								{
-									project_tag_id: ["id", "text", "created_at"],
-								},
-							],
-						},
-						{
-							chunks: [
-								"id",
-								"conversation_id",
-								"transcript",
-								"source",
-								"path",
-								"timestamp",
-								"created_at",
-								"error",
-							],
-						},
-					],
-					// @ts-expect-error TODO
-					filter: {
-						chunks: {
-							...(loadWhereTranscriptExists && {
-								_some: {
-									transcript: {
-										_nempty: true,
-									},
-								},
-							}),
-						},
-						project_id: {
-							_eq: projectId,
-						},
-						...(filterBySource && {
-							source: {
-								_in: filterBySource,
-							},
-						}),
-					},
-					limit: 1000,
-					sort: "-updated_at",
-					...query,
-				}),
-			);
-
+			void query; // @TODO: advanced query params not supported by BFF yet
+			void loadWhereTranscriptExists;
+			const conversations = await bff.get<Conversation[]>("/conversations", {
+				project_id: projectId,
+				include_chunks: true,
+				include_tags: true,
+				sources: filterBySource?.join(","),
+				limit: 1000,
+			});
 			return conversations;
 		},
 		queryKey: [
@@ -851,6 +698,10 @@ export const useConversationById = ({
 	useQueryOpts?: Partial<UseQueryOptions<Conversation>>;
 }) => {
 	return useQuery({
+		// NOTE: PR #497 (signposts) needs the `signposts` relation in the response,
+		// which the v2 BFF /conversations/{id} endpoint does not yet expose. Falling
+		// back to a direct Directus query here to preserve the feature. Follow-up:
+		// add `include_signposts` to the BFF endpoint and switch back. See merge PR.
 		queryFn: () =>
 			directus.request<Conversation>(
 				readItem("conversation", conversationId, {
@@ -941,65 +792,16 @@ export const useInfiniteConversationsByProjectId = (
 			lastPage.nextOffset,
 		initialPageParam: 0,
 		queryFn: async ({ pageParam = 0 }) => {
-			const conversations = await directus.request(
-				readItems("conversation", {
-					deep: {
-						chunks: {
-							_limit: loadChunks ? 1000 : 1,
-							_sort: ["-timestamp", "-created_at"],
-						},
-					},
-					fields: [
-						...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
-						{
-							tags: [
-								{
-									project_tag_id: ["id", "text"],
-								},
-							],
-						},
-						{
-							chunks: [
-								"id",
-								"conversation_id",
-								"transcript",
-								"source",
-								"path",
-								"timestamp",
-								"created_at",
-								"error",
-							],
-						},
-						{
-							conversation_artifacts: ["id", "approved_at"],
-						},
-					],
-					// @ts-expect-error TODO
-					filter: {
-						chunks: {
-							...(loadWhereTranscriptExists && {
-								_some: {
-									transcript: {
-										_nempty: true,
-									},
-								},
-							}),
-						},
-						project_id: {
-							_eq: projectId,
-						},
-						...(filterBySource && {
-							source: {
-								_in: filterBySource,
-							},
-						}),
-					},
-					limit: initialLimit,
-					offset: pageParam * initialLimit,
-					sort: "-updated_at",
-					...query,
-				}),
-			);
+			void query; // advanced query params not yet supported by BFF
+			const conversations = await bff.get<Conversation[]>("/conversations", {
+				project_id: projectId,
+				include_chunks: Boolean(loadChunks),
+				include_tags: true,
+				sources: filterBySource?.join(","),
+				transcript_required: Boolean(loadWhereTranscriptExists),
+				limit: initialLimit,
+				offset: pageParam * initialLimit,
+			});
 
 			return {
 				conversations: conversations,
@@ -1065,22 +867,12 @@ export const useConversationsCountByProjectId = (
 ) => {
 	return useQuery({
 		queryFn: async () => {
-			const response = await directus.request(
-				aggregate("conversation", {
-					aggregate: {
-						count: "*",
-					},
-					query: {
-						filter: {
-							project_id: {
-								_eq: projectId,
-							},
-							...(query?.filter && query.filter),
-						},
-					},
-				}),
+			void query;
+			const { count } = await bff.get<{ count: number }>(
+				"/conversations/count",
+				{ project_id: projectId },
 			);
-			return response[0].count;
+			return count;
 		},
 		queryKey: ["projects", projectId, "conversations", "count", query],
 	});
@@ -1109,63 +901,27 @@ export const useRemainingConversationsCount = (
 			chatContextQuery.data !== undefined &&
 			options?.enabled !== false,
 		queryFn: async () => {
-			// Build filter for conversations matching current filters
-			const filterQuery: any = {
-				project_id: {
-					_eq: projectId,
-				},
-			};
-
-			// Apply tag filter if provided
-			if (filters?.tagIds && filters.tagIds.length > 0) {
-				filterQuery.tags = {
-					_some: {
-						project_tag_id: {
-							id: { _in: filters.tagIds },
-						},
-					},
-				};
-			}
-
-			// Apply verified filter if requested
-			if (filters?.verifiedOnly) {
-				filterQuery.conversation_artifacts = {
-					_some: {
-						approved_at: {
-							_nnull: true,
-						},
-					},
-				};
-			}
-
-			// Get count of conversations already in context
 			const conversationsInContext = chatContextQuery.data?.conversations ?? [];
-			const conversationIdsInContext = new Set(
-				conversationsInContext.map((c) => c.conversation_id),
+			const conversationIdsInContext = Array.from(
+				new Set(conversationsInContext.map((c) => c.conversation_id)),
 			);
-
-			// If we have conversations in context, exclude them from the filter
-			if (conversationIdsInContext.size > 0) {
-				filterQuery.id = {
-					_nin: Array.from(conversationIdsInContext),
-				};
-			}
-
-			const response = await directus.request(
-				aggregate("conversation", {
-					aggregate: {
-						countDistinct: ["id"],
-					},
-					query: {
-						filter: filterQuery,
-						...(filters?.searchText?.trim() && {
-							search: filters.searchText.trim(),
-						}),
-					},
-				}),
+			const { count } = await bff.get<{ count: number }>(
+				"/conversations/remaining-count",
+				{
+					project_id: projectId,
+					exclude_ids:
+						conversationIdsInContext.length > 0
+							? conversationIdsInContext.join(",")
+							: undefined,
+					tag_ids:
+						filters?.tagIds && filters.tagIds.length > 0
+							? filters.tagIds.join(",")
+							: undefined,
+					verified_only: filters?.verifiedOnly ? true : undefined,
+					search_text: filters?.searchText?.trim() || undefined,
+				},
 			);
-
-			return Number(response[0]?.countDistinct?.id) || 0;
+			return count;
 		},
 		queryKey: [
 			"projects",
@@ -1190,36 +946,11 @@ export const useConversationHasTranscript = (
 	return useQuery({
 		enabled: enabled,
 		queryFn: async () => {
-			const response = await directus.request(
-				aggregate("conversation_chunk", {
-					aggregate: {
-						count: "*",
-					},
-					query: {
-						filter: {
-							_and: [
-								{
-									conversation_id: {
-										_eq: conversationId,
-									},
-								},
-								{
-									transcript: {
-										_nnull: true,
-									},
-								},
-								{
-									transcript: {
-										_nempty: true,
-									},
-								},
-							],
-						},
-					},
-				}),
+			const { count } = await bff.get<{ count: number }>(
+				`/conversations/${conversationId}/chunk-count`,
+				{ transcript_required: true },
 			);
-			const count = response[0]?.count;
-			return typeof count === "number" ? count : Number(count) || 0;
+			return count;
 		},
 		queryKey: ["conversations", conversationId, "chunks", "transcript-count"],
 		refetchInterval,

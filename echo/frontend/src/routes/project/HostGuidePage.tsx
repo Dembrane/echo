@@ -426,16 +426,24 @@ const printStyles = `
     size: A4 landscape;
     margin: 12mm;
   }
-  body {
+  html, body {
+    background: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   .no-print { display: none !important; }
+  .print-only { display: block !important; }
   .print-page {
     height: auto !important;
     padding: 48px !important;
-    background: ${colors.parchment} !important;
+    background: #ffffff !important;
   }
+  .qr-screen { display: none !important; }
+  .qr-print { display: block !important; }
+}
+@media screen {
+  .print-only { display: none !important; }
+  .qr-print { display: none !important; }
 }
 `;
 
@@ -1112,20 +1120,41 @@ const LiveConversationSignpostsPanel = ({
 };
 
 // QR Code component
+// Renders two QR canvases: parchment background for screen, white for print.
+// CSS print styles can't recolor canvas pixels, so we swap which one is visible.
 const BrandQRCode = ({ value }: { value: string }) => (
-	<QRCodeLogo
-		value={value}
-		logoImage="/dembrane-logomark-cropped.png"
-		logoWidth={50}
-		logoHeight={50}
-		bgColor={colors.parchment}
-		fgColor={colors.graphite}
-		eyeColor={colors.graphite}
-		logoPadding={4}
-		removeQrCodeBehindLogo
-		logoPaddingStyle="circle"
-		size={200}
-	/>
+	<>
+		<div className="qr-screen">
+			<QRCodeLogo
+				value={value}
+				logoImage="/dembrane-logomark-cropped.png"
+				logoWidth={50}
+				logoHeight={50}
+				bgColor={colors.parchment}
+				fgColor={colors.graphite}
+				eyeColor={colors.graphite}
+				logoPadding={4}
+				removeQrCodeBehindLogo
+				logoPaddingStyle="circle"
+				size={200}
+			/>
+		</div>
+		<div className="qr-print">
+			<QRCodeLogo
+				value={value}
+				logoImage="/dembrane-logomark-cropped.png"
+				logoWidth={50}
+				logoHeight={50}
+				bgColor="#ffffff"
+				fgColor={colors.graphite}
+				eyeColor={colors.graphite}
+				logoPadding={4}
+				removeQrCodeBehindLogo
+				logoPaddingStyle="circle"
+				size={200}
+			/>
+		</div>
+	</>
 );
 
 // ============================================================================

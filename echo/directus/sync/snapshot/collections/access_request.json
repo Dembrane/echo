@@ -1,0 +1,28 @@
+{
+  "collection": "access_request",
+  "meta": {
+    "accountability": "all",
+    "archive_app_filter": true,
+    "archive_field": null,
+    "archive_value": null,
+    "collapse": "open",
+    "collection": "access_request",
+    "color": null,
+    "display_template": "{{user_id}} → {{workspace_id}} ({{status}})",
+    "group": null,
+    "hidden": false,
+    "icon": "meeting_room",
+    "item_duplication_fields": null,
+    "note": "Pending join requests from team members on open-to-team workspaces. Matrix v1.1 §6 Slack-style discovery.",
+    "preview_url": null,
+    "singleton": false,
+    "sort": null,
+    "sort_field": "requested_at",
+    "translations": null,
+    "unarchive_value": null,
+    "versioning": false
+  },
+  "schema": {
+    "name": "access_request"
+  }
+}

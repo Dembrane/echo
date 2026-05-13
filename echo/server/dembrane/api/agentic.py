@@ -319,7 +319,10 @@ def _list_project_conversations_for_agent(
             "conversations": conversations,
         }
 
-    conversation_filter: dict[str, Any] = {"project_id": {"_eq": project_id}}
+    conversation_filter: dict[str, Any] = {
+        "project_id": {"_eq": project_id},
+        "deleted_at": {"_null": True},
+    }
     if normalized_conversation_id:
         conversation_filter["id"] = {"_eq": normalized_conversation_id}
 
@@ -508,6 +511,10 @@ async def create_run(
 
     _assert_project_authorized(project, auth)
 
+    # Matrix §8: agentic analysis is a host-side operation → Pilot hard-block.
+    from dembrane.api.v2.middleware import check_no_pilot_block_for_project
+    await check_no_pilot_block_for_project(body.project_id)
+
     run = await run_in_thread_pool(
         agentic_run_service.create_run,
         project_id=body.project_id,
@@ -549,6 +556,12 @@ async def append_message(
 
     if run.get("status") in {"queued", "running"}:
         raise HTTPException(status_code=409, detail="Run already in progress")
+
+    # Matrix §8: continuing an agentic analysis is a host-side operation.
+    project_id = run.get("project_id")
+    if project_id:
+        from dembrane.api.v2.middleware import check_no_pilot_block_for_project
+        await check_no_pilot_block_for_project(str(project_id))
 
     await run_in_thread_pool(
         agentic_run_service.append_event,

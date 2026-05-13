@@ -247,6 +247,66 @@ install_server_deps() {
     fi
 }
 
+install_ssh_server() {
+    if command_exists sshd && [ -f /etc/ssh/sshd_config ]; then
+        log_info "openssh-server already installed"
+    else
+        ensure_apt_packages openssh-server
+        log_info "openssh-server installed"
+    fi
+
+    # Generate host keys if missing
+    if [ ! -f /etc/ssh/ssh_host_ed25519_key ]; then
+        log_info "Generating SSH host keys..."
+        ssh-keygen -A
+    fi
+
+    # Ensure /var/run/sshd exists (required for sshd to start)
+    mkdir -p /var/run/sshd
+
+    # Configure sshd: allow root login (dev container runs as root),
+    # enable password auth for first-time setup, permit public key auth.
+    local sshd_config="/etc/ssh/sshd_config.d/99-devcontainer.conf"
+    cat > "$sshd_config" <<'CONF'
+# Devcontainer SSH config
+Port 22
+PermitRootLogin yes
+PasswordAuthentication yes
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+PermitEmptyPasswords no
+X11Forwarding yes
+AllowAgentForwarding yes
+AllowTcpForwarding yes
+PrintMotd no
+UsePAM yes
+AcceptEnv LANG LC_*
+Subsystem sftp /usr/lib/openssh/sftp-server
+CONF
+
+    # Set a default root password so initial SSH works
+    # (override in your own setup with ssh-copy-id to switch to key auth)
+    if ! passwd -S root 2>/dev/null | grep -q "^root P "; then
+        log_info "Setting default root password (change after first login)"
+        echo 'root:dembrane' | chpasswd
+    fi
+
+    # Ensure .ssh dir exists for authorized_keys
+    mkdir -p /root/.ssh
+    chmod 700 /root/.ssh
+    touch /root/.ssh/authorized_keys
+    chmod 600 /root/.ssh/authorized_keys
+
+    # Start sshd (not systemd-managed in container — run directly)
+    if pgrep -x sshd > /dev/null; then
+        log_info "sshd already running"
+    else
+        log_info "Starting sshd..."
+        /usr/sbin/sshd
+    fi
+    log_info "SSH server ready on port 22 (user: root, password: dembrane)"
+}
+
 install_postgresql_client() {
     if command_exists psql && psql --version | grep -q "psql (PostgreSQL) 16"; then
         log_info "PostgreSQL client 16 already installed: $(psql --version)"
@@ -289,6 +349,7 @@ Options:
   --skip-server       Skip server dependency installation
   --skip-python       Skip managed Python setup for uv
   --skip-postgres     Skip PostgreSQL client installation
+  --skip-ssh          Skip SSH server installation
 
 Environment overrides:
   NODE_VERSION (default: ${NODE_VERSION})
@@ -305,6 +366,7 @@ parse_args() {
     SKIP_SERVER="false"
     SKIP_PYTHON="false"
     SKIP_POSTGRES="false"
+    SKIP_SSH="false"
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -338,6 +400,10 @@ parse_args() {
                 ;;
             --skip-postgres)
                 SKIP_POSTGRES="true"
+                shift
+                ;;
+            --skip-ssh)
+                SKIP_SSH="true"
                 shift
                 ;;
             *)
@@ -410,6 +476,12 @@ main() {
         install_postgresql_client
     else
         log_info "Skipping PostgreSQL client installation"
+    fi
+
+    if [ "$SKIP_SSH" = "false" ]; then
+        install_ssh_server
+    else
+        log_info "Skipping SSH server installation"
     fi
 
     if [ "$SKIP_FRONTEND" = "false" ]; then

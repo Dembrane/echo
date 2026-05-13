@@ -1,22 +1,22 @@
 """
 Dembrane ECHO Usage Tracker
 
-A customer usage reporting tool for sales teams.
+A customer usage reporting tool for sales organisations.
 """
 
 from __future__ import annotations
 
-import logging
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
-from collections import Counter, defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import math
 import random
+import logging
 import statistics
+from typing import Any, Dict, List, Tuple, Optional
+from datetime import date, datetime, timedelta
+from collections import Counter, defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import streamlit as st
 import pandas as pd
+import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -32,39 +32,39 @@ IGNORED_LLM_EMAILS = {
 
 # Import our modules
 try:
-    from src.usage_tracker.settings import get_settings
-    from src.usage_tracker.directus_client import (
-        DirectusClient,
-        DirectusError,
-        DirectusConnectionError,
-        DirectusAuthError,
-    )
-    from src.usage_tracker.data_fetcher import (
-        DataFetcher,
-        DateRange,
-        UserInfo,
-        UserUsageData,
-    )
     from src.usage_tracker.metrics import (
-        calculate_metrics,
-        calculate_trends,
-        get_period_comparison,
-        UsageMetrics,
         MonthlyStats,
+        UsageMetrics,
         format_duration,
+        calculate_trends,
+        calculate_metrics,
+        get_period_comparison,
         estimate_conversation_duration,
     )
-    from src.usage_tracker.llm_insights import (
-        generate_insights,
-        generate_executive_summary,
-        analyze_chat_messages,
-        generate_monthly_overview,
-        MonthlyOverviewPayload,
-        generate_user_profile,
-        UserProfilePayload,
-        ProjectStructureSample,
-    )
+    from src.usage_tracker.settings import get_settings
     from src.usage_tracker.pdf_export import generate_pdf_report
+    from src.usage_tracker.data_fetcher import (
+        UserInfo,
+        DateRange,
+        DataFetcher,
+        UserUsageData,
+    )
+    from src.usage_tracker.llm_insights import (
+        UserProfilePayload,
+        MonthlyOverviewPayload,
+        ProjectStructureSample,
+        generate_insights,
+        analyze_chat_messages,
+        generate_user_profile,
+        generate_monthly_overview,
+        generate_executive_summary,
+    )
+    from src.usage_tracker.directus_client import (
+        DirectusError,
+        DirectusClient,
+        DirectusAuthError,
+        DirectusConnectionError,
+    )
 except ImportError as e:
     st.error(f"Failed to import modules: {e}")
     st.info(
@@ -145,7 +145,9 @@ def _percentile(sorted_values: List[float], percentile: float) -> float:
     return float(d0 + d1)
 
 
-def _build_conversation_spread_insight(project_activity: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+def _build_conversation_spread_insight(
+    project_activity: Dict[str, Dict[str, Any]],
+) -> Dict[str, Any]:
     """Summarize how conversations are distributed across projects."""
     counts = [
         entry.get("conversations", 0)
@@ -197,15 +199,11 @@ def _build_login_baseline_insight(
     weeks = max(range_days / 7, 1)
     avg_per_week = total_logins / weeks
 
-    heavy_users = sum(
-        1
-        for entry in login_summary.values()
-        if (entry.get("count", 0) / weeks) > 8
-    )
+    heavy_users = sum(1 for entry in login_summary.values() if (entry.get("count", 0) / weeks) > 8)
 
     bullets = [
         f"Mean logins/user: {avg_per_user:.1f} · median: {median_logins:.1f}.",
-        f"Team averages {avg_per_week:.1f} total logins/week across the cohort.",
+        f"Organisation averages {avg_per_week:.1f} total logins/week across the cohort.",
         f"{heavy_users} user(s) exceed the power-user bar (>8 logins/week).",
     ]
 
@@ -576,7 +574,7 @@ def fetch_user_data_with_progress(
 
     # Create a placeholder for progress
     progress_container = st.container()
-    
+
     with progress_container:
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -602,6 +600,7 @@ def fetch_user_data_with_progress(
 
     # Clear progress after a moment
     import time
+
     time.sleep(0.5)
     progress_container.empty()
 
@@ -649,9 +648,7 @@ def render_metric_cards(metrics: UsageMetrics, trends: dict):
         if metrics.projects.total_projects > 0:
             avg_conv = metrics.projects.avg_conversations_per_project
             p90_conv = metrics.projects.p90_conversations_per_project
-            st.caption(
-                f"Avg {avg_conv:.1f} conv/project · P90 {p90_conv:.0f} conv"
-            )
+            st.caption(f"Avg {avg_conv:.1f} conv/project · P90 {p90_conv:.0f} conv")
 
     with cols[1]:
         st.metric(
@@ -667,7 +664,9 @@ def render_metric_cards(metrics: UsageMetrics, trends: dict):
             metrics.audio.total_duration_formatted,
             delta=_format_delta(trends.get("duration", (0, "flat"))),
         )
-        st.caption(f"P50 {metrics.audio.p50_duration_formatted} · P90 {metrics.audio.p90_duration_formatted}")
+        st.caption(
+            f"P50 {metrics.audio.p50_duration_formatted} · P90 {metrics.audio.p90_duration_formatted}"
+        )
 
     with cols[3]:
         st.metric(
@@ -700,9 +699,7 @@ def render_login_tier_banner(metrics: UsageMetrics):
 
     tier = login_metrics.usage_band.title() if login_metrics.usage_band else "Unknown"
     avg_week = login_metrics.avg_logins_per_week
-    st.caption(
-        f"Login tier: **{tier}** ({avg_week:.1f} logins/week) · {legend}"
-    )
+    st.caption(f"Login tier: **{tier}** ({avg_week:.1f} logins/week) · {legend}")
 
 
 def render_login_activity(metrics: UsageMetrics, users: List[UserInfo]):
@@ -774,16 +771,11 @@ def render_login_activity(metrics: UsageMetrics, users: List[UserInfo]):
             fig.update_layout(margin=dict(t=40, b=40))
             st.plotly_chart(fig, use_container_width=True)
 
-    per_user = sorted(
-        login_metrics.logins_by_user.items(), key=lambda item: item[1], reverse=True
-    )
+    per_user = sorted(login_metrics.logins_by_user.items(), key=lambda item: item[1], reverse=True)
     if per_user:
         lookup = {u.id: u.display_name for u in users}
         summary_df = pd.DataFrame(
-            [
-                {"User": lookup.get(user_id, user_id), "Logins": count}
-                for user_id, count in per_user
-            ]
+            [{"User": lookup.get(user_id, user_id), "Logins": count} for user_id, count in per_user]
         )
         st.dataframe(summary_df, use_container_width=True, hide_index=True)
 
@@ -856,9 +848,7 @@ def _get_dashboard_summary(
                     entry["owner_id"] = chat_data.get("owner_id")
                 entry["chat_sessions"] = chat_data.get("count", 0)
                 last_chat = chat_data.get("last")
-                if last_chat and (
-                    entry["last_chat"] is None or last_chat > entry["last_chat"]
-                ):
+                if last_chat and (entry["last_chat"] is None or last_chat > entry["last_chat"]):
                     entry["last_chat"] = last_chat
 
             summary = {
@@ -1005,14 +995,10 @@ def render_power_user_dashboard(
     mau = len(login_summary)
     dau = daily_logins.get(latest_day, 0)
     avg_daily_conversations = (
-        sum(daily_conversations.values()) / len(daily_conversations)
-        if daily_conversations
-        else 0.0
+        sum(daily_conversations.values()) / len(daily_conversations) if daily_conversations else 0.0
     )
     avg_daily_projects = (
-        sum(daily_projects.values()) / len(daily_projects)
-        if daily_projects
-        else 0.0
+        sum(daily_projects.values()) / len(daily_projects) if daily_projects else 0.0
     )
 
     kpi_cols = st.columns(4)
@@ -1191,8 +1177,7 @@ def render_power_user_dashboard(
                     "Project": entry.get("project_name"),
                     "Owner": user_lookup.get(entry.get("owner_id")).display_name
                     if user_lookup.get(entry.get("owner_id"))
-                    else entry.get("owner_id")
-                    or "—",
+                    else entry.get("owner_id") or "—",
                     "Conversations": entry.get("conversations", 0),
                     "Chats": entry.get("chat_sessions", 0),
                     "Last Conversation": _format_ts(entry.get("last_conversation")),
@@ -1274,6 +1259,7 @@ def render_power_user_dashboard(
         st.session_state.selected_user_ids = selected_candidates
         st.experimental_rerun()
 
+
 def render_monthly_summary(
     metrics: UsageMetrics,
     usage_data: List[UserUsageData],
@@ -1317,18 +1303,26 @@ def render_monthly_summary(
 
     summary_metrics = {
         "avg_conversations": _safe_mean(conversation_counts),
-        "median_conversations": statistics.median(conversation_counts) if conversation_counts else 0.0,
-        "p90_conversations": _percentile(sorted(conversation_counts), 0.9) if conversation_counts else 0.0,
+        "median_conversations": statistics.median(conversation_counts)
+        if conversation_counts
+        else 0.0,
+        "p90_conversations": _percentile(sorted(conversation_counts), 0.9)
+        if conversation_counts
+        else 0.0,
         "avg_chats": _safe_mean(chat_counts),
         "median_chats": statistics.median(chat_counts) if chat_counts else 0.0,
         "p90_chats": _percentile(sorted(chat_counts), 0.9) if chat_counts else 0.0,
         "avg_logins": _safe_mean(login_counts_ordered),
         "median_logins": statistics.median(login_counts_ordered) if login_counts_ordered else 0.0,
-        "p90_logins": _percentile(sorted(login_counts_ordered), 0.9) if login_counts_ordered else 0.0,
+        "p90_logins": _percentile(sorted(login_counts_ordered), 0.9)
+        if login_counts_ordered
+        else 0.0,
     }
 
     ratio_valid = (
-        sum(valid_counts) / sum(conversation_counts) if conversation_counts and sum(conversation_counts) else 0.0
+        sum(valid_counts) / sum(conversation_counts)
+        if conversation_counts and sum(conversation_counts)
+        else 0.0
     )
     avg_duration_per_conversation = (
         sum(m.duration_seconds for m in monthly_stats) / sum(conversation_counts)
@@ -1353,19 +1347,25 @@ def render_monthly_summary(
             f"{summary_metrics['avg_chats']:.1f}",
             help="Mean monthly chat sessions",
         )
-        st.caption(f"Median {summary_metrics['median_chats']:.1f} · P90 {summary_metrics['p90_chats']:.1f}")
+        st.caption(
+            f"Median {summary_metrics['median_chats']:.1f} · P90 {summary_metrics['p90_chats']:.1f}"
+        )
     with metric_cols[2]:
         st.metric(
             "Avg Logins / Mo",
             f"{summary_metrics['avg_logins']:.1f}",
             help="Mean monthly Directus logins",
         )
-        st.caption(f"Median {summary_metrics['median_logins']:.1f} · P90 {summary_metrics['p90_logins']:.1f}")
+        st.caption(
+            f"Median {summary_metrics['median_logins']:.1f} · P90 {summary_metrics['p90_logins']:.1f}"
+        )
 
     months_label = f"{monthly_stats[0].month_label} – {monthly_stats[-1].month_label}"
     range_start_key = selected_range.start.isoformat() if selected_range else "all"
     range_end_key = selected_range.end.isoformat() if selected_range else "all"
-    llm_cache_key = f"monthly_overview_{user_selection_key}_{months_label}_{range_start_key}_{range_end_key}"
+    llm_cache_key = (
+        f"monthly_overview_{user_selection_key}_{months_label}_{range_start_key}_{range_end_key}"
+    )
     if llm_cache_key not in st.session_state:
         payload = MonthlyOverviewPayload(
             range_label=months_label,
@@ -1521,12 +1521,16 @@ def render_user_profile(
     total_projects = len(all_projects)
     portal_title_count = sum(1 for p in all_projects if p.default_conversation_title)
     portal_desc_count = sum(1 for p in all_projects if p.default_conversation_description)
-    transcript_prompt_count = sum(1 for p in all_projects if p.default_conversation_transcript_prompt)
+    transcript_prompt_count = sum(
+        1 for p in all_projects if p.default_conversation_transcript_prompt
+    )
     proj_context_count = sum(1 for p in all_projects if p.context)
 
     portal_title_pct = (portal_title_count / total_projects * 100) if total_projects else 0
     portal_desc_pct = (portal_desc_count / total_projects * 100) if total_projects else 0
-    transcript_prompt_pct = (transcript_prompt_count / total_projects * 100) if total_projects else 0
+    transcript_prompt_pct = (
+        (transcript_prompt_count / total_projects * 100) if total_projects else 0
+    )
     proj_context_pct = (proj_context_count / total_projects * 100) if total_projects else 0
 
     # Tag analysis
@@ -1566,10 +1570,13 @@ def render_user_profile(
     for p in all_projects:
         convs = project_conversations.get(p.id, [])
         # Get unique participant names (filter out None/empty)
-        participant_names = list(set(
-            c.participant_name for c in convs
-            if c.participant_name and c.participant_name.strip()
-        ))
+        participant_names = list(
+            set(
+                c.participant_name
+                for c in convs
+                if c.participant_name and c.participant_name.strip()
+            )
+        )
         # Sample up to 10 participant names
         participant_names = participant_names[:10]
 
@@ -1599,7 +1606,9 @@ def render_user_profile(
     project_samples = project_samples[:12]  # Top 12 projects for LLM context
 
     # Sample conversation summaries
-    summaries_with_content = [c.summary for c in all_conversations if c.summary and len(c.summary.strip()) > 20]
+    summaries_with_content = [
+        c.summary for c in all_conversations if c.summary and len(c.summary.strip()) > 20
+    ]
     summary_count = len(summaries_with_content)
 
     if summaries_with_content:
@@ -1617,7 +1626,9 @@ def render_user_profile(
         sampled_queries = []
 
     # === PROFILE SUMMARY (TOP - AUTO-GENERATED) ===
-    profile_cache_key = f"user_profile_{user_selection_key}_{hash(tuple(p.id for p in all_projects[:10]))}"
+    profile_cache_key = (
+        f"user_profile_{user_selection_key}_{hash(tuple(p.id for p in all_projects[:10]))}"
+    )
 
     # Auto-generate if not cached
     if profile_cache_key not in st.session_state:
@@ -1694,11 +1705,13 @@ def render_user_profile(
 
     # === RAW DATA (BOTTOM - EXPANDABLE) ===
     with st.expander("📋 Raw Data Samples", expanded=False):
-        tab_summaries, tab_queries, tab_context = st.tabs([
-            f"Conversations ({summary_count})",
-            f"Chat Questions ({query_count})",
-            f"Project Context ({len(sample_contexts)})"
-        ])
+        tab_summaries, tab_queries, tab_context = st.tabs(
+            [
+                f"Conversations ({summary_count})",
+                f"Chat Questions ({query_count})",
+                f"Project Context ({len(sample_contexts)})",
+            ]
+        )
 
         with tab_summaries:
             if sampled_summaries:
@@ -1710,7 +1723,9 @@ def render_user_profile(
                     st.markdown(f"**{i}.** {clean_summary}")
                     st.caption("---")
             else:
-                st.info("No conversation summaries available yet. Summaries are generated after conversations are processed.")
+                st.info(
+                    "No conversation summaries available yet. Summaries are generated after conversations are processed."
+                )
 
         with tab_queries:
             if sampled_queries:
@@ -1885,7 +1900,7 @@ def main():
     # Header
     st.markdown('<p class="main-header">📊 ECHO Usage Tracker</p>', unsafe_allow_html=True)
     st.markdown(
-        '<p class="sub-header">Customer usage analytics for sales teams</p>',
+        '<p class="sub-header">Customer usage analytics for sales organisations</p>',
         unsafe_allow_html=True,
     )
 
@@ -1967,9 +1982,7 @@ DIRECTUS_TOKEN=your-admin-token
     query_user_ids: List[str] = []
     users_param = query_params.get("users")
     if users_param:
-        query_user_ids = [
-            uid for uid in users_param.split(",") if uid and uid in all_users_by_id
-        ]
+        query_user_ids = [uid for uid in users_param.split(",") if uid and uid in all_users_by_id]
 
     # Search box
     search_query = st.sidebar.text_input(
@@ -2002,17 +2015,13 @@ DIRECTUS_TOKEN=your-admin-token
         if uid in all_users_by_id and uid not in filtered_ids
     ]
     display_users = filtered_users + previously_selected
-    
+
     user_options = {u.id: f"{u.display_name} ({u.email})" for u in display_users}
 
     # Restore previously selected users that still exist (query param overrides state)
-    default_selection = (
-        query_user_ids
-        or [
-            uid for uid in st.session_state.selected_user_ids
-            if uid in all_users_by_id
-        ]
-    )
+    default_selection = query_user_ids or [
+        uid for uid in st.session_state.selected_user_ids if uid in all_users_by_id
+    ]
 
     selected_user_ids = st.sidebar.multiselect(
         "Select users",
@@ -2021,7 +2030,7 @@ DIRECTUS_TOKEN=your-admin-token
         format_func=lambda x: user_options.get(x, x),
         help="Select one or more users to analyze",
     )
-    
+
     # Save selection to session state
     st.session_state.selected_user_ids = selected_user_ids
     _sync_query_params(selected_range_name, date_range, selected_user_ids)
@@ -2085,7 +2094,9 @@ DIRECTUS_TOKEN=your-admin-token
                 monthly_stats_override = calculate_metrics(all_time_usage).timeline.monthly_stats
                 st.session_state[monthly_cache_key] = monthly_stats_override
             else:
-                monthly_note = "Monthly summary limited to selected range (unable to load all-time data)."
+                monthly_note = (
+                    "Monthly summary limited to selected range (unable to load all-time data)."
+                )
 
     # Calculate trends (compare to previous period) - use cached version (no progress)
     trends = {}
@@ -2164,12 +2175,18 @@ DIRECTUS_TOKEN=your-admin-token
         else:
             # Collect user queries
             user_texts = [
-                m.text for ud in usage_data for m in ud.chat_messages
+                m.text
+                for ud in usage_data
+                for m in ud.chat_messages
                 if m.message_from and m.message_from.lower() == "user" and m.text
             ]
 
             # Quick stats
-            queries_per_session = metrics.chat.user_messages / metrics.chat.total_chats if metrics.chat.total_chats > 0 else 0
+            queries_per_session = (
+                metrics.chat.user_messages / metrics.chat.total_chats
+                if metrics.chat.total_chats > 0
+                else 0
+            )
             st.caption(
                 f"**{metrics.chat.total_chats}** sessions · "
                 f"**{metrics.chat.user_messages}** queries · "
@@ -2182,13 +2199,12 @@ DIRECTUS_TOKEN=your-admin-token
             if user_texts and chat_cache_key not in st.session_state:
                 with st.spinner("Analyzing chat patterns..."):
                     st.session_state[chat_cache_key] = analyze_chat_messages(
-                        user_texts, 
-                        user_profile_context=profile_context
+                        user_texts, user_profile_context=profile_context
                     )
 
             if chat_cache_key in st.session_state:
                 st.markdown(st.session_state[chat_cache_key])
-                
+
                 col_regen, _ = st.columns([1, 4])
                 with col_regen:
                     if st.button("🔄 Regenerate", key="chat_regen_btn", type="secondary"):
@@ -2201,6 +2217,7 @@ DIRECTUS_TOKEN=your-admin-token
             with st.expander(f"📝 Sample Queries ({len(user_texts)} total)", expanded=False):
                 if user_texts:
                     import random
+
                     sampled = random.sample(user_texts, min(20, len(user_texts)))
                     for q in sampled:
                         # Truncate long queries

@@ -4,14 +4,17 @@ import {
 	createLazyRoute,
 } from "./components/common/LazyRoute";
 import { Protected } from "./components/common/Protected";
+import { WorkspaceRedirect } from "./components/common/WorkspaceRedirect";
 import { ErrorPage } from "./components/error/ErrorPage";
 import { AuthLayout } from "./components/layout/AuthLayout";
 // Layout components - keep as regular imports since they're used frequently
 import { BaseLayout } from "./components/layout/BaseLayout";
+import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
 import { LanguageLayout } from "./components/layout/LanguageLayout";
 import { ParticipantLayout } from "./components/layout/ParticipantLayout";
 import { ProjectConversationLayout } from "./components/layout/ProjectConversationLayout";
 import { ProjectLayout } from "./components/layout/ProjectLayout";
+import { ProjectAccessGuard } from "./components/project/ProjectAccessGuard";
 import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
 import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
 import { ParticipantConversationAudioContent } from "./components/participant/ParticipantConversationAudioContent";
@@ -29,6 +32,7 @@ import { ProjectConversationOverviewRoute } from "./routes/project/conversation/
 import { ProjectConversationTranscript } from "./routes/project/conversation/ProjectConversationTranscript";
 // Tab-based routes - import directly for now to debug
 import {
+	ProjectAccessRoute,
 	ProjectPortalSettingsRoute,
 	ProjectSettingsRoute,
 } from "./routes/project/ProjectRoutes";
@@ -107,6 +111,159 @@ const HostGuidePage = createLazyNamedRoute(
 	() => import("./routes/project/HostGuidePage"),
 	"HostGuidePage",
 );
+const OnboardingRoute = createLazyNamedRoute(
+	() => import("./routes/onboarding/OnboardingRoute"),
+	"OnboardingRoute",
+);
+const WorkspaceSelectorRoute = createLazyNamedRoute(
+	() => import("./routes/workspaces/WorkspaceSelectorRoute"),
+	"WorkspaceSelectorRoute",
+);
+const CreateWorkspaceRoute = createLazyNamedRoute(
+	() => import("./routes/workspaces/CreateWorkspaceRoute"),
+	"CreateWorkspaceRoute",
+);
+const CreateProjectRoute = createLazyNamedRoute(
+	() => import("./routes/project/CreateProjectRoute"),
+	"CreateProjectRoute",
+);
+const WorkspaceSettingsRoute = createLazyNamedRoute(
+	() => import("./routes/workspaces/WorkspaceSettingsRoute"),
+	"WorkspaceSettingsRoute",
+);
+const AcceptInviteRoute = createLazyNamedRoute(
+	() => import("./routes/invite/AcceptInviteRoute"),
+	"AcceptInviteRoute",
+);
+const MyInvitesRoute = createLazyNamedRoute(
+	() => import("./routes/invite/MyInvitesRoute"),
+	"MyInvitesRoute",
+);
+const OrganisationRoute = createLazyNamedRoute(
+	() => import("./routes/organisation/OrganisationRoute"),
+	"OrganisationRoute",
+);
+const AdminSettingsRoute = createLazyNamedRoute(
+	() => import("./routes/admin/AdminSettingsRoute"),
+	"AdminSettingsRoute",
+);
+// Project route children — shared between /projects and /w/:workspaceId/projects
+const projectRouteChildren = [
+	{
+		element: <ProjectsHomeRoute />,
+		index: true,
+	},
+	{
+		element: <CreateProjectRoute />,
+		path: "new",
+	},
+	{
+		children: [
+			{
+				children: [
+					{
+						children: [
+							{
+								element: <Navigate to="portal-editor" replace />,
+								index: true,
+							},
+							{
+								element: <ProjectSettingsRoute />,
+								path: "overview",
+							},
+							{
+								element: <ProjectPortalSettingsRoute />,
+								path: "portal-editor",
+							},
+							{
+								// "Access & usage" tab (2026-04-24) — dedicated
+								// surface for per-project usage, sharing, and the
+								// list of who can actually see the project.
+								element: <ProjectAccessRoute />,
+								path: "access",
+							},
+							{
+								// /sharing tab retired 2026-04-23 — bookmark redirect
+								// now points at the new /access tab.
+								element: <Navigate to="../access" replace />,
+								path: "sharing",
+							},
+						],
+						element: <ProjectOverviewLayout />,
+						path: "",
+					},
+					{
+						element: <NewChatRoute />,
+						path: "chats/new",
+					},
+					{
+						element: <ProjectChatRoute />,
+						path: "chats/:chatId",
+					},
+					{
+						element: <DebugPage />,
+						path: "chats/:chatId/debug",
+					},
+					{
+						children: [
+							{
+								element: <Navigate to="overview" replace />,
+								index: true,
+							},
+							{
+								element: <ProjectConversationOverviewRoute />,
+								path: "overview",
+							},
+							{
+								element: <ProjectConversationTranscript />,
+								path: "transcript",
+							},
+							{
+								element: <DebugPage />,
+								path: "debug",
+							},
+						],
+						element: <ProjectConversationLayout />,
+						path: "conversation/:conversationId",
+					},
+
+					{
+						children: [
+							{
+								element: <ProjectLibraryAspect />,
+								path: "views/:viewId/aspects/:aspectId",
+							},
+							{
+								element: <ProjectLibraryView />,
+								path: "views/:viewId",
+							},
+							{
+								element: <ProjectLibraryRoute />,
+								index: true,
+							},
+						],
+						element: <ProjectLibraryLayout />,
+						path: "library",
+					},
+					{
+						element: <ProjectReportRoute />,
+						path: "report",
+					},
+					{
+						element: <DebugPage />,
+						path: "debug",
+					},
+				],
+				element: (
+					<ProjectAccessGuard>
+						<ProjectLayout />
+					</ProjectAccessGuard>
+				),
+			},
+		],
+		path: ":projectId",
+	},
+];
 
 export const mainRouter = createBrowserRouter([
 	{
@@ -164,6 +321,79 @@ export const mainRouter = createBrowserRouter([
 				path: "verify-email",
 			},
 			{
+				// Onboarding - one-time setup after first login
+				element: (
+					<Protected>
+						<OnboardingRoute />
+					</Protected>
+				),
+				path: "onboarding",
+			},
+			{
+				// Accept invite — public (email link target). Handles logged-out,
+				// logged-in-wrong-email, and logged-in-matching-email states.
+				element: <AcceptInviteRoute />,
+				path: "invite/accept",
+			},
+			{
+				// My pending invites (authenticated list view with accept/decline)
+				element: (
+					<Protected>
+						<MyInvitesRoute />
+					</Protected>
+				),
+				path: "invites",
+			},
+			{
+				// Workspace selector + create — canonical path is /w.
+				children: [
+					{
+						element: <WorkspaceSelectorRoute />,
+						index: true,
+					},
+					{
+						element: <CreateWorkspaceRoute />,
+						path: "new",
+					},
+					{
+						element: <Navigate to="settings" replace />,
+						path: ":workspaceId",
+					},
+					{
+						// Splat so the tab lives in the path
+						// (/w/:workspaceId/settings/:tab). The component parses
+						// the trailing segment.
+						element: <WorkspaceSettingsRoute />,
+						path: ":workspaceId/settings/*",
+					},
+				],
+				element: (
+					<Protected>
+						<BaseLayout />
+					</Protected>
+				),
+				path: "w",
+			},
+			{
+				// Organisation (org) admin surface. Canonical path is /o/:organisationId —
+				// matches the /w/:workspaceId pattern.
+				children: [
+					{
+						// Splat so tab state lives in the path
+						// (/o/:organisationId/:tab) — matches the project-tab pattern.
+						// The component parses the trailing segment itself.
+						element: <OrganisationRoute />,
+						path: ":organisationId/*",
+					},
+				],
+				element: (
+					<Protected>
+						<BaseLayout />
+					</Protected>
+				),
+				path: "o",
+			},
+			{
 				// Host Guide - standalone page, protected but no header/layout
 				element: (
 					<Protected>
@@ -173,100 +403,32 @@ export const mainRouter = createBrowserRouter([
 				path: "projects/:projectId/host-guide",
 			},
 			{
+				// Workspace-scoped projects: /w/:workspaceId/projects/...
+				// This is the PRIMARY route — workspace ID in URL makes it shareable
 				children: [
 					{
-						element: <ProjectsHomeRoute />,
+						children: projectRouteChildren,
+						element: <BaseLayout />,
+						path: "projects",
+					},
+				],
+				element: (
+					<Protected>
+						<WorkspaceLayout />
+					</Protected>
+				),
+				path: "w/:workspaceId",
+			},
+			{
+				// Legacy /projects — redirects to /w/:workspaceId/projects
+				// Kept for backward compat (bookmarks, existing links)
+				children: [
+					{
+						element: <WorkspaceRedirect />,
 						index: true,
 					},
-					{
-						children: [
-							{
-								children: [
-									{
-										children: [
-											{
-												element: <Navigate to="portal-editor" replace />,
-												index: true,
-											},
-											{
-												element: <ProjectSettingsRoute />,
-												path: "overview",
-											},
-											{
-												element: <ProjectPortalSettingsRoute />,
-												path: "portal-editor",
-											},
-										],
-										element: <ProjectOverviewLayout />,
-										path: "",
-									},
-									{
-										element: <NewChatRoute />,
-										path: "chats/new",
-									},
-									{
-										element: <ProjectChatRoute />,
-										path: "chats/:chatId",
-									},
-									{
-										element: <DebugPage />,
-										path: "chats/:chatId/debug",
-									},
-									{
-										children: [
-											{
-												element: <Navigate to="overview" replace />,
-												index: true,
-											},
-											{
-												element: <ProjectConversationOverviewRoute />,
-												path: "overview",
-											},
-											{
-												element: <ProjectConversationTranscript />,
-												path: "transcript",
-											},
-											{
-												element: <DebugPage />,
-												path: "debug",
-											},
-										],
-										element: <ProjectConversationLayout />,
-										path: "conversation/:conversationId",
-									},
-
-									{
-										children: [
-											{
-												element: <ProjectLibraryAspect />,
-												path: "views/:viewId/aspects/:aspectId",
-											},
-											{
-												element: <ProjectLibraryView />,
-												path: "views/:viewId",
-											},
-											{
-												element: <ProjectLibraryRoute />,
-												index: true,
-											},
-										],
-										element: <ProjectLibraryLayout />,
-										path: "library",
-									},
-									{
-										element: <ProjectReportRoute />,
-										path: "report",
-									},
-									{
-										element: <DebugPage />,
-										path: "debug",
-									},
-								],
-								element: <ProjectLayout />,
-							},
-						],
-						path: ":projectId",
-					},
+					// Direct project access still works (falls through to v1)
+					...projectRouteChildren.slice(1),
 				],
 				element: (
 					<Protected>
@@ -288,6 +450,21 @@ export const mainRouter = createBrowserRouter([
 					</Protected>
 				),
 				path: "settings",
+			},
+			{
+				// Staff-only — billing rollup, at-risk watch, partners, upgrades.
+				// Client-side guard lives inside AdminSettingsRoute (reads
+				// meV2.is_staff); backend /v2/admin/* also gates on is_admin.
+				children: [
+					{ element: <AdminSettingsRoute />, index: true },
+					{ element: <AdminSettingsRoute />, path: ":tab" },
+				],
+				element: (
+					<Protected>
+						<BaseLayout />
+					</Protected>
+				),
+				path: "admin",
 			},
 			{
 				element: <ErrorPage />,

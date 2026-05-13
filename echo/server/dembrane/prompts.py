@@ -65,14 +65,15 @@ def log_template_support(level: int = logging.DEBUG) -> None:
         logger.log(level, "No prompt templates available to display language support")
         return
 
-    header = "Name                           | de  | en  | es  | fr  | nl"
+    header = "Name                           | de  | en  | es  | fr  | it  | nl  | uk"
     separator = "-" * len(header)
     rows = []
     templates_payload = []
     for name, languages in sorted(template_support.items()):
         padded_name = f"{name[:30]}{' ' * (30 - len(name[:30]))}"
         row = f"{padded_name}| " + " | ".join(
-            " y " if lang in languages else " n " for lang in ["de", "en", "es", "fr", "nl"]
+            " y " if lang in languages else " n "
+            for lang in ["de", "en", "es", "fr", "it", "nl", "uk"]
         )
         rows.append(row)
         templates_payload.append({"name": name, "languages": sorted(languages)})

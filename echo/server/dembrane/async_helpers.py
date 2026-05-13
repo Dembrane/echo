@@ -23,6 +23,7 @@ import os
 import atexit
 import asyncio
 import threading
+import contextvars
 from typing import Any, TypeVar, Callable, Optional, Coroutine
 from logging import getLogger
 from functools import partial
@@ -31,6 +32,15 @@ from concurrent.futures import ThreadPoolExecutor
 logger = getLogger("async_helpers")
 
 T = TypeVar("T")
+
+# ContextVar to track the event loop created by run_async_in_new_loop().
+# Under dramatiq-gevent, multiple greenlets share one OS thread, so
+# asyncio's thread-local _running_loop can be corrupted when greenlets
+# interleave. This ContextVar provides a reliable fallback because
+# contextvars are properly inherited by asyncio Tasks via copy_context().
+_worker_loop: contextvars.ContextVar[Optional[asyncio.AbstractEventLoop]] = contextvars.ContextVar(
+    "_worker_loop", default=None
+)
 
 # Get thread pool size from environment or use default
 try:
@@ -129,7 +139,14 @@ async def run_in_thread_pool(func: Callable[..., T], *args: Any, **kwargs: Any) 
             "Coroutines should be awaited directly, not wrapped in a thread pool."
         )
 
-    loop = asyncio.get_running_loop()
+    # In Dramatiq workers (gevent), the thread-local _running_loop
+    # can be corrupted by greenlet interleaving. Prefer the ContextVar
+    # which is reliably inherited by asyncio Tasks via copy_context().
+    loop = _worker_loop.get(None)
+    if loop is not None and not loop.is_closed():
+        pass  # use the reliable ContextVar value
+    else:
+        loop = asyncio.get_running_loop()  # FastAPI path (ContextVar is None)
 
     # If there are kwargs, use partial to bind them
     if kwargs:
@@ -139,6 +156,46 @@ async def run_in_thread_pool(func: Callable[..., T], *args: Any, **kwargs: Any) 
     # Note: We use the global thread pool instead of None (default) to ensure
     # we have control over the thread count via environment variable
     return await loop.run_in_executor(get_thread_pool_executor(), func, *args)
+
+
+def _get_worker_loop() -> asyncio.AbstractEventLoop:
+    """
+    Get the correct event loop, preferring the ContextVar over the thread-local.
+
+    Under dramatiq-gevent, multiple greenlets share one OS thread. asyncio's
+    thread-local _running_loop can be corrupted when greenlets interleave
+    (e.g., another greenlet's run_async_in_new_loop overwrites it). The
+    _worker_loop ContextVar is reliable because asyncio Tasks snapshot
+    contextvars at creation time via copy_context().
+
+    Falls back to asyncio.get_running_loop() for the FastAPI path where
+    _worker_loop is None.
+    """
+    loop = _worker_loop.get(None)
+    if loop is not None and not loop.is_closed():
+        return loop
+    return asyncio.get_running_loop()
+
+
+async def safe_gather(*coros_or_futures: Any, return_exceptions: bool = False) -> list:
+    """
+    Like asyncio.gather but resistant to gevent greenlet interleaving.
+
+    asyncio.gather internally calls get_running_loop() (a thread-local) to
+    create tasks from coroutines. Under dramatiq-gevent, this thread-local
+    can point to another greenlet's (now-closed) event loop, causing
+    "Event loop is closed" errors.
+
+    This helper pre-creates Task objects on the correct loop (from the
+    _worker_loop ContextVar) before passing them to asyncio.gather, which
+    then just gathers already-created futures without needing get_running_loop().
+    """
+    loop = _get_worker_loop()
+    tasks = [
+        loop.create_task(c) if asyncio.iscoroutine(c) else c
+        for c in coros_or_futures
+    ]
+    return await asyncio.gather(*tasks, return_exceptions=return_exceptions)
 
 
 # Persistent event loops per worker thread for Dramatiq actors
@@ -190,6 +247,7 @@ def run_async_in_new_loop(coro: Coroutine[Any, Any, T]) -> T:
     import nest_asyncio
 
     loop = asyncio.new_event_loop()
+    _worker_loop.set(loop)
     # Apply nest_asyncio in case dramatiq-gevent has patched asyncio's running
     # loop detection on this thread.
     nest_asyncio.apply(loop)

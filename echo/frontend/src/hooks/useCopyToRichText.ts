@@ -1,9 +1,11 @@
+import { t } from "@lingui/core/macro";
 import { useCallback, useEffect, useState } from "react";
 import rehypeStringify from "rehype-stringify";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
+import { toast } from "@/components/common/Toaster";
 
 async function markdownToHtml(markdown: string): Promise<string> {
 	const result = await unified()
@@ -55,7 +57,7 @@ function useCopyToRichText() {
 				(_e) => {
 					navigator.clipboard.write([fallBackData]).catch((e) => {
 						console.error("Rich text copy failed:", e);
-						alert("Failed to copy. Please report this issue to the team.");
+						toast.error(t`Could not copy to clipboard. Please try again.`);
 					});
 				},
 			);

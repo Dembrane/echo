@@ -1,370 +1,88 @@
+{% comment %}
+  Shared layout for Directus-sent emails (registration verify, password
+  reset, Directus user invite). Matches the designer's "Verify Email C"
+  direction: letter-style card on parchment, DM Sans Light, royal-blue
+  pill CTA, crowd banner pinned to the card bottom. Children provide
+  content via {% block content %}.
+{% endcomment %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>{{ projectName }} Email Service</title>
-
+    <title>{{ projectName }}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-
-    <style type="text/css" id="hs-inline-css">
-      /*<![CDATA[*/
-
-      /* CLIENT-SPECIFIC STYLES */
-      body, table, td, a {
-      	-webkit-text-size-adjust: 100%;
-      	-ms-text-size-adjust: 100%;
-      	-webkit-font-smoothing: antialiased;
-      	}
-      table,
-      td {
-        mso-table-lspace: 0pt;
-        mso-table-rspace: 0pt;
-      }
-      img {
-        -ms-interpolation-mode: bicubic;
-      }
-      s #content p {
-        margin: 0;
-      }
-      /* RESET STYLES */
-      img {
-        border: 0;
-        height: auto;
-        line-height: 100%;
-        outline: none;
-        text-decoration: none;
-      }
-      table {
-        border-collapse: collapse !important;
-      }
-      body {
-        height: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-      }
-
-      /* iOS BLUE LINKS */
-      a[x-apple-data-detectors] {
-         color: inherit !important;
-         text-decoration: none !important;
-         font-size: inherit !important;
-         font-family: inherit !important;
-         font-weight: inherit !important;
-         line-height: inherit !important;
-      }
-      body a {
-          color: {{projectColor}};
-          text-decoration: underline;
-      }
-      body p {
-        color: #525252;
-      }
-      h1 {
-        font-size: 28px;
-        color: #171717;
-        font-weight: 700;
-        line-height: 32px;
-        margin: 0;
-        padding-bottom: 20px;
-      }
-      hr {
-        margin: 0;
-        width: 100%;
-        border-top: 1px solid #d3dae4;
-        border-bottom: none;
-        border-left: none;
-        border-right: none;
-      }
-      div.im,
-      span.im {
-        color: inherit !important;
-      }
-
-      /* MOBILE STYLES */
-      @media screen and (max-width: 600px) {
-       .img-max {
-         width: 100% !important;
-         max-width: 100% !important;
-         height: auto !important;
-       }
-
-       .max-width {
-         max-width: 100% !important;
-       }
-
-       #content {
-          padding-top: 30px !important;
-          padding-bottom: 30px !important;
-        }
-      }
-
-      /* DARK MODE */
-      /* @media (prefers-color-scheme: dark) {
-        #background {
-          background-color: #171717 !important;
-        }
-        #content {
-          background-color: #171717 !important;
-          color: #ffffff !important;
-        }
-        #footer {
-          background-color: #171717 !important;
-          color: #ffffff !important;
-        }
-        h1,
-        h2 {
-          color: #ffffff !important;
-        }
-        .link {
-          color: #ff99dd !important;
-        }
-        body a {
-          color: #ffffff !important;
-        }
-        body p {
-          color: #e7e5e4 !important;
-        }
-        .button {
-          background-color: #ffffff !important;
-          color: #171717 !important;
-          border-color: #171717 !important;
-        }
-        hr {
-          border-color: #334155 !important;
-        }
-      } */
-
-      /* ANDROID CENTER FIX */
-      div[style*="margin: 16px 0;"] {
-      	margin: 0 !important;
-      }
-
-      blockquote {
-      	background: #f0f4f9 !important;
-      	border-radius: 4px !important;
-      	margin: 0 !important;
-      	padding: 24px !important;
-      }
-
-      blockquote > p {
-      	margin: 0 !important;
-      }
-      /*]]>*/
-    </style>
-
     <meta name="generator" content="Directus" />
     <meta name="x-apple-disable-message-reformatting" />
     <meta name="robots" content="noindex,follow" />
+    <style type="text/css">
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400&display=swap');
+      body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-font-smoothing: antialiased; }
+      table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+      img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+      table { border-collapse: collapse !important; }
+      body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+      a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
+
+      /* Design tokens — stay aligned with colors_and_type.css */
+      body { font-family: 'DM Sans', 'DM Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #2D2D2C; font-weight: 300; }
+      h1 { font-size: 32px; font-weight: 300; letter-spacing: -0.01em; line-height: 1.15; color: #2D2D2C; margin: 0 0 20px; text-wrap: balance; }
+      p { font-size: 17px; line-height: 1.65; color: #2D2D2C; margin: 0 0 28px; font-weight: 300; }
+      a { color: #4169E1; }
+      /* Pill button. Children apply `.button` on their <a>. */
+      .button {
+        display: inline-block;
+        background: #4169E1;
+        color: #FFFFFF !important;
+        text-decoration: none;
+        padding: 14px 30px;
+        border-radius: 9999px;
+        font-size: 15px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      @media screen and (max-width: 600px) {
+        .card-inner { padding: 24px 24px 0 !important; }
+      }
+    </style>
   </head>
-  <body
-    style="-webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; height:100% !important; width:100% !important; margin:0 !important; padding:0; !important background-color:#f6f6f6"
-    bgcolor="#f6f6f6"
-  >
-    <!-- HIDDEN PREHEADER TEXT -->
-    <div
-      class="preview-text"
-      style="
-        display: none;
-        font-size: 1px;
-        color: #172940;
-        line-height: 1px;
-        max-height: 0px;
-        max-width: 0px;
-        opacity: 0;
-        overflow: hidden;
-      "
-    >
-      &nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌
-    </div>
+  <body style="background-color:#F6F4F1;">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#F6F4F1; padding:40px 20px;">
+      <tr>
+        <td align="center" valign="top">
+          <!--[if (gte mso 9)|(IE)]>
+          <table role="presentation" align="center" border="0" cellspacing="0" cellpadding="0" width="600"><tr><td align="center" valign="top" width="600">
+          <![endif]-->
+          <table role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; background-color:#FFFFFF; border:1px solid #EFEAE2;">
+            <!-- Logo -->
+            <tr>
+              <td class="card-inner" style="padding:32px 48px 0;">
+                <img src="https://directus.dembrane.com/assets/36aa0e6d-eac0-4a56-9478-8afb01131134" alt="dembrane" width="158" height="32" border="0" style="height:32px; width:auto; max-width:100%; display:block; border:0;" />
+              </td>
+            </tr>
 
-    <table
-      role="presentation"
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      width="100%"
-      style="
-        -webkit-text-size-adjust: 100%;
-        -ms-text-size-adjust: 100%;
-        mso-table-lspace: 0pt;
-        mso-table-rspace: 0pt;
-        border-collapse: collapse !important;
-      "
-    >
-      <tbody>
-        <tr>
-          <td
-            id="background"
-            align="center"
-            valign="top"
-            width="100%"
-            bgcolor="#ffffff"
-            style="
-              -webkit-text-size-adjust: 100%;
-              -ms-text-size-adjust: 100%;
-              mso-table-lspace: 0pt;
-              mso-table-rspace: 0pt;
-              background-size: cover;
-              padding: 30px 15px 0 15px;
-              background-color: #ffffff;
-            "
-          >
-            <!--[if (gte mso 9)|(IE)]>
-					<table role="presentation" align="center" border="0" cellspacing="0" cellpadding="0" width="600">
-					<tr>
-					<td align="center" valign="top" width="600">
-					<![endif]-->
-            <table
-              role="presentation"
-              align="center"
-              border="0"
-              cellpadding="0"
-              cellspacing="0"
-              width="100%"
-              style="
-                -webkit-text-size-adjust: 100%;
-                -ms-text-size-adjust: 100%;
-                mso-table-lspace: 0pt;
-                mso-table-rspace: 0pt;
-                border-collapse: collapse !important;
-                max-width: 600px;
-              "
-            >
-              <tbody>
-                <tr>
-                  <td
-                    align="left"
-                    valign="top"
-                    style="
-                      -webkit-text-size-adjust: 100%;
-                      -ms-text-size-adjust: 100%;
-                      mso-table-lspace: 0pt;
-                      mso-table-rspace: 0pt;
-                      padding: 0 0 40px 0;
-                    "
-                  >
-                    <table>
-                      <tbody>
-                        <tr>
-                          <td align="center" valign="middle">
-                            <img
-                              id="logo"
-                              src="https://dembrane.blob.core.windows.net/pilot/dembrane-logo-hq.png"
-                              alt="Dembrane Logo"
-                              width="40"
-                              height="40"
-                              border="0"
-                              style="
-                                -ms-interpolation-mode: bicubic;
-                                border: 1px solid white;
-                                border-radius: 8px;
-                                height: 40px;
-                                width: 40px;
-                                line-height: 100%;
-                                outline: none;
-                                text-decoration: none;
-                                display: block;
-                                object-fit: contain;
-                                padding: 10px;
-                                background: white;
-                              "
-                            />
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </td>
-                </tr>
-                <tr>
-                  <td
-                    id="content"
-                    align="left"
-                    valign="top"
-                    style="
-                      -webkit-text-size-adjust: 100%;
-                      -ms-text-size-adjust: 100%;
-                      mso-table-lspace: 0pt;
-                      mso-table-rspace: 0pt;
-                      font-family: -apple-system, BlinkMacSystemFont,
-                        'HelveticaNeue-Light', 'Helvetica Neue Light',
-                        'Helvetica Neue', Helvetica, Arial, 'Lucida Grande',
-                        sans-serif;
-                      font-size: 16px;
-                      line-height: 26px;
-                      letter-spacing: 0.32px;
-                      margin: 0;
-                      color: #171717;
-                    "
-                  >
-                    <div
-                      style="
-                        color: inherit;
-                        font-size: inherit;
-                        line-height: inherit;
-                      "
-                    >
-                      {% block content %}{{ html }}{% endblock %}
-                    </div>
+            <!-- Content -->
+            <tr>
+              <td class="card-inner" style="padding:28px 48px 0;">
+                {% block content %}{{ html }}{% endblock %}
 
-                    <p style="padding: 20px 0 10px 0">All the best,</p>
-                    <table border="0" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td align="center" valign="middle" style="">
-                          <img
-                            id="logo"
-                            src="https://dembrane.blob.core.windows.net/pilot/dembrane-logo-hq.png"
-                            alt=""
-                            width="22"
-                            height="22"
-                            border="0"
-                            style="
-                              -ms-interpolation-mode: bicubic;
-                              border: 0;
-                              height: 22px;
-                              width: 22px;
-                              outline: none;
-                              text-decoration: none;
-                              display: block;
-                              object-fit: contain;
-                              padding: 11px;
-                              border-radius: 100%;
-                              border: 1px solid #ffffff;
-                              background: white;
-                            "
-                          />
-                        </td>
-                        <td>
-                          <p
-                            style="
-                              display: inline-block;
-                              line-height: 20px;
-                              padding-left: 8px;
-                              margin: 0;
-                            "
-                          >
-                            The Dembrane Team<br /><span
-                              style="color: #737373"
-                              >Administrator</span
-                            >
-                          </p>
-                        </td>
-                      </tr>
-                    </table>
-                    <hr style="margin: 40px 0 20px 0" width="100%" />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <!--[if (gte mso 9)|(IE)]>
-					</td>
-					</tr>
-					</table>
-					<![endif]-->
-          </td>
-        </tr>
-      </tbody>
+                <p style="font-size:17px; line-height:1.65; margin:0 0 32px;">— the dembrane team</p>
+              </td>
+            </tr>
+
+            <!-- Crowd banner (designer's "Verify Email C" anchor) -->
+            <tr>
+              <td style="background-color:#FFFFFF;">
+                <img src="https://directus.dembrane.com/assets/a75db1e0-4dd9-4660-a6fb-24e0dd4cd104" alt="" width="600" style="width:100%; max-width:600px; height:auto; display:block; border:0;" />
+              </td>
+            </tr>
+          </table>
+          <!--[if (gte mso 9)|(IE)]>
+          </td></tr></table>
+          <![endif]-->
+        </td>
+      </tr>
     </table>
   </body>
 </html>

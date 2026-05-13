@@ -1,4 +1,4 @@
-import { Group, type GroupProps } from "@mantine/core";
+import { Group, type GroupProps, Loader } from "@mantine/core";
 import aiconlLogo from "@/assets/aiconl-logo.png";
 import aiconlLogoHQ from "@/assets/aiconl-logo-hq.png";
 
@@ -18,13 +18,15 @@ export const LogoDembrane = ({ hideLogo, hideTitle, alwaysDembrane, ...props }: 
 
 	return (
 		<Group gap="sm" h="36px" align="center" {...props}>
-			{!hideLogo && (
+			{!hideLogo && effectiveLogoUrl === undefined ? (
+				<Loader size={24} color="gray" ml="xl" />
+			) : !hideLogo ? (
 				<img
 					src={effectiveLogoUrl ?? (hideTitle ? dembraneLogomark : dembraneLogoFull)}
 					alt="Logo"
 					className="h-full object-contain"
 				/>
-			)}
+			) : null}
 		</Group>
 	);
 };
@@ -51,5 +53,4 @@ export const Logo = (props: LogoProps) => {
 	);
 };
 
-// Export logomark for use in spinners and loading indicators
 export const DembraneLogomark = dembraneLogomark;

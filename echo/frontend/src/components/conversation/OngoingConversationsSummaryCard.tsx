@@ -1,11 +1,10 @@
-import { aggregate } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import { ActionIcon, Group, Stack, Text } from "@mantine/core";
 import { UsersThreeIcon } from "@phosphor-icons/react";
 import { IconRefresh } from "@tabler/icons-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { directus } from "@/lib/directus";
+import { bff } from "@/lib/bff";
 import { SummaryCard } from "../common/SummaryCard";
 
 const TIME_INTERVAL_SECONDS = 30;
@@ -16,52 +15,27 @@ export const OngoingConversationsSummaryCard = ({
 	projectId: string;
 }) => {
 	const queryClient = useQueryClient();
-	// Track previous state to detect changes
+	// Track previous state to detect changes so we refetch the
+	// conversations list when the count transitions (a conversation
+	// went live or ended) — that way the list reflects fresh chunks
+	// without the user having to hit refresh.
 	const [hasOngoingConversations, setHasOngoingConversations] = useState(false);
-	// const hasOngoingConversationsRef = useRef<boolean>(false);
 
 	const conversationChunksQuery = useQuery({
 		queryFn: async () => {
-			const result = await directus.request(
-				aggregate("conversation_chunk", {
-					aggregate: {
-						countDistinct: ["conversation_id"],
-					},
-					query: {
-						filter: {
-							conversation_id: {
-								project_id: projectId,
-							},
-							source: {
-								// @ts-expect-error source is not typed
-								_nin: ["DASHBOARD_UPLOAD", "CLONE"],
-							},
-							timestamp: {
-								// @ts-expect-error gt is not typed
-								_gt: new Date(
-									Date.now() - TIME_INTERVAL_SECONDS * 1000,
-								).toISOString(),
-							},
-						},
-					},
-				}),
+			const { count } = await bff.get<{ count: number }>(
+				"/conversations/live-count",
+				{ project_id: projectId, window_seconds: TIME_INTERVAL_SECONDS },
 			);
 
-			const currentCount = Number(
-				// @ts-expect-error aggregate response type is not properly typed
-				(result[0]?.countDistinct?.conversation_id as string) ?? "0",
-			);
-
-			if (currentCount > 0 || hasOngoingConversations) {
+			if (count > 0 || hasOngoingConversations) {
 				queryClient.invalidateQueries({
 					queryKey: ["projects", projectId, "conversations"],
 				});
-				setHasOngoingConversations(false);
 			}
+			setHasOngoingConversations(count > 0);
 
-			setHasOngoingConversations(currentCount > 0);
-
-			return currentCount;
+			return count;
 		},
 		queryKey: ["conversation_chunks", projectId],
 		refetchInterval: 30000,

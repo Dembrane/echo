@@ -190,6 +190,7 @@ export const ParticipantConversationText = () => {
 						viewResponses
 						projectId={projectId ?? ""}
 						conversationId={conversationId ?? ""}
+						isAnonymized={conversationQuery.data?.is_anonymized ?? false}
 					/>
 				)}
 

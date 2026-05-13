@@ -15,7 +15,7 @@ import { useSearchParams } from "react-router";
 import { useResetPasswordMutation } from "@/components/auth/hooks";
 
 export const PasswordResetRoute = () => {
-	useDocumentTitle(t`Reset Password | Dembrane`);
+	useDocumentTitle(t`Reset Password | dembrane`);
 	const [search, _] = useSearchParams();
 	const { register, handleSubmit } = useForm<{
 		password: string;

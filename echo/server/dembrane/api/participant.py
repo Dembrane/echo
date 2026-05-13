@@ -85,6 +85,8 @@ class PublicConversationSchema(BaseModel):
     participant_email: Optional[str] = None
     participant_name: Optional[str] = None
 
+    is_anonymized: Optional[bool] = None
+
 
 class InitiateConversationRequestBodySchema(BaseModel):
     name: str
@@ -188,28 +190,60 @@ async def get_project(
         if project.get("is_conversation_allowed", False) is False:
             raise HTTPException(status_code=403, detail="Conversation not open for participation")
 
-        # Resolve whitelabel logo, legal basis, and privacy policy URL from project owner
-        directus_user_id = project.get("directus_user_id")
-        if directus_user_id:
+        # Resolve whitelabel logo, legal basis, and privacy policy URL.
+        # PREFERRED: from workspace (new model). FALLBACK: from project owner (legacy).
+        workspace_id = project.get("workspace_id")
+        resolved_from_workspace = False
+
+        if workspace_id:
             try:
-                user_data = await run_in_thread_pool(
-                    directus.get_users,
+                ws_data = await run_in_thread_pool(
+                    directus.get_items,
+                    "workspace",
                     {
                         "query": {
-                            "filter": {"id": {"_eq": directus_user_id}},
-                            "fields": ["whitelabel_logo", "legal_basis", "privacy_policy_url"],
+                            "filter": {"id": {"_eq": workspace_id}, "deleted_at": {"_null": True}},
+                            "fields": ["logo_url", "legal_basis", "privacy_policy_url"],
+                            "limit": 1,
                         }
                     },
                 )
-                if user_data and len(user_data) > 0:
-                    owner = user_data[0]
-                    logo_file_id = owner.get("whitelabel_logo")
-                    if logo_file_id:
-                        project["whitelabel_logo_url"] = logo_file_id
-                    project["legal_basis"] = owner.get("legal_basis") or "client-managed"
-                    project["privacy_policy_url"] = owner.get("privacy_policy_url")
+                if isinstance(ws_data, list) and len(ws_data) > 0:
+                    ws = ws_data[0]
+                    if ws.get("logo_url"):
+                        project["whitelabel_logo_url"] = ws["logo_url"]
+                    if ws.get("legal_basis"):
+                        project["legal_basis"] = ws["legal_basis"]
+                        resolved_from_workspace = True
+                    if ws.get("privacy_policy_url"):
+                        project["privacy_policy_url"] = ws["privacy_policy_url"]
             except Exception as e:
-                logger.warning(f"Failed to resolve owner settings for project {project_id}: {e}")
+                logger.warning(f"Failed to resolve workspace settings for project {project_id}: {e}")
+
+        # Fallback to owner's user settings if workspace didn't provide legal_basis
+        if not resolved_from_workspace:
+            directus_user_id = project.get("directus_user_id")
+            if directus_user_id:
+                try:
+                    user_data = await run_in_thread_pool(
+                        directus.get_users,
+                        {
+                            "query": {
+                                "filter": {"id": {"_eq": directus_user_id}},
+                                "fields": ["whitelabel_logo", "legal_basis", "privacy_policy_url"],
+                            }
+                        },
+                    )
+                    if user_data and len(user_data) > 0:
+                        owner = user_data[0]
+                        if not project.get("whitelabel_logo_url") and owner.get("whitelabel_logo"):
+                            project["whitelabel_logo_url"] = owner["whitelabel_logo"]
+                        if not project.get("legal_basis"):
+                            project["legal_basis"] = owner.get("legal_basis") or "client-managed"
+                        if not project.get("privacy_policy_url"):
+                            project["privacy_policy_url"] = owner.get("privacy_policy_url")
+                except Exception as e:
+                    logger.warning(f"Failed to resolve owner settings for project {project_id}: {e}")
 
         return project
 
@@ -619,6 +653,150 @@ class NotificationSubscriptionRequest(BaseModel):
     emails: List[str]
     project_id: str
     conversation_id: str
+
+
+class ReportMetricCreateSchema(BaseModel):
+    project_report_id: int
+    type: str = "view"
+
+
+class PublicReportLatestResponse(BaseModel):
+    id: int
+    status: str
+    project_id: str
+    show_portal_link: bool
+
+
+class PublicReportDetailResponse(BaseModel):
+    id: int
+    content: str
+    status: str
+    project_id: str
+    show_portal_link: bool
+
+
+class PublicReportViewsResponse(BaseModel):
+    recent: int
+
+
+class PublicReportMetricResponse(BaseModel):
+    status: str
+
+
+@ParticipantRouter.get("/{project_id}/report/latest")
+async def get_public_report_latest(
+    project_id: str,
+) -> Optional[PublicReportLatestResponse]:
+    """Get the latest published report for a project. No auth required."""
+    reports = await run_in_thread_pool(
+        directus.get_items,
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_eq": project_id},
+                    "status": {"_eq": "published"},
+                },
+                "fields": ["id", "status", "project_id", "show_portal_link"],
+                "sort": ["-date_created"],
+                "limit": 1,
+            }
+        },
+    )
+    return PublicReportLatestResponse(**reports[0]) if reports else None
+
+
+@ParticipantRouter.get("/{project_id}/report/{report_id}/detail")
+async def get_public_report_detail(
+    project_id: str,
+    report_id: int,
+) -> PublicReportDetailResponse:
+    """Get full report content. Only returns published reports. No auth required."""
+    reports = await run_in_thread_pool(
+        directus.get_items,
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "id": {"_eq": report_id},
+                    "project_id": {"_eq": project_id},
+                    "status": {"_eq": "published"},
+                },
+                "fields": ["id", "content", "status", "project_id", "show_portal_link"],
+                "limit": 1,
+            }
+        },
+    )
+
+    if not reports:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    return PublicReportDetailResponse(**reports[0])
+
+
+@ParticipantRouter.get("/{project_id}/report/views")
+async def get_public_report_views(
+    project_id: str,
+) -> PublicReportViewsResponse:
+    """Get recent view count for a report. No auth required."""
+    from datetime import timezone, timedelta
+
+    ten_mins_ago = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+    recent_metrics = await run_in_thread_pool(
+        directus.get_items,
+        "project_report_metric",
+        {
+            "query": {
+                "filter": {
+                    "date_created": {"_gte": ten_mins_ago},
+                    "project_report_id": {
+                        "project_id": {"_eq": project_id},
+                    },
+                },
+                "aggregate": {"count": "*"},
+            }
+        },
+    )
+    recent = 0
+    if recent_metrics and len(recent_metrics) > 0:
+        recent = int(recent_metrics[0].get("count", 0))
+
+    return PublicReportViewsResponse(recent=recent)
+
+
+@ParticipantRouter.post("/{project_id}/report/metric")
+async def create_public_report_metric(
+    project_id: str,
+    body: ReportMetricCreateSchema,
+) -> PublicReportMetricResponse:
+    """Record a report view metric. No auth required."""
+    reports = await run_in_thread_pool(
+        directus.get_items,
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "id": {"_eq": body.project_report_id},
+                    "project_id": {"_eq": project_id},
+                    "status": {"_eq": "published"},
+                },
+                "fields": ["id"],
+                "limit": 1,
+            }
+        },
+    )
+    if not reports:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    await run_in_thread_pool(
+        directus.create_item,
+        "project_report_metric",
+        {
+            "project_report_id": body.project_report_id,
+            "type": body.type,
+        },
+    )
+    return PublicReportMetricResponse(status="ok")
 
 
 @ParticipantRouter.post("/report/subscribe")

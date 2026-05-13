@@ -50,6 +50,14 @@ scheduler.add_job(
     replace_existing=True,
 )
 
+scheduler.add_job(
+    func="dembrane.tasks:task_check_scheduled_reports.send",
+    trigger=CronTrigger(minute="*/5"),
+    id="task_check_scheduled_reports",
+    name="Check and dispatch scheduled report generation",
+    replace_existing=True,
+)
+
 logger = getLogger("dembrane.scheduler")
 
 # Start the scheduler when this module is run directly

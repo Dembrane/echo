@@ -1,3 +1,4 @@
+<transcripts>
 {% if conversations|length == 0 %}
 No se encontraron transcripciones de conversaciones.
 {% else %}
@@ -12,6 +13,14 @@ No se encontraron transcripciones de conversaciones.
    {% endfor %}
 {% endif %}
 </transcripts>
+{% if user_instructions %}
+
+<user_instructions>
+The report creator has provided the following guidance. Pay special attention to these instructions when analyzing the transcripts and structuring your article:
+
+{{ user_instructions | replace("</user_instructions>", "") | replace("<user_instructions>", "") }}
+</user_instructions>
+{% endif %}
 
 Su tarea es crear un artículo dinámico estilo entrevista en formato de preguntas y respuestas basado en las transcripciones de conversaciones proporcionadas anteriormente. Este artículo debe analizar críticamente el contenido mientras mantiene una clara conexión con el material fuente. El resultado final debe ser un documento profesional y legible, adecuado para compartir inmediatamente en línea.
 
@@ -41,12 +50,16 @@ Para mantener la integridad del material fuente:
 * Haga referencia a nombres propios cuando sea relevante. Ignore los nombres compartidos durante las transcripciones a menos que sea obvio que la persona es una figura pública.
 
 Formatee su resultado final de la siguiente manera:
-* Título: Cree un título atractivo que capture la esencia de las preguntas y respuestas.
+* Título: Cree un título atractivo como encabezado H1 (#).
 * Introducción: 2-3 oraciones estableciendo el contexto.
-* Pares de preguntas y respuestas: Presente cada par con la pregunta en negrita, seguida de una respuesta completa, separadas por dos saltos de línea.
+* Pares de preguntas y respuestas: Presente cada pregunta como un encabezado H3 (###), seguida de una respuesta completa como párrafo, separados por dos saltos de línea.
 * Conclusión: 2-3 oraciones resumiendo los puntos clave y su significado.
 
+IMPORTANTE: Escriba el artículo completo en español, independientemente del idioma de las transcripciones. Si las transcripciones están en otro idioma, traduzca el contenido al español.
+
 Mantenga un tono profesional y periodístico a lo largo del artículo. El lenguaje debe ser claro, conciso y fácilmente comprensible para una audiencia general. Evite el lenguaje coloquial, la jerga o términos excesivamente técnicos a menos que sean esenciales y estén explicados.
+
+Al referirse a la plataforma por su nombre, escriba siempre "dembrane" en minúsculas, incluso al inicio de una oración. Nunca lo escriba como "Dembrane".
 
 No inserte ningún tag <br> en la salida. Use saltos de línea en su lugar.
 

@@ -1,14 +1,14 @@
 import { Trans } from "@lingui/react/macro";
 import { LoadingOverlay, Stack, Text } from "@mantine/core";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { Logo } from "@/components/common/Logo";
-import { useCreateProjectReportMetricOncePerDayMutation } from "@/components/participant/hooks";
 import {
-	useLatestProjectReport,
-	useProjectReportViews,
+	usePublicLatestProjectReport,
+	usePublicProjectReportViews,
 } from "@/components/report/hooks";
 import { ReportRenderer } from "@/components/report/ReportRenderer";
+import { createPublicReportMetric } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 
 export const ParticipantReport = () => {
@@ -17,22 +17,45 @@ export const ParticipantReport = () => {
 
 	const { language, projectId } = useParams();
 
-	const { data: report, isLoading } = useLatestProjectReport(projectId ?? "");
-	const { data: views } = useProjectReportViews(report?.id ?? -1);
+	const { data: report, isLoading } = usePublicLatestProjectReport(
+		projectId ?? "",
+	);
+	const { data: views, refetch: refetchViews } = usePublicProjectReportViews(
+		projectId ?? "",
+	);
 
 	const contributeLink = `${window.location.origin}/${language}/${projectId}/start`;
 
-	const { mutate } = useCreateProjectReportMetricOncePerDayMutation();
+	const recordView = useCallback(
+		(reportId: number) => {
+			const key = `rm_${reportId}_updated`;
+			try {
+				const lastUpdated = localStorage.getItem(key);
+				if (lastUpdated) {
+					const hoursDiff =
+						(Date.now() - new Date(lastUpdated).getTime()) / (1000 * 60 * 60);
+					if (hoursDiff < 24) return;
+				}
+				localStorage.setItem(key, new Date().toISOString());
+			} catch {
+				// Ignore localStorage errors
+			}
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
+			createPublicReportMetric(projectId ?? "", {
+				project_report_id: reportId,
+				type: "view",
+			})
+				.then(() => {
+					setTimeout(() => refetchViews(), 1000);
+				})
+				.catch(() => {});
+		},
+		[projectId, refetchViews],
+	);
+
 	useEffect(() => {
 		if (report) {
-			mutate({
-				payload: {
-					project_report_id: Number(report.id),
-					type: "view",
-				},
-			});
+			recordView(Number(report.id));
 
 			if (print) {
 				setTimeout(() => {
@@ -40,7 +63,7 @@ export const ParticipantReport = () => {
 				}, 1000);
 			}
 		}
-	}, [report, print]);
+	}, [report, print, recordView]);
 
 	if (isLoading) {
 		return <LoadingOverlay visible />;
@@ -74,7 +97,9 @@ export const ParticipantReport = () => {
 	return (
 		<div {...testId("public-report-view")}>
 			<ReportRenderer
+				projectId={projectId ?? ""}
 				reportId={Number(report.id)}
+				isPublic
 				opts={{
 					contributeLink: report.show_portal_link ? contributeLink : undefined,
 					readingNow: views?.recent ?? 0,

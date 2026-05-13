@@ -1,0 +1,79 @@
+{
+  "collection": "notification",
+  "field": "action",
+  "type": "string",
+  "meta": {
+    "collection": "notification",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "action",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": "Codified nav target. UI resolves the URL from ref_* fields.",
+    "options": {
+      "choices": [
+        {
+          "text": "None",
+          "value": "NONE"
+        },
+        {
+          "text": "Navigate to workspace",
+          "value": "NAVIGATE_WS"
+        },
+        {
+          "text": "Navigate to project",
+          "value": "NAVIGATE_PROJECT"
+        },
+        {
+          "text": "Navigate to report",
+          "value": "NAVIGATE_REPORT"
+        },
+        {
+          "text": "Navigate to chat",
+          "value": "NAVIGATE_CHAT"
+        },
+        {
+          "text": "Navigate to invite",
+          "value": "NAVIGATE_INVITE"
+        },
+        {
+          "text": "Navigate to team settings",
+          "value": "NAVIGATE_TEAM_SETTINGS"
+        },
+        {
+          "text": "Navigate to workspace settings",
+          "value": "NAVIGATE_WORKSPACE_SETTINGS"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 6,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "action",
+    "table": "notification",
+    "data_type": "character varying",
+    "default_value": "NONE",
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": false,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

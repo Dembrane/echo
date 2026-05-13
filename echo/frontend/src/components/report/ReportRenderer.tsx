@@ -1,36 +1,37 @@
 import { Trans } from "@lingui/react/macro";
-import { Button, Group, Paper, Skeleton, Stack, Text } from "@mantine/core";
+import { Group, Paper, Skeleton, Stack, Text } from "@mantine/core";
 import { testId } from "@/lib/testUtils";
 import { cn } from "@/lib/utils";
 import { Logo } from "../common/Logo";
 import { Markdown } from "../common/Markdown";
 import { QRCode } from "../common/QRCode";
-import { useProjectReport } from "./hooks";
+import { useProjectReport, usePublicProjectReport } from "./hooks";
 import { ReportEditor } from "./ReportEditor";
 
-const ContributeToReportCTA = ({ href }: { href: string }) => {
+const ContributeToReportCTA = ({
+	href,
+	fullscreen,
+}: {
+	href: string;
+	fullscreen?: boolean;
+}) => {
 	return (
-		<Paper p="xl" className="bg-gray-100" {...testId("report-contribute-cta")}>
-			<Stack className="text-center text-2xl font-semibold" align="center">
-				<Trans>Do you want to contribute to this project?</Trans>
+		<Paper
+			p="xl"
+			className={fullscreen ? "bg-white" : "bg-gray-100"}
+			{...testId("report-contribute-cta")}
+		>
+			<Stack className="text-center" align="center" gap="md">
+				<Text size="lg" fw={600}>
+					<Trans>Share your voice by scanning the QR code</Trans>
+				</Text>
 
-				<Button
-					component="a"
+				<QRCode
+					value={href}
 					href={href}
-					target="_blank"
-					className="rounded-3xl print:hidden"
-					{...testId("report-contribute-share-button")}
-				>
-					<Trans>Share your voice</Trans>
-				</Button>
-
-				<div className="hidden print:block">
-					<Trans>Share your voice by scanning the QR code below.</Trans>
-				</div>
-
-				<div className="hidden h-[200px] w-[200px] print:block">
-					<QRCode value={href} />
-				</div>
+					style={{ height: 200, width: 200 }}
+					{...testId("report-contribute-qr")}
+				/>
 			</Stack>
 		</Paper>
 	);
@@ -40,6 +41,7 @@ type ReportLayoutOpts = {
 	contributeLink?: string;
 	readingNow?: number;
 	showBorder?: boolean;
+	fullscreen?: boolean;
 	className?: string;
 };
 
@@ -48,6 +50,7 @@ const ReportLayout = ({
 	contributeLink,
 	readingNow,
 	showBorder,
+	fullscreen,
 	className,
 }: {
 	children: React.ReactNode;
@@ -82,21 +85,32 @@ const ReportLayout = ({
 
 			{children}
 
-			{!!contributeLink && <ContributeToReportCTA href={contributeLink} />}
+			{!!contributeLink && (
+				<ContributeToReportCTA href={contributeLink} fullscreen={fullscreen} />
+			)}
 		</Stack>
 	);
 };
 
 export const ReportRenderer = ({
+	projectId,
 	reportId,
 	opts,
 	isEditing,
+	isPublic,
 }: {
+	projectId: string;
 	reportId: number;
 	opts?: ReportLayoutOpts;
 	isEditing?: boolean;
+	isPublic?: boolean;
 }) => {
-	const { data, isLoading } = useProjectReport(reportId);
+	const authQuery = useProjectReport(projectId, isPublic ? -1 : reportId);
+	const publicQuery = usePublicProjectReport(
+		projectId,
+		isPublic ? reportId : -1,
+	);
+	const { data, isLoading } = isPublic ? publicQuery : authQuery;
 
 	if (isLoading) {
 		return (

@@ -190,7 +190,7 @@ def _search_projects(client: DirectusClient, term: str, limit: int) -> List[Sear
         "project",
         {
             "query": {
-                "filter": _search_like_filter("name", term),
+                "filter": {**_search_like_filter("name", term), "deleted_at": {"_null": True}},
                 "fields": ["id", "name", "updated_at", "count(conversations)"],
                 "sort": ["-updated_at"],
                 "limit": limit,
@@ -214,11 +214,14 @@ def _search_conversations(
         {
             "query": {
                 "filter": {
-                    "_or": [
-                        _search_like_filter("participant_name", term),
-                        _search_like_filter("participant_email", term),
-                        _search_like_filter("summary", term),
-                        _search_like_filter("id", term),
+                    "_and": [
+                        {"deleted_at": {"_null": True}},
+                        {"_or": [
+                            _search_like_filter("participant_name", term),
+                            _search_like_filter("participant_email", term),
+                            _search_like_filter("summary", term),
+                            _search_like_filter("id", term),
+                        ]},
                     ]
                 },
                 "fields": [
@@ -336,9 +339,12 @@ def _search_chats(client: DirectusClient, term: str, limit: int) -> List[SearchC
         {
             "query": {
                 "filter": {
-                    "_or": [
-                        _search_like_filter("name", term),
-                        _search_like_filter("id", term),
+                    "_and": [
+                        {"deleted_at": {"_null": True}},
+                        {"_or": [
+                            _search_like_filter("name", term),
+                            _search_like_filter("id", term),
+                        ]},
                     ]
                 },
                 "fields": [
