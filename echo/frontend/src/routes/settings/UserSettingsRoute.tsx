@@ -63,7 +63,7 @@ const SECTIONS: Array<{
 ];
 
 export const UserSettingsRoute = () => {
-	useDocumentTitle(t`Settings | Dembrane`);
+	useDocumentTitle(t`Settings | dembrane`);
 	const { data: user, isLoading } = useCurrentUser();
 	const navigate = useI18nNavigate();
 	const [activeSection, setActiveSection] = useState<SectionId>("account");

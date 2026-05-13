@@ -20,7 +20,7 @@ const DembraneLoadingSpinner: React.FC<DembraneLoadingSpinnerProps> = ({
 	const [visible, setVisible] = useState(true);
 
 	const messages = [
-		t`Welcome to Dembrane!`,
+		t`Welcome to dembrane!`,
 		t`Loading`,
 		t`Preparing your experience`,
 		t`Almost there`,
@@ -63,7 +63,7 @@ const DembraneLoadingSpinner: React.FC<DembraneLoadingSpinnerProps> = ({
 		>
 			<img
 				src={DembraneLogomark}
-				alt="Spinning Dembrane Logo to indicate loading"
+				alt="Spinning dembrane logo to indicate loading"
 				className={cn("loading-image h-12 w-12 animate-spin", className)}
 			/>
 			{showMessage && <p className="mt-4 text-lg">{messages[messageIndex]}</p>}

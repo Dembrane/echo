@@ -405,7 +405,7 @@ def step_3_workspace():
                 "options": {"choices": [
                     {"text": "Consent", "value": "consent"},
                     {"text": "Client-managed", "value": "client-managed"},
-                    {"text": "Dembrane Events", "value": "dembrane-events"},
+                    {"text": "dembrane events", "value": "dembrane-events"},
                 ]},
             },
         },
