@@ -90,8 +90,13 @@ def test_task_correct_transcript_standard_mode(monkeypatch) -> None:
     monkeypatch.setattr(
         transcribe,
         "_save_transcript",
-        lambda chunk_id, transcript, diarization=None: saved.update(
-            {"chunk_id": chunk_id, "transcript": transcript, "diarization": diarization}
+        lambda chunk_id, transcript, diarization=None, mark_signpost_ready=False: saved.update(
+            {
+                "chunk_id": chunk_id,
+                "transcript": transcript,
+                "diarization": diarization,
+                "mark_signpost_ready": mark_signpost_ready,
+            }
         ),
     )
     monkeypatch.setattr(
@@ -118,6 +123,7 @@ def test_task_correct_transcript_standard_mode(monkeypatch) -> None:
     assert saved["transcript"] == "corrected text"
     assert saved["diarization"]["schema"] == "Dembrane-25-09"
     assert saved["diarization"]["data"]["raw"] == {"words": []}
+    assert saved["mark_signpost_ready"] is True
     assert decremented == {"conversation_id": "conv-2", "chunk_id": "chunk-2"}
 
 
@@ -140,8 +146,13 @@ def test_task_correct_transcript_anonymized_mode(monkeypatch) -> None:
     monkeypatch.setattr(
         transcribe,
         "_save_transcript",
-        lambda chunk_id, transcript, diarization=None: saved.update(
-            {"chunk_id": chunk_id, "transcript": transcript, "diarization": diarization}
+        lambda chunk_id, transcript, diarization=None, mark_signpost_ready=False: saved.update(
+            {
+                "chunk_id": chunk_id,
+                "transcript": transcript,
+                "diarization": diarization,
+                "mark_signpost_ready": mark_signpost_ready,
+            }
         ),
     )
     monkeypatch.setattr(
@@ -168,6 +179,7 @@ def test_task_correct_transcript_anonymized_mode(monkeypatch) -> None:
     assert observed["use_pii_redaction"] is True
     assert saved["diarization"]["schema"] == "Dembrane-26-01-redaction"
     assert saved["diarization"]["data"]["raw"] == {}
+    assert saved["mark_signpost_ready"] is True
     assert decremented == {"conversation_id": "conv-3", "chunk_id": "chunk-3"}
 
 
@@ -218,3 +230,99 @@ def test_task_correct_transcript_fallback_and_error_save(monkeypatch) -> None:
     assert state["chunk_id"] == "chunk-4"
     assert "Failed to save fallback transcript" in state["error_message"]
     assert decremented == {"conversation_id": "conv-4", "chunk_id": "chunk-4"}
+
+
+def test_task_refresh_conversation_signposts_skips_when_lock_exists(
+    monkeypatch,
+) -> None:
+    called: dict[str, Any] = {"refresh": False, "clear": False}
+
+    monkeypatch.setattr(tasks, "ProcessingStatusContext", lambda **_kwargs: nullcontext())
+
+    import dembrane.signposting as signposting
+    import dembrane.coordination as coordination
+
+    monkeypatch.setattr(coordination, "mark_signposting_in_progress", lambda _id: False)
+    monkeypatch.setattr(
+        coordination,
+        "clear_signposting_in_progress",
+        lambda _id: called.update({"clear": True}),
+    )
+    monkeypatch.setattr(
+        signposting,
+        "refresh_conversation_signposts",
+        lambda _id: called.update({"refresh": True}),
+    )
+
+    tasks.task_refresh_conversation_signposts.fn("conv-9")
+
+    assert called["refresh"] is False
+    assert called["clear"] is False
+
+
+def test_task_refresh_conversation_signposts_requeues_when_more_chunks(
+    monkeypatch,
+) -> None:
+    state: dict[str, Any] = {"cleared": 0, "requeued": []}
+
+    monkeypatch.setattr(tasks, "ProcessingStatusContext", lambda **_kwargs: nullcontext())
+
+    import dembrane.signposting as signposting
+    import dembrane.coordination as coordination
+
+    monkeypatch.setattr(coordination, "mark_signposting_in_progress", lambda _id: True)
+    monkeypatch.setattr(
+        coordination,
+        "clear_signposting_in_progress",
+        lambda _id: state.update({"cleared": state["cleared"] + 1}),
+    )
+    monkeypatch.setattr(
+        signposting,
+        "refresh_conversation_signposts",
+        lambda _id: {
+            "processed_chunk_ids": ["chunk-a"],
+            "has_more": True,
+            "operations": {"created": 1, "updated": 2, "resolved": 1},
+        },
+    )
+    monkeypatch.setattr(
+        tasks.task_refresh_conversation_signposts,
+        "send",
+        lambda conversation_id: state["requeued"].append(conversation_id),
+    )
+
+    tasks.task_refresh_conversation_signposts.fn("conv-10")
+
+    assert state["cleared"] == 1
+    assert state["requeued"] == ["conv-10"]
+
+
+def test_task_catch_up_pending_signposts_enqueues_conversations(monkeypatch) -> None:
+    enqueued: list[str] = []
+    ran: dict[str, bool] = {"value": False}
+
+    class _RefreshActor:
+        @staticmethod
+        def message(conversation_id: str) -> str:
+            enqueued.append(conversation_id)
+            return conversation_id
+
+    class _FakeGroup:
+        def __init__(self, messages: list[str]) -> None:
+            self.messages = messages
+
+        def run(self) -> None:
+            ran["value"] = True
+
+    monkeypatch.setattr(
+        tasks,
+        "collect_conversations_needing_signposts",
+        lambda: ["conv-a", "conv-b"],
+    )
+    monkeypatch.setattr(tasks, "group", lambda messages: _FakeGroup(messages))
+    monkeypatch.setattr(tasks, "task_refresh_conversation_signposts", _RefreshActor())
+
+    tasks.task_catch_up_pending_signposts.fn()
+
+    assert enqueued == ["conv-a", "conv-b"]
+    assert ran["value"] is True

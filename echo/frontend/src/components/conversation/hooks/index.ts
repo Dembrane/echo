@@ -1,3 +1,4 @@
+import { readItem } from "@directus/sdk";
 import type { Query, QueryFields } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import * as Sentry from "@sentry/react";
@@ -697,13 +698,76 @@ export const useConversationById = ({
 	useQueryOpts?: Partial<UseQueryOptions<Conversation>>;
 }) => {
 	return useQuery({
-		queryFn: async () => {
-			void query; // reserved for future fields param on BFF
-			return bff.get<Conversation>(`/conversations/${conversationId}`, {
-				include_chunks: loadConversationChunks,
-				include_tags: true,
-			});
-		},
+		// NOTE: PR #497 (signposts) needs the `signposts` relation in the response,
+		// which the v2 BFF /conversations/{id} endpoint does not yet expose. Falling
+		// back to a direct Directus query here to preserve the feature. Follow-up:
+		// add `include_signposts` to the BFF endpoint and switch back. See merge PR.
+		queryFn: () =>
+			directus.request<Conversation>(
+				readItem("conversation", conversationId, {
+					// @ts-expect-error TODO
+					fields: [
+						...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
+						{
+							linking_conversations: [
+								"id",
+								{
+									source_conversation_id: ["id", "participant_name"],
+								},
+								"link_type",
+							],
+						},
+						{
+							linked_conversations: [
+								"id",
+								{
+									target_conversation_id: ["id", "participant_name"],
+								},
+								"link_type",
+							],
+						},
+						{
+							tags: [
+								{
+									project_tag_id: ["id", "text"],
+								},
+							],
+						},
+						{
+							signposts: [
+								"id",
+								"conversation_id",
+								"category",
+								"title",
+								"summary",
+								"evidence_quote",
+								"status",
+								"confidence",
+								"created_at",
+								"updated_at",
+								"evidence_chunk_id",
+							],
+						},
+						...(loadConversationChunks
+							? [
+									{
+										chunks: [
+											"id",
+											"conversation_id",
+											"transcript",
+											"source",
+											"path",
+											"timestamp",
+											"created_at",
+											"error",
+										],
+									},
+								]
+							: []),
+					],
+					...query,
+				}),
+			),
 		queryKey: ["conversations", conversationId, loadConversationChunks, query],
 		...useQueryOpts,
 	});

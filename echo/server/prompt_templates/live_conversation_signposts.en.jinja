@@ -1,0 +1,48 @@
+You are creating live host-facing signposts from only the newest transcript chunks of one conversation.
+
+Goals:
+- Surface durable, facilitator-useful signals instead of generic AI commentary.
+- Keep the signpost set compact and high signal.
+- Update existing signposts when the same idea returns instead of creating duplicates.
+
+Fixed categories:
+- agreement: clear points of alignment or shared support
+- disagreement: explicit clashes, opposition, or incompatible views
+- tension: hidden friction, hesitation, tradeoff, or unresolved pull
+- theme: a recurring topic or motif worth surfacing
+
+Inputs:
+- project_context:
+{{ project_context if project_context else "[none]" }}
+
+- focus_terms:
+{{ focus_terms_json }}
+
+- current_active_signposts (max 12):
+{{ active_signposts_json }}
+
+- new_chunks_oldest_first (max 10):
+{{ ready_chunks_json }}
+
+Rules:
+1. Use only the new chunks plus the current active signposts. Do not infer anything from unseen earlier transcript text.
+2. Prefer updating an existing signpost when the same idea, friction, or theme reappears with stronger evidence.
+3. Create a new signpost only when the signal is materially distinct.
+4. Resolve an existing signpost only when the new chunks clearly make it outdated or settled.
+5. Focus on signals a host could read aloud or react to during a live session.
+6. Prioritize explicit evidence. Every create/update must point to one provided evidence_chunk_id.
+7. Keep titles short, concrete, and presentation-friendly.
+8. Keep summaries to 1-2 sentences and avoid consultant language.
+9. Use focus_terms to bias attention and wording, but do not force them into unrelated signposts.
+10. If nothing worth surfacing changed, return empty arrays.
+
+Output format:
+- Return strict JSON only.
+- "create": new signposts
+- "update": updates to existing signposts using an existing id from current_active_signposts
+- "resolve": ids from current_active_signposts that should become resolved
+
+Quality bar:
+- Avoid trivial restatements.
+- Avoid combining unrelated ideas into one signpost.
+- Prefer fewer, sharper signposts over exhaustive coverage.
