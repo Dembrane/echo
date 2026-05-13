@@ -1,6 +1,28 @@
 const { defineConfig } = require("cypress");
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const normalizeEnvVersion = (value) =>
+	String(value || "")
+		.trim()
+		.toUpperCase()
+		.replace(/[^A-Z0-9]+/g, "_");
+
+const resolveAuthFromProcess = (version) => {
+	const normalizedVersion = normalizeEnvVersion(version);
+	const email =
+		process.env[`CYPRESS_${normalizedVersion}_AUTH_EMAIL`] ||
+		process.env.CYPRESS_AUTH_EMAIL;
+	const password =
+		process.env[`CYPRESS_${normalizedVersion}_AUTH_PASSWORD`] ||
+		process.env.CYPRESS_AUTH_PASSWORD;
+
+	if (!email || !password) {
+		return undefined;
+	}
+
+	return { email, password };
+};
 
 module.exports = defineConfig({
 	e2e: {
@@ -130,12 +152,14 @@ module.exports = defineConfig({
 
 			// Set baseUrl to the dashboardUrl by default
 			config.baseUrl = envConfig.dashboardUrl;
+			const auth = resolveAuthFromProcess(version);
 
 			// Merge the specific environment config to the top level of config.env
 			// So in tests we can do Cypress.env('auth') or Cypress.env('portalUrl') directly
 			config.env = {
 				...config.env,
 				...envConfig,
+				...(auth ? { auth } : {}),
 			};
 
 			return config;
@@ -143,12 +167,12 @@ module.exports = defineConfig({
 		specPattern: "e2e/suites/**/*.cy.{js,jsx,ts,tsx}",
 		supportFile: "support/e2e.js",
 		viewportHeight: process.env.CYPRESS_viewportHeight
-			? Number.parseInt(process.env.CYPRESS_viewportHeight)
+			? Number.parseInt(process.env.CYPRESS_viewportHeight, 10)
 			: 720,
 		// viewportWidth and viewportHeight are set via CLI --config flag
 		// Default fallbacks if not provided via CLI
 		viewportWidth: process.env.CYPRESS_viewportWidth
-			? Number.parseInt(process.env.CYPRESS_viewportWidth)
+			? Number.parseInt(process.env.CYPRESS_viewportWidth, 10)
 			: 1280,
 	},
 	experimentalWebKitSupport: true,

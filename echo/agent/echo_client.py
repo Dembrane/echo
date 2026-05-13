@@ -38,6 +38,7 @@ class AgentProjectConversation(TypedDict, total=False):
     summary: Optional[str]
     started_at: Optional[str]
     last_chunk_at: Optional[str]
+    matches: list[dict[str, Optional[str]]]
 
 
 class AgentProjectConversationsResponse(TypedDict, total=False):

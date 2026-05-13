@@ -11,9 +11,9 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
 import { ConversationChunkAudioTranscript } from "@/components/conversation/ConversationChunkAudioTranscript";
 import { CopyConversationTranscriptActionIcon } from "@/components/conversation/CopyConversationTranscript";
@@ -27,6 +27,7 @@ import { testId } from "@/lib/testUtils";
 
 export const ProjectConversationTranscript = () => {
 	const { conversationId } = useParams();
+	const location = useLocation();
 	const conversationQuery = useConversationById({
 		conversationId: conversationId ?? "",
 		loadConversationChunks: false,
@@ -58,15 +59,59 @@ export const ProjectConversationTranscript = () => {
 	);
 
 	const allChunks = (chunksData?.pages ?? []).flatMap((page) => page.chunks);
+	const targetChunkId = location.hash.startsWith("#chunk-")
+		? decodeURIComponent(location.hash.slice("#chunk-".length))
+		: null;
 
 	const isAnonymized = conversationQuery.data?.is_anonymized ?? false;
 
 	const hasValidTranscripts = allChunks.some(
 		(chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
 	);
+	const [highlightedChunkId, setHighlightedChunkId] = useState<string | null>(
+		null,
+	);
 
 	const isEmptyConversation =
 		!hasValidTranscripts && conversationQuery.data?.is_finished;
+
+	useEffect(() => {
+		if (!targetChunkId) return;
+		const hasTargetChunk = allChunks.some(
+			(chunk) => chunk.id === targetChunkId,
+		);
+		if (hasTargetChunk || !hasNextPage || isFetchingNextPage) return;
+		void fetchNextPage();
+	}, [
+		allChunks,
+		fetchNextPage,
+		hasNextPage,
+		isFetchingNextPage,
+		targetChunkId,
+	]);
+
+	useEffect(() => {
+		if (!targetChunkId) return;
+		const targetChunk = allChunks.find((chunk) => chunk.id === targetChunkId);
+		if (!targetChunk) return;
+		const targetElement = document.getElementById(`chunk-${targetChunk.id}`);
+		if (!targetElement) return;
+		targetElement.scrollIntoView({
+			behavior: "smooth",
+			block: "center",
+		});
+		setHighlightedChunkId(targetChunkId);
+	}, [allChunks, targetChunkId]);
+
+	useEffect(() => {
+		if (!highlightedChunkId) return;
+		const timeoutId = window.setTimeout(() => {
+			setHighlightedChunkId(null);
+		}, 5000);
+		return () => {
+			window.clearTimeout(timeoutId);
+		};
+	}, [highlightedChunkId]);
 
 	if (status === "pending") {
 		return (
@@ -148,6 +193,7 @@ export const ProjectConversationTranscript = () => {
 							return (
 								<div
 									key={chunk.id}
+									id={`chunk-${chunk.id}`}
 									ref={isLastChunk ? loadMoreRef : undefined}
 									{...testId(`transcript-chunk-${index}`)}
 								>
@@ -160,6 +206,7 @@ export const ProjectConversationTranscript = () => {
 											timestamp: chunk.timestamp ?? "",
 											transcript: chunk.transcript ?? "",
 										}}
+										highlighted={highlightedChunkId === chunk.id}
 										showAudioPlayer={isAnonymized ? false : showAudioPlayer}
 									/>
 								</div>

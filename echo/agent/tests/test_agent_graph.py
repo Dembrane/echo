@@ -1,7 +1,8 @@
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
-from agent import POST_NUDGE_CONTINUATION_SYSTEM_PROMPT, create_agent_graph
+import agent
+from agent import POST_NUDGE_CONTINUATION_SYSTEM_PROMPT, _build_llm, create_agent_graph
 
 
 class FakeLLM:
@@ -70,6 +71,176 @@ def _count_corrective_retry_invocations(invocations: list[list[object]]) -> int:
         ):
             count += 1
     return count
+
+
+def test_build_llm_prefers_explicit_vertex_credentials(monkeypatch, tmp_path):
+    class _FakeChatAnthropicVertex:
+        def __init__(self, **kwargs) -> None:
+            self.kwargs = kwargs
+
+    class _FakeCredentialsFactory:
+        calls: list[dict[str, object]] = []
+
+        @classmethod
+        def from_service_account_info(cls, value, scopes=None):
+            cls.calls.append(
+                {
+                    "scopes": scopes,
+                    "value": value,
+                }
+            )
+            return {"credentials": value, "scopes": scopes}
+
+    class _FakeVertexModelGardenModule:
+        ChatAnthropicVertex = _FakeChatAnthropicVertex
+
+    class _FakeServiceAccountModule:
+        Credentials = _FakeCredentialsFactory
+
+    def _fake_import(name: str):
+        if name == "langchain_google_vertexai.model_garden":
+            return _FakeVertexModelGardenModule
+        if name == "google.oauth2.service_account":
+            return _FakeServiceAccountModule
+        raise ModuleNotFoundError(name)
+
+    monkeypatch.chdir(tmp_path)
+    agent.get_settings.cache_clear()
+    monkeypatch.setenv("LLM_MODEL", "claude-opus-4-6")
+    monkeypatch.setenv("VERTEX_PROJECT", "vertex-project")
+    monkeypatch.setenv("VERTEX_LOCATION", "europe-west4")
+    monkeypatch.setenv("VERTEX_CREDENTIALS", '{"type":"service_account","project_id":"explicit"}')
+    monkeypatch.setenv("GCP_SA_JSON", '{"type":"service_account","project_id":"fallback"}')
+    monkeypatch.setattr(agent.importlib, "import_module", _fake_import)
+
+    llm = _build_llm()
+
+    assert isinstance(llm, _FakeChatAnthropicVertex)
+    assert llm.kwargs["model_name"] == "claude-opus-4-6"
+    assert llm.kwargs["project"] == "vertex-project"
+    assert llm.kwargs["location"] == "europe-west4"
+    assert llm.kwargs["credentials"] == {
+        "credentials": {
+            "type": "service_account",
+            "project_id": "explicit",
+        },
+        "scopes": ["https://www.googleapis.com/auth/cloud-platform"],
+    }
+    assert _FakeCredentialsFactory.calls == [
+        {
+            "scopes": ["https://www.googleapis.com/auth/cloud-platform"],
+            "value": {
+                "type": "service_account",
+                "project_id": "explicit",
+            },
+        }
+    ]
+    agent.get_settings.cache_clear()
+
+
+def test_build_llm_uses_adc_when_no_explicit_credentials(monkeypatch, tmp_path):
+    class _FakeChatAnthropicVertex:
+        def __init__(self, **kwargs) -> None:
+            self.kwargs = kwargs
+
+    class _FakeVertexModelGardenModule:
+        ChatAnthropicVertex = _FakeChatAnthropicVertex
+
+    class _FakeServiceAccountModule:
+        class Credentials:
+            @classmethod
+            def from_service_account_info(cls, value):
+                raise AssertionError(f"Unexpected explicit credentials: {value}")
+
+    def _fake_import(name: str):
+        if name == "langchain_google_vertexai.model_garden":
+            return _FakeVertexModelGardenModule
+        if name == "google.oauth2.service_account":
+            return _FakeServiceAccountModule
+        raise ModuleNotFoundError(name)
+
+    monkeypatch.chdir(tmp_path)
+    agent.get_settings.cache_clear()
+    monkeypatch.delenv("VERTEX_CREDENTIALS", raising=False)
+    monkeypatch.setenv("GCP_SA_JSON", "")
+    monkeypatch.setenv("LLM_MODEL", "claude-opus-4-6")
+    monkeypatch.setenv("VERTEX_PROJECT", "vertex-project")
+    monkeypatch.setenv("VERTEX_LOCATION", "us-central1")
+    monkeypatch.setattr(agent.importlib, "import_module", _fake_import)
+
+    llm = _build_llm()
+
+    assert isinstance(llm, _FakeChatAnthropicVertex)
+    assert llm.kwargs["credentials"] is None
+    assert llm.kwargs["model_name"] == "claude-opus-4-6"
+    assert llm.kwargs["project"] == "vertex-project"
+    assert llm.kwargs["location"] == "us-central1"
+    agent.get_settings.cache_clear()
+
+
+def test_build_llm_falls_back_to_service_account_project_id(monkeypatch, tmp_path):
+    class _FakeChatAnthropicVertex:
+        def __init__(self, **kwargs) -> None:
+            self.kwargs = kwargs
+
+    class _FakeVertexModelGardenModule:
+        ChatAnthropicVertex = _FakeChatAnthropicVertex
+
+    class _FakeCredentialsFactory:
+        calls: list[dict[str, str]] = []
+
+        @classmethod
+        def from_service_account_info(cls, value, scopes=None):
+            cls.calls.append(
+                {
+                    "scopes": scopes,
+                    "value": value,
+                }
+            )
+            return {"credentials": value, "scopes": scopes}
+
+    class _FakeServiceAccountModule:
+        Credentials = _FakeCredentialsFactory
+
+    def _fake_import(name: str):
+        if name == "langchain_google_vertexai.model_garden":
+            return _FakeVertexModelGardenModule
+        if name == "google.oauth2.service_account":
+            return _FakeServiceAccountModule
+        raise ModuleNotFoundError(name)
+
+    monkeypatch.chdir(tmp_path)
+    agent.get_settings.cache_clear()
+    monkeypatch.setenv("VERTEX_PROJECT", "")
+    monkeypatch.delenv("VERTEX_CREDENTIALS", raising=False)
+    monkeypatch.setenv("LLM_MODEL", "claude-opus-4-6")
+    monkeypatch.setenv("VERTEX_LOCATION", "us-central1")
+    monkeypatch.setenv("GCP_SA_JSON", '{"type":"service_account","project_id":"sa-project"}')
+    monkeypatch.setattr(agent.importlib, "import_module", _fake_import)
+
+    llm = _build_llm()
+
+    assert isinstance(llm, _FakeChatAnthropicVertex)
+    assert llm.kwargs["model_name"] == "claude-opus-4-6"
+    assert llm.kwargs["project"] == "sa-project"
+    assert llm.kwargs["location"] == "us-central1"
+    assert llm.kwargs["credentials"] == {
+        "credentials": {
+            "type": "service_account",
+            "project_id": "sa-project",
+        },
+        "scopes": ["https://www.googleapis.com/auth/cloud-platform"],
+    }
+    assert _FakeCredentialsFactory.calls == [
+        {
+            "scopes": ["https://www.googleapis.com/auth/cloud-platform"],
+            "value": {
+                "type": "service_account",
+                "project_id": "sa-project",
+            },
+        }
+    ]
+    agent.get_settings.cache_clear()
 
 
 @pytest.mark.asyncio

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import type { AgenticRunEvent } from "@/lib/api";
 
 type AnyObject = Record<string, unknown>;
@@ -8,8 +9,9 @@ export type ToolActivity = {
 	id: string;
 	toolName: string;
 	status: ToolActivityStatus;
+	sortSeq: number;
+	timestamp: string;
 	headline: string;
-	summaryLines: string[];
 	rawInput: string | null;
 	rawOutput: string | null;
 	rawError: string | null;
@@ -26,22 +28,10 @@ const asString = (value: unknown): string | null => {
 	return typeof value === "string" && value.trim() ? value.trim() : null;
 };
 
-const asNumber = (value: unknown): number | null => {
-	return typeof value === "number" && Number.isFinite(value) ? value : null;
-};
-
 const firstString = (...values: unknown[]): string | null => {
 	for (const value of values) {
 		const normalized = asString(value);
 		if (normalized) return normalized;
-	}
-	return null;
-};
-
-const firstNumber = (...values: unknown[]): number | null => {
-	for (const value of values) {
-		const normalized = asNumber(value);
-		if (normalized !== null) return normalized;
 	}
 	return null;
 };
@@ -87,131 +77,37 @@ const humanizeToolName = (toolName: string) => {
 		.replace(/[_-]+/g, " ")
 		.trim();
 
-	if (!spaced) return "Tool";
+	if (!spaced) return t`Tool`;
+	if (spaced.toLowerCase() === "tool") return t`Tool`;
 	return `${spaced[0]?.toUpperCase() ?? ""}${spaced.slice(1)}`;
-};
-
-const normalizeErrorRepr = (repr: string) => {
-	const trimmed = repr.trim();
-	const match = trimmed.match(/^[A-Za-z_]\w*\((.*)\)$/);
-	if (!match) return trimmed;
-	return match[1].replace(/^['"]|['"]$/g, "");
 };
 
 type ToolContext = {
 	query: string | null;
-	limit: number | null;
-	count: number | null;
-	conversationId: string | null;
-	participantName: string | null;
-	projectId: string | null;
-	guardrailMessage: string | null;
-	errorMessage: string | null;
-	transcriptCharCount: number | null;
 };
 
-const buildHeadline = (
-	toolName: string,
-	status: ToolActivityStatus,
-	context: ToolContext,
-) => {
+const buildHeadline = (toolName: string, context: ToolContext) => {
 	switch (toolName) {
 		case "get_project_scope":
-			if (status === "running") return "Getting project information...";
-			if (status === "completed") return "Project information ready";
-			return "Could not get project information";
+			return t`Load project context`;
 		case "listProjectConversations":
-			if (status === "running") return "Listing project conversations...";
-			if (status === "completed" && context.count !== null) {
-				return `Listed ${context.count} conversations`;
-			}
-			if (status === "completed") return "Project conversations listed";
-			return "Could not list project conversations";
+			return t`List project conversations`;
 		case "findConvosByKeywords":
-			if (status === "running" && context.query) {
-				return `Searching conversations for "${context.query}"...`;
-			}
-			if (status === "running") return "Searching conversations by keywords...";
-			if (status === "completed" && context.count === 0 && context.query) {
-				return `No matching conversations for "${context.query}"`;
-			}
-			if (status === "completed" && context.count !== null) {
-				return `Found ${context.count} matching conversations`;
-			}
-			if (status === "completed") return "Conversation search complete";
-			if (context.query) return `Search failed for "${context.query}"`;
-			return "Conversation search failed";
+			return context.query
+				? t`Search conversations for "${context.query}"`
+				: t`Search conversations`;
 		case "listConvoSummary":
-			if (status === "running") return "Getting conversation summary...";
-			if (status === "completed") return "Conversation summary ready";
-			return "Could not get conversation summary";
+			return t`Load conversation summary`;
 		case "listConvoFullTranscript":
-			if (status === "running") return "Loading full transcript...";
-			if (status === "completed") return "Transcript ready";
-			return "Could not load transcript";
+			return t`Load full transcript`;
 		case "grepConvoSnippets":
-			if (status === "running" && context.query) {
-				return `Searching transcript for "${context.query}"...`;
-			}
-			if (status === "running") return "Searching transcript snippets...";
-			if (status === "completed" && context.count === 0) {
-				return "No matching snippets found";
-			}
-			if (status === "completed" && context.count !== null) {
-				return `Found ${context.count} matching snippets`;
-			}
-			if (status === "completed") return "Transcript snippet search complete";
-			if (context.query) return `Snippet search failed for "${context.query}"`;
-			return "Snippet search failed";
+			return context.query
+				? t`Search transcript for "${context.query}"`
+				: t`Search transcript`;
 		default: {
-			const humanized = humanizeToolName(toolName);
-			if (status === "running") return `Running ${humanized}...`;
-			if (status === "completed") return `Finished ${humanized}`;
-			return `${humanized} failed`;
+			return humanizeToolName(toolName);
 		}
 	}
-};
-
-const buildSummaryLines = (
-	toolName: string,
-	status: ToolActivityStatus,
-	context: ToolContext,
-) => {
-	const lines: string[] = [];
-
-	if (context.query) lines.push(`Query: ${context.query}`);
-	if (context.limit !== null) lines.push(`Limit: ${context.limit}`);
-	if (context.count !== null) lines.push(`Count: ${context.count}`);
-	if (context.conversationId) lines.push(`Conversation: ${context.conversationId}`);
-	if (context.participantName) lines.push(`Participant: ${context.participantName}`);
-	if (context.projectId) lines.push(`Project: ${context.projectId}`);
-	if (context.transcriptCharCount !== null && status === "completed") {
-		lines.push(`Transcript length: ${context.transcriptCharCount} chars`);
-	}
-	if (context.guardrailMessage) lines.push(context.guardrailMessage);
-	if (context.errorMessage) lines.push(`Error: ${context.errorMessage}`);
-
-	// Keep summaries concise for tools with noisy payloads.
-	if (toolName === "listProjectConversations" && status === "completed") {
-		return lines.filter((line) => line.startsWith("Count:") || line.startsWith("Project:"));
-	}
-
-	if (toolName === "get_project_scope" && status === "completed") {
-		return lines.filter((line) => line.startsWith("Project:"));
-	}
-
-	return lines;
-};
-
-const dedupeLines = (lines: string[]) => {
-	const seen = new Set<string>();
-	const deduped: string[] = [];
-	for (const line of lines) {
-		if (!line || seen.has(line)) continue;
-		seen.add(line);
-		deduped.push(line);
-	}
-	return deduped;
 };
 
 const toStatus = (eventType: string): ToolActivityStatus | null => {
@@ -221,11 +117,14 @@ const toStatus = (eventType: string): ToolActivityStatus | null => {
 	return null;
 };
 
-export const extractTopLevelToolActivity = (
-	event: AgenticRunEvent,
-): ToolActivity[] => {
+type ParsedToolEvent = Omit<ToolActivity, "id"> & {
+	callId: string | null;
+	seq: number;
+};
+
+const parseToolEvent = (event: AgenticRunEvent): ParsedToolEvent | null => {
 	const status = toStatus(event.event_type);
-	if (!status) return [];
+	if (!status) return null;
 
 	const payload = asObject(event.payload);
 	const data = asObject(payload?.data);
@@ -247,59 +146,123 @@ export const extractTopLevelToolActivity = (
 			data?.name,
 			outputKwargs?.name,
 		) ?? "tool";
-
-	const query = firstString(input?.keywords, input?.query, outputContent?.query);
-	const limit = firstNumber(input?.limit);
-	const count =
-		firstNumber(outputContent?.count) ??
-		(Array.isArray(outputContent?.conversations)
-			? outputContent.conversations.length
-			: null) ??
-		(Array.isArray(outputContent?.matches) ? outputContent.matches.length : null);
-	const conversationId = firstString(
-		input?.conversation_id,
-		outputContent?.conversation_id,
+	const callId = firstString(
+		payload?.run_id,
+		payload?.runId,
+		payload?.tool_call_id,
+		payload?.toolCallId,
+		payload?.call_id,
+		payload?.callId,
+		data?.run_id,
+		data?.runId,
+		data?.tool_call_id,
+		data?.toolCallId,
+		data?.call_id,
+		data?.callId,
+		outputKwargs?.run_id,
+		outputKwargs?.runId,
+		outputKwargs?.tool_call_id,
+		outputKwargs?.toolCallId,
+		outputKwargs?.call_id,
+		outputKwargs?.callId,
+		payload?.id,
+		data?.id,
 	);
-	const participantName = firstString(outputContent?.participant_name);
-	const projectId = firstString(outputContent?.project_id);
-	const guardrailMessage = firstString(guardrail?.message);
-	const transcript = firstString(outputContent?.transcript);
-	const transcriptCharCount = transcript ? transcript.length : null;
-	const errorMessage =
-		firstString(error?.message, data?.message, payload?.message) ??
-		(() => {
-			const repr = firstString(error?.repr);
-			return repr ? normalizeErrorRepr(repr) : null;
-		})();
 
+	const query = firstString(
+		input?.keywords,
+		input?.query,
+		outputContent?.query,
+	);
 	const context: ToolContext = {
-		conversationId,
-		count,
-		errorMessage,
-		guardrailMessage,
-		limit,
-		participantName,
-		projectId,
 		query,
-		transcriptCharCount,
 	};
 
-	const headline = buildHeadline(toolName, status, context);
-	const summaryLines = dedupeLines(buildSummaryLines(toolName, status, context));
+	const headline = buildHeadline(toolName, context);
 	const rawInput = formatRaw(input ?? data?.input ?? payload?.input);
 	const rawOutput = formatRaw(outputContent ?? output ?? data?.output);
-	const rawError = formatRaw(error ?? data?.error);
+	const rawError = formatRaw(error ?? data?.error ?? guardrail);
 
-	return [
-		{
-			headline,
-			id: `tool-event-${event.seq}`,
-			rawError,
-			rawInput,
-			rawOutput,
-			status,
-			summaryLines,
-			toolName,
-		},
-	];
+	return {
+		callId,
+		headline,
+		rawError,
+		rawInput,
+		rawOutput,
+		seq: event.seq,
+		sortSeq: event.seq,
+		status,
+		timestamp: event.timestamp,
+		toolName,
+	};
+};
+
+const getToolPairingKey = (parsed: ParsedToolEvent) =>
+	parsed.callId ? `call:${parsed.callId}` : `tool:${parsed.toolName}`;
+
+const getToolActivityId = (parsed: ParsedToolEvent) =>
+	parsed.callId
+		? `tool-${parsed.toolName}-${parsed.callId}`
+		: `tool-${parsed.toolName}-${parsed.seq}`;
+
+const takeLatestOpenIndex = (
+	openToolIndexes: Map<string, number[]>,
+	pairingKey: string,
+) => {
+	const openIndexes = openToolIndexes.get(pairingKey);
+	if (!openIndexes || openIndexes.length === 0) return null;
+
+	const index = openIndexes.pop() ?? null;
+	if (openIndexes.length === 0) {
+		openToolIndexes.delete(pairingKey);
+	}
+	return index;
+};
+
+export const extractTopLevelToolActivity = (
+	events: AgenticRunEvent[],
+): ToolActivity[] => {
+	const activities: ToolActivity[] = [];
+	const openToolIndexes = new Map<string, number[]>();
+
+	for (const event of events) {
+		const parsed = parseToolEvent(event);
+		if (!parsed) continue;
+		const pairingKey = getToolPairingKey(parsed);
+
+		if (parsed.status === "running") {
+			const nextIndex = activities.length;
+			activities.push({
+				...parsed,
+				id: getToolActivityId(parsed),
+			});
+			openToolIndexes.set(pairingKey, [
+				...(openToolIndexes.get(pairingKey) ?? []),
+				nextIndex,
+			]);
+			continue;
+		}
+
+		const openIndex = takeLatestOpenIndex(openToolIndexes, pairingKey);
+		if (openIndex === null) {
+			activities.push({
+				...parsed,
+				id: getToolActivityId(parsed),
+			});
+			continue;
+		}
+
+		const existing = activities[openIndex];
+		activities[openIndex] = {
+			...existing,
+			headline: parsed.headline || existing.headline,
+			rawError: parsed.rawError ?? existing.rawError,
+			rawInput: existing.rawInput ?? parsed.rawInput,
+			rawOutput: parsed.rawOutput ?? existing.rawOutput,
+			status: parsed.status,
+			timestamp: parsed.timestamp,
+		};
+	}
+
+	return activities;
 };
