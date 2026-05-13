@@ -1,186 +1,89 @@
 # AGENTS.md
 
-This file provides context for AI coding assistants working on the ECHO codebase.
+Context for AI coding assistants on the ECHO codebase. Only patterns and rules that aren't obvious from one read of the relevant file live here.
 
-## Project Overview
+ECHO is an event-driven platform for collective sense-making — workshops, consultations, civic forums collect and analyze conversations.
 
-ECHO is an event-driven platform for collective sense-making. Users run discrete engagement sessions (workshops, consultations, civic forums) to collect and analyze conversations.
+## Maintenance Protocol
 
-## Repository Structure
+- Read this file before making changes. Fix stale links/paths immediately when you spot them
+- Rely on `git log` / `git blame` for timing — no manual timestamps in this file
+- Auto-correct typos and formatting without asking; escalate only on new patterns or contradictions
+- Keep instructions aligned with repo reality. If something drifts, repair it
+- Skip documenting secrets, temporary hacks, or anything that would rot within a sprint
 
-```
-echo/
-├── brand/             # Brand guidelines and assets
-│   ├── STYLE_GUIDE.md # Comprehensive brand/UI guidelines
-│   ├── colors.json    # Machine-readable color tokens
-│   ├── README.md      # Quick reference + source links
-│   └── logos/         # Logo files (PNG, SVG when available)
-├── frontend/          # React + Vite frontend
-│   ├── src/
-│   │   ├── components/
-│   │   ├── routes/
-│   │   ├── locales/   # Translation .po files
-│   │   └── config.ts  # Feature flags
-├── server/            # Python FastAPI backend
-│   └── dembrane/
-│       ├── api/       # API endpoints
-│       ├── service/   # Business logic
-│       └── settings.py # Configuration & feature flags
-└── docs/              # Documentation
-```
+When to propose an addition — primary signal is **what the user just told you**:
 
-## Key Conventions
+- User taught a convention ("we use X here", "never do Y", "the reason for Z is…") → "Add this to AGENTS.md?"
+- User corrected your approach with a rule that would help another teammate → "Capture this?"
+- User confirmed a non-obvious decision you were unsure about → "Worth documenting?"
+- User flagged a pitfall, hidden constraint, or past incident → "Add to warnings?"
 
-### Brand & UI Copy (IMPORTANT)
+Secondary signals (look for these on top of user input, not instead of it):
 
-Always follow [brand/STYLE_GUIDE.md](brand/STYLE_GUIDE.md) when writing user-facing text or making design decisions:
+- Same pattern recurring across files you already had to read for the task
+- A bug fix where the root cause would surprise a reader
 
-- Shortest possible, highest clarity
-- No jargon, no corporate speak
-- Write like explaining to a colleague
-- Never say "successfully" (just state what happened)
-- Never use bold text for emphasis (use Royal Blue or italics)
-- "dembrane" always lowercase, even at sentence start
-- Say "language model" not "AI" when describing platform features
+What **not** to add: anything a smart model can derive in ≤2 turns from `ls`, `cat package.json`, `git log`, or a single file read. Repo structure, file inventories, TODO lists, build commands, dep versions, change hotspots — leave those to the tooling.
 
-Examples:
-- "Context limit reached" → "Selection too large"
-- "Successfully saved" → "Saved"
-- "Please wait while we process" → "Processing..."
+## Stakeholder Q&A docs
 
-Color tokens available in `brand/colors.json` for programmatic use.
+Docs like `*-QUESTIONS-FOR-<NAME>.md` follow a tag-in-place convention so pending vs answered stays scannable:
 
-### Translations
+- `🔴 blocking` — blocks other work
+- `🟡 non-blocking` — can proceed without
+- `✅ answered <date>` — resolved
 
-See [docs/frontend_translations.md](docs/frontend_translations.md) for the full workflow.
+New questions go to the top. Answered questions **stay in place** — don't move them to an "Answered" section at the bottom. Update the heading tag to `✅ answered <date>` and add an `**Answer:**` line near the top of the block.
 
-Quick reference:
-```bash
-cd frontend
-pnpm messages:extract    # Extract new strings to .po files
-# Edit .po files in src/locales/
-pnpm messages:compile    # Compile for production
-```
+## Brand & UI Copy
 
-Supported languages: en-US, nl-NL, de-DE, fr-FR, es-ES, it-IT
+Follow `brand/STYLE_GUIDE.md` for all user-facing text.
 
-### Feature Flags
+- Shortest possible, highest clarity. No jargon.
+- Never say "AI" — use "language model" or just describe the action ("Generating your report…" not "Generating with AI…")
+- Never say "successfully" — state what happened ("Saved", not "Successfully saved")
+- "dembrane" is always lowercase, even at sentence start
+- Never use bold for emphasis — use Royal Blue (`#4169e1`) or italics
+- Say "participants/hosts", not "users"
+- Dutch translations use informal "je/jij"; keep English terms when they sound better (Dashboard, Upload, Chat)
+- Italian translations use informal "tu", target A2 reading level, sentence case for titles, active voice over passive — see `brand/STYLE_GUIDE.md` for the glossary
 
-**Frontend** (`frontend/src/config.ts`):
-```typescript
-export const ENABLE_FEATURE_NAME = import.meta.env.VITE_ENABLE_FEATURE_NAME === "1";
-```
+## UI Rules
 
-**Backend** (`server/dembrane/settings.py`):
-```python
-feature_name: bool = Field(
-    default=False,
-    alias="ENABLE_FEATURE_NAME",
-    validation_alias=AliasChoices("ENABLE_FEATURE_NAME", "FEATURE_FLAGS__ENABLE_FEATURE_NAME"),
-)
-```
+- Never stack multiple `Alert` components — pick one
+- Don't use `@mantine/charts`
+- Loading spinners: always pass `alwaysDembrane` on `DembraneLoadingSpinner` for whitelabel safety; never `animate-spin` on custom logos
+- Show emails only on hover, never in list rows by default
+- Conversations come from QR codes or audio uploads — never add "new conversation" buttons
+- Prefer text buttons over icon-only buttons for important actions
+- Destructive actions: `ConfirmModal` (`confirmColor="red"`), never `window.confirm`
+- Single-field prompts: `InputModal`, never `window.prompt`
+- Status messages: `toast.*` from `@/components/common/Toaster`, never `window.alert`
 
-Convention: Use `ENABLE_*` naming pattern for feature flags.
+## Translations
 
-### Environment Variables
+- Lingui — `<Trans>` component or `` t` `` template literal
+- Supported: en-US, nl-NL, de-DE, fr-FR, es-ES, it-IT
+- Workflow: `pnpm messages:extract` → edit `.po` files → `pnpm messages:compile`
 
-- Frontend env vars must be prefixed with `VITE_`
-- Backend reads from `server/.env`
-- See `frontend/.env.example` and `server/.env.example` for available options
+## Feature Flags
 
-## Common Tasks
+- Naming: `ENABLE_*` (backend), `VITE_ENABLE_*` (frontend)
+- Backend lives in `server/dembrane/settings.py` `FeatureFlagSettings`
+- Frontend lives in `frontend/src/config.ts`
+- Document in `.env.example` files
 
-### Adding a New Feature Flag
+## Branching & Deployment
 
-1. Add to `server/dembrane/settings.py` in `FeatureFlagSettings` class
-2. Add to `frontend/src/config.ts` if frontend needs it
-3. Update `.env.example` files to document the flag
+See [docs/branching_and_releases.md](docs/branching_and_releases.md) for the full guide.
 
-### Adding Translations
-
-1. Write copy following `brand/STYLE_GUIDE.md`
-2. Use `<Trans>` component or `t` template literal
-3. Run `pnpm messages:extract`
-4. Fill in translations in all `.po` files
-5. Run `pnpm messages:compile`
-
-### Running Locally
-
-```bash
-# Frontend
-cd frontend && pnpm i && pnpm dev
-
-# Backend API
-cd server && uv sync && uv run uvicorn dembrane.main:app --port 8000 --reload --loop asyncio
-
-# Agent service (required for agentic chat)
-cd ../agent && uv sync && uv run uvicorn main:app --host 0.0.0.0 --port 8001 --reload
-```
-
-For full background processing (transcription/audio and non-agentic jobs), also run:
-
-```bash
-cd server
-uv run dramatiq-gevent --watch ./dembrane --queues network --processes 2 --threads 1 dembrane.tasks
-uv run dramatiq --watch ./dembrane --queues cpu --processes 1 --threads 1 dembrane.tasks
-```
-
-Agentic chat execution is stream-first through `POST /api/agentic/runs/{run_id}/stream` and no longer enqueues an agentic Dramatiq actor.
-
-### Future Agent Tool Development
-
-- Add tool definitions in `agent/agent.py` (`@tool` functions in `create_agent_graph`).
-- Add shared API client calls for tools in `agent/echo_client.py`.
-- If a tool needs new data, expose it via `server/dembrane/api/agentic.py` and/or `server/dembrane/service/`.
-- Add tests in `agent/tests/test_agent_tools.py` and `server/tests/test_agentic_api.py`.
-
-### Inspect Local Agentic Conversations
-
-Use the local script from repo root:
-
-```bash
-bash echo/server/scripts/agentic/latest_runs.sh --chat-id <chat_uuid> --limit 3 --events 80
-```
-
-Common variants:
-
-```bash
-bash echo/server/scripts/agentic/latest_runs.sh --run-id <run_uuid> --events 120
-bash echo/server/scripts/agentic/latest_runs.sh --chat-id <chat_uuid> --limit 1 --events 200 --json
-```
-
-## Important Files
-
-| File | Purpose |
-|------|---------|
-| `brand/STYLE_GUIDE.md` | Brand guidelines, UI copy, colors, typography |
-| `brand/colors.json` | Machine-readable color tokens |
-| `frontend/src/config.ts` | Frontend feature flags |
-| `server/dembrane/settings.py` | Backend configuration |
-| `docs/frontend_translations.md` | Translation workflow |
-| `docs/branching_and_releases.md` | Branching strategy, release process, hotfixes |
-| `docs/database_migrations.md` | Directus data migration steps |
-
-## Code Style
-
-- Frontend: TypeScript, React, Mantine UI
-- Backend: Python 3.11+, FastAPI, Pydantic
-- Use existing patterns in the codebase as reference
-
-## Branching Strategy & Deployment
-
-See [docs/branching_and_releases.md](docs/branching_and_releases.md) for the full guide including hotfix process, release checklist, and ASCII diagrams.
-
-Quick reference:
-- **Feature flow**: branch off `main` → (optional) merge to `testing` → PR to `main` → auto-deploys to Echo Next
+- **Feature flow**: branch off `main` → (optional) `testing` → PR to `main` → auto-deploys to Echo Next
 - **Releases**: tagged from `main` every ~2 weeks → auto-deploys to production
-- **Hotfixes**: branch off release tag → fix → new release → cherry-pick into main
-- **Project management**: Linear (`ECHO-xxx` tickets, two-week cycles)
-- **GitOps**: `dembrane/echo-gitops` (Terraform + Helm + Argo CD)
+- **Hotfixes**: branch off release tag → fix → new release → cherry-pick back into `main`
+- Always check for Directus data migrations before deploying — see [docs/database_migrations.md](docs/database_migrations.md)
 
-## Architecture Notes
-
-### High-Level Stack
+## Architecture
 
 ```
 Frontend (React/Vite/Mantine)  →  Backend API (FastAPI)  →  Directus (headless CMS/DB)
@@ -193,105 +96,85 @@ Frontend (React/Vite/Mantine)  →  Backend API (FastAPI)  →  Directus (headle
                                Agent Service (LangGraph, port 8001)
 ```
 
-- **Directus** is the data layer — all collections (projects, conversations, reports, etc.) live there
-- **FastAPI** handles API routes, SSE streaming, and orchestration
-- **Dramatiq** handles background work: transcription, summarization, report generation
-- **Redis** is used for task brokering, pub/sub (SSE progress), and caching
+- **Directus** is the data layer — all collections (projects, conversations, reports) live there
 - **LiteLLM** routes all LLM calls with automatic failover between deployments
-
-### Report Generation Pipeline
-
-Report generation runs **synchronously** in Dramatiq network-queue workers (no asyncio — this was a deliberate choice after recurring event-loop corruption bugs):
-
-1. Fetch conversations for the project
-2. Fan-out summarization of individual conversations via `dramatiq.group()`
-3. Poll Redis for group completion
-4. Refetch conversations with summaries
-5. Fetch full transcripts via `gevent.pool.Pool` (concurrent I/O)
-6. Build prompt with token budget management
-7. Call LLM via `router_completion()` (sync litellm, uses `MULTI_MODAL_PRO`)
-
-Key files:
-- `server/dembrane/report_generation.py` — main pipeline
-- `server/dembrane/report_events.py` — Redis pub/sub for real-time SSE progress
-- `server/prompt_templates/system_report.{lang}.jinja` — per-language prompt templates (written IN the target language)
+- **Agent service** runs separately on port 8001; agentic chat streams via `POST /api/agentic/runs/{run_id}/stream` (no Dramatiq dispatch). The runtime is reconnect-driven and lease-based in Redis
 
 ### BFF Pattern
 
-Backend For Frontend endpoints under `/bff/` aggregate data the frontend needs in a single call. This is the preferred pattern over having the frontend make multiple Directus SDK calls directly.
+Backend-for-frontend routes under `/bff/` aggregate data the frontend needs into one call — prefer this over having the frontend make multiple Directus SDK calls. Example: `/bff/projects/home` bundles pinned projects, paginated list, search, and admin info.
 
-Example: `/bff/projects/home` bundles pinned projects, paginated project list, search results, and admin info into one response.
+### URL-Driven State
 
-### Transcription Pipeline
+Filters, search queries, and selected tabs live in URL search params (not React state) so state is shareable and survives refresh.
 
-Two-step process:
-1. **AssemblyAI** (`universal-3-pro`) for raw speech-to-text — supports en, es, pt, fr, de, it. Dutch ("nl") requires `universal-2` fallback.
-2. **Gemini correction** — fixes transcripts, normalizes hotwords, PII redaction, adds recording feedback
+### Real-Time Progress (SSE)
 
-Production uses webhook mode (`ASSEMBLYAI_WEBHOOK_URL`); polling is only a fallback path.
+Long-running progress streams via Server-Sent Events backed by Redis pub/sub (report generation, health). Don't poll for progress that has an SSE channel.
 
-### Agent Service
+### Dramatiq & Async Rules
 
-The `agent/` directory contains the agentic chat service (LangGraph-based). It runs as a separate FastAPI service on port 8001. Agentic chat streams via `POST /api/agentic/runs/{run_id}/stream` — no Dramatiq dispatch. See `agent/README.md`.
+- **No `asyncio` in Dramatiq actors** — recurring event-loop corruption bugs led to this. Use `gevent` pools + `dramatiq.group()` instead. Report generation is fully synchronous
+- `gevent.pool.Pool` is only safe on the `network` queue (uses `dramatiq-gevent`); the CPU queue runs standard dramatiq
+- Use `gevent.sleep()` (not `time.sleep()`) in network-queue actors
+- Restart workers after changing actor signatures — positional args are serialized
+- `SkipRetryOnUnrecoverableError` middleware skips retries for `TypeError`, `SyntaxError`, `AttributeError`, `ImportError`, `NotImplementedError`
+- To invoke async code from a Dramatiq actor: `run_async_in_new_loop` from `dembrane.async_helpers` — never `asyncio.run` (clashes with nested loops)
+- Wrap blocking I/O in async endpoints with `run_in_thread_pool` from `dembrane.async_helpers` (Directus, service-layer, S3, token counting). Don't wrap already-async calls (e.g. `rag.aquery`)
 
-## Directus File Cleanup
+### LLM Model Groups
 
-When removing a file reference from a user record (e.g. avatar, whitelabel logo), always delete the orphaned Directus file after clearing the reference. Pattern:
+Which group powers which feature is non-obvious — don't downgrade silently.
 
-1. Fetch the current file ID from the user record
-2. Update the user record to set the field to `None`
-3. Delete the file via `directus.delete_file(file_id)`
+- `MULTI_MODAL_PRO` (Gemini 2.5 Pro) — chat, report generation, transcript correction. **Do not downgrade chat to Flash**
+- `MULTI_MODAL_FAST` (Gemini 2.5 Flash) — suggestions, verification, stateless endpoints
+- `TEXT_FAST` (Azure GPT-4.1) — being deprecated, migrating to Gemini
+- Report prompt templates are written **in the target language**, not English with a "write in X" instruction
+- LLM router supports failover: define primary as `LLM__<GROUP>__*` and fallbacks as `LLM__<GROUP>_1__*`, `_2__*`, etc.
 
-Wrap all blocking Directus SDK calls in `run_in_thread_pool` (from `dembrane.async_helpers`) when used in async endpoints. See `server/dembrane/api/user_settings.py` for reference implementations in `remove_avatar` and `remove_whitelabel_logo`.
+### Transcription
 
-## Tech Debt / Known Issues
-- Some mypy errors in `llm_router.py` and `settings.py` (pre-existing, non-blocking)
+- AssemblyAI `universal-3-pro` supports en, es, pt, fr, de, it
+- Dutch (`nl`) **requires** `universal-2` fallback — `universal-3-pro` does not support it
+- Production uses webhook mode (`ASSEMBLYAI_WEBHOOK_URL`); polling is only a fallback
+- After raw transcription, a Gemini pass corrects, normalizes hotwords, redacts PII, and adds recording feedback
+- Load S3 audio via the shared file service (`_get_audio_file_object`) — signed URLs may expire mid-request
 
-## Deployment Checklist
+## Directus Rules (Critical)
 
-### Before Merging to Main
+**Never hand-write Directus sync/snapshot JSON files.** To create or modify collections:
 
-1. **Check for new env vars**: Look for new `Field()` definitions in `settings.py` and new exports in `config.ts`
-2. **Update deployment env vars** if needed (see checklist below)
-3. **Push Directus schema** if there were database changes (see `docs/database_migrations.md`)
-4. **Create PR** from feature branch to `main`
-5. After merge → auto-deploys to Echo Next
+1. Write an idempotent Python script that uses the Directus REST API (`POST /collections`, `POST /fields`, `POST /relations`) with the admin token. Check `collection_exists()` / `field_exists()` before creating
+2. Run it step-by-step to verify each change
+3. Pull the schema: `cd directus && bash sync.sh -u http://directus:8055 -e admin@dembrane.com -p admin pull`
+4. Commit the snapshot JSON
 
-### Environment Variables Checklist
+See `scripts/create_schema.py` for the established pattern.
 
-When deploying new features, check for:
+### Python DirectusClient
 
-**Backend** (`server/dembrane/settings.py`):
-- New `LLM__*` model configurations (for LLM router)
-- New `ENABLE_*` feature flags
-- Any new service credentials
+- `create_item` / `update_item` return `{"data": {...}}` — **MUST** unwrap with `["data"]`
+- `get_items` / `get_item` return data directly (no wrapper)
+- `get_items` requires `{"query": {filter, fields, sort, ...}}` wrapper
+- `search()` silently returns `{"error": "..."}` on failure — always validate the return is a list before iterating
 
-**Frontend** (`frontend/src/config.ts`, `frontend/.env.example`):
-- New `VITE_ENABLE_*` feature flags
+### TypeScript Directus SDK
 
-### LLM Router Configuration
+- Auto-unwraps everything — no `["data"]` needed
+- Type error on `<relationship>.count`? Add the type to `typesDirectus.d.ts` and use `count("<relationship>")` in fields
 
-The LLM router supports multiple deployments per model group with automatic failover:
+### File Cleanup
 
-```bash
-# Primary deployment
-LLM__TEXT_FAST__MODEL=azure/gpt-4.1
-LLM__TEXT_FAST__API_KEY=...
-LLM__TEXT_FAST__API_BASE=...
+When clearing a file reference from a user record (avatar, whitelabel logo), delete the orphaned Directus file afterwards:
 
-# Fallback deployments (suffix _1, _2, etc.)
-LLM__TEXT_FAST_1__MODEL=vertex_ai/gemini-2.5-flash
-LLM__TEXT_FAST_1__VERTEX_PROJECT=...
-LLM__TEXT_FAST_1__VERTEX_LOCATION=europe-west1
+1. Fetch current file ID from the user record
+2. Set the field to `None`
+3. `directus.delete_file(file_id)`
 
-# Additional fallbacks for multimodal models
-LLM__MULTI_MODAL_PRO_2__MODEL=vertex_ai/gemini-2.5-pro
-LLM__MULTI_MODAL_PRO_2__GCP_SA_JSON=${GCP_SA_JSON}
-LLM__MULTI_MODAL_PRO_2__VERTEX_LOCATION=europe-west1
+See `server/dembrane/api/user_settings.py` (`remove_avatar`, `remove_whitelabel_logo`) for the reference implementation.
 
-LLM__MULTI_MODAL_FAST_2__MODEL=vertex_ai/gemini-2.5-flash
-LLM__MULTI_MODAL_FAST_2__GCP_SA_JSON=${GCP_SA_JSON}
-LLM__MULTI_MODAL_FAST_2__VERTEX_LOCATION=europe-west1
-```
+## Project Management
 
-Model groups: `MULTI_MODAL_PRO` (Gemini 2.5 Pro — chat, reports, transcript correction), `MULTI_MODAL_FAST` (Gemini 2.5 Flash — suggestions, verification, lightweight tasks), `TEXT_FAST` (Azure GPT-4.1 — being deprecated)
+- Linear for issue tracking — tickets are `ECHO-xxx`
+- Two-week cycles
+- GitOps repo: `dembrane/echo-gitops` (separate repo, vendored under `echo-gitops/`)

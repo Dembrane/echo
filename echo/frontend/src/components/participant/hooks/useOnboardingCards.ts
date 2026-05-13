@@ -306,34 +306,33 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Registra la tua voce per rispondere alle domande e avere un impatto.",
+								"Registra la tua voce per rispondere alle domande e dire la tua.",
 							cta: "Andiamo!",
 							extraHelp:
-								"Questo è un mini-tutorial. Usa i pulsanti precedente e successivo per navigare. Al termine entrerai nel portale di registrazione.",
-							title: "Benvenuto su Dembrane!",
+								"Questo è un breve tutorial. Usa i pulsanti per andare avanti e indietro. Alla fine entri nel portale di registrazione.",
+							title: "Benvenuto su dembrane",
 						},
 						{
-							content:
-								"Dembrane aiuta a raccogliere facilmente contributi da grandi gruppi.",
+							content: "dembrane aiuta a raccogliere idee da gruppi grandi.",
 							cta: "Dimmi di più",
 							extraHelp:
-								"Che si tratti di feedback per un comune, di input sul lavoro o di partecipazione a una ricerca, la tua voce conta!",
-							title: "Cos'è Dembrane?",
+								"Feedback per il comune, idee al lavoro, ricerca: la tua voce conta.",
+							title: "Cos'è dembrane?",
 						},
 						{
 							content:
-								"Rispondi alle domande a tuo ritmo parlando o scrivendo.",
+								"Rispondi alle domande a tuo ritmo, parlando o scrivendo.",
 							cta: "Avanti",
 							extraHelp:
-								"La voce è la modalità principale perché permette risposte più naturali e ricche. Scrivere è sempre disponibile come alternativa.",
-							title: "Dì semplicemente ciò che pensi",
+								"Parlare è il modo principale: le risposte sono più naturali. Ma puoi anche scrivere.",
+							title: "Di' cosa pensi",
 						},
 						{
-							content: "Dembrane è più divertente in gruppo!",
+							content: "dembrane è più bello in gruppo.",
 							cta: "Avanti",
 							extraHelp:
-								"È ancora meglio se trovi qualcuno con cui discutere le domande e registrare la conversazione. Non possiamo sapere chi ha detto cosa, solo quali idee sono state condivise.",
-							title: "Da soli o in gruppo",
+								"Trova qualcuno per parlare insieme delle domande e registrare la conversazione. Non sappiamo chi ha detto cosa, solo quali idee sono state condivise.",
+							title: "Da solo o in gruppo",
 						},
 					],
 				},
@@ -342,11 +341,11 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Riceverai le domande quando sarai nel portale di registrazione.",
+								"Le domande arrivano quando entri nel portale di registrazione.",
 							cta: "Capito",
 							extraHelp:
-								"Le domande variano in base alle esigenze dell'host. Possono riguardare temi della comunità, esperienze di lavoro o ricerca. Se non ci sono domande specifiche, puoi condividere qualsiasi pensiero o preoccupazione.",
-							title: "È il momento delle domande",
+								"Le domande dipendono dall'host. Possono parlare di temi della comunità, lavoro o ricerca. Se non ci sono domande, puoi condividere qualsiasi pensiero o preoccupazione.",
+							title: "Le domande",
 						},
 					],
 				},
@@ -354,10 +353,10 @@ export const useOnboardingCards = () => {
 					section: "Privacy",
 					slides: [
 						{
-							content: "Come registratore, controlli tu ciò che condividi.",
+							content: "Scegli tu cosa condividere.",
 							cta: "Dimmi di più",
 							extraHelp:
-								"Evita di condividere dettagli che non vuoi rendere noti all'host. Chiedi sempre il consenso prima di registrare altre persone.",
+								"Non condividere dettagli che non vuoi far sapere all'host. Chiedi sempre il permesso prima di registrare altre persone.",
 							title: "La privacy conta",
 						},
 					],
@@ -884,34 +883,33 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Registra la tua voce per rispondere alle domande e avere un impatto.",
+								"Registra la tua voce per rispondere alle domande e dire la tua.",
 							cta: "Andiamo!",
 							extraHelp:
-								"Questo è un mini-tutorial. Usa i pulsanti precedente e successivo per navigare. Al termine entrerai nel portale di registrazione.",
-							title: "Benvenuto su Dembrane!",
+								"Questo è un breve tutorial. Usa i pulsanti per andare avanti e indietro. Alla fine entri nel portale di registrazione.",
+							title: "Benvenuto su dembrane",
 						},
 						{
-							content:
-								"Dembrane aiuta a raccogliere facilmente contributi da grandi gruppi.",
+							content: "dembrane aiuta a raccogliere idee da gruppi grandi.",
 							cta: "Dimmi di più",
 							extraHelp:
-								"Che si tratti di feedback per un comune, di input sul lavoro o di partecipazione a una ricerca, la tua voce conta!",
-							title: "Cos'è Dembrane?",
+								"Feedback per il comune, idee al lavoro, ricerca: la tua voce conta.",
+							title: "Cos'è dembrane?",
 						},
 						{
 							content:
-								"Rispondi alle domande a tuo ritmo parlando o scrivendo.",
+								"Rispondi alle domande a tuo ritmo, parlando o scrivendo.",
 							cta: "Avanti",
 							extraHelp:
-								"La voce è la modalità principale perché permette risposte più naturali e ricche. Scrivere è sempre disponibile come alternativa.",
-							title: "Dì semplicemente ciò che pensi",
+								"Parlare è il modo principale: le risposte sono più naturali. Ma puoi anche scrivere.",
+							title: "Di' cosa pensi",
 						},
 						{
-							content: "Dembrane è più divertente in gruppo!",
+							content: "dembrane è più bello in gruppo.",
 							cta: "Avanti",
 							extraHelp:
-								"È ancora meglio se trovi qualcuno con cui discutere le domande e registrare la conversazione. Non possiamo sapere chi ha detto cosa, solo quali idee sono state condivise.",
-							title: "Da soli o in gruppo",
+								"Trova qualcuno per parlare insieme delle domande e registrare la conversazione. Non sappiamo chi ha detto cosa, solo quali idee sono state condivise.",
+							title: "Da solo o in gruppo",
 						},
 					],
 				},
@@ -920,11 +918,11 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Riceverai le domande quando sarai nel portale di registrazione.",
+								"Le domande arrivano quando entri nel portale di registrazione.",
 							cta: "Capito",
 							extraHelp:
-								"Le domande variano in base alle esigenze dell'host. Possono riguardare temi della comunità, esperienze di lavoro o ricerca. Se non ci sono domande specifiche, puoi condividere qualsiasi pensiero o preoccupazione.",
-							title: "È il momento delle domande",
+								"Le domande dipendono dall'host. Possono parlare di temi della comunità, lavoro o ricerca. Se non ci sono domande, puoi condividere qualsiasi pensiero o preoccupazione.",
+							title: "Le domande",
 						},
 					],
 				},
@@ -932,10 +930,10 @@ export const useOnboardingCards = () => {
 					section: "Privacy",
 					slides: [
 						{
-							content: "Come registratore, controlli tu ciò che condividi.",
+							content: "Scegli tu cosa condividere.",
 							cta: "Dimmi di più",
 							extraHelp:
-								"Evita di condividere dettagli che non vuoi rendere noti all'host. Chiedi sempre il consenso prima di registrare altre persone.",
+								"Non condividere dettagli che non vuoi far sapere all'host. Chiedi sempre il permesso prima di registrare altre persone.",
 							title: "La privacy conta",
 						},
 						...(getPrivacyCard("it-IT", legalBasis, privacyPolicyUrl)?.slides ||
@@ -943,31 +941,30 @@ export const useOnboardingCards = () => {
 					],
 				},
 				{
-					section: "Migliori Pratiche",
+					section: "Consigli utili",
 					slides: [
 						{
 							content:
-								"Immagina che Dembrane sia in vivavoce con te. Se riesci a sentirti, sei a posto.",
+								"Pensa che dembrane sia in vivavoce con te. Se senti la tua voce, va bene.",
 							cta: "Capito",
 							extraHelp:
-								"Un po' di rumore di fondo va bene, purché sia chiaro chi sta parlando.",
-							title: "Riduci il Rumore di Fondo",
+								"Un po' di rumore va bene. Importante: deve essere chiaro chi parla.",
+							title: "Riduci il rumore di fondo",
 						},
 						{
-							content:
-								"Assicurati di avere una connessione stabile per una registrazione fluida.",
+							content: "Usa una connessione stabile per registrare bene.",
 							cta: "Pronto!",
 							extraHelp:
-								"Wi-Fi o buoni dati mobili funzionano meglio. Se la connessione cade, non preoccuparti. Puoi sempre riprendere da dove avevi interrotto.",
-							title: "Connessione Internet Forte",
+								"Wi-Fi o dati mobili buoni vanno bene. Se la connessione cade, non preoccuparti: puoi continuare da dove hai lasciato.",
+							title: "Connessione stabile",
 						},
 						{
 							content:
-								"Evita interruzioni mantenendo il dispositivo sbloccato. Se si blocca, sbloccalo semplicemente e continua.",
-							cta: "Okay",
+								"Tieni il telefono sbloccato. Se si blocca, sbloccalo e continua.",
+							cta: "Ok",
 							extraHelp:
-								"Dembrane cerca di mantenere il dispositivo attivo, ma a volte i dispositivi possono sovrascrivere questa impostazione. Puoi regolare le impostazioni del dispositivo per rimanere sbloccato più a lungo se necessario.",
-							title: "Non bloccare il dispositivo!",
+								"dembrane prova a tenere il telefono attivo. A volte non funziona: puoi cambiare le impostazioni del telefono per stare sbloccato più a lungo.",
+							title: "Non bloccare il telefono",
 						},
 					],
 				},
@@ -1241,11 +1238,11 @@ export const useOnboardingCards = () => {
 				slides: [
 					{
 						content:
-							"L'organizzatore è responsabile di come vengono utilizzati i tuoi dati in questa sessione. dembrane elabora la tua conversazione per suo conto.",
+							"L'organizzatore decide come usare i tuoi dati in questa sessione. dembrane lavora per lui.",
 						cta: "Ho capito",
 						extraHelp:
-							"Le registrazioni vengono trascritte e analizzate per ottenere insight. I tuoi dati sono archiviati su server sicuri in Europa, non vengono utilizzati per addestrare modelli di IA e vengono eliminati entro 30 giorni dalla fine del progetto.\n\nDomande sulla tua privacy? Contatta direttamente l'organizzatore.",
-						title: "Titolare del trattamento, utilizzo e sicurezza.",
+							"Trascriviamo e analizziamo le registrazioni per ottenere informazioni utili. I tuoi dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA. Li cancelliamo entro 30 giorni dalla fine del progetto.\n\nHai domande sulla privacy? Scrivi direttamente all'organizzatore.",
+						title: "I tuoi dati: chi, come, sicurezza",
 					},
 				],
 			},
@@ -1398,14 +1395,14 @@ export const useOnboardingCards = () => {
 					{
 						checkbox: {
 							label:
-								"Acconsento alla registrazione e al trattamento della mia conversazione.",
+								"Accetto che la mia conversazione sia registrata e trattata.",
 							required: true,
 						},
 						content:
-							"L'organizzatore è responsabile di come vengono utilizzati i tuoi dati in questa sessione. dembrane elabora la tua conversazione per suo conto.",
+							"L'organizzatore decide come usare i tuoi dati in questa sessione. dembrane lavora per lui.",
 						cta: "Ho capito",
 						extraHelp:
-							"Le registrazioni vengono trascritte e analizzate per ottenere insight. I tuoi dati sono archiviati su server sicuri in Europa, non vengono utilizzati per addestrare modelli di IA e vengono eliminati entro 30 giorni dalla fine del progetto.\n\nDomande sulla tua privacy? Contatta direttamente l'organizzatore.",
+							"Trascriviamo e analizziamo le registrazioni per ottenere informazioni utili. I tuoi dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA. Li cancelliamo entro 30 giorni dalla fine del progetto.\n\nHai domande sulla privacy? Scrivi direttamente all'organizzatore.",
 						...(policyUrl
 							? {
 									link: {
@@ -1415,7 +1412,7 @@ export const useOnboardingCards = () => {
 									},
 								}
 							: {}),
-						title: "Titolare del trattamento, utilizzo e sicurezza.",
+						title: "I tuoi dati: chi, come, sicurezza",
 					},
 				],
 			},
@@ -1556,10 +1553,10 @@ export const useOnboardingCards = () => {
 				slides: [
 					{
 						content:
-							"dembrane registra e analizza questa conversazione sulla base del nostro legittimo interesse: acquisire le discussioni in modo accurato, fornire informazioni affidabili e sviluppare la nostra piattaforma.",
+							"dembrane registra e analizza questa conversazione. Lo facciamo per legittimo interesse: registrare bene le discussioni, dare informazioni affidabili, migliorare la nostra piattaforma.",
 						cta: "Ho capito",
 						extraHelp:
-							"Le registrazioni e le trascrizioni vengono eliminate entro 30 giorni dalla chiusura della sessione. I dati sono archiviati su server sicuri in Europa e non vengono utilizzati per addestrare modelli di IA.\n\nDomande o vuoi opporti? Contattaci a info@dembrane.com o consulta la nostra informativa sulla privacy.",
+							"Cancelliamo registrazioni e trascrizioni entro 30 giorni dalla fine della sessione. I dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA.\n\nHai domande o vuoi opporti? Scrivi a info@dembrane.com o leggi l'informativa sulla privacy.",
 						link: {
 							label: "Leggi l'informativa sulla privacy completa",
 							url: dembranePrivacyUrl,

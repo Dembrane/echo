@@ -174,6 +174,29 @@ const ParticipantOnboardingCards = ({
 				],
 			},
 		],
+		"it-IT": [
+			...getSystemCards("it-IT", tutorialSlug, legalBasis, privacyPolicyUrl),
+			{
+				section: "Controllo microfono",
+				slides: [
+					{
+						component: MicrophoneTestComponent,
+						content: "Controlliamo se ti sentiamo bene.",
+						title: "Controllo microfono",
+						type: "microphone",
+					},
+				],
+			},
+			{
+				section: "Tutto pronto?",
+				slides: [
+					{
+						component: InitiateFormComponent,
+						title: "Tutto pronto?",
+					},
+				],
+			},
+		],
 		"nl-NL": [
 			...getSystemCards("nl-NL", tutorialSlug, legalBasis, privacyPolicyUrl),
 			{
@@ -377,7 +400,9 @@ const ParticipantOnboardingCards = ({
 											className="basis-1/2"
 											{...testId("portal-onboarding-mic-back-button")}
 										>
-											<Trans id="participant.button.back.microphone">Back</Trans>
+											<Trans id="participant.button.back.microphone">
+												Back
+											</Trans>
 										</Button>
 									)}
 									<Button
