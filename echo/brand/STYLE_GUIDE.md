@@ -346,6 +346,59 @@ Logo files live in `logos/`. SVG preferred.
 
 ---
 
+## Italian localization
+
+Target reading level: A2 (general public, basic Italian). Short sentences, common words, present tense.
+
+### Core rules
+
+- Use "tu" - never "Lei" or "voi" (always informal, even in privacy/legal text)
+- Natural phrasing, not word-for-word translation
+- Prefer active voice ("Cancelliamo i dati") over passive ("I dati vengono cancellati")
+- Prefer present tense over future where the meaning is the same ("Le domande arrivano" not "Riceverai le domande")
+- Sentence case for titles, not Title Case ("Controllo microfono", not "Controllo Microfono")
+- "dembrane" stays lowercase even at sentence start, even in Italian
+- Keep English when it sounds better: Dashboard, Upload, Chat, Login, Wi-Fi
+- Avoid subjunctive and conditional where a simple alternative works
+- Short sentences. If a sentence has two ideas, split it
+
+### Key glossary
+
+| English | Italian |
+|---------|---------|
+| Dashboard | Dashboard |
+| Upload | Carica / Caricamento |
+| Chat | Chat |
+| Conversation | Conversazione |
+| Audio file | File audio |
+| Participant | Partecipante |
+| Host | Organizzatore |
+| Recording | Registrazione |
+| Settings | Impostazioni |
+| Save | Salva |
+| Delete | Elimina |
+| Continue | Avanti |
+| Back | Indietro |
+| Privacy | Privacy |
+| It's not working | Non funziona |
+| We're fixing it | Stiamo sistemando |
+
+### Examples
+
+- Bad: "La preghiamo di caricare il suo file"
+- Good: "Carica il tuo file"
+
+- Bad: "Siamo lieti di informarLa che la funzionalità è stata ripristinata"
+- Good: "La chat funziona di nuovo"
+
+- Bad: "Le registrazioni vengono trascritte e analizzate per ottenere insight"
+- Good: "Trascriviamo e analizziamo le registrazioni"
+
+- Bad: "Riceverai le domande quando sarai nel portale"
+- Good: "Le domande arrivano quando entri nel portale"
+
+---
+
 ## Platform context
 
 ECHO is event-driven, not daily-use software. Hosts run discrete engagement sessions: workshops, consultations, civic forums, employee feedback rounds.
@@ -382,3 +435,4 @@ Before shipping any UI:
 - [ ] Have I avoided bold text?
 - [ ] Are error states helpful, not scary?
 - [ ] Does it work in Dutch?
+- [ ] Does it work in Italian (at A2 reading level)?
