@@ -70,6 +70,8 @@ class WorkspaceDetailResponse(BaseModel):
     inherit_organisation_admins: bool = True
     inherit_organisation_members: bool = False
     logo_url: Optional[str] = None
+    type_discount: Optional[str] = None
+    percent_discount: Optional[int] = None
 
 
 @router.get("/{workspace_id}/settings", response_model=WorkspaceDetailResponse)
@@ -247,6 +249,8 @@ async def get_workspace_settings(
         inherit_organisation_admins=workspace_follows_organisation_admins(ws),
         inherit_organisation_members=workspace_follows_organisation_members(ws),
         logo_url=ws.get("logo_url"),
+        type_discount=ws.get("type_discount"),
+        percent_discount=ws.get("percent_discount"),
     )
 
 

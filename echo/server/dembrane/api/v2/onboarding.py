@@ -474,6 +474,8 @@ async def complete_onboarding(
             personal_ws_id = existing_ws[0]["id"]
         else:
             personal_ws_id = generate_uuid()
+            # System-seeded workspace — bypasses workspace_request flow intentionally.
+            # Only user-initiated workspace creation goes through requests.
             await async_directus.create_item(
                 "workspace",
                 {
@@ -481,7 +483,7 @@ async def complete_onboarding(
                     "org_id": org_id,
                     "name": "Default",
                     "is_default": True,
-                    "tier": "pilot",
+                    "tier": "free",
                     "created_by": app_user_id,
                 },
             )

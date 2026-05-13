@@ -25,6 +25,9 @@ import {
 	Text,
 	TextInput,
 	Title,
+	NumberInput,
+	Select,
+	Textarea,
 	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
@@ -41,7 +44,7 @@ import {
 	IconSortDescending,
 	IconUsersGroup,
 } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	type ColumnDef,
 	type ColumnFiltersState,
@@ -67,11 +70,12 @@ import { useV2Me } from "@/hooks/useV2Me";
 import { formatDurationFromHours } from "@/lib/time";
 
 // Ordered tier list for custom sorting. matrix v1.1 §1 order from low to high.
-const TIER_ORDER = ["pilot", "pioneer", "innovator", "changemaker", "guardian"] as const;
+const TIER_ORDER = ["free", "pilot", "pioneer", "innovator", "changemaker", "guardian"] as const;
 type Tier = (typeof TIER_ORDER)[number];
 const tierRank = (tier: string): number => TIER_ORDER.indexOf(tier as Tier);
 
 const tierColors: Record<string, string> = {
+	free: "gray",
 	pilot: "gray",
 	pioneer: "blue",
 	innovator: "violet",
@@ -104,8 +108,6 @@ type BillingRow = {
 	over_seats: number;
 	seat_overage_eur: number;
 	guest_count: number;
-	guest_cap: number | null;
-	guest_cap_hit: boolean;
 	base_price_eur: number | null;
 	total_forecast_eur: number | null;
 	pilot_hard_block: boolean;
@@ -115,6 +117,9 @@ type BillingRow = {
 	downgraded_from_tier: string | null;
 	is_active: boolean;
 	workspace_admins: BillingContact[];
+	tier_expires_at: string | null;
+	type_discount: string | null;
+	percent_discount: number | null;
 };
 
 type BillingRollup = {
@@ -146,21 +151,6 @@ type ReferralLedgerRow = {
 	notes: string | null;
 };
 
-type UpgradeRequestRow = {
-	id: string;
-	workspace_id: string;
-	workspace_name: string;
-	org_id: string;
-	org_name: string;
-	current_tier: string;
-	target_tier: string;
-	audio_hours_current: number;
-	audio_hours_included: number | null;
-	seat_count: number;
-	seats_included: number | null;
-	requested_at: string;
-	requested_by: string | null;
-};
 
 async function fetchJson<T>(path: string): Promise<T | null> {
 	const res = await fetch(`${API_BASE_URL}${path}`, { credentials: "include" });
@@ -312,10 +302,128 @@ function UsageBar({
 }
 
 /**
- * Mocked actions modal. The buttons are disabled on purpose; they
- * communicate the action shape staff will eventually have without
- * letting anyone run them. Copy reads natural (no "coming soon"
- * language); only the disabled state signals state.
+ * Inline discount editor used in WorkspaceActionsModal.
+ */
+function DiscountEditor({
+	workspaceId,
+	initialType,
+	initialPercent,
+}: {
+	workspaceId: string;
+	initialType: string | null;
+	initialPercent: number | null;
+}) {
+	const queryClient = useQueryClient();
+	const [typeDiscount, setTypeDiscount] = useState<string | null>(
+		initialType,
+	);
+	const [percentDiscount, setPercentDiscount] = useState<number | string>(
+		initialPercent ?? "",
+	);
+
+	const hasChanges =
+		typeDiscount !== initialType ||
+		(percentDiscount !== "" ? Number(percentDiscount) : null) !==
+			initialPercent;
+
+	const mutation = useMutation({
+		mutationFn: async () => {
+			const body: Record<string, unknown> = {};
+			if (typeDiscount !== initialType) {
+				if (typeDiscount) {
+					body.type_discount = typeDiscount;
+				} else {
+					body.clear_type_discount = true;
+				}
+			}
+			const pct =
+				percentDiscount !== "" ? Number(percentDiscount) : null;
+			if (pct !== initialPercent) {
+				if (pct != null) {
+					body.percent_discount = pct;
+				} else {
+					body.clear_percent_discount = true;
+				}
+			}
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/workspaces/${workspaceId}/discount`,
+				{
+					method: "PATCH",
+					headers: { "Content-Type": "application/json" },
+					credentials: "include",
+					body: JSON.stringify(body),
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "admin", "billing-rollup"],
+			});
+		},
+	});
+
+	return (
+		<Paper withBorder radius="sm" p="sm">
+			<Stack gap="xs">
+				<Text size="sm" fw={500}>
+					<Trans>Discount</Trans>
+				</Text>
+				<SimpleGrid cols={2}>
+					<Select
+						label={t`Type`}
+						data={[
+							{ value: "scholarship", label: "Scholarship" },
+							{
+								value: "staff_discount",
+								label: "Staff discount",
+							},
+						]}
+						value={typeDiscount}
+						onChange={setTypeDiscount}
+						clearable
+						size="xs"
+					/>
+					<NumberInput
+						label={t`Percent`}
+						min={0}
+						max={100}
+						value={percentDiscount}
+						onChange={setPercentDiscount}
+						size="xs"
+					/>
+				</SimpleGrid>
+				{mutation.isError && (
+					<Text size="xs" c="red">
+						{(mutation.error as Error).message}
+					</Text>
+				)}
+				{mutation.isSuccess && (
+					<Text size="xs" c="green">
+						<Trans>Saved</Trans>
+					</Text>
+				)}
+				<Button
+					size="xs"
+					variant="light"
+					disabled={!hasChanges}
+					loading={mutation.isPending}
+					onClick={() => mutation.mutate()}
+				>
+					<Trans>Save discount</Trans>
+				</Button>
+			</Stack>
+		</Paper>
+	);
+}
+
+/**
+ * Actions modal for a workspace row. Includes the discount editor
+ * (live, staff-only) and mocked placeholders for future actions.
  */
 function WorkspaceActionsModal({
 	row,
@@ -375,6 +483,14 @@ function WorkspaceActionsModal({
 						{row.org_name}, workspace id {row.workspace_id.slice(0, 8)}
 					</Trans>
 				</Text>
+				<Divider my={4} />
+
+				<DiscountEditor
+					workspaceId={row.workspace_id}
+					initialType={row.type_discount ?? null}
+					initialPercent={row.percent_discount ?? null}
+				/>
+
 				<Divider my={4} />
 				{actions.map((a) => (
 					<Paper key={a.label} withBorder radius="sm" p="sm">
@@ -437,7 +553,6 @@ function BillingTable({
 	footerTotals: {
 		audio_hours: number;
 		seat_count: number;
-		guest_count: number;
 		base_price_eur: number;
 		hour_overage_eur: number;
 		seat_overage_eur: number;
@@ -690,22 +805,17 @@ function BillingTable({
 								// Lookup table keyed by column id — immune to
 								// column-visibility or reorder churn.
 								const footerById: Record<string, React.ReactNode> = {
-									audio_hours: (
-										<Text size="xs" fw={600} ta="right">
-											{formatDurationFromHours(footerTotals.audio_hours)}
-										</Text>
-									),
-									seat_count: (
-										<Text size="xs" fw={600} ta="right">
-											{footerTotals.seat_count}
-										</Text>
-									),
-									guest_count: (
-										<Text size="xs" fw={600} ta="right">
-											{footerTotals.guest_count}
-										</Text>
-									),
-									base_price_eur: (
+								audio_hours: (
+									<Text size="xs" fw={600} ta="right">
+										{formatDurationFromHours(footerTotals.audio_hours)}
+									</Text>
+								),
+								seat_count: (
+									<Text size="xs" fw={600} ta="right">
+										{footerTotals.seat_count}
+									</Text>
+								),
+								base_price_eur: (
 										<Text size="xs" fw={600} ta="right">
 											{formatEur(footerTotals.base_price_eur)}
 										</Text>
@@ -1053,24 +1163,8 @@ function UsageAndBillingPanel() {
 					);
 				},
 			},
-			{
-				id: "guest_count",
-				accessorKey: "guest_count",
-				// Matrix §1: guests are tier-capped, not billed. Column
-				// here lets staff spot workspaces that are leaning on
-				// external collaborators before they hit the hard cap.
-				header: t`Guests`,
-				meta: { align: "right" },
-				cell: ({ row }) => (
-					<UsageBar
-						used={row.original.guest_count}
-						cap={row.original.guest_cap}
-						block={row.original.guest_cap_hit}
-					/>
-				),
-			},
-			{
-				id: "is_active",
+		{
+			id: "is_active",
 				accessorFn: (r) => (r.is_active ? "active" : "inactive"),
 				header: t`Status`,
 				cell: ({ row }) =>
@@ -1121,7 +1215,6 @@ function UsageAndBillingPanel() {
 		() => ({
 			audio_hours: prefiltered.reduce((s, r) => s + r.audio_hours, 0),
 			seat_count: prefiltered.reduce((s, r) => s + r.seat_count, 0),
-			guest_count: prefiltered.reduce((s, r) => s + r.guest_count, 0),
 			base_price_eur: prefiltered.reduce(
 				(s, r) => s + (r.base_price_eur ?? 0),
 				0,
@@ -1168,6 +1261,9 @@ function UsageAndBillingPanel() {
 			"workspace_name",
 			"organisation",
 			"tier",
+			"tier_expires_at",
+			"type_discount",
+			"percent_discount",
 			"audio_hours",
 			"audio_hours_included",
 			"hour_overage_eur",
@@ -1175,7 +1271,6 @@ function UsageAndBillingPanel() {
 			"seats_included",
 			"seat_overage_eur",
 			"guest_count",
-			"guest_cap",
 			"base_price_eur",
 			"total_forecast_eur",
 			"workspace_admin_email",
@@ -1187,6 +1282,9 @@ function UsageAndBillingPanel() {
 				r.workspace_name,
 				r.billed_to_team_name ?? r.org_name,
 				r.tier,
+				r.tier_expires_at ?? "",
+				r.type_discount ?? "",
+				r.percent_discount ?? "",
 				r.audio_hours.toFixed(2),
 				r.audio_hours_included ?? "",
 				r.hour_overage_eur.toFixed(2),
@@ -1194,7 +1292,6 @@ function UsageAndBillingPanel() {
 				r.seats_included ?? "",
 				r.seat_overage_eur.toFixed(2),
 				r.guest_count,
-				r.guest_cap ?? "",
 				r.base_price_eur ?? "",
 				r.total_forecast_eur ?? "",
 				r.workspace_admins[0]?.email ?? "",
@@ -1667,138 +1764,864 @@ function PartnersPanel() {
 	);
 }
 
+type WorkspaceRequestRequester = {
+	id: string;
+	display_name: string | null;
+	email: string | null;
+};
+
+type WorkspaceRequestRow = {
+	id: string;
+	kind: string;
+	status: string;
+	requester: WorkspaceRequestRequester | null;
+	org_id: string;
+	org_name: string | null;
+	workspace_id: string | null;
+	workspace_name: string | null;
+	proposed_name: string | null;
+	proposed_tier: string;
+	proposed_visibility: string | null;
+	requester_message: string | null;
+	granted_tier: string | null;
+	granted_tier_expires_at: string | null;
+	granted_type_discount: string | null;
+	granted_percent_discount: number | null;
+	resulting_workspace_id: string | null;
+	decided_at: string | null;
+	decided_by: WorkspaceRequestRequester | null;
+	denial_reason: string | null;
+	staff_notes: string | null;
+	created_at: string | null;
+};
+
+type WorkspaceRequestListResponse = {
+	items: WorkspaceRequestRow[];
+	counts: Record<string, number>;
+};
+
+const kindLabels: Record<string, string> = {
+	new_workspace: "New workspace",
+	tier_upgrade: "Tier upgrade",
+};
+
+const visibilityLabels: Record<string, string> = {
+	open_to_organisation: "Open to organisation",
+	private: "Private",
+};
+
+async function patchWorkspaceRequest(
+	requestId: string,
+	body: Record<string, unknown>,
+): Promise<{ id: string; status: string; resulting_workspace_id?: string }> {
+	const res = await fetch(
+		`${API_BASE_URL}/v2/admin/workspace-requests/${requestId}`,
+		{
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			credentials: "include",
+			body: JSON.stringify(body),
+		},
+	);
+	if (!res.ok) {
+		const err = await res.json().catch(() => ({}));
+		throw new Error(err.detail || `Request failed (${res.status})`);
+	}
+	return res.json();
+}
+
+function ApproveDialog({
+	request: req,
+	onClose,
+	onSuccess,
+}: {
+	request: WorkspaceRequestRow;
+	onClose: () => void;
+	onSuccess: () => void;
+}) {
+	const queryClient = useQueryClient();
+	const [grantedTier, setGrantedTier] = useState<string>(
+		req.proposed_tier,
+	);
+	const [expiresAt, setExpiresAt] = useState("");
+	const [typeDiscount, setTypeDiscount] = useState<string | null>(null);
+	const [percentDiscount, setPercentDiscount] = useState<
+		number | string
+	>("");
+	const [staffNotes, setStaffNotes] = useState("");
+
+	const mutation = useMutation({
+		mutationFn: () =>
+			patchWorkspaceRequest(req.id, {
+				action: "approve",
+				granted_tier: grantedTier,
+				granted_tier_expires_at: expiresAt || undefined,
+				granted_type_discount: typeDiscount || undefined,
+				granted_percent_discount:
+					percentDiscount !== "" ? Number(percentDiscount) : undefined,
+				staff_notes: staffNotes || undefined,
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "admin", "workspace-requests"],
+			});
+			onSuccess();
+		},
+	});
+
+	const tierOptions = TIER_ORDER.map((t) => ({
+		value: t,
+		label: t.charAt(0).toUpperCase() + t.slice(1),
+	}));
+
+	return (
+		<Modal opened onClose={onClose} title={t`Approve request`} size="md">
+			<Stack gap="md">
+				<Text size="sm">
+					<Trans>
+						Approving request from{" "}
+						{req.requester?.display_name ?? "unknown"} for a{" "}
+						{kindLabels[req.kind]} ({req.proposed_tier}).
+					</Trans>
+				</Text>
+
+				<Select
+					label={t`Granted tier`}
+					data={tierOptions}
+					value={grantedTier}
+					onChange={(v) => v && setGrantedTier(v)}
+					allowDeselect={false}
+				/>
+
+				<TextInput
+					label={t`Tier expires at (ISO date, optional)`}
+					placeholder="2026-06-11T00:00:00Z"
+					value={expiresAt}
+					onChange={(e) => setExpiresAt(e.currentTarget.value)}
+				/>
+
+				<Select
+					label={t`Discount type (optional)`}
+					data={[
+						{ value: "scholarship", label: "Scholarship" },
+						{ value: "staff_discount", label: "Staff discount" },
+					]}
+					value={typeDiscount}
+					onChange={setTypeDiscount}
+					clearable
+				/>
+
+				<NumberInput
+					label={t`Discount % (optional)`}
+					min={0}
+					max={100}
+					value={percentDiscount}
+					onChange={setPercentDiscount}
+				/>
+
+				<Textarea
+					label={t`Staff notes (internal, optional)`}
+					value={staffNotes}
+					onChange={(e) => setStaffNotes(e.currentTarget.value)}
+					maxLength={2000}
+					autosize
+					minRows={2}
+				/>
+
+				{mutation.isError && (
+					<Text size="xs" c="red">
+						{(mutation.error as Error).message}
+					</Text>
+				)}
+
+				<Group justify="flex-end">
+					<Button variant="subtle" onClick={onClose}>
+						<Trans>Cancel</Trans>
+					</Button>
+					<Button
+						color="green"
+						loading={mutation.isPending}
+						onClick={() => mutation.mutate()}
+					>
+						<Trans>Approve</Trans>
+					</Button>
+				</Group>
+			</Stack>
+		</Modal>
+	);
+}
+
+function DenyDialog({
+	request: req,
+	onClose,
+	onSuccess,
+}: {
+	request: WorkspaceRequestRow;
+	onClose: () => void;
+	onSuccess: () => void;
+}) {
+	const queryClient = useQueryClient();
+	const [reason, setReason] = useState("");
+	const [staffNotes, setStaffNotes] = useState("");
+
+	const mutation = useMutation({
+		mutationFn: () =>
+			patchWorkspaceRequest(req.id, {
+				action: "deny",
+				denial_reason: reason,
+				staff_notes: staffNotes || undefined,
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "admin", "workspace-requests"],
+			});
+			onSuccess();
+		},
+	});
+
+	return (
+		<Modal opened onClose={onClose} title={t`Deny request`} size="md">
+			<Stack gap="md">
+				<Text size="sm">
+					<Trans>
+						Denying request from{" "}
+						{req.requester?.display_name ?? "unknown"} for a{" "}
+						{kindLabels[req.kind]} ({req.proposed_tier}).
+					</Trans>
+				</Text>
+
+				<Textarea
+					label={t`Denial reason (required)`}
+					value={reason}
+					onChange={(e) => setReason(e.currentTarget.value)}
+					maxLength={2000}
+					autosize
+					minRows={3}
+					required
+				/>
+
+				<Textarea
+					label={t`Staff notes (internal, optional)`}
+					value={staffNotes}
+					onChange={(e) => setStaffNotes(e.currentTarget.value)}
+					maxLength={2000}
+					autosize
+					minRows={2}
+				/>
+
+				{mutation.isError && (
+					<Text size="xs" c="red">
+						{(mutation.error as Error).message}
+					</Text>
+				)}
+
+				<Group justify="flex-end">
+					<Button variant="subtle" onClick={onClose}>
+						<Trans>Cancel</Trans>
+					</Button>
+					<Button
+						color="red"
+						loading={mutation.isPending}
+						onClick={() => mutation.mutate()}
+						disabled={!reason.trim()}
+					>
+						<Trans>Deny</Trans>
+					</Button>
+				</Group>
+			</Stack>
+		</Modal>
+	);
+}
+
+function WorkspaceRequestDetail({
+	request: req,
+	onClose,
+}: {
+	request: WorkspaceRequestRow;
+	onClose: () => void;
+}) {
+	const [approveOpen, { open: openApprove, close: closeApprove }] =
+		useDisclosure(false);
+	const [denyOpen, { open: openDeny, close: closeDeny }] =
+		useDisclosure(false);
+
+	const handleActionSuccess = () => {
+		closeApprove();
+		closeDeny();
+		onClose();
+	};
+
+	return (
+		<>
+			<Modal
+				opened
+				onClose={onClose}
+				title={
+					<Group gap="xs">
+						<Text fw={500}>{kindLabels[req.kind] ?? req.kind}</Text>
+						<Badge
+							size="xs"
+							color={
+								req.status === "pending"
+									? "yellow"
+									: req.status === "approved"
+										? "green"
+										: "red"
+							}
+							variant="light"
+							tt="capitalize"
+						>
+							{req.status}
+						</Badge>
+					</Group>
+				}
+				size="lg"
+			>
+				<Stack gap="md">
+					<Divider label={t`Requester`} labelPosition="left" />
+					<SimpleGrid cols={2}>
+						<Box>
+							<Text size="xs" c="dimmed">
+								<Trans>Requester</Trans>
+							</Text>
+							<Text size="sm">
+								{req.requester?.display_name ?? req.requester?.id ?? "-"}
+							</Text>
+							{req.requester?.email && (
+								<Text size="xs" c="dimmed">
+									{req.requester.email}
+								</Text>
+							)}
+						</Box>
+						<Box>
+							<Text size="xs" c="dimmed">
+								<Trans>Organisation</Trans>
+							</Text>
+							<Text size="sm">{req.org_name ?? req.org_id}</Text>
+						</Box>
+						<Box>
+							<Text size="xs" c="dimmed">
+								<Trans>Submitted</Trans>
+							</Text>
+							<Text size="sm">{formatDate(req.created_at)}</Text>
+						</Box>
+						<Box>
+							<Text size="xs" c="dimmed">
+								<Trans>Kind</Trans>
+							</Text>
+							<Text size="sm">{kindLabels[req.kind] ?? req.kind}</Text>
+						</Box>
+					</SimpleGrid>
+
+					<Divider label={t`Proposed`} labelPosition="left" />
+					<SimpleGrid cols={2}>
+						{req.proposed_name && (
+							<Box>
+								<Text size="xs" c="dimmed">
+									<Trans>Workspace name</Trans>
+								</Text>
+								<Text size="sm">{req.proposed_name}</Text>
+							</Box>
+						)}
+						<Box>
+							<Text size="xs" c="dimmed">
+								<Trans>Proposed tier</Trans>
+							</Text>
+							<Badge
+								size="sm"
+								color={tierColors[req.proposed_tier] ?? "gray"}
+								variant="filled"
+								tt="capitalize"
+							>
+								{req.proposed_tier}
+							</Badge>
+						</Box>
+						{req.proposed_visibility && (
+							<Box>
+								<Text size="xs" c="dimmed">
+									<Trans>Visibility</Trans>
+								</Text>
+								<Text size="sm">
+									{visibilityLabels[req.proposed_visibility] ??
+										req.proposed_visibility}
+								</Text>
+							</Box>
+						)}
+						{req.workspace_id && (
+							<Box>
+								<Text size="xs" c="dimmed">
+									<Trans>Target workspace</Trans>
+								</Text>
+								<Anchor
+									component={I18nLink}
+									to={`/w/${req.workspace_id}/settings`}
+									size="sm"
+								>
+									{req.workspace_name ?? req.workspace_id}
+								</Anchor>
+							</Box>
+						)}
+					</SimpleGrid>
+
+					{req.requester_message && (
+						<>
+							<Divider label={t`Message`} labelPosition="left" />
+							<Paper withBorder p="sm" radius="sm">
+								<Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+									{req.requester_message}
+								</Text>
+							</Paper>
+						</>
+					)}
+
+					{req.status !== "pending" && (
+						<>
+							<Divider label={t`Decision`} labelPosition="left" />
+							<SimpleGrid cols={2}>
+								<Box>
+									<Text size="xs" c="dimmed">
+										<Trans>Decided at</Trans>
+									</Text>
+									<Text size="sm">{formatDate(req.decided_at)}</Text>
+								</Box>
+								<Box>
+									<Text size="xs" c="dimmed">
+										<Trans>Decided by</Trans>
+									</Text>
+									<Text size="sm">
+										{req.decided_by?.display_name ??
+											req.decided_by?.id ??
+											"-"}
+									</Text>
+								</Box>
+								{req.granted_tier && (
+									<Box>
+										<Text size="xs" c="dimmed">
+											<Trans>Granted tier</Trans>
+										</Text>
+										<Badge
+											size="sm"
+											color={tierColors[req.granted_tier] ?? "gray"}
+											variant="filled"
+											tt="capitalize"
+										>
+											{req.granted_tier}
+										</Badge>
+									</Box>
+								)}
+								{req.granted_tier_expires_at && (
+									<Box>
+										<Text size="xs" c="dimmed">
+											<Trans>Tier expires</Trans>
+										</Text>
+										<Text size="sm">
+											{formatDate(req.granted_tier_expires_at)}
+										</Text>
+									</Box>
+								)}
+								{req.granted_type_discount && (
+									<Box>
+										<Text size="xs" c="dimmed">
+											<Trans>Discount type</Trans>
+										</Text>
+										<Badge size="sm" variant="light" tt="capitalize">
+											{req.granted_type_discount.replace(/_/g, " ")}
+										</Badge>
+									</Box>
+								)}
+								{req.granted_percent_discount != null && (
+									<Box>
+										<Text size="xs" c="dimmed">
+											<Trans>Discount %</Trans>
+										</Text>
+										<Text size="sm">{req.granted_percent_discount}%</Text>
+									</Box>
+								)}
+								{req.denial_reason && (
+									<Box style={{ gridColumn: "1 / -1" }}>
+										<Text size="xs" c="dimmed">
+											<Trans>Denial reason</Trans>
+										</Text>
+										<Paper withBorder p="xs" radius="sm" mt={4}>
+											<Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+												{req.denial_reason}
+											</Text>
+										</Paper>
+									</Box>
+								)}
+								{req.resulting_workspace_id && (
+									<Box>
+										<Text size="xs" c="dimmed">
+											<Trans>Resulting workspace</Trans>
+										</Text>
+										<Anchor
+											component={I18nLink}
+											to={`/w/${req.resulting_workspace_id}/settings`}
+											size="sm"
+										>
+											<Trans>View workspace</Trans>
+										</Anchor>
+									</Box>
+								)}
+							</SimpleGrid>
+						</>
+					)}
+
+					{req.staff_notes && (
+						<>
+							<Divider label={t`Staff notes`} labelPosition="left" />
+							<Paper withBorder p="sm" radius="sm" bg="gray.0">
+								<Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+									{req.staff_notes}
+								</Text>
+							</Paper>
+						</>
+					)}
+
+					{req.status === "pending" && (
+						<>
+							<Divider />
+							<Group justify="flex-end">
+								<Button
+									variant="subtle"
+									color="red"
+									onClick={openDeny}
+								>
+									<Trans>Deny</Trans>
+								</Button>
+								<Button color="green" onClick={openApprove}>
+									<Trans>Approve</Trans>
+								</Button>
+							</Group>
+						</>
+					)}
+				</Stack>
+			</Modal>
+
+			{approveOpen && (
+				<ApproveDialog
+					request={req}
+					onClose={closeApprove}
+					onSuccess={handleActionSuccess}
+				/>
+			)}
+			{denyOpen && (
+				<DenyDialog
+					request={req}
+					onClose={closeDeny}
+					onSuccess={handleActionSuccess}
+				/>
+			)}
+		</>
+	);
+}
+
 function UpgradesPanel() {
+	const [statusFilter, setStatusFilter] = useState<string>("pending");
+	const [selectedRequest, setSelectedRequest] =
+		useState<WorkspaceRequestRow | null>(null);
 	const { data, isLoading } = useQuery({
-		queryKey: ["v2", "admin", "upgrade-requests"],
-		queryFn: () => fetchJson<UpgradeRequestRow[]>("/v2/admin/upgrade-requests"),
-		staleTime: 60_000,
+		queryKey: ["v2", "admin", "workspace-requests", statusFilter],
+		queryFn: () =>
+			fetchJson<WorkspaceRequestListResponse>(
+				`/v2/admin/workspace-requests?status=${statusFilter}`,
+			),
+		staleTime: 30_000,
 	});
 	const [globalFilter, setGlobalFilter] = useState("");
-	const columns = useMemo<ColumnDef<UpgradeRequestRow, unknown>[]>(
+
+	const columns = useMemo<ColumnDef<WorkspaceRequestRow, unknown>[]>(
 		() => [
 			{
-				id: "workspace_name",
-				accessorKey: "workspace_name",
-				header: t`Workspace`,
+				id: "kind",
+				accessorKey: "kind",
+				header: t`Kind`,
 				cell: ({ row }) => (
-					<Anchor
-						component={I18nLink}
-						to={`/w/${row.original.workspace_id}/settings/billing`}
+					<Badge
 						size="xs"
-						fw={500}
+						variant="light"
+						color={
+							row.original.kind === "new_workspace" ? "blue" : "violet"
+						}
 					>
-						{row.original.workspace_name}
-					</Anchor>
+						{kindLabels[row.original.kind] ?? row.original.kind}
+					</Badge>
 				),
 			},
 			{
-				id: "org_name",
-				accessorKey: "org_name",
-				header: t`Organisation`,
+				id: "requester",
+				accessorFn: (r) => r.requester?.display_name ?? r.requester?.email ?? "",
+				header: t`Requester`,
 				cell: ({ row }) => (
-					<Text size="xs" c="dimmed">
-						{row.original.org_name}
+					<Text size="xs" fw={500}>
+						{row.original.requester?.display_name ?? "-"}
 					</Text>
 				),
 			},
 			{
-				id: "current_tier",
-				accessorFn: (r) => r.current_tier,
-				sortingFn: (a, b) =>
-					tierRank(a.original.current_tier) - tierRank(b.original.current_tier),
-				header: t`Current tier`,
+				id: "org_name",
+				accessorFn: (r) => r.org_name ?? "",
+				header: t`Organisation`,
 				cell: ({ row }) => (
-					<Badge
-						size="xs"
-						color={tierColors[row.original.current_tier] ?? "gray"}
-						variant="light"
-						tt="capitalize"
-					>
-						{row.original.current_tier}
-					</Badge>
+					<Text size="xs" c="dimmed">
+						{row.original.org_name ?? "-"}
+					</Text>
 				),
 			},
 			{
-				id: "target_tier",
-				accessorFn: (r) => r.target_tier,
+				id: "proposed_tier",
+				accessorKey: "proposed_tier",
 				sortingFn: (a, b) =>
-					tierRank(a.original.target_tier) - tierRank(b.original.target_tier),
-				header: t`Target tier`,
+					tierRank(a.original.proposed_tier) -
+					tierRank(b.original.proposed_tier),
+				header: t`Proposed tier`,
 				cell: ({ row }) => (
 					<Badge
 						size="xs"
-						color={tierColors[row.original.target_tier] ?? "gray"}
+						color={tierColors[row.original.proposed_tier] ?? "gray"}
 						variant="filled"
 						tt="capitalize"
 					>
-						{row.original.target_tier}
+						{row.original.proposed_tier}
 					</Badge>
 				),
 			},
 			{
-				id: "audio_hours_current",
-				accessorKey: "audio_hours_current",
-				header: t`Current hours`,
-				meta: { align: "right" },
+				id: "message",
+				accessorFn: (r) => r.requester_message ?? "",
+				header: t`Message`,
 				cell: ({ row }) => (
-					<UsageBar
-						used={row.original.audio_hours_current}
-						cap={row.original.audio_hours_included}
-						unit="h"
-					/>
+					<Text size="xs" c="dimmed" lineClamp={1} maw={200}>
+						{row.original.requester_message ?? "-"}
+					</Text>
 				),
 			},
 			{
-				id: "seat_count",
-				accessorKey: "seat_count",
-				header: t`Seats`,
-				meta: { align: "right" },
+				id: "created_at",
+				accessorKey: "created_at",
+				header: t`Submitted`,
 				cell: ({ row }) => (
-					<UsageBar
-						used={row.original.seat_count}
-						cap={row.original.seats_included}
-					/>
+					<Text size="xs">{formatDate(row.original.created_at)}</Text>
 				),
-			},
-			{
-				id: "requested_at",
-				accessorKey: "requested_at",
-				header: t`Requested`,
-				cell: ({ row }) => formatDate(row.original.requested_at),
 			},
 		],
 		[],
 	);
-	if (isLoading) {
-		return (
-			<Center py="xl">
-				<Loader size="sm" color="gray" />
-			</Center>
-		);
-	}
-	const rows = data ?? [];
+
+	const items = data?.items ?? [];
+	const counts = data?.counts ?? { pending: 0, approved: 0, denied: 0 };
+
 	return (
 		<Stack gap="sm">
-			<Group justify="space-between" align="center" wrap="wrap">
-				<Text size="xs" c="dimmed">
-					<Plural value={rows.length} one="# request" other="# requests" />
-				</Text>
-				<TextInput
-					leftSection={<IconSearch size={14} />}
-					placeholder={t`Search workspace, organisation, tier`}
-					value={globalFilter}
-					onChange={(e) => setGlobalFilter(e.currentTarget.value)}
-					size="xs"
-					style={{ maxWidth: 320 }}
+			<Tabs
+				value={statusFilter}
+				onChange={(v) => {
+					if (v) {
+						setStatusFilter(v);
+						setGlobalFilter("");
+					}
+				}}
+			>
+				<Tabs.List>
+					<Tabs.Tab value="pending">
+						<Group gap={6}>
+							<Trans>Pending</Trans>
+							<Badge size="xs" variant="filled" color="yellow" circle>
+								{counts.pending}
+							</Badge>
+						</Group>
+					</Tabs.Tab>
+					<Tabs.Tab value="approved">
+						<Group gap={6}>
+							<Trans>Approved</Trans>
+							<Badge size="xs" variant="filled" color="green" circle>
+								{counts.approved}
+							</Badge>
+						</Group>
+					</Tabs.Tab>
+					<Tabs.Tab value="denied">
+						<Group gap={6}>
+							<Trans>Denied</Trans>
+							<Badge size="xs" variant="filled" color="red" circle>
+								{counts.denied}
+							</Badge>
+						</Group>
+					</Tabs.Tab>
+				</Tabs.List>
+			</Tabs>
+
+			{isLoading ? (
+				<Center py="xl">
+					<Loader size="sm" color="gray" />
+				</Center>
+			) : (
+				<>
+					<Group justify="space-between" align="center" wrap="wrap">
+						<Text size="xs" c="dimmed">
+							<Plural
+								value={items.length}
+								one="# request"
+								other="# requests"
+							/>
+						</Text>
+						<TextInput
+							leftSection={<IconSearch size={14} />}
+							placeholder={t`Search requester, organisation, tier`}
+							value={globalFilter}
+							onChange={(e) => setGlobalFilter(e.currentTarget.value)}
+							size="xs"
+							style={{ maxWidth: 320 }}
+						/>
+					</Group>
+					<Paper withBorder radius="sm" style={{ overflowX: "auto" }}>
+						<Table
+							striped
+							highlightOnHover
+							verticalSpacing="xs"
+							fz="xs"
+						>
+							<Table.Thead>
+								<Table.Tr>
+									{columns.map((col) => (
+										<Table.Th key={col.id}>
+											<Text
+												size="xs"
+												fw={500}
+												c="dimmed"
+												tt="uppercase"
+												lts={0.3}
+											>
+												{typeof col.header === "string"
+													? col.header
+													: ""}
+											</Text>
+										</Table.Th>
+									))}
+								</Table.Tr>
+							</Table.Thead>
+							<Table.Tbody>
+								{items.length === 0 ? (
+									<Table.Tr>
+										<Table.Td colSpan={columns.length}>
+											<Text
+												size="xs"
+												c="dimmed"
+												ta="center"
+												py="md"
+											>
+												{statusFilter === "pending"
+													? t`No pending requests.`
+													: statusFilter === "approved"
+														? t`No approved requests.`
+														: t`No denied requests.`}
+											</Text>
+										</Table.Td>
+									</Table.Tr>
+								) : (
+									items
+										.filter((item) => {
+											if (!globalFilter) return true;
+											const q = globalFilter.toLowerCase();
+											return (
+												(item.requester?.display_name ?? "")
+													.toLowerCase()
+													.includes(q) ||
+												(item.requester?.email ?? "")
+													.toLowerCase()
+													.includes(q) ||
+												(item.org_name ?? "")
+													.toLowerCase()
+													.includes(q) ||
+												(item.proposed_tier ?? "")
+													.toLowerCase()
+													.includes(q) ||
+												(item.proposed_name ?? "")
+													.toLowerCase()
+													.includes(q) ||
+												(item.requester_message ?? "")
+													.toLowerCase()
+													.includes(q)
+											);
+										})
+										.map((item) => (
+											<Table.Tr
+												key={item.id}
+												style={{ cursor: "pointer" }}
+												onClick={() =>
+													setSelectedRequest(item)
+												}
+											>
+												<Table.Td>
+													<Badge
+														size="xs"
+														variant="light"
+														color={
+															item.kind ===
+															"new_workspace"
+																? "blue"
+																: "violet"
+														}
+													>
+														{kindLabels[item.kind] ??
+															item.kind}
+													</Badge>
+												</Table.Td>
+												<Table.Td>
+													<Text size="xs" fw={500}>
+														{item.requester
+															?.display_name ?? "-"}
+													</Text>
+												</Table.Td>
+												<Table.Td>
+													<Text size="xs" c="dimmed">
+														{item.org_name ?? "-"}
+													</Text>
+												</Table.Td>
+												<Table.Td>
+													<Badge
+														size="xs"
+														color={
+															tierColors[
+																item.proposed_tier
+															] ?? "gray"
+														}
+														variant="filled"
+														tt="capitalize"
+													>
+														{item.proposed_tier}
+													</Badge>
+												</Table.Td>
+												<Table.Td>
+													<Text
+														size="xs"
+														c="dimmed"
+														lineClamp={1}
+														maw={200}
+													>
+														{item.requester_message ??
+															"-"}
+													</Text>
+												</Table.Td>
+												<Table.Td>
+													<Text size="xs">
+														{formatDate(item.created_at)}
+													</Text>
+												</Table.Td>
+											</Table.Tr>
+										))
+								)}
+							</Table.Tbody>
+						</Table>
+					</Paper>
+				</>
+			)}
+
+			{selectedRequest && (
+				<WorkspaceRequestDetail
+					request={selectedRequest}
+					onClose={() => setSelectedRequest(null)}
 				/>
-			</Group>
-			<SimpleDataTable<UpgradeRequestRow>
-				columns={columns}
-				data={rows}
-				globalFilter={globalFilter}
-				onGlobalFilterChange={setGlobalFilter}
-				emptyLabel={t`No pending upgrade requests.`}
-			/>
+			)}
 		</Stack>
 	);
 }

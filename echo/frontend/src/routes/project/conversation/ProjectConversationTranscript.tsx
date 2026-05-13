@@ -22,6 +22,7 @@ import {
 	useConversationById,
 	useInfiniteConversationChunks,
 } from "@/components/conversation/hooks";
+import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { RetranscribeConversationModalActionIcon } from "@/components/conversation/RetranscribeConversation";
 import { testId } from "@/lib/testUtils";
 
@@ -31,7 +32,7 @@ export const ProjectConversationTranscript = () => {
 		conversationId: conversationId ?? "",
 		loadConversationChunks: false,
 		query: {
-			fields: ["id", "participant_name", "is_finished", "is_anonymized"],
+			fields: ["id", "participant_name", "is_finished", "is_anonymized", "locked"],
 		},
 	});
 	const { ref: loadMoreRef, inView } = useInView();
@@ -60,6 +61,7 @@ export const ProjectConversationTranscript = () => {
 	const allChunks = (chunksData?.pages ?? []).flatMap((page) => page.chunks);
 
 	const isAnonymized = conversationQuery.data?.is_anonymized ?? false;
+	const isLocked = conversationQuery.data?.locked === true;
 
 	const hasValidTranscripts = allChunks.some(
 		(chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
@@ -87,7 +89,7 @@ export const ProjectConversationTranscript = () => {
 							<Trans>Transcript</Trans>
 						</Title>
 						{/* TODO: (@ussaama) what u think about extracting into reusable flags? - useConversationFlags(conversationId) */}
-						{isEmptyConversation && (
+						{isEmptyConversation && !isLocked && (
 							<Badge
 								color="red"
 								variant="light"
@@ -96,18 +98,21 @@ export const ProjectConversationTranscript = () => {
 								<Trans>Empty</Trans>
 							</Badge>
 						)}
-						{/* Actions */}
-						<DownloadConversationTranscriptModalActionIcon
-							conversationId={conversationId ?? ""}
-						/>
-						<CopyConversationTranscriptActionIcon
-							conversationId={conversationId ?? ""}
-						/>
-						<RetranscribeConversationModalActionIcon
-							conversationId={conversationId ?? ""}
-							conversationName={conversationQuery.data?.participant_name ?? ""}
-							disabled={isAnonymized}
-						/>
+						{!isLocked && (
+							<>
+								<DownloadConversationTranscriptModalActionIcon
+									conversationId={conversationId ?? ""}
+								/>
+								<CopyConversationTranscriptActionIcon
+									conversationId={conversationId ?? ""}
+								/>
+								<RetranscribeConversationModalActionIcon
+									conversationId={conversationId ?? ""}
+									conversationName={conversationQuery.data?.participant_name ?? ""}
+									disabled={isAnonymized}
+								/>
+							</>
+						)}
 					</Group>
 
 					<Group>
@@ -129,6 +134,9 @@ export const ProjectConversationTranscript = () => {
 					</Group>
 				</Group>
 
+				{isLocked ? (
+					<LockedTranscriptOverlay />
+				) : (
 				<Stack>
 					{allChunks.length === 0 ? (
 						<Alert
@@ -161,6 +169,7 @@ export const ProjectConversationTranscript = () => {
 											transcript: chunk.transcript ?? "",
 										}}
 										showAudioPlayer={isAnonymized ? false : showAudioPlayer}
+										transcriptLocked={!!chunk.transcript_locked}
 									/>
 								</div>
 							);
@@ -174,6 +183,7 @@ export const ProjectConversationTranscript = () => {
 						</Stack>
 					)}
 				</Stack>
+				)}
 			</Stack>
 		</Stack>
 	);

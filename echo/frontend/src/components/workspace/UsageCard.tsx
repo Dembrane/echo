@@ -11,7 +11,7 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
@@ -19,52 +19,17 @@ import { type Tier, UpgradeModal } from "@/components/workspace/FeatureGate";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useWorkspaceUsage, type WorkspaceUsageData } from "@/hooks/useWorkspaceUsage";
 import { isTier } from "@/lib/tiers";
 import { formatDurationFromHours } from "@/lib/time";
 
-interface ProjectUsage {
-	id: string;
-	name: string;
-	audio_hours: number;
-	conversation_count: number;
-}
-
-interface UsageResponse {
-	cycle_start: string;
-	cycle_end_exclusive: string;
-	tier: string;
-	tier_tagline: string;
-	audio_hours: number;
-	audio_hours_included: number | null;
-	seat_count: number;
-	seat_count_included: number | null;
-	guest_count: number;
-	guest_cap: number | null;
-	project_count: number;
-	projects: ProjectUsage[];
-	pilot_hard_block_active: boolean;
-	member_invite_blocked?: boolean;
-	guest_invite_blocked?: boolean;
-	overage_forecast_eur?: number | null;
-	seat_overage_eur?: number | null;
-	next_tier?: {
-		tier: string;
-		tagline: string;
-		price_eur_monthly: number | null;
-		price_note: string;
-		included_hours: number | null;
-		included_seats: number | null;
-	} | null;
-}
-
-async function fetchUsage(
+async function fetchUsageFresh(
 	workspaceId: string,
 	monthOffset = 0,
-	refresh = false,
-): Promise<UsageResponse> {
+): Promise<WorkspaceUsageData> {
 	const params = new URLSearchParams();
 	if (monthOffset > 0) params.set("month_offset", String(monthOffset));
-	if (refresh) params.set("refresh", "true");
+	params.set("refresh", "true");
 	const qs = params.toString();
 	const url = `${API_BASE_URL}/v2/workspaces/${workspaceId}/usage${qs ? `?${qs}` : ""}`;
 	const res = await fetch(url, { credentials: "include" });
@@ -109,28 +74,15 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const [upgradeOpen, setUpgradeOpen] = useState(false);
 	const [monthOffset, setMonthOffset] = useState(0);
 
-	const { data, isLoading, isError, refetch, dataUpdatedAt } = useQuery({
-		queryFn: () => fetchUsage(workspaceId, monthOffset),
-		queryKey: ["v2", "workspace-usage", workspaceId, monthOffset],
-		// Always refetch when the billing tab mounts, even if the cached
-		// payload is still within staleTime. Users expect fresh seat/guest
-		// counts every time they land on this surface — without this, a
-		// member added in another tab or by another admin doesn't show
-		// until a manual click on the refresh icon. The server-side cache
-		// (30-min Redis TTL) still does its job; we're only overriding
-		// React Query's "fresh = skip" optimization.
-		refetchOnMount: "always",
-		refetchOnWindowFocus: "always",
-		staleTime: 60_000,
-	});
+	const { data, isLoading, isError, refetch, dataUpdatedAt } = useWorkspaceUsage(
+		workspaceId,
+		{ monthOffset },
+	);
 
 	const handleRefresh = async () => {
-		// Manual force-recompute. Bypasses the server's 30-min cache via
-		// ?refresh=true, then writes the fresh payload into the React
-		// Query cache so the card updates without a second fetch.
 		setRefreshing(true);
 		try {
-			const fresh = await fetchUsage(workspaceId, monthOffset, true);
+			const fresh = await fetchUsageFresh(workspaceId, monthOffset);
 			queryClient.setQueryData(
 				["v2", "workspace-usage", workspaceId, monthOffset],
 				fresh,
@@ -256,43 +208,44 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 					)}
 				</Stack>
 
-				{/* Seats */}
-				<Stack gap={6}>
-					<Group justify="space-between">
-						<Text size="sm" c="dimmed">
-							<Trans>Seats</Trans>
-						</Text>
-						<Text size="sm">
-							{data.seat_count}
-							{data.seat_count_included != null && (
-								<Text span c="dimmed" size="sm">
-									{" / "}
-									{data.seat_count_included}
-								</Text>
-							)}
-						</Text>
-					</Group>
-					{seatsPct !== null && (
-						<Progress value={seatsPct} size="xs" color="blue" />
-					)}
-				</Stack>
-
-				{/* Guests + projects (compact row) */}
+			{/* Seats (unified — guests share this pool) */}
+			<Stack gap={6}>
 				<Group justify="space-between">
 					<Text size="sm" c="dimmed">
-						<Trans>Guests</Trans>
+						<Trans>Seats</Trans>
 					</Text>
 					<Text size="sm">
-						{data.guest_count}
-						{data.guest_cap != null && (
+						{data.seat_count}
+						{data.seat_count_included != null && (
 							<Text span c="dimmed" size="sm">
 								{" / "}
-								{data.guest_cap}
+								{data.seat_count_included}
 							</Text>
 						)}
 					</Text>
 				</Group>
-				<Group justify="space-between">
+				{seatsPct !== null && (
+					<Progress value={seatsPct} size="xs" color="blue" />
+				)}
+				{data.guest_count > 0 && (
+					<Text size="xs" c="dimmed">
+						({data.seat_count - data.guest_count}{" "}
+						<Plural
+							value={data.seat_count - data.guest_count}
+							one="member"
+							other="members"
+						/>{" "}
+						+ {data.guest_count}{" "}
+						<Plural
+							value={data.guest_count}
+							one="guest"
+							other="guests"
+						/>)
+					</Text>
+				)}
+			</Stack>
+
+			<Group justify="space-between">
 					<Text size="sm" c="dimmed">
 						<Trans>Projects</Trans>
 					</Text>

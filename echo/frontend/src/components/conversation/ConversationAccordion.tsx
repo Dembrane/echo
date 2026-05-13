@@ -41,6 +41,7 @@ import {
 	IconChevronDown,
 	IconChevronUp,
 	IconInfoCircle,
+	IconLock,
 	IconRosetteDiscountCheck,
 	IconSearch,
 	IconSelectAll,
@@ -124,9 +125,10 @@ const ConversationAccordionLabelChatSelection = ({
 	const isSelected = !!projectChatContextQuery.data?.conversations?.find(
 		(c) => c.conversation_id === conversation.id,
 	);
-	const isLocked = !!projectChatContextQuery.data?.conversations?.find(
+	const isChatLocked = !!projectChatContextQuery.data?.conversations?.find(
 		(c) => c.conversation_id === conversation.id && c.locked,
 	);
+	const isOverCapLocked = !!conversation.locked;
 
 	const isAutoSelectEnabled =
 		projectChatContextQuery.data?.auto_select_bool ?? false;
@@ -137,12 +139,11 @@ const ConversationAccordionLabelChatSelection = ({
 		return typeof transcript === "string" && transcript.trim().length > 0;
 	});
 
+	const isDisabled = isChatLocked || isOverCapLocked || !hasContent;
+
 	const handleSelectChat = () => {
 		if (!isSelected) {
-			// Don't allow adding empty conversations to chat context
-			if (!hasContent) {
-				return;
-			}
+			if (isDisabled) return;
 			addChatContextMutation.mutate({
 				chatId: chatId ?? "",
 				conversationId: conversation.id,
@@ -155,20 +156,22 @@ const ConversationAccordionLabelChatSelection = ({
 		}
 	};
 
-	const tooltipLabel = isLocked
-		? t`Already added to this chat`
-		: !hasContent
-			? t`Cannot add empty conversation`
-			: isSelected
-				? t`Remove from this chat`
-				: t`Add to this chat`;
+	const tooltipLabel = isOverCapLocked
+		? t`Conversation locked, upgrade to add to chat`
+		: isChatLocked
+			? t`Already added to this chat`
+			: !hasContent
+				? t`Cannot add empty conversation`
+				: isSelected
+					? t`Remove from this chat`
+					: t`Add to this chat`;
 
 	return (
 		<Tooltip label={tooltipLabel}>
 			<Checkbox
 				size="md"
 				checked={isSelected}
-				disabled={isLocked || !hasContent}
+				disabled={isDisabled}
 				onChange={handleSelectChat}
 				color={
 					ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled ? "green" : undefined
@@ -584,19 +587,32 @@ const ConversationAccordionItem = ({
 							</Tooltip>
 						)}
 
-						{conversation.is_anonymized && (
-							<Tooltip label={t`Anonymized conversation`}>
-								<ThemeIcon
-									variant="subtle"
-									color="primary"
-									aria-label={t`anonymized conversation`}
-									size={18}
-									style={{ cursor: "default" }}
-								>
-									<DetectiveIcon />
-								</ThemeIcon>
-							</Tooltip>
-						)}
+					{conversation.is_anonymized && (
+						<Tooltip label={t`Anonymized conversation`}>
+							<ThemeIcon
+								variant="subtle"
+								color="primary"
+								aria-label={t`anonymized conversation`}
+								size={18}
+								style={{ cursor: "default" }}
+							>
+								<DetectiveIcon />
+							</ThemeIcon>
+						</Tooltip>
+					)}
+
+					{conversation.locked && (
+						<Tooltip label={t`Transcript locked, upgrade to view`}>
+							<Badge
+								size="xs"
+								color="blue"
+								variant="light"
+								leftSection={<IconLock size={10} />}
+							>
+								{t`Locked`}
+							</Badge>
+						</Tooltip>
+					)}
 					</Group>
 
 					<ConversationStatusIndicators

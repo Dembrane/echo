@@ -1,0 +1,10 @@
+Request not approved
+
+Your {{ kind_label }} request was not approved.
+
+{% if denial_reason %}Reason:
+{{ denial_reason }}
+
+{% endif %}If you have questions, reply to this email or reach out to the dembrane team.
+
+— the dembrane team

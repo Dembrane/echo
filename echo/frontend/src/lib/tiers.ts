@@ -9,6 +9,7 @@
  */
 
 export type Tier =
+	| "free"
 	| "pilot"
 	| "pioneer"
 	| "innovator"
@@ -16,6 +17,7 @@ export type Tier =
 	| "guardian";
 
 export const TIER_ORDER: Tier[] = [
+	"free",
 	"pilot",
 	"pioneer",
 	"innovator",
@@ -24,6 +26,7 @@ export const TIER_ORDER: Tier[] = [
 ];
 
 export const TIER_TAGLINE: Record<Tier, string> = {
+	free: "get started.",
 	changemaker: "your brand, your integrations.",
 	guardian: "enterprise scale.",
 	innovator: "privacy and data portability.",
@@ -35,6 +38,7 @@ export const TIER_TAGLINE: Record<Tier, string> = {
 // "what does Pioneer mean?" without hitting the billing tab. Numbers
 // mirror server/dembrane/tier_capacity.py — keep in sync.
 export const TIER_CAPACITY_SHORT: Record<Tier, string> = {
+	free: "1 seat · 1 h · free",
 	changemaker: "20 seats · 100 h/mo · €1500/mo",
 	guardian: "unlimited · custom pricing",
 	innovator: "10 seats · 50 h/mo · €500/mo",
@@ -43,11 +47,11 @@ export const TIER_CAPACITY_SHORT: Record<Tier, string> = {
 };
 
 // Per-seat overage rate (euros, monthly) when a workspace exceeds
-// included seats. Pilot is null (hard-blocks instead of billing
-// overage); Guardian is null (unlimited). Pioneer/Innovator/Changemaker
-// bill per matrix §8. Mirror of seat_overage_eur in tier_capacity.py —
-// keep in sync.
+// included seats. Free + pilot have no overage billing; Guardian is
+// unlimited. Pioneer/Innovator/Changemaker bill per matrix §8. Mirror
+// of seat_overage_eur in tier_capacity.py — keep in sync.
 export const TIER_SEAT_OVERAGE_EUR: Record<Tier, number | null> = {
+	free: null,
 	changemaker: 60,
 	guardian: null,
 	innovator: 30,
@@ -67,6 +71,7 @@ export function capacityShortFor(tier: string | null | undefined): string {
 
 export function isTier(value: string | null | undefined): value is Tier {
 	return (
+		value === "free" ||
 		value === "pilot" ||
 		value === "pioneer" ||
 		value === "innovator" ||

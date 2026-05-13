@@ -14,7 +14,6 @@ interface TierCapacity {
 	included_hours: number | null;
 	hour_overage_eur: number | null;
 	hard_block_on_hours: boolean;
-	guest_cap: number | null;
 	training_included: string;
 }
 
@@ -57,11 +56,6 @@ function fmtHourOverage(cap: TierCapacity): string {
 	if (cap.hard_block_on_hours) return "hard block";
 	if (cap.hour_overage_eur == null) return "—";
 	return `${fmtEur(cap.hour_overage_eur)}/h`;
-}
-
-function fmtGuests(cap: TierCapacity): string {
-	if (cap.guest_cap == null) return "∞";
-	return String(cap.guest_cap);
 }
 
 interface Props {
@@ -125,7 +119,6 @@ export const TierCapacityMatrix = ({
 				{ label: "Seats", render: fmtSeats },
 				{ label: "Hours", render: fmtHours },
 				{ label: "Hour overage", render: fmtHourOverage },
-				{ label: "Guests", render: fmtGuests },
 			] as const)
 		: ([
 				{ label: "Price", render: fmtPrice },
@@ -134,7 +127,6 @@ export const TierCapacityMatrix = ({
 				{ label: "Seat overage", render: fmtSeatOverage },
 				{ label: "Hours", render: fmtHours },
 				{ label: "Hour overage", render: fmtHourOverage },
-				{ label: "Guests", render: fmtGuests },
 				{
 					label: "Training",
 					render: (c: TierCapacity) => c.training_included,

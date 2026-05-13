@@ -685,6 +685,73 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
         raise e from e
 
 
+def _stamp_over_cap(conversation_id: str, logger: Any) -> None:
+    """Compute and persist the is_over_cap stamp for a just-finished conversation.
+
+    ADR 0001 soft-edge formula:
+        is_over_cap = NOT tier_allows_overage(tier)
+            AND (workspace.audio_hours - this_conversation.duration) >= included_hours
+
+    Only fires on free + pilot; pioneer+ always evaluates to False.
+    """
+    from dembrane.service import project_service, conversation_service
+    from dembrane.directus import directus, directus_client_context
+    from dembrane.tier_capacity import compute_is_over_cap
+
+    conversation = conversation_service.get_by_id_or_raise(conversation_id)
+    project_id = conversation.get("project_id")
+    if not project_id:
+        logger.warning(f"Conversation {conversation_id} has no project_id, skipping stamp")
+        return
+
+    project = project_service.get_by_id_or_raise(project_id)
+    workspace_id = project.get("workspace_id")
+    if not workspace_id:
+        logger.warning(f"Project {project_id} has no workspace_id, skipping stamp")
+        return
+
+    with directus_client_context(directus) as client:
+        workspace = client.get_item("workspace", workspace_id)
+    tier = workspace.get("tier", "")
+
+    # Sum all conversation durations in this workspace (includes deleted rows
+    # because deletions preserve billable duration).
+    with directus_client_context(directus) as client:
+        projects = client.get_items("project", {
+            "query": {
+                "filter": {"workspace_id": {"_eq": workspace_id}},
+                "fields": ["id"],
+                "limit": -1,
+            }
+        })
+    if not isinstance(projects, list) or not projects:
+        return
+    project_ids = [p["id"] for p in projects]
+
+    with directus_client_context(directus) as client:
+        conversations = client.get_items("conversation", {
+            "query": {
+                "filter": {"project_id": {"_in": project_ids}},
+                "fields": ["duration"],
+                "limit": -1,
+            }
+        })
+    if not isinstance(conversations, list):
+        conversations = []
+    total_seconds = sum(c.get("duration") or 0 for c in conversations)
+    workspace_audio_hours = total_seconds / 3600
+
+    conversation_duration_hours = (conversation.get("duration") or 0) / 3600
+
+    over_cap = compute_is_over_cap(tier, workspace_audio_hours, conversation_duration_hours)
+    conversation_service.update(conversation_id=conversation_id, is_over_cap=over_cap)
+    logger.info(
+        f"Stamped is_over_cap={over_cap} on conversation {conversation_id} "
+        f"(tier={tier}, ws_hours={workspace_audio_hours:.2f}, "
+        f"conv_hours={conversation_duration_hours:.2f})"
+    )
+
+
 @dramatiq.actor(queue_name="network", priority=30)
 def task_finish_conversation_hook(conversation_id: str) -> None:
     """
@@ -725,6 +792,10 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
         # Mark as finished (user intent)
         conversation_service.update(conversation_id=conversation_id, is_finished=True)
         logger.info(f"Marked conversation {conversation_id} as is_finished=True")
+
+        # Stamp is_over_cap (ADR 0001) — must run after is_finished is set.
+        # Let errors propagate so Dramatiq retries the stamp.
+        _stamp_over_cap(conversation_id, logger)
 
         # Check if all chunks are already transcribed
         pending = get_pending_chunks(conversation_id)
@@ -1702,3 +1773,386 @@ def task_send_invite_email(
         # Raise so dramatiq retries. The worker's retry middleware
         # applies exponential backoff (default 15s → minutes).
         raise RuntimeError(f"invite email send failed: {to}")
+
+
+@dramatiq.actor(queue_name="network")
+def task_expire_workspace_tiers() -> None:
+    """Hourly cron: downgrade workspaces whose tier_expires_at has elapsed.
+
+    For each expired workspace:
+      1. Set tier = 'free'
+      2. Populate downgraded_at / downgraded_from_tier (existing banner reads these)
+      3. Clear tier_expires_at
+      4. Run downgrade effects (whitelabel revert, policy freezes)
+      5. Emit TIER_EXPIRED notification + email to workspace admins + billing
+
+    Idempotent: already-free workspaces are excluded by the query filter.
+    Re-running after a successful downgrade is a no-op.
+    """
+    task_logger = getLogger("dembrane.tasks.task_expire_workspace_tiers")
+    task_logger.info("Checking for expired workspace tiers @ %s", get_utc_timestamp())
+
+    from dembrane.directus import directus, directus_client_context
+
+    now_iso = get_utc_timestamp().isoformat()
+
+    with directus_client_context(directus) as client:
+        expired = client.get_items("workspace", {
+            "query": {
+                "filter": {
+                    "tier_expires_at": {"_nnull": True, "_lt": now_iso},
+                    "tier": {"_neq": "free"},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id", "name", "tier", "org_id"],
+                "limit": -1,
+            }
+        })
+
+    if not isinstance(expired, list) or not expired:
+        task_logger.debug("No expired workspace tiers found")
+        return
+
+    task_logger.info("Found %d workspace(s) with expired tier", len(expired))
+
+    for ws in expired:
+        ws_id = ws["id"]
+        from_tier = ws.get("tier", "pioneer")
+        ws_name = ws.get("name") or "Untitled"
+
+        try:
+            effects = run_async_in_new_loop(
+                _apply_tier_expiry(ws_id, from_tier)
+            )
+
+            task_logger.info(
+                "Expired workspace %s (%s): %s -> free, %d effects applied",
+                ws_id, ws_name, from_tier, len(effects),
+            )
+
+            _send_tier_expired_notifications(ws_id, ws_name, from_tier, effects)
+
+        except Exception:
+            task_logger.exception(
+                "Failed to expire workspace %s (%s)", ws_id, ws_name,
+            )
+
+
+async def _apply_tier_expiry(workspace_id: str, from_tier: str) -> list[dict]:
+    """Downgrade a single workspace to free tier and clear expiry date.
+
+    Returns the list of downgrade effects applied.
+    """
+    from dembrane.cache_utils import invalidate_org_usage, invalidate_workspace_usage
+    from dembrane.directus_async import async_directus
+    from dembrane.tier_downgrade import apply_downgrade_effects
+
+    effects = await apply_downgrade_effects(workspace_id, from_tier, "free")
+
+    now_iso = get_utc_timestamp().isoformat()
+    await async_directus.update_item("workspace", workspace_id, {
+        "tier": "free",
+        "downgraded_at": now_iso,
+        "downgraded_from_tier": from_tier,
+        "tier_expires_at": None,
+        "pre_warning_sent": False,
+    })
+
+    await invalidate_workspace_usage(workspace_id)
+    ws = await async_directus.get_item("workspace", workspace_id)
+    if ws and ws.get("org_id"):
+        await invalidate_org_usage(ws["org_id"])
+
+    return effects
+
+
+def _send_tier_expired_notifications(
+    workspace_id: str,
+    workspace_name: str,
+    from_tier: str,
+    effects: list[dict],
+) -> None:
+    """Emit TIER_EXPIRED in-app notification + email to admins + billing."""
+    from dembrane.email import send_email_sync
+    from dembrane.notifications import (
+        emit_to_audience,
+        audience_workspace_admins_and_billing,
+    )
+
+    task_logger = getLogger("dembrane.tasks._send_tier_expired_notifications")
+
+    audience = run_async_in_new_loop(
+        audience_workspace_admins_and_billing(workspace_id)
+    )
+    if not audience:
+        task_logger.info("No audience for TIER_EXPIRED on workspace %s", workspace_id)
+        return
+
+    run_async_in_new_loop(emit_to_audience(
+        audience_user_ids=audience,
+        event_code="TIER_EXPIRED",
+        title=f"{workspace_name} tier expired",
+        message=f"Moved from {from_tier} to free. Request an upgrade to restore features.",
+        action="NAVIGATE_WORKSPACE_SETTINGS",
+        ref_workspace_id=workspace_id,
+    ))
+
+    settings = get_settings()
+    base = (settings.urls.admin_base_url or "").rstrip("/")
+    workspace_url = f"{base}/w/{workspace_id}" if base else f"/w/{workspace_id}"
+
+    freeze_items = [
+        e["human"] for e in effects
+        if isinstance(e, dict) and e.get("effect") == "freeze" and e.get("human")
+    ]
+    revert_items = [
+        e["human"] for e in effects
+        if isinstance(e, dict) and e.get("effect") == "revert" and e.get("human")
+    ]
+
+    from dembrane.directus import directus
+    with directus_client_context(directus) as client:
+        rows = client.get_items("app_user", {
+            "query": {
+                "filter": {"id": {"_in": audience}},
+                "fields": ["email"],
+                "limit": -1,
+            }
+        })
+    emails = sorted({
+        (r.get("email") or "").strip()
+        for r in (rows if isinstance(rows, list) else [])
+        if isinstance(r, dict) and r.get("email")
+    })
+
+    if not emails:
+        return
+
+    for email_addr in emails:
+        ok = send_email_sync(
+            to=email_addr,
+            subject=f"{workspace_name} moved to free",
+            template="tier_expired",
+            template_data={
+                "workspace_name": workspace_name,
+                "from_tier": from_tier,
+                "freeze_items": freeze_items,
+                "revert_items": revert_items,
+                "workspace_url": workspace_url,
+            },
+        )
+        if not ok:
+            task_logger.warning(
+                "tier_expired email failed for workspace %s to %s",
+                workspace_id, email_addr,
+            )
+
+
+@dramatiq.actor(queue_name="network")
+def task_send_tier_expiry_prewarning() -> None:
+    """Hourly cron: send 3-day pre-warning emails for expiring workspace tiers.
+
+    Finds workspaces where tier_expires_at is within 3 days from now,
+    tier != 'free', and pre_warning_sent = false. Emits TIER_EXPIRING_SOON
+    notification + email, then sets pre_warning_sent = true.
+
+    Idempotent: pre_warning_sent prevents duplicate warnings.
+    """
+    task_logger = getLogger("dembrane.tasks.task_send_tier_expiry_prewarning")
+    task_logger.info("Checking for workspaces needing tier expiry pre-warning @ %s", get_utc_timestamp())
+
+    from datetime import datetime as dt_cls, timezone, timedelta
+
+    from dembrane.directus import directus, directus_client_context
+
+    now = dt_cls.now(timezone.utc)
+    three_days = now + timedelta(days=3)
+    now_iso = now.isoformat()
+    three_days_iso = three_days.isoformat()
+
+    with directus_client_context(directus) as client:
+        candidates = client.get_items("workspace", {
+            "query": {
+                "filter": {
+                    "tier_expires_at": {"_nnull": True, "_gte": now_iso, "_lte": three_days_iso},
+                    "tier": {"_neq": "free"},
+                    "pre_warning_sent": {"_eq": False},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id", "name", "tier", "org_id", "tier_expires_at"],
+                "limit": -1,
+            }
+        })
+
+    if not isinstance(candidates, list) or not candidates:
+        task_logger.debug("No workspaces need tier expiry pre-warning")
+        return
+
+    task_logger.info("Found %d workspace(s) needing tier expiry pre-warning", len(candidates))
+
+    for ws in candidates:
+        ws_id = ws["id"]
+        ws_name = ws.get("name") or "Untitled"
+        current_tier = ws.get("tier", "pioneer")
+        expires_at_raw = ws.get("tier_expires_at", "")
+
+        try:
+            _send_tier_expiring_soon(ws_id, ws_name, current_tier, expires_at_raw)
+
+            from dembrane.directus import directus
+            with directus_client_context(directus) as client:
+                client.update_item("workspace", ws_id, {"pre_warning_sent": True})
+
+            task_logger.info(
+                "Pre-warning sent for workspace %s (%s), tier=%s, expires=%s",
+                ws_id, ws_name, current_tier, expires_at_raw,
+            )
+        except Exception:
+            task_logger.exception(
+                "Failed to send pre-warning for workspace %s (%s)", ws_id, ws_name,
+            )
+
+
+def _send_tier_expiring_soon(
+    workspace_id: str,
+    workspace_name: str,
+    current_tier: str,
+    expires_at_raw: str,
+) -> None:
+    """Emit TIER_EXPIRING_SOON in-app notification + email to admins + billing."""
+    from dembrane.email import send_email_sync
+    from dembrane.notifications import (
+        emit_to_audience,
+        audience_workspace_admins_and_billing,
+    )
+
+    task_logger = getLogger("dembrane.tasks._send_tier_expiring_soon")
+
+    audience = run_async_in_new_loop(
+        audience_workspace_admins_and_billing(workspace_id)
+    )
+    if not audience:
+        task_logger.info("No audience for TIER_EXPIRING_SOON on workspace %s", workspace_id)
+        return
+
+    expires_date = _format_expiry_date(expires_at_raw)
+
+    run_async_in_new_loop(emit_to_audience(
+        audience_user_ids=audience,
+        event_code="TIER_EXPIRING_SOON",
+        title=f"{workspace_name} tier expires {expires_date}",
+        message=f"Your {current_tier} tier expires on {expires_date}. Request an upgrade to keep full features.",
+        action="NAVIGATE_WORKSPACE_SETTINGS",
+        ref_workspace_id=workspace_id,
+    ))
+
+    settings = get_settings()
+    base = (settings.urls.admin_base_url or "").rstrip("/")
+    workspace_url = f"{base}/w/{workspace_id}" if base else f"/w/{workspace_id}"
+
+    from dembrane.directus import directus
+    with directus_client_context(directus) as client:
+        rows = client.get_items("app_user", {
+            "query": {
+                "filter": {"id": {"_in": audience}},
+                "fields": ["email"],
+                "limit": -1,
+            }
+        })
+    emails = sorted({
+        (r.get("email") or "").strip()
+        for r in (rows if isinstance(rows, list) else [])
+        if isinstance(r, dict) and r.get("email")
+    })
+
+    if not emails:
+        return
+
+    for email_addr in emails:
+        ok = send_email_sync(
+            to=email_addr,
+            subject=f"{workspace_name} tier expires {expires_date}",
+            template="tier_expiring_soon",
+            template_data={
+                "workspace_name": workspace_name,
+                "current_tier": current_tier,
+                "expires_date": expires_date,
+                "workspace_url": workspace_url,
+            },
+        )
+        if not ok:
+            task_logger.warning(
+                "tier_expiring_soon email failed for workspace %s to %s",
+                workspace_id, email_addr,
+            )
+
+
+def _format_expiry_date(expires_at_raw: str) -> str:
+    """Format ISO timestamp to human-readable date like '15 May 2026'."""
+    from datetime import datetime as dt_cls
+
+    try:
+        if expires_at_raw:
+            dt = dt_cls.fromisoformat(expires_at_raw.replace("Z", "+00:00"))
+            return f"{dt.day} {dt.strftime('%B %Y')}"
+    except (ValueError, TypeError):
+        pass
+    return "soon"
+
+
+@dramatiq.actor(queue_name="network")
+def task_flush_email_digests() -> None:
+    """Daily digest flush — sends one summary email per recipient.
+
+    Scheduled at 09:00 UTC by the scheduler. Drains all queued digest
+    items and sends a single digest email per recipient. Idempotent:
+    re-running when the queue is empty is a no-op.
+    """
+    from dembrane.email import send_email_sync
+    from dembrane.email_throttle import flush_all_digests_sync
+
+    task_logger = getLogger("dembrane.tasks.task_flush_email_digests")
+
+    batches = flush_all_digests_sync()
+    if not batches:
+        task_logger.info("digest_flush: no pending items")
+        return
+
+    settings = get_settings()
+    base = (settings.urls.admin_base_url or "").rstrip("/")
+    admin_url = f"{base}/admin/upgrades"
+
+    for recipient_id, items in batches.items():
+        task_logger.info(
+            "digest_flush: sending %d items to recipient %s",
+            len(items), recipient_id,
+        )
+        email_addr = _resolve_recipient_email_sync(recipient_id)
+        if not email_addr:
+            task_logger.warning("digest_flush: no email found for recipient %s, skipping", recipient_id)
+            continue
+        ok = send_email_sync(
+            to=email_addr,
+            subject=f"dembrane digest: {len(items)} notification{'s' if len(items) != 1 else ''}",
+            template="notification_digest",
+            template_data={
+                "item_count": len(items),
+                "items": items,
+                "admin_url": admin_url,
+            },
+        )
+        if not ok:
+            task_logger.warning("digest_flush: email send failed for %s", recipient_id)
+
+
+def _resolve_recipient_email_sync(app_user_id: str) -> str:
+    """Look up email for an app_user ID (sync, for Dramatiq actors)."""
+    from dembrane.directus import directus
+
+    try:
+        user = directus.get_item("app_user", app_user_id)
+        if user and user.get("email"):
+            return user["email"]
+    except Exception:
+        logger.warning("_resolve_recipient_email_sync: failed for %s", app_user_id)
+    return ""

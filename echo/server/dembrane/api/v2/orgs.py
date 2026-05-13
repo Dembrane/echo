@@ -848,13 +848,9 @@ class OrgWorkspaceSummary(BaseModel):
     project_count: int = 0
     member_count: int = 0
     is_private: bool = False  # settings.inherit_organisation_admins == false
-    # Cap-blocked flags so the organisation invite wizard can disable
-    # workspaces that wouldn't accept a new direct member or guest. Mirror
-    # of the same flags on `WorkspaceUsageResponse`. member_invite_blocked
-    # is only True on hard-block tiers (Pilot); guest_invite_blocked is
-    # True at every finite-cap tier when at cap.
-    member_invite_blocked: bool = False
-    guest_invite_blocked: bool = False
+    # Unified seat cap gate. True when seats_used (members + guests) meets
+    # or exceeds included_seats on a hard-blocking tier (free, pilot).
+    seat_invite_blocked: bool = False
 
 
 @router.get("/{org_id}/workspaces", response_model=list[OrgWorkspaceSummary])
@@ -971,21 +967,15 @@ async def list_organisation_workspaces(
         # the cap, not only after they're accepted.
         tier = (ws.get("tier") or "").lower()
         cap = get_capacity(tier)
-        member_blocked = False
-        guest_blocked = False
-        if cap is not None and (cap.included_seats is not None or cap.guest_cap is not None):
+        seat_blocked = False
+        if cap is not None and cap.included_seats is not None and tier_hard_blocks_seats(tier):
             from dembrane.seat_capacity import count_pending_invites
 
-            seat_count, guest_count = await compute_effective_seat_state(ws["id"])
+            seats_used, _member_count, _guest_count = await compute_effective_seat_state(ws["id"])
             member_pending, guest_pending = await count_pending_invites(ws["id"])
-            if (
-                cap.included_seats is not None
-                and tier_hard_blocks_seats(tier)
-                and (seat_count + member_pending) >= cap.included_seats
-            ):
-                member_blocked = True
-            if cap.guest_cap is not None and (guest_count + guest_pending) >= cap.guest_cap:
-                guest_blocked = True
+            total_pending = member_pending + guest_pending
+            if (seats_used + total_pending) >= cap.included_seats:
+                seat_blocked = True
 
         out.append(
             OrgWorkspaceSummary(
@@ -996,8 +986,7 @@ async def list_organisation_workspaces(
                 project_count=project_counts.get(ws["id"], 0),
                 member_count=member_counts.get(ws["id"], 0),
                 is_private=is_private,
-                member_invite_blocked=member_blocked,
-                guest_invite_blocked=guest_blocked,
+                seat_invite_blocked=seat_blocked,
             )
         )
     return out
@@ -1346,12 +1335,8 @@ class OrgUsageWorkspaceRow(BaseModel):
     approaching_seat_cap: bool = False  # >=80% on capped seats
     seat_cap_hit: bool = False  # seat_count >= seats_included
     downgraded_at: Optional[str] = None
-    # Guests live alongside seats (matrix §7). They don't bill but
-    # they're tier-capped (§1 Guest cap column), so staff wants to
-    # see the count + cap on the same rollup row.
+    # Guests share the seat pool. Count exposed separately for breakdown.
     guest_count: int = 0
-    guest_cap: Optional[int] = None
-    guest_cap_hit: bool = False
     # Admin / billing only:
     overage_forecast_eur: Optional[float] = None
 
@@ -1534,10 +1519,10 @@ async def get_org_usage(
         seat_state_results = await asyncio.gather(
             *[compute_effective_seat_state(wid) for wid in ws_ids]
         )
-        for wid, (seat_count, guest_count) in zip(ws_ids, seat_state_results, strict=True):
-            per_ws_seats[wid] = seat_count
+        for wid, (_seats_used, member_count, guest_count) in zip(ws_ids, seat_state_results, strict=True):
+            per_ws_seats[wid] = member_count
             per_ws_guests[wid] = guest_count
-            total_seat_count += seat_count
+            total_seat_count += member_count
             total_guest_count += guest_count
 
     # Per-workspace rows + aggregation. We build the rows even when the
@@ -1573,8 +1558,6 @@ async def get_org_usage(
         seat_cap_hit = seats_included is not None and seat_count >= seats_included
         approaching_seat_cap = seats_pct is not None and seats_pct >= 0.8 and not seat_cap_hit
         guest_count = per_ws_guests.get(wid, 0)
-        guest_cap: Optional[int] = cap.guest_cap if cap else None
-        guest_cap_hit = guest_cap is not None and guest_count >= guest_cap
         ws_at_cap = False
         ws_approaching = False
         ws_forecast_eur = 0.0
@@ -1611,8 +1594,6 @@ async def get_org_usage(
                 "seat_cap_hit": seat_cap_hit,
                 "approaching_seat_cap": approaching_seat_cap,
                 "guest_count": guest_count,
-                "guest_cap": guest_cap,
-                "guest_cap_hit": guest_cap_hit,
                 "at_cap": ws_at_cap,
                 "approaching_cap": ws_approaching,
                 "downgraded_at": w.get("downgraded_at"),

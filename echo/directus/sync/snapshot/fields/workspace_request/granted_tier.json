@@ -1,0 +1,67 @@
+{
+  "collection": "workspace_request",
+  "field": "granted_tier",
+  "type": "string",
+  "meta": {
+    "collection": "workspace_request",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "granted_tier",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": "What staff actually granted (may differ from proposed).",
+    "options": {
+      "choices": [
+        {
+          "text": "Pilot",
+          "value": "pilot"
+        },
+        {
+          "text": "Pioneer",
+          "value": "pioneer"
+        },
+        {
+          "text": "Innovator",
+          "value": "innovator"
+        },
+        {
+          "text": "Changemaker",
+          "value": "changemaker"
+        },
+        {
+          "text": "Guardian",
+          "value": "guardian"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 11,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "granted_tier",
+    "table": "workspace_request",
+    "data_type": "character varying",
+    "default_value": null,
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

@@ -40,6 +40,7 @@ import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
  */
 
 export type Tier =
+	| "free"
 	| "pilot"
 	| "pioneer"
 	| "innovator"
@@ -47,6 +48,7 @@ export type Tier =
 	| "guardian";
 
 const TIER_LABEL: Record<Tier, string> = {
+	free: "free",
 	changemaker: "changemaker",
 	guardian: "guardian",
 	innovator: "innovator",
@@ -65,13 +67,14 @@ interface FeatureGateProps {
 	benefit: string;
 	/** `true` if the caller has admin/owner role in this workspace. */
 	canRequestUpgrade: boolean;
-	/** Workspace id so the modal can POST /v2/workspaces/:id/upgrade-request. */
+	/** Workspace id for the tier_upgrade request. */
 	workspaceId: string;
 	/** The gated feature's normal render — shown under the hatched overlay. */
 	children: ReactNode;
 }
 
 const TIER_ORDER: Tier[] = [
+	"free",
 	"pilot",
 	"pioneer",
 	"innovator",
@@ -189,7 +192,7 @@ interface UpgradeModalProps {
 /**
  * Ask 4C — one feature, one benefit, one tier, one CTA.
  *
- * Admin path: "Request upgrade" posts to /v2/workspaces/:id/upgrade-request.
+ * Admin path: "Request upgrade" posts to /v2/workspace-requests (kind=tier_upgrade).
  * Member path: informational only; the copy says "ask a organisation admin" but
  * there's no button — Q3 decision (D9). Keeping the message honest:
  * there's nothing we can do for them, only their admin can.
@@ -292,22 +295,27 @@ export function UpgradeModal({
 	canRequestUpgrade,
 	workspaceId,
 }: UpgradeModalProps) {
+	const { workspace } = useWorkspace();
 	const [message, setMessage] = useState("");
 	const [sending, setSending] = useState(false);
 
 	const handleRequest = async () => {
-		// Guard against double-fire: Mantine's `loading` prop doesn't disable
-		// the button, so a fast double-click would fire two POSTs before the
-		// first setSending(true) paints (round-2 audit, Reliability H2).
 		if (sending) return;
+		if (!workspace?.org_id) {
+			toast.error(t`Workspace data not loaded yet. Please try again.`);
+			return;
+		}
 		setSending(true);
 		try {
 			const res = await fetch(
-				`${API_BASE_URL}/v2/workspaces/${workspaceId}/upgrade-request`,
+				`${API_BASE_URL}/v2/workspace-requests`,
 				{
 					body: JSON.stringify({
-						message: message.trim() || undefined,
-						target_tier: requiredTier,
+						kind: "tier_upgrade",
+						org_id: workspace.org_id,
+						workspace_id: workspaceId,
+						proposed_tier: requiredTier,
+						requester_message: message.trim() || undefined,
 					}),
 					credentials: "include",
 					headers: { "Content-Type": "application/json" },
@@ -322,7 +330,7 @@ export function UpgradeModal({
 						: t`Couldn't send the request`;
 				throw new Error(detail);
 			}
-			toast.success(t`Request sent. We'll be in touch.`);
+			toast.success(t`Request submitted. We'll be in touch within 1 business day.`);
 			onClose();
 			setMessage("");
 		} catch (err) {

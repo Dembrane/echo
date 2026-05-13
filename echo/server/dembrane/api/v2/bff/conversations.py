@@ -34,6 +34,7 @@ from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
+from dembrane.tier_capacity import is_conversation_locked
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.bff._access import (
     filter_exclude_deleted,
@@ -64,7 +65,22 @@ _CONVERSATION_DEFAULT_FIELDS = [
     "is_finished",
     "is_audio_processing_finished",
     "is_anonymized",
+    "is_over_cap",
 ]
+
+
+def _enrich_conversation(conv: dict, tier: Optional[str]) -> dict:
+    """Add derived `locked`, strip raw `is_over_cap` from client responses."""
+    conv["locked"] = is_conversation_locked(conv, tier)
+    conv.pop("is_over_cap", None)
+    return conv
+
+
+def _scrub_chunk_transcript(chunk: dict) -> dict:
+    """Redact transcript from a locked conversation's chunk."""
+    chunk["transcript"] = None
+    chunk["transcript_locked"] = True
+    return chunk
 
 
 @router.get("")
@@ -160,6 +176,10 @@ async def list_conversations(
                     kept.add(cid)
         convs = [c for c in convs if c["id"] in kept]
 
+    tier = access.tier
+    for conv in convs:
+        _enrich_conversation(conv, tier)
+
     if convs and (include_chunks or include_tags):
         conv_ids = [c["id"] for c in convs]
 
@@ -187,11 +207,14 @@ async def list_conversations(
                 )
                 or []
             )
+            locked_conv_ids = {c["id"] for c in convs if c.get("locked")}
             chunk_map: dict[str, list[dict]] = {}
             if isinstance(chunks, list):
                 for ch in chunks:
                     cid = ch.get("conversation_id")
                     if cid:
+                        if cid in locked_conv_ids:
+                            _scrub_chunk_transcript(ch)
                         chunk_map.setdefault(cid, []).append(ch)
             for conv in convs:
                 conv["chunks"] = chunk_map.get(conv["id"], [])
@@ -361,6 +384,8 @@ async def get_conversation(
 ) -> dict:
     """Read a single conversation with optional embeds."""
     access, conv = await resolve_conversation_access(conversation_id, auth)
+    _enrich_conversation(conv, access.tier)
+    is_locked = conv.get("locked", False)
 
     if include_chunks:
         chunks = (
@@ -377,7 +402,11 @@ async def get_conversation(
             )
             or []
         )
-        conv["chunks"] = chunks if isinstance(chunks, list) else []
+        chunk_list = chunks if isinstance(chunks, list) else []
+        if is_locked:
+            for ch in chunk_list:
+                _scrub_chunk_transcript(ch)
+        conv["chunks"] = chunk_list
 
     if include_tags:
         tags = (
@@ -398,10 +427,6 @@ async def get_conversation(
         )
         conv["tags"] = tags if isinstance(tags, list) else []
 
-    # The ResourceAccess bundle already enforced conversation:read, but
-    # we don't need to surface anything about it to the client — just
-    # hand back the conversation dict.
-    _ = access
     return conv
 
 
@@ -505,10 +530,8 @@ async def list_chunks(
     Replaces the infinite-query `readItems("conversation_chunk", ...)`
     on the conversation detail view.
     """
-    access, _ = await resolve_conversation_access(conversation_id, auth)
-    # reading chunks == reading the conversation, already gated by
-    # resolve_conversation_access.
-    _ = access
+    access, conv = await resolve_conversation_access(conversation_id, auth)
+    is_locked = is_conversation_locked(conv, access.tier)
 
     default_fields = [
         "id",
@@ -534,7 +557,11 @@ async def list_chunks(
             }
         },
     )
-    return chunks if isinstance(chunks, list) else []
+    result = chunks if isinstance(chunks, list) else []
+    if is_locked:
+        for ch in result:
+            _scrub_chunk_transcript(ch)
+    return result
 
 
 @router.get("/{conversation_id}/chunk-count")
@@ -582,7 +609,9 @@ async def get_chunk(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Single-chunk read. Rare path — most callers go through the list."""
-    _access, chunk, _conv = await resolve_conversation_chunk_access(chunk_id, auth)
+    access, chunk, conv = await resolve_conversation_chunk_access(chunk_id, auth)
+    if is_conversation_locked(conv, access.tier):
+        _scrub_chunk_transcript(chunk)
     return chunk
 
 

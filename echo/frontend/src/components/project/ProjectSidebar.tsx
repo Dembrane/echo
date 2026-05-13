@@ -13,6 +13,7 @@ import { GraphIcon, HouseIcon, QuestionIcon } from "@phosphor-icons/react";
 import { useRef } from "react";
 import { useLocation, useParams } from "react-router";
 import { useInitializeChatModeMutation } from "@/components/chat/hooks";
+import { useConversationById } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
@@ -46,6 +47,12 @@ export const ProjectSidebar = () => {
 	const { pathname } = useLocation();
 
 	// const { isCollapsed, toggleSidebar } = useSidebarCollapsed();
+
+	const conversationQuery = useConversationById({
+		conversationId: conversationId ?? "",
+		useQueryOpts: { enabled: !!conversationId },
+	});
+	const isConversationLocked = !!conversationQuery.data?.locked;
 
 	const createChatMutation = useCreateChatMutation();
 	const initializeModeMutation = useInitializeChatModeMutation();
@@ -138,15 +145,21 @@ export const ProjectSidebar = () => {
         )} */}
 			</Group>
 
-			<NavigationButton
-				onClick={handleAsk}
-				component="button"
-				rightIcon={<QuestionIcon size={24} color="var(--app-text)" />}
-				active={pathname.includes("chat")}
-				{...testId("sidebar-ask-button")}
+			<Tooltip
+				label={t`Conversation locked, upgrade to start a chat`}
+				disabled={!conversationId || !isConversationLocked}
 			>
-				<Trans>Ask</Trans>
-			</NavigationButton>
+				<NavigationButton
+					onClick={handleAsk}
+					component="button"
+					rightIcon={<QuestionIcon size={24} color="var(--app-text)" />}
+					active={pathname.includes("chat")}
+					disabled={!!conversationId && isConversationLocked}
+					{...testId("sidebar-ask-button")}
+				>
+					<Trans>Ask</Trans>
+				</NavigationButton>
+			</Tooltip>
 
 			<NavigationButton
 				to={`/projects/${projectId}/library`}

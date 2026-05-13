@@ -27,7 +27,9 @@ from dembrane.chat_utils import (
 from dembrane.service.chat import ChatServiceException, ChatNotFoundException
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.stream_status import stream_with_status
+from dembrane.tier_capacity import tier_allows_overage, is_conversation_locked
 from dembrane.api.rate_limit import create_rate_limiter
+from dembrane.directus_async import async_directus
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
@@ -45,6 +47,35 @@ logger = logging.getLogger("dembrane.chat")
 settings = get_settings()
 ENABLE_CHAT_AUTO_SELECT = settings.feature_flags.enable_chat_auto_select
 ENABLE_CHAT_SELECT_ALL = settings.feature_flags.enable_chat_select_all
+
+CONVERSATION_LOCKED_ERROR = "conversation_locked"
+
+
+async def _resolve_workspace_tier(project_id: str) -> Optional[str]:
+    """Resolve the workspace tier for a project. Returns None if the chain is broken."""
+    project = await async_directus.get_item("project", project_id)
+    if not project or not project.get("workspace_id"):
+        return None
+    workspace = await async_directus.get_item("workspace", project["workspace_id"])
+    if not workspace:
+        return None
+    return workspace.get("tier")
+
+
+async def _check_conversation_not_locked(conversation_id: str, project_id: str) -> None:
+    """Raise 402 if the conversation is locked (over-cap on a non-overage tier)."""
+    conv = await async_directus.get_item("conversation", conversation_id)
+    if not conv or not conv.get("is_over_cap"):
+        return
+    tier = await _resolve_workspace_tier(project_id)
+    if is_conversation_locked(conv, tier):
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "error": CONVERSATION_LOCKED_ERROR,
+                "message": "Conversation is locked, upgrade to add it to a chat.",
+            },
+        )
 
 
 async def is_followup_question(
@@ -421,6 +452,8 @@ async def add_chat_context(
             conversation_entry.token_usage for conversation_entry in chat_context.conversations
         )
 
+        workspace_tier = await _resolve_workspace_tier(project_id)
+
         added: List[SelectAllConversationResult] = []
         skipped: List[SelectAllConversationResult] = []
         context_limit_reached = False
@@ -430,6 +463,17 @@ async def add_chat_context(
             participant_name = str(conversation.get("participant_name") or "Unknown")
 
             if not conv_id:
+                continue
+
+            if is_conversation_locked(conversation, workspace_tier):
+                skipped.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="locked",
+                    )
+                )
                 continue
 
             # Skip if already in context
@@ -556,6 +600,9 @@ async def add_chat_context(
             )
         except Exception as exc:
             raise HTTPException(status_code=404, detail="Conversation not found") from exc
+
+        if project_id:
+            await _check_conversation_not_locked(body.conversation_id, project_id)
 
         existing_ids = {
             (link.get("conversation_id") or {}).get("id")
@@ -1055,6 +1102,25 @@ async def post_chat(
                 for proj_result in auto_select_result["results"].values():
                     selected_conversation_ids.extend(proj_result.get("conversation_id_list", []))
 
+            auto_select_tier = await _resolve_workspace_tier(project_id)
+            locked_ids: set[str] = set()
+            if selected_conversation_ids and auto_select_tier is not None and not tier_allows_overage(auto_select_tier):
+                caps = await async_directus.get_items(
+                    "conversation",
+                    {
+                        "query": {
+                            "filter": {
+                                "id": {"_in": selected_conversation_ids},
+                                "is_over_cap": {"_eq": True},
+                            },
+                            "fields": ["id"],
+                            "limit": len(selected_conversation_ids),
+                        }
+                    },
+                )
+                if isinstance(caps, list):
+                    locked_ids = {c["id"] for c in caps if c.get("id")}
+
             existing_conversation_ids = set(chat_context.conversation_id_list)
             max_context_threshold = int(MAX_CHAT_CONTEXT_LENGTH * 0.8)
 
@@ -1062,6 +1128,7 @@ async def post_chat(
                 if (
                     conversation_id in existing_conversation_ids
                     or conversation_id in conversations_added_ids
+                    or conversation_id in locked_ids
                 ):
                     continue
 

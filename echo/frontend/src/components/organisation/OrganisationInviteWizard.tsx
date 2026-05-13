@@ -31,11 +31,7 @@ export interface OrganisationInviteWizardWorkspace {
 	tier: string;
 	member_count: number;
 	is_private?: boolean;
-	// Cap-blocked flags from /v2/orgs/:id/workspaces. Org-level invites are
-	// always is_org_member=true, so member_invite_blocked is the relevant
-	// signal for whether this workspace card should be disabled.
-	member_invite_blocked?: boolean;
-	guest_invite_blocked?: boolean;
+	seat_invite_blocked?: boolean;
 }
 
 export interface OrganisationInviteWizardMember {
@@ -351,10 +347,7 @@ export function OrganisationInviteWizard({
 								{workspaces.map((ws) => {
 									const isSelected = selected.has(ws.id);
 									const avatars = previewsByWorkspace.get(ws.id) ?? [];
-									// Org invites add an organisation member to the workspace —
-									// always a non-guest. Member cap is what matters here. The
-									// guest cap doesn't gate org invites.
-									const capBlocked = !!ws.member_invite_blocked;
+									const capBlocked = !!ws.seat_invite_blocked;
 									const wsError = errorByWorkspace[ws.id];
 									const card = (
 										<Paper

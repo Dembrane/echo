@@ -1,15 +1,21 @@
 """
-Session 2: Create workspace schema collections via Directus API.
+Create / extend Directus schema collections via the Directus API.
 
 Usage:
     python scripts/create_schema.py --step 1        # app_user only (test)
     python scripts/create_schema.py --step 2        # org + org_membership
     python scripts/create_schema.py --step 3        # workspace + workspace_membership
     python scripts/create_schema.py --step 4        # workspace_invite + project_membership
-    python scripts/create_schema.py --step 5        # (removed — usage_event dropped)
+    python scripts/create_schema.py --step 5        # (removed)
     python scripts/create_schema.py --step 6        # add fields to project
     python scripts/create_schema.py --step 7        # add deleted_at to existing collections
     python scripts/create_schema.py --step 8        # remove legacy chat collection
+    python scripts/create_schema.py --step 9-16     # notifications, visibility, downgrade, etc.
+    python scripts/create_schema.py --step 17       # conversation.is_over_cap
+    python scripts/create_schema.py --step 18       # workspace_request collection
+    python scripts/create_schema.py --step 19       # workspace.tier_expires_at
+    python scripts/create_schema.py --step 20       # workspace.pre_warning_sent
+    python scripts/create_schema.py --step 21       # workspace discount fields
     python scripts/create_schema.py --step all      # everything
 
 Requires DIRECTUS_TOKEN and DIRECTUS_BASE_URL env vars (reads from directus/.env).
@@ -372,10 +378,11 @@ def step_3_workspace():
         {
             "field": "tier",
             "type": "string",
-            "schema": {"is_nullable": False, "default_value": "pioneer"},
+            "schema": {"is_nullable": False, "default_value": "free"},
             "meta": {
                 "interface": "select-dropdown",
                 "options": {"choices": [
+                    {"text": "Free", "value": "free"},
                     {"text": "Pilot", "value": "pilot"},
                     {"text": "Pioneer", "value": "pioneer"},
                     {"text": "Innovator", "value": "innovator"},
@@ -1574,6 +1581,335 @@ def step_16_access_request_uuid_pk():
     return step_12_access_requests()
 
 
+def step_17_conversation_is_over_cap():
+    """Add conversation.is_over_cap boolean for over-cap stamping (ADR 0001).
+
+    Durable accounting stamp set once at conversation finish. True iff the
+    workspace's tier disallows overage AND the workspace was at or past its
+    hour cap before this conversation started. Never recomputed retroactively.
+
+    Idempotent.
+    """
+    print("\n=== Step 17: conversation.is_over_cap ===")
+
+    add_field("conversation", "is_over_cap", {
+        "type": "boolean",
+        "schema": {"is_nullable": False, "default_value": False},
+        "meta": {
+            "interface": "boolean",
+            "readonly": True,
+            "note": (
+                "ADR 0001. Durable stamp set at finish. True = workspace was "
+                "at/past its lifetime cap before this conversation started. "
+                "The live UI lock is computed from this + current tier."
+            ),
+        },
+    })
+
+    return True
+
+
+def step_18_workspace_request():
+    """Create the workspace_request collection (Slice 08).
+
+    Unified collection for new-workspace and tier-upgrade requests.
+    Staff review at /admin/upgrades; requesters see read-only rows.
+
+    Schema trimmed per grilling session: decided_at + decided_by replace
+    separate approved_at/approved_by/denied_at/denied_by. No
+    proposed_inherit_organisation_admins (always true). No
+    proposed_type_discount or proposed_percent_discount (discounts are
+    staff-granted only).
+
+    Idempotent.
+    """
+    print("\n=== Step 18: workspace_request collection ===")
+
+    wr_fields = [
+        pk_uuid(),
+        {
+            "field": "kind",
+            "type": "string",
+            "schema": {"is_nullable": False},
+            "meta": {
+                "interface": "select-dropdown",
+                "options": {"choices": [
+                    {"text": "New workspace", "value": "new_workspace"},
+                    {"text": "Tier upgrade", "value": "tier_upgrade"},
+                ]},
+                "required": True,
+            },
+        },
+        {
+            "field": "status",
+            "type": "string",
+            "schema": {"is_nullable": False, "default_value": "pending"},
+            "meta": {
+                "interface": "select-dropdown",
+                "options": {"choices": [
+                    {"text": "Pending", "value": "pending"},
+                    {"text": "Approved", "value": "approved"},
+                    {"text": "Denied", "value": "denied"},
+                ]},
+            },
+        },
+        {
+            "field": "requested_by",
+            "type": "uuid",
+            "schema": {"is_nullable": False},
+            "meta": {"interface": "input", "required": True,
+                     "note": "FK to app_user — the submitter."},
+        },
+        {
+            "field": "org_id",
+            "type": "uuid",
+            "schema": {"is_nullable": False},
+            "meta": {"interface": "input", "required": True,
+                     "note": "Target org for new_workspace; existing org for tier_upgrade."},
+        },
+        {
+            "field": "workspace_id",
+            "type": "uuid",
+            "schema": {"is_nullable": True},
+            "meta": {"interface": "input",
+                     "note": "Set for tier_upgrade; null for new_workspace until approved."},
+        },
+        {
+            "field": "proposed_name",
+            "type": "string",
+            "schema": {"is_nullable": True, "max_length": 100},
+            "meta": {"interface": "input",
+                     "note": "Only for new_workspace."},
+        },
+        {
+            "field": "proposed_tier",
+            "type": "string",
+            "schema": {"is_nullable": False, "default_value": "innovator"},
+            "meta": {
+                "interface": "select-dropdown",
+                "options": {"choices": [
+                    {"text": "Pilot", "value": "pilot"},
+                    {"text": "Pioneer", "value": "pioneer"},
+                    {"text": "Innovator", "value": "innovator"},
+                    {"text": "Changemaker", "value": "changemaker"},
+                    {"text": "Guardian", "value": "guardian"},
+                ]},
+            },
+        },
+        {
+            "field": "proposed_visibility",
+            "type": "string",
+            "schema": {"is_nullable": False, "default_value": "open_to_organisation"},
+            "meta": {
+                "interface": "select-dropdown",
+                "options": {"choices": [
+                    {"text": "Open to organisation", "value": "open_to_organisation"},
+                    {"text": "Private", "value": "private"},
+                ]},
+            },
+        },
+        {
+            "field": "requester_message",
+            "type": "text",
+            "schema": {"is_nullable": True},
+            "meta": {"interface": "input-multiline",
+                     "note": "Free text from requester, max 1000 chars."},
+        },
+        {
+            "field": "granted_tier",
+            "type": "string",
+            "schema": {"is_nullable": True},
+            "meta": {
+                "interface": "select-dropdown",
+                "options": {"choices": [
+                    {"text": "Free", "value": "free"},
+                    {"text": "Pilot", "value": "pilot"},
+                    {"text": "Pioneer", "value": "pioneer"},
+                    {"text": "Innovator", "value": "innovator"},
+                    {"text": "Changemaker", "value": "changemaker"},
+                    {"text": "Guardian", "value": "guardian"},
+                ]},
+                "note": "What staff actually granted (may differ from proposed).",
+            },
+        },
+        {
+            "field": "granted_tier_expires_at",
+            "type": "timestamp",
+            "schema": {"is_nullable": True},
+            "meta": {"interface": "datetime",
+                     "note": "Optional expiry on the granted tier."},
+        },
+        {
+            "field": "granted_type_discount",
+            "type": "string",
+            "schema": {"is_nullable": True},
+            "meta": {
+                "interface": "select-dropdown",
+                "options": {"choices": [
+                    {"text": "Scholarship", "value": "scholarship"},
+                    {"text": "Staff discount", "value": "staff_discount"},
+                ]},
+            },
+        },
+        {
+            "field": "granted_percent_discount",
+            "type": "integer",
+            "schema": {"is_nullable": True},
+            "meta": {"interface": "input",
+                     "note": "0-100. Applied at tier subscription price only."},
+        },
+        {
+            "field": "resulting_workspace_id",
+            "type": "uuid",
+            "schema": {"is_nullable": True},
+            "meta": {"interface": "input",
+                     "note": "Points to created (new_workspace) or upgraded (tier_upgrade) workspace."},
+        },
+        {
+            "field": "decided_at",
+            "type": "timestamp",
+            "schema": {"is_nullable": True},
+            "meta": {"interface": "datetime",
+                     "note": "When staff approved or denied."},
+        },
+        {
+            "field": "decided_by",
+            "type": "uuid",
+            "schema": {"is_nullable": True},
+            "meta": {"interface": "input",
+                     "note": "FK to app_user — the staff member who decided."},
+        },
+        {
+            "field": "denial_reason",
+            "type": "text",
+            "schema": {"is_nullable": True},
+            "meta": {"interface": "input-multiline",
+                     "note": "Required on deny; shown to requester."},
+        },
+        {
+            "field": "staff_notes",
+            "type": "text",
+            "schema": {"is_nullable": True},
+            "meta": {"interface": "input-multiline",
+                     "note": "Internal staff notes. Never shown to requester. Field-level locked to staff role."},
+        },
+        {"field": "created_at", **timestamp_created()},
+        {"field": "updated_at", **timestamp_updated()},
+    ]
+
+    ok = create_collection("workspace_request", wr_fields, {
+        "accountability": "all",
+        "display_template": "{{kind}} — {{status}} ({{proposed_tier}})",
+        "sort_field": "created_at",
+    })
+    if not ok:
+        return False
+
+    create_relation("workspace_request", "requested_by", "app_user",
+                    schema={"on_delete": "CASCADE"})
+    create_relation("workspace_request", "org_id", "org",
+                    schema={"on_delete": "CASCADE"})
+    create_relation("workspace_request", "workspace_id", "workspace",
+                    schema={"on_delete": "SET NULL"})
+    create_relation("workspace_request", "resulting_workspace_id", "workspace",
+                    schema={"on_delete": "SET NULL"})
+    create_relation("workspace_request", "decided_by", "app_user",
+                    schema={"on_delete": "SET NULL"})
+
+    return True
+
+
+def step_19_workspace_tier_expires_at():
+    """Add workspace.tier_expires_at nullable timestamp (Slice 15).
+
+    Staff-writable. When set and elapsed, the hourly cron downgrades
+    the workspace to free. NULL means no auto-expiry.
+
+    Idempotent.
+    """
+    print("\n=== Step 19: workspace.tier_expires_at ===")
+
+    add_field("workspace", "tier_expires_at", {
+        "type": "timestamp",
+        "schema": {"is_nullable": True, "default_value": None},
+        "meta": {
+            "interface": "datetime",
+            "note": (
+                "Optional tier expiry. Staff sets at approval time. "
+                "Hourly cron downgrades to free when elapsed."
+            ),
+        },
+    })
+
+    return True
+
+
+def step_20_workspace_pre_warning_sent():
+    """Add workspace.pre_warning_sent boolean (Slice 16).
+
+    Deduplicates the 3-day tier-expiry pre-warning email. Reset to
+    false whenever staff changes tier_expires_at.
+
+    Idempotent.
+    """
+    print("\n=== Step 20: workspace.pre_warning_sent ===")
+
+    add_field("workspace", "pre_warning_sent", {
+        "type": "boolean",
+        "schema": {"is_nullable": False, "default_value": False},
+        "meta": {
+            "interface": "boolean",
+            "note": (
+                "Dedup flag for 3-day tier-expiry pre-warning email. "
+                "Reset to false when tier_expires_at changes."
+            ),
+        },
+    })
+
+    return True
+
+
+def step_21_workspace_discount_fields():
+    """Add workspace.type_discount and workspace.percent_discount (Slice 19).
+
+    Staff-writable, members read-only. Descriptive metadata only — no code
+    path computes a price using these fields.
+
+    Idempotent.
+    """
+    print("\n=== Step 21: workspace.type_discount + workspace.percent_discount ===")
+
+    add_field("workspace", "type_discount", {
+        "type": "string",
+        "schema": {"is_nullable": True, "default_value": None},
+        "meta": {
+            "interface": "select-dropdown",
+            "options": {"choices": [
+                {"text": "Scholarship", "value": "scholarship"},
+                {"text": "Staff discount", "value": "staff_discount"},
+            ]},
+            "note": (
+                "Categorical discount label. Staff write, members read. "
+                "Descriptive only — not enforced by any billing code path."
+            ),
+        },
+    })
+
+    add_field("workspace", "percent_discount", {
+        "type": "integer",
+        "schema": {"is_nullable": True, "default_value": None},
+        "meta": {
+            "interface": "input",
+            "note": (
+                "0-100. Applied at tier subscription price only (descriptive). "
+                "Does NOT discount overage, add-on seats, or à la carte items."
+            ),
+        },
+    })
+
+    return True
+
+
 STEPS = {
     "1": ("app_user", step_1_app_user),
     "2": ("org + org_membership", step_2_org),
@@ -1591,13 +1927,18 @@ STEPS = {
     "14": ("kickback extensions on referral_ledger", step_14_kickback_extensions),
     "15": ("prompt_template workspace scope", step_15_prompt_template_workspace_scope),
     "16": ("access_request.id integer → uuid", step_16_access_request_uuid_pk),
+    "17": ("conversation.is_over_cap stamp", step_17_conversation_is_over_cap),
+    "18": ("workspace_request collection", step_18_workspace_request),
+    "19": ("workspace.tier_expires_at field", step_19_workspace_tier_expires_at),
+    "20": ("workspace.pre_warning_sent flag", step_20_workspace_pre_warning_sent),
+    "21": ("workspace discount fields (type_discount, percent_discount)", step_21_workspace_discount_fields),
 }
 
 
 def main():
     parser = argparse.ArgumentParser(description="Create workspace schema in Directus")
     parser.add_argument("--step", required=True,
-                        help="Step number (1-8) or 'all'")
+                        help="Step number (1-21) or 'all'")
     args = parser.parse_args()
 
     # Verify connection
@@ -1615,7 +1956,7 @@ def main():
 
     for step_num in steps_to_run:
         if step_num not in STEPS:
-            print(f"ERROR: Unknown step {step_num}. Valid: 1-8 or 'all'")
+            print(f"ERROR: Unknown step {step_num}. Valid: 1-21 or 'all'")
             sys.exit(1)
 
         name, fn = STEPS[step_num]

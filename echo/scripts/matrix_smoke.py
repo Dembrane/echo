@@ -90,14 +90,15 @@ def check_tier_capacity(report: Report) -> None:
 
     get = mod.get_capacity
     expected = {
-        # (tier, hours, seats, guest_cap, hour_overage_eur, seat_overage_eur, hard_block)
-        "pilot": (10, 2, 2, None, None, True),
-        "pioneer": (25, 3, 5, 5.0, 25.0, False),
-        "innovator": (50, 10, 20, 4.0, 30.0, False),
-        "changemaker": (100, 20, 50, 3.0, 60.0, False),
-        "guardian": (None, None, None, None, None, False),
+        # (hours, seats, hour_overage_eur, seat_overage_eur, hard_block)
+        "free": (1, 1, None, None, False),
+        "pilot": (10, 2, None, None, False),
+        "pioneer": (25, 3, 5.0, 25.0, False),
+        "innovator": (50, 10, 4.0, 30.0, False),
+        "changemaker": (100, 20, 3.0, 60.0, False),
+        "guardian": (None, None, None, None, False),
     }
-    for tier, (hours, seats, guest_cap, hour_over, seat_over, block) in expected.items():
+    for tier, (hours, seats, hour_over, seat_over, block) in expected.items():
         cap = get(tier)
         if cap is None:
             report.add(
@@ -281,21 +282,21 @@ def check_access_request_schema(url: str, token: str, report: Report) -> None:
         )
 
 
-def check_seats_exclude_guests(report: Report) -> None:
-    """Section 7: seat counting excludes guests."""
+def check_seats_unified(report: Report) -> None:
+    """Section 7: seat counting includes guests in the unified pool."""
     try:
-        with open(os.path.join(ROOT, "server", "dembrane", "api", "v2", "orgs.py")) as f:
+        with open(os.path.join(ROOT, "server", "dembrane", "seat_capacity.py")) as f:
             src = f.read()
     except Exception as e:
-        report.add("7. Seats", "read orgs.py", False, str(e))
+        report.add("7. Seats", "read seat_capacity.py", False, str(e))
         return
-    # Look for the seat-count dedup loop guarded by is_external/guest.
-    ok = ("is_external" in src and "seat" in src.lower())
+    # Unified model: guests counted via is_external into the same pool.
+    ok = ("is_external" in src and "seats_used" in src)
     report.add(
         "7. Seats",
-        "orgs.py seat counting references is_external",
+        "seat_capacity.py unifies guests into seat pool (is_external + seats_used)",
         ok,
-        "no is_external guard in seat code" if not ok else "",
+        "no unified seat logic found" if not ok else "",
     )
 
 
@@ -341,19 +342,23 @@ def check_pilot_hard_block(report: Report) -> None:
 
 
 def check_upgrade_inbox(report: Report) -> None:
-    """Section 11: upgrade requests mail upgrades@dembrane.com."""
-    path = os.path.join(ROOT, "server", "dembrane", "api", "v2", "workspaces.py")
+    """Section 11: upgrade requests go through workspace_request collection."""
+    ws_requests_path = os.path.join(
+        ROOT, "server", "dembrane", "api", "v2", "workspace_requests.py"
+    )
     try:
-        with open(path) as f:
+        with open(ws_requests_path) as f:
             src = f.read()
     except Exception as e:
-        report.add("11. Upgrade flow", "read workspaces.py", False, str(e))
+        report.add("11. Upgrade flow", "read workspace_requests.py", False, str(e))
         return
-    ok = "upgrades@dembrane.com" in src or "UPGRADE_REQUEST_INBOX" in src
+    has_endpoint = "workspace-requests" in src or "workspace_requests" in src
+    has_kinds = "new_workspace" in src and "tier_upgrade" in src
     report.add(
         "11. Upgrade flow",
-        "upgrade-request emails upgrades@dembrane.com (or via env)",
-        ok,
+        "workspace_requests.py handles new_workspace + tier_upgrade kinds",
+        has_endpoint and has_kinds,
+        "" if has_endpoint and has_kinds else "missing request kinds",
     )
 
 
@@ -405,7 +410,7 @@ def main() -> int:
     check_role_policies(report)
     check_visibility_enum(args.directus, args.token, report)
     check_access_request_schema(args.directus, args.token, report)
-    check_seats_exclude_guests(report)
+    check_seats_unified(report)
     check_hours_meter(report)
     check_pilot_hard_block(report)
     check_upgrade_inbox(report)

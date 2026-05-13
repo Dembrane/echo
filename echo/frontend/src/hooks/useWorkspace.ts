@@ -4,6 +4,24 @@ import { API_BASE_URL } from "@/config";
 
 // ── Types ──
 
+interface WorkspaceUsageGates {
+	over_cap_active: boolean;
+	uploads_locked: boolean;
+	upgrade_cta_tier: string | null;
+}
+
+interface WorkspaceUsageSummary {
+	audio_hours: number;
+	conversation_count: number;
+	audio_hours_this_month: number;
+	conversations_this_month: number;
+	hours_included: number | null;
+	hours_pct: number | null;
+	at_cap: boolean;
+	approaching_cap: boolean;
+	usage_gates: WorkspaceUsageGates;
+}
+
 interface WorkspaceSummary {
 	id: string;
 	name: string;
@@ -17,6 +35,7 @@ interface WorkspaceSummary {
 	project_count: number;
 	member_count: number;
 	is_external: boolean;
+	usage?: WorkspaceUsageSummary;
 	// Matrix v1.1 §3 downgrade banner fields.
 	downgraded_at?: string | null;
 	downgraded_from_tier?: string | null;

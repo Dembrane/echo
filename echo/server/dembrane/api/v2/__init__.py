@@ -42,6 +42,7 @@ from dembrane.api.v2.bff.conversations import (
     junction_router as bff_conv_tag_router,
 )
 from dembrane.api.v2.workspace_projects import router as workspace_projects_router
+from dembrane.api.v2.workspace_requests import router as workspace_requests_router
 from dembrane.api.v2.workspace_settings import router as workspace_settings_router
 
 v2_router = APIRouter()
@@ -69,6 +70,9 @@ v2_router.include_router(
     workspace_settings_router, prefix="/workspaces", tags=["v2:workspace-settings"]
 )
 v2_router.include_router(access_requests_router, prefix="/workspaces", tags=["v2:access-requests"])
+v2_router.include_router(
+    workspace_requests_router, prefix="/workspace-requests", tags=["v2:workspace-requests"]
+)
 
 # Project-level: /projects/{id}/move + /projects/{id}/members (private sharing)
 v2_router.include_router(projects_router, prefix="/projects", tags=["v2:projects"])

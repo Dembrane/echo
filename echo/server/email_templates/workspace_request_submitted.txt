@@ -1,0 +1,15 @@
+Workspace request received
+
+{{ requester_name }}{% if requester_email %} <{{ requester_email }}>{% endif %} submitted a {{ kind_label }} request.
+
+Organisation:   {{ org_name }}
+Proposed tier:  {{ proposed_tier }}
+{% if proposed_name %}Name:           {{ proposed_name }}
+{% endif %}
+{% if requester_message %}Message:
+{{ requester_message }}
+
+{% endif %}Review and decide from the admin panel:
+{{ admin_url }}
+
+— the dembrane team

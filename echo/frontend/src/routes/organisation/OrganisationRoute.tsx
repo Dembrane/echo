@@ -97,8 +97,7 @@ interface OrganisationWorkspace {
 	project_count: number;
 	member_count: number;
 	is_private: boolean;
-	member_invite_blocked?: boolean;
-	guest_invite_blocked?: boolean;
+	seat_invite_blocked?: boolean;
 }
 
 async function fetchOrganisation(

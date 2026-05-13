@@ -61,6 +61,13 @@ class MemberPreview(BaseModel):
     avatar: Optional[str] = None
 
 
+class UsageGatesSummary(BaseModel):
+    """Workspace-level gate flags for over-cap UI gating (list view)."""
+    over_cap_active: bool = False
+    uploads_locked: bool = False
+    upgrade_cta_tier: Optional[str] = None
+
+
 class WorkspaceUsage(BaseModel):
     """Usage stats for a workspace (all-time + current month)."""
 
@@ -76,6 +83,7 @@ class WorkspaceUsage(BaseModel):
     hours_pct: Optional[float] = None  # 0..1; null when unlimited
     at_cap: bool = False
     approaching_cap: bool = False
+    usage_gates: UsageGatesSummary = UsageGatesSummary()
 
 
 class WorkspaceSummary(BaseModel):
