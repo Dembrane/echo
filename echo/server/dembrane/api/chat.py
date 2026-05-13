@@ -81,7 +81,7 @@ async def is_followup_question(
 
     try:
         response = await arouter_completion(
-            MODELS.TEXT_FAST,
+            MODELS.MULTI_MODAL_FAST,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,  # Deterministic
             timeout=60,  # 1 minute timeout for quick decision
@@ -159,6 +159,25 @@ async def raise_if_chat_not_found_or_not_authorized(
         raise HTTPException(status_code=403, detail="You are not authorized to access this chat")
 
     return chat
+
+
+@ChatRouter.delete("/{chat_id}")
+async def delete_chat(chat_id: str, auth: DependencyDirectusSession) -> dict:
+    """Soft-delete a chat by setting deleted_at."""
+    await raise_if_chat_not_found_or_not_authorized(chat_id, auth)
+
+    from datetime import datetime
+
+    from dembrane.directus import directus
+
+    await run_in_thread_pool(
+        directus.update_item,
+        "project_chat",
+        chat_id,
+        {"deleted_at": datetime.utcnow().isoformat()},
+    )
+
+    return {"status": "success"}
 
 
 @ChatRouter.get("/{chat_id}/context", response_model=ChatContextSchema)
@@ -920,6 +939,10 @@ async def post_chat(
     if not project_id:
         raise HTTPException(status_code=500, detail="Chat is missing a project reference")
 
+    # Matrix §8: chat is a host-side operation → Pilot hard-block.
+    from dembrane.api.v2.middleware import check_no_pilot_block_for_project
+    await check_no_pilot_block_for_project(str(project_id))
+
     user_message_content = body.messages[-1].content
     user_message_id = generate_uuid()
 
@@ -1120,7 +1143,7 @@ async def post_chat(
 
             try:
                 response = await arouter_completion(
-                    MODELS.TEXT_FAST,
+                    MODELS.MULTI_MODAL_PRO,
                     messages=formatted,
                     stream=True,
                     timeout=300,

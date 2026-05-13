@@ -16,13 +16,12 @@ from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
 from dembrane.service import project_service, conversation_service, build_conversation_service
 from dembrane.directus import directus
 from dembrane.audio_utils import (
-    get_duration_from_s3,
     sanitize_filename_component,
     merge_multiple_audio_files_and_save_to_s3,
 )
 from dembrane.reply_utils import generate_reply_for_conversation
 from dembrane.api.stateless import generate_summary, generate_conversation_title
-from dembrane.async_helpers import run_in_thread_pool
+from dembrane.async_helpers import safe_gather, run_in_thread_pool
 from dembrane.stream_status import stream_with_status
 from dembrane.api.exceptions import (
     NoContentFoundException,
@@ -37,6 +36,28 @@ ConversationRouter = APIRouter(tags=["conversation"])
 
 def conversation_service_for_auth(auth: DirectusSession) -> ConversationService:
     return build_conversation_service(auth.client)
+
+
+async def _invalidate_usage_cache_for_conversation(conversation_id: str) -> None:
+    """Bust workspace + org usage cache. No-op on any missing link."""
+    from dembrane.cache_utils import invalidate_workspace_and_org_usage
+    from dembrane.directus_async import async_directus
+
+    # Single round-trip via Directus relational expansion — avoids
+    # walking conversation -> project -> workspace as 3 separate GETs.
+    conv = await async_directus.get_item(
+        "conversation",
+        conversation_id,
+        params={"fields": "project_id.workspace_id.id,project_id.workspace_id.org_id"},
+    )
+    project = (conv or {}).get("project_id") if isinstance(conv, dict) else None
+    workspace = (project or {}).get("workspace_id") if isinstance(project, dict) else None
+    if not isinstance(workspace, dict):
+        return
+    workspace_id = workspace.get("id")
+    if not workspace_id:
+        return
+    await invalidate_workspace_and_org_usage(workspace_id, workspace.get("org_id"))
 
 
 async def get_conversation(
@@ -137,26 +158,38 @@ async def raise_if_conversation_not_found_or_not_authorized(
     conversation_id: str,
     auth: DependencyDirectusSession,
 ) -> None:
-    active_client = auth.client or directus
+    # v2 access gate — replaces the old legacy-creator check on
+    # conversation.project_id.directus_user_id, which excluded every
+    # workspace member who didn't originally create the project.
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.inheritance import get_user_project_access
+    from dembrane.directus_async import async_directus
 
-    conversation = await run_in_thread_pool(
-        active_client.get_items,
-        "conversation",
-        {
-            "query": {
-                "filter": {"id": {"_eq": conversation_id}},
-                "fields": ["project_id.directus_user_id"],
-            }
-        },
-    )
-
-    if conversation is None or len(conversation) == 0:
+    conversation = await async_directus.get_item("conversation", conversation_id)
+    if not conversation or conversation.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    if not auth.is_admin and conversation[0]["project_id"]["directus_user_id"] != auth.user_id:
-        raise HTTPException(
-            status_code=403, detail="You are not authorized to access this conversation"
-        )
+    if auth.is_admin:
+        return
+
+    project_id = conversation.get("project_id")
+    if isinstance(project_id, dict):
+        project_id = project_id.get("id")
+    if not project_id:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    try:
+        app_user = await get_app_user_or_raise(auth.user_id)
+    except HTTPException:
+        raise HTTPException(status_code=404, detail="Conversation not found") from None
+
+    access = await get_user_project_access(
+        project_id=project_id,
+        user_id=app_user["id"],
+        directus_user_id=auth.user_id,
+    )
+    if access is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
 
 
 def return_url_or_redirect(
@@ -291,20 +324,14 @@ async def get_conversation_content(
     try:
         uuid = generate_uuid()
 
-        merged_path = await run_in_thread_pool(
+        merged_path, duration = await run_in_thread_pool(
             merge_multiple_audio_files_and_save_to_s3,
             file_paths,
             f"audio-conversations/merged-{sanitize_filename_component(conversation_id)}-{uuid}.mp3",
             "mp3",
         )
 
-        logger.debug(f"Successfully merged audio to: {merged_path}")
-
-        duration = -1.0
-        try:
-            duration = await run_in_thread_pool(get_duration_from_s3, merged_path)
-        except Exception as e:
-            logger.error(f"Error getting duration from s3: {str(e)}")
+        logger.debug(f"Successfully merged audio to: {merged_path}, duration: {duration}s")
 
         await run_in_thread_pool(
             active_client.update_item,
@@ -315,6 +342,17 @@ async def get_conversation_content(
                 "duration": duration,
             },
         )
+
+        # New duration → bust usage cache so /w + billing don't wait
+        # 30 min (TTL) for the hours to surface.
+        try:
+            await _invalidate_usage_cache_for_conversation(conversation_id)
+        except Exception as exc:
+            logger.warning(
+                "usage cache invalidation failed for conversation %s: %s",
+                conversation_id,
+                exc,
+            )
 
         return return_url_or_redirect(merged_path, signed=signed, return_url=return_url)
 
@@ -556,7 +594,7 @@ async def summarize_conversation(
         ),
     ]
 
-    transcript_str, project_context_str, verified_artifacts = await asyncio.gather(*awaitable_list)
+    transcript_str, project_context_str, verified_artifacts = await safe_gather(*awaitable_list)
 
     if not conversation_data_result or len(conversation_data_result) == 0:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -793,11 +831,18 @@ async def retranscribe_conversation(
         # because return_url is True
         assert isinstance(merged_audio_path, str)
 
-        duration = None
-        try:
-            duration = await run_in_thread_pool(get_duration_from_s3, merged_audio_path)
-        except Exception as e:
-            logger.error(f"Error getting duration from s3: {str(e)}")
+        # Duration was already computed and saved by get_conversation_content above
+        updated_conversation = await run_in_thread_pool(
+            active_client.get_items,
+            "conversation",
+            {
+                "query": {
+                    "filter": {"id": {"_eq": conversation_id}},
+                    "fields": ["duration"],
+                }
+            },
+        )
+        duration = updated_conversation[0].get("duration") if updated_conversation else None
 
         # Create a new conversation
         new_conversation_id = generate_uuid()
@@ -868,6 +913,17 @@ async def retranscribe_conversation(
 
             task_process_conversation_chunk.send(chunk_id, use_pii_redaction=use_pii_redaction)
 
+            # Clone duplicates `duration` into the workspace rollup.
+            try:
+                await _invalidate_usage_cache_for_conversation(new_conversation_id)
+            except Exception as exc:
+                logger.warning(
+                    "usage cache invalidation failed after retranscribe of %s (clone=%s): %s",
+                    conversation_id,
+                    new_conversation_id,
+                    exc,
+                )
+
             return {
                 "status": "success",
                 "message": "Retranscription in progress",
@@ -876,26 +932,27 @@ async def retranscribe_conversation(
         except Exception as e:
             # Clean up the partially created conversation
             await run_in_thread_pool(active_client.delete_item, "conversation", new_conversation_id)
-            logger.error(f"Error during retranscription: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Failed to process audio: {str(e)}") from e
+            # Log the raw exception server-side, but don't surface str(e)
+            # to the client — CodeQL flags it as stack-trace exposure.
+            logger.exception("Error during retranscription")
+            raise HTTPException(status_code=500, detail="Failed to process audio") from e
 
     except HTTPException as e:
-        # Handle HTTP exceptions
         status_code = getattr(e, "status_code", 500)
-        detail = getattr(e, "detail", str(e))
-
+        detail = getattr(e, "detail", "Operation failed")
         logger.error(f"HTTP error during retranscription: {status_code} - {detail}")
         return {
             "status": "error",
             "message": "Operation failed",
             "error_detail": detail,
         }
-    except Exception as e:
-        logger.exception(f"Unexpected error during retranscription: {e}")
+    except Exception:
+        # Don't echo str(e) back to the caller (CodeQL py/stack-trace-exposure).
+        logger.exception("Unexpected error during retranscription")
         return {
             "status": "error",
             "message": "Failed to retranscribe conversation",
-            "error_detail": str(e),
+            "error_detail": "internal error",
         }
 
 
@@ -905,19 +962,25 @@ async def delete_conversation(
     auth: DependencyDirectusSession,
 ) -> dict:
     """
-    Delete a conversation and its associated documents from RAG, Postgres, and Directus.
+    Soft-delete a conversation by setting deleted_at.
 
-    Args:
-        conversation_id: ID of the conversation to delete
-        auth: Authentication session to verify ownership
-
-    Returns:
-        Dictionary with status info from Directus deletion
+    S3 audio files are preserved. The conversation data remains in the
+    database but is excluded from read queries via deleted_at IS NULL.
     """
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
     try:
         conversation_service = conversation_service_for_auth(auth)
         await run_in_thread_pool(conversation_service.delete, conversation_id)
+
+        try:
+            await _invalidate_usage_cache_for_conversation(conversation_id)
+        except Exception as exc:
+            logger.warning(
+                "usage cache invalidation failed after deleting conversation %s: %s",
+                conversation_id,
+                exc,
+            )
+
         return {"status": "success", "message": "Conversation deleted successfully"}
     except Exception as e:
         logger.exception(f"Error deleting conversation {conversation_id}: {e}")

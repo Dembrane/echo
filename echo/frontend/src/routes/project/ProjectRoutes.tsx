@@ -11,9 +11,11 @@ import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
 import { ProjectExportSection } from "@/components/project/ProjectExportSection";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
 import { ProjectUploadSection } from "@/components/project/ProjectUploadSection";
+import { ProjectUsageAndSharing } from "@/components/project/ProjectUsageAndSharing";
 import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
 import { ENABLE_WEBHOOKS } from "@/config";
 import { getProjectTranscriptsLink } from "@/lib/api";
+
 
 export const ProjectSettingsRoute = () => {
 	const { projectId } = useParams();
@@ -23,6 +25,7 @@ export const ProjectSettingsRoute = () => {
 				"id",
 				"name",
 				"context",
+				"visibility",
 				"updated_at",
 				"language",
 				"is_conversation_allowed",
@@ -51,6 +54,11 @@ export const ProjectSettingsRoute = () => {
 			)}
 
 			{projectQuery.data && <ProjectBasicEdit project={projectQuery.data} />}
+
+			{/* Usage and sharing moved to its own tab (2026-04-24) —
+			    /projects/:id/access — so Project Settings stays focused on
+			    editing the project itself. The ProjectAccessRoute below
+			    owns the Usage & sharing surface. */}
 
 			{projectQuery.data && (
 				<>
@@ -160,6 +168,46 @@ export const ProjectPortalSettingsRoute = () => {
 					project={project}
 					verificationTopics={verificationTopicsQuery.data}
 					isVerificationTopicsLoading={verificationTopicsQuery.isLoading}
+				/>
+			)}
+		</Stack>
+	);
+};
+
+export const ProjectAccessRoute = () => {
+	const { projectId } = useParams();
+	const query = useMemo(
+		() => ({
+			fields: ["id", "name", "visibility"],
+		}),
+		[],
+	);
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		// @ts-expect-error tags field structure not properly typed in Directus SDK
+		query,
+	});
+
+	return (
+		<Stack
+			gap="3rem"
+			className="relative"
+			px={{ base: "1rem", md: "2rem" }}
+			py={{ base: "2rem", md: "4rem" }}
+		>
+			{projectQuery.isLoading && <LoadingOverlay visible />}
+			{projectQuery.isError && (
+				<Alert variant="outline" color="red">
+					<Trans>Error loading project</Trans>
+				</Alert>
+			)}
+			{projectQuery.data && projectId && (
+				<ProjectUsageAndSharing
+					projectId={projectId}
+					visibility={
+						(projectQuery.data.visibility as "workspace" | "private") ??
+						"workspace"
+					}
 				/>
 			)}
 		</Stack>

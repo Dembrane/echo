@@ -1,8 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Box, Collapse, Divider, Group, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Box, Collapse, Divider, Group, Text, Tooltip } from "@mantine/core";
 import { IconArrowUpRight, IconNotes } from "@tabler/icons-react";
 import { formatDate } from "date-fns";
+import { BookmarkSimple } from "@phosphor-icons/react";
 import type React from "react";
 import { Children, useEffect, useMemo, useState } from "react";
 import type { Components } from "react-markdown";
@@ -45,12 +46,14 @@ export const ChatHistoryMessage = ({
 	referenceIds,
 	setReferenceIds,
 	chatMode,
+	onSaveAsTemplate,
 }: {
 	message: ChatHistory[number];
 	section?: React.ReactNode;
 	referenceIds?: string[];
 	setReferenceIds?: (ids: string[]) => void;
 	chatMode?: ChatMode;
+	onSaveAsTemplate?: (content: string) => void;
 }) => {
 	const [metadata, setMetadata] = useState<ChatHistoryMessage["metadata"]>([]);
 	const { projectId } = useParams();
@@ -143,6 +146,18 @@ export const ChatHistoryMessage = ({
 								</Text>
 								<Group gap="sm">
 									<CopyRichTextIconButton markdown={message.content} />
+									{message.role === "user" && onSaveAsTemplate && (
+										<Tooltip label={t`Save as template`}>
+											<ActionIcon
+												size="xs"
+												variant="subtle"
+												color="gray"
+												onClick={() => onSaveAsTemplate(message.content)}
+											>
+												<BookmarkSimple size={14} />
+											</ActionIcon>
+										</Tooltip>
+									)}
 
 									{/* Info button for citations */}
 									{ENABLE_CHAT_AUTO_SELECT &&

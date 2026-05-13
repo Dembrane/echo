@@ -81,14 +81,14 @@ class UpdateVerificationTopicsRequest(BaseModel):
 
 class CreateCustomTopicRequest(BaseModel):
     label: str = Field(..., max_length=100)
-    prompt: str = Field(..., max_length=1000)
+    prompt: str = Field(..., max_length=10000)
     icon: Optional[str] = Field(None, max_length=10)
     translations: Dict[str, str] = Field(default_factory=dict)
 
 
 class UpdateCustomTopicRequest(BaseModel):
     label: Optional[str] = Field(None, max_length=100)
-    prompt: Optional[str] = Field(None, max_length=1000)
+    prompt: Optional[str] = Field(None, max_length=10000)
     icon: Optional[str] = Field(None, max_length=10)
     translations: Optional[Dict[str, str]] = None
 
@@ -148,10 +148,34 @@ async def _get_project(project_id: str, client: DirectusClient) -> dict:
     return project
 
 
-def _assert_project_owner(project: dict, auth: DependencyDirectusSession) -> None:
+async def _assert_project_owner(project: dict, auth: DependencyDirectusSession) -> None:
+    """v2 access gate over a pre-fetched project dict.
+
+    Name kept for backwards compat, but this is no longer "owner" —
+    any role with `get_user_project_access() is not None` passes
+    (member/admin/billing/guest/shared). Stricter per-action checks
+    should use `has_policy()`; this one just answers reachability.
+    """
     if auth.is_admin:
         return
-    if project.get("directus_user_id", "") != auth.user_id:
+
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.inheritance import get_user_project_access
+
+    try:
+        app_user = await get_app_user_or_raise(auth.user_id)
+    except HTTPException:
+        raise HTTPException(
+            status_code=403, detail="Not authorized for this project"
+        ) from None
+
+    access = await get_user_project_access(
+        project_id=project["id"],
+        user_id=app_user["id"],
+        directus_user_id=auth.user_id,
+        project=project,
+    )
+    if access is None:
         raise HTTPException(status_code=403, detail="Not authorized for this project")
 
 
@@ -303,7 +327,7 @@ async def create_custom_topic(
 ) -> GetVerificationTopicsResponse:
     client = directus
     project = await _get_project(project_id, client)
-    _assert_project_owner(project, auth)
+    await _assert_project_owner(project, auth)
 
     slug = _slugify(body.label)
     short_id = generate_uuid()[:8]
@@ -357,7 +381,7 @@ async def update_custom_topic(
 ) -> GetVerificationTopicsResponse:
     client = directus
     project = await _get_project(project_id, client)
-    _assert_project_owner(project, auth)
+    await _assert_project_owner(project, auth)
 
     topic_rows = await run_in_thread_pool(
         client.get_items,
@@ -452,7 +476,7 @@ async def delete_custom_topic(
 ) -> GetVerificationTopicsResponse:
     client = directus
     project_check = await _get_project(project_id, client)
-    _assert_project_owner(project_check, auth)
+    await _assert_project_owner(project_check, auth)
 
     topic_rows = await run_in_thread_pool(
         client.get_items,
@@ -917,6 +941,7 @@ async def generate_verification_artifacts(
                     "content": message_content,
                 },
             ],
+            thinking={"type": "enabled", "budget_tokens": 2048},
         )
     except Exception as exc:
         logger.error("Gemini completion failed: %s", exc, exc_info=True)
@@ -1061,6 +1086,7 @@ async def update_verification_artifact(
                         "content": message_content,
                     },
                 ],
+                thinking={"type": "enabled", "budget_tokens": 2048},
             )
         except Exception as exc:  # pragma: no cover - external failure
             logger.error("Gemini revision failed: %s", exc, exc_info=True)

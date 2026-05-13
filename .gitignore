@@ -1,4 +1,3 @@
-.claude
 .DS_Store
 echo/docker-compose.coolify.yml
 echo/.devcontainer/neo4j_data/*
@@ -17,9 +16,5 @@ echo/server/wandb*
 **/.venv/
 **/.venv-*/
 
-# Local documentation (not committed)
-CLAUDE.md
-IMPLEMENTATION_PLANS/
-
 *.env
-notes_*.md
+settings.local.json

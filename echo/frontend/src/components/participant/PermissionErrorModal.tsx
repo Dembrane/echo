@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { Button, Divider, Modal, Stack } from "@mantine/core";
 import { IconQuestionMark, IconReload } from "@tabler/icons-react";
 import { useState } from "react";
+import { toast } from "@/components/common/Toaster";
 import { checkPermissionError } from "@/lib/utils";
 
 type PermissionErrorModalProps = {
@@ -20,7 +21,7 @@ export const PermissionErrorModal = ({
 		if (["granted", "prompt"].includes(permissionState ?? "")) {
 			window.location.reload();
 		} else {
-			alert(
+			toast.error(
 				t`Microphone access is still denied. Please check your settings and try again.`,
 			);
 		}

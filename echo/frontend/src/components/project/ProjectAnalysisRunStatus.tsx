@@ -1,7 +1,6 @@
-import { readItems } from "@directus/sdk";
 import { Trans } from "@lingui/react/macro";
 import { useQuery } from "@tanstack/react-query";
-import { directus } from "@/lib/directus";
+import { bff } from "@/lib/bff";
 import { CloseableAlert } from "../common/ClosableAlert";
 import { useLatestProjectAnalysisRunByProjectId } from "./hooks";
 
@@ -14,37 +13,18 @@ export const ProjectAnalysisRunStatus = ({
 		projectId ?? "",
 	);
 
-	// one off query
+	// Count of new chunks since the latest analysis run. Moved to a BFF
+	// endpoint that scopes to this project — the original frontend read
+	// forgot to pass project_id and over-counted across the whole DB.
 	const conversationChunksQuery = useQuery({
 		enabled: !!latestRunQuery.data,
 		queryFn: async () => {
-			const projectAnalysisRun = latestRunQuery.data;
-			if (!projectAnalysisRun) {
-				return 0;
-			}
-
-			const data = await directus.request(
-				readItems("conversation_chunk", {
-					fields: ["id"],
-					filter: {
-						timestamp: {
-							// @ts-expect-error _gt is not typed
-							_gt: projectAnalysisRun.created_at,
-						},
-					},
-					limit: 1,
-				}),
+			const run = latestRunQuery.data as { id?: string } | null;
+			if (!run?.id) return 0;
+			const { count } = await bff.get<{ count: number }>(
+				`/analysis-runs/${run.id}/new-chunks-count`,
 			);
-
-			if (data.length === 0) {
-				return 0;
-			}
-
-			try {
-				return data.length;
-			} catch {
-				return 0;
-			}
+			return count;
 		},
 		queryKey: ["conversationChunksProcessingPending", projectId],
 	});
@@ -54,27 +34,6 @@ export const ProjectAnalysisRunStatus = ({
 	if (data == null) {
 		return null;
 	}
-
-	// if (data.processing_status === "DONE") {
-	//   return (
-	//     <Stack className="italic text-gray-700">
-	//       {!!conversationChunksQuery.data && conversationChunksQuery.data > 0 ? (
-	//         <CloseableAlert>
-	//           <Trans>
-	//             New conversations have been added since the library was generated.
-	//             Regenerate the library to process them.
-	//           </Trans>
-	//         </CloseableAlert>
-	//       ) : (
-	//         <></>
-	//       )}
-	//       <div>
-	//         <Trans>This project library was generated on</Trans>{" "}
-	//         {new Date(data.created_at ?? new Date()).toLocaleString()}.
-	//       </div>
-	//     </Stack>
-	//   );
-	// }
 
 	return (
 		<div className="italic text-gray-700">
@@ -86,7 +45,6 @@ export const ProjectAnalysisRunStatus = ({
 					</Trans>
 				</CloseableAlert>
 			) : null}
-			{/* {data.processing_status}: {data.processing_message}{" "} */}
 		</div>
 	);
 };

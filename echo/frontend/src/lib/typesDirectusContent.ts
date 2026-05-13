@@ -308,14 +308,14 @@ export type BlockStepsTranslations = {
 	title?: string | null;
 };
 
-export type BlockTeam = {
+export type BlockOrganisation = {
 	id: string;
 	title?: string | null;
-	translations: any[] | BlockTeamTranslations[];
+	translations: any[] | BlockOrganisationTranslations[];
 };
 
-export type BlockTeamTranslations = {
-	block_team_id?: string | BlockTeam | null;
+export type BlockOrganisationTranslations = {
+	block_organisation_id?: string | BlockOrganisation | null;
 	content?: string | null;
 	headline?: string | null;
 	id: number;
@@ -717,6 +717,7 @@ export type DirectusUsers = {
 	status: string;
 	tags?: unknown | null;
 	tfa_secret?: string | null;
+	tfa_enabled?: boolean;
 	theme_dark?: string | null;
 	theme_dark_overrides?: unknown | null;
 	theme_light?: string | null;
@@ -979,7 +980,7 @@ export type PostGalleryItems = {
 };
 
 export type Posts = {
-	author?: string | Team | null;
+	author?: string | Organisation | null;
 	category?: string | Categories | null;
 	content?: string | null;
 	cost?: string | null;
@@ -1058,7 +1059,7 @@ export type SeoTranslations = {
 	seo_id?: string | Seo | null;
 };
 
-export type Team = {
+export type Organisation = {
 	bio?: string | null;
 	date_created?: string | null;
 	date_updated?: string | null;
@@ -1164,8 +1165,8 @@ export type CustomDirectusTypes = {
 	block_step_items_translations: BlockStepItemsTranslations;
 	block_steps: BlockSteps;
 	block_steps_translations: BlockStepsTranslations;
-	block_team: BlockTeam;
-	block_team_translations: BlockTeamTranslations;
+	block_organisation: BlockOrganisation;
+	block_organisation_translations: BlockOrganisationTranslations;
 	block_testimonial_slider_items: BlockTestimonialSliderItems;
 	block_testimonials: BlockTestimonials;
 	block_testimonials_translations: BlockTestimonialsTranslations;
@@ -1226,7 +1227,7 @@ export type CustomDirectusTypes = {
 	redirects: Redirects;
 	seo: Seo;
 	seo_translations: SeoTranslations;
-	team: Team;
+	organisation: Organisation;
 	testimonials: Testimonials;
 	testimonials_translations: TestimonialsTranslations;
 	announcement: Announcement;

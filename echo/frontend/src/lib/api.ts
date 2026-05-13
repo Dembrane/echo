@@ -708,10 +708,12 @@ export const initiateAndUploadConversationChunk = async (payload: {
 	const fileQueue = [...Array(payload.chunks.length).keys()];
 	const inProgress = new Set<number>();
 
-	// Track conversation ID for finish hook
-	let conversationId: string | null = null;
+	// Each uploaded file creates its own conversation.
+	// We need to remember every conversation ID so we can call finishConversation()
+	// on each one after uploads complete. Without this, only the first conversation
+	// would enter the processing pipeline (transcription, merging, duration, etc.).
+	const conversationIdByFileIndex = new Map<number, string>();
 
-	// Process a single file
 	const processFile = async (i: number) => {
 		const chunk = payload.chunks[i];
 		let fileName = "";
@@ -726,7 +728,6 @@ export const initiateAndUploadConversationChunk = async (payload: {
 		const source = payload.source || "PORTAL_AUDIO";
 
 		try {
-			// Create the conversation first (one per file in this implementation)
 			const conversation = await initiateConversation({
 				email: payload.email,
 				name: `${payload.namePrefix} - ${fileName}`,
@@ -736,10 +737,7 @@ export const initiateAndUploadConversationChunk = async (payload: {
 				tagIdList: payload.tagIdList,
 			});
 
-			// Store conversation ID for finish hook
-			if (!conversationId) {
-				conversationId = conversation.id;
-			}
+			conversationIdByFileIndex.set(i, conversation.id);
 
 			// Upload using new presigned URL method
 			const uploadResult = await uploadConversationChunkWithPresignedUrl({
@@ -811,20 +809,33 @@ export const initiateAndUploadConversationChunk = async (payload: {
 		toast.success(`All ${payload.chunks.length} file(s) uploaded successfully`);
 	}
 
-	// IMPORTANT: Trigger finish hook after all uploads complete
-	// This triggers: audio merging, ETL pipeline, summarization
-	if (conversationId && failures.length === 0) {
-		console.log(
-			`[Upload] Triggering finish hook for conversation ${conversationId}`,
-		);
-		try {
-			await finishConversation(conversationId);
-			console.log("[Upload] Finish hook triggered successfully");
-		} catch (error) {
-			console.error("[Upload] Failed to trigger finish hook:", error);
-			// Don't throw - uploads succeeded, this is just post-processing
+	// Collect conversation IDs for files that uploaded successfully.
+	// Failed uploads are skipped — they have no conversation to finish.
+	const succeededConversationIds = results.reduce<string[]>((ids, result, i) => {
+		const isFailure = result && "error" in result;
+		const conversationId = conversationIdByFileIndex.get(i);
+		if (!isFailure && conversationId) {
+			ids.push(conversationId);
 		}
-	}
+		return ids;
+	}, []);
+
+	// Call finishConversation() for every successful upload, concurrently.
+	// This triggers the backend pipeline: transcription → merging → duration → summary.
+	// Each call is independent, so one failure won't block the others.
+	await Promise.all(
+		succeededConversationIds.map(async (conversationId) => {
+			try {
+				await finishConversation(conversationId);
+				console.log(`[Upload] Finish hook triggered for conversation ${conversationId}`);
+			} catch (error) {
+				console.error(
+					`[Upload] Failed to finish conversation ${conversationId}:`,
+					error,
+				);
+			}
+		}),
+	);
 
 	return results;
 };
@@ -842,6 +853,9 @@ export const getProjectConversationCounts = async (projectId: string) => {
 			filter: {
 				project_id: {
 					_eq: projectId,
+				},
+				deleted_at: {
+					_null: true,
 				},
 			},
 		}),
@@ -1260,24 +1274,155 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
 export const createProjectReport = async (payload: {
 	projectId: string;
 	language: string;
+	userInstructions?: string;
+	scheduledAt?: string;
 	otherPayload?: Partial<ProjectReport>;
 }) => {
 	const response = await api.post<unknown, ProjectReport>(
 		`/projects/${payload.projectId}/create-report`,
 		{
 			language: payload.language,
+			scheduled_at: payload.scheduledAt || undefined,
+			user_instructions: payload.userInstructions || undefined,
 		},
 	);
 
-	const reportId = response.id;
-
 	if (payload.otherPayload) {
-		await directus.request(
-			updateItem("project_report", reportId, payload.otherPayload),
+		await updateProjectReport(
+			payload.projectId,
+			response.id,
+			payload.otherPayload,
 		);
 	}
 
 	return response;
+};
+
+export const cancelScheduledReport = async (
+	projectId: string,
+	reportId: number,
+) => {
+	return api.post<unknown, { cancelled: boolean }>(
+		`/projects/${projectId}/reports/${reportId}/cancel-schedule`,
+	);
+};
+
+export const listProjectReports = async (projectId: string) => {
+	return api.get<
+		unknown,
+		(Pick<
+			ProjectReport,
+			| "id"
+			| "status"
+			| "date_created"
+			| "language"
+			| "user_instructions"
+			| "scheduled_at"
+		> & { title?: string | null })[]
+	>(`/projects/${projectId}/reports`);
+};
+
+export const getLatestProjectReport = async (projectId: string) => {
+	return api.get<
+		unknown,
+		Pick<
+			ProjectReport,
+			| "id"
+			| "status"
+			| "project_id"
+			| "show_portal_link"
+			| "date_created"
+			| "error_message"
+		> | null
+	>(`/projects/${projectId}/reports/latest`);
+};
+
+export const getProjectReportDetail = async (
+	projectId: string,
+	reportId: number,
+) => {
+	return api.get<unknown, ProjectReport>(
+		`/projects/${projectId}/reports/${reportId}/detail`,
+	);
+};
+
+export const updateProjectReport = async (
+	projectId: string,
+	reportId: number,
+	payload: Partial<ProjectReport>,
+) => {
+	return api.patch<unknown, ProjectReport>(
+		`/projects/${projectId}/reports/${reportId}`,
+		payload,
+	);
+};
+
+export const deleteProjectReport = async (
+	projectId: string,
+	reportId: number,
+) => {
+	return api.delete<unknown, { deleted: boolean }>(
+		`/projects/${projectId}/reports/${reportId}`,
+	);
+};
+
+export const getProjectReportViews = async (
+	projectId: string,
+	reportId: number,
+) => {
+	return api.get<unknown, { total: number; recent: number }>(
+		`/projects/${projectId}/reports/${reportId}/views`,
+	);
+};
+
+export const getPublicLatestProjectReport = async (projectId: string) => {
+	return apiNoAuth.get<
+		unknown,
+		Pick<
+			ProjectReport,
+			"id" | "status" | "project_id" | "show_portal_link"
+		> | null
+	>(`/participant/${projectId}/report/latest`);
+};
+
+export const getPublicProjectReportDetail = async (
+	projectId: string,
+	reportId: number,
+) => {
+	return apiNoAuth.get<unknown, ProjectReport>(
+		`/participant/${projectId}/report/${reportId}/detail`,
+	);
+};
+
+export const getPublicProjectReportViews = async (projectId: string) => {
+	return apiNoAuth.get<unknown, { recent: number }>(
+		`/participant/${projectId}/report/views`,
+	);
+};
+
+export const createPublicReportMetric = async (
+	projectId: string,
+	payload: { project_report_id: number; type: string },
+) => {
+	return apiNoAuth.post<unknown, { status: string }>(
+		`/participant/${projectId}/report/metric`,
+		payload,
+	);
+};
+
+export const checkReportNeedsUpdate = async (
+	projectId: string,
+	reportId: number,
+) => {
+	return api.get<unknown, { needs_update: boolean }>(
+		`/projects/${projectId}/reports/${reportId}/needs-update`,
+	);
+};
+
+export const getProjectParticipantCount = async (projectId: string) => {
+	return api.get<unknown, { count: number }>(
+		`/projects/${projectId}/participants/count`,
+	);
 };
 
 export const finishConversation = async (conversationId: string) => {
@@ -1485,6 +1630,46 @@ export const submitNotificationParticipant = async (
 	}
 };
 
+export const deleteTagById = async (
+	projectId: string,
+	tagId: string,
+) => {
+	return api.delete(`/projects/${projectId}/tags/${tagId}`);
+};
+
+export const deleteConversationTags = async (
+	projectId: string,
+	conversationId: string,
+	tagIds: number[],
+) => {
+	return api.post(
+		`/projects/${projectId}/conversations/${conversationId}/tags/delete`,
+		{ tag_ids: tagIds },
+	);
+};
+
+export const deleteChatById = async (chatId: string) => {
+	try {
+		const response = await api.delete(`/chats/${chatId}`);
+		return response;
+	} catch (error: any) {
+		const message =
+			error?.response?.data?.detail || "Failed to delete chat";
+		throw new Error(message);
+	}
+};
+
+export const deleteProjectById = async (projectId: string) => {
+	try {
+		const response = await api.delete(`/projects/${projectId}`);
+		return response;
+	} catch (error: any) {
+		const message =
+			error?.response?.data?.detail || "Failed to delete project";
+		throw new Error(message);
+	}
+};
+
 export const deleteConversationById = async (conversationId: string) => {
 	try {
 		const response = await api.delete(`/conversations/${conversationId}`);
@@ -1522,7 +1707,8 @@ export const checkUnsubscribeStatus = async (
 export type WebhookEvent =
 	| "conversation.started"
 	| "conversation.transcribed"
-	| "conversation.summarized";
+	| "conversation.summarized"
+	| "report.generated";
 
 export type WebhookStatus = "published" | "draft" | "archived";
 
@@ -1622,4 +1808,102 @@ export const testProjectWebhook = async (
 		`/projects/${projectId}/webhooks/${webhookId}/test`,
 	);
 	return response;
+};
+
+// ── User Templates ──
+
+export type PromptTemplateResponse = {
+	id: string;
+	title: string;
+	content: string;
+	icon: string | null;
+	sort: number | null;
+	is_public: boolean;
+	description: string | null;
+	tags: string[] | null;
+	language: string | null;
+	author_display_name: string | null;
+	is_anonymous: boolean;
+	use_count: number;
+	star_count: number;
+	copied_from: string | null;
+	date_created: string | null;
+	date_updated: string | null;
+	// Workspace-scope (matrix v1.1). scope='user' = private template
+	// (legacy). scope='workspace' = shared with every workspace member.
+	scope: "user" | "workspace";
+	workspace_id: string | null;
+	// Derived server-side: true if the caller is allowed to edit this
+	// template (creator for scope='user', or non-external workspace
+	// member for scope='workspace').
+	can_edit: boolean;
+};
+
+// -- Quick-Access Preferences --
+
+export type QuickAccessPreference = {
+	type: "static" | "user";
+	id: string;
+};
+
+export const getPromptTemplates = async (
+	workspaceId?: string | null,
+): Promise<PromptTemplateResponse[]> => {
+	const qs = workspaceId ? `?workspace_id=${encodeURIComponent(workspaceId)}` : "";
+	return api.get<unknown, PromptTemplateResponse[]>(
+		`/templates/prompt-templates${qs}`,
+	);
+};
+
+export const createPromptTemplate = async (payload: {
+	title: string;
+	content: string;
+	icon?: string | null;
+	// Default scope is 'user' — pass 'workspace' + workspace_id to
+	// create a shared organisation template.
+	scope?: "user" | "workspace";
+	workspace_id?: string | null;
+}): Promise<PromptTemplateResponse> => {
+	return api.post<unknown, PromptTemplateResponse>(
+		"/templates/prompt-templates",
+		payload,
+	);
+};
+
+export const updatePromptTemplate = async (
+	templateId: string,
+	payload: { title?: string; content?: string; icon?: string | null },
+): Promise<PromptTemplateResponse> => {
+	return api.patch<unknown, PromptTemplateResponse>(
+		`/templates/prompt-templates/${templateId}`,
+		payload,
+	);
+};
+
+export const deletePromptTemplate = async (
+	templateId: string,
+): Promise<void> => {
+	await api.delete(`/templates/prompt-templates/${templateId}`);
+};
+
+export const getQuickAccessPreferences = async (): Promise<QuickAccessPreference[]> => {
+	return api.get<unknown, QuickAccessPreference[]>("/templates/quick-access");
+};
+
+export const saveQuickAccessPreferences = async (
+	preferences: QuickAccessPreference[],
+): Promise<QuickAccessPreference[]> => {
+	return api.put<unknown, QuickAccessPreference[]>(
+		"/templates/quick-access",
+		preferences,
+	);
+};
+
+export const toggleAiSuggestions = async (
+	hide_ai_suggestions: boolean,
+): Promise<{ status: string; hide_ai_suggestions: boolean }> => {
+	return api.patch<unknown, { status: string; hide_ai_suggestions: boolean }>(
+		"/templates/ai-suggestions",
+		{ hide_ai_suggestions },
+	);
 };

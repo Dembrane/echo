@@ -5,7 +5,15 @@ import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
 
-export const CopyRichTextIconButton = ({ markdown }: { markdown: string }) => {
+export const CopyRichTextIconButton = ({
+	markdown,
+	size = "xs",
+	iconSize = 14,
+}: {
+	markdown: string;
+	size?: "xs" | "sm" | "md" | "lg";
+	iconSize?: number;
+}) => {
 	const { copy, copied } = useCopyToRichText();
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -30,7 +38,7 @@ export const CopyRichTextIconButton = ({ markdown }: { markdown: string }) => {
 			px={5}
 		>
 			<ActionIcon
-				size="md"
+				size={size}
 				radius="xl"
 				color={copied ? "teal" : "gray"}
 				variant="subtle"
@@ -38,11 +46,11 @@ export const CopyRichTextIconButton = ({ markdown }: { markdown: string }) => {
 				disabled={isLoading}
 			>
 				{isLoading ? (
-					<Loader size={18} />
+					<Loader size={iconSize} />
 				) : copied ? (
-					<IconCheck size={18} />
+					<IconCheck size={iconSize} />
 				) : (
-					<IconCopy size={18} />
+					<IconCopy size={iconSize} />
 				)}
 			</ActionIcon>
 		</Tooltip>

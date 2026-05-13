@@ -1,4 +1,4 @@
-import { aggregate, createItems, type Query, readItems } from "@directus/sdk";
+import { createItems, type Query, readItems, updateItem } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import * as Sentry from "@sentry/react";
 import {
@@ -276,6 +276,114 @@ export const useMarkAsReadMutation = () => {
 	});
 };
 
+export const useMarkAsUnreadMutation = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			activityIds,
+		}: {
+			announcementId: string;
+			activityIds: string[];
+		}) => {
+			try {
+				const updates = activityIds.map((id) =>
+					directus.request(
+						updateItem(
+							"announcement_activity",
+							id,
+							{ read: false } as any,
+						),
+					),
+				);
+				return await Promise.all(updates);
+			} catch (error) {
+				Sentry.captureException(error);
+				toast.error(t`Failed to mark announcement as unread`);
+				console.error("Error in markAsUnread mutationFn:", error);
+				throw error;
+			}
+		},
+		onError: (
+			err,
+			_variables,
+			context: { previousAnnouncements?: [any, any][] } = {},
+		) => {
+			if (context?.previousAnnouncements) {
+				context.previousAnnouncements.forEach(
+					([queryKey, data]: [any, any]) => {
+						queryClient.setQueriesData({ queryKey }, data);
+					},
+				);
+			}
+			console.error("Error marking announcement as unread:", err);
+			toast.error(t`Failed to mark announcement as unread`);
+		},
+		onMutate: async ({ announcementId }) => {
+			await queryClient.cancelQueries({ queryKey: ["announcements"] });
+
+			const previousAnnouncements = queryClient.getQueriesData({
+				queryKey: ["announcements"],
+			});
+
+			// Optimistically update infinite announcements - set read to false
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "infinite"] },
+				(old: any) => {
+					if (!old) return old;
+					return {
+						...old,
+						pages: old.pages.map((page: any) => ({
+							...page,
+							announcements: page.announcements.map(
+								(announcement: any) => {
+									if (announcement.id === announcementId) {
+										return {
+											...announcement,
+											activity: announcement.activity?.map(
+												(a: any) => ({ ...a, read: false }),
+											) ?? [],
+										};
+									}
+									return announcement;
+								},
+							),
+						})),
+					};
+				},
+			);
+
+			// Optimistically update latest announcement
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "latest"] },
+				(old: any) => {
+					if (!old || old.id !== announcementId) return old;
+					return {
+						...old,
+						activity: old.activity?.map(
+							(a: any) => ({ ...a, read: false }),
+						) ?? [],
+					};
+				},
+			);
+
+			// Optimistically increment unread count
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "unread"] },
+				(old: number) => {
+					if (typeof old !== "number") return old;
+					return old + 1;
+				},
+			);
+
+			return { previousAnnouncements };
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["announcements"] });
+		},
+	});
+};
+
 export const useMarkAllAsReadMutation = () => {
 	const queryClient = useQueryClient();
 	const { data: currentUser } = useCurrentUser();
@@ -420,55 +528,47 @@ export const useUnreadAnnouncements = () => {
 	const { data: currentUser } = useCurrentUser();
 
 	return useQuery({
-		enabled: !!currentUser?.id, // Only run query if user is logged in
+		enabled: !!currentUser?.id,
 		queryFn: async () => {
 			try {
-				// If no user is logged in, return 0
 				if (!currentUser?.id) {
 					return 0;
 				}
 
 				const unreadAnnouncements = await directus.request(
-					aggregate("announcement", {
-						aggregate: { count: "*" },
-						query: {
-							filter: {
-								_or: [
-									{
-										expires_at: {
-											_gte: new Date().toISOString(),
+					readItems("announcement", {
+						fields: ["id"],
+						filter: {
+							_and: [
+								{
+									activity: {
+										_none: {
+											user_id: {
+												_eq: currentUser.id,
+											},
 										},
 									},
-									{
-										expires_at: {
-											_null: true,
+								},
+								{
+									_or: [
+										{
+											expires_at: {
+												_gte: new Date().toISOString(),
+											},
 										},
-									},
-								],
-							},
+										{
+											expires_at: {
+												_null: true,
+											},
+										},
+									],
+								},
+							],
 						},
 					}),
 				);
 
-				const activities = await directus.request(
-					aggregate("announcement_activity", {
-						aggregate: { count: "*" },
-						query: {
-							filter: {
-								_and: [
-									{
-										user_id: { _eq: currentUser.id },
-									},
-								],
-							},
-						},
-					}),
-				);
-
-				const count =
-					Number.parseInt(unreadAnnouncements?.[0]?.count?.toString() ?? "0") -
-					Number.parseInt(activities?.[0]?.count?.toString() ?? "0");
-				return Math.max(0, count);
+				return unreadAnnouncements.length;
 			} catch (error) {
 				Sentry.captureException(error);
 				console.error("Error fetching unread announcements count:", error);
@@ -478,6 +578,58 @@ export const useUnreadAnnouncements = () => {
 		queryKey: ["announcements", "unread", currentUser?.id],
 		retry: 2,
 		staleTime: 1000 * 60 * 5, // 5 minutes
+	});
+};
+
+export const useWhatsNewAnnouncements = ({
+	enabled = true,
+}: {
+	enabled?: boolean;
+} = {}) => {
+	const { data: currentUser } = useCurrentUser();
+
+	return useQuery({
+		enabled,
+		queryFn: async () => {
+			try {
+				const response: Announcement[] = await directus.request<Announcement[]>(
+					readItems("announcement", {
+						deep: {
+							activity: {
+								_filter: {
+									user_id: {
+										_eq: currentUser?.id,
+									},
+								},
+							},
+						},
+						fields: [
+							"id",
+							"created_at",
+							"expires_at",
+							"level",
+							{
+								translations: ["id", "languages_code", "title", "message"],
+							},
+							{
+								activity: ["id", "user_id", "announcement_activity", "read"],
+							},
+						],
+						sort: ["-created_at"],
+						limit: 50,
+					}),
+				);
+
+				return response;
+			} catch (error) {
+				Sentry.captureException(error);
+				console.error("Error fetching what's new announcements:", error);
+				throw error;
+			}
+		},
+		queryKey: ["announcements", "whats-new"],
+		retry: 2,
+		staleTime: 1000 * 60 * 5,
 	});
 };
 

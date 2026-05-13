@@ -1,18 +1,33 @@
 import {
 	passwordRequest,
 	passwordReset,
-	readUser,
 	registerUser,
 	registerUserVerify,
 } from "@directus/sdk";
+import { usePostHog } from "@posthog/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useLocation, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
-import { ADMIN_BASE_URL } from "@/config";
+import { ADMIN_BASE_URL, API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { directus } from "@/lib/directus";
+import { isAuthPath } from "../utils/authPaths";
 import { throwWithMessage } from "../utils/errorUtils";
+
+const buildLoginQuery = ({
+	next,
+	reason,
+}: {
+	next?: string;
+	reason?: string;
+}): string => {
+	const params = new URLSearchParams();
+	if (next) params.set("next", next);
+	if (reason) params.set("reason", reason);
+	const qs = params.toString();
+	return qs ? `?${qs}` : "";
+};
 
 export const useCurrentUser = ({
 	enabled = true,
@@ -21,22 +36,13 @@ export const useCurrentUser = ({
 } = {}) =>
 	useQuery({
 		enabled,
-		queryFn: () => {
+		queryFn: async () => {
 			try {
-				return directus.request(
-					readUser("me", {
-						fields: [
-							"id",
-							"first_name",
-							"email",
-							"disable_create_project",
-							"tfa_secret",
-							"whitelabel_logo",
-							"legal_basis",
-							"privacy_policy_url",
-						],
-					}),
-				);
+				const response = await fetch(`${API_BASE_URL}/user-settings/me`, {
+					credentials: "include",
+				});
+				if (!response.ok) return null;
+				return response.json();
 			} catch (_error) {
 				return null;
 			}
@@ -69,9 +75,7 @@ export const useResetPasswordMutation = () => {
 			}
 		},
 		onSuccess: () => {
-			toast.success(
-				"Password reset successfully. Please login with new password.",
-			);
+			toast.success("Password reset. Log in with your new password.");
 			navigate("/login");
 		},
 	});
@@ -94,7 +98,7 @@ export const useRequestPasswordResetMutation = () => {
 			toast.error(e.message);
 		},
 		onSuccess: () => {
-			toast.success("Password reset email sent successfully");
+			toast.success("Check your email for reset instructions.");
 			navigate("/check-your-email");
 		},
 	});
@@ -105,56 +109,100 @@ export const useVerifyMutation = (doRedirect = true) => {
 
 	return useMutation({
 		mutationFn: async (data: { token: string }) => {
+			// 15s ceiling — without it, a hung Directus / proxy would
+			// leave the page spinning forever (original infinite-loading bug).
+			const timeout = new Promise<never>((_, reject) =>
+				setTimeout(
+					() => reject(new Error("Verification timed out. Try again.")),
+					15_000,
+				),
+			);
 			try {
-				const response = await directus.request(registerUserVerify(data.token));
+				const response = await Promise.race([
+					directus.request(registerUserVerify(data.token)),
+					timeout,
+				]);
 				return response;
 			} catch (e) {
 				throwWithMessage(e);
 			}
 		},
-		onError: (e) => {
-			toast.error(e.message);
-		},
+		// No toast here — the verify page shows the status inline, so a
+		// parallel toast is double-signalling. Errors surface via the
+		// verifyMutation.isError branch on the page.
 		onSuccess: () => {
-			toast.success("Email verified successfully.");
 			if (doRedirect) {
+				// Redirect with a "?verified=1" hint so /login can show
+				// "Your email is verified. Log in to continue." Shorter
+				// delay than before — 1.5s is enough to read the page
+				// state before we move the user along.
 				setTimeout(() => {
-					// window.location.href = `/login?new=true`;
-					navigate("/login?new=true");
-				}, 4500);
+					navigate("/login?verified=1");
+				}, 1500);
+			}
+		},
+	});
+};
+
+// Probes whether an email is already registered, so Register.tsx can
+// block before Directus's anti-enumeration silent-200 traps the user on
+// "Check your email" forever. Failures collapse to "available" so an
+// outage of the probe never blocks a legit signup.
+export const useCheckEmailMutation = () => {
+	return useMutation({
+		mutationFn: async (
+			email: string,
+		): Promise<{ status: "available" | "registered" | "invalid" }> => {
+			try {
+				const res = await fetch(`${API_BASE_URL}/v2/auth/check-email`, {
+					body: JSON.stringify({ email }),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				});
+				if (!res.ok) {
+					return { status: "available" };
+				}
+				return res.json();
+			} catch (_e) {
+				return { status: "available" };
 			}
 		},
 	});
 };
 
 export const useRegisterMutation = () => {
-	const navigate = useI18nNavigate();
 	return useMutation({
 		mutationFn: async (payload: Parameters<typeof registerUser>) => {
 			try {
-				const response = await directus.request(registerUser(...payload));
-				return response;
+				return await directus.request(registerUser(...payload));
 			} catch (e) {
+				// Map the raw Directus error to a user-facing message, then
+				// re-throw so react-query marks the mutation as failed and
+				// onError / the inline Alert both fire. Previously only the
+				// "no permission" case re-threw; every other failure fell
+				// through as undefined and looked like a success, which
+				// bounced users to the "Check your email" step even when
+				// registration actually failed (e.g. validation errors).
+				let mapped: Error = new Error("Registration failed");
 				try {
 					throwWithMessage(e);
 				} catch (inner) {
-					if (inner instanceof Error) {
-						if (inner.message === "You don't have permission to access this.") {
-							throw new Error(
-								"Oops! It seems your email is not eligible for registration at this time. Please consider joining our waitlist for future updates!",
-							);
-						}
-					}
+					if (inner instanceof Error) mapped = inner;
 				}
+				if (mapped.message === "You don't have permission to access this.") {
+					throw new Error(
+						"Oops! It seems your email is not eligible for registration at this time. Please consider joining our waitlist for future updates!",
+					);
+				}
+				throw mapped;
 			}
 		},
-		onError: (e) => {
-			toast.error(e.message);
-		},
-		onSuccess: () => {
-			toast.success("Please check your email to verify your account.");
-			navigate("/check-your-email");
-		},
+		// Success handling lives inline on the Register page — the
+		// stepper advances to step 2 ("Check your email"). No toast +
+		// no redirect, since the inline state already shows the user
+		// exactly what's next. Failures surface via the inline Alert
+		// that reads from `registerMutation.error`.
 	});
 };
 
@@ -190,6 +238,7 @@ export const useLoginMutation = () => {
 export const useLogoutMutation = () => {
 	const queryClient = useQueryClient();
 	const navigate = useI18nNavigate();
+	const posthog = usePostHog();
 
 	return useMutation({
 		mutationFn: async ({
@@ -212,28 +261,29 @@ export const useLogoutMutation = () => {
 		},
 		onError: (_error, { next, reason, doRedirect }) => {
 			if (doRedirect) {
-				navigate(
-					"/login" +
-						(next ? `?next=${encodeURIComponent(next)}` : "") +
-						(reason ? `&reason=${reason}` : ""),
-				);
+				navigate(`/login${buildLoginQuery({ next, reason })}`);
 			}
 		},
 		onMutate: async () => {
 			await queryClient.cancelQueries();
+			// Wipe cache before re-setting session=false — prevents the next user
+			// from briefly seeing the previous user's workspaces/projects.
+			queryClient.removeQueries();
 			queryClient.setQueryData(["auth", "session"], false);
-			queryClient.removeQueries({ exact: false, queryKey: ["users", "me"] });
+			if (typeof window !== "undefined") {
+				try {
+					sessionStorage.removeItem("dembrane_ws_selected");
+				} catch {}
+			}
 		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
 		},
 		onSuccess: (_data, { next, reason, doRedirect }) => {
+			posthog?.capture("user_logged_out");
+			posthog?.reset();
 			if (doRedirect) {
-				navigate(
-					"/login" +
-						(next ? `?next=${encodeURIComponent(next)}` : "") +
-						(reason ? `&reason=${reason}` : ""),
-				);
+				navigate(`/login${buildLoginQuery({ next, reason })}`);
 			}
 		},
 	});
@@ -258,15 +308,21 @@ export const useAuthenticated = (doRedirect = false) => {
 	useEffect(() => {
 		if (sessionQuery.isError && doRedirect && !hasLoggedOutRef.current) {
 			hasLoggedOutRef.current = true;
+			// Preserve full URL through /login; skip auth pages to avoid loops.
+			const nextUrl = isAuthPath(location.pathname)
+				? undefined
+				: location.pathname + location.search + location.hash;
 			logoutMutation.mutate({
 				doRedirect,
-				next: location.pathname,
+				next: nextUrl,
 				reason: searchParams.get("reason") ?? "",
 			});
 		}
 	}, [
 		doRedirect,
+		location.hash,
 		location.pathname,
+		location.search,
 		logoutMutation,
 		searchParams,
 		sessionQuery.isError,

@@ -17,7 +17,7 @@ import {
 } from "./hooks";
 import { VerifyInstructions } from "./VerifyInstructions";
 
-type LanguageCode = "de" | "en" | "es" | "fr" | "nl" | "it";
+type LanguageCode = "de" | "en" | "es" | "fr" | "nl" | "it" | "uk";
 
 const LANGUAGE_TO_LOCALE: Record<LanguageCode, string> = {
 	de: "de-DE",
@@ -26,6 +26,7 @@ const LANGUAGE_TO_LOCALE: Record<LanguageCode, string> = {
 	fr: "fr-FR",
 	it: "it-IT",
 	nl: "nl-NL",
+	uk: "uk-UA",
 };
 
 const localeFromLanguage = (language?: string) => {
@@ -119,7 +120,11 @@ export const VerifySelection = () => {
 	const handleGenerationFlow = async (topicKey: string) => {
 		if (!conversationId) return;
 
-		abortControllerRef.current = new AbortController();
+		if (abortControllerRef.current) {
+			abortControllerRef.current.abort();
+		}
+		const controller = new AbortController();
+		abortControllerRef.current = controller;
 
 		setGeneratedArtefactId(null);
 		setInstructionTopicKey(topicKey);
@@ -127,13 +132,12 @@ export const VerifySelection = () => {
 		try {
 			const artefact = await generateArtefactMutation.mutateAsync({
 				conversationId,
-				signal: abortControllerRef.current.signal,
+				signal: controller.signal,
 				topicKey,
 			});
 			setGeneratedArtefactId(artefact.id);
 			startCooldown(conversationId, "verify");
 		} catch (error) {
-			// Don't show error toast if request was aborted
 			if (error instanceof Error && error.name === "CanceledError") {
 				return;
 			}
@@ -146,9 +150,31 @@ export const VerifySelection = () => {
 			setSelectedOption(null);
 			setSearchParams({});
 		} finally {
-			abortControllerRef.current = null;
+			if (abortControllerRef.current === controller) {
+				abortControllerRef.current = null;
+			}
 		}
 	};
+
+	const singleTopicKey =
+		availableOptions.length === 1 ? availableOptions[0].key : null;
+
+	const [hasAutoTriedSingle, setHasAutoTriedSingle] = useState(false);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: handleGenerationFlow is intentionally excluded; auto-skip should only react to data/route changes, not function-identity changes.
+	useEffect(() => {
+		if (hasAutoTriedSingle) return;
+		if (!isLoading && !showInstructions && singleTopicKey && conversationId) {
+			setHasAutoTriedSingle(true);
+			handleGenerationFlow(singleTopicKey);
+		}
+	}, [
+		hasAutoTriedSingle,
+		isLoading,
+		singleTopicKey,
+		conversationId,
+		showInstructions,
+	]);
 
 	const handleNext = () => {
 		if (!selectedOption || !conversationId) return;
@@ -174,6 +200,19 @@ export const VerifySelection = () => {
 			`/${projectId}/conversation/${conversationId}/verify/approve?${params.toString()}`,
 		);
 	};
+
+	if (
+		isLoading ||
+		(singleTopicKey && !showInstructions && !hasAutoTriedSingle)
+	) {
+		return (
+			<Stack align="center" justify="center" className="h-full">
+				<div className="animate-spin">
+					<Logo hideTitle alwaysDembrane h="48px" />
+				</div>
+			</Stack>
+		);
+	}
 
 	if (showInstructions) {
 		const objectLabel = getOptionLabel(instructionTopicKey);
@@ -205,14 +244,7 @@ export const VerifySelection = () => {
 
 				{/* Options list */}
 				<Group gap="md">
-					{isLoading && (
-						<Stack align="center" justify="center" className="w-full py-8">
-							<div className="animate-spin">
-								<Logo hideTitle alwaysDembrane h="48px" />
-							</div>
-						</Stack>
-					)}
-					{!isLoading && availableOptions.length === 0 && (
+					{availableOptions.length === 0 && (
 						<Text size="sm" c="dimmed">
 							<Trans>
 								No verification topics are configured for this project.
@@ -247,17 +279,11 @@ export const VerifySelection = () => {
 				radius="3xl"
 				onClick={handleNext}
 				className="w-full"
-				rightSection={
-					isLoading ? null : <IconArrowRight size={20} className="ml-1" />
-				}
-				disabled={!selectedOption || isLoading}
+				rightSection={<IconArrowRight size={20} className="ml-1" />}
+				disabled={!selectedOption}
 				{...testId("portal-verify-selection-next-button")}
 			>
-				{isLoading ? (
-					<Trans>Loading…</Trans>
-				) : (
-					<Trans id="participant.verify.selection.button.next">Next</Trans>
-				)}
+				<Trans id="participant.verify.selection.button.next">Next</Trans>
 			</Button>
 		</Stack>
 	);

@@ -1,0 +1,25 @@
+{
+  "collection": "notification",
+  "field": "audience_user_id",
+  "related_collection": "app_user",
+  "meta": {
+    "junction_field": null,
+    "many_collection": "notification",
+    "many_field": "audience_user_id",
+    "one_allowed_collections": null,
+    "one_collection": "app_user",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": null,
+    "sort_field": null
+  },
+  "schema": {
+    "table": "notification",
+    "column": "audience_user_id",
+    "foreign_key_table": "app_user",
+    "foreign_key_column": "id",
+    "constraint_name": "notification_audience_user_id_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "CASCADE"
+  }
+}

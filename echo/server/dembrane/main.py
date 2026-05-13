@@ -14,6 +14,7 @@ from fastapi.openapi.utils import get_openapi
 from starlette.middleware.cors import CORSMiddleware
 
 from dembrane.seed import seed_default_languages, reconcile_default_verification_topics
+from dembrane.api.v2 import v2_router
 from dembrane.sentry import init_sentry
 from dembrane.api.api import api
 from dembrane.settings import get_settings
@@ -47,9 +48,25 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception:  # pragma: no cover - startup logging only
         logger.exception("Failed to reconcile verification topics during startup")
 
+    # Warn loudly if email is not configured — workspace invites depend on it
+    try:
+        from dembrane.settings import get_settings
+        if not get_settings().email.sendgrid_api_key:
+            logger.error(
+                "SENDGRID_API_KEY is not configured — workspace invite emails "
+                "will silently fail. Set SENDGRID_API_KEY in server/.env"
+            )
+    except Exception:
+        pass
+
     yield
     # shutdown
     logger.info("shutting down server")
+    try:
+        from dembrane.directus_async import async_directus
+        await async_directus.close()
+    except Exception:
+        logger.exception("Failed to close async Directus client")
 
 
 docs_url = None
@@ -91,6 +108,9 @@ async def add_process_time_header(
 
 logger.info("mounting api on /api")
 app.include_router(api, prefix="/api")
+
+logger.info("mounting v2 api on /api/v2")
+app.include_router(v2_router, prefix="/api/v2")
 
 
 class SPAStaticFiles(StaticFiles):

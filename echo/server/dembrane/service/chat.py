@@ -378,7 +378,10 @@ class ChatService:
                         "project_chat",
                         {
                             "query": {
-                                "filter": {"project_id": {"_eq": project_id}},
+                                "filter": {
+                                    "project_id": {"_eq": project_id},
+                                    "deleted_at": {"_null": True},
+                                },
                                 "fields": ["id"],
                                 "sort": "-date_created",
                                 "limit": 10,
