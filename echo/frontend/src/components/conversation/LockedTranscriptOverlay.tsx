@@ -1,16 +1,32 @@
-import { Trans } from "@lingui/react/macro";
+import { t } from "@lingui/core/macro";
 import { Badge, Box, Stack, Text } from "@mantine/core";
 import { IconLock } from "@tabler/icons-react";
 
 /**
- * Overlay shown in place of transcript text on over-cap conversations.
+ * Overlay shown in place of content on over-cap conversations.
  *
- * Audio playback remains accessible — only the transcript is gated.
+ * Audio playback remains accessible -- only the text content is gated.
  * Upgrading the workspace to a tier with overage billing immediately
  * unlocks all previously-locked conversations on the next page load
  * (live computation, no batch update).
  */
-export function LockedTranscriptOverlay({ compact = false }: { compact?: boolean }) {
+export function LockedTranscriptOverlay({
+	compact = false,
+	variant = "transcript",
+}: {
+	compact?: boolean;
+	variant?: "transcript" | "summary";
+}) {
+	const label =
+		variant === "summary"
+			? t`You've reached your summary limit`
+			: t`You've reached your transcript limit`;
+
+	const description =
+		variant === "summary"
+			? t`Upgrade your workspace to view summaries for new conversations.`
+			: t`Upgrade your workspace to view transcripts for new conversations.`;
+
 	return (
 		<Box
 			style={{
@@ -29,14 +45,11 @@ export function LockedTranscriptOverlay({ compact = false }: { compact?: boolean
 					variant="light"
 					leftSection={<IconLock size={12} />}
 				>
-					<Trans>Transcript locked</Trans>
+					{label}
 				</Badge>
 				{!compact && (
 					<Text size="sm" ta="center" c="dimmed">
-						<Trans>
-							Upgrade your workspace to view transcripts for
-							conversations recorded after the cap.
-						</Trans>
+						{description}
 					</Text>
 				)}
 			</Stack>

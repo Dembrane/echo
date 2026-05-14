@@ -52,6 +52,8 @@ export const ConversationDangerZone = ({
 										: undefined
 							}
 							disabled={!disableDownloadAudio && !locked}
+							maw={250}
+							multiline
 						>
 							<Button
 								variant="outline"

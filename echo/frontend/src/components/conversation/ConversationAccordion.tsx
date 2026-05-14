@@ -42,6 +42,7 @@ import {
 	IconChevronUp,
 	IconInfoCircle,
 	IconLock,
+	IconPlus,
 	IconRosetteDiscountCheck,
 	IconSearch,
 	IconSelectAll,
@@ -603,7 +604,7 @@ const ConversationAccordionItem = ({
 					)}
 
 					{conversation.locked && (
-						<Tooltip label={t`Transcript locked, upgrade to view`}>
+						<Tooltip label={t`Upgrade your workspace to view this conversation`}>
 							<Badge
 								size="xs"
 								color="blue"
@@ -1119,9 +1120,13 @@ export const ConversationAccordion = ({
 					<div onClick={(e) => e.stopPropagation()}>
 						{usageGates.uploads_locked ? (
 							<Tooltip label={t`Upload limit reached. Upgrade your workspace.`}>
-								<ActionIcon variant="subtle" color="gray" disabled>
-									<IconLock size={16} />
-								</ActionIcon>
+								<Button
+									rightSection={<IconPlus size={16} />}
+									variant="outline"
+									disabled
+								>
+									{t`Upload`}
+								</Button>
 							</Tooltip>
 						) : (
 							<UploadConversationDropzone projectId={projectId} />

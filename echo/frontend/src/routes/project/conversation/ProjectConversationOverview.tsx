@@ -186,7 +186,7 @@ export const ProjectConversationOverviewRoute = () => {
 						</Group>
 
 						{isLocked ? (
-							<LockedTranscriptOverlay />
+							<LockedTranscriptOverlay variant="summary" />
 						) : (
 							<>
 								<div {...testId("conversation-overview-summary-content")}>
