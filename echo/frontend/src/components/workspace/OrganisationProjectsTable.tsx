@@ -12,8 +12,8 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import { IconDots, IconSearch, IconTrash } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
@@ -141,8 +141,8 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 				<Stack gap={8}>
 					<Text size="sm">
 						<Trans>
-							Delete this project in {p.workspace_name}? All conversations
-							and data are permanently removed.
+							Delete this project in {p.workspace_name}? All
+							conversations and data are permanently removed.
 						</Trans>
 					</Text>
 					{p.conversation_count > 0 && (

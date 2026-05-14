@@ -25,6 +25,7 @@ import { toast } from "@/components/common/Toaster";
 import { ConversationDangerZone } from "@/components/conversation/ConversationDangerZone";
 import { ConversationEdit } from "@/components/conversation/ConversationEdit";
 import { ConversationLink } from "@/components/conversation/ConversationLink";
+import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import {
 	useConversationById,
 	useConversationChunks,
@@ -77,6 +78,7 @@ export const ProjectConversationOverviewRoute = () => {
 	const hasTranscript = (chunksWithTranscriptQuery.data ?? 0) > 0;
 
 	const isAnonymized = conversationQuery.data?.is_anonymized ?? false;
+	const isLocked = conversationQuery.data?.locked === true;
 
 	const useHandleGenerateSummaryManually = useMutation({
 		mutationFn: async (isRegeneration: boolean) => {
@@ -152,77 +154,85 @@ export const ProjectConversationOverviewRoute = () => {
 							<Title order={2}>
 								<Trans>Summary</Trans>
 							</Title>
-							<Group gap="sm">
-								{conversationQuery.data?.summary && (
-									<CopyIconButton
-										size={23}
-										onCopy={() => {
-											clipboard.copy(conversationQuery.data?.summary ?? "");
-										}}
-										copied={clipboard.copied}
-										copyTooltip={t`Copy Summary`}
-										{...testId("conversation-overview-copy-summary-button")}
-									/>
-								)}
-								{conversationQuery.data?.summary && (
-									<Tooltip label={t`Regenerate Summary`}>
-										<ActionIcon
-											variant="transparent"
-											loading={isMutationPending}
-											onClick={openRegenerateConfirm}
-											{...testId(
-												"conversation-overview-regenerate-summary-button",
-											)}
-										>
-											<IconRefresh size={23} color="gray" />
-										</ActionIcon>
-									</Tooltip>
-								)}
-							</Group>
+							{!isLocked && (
+								<Group gap="sm">
+									{conversationQuery.data?.summary && (
+										<CopyIconButton
+											size={23}
+											onCopy={() => {
+												clipboard.copy(conversationQuery.data?.summary ?? "");
+											}}
+											copied={clipboard.copied}
+											copyTooltip={t`Copy Summary`}
+											{...testId("conversation-overview-copy-summary-button")}
+										/>
+									)}
+									{conversationQuery.data?.summary && (
+										<Tooltip label={t`Regenerate Summary`}>
+											<ActionIcon
+												variant="transparent"
+												loading={isMutationPending}
+												onClick={openRegenerateConfirm}
+												{...testId(
+													"conversation-overview-regenerate-summary-button",
+												)}
+											>
+												<IconRefresh size={23} color="gray" />
+											</ActionIcon>
+										</Tooltip>
+									)}
+								</Group>
+							)}
 						</Group>
 
-						<div {...testId("conversation-overview-summary-content")}>
-							<Markdown
-								content={
-									conversationQuery.data?.summary ??
-									(useHandleGenerateSummaryManually.data &&
-									"summary" in useHandleGenerateSummaryManually.data
-										? useHandleGenerateSummaryManually.data.summary
-										: "")
-								}
-							/>
-						</div>
-
-						{!conversationQuery.isFetching &&
-							!conversationQuery.data?.summary && (
-								<div>
-									<Tooltip
-										color="gray.7"
-										position="bottom-start"
-										label={
-											!hasTranscript
-												? t`Summary will be available once the conversation is transcribed`
-												: undefined
+						{isLocked ? (
+							<LockedTranscriptOverlay />
+						) : (
+							<>
+								<div {...testId("conversation-overview-summary-content")}>
+									<Markdown
+										content={
+											conversationQuery.data?.summary ??
+											(useHandleGenerateSummaryManually.data &&
+											"summary" in useHandleGenerateSummaryManually.data
+												? useHandleGenerateSummaryManually.data.summary
+												: "")
 										}
-										disabled={hasTranscript}
-									>
-										<Button
-											variant="outline"
-											className="-mt-[2rem]"
-											loading={isMutationPending}
-											disabled={!hasTranscript}
-											onClick={() => {
-												useHandleGenerateSummaryManually.mutate(false);
-											}}
-											{...testId(
-												"conversation-overview-generate-summary-button",
-											)}
-										>
-											{t`Generate Summary`}
-										</Button>
-									</Tooltip>
+									/>
 								</div>
-							)}
+
+								{!conversationQuery.isFetching &&
+									!conversationQuery.data?.summary && (
+										<div>
+											<Tooltip
+												color="gray.7"
+												position="bottom-start"
+												label={
+													!hasTranscript
+														? t`Summary will be available once the conversation is transcribed`
+														: undefined
+												}
+												disabled={hasTranscript}
+											>
+												<Button
+													variant="outline"
+													className="-mt-[2rem]"
+													loading={isMutationPending}
+													disabled={!hasTranscript}
+													onClick={() => {
+														useHandleGenerateSummaryManually.mutate(false);
+													}}
+													{...testId(
+														"conversation-overview-generate-summary-button",
+													)}
+												>
+													{t`Generate Summary`}
+												</Button>
+											</Tooltip>
+										</div>
+									)}
+							</>
+						)}
 
 						{conversationQuery.data?.summary &&
 							conversationQuery.data?.is_finished && <Divider />}
@@ -279,6 +289,7 @@ export const ProjectConversationOverviewRoute = () => {
 						<ConversationDangerZone
 							conversation={conversationQuery.data}
 							disableDownloadAudio={isAnonymized}
+							locked={isLocked}
 						/>
 					</Stack>
 				</>

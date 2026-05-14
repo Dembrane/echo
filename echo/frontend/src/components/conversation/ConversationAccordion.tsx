@@ -73,6 +73,7 @@ import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
+import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { BaseSkeleton } from "../common/BaseSkeleton";
 import { NavigationButton } from "../common/NavigationButton";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
@@ -684,6 +685,16 @@ export const ConversationAccordion = ({
 	const chatMode = chatContextQuery.data?.chat_mode;
 	const isOverviewMode = chatMode === "overview";
 
+	// Workspace usage gating for uploads
+	const projectForWs = useProjectById({
+		projectId,
+		query: { fields: ["id", "workspace_id"] },
+	});
+	const workspaceId =
+		(projectForWs.data as { workspace_id?: string | null } | undefined)
+			?.workspace_id ?? null;
+	const { usageGates } = useWorkspaceUsage(workspaceId);
+
 	// Temporarily disabled source filters
 	// const FILTER_OPTIONS = [
 	//   { label: t`Conversations from QR Code`, value: "PORTAL_AUDIO" },
@@ -1106,7 +1117,15 @@ export const ConversationAccordion = ({
 					{/** biome-ignore lint/a11y/noStaticElementInteractions: <todo> */}
 					{/** biome-ignore lint/a11y/useKeyWithClickEvents: <todo> */}
 					<div onClick={(e) => e.stopPropagation()}>
-						<UploadConversationDropzone projectId={projectId} />
+						{usageGates.uploads_locked ? (
+							<Tooltip label={t`Upload limit reached. Upgrade your workspace.`}>
+								<ActionIcon variant="subtle" color="gray" disabled>
+									<IconLock size={16} />
+								</ActionIcon>
+							</Tooltip>
+						) : (
+							<UploadConversationDropzone projectId={projectId} />
+						)}
 					</div>
 				</Group>
 			</Accordion.Control>

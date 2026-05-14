@@ -724,6 +724,117 @@ async def list_org_members(
     return out
 
 
+class OrgPendingInviteResponse(BaseModel):
+    id: str
+    email: str
+    role: str
+    workspace_id: str
+    workspace_name: str
+    created_at: Optional[str] = None
+    invited_by_name: Optional[str] = None
+
+
+@router.get("/{org_id}/pending-invites", response_model=list[OrgPendingInviteResponse])
+async def list_org_pending_invites(
+    org_id: str,
+    auth: DependencyDirectusSession,
+) -> list[OrgPendingInviteResponse]:
+    """Pending workspace invitations across all workspaces in the org.
+
+    Admin-only. Returns pending invites from all workspaces so admins
+    can see outstanding invitations at the org level.
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+    await _require_org_role(org_id, app_user["id"], minimum="admin")
+
+    ws_rows = (
+        await async_directus.get_items(
+            "workspace",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id", "name"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
+    if not isinstance(ws_rows, list) or not ws_rows:
+        return []
+
+    ws_ids = [w["id"] for w in ws_rows if w.get("id")]
+    ws_name_map = {w["id"]: w.get("name", "") for w in ws_rows}
+    if not ws_ids:
+        return []
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    invites = (
+        await async_directus.get_items(
+            "workspace_invite",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_in": ws_ids},
+                        "accepted_at": {"_null": True},
+                        "expires_at": {"_gt": now_iso},
+                    },
+                    "fields": [
+                        "id",
+                        "email",
+                        "role",
+                        "workspace_id",
+                        "created_at",
+                        "invited_by",
+                    ],
+                    "sort": ["-created_at"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
+    if not isinstance(invites, list) or not invites:
+        return []
+
+    inviter_ids = {inv.get("invited_by") for inv in invites if inv.get("invited_by")}
+    inviter_map: dict[str, str] = {}
+    if inviter_ids:
+        inviter_rows = (
+            await async_directus.get_items(
+                "app_user",
+                {
+                    "query": {
+                        "filter": {"id": {"_in": list(inviter_ids)}},
+                        "fields": ["id", "display_name"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        if isinstance(inviter_rows, list):
+            inviter_map = {
+                u["id"]: u.get("display_name") or "" for u in inviter_rows if u.get("id")
+            }
+
+    return [
+        OrgPendingInviteResponse(
+            id=inv["id"],
+            email=inv.get("email", ""),
+            role=inv.get("role", "member"),
+            workspace_id=inv.get("workspace_id", ""),
+            workspace_name=ws_name_map.get(inv.get("workspace_id", ""), ""),
+            created_at=inv.get("created_at"),
+            invited_by_name=inviter_map.get(inv.get("invited_by", ""), None),
+        )
+        for inv in invites
+    ]
+
+
 async def _direct_workspace_roles_by_user(
     org_id: str, user_ids: list[str]
 ) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]]]:
@@ -1519,7 +1630,9 @@ async def get_org_usage(
         seat_state_results = await asyncio.gather(
             *[compute_effective_seat_state(wid) for wid in ws_ids]
         )
-        for wid, (_seats_used, member_count, guest_count) in zip(ws_ids, seat_state_results, strict=True):
+        for wid, (_seats_used, member_count, guest_count) in zip(
+            ws_ids, seat_state_results, strict=True
+        ):
             per_ws_seats[wid] = member_count
             per_ws_guests[wid] = guest_count
             total_seat_count += member_count

@@ -1,9 +1,9 @@
 """Workspace request endpoints — submit, list, decide."""
 
-from typing import Literal, Optional
+from typing import Literal, Optional, Annotated
 from logging import getLogger
 
-from fastapi import APIRouter, HTTPException
+from fastapi import Depends, APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
 from dembrane.email import send_email
@@ -13,6 +13,7 @@ from dembrane.policies import TIER_ORDER
 from dembrane.settings import get_settings
 from dembrane.notifications import audience_staff, emit_to_audience
 from dembrane.directus_async import async_directus
+from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
@@ -28,19 +29,19 @@ async def _resolve_emails(app_user_ids: list[str]) -> list[str]:
     try:
         rows = await async_directus.get_items(
             "app_user",
-            {"query": {
-                "filter": {"id": {"_in": app_user_ids}},
-                "fields": ["email"],
-                "limit": -1,
-            }},
+            {
+                "query": {
+                    "filter": {"id": {"_in": app_user_ids}},
+                    "fields": ["email"],
+                    "limit": -1,
+                }
+            },
         )
         if not isinstance(rows, list):
             return []
-        return sorted({
-            (r.get("email") or "").strip()
-            for r in rows
-            if isinstance(r, dict) and r.get("email")
-        })
+        return sorted(
+            {(r.get("email") or "").strip() for r in rows if isinstance(r, dict) and r.get("email")}
+        )
     except Exception:  # noqa: BLE001 — best-effort
         return []
 
@@ -78,7 +79,9 @@ async def submit_workspace_request(
 
     if body.kind == "new_workspace":
         if not body.proposed_name or not body.proposed_name.strip():
-            raise HTTPException(status_code=400, detail="proposed_name is required for new_workspace")
+            raise HTTPException(
+                status_code=400, detail="proposed_name is required for new_workspace"
+            )
         org_access = await async_directus.get_items(
             "org_membership",
             {
@@ -173,7 +176,10 @@ async def submit_workspace_request(
 
     logger.info(
         "workspace_request_submitted id=%s kind=%s tier=%s by=%s",
-        req_id, body.kind, body.proposed_tier, app_user_id,
+        req_id,
+        body.kind,
+        body.proposed_tier,
+        app_user_id,
     )
 
     # Notify all staff (in-app) + email
@@ -215,7 +221,8 @@ async def submit_workspace_request(
 
         for staff_email_addr in staff_emails:
             decision = await record_and_check_throttle(
-                staff_email_addr, "WORKSPACE_REQUEST_SUBMITTED",
+                staff_email_addr,
+                "WORKSPACE_REQUEST_SUBMITTED",
             )
             if decision == "individual":
                 await send_email(
@@ -234,15 +241,131 @@ async def submit_workspace_request(
                     },
                 )
             else:
-                await queue_digest_item(staff_email_addr, {
-                    "event_code": "WORKSPACE_REQUEST_SUBMITTED",
-                    "summary": summary,
-                    "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-                    "admin_url": admin_url,
-                })
+                await queue_digest_item(
+                    staff_email_addr,
+                    {
+                        "event_code": "WORKSPACE_REQUEST_SUBMITTED",
+                        "summary": summary,
+                        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+                        "admin_url": admin_url,
+                    },
+                )
 
     return SubmitWorkspaceRequestResponse(
         id=req_id,
         status="pending",
         kind=body.kind,
     )
+
+
+DependencyWorkspaceContext = Annotated[WorkspaceContext, Depends(get_workspace_context)]
+
+
+class WorkspaceRequestHistoryItem(BaseModel):
+    id: str
+    kind: str
+    status: str
+    proposed_tier: str
+    requester_message: Optional[str] = None
+    requester_name: Optional[str] = None
+    granted_tier: Optional[str] = None
+    granted_tier_expires_at: Optional[str] = None
+    denial_reason: Optional[str] = None
+    decided_at: Optional[str] = None
+    created_at: Optional[str] = None
+
+
+class WorkspaceRequestHistoryResponse(BaseModel):
+    requests: list[WorkspaceRequestHistoryItem]
+    has_pending: bool
+
+
+history_router = APIRouter()
+
+
+@history_router.get(
+    "/{workspace_id}/requests",
+    response_model=WorkspaceRequestHistoryResponse,
+)
+async def list_workspace_request_history(
+    ctx: DependencyWorkspaceContext,
+) -> WorkspaceRequestHistoryResponse:
+    """Workspace request history visible to workspace members.
+
+    Admin/owner/billing see all requests for the workspace.
+    Regular members see only their own requests.
+    """
+    workspace_id = ctx.workspace_id
+    is_manager = ctx.role in ("admin", "owner", "billing")
+
+    filt: dict = {
+        "workspace_id": {"_eq": workspace_id},
+    }
+    if not is_manager:
+        filt["requested_by"] = {"_eq": ctx.app_user_id}
+
+    rows = await async_directus.get_items(
+        "workspace_request",
+        {
+            "query": {
+                "filter": filt,
+                "fields": [
+                    "id",
+                    "kind",
+                    "status",
+                    "proposed_tier",
+                    "requester_message",
+                    "requested_by",
+                    "granted_tier",
+                    "granted_tier_expires_at",
+                    "denial_reason",
+                    "decided_at",
+                    "created_at",
+                ],
+                "sort": ["-created_at"],
+                "limit": 50,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        rows = []
+
+    # Resolve requester names (for admin view)
+    requester_ids = sorted({r.get("requested_by") for r in rows if r.get("requested_by")})
+    name_map: dict[str, str] = {}
+    if requester_ids and is_manager:
+        users = await async_directus.get_items(
+            "app_user",
+            {
+                "query": {
+                    "filter": {"id": {"_in": requester_ids}},
+                    "fields": ["id", "display_name"],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(users, list):
+            name_map = {u["id"]: u.get("display_name") or "" for u in users if u.get("id")}
+
+    items = []
+    has_pending = False
+    for r in rows:
+        if r.get("status") == "pending":
+            has_pending = True
+        items.append(
+            WorkspaceRequestHistoryItem(
+                id=r["id"],
+                kind=r.get("kind", ""),
+                status=r.get("status", ""),
+                proposed_tier=r.get("proposed_tier", ""),
+                requester_message=r.get("requester_message"),
+                requester_name=name_map.get(r.get("requested_by", "")) if is_manager else None,
+                granted_tier=r.get("granted_tier"),
+                granted_tier_expires_at=r.get("granted_tier_expires_at"),
+                denial_reason=r.get("denial_reason"),
+                decided_at=r.get("decided_at"),
+                created_at=r.get("created_at"),
+            )
+        )
+
+    return WorkspaceRequestHistoryResponse(requests=items, has_pending=has_pending)

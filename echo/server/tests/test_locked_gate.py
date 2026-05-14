@@ -67,9 +67,11 @@ class TestUpgradeDowngradeScenarios:
         assert is_conversation_locked(conv, "pilot") is False
         assert is_conversation_locked(conv, "free") is False
 
-    def test_pioneer_downgrade_to_free_locks_over_cap_convs(self) -> None:
-        """A conversation stamped on pioneer (never stamped, so is_over_cap=False)
-        stays unlocked. But if somehow stamped True, it would lock on free."""
+    def test_over_cap_flag_locks_on_non_overage_tier(self) -> None:
+        """The live-lock formula locks when is_over_cap=True and the tier
+        doesn't allow overage. In practice, apply_downgrade_effects()
+        clears is_over_cap on all conversations during downgrade so
+        pre-downgrade content stays readable."""
         conv_stamped = {"is_over_cap": True}
         assert is_conversation_locked(conv_stamped, "pioneer") is False
         assert is_conversation_locked(conv_stamped, "free") is True

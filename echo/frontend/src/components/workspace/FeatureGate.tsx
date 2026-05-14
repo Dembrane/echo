@@ -14,13 +14,14 @@ import {
 } from "@mantine/core";
 import { IconLock } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { avatarUrl } from "@/lib/avatar";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
+import { TIER_TAGLINE } from "@/lib/tiers";
 
 /**
  * Tier-gating UI primitives for the ECHO platform.
@@ -299,6 +300,17 @@ export function UpgradeModal({
 	const [message, setMessage] = useState("");
 	const [sending, setSending] = useState(false);
 
+	const tiersAboveCurrent = TIER_ORDER.filter(
+		(t) => TIER_ORDER.indexOf(t) > TIER_ORDER.indexOf(currentTier),
+	);
+	const defaultSelectedTier =
+		tiersAboveCurrent.includes(requiredTier) ? requiredTier : (tiersAboveCurrent[0] ?? requiredTier);
+	const [selectedTier, setSelectedTier] = useState<Tier>(defaultSelectedTier);
+
+	useEffect(() => {
+		if (opened) setSelectedTier(defaultSelectedTier);
+	}, [opened, defaultSelectedTier]);
+
 	const handleRequest = async () => {
 		if (sending) return;
 		if (!workspace?.org_id) {
@@ -314,7 +326,7 @@ export function UpgradeModal({
 						kind: "tier_upgrade",
 						org_id: workspace.org_id,
 						workspace_id: workspaceId,
-						proposed_tier: requiredTier,
+						proposed_tier: selectedTier,
 						requester_message: message.trim() || undefined,
 					}),
 					credentials: "include",
@@ -340,31 +352,36 @@ export function UpgradeModal({
 		}
 	};
 
+	const displayTier = canRequestUpgrade ? selectedTier : requiredTier;
+	const displayName = canRequestUpgrade
+		? t`Upgrade to ${displayTier}`
+		: featureName;
+	const displayBenefit = canRequestUpgrade
+		? TIER_TAGLINE[displayTier] ?? benefit
+		: benefit;
+
 	return (
 		<Modal
 			opened={opened}
 			onClose={onClose}
-			title={<Text fw={500}>{featureName}</Text>}
+			title={<Text fw={500}>{displayName}</Text>}
 			centered
-			size="md"
+			size="lg"
 		>
 			<Stack gap="md">
 				<Text size="sm" c="dimmed">
-					{benefit}
+					{displayBenefit}
 				</Text>
-
-				{/* Matrix §1 requires the full capacity matrix visible in-
-				    product on the upgrade-request modal. fromTier clips the
-				    table to tiers strictly above the current; highlightTier
-				    calls out the minimum tier the gate needs. */}
-				<TierCapacityMatrix
-					fromTier={currentTier}
-					highlightTier={requiredTier}
-					compact
-				/>
 
 				{canRequestUpgrade ? (
 					<>
+						<TierCapacityMatrix
+							fromTier={currentTier}
+							highlightTier={selectedTier}
+							compact
+							onTierSelect={(tier) => setSelectedTier(tier as Tier)}
+						/>
+
 						<Textarea
 							label={t`Anything to add?`}
 							placeholder={t`Optional. Context for our team.`}
@@ -382,10 +399,16 @@ export function UpgradeModal({
 						</Text>
 					</>
 				) : (
-					<OrganisationAdminChips />
+					<>
+						<TierCapacityMatrix
+							fromTier={currentTier}
+							highlightTier={requiredTier}
+							compact
+						/>
+						<OrganisationAdminChips />
+					</>
 				)}
 
-				{/* Role-aware footer: admin gets primary, member gets close-only (D9) */}
 				<Box style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
 					<Button variant="subtle" onClick={onClose}>
 						<Trans>Close</Trans>

@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Box, Paper, Stack, Table, Text } from "@mantine/core";
+import { Box, Paper, SegmentedControl, Stack, Table, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
 
@@ -69,9 +69,13 @@ interface Props {
 	/** Compact mode drops the long rows (overage, training) to fit narrow
 	 * modals. Default false. */
 	compact?: boolean;
+	/** When set, tier columns become selectable. The selected tier is
+	 * tracked by highlightTier; clicks call this callback. */
+	onTierSelect?: (tier: string) => void;
 }
 
 const TIER_ORDER = [
+	"free",
 	"pilot",
 	"pioneer",
 	"innovator",
@@ -95,6 +99,7 @@ export const TierCapacityMatrix = ({
 	highlightTier,
 	fromTier,
 	compact = false,
+	onTierSelect,
 }: Props) => {
 	const { data, isLoading } = useQuery({
 		queryKey: ["v2", "tier-capacities"],
@@ -134,73 +139,91 @@ export const TierCapacityMatrix = ({
 			] as const);
 
 	return (
-		<Paper withBorder radius="sm" p={compact ? "xs" : "md"}>
-			<Table verticalSpacing="xs" striped>
-				<Table.Thead>
-					<Table.Tr>
-						<Table.Th />
-						{tiers.map((cap) => {
-							const isHighlight = cap.tier === highlightTier;
-							return (
-								<Table.Th
-									key={cap.tier}
-									style={{
-										textAlign: "left",
-										background: isHighlight ? "rgba(65,105,225,0.08)" : undefined,
-										borderTop: isHighlight
-											? "2px solid #4169e1"
-											: undefined,
-									}}
-								>
-									<Stack gap={0}>
-										<Text
-											size="sm"
-											fw={500}
-											style={{ textTransform: "capitalize" }}
-										>
-											{cap.tier}
-										</Text>
-										<Text size="xs" c="dimmed" fw={400}>
-											— {cap.tagline}
-										</Text>
-									</Stack>
-								</Table.Th>
-							);
-						})}
-					</Table.Tr>
-				</Table.Thead>
-				<Table.Tbody>
-					{rows.map((row) => (
-						<Table.Tr key={row.label}>
-							<Table.Td>
-								<Text size="xs" c="dimmed">
-									<Trans id={row.label}>{row.label}</Trans>
-								</Text>
-							</Table.Td>
-							{tiers.map((cap) => (
-								<Table.Td
-									key={cap.tier}
-									style={{
-										background:
-											cap.tier === highlightTier
-												? "rgba(65,105,225,0.04)"
-												: undefined,
-									}}
-								>
-									<Text size="xs">{row.render(cap)}</Text>
-								</Table.Td>
-							))}
-						</Table.Tr>
-					))}
-				</Table.Tbody>
-			</Table>
-			{compact && (
-				<Box mt={4}>
-					<Text size="xs" c="dimmed" ta="right">
-						<Trans>∞ = unlimited subject to plan</Trans>
-					</Text>
-				</Box>
+		<Stack gap={compact ? "xs" : "sm"}>
+			{onTierSelect && (
+				<SegmentedControl
+					value={highlightTier ?? ""}
+					onChange={(v) => onTierSelect(v)}
+					data={tiers.map((cap) => ({
+						value: cap.tier,
+						label: cap.tier.charAt(0).toUpperCase() + cap.tier.slice(1),
+					}))}
+					fullWidth
+					size="sm"
+				/>
 			)}
-		</Paper>
+			<Paper withBorder radius="sm" p={compact ? "xs" : "md"} style={{ overflowX: "auto" }}>
+				<Table verticalSpacing="xs" striped>
+					<Table.Thead>
+						<Table.Tr>
+							<Table.Th />
+							{tiers.map((cap) => {
+								const isHighlight = cap.tier === highlightTier;
+								return (
+									<Table.Th
+										key={cap.tier}
+										style={{
+											textAlign: "left",
+											background: isHighlight ? "rgba(65,105,225,0.08)" : undefined,
+											borderTop: isHighlight
+												? "2px solid #4169e1"
+												: undefined,
+											cursor: onTierSelect ? "pointer" : undefined,
+										}}
+										onClick={onTierSelect ? () => onTierSelect(cap.tier) : undefined}
+									>
+										<Stack gap={0}>
+											<Text
+												size="sm"
+												fw={500}
+												style={{ textTransform: "capitalize" }}
+											>
+												{cap.tier}
+											</Text>
+											<Text size="xs" c="dimmed" fw={400}>
+												{cap.tagline}
+											</Text>
+										</Stack>
+									</Table.Th>
+								);
+							})}
+						</Table.Tr>
+					</Table.Thead>
+					<Table.Tbody>
+						{rows.map((row) => (
+							<Table.Tr key={row.label}>
+								<Table.Td>
+									<Text size="xs" c="dimmed">
+										<Trans id={row.label}>{row.label}</Trans>
+									</Text>
+								</Table.Td>
+								{tiers.map((cap) => (
+									<Table.Td
+										key={cap.tier}
+										style={{
+											background:
+												cap.tier === highlightTier
+													? "rgba(65,105,225,0.04)"
+													: undefined,
+											cursor: onTierSelect ? "pointer" : undefined,
+										}}
+										onClick={onTierSelect ? () => onTierSelect(cap.tier) : undefined}
+									>
+										<Text size="xs">{row.render(cap)}</Text>
+									</Table.Td>
+								))}
+							</Table.Tr>
+						))}
+					</Table.Tbody>
+				</Table>
+				{compact && (
+					<Box mt={4}>
+						<Text size="xs" c="dimmed" ta="right">
+							<Trans>∞ = unlimited subject to plan</Trans>
+						</Text>
+					</Box>
+				)}
+			</Paper>
+		</Stack>
 	);
 };

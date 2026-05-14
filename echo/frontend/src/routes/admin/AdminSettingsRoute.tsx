@@ -30,6 +30,7 @@ import {
 	Textarea,
 	Tooltip,
 	UnstyledButton,
+	useModalsStack,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import {
@@ -77,7 +78,7 @@ const tierRank = (tier: string): number => TIER_ORDER.indexOf(tier as Tier);
 const tierColors: Record<string, string> = {
 	free: "gray",
 	pilot: "gray",
-	pioneer: "blue",
+	pioneer: "primary",
 	innovator: "violet",
 	changemaker: "grape",
 	guardian: "orange",
@@ -201,7 +202,7 @@ function PeriodSelector({
 					key={opt.offset}
 					size="xs"
 					variant={value === opt.offset ? "filled" : "default"}
-					color={value === opt.offset ? "blue" : "gray"}
+					color={value === opt.offset ? "primary" : "gray"}
 					onClick={() => onChange(opt.offset)}
 				>
 					{opt.label}
@@ -257,7 +258,7 @@ function SortableHeader({
 }
 
 /**
- * Inline usage bar. Green under 60 percent, yellow 60 to 90, red over
+ * Inline usage bar. primary under 60 percent, yellow 60 to 90, red over
  * 90. Shows N / cap next to the bar. When cap is null (guardian, pilot
  * with no ceiling) we render the raw count with a dash.
  */
@@ -289,7 +290,7 @@ function UsageBar({
 				? "red"
 				: pct >= 60
 					? "yellow"
-					: "green";
+					: "primary";
 	return (
 		<Stack gap={2}>
 			<Text size="xs" c={color === "red" ? "red" : undefined}>
@@ -403,7 +404,7 @@ function DiscountEditor({
 					</Text>
 				)}
 				{mutation.isSuccess && (
-					<Text size="xs" c="green">
+					<Text size="xs" c="primary">
 						<Trans>Saved</Trans>
 					</Text>
 				)}
@@ -1169,7 +1170,7 @@ function UsageAndBillingPanel() {
 				header: t`Status`,
 				cell: ({ row }) =>
 					row.original.is_active ? (
-						<Badge size="xs" color="green" variant="light">
+						<Badge size="xs" color="primary" variant="light">
 							<Trans>Active</Trans>
 						</Badge>
 					) : (
@@ -1364,7 +1365,7 @@ function UsageAndBillingPanel() {
 					<Button
 						size="xs"
 						variant={statusFilter === "all" ? "filled" : "default"}
-						color={statusFilter === "all" ? "blue" : "gray"}
+						color={statusFilter === "all" ? "primary" : "gray"}
 						onClick={() => setStatusFilter("all")}
 					>
 						<Trans>All</Trans>
@@ -1372,7 +1373,7 @@ function UsageAndBillingPanel() {
 					<Button
 						size="xs"
 						variant={statusFilter === "active" ? "filled" : "default"}
-						color={statusFilter === "active" ? "green" : "gray"}
+						color={statusFilter === "active" ? "primary" : "gray"}
 						onClick={() => setStatusFilter("active")}
 					>
 						<Trans>Active</Trans>
@@ -1397,7 +1398,7 @@ function UsageAndBillingPanel() {
 				<Button
 					size="xs"
 					variant={isGrouped ? "filled" : "default"}
-					color={isGrouped ? "blue" : "gray"}
+					color={isGrouped ? "primary" : "gray"}
 					leftSection={<IconUsersGroup size={14} />}
 					onClick={() => setGrouping(isGrouped ? [] : ["organisation"])}
 				>
@@ -1832,10 +1833,12 @@ async function patchWorkspaceRequest(
 
 function ApproveDialog({
 	request: req,
+	opened,
 	onClose,
 	onSuccess,
 }: {
 	request: WorkspaceRequestRow;
+	opened: boolean;
 	onClose: () => void;
 	onSuccess: () => void;
 }) {
@@ -1875,7 +1878,7 @@ function ApproveDialog({
 	}));
 
 	return (
-		<Modal opened onClose={onClose} title={t`Approve request`} size="md">
+		<Modal opened={opened} onClose={onClose} title={t`Approve request`} size="md">
 			<Stack gap="md">
 				<Text size="sm">
 					<Trans>
@@ -1939,7 +1942,7 @@ function ApproveDialog({
 						<Trans>Cancel</Trans>
 					</Button>
 					<Button
-						color="green"
+						color="primary"
 						loading={mutation.isPending}
 						onClick={() => mutation.mutate()}
 					>
@@ -1953,10 +1956,12 @@ function ApproveDialog({
 
 function DenyDialog({
 	request: req,
+	opened,
 	onClose,
 	onSuccess,
 }: {
 	request: WorkspaceRequestRow;
+	opened: boolean;
 	onClose: () => void;
 	onSuccess: () => void;
 }) {
@@ -1980,7 +1985,7 @@ function DenyDialog({
 	});
 
 	return (
-		<Modal opened onClose={onClose} title={t`Deny request`} size="md">
+		<Modal opened={opened} onClose={onClose} title={t`Deny request`} size="md">
 			<Stack gap="md">
 				<Text size="sm">
 					<Trans>
@@ -2040,21 +2045,19 @@ function WorkspaceRequestDetail({
 	request: WorkspaceRequestRow;
 	onClose: () => void;
 }) {
-	const [approveOpen, { open: openApprove, close: closeApprove }] =
-		useDisclosure(false);
-	const [denyOpen, { open: openDeny, close: closeDeny }] =
-		useDisclosure(false);
+	const stack = useModalsStack(["approve-dialog", "deny-dialog"]);
+	const showDetail =
+		!stack.state["approve-dialog"] && !stack.state["deny-dialog"];
 
 	const handleActionSuccess = () => {
-		closeApprove();
-		closeDeny();
+		stack.closeAll();
 		onClose();
 	};
 
 	return (
 		<>
 			<Modal
-				opened
+				opened={showDetail}
 				onClose={onClose}
 				title={
 					<Group gap="xs">
@@ -2065,7 +2068,7 @@ function WorkspaceRequestDetail({
 								req.status === "pending"
 									? "yellow"
 									: req.status === "approved"
-										? "green"
+										? "primary"
 										: "red"
 							}
 							variant="light"
@@ -2285,11 +2288,14 @@ function WorkspaceRequestDetail({
 								<Button
 									variant="subtle"
 									color="red"
-									onClick={openDeny}
+									onClick={() => stack.open("deny-dialog")}
 								>
 									<Trans>Deny</Trans>
 								</Button>
-								<Button color="green" onClick={openApprove}>
+								<Button
+									color="primary"
+									onClick={() => stack.open("approve-dialog")}
+								>
 									<Trans>Approve</Trans>
 								</Button>
 							</Group>
@@ -2298,20 +2304,18 @@ function WorkspaceRequestDetail({
 				</Stack>
 			</Modal>
 
-			{approveOpen && (
-				<ApproveDialog
-					request={req}
-					onClose={closeApprove}
-					onSuccess={handleActionSuccess}
-				/>
-			)}
-			{denyOpen && (
-				<DenyDialog
-					request={req}
-					onClose={closeDeny}
-					onSuccess={handleActionSuccess}
-				/>
-			)}
+			<ApproveDialog
+				request={req}
+				opened={stack.state["approve-dialog"]}
+				onClose={() => stack.close("approve-dialog")}
+				onSuccess={handleActionSuccess}
+			/>
+			<DenyDialog
+				request={req}
+				opened={stack.state["deny-dialog"]}
+				onClose={() => stack.close("deny-dialog")}
+				onSuccess={handleActionSuccess}
+			/>
 		</>
 	);
 }
@@ -2341,7 +2345,7 @@ function UpgradesPanel() {
 						size="xs"
 						variant="light"
 						color={
-							row.original.kind === "new_workspace" ? "blue" : "violet"
+							row.original.kind === "new_workspace" ? "primary" : "violet"
 						}
 					>
 						{kindLabels[row.original.kind] ?? row.original.kind}
@@ -2434,7 +2438,7 @@ function UpgradesPanel() {
 					<Tabs.Tab value="approved">
 						<Group gap={6}>
 							<Trans>Approved</Trans>
-							<Badge size="xs" variant="filled" color="green" circle>
+							<Badge size="xs" variant="filled" color="primary" circle>
 								{counts.approved}
 							</Badge>
 						</Group>
@@ -2558,7 +2562,7 @@ function UpgradesPanel() {
 														color={
 															item.kind ===
 															"new_workspace"
-																? "blue"
+																? "primary"
 																: "violet"
 														}
 													>

@@ -178,21 +178,75 @@ export const CreateWorkspaceRoute = () => {
 	}
 
 	if (submitted) {
+		const capitalizedTier =
+			selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1);
+
 		return (
 			<Container size="xs" py="xl" px="lg">
-				<Stack gap="lg" align="center" ta="center">
-					<ThemeIcon size="xl" radius="xl" color="green" variant="light">
-						<IconCheck size={24} />
-					</ThemeIcon>
-					<Title order={3} fw={400}>
-						<Trans>Request submitted</Trans>
-					</Title>
-					<Text size="sm" c="dimmed">
+				<Stack gap={24}>
+					<Group gap="sm" align="center" justify="space-between">
+						<Stack gap={2}>
+							<Title order={3} fw={500}>
+								<Trans>Request submitted</Trans>
+							</Title>
+							<Text size="sm" c="dimmed">
+								<Trans>We'll review it within 1 business day.</Trans>
+							</Text>
+						</Stack>
+						<ThemeIcon size={46} radius="md" color="green" variant="light">
+							<IconCheck size={22} />
+						</ThemeIcon>
+					</Group>
+
+					<Paper withBorder p="md" radius="sm">
+						<Stack gap={8}>
+							<Group gap={12} align="baseline">
+								<Text size="xs" c="dimmed" w={90}>
+									<Trans>Workspace</Trans>
+								</Text>
+								<Text size="sm" fw={500}>
+									{name.trim()}
+								</Text>
+							</Group>
+							<Group gap={12} align="baseline">
+								<Text size="xs" c="dimmed" w={90}>
+									<Trans>Organisation</Trans>
+								</Text>
+								<Text size="sm">
+									{targetOrganisation?.name ?? ""}
+								</Text>
+							</Group>
+							<Group gap={12} align="baseline">
+								<Text size="xs" c="dimmed" w={90}>
+									<Trans>Tier</Trans>
+								</Text>
+								<Text size="sm">
+									{capitalizedTier}
+								</Text>
+							</Group>
+							<Group gap={12} align="baseline">
+								<Text size="xs" c="dimmed" w={90}>
+									<Trans>Access</Trans>
+								</Text>
+								<Text size="sm">
+									{privacy === "open" ? (
+										<Trans>Open to the organisation</Trans>
+									) : (
+										<Trans>Private</Trans>
+									)}
+								</Text>
+							</Group>
+						</Stack>
+					</Paper>
+
+					<Text size="xs" c="dimmed">
 						<Trans>
-							We'll be in touch within 1 business day.
+							You'll get a notification once the request is approved or if we need more details.
+							You can track the status on your workspaces page.
 						</Trans>
 					</Text>
-					<Button variant="default" onClick={() => navigate("/w")}>
+
+					<Button variant="outline" onClick={() => navigate("/w")}>
 						<Trans>Back to workspaces</Trans>
 					</Button>
 				</Stack>
@@ -417,7 +471,7 @@ export const CreateWorkspaceRoute = () => {
 
 				<Group justify="space-between" mt="sm">
 					<Button
-						variant="default"
+						variant="outline"
 						size="sm"
 						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
 					>
@@ -443,6 +497,7 @@ export const CreateWorkspaceRoute = () => {
 					)}
 				</Group>
 			</Stack>
+
 		</Container>
 	);
 };

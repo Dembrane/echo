@@ -140,6 +140,20 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 
 	const pilotExhausted = data.pilot_hard_block_active;
 
+	const audioColor =
+		pilotExhausted || (hoursPct != null && hoursPct >= 90)
+			? "red"
+			: hoursPct != null && hoursPct >= 60
+				? "yellow"
+				: "primary";
+
+	const seatsColor =
+		seatsPct != null && seatsPct >= 90
+			? "red"
+			: seatsPct != null && seatsPct >= 60
+				? "yellow"
+				: "primary";
+
 	const nextTier = data.next_tier;
 	const currentTierName = isTier(data.tier) ? (data.tier as Tier) : "pioneer";
 	const nextTierName =
@@ -203,7 +217,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 						<Progress
 							value={hoursPct}
 							size="xs"
-							color={pilotExhausted ? "red" : "blue"}
+							color={audioColor}
 						/>
 					)}
 				</Stack>
@@ -225,7 +239,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 					</Text>
 				</Group>
 				{seatsPct !== null && (
-					<Progress value={seatsPct} size="xs" color="blue" />
+					<Progress value={seatsPct} size="xs" color={seatsColor} />
 				)}
 				{data.guest_count > 0 && (
 					<Text size="xs" c="dimmed">

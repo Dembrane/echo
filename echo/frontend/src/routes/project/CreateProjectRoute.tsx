@@ -75,7 +75,8 @@ export const CreateProjectRoute = () => {
 	useDocumentTitle(t`New project | dembrane`);
 
 	const tier = workspace?.tier ?? "pilot";
-	const privateAvailable = tier !== "pilot";
+	const privateTiers = new Set(["innovator", "changemaker", "guardian"]);
+	const privateAvailable = privateTiers.has(tier);
 
 	const createProject = useCreateWorkspaceProject();
 	const updateProject = useUpdateProjectByIdMutation();
@@ -247,7 +248,7 @@ export const CreateProjectRoute = () => {
 													{!privateAvailable && (
 														<Text span size="xs" c="dimmed">
 															{" "}
-															(<Trans>not available on Pilot</Trans>)
+															(<Trans>Innovator or higher</Trans>)
 														</Text>
 													)}
 												</Text>

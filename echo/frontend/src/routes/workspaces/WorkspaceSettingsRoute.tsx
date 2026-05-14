@@ -45,6 +45,7 @@ import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { UsageCard } from "@/components/workspace/UsageCard";
+import { WorkspaceRequestHistory } from "@/components/workspace/WorkspaceRequestHistory";
 import { WorkspaceInviteWizard } from "@/components/workspace/WorkspaceInviteWizard";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -278,6 +279,7 @@ export const WorkspaceSettingsRoute = () => {
 		{ open: openInviteModal, close: closeInviteModal },
 	] = useDisclosure(false);
 	const [memberSearch, setMemberSearch] = useUrlSearch();
+
 	type WsRoleFilter = "all" | "admins" | "billing" | "members" | "guests";
 	const [memberRoleFilter, setMemberRoleFilter] = useState<WsRoleFilter>("all");
 
@@ -667,6 +669,7 @@ export const WorkspaceSettingsRoute = () => {
 							<Tabs.Panel value="billing" pt="md">
 								<Stack gap={16}>
 									{workspaceId && <UsageCard workspaceId={workspaceId} />}
+									{workspaceId && <WorkspaceRequestHistory workspaceId={workspaceId} />}
 
 									{/* Seats explainer — audit feedback: users need to
 								    know "how do seats work as a user" without

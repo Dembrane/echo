@@ -1082,6 +1082,11 @@ async def _upgrade_workspace_for_request(
 
     await async_directus.update_item("workspace", workspace_id, ws_update)
 
+    if direction == "upgrade":
+        from dembrane.tier_downgrade import recalculate_over_cap_on_upgrade
+
+        await recalculate_over_cap_on_upgrade(workspace_id, to_tier)
+
     if direction != "no-change":
         from dembrane.cache_utils import invalidate_org_usage, invalidate_workspace_usage
 
