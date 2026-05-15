@@ -97,8 +97,7 @@ interface OrganisationWorkspace {
 	project_count: number;
 	member_count: number;
 	is_private: boolean;
-	member_invite_blocked?: boolean;
-	guest_invite_blocked?: boolean;
+	seat_invite_blocked?: boolean;
 }
 
 async function fetchOrganisation(
@@ -329,6 +328,29 @@ export const OrganisationRoute = () => {
 		enabled: Boolean(organisationId),
 		queryFn: () => fetchOrganisationWorkspaces(organisationId as string),
 		queryKey: ["v2", "organisation", organisationId, "workspaces"],
+	});
+
+	const { data: pendingInvites = [] } = useQuery({
+		enabled: Boolean(organisationId) && (organisation?.role === "owner" || organisation?.role === "admin"),
+		queryFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/orgs/${organisationId}/pending-invites`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) return [];
+			const data = await res.json();
+			return Array.isArray(data) ? data as Array<{
+				id: string;
+				email: string;
+				role: string;
+				workspace_id: string;
+				workspace_name: string;
+				created_at: string | null;
+				invited_by_name: string | null;
+			}> : [];
+		},
+		queryKey: ["v2", "organisation", organisationId, "pending-invites"],
+		staleTime: 30_000,
 	});
 
 	const isAdmin =
@@ -772,6 +794,43 @@ export const OrganisationRoute = () => {
 									workspaces={workspaces}
 									members={members}
 								/>
+							)}
+
+							{isAdmin && pendingInvites.length > 0 && (
+								<Stack gap="xs" mt="md">
+									<Title order={5} fw={400}>
+										<Trans>Pending invites</Trans>
+									</Title>
+									<Stack gap="xs">
+										{pendingInvites.map((inv) => (
+											<Paper key={inv.id} p="md" withBorder radius="md">
+												<Group justify="space-between">
+													<Stack gap={2}>
+														<Text size="sm">{inv.email}</Text>
+														<Text size="xs" c="dimmed">
+															{displayRole(inv.role)}
+															{inv.workspace_name && (
+																<>
+																	{" · "}
+																	{inv.workspace_name}
+																</>
+															)}
+															{inv.invited_by_name && (
+																<>
+																	{" · "}
+																	<Trans>invited by {inv.invited_by_name}</Trans>
+																</>
+															)}
+														</Text>
+													</Stack>
+													<Badge size="xs" variant="light" color="yellow">
+														<Trans>Pending</Trans>
+													</Badge>
+												</Group>
+											</Paper>
+										))}
+									</Stack>
+								</Stack>
 							)}
 
 							<Text size="xs" c="dimmed">

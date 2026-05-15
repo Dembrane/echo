@@ -305,6 +305,9 @@ export const OnboardingRoute = () => {
 							<Button
 								flex={1}
 								loading={sendingInvites}
+								disabled={
+									!inviteEmails.some((e) => e.trim() && e.includes("@"))
+								}
 								size="md"
 								onClick={handleSendInvites}
 							>

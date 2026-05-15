@@ -9,8 +9,7 @@ interface WorkspaceCapInfo {
 	name: string;
 	tier: string;
 	member_count: number;
-	member_invite_blocked?: boolean;
-	guest_invite_blocked?: boolean;
+	seat_invite_blocked?: boolean;
 }
 
 interface Props {
@@ -40,19 +39,9 @@ export const OrganisationCapBanner = ({
 }: Props) => {
 	const navigate = useI18nNavigate();
 
-	const blockedWorkspaces = workspaces.filter(
-		(w) => w.member_invite_blocked || w.guest_invite_blocked,
-	);
+	const blockedWorkspaces = workspaces.filter((w) => w.seat_invite_blocked);
 
-	// Per-session dismissal keyed on org + the set of blocked workspaces +
-	// their cap state. If a new workspace fills up later, the key changes
-	// and the banner returns.
-	const stateKey = blockedWorkspaces
-		.map(
-			(w) =>
-				`${w.id}:${w.member_invite_blocked ? "M" : ""}${w.guest_invite_blocked ? "G" : ""}`,
-		)
-		.join("|");
+	const stateKey = blockedWorkspaces.map((w) => w.id).join("|");
 	const dismissKey = `${DISMISS_KEY_PREFIX}${organisationId}:${stateKey}`;
 
 	const [dismissed, setDismissed] = useState(false);
@@ -85,7 +74,7 @@ export const OrganisationCapBanner = ({
 					{others === 0 ? (
 						<Trans>
 							"{first.name}" is at capacity on {first.tier}. New invites to that
-							workspace are blocked.
+							workspace are not available.
 						</Trans>
 					) : (
 						<Trans>
@@ -95,7 +84,7 @@ export const OrganisationCapBanner = ({
 								one="# other workspace"
 								other="# other workspaces"
 							/>{" "}
-							are at capacity. New invites to those workspaces are blocked.
+							are at capacity. New invites to those workspaces are not available.
 						</Trans>
 					)}{" "}
 					<Anchor

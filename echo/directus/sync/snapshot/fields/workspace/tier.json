@@ -15,6 +15,10 @@
     "options": {
       "choices": [
         {
+          "text": "Free",
+          "value": "free"
+        },
+        {
           "text": "Pilot",
           "value": "pilot"
         },
@@ -50,7 +54,7 @@
     "name": "tier",
     "table": "workspace",
     "data_type": "character varying",
-    "default_value": "pioneer",
+    "default_value": "free",
     "max_length": 255,
     "numeric_precision": null,
     "numeric_scale": null,

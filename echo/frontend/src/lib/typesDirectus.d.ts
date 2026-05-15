@@ -104,6 +104,7 @@ interface Conversation {
 	is_audio_processing_finished: boolean | null;
 	is_finished: boolean | null;
 	is_anonymized: boolean | null;
+	locked: boolean | null;
 	merged_audio_path: string | null;
 	merged_transcript: string | null;
 	participant_email: string | null;
@@ -167,6 +168,7 @@ interface ConversationChunk {
 	source: "DASHBOARD_UPLOAD" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT" | null;
 	timestamp: string;
 	transcript: string | null;
+	transcript_locked: boolean | null;
 	translation_error: string | null;
 	updated_at: string | null;
 	conversation_segments: string[] | ConversationSegmentConversationChunk[];

@@ -202,7 +202,8 @@ class ConversationService:
         fields: List[str] = [
             "id",
             "participant_name",
-            "chunks.transcript",  # Only transcript needed to check if conversation has content
+            "is_over_cap",
+            "chunks.transcript",
         ]
 
         deep: dict[str, Any] = {"chunks": {"_sort": "timestamp"}}
@@ -328,6 +329,7 @@ class ConversationService:
         source: Any = _UNSET,
         is_finished: Any = _UNSET,
         is_all_chunks_transcribed: Any = _UNSET,
+        is_over_cap: Any = _UNSET,
     ) -> dict:
         update_data: dict[str, Any] = {}
         if participant_name is not _UNSET:
@@ -344,6 +346,8 @@ class ConversationService:
             update_data["is_finished"] = is_finished
         if is_all_chunks_transcribed is not _UNSET:
             update_data["is_all_chunks_transcribed"] = is_all_chunks_transcribed
+        if is_over_cap is not _UNSET:
+            update_data["is_over_cap"] = is_over_cap
 
         try:
             with self._client_context() as client:

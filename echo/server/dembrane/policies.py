@@ -18,7 +18,7 @@ logger = getLogger("dembrane.policies")
 
 # ── Tier ordering (lowest to highest) ──
 
-TIER_ORDER: list[str] = ["pilot", "pioneer", "innovator", "changemaker", "guardian"]
+TIER_ORDER: list[str] = ["free", "pilot", "pioneer", "innovator", "changemaker", "guardian"]
 
 # Policies that require a minimum workspace tier. Enforced automatically by
 # has_policy() when the caller passes workspace_tier. Matrix v1.1 §2 lists

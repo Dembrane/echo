@@ -66,6 +66,14 @@ _SEVERITY_BY_EVENT: dict[str, NotificationSeverity] = {
     # state and the retry path.
     "INVITE_BLOCKED_AT_CAP": "action_required",
     "INVITE_PENDING_AT_CAP": "action_required",
+    # Workspace request flow (slice 12). Staff gets action_required on
+    # submission; requester gets info on decision.
+    "WORKSPACE_REQUEST_SUBMITTED": "action_required",
+    # WORKSPACE_REQUEST_APPROVED / WORKSPACE_REQUEST_DENIED default to "info".
+    # Tier expiry — emission wired in slice 15.
+    "TIER_EXPIRED": "destructive",
+    # 3-day pre-warning before tier_expires_at (slice 16).
+    "TIER_EXPIRING_SOON": "action_required",
     # WORKSPACE_GUEST_ADDED is intentionally NOT in this map — it's a
     # passive "FYI a guest joined your workspace" event with no action
     # required, so it falls through to the default "info" tint.
@@ -236,6 +244,43 @@ async def audience_workspace_admins_and_billing(workspace_id: str) -> list[str]:
         for m in members
         if m.get("user_id") and m.get("role") in ("admin", "owner", "billing")
     ]
+
+
+async def audience_staff() -> list[str]:
+    """All Directus users with admin access (staff).
+
+    Used for WORKSPACE_REQUEST_SUBMITTED notifications so every staff
+    member sees the pending request.
+    """
+    try:
+        users = await async_directus.get_users(
+            {"query": {
+                "fields": ["id", "admin_access"],
+                "limit": -1,
+            }},
+        )
+        if not isinstance(users, list):
+            return []
+        directus_ids = [
+            u["id"] for u in users
+            if u.get("id") and u.get("admin_access") is True
+        ]
+        if not directus_ids:
+            return []
+        rows = await async_directus.get_items(
+            "app_user",
+            {"query": {
+                "filter": {"directus_user_id": {"_in": directus_ids}},
+                "fields": ["id"],
+                "limit": -1,
+            }},
+        )
+        if not isinstance(rows, list):
+            return []
+        return [r["id"] for r in rows if r.get("id")]
+    except Exception as exc:  # noqa: BLE001 — best-effort
+        logger.warning("audience_staff failed: %s", exc)
+        return []
 
 
 async def audience_organisation_admins(org_id: str) -> list[str]:

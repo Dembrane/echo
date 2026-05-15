@@ -41,6 +41,8 @@ import {
 	IconChevronDown,
 	IconChevronUp,
 	IconInfoCircle,
+	IconLock,
+	IconPlus,
 	IconRosetteDiscountCheck,
 	IconSearch,
 	IconSelectAll,
@@ -72,6 +74,7 @@ import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
+import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { BaseSkeleton } from "../common/BaseSkeleton";
 import { NavigationButton } from "../common/NavigationButton";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
@@ -124,9 +127,10 @@ const ConversationAccordionLabelChatSelection = ({
 	const isSelected = !!projectChatContextQuery.data?.conversations?.find(
 		(c) => c.conversation_id === conversation.id,
 	);
-	const isLocked = !!projectChatContextQuery.data?.conversations?.find(
+	const isChatLocked = !!projectChatContextQuery.data?.conversations?.find(
 		(c) => c.conversation_id === conversation.id && c.locked,
 	);
+	const isOverCapLocked = !!conversation.locked;
 
 	const isAutoSelectEnabled =
 		projectChatContextQuery.data?.auto_select_bool ?? false;
@@ -137,12 +141,11 @@ const ConversationAccordionLabelChatSelection = ({
 		return typeof transcript === "string" && transcript.trim().length > 0;
 	});
 
+	const isDisabled = isChatLocked || isOverCapLocked || !hasContent;
+
 	const handleSelectChat = () => {
 		if (!isSelected) {
-			// Don't allow adding empty conversations to chat context
-			if (!hasContent) {
-				return;
-			}
+			if (isDisabled) return;
 			addChatContextMutation.mutate({
 				chatId: chatId ?? "",
 				conversationId: conversation.id,
@@ -155,20 +158,22 @@ const ConversationAccordionLabelChatSelection = ({
 		}
 	};
 
-	const tooltipLabel = isLocked
-		? t`Already added to this chat`
-		: !hasContent
-			? t`Cannot add empty conversation`
-			: isSelected
-				? t`Remove from this chat`
-				: t`Add to this chat`;
+	const tooltipLabel = isOverCapLocked
+		? t`Conversation locked, upgrade to add to chat`
+		: isChatLocked
+			? t`Already added to this chat`
+			: !hasContent
+				? t`Cannot add empty conversation`
+				: isSelected
+					? t`Remove from this chat`
+					: t`Add to this chat`;
 
 	return (
 		<Tooltip label={tooltipLabel}>
 			<Checkbox
 				size="md"
 				checked={isSelected}
-				disabled={isLocked || !hasContent}
+				disabled={isDisabled}
 				onChange={handleSelectChat}
 				color={
 					ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled ? "green" : undefined
@@ -584,19 +589,32 @@ const ConversationAccordionItem = ({
 							</Tooltip>
 						)}
 
-						{conversation.is_anonymized && (
-							<Tooltip label={t`Anonymized conversation`}>
-								<ThemeIcon
-									variant="subtle"
-									color="primary"
-									aria-label={t`anonymized conversation`}
-									size={18}
-									style={{ cursor: "default" }}
-								>
-									<DetectiveIcon />
-								</ThemeIcon>
-							</Tooltip>
-						)}
+					{conversation.is_anonymized && (
+						<Tooltip label={t`Anonymized conversation`}>
+							<ThemeIcon
+								variant="subtle"
+								color="primary"
+								aria-label={t`anonymized conversation`}
+								size={18}
+								style={{ cursor: "default" }}
+							>
+								<DetectiveIcon />
+							</ThemeIcon>
+						</Tooltip>
+					)}
+
+					{conversation.locked && (
+						<Tooltip label={t`Upgrade your workspace to view this conversation`}>
+							<Badge
+								size="xs"
+								color="blue"
+								variant="light"
+								leftSection={<IconLock size={10} />}
+							>
+								{t`Locked`}
+							</Badge>
+						</Tooltip>
+					)}
 					</Group>
 
 					<ConversationStatusIndicators
@@ -667,6 +685,16 @@ export const ConversationAccordion = ({
 	const chatContextQuery = useProjectChatContext(chatId ?? "");
 	const chatMode = chatContextQuery.data?.chat_mode;
 	const isOverviewMode = chatMode === "overview";
+
+	// Workspace usage gating for uploads
+	const projectForWs = useProjectById({
+		projectId,
+		query: { fields: ["id", "workspace_id"] },
+	});
+	const workspaceId =
+		(projectForWs.data as { workspace_id?: string | null } | undefined)
+			?.workspace_id ?? null;
+	const { usageGates } = useWorkspaceUsage(workspaceId);
 
 	// Temporarily disabled source filters
 	// const FILTER_OPTIONS = [
@@ -1090,7 +1118,19 @@ export const ConversationAccordion = ({
 					{/** biome-ignore lint/a11y/noStaticElementInteractions: <todo> */}
 					{/** biome-ignore lint/a11y/useKeyWithClickEvents: <todo> */}
 					<div onClick={(e) => e.stopPropagation()}>
-						<UploadConversationDropzone projectId={projectId} />
+						{usageGates.uploads_locked ? (
+							<Tooltip label={t`Upload limit reached. Upgrade your workspace.`}>
+								<Button
+									rightSection={<IconPlus size={16} />}
+									variant="outline"
+									disabled
+								>
+									{t`Upload`}
+								</Button>
+							</Tooltip>
+						) : (
+							<UploadConversationDropzone projectId={projectId} />
+						)}
 					</div>
 				</Group>
 			</Accordion.Control>

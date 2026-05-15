@@ -392,18 +392,21 @@ export const LoginRoute = () => {
 									</I18nLink>
 								</div>
 							)}
-							<Button
-								size="lg"
-								type="submit"
-								loading={loginMutation.isPending}
-								{...testId("auth-login-submit-button")}
-							>
-								{otpRequired ? (
-									<Trans>Verify code</Trans>
-								) : (
-									<Trans>Login</Trans>
-								)}
-							</Button>
+							<div>
+								<Button
+									size="lg"
+									type="submit"
+									fullWidth
+									loading={loginMutation.isPending}
+									{...testId("auth-login-submit-button")}
+								>
+									{otpRequired ? (
+										<Trans>Verify code</Trans>
+									) : (
+										<Trans>Login</Trans>
+									)}
+								</Button>
+							</div>
 						</Stack>
 					</form>
 

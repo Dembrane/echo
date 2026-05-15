@@ -19,7 +19,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconPlus, IconSettings } from "@tabler/icons-react";
+import { IconClock, IconPlus, IconSettings } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
@@ -62,6 +62,7 @@ interface Workspace {
 	is_external: boolean;
 	members_preview: MemberPreview[];
 	usage: WorkspaceUsage;
+	has_pending_upgrade_request?: boolean;
 }
 
 interface OrganisationRollup {
@@ -83,10 +84,22 @@ interface RecentRemoval {
 	ended_at: string;
 }
 
+interface PendingWorkspaceRequest {
+	id: string;
+	kind: string;
+	status: string;
+	proposed_name: string | null;
+	proposed_tier: string;
+	org_id: string;
+	org_name: string;
+	created_at: string | null;
+}
+
 async function fetchWorkspaces(): Promise<{
 	workspaces: Workspace[];
 	organisations: OrganisationRollup[];
 	recent_removals: RecentRemoval[];
+	pending_workspace_requests: PendingWorkspaceRequest[];
 }> {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		credentials: "include",
@@ -221,11 +234,6 @@ function WorkspaceCard({
 							</Text>
 						</Tooltip>
 					</Box>
-					{workspace.usage.at_cap && (
-						<Badge size="xs" color="red" variant="light">
-							<Trans>Included hours used up</Trans>
-						</Badge>
-					)}
 				</Group>
 
 				<Group gap="lg" wrap="wrap">
@@ -274,6 +282,21 @@ function WorkspaceCard({
 						)}
 					</Group>
 				</Group>
+				{(workspace.has_pending_upgrade_request ||
+					workspace.usage.at_cap) && (
+					<Group gap={6}>
+						{workspace.has_pending_upgrade_request && (
+							<Badge size="xs" color="yellow" variant="light">
+								<Trans>Upgrade pending</Trans>
+							</Badge>
+						)}
+						{workspace.usage.at_cap && (
+							<Badge size="xs" color="red" variant="light">
+								<Trans>Included hours used up</Trans>
+							</Badge>
+						)}
+					</Group>
+				)}
 			</Stack>
 		</Paper>
 	);
@@ -287,6 +310,53 @@ function WorkspaceCard({
  * Solves the "create workspace BUT WHERE?" ambiguity — the card sits
  * physically under the organisation it belongs to, no confusion.
  */
+function PendingRequestCard({ request }: { request: PendingWorkspaceRequest }) {
+	const capitalizedTier =
+		request.proposed_tier.charAt(0).toUpperCase() +
+		request.proposed_tier.slice(1);
+
+	return (
+		<Paper
+			p="lg"
+			radius="md"
+			style={{
+				border: "1px dashed var(--mantine-color-yellow-4)",
+				background: "var(--mantine-color-yellow-0)",
+				opacity: 0.85,
+			}}
+		>
+			<Stack gap={12}>
+				<Group gap="sm" wrap="nowrap" align="flex-start">
+					<IconClock
+						size={20}
+						style={{
+							color: "var(--mantine-color-yellow-6)",
+							flexShrink: 0,
+							marginTop: 2,
+						}}
+					/>
+					<Box flex={1} style={{ minWidth: 0 }}>
+						<Text fw={500} size="md" lineClamp={1}>
+							{request.kind === "new_workspace"
+								? request.proposed_name ?? t`New workspace`
+								: t`Upgrade request`}
+						</Text>
+						<Text size="xs" c="dimmed" lineClamp={1}>
+							{capitalizedTier}
+						</Text>
+					</Box>
+				</Group>
+
+				<Text size="xs" c="dimmed">
+					<Trans>Pending review</Trans>
+					{request.created_at &&
+						` · ${new Date(request.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}`}
+				</Text>
+			</Stack>
+		</Paper>
+	);
+}
+
 function AddWorkspaceCard({ organisationId }: { organisationId: string }) {
 	const navigate = useI18nNavigate();
 	return (
@@ -476,6 +546,7 @@ export const WorkspaceSelectorRoute = () => {
 	const workspaces = data?.workspaces ?? [];
 	const organisations = data?.organisations ?? [];
 	const recentRemovals = data?.recent_removals ?? [];
+	const pendingRequests = data?.pending_workspace_requests ?? [];
 	const invites = pendingInvites ?? [];
 
 	const filtered = search
@@ -567,7 +638,7 @@ export const WorkspaceSelectorRoute = () => {
 					/>
 				)}
 
-				{/* Organisation groups — organisation hero card tops each group when a rollup
+				{/* Organisation groups -- organisation hero card tops each group when a rollup
 					    exists; falls back to a plain heading otherwise (designer
 					    Ask 5: organisation-level context at top). Dividers between groups
 					    (2026-04-24 ask) so each organisation/guest section reads as a
@@ -598,9 +669,11 @@ export const WorkspaceSelectorRoute = () => {
 										onManage={() => navigate(`/w/${ws.id}/settings`)}
 									/>
 								))}
-								{/* Dashed "+ new workspace" placeholder — admin/
-									    owner only. Lives under the organisation it belongs
-									    to so create-where is answered by placement. */}
+								{pendingRequests
+									.filter((r) => r.org_id === orgId)
+									.map((r) => (
+										<PendingRequestCard key={r.id} request={r} />
+									))}
 								{(group.role === "owner" || group.role === "admin") && (
 									<AddWorkspaceCard organisationId={orgId} />
 								)}

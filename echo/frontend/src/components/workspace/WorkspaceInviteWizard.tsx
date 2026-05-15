@@ -491,26 +491,25 @@ export function WorkspaceInviteWizard({
 
 					<Stepper.Step label={t`Externals`}>
 						<Stack gap={12} mt="md">
-							<Text size="sm" c="dimmed">
-								<Trans>
-									Invite people outside your organisation. They get
-									workspace-only access and don't use a organisation seat.
-								</Trans>
-							</Text>
+						<Text size="sm" c="dimmed">
+							<Trans>
+								Invite people outside your organisation. They get
+								workspace-only access and count toward the seat pool.
+							</Trans>
+						</Text>
 
-							{guestInviteBlocked && (
-								<Alert color="yellow" variant="light">
-									<Text size="sm" fw={500}>
-										<Trans>Guest cap reached on this tier</Trans>
-									</Text>
-									<Text size="xs" c="dimmed" mt={4}>
-										<Trans>
-											Remove a guest or upgrade to invite more externals. The
-											guest cap is hard at every tier; there's no overage.
-										</Trans>
-									</Text>
-								</Alert>
-							)}
+						{guestInviteBlocked && (
+							<Alert color="yellow" variant="light">
+								<Text size="sm" fw={500}>
+									<Trans>All seats taken on this tier</Trans>
+								</Text>
+								<Text size="xs" c="dimmed" mt={4}>
+									<Trans>
+										Remove a member or guest, or upgrade to invite more people.
+									</Trans>
+								</Text>
+							</Alert>
+						)}
 
 							{!guestInviteBlocked && externals.length === 0 && (
 								<Alert color="gray" variant="light">

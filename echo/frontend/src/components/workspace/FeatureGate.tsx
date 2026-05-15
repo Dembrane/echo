@@ -14,13 +14,14 @@ import {
 } from "@mantine/core";
 import { IconLock } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { avatarUrl } from "@/lib/avatar";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
+import { TIER_TAGLINE } from "@/lib/tiers";
 
 /**
  * Tier-gating UI primitives for the ECHO platform.
@@ -40,6 +41,7 @@ import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
  */
 
 export type Tier =
+	| "free"
 	| "pilot"
 	| "pioneer"
 	| "innovator"
@@ -47,6 +49,7 @@ export type Tier =
 	| "guardian";
 
 const TIER_LABEL: Record<Tier, string> = {
+	free: "free",
 	changemaker: "changemaker",
 	guardian: "guardian",
 	innovator: "innovator",
@@ -65,13 +68,14 @@ interface FeatureGateProps {
 	benefit: string;
 	/** `true` if the caller has admin/owner role in this workspace. */
 	canRequestUpgrade: boolean;
-	/** Workspace id so the modal can POST /v2/workspaces/:id/upgrade-request. */
+	/** Workspace id for the tier_upgrade request. */
 	workspaceId: string;
 	/** The gated feature's normal render — shown under the hatched overlay. */
 	children: ReactNode;
 }
 
 const TIER_ORDER: Tier[] = [
+	"free",
 	"pilot",
 	"pioneer",
 	"innovator",
@@ -189,7 +193,7 @@ interface UpgradeModalProps {
 /**
  * Ask 4C — one feature, one benefit, one tier, one CTA.
  *
- * Admin path: "Request upgrade" posts to /v2/workspaces/:id/upgrade-request.
+ * Admin path: "Request upgrade" posts to /v2/workspace-requests (kind=tier_upgrade).
  * Member path: informational only; the copy says "ask a organisation admin" but
  * there's no button — Q3 decision (D9). Keeping the message honest:
  * there's nothing we can do for them, only their admin can.
@@ -292,22 +296,38 @@ export function UpgradeModal({
 	canRequestUpgrade,
 	workspaceId,
 }: UpgradeModalProps) {
+	const { workspace } = useWorkspace();
 	const [message, setMessage] = useState("");
 	const [sending, setSending] = useState(false);
 
+	const tiersAboveCurrent = TIER_ORDER.filter(
+		(t) => TIER_ORDER.indexOf(t) > TIER_ORDER.indexOf(currentTier),
+	);
+	const defaultSelectedTier =
+		tiersAboveCurrent.includes(requiredTier) ? requiredTier : (tiersAboveCurrent[0] ?? requiredTier);
+	const [selectedTier, setSelectedTier] = useState<Tier>(defaultSelectedTier);
+
+	useEffect(() => {
+		if (opened) setSelectedTier(defaultSelectedTier);
+	}, [opened, defaultSelectedTier]);
+
 	const handleRequest = async () => {
-		// Guard against double-fire: Mantine's `loading` prop doesn't disable
-		// the button, so a fast double-click would fire two POSTs before the
-		// first setSending(true) paints (round-2 audit, Reliability H2).
 		if (sending) return;
+		if (!workspace?.org_id) {
+			toast.error(t`Workspace data not loaded yet. Please try again.`);
+			return;
+		}
 		setSending(true);
 		try {
 			const res = await fetch(
-				`${API_BASE_URL}/v2/workspaces/${workspaceId}/upgrade-request`,
+				`${API_BASE_URL}/v2/workspace-requests`,
 				{
 					body: JSON.stringify({
-						message: message.trim() || undefined,
-						target_tier: requiredTier,
+						kind: "tier_upgrade",
+						org_id: workspace.org_id,
+						workspace_id: workspaceId,
+						proposed_tier: selectedTier,
+						requester_message: message.trim() || undefined,
 					}),
 					credentials: "include",
 					headers: { "Content-Type": "application/json" },
@@ -322,7 +342,7 @@ export function UpgradeModal({
 						: t`Couldn't send the request`;
 				throw new Error(detail);
 			}
-			toast.success(t`Request sent. We'll be in touch.`);
+			toast.success(t`Request submitted. We'll be in touch within 1 business day.`);
 			onClose();
 			setMessage("");
 		} catch (err) {
@@ -332,31 +352,36 @@ export function UpgradeModal({
 		}
 	};
 
+	const displayTier = canRequestUpgrade ? selectedTier : requiredTier;
+	const displayName = canRequestUpgrade
+		? t`Upgrade to ${displayTier}`
+		: featureName;
+	const displayBenefit = canRequestUpgrade
+		? TIER_TAGLINE[displayTier] ?? benefit
+		: benefit;
+
 	return (
 		<Modal
 			opened={opened}
 			onClose={onClose}
-			title={<Text fw={500}>{featureName}</Text>}
+			title={<Text fw={500}>{displayName}</Text>}
 			centered
-			size="md"
+			size="lg"
 		>
 			<Stack gap="md">
 				<Text size="sm" c="dimmed">
-					{benefit}
+					{displayBenefit}
 				</Text>
-
-				{/* Matrix §1 requires the full capacity matrix visible in-
-				    product on the upgrade-request modal. fromTier clips the
-				    table to tiers strictly above the current; highlightTier
-				    calls out the minimum tier the gate needs. */}
-				<TierCapacityMatrix
-					fromTier={currentTier}
-					highlightTier={requiredTier}
-					compact
-				/>
 
 				{canRequestUpgrade ? (
 					<>
+						<TierCapacityMatrix
+							fromTier={currentTier}
+							highlightTier={selectedTier}
+							compact
+							onTierSelect={(tier) => setSelectedTier(tier as Tier)}
+						/>
+
 						<Textarea
 							label={t`Anything to add?`}
 							placeholder={t`Optional. Context for our team.`}
@@ -374,10 +399,16 @@ export function UpgradeModal({
 						</Text>
 					</>
 				) : (
-					<OrganisationAdminChips />
+					<>
+						<TierCapacityMatrix
+							fromTier={currentTier}
+							highlightTier={requiredTier}
+							compact
+						/>
+						<OrganisationAdminChips />
+					</>
 				)}
 
-				{/* Role-aware footer: admin gets primary, member gets close-only (D9) */}
 				<Box style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
 					<Button variant="subtle" onClick={onClose}>
 						<Trans>Close</Trans>

@@ -1,8 +1,8 @@
 """Public auth helpers — endpoints that run unauthenticated.
 
-Email enumeration is the explicit tradeoff (same call Linear / Notion /
-GitHub / Stripe make): silent registration failure is worse UX than the
-small leak. Strict per-IP rate limits keep brute-force expensive.
+Registration is information-neutral: the response is always the same
+regardless of whether the email already exists. A transactional email
+handles both cases (verification for new, sign-in nudge for existing).
 """
 
 from __future__ import annotations
@@ -12,10 +12,14 @@ import hmac as _hmac
 from typing import Optional
 from logging import getLogger
 from datetime import datetime, timezone
+from urllib.parse import urlencode
 
-from fastapi import Request, APIRouter
+import httpx
+from fastapi import Request, Response, APIRouter
 from pydantic import Field, BaseModel
 
+from dembrane.email import send_email
+from dembrane.settings import get_settings
 from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.api.v2.invites import compute_invite_hash
 from dembrane.directus_async import async_directus
@@ -23,9 +27,9 @@ from dembrane.directus_async import async_directus
 router = APIRouter()
 logger = getLogger("api.v2.auth")
 
-_check_email_rate_limiter = create_rate_limiter(
-    name="auth_check_email",
-    capacity=15,
+_register_rate_limiter = create_rate_limiter(
+    name="auth_register",
+    capacity=10,
     window_seconds=300,
 )
 
@@ -50,47 +54,6 @@ def _client_ip(request: Request) -> str:
     if request.client:
         return request.client.host
     return "unknown"
-
-
-class CheckEmailRequest(BaseModel):
-    email: str = Field(..., min_length=3, max_length=320)
-
-
-class CheckEmailResponse(BaseModel):
-    """available = safe to register; registered = block + offer login;
-    invalid = failed regex. Verified vs unverified is intentionally
-    not distinguished (finer-grained leak, same recovery path)."""
-
-    status: str
-
-
-@router.post("/check-email", response_model=CheckEmailResponse)
-async def check_email(
-    body: CheckEmailRequest,
-    request: Request,
-) -> CheckEmailResponse:
-    """Public probe — returns whether an email already has a Directus user.
-    Uses the admin client for lookup; rate-limited per IP."""
-    await _check_email_rate_limiter.check(_client_ip(request))
-
-    email = body.email.strip().lower()
-    if not _EMAIL_RE.match(email):
-        return CheckEmailResponse(status="invalid")
-
-    users = await async_directus.get_users(
-        {
-            "query": {
-                "filter": {"email": {"_eq": email}},
-                "fields": ["id"],
-                "limit": 1,
-            }
-        },
-    )
-
-    if isinstance(users, list) and len(users) > 0:
-        return CheckEmailResponse(status="registered")
-
-    return CheckEmailResponse(status="available")
 
 
 class PublicInviteStatus(BaseModel):
@@ -177,3 +140,86 @@ async def public_invite_status(
         role=target.get("role"),
         expires_at=target.get("expires_at"),
     )
+
+
+# ── Registration ──────────────────────────────────────────────────────
+
+
+class RegisterRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=320)
+    password: str = Field(..., min_length=8, max_length=256)
+    first_name: str = Field(..., min_length=1, max_length=150)
+    last_name: Optional[str] = Field(None, max_length=150)
+    verification_url: str = Field(..., max_length=500)
+
+
+@router.post("/register", status_code=204)
+async def register_user(body: RegisterRequest, request: Request) -> Response:
+    """Information-neutral registration.
+
+    Always returns 204 regardless of whether the email is new or
+    existing. New users get the Directus verification email; existing
+    users get a transactional "you already have an account" email with
+    sign-in and password-reset links. No enumeration leak.
+    """
+    await _register_rate_limiter.check(_client_ip(request))
+
+    settings = get_settings()
+    email = body.email.strip().lower()
+
+    if not _EMAIL_RE.match(email):
+        return Response(status_code=204)
+
+    try:
+        users = await async_directus.get_users(
+            {
+                "query": {
+                    "filter": {"email": {"_eq": email}},
+                    "fields": ["id"],
+                    "limit": 1,
+                }
+            },
+        )
+    except Exception:
+        logger.exception("Directus user lookup failed during registration for %s", email)
+        return Response(status_code=204)
+
+    if isinstance(users, list) and len(users) > 0:
+        qs = urlencode({"email": email})
+        sent = await send_email(
+            to=email,
+            subject="You already have a dembrane account",
+            template="registration_existing_account",
+            template_data={
+                "login_url": f"{settings.urls.admin_base_url}/login?{qs}",
+                "reset_url": f"{settings.urls.admin_base_url}/request-password-reset?{qs}",
+            },
+        )
+        if not sent:
+            logger.warning("Failed to send existing-account email to %s", email)
+    else:
+        payload: dict = {
+            "email": email,
+            "password": body.password,
+            "first_name": body.first_name,
+            "verification_url": body.verification_url,
+        }
+        if body.last_name and body.last_name.strip():
+            payload["last_name"] = body.last_name.strip()
+
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.post(
+                    f"{settings.directus.base_url}/users/register",
+                    json=payload,
+                )
+                if resp.status_code >= 400:
+                    logger.error(
+                        "Directus registration failed: %s %s",
+                        resp.status_code,
+                        resp.text,
+                    )
+        except Exception:
+            logger.exception("Directus registration proxy failed for %s", email)
+
+    return Response(status_code=204)

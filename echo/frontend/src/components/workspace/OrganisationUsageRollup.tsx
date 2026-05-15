@@ -82,8 +82,6 @@ interface OrgUsageWorkspaceRow {
 	seat_cap_hit: boolean;
 	approaching_seat_cap: boolean;
 	guest_count: number;
-	guest_cap: number | null;
-	guest_cap_hit: boolean;
 	downgraded_at: string | null;
 	at_cap: boolean;
 	approaching_cap: boolean;
@@ -260,10 +258,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 		setRefreshing(true);
 		try {
 			const fresh = await fetchOrgUsage(orgId, monthOffset, true);
-			queryClient.setQueryData(
-				["v2", "org-usage", orgId, monthOffset],
-				fresh,
-			);
+			queryClient.setQueryData(["v2", "org-usage", orgId, monthOffset], fresh);
 		} catch (err) {
 			toast.error(
 				err instanceof Error
@@ -440,21 +435,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				id: "seats_over",
 			},
 			{
-				accessorKey: "guest_count",
-				cell: ({ row }) => (
-					<UsageBar
-						used={row.original.guest_count}
-						cap={row.original.guest_cap}
-						block={row.original.guest_cap_hit}
-					/>
-				),
-				// Matrix §1: guest caps live per-tier. Surfacing them here
-				// lets organisation admins see when their workspaces are close to
-				// hitting the external-collaborator ceiling.
-				header: t`Guests`,
-				id: "guest_count",
-			},
-			{
 				accessorFn: (r) => (isActive(r) ? "active" : "inactive"),
 				cell: ({ row }) =>
 					isActive(row.original) ? (
@@ -523,8 +503,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 		const cap = r.original.seats_included;
 		return s + (cap == null ? 0 : Math.max(0, r.original.seat_count - cap));
 	}, 0);
-	const totalsGuests = rows.reduce((s, r) => s + r.original.guest_count, 0);
-
 	if (isLoading) return null;
 
 	if (isError || !data) {
@@ -788,11 +766,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 														{formatDurationFromHours(totalsHours)}
 													</Text>
 												),
-												guest_count: (
-													<Text size="xs" fw={600}>
-														{totalsGuests}
-													</Text>
-												),
 												hours_over: (
 													<Text
 														size="xs"
@@ -897,12 +870,18 @@ function WorkspaceRow({
 	});
 	const projects = wsUsage?.projects ?? [];
 
-	const visibleSet = useMemo(() => new Set(visibleColumnIds), [visibleColumnIds]);
+	const visibleSet = useMemo(
+		() => new Set(visibleColumnIds),
+		[visibleColumnIds],
+	);
 	const allCells = (
 		row as unknown as {
 			getAllCells: () => Array<{
 				id: string;
-				column: { id: string; columnDef: ColumnDef<OrgUsageWorkspaceRow, unknown> };
+				column: {
+					id: string;
+					columnDef: ColumnDef<OrgUsageWorkspaceRow, unknown>;
+				};
 				getContext: () => unknown;
 			}>;
 		}
@@ -914,10 +893,12 @@ function WorkspaceRow({
 			<Table.Tr>
 				{cells.map((cell) => (
 					<Table.Td key={cell.id}>
-						{flexRender(
-							cell.column.columnDef.cell,
-							cell.getContext() as never,
-						) as React.ReactNode}
+						{
+							flexRender(
+								cell.column.columnDef.cell,
+								cell.getContext() as never,
+							) as React.ReactNode
+						}
 					</Table.Td>
 				))}
 			</Table.Tr>
@@ -952,10 +933,7 @@ function WorkspaceRow({
 												other="# conversations"
 											/>
 										</Text>
-										<Text
-											size="xs"
-											style={{ minWidth: 60 }}
-										>
+										<Text size="xs" style={{ minWidth: 60 }}>
 											{formatDurationFromHours(p.audio_hours)}
 										</Text>
 									</Group>
@@ -994,12 +972,11 @@ interface OverageItem {
 	workspaceId: string;
 }
 
-// Matrix v1.1 §8: Pilot is the only tier that hard-blocks. Pioneer+ allow
-// overage with monthly billing. Hard-block tiers go in "Needs attention",
-// overage tiers go in "Overage this cycle" — different urgency, different
-// treatment.
+// Free + pilot gate consumption (no overage billing). Pioneer+ allow
+// overage with monthly billing. Gated tiers go in "Needs attention",
+// overage tiers go in "Overage this cycle".
 function isHardBlockTier(tier: string): boolean {
-	return tier === "pilot";
+	return tier === "free" || tier === "pilot";
 }
 
 function formatSeatFraction(
@@ -1014,7 +991,7 @@ function formatHourFraction(hours: number, cap: number | null): string {
 }
 
 function formatEur(value: number | null | undefined): string {
-	if (value == null) return "—";
+	if (value == null) return "-";
 	if (value === 0) return "€0";
 	return `€${Math.round(value)}`;
 }

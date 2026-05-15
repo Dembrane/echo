@@ -45,6 +45,7 @@ import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { UsageCard } from "@/components/workspace/UsageCard";
+import { WorkspaceRequestHistory } from "@/components/workspace/WorkspaceRequestHistory";
 import { WorkspaceInviteWizard } from "@/components/workspace/WorkspaceInviteWizard";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -89,6 +90,8 @@ interface WorkspaceDetail {
 	inherit_organisation_members: boolean;
 	description: string | null;
 	logo_url: string | null;
+	type_discount: string | null;
+	percent_discount: number | null;
 }
 
 async function deleteWorkspace(workspaceId: string) {
@@ -276,6 +279,7 @@ export const WorkspaceSettingsRoute = () => {
 		{ open: openInviteModal, close: closeInviteModal },
 	] = useDisclosure(false);
 	const [memberSearch, setMemberSearch] = useUrlSearch();
+
 	type WsRoleFilter = "all" | "admins" | "billing" | "members" | "guests";
 	const [memberRoleFilter, setMemberRoleFilter] = useState<WsRoleFilter>("all");
 
@@ -319,47 +323,28 @@ export const WorkspaceSettingsRoute = () => {
 				{ credentials: "include" },
 			);
 			if (!res.ok) return null;
-			return res.json() as Promise<{
-				tier: string;
-				member_invite_blocked?: boolean;
-				guest_invite_blocked?: boolean;
-				seat_count: number;
-				seat_count_included: number | null;
-				guest_count: number;
-				guest_cap: number | null;
-			}>;
+		return res.json() as Promise<{
+			tier: string;
+			seat_invite_blocked?: boolean;
+			seat_count: number;
+			seat_count_included: number | null;
+			guest_count: number;
+		}>;
 		},
 		queryKey: ["v2", "workspace-usage", workspaceId, 0],
-		// Match the refetch policy of UsageCard / SeatCapBanner that
-		// share this query key: switching tabs (Members ↔ Billing) or
-		// re-focusing the window should reflect the live cap state, not
-		// a 60-second-old snapshot.
 		refetchOnMount: "always",
 		refetchOnWindowFocus: "always",
 		staleTime: 60_000,
 	});
 
-	// Prefer backend flags; fall back to client-side comparison so the UI
-	// still works on deploys without the new flags. Hard-block tier list
-	// must match server/dembrane/seat_capacity.py: tier_hard_blocks_seats.
-	const tierIsHardBlock = usageProbe?.tier === "pilot";
-	const memberCapHit =
+	const seatCapHit =
 		!!usageProbe &&
 		usageProbe.seat_count_included != null &&
 		usageProbe.seat_count >= usageProbe.seat_count_included;
-	const guestCapHit =
-		!!usageProbe &&
-		usageProbe.guest_cap != null &&
-		usageProbe.guest_count >= usageProbe.guest_cap;
-	const memberInviteBlocked =
-		usageProbe?.member_invite_blocked ?? (tierIsHardBlock && memberCapHit);
-	const guestInviteBlocked = usageProbe?.guest_invite_blocked ?? guestCapHit;
-	const inviteFullyBlocked = memberInviteBlocked && guestInviteBlocked;
-	// Pioneer+ over included seats: not blocked, but the next member adds
-	// to the workspace's monthly overage. Surface this in the InviteMember
-	// helper text + wizard so admins see the cost before clicking Send,
-	// not after the bill arrives.
-	const memberOverageActive = !tierIsHardBlock && memberCapHit;
+	const seatInviteBlocked = usageProbe?.seat_invite_blocked ?? seatCapHit;
+	const tierHardBlocks =
+		usageProbe?.tier === "free" || usageProbe?.tier === "pilot";
+	const seatOverageActive = !tierHardBlocks && seatCapHit;
 	const seatOverageRate = seatOverageRateFor(usageProbe?.tier);
 
 	// The bulk-invite wizard handles its own POSTs + success toasts, so
@@ -626,15 +611,25 @@ export const WorkspaceSettingsRoute = () => {
 						    the Billing tab where it's next to the price. Organisation name
 						    is already in the nav breadcrumb; duplicating it here
 						    was audit noise (2026-04-23). */}
-							<Group gap={8} wrap="nowrap">
-								{iAmGuest ? (
-									<Badge size="xs" variant="light" color="yellow">
-										<Trans>Guest of {settings.org_name}</Trans>
-									</Badge>
-								) : (
-									<TierBadge tier={settings.tier} size="xs" />
-								)}
-							</Group>
+						<Group gap={8} wrap="wrap">
+							{iAmGuest ? (
+								<Badge size="xs" variant="light" color="yellow">
+									<Trans>Guest of {settings.org_name}</Trans>
+								</Badge>
+							) : (
+								<TierBadge tier={settings.tier} size="xs" />
+							)}
+							{!iAmGuest && settings.type_discount && (
+								<Badge size="xs" variant="light" color="teal" tt="capitalize">
+									{settings.type_discount.replace(/_/g, " ")}
+								</Badge>
+							)}
+							{!iAmGuest && settings.percent_discount != null && settings.percent_discount > 0 && (
+								<Badge size="xs" variant="light" color="teal">
+									{settings.percent_discount}% discount
+								</Badge>
+							)}
+						</Group>
 						</Stack>
 						<Button
 							variant="subtle"
@@ -674,6 +669,7 @@ export const WorkspaceSettingsRoute = () => {
 							<Tabs.Panel value="billing" pt="md">
 								<Stack gap={16}>
 									{workspaceId && <UsageCard workspaceId={workspaceId} />}
+									{workspaceId && <WorkspaceRequestHistory workspaceId={workspaceId} />}
 
 									{/* Seats explainer — audit feedback: users need to
 								    know "how do seats work as a user" without
@@ -683,29 +679,21 @@ export const WorkspaceSettingsRoute = () => {
 											<Text size="sm" fw={500}>
 												<Trans>How seats work</Trans>
 											</Text>
-											<Text size="xs" c="dimmed">
-												<Trans>
-													Every member with <em>Admin</em>, <em>Billing</em>, or{" "}
-													<em>Member</em> role on this workspace counts as one
-													seat. One person never takes more than one seat per
-													workspace, even if they're on multiple organisations.
-												</Trans>
-											</Text>
-											<Text size="xs" c="dimmed">
-												<Trans>
-													Guests don't take a seat. They can view and chat with
-													projects you share with them, but can't create
-													projects, invite others, see usage, or change
-													workspace settings.
-												</Trans>
-											</Text>
-											<Text size="xs" c="dimmed">
-												<Trans>
-													Going over your tier's included seats bills extra per
-													month. See the matrix below for the per-seat rate on
-													each tier.
-												</Trans>
-											</Text>
+									<Text size="xs" c="dimmed">
+											<Trans>
+												Every workspace member, including guests, counts as
+												one seat. One person never takes more than one seat
+												per workspace, even if they're on multiple
+												organisations.
+											</Trans>
+										</Text>
+										<Text size="xs" c="dimmed">
+											<Trans>
+												Going over your tier's included seats bills extra per
+												month. See the matrix below for the per-seat rate on
+												each tier.
+											</Trans>
+										</Text>
 										</Stack>
 									</Paper>
 
@@ -804,59 +792,50 @@ export const WorkspaceSettingsRoute = () => {
 									/>
 
 									<Stack gap="xs">
-										{canManage && (
-											<InviteMemberCard
-												label={
-													inviteFullyBlocked ? (
-														<Trans>Workspace is full</Trans>
-													) : (
-														<Trans>Invite member</Trans>
-													)
-												}
-												helperText={
-													inviteFullyBlocked ? (
-														<Trans>
-															Both seat and guest limits reached for this tier.
-															Free a seat or upgrade.
-														</Trans>
-													) : memberInviteBlocked ? (
-														<Trans>
-															Member seats full. You can still invite guests.
-														</Trans>
-													) : guestInviteBlocked ? (
-														<Trans>
-															Guest cap reached. You can still invite
-															organisation members.
-														</Trans>
-													) : memberOverageActive && seatOverageRate != null ? (
-														<Trans>
-															You're over your included seats. Each new member
-															adds €{seatOverageRate}/month to next bill.
-														</Trans>
-													) : memberOverageActive ? (
-														<Trans>
-															You're over your included seats. Overage applies
-															on the next bill.
-														</Trans>
-													) : (
-														<Trans>
-															Add members or a guest to this workspace.
-														</Trans>
-													)
-												}
-												tooltip={
-													inviteFullyBlocked ? (
-														<Trans>
-															Both seat and guest limits are full on this tier.
-															Remove a member or guest, or upgrade the workspace
-															tier to invite more people.
-														</Trans>
-													) : undefined
-												}
-												onClick={openInviteModal}
-												disabled={inviteFullyBlocked}
-											/>
-										)}
+									{canManage && (
+										<InviteMemberCard
+											label={
+												seatInviteBlocked ? (
+													<Trans>Workspace is full</Trans>
+												) : (
+													<Trans>Invite member</Trans>
+												)
+											}
+											helperText={
+												seatInviteBlocked ? (
+													<Trans>
+														All seats are taken. Free a seat or upgrade to
+														invite more.
+													</Trans>
+												) : seatOverageActive && seatOverageRate != null ? (
+													<Trans>
+														You're over your included seats. Each new member
+														adds €{seatOverageRate}/month to next bill.
+													</Trans>
+												) : seatOverageActive ? (
+													<Trans>
+														You're over your included seats. Overage applies
+														on the next bill.
+													</Trans>
+												) : (
+													<Trans>
+														Add members or a guest to this workspace.
+													</Trans>
+												)
+											}
+											tooltip={
+												seatInviteBlocked ? (
+													<Trans>
+														All seats are taken on this tier. Remove a member
+														or guest, or upgrade the workspace tier to invite
+														more people.
+													</Trans>
+												) : undefined
+											}
+											onClick={openInviteModal}
+											disabled={seatInviteBlocked}
+										/>
+									)}
 										{settings.members.length === 0 && (
 											<Stack align="center" gap={6} py={32}>
 												<Text size="sm" fw={500}>
@@ -1379,9 +1358,9 @@ export const WorkspaceSettingsRoute = () => {
 					existingMemberAppUserIds={
 						new Set(settings.members.map((m) => m.user_id))
 					}
-					memberInviteBlocked={memberInviteBlocked}
-					guestInviteBlocked={guestInviteBlocked}
-					memberOverageActive={memberOverageActive}
+					memberInviteBlocked={seatInviteBlocked}
+					guestInviteBlocked={seatInviteBlocked}
+					memberOverageActive={seatOverageActive}
 					seatOverageRate={seatOverageRate}
 				/>
 			)}

@@ -50,6 +50,30 @@ scheduler.add_job(
     replace_existing=True,
 )
 
+scheduler.add_job(
+    func="dembrane.tasks:task_expire_workspace_tiers.send",
+    trigger=CronTrigger(minute=0),
+    id="task_expire_workspace_tiers",
+    name="Downgrade workspaces with elapsed tier_expires_at to free",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_send_tier_expiry_prewarning.send",
+    trigger=CronTrigger(minute=0),
+    id="task_send_tier_expiry_prewarning",
+    name="Send 3-day pre-warning emails for expiring workspace tiers",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_flush_email_digests.send",
+    trigger=CronTrigger(hour=9, minute=0),
+    id="task_flush_email_digests",
+    name="Flush batched email notification digests",
+    replace_existing=True,
+)
+
 logger = getLogger("dembrane.scheduler")
 
 # Start the scheduler when this module is run directly
