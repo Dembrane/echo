@@ -19,7 +19,12 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconClock, IconPlus, IconSettings } from "@tabler/icons-react";
+import {
+	IconClock,
+	IconPlus,
+	IconSettings,
+	IconSparkles,
+} from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
@@ -63,6 +68,7 @@ interface Workspace {
 	members_preview: MemberPreview[];
 	usage: WorkspaceUsage;
 	has_pending_upgrade_request?: boolean;
+	created_at?: string | null;
 }
 
 interface OrganisationRollup {
@@ -162,6 +168,10 @@ function WorkspaceCard({
 }) {
 	const isAdminOrOwner =
 		workspace.role === "admin" || workspace.role === "owner";
+	const ONE_DAY_MS = 86_400_000;
+	const isRecentlyApproved =
+		!!workspace.created_at &&
+		Date.now() - new Date(workspace.created_at).getTime() < ONE_DAY_MS;
 	const [hovered, setHovered] = useState(false);
 	const wsLogo = resolveLogoUrl(workspace.logo_url);
 	const organisationLogo = resolveLogoUrl(workspace.org_logo_url);
@@ -282,8 +292,20 @@ function WorkspaceCard({
 						)}
 					</Group>
 				</Group>
-				{(workspace.has_pending_upgrade_request || workspace.usage.at_cap) && (
+				{(isRecentlyApproved ||
+					workspace.has_pending_upgrade_request ||
+					workspace.usage.at_cap) && (
 					<Group gap={6}>
+						{isRecentlyApproved && (
+							<Badge
+								size="xs"
+								color="green"
+								variant="light"
+								leftSection={<IconSparkles size={10} />}
+							>
+								<Trans>Recently approved</Trans>
+							</Badge>
+						)}
 						{workspace.has_pending_upgrade_request && (
 							<Badge size="xs" color="yellow" variant="light">
 								<Trans>Upgrade pending</Trans>

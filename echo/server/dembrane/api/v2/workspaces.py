@@ -225,6 +225,7 @@ async def list_workspaces(
                         "downgraded_at",
                         "downgraded_from_tier",
                         "logo_url",
+                        "created_at",
                     ],
                     "limit": -1,
                 }
@@ -376,6 +377,7 @@ async def list_workspaces(
                 downgraded_at=ws.get("downgraded_at"),
                 downgraded_from_tier=ws.get("downgraded_from_tier"),
                 has_pending_upgrade_request=ws["id"] in pending_request_ws_ids,
+                created_at=ws.get("created_at"),
             )
         )
 
