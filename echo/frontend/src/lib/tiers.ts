@@ -26,8 +26,8 @@ export const TIER_ORDER: Tier[] = [
 ];
 
 export const TIER_TAGLINE: Record<Tier, string> = {
-	free: "get started.",
 	changemaker: "your brand, your integrations.",
+	free: "get started.",
 	guardian: "enterprise scale.",
 	innovator: "privacy and data portability.",
 	pilot: "one month to try it.",
@@ -38,11 +38,11 @@ export const TIER_TAGLINE: Record<Tier, string> = {
 // "what does Pioneer mean?" without hitting the billing tab. Numbers
 // mirror server/dembrane/tier_capacity.py — keep in sync.
 export const TIER_CAPACITY_SHORT: Record<Tier, string> = {
-	free: "1 seat · 1 h · free",
 	changemaker: "20 seats · 100 h/mo · €1500/mo",
+	free: "1 seat · 1 h · free",
 	guardian: "unlimited · custom pricing",
 	innovator: "10 seats · 50 h/mo · €500/mo",
-	pilot: "2 seats · 10 h · one month",
+	pilot: "2 seats · 10 h · €349 one-time",
 	pioneer: "3 seats · 25 h/mo · €200/mo",
 };
 
@@ -51,8 +51,8 @@ export const TIER_CAPACITY_SHORT: Record<Tier, string> = {
 // unlimited. Pioneer/Innovator/Changemaker bill per matrix §8. Mirror
 // of seat_overage_eur in tier_capacity.py — keep in sync.
 export const TIER_SEAT_OVERAGE_EUR: Record<Tier, number | null> = {
-	free: null,
 	changemaker: 60,
+	free: null,
 	guardian: null,
 	innovator: 30,
 	pilot: null,

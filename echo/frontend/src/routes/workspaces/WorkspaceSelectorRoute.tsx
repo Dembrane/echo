@@ -282,8 +282,7 @@ function WorkspaceCard({
 						)}
 					</Group>
 				</Group>
-				{(workspace.has_pending_upgrade_request ||
-					workspace.usage.at_cap) && (
+				{(workspace.has_pending_upgrade_request || workspace.usage.at_cap) && (
 					<Group gap={6}>
 						{workspace.has_pending_upgrade_request && (
 							<Badge size="xs" color="yellow" variant="light">
@@ -320,8 +319,8 @@ function PendingRequestCard({ request }: { request: PendingWorkspaceRequest }) {
 			p="lg"
 			radius="md"
 			style={{
-				border: "1px dashed var(--mantine-color-yellow-4)",
 				background: "var(--mantine-color-yellow-0)",
+				border: "1px dashed var(--mantine-color-yellow-4)",
 				opacity: 0.85,
 			}}
 		>
@@ -338,7 +337,7 @@ function PendingRequestCard({ request }: { request: PendingWorkspaceRequest }) {
 					<Box flex={1} style={{ minWidth: 0 }}>
 						<Text fw={500} size="md" lineClamp={1}>
 							{request.kind === "new_workspace"
-								? request.proposed_name ?? t`New workspace`
+								? (request.proposed_name ?? t`New workspace`)
 								: t`Upgrade request`}
 						</Text>
 						<Text size="xs" c="dimmed" lineClamp={1}>
@@ -349,8 +348,12 @@ function PendingRequestCard({ request }: { request: PendingWorkspaceRequest }) {
 
 				<Text size="xs" c="dimmed">
 					<Trans>Pending review</Trans>
-					{request.created_at &&
-						` · ${new Date(request.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}`}
+					{request.created_at && (
+						<>
+							{" · "}
+							{t`requested on ${new Date(request.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}`}
+						</>
+					)}
 				</Text>
 			</Stack>
 		</Paper>
@@ -394,7 +397,7 @@ function AddWorkspaceCard({ organisationId }: { organisationId: string }) {
 			<Stack gap={6} align="center">
 				<IconPlus size={20} style={{ color: "var(--mantine-color-gray-6)" }} />
 				<Text size="sm" c="dimmed">
-					<Trans>Add workspace</Trans>
+					<Trans>Request workspace</Trans>
 				</Text>
 			</Stack>
 		</Paper>
@@ -719,8 +722,8 @@ export const WorkspaceSelectorRoute = () => {
 						<Stack align="center" gap={12} mt="10vh">
 							<Text c="dimmed" size="sm" ta="center">
 								<Trans>
-									You have a pending invite to {invites[0].workspace_name}.
-									The admin needs to free a seat before you can join.
+									You have a pending invite to {invites[0].workspace_name}. The
+									admin needs to free a seat before you can join.
 								</Trans>
 							</Text>
 							<Button
@@ -740,9 +743,7 @@ export const WorkspaceSelectorRoute = () => {
 								</Trans>
 							</Text>
 							<Text c="dimmed" size="xs" ta="center">
-								<Trans>
-									Contact the admin if this was unexpected.
-								</Trans>
+								<Trans>Contact the admin if this was unexpected.</Trans>
 							</Text>
 						</Stack>
 					) : (

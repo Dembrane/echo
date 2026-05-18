@@ -16,18 +16,18 @@ import {
 	Menu,
 	Modal,
 	MultiSelect,
+	NumberInput,
 	Paper,
 	Progress,
+	Select,
 	SimpleGrid,
 	Stack,
 	Table,
 	Tabs,
 	Text,
+	Textarea,
 	TextInput,
 	Title,
-	NumberInput,
-	Select,
-	Textarea,
 	Tooltip,
 	UnstyledButton,
 	useModalsStack,
@@ -40,6 +40,7 @@ import {
 	IconChevronRight,
 	IconDots,
 	IconDownload,
+	IconEye,
 	IconSearch,
 	IconSortAscending,
 	IconSortDescending,
@@ -49,18 +50,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	type ColumnDef,
 	type ColumnFiltersState,
-	type GroupingState,
-	type Row,
-	type SortingState,
-	type VisibilityState,
 	flexRender,
+	type GroupingState,
 	getCoreRowModel,
 	getExpandedRowModel,
 	getFilteredRowModel,
 	getGroupedRowModel,
 	getSortedRowModel,
+	type Row,
+	type SortingState,
 	useReactTable,
+	type VisibilityState,
 } from "@tanstack/react-table";
+import { formatDistance } from "date-fns";
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -71,17 +73,24 @@ import { useV2Me } from "@/hooks/useV2Me";
 import { formatDurationFromHours } from "@/lib/time";
 
 // Ordered tier list for custom sorting. matrix v1.1 §1 order from low to high.
-const TIER_ORDER = ["free", "pilot", "pioneer", "innovator", "changemaker", "guardian"] as const;
+const TIER_ORDER = [
+	"free",
+	"pilot",
+	"pioneer",
+	"innovator",
+	"changemaker",
+	"guardian",
+] as const;
 type Tier = (typeof TIER_ORDER)[number];
 const tierRank = (tier: string): number => TIER_ORDER.indexOf(tier as Tier);
 
 const tierColors: Record<string, string> = {
+	changemaker: "grape",
 	free: "gray",
+	guardian: "orange",
+	innovator: "violet",
 	pilot: "gray",
 	pioneer: "primary",
-	innovator: "violet",
-	changemaker: "grape",
-	guardian: "orange",
 };
 
 type BillingContact = {
@@ -152,7 +161,6 @@ type ReferralLedgerRow = {
 	notes: string | null;
 };
 
-
 async function fetchJson<T>(path: string): Promise<T | null> {
 	const res = await fetch(`${API_BASE_URL}${path}`, { credentials: "include" });
 	if (!res.ok) return null;
@@ -190,10 +198,10 @@ function PeriodSelector({
 	onChange: (offset: number) => void;
 }) {
 	const options: { offset: number; label: string }[] = [
-		{ offset: 0, label: t`This month` },
-		{ offset: -1, label: t`Last month` },
-		{ offset: -2, label: t`2 months ago` },
-		{ offset: -3, label: t`3 months ago` },
+		{ label: t`This month`, offset: 0 },
+		{ label: t`Last month`, offset: -1 },
+		{ label: t`2 months ago`, offset: -2 },
+		{ label: t`3 months ago`, offset: -3 },
 	];
 	return (
 		<Button.Group>
@@ -315,9 +323,7 @@ function DiscountEditor({
 	initialPercent: number | null;
 }) {
 	const queryClient = useQueryClient();
-	const [typeDiscount, setTypeDiscount] = useState<string | null>(
-		initialType,
-	);
+	const [typeDiscount, setTypeDiscount] = useState<string | null>(initialType);
 	const [percentDiscount, setPercentDiscount] = useState<number | string>(
 		initialPercent ?? "",
 	);
@@ -337,8 +343,7 @@ function DiscountEditor({
 					body.clear_type_discount = true;
 				}
 			}
-			const pct =
-				percentDiscount !== "" ? Number(percentDiscount) : null;
+			const pct = percentDiscount !== "" ? Number(percentDiscount) : null;
 			if (pct !== initialPercent) {
 				if (pct != null) {
 					body.percent_discount = pct;
@@ -349,10 +354,10 @@ function DiscountEditor({
 			const res = await fetch(
 				`${API_BASE_URL}/v2/admin/workspaces/${workspaceId}/discount`,
 				{
-					method: "PATCH",
-					headers: { "Content-Type": "application/json" },
-					credentials: "include",
 					body: JSON.stringify(body),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "PATCH",
 				},
 			);
 			if (!res.ok) {
@@ -378,10 +383,10 @@ function DiscountEditor({
 					<Select
 						label={t`Type`}
 						data={[
-							{ value: "scholarship", label: "Scholarship" },
+							{ label: "Scholarship", value: "scholarship" },
 							{
-								value: "staff_discount",
 								label: "Staff discount",
+								value: "staff_discount",
 							},
 						]}
 						value={typeDiscount}
@@ -438,25 +443,25 @@ function WorkspaceActionsModal({
 	if (!row) return null;
 	const actions: { label: string; hint: string; color?: string }[] = [
 		{
-			label: t`Change tier`,
 			hint: t`Pick a new tier and apply downgrade effects per matrix.`,
+			label: t`Change tier`,
 		},
 		{
-			label: t`Change workspace admin`,
 			hint: t`Transfer the primary admin role to another member.`,
+			label: t`Change workspace admin`,
 		},
 		{
-			label: t`Reset monthly usage`,
 			hint: t`Back out this cycle's hour count after a support incident.`,
+			label: t`Reset monthly usage`,
 		},
 		{
-			label: t`Transfer workspace to another organisation`,
 			hint: t`Partner handoff. Writes billed_to_team_id and notifies both organisations.`,
+			label: t`Transfer workspace to another organisation`,
 		},
 		{
-			label: t`Delete workspace`,
-			hint: t`Permanent. Removes all conversations and data.`,
 			color: "red",
+			hint: t`Permanent. Removes all conversations and data.`,
+			label: t`Delete workspace`,
 		},
 	];
 	return (
@@ -567,18 +572,18 @@ function BillingTable({
 	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
 	const table = useReactTable<BillingRow>({
+		autoResetExpanded: false,
 		columns,
 		data,
-		state: {
-			sorting,
-			globalFilter,
-			columnFilters,
-			columnVisibility,
-			grouping,
-			expanded,
-		},
-		onSortingChange: setSorting,
-		onGlobalFilterChange,
+		getCoreRowModel: getCoreRowModel(),
+		getExpandedRowModel: getExpandedRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
+		getGroupedRowModel: getGroupedRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+		// 'reorder' (default) moves grouped columns to the front so organisation
+		// renders first when group-by-organisation is active; being explicit here
+		// makes that contract impossible to miss during future edits.
+		groupedColumnMode: "reorder",
 		onColumnFiltersChange: (updater) =>
 			onColumnFiltersChange(
 				typeof updater === "function" ? updater(columnFilters) : updater,
@@ -587,27 +592,26 @@ function BillingTable({
 			onColumnVisibilityChange(
 				typeof updater === "function" ? updater(columnVisibility) : updater,
 			),
-		onGroupingChange: (updater) =>
-			onGroupingChange(
-				typeof updater === "function" ? updater(grouping) : updater,
-			),
 		onExpandedChange: (updater) => {
-			const next =
-				typeof updater === "function" ? updater(expanded) : updater;
+			const next = typeof updater === "function" ? updater(expanded) : updater;
 			// Reject the 'true' shorthand; we never set that state.
 			if (next === true) return;
 			setExpanded(next as Record<string, boolean>);
 		},
-		getCoreRowModel: getCoreRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
-		getGroupedRowModel: getGroupedRowModel(),
-		getExpandedRowModel: getExpandedRowModel(),
-		// 'reorder' (default) moves grouped columns to the front so organisation
-		// renders first when group-by-organisation is active; being explicit here
-		// makes that contract impossible to miss during future edits.
-		groupedColumnMode: "reorder",
-		autoResetExpanded: false,
+		onGlobalFilterChange,
+		onGroupingChange: (updater) =>
+			onGroupingChange(
+				typeof updater === "function" ? updater(grouping) : updater,
+			),
+		onSortingChange: setSorting,
+		state: {
+			columnFilters,
+			columnVisibility,
+			expanded,
+			globalFilter,
+			grouping,
+			sorting,
+		},
 	});
 
 	const rows = table.getRowModel().rows;
@@ -629,29 +633,24 @@ function BillingTable({
 											| undefined
 									)?.align ?? "left";
 								return (
-									<Table.Th
-										key={header.id}
-										ta={align}
-										style={{ padding: 0 }}
-									>
+									<Table.Th key={header.id} ta={align} style={{ padding: 0 }}>
 										{canSort ? (
 											<UnstyledButton
 												onClick={header.column.getToggleSortingHandler()}
 												title={t`Click to sort`}
 												style={{
-													width: "100%",
+													cursor: "pointer",
 													display: "block",
 													padding: "8px 12px",
-													cursor: "pointer",
 													transition: "background 0.1s ease",
+													width: "100%",
 												}}
 												onMouseEnter={(e) => {
 													e.currentTarget.style.background =
 														"var(--mantine-color-gray-1)";
 												}}
 												onMouseLeave={(e) => {
-													e.currentTarget.style.background =
-														"transparent";
+													e.currentTarget.style.background = "transparent";
 												}}
 											>
 												<SortableHeader
@@ -699,7 +698,9 @@ function BillingTable({
 						rows.map((row) => {
 							// Grouping renders header rows with a single merged cell.
 							if (row.getIsGrouped()) {
-								const groupValue = String(row.getValue(row.groupingColumnId ?? ""));
+								const groupValue = String(
+									row.getValue(row.groupingColumnId ?? ""),
+								);
 								const descendants = row.getLeafRows();
 								const organisationBase = descendants.reduce(
 									(s, r) => s + (r.original.base_price_eur ?? 0),
@@ -707,7 +708,9 @@ function BillingTable({
 								);
 								const organisationOverage = descendants.reduce(
 									(s, r) =>
-										s + r.original.hour_overage_eur + r.original.seat_overage_eur,
+										s +
+										r.original.hour_overage_eur +
+										r.original.seat_overage_eur,
 									0,
 								);
 								const organisationTotal = descendants.reduce(
@@ -746,10 +749,12 @@ function BillingTable({
 															<Trans>Base</Trans> {formatEur(organisationBase)}
 														</Text>
 														<Text size="xs" c="dimmed">
-															<Trans>Overage</Trans> {formatEur(organisationOverage)}
+															<Trans>Overage</Trans>{" "}
+															{formatEur(organisationOverage)}
 														</Text>
 														<Text size="xs" fw={500}>
-															<Trans>Total</Trans> {formatEur(organisationTotal)}
+															<Trans>Total</Trans>{" "}
+															{formatEur(organisationTotal)}
 														</Text>
 													</Group>
 												</Group>
@@ -769,7 +774,10 @@ function BillingTable({
 											)?.align ?? "left";
 										return (
 											<Table.Td key={cell.id} ta={align}>
-												{flexRender(cell.column.columnDef.cell, cell.getContext())}
+												{flexRender(
+													cell.column.columnDef.cell,
+													cell.getContext(),
+												)}
 											</Table.Td>
 										);
 									})}
@@ -806,17 +814,12 @@ function BillingTable({
 								// Lookup table keyed by column id — immune to
 								// column-visibility or reorder churn.
 								const footerById: Record<string, React.ReactNode> = {
-								audio_hours: (
-									<Text size="xs" fw={600} ta="right">
-										{formatDurationFromHours(footerTotals.audio_hours)}
-									</Text>
-								),
-								seat_count: (
-									<Text size="xs" fw={600} ta="right">
-										{footerTotals.seat_count}
-									</Text>
-								),
-								base_price_eur: (
+									audio_hours: (
+										<Text size="xs" fw={600} ta="right">
+											{formatDurationFromHours(footerTotals.audio_hours)}
+										</Text>
+									),
+									base_price_eur: (
 										<Text size="xs" fw={600} ta="right">
 											{formatEur(footerTotals.base_price_eur)}
 										</Text>
@@ -827,12 +830,15 @@ function BillingTable({
 											fw={600}
 											ta="right"
 											c={
-												footerTotals.hour_overage_eur > 0
-													? "orange"
-													: undefined
+												footerTotals.hour_overage_eur > 0 ? "orange" : undefined
 											}
 										>
 											{formatEur(footerTotals.hour_overage_eur)}
+										</Text>
+									),
+									seat_count: (
+										<Text size="xs" fw={600} ta="right">
+											{footerTotals.seat_count}
 										</Text>
 									),
 									seat_overage_eur: (
@@ -841,9 +847,7 @@ function BillingTable({
 											fw={600}
 											ta="right"
 											c={
-												footerTotals.seat_overage_eur > 0
-													? "orange"
-													: undefined
+												footerTotals.seat_overage_eur > 0 ? "orange" : undefined
 											}
 										>
 											{formatEur(footerTotals.seat_overage_eur)}
@@ -876,10 +880,15 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 			{ count: number; base: number; overage: number; active: number }
 		>();
 		for (const tier of TIER_ORDER) {
-			groups.set(tier, { count: 0, base: 0, overage: 0, active: 0 });
+			groups.set(tier, { active: 0, base: 0, count: 0, overage: 0 });
 		}
 		for (const r of rows) {
-			const g = groups.get(r.tier) ?? { count: 0, base: 0, overage: 0, active: 0 };
+			const g = groups.get(r.tier) ?? {
+				active: 0,
+				base: 0,
+				count: 0,
+				overage: 0,
+			};
 			g.count += 1;
 			g.base += r.base_price_eur ?? 0;
 			g.overage += r.hour_overage_eur + r.seat_overage_eur;
@@ -888,7 +897,7 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 		}
 		return TIER_ORDER.map((tier) => ({
 			tier,
-			...(groups.get(tier) ?? { count: 0, base: 0, overage: 0, active: 0 }),
+			...(groups.get(tier) ?? { active: 0, base: 0, count: 0, overage: 0 }),
 		}));
 	}, [rows]);
 
@@ -907,13 +916,17 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 						</Text>
 					</Group>
 					<Text size="xs" c="dimmed">
-						<Plural value={rows.length} one="# workspace" other="# workspaces" />
+						<Plural
+							value={rows.length}
+							one="# workspace"
+							other="# workspaces"
+						/>
 					</Text>
 				</Group>
 			</UnstyledButton>
 			<Collapse in={opened}>
 				<Box mt="sm">
-					<SimpleGrid cols={{ base: 2, sm: 3, md: 5 }} spacing="sm">
+					<SimpleGrid cols={{ base: 2, md: 5, sm: 3 }} spacing="sm">
 						{byTier.map((b) => (
 							<Paper key={b.tier} withBorder radius="sm" p="sm">
 								<Stack gap={2}>
@@ -957,11 +970,11 @@ function UsageAndBillingPanel() {
 	const [periodOffset, setPeriodOffset] = useState(0);
 	const [refreshing, setRefreshing] = useState(false);
 	const { data, isLoading, dataUpdatedAt, refetch } = useQuery({
-		queryKey: ["v2", "admin", "billing-rollup", periodOffset],
 		queryFn: () =>
 			fetchJson<BillingRollup>(
 				`/v2/admin/billing-rollup?month_offset=${periodOffset}`,
 			),
+		queryKey: ["v2", "admin", "billing-rollup", periodOffset],
 		staleTime: 60_000,
 	});
 	const handleRefresh = async () => {
@@ -978,9 +991,9 @@ function UsageAndBillingPanel() {
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 	const [grouping, setGrouping] = useState<GroupingState>([]);
 	const [onlyOver, setOnlyOver] = useState(false);
-	const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
-		"all",
-	);
+	const [statusFilter, setStatusFilter] = useState<
+		"all" | "active" | "inactive"
+	>("all");
 	const [tierFilter, setTierFilter] = useState<string[]>([]);
 	const [actionsRow, setActionsRow] = useState<BillingRow | null>(null);
 
@@ -1001,14 +1014,7 @@ function UsageAndBillingPanel() {
 	const columns = useMemo<ColumnDef<BillingRow, unknown>[]>(
 		() => [
 			{
-				id: "workspace_name",
 				accessorKey: "workspace_name",
-				header: t`Workspace`,
-				// Workspace name anchors the whole row — if the user hides
-				// it, the total row + every other column becomes unreadable.
-				// The menu already filters it out; this belts-and-braces
-				// prevents it via a stray columnVisibility write too.
-				enableHiding: false,
 				cell: ({ row }) => {
 					const admins = row.original.workspace_admins;
 					const adminEmail = admins[0]?.email ?? null;
@@ -1038,14 +1044,16 @@ function UsageAndBillingPanel() {
 						</Stack>
 					);
 				},
+				// Workspace name anchors the whole row — if the user hides
+				// it, the total row + every other column becomes unreadable.
+				// The menu already filters it out; this belts-and-braces
+				// prevents it via a stray columnVisibility write too.
+				enableHiding: false,
+				header: t`Workspace`,
+				id: "workspace_name",
 			},
 			{
-				id: "organisation",
 				accessorFn: (r) => r.billed_to_team_name ?? r.org_name,
-				header: t`Organisation`,
-				// Used for grouping; the grouped-row renderer in BillingTable
-				// reads this to label the header.
-				getGroupingValue: (r) => r.billed_to_team_name ?? r.org_name,
 				cell: ({ row }) => (
 					<Group gap={4} wrap="nowrap">
 						<Anchor
@@ -1063,13 +1071,14 @@ function UsageAndBillingPanel() {
 						)}
 					</Group>
 				),
+				// Used for grouping; the grouped-row renderer in BillingTable
+				// reads this to label the header.
+				getGroupingValue: (r) => r.billed_to_team_name ?? r.org_name,
+				header: t`Organisation`,
+				id: "organisation",
 			},
 			{
-				id: "tier",
 				accessorFn: (r) => r.tier,
-				sortingFn: (a, b) =>
-					tierRank(a.original.tier) - tierRank(b.original.tier),
-				header: t`Tier`,
 				cell: ({ row }) => (
 					<Badge
 						size="xs"
@@ -1080,19 +1089,20 @@ function UsageAndBillingPanel() {
 						{row.original.tier}
 					</Badge>
 				),
+				header: t`Tier`,
+				id: "tier",
+				sortingFn: (a, b) =>
+					tierRank(a.original.tier) - tierRank(b.original.tier),
 			},
 			{
-				id: "base_price_eur",
 				accessorKey: "base_price_eur",
-				header: t`Base`,
-				meta: { align: "right" },
 				cell: ({ row }) => formatEur(row.original.base_price_eur),
+				header: t`Base`,
+				id: "base_price_eur",
+				meta: { align: "right" },
 			},
 			{
-				id: "audio_hours",
 				accessorKey: "audio_hours",
-				header: t`Hours`,
-				meta: { align: "right" },
 				cell: ({ row }) => (
 					<UsageBar
 						used={row.original.audio_hours}
@@ -1101,12 +1111,12 @@ function UsageAndBillingPanel() {
 						block={row.original.pilot_hard_block}
 					/>
 				),
+				header: t`Hours`,
+				id: "audio_hours",
+				meta: { align: "right" },
 			},
 			{
-				id: "hour_overage_eur",
 				accessorKey: "hour_overage_eur",
-				header: t`Overage hrs`,
-				meta: { align: "right" },
 				cell: ({ row }) => {
 					const v = row.original.hour_overage_eur;
 					const over = row.original.over_hours;
@@ -1126,24 +1136,24 @@ function UsageAndBillingPanel() {
 						</Stack>
 					);
 				},
+				header: t`Overage hrs`,
+				id: "hour_overage_eur",
+				meta: { align: "right" },
 			},
 			{
-				id: "seat_count",
 				accessorKey: "seat_count",
-				header: t`Seats`,
-				meta: { align: "right" },
 				cell: ({ row }) => (
 					<UsageBar
 						used={row.original.seat_count}
 						cap={row.original.seats_included}
 					/>
 				),
+				header: t`Seats`,
+				id: "seat_count",
+				meta: { align: "right" },
 			},
 			{
-				id: "seat_overage_eur",
 				accessorKey: "seat_overage_eur",
-				header: t`Overage seats`,
-				meta: { align: "right" },
 				cell: ({ row }) => {
 					const v = row.original.seat_overage_eur;
 					const over = row.original.over_seats;
@@ -1163,11 +1173,12 @@ function UsageAndBillingPanel() {
 						</Stack>
 					);
 				},
+				header: t`Overage seats`,
+				id: "seat_overage_eur",
+				meta: { align: "right" },
 			},
-		{
-			id: "is_active",
+			{
 				accessorFn: (r) => (r.is_active ? "active" : "inactive"),
-				header: t`Status`,
 				cell: ({ row }) =>
 					row.original.is_active ? (
 						<Badge size="xs" color="primary" variant="light">
@@ -1178,24 +1189,21 @@ function UsageAndBillingPanel() {
 							<Trans>Inactive</Trans>
 						</Badge>
 					),
+				header: t`Status`,
+				id: "is_active",
 			},
 			{
-				id: "total_forecast_eur",
 				accessorKey: "total_forecast_eur",
-				header: t`Total`,
-				meta: { align: "right" },
 				cell: ({ row }) => (
 					<Text size="xs" fw={500}>
 						{formatEur(row.original.total_forecast_eur)}
 					</Text>
 				),
+				header: t`Total`,
+				id: "total_forecast_eur",
+				meta: { align: "right" },
 			},
 			{
-				id: "actions",
-				header: "",
-				enableSorting: false,
-				enableGrouping: false,
-				enableHiding: false,
 				cell: ({ row }) => (
 					<ActionIcon
 						size="sm"
@@ -1207,6 +1215,11 @@ function UsageAndBillingPanel() {
 						<IconDots size={14} />
 					</ActionIcon>
 				),
+				enableGrouping: false,
+				enableHiding: false,
+				enableSorting: false,
+				header: "",
+				id: "actions",
 			},
 		],
 		[],
@@ -1215,19 +1228,13 @@ function UsageAndBillingPanel() {
 	const footerTotals = useMemo(
 		() => ({
 			audio_hours: prefiltered.reduce((s, r) => s + r.audio_hours, 0),
-			seat_count: prefiltered.reduce((s, r) => s + r.seat_count, 0),
 			base_price_eur: prefiltered.reduce(
 				(s, r) => s + (r.base_price_eur ?? 0),
 				0,
 			),
-			hour_overage_eur: prefiltered.reduce(
-				(s, r) => s + r.hour_overage_eur,
-				0,
-			),
-			seat_overage_eur: prefiltered.reduce(
-				(s, r) => s + r.seat_overage_eur,
-				0,
-			),
+			hour_overage_eur: prefiltered.reduce((s, r) => s + r.hour_overage_eur, 0),
+			seat_count: prefiltered.reduce((s, r) => s + r.seat_count, 0),
+			seat_overage_eur: prefiltered.reduce((s, r) => s + r.seat_overage_eur, 0),
 			total_forecast_eur: prefiltered.reduce(
 				(s, r) => s + (r.total_forecast_eur ?? 0),
 				0,
@@ -1312,8 +1319,8 @@ function UsageAndBillingPanel() {
 	};
 
 	const tierOptions = TIER_ORDER.map((t) => ({
-		value: t,
 		label: t.charAt(0).toUpperCase() + t.slice(1),
+		value: t,
 	}));
 
 	// Column visibility menu: let staff hide noisy columns.
@@ -1350,7 +1357,7 @@ function UsageAndBillingPanel() {
 					value={globalFilter}
 					onChange={(e) => setGlobalFilter(e.currentTarget.value)}
 					size="sm"
-					style={{ flex: 1, minWidth: 220, maxWidth: 360 }}
+					style={{ flex: 1, maxWidth: 360, minWidth: 220 }}
 				/>
 				<MultiSelect
 					data={tierOptions}
@@ -1460,7 +1467,7 @@ function UsageAndBillingPanel() {
 				onColumnVisibilityChange={setColumnVisibility}
 				grouping={grouping}
 				onGroupingChange={setGrouping}
-				initialSorting={[{ id: "total_forecast_eur", desc: true }]}
+				initialSorting={[{ desc: true, id: "total_forecast_eur" }]}
 				footerTotals={footerTotals}
 			/>
 
@@ -1471,7 +1478,10 @@ function UsageAndBillingPanel() {
 						<Trans>Pricing matrix</Trans>
 					</Text>
 					<Text size="xs" c="dimmed">
-						<Trans>Every tier at a glance. Same table customers see on the workspace billing tab.</Trans>
+						<Trans>
+							Every tier at a glance. Same table customers see on the workspace
+							billing tab.
+						</Trans>
 					</Text>
 					<Box mt="xs">
 						<TierCapacityMatrix />
@@ -1513,12 +1523,12 @@ function SimpleDataTable<T extends object>({
 	const table = useReactTable<T>({
 		columns,
 		data,
-		state: { sorting, globalFilter },
-		onSortingChange: setSorting,
-		onGlobalFilterChange,
 		getCoreRowModel: getCoreRowModel(),
-		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+		onGlobalFilterChange,
+		onSortingChange: setSorting,
+		state: { globalFilter, sorting },
 	});
 	const rows = table.getRowModel().rows;
 	return (
@@ -1531,24 +1541,23 @@ function SimpleDataTable<T extends object>({
 								const canSort = h.column.getCanSort();
 								const sorted = h.column.getIsSorted();
 								const align =
-									(h.column.columnDef.meta as { align?: "left" | "right" } | undefined)
-										?.align ?? "left";
+									(
+										h.column.columnDef.meta as
+											| { align?: "left" | "right" }
+											| undefined
+									)?.align ?? "left";
 								return (
-									<Table.Th
-										key={h.id}
-										ta={align}
-										style={{ padding: 0 }}
-									>
+									<Table.Th key={h.id} ta={align} style={{ padding: 0 }}>
 										{canSort ? (
 											<UnstyledButton
 												onClick={h.column.getToggleSortingHandler()}
 												title={t`Click to sort`}
 												style={{
-													width: "100%",
+													cursor: "pointer",
 													display: "block",
 													padding: "8px 12px",
-													cursor: "pointer",
 													transition: "background 0.1s ease",
+													width: "100%",
 												}}
 												onMouseEnter={(e) => {
 													e.currentTarget.style.background =
@@ -1570,8 +1579,17 @@ function SimpleDataTable<T extends object>({
 											</UnstyledButton>
 										) : (
 											<Box px={12} py={8}>
-												<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.3}>
-													{flexRender(h.column.columnDef.header, h.getContext())}
+												<Text
+													size="xs"
+													fw={500}
+													c="dimmed"
+													tt="uppercase"
+													lts={0.3}
+												>
+													{flexRender(
+														h.column.columnDef.header,
+														h.getContext(),
+													)}
 												</Text>
 											</Box>
 										)}
@@ -1595,11 +1613,17 @@ function SimpleDataTable<T extends object>({
 							<Table.Tr key={row.id}>
 								{row.getVisibleCells().map((cell) => {
 									const align =
-										(cell.column.columnDef.meta as { align?: "left" | "right" } | undefined)
-											?.align ?? "left";
+										(
+											cell.column.columnDef.meta as
+												| { align?: "left" | "right" }
+												| undefined
+										)?.align ?? "left";
 									return (
 										<Table.Td key={cell.id} ta={align}>
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
+											{flexRender(
+												cell.column.columnDef.cell,
+												cell.getContext(),
+											)}
 										</Table.Td>
 									);
 								})}
@@ -1614,17 +1638,15 @@ function SimpleDataTable<T extends object>({
 
 function PartnersPanel() {
 	const { data, isLoading } = useQuery({
-		queryKey: ["v2", "admin", "referral-ledger"],
 		queryFn: () => fetchJson<ReferralLedgerRow[]>("/v2/admin/referral-ledger"),
+		queryKey: ["v2", "admin", "referral-ledger"],
 		staleTime: 60_000,
 	});
 	const [globalFilter, setGlobalFilter] = useState("");
 	const columns = useMemo<ColumnDef<ReferralLedgerRow, unknown>[]>(
 		() => [
 			{
-				id: "workspace_name",
 				accessorFn: (r) => r.workspace_name ?? "",
-				header: t`Workspace`,
 				cell: ({ row }) =>
 					row.original.workspace_id ? (
 						<Anchor
@@ -1633,18 +1655,19 @@ function PartnersPanel() {
 							size="xs"
 							fw={500}
 						>
-							{row.original.workspace_name ?? row.original.workspace_id.slice(0, 8)}
+							{row.original.workspace_name ??
+								row.original.workspace_id.slice(0, 8)}
 						</Anchor>
 					) : (
 						<Text size="xs" c="dimmed">
 							.
 						</Text>
 					),
+				header: t`Workspace`,
+				id: "workspace_name",
 			},
 			{
-				id: "partner_team_name",
 				accessorFn: (r) => r.partner_team_name ?? "",
-				header: t`Partner organisation`,
 				cell: ({ row }) =>
 					row.original.partner_team_id ? (
 						<Anchor
@@ -1659,11 +1682,11 @@ function PartnersPanel() {
 							.
 						</Text>
 					),
+				header: t`Partner organisation`,
+				id: "partner_team_name",
 			},
 			{
-				id: "from_org_name",
 				accessorFn: (r) => r.from_org_name ?? "",
-				header: t`Client organisation`,
 				cell: ({ row }) =>
 					row.original.from_org_id ? (
 						<Anchor
@@ -1678,55 +1701,57 @@ function PartnersPanel() {
 							.
 						</Text>
 					),
+				header: t`Client organisation`,
+				id: "from_org_name",
 			},
 			{
-				id: "partner_kickback_percent",
 				accessorKey: "partner_kickback_percent",
-				header: t`Kickback %`,
-				meta: { align: "right" },
 				cell: ({ row }) => {
 					const v = row.original.partner_kickback_percent;
 					return v == null ? "" : `${v}%`;
 				},
+				header: t`Kickback %`,
+				id: "partner_kickback_percent",
+				meta: { align: "right" },
 			},
 			{
-				id: "to_organisation_discount_percent",
 				accessorKey: "to_organisation_discount_percent",
-				header: t`Client discount %`,
-				meta: { align: "right" },
 				cell: ({ row }) => {
 					const v = row.original.to_organisation_discount_percent;
 					return v == null ? "" : `${v}%`;
 				},
-			},
-			{
-				id: "eur_cap_kickback",
-				accessorKey: "eur_cap_kickback",
-				header: t`Lifetime cap`,
+				header: t`Client discount %`,
+				id: "to_organisation_discount_percent",
 				meta: { align: "right" },
+			},
+			{
+				accessorKey: "eur_cap_kickback",
 				cell: ({ row }) => formatEur(row.original.eur_cap_kickback),
+				header: t`Lifetime cap`,
+				id: "eur_cap_kickback",
+				meta: { align: "right" },
 			},
 			{
-				id: "starts_at",
 				accessorKey: "starts_at",
-				header: t`Starts`,
 				cell: ({ row }) => formatDate(row.original.starts_at),
+				header: t`Starts`,
+				id: "starts_at",
 			},
 			{
-				id: "expires_at",
 				accessorKey: "expires_at",
-				header: t`Expires`,
 				cell: ({ row }) => formatDate(row.original.expires_at) || t`no expiry`,
+				header: t`Expires`,
+				id: "expires_at",
 			},
 			{
-				id: "notes",
 				accessorKey: "notes",
-				header: t`Notes`,
 				cell: ({ row }) => (
 					<Text size="xs" c="dimmed" lineClamp={1} maw={220}>
 						{row.original.notes ?? ""}
 					</Text>
 				),
+				header: t`Notes`,
+				id: "notes",
 			},
 		],
 		[],
@@ -1818,10 +1843,10 @@ async function patchWorkspaceRequest(
 	const res = await fetch(
 		`${API_BASE_URL}/v2/admin/workspace-requests/${requestId}`,
 		{
-			method: "PATCH",
-			headers: { "Content-Type": "application/json" },
-			credentials: "include",
 			body: JSON.stringify(body),
+			credentials: "include",
+			headers: { "Content-Type": "application/json" },
+			method: "PATCH",
 		},
 	);
 	if (!res.ok) {
@@ -1843,25 +1868,19 @@ function ApproveDialog({
 	onSuccess: () => void;
 }) {
 	const queryClient = useQueryClient();
-	const [grantedTier, setGrantedTier] = useState<string>(
-		req.proposed_tier,
-	);
-	const [expiresAt, setExpiresAt] = useState("");
+	const [grantedTier, setGrantedTier] = useState<string>(req.proposed_tier);
 	const [typeDiscount, setTypeDiscount] = useState<string | null>(null);
-	const [percentDiscount, setPercentDiscount] = useState<
-		number | string
-	>("");
+	const [percentDiscount, setPercentDiscount] = useState<number | string>("");
 	const [staffNotes, setStaffNotes] = useState("");
 
 	const mutation = useMutation({
 		mutationFn: () =>
 			patchWorkspaceRequest(req.id, {
 				action: "approve",
-				granted_tier: grantedTier,
-				granted_tier_expires_at: expiresAt || undefined,
-				granted_type_discount: typeDiscount || undefined,
 				granted_percent_discount:
 					percentDiscount !== "" ? Number(percentDiscount) : undefined,
+				granted_tier: grantedTier,
+				granted_type_discount: typeDiscount || undefined,
 				staff_notes: staffNotes || undefined,
 			}),
 		onSuccess: () => {
@@ -1873,18 +1892,22 @@ function ApproveDialog({
 	});
 
 	const tierOptions = TIER_ORDER.map((t) => ({
-		value: t,
 		label: t.charAt(0).toUpperCase() + t.slice(1),
+		value: t,
 	}));
 
 	return (
-		<Modal opened={opened} onClose={onClose} title={t`Approve request`} size="md">
+		<Modal
+			opened={opened}
+			onClose={onClose}
+			title={t`Approve request`}
+			size="md"
+		>
 			<Stack gap="md">
 				<Text size="sm">
 					<Trans>
-						Approving request from{" "}
-						{req.requester?.display_name ?? "unknown"} for a{" "}
-						{kindLabels[req.kind]} ({req.proposed_tier}).
+						Approving request from {req.requester?.display_name ?? "unknown"}{" "}
+						for a {kindLabels[req.kind]} ({req.proposed_tier}).
 					</Trans>
 				</Text>
 
@@ -1896,18 +1919,11 @@ function ApproveDialog({
 					allowDeselect={false}
 				/>
 
-				<TextInput
-					label={t`Tier expires at (ISO date, optional)`}
-					placeholder="2026-06-11T00:00:00Z"
-					value={expiresAt}
-					onChange={(e) => setExpiresAt(e.currentTarget.value)}
-				/>
-
 				<Select
 					label={t`Discount type (optional)`}
 					data={[
-						{ value: "scholarship", label: "Scholarship" },
-						{ value: "staff_discount", label: "Staff discount" },
+						{ label: "Scholarship", value: "scholarship" },
+						{ label: "Staff discount", value: "staff_discount" },
 					]}
 					value={typeDiscount}
 					onChange={setTypeDiscount}
@@ -1989,9 +2005,8 @@ function DenyDialog({
 			<Stack gap="md">
 				<Text size="sm">
 					<Trans>
-						Denying request from{" "}
-						{req.requester?.display_name ?? "unknown"} for a{" "}
-						{kindLabels[req.kind]} ({req.proposed_tier}).
+						Denying request from {req.requester?.display_name ?? "unknown"} for
+						a {kindLabels[req.kind]} ({req.proposed_tier}).
 					</Trans>
 				</Text>
 
@@ -2192,9 +2207,7 @@ function WorkspaceRequestDetail({
 										<Trans>Decided by</Trans>
 									</Text>
 									<Text size="sm">
-										{req.decided_by?.display_name ??
-											req.decided_by?.id ??
-											"-"}
+										{req.decided_by?.display_name ?? req.decided_by?.id ?? "-"}
 									</Text>
 								</Box>
 								{req.granted_tier && (
@@ -2325,11 +2338,11 @@ function UpgradesPanel() {
 	const [selectedRequest, setSelectedRequest] =
 		useState<WorkspaceRequestRow | null>(null);
 	const { data, isLoading } = useQuery({
-		queryKey: ["v2", "admin", "workspace-requests", statusFilter],
 		queryFn: () =>
 			fetchJson<WorkspaceRequestListResponse>(
 				`/v2/admin/workspace-requests?status=${statusFilter}`,
 			),
+		queryKey: ["v2", "admin", "workspace-requests", statusFilter],
 		staleTime: 30_000,
 	});
 	const [globalFilter, setGlobalFilter] = useState("");
@@ -2337,48 +2350,42 @@ function UpgradesPanel() {
 	const columns = useMemo<ColumnDef<WorkspaceRequestRow, unknown>[]>(
 		() => [
 			{
-				id: "kind",
 				accessorKey: "kind",
-				header: t`Kind`,
 				cell: ({ row }) => (
 					<Badge
 						size="xs"
 						variant="light"
-						color={
-							row.original.kind === "new_workspace" ? "primary" : "violet"
-						}
+						color={row.original.kind === "new_workspace" ? "primary" : "violet"}
 					>
 						{kindLabels[row.original.kind] ?? row.original.kind}
 					</Badge>
 				),
+				header: t`Kind`,
+				id: "kind",
 			},
 			{
-				id: "requester",
-				accessorFn: (r) => r.requester?.display_name ?? r.requester?.email ?? "",
-				header: t`Requester`,
+				accessorFn: (r) =>
+					r.requester?.display_name ?? r.requester?.email ?? "",
 				cell: ({ row }) => (
 					<Text size="xs" fw={500}>
 						{row.original.requester?.display_name ?? "-"}
 					</Text>
 				),
+				header: t`Requester`,
+				id: "requester",
 			},
 			{
-				id: "org_name",
 				accessorFn: (r) => r.org_name ?? "",
-				header: t`Organisation`,
 				cell: ({ row }) => (
 					<Text size="xs" c="dimmed">
 						{row.original.org_name ?? "-"}
 					</Text>
 				),
+				header: t`Organisation`,
+				id: "org_name",
 			},
 			{
-				id: "proposed_tier",
 				accessorKey: "proposed_tier",
-				sortingFn: (a, b) =>
-					tierRank(a.original.proposed_tier) -
-					tierRank(b.original.proposed_tier),
-				header: t`Proposed tier`,
 				cell: ({ row }) => (
 					<Badge
 						size="xs"
@@ -2389,31 +2396,67 @@ function UpgradesPanel() {
 						{row.original.proposed_tier}
 					</Badge>
 				),
+				header: t`Proposed tier`,
+				id: "proposed_tier",
+				sortingFn: (a, b) =>
+					tierRank(a.original.proposed_tier) -
+					tierRank(b.original.proposed_tier),
 			},
 			{
-				id: "message",
 				accessorFn: (r) => r.requester_message ?? "",
-				header: t`Message`,
 				cell: ({ row }) => (
 					<Text size="xs" c="dimmed" lineClamp={1} maw={200}>
 						{row.original.requester_message ?? "-"}
 					</Text>
 				),
+				header: t`Message`,
+				id: "message",
 			},
 			{
-				id: "created_at",
 				accessorKey: "created_at",
-				header: t`Submitted`,
 				cell: ({ row }) => (
-					<Text size="xs">{formatDate(row.original.created_at)}</Text>
+					<Tooltip
+						label={formatDate(row.original.created_at)}
+						withArrow
+						position="top"
+					>
+						<Text size="sm" c="dimmed">
+							{row.original.created_at
+								? formatDistance(
+										new Date(row.original.created_at),
+										new Date(),
+										{ addSuffix: true },
+									)
+								: "-"}
+						</Text>
+					</Tooltip>
 				),
+				header: t`Submitted`,
+				id: "created_at",
+			},
+			{
+				cell: ({ row }) => (
+					<Button
+						size="compact-xs"
+						variant="outline"
+						leftSection={<IconEye size={14} />}
+						onClick={(e) => {
+							e.stopPropagation();
+							setSelectedRequest(row.original);
+						}}
+					>
+						<Trans>Open details</Trans>
+					</Button>
+				),
+				header: "",
+				id: "actions",
 			},
 		],
 		[],
 	);
 
 	const items = data?.items ?? [];
-	const counts = data?.counts ?? { pending: 0, approved: 0, denied: 0 };
+	const counts = data?.counts ?? { approved: 0, denied: 0, pending: 0 };
 
 	return (
 		<Stack gap="sm">
@@ -2462,11 +2505,7 @@ function UpgradesPanel() {
 				<>
 					<Group justify="space-between" align="center" wrap="wrap">
 						<Text size="xs" c="dimmed">
-							<Plural
-								value={items.length}
-								one="# request"
-								other="# requests"
-							/>
+							<Plural value={items.length} one="# request" other="# requests" />
 						</Text>
 						<TextInput
 							leftSection={<IconSearch size={14} />}
@@ -2478,12 +2517,7 @@ function UpgradesPanel() {
 						/>
 					</Group>
 					<Paper withBorder radius="sm" style={{ overflowX: "auto" }}>
-						<Table
-							striped
-							highlightOnHover
-							verticalSpacing="xs"
-							fz="xs"
-						>
+						<Table highlightOnHover verticalSpacing="sm" fz="sm">
 							<Table.Thead>
 								<Table.Tr>
 									{columns.map((col) => (
@@ -2495,9 +2529,7 @@ function UpgradesPanel() {
 												tt="uppercase"
 												lts={0.3}
 											>
-												{typeof col.header === "string"
-													? col.header
-													: ""}
+												{typeof col.header === "string" ? col.header : ""}
 											</Text>
 										</Table.Th>
 									))}
@@ -2507,12 +2539,7 @@ function UpgradesPanel() {
 								{items.length === 0 ? (
 									<Table.Tr>
 										<Table.Td colSpan={columns.length}>
-											<Text
-												size="xs"
-												c="dimmed"
-												ta="center"
-												py="md"
-											>
+											<Text size="xs" c="dimmed" ta="center" py="md">
 												{statusFilter === "pending"
 													? t`No pending requests.`
 													: statusFilter === "approved"
@@ -2533,62 +2560,45 @@ function UpgradesPanel() {
 												(item.requester?.email ?? "")
 													.toLowerCase()
 													.includes(q) ||
-												(item.org_name ?? "")
-													.toLowerCase()
-													.includes(q) ||
-												(item.proposed_tier ?? "")
-													.toLowerCase()
-													.includes(q) ||
-												(item.proposed_name ?? "")
-													.toLowerCase()
-													.includes(q) ||
-												(item.requester_message ?? "")
-													.toLowerCase()
-													.includes(q)
+												(item.org_name ?? "").toLowerCase().includes(q) ||
+												(item.proposed_tier ?? "").toLowerCase().includes(q) ||
+												(item.proposed_name ?? "").toLowerCase().includes(q) ||
+												(item.requester_message ?? "").toLowerCase().includes(q)
 											);
 										})
 										.map((item) => (
 											<Table.Tr
 												key={item.id}
 												style={{ cursor: "pointer" }}
-												onClick={() =>
-													setSelectedRequest(item)
-												}
+												onClick={() => setSelectedRequest(item)}
 											>
 												<Table.Td>
 													<Badge
 														size="xs"
 														variant="light"
 														color={
-															item.kind ===
-															"new_workspace"
+															item.kind === "new_workspace"
 																? "primary"
 																: "violet"
 														}
 													>
-														{kindLabels[item.kind] ??
-															item.kind}
+														{kindLabels[item.kind] ?? item.kind}
 													</Badge>
 												</Table.Td>
 												<Table.Td>
-													<Text size="xs" fw={500}>
-														{item.requester
-															?.display_name ?? "-"}
+													<Text size="sm" fw={500}>
+														{item.requester?.display_name ?? "-"}
 													</Text>
 												</Table.Td>
 												<Table.Td>
-													<Text size="xs" c="dimmed">
+													<Text size="sm" c="dimmed">
 														{item.org_name ?? "-"}
 													</Text>
 												</Table.Td>
 												<Table.Td>
 													<Badge
 														size="xs"
-														color={
-															tierColors[
-																item.proposed_tier
-															] ?? "gray"
-														}
+														color={tierColors[item.proposed_tier] ?? "gray"}
 														variant="filled"
 														tt="capitalize"
 													>
@@ -2596,20 +2606,39 @@ function UpgradesPanel() {
 													</Badge>
 												</Table.Td>
 												<Table.Td>
-													<Text
-														size="xs"
-														c="dimmed"
-														lineClamp={1}
-														maw={200}
-													>
-														{item.requester_message ??
-															"-"}
+													<Text size="sm" c="dimmed" lineClamp={1} maw={200}>
+														{item.requester_message ?? "-"}
 													</Text>
 												</Table.Td>
 												<Table.Td>
-													<Text size="xs">
-														{formatDate(item.created_at)}
-													</Text>
+													<Tooltip
+														label={formatDate(item.created_at)}
+														withArrow
+														position="top"
+													>
+														<Text size="sm" c="dimmed">
+															{item.created_at
+																? formatDistance(
+																		new Date(item.created_at),
+																		new Date(),
+																		{ addSuffix: true },
+																	)
+																: "-"}
+														</Text>
+													</Tooltip>
+												</Table.Td>
+												<Table.Td>
+													<Button
+														size="compact-xs"
+														variant="outline"
+														leftSection={<IconEye size={14} />}
+														onClick={(e) => {
+															e.stopPropagation();
+															setSelectedRequest(item);
+														}}
+													>
+														<Trans>Open details</Trans>
+													</Button>
 												</Table.Td>
 											</Table.Tr>
 										))
