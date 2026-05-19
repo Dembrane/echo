@@ -1,40 +1,25 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Box, Paper, SegmentedControl, Stack, Table, Text } from "@mantine/core";
+import { Badge, Box, Group, Stack, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
-
-interface TierCapacity {
-	tier: string;
-	tagline: string;
-	price_eur_monthly: number | null;
-	price_note: string;
-	duration: string;
-	included_seats: number | null;
-	seat_overage_eur: number | null;
-	included_hours: number | null;
-	hour_overage_eur: number | null;
-	hard_block_on_hours: boolean;
-	training_included: string;
-}
-
-async function fetchTierCapacities(): Promise<TierCapacity[]> {
-	const res = await fetch(`${API_BASE_URL}/v2/workspaces/tier-capacities`, {
-		credentials: "include",
-	});
-	if (!res.ok) return [];
-	return res.json();
-}
-
-function fmtEur(value: number | null): string {
-	if (value == null) return "—";
-	return `€${value}`;
-}
+import {
+	TIER_ORDER,
+	type TierCapacity,
+	fetchTierCapacities,
+} from "@/lib/tiers";
 
 function fmtPrice(cap: TierCapacity): string {
-	if (cap.price_eur_monthly == null) {
-		return cap.price_note; // e.g. "€349 one-time"
+	if (cap.price_eur_monthly != null) {
+		return `€${cap.price_eur_monthly.toLocaleString("en-IE")}`;
 	}
-	return `€${cap.price_eur_monthly}/mo`;
+	return cap.price_note || t`Custom`;
+}
+
+function fmtPricePeriod(cap: TierCapacity): string {
+	if (cap.price_eur_monthly != null) return t`/mo`;
+	if (cap.price_note?.includes("one-time")) return t`one-time`;
+	return "";
 }
 
 function fmtSeats(cap: TierCapacity): string {
@@ -42,59 +27,32 @@ function fmtSeats(cap: TierCapacity): string {
 	return String(cap.included_seats);
 }
 
-function fmtSeatOverage(cap: TierCapacity): string {
-	if (cap.seat_overage_eur == null) return "—";
-	return `+${fmtEur(cap.seat_overage_eur)}/seat`;
-}
-
 function fmtHours(cap: TierCapacity): string {
 	if (cap.included_hours == null) return "∞";
 	return String(cap.included_hours);
 }
 
+function fmtSeatOverage(cap: TierCapacity): string {
+	if (cap.seat_overage_eur == null) return "—";
+	return t`+€${cap.seat_overage_eur}/seat`;
+}
+
 function fmtHourOverage(cap: TierCapacity): string {
-	if (cap.hard_block_on_hours) return "hard block";
+	if (cap.hard_block_on_hours) return "€0";
 	if (cap.hour_overage_eur == null) return "—";
-	return `${fmtEur(cap.hour_overage_eur)}/h`;
+	return t`€${cap.hour_overage_eur}/h`;
 }
 
 interface Props {
-	/** Optional: highlight one tier column (e.g. the workspace's current
-	 * tier). */
 	highlightTier?: string;
-	/** Optional: cap the rendered tiers to those at or above this one.
-	 * Useful in the upgrade modal where tiers below the current aren't
-	 * relevant. */
 	fromTier?: string;
-	/** Compact mode drops the long rows (overage, training) to fit narrow
-	 * modals. Default false. */
 	compact?: boolean;
-	/** When set, tier columns become selectable. The selected tier is
-	 * tracked by highlightTier; clicks call this callback. */
 	onTierSelect?: (tier: string) => void;
 }
 
-const TIER_ORDER = [
-	"free",
-	"pilot",
-	"pioneer",
-	"innovator",
-	"changemaker",
-	"guardian",
-];
+const HIGHLIGHT_BG = "var(--mantine-color-primary-light)";
+const HIGHLIGHT_COLOR = "var(--mantine-color-primary-6)";
 
-/**
- * Matrix v1.1 §1 — tier × capacity table rendered in-product.
- *
- * Contract: "the tier capacity matrix must be visible inside the product
- * at minimum on the workspace billing tab and in the upgrade-request
- * modal. Customers should never have to leave the app to understand what
- * each tier gets them."
- *
- * Two render surfaces today: UpgradeModal (compact=true, fromTier set to
- * the caller's current) and — when the settings tab split lands — the
- * billing tab (compact=false, full history).
- */
 export const TierCapacityMatrix = ({
 	highlightTier,
 	fromTier,
@@ -103,127 +61,207 @@ export const TierCapacityMatrix = ({
 }: Props) => {
 	const { data, isLoading } = useQuery({
 		queryKey: ["v2", "tier-capacities"],
-		queryFn: fetchTierCapacities,
-		// Static per deploy — cache aggressively.
+		queryFn: () => fetchTierCapacities(API_BASE_URL),
 		staleTime: 60 * 60 * 1000,
 	});
 
 	if (isLoading || !data || data.length === 0) return null;
 
-	const fromIdx = fromTier ? TIER_ORDER.indexOf(fromTier) : -1;
+	const fromIdx = fromTier ? TIER_ORDER.indexOf(fromTier as typeof TIER_ORDER[number]) : -1;
 	const tiers = data.filter((cap) => {
 		if (fromIdx < 0) return true;
-		const idx = TIER_ORDER.indexOf(cap.tier);
-		return idx >= 0 && idx > fromIdx; // strictly above current
+		const idx = TIER_ORDER.indexOf(cap.tier as typeof TIER_ORDER[number]);
+		return idx >= 0 && idx > fromIdx;
 	});
 	if (tiers.length === 0) return null;
 
-	const rows = compact
-		? ([
-				{ label: "Price", render: fmtPrice },
-				{ label: "Seats", render: fmtSeats },
-				{ label: "Hours", render: fmtHours },
-				{ label: "Hour overage", render: fmtHourOverage },
-			] as const)
-		: ([
-				{ label: "Price", render: fmtPrice },
-				{ label: "Duration", render: (c: TierCapacity) => c.duration },
-				{ label: "Seats", render: fmtSeats },
-				{ label: "Seat overage", render: fmtSeatOverage },
-				{ label: "Hours", render: fmtHours },
-				{ label: "Hour overage", render: fmtHourOverage },
-				{
-					label: "Training",
-					render: (c: TierCapacity) => c.training_included,
-				},
-			] as const);
+	const stickyLabel: React.CSSProperties = {
+		position: "sticky",
+		left: 0,
+		background: "var(--app-background)",
+		zIndex: 1,
+	};
+
+	const cellStyle = (tier: string): React.CSSProperties => ({
+		padding: "10px 16px",
+		borderBottom: "1px solid var(--mantine-color-gray-1)",
+		background: tier === highlightTier ? HIGHLIGHT_BG : undefined,
+		cursor: onTierSelect ? "pointer" : undefined,
+		verticalAlign: "top",
+		minWidth: 120,
+	});
+
+	const valStyle = (tier: string): React.CSSProperties => ({
+		color: tier === highlightTier ? HIGHLIGHT_COLOR : undefined,
+	});
+
+	const labelCellStyle: React.CSSProperties = {
+		padding: "10px 16px",
+		borderBottom: "1px solid var(--mantine-color-gray-1)",
+		verticalAlign: "top",
+		whiteSpace: "nowrap",
+		...stickyLabel,
+	};
+
+	const handleClick = (tier: string) => {
+		if (onTierSelect) onTierSelect(tier);
+	};
+
+	type Row = {
+		label: string;
+		render: (cap: TierCapacity) => string;
+		renderSub?: (cap: TierCapacity) => string;
+	};
+
+	const mainRows: Row[] = [
+		{
+			label: "Price",
+			render: fmtPrice,
+			renderSub: fmtPricePeriod,
+		},
+	];
+
+	if (!compact) {
+		mainRows.push({
+			label: "Duration",
+			render: (c) => c.duration,
+		});
+	}
+
+	const usageRows: Row[] = [
+		{ label: "Seats (included)", render: fmtSeats },
+		{ label: "Hours (included)", render: fmtHours },
+	];
+
+	const overageRows: Row[] = [
+		{ label: "Additional seat", render: fmtSeatOverage },
+		{ label: "Additional hour", render: fmtHourOverage },
+	];
+
+	const trainingRows: Row[] = [
+		{ label: "Training", render: (c) => c.training_included },
+	];
+
+	function renderRows(rows: Row[]) {
+		return rows.map((row) => (
+			<tr key={row.label}>
+				<td style={labelCellStyle}>
+					<Text size="sm" c="dimmed">
+						<Trans id={row.label}>{row.label}</Trans>
+					</Text>
+				</td>
+				{tiers.map((cap) => (
+					<td
+						key={cap.tier}
+						style={cellStyle(cap.tier)}
+						onClick={() => handleClick(cap.tier)}
+					>
+						<Text size="sm" style={valStyle(cap.tier)}>
+							{row.render(cap)}
+						</Text>
+						{row.renderSub && (
+							<Text size="xs" c={cap.tier === highlightTier ? HIGHLIGHT_COLOR : "dimmed"}>
+								{row.renderSub(cap)}
+							</Text>
+						)}
+					</td>
+				))}
+			</tr>
+		));
+	}
 
 	return (
-		<Stack gap={compact ? "xs" : "sm"}>
-			{onTierSelect && (
-				<SegmentedControl
-					value={highlightTier ?? ""}
-					onChange={(v) => onTierSelect(v)}
-					data={tiers.map((cap) => ({
-						value: cap.tier,
-						label: cap.tier.charAt(0).toUpperCase() + cap.tier.slice(1),
-					}))}
-					fullWidth
-					size="sm"
-				/>
-			)}
-			<Paper withBorder radius="sm" p={compact ? "xs" : "md"} style={{ overflowX: "auto" }}>
-				<Table verticalSpacing="xs" striped>
-					<Table.Thead>
-						<Table.Tr>
-							<Table.Th />
+		<Stack gap={0}>
+			<Box
+				style={{
+					overflowX: "auto",
+					border: "1px solid var(--mantine-color-gray-3)",
+					borderRadius: "var(--mantine-radius-default)",
+				}}
+			>
+				<table
+					style={{
+						width: "100%",
+						borderCollapse: "collapse",
+					}}
+				>
+					<thead>
+						<tr>
+							<th
+								style={{
+									padding: "12px 16px",
+									textAlign: "left",
+									verticalAlign: "top",
+									borderBottom: "1px solid var(--mantine-color-gray-3)",
+									whiteSpace: "nowrap",
+									...stickyLabel,
+								}}
+							>
+								<Text size="sm" c="dimmed">
+									<Trans>Plans</Trans>
+								</Text>
+							</th>
 							{tiers.map((cap) => {
 								const isHighlight = cap.tier === highlightTier;
 								return (
-									<Table.Th
+									<th
 										key={cap.tier}
 										style={{
+											padding: "12px 16px",
 											textAlign: "left",
-											background: isHighlight ? "rgba(65,105,225,0.08)" : undefined,
-											borderTop: isHighlight
-												? "2px solid #4169e1"
-												: undefined,
+											verticalAlign: "top",
+											borderBottom: "1px solid var(--mantine-color-gray-3)",
+											background: isHighlight ? HIGHLIGHT_BG : undefined,
 											cursor: onTierSelect ? "pointer" : undefined,
+											minWidth: 130,
 										}}
-										onClick={onTierSelect ? () => onTierSelect(cap.tier) : undefined}
+										onClick={() => handleClick(cap.tier)}
 									>
-										<Stack gap={0}>
-											<Text
-												size="sm"
-												fw={500}
-												style={{ textTransform: "capitalize" }}
-											>
-												{cap.tier}
-											</Text>
-											<Text size="xs" c="dimmed" fw={400}>
+										<Stack gap={4}>
+											<Group gap={8} wrap="nowrap">
+												<Text
+													size="sm"
+													c={isHighlight ? HIGHLIGHT_COLOR : undefined}
+													style={{ textTransform: "capitalize" }}
+												>
+													{cap.tier}
+												</Text>
+												{cap.tier === "innovator" && (
+													<Badge
+														variant="light"
+														size="xs"
+													>
+														<Trans>Popular</Trans>
+													</Badge>
+												)}
+											</Group>
+											<Text size="xs" c="dimmed" lh={1.3}>
 												{cap.tagline}
 											</Text>
 										</Stack>
-									</Table.Th>
+									</th>
 								);
 							})}
-						</Table.Tr>
-					</Table.Thead>
-					<Table.Tbody>
-						{rows.map((row) => (
-							<Table.Tr key={row.label}>
-								<Table.Td>
-									<Text size="xs" c="dimmed">
-										<Trans id={row.label}>{row.label}</Trans>
-									</Text>
-								</Table.Td>
-								{tiers.map((cap) => (
-									<Table.Td
-										key={cap.tier}
-										style={{
-											background:
-												cap.tier === highlightTier
-													? "rgba(65,105,225,0.04)"
-													: undefined,
-											cursor: onTierSelect ? "pointer" : undefined,
-										}}
-										onClick={onTierSelect ? () => onTierSelect(cap.tier) : undefined}
-									>
-										<Text size="xs">{row.render(cap)}</Text>
-									</Table.Td>
-								))}
-							</Table.Tr>
-						))}
-					</Table.Tbody>
-				</Table>
-				{compact && (
-					<Box mt={4}>
-						<Text size="xs" c="dimmed" ta="right">
-							<Trans>∞ = unlimited subject to plan</Trans>
-						</Text>
-					</Box>
-				)}
-			</Paper>
+						</tr>
+					</thead>
+					<tbody>
+						{renderRows(mainRows)}
+						{!compact && (
+							<>
+								{renderRows(usageRows)}
+								{renderRows(overageRows)}
+								{renderRows(trainingRows)}
+							</>
+						)}
+						{compact && (
+							<>
+								{renderRows(usageRows)}
+								{renderRows(overageRows)}
+							</>
+						)}
+					</tbody>
+				</table>
+			</Box>
 		</Stack>
 	);
 };

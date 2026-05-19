@@ -54,7 +54,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         hour_overage_eur=None,
         hard_block_on_hours=False,
         training_included="—",
-        duration="permanent",
+        duration="—",
     ),
     "pilot": TierCapacity(
         tier="pilot",

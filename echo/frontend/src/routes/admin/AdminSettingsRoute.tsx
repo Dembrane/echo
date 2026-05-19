@@ -68,20 +68,12 @@ import { useNavigate, useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
+import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
+import { type Tier, TIER_ORDER } from "@/lib/tiers";
 import { formatDurationFromHours } from "@/lib/time";
 
-// Ordered tier list for custom sorting. matrix v1.1 §1 order from low to high.
-const TIER_ORDER = [
-	"free",
-	"pilot",
-	"pioneer",
-	"innovator",
-	"changemaker",
-	"guardian",
-] as const;
-type Tier = (typeof TIER_ORDER)[number];
 const tierRank = (tier: string): number => TIER_ORDER.indexOf(tier as Tier);
 
 const tierColors: Record<string, string> = {
@@ -1891,17 +1883,12 @@ function ApproveDialog({
 		},
 	});
 
-	const tierOptions = TIER_ORDER.map((t) => ({
-		label: t.charAt(0).toUpperCase() + t.slice(1),
-		value: t,
-	}));
-
 	return (
 		<Modal
 			opened={opened}
 			onClose={onClose}
 			title={t`Approve request`}
-			size="md"
+			size="xl"
 		>
 			<Stack gap="md">
 				<Text size="sm">
@@ -1911,12 +1898,9 @@ function ApproveDialog({
 					</Trans>
 				</Text>
 
-				<Select
-					label={t`Granted tier`}
-					data={tierOptions}
+				<TierPricingCards
 					value={grantedTier}
-					onChange={(v) => v && setGrantedTier(v)}
-					allowDeselect={false}
+					onChange={(v) => setGrantedTier(v)}
 				/>
 
 				<Select

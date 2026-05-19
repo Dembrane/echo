@@ -16,12 +16,12 @@ import { IconLock } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useState } from "react";
 import { toast } from "@/components/common/Toaster";
-import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
+import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { avatarUrl } from "@/lib/avatar";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
-import { TIER_TAGLINE } from "@/lib/tiers";
+import { type Tier, TIER_ORDER, taglineFor } from "@/lib/tiers";
 
 /**
  * Tier-gating UI primitives for the ECHO platform.
@@ -40,22 +40,6 @@ import { TIER_TAGLINE } from "@/lib/tiers";
  *   - requiredTierCopy  — shared "This feature requires X plan" text
  */
 
-export type Tier =
-	| "free"
-	| "pilot"
-	| "pioneer"
-	| "innovator"
-	| "changemaker"
-	| "guardian";
-
-const TIER_LABEL: Record<Tier, string> = {
-	free: "free",
-	changemaker: "changemaker",
-	guardian: "guardian",
-	innovator: "innovator",
-	pilot: "pilot",
-	pioneer: "pioneer",
-};
 
 interface FeatureGateProps {
 	/** Currently-resolved workspace tier. */
@@ -73,15 +57,6 @@ interface FeatureGateProps {
 	/** The gated feature's normal render — shown under the hatched overlay. */
 	children: ReactNode;
 }
-
-const TIER_ORDER: Tier[] = [
-	"free",
-	"pilot",
-	"pioneer",
-	"innovator",
-	"changemaker",
-	"guardian",
-];
 
 function meetsTier(current: Tier, required: Tier): boolean {
 	return TIER_ORDER.indexOf(current) >= TIER_ORDER.indexOf(required);
@@ -140,7 +115,7 @@ export function FeatureGate({
 				}}
 				role="button"
 				tabIndex={0}
-				aria-label={`${featureName} · requires ${TIER_LABEL[requiredTier]} plan`}
+				aria-label={`${featureName} · requires ${requiredTier} plan`}
 				onKeyDown={(e) => {
 					if (e.key === "Enter" || e.key === " ") {
 						e.preventDefault();
@@ -154,7 +129,7 @@ export function FeatureGate({
 						variant="light"
 						leftSection={<IconLock size={12} />}
 					>
-						{TIER_LABEL[requiredTier]}
+						{requiredTier}
 					</Badge>
 					<Text size="sm" ta="center" fw={500}>
 						{featureName}
@@ -357,7 +332,7 @@ export function UpgradeModal({
 		? t`Upgrade to ${displayTier}`
 		: featureName;
 	const displayBenefit = canRequestUpgrade
-		? TIER_TAGLINE[displayTier] ?? benefit
+		? taglineFor(displayTier) || benefit
 		: benefit;
 
 	return (
@@ -366,7 +341,7 @@ export function UpgradeModal({
 			onClose={onClose}
 			title={<Text fw={500}>{displayName}</Text>}
 			centered
-			size="lg"
+			size="xl"
 		>
 			<Stack gap="md">
 				<Text size="sm" c="dimmed">
@@ -375,11 +350,10 @@ export function UpgradeModal({
 
 				{canRequestUpgrade ? (
 					<>
-						<TierCapacityMatrix
-							fromTier={currentTier}
-							highlightTier={selectedTier}
-							compact
-							onTierSelect={(tier) => setSelectedTier(tier as Tier)}
+						<TierPricingCards
+							tiers={tiersAboveCurrent}
+							value={selectedTier}
+							onChange={(tier) => setSelectedTier(tier as Tier)}
 						/>
 
 						<Textarea
@@ -400,10 +374,10 @@ export function UpgradeModal({
 					</>
 				) : (
 					<>
-						<TierCapacityMatrix
-							fromTier={currentTier}
-							highlightTier={requiredTier}
-							compact
+						<TierPricingCards
+							tiers={tiersAboveCurrent}
+							value={requiredTier}
+							onChange={() => {}}
 						/>
 						<OrganisationAdminChips />
 					</>

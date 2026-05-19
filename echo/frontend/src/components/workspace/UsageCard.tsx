@@ -15,12 +15,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
-import { type Tier, UpgradeModal } from "@/components/workspace/FeatureGate";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage, type WorkspaceUsageData } from "@/hooks/useWorkspaceUsage";
-import { isTier } from "@/lib/tiers";
+import { type Tier, isTier } from "@/lib/tiers";
 import { formatDurationFromHours } from "@/lib/time";
 
 async function fetchUsageFresh(

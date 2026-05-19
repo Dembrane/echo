@@ -1,0 +1,55 @@
+@property --tier-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes tier-spin {
+  to {
+    --tier-angle: 360deg;
+  }
+}
+
+.wrap {
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  border-radius: calc(var(--mantine-radius-default) + 2px);
+}
+
+.wrap:not(.selected):hover {
+  background: var(--mantine-color-primary-light);
+}
+
+.selected {
+  background: conic-gradient(
+    from var(--tier-angle),
+    var(--mantine-color-primary-6),
+    var(--mantine-color-cyan-6),
+    var(--mantine-color-springGreen-6),
+    var(--mantine-color-primary-6),
+    var(--mantine-color-mauve-6),
+    var(--mantine-color-primary-6)
+  );
+  animation: tier-spin 3s linear infinite;
+}
+
+.wideWrap {
+  composes: wrap;
+  flex: 0 1 calc((100% - 28px) / 3);
+  min-width: 160px;
+}
+
+.inner {
+  background: #fff;
+  border-radius: var(--mantine-radius-default);
+  flex: 1;
+}
+
+.wrap:not(.selected):hover .inner {
+  background: rgba(65, 105, 225, 0.03);
+}
+
+.selected .inner {
+  background: #fff;
+}

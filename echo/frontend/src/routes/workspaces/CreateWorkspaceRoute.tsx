@@ -30,15 +30,8 @@ import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
-import { TIER_CAPACITY_SHORT, type Tier } from "@/lib/tiers";
-
-const REQUESTABLE_TIERS: Tier[] = [
-	"pilot",
-	"pioneer",
-	"innovator",
-	"changemaker",
-	"guardian",
-];
+import { type Tier, capacityShortFor } from "@/lib/tiers";
+import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 
 async function submitWorkspaceRequest(payload: {
 	kind: "new_workspace";
@@ -391,31 +384,10 @@ export const CreateWorkspaceRoute = () => {
 							<Text size="sm" c="dimmed">
 								<Trans>Pick a plan for your team.</Trans>
 							</Text>
-							<Radio.Group
-								label={t`Choose a tier`}
-								description={t`Each tier includes different limits. You can request an upgrade later.`}
+							<TierPricingCards
 								value={selectedTier}
 								onChange={(v) => setSelectedTier(v as Tier)}
-							>
-								<Stack gap={10} mt={8}>
-									{REQUESTABLE_TIERS.map((tier) => (
-										<Radio
-											key={tier}
-											value={tier}
-											label={
-												<Stack gap={2}>
-													<Text size="sm" tt="capitalize">
-														{tier}
-													</Text>
-													<Text size="xs" c="dimmed">
-														{TIER_CAPACITY_SHORT[tier]}
-													</Text>
-												</Stack>
-											}
-										/>
-									))}
-								</Stack>
-							</Radio.Group>
+							/>
 						</Stack>
 					</Stepper.Step>
 
@@ -520,7 +492,7 @@ export const CreateWorkspaceRoute = () => {
 											{selectedTier}
 											<Text span c="dimmed" size="xs">
 												{" · "}
-												{TIER_CAPACITY_SHORT[selectedTier]}
+												{capacityShortFor(selectedTier)}
 											</Text>
 										</Text>
 									</Group>
