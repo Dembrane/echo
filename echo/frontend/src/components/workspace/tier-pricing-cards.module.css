@@ -53,3 +53,77 @@
 .selected .inner {
   background: #fff;
 }
+
+.wideInner {
+  composes: inner;
+  padding: 22px 18px 18px;
+}
+
+.narrowInner {
+  composes: inner;
+  padding: 13px 16px;
+}
+
+.tierName {
+  text-transform: capitalize;
+}
+
+.specRow {
+  line-height: 2;
+}
+
+.priceFooter {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.priceAmount {
+  letter-spacing: -0.02em;
+}
+
+.radio {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--mantine-color-gray-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radioSelected {
+  composes: radio;
+  border-color: var(--mantine-color-primary-6);
+}
+
+.radioDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mantine-color-primary-6);
+  transition: transform 0.15s;
+}
+
+.narrowMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.narrowPrice {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupWide {
+  composes: group;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 14px;
+}

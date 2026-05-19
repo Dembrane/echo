@@ -4,13 +4,14 @@ import { Badge, Box, Divider, Group, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconCheck } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
+import { type ReactNode } from "react";
 import { API_BASE_URL } from "@/config";
 import {
 	TIER_BADGE_COLOR,
-	TIER_CAPACITY_SHORT,
 	type Tier,
 	type TierCapacity,
 	tierBestFor,
+	capacityShortFor,
 	fetchTierCapacities,
 	isTier,
 	taglineFor,
@@ -56,7 +57,7 @@ function buildCardData(cap: TierCapacity) {
 
 	return {
 		tier: cap.tier,
-		tagline: cap.tagline,
+		tagline: isTier(cap.tier) ? taglineFor(cap.tier) : cap.tagline,
 		specs,
 		bestFor: tierBestFor(cap.tier),
 		priceAmount,
@@ -66,7 +67,7 @@ function buildCardData(cap: TierCapacity) {
 
 function buildFallbackCardData(tier: Tier) {
 	const tagline = taglineFor(tier);
-	const capacityShort = TIER_CAPACITY_SHORT[tier];
+	const capacityShort = capacityShortFor(tier);
 	const specs = capacityShort
 		.split(" · ")
 		.filter((s) => !s.startsWith("€") || s.includes("seat"));
@@ -107,7 +108,7 @@ function WideCard({
 	card: CardData;
 	selected: boolean;
 	highlighted: boolean;
-	highlightLabel: string;
+	highlightLabel: ReactNode;
 	onSelect: () => void;
 }) {
 	return (
@@ -124,13 +125,9 @@ function WideCard({
 			aria-checked={selected}
 			tabIndex={0}
 		>
-			<Stack
-				gap={0}
-				className={classes.inner}
-				style={{ padding: "22px 18px 18px" }}
-			>
+			<Stack gap={0} className={classes.wideInner}>
 				<Group gap={8} wrap="nowrap">
-					<Text size="lg" style={{ textTransform: "capitalize" }}>
+					<Text size="lg" className={classes.tierName}>
 						{card.tier}
 					</Text>
 					{highlighted && (
@@ -145,7 +142,7 @@ function WideCard({
 				<Divider my={14} color="var(--mantine-color-gray-2)" />
 				<Stack gap={0}>
 					{card.specs.map((spec) => (
-						<Group key={spec} gap={7} wrap="nowrap" style={{ lineHeight: 2 }}>
+						<Group key={spec} gap={7} wrap="nowrap" className={classes.specRow}>
 							<IconCheck size={13} stroke={1.5} color="var(--mantine-color-primary-6)" />
 							<Text size="xs" c="dimmed">
 								{spec}
@@ -153,7 +150,7 @@ function WideCard({
 						</Group>
 					))}
 				</Stack>
-				<Box style={{ marginTop: "auto", paddingTop: 16 }}>
+				<Box className={classes.priceFooter}>
 					{card.bestFor && (
 						<Text size="xs" c="dimmed" fs="italic" mb={10} lh={1.4}>
 							{card.bestFor}
@@ -163,7 +160,7 @@ function WideCard({
 						<Text size="xs" c="dimmed">
 							<Trans>from</Trans>
 						</Text>
-						<Text size="xl" style={{ letterSpacing: "-0.02em" }} c="var(--app-text)">
+						<Text size="xl" className={classes.priceAmount} c="var(--app-text)">
 							{card.priceAmount}
 						</Text>
 						{card.pricePeriod && (
@@ -188,7 +185,7 @@ function NarrowRow({
 	card: CardData;
 	selected: boolean;
 	highlighted: boolean;
-	highlightLabel: string;
+	highlightLabel: ReactNode;
 	onSelect: () => void;
 }) {
 	const capacityLine = card.specs.slice(0, 2).join(" · ");
@@ -207,39 +204,13 @@ function NarrowRow({
 			aria-checked={selected}
 			tabIndex={0}
 		>
-			<Group
-				gap={14}
-				wrap="nowrap"
-				className={classes.inner}
-				style={{ padding: "13px 16px" }}
-			>
-				<Box
-					style={{
-						width: 15,
-						height: 15,
-						flexShrink: 0,
-						borderRadius: "50%",
-						border: `1.5px solid ${selected ? "var(--mantine-color-primary-6)" : "var(--mantine-color-gray-4)"}`,
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-					}}
-				>
-					{selected && (
-						<Box
-							style={{
-								width: 7,
-								height: 7,
-								borderRadius: "50%",
-								background: "var(--mantine-color-primary-6)",
-								transition: "transform 0.15s",
-							}}
-						/>
-					)}
+			<Group gap={14} wrap="nowrap" className={classes.narrowInner}>
+				<Box className={selected ? classes.radioSelected : classes.radio}>
+					{selected && <Box className={classes.radioDot} />}
 				</Box>
-				<div style={{ flex: 1, minWidth: 0 }}>
+				<div className={classes.narrowMain}>
 					<Group gap={6} wrap="nowrap">
-						<Text size="sm" c="var(--app-text)" style={{ textTransform: "capitalize" }}>
+						<Text size="sm" c="var(--app-text)" className={classes.tierName}>
 							{card.tier}
 						</Text>
 						{highlighted && (
@@ -252,8 +223,8 @@ function NarrowRow({
 						{capacityLine}
 					</Text>
 				</div>
-				<div style={{ textAlign: "right", flexShrink: 0 }}>
-					<Text size="md" c="var(--app-text)" style={{ letterSpacing: "-0.02em" }}>
+				<div className={classes.narrowPrice}>
+					<Text size="md" c="var(--app-text)" className={classes.priceAmount}>
 						{card.priceAmount}
 					</Text>
 					{card.pricePeriod && (
@@ -272,7 +243,7 @@ interface TierPricingCardsProps {
 	value: string | null;
 	onChange: (tier: string) => void;
 	highlightTier?: string | null;
-	highlightLabel?: string;
+	highlightLabel?: ReactNode;
 	compact?: boolean;
 }
 
@@ -289,7 +260,7 @@ export const TierPricingCards = ({
 	value,
 	onChange,
 	highlightTier = "innovator",
-	highlightLabel = "Popular",
+	highlightLabel,
 	compact = false,
 }: TierPricingCardsProps) => {
 	const isWide = useMediaQuery("(min-width: 768px)");
@@ -308,15 +279,11 @@ export const TierPricingCards = ({
 	});
 
 	const CardComponent = useWideLayout ? WideCard : NarrowRow;
+	const resolvedHighlightLabel = highlightLabel ?? <Trans>Popular</Trans>;
 
 	return (
 		<div
-			style={{
-				display: "flex",
-				flexDirection: useWideLayout ? "row" : "column",
-				flexWrap: useWideLayout ? "wrap" : undefined,
-				gap: useWideLayout ? 14 : 8,
-			}}
+			className={useWideLayout ? classes.groupWide : classes.group}
 			role="radiogroup"
 		>
 			{cards.map((card) => (
@@ -325,7 +292,7 @@ export const TierPricingCards = ({
 					card={card}
 					selected={value === card.tier}
 					highlighted={card.tier === highlightTier}
-					highlightLabel={highlightLabel}
+					highlightLabel={resolvedHighlightLabel}
 					onSelect={() => onChange(card.tier)}
 				/>
 			))}

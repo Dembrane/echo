@@ -1,12 +1,16 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Badge, Box, Group, Stack, Text } from "@mantine/core";
+import { Badge, Box, Group, Stack, Table, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
+import { type ReactNode } from "react";
 import { API_BASE_URL } from "@/config";
 import {
 	TIER_ORDER,
+	type Tier,
 	type TierCapacity,
 	fetchTierCapacities,
+	isTier,
+	taglineFor,
 } from "@/lib/tiers";
 
 function fmtPrice(cap: TierCapacity): string {
@@ -67,10 +71,10 @@ export const TierCapacityMatrix = ({
 
 	if (isLoading || !data || data.length === 0) return null;
 
-	const fromIdx = fromTier ? TIER_ORDER.indexOf(fromTier as typeof TIER_ORDER[number]) : -1;
+	const fromIdx = fromTier ? TIER_ORDER.indexOf(fromTier as Tier) : -1;
 	const tiers = data.filter((cap) => {
 		if (fromIdx < 0) return true;
-		const idx = TIER_ORDER.indexOf(cap.tier as typeof TIER_ORDER[number]);
+		const idx = TIER_ORDER.indexOf(cap.tier as Tier);
 		return idx >= 0 && idx > fromIdx;
 	});
 	if (tiers.length === 0) return null;
@@ -83,8 +87,6 @@ export const TierCapacityMatrix = ({
 	};
 
 	const cellStyle = (tier: string): React.CSSProperties => ({
-		padding: "10px 16px",
-		borderBottom: "1px solid var(--mantine-color-gray-1)",
 		background: tier === highlightTier ? HIGHLIGHT_BG : undefined,
 		cursor: onTierSelect ? "pointer" : undefined,
 		verticalAlign: "top",
@@ -96,8 +98,6 @@ export const TierCapacityMatrix = ({
 	});
 
 	const labelCellStyle: React.CSSProperties = {
-		padding: "10px 16px",
-		borderBottom: "1px solid var(--mantine-color-gray-1)",
 		verticalAlign: "top",
 		whiteSpace: "nowrap",
 		...stickyLabel,
@@ -108,14 +108,16 @@ export const TierCapacityMatrix = ({
 	};
 
 	type Row = {
-		label: string;
+		key: string;
+		label: ReactNode;
 		render: (cap: TierCapacity) => string;
 		renderSub?: (cap: TierCapacity) => string;
 	};
 
 	const mainRows: Row[] = [
 		{
-			label: "Price",
+			key: "price",
+			label: <Trans>Price</Trans>,
 			render: fmtPrice,
 			renderSub: fmtPricePeriod,
 		},
@@ -123,35 +125,36 @@ export const TierCapacityMatrix = ({
 
 	if (!compact) {
 		mainRows.push({
-			label: "Duration",
+			key: "duration",
+			label: <Trans>Duration</Trans>,
 			render: (c) => c.duration,
 		});
 	}
 
 	const usageRows: Row[] = [
-		{ label: "Seats (included)", render: fmtSeats },
-		{ label: "Hours (included)", render: fmtHours },
+		{ key: "seats", label: <Trans>Seats (included)</Trans>, render: fmtSeats },
+		{ key: "hours", label: <Trans>Hours (included)</Trans>, render: fmtHours },
 	];
 
 	const overageRows: Row[] = [
-		{ label: "Additional seat", render: fmtSeatOverage },
-		{ label: "Additional hour", render: fmtHourOverage },
+		{ key: "seat-overage", label: <Trans>Additional seat</Trans>, render: fmtSeatOverage },
+		{ key: "hour-overage", label: <Trans>Additional hour</Trans>, render: fmtHourOverage },
 	];
 
 	const trainingRows: Row[] = [
-		{ label: "Training", render: (c) => c.training_included },
+		{ key: "training", label: <Trans>Training</Trans>, render: (c) => c.training_included },
 	];
 
 	function renderRows(rows: Row[]) {
 		return rows.map((row) => (
-			<tr key={row.label}>
-				<td style={labelCellStyle}>
+			<Table.Tr key={row.key}>
+				<Table.Td style={labelCellStyle}>
 					<Text size="sm" c="dimmed">
-						<Trans id={row.label}>{row.label}</Trans>
+						{row.label}
 					</Text>
-				</td>
+				</Table.Td>
 				{tiers.map((cap) => (
-					<td
+					<Table.Td
 						key={cap.tier}
 						style={cellStyle(cap.tier)}
 						onClick={() => handleClick(cap.tier)}
@@ -164,9 +167,9 @@ export const TierCapacityMatrix = ({
 								{row.renderSub(cap)}
 							</Text>
 						)}
-					</td>
+					</Table.Td>
 				))}
-			</tr>
+			</Table.Tr>
 		));
 	}
 
@@ -179,38 +182,29 @@ export const TierCapacityMatrix = ({
 					borderRadius: "var(--mantine-radius-default)",
 				}}
 			>
-				<table
-					style={{
-						width: "100%",
-						borderCollapse: "collapse",
+				<Table
+					withRowBorders
+					verticalSpacing={10}
+					horizontalSpacing={16}
+					styles={{
+						table: { width: "100%" },
 					}}
 				>
-					<thead>
-						<tr>
-							<th
-								style={{
-									padding: "12px 16px",
-									textAlign: "left",
-									verticalAlign: "top",
-									borderBottom: "1px solid var(--mantine-color-gray-3)",
-									whiteSpace: "nowrap",
-									...stickyLabel,
-								}}
-							>
+					<Table.Thead>
+						<Table.Tr>
+							<Table.Th style={labelCellStyle}>
 								<Text size="sm" c="dimmed">
 									<Trans>Plans</Trans>
 								</Text>
-							</th>
+							</Table.Th>
 							{tiers.map((cap) => {
 								const isHighlight = cap.tier === highlightTier;
+								const tagline = isTier(cap.tier) ? taglineFor(cap.tier) : cap.tagline;
 								return (
-									<th
+									<Table.Th
 										key={cap.tier}
 										style={{
-											padding: "12px 16px",
-											textAlign: "left",
 											verticalAlign: "top",
-											borderBottom: "1px solid var(--mantine-color-gray-3)",
 											background: isHighlight ? HIGHLIGHT_BG : undefined,
 											cursor: onTierSelect ? "pointer" : undefined,
 											minWidth: 130,
@@ -227,24 +221,21 @@ export const TierCapacityMatrix = ({
 													{cap.tier}
 												</Text>
 												{cap.tier === "innovator" && (
-													<Badge
-														variant="light"
-														size="xs"
-													>
+													<Badge variant="light" size="xs">
 														<Trans>Popular</Trans>
 													</Badge>
 												)}
 											</Group>
 											<Text size="xs" c="dimmed" lh={1.3}>
-												{cap.tagline}
+												{tagline}
 											</Text>
 										</Stack>
-									</th>
+									</Table.Th>
 								);
 							})}
-						</tr>
-					</thead>
-					<tbody>
+						</Table.Tr>
+					</Table.Thead>
+					<Table.Tbody>
 						{renderRows(mainRows)}
 						{!compact && (
 							<>
@@ -259,8 +250,8 @@ export const TierCapacityMatrix = ({
 								{renderRows(overageRows)}
 							</>
 						)}
-					</tbody>
-				</table>
+					</Table.Tbody>
+				</Table>
 			</Box>
 		</Stack>
 	);
