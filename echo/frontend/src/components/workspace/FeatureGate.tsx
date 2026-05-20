@@ -13,15 +13,22 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { IconLock } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { type ReactNode, useEffect, useState } from "react";
 import { toast } from "@/components/common/Toaster";
-import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
+import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
+import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { avatarUrl } from "@/lib/avatar";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
-import { TIER_TAGLINE } from "@/lib/tiers";
+import {
+	type BillingPeriod,
+	TIER_ORDER,
+	type Tier,
+	taglineFor,
+} from "@/lib/tiers";
 
 /**
  * Tier-gating UI primitives for the ECHO platform.
@@ -40,23 +47,6 @@ import { TIER_TAGLINE } from "@/lib/tiers";
  *   - requiredTierCopy  — shared "This feature requires X plan" text
  */
 
-export type Tier =
-	| "free"
-	| "pilot"
-	| "pioneer"
-	| "innovator"
-	| "changemaker"
-	| "guardian";
-
-const TIER_LABEL: Record<Tier, string> = {
-	free: "free",
-	changemaker: "changemaker",
-	guardian: "guardian",
-	innovator: "innovator",
-	pilot: "pilot",
-	pioneer: "pioneer",
-};
-
 interface FeatureGateProps {
 	/** Currently-resolved workspace tier. */
 	currentTier: Tier;
@@ -73,15 +63,6 @@ interface FeatureGateProps {
 	/** The gated feature's normal render — shown under the hatched overlay. */
 	children: ReactNode;
 }
-
-const TIER_ORDER: Tier[] = [
-	"free",
-	"pilot",
-	"pioneer",
-	"innovator",
-	"changemaker",
-	"guardian",
-];
 
 function meetsTier(current: Tier, required: Tier): boolean {
 	return TIER_ORDER.indexOf(current) >= TIER_ORDER.indexOf(required);
@@ -140,7 +121,7 @@ export function FeatureGate({
 				}}
 				role="button"
 				tabIndex={0}
-				aria-label={`${featureName} · requires ${TIER_LABEL[requiredTier]} plan`}
+				aria-label={`${featureName} · requires ${requiredTier} plan`}
 				onKeyDown={(e) => {
 					if (e.key === "Enter" || e.key === " ") {
 						e.preventDefault();
@@ -154,7 +135,7 @@ export function FeatureGate({
 						variant="light"
 						leftSection={<IconLock size={12} />}
 					>
-						{TIER_LABEL[requiredTier]}
+						{requiredTier}
 					</Badge>
 					<Text size="sm" ta="center" fw={500}>
 						{featureName}
@@ -297,14 +278,17 @@ export function UpgradeModal({
 	workspaceId,
 }: UpgradeModalProps) {
 	const { workspace } = useWorkspace();
+	const queryClient = useQueryClient();
 	const [message, setMessage] = useState("");
 	const [sending, setSending] = useState(false);
+	const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
 
 	const tiersAboveCurrent = TIER_ORDER.filter(
 		(t) => TIER_ORDER.indexOf(t) > TIER_ORDER.indexOf(currentTier),
 	);
-	const defaultSelectedTier =
-		tiersAboveCurrent.includes(requiredTier) ? requiredTier : (tiersAboveCurrent[0] ?? requiredTier);
+	const defaultSelectedTier = tiersAboveCurrent.includes(requiredTier)
+		? requiredTier
+		: (tiersAboveCurrent[0] ?? requiredTier);
 	const [selectedTier, setSelectedTier] = useState<Tier>(defaultSelectedTier);
 
 	useEffect(() => {
@@ -318,22 +302,22 @@ export function UpgradeModal({
 			return;
 		}
 		setSending(true);
+		const submittedBillingPeriod: BillingPeriod | null =
+			selectedTier === "pilot" ? null : billingPeriod;
 		try {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/workspace-requests`,
-				{
-					body: JSON.stringify({
-						kind: "tier_upgrade",
-						org_id: workspace.org_id,
-						workspace_id: workspaceId,
-						proposed_tier: selectedTier,
-						requester_message: message.trim() || undefined,
-					}),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				},
-			);
+			const res = await fetch(`${API_BASE_URL}/v2/workspace-requests`, {
+				body: JSON.stringify({
+					kind: "tier_upgrade",
+					org_id: workspace.org_id,
+					proposed_billing_period: submittedBillingPeriod,
+					proposed_tier: selectedTier,
+					requester_message: message.trim() || undefined,
+					workspace_id: workspaceId,
+				}),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "POST",
+			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
 				const detail =
@@ -342,7 +326,18 @@ export function UpgradeModal({
 						: t`Couldn't send the request`;
 				throw new Error(detail);
 			}
-			toast.success(t`Request submitted. We'll be in touch within 1 business day.`);
+			toast.success(
+				t`Request submitted. We'll be in touch within 1 business day.`,
+			);
+			// /v2/workspaces returns pending workspace_requests; invalidate so
+			// the selector + workspace settings reflect the new request without
+			// a hard refresh.
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			posthog.capture("workspace_request_submitted", {
+				kind: "tier_upgrade",
+				proposed_billing_period: submittedBillingPeriod,
+				proposed_tier: selectedTier,
+			});
 			onClose();
 			setMessage("");
 		} catch (err) {
@@ -357,7 +352,7 @@ export function UpgradeModal({
 		? t`Upgrade to ${displayTier}`
 		: featureName;
 	const displayBenefit = canRequestUpgrade
-		? TIER_TAGLINE[displayTier] ?? benefit
+		? taglineFor(displayTier) || benefit
 		: benefit;
 
 	return (
@@ -366,7 +361,7 @@ export function UpgradeModal({
 			onClose={onClose}
 			title={<Text fw={500}>{displayName}</Text>}
 			centered
-			size="lg"
+			size="72rem"
 		>
 			<Stack gap="md">
 				<Text size="sm" c="dimmed">
@@ -375,11 +370,18 @@ export function UpgradeModal({
 
 				{canRequestUpgrade ? (
 					<>
-						<TierCapacityMatrix
-							fromTier={currentTier}
-							highlightTier={selectedTier}
-							compact
-							onTierSelect={(tier) => setSelectedTier(tier as Tier)}
+						<Group justify="center" mb="xs">
+							<BillingPeriodToggle
+								value={billingPeriod}
+								onChange={setBillingPeriod}
+								compact
+							/>
+						</Group>
+						<TierPricingCards
+							tiers={tiersAboveCurrent}
+							value={selectedTier}
+							onChange={(tier) => setSelectedTier(tier as Tier)}
+							billingPeriod={billingPeriod}
 						/>
 
 						<Textarea
@@ -400,10 +402,18 @@ export function UpgradeModal({
 					</>
 				) : (
 					<>
-						<TierCapacityMatrix
-							fromTier={currentTier}
-							highlightTier={requiredTier}
-							compact
+						<Group justify="center" mb="xs">
+							<BillingPeriodToggle
+								value={billingPeriod}
+								onChange={setBillingPeriod}
+								compact
+							/>
+						</Group>
+						<TierPricingCards
+							tiers={tiersAboveCurrent}
+							value={requiredTier}
+							onChange={() => {}}
+							billingPeriod={billingPeriod}
 						/>
 						<OrganisationAdminChips />
 					</>

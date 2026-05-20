@@ -15,12 +15,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
-import { type Tier, UpgradeModal } from "@/components/workspace/FeatureGate";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useWorkspaceUsage, type WorkspaceUsageData } from "@/hooks/useWorkspaceUsage";
-import { isTier } from "@/lib/tiers";
+import {
+	useWorkspaceUsage,
+	type WorkspaceUsageData,
+} from "@/hooks/useWorkspaceUsage";
+import { isTier, type Tier } from "@/lib/tiers";
 import { formatDurationFromHours } from "@/lib/time";
 
 async function fetchUsageFresh(
@@ -74,10 +77,8 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const [upgradeOpen, setUpgradeOpen] = useState(false);
 	const [monthOffset, setMonthOffset] = useState(0);
 
-	const { data, isLoading, isError, refetch, dataUpdatedAt } = useWorkspaceUsage(
-		workspaceId,
-		{ monthOffset },
-	);
+	const { data, isLoading, isError, refetch, dataUpdatedAt } =
+		useWorkspaceUsage(workspaceId, { monthOffset });
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
@@ -214,52 +215,44 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 						</Text>
 					</Group>
 					{hoursPct !== null && (
-						<Progress
-							value={hoursPct}
-							size="xs"
-							color={audioColor}
-						/>
+						<Progress value={hoursPct} size="xs" color={audioColor} />
 					)}
 				</Stack>
 
-			{/* Seats (unified — guests share this pool) */}
-			<Stack gap={6}>
-				<Group justify="space-between">
-					<Text size="sm" c="dimmed">
-						<Trans>Seats</Trans>
-					</Text>
-					<Text size="sm">
-						{data.seat_count}
-						{data.seat_count_included != null && (
-							<Text span c="dimmed" size="sm">
-								{" / "}
-								{data.seat_count_included}
-							</Text>
-						)}
-					</Text>
-				</Group>
-				{seatsPct !== null && (
-					<Progress value={seatsPct} size="xs" color={seatsColor} />
-				)}
-				{data.guest_count > 0 && (
-					<Text size="xs" c="dimmed">
-						({data.seat_count - data.guest_count}{" "}
-						<Plural
-							value={data.seat_count - data.guest_count}
-							one="member"
-							other="members"
-						/>{" "}
-						+ {data.guest_count}{" "}
-						<Plural
-							value={data.guest_count}
-							one="guest"
-							other="guests"
-						/>)
-					</Text>
-				)}
-			</Stack>
+				{/* Seats (unified — guests share this pool) */}
+				<Stack gap={6}>
+					<Group justify="space-between">
+						<Text size="sm" c="dimmed">
+							<Trans>Seats</Trans>
+						</Text>
+						<Text size="sm">
+							{data.seat_count}
+							{data.seat_count_included != null && (
+								<Text span c="dimmed" size="sm">
+									{" / "}
+									{data.seat_count_included}
+								</Text>
+							)}
+						</Text>
+					</Group>
+					{seatsPct !== null && (
+						<Progress value={seatsPct} size="xs" color={seatsColor} />
+					)}
+					{data.guest_count > 0 && (
+						<Text size="xs" c="dimmed">
+							({data.seat_count - data.guest_count}{" "}
+							<Plural
+								value={data.seat_count - data.guest_count}
+								one="member"
+								other="members"
+							/>{" "}
+							+ {data.guest_count}{" "}
+							<Plural value={data.guest_count} one="guest" other="guests" />)
+						</Text>
+					)}
+				</Stack>
 
-			<Group justify="space-between">
+				<Group justify="space-between">
 					<Text size="sm" c="dimmed">
 						<Trans>Projects</Trans>
 					</Text>
@@ -292,10 +285,13 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 								<Trans>
 									Next tier: {data.next_tier.tier} · {data.next_tier.tagline}
 								</Trans>
-								{data.next_tier.price_eur_monthly != null && (
+								{data.next_tier.pricing?.annual_billing?.per_month_eur !=
+									null && (
 									<>
 										{" · "}
-										{formatEur(data.next_tier.price_eur_monthly)}
+										{formatEur(
+											data.next_tier.pricing.annual_billing.per_month_eur,
+										)}
 										/mo
 									</>
 								)}

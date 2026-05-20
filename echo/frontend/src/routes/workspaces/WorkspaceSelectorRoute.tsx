@@ -19,7 +19,12 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconClock, IconPlus, IconSettings } from "@tabler/icons-react";
+import {
+	IconClock,
+	IconPlus,
+	IconSettings,
+	IconSparkles,
+} from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
@@ -63,6 +68,7 @@ interface Workspace {
 	members_preview: MemberPreview[];
 	usage: WorkspaceUsage;
 	has_pending_upgrade_request?: boolean;
+	created_at?: string | null;
 }
 
 interface OrganisationRollup {
@@ -162,6 +168,10 @@ function WorkspaceCard({
 }) {
 	const isAdminOrOwner =
 		workspace.role === "admin" || workspace.role === "owner";
+	const ONE_DAY_MS = 86_400_000;
+	const isRecentlyApproved =
+		!!workspace.created_at &&
+		Date.now() - new Date(workspace.created_at).getTime() < ONE_DAY_MS;
 	const [hovered, setHovered] = useState(false);
 	const wsLogo = resolveLogoUrl(workspace.logo_url);
 	const organisationLogo = resolveLogoUrl(workspace.org_logo_url);
@@ -282,9 +292,20 @@ function WorkspaceCard({
 						)}
 					</Group>
 				</Group>
-				{(workspace.has_pending_upgrade_request ||
+				{(isRecentlyApproved ||
+					workspace.has_pending_upgrade_request ||
 					workspace.usage.at_cap) && (
 					<Group gap={6}>
+						{isRecentlyApproved && (
+							<Badge
+								size="xs"
+								color="green"
+								variant="light"
+								leftSection={<IconSparkles size={10} />}
+							>
+								<Trans>Recently approved</Trans>
+							</Badge>
+						)}
 						{workspace.has_pending_upgrade_request && (
 							<Badge size="xs" color="yellow" variant="light">
 								<Trans>Upgrade pending</Trans>
@@ -320,8 +341,8 @@ function PendingRequestCard({ request }: { request: PendingWorkspaceRequest }) {
 			p="lg"
 			radius="md"
 			style={{
-				border: "1px dashed var(--mantine-color-yellow-4)",
 				background: "var(--mantine-color-yellow-0)",
+				border: "1px dashed var(--mantine-color-yellow-4)",
 				opacity: 0.85,
 			}}
 		>
@@ -338,7 +359,7 @@ function PendingRequestCard({ request }: { request: PendingWorkspaceRequest }) {
 					<Box flex={1} style={{ minWidth: 0 }}>
 						<Text fw={500} size="md" lineClamp={1}>
 							{request.kind === "new_workspace"
-								? request.proposed_name ?? t`New workspace`
+								? (request.proposed_name ?? t`New workspace`)
 								: t`Upgrade request`}
 						</Text>
 						<Text size="xs" c="dimmed" lineClamp={1}>
@@ -349,8 +370,12 @@ function PendingRequestCard({ request }: { request: PendingWorkspaceRequest }) {
 
 				<Text size="xs" c="dimmed">
 					<Trans>Pending review</Trans>
-					{request.created_at &&
-						` · ${new Date(request.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}`}
+					{request.created_at && (
+						<>
+							{" · "}
+							{t`requested on ${new Date(request.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}`}
+						</>
+					)}
 				</Text>
 			</Stack>
 		</Paper>
@@ -394,7 +419,7 @@ function AddWorkspaceCard({ organisationId }: { organisationId: string }) {
 			<Stack gap={6} align="center">
 				<IconPlus size={20} style={{ color: "var(--mantine-color-gray-6)" }} />
 				<Text size="sm" c="dimmed">
-					<Trans>Add workspace</Trans>
+					<Trans>Request workspace</Trans>
 				</Text>
 			</Stack>
 		</Paper>
@@ -719,8 +744,8 @@ export const WorkspaceSelectorRoute = () => {
 						<Stack align="center" gap={12} mt="10vh">
 							<Text c="dimmed" size="sm" ta="center">
 								<Trans>
-									You have a pending invite to {invites[0].workspace_name}.
-									The admin needs to free a seat before you can join.
+									You have a pending invite to {invites[0].workspace_name}. The
+									admin needs to free a seat before you can join.
 								</Trans>
 							</Text>
 							<Button
@@ -740,9 +765,7 @@ export const WorkspaceSelectorRoute = () => {
 								</Trans>
 							</Text>
 							<Text c="dimmed" size="xs" ta="center">
-								<Trans>
-									Contact the admin if this was unexpected.
-								</Trans>
+								<Trans>Contact the admin if this was unexpected.</Trans>
 							</Text>
 						</Stack>
 					) : (

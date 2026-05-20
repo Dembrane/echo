@@ -121,7 +121,10 @@ class TestNewWorkspaceSubmission:
     @pytest.mark.asyncio
     async def test_org_admin_can_submit(self):
         body = SubmitWorkspaceRequest(
-            kind="new_workspace", org_id="org-1", proposed_name="My Workspace"
+            kind="new_workspace",
+            org_id="org-1",
+            proposed_name="My Workspace",
+            proposed_billing_period="annual",
         )
         mock_directus = AsyncMock()
         mock_directus.get_items = AsyncMock(return_value=[{"org_id": "org-1", "role": "admin"}])
@@ -163,7 +166,10 @@ class TestNewWorkspaceSubmission:
     @pytest.mark.asyncio
     async def test_org_owner_can_submit(self):
         body = SubmitWorkspaceRequest(
-            kind="new_workspace", org_id="org-1", proposed_name="Test"
+            kind="new_workspace",
+            org_id="org-1",
+            proposed_name="Test",
+            proposed_billing_period="annual",
         )
         mock_directus = AsyncMock()
         mock_directus.get_items = AsyncMock(return_value=[{"org_id": "org-1", "role": "owner"}])
@@ -200,6 +206,7 @@ class TestTierUpgradeSubmission:
         body = SubmitWorkspaceRequest(
             kind="tier_upgrade", org_id="org-1", workspace_id="ws-1",
             proposed_tier="pioneer",
+            proposed_billing_period="annual",
         )
         mock_directus = AsyncMock()
         call_count = 0
@@ -227,6 +234,7 @@ class TestTierUpgradeSubmission:
     async def test_billing_role_can_submit(self):
         body = SubmitWorkspaceRequest(
             kind="tier_upgrade", org_id="org-1", workspace_id="ws-1",
+            proposed_billing_period="annual",
         )
         mock_directus = AsyncMock()
         async def mock_get_items(collection, _query):
@@ -284,6 +292,101 @@ class TestTierUpgradeSubmission:
             with pytest.raises(HTTPException) as exc_info:
                 await submit_workspace_request(body, _mock_auth())
             assert exc_info.value.status_code == 409
+
+
+# ── Billing-period cadence validation ────────────────────────────────
+
+
+class TestBillingPeriodValidation:
+    """Pioneer+ tiers must carry a cadence; pilot must arrive without one.
+
+    These rules are independent of `kind` — the same code path enforces them
+    for both `new_workspace` and `tier_upgrade`. We use `new_workspace` here
+    because its setup is simpler (no workspace lookup mock needed).
+    """
+
+    @staticmethod
+    def _ok_directus():
+        m = AsyncMock()
+        m.get_items = AsyncMock(return_value=[{"org_id": "org-1", "role": "admin"}])
+        m.create_item = AsyncMock(return_value={"data": {"id": "r-1"}})
+        return m
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("tier", ["pioneer", "innovator", "changemaker", "guardian"])
+    async def test_overage_tier_without_cadence_returns_400(self, tier: str):
+        body = SubmitWorkspaceRequest(
+            kind="new_workspace",
+            org_id="org-1",
+            proposed_name="W",
+            proposed_tier=tier,
+            proposed_billing_period=None,
+        )
+        with (
+            patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value={"id": "au-1"}),
+            patch("dembrane.api.v2.workspace_requests.async_directus", self._ok_directus()),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await submit_workspace_request(body, _mock_auth())
+        assert exc_info.value.status_code == 400
+        assert "proposed_billing_period" in str(exc_info.value.detail)
+
+    @pytest.mark.asyncio
+    async def test_pilot_with_cadence_returns_400(self):
+        body = SubmitWorkspaceRequest(
+            kind="new_workspace",
+            org_id="org-1",
+            proposed_name="W",
+            proposed_tier="pilot",
+            proposed_billing_period="annual",
+        )
+        with (
+            patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value={"id": "au-1"}),
+            patch("dembrane.api.v2.workspace_requests.async_directus", self._ok_directus()),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await submit_workspace_request(body, _mock_auth())
+        assert exc_info.value.status_code == 400
+        assert "pilot" in str(exc_info.value.detail)
+
+    @pytest.mark.asyncio
+    async def test_pilot_without_cadence_accepted(self):
+        body = SubmitWorkspaceRequest(
+            kind="new_workspace",
+            org_id="org-1",
+            proposed_name="W",
+            proposed_tier="pilot",
+            proposed_billing_period=None,
+        )
+        mock_d = self._ok_directus()
+        with (
+            patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value={"id": "au-1"}),
+            patch("dembrane.api.v2.workspace_requests.async_directus", mock_d),
+        ):
+            result = await submit_workspace_request(body, _mock_auth())
+        assert result.status == "pending"
+        row = mock_d.create_item.call_args[0][1]
+        assert row["proposed_billing_period"] is None
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("cadence", ["annual", "monthly"])
+    async def test_pioneer_with_cadence_accepted(self, cadence: str):
+        body = SubmitWorkspaceRequest(
+            kind="new_workspace",
+            org_id="org-1",
+            proposed_name="W",
+            proposed_tier="pioneer",
+            proposed_billing_period=cadence,
+        )
+        mock_d = self._ok_directus()
+        with (
+            patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value={"id": "au-1"}),
+            patch("dembrane.api.v2.workspace_requests.async_directus", mock_d),
+        ):
+            result = await submit_workspace_request(body, _mock_auth())
+        assert result.status == "pending"
+        row = mock_d.create_item.call_args[0][1]
+        assert row["proposed_billing_period"] == cadence
 
 
 # ── Schema script step_18 ────────────────────────────────────────────

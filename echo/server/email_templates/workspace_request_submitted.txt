@@ -4,7 +4,8 @@ Workspace request received
 
 Organisation:   {{ org_name }}
 Proposed tier:  {{ proposed_tier }}
-{% if proposed_name %}Name:           {{ proposed_name }}
+{% if proposed_billing_period %}Billing:        {{ proposed_billing_period }}
+{% endif %}{% if proposed_name %}Name:           {{ proposed_name }}
 {% endif %}
 {% if requester_message %}Message:
 {{ requester_message }}

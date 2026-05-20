@@ -1,40 +1,38 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Box, Paper, SegmentedControl, Stack, Table, Text } from "@mantine/core";
+import { Badge, Box, Group, Stack, Table, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { API_BASE_URL } from "@/config";
+import {
+	type BillingPeriod,
+	fetchTierCapacities,
+	isTier,
+	pricingForBillingPeriod,
+	TIER_ORDER,
+	type Tier,
+	type TierCapacity,
+	taglineFor,
+} from "@/lib/tiers";
 
-interface TierCapacity {
-	tier: string;
-	tagline: string;
-	price_eur_monthly: number | null;
-	price_note: string;
-	duration: string;
-	included_seats: number | null;
-	seat_overage_eur: number | null;
-	included_hours: number | null;
-	hour_overage_eur: number | null;
-	hard_block_on_hours: boolean;
-	training_included: string;
-}
-
-async function fetchTierCapacities(): Promise<TierCapacity[]> {
-	const res = await fetch(`${API_BASE_URL}/v2/workspaces/tier-capacities`, {
-		credentials: "include",
-	});
-	if (!res.ok) return [];
-	return res.json();
-}
-
-function fmtEur(value: number | null): string {
-	if (value == null) return "—";
-	return `€${value}`;
-}
-
-function fmtPrice(cap: TierCapacity): string {
-	if (cap.price_eur_monthly == null) {
-		return cap.price_note; // e.g. "€349 one-time"
+function fmtPrice(cap: TierCapacity, billingPeriod: BillingPeriod): string {
+	const resolved = pricingForBillingPeriod(cap, billingPeriod);
+	if (!resolved) return t`Free`;
+	if (resolved.kind === "one_time") {
+		return `€${resolved.amount_eur.toLocaleString("en-IE")}`;
 	}
-	return `€${cap.price_eur_monthly}/mo`;
+	return `€${resolved.per_month_eur.toLocaleString("en-IE")}`;
+}
+
+function fmtPricePeriod(
+	cap: TierCapacity,
+	billingPeriod: BillingPeriod,
+): string {
+	const resolved = pricingForBillingPeriod(cap, billingPeriod);
+	if (!resolved) return "";
+	if (resolved.kind === "one_time") return t`one-time`;
+	if (resolved.kind === "annual") return t`/mo · billed annually`;
+	return t`/mo · billed monthly`;
 }
 
 function fmtSeats(cap: TierCapacity): string {
@@ -42,146 +40,222 @@ function fmtSeats(cap: TierCapacity): string {
 	return String(cap.included_seats);
 }
 
-function fmtSeatOverage(cap: TierCapacity): string {
-	if (cap.seat_overage_eur == null) return "—";
-	return `+${fmtEur(cap.seat_overage_eur)}/seat`;
-}
-
 function fmtHours(cap: TierCapacity): string {
 	if (cap.included_hours == null) return "∞";
 	return String(cap.included_hours);
 }
 
+function fmtSeatOverage(cap: TierCapacity): string {
+	if (cap.seat_overage_eur == null) return "—";
+	return t`+€${cap.seat_overage_eur}/seat`;
+}
+
 function fmtHourOverage(cap: TierCapacity): string {
-	if (cap.hard_block_on_hours) return "hard block";
+	if (cap.hard_block_on_hours) return "€0";
 	if (cap.hour_overage_eur == null) return "—";
-	return `${fmtEur(cap.hour_overage_eur)}/h`;
+	return t`€${cap.hour_overage_eur}/h`;
 }
 
 interface Props {
-	/** Optional: highlight one tier column (e.g. the workspace's current
-	 * tier). */
 	highlightTier?: string;
-	/** Optional: cap the rendered tiers to those at or above this one.
-	 * Useful in the upgrade modal where tiers below the current aren't
-	 * relevant. */
 	fromTier?: string;
-	/** Compact mode drops the long rows (overage, training) to fit narrow
-	 * modals. Default false. */
 	compact?: boolean;
-	/** When set, tier columns become selectable. The selected tier is
-	 * tracked by highlightTier; clicks call this callback. */
 	onTierSelect?: (tier: string) => void;
+	billingPeriod?: BillingPeriod;
 }
 
-const TIER_ORDER = [
-	"free",
-	"pilot",
-	"pioneer",
-	"innovator",
-	"changemaker",
-	"guardian",
-];
+const HIGHLIGHT_BG = "var(--mantine-color-primary-light)";
+const HIGHLIGHT_COLOR = "var(--mantine-color-primary-6)";
 
-/**
- * Matrix v1.1 §1 — tier × capacity table rendered in-product.
- *
- * Contract: "the tier capacity matrix must be visible inside the product
- * at minimum on the workspace billing tab and in the upgrade-request
- * modal. Customers should never have to leave the app to understand what
- * each tier gets them."
- *
- * Two render surfaces today: UpgradeModal (compact=true, fromTier set to
- * the caller's current) and — when the settings tab split lands — the
- * billing tab (compact=false, full history).
- */
 export const TierCapacityMatrix = ({
 	highlightTier,
 	fromTier,
 	compact = false,
 	onTierSelect,
+	billingPeriod = "annual",
 }: Props) => {
 	const { data, isLoading } = useQuery({
+		queryFn: () => fetchTierCapacities(API_BASE_URL),
 		queryKey: ["v2", "tier-capacities"],
-		queryFn: fetchTierCapacities,
-		// Static per deploy — cache aggressively.
 		staleTime: 60 * 60 * 1000,
 	});
 
 	if (isLoading || !data || data.length === 0) return null;
 
-	const fromIdx = fromTier ? TIER_ORDER.indexOf(fromTier) : -1;
+	const fromIdx = fromTier ? TIER_ORDER.indexOf(fromTier as Tier) : -1;
 	const tiers = data.filter((cap) => {
 		if (fromIdx < 0) return true;
-		const idx = TIER_ORDER.indexOf(cap.tier);
-		return idx >= 0 && idx > fromIdx; // strictly above current
+		const idx = TIER_ORDER.indexOf(cap.tier as Tier);
+		return idx >= 0 && idx > fromIdx;
 	});
 	if (tiers.length === 0) return null;
 
-	const rows = compact
-		? ([
-				{ label: "Price", render: fmtPrice },
-				{ label: "Seats", render: fmtSeats },
-				{ label: "Hours", render: fmtHours },
-				{ label: "Hour overage", render: fmtHourOverage },
-			] as const)
-		: ([
-				{ label: "Price", render: fmtPrice },
-				{ label: "Duration", render: (c: TierCapacity) => c.duration },
-				{ label: "Seats", render: fmtSeats },
-				{ label: "Seat overage", render: fmtSeatOverage },
-				{ label: "Hours", render: fmtHours },
-				{ label: "Hour overage", render: fmtHourOverage },
-				{
-					label: "Training",
-					render: (c: TierCapacity) => c.training_included,
-				},
-			] as const);
+	const stickyLabel: React.CSSProperties = {
+		background: "var(--app-background)",
+		left: 0,
+		position: "sticky",
+		zIndex: 1,
+	};
+
+	const cellStyle = (tier: string): React.CSSProperties => ({
+		background: tier === highlightTier ? HIGHLIGHT_BG : undefined,
+		cursor: onTierSelect ? "pointer" : undefined,
+		minWidth: 120,
+		verticalAlign: "top",
+	});
+
+	const valStyle = (tier: string): React.CSSProperties => ({
+		color: tier === highlightTier ? HIGHLIGHT_COLOR : undefined,
+	});
+
+	const labelCellStyle: React.CSSProperties = {
+		verticalAlign: "top",
+		whiteSpace: "nowrap",
+		...stickyLabel,
+	};
+
+	const handleClick = (tier: string) => {
+		if (onTierSelect) onTierSelect(tier);
+	};
+
+	type Row = {
+		key: string;
+		label: ReactNode;
+		render: (cap: TierCapacity) => string;
+		renderSub?: (cap: TierCapacity) => string;
+	};
+
+	const mainRows: Row[] = [
+		{
+			key: "price",
+			label: <Trans>Price</Trans>,
+			render: (cap) => fmtPrice(cap, billingPeriod),
+			renderSub: (cap) => fmtPricePeriod(cap, billingPeriod),
+		},
+	];
+
+	if (!compact) {
+		mainRows.push({
+			key: "duration",
+			label: <Trans>Duration</Trans>,
+			render: (c) => c.duration,
+		});
+	}
+
+	const usageRows: Row[] = [
+		{ key: "seats", label: <Trans>Seats (included)</Trans>, render: fmtSeats },
+		{ key: "hours", label: <Trans>Hours (included)</Trans>, render: fmtHours },
+	];
+
+	const overageRows: Row[] = [
+		{
+			key: "seat-overage",
+			label: <Trans>Additional seat</Trans>,
+			render: fmtSeatOverage,
+		},
+		{
+			key: "hour-overage",
+			label: <Trans>Additional hour</Trans>,
+			render: fmtHourOverage,
+		},
+	];
+
+	const trainingRows: Row[] = [
+		{
+			key: "training",
+			label: <Trans>Training</Trans>,
+			render: (c) => c.training_included,
+		},
+	];
+
+	function renderRows(rows: Row[]) {
+		return rows.map((row) => (
+			<Table.Tr key={row.key}>
+				<Table.Td style={labelCellStyle}>
+					<Text size="sm" c="dimmed">
+						{row.label}
+					</Text>
+				</Table.Td>
+				{tiers.map((cap) => (
+					<Table.Td
+						key={cap.tier}
+						style={cellStyle(cap.tier)}
+						onClick={() => handleClick(cap.tier)}
+					>
+						<Text size="sm" style={valStyle(cap.tier)}>
+							{row.render(cap)}
+						</Text>
+						{row.renderSub && (
+							<Text
+								size="xs"
+								c={cap.tier === highlightTier ? HIGHLIGHT_COLOR : "dimmed"}
+							>
+								{row.renderSub(cap)}
+							</Text>
+						)}
+					</Table.Td>
+				))}
+			</Table.Tr>
+		));
+	}
 
 	return (
-		<Stack gap={compact ? "xs" : "sm"}>
-			{onTierSelect && (
-				<SegmentedControl
-					value={highlightTier ?? ""}
-					onChange={(v) => onTierSelect(v)}
-					data={tiers.map((cap) => ({
-						value: cap.tier,
-						label: cap.tier.charAt(0).toUpperCase() + cap.tier.slice(1),
-					}))}
-					fullWidth
-					size="sm"
-				/>
-			)}
-			<Paper withBorder radius="sm" p={compact ? "xs" : "md"} style={{ overflowX: "auto" }}>
-				<Table verticalSpacing="xs" striped>
+		<Stack gap={0}>
+			<Box
+				style={{
+					border: "1px solid var(--mantine-color-gray-3)",
+					borderRadius: "var(--mantine-radius-default)",
+					overflowX: "auto",
+				}}
+			>
+				<Table
+					withRowBorders
+					verticalSpacing={10}
+					horizontalSpacing={16}
+					styles={{
+						table: { width: "100%" },
+					}}
+				>
 					<Table.Thead>
 						<Table.Tr>
-							<Table.Th />
+							<Table.Th style={labelCellStyle}>
+								<Text size="sm" c="dimmed">
+									<Trans>Plans</Trans>
+								</Text>
+							</Table.Th>
 							{tiers.map((cap) => {
 								const isHighlight = cap.tier === highlightTier;
+								const tagline = isTier(cap.tier)
+									? taglineFor(cap.tier)
+									: cap.tagline;
 								return (
 									<Table.Th
 										key={cap.tier}
 										style={{
-											textAlign: "left",
-											background: isHighlight ? "rgba(65,105,225,0.08)" : undefined,
-											borderTop: isHighlight
-												? "2px solid #4169e1"
-												: undefined,
+											background: isHighlight ? HIGHLIGHT_BG : undefined,
 											cursor: onTierSelect ? "pointer" : undefined,
+											minWidth: 130,
+											verticalAlign: "top",
 										}}
-										onClick={onTierSelect ? () => onTierSelect(cap.tier) : undefined}
+										onClick={() => handleClick(cap.tier)}
 									>
-										<Stack gap={0}>
-											<Text
-												size="sm"
-												fw={500}
-												style={{ textTransform: "capitalize" }}
-											>
-												{cap.tier}
-											</Text>
-											<Text size="xs" c="dimmed" fw={400}>
-												{cap.tagline}
+										<Stack gap={4}>
+											<Group gap={8} wrap="nowrap">
+												<Text
+													size="sm"
+													c={isHighlight ? HIGHLIGHT_COLOR : undefined}
+													style={{ textTransform: "capitalize" }}
+												>
+													{cap.tier}
+												</Text>
+												{cap.tier === "innovator" && (
+													<Badge variant="light" size="xs">
+														<Trans>Popular</Trans>
+													</Badge>
+												)}
+											</Group>
+											<Text size="xs" c="dimmed" lh={1.3}>
+												{tagline}
 											</Text>
 										</Stack>
 									</Table.Th>
@@ -190,40 +264,23 @@ export const TierCapacityMatrix = ({
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>
-						{rows.map((row) => (
-							<Table.Tr key={row.label}>
-								<Table.Td>
-									<Text size="xs" c="dimmed">
-										<Trans id={row.label}>{row.label}</Trans>
-									</Text>
-								</Table.Td>
-								{tiers.map((cap) => (
-									<Table.Td
-										key={cap.tier}
-										style={{
-											background:
-												cap.tier === highlightTier
-													? "rgba(65,105,225,0.04)"
-													: undefined,
-											cursor: onTierSelect ? "pointer" : undefined,
-										}}
-										onClick={onTierSelect ? () => onTierSelect(cap.tier) : undefined}
-									>
-										<Text size="xs">{row.render(cap)}</Text>
-									</Table.Td>
-								))}
-							</Table.Tr>
-						))}
+						{renderRows(mainRows)}
+						{!compact && (
+							<>
+								{renderRows(usageRows)}
+								{renderRows(overageRows)}
+								{renderRows(trainingRows)}
+							</>
+						)}
+						{compact && (
+							<>
+								{renderRows(usageRows)}
+								{renderRows(overageRows)}
+							</>
+						)}
 					</Table.Tbody>
 				</Table>
-				{compact && (
-					<Box mt={4}>
-						<Text size="xs" c="dimmed" ta="right">
-							<Trans>∞ = unlimited subject to plan</Trans>
-						</Text>
-					</Box>
-				)}
-			</Paper>
+			</Box>
 		</Stack>
 	);
 };

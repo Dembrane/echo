@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
+import type { TierPricing } from "@/lib/tiers";
 
 export interface UsageGates {
 	over_cap_active: boolean;
@@ -19,7 +20,12 @@ export interface WorkspaceUsageData {
 	seat_count_included: number | null;
 	guest_count: number;
 	project_count: number;
-	projects: { id: string; name: string; audio_hours: number; conversation_count: number }[];
+	projects: {
+		id: string;
+		name: string;
+		audio_hours: number;
+		conversation_count: number;
+	}[];
 	pilot_hard_block_active: boolean;
 	seat_invite_blocked?: boolean;
 	usage_gates: UsageGates;
@@ -28,8 +34,7 @@ export interface WorkspaceUsageData {
 	next_tier?: {
 		tier: string;
 		tagline: string;
-		price_eur_monthly: number | null;
-		price_note: string;
+		pricing: TierPricing | null;
 		included_hours: number | null;
 		included_seats: number | null;
 	} | null;
@@ -65,9 +70,9 @@ export function useWorkspaceUsage(
 	const enabled = options?.enabled !== false && !!workspaceId;
 
 	const query = useQuery({
-		queryKey: ["v2", "workspace-usage", workspaceId, monthOffset],
-		queryFn: () => fetchWorkspaceUsage(workspaceId as string, monthOffset),
 		enabled,
+		queryFn: () => fetchWorkspaceUsage(workspaceId as string, monthOffset),
+		queryKey: ["v2", "workspace-usage", workspaceId, monthOffset],
 		refetchOnMount: "always" as const,
 		refetchOnWindowFocus: "always" as const,
 		staleTime: 60_000,
@@ -75,8 +80,8 @@ export function useWorkspaceUsage(
 
 	const usageGates: UsageGates = query.data?.usage_gates ?? {
 		over_cap_active: false,
-		uploads_locked: false,
 		upgrade_cta_tier: null,
+		uploads_locked: false,
 	};
 
 	return {

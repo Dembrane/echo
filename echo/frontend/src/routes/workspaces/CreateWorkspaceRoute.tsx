@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Alert,
+	Anchor,
 	Button,
 	Center,
 	Container,
@@ -18,19 +19,28 @@ import {
 	ThemeIcon,
 	Title,
 } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
 import { useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import { useMutation } from "@tanstack/react-query";
+import { IconCheck } from "@tabler/icons-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
+import { CharsRemainingIndicator } from "@/components/common/CharsRemainingIndicator";
 import { toast } from "@/components/common/Toaster";
+import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
+import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
-import { TIER_CAPACITY_SHORT, type Tier } from "@/lib/tiers";
-
-const REQUESTABLE_TIERS: Tier[] = ["pilot", "pioneer", "innovator", "changemaker", "guardian"];
+import {
+	type BillingPeriod,
+	capacityShortFor,
+	fetchTierCapacities,
+	pricingForBillingPeriod,
+	type Tier,
+	type TierCapacity,
+} from "@/lib/tiers";
 
 async function submitWorkspaceRequest(payload: {
 	kind: "new_workspace";
@@ -38,6 +48,7 @@ async function submitWorkspaceRequest(payload: {
 	proposed_name: string;
 	proposed_tier: string;
 	proposed_visibility: string;
+	proposed_billing_period: BillingPeriod | null;
 	requester_message?: string;
 }) {
 	const res = await fetch(`${API_BASE_URL}/v2/workspace-requests`, {
@@ -71,6 +82,7 @@ type Privacy = "open" | "private";
  */
 export const CreateWorkspaceRoute = () => {
 	const navigate = useI18nNavigate();
+	const queryClient = useQueryClient();
 	const [searchParams] = useSearchParams();
 	const organisationIdFromQuery = searchParams.get("organisationId") ?? null;
 	const { data: meV2, isLoading: meLoading } = useV2Me();
@@ -78,6 +90,7 @@ export const CreateWorkspaceRoute = () => {
 	const [step, setStep] = useState(0);
 	const [name, setName] = useState("");
 	const [selectedTier, setSelectedTier] = useState<Tier>("innovator");
+	const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
 	const [privacy, setPrivacy] = useState<Privacy>("open");
 	const [message, setMessage] = useState("");
 	const [submitted, setSubmitted] = useState(false);
@@ -99,10 +112,67 @@ export const CreateWorkspaceRoute = () => {
 		}
 	}, [meLoading, meV2, navigate]);
 
-	const targetOrganisationId = organisationIdFromQuery || adminOrganisations[0]?.id || null;
-	const targetOrganisation = adminOrganisations.find((o) => o.id === targetOrganisationId) ?? null;
+	const targetOrganisationId =
+		organisationIdFromQuery || adminOrganisations[0]?.id || null;
+	const targetOrganisation =
+		adminOrganisations.find((o) => o.id === targetOrganisationId) ?? null;
 
-	const canPickPrivate = selectedTier !== "free" && selectedTier !== "pilot" && selectedTier !== "pioneer";
+	const { data: workspacesData } = useQuery<{
+		workspaces: Array<{
+			id: string;
+			org_id: string;
+			tier: string;
+			name: string;
+		}>;
+	}>({
+		queryFn: async () => {
+			const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
+				credentials: "include",
+			});
+			if (!res.ok) throw new Error("Failed to fetch workspaces");
+			return res.json();
+		},
+		queryKey: ["v2", "workspaces"],
+		staleTime: 60_000,
+	});
+
+	// Tier capacities for the review-step price summary. Shares the query
+	// key with TierPricingCards so this is a free read from the cache.
+	const { data: tierCapacities } = useQuery({
+		queryFn: () => fetchTierCapacities(API_BASE_URL),
+		queryKey: ["v2", "tier-capacities"],
+		staleTime: 60 * 60 * 1000,
+	});
+
+	const reviewTierSummary = useMemo(() => {
+		const cap = tierCapacities?.find(
+			(c: TierCapacity) => c.tier === selectedTier,
+		);
+		if (!cap) return capacityShortFor(selectedTier);
+		const resolved = pricingForBillingPeriod(cap, billingPeriod);
+		if (!resolved) return capacityShortFor(selectedTier);
+		if (resolved.kind === "one_time") {
+			return t`€${resolved.amount_eur} one-time`;
+		}
+		if (resolved.kind === "annual") {
+			return t`€${resolved.per_month_eur}/mo · billed annually · €${resolved.total_per_year_eur}/yr`;
+		}
+		return t`€${resolved.per_month_eur}/mo · billed monthly`;
+	}, [tierCapacities, selectedTier, billingPeriod]);
+
+	const freeWorkspaceForOrg = useMemo(() => {
+		if (!workspacesData?.workspaces || !targetOrganisationId) return null;
+		return (
+			workspacesData.workspaces.find(
+				(w) => w.org_id === targetOrganisationId && w.tier === "free",
+			) ?? null
+		);
+	}, [workspacesData, targetOrganisationId]);
+
+	const canPickPrivate =
+		selectedTier !== "free" &&
+		selectedTier !== "pilot" &&
+		selectedTier !== "pioneer";
 
 	useEffect(() => {
 		if (!canPickPrivate && privacy === "private") {
@@ -110,36 +180,52 @@ export const CreateWorkspaceRoute = () => {
 		}
 	}, [canPickPrivate, privacy]);
 
+	// Pilot is a one-time fee; the toggle doesn't influence its price and the
+	// backend rejects `proposed_billing_period` on pilot. Send null.
+	const submittedBillingPeriod: BillingPeriod | null =
+		selectedTier === "pilot" ? null : billingPeriod;
+
 	const mutation = useMutation({
 		mutationFn: () =>
 			submitWorkspaceRequest({
 				kind: "new_workspace",
 				org_id: targetOrganisationId!,
+				proposed_billing_period: submittedBillingPeriod,
 				proposed_name: name.trim(),
 				proposed_tier: selectedTier,
-				proposed_visibility: privacy === "open" ? "open_to_organisation" : "private",
+				proposed_visibility:
+					privacy === "open" ? "open_to_organisation" : "private",
 				requester_message: message.trim() || undefined,
 			}),
-		onSuccess: () => {
-			setSubmitted(true);
-		},
 		onError: (error: Error) => {
 			toast.error(error.message);
+		},
+		onSuccess: () => {
+			setSubmitted(true);
+			// /v2/workspaces returns `pending_workspace_requests`; without an
+			// invalidation, the selector keeps stale data and the new request
+			// only appears after a hard refresh.
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			posthog.capture("workspace_request_submitted", {
+				kind: "new_workspace",
+				proposed_billing_period: submittedBillingPeriod,
+				proposed_tier: selectedTier,
+			});
 		},
 	});
 
 	const handleCancel = () => {
 		if (name.trim()) {
 			modals.openConfirmModal({
-				title: t`Discard this request?`,
 				children: (
 					<Text size="sm">
 						<Trans>Your draft won't be saved.</Trans>
 					</Text>
 				),
-				labels: { confirm: t`Discard`, cancel: t`Keep editing` },
 				confirmProps: { color: "red" },
+				labels: { cancel: t`Keep editing`, confirm: t`Discard` },
 				onConfirm: () => navigate("/w"),
+				title: t`Discard this request?`,
 			});
 		} else {
 			navigate("/w");
@@ -163,8 +249,9 @@ export const CreateWorkspaceRoute = () => {
 					</Title>
 					<Text size="sm" c="dimmed">
 						<Trans>
-							Only organisation admins and owners can request workspaces. Ask an admin
-							on your organisation to create one, or ask them to promote you first.
+							Only organisation admins and owners can request workspaces. Ask an
+							admin on your organisation to create one, or ask them to promote
+							you first.
 						</Trans>
 					</Text>
 					<Group>
@@ -212,18 +299,28 @@ export const CreateWorkspaceRoute = () => {
 								<Text size="xs" c="dimmed" w={90}>
 									<Trans>Organisation</Trans>
 								</Text>
-								<Text size="sm">
-									{targetOrganisation?.name ?? ""}
-								</Text>
+								<Text size="sm">{targetOrganisation?.name ?? ""}</Text>
 							</Group>
 							<Group gap={12} align="baseline">
 								<Text size="xs" c="dimmed" w={90}>
 									<Trans>Tier</Trans>
 								</Text>
-								<Text size="sm">
-									{capitalizedTier}
-								</Text>
+								<Text size="sm">{capitalizedTier}</Text>
 							</Group>
+							{submittedBillingPeriod && (
+								<Group gap={12} align="baseline">
+									<Text size="xs" c="dimmed" w={90}>
+										<Trans>Billing</Trans>
+									</Text>
+									<Text size="sm" tt="capitalize">
+										{submittedBillingPeriod === "annual" ? (
+											<Trans>Annual</Trans>
+										) : (
+											<Trans>Monthly</Trans>
+										)}
+									</Text>
+								</Group>
+							)}
 							<Group gap={12} align="baseline">
 								<Text size="xs" c="dimmed" w={90}>
 									<Trans>Access</Trans>
@@ -241,8 +338,9 @@ export const CreateWorkspaceRoute = () => {
 
 					<Text size="xs" c="dimmed">
 						<Trans>
-							You'll get a notification once the request is approved or if we need more details.
-							You can track the status on your workspaces page.
+							You'll get a notification once the request is approved or if we
+							need more details. You can track the status on your workspaces
+							page.
 						</Trans>
 					</Text>
 
@@ -258,7 +356,7 @@ export const CreateWorkspaceRoute = () => {
 	const canSubmit = canAdvanceFromName && Boolean(targetOrganisationId);
 
 	return (
-		<Container size="sm" py="xl" px="lg">
+		<Container size="xl" py="xl" px="lg">
 			<Stack gap={28}>
 				<Stack gap={6}>
 					<Title order={3} fw={400}>
@@ -276,8 +374,8 @@ export const CreateWorkspaceRoute = () => {
 				{organisationIdFromQuery && !targetOrganisation && (
 					<Alert color="gray" variant="light">
 						<Trans>
-							You don't have permission to create workspaces in that organisation.
-							Falling back to your primary organisation instead.
+							You don't have permission to create workspaces in that
+							organisation. Falling back to your primary organisation instead.
 						</Trans>
 					</Alert>
 				)}
@@ -292,6 +390,26 @@ export const CreateWorkspaceRoute = () => {
 				>
 					<Stepper.Step label={t`Name`}>
 						<Stack gap={16} mt="md">
+							<Text size="sm" c="dimmed">
+								<Trans>Name your workspace.</Trans>
+							</Text>
+							{freeWorkspaceForOrg && (
+								<Alert variant="light" color="blue" py="xs">
+									<Text size="sm">
+										<Trans>
+											You already have a free workspace.{" "}
+											<Anchor
+												size="sm"
+												onClick={() =>
+													navigate(`/w/${freeWorkspaceForOrg.id}/projects`)
+												}
+											>
+												Open {freeWorkspaceForOrg.name}
+											</Anchor>
+										</Trans>
+									</Text>
+								</Alert>
+							)}
 							<TextInput
 								autoFocus
 								label={t`Workspace name`}
@@ -312,8 +430,8 @@ export const CreateWorkspaceRoute = () => {
 									label={t`Organisation`}
 									description={t`Which organisation does this workspace belong to?`}
 									data={adminOrganisations.map((o) => ({
-										value: o.id,
 										label: o.name,
+										value: o.id,
 									}))}
 									value={targetOrganisationId}
 									onChange={(v) => {
@@ -328,36 +446,28 @@ export const CreateWorkspaceRoute = () => {
 
 					<Stepper.Step label={t`Tier`}>
 						<Stack gap={14} mt="md">
-							<Radio.Group
-								label={t`Choose a tier`}
-								description={t`Each tier includes different limits. You can request an upgrade later.`}
+							<Text size="sm" c="dimmed">
+								<Trans>Pick a plan for your team.</Trans>
+							</Text>
+							<Group justify="center" mb="xs">
+								<BillingPeriodToggle
+									value={billingPeriod}
+									onChange={setBillingPeriod}
+								/>
+							</Group>
+							<TierPricingCards
 								value={selectedTier}
 								onChange={(v) => setSelectedTier(v as Tier)}
-							>
-								<Stack gap={10} mt={8}>
-									{REQUESTABLE_TIERS.map((tier) => (
-										<Radio
-											key={tier}
-											value={tier}
-											label={
-												<Stack gap={2}>
-													<Text size="sm" tt="capitalize">
-														{tier}
-													</Text>
-													<Text size="xs" c="dimmed">
-														{TIER_CAPACITY_SHORT[tier]}
-													</Text>
-												</Stack>
-											}
-										/>
-									))}
-								</Stack>
-							</Radio.Group>
+								billingPeriod={billingPeriod}
+							/>
 						</Stack>
 					</Stepper.Step>
 
 					<Stepper.Step label={t`Access`}>
 						<Stack gap={14} mt="md">
+							<Text size="sm" c="dimmed">
+								<Trans>Set who can see and join.</Trans>
+							</Text>
 							<Radio.Group
 								label={t`Who can see this workspace?`}
 								description={t`You can change this later in workspace settings.`}
@@ -386,11 +496,15 @@ export const CreateWorkspaceRoute = () => {
 										disabled={!canPickPrivate}
 										label={
 											<Stack gap={2}>
-												<Text size="sm" c={canPickPrivate ? undefined : "dimmed"}>
+												<Text
+													size="sm"
+													c={canPickPrivate ? undefined : "dimmed"}
+												>
 													<Trans>Private</Trans>
 													{!canPickPrivate && (
 														<Text span size="xs" c="dimmed">
-															{" "}(<Trans>requires Innovator or higher</Trans>)
+															{" "}
+															(<Trans>requires Innovator or higher</Trans>)
 														</Text>
 													)}
 												</Text>
@@ -409,6 +523,9 @@ export const CreateWorkspaceRoute = () => {
 
 					<Stepper.Step label={t`Review`}>
 						<Stack gap={14} mt="md">
+							<Text size="sm" c="dimmed">
+								<Trans>Review before submitting.</Trans>
+							</Text>
 							<Paper withBorder p="md" radius="sm">
 								<Stack gap={10}>
 									<Group gap={12} align="baseline">
@@ -447,23 +564,42 @@ export const CreateWorkspaceRoute = () => {
 											{selectedTier}
 											<Text span c="dimmed" size="xs">
 												{" · "}
-												{TIER_CAPACITY_SHORT[selectedTier]}
+												{reviewTierSummary}
 											</Text>
 										</Text>
 									</Group>
+									{submittedBillingPeriod && (
+										<Group gap={12} align="baseline">
+											<Text size="xs" c="dimmed" w={80}>
+												<Trans>Billing</Trans>
+											</Text>
+											<Text size="sm" tt="capitalize">
+												{submittedBillingPeriod === "annual" ? (
+													<Trans>Annual</Trans>
+												) : (
+													<Trans>Monthly</Trans>
+												)}
+											</Text>
+										</Group>
+									)}
 								</Stack>
 							</Paper>
 
 							<Textarea
 								label={t`Message (optional)`}
-								description={t`Anything we should know? Discount requests, timelines, context.`}
-								placeholder={t`e.g. We're a non-profit and would appreciate a discount.`}
+								description={t`Anything we should know? Team size, timelines, intended use.`}
+								placeholder={t`e.g. 12-person research team starting in June.`}
 								value={message}
 								onChange={(e) => setMessage(e.currentTarget.value)}
 								maxLength={1000}
 								autosize
 								minRows={2}
 								maxRows={5}
+							/>
+							<CharsRemainingIndicator
+								value={message}
+								max={1000}
+								numberThresholdRatio={0.9}
 							/>
 						</Stack>
 					</Stepper.Step>
@@ -472,14 +608,16 @@ export const CreateWorkspaceRoute = () => {
 				<Group justify="space-between" mt="sm">
 					<Button
 						variant="outline"
-						size="sm"
+						size="md"
+						px="xl"
 						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
 					>
 						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
 					</Button>
 					{step < 3 ? (
 						<Button
-							size="sm"
+							size="md"
+							px="xl"
 							disabled={step === 0 && !canAdvanceFromName}
 							onClick={() => setStep(step + 1)}
 						>
@@ -487,7 +625,8 @@ export const CreateWorkspaceRoute = () => {
 						</Button>
 					) : (
 						<Button
-							size="sm"
+							size="md"
+							px="xl"
 							loading={mutation.isPending}
 							disabled={!canSubmit}
 							onClick={() => mutation.mutate()}
@@ -497,7 +636,6 @@ export const CreateWorkspaceRoute = () => {
 					)}
 				</Group>
 			</Stack>
-
 		</Container>
 	);
 };

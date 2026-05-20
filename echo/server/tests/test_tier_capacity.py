@@ -18,12 +18,15 @@ import pytest
 from dembrane.policies import TIER_ORDER
 from dembrane.tier_capacity import (
     TIER_CAPACITIES,
+    MONTHLY_BILLING_PREMIUM_PCT,
     next_tier,
     get_capacity,
     is_hard_blocked,
+    build_tier_pricing,
     compute_is_over_cap,
     compute_usage_gates,
     tier_allows_overage,
+    compute_monthly_billing_price,
 )
 
 # ── Tier matrix structure ──
@@ -273,3 +276,74 @@ class TestComputeIsOverCap:
     def test_ac_pioneer_never_stamps_true(self):
         """AC: pioneer conversation never stamps true regardless of usage."""
         assert compute_is_over_cap("pioneer", 100.0, 1.0) is False
+
+
+# ── Monthly billing premium math ──
+
+
+class TestComputeMonthlyBillingPrice:
+    def test_premium_is_ten_percent(self):
+        assert MONTHLY_BILLING_PREMIUM_PCT == 10
+
+    def test_pioneer_base(self):
+        # 200 * 1.10 = 220
+        assert compute_monthly_billing_price(200) == 220
+
+    def test_innovator_base(self):
+        # 500 * 1.10 = 550
+        assert compute_monthly_billing_price(500) == 550
+
+    def test_changemaker_base(self):
+        # 1500 * 1.10 = 1650
+        assert compute_monthly_billing_price(1500) == 1650
+
+    def test_guardian_base(self):
+        # 5000 * 1.10 = 5500
+        assert compute_monthly_billing_price(5000) == 5500
+
+    def test_odd_rate_rounds_to_nearest_euro(self):
+        # 333 * 1.10 = 366.3 → 366
+        assert compute_monthly_billing_price(333) == 366
+
+    def test_zero_stays_zero(self):
+        assert compute_monthly_billing_price(0) == 0
+
+
+# ── Nested pricing builder ──
+
+
+class TestBuildTierPricing:
+    def test_free_returns_none(self):
+        assert build_tier_pricing("free") is None
+
+    def test_unknown_tier_returns_none(self):
+        assert build_tier_pricing("nonexistent") is None
+
+    def test_pilot_has_only_one_time(self):
+        p = build_tier_pricing("pilot")
+        assert p == {"one_time": {"amount_eur": 349}}
+        assert "annual_billing" not in p
+        assert "monthly_billing" not in p
+
+    @pytest.mark.parametrize(
+        ("tier", "annual"),
+        [
+            ("pioneer", 200),
+            ("innovator", 500),
+            ("changemaker", 1500),
+            ("guardian", 5000),
+        ],
+    )
+    def test_overage_tiers_have_annual_and_monthly(self, tier: str, annual: int):
+        p = build_tier_pricing(tier)
+        assert p is not None
+        assert "one_time" not in p
+        assert p["annual_billing"]["per_month_eur"] == annual
+        assert p["annual_billing"]["total_per_year_eur"] == annual * 12
+        assert p["monthly_billing"]["per_month_eur"] == round(annual * 1.10)
+
+    def test_billing_period_applicable_flag(self):
+        assert get_capacity("free").billing_period_applicable is False
+        assert get_capacity("pilot").billing_period_applicable is False
+        for tier in ("pioneer", "innovator", "changemaker", "guardian"):
+            assert get_capacity(tier).billing_period_applicable is True

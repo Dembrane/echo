@@ -1,0 +1,80 @@
+.wrap {
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: var(--mantine-radius-default);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.wrap:not(.selected):hover {
+  border-color: var(--mantine-color-primary-4);
+  background: rgba(65, 105, 225, 0.02);
+}
+
+.selected {
+  border-color: var(--mantine-color-primary-6);
+  box-shadow: 0 0 0 1px var(--mantine-color-primary-6);
+}
+
+.highlighted {
+  border-color: rgba(65, 105, 225, 0.22);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.05),
+    0 8px 20px rgba(65, 105, 225, 0.14);
+  transform: translateY(-4px);
+}
+
+.highlighted.selected {
+  border-color: var(--mantine-color-primary-6);
+  box-shadow:
+    0 0 0 1px var(--mantine-color-primary-6),
+    0 2px 4px rgba(15, 23, 42, 0.05),
+    0 8px 20px rgba(65, 105, 225, 0.16);
+}
+
+.wideWrap {
+  composes: wrap;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.wideInner {
+  flex: 1;
+  padding: 20px 16px 16px;
+}
+
+.mobileInner {
+  padding: 18px 18px 18px;
+}
+
+.tierName {
+  text-transform: capitalize;
+}
+
+.specRow {
+  line-height: 1.6;
+}
+
+.priceFooter {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.priceAmount {
+  letter-spacing: -0.02em;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.groupWide {
+  composes: group;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 14px;
+}

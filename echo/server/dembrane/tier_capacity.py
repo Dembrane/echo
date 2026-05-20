@@ -18,12 +18,19 @@ from __future__ import annotations
 from typing import Optional
 from dataclasses import dataclass
 
+# Single source of truth for the monthly-billing premium. The annual-billing
+# price stored in `price_eur_monthly` is anchored as the regular price; the
+# monthly cadence is the surcharged variant (matches standard SaaS framing
+# of "X% off when billed annually"). Editing this constant + a deploy is the
+# entire workflow for adjusting the premium — no env var, no Directus row.
+MONTHLY_BILLING_PREMIUM_PCT = 10
+
 
 @dataclass(frozen=True)
 class TierCapacity:
     tier: str
     tagline: str
-    price_eur_monthly: Optional[int]      # None for one-off Pilot, None for Guardian
+    price_eur_monthly: Optional[int]      # Annual-billing per-month rate. None for one-off Pilot + Free.
     price_note: str                        # "one-time" / "per month" / "negotiated"
     included_seats: Optional[int]          # None = unlimited; guests share this pool
     seat_overage_eur: Optional[int]        # None = not billed
@@ -32,6 +39,14 @@ class TierCapacity:
     hard_block_on_hours: bool              # Deprecated: always False. Kept for call-site compat.
     training_included: str                 # human-readable
     duration: str                          # "1 month" / "ongoing" / etc
+    # True when the tier supports annual + monthly cadences (pioneer+).
+    # False for free (no price) and pilot (one-time fee). The API serializer
+    # uses this to populate `pricing.annual_billing` + `pricing.monthly_billing`
+    # vs `pricing.one_time` vs leaving `pricing` null.
+    billing_period_applicable: bool = False
+    # One-time fee for tiers that aren't subscription-billed (currently pilot).
+    # `build_tier_pricing` reads this so the constant has one home.
+    one_time_amount_eur: Optional[int] = None
 
 
 @dataclass(frozen=True)
@@ -54,7 +69,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         hour_overage_eur=None,
         hard_block_on_hours=False,
         training_included="—",
-        duration="permanent",
+        duration="—",
     ),
     "pilot": TierCapacity(
         tier="pilot",
@@ -68,6 +83,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         hard_block_on_hours=False,
         training_included="2 people",
         duration="1 month",
+        one_time_amount_eur=349,
     ),
     "pioneer": TierCapacity(
         tier="pioneer",
@@ -81,6 +97,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         hard_block_on_hours=False,
         training_included="—",
         duration="ongoing",
+        billing_period_applicable=True,
     ),
     "innovator": TierCapacity(
         tier="innovator",
@@ -94,6 +111,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         hard_block_on_hours=False,
         training_included="—",
         duration="ongoing",
+        billing_period_applicable=True,
     ),
     "changemaker": TierCapacity(
         tier="changemaker",
@@ -107,6 +125,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         hard_block_on_hours=False,
         training_included="—",
         duration="ongoing",
+        billing_period_applicable=True,
     ),
     "guardian": TierCapacity(
         tier="guardian",
@@ -120,8 +139,53 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         hard_block_on_hours=False,
         training_included="negotiable",
         duration="ongoing",
+        billing_period_applicable=True,
     ),
 }
+
+
+def compute_monthly_billing_price(annual_per_month: int) -> int:
+    """Monthly-cadence per-month price derived from the annual-billing rate.
+
+    The annual rate is treated as the anchor (regular price); the monthly
+    cadence is `annual × (1 + MONTHLY_BILLING_PREMIUM_PCT/100)`, rounded to
+    whole euros. Pure function — same input, same output.
+    """
+    return round(annual_per_month * (1 + MONTHLY_BILLING_PREMIUM_PCT / 100))
+
+
+def build_tier_pricing(tier: str) -> Optional[dict]:
+    """Nested pricing dict for the public API.
+
+    Returns one of:
+        - None for free (no price to display)
+        - {"one_time": {"amount_eur": <pilot fee>}} for tiers with a one-time fee
+        - {"annual_billing": {...}, "monthly_billing": {...}} for pioneer+
+
+    The shape matches the `TierPricing` Pydantic model in
+    `dembrane.api.v2.workspaces`; the function lives here so the math has
+    one home and downstream consumers cannot drift.
+    """
+    cap = TIER_CAPACITIES.get(tier)
+    if cap is None:
+        return None
+
+    if cap.one_time_amount_eur is not None:
+        return {"one_time": {"amount_eur": cap.one_time_amount_eur}}
+
+    if cap.billing_period_applicable and cap.price_eur_monthly is not None:
+        annual_per_month = cap.price_eur_monthly
+        return {
+            "annual_billing": {
+                "per_month_eur": annual_per_month,
+                "total_per_year_eur": annual_per_month * 12,
+            },
+            "monthly_billing": {
+                "per_month_eur": compute_monthly_billing_price(annual_per_month),
+            },
+        }
+
+    return None
 
 
 def get_capacity(tier: str) -> Optional[TierCapacity]:

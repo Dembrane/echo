@@ -292,10 +292,7 @@ export function WorkspaceInviteWizard({
 					<Stepper.Step label={t`Your organisation`}>
 						<Stack gap={12} mt="md">
 							<Text size="sm" c="dimmed">
-								<Trans>
-									Pick members to bring into this workspace. They'll keep their
-									organisation seat — no extra cost.
-								</Trans>
+								<Trans>Pick members to bring into this workspace.</Trans>
 							</Text>
 
 							{memberInviteBlocked && (
@@ -366,7 +363,7 @@ export function WorkspaceInviteWizard({
 								!memberInviteBlocked && (
 									<Alert color="gray" variant="light">
 										<Trans>
-											Everyone on your organisation is already in this
+											Everyone from your organisation is already in this
 											workspace. Invite externals in the next step.
 										</Trans>
 									</Alert>
@@ -491,25 +488,26 @@ export function WorkspaceInviteWizard({
 
 					<Stepper.Step label={t`Externals`}>
 						<Stack gap={12} mt="md">
-						<Text size="sm" c="dimmed">
-							<Trans>
-								Invite people outside your organisation. They get
-								workspace-only access and count toward the seat pool.
-							</Trans>
-						</Text>
+							<Text size="sm" c="dimmed">
+								<Trans>
+									Invite people outside your organisation. They get
+									workspace-only access and count toward the seat pool.
+								</Trans>
+							</Text>
 
-						{guestInviteBlocked && (
-							<Alert color="yellow" variant="light">
-								<Text size="sm" fw={500}>
-									<Trans>All seats taken on this tier</Trans>
-								</Text>
-								<Text size="xs" c="dimmed" mt={4}>
-									<Trans>
-										Remove a member or guest, or upgrade to invite more people.
-									</Trans>
-								</Text>
-							</Alert>
-						)}
+							{guestInviteBlocked && (
+								<Alert color="yellow" variant="light">
+									<Text size="sm" fw={500}>
+										<Trans>All seats taken on this tier</Trans>
+									</Text>
+									<Text size="xs" c="dimmed" mt={4}>
+										<Trans>
+											Remove a member or guest, or upgrade to invite more
+											people.
+										</Trans>
+									</Text>
+								</Alert>
+							)}
 
 							{!guestInviteBlocked && externals.length === 0 && (
 								<Alert color="gray" variant="light">
@@ -569,7 +567,15 @@ export function WorkspaceInviteWizard({
 						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
 					</Button>
 					{step === 0 ? (
-						<Button size="sm" onClick={() => setStep(1)}>
+						<Button
+							size="sm"
+							onClick={() => {
+								if (externals.length === 0 && !guestInviteBlocked) {
+									addExternalRow();
+								}
+								setStep(1);
+							}}
+						>
 							<Trans>Next</Trans>
 						</Button>
 					) : (

@@ -111,6 +111,7 @@ class WorkspaceSummary(BaseModel):
     downgraded_at: Optional[str] = None
     downgraded_from_tier: Optional[str] = None
     has_pending_upgrade_request: bool = False
+    created_at: Optional[str] = None
 
 
 class OrganisationRollup(BaseModel):
