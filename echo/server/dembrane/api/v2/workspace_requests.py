@@ -248,7 +248,9 @@ async def submit_workspace_request(
 
         summary = f"{requester_name} requested a {kind_label}"
         if org_name:
-            summary += f" ({org_name} · {body.proposed_tier})"
+            summary += f" ({org_name} · {tier_segment})"
+        else:
+            summary += f" ({tier_segment})"
 
         for staff_email_addr in staff_emails:
             decision = await record_and_check_throttle(

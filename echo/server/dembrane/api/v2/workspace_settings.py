@@ -238,7 +238,18 @@ async def get_workspace_settings(
 
     from dembrane.billing_period import resolve_workspace_billing_period
 
-    billing_period = await resolve_workspace_billing_period(ctx.workspace_id)
+    # Soft-degrade on resolver failure — billing_period is informational
+    # (UI defaults to "annual" when null) and we'd rather return the rest
+    # of the settings than 500 the whole panel on a transient Directus blip.
+    try:
+        billing_period = await resolve_workspace_billing_period(ctx.workspace_id)
+    except Exception as e:
+        logger.warning(
+            "Failed to resolve billing_period for workspace %s: %s",
+            ctx.workspace_id,
+            e,
+        )
+        billing_period = None
 
     return WorkspaceDetailResponse(
         id=ws["id"],

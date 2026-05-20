@@ -44,6 +44,9 @@ class TierCapacity:
     # uses this to populate `pricing.annual_billing` + `pricing.monthly_billing`
     # vs `pricing.one_time` vs leaving `pricing` null.
     billing_period_applicable: bool = False
+    # One-time fee for tiers that aren't subscription-billed (currently pilot).
+    # `build_tier_pricing` reads this so the constant has one home.
+    one_time_amount_eur: Optional[int] = None
 
 
 @dataclass(frozen=True)
@@ -80,6 +83,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         hard_block_on_hours=False,
         training_included="2 people",
         duration="1 month",
+        one_time_amount_eur=349,
     ),
     "pioneer": TierCapacity(
         tier="pioneer",
@@ -155,7 +159,7 @@ def build_tier_pricing(tier: str) -> Optional[dict]:
 
     Returns one of:
         - None for free (no price to display)
-        - {"one_time": {"amount_eur": 349}} for pilot
+        - {"one_time": {"amount_eur": <pilot fee>}} for tiers with a one-time fee
         - {"annual_billing": {...}, "monthly_billing": {...}} for pioneer+
 
     The shape matches the `TierPricing` Pydantic model in
@@ -166,11 +170,8 @@ def build_tier_pricing(tier: str) -> Optional[dict]:
     if cap is None:
         return None
 
-    if cap.tier == "free":
-        return None
-
-    if cap.tier == "pilot":
-        return {"one_time": {"amount_eur": 349}}
+    if cap.one_time_amount_eur is not None:
+        return {"one_time": {"amount_eur": cap.one_time_amount_eur}}
 
     if cap.billing_period_applicable and cap.price_eur_monthly is not None:
         annual_per_month = cap.price_eur_monthly
