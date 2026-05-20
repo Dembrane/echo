@@ -159,6 +159,7 @@ function WideCard({
 		.filter(Boolean)
 		.join(" ");
 	return (
+		// biome-ignore lint/a11y/useSemanticElements: card-as-radio; the entire card is the click target
 		<div
 			className={wrapClasses}
 			onClick={onSelect}
@@ -256,6 +257,7 @@ function MobileCard({
 		.filter(Boolean)
 		.join(" ");
 	return (
+		// biome-ignore lint/a11y/useSemanticElements: card-as-radio; the entire card is the click target
 		<div
 			className={wrapClasses}
 			onClick={onSelect}

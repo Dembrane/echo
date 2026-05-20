@@ -43,9 +43,6 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"a11y": {
-				"useSemanticElements": "off"
-			},
 			"correctness": {
 				"noUndeclaredDependencies": "error",
 				"noUnusedVariables": "error",
