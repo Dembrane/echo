@@ -356,7 +356,7 @@ export const CreateWorkspaceRoute = () => {
 	const canSubmit = canAdvanceFromName && Boolean(targetOrganisationId);
 
 	return (
-		<Container size="sm" py="xl" px="lg">
+		<Container size="xl" py="xl" px="lg">
 			<Stack gap={28}>
 				<Stack gap={6}>
 					<Title order={3} fw={400}>
@@ -449,7 +449,7 @@ export const CreateWorkspaceRoute = () => {
 							<Text size="sm" c="dimmed">
 								<Trans>Pick a plan for your team.</Trans>
 							</Text>
-							<Group justify="flex-start">
+							<Group justify="center" mb="xs">
 								<BillingPeriodToggle
 									value={billingPeriod}
 									onChange={setBillingPeriod}
@@ -608,14 +608,16 @@ export const CreateWorkspaceRoute = () => {
 				<Group justify="space-between" mt="sm">
 					<Button
 						variant="outline"
-						size="sm"
+						size="md"
+						px="xl"
 						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
 					>
 						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
 					</Button>
 					{step < 3 ? (
 						<Button
-							size="sm"
+							size="md"
+							px="xl"
 							disabled={step === 0 && !canAdvanceFromName}
 							onClick={() => setStep(step + 1)}
 						>
@@ -623,7 +625,8 @@ export const CreateWorkspaceRoute = () => {
 						</Button>
 					) : (
 						<Button
-							size="sm"
+							size="md"
+							px="xl"
 							loading={mutation.isPending}
 							disabled={!canSubmit}
 							onClick={() => mutation.mutate()}

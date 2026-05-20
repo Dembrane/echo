@@ -25,23 +25,19 @@ export function BillingPeriodToggle({
 }: BillingPeriodToggleProps) {
 	return (
 		<SegmentedControl
-			size={compact ? "xs" : "sm"}
+			size={compact ? "sm" : "md"}
 			value={value}
 			onChange={(v) => onChange(v as BillingPeriod)}
-			data={[
-				{
-					label: (
-						<Group gap={6} wrap="nowrap" justify="center">
-							<Text size={compact ? "xs" : "sm"}>
-								<Trans>Annual billing</Trans>
-							</Text>
-							<Badge size="xs" variant="light" color="primary">
-								<Trans>10% off</Trans>
-							</Badge>
-						</Group>
-					),
-					value: "annual",
+			styles={{
+				root: { overflow: "visible" },
+				control: { overflow: "visible" },
+				label: {
+					overflow: "visible",
+					textOverflow: "clip",
+					paddingInline: 18,
 				},
+			}}
+			data={[
 				{
 					label: (
 						<Text size={compact ? "xs" : "sm"}>
@@ -49,6 +45,31 @@ export function BillingPeriodToggle({
 						</Text>
 					),
 					value: "monthly",
+				},
+				{
+					label: (
+						<Group gap={6} wrap="nowrap" justify="center">
+							<Text size={compact ? "xs" : "sm"}>
+								<Trans>Annual billing</Trans>
+							</Text>
+							<Badge
+								size="xs"
+								variant="light"
+								color="primary"
+								styles={{
+									root: {
+										flex: "0 0 auto",
+										overflow: "visible",
+										textOverflow: "clip",
+									},
+									label: { overflow: "visible", textOverflow: "clip" },
+								}}
+							>
+								<Trans>10% off</Trans>
+							</Badge>
+						</Group>
+					),
+					value: "annual",
 				},
 			]}
 			aria-label={t`Billing period`}

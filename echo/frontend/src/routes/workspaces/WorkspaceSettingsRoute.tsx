@@ -709,7 +709,7 @@ export const WorkspaceSettingsRoute = () => {
 								    hours / guests / training. Highlights the current
 								    tier so admins can see what they have vs what's
 								    next. */}
-									<Group justify="flex-start">
+									<Group justify="center" mb="xs">
 										<BillingPeriodToggle
 											value={
 												billingPeriodOverride ??

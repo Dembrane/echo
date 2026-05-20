@@ -1505,7 +1505,7 @@ function UsageAndBillingPanel() {
 					</Text>
 					<Box mt="xs">
 						<Stack gap={8}>
-							<Group justify="flex-start">
+							<Group justify="center" mb="xs">
 								<BillingPeriodToggle
 									value={billingPeriod}
 									onChange={setBillingPeriod}
@@ -1935,7 +1935,7 @@ function ApproveDialog({
 			opened={opened}
 			onClose={onClose}
 			title={t`Approve request`}
-			size="xl"
+			size="72rem"
 		>
 			<Stack gap="md">
 				<Text size="sm">
@@ -1946,7 +1946,7 @@ function ApproveDialog({
 				</Text>
 
 				{cadenceApplies && (
-					<Group justify="flex-start">
+					<Group justify="center" mb="xs">
 						<BillingPeriodToggle
 							value={approvedBillingPeriod}
 							onChange={setApprovedBillingPeriod}

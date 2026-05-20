@@ -1,6 +1,14 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Badge, Box, Divider, Group, Stack, Text } from "@mantine/core";
+import {
+	Badge,
+	Box,
+	Collapse,
+	Divider,
+	Group,
+	Stack,
+	Text,
+} from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconCheck } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
@@ -36,7 +44,14 @@ function buildCardData(cap: TierCapacity, billingPeriod: BillingPeriod) {
 	}
 	if (cap.seat_overage_eur != null) {
 		specs.push(t`€${cap.seat_overage_eur} / extra seat`);
-	} else if (cap.included_seats == null) {
+	}
+	if (cap.hour_overage_eur != null && !cap.hard_block_on_hours) {
+		specs.push(t`€${cap.hour_overage_eur} / extra hour`);
+	}
+	if (cap.training_included && cap.training_included !== "—") {
+		specs.push(t`Training: ${cap.training_included}`);
+	}
+	if (cap.included_seats == null) {
 		specs.push(t`Dedicated support`);
 	}
 
@@ -136,9 +151,16 @@ function WideCard({
 	highlightLabel: ReactNode;
 	onSelect: () => void;
 }) {
+	const wrapClasses = [
+		classes.wideWrap,
+		selected ? classes.selected : "",
+		highlighted ? classes.highlighted : "",
+	]
+		.filter(Boolean)
+		.join(" ");
 	return (
 		<div
-			className={`${classes.wideWrap} ${selected ? classes.selected : ""}`}
+			className={wrapClasses}
 			onClick={onSelect}
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
@@ -213,7 +235,7 @@ function WideCard({
 	);
 }
 
-function NarrowRow({
+function MobileCard({
 	card,
 	selected,
 	highlighted,
@@ -226,11 +248,16 @@ function NarrowRow({
 	highlightLabel: ReactNode;
 	onSelect: () => void;
 }) {
-	const capacityLine = card.specs.slice(0, 2).join(" · ");
-
+	const wrapClasses = [
+		classes.wrap,
+		selected ? classes.selected : "",
+		highlighted ? classes.highlighted : "",
+	]
+		.filter(Boolean)
+		.join(" ");
 	return (
 		<div
-			className={`${classes.wrap} ${selected ? classes.selected : ""}`}
+			className={wrapClasses}
 			onClick={onSelect}
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
@@ -242,13 +269,10 @@ function NarrowRow({
 			aria-checked={selected}
 			tabIndex={0}
 		>
-			<Group gap={14} wrap="nowrap" className={classes.narrowInner}>
-				<Box className={selected ? classes.radioSelected : classes.radio}>
-					{selected && <Box className={classes.radioDot} />}
-				</Box>
-				<div className={classes.narrowMain}>
-					<Group gap={6} wrap="nowrap">
-						<Text size="sm" c="var(--app-text)" className={classes.tierName}>
+			<Stack gap={0} className={classes.mobileInner}>
+				<Group justify="space-between" wrap="nowrap" align="flex-start" gap={12}>
+					<Group gap={8} wrap="nowrap">
+						<Text size="md" fw={500} className={classes.tierName}>
 							{card.tier}
 						</Text>
 						{highlighted && (
@@ -261,26 +285,62 @@ function NarrowRow({
 							</Badge>
 						)}
 					</Group>
-					<Text size="xs" c="dimmed" mt={2}>
-						{capacityLine}
-					</Text>
-				</div>
-				<div className={classes.narrowPrice}>
-					<Text size="md" c="var(--app-text)" className={classes.priceAmount}>
-						{card.priceAmount}
-					</Text>
-					{card.pricePeriod && (
+					<Stack gap={2} align="flex-end">
+						<Group gap={3} align="baseline" wrap="nowrap">
+							<Text
+								size="lg"
+								className={classes.priceAmount}
+								c="var(--app-text)"
+							>
+								{card.priceAmount}
+							</Text>
+							{card.pricePeriod && (
+								<Text size="xs" c="dimmed">
+									{card.pricePeriod}
+								</Text>
+							)}
+						</Group>
+						{card.priceSubtext && (
+							<Text size="xs" c="dimmed" ta="right" lh={1.3}>
+								{card.priceSubtext}
+							</Text>
+						)}
+					</Stack>
+				</Group>
+
+				<Collapse in={selected}>
+					<Stack gap={10} pt={14}>
 						<Text size="xs" c="dimmed">
-							{card.pricePeriod}
+							{card.tagline}
 						</Text>
-					)}
-					{card.priceSubtext && (
-						<Text size="xs" c="dimmed">
-							{card.priceSubtext}
-						</Text>
-					)}
-				</div>
-			</Group>
+						<Divider color="var(--mantine-color-gray-2)" />
+						<Stack gap={0}>
+							{card.specs.map((spec) => (
+								<Group
+									key={spec}
+									gap={7}
+									wrap="nowrap"
+									className={classes.specRow}
+								>
+									<IconCheck
+										size={14}
+										stroke={1.5}
+										color="var(--mantine-color-primary-6)"
+									/>
+									<Text size="sm" c="dimmed">
+										{spec}
+									</Text>
+								</Group>
+							))}
+						</Stack>
+						{card.bestFor && (
+							<Text size="xs" c="dimmed" fs="italic" lh={1.4}>
+								{card.bestFor}
+							</Text>
+						)}
+					</Stack>
+				</Collapse>
+			</Stack>
 		</div>
 	);
 }
@@ -329,7 +389,7 @@ export const TierPricingCards = ({
 		return buildFallbackCardData(tier, billingPeriod);
 	});
 
-	const CardComponent = useWideLayout ? WideCard : NarrowRow;
+	const CardComponent = useWideLayout ? WideCard : MobileCard;
 	const resolvedHighlightLabel = highlightLabel ?? <Trans>Popular</Trans>;
 
 	return (

@@ -361,7 +361,7 @@ export function UpgradeModal({
 			onClose={onClose}
 			title={<Text fw={500}>{displayName}</Text>}
 			centered
-			size="xl"
+			size="72rem"
 		>
 			<Stack gap="md">
 				<Text size="sm" c="dimmed">
@@ -370,7 +370,7 @@ export function UpgradeModal({
 
 				{canRequestUpgrade ? (
 					<>
-						<Group justify="flex-start">
+						<Group justify="center" mb="xs">
 							<BillingPeriodToggle
 								value={billingPeriod}
 								onChange={setBillingPeriod}
@@ -402,7 +402,7 @@ export function UpgradeModal({
 					</>
 				) : (
 					<>
-						<Group justify="flex-start">
+						<Group justify="center" mb="xs">
 							<BillingPeriodToggle
 								value={billingPeriod}
 								onChange={setBillingPeriod}

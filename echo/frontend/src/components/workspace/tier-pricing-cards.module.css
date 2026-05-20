@@ -1,67 +1,51 @@
-@property --tier-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-
-@keyframes tier-spin {
-  to {
-    --tier-angle: 360deg;
-  }
-}
-
 .wrap {
-  padding: 2px;
   cursor: pointer;
-  display: flex;
-  border-radius: calc(var(--mantine-radius-default) + 2px);
+  background: #fff;
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: var(--mantine-radius-default);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
 .wrap:not(.selected):hover {
-  background: var(--mantine-color-primary-light);
+  border-color: var(--mantine-color-primary-4);
+  background: rgba(65, 105, 225, 0.02);
 }
 
 .selected {
-  background: conic-gradient(
-    from var(--tier-angle),
-    var(--mantine-color-primary-6),
-    var(--mantine-color-cyan-6),
-    var(--mantine-color-springGreen-6),
-    var(--mantine-color-primary-6),
-    var(--mantine-color-mauve-6),
-    var(--mantine-color-primary-6)
-  );
-  animation: tier-spin 3s linear infinite;
+  border-color: var(--mantine-color-primary-6);
+  box-shadow: 0 0 0 1px var(--mantine-color-primary-6);
+}
+
+.highlighted {
+  border-color: rgba(65, 105, 225, 0.22);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.05),
+    0 8px 20px rgba(65, 105, 225, 0.14);
+  transform: translateY(-4px);
+}
+
+.highlighted.selected {
+  border-color: var(--mantine-color-primary-6);
+  box-shadow:
+    0 0 0 1px var(--mantine-color-primary-6),
+    0 2px 4px rgba(15, 23, 42, 0.05),
+    0 8px 20px rgba(65, 105, 225, 0.16);
 }
 
 .wideWrap {
   composes: wrap;
-  flex: 0 1 calc((100% - 28px) / 3);
-  min-width: 160px;
-}
-
-.inner {
-  background: #fff;
-  border-radius: var(--mantine-radius-default);
-  flex: 1;
-}
-
-.wrap:not(.selected):hover .inner {
-  background: rgba(65, 105, 225, 0.03);
-}
-
-.selected .inner {
-  background: #fff;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .wideInner {
-  composes: inner;
-  padding: 22px 18px 18px;
+  flex: 1;
+  padding: 20px 16px 16px;
 }
 
-.narrowInner {
-  composes: inner;
-  padding: 13px 16px;
+.mobileInner {
+  padding: 18px 18px 18px;
 }
 
 .tierName {
@@ -69,7 +53,7 @@
 }
 
 .specRow {
-  line-height: 2;
+  line-height: 1.6;
 }
 
 .priceFooter {
@@ -81,49 +65,16 @@
   letter-spacing: -0.02em;
 }
 
-.radio {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  border: 1.5px solid var(--mantine-color-gray-4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.radioSelected {
-  composes: radio;
-  border-color: var(--mantine-color-primary-6);
-}
-
-.radioDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--mantine-color-primary-6);
-  transition: transform 0.15s;
-}
-
-.narrowMain {
-  flex: 1;
-  min-width: 0;
-}
-
-.narrowPrice {
-  text-align: right;
-  flex-shrink: 0;
-}
-
 .group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .groupWide {
   composes: group;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: stretch;
   gap: 14px;
 }
