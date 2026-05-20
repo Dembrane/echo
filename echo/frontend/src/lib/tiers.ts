@@ -38,11 +38,12 @@ export const TIER_TAGLINE: Record<Tier, string> = {
 
 // Capacity line appended to tooltips so a new customer can answer
 // "what does Pioneer mean?" without hitting the billing tab. Numbers
-// mirror server/dembrane/tier_capacity.py — keep in sync.
+// mirror server/dembrane/tier_capacity.py — keep in sync. Annual-billing
+// per-month prices (matches the matrix's anchor cadence).
 export const TIER_CAPACITY_SHORT: Record<Tier, string> = {
 	changemaker: "20 seats · 100 h/mo · €1500/mo",
 	free: "1 seat · 1 h · free",
-	guardian: "unlimited · custom pricing",
+	guardian: "unlimited · €5000/mo",
 	innovator: "10 seats · 50 h/mo · €500/mo",
 	pilot: "2 seats · 10 h · €349 one-time",
 	pioneer: "3 seats · 25 h/mo · €200/mo",
@@ -94,7 +95,7 @@ export function capacityShortFor(tier: string | null | undefined): string {
 	const map: Record<Tier, string> = {
 		changemaker: t`20 seats · 100 h/mo · €1500/mo`,
 		free: t`1 seat · 1 h · free`,
-		guardian: t`unlimited · custom pricing`,
+		guardian: t`unlimited · €5000/mo`,
 		innovator: t`10 seats · 50 h/mo · €500/mo`,
 		pilot: t`2 seats · 10 h · €349 one-time`,
 		pioneer: t`3 seats · 25 h/mo · €200/mo`,
@@ -127,19 +128,40 @@ export function taglineFor(tier: string | null | undefined): string {
 }
 
 export const TIER_BADGE_COLOR: Record<Tier, string> = {
+	changemaker: "grape",
 	free: "gray",
+	guardian: "orange",
+	innovator: "violet",
 	pilot: "gray",
 	pioneer: "blue",
-	innovator: "violet",
-	changemaker: "grape",
-	guardian: "orange",
 };
+
+export type BillingPeriod = "annual" | "monthly";
+
+export interface AnnualPricing {
+	per_month_eur: number;
+	total_per_year_eur: number;
+}
+
+export interface MonthlyPricing {
+	per_month_eur: number;
+}
+
+export interface OneTimePricing {
+	amount_eur: number;
+}
+
+export interface TierPricing {
+	annual_billing?: AnnualPricing | null;
+	monthly_billing?: MonthlyPricing | null;
+	one_time?: OneTimePricing | null;
+}
 
 export interface TierCapacity {
 	tier: string;
 	tagline: string;
-	price_eur_monthly: number | null;
-	price_note: string;
+	pricing: TierPricing | null;
+	billing_period_applicable: boolean;
 	duration: string;
 	included_seats: number | null;
 	seat_overage_eur: number | null;
@@ -147,6 +169,46 @@ export interface TierCapacity {
 	hour_overage_eur: number | null;
 	hard_block_on_hours: boolean;
 	training_included: string;
+}
+
+/**
+ * Resolve the active-cadence pricing slot for a tier capacity.
+ *
+ * Returns the slot the UI should render in for the active billing period,
+ * or `null` when the tier has no displayable price (free).
+ *
+ * - Annual selected, pioneer+ → `annual_billing`
+ * - Monthly selected, pioneer+ → `monthly_billing`
+ * - Pilot → `one_time` (ignores billing period — toggle does not move pilot)
+ * - Free → null
+ */
+export function pricingForBillingPeriod(
+	cap: TierCapacity,
+	period: BillingPeriod,
+):
+	| { kind: "annual"; per_month_eur: number; total_per_year_eur: number }
+	| { kind: "monthly"; per_month_eur: number }
+	| { kind: "one_time"; amount_eur: number }
+	| null {
+	const p = cap.pricing;
+	if (!p) return null;
+	if (p.one_time) {
+		return { amount_eur: p.one_time.amount_eur, kind: "one_time" };
+	}
+	if (period === "monthly" && p.monthly_billing) {
+		return {
+			kind: "monthly",
+			per_month_eur: p.monthly_billing.per_month_eur,
+		};
+	}
+	if (p.annual_billing) {
+		return {
+			kind: "annual",
+			per_month_eur: p.annual_billing.per_month_eur,
+			total_per_year_eur: p.annual_billing.total_per_year_eur,
+		};
+	}
+	return null;
 }
 
 export async function fetchTierCapacities(

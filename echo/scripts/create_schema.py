@@ -16,6 +16,7 @@ Usage:
     python scripts/create_schema.py --step 19       # workspace.tier_expires_at
     python scripts/create_schema.py --step 20       # workspace.pre_warning_sent
     python scripts/create_schema.py --step 21       # workspace discount fields
+    python scripts/create_schema.py --step 22       # workspace_request billing period columns
     python scripts/create_schema.py --step all      # everything
 
 Requires DIRECTUS_TOKEN and DIRECTUS_BASE_URL env vars (reads from directus/.env).
@@ -1910,6 +1911,51 @@ def step_21_workspace_discount_fields():
     return True
 
 
+def step_22_workspace_request_billing_period():
+    """Add proposed_billing_period + approved_billing_period to workspace_request.
+
+    Two nullable enum columns ('annual' | 'monthly' | null) capturing the
+    cadence the requester picked and the cadence staff actually granted.
+    Splitting proposed vs approved keeps the audit trail honest when staff
+    overrides the requested cadence (see docs/adr/0002-billing-period-toggle.md).
+
+    Idempotent.
+    """
+    print("\n=== Step 22: workspace_request billing period columns ===")
+
+    cadence_field = {
+        "interface": "select-dropdown",
+        "options": {"choices": [
+            {"text": "Annual", "value": "annual"},
+            {"text": "Monthly", "value": "monthly"},
+        ]},
+    }
+
+    ok1 = add_field("workspace_request", "proposed_billing_period", {
+        "type": "string",
+        "schema": {"is_nullable": True, "default_value": None},
+        "meta": {
+            **cadence_field,
+            "note": (
+                "Cadence the requester picked. Required for pioneer+, null for "
+                "pilot/free. Never mutated post-submit."
+            ),
+        },
+    })
+    ok2 = add_field("workspace_request", "approved_billing_period", {
+        "type": "string",
+        "schema": {"is_nullable": True, "default_value": None},
+        "meta": {
+            **cadence_field,
+            "note": (
+                "Cadence staff actually granted. May differ from proposed "
+                "(divergence drives extra copy in the approval email)."
+            ),
+        },
+    })
+    return ok1 and ok2
+
+
 STEPS = {
     "1": ("app_user", step_1_app_user),
     "2": ("org + org_membership", step_2_org),
@@ -1932,13 +1978,14 @@ STEPS = {
     "19": ("workspace.tier_expires_at field", step_19_workspace_tier_expires_at),
     "20": ("workspace.pre_warning_sent flag", step_20_workspace_pre_warning_sent),
     "21": ("workspace discount fields (type_discount, percent_discount)", step_21_workspace_discount_fields),
+    "22": ("workspace_request billing period columns", step_22_workspace_request_billing_period),
 }
 
 
 def main():
     parser = argparse.ArgumentParser(description="Create workspace schema in Directus")
     parser.add_argument("--step", required=True,
-                        help="Step number (1-21) or 'all'")
+                        help="Step number (1-22) or 'all'")
     args = parser.parse_args()
 
     # Verify connection
@@ -1956,7 +2003,7 @@ def main():
 
     for step_num in steps_to_run:
         if step_num not in STEPS:
-            print(f"ERROR: Unknown step {step_num}. Valid: 1-21 or 'all'")
+            print(f"ERROR: Unknown step {step_num}. Valid: 1-22 or 'all'")
             sys.exit(1)
 
         name, fn = STEPS[step_num]

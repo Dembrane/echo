@@ -950,11 +950,37 @@ class ProjectUsageItem(BaseModel):
     conversation_count: int
 
 
+class AnnualPricing(BaseModel):
+    per_month_eur: int
+    total_per_year_eur: int
+
+
+class MonthlyPricing(BaseModel):
+    per_month_eur: int
+
+
+class OneTimePricing(BaseModel):
+    amount_eur: int
+
+
+class TierPricing(BaseModel):
+    """Per-tier nested pricing payload.
+
+    Exactly one of the cadence groups is populated per tier:
+        - Free: pricing is None at the parent level (never instantiated).
+        - Pilot: `one_time` only.
+        - Pioneer+: `annual_billing` + `monthly_billing`.
+    """
+
+    annual_billing: Optional[AnnualPricing] = None
+    monthly_billing: Optional[MonthlyPricing] = None
+    one_time: Optional[OneTimePricing] = None
+
+
 class NextTierRecommendation(BaseModel):
     tier: str
     tagline: str
-    price_eur_monthly: Optional[int]
-    price_note: str
+    pricing: Optional[TierPricing] = None
     included_hours: Optional[int]
     included_seats: Optional[int]
 
@@ -995,8 +1021,8 @@ class WorkspaceUsageResponse(BaseModel):
 class TierCapacityItem(BaseModel):
     tier: str
     tagline: str
-    price_eur_monthly: Optional[int]
-    price_note: str
+    pricing: Optional[TierPricing] = None
+    billing_period_applicable: bool
     duration: str
     included_seats: Optional[int]
     seat_overage_eur: Optional[int]
@@ -1016,24 +1042,28 @@ async def list_tier_capacities() -> list[TierCapacityItem]:
     surface (upgrade modal, billing tab, pricing comparison) reads from
     a single source.
     """
-    from dembrane.tier_capacity import TIER_CAPACITIES
+    from dembrane.tier_capacity import TIER_CAPACITIES, build_tier_pricing
 
-    return [
-        TierCapacityItem(
-            tier=cap.tier,
-            tagline=cap.tagline,
-            price_eur_monthly=cap.price_eur_monthly,
-            price_note=cap.price_note,
-            duration=cap.duration,
-            included_seats=cap.included_seats,
-            seat_overage_eur=cap.seat_overage_eur,
-            included_hours=cap.included_hours,
-            hour_overage_eur=cap.hour_overage_eur,
-            hard_block_on_hours=cap.hard_block_on_hours,
-            training_included=cap.training_included,
+    items: list[TierCapacityItem] = []
+    for cap in TIER_CAPACITIES.values():
+        raw_pricing = build_tier_pricing(cap.tier)
+        pricing = TierPricing(**raw_pricing) if raw_pricing else None
+        items.append(
+            TierCapacityItem(
+                tier=cap.tier,
+                tagline=cap.tagline,
+                pricing=pricing,
+                billing_period_applicable=cap.billing_period_applicable,
+                duration=cap.duration,
+                included_seats=cap.included_seats,
+                seat_overage_eur=cap.seat_overage_eur,
+                included_hours=cap.included_hours,
+                hour_overage_eur=cap.hour_overage_eur,
+                hard_block_on_hours=cap.hard_block_on_hours,
+                training_included=cap.training_included,
+            )
         )
-        for cap in TIER_CAPACITIES.values()
-    ]
+    return items
 
 
 @router.get(
@@ -1267,11 +1297,13 @@ async def get_workspace_usage(
     if recommended:
         rcap = get_capacity(recommended)
         if rcap:
+            from dembrane.tier_capacity import build_tier_pricing
+
+            raw_pricing = build_tier_pricing(recommended)
             next_rec = NextTierRecommendation(
                 tier=recommended,
                 tagline=rcap.tagline,
-                price_eur_monthly=rcap.price_eur_monthly,
-                price_note=rcap.price_note,
+                pricing=TierPricing(**raw_pricing) if raw_pricing else None,
                 included_hours=rcap.included_hours,
                 included_seats=rcap.included_seats,
             )

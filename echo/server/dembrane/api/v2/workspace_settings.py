@@ -72,6 +72,10 @@ class WorkspaceDetailResponse(BaseModel):
     logo_url: Optional[str] = None
     type_discount: Optional[str] = None
     percent_discount: Optional[int] = None
+    # Derived cadence: most-recently approved workspace_request's
+    # approved_billing_period. `None` for legacy workspaces with no
+    # approved request — UI defaults those to annual for display.
+    billing_period: Optional[str] = None
 
 
 @router.get("/{workspace_id}/settings", response_model=WorkspaceDetailResponse)
@@ -232,6 +236,10 @@ async def get_workspace_settings(
                     all_policies.add(p)
         effective = sorted(all_policies)
 
+    from dembrane.billing_period import resolve_workspace_billing_period
+
+    billing_period = await resolve_workspace_billing_period(ctx.workspace_id)
+
     return WorkspaceDetailResponse(
         id=ws["id"],
         name=ws.get("name", ""),
@@ -251,6 +259,7 @@ async def get_workspace_settings(
         logo_url=ws.get("logo_url"),
         type_discount=ws.get("type_discount"),
         percent_discount=ws.get("percent_discount"),
+        billing_period=billing_period,
     )
 
 

@@ -4,8 +4,11 @@ Your {{ kind_label }} request has been approved.
 
 Workspace:  {{ workspace_name }}
 Tier:       {{ granted_tier }}
+{% if approved_billing_period %}Billing:    {{ approved_billing_period }}
+{% endif %}
+{% if cadence_diverges %}Note: we approved {{ approved_billing_period }} billing instead of {{ proposed_billing_period }} — reach out if this doesn't work for your team.
 
-Open your workspace to get started:
+{% endif %}Open your workspace to get started:
 {{ workspace_url }}
 
 — the dembrane team

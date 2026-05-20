@@ -36,17 +36,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
-import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { ImageCropModal } from "@/components/common/ImageCropModal";
 import { toast } from "@/components/common/Toaster";
 import { InviteMemberCard, MembersToolbar } from "@/components/members";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
+import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { UsageCard } from "@/components/workspace/UsageCard";
-import { WorkspaceRequestHistory } from "@/components/workspace/WorkspaceRequestHistory";
 import { WorkspaceInviteWizard } from "@/components/workspace/WorkspaceInviteWizard";
+import { WorkspaceRequestHistory } from "@/components/workspace/WorkspaceRequestHistory";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
@@ -55,7 +56,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { logoUrl, memberInitials } from "@/lib/avatar";
 import { displayRole } from "@/lib/roles";
-import { seatOverageRateFor } from "@/lib/tiers";
+import { type BillingPeriod, seatOverageRateFor } from "@/lib/tiers";
 
 interface WorkspaceMember {
 	id: string;
@@ -92,6 +93,7 @@ interface WorkspaceDetail {
 	logo_url: string | null;
 	type_discount: string | null;
 	percent_discount: number | null;
+	billing_period: BillingPeriod | null;
 }
 
 async function deleteWorkspace(workspaceId: string) {
@@ -282,6 +284,11 @@ export const WorkspaceSettingsRoute = () => {
 
 	type WsRoleFilter = "all" | "admins" | "billing" | "members" | "guests";
 	const [memberRoleFilter, setMemberRoleFilter] = useState<WsRoleFilter>("all");
+	// User override for the matrix toggle. `null` means "follow whatever the
+	// workspace is currently on" (seeded from settings.billing_period when it
+	// loads); once the user clicks the toggle we hold their choice.
+	const [billingPeriodOverride, setBillingPeriodOverride] =
+		useState<BillingPeriod | null>(null);
 
 	// Tab state — path-driven (/w/:id/settings/<tab>). Declared BEFORE
 	// the loading early-return below; moving any hook below the early
@@ -323,13 +330,13 @@ export const WorkspaceSettingsRoute = () => {
 				{ credentials: "include" },
 			);
 			if (!res.ok) return null;
-		return res.json() as Promise<{
-			tier: string;
-			seat_invite_blocked?: boolean;
-			seat_count: number;
-			seat_count_included: number | null;
-			guest_count: number;
-		}>;
+			return res.json() as Promise<{
+				tier: string;
+				seat_invite_blocked?: boolean;
+				seat_count: number;
+				seat_count_included: number | null;
+				guest_count: number;
+			}>;
 		},
 		queryKey: ["v2", "workspace-usage", workspaceId, 0],
 		refetchOnMount: "always",
@@ -561,13 +568,9 @@ export const WorkspaceSettingsRoute = () => {
 						queryKey: ["v2", "workspace-settings", workspaceId],
 					})
 				}
-				detail={
-					settingsError instanceof Error ? settingsError.message : null
-				}
+				detail={settingsError instanceof Error ? settingsError.message : null}
 				message={
-					<Trans>
-						We couldn't load this workspace. Try again in a moment.
-					</Trans>
+					<Trans>We couldn't load this workspace. Try again in a moment.</Trans>
 				}
 			/>
 		);
@@ -611,25 +614,27 @@ export const WorkspaceSettingsRoute = () => {
 						    the Billing tab where it's next to the price. Organisation name
 						    is already in the nav breadcrumb; duplicating it here
 						    was audit noise (2026-04-23). */}
-						<Group gap={8} wrap="wrap">
-							{iAmGuest ? (
-								<Badge size="xs" variant="light" color="yellow">
-									<Trans>Guest of {settings.org_name}</Trans>
-								</Badge>
-							) : (
-								<TierBadge tier={settings.tier} size="xs" />
-							)}
-							{!iAmGuest && settings.type_discount && (
-								<Badge size="xs" variant="light" color="teal" tt="capitalize">
-									{settings.type_discount.replace(/_/g, " ")}
-								</Badge>
-							)}
-							{!iAmGuest && settings.percent_discount != null && settings.percent_discount > 0 && (
-								<Badge size="xs" variant="light" color="teal">
-									{settings.percent_discount}% discount
-								</Badge>
-							)}
-						</Group>
+							<Group gap={8} wrap="wrap">
+								{iAmGuest ? (
+									<Badge size="xs" variant="light" color="yellow">
+										<Trans>Guest of {settings.org_name}</Trans>
+									</Badge>
+								) : (
+									<TierBadge tier={settings.tier} size="xs" />
+								)}
+								{!iAmGuest && settings.type_discount && (
+									<Badge size="xs" variant="light" color="teal" tt="capitalize">
+										{settings.type_discount.replace(/_/g, " ")}
+									</Badge>
+								)}
+								{!iAmGuest &&
+									settings.percent_discount != null &&
+									settings.percent_discount > 0 && (
+										<Badge size="xs" variant="light" color="teal">
+											{settings.percent_discount}% discount
+										</Badge>
+									)}
+							</Group>
 						</Stack>
 						<Button
 							variant="subtle"
@@ -669,7 +674,9 @@ export const WorkspaceSettingsRoute = () => {
 							<Tabs.Panel value="billing" pt="md">
 								<Stack gap={16}>
 									{workspaceId && <UsageCard workspaceId={workspaceId} />}
-									{workspaceId && <WorkspaceRequestHistory workspaceId={workspaceId} />}
+									{workspaceId && (
+										<WorkspaceRequestHistory workspaceId={workspaceId} />
+									)}
 
 									{/* Seats explainer — audit feedback: users need to
 								    know "how do seats work as a user" without
@@ -679,21 +686,21 @@ export const WorkspaceSettingsRoute = () => {
 											<Text size="sm" fw={500}>
 												<Trans>How seats work</Trans>
 											</Text>
-									<Text size="xs" c="dimmed">
-											<Trans>
-												Every workspace member, including guests, counts as
-												one seat. One person never takes more than one seat
-												per workspace, even if they're on multiple
-												organisations.
-											</Trans>
-										</Text>
-										<Text size="xs" c="dimmed">
-											<Trans>
-												Going over your tier's included seats bills extra per
-												month. See the matrix below for the per-seat rate on
-												each tier.
-											</Trans>
-										</Text>
+											<Text size="xs" c="dimmed">
+												<Trans>
+													Every workspace member, including guests, counts as
+													one seat. One person never takes more than one seat
+													per workspace, even if they're on multiple
+													organisations.
+												</Trans>
+											</Text>
+											<Text size="xs" c="dimmed">
+												<Trans>
+													Going over your tier's included seats bills extra per
+													month. See the matrix below for the per-seat rate on
+													each tier.
+												</Trans>
+											</Text>
 										</Stack>
 									</Paper>
 
@@ -702,9 +709,24 @@ export const WorkspaceSettingsRoute = () => {
 								    hours / guests / training. Highlights the current
 								    tier so admins can see what they have vs what's
 								    next. */}
+									<Group justify="flex-start">
+										<BillingPeriodToggle
+											value={
+												billingPeriodOverride ??
+												settings.billing_period ??
+												"annual"
+											}
+											onChange={setBillingPeriodOverride}
+										/>
+									</Group>
 									<TierCapacityMatrix
 										highlightTier={settings.tier}
 										compact={false}
+										billingPeriod={
+											billingPeriodOverride ??
+											settings.billing_period ??
+											"annual"
+										}
 									/>
 									{seesFinancials && (
 										<Text size="xs" c="dimmed">
@@ -792,50 +814,50 @@ export const WorkspaceSettingsRoute = () => {
 									/>
 
 									<Stack gap="xs">
-									{canManage && (
-										<InviteMemberCard
-											label={
-												seatInviteBlocked ? (
-													<Trans>Workspace is full</Trans>
-												) : (
-													<Trans>Invite member</Trans>
-												)
-											}
-											helperText={
-												seatInviteBlocked ? (
-													<Trans>
-														All seats are taken. Free a seat or upgrade to
-														invite more.
-													</Trans>
-												) : seatOverageActive && seatOverageRate != null ? (
-													<Trans>
-														You're over your included seats. Each new member
-														adds €{seatOverageRate}/month to next bill.
-													</Trans>
-												) : seatOverageActive ? (
-													<Trans>
-														You're over your included seats. Overage applies
-														on the next bill.
-													</Trans>
-												) : (
-													<Trans>
-														Add members or a guest to this workspace.
-													</Trans>
-												)
-											}
-											tooltip={
-												seatInviteBlocked ? (
-													<Trans>
-														All seats are taken on this tier. Remove a member
-														or guest, or upgrade the workspace tier to invite
-														more people.
-													</Trans>
-												) : undefined
-											}
-											onClick={openInviteModal}
-											disabled={seatInviteBlocked}
-										/>
-									)}
+										{canManage && (
+											<InviteMemberCard
+												label={
+													seatInviteBlocked ? (
+														<Trans>Workspace is full</Trans>
+													) : (
+														<Trans>Invite member</Trans>
+													)
+												}
+												helperText={
+													seatInviteBlocked ? (
+														<Trans>
+															All seats are taken. Free a seat or upgrade to
+															invite more.
+														</Trans>
+													) : seatOverageActive && seatOverageRate != null ? (
+														<Trans>
+															You're over your included seats. Each new member
+															adds €{seatOverageRate}/month to next bill.
+														</Trans>
+													) : seatOverageActive ? (
+														<Trans>
+															You're over your included seats. Overage applies
+															on the next bill.
+														</Trans>
+													) : (
+														<Trans>
+															Add members or a guest to this workspace.
+														</Trans>
+													)
+												}
+												tooltip={
+													seatInviteBlocked ? (
+														<Trans>
+															All seats are taken on this tier. Remove a member
+															or guest, or upgrade the workspace tier to invite
+															more people.
+														</Trans>
+													) : undefined
+												}
+												onClick={openInviteModal}
+												disabled={seatInviteBlocked}
+											/>
+										)}
 										{settings.members.length === 0 && (
 											<Stack align="center" gap={6} py={32}>
 												<Text size="sm" fw={500}>
@@ -1493,256 +1515,258 @@ function PrivacyAndDefaultsSection({
 	if (section === "general")
 		return (
 			<>
-			<Stack gap={16}>
-				<TextInput
-					label={t`Name`}
-					description={t`Workspace name. Autosaves on blur.`}
-					placeholder={t`e.g. Client Alpha`}
-					value={name}
-					onChange={(e) => setName(e.currentTarget.value)}
-					onBlur={() => {
-						const trimmed = name.trim();
-						if (!trimmed) {
-							setName(settings.name ?? "");
-							return;
-						}
-						if (trimmed !== (settings.name ?? "")) {
-							nameMutation.mutate(trimmed);
-						}
-					}}
-					onKeyDown={(e) => {
-						if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
-						if (e.key === "Escape") {
-							setName(settings.name ?? "");
-							(e.currentTarget as HTMLInputElement).blur();
-						}
-					}}
-					disabled={!canEdit || nameMutation.isPending}
-					maxLength={100}
-				/>
-				<TextInput
-					label={t`Description`}
-					description={t`Optional. What this workspace is for.`}
-					placeholder={t`e.g. Client onboarding interviews, Q1 product research`}
-					value={description}
-					onChange={(e) => setDescription(e.currentTarget.value)}
-					onBlur={() => {
-						const next = description;
-						if (next !== (settings.description ?? "")) {
-							descriptionMutation.mutate(next);
-						}
-					}}
-					onKeyDown={(e) => {
-						if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
-						if (e.key === "Escape") {
-							setDescription(settings.description ?? "");
-							(e.currentTarget as HTMLInputElement).blur();
-						}
-					}}
-					disabled={!canEdit || descriptionMutation.isPending}
-					maxLength={500}
-				/>
-				{(() => {
-					// Whitelabel branding is changemaker+
-					const whitelabelTiers = ["changemaker", "guardian"];
-					const canWhitelabel = whitelabelTiers.includes(settings.tier);
-					const canRequestUpgrade =
-						settings.my_role === "owner" ||
-						settings.my_role === "admin" ||
-						settings.my_role === "billing";
+				<Stack gap={16}>
+					<TextInput
+						label={t`Name`}
+						description={t`Workspace name. Autosaves on blur.`}
+						placeholder={t`e.g. Client Alpha`}
+						value={name}
+						onChange={(e) => setName(e.currentTarget.value)}
+						onBlur={() => {
+							const trimmed = name.trim();
+							if (!trimmed) {
+								setName(settings.name ?? "");
+								return;
+							}
+							if (trimmed !== (settings.name ?? "")) {
+								nameMutation.mutate(trimmed);
+							}
+						}}
+						onKeyDown={(e) => {
+							if (e.key === "Enter")
+								(e.currentTarget as HTMLInputElement).blur();
+							if (e.key === "Escape") {
+								setName(settings.name ?? "");
+								(e.currentTarget as HTMLInputElement).blur();
+							}
+						}}
+						disabled={!canEdit || nameMutation.isPending}
+						maxLength={100}
+					/>
+					<TextInput
+						label={t`Description`}
+						description={t`Optional. What this workspace is for.`}
+						placeholder={t`e.g. Client onboarding interviews, Q1 product research`}
+						value={description}
+						onChange={(e) => setDescription(e.currentTarget.value)}
+						onBlur={() => {
+							const next = description;
+							if (next !== (settings.description ?? "")) {
+								descriptionMutation.mutate(next);
+							}
+						}}
+						onKeyDown={(e) => {
+							if (e.key === "Enter")
+								(e.currentTarget as HTMLInputElement).blur();
+							if (e.key === "Escape") {
+								setDescription(settings.description ?? "");
+								(e.currentTarget as HTMLInputElement).blur();
+							}
+						}}
+						disabled={!canEdit || descriptionMutation.isPending}
+						maxLength={500}
+					/>
+					{(() => {
+						// Whitelabel branding is changemaker+
+						const whitelabelTiers = ["changemaker", "guardian"];
+						const canWhitelabel = whitelabelTiers.includes(settings.tier);
+						const canRequestUpgrade =
+							settings.my_role === "owner" ||
+							settings.my_role === "admin" ||
+							settings.my_role === "billing";
 
-					if (canWhitelabel) {
-						return (
-							<Stack gap={6}>
-								<Text size="sm" fw={500}>
-									<Trans>Logo</Trans>
-								</Text>
-								<Text size="xs" c="dimmed">
-									<Trans>Custom workspace logo shown to participants.</Trans>
-								</Text>
-								{currentLogoUrl ? (
-									<Group gap="sm" align="center">
-										<Image
-											src={currentLogoUrl}
-											alt={t`Workspace logo`}
-											h={48}
-											w="auto"
-											fit="contain"
-											style={{ maxWidth: 200 }}
-										/>
-										<Button
-											variant="subtle"
-											color="red"
-											size="compact-sm"
-											leftSection={<IconTrash size={14} />}
-											loading={removeLogoMutation.isPending}
-											disabled={!canEdit}
-											onClick={openRemoveLogoConfirm}
-										>
-											<Trans>Remove</Trans>
-										</Button>
-									</Group>
-								) : (
-									<Text size="xs" c="dimmed" fs="italic">
-										<Trans>No logo set. dembrane default will be used.</Trans>
-									</Text>
-								)}
-								{!currentLogoUrl && (
-									<FileButton
-										resetRef={logoResetRef}
-										onChange={handleLogoSelect}
-										accept="image/png,image/jpeg,image/webp"
-										disabled={!canEdit}
-									>
-										{(props) => (
-											<Button
-												variant="light"
-												size="compact-sm"
-												leftSection={<IconUpload size={14} />}
-												loading={uploadLogoMutation.isPending}
-												style={{ alignSelf: "flex-start" }}
-												disabled={!canEdit}
-												{...props}
-											>
-												<Trans>Upload logo</Trans>
-											</Button>
-										)}
-									</FileButton>
-								)}
-							</Stack>
-						);
-					}
-
-					return (
-						<Stack gap={0}>
-							<Divider />
-							<Group
-								justify="space-between"
-								align="center"
-								gap="xl"
-								py="md"
-								wrap="nowrap"
-							>
+						if (canWhitelabel) {
+							return (
 								<Stack gap={6}>
 									<Text size="sm" fw={500}>
 										<Trans>Logo</Trans>
 									</Text>
+									<Text size="xs" c="dimmed">
+										<Trans>Custom workspace logo shown to participants.</Trans>
+									</Text>
 									{currentLogoUrl ? (
-										<>
-											<Group gap="sm" align="center">
-												<Image
-													src={currentLogoUrl}
-													alt={t`Workspace logo`}
-													h={48}
-													w="auto"
-													fit="contain"
-													style={{ maxWidth: 200 }}
-												/>
-												<Button
-													variant="subtle"
-													color="red"
-													size="compact-sm"
-													leftSection={<IconTrash size={14} />}
-													loading={removeLogoMutation.isPending}
-													disabled={!canEdit}
-													onClick={openRemoveLogoConfirm}
-												>
-													<Trans>Remove</Trans>
-												</Button>
-											</Group>
-											<Text size="xs" c="dimmed" fs="italic">
-												<Trans>
-													Your logo is still active but can't be changed on
-													this tier.
-												</Trans>
-											</Text>
-										</>
-									) : (
-										<>
-											<Text size="xs" c="dimmed" fs="italic">
-												<Trans>
-													No logo set. dembrane default will be used.
-												</Trans>
-											</Text>
+										<Group gap="sm" align="center">
+											<Image
+												src={currentLogoUrl}
+												alt={t`Workspace logo`}
+												h={48}
+												w="auto"
+												fit="contain"
+												style={{ maxWidth: 200 }}
+											/>
 											<Button
-												variant="light"
+												variant="subtle"
+												color="red"
 												size="compact-sm"
-												leftSection={<IconUpload size={14} />}
-												style={{ alignSelf: "flex-start" }}
-												disabled
+												leftSection={<IconTrash size={14} />}
+												loading={removeLogoMutation.isPending}
+												disabled={!canEdit}
+												onClick={openRemoveLogoConfirm}
 											>
-												<Trans>Upload logo</Trans>
+												<Trans>Remove</Trans>
 											</Button>
-										</>
+										</Group>
+									) : (
+										<Text size="xs" c="dimmed" fs="italic">
+											<Trans>No logo set. dembrane default will be used.</Trans>
+										</Text>
+									)}
+									{!currentLogoUrl && (
+										<FileButton
+											resetRef={logoResetRef}
+											onChange={handleLogoSelect}
+											accept="image/png,image/jpeg,image/webp"
+											disabled={!canEdit}
+										>
+											{(props) => (
+												<Button
+													variant="light"
+													size="compact-sm"
+													leftSection={<IconUpload size={14} />}
+													loading={uploadLogoMutation.isPending}
+													style={{ alignSelf: "flex-start" }}
+													disabled={!canEdit}
+													{...props}
+												>
+													<Trans>Upload logo</Trans>
+												</Button>
+											)}
+										</FileButton>
 									)}
 								</Stack>
+							);
+						}
 
-								<Box
-									p="sm"
-									style={{
-										background: "rgba(65, 105, 225, 0.06)",
-										border: "1px solid rgba(65, 105, 225, 0.2)",
-										borderRadius: 8,
-									}}
+						return (
+							<Stack gap={0}>
+								<Divider />
+								<Group
+									justify="space-between"
+									align="center"
+									gap="xl"
+									py="md"
+									wrap="nowrap"
 								>
-									<Stack align="center" gap="xs" maw={260} ta="center">
-										<IconLock
-											size={24}
-											stroke={1.5}
-											color="var(--mantine-color-blue-6)"
-										/>
-										<Text size="sm" fw={600}>
-											<Trans>Requires changemaker tier or above</Trans>
+									<Stack gap={6}>
+										<Text size="sm" fw={500}>
+											<Trans>Logo</Trans>
 										</Text>
-										<Button
-											color="blue"
-											size="xs"
-											disabled={!canRequestUpgrade}
-											onClick={() =>
-												navigate(`/w/${workspaceId}/settings/billing`)
-											}
-										>
-											<Trans>Upgrade to unlock</Trans>
-										</Button>
+										{currentLogoUrl ? (
+											<>
+												<Group gap="sm" align="center">
+													<Image
+														src={currentLogoUrl}
+														alt={t`Workspace logo`}
+														h={48}
+														w="auto"
+														fit="contain"
+														style={{ maxWidth: 200 }}
+													/>
+													<Button
+														variant="subtle"
+														color="red"
+														size="compact-sm"
+														leftSection={<IconTrash size={14} />}
+														loading={removeLogoMutation.isPending}
+														disabled={!canEdit}
+														onClick={openRemoveLogoConfirm}
+													>
+														<Trans>Remove</Trans>
+													</Button>
+												</Group>
+												<Text size="xs" c="dimmed" fs="italic">
+													<Trans>
+														Your logo is still active but can't be changed on
+														this tier.
+													</Trans>
+												</Text>
+											</>
+										) : (
+											<>
+												<Text size="xs" c="dimmed" fs="italic">
+													<Trans>
+														No logo set. dembrane default will be used.
+													</Trans>
+												</Text>
+												<Button
+													variant="light"
+													size="compact-sm"
+													leftSection={<IconUpload size={14} />}
+													style={{ alignSelf: "flex-start" }}
+													disabled
+												>
+													<Trans>Upload logo</Trans>
+												</Button>
+											</>
+										)}
 									</Stack>
-								</Box>
-							</Group>
-							<Divider />
-						</Stack>
-					);
-				})()}
-			</Stack>
-			{cropSrc && (
-				<ImageCropModal
-					opened={cropOpened}
-					onClose={() => {
-						closeCrop();
-						setCropSrc(null);
+
+									<Box
+										p="sm"
+										style={{
+											background: "rgba(65, 105, 225, 0.06)",
+											border: "1px solid rgba(65, 105, 225, 0.2)",
+											borderRadius: 8,
+										}}
+									>
+										<Stack align="center" gap="xs" maw={260} ta="center">
+											<IconLock
+												size={24}
+												stroke={1.5}
+												color="var(--mantine-color-blue-6)"
+											/>
+											<Text size="sm" fw={600}>
+												<Trans>Requires changemaker tier or above</Trans>
+											</Text>
+											<Button
+												color="blue"
+												size="xs"
+												disabled={!canRequestUpgrade}
+												onClick={() =>
+													navigate(`/w/${workspaceId}/settings/billing`)
+												}
+											>
+												<Trans>Upgrade to unlock</Trans>
+											</Button>
+										</Stack>
+									</Box>
+								</Group>
+								<Divider />
+							</Stack>
+						);
+					})()}
+				</Stack>
+				{cropSrc && (
+					<ImageCropModal
+						opened={cropOpened}
+						onClose={() => {
+							closeCrop();
+							setCropSrc(null);
+						}}
+						imageSrc={cropSrc}
+						onCropComplete={handleCropComplete}
+						aspect={3}
+						title={t`Crop logo`}
+					/>
+				)}
+				<ConfirmModal
+					opened={removeLogoConfirmOpened}
+					onClose={closeRemoveLogoConfirm}
+					onConfirm={() => {
+						removeLogoMutation.mutate();
+						closeRemoveLogoConfirm();
 					}}
-					imageSrc={cropSrc}
-					onCropComplete={handleCropComplete}
-					aspect={3}
-					title={t`Crop logo`}
+					title={t`Remove logo`}
+					message={
+						<Trans>
+							Remove the custom logo? The dembrane default will be used instead.
+						</Trans>
+					}
+					confirmLabel={<Trans>Remove</Trans>}
+					confirmColor="red"
+					loading={removeLogoMutation.isPending}
+					data-testid="workspace-logo-remove-modal"
 				/>
-			)}
-			<ConfirmModal
-				opened={removeLogoConfirmOpened}
-				onClose={closeRemoveLogoConfirm}
-				onConfirm={() => {
-					removeLogoMutation.mutate();
-					closeRemoveLogoConfirm();
-				}}
-				title={t`Remove logo`}
-				message={
-					<Trans>
-						Remove the custom logo? The dembrane default will be used instead.
-					</Trans>
-				}
-				confirmLabel={<Trans>Remove</Trans>}
-				confirmColor="red"
-				loading={removeLogoMutation.isPending}
-				data-testid="workspace-logo-remove-modal"
-			/>
 			</>
 		);
 

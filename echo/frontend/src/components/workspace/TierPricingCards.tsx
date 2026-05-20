@@ -4,21 +4,23 @@ import { Badge, Box, Divider, Group, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconCheck } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { API_BASE_URL } from "@/config";
 import {
-	TIER_BADGE_COLOR,
-	type Tier,
-	type TierCapacity,
-	tierBestFor,
+	type BillingPeriod,
 	capacityShortFor,
 	fetchTierCapacities,
 	isTier,
+	pricingForBillingPeriod,
+	TIER_BADGE_COLOR,
+	type Tier,
+	type TierCapacity,
 	taglineFor,
+	tierBestFor,
 } from "@/lib/tiers";
 import classes from "./tier-pricing-cards.module.css";
 
-function buildCardData(cap: TierCapacity) {
+function buildCardData(cap: TierCapacity, billingPeriod: BillingPeriod) {
 	const specs: string[] = [];
 	if (cap.included_seats == null) {
 		specs.push(t`Unlimited seats`);
@@ -40,32 +42,38 @@ function buildCardData(cap: TierCapacity) {
 
 	let priceAmount: string;
 	let pricePeriod: string;
-	if (cap.price_eur_monthly != null) {
-		priceAmount = `€${cap.price_eur_monthly.toLocaleString("en-IE")}`;
+	let priceSubtext = "";
+
+	const resolved = pricingForBillingPeriod(cap, billingPeriod);
+	if (resolved?.kind === "annual") {
+		priceAmount = `€${resolved.per_month_eur.toLocaleString("en-IE")}`;
 		pricePeriod = t`/mo`;
+		const total = `€${resolved.total_per_year_eur.toLocaleString("en-IE")}`;
+		priceSubtext = t`billed annually · ${total}/yr`;
+	} else if (resolved?.kind === "monthly") {
+		priceAmount = `€${resolved.per_month_eur.toLocaleString("en-IE")}`;
+		pricePeriod = t`/mo`;
+		priceSubtext = t`billed monthly`;
+	} else if (resolved?.kind === "one_time") {
+		priceAmount = `€${resolved.amount_eur.toLocaleString("en-IE")}`;
+		pricePeriod = t`one-time`;
 	} else {
-		const note = cap.price_note || t`Custom pricing`;
-		const match = note.match(/^(€[\d,]+)\s*(.*)$/);
-		if (match) {
-			priceAmount = match[1];
-			pricePeriod = match[2];
-		} else {
-			priceAmount = note;
-			pricePeriod = "";
-		}
+		priceAmount = t`Free`;
+		pricePeriod = "";
 	}
 
 	return {
-		tier: cap.tier,
-		tagline: isTier(cap.tier) ? taglineFor(cap.tier) : cap.tagline,
-		specs,
 		bestFor: tierBestFor(cap.tier),
 		priceAmount,
 		pricePeriod,
+		priceSubtext,
+		specs,
+		tagline: isTier(cap.tier) ? taglineFor(cap.tier) : cap.tagline,
+		tier: cap.tier,
 	};
 }
 
-function buildFallbackCardData(tier: Tier) {
+function buildFallbackCardData(tier: Tier, billingPeriod: BillingPeriod) {
 	const tagline = taglineFor(tier);
 	const capacityShort = capacityShortFor(tier);
 	const specs = capacityShort
@@ -74,25 +82,42 @@ function buildFallbackCardData(tier: Tier) {
 
 	let priceAmount = "—";
 	let pricePeriod = "";
-	const priceMatch = capacityShort.match(/(€[\d,]+(?:\/mo)?|free|custom pricing)/i);
-	if (priceMatch) {
-		const raw = priceMatch[1];
-		if (raw.includes("/mo")) {
-			priceAmount = raw.replace("/mo", "");
-			pricePeriod = t`/mo`;
+	let priceSubtext = "";
+
+	if (tier === "free") {
+		priceAmount = t`Free`;
+	} else if (tier === "pilot") {
+		priceAmount = "€349";
+		pricePeriod = t`one-time`;
+	} else {
+		// Pioneer+. Fallback hard-codes the annual-billing rates so the
+		// component still renders if the network call hasn't returned.
+		const annualPerMonth: Record<string, number> = {
+			changemaker: 1500,
+			guardian: 5000,
+			innovator: 500,
+			pioneer: 200,
+		};
+		const base = annualPerMonth[tier] ?? 0;
+		const value = billingPeriod === "monthly" ? Math.round(base * 1.1) : base;
+		priceAmount = `€${value.toLocaleString("en-IE")}`;
+		pricePeriod = t`/mo`;
+		if (billingPeriod === "annual") {
+			const total = `€${(base * 12).toLocaleString("en-IE")}`;
+			priceSubtext = t`billed annually · ${total}/yr`;
 		} else {
-			priceAmount = raw;
-			pricePeriod = "";
+			priceSubtext = t`billed monthly`;
 		}
 	}
 
 	return {
-		tier,
-		tagline,
-		specs,
 		bestFor: tierBestFor(tier),
 		priceAmount,
 		pricePeriod,
+		priceSubtext,
+		specs,
+		tagline,
+		tier,
 	};
 }
 
@@ -131,7 +156,11 @@ function WideCard({
 						{card.tier}
 					</Text>
 					{highlighted && (
-						<Badge variant="light" color={TIER_BADGE_COLOR[card.tier as Tier] ?? "blue"} size="xs">
+						<Badge
+							variant="light"
+							color={TIER_BADGE_COLOR[card.tier as Tier] ?? "blue"}
+							size="xs"
+						>
 							{highlightLabel}
 						</Badge>
 					)}
@@ -143,7 +172,11 @@ function WideCard({
 				<Stack gap={0}>
 					{card.specs.map((spec) => (
 						<Group key={spec} gap={7} wrap="nowrap" className={classes.specRow}>
-							<IconCheck size={13} stroke={1.5} color="var(--mantine-color-primary-6)" />
+							<IconCheck
+								size={13}
+								stroke={1.5}
+								color="var(--mantine-color-primary-6)"
+							/>
 							<Text size="xs" c="dimmed">
 								{spec}
 							</Text>
@@ -169,6 +202,11 @@ function WideCard({
 							</Text>
 						)}
 					</Group>
+					{card.priceSubtext && (
+						<Text size="xs" c="dimmed" mt={2}>
+							{card.priceSubtext}
+						</Text>
+					)}
 				</Box>
 			</Stack>
 		</div>
@@ -214,7 +252,11 @@ function NarrowRow({
 							{card.tier}
 						</Text>
 						{highlighted && (
-							<Badge variant="light" color={TIER_BADGE_COLOR[card.tier as Tier] ?? "blue"} size="xs">
+							<Badge
+								variant="light"
+								color={TIER_BADGE_COLOR[card.tier as Tier] ?? "blue"}
+								size="xs"
+							>
 								{highlightLabel}
 							</Badge>
 						)}
@@ -232,6 +274,11 @@ function NarrowRow({
 							{card.pricePeriod}
 						</Text>
 					)}
+					{card.priceSubtext && (
+						<Text size="xs" c="dimmed">
+							{card.priceSubtext}
+						</Text>
+					)}
 				</div>
 			</Group>
 		</div>
@@ -245,6 +292,9 @@ interface TierPricingCardsProps {
 	highlightTier?: string | null;
 	highlightLabel?: ReactNode;
 	compact?: boolean;
+	/** Active billing cadence. Defaults to "annual" for callers that haven't
+	 *  wired the toggle yet — preserves today's prices on first paint. */
+	billingPeriod?: BillingPeriod;
 }
 
 const REQUESTABLE_TIERS: Tier[] = [
@@ -262,20 +312,21 @@ export const TierPricingCards = ({
 	highlightTier = "innovator",
 	highlightLabel,
 	compact = false,
+	billingPeriod = "annual",
 }: TierPricingCardsProps) => {
 	const isWide = useMediaQuery("(min-width: 768px)");
 	const useWideLayout = !compact && isWide;
 
 	const { data: apiData } = useQuery({
-		queryKey: ["v2", "tier-capacities"],
 		queryFn: () => fetchTierCapacities(API_BASE_URL),
+		queryKey: ["v2", "tier-capacities"],
 		staleTime: 60 * 60 * 1000,
 	});
 
 	const cards: CardData[] = tiers.map((tier) => {
 		const apiEntry = apiData?.find((c) => c.tier === tier);
-		if (apiEntry) return buildCardData(apiEntry);
-		return buildFallbackCardData(tier);
+		if (apiEntry) return buildCardData(apiEntry, billingPeriod);
+		return buildFallbackCardData(tier, billingPeriod);
 	});
 
 	const CardComponent = useWideLayout ? WideCard : NarrowRow;

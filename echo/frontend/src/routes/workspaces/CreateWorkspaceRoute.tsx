@@ -22,16 +22,25 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconCheck } from "@tabler/icons-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { CharsRemainingIndicator } from "@/components/common/CharsRemainingIndicator";
 import { toast } from "@/components/common/Toaster";
+import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
+import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
-import { type Tier, capacityShortFor } from "@/lib/tiers";
-import { TierPricingCards } from "@/components/workspace/TierPricingCards";
+import {
+	type BillingPeriod,
+	capacityShortFor,
+	fetchTierCapacities,
+	pricingForBillingPeriod,
+	type Tier,
+	type TierCapacity,
+} from "@/lib/tiers";
 
 async function submitWorkspaceRequest(payload: {
 	kind: "new_workspace";
@@ -39,6 +48,7 @@ async function submitWorkspaceRequest(payload: {
 	proposed_name: string;
 	proposed_tier: string;
 	proposed_visibility: string;
+	proposed_billing_period: BillingPeriod | null;
 	requester_message?: string;
 }) {
 	const res = await fetch(`${API_BASE_URL}/v2/workspace-requests`, {
@@ -72,6 +82,7 @@ type Privacy = "open" | "private";
  */
 export const CreateWorkspaceRoute = () => {
 	const navigate = useI18nNavigate();
+	const queryClient = useQueryClient();
 	const [searchParams] = useSearchParams();
 	const organisationIdFromQuery = searchParams.get("organisationId") ?? null;
 	const { data: meV2, isLoading: meLoading } = useV2Me();
@@ -79,6 +90,7 @@ export const CreateWorkspaceRoute = () => {
 	const [step, setStep] = useState(0);
 	const [name, setName] = useState("");
 	const [selectedTier, setSelectedTier] = useState<Tier>("innovator");
+	const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
 	const [privacy, setPrivacy] = useState<Privacy>("open");
 	const [message, setMessage] = useState("");
 	const [submitted, setSubmitted] = useState(false);
@@ -124,6 +136,30 @@ export const CreateWorkspaceRoute = () => {
 		staleTime: 60_000,
 	});
 
+	// Tier capacities for the review-step price summary. Shares the query
+	// key with TierPricingCards so this is a free read from the cache.
+	const { data: tierCapacities } = useQuery({
+		queryFn: () => fetchTierCapacities(API_BASE_URL),
+		queryKey: ["v2", "tier-capacities"],
+		staleTime: 60 * 60 * 1000,
+	});
+
+	const reviewTierSummary = useMemo(() => {
+		const cap = tierCapacities?.find(
+			(c: TierCapacity) => c.tier === selectedTier,
+		);
+		if (!cap) return capacityShortFor(selectedTier);
+		const resolved = pricingForBillingPeriod(cap, billingPeriod);
+		if (!resolved) return capacityShortFor(selectedTier);
+		if (resolved.kind === "one_time") {
+			return t`€${resolved.amount_eur} one-time`;
+		}
+		if (resolved.kind === "annual") {
+			return t`€${resolved.per_month_eur}/mo · billed annually · €${resolved.total_per_year_eur}/yr`;
+		}
+		return t`€${resolved.per_month_eur}/mo · billed monthly`;
+	}, [tierCapacities, selectedTier, billingPeriod]);
+
 	const freeWorkspaceForOrg = useMemo(() => {
 		if (!workspacesData?.workspaces || !targetOrganisationId) return null;
 		return (
@@ -144,11 +180,17 @@ export const CreateWorkspaceRoute = () => {
 		}
 	}, [canPickPrivate, privacy]);
 
+	// Pilot is a one-time fee; the toggle doesn't influence its price and the
+	// backend rejects `proposed_billing_period` on pilot. Send null.
+	const submittedBillingPeriod: BillingPeriod | null =
+		selectedTier === "pilot" ? null : billingPeriod;
+
 	const mutation = useMutation({
 		mutationFn: () =>
 			submitWorkspaceRequest({
 				kind: "new_workspace",
 				org_id: targetOrganisationId!,
+				proposed_billing_period: submittedBillingPeriod,
 				proposed_name: name.trim(),
 				proposed_tier: selectedTier,
 				proposed_visibility:
@@ -160,6 +202,15 @@ export const CreateWorkspaceRoute = () => {
 		},
 		onSuccess: () => {
 			setSubmitted(true);
+			// /v2/workspaces returns `pending_workspace_requests`; without an
+			// invalidation, the selector keeps stale data and the new request
+			// only appears after a hard refresh.
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			posthog.capture("workspace_request_submitted", {
+				kind: "new_workspace",
+				proposed_billing_period: submittedBillingPeriod,
+				proposed_tier: selectedTier,
+			});
 		},
 	});
 
@@ -256,6 +307,20 @@ export const CreateWorkspaceRoute = () => {
 								</Text>
 								<Text size="sm">{capitalizedTier}</Text>
 							</Group>
+							{submittedBillingPeriod && (
+								<Group gap={12} align="baseline">
+									<Text size="xs" c="dimmed" w={90}>
+										<Trans>Billing</Trans>
+									</Text>
+									<Text size="sm" tt="capitalize">
+										{submittedBillingPeriod === "annual" ? (
+											<Trans>Annual</Trans>
+										) : (
+											<Trans>Monthly</Trans>
+										)}
+									</Text>
+								</Group>
+							)}
 							<Group gap={12} align="baseline">
 								<Text size="xs" c="dimmed" w={90}>
 									<Trans>Access</Trans>
@@ -384,9 +449,16 @@ export const CreateWorkspaceRoute = () => {
 							<Text size="sm" c="dimmed">
 								<Trans>Pick a plan for your team.</Trans>
 							</Text>
+							<Group justify="flex-start">
+								<BillingPeriodToggle
+									value={billingPeriod}
+									onChange={setBillingPeriod}
+								/>
+							</Group>
 							<TierPricingCards
 								value={selectedTier}
 								onChange={(v) => setSelectedTier(v as Tier)}
+								billingPeriod={billingPeriod}
 							/>
 						</Stack>
 					</Stepper.Step>
@@ -492,10 +564,24 @@ export const CreateWorkspaceRoute = () => {
 											{selectedTier}
 											<Text span c="dimmed" size="xs">
 												{" · "}
-												{capacityShortFor(selectedTier)}
+												{reviewTierSummary}
 											</Text>
 										</Text>
 									</Group>
+									{submittedBillingPeriod && (
+										<Group gap={12} align="baseline">
+											<Text size="xs" c="dimmed" w={80}>
+												<Trans>Billing</Trans>
+											</Text>
+											<Text size="sm" tt="capitalize">
+												{submittedBillingPeriod === "annual" ? (
+													<Trans>Annual</Trans>
+												) : (
+													<Trans>Monthly</Trans>
+												)}
+											</Text>
+										</Group>
+									)}
 								</Stack>
 							</Paper>
 

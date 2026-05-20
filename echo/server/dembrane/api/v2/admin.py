@@ -88,6 +88,9 @@ class BillingRow(BaseModel):
     tier_expires_at: Optional[str] = None
     type_discount: Optional[str] = None
     percent_discount: Optional[int] = None
+    # Cadence derived from the workspace's most-recently approved
+    # workspace_request. `None` for legacy workspaces.
+    billing_period: Optional[str] = None
 
 
 class BillingRollupResponse(BaseModel):
@@ -404,6 +407,14 @@ async def billing_rollup(
     org_ids = [w["org_id"] for w in workspaces if w.get("org_id")]
     org_name_by_id = await _org_name_map(org_ids)
 
+    # Batch-resolve cadence for every workspace in one Directus query.
+    # Per-workspace lookups would be N+1 against the request table.
+    from dembrane.billing_period import resolve_workspace_billing_periods
+
+    workspace_billing_periods = await resolve_workspace_billing_periods(
+        [w["id"] for w in workspaces if w.get("id")]
+    )
+
     rows: list[BillingRow] = []
     total_base = 0.0
     total_overage = 0.0
@@ -483,6 +494,7 @@ async def billing_rollup(
             tier_expires_at=ws.get("tier_expires_at"),
             type_discount=ws.get("type_discount"),
             percent_discount=ws.get("percent_discount"),
+            billing_period=workspace_billing_periods.get(ws_id),
         )
         rows.append(row)
         if base_price is not None:
@@ -657,11 +669,13 @@ class WorkspaceRequestRow(BaseModel):
     proposed_name: Optional[str] = None
     proposed_tier: str
     proposed_visibility: Optional[str] = None
+    proposed_billing_period: Optional[Literal["annual", "monthly"]] = None
     requester_message: Optional[str] = None
     granted_tier: Optional[str] = None
     granted_tier_expires_at: Optional[str] = None
     granted_type_discount: Optional[str] = None
     granted_percent_discount: Optional[int] = None
+    approved_billing_period: Optional[Literal["annual", "monthly"]] = None
     resulting_workspace_id: Optional[str] = None
     decided_at: Optional[str] = None
     decided_by: Optional[WorkspaceRequestRequester] = None
@@ -767,11 +781,13 @@ async def _enrich_workspace_requests(
                 proposed_name=r.get("proposed_name"),
                 proposed_tier=r.get("proposed_tier", "innovator"),
                 proposed_visibility=r.get("proposed_visibility"),
+                proposed_billing_period=r.get("proposed_billing_period"),
                 requester_message=r.get("requester_message"),
                 granted_tier=r.get("granted_tier"),
                 granted_tier_expires_at=r.get("granted_tier_expires_at"),
                 granted_type_discount=r.get("granted_type_discount"),
                 granted_percent_discount=r.get("granted_percent_discount"),
+                approved_billing_period=r.get("approved_billing_period"),
                 resulting_workspace_id=r.get("resulting_workspace_id"),
                 decided_at=r.get("decided_at"),
                 decided_by=_user(r.get("decided_by")),
@@ -818,11 +834,13 @@ async def list_workspace_requests(
                     "proposed_name",
                     "proposed_tier",
                     "proposed_visibility",
+                    "proposed_billing_period",
                     "requester_message",
                     "granted_tier",
                     "granted_tier_expires_at",
                     "granted_type_discount",
                     "granted_percent_discount",
+                    "approved_billing_period",
                     "resulting_workspace_id",
                     "decided_at",
                     "decided_by",
@@ -878,8 +896,17 @@ async def _notify_requester_approved(
     req: dict,
     granted_tier: str,
     resulting_ws_id: str,
+    *,
+    approved_billing_period: Optional[str] = None,
+    proposed_billing_period: Optional[str] = None,
 ) -> None:
-    """In-app notification + email to the requester on approval."""
+    """In-app notification + email to the requester on approval.
+
+    Cadence appears in subject + body when applicable (pioneer+); for pilot
+    approvals it's omitted entirely. When the approved cadence diverges
+    from what the requester proposed, the email body adds an explanatory
+    line so the customer can object before invoicing.
+    """
     requester_id = req.get("requested_by")
     if not requester_id:
         return
@@ -897,25 +924,51 @@ async def _notify_requester_approved(
         pass
     ws_name = ws_name or req.get("proposed_name") or "your workspace"
 
+    cadence_label = (
+        f"{approved_billing_period} billing"
+        if approved_billing_period
+        else None
+    )
+
+    notification_message = (
+        f"{ws_name} \u00b7 {granted_tier} \u00b7 {cadence_label}"
+        if cadence_label
+        else f"{ws_name} \u00b7 {granted_tier}"
+    )
+
     await emit(
         audience_user_id=requester_id,
         event_code="WORKSPACE_REQUEST_APPROVED",
         title=f"Your {kind_label} request was approved",
-        message=f"{ws_name} \u00b7 {granted_tier}",
+        message=notification_message,
         action="NAVIGATE_WS",
         ref_workspace_id=resulting_ws_id,
     )
 
     _, email = await _resolve_requester_info(requester_id)
     if email:
+        if cadence_label:
+            subject = (
+                f"Your {granted_tier.title()} tier ({cadence_label}) is ready"
+            )
+        else:
+            subject = f"Your {granted_tier.title()} is ready"
+        cadence_diverges = (
+            approved_billing_period is not None
+            and proposed_billing_period is not None
+            and approved_billing_period != proposed_billing_period
+        )
         await send_email(
             to=email,
-            subject=f"Request approved \u00b7 {ws_name}",
+            subject=subject,
             template="workspace_request_approved",
             template_data={
                 "kind_label": kind_label,
                 "workspace_name": ws_name,
                 "granted_tier": granted_tier,
+                "approved_billing_period": approved_billing_period,
+                "proposed_billing_period": proposed_billing_period,
+                "cadence_diverges": cadence_diverges,
                 "workspace_url": workspace_url,
             },
         )
@@ -964,6 +1017,10 @@ class DecideWorkspaceRequestBody(BaseModel):
     granted_tier_expires_at: Optional[datetime] = None
     granted_type_discount: Optional[Literal["scholarship", "staff_discount"]] = None
     granted_percent_discount: Optional[int] = Field(default=None, ge=0, le=100)
+    # Cadence staff actually granted. Pioneer+ should carry annual or monthly;
+    # pilot/free must be null. We never mutate proposed_billing_period here —
+    # the divergence between the two columns is the audit trail.
+    approved_billing_period: Optional[Literal["annual", "monthly"]] = None
     staff_notes: Optional[str] = Field(default=None, max_length=2000)
 
 
@@ -1176,6 +1233,22 @@ async def decide_workspace_request(
         if granted_tier not in TIER_ORDER:
             raise HTTPException(status_code=400, detail=f"Unknown tier: {granted_tier}")
 
+        # Cadence vs tier validity. Pioneer+ must have a cadence (approve form
+        # is server-side validated, not just UI-validated); pilot/free strip
+        # the cadence to null regardless of what the toggle was last on.
+        _cadence_tiers = {"pioneer", "innovator", "changemaker", "guardian"}
+        if granted_tier in _cadence_tiers and body.approved_billing_period is None:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "approved_billing_period is required for "
+                    f"{granted_tier} (annual or monthly)"
+                ),
+            )
+        approved_billing_period: Optional[str] = (
+            body.approved_billing_period if granted_tier in _cadence_tiers else None
+        )
+
         expires_iso = (
             body.granted_tier_expires_at.isoformat() if body.granted_tier_expires_at else None
         )
@@ -1210,6 +1283,9 @@ async def decide_workspace_request(
         extra_data: dict = {
             "granted_tier": granted_tier,
             "resulting_workspace_id": resulting_ws_id,
+            # proposed_billing_period is NEVER overwritten here — divergence
+            # between proposed/approved is the audit trail.
+            "approved_billing_period": approved_billing_period,
         }
         if expires_iso:
             extra_data["granted_tier_expires_at"] = expires_iso
@@ -1220,7 +1296,13 @@ async def decide_workspace_request(
 
         await async_directus.update_item("workspace_request", request_id, extra_data)
 
-        await _notify_requester_approved(req, granted_tier, resulting_ws_id)
+        await _notify_requester_approved(
+            req,
+            granted_tier,
+            resulting_ws_id,
+            approved_billing_period=approved_billing_period,
+            proposed_billing_period=req.get("proposed_billing_period"),
+        )
 
         return DecideWorkspaceRequestResponse(
             id=request_id,

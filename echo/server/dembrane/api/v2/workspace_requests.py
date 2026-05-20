@@ -53,7 +53,13 @@ class SubmitWorkspaceRequest(BaseModel):
     proposed_name: Optional[str] = Field(default=None, max_length=100)
     proposed_tier: Literal["pilot", "pioneer", "innovator", "changemaker", "guardian"] = "innovator"
     proposed_visibility: Literal["open_to_organisation", "private"] = "open_to_organisation"
+    proposed_billing_period: Optional[Literal["annual", "monthly"]] = None
     requester_message: Optional[str] = Field(default=None, max_length=1000)
+
+
+# Tiers where annual/monthly cadence applies. Free is not requestable here; pilot
+# is a one-time fee and must arrive without a billing period.
+_CADENCE_TIERS = {"pioneer", "innovator", "changemaker", "guardian"}
 
 
 class SubmitWorkspaceRequestResponse(BaseModel):
@@ -152,6 +158,22 @@ async def submit_workspace_request(
                 detail="An upgrade request is already pending for this workspace",
             )
 
+    # Cadence-vs-tier validity. Pioneer+ require a cadence; pilot must arrive
+    # without one. Checked after kind-specific validation so the more specific
+    # 400 messages (missing name, missing workspace_id) surface first.
+    if body.proposed_tier in _CADENCE_TIERS and body.proposed_billing_period is None:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"proposed_billing_period is required for {body.proposed_tier} (annual or monthly)"
+            ),
+        )
+    if body.proposed_tier == "pilot" and body.proposed_billing_period is not None:
+        raise HTTPException(
+            status_code=400,
+            detail="proposed_billing_period must be null for pilot (one-time fee)",
+        )
+
     req_id = generate_uuid()
     row = {
         "id": req_id,
@@ -163,6 +185,7 @@ async def submit_workspace_request(
         "proposed_name": body.proposed_name.strip() if body.proposed_name else None,
         "proposed_tier": body.proposed_tier,
         "proposed_visibility": body.proposed_visibility,
+        "proposed_billing_period": body.proposed_billing_period,
         "requester_message": body.requester_message,
     }
     try:
@@ -193,13 +216,21 @@ async def submit_workspace_request(
         pass
     kind_label = "new workspace" if body.kind == "new_workspace" else "tier upgrade"
 
+    # Notification message format: "{org_name} · {tier} · {cadence}" — cadence
+    # appended only when applicable (pioneer+). Pilot/free omit it so the line
+    # stays honest about what's actually billable.
+    tier_segment: str = body.proposed_tier
+    if body.proposed_billing_period:
+        tier_segment = f"{body.proposed_tier} · {body.proposed_billing_period}"
+    notification_message = f"{org_name} · {tier_segment}" if org_name else tier_segment
+
     staff_ids = await audience_staff()
     await emit_to_audience(
         staff_ids,
         actor_user_id=app_user_id,
         event_code="WORKSPACE_REQUEST_SUBMITTED",
         title=f"{requester_name} requested a {kind_label}",
-        message=f"{org_name} \u00b7 {body.proposed_tier}" if org_name else body.proposed_tier,
+        message=notification_message,
         action="NAVIGATE_ADMIN_UPGRADES",
         ref_org_id=body.org_id,
         ref_workspace_id=body.workspace_id,
@@ -217,7 +248,7 @@ async def submit_workspace_request(
 
         summary = f"{requester_name} requested a {kind_label}"
         if org_name:
-            summary += f" ({org_name} \u00b7 {body.proposed_tier})"
+            summary += f" ({org_name} · {body.proposed_tier})"
 
         for staff_email_addr in staff_emails:
             decision = await record_and_check_throttle(
@@ -227,7 +258,7 @@ async def submit_workspace_request(
             if decision == "individual":
                 await send_email(
                     to=staff_email_addr,
-                    subject=f"Workspace request: {requester_name} \u00b7 {kind_label}",
+                    subject=f"Workspace request: {requester_name} · {kind_label}",
                     template="workspace_request_submitted",
                     template_data={
                         "requester_name": requester_name,
@@ -235,6 +266,7 @@ async def submit_workspace_request(
                         "kind_label": kind_label,
                         "org_name": org_name,
                         "proposed_tier": body.proposed_tier,
+                        "proposed_billing_period": body.proposed_billing_period,
                         "proposed_name": body.proposed_name,
                         "requester_message": body.requester_message,
                         "admin_url": admin_url,

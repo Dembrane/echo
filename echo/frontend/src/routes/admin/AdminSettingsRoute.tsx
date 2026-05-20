@@ -67,11 +67,12 @@ import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
+import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
-import { type Tier, TIER_ORDER } from "@/lib/tiers";
+import { type BillingPeriod, TIER_ORDER, type Tier } from "@/lib/tiers";
 import { formatDurationFromHours } from "@/lib/time";
 
 const tierRank = (tier: string): number => TIER_ORDER.indexOf(tier as Tier);
@@ -122,6 +123,7 @@ type BillingRow = {
 	tier_expires_at: string | null;
 	type_discount: string | null;
 	percent_discount: number | null;
+	billing_period: BillingPeriod | null;
 };
 
 type BillingRollup = {
@@ -988,6 +990,7 @@ function UsageAndBillingPanel() {
 	>("all");
 	const [tierFilter, setTierFilter] = useState<string[]>([]);
 	const [actionsRow, setActionsRow] = useState<BillingRow | null>(null);
+	const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
 
 	// Pre-filter handles the fast chip-toggles; column filters inside
 	// TanStack handle per-column multiselects (currently tier).
@@ -1085,6 +1088,31 @@ function UsageAndBillingPanel() {
 				id: "tier",
 				sortingFn: (a, b) =>
 					tierRank(a.original.tier) - tierRank(b.original.tier),
+			},
+			{
+				accessorFn: (r) => r.billing_period ?? "",
+				cell: ({ row }) => {
+					const bp = row.original.billing_period;
+					if (!bp) {
+						return (
+							<Text size="xs" c="dimmed">
+								—
+							</Text>
+						);
+					}
+					return (
+						<Badge
+							size="xs"
+							variant="light"
+							color={bp === "annual" ? "blue" : "gray"}
+							tt="capitalize"
+						>
+							{bp}
+						</Badge>
+					);
+				},
+				header: t`Billing`,
+				id: "billing_period",
 			},
 			{
 				accessorKey: "base_price_eur",
@@ -1476,7 +1504,16 @@ function UsageAndBillingPanel() {
 						</Trans>
 					</Text>
 					<Box mt="xs">
-						<TierCapacityMatrix />
+						<Stack gap={8}>
+							<Group justify="flex-start">
+								<BillingPeriodToggle
+									value={billingPeriod}
+									onChange={setBillingPeriod}
+									compact
+								/>
+							</Group>
+							<TierCapacityMatrix billingPeriod={billingPeriod} />
+						</Stack>
 					</Box>
 				</Stack>
 			</Paper>
@@ -1800,11 +1837,13 @@ type WorkspaceRequestRow = {
 	proposed_name: string | null;
 	proposed_tier: string;
 	proposed_visibility: string | null;
+	proposed_billing_period: BillingPeriod | null;
 	requester_message: string | null;
 	granted_tier: string | null;
 	granted_tier_expires_at: string | null;
 	granted_type_discount: string | null;
 	granted_percent_discount: number | null;
+	approved_billing_period: BillingPeriod | null;
 	resulting_workspace_id: string | null;
 	decided_at: string | null;
 	decided_by: WorkspaceRequestRequester | null;
@@ -1864,11 +1903,19 @@ function ApproveDialog({
 	const [typeDiscount, setTypeDiscount] = useState<string | null>(null);
 	const [percentDiscount, setPercentDiscount] = useState<number | string>("");
 	const [staffNotes, setStaffNotes] = useState("");
+	// Default to whatever the requester proposed; fallback to annual when
+	// the request has no proposed cadence (e.g. pilot, or a pre-feature row).
+	// On confirm we send null for pilot/free regardless of the toggle.
+	const [approvedBillingPeriod, setApprovedBillingPeriod] =
+		useState<BillingPeriod>(req.proposed_billing_period ?? "annual");
+
+	const cadenceApplies = grantedTier !== "pilot" && grantedTier !== "free";
 
 	const mutation = useMutation({
 		mutationFn: () =>
 			patchWorkspaceRequest(req.id, {
 				action: "approve",
+				approved_billing_period: cadenceApplies ? approvedBillingPeriod : null,
 				granted_percent_discount:
 					percentDiscount !== "" ? Number(percentDiscount) : undefined,
 				granted_tier: grantedTier,
@@ -1898,10 +1945,30 @@ function ApproveDialog({
 					</Trans>
 				</Text>
 
+				{cadenceApplies && (
+					<Group justify="flex-start">
+						<BillingPeriodToggle
+							value={approvedBillingPeriod}
+							onChange={setApprovedBillingPeriod}
+							compact
+						/>
+					</Group>
+				)}
 				<TierPricingCards
 					value={grantedTier}
 					onChange={(v) => setGrantedTier(v)}
+					billingPeriod={approvedBillingPeriod}
 				/>
+				{cadenceApplies &&
+					req.proposed_billing_period &&
+					req.proposed_billing_period !== approvedBillingPeriod && (
+						<Text size="xs" c="orange">
+							<Trans>
+								Requester proposed {req.proposed_billing_period} billing —
+								approving as {approvedBillingPeriod}.
+							</Trans>
+						</Text>
+					)}
 
 				<Select
 					label={t`Discount type (optional)`}
@@ -2138,6 +2205,23 @@ function WorkspaceRequestDetail({
 								{req.proposed_tier}
 							</Badge>
 						</Box>
+						{req.proposed_billing_period && (
+							<Box>
+								<Text size="xs" c="dimmed">
+									<Trans>Proposed billing</Trans>
+								</Text>
+								<Badge
+									size="sm"
+									variant="light"
+									color={
+										req.proposed_billing_period === "annual" ? "blue" : "gray"
+									}
+									tt="capitalize"
+								>
+									{req.proposed_billing_period}
+								</Badge>
+							</Box>
+						)}
 						{req.proposed_visibility && (
 							<Box>
 								<Text size="xs" c="dimmed">
@@ -2207,6 +2291,36 @@ function WorkspaceRequestDetail({
 										>
 											{req.granted_tier}
 										</Badge>
+									</Box>
+								)}
+								{req.approved_billing_period && (
+									<Box>
+										<Text size="xs" c="dimmed">
+											<Trans>Approved billing</Trans>
+										</Text>
+										<Group gap={6}>
+											<Badge
+												size="sm"
+												variant="light"
+												color={
+													req.approved_billing_period === "annual"
+														? "blue"
+														: "gray"
+												}
+												tt="capitalize"
+											>
+												{req.approved_billing_period}
+											</Badge>
+											{req.proposed_billing_period &&
+												req.proposed_billing_period !==
+													req.approved_billing_period && (
+													<Text size="xs" c="orange">
+														<Trans>
+															(overrode {req.proposed_billing_period})
+														</Trans>
+													</Text>
+												)}
+										</Group>
 									</Box>
 								)}
 								{req.granted_tier_expires_at && (
@@ -2385,6 +2499,57 @@ function UpgradesPanel() {
 				sortingFn: (a, b) =>
 					tierRank(a.original.proposed_tier) -
 					tierRank(b.original.proposed_tier),
+			},
+			{
+				// "Billing" column shows proposed → approved divergence at a
+				// glance. For pending rows there's no approved cadence yet, so
+				// we just show the proposed value. For decided rows where the
+				// two differ, render "annual → monthly" so admins can spot
+				// overrides in the list before opening the detail panel.
+				accessorFn: (r) =>
+					`${r.proposed_billing_period ?? ""}/${r.approved_billing_period ?? ""}`,
+				cell: ({ row }) => {
+					const proposed = row.original.proposed_billing_period;
+					const approved = row.original.approved_billing_period;
+					if (!proposed && !approved) {
+						return (
+							<Text size="xs" c="dimmed">
+								—
+							</Text>
+						);
+					}
+					const diverges =
+						approved !== null && proposed !== null && approved !== proposed;
+					return (
+						<Group gap={4} wrap="nowrap">
+							<Badge
+								size="xs"
+								variant="light"
+								color={proposed === "annual" ? "blue" : "gray"}
+								tt="capitalize"
+							>
+								{proposed ?? "—"}
+							</Badge>
+							{approved && diverges && (
+								<>
+									<Text size="xs" c="dimmed">
+										→
+									</Text>
+									<Badge
+										size="xs"
+										variant="light"
+										color="orange"
+										tt="capitalize"
+									>
+										{approved}
+									</Badge>
+								</>
+							)}
+						</Group>
+					);
+				},
+				header: t`Billing`,
+				id: "billing_period",
 			},
 			{
 				accessorFn: (r) => r.requester_message ?? "",
@@ -2588,6 +2753,52 @@ function UpgradesPanel() {
 													>
 														{item.proposed_tier}
 													</Badge>
+												</Table.Td>
+												<Table.Td>
+													{(() => {
+														const proposed = item.proposed_billing_period;
+														const approved = item.approved_billing_period;
+														if (!proposed && !approved) {
+															return (
+																<Text size="xs" c="dimmed">
+																	—
+																</Text>
+															);
+														}
+														const diverges =
+															approved !== null &&
+															proposed !== null &&
+															approved !== proposed;
+														return (
+															<Group gap={4} wrap="nowrap">
+																<Badge
+																	size="xs"
+																	variant="light"
+																	color={
+																		proposed === "annual" ? "blue" : "gray"
+																	}
+																	tt="capitalize"
+																>
+																	{proposed ?? "—"}
+																</Badge>
+																{approved && diverges && (
+																	<>
+																		<Text size="xs" c="dimmed">
+																			→
+																		</Text>
+																		<Badge
+																			size="xs"
+																			variant="light"
+																			color="orange"
+																			tt="capitalize"
+																		>
+																			{approved}
+																		</Badge>
+																	</>
+																)}
+															</Group>
+														);
+													})()}
 												</Table.Td>
 												<Table.Td>
 													<Text size="sm" c="dimmed" lineClamp={1} maw={200}>

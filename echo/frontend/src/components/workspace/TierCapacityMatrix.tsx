@@ -2,28 +2,37 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Group, Stack, Table, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { API_BASE_URL } from "@/config";
 import {
+	type BillingPeriod,
+	fetchTierCapacities,
+	isTier,
+	pricingForBillingPeriod,
 	TIER_ORDER,
 	type Tier,
 	type TierCapacity,
-	fetchTierCapacities,
-	isTier,
 	taglineFor,
 } from "@/lib/tiers";
 
-function fmtPrice(cap: TierCapacity): string {
-	if (cap.price_eur_monthly != null) {
-		return `€${cap.price_eur_monthly.toLocaleString("en-IE")}`;
+function fmtPrice(cap: TierCapacity, billingPeriod: BillingPeriod): string {
+	const resolved = pricingForBillingPeriod(cap, billingPeriod);
+	if (!resolved) return t`Free`;
+	if (resolved.kind === "one_time") {
+		return `€${resolved.amount_eur.toLocaleString("en-IE")}`;
 	}
-	return cap.price_note || t`Custom`;
+	return `€${resolved.per_month_eur.toLocaleString("en-IE")}`;
 }
 
-function fmtPricePeriod(cap: TierCapacity): string {
-	if (cap.price_eur_monthly != null) return t`/mo`;
-	if (cap.price_note?.includes("one-time")) return t`one-time`;
-	return "";
+function fmtPricePeriod(
+	cap: TierCapacity,
+	billingPeriod: BillingPeriod,
+): string {
+	const resolved = pricingForBillingPeriod(cap, billingPeriod);
+	if (!resolved) return "";
+	if (resolved.kind === "one_time") return t`one-time`;
+	if (resolved.kind === "annual") return t`/mo · billed annually`;
+	return t`/mo · billed monthly`;
 }
 
 function fmtSeats(cap: TierCapacity): string {
@@ -52,6 +61,7 @@ interface Props {
 	fromTier?: string;
 	compact?: boolean;
 	onTierSelect?: (tier: string) => void;
+	billingPeriod?: BillingPeriod;
 }
 
 const HIGHLIGHT_BG = "var(--mantine-color-primary-light)";
@@ -62,10 +72,11 @@ export const TierCapacityMatrix = ({
 	fromTier,
 	compact = false,
 	onTierSelect,
+	billingPeriod = "annual",
 }: Props) => {
 	const { data, isLoading } = useQuery({
-		queryKey: ["v2", "tier-capacities"],
 		queryFn: () => fetchTierCapacities(API_BASE_URL),
+		queryKey: ["v2", "tier-capacities"],
 		staleTime: 60 * 60 * 1000,
 	});
 
@@ -80,17 +91,17 @@ export const TierCapacityMatrix = ({
 	if (tiers.length === 0) return null;
 
 	const stickyLabel: React.CSSProperties = {
-		position: "sticky",
-		left: 0,
 		background: "var(--app-background)",
+		left: 0,
+		position: "sticky",
 		zIndex: 1,
 	};
 
 	const cellStyle = (tier: string): React.CSSProperties => ({
 		background: tier === highlightTier ? HIGHLIGHT_BG : undefined,
 		cursor: onTierSelect ? "pointer" : undefined,
-		verticalAlign: "top",
 		minWidth: 120,
+		verticalAlign: "top",
 	});
 
 	const valStyle = (tier: string): React.CSSProperties => ({
@@ -118,8 +129,8 @@ export const TierCapacityMatrix = ({
 		{
 			key: "price",
 			label: <Trans>Price</Trans>,
-			render: fmtPrice,
-			renderSub: fmtPricePeriod,
+			render: (cap) => fmtPrice(cap, billingPeriod),
+			renderSub: (cap) => fmtPricePeriod(cap, billingPeriod),
 		},
 	];
 
@@ -137,12 +148,24 @@ export const TierCapacityMatrix = ({
 	];
 
 	const overageRows: Row[] = [
-		{ key: "seat-overage", label: <Trans>Additional seat</Trans>, render: fmtSeatOverage },
-		{ key: "hour-overage", label: <Trans>Additional hour</Trans>, render: fmtHourOverage },
+		{
+			key: "seat-overage",
+			label: <Trans>Additional seat</Trans>,
+			render: fmtSeatOverage,
+		},
+		{
+			key: "hour-overage",
+			label: <Trans>Additional hour</Trans>,
+			render: fmtHourOverage,
+		},
 	];
 
 	const trainingRows: Row[] = [
-		{ key: "training", label: <Trans>Training</Trans>, render: (c) => c.training_included },
+		{
+			key: "training",
+			label: <Trans>Training</Trans>,
+			render: (c) => c.training_included,
+		},
 	];
 
 	function renderRows(rows: Row[]) {
@@ -163,7 +186,10 @@ export const TierCapacityMatrix = ({
 							{row.render(cap)}
 						</Text>
 						{row.renderSub && (
-							<Text size="xs" c={cap.tier === highlightTier ? HIGHLIGHT_COLOR : "dimmed"}>
+							<Text
+								size="xs"
+								c={cap.tier === highlightTier ? HIGHLIGHT_COLOR : "dimmed"}
+							>
 								{row.renderSub(cap)}
 							</Text>
 						)}
@@ -177,9 +203,9 @@ export const TierCapacityMatrix = ({
 		<Stack gap={0}>
 			<Box
 				style={{
-					overflowX: "auto",
 					border: "1px solid var(--mantine-color-gray-3)",
 					borderRadius: "var(--mantine-radius-default)",
+					overflowX: "auto",
 				}}
 			>
 				<Table
@@ -199,15 +225,17 @@ export const TierCapacityMatrix = ({
 							</Table.Th>
 							{tiers.map((cap) => {
 								const isHighlight = cap.tier === highlightTier;
-								const tagline = isTier(cap.tier) ? taglineFor(cap.tier) : cap.tagline;
+								const tagline = isTier(cap.tier)
+									? taglineFor(cap.tier)
+									: cap.tagline;
 								return (
 									<Table.Th
 										key={cap.tier}
 										style={{
-											verticalAlign: "top",
 											background: isHighlight ? HIGHLIGHT_BG : undefined,
 											cursor: onTierSelect ? "pointer" : undefined,
 											minWidth: 130,
+											verticalAlign: "top",
 										}}
 										onClick={() => handleClick(cap.tier)}
 									>
