@@ -315,6 +315,12 @@ async def request_workspace_access(
             detail="Workspace not found",  # intentional — don't confirm existence
         )
 
+    if workspace.get("tier") == "free":
+        raise HTTPException(
+            status_code=404,
+            detail="Workspace not found",
+        )
+
     org_role = await _org_role(org_id, app_user_id)
     if org_role is None:
         raise HTTPException(status_code=403, detail="Not a member of this organisation")
@@ -652,6 +658,8 @@ async def list_discoverable_workspaces(
     }
     if not is_org_admin:
         filters["visibility"] = {"_neq": "private"}
+        # Free tier is the admin's personal allotment — not requestable.
+        filters["tier"] = {"_neq": "free"}
 
     workspaces = await async_directus.get_items(
         "workspace",

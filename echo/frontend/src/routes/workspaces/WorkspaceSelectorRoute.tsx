@@ -123,12 +123,14 @@ function AvatarBubbles({
 	members: MemberPreview[];
 	count: number;
 }) {
-	const overflow = count - members.length;
+	const MAX_VISIBLE = 3;
+	const visible = members.slice(0, MAX_VISIBLE);
+	const overflow = count - visible.length;
 
 	return (
 		<Tooltip.Group>
 			<Avatar.Group spacing="sm">
-				{members.map((m, i) => (
+				{visible.map((m, i) => (
 					<Tooltip
 						key={`${m.display_name}-${i}`}
 						label={m.display_name}
@@ -168,8 +170,10 @@ function WorkspaceCard({
 	const isAdminOrOwner =
 		workspace.role === "admin" || workspace.role === "owner";
 	const ONE_DAY_MS = 86_400_000;
+	// Free workspaces are auto-created on signup, never "approved".
 	const isRecentlyApproved =
 		!!workspace.created_at &&
+		workspace.tier !== "free" &&
 		Date.now() - new Date(workspace.created_at).getTime() < ONE_DAY_MS;
 	const [hovered, setHovered] = useState(false);
 	const wsLogo = resolveLogoUrl(workspace.logo_url);
