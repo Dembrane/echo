@@ -712,7 +712,7 @@ def seed(session: requests.Session, dry_run: bool) -> None:
         session, acme_default, au("grace@seed.dembrane.dev"),
         "external",
     )
-    print(f"  external grace@external on Acme/Default")
+    print("  external grace@seed.dembrane.dev on Acme/Default")
 
     # Pending access request — cara requesting access to Acme Q1 Discovery
     # (she's organisation member; workspace is open).

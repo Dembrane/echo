@@ -837,7 +837,7 @@ export const OrganisationRoute = () => {
 							<Text size="xs" c="dimmed">
 								<Trans>
 									Admins can reach every workspace in this organisation. Members
-									and guests only see the workspaces they've been given access
+									and externals only see the workspaces they've been given access
 									to.
 								</Trans>
 							</Text>

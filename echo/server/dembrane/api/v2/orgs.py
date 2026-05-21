@@ -247,7 +247,32 @@ async def _count_external_in_organisation(org_id: str) -> int:
     )
     if not isinstance(rows, list):
         return 0
-    return len({r["user_id"] for r in rows if r.get("user_id")})
+    external_user_ids = {r["user_id"] for r in rows if r.get("user_id")}
+    if not external_user_ids:
+        return 0
+
+    # Exclude users who are actually org members — keeps this in sync with
+    # list_org_members()'s internal_set filter when stale external rows linger.
+    internal_rows = (
+        await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "user_id": {"_in": list(external_user_ids)},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["user_id"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
+    if isinstance(internal_rows, list):
+        external_user_ids -= {r["user_id"] for r in internal_rows if r.get("user_id")}
+    return len(external_user_ids)
 
 
 async def _invalidate_org_workspace_usage(org_id: str) -> None:
