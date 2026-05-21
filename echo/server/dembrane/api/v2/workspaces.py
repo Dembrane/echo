@@ -172,7 +172,7 @@ async def list_workspaces(
                     "user_id": {"_eq": app_user_id},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["workspace_id", "role", "source", "is_external"],
+                "fields": ["workspace_id", "role", "source"],
                 "limit": -1,
             }
         },
@@ -371,7 +371,6 @@ async def list_workspaces(
                 org_logo_url=org_logo_map.get(ws.get("org_id", "")),
                 project_count=project_count,
                 member_count=member_count,
-                is_external=membership.get("is_external", False),
                 members_preview=previews,
                 usage=usage,
                 downgraded_at=ws.get("downgraded_at"),
@@ -1001,14 +1000,23 @@ class WorkspaceUsageResponse(BaseModel):
     tier_tagline: str
     audio_hours: float
     audio_hours_included: Optional[int]  # None = unlimited
+    # Unified seat total (members + externals) — matches what
+    # assert_can_add_seat counts. This is the bar numerator.
     seat_count: int
     seat_count_included: Optional[int]
-    guest_count: int
+    # Breakdown for the host-facing card. Sum of member_count +
+    # external_count == seat_count.
+    member_count: int
+    external_count: int
+    # Pending workspace_invite rows (not yet accepted, not expired). Counted
+    # in the bar via seat_invite_blocked; surfaced separately for the
+    # "Pending invites" sub-row.
+    pending_count: int
     project_count: int
     projects: list[ProjectUsageItem]
     pilot_hard_block_active: bool = False  # deprecated: always False, use usage_gates
-    # Unified seat cap gate for invite UI. True when seats_used (members +
-    # guests) meets or exceeds included_seats on a hard-blocking tier.
+    # Unified seat cap gate for invite UI. True when (members + externals +
+    # pending) meets or exceeds included_seats on a hard-blocking tier.
     seat_invite_blocked: bool = False
     usage_gates: UsageGatesResponse = UsageGatesResponse()
 
@@ -1105,13 +1113,6 @@ async def get_workspace_usage(
     )
 
     ctx.require_policy("workspace:view_usage")
-
-    # Guest exclusion. Matrix §4 "View usage & overage" row grants Admin /
-    # Billing / Member but not Guest. Our preset system gives guests the
-    # member preset (guest = is_external=true on a direct row), so we gate
-    # here explicitly rather than forking the preset.
-    if ctx.is_external:
-        raise HTTPException(status_code=403, detail="Guests don't see workspace usage")
 
     if month_offset < 0 or month_offset > 12:
         raise HTTPException(status_code=400, detail="month_offset must be 0–12")
@@ -1228,35 +1229,24 @@ async def get_workspace_usage(
 
     audio_hours = round(total_seconds / 3600, 2)
 
-    # Seat + guest count. Reuses inheritance.get_effective_members so the
+    # Seat breakdown. Reuses inheritance.get_effective_members so the
     # count includes derived org admins/owners — they consume a seat just
-    # like direct members ("admin should consume a seat" per matrix §7
-    # + product call 2026-05-04). get_effective_members already dedups by
-    # user_id with direct-wins-over-derived precedence, so we just bucket
-    # the rows here.
+    # like direct members. get_effective_members dedups by user_id with
+    # direct-wins-over-derived precedence, so we just bucket on role here.
+    # member + external counts always sum to the unified seat_count
+    # surfaced on the API (the bar numerator).
     effective_members = await get_effective_members(ctx.workspace_id)
 
-    seat_count = 0
-    guest_count = 0
-    seat_roles = {"owner", "admin", "member", "billing"}
+    member_count = 0
+    external_count = 0
+    member_roles = {"owner", "admin", "member", "billing"}
     for m in effective_members:
         role = m.get("role")
-        if m.get("is_external"):
-            # Guest bucket. A guest with an elevated role (admin/billing/
-            # owner) shouldn't exist — blocked at invite + change-role —
-            # but log if we ever see one so ops can spot it. Derived rows
-            # are never external (inheritance.py:303), so this only fires
-            # on direct rows.
-            if role in ("admin", "billing", "owner"):
-                logger.warning(
-                    "external_with_elevated_role workspace=%s role=%s",
-                    ctx.workspace_id,
-                    role,
-                )
-            guest_count += 1
-            continue
-        if role in seat_roles:
-            seat_count += 1
+        if role == "external":
+            external_count += 1
+        elif role in member_roles:
+            member_count += 1
+    seat_count = member_count + external_count
 
     # Tier capacity lookup. Legacy rows with NULL tier fall through to the
     # unknown-tier path below (unlimited / no block) rather than silently
@@ -1308,18 +1298,17 @@ async def get_workspace_usage(
                 included_seats=rcap.included_seats,
             )
 
-    # Unified seat cap gate for invite UI. Members + guests share the pool.
+    # Unified seat cap gate for invite UI. Members + externals share the pool.
     # Mirrors seat_capacity.assert_can_add_seat with include_pending=True
     # so the UI disables the invite button as soon as the cap is taken.
     from dembrane.seat_capacity import count_pending_invites
 
-    member_pending, guest_pending = await count_pending_invites(ctx.workspace_id)
-    total_pending = member_pending + guest_pending
-    seats_used = seat_count + guest_count
+    member_pending, external_pending = await count_pending_invites(ctx.workspace_id)
+    pending_count = member_pending + external_pending
     seat_invite_blocked = (
         included_seats is not None
         and tier_hard_blocks_seats(tier)
-        and (seats_used + total_pending) >= included_seats
+        and (seat_count + pending_count) >= included_seats
     )
 
     gates_raw = compute_usage_gates(tier, hours_lifetime, audio_hours)
@@ -1338,7 +1327,9 @@ async def get_workspace_usage(
         audio_hours_included=included_hours,
         seat_count=seat_count,
         seat_count_included=included_seats,
-        guest_count=guest_count,
+        member_count=member_count,
+        external_count=external_count,
+        pending_count=pending_count,
         project_count=live_project_count,
         projects=per_project_items,
         pilot_hard_block_active=hard_block,

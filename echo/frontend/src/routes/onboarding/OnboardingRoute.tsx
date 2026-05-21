@@ -41,7 +41,7 @@ async function sendInvite(workspaceId: string, email: string) {
 	const response = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`,
 		{
-			body: JSON.stringify({ email, is_org_member: true, role: "member" }),
+			body: JSON.stringify({ email, role: "member" }),
 			credentials: "include",
 			headers: { "Content-Type": "application/json" },
 			method: "POST",

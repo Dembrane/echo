@@ -488,7 +488,8 @@ def step_3_workspace():
                     {"text": "Owner", "value": "owner"},
                     {"text": "Admin", "value": "admin"},
                     {"text": "Member", "value": "member"},
-                    {"text": "Viewer", "value": "viewer"},
+                    {"text": "Billing", "value": "billing"},
+                    {"text": "External", "value": "external"},
                 ]},
                 "required": True,
             },
@@ -512,13 +513,6 @@ def step_3_workspace():
                 ]},
                 "note": "direct = explicitly invited. inherited = auto-added from org role.",
             },
-        },
-        {
-            "field": "is_external",
-            "type": "boolean",
-            "schema": {"is_nullable": False, "default_value": False},
-            "meta": {"interface": "boolean",
-                     "note": "True if user's primary org != workspace's org"},
         },
         {
             "field": "deleted_at",
@@ -579,7 +573,8 @@ def step_4_invite_and_project_membership():
                 "options": {"choices": [
                     {"text": "Admin", "value": "admin"},
                     {"text": "Member", "value": "member"},
-                    {"text": "Viewer", "value": "viewer"},
+                    {"text": "Billing", "value": "billing"},
+                    {"text": "External", "value": "external"},
                 ]},
                 "required": True,
                 "note": "Role to assign on acceptance",

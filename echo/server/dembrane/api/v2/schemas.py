@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import Field, EmailStr, BaseModel, AliasChoices
+from pydantic import Field, EmailStr, BaseModel
 
 # ── /v2/me ──
 
@@ -101,7 +101,6 @@ class WorkspaceSummary(BaseModel):
     org_logo_url: Optional[str] = None
     project_count: int
     member_count: int
-    is_external: bool
     members_preview: list[MemberPreview] = []
     usage: WorkspaceUsage = WorkspaceUsage()
     # Post-downgrade banner state (matrix v1.1 §3). Set on downgrade,
@@ -190,22 +189,14 @@ class CreateWorkspaceResponse(BaseModel):
 class WorkspaceInviteRequest(BaseModel):
     """Invite payload.
 
-    is_org_member accepts two aliases because the value lives under two
-    names across the codebase: the API/UI uses is_org_member, while the
-    Directus workspace_invite column is include_org_membership. Rather
-    than force one convention (and silently accept the other as a
-    no-op, which was the root cause of the "Guests can't be …" error
-    when testing the billing role), we take either.
+    `role` is the single axis for the invite — external collaborators are
+    invited as role='external' (ADR-0003). Out-of-enum values fail at
+    Pydantic validation (422); the endpoint enforces role-hierarchy
+    escalation rules separately.
     """
 
-    model_config = {"populate_by_name": True}
-
     email: EmailStr
-    role: str = "member"
-    is_org_member: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("is_org_member", "include_org_membership"),
-    )
+    role: Literal["admin", "member", "billing", "external"] = "member"
 
 
 class WorkspaceInviteResponse(BaseModel):

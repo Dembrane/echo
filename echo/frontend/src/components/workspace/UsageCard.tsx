@@ -63,12 +63,14 @@ function formatEur(value: number | null | undefined): string {
  * Workspace usage card (matrix v1.1 §8).
  *
  * Role-aware rendering:
- *   - Member: hours / seats / guests / projects, raw numbers.
+ *   - Member: hours / seats / projects, raw numbers.
  *   - Admin + Billing: adds overage forecast and next-tier recommendation.
  *
- * Source fields come pre-differentiated from the backend (next_tier +
- * overage_forecast_eur are null for members — `workspace:view_invoices`
- * gates them server-side).
+ * Seat block: single bar over the unified pool (members + externals),
+ * with three optional sub-rows beneath — Members, Externals, Pending
+ * invites. Rows with count zero are hidden. The bar numerator
+ * (data.seat_count) is the value enforcement code (assert_can_add_seat)
+ * counts against — they always agree.
  */
 export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const queryClient = useQueryClient();
@@ -219,7 +221,9 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 					)}
 				</Stack>
 
-				{/* Seats (unified — guests share this pool) */}
+				{/* Seats — unified pool (members + externals). Breakdown
+				    rows sit beneath the bar; zero-count rows hide so a
+				    workspace with only members reads cleanly. */}
 				<Stack gap={6}>
 					<Group justify="space-between">
 						<Text size="sm" c="dimmed">
@@ -238,17 +242,29 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 					{seatsPct !== null && (
 						<Progress value={seatsPct} size="xs" color={seatsColor} />
 					)}
-					{data.guest_count > 0 && (
-						<Text size="xs" c="dimmed">
-							({data.seat_count - data.guest_count}{" "}
-							<Plural
-								value={data.seat_count - data.guest_count}
-								one="member"
-								other="members"
-							/>{" "}
-							+ {data.guest_count}{" "}
-							<Plural value={data.guest_count} one="guest" other="guests" />)
-						</Text>
+					{data.member_count > 0 && (
+						<Group justify="space-between">
+							<Text size="xs" c="dimmed">
+								<Trans>Members</Trans>
+							</Text>
+							<Text size="xs" c="dimmed">{data.member_count}</Text>
+						</Group>
+					)}
+					{data.external_count > 0 && (
+						<Group justify="space-between">
+							<Text size="xs" c="dimmed">
+								<Trans>Externals</Trans>
+							</Text>
+							<Text size="xs" c="dimmed">{data.external_count}</Text>
+						</Group>
+					)}
+					{data.pending_count > 0 && (
+						<Group justify="space-between">
+							<Text size="xs" c="dimmed">
+								<Trans>Pending invites</Trans>
+							</Text>
+							<Text size="xs" c="dimmed">{data.pending_count}</Text>
+						</Group>
 					)}
 				</Stack>
 

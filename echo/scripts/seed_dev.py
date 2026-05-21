@@ -448,7 +448,6 @@ def add_workspace_member(
     workspace_id: str,
     user_id: str,
     role: str,
-    is_external: bool = False,
 ) -> None:
     api(session, "POST", "/items/workspace_membership", {
         "id": new_uuid(),
@@ -456,7 +455,6 @@ def add_workspace_member(
         "user_id": user_id,
         "role": role,
         "source": "direct",
-        "is_external": is_external,
     })
 
 
@@ -534,7 +532,6 @@ def create_workspace_invite(
         "email": email,
         "role": role,
         "invited_by_user_id": invited_by_user_id,
-        "include_org_membership": True,
         "expires_at": expires,
         # HMAC token_hash would normally be set — skip for seed (invite
         # is surface-tested; not accepted via seed).
@@ -710,12 +707,12 @@ def seed(session: requests.Session, dry_run: bool) -> None:
     create_conversations(session, p_solo, [3600] * 10 + [1200])
     print(f"  workspace Solo / Trial Run → pilot AT cap (hard block active)")
 
-    # Guest on Acme Default
+    # External on Acme Default
     add_workspace_member(
         session, acme_default, au("grace@seed.dembrane.dev"),
-        "member", is_external=True,
+        "external",
     )
-    print(f"  guest grace@external on Acme/Default")
+    print("  external grace@seed.dembrane.dev on Acme/Default")
 
     # Pending access request — cara requesting access to Acme Q1 Discovery
     # (she's organisation member; workspace is open).

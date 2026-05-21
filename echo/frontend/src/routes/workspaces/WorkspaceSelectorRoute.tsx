@@ -64,7 +64,6 @@ interface Workspace {
 	org_logo_url: string | null;
 	project_count: number;
 	member_count: number;
-	is_external: boolean;
 	members_preview: MemberPreview[];
 	usage: WorkspaceUsage;
 	has_pending_upgrade_request?: boolean;
@@ -176,7 +175,7 @@ function WorkspaceCard({
 	const wsLogo = resolveLogoUrl(workspace.logo_url);
 	const organisationLogo = resolveLogoUrl(workspace.org_logo_url);
 	// Logo rules (2026-04-24 ask, refined):
-	//   - Guest workspace: ws logo if set, else organisation logo. A guest's
+	//   - External workspace: ws logo if set, else organisation logo. An external's
 	//     anchor is the organisation that invited them — always show something
 	//     so the card has a visual hook.
 	//   - Internal workspace: only show the ws logo. No ws logo → no
@@ -184,7 +183,7 @@ function WorkspaceCard({
 	//     organisation, so repeating the organisation logo on every internal card is
 	//     just visual noise ("see here there is no special workspace
 	//     icon so no need to show").
-	const headerLogo = workspace.is_external
+	const headerLogo = (workspace.role === "external")
 		? wsLogo || organisationLogo
 		: wsLogo;
 	// Calmer meta-line: role + tier as a single dimmed string, no
@@ -193,8 +192,8 @@ function WorkspaceCard({
 	// warning keeps color — it's the one actionable exception.
 	const capitalizedTier =
 		workspace.tier.charAt(0).toUpperCase() + workspace.tier.slice(1);
-	const metaParts = workspace.is_external
-		? [t`Guest of ${workspace.org_name}`]
+	const metaParts = (workspace.role === "external")
+		? [t`External of ${workspace.org_name}`]
 		: [displayRole(workspace.role), capitalizedTier];
 
 	return (
@@ -237,7 +236,7 @@ function WorkspaceCard({
 							label={t`${capitalizedTier} · tap to see what's included`}
 							position="bottom-start"
 							withArrow
-							disabled={workspace.is_external}
+							disabled={(workspace.role === "external")}
 						>
 							<Text size="xs" c="dimmed" lineClamp={1}>
 								{metaParts.join(" · ")}
@@ -583,8 +582,8 @@ export const WorkspaceSelectorRoute = () => {
 		: workspaces;
 
 	// Group by organisation (org)
-	const internalWorkspaces = filtered.filter((w) => !w.is_external);
-	const externalWorkspaces = filtered.filter((w) => w.is_external);
+	const internalWorkspaces = filtered.filter((w) => !(w.role === "external"));
+	const externalWorkspaces = filtered.filter((w) => (w.role === "external"));
 
 	// Seed groups from `organisations` first — that way a organisation with zero workspaces
 	// still renders a hero card + AddWorkspace affordance instead of getting
@@ -718,7 +717,7 @@ export const WorkspaceSelectorRoute = () => {
 					<Stack gap={12}>
 						{orgGroups.size > 0 && <Divider />}
 						<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.5}>
-							<Trans>As a guest</Trans>
+							<Trans>As an external</Trans>
 						</Text>
 						<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
 							{externalWorkspaces.map((ws) => (

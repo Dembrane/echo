@@ -340,7 +340,6 @@ def main() -> int:
                         "user_id": p["user_id"],
                         "role": p["role"],
                         "source": "direct",
-                        "is_external": False,
                     },
                 )
                 written += 1

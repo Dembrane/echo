@@ -105,51 +105,51 @@ class TestComputeUsageGates:
 
     # Free: 1 hour lifetime cap
     def test_free_under_cap(self):
-        gates = compute_usage_gates("free", hours_lifetime=0.5, hours_this_month=0.5)
+        gates = compute_usage_gates("free", hours_lifetime=0.5, _hours_this_month=0.5)
         assert gates.over_cap_active is False
         assert gates.uploads_locked is False
 
     def test_free_at_cap(self):
-        gates = compute_usage_gates("free", hours_lifetime=1.0, hours_this_month=1.0)
+        gates = compute_usage_gates("free", hours_lifetime=1.0, _hours_this_month=1.0)
         assert gates.over_cap_active is True
         assert gates.uploads_locked is True
 
     def test_free_over_cap(self):
-        gates = compute_usage_gates("free", hours_lifetime=2.5, hours_this_month=0.3)
+        gates = compute_usage_gates("free", hours_lifetime=2.5, _hours_this_month=0.3)
         assert gates.over_cap_active is True
         assert gates.uploads_locked is True
 
     # Pilot: 10 hours lifetime cap
     def test_pilot_under_cap(self):
-        gates = compute_usage_gates("pilot", hours_lifetime=5.0, hours_this_month=5.0)
+        gates = compute_usage_gates("pilot", hours_lifetime=5.0, _hours_this_month=5.0)
         assert gates.over_cap_active is False
         assert gates.uploads_locked is False
 
     def test_pilot_at_cap(self):
-        gates = compute_usage_gates("pilot", hours_lifetime=10.0, hours_this_month=3.0)
+        gates = compute_usage_gates("pilot", hours_lifetime=10.0, _hours_this_month=3.0)
         assert gates.over_cap_active is True
         assert gates.uploads_locked is True
 
     def test_pilot_over_cap(self):
-        gates = compute_usage_gates("pilot", hours_lifetime=15.0, hours_this_month=2.0)
+        gates = compute_usage_gates("pilot", hours_lifetime=15.0, _hours_this_month=2.0)
         assert gates.over_cap_active is True
         assert gates.uploads_locked is True
 
     # Pioneer+ (overage tiers): gates never fire
     @pytest.mark.parametrize("tier", ["pioneer", "innovator", "changemaker", "guardian"])
     def test_overage_tier_under_cap(self, tier: str):
-        gates = compute_usage_gates(tier, hours_lifetime=0.5, hours_this_month=0.5)
+        gates = compute_usage_gates(tier, hours_lifetime=0.5, _hours_this_month=0.5)
         assert gates.over_cap_active is False
         assert gates.uploads_locked is False
 
     @pytest.mark.parametrize("tier", ["pioneer", "innovator", "changemaker", "guardian"])
     def test_overage_tier_over_cap(self, tier: str):
-        gates = compute_usage_gates(tier, hours_lifetime=999.0, hours_this_month=999.0)
+        gates = compute_usage_gates(tier, hours_lifetime=999.0, _hours_this_month=999.0)
         assert gates.over_cap_active is False
         assert gates.uploads_locked is False
 
     def test_unknown_tier_gates_never_fire(self):
-        gates = compute_usage_gates("nonexistent", hours_lifetime=999.0, hours_this_month=999.0)
+        gates = compute_usage_gates("nonexistent", hours_lifetime=999.0, _hours_this_month=999.0)
         assert gates.over_cap_active is False
         assert gates.uploads_locked is False
 

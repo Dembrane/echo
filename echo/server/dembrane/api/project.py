@@ -222,7 +222,7 @@ async def toggle_project_pin(
     Pinning is a workspace-level signal — it changes what every member sees
     on the workspace home, so permission follows workspace membership:
       - workspace admin / owner / member: allowed
-      - external guest (is_external=true): blocked (403) — guests see the
+      - external (role='external'): blocked (403) — externals see the
         project they were invited to, they don't curate the organisation view.
       - legacy projects without a workspace_id: fall back to the pre-matrix
         "project owner" check so unmigrated projects still pin for the owner.
@@ -257,17 +257,17 @@ async def toggle_project_pin(
                         "user_id": {"_eq": app_user["id"]},
                         "deleted_at": {"_null": True},
                     },
-                    "fields": ["role", "is_external"],
+                    "fields": ["role"],
                     "limit": 1,
                 }
             },
         )
         if not isinstance(mems, list) or len(mems) == 0:
             raise HTTPException(status_code=403, detail="Not a member of this workspace")
-        if mems[0].get("is_external"):
+        if mems[0].get("role") == "external":
             raise HTTPException(
                 status_code=403,
-                detail="Guests cannot pin projects",
+                detail="Externals cannot pin projects",
             )
     else:
         # Legacy path: project not yet attached to a workspace. Fall back to

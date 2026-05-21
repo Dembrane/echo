@@ -7,7 +7,7 @@ from logging import getLogger
 from fastapi import HTTPException
 
 from dembrane.app_user import resolve_app_user
-from dembrane.policies import has_policy, meets_tier, effective_workspace_role
+from dembrane.policies import has_policy, meets_tier
 from dembrane.inheritance import user_can_access
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
@@ -30,7 +30,6 @@ class WorkspaceContext:
         role: str,
         custom_policies: list[str],
         source: str,
-        is_external: bool,
     ):
         self.workspace_id = workspace_id
         self.workspace = workspace
@@ -38,16 +37,14 @@ class WorkspaceContext:
         self.role = role
         self.custom_policies = custom_policies
         self.source = source
-        self.is_external = is_external
 
     def has_policy(self, required: str) -> bool:
         # Tier auto-wiring is in policies.has_policy — workspace_tier is
         # forwarded so tier gates fire without per-endpoint require_tier
-        # calls. Guests run through the strictly scoped 'guest' preset
-        # via effective_workspace_role; raw self.role stays untouched
-        # for UI display + role-hierarchy compares.
+        # calls. role='external' uses the strictly scoped external preset
+        # directly (ADR-0003).
         return has_policy(
-            effective_workspace_role(self.role, self.is_external),
+            self.role,
             self.custom_policies,
             required,
             workspace_tier=self.workspace.get("tier"),
@@ -99,10 +96,9 @@ async def get_workspace_context(
 
     role, source = resolved
 
-    # Direct rows can carry custom_policies + is_external. Inherited rows
-    # derive from org role — they get the plain role preset, never external.
+    # Direct rows can carry custom_policies. Inherited rows derive from
+    # org role — they get the plain role preset, never external.
     custom_policies: list[str] = []
-    is_external = False
     if source == "direct":
         rows = await async_directus.get_items(
             "workspace_membership",
@@ -113,14 +109,13 @@ async def get_workspace_context(
                         "user_id": {"_eq": app_user_id},
                         "deleted_at": {"_null": True},
                     },
-                    "fields": ["custom_policies", "is_external"],
+                    "fields": ["custom_policies"],
                     "limit": 1,
                 }
             },
         )
         if isinstance(rows, list) and rows:
             custom_policies = rows[0].get("custom_policies") or []
-            is_external = bool(rows[0].get("is_external", False))
 
     # Normalize legacy role names at context build so every downstream
     # check — has_policy, role-hierarchy compares, UI serialisation — sees
@@ -136,7 +131,6 @@ async def get_workspace_context(
         role=normalized_role,
         custom_policies=custom_policies,
         source=source,
-        is_external=is_external,
     )
 
 

@@ -6,8 +6,8 @@ creates a personal org + default workspace based on invite context.
 Decision tree:
   1. Create app_user (always)
   2. Auto-accept pending workspace invites (if any)
-     - include_org_membership=true → also add to that org (skip personal org)
-     - include_org_membership=false → external access only
+     - role != 'external' → also add to that org (skip personal org)
+     - role == 'external' → external access only
   3. Has own projects OR no internal invites?
      → Create personal org + default workspace + move projects
   4. Only has internal invites (no projects)?
@@ -23,7 +23,7 @@ from fastapi import APIRouter, HTTPException
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import create_app_user, resolve_app_user, get_directus_user_profile
-from dembrane.seat_capacity import assert_can_add_guest, assert_can_add_member
+from dembrane.seat_capacity import assert_can_add_seat
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.schemas import OnboardingCompleteRequest, OnboardingCompleteResponse
 from dembrane.directus_async import async_directus
@@ -108,8 +108,8 @@ async def complete_onboarding(
                     "id",
                     "workspace_id",
                     "role",
-                    "include_org_membership",
                     "expires_at",
+                    "invited_by",
                 ],
                 "limit": -1,
             }
@@ -131,85 +131,17 @@ async def complete_onboarding(
             # so a blocked invite still suppresses the personal-org branch.
             had_pending_invite = True
 
-            is_org_invite = invite.get("include_org_membership", False)
-            is_external = not is_org_invite
+            invite_role = invite.get("role") or "member"
+            ws_org_id = ws.get("org_id")
 
-            # Cap gate. Race-protection on auto-accept: if the workspace
-            # filled up between invite-send and signup, don't fail
-            # onboarding — skip this one invite, leave it pending so the
-            # admin can free a seat, and notify the inviter so they know
-            # to act. The user finishes onboarding without that workspace.
-            try:
-                if is_org_invite:
-                    await assert_can_add_member(ws, audience="invitee")
-                else:
-                    await assert_can_add_guest(ws, audience="invitee")
-            except HTTPException as cap_err:
-                if cap_err.status_code != 402:
-                    raise
-                logger.warning(
-                    f"Skipping auto-accept of invite {invite.get('id')} "
-                    f"for {app_user_email} → workspace {ws_id}: "
-                    f"cap reached ({cap_err.detail})"
-                )
-                inviter_id = invite.get("invited_by")
-                ws_name = ws.get("name") or "the workspace"
-                from dembrane.notifications import emit
-
-                if inviter_id and inviter_id != app_user_id:
-                    try:
-                        await emit(
-                            audience_user_id=inviter_id,
-                            actor_user_id=app_user_id,
-                            event_code="INVITE_BLOCKED_AT_CAP",
-                            title=f"Invite to {ws_name} couldn't be honoured",
-                            message=(
-                                f"{app_user_email} signed up but your workspace is at its "
-                                f"{'guest' if is_external else 'seat'} limit. "
-                                "Free a seat or upgrade so they can join."
-                            ),
-                            action="NAVIGATE_WORKSPACE_SETTINGS",
-                            ref_workspace_id=ws_id,
-                            ref_org_id=ws.get("org_id"),
-                        )
-                    except Exception:
-                        logger.exception("Failed to emit INVITE_BLOCKED_AT_CAP")
-
-                # Also notify the invitee (the new signup). Without this
-                # they finish onboarding silently and the only signal is
-                # the "pending invites" hint in the user menu — easy to
-                # miss. The bell + inbox row makes the stuck state
-                # discoverable. Action takes them to /me/invites where
-                # they can hit "Try again" once a seat opens up.
-                try:
-                    await emit(
-                        audience_user_id=app_user_id,
-                        actor_user_id=inviter_id,
-                        event_code="INVITE_PENDING_AT_CAP",
-                        title=f"Your invite to {ws_name} is still pending",
-                        message=(
-                            f"The workspace is at its "
-                            f"{'guest' if is_external else 'seat'} limit. "
-                            "We've notified the admin. Once they free a seat or "
-                            "upgrade, you can join from your invites."
-                        ),
-                        action="NAVIGATE_INVITE",
-                        ref_workspace_id=ws_id,
-                        ref_org_id=ws.get("org_id"),
-                    )
-                except Exception:
-                    logger.exception("Failed to emit INVITE_PENDING_AT_CAP")
-                continue
-
-            # If org member invite, add to that org
-            if is_org_invite and ws.get("org_id"):
-                org_id = ws["org_id"]
+            existing_org_mem = []
+            if ws_org_id:
                 existing_org_mem = await async_directus.get_items(
                     "org_membership",
                     {
                         "query": {
                             "filter": {
-                                "org_id": {"_eq": org_id},
+                                "org_id": {"_eq": ws_org_id},
                                 "user_id": {"_eq": app_user_id},
                                 "deleted_at": {"_null": True},
                             },
@@ -217,20 +149,20 @@ async def complete_onboarding(
                         }
                     },
                 )
-                if not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0):
-                    await async_directus.create_item(
-                        "org_membership",
-                        {
-                            "id": generate_uuid(),
-                            "org_id": org_id,
-                            "user_id": app_user_id,
-                            "role": "member",
-                        },
-                    )
-                    logger.info(f"Auto-added {app_user_email} to org {org_id} via invite")
-                joined_an_org = True
+            user_has_org_mem = isinstance(existing_org_mem, list) and len(existing_org_mem) > 0
 
-            # Create workspace membership
+            # ADR-0003 invariant: external ⇔ no org_membership. Promote to
+            # member if the user is already in this workspace's org.
+            if invite_role == "external" and user_has_org_mem:
+                logger.info(
+                    f"Promoting external invite {invite.get('id')} to member: "
+                    f"{app_user_email} already in org {ws_org_id}"
+                )
+                invite_role = "member"
+
+            is_external = invite_role == "external"
+            is_org_invite = not is_external
+
             existing_ws_mem = await async_directus.get_items(
                 "workspace_membership",
                 {
@@ -244,33 +176,102 @@ async def complete_onboarding(
                     }
                 },
             )
-            if not (isinstance(existing_ws_mem, list) and len(existing_ws_mem) > 0):
+            has_ws_mem = isinstance(existing_ws_mem, list) and len(existing_ws_mem) > 0
+
+            # Cap gate only when adding a new seat — skip on retries so an
+            # over-cap workspace doesn't 402 an existing member.
+            if not has_ws_mem:
+                try:
+                    await assert_can_add_seat(ws, audience="invitee")
+                except HTTPException as cap_err:
+                    if cap_err.status_code != 402:
+                        raise
+                    logger.warning(
+                        f"Skipping auto-accept of invite {invite.get('id')} "
+                        f"for {app_user_email} → workspace {ws_id}: "
+                        f"cap reached ({cap_err.detail})"
+                    )
+                    inviter_id = invite.get("invited_by")
+                    ws_name = ws.get("name") or "the workspace"
+                    from dembrane.notifications import emit
+
+                    if inviter_id and inviter_id != app_user_id:
+                        try:
+                            await emit(
+                                audience_user_id=inviter_id,
+                                actor_user_id=app_user_id,
+                                event_code="INVITE_BLOCKED_AT_CAP",
+                                title=f"Invite to {ws_name} couldn't be honoured",
+                                message=(
+                                    f"{app_user_email} signed up but your workspace is at its "
+                                    "seat limit. Free a seat or upgrade so they can join."
+                                ),
+                                action="NAVIGATE_WORKSPACE_SETTINGS",
+                                ref_workspace_id=ws_id,
+                                ref_org_id=ws_org_id,
+                            )
+                        except Exception:
+                            logger.exception("Failed to emit INVITE_BLOCKED_AT_CAP")
+
+                    try:
+                        await emit(
+                            audience_user_id=app_user_id,
+                            actor_user_id=inviter_id,
+                            event_code="INVITE_PENDING_AT_CAP",
+                            title=f"Your invite to {ws_name} is still pending",
+                            message=(
+                                "The workspace is at its seat limit. "
+                                "We've notified the admin. Once they free a seat or "
+                                "upgrade, you can join from your invites."
+                            ),
+                            action="NAVIGATE_INVITE",
+                            ref_workspace_id=ws_id,
+                            ref_org_id=ws_org_id,
+                        )
+                    except Exception:
+                        logger.exception("Failed to emit INVITE_PENDING_AT_CAP")
+                    continue
+
+            # If org member invite, add to that org
+            if is_org_invite and ws_org_id:
+                if not user_has_org_mem:
+                    await async_directus.create_item(
+                        "org_membership",
+                        {
+                            "id": generate_uuid(),
+                            "org_id": ws_org_id,
+                            "user_id": app_user_id,
+                            "role": "member",
+                        },
+                    )
+                    logger.info(f"Auto-added {app_user_email} to org {ws_org_id} via invite")
+                joined_an_org = True
+
+            # Create workspace membership
+            if not has_ws_mem:
                 await async_directus.create_item(
                     "workspace_membership",
                     {
                         "id": generate_uuid(),
                         "workspace_id": ws_id,
                         "user_id": app_user_id,
-                        "role": invite.get("role", "member"),
+                        "role": invite_role,
                         "source": "direct",
-                        "is_external": is_external,
                     },
                 )
                 from dembrane.cache_utils import invalidate_workspace_and_org_usage
 
-                await invalidate_workspace_and_org_usage(ws_id, ws.get("org_id"))
+                await invalidate_workspace_and_org_usage(ws_id, ws_org_id)
                 joined_any_workspace = True
                 logger.info(
                     f"Auto-accepted invite: {app_user_email} → workspace {ws_id} "
-                    f"(role: {invite.get('role')}, external: {is_external})"
+                    f"(role: {invite_role})"
                 )
 
             if not first_workspace_id:
                 first_workspace_id = ws_id
-            # Idempotent re-run: existing membership still counts toward
-            # "this user is in someone else's workspace, no personal org
-            # needed". Without this flip, a retry where the row already
-            # exists would treat them as having joined nothing.
+            # Idempotent re-run: existing membership still suppresses the
+            # personal-org branch below.
             joined_any_workspace = True
 
             # Mark invite as accepted
@@ -351,20 +352,20 @@ async def complete_onboarding(
 
                 admin_ids = await audience_workspace_admins(ws_id)
                 admin_ids = [a for a in admin_ids if a != app_user_id and a != inviter_id]
-                guest_name = (
+                external_name = (
                     (await get_directus_user_profile(directus_user_id) or {}).get("display_name")
                     or app_user_email
-                    or "A guest"
+                    or "An external"
                 )
                 ws_name = ws.get("name") or "your workspace"
                 await emit_to_audience(
                     admin_ids,
                     actor_user_id=app_user_id,
                     event_code="WORKSPACE_GUEST_ADDED",
-                    title=f"{guest_name} joined {ws_name} as a guest",
+                    title=f"{external_name} joined {ws_name} as an external",
                     message=(
-                        f"{app_user_email} now has guest access. "
-                        "Guests count against your tier's guest cap."
+                        f"{app_user_email} now has external access. "
+                        "Externals count against your tier's seat cap."
                     ),
                     action="NAVIGATE_WORKSPACE_SETTINGS",
                     ref_workspace_id=ws_id,

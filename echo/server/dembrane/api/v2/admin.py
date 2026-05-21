@@ -27,6 +27,7 @@ from pydantic import Field, BaseModel
 from dembrane.email import send_email
 from dembrane.settings import get_settings
 from dembrane.notifications import emit
+from dembrane.seat_capacity import compute_effective_seat_state
 from dembrane.tier_capacity import get_capacity
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
@@ -66,8 +67,8 @@ class BillingRow(BaseModel):
     seats_included: Optional[int] = None
     over_seats: int = 0
     seat_overage_eur: float = 0.0
-    # Guests share the main seat pool. Count exposed for visibility.
-    guest_count: int = 0
+    # Externals share the main seat pool. Count exposed for visibility.
+    external_count: int = 0
     # Base monthly price (tier sticker). Pilot shows its one-time fee.
     base_price_eur: Optional[float] = None
     total_forecast_eur: Optional[float] = None
@@ -78,8 +79,9 @@ class BillingRow(BaseModel):
     downgraded_at: Optional[str] = None
     downgraded_from_tier: Optional[str] = None
     # Activity gate. Active = has audio this cycle OR has at least one
-    # non-external member. Inactive workspaces are seats that never
-    # converted — worth calling staff's attention but not billing risk.
+    # seat occupied (member or external). Inactive workspaces are seats
+    # that never converted — worth calling staff's attention but not
+    # billing risk.
     is_active: bool = True
     # Workspace admins (max 3), preferred over billing-role users so
     # staff has someone to talk to about project issues, not just money.
@@ -239,50 +241,6 @@ async def _org_name_map(org_ids: list[str]) -> dict[str, str]:
     return {r["id"]: r.get("name", "") for r in rows}
 
 
-async def _workspace_seat_count(ws_id: str) -> int:
-    """Members + admins + billing, excluding is_external (matrix §7)."""
-    mems = await async_directus.get_items(
-        "workspace_membership",
-        {
-            "query": {
-                "filter": {
-                    "workspace_id": {"_eq": ws_id},
-                    "deleted_at": {"_null": True},
-                    "is_external": {"_eq": False},
-                },
-                "fields": ["user_id"],
-                "limit": -1,
-            }
-        },
-    )
-    if not isinstance(mems, list):
-        return 0
-    return len({m["user_id"] for m in mems if m.get("user_id")})
-
-
-async def _workspace_guest_count(ws_id: str) -> int:
-    """Guests only. Dedup by user_id so a user with both a direct and
-    legacy inherited guest row counts once (matrix §7 dedupe rule
-    applies to guests too)."""
-    mems = await async_directus.get_items(
-        "workspace_membership",
-        {
-            "query": {
-                "filter": {
-                    "workspace_id": {"_eq": ws_id},
-                    "deleted_at": {"_null": True},
-                    "is_external": {"_eq": True},
-                },
-                "fields": ["user_id"],
-                "limit": -1,
-            }
-        },
-    )
-    if not isinstance(mems, list):
-        return 0
-    return len({m["user_id"] for m in mems if m.get("user_id")})
-
-
 async def _workspace_hours_this_cycle(ws_id: str, cycle_start: str, cycle_end: str) -> float:
     """Sum conversation.duration (seconds) → hours for this workspace's
     projects in the current cycle."""
@@ -336,7 +294,6 @@ async def _workspace_admins(ws_id: str) -> list[BillingContact]:
                     "workspace_id": {"_eq": ws_id},
                     "deleted_at": {"_null": True},
                     "role": {"_in": ["admin", "owner"]},
-                    "is_external": {"_eq": False},
                 },
                 "fields": ["user_id"],
                 "limit": 3,
@@ -424,13 +381,17 @@ async def billing_rollup(
         tier = ws.get("tier", "pioneer")
         cap = get_capacity(tier)
         hours = await _workspace_hours_this_cycle(ws_id, cycle_start, cycle_end)
-        seat_count = await _workspace_seat_count(ws_id)
-        guest_count = await _workspace_guest_count(ws_id)
+        # Use the unified inheritance-aware count so billing arithmetic
+        # matches what enforcement/usage endpoints see (derived org admins
+        # included). Direct workspace_membership queries miss derived rows
+        # and would understate over_seats/seat_overage_eur.
+        _seats_used, seat_count, external_count = await compute_effective_seat_state(ws_id)
 
         included_hours = cap.included_hours if cap else None
         included_seats = cap.included_seats if cap else None
         over_hours = max(0.0, hours - included_hours) if included_hours is not None else 0.0
-        over_seats = max(0, seat_count - included_seats) if included_seats is not None else 0
+        unified_seats = seat_count + external_count
+        over_seats = max(0, unified_seats - included_seats) if included_seats is not None else 0
         hour_rate = cap.hour_overage_eur if cap else None
         seat_rate = cap.seat_overage_eur if cap else None
         hour_overage_eur = round(over_hours * hour_rate, 2) if hour_rate else 0.0
@@ -461,7 +422,7 @@ async def billing_rollup(
         admins = await _workspace_admins(ws_id)
         # Active when there's usage this cycle OR real members. Everything
         # else is a shell that never turned into an engagement.
-        is_active = hours > 0 or seat_count > 0
+        is_active = hours > 0 or seat_count > 0 or external_count > 0
 
         row = BillingRow(
             workspace_id=ws_id,
@@ -481,7 +442,7 @@ async def billing_rollup(
             seats_included=included_seats,
             over_seats=over_seats,
             seat_overage_eur=seat_overage_eur,
-            guest_count=guest_count,
+            external_count=external_count,
             base_price_eur=base_price,
             total_forecast_eur=total,
             pilot_hard_block=pilot_block,
@@ -924,11 +885,7 @@ async def _notify_requester_approved(
         pass
     ws_name = ws_name or req.get("proposed_name") or "your workspace"
 
-    cadence_label = (
-        f"{approved_billing_period} billing"
-        if approved_billing_period
-        else None
-    )
+    cadence_label = f"{approved_billing_period} billing" if approved_billing_period else None
 
     notification_message = (
         f"{ws_name} \u00b7 {granted_tier} \u00b7 {cadence_label}"
@@ -948,9 +905,7 @@ async def _notify_requester_approved(
     _, email = await _resolve_requester_info(requester_id)
     if email:
         if cadence_label:
-            subject = (
-                f"Your {granted_tier.title()} tier ({cadence_label}) is ready"
-            )
+            subject = f"Your {granted_tier.title()} tier ({cadence_label}) is ready"
         else:
             subject = f"Your {granted_tier.title()} is ready"
         cadence_diverges = (
@@ -1241,8 +1196,7 @@ async def decide_workspace_request(
             raise HTTPException(
                 status_code=400,
                 detail=(
-                    "approved_billing_period is required for "
-                    f"{granted_tier} (annual or monthly)"
+                    f"approved_billing_period is required for {granted_tier} (annual or monthly)"
                 ),
             )
         approved_billing_period: Optional[str] = (

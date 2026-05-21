@@ -80,7 +80,7 @@ interface OrganisationMember {
 	is_pending: boolean;
 	// True when the person is only reachable via external workspace
 	// memberships — no org_membership. Admins see them in the organisation
-	// Members list with a Guest badge; no organisation-role picker is shown.
+	// Members list with an External badge; no organisation-role picker is shown.
 	is_external?: boolean;
 	// workspace_id → role for direct memberships (not derived).
 	direct_workspace_roles?: Record<string, string>;
@@ -166,7 +166,7 @@ async function fetchOrganisationWorkspaces(
 	return res.json();
 }
 
-type RoleFilter = "all" | "admins" | "billing" | "members" | "guests";
+type RoleFilter = "all" | "admins" | "billing" | "members" | "externals";
 
 // Role options by scope + caller role. Organisation-level doesn't include
 // Matrix §5 retires "owner" as a user-facing role — it's a backend-only
@@ -428,9 +428,10 @@ export const OrganisationRoute = () => {
 	});
 
 	// Add-to-workspace from the Organisation Members tab. Reuses the workspace
-	// invite endpoint — the target is an existing organisation member, so the
-	// server treats it as a direct workspace grant rather than an email
-	// invite (is_org_member=true).
+	// invite endpoint — the target is an existing organisation member, so
+	// posting role='member' (or admin/billing) writes the workspace_membership
+	// directly. The invariant (ADR-0003) ensures the org_membership stays
+	// in sync.
 	const addToWorkspaceMutation = useMutation({
 		mutationFn: async ({
 			workspaceId,
@@ -444,7 +445,7 @@ export const OrganisationRoute = () => {
 			const res = await fetch(
 				`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`,
 				{
-					body: JSON.stringify({ email, is_org_member: true, role }),
+					body: JSON.stringify({ email, role }),
 					credentials: "include",
 					headers: { "Content-Type": "application/json" },
 					method: "POST",
@@ -475,7 +476,7 @@ export const OrganisationRoute = () => {
 	const { data: meV2 } = useV2Me();
 	const myAppUserId = meV2?.id ?? null;
 
-	const hasGuests = useMemo(
+	const hasExternals = useMemo(
 		() => members.some((m) => m.is_external),
 		[members],
 	);
@@ -491,9 +492,9 @@ export const OrganisationRoute = () => {
 		const q = search.trim().toLowerCase();
 		return members.filter((m) => {
 			// Matrix §5: internal organisation roles are Admin / Billing / Member.
-			// Externals show up as a fourth bucket ("guests") — they have
+			// Externals show up as a fourth bucket ("externals") — they have
 			// no org_membership, only per-workspace external rows. The
-			// admins/members filters exclude externals; "guests" isolates
+			// admins/members filters exclude externals; "externals" isolates
 			// them. Filter collapses owner → admin for display.
 			if (roleFilter === "admins") {
 				if (m.is_external) return false;
@@ -507,7 +508,7 @@ export const OrganisationRoute = () => {
 				if (m.is_external) return false;
 				if (m.role !== "billing") return false;
 			}
-			if (roleFilter === "guests" && !m.is_external) return false;
+			if (roleFilter === "externals" && !m.is_external) return false;
 			if (!q) return true;
 			return (
 				(m.display_name || "").toLowerCase().includes(q) ||
@@ -682,8 +683,8 @@ export const OrganisationRoute = () => {
 											? [{ label: t`Billing`, value: "billing" }]
 											: []),
 										{ label: t`Members`, value: "members" },
-										...(hasGuests
-											? [{ label: t`Guests`, value: "guests" }]
+										...(hasExternals
+											? [{ label: t`Externals`, value: "externals" }]
 											: []),
 									],
 									value: roleFilter,
@@ -718,7 +719,7 @@ export const OrganisationRoute = () => {
 
 							{/* Members list: dotted invite card as the first row (same
 				    shape as any other member), then one OrganisationPersonCard per
-				    person. Externals render inline with a Guest badge so
+				    person. Externals render inline with an External badge so
 				    admins see everyone reaching their data in one list. */}
 							{!membersError && (
 								<Stack gap="xs">
@@ -836,7 +837,7 @@ export const OrganisationRoute = () => {
 							<Text size="xs" c="dimmed">
 								<Trans>
 									Admins can reach every workspace in this organisation. Members
-									and guests only see the workspaces they've been given access
+									and externals only see the workspaces they've been given access
 									to.
 								</Trans>
 							</Text>
@@ -1141,9 +1142,11 @@ function OrganisationPersonCard({
 						{member.is_external ? (
 							<Tooltip
 								label={t`No organisation role. Access via workspace invites.`}
+								multiline
+								w={240}
 							>
 								<Badge size="sm" variant="light" color="gray">
-									<Trans>Guest</Trans>
+									<Trans>External</Trans>
 								</Badge>
 							</Tooltip>
 						) : (
@@ -1192,7 +1195,24 @@ function OrganisationPersonCard({
 										</Text>
 									</Group>
 									{role ? (
-										isAdmin && isDirect && membershipId ? (
+										// External rows can't be flipped to/from a non-external
+										// role from this dropdown (ADR-0003). Promotion goes
+										// through the explicit add-to-org + re-invite flow.
+										role === "external" ? (
+											<Tooltip
+												label={t`No workspace role change. Add this person to the organisation, then re-invite from the workspace.`}
+												multiline
+												w={260}
+											>
+												<Badge
+													size="xs"
+													variant="light"
+													color={roleColor(role)}
+												>
+													{displayRole(role)}
+												</Badge>
+											</Tooltip>
+										) : isAdmin && isDirect && membershipId ? (
 											<RoleBadgeMenu
 												currentRole={role}
 												options={WS_ROLE_OPTIONS}
@@ -1227,7 +1247,7 @@ function OrganisationPersonCard({
 									) : isAdmin && member.email ? (
 										// Admin can add this person to a workspace they
 										// don't currently have a role on. Reuses the
-										// workspace invite endpoint (is_org_member=true)
+										// workspace invite endpoint with a non-external role
 										// so the server sees this as a direct grant,
 										// not a fresh invitation.
 										<Button
@@ -1236,7 +1256,7 @@ function OrganisationPersonCard({
 											leftSection={<IconPlus size={12} />}
 											onClick={() => {
 												const nextRole = member.is_external
-													? "guest"
+													? "external"
 													: "member";
 												modals.openConfirmModal({
 													children: (

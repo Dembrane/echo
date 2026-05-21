@@ -60,7 +60,7 @@ async function inviteToWorkspace(
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`,
 		{
-			body: JSON.stringify({ email, is_org_member: true, role }),
+			body: JSON.stringify({ email, role }),
 			credentials: "include",
 			headers: { "Content-Type": "application/json" },
 			method: "POST",
@@ -85,8 +85,9 @@ async function inviteToWorkspace(
  * Organisation-scope invites don't exist as a single backend endpoint — the
  * matrix §3 model is that someone "joins the organisation" by joining their
  * first workspace. So this wizard fans out: it calls the workspace
- * invite endpoint with is_org_member=true for every selected workspace.
- * The first call creates the organisation membership; subsequent calls reuse it.
+ * invite endpoint with a non-external role (member/billing/admin) for
+ * every selected workspace — the invariant (ADR-0003) means non-external
+ * invites always carry an org_membership write.
  *
  * Step 2 cards show tier + member count + a few avatar bubbles of
  * current members so the admin can eyeball who's already in without

@@ -82,7 +82,7 @@ async def _get_workspace_membership(
                     "user_id": {"_eq": app_user_id},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["role", "is_external"],
+                "fields": ["role"],
                 "limit": 1,
             }
         },
@@ -112,7 +112,7 @@ async def list_prompt_templates(
     Always includes the caller's scope='user' templates (legacy
     behavior). When workspace_id is provided AND the caller belongs to
     that workspace, also includes the workspace's scope='workspace'
-    templates — even for guests (is_external=true) who get read-only
+    templates — even for externals (role='external') who get read-only
     access.
     """
     try:
@@ -142,7 +142,7 @@ async def list_prompt_templates(
             if app_user:
                 mem = await _get_workspace_membership(app_user["id"], workspace_id)
                 if mem is not None:
-                    is_external_in_ws = bool(mem.get("is_external"))
+                    is_external_in_ws = mem.get("role") == "external"
                     workspace_rows_raw = directus.get_items(
                         "prompt_template",
                         {
@@ -213,7 +213,7 @@ async def create_prompt_template(
 
     Personal templates (scope='user') — always allowed. Workspace
     templates (scope='workspace') require workspace membership and a
-    non-external role (is_external=false); guests are blocked.
+    non-external role; externals are blocked.
     """
     # Validate workspace-scope requests
     if body.scope == "workspace":
@@ -228,10 +228,10 @@ async def create_prompt_template(
         mem = await _get_workspace_membership(app_user["id"], body.workspace_id)
         if mem is None:
             raise HTTPException(status_code=403, detail="Not a workspace member")
-        if mem.get("is_external"):
+        if mem.get("role") == "external":
             raise HTTPException(
                 status_code=403,
-                detail="Guests cannot create workspace templates",
+                detail="Externals cannot create workspace templates",
             )
 
     payload: dict = {
@@ -287,7 +287,7 @@ async def update_prompt_template(
         if not app_user:
             raise HTTPException(status_code=403, detail="Not a workspace member")
         mem = await _get_workspace_membership(app_user["id"], ws_id)
-        if mem is None or mem.get("is_external"):
+        if mem is None or mem.get("role") == "external":
             raise HTTPException(status_code=403, detail="Not allowed to edit this template")
     else:
         if existing.get("user_created") != auth.user_id:
@@ -330,7 +330,7 @@ async def delete_prompt_template(
         if not app_user:
             raise HTTPException(status_code=403, detail="Not a workspace member")
         mem = await _get_workspace_membership(app_user["id"], ws_id)
-        if mem is None or mem.get("is_external"):
+        if mem is None or mem.get("role") == "external":
             raise HTTPException(status_code=403, detail="Not allowed to delete this template")
     else:
         if existing.get("user_created") != auth.user_id:

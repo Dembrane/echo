@@ -18,7 +18,9 @@ export interface WorkspaceUsageData {
 	audio_hours_included: number | null;
 	seat_count: number;
 	seat_count_included: number | null;
-	guest_count: number;
+	member_count: number;
+	external_count: number;
+	pending_count: number;
 	project_count: number;
 	projects: {
 		id: string;

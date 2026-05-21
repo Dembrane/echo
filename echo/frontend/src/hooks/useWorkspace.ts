@@ -34,7 +34,6 @@ interface WorkspaceSummary {
 	org_logo_url: string | null;
 	project_count: number;
 	member_count: number;
-	is_external: boolean;
 	usage?: WorkspaceUsageSummary;
 	// Matrix v1.1 §3 downgrade banner fields.
 	downgraded_at?: string | null;
