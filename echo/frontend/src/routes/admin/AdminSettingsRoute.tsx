@@ -559,6 +559,9 @@ function BillingTable({
 		total_forecast_eur: number;
 	};
 }) {
+	// useReactTable returns a stable ref; React Compiler caches our JSX on
+	// it, so state changes never reach the DOM. See frontend/AGENTS.md.
+	"use no memo";
 	const [sorting, setSorting] = useState<SortingState>(initialSorting ?? []);
 	// TanStack's ExpandedState is Record<string, boolean> | true, but the
 	// 'true' shorthand isn't useful to us — we always track per-row
@@ -1451,19 +1454,25 @@ function UsageAndBillingPanel() {
 						{columnMenuItems.map((c) => (
 							<Menu.Item
 								key={c.id}
-								onClick={(e) => e.preventDefault()}
 								closeMenuOnClick={false}
+								onClick={() =>
+									setColumnVisibility((v) => ({
+										...v,
+										[c.id]: v[c.id] === false,
+									}))
+								}
 							>
 								<Checkbox
 									size="xs"
 									label={c.label}
 									checked={columnVisibility[c.id] !== false}
-									onChange={(e) =>
+									onChange={() =>
 										setColumnVisibility((v) => ({
 											...v,
-											[c.id]: e.currentTarget.checked,
+											[c.id]: v[c.id] === false,
 										}))
 									}
+									onClick={(e) => e.stopPropagation()}
 								/>
 							</Menu.Item>
 						))}
@@ -1551,6 +1560,8 @@ function SimpleDataTable<T extends object>({
 	initialSorting?: SortingState;
 	emptyLabel: string;
 }) {
+	// See BillingTable / frontend/AGENTS.md for the rationale.
+	"use no memo";
 	const [sorting, setSorting] = useState<SortingState>(initialSorting ?? []);
 	const table = useReactTable<T>({
 		columns,
