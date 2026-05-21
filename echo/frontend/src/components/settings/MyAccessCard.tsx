@@ -99,6 +99,8 @@ export const MyAccessCard = () => {
 
 	const totalOrganisations = data?.organisations.length ?? 0;
 	const totalWorkspaces = data?.workspaces.length ?? 0;
+	// Externals (no org membership) can't request a workspace.
+	const canCreateWorkspace = totalOrganisations > 0;
 
 	return (
 		<Card withBorder p="lg" radius="md">
@@ -122,14 +124,16 @@ export const MyAccessCard = () => {
 							/>
 						</Text>
 					</Stack>
-					<Button
-						variant="light"
-						size="sm"
-						leftSection={<IconPlus size={14} />}
-						onClick={() => navigate("/w/new")}
-					>
-						<Trans>New organisation workspace</Trans>
-					</Button>
+					{canCreateWorkspace && (
+						<Button
+							variant="light"
+							size="sm"
+							leftSection={<IconPlus size={14} />}
+							onClick={() => navigate("/w/new")}
+						>
+							<Trans>New organisation workspace</Trans>
+						</Button>
+					)}
 				</Group>
 
 				{byOrganisation.size === 0 ? (

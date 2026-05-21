@@ -20,8 +20,10 @@ import {
 	IconScale,
 	IconShieldLock,
 } from "@tabler/icons-react";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
+import { API_BASE_URL } from "@/config";
 import { AccountSettingsCard } from "@/components/settings/AccountSettingsCard";
 import { AuditLogsCard } from "@/components/settings/AuditLogsCard";
 import { ChangePasswordCard } from "@/components/settings/ChangePasswordCard";
@@ -70,6 +72,26 @@ export const UserSettingsRoute = () => {
 
 	const isTwoFactorEnabled = Boolean(user?.tfa_enabled);
 
+	const { data: accessData } = useQuery<{
+		organisations: Array<{ id: string }>;
+	} | null>({
+		queryKey: ["v2", "workspaces"],
+		queryFn: async () => {
+			const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
+				credentials: "include",
+			});
+			if (!res.ok) return null;
+			return res.json();
+		},
+		staleTime: 60_000,
+	});
+	const isExternalOnly = (accessData?.organisations.length ?? 0) === 0;
+
+	const visibleSections = useMemo(
+		() => SECTIONS.filter((s) => !(isExternalOnly && s.id === "project-defaults")),
+		[isExternalOnly],
+	);
+
 	return (
 		<Container size="xl" py="xl">
 			<Stack gap="lg">
@@ -116,7 +138,7 @@ export const UserSettingsRoute = () => {
 
 							<Divider my="xs" />
 
-							{SECTIONS.map((section) => (
+							{visibleSections.map((section) => (
 								<NavLink
 									key={section.id}
 									label={section.label()}
@@ -178,7 +200,7 @@ export const UserSettingsRoute = () => {
 								</Stack>
 							)}
 
-							{activeSection === "project-defaults" && (
+							{activeSection === "project-defaults" && !isExternalOnly && (
 								<Stack gap="lg">
 									<Title order={3}>
 										<Trans>Project Defaults</Trans>

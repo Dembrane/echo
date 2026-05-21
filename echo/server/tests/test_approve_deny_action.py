@@ -14,6 +14,7 @@ Covers:
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi import BackgroundTasks
 from pydantic import ValidationError
 
 from dembrane.api.v2.admin import (
@@ -236,7 +237,8 @@ class TestUpgradeWorkspaceForRequest:
                     req, granted_tier="pioneer", staff_user_id="staff-1"
                 )
 
-        assert result == "ws-1"
+        # Helper now returns (workspace_id, workspace_name).
+        assert result[0] == "ws-1"
         update_call = mock_directus.update_item.call_args
         assert update_call[0][0] == "workspace"
         assert update_call[0][1] == "ws-1"
@@ -388,7 +390,7 @@ class TestDecideEndpointApprove:
             )
             mock_directus.update_item = AsyncMock()
 
-            result = await decide_workspace_request("req-1", body, auth)
+            result = await decide_workspace_request("req-1", body, auth, BackgroundTasks())
 
         assert result.status == "approved"
         assert result.resulting_workspace_id == "ws-new"
@@ -419,7 +421,7 @@ class TestDecideEndpointApprove:
         with (
             patch("dembrane.api.v2.admin.async_directus") as mock_directus,
             patch("dembrane.app_user.get_app_user_or_raise", new_callable=AsyncMock, return_value={"id": "staff-1"}),
-            patch("dembrane.api.v2.admin._upgrade_workspace_for_request", new_callable=AsyncMock, return_value="ws-1") as mock_upgrade,
+            patch("dembrane.api.v2.admin._upgrade_workspace_for_request", new_callable=AsyncMock, return_value=("ws-1", "Existing WS")) as mock_upgrade,
         ):
             mock_directus.get_item = AsyncMock(
                 side_effect=[
@@ -429,7 +431,7 @@ class TestDecideEndpointApprove:
             )
             mock_directus.update_item = AsyncMock()
 
-            result = await decide_workspace_request("req-1", body, auth)
+            result = await decide_workspace_request("req-1", body, auth, BackgroundTasks())
 
         assert result.status == "approved"
         assert result.resulting_workspace_id == "ws-1"
@@ -461,7 +463,7 @@ class TestDecideEndpointApprove:
             )
             mock_directus.update_item = AsyncMock()
 
-            _result = await decide_workspace_request("req-1", body, auth)
+            _result = await decide_workspace_request("req-1", body, auth, BackgroundTasks())
 
         call_kwargs = _mock_create.call_args
         assert call_kwargs[1]["granted_tier"] == "changemaker"
@@ -486,7 +488,7 @@ class TestDecideEndpointApprove:
             mock_directus.get_item = AsyncMock(return_value=decided_req)
 
             with pytest.raises(HTTPException) as exc:
-                await decide_workspace_request("req-1", body, auth)
+                await decide_workspace_request("req-1", body, auth, BackgroundTasks())
             assert exc.value.status_code == 409
 
     @pytest.mark.asyncio
@@ -507,7 +509,7 @@ class TestDecideEndpointApprove:
             mock_directus.get_item = AsyncMock(return_value=None)
 
             with pytest.raises(HTTPException) as exc:
-                await decide_workspace_request("req-missing", body, auth)
+                await decide_workspace_request("req-missing", body, auth, BackgroundTasks())
             assert exc.value.status_code == 404
 
     @pytest.mark.asyncio
@@ -521,7 +523,7 @@ class TestDecideEndpointApprove:
         auth.is_admin = False
 
         with pytest.raises(HTTPException) as exc:
-            await decide_workspace_request("req-1", body, auth)
+            await decide_workspace_request("req-1", body, auth, BackgroundTasks())
         assert exc.value.status_code == 403
 
     @pytest.mark.asyncio
@@ -550,7 +552,7 @@ class TestDecideEndpointApprove:
             mock_directus.update_item = AsyncMock()
 
             with pytest.raises(HTTPException) as exc:
-                await decide_workspace_request("req-1", body, auth)
+                await decide_workspace_request("req-1", body, auth, BackgroundTasks())
             assert exc.value.status_code == 400
 
     @pytest.mark.asyncio
@@ -579,7 +581,7 @@ class TestDecideEndpointApprove:
             mock_directus.update_item = AsyncMock()
 
             with pytest.raises(HTTPException) as exc:
-                await decide_workspace_request("req-1", body, auth)
+                await decide_workspace_request("req-1", body, auth, BackgroundTasks())
             assert exc.value.status_code == 400
 
 
@@ -609,7 +611,7 @@ class TestDecideEndpointDeny:
             )
             mock_directus.update_item = AsyncMock()
 
-            result = await decide_workspace_request("req-1", body, auth)
+            result = await decide_workspace_request("req-1", body, auth, BackgroundTasks())
 
         assert result.status == "denied"
         assert result.resulting_workspace_id is None
@@ -642,7 +644,7 @@ class TestDecideEndpointDeny:
             mock_directus.get_item = AsyncMock(return_value=pending_req)
 
             with pytest.raises(HTTPException) as exc:
-                await decide_workspace_request("req-1", body, auth)
+                await decide_workspace_request("req-1", body, auth, BackgroundTasks())
             assert exc.value.status_code == 400
 
     @pytest.mark.asyncio
@@ -665,7 +667,7 @@ class TestDecideEndpointDeny:
             mock_directus.get_item = AsyncMock(return_value=pending_req)
 
             with pytest.raises(HTTPException) as exc:
-                await decide_workspace_request("req-1", body, auth)
+                await decide_workspace_request("req-1", body, auth, BackgroundTasks())
             assert exc.value.status_code == 400
 
     @pytest.mark.asyncio
@@ -695,7 +697,7 @@ class TestDecideEndpointDeny:
             )
             mock_directus.update_item = AsyncMock()
 
-            _result = await decide_workspace_request("req-1", body, auth)
+            _result = await decide_workspace_request("req-1", body, auth, BackgroundTasks())
 
         claim = mock_directus.update_item.call_args_list[0][0][2]
         assert claim["staff_notes"] == "Internal: check credit history"
@@ -722,7 +724,7 @@ class TestDecideEndpointDeny:
             mock_directus.get_item = AsyncMock(return_value=decided_req)
 
             with pytest.raises(HTTPException) as exc:
-                await decide_workspace_request("req-1", body, auth)
+                await decide_workspace_request("req-1", body, auth, BackgroundTasks())
             assert exc.value.status_code == 409
 
 
