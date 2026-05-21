@@ -21,7 +21,7 @@ from typing import Literal, Optional
 from logging import getLogger
 from datetime import datetime, timezone, timedelta
 
-from fastapi import Query, APIRouter, HTTPException
+from fastapi import Query, APIRouter, HTTPException, BackgroundTasks
 from pydantic import Field, BaseModel
 
 from dembrane.email import send_email
@@ -858,6 +858,7 @@ async def _notify_requester_approved(
     granted_tier: str,
     resulting_ws_id: str,
     *,
+    workspace_name: Optional[str] = None,
     approved_billing_period: Optional[str] = None,
     proposed_billing_period: Optional[str] = None,
 ) -> None:
@@ -877,13 +878,7 @@ async def _notify_requester_approved(
     base = (settings.urls.admin_base_url or "").rstrip("/")
     workspace_url = f"{base}/w/{resulting_ws_id}" if base else f"/w/{resulting_ws_id}"
 
-    ws_name = ""
-    try:
-        ws = await async_directus.get_item("workspace", resulting_ws_id)
-        ws_name = (ws or {}).get("name", "")
-    except Exception:  # noqa: BLE001
-        pass
-    ws_name = ws_name or req.get("proposed_name") or "your workspace"
+    ws_name = workspace_name or req.get("proposed_name") or "your workspace"
 
     cadence_label = f"{approved_billing_period} billing" if approved_billing_period else None
 
@@ -1042,10 +1037,11 @@ async def _upgrade_workspace_for_request(
     granted_tier_expires_at: Optional[str] = None,
     granted_type_discount: Optional[str] = None,
     granted_percent_discount: Optional[int] = None,
-) -> str:
+) -> tuple[str, str]:
     """Update an existing workspace's tier as part of approving a tier_upgrade request.
 
-    Reuses the tier-change logic from set_workspace_tier.
+    Reuses the tier-change logic from set_workspace_tier. Returns
+    (workspace_id, workspace_name) so callers can skip a re-fetch.
     """
     from dembrane.policies import TIER_ORDER
     from dembrane.tier_downgrade import apply_downgrade_effects
@@ -1115,7 +1111,7 @@ async def _upgrade_workspace_for_request(
         req["id"],
         staff_user_id,
     )
-    return workspace_id
+    return workspace_id, workspace.get("name") or ""
 
 
 @router.patch(
@@ -1126,6 +1122,7 @@ async def decide_workspace_request(
     request_id: str,
     body: DecideWorkspaceRequestBody,
     auth: DependencyDirectusSession,
+    background_tasks: BackgroundTasks,
 ) -> DecideWorkspaceRequestResponse:
     """Staff approve or deny a workspace request.
 
@@ -1208,6 +1205,7 @@ async def decide_workspace_request(
         )
 
         resulting_ws_id: str
+        resulting_ws_name: str = ""
         if req.get("kind") == "new_workspace":
             resulting_ws_id = await _create_workspace_for_request(
                 req,
@@ -1217,13 +1215,15 @@ async def decide_workspace_request(
                 granted_type_discount=body.granted_type_discount,
                 granted_percent_discount=body.granted_percent_discount,
             )
+            # We just created it with this name — no need to re-fetch.
+            resulting_ws_name = (req.get("proposed_name") or "").strip()
         elif req.get("kind") == "tier_upgrade":
             if not req.get("workspace_id"):
                 raise HTTPException(
                     status_code=400,
                     detail="tier_upgrade request missing workspace_id",
                 )
-            resulting_ws_id = await _upgrade_workspace_for_request(
+            resulting_ws_id, resulting_ws_name = await _upgrade_workspace_for_request(
                 req,
                 granted_tier=granted_tier,
                 staff_user_id=staff_user_id,
@@ -1250,10 +1250,13 @@ async def decide_workspace_request(
 
         await async_directus.update_item("workspace_request", request_id, extra_data)
 
-        await _notify_requester_approved(
+        # Off the request path: SendGrid alone adds ~300–1000ms.
+        background_tasks.add_task(
+            _notify_requester_approved,
             req,
             granted_tier,
             resulting_ws_id,
+            workspace_name=resulting_ws_name,
             approved_billing_period=approved_billing_period,
             proposed_billing_period=req.get("proposed_billing_period"),
         )
@@ -1273,7 +1276,11 @@ async def decide_workspace_request(
         staff_user_id,
     )
 
-    await _notify_requester_denied(req, (body.denial_reason or "").strip())
+    background_tasks.add_task(
+        _notify_requester_denied,
+        req,
+        (body.denial_reason or "").strip(),
+    )
 
     return DecideWorkspaceRequestResponse(
         id=request_id,

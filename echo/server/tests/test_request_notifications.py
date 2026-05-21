@@ -13,6 +13,7 @@ Covers:
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi import BackgroundTasks
 
 from dembrane.notifications import (
     _SEVERITY_BY_EVENT,
@@ -243,7 +244,10 @@ class TestSubmitNotificationWiring:
             patch("dembrane.api.v2.workspace_requests.send_email", mock_send_email),
             patch("dembrane.api.v2.workspace_requests._resolve_emails", mock_resolve_emails),
         ):
-            result = await submit_workspace_request(body, auth)
+            bg = BackgroundTasks()
+            result = await submit_workspace_request(body, auth, bg)
+            # Drain the queue so the mocks see the side-effect calls.
+            await bg()
 
         assert result.status == "pending"
 
@@ -297,7 +301,10 @@ class TestSubmitNotificationWiring:
             patch("dembrane.api.v2.workspace_requests.send_email", mock_send_email),
             patch("dembrane.api.v2.workspace_requests._resolve_emails", mock_resolve_emails),
         ):
-            result = await submit_workspace_request(body, auth)
+            bg = BackgroundTasks()
+            result = await submit_workspace_request(body, auth, bg)
+            # Drain the queue so the mocks see the side-effect calls.
+            await bg()
 
         assert result.status == "pending"
         mock_emit.assert_called_once()
@@ -342,7 +349,10 @@ class TestSubmitNotificationWiring:
             patch("dembrane.api.v2.workspace_requests.send_email", mock_send_email),
             patch("dembrane.api.v2.workspace_requests._resolve_emails", mock_resolve_emails),
         ):
-            result = await submit_workspace_request(body, auth)
+            bg = BackgroundTasks()
+            result = await submit_workspace_request(body, auth, bg)
+            # Drain the queue so the mocks see the side-effect calls.
+            await bg()
 
         assert result.status == "pending"
         emit_kwargs = mock_emit.call_args[1]
@@ -361,10 +371,10 @@ class TestApproveNotificationWiring:
         from dembrane.api.v2.admin import _notify_requester_approved
 
         mock_directus = AsyncMock()
-        mock_directus.get_item.side_effect = [
-            {"name": "My Workspace"},  # workspace lookup
-            {"display_name": "Alice", "email": "alice@example.com"},  # requester info
-        ]
+        # Only the requester lookup now — workspace name comes from the caller.
+        mock_directus.get_item.return_value = {
+            "display_name": "Alice", "email": "alice@example.com",
+        }
 
         mock_emit = AsyncMock(return_value="n-1")
         mock_send_email = AsyncMock(return_value=True)
@@ -404,10 +414,7 @@ class TestApproveNotificationWiring:
         from dembrane.api.v2.admin import _notify_requester_approved
 
         mock_directus = AsyncMock()
-        mock_directus.get_item.side_effect = [
-            {"name": "WS"},
-            {"display_name": "Alice", "email": ""},  # no email
-        ]
+        mock_directus.get_item.return_value = {"display_name": "Alice", "email": ""}
 
         mock_emit = AsyncMock(return_value="n-1")
         mock_send_email = AsyncMock(return_value=True)
@@ -447,10 +454,7 @@ class TestApproveNotificationWiring:
         from dembrane.api.v2.admin import _notify_requester_approved
 
         mock_directus = AsyncMock()
-        mock_directus.get_item.side_effect = [
-            {"name": "Upgraded WS"},
-            {"display_name": "Bob", "email": "bob@x.com"},
-        ]
+        mock_directus.get_item.return_value = {"display_name": "Bob", "email": "bob@x.com"}
 
         mock_emit = AsyncMock(return_value="n-1")
         mock_send_email = AsyncMock(return_value=True)
@@ -468,7 +472,7 @@ class TestApproveNotificationWiring:
             patch("dembrane.api.v2.admin.emit", mock_emit),
             patch("dembrane.api.v2.admin.send_email", mock_send_email),
         ):
-            await _notify_requester_approved(req, "changemaker", "ws-2")
+            await _notify_requester_approved(req, "changemaker", "ws-2", workspace_name="Upgraded WS")
 
         assert "tier upgrade" in mock_emit.call_args[1]["title"]
         assert "Upgraded WS" in mock_emit.call_args[1]["message"]
@@ -762,14 +766,16 @@ class TestDecideEndpointIntegration:
             patch("dembrane.api.v2.admin._create_workspace_for_request", mock_create_ws),
             patch("dembrane.api.v2.admin._notify_requester_approved", mock_notify_approved),
         ):
-            result = await decide_workspace_request("req-1", body, auth)
+            bg = BackgroundTasks()
+            result = await decide_workspace_request("req-1", body, auth, bg)
+            await bg()
 
         assert result.status == "approved"
-        mock_notify_approved.assert_called_once_with(
-            req_data,
-            "innovator",
-            "ws-new",
-        )
+        mock_notify_approved.assert_called_once()
+        notify_args = mock_notify_approved.call_args
+        assert notify_args.args == (req_data, "innovator", "ws-new")
+        # workspace_name is threaded from req["proposed_name"] to skip a re-fetch.
+        assert notify_args.kwargs.get("workspace_name") == "WS"
 
     @pytest.mark.asyncio
     async def test_deny_calls_notify_denied(self):
@@ -815,7 +821,9 @@ class TestDecideEndpointIntegration:
             patch("dembrane.app_user.get_app_user_or_raise", mock_app_user),
             patch("dembrane.api.v2.admin._notify_requester_denied", mock_notify_denied),
         ):
-            result = await decide_workspace_request("req-1", body, auth)
+            bg = BackgroundTasks()
+            result = await decide_workspace_request("req-1", body, auth, bg)
+            await bg()
 
         assert result.status == "denied"
         mock_notify_denied.assert_called_once_with(

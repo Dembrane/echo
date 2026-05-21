@@ -12,7 +12,7 @@ Covers:
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 from pydantic import ValidationError
 
 from dembrane.api.v2.workspace_requests import (
@@ -114,7 +114,7 @@ class TestNewWorkspaceSubmission:
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_directus),
         ):
             with pytest.raises(HTTPException) as exc_info:
-                await submit_workspace_request(body, _mock_auth())
+                await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
             assert exc_info.value.status_code == 400
             assert "proposed_name" in str(exc_info.value.detail)
 
@@ -134,7 +134,7 @@ class TestNewWorkspaceSubmission:
             patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value=app_user),
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_directus),
         ):
-            result = await submit_workspace_request(body, _mock_auth())
+            result = await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
         assert result.status == "pending"
         assert result.kind == "new_workspace"
         mock_directus.create_item.assert_called_once()
@@ -160,7 +160,7 @@ class TestNewWorkspaceSubmission:
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_directus),
         ):
             with pytest.raises(HTTPException) as exc_info:
-                await submit_workspace_request(body, _mock_auth())
+                await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
             assert exc_info.value.status_code == 403
 
     @pytest.mark.asyncio
@@ -179,7 +179,7 @@ class TestNewWorkspaceSubmission:
             patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value=app_user),
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_directus),
         ):
-            result = await submit_workspace_request(body, _mock_auth())
+            result = await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
         assert result.status == "pending"
 
 
@@ -197,7 +197,7 @@ class TestTierUpgradeSubmission:
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_directus),
         ):
             with pytest.raises(HTTPException) as exc_info:
-                await submit_workspace_request(body, _mock_auth())
+                await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
             assert exc_info.value.status_code == 400
             assert "workspace_id" in str(exc_info.value.detail)
 
@@ -226,7 +226,7 @@ class TestTierUpgradeSubmission:
             patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value=app_user),
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_directus),
         ):
-            result = await submit_workspace_request(body, _mock_auth())
+            result = await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
         assert result.status == "pending"
         assert result.kind == "tier_upgrade"
 
@@ -251,7 +251,7 @@ class TestTierUpgradeSubmission:
             patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value=app_user),
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_directus),
         ):
-            result = await submit_workspace_request(body, _mock_auth())
+            result = await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
         assert result.status == "pending"
 
     @pytest.mark.asyncio
@@ -267,7 +267,7 @@ class TestTierUpgradeSubmission:
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_directus),
         ):
             with pytest.raises(HTTPException) as exc_info:
-                await submit_workspace_request(body, _mock_auth())
+                await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
             assert exc_info.value.status_code == 403
 
     @pytest.mark.asyncio
@@ -290,7 +290,7 @@ class TestTierUpgradeSubmission:
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_directus),
         ):
             with pytest.raises(HTTPException) as exc_info:
-                await submit_workspace_request(body, _mock_auth())
+                await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
             assert exc_info.value.status_code == 409
 
 
@@ -327,7 +327,7 @@ class TestBillingPeriodValidation:
             patch("dembrane.api.v2.workspace_requests.async_directus", self._ok_directus()),
         ):
             with pytest.raises(HTTPException) as exc_info:
-                await submit_workspace_request(body, _mock_auth())
+                await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
         assert exc_info.value.status_code == 400
         assert "proposed_billing_period" in str(exc_info.value.detail)
 
@@ -345,7 +345,7 @@ class TestBillingPeriodValidation:
             patch("dembrane.api.v2.workspace_requests.async_directus", self._ok_directus()),
         ):
             with pytest.raises(HTTPException) as exc_info:
-                await submit_workspace_request(body, _mock_auth())
+                await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
         assert exc_info.value.status_code == 400
         assert "pilot" in str(exc_info.value.detail)
 
@@ -363,7 +363,7 @@ class TestBillingPeriodValidation:
             patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value={"id": "au-1"}),
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_d),
         ):
-            result = await submit_workspace_request(body, _mock_auth())
+            result = await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
         assert result.status == "pending"
         row = mock_d.create_item.call_args[0][1]
         assert row["proposed_billing_period"] is None
@@ -383,7 +383,7 @@ class TestBillingPeriodValidation:
             patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value={"id": "au-1"}),
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_d),
         ):
-            result = await submit_workspace_request(body, _mock_auth())
+            result = await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
         assert result.status == "pending"
         row = mock_d.create_item.call_args[0][1]
         assert row["proposed_billing_period"] == cadence
@@ -440,7 +440,7 @@ class TestRowPayload:
             patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value=app_user),
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_directus),
         ):
-            await submit_workspace_request(body, _mock_auth())
+            await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
         row = mock_directus.create_item.call_args[0][1]
         assert row["kind"] == "new_workspace"
         assert row["status"] == "pending"
@@ -467,7 +467,7 @@ class TestRowPayload:
             patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value=app_user),
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_directus),
         ):
-            await submit_workspace_request(body, _mock_auth())
+            await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
         row = mock_directus.create_item.call_args[0][1]
         assert row["proposed_name"] == "My Workspace"
 
@@ -494,7 +494,7 @@ class TestRowPayload:
             patch("dembrane.api.v2.workspace_requests.get_app_user_or_raise", return_value=app_user),
             patch("dembrane.api.v2.workspace_requests.async_directus", mock_directus),
         ):
-            await submit_workspace_request(body, _mock_auth())
+            await submit_workspace_request(body, _mock_auth(), BackgroundTasks())
         row = mock_directus.create_item.call_args[0][1]
         assert row["workspace_id"] == "ws-1"
         assert row["kind"] == "tier_upgrade"

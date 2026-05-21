@@ -3,7 +3,7 @@
 from typing import Literal, Optional, Annotated
 from logging import getLogger
 
-from fastapi import Depends, APIRouter, HTTPException
+from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
 from pydantic import Field, BaseModel
 
 from dembrane.email import send_email
@@ -68,10 +68,111 @@ class SubmitWorkspaceRequestResponse(BaseModel):
     kind: str
 
 
+async def _notify_staff_workspace_request_submitted(
+    *,
+    req_id: str,
+    kind: str,
+    org_id: str,
+    workspace_id: Optional[str],
+    proposed_tier: str,
+    proposed_billing_period: Optional[str],
+    proposed_name: Optional[str],
+    requester_message: Optional[str],
+    requester_app_user_id: str,
+    requester_name: str,
+    requester_email: str,
+) -> None:
+    """Fan out in-app notifications + emails to all staff. Best-effort —
+    runs off the request path so SendGrid latency doesn't block the response.
+    """
+    from datetime import datetime, timezone
+
+    from dembrane.email_throttle import queue_digest_item, record_and_check_throttle
+
+    try:
+        org_name = ""
+        try:
+            org = await async_directus.get_item("org", org_id)
+            org_name = (org or {}).get("name", "")
+        except Exception:  # noqa: BLE001 — best-effort
+            pass
+
+        kind_label = "new workspace" if kind == "new_workspace" else "tier upgrade"
+
+        tier_segment: str = proposed_tier
+        if proposed_billing_period:
+            tier_segment = f"{proposed_tier} · {proposed_billing_period}"
+        notification_message = f"{org_name} · {tier_segment}" if org_name else tier_segment
+
+        staff_ids = await audience_staff()
+        await emit_to_audience(
+            staff_ids,
+            actor_user_id=requester_app_user_id,
+            event_code="WORKSPACE_REQUEST_SUBMITTED",
+            title=f"{requester_name} requested a {kind_label}",
+            message=notification_message,
+            action="NAVIGATE_ADMIN_UPGRADES",
+            ref_org_id=org_id,
+            ref_workspace_id=workspace_id,
+        )
+
+        settings = get_settings()
+        base = (settings.urls.admin_base_url or "").rstrip("/")
+        admin_url = f"{base}/admin/upgrades"
+
+        staff_emails = await _resolve_emails(staff_ids)
+        if not staff_emails:
+            return
+
+        summary = f"{requester_name} requested a {kind_label}"
+        if org_name:
+            summary += f" ({org_name} · {tier_segment})"
+        else:
+            summary += f" ({tier_segment})"
+
+        for staff_email_addr in staff_emails:
+            decision = await record_and_check_throttle(
+                staff_email_addr,
+                "WORKSPACE_REQUEST_SUBMITTED",
+            )
+            if decision == "individual":
+                await send_email(
+                    to=staff_email_addr,
+                    subject=f"Workspace request: {requester_name} · {kind_label}",
+                    template="workspace_request_submitted",
+                    template_data={
+                        "requester_name": requester_name,
+                        "requester_email": requester_email,
+                        "kind_label": kind_label,
+                        "org_name": org_name,
+                        "proposed_tier": proposed_tier,
+                        "proposed_billing_period": proposed_billing_period,
+                        "proposed_name": proposed_name,
+                        "requester_message": requester_message,
+                        "admin_url": admin_url,
+                    },
+                )
+            else:
+                await queue_digest_item(
+                    staff_email_addr,
+                    {
+                        "event_code": "WORKSPACE_REQUEST_SUBMITTED",
+                        "summary": summary,
+                        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+                        "admin_url": admin_url,
+                    },
+                )
+    except Exception:  # noqa: BLE001 — background side effect, never fail the caller
+        logger.exception(
+            "Background notify-staff failed for workspace_request %s", req_id
+        )
+
+
 @router.post("", response_model=SubmitWorkspaceRequestResponse)
 async def submit_workspace_request(
     body: SubmitWorkspaceRequest,
     auth: DependencyDirectusSession,
+    background_tasks: BackgroundTasks,
 ) -> SubmitWorkspaceRequestResponse:
     """Submit a workspace request (new workspace or tier upgrade).
 
@@ -205,85 +306,22 @@ async def submit_workspace_request(
         app_user_id,
     )
 
-    # Notify all staff (in-app) + email
-    requester_name = app_user.get("display_name") or "A user"
-    requester_email = app_user.get("email") or ""
-    org_name = ""
-    try:
-        org = await async_directus.get_item("org", body.org_id)
-        org_name = (org or {}).get("name", "")
-    except Exception:  # noqa: BLE001 — best-effort
-        pass
-    kind_label = "new workspace" if body.kind == "new_workspace" else "tier upgrade"
-
-    # Notification message format: "{org_name} · {tier} · {cadence}" — cadence
-    # appended only when applicable (pioneer+). Pilot/free omit it so the line
-    # stays honest about what's actually billable.
-    tier_segment: str = body.proposed_tier
-    if body.proposed_billing_period:
-        tier_segment = f"{body.proposed_tier} · {body.proposed_billing_period}"
-    notification_message = f"{org_name} · {tier_segment}" if org_name else tier_segment
-
-    staff_ids = await audience_staff()
-    await emit_to_audience(
-        staff_ids,
-        actor_user_id=app_user_id,
-        event_code="WORKSPACE_REQUEST_SUBMITTED",
-        title=f"{requester_name} requested a {kind_label}",
-        message=notification_message,
-        action="NAVIGATE_ADMIN_UPGRADES",
-        ref_org_id=body.org_id,
-        ref_workspace_id=body.workspace_id,
+    # Off the request path: N sequential Directus writes + N SendGrid calls
+    # added 2–5s of click latency when done inline.
+    background_tasks.add_task(
+        _notify_staff_workspace_request_submitted,
+        req_id=req_id,
+        kind=body.kind,
+        org_id=body.org_id,
+        workspace_id=body.workspace_id,
+        proposed_tier=body.proposed_tier,
+        proposed_billing_period=body.proposed_billing_period,
+        proposed_name=body.proposed_name,
+        requester_message=body.requester_message,
+        requester_app_user_id=app_user_id,
+        requester_name=app_user.get("display_name") or "A user",
+        requester_email=app_user.get("email") or "",
     )
-
-    settings = get_settings()
-    base = (settings.urls.admin_base_url or "").rstrip("/")
-    admin_url = f"{base}/admin/upgrades"
-
-    staff_emails = await _resolve_emails(staff_ids)
-    if staff_emails:
-        from datetime import datetime, timezone
-
-        from dembrane.email_throttle import queue_digest_item, record_and_check_throttle
-
-        summary = f"{requester_name} requested a {kind_label}"
-        if org_name:
-            summary += f" ({org_name} · {tier_segment})"
-        else:
-            summary += f" ({tier_segment})"
-
-        for staff_email_addr in staff_emails:
-            decision = await record_and_check_throttle(
-                staff_email_addr,
-                "WORKSPACE_REQUEST_SUBMITTED",
-            )
-            if decision == "individual":
-                await send_email(
-                    to=staff_email_addr,
-                    subject=f"Workspace request: {requester_name} · {kind_label}",
-                    template="workspace_request_submitted",
-                    template_data={
-                        "requester_name": requester_name,
-                        "requester_email": requester_email,
-                        "kind_label": kind_label,
-                        "org_name": org_name,
-                        "proposed_tier": body.proposed_tier,
-                        "proposed_billing_period": body.proposed_billing_period,
-                        "proposed_name": body.proposed_name,
-                        "requester_message": body.requester_message,
-                        "admin_url": admin_url,
-                    },
-                )
-            else:
-                await queue_digest_item(
-                    staff_email_addr,
-                    {
-                        "event_code": "WORKSPACE_REQUEST_SUBMITTED",
-                        "summary": summary,
-                        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-                        "admin_url": admin_url,
-                    },
-                )
 
     return SubmitWorkspaceRequestResponse(
         id=req_id,
