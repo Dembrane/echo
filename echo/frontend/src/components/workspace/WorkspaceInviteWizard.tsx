@@ -53,12 +53,11 @@ async function inviteToWorkspace(
 	workspaceId: string,
 	email: string,
 	role: string,
-	isOrgMember: boolean,
 ): Promise<{ status: string; email: string; email_sent: boolean }> {
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`,
 		{
-			body: JSON.stringify({ email, is_org_member: isOrgMember, role }),
+			body: JSON.stringify({ email, role }),
 			credentials: "include",
 			headers: { "Content-Type": "application/json" },
 			method: "POST",
@@ -74,7 +73,7 @@ async function inviteToWorkspace(
 interface ExternalRow {
 	id: string;
 	email: string;
-	role: "member";
+	role: "external";
 }
 
 interface Props {
@@ -89,7 +88,7 @@ interface Props {
 	// corresponding step is disabled with an upgrade prompt instead of
 	// letting the user fill the form only to fail at submit.
 	memberInviteBlocked?: boolean;
-	guestInviteBlocked?: boolean;
+	externalInviteBlocked?: boolean;
 	// True when the workspace is on a Pioneer+ tier and already at or over
 	// included seats. Picker stays enabled (overage is allowed), but we
 	// surface a soft warning so admins know each new member adds to the
@@ -111,8 +110,8 @@ interface Props {
  * externals through a similar add-rows UI in step 2.
  *
  * Submit fans out to the existing per-email invite endpoint; the
- * backend already handles "already organisation member? skip org_membership"
- * and guest-clamp-to-member, so nothing new is needed on the server.
+ * backend handles "already organisation member? skip org_membership"
+ * and writes role='external' on the membership/invite row.
  */
 export function WorkspaceInviteWizard({
 	opened,
@@ -121,7 +120,7 @@ export function WorkspaceInviteWizard({
 	orgId,
 	existingMemberAppUserIds,
 	memberInviteBlocked = false,
-	guestInviteBlocked = false,
+	externalInviteBlocked = false,
 	memberOverageActive = false,
 	seatOverageRate = null,
 }: Props) {
@@ -146,9 +145,12 @@ export function WorkspaceInviteWizard({
 
 	const availableOrganisationMembers = useMemo(() => {
 		if (!organisationMembers) return [];
-		// People not already in this workspace.
+		// People not already in this workspace. Externals (no org_membership,
+		// only reachable via external workspace rows) are excluded here —
+		// step 1 is for real org members; externals belong in step 2.
 		return organisationMembers.filter(
-			(m) => !existingMemberAppUserIds.has(m.app_user_id),
+			(m) =>
+				!existingMemberAppUserIds.has(m.app_user_id) && m.role !== "external",
 		);
 	}, [organisationMembers, existingMemberAppUserIds]);
 
@@ -177,7 +179,7 @@ export function WorkspaceInviteWizard({
 			{
 				email: "",
 				id: Math.random().toString(36).slice(2),
-				role: "member",
+				role: "external",
 			},
 		]);
 	};
@@ -205,12 +207,10 @@ export function WorkspaceInviteWizard({
 
 			const calls: ReturnType<typeof inviteToWorkspace>[] = [];
 			for (const email of organisationEmails) {
-				calls.push(inviteToWorkspace(workspaceId, email, role, true));
+				calls.push(inviteToWorkspace(workspaceId, email, role));
 			}
 			for (const email of externalEmails) {
-				// Guests are clamped to 'member' on the backend regardless; we
-				// send member here so the UI matches.
-				calls.push(inviteToWorkspace(workspaceId, email, "member", false));
+				calls.push(inviteToWorkspace(workspaceId, email, "external"));
 			}
 
 			const results = await Promise.allSettled(calls);
@@ -231,7 +231,7 @@ export function WorkspaceInviteWizard({
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", orgId, "members"],
 			});
-			// Refresh seat / guest cap flags after invites land.
+			// Refresh seat cap flags after invites land.
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "workspace-usage", workspaceId, 0],
 			});
@@ -266,17 +266,17 @@ export function WorkspaceInviteWizard({
 	);
 	// Pre-flight: don't even let them submit picks the backend will 402 on.
 	const memberPicksWillFail = hasMemberPicks && memberInviteBlocked;
-	const guestPicksWillFail = hasExternalPicks && guestInviteBlocked;
+	const externalPicksWillFail = hasExternalPicks && externalInviteBlocked;
 	const canSubmit =
 		(hasMemberPicks || hasExternalPicks) &&
 		!memberPicksWillFail &&
-		!guestPicksWillFail;
+		!externalPicksWillFail;
 
 	return (
 		<Modal
 			opened={opened}
 			onClose={handleClose}
-			title={<Trans>Invite members</Trans>}
+			title={step === 0 ? <Trans>Invite members</Trans> : <Trans>Invite externals</Trans>}
 			centered
 			size="lg"
 		>
@@ -303,7 +303,7 @@ export function WorkspaceInviteWizard({
 									<Text size="xs" c="dimmed" mt={4}>
 										<Trans>
 											Free a seat by removing someone, or upgrade to add more
-											members. You can still invite guests in the next step.
+											members. You can still invite externals in the next step.
 										</Trans>
 									</Text>
 								</Alert>
@@ -429,7 +429,7 @@ export function WorkspaceInviteWizard({
 								)}
 
 							{/* Role picker — applies to everyone selected in step 1.
-							    Externals in step 2 are always 'member' (guest clamp). */}
+							    Step 2 always submits role='external'. */}
 							{selectedOrganisationMembers.size > 0 && !memberInviteBlocked && (
 								<Paper withBorder p="sm" radius="sm">
 									<Radio.Group
@@ -486,7 +486,7 @@ export function WorkspaceInviteWizard({
 						</Stack>
 					</Stepper.Step>
 
-					<Stepper.Step label={t`Externals`}>
+					<Stepper.Step label={t`Invite externals`}>
 						<Stack gap={12} mt="md">
 							<Text size="sm" c="dimmed">
 								<Trans>
@@ -495,21 +495,21 @@ export function WorkspaceInviteWizard({
 								</Trans>
 							</Text>
 
-							{guestInviteBlocked && (
+							{externalInviteBlocked && (
 								<Alert color="yellow" variant="light">
 									<Text size="sm" fw={500}>
 										<Trans>All seats taken on this tier</Trans>
 									</Text>
 									<Text size="xs" c="dimmed" mt={4}>
 										<Trans>
-											Remove a member or guest, or upgrade to invite more
+											Remove a member or external, or upgrade to invite more
 											people.
 										</Trans>
 									</Text>
 								</Alert>
 							)}
 
-							{!guestInviteBlocked && externals.length === 0 && (
+							{!externalInviteBlocked && externals.length === 0 && (
 								<Alert color="gray" variant="light">
 									<Trans>
 										No externals yet. Add one if you want someone outside your
@@ -518,7 +518,7 @@ export function WorkspaceInviteWizard({
 								</Alert>
 							)}
 
-							{!guestInviteBlocked && externals.length > 0 && (
+							{!externalInviteBlocked && externals.length > 0 && (
 								<Stack gap={8}>
 									{externals.map((row) => (
 										<Group key={row.id} gap={8} wrap="nowrap">
@@ -544,7 +544,7 @@ export function WorkspaceInviteWizard({
 								</Stack>
 							)}
 
-							{!guestInviteBlocked && (
+							{!externalInviteBlocked && (
 								<Button
 									size="sm"
 									variant="default"
@@ -570,7 +570,7 @@ export function WorkspaceInviteWizard({
 						<Button
 							size="sm"
 							onClick={() => {
-								if (externals.length === 0 && !guestInviteBlocked) {
+								if (externals.length === 0 && !externalInviteBlocked) {
 									addExternalRow();
 								}
 								setStep(1);

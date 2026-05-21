@@ -81,7 +81,7 @@ interface OrgUsageWorkspaceRow {
 	seats_pct: number | null;
 	seat_cap_hit: boolean;
 	approaching_seat_cap: boolean;
-	guest_count: number;
+	external_count: number;
 	downgraded_at: string | null;
 	at_cap: boolean;
 	approaching_cap: boolean;
@@ -94,7 +94,7 @@ interface OrgUsage {
 	workspace_count: number;
 	total_audio_hours: number;
 	total_seat_count: number;
-	total_guest_count: number;
+	total_external_count: number;
 	total_project_count: number;
 	workspaces_at_cap: number;
 	workspaces_approaching_cap: number;

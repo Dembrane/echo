@@ -24,7 +24,6 @@ interface Workspace {
 	org_name: string;
 	role: string;
 	tier: string;
-	is_external: boolean;
 	project_count: number;
 	member_count: number;
 }
@@ -201,15 +200,9 @@ export const MyAccessCard = () => {
 												<Badge
 													size="xs"
 													variant="light"
-													color={
-														ws.is_external
-															? "gray"
-															: roleColor(ws.role)
-													}
+													color={roleColor(ws.role)}
 												>
-													{ws.is_external
-														? t`Guest`
-														: displayRole(ws.role)}
+													{displayRole(ws.role)}
 												</Badge>
 											</Group>
 											<Text size="xs" c="dimmed">

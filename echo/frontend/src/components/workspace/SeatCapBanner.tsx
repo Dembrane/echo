@@ -8,7 +8,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
 /**
- * Level-2 status banner for seat cap reached (unified — guests share
+ * Level-2 status banner for seat cap reached (unified — externals share
  * the same seat pool as members).
  *
  * Mounts in WorkspaceLayout alongside DowngradeBanner. Persistent strip
@@ -21,7 +21,7 @@ interface UsageProbe {
 	tier: string;
 	seat_count: number;
 	seat_count_included: number | null;
-	guest_count: number;
+	external_count: number;
 	seat_invite_blocked?: boolean;
 }
 

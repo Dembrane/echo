@@ -186,13 +186,13 @@ export const ProjectsHomeRoute = () => {
 
 	const canManageWorkspace =
 		workspace?.role === "owner" || workspace?.role === "admin";
-	// Guests (external workspace access) cannot create projects or pin —
-	// their surface is view-only on the workspace level. Gate the CTAs
-	// up front so we don't lure them into a click that 403s.
-	const isExternalGuest = workspace?.is_external === true;
+	// Externals cannot create projects or pin — their surface is
+	// view-only on the workspace level. Gate the CTAs up front so we
+	// don't lure them into a click that 403s.
+	const isExternal = workspace?.role === "external";
 	const canCreateProject =
-		!isExternalGuest && !user.data?.disable_create_project;
-	const canPinOnThisWorkspace = !isExternalGuest;
+		!isExternal && !user.data?.disable_create_project;
+	const canPinOnThisWorkspace = !isExternal;
 	const totallyEmpty =
 		allProjects.length === 0 &&
 		debouncedSearchValue === "" &&
@@ -259,16 +259,16 @@ export const ProjectsHomeRoute = () => {
 				{totallyEmpty ? (
 					<Stack align="center" gap={12} py={48}>
 						<Title order={3} fw={400}>
-							{isExternalGuest ? (
+							{isExternal ? (
 								<Trans>Nothing here for you yet.</Trans>
 							) : (
 								<Trans>Let's hear your first conversation.</Trans>
 							)}
 						</Title>
 						<Text size="sm" c="dimmed" ta="center" maw={440}>
-							{isExternalGuest ? (
+							{isExternal ? (
 								<Trans>
-									You're a guest in this workspace. Projects will show up
+									You're an external in this workspace. Projects will show up
 									here once someone on the organisation shares one with you.
 								</Trans>
 							) : (

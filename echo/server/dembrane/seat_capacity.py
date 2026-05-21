@@ -4,10 +4,10 @@ Single source of truth for "is there room on this workspace for one more
 user?" Builds on inheritance.get_effective_members so the count includes
 derived org admins/owners — they count toward seats just like direct members.
 
-Guests (is_external=true) share the same seat pool as members. There is no
-separate guest cap — only `included_seats` matters. The `is_external` flag
-continues to drive role/permissions (guest = read-mostly), but no longer has
-a parallel capacity limit.
+Externals (role='external') share the same seat pool as members. There is
+no separate external cap — only `included_seats` matters. The `external`
+role drives policy (read-mostly per matrix §4) but no longer has a
+parallel capacity limit. See ADR-0003.
 
 Policy (free-tier unification, 2026-05):
 
@@ -42,7 +42,10 @@ from dembrane.directus_async import async_directus
 Audience = Literal["admin", "invitee"]
 
 
-_SEAT_ROLES = {"owner", "admin", "member", "billing"}
+# Every workspace role consumes a seat. external sits in the same pool as
+# member/admin/billing/owner — the unified-pool decision in ADR-0003.
+_SEAT_ROLES = {"owner", "admin", "member", "billing", "external"}
+_EXTERNAL_ROLE = "external"
 
 # Tiers that hard-block on seat cap (no overage mechanism).
 _HARD_BLOCK_SEAT_TIERS = frozenset({"free", "pilot"})
@@ -55,39 +58,39 @@ def tier_hard_blocks_seats(tier: str) -> bool:
 
 
 async def compute_effective_seat_state(workspace_id: str) -> tuple[int, int, int]:
-    """Return (seats_used, member_count, guest_count) for a workspace.
+    """Return (seats_used, member_count, external_count) for a workspace.
 
-    seats_used: total distinct users (members + guests) — the enforcement value.
-    member_count: distinct users with a seat role (owner/admin/member/billing).
-    guest_count: distinct users with is_external=true.
+    seats_used: total distinct users — the enforcement value.
+    member_count: distinct users with a non-external seat role
+        (owner/admin/member/billing).
+    external_count: distinct users with role='external'.
 
-    Includes derived org admins/owners (via get_effective_members). A user with
-    both a direct row and a derived path counts once.
+    Includes derived org admins/owners (via get_effective_members). A user
+    with both a direct row and a derived path counts once. Derived rows
+    are never external (inheritance.get_effective_members enforces).
     """
     members = await get_effective_members(workspace_id)
 
     member_users: set[str] = set()
-    guest_users: set[str] = set()
+    external_users: set[str] = set()
     for m in members:
         uid = m.get("user_id")
         if not uid:
             continue
-        if m.get("is_external"):
-            guest_users.add(uid)
-            continue
         role = m.get("role") or ""
-        if role in _SEAT_ROLES:
+        if role == _EXTERNAL_ROLE:
+            external_users.add(uid)
+        elif role in _SEAT_ROLES:
             member_users.add(uid)
 
-    seats_used = len(member_users) + len(guest_users)
-    return seats_used, len(member_users), len(guest_users)
+    seats_used = len(member_users) + len(external_users)
+    return seats_used, len(member_users), len(external_users)
 
 
 async def count_pending_invites(workspace_id: str) -> tuple[int, int]:
-    """Return (pending_member_invites, pending_guest_invites) for a
+    """Return (pending_member_invites, pending_external_invites) for a
     workspace. Counts active workspace_invite rows: not yet accepted, not
-    expired. Member invite = include_org_membership=True; guest invite =
-    include_org_membership=False.
+    expired. Buckets by the invite's `role` column.
 
     Used at invite-send time so the cap check accounts for outstanding
     commitments, not just realised memberships. Without this an admin can
@@ -108,7 +111,7 @@ async def count_pending_invites(workspace_id: str) -> tuple[int, int]:
                     "accepted_at": {"_null": True},
                     "expires_at": {"_gt": now_iso},
                 },
-                "fields": ["include_org_membership"],
+                "fields": ["role"],
                 "limit": -1,
             }
         },
@@ -116,13 +119,17 @@ async def count_pending_invites(workspace_id: str) -> tuple[int, int]:
     if not isinstance(rows, list):
         return 0, 0
     member_pending = 0
-    guest_pending = 0
+    external_pending = 0
     for r in rows:
-        if r.get("include_org_membership"):
-            member_pending += 1
+        # NULL-role rows (pre-ADR-0003, before invite.role was populated)
+        # default to member_pending — the safer bucket. The migration backfills
+        # these to 'member', so this branch is only for in-flight rows during
+        # the rollout window.
+        if (r.get("role") or "") == _EXTERNAL_ROLE:
+            external_pending += 1
         else:
-            guest_pending += 1
-    return member_pending, guest_pending
+            member_pending += 1
+    return member_pending, external_pending
 
 
 def _format_message(*, audience: Audience, tier: str, cap: int) -> str:
@@ -137,7 +144,7 @@ async def assert_can_add_seat(
     audience: Audience = "admin",
     include_pending: bool = False,
 ) -> None:
-    """Raise 402 if adding any user (member or guest) would exceed the
+    """Raise 402 if adding any user (member or external) would exceed the
     unified seat cap, but only for tiers that hard-block (free, pilot).
 
     Pioneer+ never blocks — seat overage applies instead. Guardian and
@@ -158,11 +165,11 @@ async def assert_can_add_seat(
     workspace_id = workspace.get("id")
     if not workspace_id:
         return  # defensive — should never happen
-    seats_used, _member_count, _guest_count = await compute_effective_seat_state(workspace_id)
+    seats_used, _member_count, _external_count = await compute_effective_seat_state(workspace_id)
     pending = 0
     if include_pending:
-        member_pending, guest_pending = await count_pending_invites(workspace_id)
-        pending = member_pending + guest_pending
+        member_pending, external_pending = await count_pending_invites(workspace_id)
+        pending = member_pending + external_pending
     if seats_used + pending < cap.included_seats:
         return
 
@@ -175,26 +182,3 @@ async def assert_can_add_seat(
             "X-Cap-Next-Tier": next_tier(tier) or "",
         },
     )
-
-
-# Backwards-compatible aliases — call sites that differentiate between
-# member and guest invites can keep calling these; they both route to the
-# unified seat check.
-async def assert_can_add_member(
-    workspace: dict,
-    *,
-    audience: Audience = "admin",
-    include_pending: bool = False,
-) -> None:
-    """Legacy alias for assert_can_add_seat (member invite path)."""
-    await assert_can_add_seat(workspace, audience=audience, include_pending=include_pending)
-
-
-async def assert_can_add_guest(
-    workspace: dict,
-    *,
-    audience: Audience = "admin",
-    include_pending: bool = False,
-) -> None:
-    """Legacy alias for assert_can_add_seat (guest invite path)."""
-    await assert_can_add_seat(workspace, audience=audience, include_pending=include_pending)

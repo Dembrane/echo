@@ -110,7 +110,7 @@ type BillingRow = {
 	seats_included: number | null;
 	over_seats: number;
 	seat_overage_eur: number;
-	guest_count: number;
+	external_count: number;
 	base_price_eur: number | null;
 	total_forecast_eur: number | null;
 	pilot_hard_block: boolean;
@@ -1161,10 +1161,10 @@ function UsageAndBillingPanel() {
 				meta: { align: "right" },
 			},
 			{
-				accessorKey: "seat_count",
+				accessorFn: (r) => r.seat_count + r.external_count,
 				cell: ({ row }) => (
 					<UsageBar
-						used={row.original.seat_count}
+						used={row.original.seat_count + row.original.external_count}
 						cap={row.original.seats_included}
 					/>
 				),
@@ -1253,7 +1253,10 @@ function UsageAndBillingPanel() {
 				0,
 			),
 			hour_overage_eur: prefiltered.reduce((s, r) => s + r.hour_overage_eur, 0),
-			seat_count: prefiltered.reduce((s, r) => s + r.seat_count, 0),
+			seat_count: prefiltered.reduce(
+				(s, r) => s + r.seat_count + r.external_count,
+				0,
+			),
 			seat_overage_eur: prefiltered.reduce((s, r) => s + r.seat_overage_eur, 0),
 			total_forecast_eur: prefiltered.reduce(
 				(s, r) => s + (r.total_forecast_eur ?? 0),
@@ -1298,7 +1301,7 @@ function UsageAndBillingPanel() {
 			"seat_count",
 			"seats_included",
 			"seat_overage_eur",
-			"guest_count",
+			"external_count",
 			"base_price_eur",
 			"total_forecast_eur",
 			"workspace_admin_email",
@@ -1319,7 +1322,7 @@ function UsageAndBillingPanel() {
 				r.seat_count,
 				r.seats_included ?? "",
 				r.seat_overage_eur.toFixed(2),
-				r.guest_count,
+				r.external_count,
 				r.base_price_eur ?? "",
 				r.total_forecast_eur ?? "",
 				r.workspace_admins[0]?.email ?? "",

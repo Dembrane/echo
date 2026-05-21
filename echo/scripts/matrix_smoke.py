@@ -290,11 +290,11 @@ def check_seats_unified(report: Report) -> None:
     except Exception as e:
         report.add("7. Seats", "read seat_capacity.py", False, str(e))
         return
-    # Unified model: guests counted via is_external into the same pool.
-    ok = ("is_external" in src and "seats_used" in src)
+    # Unified model: externals (role='external') share the seat pool.
+    ok = ("external" in src and "seats_used" in src)
     report.add(
         "7. Seats",
-        "seat_capacity.py unifies guests into seat pool (is_external + seats_used)",
+        "seat_capacity.py unifies externals into seat pool (role='external' + seats_used)",
         ok,
         "no unified seat logic found" if not ok else "",
     )

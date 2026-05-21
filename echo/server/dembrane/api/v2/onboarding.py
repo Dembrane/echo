@@ -6,8 +6,8 @@ creates a personal org + default workspace based on invite context.
 Decision tree:
   1. Create app_user (always)
   2. Auto-accept pending workspace invites (if any)
-     - include_org_membership=true → also add to that org (skip personal org)
-     - include_org_membership=false → external access only
+     - role != 'external' → also add to that org (skip personal org)
+     - role == 'external' → external access only
   3. Has own projects OR no internal invites?
      → Create personal org + default workspace + move projects
   4. Only has internal invites (no projects)?
@@ -23,7 +23,7 @@ from fastapi import APIRouter, HTTPException
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import create_app_user, resolve_app_user, get_directus_user_profile
-from dembrane.seat_capacity import assert_can_add_guest, assert_can_add_member
+from dembrane.seat_capacity import assert_can_add_seat
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.schemas import OnboardingCompleteRequest, OnboardingCompleteResponse
 from dembrane.directus_async import async_directus
@@ -108,7 +108,6 @@ async def complete_onboarding(
                     "id",
                     "workspace_id",
                     "role",
-                    "include_org_membership",
                     "expires_at",
                 ],
                 "limit": -1,
@@ -131,8 +130,9 @@ async def complete_onboarding(
             # so a blocked invite still suppresses the personal-org branch.
             had_pending_invite = True
 
-            is_org_invite = invite.get("include_org_membership", False)
-            is_external = not is_org_invite
+            invite_role = invite.get("role") or "member"
+            is_external = invite_role == "external"
+            is_org_invite = not is_external
 
             # Cap gate. Race-protection on auto-accept: if the workspace
             # filled up between invite-send and signup, don't fail
@@ -140,10 +140,7 @@ async def complete_onboarding(
             # admin can free a seat, and notify the inviter so they know
             # to act. The user finishes onboarding without that workspace.
             try:
-                if is_org_invite:
-                    await assert_can_add_member(ws, audience="invitee")
-                else:
-                    await assert_can_add_guest(ws, audience="invitee")
+                await assert_can_add_seat(ws, audience="invitee")
             except HTTPException as cap_err:
                 if cap_err.status_code != 402:
                     raise
@@ -165,8 +162,7 @@ async def complete_onboarding(
                             title=f"Invite to {ws_name} couldn't be honoured",
                             message=(
                                 f"{app_user_email} signed up but your workspace is at its "
-                                f"{'guest' if is_external else 'seat'} limit. "
-                                "Free a seat or upgrade so they can join."
+                                "seat limit. Free a seat or upgrade so they can join."
                             ),
                             action="NAVIGATE_WORKSPACE_SETTINGS",
                             ref_workspace_id=ws_id,
@@ -188,8 +184,7 @@ async def complete_onboarding(
                         event_code="INVITE_PENDING_AT_CAP",
                         title=f"Your invite to {ws_name} is still pending",
                         message=(
-                            f"The workspace is at its "
-                            f"{'guest' if is_external else 'seat'} limit. "
+                            "The workspace is at its seat limit. "
                             "We've notified the admin. Once they free a seat or "
                             "upgrade, you can join from your invites."
                         ),
@@ -251,9 +246,8 @@ async def complete_onboarding(
                         "id": generate_uuid(),
                         "workspace_id": ws_id,
                         "user_id": app_user_id,
-                        "role": invite.get("role", "member"),
+                        "role": invite_role,
                         "source": "direct",
-                        "is_external": is_external,
                     },
                 )
                 from dembrane.cache_utils import invalidate_workspace_and_org_usage
@@ -262,7 +256,7 @@ async def complete_onboarding(
                 joined_any_workspace = True
                 logger.info(
                     f"Auto-accepted invite: {app_user_email} → workspace {ws_id} "
-                    f"(role: {invite.get('role')}, external: {is_external})"
+                    f"(role: {invite_role})"
                 )
 
             if not first_workspace_id:
@@ -351,20 +345,20 @@ async def complete_onboarding(
 
                 admin_ids = await audience_workspace_admins(ws_id)
                 admin_ids = [a for a in admin_ids if a != app_user_id and a != inviter_id]
-                guest_name = (
+                external_name = (
                     (await get_directus_user_profile(directus_user_id) or {}).get("display_name")
                     or app_user_email
-                    or "A guest"
+                    or "An external"
                 )
                 ws_name = ws.get("name") or "your workspace"
                 await emit_to_audience(
                     admin_ids,
                     actor_user_id=app_user_id,
                     event_code="WORKSPACE_GUEST_ADDED",
-                    title=f"{guest_name} joined {ws_name} as a guest",
+                    title=f"{external_name} joined {ws_name} as an external",
                     message=(
-                        f"{app_user_email} now has guest access. "
-                        "Guests count against your tier's guest cap."
+                        f"{app_user_email} now has external access. "
+                        "Externals count against your tier's seat cap."
                     ),
                     action="NAVIGATE_WORKSPACE_SETTINGS",
                     ref_workspace_id=ws_id,

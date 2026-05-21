@@ -13,7 +13,7 @@ Endpoints here cover organisation-level management:
   GET    /v2/orgs/:id                   — organisation detail (name, counts)
   PATCH  /v2/orgs/:id                   — rename, logo
   GET    /v2/orgs/:id/members           — organisation members (list view of Ask 1)
-  POST   /v2/orgs/:id/members           — invite to organisation (include_org_membership=true)
+  POST   /v2/orgs/:id/members           — invite to organisation (non-external workspace invite)
   PATCH  /v2/orgs/:id/members/:uid      — change organisation role (member/admin/owner)
   DELETE /v2/orgs/:id/members/:uid      — soft-delete organisation membership
 """
@@ -90,13 +90,15 @@ class OrgMemberResponse(BaseModel):
     accessible_workspace_count: int = 0
     is_pending: bool = False  # placeholder — will cover pending org invites later
     # True when the user is only reachable through external workspace
-    # memberships (no org_membership in this organisation). Frontend renders a
-    # "Guest" badge and scopes organisation-level actions accordingly.
+    # memberships (no org_membership in this organisation). Frontend renders
+    # the External badge and scopes organisation-level actions accordingly.
+    # Derived from role='external' on the workspace_membership row (ADR-0003)
+    # for response only — internal lookups key on role directly.
     is_external: bool = False
     # Direct workspace memberships: workspace_id → role. Powers the organisation
     # admin matrix page so non-admin organisation members with a direct invite
-    # on a specific workspace aren't hidden. Includes is_external=true
-    # rows (guests) — frontend decides how to display.
+    # on a specific workspace aren't hidden. Includes role='external'
+    # rows — frontend decides how to display.
     direct_workspace_roles: dict[str, str] = {}
     # Membership id per workspace so the organisation people tab can mutate a
     # row's role directly (PATCH /v2/workspaces/:ws/members/:membership).
@@ -200,8 +202,9 @@ async def _count_organisation_workspaces(org_id: str) -> int:
 async def _count_external_in_organisation(org_id: str) -> int:
     """Count distinct users who are external on any workspace in this organisation.
 
-    External = has workspace_membership with is_external=True and no
-    org_membership in this org. Informational; used by Ask 1 header count.
+    External = has workspace_membership with role='external' and no
+    org_membership in this org (ADR-0003). Informational; used by Ask 1
+    header count.
     """
     workspaces = (
         await async_directus.get_items(
@@ -232,7 +235,7 @@ async def _count_external_in_organisation(org_id: str) -> int:
                 "query": {
                     "filter": {
                         "workspace_id": {"_in": ws_ids},
-                        "is_external": {"_eq": True},
+                        "role": {"_eq": "external"},
                         "deleted_at": {"_null": True},
                     },
                     "fields": ["user_id"],
@@ -567,10 +570,10 @@ async def list_org_members(
     internal_ids = [m["user_id"] for m in memberships if m.get("user_id")]
     internal_set = set(internal_ids)
 
-    # External (guest) users: workspace_membership(is_external=True) on any
+    # External users: workspace_membership(role='external') on any
     # workspace in this organisation, minus anyone already in internal_set. These
     # users have no org_membership but need to appear in the organisation Members
-    # list so admins can see every person reaching their data.
+    # list so admins can see every person reaching their data (ADR-0003).
     ws_rows = (
         await async_directus.get_items(
             "workspace",
@@ -600,7 +603,7 @@ async def list_org_members(
                     "query": {
                         "filter": {
                             "workspace_id": {"_in": organisation_ws_ids},
-                            "is_external": {"_eq": True},
+                            "role": {"_eq": "external"},
                             "deleted_at": {"_null": True},
                         },
                         "fields": ["user_id"],
@@ -694,11 +697,11 @@ async def list_org_members(
             )
         )
 
-    # Externals: no org role to show, so role=="guest" is a sentinel the
-    # frontend recognizes (displayRole falls back to "Guest"). Organisation-level
-    # actions (change organisation role) aren't offered for these rows — only
-    # per-workspace role edits and "Remove from organisation" (cascades all
-    # external rows in this org).
+    # Externals: no org role to show, so role=="external" tells the
+    # frontend to render the External badge. Organisation-level actions
+    # (change organisation role) aren't offered for these rows — only
+    # per-workspace role edits and "Remove from organisation" (cascades
+    # all external rows in this org).
     for uid in external_ids:
         app_row = app_user_map.get(uid) or {}
         du_id = app_row.get("directus_user_id") or ""
@@ -708,13 +711,12 @@ async def list_org_members(
                 user_id=uid,
                 app_user_id=uid,
                 # Externals' emails always show to managers — admins need
-                # to see who a guest actually is (otherwise "External"
-                # rows would be anonymous strings). Non-managers can't
+                # to see who an external actually is. Non-managers can't
                 # reach this endpoint as admin anyway (can_manage gate).
                 email=(app_row.get("email") or "") if can_manage else "",
                 display_name=app_row.get("display_name") or "",
                 avatar=avatar_map.get(du_id) if du_id else None,
-                role="guest",
+                role="external",
                 accessible_workspace_count=ext_workspace_count,
                 is_external=True,
                 direct_workspace_roles=direct_roles.get(uid, {}),
@@ -1082,9 +1084,9 @@ async def list_organisation_workspaces(
         if cap is not None and cap.included_seats is not None and tier_hard_blocks_seats(tier):
             from dembrane.seat_capacity import count_pending_invites
 
-            seats_used, _member_count, _guest_count = await compute_effective_seat_state(ws["id"])
-            member_pending, guest_pending = await count_pending_invites(ws["id"])
-            total_pending = member_pending + guest_pending
+            seats_used, _member_count, _external_count = await compute_effective_seat_state(ws["id"])
+            member_pending, external_pending = await count_pending_invites(ws["id"])
+            total_pending = member_pending + external_pending
             if (seats_used + total_pending) >= cap.included_seats:
                 seat_blocked = True
 
@@ -1182,7 +1184,7 @@ async def change_member_role(
     # organisation members.
     if body.role in ("admin", "owner"):
         # Look across this organisation's workspaces for any active direct row
-        # marked is_external=True for this user.
+        # with role='external' for this user.
         workspaces = (
             await async_directus.get_items(
                 "workspace",
@@ -1209,7 +1211,7 @@ async def change_member_role(
                             "filter": {
                                 "user_id": {"_eq": user_id},
                                 "workspace_id": {"_in": ws_ids},
-                                "is_external": {"_eq": True},
+                                "role": {"_eq": "external"},
                                 "deleted_at": {"_null": True},
                             },
                             "fields": ["id"],
@@ -1221,9 +1223,9 @@ async def change_member_role(
                     raise HTTPException(
                         status_code=400,
                         detail=(
-                            "This person is an external guest on one of the "
+                            "This person is an external on one of the "
                             "organisation's workspaces. Clear that first — they can't "
-                            "hold organisation admin/owner while marked as a guest."
+                            "hold organisation admin/owner while marked as external."
                         ),
                     )
 
@@ -1325,7 +1327,7 @@ async def remove_organisation_member(
                             "filter": {
                                 "workspace_id": {"_in": ext_ws_ids},
                                 "user_id": {"_eq": user_id},
-                                "is_external": {"_eq": True},
+                                "role": {"_eq": "external"},
                                 "deleted_at": {"_null": True},
                             },
                             "fields": ["id", "workspace_id"],
@@ -1446,8 +1448,8 @@ class OrgUsageWorkspaceRow(BaseModel):
     approaching_seat_cap: bool = False  # >=80% on capped seats
     seat_cap_hit: bool = False  # seat_count >= seats_included
     downgraded_at: Optional[str] = None
-    # Guests share the seat pool. Count exposed separately for breakdown.
-    guest_count: int = 0
+    # Externals share the seat pool. Count exposed separately for breakdown.
+    external_count: int = 0
     # Admin / billing only:
     overage_forecast_eur: Optional[float] = None
 
@@ -1457,8 +1459,9 @@ class OrgUsageResponse(BaseModel):
     cycle_end_exclusive: str
     workspace_count: int
     total_audio_hours: float
+    # Unified seat total across all workspaces (members + externals).
     total_seat_count: int
-    total_guest_count: int
+    total_external_count: int
     total_project_count: int
     workspaces_at_cap: int  # Pilot + over cap (hard block active)
     workspaces_approaching_cap: int  # tier with cap, usage >= 80%
@@ -1618,25 +1621,23 @@ async def get_org_usage(
     # implementation walked workspace_membership directly and missed
     # derived rows, producing a stale "seat_count" on the org rollup
     # that didn't match the per-workspace UI.
+    # total_seat_count is the unified pool (members + externals) per
+    # ADR-0003. Per-workspace rows expose member/external split.
     total_seat_count = 0
-    total_guest_count = 0
+    total_external_count = 0
     per_ws_seats: dict[str, int] = {wid: 0 for wid in ws_ids}
-    per_ws_guests: dict[str, int] = {wid: 0 for wid in ws_ids}
+    per_ws_externals: dict[str, int] = {wid: 0 for wid in ws_ids}
     if ws_ids:
-        # Parallel fan-out: one compute_effective_seat_state per workspace.
-        # For an org with a few dozen workspaces this is the same shape as
-        # the existing per-workspace cap-flag computation in
-        # list_organisation_workspaces above — acceptable cost.
         seat_state_results = await asyncio.gather(
             *[compute_effective_seat_state(wid) for wid in ws_ids]
         )
-        for wid, (_seats_used, member_count, guest_count) in zip(
+        for wid, (seats_used, _member_count, external_count) in zip(
             ws_ids, seat_state_results, strict=True
         ):
-            per_ws_seats[wid] = member_count
-            per_ws_guests[wid] = guest_count
-            total_seat_count += member_count
-            total_guest_count += guest_count
+            per_ws_seats[wid] = seats_used
+            per_ws_externals[wid] = external_count
+            total_seat_count += seats_used
+            total_external_count += external_count
 
     # Per-workspace rows + aggregation. We build the rows even when the
     # caller doesn't see financials — the €-field is stripped below.
@@ -1670,7 +1671,7 @@ async def get_org_usage(
         )
         seat_cap_hit = seats_included is not None and seat_count >= seats_included
         approaching_seat_cap = seats_pct is not None and seats_pct >= 0.8 and not seat_cap_hit
-        guest_count = per_ws_guests.get(wid, 0)
+        external_count = per_ws_externals.get(wid, 0)
         ws_at_cap = False
         ws_approaching = False
         ws_forecast_eur = 0.0
@@ -1706,7 +1707,7 @@ async def get_org_usage(
                 "seats_pct": seats_pct,
                 "seat_cap_hit": seat_cap_hit,
                 "approaching_seat_cap": approaching_seat_cap,
-                "guest_count": guest_count,
+                "external_count": external_count,
                 "at_cap": ws_at_cap,
                 "approaching_cap": ws_approaching,
                 "downgraded_at": w.get("downgraded_at"),
@@ -1729,7 +1730,7 @@ async def get_org_usage(
         "workspace_count": len(workspaces),
         "total_audio_hours": round(total_hours, 2),
         "total_seat_count": total_seat_count,
-        "total_guest_count": total_guest_count,
+        "total_external_count": total_external_count,
         "total_project_count": project_count,
         "workspaces_at_cap": at_cap,
         "workspaces_approaching_cap": approaching,

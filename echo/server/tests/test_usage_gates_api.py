@@ -72,7 +72,7 @@ class TestUpgradeCtaTier:
         expected = next_tier(tier)
         from dembrane.api.v2.workspaces import UsageGatesResponse
 
-        gates_raw = compute_usage_gates(tier, hours_lifetime=0.0, hours_this_month=0.0)
+        gates_raw = compute_usage_gates(tier, hours_lifetime=0.0, _hours_this_month=0.0)
         response = UsageGatesResponse(
             over_cap_active=gates_raw.over_cap_active,
             uploads_locked=gates_raw.uploads_locked,
@@ -182,7 +182,9 @@ class TestWorkspaceUsageResponseIncludesGates:
             audio_hours_included=1,
             seat_count=1,
             seat_count_included=1,
-            guest_count=0,
+            member_count=1,
+            external_count=0,
+            pending_count=0,
             project_count=0,
             projects=[],
             pilot_hard_block_active=False,
@@ -208,7 +210,9 @@ class TestWorkspaceUsageResponseIncludesGates:
             audio_hours_included=1,
             seat_count=1,
             seat_count_included=1,
-            guest_count=0,
+            member_count=1,
+            external_count=0,
+            pending_count=0,
             project_count=1,
             projects=[],
             pilot_hard_block_active=False,

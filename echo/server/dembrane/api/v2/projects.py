@@ -233,8 +233,7 @@ async def set_project_visibility(
     Authorization (round-2 audit, R2-H2 follow-up — now uses the
     middleware pattern for consistency):
       - Caller must have workspace access via user_can_access.
-      - Caller must NOT be is_external (guests don't manage).
-      - Caller role must be admin or owner.
+      - Caller role must be admin or owner (externals are below this).
       - Going private additionally requires project:set_private which
         auto-enforces innovator+ via has_policy's tier wiring.
 
@@ -266,32 +265,9 @@ async def set_project_visibility(
     if not workspace or workspace.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Workspace not found")
 
-    # If the caller's access is via a direct row, check is_external. Guests
-    # don't manage visibility on their host's workspace.
-    is_external = False
-    if source == "direct":
-        rows = await async_directus.get_items(
-            "workspace_membership",
-            {
-                "query": {
-                    "filter": {
-                        "workspace_id": {"_eq": workspace_id},
-                        "user_id": {"_eq": app_user["id"]},
-                        "deleted_at": {"_null": True},
-                    },
-                    "fields": ["is_external"],
-                    "limit": 1,
-                }
-            },
-        )
-        if isinstance(rows, list) and rows:
-            is_external = bool(rows[0].get("is_external", False))
-    if is_external:
-        raise HTTPException(
-            status_code=403,
-            detail="Guests can't change project visibility",
-        )
-
+    # Externals are excluded by the admin/owner role check below. No
+    # separate is_external lookup needed (ADR-0003: role is the single
+    # source of truth).
     if role not in ("admin", "owner"):
         raise HTTPException(
             status_code=403,

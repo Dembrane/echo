@@ -79,16 +79,15 @@ ORG_ROLE_PRESETS: dict[str, list[str]] = {
 
 # ── Workspace role presets ──
 #
-# Matrix v1.1 §4 collapses to four roles: Admin / Billing / Member / Guest.
-# - Admin (code: admin + owner) — full workspace control + billing.
+# Matrix v1.1 §4 collapses to five roles: Owner / Admin / Billing / Member /
+# External.
+# - Owner / Admin — full workspace control + billing.
 # - Billing — financial surface only; no project capabilities.
 # - Member — content author.
-# - Guest (code: is_external=true on a direct row, role='member' on disk,
-#   served from the dedicated 'guest' preset below by effective_workspace_role
-#   at the middleware layer). The preset is strictly scoped per matrix §4:
-#   edit projects, capture conversations, run chat, generate reports —
-#   nothing else. No invite, no settings, no usage, no publish, no
-#   org-level visibility.
+# - External — outside collaborator (no org_membership in this org).
+#   Strictly scoped per matrix §4: edit projects, capture conversations,
+#   run chat, generate reports — nothing else. No invite, no settings,
+#   no usage, no publish, no org-level visibility. See ADR-0003.
 #
 # Retired: 'viewer' (matrix has no viewer role; D11). If any stray rows
 # surface with role='viewer', _normalize_legacy_role treats them as 'member'.
@@ -106,10 +105,10 @@ WORKSPACE_ROLE_PRESETS: dict[str, list[str]] = {
         "report:publish",
         "workspace:view_usage",  # matrix §4: members see usage (raw, no €).
     ],
-    # Matrix §4 guest scope — explicit allowlist. Anything not here is
+    # Matrix §4 external scope — explicit allowlist. Anything not here is
     # implicitly denied (workspace:view_usage, member:invite, settings:manage,
     # report:publish, project:create, conversation:delete, etc.).
-    "guest": [
+    "external": [
         "project:read",
         "project:update",
         "conversation:read",
@@ -215,23 +214,22 @@ def get_effective_policies(
     return base + extras
 
 
-def effective_workspace_role(role: str | None, is_external: bool) -> str:
-    """Resolve the role used for policy lookups on workspace-scope checks.
+# ── Role hierarchy (workspace) ──
+#
+# Used by the invite endpoint (and any future role-change endpoints) to
+# block role escalation: a caller can only grant a role at or below their
+# own level. External sits at the bottom because outside collaborators
+# cannot invite anyone (no member:invite policy). Owner is highest and
+# can only be granted by another owner — currently not exposed in any
+# invite UI, but the ordering is here for completeness. See ADR-0003.
 
-    Guests have role='member' on disk (the storage convention from before
-    the dedicated 'guest' preset existed). Treating them as 'member' for
-    policy purposes leaks settings, invite, usage, and publish capabilities
-    they shouldn't have per matrix §4. This helper swaps role='member' +
-    is_external=True to 'guest' so every downstream has_policy / preset
-    lookup pulls from the strictly scoped guest preset.
-
-    Direct callers (UI display, role hierarchy compares) keep using the
-    raw `role` field — only policy enforcement runs through this helper.
-    """
-    role = _normalize_legacy_role(role) or role or ""
-    if is_external:
-        return "guest"
-    return role
+ROLE_HIERARCHY: dict[str, int] = {
+    "external": 0,
+    "member": 1,
+    "billing": 2,
+    "admin": 3,
+    "owner": 4,
+}
 
 
 def has_policy(

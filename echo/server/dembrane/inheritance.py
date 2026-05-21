@@ -199,13 +199,13 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
             "user_id": str,
             "role": str,
             "source": "direct" | "inherited",
-            "is_external": bool,     # only meaningful for direct rows
             "custom_policies": list, # only stored for direct rows
             "created_at": str | None,
         }
 
     Direct rows take precedence; a user with both a direct row and a derived
-    path appears once with their direct role.
+    path appears once with their direct role. External collaborators
+    surface as role='external' (see ADR-0003) — no separate flag.
     """
     workspace = await async_directus.get_item("workspace", workspace_id)
     if not workspace or workspace.get("deleted_at"):
@@ -223,7 +223,6 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
                     "fields": [
                         "user_id",
                         "role",
-                        "is_external",
                         "custom_policies",
                         "created_at",
                     ],
@@ -248,7 +247,6 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
                 "user_id": uid,
                 "role": row.get("role", ""),
                 "source": "direct",
-                "is_external": bool(row.get("is_external", False)),
                 "custom_policies": row.get("custom_policies") or [],
                 "created_at": row.get("created_at"),
             }
@@ -300,7 +298,6 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
                 "user_id": uid,
                 "role": derived_role,
                 "source": "inherited",
-                "is_external": False,  # derived cannot be external
                 "custom_policies": [],  # no custom policies on derived slots
                 "created_at": None,
             }
@@ -331,7 +328,6 @@ async def on_workspace_created(
             "user_id": creator_app_user_id,
             "role": "owner",
             "source": "direct",
-            "is_external": False,
         },
     )
 

@@ -85,22 +85,14 @@ async def test_direct_signup_seeds_free_workspace():
             return_value=_DIRECTUS_PROFILE,
         ),
         patch(
-            "dembrane.api.v2.onboarding.assert_can_add_member",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "dembrane.api.v2.onboarding.assert_can_add_guest",
+            "dembrane.api.v2.onboarding.assert_can_add_seat",
             new_callable=AsyncMock,
         ),
         patch("dembrane.inheritance.on_workspace_created", new_callable=AsyncMock),
     ):
         app = _build_app()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
-            resp = await client.post(
-                "/v2/onboarding/complete", json={"org_name": "Alice Corp"}
-            )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.post("/v2/onboarding/complete", json={"org_name": "Alice Corp"})
 
     assert resp.status_code == 200
     body = resp.json()
@@ -132,7 +124,6 @@ async def test_invite_user_gets_no_personal_workspace():
         "id": "inv-1",
         "workspace_id": "ws-invite-target",
         "role": "member",
-        "include_org_membership": True,
         "expires_at": "2099-01-01T00:00:00Z",
     }
 
@@ -163,11 +154,7 @@ async def test_invite_user_gets_no_personal_workspace():
             return_value=_DIRECTUS_PROFILE,
         ),
         patch(
-            "dembrane.api.v2.onboarding.assert_can_add_member",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "dembrane.api.v2.onboarding.assert_can_add_guest",
+            "dembrane.api.v2.onboarding.assert_can_add_seat",
             new_callable=AsyncMock,
         ),
         patch("dembrane.inheritance.on_workspace_created", new_callable=AsyncMock),
@@ -186,12 +173,8 @@ async def test_invite_user_gets_no_personal_workspace():
         patch("dembrane.cache_utils.invalidate_workspace_and_org_usage", new_callable=AsyncMock),
     ):
         app = _build_app()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
-            resp = await client.post(
-                "/v2/onboarding/complete", json={"org_name": "Ignored Corp"}
-            )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.post("/v2/onboarding/complete", json={"org_name": "Ignored Corp"})
 
     assert resp.status_code == 200
     body = resp.json()
@@ -249,22 +232,14 @@ async def test_existing_owner_does_not_get_duplicate_workspace():
             return_value=_DIRECTUS_PROFILE,
         ),
         patch(
-            "dembrane.api.v2.onboarding.assert_can_add_member",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "dembrane.api.v2.onboarding.assert_can_add_guest",
+            "dembrane.api.v2.onboarding.assert_can_add_seat",
             new_callable=AsyncMock,
         ),
         patch("dembrane.inheritance.on_workspace_created", new_callable=AsyncMock),
     ):
         app = _build_app()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
-            resp = await client.post(
-                "/v2/onboarding/complete", json={"org_name": "Alice Corp"}
-            )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.post("/v2/onboarding/complete", json={"org_name": "Alice Corp"})
 
     assert resp.status_code == 200
     body = resp.json()

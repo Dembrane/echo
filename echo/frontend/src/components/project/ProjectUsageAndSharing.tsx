@@ -47,7 +47,6 @@ interface WorkspaceSettingsMember {
 	avatar: string | null;
 	role: string;
 	source: string;
-	is_external: boolean;
 }
 
 interface WorkspaceSettingsResponse {
@@ -127,7 +126,7 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 	const { data: shares, isLoading: sharesLoading } = useProjectShares(projectId);
 	const [memberSearch, setMemberSearch] = useState("");
 	const [memberFilter, setMemberFilter] = useState<
-		"all" | "admins" | "members" | "guests"
+		"all" | "admins" | "members" | "externals"
 	>("all");
 	const [inviteOpen, setInviteOpen] = useState(false);
 
@@ -207,7 +206,7 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 					email: m.email,
 					avatar: m.avatar,
 					role: m.role,
-					is_external: m.is_external,
+					is_external: m.role === "external",
 				})),
 			)
 		: (shares ?? []).map((s) => ({
@@ -236,7 +235,7 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 				if (r.is_external) return false;
 				if (r.role === "owner" || r.role === "admin") return false;
 			}
-			if (memberFilter === "guests" && !r.is_external) return false;
+			if (memberFilter === "externals" && !r.is_external) return false;
 			if (!q) return true;
 			return (
 				(r.display_name || "").toLowerCase().includes(q) ||
@@ -494,7 +493,7 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 							{ value: "admins", label: t`Admins` },
 							{ value: "members", label: t`Members` },
 							...(hasGuestRows
-								? [{ value: "guests", label: t`Guests` }]
+								? [{ value: "externals", label: t`Externals` }]
 								: []),
 						],
 					}}
@@ -580,7 +579,7 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 														variant="light"
 														color="gray"
 													>
-														<Trans>Guest</Trans>
+														<Trans>External</Trans>
 													</Badge>
 												)}
 											</Group>

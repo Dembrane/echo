@@ -66,8 +66,12 @@ interface WorkspaceMember {
 	avatar: string | null;
 	role: string;
 	source: string;
-	is_external: boolean;
 }
+
+// Helper: external collaborators are identified by role==='external'
+// (ADR-0003). Drives badge + filter logic across this route.
+const isExternalMember = (m: { role: string }): boolean =>
+	m.role === "external";
 
 interface WorkspaceDetail {
 	id: string;
@@ -262,19 +266,18 @@ export const WorkspaceSettingsRoute = () => {
 	const queryClient = useQueryClient();
 	const { data: meV2 } = useV2Me();
 	const { workspace: myWorkspaceSummary } = useWorkspace();
-	// Guest = is_external on my direct row. Matrix §4: guest permissions
-	// mirror member inside their assigned workspace, but they don't see
-	// usage / privacy / pending invites (matrix §4 "View usage & overage"
-	// row is ✗ for Guest).
-	const iAmGuest = myWorkspaceSummary?.is_external === true;
+	// External = role==='external' on my direct row (ADR-0003).
+	// Matrix §4: external permissions are strictly scoped — no settings,
+	// usage, privacy, or pending invites surfaces.
+	const iAmExternal = myWorkspaceSummary?.role === "external";
 	// Externals don't have a manage surface at all (2026-04-24). Bounce
 	// them back to the project list of the workspace they came in on.
 	// Keep the effect above the loading gate so hook order is stable.
 	useEffect(() => {
-		if (iAmGuest && workspaceId) {
+		if (iAmExternal && workspaceId) {
 			navigate(`/w/${workspaceId}/projects`, { replace: true });
 		}
-	}, [iAmGuest, workspaceId, navigate]);
+	}, [iAmExternal, workspaceId, navigate]);
 	const [deleteConfirm, setDeleteConfirm] = useState("");
 	const [
 		inviteModalOpened,
@@ -282,7 +285,7 @@ export const WorkspaceSettingsRoute = () => {
 	] = useDisclosure(false);
 	const [memberSearch, setMemberSearch] = useUrlSearch();
 
-	type WsRoleFilter = "all" | "admins" | "billing" | "members" | "guests";
+	type WsRoleFilter = "all" | "admins" | "billing" | "members" | "externals";
 	const [memberRoleFilter, setMemberRoleFilter] = useState<WsRoleFilter>("all");
 	// User override for the matrix toggle. `null` means "follow whatever the
 	// workspace is currently on" (seeded from settings.billing_period when it
@@ -335,7 +338,9 @@ export const WorkspaceSettingsRoute = () => {
 				seat_invite_blocked?: boolean;
 				seat_count: number;
 				seat_count_included: number | null;
-				guest_count: number;
+				member_count: number;
+				external_count: number;
+				pending_count: number;
 			}>;
 		},
 		queryKey: ["v2", "workspace-usage", workspaceId, 0],
@@ -416,7 +421,7 @@ export const WorkspaceSettingsRoute = () => {
 		onError: (err: Error) => toast.error(err.message),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
-			// Frees a seat / guest slot — re-enable invite button.
+			// Frees a seat — re-enable invite button.
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 			toast.success(t`Member removed`);
 		},
@@ -478,7 +483,7 @@ export const WorkspaceSettingsRoute = () => {
 
 	// Members list order (2026-04-24): internals first — sorted by role
 	// (owner → admin → billing → member) — then externals at the bottom.
-	// Matches the mental model "who's in your organisation, then your guests."
+	// Matches the mental model "who's in your organisation, then your externals."
 	// Stable within each tier by display_name so the list doesn't shuffle
 	// when roles change.
 	const MEMBERS_ROLE_WEIGHT: Record<string, number> = {
@@ -490,7 +495,7 @@ export const WorkspaceSettingsRoute = () => {
 	const sortedMembers = useMemo(() => {
 		if (!settings) return [];
 		return [...settings.members].sort((a, b) => {
-			if (a.is_external !== b.is_external) return a.is_external ? 1 : -1;
+			if (isExternalMember(a) !== isExternalMember(b)) return isExternalMember(a) ? 1 : -1;
 			const ar = MEMBERS_ROLE_WEIGHT[a.role] ?? 99;
 			const br = MEMBERS_ROLE_WEIGHT[b.role] ?? 99;
 			if (ar !== br) return ar - br;
@@ -504,18 +509,18 @@ export const WorkspaceSettingsRoute = () => {
 		const q = memberSearch.trim().toLowerCase();
 		return sortedMembers.filter((m) => {
 			if (memberRoleFilter === "admins") {
-				if (m.is_external) return false;
+				if (isExternalMember(m)) return false;
 				if (!(m.role === "owner" || m.role === "admin")) return false;
 			}
 			if (memberRoleFilter === "members") {
-				if (m.is_external) return false;
+				if (isExternalMember(m)) return false;
 				if (m.role !== "member") return false;
 			}
 			if (memberRoleFilter === "billing") {
-				if (m.is_external) return false;
+				if (isExternalMember(m)) return false;
 				if (m.role !== "billing") return false;
 			}
-			if (memberRoleFilter === "guests" && !m.is_external) return false;
+			if (memberRoleFilter === "externals" && !isExternalMember(m)) return false;
 			if (!q) return true;
 			return (
 				(m.display_name || "").toLowerCase().includes(q) ||
@@ -524,14 +529,14 @@ export const WorkspaceSettingsRoute = () => {
 		});
 	}, [sortedMembers, memberSearch, memberRoleFilter]);
 
-	const hasGuestMembers = useMemo(
-		() => sortedMembers.some((m) => m.is_external),
+	const hasExternalMembers = useMemo(
+		() => sortedMembers.some((m) => isExternalMember(m)),
 		[sortedMembers],
 	);
 
-	// Show Billing chip only when ≥1 billing-role member exists (mirrors hasGuestMembers).
+	// Show Billing chip only when ≥1 billing-role member exists (mirrors hasExternalMembers).
 	const hasBillingMembers = useMemo(
-		() => sortedMembers.some((m) => !m.is_external && m.role === "billing"),
+		() => sortedMembers.some((m) => !isExternalMember(m) && m.role === "billing"),
 		[sortedMembers],
 	);
 
@@ -539,7 +544,7 @@ export const WorkspaceSettingsRoute = () => {
 	const adminLikeCount = useMemo(
 		() =>
 			sortedMembers.filter(
-				(m) => !m.is_external && (m.role === "admin" || m.role === "owner"),
+				(m) => !isExternalMember(m) && (m.role === "admin" || m.role === "owner"),
 			).length,
 		[sortedMembers],
 	);
@@ -576,11 +581,11 @@ export const WorkspaceSettingsRoute = () => {
 		);
 	}
 
-	// Guests don't have a settings surface (matrix §4). The useEffect above
+	// Externals don't have a settings surface (matrix §4). The useEffect above
 	// kicks them to /projects, but that fires on the next tick — without
 	// this early return the settings tabs flash briefly. Render nothing
 	// while the redirect resolves.
-	if (iAmGuest) {
+	if (iAmExternal) {
 		return null;
 	}
 
@@ -615,19 +620,19 @@ export const WorkspaceSettingsRoute = () => {
 						    is already in the nav breadcrumb; duplicating it here
 						    was audit noise (2026-04-23). */}
 							<Group gap={8} wrap="wrap">
-								{iAmGuest ? (
+								{iAmExternal ? (
 									<Badge size="xs" variant="light" color="yellow">
-										<Trans>Guest of {settings.org_name}</Trans>
+										<Trans>External of {settings.org_name}</Trans>
 									</Badge>
 								) : (
 									<TierBadge tier={settings.tier} size="xs" />
 								)}
-								{!iAmGuest && settings.type_discount && (
+								{!iAmExternal && settings.type_discount && (
 									<Badge size="xs" variant="light" color="teal" tt="capitalize">
 										{settings.type_discount.replace(/_/g, " ")}
 									</Badge>
 								)}
-								{!iAmGuest &&
+								{!iAmExternal &&
 									settings.percent_discount != null &&
 									settings.percent_discount > 0 && (
 										<Badge size="xs" variant="light" color="teal">
@@ -648,9 +653,9 @@ export const WorkspaceSettingsRoute = () => {
 
 					<Divider />
 
-					{/* Guests bypass the tab structure — they have one workspace
+					{/* Externals bypass the tab structure — they have one workspace
 				    and nothing to navigate. Tabs come next for everyone else. */}
-					{!iAmGuest && (
+					{!iAmExternal && (
 						<Tabs value={activeTab} onChange={setActiveTab} keepMounted={false}>
 							<Tabs.List>
 								<Tabs.Tab value="general">
@@ -688,9 +693,9 @@ export const WorkspaceSettingsRoute = () => {
 											</Text>
 											<Text size="xs" c="dimmed">
 												<Trans>
-													Every workspace member, including guests, counts as
-													one seat. One person never takes more than one seat
-													per workspace, even if they're on multiple
+													Every workspace member, including externals, counts
+													as one seat. One person never takes more than one
+													seat per workspace, even if they're on multiple
 													organisations.
 												</Trans>
 											</Text>
@@ -706,7 +711,7 @@ export const WorkspaceSettingsRoute = () => {
 
 									{/* Matrix §1 full capacity matrix on the billing tab.
 								    Non-compact: price / duration / seats / overage /
-								    hours / guests / training. Highlights the current
+								    hours / externals / training. Highlights the current
 								    tier so admins can see what they have vs what's
 								    next. */}
 									<Group justify="center" mb="xs">
@@ -801,8 +806,8 @@ export const WorkspaceSettingsRoute = () => {
 													? [{ label: t`Billing`, value: "billing" }]
 													: []),
 												{ label: t`Members`, value: "members" },
-												...(hasGuestMembers
-													? [{ label: t`Guests`, value: "guests" }]
+												...(hasExternalMembers
+													? [{ label: t`Externals`, value: "externals" }]
 													: []),
 											],
 											value: memberRoleFilter,
@@ -841,7 +846,7 @@ export const WorkspaceSettingsRoute = () => {
 														</Trans>
 													) : (
 														<Trans>
-															Add members or a guest to this workspace.
+															Add members or an external to this workspace.
 														</Trans>
 													)
 												}
@@ -849,7 +854,7 @@ export const WorkspaceSettingsRoute = () => {
 													seatInviteBlocked ? (
 														<Trans>
 															All seats are taken on this tier. Remove a member
-															or guest, or upgrade the workspace tier to invite
+															or external, or upgrade the workspace tier to invite
 															more people.
 														</Trans>
 													) : undefined
@@ -903,9 +908,9 @@ export const WorkspaceSettingsRoute = () => {
 																		</Text>
 																	)}
 																</Text>
-																{member.is_external && (
+																{isExternalMember(member) && (
 																	<Badge size="xs" variant="light" color="gray">
-																		<Trans>Guest</Trans>
+																		<Trans>External</Trans>
 																	</Badge>
 																)}
 															</Group>
@@ -967,23 +972,32 @@ export const WorkspaceSettingsRoute = () => {
 																	<Trans>Admin</Trans>
 																</Badge>
 															</Tooltip>
+														) : canManage && isExternalMember(member) ? (
+															// External row: dropdown locked to "External".
+															// Promotion to a member role goes through the
+															// org settings page → remove → re-invite flow
+															// (ADR-0003). The workspace UI never has a
+															// single button that mutates org_membership.
+															<Tooltip
+																label={t`To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace.`}
+																multiline
+																w={280}
+															>
+																<Badge size="sm" variant="light" color="gray">
+																	<Trans>External</Trans>
+																</Badge>
+															</Tooltip>
 														) : canManage ? (
 															<Select
 																// Matrix §5 retires "Owner" as a user-facing role
-																// — only Admin + Member (+ Billing on non-guest
-																// seats). A workspace with a DB-level "owner"
-																// row still renders as Admin via displayRole();
-																// ownership transfer is a separate support flow
-																// and is not exposed in this picker. Guests
-																// (is_external=true) can't hold Billing/Admin.
+																// — only Admin / Billing / Member exposed here.
+																// "External" is never an option for a non-external
+																// row (ADR-0003): the dropdown is not a
+																// cross-boundary lever.
 																data={[
 																	{ label: t`Member`, value: "member" },
-																	...(!member.is_external
-																		? [
-																				{ label: t`Billing`, value: "billing" },
-																				{ label: t`Admin`, value: "admin" },
-																			]
-																		: []),
+																	{ label: t`Billing`, value: "billing" },
+																	{ label: t`Admin`, value: "admin" },
 																]}
 																size="xs"
 																value={member.role}
@@ -1320,16 +1334,16 @@ export const WorkspaceSettingsRoute = () => {
 						</Tabs>
 					)}
 
-					{/* Guest view — minimal, no tabs. They can see their own
+					{/* External view — minimal, no tabs. They can see their own
 				    access block + leave affordance, nothing else. */}
-					{iAmGuest && (
+					{iAmExternal && (
 						<Stack gap={12}>
 							<Title order={5} fw={400}>
 								<Trans>Your access</Trans>
 							</Title>
 							<Group justify="space-between" align="center">
 								<Badge size="sm" variant="light" color="yellow">
-									<Trans>Guest</Trans>
+									<Trans>External</Trans>
 								</Badge>
 								{(() => {
 									const myMembership = settings.members.find(
@@ -1381,7 +1395,7 @@ export const WorkspaceSettingsRoute = () => {
 						new Set(settings.members.map((m) => m.user_id))
 					}
 					memberInviteBlocked={seatInviteBlocked}
-					guestInviteBlocked={seatInviteBlocked}
+					externalInviteBlocked={seatInviteBlocked}
 					memberOverageActive={seatOverageActive}
 					seatOverageRate={seatOverageRate}
 				/>
