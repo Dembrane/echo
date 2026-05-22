@@ -31,7 +31,7 @@ import {
 } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
 import { InviteMemberCard, MembersToolbar } from "@/components/members";
@@ -288,6 +288,7 @@ export const OrganisationRoute = () => {
 		"*": string;
 	}>();
 	const navigate = useI18nNavigate();
+	const { search: urlSearch } = useLocation();
 	const [search, setSearch] = useUrlSearch();
 	const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
 	const [inviteOpen, setInviteOpen] = useState(false);
@@ -329,13 +330,13 @@ export const OrganisationRoute = () => {
 		if (!organisationId) return;
 		if (isSettingsPath || isRequestsPath) return;
 		if (segment !== viewRaw) {
-			navigate(`/o/${organisationId}/${viewRaw}`, { replace: true });
+			navigate(`/o/${organisationId}/${viewRaw}${urlSearch}`, { replace: true });
 		}
-	}, [organisationId, viewRaw, segment, isSettingsPath, isRequestsPath, navigate]);
+	}, [organisationId, viewRaw, segment, isSettingsPath, isRequestsPath, navigate, urlSearch]);
 
 	const setView = (value: string | null) => {
 		if (!value || !organisationId) return;
-		navigate(`/o/${organisationId}/${value}`, { replace: true });
+		navigate(`/o/${organisationId}/${value}${urlSearch}`, { replace: true });
 	};
 
 	useDocumentTitle(t`Organisation | dembrane`);

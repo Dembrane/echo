@@ -34,7 +34,7 @@ import {
 } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
@@ -263,6 +263,7 @@ export const WorkspaceSettingsRoute = () => {
 		"*": string;
 	}>();
 	const navigate = useI18nNavigate();
+	const { search: urlSearch } = useLocation();
 	const queryClient = useQueryClient();
 	const { data: meV2 } = useV2Me();
 	const { workspace: myWorkspaceSummary } = useWorkspace();
@@ -470,16 +471,18 @@ export const WorkspaceSettingsRoute = () => {
 		: defaultTab;
 	const setActiveTab = (value: string | null) => {
 		if (!value || !workspaceId) return;
-		navigate(`/w/${workspaceId}/settings/${value}`, { replace: true });
+		navigate(`/w/${workspaceId}/settings/${value}${urlSearch}`, {
+			replace: true,
+		});
 	};
 	useEffect(() => {
 		if (!workspaceId) return;
 		if (segment !== activeTab) {
-			navigate(`/w/${workspaceId}/settings/${activeTab}`, {
+			navigate(`/w/${workspaceId}/settings/${activeTab}${urlSearch}`, {
 				replace: true,
 			});
 		}
-	}, [workspaceId, segment, activeTab, navigate]);
+	}, [workspaceId, segment, activeTab, navigate, urlSearch]);
 
 	// Members list order (2026-04-24): internals first — sorted by role
 	// (owner → admin → billing → member) — then externals at the bottom.

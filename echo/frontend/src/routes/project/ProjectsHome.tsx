@@ -103,11 +103,18 @@ export const ProjectsHomeRoute = () => {
 	const togglePinMutation = useTogglePinMutation();
 
 	useEffect(() => {
-		if (search) {
-			setSearchParams({ search });
-		} else {
-			setSearchParams({});
-		}
+		setSearchParams(
+			(prev) => {
+				const next = new URLSearchParams(prev);
+				if (search) {
+					next.set("search", search);
+				} else {
+					next.delete("search");
+				}
+				return next;
+			},
+			{ replace: true },
+		);
 	}, [search, setSearchParams]);
 
 	useEffect(() => {
