@@ -884,13 +884,21 @@ async def get_latest_report(
                     "show_portal_link",
                     "date_created",
                     "error_message",
+                    "content",
                 ],
                 "sort": ["-date_created"],
                 "limit": 1,
             }
         },
     )
-    return reports[0] if reports else None
+    if not reports:
+        return None
+    report = reports[0]
+    return {
+        **report,
+        "content": None,
+        "title": _extract_report_title(report.get("content")),
+    }
 
 
 class UpdateReportRequestBodySchema(BaseModel):

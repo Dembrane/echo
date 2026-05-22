@@ -24,7 +24,6 @@ export function displayRole(role: string | null | undefined): string {
 			return t`Member`;
 		case "billing":
 			return t`Billing`;
-		case "guest":
 		case "external":
 			return t`External`;
 		default:

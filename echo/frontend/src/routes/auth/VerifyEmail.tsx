@@ -112,7 +112,7 @@ export const VerifyEmailRoute = () => {
 									</Text>
 								</Stack>
 							</Alert>
-							<Button size="md" onClick={() => navigate("/projects")}>
+							<Button size="md" onClick={() => navigate("/w")}>
 								<Trans>Go to dashboard</Trans>
 							</Button>
 						</Stack>

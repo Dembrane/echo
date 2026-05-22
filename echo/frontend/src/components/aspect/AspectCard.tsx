@@ -13,7 +13,7 @@ export const AspectCard = ({
 	data: Aspect;
 	className?: string;
 }) => {
-	const { projectId } = useParams();
+	const { projectId, workspaceId } = useParams();
 
 	const project = useProjectById({
 		projectId: projectId ?? "",
@@ -26,7 +26,7 @@ export const AspectCard = ({
 		<Box className="relative mb-2 place-self-stretch">
 			<LoadingOverlay visible={project.isLoading} />
 			<I18nLink
-				to={`/projects/${projectId}/library/views/${data.view_id}/aspects/${data.id}`}
+				to={`/w/${workspaceId}/projects/${projectId}/library/views/${data.view_id}/aspects/${data.id}`}
 			>
 				<Paper
 					bg="var(--app-background)"

@@ -4,6 +4,7 @@ import { ActionIcon, Avatar, Badge, Box, Group, Paper, Stack, Text, Tooltip } fr
 import { IconLock, IconPin, IconPinFilled } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import type { PropsWithChildren } from "react";
+import { useParams } from "react-router";
 import { Icons } from "@/icons";
 import { avatarUrl } from "@/lib/avatar";
 import { testId } from "@/lib/testUtils";
@@ -110,7 +111,8 @@ export const ProjectListItem = ({
 	canPin?: boolean;
 	onSearchOwner?: (term: string) => void;
 }>) => {
-	const link = `/projects/${project.id}/overview`;
+	const { workspaceId } = useParams();
+	const link = `/w/${workspaceId}/projects/${project.id}/home`;
 	const languageLabel = project.language
 		? LANGUAGE_LABELS[project.language] ?? project.language.toUpperCase()
 		: null;

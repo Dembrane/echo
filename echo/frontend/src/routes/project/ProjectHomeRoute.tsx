@@ -1,0 +1,270 @@
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
+import {
+	Badge,
+	Button,
+	Card,
+	Group,
+	SimpleGrid,
+	Skeleton,
+	Stack,
+	Text,
+	Title,
+} from "@mantine/core";
+import {
+	ChatCircleDots,
+	ClockClockwise,
+	FileText,
+	PaintBrush,
+	UploadSimple,
+} from "@phosphor-icons/react";
+import { useParams } from "react-router";
+import { useInfiniteConversationsByProjectId } from "@/components/conversation/hooks";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { useProjectById } from "@/components/project/hooks";
+import { ProjectQRCode } from "@/components/project/ProjectQRCode";
+import { useLatestProjectReport } from "@/components/report/hooks";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+
+const lineClampStyle = {
+	display: "-webkit-box",
+	overflow: "hidden",
+	WebkitBoxOrient: "vertical",
+	WebkitLineClamp: 2,
+} as const;
+
+const tagText = (tag: ConversationProjectTag) => {
+	const projectTag = tag.project_tag_id as ProjectTag | string | null;
+	return typeof projectTag === "object" && projectTag ? projectTag.text : null;
+};
+
+const conversationTitle = (conversation: Conversation) =>
+	conversation.title?.trim() ||
+	conversation.participant_name?.trim() ||
+	t`Untitled conversation`;
+
+export const ProjectHomeRoute = () => {
+	const { workspaceId, projectId } = useParams<{
+		workspaceId: string;
+		projectId: string;
+	}>();
+	const navigate = useI18nNavigate();
+
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		query: {
+			fields: [
+				"id",
+				"name",
+				"language",
+				"visibility",
+				"is_conversation_allowed",
+				"default_conversation_title",
+			],
+		},
+	});
+	const reportQuery = useLatestProjectReport(projectId ?? "");
+	const recentConversationsQuery = useInfiniteConversationsByProjectId(
+		projectId ?? "",
+		false,
+		false,
+		{ sort: "-created_at" },
+		undefined,
+		{ initialLimit: 2 },
+	);
+
+	const project = projectQuery.data;
+	const report = reportQuery.data;
+	const reportTitle = report?.title?.trim();
+	const recentConversations =
+		recentConversationsQuery.data?.pages.flatMap(
+			(page) => page.conversations,
+		) ?? [];
+
+	const base = `/w/${workspaceId}/projects/${projectId}`;
+
+	return (
+		<PageContainer>
+			<Stack gap="xl">
+				<Stack gap={4}>
+					{project?.name ? (
+						<Title order={2} fw={500} style={{ color: "#2d2d2c" }}>
+							{project.name}
+						</Title>
+					) : (
+						<Skeleton height={32} width={240} />
+					)}
+					<Text size="sm" c="dimmed" maw={560}>
+						<Trans>
+							Share the project, watch live activity, and jump into the main
+							tools from one place.
+						</Trans>
+					</Text>
+				</Stack>
+
+				<ProjectQRCode project={projectQuery.data} />
+
+				<Stack gap="sm">
+					<Text size="xs" c="dimmed" tt="uppercase">
+						<Trans>Jump to</Trans>
+					</Text>
+					<Group gap="sm" wrap="wrap">
+						<Button
+							leftSection={<ChatCircleDots size={16} />}
+							variant="filled"
+							color="blue"
+							onClick={() => navigate(`${base}/chats/new`)}
+						>
+							<Trans>Start a chat</Trans>
+						</Button>
+						<Button
+							leftSection={<UploadSimple size={16} />}
+							variant="default"
+							onClick={() => navigate(`${base}/upload`)}
+						>
+							<Trans>Upload</Trans>
+						</Button>
+						<Button
+							leftSection={<PaintBrush size={16} />}
+							variant="default"
+							onClick={() => navigate(`${base}/portal-editor`)}
+						>
+							<Trans>Portal editor</Trans>
+						</Button>
+						<Button
+							leftSection={<FileText size={16} />}
+							variant="default"
+							onClick={() => navigate(`${base}/report`)}
+						>
+							<Trans>Report</Trans>
+						</Button>
+					</Group>
+				</Stack>
+
+				<Stack gap="sm">
+					<Group justify="space-between" align="center">
+						<Text size="xs" c="dimmed" tt="uppercase">
+							<Trans>Latest conversations</Trans>
+						</Text>
+						<Button
+							variant="subtle"
+							size="xs"
+							onClick={() => navigate(`${base}/conversations`)}
+						>
+							<Trans>Open all</Trans>
+						</Button>
+					</Group>
+
+					{recentConversationsQuery.isLoading ? (
+						<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+							<Skeleton height={128} radius="sm" />
+							<Skeleton height={128} radius="sm" />
+						</SimpleGrid>
+					) : recentConversations.length > 0 ? (
+						<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+							{recentConversations.slice(0, 2).map((conversation) => {
+								const tags =
+									(conversation.tags as ConversationProjectTag[] | undefined) ??
+									[];
+								return (
+									<Card key={conversation.id} withBorder p="md" radius="sm">
+										<Stack gap="xs">
+											<Group
+												justify="space-between"
+												align="flex-start"
+												wrap="nowrap"
+											>
+												<Stack gap={2} style={{ minWidth: 0 }}>
+													<Text size="sm" fw={500} truncate>
+														{conversationTitle(conversation)}
+													</Text>
+													<Text size="xs" c="dimmed">
+														{conversation.created_at
+															? new Date(
+																	conversation.created_at,
+																).toLocaleDateString()
+															: ""}
+													</Text>
+												</Stack>
+												<Button
+													variant="light"
+													size="xs"
+													onClick={() =>
+														navigate(
+															`${base}/conversation/${conversation.id}/overview`,
+														)
+													}
+												>
+													<Trans>Open</Trans>
+												</Button>
+											</Group>
+
+											<Text size="sm" c="dimmed" style={lineClampStyle}>
+												{conversation.summary?.trim() || (
+													<Trans>No summary yet</Trans>
+												)}
+											</Text>
+
+											{tags.length > 0 && (
+												<Group gap={6} wrap="wrap">
+													{tags.slice(0, 4).map((tag) => {
+														const label = tagText(tag);
+														if (!label) return null;
+														return (
+															<Badge
+																key={tag.id}
+																size="xs"
+																variant="light"
+																color="gray"
+																radius="sm"
+															>
+																{label}
+															</Badge>
+														);
+													})}
+												</Group>
+											)}
+										</Stack>
+									</Card>
+								);
+							})}
+						</SimpleGrid>
+					) : null}
+				</Stack>
+
+				{report && reportTitle && (
+					<Card withBorder p="md" radius="sm">
+						<Group justify="space-between" align="center">
+							<Stack gap={2}>
+								<Group gap="xs" align="center">
+									<ClockClockwise size={14} />
+									<Text size="sm" fw={500}>
+										<Trans>Latest report</Trans>
+									</Text>
+									<Badge size="xs" variant="light">
+										{report.status}
+									</Badge>
+								</Group>
+								<Text size="sm" fw={500}>
+									{reportTitle}
+								</Text>
+								{report.date_created && (
+									<Text size="xs" c="dimmed">
+										{new Date(report.date_created).toLocaleString()}
+									</Text>
+								)}
+							</Stack>
+							<Button
+								variant="light"
+								size="xs"
+								onClick={() => navigate(`${base}/report`)}
+							>
+								<Trans>Open</Trans>
+							</Button>
+						</Group>
+					</Card>
+				)}
+			</Stack>
+		</PageContainer>
+	);
+};

@@ -2,8 +2,8 @@ import { Trans } from "@lingui/react/macro";
 import { Button, Stack } from "@mantine/core";
 import { IconDownload } from "@tabler/icons-react";
 import { testId } from "@/lib/testUtils";
-import { ProjectSettingsSection } from "./ProjectSettingsSection";
 import { HostGuideDownload } from "./HostGuideDownload";
+import { ProjectSettingsSection } from "./ProjectSettingsSection";
 
 type ProjectExportSectionProps = {
 	exportLink: string;
@@ -36,7 +36,7 @@ export const ProjectExportSection = ({
 					variant="outline"
 					{...testId("project-export-transcripts-button")}
 				>
-					<Trans>Download All Transcripts</Trans>
+					<Trans>Download all transcripts</Trans>
 				</Button>
 
 				{project && <HostGuideDownload project={project} />}

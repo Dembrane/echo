@@ -99,6 +99,22 @@ async def list_conversations(
     ),
     limit: int = Query(1000, ge=1, le=1000),
     offset: int = Query(0, ge=0),
+    sort: Literal[
+        "-created_at",
+        "created_at",
+        "-participant_name",
+        "participant_name",
+        "-duration",
+        "duration",
+        "-updated_at",
+        "updated_at",
+    ] = Query("-created_at"),
+    tag_ids: Optional[str] = Query(
+        None,
+        description="Comma-separated project_tag ids. Match any.",
+    ),
+    verified_only: bool = Query(False),
+    search_text: Optional[str] = Query(None),
     transcript_required: bool = Query(
         False,
         description="Only return conversations that have at least one chunk with transcript text.",
@@ -120,6 +136,17 @@ async def list_conversations(
         if src_list:
             conv_filter["source"] = {"_in": src_list}
 
+    tids = [x.strip() for x in (tag_ids or "").split(",") if x.strip()]
+    if tids:
+        conv_filter["tags"] = {
+            "_some": {"project_tag_id": {"id": {"_in": tids}}},
+        }
+
+    if verified_only:
+        conv_filter["conversation_artifacts"] = {
+            "_some": {"approved_at": {"_nnull": True}},
+        }
+
     if fields is None:
         field_list: list[str] = list(_CONVERSATION_DEFAULT_FIELDS)
     elif fields.strip() == "*":
@@ -129,18 +156,20 @@ async def list_conversations(
         if "id" not in field_list:
             field_list.insert(0, "id")
 
+    query_dict: dict = {
+        "filter": conv_filter,
+        "fields": field_list,
+        "sort": [sort],
+        "limit": limit,
+        "offset": offset,
+    }
+    if search_text and search_text.strip():
+        query_dict["search"] = search_text.strip()
+
     convs = (
         await async_directus.get_items(
             "conversation",
-            {
-                "query": {
-                    "filter": conv_filter,
-                    "fields": field_list,
-                    "sort": ["-updated_at"],
-                    "limit": limit,
-                    "offset": offset,
-                }
-            },
+            {"query": query_dict},
         )
         or []
     )
@@ -180,8 +209,31 @@ async def list_conversations(
     for conv in convs:
         _enrich_conversation(conv, tier)
 
-    if convs and (include_chunks or include_tags):
+    if convs:
         conv_ids = [c["id"] for c in convs]
+
+        artifacts = (
+            await async_directus.get_items(
+                "conversation_artifact",
+                {
+                    "query": {
+                        "filter": {"conversation_id": {"_in": conv_ids}},
+                        "fields": ["id", "conversation_id", "approved_at", "key", "topic_label"],
+                        "sort": ["-approved_at", "-date_created"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        artifact_map: dict[str, list[dict]] = {}
+        if isinstance(artifacts, list):
+            for artifact in artifacts:
+                cid = artifact.get("conversation_id")
+                if cid:
+                    artifact_map.setdefault(cid, []).append(artifact)
+        for conv in convs:
+            conv["conversation_artifacts"] = artifact_map.get(conv["id"], [])
 
         if include_chunks:
             chunks = (
@@ -253,18 +305,39 @@ async def list_conversations(
 async def count_conversations(
     auth: DependencyDirectusSession,
     project_id: str = Query(...),
+    tag_ids: Optional[str] = Query(
+        None,
+        description="Comma-separated project_tag ids. Match any.",
+    ),
+    verified_only: bool = Query(False),
+    search_text: Optional[str] = Query(None),
 ) -> dict:
     """Count of conversations in a project (deleted_at is null)."""
     access = await resolve_project_access(project_id, auth)
     access.require("conversation:read")
+    filt: dict = filter_exclude_deleted({"project_id": {"_eq": project_id}})
+
+    tids = [x.strip() for x in (tag_ids or "").split(",") if x.strip()]
+    if tids:
+        filt["tags"] = {
+            "_some": {"project_tag_id": {"id": {"_in": tids}}},
+        }
+
+    if verified_only:
+        filt["conversation_artifacts"] = {
+            "_some": {"approved_at": {"_nnull": True}},
+        }
+
+    query_dict: dict = {
+        "aggregate": {"count": "id"},
+        "filter": filt,
+    }
+    if search_text and search_text.strip():
+        query_dict["search"] = search_text.strip()
+
     agg = await async_directus.get_items(
         "conversation",
-        {
-            "query": {
-                "aggregate": {"count": "id"},
-                "filter": filter_exclude_deleted({"project_id": {"_eq": project_id}}),
-            }
-        },
+        {"query": query_dict},
     )
     if isinstance(agg, list) and agg:
         return {"count": int((agg[0].get("count") or {}).get("id", 0) or 0)}
@@ -361,13 +434,36 @@ async def count_remaining_conversations(
             "_some": {"approved_at": {"_nnull": True}},
         }
 
-    query: dict = {"aggregate": {"countDistinct": ["id"]}, "filter": filt}
+    query: dict = {"fields": ["id"], "filter": filt, "limit": -1}
     if search_text and search_text.strip():
         query["search"] = search_text.strip()
 
-    agg = await async_directus.get_items("conversation", {"query": query})
+    candidates = await async_directus.get_items("conversation", {"query": query})
+    if not isinstance(candidates, list) or not candidates:
+        return {"count": 0}
+
+    candidate_ids = [row["id"] for row in candidates if row.get("id")]
+    if not candidate_ids:
+        return {"count": 0}
+
+    # Match the select-all backend: empty conversations are skipped because
+    # they do not add useful context. Counting chunks separately keeps this
+    # endpoint aligned with that behavior without relying on relationship
+    # aggregate semantics in Directus.
+    agg = await async_directus.get_items(
+        "conversation_chunk",
+        {
+            "query": {
+                "aggregate": {"countDistinct": ["conversation_id"]},
+                "filter": {
+                    "conversation_id": {"_in": candidate_ids},
+                    "transcript": {"_nempty": True},
+                },
+            }
+        },
+    )
     if isinstance(agg, list) and agg:
-        val = (agg[0].get("countDistinct") or {}).get("id", 0) or 0
+        val = (agg[0].get("countDistinct") or {}).get("conversation_id", 0) or 0
         try:
             return {"count": int(val)}
         except (TypeError, ValueError):

@@ -48,7 +48,7 @@ export const ViewExpandedCard = ({
 	data: View;
 	isLibraryEnabled: boolean;
 }) => {
-	const { projectId } = useParams();
+	const { projectId, workspaceId } = useParams();
 	const { copyView, copied } = useCopyView();
 	const [opened, { open, close }] = useDisclosure(false);
 
@@ -87,7 +87,7 @@ export const ViewExpandedCard = ({
 								</ActionIcon>
 							</Tooltip>
 						)}
-						<I18nLink to={`/projects/${projectId}/library/views/${data.id}`}>
+						<I18nLink to={`/w/${workspaceId}/projects/${projectId}/library/views/${data.id}`}>
 							<ActionIcon component="a" variant="transparent" c="gray">
 								<IconArrowsDiagonal />
 							</ActionIcon>

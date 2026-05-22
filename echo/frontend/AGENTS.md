@@ -12,6 +12,13 @@ Cross-cutting rules (brand, UI, Directus, BFF, architecture, translations) live 
 - **2FA flow**: Directus surfaces it by returning `INVALID_OTP` — toggle a Mantine `PinInput` field and retry the same mutation. See `src/routes/auth/Login.tsx`
 - **Transitions**: login/logout flows call `useTransitionCurtain().runTransition()` before navigation — animations expect the Directus mutation promise to be awaited
 
+## Sidebar Navigation
+
+- The sketch is canonical for the first-layer sidebar: Search and Inbox live at the top; Home and Organisations are the primary body; user-level settings sits directly below organisations; Help is an expanded footer utility list, not a pushed view.
+- Bottom footer actions must not change the top sidebar context. Scope changes should come from body rows like organisations, workspaces, projects, inbox, or user settings.
+- User settings are global. Organisation, workspace, and project settings stay inside their scope views.
+- Do not link to `status.dembrane.com` until a status surface exists. The future status page should cover queue depth and backend health.
+
 ## Analytics (PostHog)
 
 - `posthog-js` + `@posthog/react` are initialized in `src/main.tsx`; the app is wrapped in `PostHogProvider`

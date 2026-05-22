@@ -2,6 +2,8 @@ import { Trans } from "@lingui/react/macro";
 import { Alert, Divider, LoadingOverlay, Stack } from "@mantine/core";
 import { useMemo } from "react";
 import { useParams } from "react-router";
+import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
+import { PageContainer } from "@/components/layout/PageContainer";
 import {
 	useProjectById,
 	useVerificationTopicsQuery,
@@ -16,6 +18,21 @@ import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCar
 import { ENABLE_WEBHOOKS } from "@/config";
 import { getProjectTranscriptsLink } from "@/lib/api";
 
+export const ProjectConversationsRoute = () => {
+	const { projectId, workspaceId } = useParams();
+
+	if (!projectId) return null;
+
+	return (
+		<PageContainer width="xl">
+			<ProjectConversationsPanel
+				projectId={projectId}
+				workspaceId={workspaceId}
+				showUpload
+			/>
+		</PageContainer>
+	);
+};
 
 export const ProjectSettingsRoute = () => {
 	const { projectId } = useParams();
@@ -62,23 +79,6 @@ export const ProjectSettingsRoute = () => {
 
 			{projectQuery.data && (
 				<>
-					<Divider />
-					<ProjectUploadSection projectId={projectId ?? ""} />
-
-					<Divider />
-					<ProjectExportSection
-						exportLink={getProjectTranscriptsLink(projectId ?? "")}
-						projectName={projectQuery.data.name}
-						project={projectQuery.data}
-					/>
-
-					{ENABLE_WEBHOOKS && (
-						<>
-							<Divider />
-							<WebhookSection projectId={projectId ?? ""} />
-						</>
-					)}
-
 					{/*
           {projectId && (
             <>
@@ -92,6 +92,63 @@ export const ProjectSettingsRoute = () => {
 				</>
 			)}
 		</Stack>
+	);
+};
+
+export const ProjectUploadRoute = () => {
+	const { projectId } = useParams();
+
+	if (!projectId) return null;
+
+	return (
+		<PageContainer>
+			<ProjectUploadSection projectId={projectId} />
+		</PageContainer>
+	);
+};
+
+export const ProjectIntegrationsRoute = () => {
+	const { projectId } = useParams();
+	const query = useMemo(
+		() => ({
+			fields: ["id", "name", "is_conversation_allowed"],
+		}),
+		[],
+	);
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		// @ts-expect-error narrowed fields are enough for this route
+		query,
+	});
+
+	if (!projectId) return null;
+
+	return (
+		<PageContainer>
+			<Stack gap="3rem" className="relative">
+				{projectQuery.isLoading && <LoadingOverlay visible />}
+				{projectQuery.isError && (
+					<Alert variant="outline" color="red">
+						<Trans>Error loading project</Trans>
+					</Alert>
+				)}
+				{projectQuery.data && (
+					<ProjectExportSection
+						exportLink={getProjectTranscriptsLink(projectId)}
+						projectName={projectQuery.data.name}
+						project={projectQuery.data}
+					/>
+				)}
+				<Divider />
+				{ENABLE_WEBHOOKS ? (
+					<WebhookSection projectId={projectId} />
+				) : (
+					<Alert variant="light">
+						<Trans>Webhooks are not enabled for this environment.</Trans>
+					</Alert>
+				)}
+			</Stack>
+		</PageContainer>
 	);
 };
 

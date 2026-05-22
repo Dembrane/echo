@@ -71,10 +71,10 @@ import {
 	useProjectById,
 } from "@/components/project/hooks";
 import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
+import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
-import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { BaseSkeleton } from "../common/BaseSkeleton";
 import { NavigationButton } from "../common/NavigationButton";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
@@ -513,7 +513,7 @@ const ConversationAccordionItem = ({
 	const inChatMode = location.pathname.includes("/chats/");
 	const isNewChatRoute = location.pathname.includes("/chats/new");
 
-	const { chatId } = useParams();
+	const { chatId, workspaceId } = useParams();
 	const chatContextQuery = useProjectChatContext(chatId ?? "");
 
 	// Don't show loading skeleton for new chat route (no chat exists yet)
@@ -544,7 +544,7 @@ const ConversationAccordionItem = ({
 
 	return (
 		<NavigationButton
-			to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
+			to={`/w/${workspaceId}/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
 			active={highlight}
 			className="w-full"
 			rightSection={
@@ -589,32 +589,34 @@ const ConversationAccordionItem = ({
 							</Tooltip>
 						)}
 
-					{conversation.is_anonymized && (
-						<Tooltip label={t`Anonymized conversation`}>
-							<ThemeIcon
-								variant="subtle"
-								color="primary"
-								aria-label={t`anonymized conversation`}
-								size={18}
-								style={{ cursor: "default" }}
-							>
-								<DetectiveIcon />
-							</ThemeIcon>
-						</Tooltip>
-					)}
+						{conversation.is_anonymized && (
+							<Tooltip label={t`Anonymized conversation`}>
+								<ThemeIcon
+									variant="subtle"
+									color="primary"
+									aria-label={t`anonymized conversation`}
+									size={18}
+									style={{ cursor: "default" }}
+								>
+									<DetectiveIcon />
+								</ThemeIcon>
+							</Tooltip>
+						)}
 
-					{conversation.locked && (
-						<Tooltip label={t`Upgrade your workspace to view this conversation`}>
-							<Badge
-								size="xs"
-								color="blue"
-								variant="light"
-								leftSection={<IconLock size={10} />}
+						{conversation.locked && (
+							<Tooltip
+								label={t`Upgrade your workspace to view this conversation`}
 							>
-								{t`Locked`}
-							</Badge>
-						</Tooltip>
-					)}
+								<Badge
+									size="xs"
+									color="blue"
+									variant="light"
+									leftSection={<IconLock size={10} />}
+								>
+									{t`Locked`}
+								</Badge>
+							</Tooltip>
+						)}
 					</Group>
 
 					<ConversationStatusIndicators
@@ -678,7 +680,11 @@ export const ConversationAccordion = ({
 	const location = useLocation();
 	const inChatMode = location.pathname.includes("/chats/");
 	const isMobile = useMediaQuery("(max-width: 768px)");
-	const { conversationId: activeConversationId, chatId } = useParams();
+	const {
+		conversationId: activeConversationId,
+		chatId,
+		workspaceId: routeWorkspaceId,
+	} = useParams();
 	const { ref: loadMoreRef, inView } = useInView();
 
 	// Get chat context to check mode
@@ -691,10 +697,13 @@ export const ConversationAccordion = ({
 		projectId,
 		query: { fields: ["id", "workspace_id"] },
 	});
-	const workspaceId =
+	const projectWorkspaceId =
 		(projectForWs.data as { workspace_id?: string | null } | undefined)
-			?.workspace_id ?? null;
-	const { usageGates } = useWorkspaceUsage(workspaceId);
+			?.workspace_id ??
+		routeWorkspaceId ??
+		null;
+	const conversationWorkspaceId = routeWorkspaceId ?? projectWorkspaceId;
+	const { usageGates } = useWorkspaceUsage(projectWorkspaceId);
 
 	// Temporarily disabled source filters
 	// const FILTER_OPTIONS = [
@@ -1492,7 +1501,9 @@ export const ConversationAccordion = ({
 							<Trans>
 								No conversations found. Start a conversation using the
 								participation invite link from the{" "}
-								<I18nLink to={`/projects/${projectId}/overview`}>
+								<I18nLink
+									to={`/w/${conversationWorkspaceId}/projects/${projectId}/overview`}
+								>
 									<Anchor
 										onClick={(e) => {
 											if (qrCodeRef?.current && isMobile) {

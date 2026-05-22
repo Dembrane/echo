@@ -11,13 +11,16 @@ export const Insight = ({
 	overrideProjectId?: string;
 }) => {
 	let { projectId } = useParams();
+	const { workspaceId } = useParams();
 
 	if (overrideProjectId) {
 		projectId = overrideProjectId;
 	}
 
 	return (
-		<I18nLink to={`/projects/${projectId}/library/insights/${data.id}`}>
+		<I18nLink
+			to={`/w/${workspaceId}/projects/${projectId}/library/insights/${data.id}`}
+		>
 			<Paper
 				component="a"
 				className="h-full place-content-start border-2 p-4 text-left transition-all hover:border-primary-300 hover:border-opacity-70"

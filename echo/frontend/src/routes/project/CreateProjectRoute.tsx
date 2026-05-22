@@ -18,9 +18,9 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
+import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { usePostHog } from "@posthog/react";
 import { toast } from "@/components/common/Toaster";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
 import { API_BASE_URL } from "@/config";
@@ -87,8 +87,8 @@ export const CreateProjectRoute = () => {
 				language === "en-US" ? "en" : language === "nl-NL" ? "nl" : "en";
 
 			const project = await createProject.mutateAsync({
-				name: name.trim(),
 				language: lang,
+				name: name.trim(),
 			});
 
 			await updateProject.mutateAsync({
@@ -107,38 +107,38 @@ export const CreateProjectRoute = () => {
 
 			return project;
 		},
+		onError: (error: Error) => {
+			toast.error(error.message);
+		},
 		onSuccess: (project) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
 			posthog?.capture("project_created", { project_id: project.id });
 			toast.success(t`Project created`);
-			navigate(`/projects/${project.id}/overview`);
-		},
-		onError: (error: Error) => {
-			toast.error(error.message);
+			navigate(`/w/${workspaceId}/projects/${project.id}/home`);
 		},
 	});
 
 	const backToProjects = () => {
 		if (workspaceId) {
-			navigate(`/w/${workspaceId}/projects`);
+			navigate(`/w/${workspaceId}/home`);
 		} else {
-			navigate("/projects");
+			navigate("/w");
 		}
 	};
 
 	const handleCancel = () => {
 		if (name.trim() || context.trim()) {
 			modals.openConfirmModal({
-				title: t`Discard this project?`,
 				children: (
 					<Text size="sm">
 						<Trans>Your draft won't be saved.</Trans>
 					</Text>
 				),
-				labels: { confirm: t`Discard`, cancel: t`Keep editing` },
 				confirmProps: { color: "red" },
+				labels: { cancel: t`Keep editing`, confirm: t`Discard` },
 				onConfirm: backToProjects,
+				title: t`Discard this project?`,
 			});
 		} else {
 			backToProjects();
@@ -228,8 +228,8 @@ export const CreateProjectRoute = () => {
 												</Text>
 												<Text size="xs" c="dimmed">
 													<Trans>
-														Everyone in {workspace.name} can find and open
-														this project.
+														Everyone in {workspace.name} can find and open this
+														project.
 													</Trans>
 												</Text>
 											</Stack>
@@ -254,8 +254,8 @@ export const CreateProjectRoute = () => {
 												</Text>
 												<Text size="xs" c="dimmed">
 													<Trans>
-														Only workspace admins and the people you
-														invite can open this project.
+														Only workspace admins and the people you invite can
+														open this project.
 													</Trans>
 												</Text>
 											</Stack>
@@ -314,7 +314,7 @@ export const CreateProjectRoute = () => {
 										<Text
 											size="sm"
 											c={context.trim() ? undefined : "dimmed"}
-											style={{ whiteSpace: "pre-wrap", flex: 1 }}
+											style={{ flex: 1, whiteSpace: "pre-wrap" }}
 										>
 											{context.trim() || t`(none)`}
 										</Text>

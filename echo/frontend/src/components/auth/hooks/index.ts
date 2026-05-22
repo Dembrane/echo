@@ -10,6 +10,7 @@ import { useLocation, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { ADMIN_BASE_URL, API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { emitAuthCacheBoundary } from "@/lib/authCacheBoundary";
 import { directus } from "@/lib/directus";
 import { isAuthPath } from "../utils/authPaths";
 import { throwWithMessage } from "../utils/errorUtils";
@@ -193,9 +194,22 @@ export const useLoginMutation = () => {
 			);
 		},
 		onSuccess: async () => {
+			queryClient.removeQueries({ queryKey: ["users", "me"] });
+			queryClient.removeQueries({ queryKey: ["v2", "workspaces"] });
+			queryClient.removeQueries({ queryKey: ["v2", "workspaces-context"] });
+			if (typeof window !== "undefined") {
+				try {
+					sessionStorage.removeItem("dembrane_ws_selected");
+				} catch {}
+			}
+			emitAuthCacheBoundary();
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["auth", "session"] }),
 				queryClient.invalidateQueries({ queryKey: ["users", "me"] }),
+				queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] }),
+				queryClient.invalidateQueries({
+					queryKey: ["v2", "workspaces-context"],
+				}),
 			]);
 		},
 	});
@@ -241,6 +255,7 @@ export const useLogoutMutation = () => {
 					sessionStorage.removeItem("dembrane_ws_selected");
 				} catch {}
 			}
+			emitAuthCacheBoundary();
 		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["auth", "session"] });

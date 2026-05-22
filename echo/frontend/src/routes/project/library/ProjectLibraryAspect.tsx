@@ -19,7 +19,7 @@ import { sanitizeImageUrl } from "@/lib/utils";
 import { Quote } from "../../../components/quote/Quote";
 
 export const ProjectLibraryAspect = () => {
-	const { projectId, viewId, aspectId } = useParams();
+	const { projectId, viewId, aspectId, workspaceId } = useParams();
 
 	const { data: aspect, isLoading } = useAspectById(
 		projectId ?? "",
@@ -41,11 +41,11 @@ export const ProjectLibraryAspect = () => {
 				items={[
 					{
 						label: <Trans>Library</Trans>,
-						link: `/projects/${projectId}/library`,
+						link: `/w/${workspaceId}/projects/${projectId}/library`,
 					},
 					{
 						label: <Trans>View</Trans>,
-						link: `/projects/${projectId}/library/views/${viewId}`,
+						link: `/w/${workspaceId}/projects/${projectId}/library/views/${viewId}`,
 					},
 					{
 						label: <Trans>Aspect</Trans>,

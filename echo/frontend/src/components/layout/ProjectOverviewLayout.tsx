@@ -1,22 +1,10 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
-import {
-	Badge,
-	Box,
-	Divider,
-	Group,
-	LoadingOverlay,
-	Stack,
-	Tooltip,
-} from "@mantine/core";
+import { Badge, Group, LoadingOverlay, Stack, Tooltip } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { IconLock } from "@tabler/icons-react";
 import { useParams } from "react-router";
 import { useProjectById } from "@/components/project/hooks";
 import { testId } from "@/lib/testUtils";
-import { OngoingConversationsSummaryCard } from "../conversation/OngoingConversationsSummaryCard";
-import { OpenForParticipationSummaryCard } from "../conversation/OpenForParticipationSummaryCard";
-import { ProjectQRCode } from "../project/ProjectQRCode";
 import { TabsWithRouter } from "./TabsWithRouter";
 
 export const ProjectOverviewLayout = () => {
@@ -63,18 +51,8 @@ export const ProjectOverviewLayout = () => {
 					)}
 				</Group>
 			)}
-			<div className="grid grid-cols-12 place-content-stretch gap-3">
-				<Box visibleFrom="lg" className="col-span-6 h-full">
-					<ProjectQRCode project={projectQuery.data} />
-				</Box>
-				<Stack gap="sm" className="col-span-12 h-full lg:col-span-6">
-					<OpenForParticipationSummaryCard projectId={projectId ?? ""} />
-					<OngoingConversationsSummaryCard projectId={projectId ?? ""} />
-				</Stack>
-			</div>
-			<Divider />
 			<TabsWithRouter
-				basePath="/projects/:projectId"
+				basePath="/w/:workspaceId/projects/:projectId"
 				tabs={[
 					{ label: t`Portal Editor`, value: "portal-editor" },
 					{ label: t`Project Settings`, value: "overview" },

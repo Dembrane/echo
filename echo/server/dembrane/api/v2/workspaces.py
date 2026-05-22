@@ -198,6 +198,9 @@ async def list_workspaces(
     )
     if not isinstance(org_membership_data, list):
         org_membership_data = []
+    internal_org_ids = {
+        om["org_id"] for om in org_membership_data if om.get("org_id")
+    }
 
     if len(memberships) == 0 and len(org_membership_data) == 0:
         return WorkspaceListResponse(workspaces=[], organisations=[])
@@ -340,6 +343,13 @@ async def list_workspaces(
     for (membership, ws), (project_count, member_count, usage, previews) in zip(
         valid_memberships, all_aggregates, strict=True
     ):
+        org_id = ws.get("org_id", "")
+        raw_role = membership.get("role", "")
+        source = membership.get("source", "")
+        is_external_access = raw_role == "external" or (
+            source == "direct" and org_id not in internal_org_ids
+        )
+        role = "external" if is_external_access else raw_role
         # Fill in matrix §8 cap signals on the usage object so card-level
         # rendering doesn't need to join tier → cap client-side.
         tier = ws.get("tier") or ""
@@ -362,13 +372,13 @@ async def list_workspaces(
             WorkspaceSummary(
                 id=ws["id"],
                 name=ws.get("name", ""),
-                org_id=ws.get("org_id", ""),
-                org_name=org_map.get(ws.get("org_id", ""), ""),
-                role=membership.get("role", ""),
+                org_id=org_id,
+                org_name=org_map.get(org_id, ""),
+                role=role,
                 is_default=ws.get("is_default", False),
                 tier=ws.get("tier", "pioneer"),
                 logo_url=ws.get("logo_url"),
-                org_logo_url=org_logo_map.get(ws.get("org_id", "")),
+                org_logo_url=org_logo_map.get(org_id),
                 project_count=project_count,
                 member_count=member_count,
                 members_preview=previews,

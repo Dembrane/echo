@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Anchor, Table, Text } from "@mantine/core";
-import { Link } from "react-router";
+import { Link, useParams } from "react-router";
 import { useProjectConversationCounts } from "@/components/report/hooks";
 
 type Conversation = {
@@ -18,6 +18,7 @@ export const ConversationStatusTable = ({
 	projectId: string;
 }) => {
 	const { data } = useProjectConversationCounts(projectId);
+	const { workspaceId } = useParams();
 
 	if (!data) return null;
 
@@ -89,7 +90,7 @@ export const ConversationStatusTable = ({
 						<Table.Td>
 							<Anchor
 								component={Link}
-								to={`/projects/${projectId}/conversation/${conv.id}/overview`}
+								to={`/w/${workspaceId}/projects/${projectId}/conversation/${conv.id}/overview`}
 							>
 								<Trans>View</Trans>
 							</Anchor>

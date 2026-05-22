@@ -9,6 +9,7 @@ import {
 import { toast } from "@/components/common/Toaster";
 import { useAddChatContextMutation } from "@/components/conversation/hooks";
 import { API_BASE_URL } from "@/config";
+import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	api,
@@ -318,6 +319,7 @@ export const useCreateChatMutation = () => {
 	const navigate = useI18nNavigate();
 	const queryClient = useQueryClient();
 	const addChatContextMutation = useAddChatContextMutation();
+	const { workspaceId } = useParams();
 	return useMutation({
 		mutationFn: async (payload: {
 			navigateToNewChat?: boolean;
@@ -345,7 +347,9 @@ export const useCreateChatMutation = () => {
 			const chat = (await res.json()) as { id: string };
 
 			if (payload.navigateToNewChat && chat?.id) {
-				navigate(`/projects/${payload.project_id.id}/chats/${chat.id}`);
+				navigate(
+					`/w/${workspaceId}/projects/${payload.project_id.id}/chats/${chat.id}`,
+				);
 			}
 
 			if (payload.conversationId) {
@@ -478,6 +482,10 @@ export const useProjectById = ({
 	query?: Partial<Query<CustomDirectusTypes, Project>>;
 }) => {
 	return useQuery({
+		// Skip the fetch when projectId hasn't resolved yet — otherwise we
+		// hammer /api/v2/projects//bff with an empty id during transient
+		// renders (sidebar mounts before scope params land).
+		enabled: !!projectId,
 		// BFF migration (2026-04-24): the frontend used to call Directus
 		// directly via readItem("project", ...), but Directus row-level
 		// ACL doesn't know about our v2 inheritance/sharing model — a

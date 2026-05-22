@@ -19,7 +19,7 @@ import { useCopyView } from "@/components/view/hooks/useCopyView";
 import { Icons } from "@/icons";
 
 export const ProjectLibraryView = () => {
-	const { projectId, viewId } = useParams();
+	const { projectId, viewId, workspaceId } = useParams();
 
 	const { copyView, copied } = useCopyView();
 	const view = useViewById(projectId ?? "", viewId ?? "");
@@ -30,7 +30,7 @@ export const ProjectLibraryView = () => {
 				items={[
 					{
 						label: <Trans>Library</Trans>,
-						link: `/projects/${projectId}/library`,
+						link: `/w/${workspaceId}/projects/${projectId}/library`,
 					},
 					{
 						label: <Trans>View</Trans>,

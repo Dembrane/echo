@@ -126,10 +126,8 @@ export const ProjectsHomeRoute = () => {
 		// instant POST that leaves the new project with a "New Project"
 		// placeholder name. See CreateProjectRoute.tsx.
 		posthog?.capture("project_create_started");
-		const path = workspaceId
-			? `/w/${workspaceId}/projects/new`
-			: "/projects/new";
-		navigate(path);
+		if (!workspaceId) return;
+		navigate(`/w/${workspaceId}/projects/new`);
 	};
 
 	// First page has pinned + total_count; all pages have projects

@@ -996,32 +996,72 @@ async def list_organisation_workspaces(
     org_id: str,
     auth: DependencyDirectusSession,
 ) -> list[OrgWorkspaceSummary]:
-    """Every workspace in the organisation, visible to any organisation member.
+    """Workspaces in the organisation that the caller can see.
 
-    A organisation owner's "see all my workspaces" answer — the selector only
-    shows workspaces the caller is a member of (direct or derived), but
-    organisation owners may want a roster view including workspaces they haven't
-    joined directly. Anyone in the organisation can read this.
+    - Org admin/owner: every workspace in the org.
+    - Org member: every non-private workspace in the org.
+    - Guest (no org membership, but has at least one workspace_membership in
+      the org): just the workspaces they're a direct member of. Counts and
+      tier still populated so the response model stays uniform — the
+      sidebar uses id/name only, but other surfaces want the rest.
     """
     app_user = await get_app_user_or_raise(auth.user_id)
-    caller_role = await _require_org_role(org_id, app_user["id"], minimum="member")
+
+    # Resolve the caller's org role without raising — a guest with workspace
+    # access in this org has no org_membership but should still see "the
+    # basics" (which workspaces they're in). 5xx and other unexpected
+    # failures bubble up.
+    caller_role: str | None = None
+    try:
+        caller_role = await _require_org_role(org_id, app_user["id"], minimum="member")
+    except HTTPException as e:
+        if e.status_code != 403:
+            raise
     caller_is_manager = caller_role in ("admin", "owner")
+    is_org_member = caller_role is not None
+
+    ws_filter: dict = {
+        "org_id": {"_eq": org_id},
+        "deleted_at": {"_null": True},
+    }
+
+    if not is_org_member:
+        # Guest path: restrict to workspaces the caller is a direct member
+        # of (workspace_membership row). If none, they have no view here.
+        membership_rows = (
+            await async_directus.get_items(
+                "workspace_membership",
+                {
+                    "query": {
+                        "filter": {
+                            "user_id": {"_eq": app_user["id"]},
+                            "deleted_at": {"_null": True},
+                        },
+                        "fields": ["workspace_id"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        if not isinstance(membership_rows, list):
+            membership_rows = []
+        accessible_ids = [
+            r["workspace_id"] for r in membership_rows if r.get("workspace_id")
+        ]
+        if not accessible_ids:
+            raise HTTPException(status_code=403, detail="No access to this organisation")
+        ws_filter["id"] = {"_in": accessible_ids}
 
     # Pull settings.inherit_organisation_admins explicitly (sub-field projection)
-    # so we don't need to send the whole JSON (also avoids accidentally
-    # exposing sticky_removed tombstones to the client — the response model
-    # drops them, but belt-and-braces). Counts come from separate aggregates
-    # because the workspace collection doesn't declare O2M aliases for
-    # projects/members.
+    # so we don't need to send the whole JSON. Counts come from separate
+    # aggregates because the workspace collection doesn't declare O2M aliases.
     workspaces = (
         await async_directus.get_items(
             "workspace",
             {
                 "query": {
-                    "filter": {
-                        "org_id": {"_eq": org_id},
-                        "deleted_at": {"_null": True},
-                    },
+                    "filter": ws_filter,
                     "fields": [
                         "id",
                         "name",
@@ -1088,12 +1128,14 @@ async def list_organisation_workspaces(
     # Hide private workspaces from non-admin organisation members — the whole
     # point of a private workspace is that organisation admins can't see it,
     # advertising its name + tier in a organisation-scoped list contradicts that.
-    # Admins/owners still see the full roster (they're the audience).
+    # Admins/owners still see the full roster. Guests already came in via
+    # direct membership so we don't filter them here (they ARE the audience
+    # for those private workspaces).
     out: list[OrgWorkspaceSummary] = []
     for ws in workspaces:
         settings = ws.get("settings") if isinstance(ws.get("settings"), dict) else {}
         is_private = (settings or {}).get("inherit_organisation_admins") is False
-        if is_private and not caller_is_manager:
+        if is_org_member and is_private and not caller_is_manager:
             continue
 
         # Cap-blocked flags. Compute lazily — only call get_effective_members
