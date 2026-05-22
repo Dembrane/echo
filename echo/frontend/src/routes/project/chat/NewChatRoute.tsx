@@ -13,7 +13,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import type { ChatMode } from "@/lib/api";
 
 export const NewChatRoute = () => {
-	const { projectId } = useParams();
+	const { projectId, workspaceId } = useParams();
 	const navigate = useI18nNavigate();
 	const { language } = useLanguage();
 	const createChatMutation = useCreateChatMutation();
@@ -51,7 +51,7 @@ export const NewChatRoute = () => {
 			}
 
 			// Step 4: Navigate to the new chat
-			navigate(`/projects/${projectId}/chats/${chat.id}`);
+			navigate(`/w/${workspaceId}/projects/${projectId}/chats/${chat.id}`);
 		} catch (error) {
 			console.error("Failed to create chat with mode:", error);
 			setIsInitializing(false);

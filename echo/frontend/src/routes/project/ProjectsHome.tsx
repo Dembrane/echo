@@ -103,11 +103,18 @@ export const ProjectsHomeRoute = () => {
 	const togglePinMutation = useTogglePinMutation();
 
 	useEffect(() => {
-		if (search) {
-			setSearchParams({ search });
-		} else {
-			setSearchParams({});
-		}
+		setSearchParams(
+			(prev) => {
+				const next = new URLSearchParams(prev);
+				if (search) {
+					next.set("search", search);
+				} else {
+					next.delete("search");
+				}
+				return next;
+			},
+			{ replace: true },
+		);
 	}, [search, setSearchParams]);
 
 	useEffect(() => {
@@ -126,10 +133,8 @@ export const ProjectsHomeRoute = () => {
 		// instant POST that leaves the new project with a "New Project"
 		// placeholder name. See CreateProjectRoute.tsx.
 		posthog?.capture("project_create_started");
-		const path = workspaceId
-			? `/w/${workspaceId}/projects/new`
-			: "/projects/new";
-		navigate(path);
+		if (!workspaceId) return;
+		navigate(`/w/${workspaceId}/projects/new`);
 	};
 
 	// First page has pinned + total_count; all pages have projects

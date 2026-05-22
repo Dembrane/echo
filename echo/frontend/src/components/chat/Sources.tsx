@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Group, Text } from "@mantine/core";
+import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 
 export const Sources = ({
@@ -10,6 +11,7 @@ export const Sources = ({
 	metadata: any[];
 	projectId: string | undefined;
 }) => {
+	const { workspaceId } = useParams();
 	const references = metadata.filter((m) => m.type === "reference");
 
 	if (references.length === 0) return null;
@@ -29,7 +31,7 @@ export const Sources = ({
 					<I18nLink
 						// biome-ignore lint/suspicious/noArrayIndexKey: needs to be fixed
 						key={index}
-						to={`/projects/${projectId}/conversation/${ref?.conversation?.id || ref?.conversation}/overview`}
+						to={`/w/${workspaceId}/projects/${projectId}/conversation/${ref?.conversation?.id || ref?.conversation}/overview`}
 					>
 						<Badge className="cursor-pointer normal-case" variant="default">
 							{ref?.conversation_title ||

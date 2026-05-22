@@ -1,15 +1,37 @@
-import { LoadingOverlay } from "@mantine/core";
+import { Group, LoadingOverlay, Paper } from "@mantine/core";
 import { type PropsWithChildren, useEffect } from "react";
 import { Outlet, useLocation, useSearchParams } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
+import { I18nLink } from "@/components/common/i18nLink";
+import { Logo } from "@/components/common/Logo";
+import { LanguagePicker } from "@/components/language/LanguagePicker";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Toaster } from "../common/Toaster";
 import { Footer } from "./Footer";
-import { HeaderView } from "./Header";
 import {
 	TransitionCurtainProvider,
 	useTransitionCurtain,
 } from "./TransitionCurtainProvider";
+
+const AuthHeader = () => (
+	<Paper
+		component="header"
+		radius="0"
+		shadow="xs"
+		withBorder={false}
+		className="z-30 w-full"
+		style={{ backgroundColor: "var(--app-background)" }}
+	>
+		<Group justify="space-between" align="center" h={60} px="md">
+			<I18nLink to="/">
+				<Group align="center">
+					<Logo hideTitle={false} />
+				</Group>
+			</I18nLink>
+			<LanguagePicker />
+		</Group>
+	</Paper>
+);
 
 // Token-consuming routes render their own auth-aware UI; redirecting
 // authed users away would race the token call (verify-email infinite-loading bug).
@@ -33,7 +55,7 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 
 	useEffect(() => {
 		if (auth.isAuthenticated && !isActive && !skipRedirect) {
-			const nextLink = query.get("next") ?? "/projects";
+			const nextLink = query.get("next") ?? "/w";
 			navigate(nextLink);
 		}
 	}, [auth.isAuthenticated, isActive, navigate, query, skipRedirect]);
@@ -50,10 +72,7 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 						className="border-b border-slate-200/60"
 						style={{ backgroundColor: "var(--app-background)" }}
 					>
-						<HeaderView
-							isAuthenticated={auth.isAuthenticated}
-							loading={auth.loading}
-						/>
+						<AuthHeader />
 					</div>
 					<main className="flex flex-1 flex-col items-center justify-center px-6 py-12 sm:px-8 lg:px-14 lg:py-16">
 						<div className="flex w-full max-w-lg flex-col gap-8">

@@ -50,7 +50,7 @@ export const MyInvitesRoute = () => {
 		try {
 			const data = await acceptMutation.mutateAsync(inviteId);
 			toast.success(t`Joined ${workspaceName}`);
-			navigate(`/w/${data.workspace_id}/projects`);
+			navigate(`/w/${data.workspace_id}/home`);
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : "Failed to accept";
 			setErrorByInvite((prev) => ({ ...prev, [inviteId]: msg }));

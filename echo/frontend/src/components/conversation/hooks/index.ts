@@ -24,7 +24,92 @@ import {
 	selectAllContext,
 } from "@/lib/api";
 import { bff } from "@/lib/bff";
-import { directus } from "@/lib/directus";
+
+type ConversationBffListParams = {
+	search_text?: string;
+	sort?:
+		| "-created_at"
+		| "created_at"
+		| "-participant_name"
+		| "participant_name"
+		| "-duration"
+		| "duration"
+		| "-updated_at"
+		| "updated_at";
+	tag_ids?: string;
+	verified_only?: true;
+};
+
+type ConversationQueryFilter = {
+	conversation_artifacts?: {
+		_some?: {
+			approved_at?: {
+				_nnull?: unknown;
+			};
+		};
+	};
+	tags?: {
+		_some?: {
+			project_tag_id?: {
+				id?: {
+					_in?: unknown;
+				};
+			};
+		};
+	};
+};
+
+const conversationQueryToBffParams = (
+	query?: Partial<Query<CustomDirectusTypes, Conversation>>,
+): ConversationBffListParams => {
+	const params: ConversationBffListParams = {};
+	const rawQuery = query as
+		| {
+				filter?: ConversationQueryFilter;
+				search?: unknown;
+				sort?: unknown;
+		  }
+		| undefined;
+
+	const search = rawQuery?.search;
+	if (typeof search === "string" && search.trim()) {
+		params.search_text = search.trim();
+	}
+
+	const sort = Array.isArray(rawQuery?.sort)
+		? rawQuery?.sort[0]
+		: rawQuery?.sort;
+	if (
+		sort === "-created_at" ||
+		sort === "created_at" ||
+		sort === "-participant_name" ||
+		sort === "participant_name" ||
+		sort === "-duration" ||
+		sort === "duration" ||
+		sort === "-updated_at" ||
+		sort === "updated_at"
+	) {
+		params.sort = sort;
+	}
+
+	const filter = rawQuery?.filter;
+	const tagIds = filter?.tags?._some?.project_tag_id?.id?._in;
+	if (Array.isArray(tagIds) && tagIds.length > 0) {
+		params.tag_ids = tagIds.filter(Boolean).join(",");
+	}
+
+	if (filter?.conversation_artifacts?._some?.approved_at?._nnull) {
+		params.verified_only = true;
+	}
+
+	return params;
+};
+
+type AddChatContextMutationContext = {
+	conversationId?: string;
+	optimisticId?: string;
+	previousChatContext?: TProjectChatContext;
+};
 
 export const useInfiniteConversationChunks = (
 	conversationId: string,
@@ -48,10 +133,10 @@ export const useInfiniteConversationChunks = (
 			const response = await bff.get<ConversationChunk[]>(
 				`/conversations/${conversationId}/chunks`,
 				{
+					fields: "id,conversation_id,transcript,path,timestamp,error",
 					limit: initialLimit,
 					offset: pageParam * initialLimit,
 					sort: "timestamp",
-					fields: "id,conversation_id,transcript,path,timestamp,error",
 				},
 			);
 
@@ -75,8 +160,7 @@ export const useUpdateConversationByIdMutation = () => {
 		}: {
 			id: string;
 			payload: Partial<Conversation>;
-		}) =>
-			bff.patch<Conversation>(`/conversations/${id}`, payload),
+		}) => bff.patch<Conversation>(`/conversations/${id}`, payload),
 		onSuccess: (values, variables) => {
 			queryClient.setQueryData(
 				["conversations", variables.id],
@@ -193,9 +277,12 @@ export const useAddChatContextMutation = () => {
 			}),
 		onError: (error, variables, context) => {
 			Sentry.captureException(error);
+			const mutationContext = context as
+				| AddChatContextMutationContext
+				| undefined;
 
 			// Only rollback the failed optimistic entry
-			if ((context as any)?.optimisticId && (context as any)?.conversationId) {
+			if (mutationContext?.optimisticId && mutationContext.conversationId) {
 				queryClient.setQueryData(
 					["chats", "context", variables.chatId],
 					(oldData: TProjectChatContext | undefined) => {
@@ -204,17 +291,17 @@ export const useAddChatContextMutation = () => {
 							...oldData,
 							conversations: oldData.conversations.filter(
 								(conv) =>
-									conv.conversation_id !== (context as any).conversationId ||
-									conv.optimisticId !== (context as any).optimisticId,
+									conv.conversation_id !== mutationContext.conversationId ||
+									conv.optimisticId !== mutationContext.optimisticId,
 							),
 						};
 					},
 				);
-			} else if ((context as any)?.previousChatContext) {
+			} else if (mutationContext?.previousChatContext) {
 				// fallback: full rollback
 				queryClient.setQueryData(
 					["chats", "context", variables.chatId],
-					(context as any).previousChatContext,
+					mutationContext.previousChatContext,
 				);
 			}
 			if (error instanceof AxiosError) {
@@ -571,9 +658,9 @@ export const useConversationChunks = (
 	return useQuery({
 		queryFn: () =>
 			bff.get<unknown[]>(`/conversations/${conversationId}/chunks`, {
+				fields: fields.join(","),
 				limit: 1,
 				sort: "timestamp",
-				fields: fields.join(","),
 			}),
 		queryKey: ["conversations", conversationId, "chunks"],
 		refetchInterval,
@@ -603,14 +690,15 @@ export const useConversationsByProjectId = (
 
 	return useQuery({
 		queryFn: async () => {
-			void query; // @TODO: advanced query params not supported by BFF yet
 			void loadWhereTranscriptExists;
+			const params = conversationQueryToBffParams(query);
 			const conversations = await bff.get<Conversation[]>("/conversations", {
-				project_id: projectId,
 				include_chunks: true,
 				include_tags: true,
-				sources: filterBySource?.join(","),
 				limit: 1000,
+				project_id: projectId,
+				sources: filterBySource?.join(","),
+				...params,
 			});
 			return conversations;
 		},
@@ -644,7 +732,8 @@ export const useConversationsByProjectId = (
 						live: false,
 					};
 
-				const hasRecentChunks = conversation.chunks?.some((chunk: any) => {
+				const hasRecentChunks = conversation.chunks?.some((chunk) => {
+					if (typeof chunk !== "object" || !chunk) return false;
 					// Check if chunk timestamp is recent
 					const chunkTime = new Date(chunk.timestamp || chunk.created_at || 0);
 					return chunkTime > cutoffTime;
@@ -728,15 +817,16 @@ export const useInfiniteConversationsByProjectId = (
 			lastPage.nextOffset,
 		initialPageParam: 0,
 		queryFn: async ({ pageParam = 0 }) => {
-			void query; // advanced query params not yet supported by BFF
+			const params = conversationQueryToBffParams(query);
 			const conversations = await bff.get<Conversation[]>("/conversations", {
-				project_id: projectId,
 				include_chunks: Boolean(loadChunks),
 				include_tags: true,
-				sources: filterBySource?.join(","),
-				transcript_required: Boolean(loadWhereTranscriptExists),
 				limit: initialLimit,
 				offset: pageParam * initialLimit,
+				project_id: projectId,
+				sources: filterBySource?.join(","),
+				transcript_required: Boolean(loadWhereTranscriptExists),
+				...params,
 			});
 
 			return {
@@ -778,7 +868,8 @@ export const useInfiniteConversationsByProjectId = (
 								live: false,
 							};
 
-						const hasRecentChunks = conversation.chunks?.some((chunk: any) => {
+						const hasRecentChunks = conversation.chunks?.some((chunk) => {
+							if (typeof chunk !== "object" || !chunk) return false;
 							// Check if chunk timestamp is recent
 							const chunkTime = new Date(
 								chunk.timestamp || chunk.created_at || 0,
@@ -803,10 +894,10 @@ export const useConversationsCountByProjectId = (
 ) => {
 	return useQuery({
 		queryFn: async () => {
-			void query;
+			const params = conversationQueryToBffParams(query);
 			const { count } = await bff.get<{ count: number }>(
 				"/conversations/count",
-				{ project_id: projectId },
+				{ project_id: projectId, ...params },
 			);
 			return count;
 		},
@@ -844,17 +935,17 @@ export const useRemainingConversationsCount = (
 			const { count } = await bff.get<{ count: number }>(
 				"/conversations/remaining-count",
 				{
-					project_id: projectId,
 					exclude_ids:
 						conversationIdsInContext.length > 0
 							? conversationIdsInContext.join(",")
 							: undefined,
+					project_id: projectId,
+					search_text: filters?.searchText?.trim() || undefined,
 					tag_ids:
 						filters?.tagIds && filters.tagIds.length > 0
 							? filters.tagIds.join(",")
 							: undefined,
 					verified_only: filters?.verifiedOnly ? true : undefined,
-					search_text: filters?.searchText?.trim() || undefined,
 				},
 			);
 			return count;

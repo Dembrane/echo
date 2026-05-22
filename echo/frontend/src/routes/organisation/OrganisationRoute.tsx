@@ -31,7 +31,7 @@ import {
 } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
 import { InviteMemberCard, MembersToolbar } from "@/components/members";
@@ -42,11 +42,13 @@ import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useV2Me } from "@/hooks/useV2Me";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import {
 	avatarUrl,
 	memberInitials,
 	logoUrl as resolveLogoUrl,
 } from "@/lib/avatar";
+import { OrganisationExternalView } from "./OrganisationExternalView";
 import { displayRole, roleColor } from "@/lib/roles";
 
 /**
@@ -127,15 +129,19 @@ async function fetchOrganisation(
 
 async function fetchOrganisationMembers(
 	organisationId: string,
-): Promise<OrganisationMember[]> {
+): Promise<OrganisationMember[] | null> {
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}/members`, {
 		credentials: "include",
 	});
+	// Auth-style failures are not crashes — they're "you don't have
+	// access here". Return null so callers can show an external state. 5xx
+	// still throws (preserves the 2026-04-23 audit fix where a swallowed
+	// 500 was masquerading as an empty organisation).
+	if (res.status === 401 || res.status === 403 || res.status === 404) {
+		return null;
+	}
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		// Bubble up the error instead of silently falling through to an
-		// empty list — the "0 of 0" symptom in the 2026-04-23 audit was
-		// a swallowed 500 masquerading as an empty organisation.
 		throw new Error(
 			typeof data.detail === "string"
 				? data.detail
@@ -147,14 +153,18 @@ async function fetchOrganisationMembers(
 
 async function fetchOrganisationWorkspaces(
 	organisationId: string,
-): Promise<OrganisationWorkspace[]> {
+): Promise<OrganisationWorkspace[] | null> {
 	const res = await fetch(
 		`${API_BASE_URL}/v2/orgs/${organisationId}/workspaces`,
 		{
 			credentials: "include",
 		},
 	);
-	// Throw rather than [] — empty list is indistinguishable from a real "0 workspaces".
+	// Same convention as fetchOrganisation / fetchOrganisationMembers:
+	// auth failures return null (= external-only signal), 5xx throws.
+	if (res.status === 401 || res.status === 403 || res.status === 404) {
+		return null;
+	}
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
 		throw new Error(
@@ -278,32 +288,55 @@ export const OrganisationRoute = () => {
 		"*": string;
 	}>();
 	const navigate = useI18nNavigate();
+	const { search: urlSearch } = useLocation();
 	const [search, setSearch] = useUrlSearch();
 	const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
 	const [inviteOpen, setInviteOpen] = useState(false);
 	const queryClient = useQueryClient();
 	// URL-driven tab state. Tab lives in the path segment
 	// (`/o/:organisationId/<tab>`) so browser back steps between tabs and URLs
-	// are shareable.
-	const allowedTabs = ["overview", "usage", "people"] as const;
+	// are shareable. We ALSO recognise sidebar-driven URLs:
+	//   /o/:id/settings/<section>  → maps to an existing tab
+	//   /o/:id/requests            → stub, renders overview for now
+	// The sidebar pushes those URLs so its view resolver lands on
+	// "org-settings" while the content panel keeps using existing tabs.
+	const allowedTabs = ["overview", "usage", "people", "billing"] as const;
 	type TabValue = (typeof allowedTabs)[number];
-	const segment = (splat ?? "").split("/")[0] || "";
-	const viewRaw: TabValue = (allowedTabs as readonly string[]).includes(segment)
-		? (segment as TabValue)
-		: "overview";
+	const segments = (splat ?? "").split("/").filter(Boolean);
+	const segment = segments[0] ?? "";
+
+	const isSettingsPath = segment === "settings";
+	const isRequestsPath = segment === "requests";
+
+	const viewRaw: TabValue = isSettingsPath
+		? (() => {
+				const section = segments[1] ?? "general";
+				if (section === "usage") return "usage";
+				if (section === "members") return "people";
+				if (section === "billing") return "billing";
+				// general / anything else → overview (general settings).
+				return "overview";
+			})()
+		: isRequestsPath
+			? "overview"
+			: (allowedTabs as readonly string[]).includes(segment)
+				? (segment as TabValue)
+				: "overview";
 
 	useEffect(() => {
-		// Bounce bare /o/:id to /o/:id/overview so the URL always
-		// matches the active tab.
+		// Bounce bare /o/:id to /o/:id/overview so the URL always matches
+		// the active tab. Don't bounce /settings/* or /requests — those
+		// are canonical URLs driven by the sidebar.
 		if (!organisationId) return;
+		if (isSettingsPath || isRequestsPath) return;
 		if (segment !== viewRaw) {
-			navigate(`/o/${organisationId}/${viewRaw}`, { replace: true });
+			navigate(`/o/${organisationId}/${viewRaw}${urlSearch}`, { replace: true });
 		}
-	}, [organisationId, viewRaw, segment, navigate]);
+	}, [organisationId, viewRaw, segment, isSettingsPath, isRequestsPath, navigate, urlSearch]);
 
 	const setView = (value: string | null) => {
 		if (!value || !organisationId) return;
-		navigate(`/o/${organisationId}/${value}`, { replace: true });
+		navigate(`/o/${organisationId}/${value}${urlSearch}`, { replace: true });
 	};
 
 	useDocumentTitle(t`Organisation | dembrane`);
@@ -318,17 +351,24 @@ export const OrganisationRoute = () => {
 		queryKey: ["v2", "organisation", organisationId],
 		staleTime: 30_000,
 	});
-	const { data: members = [], error: membersError } = useQuery({
+	const { data: membersData, error: membersError } = useQuery({
 		enabled: Boolean(organisationId),
 		queryFn: () => fetchOrganisationMembers(organisationId as string),
 		queryKey: ["v2", "organisation", organisationId, "members"],
 		retry: 1,
 	});
-	const { data: workspaces = [], error: workspacesError } = useQuery({
+	const members: OrganisationMember[] = membersData ?? [];
+	const { data: workspacesData, error: workspacesError } = useQuery({
 		enabled: Boolean(organisationId),
 		queryFn: () => fetchOrganisationWorkspaces(organisationId as string),
 		queryKey: ["v2", "organisation", organisationId, "workspaces"],
+		retry: false,
 	});
+	const workspaces: OrganisationWorkspace[] = workspacesData ?? [];
+	// The current user's full workspace list (provided by the app-level
+	// WorkspaceProvider). Used to detect external-only mode when the
+	// org-level fetches 403.
+	const { workspaces: userWorkspaces } = useWorkspace();
 
 	const { data: pendingInvites = [] } = useQuery({
 		enabled: Boolean(organisationId) && (organisation?.role === "owner" || organisation?.role === "admin"),
@@ -357,7 +397,10 @@ export const OrganisationRoute = () => {
 		organisation?.role === "owner" || organisation?.role === "admin";
 	// Admin-only views fall back to People for other roles so landing
 	// state is never an empty panel for them.
-	const view: TabValue = !isAdmin && viewRaw === "usage" ? "people" : viewRaw;
+	const view: TabValue =
+		!isAdmin && (viewRaw === "usage" || viewRaw === "billing")
+			? "people"
+			: viewRaw;
 
 	// Organisation-level role change — admin + owner can edit; owner-only offers
 	// the "owner" option (only owners can grant owner).
@@ -553,6 +596,16 @@ export const OrganisationRoute = () => {
 	}
 
 	if (!organisation) {
+		// 401/403/404 fall through here. If the user has an external
+		// workspace in this org, render the external landing instead of the
+		// generic "not found" — they're not lost, they're just not an
+		// org admin.
+		const externalWorkspaces = userWorkspaces.filter(
+			(w) => w.org_id === organisationId && w.role === "external",
+		);
+		if (organisationId && externalWorkspaces.length > 0) {
+			return <OrganisationExternalView organisationId={organisationId} />;
+		}
 		return (
 			<Center style={{ height: "60vh" }}>
 				<Stack align="center">
@@ -635,20 +688,9 @@ export const OrganisationRoute = () => {
 					</Alert>
 				)}
 
+				{/* Tab strip hidden — the main AppSidebar drives section
+				    navigation. Internal Tabs.value still wires the panels via URL. */}
 				<Tabs value={view} onChange={setView} keepMounted={false}>
-					<Tabs.List>
-						<Tabs.Tab value="overview">
-							<Trans>Overview</Trans>
-						</Tabs.Tab>
-						{isAdmin && (
-							<Tabs.Tab value="usage">
-								<Trans>Usage and Tier</Trans>
-							</Tabs.Tab>
-						)}
-						<Tabs.Tab value="people">
-							<Trans>Members</Trans>
-						</Tabs.Tab>
-					</Tabs.List>
 
 					<Tabs.Panel value="overview" pt="md">
 						<OverviewPanel
@@ -666,6 +708,28 @@ export const OrganisationRoute = () => {
 									<OrganisationUsageRollup orgId={organisationId} />
 								)}
 							</Stack>
+						</Tabs.Panel>
+					)}
+
+					{isAdmin && (
+						<Tabs.Panel value="billing" pt="md">
+							<Paper withBorder p="md" radius="sm">
+								<Stack gap={8}>
+									<Text size="sm" fw={500}>
+										<Trans>Billing</Trans>
+									</Text>
+									<Text size="sm" c="dimmed">
+										<Trans>
+											Organisation billing is handled through support. For
+											invoices, payment changes, or a shared contract, email{" "}
+											<Anchor href="mailto:support@dembrane.com">
+												support@dembrane.com
+											</Anchor>
+											.
+										</Trans>
+									</Text>
+								</Stack>
+							</Paper>
 						</Tabs.Panel>
 					)}
 

@@ -103,7 +103,7 @@ export const AcceptInviteRoute = () => {
 				toast.success(t`You're in`);
 			}
 			setTimeout(() => {
-				navigate(`/w/${data.workspace_id}/projects`);
+				navigate(`/w/${data.workspace_id}/home`);
 			}, 800);
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : "Failed to accept";
@@ -421,7 +421,7 @@ export const AcceptInviteRoute = () => {
 												size="md"
 												fullWidth
 												onClick={() =>
-													navigate(`/w/${inviteState.workspace_id}/projects`)
+													navigate(`/w/${inviteState.workspace_id}/home`)
 												}
 											>
 												<Trans>Take me to {resolvedWorkspaceName}</Trans>
@@ -455,7 +455,7 @@ export const AcceptInviteRoute = () => {
 													size="md"
 													fullWidth
 													onClick={() =>
-														navigate(`/w/${inviteState.workspace_id}/projects`)
+														navigate(`/w/${inviteState.workspace_id}/home`)
 													}
 												>
 													<Trans>Take me to {resolvedWorkspaceName}</Trans>

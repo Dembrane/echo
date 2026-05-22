@@ -34,7 +34,7 @@ import {
 } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
@@ -263,6 +263,7 @@ export const WorkspaceSettingsRoute = () => {
 		"*": string;
 	}>();
 	const navigate = useI18nNavigate();
+	const { search: urlSearch } = useLocation();
 	const queryClient = useQueryClient();
 	const { data: meV2 } = useV2Me();
 	const { workspace: myWorkspaceSummary } = useWorkspace();
@@ -271,11 +272,11 @@ export const WorkspaceSettingsRoute = () => {
 	// usage, privacy, or pending invites surfaces.
 	const iAmExternal = myWorkspaceSummary?.role === "external";
 	// Externals don't have a manage surface at all (2026-04-24). Bounce
-	// them back to the project list of the workspace they came in on.
+	// them back to the workspace home they came in on.
 	// Keep the effect above the loading gate so hook order is stable.
 	useEffect(() => {
 		if (iAmExternal && workspaceId) {
-			navigate(`/w/${workspaceId}/projects`, { replace: true });
+			navigate(`/w/${workspaceId}/home`, { replace: true });
 		}
 	}, [iAmExternal, workspaceId, navigate]);
 	const [deleteConfirm, setDeleteConfirm] = useState("");
@@ -470,16 +471,18 @@ export const WorkspaceSettingsRoute = () => {
 		: defaultTab;
 	const setActiveTab = (value: string | null) => {
 		if (!value || !workspaceId) return;
-		navigate(`/w/${workspaceId}/settings/${value}`, { replace: true });
+		navigate(`/w/${workspaceId}/settings/${value}${urlSearch}`, {
+			replace: true,
+		});
 	};
 	useEffect(() => {
 		if (!workspaceId) return;
 		if (segment !== activeTab) {
-			navigate(`/w/${workspaceId}/settings/${activeTab}`, {
+			navigate(`/w/${workspaceId}/settings/${activeTab}${urlSearch}`, {
 				replace: true,
 			});
 		}
-	}, [workspaceId, segment, activeTab, navigate]);
+	}, [workspaceId, segment, activeTab, navigate, urlSearch]);
 
 	// Members list order (2026-04-24): internals first — sorted by role
 	// (owner → admin → billing → member) — then externals at the bottom.
@@ -495,7 +498,8 @@ export const WorkspaceSettingsRoute = () => {
 	const sortedMembers = useMemo(() => {
 		if (!settings) return [];
 		return [...settings.members].sort((a, b) => {
-			if (isExternalMember(a) !== isExternalMember(b)) return isExternalMember(a) ? 1 : -1;
+			if (isExternalMember(a) !== isExternalMember(b))
+				return isExternalMember(a) ? 1 : -1;
 			const ar = MEMBERS_ROLE_WEIGHT[a.role] ?? 99;
 			const br = MEMBERS_ROLE_WEIGHT[b.role] ?? 99;
 			if (ar !== br) return ar - br;
@@ -520,7 +524,8 @@ export const WorkspaceSettingsRoute = () => {
 				if (isExternalMember(m)) return false;
 				if (m.role !== "billing") return false;
 			}
-			if (memberRoleFilter === "externals" && !isExternalMember(m)) return false;
+			if (memberRoleFilter === "externals" && !isExternalMember(m))
+				return false;
 			if (!q) return true;
 			return (
 				(m.display_name || "").toLowerCase().includes(q) ||
@@ -536,7 +541,8 @@ export const WorkspaceSettingsRoute = () => {
 
 	// Show Billing chip only when ≥1 billing-role member exists (mirrors hasExternalMembers).
 	const hasBillingMembers = useMemo(
-		() => sortedMembers.some((m) => !isExternalMember(m) && m.role === "billing"),
+		() =>
+			sortedMembers.some((m) => !isExternalMember(m) && m.role === "billing"),
 		[sortedMembers],
 	);
 
@@ -544,7 +550,8 @@ export const WorkspaceSettingsRoute = () => {
 	const adminLikeCount = useMemo(
 		() =>
 			sortedMembers.filter(
-				(m) => !isExternalMember(m) && (m.role === "admin" || m.role === "owner"),
+				(m) =>
+					!isExternalMember(m) && (m.role === "admin" || m.role === "owner"),
 			).length,
 		[sortedMembers],
 	);
@@ -580,9 +587,10 @@ export const WorkspaceSettingsRoute = () => {
 			/>
 		);
 	}
+	if (!workspaceId) return null;
 
 	// Externals don't have a settings surface (matrix §4). The useEffect above
-	// kicks them to /projects, but that fires on the next tick — without
+	// kicks them to workspace home, but that fires on the next tick — without
 	// this early return the settings tabs flash briefly. Render nothing
 	// while the redirect resolves.
 	if (iAmExternal) {
@@ -657,24 +665,8 @@ export const WorkspaceSettingsRoute = () => {
 				    and nothing to navigate. Tabs come next for everyone else. */}
 					{!iAmExternal && (
 						<Tabs value={activeTab} onChange={setActiveTab} keepMounted={false}>
-							<Tabs.List>
-								<Tabs.Tab value="general">
-									<Trans>General</Trans>
-								</Tabs.Tab>
-								<Tabs.Tab value="members">
-									<Trans>Members</Trans>
-								</Tabs.Tab>
-								<Tabs.Tab value="billing">
-									<Trans>Usage and Tier</Trans>
-								</Tabs.Tab>
-								{/* Matrix §4: delete-workspace is admin + owner. Tab
-							    hidden for billing and member roles. */}
-								{canEditSettings && (
-									<Tabs.Tab value="danger" color="red">
-										<Trans>Danger</Trans>
-									</Tabs.Tab>
-								)}
-							</Tabs.List>
+							{/* Tab strip hidden — the main AppSidebar drives section
+							    navigation. Internal Tabs.value still wires the panels via URL. */}
 
 							<Tabs.Panel value="billing" pt="md">
 								<Stack gap={16}>
@@ -693,9 +685,9 @@ export const WorkspaceSettingsRoute = () => {
 											</Text>
 											<Text size="xs" c="dimmed">
 												<Trans>
-													Every workspace member, including externals, counts
-													as one seat. One person never takes more than one
-													seat per workspace, even if they're on multiple
+													Every workspace member, including externals, counts as
+													one seat. One person never takes more than one seat
+													per workspace, even if they're on multiple
 													organisations.
 												</Trans>
 											</Text>
@@ -758,13 +750,13 @@ export const WorkspaceSettingsRoute = () => {
 											<PrivacyAndDefaultsSection
 												settings={settings}
 												canEdit={canEditSettings}
-												workspaceId={workspaceId!}
+												workspaceId={workspaceId}
 												section="general"
 											/>
 											<PrivacyAndDefaultsSection
 												settings={settings}
 												canEdit={canEditSettings}
-												workspaceId={workspaceId!}
+												workspaceId={workspaceId}
 												section="access"
 											/>
 										</>
@@ -854,8 +846,8 @@ export const WorkspaceSettingsRoute = () => {
 													seatInviteBlocked ? (
 														<Trans>
 															All seats are taken on this tier. Remove a member
-															or external, or upgrade the workspace tier to invite
-															more people.
+															or external, or upgrade the workspace tier to
+															invite more people.
 														</Trans>
 													) : undefined
 												}

@@ -2915,22 +2915,13 @@ export const AdminSettingsRoute = () => {
 						</Text>
 					</Stack>
 				</Group>
+				{/* Tab strip retired — section navigation lives in the main
+				    AppSidebar (AdminHomeView). Tabs.Panel still switches on value. */}
 				<Tabs
 					value={active}
 					onChange={(v) => v && navigate(`/admin/${v}`, { replace: true })}
 					keepMounted={false}
 				>
-					<Tabs.List>
-						<Tabs.Tab value="usage-and-billing">
-							<Trans>Usage and Billing</Trans>
-						</Tabs.Tab>
-						<Tabs.Tab value="partners">
-							<Trans>Partners</Trans>
-						</Tabs.Tab>
-						<Tabs.Tab value="upgrades">
-							<Trans>Upgrades</Trans>
-						</Tabs.Tab>
-					</Tabs.List>
 					<Tabs.Panel value="usage-and-billing" pt="md">
 						<UsageAndBillingPanel />
 					</Tabs.Panel>

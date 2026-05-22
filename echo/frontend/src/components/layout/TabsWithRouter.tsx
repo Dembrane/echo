@@ -1,79 +1,29 @@
-import { Box, LoadingOverlay, Stack, Tabs } from "@mantine/core";
-import { Suspense, useCallback, useEffect, useState } from "react";
-import { Outlet, useLocation, useParams } from "react-router";
-import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { testId } from "@/lib/testUtils";
+import { Box, LoadingOverlay, Stack } from "@mantine/core";
+import { Suspense } from "react";
+import { Outlet } from "react-router";
 
 const TabLoadingFallback = () => (
 	<Box pos="relative" h="100%">
 		<LoadingOverlay
 			visible={true}
 			zIndex={1000}
-			overlayProps={{
-				backgroundOpacity: 0.1,
-				blur: 2,
-				radius: "sm",
-			}}
-			loaderProps={{
-				size: "md",
-				type: "dots",
-			}}
+			overlayProps={{ backgroundOpacity: 0.1, blur: 2, radius: "sm" }}
+			loaderProps={{ size: "md", type: "dots" }}
 		/>
 	</Box>
 );
 
-export const TabsWithRouter = ({
-	basePath,
-	tabs,
-	loading = false,
-	...rest
-}: {
-	basePath: string;
-	tabs: { value: string; label: string }[];
-	loading?: boolean;
-} & Record<string, unknown>) => {
-	const navigate = useI18nNavigate();
-	const location = useLocation();
-	const params = useParams();
-
-	const determineInitialTab = useCallback(() => {
-		return (
-			tabs.find((tab) => location.pathname.includes(`/${tab.value}`))?.value ||
-			tabs[0].value
-		);
-	}, [tabs, location.pathname]);
-
-	const [activeTab, setActiveTab] = useState(determineInitialTab());
-
-	useEffect(() => {
-		const newTab = determineInitialTab();
-		if (newTab !== activeTab) {
-			setActiveTab(newTab);
-		}
-	}, [determineInitialTab, activeTab]);
-
-	const handleTabChange = (value: string | null) => {
-		const path = basePath.replace(/:(\w+)/g, (_, param) => params[param] || "");
-		navigate(`${path}/${value}`);
-		setActiveTab(value ?? "");
-	};
-
+// Tab strip retired — section navigation lives in the main AppSidebar.
+// Now a thin Outlet wrapper; props kept for callsite compat but ignored.
+export const TabsWithRouter = (
+	_props: {
+		basePath?: string;
+		tabs?: { value: string; label: string }[];
+		loading?: boolean;
+	} & Record<string, unknown>,
+) => {
 	return (
-		<Stack className="relative" {...rest}>
-			<Tabs value={activeTab} onChange={handleTabChange} variant="default">
-				<Tabs.List grow justify="space-between">
-					{tabs.map((tab) => (
-						<Tabs.Tab
-							disabled={loading}
-							key={tab.value}
-							value={tab.value}
-							{...testId(`project-overview-tab-${tab.value}`)}
-						>
-							{tab.label}
-						</Tabs.Tab>
-					))}
-				</Tabs.List>
-			</Tabs>
+		<Stack className="relative">
 			<Suspense fallback={<TabLoadingFallback />}>
 				<Outlet />
 			</Suspense>

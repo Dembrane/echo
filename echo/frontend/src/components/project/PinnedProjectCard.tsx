@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink, IconPinFilled } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
+import { useParams } from "react-router";
 import { Icons } from "@/icons";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
@@ -40,7 +41,8 @@ export const PinnedProjectCard = ({
 	isUnpinning?: boolean;
 	onSearchOwner?: (term: string) => void;
 }) => {
-	const link = `/projects/${project.id}/overview`;
+	const { workspaceId } = useParams();
+	const link = `/w/${workspaceId}/projects/${project.id}/home`;
 	const conversationCount =
 		project.conversations_count ?? project?.conversations?.length ?? 0;
 	const audioHours =

@@ -16,6 +16,7 @@ import {
 	IconPresentation,
 } from "@tabler/icons-react";
 import { useMemo, useRef } from "react";
+import { useParams } from "react-router";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { useAppPreferences } from "@/hooks/useAppPreferences";
 import { testId } from "@/lib/testUtils";
@@ -80,11 +81,12 @@ export const useProjectSharingLink = (project?: Project) => {
 export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 	const link = useProjectSharingLink(project);
 	const qrRef = useRef<HTMLDivElement>(null);
+	const { workspaceId } = useParams();
 
 	const handleOpenHostGuide = () => {
 		if (!project) return;
 		// Open quick start page in new tab
-		const hostGuideUrl = `/projects/${project.id}/host-guide`;
+		const hostGuideUrl = `/w/${workspaceId}/projects/${project.id}/host-guide`;
 		window.open(hostGuideUrl, "_blank");
 	};
 

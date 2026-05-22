@@ -56,9 +56,9 @@ export const FontSettingsCard = () => {
 			setFontFamily(newTheme);
 		}, 800);
 
-		// Wait for transition to complete then navigate to projects
+		// Wait for transition to complete then navigate home.
 		await transitionPromise;
-		navigate("/projects");
+		navigate("/");
 	};
 
 	return (

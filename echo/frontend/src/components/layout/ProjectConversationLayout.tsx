@@ -39,7 +39,7 @@ export const ProjectConversationLayout = () => {
 				/>
 			)}
 			<TabsWithRouter
-				basePath="/projects/:projectId/conversation/:conversationId"
+				basePath="/w/:workspaceId/projects/:projectId/conversation/:conversationId"
 				tabs={[
 					{ label: t`Overview`, value: "overview" },
 					{ label: t`Transcript`, value: "transcript" },

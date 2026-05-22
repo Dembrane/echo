@@ -24,7 +24,7 @@ export const ConversationDangerZone = ({
 }) => {
 	const deleteConversationByIdMutation = useDeleteConversationByIdMutation();
 	const navigate = useI18nNavigate();
-	const { projectId } = useParams();
+	const { projectId, workspaceId } = useParams();
 	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
 		useDisclosure(false);
 
@@ -103,7 +103,7 @@ export const ConversationDangerZone = ({
 						console.warn("Analytics tracking failed:", error);
 					}
 					deleteConversationByIdMutation.mutate(conversation.id);
-					navigate(`/projects/${projectId}/overview`);
+					navigate(`/w/${workspaceId}/projects/${projectId}/overview`);
 					closeConfirm();
 				}}
 			/>

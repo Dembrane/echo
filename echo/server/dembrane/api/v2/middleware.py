@@ -123,6 +123,25 @@ async def get_workspace_context(
     from dembrane.policies import _normalize_legacy_role
 
     normalized_role = _normalize_legacy_role(role) or role
+    if source == "direct" and normalized_role != "external":
+        org_id = workspace.get("org_id")
+        if org_id:
+            org_rows = await async_directus.get_items(
+                "org_membership",
+                {
+                    "query": {
+                        "filter": {
+                            "org_id": {"_eq": org_id},
+                            "user_id": {"_eq": app_user_id},
+                            "deleted_at": {"_null": True},
+                        },
+                        "fields": ["id"],
+                        "limit": 1,
+                    }
+                },
+            )
+            if not isinstance(org_rows, list) or len(org_rows) == 0:
+                normalized_role = "external"
 
     return WorkspaceContext(
         workspace_id=workspace_id,

@@ -29,12 +29,14 @@ const ConversationList = ({
 	conversations,
 	projectId,
 	onItemClick,
-}: ConversationListProps) => (
+}: ConversationListProps) => {
+	const { workspaceId } = useParams();
+	return (
 	<Stack gap={4}>
 		{conversations.map((conversation, index) => (
 			<I18nLink
 				key={conversation.id}
-				to={`/projects/${projectId}/conversation/${conversation.id}/overview`}
+				to={`/w/${workspaceId}/projects/${projectId}/conversation/${conversation.id}/overview`}
 				onClick={onItemClick}
 			>
 				<Box className="cursor-pointer rounded-lg px-3.5 py-2.5 hover:bg-primary-100">
@@ -55,7 +57,8 @@ const ConversationList = ({
 			</I18nLink>
 		))}
 	</Stack>
-);
+	);
+};
 
 type ConversationsModalProps = {
 	opened: boolean;
@@ -118,7 +121,7 @@ export const ConversationLinks = ({
 	color?: string;
 	hoverUnderlineColor?: string;
 }) => {
-	const { projectId } = useParams();
+	const { projectId, workspaceId } = useParams();
 	const [modalOpened, setModalOpened] = useState(false);
 
 	// an error could occur if the conversation is deleted and not filtered in ChatHistoryMessage.tsx
@@ -140,7 +143,7 @@ export const ConversationLinks = ({
 				{visibleConversations.map((conversation) => (
 					<I18nLink
 						key={conversation.id}
-						to={`/projects/${projectId}/conversation/${conversation.id}/overview`}
+						to={`/w/${workspaceId}/projects/${projectId}/conversation/${conversation.id}/overview`}
 					>
 						<Box maw={300} className="cursor-pointer hover:underline">
 							<Text size="xs" truncate="end" c="gray.7" pr={3}>

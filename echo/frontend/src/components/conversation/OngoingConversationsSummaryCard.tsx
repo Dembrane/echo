@@ -52,8 +52,9 @@ export const OngoingConversationsSummaryCard = ({
 					w="100%"
 					className="relative"
 				>
-					<Text className="text-lg">{t`Ongoing Conversations`}</Text>
+					<Text className="text-lg">{t`Ongoing conversations`}</Text>
 					<ActionIcon
+						aria-label={t`Refresh ongoing conversations`}
 						variant="transparent"
 						c="gray.8"
 						opacity={0.6}
@@ -73,7 +74,7 @@ export const OngoingConversationsSummaryCard = ({
 					</Text>
 				</Stack>
 			}
-			loading={conversationChunksQuery.isFetching}
+			loading={conversationChunksQuery.isLoading}
 		/>
 	);
 };

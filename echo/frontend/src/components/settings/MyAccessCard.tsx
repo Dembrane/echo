@@ -64,8 +64,8 @@ async function fetchAccess(): Promise<WorkspacesResponse | null> {
 export const MyAccessCard = () => {
 	const navigate = useI18nNavigate();
 	const { data, isLoading } = useQuery({
-		queryKey: ["v2", "workspaces"],
 		queryFn: fetchAccess,
+		queryKey: ["v2", "workspaces"],
 		staleTime: 60_000,
 	});
 
@@ -79,7 +79,8 @@ export const MyAccessCard = () => {
 		if (!data) return out;
 		for (const ws of data.workspaces) {
 			const key = ws.org_id || "__orphan__";
-			const organisation = data.organisations.find((t) => t.id === ws.org_id) ?? null;
+			const organisation =
+				data.organisations.find((t) => t.id === ws.org_id) ?? null;
 			const existing = out.get(key);
 			if (existing) existing.workspaces.push(ws);
 			else out.set(key, { organisation, workspaces: [ws] });
@@ -145,86 +146,85 @@ export const MyAccessCard = () => {
 					</Text>
 				) : (
 					<Stack gap="md">
-						{Array.from(byOrganisation.values()).map(({ organisation, workspaces }) => (
-							<Stack key={organisation?.id ?? "orphan"} gap={8}>
-								{/* Organisation header sits flush-left so the eye reads
+						{Array.from(byOrganisation.values()).map(
+							({ organisation, workspaces }) => (
+								<Stack key={organisation?.id ?? "orphan"} gap={8}>
+									{/* Organisation header sits flush-left so the eye reads
 								    "organisation → workspaces" as a hierarchy. Only the
 								    workspace rows are indented + rule'd. */}
-								<Group gap="xs" justify="space-between" align="center">
-									<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-										<Text fw={500} size="sm" lineClamp={1}>
-											{organisation?.name ?? t`(direct workspace access)`}
-										</Text>
-										{organisation && (
-											<Badge
-												size="xs"
-												variant="light"
-												color={roleColor(organisation.role)}
-											>
-												{displayRole(organisation.role)}
-											</Badge>
-										)}
-									</Group>
-									{organisation && (
-										<Button
-											size="compact-xs"
-											variant="subtle"
-											rightSection={<IconExternalLink size={12} />}
-											onClick={() => navigate(`/o/${organisation.id}`)}
-										>
-											<Trans>Open organisation</Trans>
-										</Button>
-									)}
-								</Group>
-
-								<Stack
-									gap={4}
-									ml={12}
-									style={{
-										borderLeft:
-											"2px solid var(--mantine-color-gray-3)",
-										paddingLeft: 12,
-									}}
-								>
-									{workspaces.map((ws) => (
-										<Group
-											key={ws.id}
-											gap="sm"
-											justify="space-between"
-											wrap="nowrap"
-											style={{ cursor: "pointer" }}
-											onClick={() =>
-												navigate(`/w/${ws.id}/projects`)
-											}
-										>
-											<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-												<Text size="sm" lineClamp={1}>
-													{ws.name}
-												</Text>
+									<Group gap="xs" justify="space-between" align="center">
+										<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+											<Text fw={500} size="sm" lineClamp={1}>
+												{organisation?.name ?? t`(direct workspace access)`}
+											</Text>
+											{organisation && (
 												<Badge
 													size="xs"
 													variant="light"
-													color={roleColor(ws.role)}
+													color={roleColor(organisation.role)}
 												>
-													{displayRole(ws.role)}
+													{displayRole(organisation.role)}
 												</Badge>
-											</Group>
-											<Text size="xs" c="dimmed">
-												<Plural
-													value={ws.project_count}
-													one="# project"
-													other="# projects"
-												/>
-												{" · "}
-												<span style={{ textTransform: "capitalize" }}>
-													{ws.tier}
-												</span>
-											</Text>
+											)}
 										</Group>
-									))}
+										{organisation && (
+											<Button
+												size="compact-xs"
+												variant="subtle"
+												rightSection={<IconExternalLink size={12} />}
+												onClick={() => navigate(`/o/${organisation.id}`)}
+											>
+												<Trans>Open organisation</Trans>
+											</Button>
+										)}
+									</Group>
+
+									<Stack
+										gap={4}
+										ml={12}
+										style={{
+											borderLeft: "2px solid var(--mantine-color-gray-3)",
+											paddingLeft: 12,
+										}}
+									>
+										{workspaces.map((ws) => (
+											<Group
+												key={ws.id}
+												gap="sm"
+												justify="space-between"
+												wrap="nowrap"
+												style={{ cursor: "pointer" }}
+												onClick={() => navigate(`/w/${ws.id}/home`)}
+											>
+												<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+													<Text size="sm" lineClamp={1}>
+														{ws.name}
+													</Text>
+													<Badge
+														size="xs"
+														variant="light"
+														color={roleColor(ws.role)}
+													>
+														{displayRole(ws.role)}
+													</Badge>
+												</Group>
+												<Text size="xs" c="dimmed">
+													<Plural
+														value={ws.project_count}
+														one="# project"
+														other="# projects"
+													/>
+													{" · "}
+													<span style={{ textTransform: "capitalize" }}>
+														{ws.tier}
+													</span>
+												</Text>
+											</Group>
+										))}
+									</Stack>
 								</Stack>
-							</Stack>
-						))}
+							),
+						)}
 					</Stack>
 				)}
 			</Stack>

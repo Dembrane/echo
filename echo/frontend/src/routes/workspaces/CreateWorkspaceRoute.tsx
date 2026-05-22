@@ -186,17 +186,21 @@ export const CreateWorkspaceRoute = () => {
 		selectedTier === "pilot" ? null : billingPeriod;
 
 	const mutation = useMutation({
-		mutationFn: () =>
-			submitWorkspaceRequest({
+		mutationFn: () => {
+			if (!targetOrganisationId) {
+				throw new Error(t`Choose an organisation first`);
+			}
+			return submitWorkspaceRequest({
 				kind: "new_workspace",
-				org_id: targetOrganisationId!,
+				org_id: targetOrganisationId,
 				proposed_billing_period: submittedBillingPeriod,
 				proposed_name: name.trim(),
 				proposed_tier: selectedTier,
 				proposed_visibility:
 					privacy === "open" ? "open_to_organisation" : "private",
 				requester_message: message.trim() || undefined,
-			}),
+			});
+		},
 		onError: (error: Error) => {
 			toast.error(error.message);
 		},
@@ -401,7 +405,7 @@ export const CreateWorkspaceRoute = () => {
 											<Anchor
 												size="sm"
 												onClick={() =>
-													navigate(`/w/${freeWorkspaceForOrg.id}/projects`)
+													navigate(`/w/${freeWorkspaceForOrg.id}/home`)
 												}
 											>
 												Open {freeWorkspaceForOrg.name}

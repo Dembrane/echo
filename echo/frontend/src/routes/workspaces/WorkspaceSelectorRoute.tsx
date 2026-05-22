@@ -187,18 +187,18 @@ function WorkspaceCard({
 	//     organisation, so repeating the organisation logo on every internal card is
 	//     just visual noise ("see here there is no special workspace
 	//     icon so no need to show").
-	const headerLogo = (workspace.role === "external")
-		? wsLogo || organisationLogo
-		: wsLogo;
+	const headerLogo =
+		workspace.role === "external" ? wsLogo || organisationLogo : wsLogo;
 	// Calmer meta-line: role + tier as a single dimmed string, no
 	// colored badges. The old design stacked two blue pills which made
 	// every card shout "admin! pioneer!" at once. Only the at-limit
 	// warning keeps color — it's the one actionable exception.
 	const capitalizedTier =
 		workspace.tier.charAt(0).toUpperCase() + workspace.tier.slice(1);
-	const metaParts = (workspace.role === "external")
-		? [t`External of ${workspace.org_name}`]
-		: [displayRole(workspace.role), capitalizedTier];
+	const metaParts =
+		workspace.role === "external"
+			? [t`External of ${workspace.org_name}`]
+			: [displayRole(workspace.role), capitalizedTier];
 
 	return (
 		<Paper
@@ -240,7 +240,7 @@ function WorkspaceCard({
 							label={t`${capitalizedTier} · tap to see what's included`}
 							position="bottom-start"
 							withArrow
-							disabled={(workspace.role === "external")}
+							disabled={workspace.role === "external"}
 						>
 							<Text size="xs" c="dimmed" lineClamp={1}>
 								{metaParts.join(" · ")}
@@ -429,6 +429,11 @@ function AddWorkspaceCard({ organisationId }: { organisationId: string }) {
 	);
 }
 
+function sortWorkspaceCards(a: Workspace, b: Workspace) {
+	if (a.is_default !== b.is_default) return a.is_default ? -1 : 1;
+	return a.name.localeCompare(b.name);
+}
+
 interface OrgUsageLite {
 	total_audio_hours: number;
 	workspaces_at_cap: number;
@@ -586,8 +591,16 @@ export const WorkspaceSelectorRoute = () => {
 		: workspaces;
 
 	// Group by organisation (org)
-	const internalWorkspaces = filtered.filter((w) => !(w.role === "external"));
-	const externalWorkspaces = filtered.filter((w) => (w.role === "external"));
+	const internalWorkspaces = filtered
+		.filter((w) => !(w.role === "external"))
+		.sort(sortWorkspaceCards);
+	const externalWorkspaces = filtered
+		.filter((w) => w.role === "external")
+		.sort((a, b) => {
+			const orgCompare = a.org_name.localeCompare(b.org_name);
+			if (orgCompare !== 0) return orgCompare;
+			return sortWorkspaceCards(a, b);
+		});
 
 	// Seed groups from `organisations` first — that way a organisation with zero workspaces
 	// still renders a hero card + AddWorkspace affordance instead of getting
@@ -618,7 +631,7 @@ export const WorkspaceSelectorRoute = () => {
 
 	const handleSelect = (ws: Workspace) => {
 		setWorkspace(ws.id);
-		navigate(`/w/${ws.id}/projects`);
+		navigate(`/w/${ws.id}/home`);
 	};
 
 	if (isLoading) {
@@ -671,49 +684,51 @@ export const WorkspaceSelectorRoute = () => {
 					    Ask 5: organisation-level context at top). Dividers between groups
 					    (2026-04-24 ask) so each organisation/guest section reads as a
 					    distinct block instead of one big stream. */}
-				{Array.from(orgGroups.entries()).map(([orgId, group], idx) => {
-					const organisation = organisations.find((t) => t.id === orgId);
+				{Array.from(orgGroups.entries())
+					.sort(([, a], [, b]) => a.name.localeCompare(b.name))
+					.map(([orgId, group], idx) => {
+						const organisation = organisations.find((t) => t.id === orgId);
 
-					return (
-						<Stack key={orgId} gap={16}>
-							{idx > 0 && <Divider />}
-							{organisation ? (
-								<OrganisationHeroCard
-									organisation={organisation}
-									onManage={() => navigate(`/o/${orgId}`)}
-								/>
-							) : (
-								<Text size="sm" fw={500}>
-									{group.name}
-								</Text>
-							)}
-
-							<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
-								{group.workspaces.map((ws) => (
-									<WorkspaceCard
-										key={ws.id}
-										workspace={ws}
-										onSelect={() => handleSelect(ws)}
-										onManage={() => navigate(`/w/${ws.id}/settings`)}
+						return (
+							<Stack key={orgId} gap={16}>
+								{idx > 0 && <Divider />}
+								{organisation ? (
+									<OrganisationHeroCard
+										organisation={organisation}
+										onManage={() => navigate(`/o/${orgId}`)}
 									/>
-								))}
-								{pendingRequests
-									.filter((r) => r.org_id === orgId)
-									.map((r) => (
-										<PendingRequestCard key={r.id} request={r} />
-									))}
-								{(group.role === "owner" || group.role === "admin") && (
-									<AddWorkspaceCard organisationId={orgId} />
+								) : (
+									<Text size="sm" fw={500}>
+										{group.name}
+									</Text>
 								)}
-							</SimpleGrid>
 
-							{/* Matrix §6: Slack-style discovery. Renders only
+								<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
+									{group.workspaces.map((ws) => (
+										<WorkspaceCard
+											key={ws.id}
+											workspace={ws}
+											onSelect={() => handleSelect(ws)}
+											onManage={() => navigate(`/w/${ws.id}/settings`)}
+										/>
+									))}
+									{pendingRequests
+										.filter((r) => r.org_id === orgId)
+										.map((r) => (
+											<PendingRequestCard key={r.id} request={r} />
+										))}
+									{(group.role === "owner" || group.role === "admin") && (
+										<AddWorkspaceCard organisationId={orgId} />
+									)}
+								</SimpleGrid>
+
+								{/* Matrix §6: Slack-style discovery. Renders only
 								    when there's something joinable/requestable and
 								    hides itself otherwise. */}
-							<DiscoverableWorkspaces orgId={orgId} />
-						</Stack>
-					);
-				})}
+								<DiscoverableWorkspaces orgId={orgId} />
+							</Stack>
+						);
+					})}
 
 				{/* External workspaces — quieter section, individual "guest of"
 					    labels live on each card (designer Ask 5). */}
