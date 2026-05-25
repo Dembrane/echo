@@ -25,7 +25,7 @@ const AuthHeader = () => (
 		<Group justify="space-between" align="center" h={60} px="md">
 			<I18nLink to="/">
 				<Group align="center">
-					<Logo hideTitle={false} />
+					<Logo hideTitle={false} alwaysDembrane />
 				</Group>
 			</I18nLink>
 			<LanguagePicker />
