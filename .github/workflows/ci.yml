@@ -64,6 +64,24 @@ jobs:
         with:
           src: echo/server
 
+      - name: Security lint (ruff bandit rules)
+        run: ruff check echo/server --select=S --ignore=S101
+
+      - name: Install pip-audit
+        run: pip install pip-audit==2.9.0
+
+      - name: Python dependency CVE scan (pip-audit)
+        run: |
+          IGNORE_ARGS=()
+          if [ -f .pipauditignore ]; then
+            while IFS= read -r line; do
+              [[ "$line" =~ ^[[:space:]]*# ]] && continue
+              [[ -z "${line// }" ]] && continue
+              IGNORE_ARGS+=(--ignore-vuln "$line")
+            done < .pipauditignore
+          fi
+          pip-audit -r echo/server/requirements.lock "${IGNORE_ARGS[@]}"
+
   ci-check-frontend:
     name: ci-check-frontend
     runs-on: ubuntu-latest
@@ -153,8 +171,21 @@ jobs:
           file: ${{ matrix.image.context }}/${{ matrix.image.dockerfile }}
           # Only push if the event is a push event to main.
           push: ${{ github.event_name == 'push' }}
+          load: ${{ github.event_name != 'push' }}
           tags: registry.digitalocean.com/dbr-cr/${{ matrix.image.tag }}:${{ github.sha }}
           build-args: ${{ matrix.image.build_args }}
           # Enhanced cache settings - using GitHub Actions cache for better performance
           cache-from: type=gha,scope=build-${{ matrix.image.name }}
           cache-to: type=gha,scope=build-${{ matrix.image.name }},mode=max
+
+      - name: Container vulnerability scan (trivy)
+        # Scan built image locally on PR / merge group validation before deploy/merge
+        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: registry.digitalocean.com/dbr-cr/${{ matrix.image.tag }}:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+          format: table
+          trivyignores: .trivyignore
