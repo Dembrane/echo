@@ -18,7 +18,6 @@ Covers:
 from __future__ import annotations
 
 import os
-import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -595,36 +594,3 @@ class TestPrewarningScheduler:
         assert "task_send_tier_expiry_prewarning" in str(job.func_ref)
 
 
-# ── Schema step 20 ───────────────────────────────────────────────────
-
-
-class TestSchemaStep20:
-    """Structural check for the pre_warning_sent field definition."""
-
-    @pytest.fixture(autouse=True)
-    def _add_scripts_to_path(self):
-        scripts_dir = os.path.join(os.path.dirname(__file__), "..", "..", "scripts")
-        scripts_dir = os.path.abspath(scripts_dir)
-        if scripts_dir not in sys.path:
-            sys.path.insert(0, scripts_dir)
-        yield
-        if scripts_dir in sys.path:
-            sys.path.remove(scripts_dir)
-
-    def test_step_20_in_steps(self):
-        from create_schema import STEPS
-
-        assert "20" in STEPS
-        name, fn = STEPS["20"]
-        assert "pre_warning_sent" in name
-
-    def test_step_20_callable(self):
-        from create_schema import STEPS
-
-        _, fn = STEPS["20"]
-        assert callable(fn)
-
-    def test_step_20_function_name(self):
-        from create_schema import step_20_workspace_pre_warning_sent
-
-        assert step_20_workspace_pre_warning_sent.__name__ == "step_20_workspace_pre_warning_sent"

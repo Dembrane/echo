@@ -389,33 +389,6 @@ class TestBillingPeriodValidation:
         assert row["proposed_billing_period"] == cadence
 
 
-# ── Schema script step_18 ────────────────────────────────────────────
-
-
-class TestSchemaStep18:
-    """Structural checks that the schema step function exists and has the right shape."""
-
-    def _load_schema_module(self):
-        import os
-        import importlib.util
-        script_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "scripts", "create_schema.py"
-        )
-        spec = importlib.util.spec_from_file_location("create_schema", script_path)
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod
-
-    def test_step_registered(self):
-        mod = self._load_schema_module()
-        assert "18" in mod.STEPS
-        assert mod.STEPS["18"][0] == "workspace_request collection"
-
-    def test_step_function_callable(self):
-        mod = self._load_schema_module()
-        assert callable(mod.step_18_workspace_request)
-
-
 # ── Row creation payload ─────────────────────────────────────────────
 
 

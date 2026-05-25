@@ -145,11 +145,9 @@ Which group powers which feature is non-obvious — don't downgrade silently.
 **Never hand-write Directus sync/snapshot JSON files.** To create or modify collections:
 
 1. Write an idempotent Python script that uses the Directus REST API (`POST /collections`, `POST /fields`, `POST /relations`) with the admin token. Check `collection_exists()` / `field_exists()` before creating
-2. Run it step-by-step to verify each change
+2. Run it step-by-step to verify each change against a local Directus
 3. Pull the schema: `cd directus && bash sync.sh -u http://directus:8055 -e admin@dembrane.com -p admin pull`
-4. Commit the snapshot JSON
-
-See `scripts/create_schema.py` for the established pattern.
+4. Commit the snapshot JSON under `directus/sync/snapshot/` — that is the source of truth; the one-shot migration script does not need to be committed
 
 ### Python DirectusClient
 

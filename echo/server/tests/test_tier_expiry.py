@@ -483,33 +483,6 @@ class TestSchedulerRegistration:
         assert str(minute_field) == "0"
 
 
-# ── Schema step 19 ──────────────────────────────────────────────────
-
-
-class TestSchemaStep19:
-    """Structural check that step_19 is wired in STEPS and is callable."""
-
-    def test_step_19_in_source(self):
-        src_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "scripts", "create_schema.py"
-        )
-        with open(src_path) as f:
-            source = f.read()
-
-        assert "step_19_workspace_tier_expires_at" in source
-        assert '"19"' in source
-
-    def test_step_19_adds_tier_expires_at(self):
-        src_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "scripts", "create_schema.py"
-        )
-        with open(src_path) as f:
-            source = f.read()
-
-        assert '"tier_expires_at"' in source
-        assert '"timestamp"' in source
-
-
 # ── Email template existence ─────────────────────────────────────────
 
 
