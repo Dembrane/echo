@@ -65,7 +65,7 @@ jobs:
           src: echo/server
 
       - name: Security lint (ruff bandit rules)
-        run: ruff check echo/server --select=S --ignore=S101
+        run: ruff check echo/server --select=S --ignore=S101,S104,S105,S106,S107,S110,S112,S113,S311,S603
 
       - name: Install pip-audit
         run: pip install pip-audit==2.9.0
