@@ -389,6 +389,7 @@ async def change_project_share_role(
             message=f"You're now a **{body.role}** on this project.",
             action="NAVIGATE_PROJECT",
             ref_project_id=project_id,
+            ref_workspace_id=project.get("workspace_id"),
         )
 
     return {"status": "updated", "role": body.role}

@@ -1437,6 +1437,7 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
                             action="NAVIGATE_REPORT",
                             ref_project_id=project_id,
                             ref_report_id=report_id_str,
+                            ref_workspace_id=(project_row or {}).get("workspace_id"),
                         )
             except Exception as e:
                 logger.warning(f"Failed to emit REPORT_READY notification: {e}")
@@ -1467,6 +1468,7 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
                 from dembrane.notifications import emit_sync
                 with directus_client_context() as client:
                     report_row = client.get_item("project_report", report_id_str)
+                    project_row = client.get_item("project", project_id) if project_id else None
                 report_data = (report_row or {}).get("data") or report_row or {}
                 creator_directus_id = report_data.get("user_created")
                 if creator_directus_id:
@@ -1480,6 +1482,7 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
                             action="NAVIGATE_REPORT",
                             ref_project_id=project_id,
                             ref_report_id=report_id_str,
+                            ref_workspace_id=(project_row or {}).get("workspace_id"),
                         )
             except Exception as notif_err:
                 logger.warning(f"Failed to emit REPORT_FAILED: {notif_err}")

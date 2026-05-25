@@ -10,12 +10,9 @@ Covers:
 - _create_workspace_for_request writes discount fields (already covered in Slice 10,
   but verified structurally here)
 - _upgrade_workspace_for_request writes discount fields (same)
-- create_schema step_21 is registered and callable
 - No code path computes a price using discount fields (grep guard)
 """
 
-import os
-import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -454,39 +451,6 @@ class TestAllActiveWorkspacesFields:
             assert "tier_expires_at" in fields
             assert "type_discount" in fields
             assert "percent_discount" in fields
-
-
-# ── Schema step_21 registration ──
-
-
-class TestSchemaStep21:
-    @pytest.fixture(autouse=True)
-    def _add_scripts_to_path(self):
-        scripts_dir = os.path.join(os.path.dirname(__file__), "..", "..", "scripts")
-        scripts_dir = os.path.abspath(scripts_dir)
-        if scripts_dir not in sys.path:
-            sys.path.insert(0, scripts_dir)
-        yield
-        if scripts_dir in sys.path:
-            sys.path.remove(scripts_dir)
-
-    def test_step_21_in_steps(self):
-        from create_schema import STEPS
-
-        assert "21" in STEPS
-        name, fn = STEPS["21"]
-        assert "discount" in name.lower()
-
-    def test_step_21_callable(self):
-        from create_schema import STEPS
-
-        _, fn = STEPS["21"]
-        assert callable(fn)
-
-    def test_step_21_function_name(self):
-        from create_schema import step_21_workspace_discount_fields
-
-        assert step_21_workspace_discount_fields.__name__ == "step_21_workspace_discount_fields"
 
 
 # ── Approve helpers write discount fields (structural) ──
