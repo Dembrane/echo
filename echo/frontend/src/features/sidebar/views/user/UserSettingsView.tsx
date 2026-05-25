@@ -34,7 +34,8 @@ export const UserSettingsView = () => {
 		queryKey: ["v2", "workspaces"],
 		staleTime: 60_000,
 	});
-	const isExternalOnly = (accessData?.organisations.length ?? 0) === 0;
+	const isExternalOnly =
+		accessData != null ? accessData.organisations.length === 0 : false;
 
 	const handleLogout = async () => {
 		if (logoutMutation.isPending) return;
