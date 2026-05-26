@@ -29,6 +29,7 @@ def generate_summary(
     language: str | None,
     project_context: str | None = None,
     verified_artifacts: list[str] | None = None,
+    model_group: str | None = None,
 ) -> str:
     """
     Generate a summary of the transcript using LangChain and a custom API endpoint.
@@ -38,6 +39,7 @@ def generate_summary(
         language (str | None): The language of the transcript.
         project_context (str | None): Optional project context to include.
         verified_artifacts (list[str] | None): Optional list of verified artifacts.
+        model_group (str | None): Optional model group name to use.
 
     Returns:
         str: The generated summary.
@@ -54,10 +56,25 @@ def generate_summary(
         },
     )
 
+    model_group_enum = MODELS.MULTI_MODAL_PRO
+    if model_group:
+        try:
+            model_group_enum = MODELS[model_group.upper()]
+        except (KeyError, ValueError):
+            logger.warning(f"Invalid model group '{model_group}', falling back to MULTI_MODAL_PRO")
+            model_group_enum = MODELS.MULTI_MODAL_PRO
+
+    if model_group_enum == MODELS.OPEN_SOURCE:
+        from dembrane.settings import get_settings
+        settings = get_settings()
+        if not settings.llms.get_deployments_for_group("open_source"):
+            logger.warning("OPEN_SOURCE model group is not configured, falling back to MULTI_MODAL_PRO")
+            model_group_enum = MODELS.MULTI_MODAL_PRO
+
     try:
         # Use router for load balancing and failover
         response = router_completion(
-            MODELS.MULTI_MODAL_PRO,
+            model_group_enum,
             messages=[
                 {
                     "role": "user",
