@@ -56,6 +56,7 @@ export const ProjectConversationOverviewRoute = () => {
 	const [hasVoted, setHasVoted] = useState(false);
 	const [feedbackSaved, setFeedbackSaved] = useState(false);
 	const [votedOption, setVotedOption] = useState<string | null>(null);
+	const [overrideSummaryContent, setOverrideSummaryContent] = useState<string | null>(null);
 
 	const conversationQuery = useConversationById({
 		conversationId: conversationId ?? "",
@@ -147,8 +148,12 @@ export const ProjectConversationOverviewRoute = () => {
 		let preferredType: string = option;
 		if (option === "A") {
 			preferredType = randomized.type1;
+			setOverrideSummaryContent(randomized.content1);
 		} else if (option === "B") {
 			preferredType = randomized.type2;
+			setOverrideSummaryContent(randomized.content2);
+		} else {
+			setOverrideSummaryContent(null);
 		}
 
 		try {
@@ -283,6 +288,7 @@ export const ProjectConversationOverviewRoute = () => {
 								<div {...testId("conversation-overview-summary-content")}>
 									<Markdown
 										content={
+											overrideSummaryContent ??
 											conversationQuery.data?.summary ??
 											(useHandleGenerateSummaryManually.data &&
 											"summary" in useHandleGenerateSummaryManually.data
@@ -455,6 +461,21 @@ export const ProjectConversationOverviewRoute = () => {
 																	<Trans>✓ Alternative summary has been saved permanently to this conversation!</Trans>
 																</Text>
 															)}
+
+															<Group gap="xs" mt="xs">
+																<Button
+																	size="xs"
+																	variant="subtle"
+																	color="gray"
+																	onClick={() => {
+																		setHasVoted(false);
+																		setVotedOption(null);
+																		setOverrideSummaryContent(null);
+																	}}
+																>
+																	<Trans>← Back to Preference Selector</Trans>
+																</Button>
+															</Group>
 														</Stack>
 													)}
 												</Stack>
