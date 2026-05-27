@@ -464,8 +464,13 @@ export const WorkspaceSettingsRoute = () => {
 	// a second time with the role-correct default if the URL is bare.
 	const callerCanManage =
 		settings?.my_policies?.includes("member:manage") ?? false;
-	const defaultTab: TabValue =
-		settings?.my_role === "billing" && !callerCanManage ? "billing" : "general";
+	const canEditSettings =
+		settings?.my_policies?.includes("settings:manage") ?? false;
+	const defaultTab: TabValue = canEditSettings
+		? "general"
+		: settings?.my_role === "billing"
+			? "billing"
+			: "members";
 	const activeTab: TabValue = segmentIsValid
 		? (segment as TabValue)
 		: defaultTab;
@@ -599,8 +604,6 @@ export const WorkspaceSettingsRoute = () => {
 
 	const canManage = callerCanManage;
 	const myAppUserId = meV2?.id ?? null;
-	const canEditSettings =
-		settings.my_policies?.includes("settings:manage") ?? false;
 	const seesFinancials =
 		settings.my_policies?.includes("workspace:view_invoices") ?? false;
 
