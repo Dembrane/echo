@@ -128,10 +128,10 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 	return (
 		<Paper
 			p="md"
-			className="relative flex h-full flex-col items-center justify-center"
+			className="relative flex h-full flex-col items-start justify-center"
 		>
 			{project?.is_conversation_allowed ? (
-				<Group align="center" justify="center" gap="lg">
+				<Group align="center" justify="start" gap="lg">
 					<QRCode
 						value={link}
 						href={link}

@@ -111,8 +111,6 @@ export const ProjectHomeRoute = () => {
 					<Group gap="sm" wrap="wrap">
 						<Button
 							leftSection={<ChatCircleDots size={16} />}
-							variant="filled"
-							color="blue"
 							onClick={() => navigate(`${base}/chats/new`)}
 						>
 							<Trans>Start a chat</Trans>
