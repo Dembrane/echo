@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 import { Outlet } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
+import { SeatCapBanner } from "@/components/workspace/SeatCapBanner";
 import { AppSidebar } from "@/features/sidebar";
 import { AppBreadcrumbs } from "@/features/sidebar/breadcrumbs/AppBreadcrumbs";
 import { Toaster } from "../common/Toaster";
@@ -41,6 +42,11 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 				<ErrorBoundary>
 					<main className="flex flex-1 flex-col overflow-hidden">
 						{isAuthenticated ? <AppBreadcrumbs /> : null}
+						{/* SeatCapBanner self-gates on workspace context, so it only
+						    appears on /w/:workspaceId/* routes. Lives here (inside
+						    main) instead of WorkspaceLayout so it doesn't stretch
+						    across the sidebar column. */}
+						<SeatCapBanner />
 						<div className="flex-1 overflow-auto">
 							<Outlet />
 							{children}

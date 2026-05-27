@@ -12,20 +12,39 @@ type LogoProps = {
 	alwaysDembrane?: boolean;
 } & GroupProps;
 
+const STAGING_HOSTNAMES = new Set([
+	"dashboard.echo-next.dembrane.com",
+	"portal.echo-next.dembrane.com",
+]);
+
+const isStagingHost = () =>
+	typeof window !== "undefined" && STAGING_HOSTNAMES.has(window.location.hostname);
+
 export const LogoDembrane = ({ hideLogo, hideTitle, alwaysDembrane, ...props }: LogoProps) => {
 	const { logoUrl } = useWhitelabelLogo();
 	const effectiveLogoUrl = alwaysDembrane ? null : logoUrl;
+	const showStagingBadge = isStagingHost();
 
 	return (
 		<Group gap="sm" h="36px" align="center" {...props}>
 			{!hideLogo && effectiveLogoUrl === undefined ? (
 				<Loader size={24} color="gray" ml="xl" />
 			) : !hideLogo ? (
-				<img
-					src={effectiveLogoUrl ?? (hideTitle ? dembraneLogomark : dembraneLogoFull)}
-					alt="Logo"
-					className="h-full object-contain"
-				/>
+				<span className="relative inline-flex h-full items-center">
+					<img
+						src={effectiveLogoUrl ?? (hideTitle ? dembraneLogomark : dembraneLogoFull)}
+						alt="Logo"
+						className="h-full object-contain"
+					/>
+					{showStagingBadge && (
+						<span
+							className="pointer-events-none absolute -bottom-1 -right-[20px] -translate-x-1/2 pl-1 text-[10px] font-medium leading-none"
+							style={{ color: "var(--mantine-color-primary-6)" }}
+						>
+							Staging
+						</span>
+					)}
+				</span>
 			) : null}
 		</Group>
 	);

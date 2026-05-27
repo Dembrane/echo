@@ -99,6 +99,8 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@babel/plugin-transform-react-jsx-source": "^7.27.1",
+    "@babel/preset-react": "^7.28.5",
     "@biomejs/biome": "^2.2.4",
     "@lingui/babel-plugin-lingui-macro": "^5.3.0",
     "@lingui/cli": "^5.3.0",
@@ -115,6 +117,7 @@
     "@types/react-dom": "^19.0.4",
     "@types/showdown": "^2.0.6",
     "@vitejs/plugin-react": "^4.7.0",
+    "agentation": "3.0.2",
     "autoprefixer": "^10.4.21",
     "babel-plugin-react-compiler": "19.0.0-beta-37ed2a7-20241206",
     "debug": "^4.4.0",
