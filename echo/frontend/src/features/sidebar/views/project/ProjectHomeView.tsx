@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import {
+	AppWindow,
 	BookOpen,
 	Broadcast,
 	ChatCircleDots,
@@ -7,7 +8,6 @@ import {
 	FileText,
 	Gear,
 	Graph,
-	House,
 	PaintBrush,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
@@ -55,7 +55,7 @@ export const ProjectHomeView = () => {
 				</div>
 			)}
 
-			<NavItem to={`${base}/home`} label={<Trans>Home</Trans>} icon={House} />
+			<NavItem to={`${base}/home`} label={<Trans>Overview</Trans>} icon={AppWindow} />
 			<NavItem
 				to={`${base}/chats/new`}
 				label={<Trans>Ask</Trans>}
