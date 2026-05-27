@@ -76,12 +76,15 @@ export const WorkspaceHomeView = () => {
 				</>
 			)}
 			{!isExternal && (
-				<NavItem
-					to={settingsPath}
-					label={<Trans>Settings</Trans>}
-					icon={Gear}
-					pushes
-				/>
+				<>
+					<div className="mt-auto" />
+					<NavItem
+						to={`${base}/settings/general`}
+						label={<Trans>Settings</Trans>}
+						icon={Gear}
+						pushes
+					/>
+				</>
 			)}
 		</nav>
 	);
