@@ -20,13 +20,12 @@ import { I18nProvider } from "./components/layout/I18nProvider";
 import { USE_PARTICIPANT_ROUTER } from "./config";
 import { detectAndEmitPilotBlock } from "./lib/pilotBlock";
 
-// Reference import.meta.env directly so Vite can constant-fold both branches
-// and Rollup can tree-shake the agentation chunk out of production / participant
-// builds. Through an intermediate constant the values would still be replaced,
-// but the lazy(import(...)) call would remain reachable in the module graph.
+// Reference import.meta.env directly so Vite can constant-fold the branch and
+// Rollup can tree-shake the agentation chunk out of production builds. Through
+// an intermediate constant the values would still be replaced, but the
+// lazy(import(...)) call would remain reachable in the module graph.
 const Agentation =
-	(import.meta.env.DEV || import.meta.env.VITE_ENABLE_AGENTATION === "1") &&
-	import.meta.env.VITE_USE_PARTICIPANT_ROUTER !== "1"
+	import.meta.env.DEV || import.meta.env.VITE_ENABLE_AGENTATION === "1"
 		? lazy(() => import("agentation").then((m) => ({ default: m.Agentation })))
 		: null;
 
