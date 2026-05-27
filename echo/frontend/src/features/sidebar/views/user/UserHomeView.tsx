@@ -132,7 +132,7 @@ export const UserHomeView = () => {
 					)}
 				</>
 			)}
-			<div className="mt-1" />
+			<div className="mt-auto" />
 			<SettingsBlock />
 		</nav>
 	);

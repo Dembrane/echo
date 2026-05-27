@@ -40,7 +40,7 @@ export const ProjectHomeView = () => {
 	const base = `/w/${workspaceId}/projects/${projectId}`;
 
 	return (
-		<nav className="flex flex-col gap-0.5 p-1.5">
+		<nav className="flex h-full flex-col gap-0.5 p-1.5">
 			<BackButton
 				to={`/w/${workspaceId}/home`}
 				label={workspace?.name ?? <Trans>Workspace</Trans>}
@@ -101,7 +101,7 @@ export const ProjectHomeView = () => {
 				}
 			/>
 
-			<div className="mt-2" />
+			<div className="mt-auto" />
 			<NavItem
 				to={`${base}/overview`}
 				label={<Trans>Settings</Trans>}

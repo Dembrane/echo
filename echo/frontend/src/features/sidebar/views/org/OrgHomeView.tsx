@@ -140,6 +140,7 @@ export const OrgHomeView = () => {
 						label={<Trans>Pending requests</Trans>}
 						icon={UserPlus}
 					/>
+					<div className="mt-auto" />
 					<NavItem
 						to={`${base}/settings/general`}
 						label={<Trans>Settings</Trans>}
