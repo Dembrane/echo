@@ -8,9 +8,8 @@ import {
 	Loader,
 	Stack,
 	Text,
-	Title,
 } from "@mantine/core";
-import { IconExternalLink, IconPlus } from "@tabler/icons-react";
+import { IconExternalLink } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { API_BASE_URL } from "@/config";
@@ -100,17 +99,12 @@ export const MyAccessCard = () => {
 
 	const totalOrganisations = data?.organisations.length ?? 0;
 	const totalWorkspaces = data?.workspaces.length ?? 0;
-	// Externals (no org membership) can't request a workspace.
-	const canCreateWorkspace = totalOrganisations > 0;
 
 	return (
 		<Card withBorder p="lg" radius="md">
 			<Stack gap="lg">
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Stack gap={4} style={{ minWidth: 0 }}>
-						<Title order={4} fw={500}>
-							<Trans>What you can reach</Trans>
-						</Title>
 						<Text size="sm" c="dimmed">
 							<Plural
 								value={totalOrganisations}
@@ -125,16 +119,6 @@ export const MyAccessCard = () => {
 							/>
 						</Text>
 					</Stack>
-					{canCreateWorkspace && (
-						<Button
-							variant="light"
-							size="sm"
-							leftSection={<IconPlus size={14} />}
-							onClick={() => navigate("/w/new")}
-						>
-							<Trans>New organisation workspace</Trans>
-						</Button>
-					)}
 				</Group>
 
 				{byOrganisation.size === 0 ? (
@@ -162,6 +146,7 @@ export const MyAccessCard = () => {
 													size="xs"
 													variant="light"
 													color={roleColor(organisation.role)}
+													c="#2D2D2C"
 												>
 													{displayRole(organisation.role)}
 												</Badge>
@@ -204,6 +189,7 @@ export const MyAccessCard = () => {
 														size="xs"
 														variant="light"
 														color={roleColor(ws.role)}
+														c="#2D2D2C"
 													>
 														{displayRole(ws.role)}
 													</Badge>

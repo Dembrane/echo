@@ -7,6 +7,7 @@ import {
 	Group,
 	ScrollArea,
 	Stack,
+	Text,
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
@@ -108,9 +109,14 @@ export const UserSettingsRoute = () => {
 
 						{activeSection === "access" && (
 							<Stack gap="lg">
-								<Title order={3}>
-									<Trans>My access</Trans>
-								</Title>
+								<Stack gap={4}>
+									<Title order={3}>
+										<Trans>My access</Trans>
+									</Title>
+									<Text size="sm" c="dimmed">
+										<Trans>This is a map of every organisation and workspace you are a member of.</Trans>
+									</Text>
+								</Stack>
 								<MyAccessCard />
 							</Stack>
 						)}
