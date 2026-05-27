@@ -145,7 +145,7 @@ export const ProjectConversationOverviewRoute = () => {
 	] = useDisclosure(false);
 
 	return (
-		<Stack gap="3rem" className="relative" px="2rem" pt="2rem" pb="2rem">
+		<Stack gap="3rem" className="relative" pt="2rem" pb="2rem">
 			<LoadingOverlay visible={conversationQuery.isLoading} />
 			{conversationChunksQuery.data &&
 				conversationChunksQuery.data?.length > 0 && (
