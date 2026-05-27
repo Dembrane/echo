@@ -10,7 +10,6 @@ import { SidebarShell } from "./shell/SidebarShell";
 import { useSidebarWhitelabelLogo } from "./shell/useSidebarWhitelabelLogo";
 import { AdminHomeView } from "./views/admin/AdminHomeView";
 import { HelpView } from "./views/HelpView";
-import { InboxView } from "./views/InboxView";
 import { OrgHomeView } from "./views/org/OrgHomeView";
 import { OrgSettingsView } from "./views/org/OrgSettingsView";
 import { ProjectHomeView } from "./views/project/ProjectHomeView";
@@ -27,8 +26,6 @@ export const AppSidebar = () => {
 
 	const content = (() => {
 		switch (view) {
-			case "inbox":
-				return <InboxView />;
 			case "help":
 				return <HelpView />;
 			case "user-home":

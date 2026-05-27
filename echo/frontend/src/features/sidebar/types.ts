@@ -23,4 +23,5 @@ export interface ResolvedSidebarView {
 		projectId?: string;
 		section?: string;
 	};
+	overlay?: "inbox" | "help" | null;
 }
