@@ -79,7 +79,7 @@ export const WorkspaceHomeView = () => {
 				<>
 					<div className="mt-auto" />
 					<NavItem
-						to={`${base}/settings/general`}
+						to={settingsPath}
 						label={<Trans>Settings</Trans>}
 						icon={Gear}
 						pushes
