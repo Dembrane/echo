@@ -12,9 +12,10 @@ import {
 	Title,
 } from "@mantine/core";
 import { IconAlertTriangle, IconScale } from "@tabler/icons-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
+import { isAdminRole } from "@/lib/roles";
 import { API_BASE_URL } from "@/config";
 import { toast } from "../common/Toaster";
 
@@ -23,6 +24,11 @@ type LegalBasisValue = CustomDirectusUser["legal_basis"];
 export const LegalBasisSettingsCard = () => {
 	const { data: user } = useCurrentUser();
 	const queryClient = useQueryClient();
+
+	const { data: accessData } = useQuery<{ organisations: { role: string }[] } | null>({
+		queryKey: ["v2", "workspaces"],
+	});
+	const isOrgAdmin = accessData?.organisations?.some((org) => isAdminRole(org.role)) ?? false;
 
 	const currentLegalBasis =
 		(user?.legal_basis as LegalBasisValue | null) ?? "client-managed";
@@ -104,15 +110,26 @@ export const LegalBasisSettingsCard = () => {
 					</Text>
 				</Alert>
 
+				{!isOrgAdmin && (
+					<Alert variant="light" color="blue" title={t`Read-only`}>
+						<Text size="sm">
+							<Trans>
+								These settings are read-only. Only organisation administrators can modify project defaults.
+							</Trans>
+						</Text>
+					</Alert>
+				)}
+
 				<Radio.Group
 					value={legalBasis}
 					onChange={(value) => setLegalBasis(value as LegalBasisValue)}
+					disabled={!isOrgAdmin}
 				>
 					<Stack gap="xs">
-						<Radio value="client-managed" label={t`Client-managed`} />
-						<Radio value="consent" label={t`Consent`} />
+						<Radio value="client-managed" label={t`Client-managed`} disabled={!isOrgAdmin} />
+						<Radio value="consent" label={t`Consent`} disabled={!isOrgAdmin} />
 						{isDembraneUser && (
-							<Radio value="dembrane-events" label={t`dembrane events`} />
+							<Radio value="dembrane-events" label={t`dembrane events`} disabled={!isOrgAdmin} />
 						)}
 					</Stack>
 				</Radio.Group>
@@ -120,6 +137,7 @@ export const LegalBasisSettingsCard = () => {
 				{legalBasis === "consent" && (
 					<TextInput
 						label={t`Organiser's Privacy Policy URL`}
+							disabled={!isOrgAdmin}
 						description={t`Link to your organisation's privacy policy that will be shown to participants`}
 						placeholder="https://example.com/privacy-policy"
 						value={privacyPolicyUrl}
@@ -131,7 +149,7 @@ export const LegalBasisSettingsCard = () => {
 					<Button
 						onClick={() => mutation.mutate()}
 						loading={mutation.isPending}
-						disabled={!hasChanges}
+						disabled={!hasChanges || !isOrgAdmin}
 					>
 						<Trans>Save</Trans>
 					</Button>
