@@ -30,7 +30,7 @@ const PROJECT_SECTION_LABELS: Record<string, string> = {
 	conversation: "Conversation",
 	conversations: "Conversations",
 	export: "Export",
-	home: "Home",
+	home: "Overview",
 	"host-guide": "Host guide",
 	integrations: "Integrations",
 	library: "Explore",
@@ -93,9 +93,9 @@ export const AppBreadcrumbs = () => {
 		switch (view) {
 			case "inbox":
 			case "help":
-				return [];
+				return out;
 			case "user-home":
-				return [];
+				return out;
 			case "user-settings": {
 				out.push({ href: "/settings/account", label: "User settings" });
 				const section = params.section;
@@ -137,8 +137,24 @@ export const AppBreadcrumbs = () => {
 				}
 				return out;
 			}
-			case "workspace-home":
-				return workspace ? [...out, { label: workspace.name }] : [];
+			case "workspace-home": {
+				if (!workspace) return out;
+				out.push({
+					href: `/w/${workspace.id}/home`,
+					label: workspace.name,
+				});
+				const section = params.section;
+				if (section === "home" || !section) {
+					out.push({ label: "Overview" });
+				} else {
+					if (window.location.pathname.endsWith("/projects/new")) {
+						out.push({ label: "New project" });
+					} else {
+						out.push({ label: "Overview" });
+					}
+				}
+				return out;
+			}
 			case "workspace-settings": {
 				if (workspace) {
 					out.push({
@@ -195,8 +211,7 @@ export const AppBreadcrumbs = () => {
 		return out;
 	}, [view, params, workspace, orgNameForId, projectQuery.data?.name]);
 
-	// Brand: hide breadcrumbs when there's only one crumb.
-	if (crumbs.length < 2) return null;
+	if (crumbs.length === 0) return null;
 
 	return (
 		<nav

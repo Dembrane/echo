@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Folder, Gear, House, UserPlus } from "@phosphor-icons/react";
+import { AppWindow, Folder, Gear, UserPlus } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useParams } from "react-router";
@@ -100,8 +100,8 @@ export const OrgHomeView = () => {
 			{!isExternal && (
 				<NavItem
 					to={`${base}/overview`}
-					label={<Trans>Home</Trans>}
-					icon={House}
+					label={<Trans>Overview</Trans>}
+					icon={AppWindow}
 					end
 				/>
 			)}
