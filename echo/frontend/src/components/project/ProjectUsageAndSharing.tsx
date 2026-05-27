@@ -21,7 +21,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useProjectShares } from "@/hooks/useProjectSharing";
 import { avatarUrl, memberInitials } from "@/lib/avatar";
-import { displayRole } from "@/lib/roles";
+import { displayRole, isAdminRole } from "@/lib/roles";
 import { formatDurationFromHours } from "@/lib/time";
 import { ProjectSharingModal } from "./ProjectSharingModal";
 import { ProjectSharingStrip } from "./ProjectSharingStrip";
@@ -508,25 +508,13 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 					    add-share modal. For a workspace-visible project
 					    it opens the same modal which surfaces "Make
 					    private" as the path to specific-member access. */}
-					<InviteMemberCard
-						label={
-							isWorkspaceVisible ? (
-								<Trans>Make private to invite specific members</Trans>
-							) : (
-								<Trans>Share with someone</Trans>
-							)
-						}
-						helperText={
-							isWorkspaceVisible ? (
-								<Trans>
-									This project is visible to everyone in the workspace.
-								</Trans>
-							) : (
-								<Trans>Add a member and pick their access.</Trans>
-							)
-						}
-						onClick={() => setInviteOpen(true)}
-					/>
+					{!isWorkspaceVisible && isAdminRole(workspace?.role) && (
+						<InviteMemberCard
+							label={<Trans>Share with someone</Trans>}
+							helperText={<Trans>Add a member and pick their access.</Trans>}
+							onClick={() => setInviteOpen(true)}
+						/>
+					)}
 
 					{accessLoading ? (
 						<Loader size="xs" />

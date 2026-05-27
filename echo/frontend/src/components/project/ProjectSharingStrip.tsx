@@ -11,7 +11,9 @@ import {
 import { IconLock, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 import { useProjectShares } from "@/hooks/useProjectSharing";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { avatarUrl, memberInitials } from "@/lib/avatar";
+import { isAdminRole } from "@/lib/roles";
 import { ProjectSharingModal } from "./ProjectSharingModal";
 
 interface ProjectSharingStripProps {
@@ -38,6 +40,7 @@ export function ProjectSharingStrip({
 }: ProjectSharingStripProps) {
 	const [modalOpen, setModalOpen] = useState(false);
 	const { data: shares, isLoading } = useProjectShares(projectId);
+	const { workspace } = useWorkspace();
 
 	const isPrivate = visibility === "private";
 	const shareCount = shares?.length ?? 0;
@@ -85,14 +88,16 @@ export function ProjectSharingStrip({
 								)}
 							</>
 						)}
-						<Button
-							variant="subtle"
-							size="compact-sm"
-							ml="auto"
-							onClick={() => setModalOpen(true)}
-						>
-							<Trans>Manage</Trans>
-						</Button>
+						{isAdminRole(workspace?.role) && (
+							<Button
+								variant="subtle"
+								size="compact-sm"
+								ml="auto"
+								onClick={() => setModalOpen(true)}
+							>
+								<Trans>Manage</Trans>
+							</Button>
+						)}
 					</>
 				) : (
 					<>
@@ -107,14 +112,16 @@ export function ProjectSharingStrip({
 								<Trans>Visible to everyone in this workspace</Trans>
 							)}
 						</Text>
-						<Button
-							variant="subtle"
-							size="compact-sm"
-							ml="auto"
-							onClick={() => setModalOpen(true)}
-						>
-							<Trans>Make private</Trans>
-						</Button>
+						{isAdminRole(workspace?.role) && (
+							<Button
+								variant="subtle"
+								size="compact-sm"
+								ml="auto"
+								onClick={() => setModalOpen(true)}
+							>
+								<Trans>Make private</Trans>
+							</Button>
+						)}
 					</>
 				)}
 			</Group>
