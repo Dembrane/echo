@@ -62,8 +62,7 @@ const ORG_SETTINGS_LABELS: Record<string, string> = {
 	usage: "Usage and tier",
 };
 
-// Brand: "Breadcrumbs for deep nesting only". Render only when there
-// are 2+ meaningful crumbs to show.
+// Render when there is at least 1 meaningful crumb to show.
 export const AppBreadcrumbs = () => {
 	const { view, params } = useSidebarView();
 	const { orgId: routeOrgId, organisationId } = useParams<{
@@ -144,15 +143,13 @@ export const AppBreadcrumbs = () => {
 					label: workspace.name,
 				});
 				const section = params.section;
-				if (section === "home" || !section) {
-					out.push({ label: "Overview" });
-				} else {
 					if (window.location.pathname.endsWith("/projects/new")) {
 						out.push({ label: "New project" });
+					} else if (section === "home" || !section) {
+						out.push({ label: "Overview" });
 					} else {
 						out.push({ label: "Overview" });
 					}
-				}
 				return out;
 			}
 			case "workspace-settings": {
