@@ -1,16 +1,18 @@
 import { Trans } from "@lingui/react/macro";
+import { Loader } from "@mantine/core";
 import {
-	AppWindow,
-	BookOpen,
-	Broadcast,
-	ChatCircleDots,
-	ChatCircleText,
-	FileText,
-	Gear,
-	Graph,
-	PaintBrush,
+	AppWindowIcon,
+	BookOpenIcon,
+	BroadcastIcon,
+	ChatCircleDotsIcon,
+	ChatCircleTextIcon,
+	FileTextIcon,
+	GearIcon,
+	GraphIcon,
+	PaintBrushIcon,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
+import { useProjectChatsTotal } from "@/components/chat/hooks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -32,6 +34,9 @@ export const ProjectHomeView = () => {
 	const conversationsCountQuery = useConversationsCountByProjectId(
 		projectId ?? "",
 	);
+	const chatsTotalQuery = useProjectChatsTotal(projectId ?? "", {
+		hasMessages: true,
+	});
 	const project = projectQuery.data;
 	const { workspaces } = useWorkspace();
 	const workspace = workspaces.find((w) => w.id === workspaceId);
@@ -55,15 +60,22 @@ export const ProjectHomeView = () => {
 				</div>
 			)}
 
-			<NavItem to={`${base}/home`} label={<Trans>Overview</Trans>} icon={AppWindow} />
+			<NavItem to={`${base}/home`} label={<Trans>Overview</Trans>} icon={AppWindowIcon} />
 			<NavItem
 				to={`${base}/chats/new`}
 				label={<Trans>Ask</Trans>}
-				icon={ChatCircleDots}
+				icon={ChatCircleDotsIcon}
+				badge={
+					chatsTotalQuery.isLoading ? (
+						<Loader size={10} color="gray" />
+					) : typeof chatsTotalQuery.data === "number" ? (
+						chatsTotalQuery.data
+					) : undefined
+				}
 			/>
 			<NavButton
 				label={<Trans>Explore</Trans>}
-				icon={Graph}
+				icon={GraphIcon}
 				onClick={() => undefined}
 				badge={<Trans>Planned</Trans>}
 				disabled
@@ -71,11 +83,11 @@ export const ProjectHomeView = () => {
 			<NavItem
 				to={`${base}/portal-editor`}
 				label={<Trans>Portal editor</Trans>}
-				icon={PaintBrush}
+				icon={PaintBrushIcon}
 			/>
 			<NavButton
 				label={<Trans>Monitor</Trans>}
-				icon={Broadcast}
+				icon={BroadcastIcon}
 				onClick={() => undefined}
 				badge={<Trans>Planned</Trans>}
 				disabled
@@ -83,17 +95,17 @@ export const ProjectHomeView = () => {
 			<NavItem
 				to={`${base}/host-guide`}
 				label={<Trans>Host guide</Trans>}
-				icon={BookOpen}
+				icon={BookOpenIcon}
 			/>
 			<NavItem
 				to={`${base}/report`}
 				label={<Trans>Report</Trans>}
-				icon={FileText}
+				icon={FileTextIcon}
 			/>
 			<NavItem
 				to={`${base}/conversations`}
 				label={<Trans>Conversations</Trans>}
-				icon={ChatCircleText}
+				icon={ChatCircleTextIcon}
 				badge={
 					typeof conversationsCountQuery.data === "number"
 						? conversationsCountQuery.data
@@ -105,7 +117,7 @@ export const ProjectHomeView = () => {
 			<NavItem
 				to={`${base}/overview`}
 				label={<Trans>Settings</Trans>}
-				icon={Gear}
+				icon={GearIcon}
 				pushes
 			/>
 		</nav>

@@ -8,6 +8,7 @@ import axios, {
 } from "axios";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL, USE_PARTICIPANT_ROUTER } from "@/config";
+import { bff } from "./bff";
 import { directus } from "./directus";
 
 export const apiCommonConfig: CreateAxiosDefaults = {
@@ -811,14 +812,17 @@ export const initiateAndUploadConversationChunk = async (payload: {
 
 	// Collect conversation IDs for files that uploaded successfully.
 	// Failed uploads are skipped — they have no conversation to finish.
-	const succeededConversationIds = results.reduce<string[]>((ids, result, i) => {
-		const isFailure = result && "error" in result;
-		const conversationId = conversationIdByFileIndex.get(i);
-		if (!isFailure && conversationId) {
-			ids.push(conversationId);
-		}
-		return ids;
-	}, []);
+	const succeededConversationIds = results.reduce<string[]>(
+		(ids, result, i) => {
+			const isFailure = result && "error" in result;
+			const conversationId = conversationIdByFileIndex.get(i);
+			if (!isFailure && conversationId) {
+				ids.push(conversationId);
+			}
+			return ids;
+		},
+		[],
+	);
 
 	// Call finishConversation() for every successful upload, concurrently.
 	// This triggers the backend pipeline: transcription → merging → duration → summary.
@@ -827,7 +831,9 @@ export const initiateAndUploadConversationChunk = async (payload: {
 		succeededConversationIds.map(async (conversationId) => {
 			try {
 				await finishConversation(conversationId);
-				console.log(`[Upload] Finish hook triggered for conversation ${conversationId}`);
+				console.log(
+					`[Upload] Finish hook triggered for conversation ${conversationId}`,
+				);
 			} catch (error) {
 				console.error(
 					`[Upload] Failed to finish conversation ${conversationId}:`,
@@ -851,11 +857,11 @@ export const getProjectConversationCounts = async (projectId: string) => {
 				"created_at",
 			],
 			filter: {
-				project_id: {
-					_eq: projectId,
-				},
 				deleted_at: {
 					_null: true,
+				},
+				project_id: {
+					_eq: projectId,
 				},
 			},
 		}),
@@ -1236,24 +1242,9 @@ export const getChatSuggestions = async (
 };
 
 export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
-	const data = await directus.request<ProjectChatMessage[]>(
-		readItems("project_chat_message", {
-			fields: [
-				"*",
-				{
-					added_conversations: [
-						{
-							conversation_id: ["id", "participant_name"],
-						},
-					],
-				},
-			],
-			filter: {
-				project_chat_id: chatId,
-			},
-			sort: "date_created",
-		}),
-	);
+	const data = await bff.get<ProjectChatMessage[]>("/chat-messages", {
+		chat_id: chatId,
+	});
 
 	// @ts-expect-error TODO
 	return data.map((message) => ({
@@ -1626,10 +1617,7 @@ export const submitNotificationParticipant = async (
 	}
 };
 
-export const deleteTagById = async (
-	projectId: string,
-	tagId: string,
-) => {
+export const deleteTagById = async (projectId: string, tagId: string) => {
 	return api.delete(`/projects/${projectId}/tags/${tagId}`);
 };
 
@@ -1649,8 +1637,7 @@ export const deleteChatById = async (chatId: string) => {
 		const response = await api.delete(`/chats/${chatId}`);
 		return response;
 	} catch (error: any) {
-		const message =
-			error?.response?.data?.detail || "Failed to delete chat";
+		const message = error?.response?.data?.detail || "Failed to delete chat";
 		throw new Error(message);
 	}
 };
@@ -1660,8 +1647,7 @@ export const deleteProjectById = async (projectId: string) => {
 		const response = await api.delete(`/projects/${projectId}`);
 		return response;
 	} catch (error: any) {
-		const message =
-			error?.response?.data?.detail || "Failed to delete project";
+		const message = error?.response?.data?.detail || "Failed to delete project";
 		throw new Error(message);
 	}
 };
@@ -1845,7 +1831,9 @@ export type QuickAccessPreference = {
 export const getPromptTemplates = async (
 	workspaceId?: string | null,
 ): Promise<PromptTemplateResponse[]> => {
-	const qs = workspaceId ? `?workspace_id=${encodeURIComponent(workspaceId)}` : "";
+	const qs = workspaceId
+		? `?workspace_id=${encodeURIComponent(workspaceId)}`
+		: "";
 	return api.get<unknown, PromptTemplateResponse[]>(
 		`/templates/prompt-templates${qs}`,
 	);
@@ -1882,7 +1870,9 @@ export const deletePromptTemplate = async (
 	await api.delete(`/templates/prompt-templates/${templateId}`);
 };
 
-export const getQuickAccessPreferences = async (): Promise<QuickAccessPreference[]> => {
+export const getQuickAccessPreferences = async (): Promise<
+	QuickAccessPreference[]
+> => {
 	return api.get<unknown, QuickAccessPreference[]>("/templates/quick-access");
 };
 
