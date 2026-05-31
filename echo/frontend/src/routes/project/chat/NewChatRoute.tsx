@@ -63,7 +63,7 @@ const ProjectChatsSection = ({
 		chatsQuery.fetchNextPage,
 	]);
 
-	const totalChats = Number(chatsCountQuery.data) ?? 0;
+	const totalChats = chatsCountQuery.data ?? 0;
 	if (totalChats === 0) return null;
 
 	const allChats =
@@ -77,12 +77,10 @@ const ProjectChatsSection = ({
 	return (
 		<Stack gap="lg">
 			<Group gap="sm" align="center">
-				<Title order={2} fw={500} style={{ color: "#2d2d2c" }}>
+				<Title order={2} fw={500} style={{ color: "var(--app-text)" }}>
 					<Trans>Chats</Trans>
 				</Title>
-				<Badge variant="light" >
-					{totalChats}
-				</Badge>
+				<Badge variant="light">{totalChats}</Badge>
 			</Group>
 
 			<Stack gap="xs">

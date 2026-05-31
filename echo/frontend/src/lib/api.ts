@@ -1242,8 +1242,10 @@ export const getChatSuggestions = async (
 };
 
 export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
+	// BFF default is 100; lift to its max so long chats aren't truncated.
 	const data = await bff.get<ProjectChatMessage[]>("/chat-messages", {
 		chat_id: chatId,
+		limit: 500,
 	});
 
 	// @ts-expect-error TODO

@@ -211,54 +211,52 @@ export const useInfiniteProjectChats = (
 	});
 };
 
+const projectChatsCountQueryOptions = (
+	projectId: string,
+	query: Partial<Query<CustomDirectusTypes, ProjectChat>> | undefined,
+	hasMessages: boolean,
+) => ({
+	queryKey: [
+		"projects",
+		projectId,
+		"chats",
+		"count",
+		{ query, hasMessages },
+	] as const,
+	queryFn: async () => {
+		void query;
+		const { total } = await bff.get<{ chats: ProjectChat[]; total: number }>(
+			"/chats",
+			{
+				project_id: projectId,
+				limit: 1,
+				...(hasMessages ? { has_messages: true } : {}),
+			},
+		);
+		return total;
+	},
+});
+
 export const useProjectChatsCount = (
 	projectId: string,
 	query?: Partial<Query<CustomDirectusTypes, ProjectChat>>,
 	options?: { hasMessages?: boolean },
 ) => {
 	const { hasMessages = false } = options ?? {};
-	return useSuspenseQuery({
-		queryFn: async () => {
-			void query;
-			const { total } = await bff.get<{ chats: ProjectChat[]; total: number }>(
-				"/chats",
-				{
-					project_id: projectId,
-					limit: 1,
-					...(hasMessages ? { has_messages: true } : {}),
-				},
-			);
-			return total;
-		},
-		queryKey: ["projects", projectId, "chats", "count", { query, hasMessages }],
-	});
+	return useSuspenseQuery(
+		projectChatsCountQueryOptions(projectId, query, hasMessages),
+	);
 };
 
-export const useProjectChatsTotal = (
+// Non-suspense variant. Shares cache key with useProjectChatsCount.
+export const useProjectChatsCountQuery = (
 	projectId: string,
 	options?: { hasMessages?: boolean },
 ) => {
 	const { hasMessages = false } = options ?? {};
 	return useQuery({
 		enabled: projectId !== "",
-		queryFn: async () => {
-			const { total } = await bff.get<{ chats: ProjectChat[]; total: number }>(
-				"/chats",
-				{
-					project_id: projectId,
-					limit: 1,
-					...(hasMessages ? { has_messages: true } : {}),
-				},
-			);
-			return total;
-		},
-		queryKey: [
-			"projects",
-			projectId,
-			"chats",
-			"count",
-			{ query: undefined, hasMessages },
-		],
+		...projectChatsCountQueryOptions(projectId, undefined, hasMessages),
 	});
 };
 

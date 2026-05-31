@@ -1,5 +1,4 @@
 import { Trans } from "@lingui/react/macro";
-import { Loader } from "@mantine/core";
 import {
 	AppWindowIcon,
 	BookOpenIcon,
@@ -12,7 +11,7 @@ import {
 	PaintBrushIcon,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
-import { useProjectChatsTotal } from "@/components/chat/hooks";
+import { useProjectChatsCountQuery } from "@/components/chat/hooks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -34,7 +33,7 @@ export const ProjectHomeView = () => {
 	const conversationsCountQuery = useConversationsCountByProjectId(
 		projectId ?? "",
 	);
-	const chatsTotalQuery = useProjectChatsTotal(projectId ?? "", {
+	const chatsCountQuery = useProjectChatsCountQuery(projectId ?? "", {
 		hasMessages: true,
 	});
 	const project = projectQuery.data;
@@ -66,11 +65,9 @@ export const ProjectHomeView = () => {
 				label={<Trans>Ask</Trans>}
 				icon={ChatCircleDotsIcon}
 				badge={
-					chatsTotalQuery.isLoading ? (
-						<Loader size={10} color="gray" />
-					) : typeof chatsTotalQuery.data === "number" ? (
-						chatsTotalQuery.data
-					) : undefined
+					typeof chatsCountQuery.data === "number"
+						? chatsCountQuery.data
+						: undefined
 				}
 			/>
 			<NavButton

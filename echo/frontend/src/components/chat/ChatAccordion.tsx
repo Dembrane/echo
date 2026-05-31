@@ -107,7 +107,7 @@ export const ChatAccordionItemMenu = ({
 	const deleteChatMutation = useDeleteChatMutation();
 	const updateChatMutation = useUpdateChatMutation();
 	const navigate = useI18nNavigate();
-	const { workspaceId } = useParams();
+	const { workspaceId, chatId: currentChatId } = useParams();
 	const [
 		deleteConfirmOpened,
 		{ open: openDeleteConfirm, close: closeDeleteConfirm },
@@ -184,7 +184,12 @@ export const ChatAccordionItemMenu = ({
 						chatId: chat.id ?? "",
 						projectId: (chat.project_id as string) ?? "",
 					});
-					navigate(`/w/${workspaceId}/projects/${chat.project_id}/overview`);
+					// Only redirect when deleting the chat you're viewing.
+					if (currentChatId && currentChatId === chat.id) {
+						navigate(
+							`/w/${workspaceId}/projects/${chat.project_id}/chats/new`,
+						);
+					}
 					closeDeleteConfirm();
 				}}
 				data-testid="chat-delete-modal"

@@ -180,7 +180,7 @@ const ConversationSelectionCheckbox = ({
 		: isChatLocked
 			? t`Already used in this chat`
 			: !hasContent
-				? t`Cannot add empty conversation`
+				? t`This conversation has no transcript yet`
 				: isSelected
 					? t`Remove from chat`
 					: t`Add to chat`;
