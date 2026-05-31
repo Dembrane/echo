@@ -187,7 +187,7 @@ export const ChatAccordionItemMenu = ({
 					// Only redirect when deleting the chat you're viewing.
 					if (currentChatId && currentChatId === chat.id) {
 						navigate(
-							`/w/${workspaceId}/projects/${chat.project_id}/chats/new`,
+							`/w/${workspaceId}/projects/${(chat.project_id as string) ?? ""}/chats/new`,
 						);
 					}
 					closeDeleteConfirm();
