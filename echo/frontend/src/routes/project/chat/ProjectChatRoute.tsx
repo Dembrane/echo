@@ -165,9 +165,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 					chat_message_metadata: flattenedItems ?? [],
 					date_created: new Date().toISOString(),
 					message_from: "assistant",
-					project_chat_id: {
-						id: chatId,
-					} as ProjectChat,
+					project_chat_id: chatId,
 					text: message.content,
 				});
 			} else {
@@ -175,9 +173,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 					chat_message_metadata: [],
 					date_created: new Date().toISOString(),
 					message_from: "assistant",
-					project_chat_id: {
-						id: chatId,
-					} as ProjectChat,
+					project_chat_id: chatId,
 					text: message.content,
 				});
 			}
@@ -214,9 +210,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 				incompleteMessage.createdAt ?? new Date(),
 			).toISOString(),
 			message_from: "assistant",
-			project_chat_id: {
-				id: chatId,
-			} as ProjectChat,
+			project_chat_id: chatId,
 			text: incompleteMessage.content,
 		};
 
@@ -1001,7 +995,6 @@ export const ProjectChatRoute = () => {
 						workspaceId={routeWorkspaceId ?? projectWorkspaceId}
 						selectionChatId={chatId}
 						selectionMode
-						maxHeight="65vh"
 					/>
 				)}
 			</Modal>

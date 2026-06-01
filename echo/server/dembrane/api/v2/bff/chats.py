@@ -82,12 +82,19 @@ async def list_chats(
     project_id: str = Query(...),
     limit: int = Query(15, ge=1, le=200),
     offset: int = Query(0, ge=0),
+    has_messages: bool = Query(False),
 ) -> dict:
-    """List chats in a project. Returns {chats, total}."""
+    """List chats in a project. Returns {chats, total}.
+
+    has_messages=true excludes chats with zero messages from page and total.
+    """
     access = await resolve_project_access(project_id, auth)
     access.require("chat:use")
 
-    filt = filter_exclude_deleted({"project_id": {"_eq": project_id}})
+    base_filter: dict = {"project_id": {"_eq": project_id}}
+    if has_messages:
+        base_filter["count(project_chat_messages)"] = {"_gt": 0}
+    filt = filter_exclude_deleted(base_filter)
 
     chats = await async_directus.get_items(
         "project_chat",
@@ -190,7 +197,11 @@ async def list_messages(
                     "template_key",
                     "tokens_count",
                     "used_conversations",
-                    "added_conversations",
+                    # Expand the m2m so the frontend can render the
+                    # "Context added: <names>" line on each user message.
+                    "added_conversations.id",
+                    "added_conversations.conversation_id.id",
+                    "added_conversations.conversation_id.participant_name",
                     "project_chat_id",
                 ],
                 "sort": ["date_created"],
