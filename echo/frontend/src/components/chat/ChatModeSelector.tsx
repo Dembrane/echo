@@ -248,22 +248,21 @@ export const ChatModeSelector = ({
 
 	return (
 		<Box
-			className="mx-auto w-full max-w-2xl px-6 py-8"
+			className="mx-auto w-full py-8"
 			{...testId("chat-mode-selector")}
 		>
 			<Stack gap="xl">
 				{/* Header */}
-				<Stack gap={6} align="center">
+				<Stack gap={6}>
 					<Title
 						order={2}
-						ta="center"
 						style={{ color: "var(--app-text)" }}
 						fw={600}
 						{...testId("chat-mode-selector-title")}
 					>
 						<Trans>What would you like to explore?</Trans>
 					</Title>
-					<Text size="md" c="dimmed" ta="center">
+					<Text size="md" c="dimmed">
 						<Trans>Pick the approach that fits your question</Trans>
 					</Text>
 				</Stack>
