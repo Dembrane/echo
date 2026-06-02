@@ -55,6 +55,10 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 						</div>
 						{overlay === "inbox" && (
 							<div
+								role="dialog"
+								aria-modal="true"
+								aria-label="Inbox"
+								tabIndex={-1}
 								className="absolute inset-0 z-50 flex flex-col overflow-hidden"
 								style={{ backgroundColor: "var(--app-background)" }}
 							>
