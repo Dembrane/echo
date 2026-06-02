@@ -10,6 +10,7 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { IconChevronDown, IconLock, IconPlus } from "@tabler/icons-react";
+import { usePostHog } from "@posthog/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
@@ -21,6 +22,7 @@ interface DiscoverableWorkspace {
 	visibility: string;
 	action: "join" | "request-access" | "pending" | "member";
 	pending_request_id: string | null;
+	member_count: number;
 }
 
 async function fetchDiscoverable(orgId: string): Promise<DiscoverableWorkspace[]> {
@@ -67,6 +69,7 @@ async function postRequestAccess(workspaceId: string) {
  */
 export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 	const queryClient = useQueryClient();
+	const posthog = usePostHog();
 	// Collapsed by default (2026-04-24 ask). The list can be long on
 	// bigger organisations and most of the time the user isn't here to discover
 	// new workspaces — they're here to enter one they already belong to.
@@ -102,13 +105,41 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 
 	const requestMutation = useMutation({
 		mutationFn: postRequestAccess,
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "discoverable-workspaces", orgId],
+		// Optimistic update: flip to "Requested" on click; rollback on error, refetch on settle.
+		onMutate: async (workspaceId) => {
+			const key = ["v2", "discoverable-workspaces", orgId] as const;
+			await queryClient.cancelQueries({ queryKey: key });
+			const previous = queryClient.getQueryData<DiscoverableWorkspace[]>(key);
+			queryClient.setQueryData<DiscoverableWorkspace[]>(key, (rows) =>
+				(rows ?? []).map((ws) =>
+					ws.id === workspaceId
+						? { ...ws, action: "pending" as const }
+						: ws,
+				),
+			);
+			return { previous };
+		},
+		onError: (error: Error, _workspaceId, ctx) => {
+			if (ctx?.previous) {
+				queryClient.setQueryData(
+					["v2", "discoverable-workspaces", orgId],
+					ctx.previous,
+				);
+			}
+			toast.error(error.message);
+		},
+		onSuccess: (_data, workspaceId) => {
+			posthog?.capture("workspace_access_requested", {
+				workspace_id: workspaceId,
+				org_id: orgId,
 			});
 			toast.success(t`Request sent`);
 		},
-		onError: (error: Error) => toast.error(error.message),
+		onSettled: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "discoverable-workspaces", orgId],
+			});
+		},
 	});
 
 	if (isLoading || joinable.length === 0) return null;
@@ -170,11 +201,18 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 										<Trans>Private</Trans>
 									</Text>
 								)}
+								<Text size="xs" c="dimmed">
+									<Plural
+										value={ws.member_count}
+										one="# member"
+										other="# members"
+									/>
+								</Text>
 							</Group>
 							{ws.action === "join" && (
 								<Button
 									size="compact-xs"
-									variant="light"
+									variant="outline"
 									leftSection={<IconPlus size={12} />}
 									loading={
 										joinMutation.isPending &&

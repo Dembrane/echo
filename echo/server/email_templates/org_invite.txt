@@ -1,0 +1,10 @@
+{{ inviter_name }} invited you to join {{ org_name }} on dembrane{% if role and role != "member" %} as {{ role }}{% endif %}. The invite expires in 7 days.
+
+Accept the invitation:
+{{ invite_url }}
+
+Once you accept, you can discover and request access to the workspaces your team is using.
+
+Didn't expect this? Ignore this email. Nothing will happen.
+
+— the dembrane team

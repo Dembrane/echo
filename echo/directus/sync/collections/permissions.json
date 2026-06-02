@@ -1,5 +1,53 @@
 [
   {
+    "collection": "org_invite",
+    "action": "create",
+    "permissions": {},
+    "validation": {},
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_admin_policy",
+    "_syncId": "7fc1a988-39b8-4b1d-b313-efb4b85e5d7f"
+  },
+  {
+    "collection": "org_invite",
+    "action": "delete",
+    "permissions": {},
+    "validation": {},
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_admin_policy",
+    "_syncId": "f31485f3-299e-4fc7-8177-1a66f65487b4"
+  },
+  {
+    "collection": "org_invite",
+    "action": "read",
+    "permissions": {},
+    "validation": {},
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_admin_policy",
+    "_syncId": "7e318264-c55d-46c3-875a-91f52a8215f2"
+  },
+  {
+    "collection": "org_invite",
+    "action": "update",
+    "permissions": {},
+    "validation": {},
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_admin_policy",
+    "_syncId": "db52b052-326f-4f4e-9a7d-66418d254ab3"
+  },
+  {
     "collection": "referral_ledger",
     "action": "create",
     "permissions": {},

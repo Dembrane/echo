@@ -200,7 +200,8 @@ class WorkspaceInviteRequest(BaseModel):
 
 
 class WorkspaceInviteResponse(BaseModel):
-    status: str  # "invited" | "added" (existing user → immediate membership)
+    # invited | added | reactivated | already_member | already_invited
+    status: str
     email: str
     user_existed: bool
     email_sent: bool = True  # False if SendGrid failed or was not configured

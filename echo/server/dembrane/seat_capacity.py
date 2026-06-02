@@ -109,6 +109,7 @@ async def count_pending_invites(workspace_id: str) -> tuple[int, int]:
                 "filter": {
                     "workspace_id": {"_eq": workspace_id},
                     "accepted_at": {"_null": True},
+                    "deleted_at": {"_null": True},
                     "expires_at": {"_gt": now_iso},
                 },
                 "fields": ["role"],

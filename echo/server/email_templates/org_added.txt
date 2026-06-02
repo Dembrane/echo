@@ -1,0 +1,8 @@
+{{ inviter_name }} added you to {{ org_name }} on dembrane{% if role and role != "member" %} as {{ role }}{% endif %}.
+
+You can discover and request access to the workspaces your team is using.
+
+Open dembrane:
+{{ invite_url }}
+
+— the dembrane team
