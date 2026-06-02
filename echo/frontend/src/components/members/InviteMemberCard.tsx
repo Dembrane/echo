@@ -22,13 +22,7 @@ interface Props {
 	tooltip?: ReactNode;
 }
 
-/**
- * Dotted-border card that lives as the first row in a Members list.
- * Clicking opens the scope-specific invite flow (OrganisationInviteWizard,
- * WorkspaceInviteWizard, ProjectSharingModal). Sits in the list so the
- * invite affordance has the same visual weight as a member row —
- * replaces the old "Invite member" button floating in the header.
- */
+// Dotted-border card rendered as the first row in a Members list; opens the unified InviteModal or ProjectSharingModal.
 export function InviteMemberCard({
 	label,
 	helperText,
@@ -96,12 +90,7 @@ export function InviteMemberCard({
 			withArrow
 			multiline
 			w={280}
-			// Disabled UnstyledButton blocks pointer events on some browsers,
-			// which would suppress the tooltip. Wrap the target in a Box so
-			// hover events fire on the wrapper regardless of the inner
-			// disabled state — same pattern OrganisationInviteWizard uses
-			// for cap-blocked workspace cards. `events` flag is belt-and-
-			// braces in case the wrapper trick is bypassed.
+			// Disabled UnstyledButton blocks pointer events on some browsers, suppressing the tooltip; Box wrapper + events flag keep it firing.
 			events={{ focus: true, hover: true, touch: true }}
 		>
 			<Box>{card}</Box>

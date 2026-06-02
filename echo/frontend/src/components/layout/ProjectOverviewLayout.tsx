@@ -37,18 +37,11 @@ export const ProjectOverviewLayout = () => {
 			style={{ backgroundColor: "var(--app-background)" }}
 		>
 			<LoadingOverlay visible={projectQuery.isLoading} />
-			{project && (isPrivate || project.language) && (
+			{project && isPrivate && (
 				<Group gap={8} align="center" wrap="nowrap" px="xs">
-					{isPrivate && (
-						<Tooltip label={t`Private · only invited people can see this`}>
-							<IconLock size={16} color="var(--mantine-color-gray-6)" />
-						</Tooltip>
-					)}
-					{project.language && (
-						<Badge size="xs" variant="light" color="gray">
-							{String(project.language).toUpperCase()}
-						</Badge>
-					)}
+					<Tooltip label={t`Private · only invited people can see this`}>
+						<IconLock size={16} color="var(--mantine-color-gray-6)" />
+					</Tooltip>
 				</Group>
 			)}
 			<TabsWithRouter

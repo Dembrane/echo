@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
 
+// Org-only invites have no workspace_id/workspace_name; consumers must branch on `type` before dereferencing workspace fields.
 export interface MyPendingInvite {
 	id: string;
-	workspace_id: string;
-	workspace_name: string;
+	type: "workspace" | "org";
+	workspace_id?: string;
+	workspace_name?: string;
+	org_id: string;
 	org_name: string;
 	role: string;
 	invited_by_name: string | null;
@@ -47,7 +50,7 @@ export const useAcceptInvite = () => {
 				(err as Error & { status?: number }).status = res.status;
 				throw err;
 			}
-			return res.json() as Promise<{ workspace_id: string }>;
+			return res.json() as Promise<AcceptInviteResult>;
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
@@ -76,26 +79,30 @@ export const useDeclineInvite = () => {
 	});
 };
 
-// success = fresh accept; already_member = no-op (row + membership both
-// existed); healed = row accepted but membership was missing (rare race) —
-// treat visually as already_member.
+// status: success = fresh accept; already_member = no-op; healed = row accepted but membership was missing (treat visually as already_member).
 export type AcceptInviteResult = {
 	status?: "success" | "already_member" | "healed";
-	workspace_id: string;
-	workspace_name: string;
+	type?: "workspace" | "org";
+	workspace_id?: string;
+	workspace_name?: string;
+	org_id?: string;
+	org_name?: string;
 };
 
-// Read-only inspect (does not consume). `is_member` is only meaningful
-// when status is `pending` or `accepted`.
+// Read-only inspect (does not consume); `is_member` only meaningful when status is `pending` or `accepted`.
 export type InviteByHashState = {
 	status:
 		| "pending"
 		| "accepted"
 		| "expired"
 		| "workspace_deleted"
+		| "org_deleted"
 		| "not_found";
+	type?: "workspace" | "org";
 	workspace_id?: string;
 	workspace_name?: string;
+	org_id?: string;
+	org_name?: string;
 	role?: string;
 	is_member?: boolean;
 	expires_at?: string;
@@ -110,8 +117,11 @@ export type PublicInviteStatus = {
 		| "accepted"
 		| "expired"
 		| "workspace_deleted"
+		| "org_deleted"
 		| "not_found";
+	type?: "workspace" | "org";
 	workspace_name?: string;
+	org_name?: string;
 	role?: string;
 	expires_at?: string;
 };
