@@ -410,32 +410,47 @@ export const WorkspaceSettingsRoute = () => {
 	// order stable. Default depends on caller role, so until settings
 	// loads we fall back to "general"; once loaded, the effect may fire
 	// a second time with the role-correct default if the URL is bare.
-	const callerCanManage =
-		settings?.my_policies?.includes("member:manage") ?? false;
-	const canEditSettings =
-		settings?.my_policies?.includes("settings:manage") ?? false;
-	const defaultTab: TabValue = canEditSettings
-		? "general"
-		: settings?.my_role === "billing"
-			? "billing"
-			: "members";
-	const activeTab: TabValue = segmentIsValid
-		? (segment as TabValue)
-		: defaultTab;
+	const callerCanManage = useMemo(() => {
+		if (!settings) return false;
+		return settings.my_policies?.includes("member:manage") ?? false;
+	}, [settings]);
+
+	const canEditSettings = useMemo(() => {
+		if (!settings) return false;
+		return settings.my_policies?.includes("settings:manage") ?? false;
+	}, [settings]);
+
+	const defaultTab = useMemo<TabValue | null>(() => {
+		if (!settings) return null;
+		return canEditSettings
+			? "general"
+			: settings.my_role === "billing"
+				? "billing"
+				: "members";
+	}, [settings, canEditSettings]);
+
+	const activeTab: TabValue = useMemo(() => {
+		if (segmentIsValid) {
+			return segment as TabValue;
+		}
+		return defaultTab ?? "general";
+	}, [segmentIsValid, segment, defaultTab]);
+
 	const setActiveTab = (value: string | null) => {
 		if (!value || !workspaceId) return;
 		navigate(`/w/${workspaceId}/settings/${value}${urlSearch}`, {
 			replace: true,
 		});
 	};
+
 	useEffect(() => {
-		if (!workspaceId) return;
+		if (!workspaceId || !settings || !defaultTab) return;
 		if (segment !== activeTab) {
 			navigate(`/w/${workspaceId}/settings/${activeTab}${urlSearch}`, {
 				replace: true,
 			});
 		}
-	}, [workspaceId, segment, activeTab, navigate, urlSearch]);
+	}, [workspaceId, segment, activeTab, navigate, urlSearch, settings, defaultTab]);
 
 	// Members list order (2026-04-24): internals first — sorted by role
 	// (owner → admin → billing → member) — then externals at the bottom.
