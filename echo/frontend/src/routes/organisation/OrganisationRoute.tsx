@@ -34,9 +34,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
-import { InviteMemberCard, MembersToolbar } from "@/components/members";
+import { InviteModal } from "@/components/invite/InviteModal";
+import {
+	InviteMemberCard,
+	MembersToolbar,
+	PendingInvitesSection,
+} from "@/components/members";
 import { OrganisationCapBanner } from "@/components/organisation/OrganisationCapBanner";
-import { OrganisationInviteWizard } from "@/components/organisation/OrganisationInviteWizard";
 import { OrganisationUsageRollup } from "@/components/workspace/OrganisationUsageRollup";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -48,8 +52,8 @@ import {
 	memberInitials,
 	logoUrl as resolveLogoUrl,
 } from "@/lib/avatar";
-import { OrganisationExternalView } from "./OrganisationExternalView";
 import { displayRole, roleColor } from "@/lib/roles";
+import { OrganisationExternalView } from "./OrganisationExternalView";
 
 /**
  * Organisation admin page — single-page matrix view.
@@ -109,11 +113,7 @@ async function fetchOrganisation(
 		credentials: "include",
 	});
 	// 401/403/404 → null feeds the "not found" UI; other failures must throw so 5xx isn't masked as 404.
-	if (
-		res.status === 401 ||
-		res.status === 403 ||
-		res.status === 404
-	) {
+	if (res.status === 401 || res.status === 403 || res.status === 404) {
 		return null;
 	}
 	if (!res.ok) {
@@ -300,7 +300,12 @@ export const OrganisationRoute = () => {
 	//   /o/:id/requests            → stub, renders overview for now
 	// The sidebar pushes those URLs so its view resolver lands on
 	// "org-settings" while the content panel keeps using existing tabs.
-	const allowedTabs = ["overview", "usage", "people", "billing"] as const;
+	const allowedTabs = [
+		"overview",
+		"usage",
+		"people",
+		"billing",
+	] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const segments = (splat ?? "").split("/").filter(Boolean);
 	const segment = segments[0] ?? "";
@@ -324,15 +329,23 @@ export const OrganisationRoute = () => {
 				: "overview";
 
 	useEffect(() => {
-		// Bounce bare /o/:id to /o/:id/overview so the URL always matches
-		// the active tab. Don't bounce /settings/* or /requests — those
-		// are canonical URLs driven by the sidebar.
+		// Bounce bare /o/:id to /o/:id/overview. Don't bounce /settings/* or /requests; those are canonical sidebar URLs.
 		if (!organisationId) return;
 		if (isSettingsPath || isRequestsPath) return;
 		if (segment !== viewRaw) {
-			navigate(`/o/${organisationId}/${viewRaw}${urlSearch}`, { replace: true });
+			navigate(`/o/${organisationId}/${viewRaw}${urlSearch}`, {
+				replace: true,
+			});
 		}
-	}, [organisationId, viewRaw, segment, isSettingsPath, isRequestsPath, navigate, urlSearch]);
+	}, [
+		organisationId,
+		viewRaw,
+		segment,
+		isSettingsPath,
+		isRequestsPath,
+		navigate,
+		urlSearch,
+	]);
 
 	const setView = (value: string | null) => {
 		if (!value || !organisationId) return;
@@ -369,29 +382,6 @@ export const OrganisationRoute = () => {
 	// WorkspaceProvider). Used to detect external-only mode when the
 	// org-level fetches 403.
 	const { workspaces: userWorkspaces } = useWorkspace();
-
-	const { data: pendingInvites = [] } = useQuery({
-		enabled: Boolean(organisationId) && (organisation?.role === "owner" || organisation?.role === "admin"),
-		queryFn: async () => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/orgs/${organisationId}/pending-invites`,
-				{ credentials: "include" },
-			);
-			if (!res.ok) return [];
-			const data = await res.json();
-			return Array.isArray(data) ? data as Array<{
-				id: string;
-				email: string;
-				role: string;
-				workspace_id: string;
-				workspace_name: string;
-				created_at: string | null;
-				invited_by_name: string | null;
-			}> : [];
-		},
-		queryKey: ["v2", "organisation", organisationId, "pending-invites"],
-		staleTime: 30_000,
-	});
 
 	const isAdmin =
 		organisation?.role === "owner" || organisation?.role === "admin";
@@ -578,9 +568,7 @@ export const OrganisationRoute = () => {
 					})
 				}
 				detail={
-					organisationError instanceof Error
-						? organisationError.message
-						: null
+					organisationError instanceof Error ? organisationError.message : null
 				}
 				message={
 					<Trans>
@@ -612,7 +600,7 @@ export const OrganisationRoute = () => {
 					<Title order={3} fw={400}>
 						<Trans>Organisation not found</Trans>
 					</Title>
-					<Button variant="default" onClick={() => navigate("/w")}>
+					<Button variant="outline" onClick={() => navigate("/w")}>
 						<Trans>Back</Trans>
 					</Button>
 				</Stack>
@@ -664,11 +652,7 @@ export const OrganisationRoute = () => {
 					{/* Back link top-right per the canonical header pattern
 					    (design review 2026-04-23). No gear icon — organisation-name
 					    + logo editing live inline in the Overview tab. */}
-					<Button
-						variant="subtle"
-						size="xs"
-						onClick={() => navigate("/w")}
-					>
+					<Button variant="subtle" size="xs" onClick={() => navigate("/w")}>
 						<Trans>Back to workspaces</Trans>
 					</Button>
 				</Group>
@@ -682,8 +666,8 @@ export const OrganisationRoute = () => {
 				{workspacesError && (
 					<Alert color="red" variant="light" mb="md">
 						<Trans>
-							We couldn't load this organisation's workspaces. Some controls
-							may be missing. Try refreshing.
+							We couldn't load this organisation's workspaces. Some controls may
+							be missing. Try refreshing.
 						</Trans>
 					</Alert>
 				)}
@@ -691,7 +675,6 @@ export const OrganisationRoute = () => {
 				{/* Tab strip hidden — the main AppSidebar drives section
 				    navigation. Internal Tabs.value still wires the panels via URL. */}
 				<Tabs value={view} onChange={setView} keepMounted={false}>
-
 					<Tabs.Panel value="overview" pt="md">
 						<OverviewPanel
 							organisation={organisation}
@@ -787,12 +770,12 @@ export const OrganisationRoute = () => {
 				    admins see everyone reaching their data in one list. */}
 							{!membersError && (
 								<Stack gap="xs">
-									{isAdmin && workspaces.length > 0 && (
+									{isAdmin && (
 										<InviteMemberCard
-											label={<Trans>Invite someone</Trans>}
+											label={<Trans>Invite people</Trans>}
 											helperText={
 												<Trans>
-													Pick one or more workspaces and we'll send the email.
+													Invite to a workspace, or just the organisation.
 												</Trans>
 											}
 											onClick={() => setInviteOpen(true)}
@@ -852,57 +835,24 @@ export const OrganisationRoute = () => {
 									)}
 								</Stack>
 							)}
-							{organisationId && (
-								<OrganisationInviteWizard
+							{organisationId && organisation && (
+								<InviteModal
 									opened={inviteOpen}
 									onClose={() => setInviteOpen(false)}
-									workspaces={workspaces}
-									members={members}
+									orgId={organisationId}
+									orgName={organisation.name}
 								/>
 							)}
 
-							{isAdmin && pendingInvites.length > 0 && (
-								<Stack gap="xs" mt="md">
-									<Title order={5} fw={400}>
-										<Trans>Pending invites</Trans>
-									</Title>
-									<Stack gap="xs">
-										{pendingInvites.map((inv) => (
-											<Paper key={inv.id} p="md" withBorder radius="md">
-												<Group justify="space-between">
-													<Stack gap={2}>
-														<Text size="sm">{inv.email}</Text>
-														<Text size="xs" c="dimmed">
-															{displayRole(inv.role)}
-															{inv.workspace_name && (
-																<>
-																	{" · "}
-																	{inv.workspace_name}
-																</>
-															)}
-															{inv.invited_by_name && (
-																<>
-																	{" · "}
-																	<Trans>invited by {inv.invited_by_name}</Trans>
-																</>
-															)}
-														</Text>
-													</Stack>
-													<Badge size="xs" variant="light" color="yellow">
-														<Trans>Pending</Trans>
-													</Badge>
-												</Group>
-											</Paper>
-										))}
-									</Stack>
-								</Stack>
+							{isAdmin && organisationId && (
+								<PendingInvitesSection orgId={organisationId} scope="org" />
 							)}
 
 							<Text size="xs" c="dimmed">
 								<Trans>
 									Admins can reach every workspace in this organisation. Members
-									and externals only see the workspaces they've been given access
-									to.
+									and externals only see the workspaces they've been given
+									access to.
 								</Trans>
 							</Text>
 						</Stack>

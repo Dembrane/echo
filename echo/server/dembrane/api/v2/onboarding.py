@@ -102,6 +102,7 @@ async def complete_onboarding(
                 "filter": {
                     "email": {"_eq": app_user_email},
                     "accepted_at": {"_null": True},
+                    "deleted_at": {"_null": True},
                     "expires_at": {"_gt": now},
                 },
                 "fields": [
@@ -232,56 +233,72 @@ async def complete_onboarding(
                         logger.exception("Failed to emit INVITE_PENDING_AT_CAP")
                     continue
 
-            # If org member invite, add to that org
-            if is_org_invite and ws_org_id:
-                if not user_has_org_mem:
+            # Two try/except blocks: membership writes are load-bearing, accepted_at update is bookkeeping that can self-heal.
+            try:
+                if is_org_invite and ws_org_id:
+                    if not user_has_org_mem:
+                        await async_directus.create_item(
+                            "org_membership",
+                            {
+                                "id": generate_uuid(),
+                                "org_id": ws_org_id,
+                                "user_id": app_user_id,
+                                "role": "member",
+                            },
+                        )
+                        logger.info(
+                            f"Auto-added {app_user_email} to org {ws_org_id} via invite"
+                        )
+                    joined_an_org = True
+
+                if not has_ws_mem:
                     await async_directus.create_item(
-                        "org_membership",
+                        "workspace_membership",
                         {
                             "id": generate_uuid(),
-                            "org_id": ws_org_id,
+                            "workspace_id": ws_id,
                             "user_id": app_user_id,
-                            "role": "member",
+                            "role": invite_role,
+                            "source": "direct",
                         },
                     )
-                    logger.info(f"Auto-added {app_user_email} to org {ws_org_id} via invite")
-                joined_an_org = True
+                    from dembrane.cache_utils import invalidate_workspace_and_org_usage
 
-            # Create workspace membership
-            if not has_ws_mem:
-                await async_directus.create_item(
-                    "workspace_membership",
+                    await invalidate_workspace_and_org_usage(ws_id, ws_org_id)
+                    joined_any_workspace = True
+                    logger.info(
+                        f"Auto-accepted invite: {app_user_email} → workspace {ws_id} "
+                        f"(role: {invite_role})"
+                    )
+
+                if not first_workspace_id:
+                    first_workspace_id = ws_id
+                joined_any_workspace = True  # idempotent re-run: still suppresses the personal-org branch below
+            except Exception:
+                logger.exception(
+                    "Failed to auto-accept workspace_invite %s for %s in workspace %s; "
+                    "invite remains pending — user can accept later",
+                    invite.get("id"),
+                    app_user_email,
+                    ws_id,
+                )
+                continue
+
+            try:
+                await async_directus.update_item(
+                    "workspace_invite",
+                    invite["id"],
                     {
-                        "id": generate_uuid(),
-                        "workspace_id": ws_id,
-                        "user_id": app_user_id,
-                        "role": invite_role,
-                        "source": "direct",
+                        "accepted_at": now,
                     },
                 )
-                from dembrane.cache_utils import invalidate_workspace_and_org_usage
-
-                await invalidate_workspace_and_org_usage(ws_id, ws_org_id)
-                joined_any_workspace = True
-                logger.info(
-                    f"Auto-accepted invite: {app_user_email} → workspace {ws_id} "
-                    f"(role: {invite_role})"
+            except Exception:
+                logger.exception(
+                    "Auto-accept wrote membership for workspace_invite %s "
+                    "but failed to mark accepted_at — invite will linger "
+                    "in pending lists until next re-invite cleanup",
+                    invite.get("id"),
                 )
-
-            if not first_workspace_id:
-                first_workspace_id = ws_id
-            # Idempotent re-run: existing membership still suppresses the
-            # personal-org branch below.
-            joined_any_workspace = True
-
-            # Mark invite as accepted
-            await async_directus.update_item(
-                "workspace_invite",
-                invite["id"],
-                {
-                    "accepted_at": now,
-                },
-            )
 
             # Notify the inviter (INVITE_ACCEPTED #3). Mirrors the
             # notification fired by me.accept_my_invite — same event
@@ -371,6 +388,81 @@ async def complete_onboarding(
                     ref_workspace_id=ws_id,
                     ref_org_id=ws.get("org_id"),
                 )
+
+    # Step 2b: auto-accept org-only invites. Without this, org-only invitees fall into the personal-org branch below.
+    pending_org_invites = await async_directus.get_items(
+        "org_invite",
+        {
+            "query": {
+                "filter": {
+                    "email": {"_eq": app_user_email},
+                    "accepted_at": {"_null": True},
+                    "deleted_at": {"_null": True},
+                    "expires_at": {"_gt": now},
+                },
+                "fields": ["id", "org_id", "role", "invited_by", "expires_at"],
+                "limit": -1,
+            }
+        },
+    )
+
+    if isinstance(pending_org_invites, list):
+        for org_inv in pending_org_invites:
+            inv_org_id = org_inv.get("org_id")
+            if not inv_org_id:
+                continue
+
+            org_row = await async_directus.get_item("org", inv_org_id)
+            if not org_row or org_row.get("deleted_at"):
+                continue
+
+            # Set had_pending_invite only after the org_membership write succeeds.
+            try:
+                existing_org_mem = await async_directus.get_items(
+                    "org_membership",
+                    {
+                        "query": {
+                            "filter": {
+                                "org_id": {"_eq": inv_org_id},
+                                "user_id": {"_eq": app_user_id},
+                                "deleted_at": {"_null": True},
+                            },
+                            "limit": 1,
+                        }
+                    },
+                )
+
+                if not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0):
+                    await async_directus.create_item(
+                        "org_membership",
+                        {
+                            "id": generate_uuid(),
+                            "org_id": inv_org_id,
+                            "user_id": app_user_id,
+                            "role": org_inv.get("role") or "member",
+                        },
+                    )
+                    logger.info(
+                        f"Auto-accepted org_invite: {app_user_email} → org {inv_org_id} "
+                        f"(role: {org_inv.get('role')})"
+                    )
+
+                await async_directus.update_item(
+                    "org_invite",
+                    org_inv["id"],
+                    {"accepted_at": now},
+                )
+
+                had_pending_invite = True
+                joined_an_org = True
+            except Exception:
+                logger.exception(
+                    "Failed to auto-accept org_invite for %s in org %s; "
+                    "invite remains pending — user can accept later",
+                    app_user_email,
+                    inv_org_id,
+                )
+                continue
 
     # ── Step 3: Check if user has their own projects ──
 
