@@ -1387,6 +1387,13 @@ export const HostGuidePage = () => {
 				padding: space.page,
 				paddingTop: isFullscreen ? space.page : `calc(${space.page} + 48px)`,
 				transition: "padding-top 0.2s",
+				position: isFullscreen ? "fixed" : "relative",
+				top: isFullscreen ? 0 : undefined,
+				left: isFullscreen ? 0 : undefined,
+				width: isFullscreen ? "100vw" : "100%",
+				height: isFullscreen ? "100vh" : undefined,
+				zIndex: isFullscreen ? 1000 : undefined,
+				overflowY: isFullscreen ? "auto" : undefined,
 			}}
 		>
 			{/* Fullscreen exit zone — thin invisible strip at top edge */}
@@ -1410,7 +1417,7 @@ export const HostGuidePage = () => {
 				className="no-print"
 				style={{
 					left: 0,
-					position: "fixed",
+					position: isFullscreen ? "fixed" : "absolute",
 					right: 0,
 					top: 0,
 					transform: isFullscreen ? "translateY(-100%)" : "translateY(0)",
