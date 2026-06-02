@@ -417,14 +417,14 @@ export const mainRouter = createBrowserRouter([
 						index: true,
 					},
 					{
-						element: <HostGuidePage />,
-						path: "projects/:projectId/host-guide",
-					},
-					{
 						children: [
 							{
 								element: <ProjectsHomeRoute />,
 								path: "home",
+							},
+							{
+								element: <HostGuidePage />,
+								path: "projects/:projectId/host-guide",
 							},
 							{
 								// Splat so the tab lives in the path
