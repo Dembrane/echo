@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Gear, House, Plus, PushPin } from "@phosphor-icons/react";
+import { AppWindow, Gear, Plus, PushPin } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { isAdminRole } from "@/lib/roles";
@@ -51,7 +51,7 @@ export const WorkspaceHomeView = () => {
 				</div>
 			)}
 
-			<NavItem to={`${base}/home`} label={<Trans>Home</Trans>} icon={House} />
+			<NavItem to={`${base}/home`} label={<Trans>Overview</Trans>} icon={AppWindow} />
 			{canCreateProject && (
 				<NavItem
 					to={`${base}/projects/new`}

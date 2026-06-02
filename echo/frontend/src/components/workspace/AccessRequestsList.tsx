@@ -12,8 +12,12 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { usePostHog } from "@posthog/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 
@@ -61,8 +65,15 @@ async function postAction(
  * to the members table. Approve writes a direct Member row; Reject is
  * silent to the requester.
  */
-export const AccessRequestsList = ({ workspaceId }: { workspaceId: string }) => {
+export const AccessRequestsList = ({
+	workspaceId,
+	actionedByRole,
+}: {
+	workspaceId: string;
+	actionedByRole: string;
+}) => {
 	const queryClient = useQueryClient();
+	const posthog = usePostHog();
 
 	const { data } = useQuery({
 		queryKey: ["v2", "access-requests", workspaceId],
@@ -80,7 +91,12 @@ export const AccessRequestsList = ({ workspaceId }: { workspaceId: string }) => 
 
 	const approveMutation = useMutation({
 		mutationFn: (reqId: string) => postAction(workspaceId, reqId, "approve"),
-		onSuccess: () => {
+		onSuccess: (_data, reqId) => {
+			posthog?.capture("workspace_access_actioned", {
+				action: "approved",
+				request_id: reqId,
+				actioned_by_role: actionedByRole,
+			});
 			toast.success(t`Request approved`);
 			invalidateAll();
 		},
@@ -89,12 +105,28 @@ export const AccessRequestsList = ({ workspaceId }: { workspaceId: string }) => 
 
 	const rejectMutation = useMutation({
 		mutationFn: (reqId: string) => postAction(workspaceId, reqId, "reject"),
-		onSuccess: () => {
+		onSuccess: (_data, reqId) => {
+			posthog?.capture("workspace_access_actioned", {
+				action: "rejected",
+				request_id: reqId,
+				actioned_by_role: actionedByRole,
+			});
 			toast.success(t`Request declined`);
 			invalidateAll();
 		},
 		onError: (e: Error) => toast.error(e.message),
 	});
+
+	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
+		useDisclosure(false);
+	const [pendingRejectId, setPendingRejectId] = useState<string | null>(null);
+
+	const confirmReject = () => {
+		if (!pendingRejectId) return;
+		rejectMutation.mutate(pendingRejectId);
+		closeConfirm();
+		setPendingRejectId(null);
+	};
 
 	if (rows.length === 0) return null;
 
@@ -127,7 +159,7 @@ export const AccessRequestsList = ({ workspaceId }: { workspaceId: string }) => 
 								<Group gap={4}>
 									<Tooltip label={t`Approve`}>
 										<ActionIcon
-											color="blue"
+											color="primary"
 											size="sm"
 											variant="subtle"
 											loading={
@@ -149,7 +181,10 @@ export const AccessRequestsList = ({ workspaceId }: { workspaceId: string }) => 
 												rejectMutation.isPending &&
 												rejectMutation.variables === r.id
 											}
-											onClick={() => rejectMutation.mutate(r.id)}
+											onClick={() => {
+												setPendingRejectId(r.id);
+												openConfirm();
+											}}
 											aria-label={t`Decline`}
 										>
 											<IconX size={14} />
@@ -161,6 +196,25 @@ export const AccessRequestsList = ({ workspaceId }: { workspaceId: string }) => 
 					))}
 				</Stack>
 			</Stack>
+			<ConfirmModal
+				opened={confirmOpened}
+				onClose={() => {
+					closeConfirm();
+					setPendingRejectId(null);
+				}}
+				onConfirm={confirmReject}
+				title={t`Decline request?`}
+				message={
+					<Trans>
+						Decline this access request? The requester won't be notified and
+						would need to request access again.
+					</Trans>
+				}
+				confirmLabel={<Trans>Decline request</Trans>}
+				cancelLabel={<Trans>Keep pending</Trans>}
+				confirmColor="red"
+				data-testid="access-request-reject-confirm"
+			/>
 		</Box>
 	);
 };

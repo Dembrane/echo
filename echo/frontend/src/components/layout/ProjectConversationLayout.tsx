@@ -27,7 +27,7 @@ export const ProjectConversationLayout = () => {
 	});
 
 	return (
-		<Stack className="relative px-2 py-4">
+		<Stack className="relative px-8 py-4">
 			<Title order={1}>
 				{conversationQuery.data?.participant_name ||
 					conversationQuery.data?.title}

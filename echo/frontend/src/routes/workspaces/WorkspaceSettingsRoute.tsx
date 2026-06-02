@@ -25,13 +25,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import {
-	IconLock,
-	IconRefresh,
-	IconTrash,
-	IconUpload,
-	IconX,
-} from "@tabler/icons-react";
+import { IconLock, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
@@ -40,13 +34,18 @@ import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { ImageCropModal } from "@/components/common/ImageCropModal";
 import { toast } from "@/components/common/Toaster";
-import { InviteMemberCard, MembersToolbar } from "@/components/members";
+import { InviteModal } from "@/components/invite/InviteModal";
+import {
+	InviteMemberCard,
+	MembersToolbar,
+	PendingInvitesSection,
+} from "@/components/members";
+import { usePendingInvites } from "@/components/members/hooks";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { UsageCard } from "@/components/workspace/UsageCard";
-import { WorkspaceInviteWizard } from "@/components/workspace/WorkspaceInviteWizard";
 import { WorkspaceRequestHistory } from "@/components/workspace/WorkspaceRequestHistory";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -231,32 +230,6 @@ async function updateWorkspace(
 	}
 }
 
-async function resendInvite(
-	workspaceId: string,
-	inviteId: string,
-): Promise<{ email_sent: boolean }> {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invites/${inviteId}/resend`,
-		{ credentials: "include", method: "POST" },
-	);
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to resend invite");
-	}
-	return res.json();
-}
-
-async function cancelInvite(workspaceId: string, inviteId: string) {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invites/${inviteId}`,
-		{ credentials: "include", method: "DELETE" },
-	);
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to cancel invite");
-	}
-}
-
 export const WorkspaceSettingsRoute = () => {
 	const { workspaceId, "*": splat } = useParams<{
 		workspaceId: string;
@@ -321,6 +294,13 @@ export const WorkspaceSettingsRoute = () => {
 			err instanceof WorkspaceAccessDeniedError ? false : failureCount < 3,
 	});
 
+	// Live count for the "N pending" counter; the settings payload's `pending_invites` array can lag after a revoke.
+	const { data: livePendingInvites } = usePendingInvites({
+		orgId: settings?.org_id,
+		workspaceId,
+		enabled: !!workspaceId && !!settings?.org_id,
+	});
+
 	// Lightweight usage probe so the Members tab can disable the invite
 	// card / show cap copy. Shares the cache key with UsageCard so we
 	// don't double-fetch on the billing tab. monthOffset=0 only — caps
@@ -364,24 +344,6 @@ export const WorkspaceSettingsRoute = () => {
 	// there's no top-level inviteMutation anymore. Pending invites are
 	// invalidated via the ["v2", "workspace-settings"] key it targets.
 
-	const resendInviteMutation = useMutation({
-		mutationFn: (inviteId: string) => {
-			if (!workspaceId) throw new Error("No workspace");
-			return resendInvite(workspaceId, inviteId);
-		},
-		onError: (err: Error) => toast.error(err.message),
-		onSuccess: (data) => {
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
-			if (data.email_sent) {
-				toast.success(t`Invite resent`);
-			} else {
-				toast.error(
-					t`Could not send the invite email. Check email configuration.`,
-				);
-			}
-		},
-	});
-
 	const changeRoleMutation = useMutation({
 		mutationFn: ({
 			membershipId,
@@ -397,20 +359,6 @@ export const WorkspaceSettingsRoute = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			toast.success(t`Role updated`);
-		},
-	});
-
-	const cancelInviteMutation = useMutation({
-		mutationFn: (inviteId: string) => {
-			if (!workspaceId) throw new Error("No workspace");
-			return cancelInvite(workspaceId, inviteId);
-		},
-		onError: (err: Error) => toast.error(err.message),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
-			// Frees a pending-counted slot — re-enable invite button.
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
-			toast.success(t`Invite canceled`);
 		},
 	});
 
@@ -784,8 +732,8 @@ export const WorkspaceSettingsRoute = () => {
 										<Text size="xs" c="dimmed">
 											{settings.members.length}{" "}
 											{settings.members.length === 1 ? t`member` : t`members`}
-											{settings.pending_invites.length > 0 &&
-												` · ${settings.pending_invites.length} ${t`pending`}`}
+											{(livePendingInvites?.length ?? 0) > 0 &&
+												` · ${livePendingInvites?.length ?? 0} ${t`pending`}`}
 										</Text>
 									</Group>
 
@@ -820,7 +768,7 @@ export const WorkspaceSettingsRoute = () => {
 													seatInviteBlocked ? (
 														<Trans>Workspace is full</Trans>
 													) : (
-														<Trans>Invite member</Trans>
+														<Trans>Invite people</Trans>
 													)
 												}
 												helperText={
@@ -841,7 +789,7 @@ export const WorkspaceSettingsRoute = () => {
 														</Trans>
 													) : (
 														<Trans>
-															Add members or an external to this workspace.
+															Invite to this workspace, or just the organisation.
 														</Trans>
 													)
 												}
@@ -883,7 +831,7 @@ export const WorkspaceSettingsRoute = () => {
 																	? `${DIRECTUS_PUBLIC_URL}/assets/${member.avatar}`
 																	: null
 															}
-															color="blue"
+															color="primary"
 														>
 															{memberInitials(
 																member.display_name,
@@ -951,7 +899,7 @@ export const WorkspaceSettingsRoute = () => {
 															<Tooltip
 																label={t`Ownership is locked. Contact support to transfer.`}
 															>
-																<Badge size="sm" variant="light" color="blue">
+																<Badge size="sm" variant="light" color="primary">
 																	<Trans>Admin</Trans>
 																</Badge>
 															</Tooltip>
@@ -963,7 +911,7 @@ export const WorkspaceSettingsRoute = () => {
 															<Tooltip
 																label={t`You're the only admin. Promote someone else before changing your role.`}
 															>
-																<Badge size="sm" variant="light" color="blue">
+																<Badge size="sm" variant="light" color="primary">
 																	<Trans>Admin</Trans>
 																</Badge>
 															</Tooltip>
@@ -1142,95 +1090,24 @@ export const WorkspaceSettingsRoute = () => {
 									</Stack>
 								</Stack>
 
-								{/* Pending invites */}
-								{settings.pending_invites.length > 0 && (
-									<Box mt="xl">
-										<Divider />
-										<Stack gap={12} my="lg">
-											<Title order={5} fw={400}>
-												<Trans>Pending invites</Trans>
-											</Title>
-											<Stack gap="xs">
-												{settings.pending_invites.map((inv) => (
-													<Paper key={inv.id} p="md" withBorder radius="md">
-														<Group justify="space-between">
-															<Box>
-																<Text size="sm">{inv.email}</Text>
-																<Text size="xs" c="dimmed">
-																	<span>{displayRole(inv.role)}</span>
-																	{inv.invited_by_name && (
-																		<>
-																			{" · "}
-																			<Trans>
-																				invited by {inv.invited_by_name}
-																			</Trans>
-																		</>
-																	)}
-																</Text>
-															</Box>
-															<Group gap={8}>
-																<Badge size="xs" variant="light" color="yellow">
-																	<Trans>Pending</Trans>
-																</Badge>
-																<Tooltip label={t`Resend invite email`}>
-																	<ActionIcon
-																		color="blue"
-																		size="sm"
-																		variant="subtle"
-																		loading={resendInviteMutation.isPending}
-																		onClick={() =>
-																			resendInviteMutation.mutate(inv.id)
-																		}
-																		aria-label={t`Resend invite`}
-																	>
-																		<IconRefresh size={14} />
-																	</ActionIcon>
-																</Tooltip>
-																<Tooltip label={t`Cancel invite`}>
-																	<ActionIcon
-																		color="gray"
-																		size="sm"
-																		variant="subtle"
-																		loading={cancelInviteMutation.isPending}
-																		onClick={() => {
-																			modals.openConfirmModal({
-																				children: (
-																					<Text size="sm">
-																						<Trans>
-																							Cancel the invite sent to{" "}
-																							{inv.email}? You can invite them
-																							again later.
-																						</Trans>
-																					</Text>
-																				),
-																				confirmProps: { color: "red" },
-																				labels: {
-																					cancel: t`Keep it`,
-																					confirm: t`Cancel invite`,
-																				},
-																				onConfirm: () =>
-																					cancelInviteMutation.mutate(inv.id),
-																				title: t`Cancel invite`,
-																			});
-																		}}
-																		aria-label={t`Cancel invite`}
-																	>
-																		<IconX size={14} />
-																	</ActionIcon>
-																</Tooltip>
-															</Group>
-														</Group>
-													</Paper>
-												))}
-											</Stack>
-										</Stack>
-									</Box>
+								{/* Pending invites — unified component talks to
+								    /v2/orgs/:id/pending-invites?workspace_id= and the
+								    new /v2/invites/:id resend/revoke endpoints. */}
+								{workspaceId && settings.org_id && (
+									<PendingInvitesSection
+										orgId={settings.org_id}
+										scope="workspace"
+										workspaceId={workspaceId}
+									/>
 								)}
 
 								{/* Matrix §6 access requests from organisation members. Hides itself
 				    when nothing is pending. */}
 								{canManage && workspaceId && (
-									<AccessRequestsList workspaceId={workspaceId} />
+									<AccessRequestsList
+										workspaceId={workspaceId}
+										actionedByRole={settings?.my_role ?? "unknown"}
+									/>
 								)}
 							</Tabs.Panel>
 
@@ -1381,18 +1258,12 @@ export const WorkspaceSettingsRoute = () => {
 			</Container>
 
 			{workspaceId && settings && (
-				<WorkspaceInviteWizard
+				<InviteModal
 					opened={inviteModalOpened}
 					onClose={closeInviteModal}
-					workspaceId={workspaceId}
 					orgId={settings.org_id}
-					existingMemberAppUserIds={
-						new Set(settings.members.map((m) => m.user_id))
-					}
-					memberInviteBlocked={seatInviteBlocked}
-					externalInviteBlocked={seatInviteBlocked}
-					memberOverageActive={seatOverageActive}
-					seatOverageRate={seatOverageRate}
+					orgName={settings.org_name}
+					defaultWorkspaceId={workspaceId}
 				/>
 			)}
 		</>
@@ -1728,7 +1599,6 @@ function PrivacyAndDefaultsSection({
 												<Trans>Requires changemaker tier or above</Trans>
 											</Text>
 											<Button
-												color="blue"
 												size="xs"
 												disabled={!canRequestUpgrade}
 												onClick={() =>
@@ -1851,7 +1721,7 @@ function PrivacyAndDefaultsSection({
 			{canEdit && privacyDirty && (
 				<Group justify="flex-end">
 					<Button
-						variant="default"
+						variant="outline"
 						onClick={() => setIsOpen(null)}
 						disabled={privacyMutation.isPending}
 					>

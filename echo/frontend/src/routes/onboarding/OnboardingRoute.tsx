@@ -70,7 +70,11 @@ export const OnboardingRoute = () => {
 	const displayName = (user.data as Record<string, string>)?.first_name || "";
 	const hasInvites = meV2?.has_pending_invites === true;
 	const inviteOrganisations = Array.from(
-		new Set((pendingInvites ?? []).map((i) => i.org_name).filter(Boolean)),
+		new Set(
+			(pendingInvites ?? [])
+				.map((i) => i.org_name?.trim())
+				.filter((name): name is string => Boolean(name)),
+		),
 	);
 	// The designer's onboarding split (docs/workspaces/designer-return.html):
 	// users with projects from before workspaces existed see the "migration"
@@ -142,8 +146,11 @@ export const OnboardingRoute = () => {
 			});
 			// Pending invites query too — the dropdown / inbox uses this.
 			queryClient.invalidateQueries({ queryKey: ["v2", "me", "invites"] });
-			setWorkspaceId(data.workspace_id);
-			setWorkspace(data.workspace_id);
+			// Org-only invitees return workspace_id=""; only set the active workspace when there's a real id.
+			if (data.workspace_id) {
+				setWorkspaceId(data.workspace_id);
+				setWorkspace(data.workspace_id);
+			}
 
 			// Invited users skip the invite step — they don't have a organisation to invite
 			if (hasInvites) {
