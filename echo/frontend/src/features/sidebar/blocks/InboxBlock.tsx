@@ -8,7 +8,7 @@ import { NavItem } from "../primitives/NavItem";
 
 export const InboxBlock = () => {
 	const to = useSidebarOverlayLink("inbox");
-	const { view } = useSidebarView();
+	const { overlay } = useSidebarView();
 	const { data: unreadNotifications = 0 } = useUnreadNotificationCount();
 	const { data: unreadAnnouncements = 0 } = useUnreadAnnouncements();
 	const total = unreadNotifications + unreadAnnouncements;
@@ -19,7 +19,7 @@ export const InboxBlock = () => {
 			label={<Trans>Inbox</Trans>}
 			icon={EnvelopeSimple}
 			pushes
-			active={view === "inbox"}
+			active={overlay === "inbox"}
 			badge={total > 0 ? total : undefined}
 		/>
 	);

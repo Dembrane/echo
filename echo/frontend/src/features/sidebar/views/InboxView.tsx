@@ -99,70 +99,72 @@ export const InboxView = () => {
 		activeTab === "for-you" ? unreadNotifs === 0 : unreadAnnouncements === 0;
 
 	return (
-		<nav className="flex h-full flex-col">
-			<div className="shrink-0 p-1.5">
-				<ViewHeader to={backTo ?? "/w"} title={<Trans>Inbox</Trans>} />
-			</div>
-
-			<div className="flex shrink-0 items-center justify-between gap-1 px-3 pb-2">
-				<div className="flex gap-1">
-					<TabButton
-						active={activeTab === "for-you"}
-						onClick={() => setActiveTab("for-you")}
-						badge={unreadNotifs}
-					>
-						<Trans>For you</Trans>
-					</TabButton>
-					<TabButton
-						active={activeTab === "announcements"}
-						onClick={() => setActiveTab("announcements")}
-						badge={unreadAnnouncements}
-					>
-						<Trans>Updates</Trans>
-					</TabButton>
+		<div className="flex h-full w-full justify-center overflow-hidden">
+			<nav className="flex h-full w-full max-w-2xl flex-col px-4 py-6">
+				<div className="shrink-0 p-1.5">
+					<ViewHeader to={backTo ?? "/w"} title={<Trans>Inbox</Trans>} />
 				</div>
-				<button
-					type="button"
-					onClick={handleMarkAllReadForActiveTab}
-					disabled={markAllDisabled || markAllPending}
-					className="flex items-center gap-1 rounded px-1.5 py-1 text-[11px] transition-colors enabled:hover:bg-black/[0.04] disabled:opacity-40"
-					style={{ color: "rgba(45, 45, 44, 0.6)" }}
-					aria-label={t`Mark all as read`}
-				>
-					<Check size={12} />
-					<Trans>All read</Trans>
-				</button>
-			</div>
-
-			<div className="flex-1 overflow-y-auto px-1.5 pb-2">
-				{activeTab === "for-you" ? (
-					<ForYouPanel
-						loading={loadingNotifs}
-						rows={notifications}
-						onRowClick={handleNotificationClick}
-						onMarkRead={(row) => {
-							if (!row.read) markNotifRead.mutate(row.id);
-						}}
-					/>
-				) : (
-					<AnnouncementsPanel
-						loading={loadingAnnouncements}
-						announcements={processedAnnouncements}
-						onMarkRead={(id) =>
-							markAnnouncementRead.mutate({ announcementId: id })
-						}
-						onMarkUnread={(id, activityIds) =>
-							markAnnouncementUnread.mutate({
-								activityIds,
-								announcementId: id,
-							})
-						}
-						isFetchingNextPage={isFetchingNextPage}
-						loadMoreRef={loadMoreRef}
-					/>
-				)}
-			</div>
-		</nav>
+	
+				<div className="flex shrink-0 items-center justify-between gap-1 px-3 pb-2">
+					<div className="flex gap-1">
+						<TabButton
+							active={activeTab === "for-you"}
+							onClick={() => setActiveTab("for-you")}
+							badge={unreadNotifs}
+						>
+							<Trans>For you</Trans>
+						</TabButton>
+						<TabButton
+							active={activeTab === "announcements"}
+							onClick={() => setActiveTab("announcements")}
+							badge={unreadAnnouncements}
+						>
+							<Trans>Updates</Trans>
+						</TabButton>
+					</div>
+					<button
+						type="button"
+						onClick={handleMarkAllReadForActiveTab}
+						disabled={markAllDisabled || markAllPending}
+						className="flex items-center gap-1 rounded px-1.5 py-1 text-[11px] transition-colors enabled:hover:bg-black/[0.04] disabled:opacity-40"
+						style={{ color: "rgba(45, 45, 44, 0.6)" }}
+						aria-label={t`Mark all as read`}
+					>
+						<Check size={12} />
+						<Trans>All read</Trans>
+					</button>
+				</div>
+	
+				<div className="flex-1 overflow-y-auto px-1.5 pb-2">
+					{activeTab === "for-you" ? (
+						<ForYouPanel
+							loading={loadingNotifs}
+							rows={notifications}
+							onRowClick={handleNotificationClick}
+							onMarkRead={(row) => {
+								if (!row.read) markNotifRead.mutate(row.id);
+							}}
+						/>
+					) : (
+						<AnnouncementsPanel
+							loading={loadingAnnouncements}
+							announcements={processedAnnouncements}
+							onMarkRead={(id) =>
+								markAnnouncementRead.mutate({ announcementId: id })
+							}
+							onMarkUnread={(id, activityIds) =>
+								markAnnouncementUnread.mutate({
+									activityIds,
+									announcementId: id,
+								})
+							}
+							isFetchingNextPage={isFetchingNextPage}
+							loadMoreRef={loadMoreRef}
+						/>
+					)}
+				</div>
+			</nav>
+		</div>
 	);
 };
 
