@@ -1416,9 +1416,9 @@ export const HostGuidePage = () => {
 			<Box
 				className="no-print"
 				style={{
-					left: isFullscreen ? 0 : undefined,
+					left: 0,
 					position: isFullscreen ? "fixed" : "absolute",
-					right: isFullscreen ? 0 : undefined,
+					right: 0,
 					top: 0,
 					transform: isFullscreen ? "translateY(-100%)" : "translateY(0)",
 					transition: "transform 0.2s",
