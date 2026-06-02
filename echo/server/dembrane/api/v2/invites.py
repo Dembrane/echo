@@ -87,8 +87,6 @@ async def invite_to_workspace(
     """
     ctx.require_policy("member:invite")
 
-    await _invite_rate_limiter.check(ctx.app_user_id)
-
     email = body.email.strip().lower()
     role = body.role
     is_external_invite = role == "external"
@@ -113,24 +111,8 @@ async def invite_to_workspace(
         if inviter_app_user[0].get("email", "").lower() == email:
             raise HTTPException(status_code=400, detail="Cannot invite yourself")
 
-    # Unified seat-cap gate (members + externals share the pool — ADR-0003).
-    # include_pending=True so outstanding workspace_invite rows count too.
-    await assert_can_add_seat(ctx.workspace, audience="admin", include_pending=True)
-
-    # Check if already a member
-    existing_membership = await async_directus.get_items(
-        "workspace_membership",
-        {
-            "query": {
-                "filter": {
-                    "workspace_id": {"_eq": workspace_id},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["user_id"],
-                "limit": -1,
-            }
-        },
-    )
+    # Rate-limit after validation gates so spam on malformed/forbidden requests doesn't burn legitimate quota.
+    await _invite_rate_limiter.check(ctx.app_user_id)
 
     # Try to find the user
     users = await async_directus.get_users(
@@ -152,20 +134,76 @@ async def invite_to_workspace(
         app_user = await resolve_app_user(directus_user["id"])
 
         if app_user:
-            # Check if already a member
-            if isinstance(existing_membership, list):
-                for m in existing_membership:
-                    if m.get("user_id") == app_user["id"]:
-                        raise HTTPException(
-                            status_code=409,
-                            detail="User is already a member of this workspace",
-                        )
+            # Include soft-deleted rows so we reactivate rather than insert a duplicate.
+            existing_membership_rows = await async_directus.get_items(
+                "workspace_membership",
+                {
+                    "query": {
+                        "filter": {
+                            "workspace_id": {"_eq": workspace_id},
+                            "user_id": {"_eq": app_user["id"]},
+                        },
+                        "fields": ["id", "deleted_at", "role"],
+                        "limit": 1,
+                    }
+                },
+            )
+            existing_row = (
+                existing_membership_rows[0]
+                if isinstance(existing_membership_rows, list) and existing_membership_rows
+                else None
+            )
+
+            # Idempotent re-invite: active member → 200 already_member, no email. Must run before the seat-cap gate.
+            if existing_row and not existing_row.get("deleted_at"):
+                # Best-effort cleanup of stale pending invite rows for the same (email, workspace).
+                try:
+                    now_iso = datetime.now(timezone.utc).isoformat()
+                    stale = await async_directus.get_items(
+                        "workspace_invite",
+                        {
+                            "query": {
+                                "filter": {
+                                    "workspace_id": {"_eq": workspace_id},
+                                    "email": {"_eq": email},
+                                    "accepted_at": {"_null": True},
+                                    "deleted_at": {"_null": True},
+                                },
+                                "fields": ["id"],
+                                "limit": -1,
+                            }
+                        },
+                    )
+                    if isinstance(stale, list):
+                        for inv in stale:
+                            await async_directus.update_item(
+                                "workspace_invite",
+                                inv["id"],
+                                {"accepted_at": now_iso},
+                            )
+                except Exception:
+                    logger.exception(
+                        "already_member: failed to clean up stale pending invites "
+                        "for %s in workspace %s",
+                        email,
+                        workspace_id,
+                    )
+
+                return WorkspaceInviteResponse(
+                    status="already_member",
+                    email=email,
+                    user_existed=True,
+                    email_sent=False,
+                )
+
+            # Net-new seat or reactivation of soft-deleted row: include pending invites in the cap.
+            await assert_can_add_seat(
+                ctx.workspace, audience="admin", include_pending=True
+            )
 
             ws_org_id = ctx.workspace.get("org_id")
 
-            # Invariant (ADR-0003): role='external' ⟺ no org_membership row
-            # in this org. Non-external invites ensure an org_membership
-            # row exists (create if absent); external invites skip it.
+            # Invariant: role='external' ⟺ no org_membership in this org. Non-external invites create org_membership if missing (also the external-to-member promotion path).
             newly_joined_organisation = False
             if not is_external_invite and ws_org_id:
                 existing_org_mem = await async_directus.get_items(
@@ -194,16 +232,26 @@ async def invite_to_workspace(
                     logger.info(f"Added {email} to org {ws_org_id} as member")
                     newly_joined_organisation = True
 
-            await async_directus.create_item(
-                "workspace_membership",
-                {
-                    "id": generate_uuid(),
-                    "workspace_id": workspace_id,
-                    "user_id": app_user["id"],
-                    "role": role,
-                    "source": "direct",
-                },
-            )
+            # Reactivate a soft-deleted row if present; otherwise create fresh. Distinct status so UI can show "reactivated" vs "added".
+            reactivated = False
+            if existing_row and existing_row.get("deleted_at"):
+                await async_directus.update_item(
+                    "workspace_membership",
+                    existing_row["id"],
+                    {"deleted_at": None, "role": role, "source": "direct"},
+                )
+                reactivated = True
+            else:
+                await async_directus.create_item(
+                    "workspace_membership",
+                    {
+                        "id": generate_uuid(),
+                        "workspace_id": workspace_id,
+                        "user_id": app_user["id"],
+                        "role": role,
+                        "source": "direct",
+                    },
+                )
 
             from dembrane.cache_utils import invalidate_workspace_and_org_usage
 
@@ -296,13 +344,16 @@ async def invite_to_workspace(
             )
 
             return WorkspaceInviteResponse(
-                status="added",
+                status="reactivated" if reactivated else "added",
                 email=email,
                 user_existed=True,
                 email_sent=email_queued,
             )
 
     # User doesn't exist or doesn't have app_user — create an invite.
+    # Pending invites reserve seats elsewhere, so cap-check before issuing one.
+    await assert_can_add_seat(ctx.workspace, audience="admin", include_pending=True)
+
     expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
 
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -314,6 +365,7 @@ async def invite_to_workspace(
                     "workspace_id": {"_eq": workspace_id},
                     "email": {"_eq": email},
                     "accepted_at": {"_null": True},
+                    "deleted_at": {"_null": True},
                     "expires_at": {"_gt": now_iso},
                 },
                 "fields": ["id"],
@@ -323,7 +375,13 @@ async def invite_to_workspace(
     )
 
     if isinstance(existing_invites, list) and len(existing_invites) > 0:
-        raise HTTPException(status_code=409, detail="An invite is already pending for this email")
+        # 200 with status string so the modal renders this per-row rather than as a global failure.
+        return WorkspaceInviteResponse(
+            status="already_invited",
+            email=email,
+            user_existed=user_existed,
+            email_sent=False,
+        )
 
     inviter_name = "Your organisation"
     inviter_app_user_data = await async_directus.get_items(

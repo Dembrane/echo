@@ -266,6 +266,7 @@ export const useMoveConversationMutation = () => {
 export const useAddChatContextMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
+		mutationKey: ["chat-context", "add"],
 		mutationFn: (payload: {
 			chatId: string;
 			conversationId?: string;
@@ -400,6 +401,7 @@ export const useAddChatContextMutation = () => {
 export const useDeleteChatContextMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
+		mutationKey: ["chat-context", "delete"],
 		mutationFn: (payload: {
 			chatId: string;
 			conversationId?: string;

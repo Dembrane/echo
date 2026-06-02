@@ -761,13 +761,23 @@ export const WorkspaceSelectorRoute = () => {
 					(invites.length > 0 ? (
 						<Stack align="center" gap={12} mt="10vh">
 							<Text c="dimmed" size="sm" ta="center">
-								<Trans>
-									You have a pending invite to {invites[0].workspace_name}. The
-									admin needs to free a seat before you can join.
-								</Trans>
+								{/* Org-only invites (ADR 0004) have no workspace name —
+								    surface the org name; skip seat-cap copy. */}
+								{invites[0].type === "org" ? (
+									<Trans>
+										You have a pending invite to {invites[0].org_name}. Open it
+										to join the organisation.
+									</Trans>
+								) : (
+									<Trans>
+										You have a pending invite to{" "}
+										{invites[0].workspace_name ?? "a workspace"}. The
+										admin needs to free a seat before you can join.
+									</Trans>
+								)}
 							</Text>
 							<Button
-								variant="default"
+								variant="outline"
 								size="sm"
 								onClick={() => navigate("/invites")}
 							>

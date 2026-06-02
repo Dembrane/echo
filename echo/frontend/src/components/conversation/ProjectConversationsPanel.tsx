@@ -14,7 +14,6 @@ import {
 	Modal,
 	MultiSelect,
 	Paper,
-	ScrollArea,
 	Select,
 	Skeleton,
 	Stack,
@@ -43,6 +42,7 @@ import {
 import { formatDistanceToNowStrict } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import { useIsMutating } from "@tanstack/react-query";
 import { useProjectChatContext } from "@/components/chat/hooks";
 import { toast } from "@/components/common/Toaster";
 import { AutoSelectConversations } from "@/components/conversation/AutoSelectConversations";
@@ -82,7 +82,6 @@ type ProjectConversationsPanelProps = {
 	selectionChatId?: string;
 	selectionMode?: boolean;
 	showUpload?: boolean;
-	maxHeight?: number | string;
 };
 
 type EditConversationValues = {
@@ -140,6 +139,32 @@ const ConversationSelectionCheckbox = ({
 	const chatContextQuery = useProjectChatContext(chatId);
 	const addChatContextMutation = useAddChatContextMutation();
 	const deleteChatContextMutation = useDeleteChatContextMutation();
+	// Global mutation cache so pending state survives modal unmount/remount.
+	const globalPendingForRow = useIsMutating({
+		mutationKey: ["chat-context"],
+		predicate: (mutation) => {
+			const vars = mutation.state.variables as
+				| { chatId?: string; conversationId?: string }
+				| undefined;
+			return (
+				vars?.chatId === chatId && vars?.conversationId === conversation.id
+			);
+		},
+	});
+	const isPending =
+		chatContextQuery.isLoading ||
+		globalPendingForRow > 0 ||
+		addChatContextMutation.isPending ||
+		deleteChatContextMutation.isPending;
+
+	if (isPending) {
+		return (
+			<Tooltip label={t`Loading...`}>
+				<Loader size="xs" color={MODE_COLOR} />
+			</Tooltip>
+		);
+	}
+
 	const isSelected = !!chatContextQuery.data?.conversations?.some(
 		(c) => c.conversation_id === conversation.id,
 	);
@@ -149,10 +174,6 @@ const ConversationSelectionCheckbox = ({
 	const isOverCapLocked = !!conversation.locked;
 	const hasContent = hasTranscriptContent(conversation);
 	const isDisabled = isChatLocked || isOverCapLocked || !hasContent;
-	const isPending =
-		chatContextQuery.isLoading ||
-		addChatContextMutation.isPending ||
-		deleteChatContextMutation.isPending;
 
 	const tooltipLabel = isOverCapLocked
 		? t`Conversation locked. Upgrade to add it.`
@@ -165,7 +186,6 @@ const ConversationSelectionCheckbox = ({
 					: t`Add to chat`;
 
 	const handleChange = () => {
-		if (isPending) return;
 		if (isSelected) {
 			deleteChatContextMutation.mutate({
 				chatId,
@@ -187,8 +207,7 @@ const ConversationSelectionCheckbox = ({
 				<Checkbox
 					aria-label={isSelected ? t`Remove from chat` : t`Add to chat`}
 					checked={isSelected}
-					disabled={isDisabled || isPending}
-					indeterminate={isPending}
+					disabled={isDisabled}
 					onChange={handleChange}
 					color={MODE_COLOR}
 					{...testId(`conversation-picker-checkbox-${conversation.id}`)}
@@ -394,7 +413,6 @@ export const ProjectConversationsPanel = ({
 	selectionChatId,
 	selectionMode = false,
 	showUpload = false,
-	maxHeight,
 }: ProjectConversationsPanelProps) => {
 	const navigate = useI18nNavigate();
 	const { ref: loadMoreRef, inView } = useInView();
@@ -787,60 +805,58 @@ export const ProjectConversationsPanel = ({
 
 			<Divider />
 
-			<ScrollArea.Autosize mah={maxHeight} type={maxHeight ? "auto" : "never"}>
-				<Stack gap="sm" pr={maxHeight ? "sm" : 0}>
-					{conversationsQuery.isLoading && (
-						<>
-							<Skeleton height={98} radius="sm" />
-							<Skeleton height={98} radius="sm" />
-							<Skeleton height={98} radius="sm" />
-						</>
-					)}
+			<Stack gap="sm">
+				{conversationsQuery.isLoading && (
+					<>
+						<Skeleton height={98} radius="sm" />
+						<Skeleton height={98} radius="sm" />
+						<Skeleton height={98} radius="sm" />
+					</>
+				)}
 
-					{!conversationsQuery.isLoading && allConversations.length === 0 && (
-						<Paper withBorder radius="sm" p="xl">
-							<Stack gap="xs" align="center">
-								<Text size="sm" c="dimmed" ta="center">
-									{hasActiveFilters ? (
-										<Trans>No conversations match these filters.</Trans>
-									) : (
-										<Trans>No conversations yet.</Trans>
-									)}
-								</Text>
-								{hasActiveFilters && (
-									<Button variant="subtle" size="xs" onClick={resetFilters}>
-										<Trans>Clear filters</Trans>
-									</Button>
+				{!conversationsQuery.isLoading && allConversations.length === 0 && (
+					<Paper withBorder radius="sm" p="xl">
+						<Stack gap="xs" align="center">
+							<Text size="sm" c="dimmed" ta="center">
+								{hasActiveFilters ? (
+									<Trans>No conversations match these filters.</Trans>
+								) : (
+									<Trans>No conversations yet.</Trans>
 								)}
-							</Stack>
-						</Paper>
-					)}
+							</Text>
+							{hasActiveFilters && (
+								<Button variant="subtle" size="xs" onClick={resetFilters}>
+									<Trans>Clear filters</Trans>
+								</Button>
+							)}
+						</Stack>
+					</Paper>
+				)}
 
-					{allConversations.map((conversation, index) => (
-						<div
-							key={conversation.id}
-							ref={
-								index === allConversations.length - 1 ? loadMoreRef : undefined
-							}
-						>
-							<ConversationRow
-								conversation={conversation as Conversation & { live?: boolean }}
-								isSelected={selectedConversationIds.has(conversation.id)}
-								onEdit={openEdit}
-								onOpen={openConversation}
-								selectionChatId={selectionChatId}
-								selectionMode={selectionMode}
-							/>
-						</div>
-					))}
+				{allConversations.map((conversation, index) => (
+					<div
+						key={conversation.id}
+						ref={
+							index === allConversations.length - 1 ? loadMoreRef : undefined
+						}
+					>
+						<ConversationRow
+							conversation={conversation as Conversation & { live?: boolean }}
+							isSelected={selectedConversationIds.has(conversation.id)}
+							onEdit={openEdit}
+							onOpen={openConversation}
+							selectionChatId={selectionChatId}
+							selectionMode={selectionMode}
+						/>
+					</div>
+				))}
 
-					{conversationsQuery.isFetchingNextPage && (
-						<Center py="md">
-							<Loader size="sm" />
-						</Center>
-					)}
-				</Stack>
-			</ScrollArea.Autosize>
+				{conversationsQuery.isFetchingNextPage && (
+					<Center py="md">
+						<Loader size="sm" />
+					</Center>
+				)}
+			</Stack>
 
 			<Modal
 				opened={editOpened}

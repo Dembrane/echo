@@ -173,9 +173,10 @@ export const useInfiniteProjectChats = (
 	query?: Partial<Query<CustomDirectusTypes, ProjectChat>>,
 	options?: {
 		initialLimit?: number;
+		hasMessages?: boolean;
 	},
 ) => {
-	const { initialLimit = 15 } = options ?? {};
+	const { initialLimit = 15, hasMessages = false } = options ?? {};
 
 	return useSuspenseInfiniteQuery({
 		getNextPageParam: (lastPage: { nextOffset?: number }) =>
@@ -189,6 +190,7 @@ export const useInfiniteProjectChats = (
 					project_id: projectId,
 					limit: initialLimit,
 					offset: pageParam * initialLimit,
+					...(hasMessages ? { has_messages: true } : {}),
 				},
 			);
 
@@ -198,25 +200,63 @@ export const useInfiniteProjectChats = (
 					chats.length === initialLimit ? pageParam + 1 : undefined,
 			};
 		},
-		queryKey: ["projects", projectId, "chats", "infinite", query],
+		queryKey: [
+			"projects",
+			projectId,
+			"chats",
+			"infinite",
+			{ query, hasMessages },
+		],
 		refetchInterval: 30000,
 	});
 };
 
+const projectChatsCountQueryOptions = (
+	projectId: string,
+	query: Partial<Query<CustomDirectusTypes, ProjectChat>> | undefined,
+	hasMessages: boolean,
+) => ({
+	queryKey: [
+		"projects",
+		projectId,
+		"chats",
+		"count",
+		{ query, hasMessages },
+	] as const,
+	queryFn: async () => {
+		void query;
+		const { total } = await bff.get<{ chats: ProjectChat[]; total: number }>(
+			"/chats",
+			{
+				project_id: projectId,
+				limit: 1,
+				...(hasMessages ? { has_messages: true } : {}),
+			},
+		);
+		return total;
+	},
+});
+
 export const useProjectChatsCount = (
 	projectId: string,
 	query?: Partial<Query<CustomDirectusTypes, ProjectChat>>,
+	options?: { hasMessages?: boolean },
 ) => {
-	return useSuspenseQuery({
-		queryFn: async () => {
-			void query;
-			const { total } = await bff.get<{ chats: ProjectChat[]; total: number }>(
-				"/chats",
-				{ project_id: projectId, limit: 1 },
-			);
-			return total;
-		},
-		queryKey: ["projects", projectId, "chats", "count", query],
+	const { hasMessages = false } = options ?? {};
+	return useSuspenseQuery(
+		projectChatsCountQueryOptions(projectId, query, hasMessages),
+	);
+};
+
+// Non-suspense variant. Shares cache key with useProjectChatsCount.
+export const useProjectChatsCountQuery = (
+	projectId: string,
+	options?: { hasMessages?: boolean },
+) => {
+	const { hasMessages = false } = options ?? {};
+	return useQuery({
+		enabled: projectId !== "",
+		...projectChatsCountQueryOptions(projectId, undefined, hasMessages),
 	});
 };
 

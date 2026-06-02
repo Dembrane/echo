@@ -31,6 +31,7 @@ from dembrane.api.v2.bff.reports import (
     metric_router as bff_report_metric_router,
 )
 from dembrane.api.v2.notifications import router as notifications_router
+from dembrane.api.v2.invite_actions import router as invite_actions_router
 from dembrane.api.v2.access_requests import (
     router as access_requests_router,
     discover_router as access_requests_discover_router,
@@ -66,6 +67,7 @@ v2_router.include_router(access_requests_discover_router, prefix="/orgs", tags=[
 # Workspace-scoped: /workspaces, /workspaces/{id}/invite, /workspaces/{id}/projects
 v2_router.include_router(workspaces_router, prefix="/workspaces", tags=["v2:workspaces"])
 v2_router.include_router(invites_router, prefix="/workspaces", tags=["v2:invites"])
+v2_router.include_router(invite_actions_router, prefix="/invites", tags=["v2:invite-actions"])
 v2_router.include_router(
     workspace_projects_router, prefix="/workspaces", tags=["v2:workspace-projects"]
 )

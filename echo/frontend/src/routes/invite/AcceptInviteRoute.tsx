@@ -27,9 +27,7 @@ import {
 	usePublicInviteStatus,
 } from "@/hooks/useMyInvites";
 
-// Email link target: /invite/accept?h=...&iss=...&ws=...&email=...&role=...
-// Inspect-on-mount drives the UI per state — already-used links no
-// longer silently re-accept.
+// Link: /invite/accept?h=...&iss=...&(ws|org)=...&email=...&role=...; hash is the lookup key, inspect-on-mount drives UI state.
 export const AcceptInviteRoute = () => {
 	const [searchParams] = useSearchParams();
 	const navigate = useI18nNavigate();
@@ -44,7 +42,10 @@ export const AcceptInviteRoute = () => {
 
 	const hash = searchParams.get("h") || "";
 	const inviterName = searchParams.get("iss") || t`Someone`;
-	const workspaceNameParam = searchParams.get("ws") || t`a workspace`;
+	const workspaceNameParam = searchParams.get("ws") || "";
+	const orgNameParam = searchParams.get("org") || "";
+	const subjectFromUrl =
+		orgNameParam || workspaceNameParam || t`a workspace`;
 	const role = searchParams.get("role") || "member";
 	// Carried in URL so /register can pre-fill + lock the email field —
 	// prevents stray personal-org signups from typo'd addresses.
@@ -67,7 +68,7 @@ export const AcceptInviteRoute = () => {
 	const { data: publicInviteState, isLoading: publicInspectLoading } =
 		usePublicInviteStatus(invitedEmail, hash, { enabled: canProbePublic });
 
-	useDocumentTitle(t`Join ${workspaceNameParam} | dembrane`);
+	useDocumentTitle(t`Join ${subjectFromUrl} | dembrane`);
 
 	// Preserve invite URL through login/register. Pass the invited email
 	// as a separate query param so /register pre-fills the form.
@@ -78,12 +79,13 @@ export const AcceptInviteRoute = () => {
 	const loginUrl = `/login?next=${encodeURIComponent(currentUrl)}${emailQs}`;
 	const registerUrl = `/register?next=${encodeURIComponent(currentUrl)}${emailQs}`;
 
-	// Backend-authoritative name (handles renames since invite was sent),
-	// falling back to the URL param while loading.
+	// Backend-authoritative name (handles renames); falls back to URL param while loading. Org-only invites use org_name instead of workspace_name.
 	const resolvedWorkspaceName =
 		inviteState?.workspace_name ||
+		inviteState?.org_name ||
 		publicInviteState?.workspace_name ||
-		workspaceNameParam;
+		publicInviteState?.org_name ||
+		subjectFromUrl;
 
 	const handleAccept = async () => {
 		if (!hash) {
@@ -103,7 +105,14 @@ export const AcceptInviteRoute = () => {
 				toast.success(t`You're in`);
 			}
 			setTimeout(() => {
-				navigate(`/w/${data.workspace_id}/home`);
+				// Org-only acceptance lands on /w (WorkspaceSelectorRoute surfaces DiscoverableWorkspaces per-org).
+				if (data.type === "org") {
+					navigate("/w");
+				} else if (data.workspace_id) {
+					navigate(`/w/${data.workspace_id}/home`);
+				} else {
+					navigate("/w");
+				}
 			}, 800);
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : "Failed to accept";
@@ -141,7 +150,7 @@ export const AcceptInviteRoute = () => {
 				<Paper p="xl" radius="md" withBorder>
 					<Stack gap={20}>
 						<Stack gap={6}>
-							<Badge size="sm" variant="light" color="blue" w="fit-content">
+							<Badge size="sm" variant="light" color="primary" w="fit-content">
 								<Trans>Invitation</Trans>
 							</Badge>
 							<Title order={3} fw={400}>
@@ -230,12 +239,29 @@ export const AcceptInviteRoute = () => {
 										</Alert>
 									)}
 
+								{!publicInspectLoading &&
+									publicInviteState?.status === "org_deleted" && (
+										<Alert color="red" variant="light">
+											<Stack gap={4}>
+												<Text size="sm" fw={500}>
+													<Trans>This organisation no longer exists</Trans>
+												</Text>
+												<Text size="xs">
+													<Trans>
+														The organisation this invite was for has been
+														deleted. There's nothing to join.
+													</Trans>
+												</Text>
+											</Stack>
+										</Alert>
+									)}
+
 								{/* Already accepted — offer login (registering would
 								    duplicate an existing account). */}
 								{!publicInspectLoading &&
 									publicInviteState?.status === "accepted" && (
 										<Stack gap={8}>
-											<Alert color="blue" variant="light">
+											<Alert color="primary" variant="light">
 												<Stack gap={4}>
 													<Text size="sm" fw={500}>
 														<Trans>This invite has already been used</Trans>
@@ -265,10 +291,17 @@ export const AcceptInviteRoute = () => {
 										!invitedEmail) && (
 										<>
 											<Text size="sm" c="dimmed" lh={1.5}>
-												<Trans>
-													Join this workspace to collaborate on conversations,
-													share insights, and build reports together.
-												</Trans>
+												{publicInviteState?.type === "org" ? (
+													<Trans>
+														Join this organisation to discover workspaces and
+														collaborate with your team.
+													</Trans>
+												) : (
+													<Trans>
+														Join this workspace to collaborate on conversations,
+														share insights, and build reports together.
+													</Trans>
+												)}
 											</Text>
 											<Stack gap={8}>
 												<Button
@@ -320,7 +353,7 @@ export const AcceptInviteRoute = () => {
 								<Button
 									size="md"
 									fullWidth
-									variant="default"
+									variant="outline"
 									onClick={() => navigate("/w")}
 								>
 									<Trans>Back to my workspaces</Trans>
@@ -389,11 +422,27 @@ export const AcceptInviteRoute = () => {
 										</Alert>
 									)}
 
+								{!inspectLoading && inviteState?.status === "org_deleted" && (
+									<Alert color="red" variant="light">
+										<Stack gap={4}>
+											<Text size="sm" fw={500}>
+												<Trans>This organisation no longer exists</Trans>
+											</Text>
+											<Text size="xs">
+												<Trans>
+													The organisation this invite was for has been deleted.
+													There's nothing to join.
+												</Trans>
+											</Text>
+										</Stack>
+									</Alert>
+								)}
+
 								{/* Consumed. No "Accept and join" — jump-to-workspace
 								    if they're a member, ask-admin if they're not. */}
 								{!inspectLoading && inviteState?.status === "accepted" && (
 									<Stack gap={8}>
-										<Alert color="blue" variant="light">
+										<Alert color="primary" variant="light">
 											<Stack gap={4}>
 												<Text size="sm" fw={500}>
 													<Trans>This invite has already been used</Trans>
@@ -416,21 +465,28 @@ export const AcceptInviteRoute = () => {
 												)}
 											</Stack>
 										</Alert>
-										{inviteState.is_member && inviteState.workspace_id && (
-											<Button
-												size="md"
-												fullWidth
-												onClick={() =>
-													navigate(`/w/${inviteState.workspace_id}/home`)
-												}
-											>
-												<Trans>Take me to {resolvedWorkspaceName}</Trans>
-											</Button>
-										)}
+										{inviteState.is_member &&
+											(inviteState.type === "org"
+												? inviteState.org_id
+												: inviteState.workspace_id) && (
+												<Button
+													size="md"
+													fullWidth
+													onClick={() =>
+														navigate(
+															inviteState.type === "org"
+																? "/w"
+																: `/w/${inviteState.workspace_id}/home`,
+														)
+													}
+												>
+													<Trans>Take me to {resolvedWorkspaceName}</Trans>
+												</Button>
+											)}
 										<Button
 											size="md"
 											fullWidth
-											variant="default"
+											variant="outline"
 											onClick={() => navigate("/w")}
 										>
 											<Trans>Back to my workspaces</Trans>
@@ -443,19 +499,25 @@ export const AcceptInviteRoute = () => {
 									inviteState?.status === "pending" &&
 									inviteState.is_member && (
 										<Stack gap={8}>
-											<Alert color="blue" variant="light">
+											<Alert color="primary" variant="light">
 												<Text size="sm">
 													<Trans>
 														You're already in {resolvedWorkspaceName}.
 													</Trans>
 												</Text>
 											</Alert>
-											{inviteState.workspace_id && (
+											{(inviteState.type === "org"
+												? inviteState.org_id
+												: inviteState.workspace_id) && (
 												<Button
 													size="md"
 													fullWidth
 													onClick={() =>
-														navigate(`/w/${inviteState.workspace_id}/home`)
+														navigate(
+															inviteState.type === "org"
+																? "/w"
+																: `/w/${inviteState.workspace_id}/home`,
+														)
 													}
 												>
 													<Trans>Take me to {resolvedWorkspaceName}</Trans>
@@ -472,10 +534,17 @@ export const AcceptInviteRoute = () => {
 									!inviteState.is_member && (
 										<>
 											<Text size="sm" c="dimmed" lh={1.5}>
-												<Trans>
-													Join this workspace to collaborate on conversations,
-													share insights, and build reports together.
-												</Trans>
+												{inviteState.type === "org" ? (
+													<Trans>
+														Join this organisation to discover workspaces and
+														collaborate with your team.
+													</Trans>
+												) : (
+													<Trans>
+														Join this workspace to collaborate on conversations,
+														share insights, and build reports together.
+													</Trans>
+												)}
 											</Text>
 											<Stack gap={8}>
 												<Button
@@ -493,7 +562,7 @@ export const AcceptInviteRoute = () => {
 												<Button
 													size="md"
 													fullWidth
-													variant="default"
+													variant="outline"
 													onClick={() => navigate("/w")}
 												>
 													<Trans>Not now</Trans>

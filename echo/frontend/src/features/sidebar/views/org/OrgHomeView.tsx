@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { AppWindow, Folder, Gear, UserPlus } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
@@ -45,6 +46,7 @@ export const OrgHomeView = () => {
 	const orgWsQuery = useQuery({
 		enabled: Boolean(orgId),
 		queryFn: async () => fetchOrgWorkspaces(orgId as string),
+		// Shared namespace with OrganisationRoute; mutations affecting org workspaces must invalidate THIS key (not `["v2", "orgs", ...]`).
 		queryKey: ["v2", "organisation", orgId, "workspaces"],
 		retry: false,
 		staleTime: 30_000,
@@ -55,7 +57,7 @@ export const OrgHomeView = () => {
 		(myOrgWorkspaces.length > 0 &&
 			myOrgWorkspaces.every((w) => w.role === "external"));
 
-	const orgName = myOrgWorkspaces[0]?.org_name ?? "Organisation";
+	const orgName = myOrgWorkspaces[0]?.org_name ?? t`Organisation`;
 
 	const displayList = useMemo(() => {
 		if (isExternal) {
@@ -83,6 +85,9 @@ export const OrgHomeView = () => {
 		}));
 	}, [isExternal, myOrgWorkspaces, orgWsQuery.data]);
 
+	// Org-only members get no children under the org node; /w handles discovery instead.
+	const hasDirectMembership = myOrgWorkspaces.length > 0;
+
 	if (!orgId) return null;
 	const base = `/o/${orgId}`;
 
@@ -106,40 +111,33 @@ export const OrgHomeView = () => {
 				/>
 			)}
 
-			<SectionLabel>
-				<Trans>Workspaces</Trans>
-			</SectionLabel>
-			{displayList.length === 0 ? (
-				<div
-					className="px-2 py-1 text-[12px]"
-					style={{ color: "rgba(45, 45, 44, 0.45)" }}
-				>
-					{orgWsQuery.isLoading ? (
-						<Trans>Loading...</Trans>
-					) : (
-						<Trans>No workspaces</Trans>
-					)}
-				</div>
-			) : (
-				displayList.map((ws) => (
-					<NavItem
-						key={ws.id}
-						to={`/w/${ws.id}/home`}
-						label={ws.name}
-						icon={Folder}
-						badge={ws.isExternal ? <Trans>External</Trans> : undefined}
-						pushes
-					/>
-				))
+			{hasDirectMembership && (
+				<>
+					<SectionLabel>
+						<Trans>Workspaces</Trans>
+					</SectionLabel>
+					{displayList.map((ws) => (
+						<NavItem
+							key={ws.id}
+							to={`/w/${ws.id}/home`}
+							label={ws.name}
+							icon={Folder}
+							badge={ws.isExternal ? <Trans>External</Trans> : undefined}
+							pushes
+						/>
+					))}
+				</>
 			)}
 
 			{!isExternal && (
 				<>
-					<NavItem
-						to={`${base}/requests`}
-						label={<Trans>Pending requests</Trans>}
-						icon={UserPlus}
-					/>
+					{hasDirectMembership && (
+						<NavItem
+							to={`${base}/requests`}
+							label={<Trans>Pending requests</Trans>}
+							icon={UserPlus}
+						/>
+					)}
 					<div className="mt-auto" />
 					<NavItem
 						to={`${base}/settings/general`}
