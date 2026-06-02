@@ -117,21 +117,21 @@ export const ProjectHomeRoute = () => {
 						</Button>
 						<Button
 							leftSection={<UploadSimple size={16} />}
-							variant="default"
+							variant="outline"
 							onClick={() => navigate(`${base}/upload`)}
 						>
 							<Trans>Upload</Trans>
 						</Button>
 						<Button
 							leftSection={<PaintBrush size={16} />}
-							variant="default"
+							variant="outline"
 							onClick={() => navigate(`${base}/portal-editor`)}
 						>
 							<Trans>Portal editor</Trans>
 						</Button>
 						<Button
 							leftSection={<FileText size={16} />}
-							variant="default"
+							variant="outline"
 							onClick={() => navigate(`${base}/report`)}
 						>
 							<Trans>Report</Trans>
