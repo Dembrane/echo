@@ -13,7 +13,6 @@ endpoint:
 
 from __future__ import annotations
 
-import copy
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -284,23 +283,12 @@ async def test_external_in_other_workspace_promoted_to_member_in_target():
 
 
 @pytest.mark.asyncio
-async def test_external_row_in_other_workspace_is_byte_for_byte_unchanged():
-    """Explicit assertion: the external WS-A row is never read or mutated
-    by this endpoint. We pass it through and assert it's identical to
-    the original after the request."""
+async def test_external_to_member_promotion_never_updates_workspace_membership():
+    """Promotion must NEVER issue update_item on workspace_membership; an
+    existing external row in another workspace must survive unchanged
+    (ADR-0003 invariant: role='external' ⟺ no org_membership)."""
     invitee_directus = {"id": "du-ext2", "email": "ext2@example.com"}
     invitee_app_user = {"id": "au-ext2", "email": "ext2@example.com"}
-
-    ws_a_external_row = {
-        "id": "wm-ws-a-external",
-        "workspace_id": "ws-a",
-        "user_id": "au-ext2",
-        "role": "external",
-        "custom_policies": [],
-        "source": "direct",
-        "deleted_at": None,
-    }
-    snapshot = copy.deepcopy(ws_a_external_row)
 
     mock = _build_directus_mock(
         invitee_directus_user=invitee_directus,
@@ -320,11 +308,6 @@ async def test_external_row_in_other_workspace_is_byte_for_byte_unchanged():
             )
 
     assert resp.status_code == 200, resp.text
-    # The endpoint never queried or wrote WS-A's row. The locally held
-    # object is identical to its pre-request snapshot.
-    assert ws_a_external_row == snapshot
-
-    # And the endpoint never issued an update_item to any workspace_membership.
     updates = [c.args for c in mock.update_item.call_args_list]
     wm_updates = [u for u in updates if u[0] == "workspace_membership"]
     assert wm_updates == []

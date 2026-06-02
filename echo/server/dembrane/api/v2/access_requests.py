@@ -665,7 +665,8 @@ async def list_discoverable_workspaces(
         "tier": {"_neq": "free"},
     }
     if not is_org_admin:
-        filters["visibility"] = {"_neq": "private"}
+        # Positive-match mirrors request_workspace_access so NULL-visibility rows don't surface a CTA that 404s on submit.
+        filters["visibility"] = {"_eq": "open_to_organisation"}
 
     workspaces = await async_directus.get_items(
         "workspace",

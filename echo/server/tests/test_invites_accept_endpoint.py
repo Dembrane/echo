@@ -411,16 +411,34 @@ async def test_accept_org_invite_idempotent_already_member():
 
 @pytest.mark.asyncio
 async def test_accept_revoked_org_invite_returns_not_found():
-    """Soft-deleted org_invite (admin revoked) → 404 not_found. This was a
-    security regression at me.py:914 — the filter must include
-    deleted_at:_null so revoked hashes can't still be accepted."""
+    """Revoked org_invite must 404. Mock returns the revoked row unless the
+    filter pins deleted_at:_null, so dropping that filter fails the test."""
     invite_id = "oi-revoked"
     h = _invite_hash(invite_id)
 
-    # The row exists with deleted_at set; the filter on the accept query
-    # excludes it, so get_items returns [] for both tables.
+    revoked_row = {
+        "id": invite_id,
+        "org_id": _ORG_ID,
+        "email": _EMAIL,
+        "role": "member",
+        "accepted_at": None,
+        "deleted_at": "2099-01-01T00:00:00Z",
+        "expires_at": "2099-01-01T00:00:00Z",
+    }
+
+    seen_filters: dict[str, dict[str, Any]] = {}
+
+    async def _fake_get_items(collection: str, params: dict) -> Any:
+        filt = (params.get("query") or {}).get("filter") or {}
+        seen_filters[collection] = filt
+        if collection == "org_invite":
+            if filt.get("deleted_at") == {"_null": True}:
+                return []
+            return [revoked_row]
+        return []
+
     mock = AsyncMock()
-    mock.get_items = AsyncMock(return_value=[])
+    mock.get_items = AsyncMock(side_effect=_fake_get_items)
     mock.get_item = AsyncMock(return_value=None)
     mock.create_item = AsyncMock(return_value={"data": {"id": "x"}})
     mock.update_item = AsyncMock(return_value={"data": {}})
@@ -437,25 +455,45 @@ async def test_accept_revoked_org_invite_returns_not_found():
             )
 
     assert resp.status_code == 404
-    # Critically: no membership row should have been created from a revoked invite.
     assert not any(
         c.args[0] in {"org_membership", "workspace_membership"}
         for c in mock.create_item.call_args_list
+    )
+    assert seen_filters.get("org_invite", {}).get("deleted_at") == {"_null": True}, (
+        "accept-by-hash must filter org_invite by deleted_at:_null so revoked invites can't be accepted"
     )
 
 
 @pytest.mark.asyncio
 async def test_accept_expired_invite_returns_not_found():
-    """Expired invites are filtered at the query (expires_at > now) so
-    accept-by-hash returns 404. Pins the contract so a future change
-    that drops the filter doesn't silently let expired invites through."""
-    invite_id = "oi-expired"
+    """Expired workspace_invite must 404. Mock returns the expired row unless
+    the filter pins expires_at:_gt:now, so dropping that filter fails the test."""
+    invite_id = "wi-expired"
     h = _invite_hash(invite_id)
 
+    expired_row = {
+        "id": invite_id,
+        "workspace_id": _WS_ID,
+        "email": _EMAIL,
+        "role": "member",
+        "accepted_at": None,
+        "deleted_at": None,
+        "expires_at": "2000-01-01T00:00:00Z",
+    }
+
+    seen_filters: dict[str, dict[str, Any]] = {}
+
+    async def _fake_get_items(collection: str, params: dict) -> Any:
+        filt = (params.get("query") or {}).get("filter") or {}
+        seen_filters[collection] = filt
+        if collection == "workspace_invite":
+            if "_gt" in (filt.get("expires_at") or {}):
+                return []
+            return [expired_row]
+        return []
+
     mock = AsyncMock()
-    # The pending filter `expires_at: {_gt: now}` excludes the expired
-    # row, so get_items returns [] — equivalent to "no live invite."
-    mock.get_items = AsyncMock(return_value=[])
+    mock.get_items = AsyncMock(side_effect=_fake_get_items)
     mock.get_item = AsyncMock(return_value=None)
     mock.create_item = AsyncMock(return_value={"data": {"id": "x"}})
     mock.update_item = AsyncMock(return_value={"data": {}})
@@ -472,6 +510,13 @@ async def test_accept_expired_invite_returns_not_found():
             )
 
     assert resp.status_code == 404
+    assert not any(
+        c.args[0] in {"org_membership", "workspace_membership"}
+        for c in mock.create_item.call_args_list
+    )
+    assert "_gt" in (seen_filters.get("workspace_invite", {}).get("expires_at") or {}), (
+        "accept-by-hash must filter workspace_invite by expires_at:_gt:now so expired invites can't be accepted"
+    )
 
 
 @pytest.mark.asyncio

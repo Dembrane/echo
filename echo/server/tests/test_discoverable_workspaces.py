@@ -221,11 +221,10 @@ async def test_org_admin_sees_all_workspaces_with_action_join():
 
 
 @pytest.mark.asyncio
-async def test_workspace_query_filters_deleted_and_for_member_filters_private():
-    """Contract test: the workspace query filter must include
-    deleted_at:_null in all cases AND visibility:_neq:private for
-    non-admin callers. If these filters disappear, members would see
-    deleted workspaces or private ones in their discovery list."""
+async def test_workspace_query_filters_deleted_tier_and_for_member_filters_visibility():
+    """Pins three filters: deleted_at:_null, tier:_neq:free, and (non-admin)
+    visibility:_eq:open_to_organisation — the positive match prevents
+    NULL-visibility rows from surfacing a CTA that submit 404s on."""
     mock = _make_directus_mock(
         caller_role="member",
         workspaces=[],
@@ -252,6 +251,10 @@ async def test_workspace_query_filters_deleted_and_for_member_filters_private():
     assert filt.get("deleted_at") == {"_null": True}, (
         "workspace query must exclude deleted rows"
     )
-    assert filt.get("visibility") == {"_neq": "private"}, (
-        "non-admin caller must not see private workspaces in discovery"
+    assert filt.get("tier") == {"_neq": "free"}, (
+        "workspace query must exclude free-tier (personal) workspaces from discovery"
+    )
+    assert filt.get("visibility") == {"_eq": "open_to_organisation"}, (
+        "non-admin caller must positive-match open_to_organisation; "
+        "_neq:private would surface NULL-visibility rows that the submit endpoint 404s on"
     )

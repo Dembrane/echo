@@ -113,8 +113,9 @@ export function WorkspaceSelectList({
 					)}
 					{visibleWorkspaces.map((ws) => {
 				const isSelected = selected.has(ws.id);
-				// Only `seat_invite_blocked` hard-disables; soft-cap tiers stay clickable with overage warnings.
+				// Only `seat_invite_blocked` hard-disables; allow deselect so a preselected row that flipped blocked isn't stuck.
 				const blocked = ws.seat_invite_blocked;
+				const interactionDisabled = blocked && !isSelected;
 				const overage =
 					!blocked &&
 					ws.seat_cap != null &&
@@ -135,7 +136,7 @@ export function WorkspaceSelectList({
 						withBorder
 						p="sm"
 						radius="sm"
-						onClick={() => !blocked && onToggle(ws.id)}
+						onClick={() => !interactionDisabled && onToggle(ws.id)}
 						style={{
 							backgroundColor: isSelected
 								? "var(--mantine-primary-color-light)"
@@ -143,7 +144,7 @@ export function WorkspaceSelectList({
 							borderColor: isSelected
 								? "var(--mantine-primary-color-filled)"
 								: undefined,
-							cursor: blocked ? "not-allowed" : "pointer",
+							cursor: interactionDisabled ? "not-allowed" : "pointer",
 							opacity: blocked ? 0.55 : 1,
 						}}
 					>
@@ -151,7 +152,7 @@ export function WorkspaceSelectList({
 							<Group gap={12} wrap="nowrap" style={{ minWidth: 0 }}>
 								<Checkbox
 									checked={isSelected}
-									disabled={blocked}
+									disabled={interactionDisabled}
 									onChange={() => onToggle(ws.id)}
 									onClick={(e) => e.stopPropagation()}
 									aria-label={t`Select ${ws.name}`}

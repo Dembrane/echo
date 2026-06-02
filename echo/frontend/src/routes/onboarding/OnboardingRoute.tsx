@@ -70,7 +70,11 @@ export const OnboardingRoute = () => {
 	const displayName = (user.data as Record<string, string>)?.first_name || "";
 	const hasInvites = meV2?.has_pending_invites === true;
 	const inviteOrganisations = Array.from(
-		new Set((pendingInvites ?? []).map((i) => i.org_name)),
+		new Set(
+			(pendingInvites ?? [])
+				.map((i) => i.org_name?.trim())
+				.filter((name): name is string => Boolean(name)),
+		),
 	);
 	// The designer's onboarding split (docs/workspaces/designer-return.html):
 	// users with projects from before workspaces existed see the "migration"

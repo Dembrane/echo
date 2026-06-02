@@ -53,9 +53,14 @@ async function fetchOrgWorkspaces(orgId: string): Promise<InviteableWorkspace[]>
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/workspaces`, {
 		credentials: "include",
 	});
-	if (!res.ok) return [];
+	// Throw rather than [] — empty list is indistinguishable from "no inviteable workspaces".
+	if (!res.ok) {
+		throw new Error(`Workspaces request failed (${res.status})`);
+	}
 	const data = await res.json();
-	if (!Array.isArray(data)) return [];
+	if (!Array.isArray(data)) {
+		throw new Error("Workspaces response was not an array");
+	}
 	return data as InviteableWorkspace[];
 }
 
@@ -169,7 +174,11 @@ export function InviteModal({
 		);
 	}, [opened, defaultWorkspaceId]);
 
-	const { data: allWorkspaces = [], isLoading: workspacesLoading } = useQuery({
+	const {
+		data: allWorkspaces = [],
+		isLoading: workspacesLoading,
+		isError: workspacesLoadError,
+	} = useQuery({
 		enabled: opened && Boolean(orgId),
 		queryFn: () => fetchOrgWorkspaces(orgId),
 		queryKey: ["v2", "orgs", orgId, "workspaces", "invite-modal"],
@@ -262,7 +271,25 @@ export function InviteModal({
 				}
 			}
 
-			const settled = await Promise.allSettled(calls.map((c) => c.run()));
+			// Cap concurrency: 20 emails × 5 workspaces = 100 in-flight POSTs would trip the per-account 429.
+			const CONCURRENCY = 4;
+			const settled: PromiseSettledResult<WorkspaceInvitePayload | { status: string }>[] = new Array(
+				calls.length,
+			);
+			let cursor = 0;
+			const workers = Array.from({ length: Math.min(CONCURRENCY, calls.length) }, async () => {
+				while (true) {
+					const idx = cursor++;
+					if (idx >= calls.length) return;
+					try {
+						const value = await calls[idx].run();
+						settled[idx] = { status: "fulfilled", value };
+					} catch (reason) {
+						settled[idx] = { status: "rejected", reason };
+					}
+				}
+			});
+			await Promise.all(workers);
 
 			const rows = settled.map((res, i) => {
 				const call = calls[i];
@@ -314,15 +341,22 @@ export function InviteModal({
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 
+			// already_member / already_invited are idempotent outcomes, not failures.
 			const sentCount = rows.filter((r) => r.state === "sent").length;
-			const failedCount = rows.length - sentCount;
+			const idempotentCount = rows.filter(
+				(r) => r.state === "already_member" || r.state === "already_invited",
+			).length;
+			const okCount = sentCount + idempotentCount;
+			const failedCount = rows.length - okCount;
 			if (failedCount === 0) {
 				toast.success(
-					sentCount === 1
+					sentCount === 1 && idempotentCount === 0
 						? t`Invite sent.`
-						: t`${sentCount} invites sent.`,
+						: sentCount === 0
+							? t`No new invites needed. Check the list below.`
+							: t`${sentCount} invites sent.`,
 				);
-			} else if (sentCount === 0) {
+			} else if (okCount === 0) {
 				toast.error(t`No invites went out. Check the list below.`);
 			} else {
 				toast.error(
@@ -373,14 +407,24 @@ export function InviteModal({
 							labelPosition="left"
 						/>
 
-						<WorkspaceSelectList
-							workspaces={inviteableWorkspaces}
-							selected={selectedWorkspaces}
-							onToggle={toggleWorkspace}
-							pendingCount={pendingCount}
-							loading={workspacesLoading}
-							data-testid="invite-modal-workspaces"
-						/>
+						{workspacesLoadError ? (
+							<Alert color="red" variant="light" p="xs">
+								<Text size="xs">
+									<Trans>
+										Couldn't load workspaces. Close and reopen to retry.
+									</Trans>
+								</Text>
+							</Alert>
+						) : (
+							<WorkspaceSelectList
+								workspaces={inviteableWorkspaces}
+								selected={selectedWorkspaces}
+								onToggle={toggleWorkspace}
+								pendingCount={pendingCount}
+								loading={workspacesLoading}
+								data-testid="invite-modal-workspaces"
+							/>
+						)}
 
 						{zeroWorkspaceSubmit && (
 							externalNeedsWorkspace ? (

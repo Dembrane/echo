@@ -116,7 +116,9 @@ export function EmailChipsInput({
 		const pasted = e.clipboardData.getData("text");
 		if (SEPARATORS.test(pasted)) {
 			e.preventDefault();
-			commitDraft(`${draft}${pasted}`);
+			// Separator between draft and pasted avoids fusing "alice@x.com" + "bob@y.com" into one token.
+			const joined = draft.length > 0 ? `${draft} ${pasted}` : pasted;
+			commitDraft(joined);
 		}
 	};
 
