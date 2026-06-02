@@ -7,8 +7,8 @@ from logging import getLogger
 from datetime import datetime, timezone
 from urllib.parse import urlencode
 
-from dembrane.directus_async import async_directus
 from dembrane.utils import generate_uuid
+from dembrane.directus_async import async_directus
 
 logger = getLogger("api.v2._invite_helpers")
 

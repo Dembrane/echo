@@ -427,7 +427,6 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
 
         return await _accept_org_invite_by_id(
             org_invite=org_invite,
-            app_user=app_user,
             app_user_id=app_user_id,
             email=email,
             now_iso=now_iso,
@@ -622,7 +621,6 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
 async def _accept_org_invite_by_id(
     *,
     org_invite: dict,
-    app_user: dict,
     app_user_id: str,
     email: str,
     now_iso: str,

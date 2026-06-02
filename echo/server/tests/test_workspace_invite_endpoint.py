@@ -141,7 +141,7 @@ def _build_directus_mock(
     workspace_membership_rows = existing_workspace_membership or []
     org_membership_rows = existing_org_membership_for_invitee or []
 
-    async def _fake_get_items(collection: str, params: dict) -> Any:
+    async def _fake_get_items(collection: str, _params: dict) -> Any:
         if collection == "app_user":
             return [
                 {

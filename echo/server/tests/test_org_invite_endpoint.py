@@ -84,7 +84,7 @@ def _make_directus_mock(
 
     call_state = {"org_membership_call": 0}
 
-    async def _fake_get_items(collection: str, params: dict) -> Any:
+    async def _fake_get_items(collection: str, _params: dict) -> Any:
         if collection == "org_membership":
             # First call = _require_org_role for caller. Subsequent calls =
             # invitee's existing membership lookup.
