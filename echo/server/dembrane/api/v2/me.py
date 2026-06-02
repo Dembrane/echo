@@ -52,24 +52,44 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
 
     email = directus_profile.get("email", "")
 
-    # Check for pending workspace invites (by email, regardless of onboarding)
+    # Org-only invites must count here so onboarding doesn't show "name your organisation" to an invited user.
     has_pending_invites = False
     if email:
-        pending = await async_directus.get_items(
+        now_iso = datetime.now(timezone.utc).isoformat()
+        pending_ws = await async_directus.get_items(
             "workspace_invite",
             {
                 "query": {
                     "filter": {
                         "email": {"_eq": email},
                         "accepted_at": {"_null": True},
-                        "expires_at": {"_gt": datetime.now(timezone.utc).isoformat()},
+                        "deleted_at": {"_null": True},
+                        "expires_at": {"_gt": now_iso},
                     },
                     "fields": ["id"],
                     "limit": 1,
                 }
             },
         )
-        has_pending_invites = isinstance(pending, list) and len(pending) > 0
+        if isinstance(pending_ws, list) and len(pending_ws) > 0:
+            has_pending_invites = True
+        else:
+            pending_org = await async_directus.get_items(
+                "org_invite",
+                {
+                    "query": {
+                        "filter": {
+                            "email": {"_eq": email},
+                            "accepted_at": {"_null": True},
+                            "deleted_at": {"_null": True},
+                            "expires_at": {"_gt": now_iso},
+                        },
+                        "fields": ["id"],
+                        "limit": 1,
+                    }
+                },
+            )
+            has_pending_invites = isinstance(pending_org, list) and len(pending_org) > 0
 
     # Does this user have projects from before workspaces existed? Drives
     # the onboarding split: new users get signup-time organisation name, legacy
@@ -182,10 +202,18 @@ async def update_me(
 
 
 class MyPendingInvite(BaseModel):
+    """Single pending invite for the current user. ADR 0004: org-only
+    invites have no workspace context — `type` discriminates, and
+    workspace_* fields are absent on org-only rows."""
+
     id: str
-    workspace_id: str
-    workspace_name: str
-    org_name: str
+    # "workspace" | "org"
+    type: str
+    workspace_id: Optional[str] = None
+    workspace_name: Optional[str] = None
+    # Always present in practice; empty-string fallback so consumers don't have to branch on the orphan-workspace edge case.
+    org_id: str = ""
+    org_name: str = ""
     role: str
     invited_by_name: Optional[str] = None
     created_at: Optional[str] = None
@@ -194,7 +222,12 @@ class MyPendingInvite(BaseModel):
 
 @router.get("/invites", response_model=list[MyPendingInvite])
 async def get_my_invites(auth: DependencyDirectusSession) -> list[MyPendingInvite]:
-    """List pending workspace invites sent to the current user's email."""
+    """List pending invites sent to the current user's email.
+
+    Returns workspace_invite AND org_invite rows (ADR 0004). Org-only
+    invitees would otherwise see "0 invites" on /me/invites, /w, and
+    the onboarding welcome list.
+    """
     app_user = await resolve_app_user(auth.user_id)
     if not app_user:
         return []
@@ -207,13 +240,16 @@ async def get_my_invites(auth: DependencyDirectusSession) -> list[MyPendingInvit
         return []
 
     now_iso = datetime.now(timezone.utc).isoformat()
-    invites = await async_directus.get_items(
+
+    # deleted_at filter required so revoked invites don't appear in the listing.
+    ws_invites_raw = await async_directus.get_items(
         "workspace_invite",
         {
             "query": {
                 "filter": {
                     "email": {"_eq": email.lower()},
                     "accepted_at": {"_null": True},
+                    "deleted_at": {"_null": True},
                     "expires_at": {"_gt": now_iso},
                 },
                 "fields": ["id", "workspace_id", "role", "invited_by", "created_at", "expires_at"],
@@ -222,16 +258,38 @@ async def get_my_invites(auth: DependencyDirectusSession) -> list[MyPendingInvit
             }
         },
     )
+    ws_invites = ws_invites_raw if isinstance(ws_invites_raw, list) else []
 
-    if not isinstance(invites, list) or not invites:
+    org_invites_raw = await async_directus.get_items(
+        "org_invite",
+        {
+            "query": {
+                "filter": {
+                    "email": {"_eq": email.lower()},
+                    "accepted_at": {"_null": True},
+                    "deleted_at": {"_null": True},
+                    "expires_at": {"_gt": now_iso},
+                },
+                "fields": ["id", "org_id", "role", "invited_by", "created_at", "expires_at"],
+                "sort": ["-created_at"],
+                "limit": -1,
+            }
+        },
+    )
+    org_invites = org_invites_raw if isinstance(org_invites_raw, list) else []
+
+    if not ws_invites and not org_invites:
         return []
 
-    # Batch fetch workspaces + inviters
-    ws_ids = list({inv["workspace_id"] for inv in invites if inv.get("workspace_id")})
-    inviter_ids = list({inv["invited_by"] for inv in invites if inv.get("invited_by")})
+    # Batch fetch workspaces, orgs (both kinds), and inviters.
+    ws_ids = list({inv["workspace_id"] for inv in ws_invites if inv.get("workspace_id")})
+    inviter_ids = list(
+        {inv["invited_by"] for inv in (ws_invites + org_invites) if inv.get("invited_by")}
+    )
 
     ws_map: dict[str, dict] = {}
     org_map: dict[str, str] = {}
+    org_ids_from_ws: list[str] = []
     if ws_ids:
         workspaces = await async_directus.get_items(
             "workspace",
@@ -245,20 +303,23 @@ async def get_my_invites(auth: DependencyDirectusSession) -> list[MyPendingInvit
         )
         if isinstance(workspaces, list):
             ws_map = {w["id"]: w for w in workspaces}
-            org_ids = list({w.get("org_id") for w in workspaces if w.get("org_id")})
-            if org_ids:
-                orgs_data = await async_directus.get_items(
-                    "org",
-                    {
-                        "query": {
-                            "filter": {"id": {"_in": org_ids}},
-                            "fields": ["id", "name"],
-                            "limit": -1,
-                        }
-                    },
-                )
-                if isinstance(orgs_data, list):
-                    org_map = {o["id"]: o.get("name", "") for o in orgs_data}
+            org_ids_from_ws = list({w.get("org_id") for w in workspaces if w.get("org_id")})
+
+    org_ids_from_invites = list({inv["org_id"] for inv in org_invites if inv.get("org_id")})
+    all_org_ids = list(set(org_ids_from_ws) | set(org_ids_from_invites))
+    if all_org_ids:
+        orgs_data = await async_directus.get_items(
+            "org",
+            {
+                "query": {
+                    "filter": {"id": {"_in": all_org_ids}, "deleted_at": {"_null": True}},
+                    "fields": ["id", "name"],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(orgs_data, list):
+            org_map = {o["id"]: o.get("name", "") for o in orgs_data}
 
     inviter_map: dict[str, str] = {}
     if inviter_ids:
@@ -276,15 +337,17 @@ async def get_my_invites(auth: DependencyDirectusSession) -> list[MyPendingInvit
             inviter_map = {u["id"]: u.get("display_name") or "" for u in inviters}
 
     results: list[MyPendingInvite] = []
-    for inv in invites:
+    for inv in ws_invites:
         ws = ws_map.get(inv.get("workspace_id", ""))
         if not ws:
-            continue
+            continue  # workspace deleted; drop the invite
         results.append(
             MyPendingInvite(
                 id=inv["id"],
+                type="workspace",
                 workspace_id=inv["workspace_id"],
                 workspace_name=ws.get("name", ""),
+                org_id=ws.get("org_id") or "",
                 org_name=org_map.get(ws.get("org_id", ""), ""),
                 role=inv.get("role", ""),
                 invited_by_name=inviter_map.get(inv.get("invited_by", "")) or None,
@@ -292,26 +355,89 @@ async def get_my_invites(auth: DependencyDirectusSession) -> list[MyPendingInvit
                 expires_at=inv.get("expires_at"),
             )
         )
+    for inv in org_invites:
+        org_id = inv.get("org_id")
+        org_name = org_map.get(org_id, "") if org_id else ""
+        if org_id and not org_name and org_id not in org_map:
+            continue  # org deleted; skip silently
+        results.append(
+            MyPendingInvite(
+                id=inv["id"],
+                type="org",
+                org_id=org_id,
+                org_name=org_name,
+                role=inv.get("role", ""),
+                invited_by_name=inviter_map.get(inv.get("invited_by", "")) or None,
+                created_at=inv.get("created_at"),
+                expires_at=inv.get("expires_at"),
+            )
+        )
 
+    results.sort(key=lambda r: r.created_at or "", reverse=True)
     return results
 
 
 @router.post("/invites/{invite_id}/accept")
 async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> dict:
-    """Accept a pending workspace invite by ID (used by /invites page)."""
+    """Accept a pending invite by ID. Dispatches to workspace_invite or
+    org_invite based on which table holds the id (ADR 0004).
+
+    Filter-based lookup on both tables avoids Directus's get_item
+    FORBIDDEN-on-missing probe trap when the id doesn't belong to a
+    given collection.
+    """
     from dembrane.utils import generate_uuid
 
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
     email = (app_user.get("email") or "").lower()
+    now_iso = datetime.now(timezone.utc).isoformat()
 
-    invite = await async_directus.get_item("workspace_invite", invite_id)
-    if not invite:
-        raise HTTPException(status_code=404, detail="Invite not found")
+    # Probe workspace_invite first; revoked rows filtered at query level so a hardcoded URL can't reach acceptance.
+    ws_rows = await async_directus.get_items(
+        "workspace_invite",
+        {
+            "query": {
+                "filter": {
+                    "id": {"_eq": invite_id},
+                    "deleted_at": {"_null": True},
+                },
+                "limit": 1,
+            }
+        },
+    )
+    invite = ws_rows[0] if isinstance(ws_rows, list) and ws_rows else None
+
+    if invite is None:
+        org_rows = await async_directus.get_items(
+            "org_invite",
+            {
+                "query": {
+                    "filter": {
+                        "id": {"_eq": invite_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "limit": 1,
+                }
+            },
+        )
+        org_invite = org_rows[0] if isinstance(org_rows, list) and org_rows else None
+        if org_invite is None:
+            raise HTTPException(status_code=404, detail="Invite not found")
+
+        return await _accept_org_invite_by_id(
+            org_invite=org_invite,
+            app_user_id=app_user_id,
+            email=email,
+            now_iso=now_iso,
+        )
+
     if (invite.get("email") or "").lower() != email:
         raise HTTPException(status_code=403, detail="This invite isn't for you")
     if invite.get("accepted_at"):
         raise HTTPException(status_code=400, detail="Invite already accepted")
+    if invite.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Invite not found")  # revoked; surface as not-found
 
     # Hoist inviter_id once so every notification block below can reference
     # it without depending on the assignment landing inside a conditional
@@ -319,7 +445,6 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
     # that would otherwise NameError on the WORKSPACE_GUEST_ADDED branch.
     inviter_id = invite.get("invited_by")
 
-    now_iso = datetime.now(timezone.utc).isoformat()
     if invite.get("expires_at") and invite["expires_at"] < now_iso:
         raise HTTPException(status_code=400, detail="Invite has expired")
 
@@ -475,26 +600,153 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
             ref_org_id=ws.get("org_id"),
         )
 
-    return {"status": "success", "workspace_id": invite["workspace_id"]}
+    # Multi-pending consume: apply every other pending invite for (email, org_id) so the user gets all promised memberships in one accept.
+    if ws.get("org_id") and not is_external_invite:
+        await _consume_pending_invites_in_org(
+            email=email,
+            org_id=ws["org_id"],
+            app_user_id=app_user_id,
+            exclude_workspace_invite_id=invite_id,
+        )
+
+    return {
+        "status": "success",
+        "type": "workspace",
+        "workspace_id": invite["workspace_id"],
+        "workspace_name": ws.get("name", ""),
+        "org_id": ws.get("org_id"),
+    }
+
+
+async def _accept_org_invite_by_id(
+    *,
+    org_invite: dict,
+    app_user_id: str,
+    email: str,
+    now_iso: str,
+) -> dict:
+    """Accept an org_invite by id (used by /invites page). Mirrors the
+    org branch of accept-by-hash without the HMAC layer — the id itself
+    is the proof, plus email-match for ownership."""
+    from dembrane.utils import generate_uuid
+
+    if (org_invite.get("email") or "").lower() != email:
+        raise HTTPException(status_code=403, detail="This invite isn't for you")
+    if org_invite.get("accepted_at"):
+        raise HTTPException(status_code=400, detail="Invite already accepted")
+    if org_invite.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Invite not found")
+    if org_invite.get("expires_at") and org_invite["expires_at"] < now_iso:
+        raise HTTPException(status_code=400, detail="Invite has expired")
+
+    invite_org_id = org_invite["org_id"]
+    invite_role = org_invite.get("role") or "member"
+
+    org_row = await async_directus.get_item("org", invite_org_id)
+    if not org_row or org_row.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Organisation no longer exists")
+
+    await _accept_rate_limiter.check(app_user_id)
+
+    # Fetch active + soft-deleted org_membership rows; pick deterministically (no unique constraint on (org_id, user_id)).
+    existing_org_mem = await async_directus.get_items(
+        "org_membership",
+        {
+            "query": {
+                "filter": {
+                    "org_id": {"_eq": invite_org_id},
+                    "user_id": {"_eq": app_user_id},
+                },
+                "fields": ["id", "role", "deleted_at"],
+                "limit": -1,
+            }
+        },
+    )
+
+    active_row = None
+    deleted_row = None
+    if isinstance(existing_org_mem, list):
+        for row in existing_org_mem:
+            if row.get("deleted_at") is None and active_row is None:
+                active_row = row
+            elif row.get("deleted_at") is not None and deleted_row is None:
+                deleted_row = row
+
+    already_active_member = False
+    if active_row is not None:
+        already_active_member = True
+    elif deleted_row is not None:
+        await async_directus.update_item(
+            "org_membership",
+            deleted_row["id"],
+            {"deleted_at": None, "role": invite_role},
+        )
+    else:
+        await async_directus.create_item(
+            "org_membership",
+            {
+                "id": generate_uuid(),
+                "org_id": invite_org_id,
+                "user_id": app_user_id,
+                "role": invite_role,
+            },
+        )
+
+    await async_directus.update_item(
+        "org_invite",
+        org_invite["id"],
+        {"accepted_at": now_iso},
+    )
+
+    await _consume_pending_invites_in_org(
+        email=email,
+        org_id=invite_org_id,
+        app_user_id=app_user_id,
+        exclude_org_invite_id=org_invite["id"],
+    )
+
+    return {
+        "status": "already_member" if already_active_member else "success",
+        "type": "org",
+        "org_id": invite_org_id,
+        "org_name": org_row.get("name") or "",
+    }
 
 
 @router.post("/invites/{invite_id}/decline")
 async def decline_my_invite(invite_id: str, auth: DependencyDirectusSession) -> dict:
-    """Decline a pending workspace invite (deletes the row)."""
+    """Decline a pending invite (deletes the row). Handles both
+    workspace_invite and org_invite ids (ADR 0004)."""
     app_user = await get_app_user_or_raise(auth.user_id)
     email = (app_user.get("email") or "").lower()
 
-    invite = await async_directus.get_item("workspace_invite", invite_id)
-    if not invite:
+    ws_rows = await async_directus.get_items(
+        "workspace_invite",
+        {"query": {"filter": {"id": {"_eq": invite_id}}, "limit": 1}},
+    )
+    invite = ws_rows[0] if isinstance(ws_rows, list) and ws_rows else None
+    is_org_invite = False
+
+    if invite is None:
+        org_rows = await async_directus.get_items(
+            "org_invite",
+            {"query": {"filter": {"id": {"_eq": invite_id}}, "limit": 1}},
+        )
+        invite = org_rows[0] if isinstance(org_rows, list) and org_rows else None
+        is_org_invite = invite is not None
+
+    if invite is None:
         raise HTTPException(status_code=404, detail="Invite not found")
     if (invite.get("email") or "").lower() != email:
         raise HTTPException(status_code=403, detail="This invite isn't for you")
     if invite.get("accepted_at"):
         raise HTTPException(status_code=400, detail="Invite already accepted")
+    if invite.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Invite not found")  # revoked; don't leak existence
 
     # Notify the inviter before deletion (we still have the row).
     inviter_id = invite.get("invited_by")
-    if inviter_id:
+    if inviter_id and not is_org_invite:
         ws_for_notif = await async_directus.get_item("workspace", invite.get("workspace_id"))
         ws_name = (ws_for_notif or {}).get("name") or "a workspace"
         from dembrane.notifications import emit
@@ -508,18 +760,44 @@ async def decline_my_invite(invite_id: str, auth: DependencyDirectusSession) -> 
             action="NAVIGATE_WORKSPACE_SETTINGS",
             ref_workspace_id=invite.get("workspace_id"),
         )
+    elif inviter_id and is_org_invite:
+        org_for_notif = await async_directus.get_item("org", invite.get("org_id"))
+        org_name = (org_for_notif or {}).get("name") or "an organisation"
+        from dembrane.notifications import emit
 
-    await async_directus.delete_item("workspace_invite", invite_id)
+        await emit(
+            audience_user_id=inviter_id,
+            actor_user_id=app_user["id"],
+            event_code="INVITE_DECLINED",
+            title=f"{email} declined your invite",
+            message=f"They chose not to join **{org_name}**.",
+            action="NAVIGATE_ORGANISATION_SETTINGS",
+            ref_org_id=invite.get("org_id"),
+        )
+
+    await async_directus.delete_item(
+        "org_invite" if is_org_invite else "workspace_invite", invite_id
+    )
     return {"status": "success"}
 
 
 class InviteByHashState(BaseModel):
-    """Status enum: not_found / expired / workspace_deleted / accepted / pending.
-    On `accepted`, read `is_member` to tell live vs orphaned membership."""
+    """Status enum: not_found / expired / workspace_deleted / org_deleted /
+    accepted / pending. On `accepted`, read `is_member` to tell live vs
+    orphaned membership.
+
+    `type` discriminates org-only invites (ADR 0004) from workspace invites.
+    org-only invites populate `org_id`/`org_name` instead of workspace_*.
+    `org_deleted` only fires for `type=org`; `workspace_deleted` only for
+    `type=workspace`.
+    """
 
     status: str
+    type: Optional[str] = None  # "workspace" | "org" | None
     workspace_id: Optional[str] = None
     workspace_name: Optional[str] = None
+    org_id: Optional[str] = None
+    org_name: Optional[str] = None
     role: Optional[str] = None
     is_member: Optional[bool] = None
     expires_at: Optional[str] = None
@@ -542,16 +820,21 @@ async def inspect_invite_by_hash(
     if not my_email:
         raise HTTPException(status_code=400, detail="User has no email")
 
+    # Filter revoked rows at the query level so a hardcoded hash can't probe a cancelled invite.
     invites = await async_directus.get_items(
         "workspace_invite",
         {
             "query": {
-                "filter": {"email": {"_eq": my_email}},
+                "filter": {
+                    "email": {"_eq": my_email},
+                    "deleted_at": {"_null": True},
+                },
                 "fields": [
                     "id",
                     "workspace_id",
                     "role",
                     "accepted_at",
+                    "deleted_at",
                     "expires_at",
                 ],
                 "limit": -1,
@@ -566,13 +849,98 @@ async def inspect_invite_by_hash(
                 target = inv
                 break
 
+    if target is not None and target.get("deleted_at"):
+        return InviteByHashState(status="not_found")
+
     if target is None:
+        # Fall through to org_invite when the hash didn't match a workspace_invite.
+        org_invites = await async_directus.get_items(
+            "org_invite",
+            {
+                "query": {
+                    "filter": {
+                        "email": {"_eq": my_email},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": [
+                        "id",
+                        "org_id",
+                        "role",
+                        "accepted_at",
+                        "deleted_at",
+                        "expires_at",
+                    ],
+                    "limit": -1,
+                }
+            },
+        )
+        org_target = None
+        if isinstance(org_invites, list):
+            for inv in org_invites:
+                if _hmac.compare_digest(compute_invite_hash(inv["id"]), h):
+                    org_target = inv
+                    break
+
+        if org_target is not None:
+            # Check revoked BEFORE the org lookup; get_item raises FORBIDDEN on missing ids.
+            if org_target.get("deleted_at"):
+                return InviteByHashState(status="not_found")
+
+            org_row = await async_directus.get_item("org", org_target["org_id"])
+            now_iso_2 = datetime.now(timezone.utc).isoformat()
+
+            existing_org_mem = await async_directus.get_items(
+                "org_membership",
+                {
+                    "query": {
+                        "filter": {
+                            "org_id": {"_eq": org_target["org_id"]},
+                            "user_id": {"_eq": app_user_id},
+                            "deleted_at": {"_null": True},
+                        },
+                        "fields": ["id"],
+                        "limit": 1,
+                    }
+                },
+            )
+            org_is_member = (
+                isinstance(existing_org_mem, list) and len(existing_org_mem) > 0
+            )
+
+            base = {
+                "type": "org",
+                "org_id": org_target["org_id"],
+                "org_name": (org_row or {}).get("name") or "",
+                "role": org_target.get("role"),
+                "is_member": org_is_member,
+            }
+
+            if not org_row or org_row.get("deleted_at"):
+                return InviteByHashState(status="org_deleted", **base)
+
+            if org_target.get("accepted_at"):
+                return InviteByHashState(status="accepted", **base)
+
+            if org_target.get("expires_at") and org_target["expires_at"] < now_iso_2:
+                return InviteByHashState(
+                    status="expired",
+                    expires_at=org_target.get("expires_at"),
+                    **base,
+                )
+
+            return InviteByHashState(
+                status="pending",
+                expires_at=org_target.get("expires_at"),
+                **base,
+            )
+
         return InviteByHashState(status="not_found")
 
     ws = await async_directus.get_item("workspace", target["workspace_id"])
     if not ws or ws.get("deleted_at"):
         return InviteByHashState(
             status="workspace_deleted",
+            type="workspace",
             workspace_name=(ws or {}).get("name") or "",
         )
 
@@ -597,6 +965,7 @@ async def inspect_invite_by_hash(
     if target.get("accepted_at"):
         return InviteByHashState(
             status="accepted",
+            type="workspace",
             workspace_id=target["workspace_id"],
             workspace_name=ws.get("name") or "",
             role=target.get("role"),
@@ -606,6 +975,7 @@ async def inspect_invite_by_hash(
     if target.get("expires_at") and target["expires_at"] < now_iso:
         return InviteByHashState(
             status="expired",
+            type="workspace",
             workspace_id=target["workspace_id"],
             workspace_name=ws.get("name") or "",
             role=target.get("role"),
@@ -614,6 +984,7 @@ async def inspect_invite_by_hash(
 
     return InviteByHashState(
         status="pending",
+        type="workspace",
         workspace_id=target["workspace_id"],
         workspace_name=ws.get("name") or "",
         role=target.get("role"),
@@ -625,6 +996,227 @@ async def inspect_invite_by_hash(
 class AcceptByHashRequest(BaseModel):
     hash: str
     claimed_role: Optional[str] = None  # honeypot — URL-claimed role
+
+
+async def _consume_pending_invites_in_org(
+    *,
+    email: str,
+    org_id: str,
+    app_user_id: str,
+    exclude_workspace_invite_id: Optional[str] = None,
+    exclude_org_invite_id: Optional[str] = None,
+) -> None:
+    """Multi-pending consume: when an invite is accepted, mark every OTHER
+    pending invite for the same (email, org_id) as accepted in the same
+    request and apply the union of memberships. ADR 0004.
+
+    For each remaining workspace_invite in this org: create the
+    workspace_membership (if absent) and mark accepted. We do NOT raise on
+    seat-cap or other errors here — the originating invite has already
+    been honoured, so a per-row failure should be logged but not roll back
+    the whole accept. Stale rows can be revisited from the org admin's
+    Pending Invites surface.
+
+    For each remaining org_invite in this org: just mark accepted (the
+    org_membership already exists from the originating accept).
+
+    DEVIATION FROM PLAN §2c: the plan called for "a single transaction"
+    wrapping originating accept + sweep. Directus's SDK does not expose
+    transaction boundaries, so this sweep is best-effort per-item:
+    failures in one workspace_invite (seat-cap, deleted workspace, race)
+    are logged and the loop continues. The originating accept stays
+    successful regardless. The trade-off is acceptable because (a) the
+    sweep is idempotent — a future accept that finds the same row still
+    pending will retry, (b) seat-cap and workspace-deleted are the only
+    realistic failure modes and both are recoverable from the admin's
+    Pending Invites view, and (c) the alternative is a partial rollback
+    of the originating accept, which would be worse UX.
+    """
+    from dembrane.utils import generate_uuid
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    ws_rows = await async_directus.get_items(
+        "workspace",
+        {
+            "query": {
+                "filter": {
+                    "org_id": {"_eq": org_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    )
+    ws_ids = [w["id"] for w in ws_rows] if isinstance(ws_rows, list) else []
+
+    if ws_ids:
+        # deleted_at filter is critical: without it a revoked invite would silently get accepted by the consume sweep.
+        ws_invite_filter: dict = {
+            "workspace_id": {"_in": ws_ids},
+            "email": {"_eq": email},
+            "accepted_at": {"_null": True},
+            "deleted_at": {"_null": True},
+            "expires_at": {"_gt": now_iso},
+        }
+        if exclude_workspace_invite_id:
+            ws_invite_filter["id"] = {"_neq": exclude_workspace_invite_id}
+
+        ws_invites = await async_directus.get_items(
+            "workspace_invite",
+            {
+                "query": {
+                    "filter": ws_invite_filter,
+                    "fields": ["id", "workspace_id", "role"],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(ws_invites, list):
+            for inv in ws_invites:
+                try:
+                    # Cap may have shrunk since the invite was sent; skip-over-cap leaves the invite pending.
+                    ws_row = await async_directus.get_item(
+                        "workspace", inv["workspace_id"]
+                    )
+                    if not ws_row or ws_row.get("deleted_at"):
+                        logger.info(
+                            "multi-consume: workspace %s gone; skipping invite %s",
+                            inv.get("workspace_id"),
+                            inv.get("id"),
+                        )
+                        continue
+                    try:
+                        await assert_can_add_seat(ws_row, audience="invitee")
+                    except HTTPException as cap_exc:
+                        if cap_exc.status_code == 402:
+                            logger.info(
+                                "multi-consume: workspace %s over cap; skipping invite %s",
+                                inv.get("workspace_id"),
+                                inv.get("id"),
+                            )
+                            continue
+                        raise
+
+                    # Reactivate-or-create: include soft-deleted so a previously-removed member is revived, not duplicated.
+                    existing_rows = await async_directus.get_items(
+                        "workspace_membership",
+                        {
+                            "query": {
+                                "filter": {
+                                    "workspace_id": {"_eq": inv["workspace_id"]},
+                                    "user_id": {"_eq": app_user_id},
+                                },
+                                "fields": ["id", "deleted_at"],
+                                "limit": -1,
+                            }
+                        },
+                    )
+                    active_row = None
+                    deleted_row = None
+                    if isinstance(existing_rows, list):
+                        for row in existing_rows:
+                            if row.get("deleted_at") is None and active_row is None:
+                                active_row = row
+                            elif row.get("deleted_at") is not None and deleted_row is None:
+                                deleted_row = row
+                    if active_row is None and deleted_row is not None:
+                        await async_directus.update_item(
+                            "workspace_membership",
+                            deleted_row["id"],
+                            {
+                                "deleted_at": None,
+                                "role": inv.get("role") or "member",
+                                "source": "direct",
+                            },
+                        )
+                    elif active_row is None:
+                        await async_directus.create_item(
+                            "workspace_membership",
+                            {
+                                "id": generate_uuid(),
+                                "workspace_id": inv["workspace_id"],
+                                "user_id": app_user_id,
+                                "role": inv.get("role") or "member",
+                                "source": "direct",
+                            },
+                        )
+                    await async_directus.update_item(
+                        "workspace_invite",
+                        inv["id"],
+                        {"accepted_at": now_iso},
+                    )
+                except Exception:
+                    logger.exception(
+                        "multi-consume: failed to apply workspace_invite %s for %s",
+                        inv.get("id"),
+                        email,
+                    )
+
+    # Org_invite sweep: membership already exists from originating accept; just mark accepted, or promote if invite role outranks.
+    org_invite_filter: dict = {
+        "org_id": {"_eq": org_id},
+        "email": {"_eq": email},
+        "accepted_at": {"_null": True},
+        "deleted_at": {"_null": True},
+        "expires_at": {"_gt": now_iso},
+    }
+    if exclude_org_invite_id:
+        org_invite_filter["id"] = {"_neq": exclude_org_invite_id}
+
+    org_invites = await async_directus.get_items(
+        "org_invite",
+        {"query": {"filter": org_invite_filter, "fields": ["id", "role"], "limit": -1}},
+    )
+    if isinstance(org_invites, list) and org_invites:
+        active_org_mem_rows = await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "user_id": {"_eq": app_user_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id", "role"],
+                    "limit": 1,
+                }
+            },
+        )
+        active_org_mem = (
+            active_org_mem_rows[0]
+            if isinstance(active_org_mem_rows, list) and active_org_mem_rows
+            else None
+        )
+
+        for inv in org_invites:
+            try:
+                invite_role = inv.get("role") or "member"
+                # Promote if invite's role outranks the current membership.
+                if active_org_mem is not None:
+                    current_level = _ROLE_LEVEL.get(
+                        active_org_mem.get("role") or "member", 0
+                    )
+                    invite_level = _ROLE_LEVEL.get(invite_role, 0)
+                    if invite_level > current_level:
+                        await async_directus.update_item(
+                            "org_membership",
+                            active_org_mem["id"],
+                            {"role": invite_role},
+                        )
+                        active_org_mem["role"] = invite_role
+                await async_directus.update_item(
+                    "org_invite",
+                    inv["id"],
+                    {"accepted_at": now_iso},
+                )
+            except Exception:
+                logger.exception(
+                    "multi-consume: failed to mark org_invite %s accepted for %s",
+                    inv.get("id"),
+                    email,
+                )
 
 
 @router.post("/invites/accept-by-hash")
@@ -656,7 +1248,7 @@ async def accept_invite_by_hash(
 
     now_iso = datetime.now(timezone.utc).isoformat()
 
-    # First check pending invites for this email
+    # `deleted_at IS NULL` is critical: without it a revoked invite's hash is still acceptable.
     invites = await async_directus.get_items(
         "workspace_invite",
         {
@@ -664,6 +1256,7 @@ async def accept_invite_by_hash(
                 "filter": {
                     "email": {"_eq": my_email},
                     "accepted_at": {"_null": True},
+                    "deleted_at": {"_null": True},
                     "expires_at": {"_gt": now_iso},
                 },
                 "fields": ["id", "email", "workspace_id", "role"],
@@ -680,6 +1273,123 @@ async def accept_invite_by_hash(
                 target_invite = inv
                 break
 
+    # Fall through to org_invite when the hash didn't match a workspace_invite.
+    if target_invite is None:
+        org_invites_pending = await async_directus.get_items(
+            "org_invite",
+            {
+                "query": {
+                    "filter": {
+                        "email": {"_eq": my_email},
+                        "accepted_at": {"_null": True},
+                        "deleted_at": {"_null": True},
+                        "expires_at": {"_gt": now_iso},
+                    },
+                    "fields": ["id", "org_id", "role"],
+                    "limit": -1,
+                }
+            },
+        )
+        target_org_invite = None
+        if isinstance(org_invites_pending, list):
+            for inv in org_invites_pending:
+                if _hmac.compare_digest(compute_invite_hash(inv["id"]), body.hash):
+                    target_org_invite = inv
+                    break
+
+        if target_org_invite is not None:
+            actual_role = target_org_invite.get("role") or "member"
+            invite_org_id = target_org_invite["org_id"]
+
+            if body.claimed_role:  # honeypot: detect URL-claimed role escalation
+                claimed = _ROLE_LEVEL.get(body.claimed_role, -1)
+                actual = _ROLE_LEVEL.get(actual_role, 0)
+                if claimed > actual:
+                    logger.warning(
+                        f"HONEYPOT (org): {my_email} tried accept with "
+                        f"claimed_role={body.claimed_role} but actual is {actual_role}"
+                    )
+                    raise HTTPException(
+                        status_code=418,
+                        detail=(
+                            "Nice try. We noticed the URL tampering. "
+                            "If you enjoy finding edge cases, come work with us: "
+                            "sameer@dembrane.com"
+                        ),
+                    )
+
+            org_row = await async_directus.get_item("org", invite_org_id)
+            if not org_row or org_row.get("deleted_at"):
+                raise HTTPException(status_code=404, detail="Organisation no longer exists")
+
+            # Rate-limit after gates so 4xx blocks don't burn retries.
+            await _accept_rate_limiter.check(app_user_id)
+
+            # Fetch active + soft-deleted org_membership rows; pick deterministically.
+            existing_org_mem = await async_directus.get_items(
+                "org_membership",
+                {
+                    "query": {
+                        "filter": {
+                            "org_id": {"_eq": invite_org_id},
+                            "user_id": {"_eq": app_user_id},
+                        },
+                        "fields": ["id", "role", "deleted_at"],
+                        "limit": -1,
+                    }
+                },
+            )
+
+            active_row = None
+            deleted_row = None
+            if isinstance(existing_org_mem, list):
+                for row in existing_org_mem:
+                    if row.get("deleted_at") is None and active_row is None:
+                        active_row = row
+                    elif row.get("deleted_at") is not None and deleted_row is None:
+                        deleted_row = row
+
+            already_active_member = False
+            if active_row is not None:
+                already_active_member = True
+            elif deleted_row is not None:
+                await async_directus.update_item(
+                    "org_membership",
+                    deleted_row["id"],
+                    {"deleted_at": None, "role": actual_role},
+                )
+            else:
+                await async_directus.create_item(
+                    "org_membership",
+                    {
+                        "id": generate_uuid(),
+                        "org_id": invite_org_id,
+                        "user_id": app_user_id,
+                        "role": actual_role,
+                    },
+                )
+
+            await async_directus.update_item(
+                "org_invite",
+                target_org_invite["id"],
+                {"accepted_at": now_iso},
+            )
+
+            # Apply union of every other pending invite for (email, org_id) in one click.
+            await _consume_pending_invites_in_org(
+                email=my_email,
+                org_id=invite_org_id,
+                app_user_id=app_user_id,
+                exclude_org_invite_id=target_org_invite["id"],
+            )
+
+            return {
+                "status": "already_member" if already_active_member else "success",
+                "type": "org",
+                "org_id": invite_org_id,
+                "org_name": org_row.get("name") or "",
+            }
+
     # Fallback: invite may have already been marked accepted (e.g. via
     # onboarding auto-accept) but the workspace_membership row might be
     # missing — a prior accept that created the accepted_at row but
@@ -688,16 +1398,21 @@ async def accept_invite_by_hash(
     # not found or already handled". Now we self-heal: the email match +
     # unforgeable hash is strong enough proof of ownership to create the
     # missing membership and let the user in.
+    # SECURITY: filter out revoked rows at the query level so a stale link can't heal a fresh membership.
     if target_invite is None:
         accepted = await async_directus.get_items(
             "workspace_invite",
             {
                 "query": {
-                    "filter": {"email": {"_eq": my_email}},
+                    "filter": {
+                        "email": {"_eq": my_email},
+                        "deleted_at": {"_null": True},
+                    },
                     "fields": [
                         "id",
                         "workspace_id",
                         "accepted_at",
+                        "deleted_at",
                         "role",
                     ],
                     "limit": -1,
@@ -708,6 +1423,8 @@ async def accept_invite_by_hash(
             for inv in accepted:
                 if not _hmac.compare_digest(compute_invite_hash(inv["id"]), body.hash):
                     continue
+                if inv.get("deleted_at"):
+                    raise HTTPException(status_code=404, detail="Invite not found")
                 ws = await async_directus.get_item("workspace", inv["workspace_id"])
                 if not ws or ws.get("deleted_at"):
                     raise HTTPException(status_code=404, detail="Workspace no longer exists")
@@ -728,6 +1445,14 @@ async def accept_invite_by_hash(
                 )
                 already_member = isinstance(existing, list) and len(existing) > 0
                 if already_member:
+                    # Per-org sweep: first acceptance consumes all pending invites for (email, org).
+                    if ws.get("org_id"):
+                        await _consume_pending_invites_in_org(
+                            email=my_email,
+                            org_id=ws["org_id"],
+                            app_user_id=app_user_id,
+                            exclude_workspace_invite_id=inv["id"],
+                        )
                     return {
                         "status": "already_member",
                         "workspace_id": inv["workspace_id"],
@@ -785,13 +1510,85 @@ async def accept_invite_by_hash(
 
                 await invalidate_workspace_and_org_usage(inv["workspace_id"], ws.get("org_id"))
 
-                # accepted_at already set; "healed" tells the frontend to
-                # skip the "Joined!" toast (this is a partial-write patch,
-                # not a fresh accept).
+                # "healed" tells the frontend to skip the "Joined!" toast (partial-write recovery).
                 return {
                     "status": "healed",
+                    "type": "workspace",
                     "workspace_id": inv["workspace_id"],
                     "workspace_name": ws.get("name", ""),
+                    "org_id": ws.get("org_id"),
+                }
+
+        # Org_invite self-heal: mirrors the workspace branch above for partial-write recovery.
+        accepted_org = await async_directus.get_items(
+            "org_invite",
+            {
+                "query": {
+                    "filter": {
+                        "email": {"_eq": my_email},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": [
+                        "id",
+                        "org_id",
+                        "accepted_at",
+                        "deleted_at",
+                        "role",
+                    ],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(accepted_org, list):
+            from dembrane.api.v2._invite_helpers import ensure_active_org_membership
+
+            for inv in accepted_org:
+                if not _hmac.compare_digest(compute_invite_hash(inv["id"]), body.hash):
+                    continue
+                if inv.get("deleted_at"):
+                    raise HTTPException(status_code=404, detail="Invite not found")
+
+                org_rows = await async_directus.get_items(
+                    "org",
+                    {
+                        "query": {
+                            "filter": {"id": {"_eq": inv["org_id"]}},
+                            "fields": ["id", "name", "deleted_at"],
+                            "limit": 1,
+                        }
+                    },
+                )
+                org_row = (
+                    org_rows[0] if isinstance(org_rows, list) and org_rows else None
+                )
+                if not org_row or org_row.get("deleted_at"):
+                    raise HTTPException(
+                        status_code=404, detail="Organisation no longer exists"
+                    )
+
+                logger.warning(
+                    "accept-by-hash fallback healed missing org_membership "
+                    f"for user={app_user_id} invite={inv['id']} org={inv['org_id']}"
+                )
+
+                status = await ensure_active_org_membership(
+                    org_id=inv["org_id"],
+                    user_id=app_user_id,
+                    role=inv.get("role") or "member",
+                )
+                await _consume_pending_invites_in_org(
+                    email=my_email,
+                    org_id=inv["org_id"],
+                    app_user_id=app_user_id,
+                    exclude_org_invite_id=inv["id"],
+                )
+                return {
+                    "status": (
+                        "already_member" if status == "already_active" else "healed"
+                    ),
+                    "type": "org",
+                    "org_id": inv["org_id"],
+                    "org_name": org_row.get("name") or "",
                 }
 
         raise HTTPException(status_code=404, detail="Invite not found or already handled")
@@ -968,8 +1765,19 @@ async def accept_invite_by_hash(
             ref_org_id=ws.get("org_id"),
         )
 
+    # Apply every other pending invite for (email, org_id) in one click; external invites skip (no org_id).
+    if ws.get("org_id") and not is_external_invite:
+        await _consume_pending_invites_in_org(
+            email=my_email,
+            org_id=ws["org_id"],
+            app_user_id=app_user_id,
+            exclude_workspace_invite_id=target_invite["id"],
+        )
+
     return {
         "status": "success",
+        "type": "workspace",
         "workspace_id": target_invite["workspace_id"],
         "workspace_name": ws.get("name", ""),
+        "org_id": ws.get("org_id"),
     }
