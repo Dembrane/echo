@@ -48,7 +48,9 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 						    appears on /w/:workspaceId/* routes. Lives here (inside
 						    main) instead of WorkspaceLayout so it doesn't stretch
 						    across the sidebar column. */}
-						<SeatCapBanner />
+						<div className="print:hidden">
+							<SeatCapBanner />
+						</div>
 						<div className="flex-1 overflow-auto">
 							<Outlet />
 							{children}
