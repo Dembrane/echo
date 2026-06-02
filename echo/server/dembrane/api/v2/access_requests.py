@@ -308,8 +308,8 @@ async def request_workspace_access(
     if not org_id:
         raise HTTPException(status_code=500, detail="Workspace has no org")
 
-    # Private workspaces: only invited participants and org admins.
-    if workspace.get("visibility") == "private":
+    # Positive-match: closes the NULL-visibility edge case (older rows pre-column default to NULL).
+    if workspace.get("visibility") != "open_to_organisation":
         raise HTTPException(
             status_code=404,
             detail="Workspace not found",  # intentional — don't confirm existence
@@ -474,7 +474,12 @@ class ActionRequestResponse(BaseModel):
 
 
 async def _load_pending_or_404(workspace_id: str, req_id: str) -> dict:
-    req = await async_directus.get_item("access_request", req_id)
+    # Filter-based lookup: get_item returns FORBIDDEN (not 404) on unknown ids, which would 500 on attacker-supplied paths.
+    rows = await async_directus.get_items(
+        "access_request",
+        {"query": {"filter": {"id": {"_eq": req_id}}, "limit": 1}},
+    )
+    req = rows[0] if isinstance(rows, list) and rows else None
     if not req or req.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Request not found")
     if req.get("workspace_id") != workspace_id:
@@ -616,6 +621,7 @@ class DiscoverableWorkspace(BaseModel):
     visibility: str
     action: Literal["join", "request-access", "pending", "member"]
     pending_request_id: Optional[str] = None
+    member_count: int = 0
 
 
 class DiscoverResponse(BaseModel):
@@ -655,11 +661,12 @@ async def list_discoverable_workspaces(
     filters: dict = {
         "org_id": {"_eq": org_id},
         "deleted_at": {"_null": True},
+        # Free tier is the admin's personal allotment; not joinable by anyone else, even org admins.
+        "tier": {"_neq": "free"},
     }
     if not is_org_admin:
-        filters["visibility"] = {"_neq": "private"}
-        # Free tier is the admin's personal allotment — not requestable.
-        filters["tier"] = {"_neq": "free"}
+        # Positive-match mirrors request_workspace_access so NULL-visibility rows don't surface a CTA that 404s on submit.
+        filters["visibility"] = {"_eq": "open_to_organisation"}
 
     workspaces = await async_directus.get_items(
         "workspace",
@@ -717,6 +724,29 @@ async def list_discoverable_workspaces(
         if isinstance(reqs, list):
             pending_map = {r["workspace_id"]: r["id"] for r in reqs}
 
+    # Single grouped aggregate so the discovery list can show "N members" without N round-trips.
+    member_counts: dict[str, int] = {}
+    if ws_ids:
+        member_agg = await async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "aggregate": {"count": "id"},
+                    "groupBy": ["workspace_id"],
+                    "filter": {
+                        "workspace_id": {"_in": ws_ids},
+                        "deleted_at": {"_null": True},
+                    },
+                }
+            },
+        )
+        if isinstance(member_agg, list):
+            for row in member_agg:
+                wid = row.get("workspace_id")
+                cnt = int((row.get("count") or {}).get("id", 0) or 0)
+                if wid:
+                    member_counts[wid] = cnt
+
     out: list[DiscoverableWorkspace] = []
     for w in workspaces:
         wid = w["id"]
@@ -740,6 +770,7 @@ async def list_discoverable_workspaces(
                 visibility=visibility,
                 action=action,
                 pending_request_id=pending_id,
+                member_count=member_counts.get(wid, 0),
             )
         )
 
