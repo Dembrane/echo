@@ -14,14 +14,14 @@ _ORG = "org-1"
 _USER = "user-1"
 
 
-def _mock(*, ws_roles: list[str], org_membership_ids: list[str]) -> AsyncMock:
+def _mock(*, ws_roles: list[str], org_memberships: list[dict[str, Any]]) -> AsyncMock:
     async def get_items(collection: str, _params: dict[str, Any]) -> list[dict[str, Any]]:
         if collection == "workspace":
             return [{"id": "ws-1"}]
         if collection == "workspace_membership":
             return [{"role": r} for r in ws_roles]
         if collection == "org_membership":
-            return [{"id": i} for i in org_membership_ids]
+            return list(org_memberships)
         return []
 
     mock = AsyncMock()
@@ -31,8 +31,9 @@ def _mock(*, ws_roles: list[str], org_membership_ids: list[str]) -> AsyncMock:
 
 
 @pytest.mark.asyncio
-async def test_soft_deletes_stale_org_membership_when_no_internal():
-    mock = _mock(ws_roles=[], org_membership_ids=["om-1"])
+async def test_soft_deletes_member_org_membership_when_no_internal():
+    """A plain org-only member becoming external: their member org row is cleaned up."""
+    mock = _mock(ws_roles=[], org_memberships=[{"id": "om-1", "role": "member"}])
     with patch("dembrane.api.v2._invite_helpers.async_directus", mock):
         await reconcile_external_membership_org_row(_ORG, _USER)
     mock.update_item.assert_awaited_once()
@@ -43,8 +44,8 @@ async def test_soft_deletes_stale_org_membership_when_no_internal():
 
 
 @pytest.mark.asyncio
-async def test_rejects_when_user_has_internal_membership():
-    mock = _mock(ws_roles=["member"], org_membership_ids=["om-1"])
+async def test_rejects_when_user_has_internal_workspace_membership():
+    mock = _mock(ws_roles=["member"], org_memberships=[{"id": "om-1", "role": "member"}])
     with patch("dembrane.api.v2._invite_helpers.async_directus", mock):
         with pytest.raises(HTTPException) as exc:
             await reconcile_external_membership_org_row(_ORG, _USER)
@@ -53,8 +54,21 @@ async def test_rejects_when_user_has_internal_membership():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("org_role", ["admin", "owner", "billing"])
+async def test_rejects_and_preserves_privileged_org_role(org_role):
+    """An org admin/owner/billing must never be silently demoted to external."""
+    mock = _mock(ws_roles=[], org_memberships=[{"id": "om-1", "role": org_role}])
+    with patch("dembrane.api.v2._invite_helpers.async_directus", mock):
+        with pytest.raises(HTTPException) as exc:
+            await reconcile_external_membership_org_row(_ORG, _USER)
+    assert exc.value.status_code == 400
+    # The privileged org_membership must be left intact, not soft-deleted.
+    mock.update_item.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_noop_when_no_org_membership():
-    mock = _mock(ws_roles=[], org_membership_ids=[])
+    mock = _mock(ws_roles=[], org_memberships=[])
     with patch("dembrane.api.v2._invite_helpers.async_directus", mock):
         await reconcile_external_membership_org_row(_ORG, _USER)
     mock.update_item.assert_not_awaited()

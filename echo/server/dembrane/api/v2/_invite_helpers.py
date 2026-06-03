@@ -351,13 +351,26 @@ async def reconcile_external_membership_org_row(org_id: str, user_id: str) -> No
                     "user_id": {"_eq": user_id},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["id"],
+                "fields": ["id", "role"],
                 "limit": -1,
             }
         },
     )
     if not isinstance(rows, list):
         return
+    # Never silently demote a privileged org member. A plain 'member' org row
+    # with no internal workspace foothold is the stale-leftover case we clean
+    # up when making someone external; admin/owner/billing must be resolved
+    # explicitly (this mirrors is_org_external_only, which never treats those
+    # roles as external).
+    if any(r.get("role") in ("admin", "owner", "billing") for r in rows):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "This person is an organisation admin, owner, or billing member and "
+                "cannot be added as an external. Change their organisation role first."
+            ),
+        )
     for row in rows:
         if row.get("id"):
             await async_directus.update_item(
