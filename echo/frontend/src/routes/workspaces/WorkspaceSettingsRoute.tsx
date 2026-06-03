@@ -294,11 +294,14 @@ export const WorkspaceSettingsRoute = () => {
 			err instanceof WorkspaceAccessDeniedError ? false : failureCount < 3,
 	});
 
-	// Live count for the "N pending" counter; the settings payload's `pending_invites` array can lag after a revoke.
+	// Live count for the "N pending" counter; endpoint is org-admin-only so gate via enabled.
 	const { data: livePendingInvites } = usePendingInvites({
+		enabled:
+			!!workspaceId &&
+			!!settings?.org_id &&
+			(settings?.my_policies?.includes("member:manage") ?? false),
 		orgId: settings?.org_id,
 		workspaceId,
-		enabled: !!workspaceId && !!settings?.org_id,
 	});
 
 	// Lightweight usage probe so the Members tab can disable the invite
@@ -450,7 +453,15 @@ export const WorkspaceSettingsRoute = () => {
 				replace: true,
 			});
 		}
-	}, [workspaceId, segment, activeTab, navigate, urlSearch, settings, defaultTab]);
+	}, [
+		workspaceId,
+		segment,
+		activeTab,
+		navigate,
+		urlSearch,
+		settings,
+		defaultTab,
+	]);
 
 	// Members list order (2026-04-24): internals first — sorted by role
 	// (owner → admin → billing → member) — then externals at the bottom.
@@ -804,7 +815,8 @@ export const WorkspaceSettingsRoute = () => {
 														</Trans>
 													) : (
 														<Trans>
-															Invite to this workspace, or just the organisation.
+															Invite to this workspace, or just the
+															organisation.
 														</Trans>
 													)
 												}
@@ -914,7 +926,11 @@ export const WorkspaceSettingsRoute = () => {
 															<Tooltip
 																label={t`Ownership is locked. Contact support to transfer.`}
 															>
-																<Badge size="sm" variant="light" color="primary">
+																<Badge
+																	size="sm"
+																	variant="light"
+																	color="primary"
+																>
 																	<Trans>Admin</Trans>
 																</Badge>
 															</Tooltip>
@@ -926,7 +942,11 @@ export const WorkspaceSettingsRoute = () => {
 															<Tooltip
 																label={t`You're the only admin. Promote someone else before changing your role.`}
 															>
-																<Badge size="sm" variant="light" color="primary">
+																<Badge
+																	size="sm"
+																	variant="light"
+																	color="primary"
+																>
 																	<Trans>Admin</Trans>
 																</Badge>
 															</Tooltip>
@@ -1105,10 +1125,8 @@ export const WorkspaceSettingsRoute = () => {
 									</Stack>
 								</Stack>
 
-								{/* Pending invites — unified component talks to
-								    /v2/orgs/:id/pending-invites?workspace_id= and the
-								    new /v2/invites/:id resend/revoke endpoints. */}
-								{workspaceId && settings.org_id && (
+								{/* Endpoint is org-admin-only; gate matches AccessRequestsList below. */}
+								{canManage && workspaceId && settings.org_id && (
 									<PendingInvitesSection
 										orgId={settings.org_id}
 										scope="workspace"

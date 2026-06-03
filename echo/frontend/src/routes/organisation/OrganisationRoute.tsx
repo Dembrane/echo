@@ -297,7 +297,6 @@ export const OrganisationRoute = () => {
 	// (`/o/:organisationId/<tab>`) so browser back steps between tabs and URLs
 	// are shareable. We ALSO recognise sidebar-driven URLs:
 	//   /o/:id/settings/<section>  → maps to an existing tab
-	//   /o/:id/requests            → stub, renders overview for now
 	// The sidebar pushes those URLs so its view resolver lands on
 	// "org-settings" while the content panel keeps using existing tabs.
 	const allowedTabs = [
@@ -311,7 +310,6 @@ export const OrganisationRoute = () => {
 	const segment = segments[0] ?? "";
 
 	const isSettingsPath = segment === "settings";
-	const isRequestsPath = segment === "requests";
 
 	const viewRaw: TabValue = isSettingsPath
 		? (() => {
@@ -322,16 +320,14 @@ export const OrganisationRoute = () => {
 				// general / anything else → overview (general settings).
 				return "overview";
 			})()
-		: isRequestsPath
-			? "overview"
-			: (allowedTabs as readonly string[]).includes(segment)
-				? (segment as TabValue)
-				: "overview";
+		: (allowedTabs as readonly string[]).includes(segment)
+			? (segment as TabValue)
+			: "overview";
 
 	useEffect(() => {
-		// Bounce bare /o/:id to /o/:id/overview. Don't bounce /settings/* or /requests; those are canonical sidebar URLs.
+		// Bounce bare /o/:id to /o/:id/overview. Don't bounce /settings/*; those are canonical sidebar URLs.
 		if (!organisationId) return;
-		if (isSettingsPath || isRequestsPath) return;
+		if (isSettingsPath) return;
 		if (segment !== viewRaw) {
 			navigate(`/o/${organisationId}/${viewRaw}${urlSearch}`, {
 				replace: true,
@@ -342,7 +338,6 @@ export const OrganisationRoute = () => {
 		viewRaw,
 		segment,
 		isSettingsPath,
-		isRequestsPath,
 		navigate,
 		urlSearch,
 	]);
