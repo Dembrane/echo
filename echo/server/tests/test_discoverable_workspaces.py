@@ -86,6 +86,15 @@ def _make_directus_mock(
     return mock
 
 
+@pytest.fixture(autouse=True)
+def _default_not_external():
+    with patch(
+        "dembrane.api.v2.access_requests.is_org_external_only",
+        AsyncMock(return_value=False),
+    ):
+        yield
+
+
 @pytest.mark.asyncio
 async def test_member_only_sees_open_workspaces_with_member_counts():
     """Org member: private hidden, open workspaces return member_count."""
@@ -258,3 +267,30 @@ async def test_workspace_query_filters_deleted_tier_and_for_member_filters_visib
         "non-admin caller must positive-match open_to_organisation; "
         "_neq:private would surface NULL-visibility rows that the submit endpoint 404s on"
     )
+
+
+@pytest.mark.asyncio
+async def test_external_only_caller_gets_empty_discovery():
+    """A member-role caller who is external-only (stale org_membership) sees nothing."""
+    mock = _make_directus_mock(
+        caller_role="member",
+        workspaces=[_WS_OPEN_A, _WS_OPEN_B],
+        member_counts_by_ws={"ws-open-a": 4, "ws-open-b": 8},
+    )
+
+    with (
+        patch("dembrane.api.v2.access_requests.async_directus", mock),
+        patch(
+            "dembrane.api.v2.access_requests.get_app_user_or_raise",
+            AsyncMock(return_value=_APP_USER),
+        ),
+        patch(
+            "dembrane.api.v2.access_requests.is_org_external_only",
+            AsyncMock(return_value=True),
+        ),
+    ):
+        app = _build_app()
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            res = await client.get(f"/v2/orgs/{_ORG_ID}/discoverable-workspaces")
+    assert res.status_code == 200
+    assert res.json()["workspaces"] == []

@@ -133,6 +133,68 @@ async def _get_org_role(org_id: str, user_id: str) -> Optional[str]:
     return None
 
 
+async def org_workspace_membership_roles(org_id: str, user_id: str) -> list[str]:
+    """Roles on the user's active workspace memberships across this org.
+
+    One workspace-id lookup for the org, then one membership lookup. Used to
+    decide insider (any member/billing/admin/owner row) vs outsider (only
+    external rows).
+    """
+    workspaces = await async_directus.get_items(
+        "workspace",
+        {
+            "query": {
+                "filter": {"org_id": {"_eq": org_id}, "deleted_at": {"_null": True}},
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    )
+    ws_ids = (
+        [w["id"] for w in workspaces if w.get("id")]
+        if isinstance(workspaces, list)
+        else []
+    )
+    if not ws_ids:
+        return []
+    rows = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_in": ws_ids},
+                    "user_id": {"_eq": user_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["role"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return []
+    return [r.get("role") for r in rows if r.get("role")]
+
+
+async def is_org_external_only(org_id: str, user_id: str) -> bool:
+    """True when the user is an outsider (external) in this org regardless of
+    any org_membership row.
+
+    Per the confirmed invariant (insider XOR outsider per org), this holds
+    when the org role is not admin/owner/billing, the user has at least one
+    external workspace membership in the org, and zero internal workspace
+    memberships in the org. Robust to a stale org_membership left behind when
+    someone was converted to external.
+    """
+    role = await _get_org_role(org_id, user_id)
+    if role in ("admin", "owner", "billing"):
+        return False
+    roles = await org_workspace_membership_roles(org_id, user_id)
+    has_external = any(r == "external" for r in roles)
+    has_internal = any(r in ("member", "billing", "admin", "owner") for r in roles)
+    return has_external and not has_internal
+
+
 async def user_can_access(workspace_id: str, user_id: str) -> Optional[tuple[str, str]]:
     """Return (role, source) for this user on this workspace, or None.
 

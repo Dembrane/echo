@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { API_BASE_URL } from "@/config";
+import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
@@ -37,6 +38,11 @@ export const OrgHomeView = () => {
 	}>();
 	const orgId = routeOrgId ?? organisationId;
 	const { workspaces: myWorkspaces } = useWorkspace();
+	const { data: me } = useV2Me();
+	const isManager = useMemo(() => {
+		const role = me?.orgs.find((o) => o.id === orgId)?.role;
+		return role === "admin" || role === "owner";
+	}, [me, orgId]);
 
 	const myOrgWorkspaces = useMemo(
 		() => myWorkspaces.filter((w) => w.org_id === orgId),
@@ -60,10 +66,14 @@ export const OrgHomeView = () => {
 	const orgName = myOrgWorkspaces[0]?.org_name ?? t`Organisation`;
 
 	const displayList = useMemo(() => {
-		if (isExternal) {
+		// Admins/owners see the whole org roster (they can open any workspace).
+		// Everyone else (member, billing, external) sees only the workspaces
+		// they directly belong to, so the sidebar never shows a workspace that
+		// dead-links on click. Discovering other workspaces happens on /w.
+		if (!isManager) {
 			return myOrgWorkspaces.map((w) => ({
 				id: w.id,
-				isExternal: true,
+				isExternal: w.role === "external",
 				name: w.name,
 			}));
 		}
@@ -83,10 +93,11 @@ export const OrgHomeView = () => {
 			isExternal: w.role === "external",
 			name: w.name,
 		}));
-	}, [isExternal, myOrgWorkspaces, orgWsQuery.data]);
+	}, [isManager, myOrgWorkspaces, orgWsQuery.data]);
 
-	// Org-only members get no children under the org node; /w handles discovery instead.
-	const hasDirectMembership = myOrgWorkspaces.length > 0;
+	// Show the Workspaces section whenever there is something to show — for
+	// managers that is the full org list, for everyone else their direct rows.
+	const showWorkspaces = displayList.length > 0;
 
 	if (!orgId) return null;
 	const base = `/o/${orgId}`;
@@ -111,7 +122,7 @@ export const OrgHomeView = () => {
 				/>
 			)}
 
-			{hasDirectMembership && (
+			{showWorkspaces && (
 				<>
 					<SectionLabel>
 						<Trans>Workspaces</Trans>

@@ -68,10 +68,23 @@ export function InviteResultsList({ rows, "data-testid": dataTestId }: Props) {
 									) : (
 										<Trans>Organisation only</Trans>
 									)}
-									{row.detail ? ` · ${row.detail}` : ""}
 								</Text>
+								{row.detail ? (
+									<Text
+										size="xs"
+										c="dimmed"
+										style={{ wordBreak: "break-word" }}
+									>
+										{row.detail}
+									</Text>
+								) : null}
 							</Stack>
-							<Badge size="sm" variant="light" color={badge.color}>
+							<Badge
+								size="sm"
+								variant="light"
+								color={badge.color}
+								style={{ flexShrink: 0 }}
+							>
 								{badge.label}
 							</Badge>
 						</Group>

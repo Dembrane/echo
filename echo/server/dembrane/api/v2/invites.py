@@ -232,6 +232,16 @@ async def invite_to_workspace(
                     logger.info(f"Added {email} to org {ws_org_id} as member")
                     newly_joined_organisation = True
 
+            # External add: enforce insider XOR outsider before creating the
+            # external row (removes a stale org_membership, or rejects if the
+            # user is already an internal member of this org).
+            if is_external_invite and ws_org_id:
+                from dembrane.api.v2._invite_helpers import (
+                    reconcile_external_membership_org_row,
+                )
+
+                await reconcile_external_membership_org_row(ws_org_id, app_user["id"])
+
             # Reactivate a soft-deleted row if present; otherwise create fresh. Distinct status so UI can show "reactivated" vs "added".
             reactivated = False
             if existing_row and existing_row.get("deleted_at"):
