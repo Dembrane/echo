@@ -79,7 +79,12 @@ export function InviteResultsList({ rows, "data-testid": dataTestId }: Props) {
 									</Text>
 								) : null}
 							</Stack>
-							<Badge size="sm" variant="light" color={badge.color}>
+							<Badge
+								size="sm"
+								variant="light"
+								color={badge.color}
+								style={{ flexShrink: 0 }}
+							>
 								{badge.label}
 							</Badge>
 						</Group>
