@@ -16,7 +16,7 @@ import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { displayRole, roleColor } from "@/lib/roles";
 
-interface Workspace {
+export interface Workspace {
 	id: string;
 	name: string;
 	org_id: string;
@@ -27,7 +27,7 @@ interface Workspace {
 	member_count: number;
 }
 
-interface OrganisationRollup {
+export interface OrganisationRollup {
 	id: string;
 	name: string;
 	role: string;
@@ -36,18 +36,26 @@ interface OrganisationRollup {
 	total_projects: number;
 }
 
-interface WorkspacesResponse {
+export interface WorkspacesResponse {
 	workspaces: Workspace[];
 	organisations: OrganisationRollup[];
 }
 
-async function fetchAccess(): Promise<WorkspacesResponse | null> {
+export async function fetchAccess(): Promise<WorkspacesResponse | null> {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		credentials: "include",
 	});
 	if (!res.ok) return null;
 	return res.json();
 }
+
+export const useMyAccess = () => {
+	return useQuery({
+		queryFn: fetchAccess,
+		queryKey: ["v2", "workspaces"],
+		staleTime: 60_000,
+	});
+};
 
 /**
  * "My access" card on user settings. Gives the caller a complete read
@@ -62,11 +70,7 @@ async function fetchAccess(): Promise<WorkspacesResponse | null> {
  */
 export const MyAccessCard = () => {
 	const navigate = useI18nNavigate();
-	const { data, isLoading } = useQuery({
-		queryFn: fetchAccess,
-		queryKey: ["v2", "workspaces"],
-		staleTime: 60_000,
-	});
+	const { data, isLoading } = useMyAccess();
 
 	// Group workspaces under their organisation so the list reads as
 	// "organisation → workspaces in that organisation with your role."
@@ -146,7 +150,7 @@ export const MyAccessCard = () => {
 													size="xs"
 													variant="light"
 													color={roleColor(organisation.role)}
-													c="#2D2D2C"
+													c="graphite"
 												>
 													{displayRole(organisation.role)}
 												</Badge>
@@ -189,7 +193,7 @@ export const MyAccessCard = () => {
 														size="xs"
 														variant="light"
 														color={roleColor(ws.role)}
-														c="#2D2D2C"
+														c="graphite"
 													>
 														{displayRole(ws.role)}
 													</Badge>

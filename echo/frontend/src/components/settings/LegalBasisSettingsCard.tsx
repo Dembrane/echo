@@ -12,12 +12,13 @@ import {
 	Title,
 } from "@mantine/core";
 import { IconAlertTriangle, IconScale } from "@tabler/icons-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { isAdminRole } from "@/lib/roles";
 import { API_BASE_URL } from "@/config";
 import { toast } from "../common/Toaster";
+import { useMyAccess } from "./MyAccessCard";
 
 type LegalBasisValue = CustomDirectusUser["legal_basis"];
 
@@ -25,9 +26,7 @@ export const LegalBasisSettingsCard = () => {
 	const { data: user } = useCurrentUser();
 	const queryClient = useQueryClient();
 
-	const { data: accessData } = useQuery<{ organisations: { role: string }[] } | null>({
-		queryKey: ["v2", "workspaces"],
-	});
+	const { data: accessData } = useMyAccess();
 	const isOrgAdmin = accessData?.organisations?.some((org) => isAdminRole(org.role)) ?? false;
 
 	const currentLegalBasis =
@@ -111,7 +110,7 @@ export const LegalBasisSettingsCard = () => {
 				</Alert>
 
 				{!isOrgAdmin && (
-					<Alert variant="light" color="blue" title={t`Read-only`}>
+					<Alert variant="light" color="primary" title={t`Read-only`}>
 						<Text size="sm">
 							<Trans>
 								These settings are read-only. Only organisation administrators can modify project defaults.
@@ -126,10 +125,10 @@ export const LegalBasisSettingsCard = () => {
 					disabled={!isOrgAdmin}
 				>
 					<Stack gap="xs">
-						<Radio value="client-managed" label={t`Client-managed`} disabled={!isOrgAdmin} />
-						<Radio value="consent" label={t`Consent`} disabled={!isOrgAdmin} />
+						<Radio value="client-managed" label={t`Client-managed`} />
+						<Radio value="consent" label={t`Consent`} />
 						{isDembraneUser && (
-							<Radio value="dembrane-events" label={t`dembrane events`} disabled={!isOrgAdmin} />
+							<Radio value="dembrane-events" label={t`dembrane events`} />
 						)}
 					</Stack>
 				</Radio.Group>
@@ -137,7 +136,7 @@ export const LegalBasisSettingsCard = () => {
 				{legalBasis === "consent" && (
 					<TextInput
 						label={t`Organiser's Privacy Policy URL`}
-							disabled={!isOrgAdmin}
+						disabled={!isOrgAdmin}
 						description={t`Link to your organisation's privacy policy that will be shown to participants`}
 						placeholder="https://example.com/privacy-policy"
 						value={privacyPolicyUrl}
