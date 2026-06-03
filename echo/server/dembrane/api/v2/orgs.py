@@ -34,7 +34,7 @@ from dembrane.app_user import resolve_app_user, get_app_user_or_raise
 from dembrane.directus import directus
 from dembrane.policies import ROLE_HIERARCHY
 from dembrane.settings import get_settings
-from dembrane.inheritance import on_organisation_member_removed, is_org_external_only
+from dembrane.inheritance import is_org_external_only, on_organisation_member_removed
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.seat_capacity import (
     tier_hard_blocks_seats,
@@ -1399,8 +1399,10 @@ async def list_organisation_workspaces(
     # exactly like a guest: only the workspaces they directly belong to. Real
     # members and managers are unaffected, so OrganisationRoute and InviteModal
     # keep their current behavior.
-    if is_org_member and not caller_is_manager and await is_org_external_only(
-        org_id, app_user["id"]
+    if (
+        is_org_member
+        and not caller_is_manager
+        and await is_org_external_only(org_id, app_user["id"])
     ):
         is_org_member = False
 

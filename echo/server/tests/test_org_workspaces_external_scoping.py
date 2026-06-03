@@ -9,14 +9,26 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from fastapi import FastAPI
 
-from dembrane.api.dependency_auth import DirectusSession, require_directus_session
 from dembrane.api.v2.orgs import router
+from dembrane.api.dependency_auth import DirectusSession, require_directus_session
 
 _USER_ID = "du-1"
 _APP_USER = {"id": "au-1", "email": "u@example.com", "display_name": "U"}
 _ORG_ID = "org-1"
-_WS_MINE = {"id": "ws-mine", "name": "Mine", "tier": "guardian", "is_default": False, "settings": {}}
-_WS_OTHER = {"id": "ws-other", "name": "Other", "tier": "guardian", "is_default": False, "settings": {}}
+_WS_MINE = {
+    "id": "ws-mine",
+    "name": "Mine",
+    "tier": "guardian",
+    "is_default": False,
+    "settings": {},
+}
+_WS_OTHER = {
+    "id": "ws-other",
+    "name": "Other",
+    "tier": "guardian",
+    "is_default": False,
+    "settings": {},
+}
 
 
 def _build_app() -> FastAPI:
