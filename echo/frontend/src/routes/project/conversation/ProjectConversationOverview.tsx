@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -9,15 +10,21 @@ import {
 	Stack,
 	Title,
 	Tooltip,
+	Card,
+	SimpleGrid,
+	Text,
+	Badge,
+	Alert,
 } from "@mantine/core";
 import { useClipboard, useDisclosure } from "@mantine/hooks";
-import { IconRefresh } from "@tabler/icons-react";
+import { IconRefresh, IconCheck } from "@tabler/icons-react";
 import {
 	useMutation,
 	useMutationState,
 	useQueryClient,
 } from "@tanstack/react-query";
 import { useParams } from "react-router";
+import { usePostHog } from "@posthog/react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
 import { Markdown } from "@/components/common/Markdown";
@@ -30,6 +37,7 @@ import {
 	useConversationById,
 	useConversationChunks,
 	useConversationHasTranscript,
+	useUpdateConversationByIdMutation,
 } from "@/components/conversation/hooks";
 import { VerifiedArtefactsSection } from "@/components/conversation/VerifiedArtefactsSection";
 import { useProjectById } from "@/components/project/hooks";
@@ -42,6 +50,13 @@ import { testId } from "@/lib/testUtils";
 export const ProjectConversationOverviewRoute = () => {
 	const { conversationId, projectId } = useParams();
 	const queryClient = useQueryClient();
+	const posthog = usePostHog();
+	const updateConversationMutation = useUpdateConversationByIdMutation();
+
+	const [hasVoted, setHasVoted] = useState(false);
+	const [feedbackSaved, setFeedbackSaved] = useState(false);
+	const [votedOption, setVotedOption] = useState<string | null>(null);
+	const [overrideSummaryContent, setOverrideSummaryContent] = useState<string | null>(null);
 
 	const conversationQuery = useConversationById({
 		conversationId: conversationId ?? "",
@@ -79,6 +94,87 @@ export const ProjectConversationOverviewRoute = () => {
 
 	const isAnonymized = conversationQuery.data?.is_anonymized ?? false;
 	const isLocked = conversationQuery.data?.locked === true;
+
+	const openSourceSummaryMutation = useMutation({
+		mutationFn: async () => {
+			const response = await generateConversationSummary(conversationId ?? "", "open_source");
+			return response;
+		},
+	});
+
+	const [randomized, setRandomized] = useState<{
+		label1: string;
+		label2: string;
+		content1: string;
+		content2: string;
+		type1: "control" | "variant";
+		type2: "control" | "variant";
+	} | null>(null);
+
+	useEffect(() => {
+		if (
+			openSourceSummaryMutation.data &&
+			"summary" in openSourceSummaryMutation.data &&
+			conversationQuery.data?.summary
+		) {
+			const isGeminiFirst = Math.random() > 0.5;
+			const geminiSummary = conversationQuery.data.summary;
+			const openSourceSummary = openSourceSummaryMutation.data.summary;
+
+			setRandomized({
+				label1: isGeminiFirst ? t`Summary Option A (Model 1)` : t`Summary Option A (Model 2)`,
+				label2: isGeminiFirst ? t`Summary Option B (Model 2)` : t`Summary Option B (Model 1)`,
+				content1: isGeminiFirst ? geminiSummary : openSourceSummary,
+				content2: isGeminiFirst ? openSourceSummary : geminiSummary,
+				type1: isGeminiFirst ? "control" : "variant",
+				type2: isGeminiFirst ? "variant" : "control",
+			});
+		}
+	}, [openSourceSummaryMutation.data, conversationQuery.data?.summary]);
+
+	const handleVote = (option: "A" | "B" | "both" | "neither") => {
+		if (
+			!randomized ||
+			!conversationQuery.data?.summary ||
+			!openSourceSummaryMutation.data ||
+			!("summary" in openSourceSummaryMutation.data)
+		) {
+			return;
+		}
+
+		const geminiSummary = conversationQuery.data.summary;
+		const openSourceSummary = openSourceSummaryMutation.data.summary;
+
+		let preferredType: string = option;
+		if (option === "A") {
+			preferredType = randomized.type1;
+			setOverrideSummaryContent(randomized.content1);
+		} else if (option === "B") {
+			preferredType = randomized.type2;
+			setOverrideSummaryContent(randomized.content2);
+		} else {
+			setOverrideSummaryContent(null);
+		}
+
+		try {
+			posthog?.capture("summary_preference_feedback", {
+				conversation_id: conversationId,
+				project_id: projectId,
+				preferred_option: option,
+				preferred_type: preferredType,
+				control_model: "gemini-2.5-pro",
+				variant_model: "open-source",
+				summary_control: geminiSummary,
+				summary_variant: openSourceSummary,
+			});
+		} catch (error) {
+			console.warn("PostHog tracking failed:", error);
+		}
+
+		setHasVoted(true);
+		setVotedOption(option);
+		toast.success(t`Thank you for your feedback!`);
+	};
 
 	const useHandleGenerateSummaryManually = useMutation({
 		mutationFn: async (isRegeneration: boolean) => {
@@ -192,6 +288,7 @@ export const ProjectConversationOverviewRoute = () => {
 								<div {...testId("conversation-overview-summary-content")}>
 									<Markdown
 										content={
+											overrideSummaryContent ??
 											conversationQuery.data?.summary ??
 											(useHandleGenerateSummaryManually.data &&
 											"summary" in useHandleGenerateSummaryManually.data
@@ -200,6 +297,192 @@ export const ProjectConversationOverviewRoute = () => {
 										}
 									/>
 								</div>
+
+								{conversationQuery.data?.summary && (
+									<Card withBorder radius="md" p="md" mt="xl" bg="gray.0">
+										<Stack gap="sm">
+											<Group justify="space-between">
+												<Group gap="xs">
+													<Text size="sm" fw={700} c="blue.7">
+														<Trans>⚖️ Model Preference A/B Test</Trans>
+													</Text>
+													<Badge color="blue" size="sm" variant="light">
+														<Trans>Experimental</Trans>
+													</Badge>
+												</Group>
+											</Group>
+
+											{!randomized && !openSourceSummaryMutation.isPending && !openSourceSummaryMutation.isError && (
+												<Stack gap="xs">
+													<Text size="sm" c="gray.7">
+														<Trans>Help us choose our next AI model! Compare the current summary with an alternative open-source model (such as DeepSeek or Mistral) in a blind test.</Trans>
+													</Text>
+													<Button
+														size="xs"
+														variant="light"
+														color="blue"
+														style={{ alignSelf: "flex-start" }}
+														onClick={() => openSourceSummaryMutation.mutate()}
+													>
+														<Trans>Compare Summaries</Trans>
+													</Button>
+												</Stack>
+											)}
+
+											{openSourceSummaryMutation.isPending && (
+												<Stack align="center" py="md" gap="xs">
+													<LoadingOverlay visible={true} overlayProps={{ blur: 1 }} />
+													<Text size="sm" c="gray.6">
+														<Trans>Generating alternative summary... Please wait.</Trans>
+													</Text>
+												</Stack>
+											)}
+
+											{openSourceSummaryMutation.isError && (
+												<Alert color="red" title={t`Error generating alternative summary`}>
+													<Text size="xs">
+														<Trans>We could not generate the alternative summary. This might be because the open-source model is not configured in this environment.</Trans>
+													</Text>
+												</Alert>
+											)}
+
+											{randomized && (
+												<Stack gap="md">
+													{!hasVoted ? (
+														<>
+															<Text size="xs" c="gray.6" italic>
+																<Trans>To keep the test unbiased, model names are hidden. Choose the option that provides the better summary.</Trans>
+															</Text>
+
+															<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+																<Card withBorder radius="md" p="sm" bg="white">
+																	<Text fw={700} size="sm" mb="xs" c="blue.6">
+																		{randomized.label1}
+																	</Text>
+																	<Markdown content={randomized.content1} />
+																</Card>
+
+																<Card withBorder radius="md" p="sm" bg="white">
+																	<Text fw={700} size="sm" mb="xs" c="blue.6">
+																		{randomized.label2}
+																	</Text>
+																	<Markdown content={randomized.content2} />
+																</Card>
+															</SimpleGrid>
+
+															<Stack gap="xs" mt="sm">
+																<Text fw={600} size="sm">
+																	<Trans>Which summary is better?</Trans>
+																</Text>
+																<Group gap="xs">
+																	<Button
+																		size="xs"
+																		variant="outline"
+																		onClick={() => handleVote("A")}
+																	>
+																		<Trans>Option A is Better</Trans>
+																	</Button>
+																	<Button
+																		size="xs"
+																		variant="outline"
+																		onClick={() => handleVote("B")}
+																	>
+																		<Trans>Option B is Better</Trans>
+																	</Button>
+																	<Button
+																		size="xs"
+																		variant="subtle"
+																		color="gray"
+																		onClick={() => handleVote("both")}
+																	>
+																		<Trans>Both are Good</Trans>
+																	</Button>
+																	<Button
+																		size="xs"
+																		variant="subtle"
+																		color="gray"
+																		onClick={() => handleVote("neither")}
+																	>
+																		<Trans>Neither is Good</Trans>
+																	</Button>
+																</Group>
+															</Stack>
+														</>
+													) : (
+														<Stack gap="sm">
+															<Alert color="green" icon={<IconCheck size={16} />}>
+																<Text size="sm" fw={600}>
+																	<Trans>Thank you for your feedback! Your preference has been saved.</Trans>
+																</Text>
+																<Text size="xs" mt="xs">
+																	{votedOption === "A" && t`You selected Option A.`}
+																	{votedOption === "B" && t`You selected Option B.`}
+																	{votedOption === "both" && t`You selected "Both are good".`}
+																	{votedOption === "neither" && t`You selected "Neither is good".`}
+																	{" "}
+																	{votedOption === "A" && randomized.type1 === "control" && t`Option A was generated by our default model (Gemini).`}
+																	{votedOption === "A" && randomized.type1 === "variant" && t`Option A was generated by our alternative open-source model.`}
+																	{votedOption === "B" && randomized.type2 === "control" && t`Option B was generated by our default model (Gemini).`}
+																	{votedOption === "B" && randomized.type2 === "variant" && t`Option B was generated by our alternative open-source model.`}
+																</Text>
+															</Alert>
+
+															{((votedOption === "A" && randomized.type1 === "variant") ||
+																(votedOption === "B" && randomized.type2 === "variant")) &&
+																!feedbackSaved && (
+																	<Card withBorder p="sm" bg="blue.0" mt="xs">
+																		<Stack gap="xs">
+																			<Text size="sm">
+																				<Trans>Since you preferred the alternative summary, would you like to keep it as the permanent summary for this conversation?</Trans>
+																			</Text>
+																			<Button
+																				size="xs"
+																				color="blue"
+																				loading={updateConversationMutation.isPending}
+																				onClick={async () => {
+																					const newSummary = votedOption === "A" ? randomized.content1 : randomized.content2;
+																					await updateConversationMutation.mutateAsync({
+																						id: conversationId ?? "",
+																						payload: { summary: newSummary }
+																					});
+																					setFeedbackSaved(true);
+																					toast.success(t`Alternative summary saved permanently!`);
+																				}}
+																				style={{ alignSelf: "flex-start" }}
+																			>
+																				<Trans>Save Alternative Summary Permanently</Trans>
+																			</Button>
+																		</Stack>
+																	</Card>
+																)}
+
+															{feedbackSaved && (
+																<Text size="xs" c="green.7" fw={600}>
+																	<Trans>✓ Alternative summary has been saved permanently to this conversation!</Trans>
+																</Text>
+															)}
+
+															<Group gap="xs" mt="xs">
+																<Button
+																	size="xs"
+																	variant="subtle"
+																	color="gray"
+																	onClick={() => {
+																		setHasVoted(false);
+																		setVotedOption(null);
+																		setOverrideSummaryContent(null);
+																	}}
+																>
+																	<Trans>← Back to Preference Selector</Trans>
+																</Button>
+															</Group>
+														</Stack>
+													)}
+												</Stack>
+											)}
+										</Stack>
+									</Card>
+								)}
 
 								{!conversationQuery.isFetching &&
 									!conversationQuery.data?.summary && (

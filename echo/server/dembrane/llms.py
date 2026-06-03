@@ -17,12 +17,14 @@ class MODELS(Enum):
     MULTI_MODAL_PRO = "MULTI_MODAL_PRO"  # Gemini 2.5 Pro – chat/report/inference
     MULTI_MODAL_FAST = "MULTI_MODAL_FAST"  # Gemini 2.5 Flash – realtime/verification
     TEXT_FAST = "TEXT_FAST"  # GPT-5 style small text model – summaries & utilities
+    OPEN_SOURCE = "OPEN_SOURCE"  # Open Source model for A/B testing (DeepSeek/Mistral)
 
 
 MODEL_REGISTRY: Dict[MODELS, Dict[str, str]] = {
     MODELS.MULTI_MODAL_PRO: {"settings_attr": "multi_modal_pro"},
     MODELS.MULTI_MODAL_FAST: {"settings_attr": "multi_modal_fast"},
     MODELS.TEXT_FAST: {"settings_attr": "text_fast"},
+    MODELS.OPEN_SOURCE: {"settings_attr": "open_source"},
 }
 
 # Cached router instance

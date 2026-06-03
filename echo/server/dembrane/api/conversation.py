@@ -560,6 +560,7 @@ async def get_reply_for_conversation(
 async def summarize_conversation(
     conversation_id: str,
     auth: DependencyDirectusSession,
+    model_group: Optional[str] = None,
 ) -> dict:
     active_client = auth.client or directus
 
@@ -617,7 +618,17 @@ async def summarize_conversation(
             language if language else "en",
             project_context_str,
             verified_artifacts,
+            model_group,
         )
+
+        # If a specific model_group is requested (e.g. for preview / A/B comparison),
+        # return the generated summary directly WITHOUT saving to DB or generating a title.
+        if model_group is not None:
+            return {
+                "status": "success",
+                "message": f"Summary generated with model group {model_group}",
+                "summary": summary,
+            }
 
         # Prepare update data with summary
         update_data: dict = {"summary": summary}

@@ -1420,11 +1420,14 @@ export const finishConversation = async (conversationId: string) => {
 	);
 };
 
-export const generateConversationSummary = async (conversationId: string) => {
+export const generateConversationSummary = async (conversationId: string, modelGroup?: string) => {
+	const url = modelGroup
+		? `/conversations/${conversationId}/summarize?model_group=${modelGroup}`
+		: `/conversations/${conversationId}/summarize`;
 	return apiNoAuth.post<
 		unknown,
 		{ status: string; summary: string } | { status: string; message: string }
-	>(`/conversations/${conversationId}/summarize`);
+	>(url);
 };
 
 export const generateConversationTitle = async (conversationId: string) => {

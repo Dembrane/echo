@@ -126,6 +126,7 @@ class LLMSettings(BaseSettings):
     multi_modal_pro: LLMProviderConfig = Field(default_factory=LLMProviderConfig)
     multi_modal_fast: LLMProviderConfig = Field(default_factory=LLMProviderConfig)
     text_fast: LLMProviderConfig = Field(default_factory=LLMProviderConfig)
+    open_source: LLMProviderConfig = Field(default_factory=LLMProviderConfig)
 
     def get_deployments_for_group(
         self, group: str
@@ -197,7 +198,7 @@ class LLMSettings(BaseSettings):
 
     def get_all_model_groups(self) -> List[str]:
         """Return all known model group names."""
-        return ["multi_modal_pro", "multi_modal_fast", "text_fast"]
+        return ["multi_modal_pro", "multi_modal_fast", "text_fast", "open_source"]
 
 
 class BuildSettings(BaseSettings):
