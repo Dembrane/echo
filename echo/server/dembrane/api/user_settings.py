@@ -5,10 +5,10 @@ import requests
 from fastapi import APIRouter, UploadFile, HTTPException
 from pydantic import BaseModel
 
+from dembrane.app_user import resolve_app_user
 from dembrane.directus import directus
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.dependency_auth import DependencyDirectusSession
-from dembrane.app_user import resolve_app_user
 
 logger = getLogger("api.user_settings")
 
