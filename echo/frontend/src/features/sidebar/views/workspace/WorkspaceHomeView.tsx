@@ -2,6 +2,7 @@ import { Trans } from "@lingui/react/macro";
 import { AppWindow, Gear, Plus, PushPin } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
+import { isAdminRole } from "@/lib/roles";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
 import { BackButton } from "../../primitives/BackButton";
@@ -29,6 +30,13 @@ export const WorkspaceHomeView = () => {
 	const backLabel = workspace?.org_name ?? "Home";
 	const isExternal = workspace?.role === "external";
 	const canCreateProject = !isExternal;
+	const isAdmin = isAdminRole(workspace?.role);
+	const isBilling = workspace?.role === "billing";
+	const settingsPath = isAdmin
+		? `${base}/settings/general`
+		: isBilling
+			? `${base}/settings/billing`
+			: `${base}/settings/members`;
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
@@ -71,7 +79,7 @@ export const WorkspaceHomeView = () => {
 				<>
 					<div className="mt-auto" />
 					<NavItem
-						to={`${base}/settings/general`}
+						to={settingsPath}
 						label={<Trans>Settings</Trans>}
 						icon={Gear}
 						pushes
