@@ -1505,6 +1505,17 @@ async def accept_invite_by_hash(
                             },
                         )
 
+                # External heal: enforce insider XOR outsider before recreating
+                # the external row, so the self-heal path can't bypass the lockdown.
+                if heal_is_external and ws.get("org_id"):
+                    from dembrane.api.v2._invite_helpers import (
+                        reconcile_external_membership_org_row,
+                    )
+
+                    await reconcile_external_membership_org_row(
+                        ws["org_id"], app_user_id
+                    )
+
                 await async_directus.create_item(
                     "workspace_membership",
                     {
@@ -1664,6 +1675,16 @@ async def accept_invite_by_hash(
                     "role": "member",
                 },
             )
+
+    # External acceptance: enforce insider XOR outsider before creating the
+    # external row (same guard as accept_my_invite; the email-link flow must
+    # not be a bypass).
+    if is_external_invite and ws.get("org_id"):
+        from dembrane.api.v2._invite_helpers import (
+            reconcile_external_membership_org_row,
+        )
+
+        await reconcile_external_membership_org_row(ws["org_id"], app_user_id)
 
     # Create workspace membership
     existing_ws_mem = await async_directus.get_items(
