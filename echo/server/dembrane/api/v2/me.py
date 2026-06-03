@@ -494,6 +494,15 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
             )
             newly_joined_organisation = True
 
+    # External acceptance: enforce insider XOR outsider before creating the
+    # external row.
+    if is_external_invite and ws.get("org_id"):
+        from dembrane.api.v2._invite_helpers import (
+            reconcile_external_membership_org_row,
+        )
+
+        await reconcile_external_membership_org_row(ws["org_id"], app_user_id)
+
     # Create workspace membership (if not already)
     existing_ws_mem = await async_directus.get_items(
         "workspace_membership",
