@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { AppWindow, Folder, Gear, UserPlus } from "@phosphor-icons/react";
+import { AppWindowIcon, FolderIcon, GearIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useParams } from "react-router";
@@ -106,7 +106,7 @@ export const OrgHomeView = () => {
 				<NavItem
 					to={`${base}/overview`}
 					label={<Trans>Overview</Trans>}
-					icon={AppWindow}
+					icon={AppWindowIcon}
 					end
 				/>
 			)}
@@ -121,7 +121,7 @@ export const OrgHomeView = () => {
 							key={ws.id}
 							to={`/w/${ws.id}/home`}
 							label={ws.name}
-							icon={Folder}
+							icon={FolderIcon}
 							badge={ws.isExternal ? <Trans>External</Trans> : undefined}
 							pushes
 						/>
@@ -131,18 +131,11 @@ export const OrgHomeView = () => {
 
 			{!isExternal && (
 				<>
-					{hasDirectMembership && (
-						<NavItem
-							to={`${base}/requests`}
-							label={<Trans>Pending requests</Trans>}
-							icon={UserPlus}
-						/>
-					)}
 					<div className="mt-auto" />
 					<NavItem
 						to={`${base}/settings/general`}
 						label={<Trans>Settings</Trans>}
-						icon={Gear}
+						icon={GearIcon}
 						pushes
 					/>
 				</>
