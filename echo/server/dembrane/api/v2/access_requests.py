@@ -27,6 +27,7 @@ from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import get_app_user_or_raise
+from dembrane.inheritance import is_org_external_only
 from dembrane.seat_capacity import assert_can_add_seat
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.directus_async import async_directus
@@ -655,6 +656,11 @@ async def list_discoverable_workspaces(
     org_role = await _org_role(org_id, app_user_id)
     if org_role is None:
         raise HTTPException(status_code=403, detail="Not a member of this organisation")
+
+    # Outsiders (external-only, even with a stale org_membership) get no
+    # discovery surface — they may only see the workspace they were invited to.
+    if await is_org_external_only(org_id, app_user_id):
+        return DiscoverResponse(workspaces=[])
 
     is_org_admin = org_role in ("admin", "owner")
 
