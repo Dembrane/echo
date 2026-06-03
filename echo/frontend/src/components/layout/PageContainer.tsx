@@ -31,7 +31,7 @@ export const PageContainer = ({
 	const pyClass = density === "tight" ? "py-6" : "py-10";
 	return (
 		<div
-			className={`mx-auto w-full px-6 md:px-10 ${pyClass} ${className ?? ""}`}
+			className={`mr-auto w-full px-6 md:px-10 ${pyClass} ${className ?? ""}`}
 			style={{ maxWidth, ...style }}
 		>
 			{children}
