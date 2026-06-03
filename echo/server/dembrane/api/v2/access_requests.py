@@ -328,8 +328,13 @@ async def request_workspace_access(
     if org_role in ("admin", "owner"):
         raise HTTPException(
             status_code=400,
-            detail="Organisation admins can join directly — no approval needed",
+            detail="Organisation admins can join directly, no approval needed",
         )
+
+    # Outsiders (external-only, even with a stale org_membership) cannot request
+    # access — they are scoped to the workspace they were invited to.
+    if await is_org_external_only(org_id, app_user_id):
+        raise HTTPException(status_code=403, detail="Not a member of this organisation")
 
     if await _has_direct_row(workspace_id, app_user_id):
         return RequestAccessResponse(status="already_member")
