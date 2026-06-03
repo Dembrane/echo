@@ -8,16 +8,15 @@ import {
 	Loader,
 	Stack,
 	Text,
-	Title,
 } from "@mantine/core";
-import { IconExternalLink, IconPlus } from "@tabler/icons-react";
+import { IconExternalLink } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { displayRole, roleColor } from "@/lib/roles";
 
-interface Workspace {
+export interface Workspace {
 	id: string;
 	name: string;
 	org_id: string;
@@ -28,7 +27,7 @@ interface Workspace {
 	member_count: number;
 }
 
-interface OrganisationRollup {
+export interface OrganisationRollup {
 	id: string;
 	name: string;
 	role: string;
@@ -37,18 +36,26 @@ interface OrganisationRollup {
 	total_projects: number;
 }
 
-interface WorkspacesResponse {
+export interface WorkspacesResponse {
 	workspaces: Workspace[];
 	organisations: OrganisationRollup[];
 }
 
-async function fetchAccess(): Promise<WorkspacesResponse | null> {
+export async function fetchAccess(): Promise<WorkspacesResponse | null> {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		credentials: "include",
 	});
 	if (!res.ok) return null;
 	return res.json();
 }
+
+export const useMyAccess = () => {
+	return useQuery({
+		queryFn: fetchAccess,
+		queryKey: ["v2", "workspaces"],
+		staleTime: 60_000,
+	});
+};
 
 /**
  * "My access" card on user settings. Gives the caller a complete read
@@ -63,11 +70,7 @@ async function fetchAccess(): Promise<WorkspacesResponse | null> {
  */
 export const MyAccessCard = () => {
 	const navigate = useI18nNavigate();
-	const { data, isLoading } = useQuery({
-		queryFn: fetchAccess,
-		queryKey: ["v2", "workspaces"],
-		staleTime: 60_000,
-	});
+	const { data, isLoading } = useMyAccess();
 
 	// Group workspaces under their organisation so the list reads as
 	// "organisation → workspaces in that organisation with your role."
@@ -100,17 +103,12 @@ export const MyAccessCard = () => {
 
 	const totalOrganisations = data?.organisations.length ?? 0;
 	const totalWorkspaces = data?.workspaces.length ?? 0;
-	// Externals (no org membership) can't request a workspace.
-	const canCreateWorkspace = totalOrganisations > 0;
 
 	return (
 		<Card withBorder p="lg" radius="md">
 			<Stack gap="lg">
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Stack gap={4} style={{ minWidth: 0 }}>
-						<Title order={4} fw={500}>
-							<Trans>What you can reach</Trans>
-						</Title>
 						<Text size="sm" c="dimmed">
 							<Plural
 								value={totalOrganisations}
@@ -125,16 +123,6 @@ export const MyAccessCard = () => {
 							/>
 						</Text>
 					</Stack>
-					{canCreateWorkspace && (
-						<Button
-							variant="light"
-							size="sm"
-							leftSection={<IconPlus size={14} />}
-							onClick={() => navigate("/w/new")}
-						>
-							<Trans>New organisation workspace</Trans>
-						</Button>
-					)}
 				</Group>
 
 				{byOrganisation.size === 0 ? (
@@ -162,6 +150,7 @@ export const MyAccessCard = () => {
 													size="xs"
 													variant="light"
 													color={roleColor(organisation.role)}
+													c="graphite"
 												>
 													{displayRole(organisation.role)}
 												</Badge>
@@ -204,6 +193,7 @@ export const MyAccessCard = () => {
 														size="xs"
 														variant="light"
 														color={roleColor(ws.role)}
+														c="graphite"
 													>
 														{displayRole(ws.role)}
 													</Badge>

@@ -207,7 +207,7 @@ export const AppBreadcrumbs = () => {
 
 	return (
 		<nav
-			className="flex h-8 shrink-0 items-center gap-1 px-4 text-[12px] print:hidden"
+			className="flex h-[57px] shrink-0 items-center gap-1 px-4 text-[12px] print:hidden"
 			aria-label="Breadcrumb"
 			style={{ color: "rgba(45, 45, 44, 0.55)" }}
 		>

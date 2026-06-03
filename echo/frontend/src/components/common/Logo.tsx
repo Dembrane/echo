@@ -26,7 +26,7 @@ export const LogoDembrane = ({ hideLogo, hideTitle, alwaysDembrane, ...props }: 
 	const showStagingBadge = isStagingHost();
 
 	return (
-		<Group gap="sm" h="36px" align="center" {...props}>
+		<Group gap="sm" h="32px" align="center" {...props}>
 			{!hideLogo && effectiveLogoUrl === undefined ? (
 				<Loader size={24} color="gray" ml="xl" />
 			) : !hideLogo ? (

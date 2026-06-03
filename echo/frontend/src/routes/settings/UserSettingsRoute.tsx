@@ -7,6 +7,7 @@ import {
 	Group,
 	ScrollArea,
 	Stack,
+	Text,
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
@@ -65,19 +66,23 @@ export const UserSettingsRoute = () => {
 	return (
 		<Container size="xl" py="xl">
 			<Stack gap="lg">
-				<Group gap="sm" align="center">
-					<ActionIcon
-						variant="subtle"
-						color="gray"
-						onClick={() => navigate("..")}
-						aria-label={t`Go back`}
-					>
-						<IconArrowLeft size={18} />
-					</ActionIcon>
+				<div className="flex items-center">
+					<div className="hidden md:flex w-[57px] shrink-0 items-center">
+						<ActionIcon
+							variant="subtle"
+							color="gray"
+							onClick={() => navigate("..")}
+							aria-label={t`Go back`}
+							size={32}
+							className="opacity-40 hover:opacity-100 transition-opacity"
+						>
+							<IconArrowLeft size={18} />
+						</ActionIcon>
+					</div>
 					<Title order={2}>
 						<Trans>Settings</Trans>
 					</Title>
-				</Group>
+				</div>
 
 				{/* Inner sidebar retired — section navigation lives in the main
 				    AppSidebar. The page renders only the active section. */}
@@ -104,9 +109,14 @@ export const UserSettingsRoute = () => {
 
 						{activeSection === "access" && (
 							<Stack gap="lg">
-								<Title order={3}>
-									<Trans>My access</Trans>
-								</Title>
+								<Stack gap={4}>
+									<Title order={3}>
+										<Trans>My access</Trans>
+									</Title>
+									<Text size="sm" c="dimmed">
+										<Trans>This is a map of every organisation and workspace you are a member of.</Trans>
+									</Text>
+								</Stack>
 								<MyAccessCard />
 							</Stack>
 						)}

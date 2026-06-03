@@ -5,6 +5,7 @@ import requests
 from fastapi import APIRouter, UploadFile, HTTPException
 from pydantic import BaseModel
 
+from dembrane.app_user import resolve_app_user
 from dembrane.directus import directus
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.dependency_auth import DependencyDirectusSession
@@ -501,6 +502,36 @@ async def update_legal_basis(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Update the user's legal basis setting."""
+    app_user = await resolve_app_user(auth.user_id)
+    if not app_user:
+        raise HTTPException(status_code=403, detail="User not onboarded")
+
+    try:
+        org_memberships = await run_in_thread_pool(
+            directus.get_items,
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "user_id": {"_eq": app_user["id"]},
+                        "role": {"_in": ["admin", "owner"]},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": 1,
+                }
+            },
+        )
+        if not org_memberships:
+            raise HTTPException(
+                status_code=403,
+                detail="Only organisation administrators can modify legal basis settings",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to verify organisation administrator status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to verify permissions") from None
     if body.legal_basis == "dembrane-events":
         try:
             user_data = await run_in_thread_pool(
