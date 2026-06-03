@@ -111,29 +111,27 @@ export const ProjectHomeRoute = () => {
 					<Group gap="sm" wrap="wrap">
 						<Button
 							leftSection={<ChatCircleDots size={16} />}
-							variant="filled"
-							color="blue"
 							onClick={() => navigate(`${base}/chats/new`)}
 						>
 							<Trans>Start a chat</Trans>
 						</Button>
 						<Button
 							leftSection={<UploadSimple size={16} />}
-							variant="default"
+							variant="outline"
 							onClick={() => navigate(`${base}/upload`)}
 						>
 							<Trans>Upload</Trans>
 						</Button>
 						<Button
 							leftSection={<PaintBrush size={16} />}
-							variant="default"
+							variant="outline"
 							onClick={() => navigate(`${base}/portal-editor`)}
 						>
 							<Trans>Portal editor</Trans>
 						</Button>
 						<Button
 							leftSection={<FileText size={16} />}
-							variant="default"
+							variant="outline"
 							onClick={() => navigate(`${base}/report`)}
 						>
 							<Trans>Report</Trans>

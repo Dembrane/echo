@@ -142,14 +142,9 @@ export const AppBreadcrumbs = () => {
 					href: `/w/${workspace.id}/home`,
 					label: workspace.name,
 				});
-				const section = params.section;
-					if (window.location.pathname.endsWith("/projects/new")) {
-						out.push({ label: "New project" });
-					} else if (section === "home" || !section) {
-						out.push({ label: "Overview" });
-					} else {
-						out.push({ label: "Overview" });
-					}
+				if (window.location.pathname.endsWith("/projects/new")) {
+					out.push({ label: "New project" });
+				}
 				return out;
 			}
 			case "workspace-settings": {
@@ -180,7 +175,7 @@ export const AppBreadcrumbs = () => {
 					});
 				}
 				const section = params.section;
-				if (section && PROJECT_SECTION_LABELS[section]) {
+				if (section && section !== "home" && PROJECT_SECTION_LABELS[section]) {
 					out.push({ label: PROJECT_SECTION_LABELS[section] });
 				}
 				return out;
@@ -212,7 +207,7 @@ export const AppBreadcrumbs = () => {
 
 	return (
 		<nav
-			className="flex h-[57px] shrink-0 items-center gap-1 px-4 text-[12px]"
+			className="flex h-[57px] shrink-0 items-center gap-1 px-4 text-[12px] print:hidden"
 			aria-label="Breadcrumb"
 			style={{ color: "rgba(45, 45, 44, 0.55)" }}
 		>

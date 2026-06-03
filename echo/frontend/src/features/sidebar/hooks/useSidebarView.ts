@@ -42,7 +42,8 @@ export function resolveSidebarView(
 				backTo: `${pathname}${withoutSidebarSearch(search)}`,
 				params: base.params,
 				scope: base.scope,
-				view: "inbox",
+				view: base.view,
+				overlay: "inbox",
 			};
 		}
 		return {
@@ -50,6 +51,7 @@ export function resolveSidebarView(
 			params: base.params,
 			scope: base.scope,
 			view: "help",
+			overlay: "help",
 		};
 	}
 

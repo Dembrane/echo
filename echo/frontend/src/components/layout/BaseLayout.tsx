@@ -2,7 +2,8 @@ import type { PropsWithChildren } from "react";
 import { Outlet } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { SeatCapBanner } from "@/components/workspace/SeatCapBanner";
-import { AppSidebar } from "@/features/sidebar";
+import { AppSidebar, useSidebarView } from "@/features/sidebar";
+import { InboxView } from "@/features/sidebar/views/InboxView";
 import { AppBreadcrumbs } from "@/features/sidebar/breadcrumbs/AppBreadcrumbs";
 import { Toaster } from "../common/Toaster";
 import { ErrorBoundary } from "../error/ErrorBoundary";
@@ -30,6 +31,7 @@ const SidebarFailure = () => (
 
 export const BaseLayout = ({ children }: PropsWithChildren) => {
 	const { isAuthenticated } = useAuthenticated();
+	const { overlay } = useSidebarView();
 
 	return (
 		<TransitionCurtainProvider>
@@ -40,17 +42,31 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 					</ErrorBoundary>
 				) : null}
 				<ErrorBoundary>
-					<main className="flex flex-1 flex-col overflow-hidden">
+					<main className="relative flex flex-1 flex-col overflow-hidden">
 						{isAuthenticated ? <AppBreadcrumbs /> : null}
 						{/* SeatCapBanner self-gates on workspace context, so it only
 						    appears on /w/:workspaceId/* routes. Lives here (inside
 						    main) instead of WorkspaceLayout so it doesn't stretch
 						    across the sidebar column. */}
-						<SeatCapBanner />
+						<div className="print:hidden">
+							<SeatCapBanner />
+						</div>
 						<div className="flex-1 overflow-auto">
 							<Outlet />
 							{children}
 						</div>
+						{overlay === "inbox" && (
+							<div
+								role="dialog"
+								aria-modal="true"
+								aria-label="Inbox"
+								tabIndex={-1}
+								className="absolute inset-0 z-50 flex flex-col overflow-hidden"
+								style={{ backgroundColor: "var(--app-background)" }}
+							>
+								<InboxView />
+							</div>
+						)}
 					</main>
 				</ErrorBoundary>
 				<Toaster />
