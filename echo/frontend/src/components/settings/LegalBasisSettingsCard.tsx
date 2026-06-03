@@ -122,13 +122,24 @@ export const LegalBasisSettingsCard = () => {
 				<Radio.Group
 					value={legalBasis}
 					onChange={(value) => setLegalBasis(value as LegalBasisValue)}
-					disabled={!isOrgAdmin}
 				>
 					<Stack gap="xs">
-						<Radio value="client-managed" label={t`Client-managed`} />
-						<Radio value="consent" label={t`Consent`} />
+						<Radio
+							value="client-managed"
+							label={t`Client-managed`}
+							disabled={!isOrgAdmin}
+						/>
+						<Radio
+							value="consent"
+							label={t`Consent`}
+							disabled={!isOrgAdmin}
+						/>
 						{isDembraneUser && (
-							<Radio value="dembrane-events" label={t`dembrane events`} />
+							<Radio
+								value="dembrane-events"
+								label={t`dembrane events`}
+								disabled={!isOrgAdmin}
+							/>
 						)}
 					</Stack>
 				</Radio.Group>
