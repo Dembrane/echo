@@ -7,6 +7,8 @@ from logging import getLogger
 from datetime import datetime, timezone
 from urllib.parse import urlencode
 
+from fastapi import HTTPException
+
 from dembrane.utils import generate_uuid
 from dembrane.directus_async import async_directus
 
@@ -271,3 +273,95 @@ def build_invite_accept_url(
     else:
         params["org"] = subject_name
     return f"{admin_base_url}/invite/accept?{urlencode(params)}"
+
+
+# ---------------------------------------------------------------------------
+# External membership reconciliation
+# ---------------------------------------------------------------------------
+
+
+async def _org_workspace_roles_local(org_id: str, user_id: str) -> list[str]:
+    """Roles on the user's active workspace memberships across this org.
+
+    Local to this module so reconcile's directus calls all route through the
+    module-level async_directus (keeps the write path easy to test in
+    isolation).
+    """
+    workspaces = await async_directus.get_items(
+        "workspace",
+        {
+            "query": {
+                "filter": {"org_id": {"_eq": org_id}, "deleted_at": {"_null": True}},
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    )
+    ws_ids = (
+        [w["id"] for w in workspaces if w.get("id")]
+        if isinstance(workspaces, list)
+        else []
+    )
+    if not ws_ids:
+        return []
+    rows = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_in": ws_ids},
+                    "user_id": {"_eq": user_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["role"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return []
+    return [r.get("role") for r in rows if r.get("role")]
+
+
+async def reconcile_external_membership_org_row(org_id: str, user_id: str) -> None:
+    """Keep the insider/outsider invariant when a user is being made external.
+
+    Call this BEFORE creating the external workspace_membership, so the roles
+    read here are the user's OTHER memberships in the org:
+      - If any is internal (member/billing/admin/owner), being external too is
+        contradictory: raise 400.
+      - Otherwise soft-delete any active org_membership so the outsider rule
+        (external implies no org_membership) holds.
+    """
+    roles = await _org_workspace_roles_local(org_id, user_id)
+    if any(r in ("member", "billing", "admin", "owner") for r in roles):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "This person is already a member of the organisation and cannot "
+                "also be added as an external. Remove them from the organisation first."
+            ),
+        )
+    rows = await async_directus.get_items(
+        "org_membership",
+        {
+            "query": {
+                "filter": {
+                    "org_id": {"_eq": org_id},
+                    "user_id": {"_eq": user_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return
+    for row in rows:
+        if row.get("id"):
+            await async_directus.update_item(
+                "org_membership",
+                row["id"],
+                {"deleted_at": datetime.now(timezone.utc).isoformat()},
+            )
