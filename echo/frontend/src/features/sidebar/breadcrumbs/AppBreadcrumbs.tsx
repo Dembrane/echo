@@ -220,6 +220,8 @@ export const AppBreadcrumbs = () => {
 				const section = params.section;
 				if (section === "access") out.push({ label: "Access & sharing" });
 				else if (section === "overview") out.push({ label: "General" });
+				else if (section === "integrations")
+					out.push({ label: "Integrations & Export" });
 				return out;
 			}
 		}

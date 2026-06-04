@@ -111,6 +111,7 @@ class ProjectService:
         content: str,
         status: str,
         error_code: Optional[str] = None,
+        user_created: Optional[str] = None,
     ) -> dict:
         payload = {
             "project_id": project_id,
@@ -121,6 +122,11 @@ class ProjectService:
 
         if error_code is not None:
             payload["error_code"] = error_code
+
+        # Pass the creator explicitly: the admin client creates the row, so
+        # Directus would otherwise stamp the service account.
+        if user_created is not None:
+            payload["user_created"] = user_created
 
         with directus_client_context(self.directus_client) as client:
             self.logger.info(f"Creating report for project {project_id} with status: {status}")

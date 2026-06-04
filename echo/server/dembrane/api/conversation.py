@@ -840,6 +840,9 @@ async def retranscribe_conversation(
                 else None,
                 "merged_audio_path": merged_audio_path,
                 "is_anonymized": use_pii_redaction,
+                # Clone is complete at creation (one chunk, nothing more coming);
+                # finished now so the chunk pipeline finalizes event-driven.
+                "is_finished": True,
             },
         )
 

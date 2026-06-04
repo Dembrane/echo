@@ -246,7 +246,9 @@ class ProjectUpdate(BaseModel):
     is_get_reply_enabled: Optional[bool] = None
     is_verify_enabled: Optional[bool] = None
     is_verify_on_finish_enabled: Optional[bool] = None
-    selected_verification_key_list: Optional[list] = None
+    # CSV string, not a list: matches the text column and verify.py's
+    # serialization (null clears the selection).
+    selected_verification_key_list: Optional[str] = None
     is_project_notification_subscription_allowed: Optional[bool] = None
     anonymize_transcripts: Optional[bool] = None
     enable_ai_title_and_tags: Optional[bool] = None
@@ -411,7 +413,9 @@ async def update_project(
     access = await resolve_project_access(project_id, auth)
     access.require("project:update")
 
-    payload = {k: v for k, v in body.model_dump().items() if v is not None}
+    # exclude_unset (not a None-filter) so explicitly-sent nulls clear
+    # fields; a None-filter made clearing verification topics a no-op.
+    payload = body.model_dump(exclude_unset=True)
     if not payload:
         raise HTTPException(status_code=400, detail="No fields to update")
 

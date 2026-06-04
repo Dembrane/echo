@@ -1,7 +1,7 @@
 {
   "collection": "notification",
   "field": "ref_report_id",
-  "type": "uuid",
+  "type": "string",
   "meta": {
     "collection": "notification",
     "conditions": null,
@@ -26,9 +26,9 @@
   "schema": {
     "name": "ref_report_id",
     "table": "notification",
-    "data_type": "uuid",
+    "data_type": "character varying",
     "default_value": null,
-    "max_length": null,
+    "max_length": 255,
     "numeric_precision": null,
     "numeric_scale": null,
     "is_nullable": true,

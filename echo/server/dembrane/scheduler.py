@@ -12,7 +12,13 @@ jobstores = {
 }
 
 scheduler = BlockingScheduler()
-scheduler.configure(jobstores=jobstores, timezone=utc)
+scheduler.configure(
+    jobstores=jobstores,
+    timezone=utc,
+    # The default 1s misfire_grace_time silently skips any run whose wakeup
+    # lands late (routine on WSL2/loaded hosts); these jobs must run late, not never.
+    job_defaults={"misfire_grace_time": 60, "coalesce": True},
+)
 
 settings = get_settings()
 DEBUG_MODE = settings.feature_flags.debug_mode

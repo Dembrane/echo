@@ -1,14 +1,19 @@
 import { Trans } from "@lingui/react/macro";
 import { Modal, TextInput, UnstyledButton } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import {
 	Buildings,
+	ChatCircle,
+	ChatsCircle,
+	FileText,
 	FolderOpen,
 	Gear,
 	MagnifyingGlass,
 } from "@phosphor-icons/react";
+import { useQuery } from "@tanstack/react-query";
 import { type ComponentType, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useRecents } from "../hooks/useRecents";
 
@@ -20,6 +25,45 @@ interface Hit {
 	href: string;
 }
 
+// GET /api/home/search — deep search over projects, conversations,
+// transcripts and chats, access-scoped server-side.
+interface HomeSearchResponse {
+	projects: {
+		id: string;
+		name: string | null;
+		workspaceId: string | null;
+	}[];
+	conversations: {
+		id: string;
+		projectId: string | null;
+		projectName: string | null;
+		workspaceId: string | null;
+		displayLabel: string;
+	}[];
+	transcripts: {
+		id: string;
+		conversationId: string | null;
+		conversationLabel: string | null;
+		projectId: string | null;
+		workspaceId: string | null;
+		excerpt: string | null;
+	}[];
+	chats: {
+		id: string;
+		projectId: string | null;
+		projectName: string | null;
+		workspaceId: string | null;
+		name: string | null;
+	}[];
+}
+
+const EMPTY_SEARCH: HomeSearchResponse = {
+	chats: [],
+	conversations: [],
+	projects: [],
+	transcripts: [],
+};
+
 export const SearchBlock = () => {
 	const [opened, { open, close }] = useDisclosure(false);
 	const [q, setQ] = useState("");
@@ -27,6 +71,21 @@ export const SearchBlock = () => {
 	const { workspaces } = useWorkspace();
 	const { items: recents } = useRecents();
 	const navigate = useNavigate();
+
+	const [debouncedQ] = useDebouncedValue(q.trim(), 250);
+	const deepSearch = useQuery({
+		enabled: opened && debouncedQ.length >= 2,
+		queryFn: async (): Promise<HomeSearchResponse> => {
+			const res = await fetch(
+				`${API_BASE_URL}/home/search?query=${encodeURIComponent(debouncedQ)}&limit=5`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) return EMPTY_SEARCH;
+			return res.json();
+		},
+		queryKey: ["home-search", debouncedQ],
+		staleTime: 30_000,
+	});
 
 	// Global ⌘K / Ctrl+K — open palette anywhere.
 	useEffect(() => {
@@ -105,13 +164,68 @@ export const SearchBlock = () => {
 			return [...recentHits, ...rest].slice(0, 40);
 		}
 
-		return all
-			.filter((h) => {
-				const hay = `${h.label} ${h.subtitle ?? ""}`.toLowerCase();
-				return hay.includes(query);
-			})
-			.slice(0, 40);
-	}, [q, workspaces, recents]);
+		const clientHits = all.filter((h) => {
+			const hay = `${h.label} ${h.subtitle ?? ""}`.toLowerCase();
+			return hay.includes(query);
+		});
+
+		// Deep results from /home/search, deduped by destination so the
+		// same page never shows twice (e.g. a recents row + a project hit,
+		// or a conversation hit + its own transcript hit).
+		const merged: Hit[] = [...clientHits];
+		const seenHrefs = new Set(clientHits.map((h) => h.href));
+		const push = (hit: Hit) => {
+			if (seenHrefs.has(hit.href)) return;
+			seenHrefs.add(hit.href);
+			merged.push(hit);
+		};
+
+		const deep = deepSearch.data ?? EMPTY_SEARCH;
+		for (const p of deep.projects) {
+			if (!p.workspaceId) continue;
+			push({
+				href: `/w/${p.workspaceId}/projects/${p.id}/home`,
+				icon: FolderOpen,
+				id: `proj-${p.id}`,
+				label: p.name ?? "Project",
+				subtitle: "Project",
+			});
+		}
+		for (const c of deep.conversations) {
+			if (!c.workspaceId || !c.projectId) continue;
+			push({
+				href: `/w/${c.workspaceId}/projects/${c.projectId}/conversation/${c.id}`,
+				icon: ChatCircle,
+				id: `conv-${c.id}`,
+				label: c.displayLabel,
+				subtitle: c.projectName
+					? `${c.projectName} · Conversation`
+					: "Conversation",
+			});
+		}
+		for (const t of deep.transcripts) {
+			if (!t.workspaceId || !t.projectId || !t.conversationId) continue;
+			push({
+				href: `/w/${t.workspaceId}/projects/${t.projectId}/conversation/${t.conversationId}`,
+				icon: FileText,
+				id: `chunk-${t.id}`,
+				label: t.conversationLabel ?? "Transcript",
+				subtitle: t.excerpt ? t.excerpt.slice(0, 80) : "Transcript",
+			});
+		}
+		for (const ch of deep.chats) {
+			if (!ch.workspaceId || !ch.projectId) continue;
+			push({
+				href: `/w/${ch.workspaceId}/projects/${ch.projectId}/chats/${ch.id}`,
+				icon: ChatsCircle,
+				id: `chat-${ch.id}`,
+				label: ch.name ?? "Chat",
+				subtitle: ch.projectName ? `${ch.projectName} · Chat` : "Chat",
+			});
+		}
+
+		return merged.slice(0, 40);
+	}, [q, workspaces, recents, deepSearch.data]);
 
 	const onSelect = (hit: Hit) => {
 		close();
@@ -178,7 +292,7 @@ export const SearchBlock = () => {
 							}}
 							onKeyDown={onKeyDown}
 							leftSection={<MagnifyingGlass size={16} />}
-							placeholder="Search organisations, workspaces, settings…"
+							placeholder="Search projects, conversations, transcripts…"
 							variant="unstyled"
 							styles={{ input: { fontSize: 14 } }}
 						/>
@@ -189,7 +303,11 @@ export const SearchBlock = () => {
 								className="px-3 py-6 text-center text-[12px]"
 								style={{ color: "rgba(45, 45, 44, 0.55)" }}
 							>
-								<Trans>No matches</Trans>
+								{deepSearch.isFetching ? (
+									<Trans>Searching…</Trans>
+								) : (
+									<Trans>No matches</Trans>
+								)}
 							</div>
 						) : (
 							hits.map((hit, i) => {

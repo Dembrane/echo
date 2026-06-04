@@ -454,6 +454,56 @@ async def count_live_conversations(
     return {"count": 0}
 
 
+@router.get("/live")
+async def list_live_conversations(
+    auth: DependencyDirectusSession,
+    project_id: str = Query(...),
+    window_seconds: int = Query(
+        30,
+        ge=5,
+        le=600,
+        description="Conversation is 'live' if a chunk landed within this many seconds.",
+    ),
+) -> list[dict]:
+    """Lean rows for conversations with a chunk in the last `window_seconds`,
+    portal-initiated only. Same filter as /live-count. Backs the host
+    guide's live-recordings list; replaces the frontend's direct
+    conversation_chunk read that the ACL lockdown broke.
+    """
+    from datetime import datetime, timezone, timedelta
+
+    access = await resolve_project_access(project_id, auth)
+    access.require("conversation:read")
+
+    cutoff = (datetime.now(timezone.utc) - timedelta(seconds=window_seconds)).isoformat()
+
+    chunks = await async_directus.get_items(
+        "conversation_chunk",
+        {
+            "query": {
+                "filter": {
+                    "conversation_id": {"project_id": {"_eq": project_id}},
+                    "source": {"_nin": ["DASHBOARD_UPLOAD", "CLONE"]},
+                    "timestamp": {"_gt": cutoff},
+                },
+                "fields": ["conversation_id.id", "conversation_id.participant_name"],
+                "limit": 200,
+            }
+        },
+    )
+
+    out: dict[str, dict] = {}
+    if isinstance(chunks, list):
+        for chunk in chunks:
+            conv = chunk.get("conversation_id")
+            if isinstance(conv, dict) and conv.get("id") and conv["id"] not in out:
+                out[conv["id"]] = {
+                    "id": conv["id"],
+                    "participant_name": conv.get("participant_name"),
+                }
+    return list(out.values())
+
+
 @router.get("/remaining-count")
 async def count_remaining_conversations(
     auth: DependencyDirectusSession,
