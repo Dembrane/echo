@@ -544,7 +544,7 @@ const ConversationAccordionItem = ({
 
 	return (
 		<NavigationButton
-			to={`/w/${workspaceId}/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
+			to={`/w/${workspaceId}/projects/${conversation.project_id}/conversation/${conversation.id}`}
 			active={highlight}
 			className="w-full"
 			rightSection={

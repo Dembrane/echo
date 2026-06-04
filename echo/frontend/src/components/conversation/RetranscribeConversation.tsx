@@ -124,7 +124,7 @@ export const RetranscribeConversationModal = ({
 						label: t`Go to new conversation`,
 						onClick: () => {
 							navigate(
-								`/w/${workspaceId}/projects/${projectId}/conversation/${new_conversation_id}/transcript`,
+								`/w/${workspaceId}/projects/${projectId}/conversation/${new_conversation_id}`,
 							);
 						},
 					},

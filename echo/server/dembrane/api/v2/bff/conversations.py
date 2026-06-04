@@ -33,7 +33,6 @@ from logging import getLogger
 from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 
-from dembrane.utils import generate_uuid
 from dembrane.tier_capacity import is_conversation_locked
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.bff._access import (
@@ -850,7 +849,7 @@ async def replace_conversation_tags(
             await async_directus.create_item(
                 "conversation_project_tag",
                 {
-                    "id": generate_uuid(),
+                    # PK is integer auto-increment; let Directus assign it.
                     "conversation_id": body.conversation_id,
                     "project_tag_id": tag_id,
                 },

@@ -31,7 +31,7 @@ export const Sources = ({
 					<I18nLink
 						// biome-ignore lint/suspicious/noArrayIndexKey: needs to be fixed
 						key={index}
-						to={`/w/${workspaceId}/projects/${projectId}/conversation/${ref?.conversation?.id || ref?.conversation}/overview`}
+						to={`/w/${workspaceId}/projects/${projectId}/conversation/${ref?.conversation?.id || ref?.conversation}`}
 					>
 						<Badge className="cursor-pointer normal-case" variant="default">
 							{ref?.conversation_title ||

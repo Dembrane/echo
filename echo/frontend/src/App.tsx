@@ -79,8 +79,7 @@ export const App = () => {
 		const preloadRoutes = () => {
 			const loaders = [
 				() => import("./routes/project/ProjectsHome"),
-				() =>
-					import("./routes/project/conversation/ProjectConversationOverview"),
+				() => import("./routes/project/conversation/ProjectConversationRoute"),
 				() => import("./routes/project/ProjectRoutes"),
 			];
 
