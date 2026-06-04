@@ -104,10 +104,7 @@ const getTagText = (tag: ConversationProjectTag) => {
 };
 
 const hasTranscriptContent = (conversation: Conversation) =>
-	conversation.chunks?.some((chunk) => {
-		const transcript = (chunk as ConversationChunk).transcript;
-		return typeof transcript === "string" && transcript.trim().length > 0;
-	}) ?? false;
+	conversation.has_transcript ?? false;
 
 const hasVerifiedArtifacts = (conversation: Conversation) =>
 	conversation.conversation_artifacts?.some(
@@ -493,7 +490,7 @@ export const ProjectConversationsPanel = ({
 
 	const conversationsQuery = useInfiniteConversationsByProjectId(
 		projectId,
-		true,
+		false,
 		false,
 		conversationQuery,
 		undefined,
