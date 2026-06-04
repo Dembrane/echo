@@ -102,11 +102,13 @@ export function resolveSidebarView(
 		if (segs[2] === "projects" && segs[3] && segs[3] !== "new") {
 			const projectId = segs[3];
 			// Settings context: explicit /settings/<section> or the legacy
-			// /overview and /access pages which ARE the settings panels.
+			// /overview, /access and /integrations pages which ARE the
+			// settings panels.
 			if (
 				segs[4] === "settings" ||
 				segs[4] === "overview" ||
-				segs[4] === "access"
+				segs[4] === "access" ||
+				segs[4] === "integrations"
 			) {
 				return {
 					backTo: `/w/${workspaceId}/projects/${projectId}/home`,

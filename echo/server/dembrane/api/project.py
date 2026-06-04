@@ -7,22 +7,18 @@ from typing import Any, List, Optional, Generator, AsyncGenerator
 from logging import getLogger
 from datetime import datetime
 
-from fastapi import Query, Depends, Request, APIRouter, HTTPException, BackgroundTasks
+from fastapi import Depends, Request, APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
 from dembrane.tasks import task_create_view, task_create_report, task_create_project_library
-from dembrane.utils import generate_uuid, get_safe_filename
+from dembrane.utils import get_safe_filename
 from dembrane.service import build_conversation_service
 from dembrane.settings import get_settings
 from dembrane.async_helpers import run_in_thread_pool
-from dembrane.api.exceptions import (
-    ProjectLanguageNotSupportedException,
-)
 from dembrane.service.project import (
     ProjectService,
     ProjectNotFoundException,
-    get_allowed_languages,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession, require_directus_client
 
@@ -34,177 +30,6 @@ ProjectRouter = APIRouter(
 )
 settings = get_settings()
 BASE_DIR = settings.base_dir
-
-
-# ── BFF: Projects Home ──────────────────────────────────────────────────
-
-
-class BffProjectSummary(BaseModel):
-    id: str
-    name: Optional[str] = None
-    updated_at: Optional[str] = None
-    language: Optional[str] = None
-    pin_order: Optional[int] = None
-    conversations_count: int = 0
-    owner_name: Optional[str] = None
-    owner_email: Optional[str] = None
-
-
-class BffProjectsHomeResponse(BaseModel):
-    pinned: list[BffProjectSummary]
-    projects: list[BffProjectSummary]
-    total_count: int
-    has_more: bool
-    is_admin: bool = False
-
-
-_HOME_FIELDS = [
-    "id",
-    "name",
-    "updated_at",
-    "language",
-    "pin_order",
-    "count(conversations)",
-]
-
-
-def _build_project_summary(raw: dict) -> BffProjectSummary:
-    owner_name: Optional[str] = None
-    owner_email: Optional[str] = None
-    user_rel = raw.get("directus_user_id")
-    if isinstance(user_rel, dict):
-        owner_name = user_rel.get("first_name")
-        owner_email = user_rel.get("email")
-
-    return BffProjectSummary(
-        id=raw["id"],
-        name=raw.get("name"),
-        updated_at=raw.get("updated_at"),
-        language=raw.get("language"),
-        pin_order=raw.get("pin_order"),
-        conversations_count=int(raw.get("conversations_count", 0) or 0),
-        owner_name=owner_name,
-        owner_email=owner_email,
-    )
-
-
-@ProjectRouter.get("/home", response_model=BffProjectsHomeResponse)
-async def get_projects_home(
-    auth: DependencyDirectusSession,
-    search: Optional[str] = Query(None, description="Search term, supports owner:<email> prefix"),
-    offset: int = Query(0, ge=0, description="Pagination offset"),
-    limit: int = Query(15, ge=1, le=100, description="Page size"),
-    workspace_id: Optional[str] = Query(None, description="Scope to a single workspace"),
-) -> BffProjectsHomeResponse:
-    """
-    Aggregated endpoint for the projects home page.
-    Returns pinned projects and a paginated project list in one call.
-
-    `workspace_id` scopes both lists when present. Without it, the response
-    spans every project the caller can see (used on the legacy /projects
-    landing, not on /w/:id/projects).
-    """
-    client = auth.client
-
-    # Admin users get owner info via relational fields
-    fields = list(_HOME_FIELDS)
-    if auth.is_admin:
-        fields.extend(["directus_user_id.first_name", "directus_user_id.email"])
-
-    # Fetch pinned projects (always, regardless of search)
-    # Admins see only their own pins; non-admins see all (Directus permissions handle scoping)
-    pin_filter: dict[str, Any] = {"pin_order": {"_nnull": True}, "deleted_at": {"_null": True}}
-    if auth.is_admin:
-        pin_filter["directus_user_id"] = {"_eq": auth.user_id}
-    if workspace_id:
-        pin_filter["workspace_id"] = {"_eq": workspace_id}
-
-    pinned_raw = await run_in_thread_pool(
-        client.get_items,
-        "project",
-        {
-            "query": {
-                "fields": fields,
-                "filter": pin_filter,
-                "sort": ["pin_order"],
-                "limit": 3,
-            }
-        },
-    )
-    if not isinstance(pinned_raw, list):
-        logger.warning("get_items returned non-list for pinned projects: %s", pinned_raw)
-        pinned_raw = []
-    pinned = [_build_project_summary(p) for p in pinned_raw]
-
-    # Parse owner: prefix from search string (admin only)
-    import re
-
-    owner_term: Optional[str] = None
-    text_search: Optional[str] = search
-    if search and auth.is_admin:
-        match = re.match(r"^owner:(\S+)\s*(.*)", search)
-        if match:
-            owner_term = match.group(1)
-            text_search = match.group(2).strip() or None
-
-    owner_filter: Optional[dict] = None
-    if owner_term:
-        owner_filter = {
-            "_or": [
-                {"directus_user_id": {"first_name": {"_icontains": owner_term}}},
-                {"directus_user_id": {"email": {"_icontains": owner_term}}},
-            ]
-        }
-
-    # Build query for paginated project list
-    base_filter: dict[str, Any] = {"deleted_at": {"_null": True}}
-    if workspace_id:
-        base_filter["workspace_id"] = {"_eq": workspace_id}
-    if owner_filter:
-        base_filter.update(owner_filter)
-
-    query: dict = {
-        "fields": fields,
-        "sort": ["-updated_at"],
-        "limit": limit + 1,
-        "offset": offset,
-        "filter": base_filter,
-    }
-    if text_search:
-        query["search"] = text_search
-
-    projects_raw = await run_in_thread_pool(
-        client.get_items,
-        "project",
-        {"query": query},
-    )
-    if not isinstance(projects_raw, list):
-        logger.warning("get_items returned non-list for projects: %s", projects_raw)
-        projects_raw = []
-
-    has_more = len(projects_raw) > limit
-    projects = [_build_project_summary(p) for p in projects_raw[:limit]]
-
-    # Get total count (only when not searching/filtering, for pinned-section threshold)
-    total_count = 0
-    if not text_search and not owner_filter:
-        count_result = await run_in_thread_pool(
-            client.get_items,
-            "project",
-            {"query": {"aggregate": {"count": ["id"]}, "filter": {"deleted_at": {"_null": True}}}},
-        )
-        if isinstance(count_result, list) and len(count_result) > 0:
-            total_count = int(count_result[0].get("count", {}).get("id", 0))
-    else:
-        total_count = offset + len(projects) + (1 if has_more else 0)
-
-    return BffProjectsHomeResponse(
-        pinned=pinned,
-        projects=projects,
-        total_count=total_count,
-        has_more=has_more,
-        is_admin=auth.is_admin,
-    )
 
 
 class PinProjectRequest(BaseModel):
@@ -230,9 +55,7 @@ async def toggle_project_pin(
     if body.pin_order is not None and body.pin_order not in (1, 2, 3):
         raise HTTPException(status_code=400, detail="pin_order must be 1, 2, or 3")
 
-    client = auth.client
-
-    project_service = ProjectService(directus_client=client)
+    project_service = ProjectService()
     try:
         project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
     except ProjectNotFoundException as e:
@@ -276,8 +99,10 @@ async def toggle_project_pin(
         if project.get("directus_user_id") != auth.user_id:
             raise HTTPException(status_code=403, detail="Not the project owner")
 
+    from dembrane.directus import directus
+
     await run_in_thread_pool(
-        client.update_item,
+        directus.update_item,
         "project",
         project_id,
         {"pin_order": body.pin_order},
@@ -286,57 +111,6 @@ async def toggle_project_pin(
 
 
 # ── Project CRUD ────────────────────────────────────────────────────────
-
-
-class CreateProjectRequestSchema(BaseModel):
-    name: Optional[str] = None
-    context: Optional[str] = None
-    language: Optional[str] = None
-    is_conversation_allowed: Optional[bool] = None
-    default_conversation_title: Optional[str] = None
-    default_conversation_description: Optional[str] = None
-    default_conversation_finish_text: Optional[str] = None
-
-
-@ProjectRouter.post("")
-async def create_project(
-    body: CreateProjectRequestSchema,
-    auth: DependencyDirectusSession,
-) -> dict:
-    if body.language is not None and body.language not in get_allowed_languages():
-        raise ProjectLanguageNotSupportedException
-    name = body.name or "New Project"
-    context = body.context or None
-    language = body.language or "en"
-
-    is_conversation_allowed = (
-        body.is_conversation_allowed if body.is_conversation_allowed is not None else True
-    )
-
-    optional_fields: dict[str, Any] = {
-        "context": context,
-        "default_conversation_title": body.default_conversation_title,
-        "default_conversation_description": body.default_conversation_description,
-        "default_conversation_finish_text": body.default_conversation_finish_text,
-    }
-
-    filtered_optional_fields = {
-        key: value for key, value in optional_fields.items() if value is not None
-    }
-
-    project_service = ProjectService(directus_client=auth.client)
-
-    project = await run_in_thread_pool(
-        project_service.create,
-        name=name,
-        language=language,
-        is_conversation_allowed=is_conversation_allowed,
-        directus_user_id=auth.user_id,
-        id=generate_uuid(),
-        **filtered_optional_fields,
-    )
-
-    return project
 
 
 @ProjectRouter.delete("/{project_id}")
@@ -509,10 +283,10 @@ async def get_project_transcripts(
     # for every non-creator workspace member).
     project = await _verify_project_access(auth, project_id)
 
-    conversation_service_auth = build_conversation_service(auth.client)
+    conversation_service = build_conversation_service()
 
     conversations = await run_in_thread_pool(
-        conversation_service_auth.list_by_project,
+        conversation_service.list_by_project,
         project_id,
         with_chunks=True,
         with_tags=False,
@@ -624,11 +398,17 @@ async def post_create_view(
     body: CreateViewRequestBodySchema,
     auth: DependencyDirectusSession,
 ) -> None:
-    # Access gate first — lets callers without reach bail early before
-    # we even look at the analysis run.
-    await _verify_project_access(auth, project_id)
+    # Staff bypasses the app-layer model (may have no app_user row);
+    # everyone else needs project:update.
+    if auth.is_admin:
+        await _verify_project_access(auth, project_id)
+    else:
+        from dembrane.api.v2.bff._access import resolve_project_access
 
-    project_service = ProjectService(directus_client=auth.client)
+        access = await resolve_project_access(project_id, auth)
+        access.require("project:update")
+
+    project_service = ProjectService()
     project_analysis_run = await run_in_thread_pool(
         project_service.get_latest_analysis_run, project_id
     )
@@ -660,11 +440,15 @@ async def create_report(
     body: CreateReportRequestBodySchema,
     auth: DependencyDirectusSession,
 ) -> dict:
-    # v2-aware access gate (inheritance + sharing + tier). Replaces the
-    # old double-check (ProjectService.get_by_id_or_raise through the
-    # user's Directus client + legacy-creator equality) that was
-    # blocking the "Generate report" button for every member.
-    await _verify_project_access(auth, project_id)
+    # Staff bypasses the app-layer model; everyone else needs report:generate.
+    # Scheduled creation is generation, not publishing (publish gates live in update_report).
+    if auth.is_admin:
+        await _verify_project_access(auth, project_id)
+    else:
+        from dembrane.api.v2.bff._access import resolve_project_access
+
+        access = await resolve_project_access(project_id, auth)
+        access.require("report:generate")
     language = body.language or "en"
 
     from dembrane.directus import directus
@@ -726,11 +510,17 @@ async def create_report(
                 detail="A report is already being generated for this project",
             )
 
-    # Create report record
+    # Create report record; user_created explicit so notifications reach
+    # the real creator instead of the service account.
     initial_status = "scheduled" if is_scheduled else "draft"
-    project_service = ProjectService(directus_client=auth.client)
+    project_service = ProjectService()
     report = await run_in_thread_pool(
-        project_service.create_report, project_id, language, "", initial_status
+        project_service.create_report,
+        project_id,
+        language,
+        "",
+        initial_status,
+        user_created=auth.user_id,
     )
 
     # Store user instructions and scheduled_at if provided
@@ -1308,16 +1098,32 @@ async def clone_project(
     body: CloneProjectRequestBodySchema,
     auth: DependencyDirectusSession,
 ) -> str:
-    project_service = ProjectService(directus_client=auth.client)
+    # Explicit gate is required here: the user-token client used to be the
+    # implicit access check, and the admin client has none.
+    if auth.is_admin:
+        project = await _verify_project_access(auth, project_id)
+    else:
+        from dembrane.api.v2.bff._access import resolve_project_access
+
+        access = await resolve_project_access(project_id, auth)
+        access.require("project:create")
+        project = access.project
+
+    project_service = ProjectService()
     logger.info(f"Cloning project {project_id}")
 
-    overrides = {}
+    overrides: dict[str, Any] = {}
     if body.name:
         overrides["name"] = body.name
     if body.language:
         overrides["language"] = body.language
+    # Keep the clone in the source's workspace; create_shallow_clone predates
+    # workspaces and doesn't copy workspace_id, which would orphan the clone.
+    if project.get("workspace_id"):
+        overrides["workspace_id"] = project["workspace_id"]
 
-    new_project_id = project_service.create_shallow_clone(
+    new_project_id = await run_in_thread_pool(
+        project_service.create_shallow_clone,
         project_id,
         with_tags=True,
         **overrides,
