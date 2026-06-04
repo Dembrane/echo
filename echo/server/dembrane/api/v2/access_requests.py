@@ -27,7 +27,7 @@ from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import get_app_user_or_raise
-from dembrane.inheritance import is_org_external_only
+from dembrane.inheritance import is_org_billing_only, is_org_external_only
 from dembrane.seat_capacity import assert_can_add_seat
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.directus_async import async_directus
@@ -529,13 +529,25 @@ async def approve_access_request(
         # pending so the approving admin sees an upgrade prompt and can
         # act later.
         await assert_can_add_seat(workspace, audience="admin")
+
+        # Billers are finance-visibility only (matrix v1.1 §4/§5): they get
+        # the workspace 'billing' preset (usage/invoices/payment, no project
+        # or content access), never the operational 'member' role. Biller-ness
+        # covers both org-level billers (org_membership.role='billing') and
+        # workspace-scoped billers (only 'billing' workspace roles in this
+        # org) — see inheritance.is_org_billing_only. Everyone else gets
+        # 'member'.
+        requester_is_biller = await is_org_billing_only(
+            workspace.get("org_id") or "", requester_id
+        )
+        granted_role = "billing" if requester_is_biller else "member"
         await async_directus.create_item(
             "workspace_membership",
             {
                 "id": generate_uuid(),
                 "workspace_id": workspace_id,
                 "user_id": requester_id,
-                "role": "member",
+                "role": granted_role,
                 "source": "direct",
             },
         )

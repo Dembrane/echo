@@ -38,7 +38,7 @@ export function RoleSelect({
 			{
 				value: "billing",
 				label: t`Billing`,
-				description: t`Manages plans and invoices for the organisation.`,
+				description: t`Sees usage and invoices. No project or content access.`,
 			},
 			{
 				value: "admin",
