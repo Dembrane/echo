@@ -195,6 +195,28 @@ async def is_org_external_only(org_id: str, user_id: str) -> bool:
     return has_external and not has_internal
 
 
+async def is_org_billing_only(org_id: str, user_id: str) -> bool:
+    """True when the user is a biller in this org (finance visibility only,
+    matrix v1.1 §4/§5) — they must never be granted operational access.
+
+    Two ways to be a biller:
+      - org_membership.role = 'billing' (org-level biller), regardless of
+        workspace rows, or
+      - workspace-scoped biller: org role is not admin/owner, and the user's
+        workspace roles in this org include 'billing' with no operational
+        role (member/admin/owner) anywhere in the org.
+    """
+    role = await _get_org_role(org_id, user_id)
+    if role == "billing":
+        return True
+    if role in ("admin", "owner"):
+        return False
+    roles = await org_workspace_membership_roles(org_id, user_id)
+    has_billing = any(r == "billing" for r in roles)
+    has_operational = any(r in ("member", "admin", "owner") for r in roles)
+    return has_billing and not has_operational
+
+
 async def user_can_access(workspace_id: str, user_id: str) -> Optional[tuple[str, str]]:
     """Return (role, source) for this user on this workspace, or None.
 
