@@ -61,6 +61,16 @@ This document provides an overview of the environment variables used in the fron
 - **Possible Values**: `true`, `false`, `1`
 - **Example**: `VITE_ENABLE_AUDIO_DOWNLOAD=1`
 
+## Feature Flags Configuration
+
+> [!NOTE]
+> We are transitioning public, non-secret feature flags directly into git-managed JSON inside the code instead of Vercel environment variables. This avoids Vercel lock-in, reduces configuration overhead, and eliminates the mental block of updating environment configurations.
+>
+> In the new strategy:
+> - Public feature flags will live directly in git (e.g., in a JSON config file).
+> - The frontend application will consume this configuration directly from git.
+> - Secrets and platform-specific environment variables will continue to use standard env files/Vercel settings.
+
 ## Additional Configuration
 
 ### Supported Languages

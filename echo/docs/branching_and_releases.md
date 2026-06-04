@@ -4,8 +4,7 @@
 
 | Environment | URL | Deploys from | Notes |
 |---|---|---|---|
-| **Testing** | dashboard.testing.dembrane.com | `testing` branch (on push) | Shared, unprotected |
-| **Echo Next** | dashboard.echo-next.dembrane.com | `main` branch (on merge) | Staging / preview |
+| **Echo Next** | dashboard.echo-next.dembrane.com | `main` branch (on merge) | Staging / preview / beta testing |
 | **Production** | dashboard.dembrane.com | GitHub release tag on `main` | Every ~2 weeks |
 
 Each environment has dashboard, portal, and directus subpaths (e.g., `dashboard.dembrane.com`, `portal.dembrane.com`, `directus.dembrane.com`).
@@ -14,30 +13,14 @@ Each environment has dashboard, portal, and directus subpaths (e.g., `dashboard.
 
 ```
 main ──────────────────●──────────────────●──── (auto-deploys to Echo Next)
-        \             ↗ PR                |
-         feat/ECHO-123 ──→ (optional)     |
-                           \              |
-                            testing ────→ dashboard.testing.dembrane.com
+        \             ↗ PR
+         feat/ECHO-123
 ```
 
 1. **Branch off `main`** — name your branch `feat/ECHO-xxx-description` or similar
 2. **Develop** on the feature branch
-3. **(Optional) Test on testing environment**:
-   - Merge your feature branch into `testing` to deploy to dashboard.testing.dembrane.com
-   - The `testing` branch is **unprotected** — you can push/merge directly
-   - **Before merging**, check that nobody else is currently using it:
-     ```bash
-     git log main..testing --oneline   # any commits ahead of main?
-     ```
-   - If there are commits ahead, check with the team before overwriting
-4. **Create a PR** from your feature branch to `main`
-5. **After merge** — changes auto-deploy to Echo Next
-6. **After done testing** — reset `testing` back to `main`:
-   ```bash
-   git checkout testing
-   git reset --hard origin/main
-   git push --force
-   ```
+3. **Create a PR** from your feature branch to `main`
+4. **After merge** — changes auto-deploy to Echo Next (where beta testing is done directly)
 
 ## Release Process
 
