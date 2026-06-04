@@ -69,6 +69,36 @@ async def test_async_success_does_not_sleep():
     sleep_mock.assert_not_called()
 
 
+class _FailingTransport(httpx.AsyncBaseTransport):
+    def __init__(self):
+        self.requests = 0
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:  # noqa: ARG002
+        self.requests += 1
+        raise httpx.ConnectError("connection refused")
+
+
+@pytest.mark.asyncio
+async def test_async_persistent_transport_error_raises_after_3_attempts():
+    transport = _FailingTransport()
+    client = AsyncDirectusClient(url="http://directus.test", token="t")
+    client._client = httpx.AsyncClient(  # noqa: SLF001
+        base_url="http://directus.test", transport=transport
+    )
+
+    sleeps: list[float] = []
+
+    async def fake_sleep(seconds: float) -> None:
+        sleeps.append(seconds)
+
+    with patch("dembrane.directus_async.asyncio.sleep", side_effect=fake_sleep):
+        with pytest.raises(httpx.ConnectError):
+            await client._request("SEARCH", "/items/whatever")  # noqa: SLF001
+
+    assert transport.requests == 3
+    assert sleeps == [1.0, 2.0]
+
+
 class _SyncClientStub:
     temporary_token = None
     refresh_token = None
@@ -98,5 +128,27 @@ def test_sync_persistent_500_returns_last_response_after_3_attempts():
 
     assert response is not None, "must never fall through and return None"
     assert response.status_code == 500
+    assert calls["n"] == 3
+    assert sleeps == [1.0, 2.0]
+
+
+def test_sync_persistent_transport_error_raises_after_3_attempts():
+    calls = {"n": 0}
+
+    def fake_request(method, url, **kwargs):  # noqa: ARG001
+        calls["n"] += 1
+        raise requests.exceptions.ConnectionError("connection refused")
+
+    sleeps: list[float] = []
+
+    with (
+        patch("dembrane.directus.requests.request", side_effect=fake_request),
+        patch("dembrane.directus.time.sleep", side_effect=sleeps.append),
+    ):
+        with pytest.raises(requests.exceptions.ConnectionError):
+            make_request_with_retry(
+                _SyncClientStub(), "SEARCH", "http://directus.test/items/whatever"
+            )
+
     assert calls["n"] == 3
     assert sleeps == [1.0, 2.0]

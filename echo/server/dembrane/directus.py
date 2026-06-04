@@ -111,8 +111,10 @@ def make_request_with_retry(
                 retries += 1
                 if retries >= max_retries:
                     # Exhausted: return the response as-is so callers can
-                    # interpret the Directus error envelope. Never fall
-                    # through and return None.
+                    # interpret the Directus error envelope. Exhausted
+                    # recoverable statuses have always surfaced through the
+                    # envelope path (DirectusBadRequest); DirectusServerError
+                    # is for connection errors only.
                     return response
 
                 wait_time = retry_delay * (2 ** (retries - 1))
