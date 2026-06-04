@@ -34,7 +34,8 @@ export const NavButton = ({
 				{Icon ? <Icon size={16} /> : null}
 				<span className="truncate">{label}</span>
 			</span>
-			{badge && (
+			{/* != null, not truthiness: badge={0} would render a bare "0" */}
+			{badge != null && (
 				<span
 					className="relative shrink-0 rounded px-1.5 py-0.5 text-[10px] leading-none"
 					style={{
