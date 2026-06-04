@@ -90,35 +90,34 @@ class AsyncDirectusClient:
         retry_delay: float = DEFAULT_RETRY_DELAY,
         **kwargs: Any,
     ) -> httpx.Response:
-        """Make an HTTP request with retry logic for recoverable errors."""
+        """Make an HTTP request with retry logic for recoverable errors.
+
+        At most `max_retries` requests are sent. A response with a
+        recoverable status that persists through every attempt is
+        returned as-is so callers can interpret the Directus error
+        envelope; transport errors raise once retries are exhausted.
+        """
         client = self._get_client()
         retries = 0
 
-        while retries < max_retries:
+        while True:
             try:
                 response = await client.request(method, path, **kwargs)
-
-                if response.status_code in RECOVERABLE_STATUS_CODES:
-                    retries += 1
-                    if retries == max_retries:
-                        response.raise_for_status()
-
-                    wait_time = retry_delay * (2 ** (retries - 1))
-                    await asyncio.sleep(wait_time)
-                    continue
-
-                return response
-
             except httpx.HTTPError:
                 retries += 1
-                if retries == max_retries:
+                if retries >= max_retries:
                     raise
-
-                wait_time = retry_delay * (2 ** (retries - 1))
-                await asyncio.sleep(wait_time)
+                await asyncio.sleep(retry_delay * (2 ** (retries - 1)))
                 continue
 
-        return await client.request(method, path, **kwargs)
+            if response.status_code in RECOVERABLE_STATUS_CODES:
+                retries += 1
+                if retries >= max_retries:
+                    return response
+                await asyncio.sleep(retry_delay * (2 ** (retries - 1)))
+                continue
+
+            return response
 
     # ------------------------------------------------------------------
     # HTTP verbs (match sync client return semantics)

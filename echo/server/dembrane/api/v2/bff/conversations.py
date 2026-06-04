@@ -281,7 +281,9 @@ async def list_conversations(
                             "fields": [
                                 "id",
                                 "conversation_id",
-                                {"project_tag_id": ["id", "text", "created_at"]},
+                                "project_tag_id.id",
+                                "project_tag_id.text",
+                                "project_tag_id.created_at",
                             ],
                             "limit": -1,
                         }
@@ -513,7 +515,9 @@ async def get_conversation(
                         "filter": {"conversation_id": {"_eq": conversation_id}},
                         "fields": [
                             "id",
-                            {"project_tag_id": ["id", "text", "created_at"]},
+                            "project_tag_id.id",
+                            "project_tag_id.text",
+                            "project_tag_id.created_at",
                         ],
                         "limit": -1,
                     }
@@ -737,7 +741,9 @@ async def list_conversation_tags(
                 "fields": [
                     "id",
                     "conversation_id",
-                    {"project_tag_id": ["id", "text", "created_at"]},
+                    "project_tag_id.id",
+                    "project_tag_id.text",
+                    "project_tag_id.created_at",
                 ],
                 "limit": -1,
             }
@@ -797,7 +803,7 @@ async def replace_conversation_tags(
                     "filter": {"conversation_id": {"_eq": body.conversation_id}},
                     "fields": [
                         "id",
-                        {"project_tag_id": ["id"]},
+                        "project_tag_id.id",
                     ],
                     "limit": -1,
                 }
@@ -865,7 +871,9 @@ async def replace_conversation_tags(
                 "fields": [
                     "id",
                     "conversation_id",
-                    {"project_tag_id": ["id", "text", "created_at"]},
+                    "project_tag_id.id",
+                    "project_tag_id.text",
+                    "project_tag_id.created_at",
                 ],
                 "limit": -1,
             }
