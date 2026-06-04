@@ -32,6 +32,9 @@ const LOCAL_HOSTNAMES = new Set([
 
 
 const whichHost = () => {
+	if (typeof window === "undefined") {
+		return null;
+	}
 	if (DEV_HOSTNAMES.has(window.location.host)) {
 		return "dev";
 	}
@@ -48,6 +51,7 @@ const whichHost = () => {
 export const LogoDembrane = ({ hideLogo, hideTitle, alwaysDembrane, ...props }: LogoProps) => {
 	const { logoUrl } = useWhitelabelLogo();
 	const effectiveLogoUrl = alwaysDembrane ? null : logoUrl;
+	const hostEnv = whichHost();
 
 	return (
 		<Group gap="sm" h="32px" align="center" {...props}>
@@ -60,12 +64,12 @@ export const LogoDembrane = ({ hideLogo, hideTitle, alwaysDembrane, ...props }: 
 						alt="Logo"
 						className="h-full object-contain"
 					/>
-					{whichHost() && (
+					{hostEnv && (
 						<span
 							className="pointer-events-none absolute capitalize -bottom-1 -right-[15px] -translate-x-1/2 pl-1 text-[10px] font-medium leading-none"
 							style={{ color: "var(--mantine-color-primary-6)" }}
 						>
-							{whichHost()}
+							{hostEnv}
 						</span>
 					)}
 				</span>
