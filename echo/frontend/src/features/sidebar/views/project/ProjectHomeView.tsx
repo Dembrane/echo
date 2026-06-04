@@ -59,16 +59,16 @@ export const ProjectHomeView = () => {
 				</div>
 			)}
 
-			<NavItem to={`${base}/home`} label={<Trans>Overview</Trans>} icon={AppWindowIcon} />
+			<NavItem
+				to={`${base}/home`}
+				label={<Trans>Overview</Trans>}
+				icon={AppWindowIcon}
+			/>
 			<NavItem
 				to={`${base}/chats/new`}
 				label={<Trans>Ask</Trans>}
 				icon={ChatCircleDotsIcon}
-				badge={
-					typeof chatsCountQuery.data === "number"
-						? chatsCountQuery.data
-						: undefined
-				}
+				badge={chatsCountQuery.data || undefined}
 			/>
 			<NavButton
 				label={<Trans>Explore</Trans>}
@@ -103,11 +103,7 @@ export const ProjectHomeView = () => {
 				to={`${base}/conversations`}
 				label={<Trans>Conversations</Trans>}
 				icon={ChatCircleTextIcon}
-				badge={
-					typeof conversationsCountQuery.data === "number"
-						? conversationsCountQuery.data
-						: undefined
-				}
+				badge={conversationsCountQuery.data || undefined}
 			/>
 
 			<div className="mt-auto" />

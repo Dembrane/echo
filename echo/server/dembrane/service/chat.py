@@ -37,6 +37,7 @@ class ChatService:
             "name",
             "auto_select",
             "chat_mode",
+            "deleted_at",
             "project_id.id",
             "project_id.directus_user_id",
         ]
