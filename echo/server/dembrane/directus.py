@@ -96,7 +96,7 @@ def make_request_with_retry(
         requests.exceptions.RequestException: If the request fails after all retries
     """
     retries = 0
-    while retries < max_retries:
+    while True:
         try:
             if client.temporary_token is not None and client.refresh_token is not None:
                 try:
@@ -109,8 +109,11 @@ def make_request_with_retry(
 
             if is_recoverable_error(response):
                 retries += 1
-                if retries == max_retries:
-                    response.raise_for_status()
+                if retries >= max_retries:
+                    # Exhausted: return the response as-is so callers can
+                    # interpret the Directus error envelope. Never fall
+                    # through and return None.
+                    return response
 
                 wait_time = retry_delay * (2 ** (retries - 1))
                 time.sleep(wait_time)
@@ -133,7 +136,7 @@ def make_request_with_retry(
                     raise
 
             retries += 1
-            if retries == max_retries:
+            if retries >= max_retries:
                 raise
 
             wait_time = retry_delay * (2 ** (retries - 1))

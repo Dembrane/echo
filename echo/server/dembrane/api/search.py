@@ -232,15 +232,10 @@ def _search_conversations(
                     "participant_name",
                     "participant_email",
                     "summary",
-                    {
-                        "project_id": ["id", "name"],
-                    },
-                    {
-                        "chunks": [
-                            "timestamp",
-                            "created_at",
-                        ],
-                    },
+                    "project_id.id",
+                    "project_id.name",
+                    "chunks.timestamp",
+                    "chunks.created_at",
                 ],
                 "deep": {
                     "chunks": {
@@ -285,9 +280,8 @@ def _search_chunks(client: DirectusClient, term: str, limit: int) -> List[Search
                     "transcript",
                     "timestamp",
                     "created_at",
-                    {
-                        "conversation_id": ["id", "participant_name"],
-                    },
+                    "conversation_id.id",
+                    "conversation_id.participant_name",
                 ],
                 "sort": ["-timestamp"],
                 "limit": limit,
@@ -350,9 +344,8 @@ def _search_chats(client: DirectusClient, term: str, limit: int) -> List[SearchC
                 "fields": [
                     "id",
                     "name",
-                    {
-                        "project_id": ["id", "name"],
-                    },
+                    "project_id.id",
+                    "project_id.name",
                 ],
                 "sort": ["-date_updated", "-date_created"],
                 "limit": limit,

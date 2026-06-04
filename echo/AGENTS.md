@@ -168,6 +168,7 @@ Which group powers which feature is non-obvious, so don't downgrade silently.
 - `create_item` / `update_item` return `{"data": {...}}`. **MUST** unwrap with `["data"]`
 - `get_items` / `get_item` return data directly (no wrapper)
 - `get_items` requires `{"query": {filter, fields, sort, ...}}` wrapper
+- Nested relational fields use dot notation strings: `"project_tag_id.id"`, never `{"project_tag_id": ["id"]}`. The dict form is a TS SDK convenience; the Python client passes queries to the REST API verbatim, and Directus 500s on it
 - `search()` silently returns `{"error": "..."}` on failure; always validate the return is a list before iterating
 
 ### TypeScript Directus SDK
