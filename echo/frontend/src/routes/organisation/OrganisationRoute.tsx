@@ -380,10 +380,16 @@ export const OrganisationRoute = () => {
 
 	const isAdmin =
 		organisation?.role === "owner" || organisation?.role === "admin";
-	// Admin-only views fall back to People for other roles so landing
-	// state is never an empty panel for them.
+	// Financial visibility mirrors the backend's `sees_financials`
+	// (orgs.py get_org_usage): owner/admin/billing. Billing is a
+	// finance-only role, so it must reach Usage + Billing even though it
+	// isn't an admin.
+	const canSeeFinancials =
+		isAdmin || organisation?.role === "billing";
+	// Views the caller can't open fall back to People so landing state is
+	// never an empty panel for them.
 	const view: TabValue =
-		!isAdmin && (viewRaw === "usage" || viewRaw === "billing")
+		!canSeeFinancials && (viewRaw === "usage" || viewRaw === "billing")
 			? "people"
 			: viewRaw;
 
@@ -679,7 +685,7 @@ export const OrganisationRoute = () => {
 						/>
 					</Tabs.Panel>
 
-					{isAdmin && (
+					{canSeeFinancials && (
 						<Tabs.Panel value="usage" pt="md">
 							<Stack gap="md">
 								{organisationId && (
@@ -689,7 +695,7 @@ export const OrganisationRoute = () => {
 						</Tabs.Panel>
 					)}
 
-					{isAdmin && (
+					{canSeeFinancials && (
 						<Tabs.Panel value="billing" pt="md">
 							<Paper withBorder p="md" radius="sm">
 								<Stack gap={8}>
