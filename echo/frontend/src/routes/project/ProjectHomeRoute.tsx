@@ -189,7 +189,7 @@ export const ProjectHomeRoute = () => {
 													size="xs"
 													onClick={() =>
 														navigate(
-															`${base}/conversation/${conversation.id}/overview`,
+															`${base}/conversation/${conversation.id}`,
 														)
 													}
 												>

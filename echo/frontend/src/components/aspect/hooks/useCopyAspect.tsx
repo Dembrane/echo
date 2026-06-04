@@ -72,7 +72,7 @@ export const useCopyAspect = () => {
 
 				const conversationUrl =
 					window.location.origin +
-					`/${language}/projects/${projectId}/conversation/${conversationId}/transcript`;
+					`/${language}/projects/${projectId}/conversation/${conversationId}`;
 
 				stringBuilder.push(`"${description}"\n`);
 				stringBuilder.push(`from [${participantName}](${conversationUrl})\n\n`);

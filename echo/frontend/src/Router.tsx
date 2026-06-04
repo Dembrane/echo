@@ -10,7 +10,6 @@ import { AuthLayout } from "./components/layout/AuthLayout";
 import { BaseLayout } from "./components/layout/BaseLayout";
 import { LanguageLayout } from "./components/layout/LanguageLayout";
 import { ParticipantLayout } from "./components/layout/ParticipantLayout";
-import { ProjectConversationLayout } from "./components/layout/ProjectConversationLayout";
 import { ProjectLayout } from "./components/layout/ProjectLayout";
 import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
 import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
@@ -27,8 +26,7 @@ import {
 } from "./routes/participant/ParticipantConversation";
 import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
 import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
-import { ProjectConversationOverviewRoute } from "./routes/project/conversation/ProjectConversationOverview";
-import { ProjectConversationTranscript } from "./routes/project/conversation/ProjectConversationTranscript";
+import { ProjectConversationRoute } from "./routes/project/conversation/ProjectConversationRoute";
 import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
 // Tab-based routes - import directly for now to debug
 import {
@@ -216,15 +214,15 @@ const projectRouteChildren = [
 					{
 						children: [
 							{
-								element: <Navigate to="overview" replace />,
+								element: <ProjectConversationRoute />,
 								index: true,
 							},
 							{
-								element: <ProjectConversationOverviewRoute />,
+								element: <Navigate to=".." replace />,
 								path: "overview",
 							},
 							{
-								element: <ProjectConversationTranscript />,
+								element: <Navigate to=".." replace />,
 								path: "transcript",
 							},
 							{
@@ -232,7 +230,6 @@ const projectRouteChildren = [
 								path: "debug",
 							},
 						],
-						element: <ProjectConversationLayout />,
 						path: "conversation/:conversationId",
 					},
 					{

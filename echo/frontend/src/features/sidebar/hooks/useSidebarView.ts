@@ -40,18 +40,18 @@ export function resolveSidebarView(
 		if (overlay === "inbox") {
 			return {
 				backTo: `${pathname}${withoutSidebarSearch(search)}`,
+				overlay: "inbox",
 				params: base.params,
 				scope: base.scope,
 				view: base.view,
-				overlay: "inbox",
 			};
 		}
 		return {
 			backTo: `${pathname}${withoutSidebarSearch(search)}`,
+			overlay: "help",
 			params: base.params,
 			scope: base.scope,
 			view: "help",
-			overlay: "help",
 		};
 	}
 
@@ -121,7 +121,14 @@ export function resolveSidebarView(
 			}
 			return {
 				backTo: `/w/${workspaceId}/home`,
-				params: { projectId, section: segs[4], workspaceId },
+				params: {
+					projectId,
+					section: segs[4],
+					workspaceId,
+					...(segs[4] === "conversation" && segs[5]
+						? { conversationId: segs[5] }
+						: {}),
+				},
 				scope: "project",
 				view: "project-home",
 			};

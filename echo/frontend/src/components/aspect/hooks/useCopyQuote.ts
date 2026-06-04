@@ -49,7 +49,7 @@ export const useCopyQuote = () => {
 
 		// Build the formatted quote with context
 		stringBuilder.push(
-			`# Quote from [${conversation?.participant_name}](${window.location.origin}/${language}/projects/${projectId}/conversation/${conversation?.id}/transcript)`,
+			`# Quote from [${conversation?.participant_name}](${window.location.origin}/${language}/projects/${projectId}/conversation/${conversation?.id})`,
 		);
 		stringBuilder.push(`"${quote.description}"`);
 		stringBuilder.push(`${quote.verbatim_transcript}`);
@@ -96,7 +96,7 @@ export const useCopyQuote = () => {
 		// }
 
 		// Add source link
-		const sourceUrl = `${window.location.origin}/${language}/projects/${projectId}/conversation/${conversation?.id}/transcript`;
+		const sourceUrl = `${window.location.origin}/${language}/projects/${projectId}/conversation/${conversation?.id}`;
 		stringBuilder.push(""); // Empty line before source
 		stringBuilder.push(`[View in conversation](${sourceUrl})`);
 

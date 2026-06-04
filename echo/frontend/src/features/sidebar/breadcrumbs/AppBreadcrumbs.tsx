@@ -2,6 +2,7 @@ import { CaretRight } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
+import { useConversationById } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSidebarView } from "../hooks/useSidebarView";
@@ -74,6 +75,12 @@ export const AppBreadcrumbs = () => {
 	const projectQuery = useProjectById({
 		projectId: params.projectId ?? "",
 		query: { fields: ["id", "name"] },
+	});
+	// Same default args as the detail page, so this reads its cached entry
+	// instead of issuing a second request.
+	const conversationQuery = useConversationById({
+		conversationId: params.conversationId ?? "",
+		useQueryOpts: { enabled: !!params.conversationId },
 	});
 
 	const workspace = useMemo(
@@ -175,7 +182,23 @@ export const AppBreadcrumbs = () => {
 					});
 				}
 				const section = params.section;
-				if (section && section !== "home" && PROJECT_SECTION_LABELS[section]) {
+				if (section === "conversation") {
+					// Detail page: link back to the conversations list first.
+					out.push({
+						href: `/w/${params.workspaceId}/projects/${params.projectId}/conversations`,
+						label: PROJECT_SECTION_LABELS.conversations,
+					});
+					out.push({
+						label:
+							conversationQuery.data?.title?.trim() ||
+							conversationQuery.data?.participant_name?.trim() ||
+							PROJECT_SECTION_LABELS.conversation,
+					});
+				} else if (
+					section &&
+					section !== "home" &&
+					PROJECT_SECTION_LABELS[section]
+				) {
 					out.push({ label: PROJECT_SECTION_LABELS[section] });
 				}
 				return out;
@@ -201,7 +224,14 @@ export const AppBreadcrumbs = () => {
 			}
 		}
 		return out;
-	}, [view, params, workspace, orgNameForId, projectQuery.data?.name]);
+	}, [
+		view,
+		params,
+		workspace,
+		orgNameForId,
+		projectQuery.data?.name,
+		conversationQuery.data,
+	]);
 
 	if (crumbs.length === 0) return null;
 

@@ -131,6 +131,9 @@ interface Conversation {
 	replies: string[] | ConversationReply[];
 	tags: string[] | ConversationProjectTag[];
 	conversation_artifacts: string[] | ConversationArtifact[];
+	has_transcript?: boolean;
+	last_chunk_at?: string | null;
+	has_only_text_chunks?: boolean;
 }
 
 interface ConversationArtifact {

@@ -22,6 +22,7 @@ export interface ResolvedSidebarView {
 		workspaceId?: string;
 		projectId?: string;
 		section?: string;
+		conversationId?: string;
 	};
 	overlay?: "inbox" | "help";
 }
