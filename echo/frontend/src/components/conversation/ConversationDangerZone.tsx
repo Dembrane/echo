@@ -103,7 +103,7 @@ export const ConversationDangerZone = ({
 						console.warn("Analytics tracking failed:", error);
 					}
 					deleteConversationByIdMutation.mutate(conversation.id);
-					navigate(`/w/${workspaceId}/projects/${projectId}/overview`);
+					navigate(`/w/${workspaceId}/projects/${projectId}/conversations`);
 					closeConfirm();
 				}}
 			/>

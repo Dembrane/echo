@@ -695,7 +695,7 @@ export const useConversationsByProjectId = (
 			void loadWhereTranscriptExists;
 			const params = conversationQueryToBffParams(query);
 			const conversations = await bff.get<Conversation[]>("/conversations", {
-				include_chunks: true,
+				include_chunks: Boolean(loadChunks),
 				include_tags: true,
 				limit: 1000,
 				project_id: projectId,
@@ -715,35 +715,25 @@ export const useConversationsByProjectId = (
 		],
 		refetchInterval: 30000,
 		select: (data) => {
-			// Add live field to each conversation based on recent chunk activity
+			// Add live field based on the server-derived last_chunk_at
 			const cutoffTime = new Date(Date.now() - TIME_INTERVAL_SECONDS * 1000);
 
 			if (data.length === 0) return [];
 
 			return data.map((conversation) => {
-				// Skip upload chunks
-				if (["upload", "clone"].includes(conversation.source ?? ""))
+				// Only portal sessions can show as live/Ongoing
+				if (
+					!["PORTAL_AUDIO", "PORTAL_TEXT"].includes(conversation.source ?? "")
+				)
 					return {
 						...conversation,
 						live: false,
 					};
 
-				if (conversation.chunks?.length === 0)
-					return {
-						...conversation,
-						live: false,
-					};
-
-				const hasRecentChunks = conversation.chunks?.some((chunk) => {
-					if (typeof chunk !== "object" || !chunk) return false;
-					// Check if chunk timestamp is recent
-					const chunkTime = new Date(chunk.timestamp || chunk.created_at || 0);
-					return chunkTime > cutoffTime;
-				});
-
+				const lastChunkAt = conversation.last_chunk_at;
 				return {
 					...conversation,
-					live: hasRecentChunks || false,
+					live: lastChunkAt ? new Date(lastChunkAt) > cutoffTime : false,
 				};
 			});
 		},
@@ -849,7 +839,7 @@ export const useInfiniteConversationsByProjectId = (
 		],
 		refetchInterval: 30000,
 		select: (data) => {
-			// Add live field to each conversation based on recent chunk activity
+			// Add live field based on the server-derived last_chunk_at
 			const cutoffTime = new Date(Date.now() - TIME_INTERVAL_SECONDS * 1000);
 
 			return {
@@ -857,31 +847,21 @@ export const useInfiniteConversationsByProjectId = (
 				pages: data.pages.map((page) => ({
 					...page,
 					conversations: page.conversations.map((conversation) => {
-						// Skip upload chunks
-						if (["upload", "clone"].includes(conversation.source ?? ""))
+						// Only portal sessions can show as live/Ongoing
+						if (
+							!["PORTAL_AUDIO", "PORTAL_TEXT"].includes(
+								conversation.source ?? "",
+							)
+						)
 							return {
 								...conversation,
 								live: false,
 							};
 
-						if (conversation.chunks?.length === 0)
-							return {
-								...conversation,
-								live: false,
-							};
-
-						const hasRecentChunks = conversation.chunks?.some((chunk) => {
-							if (typeof chunk !== "object" || !chunk) return false;
-							// Check if chunk timestamp is recent
-							const chunkTime = new Date(
-								chunk.timestamp || chunk.created_at || 0,
-							);
-							return chunkTime > cutoffTime;
-						});
-
+						const lastChunkAt = conversation.last_chunk_at;
 						return {
 							...conversation,
-							live: hasRecentChunks || false,
+							live: lastChunkAt ? new Date(lastChunkAt) > cutoffTime : false,
 						};
 					}),
 				})),

@@ -383,15 +383,7 @@ export const ConversationStatusIndicators = ({
 	// 	[conversation.chunks],
 	// );
 
-	const hasOnlyTextContent = useMemo(
-		() =>
-			conversation.chunks?.length > 0 &&
-			conversation.chunks?.every(
-				(chunk) =>
-					(chunk as unknown as ConversationChunk).source === "PORTAL_TEXT",
-			),
-		[conversation.chunks],
-	);
+	const hasOnlyTextContent = conversation.has_only_text_chunks ?? false;
 
 	const fDuration = useCallback((duration: number) => {
 		const d = intervalToDuration({
@@ -544,7 +536,7 @@ const ConversationAccordionItem = ({
 
 	return (
 		<NavigationButton
-			to={`/w/${workspaceId}/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
+			to={`/w/${workspaceId}/projects/${conversation.project_id}/conversation/${conversation.id}`}
 			active={highlight}
 			className="w-full"
 			rightSection={

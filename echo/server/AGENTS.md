@@ -10,6 +10,15 @@ Cross-cutting rules (Directus, BFF, LLM model groups, Dramatiq/gevent, transcrip
 - Embeddings: populate `EMBEDDING_*` env vars (model, key, base URL, version) before calling `dembrane.embedding.embed_text`. The placeholder in `dembrane/embedding.py` is not yet the production implementation
 - Production API uses a **custom asyncio uvicorn worker** (`dembrane.asyncio_uvicorn_worker.AsyncioUvicornWorker`); avoid `uvloop` for `nest_asyncio` compatibility
 
+## Email (two independent senders)
+
+There are two separate email paths and they are easy to conflate. They use different transports, keys, and config.
+
+1. **App transactional email**: `dembrane/email.py` → SendGrid **HTTP API**, keyed by `SENDGRID_API_KEY`. This is the main path: workspace invites, tier notifications, digests, auth emails. Called from `tasks.py` (Dramatiq) and `api/v2/*`. The Python app does **not** read any `*_SMTP_*` vars.
+2. **Directus-native email**: the `echo-directus` container → SendGrid **SMTP** (`smtp.sendgrid.net`), keyed by `EMAIL_SMTP_PASSWORD` (sealed as `DIRECTUS_EMAIL_SMTP_PASSWORD`). Only for emails Directus generates itself. Configured on the Directus deployment, never in `dembrane/settings.py`.
+
+EU data residency: `SENDGRID_REGION=eu` makes `email.py` route through `api.eu.sendgrid.com` (`set_sendgrid_data_residency`), but the key must belong to an **EU regional subuser**, a global-account key is not EU-resident even on the EU host. The Directus path must be moved separately (`smtp.eu.sendgrid.net` + EU key); changing one does not affect the other.
+
 ## Background task design
 
 When fixing or extending Dramatiq flows:

@@ -25,10 +25,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
-import {
-	useProjectsHome,
-	useTogglePinMutation,
-} from "@/components/project/hooks";
+import { useTogglePinMutation } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
@@ -80,16 +77,9 @@ export const ProjectsHomeRoute = () => {
 		staleTime: 60_000,
 	});
 
-	// Use v2 (workspace-scoped) when workspace context exists, v1 otherwise
-	const v1Query = useProjectsHome({
-		search: debouncedSearchValue,
-		workspaceId,
-	});
-	const v2Query = useWorkspaceProjects({
-		search: debouncedSearchValue,
-	});
-
-	const activeQuery = workspaceId ? v2Query : v1Query;
+	// Workspace-scoped only; the legacy /projects/home query (v1) is gone.
+	// The hook is disabled until workspaceId resolves, which keeps the
+	// skeleton up instead of firing a workspace-less request.
 	const {
 		data: homeData,
 		fetchNextPage,
@@ -98,7 +88,9 @@ export const ProjectsHomeRoute = () => {
 		status,
 		isError,
 		error,
-	} = activeQuery;
+	} = useWorkspaceProjects({
+		search: debouncedSearchValue,
+	});
 
 	const togglePinMutation = useTogglePinMutation();
 

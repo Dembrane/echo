@@ -323,6 +323,15 @@ class EmailSettings(BaseSettings):
             "SENDGRID_API_KEY", "EMAIL__SENDGRID_API_KEY", "EMAIL_SMTP_PASSWORD"
         ),
     )
+    # SendGrid data residency region. "eu" routes sends through
+    # api.eu.sendgrid.com so recipient PII and content stay in EU data
+    # centers (GDPR). Requires an EU regional subuser key. "global" uses
+    # api.sendgrid.com. The key must belong to a subuser in this region.
+    sendgrid_region: str = Field(
+        default="eu",
+        alias="SENDGRID_REGION",
+        validation_alias=AliasChoices("SENDGRID_REGION", "EMAIL__SENDGRID_REGION"),
+    )
     from_email: str = Field(
         default="do-not-reply@dembrane.com",
         alias="EMAIL_FROM",

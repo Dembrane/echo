@@ -847,25 +847,17 @@ export const initiateAndUploadConversationChunk = async (payload: {
 };
 
 export const getProjectConversationCounts = async (projectId: string) => {
-	const conversations = await directus.request(
-		readItems("conversation", {
-			fields: [
-				"id",
-				"is_finished",
-				"participant_name",
-				"updated_at",
-				"created_at",
-			],
-			filter: {
-				deleted_at: {
-					_null: true,
-				},
-				project_id: {
-					_eq: projectId,
-				},
-			},
-		}),
-	);
+	// Direct Directus reads 403 since the lockdown; go through the BFF.
+	const conversations = await bff.get<
+		Pick<
+			Conversation,
+			"id" | "is_finished" | "participant_name" | "updated_at" | "created_at"
+		>[]
+	>("/conversations", {
+		fields: "id,is_finished,participant_name,updated_at,created_at",
+		limit: 1000,
+		project_id: projectId,
+	});
 
 	const finishedConversations = conversations.filter(
 		(conversation) => conversation.is_finished,
