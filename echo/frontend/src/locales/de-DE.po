@@ -5880,7 +5880,7 @@ msgstr ""
 #: src/routes/organisation/OrganisationRoute.tsx:756
 #: src/routes/organisation/OrganisationRoute.tsx:788
 msgid "No one on the organisation yet."
-msgstr ""
+msgstr "Noch niemand in der Organisation."
 
 #: src/routes/team/TeamRoute.tsx:559
 #~ msgid "No one on the team yet."
@@ -8913,7 +8913,7 @@ msgstr "Konkrete Details – ausgewählte Gespräche"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:856
 msgid "Specific Details needs at least one conversation."
-msgstr ""
+msgstr "Specific Details benötigt mindestens ein Gespräch."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2907
 #: src/features/sidebar/shell/UserMenu.tsx:108
@@ -11318,3 +11318,11 @@ msgstr "Ihre Ansichten"
 #: src/components/common/ImageCropModal.tsx:131
 msgid "Zoom"
 msgstr "Zoom"
+
+#: src/routes/organisation/OrganisationRoute.tsx
+msgid "No workspaces in this organisation yet."
+msgstr "Noch keine Workspaces in dieser Organisation."
+
+#: src/components/conversation/ProjectConversationsPanel.tsx
+msgid "Search and select the conversations for this chat."
+msgstr "Suche und wähle die Gespräche für diesen Chat aus."

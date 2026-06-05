@@ -851,20 +851,11 @@ export const ProjectChatRoute = () => {
 								variant="light"
 								{...testId("chat-no-conversations-alert")}
 							>
-								<Group justify="space-between" gap="sm" wrap="wrap">
-									<Text size="sm">
-										<Trans>
-											Specific Details needs at least one conversation.
-										</Trans>
-									</Text>
-									<Button
-										variant="outline"
-										size="xs"
-										onClick={() => setConversationPickerOpen(true)}
-									>
-										<Trans>Choose conversations</Trans>
-									</Button>
-								</Group>
+								<Text size="sm">
+									<Trans>
+										Specific Details needs at least one conversation.
+									</Trans>
+								</Text>
 							</Alert>
 						)}
 

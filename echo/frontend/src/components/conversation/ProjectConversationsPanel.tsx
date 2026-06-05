@@ -103,9 +103,6 @@ const getTagText = (tag: ConversationProjectTag) => {
 	return typeof projectTag === "object" && projectTag ? projectTag.text : null;
 };
 
-const hasTranscriptContent = (conversation: Conversation) =>
-	conversation.has_transcript ?? false;
-
 const hasVerifiedArtifacts = (conversation: Conversation) =>
 	conversation.conversation_artifacts?.some(
 		(artifact) => (artifact as ConversationArtifact).approved_at,
@@ -161,18 +158,15 @@ const ConversationSelectionCheckbox = ({
 		(c) => c.conversation_id === conversation.id && c.locked,
 	);
 	const isOverCapLocked = !!conversation.locked;
-	const hasContent = hasTranscriptContent(conversation);
-	const isDisabled = isChatLocked || isOverCapLocked || !hasContent;
+	const isDisabled = isChatLocked || isOverCapLocked;
 
 	const tooltipLabel = isOverCapLocked
 		? t`Conversation locked. Upgrade to add it.`
 		: isChatLocked
 			? t`Already used in this chat`
-			: !hasContent
-				? t`This conversation has no transcript yet`
-				: isSelected
-					? t`Remove from chat`
-					: t`Add to chat`;
+			: isSelected
+				? t`Remove from chat`
+				: t`Add to chat`;
 
 	const handleChange = () => {
 		if (isSelected) {
@@ -627,7 +621,7 @@ export const ProjectConversationsPanel = ({
 						<Text size="sm" c="dimmed">
 							{selectionMode ? (
 								<Trans>
-									Search and choose the conversations for this chat.
+									Search and select the conversations for this chat.
 								</Trans>
 							) : (
 								<Trans>
