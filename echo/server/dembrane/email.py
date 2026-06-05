@@ -177,6 +177,12 @@ def send_email_sync(
         )
 
         sg = SendGridAPIClient(api_key)
+        # Pin the send to a data-residency region. "eu" routes through
+        # api.eu.sendgrid.com so recipient PII and content stay in the EU.
+        # The key must belong to a subuser in this region.
+        region = settings.email.sendgrid_region
+        if region and region != "global":
+            sg.set_sendgrid_data_residency(region)
         response = sg.send(message)
 
         if response.status_code >= 400:
