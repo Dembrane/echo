@@ -14,6 +14,7 @@ import {
 	Loader,
 	Menu,
 	Paper,
+	SimpleGrid,
 	Stack,
 	Tabs,
 	Text,
@@ -677,12 +678,23 @@ export const OrganisationRoute = () => {
 				    navigation. Internal Tabs.value still wires the panels via URL. */}
 				<Tabs value={view} onChange={setView} keepMounted={false}>
 					<Tabs.Panel value="overview" pt="md">
-						<OverviewPanel
-							organisation={organisation}
-							organisationId={organisationId!}
-							canEdit={isAdmin}
-							queryClient={queryClient}
-						/>
+						{isSettingsPath ? (
+							// Sidebar "Settings" lands here (/o/:id/settings/general):
+							// organisation name + logo editing lives in settings, not
+							// on the at-a-glance overview.
+							<OverviewPanel
+								organisation={organisation}
+								organisationId={organisationId!}
+								canEdit={isAdmin}
+								queryClient={queryClient}
+							/>
+						) : (
+							<OrganisationOverviewPanel
+								members={members}
+								workspaces={workspaces}
+								onOpenWorkspace={(id) => navigate(`/w/${id}/home`)}
+							/>
+						)}
 					</Tabs.Panel>
 
 					{canSeeFinancials && (
@@ -979,6 +991,174 @@ function OverviewPanel({
 				</Stack>
 			)}
 		</Stack>
+	);
+}
+
+// ── Organisation overview — people bubbles + workspace cards ────────────────
+//
+// The at-a-glance landing for /o/:id/overview. People first (who's on the
+// team), then the team's workspaces as cards that mirror the home selector.
+// Editing (name/logo) lives in Settings, reached from the sidebar.
+
+function OrganisationOverviewPanel({
+	members,
+	workspaces,
+	onOpenWorkspace,
+}: {
+	members: OrganisationMember[];
+	workspaces: OrganisationWorkspace[];
+	onOpenWorkspace: (workspaceId: string) => void;
+}) {
+	// Pending invites aren't on the team yet, so they don't count toward the
+	// people glance. Everyone with access (incl. externals) shows as a bubble.
+	const people = members.filter((m) => !m.is_pending);
+	const MAX_BUBBLES = 8;
+	const visiblePeople = people.slice(0, MAX_BUBBLES);
+	const overflowPeople = people.length - visiblePeople.length;
+
+	return (
+		<Stack gap={32}>
+			<Stack gap="sm">
+				<Group gap="xs" align="baseline">
+					<Title order={4} fw={500}>
+						<Trans>People</Trans>
+					</Title>
+					<Text size="sm" c="dimmed">
+						{people.length}
+					</Text>
+				</Group>
+				{people.length === 0 ? (
+					<Text size="sm" c="dimmed">
+						<Trans>No one on this organisation yet.</Trans>
+					</Text>
+				) : (
+					<Tooltip.Group>
+						<Avatar.Group spacing="sm">
+							{visiblePeople.map((m) => (
+								<Tooltip
+									key={m.user_id}
+									label={`${m.display_name} · ${
+										m.is_external ? t`External` : displayRole(m.role)
+									}`}
+									withArrow
+								>
+									<Avatar
+										size={36}
+										radius="xl"
+										src={avatarUrl(m.avatar)}
+										color="primary"
+									>
+										{memberInitials(m.display_name, m.email)}
+									</Avatar>
+								</Tooltip>
+							))}
+							{overflowPeople > 0 && (
+								<Avatar size={36} radius="xl" color="gray">
+									+{overflowPeople}
+								</Avatar>
+							)}
+						</Avatar.Group>
+					</Tooltip.Group>
+				)}
+			</Stack>
+
+			<Stack gap="sm">
+				<Group gap="xs" align="baseline">
+					<Title order={4} fw={500}>
+						<Trans>Workspaces</Trans>
+					</Title>
+					<Text size="sm" c="dimmed">
+						{workspaces.length}
+					</Text>
+				</Group>
+				{workspaces.length === 0 ? (
+					<Text size="sm" c="dimmed">
+						<Trans>No workspaces in this organisation yet.</Trans>
+					</Text>
+				) : (
+					<SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+						{workspaces.map((ws) => (
+							<OrganisationWorkspaceCard
+								key={ws.id}
+								workspace={ws}
+								onOpen={() => onOpenWorkspace(ws.id)}
+							/>
+						))}
+					</SimpleGrid>
+				)}
+			</Stack>
+		</Stack>
+	);
+}
+
+function OrganisationWorkspaceCard({
+	workspace,
+	onOpen,
+}: {
+	workspace: OrganisationWorkspace;
+	onOpen: () => void;
+}) {
+	const [hovered, setHovered] = useState(false);
+	const capitalizedTier =
+		workspace.tier.charAt(0).toUpperCase() + workspace.tier.slice(1);
+
+	return (
+		<Paper
+			p="lg"
+			radius="md"
+			withBorder
+			role="button"
+			tabIndex={0}
+			style={{
+				boxShadow: hovered ? "0 2px 12px rgba(0,0,0,0.08)" : undefined,
+				cursor: "pointer",
+				transition: "box-shadow 0.15s ease",
+			}}
+			onClick={onOpen}
+			onKeyDown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					onOpen();
+				}
+			}}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+			onFocus={() => setHovered(true)}
+			onBlur={() => setHovered(false)}
+		>
+			<Stack gap={12}>
+				<Group gap="xs" wrap="nowrap" align="center">
+					<Text
+						fw={500}
+						size="md"
+						lineClamp={1}
+						style={{ flex: 1, minWidth: 0 }}
+					>
+						{workspace.name}
+					</Text>
+					{workspace.is_private && (
+						<Tooltip label={t`Private workspace`}>
+							<span style={{ display: "inline-flex", flexShrink: 0 }}>
+								<IconLock size={14} color="var(--mantine-color-gray-6)" />
+							</span>
+						</Tooltip>
+					)}
+				</Group>
+				<Text size="xs" c="dimmed" lineClamp={1}>
+					{capitalizedTier}
+				</Text>
+				<Group gap="lg" wrap="wrap">
+					<Text size="xs" c="dimmed">
+						{workspace.project_count}{" "}
+						{workspace.project_count === 1 ? t`project` : t`projects`}
+					</Text>
+					<Text size="xs" c="dimmed">
+						{workspace.member_count}{" "}
+						{workspace.member_count === 1 ? t`person` : t`people`}
+					</Text>
+				</Group>
+			</Stack>
+		</Paper>
 	);
 }
 
