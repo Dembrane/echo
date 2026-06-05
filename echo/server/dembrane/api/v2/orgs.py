@@ -121,6 +121,8 @@ class OrgMemberResponse(BaseModel):
 class OrgDetailResponse(BaseModel):
     id: str
     name: str
+    # Short blurb shown on the organisation overview. Editable in settings.
+    description: Optional[str] = None
     logo_url: Optional[str] = None
     role: str
     member_count: int
@@ -130,6 +132,8 @@ class OrgDetailResponse(BaseModel):
 
 class UpdateOrgRequest(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    # Empty string clears the description; None leaves it untouched.
+    description: Optional[str] = Field(default=None, max_length=2000)
     logo_url: Optional[str] = None
 
 
@@ -437,6 +441,7 @@ async def get_org(
     return OrgDetailResponse(
         id=org_id,
         name=org.get("name", ""),
+        description=org.get("description"),
         logo_url=org.get("logo_url"),
         role=role,
         member_count=await _count_organisation_members(org_id),
@@ -459,6 +464,10 @@ async def update_org(
         # Strip control chars — org name can land in email subject lines
         # (upgrade_request, workspace_invite) via templating.
         payload["name"] = body.name.replace("\r", " ").replace("\n", " ").strip()
+    if body.description is not None:
+        # Trim trailing whitespace; an empty string clears the field.
+        cleaned_description = body.description.strip()
+        payload["description"] = cleaned_description or None
     if body.logo_url is not None:
         # Org-level logo is legacy/optional — workspace-level whitelabel
         # takes precedence per the release lock (workspace-scoped, not
@@ -1350,6 +1359,13 @@ async def _rollup_workspace_access(org_id: str, user_ids: list[str]) -> dict[str
     return counts
 
 
+class OrgWorkspacePinnedProject(BaseModel):
+    """Minimal pinned-project info for the org overview workspace cards."""
+
+    id: str
+    name: str = ""
+
+
 class OrgWorkspaceSummary(BaseModel):
     id: str
     name: str
@@ -1364,6 +1380,53 @@ class OrgWorkspaceSummary(BaseModel):
     # Includes pending workspace_invite rows; conservatively overestimates re-invites (backend dedups at submit).
     seats_used_including_pending: int = 0
     seat_cap: int | None = None  # null on unlimited tiers
+    # Top pinned projects per workspace, for the org overview cards. Member
+    # avatars + usage hours are NOT here: the overview drives those from the
+    # caller's own /v2/workspaces list (membership-scoped), so we only enrich
+    # the one thing that endpoint can't provide. Default keeps id/name-only
+    # consumers (the sidebar) unaffected.
+    pinned_projects: list[OrgWorkspacePinnedProject] = []
+
+
+async def _get_org_workspace_pinned(
+    ws_id: str, caller_is_manager: bool
+) -> list[OrgWorkspacePinnedProject]:
+    """Top-3 pinned projects for a workspace, for the org overview cards.
+
+    Managers see every pinned project; everyone else only non-private ones so
+    a member never sees a pinned private project they can't open. (Mirrors the
+    conservative end of workspace_projects._visibility_filter_for_caller — we
+    skip the shared/creator ladder here and just hide private, which can omit a
+    shared-private pin but never leaks one.)
+    """
+    filt: dict = {
+        "workspace_id": {"_eq": ws_id},
+        "deleted_at": {"_null": True},
+        "pin_order": {"_nnull": True},
+    }
+    if not caller_is_manager:
+        filt["_or"] = [
+            {"visibility": {"_neq": "private"}},
+            {"visibility": {"_null": True}},
+        ]
+    rows = await async_directus.get_items(
+        "project",
+        {
+            "query": {
+                "fields": ["id", "name", "pin_order"],
+                "filter": filt,
+                "sort": ["pin_order"],
+                "limit": 3,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return []
+    return [
+        OrgWorkspacePinnedProject(id=r["id"], name=r.get("name") or "")
+        for r in rows
+        if r.get("id")
+    ]
 
 
 @router.get("/{org_id}/workspaces", response_model=list[OrgWorkspaceSummary])
@@ -1561,6 +1624,17 @@ async def list_organisation_workspaces(
                 seat_cap=seat_cap_value,
             )
         )
+
+    # Pinned-projects enrichment for the overview cards. Member avatars + usage
+    # hours come from the caller's own /v2/workspaces list (membership-scoped),
+    # so we don't recompute them per org workspace here. Fanned out in parallel.
+    if out:
+        pinned_lists = await asyncio.gather(
+            *[_get_org_workspace_pinned(o.id, caller_is_manager) for o in out]
+        )
+        for o, pinned in zip(out, pinned_lists, strict=True):
+            o.pinned_projects = pinned
+
     return out
 
 

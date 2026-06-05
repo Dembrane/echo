@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Group, Menu, Text, UnstyledButton } from "@mantine/core";
 import {
+	DotsThree,
 	Envelope,
 	Gear,
 	ShieldStar,
@@ -72,6 +73,16 @@ export const UserMenu = () => {
 							{user.email ?? ""}
 						</Text>
 					</Box>
+					{/* Visible affordance that the row opens a menu (settings +
+					    logout). The whole row is the menu target; the dots just
+					    signal it. */}
+					<DotsThree
+						size={18}
+						weight="bold"
+						className="shrink-0"
+						style={{ color: "rgba(45, 45, 44, 0.55)" }}
+						aria-hidden="true"
+					/>
 				</UnstyledButton>
 			</Menu.Target>
 

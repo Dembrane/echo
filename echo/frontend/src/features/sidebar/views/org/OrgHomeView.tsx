@@ -63,7 +63,10 @@ export const OrgHomeView = () => {
 		(myOrgWorkspaces.length > 0 &&
 			myOrgWorkspaces.every((w) => w.role === "external"));
 
-	const orgName = myOrgWorkspaces[0]?.org_name ?? t`Organisation`;
+	const orgName =
+		myOrgWorkspaces[0]?.org_name ??
+		me?.orgs.find((o) => o.id === orgId)?.name ??
+		t`Organisation`;
 
 	const displayList = useMemo(() => {
 		// Admins/owners see the whole org roster (they can open any workspace).
@@ -104,22 +107,27 @@ export const OrgHomeView = () => {
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
-			<BackButton to="/w" label={<Trans>Home</Trans>} />
-
-			<div
-				className="px-2 pb-1 pt-2 text-[13px] leading-tight"
-				style={{ color: "#2d2d2c" }}
-			>
-				<div className="truncate">{orgName}</div>
-			</div>
+			{/* The back button doubles as the section title: its centered label is
+			    the org name (the current context), not the destination. */}
+			<BackButton to="/w" label={orgName} center />
 
 			{!isExternal && (
-				<NavItem
-					to={`${base}/overview`}
-					label={<Trans>Overview</Trans>}
-					icon={AppWindowIcon}
-					end
-				/>
+				<>
+					<NavItem
+						to={`${base}/overview`}
+						label={<Trans>Overview</Trans>}
+						icon={AppWindowIcon}
+						end
+					/>
+					{/* Settings is the last clickable item under the org title,
+					    directly below Overview and above the Workspaces section. */}
+					<NavItem
+						to={`${base}/settings/general`}
+						label={<Trans>Settings</Trans>}
+						icon={GearIcon}
+						pushes
+					/>
+				</>
 			)}
 
 			{showWorkspaces && (
@@ -137,18 +145,6 @@ export const OrgHomeView = () => {
 							pushes
 						/>
 					))}
-				</>
-			)}
-
-			{!isExternal && (
-				<>
-					<div className="mt-auto" />
-					<NavItem
-						to={`${base}/settings/general`}
-						label={<Trans>Settings</Trans>}
-						icon={GearIcon}
-						pushes
-					/>
 				</>
 			)}
 		</nav>

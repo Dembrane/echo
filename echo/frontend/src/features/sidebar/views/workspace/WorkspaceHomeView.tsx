@@ -2,9 +2,9 @@ import { Trans } from "@lingui/react/macro";
 import { AppWindow, Gear, Plus, PushPin } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
-import { isAdminRole } from "@/lib/roles";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
+import { isAdminRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
 import { SectionLabel } from "../../primitives/SectionLabel";
@@ -40,23 +40,30 @@ export const WorkspaceHomeView = () => {
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
-			<BackButton to={backTo} label={backLabel} />
+			{/* Back button doubles as the section title: centered label is the
+			    current context (the workspace), not the destination. */}
+			<BackButton to={backTo} label={workspace?.name ?? backLabel} center />
 
-			{workspace?.name && (
-				<div
-					className="px-2 pb-1 pt-2 text-[13px] leading-tight"
-					style={{ color: "#2d2d2c" }}
-				>
-					<div className="truncate">{workspace.name}</div>
-				</div>
-			)}
-
-			<NavItem to={`${base}/home`} label={<Trans>Overview</Trans>} icon={AppWindow} />
+			<NavItem
+				to={`${base}/home`}
+				label={<Trans>Overview</Trans>}
+				icon={AppWindow}
+			/>
 			{canCreateProject && (
 				<NavItem
 					to={`${base}/projects/new`}
 					label={<Trans>New project</Trans>}
 					icon={Plus}
+				/>
+			)}
+			{/* Settings is the last clickable item under the workspace title,
+			    directly below New project and above the Pinned projects section. */}
+			{!isExternal && (
+				<NavItem
+					to={settingsPath}
+					label={<Trans>Settings</Trans>}
+					icon={Gear}
+					pushes
 				/>
 			)}
 			{pinnedProjects.length > 0 && (
@@ -73,17 +80,6 @@ export const WorkspaceHomeView = () => {
 							pushes
 						/>
 					))}
-				</>
-			)}
-			{!isExternal && (
-				<>
-					<div className="mt-auto" />
-					<NavItem
-						to={settingsPath}
-						label={<Trans>Settings</Trans>}
-						icon={Gear}
-						pushes
-					/>
 				</>
 			)}
 		</nav>
