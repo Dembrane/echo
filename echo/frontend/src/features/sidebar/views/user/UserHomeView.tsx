@@ -9,7 +9,6 @@ import {
 import { useMemo } from "react";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { SettingsBlock } from "../../blocks/SettingsBlock";
 import { NavItem } from "../../primitives/NavItem";
 import { SectionLabel } from "../../primitives/SectionLabel";
 
@@ -132,8 +131,6 @@ export const UserHomeView = () => {
 					)}
 				</>
 			)}
-			<div className="mt-auto" />
-			<SettingsBlock />
 		</nav>
 	);
 };

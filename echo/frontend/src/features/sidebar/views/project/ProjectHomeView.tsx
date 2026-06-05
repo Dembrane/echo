@@ -14,7 +14,6 @@ import { useParams } from "react-router";
 import { useProjectChatsCountQuery } from "@/components/chat/hooks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import { BackButton } from "../../primitives/BackButton";
 import { NavButton } from "../../primitives/NavButton";
 import { NavItem } from "../../primitives/NavItem";
@@ -37,27 +36,19 @@ export const ProjectHomeView = () => {
 		hasMessages: true,
 	});
 	const project = projectQuery.data;
-	const { workspaces } = useWorkspace();
-	const workspace = workspaces.find((w) => w.id === workspaceId);
 
 	if (!workspaceId || !projectId) return null;
 	const base = `/w/${workspaceId}/projects/${projectId}`;
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
+			{/* Back button doubles as the section title: centered label is the
+			    current context (the project), not the destination. */}
 			<BackButton
 				to={`/w/${workspaceId}/home`}
-				label={workspace?.name ?? <Trans>Workspace</Trans>}
+				label={project?.name ?? <Trans>Project</Trans>}
+				center
 			/>
-
-			{project?.name && (
-				<div
-					className="px-2 pb-1 pt-2 text-[13px] leading-tight"
-					style={{ color: "#2d2d2c" }}
-				>
-					<div className="truncate">{project.name}</div>
-				</div>
-			)}
 
 			<NavItem
 				to={`${base}/home`}
@@ -105,8 +96,8 @@ export const ProjectHomeView = () => {
 				icon={ChatCircleTextIcon}
 				badge={conversationsCountQuery.data || undefined}
 			/>
-
-			<div className="mt-auto" />
+			{/* Settings is the last clickable item, directly after the rest of
+			    the project items. */}
 			<NavItem
 				to={`${base}/overview`}
 				label={<Trans>Settings</Trans>}

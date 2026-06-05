@@ -101,7 +101,9 @@ export const AppBreadcrumbs = () => {
 			case "help":
 				return out;
 			case "user-home":
-				return out;
+				// The home page (/w, the organisations list) has no breadcrumb —
+				// it's the root, so a lone "Home" crumb is just noise.
+				return [];
 			case "user-settings": {
 				out.push({ href: "/settings/account", label: "User settings" });
 				const section = params.section;
