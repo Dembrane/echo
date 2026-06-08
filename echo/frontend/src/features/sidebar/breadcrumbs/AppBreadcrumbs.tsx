@@ -53,6 +53,7 @@ const ORG_SECTION_LABELS: Record<string, string> = {
 	billing: "Billing",
 	overview: "Overview",
 	people: "Members",
+	"request-workspace": "Request workspace",
 	usage: "Usage",
 };
 
@@ -96,12 +97,20 @@ export const AppBreadcrumbs = () => {
 		// Always start with Home so the trail is anchored to a real
 		// clickable parent.
 		const out: Crumb[] = [{ href: "/", label: "Home" }];
+		// Emit the org crumb before the workspace one, so workspace/project
+		// trails read Home › Org › Workspace › Project.
+		const pushWorkspaceCrumbs = (ws: NonNullable<typeof workspace>) => {
+			if (ws.org_id) {
+				out.push({ href: `/o/${ws.org_id}/overview`, label: ws.org_name });
+			}
+			out.push({ href: `/w/${ws.id}/home`, label: ws.name });
+		};
 		switch (view) {
 			case "inbox":
 			case "help":
 				return out;
 			case "user-home":
-				// The home page (/w, the organisations list) has no breadcrumb —
+				// The home page (/o, the organisations list) has no breadcrumb —
 				// it's the root, so a lone "Home" crumb is just noise.
 				return [];
 			case "user-settings": {
@@ -147,10 +156,7 @@ export const AppBreadcrumbs = () => {
 			}
 			case "workspace-home": {
 				if (!workspace) return out;
-				out.push({
-					href: `/w/${workspace.id}/home`,
-					label: workspace.name,
-				});
+				pushWorkspaceCrumbs(workspace);
 				if (window.location.pathname.endsWith("/projects/new")) {
 					out.push({ label: "New project" });
 				}
@@ -158,10 +164,7 @@ export const AppBreadcrumbs = () => {
 			}
 			case "workspace-settings": {
 				if (workspace) {
-					out.push({
-						href: `/w/${workspace.id}/home`,
-						label: workspace.name,
-					});
+					pushWorkspaceCrumbs(workspace);
 				}
 				out.push({ label: "Settings" });
 				const section = params.section;
@@ -172,10 +175,7 @@ export const AppBreadcrumbs = () => {
 			}
 			case "project-home": {
 				if (workspace) {
-					out.push({
-						href: `/w/${workspace.id}/home`,
-						label: workspace.name,
-					});
+					pushWorkspaceCrumbs(workspace);
 				}
 				if (projectQuery.data?.name) {
 					out.push({
@@ -207,10 +207,7 @@ export const AppBreadcrumbs = () => {
 			}
 			case "project-settings": {
 				if (workspace) {
-					out.push({
-						href: `/w/${workspace.id}/home`,
-						label: workspace.name,
-					});
+					pushWorkspaceCrumbs(workspace);
 				}
 				if (projectQuery.data?.name) {
 					out.push({

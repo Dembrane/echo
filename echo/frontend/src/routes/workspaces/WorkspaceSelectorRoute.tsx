@@ -16,7 +16,7 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import { IconChevronRight } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { Navigate } from "react-router";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -73,6 +73,78 @@ interface OrgListItem {
 	memberCount: number | null;
 	isExternal: boolean;
 }
+
+// External orgs are derived from external workspaces: they aren't in the
+// membership rollup but the user still needs a way into them.
+function deriveOrgList(
+	organisations: OrganisationRollup[],
+	workspaces: WorkspaceLite[],
+): OrgListItem[] {
+	const internalOrgs: OrgListItem[] = organisations.map((o) => ({
+		id: o.id,
+		isExternal: false,
+		logo_url: o.logo_url,
+		memberCount: o.total_members,
+		name: o.name,
+	}));
+
+	const internalOrgIds = new Set(internalOrgs.map((o) => o.id));
+	const externalOrgMap = new Map<string, OrgListItem>();
+	for (const w of workspaces) {
+		if (w.role !== "external" || !w.org_id) continue;
+		if (internalOrgIds.has(w.org_id)) continue;
+		if (!externalOrgMap.has(w.org_id)) {
+			externalOrgMap.set(w.org_id, {
+				id: w.org_id,
+				isExternal: true,
+				logo_url: w.org_logo_url,
+				memberCount: null,
+				name: w.org_name || t`Organisation`,
+			});
+		}
+	}
+
+	return [...internalOrgs, ...externalOrgMap.values()].sort((a, b) => {
+		if (a.isExternal !== b.isExternal) return a.isExternal ? 1 : -1;
+		return a.name.localeCompare(b.name);
+	});
+}
+
+// Entry decision: single-org users go straight to their org overview, everyone
+// else to the home list. Lives at the root (not inside /o) so the shortcut
+// fires once on entry and doesn't bounce single-org users off /o on every visit.
+export const RootRedirect = () => {
+	const { data, isLoading, isError } = useQuery({
+		queryFn: fetchWorkspaces,
+		queryKey: ["v2", "workspaces"],
+		staleTime: 30_000,
+	});
+
+	if (isLoading) {
+		return (
+			<Container size="sm" py="xl">
+				<Stack align="center" gap={16} mt="20vh">
+					<Loader size="sm" color="gray" />
+				</Stack>
+			</Container>
+		);
+	}
+
+	// On error fall through to the home list, which renders its own error panel.
+	// Relative targets keep any active /:language prefix intact.
+	if (isError || !data) {
+		return <Navigate to="o" replace />;
+	}
+
+	const orgList = deriveOrgList(
+		data.organisations ?? [],
+		data.workspaces ?? [],
+	);
+	if (orgList.length === 1) {
+		return <Navigate to={`o/${orgList[0].id}/overview`} replace />;
+	}
+	return <Navigate to="o" replace />;
+};
 
 function OrgRow({ org, onOpen }: { org: OrgListItem; onOpen: () => void }) {
 	const logo = resolveLogoUrl(org.logo_url);
@@ -162,46 +234,9 @@ export const WorkspaceSelectorRoute = () => {
 	const recentRemovals = data?.recent_removals ?? [];
 	const invites = pendingInvites ?? [];
 
-	// Internal orgs come from the rollup (the user is a member). External orgs
-	// are derived from external workspaces — those orgs aren't in the rollup but
-	// the user still needs a way into them.
-	const internalOrgs: OrgListItem[] = organisations.map((o) => ({
-		id: o.id,
-		isExternal: false,
-		logo_url: o.logo_url,
-		memberCount: o.total_members,
-		name: o.name,
-	}));
-
-	const internalOrgIds = new Set(internalOrgs.map((o) => o.id));
-	const externalOrgMap = new Map<string, OrgListItem>();
-	for (const w of workspaces) {
-		if (w.role !== "external" || !w.org_id) continue;
-		if (internalOrgIds.has(w.org_id)) continue;
-		if (!externalOrgMap.has(w.org_id)) {
-			externalOrgMap.set(w.org_id, {
-				id: w.org_id,
-				isExternal: true,
-				logo_url: w.org_logo_url,
-				memberCount: null,
-				name: w.org_name || t`Organisation`,
-			});
-		}
-	}
-
-	const orgList = [...internalOrgs, ...externalOrgMap.values()].sort((a, b) => {
-		if (a.isExternal !== b.isExternal) return a.isExternal ? 1 : -1;
-		return a.name.localeCompare(b.name);
-	});
-
-	// Single-org shortcut: a user who belongs to exactly one organisation
-	// shouldn't have to click through a one-item list. Route straight to it.
-	useEffect(() => {
-		if (isLoading || isError) return;
-		if (orgList.length === 1) {
-			navigate(`/o/${orgList[0].id}/overview`, { replace: true });
-		}
-	}, [isLoading, isError, orgList, navigate]);
+	// No single-org redirect here (it's in RootRedirect), so this list stays
+	// reachable for single-org users.
+	const orgList = deriveOrgList(organisations, workspaces);
 
 	if (isLoading) {
 		return (
@@ -227,9 +262,6 @@ export const WorkspaceSelectorRoute = () => {
 			/>
 		);
 	}
-
-	// About to redirect — render nothing to avoid a one-frame flash of the list.
-	if (orgList.length === 1) return null;
 
 	return (
 		<Container size="sm" py="xl" px="lg">

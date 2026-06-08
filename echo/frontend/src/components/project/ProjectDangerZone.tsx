@@ -77,7 +77,7 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 			console.warn("Analytics tracking failed:", error);
 		}
 		deleteProjectByIdMutation.mutate(project.id);
-		navigate(workspaceId ? `/w/${workspaceId}/home` : "/w");
+		navigate(workspaceId ? `/w/${workspaceId}/home` : "/o");
 	};
 
 	return (

@@ -117,6 +117,11 @@ export const CreateWorkspaceRoute = () => {
 	const targetOrganisation =
 		adminOrganisations.find((o) => o.id === targetOrganisationId) ?? null;
 
+	// Launched from an org overview, so exiting returns there (not to /o home).
+	const backDestination = targetOrganisationId
+		? `/o/${targetOrganisationId}/overview`
+		: "/o";
+
 	const { data: workspacesData } = useQuery<{
 		workspaces: Array<{
 			id: string;
@@ -228,11 +233,11 @@ export const CreateWorkspaceRoute = () => {
 				),
 				confirmProps: { color: "red" },
 				labels: { cancel: t`Keep editing`, confirm: t`Discard` },
-				onConfirm: () => navigate("/w"),
+				onConfirm: () => navigate(backDestination),
 				title: t`Discard this request?`,
 			});
 		} else {
-			navigate("/w");
+			navigate(backDestination);
 		}
 	};
 
@@ -259,7 +264,7 @@ export const CreateWorkspaceRoute = () => {
 						</Trans>
 					</Text>
 					<Group>
-						<Button variant="default" onClick={() => navigate("/w")}>
+						<Button variant="default" onClick={() => navigate(backDestination)}>
 							<Trans>Back</Trans>
 						</Button>
 					</Group>
@@ -348,7 +353,7 @@ export const CreateWorkspaceRoute = () => {
 						</Trans>
 					</Text>
 
-					<Button variant="outline" onClick={() => navigate("/w")}>
+					<Button variant="outline" onClick={() => navigate(backDestination)}>
 						<Trans>Back to workspaces</Trans>
 					</Button>
 				</Stack>

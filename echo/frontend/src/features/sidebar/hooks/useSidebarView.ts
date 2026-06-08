@@ -94,6 +94,20 @@ export function resolveSidebarView(
 		};
 	}
 
+	// /w/new (request-workspace) carries its org in ?organisationId=, so surface
+	// it under that org's context. No org param → fall through to user-home.
+	if (segs[0] === "w" && segs[1] === "new") {
+		const orgId = new URLSearchParams(search).get("organisationId");
+		if (orgId) {
+			return {
+				backTo: `/o/${orgId}/overview`,
+				params: { orgId, section: "request-workspace" },
+				scope: "org",
+				view: "org-home",
+			};
+		}
+	}
+
 	// /w/:workspaceId/...
 	if (segs[0] === "w" && segs[1] && segs[1] !== "new") {
 		const workspaceId = segs[1];

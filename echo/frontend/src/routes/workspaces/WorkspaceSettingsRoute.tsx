@@ -389,7 +389,7 @@ export const WorkspaceSettingsRoute = () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "organisation"] });
 			toast.success(t`Workspace deleted`);
-			navigate("/w");
+			navigate("/o");
 		},
 	});
 
@@ -405,7 +405,7 @@ export const WorkspaceSettingsRoute = () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			toast.success(t`You left the workspace`);
-			navigate("/w");
+			navigate("/o");
 		},
 	});
 
@@ -630,7 +630,7 @@ export const WorkspaceSettingsRoute = () => {
 							variant="subtle"
 							size="xs"
 							color="gray"
-							onClick={() => navigate("/w")}
+							onClick={() => navigate("/o")}
 						>
 							<Trans>Back to workspaces</Trans>
 						</Button>

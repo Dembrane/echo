@@ -123,7 +123,7 @@ export const CreateProjectRoute = () => {
 		if (workspaceId) {
 			navigate(`/w/${workspaceId}/home`);
 		} else {
-			navigate("/w");
+			navigate("/o");
 		}
 	};
 
