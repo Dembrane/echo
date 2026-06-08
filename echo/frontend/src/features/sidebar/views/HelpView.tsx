@@ -26,7 +26,7 @@ export const HelpView = () => {
 	return (
 		<>
 			<nav className="flex h-full flex-col gap-0.5 p-1.5">
-				<ViewHeader to={backTo ?? "/w"} title={<Trans>Help</Trans>} />
+				<ViewHeader to={backTo ?? "/o"} title={<Trans>Help</Trans>} />
 				<NavButton
 					label={<Trans>Contact support</Trans>}
 					icon={EnvelopeSimple}

@@ -30,7 +30,7 @@ export const UserSettingsView = () => {
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
-			<BackButton to="/w" label={<Trans>Settings</Trans>} />
+			<BackButton to="/o" label={<Trans>Settings</Trans>} />
 			<NavItem
 				to="/settings/account"
 				label={<Trans>Account & security</Trans>}

@@ -55,7 +55,7 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 
 	useEffect(() => {
 		if (auth.isAuthenticated && !isActive && !skipRedirect) {
-			const nextLink = query.get("next") ?? "/w";
+			const nextLink = query.get("next") ?? "/o";
 			navigate(nextLink);
 		}
 	}, [auth.isAuthenticated, isActive, navigate, query, skipRedirect]);

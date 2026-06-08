@@ -211,11 +211,11 @@ export const LoginRoute = () => {
 			} else if (lastStillValid) {
 				navigate(`/w/${lastUsedId}/home`);
 			} else if (workspaceCount > 1 || isOrganisationAdmin) {
-				navigate("/w");
+				navigate("/o");
 			} else if (firstWorkspaceId) {
 				navigate(`/w/${firstWorkspaceId}/home`);
 			} else {
-				navigate("/w");
+				navigate("/o");
 			}
 		} catch (error) {
 			// biome-ignore lint/suspicious/noExplicitAny: <todo>

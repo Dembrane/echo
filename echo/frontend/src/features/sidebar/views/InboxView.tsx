@@ -102,7 +102,7 @@ export const InboxView = () => {
 		<div className="flex h-full w-full justify-center overflow-hidden">
 			<nav className="flex h-full w-full max-w-2xl flex-col px-4 py-6">
 				<div className="shrink-0 p-1.5">
-					<ViewHeader to={backTo ?? "/w"} title={<Trans>Inbox</Trans>} />
+					<ViewHeader to={backTo ?? "/o"} title={<Trans>Inbox</Trans>} />
 				</div>
 	
 				<div className="flex shrink-0 items-center justify-between gap-1 px-3 pb-2">

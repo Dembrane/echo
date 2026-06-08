@@ -1708,7 +1708,11 @@ def task_send_downgrade_email(
         downgraded_at_human = "today"
 
     base = (settings.urls.admin_base_url or "").rstrip("/")
-    workspace_url = f"{base}/w/{workspace_id}" if base else f"/w/{workspace_id}"
+    workspace_url = (
+        f"{base}/w/{workspace_id}/settings/billing"
+        if base
+        else f"/w/{workspace_id}/settings/billing"
+    )
 
     subject = f"{ws_name} moved to {to_tier}".replace("\r", " ").replace("\n", " ")
 
@@ -1902,7 +1906,11 @@ def _send_tier_expired_notifications(
 
     settings = get_settings()
     base = (settings.urls.admin_base_url or "").rstrip("/")
-    workspace_url = f"{base}/w/{workspace_id}" if base else f"/w/{workspace_id}"
+    workspace_url = (
+        f"{base}/w/{workspace_id}/settings/billing"
+        if base
+        else f"/w/{workspace_id}/settings/billing"
+    )
 
     freeze_items = [
         e["human"] for e in effects
@@ -2051,7 +2059,11 @@ def _send_tier_expiring_soon(
 
     settings = get_settings()
     base = (settings.urls.admin_base_url or "").rstrip("/")
-    workspace_url = f"{base}/w/{workspace_id}" if base else f"/w/{workspace_id}"
+    workspace_url = (
+        f"{base}/w/{workspace_id}/settings/billing"
+        if base
+        else f"/w/{workspace_id}/settings/billing"
+    )
 
     from dembrane.directus import directus
     with directus_client_context(directus) as client:

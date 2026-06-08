@@ -70,7 +70,7 @@ export const UserHomeView = () => {
 			{needsOnboarding && (
 				<NavItem to="/onboarding" label={<Trans>Setup</Trans>} icon={Sparkle} />
 			)}
-			<NavItem to="/w" label={<Trans>Home</Trans>} icon={House} end />
+			<NavItem to="/o" label={<Trans>Home</Trans>} icon={House} end />
 
 			{noWorkspaces ? (
 				<>

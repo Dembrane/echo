@@ -122,6 +122,10 @@ const WorkspaceSelectorRoute = createLazyNamedRoute(
 	() => import("./routes/workspaces/WorkspaceSelectorRoute"),
 	"WorkspaceSelectorRoute",
 );
+const RootRedirect = createLazyNamedRoute(
+	() => import("./routes/workspaces/WorkspaceSelectorRoute"),
+	"RootRedirect",
+);
 const CreateWorkspaceRoute = createLazyNamedRoute(
 	() => import("./routes/workspaces/CreateWorkspaceRoute"),
 	"CreateWorkspaceRoute",
@@ -290,9 +294,13 @@ export const mainRouter = createBrowserRouter([
 	{
 		children: [
 			{
-				// Root → workspace selector. Legacy /projects routes are gone;
-				// the canonical "home" for an authed user is /w.
-				element: <Navigate to="w" replace />,
+				// Root entry: RootRedirect sends single-org users to their org
+				// overview, everyone else to the /o home list.
+				element: (
+					<Protected>
+						<RootRedirect />
+					</Protected>
+				),
 				path: "",
 			},
 			{
@@ -368,15 +376,12 @@ export const mainRouter = createBrowserRouter([
 				path: "invites",
 			},
 			{
-				// Workspace selector + create — canonical path is /w.
+				// Request-workspace wizard. Bare /w is retired (home moved to /o)
+				// and falls through to the 404; /w/:workspaceId/* is defined below.
 				children: [
 					{
-						element: <WorkspaceSelectorRoute />,
-						index: true,
-					},
-					{
 						element: <CreateWorkspaceRoute />,
-						path: "new",
+						index: true,
 					},
 				],
 				element: (
@@ -384,12 +389,16 @@ export const mainRouter = createBrowserRouter([
 						<BaseLayout />
 					</Protected>
 				),
-				path: "w",
+				path: "w/new",
 			},
 			{
-				// Organisation (org) admin surface. Canonical path is /o/:organisationId —
-				// matches the /w/:workspaceId pattern.
+				// Bare /o is the home list (organisations); /o/:organisationId is a
+				// single org's admin surface.
 				children: [
+					{
+						element: <WorkspaceSelectorRoute />,
+						index: true,
+					},
 					{
 						// Splat so tab state lives in the path
 						// (/o/:organisationId/:tab) — matches the project-tab pattern.

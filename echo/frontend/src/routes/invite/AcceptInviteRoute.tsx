@@ -105,13 +105,13 @@ export const AcceptInviteRoute = () => {
 				toast.success(t`You're in`);
 			}
 			setTimeout(() => {
-				// Org-only acceptance lands on /w (WorkspaceSelectorRoute surfaces DiscoverableWorkspaces per-org).
+				// Org-only acceptance lands on /o (WorkspaceSelectorRoute surfaces DiscoverableWorkspaces per-org).
 				if (data.type === "org") {
-					navigate("/w");
+					navigate("/o");
 				} else if (data.workspace_id) {
 					navigate(`/w/${data.workspace_id}/home`);
 				} else {
-					navigate("/w");
+					navigate("/o");
 				}
 			}, 800);
 		} catch (err) {
@@ -354,7 +354,7 @@ export const AcceptInviteRoute = () => {
 									size="md"
 									fullWidth
 									variant="outline"
-									onClick={() => navigate("/w")}
+									onClick={() => navigate("/o")}
 								>
 									<Trans>Back to my workspaces</Trans>
 								</Button>
@@ -475,7 +475,7 @@ export const AcceptInviteRoute = () => {
 													onClick={() =>
 														navigate(
 															inviteState.type === "org"
-																? "/w"
+																? "/o"
 																: `/w/${inviteState.workspace_id}/home`,
 														)
 													}
@@ -487,7 +487,7 @@ export const AcceptInviteRoute = () => {
 											size="md"
 											fullWidth
 											variant="outline"
-											onClick={() => navigate("/w")}
+											onClick={() => navigate("/o")}
 										>
 											<Trans>Back to my workspaces</Trans>
 										</Button>
@@ -515,7 +515,7 @@ export const AcceptInviteRoute = () => {
 													onClick={() =>
 														navigate(
 															inviteState.type === "org"
-																? "/w"
+																? "/o"
 																: `/w/${inviteState.workspace_id}/home`,
 														)
 													}
@@ -563,7 +563,7 @@ export const AcceptInviteRoute = () => {
 													size="md"
 													fullWidth
 													variant="outline"
-													onClick={() => navigate("/w")}
+													onClick={() => navigate("/o")}
 												>
 													<Trans>Not now</Trans>
 												</Button>

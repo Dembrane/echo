@@ -26,7 +26,7 @@ export function AccessDeniedPanel({
 				<Button
 					variant="subtle"
 					size="xs"
-					onClick={() => navigate("/w")}
+					onClick={() => navigate("/o")}
 					data-testid={`${testId}-back-button`}
 				>
 					<Trans>Back to your workspaces</Trans>

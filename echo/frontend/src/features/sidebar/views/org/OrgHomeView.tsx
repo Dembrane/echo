@@ -7,6 +7,7 @@ import { useParams } from "react-router";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useSidebarView } from "../../hooks/useSidebarView";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
 import { SectionLabel } from "../../primitives/SectionLabel";
@@ -36,7 +37,10 @@ export const OrgHomeView = () => {
 		orgId?: string;
 		organisationId?: string;
 	}>();
-	const orgId = routeOrgId ?? organisationId;
+	// On /w/new (request-workspace) the org isn't a path param — it rides in on
+	// the query string and is surfaced through the resolved sidebar view.
+	const { params: sidebarParams } = useSidebarView();
+	const orgId = routeOrgId ?? organisationId ?? sidebarParams.orgId;
 	const { workspaces: myWorkspaces } = useWorkspace();
 	const { data: me } = useV2Me();
 	const isManager = useMemo(() => {
@@ -72,7 +76,7 @@ export const OrgHomeView = () => {
 		// Admins/owners see the whole org roster (they can open any workspace).
 		// Everyone else (member, billing, external) sees only the workspaces
 		// they directly belong to, so the sidebar never shows a workspace that
-		// dead-links on click. Discovering other workspaces happens on /w.
+		// dead-links on click. Discovering other workspaces happens on /o.
 		if (!isManager) {
 			return myOrgWorkspaces.map((w) => ({
 				id: w.id,
@@ -109,7 +113,7 @@ export const OrgHomeView = () => {
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
 			{/* The back button doubles as the section title: its centered label is
 			    the org name (the current context), not the destination. */}
-			<BackButton to="/w" label={orgName} center />
+			<BackButton to="/o" label={orgName} center />
 
 			{!isExternal && (
 				<>

@@ -585,7 +585,7 @@ export const OrganisationRoute = () => {
 				}
 				secondaryAction={{
 					label: <Trans>Back</Trans>,
-					onClick: () => navigate("/w"),
+					onClick: () => navigate("/o"),
 				}}
 			/>
 		);
@@ -608,7 +608,7 @@ export const OrganisationRoute = () => {
 					<Title order={3} fw={400}>
 						<Trans>Organisation not found</Trans>
 					</Title>
-					<Button variant="outline" onClick={() => navigate("/w")}>
+					<Button variant="outline" onClick={() => navigate("/o")}>
 						<Trans>Back</Trans>
 					</Button>
 				</Stack>
@@ -618,7 +618,9 @@ export const OrganisationRoute = () => {
 
 	return (
 		<Container size="xl" py="xl" px="lg">
-			{organisationId && (
+			{/* Skipped on overview (cards + top SeatCapBanner already cover it);
+			    kept on other tabs where it's the only org-wide cap signal. */}
+			{organisationId && view !== "overview" && (
 				<OrganisationCapBanner
 					organisationId={organisationId}
 					workspaces={workspaces}
@@ -660,7 +662,7 @@ export const OrganisationRoute = () => {
 					{/* Back link top-right per the canonical header pattern
 					    (design review 2026-04-23). No gear icon — organisation-name
 					    + logo editing live inline in the Overview tab. */}
-					<Button variant="subtle" size="xs" onClick={() => navigate("/w")}>
+					<Button variant="subtle" size="xs" onClick={() => navigate("/o")}>
 						<Trans>Back to organisations</Trans>
 					</Button>
 				</Group>
