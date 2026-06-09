@@ -1110,7 +1110,7 @@ function OrganisationOverviewPanel({
 		const navigate = useI18nNavigate();
 
 		const handlePeopleClick = () => {
-			navigate(`/o/${orgId}/people`);
+			navigate(`/o/${orgId}/settings/members`);
 		};
 
 		// The caller's own workspaces (direct memberships) + their pending
