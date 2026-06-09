@@ -20,6 +20,7 @@ import {
 	UploadSimpleIcon,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
+import { I18nLink } from "@/components/common/i18nLink";
 import { useInfiniteConversationsByProjectId } from "@/components/conversation/hooks";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectById } from "@/components/project/hooks";
@@ -175,13 +176,19 @@ export const ProjectHomeRoute = () => {
 												| ConversationProjectTag[]
 												| undefined) ?? [];
 										return (
-											<Card key={conversation.id} withBorder p="md" radius="sm">
-												<Stack gap="xs">
-													<Group
-														justify="space-between"
-														align="flex-start"
-														wrap="nowrap"
-													>
+											<I18nLink
+												key={conversation.id}
+												to={`${base}/conversation/${conversation.id}`}
+												className="no-underline block h-full"
+											>
+												<Card
+													component="a"
+													withBorder
+													p="md"
+													radius="sm"
+													className="h-full hover:!border-primary-400 transition-colors"
+												>
+													<Stack gap="xs">
 														<Stack gap={2} style={{ minWidth: 0 }}>
 															<Text size="sm" fw={500} truncate>
 																{conversationTitle(conversation)}
@@ -194,46 +201,35 @@ export const ProjectHomeRoute = () => {
 																	: ""}
 															</Text>
 														</Stack>
-														<Button
-															variant="light"
-															size="xs"
-															onClick={() =>
-																navigate(
-																	`${base}/conversation/${conversation.id}`,
-																)
-															}
-														>
-															<Trans>Open</Trans>
-														</Button>
-													</Group>
 
-													<Text size="sm" c="dimmed" style={lineClampStyle}>
-														{conversation.summary?.trim() || (
-															<Trans>No summary yet</Trans>
+														<Text size="sm" c="dimmed" style={lineClampStyle}>
+															{conversation.summary?.trim() || (
+																<Trans>No summary yet</Trans>
+															)}
+														</Text>
+
+														{tags.length > 0 && (
+															<Group gap={6} wrap="wrap">
+																{tags.slice(0, 4).map((tag) => {
+																	const label = tagText(tag);
+																	if (!label) return null;
+																	return (
+																		<Badge
+																			key={tag.id}
+																			size="xs"
+																			variant="light"
+																			color="gray"
+																			radius="sm"
+																		>
+																			{label}
+																		</Badge>
+																	);
+																})}
+															</Group>
 														)}
-													</Text>
-
-													{tags.length > 0 && (
-														<Group gap={6} wrap="wrap">
-															{tags.slice(0, 4).map((tag) => {
-																const label = tagText(tag);
-																if (!label) return null;
-																return (
-																	<Badge
-																		key={tag.id}
-																		size="xs"
-																		variant="light"
-																		color="gray"
-																		radius="sm"
-																	>
-																		{label}
-																	</Badge>
-																);
-															})}
-														</Group>
-													)}
-												</Stack>
-											</Card>
+													</Stack>
+												</Card>
+											</I18nLink>
 										);
 									})}
 								</SimpleGrid>
@@ -241,8 +237,14 @@ export const ProjectHomeRoute = () => {
 						</Stack>
 
 						{report && reportTitle && (
-							<Card withBorder p="md" radius="sm">
-								<Group justify="space-between" align="center">
+							<I18nLink to={`${base}/report`} className="no-underline block">
+								<Card
+									component="a"
+									withBorder
+									p="md"
+									radius="sm"
+									className="hover:!border-primary-400 transition-colors"
+								>
 									<Stack gap={2}>
 										<Group gap="xs" align="center">
 											<ClockClockwiseIcon size={14} />
@@ -262,15 +264,8 @@ export const ProjectHomeRoute = () => {
 											</Text>
 										)}
 									</Stack>
-									<Button
-										variant="light"
-										size="xs"
-										onClick={() => navigate(`${base}/report`)}
-									>
-										<Trans>Open</Trans>
-									</Button>
-								</Group>
-							</Card>
+								</Card>
+							</I18nLink>
 						)}
 					</Stack>
 				</Grid.Col>
