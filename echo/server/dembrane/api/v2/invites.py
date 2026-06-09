@@ -12,8 +12,9 @@ from fastapi import Depends, APIRouter, HTTPException
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import resolve_app_user
+from dembrane.policies import ROLE_HIERARCHY
 from dembrane.settings import get_settings
-from dembrane.seat_capacity import assert_can_add_guest, assert_can_add_member
+from dembrane.seat_capacity import assert_can_add_seat
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.schemas import WorkspaceInviteRequest, WorkspaceInviteResponse
 from dembrane.directus_async import async_directus
@@ -23,9 +24,6 @@ router = APIRouter()
 logger = getLogger("api.v2.invites")
 
 
-# Reusable Annotated alias keeps handler signatures readable and avoids
-# Ruff B008 ("Depends() in arg defaults"). Mirrors the convention in
-# dembrane/api/v2/workspaces.py.
 DependencyWorkspaceContext = Annotated[WorkspaceContext, Depends(get_workspace_context)]
 
 settings = get_settings()
@@ -54,7 +52,6 @@ def _enqueue_invite_email(
     failure_context: str,
 ) -> bool:
     """Returns False on broker failure so callers can set email_sent=False."""
-    # Lazy import to avoid pulling Dramatiq into the request path at module load.
     from dembrane.tasks import task_send_invite_email
 
     try:
@@ -73,46 +70,37 @@ async def invite_to_workspace(
 ) -> WorkspaceInviteResponse:
     """Invite a user to a workspace by email.
 
+    `role` is the single axis. role='external' invites an outside
+    collaborator and skips the org_membership write. Any other role
+    writes (or reuses) an org_membership row in this workspace's org
+    before creating the workspace_membership. Invariant per ADR-0003:
+    role='external' ⟺ no org_membership row for the user in this org;
+    enforced at write-time only, no read-time derivation.
+
     If the user already has a Directus account + app_user:
       → Create workspace_membership immediately (status: "added")
 
     If the user doesn't exist:
       → Create workspace_invite with token
       → Send invite email via SendGrid
-      → When they register + onboard, the invite is auto-accepted (status: "invited")
+      → On register + onboard the invite is auto-accepted (status: "invited")
     """
     ctx.require_policy("member:invite")
 
-    await _invite_rate_limiter.check(ctx.app_user_id)
-
     email = body.email.strip().lower()
     role = body.role
+    is_external_invite = role == "external"
 
-    if role not in ("admin", "member", "billing"):
-        raise HTTPException(status_code=400, detail="Role must be admin, member, or billing")
-
-    # Prevent role escalation — can only grant roles at or below your own level.
-    # Billing sits between member and admin: it's more than a member (financial
-    # visibility) but less than an admin (no project or content control).
-    ROLE_HIERARCHY = {"member": 1, "billing": 2, "admin": 3, "owner": 4}
+    # Role-escalation guard: caller can only grant roles at or below their
+    # own level. external sits at the bottom (0) so anyone with
+    # member:invite can grant it. owner (4) is currently never grantable
+    # via this endpoint because no caller can ever exceed their own
+    # level — the workspace creator is the only owner, and they cannot
+    # grant owner to anyone else through invite.
     inviter_level = ROLE_HIERARCHY.get(ctx.role, 0)
     requested_level = ROLE_HIERARCHY.get(role, 0)
     if requested_level > inviter_level:
         raise HTTPException(status_code=403, detail="Cannot grant a role higher than your own")
-
-    # Hard rule: externals (guests — non-organisation members on a workspace) can
-    # only ever be member. Admin/owner/billing roles imply management or
-    # financial responsibility that doesn't make sense for a guest of
-    # another organisation. If the caller isn't inviting this person as a organisation
-    # member (is_org_member=false), clamp to member.
-    if not body.is_org_member and role in ("admin", "owner", "billing"):
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "Guests can't be admins, owners, or billing. "
-                "Invite them as a organisation member first, or choose member."
-            ),
-        )
 
     # Prevent self-invite
     inviter_app_user = await async_directus.get_items(
@@ -123,34 +111,8 @@ async def invite_to_workspace(
         if inviter_app_user[0].get("email", "").lower() == email:
             raise HTTPException(status_code=400, detail="Cannot invite yourself")
 
-    # Seat / guest cap gate. "Gate the host, not the invitee" — block the
-    # invite from being sent rather than letting an invitee click a link
-    # only to hit a wall. include_pending=True so outstanding
-    # workspace_invite rows count too — without this an admin at 0/2
-    # could fire 5 guest invites and only 2 would actually succeed at
-    # accept-time, leaving 3 invitees with friendly-but-confusing 402s.
-    # assert_can_add_* is still a no-op on tiers that allow overage
-    # (Pioneer+ for member seats), unlimited tiers (Guardian), and
-    # unknown legacy tiers.
-    if body.is_org_member:
-        await assert_can_add_member(ctx.workspace, audience="admin", include_pending=True)
-    else:
-        await assert_can_add_guest(ctx.workspace, audience="admin", include_pending=True)
-
-    # Check if already a member
-    existing_membership = await async_directus.get_items(
-        "workspace_membership",
-        {
-            "query": {
-                "filter": {
-                    "workspace_id": {"_eq": workspace_id},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["user_id"],
-                "limit": -1,
-            }
-        },
-    )
+    # Rate-limit after validation gates so spam on malformed/forbidden requests doesn't burn legitimate quota.
+    await _invite_rate_limiter.check(ctx.app_user_id)
 
     # Try to find the user
     users = await async_directus.get_users(
@@ -172,24 +134,78 @@ async def invite_to_workspace(
         app_user = await resolve_app_user(directus_user["id"])
 
         if app_user:
-            # Check if already a member
-            if isinstance(existing_membership, list):
-                for m in existing_membership:
-                    if m.get("user_id") == app_user["id"]:
-                        raise HTTPException(
-                            status_code=409,
-                            detail="User is already a member of this workspace",
-                        )
+            # Include soft-deleted rows so we reactivate rather than insert a duplicate.
+            existing_membership_rows = await async_directus.get_items(
+                "workspace_membership",
+                {
+                    "query": {
+                        "filter": {
+                            "workspace_id": {"_eq": workspace_id},
+                            "user_id": {"_eq": app_user["id"]},
+                        },
+                        "fields": ["id", "deleted_at", "role"],
+                        "limit": 1,
+                    }
+                },
+            )
+            existing_row = (
+                existing_membership_rows[0]
+                if isinstance(existing_membership_rows, list) and existing_membership_rows
+                else None
+            )
 
-            # Determine external status based on invite intent
-            is_external = not body.is_org_member
+            # Idempotent re-invite: active member → 200 already_member, no email. Must run before the seat-cap gate.
+            if existing_row and not existing_row.get("deleted_at"):
+                # Best-effort cleanup of stale pending invite rows for the same (email, workspace).
+                try:
+                    now_iso = datetime.now(timezone.utc).isoformat()
+                    stale = await async_directus.get_items(
+                        "workspace_invite",
+                        {
+                            "query": {
+                                "filter": {
+                                    "workspace_id": {"_eq": workspace_id},
+                                    "email": {"_eq": email},
+                                    "accepted_at": {"_null": True},
+                                    "deleted_at": {"_null": True},
+                                },
+                                "fields": ["id"],
+                                "limit": -1,
+                            }
+                        },
+                    )
+                    if isinstance(stale, list):
+                        for inv in stale:
+                            await async_directus.update_item(
+                                "workspace_invite",
+                                inv["id"],
+                                {"accepted_at": now_iso},
+                            )
+                except Exception:
+                    logger.exception(
+                        "already_member: failed to clean up stale pending invites "
+                        "for %s in workspace %s",
+                        email,
+                        workspace_id,
+                    )
+
+                return WorkspaceInviteResponse(
+                    status="already_member",
+                    email=email,
+                    user_existed=True,
+                    email_sent=False,
+                )
+
+            # Net-new seat or reactivation of soft-deleted row: include pending invites in the cap.
+            await assert_can_add_seat(
+                ctx.workspace, audience="admin", include_pending=True
+            )
+
             ws_org_id = ctx.workspace.get("org_id")
 
-            # If marked as org member, add them to the org too. Track
-            # whether we freshly added them so the ORGANISATION_MEMBER_ADDED
-            # notification only fires for genuinely new organisation joiners.
+            # Invariant: role='external' ⟺ no org_membership in this org. Non-external invites create org_membership if missing (also the external-to-member promotion path).
             newly_joined_organisation = False
-            if body.is_org_member and ws_org_id:
+            if not is_external_invite and ws_org_id:
                 existing_org_mem = await async_directus.get_items(
                     "org_membership",
                     {
@@ -216,34 +232,45 @@ async def invite_to_workspace(
                     logger.info(f"Added {email} to org {ws_org_id} as member")
                     newly_joined_organisation = True
 
-            await async_directus.create_item(
-                "workspace_membership",
-                {
-                    "id": generate_uuid(),
-                    "workspace_id": workspace_id,
-                    "user_id": app_user["id"],
-                    "role": role,
-                    "source": "direct",
-                    "is_external": is_external,
-                },
-            )
+            # External add: enforce insider XOR outsider before creating the
+            # external row (removes a stale org_membership, or rejects if the
+            # user is already an internal member of this org).
+            if is_external_invite and ws_org_id:
+                from dembrane.api.v2._invite_helpers import (
+                    reconcile_external_membership_org_row,
+                )
 
-            # Bust cached usage so seat / guest counts refresh on next read.
-            # Bust BOTH layers — workspace-scope and org-scope — since the
-            # /v2/orgs/:id/usage rollup aggregates over every workspace and
-            # would otherwise stay stale for up to USAGE_TTL_SECONDS.
+                await reconcile_external_membership_org_row(ws_org_id, app_user["id"])
+
+            # Reactivate a soft-deleted row if present; otherwise create fresh. Distinct status so UI can show "reactivated" vs "added".
+            reactivated = False
+            if existing_row and existing_row.get("deleted_at"):
+                await async_directus.update_item(
+                    "workspace_membership",
+                    existing_row["id"],
+                    {"deleted_at": None, "role": role, "source": "direct"},
+                )
+                reactivated = True
+            else:
+                await async_directus.create_item(
+                    "workspace_membership",
+                    {
+                        "id": generate_uuid(),
+                        "workspace_id": workspace_id,
+                        "user_id": app_user["id"],
+                        "role": role,
+                        "source": "direct",
+                    },
+                )
+
             from dembrane.cache_utils import invalidate_workspace_and_org_usage
 
             await invalidate_workspace_and_org_usage(workspace_id, ws_org_id)
 
             logger.info(
-                f"Added {email} to workspace {workspace_id} as {role} "
-                f"(external: {is_external}) by {ctx.app_user_id}"
+                f"Added {email} to workspace {workspace_id} as {role} by {ctx.app_user_id}"
             )
 
-            # Notify the invitee in-app so they see the new workspace
-            # on their next page load without having to wait for the
-            # email to land.
             from dembrane.notifications import emit
 
             await emit(
@@ -257,9 +284,6 @@ async def invite_to_workspace(
                 ref_org_id=ws_org_id,
             )
 
-            # ORGANISATION_MEMBER_ADDED to organisation admins when the invitee is new
-            # to the organisation. Kept out of the workspace-only path (they're
-            # still a guest there, no organisation-roster change to announce).
             if newly_joined_organisation and ws_org_id:
                 from dembrane.notifications import (
                     emit_to_audience,
@@ -280,12 +304,11 @@ async def invite_to_workspace(
                     ref_org_id=ws_org_id,
                 )
 
-            # WORKSPACE_GUEST_ADDED → workspace admins/owners when a guest
-            # joins. Guests don't trigger ORGANISATION_MEMBER_ADDED (they're
-            # not org members), so without this branch admins never hear
-            # about them. Excludes the inviter (they already know) and the
-            # invitee themselves.
-            if is_external:
+            # WORKSPACE_GUEST_ADDED → workspace admins/owners when an
+            # external collaborator joins. (Event code retained for
+            # backwards-compatible notification stream; the user-facing
+            # copy uses "external".)
+            if is_external_invite:
                 from dembrane.notifications import (
                     emit_to_audience,
                     audience_workspace_admins,
@@ -293,15 +316,16 @@ async def invite_to_workspace(
 
                 admin_ids = await audience_workspace_admins(workspace_id)
                 admin_ids = [a for a in admin_ids if a != ctx.app_user_id and a != app_user["id"]]
-                guest_name = app_user.get("display_name") or email or "A guest"
+                external_name = app_user.get("display_name") or email or "An external"
                 ws_name = ctx.workspace.get("name", "your workspace")
                 await emit_to_audience(
                     admin_ids,
                     actor_user_id=ctx.app_user_id,
                     event_code="WORKSPACE_GUEST_ADDED",
-                    title=f"{guest_name} joined {ws_name} as a guest",
+                    title=f"{external_name} joined {ws_name} as an external",
                     message=(
-                        f"{email} now has guest access. Guests count against your tier's guest cap."
+                        f"{email} now has external access. Externals count "
+                        "against your tier's seat cap."
                     ),
                     action="NAVIGATE_WORKSPACE_SETTINGS",
                     ref_workspace_id=workspace_id,
@@ -324,25 +348,24 @@ async def invite_to_workspace(
                 template_data={
                     "inviter_name": inviter_name,
                     "workspace_name": ctx.workspace.get("name", "a workspace"),
-                    # Direct link to the workspace, not the picker.
                     "invite_url": f"{settings.urls.admin_base_url}/w/{workspace_id}/projects",
                 },
                 failure_context=f"workspace_added / workspace {workspace_id}",
             )
 
             return WorkspaceInviteResponse(
-                status="added",
+                status="reactivated" if reactivated else "added",
                 email=email,
                 user_existed=True,
-                # False = broker refused; SendGrid outcome is on the actor's logs.
                 email_sent=email_queued,
             )
 
     # User doesn't exist or doesn't have app_user — create an invite.
-    # Security via HMAC hash derived from invite_id — no stored token needed.
+    # Pending invites reserve seats elsewhere, so cap-check before issuing one.
+    await assert_can_add_seat(ctx.workspace, audience="admin", include_pending=True)
+
     expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
 
-    # Check for existing pending invite (not accepted AND not expired)
     now_iso = datetime.now(timezone.utc).isoformat()
     existing_invites = await async_directus.get_items(
         "workspace_invite",
@@ -352,6 +375,7 @@ async def invite_to_workspace(
                     "workspace_id": {"_eq": workspace_id},
                     "email": {"_eq": email},
                     "accepted_at": {"_null": True},
+                    "deleted_at": {"_null": True},
                     "expires_at": {"_gt": now_iso},
                 },
                 "fields": ["id"],
@@ -361,9 +385,14 @@ async def invite_to_workspace(
     )
 
     if isinstance(existing_invites, list) and len(existing_invites) > 0:
-        raise HTTPException(status_code=409, detail="An invite is already pending for this email")
+        # 200 with status string so the modal renders this per-row rather than as a global failure.
+        return WorkspaceInviteResponse(
+            status="already_invited",
+            email=email,
+            user_existed=user_existed,
+            email_sent=False,
+        )
 
-    # Get inviter name
     inviter_name = "Your organisation"
     inviter_app_user_data = await async_directus.get_items(
         "app_user",
@@ -388,15 +417,9 @@ async def invite_to_workspace(
             "role": role,
             "invited_by": ctx.app_user_id,
             "expires_at": expires_at,
-            "include_org_membership": body.is_org_member,
         },
     )
 
-    # Email URL: HMAC hash is the pointer to the invite (opaque, unforgeable),
-    # iss/ws/role/email are display-only context. Security = email ownership +
-    # HMAC. The `email` param lets the registration form pre-fill the field
-    # and lock it, so an invitee can't accidentally sign up with a typo'd
-    # address that wouldn't match the invite at acceptance time.
     from urllib.parse import urlencode
 
     invite_hash = compute_invite_hash(invite_id)
@@ -432,6 +455,5 @@ async def invite_to_workspace(
         status="invited",
         email=email,
         user_existed=user_existed,
-        # False = broker refused; SendGrid outcome is on the actor's logs.
         email_sent=email_queued,
     )

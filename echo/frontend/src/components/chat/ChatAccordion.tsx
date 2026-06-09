@@ -107,6 +107,7 @@ export const ChatAccordionItemMenu = ({
 	const deleteChatMutation = useDeleteChatMutation();
 	const updateChatMutation = useUpdateChatMutation();
 	const navigate = useI18nNavigate();
+	const { workspaceId, chatId: currentChatId } = useParams();
 	const [
 		deleteConfirmOpened,
 		{ open: openDeleteConfirm, close: closeDeleteConfirm },
@@ -183,7 +184,12 @@ export const ChatAccordionItemMenu = ({
 						chatId: chat.id ?? "",
 						projectId: (chat.project_id as string) ?? "",
 					});
-					navigate(`/projects/${chat.project_id}/overview`);
+					// Only redirect when deleting the chat you're viewing.
+					if (currentChatId && currentChatId === chat.id) {
+						navigate(
+							`/w/${workspaceId}/projects/${(chat.project_id as string) ?? ""}/chats/new`,
+						);
+					}
 					closeDeleteConfirm();
 				}}
 				data-testid="chat-delete-modal"
@@ -194,7 +200,7 @@ export const ChatAccordionItemMenu = ({
 
 // Chat Accordion
 export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
-	const { chatId: activeChatId } = useParams();
+	const { chatId: activeChatId, workspaceId } = useParams();
 	const { ref: loadMoreRef, inView } = useInView();
 
 	const chatsQuery = useInfiniteProjectChats(
@@ -309,7 +315,7 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 						return (
 							<NavigationButton
 								key={item.id}
-								to={`/projects/${projectId}/chats/${item.id}`}
+								to={`/w/${workspaceId}/projects/${projectId}/chats/${item.id}`}
 								active={isActive}
 								rightSection={
 									<Group gap="xs" wrap="nowrap">

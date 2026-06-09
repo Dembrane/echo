@@ -3,6 +3,7 @@ import { ActionIcon, Button, Group, Paper, Stack, Text } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import type { PropsWithChildren } from "react";
+import { useParams } from "react-router";
 import { Icons } from "@/icons";
 import { testId } from "@/lib/testUtils";
 import { I18nLink } from "../common/i18nLink";
@@ -12,7 +13,8 @@ export const ProjectCard = ({
 }: PropsWithChildren<{
 	project: Project;
 }>) => {
-	const link = `/projects/${project.id}/overview`;
+	const { workspaceId } = useParams();
+	const link = `/w/${workspaceId}/projects/${project.id}/overview`;
 
 	return (
 		<Paper

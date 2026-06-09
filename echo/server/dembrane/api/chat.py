@@ -27,7 +27,9 @@ from dembrane.chat_utils import (
 from dembrane.service.chat import ChatServiceException, ChatNotFoundException
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.stream_status import stream_with_status
+from dembrane.tier_capacity import tier_allows_overage, is_conversation_locked
 from dembrane.api.rate_limit import create_rate_limiter
+from dembrane.directus_async import async_directus
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
@@ -45,6 +47,35 @@ logger = logging.getLogger("dembrane.chat")
 settings = get_settings()
 ENABLE_CHAT_AUTO_SELECT = settings.feature_flags.enable_chat_auto_select
 ENABLE_CHAT_SELECT_ALL = settings.feature_flags.enable_chat_select_all
+
+CONVERSATION_LOCKED_ERROR = "conversation_locked"
+
+
+async def _resolve_workspace_tier(project_id: str) -> Optional[str]:
+    """Resolve the workspace tier for a project. Returns None if the chain is broken."""
+    project = await async_directus.get_item("project", project_id)
+    if not project or not project.get("workspace_id"):
+        return None
+    workspace = await async_directus.get_item("workspace", project["workspace_id"])
+    if not workspace:
+        return None
+    return workspace.get("tier")
+
+
+async def _check_conversation_not_locked(conversation_id: str, project_id: str) -> None:
+    """Raise 402 if the conversation is locked (over-cap on a non-overage tier)."""
+    conv = await async_directus.get_item("conversation", conversation_id)
+    if not conv or not conv.get("is_over_cap"):
+        return
+    tier = await _resolve_workspace_tier(project_id)
+    if is_conversation_locked(conv, tier):
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "error": CONVERSATION_LOCKED_ERROR,
+                "message": "Conversation is locked, upgrade to add it to a chat.",
+            },
+        )
 
 
 async def is_followup_question(
@@ -124,12 +155,10 @@ async def raise_if_chat_not_found_or_not_authorized(
     auth_session: DirectusSession,
     *,
     include_used_conversations: bool = False,
+    require: Optional[str] = None,
 ) -> dict:
-    # Always use the global (admin) chat_service for reads here.
-    # Authorization is checked manually below (project owner vs user_id).
-    # Using user-scoped Directus client would cause junction table data
-    # (e.g., used_conversations) to be filtered by Directus permissions,
-    # leading to inconsistencies where writes succeed but reads return empty.
+    # v2 access gate shared with the BFF (chat:use; `require` adds a stricter
+    # policy). Reads use the admin client: row ACL is admin-only post-lockdown.
     chat_svc = chat_service
     try:
         chat = await run_in_thread_pool(
@@ -144,27 +173,44 @@ async def raise_if_chat_not_found_or_not_authorized(
         logger.error("Failed to fetch chat %s: %s", chat_id, exc)
         raise HTTPException(status_code=500, detail="Failed to load chat") from exc
 
-    project_owner: Optional[str] = None
-    project_info = chat.get("project_id")
-    if isinstance(project_info, dict):
-        project_owner = project_info.get("directus_user_id")
+    # Soft-deleted chats 404 for everyone, including staff admins.
+    if chat.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Chat not found")
 
-    if not auth_session.is_admin and project_owner != auth_session.user_id:
-        logger.debug(
-            "Chat %s not authorized for user %s (owner=%s)",
-            chat_id,
-            auth_session.user_id,
-            project_owner,
-        )
-        raise HTTPException(status_code=403, detail="You are not authorized to access this chat")
+    # Staff admins bypass the app-layer model (they may have no app_user row).
+    if not auth_session.is_admin:
+        from dembrane.api.v2.bff._access import resolve_chat_access
+
+        access, _ = await resolve_chat_access(chat_id, auth_session)
+        if require:
+            access.require(require)
 
     return chat
+
+
+def _chat_project_id(chat: dict) -> Optional[str]:
+    """Extract the parent project id from a chat row (relation dict or raw id)."""
+    project_info = chat.get("project_id")
+    if isinstance(project_info, dict):
+        return project_info.get("id")
+    return project_info
+
+
+def _raise_if_project_mismatch(chat: dict, body_project_id: Optional[str]) -> None:
+    """Reject a caller-supplied project_id that isn't the chat's own project
+    (admin-client reads would otherwise leak another tenant's conversations)."""
+    if body_project_id is not None and body_project_id != _chat_project_id(chat):
+        raise HTTPException(
+            status_code=400,
+            detail="project_id does not match this chat",
+        )
 
 
 @ChatRouter.delete("/{chat_id}")
 async def delete_chat(chat_id: str, auth: DependencyDirectusSession) -> dict:
     """Soft-delete a chat by setting deleted_at."""
-    await raise_if_chat_not_found_or_not_authorized(chat_id, auth)
+    # Same policy as the BFF's chat rename / message delete.
+    await raise_if_chat_not_found_or_not_authorized(chat_id, auth, require="project:update")
 
     from datetime import datetime
 
@@ -342,17 +388,12 @@ async def add_chat_context(
         auth,
         include_used_conversations=True,
     )
+    _raise_if_project_mismatch(chat, body.project_id)
 
     chat_svc = chat_service
     conversation_svc = conversation_service
 
-    project_info = chat.get("project_id")
-    project_id: Optional[str] = body.project_id
-    if project_id is None:
-        if isinstance(project_info, dict):
-            project_id = project_info.get("id")
-        else:
-            project_id = project_info
+    project_id: Optional[str] = body.project_id or _chat_project_id(chat)
 
     options_provided = sum(
         [
@@ -421,6 +462,8 @@ async def add_chat_context(
             conversation_entry.token_usage for conversation_entry in chat_context.conversations
         )
 
+        workspace_tier = await _resolve_workspace_tier(project_id)
+
         added: List[SelectAllConversationResult] = []
         skipped: List[SelectAllConversationResult] = []
         context_limit_reached = False
@@ -430,6 +473,17 @@ async def add_chat_context(
             participant_name = str(conversation.get("participant_name") or "Unknown")
 
             if not conv_id:
+                continue
+
+            if is_conversation_locked(conversation, workspace_tier):
+                skipped.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="locked",
+                    )
+                )
                 continue
 
             # Skip if already in context
@@ -556,6 +610,9 @@ async def add_chat_context(
             )
         except Exception as exc:
             raise HTTPException(status_code=404, detail="Conversation not found") from exc
+
+        if project_id:
+            await _check_conversation_not_locked(body.conversation_id, project_id)
 
         existing_ids = {
             (link.get("conversation_id") or {}).get("id")
@@ -752,12 +809,7 @@ async def get_chat_suggestions(
 
     chat_mode = chat.get("chat_mode")
 
-    # Get project_id from nested object
-    project_id_obj = chat.get("project_id")
-    if isinstance(project_id_obj, dict):
-        project_id = project_id_obj.get("id")
-    else:
-        project_id = project_id_obj
+    project_id = _chat_project_id(chat)
 
     if not project_id:
         logger.warning(f"No project_id found for chat {chat_id}")
@@ -826,6 +878,7 @@ async def initialize_chat_mode(
         auth,
         include_used_conversations=True,
     )
+    _raise_if_project_mismatch(chat, body.project_id)
 
     # Check if mode is already set
     existing_mode = chat.get("chat_mode")
@@ -929,12 +982,7 @@ async def post_chat(
     chat_svc = chat_service
     conversation_svc = conversation_service
 
-    project_info = chat.get("project_id")
-    project_id: Optional[str]
-    if isinstance(project_info, dict):
-        project_id = project_info.get("id")
-    else:
-        project_id = project_info  # directus may return an ID string
+    project_id: Optional[str] = _chat_project_id(chat)
 
     if not project_id:
         raise HTTPException(status_code=500, detail="Chat is missing a project reference")
@@ -1055,6 +1103,25 @@ async def post_chat(
                 for proj_result in auto_select_result["results"].values():
                     selected_conversation_ids.extend(proj_result.get("conversation_id_list", []))
 
+            auto_select_tier = await _resolve_workspace_tier(project_id)
+            locked_ids: set[str] = set()
+            if selected_conversation_ids and auto_select_tier is not None and not tier_allows_overage(auto_select_tier):
+                caps = await async_directus.get_items(
+                    "conversation",
+                    {
+                        "query": {
+                            "filter": {
+                                "id": {"_in": selected_conversation_ids},
+                                "is_over_cap": {"_eq": True},
+                            },
+                            "fields": ["id"],
+                            "limit": len(selected_conversation_ids),
+                        }
+                    },
+                )
+                if isinstance(caps, list):
+                    locked_ids = {c["id"] for c in caps if c.get("id")}
+
             existing_conversation_ids = set(chat_context.conversation_id_list)
             max_context_threshold = int(MAX_CHAT_CONTEXT_LENGTH * 0.8)
 
@@ -1062,6 +1129,7 @@ async def post_chat(
                 if (
                     conversation_id in existing_conversation_ids
                     or conversation_id in conversations_added_ids
+                    or conversation_id in locked_ids
                 ):
                     continue
 

@@ -13,7 +13,7 @@ Endpoints here cover organisation-level management:
   GET    /v2/orgs/:id                   — organisation detail (name, counts)
   PATCH  /v2/orgs/:id                   — rename, logo
   GET    /v2/orgs/:id/members           — organisation members (list view of Ask 1)
-  POST   /v2/orgs/:id/members           — invite to organisation (include_org_membership=true)
+  POST   /v2/orgs/:id/members           — invite to organisation (non-external workspace invite)
   PATCH  /v2/orgs/:id/members/:uid      — change organisation role (member/admin/owner)
   DELETE /v2/orgs/:id/members/:uid      — soft-delete organisation membership
 """
@@ -21,23 +21,28 @@ Endpoints here cover organisation-level management:
 from __future__ import annotations
 
 import asyncio
-from typing import Optional
+from typing import Literal, Optional
 from logging import getLogger
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import requests
 from fastapi import APIRouter, UploadFile, HTTPException
 from pydantic import Field, EmailStr, BaseModel
 
-from dembrane.app_user import get_app_user_or_raise
+from dembrane.utils import generate_uuid
+from dembrane.app_user import resolve_app_user, get_app_user_or_raise
 from dembrane.directus import directus
-from dembrane.inheritance import on_organisation_member_removed
+from dembrane.policies import ROLE_HIERARCHY
+from dembrane.settings import get_settings
+from dembrane.inheritance import is_org_external_only, on_organisation_member_removed
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.seat_capacity import (
     tier_hard_blocks_seats,
     compute_effective_seat_state,
 )
 from dembrane.tier_capacity import get_capacity
+from dembrane.api.rate_limit import create_user_rate_limiter
+from dembrane.api.v2.invites import compute_invite_hash, _enqueue_invite_email
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
@@ -63,7 +68,14 @@ def _validate_logo_url(value: str) -> str:
 router = APIRouter()
 logger = getLogger("api.v2.orgs")
 
-_VALID_ORG_ROLES = {"member", "admin", "owner"}
+_VALID_ORG_ROLES = {"member", "admin", "billing", "owner"}
+
+settings = get_settings()
+
+# Per-surface (not aggregate): 20/hour; mirrors workspace_invite cap.
+_org_invite_rate_limiter = create_user_rate_limiter(
+    name="org_invite", capacity=20, window_seconds=3600
+)
 
 
 # ── Response shapes ─────────────────────────────────────────────────────
@@ -90,13 +102,15 @@ class OrgMemberResponse(BaseModel):
     accessible_workspace_count: int = 0
     is_pending: bool = False  # placeholder — will cover pending org invites later
     # True when the user is only reachable through external workspace
-    # memberships (no org_membership in this organisation). Frontend renders a
-    # "Guest" badge and scopes organisation-level actions accordingly.
+    # memberships (no org_membership in this organisation). Frontend renders
+    # the External badge and scopes organisation-level actions accordingly.
+    # Derived from role='external' on the workspace_membership row (ADR-0003)
+    # for response only — internal lookups key on role directly.
     is_external: bool = False
     # Direct workspace memberships: workspace_id → role. Powers the organisation
     # admin matrix page so non-admin organisation members with a direct invite
-    # on a specific workspace aren't hidden. Includes is_external=true
-    # rows (guests) — frontend decides how to display.
+    # on a specific workspace aren't hidden. Includes role='external'
+    # rows — frontend decides how to display.
     direct_workspace_roles: dict[str, str] = {}
     # Membership id per workspace so the organisation people tab can mutate a
     # row's role directly (PATCH /v2/workspaces/:ws/members/:membership).
@@ -107,6 +121,8 @@ class OrgMemberResponse(BaseModel):
 class OrgDetailResponse(BaseModel):
     id: str
     name: str
+    # Short blurb shown on the organisation overview. Editable in settings.
+    description: Optional[str] = None
     logo_url: Optional[str] = None
     role: str
     member_count: int
@@ -116,12 +132,30 @@ class OrgDetailResponse(BaseModel):
 
 class UpdateOrgRequest(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    # Empty string clears the description; None leaves it untouched.
+    description: Optional[str] = Field(default=None, max_length=2000)
     logo_url: Optional[str] = None
 
 
 class InviteToOrganisationRequest(BaseModel):
+    """Org-only invite payload.
+
+    Org-level roles are member/admin/billing/owner; external is workspace-
+    scoped only (ADR-0003) and not valid here. Out-of-enum values fail at
+    Pydantic validation (422); the endpoint enforces role-hierarchy
+    escalation rules separately.
+    """
+
     email: EmailStr
-    role: str = "member"  # member/admin/owner
+    role: Literal["member", "admin", "billing", "owner"] = "member"
+
+
+class InviteToOrganisationResponse(BaseModel):
+    # invited | added | reactivated | already_member | already_invited
+    status: str
+    email: str
+    user_existed: bool
+    email_sent: bool = True
 
 
 class ChangeMemberRoleRequest(BaseModel):
@@ -200,8 +234,9 @@ async def _count_organisation_workspaces(org_id: str) -> int:
 async def _count_external_in_organisation(org_id: str) -> int:
     """Count distinct users who are external on any workspace in this organisation.
 
-    External = has workspace_membership with is_external=True and no
-    org_membership in this org. Informational; used by Ask 1 header count.
+    External = has workspace_membership with role='external' and no
+    org_membership in this org (ADR-0003). Informational; used by Ask 1
+    header count.
     """
     workspaces = (
         await async_directus.get_items(
@@ -232,7 +267,7 @@ async def _count_external_in_organisation(org_id: str) -> int:
                 "query": {
                     "filter": {
                         "workspace_id": {"_in": ws_ids},
-                        "is_external": {"_eq": True},
+                        "role": {"_eq": "external"},
                         "deleted_at": {"_null": True},
                     },
                     "fields": ["user_id"],
@@ -244,7 +279,32 @@ async def _count_external_in_organisation(org_id: str) -> int:
     )
     if not isinstance(rows, list):
         return 0
-    return len({r["user_id"] for r in rows if r.get("user_id")})
+    external_user_ids = {r["user_id"] for r in rows if r.get("user_id")}
+    if not external_user_ids:
+        return 0
+
+    # Exclude users who are actually org members — keeps this in sync with
+    # list_org_members()'s internal_set filter when stale external rows linger.
+    internal_rows = (
+        await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "user_id": {"_in": list(external_user_ids)},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["user_id"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
+    if isinstance(internal_rows, list):
+        external_user_ids -= {r["user_id"] for r in internal_rows if r.get("user_id")}
+    return len(external_user_ids)
 
 
 async def _invalidate_org_workspace_usage(org_id: str) -> None:
@@ -381,6 +441,7 @@ async def get_org(
     return OrgDetailResponse(
         id=org_id,
         name=org.get("name", ""),
+        description=org.get("description"),
         logo_url=org.get("logo_url"),
         role=role,
         member_count=await _count_organisation_members(org_id),
@@ -403,6 +464,10 @@ async def update_org(
         # Strip control chars — org name can land in email subject lines
         # (upgrade_request, workspace_invite) via templating.
         payload["name"] = body.name.replace("\r", " ").replace("\n", " ").strip()
+    if body.description is not None:
+        # Trim trailing whitespace; an empty string clears the field.
+        cleaned_description = body.description.strip()
+        payload["description"] = cleaned_description or None
     if body.logo_url is not None:
         # Org-level logo is legacy/optional — workspace-level whitelabel
         # takes precedence per the release lock (workspace-scoped, not
@@ -567,10 +632,10 @@ async def list_org_members(
     internal_ids = [m["user_id"] for m in memberships if m.get("user_id")]
     internal_set = set(internal_ids)
 
-    # External (guest) users: workspace_membership(is_external=True) on any
+    # External users: workspace_membership(role='external') on any
     # workspace in this organisation, minus anyone already in internal_set. These
     # users have no org_membership but need to appear in the organisation Members
-    # list so admins can see every person reaching their data.
+    # list so admins can see every person reaching their data (ADR-0003).
     ws_rows = (
         await async_directus.get_items(
             "workspace",
@@ -600,7 +665,7 @@ async def list_org_members(
                     "query": {
                         "filter": {
                             "workspace_id": {"_in": organisation_ws_ids},
-                            "is_external": {"_eq": True},
+                            "role": {"_eq": "external"},
                             "deleted_at": {"_null": True},
                         },
                         "fields": ["user_id"],
@@ -694,11 +759,11 @@ async def list_org_members(
             )
         )
 
-    # Externals: no org role to show, so role=="guest" is a sentinel the
-    # frontend recognizes (displayRole falls back to "Guest"). Organisation-level
-    # actions (change organisation role) aren't offered for these rows — only
-    # per-workspace role edits and "Remove from organisation" (cascades all
-    # external rows in this org).
+    # Externals: no org role to show, so role=="external" tells the
+    # frontend to render the External badge. Organisation-level actions
+    # (change organisation role) aren't offered for these rows — only
+    # per-workspace role edits and "Remove from organisation" (cascades
+    # all external rows in this org).
     for uid in external_ids:
         app_row = app_user_map.get(uid) or {}
         du_id = app_row.get("directus_user_id") or ""
@@ -708,13 +773,12 @@ async def list_org_members(
                 user_id=uid,
                 app_user_id=uid,
                 # Externals' emails always show to managers — admins need
-                # to see who a guest actually is (otherwise "External"
-                # rows would be anonymous strings). Non-managers can't
+                # to see who an external actually is. Non-managers can't
                 # reach this endpoint as admin anyway (can_manage gate).
                 email=(app_row.get("email") or "") if can_manage else "",
                 display_name=app_row.get("display_name") or "",
                 avatar=avatar_map.get(du_id) if du_id else None,
-                role="guest",
+                role="external",
                 accessible_workspace_count=ext_workspace_count,
                 is_external=True,
                 direct_workspace_roles=direct_roles.get(uid, {}),
@@ -722,6 +786,461 @@ async def list_org_members(
             )
         )
     return out
+
+
+class OrgPendingInviteResponse(BaseModel):
+    id: str
+    type: Literal["org", "workspace"]
+    email: str
+    role: str
+    workspace_id: Optional[str] = None
+    workspace_name: Optional[str] = None
+    created_at: Optional[str] = None
+    expires_at: Optional[str] = None
+    invited_by_id: Optional[str] = None
+    invited_by_name: Optional[str] = None
+    invited_by_email: Optional[str] = None
+
+
+@router.get("/{org_id}/pending-invites", response_model=list[OrgPendingInviteResponse])
+async def list_org_pending_invites(
+    org_id: str,
+    auth: DependencyDirectusSession,
+    workspace_id: Optional[str] = None,
+) -> list[OrgPendingInviteResponse]:
+    """Pending org-only + workspace invitations for this organisation.
+
+    Admin-only. Returns the union of `org_invite` and `workspace_invite`
+    rows where `accepted_at IS NULL AND deleted_at IS NULL AND
+    expires_at > now()`, sorted by `created_at DESC` (ADR 0004).
+
+    Pass `?workspace_id=` to narrow to a single workspace's invites; the
+    response then excludes org-typed rows entirely (workspace members
+    page never shows org-only invites).
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+    await _require_org_role(org_id, app_user["id"], minimum="admin")
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    ws_rows = (
+        await async_directus.get_items(
+            "workspace",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id", "name"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
+    if not isinstance(ws_rows, list):
+        ws_rows = []
+    ws_name_map = {w["id"]: w.get("name", "") for w in ws_rows if w.get("id")}
+    ws_ids_in_org = list(ws_name_map.keys())
+
+    # `workspace_id` scopes to that workspace if it's in this org; mismatches return [] rather than leaking cross-org.
+    scope_ws_ids: list[str] = []
+    include_org_invites = True
+    if workspace_id is not None:
+        if workspace_id not in ws_name_map:
+            return []
+        scope_ws_ids = [workspace_id]
+        include_org_invites = False
+    else:
+        scope_ws_ids = ws_ids_in_org
+
+    org_invites: list[dict] = []
+    if include_org_invites:
+        org_invites = (
+            await async_directus.get_items(
+                "org_invite",
+                {
+                    "query": {
+                        "filter": {
+                            "org_id": {"_eq": org_id},
+                            "accepted_at": {"_null": True},
+                            "deleted_at": {"_null": True},
+                            "expires_at": {"_gt": now_iso},
+                        },
+                        "fields": [
+                            "id",
+                            "email",
+                            "role",
+                            "created_at",
+                            "expires_at",
+                            "invited_by",
+                        ],
+                        "sort": ["-created_at"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        if not isinstance(org_invites, list):
+            org_invites = []
+
+    workspace_invites: list[dict] = []
+    if scope_ws_ids:
+        workspace_invites = (
+            await async_directus.get_items(
+                "workspace_invite",
+                {
+                    "query": {
+                        "filter": {
+                            "workspace_id": {"_in": scope_ws_ids},
+                            "accepted_at": {"_null": True},
+                            "deleted_at": {"_null": True},
+                            "expires_at": {"_gt": now_iso},
+                        },
+                        "fields": [
+                            "id",
+                            "email",
+                            "role",
+                            "workspace_id",
+                            "created_at",
+                            "expires_at",
+                            "invited_by",
+                        ],
+                        "sort": ["-created_at"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        if not isinstance(workspace_invites, list):
+            workspace_invites = []
+
+    if not org_invites and not workspace_invites:
+        return []
+
+    inviter_ids = {
+        inv.get("invited_by") for inv in (*org_invites, *workspace_invites) if inv.get("invited_by")
+    }
+    inviter_map: dict[str, dict] = {}
+    if inviter_ids:
+        inviter_rows = (
+            await async_directus.get_items(
+                "app_user",
+                {
+                    "query": {
+                        "filter": {"id": {"_in": list(inviter_ids)}},
+                        "fields": ["id", "display_name", "email"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        if isinstance(inviter_rows, list):
+            inviter_map = {u["id"]: u for u in inviter_rows if u.get("id")}
+
+    def _inviter_fields(inv: dict) -> dict:
+        info = inviter_map.get(inv.get("invited_by") or "", {})
+        return {
+            "invited_by_id": inv.get("invited_by") or None,
+            "invited_by_name": (info.get("display_name") or None) if info else None,
+            "invited_by_email": (info.get("email") or None) if info else None,
+        }
+
+    org_rows = [
+        OrgPendingInviteResponse(
+            id=inv["id"],
+            type="org",
+            email=inv.get("email", ""),
+            role=inv.get("role", "member"),
+            workspace_id=None,
+            workspace_name=None,
+            created_at=inv.get("created_at"),
+            expires_at=inv.get("expires_at"),
+            **_inviter_fields(inv),
+        )
+        for inv in org_invites
+    ]
+    ws_rows_out = [
+        OrgPendingInviteResponse(
+            id=inv["id"],
+            type="workspace",
+            email=inv.get("email", ""),
+            role=inv.get("role", "member"),
+            workspace_id=inv.get("workspace_id"),
+            workspace_name=ws_name_map.get(inv.get("workspace_id") or "", ""),
+            created_at=inv.get("created_at"),
+            expires_at=inv.get("expires_at"),
+            **_inviter_fields(inv),
+        )
+        for inv in workspace_invites
+    ]
+
+    # Merge-sort by created_at DESC; null created_at goes last.
+    combined = org_rows + ws_rows_out
+    combined.sort(key=lambda r: (r.created_at or ""), reverse=True)
+    return combined
+
+
+@router.post("/{org_id}/invites", response_model=InviteToOrganisationResponse)
+async def invite_to_organisation(
+    org_id: str,
+    body: InviteToOrganisationRequest,
+    auth: DependencyDirectusSession,
+) -> InviteToOrganisationResponse:
+    """Invite a user to an organisation without selecting any workspace.
+
+    The "org-only" path (ADR 0004). Branches on invitee state:
+
+      - Existing Directus user not in org → create org_membership, send
+        "you've been added" email. status='added'.
+      - Existing user already in org      → idempotent no-op.
+                                              status='already_member', no email.
+      - Existing user, soft-deleted org_membership → reactivate (clear
+                                              deleted_at, update role).
+                                              status='reactivated', send email.
+      - No Directus user                  → create org_invite row, send
+                                              invite email with hash-protected
+                                              URL. status='invited'.
+
+    Org-level invite power is admin/owner. Role-escalation guard rejects
+    requests where the caller's hierarchy level is below the requested role.
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+    caller_role = await _require_org_role(org_id, app_user["id"], minimum="admin")
+
+    email = body.email.strip().lower()
+    role = body.role
+
+    # Role-escalation guard: caller can only grant roles at or below their own.
+    inviter_level = ROLE_HIERARCHY.get(caller_role, 0)
+    requested_level = ROLE_HIERARCHY.get(role, 0)
+    if requested_level > inviter_level:
+        raise HTTPException(status_code=403, detail="Cannot grant a role higher than your own")
+
+    inviter_email = (app_user.get("email") or "").lower()
+    if inviter_email and inviter_email == email:
+        raise HTTPException(status_code=400, detail="Cannot invite yourself")
+
+    # Rate-limit after validation gates so spam doesn't burn legitimate quota.
+    await _org_invite_rate_limiter.check(app_user["id"])
+
+    org_row = await async_directus.get_item("org", org_id)
+    if not org_row or org_row.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Organisation not found")
+    org_name = org_row.get("name") or "your organisation"
+
+    inviter_name = app_user.get("display_name") or "An admin"
+
+    users = await async_directus.get_users(
+        {
+            "query": {
+                "filter": {"email": {"_eq": email}},
+                "fields": ["id", "email", "first_name", "last_name"],
+                "limit": 1,
+            }
+        },
+    )
+    user_existed = isinstance(users, list) and len(users) > 0
+
+    if user_existed:
+        directus_user = users[0]
+        invitee_app_user = await resolve_app_user(directus_user["id"])
+
+        if invitee_app_user:
+            # Include soft-deleted so we reactivate rather than duplicate.
+            existing = await async_directus.get_items(
+                "org_membership",
+                {
+                    "query": {
+                        "filter": {
+                            "org_id": {"_eq": org_id},
+                            "user_id": {"_eq": invitee_app_user["id"]},
+                        },
+                        "fields": ["id", "role", "deleted_at"],
+                        "limit": 1,
+                    }
+                },
+            )
+
+            if isinstance(existing, list) and len(existing) > 0:
+                row = existing[0]
+                if row.get("deleted_at") is None:
+                    return InviteToOrganisationResponse(
+                        status="already_member",
+                        email=email,
+                        user_existed=True,
+                        email_sent=False,
+                    )
+
+                await async_directus.update_item(
+                    "org_membership",
+                    row["id"],
+                    {"deleted_at": None, "role": role},
+                )
+                logger.info(
+                    f"Reactivated org_membership for {email} in org {org_id} "
+                    f"as {role} by {app_user['id']}"
+                )
+                email_queued = _enqueue_invite_email(
+                    to=email,
+                    subject=f"You've been re-added to {org_name}",
+                    template="org_added",
+                    template_data={
+                        "inviter_name": inviter_name,
+                        "org_name": org_name,
+                        "role": role,
+                        "invite_url": f"{settings.urls.admin_base_url}/o/{org_id}",
+                    },
+                    failure_context=f"org_reactivated / org {org_id}",
+                )
+                return InviteToOrganisationResponse(
+                    status="reactivated",
+                    email=email,
+                    user_existed=True,
+                    email_sent=email_queued,
+                )
+
+            await async_directus.create_item(
+                "org_membership",
+                {
+                    "id": generate_uuid(),
+                    "org_id": org_id,
+                    "user_id": invitee_app_user["id"],
+                    "role": role,
+                },
+            )
+            logger.info(f"Added {email} to org {org_id} as {role} by {app_user['id']}")
+
+            # Notify other org admins so they see the new member appear.
+            try:
+                from dembrane.notifications import (
+                    emit_to_audience,
+                    audience_organisation_admins,
+                )
+
+                admin_ids = await audience_organisation_admins(org_id)
+                admin_ids = [
+                    a for a in admin_ids if a != app_user["id"] and a != invitee_app_user["id"]
+                ]
+                new_member_name = invitee_app_user.get("display_name") or email
+                if admin_ids:
+                    await emit_to_audience(
+                        admin_ids,
+                        actor_user_id=app_user["id"],
+                        event_code="ORGANISATION_MEMBER_ADDED",
+                        title=f"{new_member_name} joined {org_name}",
+                        message="They're now an organisation member.",
+                        action="NAVIGATE_ORGANISATION_SETTINGS",
+                        ref_org_id=org_id,
+                    )
+            except Exception:
+                logger.exception("Failed to emit ORGANISATION_MEMBER_ADDED notification")
+
+            email_queued = _enqueue_invite_email(
+                to=email,
+                subject=f"You've been added to {org_name}",
+                template="org_added",
+                template_data={
+                    "inviter_name": inviter_name,
+                    "org_name": org_name,
+                    "role": role,
+                    "invite_url": f"{settings.urls.admin_base_url}/o/{org_id}",
+                },
+                failure_context=f"org_added / org {org_id}",
+            )
+            return InviteToOrganisationResponse(
+                status="added",
+                email=email,
+                user_existed=True,
+                email_sent=email_queued,
+            )
+
+    # New invitee or user without app_user: create org_invite row; onboarding resolves the membership at first login.
+    now_iso = datetime.now(timezone.utc).isoformat()
+    existing_invites = await async_directus.get_items(
+        "org_invite",
+        {
+            "query": {
+                "filter": {
+                    "org_id": {"_eq": org_id},
+                    "email": {"_eq": email},
+                    "accepted_at": {"_null": True},
+                    "deleted_at": {"_null": True},
+                    "expires_at": {"_gt": now_iso},
+                },
+                "fields": ["id"],
+                "limit": 1,
+            }
+        },
+    )
+    if isinstance(existing_invites, list) and len(existing_invites) > 0:
+        # 200 with status string so the modal renders this per-row rather than as a global failure.
+        return InviteToOrganisationResponse(
+            status="already_invited",
+            email=email,
+            user_existed=user_existed,
+            email_sent=False,
+        )
+
+    invite_id = generate_uuid()
+    now_dt = datetime.now(timezone.utc)
+    expires_at = (now_dt + timedelta(days=7)).isoformat()
+    await async_directus.create_item(
+        "org_invite",
+        {
+            "id": invite_id,
+            "org_id": org_id,
+            "email": email,
+            "role": role,
+            "invited_by": app_user["id"],
+            "expires_at": expires_at,
+            # Set explicitly so a future migration dropping the Directus `date-created` special doesn't NULL these.
+            "created_at": now_dt.isoformat(),
+        },
+    )
+
+    from urllib.parse import urlencode
+
+    invite_hash = compute_invite_hash(invite_id)
+    ctx_params = urlencode(
+        {
+            "iss": inviter_name,
+            "org": org_name,
+            "role": role,
+            "email": email,
+            "h": invite_hash,
+        }
+    )
+    invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
+
+    email_queued = _enqueue_invite_email(
+        to=email,
+        subject=f"{inviter_name} invited you to {org_name} on dembrane",
+        template="org_invite",
+        template_data={
+            "inviter_name": inviter_name,
+            "org_name": org_name,
+            "role": role,
+            "invite_url": invite_url,
+        },
+        failure_context=f"org_invite / org {org_id}",
+    )
+
+    logger.info(
+        f"Invited {email} to org {org_id} as {role} by {app_user['id']} "
+        f"(user_existed: {user_existed}, email_queued: {email_queued})"
+    )
+
+    return InviteToOrganisationResponse(
+        status="invited",
+        email=email,
+        user_existed=user_existed,
+        email_sent=email_queued,
+    )
 
 
 async def _direct_workspace_roles_by_user(
@@ -840,6 +1359,13 @@ async def _rollup_workspace_access(org_id: str, user_ids: list[str]) -> dict[str
     return counts
 
 
+class OrgWorkspacePinnedProject(BaseModel):
+    """Minimal pinned-project info for the org overview workspace cards."""
+
+    id: str
+    name: str = ""
+
+
 class OrgWorkspaceSummary(BaseModel):
     id: str
     name: str
@@ -848,13 +1374,59 @@ class OrgWorkspaceSummary(BaseModel):
     project_count: int = 0
     member_count: int = 0
     is_private: bool = False  # settings.inherit_organisation_admins == false
-    # Cap-blocked flags so the organisation invite wizard can disable
-    # workspaces that wouldn't accept a new direct member or guest. Mirror
-    # of the same flags on `WorkspaceUsageResponse`. member_invite_blocked
-    # is only True on hard-block tiers (Pilot); guest_invite_blocked is
-    # True at every finite-cap tier when at cap.
-    member_invite_blocked: bool = False
-    guest_invite_blocked: bool = False
+    # Unified seat cap gate. True when seats_used (members + guests) meets
+    # or exceeds included_seats on a hard-blocking tier (free, pilot).
+    seat_invite_blocked: bool = False
+    # Includes pending workspace_invite rows; conservatively overestimates re-invites (backend dedups at submit).
+    seats_used_including_pending: int = 0
+    seat_cap: int | None = None  # null on unlimited tiers
+    # Top pinned projects per workspace, for the org overview cards. Member
+    # avatars + usage hours are NOT here: the overview drives those from the
+    # caller's own /v2/workspaces list (membership-scoped), so we only enrich
+    # the one thing that endpoint can't provide. Default keeps id/name-only
+    # consumers (the sidebar) unaffected.
+    pinned_projects: list[OrgWorkspacePinnedProject] = []
+
+
+async def _get_org_workspace_pinned(
+    ws_id: str, caller_is_manager: bool
+) -> list[OrgWorkspacePinnedProject]:
+    """Top-3 pinned projects for a workspace, for the org overview cards.
+
+    Managers see every pinned project; everyone else only non-private ones so
+    a member never sees a pinned private project they can't open. (Mirrors the
+    conservative end of workspace_projects._visibility_filter_for_caller — we
+    skip the shared/creator ladder here and just hide private, which can omit a
+    shared-private pin but never leaks one.)
+    """
+    filt: dict = {
+        "workspace_id": {"_eq": ws_id},
+        "deleted_at": {"_null": True},
+        "pin_order": {"_nnull": True},
+    }
+    if not caller_is_manager:
+        filt["_or"] = [
+            {"visibility": {"_neq": "private"}},
+            {"visibility": {"_null": True}},
+        ]
+    rows = await async_directus.get_items(
+        "project",
+        {
+            "query": {
+                "fields": ["id", "name", "pin_order"],
+                "filter": filt,
+                "sort": ["pin_order"],
+                "limit": 3,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return []
+    return [
+        OrgWorkspacePinnedProject(id=r["id"], name=r.get("name") or "")
+        for r in rows
+        if r.get("id")
+    ]
 
 
 @router.get("/{org_id}/workspaces", response_model=list[OrgWorkspaceSummary])
@@ -862,32 +1434,81 @@ async def list_organisation_workspaces(
     org_id: str,
     auth: DependencyDirectusSession,
 ) -> list[OrgWorkspaceSummary]:
-    """Every workspace in the organisation, visible to any organisation member.
+    """Workspaces in the organisation that the caller can see.
 
-    A organisation owner's "see all my workspaces" answer — the selector only
-    shows workspaces the caller is a member of (direct or derived), but
-    organisation owners may want a roster view including workspaces they haven't
-    joined directly. Anyone in the organisation can read this.
+    - Org admin/owner: every workspace in the org.
+    - Org member: every non-private workspace in the org.
+    - Guest (no org membership, but has at least one workspace_membership in
+      the org): just the workspaces they're a direct member of. Counts and
+      tier still populated so the response model stays uniform — the
+      sidebar uses id/name only, but other surfaces want the rest.
     """
     app_user = await get_app_user_or_raise(auth.user_id)
-    caller_role = await _require_org_role(org_id, app_user["id"], minimum="member")
+
+    # Resolve the caller's org role without raising — a guest with workspace
+    # access in this org has no org_membership but should still see "the
+    # basics" (which workspaces they're in). 5xx and other unexpected
+    # failures bubble up.
+    caller_role: str | None = None
+    try:
+        caller_role = await _require_org_role(org_id, app_user["id"], minimum="member")
+    except HTTPException as e:
+        if e.status_code != 403:
+            raise
     caller_is_manager = caller_role in ("admin", "owner")
+    is_org_member = caller_role is not None
+
+    # An external-only caller (outsider with a stale org_membership) is scoped
+    # exactly like a guest: only the workspaces they directly belong to. Real
+    # members and managers are unaffected, so OrganisationRoute and InviteModal
+    # keep their current behavior.
+    if (
+        is_org_member
+        and not caller_is_manager
+        and await is_org_external_only(org_id, app_user["id"])
+    ):
+        is_org_member = False
+
+    ws_filter: dict = {
+        "org_id": {"_eq": org_id},
+        "deleted_at": {"_null": True},
+    }
+
+    if not is_org_member:
+        # Guest path: restrict to workspaces the caller is a direct member
+        # of (workspace_membership row). If none, they have no view here.
+        membership_rows = (
+            await async_directus.get_items(
+                "workspace_membership",
+                {
+                    "query": {
+                        "filter": {
+                            "user_id": {"_eq": app_user["id"]},
+                            "deleted_at": {"_null": True},
+                        },
+                        "fields": ["workspace_id"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        if not isinstance(membership_rows, list):
+            membership_rows = []
+        accessible_ids = [r["workspace_id"] for r in membership_rows if r.get("workspace_id")]
+        if not accessible_ids:
+            raise HTTPException(status_code=403, detail="No access to this organisation")
+        ws_filter["id"] = {"_in": accessible_ids}
 
     # Pull settings.inherit_organisation_admins explicitly (sub-field projection)
-    # so we don't need to send the whole JSON (also avoids accidentally
-    # exposing sticky_removed tombstones to the client — the response model
-    # drops them, but belt-and-braces). Counts come from separate aggregates
-    # because the workspace collection doesn't declare O2M aliases for
-    # projects/members.
+    # so we don't need to send the whole JSON. Counts come from separate
+    # aggregates because the workspace collection doesn't declare O2M aliases.
     workspaces = (
         await async_directus.get_items(
             "workspace",
             {
                 "query": {
-                    "filter": {
-                        "org_id": {"_eq": org_id},
-                        "deleted_at": {"_null": True},
-                    },
+                    "filter": ws_filter,
                     "fields": [
                         "id",
                         "name",
@@ -954,12 +1575,14 @@ async def list_organisation_workspaces(
     # Hide private workspaces from non-admin organisation members — the whole
     # point of a private workspace is that organisation admins can't see it,
     # advertising its name + tier in a organisation-scoped list contradicts that.
-    # Admins/owners still see the full roster (they're the audience).
+    # Admins/owners still see the full roster. Guests already came in via
+    # direct membership so we don't filter them here (they ARE the audience
+    # for those private workspaces).
     out: list[OrgWorkspaceSummary] = []
     for ws in workspaces:
         settings = ws.get("settings") if isinstance(ws.get("settings"), dict) else {}
         is_private = (settings or {}).get("inherit_organisation_admins") is False
-        if is_private and not caller_is_manager:
+        if is_org_member and is_private and not caller_is_manager:
             continue
 
         # Cap-blocked flags. Compute lazily — only call get_effective_members
@@ -971,21 +1594,21 @@ async def list_organisation_workspaces(
         # the cap, not only after they're accepted.
         tier = (ws.get("tier") or "").lower()
         cap = get_capacity(tier)
-        member_blocked = False
-        guest_blocked = False
-        if cap is not None and (cap.included_seats is not None or cap.guest_cap is not None):
+        seat_blocked = False
+        seats_used_total: int = 0
+        seat_cap_value: int | None = None
+        if cap is not None and cap.included_seats is not None:
             from dembrane.seat_capacity import count_pending_invites
 
-            seat_count, guest_count = await compute_effective_seat_state(ws["id"])
-            member_pending, guest_pending = await count_pending_invites(ws["id"])
-            if (
-                cap.included_seats is not None
-                and tier_hard_blocks_seats(tier)
-                and (seat_count + member_pending) >= cap.included_seats
-            ):
-                member_blocked = True
-            if cap.guest_cap is not None and (guest_count + guest_pending) >= cap.guest_cap:
-                guest_blocked = True
+            seats_used, _member_count, _external_count = await compute_effective_seat_state(
+                ws["id"]
+            )
+            member_pending, external_pending = await count_pending_invites(ws["id"])
+            total_pending = member_pending + external_pending
+            seats_used_total = seats_used + total_pending
+            seat_cap_value = cap.included_seats
+            if tier_hard_blocks_seats(tier) and seats_used_total >= cap.included_seats:
+                seat_blocked = True
 
         out.append(
             OrgWorkspaceSummary(
@@ -996,10 +1619,22 @@ async def list_organisation_workspaces(
                 project_count=project_counts.get(ws["id"], 0),
                 member_count=member_counts.get(ws["id"], 0),
                 is_private=is_private,
-                member_invite_blocked=member_blocked,
-                guest_invite_blocked=guest_blocked,
+                seat_invite_blocked=seat_blocked,
+                seats_used_including_pending=seats_used_total,
+                seat_cap=seat_cap_value,
             )
         )
+
+    # Pinned-projects enrichment for the overview cards. Member avatars + usage
+    # hours come from the caller's own /v2/workspaces list (membership-scoped),
+    # so we don't recompute them per org workspace here. Fanned out in parallel.
+    if out:
+        pinned_lists = await asyncio.gather(
+            *[_get_org_workspace_pinned(o.id, caller_is_manager) for o in out]
+        )
+        for o, pinned in zip(out, pinned_lists, strict=True):
+            o.pinned_projects = pinned
+
     return out
 
 
@@ -1082,7 +1717,7 @@ async def change_member_role(
     # organisation members.
     if body.role in ("admin", "owner"):
         # Look across this organisation's workspaces for any active direct row
-        # marked is_external=True for this user.
+        # with role='external' for this user.
         workspaces = (
             await async_directus.get_items(
                 "workspace",
@@ -1109,7 +1744,7 @@ async def change_member_role(
                             "filter": {
                                 "user_id": {"_eq": user_id},
                                 "workspace_id": {"_in": ws_ids},
-                                "is_external": {"_eq": True},
+                                "role": {"_eq": "external"},
                                 "deleted_at": {"_null": True},
                             },
                             "fields": ["id"],
@@ -1121,9 +1756,9 @@ async def change_member_role(
                     raise HTTPException(
                         status_code=400,
                         detail=(
-                            "This person is an external guest on one of the "
+                            "This person is an external on one of the "
                             "organisation's workspaces. Clear that first — they can't "
-                            "hold organisation admin/owner while marked as a guest."
+                            "hold organisation admin/owner while marked as external."
                         ),
                     )
 
@@ -1225,7 +1860,7 @@ async def remove_organisation_member(
                             "filter": {
                                 "workspace_id": {"_in": ext_ws_ids},
                                 "user_id": {"_eq": user_id},
-                                "is_external": {"_eq": True},
+                                "role": {"_eq": "external"},
                                 "deleted_at": {"_null": True},
                             },
                             "fields": ["id", "workspace_id"],
@@ -1346,12 +1981,8 @@ class OrgUsageWorkspaceRow(BaseModel):
     approaching_seat_cap: bool = False  # >=80% on capped seats
     seat_cap_hit: bool = False  # seat_count >= seats_included
     downgraded_at: Optional[str] = None
-    # Guests live alongside seats (matrix §7). They don't bill but
-    # they're tier-capped (§1 Guest cap column), so staff wants to
-    # see the count + cap on the same rollup row.
-    guest_count: int = 0
-    guest_cap: Optional[int] = None
-    guest_cap_hit: bool = False
+    # Externals share the seat pool. Count exposed separately for breakdown.
+    external_count: int = 0
     # Admin / billing only:
     overage_forecast_eur: Optional[float] = None
 
@@ -1361,8 +1992,9 @@ class OrgUsageResponse(BaseModel):
     cycle_end_exclusive: str
     workspace_count: int
     total_audio_hours: float
+    # Unified seat total across all workspaces (members + externals).
     total_seat_count: int
-    total_guest_count: int
+    total_external_count: int
     total_project_count: int
     workspaces_at_cap: int  # Pilot + over cap (hard block active)
     workspaces_approaching_cap: int  # tier with cap, usage >= 80%
@@ -1522,23 +2154,23 @@ async def get_org_usage(
     # implementation walked workspace_membership directly and missed
     # derived rows, producing a stale "seat_count" on the org rollup
     # that didn't match the per-workspace UI.
+    # total_seat_count is the unified pool (members + externals) per
+    # ADR-0003. Per-workspace rows expose member/external split.
     total_seat_count = 0
-    total_guest_count = 0
+    total_external_count = 0
     per_ws_seats: dict[str, int] = {wid: 0 for wid in ws_ids}
-    per_ws_guests: dict[str, int] = {wid: 0 for wid in ws_ids}
+    per_ws_externals: dict[str, int] = {wid: 0 for wid in ws_ids}
     if ws_ids:
-        # Parallel fan-out: one compute_effective_seat_state per workspace.
-        # For an org with a few dozen workspaces this is the same shape as
-        # the existing per-workspace cap-flag computation in
-        # list_organisation_workspaces above — acceptable cost.
         seat_state_results = await asyncio.gather(
             *[compute_effective_seat_state(wid) for wid in ws_ids]
         )
-        for wid, (seat_count, guest_count) in zip(ws_ids, seat_state_results, strict=True):
-            per_ws_seats[wid] = seat_count
-            per_ws_guests[wid] = guest_count
-            total_seat_count += seat_count
-            total_guest_count += guest_count
+        for wid, (seats_used, _member_count, external_count) in zip(
+            ws_ids, seat_state_results, strict=True
+        ):
+            per_ws_seats[wid] = seats_used
+            per_ws_externals[wid] = external_count
+            total_seat_count += seats_used
+            total_external_count += external_count
 
     # Per-workspace rows + aggregation. We build the rows even when the
     # caller doesn't see financials — the €-field is stripped below.
@@ -1572,9 +2204,7 @@ async def get_org_usage(
         )
         seat_cap_hit = seats_included is not None and seat_count >= seats_included
         approaching_seat_cap = seats_pct is not None and seats_pct >= 0.8 and not seat_cap_hit
-        guest_count = per_ws_guests.get(wid, 0)
-        guest_cap: Optional[int] = cap.guest_cap if cap else None
-        guest_cap_hit = guest_cap is not None and guest_count >= guest_cap
+        external_count = per_ws_externals.get(wid, 0)
         ws_at_cap = False
         ws_approaching = False
         ws_forecast_eur = 0.0
@@ -1610,9 +2240,7 @@ async def get_org_usage(
                 "seats_pct": seats_pct,
                 "seat_cap_hit": seat_cap_hit,
                 "approaching_seat_cap": approaching_seat_cap,
-                "guest_count": guest_count,
-                "guest_cap": guest_cap,
-                "guest_cap_hit": guest_cap_hit,
+                "external_count": external_count,
                 "at_cap": ws_at_cap,
                 "approaching_cap": ws_approaching,
                 "downgraded_at": w.get("downgraded_at"),
@@ -1635,7 +2263,7 @@ async def get_org_usage(
         "workspace_count": len(workspaces),
         "total_audio_hours": round(total_hours, 2),
         "total_seat_count": total_seat_count,
-        "total_guest_count": total_guest_count,
+        "total_external_count": total_external_count,
         "total_project_count": project_count,
         "workspaces_at_cap": at_cap,
         "workspaces_approaching_cap": approaching,

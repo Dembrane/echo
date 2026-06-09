@@ -1,7 +1,6 @@
 import {
 	passwordRequest,
 	passwordReset,
-	registerUser,
 	registerUserVerify,
 } from "@directus/sdk";
 import { usePostHog } from "@posthog/react";
@@ -11,6 +10,7 @@ import { useLocation, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { ADMIN_BASE_URL, API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { emitAuthCacheBoundary } from "@/lib/authCacheBoundary";
 import { directus } from "@/lib/directus";
 import { isAuthPath } from "../utils/authPaths";
 import { throwWithMessage } from "../utils/errorUtils";
@@ -144,65 +144,32 @@ export const useVerifyMutation = (doRedirect = true) => {
 	});
 };
 
-// Probes whether an email is already registered, so Register.tsx can
-// block before Directus's anti-enumeration silent-200 traps the user on
-// "Check your email" forever. Failures collapse to "available" so an
-// outage of the probe never blocks a legit signup.
-export const useCheckEmailMutation = () => {
-	return useMutation({
-		mutationFn: async (
-			email: string,
-		): Promise<{ status: "available" | "registered" | "invalid" }> => {
-			try {
-				const res = await fetch(`${API_BASE_URL}/v2/auth/check-email`, {
-					body: JSON.stringify({ email }),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				});
-				if (!res.ok) {
-					return { status: "available" };
-				}
-				return res.json();
-			} catch (_e) {
-				return { status: "available" };
-			}
-		},
-	});
-};
-
 export const useRegisterMutation = () => {
 	return useMutation({
-		mutationFn: async (payload: Parameters<typeof registerUser>) => {
-			try {
-				return await directus.request(registerUser(...payload));
-			} catch (e) {
-				// Map the raw Directus error to a user-facing message, then
-				// re-throw so react-query marks the mutation as failed and
-				// onError / the inline Alert both fire. Previously only the
-				// "no permission" case re-threw; every other failure fell
-				// through as undefined and looked like a success, which
-				// bounced users to the "Check your email" step even when
-				// registration actually failed (e.g. validation errors).
-				let mapped: Error = new Error("Registration failed");
-				try {
-					throwWithMessage(e);
-				} catch (inner) {
-					if (inner instanceof Error) mapped = inner;
+		mutationFn: async (body: {
+			email: string;
+			password: string;
+			first_name: string;
+			last_name?: string;
+			verification_url: string;
+		}) => {
+			const res = await fetch(`${API_BASE_URL}/v2/auth/register`, {
+				body: JSON.stringify(body),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "POST",
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				let message = "Registration failed. Please try again.";
+				if (typeof data.detail === "string") {
+					message = data.detail;
+				} else if (Array.isArray(data.detail) && data.detail.length > 0) {
+					message = data.detail[0].msg ?? message;
 				}
-				if (mapped.message === "You don't have permission to access this.") {
-					throw new Error(
-						"Oops! It seems your email is not eligible for registration at this time. Please consider joining our waitlist for future updates!",
-					);
-				}
-				throw mapped;
+				throw new Error(message);
 			}
 		},
-		// Success handling lives inline on the Register page — the
-		// stepper advances to step 2 ("Check your email"). No toast +
-		// no redirect, since the inline state already shows the user
-		// exactly what's next. Failures surface via the inline Alert
-		// that reads from `registerMutation.error`.
 	});
 };
 
@@ -227,9 +194,22 @@ export const useLoginMutation = () => {
 			);
 		},
 		onSuccess: async () => {
+			queryClient.removeQueries({ queryKey: ["users", "me"] });
+			queryClient.removeQueries({ queryKey: ["v2", "workspaces"] });
+			queryClient.removeQueries({ queryKey: ["v2", "workspaces-context"] });
+			if (typeof window !== "undefined") {
+				try {
+					sessionStorage.removeItem("dembrane_ws_selected");
+				} catch {}
+			}
+			emitAuthCacheBoundary();
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["auth", "session"] }),
 				queryClient.invalidateQueries({ queryKey: ["users", "me"] }),
+				queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] }),
+				queryClient.invalidateQueries({
+					queryKey: ["v2", "workspaces-context"],
+				}),
 			]);
 		},
 	});
@@ -275,6 +255,7 @@ export const useLogoutMutation = () => {
 					sessionStorage.removeItem("dembrane_ws_selected");
 				} catch {}
 			}
+			emitAuthCacheBoundary();
 		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["auth", "session"] });

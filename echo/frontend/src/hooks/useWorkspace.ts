@@ -1,8 +1,34 @@
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
 import { API_BASE_URL } from "@/config";
+import { AUTH_CACHE_BOUNDARY_EVENT } from "@/lib/authCacheBoundary";
 
 // ── Types ──
+
+interface WorkspaceUsageGates {
+	over_cap_active: boolean;
+	uploads_locked: boolean;
+	upgrade_cta_tier: string | null;
+}
+
+interface WorkspaceUsageSummary {
+	audio_hours: number;
+	conversation_count: number;
+	audio_hours_this_month: number;
+	conversations_this_month: number;
+	hours_included: number | null;
+	hours_pct: number | null;
+	at_cap: boolean;
+	approaching_cap: boolean;
+	usage_gates: WorkspaceUsageGates;
+}
 
 interface WorkspaceSummary {
 	id: string;
@@ -16,7 +42,7 @@ interface WorkspaceSummary {
 	org_logo_url: string | null;
 	project_count: number;
 	member_count: number;
-	is_external: boolean;
+	usage?: WorkspaceUsageSummary;
 	// Matrix v1.1 §3 downgrade banner fields.
 	downgraded_at?: string | null;
 	downgraded_from_tier?: string | null;
@@ -38,15 +64,15 @@ export interface WorkspaceContextValue {
 // ── Context ──
 
 export const WorkspaceContext = createContext<WorkspaceContextValue>({
-	workspaceId: null,
-	workspaceName: null,
-	workspace: null,
-	workspaces: [],
-	isLoading: true,
+	clearWorkspace: () => {},
 	isError: false,
+	isLoading: true,
 	refetch: () => {},
 	setWorkspace: () => {},
-	clearWorkspace: () => {},
+	workspace: null,
+	workspaceId: null,
+	workspaceName: null,
+	workspaces: [],
 });
 
 export const useWorkspace = () => useContext(WorkspaceContext);
@@ -57,6 +83,9 @@ async function fetchWorkspaces(): Promise<WorkspaceSummary[]> {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		credentials: "include",
 	});
+	if (res.status === 401 || res.status === 403) {
+		return [];
+	}
 	if (!res.ok) {
 		throw new Error(`Workspaces request failed (${res.status})`);
 	}
@@ -71,7 +100,8 @@ const SESSION_KEY = "dembrane_ws_selected";
 // Without this, a direct link to /w/<id>/projects renders the header
 // with no workspace name until the next tick — the 2026-04-23 bug
 // "don't see the workspace on the nav bar".
-const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+const UUID_RE =
+	/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 function readWorkspaceIdFromPath(): string | null {
 	if (typeof window === "undefined") return null;
 	const segments = window.location.pathname.split("/").filter(Boolean);
@@ -84,6 +114,15 @@ function readWorkspaceIdFromPath(): string | null {
 }
 
 export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
+	const [authEpoch, setAuthEpoch] = useState(0);
+
+	useEffect(() => {
+		const onAuthBoundary = () => setAuthEpoch((epoch) => epoch + 1);
+		window.addEventListener(AUTH_CACHE_BOUNDARY_EVENT, onAuthBoundary);
+		return () =>
+			window.removeEventListener(AUTH_CACHE_BOUNDARY_EVENT, onAuthBoundary);
+	}, []);
+
 	// Selection state — drives re-renders when user switches. Seed with
 	// (1) current URL's workspace id if present, (2) session, or (3) null.
 	// URL wins over session so deep-linking into another workspace doesn't
@@ -102,12 +141,12 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 		isError,
 		refetch,
 	} = useQuery({
-		queryKey: ["v2", "workspaces-context"],
-		queryFn: fetchWorkspaces,
 		enabled,
-		staleTime: 60_000,
+		queryFn: fetchWorkspaces,
+		queryKey: ["v2", "workspaces-context", authEpoch],
 		// One retry — this query wraps the entire app, so retry: false was app-wide brittle.
 		retry: 1,
+		staleTime: 60_000,
 	});
 
 	const resolved = useMemo(() => {
@@ -142,16 +181,16 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 	}, []);
 
 	return {
-		workspaceId: resolved?.id ?? null,
-		workspaceName: resolved?.name ?? null,
-		workspace: resolved,
-		workspaces,
-		isLoading,
+		clearWorkspace,
 		isError,
+		isLoading,
 		refetch: () => {
 			refetch();
 		},
 		setWorkspace,
-		clearWorkspace,
+		workspace: resolved,
+		workspaceId: resolved?.id ?? null,
+		workspaceName: resolved?.name ?? null,
+		workspaces,
 	};
 }

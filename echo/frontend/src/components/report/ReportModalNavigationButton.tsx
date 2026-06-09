@@ -16,7 +16,7 @@ export const ReportModalNavigationButton = () => {
 
 	const navigate = useI18nNavigate();
 
-	const { projectId } = useParams();
+	const { projectId, workspaceId } = useParams();
 	const { pathname } = useLocation();
 
 	const { data: projectReport, isFetching: isLoadingProjectReport } =
@@ -24,16 +24,16 @@ export const ReportModalNavigationButton = () => {
 
 	const handleClick = useCallback(() => {
 		if (projectReport) {
-			navigate(`/projects/${projectId}/report`);
+			navigate(`/w/${workspaceId}/projects/${projectId}/report`);
 		} else {
 			open();
 		}
-	}, [projectReport, navigate, open, projectId]);
+	}, [projectReport, navigate, open, projectId, workspaceId]);
 
 	const handleSuccess = useCallback(() => {
 		close();
-		navigate(`/projects/${projectId}/report`);
-	}, [navigate, projectId, close]);
+		navigate(`/w/${workspaceId}/projects/${projectId}/report`);
+	}, [navigate, projectId, workspaceId, close]);
 
 	return (
 		<>

@@ -8,14 +8,12 @@ from datetime import datetime, timezone
 from fastapi import Depends, APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
-from dembrane.email import send_email
 from dembrane.utils import generate_uuid
 from dembrane.app_user import resolve_app_user, get_app_user_or_raise
 from dembrane.policies import TIER_ORDER
 from dembrane.settings import get_settings
 from dembrane.inheritance import get_effective_members
 from dembrane.seat_capacity import tier_hard_blocks_seats
-from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.schemas import (
     MemberPreview,
     WorkspaceUsage,
@@ -24,6 +22,7 @@ from dembrane.api.v2.schemas import (
     WorkspaceListResponse,
     CreateWorkspaceRequest,
     CreateWorkspaceResponse,
+    PendingWorkspaceRequest,
 )
 from dembrane.directus_async import async_directus
 from dembrane.tier_downgrade import preview_downgrade, apply_downgrade_effects
@@ -37,25 +36,6 @@ from dembrane.api.dependency_auth import DependencyDirectusSession
 DependencyWorkspaceContext = Annotated[WorkspaceContext, Depends(get_workspace_context)]
 
 settings = get_settings()
-
-# Keep upgrade requests from flooding the billing inbox if someone spams the
-# button (or if the UI misfires and retries on every click).
-_upgrade_request_rate_limiter = create_user_rate_limiter(
-    name="upgrade_request", capacity=5, window_seconds=3600
-)
-
-
-def _strip_header_unsafe(value: str) -> str:
-    """Remove CR/LF from strings that will appear inside an email Subject.
-
-    SendGrid's API is generally tolerant, but a well-formed newline in the
-    subject can still corrupt downstream delivery or inject headers on
-    SMTP relays we don't control.
-    """
-    if not value:
-        return ""
-    return value.replace("\r", " ").replace("\n", " ").strip()
-
 
 router = APIRouter()
 logger = getLogger("api.v2.workspaces")
@@ -192,7 +172,7 @@ async def list_workspaces(
                     "user_id": {"_eq": app_user_id},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["workspace_id", "role", "source", "is_external"],
+                "fields": ["workspace_id", "role", "source"],
                 "limit": -1,
             }
         },
@@ -218,6 +198,9 @@ async def list_workspaces(
     )
     if not isinstance(org_membership_data, list):
         org_membership_data = []
+    internal_org_ids = {
+        om["org_id"] for om in org_membership_data if om.get("org_id")
+    }
 
     if len(memberships) == 0 and len(org_membership_data) == 0:
         return WorkspaceListResponse(workspaces=[], organisations=[])
@@ -245,6 +228,7 @@ async def list_workspaces(
                         "downgraded_at",
                         "downgraded_from_tier",
                         "logo_url",
+                        "created_at",
                     ],
                     "limit": -1,
                 }
@@ -330,12 +314,42 @@ async def list_workspaces(
         *[_get_workspace_aggregates(ws["id"]) for _, ws in valid_memberships]
     )
 
+    # Batch-fetch pending workspace_requests for badge rendering on /w
+    all_ws_ids = [ws["id"] for _, ws in valid_memberships]
+    pending_request_ws_ids: set[str] = set()
+    if all_ws_ids:
+        pending_reqs = await async_directus.get_items(
+            "workspace_request",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_in": all_ws_ids},
+                        "status": {"_eq": "pending"},
+                    },
+                    "fields": ["workspace_id"],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(pending_reqs, list):
+            pending_request_ws_ids = {
+                r["workspace_id"] for r in pending_reqs if r.get("workspace_id")
+            }
+
     results: list[WorkspaceSummary] = []
-    from dembrane.tier_capacity import get_capacity
+    from dembrane.tier_capacity import next_tier as tier_next, get_capacity, compute_usage_gates
+    from dembrane.api.v2.schemas import UsageGatesSummary
 
     for (membership, ws), (project_count, member_count, usage, previews) in zip(
         valid_memberships, all_aggregates, strict=True
     ):
+        org_id = ws.get("org_id", "")
+        raw_role = membership.get("role", "")
+        source = membership.get("source", "")
+        is_external_access = raw_role == "external" or (
+            source == "direct" and org_id not in internal_org_ids
+        )
+        role = "external" if is_external_access else raw_role
         # Fill in matrix §8 cap signals on the usage object so card-level
         # rendering doesn't need to join tier → cap client-side.
         tier = ws.get("tier") or ""
@@ -344,28 +358,35 @@ async def list_workspaces(
             usage.hours_included = cap.included_hours
             pct = usage.audio_hours_this_month / cap.included_hours if cap.included_hours else 0.0
             usage.hours_pct = round(pct, 3)
-            if cap.hard_block_on_hours and usage.audio_hours_this_month >= cap.included_hours:
+            if pct >= 1.0:
                 usage.at_cap = True
             elif pct >= 0.8:
                 usage.approaching_cap = True
+        gates = compute_usage_gates(tier, usage.audio_hours, usage.audio_hours_this_month)
+        usage.usage_gates = UsageGatesSummary(
+            over_cap_active=gates.over_cap_active,
+            uploads_locked=gates.uploads_locked,
+            upgrade_cta_tier=tier_next(tier),
+        )
         results.append(
             WorkspaceSummary(
                 id=ws["id"],
                 name=ws.get("name", ""),
-                org_id=ws.get("org_id", ""),
-                org_name=org_map.get(ws.get("org_id", ""), ""),
-                role=membership.get("role", ""),
+                org_id=org_id,
+                org_name=org_map.get(org_id, ""),
+                role=role,
                 is_default=ws.get("is_default", False),
                 tier=ws.get("tier", "pioneer"),
                 logo_url=ws.get("logo_url"),
-                org_logo_url=org_logo_map.get(ws.get("org_id", "")),
+                org_logo_url=org_logo_map.get(org_id),
                 project_count=project_count,
                 member_count=member_count,
-                is_external=membership.get("is_external", False),
                 members_preview=previews,
                 usage=usage,
                 downgraded_at=ws.get("downgraded_at"),
                 downgraded_from_tier=ws.get("downgraded_from_tier"),
+                has_pending_upgrade_request=ws["id"] in pending_request_ws_ids,
+                created_at=ws.get("created_at"),
             )
         )
 
@@ -520,10 +541,51 @@ async def list_workspaces(
                     )
                 )
 
+    # Fetch the caller's pending workspace requests (new_workspace + tier_upgrade)
+    # so the /w selector can show "request submitted" cards.
+    pending_requests_raw = await async_directus.get_items(
+        "workspace_request",
+        {
+            "query": {
+                "filter": {
+                    "requested_by": {"_eq": app_user_id},
+                    "status": {"_eq": "pending"},
+                },
+                "fields": [
+                    "id",
+                    "kind",
+                    "status",
+                    "proposed_name",
+                    "proposed_tier",
+                    "org_id",
+                    "created_at",
+                ],
+                "sort": ["-created_at"],
+                "limit": 20,
+            }
+        },
+    )
+    pending_ws_requests: list[PendingWorkspaceRequest] = []
+    if isinstance(pending_requests_raw, list):
+        for pr in pending_requests_raw:
+            pending_ws_requests.append(
+                PendingWorkspaceRequest(
+                    id=pr["id"],
+                    kind=pr.get("kind", ""),
+                    status=pr.get("status", "pending"),
+                    proposed_name=pr.get("proposed_name"),
+                    proposed_tier=pr.get("proposed_tier", ""),
+                    org_id=pr.get("org_id", ""),
+                    org_name=org_map.get(pr.get("org_id", ""), ""),
+                    created_at=pr.get("created_at"),
+                )
+            )
+
     return WorkspaceListResponse(
         workspaces=results,
         organisations=organisations,
         recent_removals=recent_removals,
+        pending_workspace_requests=pending_ws_requests,
     )
 
 
@@ -532,14 +594,22 @@ async def create_workspace(
     body: CreateWorkspaceRequest,
     auth: DependencyDirectusSession,
 ) -> CreateWorkspaceResponse:
-    """Create a new workspace in the user's organisation."""
+    """Create a new workspace. Staff-only — self-serve creation is retired.
+
+    Post-onboarding workspaces go through the workspace_request flow
+    (POST /v2/workspace-requests). This endpoint is now the internal
+    endpoint called by the approval orchestrator. The onboarding auto-seed
+    writes directly to Directus and is unaffected.
+    """
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only. Use workspace requests.")
+
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
 
     # Determine which org to create in
     org_id = body.org_id
     if not org_id:
-        # Use user's primary org (where they're owner)
         orgs = await async_directus.get_items(
             "org_membership",
             {
@@ -560,25 +630,8 @@ async def create_workspace(
             )
         org_id = orgs[0]["org_id"]
 
-    # Verify user has admin/owner on this org
-    org_access = await async_directus.get_items(
-        "org_membership",
-        {
-            "query": {
-                "filter": {
-                    "org_id": {"_eq": org_id},
-                    "user_id": {"_eq": app_user_id},
-                    "role": {"_in": ["owner", "admin"]},
-                    "deleted_at": {"_null": True},
-                },
-                "limit": 1,
-            }
-        },
-    )
-    if not isinstance(org_access, list) or len(org_access) == 0:
-        raise HTTPException(
-            status_code=403, detail="Must be organisation admin or owner to create workspaces"
-        )
+    # Org access check skipped for staff — they can create in any org.
+    # The approval orchestrator validates org existence before calling.
 
     # Matrix §9: new workspaces default to Pilot. Tier upgrades go through
     # the staff upgrade-request flow (matrix §11), never client-driven.
@@ -870,104 +923,6 @@ async def preview_workspace_downgrade(
     }
 
 
-# ── Upgrade request (Ask 2 + 4C "Request upgrade" CTA, admin-role only) ─
-
-
-class UpgradeRequestBody(BaseModel):
-    target_tier: Optional[Literal["pioneer", "innovator", "changemaker", "guardian"]] = None
-    message: Optional[str] = Field(default=None, max_length=1000)
-
-
-@router.post("/{workspace_id}/upgrade-request")
-async def request_upgrade(
-    body: UpgradeRequestBody,
-    ctx: DependencyWorkspaceContext,
-) -> dict:
-    """Admin or billing clicks "Request upgrade" in the tier compare view.
-    Sends an email to settings.email.upgrade_request_inbox with context.
-    Configurable via UPGRADE_REQUEST_INBOX env var (defaults to
-    upgrades@dembrane.com per matrix v1.1 §11).
-
-    Member role doesn't see this CTA (matrix §11 — member-role path shows
-    copy only, no button). Enforced here by require_policy(upgrade:request)
-    which admin and billing have — members do not.
-
-    Rate-limited per-user (5/hr) to avoid flooding the billing inbox when
-    the UI misfires or a bored admin leans on the button.
-    """
-    ctx.require_policy("upgrade:request")
-
-    await _upgrade_request_rate_limiter.check(ctx.app_user_id)
-
-    requester = await async_directus.get_item("app_user", ctx.app_user_id)
-    requester_name = (requester or {}).get("display_name") or ""
-    requester_email = (requester or {}).get("email") or ""
-
-    workspace_name = ctx.workspace.get("name", "")
-    current_tier = ctx.workspace.get("tier", "pioneer")
-    org_id = ctx.workspace.get("org_id")
-    org = await async_directus.get_item("org", org_id) if org_id else None
-    org_name = (org or {}).get("name", "")
-
-    target = body.target_tier or "(not specified)"
-
-    # Rendered via the autoescaping Jinja env — user-controlled fields
-    # (workspace_name, org_name, requester_name, message) are safe.
-    template_data = {
-        "org_name": org_name,
-        "workspace_name": workspace_name,
-        "workspace_id": ctx.workspace_id,
-        "current_tier": current_tier,
-        "target_tier": target,
-        "requester_name": requester_name,
-        "requester_email": requester_email,
-        "message": body.message or "",
-    }
-
-    # Subject is not templated — belt-and-braces strip of CR/LF from fields
-    # that end up there.
-    safe_org = _strip_header_unsafe(org_name)
-    safe_workspace = _strip_header_unsafe(workspace_name)
-    subject = f"Upgrade request: {safe_org} / {safe_workspace} ({current_tier} → {target})"
-
-    sent = await send_email(
-        to=settings.email.upgrade_request_inbox,
-        subject=subject,
-        template="upgrade_request",
-        template_data=template_data,
-    )
-    if not sent:
-        # Don't silently drop — mirrors the pattern from 9021900.
-        logger.error(f"Upgrade request email failed for workspace {ctx.workspace_id}")
-        raise HTTPException(
-            status_code=502,
-            detail="Couldn't send the request. Please try again or email us directly.",
-        )
-
-    logger.info(
-        f"Upgrade request: workspace {ctx.workspace_id} {current_tier} → {target} "
-        f"by {ctx.app_user_id}"
-    )
-
-    # Tell co-admins that a request is out so two of them don't both
-    # email the billing inbox with the same ask. Skips the requester.
-    from dembrane.notifications import emit_to_audience, audience_workspace_admins
-
-    audience = await audience_workspace_admins(ctx.workspace_id)
-    await emit_to_audience(
-        audience,
-        actor_user_id=ctx.app_user_id,
-        event_code="UPGRADE_REQUEST_SENT",
-        title=f"{requester_name or 'A organisation admin'} requested an upgrade",
-        message=(f"**{workspace_name}** · {current_tier} → {target}. We'll follow up over email."),
-        action="NAVIGATE_WS",
-        ref_workspace_id=ctx.workspace_id,
-        ref_org_id=ctx.workspace.get("org_id"),
-    )
-
-    return {"status": "sent"}
-
-
 # ────────────────────────────────────────────────────────────────────
 # Usage rollup (matrix §8)
 # ────────────────────────────────────────────────────────────────────
@@ -1004,13 +959,47 @@ class ProjectUsageItem(BaseModel):
     conversation_count: int
 
 
+class AnnualPricing(BaseModel):
+    per_month_eur: int
+    total_per_year_eur: int
+
+
+class MonthlyPricing(BaseModel):
+    per_month_eur: int
+
+
+class OneTimePricing(BaseModel):
+    amount_eur: int
+
+
+class TierPricing(BaseModel):
+    """Per-tier nested pricing payload.
+
+    Exactly one of the cadence groups is populated per tier:
+        - Free: pricing is None at the parent level (never instantiated).
+        - Pilot: `one_time` only.
+        - Pioneer+: `annual_billing` + `monthly_billing`.
+    """
+
+    annual_billing: Optional[AnnualPricing] = None
+    monthly_billing: Optional[MonthlyPricing] = None
+    one_time: Optional[OneTimePricing] = None
+
+
 class NextTierRecommendation(BaseModel):
     tier: str
     tagline: str
-    price_eur_monthly: Optional[int]
-    price_note: str
+    pricing: Optional[TierPricing] = None
     included_hours: Optional[int]
     included_seats: Optional[int]
+
+
+class UsageGatesResponse(BaseModel):
+    """Workspace-level gate flags for over-cap UI gating."""
+
+    over_cap_active: bool = False
+    uploads_locked: bool = False
+    upgrade_cta_tier: Optional[str] = None
 
 
 class WorkspaceUsageResponse(BaseModel):
@@ -1021,19 +1010,25 @@ class WorkspaceUsageResponse(BaseModel):
     tier_tagline: str
     audio_hours: float
     audio_hours_included: Optional[int]  # None = unlimited
+    # Unified seat total (members + externals) — matches what
+    # assert_can_add_seat counts. This is the bar numerator.
     seat_count: int
     seat_count_included: Optional[int]
-    guest_count: int
-    guest_cap: Optional[int]
+    # Breakdown for the host-facing card. Sum of member_count +
+    # external_count == seat_count.
+    member_count: int
+    external_count: int
+    # Pending workspace_invite rows (not yet accepted, not expired). Counted
+    # in the bar via seat_invite_blocked; surfaced separately for the
+    # "Pending invites" sub-row.
+    pending_count: int
     project_count: int
     projects: list[ProjectUsageItem]
-    pilot_hard_block_active: bool  # informational for members too
-    # Cap-blocked signals for invite UI gating. member_invite_blocked is
-    # only True on tiers that hard-block seats (Pilot); Pioneer+ accrue
-    # overage instead. guest_invite_blocked is True at every finite-cap
-    # tier when at cap — guests have no overage mechanism.
-    member_invite_blocked: bool = False
-    guest_invite_blocked: bool = False
+    pilot_hard_block_active: bool = False  # deprecated: always False, use usage_gates
+    # Unified seat cap gate for invite UI. True when (members + externals +
+    # pending) meets or exceeds included_seats on a hard-blocking tier.
+    seat_invite_blocked: bool = False
+    usage_gates: UsageGatesResponse = UsageGatesResponse()
 
     # Admin + billing only — None for members.
     overage_forecast_eur: Optional[float] = None
@@ -1044,15 +1039,14 @@ class WorkspaceUsageResponse(BaseModel):
 class TierCapacityItem(BaseModel):
     tier: str
     tagline: str
-    price_eur_monthly: Optional[int]
-    price_note: str
+    pricing: Optional[TierPricing] = None
+    billing_period_applicable: bool
     duration: str
     included_seats: Optional[int]
     seat_overage_eur: Optional[int]
     included_hours: Optional[int]
     hour_overage_eur: Optional[int]
     hard_block_on_hours: bool
-    guest_cap: Optional[int]
     training_included: str
 
 
@@ -1066,25 +1060,28 @@ async def list_tier_capacities() -> list[TierCapacityItem]:
     surface (upgrade modal, billing tab, pricing comparison) reads from
     a single source.
     """
-    from dembrane.tier_capacity import TIER_CAPACITIES
+    from dembrane.tier_capacity import TIER_CAPACITIES, build_tier_pricing
 
-    return [
-        TierCapacityItem(
-            tier=cap.tier,
-            tagline=cap.tagline,
-            price_eur_monthly=cap.price_eur_monthly,
-            price_note=cap.price_note,
-            duration=cap.duration,
-            included_seats=cap.included_seats,
-            seat_overage_eur=cap.seat_overage_eur,
-            included_hours=cap.included_hours,
-            hour_overage_eur=cap.hour_overage_eur,
-            hard_block_on_hours=cap.hard_block_on_hours,
-            guest_cap=cap.guest_cap,
-            training_included=cap.training_included,
+    items: list[TierCapacityItem] = []
+    for cap in TIER_CAPACITIES.values():
+        raw_pricing = build_tier_pricing(cap.tier)
+        pricing = TierPricing(**raw_pricing) if raw_pricing else None
+        items.append(
+            TierCapacityItem(
+                tier=cap.tier,
+                tagline=cap.tagline,
+                pricing=pricing,
+                billing_period_applicable=cap.billing_period_applicable,
+                duration=cap.duration,
+                included_seats=cap.included_seats,
+                seat_overage_eur=cap.seat_overage_eur,
+                included_hours=cap.included_hours,
+                hour_overage_eur=cap.hour_overage_eur,
+                hard_block_on_hours=cap.hard_block_on_hours,
+                training_included=cap.training_included,
+            )
         )
-        for cap in TIER_CAPACITIES.values()
-    ]
+    return items
 
 
 @router.get(
@@ -1120,18 +1117,12 @@ async def get_workspace_usage(
     from dembrane.tier_capacity import (
         next_tier as tier_next,
         get_capacity,
+        compute_usage_gates,
         compute_hour_overage_eur,
         compute_seat_overage_eur,
     )
 
     ctx.require_policy("workspace:view_usage")
-
-    # Guest exclusion. Matrix §4 "View usage & overage" row grants Admin /
-    # Billing / Member but not Guest. Our preset system gives guests the
-    # member preset (guest = is_external=true on a direct row), so we gate
-    # here explicitly rather than forking the preset.
-    if ctx.is_external:
-        raise HTTPException(status_code=403, detail="Guests don't see workspace usage")
 
     if month_offset < 0 or month_offset > 12:
         raise HTTPException(status_code=400, detail="month_offset must be 0–12")
@@ -1182,7 +1173,7 @@ async def get_workspace_usage(
     project_ids = [p["id"] for p in projects if p.get("id")]
 
     if project_ids:
-        conversations = await async_directus.get_items(
+        cycle_task = async_directus.get_items(
             "conversation",
             {
                 "query": {
@@ -1198,10 +1189,25 @@ async def get_workspace_usage(
                 }
             },
         )
+        all_time_task = async_directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {"project_id": {"_in": project_ids}},
+                    "fields": ["duration"],
+                    "limit": -1,
+                }
+            },
+        )
+        conversations, all_time_convs = await asyncio.gather(cycle_task, all_time_task)
     else:
         conversations = []
+        all_time_convs = []
     if not isinstance(conversations, list):
         conversations = []
+    if not isinstance(all_time_convs, list):
+        all_time_convs = []
+    hours_lifetime = round(sum(c.get("duration") or 0 for c in all_time_convs) / 3600, 2)
 
     # Per-project and total aggregates.
     per_project_seconds: dict[str, int] = {}
@@ -1233,35 +1239,24 @@ async def get_workspace_usage(
 
     audio_hours = round(total_seconds / 3600, 2)
 
-    # Seat + guest count. Reuses inheritance.get_effective_members so the
+    # Seat breakdown. Reuses inheritance.get_effective_members so the
     # count includes derived org admins/owners — they consume a seat just
-    # like direct members ("admin should consume a seat" per matrix §7
-    # + product call 2026-05-04). get_effective_members already dedups by
-    # user_id with direct-wins-over-derived precedence, so we just bucket
-    # the rows here.
+    # like direct members. get_effective_members dedups by user_id with
+    # direct-wins-over-derived precedence, so we just bucket on role here.
+    # member + external counts always sum to the unified seat_count
+    # surfaced on the API (the bar numerator).
     effective_members = await get_effective_members(ctx.workspace_id)
 
-    seat_count = 0
-    guest_count = 0
-    seat_roles = {"owner", "admin", "member", "billing"}
+    member_count = 0
+    external_count = 0
+    member_roles = {"owner", "admin", "member", "billing"}
     for m in effective_members:
         role = m.get("role")
-        if m.get("is_external"):
-            # Guest bucket. A guest with an elevated role (admin/billing/
-            # owner) shouldn't exist — blocked at invite + change-role —
-            # but log if we ever see one so ops can spot it. Derived rows
-            # are never external (inheritance.py:303), so this only fires
-            # on direct rows.
-            if role in ("admin", "billing", "owner"):
-                logger.warning(
-                    "external_with_elevated_role workspace=%s role=%s",
-                    ctx.workspace_id,
-                    role,
-                )
-            guest_count += 1
-            continue
-        if role in seat_roles:
-            seat_count += 1
+        if role == "external":
+            external_count += 1
+        elif role in member_roles:
+            member_count += 1
+    seat_count = member_count + external_count
 
     # Tier capacity lookup. Legacy rows with NULL tier fall through to the
     # unknown-tier path below (unlimited / no block) rather than silently
@@ -1275,13 +1270,11 @@ async def get_workspace_usage(
         tagline = ""
         included_hours: Optional[int] = None
         included_seats: Optional[int] = None
-        guest_cap: Optional[int] = None
         hard_block = False
     else:
         tagline = cap.tagline
         included_hours = cap.included_hours
         included_seats = cap.included_seats
-        guest_cap = cap.guest_cap
         hard_block = (
             cap.hard_block_on_hours
             and cap.included_hours is not None
@@ -1304,30 +1297,36 @@ async def get_workspace_usage(
     if recommended:
         rcap = get_capacity(recommended)
         if rcap:
+            from dembrane.tier_capacity import build_tier_pricing
+
+            raw_pricing = build_tier_pricing(recommended)
             next_rec = NextTierRecommendation(
                 tier=recommended,
                 tagline=rcap.tagline,
-                price_eur_monthly=rcap.price_eur_monthly,
-                price_note=rcap.price_note,
+                pricing=TierPricing(**raw_pricing) if raw_pricing else None,
                 included_hours=rcap.included_hours,
                 included_seats=rcap.included_seats,
             )
 
-    # Cap-blocked flags for invite UI gating. Mirrors seat_capacity
-    # assert_can_add_member / assert_can_add_guest with include_pending=True
-    # so the UI disables the invite button as soon as the cap is taken
-    # (by actuals + outstanding workspace_invite rows). Otherwise admins
-    # can still click Invite while pending invites already saturate the
-    # cap, only to hit a 402 at submit.
+    # Unified seat cap gate for invite UI. Members + externals share the pool.
+    # Mirrors seat_capacity.assert_can_add_seat with include_pending=True
+    # so the UI disables the invite button as soon as the cap is taken.
     from dembrane.seat_capacity import count_pending_invites
 
-    member_pending, guest_pending = await count_pending_invites(ctx.workspace_id)
-    member_invite_blocked = (
+    member_pending, external_pending = await count_pending_invites(ctx.workspace_id)
+    pending_count = member_pending + external_pending
+    seat_invite_blocked = (
         included_seats is not None
         and tier_hard_blocks_seats(tier)
-        and (seat_count + member_pending) >= included_seats
+        and (seat_count + pending_count) >= included_seats
     )
-    guest_invite_blocked = guest_cap is not None and (guest_count + guest_pending) >= guest_cap
+
+    gates_raw = compute_usage_gates(tier, hours_lifetime, audio_hours)
+    gates = UsageGatesResponse(
+        over_cap_active=gates_raw.over_cap_active,
+        uploads_locked=gates_raw.uploads_locked,
+        upgrade_cta_tier=tier_next(tier),
+    )
 
     full = WorkspaceUsageResponse(
         cycle_start=cycle_start,
@@ -1338,13 +1337,14 @@ async def get_workspace_usage(
         audio_hours_included=included_hours,
         seat_count=seat_count,
         seat_count_included=included_seats,
-        guest_count=guest_count,
-        guest_cap=guest_cap,
+        member_count=member_count,
+        external_count=external_count,
+        pending_count=pending_count,
         project_count=live_project_count,
         projects=per_project_items,
         pilot_hard_block_active=hard_block,
-        member_invite_blocked=member_invite_blocked,
-        guest_invite_blocked=guest_invite_blocked,
+        seat_invite_blocked=seat_invite_blocked,
+        usage_gates=gates,
         overage_forecast_eur=overage_forecast,
         seat_overage_eur=seat_overage,
         next_tier=next_rec,

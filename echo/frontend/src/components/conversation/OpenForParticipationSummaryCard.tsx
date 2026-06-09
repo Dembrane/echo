@@ -38,7 +38,7 @@ export const OpenForParticipationSummaryCard = ({
 		<SummaryCard
 			loading={projectQuery.isLoading}
 			icon={<DeviceMobileIcon size={24} />}
-			label={t`Open for Participation?`}
+			label={t`Open for participation`}
 			value={
 				<Tooltip
 					position="bottom"

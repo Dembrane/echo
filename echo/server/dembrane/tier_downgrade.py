@@ -31,13 +31,13 @@ logger = getLogger("dembrane.tier_downgrade")
 Effect = Literal["revert", "freeze"]
 
 DOWNGRADE_EFFECTS: dict[str, Effect] = {
-    "workspace:whitelabel": "revert",   # ↺ clear custom logo
-    "workspace:api_access": "freeze",   # ❄ existing tokens stay, no new/rotate
-    "workspace:webhooks":   "freeze",   # ❄ existing webhooks fire, no new configs
-    "workspace:export": "freeze",       # ❄ existing exports intact
-    "project:share": "freeze",          # ❄ existing shares stay
+    "workspace:whitelabel": "revert",  # ↺ clear custom logo
+    "workspace:api_access": "freeze",  # ❄ existing tokens stay, no new/rotate
+    "workspace:webhooks": "freeze",  # ❄ existing webhooks fire, no new configs
+    "workspace:export": "freeze",  # ❄ existing exports intact
+    "project:share": "freeze",  # ❄ existing shares stay
     "workspace:set_private": "freeze",  # ❄ stays private
-    "project:set_private": "freeze",    # ❄ stays private
+    "project:set_private": "freeze",  # ❄ stays private
 }
 
 
@@ -87,9 +87,7 @@ async def preview_downgrade(
     affected: list[dict] = []
     for policy, required_tier in TIER_REQUIRED_FOR_POLICY.items():
         # Policy was available at from_tier but not at to_tier
-        if meets_tier(from_tier, required_tier) and not meets_tier(
-            to_tier, required_tier
-        ):
+        if meets_tier(from_tier, required_tier) and not meets_tier(to_tier, required_tier):
             affected.append(
                 {
                     "policy": policy,
@@ -100,9 +98,7 @@ async def preview_downgrade(
     return affected
 
 
-async def apply_downgrade_effects(
-    workspace_id: str, from_tier: str, to_tier: str
-) -> list[dict]:
+async def apply_downgrade_effects(workspace_id: str, from_tier: str, to_tier: str) -> list[dict]:
     """Execute the revert effects; return the preview list for logging.
 
     Called inside the PATCH tier transaction in workspaces.py.
@@ -136,4 +132,130 @@ async def apply_downgrade_effects(
             f"({from_tier} → {to_tier}): {list(patches)}"
         )
 
+    # Clear is_over_cap on all conversations in this workspace so that
+    # previously-unlocked content stays readable after downgrade. New
+    # conversations created on the new tier will be freshly stamped.
+    await _clear_over_cap_stamps(workspace_id)
+
     return effects
+
+
+async def _clear_over_cap_stamps(workspace_id: str) -> None:
+    """Reset is_over_cap=False on all conversations in the workspace.
+
+    This ensures content created during a higher tier remains readable
+    after downgrade. The stamp is re-evaluated for new conversations
+    only, at their finish time.
+    """
+    try:
+        project_rows = await async_directus.get_items(
+            "project",
+            {
+                "query": {
+                    "filter": {"workspace_id": {"_eq": workspace_id}},
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        )
+        if not isinstance(project_rows, list) or not project_rows:
+            return
+
+        project_ids = [p["id"] for p in project_rows if p.get("id")]
+        if not project_ids:
+            return
+
+        stamped = await async_directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {
+                        "project_id": {"_in": project_ids},
+                        "is_over_cap": {"_eq": True},
+                    },
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        )
+        if not isinstance(stamped, list) or not stamped:
+            return
+
+        for conv in stamped:
+            await async_directus.update_item("conversation", conv["id"], {"is_over_cap": False})
+
+        logger.info(
+            f"Cleared is_over_cap on {len(stamped)} conversations "
+            f"in workspace {workspace_id} during downgrade"
+        )
+    except Exception:
+        logger.exception(f"Failed to clear is_over_cap stamps for workspace {workspace_id}")
+
+
+async def recalculate_over_cap_on_upgrade(workspace_id: str, new_tier: str) -> None:
+    """Recalculate is_over_cap stamps after a tier upgrade.
+
+    For overage tiers (pioneer+), no action needed -- live lock formula
+    already returns False. For non-overage tiers (free, pilot), clear
+    stamps for conversations now within the new tier's included hours.
+    """
+    from dembrane.tier_capacity import get_capacity, compute_is_over_cap, tier_allows_overage
+
+    if tier_allows_overage(new_tier):
+        return
+
+    cap = get_capacity(new_tier)
+    if cap is None or cap.included_hours is None:
+        return
+
+    try:
+        project_rows = await async_directus.get_items(
+            "project",
+            {
+                "query": {
+                    "filter": {"workspace_id": {"_eq": workspace_id}},
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        )
+        if not isinstance(project_rows, list) or not project_rows:
+            return
+
+        project_ids = [p["id"] for p in project_rows if p.get("id")]
+        if not project_ids:
+            return
+
+        all_convs = await async_directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {"project_id": {"_in": project_ids}},
+                    "fields": ["id", "duration", "is_over_cap"],
+                    "limit": -1,
+                }
+            },
+        )
+        if not isinstance(all_convs, list) or not all_convs:
+            return
+
+        total_hours = sum((int(c.get("duration") or 0) / 3600.0) for c in all_convs)
+
+        cleared = 0
+        for conv in all_convs:
+            if not conv.get("is_over_cap"):
+                continue
+            conv_hours = int(conv.get("duration") or 0) / 3600.0
+            if not compute_is_over_cap(new_tier, total_hours, conv_hours):
+                await async_directus.update_item("conversation", conv["id"], {"is_over_cap": False})
+                cleared += 1
+
+        if cleared:
+            logger.info(
+                "Cleared is_over_cap on %d conversations in workspace %s after upgrade to %s",
+                cleared,
+                workspace_id,
+                new_tier,
+            )
+    except Exception:
+        logger.exception("Failed to recalculate is_over_cap for workspace %s", workspace_id)

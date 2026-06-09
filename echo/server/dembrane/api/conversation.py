@@ -13,7 +13,7 @@ from litellm.exceptions import ContentPolicyViolationError
 from dembrane.s3 import get_signed_url
 from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
-from dembrane.service import project_service, conversation_service, build_conversation_service
+from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.audio_utils import (
     sanitize_filename_component,
@@ -27,15 +27,11 @@ from dembrane.api.exceptions import (
     NoContentFoundException,
     ConversationNotFoundException,
 )
-from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
+from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.service.conversation import ConversationService
 
 logger = getLogger("api.conversation")
 ConversationRouter = APIRouter(tags=["conversation"])
-
-
-def conversation_service_for_auth(auth: DirectusSession) -> ConversationService:
-    return build_conversation_service(auth.client)
 
 
 async def _invalidate_usage_cache_for_conversation(conversation_id: str) -> None:
@@ -157,39 +153,27 @@ async def generate_health_events(
 async def raise_if_conversation_not_found_or_not_authorized(
     conversation_id: str,
     auth: DependencyDirectusSession,
+    require: Optional[str] = None,
 ) -> None:
-    # v2 access gate — replaces the old legacy-creator check on
-    # conversation.project_id.directus_user_id, which excluded every
-    # workspace member who didn't originally create the project.
-    from dembrane.app_user import get_app_user_or_raise
-    from dembrane.inheritance import get_user_project_access
+    # v2 access gate, shared with the BFF layer (resolve_conversation_access
+    # already enforces conversation:read; `require` adds a stricter policy
+    # for mutations). Directus row ACL is admin-only post-lockdown, so all
+    # data reads/writes after this gate MUST use the admin client; a
+    # user-token client 403s on every collection.
     from dembrane.directus_async import async_directus
+    from dembrane.api.v2.bff._access import resolve_conversation_access
 
-    conversation = await async_directus.get_item("conversation", conversation_id)
-    if not conversation or conversation.get("deleted_at"):
-        raise HTTPException(status_code=404, detail="Conversation not found")
-
+    # Staff admins bypass the app-layer model (they may have no app_user
+    # row); still 404 on missing or soft-deleted conversations.
     if auth.is_admin:
+        conversation = await async_directus.get_item("conversation", conversation_id)
+        if not conversation or conversation.get("deleted_at"):
+            raise HTTPException(status_code=404, detail="Conversation not found")
         return
 
-    project_id = conversation.get("project_id")
-    if isinstance(project_id, dict):
-        project_id = project_id.get("id")
-    if not project_id:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-
-    try:
-        app_user = await get_app_user_or_raise(auth.user_id)
-    except HTTPException:
-        raise HTTPException(status_code=404, detail="Conversation not found") from None
-
-    access = await get_user_project_access(
-        project_id=project_id,
-        user_id=app_user["id"],
-        directus_user_id=auth.user_id,
-    )
-    if access is None:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+    access, _ = await resolve_conversation_access(conversation_id, auth)
+    if require:
+        access.require(require)
 
 
 def return_url_or_redirect(
@@ -215,10 +199,9 @@ async def get_conversation_counts(
     conversation_id: str,
     auth: DependencyDirectusSession,
 ) -> dict:
-    svc = conversation_service_for_auth(auth)
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
-    counts = await run_in_thread_pool(svc.get_chunk_counts, conversation_id)
+    counts = await run_in_thread_pool(conversation_service.get_chunk_counts, conversation_id)
 
     return counts
 
@@ -231,9 +214,6 @@ async def get_conversation_content(
     return_url: bool = False,
     signed: bool = True,
 ) -> StreamingResponse | RedirectResponse | str:
-    # svc = conversation_service_for_auth(auth)
-    active_client = auth.client or directus
-
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     logger.debug(
@@ -242,7 +222,7 @@ async def get_conversation_content(
 
     # First, get all conversation chunks with more information for debugging
     chunks = await run_in_thread_pool(
-        active_client.get_items,
+        directus.get_items,
         "conversation_chunk",
         {
             "query": {
@@ -269,7 +249,7 @@ async def get_conversation_content(
     logger.debug(f"Found {len(chunks)} total chunks for conversation {conversation_id}")
 
     conversations = await run_in_thread_pool(
-        active_client.get_items,
+        directus.get_items,
         "conversation",
         {
             "query": {
@@ -334,7 +314,7 @@ async def get_conversation_content(
         logger.debug(f"Successfully merged audio to: {merged_path}, duration: {duration}s")
 
         await run_in_thread_pool(
-            active_client.update_item,
+            directus.update_item,
             "conversation",
             conversation_id,
             {
@@ -369,13 +349,10 @@ async def get_conversation_chunk_content(
     return_url: bool = False,
     signed: bool = True,
 ) -> StreamingResponse | RedirectResponse | str:
-    # svc = conversation_service_for_auth(auth)
-    active_client = auth.client or directus
-
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     chunks = await run_in_thread_pool(
-        active_client.get_items,
+        directus.get_items,
         "conversation_chunk",
         {
             "query": {
@@ -405,13 +382,10 @@ async def get_conversation_chunk_content(
 
 @ConversationRouter.get("/{conversation_id}/transcript")
 async def get_conversation_transcript(conversation_id: str, auth: DependencyDirectusSession) -> str:
-    # svc = conversation_service_for_auth(auth)
-    active_client = auth.client or directus
-
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     conversation_chunks = await run_in_thread_pool(
-        active_client.get_items,
+        directus.get_items,
         "conversation_chunk",
         {
             "query": {
@@ -463,10 +437,8 @@ async def get_conversation_emails(
     """Get comma-separated list of emails captured for a conversation."""
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
-    active_client = auth.client or directus
-
     participants = await run_in_thread_pool(
-        active_client.get_items,
+        directus.get_items,
         "project_report_notification_participants",
         {
             "query": {
@@ -496,7 +468,6 @@ async def get_conversation_token_count(
     conversation_id: str,
     auth: DependencyDirectusSession,
 ) -> int:
-    # svc = conversation_service_for_auth(auth)
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     # Try to get the token count from the cache
@@ -561,12 +532,12 @@ async def summarize_conversation(
     conversation_id: str,
     auth: DependencyDirectusSession,
 ) -> dict:
-    active_client = auth.client or directus
-
-    await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+    await raise_if_conversation_not_found_or_not_authorized(
+        conversation_id, auth, require="project:update"
+    )
 
     conversation_data_result = await run_in_thread_pool(
-        active_client.get_items,
+        directus.get_items,
         "conversation",
         {
             "query": {
@@ -654,7 +625,7 @@ async def summarize_conversation(
                 # Continue without title if generation fails
 
         await run_in_thread_pool(
-            active_client.update_item,
+            directus.update_item,
             "conversation",
             conversation_id,
             update_data,
@@ -679,12 +650,12 @@ async def generate_title_for_conversation(
     Generate a title for a conversation based on its summary.
     Requires the conversation to have a summary.
     """
-    active_client = auth.client or directus
-
-    await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+    await raise_if_conversation_not_found_or_not_authorized(
+        conversation_id, auth, require="project:update"
+    )
 
     conversation_data_result = await run_in_thread_pool(
-        active_client.get_items,
+        directus.get_items,
         "conversation",
         {
             "query": {
@@ -731,7 +702,7 @@ async def generate_title_for_conversation(
 
     if title:
         await run_in_thread_pool(
-            active_client.update_item,
+            directus.update_item,
             "conversation",
             conversation_id,
             {"title": title},
@@ -768,15 +739,16 @@ async def retranscribe_conversation(
         Dictionary with status info and the new conversation ID
     """
     try:
-        active_client = auth.client or directus
         admin_client = directus
 
-        # Check if the user owns the conversation
-        await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+        # Check the caller can mutate this project's conversations
+        await raise_if_conversation_not_found_or_not_authorized(
+            conversation_id, auth, require="project:update"
+        )
 
         # Get the original conversation details
         conversation = await run_in_thread_pool(
-            active_client.get_items,
+            admin_client.get_items,
             "conversation",
             {
                 "query": {
@@ -833,7 +805,7 @@ async def retranscribe_conversation(
 
         # Duration was already computed and saved by get_conversation_content above
         updated_conversation = await run_in_thread_pool(
-            active_client.get_items,
+            admin_client.get_items,
             "conversation",
             {
                 "query": {
@@ -868,6 +840,9 @@ async def retranscribe_conversation(
                 else None,
                 "merged_audio_path": merged_audio_path,
                 "is_anonymized": use_pii_redaction,
+                # Clone is complete at creation (one chunk, nothing more coming);
+                # finished now so the chunk pipeline finalizes event-driven.
+                "is_finished": True,
             },
         )
 
@@ -931,7 +906,7 @@ async def retranscribe_conversation(
             }
         except Exception as e:
             # Clean up the partially created conversation
-            await run_in_thread_pool(active_client.delete_item, "conversation", new_conversation_id)
+            await run_in_thread_pool(admin_client.delete_item, "conversation", new_conversation_id)
             # Log the raw exception server-side, but don't surface str(e)
             # to the client — CodeQL flags it as stack-trace exposure.
             logger.exception("Error during retranscription")
@@ -967,9 +942,10 @@ async def delete_conversation(
     S3 audio files are preserved. The conversation data remains in the
     database but is excluded from read queries via deleted_at IS NULL.
     """
-    await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+    await raise_if_conversation_not_found_or_not_authorized(
+        conversation_id, auth, require="conversation:delete"
+    )
     try:
-        conversation_service = conversation_service_for_auth(auth)
         await run_in_thread_pool(conversation_service.delete, conversation_id)
 
         try:

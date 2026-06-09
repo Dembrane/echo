@@ -4,10 +4,12 @@ import { Divider, Skeleton, Text } from "@mantine/core";
 import { BaseMessage } from "../chat/BaseMessage";
 import { RedactedText } from "../common/RedactedText";
 import { useConversationChunkContentUrl } from "./hooks";
+import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
 
 export const ConversationChunkAudioTranscript = ({
 	chunk,
 	showAudioPlayer = true,
+	transcriptLocked = false,
 }: {
 	chunk: {
 		conversation_id: string;
@@ -18,6 +20,7 @@ export const ConversationChunkAudioTranscript = ({
 		error: string;
 	};
 	showAudioPlayer?: boolean;
+	transcriptLocked?: boolean;
 }) => {
 	const audioUrlQuery = useConversationChunkContentUrl(
 		chunk.conversation_id as string,
@@ -59,13 +62,10 @@ export const ConversationChunkAudioTranscript = ({
 				)
 			}
 		>
+		{transcriptLocked ? (
+			<LockedTranscriptOverlay compact />
+		) : (
 			<Text>
-				{/* {transcript && transcript.trim().length > 0 ? (
-					transcript
-				) : (
-					<span className="italic text-gray-500">{t`Transcript not available yet`}</span>
-				)} */}
-
 			{chunk.error ? (
 				<span className="italic text-gray-500">{t`Unable to process this chunk`}</span>
 			) : !chunk.transcript ? (
@@ -74,6 +74,7 @@ export const ConversationChunkAudioTranscript = ({
 				<RedactedText>{chunk.transcript}</RedactedText>
 			)}
 			</Text>
+		)}
 		</BaseMessage>
 	);
 };

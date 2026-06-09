@@ -133,6 +133,90 @@ async def _get_org_role(org_id: str, user_id: str) -> Optional[str]:
     return None
 
 
+async def org_workspace_membership_roles(org_id: str, user_id: str) -> list[str]:
+    """Roles on the user's active workspace memberships across this org.
+
+    One workspace-id lookup for the org, then one membership lookup. Used to
+    decide insider (any member/billing/admin/owner row) vs outsider (only
+    external rows).
+    """
+    workspaces = await async_directus.get_items(
+        "workspace",
+        {
+            "query": {
+                "filter": {"org_id": {"_eq": org_id}, "deleted_at": {"_null": True}},
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    )
+    ws_ids = (
+        [w["id"] for w in workspaces if w.get("id")]
+        if isinstance(workspaces, list)
+        else []
+    )
+    if not ws_ids:
+        return []
+    rows = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_in": ws_ids},
+                    "user_id": {"_eq": user_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["role"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return []
+    return [r.get("role") for r in rows if r.get("role")]
+
+
+async def is_org_external_only(org_id: str, user_id: str) -> bool:
+    """True when the user is an outsider (external) in this org regardless of
+    any org_membership row.
+
+    Per the confirmed invariant (insider XOR outsider per org), this holds
+    when the org role is not admin/owner/billing, the user has at least one
+    external workspace membership in the org, and zero internal workspace
+    memberships in the org. Robust to a stale org_membership left behind when
+    someone was converted to external.
+    """
+    role = await _get_org_role(org_id, user_id)
+    if role in ("admin", "owner", "billing"):
+        return False
+    roles = await org_workspace_membership_roles(org_id, user_id)
+    has_external = any(r == "external" for r in roles)
+    has_internal = any(r in ("member", "billing", "admin", "owner") for r in roles)
+    return has_external and not has_internal
+
+
+async def is_org_billing_only(org_id: str, user_id: str) -> bool:
+    """True when the user is a biller in this org (finance visibility only,
+    matrix v1.1 §4/§5) — they must never be granted operational access.
+
+    Two ways to be a biller:
+      - org_membership.role = 'billing' (org-level biller), regardless of
+        workspace rows, or
+      - workspace-scoped biller: org role is not admin/owner, and the user's
+        workspace roles in this org include 'billing' with no operational
+        role (member/admin/owner) anywhere in the org.
+    """
+    role = await _get_org_role(org_id, user_id)
+    if role == "billing":
+        return True
+    if role in ("admin", "owner"):
+        return False
+    roles = await org_workspace_membership_roles(org_id, user_id)
+    has_billing = any(r == "billing" for r in roles)
+    has_operational = any(r in ("member", "admin", "owner") for r in roles)
+    return has_billing and not has_operational
+
+
 async def user_can_access(workspace_id: str, user_id: str) -> Optional[tuple[str, str]]:
     """Return (role, source) for this user on this workspace, or None.
 
@@ -199,13 +283,13 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
             "user_id": str,
             "role": str,
             "source": "direct" | "inherited",
-            "is_external": bool,     # only meaningful for direct rows
             "custom_policies": list, # only stored for direct rows
             "created_at": str | None,
         }
 
     Direct rows take precedence; a user with both a direct row and a derived
-    path appears once with their direct role.
+    path appears once with their direct role. External collaborators
+    surface as role='external' (see ADR-0003) — no separate flag.
     """
     workspace = await async_directus.get_item("workspace", workspace_id)
     if not workspace or workspace.get("deleted_at"):
@@ -223,7 +307,6 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
                     "fields": [
                         "user_id",
                         "role",
-                        "is_external",
                         "custom_policies",
                         "created_at",
                     ],
@@ -248,7 +331,6 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
                 "user_id": uid,
                 "role": row.get("role", ""),
                 "source": "direct",
-                "is_external": bool(row.get("is_external", False)),
                 "custom_policies": row.get("custom_policies") or [],
                 "created_at": row.get("created_at"),
             }
@@ -300,7 +382,6 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
                 "user_id": uid,
                 "role": derived_role,
                 "source": "inherited",
-                "is_external": False,  # derived cannot be external
                 "custom_policies": [],  # no custom policies on derived slots
                 "created_at": None,
             }
@@ -331,7 +412,6 @@ async def on_workspace_created(
             "user_id": creator_app_user_id,
             "role": "owner",
             "source": "direct",
-            "is_external": False,
         },
     )
 

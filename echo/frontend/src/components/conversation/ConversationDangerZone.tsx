@@ -16,13 +16,15 @@ import { useDeleteConversationByIdMutation } from "./hooks";
 export const ConversationDangerZone = ({
 	conversation,
 	disableDownloadAudio = false,
+	locked = false,
 }: {
 	conversation: Conversation;
 	disableDownloadAudio?: boolean;
+	locked?: boolean;
 }) => {
 	const deleteConversationByIdMutation = useDeleteConversationByIdMutation();
 	const navigate = useI18nNavigate();
-	const { projectId } = useParams();
+	const { projectId, workspaceId } = useParams();
 	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
 		useDisclosure(false);
 
@@ -42,8 +44,16 @@ export const ConversationDangerZone = ({
 						<MoveConversationButton conversation={conversation} />
 
 						<Tooltip
-							label={t`Audio download not available for anonymized conversations`}
-							disabled={!disableDownloadAudio}
+							label={
+								locked
+									? t`Upgrade your workspace to download audio for conversations recorded after the cap`
+									: disableDownloadAudio
+										? t`Audio download not available for anonymized conversations`
+										: undefined
+							}
+							disabled={!disableDownloadAudio && !locked}
+							maw={250}
+							multiline
 						>
 							<Button
 								variant="outline"
@@ -51,12 +61,12 @@ export const ConversationDangerZone = ({
 								component="a"
 								target="_blank"
 								href={
-									disableDownloadAudio
+									disableDownloadAudio || locked
 										? undefined
 										: getConversationContentLink(conversation.id)
 								}
-								onClick={disableDownloadAudio ? undefined : handleDownloadAudio}
-								disabled={disableDownloadAudio}
+								onClick={disableDownloadAudio || locked ? undefined : handleDownloadAudio}
+								disabled={disableDownloadAudio || locked}
 								{...testId("conversation-download-audio-button")}
 							>
 								<Group>
@@ -93,7 +103,7 @@ export const ConversationDangerZone = ({
 						console.warn("Analytics tracking failed:", error);
 					}
 					deleteConversationByIdMutation.mutate(conversation.id);
-					navigate(`/projects/${projectId}/overview`);
+					navigate(`/w/${workspaceId}/projects/${projectId}/conversations`);
 					closeConfirm();
 				}}
 			/>

@@ -104,6 +104,7 @@ interface Conversation {
 	is_audio_processing_finished: boolean | null;
 	is_finished: boolean | null;
 	is_anonymized: boolean | null;
+	locked: boolean | null;
 	merged_audio_path: string | null;
 	merged_transcript: string | null;
 	participant_email: string | null;
@@ -130,6 +131,9 @@ interface Conversation {
 	replies: string[] | ConversationReply[];
 	tags: string[] | ConversationProjectTag[];
 	conversation_artifacts: string[] | ConversationArtifact[];
+	has_transcript?: boolean;
+	last_chunk_at?: string | null;
+	has_only_text_chunks?: boolean;
 }
 
 interface ConversationArtifact {
@@ -167,6 +171,7 @@ interface ConversationChunk {
 	source: "DASHBOARD_UPLOAD" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT" | null;
 	timestamp: string;
 	transcript: string | null;
+	transcript_locked: boolean | null;
 	translation_error: string | null;
 	updated_at: string | null;
 	conversation_segments: string[] | ConversationSegmentConversationChunk[];

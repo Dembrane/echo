@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Text } from "@mantine/core";
+import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 
 export const References = ({
@@ -10,6 +11,7 @@ export const References = ({
 	metadata: any[];
 	projectId: string | undefined;
 }) => {
+	const { workspaceId } = useParams();
 	const citations = metadata.filter((m) => m.type === "citation");
 
 	if (citations.length === 0) return null;
@@ -29,7 +31,7 @@ export const References = ({
 								<Trans>{citation.reference_text}</Trans>
 							</span>
 							<I18nLink
-								to={`/projects/${projectId}/conversation/${citation?.conversation?.id || citation?.conversation}/overview`}
+								to={`/w/${workspaceId}/projects/${projectId}/conversation/${citation?.conversation?.id || citation?.conversation}`}
 							>
 								<Badge
 									size="sm"

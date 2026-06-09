@@ -4,23 +4,16 @@ import {
 	ActionIcon,
 	Box,
 	Container,
-	Divider,
 	Group,
-	NavLink,
 	ScrollArea,
 	Stack,
 	Text,
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import {
-	IconArrowLeft,
-	IconBuildingCommunity,
-	IconPalette,
-	IconScale,
-	IconShieldLock,
-} from "@tabler/icons-react";
-import { useState } from "react";
+import { IconArrowLeft } from "@tabler/icons-react";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AccountSettingsCard } from "@/components/settings/AccountSettingsCard";
 import { AuditLogsCard } from "@/components/settings/AuditLogsCard";
@@ -30,166 +23,126 @@ import { FontSizeSettingsCard } from "@/components/settings/FontSizeSettingsCard
 import { LegalBasisSettingsCard } from "@/components/settings/LegalBasisSettingsCard";
 import { MyAccessCard } from "@/components/settings/MyAccessCard";
 import { TwoFactorSettingsCard } from "@/components/settings/TwoFactorSettingsCard";
-import { UserAvatar } from "@/components/common/UserAvatar";
+import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
-type SectionId =
-	| "account"
-	| "access"
-	| "appearance"
-	| "project-defaults";
+type SectionId = "account" | "access" | "appearance" | "project-defaults";
 
-const SECTIONS: Array<{
-	id: SectionId;
-	icon: typeof IconShieldLock;
-	label: () => string;
-}> = [
-	{
-		id: "account",
-		icon: IconShieldLock,
-		label: () => t`Account & Security`,
-	},
-	{
-		id: "access",
-		icon: IconBuildingCommunity,
-		label: () => t`My access`,
-	},
-	{ id: "appearance", icon: IconPalette, label: () => t`Appearance` },
-	{
-		id: "project-defaults",
-		icon: IconScale,
-		label: () => t`Project Defaults`,
-	},
-];
+const resolveSection = (section?: string): SectionId =>
+	section === "access" ||
+	section === "appearance" ||
+	section === "project-defaults"
+		? section
+		: "account";
 
 export const UserSettingsRoute = () => {
 	useDocumentTitle(t`Settings | dembrane`);
 	const { data: user, isLoading } = useCurrentUser();
 	const navigate = useI18nNavigate();
-	const [activeSection, setActiveSection] = useState<SectionId>("account");
+	const { section: urlSection } = useParams<{ section?: string }>();
 
+	const { data: accessData } = useQuery<{
+		organisations: Array<{ id: string }>;
+	} | null>({
+		queryFn: async () => {
+			const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
+				credentials: "include",
+			});
+			if (!res.ok) return null;
+			return res.json();
+		},
+		queryKey: ["v2", "workspaces"],
+		staleTime: 60_000,
+	});
+
+	const requestedSection = resolveSection(urlSection);
+	const isExternalOnly = (accessData?.organisations.length ?? 0) === 0;
+	const activeSection =
+		isExternalOnly && requestedSection === "project-defaults"
+			? "account"
+			: requestedSection;
 	const isTwoFactorEnabled = Boolean(user?.tfa_enabled);
 
 	return (
 		<Container size="xl" py="xl">
 			<Stack gap="lg">
-				{/* Header */}
-				<Group gap="sm" align="center">
-					<ActionIcon
-						variant="subtle"
-						color="gray"
-						onClick={() => navigate("..")}
-						aria-label={t`Go back`}
-					>
-						<IconArrowLeft size={18} />
-					</ActionIcon>
+				<div className="flex items-center">
+					<div className="hidden md:flex w-[57px] shrink-0 items-center">
+						<ActionIcon
+							variant="subtle"
+							color="gray"
+							onClick={() => navigate("..")}
+							aria-label={t`Go back`}
+							size={32}
+							className="opacity-40 hover:opacity-100 transition-opacity"
+						>
+							<IconArrowLeft size={18} />
+						</ActionIcon>
+					</div>
 					<Title order={2}>
 						<Trans>Settings</Trans>
 					</Title>
-				</Group>
+				</div>
 
-				{/* Two-column layout */}
-				<Group align="flex-start" gap="xl" wrap="nowrap">
-					{/* Sidebar */}
-					<Box
-						className="shrink-0"
-						w={220}
-						style={{
-							position: "sticky",
-							top: 80,
-						}}
-					>
-						<Stack gap={4}>
-							{/* User identity in sidebar */}
-							<Group gap="sm" className="px-3 py-2">
-								<UserAvatar size={36} />
-								<Box className="min-w-0 flex-1">
-									<Text size="sm" fw={500} truncate>
-										{(user?.first_name as string) ??
-											"User"}
-									</Text>
-									<Text size="xs" c="dimmed" truncate>
-										{user?.email ?? ""}
-									</Text>
-								</Box>
-							</Group>
+				{/* Inner sidebar retired — section navigation lives in the main
+				    AppSidebar. The page renders only the active section. */}
+				<Box className="min-w-0 flex-1">
+					<ScrollArea>
+						{activeSection === "account" && (
+							<Stack gap="lg">
+								<Title order={3}>
+									<Trans>Account & security</Trans>
+								</Title>
 
-							<Divider my="xs" />
+								<AccountSettingsCard />
 
-							{SECTIONS.map((section) => (
-								<NavLink
-									key={section.id}
-									label={section.label()}
-									leftSection={
-										<section.icon size={16} />
-									}
-									active={activeSection === section.id}
-									onClick={() =>
-										setActiveSection(section.id)
-									}
-									variant="light"
-									style={{ borderRadius: 8 }}
+								<ChangePasswordCard />
+
+								<TwoFactorSettingsCard
+									isLoading={isLoading}
+									isTwoFactorEnabled={isTwoFactorEnabled}
 								/>
-							))}
-						</Stack>
-					</Box>
 
-					{/* Content */}
-					<Box className="min-w-0 flex-1">
-						<ScrollArea>
-							{activeSection === "account" && (
-								<Stack gap="lg">
-									<Title order={3}>
-										<Trans>Account & Security</Trans>
-									</Title>
+								<AuditLogsCard />
+							</Stack>
+						)}
 
-									<AccountSettingsCard />
-
-									<ChangePasswordCard />
-
-									<TwoFactorSettingsCard
-										isLoading={isLoading}
-										isTwoFactorEnabled={
-											isTwoFactorEnabled
-										}
-									/>
-
-									<AuditLogsCard />
-								</Stack>
-							)}
-
-							{activeSection === "access" && (
-								<Stack gap="lg">
+						{activeSection === "access" && (
+							<Stack gap="lg">
+								<Stack gap={4}>
 									<Title order={3}>
 										<Trans>My access</Trans>
 									</Title>
-									<MyAccessCard />
+									<Text size="sm" c="dimmed">
+										<Trans>This is a map of every organisation and workspace you are a member of.</Trans>
+									</Text>
 								</Stack>
-							)}
+								<MyAccessCard />
+							</Stack>
+						)}
 
-							{activeSection === "appearance" && (
-								<Stack gap="lg">
-									<Title order={3}>
-										<Trans>Appearance</Trans>
-									</Title>
+						{activeSection === "appearance" && (
+							<Stack gap="lg">
+								<Title order={3}>
+									<Trans>Appearance</Trans>
+								</Title>
 
-									<FontSettingsCard />
-									<FontSizeSettingsCard />
-								</Stack>
-							)}
+								<FontSettingsCard />
+								<FontSizeSettingsCard />
+							</Stack>
+						)}
 
-							{activeSection === "project-defaults" && (
-								<Stack gap="lg">
-									<Title order={3}>
-										<Trans>Project Defaults</Trans>
-									</Title>
+						{activeSection === "project-defaults" && !isExternalOnly && (
+							<Stack gap="lg">
+								<Title order={3}>
+									<Trans>Project defaults</Trans>
+								</Title>
 
-									<LegalBasisSettingsCard />
-								</Stack>
-							)}
-						</ScrollArea>
-					</Box>
-				</Group>
+								<LegalBasisSettingsCard />
+							</Stack>
+						)}
+					</ScrollArea>
+				</Box>
 			</Stack>
 		</Container>
 	);

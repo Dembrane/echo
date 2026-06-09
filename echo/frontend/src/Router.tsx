@@ -4,38 +4,41 @@ import {
 	createLazyRoute,
 } from "./components/common/LazyRoute";
 import { Protected } from "./components/common/Protected";
-import { WorkspaceRedirect } from "./components/common/WorkspaceRedirect";
 import { ErrorPage } from "./components/error/ErrorPage";
 import { AuthLayout } from "./components/layout/AuthLayout";
 // Layout components - keep as regular imports since they're used frequently
 import { BaseLayout } from "./components/layout/BaseLayout";
-import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
 import { LanguageLayout } from "./components/layout/LanguageLayout";
 import { ParticipantLayout } from "./components/layout/ParticipantLayout";
-import { ProjectConversationLayout } from "./components/layout/ProjectConversationLayout";
 import { ProjectLayout } from "./components/layout/ProjectLayout";
-import { ProjectAccessGuard } from "./components/project/ProjectAccessGuard";
 import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
 import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
+import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
 import { ParticipantConversationAudioContent } from "./components/participant/ParticipantConversationAudioContent";
 import { RefineSelection } from "./components/participant/refine/RefineSelection";
 import { Verify } from "./components/participant/verify/Verify";
 import { VerifyArtefact } from "./components/participant/verify/VerifyArtefact";
 import { VerifySelection } from "./components/participant/verify/VerifySelection";
+import { ProjectAccessGuard } from "./components/project/ProjectAccessGuard";
 import {
 	ParticipantConversationAudioRoute,
 	ParticipantConversationTextRoute,
 } from "./routes/participant/ParticipantConversation";
 import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
 import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
-import { ProjectConversationOverviewRoute } from "./routes/project/conversation/ProjectConversationOverview";
-import { ProjectConversationTranscript } from "./routes/project/conversation/ProjectConversationTranscript";
+import { ProjectConversationRoute } from "./routes/project/conversation/ProjectConversationRoute";
+import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
 // Tab-based routes - import directly for now to debug
 import {
 	ProjectAccessRoute,
+	ProjectConversationsRoute,
+	ProjectIntegrationsRoute,
 	ProjectPortalSettingsRoute,
 	ProjectSettingsRoute,
+	ProjectUploadRoute,
 } from "./routes/project/ProjectRoutes";
+import { SidebarPreviewLayout } from "./routes/sidebar-preview/SidebarPreviewLayout";
+import { SidebarPreviewRoute } from "./routes/sidebar-preview/SidebarPreviewRoute";
 
 // Lazy-loaded route components
 const ProjectsHomeRoute = createLazyNamedRoute(
@@ -119,6 +122,10 @@ const WorkspaceSelectorRoute = createLazyNamedRoute(
 	() => import("./routes/workspaces/WorkspaceSelectorRoute"),
 	"WorkspaceSelectorRoute",
 );
+const RootRedirect = createLazyNamedRoute(
+	() => import("./routes/workspaces/WorkspaceSelectorRoute"),
+	"RootRedirect",
+);
 const CreateWorkspaceRoute = createLazyNamedRoute(
 	() => import("./routes/workspaces/CreateWorkspaceRoute"),
 	"CreateWorkspaceRoute",
@@ -150,7 +157,7 @@ const AdminSettingsRoute = createLazyNamedRoute(
 // Project route children — shared between /projects and /w/:workspaceId/projects
 const projectRouteChildren = [
 	{
-		element: <ProjectsHomeRoute />,
+		element: <Navigate to="../home" replace />,
 		index: true,
 	},
 	{
@@ -162,9 +169,13 @@ const projectRouteChildren = [
 			{
 				children: [
 					{
+						element: <ProjectHomeRoute />,
+						path: "home",
+					},
+					{
 						children: [
 							{
-								element: <Navigate to="portal-editor" replace />,
+								element: <Navigate to="home" replace />,
 								index: true,
 							},
 							{
@@ -207,15 +218,15 @@ const projectRouteChildren = [
 					{
 						children: [
 							{
-								element: <Navigate to="overview" replace />,
+								element: <ProjectConversationRoute />,
 								index: true,
 							},
 							{
-								element: <ProjectConversationOverviewRoute />,
+								element: <Navigate to=".." replace />,
 								path: "overview",
 							},
 							{
-								element: <ProjectConversationTranscript />,
+								element: <Navigate to=".." replace />,
 								path: "transcript",
 							},
 							{
@@ -223,10 +234,8 @@ const projectRouteChildren = [
 								path: "debug",
 							},
 						],
-						element: <ProjectConversationLayout />,
 						path: "conversation/:conversationId",
 					},
-
 					{
 						children: [
 							{
@@ -250,6 +259,22 @@ const projectRouteChildren = [
 						path: "report",
 					},
 					{
+						element: <ProjectConversationsRoute />,
+						path: "conversations",
+					},
+					{
+						element: <ProjectUploadRoute />,
+						path: "upload",
+					},
+					{
+						element: <Navigate to="../integrations" replace />,
+						path: "export",
+					},
+					{
+						element: <ProjectIntegrationsRoute />,
+						path: "integrations",
+					},
+					{
 						element: <DebugPage />,
 						path: "debug",
 					},
@@ -269,7 +294,13 @@ export const mainRouter = createBrowserRouter([
 	{
 		children: [
 			{
-				element: <Navigate to="projects" />,
+				// Root entry: RootRedirect sends single-org users to their org
+				// overview, everyone else to the /o home list.
+				element: (
+					<Protected>
+						<RootRedirect />
+					</Protected>
+				),
 				path: "",
 			},
 			{
@@ -345,26 +376,12 @@ export const mainRouter = createBrowserRouter([
 				path: "invites",
 			},
 			{
-				// Workspace selector + create — canonical path is /w.
+				// Request-workspace wizard. Bare /w is retired (home moved to /o)
+				// and falls through to the 404; /w/:workspaceId/* is defined below.
 				children: [
 					{
-						element: <WorkspaceSelectorRoute />,
-						index: true,
-					},
-					{
 						element: <CreateWorkspaceRoute />,
-						path: "new",
-					},
-					{
-						element: <Navigate to="settings" replace />,
-						path: ":workspaceId",
-					},
-					{
-						// Splat so the tab lives in the path
-						// (/w/:workspaceId/settings/:tab). The component parses
-						// the trailing segment.
-						element: <WorkspaceSettingsRoute />,
-						path: ":workspaceId/settings/*",
+						index: true,
 					},
 				],
 				element: (
@@ -372,12 +389,16 @@ export const mainRouter = createBrowserRouter([
 						<BaseLayout />
 					</Protected>
 				),
-				path: "w",
+				path: "w/new",
 			},
 			{
-				// Organisation (org) admin surface. Canonical path is /o/:organisationId —
-				// matches the /w/:workspaceId pattern.
+				// Bare /o is the home list (organisations); /o/:organisationId is a
+				// single org's admin surface.
 				children: [
+					{
+						element: <WorkspaceSelectorRoute />,
+						index: true,
+					},
 					{
 						// Splat so tab state lives in the path
 						// (/o/:organisationId/:tab) — matches the project-tab pattern.
@@ -394,22 +415,36 @@ export const mainRouter = createBrowserRouter([
 				path: "o",
 			},
 			{
-				// Host Guide - standalone page, protected but no header/layout
-				element: (
-					<Protected>
-						<HostGuidePage />
-					</Protected>
-				),
-				path: "projects/:projectId/host-guide",
-			},
-			{
 				// Workspace-scoped projects: /w/:workspaceId/projects/...
-				// This is the PRIMARY route — workspace ID in URL makes it shareable
+				// SINGLE canonical shape — legacy /projects/:projectId is gone.
 				children: [
 					{
-						children: projectRouteChildren,
+						element: <Navigate to="home" replace />,
+						index: true,
+					},
+					{
+						children: [
+							{
+								element: <ProjectsHomeRoute />,
+								path: "home",
+							},
+							{
+								element: <HostGuidePage />,
+								path: "projects/:projectId/host-guide",
+							},
+							{
+								// Splat so the tab lives in the path
+								// (/w/:workspaceId/settings/:tab). The component parses
+								// the trailing segment.
+								element: <WorkspaceSettingsRoute />,
+								path: "settings/*",
+							},
+							{
+								children: projectRouteChildren,
+								path: "projects",
+							},
+						],
 						element: <BaseLayout />,
-						path: "projects",
 					},
 				],
 				element: (
@@ -420,28 +455,14 @@ export const mainRouter = createBrowserRouter([
 				path: "w/:workspaceId",
 			},
 			{
-				// Legacy /projects — redirects to /w/:workspaceId/projects
-				// Kept for backward compat (bookmarks, existing links)
-				children: [
-					{
-						element: <WorkspaceRedirect />,
-						index: true,
-					},
-					// Direct project access still works (falls through to v1)
-					...projectRouteChildren.slice(1),
-				],
-				element: (
-					<Protected>
-						<BaseLayout />
-					</Protected>
-				),
-				path: "projects",
-			},
-			{
 				children: [
 					{
 						element: <UserSettingsRoute />,
 						index: true,
+					},
+					{
+						element: <UserSettingsRoute />,
+						path: ":section",
 					},
 				],
 				element: (
@@ -456,7 +477,7 @@ export const mainRouter = createBrowserRouter([
 				// Client-side guard lives inside AdminSettingsRoute (reads
 				// meV2.is_staff); backend /v2/admin/* also gates on is_admin.
 				children: [
-					{ element: <AdminSettingsRoute />, index: true },
+					{ element: <Navigate to="usage-and-billing" replace />, index: true },
 					{ element: <AdminSettingsRoute />, path: ":tab" },
 				],
 				element: (
@@ -465,6 +486,47 @@ export const mainRouter = createBrowserRouter([
 					</Protected>
 				),
 				path: "admin",
+			},
+			{
+				// Sidebar preview — feature/sidebar work-in-progress. No auth gate
+				// so the design can be poked at without sign-in friction. Remove
+				// or fold into real layouts once the sidebar replaces production
+				// chrome.
+				children: [
+					{ element: <SidebarPreviewRoute />, index: true },
+					{ element: <SidebarPreviewRoute />, path: "settings/:section" },
+					{ element: <SidebarPreviewRoute />, path: "o/:orgId" },
+					{
+						element: <SidebarPreviewRoute />,
+						path: "o/:orgId/settings/:section",
+					},
+					{
+						element: <SidebarPreviewRoute />,
+						path: "w/:workspaceId/home",
+					},
+					{
+						element: <SidebarPreviewRoute />,
+						path: "w/:workspaceId/projects",
+					},
+					{
+						element: <SidebarPreviewRoute />,
+						path: "w/:workspaceId/settings/:section",
+					},
+					{
+						element: <SidebarPreviewRoute />,
+						path: "w/:workspaceId/projects/:projectId/home",
+					},
+					{
+						element: <SidebarPreviewRoute />,
+						path: "w/:workspaceId/projects/:projectId/conversations",
+					},
+					{
+						element: <SidebarPreviewRoute />,
+						path: "w/:workspaceId/projects/:projectId/settings/:section",
+					},
+				],
+				element: <SidebarPreviewLayout />,
+				path: "sidebar-preview",
 			},
 			{
 				element: <ErrorPage />,

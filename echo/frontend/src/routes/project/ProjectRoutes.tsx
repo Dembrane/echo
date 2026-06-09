@@ -2,6 +2,8 @@ import { Trans } from "@lingui/react/macro";
 import { Alert, Divider, LoadingOverlay, Stack } from "@mantine/core";
 import { useMemo } from "react";
 import { useParams } from "react-router";
+import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
+import { PageContainer } from "@/components/layout/PageContainer";
 import {
 	useProjectById,
 	useVerificationTopicsQuery,
@@ -13,9 +15,27 @@ import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
 import { ProjectUploadSection } from "@/components/project/ProjectUploadSection";
 import { ProjectUsageAndSharing } from "@/components/project/ProjectUsageAndSharing";
 import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
+import { FeatureGate } from "@/components/workspace/FeatureGate";
 import { ENABLE_WEBHOOKS } from "@/config";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { getProjectTranscriptsLink } from "@/lib/api";
+import type { Tier } from "@/lib/tiers";
 
+export const ProjectConversationsRoute = () => {
+	const { projectId, workspaceId } = useParams();
+
+	if (!projectId) return null;
+
+	return (
+		<PageContainer width="xl">
+			<ProjectConversationsPanel
+				projectId={projectId}
+				workspaceId={workspaceId}
+				showUpload
+			/>
+		</PageContainer>
+	);
+};
 
 export const ProjectSettingsRoute = () => {
 	const { projectId } = useParams();
@@ -62,23 +82,6 @@ export const ProjectSettingsRoute = () => {
 
 			{projectQuery.data && (
 				<>
-					<Divider />
-					<ProjectUploadSection projectId={projectId ?? ""} />
-
-					<Divider />
-					<ProjectExportSection
-						exportLink={getProjectTranscriptsLink(projectId ?? "")}
-						projectName={projectQuery.data.name}
-						project={projectQuery.data}
-					/>
-
-					{ENABLE_WEBHOOKS && (
-						<>
-							<Divider />
-							<WebhookSection projectId={projectId ?? ""} />
-						</>
-					)}
-
 					{/*
           {projectId && (
             <>
@@ -92,6 +95,86 @@ export const ProjectSettingsRoute = () => {
 				</>
 			)}
 		</Stack>
+	);
+};
+
+export const ProjectUploadRoute = () => {
+	const { projectId } = useParams();
+
+	if (!projectId) return null;
+
+	return (
+		<PageContainer>
+			<ProjectUploadSection projectId={projectId} />
+		</PageContainer>
+	);
+};
+
+export const ProjectIntegrationsRoute = () => {
+	const { projectId } = useParams();
+	const { workspace, workspaceId } = useWorkspace();
+	const query = useMemo(
+		() => ({
+			fields: ["id", "name", "is_conversation_allowed"],
+		}),
+		[],
+	);
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		// @ts-expect-error narrowed fields are enough for this route
+		query,
+	});
+
+	if (!projectId) return null;
+
+	// Webhooks are a workspace admin surface (workspace:webhooks policy):
+	// members never see the section, and below the changemaker tier the
+	// FeatureGate placeholder renders instead of the live section, so no
+	// webhook request is ever sent for callers the backend would 403.
+	const isWorkspaceAdmin =
+		workspace?.role === "admin" || workspace?.role === "owner";
+
+	return (
+		<PageContainer>
+			<Stack gap="3rem" className="relative">
+				{projectQuery.isLoading && <LoadingOverlay visible />}
+				{projectQuery.isError && (
+					<Alert variant="outline" color="red">
+						<Trans>Error loading project</Trans>
+					</Alert>
+				)}
+				{projectQuery.data && (
+					<ProjectExportSection
+						exportLink={getProjectTranscriptsLink(projectId)}
+						projectName={projectQuery.data.name}
+						project={projectQuery.data}
+					/>
+				)}
+				{!ENABLE_WEBHOOKS && (
+					<>
+						<Divider />
+						<Alert variant="light">
+							<Trans>Webhooks are not enabled for this environment.</Trans>
+						</Alert>
+					</>
+				)}
+				{ENABLE_WEBHOOKS && isWorkspaceAdmin && workspace && workspaceId && (
+					<>
+						<Divider />
+						<FeatureGate
+							currentTier={workspace.tier as Tier}
+							requiredTier="changemaker"
+							featureName="Webhooks"
+							benefit="Send conversation and report events to your own systems."
+							canRequestUpgrade={isWorkspaceAdmin}
+							workspaceId={workspaceId}
+						>
+							<WebhookSection projectId={projectId} />
+						</FeatureGate>
+					</>
+				)}
+			</Stack>
+		</PageContainer>
 	);
 };
 

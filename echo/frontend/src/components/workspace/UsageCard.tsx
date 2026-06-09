@@ -11,60 +11,28 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
-import { type Tier, UpgradeModal } from "@/components/workspace/FeatureGate";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { isTier } from "@/lib/tiers";
+import {
+	useWorkspaceUsage,
+	type WorkspaceUsageData,
+} from "@/hooks/useWorkspaceUsage";
+import { isTier, type Tier } from "@/lib/tiers";
 import { formatDurationFromHours } from "@/lib/time";
 
-interface ProjectUsage {
-	id: string;
-	name: string;
-	audio_hours: number;
-	conversation_count: number;
-}
-
-interface UsageResponse {
-	cycle_start: string;
-	cycle_end_exclusive: string;
-	tier: string;
-	tier_tagline: string;
-	audio_hours: number;
-	audio_hours_included: number | null;
-	seat_count: number;
-	seat_count_included: number | null;
-	guest_count: number;
-	guest_cap: number | null;
-	project_count: number;
-	projects: ProjectUsage[];
-	pilot_hard_block_active: boolean;
-	member_invite_blocked?: boolean;
-	guest_invite_blocked?: boolean;
-	overage_forecast_eur?: number | null;
-	seat_overage_eur?: number | null;
-	next_tier?: {
-		tier: string;
-		tagline: string;
-		price_eur_monthly: number | null;
-		price_note: string;
-		included_hours: number | null;
-		included_seats: number | null;
-	} | null;
-}
-
-async function fetchUsage(
+async function fetchUsageFresh(
 	workspaceId: string,
 	monthOffset = 0,
-	refresh = false,
-): Promise<UsageResponse> {
+): Promise<WorkspaceUsageData> {
 	const params = new URLSearchParams();
 	if (monthOffset > 0) params.set("month_offset", String(monthOffset));
-	if (refresh) params.set("refresh", "true");
+	params.set("refresh", "true");
 	const qs = params.toString();
 	const url = `${API_BASE_URL}/v2/workspaces/${workspaceId}/usage${qs ? `?${qs}` : ""}`;
 	const res = await fetch(url, { credentials: "include" });
@@ -95,12 +63,14 @@ function formatEur(value: number | null | undefined): string {
  * Workspace usage card (matrix v1.1 §8).
  *
  * Role-aware rendering:
- *   - Member: hours / seats / guests / projects, raw numbers.
+ *   - Member: hours / seats / projects, raw numbers.
  *   - Admin + Billing: adds overage forecast and next-tier recommendation.
  *
- * Source fields come pre-differentiated from the backend (next_tier +
- * overage_forecast_eur are null for members — `workspace:view_invoices`
- * gates them server-side).
+ * Seat block: single bar over the unified pool (members + externals),
+ * with three optional sub-rows beneath — Members, Externals, Pending
+ * invites. Rows with count zero are hidden. The bar numerator
+ * (data.seat_count) is the value enforcement code (assert_can_add_seat)
+ * counts against — they always agree.
  */
 export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const queryClient = useQueryClient();
@@ -109,28 +79,13 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const [upgradeOpen, setUpgradeOpen] = useState(false);
 	const [monthOffset, setMonthOffset] = useState(0);
 
-	const { data, isLoading, isError, refetch, dataUpdatedAt } = useQuery({
-		queryFn: () => fetchUsage(workspaceId, monthOffset),
-		queryKey: ["v2", "workspace-usage", workspaceId, monthOffset],
-		// Always refetch when the billing tab mounts, even if the cached
-		// payload is still within staleTime. Users expect fresh seat/guest
-		// counts every time they land on this surface — without this, a
-		// member added in another tab or by another admin doesn't show
-		// until a manual click on the refresh icon. The server-side cache
-		// (30-min Redis TTL) still does its job; we're only overriding
-		// React Query's "fresh = skip" optimization.
-		refetchOnMount: "always",
-		refetchOnWindowFocus: "always",
-		staleTime: 60_000,
-	});
+	const { data, isLoading, isError, refetch, dataUpdatedAt } =
+		useWorkspaceUsage(workspaceId, { monthOffset });
 
 	const handleRefresh = async () => {
-		// Manual force-recompute. Bypasses the server's 30-min cache via
-		// ?refresh=true, then writes the fresh payload into the React
-		// Query cache so the card updates without a second fetch.
 		setRefreshing(true);
 		try {
-			const fresh = await fetchUsage(workspaceId, monthOffset, true);
+			const fresh = await fetchUsageFresh(workspaceId, monthOffset);
 			queryClient.setQueryData(
 				["v2", "workspace-usage", workspaceId, monthOffset],
 				fresh,
@@ -187,6 +142,20 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 			: null;
 
 	const pilotExhausted = data.pilot_hard_block_active;
+
+	const audioColor =
+		pilotExhausted || (hoursPct != null && hoursPct >= 90)
+			? "red"
+			: hoursPct != null && hoursPct >= 60
+				? "yellow"
+				: "primary";
+
+	const seatsColor =
+		seatsPct != null && seatsPct >= 90
+			? "red"
+			: seatsPct != null && seatsPct >= 60
+				? "yellow"
+				: "primary";
 
 	const nextTier = data.next_tier;
 	const currentTierName = isTier(data.tier) ? (data.tier as Tier) : "pioneer";
@@ -248,15 +217,13 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 						</Text>
 					</Group>
 					{hoursPct !== null && (
-						<Progress
-							value={hoursPct}
-							size="xs"
-							color={pilotExhausted ? "red" : "blue"}
-						/>
+						<Progress value={hoursPct} size="xs" color={audioColor} />
 					)}
 				</Stack>
 
-				{/* Seats */}
+				{/* Seats — unified pool (members + externals). Breakdown
+				    rows sit beneath the bar; zero-count rows hide so a
+				    workspace with only members reads cleanly. */}
 				<Stack gap={6}>
 					<Group justify="space-between">
 						<Text size="sm" c="dimmed">
@@ -273,25 +240,34 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 						</Text>
 					</Group>
 					{seatsPct !== null && (
-						<Progress value={seatsPct} size="xs" color="blue" />
+						<Progress value={seatsPct} size="xs" color={seatsColor} />
+					)}
+					{data.member_count > 0 && (
+						<Group justify="space-between">
+							<Text size="xs" c="dimmed">
+								<Trans>Members</Trans>
+							</Text>
+							<Text size="xs" c="dimmed">{data.member_count}</Text>
+						</Group>
+					)}
+					{data.external_count > 0 && (
+						<Group justify="space-between">
+							<Text size="xs" c="dimmed">
+								<Trans>Externals</Trans>
+							</Text>
+							<Text size="xs" c="dimmed">{data.external_count}</Text>
+						</Group>
+					)}
+					{data.pending_count > 0 && (
+						<Group justify="space-between">
+							<Text size="xs" c="dimmed">
+								<Trans>Pending invites</Trans>
+							</Text>
+							<Text size="xs" c="dimmed">{data.pending_count}</Text>
+						</Group>
 					)}
 				</Stack>
 
-				{/* Guests + projects (compact row) */}
-				<Group justify="space-between">
-					<Text size="sm" c="dimmed">
-						<Trans>Guests</Trans>
-					</Text>
-					<Text size="sm">
-						{data.guest_count}
-						{data.guest_cap != null && (
-							<Text span c="dimmed" size="sm">
-								{" / "}
-								{data.guest_cap}
-							</Text>
-						)}
-					</Text>
-				</Group>
 				<Group justify="space-between">
 					<Text size="sm" c="dimmed">
 						<Trans>Projects</Trans>
@@ -325,10 +301,13 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 								<Trans>
 									Next tier: {data.next_tier.tier} · {data.next_tier.tagline}
 								</Trans>
-								{data.next_tier.price_eur_monthly != null && (
+								{data.next_tier.pricing?.annual_billing?.per_month_eur !=
+									null && (
 									<>
 										{" · "}
-										{formatEur(data.next_tier.price_eur_monthly)}
+										{formatEur(
+											data.next_tier.pricing.annual_billing.per_month_eur,
+										)}
 										/mo
 									</>
 								)}

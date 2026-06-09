@@ -35,9 +35,9 @@ Design choices worth knowing about:
   point we've already admitted the resource exists; we're saying "you
   see it, you just can't do THAT to it."
 
-- **Guest clamp.** Guests (is_external=True on the caller's workspace
-  row) share the member preset except conversation:delete. Matrix §4.
-  The clamp is applied here so handlers don't need to think about it.
+- **External role.** Externals (role='external') get the strictly
+  scoped external preset per matrix §4 — ADR-0003. No flag-swap needed
+  anymore: the role field itself is the source of truth.
 
 - **Tier gate reuse.** has_policy() already handles tier gates when
   workspace_tier is passed. We always pass it so any endpoint that
@@ -64,7 +64,6 @@ from dembrane.policies import (
     TIER_REQUIRED_FOR_POLICY,
     has_policy,
     meets_tier,
-    effective_workspace_role,
 )
 from dembrane.inheritance import get_user_project_access
 from dembrane.directus_async import async_directus
@@ -91,7 +90,6 @@ class ResourceAccess:
     role: str
     source: str
     custom_policies: list[str] = field(default_factory=list)
-    is_guest: bool = False
     # Cached so cache-invalidation paths skip a second workspace fetch.
     org_id: Optional[str] = None
     # project dict cached from the initial fetch; sub-resource resolvers
@@ -107,18 +105,12 @@ class ResourceAccess:
     def allows(self, policy: str) -> bool:
         """Does this role (+tier) grant `policy`? Silent — returns bool.
 
-        Project-share access (source='project_share') uses its own
-        viewer/editor preset, so the guest swap doesn't apply there —
-        a guest with a project-share row is treated by the share role.
-        Workspace-scope access (source='workspace' or 'direct') swaps
-        is_guest=True to the strictly scoped 'guest' preset per matrix §4.
+        role='external' uses the strictly scoped external preset directly
+        (ADR-0003) — no flag-swap. Project-share access (source='project_share')
+        evaluates against the viewer/editor preset table instead.
         """
-        if self.source == "project_share":
-            role_for_policy = self.role
-        else:
-            role_for_policy = effective_workspace_role(self.role, self.is_guest)
         return has_policy(
-            role=role_for_policy,
+            role=self.role,
             custom_policies=self.custom_policies,
             required=policy,
             presets=self._presets,
@@ -149,22 +141,21 @@ class ResourceAccess:
 async def _get_workspace_bits(
     workspace_id: Optional[str],
     app_user_id: str,
-) -> tuple[Optional[str], list[str], bool, Optional[str]]:
-    """Fetch (tier, custom_policies, is_external, org_id) for this workspace.
+) -> tuple[Optional[str], list[str], Optional[str]]:
+    """Fetch (tier, custom_policies, org_id) for this workspace.
 
-    Legacy projects (workspace_id=None) return (None, [], False, None) — no
+    Legacy projects (workspace_id=None) return (None, [], None) — no
     tier gates apply to those; they're pre-workspaces data.
     """
     if not workspace_id:
-        return None, [], False, None
+        return None, [], None
 
     workspace = await async_directus.get_item("workspace", workspace_id)
     tier: Optional[str] = (workspace or {}).get("tier")
     org_id: Optional[str] = (workspace or {}).get("org_id")
 
-    # Caller's direct row, if any. This is where custom_policies +
-    # is_external live; derived rows (organisation admin inheritance) don't
-    # carry custom policies.
+    # Caller's direct row, if any. This is where custom_policies live;
+    # derived rows (organisation admin inheritance) don't carry them.
     mem = await async_directus.get_items(
         "workspace_membership",
         {
@@ -174,20 +165,18 @@ async def _get_workspace_bits(
                     "user_id": {"_eq": app_user_id},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["custom_policies", "is_external"],
+                "fields": ["custom_policies"],
                 "limit": 1,
             }
         },
     )
     custom: list[str] = []
-    is_guest = False
     if isinstance(mem, list) and mem:
         raw = mem[0].get("custom_policies")
         if isinstance(raw, list):
             custom = [p for p in raw if isinstance(p, str)]
-        is_guest = bool(mem[0].get("is_external"))
 
-    return tier, custom, is_guest, org_id
+    return tier, custom, org_id
 
 
 async def resolve_project_access(
@@ -219,7 +208,7 @@ async def resolve_project_access(
     role, source = access
 
     workspace_id = project.get("workspace_id")
-    tier, custom, is_guest, org_id = await _get_workspace_bits(workspace_id, app_user_id)
+    tier, custom, org_id = await _get_workspace_bits(workspace_id, app_user_id)
 
     return ResourceAccess(
         app_user_id=app_user_id,
@@ -230,7 +219,6 @@ async def resolve_project_access(
         role=role,
         source=source,
         custom_policies=custom,
-        is_guest=is_guest,
         org_id=org_id,
         project=project,
     )

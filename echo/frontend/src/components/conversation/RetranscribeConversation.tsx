@@ -80,7 +80,7 @@ export const RetranscribeConversationModal = ({
 	onClose: () => void;
 }) => {
 	// this should rly be a prop im lazy
-	const { projectId } = useParams();
+	const { projectId, workspaceId } = useParams();
 
 	const projectQuery = useProjectById({ projectId: projectId ?? "" });
 	const projectAnonymize = projectQuery.data?.anonymize_transcripts ?? false;
@@ -124,7 +124,7 @@ export const RetranscribeConversationModal = ({
 						label: t`Go to new conversation`,
 						onClick: () => {
 							navigate(
-								`/projects/${projectId}/conversation/${new_conversation_id}/transcript`,
+								`/w/${workspaceId}/projects/${projectId}/conversation/${new_conversation_id}`,
 							);
 						},
 					},

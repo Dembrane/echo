@@ -38,7 +38,6 @@ class WorkspaceMember(BaseModel):
     avatar: Optional[str] = None
     role: str
     source: str
-    is_external: bool
 
 
 class PendingInvite(BaseModel):
@@ -70,6 +69,12 @@ class WorkspaceDetailResponse(BaseModel):
     inherit_organisation_admins: bool = True
     inherit_organisation_members: bool = False
     logo_url: Optional[str] = None
+    type_discount: Optional[str] = None
+    percent_discount: Optional[int] = None
+    # Derived cadence: most-recently approved workspace_request's
+    # approved_billing_period. `None` for legacy workspaces with no
+    # approved request — UI defaults those to annual for display.
+    billing_period: Optional[str] = None
 
 
 @router.get("/{workspace_id}/settings", response_model=WorkspaceDetailResponse)
@@ -106,7 +111,7 @@ async def get_workspace_settings(
                     "workspace_id": {"_eq": ctx.workspace_id},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["id", "user_id", "role", "source", "is_external"],
+                "fields": ["id", "user_id", "role", "source"],
                 "limit": -1,
             }
         },
@@ -159,7 +164,6 @@ async def get_workspace_settings(
                     avatar=avatar_map.get(user.get("directus_user_id", "")),
                     role=m.get("role", ""),
                     source=m.get("source", ""),
-                    is_external=m.get("is_external", False),
                 )
             )
 
@@ -175,6 +179,7 @@ async def get_workspace_settings(
                     "filter": {
                         "workspace_id": {"_eq": ctx.workspace_id},
                         "accepted_at": {"_null": True},
+                        "deleted_at": {"_null": True},
                         "expires_at": {"_gt": datetime.now(timezone.utc).isoformat()},
                     },
                     "fields": ["id", "email", "role", "created_at", "invited_by", "expires_at"],
@@ -230,6 +235,21 @@ async def get_workspace_settings(
                     all_policies.add(p)
         effective = sorted(all_policies)
 
+    from dembrane.billing_period import resolve_workspace_billing_period
+
+    # Soft-degrade on resolver failure — billing_period is informational
+    # (UI defaults to "annual" when null) and we'd rather return the rest
+    # of the settings than 500 the whole panel on a transient Directus blip.
+    try:
+        billing_period = await resolve_workspace_billing_period(ctx.workspace_id)
+    except Exception as e:
+        logger.warning(
+            "Failed to resolve billing_period for workspace %s: %s",
+            ctx.workspace_id,
+            e,
+        )
+        billing_period = None
+
     return WorkspaceDetailResponse(
         id=ws["id"],
         name=ws.get("name", ""),
@@ -247,6 +267,9 @@ async def get_workspace_settings(
         inherit_organisation_admins=workspace_follows_organisation_admins(ws),
         inherit_organisation_members=workspace_follows_organisation_members(ws),
         logo_url=ws.get("logo_url"),
+        type_discount=ws.get("type_discount"),
+        percent_discount=ws.get("percent_discount"),
+        billing_period=billing_period,
     )
 
 
@@ -615,7 +638,8 @@ async def remove_workspace_member(
 # ── Change member role ──
 
 
-ROLE_HIERARCHY = {"member": 1, "billing": 2, "admin": 3, "owner": 4}
+# Import (not duplicate) so escalation guards stay consistent with policies.py.
+from dembrane.policies import ROLE_HIERARCHY  # noqa: E402
 
 
 class ChangeRoleRequest(BaseModel):
@@ -646,17 +670,22 @@ async def change_member_role(
     if membership.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Membership already removed")
 
-    # Hard rule: a guest (is_external=true) can never be admin, owner, or
-    # billing. Guests live inside one workspace without organisation-level presence;
-    # promoting them into management or financial roles mixes access layers
-    # that should stay separate. To promote, add them to the organisation first, then
-    # change role.
-    if membership.get("is_external") and body.role in ("admin", "owner", "billing"):
+    # Cross-boundary lever (ADR-0003): the role dropdown is not used to
+    # promote an external into a non-external role (or vice versa). The
+    # admin must take the cross-table action through the org settings
+    # page: add to org, return to workspace, remove external row, re-invite
+    # as member. Reject any attempt to flip the row across that boundary.
+    current_role = membership.get("role")
+    crossing_external_boundary = (current_role == "external" and body.role != "external") or (
+        current_role != "external" and body.role == "external"
+    )
+    if crossing_external_boundary:
         raise HTTPException(
             status_code=400,
             detail=(
-                "Guests can't be admins, owners, or billing. Add them to the "
-                "organisation first (via invite with is_org_member=true), then promote."
+                "Cannot change a member into an external (or vice versa) from this "
+                "dropdown. Add or remove the user via the org settings page, then "
+                "re-invite them to the workspace."
             ),
         )
 
@@ -734,122 +763,4 @@ async def change_member_role(
     return {"status": "success"}
 
 
-# ── Cancel pending invite ──
-
-
-@router.post("/{workspace_id}/invites/{invite_id}/resend")
-async def resend_workspace_invite(
-    invite_id: str,
-    ctx: DependencyWorkspaceContext,
-) -> dict:
-    """Resend a pending invite email. Extends expiration by 7 days."""
-    ctx.require_policy("member:invite")
-
-    from datetime import timedelta
-
-    from dembrane.email import send_email
-    from dembrane.settings import get_settings
-
-    settings = get_settings()
-
-    invite = await async_directus.get_item("workspace_invite", invite_id)
-    if not invite or invite.get("workspace_id") != ctx.workspace_id:
-        raise HTTPException(status_code=404, detail="Invite not found in this workspace")
-    if invite.get("accepted_at"):
-        raise HTTPException(status_code=400, detail="Invite has already been accepted")
-
-    # Extend expiration by 7 days
-    new_expires = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
-    await async_directus.update_item(
-        "workspace_invite",
-        invite_id,
-        {"expires_at": new_expires},
-    )
-
-    # Get inviter name
-    inviter_name = "Your organisation"
-    try:
-        inviter = await async_directus.get_item("app_user", ctx.app_user_id)
-        if inviter and inviter.get("display_name"):
-            inviter_name = inviter["display_name"]
-    except Exception:
-        pass
-
-    # Build invite URL with HMAC hash + display context
-    from urllib.parse import urlencode
-
-    from dembrane.api.v2.invites import compute_invite_hash
-
-    invite_hash = compute_invite_hash(invite_id)
-    ctx_params = urlencode(
-        {
-            "iss": inviter_name,
-            "ws": ctx.workspace.get("name", ""),
-            "role": invite.get("role", "member"),
-            "h": invite_hash,
-        }
-    )
-    invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
-    email_sent = await send_email(
-        to=invite["email"],
-        subject=f"{inviter_name} invited you to collaborate on dembrane",
-        template="workspace_invite",
-        template_data={
-            "inviter_name": inviter_name,
-            "workspace_name": ctx.workspace.get("name", "a workspace"),
-            "invite_url": invite_url,
-        },
-    )
-    if not email_sent:
-        logger.error(f"Failed to resend invite email to {invite['email']}")
-
-    return {"status": "success", "email_sent": email_sent}
-
-
-@router.delete("/{workspace_id}/invites/{invite_id}")
-async def cancel_workspace_invite(
-    invite_id: str,
-    ctx: DependencyWorkspaceContext,
-) -> dict:
-    """Cancel a pending invite. Requires member:invite."""
-    ctx.require_policy("member:invite")
-
-    invite = await async_directus.get_item("workspace_invite", invite_id)
-    if not invite or invite.get("workspace_id") != ctx.workspace_id:
-        raise HTTPException(status_code=404, detail="Invite not found in this workspace")
-    if invite.get("accepted_at"):
-        raise HTTPException(status_code=400, detail="Invite has already been accepted")
-
-    # Notify the invitee if they already have an app_user account. New-
-    # email invites have no in-app target — email would be the only
-    # channel and we deliberately don't chase those.
-    from dembrane.app_user import resolve_app_user
-
-    invitee_directus = await async_directus.get_users(
-        {
-            "query": {
-                "filter": {"email": {"_eq": (invite.get("email") or "").lower()}},
-                "fields": ["id"],
-                "limit": 1,
-            }
-        }
-    )
-    if isinstance(invitee_directus, list) and invitee_directus:
-        invitee_app_user = await resolve_app_user(invitee_directus[0]["id"])
-        if invitee_app_user:
-            from dembrane.notifications import emit
-
-            await emit(
-                audience_user_id=invitee_app_user["id"],
-                actor_user_id=ctx.app_user_id,
-                event_code="INVITE_CANCELLED",
-                title=(f"An invite to {ctx.workspace.get('name', 'a workspace')} was cancelled"),
-                message="The admin withdrew your pending invite.",
-                action="NONE",
-                ref_workspace_id=ctx.workspace_id,
-                ref_invite_id=invite_id,
-            )
-
-    # Hard delete — there's no reason to keep canceled invites around
-    await async_directus.delete_item("workspace_invite", invite_id)
-    return {"status": "success"}
+# Resend/cancel of pending invites moved to api/v2/invite_actions.py (handles both invite types).

@@ -191,10 +191,7 @@ async def safe_gather(*coros_or_futures: Any, return_exceptions: bool = False) -
     then just gathers already-created futures without needing get_running_loop().
     """
     loop = _get_worker_loop()
-    tasks = [
-        loop.create_task(c) if asyncio.iscoroutine(c) else c
-        for c in coros_or_futures
-    ]
+    tasks = [loop.create_task(c) if asyncio.iscoroutine(c) else c for c in coros_or_futures]
     return await asyncio.gather(*tasks, return_exceptions=return_exceptions)
 
 
@@ -251,10 +248,15 @@ def run_async_in_new_loop(coro: Coroutine[Any, Any, T]) -> T:
     # Apply nest_asyncio in case dramatiq-gevent has patched asyncio's running
     # loop detection on this thread.
     nest_asyncio.apply(loop)
-    logger.debug("Running async coroutine in fresh event loop: %s", coro)
+    logger.debug(
+        "Running async coroutine in fresh event loop: %s",
+        getattr(coro, "__qualname__", type(coro).__name__),
+    )
     try:
         result = loop.run_until_complete(coro)
-        logger.debug("Completed async coroutine: %s", coro)
+        logger.debug(
+            "Completed async coroutine: %s", getattr(coro, "__qualname__", type(coro).__name__)
+        )
         return result
     finally:
         loop.close()

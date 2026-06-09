@@ -12,6 +12,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconCopy, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
+import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { analytics } from "@/lib/analytics";
@@ -28,6 +29,7 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 	const deleteProjectByIdMutation = useDeleteProjectByIdMutation();
 	const cloneProjectByIdMutation = useCloneProjectByIdMutation();
 	const navigate = useI18nNavigate();
+	const { workspaceId } = useParams();
 
 	const [isCloneModalOpen, { open: openCloneModal, close: closeCloneModal }] =
 		useDisclosure(false);
@@ -61,7 +63,7 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 			});
 
 			if (newProjectId) {
-				navigate(`/projects/${newProjectId}`);
+				navigate(`/w/${workspaceId}/projects/${newProjectId}/home`);
 			}
 		} catch (_error) {
 			// toast handled in mutation hook
@@ -75,7 +77,7 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 			console.warn("Analytics tracking failed:", error);
 		}
 		deleteProjectByIdMutation.mutate(project.id);
-		navigate("/projects");
+		navigate(workspaceId ? `/w/${workspaceId}/home` : "/o");
 	};
 
 	return (

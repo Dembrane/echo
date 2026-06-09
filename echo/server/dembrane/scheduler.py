@@ -12,7 +12,13 @@ jobstores = {
 }
 
 scheduler = BlockingScheduler()
-scheduler.configure(jobstores=jobstores, timezone=utc)
+scheduler.configure(
+    jobstores=jobstores,
+    timezone=utc,
+    # The default 1s misfire_grace_time silently skips any run whose wakeup
+    # lands late (routine on WSL2/loaded hosts); these jobs must run late, not never.
+    job_defaults={"misfire_grace_time": 60, "coalesce": True},
+)
 
 settings = get_settings()
 DEBUG_MODE = settings.feature_flags.debug_mode
@@ -47,6 +53,30 @@ scheduler.add_job(
     trigger=CronTrigger(minute="*/5"),
     id="task_check_scheduled_reports",
     name="Check and dispatch scheduled report generation",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_expire_workspace_tiers.send",
+    trigger=CronTrigger(minute=0),
+    id="task_expire_workspace_tiers",
+    name="Downgrade workspaces with elapsed tier_expires_at to free",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_send_tier_expiry_prewarning.send",
+    trigger=CronTrigger(minute=0),
+    id="task_send_tier_expiry_prewarning",
+    name="Send 3-day pre-warning emails for expiring workspace tiers",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_flush_email_digests.send",
+    trigger=CronTrigger(hour=9, minute=0),
+    id="task_flush_email_digests",
+    name="Flush batched email notification digests",
     replace_existing=True,
 )
 

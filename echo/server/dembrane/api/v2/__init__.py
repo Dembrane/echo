@@ -31,6 +31,7 @@ from dembrane.api.v2.bff.reports import (
     metric_router as bff_report_metric_router,
 )
 from dembrane.api.v2.notifications import router as notifications_router
+from dembrane.api.v2.invite_actions import router as invite_actions_router
 from dembrane.api.v2.access_requests import (
     router as access_requests_router,
     discover_router as access_requests_discover_router,
@@ -42,6 +43,10 @@ from dembrane.api.v2.bff.conversations import (
     junction_router as bff_conv_tag_router,
 )
 from dembrane.api.v2.workspace_projects import router as workspace_projects_router
+from dembrane.api.v2.workspace_requests import (
+    router as workspace_requests_router,
+    history_router as workspace_request_history_router,
+)
 from dembrane.api.v2.workspace_settings import router as workspace_settings_router
 
 v2_router = APIRouter()
@@ -62,6 +67,7 @@ v2_router.include_router(access_requests_discover_router, prefix="/orgs", tags=[
 # Workspace-scoped: /workspaces, /workspaces/{id}/invite, /workspaces/{id}/projects
 v2_router.include_router(workspaces_router, prefix="/workspaces", tags=["v2:workspaces"])
 v2_router.include_router(invites_router, prefix="/workspaces", tags=["v2:invites"])
+v2_router.include_router(invite_actions_router, prefix="/invites", tags=["v2:invite-actions"])
 v2_router.include_router(
     workspace_projects_router, prefix="/workspaces", tags=["v2:workspace-projects"]
 )
@@ -69,6 +75,12 @@ v2_router.include_router(
     workspace_settings_router, prefix="/workspaces", tags=["v2:workspace-settings"]
 )
 v2_router.include_router(access_requests_router, prefix="/workspaces", tags=["v2:access-requests"])
+v2_router.include_router(
+    workspace_requests_router, prefix="/workspace-requests", tags=["v2:workspace-requests"]
+)
+v2_router.include_router(
+    workspace_request_history_router, prefix="/workspaces", tags=["v2:workspace-requests"]
+)
 
 # Project-level: /projects/{id}/move + /projects/{id}/members (private sharing)
 v2_router.include_router(projects_router, prefix="/projects", tags=["v2:projects"])

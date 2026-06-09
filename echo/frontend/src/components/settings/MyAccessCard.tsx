@@ -8,28 +8,26 @@ import {
 	Loader,
 	Stack,
 	Text,
-	Title,
 } from "@mantine/core";
-import { IconExternalLink, IconPlus } from "@tabler/icons-react";
+import { IconExternalLink } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { displayRole, roleColor } from "@/lib/roles";
 
-interface Workspace {
+export interface Workspace {
 	id: string;
 	name: string;
 	org_id: string;
 	org_name: string;
 	role: string;
 	tier: string;
-	is_external: boolean;
 	project_count: number;
 	member_count: number;
 }
 
-interface OrganisationRollup {
+export interface OrganisationRollup {
 	id: string;
 	name: string;
 	role: string;
@@ -38,18 +36,26 @@ interface OrganisationRollup {
 	total_projects: number;
 }
 
-interface WorkspacesResponse {
+export interface WorkspacesResponse {
 	workspaces: Workspace[];
 	organisations: OrganisationRollup[];
 }
 
-async function fetchAccess(): Promise<WorkspacesResponse | null> {
+export async function fetchAccess(): Promise<WorkspacesResponse | null> {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		credentials: "include",
 	});
 	if (!res.ok) return null;
 	return res.json();
 }
+
+export const useMyAccess = () => {
+	return useQuery({
+		queryFn: fetchAccess,
+		queryKey: ["v2", "workspaces"],
+		staleTime: 60_000,
+	});
+};
 
 /**
  * "My access" card on user settings. Gives the caller a complete read
@@ -64,11 +70,7 @@ async function fetchAccess(): Promise<WorkspacesResponse | null> {
  */
 export const MyAccessCard = () => {
 	const navigate = useI18nNavigate();
-	const { data, isLoading } = useQuery({
-		queryKey: ["v2", "workspaces"],
-		queryFn: fetchAccess,
-		staleTime: 60_000,
-	});
+	const { data, isLoading } = useMyAccess();
 
 	// Group workspaces under their organisation so the list reads as
 	// "organisation → workspaces in that organisation with your role."
@@ -80,7 +82,8 @@ export const MyAccessCard = () => {
 		if (!data) return out;
 		for (const ws of data.workspaces) {
 			const key = ws.org_id || "__orphan__";
-			const organisation = data.organisations.find((t) => t.id === ws.org_id) ?? null;
+			const organisation =
+				data.organisations.find((t) => t.id === ws.org_id) ?? null;
 			const existing = out.get(key);
 			if (existing) existing.workspaces.push(ws);
 			else out.set(key, { organisation, workspaces: [ws] });
@@ -106,9 +109,6 @@ export const MyAccessCard = () => {
 			<Stack gap="lg">
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Stack gap={4} style={{ minWidth: 0 }}>
-						<Title order={4} fw={500}>
-							<Trans>What you can reach</Trans>
-						</Title>
 						<Text size="sm" c="dimmed">
 							<Plural
 								value={totalOrganisations}
@@ -123,14 +123,6 @@ export const MyAccessCard = () => {
 							/>
 						</Text>
 					</Stack>
-					<Button
-						variant="light"
-						size="sm"
-						leftSection={<IconPlus size={14} />}
-						onClick={() => navigate("/w/new")}
-					>
-						<Trans>New organisation workspace</Trans>
-					</Button>
 				</Group>
 
 				{byOrganisation.size === 0 ? (
@@ -142,92 +134,87 @@ export const MyAccessCard = () => {
 					</Text>
 				) : (
 					<Stack gap="md">
-						{Array.from(byOrganisation.values()).map(({ organisation, workspaces }) => (
-							<Stack key={organisation?.id ?? "orphan"} gap={8}>
-								{/* Organisation header sits flush-left so the eye reads
+						{Array.from(byOrganisation.values()).map(
+							({ organisation, workspaces }) => (
+								<Stack key={organisation?.id ?? "orphan"} gap={8}>
+									{/* Organisation header sits flush-left so the eye reads
 								    "organisation → workspaces" as a hierarchy. Only the
 								    workspace rows are indented + rule'd. */}
-								<Group gap="xs" justify="space-between" align="center">
-									<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-										<Text fw={500} size="sm" lineClamp={1}>
-											{organisation?.name ?? t`(direct workspace access)`}
-										</Text>
-										{organisation && (
-											<Badge
-												size="xs"
-												variant="light"
-												color={roleColor(organisation.role)}
-											>
-												{displayRole(organisation.role)}
-											</Badge>
-										)}
-									</Group>
-									{organisation && (
-										<Button
-											size="compact-xs"
-											variant="subtle"
-											rightSection={<IconExternalLink size={12} />}
-											onClick={() => navigate(`/o/${organisation.id}`)}
-										>
-											<Trans>Open organisation</Trans>
-										</Button>
-									)}
-								</Group>
-
-								<Stack
-									gap={4}
-									ml={12}
-									style={{
-										borderLeft:
-											"2px solid var(--mantine-color-gray-3)",
-										paddingLeft: 12,
-									}}
-								>
-									{workspaces.map((ws) => (
-										<Group
-											key={ws.id}
-											gap="sm"
-											justify="space-between"
-											wrap="nowrap"
-											style={{ cursor: "pointer" }}
-											onClick={() =>
-												navigate(`/w/${ws.id}/projects`)
-											}
-										>
-											<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-												<Text size="sm" lineClamp={1}>
-													{ws.name}
-												</Text>
+									<Group gap="xs" justify="space-between" align="center">
+										<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+											<Text fw={500} size="sm" lineClamp={1}>
+												{organisation?.name ?? t`(direct workspace access)`}
+											</Text>
+											{organisation && (
 												<Badge
 													size="xs"
 													variant="light"
-													color={
-														ws.is_external
-															? "gray"
-															: roleColor(ws.role)
-													}
+													color={roleColor(organisation.role)}
+													c="graphite"
 												>
-													{ws.is_external
-														? t`Guest`
-														: displayRole(ws.role)}
+													{displayRole(organisation.role)}
 												</Badge>
-											</Group>
-											<Text size="xs" c="dimmed">
-												<Plural
-													value={ws.project_count}
-													one="# project"
-													other="# projects"
-												/>
-												{" · "}
-												<span style={{ textTransform: "capitalize" }}>
-													{ws.tier}
-												</span>
-											</Text>
+											)}
 										</Group>
-									))}
+										{organisation && (
+											<Button
+												size="compact-xs"
+												variant="subtle"
+												rightSection={<IconExternalLink size={12} />}
+												onClick={() => navigate(`/o/${organisation.id}`)}
+											>
+												<Trans>Open organisation</Trans>
+											</Button>
+										)}
+									</Group>
+
+									<Stack
+										gap={4}
+										ml={12}
+										style={{
+											borderLeft: "2px solid var(--mantine-color-gray-3)",
+											paddingLeft: 12,
+										}}
+									>
+										{workspaces.map((ws) => (
+											<Group
+												key={ws.id}
+												gap="sm"
+												justify="space-between"
+												wrap="nowrap"
+												style={{ cursor: "pointer" }}
+												onClick={() => navigate(`/w/${ws.id}/home`)}
+											>
+												<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+													<Text size="sm" lineClamp={1}>
+														{ws.name}
+													</Text>
+													<Badge
+														size="xs"
+														variant="light"
+														color={roleColor(ws.role)}
+														c="graphite"
+													>
+														{displayRole(ws.role)}
+													</Badge>
+												</Group>
+												<Text size="xs" c="dimmed">
+													<Plural
+														value={ws.project_count}
+														one="# project"
+														other="# projects"
+													/>
+													{" · "}
+													<span style={{ textTransform: "capitalize" }}>
+														{ws.tier}
+													</span>
+												</Text>
+											</Group>
+										))}
+									</Stack>
 								</Stack>
-							</Stack>
-						))}
+							),
+						)}
 					</Stack>
 				)}
 			</Stack>

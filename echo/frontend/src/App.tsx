@@ -7,20 +7,32 @@ import { MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import { DatesProvider } from "@mantine/dates";
 import { ModalsProvider } from "@mantine/modals";
-import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { detectAndEmitPilotBlock } from "./lib/pilotBlock";
+import {
+	MutationCache,
+	QueryCache,
+	QueryClient,
+	QueryClientProvider,
+} from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { RouterProvider } from "react-router/dom";
 import { I18nProvider } from "./components/layout/I18nProvider";
 import { USE_PARTICIPANT_ROUTER } from "./config";
+import { detectAndEmitPilotBlock } from "./lib/pilotBlock";
+
+// Reference import.meta.env directly so Vite can constant-fold the branch and
+// Rollup can tree-shake the agentation chunk out of production builds. Through
+// an intermediate constant the values would still be replaced, but the
+// lazy(import(...)) call would remain reachable in the module graph.
+const Agentation =
+	import.meta.env.DEV || import.meta.env.VITE_ENABLE_AGENTATION === "1"
+		? lazy(() => import("agentation").then((m) => ({ default: m.Agentation })))
+		: null;
+
+import type { PropsWithChildren } from "react";
 import { AppPreferencesProvider } from "./hooks/useAppPreferences";
 import { WhitelabelLogoProvider } from "./hooks/useWhitelabelLogo";
-import type { PropsWithChildren } from "react";
-import {
-	WorkspaceContext,
-	useWorkspaceProvider,
-} from "./hooks/useWorkspace";
+import { useWorkspaceProvider, WorkspaceContext } from "./hooks/useWorkspace";
 
 function WorkspaceProvider({ children }: PropsWithChildren) {
 	const value = useWorkspaceProvider(true);
@@ -30,6 +42,7 @@ function WorkspaceProvider({ children }: PropsWithChildren) {
 		</WorkspaceContext.Provider>
 	);
 }
+
 import { analytics } from "./lib/analytics";
 import { mainRouter, participantRouter } from "./Router";
 import { theme } from "./theme";
@@ -66,8 +79,7 @@ export const App = () => {
 		const preloadRoutes = () => {
 			const loaders = [
 				() => import("./routes/project/ProjectsHome"),
-				() =>
-					import("./routes/project/conversation/ProjectConversationOverview"),
+				() => import("./routes/project/conversation/ProjectConversationRoute"),
 				() => import("./routes/project/ProjectRoutes"),
 			];
 
@@ -127,6 +139,11 @@ export const App = () => {
 								<I18nProvider>
 									<ModalsProvider>
 										<RouterProvider router={router} />
+										{Agentation && (
+											<Suspense fallback={null}>
+												<Agentation />
+											</Suspense>
+										)}
 									</ModalsProvider>
 								</I18nProvider>
 							</WorkspaceProvider>

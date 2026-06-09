@@ -1,0 +1,16 @@
+{{ workspace_name }}: your {{ from_tier }} tier has expired. The workspace is now on free.
+
+{% if freeze_items %}Frozen — existing state stays; no new use until upgrade:
+{% for item in freeze_items %}- {{ item }}
+{% endfor %}
+{% endif %}
+{% if revert_items %}Reverted:
+{% for item in revert_items %}- {{ item }}
+{% endfor %}
+{% endif %}
+Your existing content stays accessible. Request an upgrade to restore full features.
+
+Open the workspace:
+{{ workspace_url }}
+
+— the dembrane team

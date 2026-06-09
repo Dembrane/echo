@@ -41,7 +41,7 @@ async function sendInvite(workspaceId: string, email: string) {
 	const response = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`,
 		{
-			body: JSON.stringify({ email, is_org_member: true, role: "member" }),
+			body: JSON.stringify({ email, role: "member" }),
 			credentials: "include",
 			headers: { "Content-Type": "application/json" },
 			method: "POST",
@@ -70,7 +70,11 @@ export const OnboardingRoute = () => {
 	const displayName = (user.data as Record<string, string>)?.first_name || "";
 	const hasInvites = meV2?.has_pending_invites === true;
 	const inviteOrganisations = Array.from(
-		new Set((pendingInvites ?? []).map((i) => i.org_name).filter(Boolean)),
+		new Set(
+			(pendingInvites ?? [])
+				.map((i) => i.org_name?.trim())
+				.filter((name): name is string => Boolean(name)),
+		),
 	);
 	// The designer's onboarding split (docs/workspaces/designer-return.html):
 	// users with projects from before workspaces existed see the "migration"
@@ -86,15 +90,15 @@ export const OnboardingRoute = () => {
 	const [sendingInvites, setSendingInvites] = useState(false);
 	const [ready, setReady] = useState(false);
 
-	// useCallback so the effect below can list goToProjects as a dep
+	// useCallback so the effect below can list goToWorkspaceHome as a dep
 	// without re-firing on every render. workspaceId / navigate are the
 	// real triggers — wrapping them via this callback satisfies the
 	// exhaustive-deps lint without hiding an actual dependency.
-	const goToProjects = useCallback(() => {
+	const goToWorkspaceHome = useCallback(() => {
 		if (workspaceId) {
-			navigate(`/w/${workspaceId}/projects`);
+			navigate(`/w/${workspaceId}/home`);
 		} else {
-			navigate("/w");
+			navigate("/o");
 		}
 	}, [workspaceId, navigate]);
 
@@ -105,12 +109,12 @@ export const OnboardingRoute = () => {
 		// is still in the loading gate. Otherwise this effect re-fires
 		// after submit (when we invalidate ["v2","me"] in onSuccess) and
 		// the freshly-true onboarding_completed flag punts the user
-		// straight to projects, silently skipping the invite step.
+		// straight to workspace home, silently skipping the invite step.
 		if (step !== "loading") return;
 		if (meLoading) return;
 
 		if (meV2?.onboarding_completed === true) {
-			goToProjects();
+			goToWorkspaceHome();
 			return;
 		}
 
@@ -120,7 +124,7 @@ export const OnboardingRoute = () => {
 		}, 1200);
 
 		return () => clearTimeout(timer);
-	}, [meV2, meLoading, step, goToProjects]);
+	}, [meV2, meLoading, step, goToWorkspaceHome]);
 
 	const onboardingMutation = useMutation({
 		mutationFn: () => completeOnboarding(orgName.trim() || defaultOrgName),
@@ -142,12 +146,15 @@ export const OnboardingRoute = () => {
 			});
 			// Pending invites query too — the dropdown / inbox uses this.
 			queryClient.invalidateQueries({ queryKey: ["v2", "me", "invites"] });
-			setWorkspaceId(data.workspace_id);
-			setWorkspace(data.workspace_id);
+			// Org-only invitees return workspace_id=""; only set the active workspace when there's a real id.
+			if (data.workspace_id) {
+				setWorkspaceId(data.workspace_id);
+				setWorkspace(data.workspace_id);
+			}
 
 			// Invited users skip the invite step — they don't have a organisation to invite
 			if (hasInvites) {
-				goToProjects();
+				goToWorkspaceHome();
 				return;
 			}
 
@@ -165,7 +172,7 @@ export const OnboardingRoute = () => {
 		const validEmails = inviteEmails.filter((e) => e.trim() && e.includes("@"));
 
 		if (validEmails.length === 0) {
-			goToProjects();
+			goToWorkspaceHome();
 			return;
 		}
 
@@ -185,7 +192,7 @@ export const OnboardingRoute = () => {
 		if (sent > 0) {
 			toast.success(sent === 1 ? t`Invite sent` : t`${sent} invites sent`);
 		}
-		goToProjects();
+		goToWorkspaceHome();
 	};
 
 	const addEmailField = () => setInviteEmails([...inviteEmails, ""]);
@@ -261,7 +268,8 @@ export const OnboardingRoute = () => {
 
 						<Stack gap={10}>
 							{inviteEmails.map((email, index) => (
-								<Group key={`invite-${email || index}`} gap={8} wrap="nowrap">
+								// biome-ignore lint/suspicious/noArrayIndexKey: row identity tracks position; emails are user-editable so value-based keys cause remount-on-keystroke (focus loss)
+								<Group key={`invite-${index}`} gap={8} wrap="nowrap">
 									<TextInput
 										flex={1}
 										placeholder={t`name@example.com`}
@@ -298,13 +306,16 @@ export const OnboardingRoute = () => {
 							<Button
 								size="md"
 								variant="outline"
-								onClick={() => goToProjects()}
+								onClick={() => goToWorkspaceHome()}
 							>
 								<Trans>Skip</Trans>
 							</Button>
 							<Button
 								flex={1}
 								loading={sendingInvites}
+								disabled={
+									!inviteEmails.some((e) => e.trim() && e.includes("@"))
+								}
 								size="md"
 								onClick={handleSendInvites}
 							>

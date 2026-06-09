@@ -1,0 +1,20 @@
+{% extends "_layout.html" %}
+{% from "_layout.html" import cta_button, fallback_url %}
+{% block title %}You already have a dembrane account{% endblock %}
+{% block preview %}You already have a dembrane account. Sign in to continue.{% endblock %}
+{% block heading %}You already have an account.{% endblock %}
+{% block body %}
+<p style="font-size:17px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight:300;">
+  It looks like an account with this email already exists. You can sign in using your existing credentials.
+</p>
+{% endblock %}
+{% block cta %}{{ cta_button("Sign in", login_url) }}{% endblock %}
+{% block fallback %}{{ fallback_url(login_url) }}{% endblock %}
+{% block disclaim %}
+<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:300;">
+  If you forgot your password, you can <a href="{{ reset_url }}" style="color:#4169E1;">reset it here</a>.
+</p>
+<p style="font-size:15px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight:300;">
+  If you didn't try to sign up, you can safely ignore this email. No changes have been made to your account.
+</p>
+{% endblock %}

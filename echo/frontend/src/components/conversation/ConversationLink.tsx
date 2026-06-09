@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Anchor, Group, List, Stack } from "@mantine/core";
+import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 
 interface ConversationLinkProps {
@@ -19,6 +20,7 @@ export const ConversationLink = ({
 	conversation,
 	projectId,
 }: ConversationLinkProps) => {
+	const { workspaceId } = useParams();
 	const linkingConversation = conversation
 		.linking_conversations[0] as unknown as ConversationLink;
 	const linkedConversations =
@@ -39,7 +41,7 @@ export const ConversationLink = ({
 
 						<ConversationAnchor
 							key={linkingConversation?.id}
-							to={`/projects/${projectId}/conversation/${(linkingConversation?.source_conversation_id as Conversation)?.id}/overview`}
+							to={`/w/${workspaceId}/projects/${projectId}/conversation/${(linkingConversation?.source_conversation_id as Conversation)?.id}`}
 							name={
 								(linkingConversation?.source_conversation_id as Conversation)
 									?.participant_name ?? ""
@@ -61,7 +63,7 @@ export const ConversationLink = ({
 									?.id && (
 									<List.Item key={conversationLink?.id}>
 										<ConversationAnchor
-											to={`/projects/${projectId}/conversation/${(conversationLink?.target_conversation_id as Conversation)?.id}/overview`}
+											to={`/w/${workspaceId}/projects/${projectId}/conversation/${(conversationLink?.target_conversation_id as Conversation)?.id}`}
 											name={
 												(
 													conversationLink?.target_conversation_id as Conversation

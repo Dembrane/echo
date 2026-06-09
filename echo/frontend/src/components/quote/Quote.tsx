@@ -22,7 +22,7 @@ export const Quote = ({
 	data: AspectSegment;
 	className?: string;
 }) => {
-	const { projectId } = useParams();
+	const { projectId, workspaceId } = useParams();
 	const [showTranscript, setShowTranscript] = useState(false);
 	const { copyQuote, copied } = useCopyQuote();
 
@@ -172,7 +172,7 @@ export const Quote = ({
 					className="border-t border-gray-200 dark:border-gray-700"
 				>
 					<I18nLink
-						to={`/projects/${projectId}/conversation/${conversationId}/transcript`}
+						to={`/w/${workspaceId}/projects/${projectId}/conversation/${conversationId}`}
 					>
 						<Pill
 							size="sm"

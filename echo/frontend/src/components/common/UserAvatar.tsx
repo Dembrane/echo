@@ -50,7 +50,7 @@ export const UserAvatar = ({ size = 32 }: UserAvatarProps) => {
 			src={avatarUrl}
 			size={size}
 			radius="50%"
-			color="blue"
+			color="primary"
 			className="shrink-0"
 		>
 			{initials}

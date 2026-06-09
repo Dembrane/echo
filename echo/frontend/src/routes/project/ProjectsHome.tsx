@@ -25,10 +25,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
-import {
-	useProjectsHome,
-	useTogglePinMutation,
-} from "@/components/project/hooks";
+import { useTogglePinMutation } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
@@ -80,16 +77,9 @@ export const ProjectsHomeRoute = () => {
 		staleTime: 60_000,
 	});
 
-	// Use v2 (workspace-scoped) when workspace context exists, v1 otherwise
-	const v1Query = useProjectsHome({
-		search: debouncedSearchValue,
-		workspaceId,
-	});
-	const v2Query = useWorkspaceProjects({
-		search: debouncedSearchValue,
-	});
-
-	const activeQuery = workspaceId ? v2Query : v1Query;
+	// Workspace-scoped only; the legacy /projects/home query (v1) is gone.
+	// The hook is disabled until workspaceId resolves, which keeps the
+	// skeleton up instead of firing a workspace-less request.
 	const {
 		data: homeData,
 		fetchNextPage,
@@ -98,16 +88,25 @@ export const ProjectsHomeRoute = () => {
 		status,
 		isError,
 		error,
-	} = activeQuery;
+	} = useWorkspaceProjects({
+		search: debouncedSearchValue,
+	});
 
 	const togglePinMutation = useTogglePinMutation();
 
 	useEffect(() => {
-		if (search) {
-			setSearchParams({ search });
-		} else {
-			setSearchParams({});
-		}
+		setSearchParams(
+			(prev) => {
+				const next = new URLSearchParams(prev);
+				if (search) {
+					next.set("search", search);
+				} else {
+					next.delete("search");
+				}
+				return next;
+			},
+			{ replace: true },
+		);
 	}, [search, setSearchParams]);
 
 	useEffect(() => {
@@ -126,10 +125,8 @@ export const ProjectsHomeRoute = () => {
 		// instant POST that leaves the new project with a "New Project"
 		// placeholder name. See CreateProjectRoute.tsx.
 		posthog?.capture("project_create_started");
-		const path = workspaceId
-			? `/w/${workspaceId}/projects/new`
-			: "/projects/new";
-		navigate(path);
+		if (!workspaceId) return;
+		navigate(`/w/${workspaceId}/projects/new`);
 	};
 
 	// First page has pinned + total_count; all pages have projects
@@ -186,13 +183,13 @@ export const ProjectsHomeRoute = () => {
 
 	const canManageWorkspace =
 		workspace?.role === "owner" || workspace?.role === "admin";
-	// Guests (external workspace access) cannot create projects or pin —
-	// their surface is view-only on the workspace level. Gate the CTAs
-	// up front so we don't lure them into a click that 403s.
-	const isExternalGuest = workspace?.is_external === true;
+	// Externals cannot create projects or pin — their surface is
+	// view-only on the workspace level. Gate the CTAs up front so we
+	// don't lure them into a click that 403s.
+	const isExternal = workspace?.role === "external";
 	const canCreateProject =
-		!isExternalGuest && !user.data?.disable_create_project;
-	const canPinOnThisWorkspace = !isExternalGuest;
+		!isExternal && !user.data?.disable_create_project;
+	const canPinOnThisWorkspace = !isExternal;
 	const totallyEmpty =
 		allProjects.length === 0 &&
 		debouncedSearchValue === "" &&
@@ -259,16 +256,16 @@ export const ProjectsHomeRoute = () => {
 				{totallyEmpty ? (
 					<Stack align="center" gap={12} py={48}>
 						<Title order={3} fw={400}>
-							{isExternalGuest ? (
+							{isExternal ? (
 								<Trans>Nothing here for you yet.</Trans>
 							) : (
 								<Trans>Let's hear your first conversation.</Trans>
 							)}
 						</Title>
 						<Text size="sm" c="dimmed" ta="center" maw={440}>
-							{isExternalGuest ? (
+							{isExternal ? (
 								<Trans>
-									You're a guest in this workspace. Projects will show up
+									You're an external in this workspace. Projects will show up
 									here once someone on the organisation shares one with you.
 								</Trans>
 							) : (

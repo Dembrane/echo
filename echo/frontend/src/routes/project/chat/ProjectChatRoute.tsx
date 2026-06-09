@@ -8,6 +8,7 @@ import {
 	Divider,
 	Group,
 	LoadingOverlay,
+	Modal,
 	Stack,
 	Text,
 	Textarea,
@@ -18,6 +19,7 @@ import { usePostHog } from "@posthog/react";
 import { ErrorBoundary } from "@sentry/react";
 import {
 	IconAlertCircle,
+	IconListDetails,
 	IconRefresh,
 	IconSend,
 	IconSquare,
@@ -62,7 +64,6 @@ import {
 	useUserTemplates,
 } from "@/components/chat/hooks/useUserTemplates";
 import SourcesSearch from "@/components/chat/SourcesSearch";
-import { useProjectById } from "@/components/project/hooks";
 import type { QuickAccessItem } from "@/components/chat/templateKey";
 import { Templates } from "@/components/chat/templates";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
@@ -71,6 +72,8 @@ import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { toast } from "@/components/common/Toaster";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
+import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
+import { useProjectById } from "@/components/project/hooks";
 import {
 	API_BASE_URL,
 	ENABLE_AGENTIC_CHAT,
@@ -162,9 +165,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 					chat_message_metadata: flattenedItems ?? [],
 					date_created: new Date().toISOString(),
 					message_from: "assistant",
-					project_chat_id: {
-						id: chatId,
-					} as ProjectChat,
+					project_chat_id: chatId,
 					text: message.content,
 				});
 			} else {
@@ -172,9 +173,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 					chat_message_metadata: [],
 					date_created: new Date().toISOString(),
 					message_from: "assistant",
-					project_chat_id: {
-						id: chatId,
-					} as ProjectChat,
+					project_chat_id: chatId,
 					text: message.content,
 				});
 			}
@@ -211,9 +210,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 				incompleteMessage.createdAt ?? new Date(),
 			).toISOString(),
 			message_from: "assistant",
-			project_chat_id: {
-				id: chatId,
-			} as ProjectChat,
+			project_chat_id: chatId,
 			text: incompleteMessage.content,
 		};
 
@@ -318,7 +315,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 export const ProjectChatRoute = () => {
 	useDocumentTitle(t`Chat | dembrane`);
 
-	const { chatId, projectId } = useParams();
+	const { chatId, projectId, workspaceId: routeWorkspaceId } = useParams();
 	const posthog = usePostHog();
 	const queryClient = useQueryClient();
 	const chatQuery = useProjectChat(chatId ?? "");
@@ -328,6 +325,7 @@ export const ProjectChatRoute = () => {
 	const [saveAsTemplateContent, setSaveAsTemplateContent] = useState<
 		string | null
 	>(null);
+	const [conversationPickerOpen, setConversationPickerOpen] = useState(false);
 
 	const handleSaveAsTemplate = (content: string) => {
 		setSaveAsTemplateContent(content);
@@ -358,14 +356,14 @@ export const ProjectChatRoute = () => {
 		projectId: projectId ?? "",
 		query: { fields: ["id", "workspace_id"] },
 	});
-	const workspaceId =
+	const projectWorkspaceId =
 		(projectForWorkspace.data as { workspace_id?: string | null } | undefined)
 			?.workspace_id ?? null;
 	const currentUserQuery = useCurrentUser();
-	const userTemplatesQuery = useUserTemplates(workspaceId);
-	const createUserTemplateMutation = useCreateUserTemplate(workspaceId);
-	const updateUserTemplateMutation = useUpdateUserTemplate(workspaceId);
-	const deleteUserTemplateMutation = useDeleteUserTemplate(workspaceId);
+	const userTemplatesQuery = useUserTemplates(projectWorkspaceId);
+	const createUserTemplateMutation = useCreateUserTemplate(projectWorkspaceId);
+	const updateUserTemplateMutation = useUpdateUserTemplate(projectWorkspaceId);
+	const deleteUserTemplateMutation = useDeleteUserTemplate(projectWorkspaceId);
 	const quickAccessQuery = useQuickAccessPreferences();
 	const saveQuickAccessMutation = useSaveQuickAccessPreferences();
 	const toggleAiSuggestionsMutation = useToggleAiSuggestions();
@@ -509,7 +507,7 @@ export const ProjectChatRoute = () => {
 	const computedChatForCopy = useMemo(() => {
 		const messagesList = messages.map((message) =>
 			// @ts-expect-error chatHistoryQuery.data is not typed
-			formatMessage(message, "User", "dembrane"),
+			formatMessage(message, "Host", "dembrane"),
 		);
 		return messagesList.join("\n\n\n\n");
 	}, [messages]);
@@ -645,7 +643,7 @@ export const ProjectChatRoute = () => {
 							content:
 								chatMode === "overview"
 									? t`Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode.`
-									: t`Welcome to dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations.`,
+									: t`Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries.`,
 							id: "init",
 							role: "assistant",
 						}}
@@ -798,7 +796,7 @@ export const ProjectChatRoute = () => {
 						}
 						chatMode={chatMode}
 						userTemplates={userTemplatesQuery.data ?? []}
-						canCreateWorkspaceTemplate={Boolean(workspaceId)}
+						canCreateWorkspaceTemplate={Boolean(projectWorkspaceId)}
 						onCreateUserTemplate={(payload) =>
 							createUserTemplateMutation.mutateAsync(payload)
 						}
@@ -823,6 +821,24 @@ export const ProjectChatRoute = () => {
 					/>
 
 					<Divider />
+					{chatMode !== "overview" && (
+						<Group justify="space-between" gap="sm" wrap="wrap">
+							<Text size="xs" c="dimmed" fw={500}>
+								<Trans>
+									{conversationCount} conversations selected for this chat
+								</Trans>
+							</Text>
+							<Button
+								variant="light"
+								size="xs"
+								leftSection={<IconListDetails size={16} />}
+								onClick={() => setConversationPickerOpen(true)}
+								{...testId("chat-select-conversations-button")}
+							>
+								<Trans>Select conversations</Trans>
+							</Button>
+						</Group>
+					)}
 					{chatMode !== "overview" &&
 						(!ENABLE_CHAT_AUTO_SELECT
 							? noConversationsSelected
@@ -830,11 +846,17 @@ export const ProjectChatRoute = () => {
 								!contextToBeAdded?.auto_select_bool) && (
 							<Alert
 								icon={<IconAlertCircle size="1rem" />}
-								title={t`Please select conversations from the sidebar to proceed`}
+								title={t`Select conversations to continue`}
 								color="orange"
 								variant="light"
 								{...testId("chat-no-conversations-alert")}
-							/>
+							>
+								<Text size="sm">
+									<Trans>
+										Specific Details needs at least one conversation.
+									</Trans>
+								</Text>
+							</Alert>
 						)}
 
 					{contextToBeAdded && contextToBeAdded.conversations.length > 0 && (
@@ -912,7 +934,7 @@ export const ProjectChatRoute = () => {
 									</Text>
 									<Text size="xs" className="italic" c="dimmed">
 										<Trans>
-											dembrane is powered by AI. Please double-check responses.
+											dembrane can make mistakes. Please double-check responses.
 										</Trans>
 									</Text>
 								</Group>
@@ -944,13 +966,29 @@ export const ProjectChatRoute = () => {
 							</Text>
 							<Text size="xs" className="italic" c="dimmed">
 								<Trans>
-									dembrane is powered by AI. Please double-check responses.
+									dembrane can make mistakes. Please double-check responses.
 								</Trans>
 							</Text>
 						</Stack>
 					</form>
 				</Stack>
 			</Box>
+			<Modal
+				opened={conversationPickerOpen}
+				onClose={() => setConversationPickerOpen(false)}
+				title={t`Select conversations`}
+				size="xl"
+				padding="lg"
+			>
+				{projectId && (
+					<ProjectConversationsPanel
+						projectId={projectId}
+						workspaceId={routeWorkspaceId ?? projectWorkspaceId}
+						selectionChatId={chatId}
+						selectionMode
+					/>
+				)}
+			</Modal>
 		</Stack>
 	);
 };

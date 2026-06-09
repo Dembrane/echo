@@ -63,10 +63,9 @@ async function fetchNotifications(): Promise<NotificationRow[]> {
 }
 
 async function fetchUnreadCount(): Promise<number> {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/me/notifications/unread-count`,
-		{ credentials: "include" },
-	);
+	const res = await fetch(`${API_BASE_URL}/v2/me/notifications/unread-count`, {
+		credentials: "include",
+	});
 	if (!res.ok) return 0;
 	const body = await res.json().catch(() => ({}));
 	return typeof body.unread === "number" ? body.unread : 0;
@@ -74,19 +73,19 @@ async function fetchUnreadCount(): Promise<number> {
 
 export const useNotifications = () =>
 	useQuery({
-		queryKey: ["v2", "notifications"],
 		queryFn: fetchNotifications,
-		staleTime: 30_000,
+		queryKey: ["v2", "notifications"],
 		// Light polling so the badge stays honest without a websocket.
 		refetchInterval: 60_000,
+		staleTime: 30_000,
 	});
 
 export const useUnreadNotificationCount = () =>
 	useQuery({
-		queryKey: ["v2", "notifications", "unread-count"],
 		queryFn: fetchUnreadCount,
-		staleTime: 30_000,
+		queryKey: ["v2", "notifications", "unread-count"],
 		refetchInterval: 60_000,
+		staleTime: 30_000,
 	});
 
 export const useMarkNotificationRead = () => {
@@ -105,6 +104,9 @@ export const useMarkNotificationRead = () => {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "notifications"] });
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "notifications", "unread-count"],
+			});
 		},
 	});
 };
@@ -113,15 +115,18 @@ export const useMarkAllNotificationsRead = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async () => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/me/notifications/read-all`,
-				{ credentials: "include", method: "POST" },
-			);
+			const res = await fetch(`${API_BASE_URL}/v2/me/notifications/read-all`, {
+				credentials: "include",
+				method: "POST",
+			});
 			if (!res.ok) throw new Error("Couldn't mark all as read");
 			return res.json();
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "notifications"] });
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "notifications", "unread-count"],
+			});
 		},
 	});
 };
@@ -140,18 +145,18 @@ export function resolveNotificationHref(
 	const { action, refs, event_code } = row;
 	switch (action) {
 		case "NAVIGATE_WS":
-			return refs.workspace_id ? `/w/${refs.workspace_id}/projects` : null;
+			return refs.workspace_id ? `/w/${refs.workspace_id}/home` : null;
 		case "NAVIGATE_PROJECT":
-			return refs.project_id
-				? `/projects/${refs.project_id}/overview`
+			return refs.project_id && refs.workspace_id
+				? `/w/${refs.workspace_id}/projects/${refs.project_id}/home`
 				: null;
 		case "NAVIGATE_REPORT":
-			return refs.project_id && refs.report_id
-				? `/projects/${refs.project_id}/reports/${refs.report_id}`
+			return refs.project_id && refs.workspace_id
+				? `/w/${refs.workspace_id}/projects/${refs.project_id}/report`
 				: null;
 		case "NAVIGATE_CHAT":
-			return refs.project_id && refs.chat_id
-				? `/projects/${refs.project_id}/chats/${refs.chat_id}`
+			return refs.project_id && refs.chat_id && refs.workspace_id
+				? `/w/${refs.workspace_id}/projects/${refs.project_id}/chats/${refs.chat_id}`
 				: null;
 		case "NAVIGATE_INVITE":
 			return "/invites";

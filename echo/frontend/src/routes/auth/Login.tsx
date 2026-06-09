@@ -199,7 +199,7 @@ export const LoginRoute = () => {
 			}
 
 			// Routing:
-			// - Solo user (1 workspace) → straight to projects
+			// - Solo user (1 workspace) → straight to workspace home
 			// - Returning multi-workspace user → last-used workspace (if still valid)
 			// - First-time multi-workspace user → selector
 			const lastUsedId = localStorage.getItem("dembrane_last_workspace_id");
@@ -207,15 +207,15 @@ export const LoginRoute = () => {
 				!!lastUsedId && wsList.some((w) => w.id === lastUsedId);
 
 			if (workspaceCount === 1 && firstWorkspaceId) {
-				navigate(`/w/${firstWorkspaceId}/projects`);
+				navigate(`/w/${firstWorkspaceId}/home`);
 			} else if (lastStillValid) {
-				navigate(`/w/${lastUsedId}/projects`);
+				navigate(`/w/${lastUsedId}/home`);
 			} else if (workspaceCount > 1 || isOrganisationAdmin) {
-				navigate("/w");
+				navigate("/o");
 			} else if (firstWorkspaceId) {
-				navigate(`/w/${firstWorkspaceId}/projects`);
+				navigate(`/w/${firstWorkspaceId}/home`);
 			} else {
-				navigate("/projects");
+				navigate("/o");
 			}
 		} catch (error) {
 			// biome-ignore lint/suspicious/noExplicitAny: <todo>
@@ -291,9 +291,7 @@ export const LoginRoute = () => {
 
 					{searchParams.get("verified") === "1" && (
 						<Alert color="green" variant="light">
-							<Trans>
-								Your email is verified. Log in to continue.
-							</Trans>
+							<Trans>Your email is verified. Log in to continue.</Trans>
 						</Alert>
 					)}
 
@@ -376,7 +374,9 @@ export const LoginRoute = () => {
 										// new-password is the standard escape hatch to
 										// stop Chrome/Firefox auto-filling a saved
 										// password into this form.
-										autoComplete={lockedEmail ? "new-password" : "current-password"}
+										autoComplete={
+											lockedEmail ? "new-password" : "current-password"
+										}
 									/>
 								</>
 							)}
@@ -392,18 +392,21 @@ export const LoginRoute = () => {
 									</I18nLink>
 								</div>
 							)}
-							<Button
-								size="lg"
-								type="submit"
-								loading={loginMutation.isPending}
-								{...testId("auth-login-submit-button")}
-							>
-								{otpRequired ? (
-									<Trans>Verify code</Trans>
-								) : (
-									<Trans>Login</Trans>
-								)}
-							</Button>
+							<div>
+								<Button
+									size="lg"
+									type="submit"
+									fullWidth
+									loading={loginMutation.isPending}
+									{...testId("auth-login-submit-button")}
+								>
+									{otpRequired ? (
+										<Trans>Verify code</Trans>
+									) : (
+										<Trans>Login</Trans>
+									)}
+								</Button>
+							</div>
 						</Stack>
 					</form>
 

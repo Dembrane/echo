@@ -1,0 +1,23 @@
+{% extends "_layout.html" %}
+{% from "_layout.html" import cta_button %}
+{% block title %}New workspace request: {{ requester_name }}{% endblock %}
+{% block preview %}{{ requester_name }} submitted a {{ kind_label }} request for {{ proposed_tier }}.{% endblock %}
+{% block heading %}Workspace request received.{% endblock %}
+{% block body %}
+<p style="font-size:17px; line-height:1.65; margin:0 0 16px; color:#2D2D2C; font-weight:300;">
+  <em style="color:#4169E1; font-style:normal;">{{ requester_name }}</em>{% if requester_email %} ({{ requester_email }}){% endif %} submitted a <em style="color:#4169E1; font-style:normal;">{{ kind_label }}</em> request.
+</p>
+<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#6B6B6A; font-weight:300;">
+  Organisation: {{ org_name }} &middot; Proposed tier: <em style="color:#4169E1; font-style:normal;">{{ proposed_tier }}</em>{% if proposed_billing_period %} &middot; Billing: <em style="color:#4169E1; font-style:normal;">{{ proposed_billing_period }}</em>{% endif %}{% if proposed_name %} &middot; Name: {{ proposed_name }}{% endif %}
+</p>
+{% if requester_message %}
+<div style="margin:16px 0 28px; padding:14px 18px; background-color:#F6F4F1; border-left:2px solid #4169E1;">
+  <div style="font-size:13px; color:#6B6B6A; margin-bottom:6px; font-weight:300;">Message</div>
+  <div style="white-space:pre-wrap; font-size:15px; line-height:1.6; color:#2D2D2C; font-weight:300;">{{ requester_message }}</div>
+</div>
+{% endif %}
+<p style="font-size:15px; line-height:1.65; margin:0 0 24px; color:#2D2D2C; font-weight:300;">
+  Review and decide from the admin panel.
+</p>
+{% endblock %}
+{% block cta %}{{ cta_button("Open requests", admin_url) }}{% endblock %}

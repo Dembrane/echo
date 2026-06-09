@@ -27,7 +27,8 @@ from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import get_app_user_or_raise
-from dembrane.seat_capacity import assert_can_add_member
+from dembrane.inheritance import is_org_billing_only, is_org_external_only
+from dembrane.seat_capacity import assert_can_add_seat
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
@@ -239,7 +240,6 @@ async def join_workspace(
             "user_id": app_user_id,
             "role": "admin",
             "source": "direct",
-            "is_external": False,
         },
     )
 
@@ -309,11 +309,17 @@ async def request_workspace_access(
     if not org_id:
         raise HTTPException(status_code=500, detail="Workspace has no org")
 
-    # Private workspaces: only invited participants and org admins.
-    if workspace.get("visibility") == "private":
+    # Positive-match: closes the NULL-visibility edge case (older rows pre-column default to NULL).
+    if workspace.get("visibility") != "open_to_organisation":
         raise HTTPException(
             status_code=404,
             detail="Workspace not found",  # intentional — don't confirm existence
+        )
+
+    if workspace.get("tier") == "free":
+        raise HTTPException(
+            status_code=404,
+            detail="Workspace not found",
         )
 
     org_role = await _org_role(org_id, app_user_id)
@@ -322,8 +328,13 @@ async def request_workspace_access(
     if org_role in ("admin", "owner"):
         raise HTTPException(
             status_code=400,
-            detail="Organisation admins can join directly — no approval needed",
+            detail="Organisation admins can join directly, no approval needed",
         )
+
+    # Outsiders (external-only, even with a stale org_membership) cannot request
+    # access — they are scoped to the workspace they were invited to.
+    if await is_org_external_only(org_id, app_user_id):
+        raise HTTPException(status_code=403, detail="Not a member of this organisation")
 
     if await _has_direct_row(workspace_id, app_user_id):
         return RequestAccessResponse(status="already_member")
@@ -469,7 +480,12 @@ class ActionRequestResponse(BaseModel):
 
 
 async def _load_pending_or_404(workspace_id: str, req_id: str) -> dict:
-    req = await async_directus.get_item("access_request", req_id)
+    # Filter-based lookup: get_item returns FORBIDDEN (not 404) on unknown ids, which would 500 on attacker-supplied paths.
+    rows = await async_directus.get_items(
+        "access_request",
+        {"query": {"filter": {"id": {"_eq": req_id}}, "limit": 1}},
+    )
+    req = rows[0] if isinstance(rows, list) and rows else None
     if not req or req.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Request not found")
     if req.get("workspace_id") != workspace_id:
@@ -508,20 +524,31 @@ async def approve_access_request(
     # manually invited them), just close the request approved without
     # duplicating the membership.
     if not await _has_direct_row(workspace_id, requester_id):
-        # Seat cap gate. Access requests always create direct members
-        # (never guests), so only the member cap applies. On 402 the
-        # request stays pending so the approving admin sees an upgrade
-        # prompt and can act later.
-        await assert_can_add_member(workspace, audience="admin")
+        # Seat cap gate. Unified seat pool — access requests create
+        # direct members (never externals). On 402 the request stays
+        # pending so the approving admin sees an upgrade prompt and can
+        # act later.
+        await assert_can_add_seat(workspace, audience="admin")
+
+        # Billers are finance-visibility only (matrix v1.1 §4/§5): they get
+        # the workspace 'billing' preset (usage/invoices/payment, no project
+        # or content access), never the operational 'member' role. Biller-ness
+        # covers both org-level billers (org_membership.role='billing') and
+        # workspace-scoped billers (only 'billing' workspace roles in this
+        # org) — see inheritance.is_org_billing_only. Everyone else gets
+        # 'member'.
+        requester_is_biller = await is_org_billing_only(
+            workspace.get("org_id") or "", requester_id
+        )
+        granted_role = "billing" if requester_is_biller else "member"
         await async_directus.create_item(
             "workspace_membership",
             {
                 "id": generate_uuid(),
                 "workspace_id": workspace_id,
                 "user_id": requester_id,
-                "role": "member",
+                "role": granted_role,
                 "source": "direct",
-                "is_external": False,
             },
         )
         from dembrane.cache_utils import invalidate_workspace_and_org_usage
@@ -612,6 +639,7 @@ class DiscoverableWorkspace(BaseModel):
     visibility: str
     action: Literal["join", "request-access", "pending", "member"]
     pending_request_id: Optional[str] = None
+    member_count: int = 0
 
 
 class DiscoverResponse(BaseModel):
@@ -646,14 +674,22 @@ async def list_discoverable_workspaces(
     if org_role is None:
         raise HTTPException(status_code=403, detail="Not a member of this organisation")
 
+    # Outsiders (external-only, even with a stale org_membership) get no
+    # discovery surface — they may only see the workspace they were invited to.
+    if await is_org_external_only(org_id, app_user_id):
+        return DiscoverResponse(workspaces=[])
+
     is_org_admin = org_role in ("admin", "owner")
 
     filters: dict = {
         "org_id": {"_eq": org_id},
         "deleted_at": {"_null": True},
+        # Free tier is the admin's personal allotment; not joinable by anyone else, even org admins.
+        "tier": {"_neq": "free"},
     }
     if not is_org_admin:
-        filters["visibility"] = {"_neq": "private"}
+        # Positive-match mirrors request_workspace_access so NULL-visibility rows don't surface a CTA that 404s on submit.
+        filters["visibility"] = {"_eq": "open_to_organisation"}
 
     workspaces = await async_directus.get_items(
         "workspace",
@@ -711,6 +747,29 @@ async def list_discoverable_workspaces(
         if isinstance(reqs, list):
             pending_map = {r["workspace_id"]: r["id"] for r in reqs}
 
+    # Single grouped aggregate so the discovery list can show "N members" without N round-trips.
+    member_counts: dict[str, int] = {}
+    if ws_ids:
+        member_agg = await async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "aggregate": {"count": "id"},
+                    "groupBy": ["workspace_id"],
+                    "filter": {
+                        "workspace_id": {"_in": ws_ids},
+                        "deleted_at": {"_null": True},
+                    },
+                }
+            },
+        )
+        if isinstance(member_agg, list):
+            for row in member_agg:
+                wid = row.get("workspace_id")
+                cnt = int((row.get("count") or {}).get("id", 0) or 0)
+                if wid:
+                    member_counts[wid] = cnt
+
     out: list[DiscoverableWorkspace] = []
     for w in workspaces:
         wid = w["id"]
@@ -734,6 +793,7 @@ async def list_discoverable_workspaces(
                 visibility=visibility,
                 action=action,
                 pending_request_id=pending_id,
+                member_count=member_counts.get(wid, 0),
             )
         )
 

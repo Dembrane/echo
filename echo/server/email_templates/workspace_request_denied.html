@@ -1,0 +1,18 @@
+{% extends "_layout.html" %}
+{% block title %}Workspace request update{% endblock %}
+{% block preview %}Your {{ kind_label }} request was not approved.{% endblock %}
+{% block heading %}Request not approved.{% endblock %}
+{% block body %}
+<p style="font-size:17px; line-height:1.65; margin:0 0 16px; color:#2D2D2C; font-weight:300;">
+  Your <em style="color:#4169E1; font-style:normal;">{{ kind_label }}</em> request was not approved.
+</p>
+{% if denial_reason %}
+<div style="margin:0 0 28px; padding:14px 18px; background-color:#F6F4F1; border-left:2px solid #4169E1;">
+  <div style="font-size:13px; color:#6B6B6A; margin-bottom:6px; font-weight:300;">Reason</div>
+  <div style="white-space:pre-wrap; font-size:15px; line-height:1.6; color:#2D2D2C; font-weight:300;">{{ denial_reason }}</div>
+</div>
+{% endif %}
+<p style="font-size:15px; line-height:1.65; margin:0 0 24px; color:#2D2D2C; font-weight:300;">
+  If you have questions, reply to this email or reach out to the dembrane team.
+</p>
+{% endblock %}

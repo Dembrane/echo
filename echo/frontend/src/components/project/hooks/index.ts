@@ -9,6 +9,7 @@ import {
 import { toast } from "@/components/common/Toaster";
 import { useAddChatContextMutation } from "@/components/conversation/hooks";
 import { API_BASE_URL } from "@/config";
+import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	api,
@@ -24,55 +25,6 @@ import {
 	updateCustomVerificationTopic,
 	type VerificationTopicsResponse,
 } from "@/lib/api";
-
-// ── BFF: Projects Home ──────────────────────────────────────────────────
-
-interface BffProjectSummary {
-	id: string;
-	name: string | null;
-	updated_at: string | null;
-	language: string | null;
-	pin_order: number | null;
-	conversations_count: number;
-	owner_name?: string;
-	owner_email?: string;
-}
-
-interface BffProjectsHomeResponse {
-	pinned: BffProjectSummary[];
-	projects: BffProjectSummary[];
-	total_count: number;
-	has_more: boolean;
-	is_admin: boolean;
-}
-
-export const useProjectsHome = ({
-	search,
-	limit = 15,
-	workspaceId,
-}: {
-	search?: string;
-	limit?: number;
-	workspaceId?: string | null;
-}) => {
-	return useInfiniteQuery({
-		queryKey: ["projects", "home", workspaceId ?? null, search],
-		initialPageParam: 0,
-		getNextPageParam: (lastPage: BffProjectsHomeResponse, _allPages, lastPageParam) =>
-			lastPage.has_more ? lastPageParam + 1 : undefined,
-		queryFn: async ({ pageParam = 0 }) => {
-			const params = new URLSearchParams();
-			if (search) params.set("search", search);
-			if (workspaceId) params.set("workspace_id", workspaceId);
-			params.set("offset", String(pageParam * limit));
-			params.set("limit", String(limit));
-			const resp = await api.get<unknown, BffProjectsHomeResponse>(
-				`/projects/home?${params.toString()}`,
-			);
-			return resp;
-		},
-	});
-};
 
 export const useTogglePinMutation = () => {
 	const queryClient = useQueryClient();
@@ -90,11 +42,8 @@ export const useTogglePinMutation = () => {
 		// immediately so the UI responds to the click. Without this the
 		// user waits on the full refetch before the card jumps — on a
 		// slow connection it looks like nothing happened. Rolls back
-		// on error. Applies to BOTH the v1 (/projects/home) cache and
-		// the v2 workspace-projects cache — pre-fix the mutation only
-		// invalidated v1, so pinning on /w/:id/projects looked broken.
+		// on error.
 		onMutate: async ({ projectId, pin_order }) => {
-			await queryClient.cancelQueries({ queryKey: ["projects", "home"] });
 			await queryClient.cancelQueries({ queryKey: ["v2", "workspace-projects"] });
 
 			type PageShape = {
@@ -141,12 +90,6 @@ export const useTogglePinMutation = () => {
 
 			const snapshots: Array<[readonly unknown[], CacheShape | undefined]> = [];
 			for (const [key, data] of queryClient.getQueriesData<CacheShape>({
-				queryKey: ["projects", "home"],
-			})) {
-				snapshots.push([key, data]);
-				queryClient.setQueryData(key, applyOptimistic(data));
-			}
-			for (const [key, data] of queryClient.getQueriesData<CacheShape>({
 				queryKey: ["v2", "workspace-projects"],
 			})) {
 				snapshots.push([key, data]);
@@ -165,11 +108,7 @@ export const useTogglePinMutation = () => {
 		},
 		onSettled: () => {
 			// Reconcile with the server regardless — optimistic state is a
-			// guess; this is the ground truth. Both caches must be busted;
-			// the v1 invalidate-alone version pre-fix missed the v2 key
-			// and was the reported "pinned projects doesn't work without
-			// refresh" bug.
-			queryClient.invalidateQueries({ queryKey: ["projects", "home"] });
+			// guess; this is the ground truth.
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
 		},
@@ -318,6 +257,7 @@ export const useCreateChatMutation = () => {
 	const navigate = useI18nNavigate();
 	const queryClient = useQueryClient();
 	const addChatContextMutation = useAddChatContextMutation();
+	const { workspaceId } = useParams();
 	return useMutation({
 		mutationFn: async (payload: {
 			navigateToNewChat?: boolean;
@@ -345,7 +285,9 @@ export const useCreateChatMutation = () => {
 			const chat = (await res.json()) as { id: string };
 
 			if (payload.navigateToNewChat && chat?.id) {
-				navigate(`/projects/${payload.project_id.id}/chats/${chat.id}`);
+				navigate(
+					`/w/${workspaceId}/projects/${payload.project_id.id}/chats/${chat.id}`,
+				);
 			}
 
 			if (payload.conversationId) {
@@ -401,23 +343,6 @@ export const useUpdateProjectByIdMutation = () => {
 				queryKey: ["projects", variables.id],
 			});
 			toast.success("Project updated successfully");
-		},
-	});
-};
-
-export const useCreateProjectMutation = () => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: (payload: Partial<Project>) => {
-			return api.post<unknown, TProject>("/projects", payload);
-		},
-		onError: (e) => {
-			console.error(e);
-			toast.error("Error creating project");
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["projects"] });
-			toast.success("Project created successfully");
 		},
 	});
 };
@@ -478,6 +403,10 @@ export const useProjectById = ({
 	query?: Partial<Query<CustomDirectusTypes, Project>>;
 }) => {
 	return useQuery({
+		// Skip the fetch when projectId hasn't resolved yet — otherwise we
+		// hammer /api/v2/projects//bff with an empty id during transient
+		// renders (sidebar mounts before scope params land).
+		enabled: !!projectId,
 		// BFF migration (2026-04-24): the frontend used to call Directus
 		// directly via readItem("project", ...), but Directus row-level
 		// ACL doesn't know about our v2 inheritance/sharing model — a

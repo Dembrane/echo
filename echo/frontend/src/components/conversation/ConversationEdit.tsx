@@ -9,6 +9,7 @@ import {
 	MultiSelect,
 	Stack,
 	Text,
+	Textarea,
 	TextInput,
 	Title,
 	Tooltip,
@@ -33,6 +34,7 @@ import {
 type ConversationEditFormValues = {
 	title: string;
 	participant_name: string;
+	summary: string;
 	tagIdList: string[];
 };
 
@@ -90,9 +92,12 @@ const getNameDescription = (source: string | null): string => {
 export const ConversationEdit = ({
 	conversation,
 	projectTags,
+	showSummary = false,
 }: {
 	conversation: Conversation;
 	projectTags: ProjectTag[];
+	/** Adds an autosaved Summary field (used by the list-row edit modal). */
+	showSummary?: boolean;
 }) => {
 	const queryClient = useQueryClient();
 	const emailsQuery = useConversationEmails(conversation.id);
@@ -139,6 +144,7 @@ export const ConversationEdit = ({
 
 	const defaultValues: ConversationEditFormValues = {
 		participant_name: conversation.participant_name ?? "",
+		summary: conversation.summary ?? "",
 		tagIdList: sanitizedConversationTagIds,
 		title: conversation.title ?? "",
 	};
@@ -160,6 +166,9 @@ export const ConversationEdit = ({
 					payload: {
 						participant_name: data.participant_name,
 						title: data.title || null,
+						// Only the modal variant edits summary; don't clobber it
+						// from the detail page where the field isn't rendered.
+						...(showSummary ? { summary: data.summary } : {}),
 					},
 				});
 
@@ -394,6 +403,21 @@ export const ConversationEdit = ({
 								</Text>
 							</CloseableAlert>
 						</Box>
+					)}
+
+					{showSummary && (
+						<Textarea
+							label={
+								<FormLabel
+									label={t`Summary`}
+									isDirty={!!formState.dirtyFields.summary}
+								/>
+							}
+							minRows={4}
+							autosize
+							{...register("summary")}
+							{...testId("conversation-edit-summary-input")}
+						/>
 					)}
 				</Stack>
 			</form>

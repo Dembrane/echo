@@ -41,7 +41,7 @@ export const MyInvitesRoute = () => {
 
 	useDocumentTitle(t`Pending invites | dembrane`);
 
-	const handleAccept = async (inviteId: string, workspaceName: string) => {
+	const handleAccept = async (inviteId: string, subjectName: string) => {
 		setErrorByInvite((prev) => {
 			const next = { ...prev };
 			delete next[inviteId];
@@ -49,8 +49,13 @@ export const MyInvitesRoute = () => {
 		});
 		try {
 			const data = await acceptMutation.mutateAsync(inviteId);
-			toast.success(t`Joined ${workspaceName}`);
-			navigate(`/w/${data.workspace_id}/projects`);
+			toast.success(t`Joined ${subjectName}`);
+			// Org-only invites have no workspace target; land on /o where DiscoverableWorkspaces is mounted.
+			if (data.type === "org" || !data.workspace_id) {
+				navigate("/o");
+			} else {
+				navigate(`/w/${data.workspace_id}/home`);
+			}
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : "Failed to accept";
 			setErrorByInvite((prev) => ({ ...prev, [inviteId]: msg }));
@@ -58,12 +63,12 @@ export const MyInvitesRoute = () => {
 		}
 	};
 
-	const handleDecline = (inviteId: string, workspaceName: string) => {
+	const handleDecline = (inviteId: string, subjectName: string) => {
 		modals.openConfirmModal({
 			children: (
 				<Text size="sm">
 					<Trans>
-						Decline the invite to {workspaceName}? You can ask them to send it
+						Decline the invite to {subjectName}? You can ask them to send it
 						again later.
 					</Trans>
 				</Text>
@@ -113,7 +118,7 @@ export const MyInvitesRoute = () => {
 					<Title order={4} fw={400} c="dimmed">
 						<Trans>No pending invites</Trans>
 					</Title>
-					<Button variant="outline" size="sm" onClick={() => navigate("/w")}>
+					<Button variant="outline" size="sm" onClick={() => navigate("/o")}>
 						<Trans>Back to workspaces</Trans>
 					</Button>
 				</Stack>
@@ -129,16 +134,24 @@ export const MyInvitesRoute = () => {
 						<Trans>Pending invites</Trans>
 					</Title>
 					<Text size="sm" c="dimmed">
-						<Trans>
-							Workspaces you've been invited to join. Accept to start
-							collaborating.
-						</Trans>
+						{invites.some((inv) => inv.type === "org") ? (
+							<Trans>Invitations waiting for you. Accept to get started.</Trans>
+						) : (
+							<Trans>
+								Workspaces you've been invited to join. Accept to start
+								collaborating.
+							</Trans>
+						)}
 					</Text>
 				</Stack>
 
 				<Stack gap={12}>
 					{invites.map((inv) => {
 						const inviteError = errorByInvite[inv.id];
+						const isOrgInvite = inv.type === "org";
+						const subjectName = isOrgInvite
+							? inv.org_name
+							: inv.workspace_name ?? inv.org_name;
 						return (
 							<Paper key={inv.id} p="lg" radius="md" withBorder>
 								<Stack gap={16}>
@@ -149,15 +162,22 @@ export const MyInvitesRoute = () => {
 									>
 										<Box flex={1}>
 											<Text fw={500} size="md">
-												{inv.workspace_name}
+												{subjectName}
 											</Text>
-											<Text size="xs" c="dimmed" mt={2}>
-												{inv.org_name}
-											</Text>
+											{!isOrgInvite && (
+												<Text size="xs" c="dimmed" mt={2}>
+													{inv.org_name}
+												</Text>
+											)}
 											<Group gap={6} mt={8}>
 												<Badge size="xs" variant="light" color="gray">
 													{displayRole(inv.role)}
 												</Badge>
+												{isOrgInvite && (
+													<Badge size="xs" variant="light" color="primary">
+														<Trans>Organisation only</Trans>
+													</Badge>
+												)}
 												{inv.invited_by_name && (
 													<Text size="xs" c="dimmed">
 														<Trans>invited by {inv.invited_by_name}</Trans>
@@ -187,8 +207,8 @@ export const MyInvitesRoute = () => {
 									<Group gap={8}>
 										<Button
 											size="sm"
-											variant="default"
-											onClick={() => handleDecline(inv.id, inv.workspace_name)}
+											variant="outline"
+											onClick={() => handleDecline(inv.id, subjectName)}
 										>
 											<Trans>Decline</Trans>
 										</Button>
@@ -196,7 +216,7 @@ export const MyInvitesRoute = () => {
 											flex={1}
 											size="sm"
 											loading={acceptMutation.isPending}
-											onClick={() => handleAccept(inv.id, inv.workspace_name)}
+											onClick={() => handleAccept(inv.id, subjectName)}
 										>
 											{inviteError ? (
 												<Trans>Try again</Trans>

@@ -41,6 +41,8 @@ import {
 	IconChevronDown,
 	IconChevronUp,
 	IconInfoCircle,
+	IconLock,
+	IconPlus,
 	IconRosetteDiscountCheck,
 	IconSearch,
 	IconSelectAll,
@@ -69,6 +71,7 @@ import {
 	useProjectById,
 } from "@/components/project/hooks";
 import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
+import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
@@ -124,9 +127,10 @@ const ConversationAccordionLabelChatSelection = ({
 	const isSelected = !!projectChatContextQuery.data?.conversations?.find(
 		(c) => c.conversation_id === conversation.id,
 	);
-	const isLocked = !!projectChatContextQuery.data?.conversations?.find(
+	const isChatLocked = !!projectChatContextQuery.data?.conversations?.find(
 		(c) => c.conversation_id === conversation.id && c.locked,
 	);
+	const isOverCapLocked = !!conversation.locked;
 
 	const isAutoSelectEnabled =
 		projectChatContextQuery.data?.auto_select_bool ?? false;
@@ -137,12 +141,11 @@ const ConversationAccordionLabelChatSelection = ({
 		return typeof transcript === "string" && transcript.trim().length > 0;
 	});
 
+	const isDisabled = isChatLocked || isOverCapLocked || !hasContent;
+
 	const handleSelectChat = () => {
 		if (!isSelected) {
-			// Don't allow adding empty conversations to chat context
-			if (!hasContent) {
-				return;
-			}
+			if (isDisabled) return;
 			addChatContextMutation.mutate({
 				chatId: chatId ?? "",
 				conversationId: conversation.id,
@@ -155,20 +158,22 @@ const ConversationAccordionLabelChatSelection = ({
 		}
 	};
 
-	const tooltipLabel = isLocked
-		? t`Already added to this chat`
-		: !hasContent
-			? t`Cannot add empty conversation`
-			: isSelected
-				? t`Remove from this chat`
-				: t`Add to this chat`;
+	const tooltipLabel = isOverCapLocked
+		? t`Conversation locked, upgrade to add to chat`
+		: isChatLocked
+			? t`Already added to this chat`
+			: !hasContent
+				? t`Cannot add empty conversation`
+				: isSelected
+					? t`Remove from this chat`
+					: t`Add to this chat`;
 
 	return (
 		<Tooltip label={tooltipLabel}>
 			<Checkbox
 				size="md"
 				checked={isSelected}
-				disabled={isLocked || !hasContent}
+				disabled={isDisabled}
 				onChange={handleSelectChat}
 				color={
 					ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled ? "green" : undefined
@@ -378,15 +383,7 @@ export const ConversationStatusIndicators = ({
 	// 	[conversation.chunks],
 	// );
 
-	const hasOnlyTextContent = useMemo(
-		() =>
-			conversation.chunks?.length > 0 &&
-			conversation.chunks?.every(
-				(chunk) =>
-					(chunk as unknown as ConversationChunk).source === "PORTAL_TEXT",
-			),
-		[conversation.chunks],
-	);
+	const hasOnlyTextContent = conversation.has_only_text_chunks ?? false;
 
 	const fDuration = useCallback((duration: number) => {
 		const d = intervalToDuration({
@@ -508,7 +505,7 @@ const ConversationAccordionItem = ({
 	const inChatMode = location.pathname.includes("/chats/");
 	const isNewChatRoute = location.pathname.includes("/chats/new");
 
-	const { chatId } = useParams();
+	const { chatId, workspaceId } = useParams();
 	const chatContextQuery = useProjectChatContext(chatId ?? "");
 
 	// Don't show loading skeleton for new chat route (no chat exists yet)
@@ -539,7 +536,7 @@ const ConversationAccordionItem = ({
 
 	return (
 		<NavigationButton
-			to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
+			to={`/w/${workspaceId}/projects/${conversation.project_id}/conversation/${conversation.id}`}
 			active={highlight}
 			className="w-full"
 			rightSection={
@@ -595,6 +592,21 @@ const ConversationAccordionItem = ({
 								>
 									<DetectiveIcon />
 								</ThemeIcon>
+							</Tooltip>
+						)}
+
+						{conversation.locked && (
+							<Tooltip
+								label={t`Upgrade your workspace to view this conversation`}
+							>
+								<Badge
+									size="xs"
+									color="blue"
+									variant="light"
+									leftSection={<IconLock size={10} />}
+								>
+									{t`Locked`}
+								</Badge>
 							</Tooltip>
 						)}
 					</Group>
@@ -660,13 +672,30 @@ export const ConversationAccordion = ({
 	const location = useLocation();
 	const inChatMode = location.pathname.includes("/chats/");
 	const isMobile = useMediaQuery("(max-width: 768px)");
-	const { conversationId: activeConversationId, chatId } = useParams();
+	const {
+		conversationId: activeConversationId,
+		chatId,
+		workspaceId: routeWorkspaceId,
+	} = useParams();
 	const { ref: loadMoreRef, inView } = useInView();
 
 	// Get chat context to check mode
 	const chatContextQuery = useProjectChatContext(chatId ?? "");
 	const chatMode = chatContextQuery.data?.chat_mode;
 	const isOverviewMode = chatMode === "overview";
+
+	// Workspace usage gating for uploads
+	const projectForWs = useProjectById({
+		projectId,
+		query: { fields: ["id", "workspace_id"] },
+	});
+	const projectWorkspaceId =
+		(projectForWs.data as { workspace_id?: string | null } | undefined)
+			?.workspace_id ??
+		routeWorkspaceId ??
+		null;
+	const conversationWorkspaceId = routeWorkspaceId ?? projectWorkspaceId;
+	const { usageGates } = useWorkspaceUsage(projectWorkspaceId);
 
 	// Temporarily disabled source filters
 	// const FILTER_OPTIONS = [
@@ -1090,7 +1119,19 @@ export const ConversationAccordion = ({
 					{/** biome-ignore lint/a11y/noStaticElementInteractions: <todo> */}
 					{/** biome-ignore lint/a11y/useKeyWithClickEvents: <todo> */}
 					<div onClick={(e) => e.stopPropagation()}>
-						<UploadConversationDropzone projectId={projectId} />
+						{usageGates.uploads_locked ? (
+							<Tooltip label={t`Upload limit reached. Upgrade your workspace.`}>
+								<Button
+									rightSection={<IconPlus size={16} />}
+									variant="outline"
+									disabled
+								>
+									{t`Upload`}
+								</Button>
+							</Tooltip>
+						) : (
+							<UploadConversationDropzone projectId={projectId} />
+						)}
 					</div>
 				</Group>
 			</Accordion.Control>
@@ -1452,7 +1493,9 @@ export const ConversationAccordion = ({
 							<Trans>
 								No conversations found. Start a conversation using the
 								participation invite link from the{" "}
-								<I18nLink to={`/projects/${projectId}/overview`}>
+								<I18nLink
+									to={`/w/${conversationWorkspaceId}/projects/${projectId}/overview`}
+								>
 									<Anchor
 										onClick={(e) => {
 											if (qrCodeRef?.current && isMobile) {

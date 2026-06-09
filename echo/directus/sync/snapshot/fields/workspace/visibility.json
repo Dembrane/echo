@@ -11,12 +11,12 @@
     "group": null,
     "hidden": false,
     "interface": "select-dropdown",
-    "note": "Matrix v1.1 §6. open_to_team = discoverable by team admins (join) and members (request access). private = visible only to team admins in discovery. Innovator+ tier to create.",
+    "note": "Matrix v1.1 §6. open_to_organisation = discoverable by organisation admins (join) and members (request access). private = visible only to organisation admins in discovery. Innovator+ tier to create.",
     "options": {
       "choices": [
         {
-          "text": "Open to team",
-          "value": "open_to_team"
+          "text": "Open to organisation",
+          "value": "open_to_organisation"
         },
         {
           "text": "Private",
@@ -38,7 +38,7 @@
     "name": "visibility",
     "table": "workspace",
     "data_type": "character varying",
-    "default_value": "open_to_team",
+    "default_value": "open_to_organisation",
     "max_length": 255,
     "numeric_precision": null,
     "numeric_scale": null,
