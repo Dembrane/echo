@@ -152,3 +152,78 @@ def test_sync_persistent_transport_error_raises_after_3_attempts():
 
     assert calls["n"] == 3
     assert sleeps == [1.0, 2.0]
+
+
+# --- get_item record-level 403 FORBIDDEN handling ---
+# Directus answers a missing single item with 403; get_item maps that to None
+# (so `if not item: raise 404` fires) but still raises on a 401 token failure.
+
+from dembrane.directus import DirectusBadRequest  # noqa: E402
+
+
+class _BodyTransport(httpx.AsyncBaseTransport):
+    def __init__(self, status_code: int, body: dict):
+        self.requests = 0
+        self.status_code = status_code
+        self.body = body
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:  # noqa: ARG002
+        self.requests += 1
+        return httpx.Response(self.status_code, json=self.body)
+
+
+def _client_with(transport: httpx.AsyncBaseTransport) -> AsyncDirectusClient:
+    client = AsyncDirectusClient(url="http://directus.test", token="t")
+    client._client = httpx.AsyncClient(  # noqa: SLF001
+        base_url="http://directus.test", transport=transport
+    )
+    return client
+
+
+@pytest.mark.asyncio
+async def test_get_item_returns_none_on_forbidden_record():
+    transport = _BodyTransport(403, {"errors": [{"extensions": {"code": "FORBIDDEN"}}]})
+    client = _client_with(transport)
+
+    with patch("dembrane.directus_async.asyncio.sleep") as sleep_mock:
+        result = await client.get_item("conversation", "does-not-exist")
+
+    assert result is None
+    assert transport.requests == 1  # no retry tail on a deterministic FORBIDDEN
+    sleep_mock.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_get_item_returns_data_on_success():
+    transport = _BodyTransport(200, {"data": {"id": "abc"}})
+    client = _client_with(transport)
+
+    result = await client.get_item("conversation", "abc")
+
+    assert result == {"id": "abc"}
+    assert transport.requests == 1
+
+
+@pytest.mark.asyncio
+async def test_get_item_raises_on_token_failure_not_treated_as_not_found():
+    # A 401 (bad/expired admin token) must NOT be silently turned into None;
+    # otherwise an auth outage would mask every record as "not found".
+    transport = _BodyTransport(401, {"errors": [{"extensions": {"code": "INVALID_CREDENTIALS"}}]})
+    client = _client_with(transport)
+
+    with patch("dembrane.directus_async.asyncio.sleep"):
+        with pytest.raises(DirectusBadRequest):
+            await client.get_item("conversation", "abc")
+
+    assert transport.requests == 3  # 401 stays recoverable -> retried, then raises
+
+
+@pytest.mark.asyncio
+async def test_get_item_raises_on_non_forbidden_403():
+    # A 403 whose code is not FORBIDDEN is a real error, not existence-hiding.
+    transport = _BodyTransport(403, {"errors": [{"extensions": {"code": "SOMETHING_ELSE"}}]})
+    client = _client_with(transport)
+
+    with patch("dembrane.directus_async.asyncio.sleep"):
+        with pytest.raises(DirectusBadRequest):
+            await client.get_item("conversation", "abc")
