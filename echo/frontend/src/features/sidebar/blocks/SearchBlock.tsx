@@ -64,13 +64,22 @@ const EMPTY_SEARCH: HomeSearchResponse = {
 	transcripts: [],
 };
 
-export const SearchBlock = () => {
-	const [opened, { open, close }] = useDisclosure(false);
-	const [q, setQ] = useState("");
-	const [activeIndex, setActiveIndex] = useState(0);
-	const { workspaces } = useWorkspace();
-	const { items: recents } = useRecents();
-	const navigate = useNavigate();
+	export const SearchBlock = () => {
+		const [opened, { open, close }] = useDisclosure(false);
+		const [q, setQ] = useState("");
+		const [activeIndex, setActiveIndex] = useState(0);
+		const { workspaces } = useWorkspace();
+		const { items: recents } = useRecents();
+		const navigate = useNavigate();
+		const [shortcut, setShortcut] = useState("⌘K");
+
+		useEffect(() => {
+			const isMac = typeof window !== "undefined" && 
+				/Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+			if (!isMac) {
+				setShortcut("Ctrl K");
+			}
+		}, []);
 
 	const [debouncedQ] = useDebouncedValue(q.trim(), 250);
 	const deepSearch = useQuery({
@@ -258,15 +267,15 @@ export const SearchBlock = () => {
 				<span>
 					<Trans>Search</Trans>
 				</span>
-				<span
-					className="ml-auto rounded px-1.5 py-0.5 text-[10px]"
-					style={{
-						backgroundColor: "rgba(45, 45, 44, 0.06)",
-						color: "rgba(45, 45, 44, 0.55)",
-					}}
-				>
-					⌘K
-				</span>
+					<span
+						className="ml-auto rounded px-1.5 py-0.5 text-[10px]"
+						style={{
+							backgroundColor: "rgba(45, 45, 44, 0.06)",
+							color: "rgba(45, 45, 44, 0.55)",
+						}}
+					>
+						{shortcut}
+					</span>
 			</UnstyledButton>
 
 			<Modal
