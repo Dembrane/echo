@@ -21,6 +21,7 @@ export const WorkspaceSettingsView = () => {
 			<BackButton
 				to={`/w/${workspaceId}/home`}
 				label={<Trans>Settings</Trans>}
+				center
 			/>
 			{isAdmin && (
 				<NavItem

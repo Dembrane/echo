@@ -5,7 +5,7 @@ import { NavItem } from "../../primitives/NavItem";
 export const AdminHomeView = () => {
 	return (
 		<nav className="flex flex-col gap-0.5 p-1.5">
-			<BackButton to="/" label="Admin dashboard" />
+			<BackButton to="/" label="Admin dashboard" center />
 			<NavItem
 				to="/admin/usage-and-billing"
 				label="Usage and billing"

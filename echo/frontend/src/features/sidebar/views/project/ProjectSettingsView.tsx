@@ -15,7 +15,7 @@ export const ProjectSettingsView = () => {
 
 	return (
 		<nav className="flex flex-col gap-0.5 p-1.5">
-			<BackButton to={`${base}/home`} label={<Trans>Settings</Trans>} />
+			<BackButton to={`${base}/home`} label={<Trans>Settings</Trans>} center />
 			<NavItem
 				to={`${base}/overview`}
 				label={<Trans>General</Trans>}
