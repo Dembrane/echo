@@ -56,15 +56,15 @@ export const useOnboardingCards = () => {
 							cta: "Los geht's!",
 							extraHelp:
 								"Dies ist ein Mini-Tutorial. Nutzen Sie die Vor- und Zurück-Tasten zur Navigation. Nach Abschluss gelangen Sie zum Aufnahmeportal.",
-							title: "Willkommen bei Dembrane!",
+							title: "Willkommen bei dembrane!",
 						},
 						{
 							content:
-								"Dembrane hilft Menschen, einfach Input von großen Gruppen zu sammeln.",
+								"dembrane hilft Menschen, einfach Input von großen Gruppen zu sammeln.",
 							cta: "Mehr erfahren",
 							extraHelp:
 								"Ob Feedback für eine Kommune, Input im Arbeitsumfeld oder Teilnahme an Forschung – Ihre Stimme zählt!",
-							title: "Was ist Dembrane?",
+							title: "Was ist dembrane?",
 						},
 						{
 							content:
@@ -75,10 +75,10 @@ export const useOnboardingCards = () => {
 							title: "Sagen Sie einfach Ihre Meinung",
 						},
 						{
-							content: "Dembrane macht in Gruppen mehr Spaß!",
+							content: "dembrane macht in Gruppen mehr Spaß!",
 							cta: "Weiter",
 							extraHelp:
-								"Dembrane macht mehr Spaß, wenn Sie jemanden finden, um die Fragen gemeinsam zu besprechen und Ihr Gespräch aufzunehmen. Wir können nicht sagen, wer was gesagt hat, nur welche Ideen geteilt wurden.",
+								"dembrane macht mehr Spaß, wenn Sie jemanden finden, um die Fragen gemeinsam zu besprechen und Ihr Gespräch aufzunehmen. Wir können nicht sagen, wer was gesagt hat, nur welche Ideen geteilt wurden.",
 							title: "Allein oder in der Gruppe",
 						},
 					],
@@ -120,15 +120,15 @@ export const useOnboardingCards = () => {
 							cta: "Let's go!",
 							extraHelp:
 								"This is a mini-tutorial. Use the previous and next buttons to navigate. Once completed, you'll enter the recording portal.",
-							title: "Welcome to Dembrane!",
+							title: "Welcome to dembrane!",
 						},
 						{
 							content:
-								"Dembrane helps people gather input from large groups easily.",
+								"dembrane helps people gather input from large groups easily.",
 							cta: "Tell me more",
 							extraHelp:
 								"Whether it's feedback for a local municipality, input in a work setting, or participation in research, your voice matters!",
-							title: "What is Dembrane?",
+							title: "What is dembrane?",
 						},
 						{
 							content:
@@ -139,10 +139,10 @@ export const useOnboardingCards = () => {
 							title: "Just Speak Your Mind",
 						},
 						{
-							content: "Dembrane is more fun in groups!",
+							content: "dembrane is more fun in groups!",
 							cta: "Next",
 							extraHelp:
-								"Dembrane is more fun when you find someone to discuss the questions together and record your conversation. We can't tell who said what, just what ideas were shared.",
+								"dembrane is more fun when you find someone to discuss the questions together and record your conversation. We can't tell who said what, just what ideas were shared.",
 							title: "Solo or in a Group",
 						},
 					],
@@ -183,15 +183,15 @@ export const useOnboardingCards = () => {
 							cta: "¡Vamos!",
 							extraHelp:
 								"Este es un mini-tutorial. Usa los botones de anterior y siguiente para navegar. Una vez completado, entrarás al portal de grabación.",
-							title: "¡Bienvenido a Dembrane!",
+							title: "¡Bienvenido a dembrane!",
 						},
 						{
 							content:
-								"Dembrane ayuda a las personas a recopilar aportaciones de grandes grupos fácilmente.",
+								"dembrane ayuda a las personas a recopilar aportaciones de grandes grupos fácilmente.",
 							cta: "Cuéntame más",
 							extraHelp:
 								"Ya sea retroalimentación para una municipalidad local, aportaciones en el trabajo o participación en investigación, ¡tu voz importa!",
-							title: "¿Qué es Dembrane?",
+							title: "¿Qué es dembrane?",
 						},
 						{
 							content:
@@ -202,10 +202,10 @@ export const useOnboardingCards = () => {
 							title: "Solo Di Lo Que Piensas",
 						},
 						{
-							content: "¡Dembrane es más divertido en grupos!",
+							content: "¡dembrane es más divertido en grupos!",
 							cta: "Siguiente",
 							extraHelp:
-								"Dembrane es más divertido cuando encuentras a alguien para discutir las preguntas juntos y grabar su conversación. No podemos distinguir quién dijo qué, solo qué ideas se compartieron.",
+								"dembrane es más divertido cuando encuentras a alguien para discutir las preguntas juntos y grabar su conversación. No podemos distinguir quién dijo qué, solo qué ideas se compartieron.",
 							title: "Solo o en Grupo",
 						},
 					],
@@ -246,15 +246,15 @@ export const useOnboardingCards = () => {
 							cta: "C'est parti !",
 							extraHelp:
 								"Ceci est un mini-tutoriel. Utilisez les boutons précédent et suivant pour naviguer. Une fois terminé, vous entrerez dans le portail d'enregistrement.",
-							title: "Bienvenue sur Dembrane !",
+							title: "Bienvenue sur dembrane !",
 						},
 						{
 							content:
-								"Dembrane aide les gens à recueillir facilement les contributions de grands groupes.",
+								"dembrane aide les gens à recueillir facilement les contributions de grands groupes.",
 							cta: "Dites-m'en plus",
 							extraHelp:
 								"Qu'il s'agisse de commentaires pour une municipalité locale, de contributions dans un cadre professionnel ou de participation à une recherche, votre voix compte !",
-							title: "Qu'est-ce que Dembrane ?",
+							title: "Qu'est-ce que dembrane ?",
 						},
 						{
 							content:
@@ -265,10 +265,10 @@ export const useOnboardingCards = () => {
 							title: "Dites Simplement Ce Que Vous Pensez",
 						},
 						{
-							content: "Dembrane est plus amusant en groupe !",
+							content: "dembrane est plus amusant en groupe !",
 							cta: "Suivant",
 							extraHelp:
-								"Dembrane est plus amusant lorsque vous trouvez quelqu'un pour discuter des questions ensemble et enregistrer votre conversation. Nous ne pouvons pas dire qui a dit quoi, juste quelles idées ont été partagées.",
+								"dembrane est plus amusant lorsque vous trouvez quelqu'un pour discuter des questions ensemble et enregistrer votre conversation. Nous ne pouvons pas dire qui a dit quoi, juste quelles idées ont été partagées.",
 							title: "Seul ou en Groupe",
 						},
 					],
@@ -372,15 +372,15 @@ export const useOnboardingCards = () => {
 							cta: "Aan de slag!",
 							extraHelp:
 								"Dit is een mini-handleiding. Gebruik de knoppen om te navigeren. Na afloop van de handleiding kom je in de opnameportaal terecht.",
-							title: "Welkom bij Dembrane!",
+							title: "Welkom bij dembrane!",
 						},
 						{
 							content:
-								"Dembrane helpt mensen gemakkelijk input van grote groepen te verzamelen.",
+								"dembrane helpt mensen gemakkelijk input van grote groepen te verzamelen.",
 							cta: "Vertel me meer",
 							extraHelp:
 								"Of het nu gaat om feedback voor de gemeente, input op het werk, of deelname aan onderzoek, jouw stem telt!",
-							title: "Wat is Dembrane?",
+							title: "Wat is dembrane?",
 						},
 						{
 							content:
@@ -391,10 +391,10 @@ export const useOnboardingCards = () => {
 							title: "Zeg het maar",
 						},
 						{
-							content: "Dembrane is leuker met een groep!",
+							content: "dembrane is leuker met een groep!",
 							cta: "Volgende",
 							extraHelp:
-								"Dembrane is leuker als je iemand vindt om de vragen samen te bespreken en jullie gesprek op te nemen. We kunnen niet horen wie wat zei, alleen welke ideeën er gedeeld zijn.",
+								"dembrane is leuker als je iemand vindt om de vragen samen te bespreken en jullie gesprek op te nemen. We kunnen niet horen wie wat zei, alleen welke ideeën er gedeeld zijn.",
 							title: "Alleen of in een groep",
 						},
 					],
@@ -435,15 +435,15 @@ export const useOnboardingCards = () => {
 							cta: "Почнімо!",
 							extraHelp:
 								"Це міні-інструкція. Використовуйте кнопки «назад» і «далі» для навігації. Після завершення ви потрапите на портал запису.",
-							title: "Ласкаво просимо до Dembrane!",
+							title: "Ласкаво просимо до dembrane!",
 						},
 						{
 							content:
-								"Dembrane допомагає людям легко збирати думки великих груп.",
+								"dembrane допомагає людям легко збирати думки великих груп.",
 							cta: "Розкажіть більше",
 							extraHelp:
 								"Чи то зворотний зв'язок для місцевої громади, чи думки в робочому середовищі, чи участь у дослідженні — ваш голос має значення!",
-							title: "Що таке Dembrane?",
+							title: "Що таке dembrane?",
 						},
 						{
 							content:
@@ -454,10 +454,10 @@ export const useOnboardingCards = () => {
 							title: "Просто скажіть, що думаєте",
 						},
 						{
-							content: "Dembrane цікавіше у групі!",
+							content: "dembrane цікавіше у групі!",
 							cta: "Далі",
 							extraHelp:
-								"Dembrane цікавіше, коли ви знаходите когось, щоб обговорити запитання разом і записати вашу розмову. Ми не можемо визначити, хто що сказав, лише які ідеї були висловлені.",
+								"dembrane цікавіше, коли ви знаходите когось, щоб обговорити запитання разом і записати вашу розмову. Ми не можемо визначити, хто що сказав, лише які ідеї були висловлені.",
 							title: "Наодинці чи в групі",
 						},
 					],
@@ -510,15 +510,15 @@ export const useOnboardingCards = () => {
 							cta: "Los geht's!",
 							extraHelp:
 								"Dies ist ein Mini-Tutorial. Nutzen Sie die Vor- und Zurück-Tasten zur Navigation. Nach Abschluss gelangen Sie zum Aufnahmeportal.",
-							title: "Willkommen bei Dembrane!",
+							title: "Willkommen bei dembrane!",
 						},
 						{
 							content:
-								"Dembrane hilft Menschen, einfach Input von großen Gruppen zu sammeln.",
+								"dembrane hilft Menschen, einfach Input von großen Gruppen zu sammeln.",
 							cta: "Mehr erfahren",
 							extraHelp:
 								"Ob Feedback für eine Kommune, Input im Arbeitsumfeld oder Teilnahme an Forschung – Ihre Stimme zählt!",
-							title: "Was ist Dembrane?",
+							title: "Was ist dembrane?",
 						},
 						{
 							content:
@@ -529,10 +529,10 @@ export const useOnboardingCards = () => {
 							title: "Sagen Sie einfach Ihre Meinung",
 						},
 						{
-							content: "Dembrane macht in Gruppen mehr Spaß!",
+							content: "dembrane macht in Gruppen mehr Spaß!",
 							cta: "Weiter",
 							extraHelp:
-								"Dembrane macht mehr Spaß, wenn Sie jemanden finden, um die Fragen gemeinsam zu besprechen und Ihr Gespräch aufzunehmen. Wir können nicht sagen, wer was gesagt hat, nur welche Ideen geteilt wurden.",
+								"dembrane macht mehr Spaß, wenn Sie jemanden finden, um die Fragen gemeinsam zu besprechen und Ihr Gespräch aufzunehmen. Wir können nicht sagen, wer was gesagt hat, nur welche Ideen geteilt wurden.",
 							title: "Allein oder in der Gruppe",
 						},
 					],
@@ -570,7 +570,7 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Stellen Sie sich vor, Dembrane ist auf Lautsprecher mit Ihnen. Wenn Sie sich selbst hören können, ist alles in Ordnung.",
+								"Stellen Sie sich vor, dembrane ist auf Lautsprecher mit Ihnen. Wenn Sie sich selbst hören können, ist alles in Ordnung.",
 							cta: "Verstanden",
 							extraHelp:
 								"Etwas Hintergrundgeräusch ist in Ordnung, solange klar ist, wer spricht.",
@@ -589,7 +589,7 @@ export const useOnboardingCards = () => {
 								"Vermeiden Sie Unterbrechungen, indem Sie Ihr Gerät entsperrt halten. Wenn es sich sperrt, entsperren Sie es einfach und fahren Sie fort.",
 							cta: "Okay",
 							extraHelp:
-								"Dembrane versucht, Ihr Gerät aktiv zu halten, aber manchmal können Geräte dies überschreiben. Sie können Ihre Geräteeinstellungen anpassen, um länger entsperrt zu bleiben, wenn nötig.",
+								"dembrane versucht, Ihr Gerät aktiv zu halten, aber manchmal können Geräte dies überschreiben. Sie können Ihre Geräteeinstellungen anpassen, um länger entsperrt zu bleiben, wenn nötig.",
 							title: "Gerät nicht sperren!",
 						},
 					],
@@ -605,15 +605,15 @@ export const useOnboardingCards = () => {
 							cta: "Let's go!",
 							extraHelp:
 								"This is a mini-tutorial. Use the previous and next buttons to navigate. Once completed, you'll enter the recording portal.",
-							title: "Welcome to Dembrane!",
+							title: "Welcome to dembrane!",
 						},
 						{
 							content:
-								"Dembrane helps people gather input from large groups easily.",
+								"dembrane helps people gather input from large groups easily.",
 							cta: "Tell me more",
 							extraHelp:
 								"Whether it's feedback for a local municipality, input in a work setting, or participation in research, your voice matters!",
-							title: "What is Dembrane?",
+							title: "What is dembrane?",
 						},
 						{
 							content:
@@ -624,10 +624,10 @@ export const useOnboardingCards = () => {
 							title: "Just Speak Your Mind",
 						},
 						{
-							content: "Dembrane is more fun in groups!",
+							content: "dembrane is more fun in groups!",
 							cta: "Next",
 							extraHelp:
-								"Dembrane is more fun when you find someone to discuss the questions together and record your conversation. We can't tell who said what, just what ideas were shared.",
+								"dembrane is more fun when you find someone to discuss the questions together and record your conversation. We can't tell who said what, just what ideas were shared.",
 							title: "Solo or in a Group",
 						},
 					],
@@ -664,7 +664,7 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Imagine Dembrane is on speakerphone with you. If you can hear yourself, you're good to go.",
+								"Imagine dembrane is on speakerphone with you. If you can hear yourself, you're good to go.",
 							cta: "Noted",
 							extraHelp:
 								"Some background noise is okay, as long as who is speaking is clear.",
@@ -682,7 +682,7 @@ export const useOnboardingCards = () => {
 								"Prevent interruptions by keeping your device unlocked. If it locks, just unlock and continue.",
 							cta: "Okay",
 							extraHelp:
-								"Dembrane tries to keep your device active, but sometimes devices can override it, for example if you have low power mode active. You can adjust your device settings to stay unlocked longer if needed.",
+								"dembrane tries to keep your device active, but sometimes devices can override it, for example if you have low power mode active. You can adjust your device settings to stay unlocked longer if needed.",
 							title: "Don't lock your device!",
 						},
 					],
@@ -698,15 +698,15 @@ export const useOnboardingCards = () => {
 							cta: "¡Vamos!",
 							extraHelp:
 								"Este es un mini-tutorial. Usa los botones de anterior y siguiente para navegar. Una vez completado, entrarás al portal de grabación.",
-							title: "¡Bienvenido a Dembrane!",
+							title: "¡Bienvenido a dembrane!",
 						},
 						{
 							content:
-								"Dembrane ayuda a las personas a recopilar aportaciones de grandes grupos fácilmente.",
+								"dembrane ayuda a las personas a recopilar aportaciones de grandes grupos fácilmente.",
 							cta: "Cuéntame más",
 							extraHelp:
 								"Ya sea retroalimentación para una municipalidad local, aportaciones en el trabajo o participación en investigación, ¡tu voz importa!",
-							title: "¿Qué es Dembrane?",
+							title: "¿Qué es dembrane?",
 						},
 						{
 							content:
@@ -717,10 +717,10 @@ export const useOnboardingCards = () => {
 							title: "Solo Di Lo Que Piensas",
 						},
 						{
-							content: "¡Dembrane es más divertido en grupos!",
+							content: "¡dembrane es más divertido en grupos!",
 							cta: "Siguiente",
 							extraHelp:
-								"Dembrane es más divertido cuando encuentras a alguien para discutir las preguntas juntos y grabar su conversación. No podemos distinguir quién dijo qué, solo qué ideas se compartieron.",
+								"dembrane es más divertido cuando encuentras a alguien para discutir las preguntas juntos y grabar su conversación. No podemos distinguir quién dijo qué, solo qué ideas se compartieron.",
 							title: "Solo o en Grupo",
 						},
 					],
@@ -757,7 +757,7 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Imagina que Dembrane está en altavoz contigo. Si puedes escucharte, estás listo.",
+								"Imagina que dembrane está en altavoz contigo. Si puedes escucharte, estás listo.",
 							cta: "Entendido",
 							extraHelp:
 								"Un poco de ruido de fondo está bien, siempre que se entienda quién está hablando.",
@@ -776,7 +776,7 @@ export const useOnboardingCards = () => {
 								"Evita interrupciones manteniendo tu dispositivo desbloqueado. Si se bloquea, simplemente desbloquéalo y continúa.",
 							cta: "De acuerdo",
 							extraHelp:
-								"Dembrane intenta mantener tu dispositivo activo, pero a veces los dispositivos pueden anularlo. Puedes ajustar la configuración de tu dispositivo para permanecer desbloqueado más tiempo si es necesario.",
+								"dembrane intenta mantener tu dispositivo activo, pero a veces los dispositivos pueden anularlo. Puedes ajustar la configuración de tu dispositivo para permanecer desbloqueado más tiempo si es necesario.",
 							title: "¡No bloquees tu dispositivo!",
 						},
 					],
@@ -792,15 +792,15 @@ export const useOnboardingCards = () => {
 							cta: "C'est parti !",
 							extraHelp:
 								"Ceci est un mini-tutoriel. Utilisez les boutons précédent et suivant pour naviguer. Une fois terminé, vous entrerez dans le portail d'enregistrement.",
-							title: "Bienvenue sur Dembrane !",
+							title: "Bienvenue sur dembrane !",
 						},
 						{
 							content:
-								"Dembrane aide les gens à recueillir facilement les contributions de grands groupes.",
+								"dembrane aide les gens à recueillir facilement les contributions de grands groupes.",
 							cta: "Dites-m'en plus",
 							extraHelp:
 								"Qu'il s'agisse de commentaires pour une municipalité locale, de contributions dans un cadre professionnel ou de participation à une recherche, votre voix compte !",
-							title: "Qu'est-ce que Dembrane ?",
+							title: "Qu'est-ce que dembrane ?",
 						},
 						{
 							content:
@@ -811,10 +811,10 @@ export const useOnboardingCards = () => {
 							title: "Dites Simplement Ce Que Vous Pensez",
 						},
 						{
-							content: "Dembrane est plus amusant en groupe !",
+							content: "dembrane est plus amusant en groupe !",
 							cta: "Suivant",
 							extraHelp:
-								"Dembrane est plus amusant lorsque vous trouvez quelqu'un pour discuter des questions ensemble et enregistrer votre conversation. Nous ne pouvons pas dire qui a dit quoi, juste quelles idées ont été partagées.",
+								"dembrane est plus amusant lorsque vous trouvez quelqu'un pour discuter des questions ensemble et enregistrer votre conversation. Nous ne pouvons pas dire qui a dit quoi, juste quelles idées ont été partagées.",
 							title: "Seul ou en Groupe",
 						},
 					],
@@ -852,7 +852,7 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Imaginez que Dembrane est sur haut-parleur avec vous. Si vous pouvez vous entendre, c'est bon.",
+								"Imaginez que dembrane est sur haut-parleur avec vous. Si vous pouvez vous entendre, c'est bon.",
 							cta: "Noté",
 							extraHelp:
 								"Un peu de bruit de fond est acceptable, tant qu'on sait qui parle.",
@@ -871,7 +871,7 @@ export const useOnboardingCards = () => {
 								"Évitez les interruptions en gardant votre appareil déverrouillé. S'il se verrouille, déverrouillez-le simplement et continuez.",
 							cta: "D'accord",
 							extraHelp:
-								"Dembrane essaie de garder votre appareil actif, mais parfois les appareils peuvent l'annuler. Vous pouvez ajuster les paramètres de votre appareil pour rester déverrouillé plus longtemps si nécessaire.",
+								"dembrane essaie de garder votre appareil actif, mais parfois les appareils peuvent l'annuler. Vous pouvez ajuster les paramètres de votre appareil pour rester déverrouillé plus longtemps si nécessaire.",
 							title: "Ne verrouillez pas votre appareil !",
 						},
 					],
@@ -979,15 +979,15 @@ export const useOnboardingCards = () => {
 							cta: "Aan de slag!",
 							extraHelp:
 								"Dit is een mini-handleiding. Gebruik de knoppen om te navigeren. Na afloop van de handleiding kom je in de opnameportaal terecht.",
-							title: "Welkom bij Dembrane!",
+							title: "Welkom bij dembrane!",
 						},
 						{
 							content:
-								"Dembrane helpt mensen gemakkelijk input van grote groepen te verzamelen.",
+								"dembrane helpt mensen gemakkelijk input van grote groepen te verzamelen.",
 							cta: "Vertel me meer",
 							extraHelp:
 								"Of het nu gaat om feedback voor de gemeente, input op het werk, of deelname aan onderzoek, jouw stem telt!",
-							title: "Wat is Dembrane?",
+							title: "Wat is dembrane?",
 						},
 						{
 							content:
@@ -998,10 +998,10 @@ export const useOnboardingCards = () => {
 							title: "Zeg het maar",
 						},
 						{
-							content: "Dembrane is leuker met een groep!",
+							content: "dembrane is leuker met een groep!",
 							cta: "Volgende",
 							extraHelp:
-								"Dembrane is leuker als je iemand vindt om de vragen samen te bespreken en jullie gesprek op te nemen. We kunnen niet horen wie wat zei, alleen welke ideeën er gedeeld zijn.",
+								"dembrane is leuker als je iemand vindt om de vragen samen te bespreken en jullie gesprek op te nemen. We kunnen niet horen wie wat zei, alleen welke ideeën er gedeeld zijn.",
 							title: "Alleen of in een groep",
 						},
 					],
@@ -1038,7 +1038,7 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Stel je voor dat Dembrane via de luidspreker met je praat. Als je jezelf kunt horen, zit je goed.",
+								"Stel je voor dat dembrane via de luidspreker met je praat. Als je jezelf kunt horen, zit je goed.",
 							cta: "Begrepen",
 							extraHelp:
 								"Een beetje achtergrondgeluid is geen probleem, zolang duidelijk is wie er spreekt.",
@@ -1057,7 +1057,7 @@ export const useOnboardingCards = () => {
 								"Voorkom onderbrekingen door je apparaat ontgrendeld te houden. Als het toch vergrendelt, ontgrendel je het gewoon en ga je verder.",
 							cta: "Oké",
 							extraHelp:
-								"Dembrane probeert je apparaat actief te houden, maar soms kunnen apparaten dit overrulen. Je kunt de instellingen van je apparaat aanpassen om langer ontgrendeld te blijven als dat nodig is.",
+								"dembrane probeert je apparaat actief te houden, maar soms kunnen apparaten dit overrulen. Je kunt de instellingen van je apparaat aanpassen om langer ontgrendeld te blijven als dat nodig is.",
 							title: "Vergrendel je apparaat niet!",
 						},
 					],
@@ -1073,15 +1073,15 @@ export const useOnboardingCards = () => {
 							cta: "Почнімо!",
 							extraHelp:
 								"Це міні-інструкція. Використовуйте кнопки «назад» і «далі» для навігації. Після завершення ви потрапите на портал запису.",
-							title: "Ласкаво просимо до Dembrane!",
+							title: "Ласкаво просимо до dembrane!",
 						},
 						{
 							content:
-								"Dembrane допомагає людям легко збирати думки великих груп.",
+								"dembrane допомагає людям легко збирати думки великих груп.",
 							cta: "Розкажіть більше",
 							extraHelp:
 								"Чи то зворотний зв'язок для місцевої громади, чи думки в робочому середовищі, чи участь у дослідженні — ваш голос має значення!",
-							title: "Що таке Dembrane?",
+							title: "Що таке dembrane?",
 						},
 						{
 							content:
@@ -1092,10 +1092,10 @@ export const useOnboardingCards = () => {
 							title: "Просто скажіть, що думаєте",
 						},
 						{
-							content: "Dembrane цікавіше у групі!",
+							content: "dembrane цікавіше у групі!",
 							cta: "Далі",
 							extraHelp:
-								"Dembrane цікавіше, коли ви знаходите когось, щоб обговорити запитання разом і записати вашу розмову. Ми не можемо визначити, хто що сказав, лише які ідеї були висловлені.",
+								"dembrane цікавіше, коли ви знаходите когось, щоб обговорити запитання разом і записати вашу розмову. Ми не можемо визначити, хто що сказав, лише які ідеї були висловлені.",
 							title: "Наодинці чи в групі",
 						},
 					],
@@ -1132,7 +1132,7 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Уявіть, що Dembrane на гучному зв'язку з вами. Якщо ви чуєте себе — все добре.",
+								"Уявіть, що dembrane на гучному зв'язку з вами. Якщо ви чуєте себе — все добре.",
 							cta: "Зрозуміло",
 							extraHelp:
 								"Невеликий фоновий шум — це нормально, головне, щоб було зрозуміло, хто говорить.",
@@ -1151,7 +1151,7 @@ export const useOnboardingCards = () => {
 								"Запобігайте перервам, тримаючи пристрій розблокованим. Якщо він заблокується, просто розблокуйте і продовжуйте.",
 							cta: "Добре",
 							extraHelp:
-								"Dembrane намагається тримати ваш пристрій активним, але іноді пристрої можуть це перевизначити. Ви можете налаштувати параметри пристрою, щоб він залишався розблокованим довше, якщо потрібно.",
+								"dembrane намагається тримати ваш пристрій активним, але іноді пристрої можуть це перевизначити. Ви можете налаштувати параметри пристрою, щоб він залишався розблокованим довше, якщо потрібно.",
 							title: "Не блокуйте пристрій!",
 						},
 					],
