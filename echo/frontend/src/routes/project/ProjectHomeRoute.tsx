@@ -4,6 +4,7 @@ import {
 	Badge,
 	Button,
 	Card,
+	Grid,
 	Group,
 	SimpleGrid,
 	Skeleton,
@@ -12,16 +13,17 @@ import {
 	Title,
 } from "@mantine/core";
 import {
-	ChatCircleDots,
-	ClockClockwise,
-	FileText,
-	PaintBrush,
-	UploadSimple,
+	ChatCircleDotsIcon,
+	ClockClockwiseIcon,
+	FileTextIcon,
+	PaintBrushIcon,
+	UploadSimpleIcon,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useInfiniteConversationsByProjectId } from "@/components/conversation/hooks";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectById } from "@/components/project/hooks";
+import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
 import { ProjectQRCode } from "@/components/project/ProjectQRCode";
 import { useLatestProjectReport } from "@/components/report/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -60,6 +62,11 @@ export const ProjectHomeRoute = () => {
 				"visibility",
 				"is_conversation_allowed",
 				"default_conversation_title",
+				"anonymize_transcripts",
+				"is_get_reply_enabled",
+				"is_verify_enabled",
+				"default_conversation_ask_for_participant_name",
+				"default_conversation_ask_for_participant_email",
 			],
 		},
 	});
@@ -84,185 +91,193 @@ export const ProjectHomeRoute = () => {
 	const base = `/w/${workspaceId}/projects/${projectId}`;
 
 	return (
-		<PageContainer>
-			<Stack gap="xl">
-				<Stack gap={4}>
-					{project?.name ? (
-						<Title order={2} fw={500} style={{ color: "#2d2d2c" }}>
-							{project.name}
-						</Title>
-					) : (
-						<Skeleton height={32} width={240} />
-					)}
-					<Text size="sm" c="dimmed" maw={560}>
-						<Trans>
-							Share the project, watch live activity, and jump into the main
-							tools from one place.
-						</Trans>
-					</Text>
-				</Stack>
+		<PageContainer width="xl">
+			<Grid gutter="xl">
+				<Grid.Col span={{ base: 12, md: 8 }}>
+					<Stack gap="xl">
+						<Stack gap={4}>
+							{project?.name ? (
+								<Title order={2} fw={500} style={{ color: "#2d2d2c" }}>
+									{project.name}
+								</Title>
+							) : (
+								<Skeleton height={32} width={240} />
+							)}
+							<Text size="sm" c="dimmed" maw={560}>
+								<Trans>
+									Share the project, watch live activity, and jump into the main
+									tools from one place.
+								</Trans>
+							</Text>
+						</Stack>
 
-				<ProjectQRCode project={projectQuery.data} />
+						<ProjectQRCode project={projectQuery.data} />
 
-				<Stack gap="sm">
-					<Text size="xs" c="dimmed" tt="uppercase">
-						<Trans>Jump to</Trans>
-					</Text>
-					<Group gap="sm" wrap="wrap">
-						<Button
-							leftSection={<ChatCircleDots size={16} />}
-							onClick={() => navigate(`${base}/chats/new`)}
-						>
-							<Trans>Start a chat</Trans>
-						</Button>
-						<Button
-							leftSection={<UploadSimple size={16} />}
-							variant="outline"
-							onClick={() => navigate(`${base}/upload`)}
-						>
-							<Trans>Upload</Trans>
-						</Button>
-						<Button
-							leftSection={<PaintBrush size={16} />}
-							variant="outline"
-							onClick={() => navigate(`${base}/portal-editor`)}
-						>
-							<Trans>Portal editor</Trans>
-						</Button>
-						<Button
-							leftSection={<FileText size={16} />}
-							variant="outline"
-							onClick={() => navigate(`${base}/report`)}
-						>
-							<Trans>Report</Trans>
-						</Button>
-					</Group>
-				</Stack>
+						<Stack gap="sm">
+							<Text size="xs" c="dimmed" tt="uppercase">
+								<Trans>Jump to</Trans>
+							</Text>
+							<Group gap="sm" wrap="wrap">
+								<Button
+									leftSection={<ChatCircleDotsIcon size={16} />}
+									onClick={() => navigate(`${base}/chats/new`)}
+								>
+									<Trans>Start a chat</Trans>
+								</Button>
+								<Button
+									leftSection={<UploadSimpleIcon size={16} />}
+									variant="outline"
+									onClick={() => navigate(`${base}/upload`)}
+								>
+									<Trans>Upload</Trans>
+								</Button>
+								<Button
+									leftSection={<PaintBrushIcon size={16} />}
+									variant="outline"
+									onClick={() => navigate(`${base}/portal-editor`)}
+								>
+									<Trans>Portal editor</Trans>
+								</Button>
+								<Button
+									leftSection={<FileTextIcon size={16} />}
+									variant="outline"
+									onClick={() => navigate(`${base}/report`)}
+								>
+									<Trans>Report</Trans>
+								</Button>
+							</Group>
+						</Stack>
 
-				<Stack gap="sm">
-					<Group justify="space-between" align="center">
-						<Text size="xs" c="dimmed" tt="uppercase">
-							<Trans>Latest conversations</Trans>
-						</Text>
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => navigate(`${base}/conversations`)}
-						>
-							<Trans>Open all</Trans>
-						</Button>
-					</Group>
-
-					{recentConversationsQuery.isLoading ? (
-						<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-							<Skeleton height={128} radius="sm" />
-							<Skeleton height={128} radius="sm" />
-						</SimpleGrid>
-					) : recentConversations.length > 0 ? (
-						<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-							{recentConversations.slice(0, 2).map((conversation) => {
-								const tags =
-									(conversation.tags as ConversationProjectTag[] | undefined) ??
-									[];
-								return (
-									<Card key={conversation.id} withBorder p="md" radius="sm">
-										<Stack gap="xs">
-											<Group
-												justify="space-between"
-												align="flex-start"
-												wrap="nowrap"
-											>
-												<Stack gap={2} style={{ minWidth: 0 }}>
-													<Text size="sm" fw={500} truncate>
-														{conversationTitle(conversation)}
-													</Text>
-													<Text size="xs" c="dimmed">
-														{conversation.created_at
-															? new Date(
-																	conversation.created_at,
-																).toLocaleDateString()
-															: ""}
-													</Text>
-												</Stack>
-												<Button
-													variant="light"
-													size="xs"
-													onClick={() =>
-														navigate(
-															`${base}/conversation/${conversation.id}`,
-														)
-													}
-												>
-													<Trans>Open</Trans>
-												</Button>
-											</Group>
-
-											<Text size="sm" c="dimmed" style={lineClampStyle}>
-												{conversation.summary?.trim() || (
-													<Trans>No summary yet</Trans>
-												)}
-											</Text>
-
-											{tags.length > 0 && (
-												<Group gap={6} wrap="wrap">
-													{tags.slice(0, 4).map((tag) => {
-														const label = tagText(tag);
-														if (!label) return null;
-														return (
-															<Badge
-																key={tag.id}
-																size="xs"
-																variant="light"
-																color="gray"
-																radius="sm"
-															>
-																{label}
-															</Badge>
-														);
-													})}
-												</Group>
-											)}
-										</Stack>
-									</Card>
-								);
-							})}
-						</SimpleGrid>
-					) : null}
-				</Stack>
-
-				{report && reportTitle && (
-					<Card withBorder p="md" radius="sm">
-						<Group justify="space-between" align="center">
-							<Stack gap={2}>
-								<Group gap="xs" align="center">
-									<ClockClockwise size={14} />
-									<Text size="sm" fw={500}>
-										<Trans>Latest report</Trans>
-									</Text>
-									<Badge size="xs" variant="light">
-										{report.status}
-									</Badge>
-								</Group>
-								<Text size="sm" fw={500}>
-									{reportTitle}
+						<Stack gap="sm">
+							<Group justify="space-between" align="center">
+								<Text size="xs" c="dimmed" tt="uppercase">
+									<Trans>Latest conversations</Trans>
 								</Text>
-								{report.date_created && (
-									<Text size="xs" c="dimmed">
-										{new Date(report.date_created).toLocaleString()}
-									</Text>
-								)}
-							</Stack>
-							<Button
-								variant="light"
-								size="xs"
-								onClick={() => navigate(`${base}/report`)}
-							>
-								<Trans>Open</Trans>
-							</Button>
-						</Group>
-					</Card>
-				)}
-			</Stack>
+								<Button
+									variant="subtle"
+									size="xs"
+									onClick={() => navigate(`${base}/conversations`)}
+								>
+									<Trans>Open all</Trans>
+								</Button>
+							</Group>
+
+							{recentConversationsQuery.isLoading ? (
+								<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+									<Skeleton height={128} radius="sm" />
+									<Skeleton height={128} radius="sm" />
+								</SimpleGrid>
+							) : recentConversations.length > 0 ? (
+								<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+									{recentConversations.slice(0, 2).map((conversation) => {
+										const tags =
+											(conversation.tags as
+												| ConversationProjectTag[]
+												| undefined) ?? [];
+										return (
+											<Card key={conversation.id} withBorder p="md" radius="sm">
+												<Stack gap="xs">
+													<Group
+														justify="space-between"
+														align="flex-start"
+														wrap="nowrap"
+													>
+														<Stack gap={2} style={{ minWidth: 0 }}>
+															<Text size="sm" fw={500} truncate>
+																{conversationTitle(conversation)}
+															</Text>
+															<Text size="xs" c="dimmed">
+																{conversation.created_at
+																	? new Date(
+																			conversation.created_at,
+																		).toLocaleDateString()
+																	: ""}
+															</Text>
+														</Stack>
+														<Button
+															variant="light"
+															size="xs"
+															onClick={() =>
+																navigate(
+																	`${base}/conversation/${conversation.id}`,
+																)
+															}
+														>
+															<Trans>Open</Trans>
+														</Button>
+													</Group>
+
+													<Text size="sm" c="dimmed" style={lineClampStyle}>
+														{conversation.summary?.trim() || (
+															<Trans>No summary yet</Trans>
+														)}
+													</Text>
+
+													{tags.length > 0 && (
+														<Group gap={6} wrap="wrap">
+															{tags.slice(0, 4).map((tag) => {
+																const label = tagText(tag);
+																if (!label) return null;
+																return (
+																	<Badge
+																		key={tag.id}
+																		size="xs"
+																		variant="light"
+																		color="gray"
+																		radius="sm"
+																	>
+																		{label}
+																	</Badge>
+																);
+															})}
+														</Group>
+													)}
+												</Stack>
+											</Card>
+										);
+									})}
+								</SimpleGrid>
+							) : null}
+						</Stack>
+
+						{report && reportTitle && (
+							<Card withBorder p="md" radius="sm">
+								<Group justify="space-between" align="center">
+									<Stack gap={2}>
+										<Group gap="xs" align="center">
+											<ClockClockwiseIcon size={14} />
+											<Text size="sm" fw={500}>
+												<Trans>Latest report</Trans>
+											</Text>
+											<Badge size="xs" variant="light">
+												{report.status}
+											</Badge>
+										</Group>
+										<Text size="sm" fw={500}>
+											{reportTitle}
+										</Text>
+										{report.date_created && (
+											<Text size="xs" c="dimmed">
+												{new Date(report.date_created).toLocaleString()}
+											</Text>
+										)}
+									</Stack>
+									<Button
+										variant="light"
+										size="xs"
+										onClick={() => navigate(`${base}/report`)}
+									>
+										<Trans>Open</Trans>
+									</Button>
+								</Group>
+							</Card>
+						)}
+					</Stack>
+				</Grid.Col>
+				<Grid.Col span={{ base: 12, md: 4 }} mt={{ base: 0, md: "md" }}>
+					<PortalSettingsOverview project={project} base={base} />
+				</Grid.Col>
+			</Grid>
 		</PageContainer>
 	);
 };
