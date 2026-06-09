@@ -659,13 +659,7 @@ export const OrganisationRoute = () => {
 							    dropped from the header summary (HCD audit). */}
 						</Stack>
 					</Group>
-					{/* Back link top-right per the canonical header pattern
-					    (design review 2026-04-23). No gear icon — organisation-name
-					    + logo editing live inline in the Overview tab. */}
-					<Button variant="subtle" size="xs" onClick={() => navigate("/o")}>
-						<Trans>Back to organisations</Trans>
-					</Button>
-				</Group>
+					</Group>
 
 				{/* Tabbed canvas per demo feedback. Overview holds organisation name
 				    + logo (no more hunting for /o/:id/settings). Usage pulls
@@ -1111,10 +1105,15 @@ function OrganisationOverviewPanel({
 	onOpenWorkspace: (workspaceId: string) => void;
 	onOpenProject: (workspaceId: string, projectId: string) => void;
 	onRequestWorkspace: () => void;
-}) {
-	const orgId = organisation.id;
+	}) {
+		const orgId = organisation.id;
+		const navigate = useI18nNavigate();
 
-	// The caller's own workspaces (direct memberships) + their pending
+		const handlePeopleClick = () => {
+			navigate(`/o/${orgId}/people`);
+		};
+
+		// The caller's own workspaces (direct memberships) + their pending
 	// new-workspace / upgrade requests. Same endpoint the home page used.
 	const { data: mine } = useQuery({
 		queryFn: fetchMyWorkspaces,
@@ -1190,39 +1189,61 @@ function OrganisationOverviewPanel({
 						{people.length}
 					</Text>
 				</Group>
-				{people.length === 0 ? (
-					<Text size="sm" c="dimmed">
-						<Trans>No one on this organisation yet.</Trans>
-					</Text>
-				) : (
-					<Tooltip.Group>
-						<Avatar.Group spacing="sm">
-							{visiblePeople.map((m) => (
-								<Tooltip
-									key={m.user_id}
-									label={`${m.display_name} · ${
-										m.is_external ? t`External` : displayRole(m.role)
-									}`}
-									withArrow
-								>
+					{people.length === 0 ? (
+						<Text size="sm" c="dimmed">
+							<Trans>No one on this organisation yet.</Trans>
+						</Text>
+					) : (
+						<Tooltip.Group>
+							<Avatar.Group spacing="sm">
+								{visiblePeople.map((m) => (
+									<Tooltip
+										key={m.user_id}
+										label={`${m.display_name} · ${
+											m.is_external ? t`External` : displayRole(m.role)
+										}`}
+										withArrow
+									>
+										<Avatar
+											size={36}
+											radius="xl"
+											src={avatarUrl(m.avatar)}
+											color="primary"
+											style={{ cursor: "pointer" }}
+											onClick={handlePeopleClick}
+										>
+											{memberInitials(m.display_name, m.email)}
+										</Avatar>
+									</Tooltip>
+								))}
+								{overflowPeople > 0 && (
 									<Avatar
 										size={36}
 										radius="xl"
-										src={avatarUrl(m.avatar)}
-										color="primary"
+										color="gray"
+										style={{ cursor: "pointer" }}
+										onClick={handlePeopleClick}
 									>
-										{memberInitials(m.display_name, m.email)}
+										+{overflowPeople}
 									</Avatar>
-								</Tooltip>
-							))}
-							{overflowPeople > 0 && (
-								<Avatar size={36} radius="xl" color="gray">
-									+{overflowPeople}
-								</Avatar>
-							)}
-						</Avatar.Group>
-					</Tooltip.Group>
-				)}
+								)}
+								{isManager && (
+									<Tooltip label={t`Manage members`} withArrow>
+										<Avatar
+											size={36}
+											radius="xl"
+											color="primary"
+											variant="light"
+											style={{ cursor: "pointer" }}
+											onClick={handlePeopleClick}
+										>
+											<IconPlus size={16} />
+										</Avatar>
+									</Tooltip>
+								)}
+							</Avatar.Group>
+						</Tooltip.Group>
+					)}
 			</Stack>
 
 			<Stack gap="sm">
@@ -1374,7 +1395,6 @@ function OrganisationWorkspaceCard({
 	onOpen: () => void;
 	onOpenProject: (projectId: string) => void;
 }) {
-	const [hovered, setHovered] = useState(false);
 	const capitalizedTier =
 		workspace.tier.charAt(0).toUpperCase() + workspace.tier.slice(1);
 	const audioHours = workspace.audio_hours;
@@ -1389,10 +1409,9 @@ function OrganisationWorkspaceCard({
 			withBorder
 			role="button"
 			tabIndex={0}
+			className="hover:!border-primary-400 transition-colors"
 			style={{
-				boxShadow: hovered ? "0 2px 12px rgba(0,0,0,0.08)" : undefined,
 				cursor: "pointer",
-				transition: "box-shadow 0.15s ease",
 			}}
 			onClick={onOpen}
 			onKeyDown={(e) => {
@@ -1401,10 +1420,6 @@ function OrganisationWorkspaceCard({
 					onOpen();
 				}
 			}}
-			onMouseEnter={() => setHovered(true)}
-			onMouseLeave={() => setHovered(false)}
-			onFocus={() => setHovered(true)}
-			onBlur={() => setHovered(false)}
 		>
 			<Stack gap={12}>
 				<Group gap="xs" wrap="nowrap" align="center">
