@@ -96,7 +96,7 @@ export const AppBreadcrumbs = () => {
 	const crumbs: Crumb[] = useMemo(() => {
 		// Always start with Home so the trail is anchored to a real
 		// clickable parent.
-		const out: Crumb[] = [{ href: "/", label: "Home" }];
+		const out: Crumb[] = [{ href: "/o", label: "Home" }];
 		// Emit the org crumb before the workspace one, so workspace/project
 		// trails read Home › Org › Workspace › Project.
 		const pushWorkspaceCrumbs = (ws: NonNullable<typeof workspace>) => {

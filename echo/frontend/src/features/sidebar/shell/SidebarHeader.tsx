@@ -8,7 +8,7 @@ export const SidebarHeader = () => {
 			style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
 		>
 			<I18nLink
-				to="/"
+				to="/o"
 				className="flex items-center gap-2 transition-opacity hover:opacity-80"
 				aria-label="dembrane home"
 			>

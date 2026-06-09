@@ -367,7 +367,11 @@ export const OrganisationRoute = () => {
 		queryKey: ["v2", "organisation", organisationId],
 		staleTime: 30_000,
 	});
-	const { data: membersData, error: membersError } = useQuery({
+	const {
+		data: membersData,
+		error: membersError,
+		isLoading: membersLoading,
+	} = useQuery({
 		enabled: Boolean(organisationId),
 		queryFn: () => fetchOrganisationMembers(organisationId as string),
 		queryKey: ["v2", "organisation", organisationId, "members"],
@@ -694,6 +698,7 @@ export const OrganisationRoute = () => {
 							<OrganisationOverviewPanel
 								organisation={organisation}
 								members={members}
+								membersLoading={membersLoading}
 								workspaces={workspaces}
 								isManager={isAdmin}
 								onOpenWorkspace={(id) => navigate(`/w/${id}/home`)}
@@ -1088,6 +1093,7 @@ interface WorkspaceCardModel {
 function OrganisationOverviewPanel({
 	organisation,
 	members,
+	membersLoading,
 	workspaces,
 	isManager,
 	onOpenWorkspace,
@@ -1096,6 +1102,7 @@ function OrganisationOverviewPanel({
 }: {
 	organisation: OrganisationDetail;
 	members: OrganisationMember[];
+	membersLoading: boolean;
 	// Org roster (manager view / People matrix). Only consulted here for
 	// per-workspace pinned projects + private flag — the cards themselves are
 	// driven by the caller's own membership list so we never show a workspace
@@ -1110,12 +1117,12 @@ function OrganisationOverviewPanel({
 		const navigate = useI18nNavigate();
 
 		const handlePeopleClick = () => {
-			navigate(`/o/${orgId}/people`);
+			navigate(`/o/${orgId}/settings/members`);
 		};
 
 		// The caller's own workspaces (direct memberships) + their pending
 	// new-workspace / upgrade requests. Same endpoint the home page used.
-	const { data: mine } = useQuery({
+	const { data: mine, isLoading: workspacesLoading } = useQuery({
 		queryFn: fetchMyWorkspaces,
 		queryKey: ["v2", "workspaces"],
 		staleTime: 30_000,
@@ -1185,11 +1192,15 @@ function OrganisationOverviewPanel({
 					<Title order={4} fw={500}>
 						<Trans>People</Trans>
 					</Title>
-					<Text size="sm" c="dimmed">
-						{people.length}
-					</Text>
+					{!membersLoading && (
+						<Text size="sm" c="dimmed">
+							{people.length}
+						</Text>
+					)}
 				</Group>
-					{people.length === 0 ? (
+					{membersLoading && people.length === 0 ? (
+						<Loader size="sm" color="gray" />
+					) : people.length === 0 ? (
 						<Text size="sm" c="dimmed">
 							<Trans>No one on this organisation yet.</Trans>
 						</Text>
@@ -1252,9 +1263,11 @@ function OrganisationOverviewPanel({
 						<Title order={4} fw={500}>
 							<Trans>Workspaces</Trans>
 						</Title>
-						<Text size="sm" c="dimmed">
-							{myCards.length}
-						</Text>
+						{!workspacesLoading && (
+							<Text size="sm" c="dimmed">
+								{myCards.length}
+							</Text>
+						)}
 					</Group>
 					{isManager && (
 						<Button
@@ -1267,7 +1280,9 @@ function OrganisationOverviewPanel({
 						</Button>
 					)}
 				</Group>
-				{myCards.length === 0 && pendingRequests.length === 0 ? (
+				{workspacesLoading && myCards.length === 0 && pendingRequests.length === 0 ? (
+					<Loader size="sm" color="gray" />
+				) : myCards.length === 0 && pendingRequests.length === 0 ? (
 					<Text size="sm" c="dimmed">
 						<Trans>
 							You haven't joined any workspace in this organisation yet.

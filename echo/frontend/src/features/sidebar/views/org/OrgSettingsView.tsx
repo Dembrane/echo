@@ -1,6 +1,7 @@
 import { Trans } from "@lingui/react/macro";
-import { ChartLine, CreditCard, Gear, Users } from "@phosphor-icons/react";
+import { ChartLineIcon, CreditCardIcon, GearIcon, UsersIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
+import { useV2Me } from "@/hooks/useV2Me";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
 
@@ -10,6 +11,12 @@ export const OrgSettingsView = () => {
 		organisationId?: string;
 	}>();
 	const orgId = routeOrgId ?? organisationId;
+	const { data: me } = useV2Me();
+	// Mirror OrganisationRoute's `canSeeFinancials`; others get bounced off
+	// Usage/Billing to the Members panel, so don't offer those items.
+	const role = me?.orgs.find((o) => o.id === orgId)?.role;
+	const canSeeFinancials =
+		role === "owner" || role === "admin" || role === "billing";
 	if (!orgId) return null;
 
 	return (
@@ -18,23 +25,27 @@ export const OrgSettingsView = () => {
 			<NavItem
 				to={`/o/${orgId}/settings/general`}
 				label={<Trans>General</Trans>}
-				icon={Gear}
+				icon={GearIcon}
 			/>
-			<NavItem
-				to={`/o/${orgId}/settings/usage`}
-				label={<Trans>Usage and tier</Trans>}
-				icon={ChartLine}
-			/>
+			{canSeeFinancials && (
+				<NavItem
+					to={`/o/${orgId}/settings/usage`}
+					label={<Trans>Usage and tier</Trans>}
+					icon={ChartLineIcon}
+				/>
+			)}
 			<NavItem
 				to={`/o/${orgId}/settings/members`}
 				label={<Trans>Members</Trans>}
-				icon={Users}
+				icon={UsersIcon}
 			/>
-			<NavItem
-				to={`/o/${orgId}/settings/billing`}
-				label={<Trans>Billing</Trans>}
-				icon={CreditCard}
-			/>
+			{canSeeFinancials && (
+				<NavItem
+					to={`/o/${orgId}/settings/billing`}
+					label={<Trans>Billing</Trans>}
+					icon={CreditCardIcon}
+				/>
+			)}
 		</nav>
 	);
 };
