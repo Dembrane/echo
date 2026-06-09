@@ -5,7 +5,7 @@ from fastapi import Query, APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
 from dembrane.app_user import resolve_app_user
-from dembrane.directus import directus
+from dembrane.directus import DirectusBadRequest, directus
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
@@ -271,6 +271,9 @@ async def update_prompt_template(
     """
     try:
         existing = directus.get_item("prompt_template", template_id)
+    except DirectusBadRequest:
+        # Missing/forbidden single item -> Directus 403; treat as 404.
+        existing = None
     except Exception:
         logger.exception("Failed to fetch template for update")
         raise HTTPException(status_code=500, detail="Failed to update template") from None
@@ -315,6 +318,9 @@ async def delete_prompt_template(
     """Delete a template. Same role rules as update."""
     try:
         existing = directus.get_item("prompt_template", template_id)
+    except DirectusBadRequest:
+        # Missing/forbidden single item -> Directus 403; treat as 404.
+        existing = None
     except Exception:
         logger.exception("Failed to fetch template for delete")
         raise HTTPException(status_code=500, detail="Failed to delete template") from None
