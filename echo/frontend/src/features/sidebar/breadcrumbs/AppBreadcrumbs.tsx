@@ -1,4 +1,4 @@
-import { CaretRight } from "@phosphor-icons/react";
+import { CaretRightIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -11,6 +11,17 @@ interface Crumb {
 	label: string;
 	href?: string;
 }
+
+const MAX_CRUMB_LABEL_LENGTH = 30;
+
+const truncateMiddle = (text: string, maxLength = MAX_CRUMB_LABEL_LENGTH) => {
+	if (text.length <= maxLength) return text;
+	const ellipsis = "...";
+	const visible = maxLength - ellipsis.length;
+	const head = Math.ceil(visible / 2);
+	const tail = Math.floor(visible / 2);
+	return `${text.slice(0, head)}${ellipsis}${text.slice(text.length - tail)}`;
+};
 
 const ADMIN_TAB_LABELS: Record<string, string> = {
 	partners: "Partners",
@@ -244,16 +255,18 @@ export const AppBreadcrumbs = () => {
 		>
 			{crumbs.map((c, i) => {
 				const isLast = i === crumbs.length - 1;
+				const displayLabel = truncateMiddle(c.label);
 				return (
 					<span key={`${c.label}-${i}`} className="flex items-center gap-1">
-						{i > 0 && <CaretRight size={10} opacity={0.5} />}
+						{i > 0 && <CaretRightIcon size={10} opacity={0.5} />}
 						{c.href && !isLast ? (
 							<I18nLink
 								to={c.href}
 								className="truncate hover:underline"
 								style={{ color: "rgba(45, 45, 44, 0.75)" }}
+								title={c.label}
 							>
-								{c.label}
+								{displayLabel}
 							</I18nLink>
 						) : (
 							<span
@@ -261,8 +274,9 @@ export const AppBreadcrumbs = () => {
 								style={{
 									color: isLast ? "#2d2d2c" : "rgba(45, 45, 44, 0.55)",
 								}}
+								title={c.label}
 							>
-								{c.label}
+								{displayLabel}
 							</span>
 						)}
 					</span>
