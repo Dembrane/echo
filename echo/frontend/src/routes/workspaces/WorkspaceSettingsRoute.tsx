@@ -1431,7 +1431,7 @@ function PrivacyAndDefaultsSection({
 				<Stack gap={16}>
 					<TextInput
 						label={t`Name`}
-						description={t`Workspace name. Autosaves on blur.`}
+						description={t`Workspace name. Saves automatically.`}
 						placeholder={t`e.g. Client Alpha`}
 						value={name}
 						onChange={(e) => setName(e.currentTarget.value)}
