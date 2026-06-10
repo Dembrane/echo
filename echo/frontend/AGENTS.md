@@ -93,5 +93,5 @@ Chat mode accents are theme-independent (consistent identification across themes
 
 ## Local dev gotchas
 
-- Directus clients need `DIRECTUS_PUBLIC_URL` and `DIRECTUS_CONTENT_PUBLIC_URL` in `.env`
-- `pnpm dev` sets `VITE_DISABLE_SENTRY` and `VITE_PARTICIPANT_BASE_URL`; the participant subtree has its own dev server via `pnpm participant:dev`
+- No `.env` is needed. Base URLs, feature flags, and PostHog resolve in code per environment (`src/config.ts`, `byEnv()` keyed on hostname); `VITE_*` vars are escape-hatch overrides only
+- The participant subtree has its own dev server via `pnpm participant:dev` (port 5174); deployed portals are detected by their `portal.*` hostname

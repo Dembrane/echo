@@ -4,64 +4,24 @@ import { App } from "./App";
 import "./index.css";
 
 import { PostHogProvider } from "@posthog/react";
-import * as Sentry from "@sentry/react";
 import posthog from "posthog-js";
-import {
-	BUILD_VERSION,
-	DISABLE_SENTRY,
-	USE_PARTICIPANT_ROUTER,
-} from "./config";
+import { POSTHOG_CAPTURE, POSTHOG_HOST, POSTHOG_TOKEN } from "./config";
 
-posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN, {
-	api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+posthog.init(POSTHOG_TOKEN, {
+	api_host: POSTHOG_HOST,
+	// Error tracking: autocapture unhandled errors and promise rejections.
+	// React render errors are reported separately via ErrorBoundary.
+	capture_exceptions: {
+		capture_console_errors: false,
+		capture_unhandled_errors: true,
+		capture_unhandled_rejections: true,
+	},
 	defaults: "2026-01-30",
+	loaded: (ph) => {
+		// testing + local never send analytics (see POSTHOG_CAPTURE in config.ts)
+		if (!POSTHOG_CAPTURE) ph.opt_out_capturing();
+	},
 });
-
-const sentryCommonOpts: Partial<Sentry.BrowserOptions> = {
-	integrations: [
-		Sentry.browserTracingIntegration(),
-		Sentry.replayIntegration(),
-		Sentry.feedbackIntegration({
-			autoInject: false,
-			colorScheme: "light",
-			enableScreenshot: true,
-			formTitle: "Report an issue",
-			isEmailRequired: true,
-			isNameRequired: false,
-			showBranding: false,
-			showEmail: true,
-			showName: false,
-			submitButtonLabel: "Submit",
-			triggerAriaLabel: "Report an issue",
-			triggerLabel: "Report an issue",
-		}),
-	],
-	release: BUILD_VERSION,
-	replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
-	// Session Replay
-	replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
-	// Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
-	tracePropagationTargets: [
-		"localhost",
-		/^https:\/\/(dashboard|portal|api|directus)(\.test)?\.dembrane\.com/,
-	],
-	// Performance Monitoring
-	tracesSampleRate: 0.5, //  Capture 50% of the transactions
-};
-
-if (!DISABLE_SENTRY) {
-	if (USE_PARTICIPANT_ROUTER) {
-		Sentry.init({
-			dsn: "https://27d974229a95ca3dcd9894f4073af1f1@o4507107162652672.ingest.de.sentry.io/4507107346743376",
-			...sentryCommonOpts,
-		});
-	} else {
-		Sentry.init({
-			dsn: "https://9194c7aa6556bcb82f8cb2aa417969cf@o4507107162652672.ingest.de.sentry.io/4507107165077584",
-			...sentryCommonOpts,
-		});
-	}
-}
 
 const root = document.getElementById("root");
 

@@ -11,7 +11,6 @@ import {
 	Text,
 } from "@mantine/core";
 import { useDisclosure, useLocalStorage, useWindowEvent } from "@mantine/hooks";
-import * as Sentry from "@sentry/react";
 import {
 	IconAlertTriangle,
 	IconCheck,
@@ -22,6 +21,7 @@ import {
 } from "@tabler/icons-react";
 import clsx from "clsx";
 import Cookies from "js-cookie";
+import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
 
@@ -326,33 +326,27 @@ export const ParticipantConversationAudio = () => {
 		}
 	}, [isRecording, stoppedRecordingTime]);
 
-	// Report interruption to Sentry and Plausible
+	// Report interruption to PostHog and Plausible
 	const reportInterruption = () => {
 		if (!audioRecorder.hadInterruption) return;
 
 		const chunkHistory = audioRecorder.getChunkHistory();
 
-		// Send to Sentry
-		Sentry.captureMessage(
-			"Recording interrupted by consecutive suspicious chunks",
+		// Send to PostHog error tracking
+		posthog.captureException(
+			new Error("Recording interrupted by consecutive suspicious chunks"),
 			{
-				extra: {
-					chunkSizes: chunkHistory.map((c) => c.size),
-					conversationId,
-					deviceInfo: navigator.userAgent,
-					projectId,
-					recordingDurationSeconds: interruptionRecordingTimeRef.current,
-					suspiciousChunkIndices: chunkHistory
-						.map((c, i) => (c.size < 1024 ? i : -1))
-						.filter((i) => i >= 0),
-					timestamp: new Date().toISOString(),
-					totalChunks: chunkHistory.length,
-				},
-				level: "warning",
-				tags: {
-					issue_type: "audio_interruption",
-					platform: "participant_portal",
-				},
+				chunkSizes: chunkHistory.map((c) => c.size),
+				conversationId,
+				deviceInfo: navigator.userAgent,
+				issue_type: "audio_interruption",
+				platform: "participant_portal",
+				projectId,
+				recordingDurationSeconds: interruptionRecordingTimeRef.current,
+				suspiciousChunkIndices: chunkHistory
+					.map((c, i) => (c.size < 1024 ? i : -1))
+					.filter((i) => i >= 0),
+				totalChunks: chunkHistory.length,
 			},
 		);
 
