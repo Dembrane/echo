@@ -93,5 +93,5 @@ Chat mode accents are theme-independent (consistent identification across themes
 
 ## Local dev gotchas
 
-- No `.env` is needed. Base URLs, feature flags, and PostHog resolve in code per environment (`src/config.ts`, `byEnv()` keyed on hostname); `VITE_*` vars are escape-hatch overrides only
-- The participant subtree has its own dev server via `pnpm participant:dev` (port 5174); deployed portals are detected by their `portal.*` hostname
+- No env vars, locally or on Vercel. Base URLs, feature flags, PostHog, and router selection all resolve in code per environment (`src/config.ts`, `byEnv()` keyed on hostname). Only `VITE_DEBUG_MODE` and the `VITE_ENABLE_AGENTATION=0` build escape hatch remain
+- The participant subtree has its own dev server via `pnpm participant:dev`; the participant router activates on `portal.*` hostnames or local port 5174

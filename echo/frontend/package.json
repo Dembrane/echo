@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "participant:dev": "VITE_USE_PARTICIPANT_ROUTER=1 vite --port 5174 --host 0.0.0.0",
+    "participant:dev": "vite --port 5174 --host 0.0.0.0",
     "messages:extract": "lingui extract",
     "messages:compile": "lingui compile --typescript",
     "build": "tsc && vite build",

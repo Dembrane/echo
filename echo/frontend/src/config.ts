@@ -62,43 +62,39 @@ const dembraneHost = (subdomain: string): string =>
 // ---------------------------------------------------------------------------
 // Routers and base URLs
 //
-// All resolved in code; the VITE_* overrides are escape hatches only and no
-// deployment needs to set them.
+// All resolved in code; no deployment sets env vars for these.
 // ---------------------------------------------------------------------------
 
 // The portal (participant) and dashboard (admin) apps share this codebase.
-// Deployed portals are portal.* hosts; local participant dev sets the env var
-// via the `participant:dev` script.
-export const USE_PARTICIPANT_ROUTER =
-	import.meta.env.VITE_USE_PARTICIPANT_ROUTER === "1" ||
-	Boolean(globalThis.window?.location.hostname.startsWith("portal."));
+// Deployed portals are portal.* hosts; locally the participant dev server is
+// the one on port 5174 (`pnpm participant:dev`).
+export const USE_PARTICIPANT_ROUTER = Boolean(
+	globalThis.window?.location.hostname.startsWith("portal.") ||
+		globalThis.window?.location.port === "5174",
+);
 
-export const ADMIN_BASE_URL =
-	import.meta.env.VITE_ADMIN_BASE_URL ??
-	byEnv({ local: "http://localhost:5173" }, dembraneHost("dashboard"));
+export const ADMIN_BASE_URL = byEnv(
+	{ local: "http://localhost:5173" },
+	dembraneHost("dashboard"),
+);
 
-export const PARTICIPANT_BASE_URL =
-	import.meta.env.VITE_PARTICIPANT_BASE_URL ??
-	byEnv({ local: "http://localhost:5174" }, dembraneHost("portal"));
+export const PARTICIPANT_BASE_URL = byEnv(
+	{ local: "http://localhost:5174" },
+	dembraneHost("portal"),
+);
 
 // FastAPI mounts its routes under /api; locally the Vite proxy forwards
 // same-origin /api to localhost:8000.
-export const API_BASE_URL =
-	import.meta.env.VITE_API_BASE_URL ??
-	byEnv({ local: "/api" }, `${dembraneHost("api")}/api`);
+export const API_BASE_URL = byEnv(
+	{ local: "/api" },
+	`${dembraneHost("api")}/api`,
+);
 
-// Resolve Directus base URL: the override supports absolute URLs or relative
-// paths like "/directus" (resolved to current origin for the Vite proxy).
-export const DIRECTUS_PUBLIC_URL = (() => {
-	const env = import.meta.env.VITE_DIRECTUS_PUBLIC_URL;
-	if (env?.startsWith("http")) return env;
-	if (env?.startsWith("/")) return `${window.location.origin}${env}`;
-	return byEnv(
-		// Local dev goes through the Vite proxy so cookies stay same-origin.
-		{ local: `${window.location.origin}/directus` },
-		dembraneHost("directus"),
-	);
-})();
+export const DIRECTUS_PUBLIC_URL = byEnv(
+	// Local dev goes through the Vite proxy so cookies stay same-origin.
+	{ local: `${globalThis.window?.location.origin ?? ""}/directus` },
+	dembraneHost("directus"),
+);
 
 // ---------------------------------------------------------------------------
 // PostHog (analytics)
@@ -131,11 +127,11 @@ export const SUPPORTED_LANGUAGES = [
 export const PRIVACY_POLICY_URL =
 	"https://dembrane.notion.site/Privacy-statements-all-languages-fa97a183f9d841f7a1089079e77ffb52" as const;
 
-export const PLAUSIBLE_API_HOST =
-	import.meta.env.VITE_PLAUSIBLE_API_HOST ?? "https://plausible.io";
+// Plausible Cloud is EU by default (EU-owned, hosted in Germany); there is no
+// separate eu.* endpoint like PostHog has.
+export const PLAUSIBLE_API_HOST = "https://plausible.io";
 
 export const COMMUNITY_SLACK_URL =
-	import.meta.env.VITE_COMMUNITY_SLACK_URL ??
 	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
 
 export const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "1";
