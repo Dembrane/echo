@@ -74,30 +74,32 @@ def patch_pending(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_seat_state_counts_members_and_externals_unified(patch_members):
+async def test_seat_state_counts_direct_members_and_externals_unified(patch_members):
+    """Direct members + externals share one seat pool. A derived org admin is
+    present for access but does not add to the count."""
     patch_members(
         [
             _direct_member("u-owner", role="owner"),
-            _derived_admin("u-org-admin"),
+            _derived_admin("u-org-admin"),  # oversight only, no seat
             _direct_external("u-ext"),
         ]
     )
     seats_used, member_count, external_count = await seat_capacity.compute_effective_seat_state(
         "w-1"
     )
-    assert member_count == 2  # owner (direct) + org-admin (derived)
+    assert member_count == 1  # only the direct owner
     assert external_count == 1
-    assert seats_used == 3  # unified: members + externals
+    assert seats_used == 2  # unified: direct members + externals
 
 
 @pytest.mark.asyncio
 async def test_seat_state_dedups_by_user(patch_members):
-    """A user with both a direct row and a derived path counts once."""
+    """A user with a direct row counts once even if also present as derived."""
     patch_members(
         [
             _direct_member("u-1", role="owner"),
-            _derived_admin("u-2"),
-            _derived_admin("u-2"),
+            _direct_member("u-2", role="member"),
+            _derived_admin("u-2"),  # same user, derived — already direct, no double count
         ]
     )
     seats_used, member_count, external_count = await seat_capacity.compute_effective_seat_state(
@@ -124,6 +126,40 @@ async def test_seat_state_externals_count_toward_seats_used(patch_members):
     assert member_count == 1
     assert external_count == 2
     assert seats_used == 3
+
+
+@pytest.mark.asyncio
+async def test_derived_org_admins_do_not_consume_seats(patch_members):
+    """Org-only admins/owners derive workspace access for oversight but must
+    NOT consume a seat — a seat is taken only when someone joins a workspace
+    directly. Reproduces the 'free tier shows 2/1' bug: the org owner is a
+    direct member and an org-only admin is derived; seats must stay at 1.
+    """
+    patch_members(
+        [
+            _direct_member("u-owner", role="owner"),
+            _derived_admin("u-org-only-admin"),
+        ]
+    )
+    seats_used, member_count, external_count = await seat_capacity.compute_effective_seat_state(
+        "w-1"
+    )
+    assert member_count == 1  # only the direct owner occupies a seat
+    assert external_count == 0
+    assert seats_used == 1  # derived org admin does NOT count
+
+
+@pytest.mark.asyncio
+async def test_derived_only_workspace_has_zero_seats(patch_members):
+    """A workspace whose only effective members are derived org admins/owners
+    (no direct rows) consumes zero seats."""
+    patch_members([_derived_admin("u-a"), _derived_admin("u-b")])
+    seats_used, member_count, external_count = await seat_capacity.compute_effective_seat_state(
+        "w-1"
+    )
+    assert member_count == 0
+    assert external_count == 0
+    assert seats_used == 0
 
 
 # ── assert_can_add_seat (unified gate) ──────────────────────────────────
@@ -219,12 +255,12 @@ async def test_unknown_tier_unlimited(patch_members):
 
 
 @pytest.mark.asyncio
-async def test_derived_admins_count_toward_cap(patch_members):
-    """Org admins (derived) count toward pilot's seat cap."""
+async def test_derived_admins_do_not_count_toward_cap(patch_members):
+    """Org admins with only derived (oversight) access do NOT consume seats,
+    so they never push a workspace to its cap. A pilot workspace whose only
+    effective members are two derived org admins is 0/2 — an invite passes."""
     patch_members([_derived_admin("u-org-admin-1"), _derived_admin("u-org-admin-2")])
-    with pytest.raises(HTTPException) as exc:
-        await seat_capacity.assert_can_add_seat(_ws("pilot"))
-    assert exc.value.status_code == 402
+    await seat_capacity.assert_can_add_seat(_ws("pilot"))  # no raise
 
 
 @pytest.mark.asyncio

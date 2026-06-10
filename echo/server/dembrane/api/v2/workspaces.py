@@ -12,7 +12,6 @@ from dembrane.utils import generate_uuid
 from dembrane.app_user import resolve_app_user, get_app_user_or_raise
 from dembrane.policies import TIER_ORDER
 from dembrane.settings import get_settings
-from dembrane.inheritance import get_effective_members
 from dembrane.seat_capacity import tier_hard_blocks_seats
 from dembrane.api.v2.schemas import (
     MemberPreview,
@@ -1239,24 +1238,12 @@ async def get_workspace_usage(
 
     audio_hours = round(total_seconds / 3600, 2)
 
-    # Seat breakdown. Reuses inheritance.get_effective_members so the
-    # count includes derived org admins/owners — they consume a seat just
-    # like direct members. get_effective_members dedups by user_id with
-    # direct-wins-over-derived precedence, so we just bucket on role here.
-    # member + external counts always sum to the unified seat_count
-    # surfaced on the API (the bar numerator).
-    effective_members = await get_effective_members(ctx.workspace_id)
+    # Seat breakdown via the shared counter so this matches /v2/orgs/:id/usage.
+    from dembrane.seat_capacity import compute_effective_seat_state
 
-    member_count = 0
-    external_count = 0
-    member_roles = {"owner", "admin", "member", "billing"}
-    for m in effective_members:
-        role = m.get("role")
-        if role == "external":
-            external_count += 1
-        elif role in member_roles:
-            member_count += 1
-    seat_count = member_count + external_count
+    seat_count, member_count, external_count = await compute_effective_seat_state(
+        ctx.workspace_id
+    )
 
     # Tier capacity lookup. Legacy rows with NULL tier fall through to the
     # unknown-tier path below (unlimited / no block) rather than silently
