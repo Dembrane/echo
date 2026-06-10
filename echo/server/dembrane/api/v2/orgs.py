@@ -1104,7 +1104,10 @@ async def invite_to_organisation(
                     email_sent=email_queued,
                 )
 
-            await async_directus.create_item(
+            from dembrane.api.v2._invite_helpers import create_membership_row
+
+            await create_membership_row(
+                async_directus,
                 "org_membership",
                 {
                     "id": generate_uuid(),

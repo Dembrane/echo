@@ -416,6 +416,8 @@ export const OrganisationRoute = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
 			});
+			// Org admins derive workspace seats; role changes shift effective seat counts.
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 			toast.success(t`Role changed`);
 		},
 	});
@@ -468,6 +470,12 @@ export const OrganisationRoute = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
 			});
+			// Removal cascades direct memberships across all org workspaces.
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "organisation", organisationId, "workspaces"],
+			});
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 			toast.success(t`Removed from organisation`);
 		},
 	});
@@ -513,6 +521,9 @@ export const OrganisationRoute = () => {
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "workspace-settings", variables.workspaceId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "workspace-usage", variables.workspaceId],
 			});
 			toast.success(t`Added to workspace`);
 		},

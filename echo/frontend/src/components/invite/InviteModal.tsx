@@ -340,6 +340,8 @@ export function InviteModal({
 			});
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			// Pending invites count toward the seat cap; refresh seat gating.
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 
 			// already_member / already_invited are idempotent outcomes, not failures.
 			const sentCount = rows.filter((r) => r.state === "sent").length;

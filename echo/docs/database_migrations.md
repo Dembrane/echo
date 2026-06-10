@@ -20,3 +20,18 @@ These are handled through the [directus-sync](https://github.com/tractr/directus
 ```bash
 CREATE extension vector;
 ```
+
+4. Membership unique indexes (one active membership per user per org/workspace;
+   the invite race fix in `dembrane/api/v2/_invite_helpers.py` relies on these.
+   Deploy the API change first, then run):
+
+```bash
+CREATE UNIQUE INDEX IF NOT EXISTS org_membership_active_org_user_uniq
+    ON org_membership (org_id, user_id) WHERE deleted_at IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS workspace_membership_active_ws_user_uniq
+    ON workspace_membership (workspace_id, user_id) WHERE deleted_at IS NULL;
+```
+
+If creation fails with a duplicate-key error, duplicate active rows exist;
+dedupe them first (keep one row per pair, soft-delete the rest), then re-run.
