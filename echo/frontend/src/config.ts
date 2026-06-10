@@ -127,10 +127,6 @@ export const SUPPORTED_LANGUAGES = [
 export const PRIVACY_POLICY_URL =
 	"https://dembrane.notion.site/Privacy-statements-all-languages-fa97a183f9d841f7a1089079e77ffb52" as const;
 
-// Plausible Cloud is EU by default (EU-owned, hosted in Germany); there is no
-// separate eu.* endpoint like PostHog has.
-export const PLAUSIBLE_API_HOST = "https://plausible.io";
-
 export const COMMUNITY_SLACK_URL =
 	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
 

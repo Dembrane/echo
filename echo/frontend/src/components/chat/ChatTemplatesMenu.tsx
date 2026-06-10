@@ -12,14 +12,17 @@ import {
 	Quotes,
 	Sparkle,
 } from "@phosphor-icons/react";
+import posthog from "posthog-js";
 import { useEffect, useMemo } from "react";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import type { ChatMode } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { MODE_COLORS } from "./ChatModeSelector";
 import { TemplatesModal } from "./TemplatesModal";
-import { type QuickAccessItem, decodeTemplateKey, encodeTemplateKey } from "./templateKey";
+import {
+	decodeTemplateKey,
+	encodeTemplateKey,
+	type QuickAccessItem,
+} from "./templateKey";
 import {
 	agenticQuickAccessTemplates,
 	quickAccessTemplates,
@@ -228,11 +231,7 @@ export const ChatTemplatesMenu = ({
 		isDynamic = false,
 	) => {
 		if (isDynamic) {
-			try {
-				analytics.trackEvent(events.DYNAMIC_TEMPLATE_USED);
-			} catch (error) {
-				console.warn("Analytics tracking failed:", error);
-			}
+			posthog.capture("chat_template_used", { template_key: template.key });
 		}
 		onTemplateSelect(template);
 	};
@@ -267,10 +266,12 @@ export const ChatTemplatesMenu = ({
 	const slotsForPinned = MAX_PILLS - visibleSuggestions.length;
 	const pinnedCount = resolvedQuickAccessTemplates.length;
 	// If all pinned fit, show them all. Otherwise reserve 1 slot for "+N more".
-	const pinnedSlots = pinnedCount <= slotsForPinned
-		? pinnedCount
-		: slotsForPinned - 1;
-	const visiblePinned = resolvedQuickAccessTemplates.slice(0, Math.max(0, pinnedSlots));
+	const pinnedSlots =
+		pinnedCount <= slotsForPinned ? pinnedCount : slotsForPinned - 1;
+	const visiblePinned = resolvedQuickAccessTemplates.slice(
+		0,
+		Math.max(0, pinnedSlots),
+	);
 	const pinnedOverflow = pinnedCount - visiblePinned.length;
 
 	return (
@@ -339,7 +340,10 @@ export const ChatTemplatesMenu = ({
 									typeof selectedModalTemplate.id === "string" &&
 									selectedModalTemplate.id.length > 10
 										? encodeTemplateKey("user", selectedModalTemplate.id)
-										: encodeTemplateKey("dembrane", selectedModalTemplate.title),
+										: encodeTemplateKey(
+												"dembrane",
+												selectedModalTemplate.title,
+											),
 							})
 						}
 						testIdSuffix={`modal-${selectedModalTemplate.title.toLowerCase().replace(/\s+/g, "-")}`}

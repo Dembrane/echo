@@ -48,16 +48,15 @@ Rules:
 
 ## Analytics (PostHog)
 
+PostHog is the only analytics tool (Plausible was migrated and removed). Pageviews, including SPA history changes, come from the `defaults` option in `posthog.init`; never add a pageview tracker.
+
 - `posthog-js` + `@posthog/react` are initialized in `src/main.tsx`; the app is wrapped in `PostHogProvider`
 - Call `posthog.identify(email)` on login and registration, `posthog.reset()` on logout. Never identify by Directus user id
-- Event naming: `snake_case` past-tense verb (`user_logged_in`, `project_created`, `chat_message_sent`)
-- Current tracked events (grep for `posthog.capture(` to verify the live set):
-  - `user_logged_in`, `user_login_failed`, `user_registered`, `user_logged_out`
-  - `project_created`
-  - `chat_mode_selected`, `chat_message_sent`
-  - `report_generated`
-  - `conversation_upload_started`
-- Dashboard + insights live in the PostHog EU project (id 160282). Don't add new dashboards from code; wire the event and let analytics own the visualization
+- Event naming: `snake_case` past-tense verb (`user_logged_in`, `project_created`, `chat_message_sent`). Prefer one event with a property over near-duplicate events (`contact_sales_clicked` with `source`, not two events)
+- Funnel pairs are intentional; keep both ends when touching a flow: `workspace_request_started` -> `workspace_request_submitted`, `$pageview` -> `registration_details_completed` -> `user_registered`, `select_all_clicked` -> `select_all_confirmed` -> `select_all_completed`/`select_all_failed`
+- Grep for `posthog.capture(` to see the live event set; auth, project, chat, report, conversation, and workspace-request flows are covered
+- Dashboard + insights live in the PostHog EU projects (production id 160282, echo-next id 197841). Don't add new dashboards from code; wire the event and let analytics own the visualization
+- One-off error reports use `posthog.captureException`, not a capture event (see `ErrorBoundary`, participant audio interruption)
 
 ## Modal conventions
 

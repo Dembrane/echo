@@ -15,10 +15,9 @@ import {
 	IconQuote,
 	IconSparkles,
 } from "@tabler/icons-react";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { ENABLE_AGENTIC_CHAT } from "@/config";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import type { ChatMode } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { useInitializeChatModeMutation } from "./hooks";
@@ -217,14 +216,13 @@ export const ChatModeSelector = ({
 	const handleSelectMode = async (mode: ChatMode) => {
 		setSelectedMode(mode);
 
-		// Track overview mode selection
-		if (mode === "overview") {
-			try {
-				analytics.trackEvent(events.OVERVIEW_MODE_CHAT_CLICK);
-			} catch (error) {
-				console.warn("Analytics tracking failed:", error);
-			}
-		}
+		// Single capture point for every entry (new chat + existing chat).
+		posthog.capture("chat_mode_selected", {
+			chat_id: chatId,
+			is_new_chat: isNewChat,
+			mode,
+			project_id: projectId,
+		});
 
 		if (isNewChat) {
 			// For new chat, just call the callback - parent will create the chat
@@ -247,10 +245,7 @@ export const ChatModeSelector = ({
 	const isLoading = initializeModeMutation.isPending || isCreating;
 
 	return (
-		<Box
-			className="mx-auto w-full py-8"
-			{...testId("chat-mode-selector")}
-		>
+		<Box className="mx-auto w-full py-8" {...testId("chat-mode-selector")}>
 			<Stack gap="xl">
 				{/* Header */}
 				<Stack gap={6}>

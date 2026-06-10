@@ -63,6 +63,11 @@ export const RegisterRoute = () => {
 			setError(t`Enter a valid email address`);
 			return;
 		}
+		// Funnel step: $pageview (/register) -> registration_details_completed
+		// -> user_registered. Time between steps shows where people stall.
+		posthog?.capture("registration_details_completed", {
+			from_invite: lockedEmail,
+		});
 		setStep(1);
 	};
 

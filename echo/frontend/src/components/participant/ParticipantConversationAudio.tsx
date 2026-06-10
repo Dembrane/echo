@@ -29,8 +29,6 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { finishConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { I18nLink } from "../common/i18nLink";
@@ -326,7 +324,7 @@ export const ParticipantConversationAudio = () => {
 		}
 	}, [isRecording, stoppedRecordingTime]);
 
-	// Report interruption to PostHog and Plausible
+	// Report interruption to PostHog error tracking
 	const reportInterruption = () => {
 		if (!audioRecorder.hadInterruption) return;
 
@@ -349,13 +347,6 @@ export const ParticipantConversationAudio = () => {
 				totalChunks: chunkHistory.length,
 			},
 		);
-
-		// Send to Plausible
-		try {
-			analytics.trackEvent(events.AUDIO_CHUNK_INTERRUPTION_ERROR);
-		} catch (error) {
-			console.warn("Analytics tracking failed:", error);
-		}
 	};
 
 	// Handler for reconnect button - waits for uploads, reports error, then reloads

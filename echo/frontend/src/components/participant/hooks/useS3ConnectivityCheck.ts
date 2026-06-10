@@ -1,7 +1,6 @@
+import posthog from "posthog-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useSessionStorageState from "use-session-storage-state";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { checkS3Connectivity } from "@/lib/api";
 
 type S3Status = "pending" | "checking" | "passed" | "failed";
@@ -27,11 +26,7 @@ export const useS3ConnectivityCheck = (
 		if (reachable) {
 			setS3CheckPassed(true);
 		} else {
-			try {
-				analytics.trackEvent(events.S3_CONNECTIVITY_CHECK_FAILED);
-			} catch (_error) {
-				console.warn("Analytics tracking failed:", _error);
-			}
+			posthog.capture("s3_connectivity_check_failed");
 		}
 		setS3Status(reachable ? "passed" : "failed");
 	}, [conversationId, setS3CheckPassed]);
@@ -49,11 +44,7 @@ export const useS3ConnectivityCheck = (
 	}, [conversationId, opts.queriesLoading, s3CheckPassed, runCheck]);
 
 	const retry = () => {
-		try {
-			analytics.trackEvent(events.S3_CONNECTIVITY_RECONNECT_ATTEMPT);
-		} catch (_error) {
-			console.warn("Analytics tracking failed:", _error);
-		}
+		posthog.capture("s3_reconnect_attempted");
 		runCheck();
 	};
 

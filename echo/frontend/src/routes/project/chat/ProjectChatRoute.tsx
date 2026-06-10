@@ -316,7 +316,6 @@ export const ProjectChatRoute = () => {
 	useDocumentTitle(t`Chat | dembrane`);
 
 	const { chatId, projectId, workspaceId: routeWorkspaceId } = useParams();
-	const posthog = usePostHog();
 	const queryClient = useQueryClient();
 	const chatQuery = useProjectChat(chatId ?? "");
 	const chatContextQuery = useProjectChatContext(chatId ?? "");
@@ -581,11 +580,7 @@ export const ProjectChatRoute = () => {
 					chatId={chatId ?? ""}
 					projectId={projectId ?? ""}
 					onModeSelected={async (mode) => {
-						posthog?.capture("chat_mode_selected", {
-							chat_id: chatId,
-							mode,
-							project_id: projectId,
-						});
+						// chat_mode_selected is captured inside ChatModeSelector
 						// Only prefetch suggestions for overview mode
 						// Deep dive mode will fetch suggestions when conversations are added
 						if (chatId && mode === "overview") {

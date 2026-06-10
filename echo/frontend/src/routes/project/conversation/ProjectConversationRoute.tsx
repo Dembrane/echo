@@ -25,6 +25,7 @@ import {
 	useMutationState,
 	useQueryClient,
 } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
@@ -33,17 +34,15 @@ import { toast } from "@/components/common/Toaster";
 import { ConversationDangerZone } from "@/components/conversation/ConversationDangerZone";
 import { ConversationLink } from "@/components/conversation/ConversationLink";
 import { ConversationTranscriptSection } from "@/components/conversation/ConversationTranscriptSection";
-import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import {
 	useConversationById,
 	useConversationChunks,
 	useConversationHasTranscript,
 } from "@/components/conversation/hooks";
+import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { VerifiedArtefactsSection } from "@/components/conversation/VerifiedArtefactsSection";
 import { useProjectById } from "@/components/project/hooks";
 import { ENABLE_DISPLAY_CONVERSATION_LINKS } from "@/config";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { generateConversationSummary } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 
@@ -99,11 +98,7 @@ export const ProjectConversationRoute = () => {
 	const useHandleGenerateSummaryManually = useMutation({
 		mutationFn: async (isRegeneration: boolean) => {
 			if (isRegeneration) {
-				try {
-					analytics.trackEvent(events.REGENERATE_SUMMARY);
-				} catch (error) {
-					console.warn("Analytics tracking failed:", error);
-				}
+				posthog.capture("conversation_summary_regenerated");
 			}
 
 			const promise = generateConversationSummary(conversationId ?? "");
