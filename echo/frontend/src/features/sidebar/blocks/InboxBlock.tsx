@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { EnvelopeSimple } from "@phosphor-icons/react";
+import { EnvelopeSimpleIcon } from "@phosphor-icons/react";
 import { useUnreadAnnouncements } from "@/components/announcement/hooks";
 import { useUnreadNotificationCount } from "@/hooks/useNotifications";
 import { useSidebarOverlayLink } from "../hooks/useSidebarOverlayLink";
@@ -17,10 +17,11 @@ export const InboxBlock = () => {
 		<NavItem
 			to={to}
 			label={<Trans>Inbox</Trans>}
-			icon={EnvelopeSimple}
+			icon={EnvelopeSimpleIcon}
 			pushes
 			active={overlay === "inbox"}
 			badge={total > 0 ? total : undefined}
+			badgeTone="notification"
 		/>
 	);
 };

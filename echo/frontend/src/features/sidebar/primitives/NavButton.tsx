@@ -1,5 +1,6 @@
-import { ArrowUpRight, CaretRight, type Icon } from "@phosphor-icons/react";
+import { ArrowUpRightIcon, CaretRightIcon, type Icon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
+import { BADGE_TONES } from "./NavItem";
 
 interface NavButtonProps {
 	label: ReactNode;
@@ -7,6 +8,7 @@ interface NavButtonProps {
 	onClick: () => void;
 	pushes?: boolean;
 	badge?: ReactNode;
+	badgeTone?: "muted" | "notification";
 	destructive?: boolean;
 	disabled?: boolean;
 	external?: boolean;
@@ -18,6 +20,7 @@ export const NavButton = ({
 	onClick,
 	pushes,
 	badge,
+	badgeTone = "muted",
 	destructive,
 	disabled,
 	external,
@@ -38,23 +41,20 @@ export const NavButton = ({
 			{badge != null && (
 				<span
 					className="relative shrink-0 rounded px-1.5 py-0.5 text-[10px] leading-none"
-					style={{
-						backgroundColor: "rgba(45, 45, 44, 0.06)",
-						color: "rgba(45, 45, 44, 0.55)",
-					}}
+					style={BADGE_TONES[badgeTone]}
 				>
 					{badge}
 				</span>
 			)}
 			{external && (
-				<ArrowUpRight
+				<ArrowUpRightIcon
 					size={13}
 					className="relative shrink-0 opacity-0 transition-opacity group-hover:opacity-55 group-focus-visible:opacity-55"
 					aria-hidden="true"
 				/>
 			)}
 			{pushes && (
-				<CaretRight
+				<CaretRightIcon
 					size={13}
 					className="relative shrink-0 opacity-45"
 					aria-hidden="true"

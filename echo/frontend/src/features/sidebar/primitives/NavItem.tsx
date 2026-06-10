@@ -13,10 +13,22 @@ interface NavItemProps {
 	pushes?: boolean;
 	end?: boolean;
 	badge?: ReactNode;
+	badgeTone?: "muted" | "notification";
 	active?: boolean;
 	muted?: boolean;
 	accent?: string;
 }
+
+export const BADGE_TONES = {
+	muted: {
+		backgroundColor: "rgba(45, 45, 44, 0.06)",
+		color: "rgba(45, 45, 44, 0.55)",
+	},
+	notification: {
+		backgroundColor: "rgba(65, 105, 225, 0.18)",
+		color: "#4169e1",
+	},
+} as const;
 
 function useLocalePath(to: string): string {
 	const { language } = useParams<{ language?: string }>();
@@ -44,6 +56,7 @@ export const NavItem = ({
 	pushes,
 	end,
 	badge,
+	badgeTone = "muted",
 	active: forcedActive,
 	muted,
 	accent,
@@ -82,10 +95,7 @@ export const NavItem = ({
 			{badge != null && (
 				<span
 					className="relative shrink-0 rounded px-1.5 py-0.5 text-[10px] leading-none"
-					style={{
-						backgroundColor: "rgba(45, 45, 44, 0.06)",
-						color: "rgba(45, 45, 44, 0.55)",
-					}}
+					style={BADGE_TONES[badgeTone]}
 				>
 					{badge}
 				</span>
