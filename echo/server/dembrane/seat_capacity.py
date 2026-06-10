@@ -1,8 +1,8 @@
 """Workspace seat capacity enforcement (unified model).
 
 Single source of truth for "is there room on this workspace for one more
-user?" Builds on inheritance.get_effective_members so the count includes
-derived org admins/owners — they count toward seats just like direct members.
+user?" Only direct workspace members consume a seat; derived org-admin/owner
+access does not (ADR-0004).
 
 Externals (role='external') share the same seat pool as members. There is
 no separate external cap — only `included_seats` matters. The `external`
@@ -65,15 +65,17 @@ async def compute_effective_seat_state(workspace_id: str) -> tuple[int, int, int
         (owner/admin/member/billing).
     external_count: distinct users with role='external'.
 
-    Includes derived org admins/owners (via get_effective_members). A user
-    with both a direct row and a derived path counts once. Derived rows
-    are never external (inheritance.get_effective_members enforces).
+    Only direct members occupy a seat; derived org-admin/owner access
+    (source='inherited') grants oversight but does not (ADR-0004).
     """
     members = await get_effective_members(workspace_id)
 
     member_users: set[str] = set()
     external_users: set[str] = set()
     for m in members:
+        # Derived oversight access doesn't consume a seat.
+        if m.get("source") != "direct":
+            continue
         uid = m.get("user_id")
         if not uid:
             continue
