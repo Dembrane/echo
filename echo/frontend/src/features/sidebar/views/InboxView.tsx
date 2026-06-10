@@ -190,10 +190,8 @@ const TabButton = ({ active, onClick, badge, children }: TabButtonProps) => (
 			<span
 				className="rounded px-1 text-[10px] leading-none"
 				style={{
-					backgroundColor: active
-						? "rgba(65, 105, 225, 0.18)"
-						: "rgba(45, 45, 44, 0.08)",
-					color: active ? "#4169e1" : "rgba(45, 45, 44, 0.6)",
+					backgroundColor: "rgba(65, 105, 225, 0.18)",
+					color: "#4169e1",
 					paddingBlock: 2,
 				}}
 			>
