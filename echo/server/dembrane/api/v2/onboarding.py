@@ -28,6 +28,7 @@ from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.schemas import OnboardingCompleteRequest, OnboardingCompleteResponse
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.api.v2._invite_helpers import create_membership_row
 
 router = APIRouter()
 logger = getLogger("api.v2.onboarding")
@@ -237,7 +238,8 @@ async def complete_onboarding(
             try:
                 if is_org_invite and ws_org_id:
                     if not user_has_org_mem:
-                        await async_directus.create_item(
+                        await create_membership_row(
+                            async_directus,
                             "org_membership",
                             {
                                 "id": generate_uuid(),
@@ -252,7 +254,8 @@ async def complete_onboarding(
                     joined_an_org = True
 
                 if not has_ws_mem:
-                    await async_directus.create_item(
+                    await create_membership_row(
+                        async_directus,
                         "workspace_membership",
                         {
                             "id": generate_uuid(),
@@ -433,7 +436,8 @@ async def complete_onboarding(
                 )
 
                 if not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0):
-                    await async_directus.create_item(
+                    await create_membership_row(
+                        async_directus,
                         "org_membership",
                         {
                             "id": generate_uuid(),

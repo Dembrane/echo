@@ -32,6 +32,7 @@ from dembrane.seat_capacity import assert_can_add_seat
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.api.v2._invite_helpers import create_membership_row
 
 router = APIRouter()
 logger = getLogger("api.v2.access_requests")
@@ -232,7 +233,8 @@ async def join_workspace(
             role="admin",
         )
 
-    await async_directus.create_item(
+    await create_membership_row(
+        async_directus,
         "workspace_membership",
         {
             "id": generate_uuid(),
@@ -541,7 +543,8 @@ async def approve_access_request(
             workspace.get("org_id") or "", requester_id
         )
         granted_role = "billing" if requester_is_biller else "member"
-        await async_directus.create_item(
+        await create_membership_row(
+            async_directus,
             "workspace_membership",
             {
                 "id": generate_uuid(),

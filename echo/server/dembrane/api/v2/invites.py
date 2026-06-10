@@ -220,7 +220,10 @@ async def invite_to_workspace(
                     },
                 )
                 if not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0):
-                    await async_directus.create_item(
+                    from dembrane.api.v2._invite_helpers import create_membership_row
+
+                    newly_joined_organisation = await create_membership_row(
+                        async_directus,
                         "org_membership",
                         {
                             "id": generate_uuid(),
@@ -229,8 +232,8 @@ async def invite_to_workspace(
                             "role": "member",
                         },
                     )
-                    logger.info(f"Added {email} to org {ws_org_id} as member")
-                    newly_joined_organisation = True
+                    if newly_joined_organisation:
+                        logger.info(f"Added {email} to org {ws_org_id} as member")
 
             # External add: enforce insider XOR outsider before creating the
             # external row (removes a stale org_membership, or rejects if the
@@ -243,16 +246,22 @@ async def invite_to_workspace(
                 await reconcile_external_membership_org_row(ws_org_id, app_user["id"])
 
             # Reactivate a soft-deleted row if present; otherwise create fresh. Distinct status so UI can show "reactivated" vs "added".
+            from dembrane.api.v2._invite_helpers import (
+                create_membership_row,
+                reactivate_membership_row,
+            )
+
             reactivated = False
             if existing_row and existing_row.get("deleted_at"):
-                await async_directus.update_item(
+                reactivated = await reactivate_membership_row(
+                    async_directus,
                     "workspace_membership",
                     existing_row["id"],
                     {"deleted_at": None, "role": role, "source": "direct"},
                 )
-                reactivated = True
             else:
-                await async_directus.create_item(
+                await create_membership_row(
+                    async_directus,
                     "workspace_membership",
                     {
                         "id": generate_uuid(),
