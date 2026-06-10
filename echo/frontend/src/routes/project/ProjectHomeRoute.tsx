@@ -4,6 +4,7 @@ import {
 	Badge,
 	Button,
 	Card,
+	Flex,
 	Grid,
 	Group,
 	SimpleGrid,
@@ -14,7 +15,6 @@ import {
 } from "@mantine/core";
 import {
 	ChatCircleDotsIcon,
-	ClockClockwiseIcon,
 	FileTextIcon,
 	PaintBrushIcon,
 	UploadSimpleIcon,
@@ -94,7 +94,7 @@ export const ProjectHomeRoute = () => {
 	return (
 		<PageContainer width="xl">
 			<Grid gutter="xl">
-				<Grid.Col span={{ base: 12, md: 8 }}>
+				<Grid.Col span={{ base: 12, md: 9 }}>
 					<Stack gap="xl">
 						<Stack gap={4}>
 							{project?.name ? (
@@ -112,42 +112,52 @@ export const ProjectHomeRoute = () => {
 							</Text>
 						</Stack>
 
-						<ProjectQRCode project={projectQuery.data} />
+						<Flex
+							direction={{ base: "column", md: "row" }}
+							align={{ base: "stretch", md: "flex-start" }}
+							gap="xl"
+						>
+							<ProjectQRCode project={projectQuery.data} />
 
-						<Stack gap="sm">
-							<Text size="xs" c="dimmed" tt="uppercase">
-								<Trans>Jump to</Trans>
-							</Text>
-							<Group gap="sm" wrap="wrap">
-								<Button
-									leftSection={<ChatCircleDotsIcon size={16} />}
-									onClick={() => navigate(`${base}/chats/new`)}
-								>
-									<Trans>Start a chat</Trans>
-								</Button>
-								<Button
-									leftSection={<UploadSimpleIcon size={16} />}
-									variant="outline"
-									onClick={() => navigate(`${base}/upload`)}
-								>
-									<Trans>Upload</Trans>
-								</Button>
-								<Button
-									leftSection={<PaintBrushIcon size={16} />}
-									variant="outline"
-									onClick={() => navigate(`${base}/portal-editor`)}
-								>
-									<Trans>Portal editor</Trans>
-								</Button>
-								<Button
-									leftSection={<FileTextIcon size={16} />}
-									variant="outline"
-									onClick={() => navigate(`${base}/report`)}
-								>
-									<Trans>Report</Trans>
-								</Button>
-							</Group>
-						</Stack>
+							<Stack gap="sm" style={{ flex: 1 }}>
+								<Text size="xs" c="dimmed" tt="uppercase">
+									<Trans>Jump to</Trans>
+								</Text>
+								<Group gap="sm" wrap="wrap">
+									<Button
+										size="sm"
+										leftSection={<ChatCircleDotsIcon size={16} />}
+										onClick={() => navigate(`${base}/chats/new`)}
+									>
+										<Trans>Start a chat</Trans>
+									</Button>
+									<Button
+										size="sm"
+										leftSection={<UploadSimpleIcon size={16} />}
+										variant="outline"
+										onClick={() => navigate(`${base}/upload`)}
+									>
+										<Trans>Upload</Trans>
+									</Button>
+									<Button
+										size="sm"
+										leftSection={<PaintBrushIcon size={16} />}
+										variant="outline"
+										onClick={() => navigate(`${base}/portal-editor`)}
+									>
+										<Trans>Portal editor</Trans>
+									</Button>
+									<Button
+										size="sm"
+										leftSection={<FileTextIcon size={16} />}
+										variant="outline"
+										onClick={() => navigate(`${base}/report`)}
+									>
+										<Trans>Report</Trans>
+									</Button>
+								</Group>
+							</Stack>
+						</Flex>
 
 						<Stack gap="sm">
 							<Group justify="space-between" align="center">
@@ -237,39 +247,40 @@ export const ProjectHomeRoute = () => {
 						</Stack>
 
 						{report && reportTitle && (
-							<I18nLink to={`${base}/report`} className="no-underline block">
-								<Card
-									component="a"
-									withBorder
-									p="md"
-									radius="sm"
-									className="hover:!border-primary-400 transition-colors"
-								>
-									<Stack gap={2}>
-										<Group gap="xs" align="center">
-											<ClockClockwiseIcon size={14} />
-											<Text size="sm" fw={500}>
-												<Trans>Latest report</Trans>
-											</Text>
-											<Badge size="xs" variant="light">
-												{report.status}
-											</Badge>
-										</Group>
-										<Text size="sm" fw={500}>
-											{reportTitle}
-										</Text>
-										{report.date_created && (
-											<Text size="xs" c="dimmed">
-												{new Date(report.date_created).toLocaleString()}
-											</Text>
-										)}
-									</Stack>
-								</Card>
-							</I18nLink>
+							<Stack gap="sm">
+								<Text size="xs" c="dimmed" tt="uppercase">
+									<Trans>Latest report</Trans>
+								</Text>
+								<I18nLink to={`${base}/report`} className="no-underline block">
+									<Card
+										component="a"
+										withBorder
+										p="md"
+										radius="sm"
+										className="hover:!border-primary-400 transition-colors"
+									>
+										<Stack gap={2}>
+											<Group gap="xs" align="center">
+												<Text size="sm" fw={500}>
+													{reportTitle}
+												</Text>
+												<Badge size="xs" variant="light">
+													{report.status}
+												</Badge>
+											</Group>
+											{report.date_created && (
+												<Text size="xs" c="dimmed">
+													{new Date(report.date_created).toLocaleString()}
+												</Text>
+											)}
+										</Stack>
+									</Card>
+								</I18nLink>
+							</Stack>
 						)}
 					</Stack>
 				</Grid.Col>
-				<Grid.Col span={{ base: 12, md: 4 }} mt={{ base: 0, md: "md" }}>
+				<Grid.Col span={{ base: 12, md: 3 }} mt={{ base: 0, md: "md" }}>
 					<PortalSettingsOverview project={project} base={base} />
 				</Grid.Col>
 			</Grid>
