@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import {
 	Box,
 	Button,
@@ -23,7 +24,12 @@ export const ErrorPage = () => {
 	// to /login (preserving where the visitor was headed) instead of dead-ending
 	// on an error screen. See useAuthenticated's redirect effect.
 	const skipAuthGate = USE_PARTICIPANT_ROUTER || isAuthPath(location.pathname);
-	const { loading, isAuthenticated } = useAuthenticated(!skipAuthGate);
+	// When the gate is skipped the session query is disabled entirely, so the
+	// participant portal never fires a doomed refresh call.
+	const { loading, isAuthenticated } = useAuthenticated(
+		!skipAuthGate,
+		!skipAuthGate,
+	);
 
 	// While the session check runs, or while we redirect an unauthenticated
 	// visitor to login, show a spinner rather than flashing an error.
@@ -41,17 +47,25 @@ export const ErrorPage = () => {
 	const isNotFound =
 		!error || (isRouteErrorResponse(error) && error.status === 404);
 
-	const title = isRouteErrorResponse(error)
-		? `${error.status} ${error.statusText}`
-		: isNotFound
-			? "Page not found"
-			: "Something went wrong";
+	const title = isRouteErrorResponse(error) ? (
+		`${error.status} ${error.statusText}`
+	) : isNotFound ? (
+		<Trans>Page not found</Trans>
+	) : (
+		<Trans>Something went wrong</Trans>
+	);
 
-	const message = isRouteErrorResponse(error)
-		? error.data?.message || "We couldn't find that page."
-		: isNotFound
-			? "We couldn't find the page you were looking for. It may have moved."
-			: "An unexpected error occurred. Reloading or returning home usually helps.";
+	const message =
+		(isRouteErrorResponse(error) && error.data?.message) ||
+		(isNotFound ? (
+			<Trans>
+				We couldn't find the page you were looking for. It may have moved.
+			</Trans>
+		) : (
+			<Trans>
+				An unexpected error occurred. Reloading or returning home usually helps.
+			</Trans>
+		));
 
 	return (
 		<BaseLayout>
@@ -67,7 +81,7 @@ export const ErrorPage = () => {
 					<Group>
 						{!isNotFound && (
 							<Button onClick={() => window.location.reload()}>
-								Reload page
+								<Trans>Reload page</Trans>
 							</Button>
 						)}
 						<Button
@@ -76,7 +90,7 @@ export const ErrorPage = () => {
 								window.location.href = "/";
 							}}
 						>
-							Return home
+							<Trans>Return home</Trans>
 						</Button>
 					</Group>
 				</Stack>

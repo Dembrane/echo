@@ -6,14 +6,16 @@
 // flags, PostHog routing, and the Logo env badge all read from here.
 //
 // To add or move a deployment, edit ENV_HOSTNAMES. Loopback hosts and dev
-// builds resolve to "local"; anything else unmatched falls back to
-// "production".
+// builds resolve to "local". Anything else unmatched (Vercel preview URLs,
+// LAN IPs, ...) falls back to "next": production must be an explicit match so
+// stray hosts can never capture into prod analytics or mutate prod data.
 // ---------------------------------------------------------------------------
 
 export type AppEnvironment = "production" | "next" | "testing" | "local";
 
-const ENV_HOSTNAMES: Record<"next" | "testing", string[]> = {
+const ENV_HOSTNAMES: Record<"production" | "next" | "testing", string[]> = {
 	next: ["dashboard.echo-next.dembrane.com", "portal.echo-next.dembrane.com"],
+	production: ["dashboard.dembrane.com", "portal.dembrane.com"],
 	testing: [
 		"dashboard.echo-testing.dembrane.com",
 		"portal.echo-testing.dembrane.com",
@@ -33,7 +35,7 @@ export const APP_ENVIRONMENT: AppEnvironment = (() => {
 	if (LOCAL_HOSTNAMES.includes(hostname) || import.meta.env.DEV) {
 		return "local";
 	}
-	return "production";
+	return "next";
 })();
 
 export const IS_PRODUCTION = APP_ENVIRONMENT === "production";

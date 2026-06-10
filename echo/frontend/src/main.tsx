@@ -18,8 +18,17 @@ posthog.init(POSTHOG_TOKEN, {
 	},
 	defaults: "2026-01-30",
 	loaded: (ph) => {
-		// testing + local never send analytics (see POSTHOG_CAPTURE in config.ts)
-		if (!POSTHOG_CAPTURE) ph.opt_out_capturing();
+		// testing + local never send analytics (see POSTHOG_CAPTURE in config.ts).
+		// The opt-out persists per-domain, so explicitly opt back in when the
+		// config says capture: otherwise flipping an environment to capture-on
+		// would silently keep returning visitors opted out.
+		if (!POSTHOG_CAPTURE) {
+			ph.opt_out_capturing();
+		} else if (ph.has_opted_out_capturing()) {
+			// Use the singleton: the `loaded` param is typed without the
+			// options bag, and we don't want a $opt_in event in the data.
+			posthog.opt_in_capturing({ captureEventName: null });
+		}
 	},
 });
 

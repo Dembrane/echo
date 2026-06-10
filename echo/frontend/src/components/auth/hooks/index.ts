@@ -270,13 +270,16 @@ export const useLogoutMutation = () => {
 	});
 };
 
-export const useAuthenticated = (doRedirect = false) => {
+export const useAuthenticated = (doRedirect = false, enabled = true) => {
 	const logoutMutation = useLogoutMutation();
 	const location = useLocation();
 	const [searchParams] = useSearchParams();
 	const hasLoggedOutRef = useRef(false);
 
 	const sessionQuery = useQuery({
+		// Callers that don't need the session (e.g. ErrorPage on the participant
+		// portal) disable the query so no refresh call is fired at all.
+		enabled,
 		queryFn: async () => {
 			await directus.refresh();
 			return true as const;
