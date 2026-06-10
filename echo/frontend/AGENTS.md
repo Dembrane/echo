@@ -56,6 +56,7 @@ PostHog is the only analytics tool (Plausible was migrated and removed). Pagevie
 - Funnel pairs are intentional; keep both ends when touching a flow: `workspace_request_started` -> `workspace_request_submitted`, `$pageview` -> `registration_details_completed` -> `user_registered`, `select_all_clicked` -> `select_all_confirmed` -> `select_all_completed`/`select_all_failed`
 - Grep for `posthog.capture(` to see the live event set; auth, project, chat, report, conversation, and workspace-request flows are covered
 - Dashboard + insights live in the PostHog EU projects (production id 160282, echo-next id 197841). Don't add new dashboards from code; wire the event and let analytics own the visualization
+- Insights, cohorts, and other PostHog artifacts must always be created in both projects (echo production and echo-next), never just one
 - One-off error reports use `posthog.captureException`, not a capture event (see `ErrorBoundary`, participant audio interruption)
 
 ## Modal conventions
