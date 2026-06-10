@@ -361,6 +361,7 @@ export const WorkspaceSettingsRoute = () => {
 		onError: (err: Error) => toast.error(err.message),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 			toast.success(t`Role updated`);
 		},
 	});
@@ -404,6 +405,7 @@ export const WorkspaceSettingsRoute = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 			toast.success(t`You left the workspace`);
 			navigate("/o");
 		},

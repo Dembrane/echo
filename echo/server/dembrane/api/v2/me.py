@@ -793,8 +793,11 @@ async def decline_my_invite(invite_id: str, auth: DependencyDirectusSession) -> 
             ref_org_id=invite.get("org_id"),
         )
 
-    await async_directus.delete_item(
-        "org_invite" if is_org_invite else "workspace_invite", invite_id
+    # Soft-delete, mirroring revoke (invite_actions.py) — keeps the audit trail.
+    await async_directus.update_item(
+        "org_invite" if is_org_invite else "workspace_invite",
+        invite_id,
+        {"deleted_at": datetime.now(timezone.utc).isoformat()},
     )
     return {"status": "success"}
 
