@@ -295,6 +295,19 @@ export function UpgradeModal({
 		if (opened) setSelectedTier(defaultSelectedTier);
 	}, [opened, defaultSelectedTier]);
 
+	// Funnel start: pairs with workspace_request_submitted below, so PostHog
+	// can show conversion and time-to-submit per gated feature.
+	useEffect(() => {
+		if (opened) {
+			posthog.capture("workspace_request_started", {
+				can_request_upgrade: canRequestUpgrade,
+				current_tier: currentTier,
+				feature_name: featureName,
+				required_tier: requiredTier,
+			});
+		}
+	}, [opened, canRequestUpgrade, currentTier, featureName, requiredTier]);
+
 	const handleRequest = async () => {
 		if (sending) return;
 		if (!workspace?.org_id) {
@@ -334,6 +347,7 @@ export function UpgradeModal({
 			// a hard refresh.
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			posthog.capture("workspace_request_submitted", {
+				feature_name: featureName,
 				kind: "tier_upgrade",
 				proposed_billing_period: submittedBillingPeriod,
 				proposed_tier: selectedTier,

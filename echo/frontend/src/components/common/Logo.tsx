@@ -4,6 +4,7 @@ import aiconlLogoHQ from "@/assets/aiconl-logo-hq.png";
 
 import dembraneLogoFull from "@/assets/dembrane-logo-new.svg";
 import dembraneLogomark from "@/assets/logomark-no-bg.svg";
+import { APP_ENVIRONMENT } from "@/config";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 
 type LogoProps = {
@@ -12,46 +13,16 @@ type LogoProps = {
 	alwaysDembrane?: boolean;
 } & GroupProps;
 
-
-// If the hostnames ever change we will need to update these 
-// ideally make these public Vite vars but im lazy
-const DEV_HOSTNAMES = new Set([
-	"dashboard.echo-testing.dembrane.com",
-	"portal.echo-testing.dembrane.com",
-]);
-
-const STAGING_HOSTNAMES = new Set([
-	"dashboard.echo-next.dembrane.com",
-	"portal.echo-next.dembrane.com",
-]);
-
-const LOCAL_HOSTNAMES = new Set([
-	"localhost:5173",
-	"localhost:5174",
-]);
-
-
-const whichHost = () => {
-	if (typeof window === "undefined") {
-		return null;
-	}
-	if (DEV_HOSTNAMES.has(window.location.host)) {
-		return "dev";
-	}
-	if (STAGING_HOSTNAMES.has(window.location.host)) {
-		return "staging";
-	}
-	if (LOCAL_HOSTNAMES.has(window.location.host)) {
-		return "local";
-	}
-	return null;
-};
-
-
-export const LogoDembrane = ({ hideLogo, hideTitle, alwaysDembrane, ...props }: LogoProps) => {
+export const LogoDembrane = ({
+	hideLogo,
+	hideTitle,
+	alwaysDembrane,
+	...props
+}: LogoProps) => {
 	const { logoUrl } = useWhitelabelLogo();
 	const effectiveLogoUrl = alwaysDembrane ? null : logoUrl;
-	const hostEnv = whichHost();
+	// Show an env badge everywhere except production.
+	const hostEnv = APP_ENVIRONMENT === "production" ? null : APP_ENVIRONMENT;
 
 	return (
 		<Group gap="sm" h="32px" align="center" {...props}>
@@ -60,7 +31,10 @@ export const LogoDembrane = ({ hideLogo, hideTitle, alwaysDembrane, ...props }: 
 			) : !hideLogo ? (
 				<span className="relative inline-flex h-full items-center">
 					<img
-						src={effectiveLogoUrl ?? (hideTitle ? dembraneLogomark : dembraneLogoFull)}
+						src={
+							effectiveLogoUrl ??
+							(hideTitle ? dembraneLogomark : dembraneLogoFull)
+						}
 						alt="Logo"
 						className="h-full object-contain"
 					/>

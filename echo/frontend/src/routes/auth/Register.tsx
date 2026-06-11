@@ -5,8 +5,10 @@ import {
 	Anchor,
 	Box,
 	Button,
+	Collapse,
 	Container,
 	Divider,
+	List,
 	PasswordInput,
 	Stack,
 	Stepper,
@@ -14,7 +16,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -47,6 +49,7 @@ export const RegisterRoute = () => {
 	const [step, setStep] = useState(0);
 	const [error, setError] = useState("");
 	const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
+	const [orgHelpOpen, { toggle: toggleOrgHelp }] = useDisclosure(false);
 
 	const registerMutation = useRegisterMutation();
 	const posthog = usePostHog();
@@ -60,6 +63,11 @@ export const RegisterRoute = () => {
 			setError(t`Enter a valid email address`);
 			return;
 		}
+		// Funnel step: $pageview (/register) -> registration_details_completed
+		// -> user_registered. Time between steps shows where people stall.
+		posthog?.capture("registration_details_completed", {
+			from_invite: lockedEmail,
+		});
 		setStep(1);
 	};
 
@@ -74,23 +82,26 @@ export const RegisterRoute = () => {
 			return;
 		}
 
-		registerMutation.mutate({
-			email: data.email,
-			password: data.password,
-			first_name: data.first_name,
-			verification_url: `${ADMIN_BASE_URL}/verify-email`,
-			...(data.last_name?.trim() ? { last_name: data.last_name.trim() } : {}),
-		}, {
-			onSuccess: () => {
-				posthog?.identify(data.email);
-				posthog?.capture("user_registered", {
-					email: data.email,
-					first_name: data.first_name,
-				});
-				setSubmittedEmail(data.email);
-				setStep(2);
+		registerMutation.mutate(
+			{
+				email: data.email,
+				first_name: data.first_name,
+				password: data.password,
+				verification_url: `${ADMIN_BASE_URL}/verify-email`,
+				...(data.last_name?.trim() ? { last_name: data.last_name.trim() } : {}),
 			},
-		});
+			{
+				onSuccess: () => {
+					posthog?.identify(data.email);
+					posthog?.capture("user_registered", {
+						email: data.email,
+						first_name: data.first_name,
+					});
+					setSubmittedEmail(data.email);
+					setStep(2);
+				},
+			},
+		);
 	});
 
 	const emailWatch = watch("email");
@@ -161,10 +172,7 @@ export const RegisterRoute = () => {
 											: undefined
 									}
 								/>
-								<Button
-									size="md"
-									onClick={handleNext}
-								>
+								<Button size="md" onClick={handleNext}>
 									<Trans>Continue</Trans>
 								</Button>
 							</>
@@ -262,6 +270,45 @@ export const RegisterRoute = () => {
 								<Trans>Already have an account? Log in</Trans>
 							</Button>
 						</I18nLink>
+
+						<Box {...testId("auth-register-join-org-help")}>
+							<Text size="sm" fw={500}>
+								<Trans>Trying to join an existing organization?</Trans>
+							</Text>
+							<Anchor
+								size="sm"
+								onClick={toggleOrgHelp}
+								style={{ cursor: "pointer" }}
+								{...testId("auth-register-join-org-help-toggle")}
+							>
+								{orgHelpOpen ? (
+									<Trans>Read less</Trans>
+								) : (
+									<Trans>Read more →</Trans>
+								)}
+							</Anchor>
+							<Collapse in={orgHelpOpen}>
+								<Stack gap={6} mt="xs">
+									<Text size="sm" c="dimmed">
+										<Trans>
+											If you're trying to join an existing organization, you
+											should not create a new one. Some reasons that you may
+											accidentally end up here are:
+										</Trans>
+									</Text>
+									<List size="sm" c="dimmed" spacing={4}>
+										<List.Item>
+											<Trans>
+												You're logging in with the wrong email address
+											</Trans>
+										</List.Item>
+										<List.Item>
+											<Trans>You need an invitation from a colleague</Trans>
+										</List.Item>
+									</List>
+								</Stack>
+							</Collapse>
+						</Box>
 					</>
 				)}
 			</Stack>

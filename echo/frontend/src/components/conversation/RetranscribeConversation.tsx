@@ -15,12 +15,11 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconRefresh } from "@tabler/icons-react";
+import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "sonner";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
 import { ExponentialProgress } from "../common/ExponentialProgress";
 import { useProjectById } from "../project/hooks";
@@ -101,11 +100,7 @@ export const RetranscribeConversationModal = ({
 	const handleRetranscribe = async () => {
 		if (!conversationId || !newConversationName.trim()) return;
 
-		try {
-			analytics.trackEvent(events.RETRANSCRIBE_CONVERSATION);
-		} catch (error) {
-			console.warn("Analytics tracking failed:", error);
-		}
+		posthog.capture("conversation_retranscribed");
 
 		const { new_conversation_id } = await retranscribeMutation.mutateAsync({
 			conversationId,

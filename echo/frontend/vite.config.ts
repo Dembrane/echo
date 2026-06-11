@@ -88,7 +88,12 @@ const injectJsxSource = (babel: any) => {
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
 	const isDev = mode === "development";
-	const enableAgentation = isDev || process.env.VITE_ENABLE_AGENTATION === "1";
+	// On by default in every build so no per-deploy env var is needed: whether
+	// the agentation overlay actually renders is decided at runtime by
+	// ENABLE_AGENTATION in src/config.ts (off in production). The cost of
+	// always shipping the JSX __source metadata is a slightly larger bundle;
+	// VITE_ENABLE_AGENTATION=0 is the escape hatch to build without it.
+	const enableAgentation = isDev || process.env.VITE_ENABLE_AGENTATION !== "0";
 
 	// biome-ignore lint/suspicious/noExplicitAny: babel plugin entries are heterogeneous
 	const babelPlugins: any[] = ["macros", ["babel-plugin-react-compiler"]];

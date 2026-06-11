@@ -13,21 +13,18 @@ import {
 	QueryClient,
 	QueryClientProvider,
 } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { lazy, Suspense, useEffect } from "react";
 import { RouterProvider } from "react-router/dom";
 import { I18nProvider } from "./components/layout/I18nProvider";
-import { USE_PARTICIPANT_ROUTER } from "./config";
+import { ENABLE_AGENTATION, USE_PARTICIPANT_ROUTER } from "./config";
 import { detectAndEmitPilotBlock } from "./lib/pilotBlock";
 
-// Reference import.meta.env directly so Vite can constant-fold the branch and
-// Rollup can tree-shake the agentation chunk out of production builds. Through
-// an intermediate constant the values would still be replaced, but the
-// lazy(import(...)) call would remain reachable in the module graph.
-const Agentation =
-	import.meta.env.DEV || import.meta.env.VITE_ENABLE_AGENTATION === "1"
-		? lazy(() => import("agentation").then((m) => ({ default: m.Agentation })))
-		: null;
+// Gated at runtime by ENABLE_AGENTATION (config.ts), not at build time, so no
+// per-deploy env var is needed. The chunk stays lazy: environments where the
+// gate is off (production) never render it, so the browser never downloads it.
+const Agentation = lazy(() =>
+	import("agentation").then((m) => ({ default: m.Agentation })),
+);
 
 import type { PropsWithChildren } from "react";
 import { AppPreferencesProvider } from "./hooks/useAppPreferences";
@@ -43,7 +40,6 @@ function WorkspaceProvider({ children }: PropsWithChildren) {
 	);
 }
 
-import { analytics } from "./lib/analytics";
 import { mainRouter, participantRouter } from "./Router";
 import { theme } from "./theme";
 
@@ -67,13 +63,8 @@ const queryClient = new QueryClient({
 const router = USE_PARTICIPANT_ROUTER ? participantRouter : mainRouter;
 
 export const App = () => {
-	useEffect(() => {
-		const cleanup = analytics.enableAutoPageviews();
-
-		return () => {
-			cleanup();
-		};
-	}, []);
+	// Pageviews (including SPA history changes) are captured by PostHog via
+	// the `defaults` option in posthog.init (src/main.tsx).
 
 	useEffect(() => {
 		const preloadRoutes = () => {
@@ -139,7 +130,7 @@ export const App = () => {
 								<I18nProvider>
 									<ModalsProvider>
 										<RouterProvider router={router} />
-										{Agentation && (
+										{ENABLE_AGENTATION && (
 											<Suspense fallback={null}>
 												<Agentation />
 											</Suspense>

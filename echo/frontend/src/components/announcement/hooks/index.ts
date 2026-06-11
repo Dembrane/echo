@@ -1,12 +1,12 @@
 import { createItems, type Query, readItems, updateItem } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
-import * as Sentry from "@sentry/react";
 import {
 	useInfiniteQuery,
 	useMutation,
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useEffect } from "react";
 import useSessionStorageState from "use-session-storage-state";
 import { useCurrentUser } from "@/components/auth/hooks";
@@ -63,7 +63,7 @@ export const useLatestAnnouncement = () => {
 
 				return response.length > 0 ? response[0] : null;
 			} catch (error) {
-				Sentry.captureException(error);
+				posthog.captureException(error);
 				console.error("Error fetching latest announcement:", error);
 				throw error;
 			}
@@ -149,7 +149,7 @@ export const useInfiniteAnnouncements = ({
 						response.length === initialLimit ? pageParam + 1 : undefined,
 				};
 			} catch (error) {
-				Sentry.captureException(error);
+				posthog.captureException(error);
 				console.error("Error fetching announcements:", error);
 				throw error;
 			}
@@ -177,8 +177,8 @@ export const useMarkAsReadMutation = () => {
 					} as any),
 				);
 			} catch (error) {
-				Sentry.captureException(error);
 				toast.error(t`Failed to mark announcement as read`);
+				posthog.captureException(error);
 				console.error("Error in mutationFn:", error);
 				throw error;
 			}
@@ -289,17 +289,13 @@ export const useMarkAsUnreadMutation = () => {
 			try {
 				const updates = activityIds.map((id) =>
 					directus.request(
-						updateItem(
-							"announcement_activity",
-							id,
-							{ read: false } as any,
-						),
+						updateItem("announcement_activity", id, { read: false } as any),
 					),
 				);
 				return await Promise.all(updates);
 			} catch (error) {
-				Sentry.captureException(error);
 				toast.error(t`Failed to mark announcement as unread`);
+				posthog.captureException(error);
 				console.error("Error in markAsUnread mutationFn:", error);
 				throw error;
 			}
@@ -335,19 +331,19 @@ export const useMarkAsUnreadMutation = () => {
 						...old,
 						pages: old.pages.map((page: any) => ({
 							...page,
-							announcements: page.announcements.map(
-								(announcement: any) => {
-									if (announcement.id === announcementId) {
-										return {
-											...announcement,
-											activity: announcement.activity?.map(
-												(a: any) => ({ ...a, read: false }),
-											) ?? [],
-										};
-									}
-									return announcement;
-								},
-							),
+							announcements: page.announcements.map((announcement: any) => {
+								if (announcement.id === announcementId) {
+									return {
+										...announcement,
+										activity:
+											announcement.activity?.map((a: any) => ({
+												...a,
+												read: false,
+											})) ?? [],
+									};
+								}
+								return announcement;
+							}),
 						})),
 					};
 				},
@@ -360,9 +356,8 @@ export const useMarkAsUnreadMutation = () => {
 					if (!old || old.id !== announcementId) return old;
 					return {
 						...old,
-						activity: old.activity?.map(
-							(a: any) => ({ ...a, read: false }),
-						) ?? [],
+						activity:
+							old.activity?.map((a: any) => ({ ...a, read: false })) ?? [],
 					};
 				},
 			);
@@ -442,8 +437,8 @@ export const useMarkAllAsReadMutation = () => {
 
 				return [];
 			} catch (error) {
-				Sentry.captureException(error);
 				toast.error(t`Failed to mark all announcements as read`);
+				posthog.captureException(error);
 				console.error("Error in markAllAsRead mutationFn:", error);
 				throw error;
 			}
@@ -570,7 +565,7 @@ export const useUnreadAnnouncements = () => {
 
 				return unreadAnnouncements.length;
 			} catch (error) {
-				Sentry.captureException(error);
+				posthog.captureException(error);
 				console.error("Error fetching unread announcements count:", error);
 				throw error;
 			}
@@ -615,14 +610,14 @@ export const useWhatsNewAnnouncements = ({
 								activity: ["id", "user_id", "announcement_activity", "read"],
 							},
 						],
-						sort: ["-created_at"],
 						limit: 50,
+						sort: ["-created_at"],
 					}),
 				);
 
 				return response;
 			} catch (error) {
-				Sentry.captureException(error);
+				posthog.captureException(error);
 				console.error("Error fetching what's new announcements:", error);
 				throw error;
 			}

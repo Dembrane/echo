@@ -83,10 +83,8 @@ The Mantine theme already sets `<Button>` defaults to `color="primary"` and `var
 
 ## Feature Flags
 
-- Naming: `ENABLE_*` (backend), `VITE_ENABLE_*` (frontend)
-- Backend lives in `server/dembrane/settings.py` `FeatureFlagSettings`
-- Frontend lives in `frontend/src/config.ts`
-- Document in `.env.example` files
+- Backend: `ENABLE_*` env vars on `FeatureFlagSettings` in `server/dembrane/settings.py`; document them in `server/.env.sample`
+- Frontend: plain `ENABLE_*` constants in `frontend/src/config.ts`, resolved per environment in code via `byEnv()` (no env vars; see `frontend/AGENTS.md`)
 
 ## Branching & Deployment
 

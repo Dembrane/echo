@@ -1,6 +1,5 @@
 import type { Query, QueryFields } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
-import * as Sentry from "@sentry/react";
 import {
 	type UseQueryOptions,
 	useInfiniteQuery,
@@ -9,6 +8,7 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import posthog from "posthog-js";
 import { useProjectChatContext } from "@/components/chat/hooks";
 import { toast } from "@/components/common/Toaster";
 import {
@@ -266,7 +266,6 @@ export const useMoveConversationMutation = () => {
 export const useAddChatContextMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationKey: ["chat-context", "add"],
 		mutationFn: (payload: {
 			chatId: string;
 			conversationId?: string;
@@ -276,8 +275,9 @@ export const useAddChatContextMutation = () => {
 				auto_select_bool: payload.auto_select_bool,
 				conversationId: payload.conversationId,
 			}),
+		mutationKey: ["chat-context", "add"],
 		onError: (error, variables, context) => {
-			Sentry.captureException(error);
+			posthog.captureException(error);
 			const mutationContext = context as
 				| AddChatContextMutationContext
 				| undefined;
@@ -401,7 +401,6 @@ export const useAddChatContextMutation = () => {
 export const useDeleteChatContextMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationKey: ["chat-context", "delete"],
 		mutationFn: (payload: {
 			chatId: string;
 			conversationId?: string;
@@ -412,9 +411,9 @@ export const useDeleteChatContextMutation = () => {
 				payload.conversationId,
 				payload.auto_select_bool,
 			),
+		mutationKey: ["chat-context", "delete"],
 		onError: (error, variables, context) => {
-			Sentry.captureException(error);
-
+			posthog.captureException(error);
 			// Only rollback the failed optimistic entry
 			const conversationId = (context as { conversationId?: string })
 				?.conversationId;
@@ -556,9 +555,6 @@ export const useSelectAllContextMutation = () => {
 				tagIds: payload.tagIds,
 				verifiedOnly: payload.verifiedOnly,
 			}),
-		onError: (error) => {
-			Sentry.captureException(error);
-		},
 		onSettled: (_, __, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["chats", "context", variables.chatId],

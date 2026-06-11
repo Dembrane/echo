@@ -11,12 +11,11 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCopy, IconTrash } from "@tabler/icons-react";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
 import { ExponentialProgress } from "../common/ExponentialProgress";
 import {
@@ -47,11 +46,7 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 	const [cloneName, setCloneName] = useState(project.name ?? "");
 
 	const handleClone = async () => {
-		try {
-			analytics.trackEvent(events.CLONE_PROJECT);
-		} catch (error) {
-			console.warn("Analytics tracking failed:", error);
-		}
+		posthog.capture("project_cloned");
 
 		try {
 			const newProjectId = await cloneProjectByIdMutation.mutateAsync({
@@ -71,11 +66,7 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 	};
 
 	const handleDelete = () => {
-		try {
-			analytics.trackEvent(events.DELETE_PROJECT);
-		} catch (error) {
-			console.warn("Analytics tracking failed:", error);
-		}
+		posthog.capture("project_deleted");
 		deleteProjectByIdMutation.mutate(project.id);
 		navigate(workspaceId ? `/w/${workspaceId}/home` : "/o");
 	};

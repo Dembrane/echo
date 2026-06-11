@@ -4,11 +4,11 @@
 {% block preview %}{{ workspace_name }} moves to free on {{ expires_date }}.{% endblock %}
 {% block heading %}{{ workspace_name }} tier expires {{ expires_date }}.{% endblock %}
 {% block body %}
-<p style="font-size:17px; line-height:1.65; margin:0 0 20px; color:#2D2D2C; font-weight:300;">
+<p style="font-size:17px; line-height:1.65; margin:0 0 20px; color:#2D2D2C; font-weight:400;">
   Your <em style="color:#4169E1; font-style:normal;">{{ current_tier }}</em> tier on <em style="color:#4169E1; font-style:normal;">{{ workspace_name }}</em> expires on <em style="color:#4169E1; font-style:normal;">{{ expires_date }}</em>. After that, the workspace moves to free and some features will be limited.
 </p>
 
-<p style="font-size:15px; line-height:1.65; margin:0 0 24px; color:#2D2D2C; font-weight:300;">
+<p style="font-size:15px; line-height:1.65; margin:0 0 24px; color:#2D2D2C; font-weight:400;">
   Your existing content stays accessible. Request an upgrade to keep full features.
 </p>
 {% endblock %}
