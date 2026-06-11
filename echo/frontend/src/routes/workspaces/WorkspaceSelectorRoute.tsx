@@ -11,16 +11,29 @@ import {
 	Paper,
 	Stack,
 	Text,
+	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDebouncedValue, useDocumentTitle } from "@mantine/hooks";
 import { IconChevronRight } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
+import { type ComponentType, useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router";
+import {
+	Buildings,
+	ChatCircle,
+	ChatsCircle,
+	FileText,
+	FolderOpen,
+	Gear,
+	MagnifyingGlass,
+} from "@phosphor-icons/react";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { API_BASE_URL } from "@/config";
+import { useRecents } from "@/features/sidebar/hooks/useRecents";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useMyInvites } from "@/hooks/useMyInvites";
+import { useV2Me } from "@/hooks/useV2Me";
 import { logoUrl as resolveLogoUrl } from "@/lib/avatar";
 
 // The home page is now a plain list of organisations the user belongs to.
@@ -218,11 +231,18 @@ export const WorkspaceSelectorRoute = () => {
 
 	useDocumentTitle(t`Organisations | dembrane`);
 
+	const [q, setQ] = useState("");
+	const [activeIndex, setActiveIndex] = useState(0);
+	const { items: recents } = useRecents();
+
 	const { data, isLoading, isError, refetch } = useQuery({
 		queryFn: fetchWorkspaces,
 		queryKey: ["v2", "workspaces"],
 		staleTime: 30_000,
 	});
+
+	// Load logged-in user for greeting
+	const { data: me } = useV2Me();
 
 	// Pending invites for this user. Used by the empty state so a guest who got
 	// bounced at the cap (or hasn't accepted yet) doesn't see the "no access"
@@ -237,6 +257,159 @@ export const WorkspaceSelectorRoute = () => {
 	// No single-org redirect here (it's in RootRedirect), so this list stays
 	// reachable for single-org users.
 	const orgList = deriveOrgList(organisations, workspaces);
+
+	const [debouncedQ] = useDebouncedValue(q.trim(), 250);
+	const deepSearch = useQuery({
+		enabled: debouncedQ.length >= 2,
+		queryFn: async (): Promise<HomeSearchResponse> => {
+			const res = await fetch(
+				`${API_BASE_URL}/home/search?query=${encodeURIComponent(debouncedQ)}&limit=5`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) return EMPTY_SEARCH;
+			return res.json();
+		},
+		queryKey: ["home-search", debouncedQ],
+		staleTime: 30_000,
+	});
+
+	const hits = useMemo<Hit[]>(() => {
+		const query = q.trim().toLowerCase();
+		const orgs = new Map<string, { name: string }>();
+		for (const ws of workspaces) {
+			if (ws.org_id && !orgs.has(ws.org_id)) {
+				orgs.set(ws.org_id, { name: ws.org_name || "" });
+			}
+		}
+
+		const all: Hit[] = [];
+		for (const [id, o] of orgs) {
+			all.push({
+				href: `/o/${id}/overview`,
+				icon: Buildings,
+				id: `org-${id}`,
+				label: o.name,
+				subtitle: "Organisation",
+			});
+		}
+		for (const ws of workspaces) {
+			all.push({
+				href: `/w/${ws.id}/home`,
+				icon: FolderOpen,
+				id: `ws-${ws.id}`,
+				label: ws.name,
+				subtitle: `${ws.org_name} · Workspace`,
+			});
+		}
+		// Settings as quick shortcuts
+		const settings = [
+			{ href: "/settings/account", label: "Account & security" },
+			{ href: "/settings/access", label: "My access" },
+			{ href: "/settings/appearance", label: "Appearance" },
+		];
+		for (const s of settings) {
+			all.push({
+				href: s.href,
+				icon: Gear,
+				id: `setting-${s.href}`,
+				label: s.label,
+				subtitle: "Settings",
+			});
+		}
+
+		if (!query) {
+			// No query → show recents (translated to Hits) then everything
+			const recentHits: Hit[] = recents.map((r) => ({
+				href: r.href,
+				icon: FolderOpen,
+				id: `recent-${r.kind}-${r.id}`,
+				label: r.label,
+				subtitle: r.parent ?? (r.kind === "project" ? "Project" : "Workspace"),
+			}));
+			const seen = new Set(recentHits.map((h) => h.label.toLowerCase()));
+			const rest = all.filter((h) => !seen.has(h.label.toLowerCase()));
+			return [...recentHits, ...rest].slice(0, 40);
+		}
+
+		const clientHits = all.filter((h) => {
+			const hay = `${h.label} ${h.subtitle ?? ""}`.toLowerCase();
+			return hay.includes(query);
+		});
+
+		// Deep results from /home/search, deduped by destination so the
+		// same page never shows twice
+		const merged: Hit[] = [...clientHits];
+		const seenHrefs = new Set(clientHits.map((h) => h.href));
+		const push = (hit: Hit) => {
+			if (seenHrefs.has(hit.href)) return;
+			seenHrefs.add(hit.href);
+			merged.push(hit);
+		};
+
+		const deep = deepSearch.data ?? EMPTY_SEARCH;
+		for (const p of deep.projects) {
+			if (!p.workspaceId) continue;
+			push({
+				href: `/w/${p.workspaceId}/projects/${p.id}/home`,
+				icon: FolderOpen,
+				id: `proj-${p.id}`,
+				label: p.name ?? "Project",
+				subtitle: "Project",
+			});
+		}
+		for (const c of deep.conversations) {
+			if (!c.workspaceId || !c.projectId) continue;
+			push({
+				href: `/w/${c.workspaceId}/projects/${c.projectId}/conversation/${c.id}`,
+				icon: ChatCircle,
+				id: `conv-${c.id}`,
+				label: c.displayLabel,
+				subtitle: c.projectName
+					? `${c.projectName} · Conversation`
+					: "Conversation",
+			});
+		}
+		for (const t of deep.transcripts) {
+			if (!t.workspaceId || !t.projectId || !t.conversationId) continue;
+			push({
+				href: `/w/${t.workspaceId}/projects/${t.projectId}/conversation/${t.conversationId}`,
+				icon: FileText,
+				id: `chunk-${t.id}`,
+				label: t.conversationLabel ?? "Transcript",
+				subtitle: t.excerpt ? t.excerpt.slice(0, 80) : "Transcript",
+			});
+		}
+		for (const ch of deep.chats) {
+			if (!ch.workspaceId || !ch.projectId) continue;
+			push({
+				href: `/w/${ch.workspaceId}/projects/${ch.projectId}/chats/${ch.id}`,
+				icon: ChatsCircle,
+				id: `chat-${ch.id}`,
+				label: ch.name ?? "Chat",
+				subtitle: ch.projectName ? `${ch.projectName} · Chat` : "Chat",
+			});
+		}
+
+		return merged.slice(0, 40);
+	}, [q, workspaces, recents, deepSearch.data]);
+
+	const onSelect = (hit: Hit) => {
+		navigate(hit.href);
+	};
+
+	const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "ArrowDown") {
+			e.preventDefault();
+			setActiveIndex((i) => Math.min(i + 1, hits.length - 1));
+		} else if (e.key === "ArrowUp") {
+			e.preventDefault();
+			setActiveIndex((i) => Math.max(i - 1, 0));
+		} else if (e.key === "Enter") {
+			e.preventDefault();
+			const hit = hits[activeIndex];
+			if (hit) onSelect(hit);
+		}
+	};
 
 	if (isLoading) {
 		return (
@@ -263,24 +436,156 @@ export const WorkspaceSelectorRoute = () => {
 		);
 	}
 
-	return (
-		<Container size="sm" py="xl" px="lg">
-			<Stack gap={24}>
-				<Title order={3} fw={400}>
-					<Trans>Organisations</Trans>
-				</Title>
+	const firstName = me?.display_name ? me.display_name.split(" ")[0] : "";
 
-				{orgList.length > 0 ? (
-					<Stack gap="sm">
-						{orgList.map((org) => (
-							<OrgRow
-								key={org.id}
-								org={org}
-								onOpen={() => navigate(`/o/${org.id}/overview`)}
-							/>
-						))}
-					</Stack>
-				) : invites.length > 0 ? (
+	return (
+		<div style={{ display: "flex", flexDirection: "column", width: "100%", position: "relative" }}>
+			{orgList.length > 0 ? (
+				<div style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 1229, paddingTop: 163 }}>
+					{/* Component 4: Text */}
+					<div
+						style={{
+							marginLeft: 309,
+							width: "55.3%",
+							height: 102,
+							display: "flex",
+							flexDirection: "column",
+							justifyContent: "center",
+						}}
+					>
+						<Title order={1} style={{ fontSize: 36, fontWeight: 500, lineHeight: 1.2, color: "#2d2d2c" }}>
+							{firstName ? <Trans>hi {firstName}</Trans> : <Trans>hi</Trans>}
+						</Title>
+						<Text size="md" c="dimmed" style={{ marginTop: 8 }}>
+							<Trans>Where would you like to go</Trans>
+						</Text>
+					</div>
+
+					{/* Component 5: Search */}
+					<div
+						style={{
+							marginLeft: 309,
+							width: "55.1%",
+							height: 76,
+							marginTop: 32,
+							borderRadius: 12,
+							border: "1px solid rgba(45, 45, 44, 0.12)",
+							backgroundColor: "#fff",
+							display: "flex",
+							alignItems: "center",
+							padding: "0 20px",
+							boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+							transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+						}}
+					>
+						<MagnifyingGlass size={24} style={{ color: "rgba(45, 45, 44, 0.4)", marginRight: 14 }} />
+						<TextInput
+							value={q}
+							onChange={(e) => {
+								setQ(e.currentTarget.value);
+								setActiveIndex(0);
+							}}
+							onKeyDown={onKeyDown}
+							placeholder={t`Search projects, organisations, workspaces, settings…`}
+							variant="unstyled"
+							styles={{
+								root: { flex: 1 },
+								input: {
+									fontSize: 18,
+									height: 56,
+									color: "#2d2d2c",
+									"&::placeholder": {
+										color: "rgba(45, 45, 44, 0.35)",
+									},
+								},
+							}}
+							autoFocus
+						/>
+					</div>
+
+					{/* Component 6: List */}
+					<div
+						style={{
+							marginLeft: 312,
+							width: "53.5%",
+							maxHeight: 377,
+							marginTop: 6,
+							overflowY: "auto",
+							display: "flex",
+							flexDirection: "column",
+							gap: 4,
+							padding: 4,
+						}}
+					>
+						{hits.length === 0 ? (
+							<div
+								style={{
+									padding: "24px 0",
+									textAlign: "center",
+									fontSize: 14,
+									color: "rgba(45, 45, 44, 0.5)",
+								}}
+							>
+								{deepSearch.isFetching ? (
+									<Trans>Searching…</Trans>
+								) : (
+									<Trans>No matches found</Trans>
+								)}
+							</div>
+						) : (
+							hits.map((hit, i) => {
+								const Icon = hit.icon;
+								const active = i === activeIndex;
+								return (
+									<button
+										type="button"
+										key={hit.id}
+										onClick={() => onSelect(hit)}
+										onMouseEnter={() => setActiveIndex(i)}
+										style={{
+											display: "flex",
+											width: "100%",
+											alignItems: "center",
+											gap: 12,
+											borderRadius: 8,
+											padding: "10px 14px",
+											textAlign: "left",
+											fontSize: 14,
+											border: "none",
+											cursor: "pointer",
+											backgroundColor: active
+												? "rgba(65, 105, 225, 0.08)"
+												: "transparent",
+											color: active ? "#4169e1" : "#2d2d2c",
+											transition: "background-color 0.1s ease, color 0.1s ease",
+										}}
+									>
+										<Icon size={18} style={{ opacity: active ? 1 : 0.7 }} />
+										<span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+											{hit.label}
+										</span>
+										{hit.subtitle && (
+											<span
+												style={{
+													overflow: "hidden",
+													textOverflow: "ellipsis",
+													whiteSpace: "nowrap",
+													fontSize: 11,
+													color: active ? "#4169e1" : "rgba(45, 45, 44, 0.5)",
+													opacity: active ? 0.8 : 1,
+												}}
+											>
+												{hit.subtitle}
+											</span>
+										)}
+									</button>
+								);
+							})
+						)}
+					</div>
+				</div>
+			) : invites.length > 0 ? (
+				<div style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 1229, paddingTop: 163 }}>
 					<Stack align="center" gap={12} mt="10vh">
 						<Text c="dimmed" size="sm" ta="center">
 							{invites[0].type === "org" ? (
@@ -304,7 +609,9 @@ export const WorkspaceSelectorRoute = () => {
 							<Trans>View invite</Trans>
 						</Button>
 					</Stack>
-				) : recentRemovals.length > 0 ? (
+				</div>
+			) : recentRemovals.length > 0 ? (
+				<div style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 1229, paddingTop: 163 }}>
 					<Stack align="center" gap={8} mt="10vh">
 						<Text c="dimmed" size="sm" ta="center">
 							<Trans>
@@ -316,7 +623,9 @@ export const WorkspaceSelectorRoute = () => {
 							<Trans>Contact the admin if this was unexpected.</Trans>
 						</Text>
 					</Stack>
-				) : (
+				</div>
+			) : (
+				<div style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 1229, paddingTop: 163 }}>
 					<Stack align="center" gap={8} mt="10vh">
 						<Text c="dimmed" size="sm" ta="center">
 							<Trans>You're not part of any organisation right now.</Trans>
@@ -328,8 +637,8 @@ export const WorkspaceSelectorRoute = () => {
 							</Trans>
 						</Text>
 					</Stack>
-				)}
-			</Stack>
-		</Container>
+				</div>
+			)}
+		</div>
 	);
 };
