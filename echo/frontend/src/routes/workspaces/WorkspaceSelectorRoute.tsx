@@ -1,21 +1,15 @@
 import { t } from "@lingui/core/macro";
-import { Plural, Trans } from "@lingui/react/macro";
+import { Trans } from "@lingui/react/macro";
 import {
-	Badge,
-	Box,
 	Button,
 	Container,
-	Group,
-	Image,
 	Loader,
-	Paper,
 	Stack,
 	Text,
 	TextInput,
 	Title,
 } from "@mantine/core";
 import { useDebouncedValue, useDocumentTitle } from "@mantine/hooks";
-import { IconChevronRight } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { type ComponentType, useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router";
@@ -159,72 +153,7 @@ export const RootRedirect = () => {
 	return <Navigate to="o" replace />;
 };
 
-function OrgRow({ org, onOpen }: { org: OrgListItem; onOpen: () => void }) {
-	const logo = resolveLogoUrl(org.logo_url);
-	return (
-		<Paper
-			p="md"
-			radius="md"
-			withBorder
-			role="button"
-			tabIndex={0}
-			style={{ cursor: "pointer", transition: "box-shadow 0.15s ease" }}
-			onClick={onOpen}
-			onKeyDown={(e) => {
-				if (e.key === "Enter" || e.key === " ") {
-					e.preventDefault();
-					onOpen();
-				}
-			}}
-			onMouseEnter={(e) => {
-				e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.08)";
-			}}
-			onMouseLeave={(e) => {
-				e.currentTarget.style.boxShadow = "";
-			}}
-		>
-			<Group justify="space-between" wrap="nowrap" gap="md">
-				<Group gap="md" wrap="nowrap" style={{ minWidth: 0 }}>
-					{logo && (
-						<Image
-							src={logo}
-							alt={t`${org.name} logo`}
-							h={32}
-							w="auto"
-							fit="contain"
-							style={{ flexShrink: 0, maxWidth: 96 }}
-						/>
-					)}
-					<Box style={{ minWidth: 0 }}>
-						<Group gap={8} wrap="nowrap">
-							<Text fw={500} size="md" lineClamp={1}>
-								{org.name}
-							</Text>
-							{org.isExternal && (
-								<Badge size="xs" variant="light" color="gray">
-									<Trans>External</Trans>
-								</Badge>
-							)}
-						</Group>
-						{org.memberCount !== null && (
-							<Text size="xs" c="dimmed">
-								<Plural
-									value={org.memberCount}
-									one="# person"
-									other="# people"
-								/>
-							</Text>
-						)}
-					</Box>
-				</Group>
-				<IconChevronRight
-					size={16}
-					style={{ color: "var(--mantine-color-gray-5)", flexShrink: 0 }}
-				/>
-			</Group>
-		</Paper>
-	);
-}
+
 
 export const WorkspaceSelectorRoute = () => {
 	const navigate = useI18nNavigate();
