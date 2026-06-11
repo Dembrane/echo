@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
+import { useV2Me } from "@/hooks/useV2Me";
 
-const KEY = "dembrane.sidebar.recents";
+// Namespaced per user so one user never sees another's recents on a shared browser.
+const KEY_PREFIX = "dembrane.sidebar.recents";
+// Pre-namespacing global key, purged on load to drop any leaked cross-user entries.
+const LEGACY_KEY = "dembrane.sidebar.recents";
 const MAX = 8;
+
+function keyFor(userId: string): string {
+	return `${KEY_PREFIX}:${userId}`;
+}
 
 export interface RecentItem {
 	kind: "workspace" | "project";
@@ -13,10 +21,10 @@ export interface RecentItem {
 	lastVisited: number;
 }
 
-function read(): RecentItem[] {
-	if (typeof window === "undefined") return [];
+function read(userId: string | null): RecentItem[] {
+	if (typeof window === "undefined" || !userId) return [];
 	try {
-		const raw = window.localStorage.getItem(KEY);
+		const raw = window.localStorage.getItem(keyFor(userId));
 		if (!raw) return [];
 		const parsed = JSON.parse(raw);
 		return Array.isArray(parsed) ? parsed : [];
@@ -25,45 +33,62 @@ function read(): RecentItem[] {
 	}
 }
 
-function write(items: RecentItem[]): void {
-	if (typeof window === "undefined") return;
+function write(userId: string | null, items: RecentItem[]): void {
+	if (typeof window === "undefined" || !userId) return;
 	try {
-		window.localStorage.setItem(KEY, JSON.stringify(items));
+		window.localStorage.setItem(keyFor(userId), JSON.stringify(items));
 	} catch {
 		// quota / private mode — ignore
 	}
 }
 
 export function useRecents() {
-	const [items, setItems] = useState<RecentItem[]>(() => read());
+	const { data: me } = useV2Me();
+	const userId = me?.directus_user_id ?? null;
+
+	const [items, setItems] = useState<RecentItem[]>([]);
+
+	// Seeded here, not in useState, because the user id isn't known on first render.
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			try {
+				window.localStorage.removeItem(LEGACY_KEY);
+			} catch {}
+		}
+		setItems(read(userId));
+	}, [userId]);
 
 	useEffect(() => {
 		const onStorage = (e: StorageEvent) => {
-			if (e.key !== KEY) return;
-			setItems(read());
+			if (!userId || e.key !== keyFor(userId)) return;
+			setItems(read(userId));
 		};
 		window.addEventListener("storage", onStorage);
 		return () => window.removeEventListener("storage", onStorage);
-	}, []);
+	}, [userId]);
 
-	const record = useCallback((item: Omit<RecentItem, "lastVisited">) => {
-		setItems((prev) => {
-			const filtered = prev.filter(
-				(p) => !(p.kind === item.kind && p.id === item.id),
-			);
-			const next = [{ ...item, lastVisited: Date.now() }, ...filtered].slice(
-				0,
-				MAX,
-			);
-			write(next);
-			return next;
-		});
-	}, []);
+	const record = useCallback(
+		(item: Omit<RecentItem, "lastVisited">) => {
+			if (!userId) return;
+			setItems((prev) => {
+				const filtered = prev.filter(
+					(p) => !(p.kind === item.kind && p.id === item.id),
+				);
+				const next = [{ ...item, lastVisited: Date.now() }, ...filtered].slice(
+					0,
+					MAX,
+				);
+				write(userId, next);
+				return next;
+			});
+		},
+		[userId],
+	);
 
 	const clear = useCallback(() => {
 		setItems([]);
-		write([]);
-	}, []);
+		write(userId, []);
+	}, [userId]);
 
 	return { clear, items, record };
 }
