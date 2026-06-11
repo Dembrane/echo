@@ -321,10 +321,9 @@ msgstr ""
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr ""
 
-#. placeholder {0}: org.memberCount
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:198
-msgid "{0, plural, one {# person} other {# people}}"
-msgstr ""
+#~ msgid "{0, plural, one {# person} other {# people}}"
+#~ msgstr ""
 
 #. placeholder {0}: data.project_count
 #. placeholder {0}: ws.project_count
@@ -425,9 +424,7 @@ msgstr ""
 msgid "{0} hours total"
 msgstr ""
 
-#. placeholder {0}: org.name
 #. placeholder {0}: organisation.name
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:178
 #: src/routes/organisation/OrganisationRoute.tsx:653
 msgid "{0} logo"
 msgstr ""
@@ -848,12 +845,14 @@ msgstr ""
 msgid "Access requests"
 msgstr ""
 
+#: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:128
 msgid "Account"
 msgstr "Account"
 
-#: src/routes/settings/UserSettingsRoute.tsx:94
+#: src/routes/settings/UserSettingsRoute.tsx:95
 #: src/features/sidebar/views/user/UserSettingsView.tsx:36
+#: src/features/sidebar/hooks/useSearchHits.ts:84
 msgid "Account & security"
 msgstr ""
 
@@ -1138,7 +1137,7 @@ msgstr ""
 #~ msgid "Admin — manage the workspace and its members"
 #~ msgstr ""
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:126
+#: src/features/sidebar/views/user/UserHomeView.tsx:127
 msgid "Admin dashboard"
 msgstr ""
 
@@ -1436,8 +1435,9 @@ msgstr ""
 msgid "Anything we should know? Team size, timelines, intended use."
 msgstr ""
 
-#: src/routes/settings/UserSettingsRoute.tsx:127
+#: src/routes/settings/UserSettingsRoute.tsx:128
 #: src/features/sidebar/views/user/UserSettingsView.tsx:46
+#: src/features/sidebar/hooks/useSearchHits.ts:86
 msgid "Appearance"
 msgstr "Weergave"
 
@@ -1741,7 +1741,7 @@ msgstr "Auditlogboeken geëxporteerd naar CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Auditlogboeken geëxporteerd naar JSON"
 
-#: src/routes/auth/Login.tsx:313
+#: src/routes/auth/Login.tsx:318
 #: src/components/settings/TwoFactorSettingsCard.tsx:231
 #: src/components/settings/TwoFactorSettingsCard.tsx:381
 msgid "Authenticator code"
@@ -2172,6 +2172,10 @@ msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resulta
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:612
 #: src/routes/project/chat/ProjectChatRoute.tsx:618
+#: src/features/sidebar/hooks/useSearchHits.ts:252
+#: src/features/sidebar/hooks/useSearchHits.ts:254
+#: src/features/sidebar/hooks/useSearchHits.ts:255
+#: src/features/sidebar/hooks/useSearchHits.ts:260
 msgid "Chat"
 msgstr "Chat"
 
@@ -2242,6 +2246,10 @@ msgstr "Kiezen uit je andere projecten"
 msgid "Choose when you want to receive notifications"
 msgstr "Kiezen wanneer je meldingen wilt ontvangen"
 
+#: src/components/settings/LanguageSettingsCard.tsx:17
+msgid "Choose your preferred language for the interface"
+msgstr ""
+
 #: src/components/settings/FontSettingsCard.tsx:74
 msgid "Choose your preferred theme for the interface"
 msgstr "Kies je favoriete thema voor de interface"
@@ -2253,7 +2261,9 @@ msgstr "Kies je favoriete thema voor de interface"
 msgid "Clear filters"
 msgstr ""
 
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:282
 #: src/routes/project/ProjectsHome.tsx:347
+#: src/features/sidebar/blocks/SearchBlock.tsx:136
 #: src/components/invite/WorkspaceSelectList.tsx:96
 #: src/components/conversation/ProjectConversationsPanel.tsx:679
 msgid "Clear search"
@@ -2447,7 +2457,7 @@ msgstr "Toestemming"
 msgid "Contact support"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:316
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:382
 msgid "Contact the admin if this was unexpected."
 msgstr ""
 
@@ -2490,6 +2500,10 @@ msgstr "Doorgaan"
 #: src/routes/organisation/OrganisationRoute.tsx:1482
 msgid "conversation"
 msgstr "gesprek"
+
+#: src/features/sidebar/hooks/useSearchHits.ts:222
+msgid "Conversation"
+msgstr ""
 
 #: src/components/conversation/hooks/index.ts:395
 msgid "Conversation added to chat"
@@ -2758,7 +2772,7 @@ msgid "Create account"
 msgstr ""
 
 #: src/routes/auth/Register.tsx:114
-#: src/routes/auth/Login.tsx:422
+#: src/routes/auth/Login.tsx:427
 msgid "Create an account"
 msgstr ""
 
@@ -3552,8 +3566,8 @@ msgstr "Webhook bewerken"
 #~ msgid "Editing mode"
 #~ msgstr "Bewerkmode"
 
-#: src/routes/auth/Login.tsx:354
-#: src/routes/auth/Login.tsx:358
+#: src/routes/auth/Login.tsx:359
+#: src/routes/auth/Login.tsx:363
 #: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -3735,7 +3749,7 @@ msgstr "Voer bestandsnaam (zonder extensie) in"
 msgid "Enter new password"
 msgstr "Voer het nieuwe wachtwoord in"
 
-#: src/routes/auth/Login.tsx:125
+#: src/routes/auth/Login.tsx:126
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Voer de 6-cijferige code uit je authenticator-app in."
 
@@ -3916,12 +3930,11 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:885
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:967
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1253
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:192
 #: src/routes/organisation/OrganisationRoute.tsx:1225
 #: src/routes/organisation/OrganisationRoute.tsx:1715
 #: src/routes/organisation/OrganisationExternalView.tsx:57
 #: src/lib/roles.ts:15
-#: src/features/sidebar/views/user/UserHomeView.tsx:110
+#: src/features/sidebar/views/user/UserHomeView.tsx:111
 #: src/features/sidebar/views/org/OrgHomeView.tsx:148
 #: src/components/project/ProjectUsageAndSharing.tsx:570
 #: src/components/invite/RoleSelect.tsx:52
@@ -4305,7 +4318,7 @@ msgstr ""
 msgid "Forecast: ~{0}"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:390
+#: src/routes/auth/Login.tsx:395
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
 
@@ -4422,7 +4435,7 @@ msgid "participant.refine.go.deeper.description"
 msgstr "Krijg direct een reactie van dembrane om het gesprek te verdiepen."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:464
-#: src/features/sidebar/views/user/UserHomeView.tsx:78
+#: src/features/sidebar/views/user/UserHomeView.tsx:79
 msgid "Get started"
 msgstr ""
 
@@ -4441,7 +4454,7 @@ msgstr "Geef me een lijst van 5-10 onderwerpen die worden besproken."
 #~ msgid "Global Research Question"
 #~ msgstr "Algemene Onderzoeksvraag"
 
-#: src/routes/settings/UserSettingsRoute.tsx:75
+#: src/routes/settings/UserSettingsRoute.tsx:76
 msgid "Go back"
 msgstr "Ga terug"
 
@@ -4570,6 +4583,14 @@ msgstr ""
 #~ msgid "Help us translate"
 #~ msgstr "Help ons te vertalen"
 
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:258
+msgid "Hi"
+msgstr ""
+
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:258
+msgid "Hi {firstName}"
+msgstr ""
+
 #: src/components/layout/Header.tsx:199
 #~ msgid "Hi, {0}"
 #~ msgstr "Hallo, {0}"
@@ -4621,7 +4642,7 @@ msgstr "Revisiegegevens verbergen"
 msgid "Highlight specific Concept"
 msgstr "Specifiek Concept markeren"
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:73
+#: src/features/sidebar/views/user/UserHomeView.tsx:74
 msgid "Home"
 msgstr "Home"
 
@@ -4703,7 +4724,7 @@ msgstr "Identificeer herhalende thema's, onderwerpen en argumenten die consisten
 msgid "participant.verify.instructions.approve.artefact"
 msgstr "Als je tevreden bent met {objectLabel}, klik dan op \"Goedkeuren\" om te laten zien dat je je gehoord voelt."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:325
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:395
 msgid "If you were expecting access, please ask the person who invited you to send it again."
 msgstr ""
 
@@ -4819,7 +4840,7 @@ msgstr ""
 msgid "Invalid code. Please request a new one."
 msgstr "Ongeldige code. Vraag een nieuwe aan."
 
-#: src/routes/auth/Login.tsx:265
+#: src/routes/auth/Login.tsx:270
 msgid "Invalid credentials."
 msgstr "Ongeldige inloggegevens."
 
@@ -5129,7 +5150,8 @@ msgstr ""
 msgid "Kind"
 msgstr ""
 
-#: src/features/sidebar/shell/UserMenu.tsx:128
+#: src/features/sidebar/shell/UserMenu.tsx:114
+#: src/components/settings/LanguageSettingsCard.tsx:13
 #: src/components/report/UpdateReportModalButton.tsx:191
 #: src/components/report/UpdateReportModalButton.tsx:264
 #: src/components/report/CreateReportForm.tsx:209
@@ -5392,11 +5414,11 @@ msgstr ""
 msgid "Log out and use the invited email"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:406
+#: src/routes/auth/Login.tsx:411
 msgid "Login"
 msgstr "Inloggen"
 
-#: src/routes/auth/Login.tsx:79
+#: src/routes/auth/Login.tsx:80
 msgid "Login | dembrane"
 msgstr "Inloggen | dembrane"
 
@@ -5428,7 +5450,7 @@ msgstr "Logo bijgewerkt"
 #~ msgid "Logo URL"
 #~ msgstr ""
 
-#: src/features/sidebar/shell/UserMenu.tsx:141
+#: src/features/sidebar/shell/UserMenu.tsx:144
 msgid "Logout"
 msgstr "Uitloggen"
 
@@ -5644,8 +5666,9 @@ msgstr ""
 msgid "Must be at least 10 minutes in the future"
 msgstr "Moet minstens 10 minuten in de toekomst zijn"
 
-#: src/routes/settings/UserSettingsRoute.tsx:114
+#: src/routes/settings/UserSettingsRoute.tsx:115
 #: src/features/sidebar/views/user/UserSettingsView.tsx:41
+#: src/features/sidebar/hooks/useSearchHits.ts:85
 msgid "My access"
 msgstr ""
 
@@ -5975,8 +5998,12 @@ msgstr ""
 msgid "No logo set. dembrane default will be used."
 msgstr ""
 
-#: src/features/sidebar/blocks/SearchBlock.tsx:318
+#: src/features/sidebar/blocks/SearchBlock.tsx:156
 msgid "No matches"
+msgstr ""
+
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:306
+msgid "No matches found"
 msgstr ""
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:228
@@ -6473,7 +6500,7 @@ msgstr "Open de probleemoplossingsgids"
 #~ msgid "Open troubleshooting guide"
 #~ msgstr "Open de probleemoplossingsgids"
 
-#: src/routes/auth/Login.tsx:345
+#: src/routes/auth/Login.tsx:350
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open je authenticator-app en voer de huidige zescijferige code in."
 
@@ -6517,7 +6544,7 @@ msgid "Options"
 msgstr "Opties"
 
 #: src/routes/auth/Register.tsx:255
-#: src/routes/auth/Login.tsx:413
+#: src/routes/auth/Login.tsx:418
 msgid "or"
 msgstr "of"
 
@@ -6533,7 +6560,7 @@ msgstr "Of schrijf uw eigen"
 msgid "Org only"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:102
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:110
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:309
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:439
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:550
@@ -6541,6 +6568,7 @@ msgstr ""
 #: src/routes/admin/AdminSettingsRoute.tsx:2181
 #: src/routes/admin/AdminSettingsRoute.tsx:2496
 #: src/features/sidebar/views/org/OrgHomeView.tsx:73
+#: src/features/sidebar/hooks/useSearchHits.ts:134
 msgid "Organisation"
 msgstr ""
 
@@ -6594,12 +6622,11 @@ msgstr ""
 msgid "Organisation usage"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:270
-#: src/features/sidebar/views/user/UserHomeView.tsx:91
+#: src/features/sidebar/views/user/UserHomeView.tsx:92
 msgid "Organisations"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:219
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:162
 msgid "Organisations | dembrane"
 msgstr ""
 
@@ -6865,8 +6892,8 @@ msgid "Partner organisation"
 msgstr ""
 
 #: src/routes/auth/Register.tsx:186
-#: src/routes/auth/Login.tsx:368
-#: src/routes/auth/Login.tsx:372
+#: src/routes/auth/Login.tsx:373
+#: src/routes/auth/Login.tsx:377
 msgid "Password"
 msgstr "Wachtwoord"
 
@@ -7119,7 +7146,7 @@ msgstr "Voer een geldig e-mailadres in."
 #~ msgid "Please keep this screen lit up (black screen = not recording)"
 #~ msgstr "Houd dit scherm aan (zwart scherm = geen opname)"
 
-#: src/routes/auth/Login.tsx:301
+#: src/routes/auth/Login.tsx:306
 msgid "Please log in to continue."
 msgstr ""
 
@@ -7422,6 +7449,12 @@ msgid "project"
 msgstr ""
 
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:49
+#: src/features/sidebar/hooks/useSearchHits.ts:164
+#: src/features/sidebar/hooks/useSearchHits.ts:205
+#: src/features/sidebar/hooks/useSearchHits.ts:206
+#: src/features/sidebar/hooks/useSearchHits.ts:211
+#: src/features/sidebar/hooks/useSearchHits.ts:219
+#: src/features/sidebar/hooks/useSearchHits.ts:252
 #: src/components/workspace/OrganisationProjectsTable.tsx:205
 msgid "Project"
 msgstr ""
@@ -7446,7 +7479,7 @@ msgstr "Projectstandaard: ingeschakeld. Persoonlijke informatie wordt vervangen 
 #~ msgid "Project default: enabled. This will replace personally identifiable information with <redacted>."
 #~ msgstr "Project standaard: ingeschakeld. Dit zal persoonlijke identificeerbare informatie vervangen door <redacted>."
 
-#: src/routes/settings/UserSettingsRoute.tsx:138
+#: src/routes/settings/UserSettingsRoute.tsx:140
 #: src/features/sidebar/views/user/UserSettingsView.tsx:52
 msgid "Project defaults"
 msgstr ""
@@ -8373,7 +8406,7 @@ msgstr "Rapport inplannen"
 msgid "Scroll to bottom"
 msgstr "Scroll naar beneden"
 
-#: src/features/sidebar/blocks/SearchBlock.tsx:268
+#: src/features/sidebar/blocks/SearchBlock.tsx:89
 #: src/components/conversation/ProjectConversationsPanel.tsx:672
 #: src/components/conversation/MoveConversationButton.tsx:160
 msgid "Search"
@@ -8416,6 +8449,10 @@ msgstr "Zoek projecten"
 msgid "Search Projects"
 msgstr "Zoek projecten"
 
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:269
+msgid "Search projects, organisations, workspaces, settings…"
+msgstr ""
+
 #: src/components/conversation/MoveConversationButton.tsx:161
 #: src/components/conversation/ConversationAccordion.tsx:289
 msgid "Search projects..."
@@ -8423,6 +8460,11 @@ msgstr "Zoek projecten..."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2675
 msgid "Search requester, organisation, tier"
+msgstr ""
+
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:296
+#: src/features/sidebar/blocks/SearchBlock.tsx:146
+msgid "Search results"
 msgstr ""
 
 #: src/components/conversation/ConversationAccordion.tsx:1297
@@ -8463,7 +8505,8 @@ msgstr "Doorzocht de meest relevante bronnen"
 msgid "Searching through the most relevant sources"
 msgstr "Zoeken door de meest relevante bronnen"
 
-#: src/features/sidebar/blocks/SearchBlock.tsx:316
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:304
+#: src/features/sidebar/blocks/SearchBlock.tsx:154
 msgid "Searching…"
 msgstr ""
 
@@ -8700,7 +8743,7 @@ msgstr "Sessienaam"
 msgid "Set up workspace"
 msgstr ""
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:82
+#: src/features/sidebar/views/user/UserHomeView.tsx:83
 msgid "Set up your first organisation"
 msgstr ""
 
@@ -8729,7 +8772,7 @@ msgstr ""
 #~ msgid "Setting up your first project"
 #~ msgstr "Installeer je eerste project"
 
-#: src/routes/settings/UserSettingsRoute.tsx:83
+#: src/routes/settings/UserSettingsRoute.tsx:84
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:23
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:64
 #: src/features/sidebar/views/user/UserSettingsView.tsx:33
@@ -8737,7 +8780,7 @@ msgstr ""
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:103
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:24
 #: src/features/sidebar/views/org/OrgHomeView.tsx:130
-#: src/features/sidebar/shell/UserMenu.tsx:112
+#: src/features/sidebar/shell/UserMenu.tsx:134
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
 #: src/components/layout/ParticipantHeader.tsx:97
 #: src/components/layout/ParticipantHeader.tsx:98
@@ -8749,11 +8792,11 @@ msgstr "Instellingen"
 msgid "participant.settings.modal.title"
 msgstr "Instellingen"
 
-#: src/routes/settings/UserSettingsRoute.tsx:39
+#: src/routes/settings/UserSettingsRoute.tsx:40
 msgid "Settings | dembrane"
 msgstr "Instellingen | dembrane"
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:71
+#: src/features/sidebar/views/user/UserHomeView.tsx:72
 msgid "Setup"
 msgstr ""
 
@@ -9003,7 +9046,7 @@ msgstr "Iets blokkeert je verbinding. Je audio wordt niet opgeslagen tenzij dit 
 #: src/routes/project/report/ProjectReportRoute.tsx:932
 #: src/routes/project/report/ProjectReportRoute.tsx:1388
 #: src/routes/onboarding/OnboardingRoute.tsx:132
-#: src/routes/auth/Login.tsx:256
+#: src/routes/auth/Login.tsx:261
 #: src/components/project/ProjectAccessGuard.tsx:87
 #: src/components/participant/ParticipantInitiateForm.tsx:93
 #: src/components/error/ErrorPage.tsx:55
@@ -9115,7 +9158,7 @@ msgid "Specific Details needs at least one conversation."
 msgstr "Specific Details heeft minstens één gesprek nodig."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2907
-#: src/features/sidebar/shell/UserMenu.tsx:119
+#: src/features/sidebar/shell/UserMenu.tsx:127
 msgid "Staff"
 msgstr ""
 
@@ -9450,7 +9493,7 @@ msgstr "Bedankt!"
 #~ msgid "Thank you! In the meantime, click individual documents to add context to each file that I will take into account for further analysis."
 #~ msgstr "Bedankt! Klik ondertussen op individuele documenten om context toe te voegen aan elk bestand dat ik zal meenemen voor verdere analyse."
 
-#: src/routes/auth/Login.tsx:239
+#: src/routes/auth/Login.tsx:244
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "Die code werkte niet. Probeer het opnieuw met een verse code uit je authenticator-app."
 
@@ -9679,7 +9722,7 @@ msgstr ""
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 msgstr "Dit is een live voorbeeld van het portaal van de deelnemer. U moet de pagina vernieuwen om de meest recente wijzigingen te bekijken."
 
-#: src/routes/settings/UserSettingsRoute.tsx:117
+#: src/routes/settings/UserSettingsRoute.tsx:118
 msgid "This is a map of every organisation and workspace you are a member of."
 msgstr ""
 
@@ -9994,6 +10037,9 @@ msgstr ""
 msgid "Transcribing..."
 msgstr "Transcriptie wordt uitgevoerd..."
 
+#: src/features/sidebar/hooks/useSearchHits.ts:235
+#: src/features/sidebar/hooks/useSearchHits.ts:236
+#: src/features/sidebar/hooks/useSearchHits.ts:244
 #: src/components/conversation/ConversationTranscriptSection.tsx:90
 msgid "Transcript"
 msgstr "Transcriptie"
@@ -10637,7 +10683,7 @@ msgstr "Controleren"
 msgid "participant.echo.verify"
 msgstr "Controleren"
 
-#: src/routes/auth/Login.tsx:404
+#: src/routes/auth/Login.tsx:409
 msgid "Verify code"
 msgstr "Code controleren"
 
@@ -10678,7 +10724,7 @@ msgstr "Bekijk details"
 msgid "View example payload"
 msgstr "Voorbeeld payload bekijken"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:304
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:366
 msgid "View invite"
 msgstr ""
 
@@ -10800,7 +10846,7 @@ msgstr ""
 #~ msgid "We couldn't load your organisation's members."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:257
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:231
 msgid "We couldn't load your organisations. Check your connection and try again."
 msgstr ""
 
@@ -10909,7 +10955,7 @@ msgstr ""
 msgid "Welcome"
 msgstr "Welkom"
 
-#: src/routes/auth/Login.tsx:143
+#: src/routes/auth/Login.tsx:144
 msgid "Welcome back"
 msgstr "Welkom terug"
 
@@ -10925,7 +10971,7 @@ msgstr ""
 #~ msgstr "Welkom in Big Picture Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Specific Details mode."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:376
-#: src/routes/auth/Login.tsx:143
+#: src/routes/auth/Login.tsx:144
 msgid "Welcome to dembrane"
 msgstr ""
 
@@ -10961,7 +11007,7 @@ msgstr "Welkom in Overview Mode! Ik heb samenvattingen van al je gesprekken klaa
 msgid "Welcome, {displayName}"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:289
+#: src/routes/auth/Login.tsx:294
 msgid "Welcome!"
 msgstr "Welkom!"
 
@@ -11059,6 +11105,10 @@ msgstr "Wanneer moet het rapport gegenereerd worden?"
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Wanneer de samenvatting klaar is (bevat zowel transcript als samenvatting)"
 
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:261
+msgid "Where would you like to go?"
+msgstr ""
+
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:440
 msgid "Which organisation does this workspace belong to?"
 msgstr ""
@@ -11097,6 +11147,7 @@ msgstr ""
 #: src/routes/project/CreateProjectRoute.tsx:324
 #: src/routes/admin/AdminSettingsRoute.tsx:1050
 #: src/routes/admin/AdminSettingsRoute.tsx:1709
+#: src/features/sidebar/hooks/useSearchHits.ts:164
 #: src/components/workspace/OrganisationUsageRollup.tsx:361
 #: src/components/workspace/OrganisationProjectsTable.tsx:210
 msgid "Workspace"
@@ -11290,12 +11341,12 @@ msgid "You have a pending invite"
 msgstr ""
 
 #. placeholder {0}: invites[0].org_name
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:287
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:349
 msgid "You have a pending invite to {0}. Open it to join the organisation."
 msgstr ""
 
 #. placeholder {0}: invites[0].workspace_name ?? "a workspace"
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:292
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:354
 msgid "You have a pending invite to {0}. The admin needs to free a seat before you can join."
 msgstr ""
 
@@ -11340,7 +11391,7 @@ msgstr "Je kunt er ook voor kiezen om een ander gesprek op te nemen."
 #~ msgid "You may choose to add a list of proper nouns, names, or other information that may be relevant to the conversation. This will be used to improve the quality of the transcripts."
 #~ msgstr "Je kunt er voor kiezen om een lijst met zelfstandige naamwoorden, namen of andere informatie toe te voegen die relevant kan zijn voor het gesprek. Dit wordt gebruikt om de kwaliteit van de transcripties te verbeteren."
 
-#: src/routes/auth/Login.tsx:270
+#: src/routes/auth/Login.tsx:275
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Je moet inloggen met dezelfde provider die u gebruikte om u aan te melden. Als u problemen ondervindt, neem dan contact op met de ondersteuning."
 
@@ -11419,7 +11470,7 @@ msgstr ""
 #~ msgid "You're not in any team yet. Create a workspace to start a team, or ask a teammate for an invite."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:322
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:392
 msgid "You're not part of any organisation right now."
 msgstr ""
 
@@ -11467,7 +11518,7 @@ msgstr ""
 
 #. placeholder {0}: recentRemovals[0].workspace_name
 #. placeholder {1}: new Date(recentRemovals[0].ended_at).toLocaleDateString()
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:310
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:376
 msgid "Your access to {0} ended on {1}."
 msgstr ""
 
@@ -11499,7 +11550,7 @@ msgstr ""
 msgid "Your email is already verified"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:294
+#: src/routes/auth/Login.tsx:299
 msgid "Your email is verified. Log in to continue."
 msgstr ""
 
