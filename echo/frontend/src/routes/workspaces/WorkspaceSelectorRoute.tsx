@@ -45,11 +45,57 @@ interface OrganisationRollup {
 
 interface WorkspaceLite {
 	id: string;
+	name: string;
 	org_id: string;
 	org_name: string;
 	org_logo_url: string | null;
 	role: string;
 }
+
+interface Hit {
+	id: string;
+	icon: ComponentType<{ size: number; style?: any }>;
+	label: string;
+	subtitle?: string;
+	href: string;
+}
+
+interface HomeSearchResponse {
+	projects: {
+		id: string;
+		name: string | null;
+		workspaceId: string | null;
+	}[];
+	conversations: {
+		id: string;
+		projectId: string | null;
+		projectName: string | null;
+		workspaceId: string | null;
+		displayLabel: string;
+	}[];
+	transcripts: {
+		id: string;
+		conversationId: string | null;
+		conversationLabel: string | null;
+		projectId: string | null;
+		workspaceId: string | null;
+		excerpt: string | null;
+	}[];
+	chats: {
+		id: string;
+		projectId: string | null;
+		projectName: string | null;
+		workspaceId: string | null;
+		name: string | null;
+	}[];
+}
+
+const EMPTY_SEARCH: HomeSearchResponse = {
+	chats: [],
+	conversations: [],
+	projects: [],
+	transcripts: [],
+};
 
 interface RecentRemoval {
 	workspace_id: string;
@@ -376,14 +422,14 @@ export const WorkspaceSelectorRoute = () => {
 						style={{
 							marginLeft: 309,
 							width: "55.3%",
-							height: 102,
 							display: "flex",
 							flexDirection: "column",
 							justifyContent: "center",
 						}}
 					>
+						<div style={{ fontSize: 32, marginBottom: 12 }}>🏠</div>
 						<Title order={1} style={{ fontSize: 36, fontWeight: 500, lineHeight: 1.2, color: "#2d2d2c" }}>
-							{firstName ? <Trans>hi {firstName}</Trans> : <Trans>hi</Trans>}
+							{firstName ? <Trans>Hi {firstName}</Trans> : <Trans>Hi</Trans>}
 						</Title>
 						<Text size="md" c="dimmed" style={{ marginTop: 8 }}>
 							<Trans>Where would you like to go</Trans>
@@ -391,40 +437,26 @@ export const WorkspaceSelectorRoute = () => {
 					</div>
 
 					{/* Component 5: Search */}
-					<div
-						style={{
-							marginLeft: 309,
-							width: "55.1%",
-							height: 76,
-							marginTop: 32,
-							borderRadius: 12,
-							border: "1px solid rgba(45, 45, 44, 0.12)",
-							backgroundColor: "#fff",
-							display: "flex",
-							alignItems: "center",
-							padding: "0 20px",
-							boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-							transition: "border-color 0.15s ease, box-shadow 0.15s ease",
-						}}
-					>
-						<MagnifyingGlass size={24} style={{ color: "rgba(45, 45, 44, 0.4)", marginRight: 14 }} />
+					<div style={{ marginLeft: 309, width: "55.1%", marginTop: 32 }}>
 						<TextInput
+							leftSection={<MagnifyingGlass size={20} style={{ color: "rgba(45, 45, 44, 0.4)" }} />}
+							placeholder={t`Search projects, organisations, workspaces, settings…`}
 							value={q}
+							size="lg"
 							onChange={(e) => {
 								setQ(e.currentTarget.value);
 								setActiveIndex(0);
 							}}
 							onKeyDown={onKeyDown}
-							placeholder={t`Search projects, organisations, workspaces, settings…`}
-							variant="unstyled"
 							styles={{
-								root: { flex: 1 },
 								input: {
-									fontSize: 18,
-									height: 56,
-									color: "#2d2d2c",
-									"&::placeholder": {
-										color: "rgba(45, 45, 44, 0.35)",
+									fontSize: 16,
+									borderRadius: 8,
+									border: "1px solid rgba(45, 45, 44, 0.12)",
+									height: 52,
+									backgroundColor: "#fff",
+									"&:focus": {
+										borderColor: "#4169e1",
 									},
 								},
 							}}
@@ -437,12 +469,10 @@ export const WorkspaceSelectorRoute = () => {
 						style={{
 							marginLeft: 312,
 							width: "53.5%",
-							maxHeight: 377,
-							marginTop: 6,
-							overflowY: "auto",
+							marginTop: 16,
 							display: "flex",
 							flexDirection: "column",
-							gap: 4,
+							gap: 8,
 							padding: 4,
 						}}
 					>
@@ -475,38 +505,44 @@ export const WorkspaceSelectorRoute = () => {
 											display: "flex",
 											width: "100%",
 											alignItems: "center",
-											gap: 12,
-											borderRadius: 8,
-											padding: "10px 14px",
+											gap: 16,
+											borderRadius: 4,
+											padding: "16px 20px",
 											textAlign: "left",
 											fontSize: 14,
-											border: "none",
 											cursor: "pointer",
+											border: active
+												? "1px solid #4169e1"
+												: "1px solid rgba(45, 45, 44, 0.12)",
 											backgroundColor: active
-												? "rgba(65, 105, 225, 0.08)"
-												: "transparent",
-											color: active ? "#4169e1" : "#2d2d2c",
-											transition: "background-color 0.1s ease, color 0.1s ease",
+												? "rgba(65, 105, 225, 0.04)"
+												: "#ffffff",
+											color: "#2d2d2c",
+											transition: "border-color 0.15s ease, background-color 0.15s ease",
+											boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
 										}}
 									>
-										<Icon size={18} style={{ opacity: active ? 1 : 0.7 }} />
-										<span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-											{hit.label}
-										</span>
-										{hit.subtitle && (
-											<span
-												style={{
-													overflow: "hidden",
-													textOverflow: "ellipsis",
-													whiteSpace: "nowrap",
-													fontSize: 11,
-													color: active ? "#4169e1" : "rgba(45, 45, 44, 0.5)",
-													opacity: active ? 0.8 : 1,
-												}}
-											>
-												{hit.subtitle}
+										<Icon size={20} style={{ color: active ? "#4169e1" : "rgba(45, 45, 44, 0.6)", flexShrink: 0 }} />
+										<div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+											<span style={{ fontSize: 16, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+												{hit.label}
 											</span>
-										)}
+											{hit.subtitle && (
+												<span
+													style={{
+														overflow: "hidden",
+														textOverflow: "ellipsis",
+														whiteSpace: "nowrap",
+														fontSize: 12,
+														color: active ? "#4169e1" : "rgba(45, 45, 44, 0.5)",
+														opacity: active ? 0.9 : 1,
+														marginTop: 2,
+													}}
+												>
+													{hit.subtitle}
+												</span>
+											)}
+										</div>
 									</button>
 								);
 							})
