@@ -8,7 +8,13 @@ import {
 	useState,
 } from "react";
 import { API_BASE_URL } from "@/config";
+import { useV2Me } from "@/hooks/useV2Me";
 import { AUTH_CACHE_BOUNDARY_EVENT } from "@/lib/authCacheBoundary";
+
+// Per-user so login routing never sends a user to the previous user's workspace.
+export function lastWorkspaceKey(userId: string): string {
+	return `dembrane_last_workspace_id:${userId}`;
+}
 
 // ── Types ──
 
@@ -115,6 +121,8 @@ function readWorkspaceIdFromPath(): string | null {
 
 export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 	const [authEpoch, setAuthEpoch] = useState(0);
+	const { data: me } = useV2Me({ enabled });
+	const userId = me?.directus_user_id ?? null;
 
 	useEffect(() => {
 		const onAuthBoundary = () => setAuthEpoch((epoch) => epoch + 1);
@@ -168,12 +176,17 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 		return null;
 	}, [workspaces, selectedId]);
 
-	const setWorkspace = useCallback((id: string) => {
-		sessionStorage.setItem(SESSION_KEY, id);
-		// Also persist across sessions so login can route back to last-used
-		localStorage.setItem("dembrane_last_workspace_id", id);
-		setSelectedId(id); // triggers re-render
-	}, []);
+	const setWorkspace = useCallback(
+		(id: string) => {
+			sessionStorage.setItem(SESSION_KEY, id);
+			// Persist across sessions so login can route back to last-used.
+			if (userId) {
+				localStorage.setItem(lastWorkspaceKey(userId), id);
+			}
+			setSelectedId(id); // triggers re-render
+		},
+		[userId],
+	);
 
 	const clearWorkspace = useCallback(() => {
 		sessionStorage.removeItem(SESSION_KEY);
