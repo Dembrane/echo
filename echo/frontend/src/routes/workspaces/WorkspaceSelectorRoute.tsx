@@ -19,6 +19,7 @@ import {
 	ChatsCircle,
 	FileText,
 	FolderOpen,
+	Folders,
 	Gear,
 	MagnifyingGlass,
 } from "@phosphor-icons/react";
@@ -264,16 +265,16 @@ export const WorkspaceSelectorRoute = () => {
 				icon: Buildings,
 				id: `org-${id}`,
 				label: o.name,
-				subtitle: "Organisation",
+				subtitle: `Organisation / ${o.name}`,
 			});
 		}
 		for (const ws of workspaces) {
 			all.push({
 				href: `/w/${ws.id}/home`,
-				icon: FolderOpen,
+				icon: Folders,
 				id: `ws-${ws.id}`,
 				label: ws.name,
-				subtitle: `${ws.org_name} · Workspace`,
+				subtitle: `${ws.org_name} / ${ws.name}`,
 			});
 		}
 		// Settings as quick shortcuts
@@ -282,25 +283,39 @@ export const WorkspaceSelectorRoute = () => {
 			{ href: "/settings/access", label: "My access" },
 			{ href: "/settings/appearance", label: "Appearance" },
 		];
+		const userName = me?.display_name || "User";
 		for (const s of settings) {
 			all.push({
 				href: s.href,
 				icon: Gear,
 				id: `setting-${s.href}`,
 				label: s.label,
-				subtitle: "Settings",
+				subtitle: `${userName} / ${s.label}`,
 			});
 		}
 
 		if (!query) {
 			// No query → show recents (translated to Hits) then everything
-			const recentHits: Hit[] = recents.map((r) => ({
-				href: r.href,
-				icon: FolderOpen,
-				id: `recent-${r.kind}-${r.id}`,
-				label: r.label,
-				subtitle: r.parent ?? (r.kind === "project" ? "Project" : "Workspace"),
-			}));
+			const recentHits: Hit[] = recents.map((r) => {
+				const match = r.href.match(/\/w\/([^/]+)/);
+				const wsId = match ? match[1] : null;
+				const ws = workspaces.find((w) => w.id === wsId);
+				let subtitle = r.parent ?? (r.kind === "project" ? "Project" : "Workspace");
+				if (ws) {
+					if (r.kind === "project") {
+						subtitle = `${ws.org_name} / ${ws.name} / ${r.label}`;
+					} else {
+						subtitle = `${ws.org_name} / ${ws.name}`;
+					}
+				}
+				return {
+					href: r.href,
+					icon: r.kind === "project" ? FolderOpen : Folders,
+					id: `recent-${r.kind}-${r.id}`,
+					label: r.label,
+					subtitle,
+				};
+			});
 			const seen = new Set(recentHits.map((h) => h.label.toLowerCase()));
 			const rest = all.filter((h) => !seen.has(h.label.toLowerCase()));
 			return [...recentHits, ...rest].slice(0, 40);
@@ -324,49 +339,70 @@ export const WorkspaceSelectorRoute = () => {
 		const deep = deepSearch.data ?? EMPTY_SEARCH;
 		for (const p of deep.projects) {
 			if (!p.workspaceId) continue;
+			const ws = workspaces.find((w) => w.id === p.workspaceId);
+			const subtitle = ws
+				? `${ws.org_name} / ${ws.name} / ${p.name ?? "Project"}`
+				: "Project";
 			push({
 				href: `/w/${p.workspaceId}/projects/${p.id}/home`,
 				icon: FolderOpen,
 				id: `proj-${p.id}`,
 				label: p.name ?? "Project",
-				subtitle: "Project",
+				subtitle,
 			});
 		}
 		for (const c of deep.conversations) {
 			if (!c.workspaceId || !c.projectId) continue;
+			const ws = workspaces.find((w) => w.id === c.workspaceId);
+			const subtitle = ws
+				? `${ws.org_name} / ${ws.name} / ${c.projectName || "Project"} / ${c.displayLabel}`
+				: c.projectName
+					? `${c.projectName} / ${c.displayLabel}`
+					: "Conversation";
 			push({
 				href: `/w/${c.workspaceId}/projects/${c.projectId}/conversation/${c.id}`,
 				icon: ChatCircle,
 				id: `conv-${c.id}`,
 				label: c.displayLabel,
-				subtitle: c.projectName
-					? `${c.projectName} · Conversation`
-					: "Conversation",
+				subtitle,
 			});
 		}
 		for (const t of deep.transcripts) {
 			if (!t.workspaceId || !t.projectId || !t.conversationId) continue;
+			const ws = workspaces.find((w) => w.id === t.workspaceId);
+			const path = ws
+				? `${ws.org_name} / ${ws.name} / ${t.conversationLabel ?? "Transcript"}`
+				: "Transcript";
+			const subtitle = t.excerpt
+				? `${path} — "${t.excerpt.slice(0, 60)}..."`
+				: path;
 			push({
 				href: `/w/${t.workspaceId}/projects/${t.projectId}/conversation/${t.conversationId}`,
 				icon: FileText,
 				id: `chunk-${t.id}`,
 				label: t.conversationLabel ?? "Transcript",
-				subtitle: t.excerpt ? t.excerpt.slice(0, 80) : "Transcript",
+				subtitle,
 			});
 		}
 		for (const ch of deep.chats) {
 			if (!ch.workspaceId || !ch.projectId) continue;
+			const ws = workspaces.find((w) => w.id === ch.workspaceId);
+			const subtitle = ws
+				? `${ws.org_name} / ${ws.name} / ${ch.projectName || "Project"} / ${ch.name ?? "Chat"}`
+				: ch.projectName
+					? `${ch.projectName} / ${ch.name ?? "Chat"}`
+					: "Chat";
 			push({
 				href: `/w/${ch.workspaceId}/projects/${ch.projectId}/chats/${ch.id}`,
 				icon: ChatsCircle,
 				id: `chat-${ch.id}`,
 				label: ch.name ?? "Chat",
-				subtitle: ch.projectName ? `${ch.projectName} · Chat` : "Chat",
+				subtitle,
 			});
 		}
 
 		return merged.slice(0, 40);
-	}, [q, workspaces, recents, deepSearch.data]);
+	}, [q, workspaces, recents, deepSearch.data, me]);
 
 	const onSelect = (hit: Hit) => {
 		navigate(hit.href);
@@ -414,17 +450,16 @@ export const WorkspaceSelectorRoute = () => {
 	const firstName = me?.display_name ? me.display_name.split(" ")[0] : "";
 
 	return (
-		<div style={{ display: "flex", flexDirection: "column", width: "100%", position: "relative" }}>
+		<div style={{ display: "flex", flexDirection: "column", width: "100%", alignItems: "center", padding: "0 16px", position: "relative" }}>
 			{orgList.length > 0 ? (
-				<div style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 1229, paddingTop: 163 }}>
+				<div style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 580, marginTop: "20vh" }}>
 					{/* Component 4: Text */}
 					<div
 						style={{
-							marginLeft: 309,
-							width: "55.3%",
 							display: "flex",
 							flexDirection: "column",
 							justifyContent: "center",
+							width: "100%",
 						}}
 					>
 						<div style={{ fontSize: 32, marginBottom: 12 }}>🏠</div>
@@ -437,7 +472,7 @@ export const WorkspaceSelectorRoute = () => {
 					</div>
 
 					{/* Component 5: Search */}
-					<div style={{ marginLeft: 309, width: "55.1%", marginTop: 32 }}>
+					<div style={{ width: "100%", marginTop: 32 }}>
 						<TextInput
 							leftSection={<MagnifyingGlass size={20} style={{ color: "rgba(45, 45, 44, 0.4)" }} />}
 							placeholder={t`Search projects, organisations, workspaces, settings…`}
@@ -454,7 +489,7 @@ export const WorkspaceSelectorRoute = () => {
 									borderRadius: 8,
 									border: "1px solid rgba(45, 45, 44, 0.12)",
 									height: 52,
-									backgroundColor: "#fff",
+									backgroundColor: "transparent",
 									"&:focus": {
 										borderColor: "#4169e1",
 									},
@@ -467,13 +502,12 @@ export const WorkspaceSelectorRoute = () => {
 					{/* Component 6: List */}
 					<div
 						style={{
-							marginLeft: 312,
-							width: "53.5%",
+							width: "100%",
 							marginTop: 16,
 							display: "flex",
 							flexDirection: "column",
 							gap: 8,
-							padding: 4,
+							padding: "4px 0",
 						}}
 					>
 						{hits.length === 0 ? (
@@ -516,7 +550,7 @@ export const WorkspaceSelectorRoute = () => {
 												: "1px solid rgba(45, 45, 44, 0.12)",
 											backgroundColor: active
 												? "rgba(65, 105, 225, 0.04)"
-												: "#ffffff",
+												: "transparent",
 											color: "#2d2d2c",
 											transition: "border-color 0.15s ease, background-color 0.15s ease",
 											boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
@@ -550,8 +584,8 @@ export const WorkspaceSelectorRoute = () => {
 					</div>
 				</div>
 			) : invites.length > 0 ? (
-				<div style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 1229, paddingTop: 163 }}>
-					<Stack align="center" gap={12} mt="10vh">
+				<div style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 580, marginTop: "20vh" }}>
+					<Stack align="center" gap={12}>
 						<Text c="dimmed" size="sm" ta="center">
 							{invites[0].type === "org" ? (
 								<Trans>
@@ -576,8 +610,8 @@ export const WorkspaceSelectorRoute = () => {
 					</Stack>
 				</div>
 			) : recentRemovals.length > 0 ? (
-				<div style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 1229, paddingTop: 163 }}>
-					<Stack align="center" gap={8} mt="10vh">
+				<div style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 580, marginTop: "20vh" }}>
+					<Stack align="center" gap={8}>
 						<Text c="dimmed" size="sm" ta="center">
 							<Trans>
 								Your access to {recentRemovals[0].workspace_name} ended on{" "}
@@ -590,8 +624,8 @@ export const WorkspaceSelectorRoute = () => {
 					</Stack>
 				</div>
 			) : (
-				<div style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 1229, paddingTop: 163 }}>
-					<Stack align="center" gap={8} mt="10vh">
+				<div style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 580, marginTop: "20vh" }}>
+					<Stack align="center" gap={8}>
 						<Text c="dimmed" size="sm" ta="center">
 							<Trans>You're not part of any organisation right now.</Trans>
 						</Text>
