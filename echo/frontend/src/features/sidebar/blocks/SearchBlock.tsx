@@ -1,102 +1,36 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Modal, TextInput, UnstyledButton } from "@mantine/core";
-import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
-import {
-	Buildings,
-	ChatCircle,
-	ChatsCircle,
-	FileText,
-	FolderOpen,
-	Folders,
-	Gear,
-	MagnifyingGlass,
-} from "@phosphor-icons/react";
-import { useQuery } from "@tanstack/react-query";
-import { type ComponentType, useEffect, useMemo, useState } from "react";
+import { CloseButton, Modal, TextInput, UnstyledButton } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useV2Me } from "@/hooks/useV2Me";
-import { useRecents } from "../hooks/useRecents";
+import { type SearchHit, useSearchHits } from "../hooks/useSearchHits";
+import classes from "./SearchBlock.module.css";
 
-interface Hit {
-	id: string;
-	icon: ComponentType<{ size?: number }>;
-	label: string;
-	subtitle?: string;
-	href: string;
-}
+export const SearchBlock = () => {
+	const [opened, { open, close }] = useDisclosure(false);
+	const [q, setQ] = useState("");
+	// Keyboard highlight: first result while searching, -1 (none) when empty.
+	const [activeIndex, setActiveIndex] = useState(-1);
+	const { workspaces } = useWorkspace();
+	const navigate = useNavigate();
+	const [shortcut, setShortcut] = useState("⌘K");
+	const searchInputRef = useRef<HTMLInputElement>(null);
 
-// GET /api/home/search — deep search over projects, conversations,
-// transcripts and chats, access-scoped server-side.
-interface HomeSearchResponse {
-	projects: {
-		id: string;
-		name: string | null;
-		workspaceId: string | null;
-	}[];
-	conversations: {
-		id: string;
-		projectId: string | null;
-		projectName: string | null;
-		workspaceId: string | null;
-		displayLabel: string;
-	}[];
-	transcripts: {
-		id: string;
-		conversationId: string | null;
-		conversationLabel: string | null;
-		projectId: string | null;
-		workspaceId: string | null;
-		excerpt: string | null;
-	}[];
-	chats: {
-		id: string;
-		projectId: string | null;
-		projectName: string | null;
-		workspaceId: string | null;
-		name: string | null;
-	}[];
-}
+	useEffect(() => {
+		const isMac =
+			typeof window !== "undefined" &&
+			/Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+		if (!isMac) {
+			setShortcut("Ctrl K");
+		}
+	}, []);
 
-const EMPTY_SEARCH: HomeSearchResponse = {
-	chats: [],
-	conversations: [],
-	projects: [],
-	transcripts: [],
-};
-
-	export const SearchBlock = () => {
-		const [opened, { open, close }] = useDisclosure(false);
-		const [q, setQ] = useState("");
-		const [activeIndex, setActiveIndex] = useState(0);
-		const { workspaces } = useWorkspace();
-		const { items: recents } = useRecents();
-		const { data: me } = useV2Me();
-		const navigate = useNavigate();
-		const [shortcut, setShortcut] = useState("⌘K");
-
-		useEffect(() => {
-			const isMac = typeof window !== "undefined" && 
-				/Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
-			if (!isMac) {
-				setShortcut("Ctrl K");
-			}
-		}, []);
-
-	const [debouncedQ] = useDebouncedValue(q.trim(), 250);
-	const deepSearch = useQuery({
-		enabled: opened && debouncedQ.length >= 2,
-		queryFn: async (): Promise<HomeSearchResponse> => {
-			const res = await fetch(
-				`${API_BASE_URL}/home/search?query=${encodeURIComponent(debouncedQ)}&limit=5`,
-				{ credentials: "include" },
-			);
-			if (!res.ok) return EMPTY_SEARCH;
-			return res.json();
-		},
-		queryKey: ["home-search", debouncedQ],
-		staleTime: 30_000,
+	// Deep search only runs while the palette is open.
+	const { hits, isFetching } = useSearchHits(q, workspaces, {
+		enabled: opened,
 	});
 
 	// Global ⌘K / Ctrl+K — open palette anywhere.
@@ -111,172 +45,21 @@ const EMPTY_SEARCH: HomeSearchResponse = {
 		return () => window.removeEventListener("keydown", onKey);
 	}, [open]);
 
-	useEffect(() => {
-		if (!opened) {
-			setQ("");
-			setActiveIndex(0);
-		}
-	}, [opened]);
+	// Clear after the exit animation, not on close, to avoid flashing the unfiltered list.
+	const onClosed = () => {
+		setQ("");
+		setActiveIndex(-1);
+	};
 
-		const hits = useMemo<Hit[]>(() => {
-			const query = q.trim().toLowerCase();
-			const orgs = new Map<string, { name: string }>();
-			for (const ws of workspaces) {
-				if (ws.org_id && !orgs.has(ws.org_id)) {
-					orgs.set(ws.org_id, { name: ws.org_name || "" });
-				}
-			}
-
-			const all: Hit[] = [];
-			for (const [id, o] of orgs) {
-				all.push({
-					href: `/o/${id}/overview`,
-					icon: Buildings,
-					id: `org-${id}`,
-					label: o.name,
-					subtitle: `Organisation / ${o.name}`,
-				});
-			}
-			for (const ws of workspaces) {
-				all.push({
-					href: `/w/${ws.id}/home`,
-					icon: Folders,
-					id: `ws-${ws.id}`,
-					label: ws.name,
-					subtitle: `${ws.org_name} / ${ws.name}`,
-				});
-			}
-			// Settings as quick shortcuts
-			const settings = [
-				{ href: "/settings/account", label: "Account & security" },
-				{ href: "/settings/access", label: "My access" },
-				{ href: "/settings/appearance", label: "Appearance" },
-			];
-			const userName = me?.display_name || "User";
-			for (const s of settings) {
-				all.push({
-					href: s.href,
-					icon: Gear,
-					id: `setting-${s.href}`,
-					label: s.label,
-					subtitle: `${userName} / ${s.label}`,
-				});
-			}
-
-			if (!query) {
-				// No query → show recents (translated to Hits) then everything
-				const recentHits: Hit[] = recents.map((r) => {
-					const match = r.href.match(/\/w\/([^/]+)/);
-					const wsId = match ? match[1] : null;
-					const ws = workspaces.find((w) => w.id === wsId);
-					let subtitle = r.parent ?? (r.kind === "project" ? "Project" : "Workspace");
-					if (ws) {
-						if (r.kind === "project") {
-							subtitle = `${ws.org_name} / ${ws.name} / ${r.label}`;
-						} else {
-							subtitle = `${ws.org_name} / ${ws.name}`;
-						}
-					}
-					return {
-						href: r.href,
-						icon: r.kind === "project" ? FolderOpen : Folders,
-						id: `recent-${r.kind}-${r.id}`,
-						label: r.label,
-						subtitle,
-					};
-				});
-				const seen = new Set(recentHits.map((h) => h.label.toLowerCase()));
-				const rest = all.filter((h) => !seen.has(h.label.toLowerCase()));
-				return [...recentHits, ...rest].slice(0, 40);
-			}
-
-			const clientHits = all.filter((h) => {
-				const hay = `${h.label} ${h.subtitle ?? ""}`.toLowerCase();
-				return hay.includes(query);
-			});
-
-			// Deep results from /home/search, deduped by destination so the
-			// same page never shows twice (e.g. a recents row + a project hit,
-			// or a conversation hit + its own transcript hit).
-			const merged: Hit[] = [...clientHits];
-			const seenHrefs = new Set(clientHits.map((h) => h.href));
-			const push = (hit: Hit) => {
-				if (seenHrefs.has(hit.href)) return;
-				seenHrefs.add(hit.href);
-				merged.push(hit);
-			};
-
-			const deep = deepSearch.data ?? EMPTY_SEARCH;
-			for (const p of deep.projects) {
-				if (!p.workspaceId) continue;
-				const ws = workspaces.find((w) => w.id === p.workspaceId);
-				const subtitle = ws
-					? `${ws.org_name} / ${ws.name} / ${p.name ?? "Project"}`
-					: "Project";
-				push({
-					href: `/w/${p.workspaceId}/projects/${p.id}/home`,
-					icon: FolderOpen,
-					id: `proj-${p.id}`,
-					label: p.name ?? "Project",
-					subtitle,
-				});
-			}
-			for (const c of deep.conversations) {
-				if (!c.workspaceId || !c.projectId) continue;
-				const ws = workspaces.find((w) => w.id === c.workspaceId);
-				const subtitle = ws
-					? `${ws.org_name} / ${ws.name} / ${c.projectName || "Project"} / ${c.displayLabel}`
-					: c.projectName
-						? `${c.projectName} / ${c.displayLabel}`
-						: "Conversation";
-				push({
-					href: `/w/${c.workspaceId}/projects/${c.projectId}/conversation/${c.id}`,
-					icon: ChatCircle,
-					id: `conv-${c.id}`,
-					label: c.displayLabel,
-					subtitle,
-				});
-			}
-			for (const t of deep.transcripts) {
-				if (!t.workspaceId || !t.projectId || !t.conversationId) continue;
-				const ws = workspaces.find((w) => w.id === t.workspaceId);
-				const path = ws
-					? `${ws.org_name} / ${ws.name} / ${t.conversationLabel ?? "Transcript"}`
-					: "Transcript";
-				const subtitle = t.excerpt
-					? `${path} — "${t.excerpt.slice(0, 60)}..."`
-					: path;
-				push({
-					href: `/w/${t.workspaceId}/projects/${t.projectId}/conversation/${t.conversationId}`,
-					icon: FileText,
-					id: `chunk-${t.id}`,
-					label: t.conversationLabel ?? "Transcript",
-					subtitle,
-				});
-			}
-			for (const ch of deep.chats) {
-				if (!ch.workspaceId || !ch.projectId) continue;
-				const ws = workspaces.find((w) => w.id === ch.workspaceId);
-				const subtitle = ws
-					? `${ws.org_name} / ${ws.name} / ${ch.projectName || "Project"} / ${ch.name ?? "Chat"}`
-					: ch.projectName
-						? `${ch.projectName} / ${ch.name ?? "Chat"}`
-						: "Chat";
-				push({
-					href: `/w/${ch.workspaceId}/projects/${ch.projectId}/chats/${ch.id}`,
-					icon: ChatsCircle,
-					id: `chat-${ch.id}`,
-					label: ch.name ?? "Chat",
-					subtitle,
-				});
-			}
-
-			return merged.slice(0, 40);
-		}, [q, workspaces, recents, deepSearch.data, me]);
-
-	const onSelect = (hit: Hit) => {
+	const onSelect = (hit: SearchHit) => {
 		close();
 		navigate(hit.href);
+	};
+
+	const onClear = () => {
+		setQ("");
+		setActiveIndex(-1);
+		searchInputRef.current?.focus();
 	};
 
 	const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -301,19 +84,19 @@ const EMPTY_SEARCH: HomeSearchResponse = {
 				style={{ color: "#2d2d2c", width: "100%" }}
 				aria-label="Search"
 			>
-				<MagnifyingGlass size={16} />
+				<MagnifyingGlassIcon size={16} />
 				<span>
 					<Trans>Search</Trans>
 				</span>
-					<span
-						className="ml-auto rounded px-1.5 py-0.5 text-[10px]"
-						style={{
-							backgroundColor: "rgba(45, 45, 44, 0.06)",
-							color: "rgba(45, 45, 44, 0.55)",
-						}}
-					>
-						{shortcut}
-					</span>
+				<span
+					className="ml-auto rounded px-1.5 py-0.5 text-[10px]"
+					style={{
+						backgroundColor: "rgba(45, 45, 44, 0.06)",
+						color: "rgba(45, 45, 44, 0.55)",
+					}}
+				>
+					{shortcut}
+				</span>
 			</UnstyledButton>
 
 			<Modal
@@ -324,6 +107,7 @@ const EMPTY_SEARCH: HomeSearchResponse = {
 				padding={0}
 				centered
 				styles={{ body: { padding: 0 } }}
+				transitionProps={{ onExited: onClosed }}
 			>
 				<div className="flex flex-col">
 					<div
@@ -331,26 +115,42 @@ const EMPTY_SEARCH: HomeSearchResponse = {
 						style={{ borderColor: "rgba(45, 45, 44, 0.08)" }}
 					>
 						<TextInput
+							ref={searchInputRef}
 							autoFocus
 							value={q}
 							onChange={(e) => {
-								setQ(e.currentTarget.value);
-								setActiveIndex(0);
+								const value = e.currentTarget.value;
+								setQ(value);
+								setActiveIndex(value ? 0 : -1);
 							}}
 							onKeyDown={onKeyDown}
-							leftSection={<MagnifyingGlass size={16} />}
+							leftSection={<MagnifyingGlassIcon size={16} />}
 							placeholder="Search projects, conversations, transcripts…"
 							variant="unstyled"
 							styles={{ input: { fontSize: 14 } }}
+							rightSectionPointerEvents="auto"
+							rightSection={
+								q ? (
+									<CloseButton
+										size="sm"
+										aria-label={t`Clear search`}
+										onClick={onClear}
+									/>
+								) : undefined
+							}
 						/>
 					</div>
-					<div className="max-h-[400px] overflow-auto p-1">
+					<div
+						className={`${classes.list} max-h-[400px] overflow-auto p-1`}
+						role="listbox"
+						aria-label={t`Search results`}
+					>
 						{hits.length === 0 ? (
 							<div
 								className="px-3 py-6 text-center text-[12px]"
 								style={{ color: "rgba(45, 45, 44, 0.55)" }}
 							>
-								{deepSearch.isFetching ? (
+								{isFetching ? (
 									<Trans>Searching…</Trans>
 								) : (
 									<Trans>No matches</Trans>
@@ -364,22 +164,18 @@ const EMPTY_SEARCH: HomeSearchResponse = {
 									<button
 										type="button"
 										key={hit.id}
+										role="option"
+										aria-selected={active}
 										onClick={() => onSelect(hit)}
-										onMouseEnter={() => setActiveIndex(i)}
-										className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-[13px]"
-										style={{
-											backgroundColor: active
-												? "rgba(65, 105, 225, 0.08)"
-												: "transparent",
-											color: active ? "#4169e1" : "#2d2d2c",
-										}}
+										className={`${classes.row} ${
+											active ? classes.rowActive : ""
+										} flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-[13px]`}
 									>
 										<Icon size={16} />
 										<span className="flex-1 truncate">{hit.label}</span>
 										{hit.subtitle && (
 											<span
-												className="truncate text-[11px]"
-												style={{ color: "rgba(45, 45, 44, 0.5)" }}
+												className={`${classes.subtitle} truncate text-[11px]`}
 											>
 												{hit.subtitle}
 											</span>

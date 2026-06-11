@@ -1,0 +1,31 @@
+/* Layout stays in Tailwind; this module owns the highlight states so a `:has`
+   rule can let the hovered row win over the keyboard highlight. */
+.row {
+	color: var(--app-text);
+	background-color: transparent;
+}
+
+.row:hover,
+.rowActive {
+	color: var(--mantine-primary-color-filled);
+	background-color: var(--mantine-primary-color-light);
+}
+
+.subtitle {
+	color: var(--mantine-color-dimmed);
+}
+
+.row:hover .subtitle,
+.rowActive .subtitle {
+	color: var(--mantine-primary-color-filled);
+}
+
+/* While hovering, the hovered row wins; the keyboard highlight yields. */
+.list:has(.row:hover) .rowActive:not(:hover) {
+	color: var(--app-text);
+	background-color: transparent;
+}
+
+.list:has(.row:hover) .rowActive:not(:hover) .subtitle {
+	color: var(--mantine-color-dimmed);
+}
