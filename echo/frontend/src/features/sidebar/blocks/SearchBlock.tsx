@@ -7,6 +7,7 @@ import {
 	ChatsCircle,
 	FileText,
 	FolderOpen,
+	Folders,
 	Gear,
 	MagnifyingGlass,
 } from "@phosphor-icons/react";
@@ -15,6 +16,7 @@ import { type ComponentType, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useV2Me } from "@/hooks/useV2Me";
 import { useRecents } from "../hooks/useRecents";
 
 interface Hit {
@@ -70,6 +72,7 @@ const EMPTY_SEARCH: HomeSearchResponse = {
 		const [activeIndex, setActiveIndex] = useState(0);
 		const { workspaces } = useWorkspace();
 		const { items: recents } = useRecents();
+		const { data: me } = useV2Me();
 		const navigate = useNavigate();
 		const [shortcut, setShortcut] = useState("⌘K");
 
@@ -115,126 +118,161 @@ const EMPTY_SEARCH: HomeSearchResponse = {
 		}
 	}, [opened]);
 
-	const hits = useMemo<Hit[]>(() => {
-		const query = q.trim().toLowerCase();
-		const orgs = new Map<string, { name: string }>();
-		for (const ws of workspaces) {
-			if (ws.org_id && !orgs.has(ws.org_id)) {
-				orgs.set(ws.org_id, { name: ws.org_name || "" });
+		const hits = useMemo<Hit[]>(() => {
+			const query = q.trim().toLowerCase();
+			const orgs = new Map<string, { name: string }>();
+			for (const ws of workspaces) {
+				if (ws.org_id && !orgs.has(ws.org_id)) {
+					orgs.set(ws.org_id, { name: ws.org_name || "" });
+				}
 			}
-		}
 
-		const all: Hit[] = [];
-		for (const [id, o] of orgs) {
-			all.push({
-				href: `/o/${id}/overview`,
-				icon: Buildings,
-				id: `org-${id}`,
-				label: o.name,
-				subtitle: "Organisation",
-			});
-		}
-		for (const ws of workspaces) {
-			all.push({
-				href: `/w/${ws.id}/home`,
-				icon: FolderOpen,
-				id: `ws-${ws.id}`,
-				label: ws.name,
-				subtitle: `${ws.org_name} · Workspace`,
-			});
-		}
-		// Settings as quick shortcuts
-		const settings = [
-			{ href: "/settings/account", label: "Account & security" },
-			{ href: "/settings/access", label: "My access" },
-			{ href: "/settings/appearance", label: "Appearance" },
-		];
-		for (const s of settings) {
-			all.push({
-				href: s.href,
-				icon: Gear,
-				id: `setting-${s.href}`,
-				label: s.label,
-				subtitle: "Settings",
-			});
-		}
+			const all: Hit[] = [];
+			for (const [id, o] of orgs) {
+				all.push({
+					href: `/o/${id}/overview`,
+					icon: Buildings,
+					id: `org-${id}`,
+					label: o.name,
+					subtitle: `Organisation / ${o.name}`,
+				});
+			}
+			for (const ws of workspaces) {
+				all.push({
+					href: `/w/${ws.id}/home`,
+					icon: Folders,
+					id: `ws-${ws.id}`,
+					label: ws.name,
+					subtitle: `${ws.org_name} / ${ws.name}`,
+				});
+			}
+			// Settings as quick shortcuts
+			const settings = [
+				{ href: "/settings/account", label: "Account & security" },
+				{ href: "/settings/access", label: "My access" },
+				{ href: "/settings/appearance", label: "Appearance" },
+			];
+			const userName = me?.display_name || "User";
+			for (const s of settings) {
+				all.push({
+					href: s.href,
+					icon: Gear,
+					id: `setting-${s.href}`,
+					label: s.label,
+					subtitle: `${userName} / ${s.label}`,
+				});
+			}
 
-		if (!query) {
-			// No query → show recents (translated to Hits) then everything
-			const recentHits: Hit[] = recents.map((r) => ({
-				href: r.href,
-				icon: r.kind === "project" ? FolderOpen : FolderOpen,
-				id: `recent-${r.kind}-${r.id}`,
-				label: r.label,
-				subtitle: r.parent ?? (r.kind === "project" ? "Project" : "Workspace"),
-			}));
-			const seen = new Set(recentHits.map((h) => h.label.toLowerCase()));
-			const rest = all.filter((h) => !seen.has(h.label.toLowerCase()));
-			return [...recentHits, ...rest].slice(0, 40);
-		}
+			if (!query) {
+				// No query → show recents (translated to Hits) then everything
+				const recentHits: Hit[] = recents.map((r) => {
+					const match = r.href.match(/\/w\/([^/]+)/);
+					const wsId = match ? match[1] : null;
+					const ws = workspaces.find((w) => w.id === wsId);
+					let subtitle = r.parent ?? (r.kind === "project" ? "Project" : "Workspace");
+					if (ws) {
+						if (r.kind === "project") {
+							subtitle = `${ws.org_name} / ${ws.name} / ${r.label}`;
+						} else {
+							subtitle = `${ws.org_name} / ${ws.name}`;
+						}
+					}
+					return {
+						href: r.href,
+						icon: r.kind === "project" ? FolderOpen : Folders,
+						id: `recent-${r.kind}-${r.id}`,
+						label: r.label,
+						subtitle,
+					};
+				});
+				const seen = new Set(recentHits.map((h) => h.label.toLowerCase()));
+				const rest = all.filter((h) => !seen.has(h.label.toLowerCase()));
+				return [...recentHits, ...rest].slice(0, 40);
+			}
 
-		const clientHits = all.filter((h) => {
-			const hay = `${h.label} ${h.subtitle ?? ""}`.toLowerCase();
-			return hay.includes(query);
-		});
+			const clientHits = all.filter((h) => {
+				const hay = `${h.label} ${h.subtitle ?? ""}`.toLowerCase();
+				return hay.includes(query);
+			});
 
-		// Deep results from /home/search, deduped by destination so the
-		// same page never shows twice (e.g. a recents row + a project hit,
-		// or a conversation hit + its own transcript hit).
-		const merged: Hit[] = [...clientHits];
-		const seenHrefs = new Set(clientHits.map((h) => h.href));
-		const push = (hit: Hit) => {
-			if (seenHrefs.has(hit.href)) return;
-			seenHrefs.add(hit.href);
-			merged.push(hit);
-		};
+			// Deep results from /home/search, deduped by destination so the
+			// same page never shows twice (e.g. a recents row + a project hit,
+			// or a conversation hit + its own transcript hit).
+			const merged: Hit[] = [...clientHits];
+			const seenHrefs = new Set(clientHits.map((h) => h.href));
+			const push = (hit: Hit) => {
+				if (seenHrefs.has(hit.href)) return;
+				seenHrefs.add(hit.href);
+				merged.push(hit);
+			};
 
-		const deep = deepSearch.data ?? EMPTY_SEARCH;
-		for (const p of deep.projects) {
-			if (!p.workspaceId) continue;
-			push({
-				href: `/w/${p.workspaceId}/projects/${p.id}/home`,
-				icon: FolderOpen,
-				id: `proj-${p.id}`,
-				label: p.name ?? "Project",
-				subtitle: "Project",
-			});
-		}
-		for (const c of deep.conversations) {
-			if (!c.workspaceId || !c.projectId) continue;
-			push({
-				href: `/w/${c.workspaceId}/projects/${c.projectId}/conversation/${c.id}`,
-				icon: ChatCircle,
-				id: `conv-${c.id}`,
-				label: c.displayLabel,
-				subtitle: c.projectName
-					? `${c.projectName} · Conversation`
-					: "Conversation",
-			});
-		}
-		for (const t of deep.transcripts) {
-			if (!t.workspaceId || !t.projectId || !t.conversationId) continue;
-			push({
-				href: `/w/${t.workspaceId}/projects/${t.projectId}/conversation/${t.conversationId}`,
-				icon: FileText,
-				id: `chunk-${t.id}`,
-				label: t.conversationLabel ?? "Transcript",
-				subtitle: t.excerpt ? t.excerpt.slice(0, 80) : "Transcript",
-			});
-		}
-		for (const ch of deep.chats) {
-			if (!ch.workspaceId || !ch.projectId) continue;
-			push({
-				href: `/w/${ch.workspaceId}/projects/${ch.projectId}/chats/${ch.id}`,
-				icon: ChatsCircle,
-				id: `chat-${ch.id}`,
-				label: ch.name ?? "Chat",
-				subtitle: ch.projectName ? `${ch.projectName} · Chat` : "Chat",
-			});
-		}
+			const deep = deepSearch.data ?? EMPTY_SEARCH;
+			for (const p of deep.projects) {
+				if (!p.workspaceId) continue;
+				const ws = workspaces.find((w) => w.id === p.workspaceId);
+				const subtitle = ws
+					? `${ws.org_name} / ${ws.name} / ${p.name ?? "Project"}`
+					: "Project";
+				push({
+					href: `/w/${p.workspaceId}/projects/${p.id}/home`,
+					icon: FolderOpen,
+					id: `proj-${p.id}`,
+					label: p.name ?? "Project",
+					subtitle,
+				});
+			}
+			for (const c of deep.conversations) {
+				if (!c.workspaceId || !c.projectId) continue;
+				const ws = workspaces.find((w) => w.id === c.workspaceId);
+				const subtitle = ws
+					? `${ws.org_name} / ${ws.name} / ${c.projectName || "Project"} / ${c.displayLabel}`
+					: c.projectName
+						? `${c.projectName} / ${c.displayLabel}`
+						: "Conversation";
+				push({
+					href: `/w/${c.workspaceId}/projects/${c.projectId}/conversation/${c.id}`,
+					icon: ChatCircle,
+					id: `conv-${c.id}`,
+					label: c.displayLabel,
+					subtitle,
+				});
+			}
+			for (const t of deep.transcripts) {
+				if (!t.workspaceId || !t.projectId || !t.conversationId) continue;
+				const ws = workspaces.find((w) => w.id === t.workspaceId);
+				const path = ws
+					? `${ws.org_name} / ${ws.name} / ${t.conversationLabel ?? "Transcript"}`
+					: "Transcript";
+				const subtitle = t.excerpt
+					? `${path} — "${t.excerpt.slice(0, 60)}..."`
+					: path;
+				push({
+					href: `/w/${t.workspaceId}/projects/${t.projectId}/conversation/${t.conversationId}`,
+					icon: FileText,
+					id: `chunk-${t.id}`,
+					label: t.conversationLabel ?? "Transcript",
+					subtitle,
+				});
+			}
+			for (const ch of deep.chats) {
+				if (!ch.workspaceId || !ch.projectId) continue;
+				const ws = workspaces.find((w) => w.id === ch.workspaceId);
+				const subtitle = ws
+					? `${ws.org_name} / ${ws.name} / ${ch.projectName || "Project"} / ${ch.name ?? "Chat"}`
+					: ch.projectName
+						? `${ch.projectName} / ${ch.name ?? "Chat"}`
+						: "Chat";
+				push({
+					href: `/w/${ch.workspaceId}/projects/${ch.projectId}/chats/${ch.id}`,
+					icon: ChatsCircle,
+					id: `chat-${ch.id}`,
+					label: ch.name ?? "Chat",
+					subtitle,
+				});
+			}
 
-		return merged.slice(0, 40);
-	}, [q, workspaces, recents, deepSearch.data]);
+			return merged.slice(0, 40);
+		}, [q, workspaces, recents, deepSearch.data, me]);
 
 	const onSelect = (hit: Hit) => {
 		close();

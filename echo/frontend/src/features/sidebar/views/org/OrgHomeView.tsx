@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { AppWindowIcon, FolderIcon, GearIcon } from "@phosphor-icons/react";
+import { AppWindowIcon, FolderIcon, Folders, GearIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useParams } from "react-router";
@@ -139,16 +139,16 @@ export const OrgHomeView = () => {
 					<SectionLabel>
 						<Trans>Workspaces</Trans>
 					</SectionLabel>
-					{displayList.map((ws) => (
-						<NavItem
-							key={ws.id}
-							to={`/w/${ws.id}/home`}
-							label={ws.name}
-							icon={FolderIcon}
-							badge={ws.isExternal ? <Trans>External</Trans> : undefined}
-							pushes
-						/>
-					))}
+						{displayList.map((ws) => (
+							<NavItem
+								key={ws.id}
+								to={`/w/${ws.id}/home`}
+								label={ws.name}
+								icon={Folders}
+								badge={ws.isExternal ? <Trans>External</Trans> : undefined}
+								pushes
+							/>
+						))}
 				</>
 			)}
 		</nav>
