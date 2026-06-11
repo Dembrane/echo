@@ -321,10 +321,9 @@ msgstr ""
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr ""
 
-#. placeholder {0}: org.memberCount
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:198
-msgid "{0, plural, one {# person} other {# people}}"
-msgstr ""
+#~ msgid "{0, plural, one {# person} other {# people}}"
+#~ msgstr ""
 
 #. placeholder {0}: data.project_count
 #. placeholder {0}: ws.project_count
@@ -425,9 +424,7 @@ msgstr ""
 msgid "{0} hours total"
 msgstr ""
 
-#. placeholder {0}: org.name
 #. placeholder {0}: organisation.name
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:178
 #: src/routes/organisation/OrganisationRoute.tsx:653
 msgid "{0} logo"
 msgstr ""
@@ -839,12 +836,14 @@ msgstr ""
 msgid "Access requests"
 msgstr ""
 
+#: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:128
 msgid "Account"
 msgstr "Konto"
 
-#: src/routes/settings/UserSettingsRoute.tsx:94
+#: src/routes/settings/UserSettingsRoute.tsx:95
 #: src/features/sidebar/views/user/UserSettingsView.tsx:36
+#: src/features/sidebar/hooks/useSearchHits.ts:84
 msgid "Account & security"
 msgstr ""
 
@@ -1123,7 +1122,7 @@ msgstr ""
 #~ msgid "Admin — manage the workspace and its members"
 #~ msgstr ""
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:126
+#: src/features/sidebar/views/user/UserHomeView.tsx:127
 msgid "Admin dashboard"
 msgstr ""
 
@@ -1412,8 +1411,9 @@ msgstr ""
 msgid "Anything we should know? Team size, timelines, intended use."
 msgstr ""
 
-#: src/routes/settings/UserSettingsRoute.tsx:127
+#: src/routes/settings/UserSettingsRoute.tsx:128
 #: src/features/sidebar/views/user/UserSettingsView.tsx:46
+#: src/features/sidebar/hooks/useSearchHits.ts:86
 msgid "Appearance"
 msgstr "Erscheinungsbild"
 
@@ -1684,7 +1684,7 @@ msgstr "Audit-Protokolle als CSV exportiert"
 msgid "Audit logs exported to JSON"
 msgstr "Audit-Protokolle als JSON exportiert"
 
-#: src/routes/auth/Login.tsx:313
+#: src/routes/auth/Login.tsx:318
 #: src/components/settings/TwoFactorSettingsCard.tsx:231
 #: src/components/settings/TwoFactorSettingsCard.tsx:381
 msgid "Authenticator code"
@@ -2115,6 +2115,10 @@ msgstr "Das Ändern der Sprache während eines aktiven Chats kann unerwartete Er
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:612
 #: src/routes/project/chat/ProjectChatRoute.tsx:618
+#: src/features/sidebar/hooks/useSearchHits.ts:252
+#: src/features/sidebar/hooks/useSearchHits.ts:254
+#: src/features/sidebar/hooks/useSearchHits.ts:255
+#: src/features/sidebar/hooks/useSearchHits.ts:260
 msgid "Chat"
 msgstr "Chat"
 
@@ -2185,6 +2189,10 @@ msgstr "Aus Ihren anderen Projekten auswählen"
 msgid "Choose when you want to receive notifications"
 msgstr "Wählen Sie, wann Sie Benachrichtigungen erhalten möchten"
 
+#: src/components/settings/LanguageSettingsCard.tsx:17
+msgid "Choose your preferred language for the interface"
+msgstr ""
+
 #: src/components/settings/FontSettingsCard.tsx:74
 msgid "Choose your preferred theme for the interface"
 msgstr "Wähl dein Theme für das Interface"
@@ -2196,7 +2204,9 @@ msgstr "Wähl dein Theme für das Interface"
 msgid "Clear filters"
 msgstr ""
 
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:282
 #: src/routes/project/ProjectsHome.tsx:347
+#: src/features/sidebar/blocks/SearchBlock.tsx:136
 #: src/components/invite/WorkspaceSelectList.tsx:96
 #: src/components/conversation/ProjectConversationsPanel.tsx:679
 msgid "Clear search"
@@ -2390,7 +2400,7 @@ msgstr "Einwilligung"
 msgid "Contact support"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:316
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:382
 msgid "Contact the admin if this was unexpected."
 msgstr ""
 
@@ -2433,6 +2443,10 @@ msgstr "Weiter"
 #: src/routes/organisation/OrganisationRoute.tsx:1482
 msgid "conversation"
 msgstr "Gespräch"
+
+#: src/features/sidebar/hooks/useSearchHits.ts:222
+msgid "Conversation"
+msgstr ""
 
 #: src/components/conversation/hooks/index.ts:395
 msgid "Conversation added to chat"
@@ -2695,7 +2709,7 @@ msgid "Create account"
 msgstr ""
 
 #: src/routes/auth/Register.tsx:114
-#: src/routes/auth/Login.tsx:422
+#: src/routes/auth/Login.tsx:427
 msgid "Create an account"
 msgstr ""
 
@@ -3468,8 +3482,8 @@ msgstr "Webhook bearbeiten"
 #~ msgid "Editing mode"
 #~ msgstr "Bearbeitungsmodus"
 
-#: src/routes/auth/Login.tsx:354
-#: src/routes/auth/Login.tsx:358
+#: src/routes/auth/Login.tsx:359
+#: src/routes/auth/Login.tsx:363
 #: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -3651,7 +3665,7 @@ msgstr "Dateiname eingeben (ohne Erweiterung)"
 msgid "Enter new password"
 msgstr "Neues Passwort eingeben"
 
-#: src/routes/auth/Login.tsx:125
+#: src/routes/auth/Login.tsx:126
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Geben Sie den 6-stelligen Code aus Ihrer Authentifizierungs-App ein."
 
@@ -3826,12 +3840,11 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:885
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:967
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1253
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:192
 #: src/routes/organisation/OrganisationRoute.tsx:1225
 #: src/routes/organisation/OrganisationRoute.tsx:1715
 #: src/routes/organisation/OrganisationExternalView.tsx:57
 #: src/lib/roles.ts:15
-#: src/features/sidebar/views/user/UserHomeView.tsx:110
+#: src/features/sidebar/views/user/UserHomeView.tsx:111
 #: src/features/sidebar/views/org/OrgHomeView.tsx:148
 #: src/components/project/ProjectUsageAndSharing.tsx:570
 #: src/components/invite/RoleSelect.tsx:52
@@ -4212,7 +4225,7 @@ msgstr ""
 msgid "Forecast: ~{0}"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:390
+#: src/routes/auth/Login.tsx:395
 msgid "Forgot your password?"
 msgstr "Passwort vergessen?"
 
@@ -4329,7 +4342,7 @@ msgid "participant.refine.go.deeper.description"
 msgstr "Erhalte eine sofortige Antwort von dembrane, um das Gespräch zu vertiefen."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:464
-#: src/features/sidebar/views/user/UserHomeView.tsx:78
+#: src/features/sidebar/views/user/UserHomeView.tsx:79
 msgid "Get started"
 msgstr ""
 
@@ -4345,7 +4358,7 @@ msgstr "Geben Sie mir eine Liste von 5-10 Themen, die diskutiert werden."
 #~ msgid "Give your team a name. You can invite teammates right after, or later from settings."
 #~ msgstr ""
 
-#: src/routes/settings/UserSettingsRoute.tsx:75
+#: src/routes/settings/UserSettingsRoute.tsx:76
 msgid "Go back"
 msgstr "Go back"
 
@@ -4468,6 +4481,14 @@ msgstr ""
 #~ msgid "Help us translate"
 #~ msgstr "Helfen Sie uns zu übersetzen"
 
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:258
+msgid "Hi"
+msgstr ""
+
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:258
+msgid "Hi {firstName}"
+msgstr ""
+
 #: src/components/layout/Header.tsx:199
 #~ msgid "Hi, {0}"
 #~ msgstr "Hallo, {0}"
@@ -4516,7 +4537,7 @@ msgstr "Revisionsdaten verbergen"
 msgid "Highlight specific Concept"
 msgstr "Bestimmtes Konzept hervorheben"
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:73
+#: src/features/sidebar/views/user/UserHomeView.tsx:74
 msgid "Home"
 msgstr "Startseite"
 
@@ -4598,7 +4619,7 @@ msgstr "Identifizieren Sie wiederkehrende Themen, Themen und Argumente, die in G
 msgid "participant.verify.instructions.approve.artefact"
 msgstr "Wenn Sie mit {objectLabel} zufrieden sind, klicken Sie auf \"Genehmigen\", um zu zeigen, dass Sie sich gehört fühlen."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:325
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:395
 msgid "If you were expecting access, please ask the person who invited you to send it again."
 msgstr ""
 
@@ -4711,7 +4732,7 @@ msgstr ""
 msgid "Invalid code. Please request a new one."
 msgstr "Ungültiger Code. Bitte fordern Sie einen neuen an."
 
-#: src/routes/auth/Login.tsx:265
+#: src/routes/auth/Login.tsx:270
 msgid "Invalid credentials."
 msgstr "Ungültige Anmeldedaten."
 
@@ -5018,7 +5039,8 @@ msgstr ""
 msgid "Kind"
 msgstr ""
 
-#: src/features/sidebar/shell/UserMenu.tsx:128
+#: src/features/sidebar/shell/UserMenu.tsx:114
+#: src/components/settings/LanguageSettingsCard.tsx:13
 #: src/components/report/UpdateReportModalButton.tsx:191
 #: src/components/report/UpdateReportModalButton.tsx:264
 #: src/components/report/CreateReportForm.tsx:209
@@ -5281,11 +5303,11 @@ msgstr ""
 msgid "Log out and use the invited email"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:406
+#: src/routes/auth/Login.tsx:411
 msgid "Login"
 msgstr "Anmelden"
 
-#: src/routes/auth/Login.tsx:79
+#: src/routes/auth/Login.tsx:80
 msgid "Login | dembrane"
 msgstr "Anmelden | dembrane"
 
@@ -5317,7 +5339,7 @@ msgstr "Logo aktualisiert"
 #~ msgid "Logo URL"
 #~ msgstr ""
 
-#: src/features/sidebar/shell/UserMenu.tsx:141
+#: src/features/sidebar/shell/UserMenu.tsx:144
 msgid "Logout"
 msgstr "Abmelden"
 
@@ -5533,8 +5555,9 @@ msgstr ""
 msgid "Must be at least 10 minutes in the future"
 msgstr "Muss mindestens 10 Minuten in der Zukunft liegen"
 
-#: src/routes/settings/UserSettingsRoute.tsx:114
+#: src/routes/settings/UserSettingsRoute.tsx:115
 #: src/features/sidebar/views/user/UserSettingsView.tsx:41
+#: src/features/sidebar/hooks/useSearchHits.ts:85
 msgid "My access"
 msgstr ""
 
@@ -5861,8 +5884,12 @@ msgstr ""
 msgid "No logo set. dembrane default will be used."
 msgstr ""
 
-#: src/features/sidebar/blocks/SearchBlock.tsx:318
+#: src/features/sidebar/blocks/SearchBlock.tsx:156
 msgid "No matches"
+msgstr ""
+
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:306
+msgid "No matches found"
 msgstr ""
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:228
@@ -6353,7 +6380,7 @@ msgstr "Fehlerbehebungsleitfaden öffnen"
 #~ msgid "Open troubleshooting guide"
 #~ msgstr "Fehlerbehebungsleitfaden öffnen"
 
-#: src/routes/auth/Login.tsx:345
+#: src/routes/auth/Login.tsx:350
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Öffnen Sie Ihre Authentifizierungs-App und geben Sie den aktuellen 6-stelligen Code ein."
 
@@ -6397,7 +6424,7 @@ msgid "Options"
 msgstr "Optionen"
 
 #: src/routes/auth/Register.tsx:255
-#: src/routes/auth/Login.tsx:413
+#: src/routes/auth/Login.tsx:418
 msgid "or"
 msgstr "oder"
 
@@ -6413,7 +6440,7 @@ msgstr "Oder schreiben Sie Ihren eigenen"
 msgid "Org only"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:102
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:110
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:309
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:439
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:550
@@ -6421,6 +6448,7 @@ msgstr ""
 #: src/routes/admin/AdminSettingsRoute.tsx:2181
 #: src/routes/admin/AdminSettingsRoute.tsx:2496
 #: src/features/sidebar/views/org/OrgHomeView.tsx:73
+#: src/features/sidebar/hooks/useSearchHits.ts:134
 msgid "Organisation"
 msgstr ""
 
@@ -6474,12 +6502,11 @@ msgstr ""
 msgid "Organisation usage"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:270
-#: src/features/sidebar/views/user/UserHomeView.tsx:91
+#: src/features/sidebar/views/user/UserHomeView.tsx:92
 msgid "Organisations"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:219
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:162
 msgid "Organisations | dembrane"
 msgstr ""
 
@@ -6736,8 +6763,8 @@ msgid "Partner organisation"
 msgstr ""
 
 #: src/routes/auth/Register.tsx:186
-#: src/routes/auth/Login.tsx:368
-#: src/routes/auth/Login.tsx:372
+#: src/routes/auth/Login.tsx:373
+#: src/routes/auth/Login.tsx:377
 msgid "Password"
 msgstr "Passwort"
 
@@ -6984,7 +7011,7 @@ msgstr "Bitte aktivieren Sie die Teilnahme, um das Teilen zu ermöglichen"
 msgid "Please enter a valid email."
 msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein."
 
-#: src/routes/auth/Login.tsx:301
+#: src/routes/auth/Login.tsx:306
 msgid "Please log in to continue."
 msgstr ""
 
@@ -7287,6 +7314,12 @@ msgid "project"
 msgstr ""
 
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:49
+#: src/features/sidebar/hooks/useSearchHits.ts:164
+#: src/features/sidebar/hooks/useSearchHits.ts:205
+#: src/features/sidebar/hooks/useSearchHits.ts:206
+#: src/features/sidebar/hooks/useSearchHits.ts:211
+#: src/features/sidebar/hooks/useSearchHits.ts:219
+#: src/features/sidebar/hooks/useSearchHits.ts:252
 #: src/components/workspace/OrganisationProjectsTable.tsx:205
 msgid "Project"
 msgstr ""
@@ -7311,7 +7344,7 @@ msgstr "Projektstandard: aktiviert. Persönliche Informationen werden durch Plat
 #~ msgid "Project default: enabled. This will replace personally identifiable information with <redacted>."
 #~ msgstr "Projekt Standard: aktiviert. Dies wird persönliche Identifizierbare Informationen mit <redacted> ersetzen."
 
-#: src/routes/settings/UserSettingsRoute.tsx:138
+#: src/routes/settings/UserSettingsRoute.tsx:140
 #: src/features/sidebar/views/user/UserSettingsView.tsx:52
 msgid "Project defaults"
 msgstr ""
@@ -8226,7 +8259,7 @@ msgstr "Bericht planen"
 msgid "Scroll to bottom"
 msgstr "Nach unten scrollen"
 
-#: src/features/sidebar/blocks/SearchBlock.tsx:268
+#: src/features/sidebar/blocks/SearchBlock.tsx:89
 #: src/components/conversation/ProjectConversationsPanel.tsx:672
 #: src/components/conversation/MoveConversationButton.tsx:160
 msgid "Search"
@@ -8269,6 +8302,10 @@ msgstr "Projekte suchen"
 msgid "Search Projects"
 msgstr "Projekte suchen"
 
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:269
+msgid "Search projects, organisations, workspaces, settings…"
+msgstr ""
+
 #: src/components/conversation/MoveConversationButton.tsx:161
 #: src/components/conversation/ConversationAccordion.tsx:289
 msgid "Search projects..."
@@ -8276,6 +8313,11 @@ msgstr "Projekte suchen..."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2675
 msgid "Search requester, organisation, tier"
+msgstr ""
+
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:296
+#: src/features/sidebar/blocks/SearchBlock.tsx:146
+msgid "Search results"
 msgstr ""
 
 #: src/components/conversation/ConversationAccordion.tsx:1297
@@ -8316,7 +8358,8 @@ msgstr "Durchsucht die relevantesten Quellen"
 msgid "Searching through the most relevant sources"
 msgstr "Durchsucht die relevantesten Quellen"
 
-#: src/features/sidebar/blocks/SearchBlock.tsx:316
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:304
+#: src/features/sidebar/blocks/SearchBlock.tsx:154
 msgid "Searching…"
 msgstr ""
 
@@ -8547,7 +8590,7 @@ msgstr "Sitzungsname"
 msgid "Set up workspace"
 msgstr ""
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:82
+#: src/features/sidebar/views/user/UserHomeView.tsx:83
 msgid "Set up your first organisation"
 msgstr ""
 
@@ -8576,7 +8619,7 @@ msgstr ""
 #~ msgid "Setting up your first project"
 #~ msgstr "Ihr erstes Projekt einrichten"
 
-#: src/routes/settings/UserSettingsRoute.tsx:83
+#: src/routes/settings/UserSettingsRoute.tsx:84
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:23
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:64
 #: src/features/sidebar/views/user/UserSettingsView.tsx:33
@@ -8584,7 +8627,7 @@ msgstr ""
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:103
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:24
 #: src/features/sidebar/views/org/OrgHomeView.tsx:130
-#: src/features/sidebar/shell/UserMenu.tsx:112
+#: src/features/sidebar/shell/UserMenu.tsx:134
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
 #: src/components/layout/ParticipantHeader.tsx:97
 #: src/components/layout/ParticipantHeader.tsx:98
@@ -8596,11 +8639,11 @@ msgstr "Einstellungen"
 msgid "participant.settings.modal.title"
 msgstr "Einstellungen"
 
-#: src/routes/settings/UserSettingsRoute.tsx:39
+#: src/routes/settings/UserSettingsRoute.tsx:40
 msgid "Settings | dembrane"
 msgstr "Settings | dembrane"
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:71
+#: src/features/sidebar/views/user/UserHomeView.tsx:72
 msgid "Setup"
 msgstr ""
 
@@ -8854,7 +8897,7 @@ msgstr "Etwas blockiert Ihre Verbindung. Ihr Audio wird nicht gespeichert, solan
 #: src/routes/project/report/ProjectReportRoute.tsx:932
 #: src/routes/project/report/ProjectReportRoute.tsx:1388
 #: src/routes/onboarding/OnboardingRoute.tsx:132
-#: src/routes/auth/Login.tsx:256
+#: src/routes/auth/Login.tsx:261
 #: src/components/project/ProjectAccessGuard.tsx:87
 #: src/components/participant/ParticipantInitiateForm.tsx:93
 #: src/components/error/ErrorPage.tsx:55
@@ -8966,7 +9009,7 @@ msgid "Specific Details needs at least one conversation."
 msgstr "Specific Details benötigt mindestens ein Gespräch."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2907
-#: src/features/sidebar/shell/UserMenu.tsx:119
+#: src/features/sidebar/shell/UserMenu.tsx:127
 msgid "Staff"
 msgstr ""
 
@@ -9295,7 +9338,7 @@ msgstr "Danke-Seite Inhalt"
 msgid "Thank you!"
 msgstr "Vielen Dank!"
 
-#: src/routes/auth/Login.tsx:239
+#: src/routes/auth/Login.tsx:244
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "Der Code hat nicht funktioniert. Versuchen Sie es erneut mit einem neuen Code aus Ihrer Authentifizierungs-App."
 
@@ -9524,7 +9567,7 @@ msgstr ""
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 msgstr "Dies ist eine Live-Vorschau des Teilnehmerportals. Sie müssen die Seite aktualisieren, um die neuesten Änderungen zu sehen."
 
-#: src/routes/settings/UserSettingsRoute.tsx:117
+#: src/routes/settings/UserSettingsRoute.tsx:118
 msgid "This is a map of every organisation and workspace you are a member of."
 msgstr ""
 
@@ -9830,6 +9873,9 @@ msgstr ""
 msgid "Transcribing..."
 msgstr "Transcribieren..."
 
+#: src/features/sidebar/hooks/useSearchHits.ts:235
+#: src/features/sidebar/hooks/useSearchHits.ts:236
+#: src/features/sidebar/hooks/useSearchHits.ts:244
 #: src/components/conversation/ConversationTranscriptSection.tsx:90
 msgid "Transcript"
 msgstr "Transkript"
@@ -10460,7 +10506,7 @@ msgstr "Verifizieren"
 msgid "participant.echo.verify"
 msgstr "Verifizieren"
 
-#: src/routes/auth/Login.tsx:404
+#: src/routes/auth/Login.tsx:409
 msgid "Verify code"
 msgstr "Code verifizieren"
 
@@ -10501,7 +10547,7 @@ msgstr "Details anzeigen"
 msgid "View example payload"
 msgstr "Beispiel-Payload anzeigen"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:304
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:366
 msgid "View invite"
 msgstr ""
 
@@ -10623,7 +10669,7 @@ msgstr ""
 #~ msgid "We couldn't load your organisation's members."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:257
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:231
 msgid "We couldn't load your organisations. Check your connection and try again."
 msgstr ""
 
@@ -10732,7 +10778,7 @@ msgstr ""
 msgid "Welcome"
 msgstr "Willkommen"
 
-#: src/routes/auth/Login.tsx:143
+#: src/routes/auth/Login.tsx:144
 msgid "Welcome back"
 msgstr "Welcome back"
 
@@ -10748,7 +10794,7 @@ msgstr ""
 #~ msgstr "Willkommen im Big Picture Modus! Ich hab Zusammenfassungen von all deinen Gesprächen geladen. Frag mich nach Mustern, Themen und Insights in deinen Daten. Für genaue Zitate, starte einen neuen Chat im Modus „Genauer Kontext“."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:376
-#: src/routes/auth/Login.tsx:143
+#: src/routes/auth/Login.tsx:144
 msgid "Welcome to dembrane"
 msgstr ""
 
@@ -10784,7 +10830,7 @@ msgstr "Willkommen im Übersichtmodus! Ich hab Zusammenfassungen von all deinen 
 msgid "Welcome, {displayName}"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:289
+#: src/routes/auth/Login.tsx:294
 msgid "Welcome!"
 msgstr "Willkommen!"
 
@@ -10879,6 +10925,10 @@ msgstr "Wann soll der Bericht erstellt werden?"
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Wenn die Zusammenfassung bereit ist (beinhaltet Transkript und Zusammenfassung)"
 
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:261
+msgid "Where would you like to go?"
+msgstr ""
+
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:440
 msgid "Which organisation does this workspace belong to?"
 msgstr ""
@@ -10917,6 +10967,7 @@ msgstr ""
 #: src/routes/project/CreateProjectRoute.tsx:324
 #: src/routes/admin/AdminSettingsRoute.tsx:1050
 #: src/routes/admin/AdminSettingsRoute.tsx:1709
+#: src/features/sidebar/hooks/useSearchHits.ts:164
 #: src/components/workspace/OrganisationUsageRollup.tsx:361
 #: src/components/workspace/OrganisationProjectsTable.tsx:210
 msgid "Workspace"
@@ -11107,12 +11158,12 @@ msgid "You have a pending invite"
 msgstr ""
 
 #. placeholder {0}: invites[0].org_name
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:287
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:349
 msgid "You have a pending invite to {0}. Open it to join the organisation."
 msgstr ""
 
 #. placeholder {0}: invites[0].workspace_name ?? "a workspace"
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:292
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:354
 msgid "You have a pending invite to {0}. The admin needs to free a seat before you can join."
 msgstr ""
 
@@ -11151,7 +11202,7 @@ msgstr ""
 msgid "You may also choose to record another conversation."
 msgstr "Sie können auch wählen, ein weiteres Gespräch aufzunehmen."
 
-#: src/routes/auth/Login.tsx:270
+#: src/routes/auth/Login.tsx:275
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Sie müssen sich mit demselben Anbieter anmelden, mit dem Sie sich registriert haben. Wenn Sie auf Probleme stoßen, wenden Sie sich bitte an den Support."
 
@@ -11230,7 +11281,7 @@ msgstr ""
 #~ msgid "You're not in any team yet. Create a workspace to start a team, or ask a teammate for an invite."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:322
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:392
 msgid "You're not part of any organisation right now."
 msgstr ""
 
@@ -11278,7 +11329,7 @@ msgstr ""
 
 #. placeholder {0}: recentRemovals[0].workspace_name
 #. placeholder {1}: new Date(recentRemovals[0].ended_at).toLocaleDateString()
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:310
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:376
 msgid "Your access to {0} ended on {1}."
 msgstr ""
 
@@ -11310,7 +11361,7 @@ msgstr ""
 msgid "Your email is already verified"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:294
+#: src/routes/auth/Login.tsx:299
 msgid "Your email is verified. Log in to continue."
 msgstr ""
 
