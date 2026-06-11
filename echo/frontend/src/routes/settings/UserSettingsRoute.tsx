@@ -20,6 +20,7 @@ import { AuditLogsCard } from "@/components/settings/AuditLogsCard";
 import { ChangePasswordCard } from "@/components/settings/ChangePasswordCard";
 import { FontSettingsCard } from "@/components/settings/FontSettingsCard";
 import { FontSizeSettingsCard } from "@/components/settings/FontSizeSettingsCard";
+import { LanguageSettingsCard } from "@/components/settings/LanguageSettingsCard";
 import { LegalBasisSettingsCard } from "@/components/settings/LegalBasisSettingsCard";
 import { MyAccessCard } from "@/components/settings/MyAccessCard";
 import { TwoFactorSettingsCard } from "@/components/settings/TwoFactorSettingsCard";
@@ -121,16 +122,17 @@ export const UserSettingsRoute = () => {
 							</Stack>
 						)}
 
-						{activeSection === "appearance" && (
-							<Stack gap="lg">
-								<Title order={3}>
-									<Trans>Appearance</Trans>
-								</Title>
+							{activeSection === "appearance" && (
+								<Stack gap="lg">
+									<Title order={3}>
+										<Trans>Appearance</Trans>
+									</Title>
 
-								<FontSettingsCard />
-								<FontSizeSettingsCard />
-							</Stack>
-						)}
+									<FontSettingsCard />
+									<FontSizeSettingsCard />
+									<LanguageSettingsCard />
+								</Stack>
+							)}
 
 						{activeSection === "project-defaults" && !isExternalOnly && (
 							<Stack gap="lg">

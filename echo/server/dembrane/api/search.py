@@ -394,9 +394,8 @@ async def search_home(
     limit = max(1, min(limit, 25))
     # Post-lockdown the user token can't read app collections, so search
     # runs with the admin client and results are scoped in the app layer.
-    # Over-fetch for non-staff so access filtering doesn't starve the
-    # visible result count.
-    fetch_limit = limit if auth.is_admin else limit * 3
+    # Over-fetch so access filtering doesn't starve the visible result count.
+    fetch_limit = limit * 3
 
     projects_raw, conversations_raw, chunks_raw, chats_raw = await gather(
         run_in_thread_pool(_fetch_projects, directus, term, fetch_limit),
@@ -405,46 +404,48 @@ async def search_home(
         run_in_thread_pool(_fetch_chats, directus, term, fetch_limit),
     )
 
-    if not auth.is_admin:
-        from dembrane.app_user import resolve_app_user
-        from dembrane.inheritance import get_user_project_access
+    # Scope every session, including is_admin (Directus staff). The
+    # click-time guard (GET /v2/projects/{id}) has no staff bypass, so an
+    # unscoped staff search returns hits that 404 on click.
+    from dembrane.app_user import resolve_app_user
+    from dembrane.inheritance import get_user_project_access
 
-        app_user = await resolve_app_user(auth.user_id)
-        if not app_user:
-            # Not onboarded: nothing is accessible; mirror the old
-            # empty-results behavior instead of erroring the palette.
-            return SearchResponse()
-        app_user_id = app_user["id"]
+    app_user = await resolve_app_user(auth.user_id)
+    if not app_user:
+        # Not onboarded: nothing is accessible; mirror the old
+        # empty-results behavior instead of erroring the palette.
+        return SearchResponse()
+    app_user_id = app_user["id"]
 
-        allowed: Dict[str, bool] = {}
+    allowed: Dict[str, bool] = {}
 
-        async def _can_access(project_id: Optional[str]) -> bool:
-            if not project_id:
-                return False
-            if project_id not in allowed:
-                access = await get_user_project_access(
-                    project_id=project_id,
-                    user_id=app_user_id,
-                    directus_user_id=auth.user_id,
-                )
-                allowed[project_id] = access is not None
-            return allowed[project_id]
+    async def _can_access(project_id: Optional[str]) -> bool:
+        if not project_id:
+            return False
+        if project_id not in allowed:
+            access = await get_user_project_access(
+                project_id=project_id,
+                user_id=app_user_id,
+                directus_user_id=auth.user_id,
+            )
+            allowed[project_id] = access is not None
+        return allowed[project_id]
 
-        async def _scope(
-            rows: List[dict], project_id_of: Callable[[Dict[str, Any]], Optional[str]]
-        ) -> List[dict]:
-            out: List[dict] = []
-            for row in rows:
-                if await _can_access(project_id_of(row)):
-                    out.append(row)
-                    if len(out) >= limit:
-                        break
-            return out
+    async def _scope(
+        rows: List[dict], project_id_of: Callable[[Dict[str, Any]], Optional[str]]
+    ) -> List[dict]:
+        out: List[dict] = []
+        for row in rows:
+            if await _can_access(project_id_of(row)):
+                out.append(row)
+                if len(out) >= limit:
+                    break
+        return out
 
-        projects_raw = await _scope(projects_raw, lambda r: _safe_str(r.get("id")))
-        conversations_raw = await _scope(conversations_raw, _project_id_of_row)
-        chunks_raw = await _scope(chunks_raw, _project_id_of_chunk)
-        chats_raw = await _scope(chats_raw, _project_id_of_row)
+    projects_raw = await _scope(projects_raw, lambda r: _safe_str(r.get("id")))
+    conversations_raw = await _scope(conversations_raw, _project_id_of_row)
+    chunks_raw = await _scope(chunks_raw, _project_id_of_chunk)
+    chats_raw = await _scope(chats_raw, _project_id_of_row)
 
     return SearchResponse(
         projects=[
