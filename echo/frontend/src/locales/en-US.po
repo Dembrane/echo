@@ -2440,7 +2440,7 @@ msgstr "Clear search"
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
 msgstr "Click \"Upload Files\" when you're ready to start the upload process."
 
-#: src/routes/project/HostGuidePage.tsx:1438
+#: src/routes/project/HostGuidePage.tsx:1472
 msgid "Click to edit"
 msgstr "Click to edit"
 
@@ -2841,6 +2841,10 @@ msgstr "Could not copy to clipboard. Please try again."
 #: src/routes/admin/AdminSettingsRoute.tsx:1282
 msgid "Could not load the rollup. Check auth and backend logs."
 msgstr "Could not load the rollup. Check auth and backend logs."
+
+#: src/components/project/hooks/index.ts:374
+msgid "Could not save the host guide"
+msgstr "Could not save the host guide"
 
 #: src/components/members/PendingInvitesSection.tsx:85
 msgid "Could not send the invite email. Check email configuration."
@@ -3551,7 +3555,7 @@ msgstr "Draft next actions and organize them by priority"
 msgid "Drag audio files here or click to select files"
 msgstr "Drag audio files here or click to select files"
 
-#: src/routes/project/HostGuidePage.tsx:1450
+#: src/routes/project/HostGuidePage.tsx:1484
 #: src/components/chat/TemplatesModal.tsx:566
 msgid "Drag to reorder"
 msgstr "Drag to reorder"
@@ -3787,7 +3791,7 @@ msgstr "Enable Explore"
 #~ msgid "Enable Make it concrete"
 #~ msgstr "Enable Make it concrete"
 
-#: src/routes/project/HostGuidePage.tsx:1624
+#: src/routes/project/HostGuidePage.tsx:1658
 msgid "Enable participation"
 msgstr "Enable participation"
 
@@ -4152,7 +4156,7 @@ msgstr "Failed to copy chat. Please try again."
 msgid "Failed to copy transcript. Please try again."
 msgstr "Failed to copy transcript. Please try again."
 
-#: src/components/project/hooks/index.ts:473
+#: src/components/project/hooks/index.ts:507
 msgid "Failed to create custom topic"
 msgstr "Failed to create custom topic"
 
@@ -4164,7 +4168,7 @@ msgstr "Failed to create project"
 msgid "Failed to delete chat"
 msgstr "Failed to delete chat"
 
-#: src/components/project/hooks/index.ts:525
+#: src/components/project/hooks/index.ts:559
 msgid "Failed to delete custom topic"
 msgstr "Failed to delete custom topic"
 
@@ -4303,7 +4307,7 @@ msgstr "Failed to revise outcome. Please try again."
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Failed to stop recording on device change. Please try again."
 
-#: src/components/project/hooks/index.ts:500
+#: src/components/project/hooks/index.ts:534
 msgid "Failed to update custom topic"
 msgstr "Failed to update custom topic"
 
@@ -4632,7 +4636,7 @@ msgstr "Go back"
 #~ msgid "Go deeper"
 #~ msgstr "Go deeper"
 
-#: src/routes/project/HostGuidePage.tsx:1487
+#: src/routes/project/HostGuidePage.tsx:1521
 msgid "Go Fullscreen"
 msgstr "Go Fullscreen"
 
@@ -7402,7 +7406,7 @@ msgstr "Pricing is still a conversation. We'll email you to work out what fits."
 msgid "Pricing matrix"
 msgstr "Pricing matrix"
 
-#: src/routes/project/HostGuidePage.tsx:1479
+#: src/routes/project/HostGuidePage.tsx:1513
 msgid "Print / Save PDF"
 msgstr "Print / Save PDF"
 
@@ -8258,7 +8262,7 @@ msgstr "Resend invite"
 msgid "Resend invite email"
 msgstr "Resend invite email"
 
-#: src/routes/project/HostGuidePage.tsx:1472
+#: src/routes/project/HostGuidePage.tsx:1506
 msgid "Reset"
 msgstr "Reset"
 
@@ -8388,7 +8392,7 @@ msgstr "Revoke invite"
 msgid "Revoke the invite sent to {0}? You can invite them again later."
 msgstr "Revoke the invite sent to {0}? You can invite them again later."
 
-#: src/routes/project/HostGuidePage.tsx:1444
+#: src/routes/project/HostGuidePage.tsx:1478
 msgid "Right-click to highlight"
 msgstr "Right-click to highlight"
 
@@ -10117,11 +10121,11 @@ msgstr "Too large"
 msgid "Too long"
 msgstr "Too long"
 
-#: src/components/project/hooks/index.ts:481
+#: src/components/project/hooks/index.ts:515
 msgid "Topic created successfully"
 msgstr "Topic created successfully"
 
-#: src/components/project/hooks/index.ts:533
+#: src/components/project/hooks/index.ts:567
 msgid "Topic deleted successfully"
 msgstr "Topic deleted successfully"
 
@@ -10129,7 +10133,7 @@ msgstr "Topic deleted successfully"
 msgid "Topic label"
 msgstr "Topic label"
 
-#: src/components/project/hooks/index.ts:508
+#: src/components/project/hooks/index.ts:542
 msgid "Topic updated successfully"
 msgstr "Topic updated successfully"
 
