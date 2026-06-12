@@ -11,7 +11,7 @@ export const ViewHeader = ({ to, title }: ViewHeaderProps) => {
 	return (
 		<I18nLink
 			to={to}
-			className="group grid h-[36px] grid-cols-[22px_1fr_22px] items-center rounded-md px-2 text-[14px] leading-tight transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
+			className="group grid h-[36px] grid-cols-[22px_1fr_22px] items-center rounded-md px-2 text-sm leading-tight transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
 			style={{ color: "#2d2d2c" }}
 		>
 			<ArrowLeft

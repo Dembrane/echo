@@ -7,7 +7,7 @@ interface SectionLabelProps {
 export const SectionLabel = ({ children }: SectionLabelProps) => {
 	return (
 		<div
-			className="px-2 pb-1 pt-2 text-[11px] uppercase"
+			className="px-2 pb-1 pt-2 text-[0.6875rem] uppercase"
 			style={{ color: "rgba(45, 45, 44, 0.5)" }}
 		>
 			{children}

@@ -16,7 +16,7 @@ export const BackButton = ({ to, label, center }: BackButtonProps) => {
 		return (
 			<I18nLink
 				to={to}
-				className="group relative flex h-[30px] items-center rounded-md px-2 text-[13px] leading-tight transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
+				className="group relative flex h-[30px] items-center rounded-md px-2 text-[0.8125rem] leading-tight transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
 				style={{ color: "#2d2d2c" }}
 			>
 				<ArrowLeft
@@ -34,7 +34,7 @@ export const BackButton = ({ to, label, center }: BackButtonProps) => {
 	return (
 		<I18nLink
 			to={to}
-			className="group flex h-[30px] items-center gap-1.5 rounded-md px-2 text-[13px] leading-tight transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
+			className="group flex h-[30px] items-center gap-1.5 rounded-md px-2 text-[0.8125rem] leading-tight transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
 			style={{ color: "#2d2d2c" }}
 		>
 			<ArrowLeft
