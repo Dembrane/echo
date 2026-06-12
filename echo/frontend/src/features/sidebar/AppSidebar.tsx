@@ -81,7 +81,7 @@ export const AppSidebar = () => {
 
 const ViewError = () => (
 	<div
-		className="flex flex-col items-start gap-1 p-3 text-[12px]"
+		className="flex flex-col items-start gap-1 p-3 text-xs"
 		style={{ color: "rgba(45, 45, 44, 0.55)" }}
 	>
 		<div>This view couldn't load.</div>

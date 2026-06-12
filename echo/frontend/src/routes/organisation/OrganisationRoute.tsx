@@ -1228,7 +1228,7 @@ function OrganisationOverviewPanel({
 									>
 										<Avatar
 											size={36}
-											radius="xl"
+											radius="full"
 											src={avatarUrl(m.avatar)}
 											color="primary"
 											style={{ cursor: "pointer" }}
@@ -1241,7 +1241,7 @@ function OrganisationOverviewPanel({
 								{overflowPeople > 0 && (
 									<Avatar
 										size={36}
-										radius="xl"
+										radius="full"
 										color="gray"
 										style={{ cursor: "pointer" }}
 										onClick={handlePeopleClick}
@@ -1253,7 +1253,7 @@ function OrganisationOverviewPanel({
 									<Tooltip label={t`Manage members`} withArrow>
 										<Avatar
 											size={36}
-											radius="xl"
+											radius="full"
 											color="primary"
 											variant="light"
 											style={{ cursor: "pointer" }}
@@ -1394,7 +1394,7 @@ function WorkspaceMemberBubbles({
 					>
 						<Avatar
 							size={26}
-							radius="xl"
+							radius="full"
 							src={avatarUrl(m.avatar)}
 							color="primary"
 						>
@@ -1403,7 +1403,7 @@ function WorkspaceMemberBubbles({
 					</Tooltip>
 				))}
 				{overflow > 0 && (
-					<Avatar size={26} radius="xl" color="gray">
+					<Avatar size={26} radius="full" color="gray">
 						+{overflow}
 					</Avatar>
 				)}
@@ -1687,7 +1687,7 @@ function OrganisationPersonCard({
 			<Stack gap={open ? 12 : 0}>
 				<Group justify="space-between" wrap="nowrap" gap="md">
 					<Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-						<Avatar src={avatarUrl(member.avatar, 64)} size="md" radius="xl">
+						<Avatar src={avatarUrl(member.avatar, 64)} size="md" radius="full">
 							{memberInitials(member.display_name, member.email)}
 						</Avatar>
 						<Stack gap={0} style={{ minWidth: 0 }}>

@@ -37,7 +37,7 @@ function buildCardData(cap: TierCapacity, billingPeriod: BillingPeriod) {
 	}
 	if (cap.included_hours == null) {
 		specs.push(t`Unlimited hours`);
-	} else if (cap.duration === "one-time") {
+	} else if (!cap.billing_period_applicable) {
 		specs.push(t`${cap.included_hours} hours total`);
 	} else {
 		specs.push(t`${cap.included_hours} hours / month`);

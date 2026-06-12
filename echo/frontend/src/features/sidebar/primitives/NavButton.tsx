@@ -30,7 +30,7 @@ export const NavButton = ({
 			type="button"
 			onClick={onClick}
 			disabled={disabled}
-			className="group relative flex h-[30px] w-full items-center gap-2 rounded-md px-2 text-left text-[13px] leading-tight transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1] disabled:cursor-not-allowed disabled:opacity-50"
+			className="group relative flex h-[30px] w-full items-center gap-2 rounded-md px-2 text-left text-[0.8125rem] leading-tight transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1] disabled:cursor-not-allowed disabled:opacity-50"
 			style={{ color: destructive ? "#c0392b" : "#2d2d2c" }}
 		>
 			<span className="relative flex flex-1 items-center gap-2 truncate">
@@ -40,7 +40,7 @@ export const NavButton = ({
 			{/* != null, not truthiness: badge={0} would render a bare "0" */}
 			{badge != null && (
 				<span
-					className="relative shrink-0 rounded px-1.5 py-0.5 text-[10px] leading-none"
+					className="relative shrink-0 rounded px-1.5 py-0.5 text-[0.625rem] leading-none"
 					style={BADGE_TONES[badgeTone]}
 				>
 					{badge}

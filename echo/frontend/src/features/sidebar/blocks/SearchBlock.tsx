@@ -80,7 +80,7 @@ export const SearchBlock = () => {
 		<>
 			<UnstyledButton
 				onClick={open}
-				className="flex h-[30px] items-center gap-2 rounded-md px-2 text-[13px] transition-colors hover:bg-black/[0.04]"
+				className="flex h-[30px] items-center gap-2 rounded-md px-2 text-[0.8125rem] transition-colors hover:bg-black/[0.04]"
 				style={{ color: "#2d2d2c", width: "100%" }}
 				aria-label="Search"
 			>
@@ -89,7 +89,7 @@ export const SearchBlock = () => {
 					<Trans>Search</Trans>
 				</span>
 				<span
-					className="ml-auto rounded px-1.5 py-0.5 text-[10px]"
+					className="ml-auto rounded px-1.5 py-0.5 text-[0.625rem]"
 					style={{
 						backgroundColor: "rgba(45, 45, 44, 0.06)",
 						color: "rgba(45, 45, 44, 0.55)",
@@ -127,7 +127,7 @@ export const SearchBlock = () => {
 							leftSection={<MagnifyingGlassIcon size={16} />}
 							placeholder="Search projects, conversations, transcripts…"
 							variant="unstyled"
-							styles={{ input: { fontSize: 14 } }}
+							styles={{ input: { fontSize: "0.875rem" } }}
 							rightSectionPointerEvents="auto"
 							rightSection={
 								q ? (
@@ -147,7 +147,7 @@ export const SearchBlock = () => {
 					>
 						{hits.length === 0 ? (
 							<div
-								className="px-3 py-6 text-center text-[12px]"
+								className="px-3 py-6 text-center text-xs"
 								style={{ color: "rgba(45, 45, 44, 0.55)" }}
 							>
 								{isFetching ? (
@@ -169,13 +169,13 @@ export const SearchBlock = () => {
 										onClick={() => onSelect(hit)}
 										className={`${classes.row} ${
 											active ? classes.rowActive : ""
-										} flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-[13px]`}
+										} flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-[0.8125rem]`}
 									>
 										<Icon size={16} />
 										<span className="flex-1 truncate">{hit.label}</span>
 										{hit.subtitle && (
 											<span
-												className={`${classes.subtitle} truncate text-[11px]`}
+												className={`${classes.subtitle} truncate text-[0.6875rem]`}
 											>
 												{hit.subtitle}
 											</span>
