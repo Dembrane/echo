@@ -2223,7 +2223,7 @@ msgstr ""
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
 msgstr "Haz clic en \"Subir archivos\" cuando estés listo para iniciar el proceso de subida."
 
-#: src/routes/project/HostGuidePage.tsx:1438
+#: src/routes/project/HostGuidePage.tsx:1472
 msgid "Click to edit"
 msgstr "Haz clic para editar"
 
@@ -2620,6 +2620,10 @@ msgstr "No se pudo copiar al portapapeles. Inténtelo de nuevo."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1282
 msgid "Could not load the rollup. Check auth and backend logs."
+msgstr ""
+
+#: src/components/project/hooks/index.ts:374
+msgid "Could not save the host guide"
 msgstr ""
 
 #: src/components/members/PendingInvitesSection.tsx:85
@@ -3333,7 +3337,7 @@ msgstr "Borrador de acciones siguientes y organizarlas por prioridad"
 msgid "Drag audio files here or click to select files"
 msgstr "Arrastra archivos de audio aquí o haz clic para seleccionar archivos"
 
-#: src/routes/project/HostGuidePage.tsx:1450
+#: src/routes/project/HostGuidePage.tsx:1484
 #: src/components/chat/TemplatesModal.tsx:566
 msgid "Drag to reorder"
 msgstr "Arrastrar para reordenar"
@@ -3564,7 +3568,7 @@ msgstr "Habilitar Explorar"
 #~ msgid "Enable Make it concrete"
 #~ msgstr "Activar Hacerlo concreto"
 
-#: src/routes/project/HostGuidePage.tsx:1624
+#: src/routes/project/HostGuidePage.tsx:1658
 msgid "Enable participation"
 msgstr "Habilitar participación"
 
@@ -3910,7 +3914,7 @@ msgstr "Error al copiar el chat. Por favor, inténtalo de nuevo."
 msgid "Failed to copy transcript. Please try again."
 msgstr "No se pudo copiar la transcripción. Inténtalo de nuevo."
 
-#: src/components/project/hooks/index.ts:473
+#: src/components/project/hooks/index.ts:507
 msgid "Failed to create custom topic"
 msgstr "Error al crear el tema personalizado"
 
@@ -3922,7 +3926,7 @@ msgstr ""
 msgid "Failed to delete chat"
 msgstr ""
 
-#: src/components/project/hooks/index.ts:525
+#: src/components/project/hooks/index.ts:559
 msgid "Failed to delete custom topic"
 msgstr "Error al eliminar el tema personalizado"
 
@@ -4053,7 +4057,7 @@ msgstr "Error al revisar el resultado. Por favor, inténtalo de nuevo."
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Error al detener la grabación al cambiar el dispositivo. Por favor, inténtalo de nuevo."
 
-#: src/components/project/hooks/index.ts:500
+#: src/components/project/hooks/index.ts:534
 msgid "Failed to update custom topic"
 msgstr "Error al actualizar el tema personalizado"
 
@@ -4374,7 +4378,7 @@ msgstr "Volver"
 #~ msgid "Go deeper"
 #~ msgstr "Profundizar"
 
-#: src/routes/project/HostGuidePage.tsx:1487
+#: src/routes/project/HostGuidePage.tsx:1521
 msgid "Go Fullscreen"
 msgstr "Pantalla completa"
 
@@ -7202,7 +7206,7 @@ msgstr ""
 msgid "Pricing matrix"
 msgstr ""
 
-#: src/routes/project/HostGuidePage.tsx:1479
+#: src/routes/project/HostGuidePage.tsx:1513
 msgid "Print / Save PDF"
 msgstr "Imprimir / Guardar PDF"
 
@@ -8025,7 +8029,7 @@ msgstr ""
 msgid "Resend invite email"
 msgstr ""
 
-#: src/routes/project/HostGuidePage.tsx:1472
+#: src/routes/project/HostGuidePage.tsx:1506
 msgid "Reset"
 msgstr "Restablecer"
 
@@ -8152,7 +8156,7 @@ msgstr ""
 msgid "Revoke the invite sent to {0}? You can invite them again later."
 msgstr ""
 
-#: src/routes/project/HostGuidePage.tsx:1444
+#: src/routes/project/HostGuidePage.tsx:1478
 msgid "Right-click to highlight"
 msgstr "Haga clic con el botón derecho para resaltar"
 
@@ -9828,11 +9832,11 @@ msgstr "Demasiado grande"
 msgid "Too long"
 msgstr "Demasiado largo"
 
-#: src/components/project/hooks/index.ts:481
+#: src/components/project/hooks/index.ts:515
 msgid "Topic created successfully"
 msgstr "Tema creado correctamente"
 
-#: src/components/project/hooks/index.ts:533
+#: src/components/project/hooks/index.ts:567
 msgid "Topic deleted successfully"
 msgstr "Tema eliminado correctamente"
 
@@ -9840,7 +9844,7 @@ msgstr "Tema eliminado correctamente"
 msgid "Topic label"
 msgstr "Etiqueta de tema"
 
-#: src/components/project/hooks/index.ts:508
+#: src/components/project/hooks/index.ts:542
 msgid "Topic updated successfully"
 msgstr "Tema actualizado correctamente"
 

@@ -347,6 +347,40 @@ export const useUpdateProjectByIdMutation = () => {
 	});
 };
 
+// Autosaves the shared host guide on the project; success is silent
+export const useUpdateProjectHostGuideMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({
+			id,
+			hostGuide,
+		}: {
+			id: string;
+			hostGuide: Record<string, unknown> | null;
+		}) => {
+			const res = await fetch(`${API_BASE_URL}/v2/bff/projects/${id}`, {
+				body: JSON.stringify({ host_guide: hostGuide }),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "PATCH",
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to save the host guide");
+			}
+			return (await res.json()) as Project;
+		},
+		onError: () => {
+			toast.error(t`Could not save the host guide`);
+		},
+		onSuccess: (_values, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["projects", variables.id],
+			});
+		},
+	});
+};
+
 export const useInfiniteProjects = ({
 	query,
 	options = {

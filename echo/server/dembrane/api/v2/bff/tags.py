@@ -9,7 +9,7 @@ live here so we can retire the frontend's direct Directus calls.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 from logging import getLogger
 from datetime import datetime, timezone
 
@@ -255,6 +255,7 @@ class ProjectUpdate(BaseModel):
     conversation_title_prompt: Optional[str] = None
     image_generation_model: Optional[str] = None
     tutorial_slug: Optional[str] = None
+    host_guide: Optional[dict[str, Any]] = None
 
 
 @project_router.get("")
