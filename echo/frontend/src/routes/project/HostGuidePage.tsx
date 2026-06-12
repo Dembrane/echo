@@ -18,7 +18,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Box, Button, Group, Text } from "@mantine/core";
-import { useWindowEvent } from "@mantine/hooks";
+import { useDebouncedValue, useWindowEvent } from "@mantine/hooks";
 import {
 	IconArrowsMaximize,
 	IconGripVertical,
@@ -26,10 +26,19 @@ import {
 	IconPrinter,
 	IconTrash,
 } from "@tabler/icons-react";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import {
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { QRCode as QRCodeLogo } from "react-qrcode-logo";
 import { useParams } from "react-router";
-import { useProjectById } from "@/components/project/hooks";
+import {
+	useProjectById,
+	useUpdateProjectHostGuideMutation,
+} from "@/components/project/hooks";
 import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
 import {
 	type ActiveConversation,
@@ -409,6 +418,21 @@ type HostGuideData = {
 	title: string;
 	steps: EditableStep[];
 	tips: EditableTip[];
+};
+
+// Persisted on project.host_guide; a language switch falls back to defaults
+type StoredHostGuide = HostGuideData & { language: string };
+
+const parseStoredGuide = (
+	raw: unknown,
+	language: string,
+): HostGuideData | null => {
+	if (!raw || typeof raw !== "object") return null;
+	const guide = raw as Partial<StoredHostGuide>;
+	if (guide.language !== language) return null;
+	if (typeof guide.title !== "string") return null;
+	if (!guide.steps?.length || !guide.tips?.length) return null;
+	return { steps: guide.steps, tips: guide.tips, title: guide.title };
 };
 
 // ============================================================================
@@ -1055,6 +1079,7 @@ export const HostGuidePage = () => {
 				"language",
 				"is_conversation_allowed",
 				"default_conversation_ask_for_participant_name",
+				"host_guide",
 			],
 		},
 	});
@@ -1065,8 +1090,8 @@ export const HostGuidePage = () => {
 	const askForName =
 		project?.default_conversation_ask_for_participant_name ?? true;
 
-	// Include language in storage key so changing language resets to defaults
-	const storageKey = `host-guide-v14-${projectId}-${langCode}`;
+	// Pre-server localStorage key, read once as a migration seed
+	const legacyStorageKey = `host-guide-v14-${projectId}-${langCode}`;
 
 	// Convert old format to new format with highlights
 	const migrateToNewFormat = (
@@ -1098,20 +1123,18 @@ export const HostGuidePage = () => {
 		// biome-ignore lint/correctness/useExhaustiveDependencies: TODO
 	}, [defaults, askForName, migrateToNewFormat]);
 
-	const loadSavedData = useCallback(() => {
-		// Clean up old versions
+	const clearLegacyGuide = useCallback(() => {
 		for (let i = localStorage.length - 1; i >= 0; i--) {
 			const key = localStorage.key(i);
-			if (
-				key?.startsWith("host-guide-") &&
-				key.includes(`-${projectId}`) &&
-				key !== storageKey
-			) {
+			if (key?.startsWith("host-guide-") && key.includes(`-${projectId}`)) {
 				localStorage.removeItem(key);
 			}
 		}
+	}, [projectId]);
+
+	const readLegacyGuide = useCallback((): HostGuideData | null => {
 		try {
-			const saved = localStorage.getItem(storageKey);
+			const saved = localStorage.getItem(legacyStorageKey);
 			if (saved) {
 				const parsed = JSON.parse(saved);
 				if (parsed.steps?.length >= 1 && parsed.tips?.length >= 1) {
@@ -1132,146 +1155,165 @@ export const HostGuidePage = () => {
 		} catch {
 			/* ignore */
 		}
-		return getDefaultData();
+		return null;
 		// biome-ignore lint/correctness/useExhaustiveDependencies: TODO
-	}, [storageKey, getDefaultData, projectId, migrateToNewFormat]);
+	}, [legacyStorageKey, migrateToNewFormat]);
 
 	// Initialize data as null, load after project is available
 	const [data, setData] = useState<HostGuideData | null>(null);
 
-	// Load data when project (and language) is available
-	useEffect(() => {
-		if (project && !data) {
-			setData(loadSavedData());
-		}
-	}, [project, data, loadSavedData]);
+	// Only user edits mark dirty, so viewing alone never writes
+	const dirtyRef = useRef(false);
 
-	// Save to localStorage when data changes (but only if we have data)
-	useEffect(() => {
-		if (!data) return;
-		try {
-			localStorage.setItem(storageKey, JSON.stringify(data));
-		} catch {
-			/* ignore */
-		}
-	}, [data, storageKey]);
+	const saveGuideMutation = useUpdateProjectHostGuideMutation();
+	// Stable ref so the autosave effect doesn't re-fire every render
+	const saveGuideRef = useRef(saveGuideMutation);
+	saveGuideRef.current = saveGuideMutation;
 
-	const updateTitle = (v: string) =>
-		setData((d) => (d ? { ...d, title: v } : d));
+	// Hydrate: server copy first, then legacy localStorage, then defaults
+	useEffect(() => {
+		if (!project || data) return;
+		const stored = parseStoredGuide(project.host_guide, langCode);
+		if (stored) {
+			clearLegacyGuide();
+			setData(stored);
+			return;
+		}
+		const legacy = readLegacyGuide();
+		if (legacy) {
+			dirtyRef.current = true;
+			setData(legacy);
+			return;
+		}
+		setData(getDefaultData());
+	}, [
+		project,
+		data,
+		langCode,
+		clearLegacyGuide,
+		readLegacyGuide,
+		getDefaultData,
+	]);
+
+	// Debounced autosave; last write wins between hosts
+	const [debouncedData] = useDebouncedValue(data, 800);
+	useEffect(() => {
+		if (!debouncedData || !dirtyRef.current || !projectId) return;
+		dirtyRef.current = false;
+		clearLegacyGuide();
+		saveGuideRef.current.mutate({
+			hostGuide: { ...debouncedData, language: langCode },
+			id: projectId,
+		});
+	}, [debouncedData, projectId, langCode, clearLegacyGuide]);
+
+	// Flush a pending edit on leave so edit-and-navigate isn't lost
+	const dataRef = useRef(data);
+	dataRef.current = data;
+	useEffect(
+		() => () => {
+			if (dirtyRef.current && dataRef.current && projectId) {
+				dirtyRef.current = false;
+				saveGuideRef.current.mutate({
+					hostGuide: { ...dataRef.current, language: langCode },
+					id: projectId,
+				});
+			}
+		},
+		[projectId, langCode],
+	);
+
+	const editData = (updater: (d: HostGuideData) => HostGuideData) => {
+		dirtyRef.current = true;
+		setData((d) => (d ? updater(d) : d));
+	};
+
+	const updateTitle = (v: string) => editData((d) => ({ ...d, title: v }));
 
 	const updateStep = (i: number, v: string) =>
-		setData((d) =>
-			d
-				? {
-						...d,
-						steps: d.steps.map((s: EditableStep, idx: number) =>
-							idx === i ? { ...s, content: v } : s,
-						),
-					}
-				: d,
-		);
+		editData((d) => ({
+			...d,
+			steps: d.steps.map((s: EditableStep, idx: number) =>
+				idx === i ? { ...s, content: v } : s,
+			),
+		}));
 
 	const toggleStepHighlight = (i: number, word: string) =>
-		setData((d) =>
-			d
-				? {
-						...d,
-						steps: d.steps.map((s: EditableStep, idx: number) => {
-							if (idx !== i) return s;
-							const highlights = s.highlights || [];
-							const hasWord = highlights.includes(word);
-							return {
-								...s,
-								highlights: hasWord
-									? highlights.filter((w) => w !== word)
-									: [...highlights, word],
-							};
-						}),
-					}
-				: d,
-		);
+		editData((d) => ({
+			...d,
+			steps: d.steps.map((s: EditableStep, idx: number) => {
+				if (idx !== i) return s;
+				const highlights = s.highlights || [];
+				const hasWord = highlights.includes(word);
+				return {
+					...s,
+					highlights: hasWord
+						? highlights.filter((w) => w !== word)
+						: [...highlights, word],
+				};
+			}),
+		}));
 
 	const addStep = () =>
-		setData((d) =>
-			d
-				? {
-						...d,
-						steps: [...d.steps, { content: "New step", highlights: [] }],
-					}
-				: d,
-		);
+		editData((d) => ({
+			...d,
+			steps: [...d.steps, { content: "New step", highlights: [] }],
+		}));
 
 	const deleteStep = (i: number) => {
 		if (data && data.steps.length > 1)
-			setData((d) =>
-				d
-					? {
-							...d,
-							steps: d.steps.filter(
-								(_: EditableStep, idx: number) => idx !== i,
-							),
-						}
-					: d,
-			);
+			editData((d) => ({
+				...d,
+				steps: d.steps.filter((_: EditableStep, idx: number) => idx !== i),
+			}));
 	};
 
 	const updateTip = (i: number, v: string) =>
-		setData((d) =>
-			d
-				? {
-						...d,
-						tips: d.tips.map((t: EditableTip, idx: number) =>
-							idx === i ? { ...t, content: v } : t,
-						),
-					}
-				: d,
-		);
+		editData((d) => ({
+			...d,
+			tips: d.tips.map((t: EditableTip, idx: number) =>
+				idx === i ? { ...t, content: v } : t,
+			),
+		}));
 
 	const toggleTipHighlight = (i: number, word: string) =>
-		setData((d) =>
-			d
-				? {
-						...d,
-						tips: d.tips.map((t: EditableTip, idx: number) => {
-							if (idx !== i) return t;
-							const highlights = t.highlights || [];
-							const hasWord = highlights.includes(word);
-							return {
-								...t,
-								highlights: hasWord
-									? highlights.filter((w) => w !== word)
-									: [...highlights, word],
-							};
-						}),
-					}
-				: d,
-		);
+		editData((d) => ({
+			...d,
+			tips: d.tips.map((t: EditableTip, idx: number) => {
+				if (idx !== i) return t;
+				const highlights = t.highlights || [];
+				const hasWord = highlights.includes(word);
+				return {
+					...t,
+					highlights: hasWord
+						? highlights.filter((w) => w !== word)
+						: [...highlights, word],
+				};
+			}),
+		}));
 
 	const addTip = () =>
-		setData((d) =>
-			d
-				? {
-						...d,
-						tips: [...d.tips, { content: "New tip", highlights: [] }],
-					}
-				: d,
-		);
+		editData((d) => ({
+			...d,
+			tips: [...d.tips, { content: "New tip", highlights: [] }],
+		}));
 
 	const deleteTip = (i: number) => {
 		if (data && data.tips.length > 1)
-			setData((d) =>
-				d
-					? {
-							...d,
-							tips: d.tips.filter((_: EditableTip, idx: number) => idx !== i),
-						}
-					: d,
-			);
+			editData((d) => ({
+				...d,
+				tips: d.tips.filter((_: EditableTip, idx: number) => idx !== i),
+			}));
 	};
 
 	const resetData = () => {
+		// Clear dirty so a pending debounce doesn't resurrect old content
+		dirtyRef.current = false;
 		setData(getDefaultData());
-		localStorage.removeItem(storageKey);
+		clearLegacyGuide();
+		if (projectId) {
+			saveGuideRef.current.mutate({ hostGuide: null, id: projectId });
+		}
 	};
 
 	// Context menu handlers
@@ -1333,14 +1375,10 @@ export const HostGuidePage = () => {
 		if (over && active.id !== over.id) {
 			const oldIndex = stepIds.indexOf(active.id as string);
 			const newIndex = stepIds.indexOf(over.id as string);
-			setData((d) =>
-				d
-					? {
-							...d,
-							steps: arrayMove(d.steps, oldIndex, newIndex),
-						}
-					: d,
-			);
+			editData((d) => ({
+				...d,
+				steps: arrayMove(d.steps, oldIndex, newIndex),
+			}));
 		}
 	};
 
@@ -1349,14 +1387,10 @@ export const HostGuidePage = () => {
 		if (over && active.id !== over.id) {
 			const oldIndex = tipIds.indexOf(active.id as string);
 			const newIndex = tipIds.indexOf(over.id as string);
-			setData((d) =>
-				d
-					? {
-							...d,
-							tips: arrayMove(d.tips, oldIndex, newIndex),
-						}
-					: d,
-			);
+			editData((d) => ({
+				...d,
+				tips: arrayMove(d.tips, oldIndex, newIndex),
+			}));
 		}
 	};
 
