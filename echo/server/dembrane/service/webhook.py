@@ -146,6 +146,8 @@ class WebhookService:
             "fr": "fr-FR",
             "es": "es-ES",
             "it": "it-IT",
+            "uk": "uk-UA",
+            "cs": "cs-CZ",
         }
         project_language = project.get("language") or "en"
         locale = language_to_locale.get(project_language, "en-US")
@@ -304,6 +306,8 @@ class WebhookService:
             "fr": "fr-FR",
             "es": "es-ES",
             "it": "it-IT",
+            "uk": "uk-UA",
+            "cs": "cs-CZ",
         }
         project_language = project.get("language") or "en"
         locale = language_to_locale.get(project_language, "en-US")

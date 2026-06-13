@@ -124,6 +124,7 @@ export const SUPPORTED_LANGUAGES = [
 	"es-ES",
 	"it-IT",
 	"uk-UA",
+	"cs-CZ",
 ] as const;
 
 export const PRIVACY_POLICY_URL =

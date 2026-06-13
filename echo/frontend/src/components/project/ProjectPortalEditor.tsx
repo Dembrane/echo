@@ -87,9 +87,10 @@ const FormSchema = z.object({
 
 type ProjectPortalFormValues = z.infer<typeof FormSchema>;
 
-type LanguageCode = "de" | "en" | "es" | "fr" | "nl" | "it" | "uk";
+type LanguageCode = "de" | "en" | "es" | "fr" | "nl" | "it" | "uk" | "cs";
 
 const LANGUAGE_TO_LOCALE: Record<LanguageCode, string> = {
+	cs: "cs-CZ",
 	de: "de-DE",
 	en: "en-US",
 	es: "es-ES",
