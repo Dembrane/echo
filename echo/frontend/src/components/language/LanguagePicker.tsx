@@ -9,7 +9,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
 import classes from "./LanguagePicker.module.css";
 
-const PARTIAL_LANGUAGES = new Set(["it-IT", "uk-UA"]);
+const PARTIAL_LANGUAGES = new Set(["it-IT", "uk-UA", "cs-CZ"]);
 
 const data: Array<{
 	language: (typeof SUPPORTED_LANGUAGES)[number];
@@ -53,12 +53,18 @@ const data: Array<{
 		label: "Español",
 		language: "es-ES",
 	},
-	{
-		flag: "🇺🇦",
-		iso639_1: "uk",
-		label: "Ukrainian",
-		language: "uk-UA",
-	},
+		{
+			flag: "🇺🇦",
+			iso639_1: "uk",
+			label: "Ukrainian",
+			language: "uk-UA",
+		},
+		{
+			flag: "🇨🇿",
+			iso639_1: "cs",
+			label: "Czech",
+			language: "cs-CZ",
+		},
 ];
 
 export const languageOptions = data.map((d) => ({

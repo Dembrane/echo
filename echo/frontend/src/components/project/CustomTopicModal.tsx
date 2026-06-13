@@ -32,6 +32,7 @@ const SUPPORTED_LANGUAGES = [
 	{ code: "es-ES", label: "Español" },
 	{ code: "it-IT", label: "Italiano" },
 	{ code: "uk-UA", label: "Ukrainian" },
+	{ code: "cs-CZ", label: "Czech" },
 ] as const;
 
 type CustomTopicModalProps = {

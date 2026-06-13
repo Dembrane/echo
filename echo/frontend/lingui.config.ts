@@ -10,7 +10,7 @@ const config: LinguiConfig = {
 	fallbackLocales: {
 		default: "en-US",
 	},
-	locales: ["en-US", "nl-NL", "de-DE", "fr-FR", "es-ES", "it-IT", "uk-UA"],
+			locales: ["en-US", "nl-NL", "de-DE", "fr-FR", "es-ES", "it-IT", "uk-UA", "cs-CZ"],
 	sourceLocale: "en-US",
 };
 
