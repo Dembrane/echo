@@ -6,7 +6,6 @@ import {
 	Box,
 	Button,
 	Collapse,
-	Container,
 	Divider,
 	List,
 	PasswordInput,
@@ -107,7 +106,7 @@ export const RegisterRoute = () => {
 	const emailWatch = watch("email");
 
 	return (
-		<Container size="sm" className="!h-full" py="xl">
+		<div className="h-full w-full">
 			<Stack gap="lg">
 				<Stack gap={4}>
 					<Title order={2} fw={400}>
@@ -312,6 +311,6 @@ export const RegisterRoute = () => {
 					</>
 				)}
 			</Stack>
-		</Container>
+		</div>
 	);
 };

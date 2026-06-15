@@ -3,6 +3,7 @@ import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
+	Anchor,
 	Avatar,
 	Badge,
 	Box,
@@ -43,6 +44,7 @@ import {
 import { usePendingInvites } from "@/components/members/hooks";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { UsageCard } from "@/components/workspace/UsageCard";
@@ -55,7 +57,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { logoUrl, memberInitials } from "@/lib/avatar";
 import { displayRole } from "@/lib/roles";
-import { type BillingPeriod, seatOverageRateFor } from "@/lib/tiers";
+import { type BillingPeriod, seatOverageRateFor, type Tier } from "@/lib/tiers";
 
 interface WorkspaceMember {
 	id: string;
@@ -1318,13 +1320,24 @@ function PrivacyAndDefaultsSection({
 	section?: "general" | "access";
 }) {
 	const queryClient = useQueryClient();
-	const navigate = useI18nNavigate();
 	// Description autosaves on blur; privacy keeps explicit Save.
 	const [description, setDescription] = useState<string>(
 		settings.description ?? "",
 	);
 	const [name, setName] = useState<string>(settings.name ?? "");
 	const [isOpen, setIsOpen] = useState<boolean | null>(null);
+
+	// Tier-gated features open the upgrade modal in place rather than
+	// bouncing to the billing tab (page-feedback: upgrade paths are modals).
+	const canRequestUpgrade =
+		settings.my_role === "owner" ||
+		settings.my_role === "admin" ||
+		settings.my_role === "billing";
+	const [upgradeFeature, setUpgradeFeature] = useState<{
+		requiredTier: Tier;
+		featureName: string;
+		benefit: string;
+	} | null>(null);
 
 	const effectiveIsOpen = isOpen ?? settings.inherit_organisation_admins;
 	const privacyDirty = isOpen !== null;
@@ -1485,10 +1498,6 @@ function PrivacyAndDefaultsSection({
 						// Whitelabel branding is changemaker+
 						const whitelabelTiers = ["changemaker", "guardian"];
 						const canWhitelabel = whitelabelTiers.includes(settings.tier);
-						const canRequestUpgrade =
-							settings.my_role === "owner" ||
-							settings.my_role === "admin" ||
-							settings.my_role === "billing";
 
 						if (canWhitelabel) {
 							return (
@@ -1635,9 +1644,12 @@ function PrivacyAndDefaultsSection({
 											</Text>
 											<Button
 												size="xs"
-												disabled={!canRequestUpgrade}
 												onClick={() =>
-													navigate(`/w/${workspaceId}/settings/billing`)
+													setUpgradeFeature({
+														benefit: t`Your brand on every participant screen.`,
+														featureName: t`Custom logo`,
+														requiredTier: "changemaker",
+													})
 												}
 											>
 												<Trans>Upgrade to unlock</Trans>
@@ -1680,6 +1692,16 @@ function PrivacyAndDefaultsSection({
 					confirmColor="red"
 					loading={removeLogoMutation.isPending}
 					data-testid="workspace-logo-remove-modal"
+				/>
+				<UpgradeModal
+					opened={upgradeFeature !== null}
+					onClose={() => setUpgradeFeature(null)}
+					currentTier={settings.tier as Tier}
+					requiredTier={upgradeFeature?.requiredTier ?? "changemaker"}
+					featureName={upgradeFeature?.featureName ?? ""}
+					benefit={upgradeFeature?.benefit ?? ""}
+					canRequestUpgrade={canRequestUpgrade}
+					workspaceId={workspaceId}
 				/>
 			</>
 		);
@@ -1738,9 +1760,26 @@ function PrivacyAndDefaultsSection({
 											</Trans>
 										</Text>
 										{!canGoPrivate && !currentlyPrivate && (
-											<Text size="xs" c="dimmed">
-												<Trans>Available on innovator and above.</Trans>
-											</Text>
+											<Anchor
+												component="button"
+												type="button"
+												size="xs"
+												ta="left"
+												style={{ alignSelf: "flex-start" }}
+												onClick={(e) => {
+													e.preventDefault();
+													e.stopPropagation();
+													setUpgradeFeature({
+														benefit: t`Keep this workspace invite-only.`,
+														featureName: t`Private workspaces`,
+														requiredTier: "innovator",
+													});
+												}}
+											>
+												<Trans>
+													Available on innovator and above. Upgrade to unlock.
+												</Trans>
+											</Anchor>
 										)}
 									</Stack>
 								}
@@ -1770,6 +1809,16 @@ function PrivacyAndDefaultsSection({
 					</Button>
 				</Group>
 			)}
+			<UpgradeModal
+				opened={upgradeFeature !== null}
+				onClose={() => setUpgradeFeature(null)}
+				currentTier={settings.tier as Tier}
+				requiredTier={upgradeFeature?.requiredTier ?? "innovator"}
+				featureName={upgradeFeature?.featureName ?? ""}
+				benefit={upgradeFeature?.benefit ?? ""}
+				canRequestUpgrade={canRequestUpgrade}
+				workspaceId={workspaceId}
+			/>
 		</Stack>
 	);
 }

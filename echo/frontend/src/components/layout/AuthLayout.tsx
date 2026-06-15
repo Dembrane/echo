@@ -75,7 +75,7 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 						<AuthHeader />
 					</div>
 					<main className="flex flex-1 flex-col items-center justify-center px-6 py-12 sm:px-8 lg:px-14 lg:py-16">
-						<div className="flex w-full max-w-lg flex-col gap-8">
+						<div className="flex w-full max-w-md flex-col gap-8">
 							<Outlet />
 							{props.children}
 						</div>

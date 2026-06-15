@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Anchor,
 	Avatar,
 	Badge,
 	Box,
@@ -382,6 +383,15 @@ export function UpgradeModal({
 					{displayBenefit}
 				</Text>
 
+				<Group gap={8} align="center">
+					<Text size="sm" c="dimmed">
+						<Trans>Your current plan</Trans>
+					</Text>
+					<Badge variant="light" tt="capitalize">
+						{currentTier}
+					</Badge>
+				</Group>
+
 				{canRequestUpgrade ? (
 					<>
 						<Group justify="center" mb="xs">
@@ -413,6 +423,12 @@ export function UpgradeModal({
 								what fits.
 							</Trans>
 						</Text>
+						<Text size="xs" c="dimmed">
+							<Trans>
+								Scholarships are available for eligible organisations. Mention
+								it in your message and we'll follow up.
+							</Trans>
+						</Text>
 					</>
 				) : (
 					<>
@@ -432,6 +448,22 @@ export function UpgradeModal({
 						<OrganisationAdminChips />
 					</>
 				)}
+
+				<Text size="xs" c="dimmed">
+					<Trans>
+						Teams in the EU using dembrane in scenarios classified as high risk
+						under the EU AI Act must complete a training before using their
+						workspace.
+					</Trans>{" "}
+					<Anchor
+						href="https://www.dembrane.com/platform/pricing#training"
+						target="_blank"
+						rel="noopener noreferrer"
+						inherit
+					>
+						<Trans>Learn more</Trans>
+					</Anchor>
+				</Text>
 
 				<Box style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
 					<Button variant="subtle" onClick={onClose}>

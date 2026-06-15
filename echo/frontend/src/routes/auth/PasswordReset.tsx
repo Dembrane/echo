@@ -1,13 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	Alert,
-	Button,
-	Container,
-	PasswordInput,
-	Stack,
-	Title,
-} from "@mantine/core";
+import { Alert, Button, PasswordInput, Stack, Title } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -44,7 +37,7 @@ export const PasswordResetRoute = () => {
 	});
 
 	return (
-		<Container size="sm" className="!h-full">
+		<div className="h-full w-full">
 			<Stack className="h-full">
 				<Stack className="flex-grow">
 					<Title order={1}>
@@ -79,6 +72,6 @@ export const PasswordResetRoute = () => {
 					</form>
 				</Stack>
 			</Stack>
-		</Container>
+		</div>
 	);
 };

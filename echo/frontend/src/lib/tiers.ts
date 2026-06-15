@@ -28,12 +28,12 @@ export const TIER_ORDER: Tier[] = [
 ];
 
 export const TIER_TAGLINE: Record<Tier, string> = {
-	changemaker: "your brand, your integrations.",
+	changemaker: "For governments and enterprises",
 	free: "get started.",
-	guardian: "enterprise scale.",
-	innovator: "privacy and data portability.",
+	guardian: "For highest-compliance environments",
+	innovator: "For organisations with ongoing participation",
 	pilot: "one month to try it.",
-	pioneer: "for your first real engagements.",
+	pioneer: "For small teams and single projects",
 };
 
 // Capacity line appended to tooltips so a new customer can answer
@@ -117,12 +117,12 @@ export function isTier(value: string | null | undefined): value is Tier {
 export function taglineFor(tier: string | null | undefined): string {
 	if (!isTier(tier)) return "";
 	const map: Record<Tier, string> = {
-		changemaker: t`your brand, your integrations.`,
+		changemaker: t`For governments and enterprises`,
 		free: t`get started.`,
-		guardian: t`enterprise scale.`,
-		innovator: t`privacy and data portability.`,
+		guardian: t`For highest-compliance environments`,
+		innovator: t`For organisations with ongoing participation`,
 		pilot: t`one month to try it.`,
-		pioneer: t`for your first real engagements.`,
+		pioneer: t`For small teams and single projects`,
 	};
 	return map[tier];
 }
