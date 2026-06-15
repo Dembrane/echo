@@ -10,6 +10,7 @@ from pydantic import Field, BaseModel
 from dembrane.directus import DirectusClient, directus
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.rate_limit import create_user_rate_limiter
+from dembrane.search_filters import all_tokens_filter
 from dembrane.api.dependency_auth import DependencyDirectusSession, require_directus_client
 
 SearchRouter = APIRouter(
@@ -193,12 +194,21 @@ def _search_like_filter(field: str, term: str) -> Dict[str, Any]:
     return {field: {"_icontains": term}}
 
 
+# Alias to the private name the fetchers below call.
+_all_tokens_filter = all_tokens_filter
+
+
 def _fetch_projects(client: DirectusClient, term: str, limit: int) -> List[dict]:
     payload = client.get_items(
         "project",
         {
             "query": {
-                "filter": {**_search_like_filter("name", term), "deleted_at": {"_null": True}},
+                "filter": {
+                    "_and": [
+                        _all_tokens_filter(["name"], term),
+                        {"deleted_at": {"_null": True}},
+                    ]
+                },
                 "fields": ["id", "name", "workspace_id", "updated_at", "count(conversations)"],
                 "sort": ["-updated_at"],
                 "limit": limit,
@@ -216,12 +226,9 @@ def _fetch_conversations(client: DirectusClient, term: str, limit: int) -> List[
                 "filter": {
                     "_and": [
                         {"deleted_at": {"_null": True}},
-                        {"_or": [
-                            _search_like_filter("participant_name", term),
-                            _search_like_filter("participant_email", term),
-                            _search_like_filter("summary", term),
-                            _search_like_filter("id", term),
-                        ]},
+                        _all_tokens_filter(
+                            ["participant_name", "participant_email", "summary"], term
+                        ),
                     ]
                 },
                 "fields": [
@@ -257,6 +264,7 @@ def _fetch_chunks(client: DirectusClient, term: str, limit: int) -> List[dict]:
         "conversation_chunk",
         {
             "query": {
+                # Phrase match (not token-AND): transcripts match a contiguous spoken phrase.
                 "filter": {
                     "_or": [
                         _search_like_filter("transcript", term),
@@ -289,10 +297,7 @@ def _fetch_chats(client: DirectusClient, term: str, limit: int) -> List[dict]:
                 "filter": {
                     "_and": [
                         {"deleted_at": {"_null": True}},
-                        {"_or": [
-                            _search_like_filter("name", term),
-                            _search_like_filter("id", term),
-                        ]},
+                        _all_tokens_filter(["name"], term),
                     ]
                 },
                 "fields": [

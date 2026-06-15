@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.directus_async import async_directus
+from dembrane.search_filters import merge_search_filter
 from dembrane.api.v2.middleware import (
     WorkspaceContext,
     get_workspace_context,
@@ -320,6 +321,9 @@ async def list_workspace_projects(
         {**base_filter, **visibility_clause} if visibility_clause is not None else base_filter
     )
 
+    if search and search.strip():
+        effective_filter = merge_search_filter(effective_filter, search.strip(), ["name"])
+
     query: dict = {
         "fields": [
             "id",
@@ -336,8 +340,6 @@ async def list_workspace_projects(
         "limit": limit + 1,
         "offset": offset,
     }
-    if search:
-        query["search"] = search
 
     projects_raw = await async_directus.get_items("project", {"query": query})
     if not isinstance(projects_raw, list):
