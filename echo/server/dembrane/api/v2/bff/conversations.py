@@ -35,6 +35,7 @@ from pydantic import BaseModel
 
 from dembrane.tier_capacity import is_conversation_locked
 from dembrane.directus_async import async_directus
+from dembrane.search_filters import merge_search_filter
 from dembrane.api.v2.bff._access import (
     filter_exclude_deleted,
     resolve_project_access,
@@ -65,6 +66,15 @@ _CONVERSATION_DEFAULT_FIELDS = [
     "is_audio_processing_finished",
     "is_anonymized",
     "is_over_cap",
+]
+
+# Shared by the list/count/select-all endpoints so they stay consistent.
+# No `id`: Directus rejects _icontains on uuid fields and errors the query.
+_CONVERSATION_SEARCH_FIELDS = [
+    "participant_name",
+    "participant_email",
+    "title",
+    "summary",
 ]
 
 
@@ -163,7 +173,9 @@ async def list_conversations(
         "offset": offset,
     }
     if search_text and search_text.strip():
-        query_dict["search"] = search_text.strip()
+        query_dict["filter"] = merge_search_filter(
+            conv_filter, search_text.strip(), _CONVERSATION_SEARCH_FIELDS
+        )
 
     convs = (
         await async_directus.get_items(
@@ -394,7 +406,9 @@ async def count_conversations(
         "filter": filt,
     }
     if search_text and search_text.strip():
-        query_dict["search"] = search_text.strip()
+        query_dict["filter"] = merge_search_filter(
+            filt, search_text.strip(), _CONVERSATION_SEARCH_FIELDS
+        )
 
     agg = await async_directus.get_items(
         "conversation",
@@ -547,7 +561,9 @@ async def count_remaining_conversations(
 
     query: dict = {"fields": ["id"], "filter": filt, "limit": -1}
     if search_text and search_text.strip():
-        query["search"] = search_text.strip()
+        query["filter"] = merge_search_filter(
+            filt, search_text.strip(), _CONVERSATION_SEARCH_FIELDS
+        )
 
     candidates = await async_directus.get_items("conversation", {"query": query})
     if not isinstance(candidates, list) or not candidates:

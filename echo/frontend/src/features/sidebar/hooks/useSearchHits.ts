@@ -181,9 +181,11 @@ export function useSearchHits(
 			return [...recentHits, ...rest].slice(0, MAX_HITS);
 		}
 
+		// Split on whitespace so "Marketing Acme" matches "Acme Marketing".
+		const tokens = needle.split(/\s+/).filter(Boolean);
 		const clientHits = all.filter((h) => {
 			const hay = `${h.label} ${h.subtitle ?? ""}`.toLowerCase();
-			return hay.includes(needle);
+			return tokens.every((tok) => hay.includes(tok));
 		});
 
 		// Deep results from /home/search, deduped by destination so the same

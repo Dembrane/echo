@@ -18,6 +18,7 @@ from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.directus_async import async_directus
+from dembrane.search_filters import merge_search_filter
 from dembrane.api.v2.bff._access import (
     resolve_tag_access,
     resolve_project_access,
@@ -360,9 +361,6 @@ async def list_my_projects(
         "workspace_id": {"_in": ws_ids},
         "deleted_at": {"_null": True},
     }
-    # Directus project rows don't have a full-text index; `search` param
-    # does a LIKE match across string fields when the server-side
-    # directus_client supports it.
     query: dict = {
         "filter": filt,
         "fields": [
@@ -379,7 +377,7 @@ async def list_my_projects(
         "offset": offset,
     }
     if search and search.strip():
-        query["search"] = search.strip()
+        query["filter"] = merge_search_filter(filt, search.strip(), ["name"])
     raw = await async_directus.get_items("project", {"query": query}) or []
     raw_list = raw if isinstance(raw, list) else []
 
