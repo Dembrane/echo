@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Badge, Box, Group, Stack, Table, Text } from "@mantine/core";
+import { Anchor, Badge, Box, Group, Stack, Table, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { API_BASE_URL } from "@/config";
@@ -160,14 +160,6 @@ export const TierCapacityMatrix = ({
 		},
 	];
 
-	const trainingRows: Row[] = [
-		{
-			key: "training",
-			label: <Trans>Training</Trans>,
-			render: (c) => c.training_included,
-		},
-	];
-
 	function renderRows(rows: Row[]) {
 		return rows.map((row) => (
 			<Table.Tr key={row.key}>
@@ -269,7 +261,6 @@ export const TierCapacityMatrix = ({
 							<>
 								{renderRows(usageRows)}
 								{renderRows(overageRows)}
-								{renderRows(trainingRows)}
 							</>
 						)}
 						{compact && (
@@ -281,6 +272,20 @@ export const TierCapacityMatrix = ({
 					</Table.Tbody>
 				</Table>
 			</Box>
+			<Text size="xs" c="dimmed" mt="sm">
+				<Trans>
+					An additional training is mandatory for teams using dembrane in
+					situations classified as high risk under the EU AI Act.
+				</Trans>{" "}
+				<Anchor
+					href="https://www.dembrane.com/platform/pricing#training"
+					target="_blank"
+					rel="noopener noreferrer"
+					inherit
+				>
+					<Trans>Learn more</Trans>
+				</Anchor>
+			</Text>
 		</Stack>
 	);
 };

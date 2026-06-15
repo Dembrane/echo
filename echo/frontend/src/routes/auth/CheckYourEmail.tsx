@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Anchor, Container, Stack, Text, Title } from "@mantine/core";
+import { Anchor, Stack, Text, Title } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { useSearchParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -13,7 +13,7 @@ export const CheckYourEmailRoute = () => {
 	const [params] = useSearchParams();
 	const email = params.get("email");
 	return (
-		<Container size="sm" py="xl">
+		<div className="h-full w-full">
 			<Stack gap="md">
 				<Title order={2} fw={400} {...testId("auth-check-email-title")}>
 					<Trans>Check your email</Trans>
@@ -21,21 +21,21 @@ export const CheckYourEmailRoute = () => {
 				<Text c="dimmed" {...testId("auth-check-email-text")}>
 					{email ? (
 						<Trans>
-							We sent a verification link to <b>{email}</b>. Click it to
-							finish setting up your account.
+							We sent a verification link to <b>{email}</b>. Click it to finish
+							setting up your account.
 						</Trans>
 					) : (
 						<Trans>
-							We sent you a verification link. Click it to finish setting
-							up your account.
+							We sent you a verification link. Click it to finish setting up
+							your account.
 						</Trans>
 					)}
 				</Text>
 				<Stack gap={6}>
 					<Text size="xs" c="dimmed">
 						<Trans>
-							Didn't get it? Check spam or junk first. The message comes
-							from dembrane.com.
+							Didn't get it? Check spam or junk first. The message comes from
+							dembrane.com.
 						</Trans>
 					</Text>
 					<Text size="xs" c="dimmed">
@@ -58,6 +58,6 @@ export const CheckYourEmailRoute = () => {
 					</Text>
 				</Stack>
 			</Stack>
-		</Container>
+		</div>
 	);
 };

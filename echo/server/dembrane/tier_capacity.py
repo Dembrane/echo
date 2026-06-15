@@ -87,7 +87,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
     ),
     "pioneer": TierCapacity(
         tier="pioneer",
-        tagline="for your first real engagements.",
+        tagline="For small teams and single projects",
         price_eur_monthly=200,
         price_note="per month",
         included_seats=3,
@@ -101,7 +101,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
     ),
     "innovator": TierCapacity(
         tier="innovator",
-        tagline="privacy and data portability.",
+        tagline="For organisations with ongoing participation",
         price_eur_monthly=500,
         price_note="per month",
         included_seats=10,
@@ -115,7 +115,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
     ),
     "changemaker": TierCapacity(
         tier="changemaker",
-        tagline="your brand, your integrations.",
+        tagline="For governments and enterprises",
         price_eur_monthly=1500,
         price_note="per month",
         included_seats=20,
@@ -129,7 +129,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
     ),
     "guardian": TierCapacity(
         tier="guardian",
-        tagline="enterprise scale.",
+        tagline="For highest-compliance environments",
         price_eur_monthly=5000,
         price_note="per month",
         included_seats=None,

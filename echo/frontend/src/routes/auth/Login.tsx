@@ -5,7 +5,6 @@ import {
 	Alert,
 	Anchor,
 	Button,
-	Container,
 	Divider,
 	PasswordInput,
 	PinInput,
@@ -287,7 +286,7 @@ export const LoginRoute = () => {
 	}, [otpRequired]);
 
 	return (
-		<Container size="sm" className="!h-full">
+		<div className="h-full w-full">
 			<Stack className="h-full">
 				<Stack className="flex-grow" gap="md">
 					<Title order={1}>
@@ -441,6 +440,6 @@ export const LoginRoute = () => {
 					</Box> */}
 				</Stack>
 			</Stack>
-		</Container>
+		</div>
 	);
 };

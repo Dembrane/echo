@@ -4,7 +4,6 @@ import {
 	Alert,
 	Anchor,
 	Button,
-	Container,
 	Group,
 	Loader,
 	Stack,
@@ -67,7 +66,7 @@ export const VerifyEmailRoute = () => {
 	const showSessionLoading = !missingToken && authLoading;
 
 	return (
-		<Container size="sm" className="!h-full" py="xl">
+		<div className="h-full w-full">
 			<Stack className="h-full">
 				<Stack className="flex-grow" gap="md">
 					<Title order={2} fw={400}>
@@ -167,6 +166,6 @@ export const VerifyEmailRoute = () => {
 					)}
 				</Stack>
 			</Stack>
-		</Container>
+		</div>
 	);
 };
