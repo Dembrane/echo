@@ -90,6 +90,13 @@ async def get_workspace_context(
     if not workspace or workspace.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Workspace not found")
 
+    # Tier and commercial terms live on the billing account. Resolve them onto
+    # the workspace dict so every downstream ctx check (has_policy, require_tier)
+    # reads the account, not a stale column.
+    from dembrane.billing_account import resolve_workspace_billing
+
+    workspace.update(await resolve_workspace_billing(workspace_id))
+
     resolved = await user_can_access(workspace_id, app_user_id)
     if resolved is None:
         raise HTTPException(status_code=403, detail="No access to this workspace")
@@ -228,7 +235,9 @@ async def check_no_pilot_block_for(workspace_id: str, tier: str | None = None) -
         ws = await async_directus.get_item("workspace", workspace_id)
         if not ws or ws.get("deleted_at"):
             return  # workspace gone → caller will 404 on its own path
-        tier = ws.get("tier")
+        from dembrane.billing_account import resolve_workspace_tier
+
+        tier = await resolve_workspace_tier(workspace_id)
 
     if not tier:
         return  # legacy NULL tier — treat as unlimited (not Pilot)

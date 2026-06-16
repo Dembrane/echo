@@ -158,6 +158,8 @@ async def assert_can_add_seat(
     over-issue invites). Acceptance paths pass False — they're
     transitioning pending → actual, so counting pending would double-count.
     """
+    # `tier` here is the billing-account tier: callers resolve it onto the
+    # workspace dict (via the account) before calling.
     tier = (workspace.get("tier") or "").lower()
     cap = get_capacity(tier)
     if cap is None or cap.included_seats is None:

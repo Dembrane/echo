@@ -317,12 +317,21 @@ class TestApprovalHandlesTierUpgrade:
         from dembrane.api.v2.admin import _upgrade_workspace_for_request
 
         req = {"id": "req-1", "workspace_id": "ws-1"}
-        mock_directus = AsyncMock()
-        mock_directus.get_item = AsyncMock(return_value={"id": "ws-1", "tier": "pilot", "org_id": "org-1"})
-        mock_directus.update_item = AsyncMock(return_value={"data": {"id": "ws-1"}})
+
+        def _get_item(coll, item_id, *a, **k):
+            if coll == "billing_account":
+                return {"id": item_id, "tier": "pilot"}
+            return {"id": "ws-1", "org_id": "org-1", "deleted_at": None, "billing_account_id": "acc-1"}
+
+        mock_admin = AsyncMock()
+        mock_admin.get_item = AsyncMock(side_effect=_get_item)
+        mock_ba = AsyncMock()
+        mock_ba.get_item = AsyncMock(side_effect=_get_item)
+        mock_ba.update_item = AsyncMock()
 
         with (
-            patch("dembrane.api.v2.admin.async_directus", mock_directus),
+            patch("dembrane.api.v2.admin.async_directus", mock_admin),
+            patch("dembrane.directus_async.async_directus", mock_ba),
             patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock),
             patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock),
         ):
@@ -335,7 +344,9 @@ class TestApprovalHandlesTierUpgrade:
                 granted_percent_discount=25,
             )
 
-        call_args = mock_directus.update_item.call_args
+        # Tier/terms are written to the billing account.
+        call_args = mock_ba.update_item.call_args
+        assert call_args[0][0] == "billing_account"
         payload = call_args[0][2]
         assert payload["tier"] == "pioneer"
         assert payload["type_discount"] == "scholarship"

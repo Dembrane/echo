@@ -76,15 +76,18 @@ class TestApplyTierExpiry:
     ):
         mock_effects.return_value = []
         mock_directus.update_item = AsyncMock()
-        mock_directus.get_item = AsyncMock(return_value={"id": "ws-1", "org_id": "org-1"})
+        # Tier now lives on the billing account; the downgrade is written there.
+        mock_directus.get_item = AsyncMock(
+            return_value={"id": "ws-1", "org_id": "org-1", "billing_account_id": "acc-1"}
+        )
 
         from dembrane.tasks import _apply_tier_expiry
 
         await _apply_tier_expiry("ws-1", "innovator")
 
         update_call = mock_directus.update_item.call_args
-        assert update_call[0][0] == "workspace"
-        assert update_call[0][1] == "ws-1"
+        assert update_call[0][0] == "billing_account"
+        assert update_call[0][1] == "acc-1"
         data = update_call[0][2]
         assert data["tier"] == "free"
         assert data["downgraded_from_tier"] == "innovator"
@@ -270,9 +273,11 @@ class TestTaskExpireWorkspaceTiers:
         self, _mock_dir, mock_ctx_fn, mock_run, mock_notify,
     ):
         mock_client = MagicMock()
+        # Cron scans billing accounts, then resolves the covered workspace.
         mock_client.get_items.return_value = [
-            {"id": "ws-1", "name": "Test WS", "tier": "pilot", "org_id": "org-1"},
+            {"id": "acc-1", "tier": "pilot", "workspace_id": "ws-1"},
         ]
+        mock_client.get_item.return_value = {"id": "ws-1", "name": "Test WS", "org_id": "org-1"}
         mock_ctx = MagicMock()
         mock_ctx.__enter__ = MagicMock(return_value=mock_client)
         mock_ctx.__exit__ = MagicMock(return_value=False)
@@ -299,9 +304,10 @@ class TestTaskExpireWorkspaceTiers:
     ):
         mock_client = MagicMock()
         mock_client.get_items.return_value = [
-            {"id": "ws-1", "name": "WS1", "tier": "pilot", "org_id": "org-1"},
-            {"id": "ws-2", "name": "WS2", "tier": "innovator", "org_id": "org-2"},
+            {"id": "acc-1", "tier": "pilot", "workspace_id": "ws-1"},
+            {"id": "acc-2", "tier": "innovator", "workspace_id": "ws-2"},
         ]
+        mock_client.get_item.return_value = {"id": "ws-x", "name": "WS", "org_id": "org-1"}
         mock_ctx = MagicMock()
         mock_ctx.__enter__ = MagicMock(return_value=mock_client)
         mock_ctx.__exit__ = MagicMock(return_value=False)
@@ -345,9 +351,10 @@ class TestTaskExpireWorkspaceTiers:
     ):
         mock_client = MagicMock()
         mock_client.get_items.return_value = [
-            {"id": "ws-1", "name": "WS1", "tier": "pilot", "org_id": "org-1"},
-            {"id": "ws-2", "name": "WS2", "tier": "innovator", "org_id": "org-2"},
+            {"id": "acc-1", "tier": "pilot", "workspace_id": "ws-1"},
+            {"id": "acc-2", "tier": "innovator", "workspace_id": "ws-2"},
         ]
+        mock_client.get_item.return_value = {"id": "ws-x", "name": "WS", "org_id": "org-1"}
         mock_ctx = MagicMock()
         mock_ctx.__enter__ = MagicMock(return_value=mock_client)
         mock_ctx.__exit__ = MagicMock(return_value=False)
@@ -396,8 +403,9 @@ class TestTaskExpireWorkspaceTiers:
     ):
         mock_client = MagicMock()
         mock_client.get_items.return_value = [
-            {"id": "ws-1", "name": None, "tier": "pilot", "org_id": "org-1"},
+            {"id": "acc-1", "tier": "pilot", "workspace_id": "ws-1"},
         ]
+        mock_client.get_item.return_value = {"id": "ws-1", "name": None, "org_id": "org-1"}
         mock_ctx = MagicMock()
         mock_ctx.__enter__ = MagicMock(return_value=mock_client)
         mock_ctx.__exit__ = MagicMock(return_value=False)
@@ -451,7 +459,9 @@ class TestIdempotency:
         """_apply_tier_expiry sets tier_expires_at=None so a re-run query won't match."""
         mock_effects.return_value = []
         mock_directus.update_item = AsyncMock()
-        mock_directus.get_item = AsyncMock(return_value={"id": "ws-1", "org_id": "org-1"})
+        mock_directus.get_item = AsyncMock(
+            return_value={"id": "ws-1", "org_id": "org-1", "billing_account_id": "acc-1"}
+        )
 
         from dembrane.tasks import _apply_tier_expiry
 
@@ -606,15 +616,19 @@ class TestPilotFreeNoRestamp:
         """_apply_tier_expiry does NOT touch conversation.is_over_cap."""
         mock_effects.return_value = []
         mock_directus.update_item = AsyncMock()
-        mock_directus.get_item = AsyncMock(return_value={"id": "ws-1", "org_id": "org-1"})
+        mock_directus.get_item = AsyncMock(
+            return_value={"id": "ws-1", "org_id": "org-1", "billing_account_id": "acc-1"}
+        )
 
         from dembrane.tasks import _apply_tier_expiry
 
         await _apply_tier_expiry("ws-1", "pilot")
 
+        # Only the tier downgrade is written (to the billing account); no
+        # conversation.is_over_cap re-stamp (ADR 0001).
         assert mock_directus.update_item.call_count == 1
         update_call = mock_directus.update_item.call_args
-        assert update_call[0][0] == "workspace"
+        assert update_call[0][0] == "billing_account"
 
     def test_live_lock_formula_pilot_content_stays_unlocked(self):
         """Conversations created on pilot (is_over_cap=False) stay unlocked

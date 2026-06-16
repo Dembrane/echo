@@ -37,7 +37,18 @@ def _make_project(project_id: str = "proj-1", workspace_id: str = "ws-1") -> dic
 
 
 def _make_workspace(workspace_id: str = "ws-1", tier: str = "free") -> dict:
-    return {"id": workspace_id, "tier": tier}
+    return {"id": workspace_id, "billing_account_id": "acc-1"}
+
+
+def _get_item_for(tier: str, workspace_id: str = "ws-1"):
+    """Sync get_item side-effect: tier now lives on the billing account."""
+
+    def _side(collection, item_id, *args, **kwargs):
+        if collection == "billing_account":
+            return {"id": item_id, "tier": tier}
+        return _make_workspace(workspace_id)
+
+    return _side
 
 
 def _setup_mocks(mock_conv_svc, mock_proj_svc, _mock_directus, conversation, project, workspace, all_projects, all_conversations):
@@ -73,7 +84,7 @@ class TestStampOverCapWiring:
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.return_value = _make_workspace(tier="free")
+        mock_client.get_item.side_effect = _get_item_for("free")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}],
             [{"duration": 5400}],  # 1.5h total
@@ -101,7 +112,7 @@ class TestStampOverCapWiring:
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.return_value = _make_workspace(tier="free")
+        mock_client.get_item.side_effect = _get_item_for("free")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}],
             [{"duration": 2160}],  # 0.6h total
@@ -129,7 +140,7 @@ class TestStampOverCapWiring:
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.return_value = _make_workspace(tier="pioneer")
+        mock_client.get_item.side_effect = _get_item_for("pioneer")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}],
             [{"duration": 3596400}],
@@ -157,7 +168,7 @@ class TestStampOverCapWiring:
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.return_value = _make_workspace(tier="free")
+        mock_client.get_item.side_effect = _get_item_for("free")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}],
             [{"duration": 3960}],  # 1.1h
@@ -218,7 +229,7 @@ class TestStampOverCapWiring:
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.return_value = _make_workspace(tier="pilot")
+        mock_client.get_item.side_effect = _get_item_for("pilot")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}],
             [{"duration": 37800}],  # 10.5h
@@ -246,7 +257,7 @@ class TestStampOverCapWiring:
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.return_value = _make_workspace(tier="free")
+        mock_client.get_item.side_effect = _get_item_for("free")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}, {"id": "proj-2"}],
             [

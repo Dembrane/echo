@@ -198,6 +198,8 @@ async def _recent_login_count(since_iso: str) -> int:
 
 
 async def _all_active_workspaces() -> list[dict]:
+    from dembrane.billing_account import nested_billing_fields, billing_from_workspace
+
     out = await async_directus.get_items(
         "workspace",
         {
@@ -206,21 +208,22 @@ async def _all_active_workspaces() -> list[dict]:
                 "fields": [
                     "id",
                     "name",
-                    "tier",
                     "org_id",
-                    "downgraded_at",
-                    "downgraded_from_tier",
                     "billed_to_team_id",
                     "effective_client_team_id",
-                    "tier_expires_at",
-                    "type_discount",
-                    "percent_discount",
+                    *nested_billing_fields(),
                 ],
                 "limit": -1,
             }
         },
     )
-    return out if isinstance(out, list) else []
+    if not isinstance(out, list):
+        return []
+    # Flatten the joined billing account fields to the top level so callers
+    # read ws["tier"], ws["downgraded_at"], etc. unchanged.
+    for ws in out:
+        ws.update(billing_from_workspace(ws))
+    return out
 
 
 async def _org_name_map(org_ids: list[str]) -> dict[str, str]:
@@ -1063,13 +1066,14 @@ async def _upgrade_workspace_for_request(
     """
     from dembrane.policies import TIER_ORDER
     from dembrane.tier_downgrade import apply_downgrade_effects
+    from dembrane.billing_account import resolve_workspace_tier, update_workspace_billing
 
     workspace_id = req["workspace_id"]
     workspace = await async_directus.get_item("workspace", workspace_id)
     if not workspace or workspace.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Target workspace not found")
 
-    from_tier = workspace.get("tier", "pioneer")
+    from_tier = (await resolve_workspace_tier(workspace_id)) or "pioneer"
     to_tier = granted_tier
 
     try:
@@ -1091,29 +1095,22 @@ async def _upgrade_workspace_for_request(
         _effects = await apply_downgrade_effects(workspace_id, from_tier, to_tier)
 
     now_iso = datetime.now(timezone.utc).isoformat()
-    ws_update: dict = {"tier": to_tier}
+    account_update: dict = {"tier": to_tier}
     if direction == "downgrade":
-        ws_update["downgraded_at"] = now_iso
-        ws_update["downgraded_from_tier"] = from_tier
+        account_update["downgraded_at"] = now_iso
+        account_update["downgraded_from_tier"] = from_tier
     elif direction == "upgrade":
-        ws_update["downgraded_at"] = None
-        ws_update["downgraded_from_tier"] = None
+        account_update["downgraded_at"] = None
+        account_update["downgraded_from_tier"] = None
     if granted_tier_expires_at:
-        ws_update["tier_expires_at"] = granted_tier_expires_at
-        ws_update["pre_warning_sent"] = False
+        account_update["tier_expires_at"] = granted_tier_expires_at
+        account_update["pre_warning_sent"] = False
     if granted_type_discount:
-        ws_update["type_discount"] = granted_type_discount
+        account_update["type_discount"] = granted_type_discount
     if granted_percent_discount is not None:
-        ws_update["percent_discount"] = granted_percent_discount
+        account_update["percent_discount"] = granted_percent_discount
 
-    await async_directus.update_item("workspace", workspace_id, ws_update)
-    # Dual-write the commercial change onto the workspace's billing account.
-    from dembrane.billing_account import account_patch_from_workspace_patch
-
-    account_id = workspace.get("billing_account_id")
-    account_patch = account_patch_from_workspace_patch(ws_update)
-    if account_id and account_patch:
-        await async_directus.update_item("billing_account", account_id, account_patch)
+    await update_workspace_billing(workspace_id, account_update)
 
     if direction == "upgrade":
         from dembrane.tier_downgrade import recalculate_over_cap_on_upgrade
