@@ -156,13 +156,10 @@ export const CreateWorkspaceRoute = () => {
 		if (!cap) return capacityShortFor(selectedTier);
 		const resolved = pricingForBillingPeriod(cap, billingPeriod);
 		if (!resolved) return capacityShortFor(selectedTier);
-		if (resolved.kind === "one_time") {
-			return t`€${resolved.amount_eur} one-time`;
-		}
 		if (resolved.kind === "annual") {
-			return t`€${resolved.per_month_eur}/mo · billed annually · €${resolved.total_per_year_eur}/yr`;
+			return t`€${resolved.per_month_eur}/seat/mo · billed annually · €${resolved.total_per_year_eur}/seat/yr`;
 		}
-		return t`€${resolved.per_month_eur}/mo · billed monthly`;
+		return t`€${resolved.per_month_eur}/seat/mo · billed monthly`;
 	}, [tierCapacities, selectedTier, billingPeriod]);
 
 	const freeWorkspaceForOrg = useMemo(() => {
@@ -174,10 +171,8 @@ export const CreateWorkspaceRoute = () => {
 		);
 	}, [workspacesData, targetOrganisationId]);
 
-	const canPickPrivate =
-		selectedTier !== "free" &&
-		selectedTier !== "pilot" &&
-		selectedTier !== "pioneer";
+	// Private visibility is a paid-tier feature; Free can't pick it.
+	const canPickPrivate = selectedTier !== "free";
 
 	useEffect(() => {
 		if (!canPickPrivate && privacy === "private") {
@@ -185,10 +180,9 @@ export const CreateWorkspaceRoute = () => {
 		}
 	}, [canPickPrivate, privacy]);
 
-	// Pilot is a one-time fee; the toggle doesn't influence its price and the
-	// backend rejects `proposed_billing_period` on pilot. Send null.
+	// Free has no billing period; paid tiers carry the annual/monthly choice.
 	const submittedBillingPeriod: BillingPeriod | null =
-		selectedTier === "pilot" ? null : billingPeriod;
+		selectedTier === "free" ? null : billingPeriod;
 
 	const mutation = useMutation({
 		mutationFn: () => {

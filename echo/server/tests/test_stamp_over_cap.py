@@ -221,18 +221,18 @@ class TestStampOverCapWiring:
     @patch("dembrane.directus.directus")
     @patch("dembrane.service.project_service")
     @patch("dembrane.service.conversation_service")
-    def test_pilot_at_cap_stamps_true(
+    def test_free_started_at_cap_stamps_true(
         self, mock_conv_svc, mock_proj_svc, _mock_directus, mock_ctx_fn, mock_logger
     ):
-        """Pilot at 10.5h after 0.5h recording → started at 10.0h, exactly at 10h cap."""
+        """Free at 1.5h after 0.5h recording → started at 1.0h, exactly at the 1h cap."""
         mock_conv_svc.get_by_id_or_raise.return_value = _make_conversation(duration=1800)
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.side_effect = _get_item_for("pilot")
+        mock_client.get_item.side_effect = _get_item_for("free")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}],
-            [{"duration": 37800}],  # 10.5h
+            [{"duration": 5400}],  # 1.5h
         ]
         mock_ctx = MagicMock()
         mock_ctx.__enter__ = MagicMock(return_value=mock_client)

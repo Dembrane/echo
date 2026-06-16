@@ -317,7 +317,7 @@ export function UpgradeModal({
 		}
 		setSending(true);
 		const submittedBillingPeriod: BillingPeriod | null =
-			selectedTier === "pilot" ? null : billingPeriod;
+			selectedTier === "free" ? null : billingPeriod;
 		try {
 			const res = await fetch(`${API_BASE_URL}/v2/workspace-requests`, {
 				body: JSON.stringify({

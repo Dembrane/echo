@@ -18,9 +18,6 @@ import {
 function fmtPrice(cap: TierCapacity, billingPeriod: BillingPeriod): string {
 	const resolved = pricingForBillingPeriod(cap, billingPeriod);
 	if (!resolved) return t`Free`;
-	if (resolved.kind === "one_time") {
-		return `€${resolved.amount_eur.toLocaleString("en-IE")}`;
-	}
 	return `€${resolved.per_month_eur.toLocaleString("en-IE")}`;
 }
 
@@ -30,9 +27,8 @@ function fmtPricePeriod(
 ): string {
 	const resolved = pricingForBillingPeriod(cap, billingPeriod);
 	if (!resolved) return "";
-	if (resolved.kind === "one_time") return t`one-time`;
-	if (resolved.kind === "annual") return t`/mo · billed annually`;
-	return t`/mo · billed monthly`;
+	if (resolved.kind === "annual") return t`/seat/mo · billed annually`;
+	return t`/seat/mo · billed monthly`;
 }
 
 function fmtSeats(cap: TierCapacity): string {

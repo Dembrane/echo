@@ -984,22 +984,15 @@ class MonthlyPricing(BaseModel):
     per_month_eur: int
 
 
-class OneTimePricing(BaseModel):
-    amount_eur: int
-
-
 class TierPricing(BaseModel):
-    """Per-tier nested pricing payload.
+    """Per-tier nested pricing payload (per seat / month).
 
-    Exactly one of the cadence groups is populated per tier:
         - Free: pricing is None at the parent level (never instantiated).
-        - Pilot: `one_time` only.
-        - Pioneer+: `annual_billing` + `monthly_billing`.
+        - Paid tiers: `annual_billing` + `monthly_billing` populated.
     """
 
     annual_billing: Optional[AnnualPricing] = None
     monthly_billing: Optional[MonthlyPricing] = None
-    one_time: Optional[OneTimePricing] = None
 
 
 class NextTierRecommendation(BaseModel):
