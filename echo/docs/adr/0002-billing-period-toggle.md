@@ -1,7 +1,9 @@
 # Billing period as a request-time choice with admin override capture
 
 ## Status
-proposed (2026-05-19)
+proposed (2026-05-19); amended in part by ADR 0005 (2026-06-16)
+
+> Amendment (ADR 0005): under the per-seat tier overhaul, `MONTHLY_BILLING_PREMIUM_PCT` becomes 20 (not 10), and the `pricing` object is per-seat rather than flat per-tier. The annual/monthly toggle, the "+X% (annual)" framing, and the `proposed_billing_period` / `approved_billing_period` capture on `workspace_request` are unchanged in shape. Pilot's `one_time` shape is moot once Pilot is removed.
 
 ## Context
 Tier prices in the matrix today are flat per-month figures (Pioneer €200/mo, Innovator €500/mo, etc.) with billing cadence handled informally over email. We want a self-serve billing-period choice (annual vs monthly) on every pricing surface — cards (CreateWorkspace, FeatureGate upgrade modal, admin approval dialog) and matrix (WorkspaceSettings, AdminSettings) — with monthly billing carrying a +10% premium over annual. Pilot and Free are exempt; Pioneer/Innovator/Changemaker/Guardian carry the toggle. Automated billing is not yet built — today the cadence choice flows to a manual invoicing process.
