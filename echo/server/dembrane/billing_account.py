@@ -101,6 +101,62 @@ async def link_account_to_workspace(account_id: str, workspace_id: str) -> None:
     )
 
 
+async def create_org_scoped_account(
+    *,
+    org_id: str,
+    tier: str = "free",
+    created_by: Optional[str] = None,
+    label: Optional[str] = None,
+) -> str:
+    """Create an org-scoped billing account (the org is the payer). Returns its
+    id. `workspace_id` stays null; workspaces attach via `billing_account_id`."""
+    account_id = generate_uuid()
+    payload: dict[str, Any] = {
+        "id": account_id,
+        "org_id": org_id,
+        "tier": tier,
+        "payment_mode": "none",
+    }
+    if created_by:
+        payload["created_by"] = created_by
+    if label:
+        payload["label"] = label
+    await directus_async.async_directus.create_item("billing_account", payload)
+    return account_id
+
+
+async def get_org_account_id(org_id: str) -> Optional[str]:
+    """The org's billing account id (oldest live org-scoped account), or None."""
+    rows = await directus_async.async_directus.get_items(
+        "billing_account",
+        {
+            "query": {
+                "filter": {"org_id": {"_eq": org_id}, "deleted_at": {"_null": True}},
+                "fields": ["id"],
+                "sort": ["created_at"],
+                "limit": 1,
+            }
+        },
+    )
+    if isinstance(rows, list) and rows:
+        return rows[0].get("id")
+    return None
+
+
+async def org_account_for_new_workspace(
+    *, org_id: str, default_tier: str = "free", created_by: Optional[str] = None
+) -> str:
+    """The account a new workspace attaches to by default (org manages billing).
+    Returns the org's existing account, or creates an org-scoped one if none
+    exists yet."""
+    existing = await get_org_account_id(org_id)
+    if existing:
+        return existing
+    return await create_org_scoped_account(
+        org_id=org_id, tier=default_tier, created_by=created_by, label="Org billing"
+    )
+
+
 async def get_billing_account_id(workspace_id: str) -> Optional[str]:
     """The id of the billing account a workspace resolves to."""
     ws = await directus_async.async_directus.get_item("workspace", workspace_id)

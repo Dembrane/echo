@@ -576,17 +576,12 @@ async def complete_onboarding(
         else:
             personal_ws_id = generate_uuid()
             # System-seeded workspace — bypasses workspace_request flow intentionally.
-            # Only user-initiated workspace creation goes through requests.
-            # Every workspace resolves to exactly one billing account (NOT NULL).
-            from dembrane.billing_account import (
-                link_account_to_workspace,
-                create_workspace_scoped_account,
-            )
+            # Org manages billing: the default workspace attaches to the org's
+            # (org-scoped) billing account, created here on first need.
+            from dembrane.billing_account import org_account_for_new_workspace
 
-            account_id = await create_workspace_scoped_account(
-                tier="free",
-                created_by=app_user_id,
-                label="Default billing",
+            account_id = await org_account_for_new_workspace(
+                org_id=org_id, default_tier="free", created_by=app_user_id
             )
             await async_directus.create_item(
                 "workspace",
@@ -599,7 +594,6 @@ async def complete_onboarding(
                     "billing_account_id": account_id,
                 },
             )
-            await link_account_to_workspace(account_id, personal_ws_id)
             logger.info(f"Created default workspace {personal_ws_id} for org {org_id}")
 
         # Make sure the creator has a workspace_membership — even when
