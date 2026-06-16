@@ -1364,6 +1364,55 @@ async def update_workspace_discount(
     return {"status": "ok", **payload}
 
 
+class GrantTrialBody(BaseModel):
+    tier: Literal["innovator", "changemaker", "guardian"] = Field(
+        default="changemaker", description="Tier to grant for the trial."
+    )
+    months: int = Field(default=1, ge=1, le=12, description="Trial length in months.")
+
+
+@router.post("/orgs/{org_id}/grant-trial")
+async def grant_org_trial(
+    org_id: str,
+    body: GrantTrialBody,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Staff-only: grant a comped reverse trial on an org's billing account.
+
+    The org gets `tier` for `months` (default Changemaker, 1 month), comped (no
+    Mollie). The expiry cron auto-reverts it to Free; the pre-warning cron nudges
+    3 days before. This is the staff-dashboard "load a trial" action.
+    """
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    from dembrane.cache_utils import invalidate_org_usage
+    from dembrane.billing_account import get_org_account_id, grant_reverse_trial
+
+    account_id = await get_org_account_id(org_id)
+    if not account_id:
+        raise HTTPException(status_code=404, detail="Org has no billing account")
+
+    expires_at = await grant_reverse_trial(account_id, tier=body.tier, months=body.months)
+    await invalidate_org_usage(org_id)
+    logger.info(
+        "staff granted %s trial (%d mo, expires %s) on org %s account %s by %s",
+        body.tier,
+        body.months,
+        expires_at,
+        org_id,
+        account_id,
+        auth.user_id,
+    )
+    return {
+        "status": "ok",
+        "org_id": org_id,
+        "billing_account_id": account_id,
+        "tier": body.tier,
+        "tier_expires_at": expires_at,
+    }
+
+
 @router.get("/at-risk", response_model=list[AtRiskRow])
 async def at_risk(
     auth: DependencyDirectusSession,
