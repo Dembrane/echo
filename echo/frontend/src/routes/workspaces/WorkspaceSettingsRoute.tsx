@@ -57,7 +57,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { logoUrl, memberInitials } from "@/lib/avatar";
 import { displayRole } from "@/lib/roles";
-import { type BillingPeriod, seatOverageRateFor, type Tier } from "@/lib/tiers";
+import { type BillingPeriod, type Tier } from "@/lib/tiers";
 
 interface WorkspaceMember {
 	id: string;
@@ -341,10 +341,8 @@ export const WorkspaceSettingsRoute = () => {
 		usageProbe.seat_count_included != null &&
 		usageProbe.seat_count >= usageProbe.seat_count_included;
 	const seatInviteBlocked = usageProbe?.seat_invite_blocked ?? seatCapHit;
-	const tierHardBlocks =
-		usageProbe?.tier === "free" || usageProbe?.tier === "pilot";
-	const seatOverageActive = !tierHardBlocks && seatCapHit;
-	const seatOverageRate = seatOverageRateFor(usageProbe?.tier);
+	// Only Free hard-caps seats now; paid tiers are per-seat metered (never block).
+	const tierHardBlocks = usageProbe?.tier === "free";
 
 	// The bulk-invite wizard handles its own POSTs + success toasts, so
 	// there's no top-level inviteMutation anymore. Pending invites are
@@ -816,15 +814,9 @@ export const WorkspaceSettingsRoute = () => {
 															All seats are taken. Free a seat or upgrade to
 															invite more.
 														</Trans>
-													) : seatOverageActive && seatOverageRate != null ? (
+													) : !tierHardBlocks && seatCapHit ? (
 														<Trans>
-															You're over your included seats. Each new member
-															adds €{seatOverageRate}/month to next bill.
-														</Trans>
-													) : seatOverageActive ? (
-														<Trans>
-															You're over your included seats. Overage applies
-															on the next bill.
+															Each new member is billed per seat on your plan.
 														</Trans>
 													) : (
 														<Trans>

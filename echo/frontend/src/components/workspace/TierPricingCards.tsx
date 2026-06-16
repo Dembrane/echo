@@ -62,16 +62,13 @@ function buildCardData(cap: TierCapacity, billingPeriod: BillingPeriod) {
 	const resolved = pricingForBillingPeriod(cap, billingPeriod);
 	if (resolved?.kind === "annual") {
 		priceAmount = `€${resolved.per_month_eur.toLocaleString("en-IE")}`;
-		pricePeriod = t`/mo`;
+		pricePeriod = t`/seat/mo`;
 		const total = `€${resolved.total_per_year_eur.toLocaleString("en-IE")}`;
-		priceSubtext = t`billed annually · ${total}/yr`;
+		priceSubtext = t`billed annually · ${total}/seat/yr`;
 	} else if (resolved?.kind === "monthly") {
 		priceAmount = `€${resolved.per_month_eur.toLocaleString("en-IE")}`;
-		pricePeriod = t`/mo`;
+		pricePeriod = t`/seat/mo`;
 		priceSubtext = t`billed monthly`;
-	} else if (resolved?.kind === "one_time") {
-		priceAmount = `€${resolved.amount_eur.toLocaleString("en-IE")}`;
-		pricePeriod = t`one-time`;
 	} else {
 		priceAmount = t`Free`;
 		pricePeriod = "";
@@ -101,25 +98,21 @@ function buildFallbackCardData(tier: Tier, billingPeriod: BillingPeriod) {
 
 	if (tier === "free") {
 		priceAmount = t`Free`;
-	} else if (tier === "pilot") {
-		priceAmount = "€349";
-		pricePeriod = t`one-time`;
 	} else {
-		// Pioneer+. Fallback hard-codes the annual-billing rates so the
+		// Paid tiers. Fallback hard-codes the annual per-seat rates so the
 		// component still renders if the network call hasn't returned.
-		const annualPerMonth: Record<string, number> = {
-			changemaker: 1500,
-			guardian: 5000,
-			innovator: 500,
-			pioneer: 200,
+		const annualPerSeat: Record<string, number> = {
+			changemaker: 75,
+			guardian: 150,
+			innovator: 20,
 		};
-		const base = annualPerMonth[tier] ?? 0;
-		const value = billingPeriod === "monthly" ? Math.round(base * 1.1) : base;
+		const base = annualPerSeat[tier] ?? 0;
+		const value = billingPeriod === "monthly" ? Math.round(base * 1.2) : base;
 		priceAmount = `€${value.toLocaleString("en-IE")}`;
-		pricePeriod = t`/mo`;
+		pricePeriod = t`/seat/mo`;
 		if (billingPeriod === "annual") {
 			const total = `€${(base * 12).toLocaleString("en-IE")}`;
-			priceSubtext = t`billed annually · ${total}/yr`;
+			priceSubtext = t`billed annually · ${total}/seat/yr`;
 		} else {
 			priceSubtext = t`billed monthly`;
 		}
@@ -359,13 +352,8 @@ interface TierPricingCardsProps {
 	billingPeriod?: BillingPeriod;
 }
 
-const REQUESTABLE_TIERS: Tier[] = [
-	"pilot",
-	"pioneer",
-	"innovator",
-	"changemaker",
-	"guardian",
-];
+// Free is hidden from selection (see VISIBLE_TIERS in lib/tiers).
+const REQUESTABLE_TIERS: Tier[] = ["innovator", "changemaker", "guardian"];
 
 export const TierPricingCards = ({
 	tiers = REQUESTABLE_TIERS,

@@ -158,7 +158,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 				: "primary";
 
 	const nextTier = data.next_tier;
-	const currentTierName = isTier(data.tier) ? (data.tier as Tier) : "pioneer";
+	const currentTierName = isTier(data.tier) ? (data.tier as Tier) : "changemaker";
 	const nextTierName =
 		nextTier && isTier(nextTier.tier) ? (nextTier.tier as Tier) : null;
 
