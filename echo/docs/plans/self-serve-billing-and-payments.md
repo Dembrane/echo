@@ -119,6 +119,42 @@ Seeing / using the data: the Mollie **test Dashboard** plus the connected
 `GetBalance`, `ListSettlements`) against the test account. Test caveats: subs
 auto-cancel after 10 payments; `changePaymentState` forces payment outcomes.
 
+## Trials / pilots (the "reverse trial" — win-win)
+
+"Pilot" stops being a tier and becomes a mechanism: a time-boxed grant of a
+paid tier (Changemaker) that auto-reverts to Free. This is the **reverse trial**
+pattern (full premium for a window, then downgrade to free), which the industry
+data backs as the strongest model: ~18-32% trial-to-paid (median ~24%) vs
+3-15% for plain freemium. It is win-win by construction: the customer gets full
+value risk-free; we get high-intent conversions via loss aversion; and a
+non-converter stays a Free user (a kept relationship + future upsell), not a
+deleted account.
+
+How it works (reuses existing machinery — no new structures):
+
+- Admin grants it: `tier=changemaker`, `tier_expires_at = now + 1 month`,
+  `payment_mode=none` (comped, no Mollie), `type_discount="trial"` (marks it).
+- `task_send_tier_expiry_prewarning` sends the 3-day "expiring soon" nudge.
+- `task_expire_workspace_tiers` auto-downgrades to Free at expiry.
+- Conversion is the normal self-serve checkout; on payment we clear
+  `tier_expires_at` (the Mollie subscription takes over continuity).
+
+Best practices applied (from SaaS reverse-trial research):
+
+- **No credit card for the comped grant.** Lowest friction; Calendly-style.
+  (A self-serve card-on-file variant is possible later via a Mollie
+  subscription `startDate = now + 1 month` + a €0 consent payment.)
+- **Communicate the downgrade clearly** before it happens (the pre-warning
+  cron) and make upgrading one click — loss aversion does the work.
+- **Never delete data or hard-block on downgrade.** They drop to Free limits
+  but keep everything; this preserves goodwill and keeps the upsell alive.
+- **Measure** trial feature adoption and trial-to-paid conversion (PostHog),
+  not just signups.
+
+Small additions needed: a `"trial"` value on `billing_account.type_discount`
+(added via the proper Directus flow with the rest of the Phase A schema), and a
+staff "grant trial" action (the existing admin tier-set path + an expiry + comp).
+
 ## What can go wrong, and how we handle it
 
 1. **Webhook never arrives / is late.** Webhook is authoritative but not the
