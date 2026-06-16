@@ -48,12 +48,14 @@ _SEAT_ROLES = {"owner", "admin", "member", "billing", "external"}
 _EXTERNAL_ROLE = "external"
 
 # Tiers that hard-block on seat cap (no overage mechanism).
-_HARD_BLOCK_SEAT_TIERS = frozenset({"free", "pilot"})
+# Free is single-user: the one tier that hard-caps seats. Paid tiers are
+# per-seat metered and never block (ADR 0005).
+_HARD_BLOCK_SEAT_TIERS = frozenset({"free"})
 
 
 def tier_hard_blocks_seats(tier: str) -> bool:
-    """Free and pilot hard-block on seat cap. Pioneer+ accrue overage.
-    Guardian + unknown tiers don't block."""
+    """Only Free hard-caps seats (single user). Paid tiers bill per seat and
+    never block. Unknown tiers don't block."""
     return tier in _HARD_BLOCK_SEAT_TIERS
 
 

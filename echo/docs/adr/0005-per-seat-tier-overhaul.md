@@ -16,14 +16,14 @@ We are simplifying to per-seat pricing, removing hour caps on paid tiers, and re
 
 - **Tiers become: Free, Innovator, Changemaker, Guardian.** Pilot and Pioneer are removed. Each paid tier is per seat / month, unlimited hours under fair use, and includes the same state-of-the-art secure transcription. Tiers stack: each includes everything below it and adds capability.
   - **Free** (unchanged): 1 hour of recording, single user, open registration. Secure transcription included.
-  - **Innovator**: $20 per seat / month. Unlimited hours. **Bring your own LLM** — no built-in analysis; the chat screen becomes an integration and we expose an **MCP from this plan** (connect ChatGPT / Claude). Secure transcription.
+  - **Innovator**: €20 per seat / month. Unlimited hours. **Bring your own LLM** — no built-in analysis; the chat screen becomes an integration and we expose an **MCP from this plan** (connect ChatGPT / Claude). Secure transcription.
   - **Changemaker** (the tier most customers land on): €75 per seat / month. Everything in Innovator, plus **built-in analysis** powered by EU-hosted **Gemini 3.5 Flash**. **Audit logs** and **white labeling** start at this tier.
   - **Guardian**: €150 per seat / month. CLOUD Act safe. Everything in Changemaker, plus the **EU-sovereign stack**: EU cloud providers (for example OVHcloud) and EU-managed / sovereign LLMs. For municipalities and large enterprises.
   - **Bespoke** compliance is a conversation; self-hosting is available.
 
 - **Feature-by-tier matrix** (the gate map for `policies.py`):
 
-  | Capability | Free | Innovator | Changemaker | Guardian |
+  | Capability | Free | Innovator €20 | Changemaker €75 | Guardian €150 |
   |---|---|---|---|---|
   | Secure transcription | ✓ | ✓ | ✓ | ✓ |
   | Recording hours | 1 h | unlimited | unlimited | unlimited |
@@ -33,7 +33,7 @@ We are simplifying to per-seat pricing, removing hour caps on paid tiers, and re
   | White labeling | — | — | ✓ | ✓ |
   | EU-sovereign stack (OVH, sovereign LLMs) | — | — | — | ✓ |
 
-- **Pricing is per seat / month**, billed yearly by default; monthly is 20% more. `MONTHLY_BILLING_PREMIUM_PCT` becomes 20 (was 10 in ADR 0002). Figures: Innovator $20, Changemaker €75, Guardian €150. (Currency mismatch — Innovator quoted in USD, the others EUR — is unresolved; see Open.)
+- **Pricing is per seat / month, EUR for all tiers**, billed yearly by default; monthly is 20% more. `MONTHLY_BILLING_PREMIUM_PCT` becomes 20 (was 10 in ADR 0002). Figures: Innovator €20, Changemaker €75, Guardian €150.
 
 - **Hours stop being a paid-tier lever.** All paid tiers have unlimited recording and transcription under fair use (fair use = a legitimate purpose). Only Free keeps an hour cap (1 hour). The per-tier `included_hours` / `hour_overage_eur` matrix fields and the over-cap machinery from ADR 0001 apply to Free only.
 
@@ -67,10 +67,10 @@ We are simplifying to per-seat pricing, removing hour caps on paid tiers, and re
 
 - **Trainings are a separate epic** but the data model should leave room for a per-user training flag and a later auditing system for high-risk-environment users.
 
-## Open
+## Resolved (2026-06-16)
 
-- **Currency.** Innovator is quoted in USD ($20), Changemaker/Guardian in EUR (€75 / €150). A prior decision said EUR for all; confirm whether Innovator is €20 or genuinely USD (multi-currency on the account).
-- **Guardian unit.** Stated as "150 per month" — assumed €150 per seat / month like the others; confirm it isn't a flat per-account price.
-- **Gemini model.** Changemaker chat is "Gemini 3.5 Flash" per product intent; reconcile with the `MULTI_MODAL_*` groups in `AGENTS.md` (today's chat is Gemini 2.5 Pro).
-- **Self-serve availability.** Changemaker is self-serve via Mollie. Innovator depends on the MCP being released; Guardian depends on the sovereign stack being stood up — both are likely sales-assisted / "coming soon" until those capabilities ship.
-- **Audit logs** are a new capability (Changemaker+) that doesn't exist yet — its own build, gated in `policies.py`.
+- **Currency: EUR for all** tiers. Innovator €20, Changemaker €75, Guardian €150 per seat / month.
+- **Guardian is €150 per seat / month** (not flat).
+- **Gemini 3.5 Flash** is already the `MULTI_MODAL` model (changed in the env), so Changemaker chat needs no model change.
+- **Self-serve availability**: Changemaker is self-serve via Mollie now. Innovator is gated on the MCP shipping, Guardian on the sovereign stack — both "coming soon" until then.
+- **Audit logs** are gated at Changemaker+, but are their own separate piece of work (capability already partly exists).
