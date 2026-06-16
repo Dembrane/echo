@@ -35,15 +35,22 @@ This **inverts the delegation boundary**. We do not push the user's write author
 - Read tools stay as they are. Mutating tools return proposals only.
 - Reference pattern: CopilotKit's human-in-the-loop / render-and-wait-for-response actions match this exactly. We can adopt that primitive if we move onto CopilotKit's React layer; today's `AgenticChatPanel` can render the proposal/diff card directly from the run-event.
 
-## The assistant has three output modes
+## It is all tool calls (some carry a frontend renderer)
 
-Not everything is a mutation. The assistant produces three kinds of output, only the last of which needs the proposal/confirm flow:
+There are no output "modes" or "types." Everything the agent does is a **tool call**. The only axis that matters: does a given tool have a **frontend renderer** registered for it?
 
-1. **Answer** - text over the host's data, with citations (exists today).
-2. **Guide / navigate** - the chat doubles as living product documentation (inspired by PostHog's in-app chat). When a host asks "how do I do X here?", the assistant explains, **links or deep-links to the relevant page**, and offers **dembrane best practices** for the task. This is **non-mutating**: links and guidance, no confirm step. The frontend renders these as clickable navigation, not a diff.
-3. **Propose** - a mutating proposal that opens the diff view and waits for accept/decline/edit (the flow above).
+- **Most tool calls render passively** - a status card (running / done), which the panel already does via `agenticToolActivity.ts`. Read tools and progress updates live here. Navigation and best-practices are not even tools: they are just links in the model's text, powered by the route map in the product-context doc.
+- **Some tools declare a typed output and a rich, interactive renderer.** `proposeChange` is the first. Its output is a typed proposal; the frontend has a renderer keyed to that type which:
+  1. reads the drafted change from the tool output,
+  2. queries current state to build a real before -> after diff,
+  3. renders the diff (accept / decline / edit, about five edits max),
+  4. on accept, **submits as the user** through the normal authenticated endpoint.
 
-The guide mode means the agent must know the app's **pages/routes** and **best practices**, which is why the product-context doc below carries a navigation map and a best-practices section. A "how do I X" question often ends by *offering* a proposal ("want me to set that up?") - that hands mode 2 into mode 3.
+Step 4 *is* the delegation inversion, and it is nothing more than what this tool's renderer is allowed to do. The agent emitted a tool call; the frontend handled it. There is no second concept.
+
+This is exactly CopilotKit's frontend-action model (`useCopilotAction` with `render`, and `renderAndWaitForResponse` for the human-in-the-loop pause), sitting on top of the tool-activity rendering the panel already does.
+
+Future interactive tools (a date-range picker, a chart the host tweaks, a "pick conversations" selector) plug in the same way: declare a typed output, register a renderer. The architecture is a **tool registry where some tools carry a frontend renderer** - not a taxonomy of output types.
 
 ## Context awareness (living product knowledge)
 
