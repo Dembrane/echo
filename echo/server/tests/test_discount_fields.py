@@ -448,9 +448,10 @@ class TestAllActiveWorkspacesFields:
 
             call_args = mock_directus.get_items.call_args
             fields = call_args[0][1]["query"]["fields"]
-            assert "tier_expires_at" in fields
-            assert "type_discount" in fields
-            assert "percent_discount" in fields
+            # Commercial fields live on the billing account; joined via dot-notation.
+            assert "billing_account_id.tier_expires_at" in fields
+            assert "billing_account_id.type_discount" in fields
+            assert "billing_account_id.percent_discount" in fields
 
 
 # ── Approve helpers write discount fields (structural) ──

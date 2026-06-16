@@ -296,7 +296,7 @@ class TestTaskSendTierExpiryPrewarning:
 
         mock_client = MagicMock()
         mock_client.get_items.return_value = candidates
-        mock_client.get_item.side_effect = lambda c, i, *a, **k: {"id": i, "name": names[i]}
+        mock_client.get_item.side_effect = lambda _c, i, *_a, **_k: {"id": i, "name": names[i]}
         mock_client.update_item.return_value = {"data": {}}
 
         mock_ctx = MagicMock()
@@ -348,7 +348,7 @@ class TestTaskSendTierExpiryPrewarning:
 
         mock_client = MagicMock()
         mock_client.get_items.return_value = candidates
-        mock_client.get_item.side_effect = lambda c, i, *a, **k: {"id": i, "name": "WS"}
+        mock_client.get_item.side_effect = lambda _c, i, *_a, **_k: {"id": i, "name": "WS"}
 
         mock_ctx = MagicMock()
         mock_ctx.__enter__ = MagicMock(return_value=mock_client)
@@ -444,7 +444,7 @@ class TestPreWarningSentReset:
     @pytest.mark.asyncio
     async def test_upgrade_workspace_resets_pre_warning_on_expires_at(self):
         """When _upgrade_workspace_for_request sets tier_expires_at, it resets pre_warning_sent."""
-        def _get_item(coll, item_id, *a, **k):
+        def _get_item(coll, item_id, *_args, **_kwargs):
             if coll == "billing_account":
                 return {"id": item_id, "tier": "pilot"}
             return {"id": "ws-1", "org_id": "org-1", "deleted_at": None, "billing_account_id": "acc-1"}
@@ -483,7 +483,7 @@ class TestPreWarningSentReset:
     @pytest.mark.asyncio
     async def test_upgrade_without_expires_at_does_not_set_pre_warning(self):
         """When tier_expires_at is not set, pre_warning_sent is not touched."""
-        def _get_item(coll, item_id, *a, **k):
+        def _get_item(coll, item_id, *_args, **_kwargs):
             if coll == "billing_account":
                 return {"id": item_id, "tier": "pilot"}
             return {"id": "ws-1", "org_id": "org-1", "deleted_at": None, "billing_account_id": "acc-1"}

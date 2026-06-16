@@ -318,7 +318,7 @@ class TestApprovalHandlesTierUpgrade:
 
         req = {"id": "req-1", "workspace_id": "ws-1"}
 
-        def _get_item(coll, item_id, *a, **k):
+        def _get_item(coll, item_id, *_args, **_kwargs):
             if coll == "billing_account":
                 return {"id": item_id, "tier": "pilot"}
             return {"id": "ws-1", "org_id": "org-1", "deleted_at": None, "billing_account_id": "acc-1"}
