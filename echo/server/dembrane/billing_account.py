@@ -1,10 +1,17 @@
-"""Workspace billing-account helpers (Phase 1: billing account split).
+"""Billing account: the single source of truth for a workspace's commercial terms.
 
-Phase 1 is behavior-preserving. Every workspace now has exactly one
-`billing_account` (NOT NULL `workspace.billing_account_id`). The account's
-commercial fields mirror the workspace's via dual-write, so enforcement can
-keep reading `workspace.tier` today and move onto `resolve_workspace_tier`
-in a follow-up with no behavior change.
+A workspace resolves its tier and commercial terms through the billing account
+its `billing_account_id` points at (NOT NULL). That account is either
+workspace-scoped (billed separately) or org-scoped (shared across the org's
+workspaces). There is no authoritative `workspace.tier`: reads resolve through
+the account, writes target the account.
+
+Two read patterns:
+- when you already fetch the workspace, add `nested_billing_fields()` to the
+  Directus `fields` list and read the joined values with `billing_from_workspace`
+  / `tier_from_workspace` (one query, no extra round-trip)
+- when you only hold a workspace id, use `resolve_workspace_tier` /
+  `resolve_workspace_billing`
 
 See docs/plans/billing-account-split.md and docs/adr/0005-per-seat-tier-overhaul.md.
 """
@@ -16,8 +23,8 @@ from typing import Any, Optional
 from dembrane import directus_async
 from dembrane.utils import generate_uuid
 
-# Commercial fields the account mirrors from the workspace during Phase 1.
-MIRRORED_FIELDS = (
+# Commercial fields that live on the billing account (moved off workspace).
+BILLING_FIELDS = (
     "tier",
     "tier_expires_at",
     "downgraded_at",
@@ -25,7 +32,30 @@ MIRRORED_FIELDS = (
     "pre_warning_sent",
     "percent_discount",
     "type_discount",
+    "billing_period",
 )
+
+
+def nested_billing_fields(prefix: str = "billing_account_id") -> list[str]:
+    """Directus dot-notation field list that joins the account's commercial
+    fields into a workspace fetch, so a single query returns both."""
+    return [f"{prefix}.{f}" for f in BILLING_FIELDS]
+
+
+def billing_from_workspace(ws: dict[str, Any], prefix: str = "billing_account_id") -> dict[str, Any]:
+    """Pull the commercial fields off a workspace dict that joined the account
+    via `nested_billing_fields()`. Returns {} when the account wasn't joined
+    (e.g. `billing_account_id` came back as a bare id string)."""
+    account = ws.get(prefix)
+    if isinstance(account, dict):
+        return {f: account.get(f) for f in BILLING_FIELDS}
+    return {}
+
+
+def tier_from_workspace(ws: dict[str, Any], prefix: str = "billing_account_id") -> Optional[str]:
+    """Read the tier off a workspace dict that joined the account. None when
+    the account wasn't joined."""
+    return billing_from_workspace(ws, prefix).get("tier")
 
 
 async def create_workspace_scoped_account(
@@ -71,30 +101,38 @@ async def link_account_to_workspace(account_id: str, workspace_id: str) -> None:
     )
 
 
-def account_patch_from_workspace_patch(patch: dict[str, Any]) -> dict[str, Any]:
-    """Return the billing-account subset of a workspace patch (pure, no I/O).
+async def get_billing_account_id(workspace_id: str) -> Optional[str]:
+    """The id of the billing account a workspace resolves to."""
+    ws = await directus_async.async_directus.get_item("workspace", workspace_id)
+    return (ws or {}).get("billing_account_id")
 
-    Phase 1 dual-write: callers apply the returned patch to the workspace's
-    billing account with their own Directus client, right after updating the
-    workspace, so the account stays the accurate source of truth. Empty when
-    the patch touches none of `MIRRORED_FIELDS`.
-    """
-    return {k: patch[k] for k in MIRRORED_FIELDS if k in patch}
+
+async def update_workspace_billing(workspace_id: str, patch: dict[str, Any]) -> Optional[str]:
+    """Write commercial fields to the workspace's billing account. Returns the
+    account id, or None if the workspace has no account (should not happen given
+    the NOT NULL invariant; treated as a no-op rather than raising)."""
+    account_id = await get_billing_account_id(workspace_id)
+    if not account_id:
+        return None
+    await directus_async.async_directus.update_item("billing_account", account_id, patch)
+    return account_id
+
+
+async def resolve_workspace_billing(workspace_id: str) -> dict[str, Any]:
+    """Resolve a workspace's commercial fields through its billing account.
+    Returns {} when the workspace or account is missing."""
+    ws = await directus_async.async_directus.get_item("workspace", workspace_id)
+    if not ws:
+        return {}
+    account_id = ws.get("billing_account_id")
+    if not account_id:
+        return {}
+    account = await directus_async.async_directus.get_item("billing_account", account_id)
+    if not account:
+        return {}
+    return {f: account.get(f) for f in BILLING_FIELDS}
 
 
 async def resolve_workspace_tier(workspace_id: str) -> Optional[str]:
-    """Resolve a workspace's tier through its billing account.
-
-    This is the seam the enforcement reads will move onto. Falls back to the
-    workspace's own `tier` when the account is missing or unreadable, so
-    callers stay safe during the Phase 1 transition.
-    """
-    ws = await directus_async.async_directus.get_item("workspace", workspace_id)
-    if not ws:
-        return None
-    account_id = ws.get("billing_account_id")
-    if account_id:
-        account = await directus_async.async_directus.get_item("billing_account", account_id)
-        if account and account.get("tier"):
-            return account["tier"]
-    return ws.get("tier")
+    """Resolve a workspace's tier through its billing account."""
+    return (await resolve_workspace_billing(workspace_id)).get("tier")

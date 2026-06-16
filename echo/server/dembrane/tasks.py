@@ -710,9 +710,12 @@ def _stamp_over_cap(conversation_id: str, logger: Any) -> None:
         logger.warning(f"Project {project_id} has no workspace_id, skipping stamp")
         return
 
+    # Tier lives on the billing account. Fetch the workspace's account tier.
     with directus_client_context(directus) as client:
         workspace = client.get_item("workspace", workspace_id)
-    tier = workspace.get("tier", "")
+        account_id = (workspace or {}).get("billing_account_id")
+        account = client.get_item("billing_account", account_id) if account_id else None
+    tier = (account or {}).get("tier", "") if account else ""
 
     # Sum all conversation durations in this workspace (includes deleted rows
     # because deletions preserve billable duration).
@@ -1803,28 +1806,41 @@ def task_expire_workspace_tiers() -> None:
 
     now_iso = get_utc_timestamp().isoformat()
 
+    # Tier + expiry live on the billing account. Scan accounts, act on the
+    # workspace(s) each one covers (Phase 1: one workspace-scoped account each;
+    # org-scoped accounts would fan out to all covered workspaces).
     with directus_client_context(directus) as client:
-        expired = client.get_items("workspace", {
+        expired_accounts = client.get_items("billing_account", {
             "query": {
                 "filter": {
                     "tier_expires_at": {"_nnull": True, "_lt": now_iso},
                     "tier": {"_neq": "free"},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["id", "name", "tier", "org_id"],
+                "fields": ["id", "tier", "workspace_id"],
                 "limit": -1,
             }
         })
 
-    if not isinstance(expired, list) or not expired:
-        task_logger.debug("No expired workspace tiers found")
+    if not isinstance(expired_accounts, list) or not expired_accounts:
+        task_logger.debug("No expired billing-account tiers found")
         return
 
-    task_logger.info("Found %d workspace(s) with expired tier", len(expired))
+    task_logger.info("Found %d billing account(s) with expired tier", len(expired_accounts))
 
-    for ws in expired:
-        ws_id = ws["id"]
-        from_tier = ws.get("tier", "pioneer")
+    for acc in expired_accounts:
+        from_tier = acc.get("tier", "pioneer")
+        ws_id = acc.get("workspace_id")
+        if not ws_id:
+            task_logger.warning(
+                "Billing account %s has no workspace_id; org-scoped fan-out not implemented, skipping",
+                acc.get("id"),
+            )
+            continue
+        with directus_client_context(directus) as client:
+            ws = client.get_item("workspace", ws_id)
+        if not ws or ws.get("deleted_at"):
+            continue
         ws_name = ws.get("name") or "Untitled"
 
         try:
@@ -1853,31 +1869,27 @@ async def _apply_tier_expiry(workspace_id: str, from_tier: str) -> list[dict]:
     from dembrane.cache_utils import invalidate_org_usage, invalidate_workspace_usage
     from dembrane.directus_async import async_directus
     from dembrane.tier_downgrade import apply_downgrade_effects
+    from dembrane.billing_account import update_workspace_billing
 
     effects = await apply_downgrade_effects(workspace_id, from_tier, "free")
 
+    # Tier lives on the billing account: write the downgrade there.
     now_iso = get_utc_timestamp().isoformat()
-    expiry_patch = {
-        "tier": "free",
-        "downgraded_at": now_iso,
-        "downgraded_from_tier": from_tier,
-        "tier_expires_at": None,
-        "pre_warning_sent": False,
-    }
-    await async_directus.update_item("workspace", workspace_id, expiry_patch)
+    await update_workspace_billing(
+        workspace_id,
+        {
+            "tier": "free",
+            "downgraded_at": now_iso,
+            "downgraded_from_tier": from_tier,
+            "tier_expires_at": None,
+            "pre_warning_sent": False,
+        },
+    )
 
     await invalidate_workspace_usage(workspace_id)
     ws = await async_directus.get_item("workspace", workspace_id)
-    if ws:
-        # Dual-write the downgrade onto the workspace's billing account.
-        from dembrane.billing_account import account_patch_from_workspace_patch
-
-        account_id = ws.get("billing_account_id")
-        account_patch = account_patch_from_workspace_patch(expiry_patch)
-        if account_id and account_patch:
-            await async_directus.update_item("billing_account", account_id, account_patch)
-        if ws.get("org_id"):
-            await invalidate_org_usage(ws["org_id"])
+    if ws and ws.get("org_id"):
+        await invalidate_org_usage(ws["org_id"])
 
     return effects
 
@@ -1990,8 +2002,10 @@ def task_send_tier_expiry_prewarning() -> None:
     now_iso = now.isoformat()
     three_days_iso = three_days.isoformat()
 
+    # Tier + expiry live on the billing account. Scan accounts, warn the
+    # workspace(s) each covers (Phase 1: one workspace-scoped account each).
     with directus_client_context(directus) as client:
-        candidates = client.get_items("workspace", {
+        candidates = client.get_items("billing_account", {
             "query": {
                 "filter": {
                     "tier_expires_at": {"_nnull": True, "_gte": now_iso, "_lte": three_days_iso},
@@ -1999,29 +2013,40 @@ def task_send_tier_expiry_prewarning() -> None:
                     "pre_warning_sent": {"_eq": False},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["id", "name", "tier", "org_id", "tier_expires_at"],
+                "fields": ["id", "tier", "tier_expires_at", "workspace_id"],
                 "limit": -1,
             }
         })
 
     if not isinstance(candidates, list) or not candidates:
-        task_logger.debug("No workspaces need tier expiry pre-warning")
+        task_logger.debug("No billing accounts need tier expiry pre-warning")
         return
 
-    task_logger.info("Found %d workspace(s) needing tier expiry pre-warning", len(candidates))
+    task_logger.info("Found %d billing account(s) needing tier expiry pre-warning", len(candidates))
 
-    for ws in candidates:
-        ws_id = ws["id"]
+    for acc in candidates:
+        account_id = acc.get("id")
+        current_tier = acc.get("tier", "pioneer")
+        expires_at_raw = acc.get("tier_expires_at", "")
+        ws_id = acc.get("workspace_id")
+        if not ws_id:
+            task_logger.warning(
+                "Billing account %s has no workspace_id; org-scoped fan-out not implemented, skipping",
+                account_id,
+            )
+            continue
+        with directus_client_context(directus) as client:
+            ws = client.get_item("workspace", ws_id)
+        if not ws or ws.get("deleted_at"):
+            continue
         ws_name = ws.get("name") or "Untitled"
-        current_tier = ws.get("tier", "pioneer")
-        expires_at_raw = ws.get("tier_expires_at", "")
 
         try:
             _send_tier_expiring_soon(ws_id, ws_name, current_tier, expires_at_raw)
 
             from dembrane.directus import directus
             with directus_client_context(directus) as client:
-                client.update_item("workspace", ws_id, {"pre_warning_sent": True})
+                client.update_item("billing_account", account_id, {"pre_warning_sent": True})
 
             task_logger.info(
                 "Pre-warning sent for workspace %s (%s), tier=%s, expires=%s",

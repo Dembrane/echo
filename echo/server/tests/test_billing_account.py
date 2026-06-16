@@ -3,10 +3,9 @@
 Covers:
 - create_workspace_scoped_account: payload shape, optional fields, returns id.
 - link_account_to_workspace: sets workspace_id.
-- account_patch_from_workspace_patch: forwards only MIRRORED_FIELDS, empty
-  when the patch touches none of them.
-- resolve_workspace_tier: account tier wins, falls back to workspace.tier,
-  None when the workspace is missing.
+- nested_billing_fields / billing_from_workspace: the join-on-read helpers.
+- update_workspace_billing: writes commercial fields to the resolved account.
+- resolve_workspace_tier: account is the only source; None when absent.
 """
 
 from __future__ import annotations
@@ -79,28 +78,55 @@ class TestLinkAccountToWorkspace:
         assert patch_data == {"workspace_id": "ws-1"}
 
 
-class TestAccountPatchFromWorkspacePatch:
-    def test_forwards_only_mirrored_fields(self):
-        from dembrane.billing_account import account_patch_from_workspace_patch
+class TestNestedJoinHelpers:
+    def test_nested_billing_fields_prefixes(self):
+        from dembrane.billing_account import BILLING_FIELDS, nested_billing_fields
 
-        out = account_patch_from_workspace_patch(
-            {"tier": "innovator", "downgraded_at": None, "name": "ignored", "visibility": "private"}
-        )
-        assert out == {"tier": "innovator", "downgraded_at": None}
+        fields = nested_billing_fields()
+        assert fields == [f"billing_account_id.{f}" for f in BILLING_FIELDS]
 
-    def test_empty_when_no_mirrored_fields(self):
-        from dembrane.billing_account import account_patch_from_workspace_patch
+    def test_billing_from_workspace_reads_joined_account(self):
+        from dembrane.billing_account import billing_from_workspace
 
-        assert account_patch_from_workspace_patch({"name": "x", "visibility": "private"}) == {}
+        ws = {"id": "ws-1", "billing_account_id": {"tier": "changemaker", "percent_discount": 20}}
+        out = billing_from_workspace(ws)
+        assert out["tier"] == "changemaker"
+        assert out["percent_discount"] == 20
 
-    def test_carries_all_mirrored_fields(self):
-        from dembrane.billing_account import MIRRORED_FIELDS, account_patch_from_workspace_patch
+    def test_billing_from_workspace_empty_when_not_joined(self):
+        from dembrane.billing_account import tier_from_workspace, billing_from_workspace
 
-        full: dict = {k: ("v" if k != "pre_warning_sent" else False) for k in MIRRORED_FIELDS}
-        full["unrelated"] = 1
-        out = account_patch_from_workspace_patch(full)
-        assert set(out.keys()) == set(MIRRORED_FIELDS)
-        assert "unrelated" not in out
+        # billing_account_id came back as a bare id string (not joined).
+        ws = {"id": "ws-1", "billing_account_id": "acc-1"}
+        assert billing_from_workspace(ws) == {}
+        assert tier_from_workspace(ws) is None
+
+
+class TestUpdateWorkspaceBilling:
+    @pytest.mark.asyncio
+    @patch("dembrane.directus_async.async_directus")
+    async def test_writes_to_the_resolved_account(self, mock_directus):
+        from dembrane.billing_account import update_workspace_billing
+
+        mock_directus.get_item = AsyncMock(return_value={"id": "ws-1", "billing_account_id": "acc-1"})
+        mock_directus.update_item = AsyncMock()
+        account_id = await update_workspace_billing("ws-1", {"tier": "free"})
+
+        assert account_id == "acc-1"
+        coll, item_id, patch_data = mock_directus.update_item.call_args.args
+        assert coll == "billing_account"
+        assert item_id == "acc-1"
+        assert patch_data == {"tier": "free"}
+
+    @pytest.mark.asyncio
+    @patch("dembrane.directus_async.async_directus")
+    async def test_noop_when_no_account(self, mock_directus):
+        from dembrane.billing_account import update_workspace_billing
+
+        mock_directus.get_item = AsyncMock(return_value={"id": "ws-1", "billing_account_id": None})
+        mock_directus.update_item = AsyncMock()
+        assert await update_workspace_billing("ws-1", {"tier": "free"}) is None
+        mock_directus.update_item.assert_not_called()
 
 
 class TestResolveWorkspaceTier:
@@ -119,16 +145,17 @@ class TestResolveWorkspaceTier:
 
     @pytest.mark.asyncio
     @patch("dembrane.directus_async.async_directus")
-    async def test_falls_back_to_workspace_tier(self, mock_directus):
+    async def test_none_when_no_account(self, mock_directus):
         from dembrane.billing_account import resolve_workspace_tier
 
         async def fake_get_item(collection, _item_id, **_kwargs):
             if collection == "workspace":
-                return {"id": "ws-1", "tier": "pioneer", "billing_account_id": None}
+                return {"id": "ws-1", "billing_account_id": None}
             return None
 
         mock_directus.get_item = AsyncMock(side_effect=fake_get_item)
-        assert await resolve_workspace_tier("ws-1") == "pioneer"
+        # No authoritative workspace.tier any more: account is the only source.
+        assert await resolve_workspace_tier("ws-1") is None
 
     @pytest.mark.asyncio
     @patch("dembrane.directus_async.async_directus")

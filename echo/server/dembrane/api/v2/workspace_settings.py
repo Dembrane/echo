@@ -250,10 +250,14 @@ async def get_workspace_settings(
         )
         billing_period = None
 
+    from dembrane.billing_account import resolve_workspace_billing
+
+    billing = await resolve_workspace_billing(ctx.workspace_id)
+
     return WorkspaceDetailResponse(
         id=ws["id"],
         name=ws.get("name", ""),
-        tier=ws.get("tier", ""),
+        tier=billing.get("tier") or "",
         org_id=ws.get("org_id", ""),
         org_name=org_name,
         is_default=ws.get("is_default", False),
@@ -267,8 +271,8 @@ async def get_workspace_settings(
         inherit_organisation_admins=workspace_follows_organisation_admins(ws),
         inherit_organisation_members=workspace_follows_organisation_members(ws),
         logo_url=ws.get("logo_url"),
-        type_discount=ws.get("type_discount"),
-        percent_discount=ws.get("percent_discount"),
+        type_discount=billing.get("type_discount"),
+        percent_discount=billing.get("percent_discount"),
         billing_period=billing_period,
     )
 

@@ -1506,6 +1506,8 @@ async def list_organisation_workspaces(
     # Pull settings.inherit_organisation_admins explicitly (sub-field projection)
     # so we don't need to send the whole JSON. Counts come from separate
     # aggregates because the workspace collection doesn't declare O2M aliases.
+    from dembrane.billing_account import nested_billing_fields, billing_from_workspace
+
     workspaces = (
         await async_directus.get_items(
             "workspace",
@@ -1515,9 +1517,9 @@ async def list_organisation_workspaces(
                     "fields": [
                         "id",
                         "name",
-                        "tier",
                         "is_default",
                         "settings",
+                        *nested_billing_fields(),
                     ],
                     "sort": ["-is_default", "name"],
                     "limit": -1,
@@ -1528,6 +1530,8 @@ async def list_organisation_workspaces(
     )
     if not isinstance(workspaces, list) or not workspaces:
         return []
+    for w in workspaces:
+        w.update(billing_from_workspace(w))
 
     ws_ids = [w["id"] for w in workspaces if w.get("id")]
 
@@ -2063,6 +2067,8 @@ async def get_org_usage(
     # so the per-workspace row can surface private-state and recent
     # downgrades (powers the "Needs attention" panel on the organisation usage
     # tab).
+    from dembrane.billing_account import nested_billing_fields, billing_from_workspace
+
     workspaces = (
         await async_directus.get_items(
             "workspace",
@@ -2075,9 +2081,8 @@ async def get_org_usage(
                     "fields": [
                         "id",
                         "name",
-                        "tier",
                         "settings",
-                        "downgraded_at",
+                        *nested_billing_fields(),
                     ],
                     "limit": -1,
                 }
@@ -2085,6 +2090,9 @@ async def get_org_usage(
         )
         or []
     )
+    if isinstance(workspaces, list):
+        for w in workspaces:
+            w.update(billing_from_workspace(w))
     if not isinstance(workspaces, list):
         workspaces = []
 

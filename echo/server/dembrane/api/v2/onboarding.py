@@ -128,6 +128,10 @@ async def complete_onboarding(
             ws = await async_directus.get_item("workspace", ws_id)
             if not ws or ws.get("deleted_at"):
                 continue
+            # Seat cap keys off tier, which lives on the billing account.
+            from dembrane.billing_account import resolve_workspace_billing
+
+            ws.update(await resolve_workspace_billing(ws_id))
 
             # Mark "had a valid pending invite" before the cap check —
             # so a blocked invite still suppresses the personal-org branch.

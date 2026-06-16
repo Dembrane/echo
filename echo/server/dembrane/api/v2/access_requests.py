@@ -154,11 +154,13 @@ async def _require_can_action_requests(workspace: dict, app_user_id: str) -> Non
     )
     if isinstance(direct_rows, list) and direct_rows:
         row = direct_rows[0]
+        from dembrane.billing_account import resolve_workspace_tier
+
         if has_policy(
             row.get("role") or "",
             row.get("custom_policies") or [],
             "member:manage",
-            workspace_tier=workspace.get("tier"),
+            workspace_tier=await resolve_workspace_tier(workspace["id"]),
         ):
             return
 
@@ -318,7 +320,9 @@ async def request_workspace_access(
             detail="Workspace not found",  # intentional — don't confirm existence
         )
 
-    if workspace.get("tier") == "free":
+    from dembrane.billing_account import resolve_workspace_tier
+
+    if (await resolve_workspace_tier(workspace["id"])) == "free":
         raise HTTPException(
             status_code=404,
             detail="Workspace not found",
