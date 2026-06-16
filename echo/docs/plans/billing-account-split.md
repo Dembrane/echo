@@ -40,6 +40,18 @@ We want a standalone `billing_account` entity that holds the commercial relation
 - **Seats are metered, never blocked.** This continues the "no hard limits" principle from the free-tier work. Seat usage is always visible and billed, but invites are never walled. A Mollie subscription drives quantity from the metered count; an offline/invoice sale can additionally provision a committed seat count that the UI shows as used-vs-provisioned. Blocking seat overage goes away.
 - **Innovator chat is an integration surface, not an upsell wall.** On Innovator the chat screen becomes "connect your own tool (ChatGPT / Claude / MCP) to analyze your data"; Changemaker bundles EU Gemini instead. Explicit anti-goal: no upsell prompts scattered across the app. The current `FeatureGate` hatched-overlay-everywhere pattern is not the model for this gate.
 - **Billable seat = `member` / `admin` / `owner`, plus `external`.** External members consume a paid seat (when added to an artifact within the billing context). There is no "guest" concept; it is only `external`. The `billing` role is unpaid and unlimited: financial-visibility people can be added freely without consuming a seat.
+- **Org manages billing; workspace shows usage (default).** New signups get one
+  **org-scoped** billing account (the payer: subscription, payment method,
+  invoices, pooled seat bill), managed by the org's billing/admin/owner roles.
+  Every workspace in the org attaches to it. **Usage stays per workspace**
+  (seats/members/activity shown per workspace via `UsageCard`; the org sees the
+  cross-workspace rollup via `OrganisationUsageRollup`). The bill = pooled seats
+  across the org's workspaces × per-seat price. Workspace-scoped accounts are the
+  opt-in alternative: at workspace creation the user can choose **"bill this
+  workspace separately"**, which mints a workspace-scoped account for it instead
+  of joining the org's (also used for partner / pre-handoff). Both are
+  first-class; org-billed is just the default. This refines the Phase 1 default,
+  which minted a workspace-scoped account per workspace.
 - **Exactly one billing context, always.** Every workspace, and everything beneath it (projects, conversations), must always resolve to exactly one billing account. `workspace.billing_account_id` is NOT NULL, the backfill covers every workspace, and workspace creation always assigns an account. No orphaned entities without a billing context.
 - **Offline sales are a first-class payment mode, Mollie-optional.** A billing account carries a `payment_mode` (mollie | offline | none). Offline (invoice) sales must remain fully supported, with or without Mollie ever being involved. Mollie is one payment backend, not a requirement for an account to exist or to be billed. Offline accounts use the provisioned seat count; Mollie ids are populated only in `mollie` mode. This keeps a paid customer on an invoice from ever depending on Mollie.
 
