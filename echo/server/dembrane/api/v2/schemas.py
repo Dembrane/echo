@@ -173,7 +173,10 @@ class CreateWorkspaceRequest(BaseModel):
     # no longer auto-inherit access (matrix §6 retires derivation). They
     # use Request access.
     inherit_organisation_members: bool = False
-    # tier is always "pioneer" on creation — upgrades happen via billing/admin
+    # Billing: default false → the workspace joins the org's billing account
+    # (org manages billing). True → mint a workspace-scoped account billed
+    # separately (the partner "for another client" path; handoff-ready).
+    bill_separately: bool = False
 
 
 class CreateWorkspaceResponse(BaseModel):

@@ -642,14 +642,24 @@ async def create_workspace(
     visibility = "open_to_organisation" if body.inherit_organisation_admins else "private"
     ws_id = generate_uuid()
 
-    # Org manages billing by default: attach to the org's billing account.
-    # (A future "bill separately" / partner-client path mints a
-    # workspace-scoped account instead — see docs/plans/self-serve-billing.)
-    from dembrane.billing_account import org_account_for_new_workspace
-
-    account_id = await org_account_for_new_workspace(
-        org_id=org_id, created_by=app_user_id
+    # Org manages billing by default: the workspace joins the org's account.
+    # bill_separately (partner "for another client") mints a workspace-scoped
+    # account instead, billed on its own and handoff-ready.
+    from dembrane.billing_account import (
+        link_account_to_workspace,
+        org_account_for_new_workspace,
+        create_workspace_scoped_account,
     )
+
+    separate = getattr(body, "bill_separately", False)
+    if separate:
+        account_id = await create_workspace_scoped_account(
+            tier="free", created_by=app_user_id, label=f"{body.name.strip()} billing"
+        )
+    else:
+        account_id = await org_account_for_new_workspace(
+            org_id=org_id, created_by=app_user_id
+        )
     await async_directus.create_item(
         "workspace",
         {
@@ -662,6 +672,8 @@ async def create_workspace(
             "billing_account_id": account_id,
         },
     )
+    if separate:
+        await link_account_to_workspace(account_id, ws_id)
 
     # Insert the creator as source='direct', role='owner'. No settings
     # flags (matrix v1.1 §6 — derivation is retired for new rows).
