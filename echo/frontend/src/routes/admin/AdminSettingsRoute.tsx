@@ -97,6 +97,7 @@ type BillingRow = {
 	workspace_name: string;
 	org_id: string;
 	org_name: string;
+	billing_account_id: string | null;
 	tier: string;
 	is_partner_owned: boolean;
 	billed_to_team_id: string | null;
@@ -425,12 +426,12 @@ function DiscountEditor({
  * Live staff action: grant a comped one-month Changemaker reverse trial on the
  * row's org billing account. Auto-reverts to Free at expiry (expiry cron).
  */
-function GrantTrialControl({ orgId }: { orgId: string }) {
+function GrantTrialControl({ accountId }: { accountId: string }) {
 	const queryClient = useQueryClient();
 	const mutation = useMutation({
 		mutationFn: async () => {
 			const res = await fetch(
-				`${API_BASE_URL}/v2/admin/orgs/${orgId}/grant-trial`,
+				`${API_BASE_URL}/v2/admin/billing-accounts/${accountId}/grant-trial`,
 				{
 					body: JSON.stringify({ months: 1, tier: "changemaker" }),
 					credentials: "include",
@@ -559,7 +560,9 @@ function WorkspaceActionsModal({
 
 				<Divider my={4} />
 
-				<GrantTrialControl orgId={row.org_id} />
+				{row.billing_account_id && (
+					<GrantTrialControl accountId={row.billing_account_id} />
+				)}
 
 				<Divider my={4} />
 				{actions.map((a) => (

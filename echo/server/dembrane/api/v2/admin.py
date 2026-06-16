@@ -52,6 +52,7 @@ class BillingRow(BaseModel):
     workspace_name: str
     org_id: str
     org_name: str
+    billing_account_id: Optional[str] = None
     tier: str
     is_partner_owned: bool = False
     billed_to_team_id: Optional[str] = None
@@ -209,6 +210,7 @@ async def _all_active_workspaces() -> list[dict]:
                     "id",
                     "name",
                     "org_id",
+                    "billing_account_id",
                     "billed_to_team_id",
                     "effective_client_team_id",
                     *nested_billing_fields(),
@@ -432,6 +434,7 @@ async def billing_rollup(
             workspace_name=ws.get("name", ""),
             org_id=ws.get("org_id", ""),
             org_name=org_name_by_id.get(ws.get("org_id", "")) or "",
+            billing_account_id=ws.get("billing_account_id"),
             tier=tier,
             is_partner_owned=is_partner,
             billed_to_team_id=billed_to,
@@ -1371,42 +1374,43 @@ class GrantTrialBody(BaseModel):
     months: int = Field(default=1, ge=1, le=12, description="Trial length in months.")
 
 
-@router.post("/orgs/{org_id}/grant-trial")
-async def grant_org_trial(
-    org_id: str,
+@router.post("/billing-accounts/{account_id}/grant-trial")
+async def grant_account_trial(
+    account_id: str,
     body: GrantTrialBody,
     auth: DependencyDirectusSession,
 ) -> dict:
-    """Staff-only: grant a comped reverse trial on an org's billing account.
+    """Staff-only: grant a comped reverse trial on a billing account.
 
-    The org gets `tier` for `months` (default Changemaker, 1 month), comped (no
-    Mollie). The expiry cron auto-reverts it to Free; the pre-warning cron nudges
-    3 days before. This is the staff-dashboard "load a trial" action.
+    Keyed on the billing account (the real unit) — a partner org can hold many
+    accounts (one per client), so account-id, not org-id. The account gets
+    `tier` for `months` (default Changemaker, 1 month), comped (no Mollie). The
+    expiry cron auto-reverts it to Free; the pre-warning cron nudges 3 days
+    before. This is the staff-dashboard "load a trial" action.
     """
     if not auth.is_admin:
         raise HTTPException(status_code=403, detail="Staff-only")
 
     from dembrane.cache_utils import invalidate_org_usage
-    from dembrane.billing_account import get_org_account_id, grant_reverse_trial
+    from dembrane.billing_account import grant_reverse_trial
 
-    account_id = await get_org_account_id(org_id)
-    if not account_id:
-        raise HTTPException(status_code=404, detail="Org has no billing account")
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
 
     expires_at = await grant_reverse_trial(account_id, tier=body.tier, months=body.months)
-    await invalidate_org_usage(org_id)
+    if account.get("org_id"):
+        await invalidate_org_usage(account["org_id"])
     logger.info(
-        "staff granted %s trial (%d mo, expires %s) on org %s account %s by %s",
+        "staff granted %s trial (%d mo, expires %s) on billing account %s by %s",
         body.tier,
         body.months,
         expires_at,
-        org_id,
         account_id,
         auth.user_id,
     )
     return {
         "status": "ok",
-        "org_id": org_id,
         "billing_account_id": account_id,
         "tier": body.tier,
         "tier_expires_at": expires_at,
