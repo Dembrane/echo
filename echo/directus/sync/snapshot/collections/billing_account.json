@@ -1,0 +1,28 @@
+{
+  "collection": "billing_account",
+  "meta": {
+    "accountability": "all",
+    "archive_app_filter": true,
+    "archive_field": null,
+    "archive_value": null,
+    "collapse": "open",
+    "collection": "billing_account",
+    "color": null,
+    "display_template": "{{label}}",
+    "group": null,
+    "hidden": false,
+    "icon": "credit_card",
+    "item_duplication_fields": null,
+    "note": "Commercial terms (tier, discounts, payment) for an org or a single workspace.",
+    "preview_url": null,
+    "singleton": false,
+    "sort": null,
+    "sort_field": null,
+    "translations": null,
+    "unarchive_value": null,
+    "versioning": false
+  },
+  "schema": {
+    "name": "billing_account"
+  }
+}
