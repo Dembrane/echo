@@ -84,6 +84,7 @@ package = false
 
 [tool.mypy]
 plugins = 'pydantic.mypy'
+# Keep in sync with [tool.ty.src].exclude below (editor type checker).
 exclude = ['scripts', 'tests']
 warn_redundant_casts = true
 warn_unused_ignores = true
@@ -208,6 +209,14 @@ project-excludes = [
     "**/tests*",
 ]
 ignore-missing-imports = ["*"]
+
+# ty (Astral's Rust type checker) — editor-only fast diagnostics.
+# mypy in check-code.sh / CI remains the source of truth.
+[tool.ty.src]
+exclude = ["tests", "scripts"]  # keep in sync with [tool.mypy].exclude
+
+[tool.ty.environment]
+python = ".venv"
 
 [tool.ruff.format]
 quote-style = "double"

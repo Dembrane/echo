@@ -1,4 +1,16 @@
 onlyBuiltDependencies:
   - '@swc/core'
 
+ignoredBuiltDependencies:
+  - canvas
+  - core-js
+  - es5-ext
+  - esbuild
+  - protobufjs
+  - react-grab
+
+overrides:
+  tar-fs: ^2.1.3
+  protobufjs: ^7.5.8
+
 minimumReleaseAge: 4320

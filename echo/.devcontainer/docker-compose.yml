@@ -108,8 +108,12 @@ services:
 
     volumes:
       - ../..:/workspaces:cached
-      # for docker passthrough
-      - /var/run/docker.sock:/var/run/docker.sock
+      # Container-engine socket passthrough. Only used by optional dev helpers
+      # (e.g. server/scripts/agentic/latest_runs.sh runs `docker ps`); the stack
+      # works without it. Defaults to the Docker socket. Podman users: run
+      # `sudo /opt/podman/bin/podman-mac-helper install` and restart the machine
+      # so /var/run/docker.sock routes to Podman, or override CONTAINER_HOST_SOCK.
+      - ${CONTAINER_HOST_SOCK:-/var/run/docker.sock}:/var/run/docker.sock
     networks:
       - dembrane-network
     command: sleep infinity
