@@ -1002,8 +1002,9 @@ function formatEur(value: number | null | undefined): string {
 // overage but nothing is broken; those rows live in OverageItem below.
 function buildAttention(workspaces: OrgUsageWorkspaceRow[]): AttentionItem[] {
 	const out: AttentionItem[] = [];
-	const SEVEN_DAYS_MS = 7 * 24 * 3600 * 1000;
-	const now = Date.now();
+	// Only used by the disabled "recently downgraded" check below.
+	// const SEVEN_DAYS_MS = 7 * 24 * 3600 * 1000;
+	// const now = Date.now();
 
 	for (const ws of workspaces) {
 		const hardBlock = isHardBlockTier(ws.tier);
@@ -1053,19 +1054,21 @@ function buildAttention(workspaces: OrgUsageWorkspaceRow[]): AttentionItem[] {
 			});
 		}
 
-		if (ws.downgraded_at) {
-			const dtMs = new Date(ws.downgraded_at).getTime();
-			if (!Number.isNaN(dtMs) && now - dtMs < SEVEN_DAYS_MS) {
-				out.push({
-					actionLabel: "Review",
-					id: ws.id,
-					key: `${ws.id}:recently_downgraded`,
-					message: `${ws.name} was downgraded recently, verify limits`,
-					reason: "recently_downgraded",
-					workspaceId: ws.id,
-				});
-			}
-		}
+		// Downgrade tracking moved to the billing account / reworked with new
+		// pricing; "recently downgraded" attention disabled for now.
+		// if (ws.downgraded_at) {
+		// 	const dtMs = new Date(ws.downgraded_at).getTime();
+		// 	if (!Number.isNaN(dtMs) && now - dtMs < SEVEN_DAYS_MS) {
+		// 		out.push({
+		// 			actionLabel: "Review",
+		// 			id: ws.id,
+		// 			key: `${ws.id}:recently_downgraded`,
+		// 			message: `${ws.name} was downgraded recently, verify limits`,
+		// 			reason: "recently_downgraded",
+		// 			workspaceId: ws.id,
+		// 		});
+		// 	}
+		// }
 	}
 	return out;
 }
