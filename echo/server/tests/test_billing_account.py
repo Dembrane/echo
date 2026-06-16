@@ -1,0 +1,139 @@
+"""Tests for the billing_account resolver/helpers (Phase 1 split).
+
+Covers:
+- create_workspace_scoped_account: payload shape, optional fields, returns id.
+- link_account_to_workspace: sets workspace_id.
+- account_patch_from_workspace_patch: forwards only MIRRORED_FIELDS, empty
+  when the patch touches none of them.
+- resolve_workspace_tier: account tier wins, falls back to workspace.tier,
+  None when the workspace is missing.
+"""
+
+from __future__ import annotations
+
+from unittest.mock import AsyncMock, patch
+
+import pytest
+
+
+class TestCreateWorkspaceScopedAccount:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_account.generate_uuid", return_value="acc-1")
+    @patch("dembrane.directus_async.async_directus")
+    async def test_minimal_payload(self, mock_directus, _uuid):
+        from dembrane.billing_account import create_workspace_scoped_account
+
+        mock_directus.create_item = AsyncMock(return_value={"data": {"id": "acc-1"}})
+        account_id = await create_workspace_scoped_account(tier="pilot")
+
+        assert account_id == "acc-1"
+        coll, payload = mock_directus.create_item.call_args.args
+        assert coll == "billing_account"
+        assert payload == {"id": "acc-1", "tier": "pilot", "payment_mode": "none"}
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_account.generate_uuid", return_value="acc-2")
+    @patch("dembrane.directus_async.async_directus")
+    async def test_optional_fields_included(self, mock_directus, _uuid):
+        from dembrane.billing_account import create_workspace_scoped_account
+
+        mock_directus.create_item = AsyncMock()
+        await create_workspace_scoped_account(
+            tier="innovator",
+            tier_expires_at="2026-12-31T00:00:00Z",
+            type_discount="scholarship",
+            percent_discount=15,
+            created_by="user-1",
+            label="Acme billing",
+        )
+        _, payload = mock_directus.create_item.call_args.args
+        assert payload["tier_expires_at"] == "2026-12-31T00:00:00Z"
+        assert payload["type_discount"] == "scholarship"
+        assert payload["percent_discount"] == 15
+        assert payload["created_by"] == "user-1"
+        assert payload["label"] == "Acme billing"
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_account.generate_uuid", return_value="acc-3")
+    @patch("dembrane.directus_async.async_directus")
+    async def test_zero_percent_discount_is_kept(self, mock_directus, _uuid):
+        from dembrane.billing_account import create_workspace_scoped_account
+
+        mock_directus.create_item = AsyncMock()
+        await create_workspace_scoped_account(tier="free", percent_discount=0)
+        _, payload = mock_directus.create_item.call_args.args
+        assert payload["percent_discount"] == 0  # 0 is meaningful, not skipped
+
+
+class TestLinkAccountToWorkspace:
+    @pytest.mark.asyncio
+    @patch("dembrane.directus_async.async_directus")
+    async def test_sets_workspace_id(self, mock_directus):
+        from dembrane.billing_account import link_account_to_workspace
+
+        mock_directus.update_item = AsyncMock()
+        await link_account_to_workspace("acc-1", "ws-1")
+        coll, item_id, patch_data = mock_directus.update_item.call_args.args
+        assert coll == "billing_account"
+        assert item_id == "acc-1"
+        assert patch_data == {"workspace_id": "ws-1"}
+
+
+class TestAccountPatchFromWorkspacePatch:
+    def test_forwards_only_mirrored_fields(self):
+        from dembrane.billing_account import account_patch_from_workspace_patch
+
+        out = account_patch_from_workspace_patch(
+            {"tier": "innovator", "downgraded_at": None, "name": "ignored", "visibility": "private"}
+        )
+        assert out == {"tier": "innovator", "downgraded_at": None}
+
+    def test_empty_when_no_mirrored_fields(self):
+        from dembrane.billing_account import account_patch_from_workspace_patch
+
+        assert account_patch_from_workspace_patch({"name": "x", "visibility": "private"}) == {}
+
+    def test_carries_all_mirrored_fields(self):
+        from dembrane.billing_account import MIRRORED_FIELDS, account_patch_from_workspace_patch
+
+        full: dict = {k: ("v" if k != "pre_warning_sent" else False) for k in MIRRORED_FIELDS}
+        full["unrelated"] = 1
+        out = account_patch_from_workspace_patch(full)
+        assert set(out.keys()) == set(MIRRORED_FIELDS)
+        assert "unrelated" not in out
+
+
+class TestResolveWorkspaceTier:
+    @pytest.mark.asyncio
+    @patch("dembrane.directus_async.async_directus")
+    async def test_account_tier_wins(self, mock_directus):
+        from dembrane.billing_account import resolve_workspace_tier
+
+        async def fake_get_item(collection, _item_id, **_kwargs):
+            if collection == "workspace":
+                return {"id": "ws-1", "tier": "free", "billing_account_id": "acc-1"}
+            return {"id": "acc-1", "tier": "changemaker"}
+
+        mock_directus.get_item = AsyncMock(side_effect=fake_get_item)
+        assert await resolve_workspace_tier("ws-1") == "changemaker"
+
+    @pytest.mark.asyncio
+    @patch("dembrane.directus_async.async_directus")
+    async def test_falls_back_to_workspace_tier(self, mock_directus):
+        from dembrane.billing_account import resolve_workspace_tier
+
+        async def fake_get_item(collection, _item_id, **_kwargs):
+            if collection == "workspace":
+                return {"id": "ws-1", "tier": "pioneer", "billing_account_id": None}
+            return None
+
+        mock_directus.get_item = AsyncMock(side_effect=fake_get_item)
+        assert await resolve_workspace_tier("ws-1") == "pioneer"
+
+    @pytest.mark.asyncio
+    @patch("dembrane.directus_async.async_directus")
+    async def test_none_when_workspace_missing(self, mock_directus):
+        from dembrane.billing_account import resolve_workspace_tier
+
+        mock_directus.get_item = AsyncMock(return_value=None)
+        assert await resolve_workspace_tier("ws-1") is None
