@@ -18,11 +18,13 @@ import {
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { useRegisterMutation } from "@/components/auth/hooks";
+import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ADMIN_BASE_URL } from "@/config";
+import { validatePassword } from "@/lib/passwordPolicy";
 import { testId } from "@/lib/testUtils";
 
 export const RegisterRoute = () => {
@@ -35,15 +37,16 @@ export const RegisterRoute = () => {
 	// auto-accepts and the user gets a stray personal organisation).
 	const invitedEmail = (searchParams.get("email") || "").toLowerCase().trim();
 	const lockedEmail = invitedEmail.length > 0 && invitedEmail.includes("@");
-	const { register, handleSubmit, trigger, getValues, watch } = useForm<{
-		email: string;
-		password: string;
-		confirmPassword: string;
-		first_name: string;
-		last_name: string;
-	}>({
-		defaultValues: lockedEmail ? { email: invitedEmail } : undefined,
-	});
+	const { register, handleSubmit, trigger, getValues, watch, control } =
+		useForm<{
+			email: string;
+			password: string;
+			confirmPassword: string;
+			first_name: string;
+			last_name: string;
+		}>({
+			defaultValues: lockedEmail ? { email: invitedEmail } : undefined,
+		});
 
 	const [step, setStep] = useState(0);
 	const [error, setError] = useState("");
@@ -72,8 +75,8 @@ export const RegisterRoute = () => {
 
 	const onSubmit = handleSubmit(async (data) => {
 		setError("");
-		if (data.password.length < 8) {
-			setError(t`Password must be at least 8 characters`);
+		if (!validatePassword(data.password).isValid) {
+			setError(t`Password does not meet the requirements.`);
 			return;
 		}
 		if (data.password !== data.confirmPassword) {
@@ -104,6 +107,8 @@ export const RegisterRoute = () => {
 	});
 
 	const emailWatch = watch("email");
+	// useWatch, not watch(): React Compiler memoizes watch() so it never updates.
+	const password = useWatch({ control, name: "password" }) ?? "";
 
 	return (
 		<div className="h-full w-full">
@@ -183,10 +188,10 @@ export const RegisterRoute = () => {
 									size="md"
 									autoFocus
 									label={t`Password`}
-									description={t`At least 8 characters`}
-									{...register("password", { minLength: 8, required: true })}
+									{...register("password", { required: true })}
 									{...testId("auth-register-password-input")}
 								/>
+								<PasswordRequirements value={password} />
 								<PasswordInput
 									size="md"
 									label={t`Confirm password`}
@@ -207,6 +212,7 @@ export const RegisterRoute = () => {
 										size="md"
 										type="submit"
 										loading={registerMutation.isPending}
+										disabled={!validatePassword(password).isValid}
 										{...testId("auth-register-submit-button")}
 									>
 										<Trans>Create account</Trans>

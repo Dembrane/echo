@@ -16,13 +16,14 @@ from urllib.parse import urlencode
 
 import httpx
 from fastapi import Request, Response, APIRouter
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel, field_validator
 
 from dembrane.email import send_email
 from dembrane.settings import get_settings
 from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.api.v2.invites import compute_invite_hash
 from dembrane.directus_async import async_directus
+from dembrane.password_policy import validate_password
 
 router = APIRouter()
 logger = getLogger("api.v2.auth")
@@ -260,6 +261,14 @@ class RegisterRequest(BaseModel):
     first_name: str = Field(..., min_length=1, max_length=150)
     last_name: Optional[str] = Field(None, max_length=150)
     verification_url: str = Field(..., max_length=500)
+
+    @field_validator("password")
+    @classmethod
+    def password_must_be_strong(cls, v: str) -> str:
+        errors = validate_password(v)
+        if errors:
+            raise ValueError("; ".join(errors))
+        return v
 
 
 @router.post("/register", status_code=204)

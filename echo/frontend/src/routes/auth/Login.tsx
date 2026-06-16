@@ -21,10 +21,12 @@ import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
-import { API_BASE_URL } from "@/config";
+import { API_BASE_URL, ENABLE_WEAK_PASSWORD_NUDGE } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { lastWorkspaceKey } from "@/hooks/useWorkspace";
+import { validatePassword } from "@/lib/passwordPolicy";
 import { testId } from "@/lib/testUtils";
+import { setWeakPasswordFlag } from "@/lib/weakPasswordFlag";
 
 // Same-origin path guard against open-redirect via ?next=//evil.com.
 const isSafeNextPath = (next: string | null | undefined): next is string => {
@@ -134,6 +136,14 @@ export const LoginRoute = () => {
 
 			posthog?.identify(data.email);
 			posthog?.capture("user_logged_in", { email: data.email });
+
+			if (
+				ENABLE_WEAK_PASSWORD_NUDGE &&
+				!validatePassword(data.password).isValid
+			) {
+				setWeakPasswordFlag();
+				posthog?.capture("weak_password_detected");
+			}
 
 			const isNewUser = searchParams.get("new") === "true";
 			const next = searchParams.get("next");

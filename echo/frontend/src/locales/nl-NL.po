@@ -1295,7 +1295,7 @@ msgid "Already added to this chat"
 msgstr "Al toegevoegd aan dit gesprek"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:320
-#: src/routes/auth/Register.tsx:269
+#: src/routes/auth/Register.tsx:275
 msgid "Already have an account? Log in"
 msgstr ""
 
@@ -1671,7 +1671,7 @@ msgstr "Aspecten"
 #~ msgid "Assistant is typing..."
 #~ msgstr "Assistent is aan het typen..."
 
-#: src/routes/auth/Register.tsx:186
+#: src/components/auth/PasswordRequirements.tsx:55
 msgid "At least 8 characters"
 msgstr ""
 
@@ -1745,7 +1745,7 @@ msgstr "Auditlogboeken geëxporteerd naar CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Auditlogboeken geëxporteerd naar JSON"
 
-#: src/routes/auth/Login.tsx:317
+#: src/routes/auth/Login.tsx:327
 #: src/components/settings/TwoFactorSettingsCard.tsx:231
 #: src/components/settings/TwoFactorSettingsCard.tsx:381
 msgid "Authenticator code"
@@ -1820,7 +1820,7 @@ msgstr "Avatar bijgewerkt"
 #: src/routes/project/report/ProjectReportRoute.tsx:603
 #: src/routes/organisation/OrganisationRoute.tsx:602
 #: src/routes/organisation/OrganisationRoute.tsx:627
-#: src/routes/auth/Register.tsx:203
+#: src/routes/auth/Register.tsx:208
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:334
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:371
 msgid "Back"
@@ -2138,7 +2138,7 @@ msgstr "Taal wijzigen"
 msgid "Change organisation role?"
 msgstr ""
 
-#: src/components/settings/ChangePasswordCard.tsx:66
+#: src/components/settings/ChangePasswordCard.tsx:65
 msgid "Change password"
 msgstr "Wachtwoord wijzigen"
 
@@ -2180,10 +2180,10 @@ msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resulta
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:612
 #: src/routes/project/chat/ProjectChatRoute.tsx:618
-#: src/features/sidebar/hooks/useSearchHits.ts:252
 #: src/features/sidebar/hooks/useSearchHits.ts:254
-#: src/features/sidebar/hooks/useSearchHits.ts:255
-#: src/features/sidebar/hooks/useSearchHits.ts:260
+#: src/features/sidebar/hooks/useSearchHits.ts:256
+#: src/features/sidebar/hooks/useSearchHits.ts:257
+#: src/features/sidebar/hooks/useSearchHits.ts:262
 msgid "Chat"
 msgstr "Chat"
 
@@ -2221,7 +2221,7 @@ msgstr "Controleer microfoontoegang"
 #~ msgid "Check microphone access"
 #~ msgstr "Controleer microfoontoegang"
 
-#: src/routes/auth/Register.tsx:221
+#: src/routes/auth/Register.tsx:227
 #: src/routes/auth/CheckYourEmail.tsx:19
 msgid "Check your email"
 msgstr "Controleer je email"
@@ -2406,12 +2406,12 @@ msgstr "Bevestigen"
 msgid "Confirm new password"
 msgstr "Bevestig nieuw wachtwoord"
 
-#: src/routes/auth/PasswordReset.tsx:58
-#: src/routes/auth/PasswordReset.tsx:61
+#: src/routes/auth/PasswordReset.tsx:68
+#: src/routes/auth/PasswordReset.tsx:71
 msgid "Confirm New Password"
 msgstr "Bevestig nieuw wachtwoord"
 
-#: src/routes/auth/Register.tsx:192
+#: src/routes/auth/Register.tsx:197
 msgid "Confirm password"
 msgstr ""
 
@@ -2494,7 +2494,7 @@ msgid "Contextual suggestions"
 msgstr "Contextuele suggesties"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:435
-#: src/routes/auth/Register.tsx:175
+#: src/routes/auth/Register.tsx:180
 #: src/components/language/LanguagePicker.tsx:153
 msgid "Continue"
 msgstr "Doorgaan"
@@ -2509,7 +2509,7 @@ msgstr "Doorgaan"
 msgid "conversation"
 msgstr "gesprek"
 
-#: src/features/sidebar/hooks/useSearchHits.ts:222
+#: src/features/sidebar/hooks/useSearchHits.ts:224
 msgid "Conversation"
 msgstr ""
 
@@ -2779,12 +2779,12 @@ msgstr "Een nieuwe webhook vanaf nul maken"
 msgid "Create a research brief from recent conversations"
 msgstr "Een onderzoeksbrief maken van recente gesprekken"
 
-#: src/routes/auth/Register.tsx:212
+#: src/routes/auth/Register.tsx:218
 msgid "Create account"
 msgstr ""
 
-#: src/routes/auth/Register.tsx:113
-#: src/routes/auth/Login.tsx:426
+#: src/routes/auth/Register.tsx:118
+#: src/routes/auth/Login.tsx:436
 msgid "Create an account"
 msgstr ""
 
@@ -2816,7 +2816,7 @@ msgstr "Maak nieuwe view aan"
 #~ msgid "Create now instead"
 #~ msgstr "Nu aanmaken"
 
-#: src/routes/auth/Register.tsx:122
+#: src/routes/auth/Register.tsx:127
 msgid "Create password"
 msgstr ""
 
@@ -2895,7 +2895,7 @@ msgstr "Logo bijsnijden"
 msgid "Current logo"
 msgstr "Huidige logo"
 
-#: src/components/settings/ChangePasswordCard.tsx:71
+#: src/components/settings/ChangePasswordCard.tsx:70
 msgid "Current password"
 msgstr "Huidig wachtwoord"
 
@@ -3269,7 +3269,7 @@ msgstr ""
 msgid "Didn't get it? Check spam or junk first. The message comes from dembrane.com."
 msgstr ""
 
-#: src/routes/auth/Register.tsx:234
+#: src/routes/auth/Register.tsx:240
 msgid "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 msgstr ""
 
@@ -3371,7 +3371,7 @@ msgstr "Documentatie"
 #~ msgid "Documents"
 #~ msgstr "Documenten"
 
-#: src/routes/auth/Register.tsx:149
+#: src/routes/auth/Register.tsx:154
 msgid "Doe"
 msgstr ""
 
@@ -3582,14 +3582,14 @@ msgstr "Webhook bewerken"
 #~ msgid "Editing mode"
 #~ msgstr "Bewerkmode"
 
-#: src/routes/auth/Login.tsx:358
-#: src/routes/auth/Login.tsx:362
+#: src/routes/auth/Login.tsx:368
+#: src/routes/auth/Login.tsx:372
 #: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
 msgstr "E-mail"
 
-#: src/routes/auth/Register.tsx:153
+#: src/routes/auth/Register.tsx:158
 msgid "Email address"
 msgstr ""
 
@@ -3741,7 +3741,7 @@ msgstr "Voer een geheime sleutel in"
 msgid "Enter a valid code to turn off two-factor authentication."
 msgstr "Voer een geldige code in om tweestapsverificatie uit te schakelen."
 
-#: src/routes/auth/Register.tsx:62
+#: src/routes/auth/Register.tsx:65
 msgid "Enter a valid email address"
 msgstr ""
 
@@ -3749,7 +3749,7 @@ msgstr ""
 #~ msgid "Enter an email address"
 #~ msgstr ""
 
-#: src/components/settings/ChangePasswordCard.tsx:74
+#: src/components/settings/ChangePasswordCard.tsx:73
 msgid "Enter current password"
 msgstr "Voer het huidige wachtwoord in"
 
@@ -3761,11 +3761,11 @@ msgstr "Voer bestandsnaam (zonder extensie) in"
 #~ msgid "Enter new name for the chat:"
 #~ msgstr "Voer een nieuwe naam in voor de chat:"
 
-#: src/components/settings/ChangePasswordCard.tsx:81
+#: src/components/settings/ChangePasswordCard.tsx:80
 msgid "Enter new password"
 msgstr "Voer het nieuwe wachtwoord in"
 
-#: src/routes/auth/Login.tsx:125
+#: src/routes/auth/Login.tsx:127
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Voer de 6-cijferige code uit je authenticator-app in."
 
@@ -4183,6 +4183,10 @@ msgstr "Fout bij het uploaden van het logo"
 #~ msgid "Failed to verify email status. Please try again."
 #~ msgstr "Fout bij het controleren van de e-mailstatus. Probeer het opnieuw."
 
+#: src/components/auth/PasswordRequirements.tsx:46
+msgid "Fair password"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:467
 msgid "participant.modal.echo.info.title"
@@ -4280,7 +4284,7 @@ msgstr "Gesprek afmaken"
 msgid "Finished"
 msgstr "Voltooid"
 
-#: src/routes/auth/Register.tsx:138
+#: src/routes/auth/Register.tsx:143
 msgid "First name"
 msgstr ""
 
@@ -4350,7 +4354,7 @@ msgstr ""
 msgid "Forecast: ~{0}"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:394
+#: src/routes/auth/Login.tsx:404
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
 
@@ -4776,7 +4780,7 @@ msgstr "Als je niet zeker bent, is het waarschijnlijk nog niet nodig. Webhooks z
 msgid "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 msgstr "Als je webhook-integraties instelt, zouden we graag weten wat je voor gebruik hebt. We zijn ook bezig met observability-functies, waaronder auditlogboeken en leveringstracking."
 
-#: src/routes/auth/Register.tsx:292
+#: src/routes/auth/Register.tsx:298
 msgid "If you're trying to join an existing organization, you should not create a new one. Some reasons that you may accidentally end up here are:"
 msgstr ""
 
@@ -4868,11 +4872,11 @@ msgstr "Instructies voor het genereren van het verificatieresultaat"
 msgid "Integrations & Export"
 msgstr ""
 
-#: src/routes/auth/PasswordReset.tsx:29
+#: src/routes/auth/PasswordReset.tsx:38
 msgid "Invalid code. Please request a new one."
 msgstr "Ongeldige code. Vraag een nieuwe aan."
 
-#: src/routes/auth/Login.tsx:269
+#: src/routes/auth/Login.tsx:279
 msgid "Invalid credentials."
 msgstr "Ongeldige inloggegevens."
 
@@ -5074,11 +5078,11 @@ msgstr "Het lijkt erop dat meer dan één persoon spreekt. Het afwisselen zal on
 msgid "Italian (only ECHO features, Transcription and Summaries)"
 msgstr "Italiaans (alleen ECHO-functies, Transcriptie en Samenvattingen)"
 
-#: src/routes/auth/Register.tsx:141
+#: src/routes/auth/Register.tsx:146
 msgid "John"
 msgstr ""
 
-#: src/routes/auth/Register.tsx:156
+#: src/routes/auth/Register.tsx:161
 msgid "john@doe.com"
 msgstr ""
 
@@ -5202,7 +5206,7 @@ msgstr "Taal"
 msgid "Last month"
 msgstr ""
 
-#: src/routes/auth/Register.tsx:145
+#: src/routes/auth/Register.tsx:150
 msgid "Last name"
 msgstr ""
 
@@ -5431,7 +5435,7 @@ msgstr "Bezig met laden…"
 msgid "Locked"
 msgstr ""
 
-#: src/routes/auth/Register.tsx:161
+#: src/routes/auth/Register.tsx:166
 msgid "Locked to match the invite. To use a different address, ask the admin to re-invite that email."
 msgstr ""
 
@@ -5452,11 +5456,11 @@ msgstr ""
 msgid "Log out and use the invited email"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:410
+#: src/routes/auth/Login.tsx:420
 msgid "Login"
 msgstr "Inloggen"
 
-#: src/routes/auth/Login.tsx:79
+#: src/routes/auth/Login.tsx:81
 msgid "Login | dembrane"
 msgstr "Inloggen | dembrane"
 
@@ -5634,8 +5638,8 @@ msgstr "Toegang tot de microfoon wordt nog steeds geweigerd. Controleer uw inste
 #~ msgstr "Mijn"
 
 #: src/components/settings/ChangePasswordCard.tsx:82
-msgid "Minimum 8 characters"
-msgstr "Minimaal 8 tekens"
+#~ msgid "Minimum 8 characters"
+#~ msgstr "Minimaal 8 tekens"
 
 #: src/components/project/ProjectPortalEditor.tsx:853
 msgid "Mode"
@@ -5820,12 +5824,12 @@ msgstr "Er zijn nieuwe gesprekken toegevoegd sinds de bibliotheek is gegenereerd
 #~ msgid "New organisation workspace"
 #~ msgstr ""
 
-#: src/components/settings/ChangePasswordCard.tsx:78
+#: src/components/settings/ChangePasswordCard.tsx:77
 msgid "New password"
 msgstr "Nieuw wachtwoord"
 
-#: src/routes/auth/PasswordReset.tsx:51
-#: src/routes/auth/PasswordReset.tsx:54
+#: src/routes/auth/PasswordReset.tsx:60
+#: src/routes/auth/PasswordReset.tsx:63
 msgid "New Password"
 msgstr "Nieuw wachtwoord"
 
@@ -6274,6 +6278,7 @@ msgid "Not available"
 msgstr "Niet beschikbaar"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:568
+#: src/components/auth/WeakPasswordModal.tsx:55
 msgid "Not now"
 msgstr ""
 
@@ -6340,8 +6345,24 @@ msgstr "Heb je het besproken? Klik op \"Herzien\" om {objectLabel} aan te passen
 msgid "participant.verify.instructions.read.aloud"
 msgstr "Lees {objectLabel} hardop voor en vertel wat je eventueel wilt aanpassen."
 
+#: src/components/auth/PasswordRequirements.tsx:63
+msgid "One lowercase letter"
+msgstr ""
+
 #: src/lib/tiers.ts:124
 msgid "one month to try it."
+msgstr ""
+
+#: src/components/auth/PasswordRequirements.tsx:65
+msgid "One number"
+msgstr ""
+
+#: src/components/auth/PasswordRequirements.tsx:66
+msgid "One symbol"
+msgstr ""
+
+#: src/components/auth/PasswordRequirements.tsx:59
+msgid "One uppercase letter"
 msgstr ""
 
 #: src/components/workspace/TierPricingCards.tsx:74
@@ -6538,11 +6559,11 @@ msgstr "Open de probleemoplossingsgids"
 #~ msgid "Open troubleshooting guide"
 #~ msgstr "Open de probleemoplossingsgids"
 
-#: src/routes/auth/Login.tsx:349
+#: src/routes/auth/Login.tsx:359
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open je authenticator-app en voer de huidige zescijferige code in."
 
-#: src/routes/auth/Register.tsx:146
+#: src/routes/auth/Register.tsx:151
 #: src/components/project/CustomTopicModal.tsx:240
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:450
 msgid "Optional"
@@ -6581,8 +6602,8 @@ msgstr ""
 msgid "Options"
 msgstr "Opties"
 
-#: src/routes/auth/Register.tsx:254
-#: src/routes/auth/Login.tsx:417
+#: src/routes/auth/Register.tsx:260
+#: src/routes/auth/Login.tsx:427
 msgid "or"
 msgstr "of"
 
@@ -6929,26 +6950,31 @@ msgstr ""
 msgid "Partner organisation"
 msgstr ""
 
-#: src/routes/auth/Register.tsx:185
-#: src/routes/auth/Login.tsx:372
-#: src/routes/auth/Login.tsx:376
+#: src/routes/auth/Register.tsx:190
+#: src/routes/auth/Login.tsx:382
+#: src/routes/auth/Login.tsx:386
 msgid "Password"
 msgstr "Wachtwoord"
 
-#: src/components/settings/ChangePasswordCard.tsx:43
+#: src/components/settings/ChangePasswordCard.tsx:45
 msgid "Password changed"
 msgstr "Wachtwoord gewijzigd"
 
-#: src/routes/auth/Register.tsx:76
-msgid "Password must be at least 8 characters"
+#: src/routes/auth/Register.tsx:79
+#: src/routes/auth/PasswordReset.tsx:28
+msgid "Password does not meet the requirements."
 msgstr ""
+
+#: src/routes/auth/Register.tsx:76
+#~ msgid "Password must be at least 8 characters"
+#~ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:297
 #~ msgid "Password protect portal (request feature)"
 #~ msgstr "Portal met wachtwoord beveiligen (aanvraag functie)"
 
-#: src/routes/auth/Register.tsx:80
-#: src/routes/auth/PasswordReset.tsx:23
+#: src/routes/auth/Register.tsx:83
+#: src/routes/auth/PasswordReset.tsx:32
 #: src/components/settings/ChangePasswordCard.tsx:92
 msgid "Passwords do not match"
 msgstr "Wachtwoorden komen niet overeen"
@@ -7184,7 +7210,7 @@ msgstr "Voer een geldig e-mailadres in."
 #~ msgid "Please keep this screen lit up (black screen = not recording)"
 #~ msgstr "Houd dit scherm aan (zwart scherm = geen opname)"
 
-#: src/routes/auth/Login.tsx:305
+#: src/routes/auth/Login.tsx:315
 msgid "Please log in to continue."
 msgstr ""
 
@@ -7492,11 +7518,11 @@ msgstr ""
 
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:49
 #: src/features/sidebar/hooks/useSearchHits.ts:164
-#: src/features/sidebar/hooks/useSearchHits.ts:205
-#: src/features/sidebar/hooks/useSearchHits.ts:206
-#: src/features/sidebar/hooks/useSearchHits.ts:211
-#: src/features/sidebar/hooks/useSearchHits.ts:219
-#: src/features/sidebar/hooks/useSearchHits.ts:252
+#: src/features/sidebar/hooks/useSearchHits.ts:207
+#: src/features/sidebar/hooks/useSearchHits.ts:208
+#: src/features/sidebar/hooks/useSearchHits.ts:213
+#: src/features/sidebar/hooks/useSearchHits.ts:221
+#: src/features/sidebar/hooks/useSearchHits.ts:254
 #: src/components/workspace/OrganisationProjectsTable.tsx:205
 msgid "Project"
 msgstr ""
@@ -7708,11 +7734,11 @@ msgstr "Gebruik instellingen van een bestaande webhook"
 msgid "Read aloud"
 msgstr "Lees hardop voor"
 
-#: src/routes/auth/Register.tsx:284
+#: src/routes/auth/Register.tsx:290
 msgid "Read less"
 msgstr ""
 
-#: src/routes/auth/Register.tsx:286
+#: src/routes/auth/Register.tsx:292
 msgid "Read more →"
 msgstr ""
 
@@ -7861,7 +7887,7 @@ msgstr "Uitkomst wordt opnieuw gegenereerd"
 msgid "Regenerating the summary. Please wait..."
 msgstr "Samenvatting wordt opnieuw gemaakt. Even wachten..."
 
-#: src/routes/auth/Register.tsx:29
+#: src/routes/auth/Register.tsx:31
 msgid "Register | dembrane"
 msgstr "Registreer | dembrane"
 
@@ -8224,12 +8250,12 @@ msgstr ""
 msgid "Reset monthly usage"
 msgstr ""
 
-#: src/routes/auth/PasswordReset.tsx:44
-#: src/routes/auth/PasswordReset.tsx:69
+#: src/routes/auth/PasswordReset.tsx:53
+#: src/routes/auth/PasswordReset.tsx:80
 msgid "Reset Password"
 msgstr "Wachtwoord resetten"
 
-#: src/routes/auth/PasswordReset.tsx:11
+#: src/routes/auth/PasswordReset.tsx:13
 msgid "Reset Password | dembrane"
 msgstr "Wachtwoord resetten | dembrane"
 
@@ -9092,7 +9118,7 @@ msgstr "Iets blokkeert je verbinding. Je audio wordt niet opgeslagen tenzij dit 
 #: src/routes/project/report/ProjectReportRoute.tsx:932
 #: src/routes/project/report/ProjectReportRoute.tsx:1388
 #: src/routes/onboarding/OnboardingRoute.tsx:132
-#: src/routes/auth/Login.tsx:260
+#: src/routes/auth/Login.tsx:270
 #: src/components/project/ProjectAccessGuard.tsx:87
 #: src/components/participant/ParticipantInitiateForm.tsx:93
 #: src/components/error/ErrorPage.tsx:55
@@ -9284,6 +9310,10 @@ msgstr "Stop"
 #: src/components/chat/templates.ts:74
 msgid "Strategic Planning"
 msgstr "Strategische Planning"
+
+#: src/components/auth/PasswordRequirements.tsx:44
+msgid "Strong password"
+msgstr ""
 
 #: src/routes/auth/RequestPasswordReset.tsx:44
 msgid "Submit"
@@ -9543,7 +9573,7 @@ msgstr "Bedankt!"
 #~ msgid "Thank you! In the meantime, click individual documents to add context to each file that I will take into account for further analysis."
 #~ msgstr "Bedankt! Klik ondertussen op individuele documenten om context toe te voegen aan elk bestand dat ik zal meenemen voor verdere analyse."
 
-#: src/routes/auth/Login.tsx:243
+#: src/routes/auth/Login.tsx:253
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "Die code werkte niet. Probeer het opnieuw met een verse code uit je authenticator-app."
 
@@ -9954,7 +9984,7 @@ msgstr ""
 msgid "This workspace was downgraded to {tier} on {sinceDate}. Some features are limited."
 msgstr ""
 
-#: src/routes/auth/Register.tsx:116
+#: src/routes/auth/Register.tsx:121
 msgid "Three quick steps and you're in."
 msgstr ""
 
@@ -10087,9 +10117,9 @@ msgstr ""
 msgid "Transcribing..."
 msgstr "Transcriptie wordt uitgevoerd..."
 
-#: src/features/sidebar/hooks/useSearchHits.ts:235
-#: src/features/sidebar/hooks/useSearchHits.ts:236
-#: src/features/sidebar/hooks/useSearchHits.ts:244
+#: src/features/sidebar/hooks/useSearchHits.ts:237
+#: src/features/sidebar/hooks/useSearchHits.ts:238
+#: src/features/sidebar/hooks/useSearchHits.ts:246
 #: src/components/conversation/ConversationTranscriptSection.tsx:90
 msgid "Transcript"
 msgstr "Transcriptie"
@@ -10221,7 +10251,7 @@ msgstr "Vraag bijvoorbeeld"
 msgid "Try moving a bit closer to your microphone for better sound quality."
 msgstr "Probeer een beetje dichter bij je microfoon te komen voor betere geluidskwaliteit."
 
-#: src/routes/auth/Register.tsx:275
+#: src/routes/auth/Register.tsx:281
 msgid "Trying to join an existing organization?"
 msgstr ""
 
@@ -10421,6 +10451,10 @@ msgstr "Naamloos rapport"
 #~ msgid "Update"
 #~ msgstr "Bijwerken"
 
+#: src/components/auth/WeakPasswordModal.tsx:58
+msgid "Update password"
+msgstr ""
+
 #: src/components/report/UpdateReportModalButton.tsx:178
 #: src/components/report/UpdateReportModalButton.tsx:194
 #~ msgid "Update Report"
@@ -10429,6 +10463,10 @@ msgstr "Naamloos rapport"
 #: src/components/report/UpdateReportModalButton.tsx:65
 #~ msgid "Update the report to include the latest data"
 #~ msgstr "Bijwerken rapport om de meest recente gegevens te bevatten"
+
+#: src/components/auth/WeakPasswordModal.tsx:43
+msgid "Update your password"
+msgstr ""
 
 #: src/components/report/UpdateReportModalButton.tsx:100
 #~ msgid "Update your report to include the latest changes in your project. The link to share the report would remain the same."
@@ -10733,11 +10771,11 @@ msgstr "Controleren"
 msgid "participant.echo.verify"
 msgstr "Controleren"
 
-#: src/routes/auth/Login.tsx:408
+#: src/routes/auth/Login.tsx:418
 msgid "Verify code"
 msgstr "Code controleren"
 
-#: src/routes/auth/Register.tsx:123
+#: src/routes/auth/Register.tsx:128
 msgid "Verify email"
 msgstr ""
 
@@ -10977,8 +11015,12 @@ msgstr ""
 #~ msgstr ""
 
 #. placeholder {0}: submittedEmail ?? emailWatch
-#: src/routes/auth/Register.tsx:224
+#: src/routes/auth/Register.tsx:230
 msgid "We've sent a verification link to <0>{0}</0>. Open the email and click the link to continue."
+msgstr ""
+
+#: src/components/auth/PasswordRequirements.tsx:48
+msgid "Weak password"
 msgstr ""
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:982
@@ -11005,7 +11047,7 @@ msgstr ""
 msgid "Welcome"
 msgstr "Welkom"
 
-#: src/routes/auth/Login.tsx:143
+#: src/routes/auth/Login.tsx:153
 msgid "Welcome back"
 msgstr "Welkom terug"
 
@@ -11021,7 +11063,7 @@ msgstr ""
 #~ msgstr "Welkom in Big Picture Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Specific Details mode."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:376
-#: src/routes/auth/Login.tsx:143
+#: src/routes/auth/Login.tsx:153
 msgid "Welcome to dembrane"
 msgstr ""
 
@@ -11057,7 +11099,7 @@ msgstr "Welkom in Overview Mode! Ik heb samenvattingen van al je gesprekken klaa
 msgid "Welcome, {displayName}"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:293
+#: src/routes/auth/Login.tsx:303
 msgid "Welcome!"
 msgstr "Welkom!"
 
@@ -11293,7 +11335,7 @@ msgstr ""
 msgid "add.tag.filter.modal.description"
 msgstr "Wilt u deze tag toevoegen aan uw huidige filters?"
 
-#: src/routes/auth/Register.tsx:244
+#: src/routes/auth/Register.tsx:250
 msgid "Wrong address? Change email"
 msgstr ""
 
@@ -11441,11 +11483,11 @@ msgstr "Je kunt er ook voor kiezen om een ander gesprek op te nemen."
 #~ msgid "You may choose to add a list of proper nouns, names, or other information that may be relevant to the conversation. This will be used to improve the quality of the transcripts."
 #~ msgstr "Je kunt er voor kiezen om een lijst met zelfstandige naamwoorden, namen of andere informatie toe te voegen die relevant kan zijn voor het gesprek. Dit wordt gebruikt om de kwaliteit van de transcripties te verbeteren."
 
-#: src/routes/auth/Login.tsx:274
+#: src/routes/auth/Login.tsx:284
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Je moet inloggen met dezelfde provider die u gebruikte om u aan te melden. Als u problemen ondervindt, neem dan contact op met de ondersteuning."
 
-#: src/routes/auth/Register.tsx:305
+#: src/routes/auth/Register.tsx:311
 msgid "You need an invitation from a colleague"
 msgstr ""
 
@@ -11508,7 +11550,7 @@ msgstr ""
 msgid "You're in"
 msgstr ""
 
-#: src/routes/auth/Register.tsx:300
+#: src/routes/auth/Register.tsx:306
 msgid "You're logging in with the wrong email address"
 msgstr ""
 
@@ -11595,7 +11637,7 @@ msgstr ""
 msgid "Your current plan"
 msgstr ""
 
-#: src/routes/auth/Register.tsx:121
+#: src/routes/auth/Register.tsx:126
 msgid "Your details"
 msgstr ""
 
@@ -11608,7 +11650,7 @@ msgstr ""
 msgid "Your email is already verified"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:298
+#: src/routes/auth/Login.tsx:308
 msgid "Your email is verified. Log in to continue."
 msgstr ""
 
@@ -11654,6 +11696,10 @@ msgstr ""
 
 #: src/routes/onboarding/OnboardingRoute.tsx:451
 msgid "Your organisation or company"
+msgstr ""
+
+#: src/components/auth/WeakPasswordModal.tsx:48
+msgid "Your password no longer meets our security requirements. Set a stronger one to keep your account secure."
 msgstr ""
 
 #: src/components/workspace/ReferralsPanel.tsx:65
