@@ -129,6 +129,47 @@ class TestUpdateWorkspaceBilling:
         mock_directus.update_item.assert_not_called()
 
 
+class TestOrgScopedAccounts:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_account.generate_uuid", return_value="acc-org")
+    @patch("dembrane.directus_async.async_directus")
+    async def test_create_org_scoped_account(self, mock_directus, _uuid):
+        from dembrane.billing_account import create_org_scoped_account
+
+        mock_directus.create_item = AsyncMock()
+        account_id = await create_org_scoped_account(org_id="org-1", tier="changemaker")
+        assert account_id == "acc-org"
+        _, payload = mock_directus.create_item.call_args.args
+        assert payload["org_id"] == "org-1"
+        assert payload["tier"] == "changemaker"
+        assert "workspace_id" not in payload  # org-scoped, not workspace-scoped
+
+    @pytest.mark.asyncio
+    @patch("dembrane.directus_async.async_directus")
+    async def test_org_account_reused_when_present(self, mock_directus):
+        from dembrane.billing_account import org_account_for_new_workspace
+
+        mock_directus.get_items = AsyncMock(return_value=[{"id": "acc-existing"}])
+        mock_directus.create_item = AsyncMock()
+        account_id = await org_account_for_new_workspace(org_id="org-1")
+        assert account_id == "acc-existing"
+        mock_directus.create_item.assert_not_called()  # reuse, don't mint a new one
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_account.generate_uuid", return_value="acc-new")
+    @patch("dembrane.directus_async.async_directus")
+    async def test_org_account_created_when_absent(self, mock_directus, _uuid):
+        from dembrane.billing_account import org_account_for_new_workspace
+
+        mock_directus.get_items = AsyncMock(return_value=[])
+        mock_directus.create_item = AsyncMock()
+        account_id = await org_account_for_new_workspace(org_id="org-1", default_tier="free")
+        assert account_id == "acc-new"
+        _, payload = mock_directus.create_item.call_args.args
+        assert payload["org_id"] == "org-1"
+        assert payload["tier"] == "free"
+
+
 class TestResolveWorkspaceTier:
     @pytest.mark.asyncio
     @patch("dembrane.directus_async.async_directus")

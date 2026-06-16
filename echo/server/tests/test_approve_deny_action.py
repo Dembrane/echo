@@ -257,9 +257,9 @@ class TestUpgradeWorkspaceForRequest:
             patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock),
             patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock),
         ):
-            _wire_upgrade_mocks(mock_admin, mock_ba, from_tier="pilot")
+            _wire_upgrade_mocks(mock_admin, mock_ba, from_tier="innovator")
             result = await _upgrade_workspace_for_request(
-                req, granted_tier="pioneer", staff_user_id="staff-1"
+                req, granted_tier="changemaker", staff_user_id="staff-1"
             )
 
         # Helper now returns (workspace_id, workspace_name).
@@ -267,7 +267,7 @@ class TestUpgradeWorkspaceForRequest:
         update_call = mock_ba.update_item.call_args
         assert update_call[0][0] == "billing_account"
         ws_update = update_call[0][2]
-        assert ws_update["tier"] == "pioneer"
+        assert ws_update["tier"] == "changemaker"
         assert ws_update.get("downgraded_at") is None
         assert ws_update.get("downgraded_from_tier") is None
 
@@ -282,10 +282,10 @@ class TestUpgradeWorkspaceForRequest:
             patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock),
             patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock),
         ):
-            _wire_upgrade_mocks(mock_admin, mock_ba, from_tier="pilot")
+            _wire_upgrade_mocks(mock_admin, mock_ba, from_tier="innovator")
             await _upgrade_workspace_for_request(
                 req,
-                granted_tier="innovator",
+                granted_tier="guardian",
                 staff_user_id="staff-1",
                 granted_tier_expires_at="2026-07-01T00:00:00Z",
                 granted_type_discount="staff_discount",
@@ -313,14 +313,14 @@ class TestUpgradeWorkspaceForRequest:
             patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock),
             patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock),
         ):
-            _wire_upgrade_mocks(mock_admin, mock_ba, from_tier="innovator")
+            _wire_upgrade_mocks(mock_admin, mock_ba, from_tier="guardian")
             await _upgrade_workspace_for_request(
-                req, granted_tier="pilot", staff_user_id="staff-1"
+                req, granted_tier="innovator", staff_user_id="staff-1"
             )
 
-        mock_downgrade.assert_awaited_once_with("ws-1", "innovator", "pilot")
+        mock_downgrade.assert_awaited_once_with("ws-1", "guardian", "innovator")
         ws_update = mock_ba.update_item.call_args[0][2]
-        assert ws_update["downgraded_from_tier"] == "innovator"
+        assert ws_update["downgraded_from_tier"] == "guardian"
         assert ws_update["downgraded_at"] is not None
 
     @pytest.mark.asyncio
@@ -334,13 +334,13 @@ class TestUpgradeWorkspaceForRequest:
             patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock),
             patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock),
         ):
-            _wire_upgrade_mocks(mock_admin, mock_ba, from_tier="pioneer")
+            _wire_upgrade_mocks(mock_admin, mock_ba, from_tier="changemaker")
             await _upgrade_workspace_for_request(
-                req, granted_tier="pioneer", staff_user_id="staff-1"
+                req, granted_tier="changemaker", staff_user_id="staff-1"
             )
 
         ws_update = mock_ba.update_item.call_args[0][2]
-        assert ws_update["tier"] == "pioneer"
+        assert ws_update["tier"] == "changemaker"
         assert "downgraded_at" not in ws_update
         assert "downgraded_from_tier" not in ws_update
 
@@ -790,7 +790,9 @@ class TestWorkspaceCreateStaffOnly:
         ):
             mock_directus.create_item = AsyncMock(return_value={"data": {}})
             mock_directus.get_item = AsyncMock(return_value={"display_name": "Staff"})
-            # Account creation/link goes through the billing_account module.
+            # Account creation goes through the billing_account module; the org
+            # has no account yet, so get_items returns [] -> org-scoped created.
+            mock_ba.get_items = AsyncMock(return_value=[])
             mock_ba.create_item = AsyncMock(return_value={"data": {}})
             mock_ba.update_item = AsyncMock()
 
