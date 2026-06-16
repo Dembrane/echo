@@ -83,6 +83,42 @@ Staff create an org- or workspace-scoped account with `payment_mode=offline`,
 set tier + provisioned seats, and invoice out of band. No Mollie. This is the
 Guardian / bespoke path.
 
+## Mollie integration model (from the Mollie docs, via MCP)
+
+Mollie has **no plan / product / tier catalog**. We do not create tiers in
+Mollie. A subscription is `{amount, interval, description, metadata, webhookUrl}`
+on a customer; the tier lives only in `tier_capacity.py`.
+
+Flow:
+1. **Customer** per billing account (`POST /customers`) -> store `cst_…` on
+   `billing_account.mollie_customer_id`.
+2. **First payment** with `sequenceType=first` -> hosted checkout -> creates a
+   **mandate** (background-chargeable). Can be €0.01.
+3. **Subscription** (`POST /customers/{id}/subscriptions`): `amount`, `interval`
+   (`1 month` / `12 months`, max 12), `description`, and **`metadata`** carrying
+   `billing_account_id` (forwarded onto every generated payment). Store `sub_…`.
+4. Mollie auto-charges and calls our **webhook per payment** (no per-subscription
+   webhook). The payment carries `subscriptionId` + our metadata.
+
+Per-seat nuance: Mollie subscriptions have **no quantity** — only a flat
+`amount`. So per-seat pricing = `amount = seats × tier_price`, and a seat change
+means **PATCH the subscription amount** (`update-subscription`). Annual ->
+`interval "12 months"`, monthly -> `"1 month"`.
+
+Dunning is built in: Mollie retries a failed charge up to 5× (daily) then
+cancels; some bank reasons cancel immediately. We map failed -> `past_due`,
+canceled -> downgrade to Free.
+
+`billing_account` Mollie fields: `mollie_customer_id`, `mollie_subscription_id`,
+`status` (pending / active / past_due / canceled). Subscription `metadata` =
+{ account_id, org_id, tier } so Mollie's financial data (payments, settlements,
+balances) joins back to our entities.
+
+Seeing / using the data: the Mollie **test Dashboard** plus the connected
+**Mollie MCP** (`ListSubscriptions`, `ListPayments`, `AggregatePayments`,
+`GetBalance`, `ListSettlements`) against the test account. Test caveats: subs
+auto-cancel after 10 payments; `changePaymentState` forces payment outcomes.
+
 ## What can go wrong, and how we handle it
 
 1. **Webhook never arrives / is late.** Webhook is authoritative but not the
