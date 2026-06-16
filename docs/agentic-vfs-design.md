@@ -1,5 +1,7 @@
 # Agentic chat + virtual filesystem / git-over-S3: design exploration
 
+> **Superseded for v1.** The committed near-term plan is `agentic-chat-mvp.md` (agentic chat + propose-and-confirm mutating tools). The git artifact vault (Layer A/A') and dynamic React "live canvas" (Layer D) below are **backlog**, kept here as the longer-term vision. Read the MVP doc first.
+
 Status: exploration / proposal. Not yet a committed plan.
 Branch: `feat/agentic-vfs` (worktree). Reference repos cloned (gitignored) under `.agent-reference/` in the main checkout: `sam`, plus notes on `tursodatabase/agentfs`, `awslabs/git-remote-s3`, `strukto-ai/mirage`.
 
