@@ -1001,21 +1001,15 @@ async def _create_workspace_for_request(
 
     visibility = req.get("proposed_visibility") or "open_to_organisation"
     ws_id = generate_uuid()
+    # Commercial terms live on the billing account, not the workspace.
     ws_data: dict = {
         "id": ws_id,
         "org_id": req["org_id"],
         "name": (req.get("proposed_name") or "Untitled").strip(),
-        "tier": granted_tier,
         "visibility": visibility,
         "is_default": False,
         "created_by": req["requested_by"],
     }
-    if granted_tier_expires_at:
-        ws_data["tier_expires_at"] = granted_tier_expires_at
-    if granted_type_discount:
-        ws_data["type_discount"] = granted_type_discount
-    if granted_percent_discount is not None:
-        ws_data["percent_discount"] = granted_percent_discount
 
     # Every workspace resolves to exactly one billing account (NOT NULL).
     # Create the account first (its workspace_id FK is set after insert).
