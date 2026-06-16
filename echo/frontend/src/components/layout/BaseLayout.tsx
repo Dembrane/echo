@@ -1,10 +1,11 @@
 import type { PropsWithChildren } from "react";
 import { Outlet } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
+import { WeakPasswordModal } from "@/components/auth/WeakPasswordModal";
 import { SeatCapBanner } from "@/components/workspace/SeatCapBanner";
 import { AppSidebar, useSidebarView } from "@/features/sidebar";
-import { InboxView } from "@/features/sidebar/views/InboxView";
 import { AppBreadcrumbs } from "@/features/sidebar/breadcrumbs/AppBreadcrumbs";
+import { InboxView } from "@/features/sidebar/views/InboxView";
 import { Toaster } from "../common/Toaster";
 import { ErrorBoundary } from "../error/ErrorBoundary";
 import { TransitionCurtainProvider } from "./TransitionCurtainProvider";
@@ -44,6 +45,7 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 				<ErrorBoundary>
 					<main className="relative flex flex-1 flex-col overflow-hidden">
 						{isAuthenticated ? <AppBreadcrumbs /> : null}
+						{isAuthenticated ? <WeakPasswordModal /> : null}
 						{/* SeatCapBanner self-gates on workspace context, so it only
 						    appears on /w/:workspaceId/* routes. Lives here (inside
 						    main) instead of WorkspaceLayout so it doesn't stretch

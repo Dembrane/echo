@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from dembrane.app_user import resolve_app_user
 from dembrane.directus import directus
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.password_policy import validate_password
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 logger = getLogger("api.user_settings")
@@ -99,6 +100,10 @@ async def change_password(
     """Change the user's password. Verifies current password via Directus login, then updates."""
     if not auth.access_token:
         raise HTTPException(status_code=401, detail="No access token")
+
+    password_errors = validate_password(body.new_password)
+    if password_errors:
+        raise HTTPException(status_code=400, detail="; ".join(password_errors))
 
     # Verify current password by attempting to get user email and login
     try:
