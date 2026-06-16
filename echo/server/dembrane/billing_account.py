@@ -19,6 +19,7 @@ See docs/plans/billing-account-split.md and docs/adr/0005-per-seat-tier-overhaul
 from __future__ import annotations
 
 from typing import Any, Optional
+from datetime import datetime, timezone, timedelta
 
 from dembrane import directus_async
 from dembrane.utils import generate_uuid
@@ -155,6 +156,33 @@ async def org_account_for_new_workspace(
     return await create_org_scoped_account(
         org_id=org_id, tier=default_tier, created_by=created_by, label="Org billing"
     )
+
+
+async def grant_reverse_trial(
+    account_id: str,
+    *,
+    tier: str = "changemaker",
+    months: int = 1,
+) -> str:
+    """Grant a comped, time-boxed reverse trial on a billing account.
+
+    Sets the tier, an expiry `months` out, marks it as a trial, and keeps it
+    comped (no Mollie). The existing tier-expiry cron auto-reverts the account
+    to Free when it lapses; the pre-warning cron nudges before that. Returns the
+    expiry timestamp (ISO).
+    """
+    expires_at = (datetime.now(timezone.utc) + timedelta(days=30 * months)).isoformat()
+    patch: dict[str, Any] = {
+        "tier": tier,
+        "tier_expires_at": expires_at,
+        "pre_warning_sent": False,
+        "type_discount": "trial",
+        "payment_mode": "none",
+        "downgraded_at": None,
+        "downgraded_from_tier": None,
+    }
+    await directus_async.async_directus.update_item("billing_account", account_id, patch)
+    return expires_at
 
 
 async def get_billing_account_id(workspace_id: str) -> Optional[str]:

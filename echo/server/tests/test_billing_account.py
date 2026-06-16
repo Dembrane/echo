@@ -170,6 +170,27 @@ class TestOrgScopedAccounts:
         assert payload["tier"] == "free"
 
 
+class TestGrantReverseTrial:
+    @pytest.mark.asyncio
+    @patch("dembrane.directus_async.async_directus")
+    async def test_grants_comped_timeboxed_changemaker(self, mock_directus):
+        from dembrane.billing_account import grant_reverse_trial
+
+        mock_directus.update_item = AsyncMock()
+        expires = await grant_reverse_trial("acc-1")
+
+        coll, item_id, patch = mock_directus.update_item.call_args.args
+        assert coll == "billing_account"
+        assert item_id == "acc-1"
+        assert patch["tier"] == "changemaker"
+        assert patch["type_discount"] == "trial"
+        assert patch["payment_mode"] == "none"  # comped, no Mollie
+        assert patch["pre_warning_sent"] is False
+        assert patch["tier_expires_at"] == expires  # cron reverts to Free at this date
+        # cleared so a re-grant after a prior downgrade shows clean
+        assert patch["downgraded_at"] is None
+
+
 class TestResolveWorkspaceTier:
     @pytest.mark.asyncio
     @patch("dembrane.directus_async.async_directus")
