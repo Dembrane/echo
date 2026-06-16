@@ -1,0 +1,30 @@
+# Dev service manager — replaces the terminal-keeper sessions.json for non-VS-Code editors.
+# Infra (redis/postgres/directus/agent) runs via .devcontainer/docker-compose.yml; these are the host processes.
+#
+# Run:  mprocs          (opens the TUI with all services)
+# Keys: j/k select · s start · x stop · r restart · a (or X) stop-all · q quit
+# Tip:  mprocs --names server,workers   to launch a subset
+procs:
+  server:
+    shell: "uv run uvicorn dembrane.main:app --port 8000 --reload --loop asyncio"
+    cwd: server
+
+  workers:
+    shell: "uv run dramatiq-gevent --queues network --processes 1 --threads 10 dembrane.tasks"
+    cwd: server
+
+  workers-cpu:
+    shell: "uv run dramatiq --queues cpu --processes 1 --threads 1 dembrane.tasks"
+    cwd: server
+
+  scheduler:
+    shell: "uv run python -m dembrane.scheduler"
+    cwd: server
+
+  admin-dashboard:
+    shell: "pnpm run dev"
+    cwd: frontend
+
+  participant-portal:
+    shell: "pnpm run participant:dev"
+    cwd: frontend
