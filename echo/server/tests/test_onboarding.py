@@ -79,6 +79,7 @@ async def test_direct_signup_seeds_free_workspace():
 
     with (
         patch("dembrane.api.v2.onboarding.async_directus", mock_directus),
+        patch("dembrane.directus_async.async_directus", _mock_async_directus()),
         patch("dembrane.api.v2.onboarding.resolve_app_user", return_value=_APP_USER),
         patch(
             "dembrane.api.v2.onboarding.get_directus_user_profile",
@@ -148,6 +149,7 @@ async def test_invite_user_gets_no_personal_workspace():
 
     with (
         patch("dembrane.api.v2.onboarding.async_directus", mock_directus),
+        patch("dembrane.directus_async.async_directus", _mock_async_directus()),
         patch("dembrane.api.v2.onboarding.resolve_app_user", return_value=_APP_USER),
         patch(
             "dembrane.api.v2.onboarding.get_directus_user_profile",
@@ -226,6 +228,7 @@ async def test_existing_owner_does_not_get_duplicate_workspace():
 
     with (
         patch("dembrane.api.v2.onboarding.async_directus", mock_directus),
+        patch("dembrane.directus_async.async_directus", _mock_async_directus()),
         patch("dembrane.api.v2.onboarding.resolve_app_user", return_value=_APP_USER),
         patch(
             "dembrane.api.v2.onboarding.get_directus_user_profile",

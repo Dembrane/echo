@@ -27,6 +27,20 @@ from dembrane.api.v2.admin import (
 # ── Fixtures ──
 
 
+def _wire_upgrade_mocks(mock_admin, mock_ba, *, from_tier: str):
+    """Wire the two clients for _upgrade_workspace_for_request: admin serves the
+    workspace existence check; directus_async (billing_account) serves the
+    current tier and receives the commercial write."""
+    def _gi(coll, item_id, *_args, **_kwargs):
+        if coll == "billing_account":
+            return {"id": item_id, "tier": from_tier}
+        return {"id": "ws-1", "org_id": "org-1", "deleted_at": None, "billing_account_id": "acc-1"}
+
+    mock_admin.get_item = AsyncMock(side_effect=_gi)
+    mock_ba.get_item = AsyncMock(side_effect=_gi)
+    mock_ba.update_item = AsyncMock()
+
+
 def _make_pending_request(
     *,
     id: str = "req-1",
@@ -154,9 +168,12 @@ class TestCreateWorkspaceForRequest:
         )
         with (
             patch("dembrane.api.v2.admin.async_directus") as mock_directus,
+            patch("dembrane.directus_async.async_directus") as mock_ba,
             patch("dembrane.inheritance.on_workspace_created", new_callable=AsyncMock) as mock_owc,
         ):
             mock_directus.create_item = AsyncMock(return_value={"data": {}})
+            mock_ba.create_item = AsyncMock(return_value={"data": {}})
+            mock_ba.update_item = AsyncMock()
 
             ws_id = await _create_workspace_for_request(
                 req, granted_tier="pioneer", staff_user_id="staff-1"
@@ -167,9 +184,12 @@ class TestCreateWorkspaceForRequest:
         ws_data = create_call[0][1]
         assert ws_data["org_id"] == "org-1"
         assert ws_data["name"] == "My WS"
-        assert ws_data["tier"] == "pioneer"
         assert ws_data["visibility"] == "private"
         assert ws_data["created_by"] == "user-1"
+        assert ws_data["billing_account_id"] is not None
+        # tier lives on the account now
+        account_data = mock_ba.create_item.call_args[0][1]
+        assert account_data["tier"] == "pioneer"
         mock_owc.assert_awaited_once_with(
             workspace_id=ws_id,
             creator_app_user_id="user-1",
@@ -180,9 +200,12 @@ class TestCreateWorkspaceForRequest:
         req = _make_pending_request()
         with (
             patch("dembrane.api.v2.admin.async_directus") as mock_directus,
+            patch("dembrane.directus_async.async_directus") as mock_ba,
             patch("dembrane.inheritance.on_workspace_created", new_callable=AsyncMock),
         ):
             mock_directus.create_item = AsyncMock(return_value={"data": {}})
+            mock_ba.create_item = AsyncMock(return_value={"data": {}})
+            mock_ba.update_item = AsyncMock()
 
             await _create_workspace_for_request(
                 req,
@@ -193,19 +216,23 @@ class TestCreateWorkspaceForRequest:
                 granted_percent_discount=50,
             )
 
-        ws_data = mock_directus.create_item.call_args_list[0][0][1]
-        assert ws_data["tier_expires_at"] == "2026-06-11T00:00:00Z"
-        assert ws_data["type_discount"] == "scholarship"
-        assert ws_data["percent_discount"] == 50
+        # Commercial terms are written to the billing account.
+        account_data = mock_ba.create_item.call_args[0][1]
+        assert account_data["tier_expires_at"] == "2026-06-11T00:00:00Z"
+        assert account_data["type_discount"] == "scholarship"
+        assert account_data["percent_discount"] == 50
 
     @pytest.mark.asyncio
     async def test_untitled_fallback(self):
         req = _make_pending_request(proposed_name=None)
         with (
             patch("dembrane.api.v2.admin.async_directus") as mock_directus,
+            patch("dembrane.directus_async.async_directus") as mock_ba,
             patch("dembrane.inheritance.on_workspace_created", new_callable=AsyncMock),
         ):
             mock_directus.create_item = AsyncMock(return_value={"data": {}})
+            mock_ba.create_item = AsyncMock(return_value={"data": {}})
+            mock_ba.update_item = AsyncMock()
 
             await _create_workspace_for_request(
                 req, granted_tier="innovator", staff_user_id="staff-1"
@@ -224,24 +251,21 @@ class TestUpgradeWorkspaceForRequest:
         req = _make_pending_request(
             kind="tier_upgrade", workspace_id="ws-1"
         )
-        with patch("dembrane.api.v2.admin.async_directus") as mock_directus:
-            mock_directus.get_item = AsyncMock(return_value={
-                "id": "ws-1", "tier": "pilot", "org_id": "org-1",
-            })
-            mock_directus.update_item = AsyncMock()
-            with (
-                patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock),
-                patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock),
-            ):
-                result = await _upgrade_workspace_for_request(
-                    req, granted_tier="pioneer", staff_user_id="staff-1"
-                )
+        with (
+            patch("dembrane.api.v2.admin.async_directus") as mock_admin,
+            patch("dembrane.directus_async.async_directus") as mock_ba,
+            patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock),
+            patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock),
+        ):
+            _wire_upgrade_mocks(mock_admin, mock_ba, from_tier="pilot")
+            result = await _upgrade_workspace_for_request(
+                req, granted_tier="pioneer", staff_user_id="staff-1"
+            )
 
         # Helper now returns (workspace_id, workspace_name).
         assert result[0] == "ws-1"
-        update_call = mock_directus.update_item.call_args
-        assert update_call[0][0] == "workspace"
-        assert update_call[0][1] == "ws-1"
+        update_call = mock_ba.update_item.call_args
+        assert update_call[0][0] == "billing_account"
         ws_update = update_call[0][2]
         assert ws_update["tier"] == "pioneer"
         assert ws_update.get("downgraded_at") is None
@@ -252,25 +276,23 @@ class TestUpgradeWorkspaceForRequest:
         req = _make_pending_request(
             kind="tier_upgrade", workspace_id="ws-1"
         )
-        with patch("dembrane.api.v2.admin.async_directus") as mock_directus:
-            mock_directus.get_item = AsyncMock(return_value={
-                "id": "ws-1", "tier": "pilot", "org_id": "org-1",
-            })
-            mock_directus.update_item = AsyncMock()
-            with (
-                patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock),
-                patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock),
-            ):
-                await _upgrade_workspace_for_request(
-                    req,
-                    granted_tier="innovator",
-                    staff_user_id="staff-1",
-                    granted_tier_expires_at="2026-07-01T00:00:00Z",
-                    granted_type_discount="staff_discount",
-                    granted_percent_discount=10,
-                )
+        with (
+            patch("dembrane.api.v2.admin.async_directus") as mock_admin,
+            patch("dembrane.directus_async.async_directus") as mock_ba,
+            patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock),
+            patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock),
+        ):
+            _wire_upgrade_mocks(mock_admin, mock_ba, from_tier="pilot")
+            await _upgrade_workspace_for_request(
+                req,
+                granted_tier="innovator",
+                staff_user_id="staff-1",
+                granted_tier_expires_at="2026-07-01T00:00:00Z",
+                granted_type_discount="staff_discount",
+                granted_percent_discount=10,
+            )
 
-        ws_update = mock_directus.update_item.call_args[0][2]
+        ws_update = mock_ba.update_item.call_args[0][2]
         assert ws_update["tier_expires_at"] == "2026-07-01T00:00:00Z"
         assert ws_update["type_discount"] == "staff_discount"
         assert ws_update["percent_discount"] == 10
@@ -280,26 +302,24 @@ class TestUpgradeWorkspaceForRequest:
         req = _make_pending_request(
             kind="tier_upgrade", workspace_id="ws-1"
         )
-        with patch("dembrane.api.v2.admin.async_directus") as mock_directus:
-            mock_directus.get_item = AsyncMock(return_value={
-                "id": "ws-1", "tier": "innovator", "org_id": "org-1",
-            })
-            mock_directus.update_item = AsyncMock()
-            with (
-                patch(
-                    "dembrane.tier_downgrade.apply_downgrade_effects",
-                    new_callable=AsyncMock,
-                    return_value=[{"policy": "workspace:whitelabel", "human": "Whitelabel removed"}],
-                ) as mock_downgrade,
-                patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock),
-                patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock),
-            ):
-                await _upgrade_workspace_for_request(
-                    req, granted_tier="pilot", staff_user_id="staff-1"
-                )
+        with (
+            patch("dembrane.api.v2.admin.async_directus") as mock_admin,
+            patch("dembrane.directus_async.async_directus") as mock_ba,
+            patch(
+                "dembrane.tier_downgrade.apply_downgrade_effects",
+                new_callable=AsyncMock,
+                return_value=[{"policy": "workspace:whitelabel", "human": "Whitelabel removed"}],
+            ) as mock_downgrade,
+            patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock),
+            patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock),
+        ):
+            _wire_upgrade_mocks(mock_admin, mock_ba, from_tier="innovator")
+            await _upgrade_workspace_for_request(
+                req, granted_tier="pilot", staff_user_id="staff-1"
+            )
 
         mock_downgrade.assert_awaited_once_with("ws-1", "innovator", "pilot")
-        ws_update = mock_directus.update_item.call_args[0][2]
+        ws_update = mock_ba.update_item.call_args[0][2]
         assert ws_update["downgraded_from_tier"] == "innovator"
         assert ws_update["downgraded_at"] is not None
 
@@ -308,17 +328,18 @@ class TestUpgradeWorkspaceForRequest:
         req = _make_pending_request(
             kind="tier_upgrade", workspace_id="ws-1"
         )
-        with patch("dembrane.api.v2.admin.async_directus") as mock_directus:
-            mock_directus.get_item = AsyncMock(return_value={
-                "id": "ws-1", "tier": "pioneer", "org_id": "org-1",
-            })
-            mock_directus.update_item = AsyncMock()
-
+        with (
+            patch("dembrane.api.v2.admin.async_directus") as mock_admin,
+            patch("dembrane.directus_async.async_directus") as mock_ba,
+            patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock),
+            patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock),
+        ):
+            _wire_upgrade_mocks(mock_admin, mock_ba, from_tier="pioneer")
             await _upgrade_workspace_for_request(
                 req, granted_tier="pioneer", staff_user_id="staff-1"
             )
 
-        ws_update = mock_directus.update_item.call_args[0][2]
+        ws_update = mock_ba.update_item.call_args[0][2]
         assert ws_update["tier"] == "pioneer"
         assert "downgraded_at" not in ws_update
         assert "downgraded_from_tier" not in ws_update
@@ -762,12 +783,16 @@ class TestWorkspaceCreateStaffOnly:
         with (
             patch("dembrane.api.v2.workspaces.get_app_user_or_raise", new_callable=AsyncMock, return_value={"id": "staff-1"}),
             patch("dembrane.api.v2.workspaces.async_directus") as mock_directus,
+            patch("dembrane.directus_async.async_directus") as mock_ba,
             patch("dembrane.inheritance.on_workspace_created", new_callable=AsyncMock),
             patch("dembrane.notifications.emit_to_audience", new_callable=AsyncMock),
             patch("dembrane.notifications.audience_organisation_admins", new_callable=AsyncMock, return_value=[]),
         ):
             mock_directus.create_item = AsyncMock(return_value={"data": {}})
             mock_directus.get_item = AsyncMock(return_value={"display_name": "Staff"})
+            # Account creation/link goes through the billing_account module.
+            mock_ba.create_item = AsyncMock(return_value={"data": {}})
+            mock_ba.update_item = AsyncMock()
 
             result = await create_workspace(body, auth)
 

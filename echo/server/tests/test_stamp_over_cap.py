@@ -36,14 +36,14 @@ def _make_project(project_id: str = "proj-1", workspace_id: str = "ws-1") -> dic
     return {"id": project_id, "workspace_id": workspace_id}
 
 
-def _make_workspace(workspace_id: str = "ws-1", tier: str = "free") -> dict:
+def _make_workspace(workspace_id: str = "ws-1", _tier: str = "free") -> dict:
     return {"id": workspace_id, "billing_account_id": "acc-1"}
 
 
 def _get_item_for(tier: str, workspace_id: str = "ws-1"):
     """Sync get_item side-effect: tier now lives on the billing account."""
 
-    def _side(collection, item_id, *args, **kwargs):
+    def _side(collection, item_id, *_args, **_kwargs):
         if collection == "billing_account":
             return {"id": item_id, "tier": tier}
         return _make_workspace(workspace_id)
