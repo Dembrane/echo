@@ -1014,7 +1014,25 @@ async def _create_workspace_for_request(
     if granted_percent_discount is not None:
         ws_data["percent_discount"] = granted_percent_discount
 
+    # Every workspace resolves to exactly one billing account (NOT NULL).
+    # Create the account first (its workspace_id FK is set after insert).
+    from dembrane.billing_account import (
+        link_account_to_workspace,
+        create_workspace_scoped_account,
+    )
+
+    account_id = await create_workspace_scoped_account(
+        tier=granted_tier,
+        tier_expires_at=granted_tier_expires_at,
+        type_discount=granted_type_discount,
+        percent_discount=granted_percent_discount,
+        created_by=req["requested_by"],
+        label=f"{ws_data['name']} billing",
+    )
+    ws_data["billing_account_id"] = account_id
+
     await async_directus.create_item("workspace", ws_data)
+    await link_account_to_workspace(account_id, ws_id)
     await on_workspace_created(
         workspace_id=ws_id,
         creator_app_user_id=req["requested_by"],
@@ -1089,6 +1107,13 @@ async def _upgrade_workspace_for_request(
         ws_update["percent_discount"] = granted_percent_discount
 
     await async_directus.update_item("workspace", workspace_id, ws_update)
+    # Dual-write the commercial change onto the workspace's billing account.
+    from dembrane.billing_account import account_patch_from_workspace_patch
+
+    account_id = workspace.get("billing_account_id")
+    account_patch = account_patch_from_workspace_patch(ws_update)
+    if account_id and account_patch:
+        await async_directus.update_item("billing_account", account_id, account_patch)
 
     if direction == "upgrade":
         from dembrane.tier_downgrade import recalculate_over_cap_on_upgrade

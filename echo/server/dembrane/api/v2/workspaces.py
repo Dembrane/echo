@@ -639,6 +639,18 @@ async def create_workspace(
     # are no longer written (resolver still reads them for pre-enum data).
     visibility = "open_to_organisation" if body.inherit_organisation_admins else "private"
     ws_id = generate_uuid()
+
+    # Every workspace resolves to exactly one billing account (NOT NULL).
+    from dembrane.billing_account import (
+        link_account_to_workspace,
+        create_workspace_scoped_account,
+    )
+
+    account_id = await create_workspace_scoped_account(
+        tier="pilot",
+        created_by=app_user_id,
+        label=f"{body.name.strip()} billing",
+    )
     await async_directus.create_item(
         "workspace",
         {
@@ -649,8 +661,10 @@ async def create_workspace(
             "visibility": visibility,
             "is_default": False,
             "created_by": app_user_id,
+            "billing_account_id": account_id,
         },
     )
+    await link_account_to_workspace(account_id, ws_id)
 
     # Insert the creator as source='direct', role='owner'. No settings
     # flags (matrix v1.1 §6 — derivation is retired for new rows).
@@ -825,6 +839,13 @@ async def set_workspace_tier(
         ws_update["downgraded_at"] = None
         ws_update["downgraded_from_tier"] = None
     await async_directus.update_item("workspace", workspace_id, ws_update)
+    # Dual-write the commercial change onto the workspace's billing account.
+    from dembrane.billing_account import account_patch_from_workspace_patch
+
+    account_id = workspace.get("billing_account_id")
+    account_patch = account_patch_from_workspace_patch(ws_update)
+    if account_id and account_patch:
+        await async_directus.update_item("billing_account", account_id, account_patch)
 
     # Bust the cached usage rollup so the UI reflects the new tier's
     # caps + rates on the next read. Both the workspace-scope cache and

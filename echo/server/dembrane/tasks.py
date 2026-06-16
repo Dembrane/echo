@@ -1857,18 +1857,27 @@ async def _apply_tier_expiry(workspace_id: str, from_tier: str) -> list[dict]:
     effects = await apply_downgrade_effects(workspace_id, from_tier, "free")
 
     now_iso = get_utc_timestamp().isoformat()
-    await async_directus.update_item("workspace", workspace_id, {
+    expiry_patch = {
         "tier": "free",
         "downgraded_at": now_iso,
         "downgraded_from_tier": from_tier,
         "tier_expires_at": None,
         "pre_warning_sent": False,
-    })
+    }
+    await async_directus.update_item("workspace", workspace_id, expiry_patch)
 
     await invalidate_workspace_usage(workspace_id)
     ws = await async_directus.get_item("workspace", workspace_id)
-    if ws and ws.get("org_id"):
-        await invalidate_org_usage(ws["org_id"])
+    if ws:
+        # Dual-write the downgrade onto the workspace's billing account.
+        from dembrane.billing_account import account_patch_from_workspace_patch
+
+        account_id = ws.get("billing_account_id")
+        account_patch = account_patch_from_workspace_patch(expiry_patch)
+        if account_id and account_patch:
+            await async_directus.update_item("billing_account", account_id, account_patch)
+        if ws.get("org_id"):
+            await invalidate_org_usage(ws["org_id"])
 
     return effects
 
