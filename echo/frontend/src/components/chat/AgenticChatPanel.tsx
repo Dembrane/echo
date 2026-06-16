@@ -29,12 +29,14 @@ import {
 } from "@/lib/api";
 import { Markdown } from "../common/Markdown";
 import { toast } from "../common/Toaster";
+import { type AgenticProposal, extractProposal } from "./agenticProposal";
 import {
 	extractTopLevelToolActivity,
 	type ToolActivity,
 } from "./agenticToolActivity";
 import { ChatMessage } from "./ChatMessage";
 import { ChatTemplatesMenu } from "./ChatTemplatesMenu";
+import { ProposalCard } from "./ProposalCard";
 
 type AgenticChatPanelProps = {
 	chatId: string;
@@ -53,6 +55,9 @@ type TimelineItem =
 	  })
 	| (ToolActivity & {
 			kind: "tool";
+	  })
+	| (AgenticProposal & {
+			kind: "proposal";
 	  });
 
 const storageKeyForChat = (chatId: string) => `agentic-run:${chatId}`;
@@ -172,6 +177,17 @@ export const AgenticChatPanel = ({
 		};
 
 		for (const event of sorted) {
+			const proposal = extractProposal(event);
+			if (proposal) {
+				// A proposal replaces the generic tool card for this tool call;
+				// render it as an interactive diff instead.
+				upsertItem({
+					...proposal,
+					kind: "proposal",
+				});
+				continue;
+			}
+
 			const topLevelMessage = toMessage(event);
 			if (topLevelMessage) {
 				upsertItem({
@@ -181,6 +197,11 @@ export const AgenticChatPanel = ({
 			}
 
 			for (const activity of extractTopLevelToolActivity(event)) {
+				// The propose tool is represented by its ProposalCard, so skip
+				// its passive running/completed activity cards.
+				if (activity.toolName === "proposeProjectUpdate") {
+					continue;
+				}
 				upsertItem({
 					...activity,
 					kind: "tool",
@@ -522,6 +543,10 @@ export const AgenticChatPanel = ({
 											<Markdown className="prose-sm" content={item.content} />
 										</ChatMessage>
 									);
+								}
+
+								if (item.kind === "proposal") {
+									return <ProposalCard key={item.id} proposal={item} />;
 								}
 
 								const statusMeta = TOOL_STATUS_META[item.status];

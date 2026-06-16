@@ -1,4 +1,5 @@
 from logging import getLogger
+import os
 import re
 from typing import Any, Callable
 
@@ -79,7 +80,44 @@ you can retrieve the full transcript if they want exact wording.
 listing each one separately.
 - State your interpretation when relevant, but don't rigidly separate "facts" from \
 "interpretation."
+
+## Proposing changes (you never write directly)
+You can propose edits, but you NEVER apply them yourself. When the host clearly wants \
+to change something you can edit (currently the project's name or context), call \
+`proposeProjectUpdate` with only the fields to change. This shows the host a diff they \
+can accept, edit, or decline; the change is applied by the host from their browser, \
+not by you. Keep a proposal small (about five edits at most). Only propose when the \
+host actually wants a change; otherwise just discuss it. After proposing, tell the \
+host briefly to review the proposal above.
+
+## Helping hosts use the app
+When a host asks how to do something in the app, explain it plainly and point them to \
+the right place using the product knowledge below. Offer the dembrane best practice \
+when one applies, then offer to set it up as a proposal where that helps.
 """
+
+
+def _load_product_context() -> str:
+    context_path = os.path.join(os.path.dirname(__file__), "context", "dembrane.md")
+    try:
+        with open(context_path, encoding="utf-8") as context_file:
+            return context_file.read().strip()
+    except OSError:
+        logger.warning("Product context file not found at %s", context_path)
+        return ""
+
+
+PRODUCT_CONTEXT = _load_product_context()
+
+
+def _build_system_prompt() -> str:
+    parts = [SYSTEM_PROMPT]
+    if PRODUCT_CONTEXT:
+        parts.append("## Product knowledge (dembrane)\n\n" + PRODUCT_CONTEXT)
+    return "\n\n".join(parts)
+
+
+EFFECTIVE_SYSTEM_PROMPT = _build_system_prompt()
 
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 4
 AUTOMATIC_NUDGE_TEMPLATE = (
@@ -583,6 +621,47 @@ def create_agent_graph(
         }
 
     @tool
+    async def proposeProjectUpdate(
+        name: str | None = None,
+        context: str | None = None,
+        reason: str = "",
+    ) -> dict[str, Any]:
+        """Propose an edit to the current project's name and/or context.
+
+        This does NOT apply the change. It produces a proposal that the host
+        reviews and approves in the UI; the host's browser applies it. Pass only
+        the fields you want to change. `reason` is a short note shown to the host.
+        """
+        edits: list[dict[str, Any]] = []
+        if isinstance(name, str) and name.strip():
+            edits.append(
+                {"field": "name", "label": "Project name", "proposed_value": name.strip()}
+            )
+        if isinstance(context, str) and context.strip():
+            edits.append(
+                {
+                    "field": "context",
+                    "label": "Project context",
+                    "proposed_value": context.strip(),
+                }
+            )
+
+        if not edits:
+            return {
+                "kind": "proposal_error",
+                "message": "No fields provided. Pass name and/or context to propose a change.",
+            }
+
+        return {
+            "kind": "proposal",
+            "proposal_type": "update_project",
+            "target": {"project_id": project_id},
+            "title": "Update project settings",
+            "reason": reason.strip(),
+            "edits": edits,
+        }
+
+    @tool
     async def sendProgressUpdate(update: str, next_steps: str = "") -> dict[str, Any]:
         """Emit a user-visible progress update without concluding the run."""
         normalized_update = update.strip()
@@ -603,6 +682,7 @@ def create_agent_graph(
         listConvoSummary,
         listConvoFullTranscript,
         grepConvoSnippets,
+        proposeProjectUpdate,
         sendProgressUpdate,
     ]
     configured_llm = llm or _build_llm()
@@ -621,7 +701,7 @@ def create_agent_graph(
         messages = state.get("messages", [])
         # Build invocation list with system prompt, but don't persist duplicates
         if not messages or not isinstance(messages[0], SystemMessage):
-            invocation_messages = [SystemMessage(content=SYSTEM_PROMPT)] + messages
+            invocation_messages = [SystemMessage(content=EFFECTIVE_SYSTEM_PROMPT)] + messages
         else:
             invocation_messages = list(messages)
 
