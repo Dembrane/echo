@@ -659,7 +659,6 @@ async def create_workspace(
             "id": ws_id,
             "org_id": org_id,
             "name": body.name.strip(),
-            "tier": "pilot",
             "visibility": visibility,
             "is_default": False,
             "created_by": app_user_id,

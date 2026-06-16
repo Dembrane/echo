@@ -595,7 +595,6 @@ async def complete_onboarding(
                     "org_id": org_id,
                     "name": "Default",
                     "is_default": True,
-                    "tier": "free",
                     "created_by": app_user_id,
                     "billing_account_id": account_id,
                 },
