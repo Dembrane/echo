@@ -422,6 +422,72 @@ function DiscountEditor({
 }
 
 /**
+ * Live staff action: grant a comped one-month Changemaker reverse trial on the
+ * row's org billing account. Auto-reverts to Free at expiry (expiry cron).
+ */
+function GrantTrialControl({ orgId }: { orgId: string }) {
+	const queryClient = useQueryClient();
+	const mutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/orgs/${orgId}/grant-trial`,
+				{
+					body: JSON.stringify({ months: 1, tier: "changemaker" }),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "admin", "billing-rollup"],
+			});
+		},
+	});
+	return (
+		<Paper withBorder radius="sm" p="sm">
+			<Group justify="space-between" wrap="nowrap" align="center">
+				<Stack gap={0} style={{ minWidth: 0 }}>
+					<Text size="sm" fw={500}>
+						<Trans>Grant Changemaker trial</Trans>
+					</Text>
+					<Text size="xs" c="dimmed">
+						<Trans>
+							One month of Changemaker on this org, comped. Auto-reverts to
+							Free at expiry.
+						</Trans>
+					</Text>
+					{mutation.isError && (
+						<Text size="xs" c="red">
+							{(mutation.error as Error).message}
+						</Text>
+					)}
+					{mutation.isSuccess && (
+						<Text size="xs" c="primary">
+							<Trans>Trial granted</Trans>
+						</Text>
+					)}
+				</Stack>
+				<Button
+					size="xs"
+					variant="light"
+					loading={mutation.isPending}
+					onClick={() => mutation.mutate()}
+				>
+					<Trans>Grant</Trans>
+				</Button>
+			</Group>
+		</Paper>
+	);
+}
+
+/**
  * Actions modal for a workspace row. Includes the discount editor
  * (live, staff-only) and mocked placeholders for future actions.
  */
@@ -490,6 +556,10 @@ function WorkspaceActionsModal({
 					initialType={row.type_discount ?? null}
 					initialPercent={row.percent_discount ?? null}
 				/>
+
+				<Divider my={4} />
+
+				<GrantTrialControl orgId={row.org_id} />
 
 				<Divider my={4} />
 				{actions.map((a) => (
