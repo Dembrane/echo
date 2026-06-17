@@ -31,10 +31,10 @@ export function LockedTranscriptOverlay({
 		<Box
 			style={{
 				alignItems: "center",
-				background:
-					"repeating-linear-gradient(45deg, rgba(65,105,225,0.04) 0 8px, rgba(65,105,225,0.08) 8px 16px)",
-				borderRadius: 8,
-				display: "flex",
+					background:
+						"repeating-linear-gradient(45deg, rgba(65,105,225,0.04) 0 8px, rgba(65,105,225,0.08) 8px 16px)",
+					borderRadius: 0,
+					display: "flex",
 				justifyContent: "center",
 				minHeight: compact ? 48 : 120,
 			}}

@@ -346,11 +346,11 @@ function VersionItem({
 			py={8}
 			style={{
 				backgroundColor: isActive ? "var(--mantine-color-gray-1)" : undefined,
-				borderLeft: isActive
-					? "3px solid var(--mantine-color-primary-6)"
-					: "3px solid transparent",
-				borderRadius: 8,
-			}}
+					borderLeft: isActive
+						? "3px solid var(--mantine-color-primary-6)"
+						: "3px solid transparent",
+					borderRadius: 0,
+				}}
 			w="100%"
 		>
 			<Stack gap={2} style={{ minWidth: 0 }}>
@@ -450,10 +450,10 @@ function ScrollableSidebar({ children }: { children: React.ReactNode }) {
 			{showFade && (
 				<Box
 					style={{
-						background:
-							"linear-gradient(to top, var(--mantine-color-white), transparent)",
-						borderRadius: "0 0 8px 8px",
-						bottom: 0,
+							background:
+								"linear-gradient(to top, var(--mantine-color-white), transparent)",
+							borderRadius: 0,
+							bottom: 0,
 						height: 24,
 						left: 0,
 						pointerEvents: "none",

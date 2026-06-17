@@ -322,14 +322,14 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 									</>
 								)}
 							</Text>
-							<Box
-								style={{
-									display: "flex",
-									height: 10,
-									borderRadius: 4,
-									overflow: "hidden",
-									background: "var(--mantine-color-gray-1)",
-								}}
+								<Box
+									style={{
+										display: "flex",
+										height: 10,
+										borderRadius: 0,
+										overflow: "hidden",
+										background: "var(--mantine-color-gray-1)",
+									}}
 							>
 								{convUsage.active.map((row) => {
 									const pct = (row.hours / convUsage.total_hours) * 100;
@@ -396,13 +396,13 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 							</Box>
 							<Group gap={14} wrap="wrap">
 								<Group gap={6} wrap="nowrap">
-									<Box
-										style={{
-											width: 8,
-											height: 8,
-											borderRadius: 2,
-											background: "var(--mantine-color-blue-5)",
-										}}
+										<Box
+											style={{
+												width: 8,
+												height: 8,
+												borderRadius: 0,
+												background: "var(--mantine-color-blue-5)",
+											}}
 									/>
 									<Text size="xs" c="dimmed">
 										<Trans>Active · {formatDurationFromHours(convUsage.active_hours)}</Trans>
@@ -410,13 +410,13 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 								</Group>
 								{convUsage.deleted_hours > 0 && (
 									<Group gap={6} wrap="nowrap">
-										<Box
-											style={{
-												width: 8,
-												height: 8,
-												borderRadius: 2,
-												background: "var(--mantine-color-gray-5)",
-											}}
+											<Box
+												style={{
+													width: 8,
+													height: 8,
+													borderRadius: 0,
+													background: "var(--mantine-color-gray-5)",
+												}}
 										/>
 										<Text size="xs" c="dimmed">
 											<Trans>Deleted · {formatDurationFromHours(convUsage.deleted_hours)}</Trans>

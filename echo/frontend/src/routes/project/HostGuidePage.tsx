@@ -610,7 +610,7 @@ const StepRow = ({
 					}}
 					style={{
 						backgroundColor: hovered ? "rgba(65,105,225,0.04)" : "transparent",
-						borderRadius: "4px",
+						borderRadius: "0px",
 						color: colors.graphite,
 						cursor: isEditing ? "text" : "pointer",
 						flex: 1,
@@ -783,7 +783,7 @@ const TipRow = ({
 					}}
 					style={{
 						backgroundColor: hovered ? "rgba(65,105,225,0.04)" : "transparent",
-						borderRadius: "4px",
+						borderRadius: "0px",
 						color: colors.graphite,
 						cursor: isEditing ? "text" : "pointer",
 						flex: 1,
@@ -1490,9 +1490,9 @@ export const HostGuidePage = () => {
 							backgroundColor: showLiveRecordings
 								? "rgba(30, 255, 161, 0.2)"
 								: "rgba(45, 45, 44, 0.1)",
-							border: "none",
-							borderRadius: "4px",
-							color: showLiveRecordings
+															border: "none",
+															borderRadius: "0px",
+															color: showLiveRecordings
 								? colors.graphite
 								: "rgba(45, 45, 44, 0.5)",
 							cursor: "pointer",
@@ -1646,9 +1646,9 @@ export const HostGuidePage = () => {
 							<div
 								style={{
 									alignItems: "center",
-									backgroundColor: "#f0eeeb",
-									borderRadius: "8px",
-									display: "flex",
+																			backgroundColor: "#f0eeeb",
+																			borderRadius: "0px",
+																			display: "flex",
 									height: "200px",
 									justifyContent: "center",
 									width: "200px",
@@ -1690,10 +1690,10 @@ export const HostGuidePage = () => {
 				<div
 					className="no-print"
 					style={{
-						backgroundColor: colors.parchment,
-						border: "1px solid rgba(45, 45, 44, 0.1)",
-						borderRadius: "4px",
-						boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+													backgroundColor: colors.parchment,
+													border: "1px solid rgba(45, 45, 44, 0.1)",
+													borderRadius: "0px",
+													boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
 						left: contextMenu.x,
 						padding: "4px 0",
 						position: "fixed",

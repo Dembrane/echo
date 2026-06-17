@@ -124,17 +124,17 @@ export const ReportFocusSelector = ({
 				{options.map((option) => {
 					const isActive = selectedIds.has(option.id);
 					return (
-						<UnstyledButton
-							key={option.id}
-							onClick={() => handleTogglePreset(option.id)}
-							disabled={atLimit && !isActive}
-							px="xs"
-							py={4}
-							style={{
-								borderRadius: 20,
-								border: isActive
-									? "1.5px solid var(--mantine-color-primary-5)"
-									: "1.5px solid var(--mantine-color-gray-3)",
+							<UnstyledButton
+								key={option.id}
+								onClick={() => handleTogglePreset(option.id)}
+								disabled={atLimit && !isActive}
+								px="xs"
+								py={4}
+								style={{
+									borderRadius: 0,
+									border: isActive
+										? "1.5px solid var(--mantine-color-primary-5)"
+										: "1.5px solid var(--mantine-color-gray-3)",
 								backgroundColor: isActive
 									? "var(--mantine-color-primary-0)"
 									: undefined,
@@ -159,14 +159,14 @@ export const ReportFocusSelector = ({
 					);
 				})}
 
-				{/* Write your own */}
-				<UnstyledButton
-					onClick={handleToggleCustom}
-					px="sm"
-					py={6}
-					style={{
-						borderRadius: 20,
-						border: showCustom
+					{/* Write your own */}
+					<UnstyledButton
+						onClick={handleToggleCustom}
+						px="sm"
+						py={6}
+						style={{
+							borderRadius: 0,
+							border: showCustom
 							? "1.5px dashed var(--mantine-color-primary-5)"
 							: "1.5px dashed var(--mantine-color-gray-5)",
 						transition: "all 0.15s ease",

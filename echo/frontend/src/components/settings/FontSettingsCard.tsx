@@ -106,12 +106,12 @@ export const FontSettingsCard = () => {
 										</Text>
 									</Stack>
 									{/* Color scheme preview */}
-									<div
-										style={{
-											backgroundColor: option.colors.bg,
-											border: `1px solid ${option.colors.text}20`,
-											borderRadius: 6,
-											color: option.colors.text,
+										<div
+											style={{
+												backgroundColor: option.colors.bg,
+												border: `1px solid ${option.colors.text}20`,
+												borderRadius: 0,
+												color: option.colors.text,
 											fontFamily:
 												option.value === "dm-sans"
 													? "'DM Sans Variable', sans-serif"

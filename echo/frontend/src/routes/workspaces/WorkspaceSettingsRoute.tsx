@@ -1634,13 +1634,13 @@ function PrivacyAndDefaultsSection({
 										)}
 									</Stack>
 
-									<Box
-										p="sm"
-										style={{
-											background: "rgba(65, 105, 225, 0.06)",
-											border: "1px solid rgba(65, 105, 225, 0.2)",
-											borderRadius: 8,
-										}}
+										<Box
+											p="sm"
+											style={{
+												background: "rgba(65, 105, 225, 0.06)",
+												border: "1px solid rgba(65, 105, 225, 0.2)",
+												borderRadius: 0,
+											}}
 									>
 										<Stack align="center" gap="xs" maw={260} ta="center">
 											<IconLock

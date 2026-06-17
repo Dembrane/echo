@@ -111,11 +111,11 @@ export function FeatureGate({
 				onClick={openModal}
 				style={{
 					alignItems: "center",
-					// Soft hatched background — subtle, not alarming.
-					background:
-						"repeating-linear-gradient(45deg, rgba(65,105,225,0.04) 0 8px, rgba(65,105,225,0.08) 8px 16px)",
-					borderRadius: 8,
-					cursor: "pointer",
+						// Soft hatched background — subtle, not alarming.
+						background:
+							"repeating-linear-gradient(45deg, rgba(65,105,225,0.04) 0 8px, rgba(65,105,225,0.08) 8px 16px)",
+						borderRadius: 0,
+						cursor: "pointer",
 					display: "flex",
 					justifyContent: "center",
 					minHeight: 160,

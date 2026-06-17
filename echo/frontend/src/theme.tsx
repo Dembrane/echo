@@ -390,17 +390,18 @@ export const theme = createTheme({
 			primaryColor: "primary",
 			defaultRadius: "none",
 			// Updated to match Tailwind radius
-	radius: {
-		"2xl": "1rem",
-		"3xl": "1.5rem",
-		DEFAULT: "0.25rem",
-		full: "9999px",
-		lg: "0.5rem",
-		md: "0.375rem",
-		none: "0px",
-		sm: "0.125rem",
-		xl: "0.75rem",
-	},
+		radius: {
+			"2xl": "0px",
+			"3xl": "0px",
+			DEFAULT: "0px",
+			full: "9999px",
+			lg: "0px",
+			md: "0px",
+			none: "0px",
+			sm: "0px",
+			xl: "0px",
+			xs: "0px",
+		},
 
 	// Updated to match Tailwind shadows
 	shadows: {

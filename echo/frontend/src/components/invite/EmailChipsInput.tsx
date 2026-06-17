@@ -136,13 +136,13 @@ export function EmailChipsInput({
 
 	return (
 		<Stack gap={6} data-testid={dataTestId}>
-			<Box
-				p={6}
-				style={{
-					borderRadius: 6,
-					border: "1px solid var(--mantine-color-gray-3)",
-					minHeight: 44,
-				}}
+				<Box
+					p={6}
+					style={{
+						borderRadius: 0,
+						border: "1px solid var(--mantine-color-gray-3)",
+						minHeight: 44,
+					}}
 			>
 				<Group gap={6} wrap="wrap">
 					{chips.map((chip) => (
@@ -219,11 +219,11 @@ function EmailChipPill({
 			wrap="nowrap"
 			px={8}
 			py={2}
-			style={{
-				backgroundColor: tone.bg,
-				border: `1px solid ${tone.border}`,
-				borderRadius: 999,
-			}}
+				style={{
+					backgroundColor: tone.bg,
+					border: `1px solid ${tone.border}`,
+					borderRadius: 0,
+				}}
 			title={title}
 		>
 			<Text size="xs" c={tone.fg}>

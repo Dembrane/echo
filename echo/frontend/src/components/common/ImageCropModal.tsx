@@ -108,10 +108,10 @@ export const ImageCropModal = ({
 					style={{
 						position: "relative",
 						width: "100%",
-						height: 350,
-						background: "#333",
-						borderRadius: 8,
-						overflow: "hidden",
+													height: 350,
+													background: "#333",
+													borderRadius: 0,
+													overflow: "hidden",
 					}}
 				>
 					<Cropper
