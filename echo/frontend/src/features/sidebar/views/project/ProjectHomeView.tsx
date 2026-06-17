@@ -1,15 +1,16 @@
 import { Trans } from "@lingui/react/macro";
-import {
-	AppWindowIcon,
-	BookOpenIcon,
-	BroadcastIcon,
-	ChatCircleDotsIcon,
-	ChatCircleTextIcon,
-	FileTextIcon,
-	GearIcon,
-	GraphIcon,
-	PaintBrushIcon,
-} from "@phosphor-icons/react";
+	import {
+		AppWindowIcon,
+		BookOpenIcon,
+		BroadcastIcon,
+		ChatCircleDotsIcon,
+		ChatCircleTextIcon,
+		FileTextIcon,
+		GearIcon,
+		GraphIcon,
+		PaintBrushIcon,
+		UsersThreeIcon,
+	} from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useProjectChatsCountQuery } from "@/components/chat/hooks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
@@ -90,20 +91,25 @@ export const ProjectHomeView = () => {
 				label={<Trans>Report</Trans>}
 				icon={FileTextIcon}
 			/>
-			<NavItem
-				to={`${base}/conversations`}
-				label={<Trans>Conversations</Trans>}
-				icon={ChatCircleTextIcon}
-				badge={conversationsCountQuery.data || undefined}
-			/>
-			{/* Settings is the last clickable item, directly after the rest of
-			    the project items. */}
-			<NavItem
-				to={`${base}/overview`}
-				label={<Trans>Settings</Trans>}
-				icon={GearIcon}
-				pushes
-			/>
+				<NavItem
+					to={`${base}/conversations`}
+					label={<Trans>Conversations</Trans>}
+					icon={ChatCircleTextIcon}
+					badge={conversationsCountQuery.data || undefined}
+				/>
+				<NavItem
+					to={`${base}/access`}
+					label={<Trans>Access & sharing</Trans>}
+					icon={UsersThreeIcon}
+				/>
+				{/* Settings is the last clickable item, directly after the rest of
+				    the project items. */}
+				<NavItem
+					to={`${base}/overview`}
+					label={<Trans>Settings</Trans>}
+					icon={GearIcon}
+					pushes
+				/>
 		</nav>
 	);
 };

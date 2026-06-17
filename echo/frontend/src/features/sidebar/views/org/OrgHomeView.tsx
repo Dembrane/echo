@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { AppWindowIcon, FolderIcon, Folders, GearIcon } from "@phosphor-icons/react";
+import { AppWindowIcon, FolderIcon, Folders, GearIcon, UsersIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useParams } from "react-router";
@@ -117,20 +117,25 @@ export const OrgHomeView = () => {
 
 			{!isExternal && (
 				<>
-					<NavItem
-						to={`${base}/overview`}
-						label={<Trans>Overview</Trans>}
-						icon={AppWindowIcon}
-						end
-					/>
-					{/* Settings is the last clickable item under the org title,
-					    directly below Overview and above the Workspaces section. */}
-					<NavItem
-						to={`${base}/settings/general`}
-						label={<Trans>Settings</Trans>}
-						icon={GearIcon}
-						pushes
-					/>
+						<NavItem
+							to={`${base}/overview`}
+							label={<Trans>Overview</Trans>}
+							icon={AppWindowIcon}
+							end
+						/>
+						<NavItem
+							to={`${base}/settings/members`}
+							label={<Trans>Members</Trans>}
+							icon={UsersIcon}
+						/>
+						{/* Settings is the last clickable item under the org title,
+						    directly below Overview and above the Workspaces section. */}
+						<NavItem
+							to={`${base}/settings/general`}
+							label={<Trans>Settings</Trans>}
+							icon={GearIcon}
+							pushes
+						/>
 				</>
 			)}
 
