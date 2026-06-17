@@ -17,8 +17,8 @@ from dembrane.api.v2.bff.conversations import (
 
 # ── is_conversation_locked ───────────────────────────────────────────
 
-TIERS_OVERAGE = ["pioneer", "innovator", "changemaker", "guardian"]
-TIERS_NO_OVERAGE = ["free", "pilot"]
+TIERS_OVERAGE = ["innovator", "changemaker", "guardian"]
+TIERS_NO_OVERAGE = ["free"]
 ALL_TIERS = TIERS_NO_OVERAGE + TIERS_OVERAGE
 
 
@@ -61,10 +61,10 @@ class TestUpgradeDowngradeScenarios:
         assert is_conversation_locked(conv, "free") is True
         assert is_conversation_locked(conv, "innovator") is False
 
-    def test_pilot_to_free_keeps_unlocked_when_not_stamped(self) -> None:
-        """Pilot content stamped is_over_cap=False stays unlocked on free."""
+    def test_innovator_to_free_keeps_unlocked_when_not_stamped(self) -> None:
+        """Content stamped is_over_cap=False stays unlocked on either tier."""
         conv = {"is_over_cap": False}
-        assert is_conversation_locked(conv, "pilot") is False
+        assert is_conversation_locked(conv, "innovator") is False
         assert is_conversation_locked(conv, "free") is False
 
     def test_over_cap_flag_locks_on_non_overage_tier(self) -> None:
@@ -73,7 +73,7 @@ class TestUpgradeDowngradeScenarios:
         clears is_over_cap on all conversations during downgrade so
         pre-downgrade content stays readable."""
         conv_stamped = {"is_over_cap": True}
-        assert is_conversation_locked(conv_stamped, "pioneer") is False
+        assert is_conversation_locked(conv_stamped, "innovator") is False
         assert is_conversation_locked(conv_stamped, "free") is True
 
 
@@ -98,7 +98,7 @@ class TestEnrichConversation:
 
     def test_locked_false_when_tier_allows_overage(self) -> None:
         conv = {"id": "c1", "is_over_cap": True}
-        result = _enrich_conversation(conv, "pioneer")
+        result = _enrich_conversation(conv, "innovator")
         assert result["locked"] is False
         assert "is_over_cap" not in result
 
