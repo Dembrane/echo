@@ -98,15 +98,31 @@ async def get_payment(payment_id: str) -> dict:
     return await _request("GET", f"/payments/{payment_id}")
 
 
-async def list_customer_payments(customer_id: str, *, limit: int = 50) -> list[dict]:
+async def list_customer_payments(
+    customer_id: str, *, limit: int = 50, from_id: Optional[str] = None
+) -> list[dict]:
     """A customer's payments, newest first. Used by the return-sync / reconcile
-    path when a webhook was missed (or no public webhook in dev)."""
-    data = await _request("GET", f"/customers/{customer_id}/payments?limit={limit}")
+    path when a webhook was missed (or no public webhook in dev), and by the
+    in-app invoice list. `from_id` is a payment id cursor for pagination."""
+    path = f"/customers/{customer_id}/payments?limit={limit}"
+    if from_id:
+        path += f"&from={from_id}"
+    data = await _request("GET", path)
     return ((data or {}).get("_embedded") or {}).get("payments") or []
 
 
 def checkout_url(payment: dict) -> Optional[str]:
     return (((payment or {}).get("_links") or {}).get("checkout") or {}).get("href")
+
+
+# ── Mandates (payment method) ────────────────────────────────────────
+
+
+async def list_mandates(customer_id: str) -> list[dict]:
+    """A customer's mandates (their stored payment methods). The newest valid
+    one is what recurring charges use."""
+    data = await _request("GET", f"/customers/{customer_id}/mandates")
+    return ((data or {}).get("_embedded") or {}).get("mandates") or []
 
 
 # ── Subscriptions ────────────────────────────────────────────────────

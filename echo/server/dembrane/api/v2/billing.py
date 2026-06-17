@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import Literal, Optional
 from logging import getLogger
 
-from fastapi import Form, APIRouter, HTTPException
+from fastapi import Form, Query, APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
 from dembrane import billing_service
@@ -91,23 +91,19 @@ async def org_billing(org_id: str, auth: DependencyDirectusSession) -> dict:
     the org has no account yet."""
     await _require_org_billing_access(org_id, auth)
     account_id = await get_org_account_id(org_id)
-    if not account_id:
-        return {
-            "account_id": None,
-            "tier": "free",
-            "status": None,
-            "billing_period": None,
-            "seats": 0,
-        }
+    return {"account_id": account_id}
+
+
+@router.get("/billing-accounts/{account_id}/overview")
+async def billing_overview(account_id: str, auth: DependencyDirectusSession) -> dict:
+    """Everything the billing dashboard needs: plan, seats, next invoice,
+    projected monthly total, payment method."""
     account = await async_directus.get_item("billing_account", account_id)
-    seats = await billing_service.count_account_seats(account_id)
-    return {
-        "account_id": account_id,
-        "tier": (account or {}).get("tier") or "free",
-        "status": (account or {}).get("status"),
-        "billing_period": (account or {}).get("billing_period"),
-        "seats": seats,
-    }
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
+    await _require_billing_access(account, auth)
+    overview = await billing_service.get_billing_overview(account_id)
+    return {"account_id": account_id, **overview}
 
 
 @router.post("/billing-accounts/{account_id}/checkout")
@@ -147,13 +143,18 @@ async def sync_account(account_id: str, auth: DependencyDirectusSession) -> dict
 
 
 @router.get("/billing-accounts/{account_id}/invoices")
-async def list_invoices(account_id: str, auth: DependencyDirectusSession) -> dict:
-    """Payment history for the account (in-app invoice list)."""
+async def list_invoices(
+    account_id: str,
+    auth: DependencyDirectusSession,
+    limit: int = Query(default=20, ge=1, le=100),
+    cursor: Optional[str] = Query(default=None, description="Payment-id cursor for load-more."),
+) -> dict:
+    """Paginated payment history for the account (in-app invoice list)."""
     account = await async_directus.get_item("billing_account", account_id)
     if not account or account.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Billing account not found")
     await _require_billing_access(account, auth)
-    return {"invoices": await billing_service.list_account_invoices(account_id)}
+    return await billing_service.list_account_invoices(account_id, limit=limit, from_id=cursor)
 
 
 @router.get("/billing-accounts/{account_id}/estimate")
