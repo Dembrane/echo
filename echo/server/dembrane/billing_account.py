@@ -34,6 +34,7 @@ BILLING_FIELDS = (
     "percent_discount",
     "type_discount",
     "billing_period",
+    "status",
 )
 
 
