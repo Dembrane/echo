@@ -1240,7 +1240,7 @@ msgstr ""
 #~ msgid "All templates"
 #~ msgstr "Alle Vorlagen"
 
-#: src/components/chat/TemplatesModal.tsx:842
+#: src/components/chat/TemplatesModal.tsx:844
 msgid "All Templates"
 msgstr "Alle Vorlagen"
 
@@ -1513,7 +1513,7 @@ msgstr "Bist du sicher, dass du diesen Bericht löschen möchtest? Diese Aktion 
 msgid "Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it."
 msgstr "Sind Sie sicher, dass Sie diesen Tag löschen möchten? Dies wird den Tag aus den bereits enthaltenen Gesprächen entfernen."
 
-#: src/components/chat/TemplatesModal.tsx:431
+#: src/components/chat/TemplatesModal.tsx:430
 msgid "Are you sure you want to delete this template? This cannot be undone."
 msgstr "Möchten Sie diese Vorlage wirklich löschen? Dies kann nicht rückgängig gemacht werden."
 
@@ -1793,7 +1793,7 @@ msgstr ""
 msgid "Back to Selection"
 msgstr "Zurück zur Auswahl"
 
-#: src/components/chat/TemplatesModal.tsx:454
+#: src/components/chat/TemplatesModal.tsx:456
 msgid "Back to templates"
 msgstr "Zurück zu Vorlagen"
 
@@ -2432,7 +2432,7 @@ msgstr "Kontext hinzugefügt:"
 #~ msgid "Context limit reached"
 #~ msgstr "Kontextlimit erreicht"
 
-#: src/components/chat/TemplatesModal.tsx:714
+#: src/components/chat/TemplatesModal.tsx:716
 msgid "Contextual suggestions"
 msgstr "Kontextbezogene Vorschläge"
 
@@ -2560,7 +2560,7 @@ msgstr "Von dem ursprünglichen Gespräch kopiert"
 msgid "Copied!"
 msgstr "Kopiert!"
 
-#: src/components/chat/TemplatesModal.tsx:285
+#: src/components/chat/TemplatesModal.tsx:284
 msgid "copy"
 msgstr "Kopie"
 
@@ -2623,6 +2623,14 @@ msgstr "Kopieren..."
 msgid "Could not copy to clipboard. Please try again."
 msgstr "Konnte nicht in die Zwischenablage kopiert werden. Bitte versuchen Sie es erneut."
 
+#: src/components/chat/hooks/useUserTemplates.ts:55
+msgid "Could not create template"
+msgstr ""
+
+#: src/components/chat/hooks/useUserTemplates.ts:100
+msgid "Could not delete template"
+msgstr ""
+
 #: src/routes/admin/AdminSettingsRoute.tsx:1282
 msgid "Could not load the rollup. Check auth and backend logs."
 msgstr ""
@@ -2633,6 +2641,10 @@ msgstr ""
 
 #: src/components/members/PendingInvitesSection.tsx:85
 msgid "Could not send the invite email. Check email configuration."
+msgstr ""
+
+#: src/components/chat/hooks/useUserTemplates.ts:79
+msgid "Could not update template"
 msgstr ""
 
 #: src/components/project/ProjectSharingModal.tsx:70
@@ -2766,7 +2778,7 @@ msgstr ""
 msgid "Create Report"
 msgstr "Bericht erstellen"
 
-#: src/components/chat/TemplatesModal.tsx:761
+#: src/components/chat/TemplatesModal.tsx:763
 msgid "Create template"
 msgstr "Vorlage erstellen"
 
@@ -2975,9 +2987,9 @@ msgstr "Multistufige Analyse mit live Werkzeugausführung delegieren"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:652
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:691
 #: src/components/conversation/ConversationDangerZone.tsx:96
-#: src/components/chat/TemplatesModal.tsx:432
-#: src/components/chat/TemplatesModal.tsx:516
-#: src/components/chat/TemplatesModal.tsx:631
+#: src/components/chat/TemplatesModal.tsx:431
+#: src/components/chat/TemplatesModal.tsx:518
+#: src/components/chat/TemplatesModal.tsx:633
 #: src/components/chat/ChatAccordion.tsx:179
 msgid "Delete"
 msgstr "Löschen"
@@ -3035,7 +3047,7 @@ msgstr "Bericht löschen"
 msgid "Delete tag"
 msgstr "Tag löschen"
 
-#: src/components/chat/TemplatesModal.tsx:429
+#: src/components/chat/TemplatesModal.tsx:428
 msgid "Delete template"
 msgstr "Vorlage löschen"
 
@@ -3347,12 +3359,12 @@ msgid "Drag audio files here or click to select files"
 msgstr "Ziehen Sie Audio-Dateien hier oder klicken Sie, um Dateien auszuwählen"
 
 #: src/routes/project/HostGuidePage.tsx:1484
-#: src/components/chat/TemplatesModal.tsx:566
+#: src/components/chat/TemplatesModal.tsx:568
 msgid "Drag to reorder"
 msgstr "Ziehen, um umzusortieren"
 
-#: src/components/chat/TemplatesModal.tsx:591
-#: src/components/chat/TemplatesModal.tsx:619
+#: src/components/chat/TemplatesModal.tsx:593
+#: src/components/chat/TemplatesModal.tsx:621
 msgid "Duplicate"
 msgstr "Duplizieren"
 
@@ -3399,7 +3411,7 @@ msgstr ""
 #~ msgid "e.g. tomorrow at 9:00"
 #~ msgstr "z.B. morgen um 9:00"
 
-#: src/components/chat/TemplatesModal.tsx:463
+#: src/components/chat/TemplatesModal.tsx:464
 msgid "e.g. Weekly stakeholder digest"
 msgstr "z.B. Wöchentliche Stakeholder-Zusammenfassung"
 
@@ -3436,7 +3448,7 @@ msgstr "ECHO"
 #~ msgstr "bearbeiten"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:647
-#: src/components/chat/TemplatesModal.tsx:606
+#: src/components/chat/TemplatesModal.tsx:608
 msgid "Edit"
 msgstr "Bearbeiten"
 
@@ -5603,7 +5615,7 @@ msgstr "Muss mindestens 10 Minuten in der Zukunft liegen"
 msgid "My access"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:856
+#: src/components/chat/TemplatesModal.tsx:858
 msgid "My templates"
 msgstr "Meine Vorlagen"
 
@@ -6058,7 +6070,7 @@ msgstr "Keine Tags gefunden"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "Diesem Projekt wurden noch keine Tags hinzugefügt. Fügen Sie ein Tag über die Texteingabe oben hinzu, um zu beginnen."
 
-#: src/components/chat/TemplatesModal.tsx:871
+#: src/components/chat/TemplatesModal.tsx:873
 msgid "No templates match '{searchQuery}'"
 msgstr "Keine Vorlagen für '{searchQuery}' gefunden"
 
@@ -6554,8 +6566,8 @@ msgstr ""
 #~ msgstr ""
 
 #: src/components/chat/TemplatesModal.tsx:483
-msgid "Organisation templates are visible to everyone in this workspace. Leave off to keep it personal."
-msgstr ""
+#~ msgid "Organisation templates are visible to everyone in this workspace. Leave off to keep it personal."
+#~ msgstr ""
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:546
 msgid "Organisation usage"
@@ -6993,7 +7005,7 @@ msgstr "Wähl den Ansatz, der zu deiner Frage passt"
 msgid "Pilot limit reached"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:668
+#: src/components/chat/TemplatesModal.tsx:670
 msgid "Pin"
 msgstr "Anheften"
 
@@ -7001,7 +7013,7 @@ msgstr "Anheften"
 msgid "Pin project"
 msgstr "Projekt anheften"
 
-#: src/components/chat/TemplatesModal.tsx:826
+#: src/components/chat/TemplatesModal.tsx:828
 msgid "Pin templates here for quick access."
 msgstr "Vorlagen hier für schnellen Zugriff anheften."
 
@@ -7017,7 +7029,7 @@ msgstr "Vorlagen hier für schnellen Zugriff anheften."
 msgid "Pinned"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:667
+#: src/components/chat/TemplatesModal.tsx:669
 msgid "Pinned is full (max 5)"
 msgstr "Angeheftet ist voll (max. 5)"
 
@@ -7025,7 +7037,7 @@ msgstr "Angeheftet ist voll (max. 5)"
 msgid "Pinned projects"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:796
+#: src/components/chat/TemplatesModal.tsx:798
 msgid "Pinned templates"
 msgstr "Angeheftete Vorlagen"
 
@@ -7502,7 +7514,7 @@ msgstr ""
 #~ msgstr "Projekte Startseite"
 
 #: src/components/project/CustomTopicModal.tsx:217
-#: src/components/chat/TemplatesModal.tsx:467
+#: src/components/chat/TemplatesModal.tsx:468
 msgid "Prompt"
 msgstr "Prompt"
 
@@ -8278,7 +8290,7 @@ msgstr "Speichern fehlgeschlagen!"
 #~ msgid "Save Quick Access"
 #~ msgstr "Schnellzugriff speichern"
 
-#: src/components/chat/TemplatesModal.tsx:526
+#: src/components/chat/TemplatesModal.tsx:528
 msgid "Save template"
 msgstr "Vorlage speichern"
 
@@ -8396,7 +8408,7 @@ msgstr ""
 msgid "Search tags"
 msgstr "Tags suchen"
 
-#: src/components/chat/TemplatesModal.tsx:734
+#: src/components/chat/TemplatesModal.tsx:736
 msgid "Search templates..."
 msgstr "Vorlagen suchen..."
 
@@ -8741,8 +8753,8 @@ msgstr ""
 
 #: src/components/chat/TemplatesModal.tsx:480
 #: src/components/chat/TemplatesModal.tsx:496
-msgid "Share with organisation"
-msgstr ""
+#~ msgid "Share with organisation"
+#~ msgstr ""
 
 #: src/components/project/ProjectUsageAndSharing.tsx:513
 msgid "Share with someone"
@@ -8751,6 +8763,11 @@ msgstr ""
 #: src/components/chat/PublishTemplateForm.tsx:87
 #~ msgid "Share with the community"
 #~ msgstr "Mit der Community teilen"
+
+#: src/components/chat/TemplatesModal.tsx:482
+#: src/components/chat/TemplatesModal.tsx:498
+msgid "Share with workspace"
+msgstr ""
 
 #: src/routes/participant/ParticipantPostConversation.tsx:154
 msgid "Share your details here"
@@ -9187,7 +9204,7 @@ msgstr ""
 msgid "Success"
 msgstr "Erfolg"
 
-#: src/components/chat/TemplatesModal.tsx:724
+#: src/components/chat/TemplatesModal.tsx:726
 msgid "Suggest dynamic suggestions based on your conversation."
 msgstr "Dynamische Vorschläge basierend auf Ihrem Gespräch vorschlagen."
 
@@ -9386,6 +9403,14 @@ msgstr ""
 msgid "Template applied"
 msgstr "Template übernommen"
 
+#: src/components/chat/hooks/useUserTemplates.ts:52
+msgid "Template created"
+msgstr ""
+
+#: src/components/chat/hooks/useUserTemplates.ts:97
+msgid "Template deleted"
+msgstr ""
+
 #: src/components/chat/TemplatesModal.tsx:460
 msgid "Template name"
 msgstr "Vorlagenname"
@@ -9394,7 +9419,11 @@ msgstr "Vorlagenname"
 #~ msgid "Template prompt content..."
 #~ msgstr "Vorlagen-Prompt-Inhalt..."
 
-#: src/components/chat/TemplatesModal.tsx:417
+#: src/components/chat/hooks/useUserTemplates.ts:76
+msgid "Template updated"
+msgstr ""
+
+#: src/components/chat/TemplatesModal.tsx:416
 msgid "Templates"
 msgstr "Vorlagen"
 
@@ -9860,7 +9889,7 @@ msgstr "Tipp"
 msgid "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 msgstr "Tipp: Verwenden Sie den Play-Button (▶), um einen Test-Payload an Ihren Webhook zu senden und zu überprüfen, ob er korrekt funktioniert."
 
-#: src/components/chat/TemplatesModal.tsx:503
+#: src/components/chat/TemplatesModal.tsx:505
 msgid "Tip: You can also create a template from any chat message you send, or duplicate an existing template."
 msgstr "Tipp: Sie können auch eine Vorlage aus jeder gesendeten Chat-Nachricht erstellen oder eine bestehende Vorlage duplizieren."
 
@@ -10206,7 +10235,7 @@ msgstr ""
 msgid "Unlimited seats"
 msgstr ""
 
-#: src/components/chat/TemplatesModal.tsx:650
+#: src/components/chat/TemplatesModal.tsx:652
 msgid "Unpin"
 msgstr "Loslösen"
 
@@ -10672,6 +10701,10 @@ msgstr ""
 msgid "Visible to everyone in this workspace"
 msgstr ""
 
+#: src/components/chat/TemplatesModal.tsx:485
+msgid "Visible to everyone in this workspace. Leave off to keep it personal."
+msgstr ""
+
 #~ msgid "Wait {0}:{1}"
 #~ msgstr "Warten Sie {0}:{1}"
 
@@ -10951,7 +10984,7 @@ msgstr "Was möchten Sie verifizieren?"
 msgid "What patterns emerge from the data?"
 msgstr "Welche Muster ergeben sich aus den Daten?"
 
-#: src/components/chat/TemplatesModal.tsx:470
+#: src/components/chat/TemplatesModal.tsx:472
 msgid "What should ECHO analyse or generate from the conversations?"
 msgstr "Was soll ECHO aus den Gesprächen analysieren oder generieren?"
 

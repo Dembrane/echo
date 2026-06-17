@@ -1,0 +1,46 @@
+{
+  "collection": "prompt_template",
+  "field": "workspace_id",
+  "type": "uuid",
+  "meta": {
+    "collection": "prompt_template",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "workspace_id",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown-m2o",
+    "note": "Set only for scope='workspace' templates.",
+    "options": null,
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 15,
+    "special": [
+      "m2o"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "half"
+  },
+  "schema": {
+    "name": "workspace_id",
+    "table": "prompt_template",
+    "data_type": "uuid",
+    "default_value": null,
+    "max_length": null,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": "workspace",
+    "foreign_key_column": "id"
+  }
+}
