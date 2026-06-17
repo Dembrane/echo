@@ -146,6 +146,16 @@ async def sync_account(account_id: str, auth: DependencyDirectusSession) -> dict
     return {"status": status}
 
 
+@router.get("/billing-accounts/{account_id}/invoices")
+async def list_invoices(account_id: str, auth: DependencyDirectusSession) -> dict:
+    """Payment history for the account (in-app invoice list)."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
+    await _require_billing_access(account, auth)
+    return {"invoices": await billing_service.list_account_invoices(account_id)}
+
+
 @router.get("/billing-accounts/{account_id}/estimate")
 async def estimate_cost(account_id: str, auth: DependencyDirectusSession) -> dict:
     """Per-tier cost preview at the account's current seat count (cost-to-move)."""

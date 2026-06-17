@@ -74,6 +74,33 @@ def _plan_description(tier: str, seats: int, billing_period: str) -> str:
     return f"dembrane {label} plan. {seat_txt}, {cadence}, {renews}. Cancel anytime."
 
 
+async def list_account_invoices(account_id: str) -> list[dict]:
+    """Payment history for the account's Mollie customer, newest first.
+
+    Mollie has no customer-facing portal, so this is the in-app invoice list:
+    each consent + recurring charge, with date / amount / status. Returns []
+    when there's no customer yet."""
+    account = await async_directus.get_item("billing_account", account_id)
+    customer_id = (account or {}).get("mollie_customer_id")
+    if not customer_id:
+        return []
+    payments = await mollie.list_customer_payments(customer_id)
+    out: list[dict] = []
+    for p in payments:
+        amt = p.get("amount") or {}
+        out.append(
+            {
+                "id": p.get("id"),
+                "created_at": p.get("createdAt"),
+                "amount": amt.get("value"),
+                "currency": amt.get("currency"),
+                "status": p.get("status"),
+                "description": p.get("description") or "",
+            }
+        )
+    return out
+
+
 async def estimate_account_cost(account_id: str) -> dict:
     """What each payable tier would cost the account at its current seat count.
 

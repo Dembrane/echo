@@ -111,6 +111,56 @@ class TestCancelSubscription:
         mock_directus.update_item.assert_not_called()
 
 
+class TestListAccountInvoices:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    async def test_maps_all_payment_statuses(self, mock_mollie, mock_directus):
+        from dembrane.billing_service import list_account_invoices
+
+        mock_directus.get_item = AsyncMock(
+            return_value={"id": "acc-1", "mollie_customer_id": "cst_1"}
+        )
+        mock_mollie.list_customer_payments = AsyncMock(
+            return_value=[
+                {
+                    "id": "tr_1",
+                    "createdAt": "2026-06-17T09:00:00+00:00",
+                    "amount": {"value": "900.00", "currency": "EUR"},
+                    "status": "paid",
+                    "description": "dembrane Changemaker plan.",
+                },
+                {
+                    "id": "tr_2",
+                    "createdAt": "2026-05-17T09:00:00+00:00",
+                    "amount": {"value": "900.00", "currency": "EUR"},
+                    "status": "canceled",
+                    "description": "dembrane Changemaker plan.",
+                },
+            ]
+        )
+
+        out = await list_account_invoices("acc-1")
+
+        assert [i["status"] for i in out] == ["paid", "canceled"]
+        assert out[0]["amount"] == "900.00"
+        assert out[0]["currency"] == "EUR"
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    async def test_no_customer_returns_empty(self, mock_mollie, mock_directus):
+        from dembrane.billing_service import list_account_invoices
+
+        mock_directus.get_item = AsyncMock(return_value={"id": "acc-1"})
+        mock_mollie.list_customer_payments = AsyncMock()
+
+        out = await list_account_invoices("acc-1")
+
+        assert out == []
+        mock_mollie.list_customer_payments.assert_not_called()
+
+
 class TestEstimateAccountCost:
     @pytest.mark.asyncio
     @patch("dembrane.billing_service.count_account_seats", new_callable=AsyncMock)

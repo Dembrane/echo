@@ -19,6 +19,7 @@ import {
 	capacityShortFor,
 	fetchTierCapacities,
 	isComingSoon,
+	isNewTier,
 	isTier,
 	MONTHLY_BILLING_PREMIUM_PCT,
 	pricingForBillingPeriod,
@@ -32,9 +33,8 @@ import classes from "./tier-pricing-cards.module.css";
 
 function buildCardData(cap: TierCapacity, billingPeriod: BillingPeriod) {
 	const specs: string[] = [];
-	if (cap.included_seats == null) {
-		specs.push(t`Unlimited seats`);
-	} else {
+	// No "unlimited seats" line — billing is per user, so seats aren't a cap.
+	if (cap.included_seats != null) {
 		specs.push(t`${cap.included_seats} seats included`);
 	}
 	if (cap.included_hours == null) {
@@ -142,6 +142,7 @@ function WideCard({
 	highlighted,
 	highlightLabel,
 	comingSoon,
+	isNew,
 	onSelect,
 }: {
 	card: CardData;
@@ -149,6 +150,7 @@ function WideCard({
 	highlighted: boolean;
 	highlightLabel: ReactNode;
 	comingSoon: boolean;
+	isNew: boolean;
 	onSelect: () => void;
 }) {
 	const wrapClasses = [
@@ -183,6 +185,10 @@ function WideCard({
 					{comingSoon ? (
 						<Badge variant="light" color="gray" size="xs">
 							<Trans>Coming soon</Trans>
+						</Badge>
+					) : isNew ? (
+						<Badge variant="light" color="green" size="xs">
+							<Trans>New</Trans>
 						</Badge>
 					) : (
 						highlighted && (
@@ -250,6 +256,7 @@ function MobileCard({
 	highlighted,
 	highlightLabel,
 	comingSoon,
+	isNew,
 	onSelect,
 }: {
 	card: CardData;
@@ -257,6 +264,7 @@ function MobileCard({
 	highlighted: boolean;
 	highlightLabel: ReactNode;
 	comingSoon: boolean;
+	isNew: boolean;
 	onSelect: () => void;
 }) {
 	const wrapClasses = [
@@ -297,6 +305,10 @@ function MobileCard({
 						{comingSoon ? (
 							<Badge variant="light" color="gray" size="xs">
 								<Trans>Coming soon</Trans>
+							</Badge>
+						) : isNew ? (
+							<Badge variant="light" color="green" size="xs">
+								<Trans>New</Trans>
 							</Badge>
 						) : (
 							highlighted && (
@@ -425,6 +437,7 @@ export const TierPricingCards = ({
 					highlighted={card.tier === highlightTier}
 					highlightLabel={resolvedHighlightLabel}
 					comingSoon={isComingSoon(card.tier)}
+					isNew={isNewTier(card.tier)}
 					onSelect={() => onChange(card.tier)}
 				/>
 			))}
