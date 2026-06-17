@@ -15,6 +15,7 @@ class OrgSummary(BaseModel):
     id: str
     name: str
     role: str  # owner / admin / member
+    is_partner: bool = False  # staff-set; gates the partner create-workspace branch
 
 
 class MeResponse(BaseModel):

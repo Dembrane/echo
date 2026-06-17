@@ -148,7 +148,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
             {
                 "query": {
                     "filter": {"id": {"_in": org_ids}, "deleted_at": {"_null": True}},
-                    "fields": ["id", "name"],
+                    "fields": ["id", "name", "is_partner"],
                     "limit": -1,
                 }
             },
@@ -162,6 +162,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
                         id=org["id"],
                         name=org.get("name", ""),
                         role=m["role"],
+                        is_partner=bool(org.get("is_partner")),
                     )
                 )
 
