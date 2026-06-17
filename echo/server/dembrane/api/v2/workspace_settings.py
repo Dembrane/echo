@@ -591,6 +591,23 @@ async def remove_workspace_member(
 
     await invalidate_workspace_and_org_usage(ctx.workspace_id, ctx.workspace.get("org_id"))
 
+    # Seat freed: reconcile billing so the next renewal drops to the new count
+    # (no mid-cycle refund). Best-effort, never fail the removal on a billing hiccup.
+    from dembrane.billing_service import (
+        reconcile_account_seats,
+        get_account_for_workspace,
+    )
+
+    try:
+        billing_account = await get_account_for_workspace(ctx.workspace_id)
+        if billing_account:
+            await reconcile_account_seats(billing_account["id"])
+    except Exception:
+        logger.exception(
+            "Seat reconcile failed after removing member from workspace %s",
+            ctx.workspace_id,
+        )
+
     removed_user_id = membership.get("user_id")
     if removed_user_id and removed_user_id != ctx.app_user_id:
         from dembrane.notifications import emit

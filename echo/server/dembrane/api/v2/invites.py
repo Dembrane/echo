@@ -63,6 +63,33 @@ def _enqueue_invite_email(
         return False
 
 
+@router.get("/{workspace_id}/seat-estimate")
+async def workspace_seat_estimate(
+    workspace_id: str,
+    ctx: DependencyWorkspaceContext,
+    added_seats: int = 1,
+) -> dict:
+    """Cost preview for adding a member: the one-off prorated charge now plus how
+    much the recurring renewal goes up. Drives the invite confirm dialog."""
+    ctx.require_policy("member:invite")
+    from dembrane.billing_service import (
+        estimate_seat_addition,
+        get_account_for_workspace,
+    )
+
+    account = await get_account_for_workspace(workspace_id)
+    if not account:
+        return {
+            "active": False,
+            "added_seats": added_seats,
+            "billing_period": "annual",
+            "currency": "EUR",
+            "prorated_now_eur": 0.0,
+            "recurring_delta_eur": 0.0,
+        }
+    return await estimate_seat_addition(account["id"], max(1, added_seats))
+
+
 @router.post("/{workspace_id}/invite", response_model=WorkspaceInviteResponse)
 async def invite_to_workspace(
     workspace_id: str,
@@ -87,6 +114,21 @@ async def invite_to_workspace(
       → On register + onboard the invite is auto-accepted (status: "invited")
     """
     ctx.require_policy("member:invite")
+
+    # Adding a member consumes a seat, and seats can only be added on an active
+    # plan. A canceled or past_due account must reactivate first (per-seat
+    # proration model): block here and let the UI route them to billing.
+    from dembrane.billing_service import (
+        account_blocks_seat_add,
+        get_account_for_workspace,
+    )
+
+    billing_account = await get_account_for_workspace(workspace_id)
+    if account_blocks_seat_add(billing_account) == "reactivate_required":
+        raise HTTPException(
+            status_code=402,
+            detail="Reactivate your plan to add members.",
+        )
 
     email = body.email.strip().lower()
     role = body.role
@@ -275,7 +317,24 @@ async def invite_to_workspace(
 
             await invalidate_workspace_and_org_usage(workspace_id, ws_org_id)
 
-            logger.info(f"Added {email} to workspace {workspace_id} as {role} by {ctx.app_user_id}")
+            # Seat consumed now: reconcile billing immediately so the prorated
+            # charge lands on add rather than waiting for the periodic cron.
+            # Best-effort: a billing hiccup must never fail the invite.
+            if billing_account:
+                from dembrane.billing_service import reconcile_account_seats
+
+                try:
+                    await reconcile_account_seats(billing_account["id"])
+                except Exception:
+                    logger.exception(
+                        "Seat reconcile failed after adding %s to workspace %s",
+                        email,
+                        workspace_id,
+                    )
+
+            logger.info(
+                f"Added {email} to workspace {workspace_id} as {role} by {ctx.app_user_id}"
+            )
 
             from dembrane.notifications import emit
 

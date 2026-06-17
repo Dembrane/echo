@@ -428,6 +428,203 @@ async def sync_subscription_seats(account_id: str) -> float | None:
     return amount
 
 
+# Approximate period length for proration. Proration is an estimate, so a fixed
+# day count avoids month-arithmetic edge cases (leap days, short months).
+_PERIOD_DAYS = {"monthly": 30, "annual": 365}
+
+
+def account_blocks_seat_add(account: dict | None) -> str | None:
+    """Reason a seat may NOT be added on this account's billing status, or None
+    to allow. Seats can only be added on an active plan: a canceled or past_due
+    account must reactivate first (per-seat billing, ADR 0005). A None account
+    (free / never subscribed) is not blocked here — the Free seat cap handles
+    that and prompts an upgrade."""
+    if account is None:
+        return None
+    if account.get("status") == "active":
+        return None
+    if account.get("status") in ("canceled", "past_due"):
+        return "reactivate_required"
+    # pending / none / unknown: leave to the seat-cap + checkout flow.
+    return None
+
+
+async def get_account_for_workspace(workspace_id: str) -> dict | None:
+    """The billing_account a workspace bills through, or None if unbilled."""
+    ws = await async_directus.get_item("workspace", workspace_id)
+    account_id = (ws or {}).get("billing_account_id")
+    if not account_id:
+        return None
+    return await async_directus.get_item("billing_account", account_id)
+
+
+async def _period_fraction_remaining(account: dict) -> float:
+    """Fraction (0..1] of the current billing period still ahead, for prorating a
+    mid-cycle seat addition. Returns 0.0 (no proration) when the period end can't
+    be read."""
+    customer_id = account.get("mollie_customer_id")
+    sub_id = account.get("mollie_subscription_id")
+    billing_period = account.get("billing_period") or "annual"
+    period_days = _PERIOD_DAYS.get(billing_period, 365)
+    if not customer_id or not sub_id:
+        return 0.0
+    try:
+        sub = await mollie.get_subscription(customer_id=customer_id, subscription_id=sub_id)
+    except mollie.MollieError:
+        return 0.0
+    next_date_str = sub.get("nextPaymentDate")  # "YYYY-MM-DD"
+    if not next_date_str:
+        return 0.0
+    try:
+        next_date = datetime.fromisoformat(next_date_str)
+    except ValueError:
+        return 0.0
+    if next_date.tzinfo is None:
+        next_date = next_date.replace(tzinfo=timezone.utc)
+    days_remaining = (next_date - datetime.now(timezone.utc)).days
+    if days_remaining <= 0:
+        return 0.0
+    return min(days_remaining / period_days, 1.0)
+
+
+async def _charge_seat_proration(account: dict, added_seats: int) -> float | None:
+    """One-off prorated charge for `added_seats` added mid-cycle, off-session
+    against the stored mandate. The caller has verified the account is active on
+    a paid tier with a subscription. Returns the amount charged, else None."""
+    if added_seats < 1:
+        return None
+    tier = account.get("tier")
+    customer_id = account.get("mollie_customer_id")
+    account_id = account.get("id")
+    billing_period = account.get("billing_period") or "annual"
+
+    fraction = await _period_fraction_remaining(account)
+    if fraction <= 0:
+        return None
+    try:
+        full_added, _interval = _per_interval_amount(tier, added_seats, billing_period)
+    except BillingError:
+        return None
+    prorated = round(full_added * fraction, 2)
+    if prorated < 0.01:
+        return None
+
+    try:
+        mandates = await mollie.list_mandates(customer_id)
+    except mollie.MollieError:
+        mandates = []
+    valid = next((m for m in mandates if m.get("status") == "valid"), None)
+    if not valid:
+        logger.warning(
+            "No valid mandate on account %s; skipping the proration charge", account_id
+        )
+        return None
+
+    try:
+        await mollie.create_recurring_payment(
+            customer_id=customer_id,
+            amount_eur=prorated,
+            description=f"{added_seats} seat(s) added, prorated for the rest of this period",
+            mandate_id=valid.get("id"),
+            metadata={
+                "account_id": account_id,
+                "kind": "seat_proration",
+                "added_seats": str(added_seats),
+            },
+        )
+    except mollie.MollieError as exc:
+        logger.error("Proration charge failed for account %s: %s", account_id, exc)
+        return None
+
+    logger.info(
+        "charged %.2f EUR proration for %d seat(s) on account %s",
+        prorated,
+        added_seats,
+        account_id,
+    )
+    return prorated
+
+
+async def reconcile_account_seats(account_id: str) -> None:
+    """Bring billing in line with the live seat count for one account. Idempotent
+    and safe to call from both the seat-change endpoints and the periodic cron.
+
+    - Re-prices the recurring subscription so the NEXT renewal matches current
+      seats (both up and down).
+    - On a net INCREASE, charges a one-off prorated payment for the added seats
+      covering the days left in the current period.
+    - On a DECREASE, only the next renewal drops (no mid-cycle refund).
+
+    `provisioned_seats` records the count already charged for, so re-running never
+    double-charges. No-op unless the account is active on a paid tier with a
+    Mollie subscription."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("status") != "active":
+        return
+    tier = account.get("tier")
+    if not tier or tier == "free" or not account.get("mollie_subscription_id"):
+        return
+
+    # The next renewal always reflects the live seat count.
+    await sync_subscription_seats(account_id)
+
+    current = max(await count_account_seats(account_id), 1)
+    provisioned = account.get("provisioned_seats")
+
+    # First reconcile for this account: set the baseline, never charge for seats
+    # that predate proration tracking.
+    if provisioned is None:
+        await async_directus.update_item(
+            "billing_account", account_id, {"provisioned_seats": current}
+        )
+        return
+
+    if current > provisioned:
+        charged = await _charge_seat_proration(account, current - provisioned)
+        # Only advance the baseline once the charge lands, so a failed charge
+        # (e.g. dead mandate) retries on the next reconcile rather than being lost.
+        if charged is not None:
+            await async_directus.update_item(
+                "billing_account", account_id, {"provisioned_seats": current}
+            )
+    elif current < provisioned:
+        # Removal takes effect at renewal (re-priced above); no mid-cycle refund.
+        await async_directus.update_item(
+            "billing_account", account_id, {"provisioned_seats": current}
+        )
+
+
+async def estimate_seat_addition(account_id: str, added_seats: int = 1) -> dict:
+    """Preview the cost of adding `added_seats`, for the invite confirm dialog:
+    the one-off prorated charge now plus how much the recurring renewal goes up.
+    `active` is False when there's nothing to charge (free / not subscribed), and
+    the UI shows no charge (or the reactivate gate) in that case."""
+    account = await async_directus.get_item("billing_account", account_id)
+    billing_period = (account or {}).get("billing_period") or "annual"
+    result = {
+        "active": False,
+        "added_seats": added_seats,
+        "billing_period": billing_period,
+        "currency": "EUR",
+        "prorated_now_eur": 0.0,
+        "recurring_delta_eur": 0.0,
+    }
+    if not account or account.get("status") != "active":
+        return result
+    tier = account.get("tier")
+    if not tier or tier == "free" or not account.get("mollie_subscription_id"):
+        return result
+    try:
+        full_added, _interval = _per_interval_amount(tier, added_seats, billing_period)
+    except BillingError:
+        return result
+    fraction = await _period_fraction_remaining(account)
+    result["active"] = True
+    result["recurring_delta_eur"] = round(full_added, 2)
+    result["prorated_now_eur"] = round(full_added * fraction, 2)
+    return result
+
+
 async def cancel_subscription(
     account_id: str, *, reason: str | None = None, feedback: str | None = None
 ) -> str:

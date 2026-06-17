@@ -18,7 +18,8 @@ export type InviteResultState =
 	| "already_member" // idempotent — already in workspace/org
 	| "already_invited" // idempotent — an unaccepted invite is already pending
 	| "rate_limited" // 429
-	| "seat_cap" // 402
+	| "seat_cap" // 402, seat limit reached
+	| "reactivate_required" // 402, billing inactive (canceled / past_due)
 	| "invalid_email" // pre-flight validation
 	| "failed";
 
@@ -48,6 +49,8 @@ function badgeForState(state: InviteResultState) {
 			return { color: "yellow", label: <Trans>Rate limited</Trans> };
 		case "seat_cap":
 			return { color: "yellow", label: <Trans>Seats full</Trans> };
+		case "reactivate_required":
+			return { color: "yellow", label: <Trans>Reactivate plan</Trans> };
 		case "invalid_email":
 			return { color: "red", label: <Trans>Invalid email</Trans> };
 		case "failed":

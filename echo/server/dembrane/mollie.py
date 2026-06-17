@@ -93,6 +93,34 @@ async def create_first_payment(
     return await _request("POST", "/payments", json=body)
 
 
+async def create_recurring_payment(
+    *,
+    customer_id: str,
+    amount_eur: float,
+    description: str,
+    mandate_id: Optional[str] = None,
+    webhook_url: Optional[str] = None,
+    metadata: Optional[dict] = None,
+) -> dict:
+    """Charge a one-off payment off-session against the customer's stored mandate
+    (sequenceType='recurring'). No checkout — used for mid-cycle seat proration.
+    If `mandate_id` is omitted Mollie uses the customer's most recent valid
+    mandate."""
+    body: dict[str, Any] = {
+        "amount": _amount(amount_eur),
+        "customerId": customer_id,
+        "sequenceType": "recurring",
+        "description": description,
+    }
+    if mandate_id:
+        body["mandateId"] = mandate_id
+    if webhook_url:
+        body["webhookUrl"] = webhook_url
+    if metadata:
+        body["metadata"] = metadata
+    return await _request("POST", "/payments", json=body)
+
+
 async def get_payment(payment_id: str) -> dict:
     """Fetch a payment. Always re-fetch on webhook — never trust the payload."""
     return await _request("GET", f"/payments/{payment_id}")

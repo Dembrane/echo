@@ -2213,7 +2213,7 @@ def task_reconcile_subscription_seats() -> None:
     reconciles all active subscriptions; the service layer skips the PATCH when
     the amount is unchanged."""
     task_logger = getLogger("dembrane.tasks.task_reconcile_subscription_seats")
-    from dembrane.billing_service import sync_subscription_seats
+    from dembrane.billing_service import reconcile_account_seats
     from dembrane.directus import directus, directus_client_context
 
     with directus_client_context(directus) as client:
@@ -2232,7 +2232,7 @@ def task_reconcile_subscription_seats() -> None:
         return
     for acc in active:
         try:
-            run_async_in_new_loop(sync_subscription_seats(acc["id"]))
+            run_async_in_new_loop(reconcile_account_seats(acc["id"]))
         except Exception:
             task_logger.exception("Failed seat-sync for billing account %s", acc.get("id"))
 
