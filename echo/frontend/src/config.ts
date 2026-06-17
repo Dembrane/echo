@@ -147,8 +147,6 @@ export const ENABLE_AGENTIC_CHAT = byEnv({ production: false }, true);
 // ships the (lazy) agentation chunk and JSX source metadata, production just
 // never renders or downloads it.
 export const ENABLE_AGENTATION = byEnv({ production: false }, true);
-// One-time post-login modal nudging users whose password fails the policy.
-export const ENABLE_WEAK_PASSWORD_NUDGE = true;
 
 export const getProductFeedbackUrl = (locale = "en-US") =>
 	`https://portal.dembrane.com/${locale}/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start?theme=dm-sans`;

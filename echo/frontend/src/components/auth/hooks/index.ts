@@ -12,7 +12,6 @@ import { ADMIN_BASE_URL, API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { emitAuthCacheBoundary } from "@/lib/authCacheBoundary";
 import { directus } from "@/lib/directus";
-import { clearWeakPasswordFlag } from "@/lib/weakPasswordFlag";
 import { isAuthPath } from "../utils/authPaths";
 import { throwWithMessage } from "../utils/errorUtils";
 
@@ -249,7 +248,6 @@ export const useLogoutMutation = () => {
 					sessionStorage.removeItem("dembrane_ws_selected");
 				} catch {}
 			}
-			clearWeakPasswordFlag();
 			emitAuthCacheBoundary();
 		},
 		onSettled: () => {
