@@ -6,6 +6,7 @@ import { useLocation } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { SUPPORTED_LANGUAGES } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
+import { storeLanguage } from "@/lib/language";
 import { testId } from "@/lib/testUtils";
 import classes from "./LanguagePicker.module.css";
 
@@ -87,6 +88,9 @@ export const LanguagePicker = () => {
 			(lang) => lang === selectedLanguage,
 		);
 		if (!validLanguage) return;
+
+		// Persist the choice so it survives the reload and future sessions.
+		storeLanguage(validLanguage);
 
 		let newPathname = pathname;
 
