@@ -318,7 +318,7 @@ export function UpgradeModal({
 		onClose();
 		// Billing is managed at the organisation level; send them there to pick
 		// a plan and pay. Self-serve replaced the staff request flow.
-		navigate(`/o/${workspace.org_id}/billing`);
+		navigate(`/o/${workspace.org_id}/settings/billing`);
 	};
 
 	const displayTier = canRequestUpgrade ? selectedTier : requiredTier;

@@ -47,10 +47,8 @@ import {
 } from "@/components/members";
 import { usePendingInvites } from "@/components/members/hooks";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
-import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { TierBadge } from "@/components/workspace/TierBadge";
-import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { UsageCard } from "@/components/workspace/UsageCard";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -269,11 +267,6 @@ export const WorkspaceSettingsRoute = () => {
 
 	type WsRoleFilter = "all" | "admins" | "billing" | "members" | "externals";
 	const [memberRoleFilter, setMemberRoleFilter] = useState<WsRoleFilter>("all");
-	// User override for the matrix toggle. `null` means "follow whatever the
-	// workspace is currently on" (seeded from settings.billing_period when it
-	// loads); once the user clicks the toggle we hold their choice.
-	const [billingPeriodOverride, setBillingPeriodOverride] =
-		useState<BillingPeriod | null>(null);
 
 	// Tab state — path-driven (/w/:id/settings/<tab> or /w/:id/members). Declared BEFORE
 	// the loading early-return below; moving any hook below the early
@@ -675,56 +668,6 @@ export const WorkspaceSettingsRoute = () => {
 										/>
 									)}
 
-									{/* Seats explainer — audit feedback: users need to
-								    know "how do seats work as a user" without
-								    reading the matrix row. Short, matches §7. */}
-									<Paper withBorder p="md" radius="sm">
-										<Stack gap={8}>
-											<Text size="sm" fw={500}>
-												<Trans>How seats work</Trans>
-											</Text>
-											<Text size="xs" c="dimmed">
-												<Trans>
-													Every workspace member, including externals, counts as
-													one seat. One person never takes more than one seat
-													per workspace, even if they're on multiple
-													organisations.
-												</Trans>
-											</Text>
-											<Text size="xs" c="dimmed">
-												<Trans>
-													Going over your tier's included seats bills extra per
-													month. See the matrix below for the per-seat rate on
-													each tier.
-												</Trans>
-											</Text>
-										</Stack>
-									</Paper>
-
-									{/* Matrix §1 full capacity matrix on the billing tab.
-								    Non-compact: price / duration / seats / overage /
-								    hours / externals / training. Highlights the current
-								    tier so admins can see what they have vs what's
-								    next. */}
-									<Group justify="center" mb="xs">
-										<BillingPeriodToggle
-											value={
-												billingPeriodOverride ??
-												settings.billing_period ??
-												"annual"
-											}
-											onChange={setBillingPeriodOverride}
-										/>
-									</Group>
-									<TierCapacityMatrix
-										highlightTier={settings.tier}
-										compact={false}
-										billingPeriod={
-											billingPeriodOverride ??
-											settings.billing_period ??
-											"annual"
-										}
-									/>
 									{seesFinancials &&
 										workspaceId &&
 										!settings.billing_org_managed && (

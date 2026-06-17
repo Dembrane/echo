@@ -343,6 +343,15 @@ export const OrganisationRoute = () => {
 		// Bounce bare /o/:id to /o/:id/overview. Don't bounce /settings/*; those are canonical sidebar URLs.
 		if (!organisationId) return;
 		if (isSettingsPath) return;
+		// Billing lives under settings in the sidebar, so the naked /o/:id/billing
+		// route leaves the sidebar inactive. Redirect it to the canonical
+		// settings path instead of keeping a naked billing route.
+		if (segment === "billing") {
+			navigate(`/o/${organisationId}/settings/billing${urlSearch}`, {
+				replace: true,
+			});
+			return;
+		}
 		if (segment !== viewRaw) {
 			navigate(`/o/${organisationId}/${viewRaw}${urlSearch}`, {
 				replace: true,

@@ -128,7 +128,10 @@ export function OrgManagedBillingNotice({
 					</Trans>
 				</Text>
 				<Group>
-					<Button size="xs" onClick={() => navigate(`/o/${orgId}/billing`)}>
+					<Button
+						size="xs"
+						onClick={() => navigate(`/o/${orgId}/settings/billing`)}
+					>
 						<Trans>Manage organisation billing</Trans>
 					</Button>
 				</Group>
