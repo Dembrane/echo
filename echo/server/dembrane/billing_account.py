@@ -185,6 +185,21 @@ async def grant_reverse_trial(
     return expires_at
 
 
+def billing_account_blocks_new_workspace(account: Optional[dict]) -> Optional[str]:
+    """Reason a billing account can't take a new workspace, or None if it can.
+
+    Pure check used to gate workspace creation. Forward-compatible with the
+    Mollie `status` field (Phase 3): a canceled account is dead and blocks; a
+    missing account blocks; past_due still allows (we never hard-block over a
+    transient failed charge — they stay a customer).
+    """
+    if not account or account.get("deleted_at"):
+        return "organisation has no valid billing account"
+    if account.get("status") == "canceled":
+        return "organisation billing is canceled; reactivate it to add workspaces"
+    return None
+
+
 async def get_billing_account_id(workspace_id: str) -> Optional[str]:
     """The id of the billing account a workspace resolves to."""
     ws = await directus_async.async_directus.get_item("workspace", workspace_id)

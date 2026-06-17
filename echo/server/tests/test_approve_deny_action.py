@@ -749,25 +749,33 @@ class TestDecideEndpointDeny:
             assert exc.value.status_code == 409
 
 
-# ── Staff-only POST /v2/workspaces ──
+# ── Self-serve POST /v2/workspaces ──
 
 
-class TestWorkspaceCreateStaffOnly:
-    """POST /v2/workspaces now returns 403 for non-staff."""
+class TestWorkspaceCreate:
+    """Self-serve creation: org admins/owners can create; staff in any org;
+    non-members get 403."""
 
     @pytest.mark.asyncio
-    async def test_non_staff_gets_403(self):
+    async def test_non_member_gets_403(self):
         from fastapi import HTTPException
 
         from dembrane.api.v2.schemas import CreateWorkspaceRequest
         from dembrane.api.v2.workspaces import create_workspace
 
-        body = CreateWorkspaceRequest(name="Test")
+        body = CreateWorkspaceRequest(name="Test", org_id="org-x")
         auth = MagicMock()
         auth.is_admin = False
+        auth.user_id = "du-1"
 
-        with pytest.raises(HTTPException) as exc:
-            await create_workspace(body, auth)
+        with (
+            patch("dembrane.api.v2.workspaces.get_app_user_or_raise", new_callable=AsyncMock, return_value={"id": "u-1"}),
+            patch("dembrane.api.v2.workspaces.async_directus") as mock_directus,
+        ):
+            # Not an admin/owner of org-x.
+            mock_directus.get_items = AsyncMock(return_value=[])
+            with pytest.raises(HTTPException) as exc:
+                await create_workspace(body, auth)
         assert exc.value.status_code == 403
 
     @pytest.mark.asyncio
