@@ -31,20 +31,24 @@ export function tierLabel(tier: string | null | undefined): string {
 	return tier.charAt(0).toUpperCase() + tier.slice(1);
 }
 
-interface TierEstimate {
-	annual_per_seat_monthly: number;
-	monthly_per_seat: number;
-	annual_total_yearly: number;
-	monthly_total_monthly: number;
+interface Invoice {
+	id: string;
+	created_at: string | null;
+	amount: string;
+	currency: string;
+	status: string;
+	description: string;
 }
 
-interface Estimate {
-	seats: number;
-	tiers: Record<string, TierEstimate>;
-}
-
-function eur(n: number): string {
-	return `€${Math.round(n).toLocaleString()}`;
+function formatInvoiceDate(iso: string | null): string {
+	if (!iso) return "";
+	const d = new Date(iso);
+	if (Number.isNaN(d.getTime())) return "";
+	return d.toLocaleDateString(undefined, {
+		day: "numeric",
+		month: "short",
+		year: "numeric",
+	});
 }
 
 /**
@@ -258,7 +262,7 @@ export function BillingManager({
 	const [tier, setTier] = useState<string>(SELLABLE_TIER);
 	const [period, setPeriod] = useState<BillingPeriod>(defaultPeriod);
 	const [submitting, setSubmitting] = useState(false);
-	const [estimate, setEstimate] = useState<Estimate | null>(null);
+	const [invoices, setInvoices] = useState<Invoice[]>([]);
 	const [plansOpen, { open: openPlans, close: closePlans }] =
 		useDisclosure(false);
 	const [cancelOpen, { open: openCancel, close: closeCancel }] =
@@ -272,11 +276,11 @@ export function BillingManager({
 
 	useEffect(() => {
 		if (!accountId) return;
-		fetch(`${API_BASE_URL}/v2/billing-accounts/${accountId}/estimate`, {
+		fetch(`${API_BASE_URL}/v2/billing-accounts/${accountId}/invoices`, {
 			credentials: "include",
 		})
-			.then((r) => (r.ok ? r.json() : null))
-			.then(setEstimate)
+			.then((r) => (r.ok ? r.json() : { invoices: [] }))
+			.then((d) => setInvoices(d.invoices ?? []))
 			.catch(() => {});
 	}, [accountId]);
 
@@ -329,13 +333,6 @@ export function BillingManager({
 			setSubmitting(false);
 		}
 	};
-
-	const selected = estimate?.tiers[tier];
-	const total = selected
-		? period === "monthly"
-			? `${eur(selected.monthly_total_monthly)} / month`
-			: `${eur(selected.annual_total_yearly)} / year`
-		: null;
 
 	if (!accountId) {
 		return (
@@ -434,14 +431,6 @@ export function BillingManager({
 						highlightTier={SELLABLE_TIER}
 						billingPeriod={period}
 					/>
-					{total && !isComingSoon(tier) && (
-						<Text size="sm" fw={500} ta="center">
-							<Trans>
-								{total} for your {estimate?.seats}{" "}
-								{estimate?.seats === 1 ? t`seat` : t`seats`}
-							</Trans>
-						</Text>
-					)}
 					<Group justify="flex-end">
 						<Button
 							loading={submitting}
@@ -455,6 +444,45 @@ export function BillingManager({
 							)}
 						</Button>
 					</Group>
+					<Text size="xs" c="dimmed" ta="center">
+						<Trans>Pricing is per user, not per workspace.</Trans>
+					</Text>
+					<Text size="xs" c="dimmed" ta="center">
+						<Trans>
+							You can use dembrane for free by self-hosting it. For bespoke
+							compliance requirements,{" "}
+							<Anchor href="mailto:support@dembrane.com" inherit>
+								call us for a quote
+							</Anchor>
+							.
+						</Trans>
+					</Text>
+				</Stack>
+			)}
+
+			{hasPaidPlan && invoices.length > 0 && (
+				<Stack gap={6} mt="md">
+					<Text size="xs" fw={500} c="dimmed">
+						<Trans>Payment history</Trans>
+					</Text>
+					{invoices.slice(0, 6).map((inv) => (
+						<Group key={inv.id} justify="space-between" gap="sm" wrap="nowrap">
+							<Text size="xs" c="dimmed">
+								{formatInvoiceDate(inv.created_at)}
+							</Text>
+							<Text size="xs" style={{ flex: 1, minWidth: 0 }} truncate>
+								{inv.description}
+							</Text>
+							<Text size="xs">€{inv.amount}</Text>
+							<Badge
+								size="xs"
+								variant="light"
+								color={inv.status === "paid" ? "green" : "gray"}
+							>
+								{inv.status}
+							</Badge>
+						</Group>
+					))}
 				</Stack>
 			)}
 

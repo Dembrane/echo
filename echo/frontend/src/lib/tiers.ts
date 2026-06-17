@@ -29,17 +29,24 @@ export const VISIBLE_TIERS: Tier[] = [
 	"guardian",
 ];
 
-// Tiers shown but not yet purchasable: Innovator waits on the MCP, Guardian on
-// the EU-sovereign stack. They render with a "Coming soon" badge and can't be
-// selected/checked out. Changemaker is the only sellable plan today. Single
-// source of truth — used by the pricing cards, plan picker, and checkout.
-export const COMING_SOON_TIERS: Tier[] = ["innovator", "guardian"];
+// Guardian waits on the EU-sovereign stack: shown with a "Coming soon" badge,
+// not selectable/checkout-able. Innovator + Changemaker are live. Single source
+// of truth — used by the pricing cards, plan picker, and checkout.
+export const COMING_SOON_TIERS: Tier[] = ["guardian"];
 
 export function isComingSoon(tier: string | null | undefined): boolean {
 	return !!tier && (COMING_SOON_TIERS as string[]).includes(tier);
 }
 
-// The plan we sell today + default selection.
+// Recently launched: render a "New" badge. Innovator (bring-your-own-LLM) just
+// shipped.
+export const NEW_TIERS: Tier[] = ["innovator"];
+
+export function isNewTier(tier: string | null | undefined): boolean {
+	return !!tier && (NEW_TIERS as string[]).includes(tier);
+}
+
+// Default selection in the plan picker (also carries the POPULAR badge).
 export const SELLABLE_TIER: Tier = "changemaker";
 
 // Annual is the anchor price; monthly cadence is surcharged by this percent
@@ -49,9 +56,9 @@ export const SELLABLE_TIER: Tier = "changemaker";
 export const MONTHLY_BILLING_PREMIUM_PCT = 20;
 
 export const TIER_TAGLINE: Record<Tier, string> = {
-	changemaker: "Built-in analysis, audit logs, white labeling",
+	changemaker: "EU hosted LLMs included",
 	free: "get started.",
-	guardian: "EU-sovereign, CLOUD Act safe",
+	guardian: "Cloud Act Safe",
 	innovator: "Bring your own LLM",
 };
 
@@ -75,19 +82,19 @@ export function capacityShortFor(tier: string | null | undefined): string {
 }
 
 export const TIER_BEST_FOR: Record<Tier, string> = {
-	changemaker: "Built-in EU analysis, audit logs, and white labeling.",
+	changemaker: "EU-hosted analysis, audit logs, and white labeling.",
 	free: "",
-	guardian: "EU-sovereign stack for the highest-compliance environments.",
-	innovator: "Bring your own LLM via the MCP. Unlimited hours.",
+	guardian: "Cloud Act safe. EU-sovereign stack for the strictest compliance.",
+	innovator: "Bring your own LLM via the MCP.",
 };
 
 export function tierBestFor(tier: string | null | undefined): string {
 	if (!isTier(tier)) return "";
 	const map: Record<Tier, string> = {
-		changemaker: t`Built-in EU analysis, audit logs, and white labeling.`,
+		changemaker: t`EU-hosted analysis, audit logs, and white labeling.`,
 		free: "",
-		guardian: t`EU-sovereign stack for the highest-compliance environments.`,
-		innovator: t`Bring your own LLM via the MCP. Unlimited hours.`,
+		guardian: t`Cloud Act safe. EU-sovereign stack for the strictest compliance.`,
+		innovator: t`Bring your own LLM via the MCP.`,
 	};
 	return map[tier];
 }
@@ -104,9 +111,9 @@ export function isTier(value: string | null | undefined): value is Tier {
 export function taglineFor(tier: string | null | undefined): string {
 	if (!isTier(tier)) return "";
 	const map: Record<Tier, string> = {
-		changemaker: t`Built-in analysis, audit logs, white labeling`,
+		changemaker: t`EU hosted LLMs included`,
 		free: t`get started.`,
-		guardian: t`EU-sovereign, CLOUD Act safe`,
+		guardian: t`Cloud Act Safe`,
 		innovator: t`Bring your own LLM`,
 	};
 	return map[tier];

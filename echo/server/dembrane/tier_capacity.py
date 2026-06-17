@@ -92,7 +92,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
     ),
     "changemaker": TierCapacity(
         tier="changemaker",
-        tagline="Built-in analysis, audit logs, white labeling",
+        tagline="EU hosted LLMs included",
         price_eur_monthly=75,
         price_note="per seat / month",
         included_seats=None,
@@ -106,7 +106,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
     ),
     "guardian": TierCapacity(
         tier="guardian",
-        tagline="EU-sovereign, CLOUD Act safe",
+        tagline="Cloud Act Safe",
         price_eur_monthly=150,
         price_note="per seat / month",
         included_seats=None,
