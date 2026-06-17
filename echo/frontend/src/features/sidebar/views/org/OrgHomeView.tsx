@@ -123,11 +123,11 @@ export const OrgHomeView = () => {
 							icon={AppWindowIcon}
 							end
 						/>
-						<NavItem
-							to={`${base}/settings/members`}
-							label={<Trans>Members</Trans>}
-							icon={UsersIcon}
-						/>
+							<NavItem
+								to={`${base}/members`}
+								label={<Trans>Members</Trans>}
+								icon={UsersIcon}
+							/>
 						{/* Settings is the last clickable item under the org title,
 						    directly below Overview and above the Workspaces section. */}
 						<NavItem

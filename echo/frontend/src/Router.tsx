@@ -432,13 +432,18 @@ export const mainRouter = createBrowserRouter([
 								element: <HostGuidePage />,
 								path: "projects/:projectId/host-guide",
 							},
-							{
-								// Splat so the tab lives in the path
-								// (/w/:workspaceId/settings/:tab). The component parses
-								// the trailing segment.
-								element: <WorkspaceSettingsRoute />,
-								path: "settings/*",
-							},
+								{
+									// Splat so the tab lives in the path
+									// (/w/:workspaceId/settings/:tab). The component parses
+									// the trailing segment.
+									element: <WorkspaceSettingsRoute />,
+									path: "settings/*",
+								},
+								{
+									// Map /w/:workspaceId/members under the same component
+									element: <WorkspaceSettingsRoute />,
+									path: "members/*",
+								},
 							{
 								children: projectRouteChildren,
 								path: "projects",

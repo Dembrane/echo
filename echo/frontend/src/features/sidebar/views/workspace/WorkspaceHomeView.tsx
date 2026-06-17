@@ -57,11 +57,11 @@ export const WorkspaceHomeView = () => {
 			    directly below New project and above the Pinned projects section. */}
 				{!isExternal && (
 					<>
-						<NavItem
-							to={`${base}/settings/members`}
-							label={<Trans>Members</Trans>}
-							icon={Users}
-						/>
+							<NavItem
+								to={`${base}/members`}
+								label={<Trans>Members</Trans>}
+								icon={Users}
+							/>
 						<NavItem
 							to={settingsPath}
 							label={<Trans>Settings</Trans>}

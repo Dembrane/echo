@@ -269,13 +269,14 @@ export const WorkspaceSettingsRoute = () => {
 	const [billingPeriodOverride, setBillingPeriodOverride] =
 		useState<BillingPeriod | null>(null);
 
-	// Tab state — path-driven (/w/:id/settings/<tab>). Declared BEFORE
-	// the loading early-return below; moving any hook below the early
-	// return changes hook count between renders and crashes React.
-	const allowedTabs = ["general", "members", "billing", "danger"] as const;
-	type TabValue = (typeof allowedTabs)[number];
-	const segment = (splat ?? "").split("/")[0] || "";
-	const segmentIsValid = (allowedTabs as readonly string[]).includes(segment);
+			// Tab state — path-driven (/w/:id/settings/<tab> or /w/:id/members). Declared BEFORE
+			// the loading early-return below; moving any hook below the early
+			// return changes hook count between renders and crashes React.
+			const allowedTabs = ["general", "members", "billing", "danger"] as const;
+			type TabValue = (typeof allowedTabs)[number];
+			const { pathname } = useLocation();
+			const segment = pathname.includes("/members") ? "members" : (splat ?? "").split("/")[0] || "";
+			const segmentIsValid = (allowedTabs as readonly string[]).includes(segment);
 
 	useDocumentTitle(t`Workspace settings | dembrane`);
 
@@ -450,22 +451,30 @@ export const WorkspaceSettingsRoute = () => {
 		});
 	};
 
-	useEffect(() => {
-		if (!workspaceId || !settings || !defaultTab) return;
-		if (segment !== activeTab) {
-			navigate(`/w/${workspaceId}/settings/${activeTab}${urlSearch}`, {
-				replace: true,
-			});
-		}
-	}, [
-		workspaceId,
-		segment,
-		activeTab,
-		navigate,
-		urlSearch,
-		settings,
-		defaultTab,
-	]);
+		useEffect(() => {
+			if (!workspaceId || !settings || !defaultTab) return;
+			if (pathname.includes("/settings/members")) {
+				navigate(`/w/${workspaceId}/members${urlSearch}`, {
+					replace: true,
+				});
+				return;
+			}
+			if (segment !== activeTab) {
+				const destPath = activeTab === "members" ? "members" : `settings/${activeTab}`;
+				navigate(`/w/${workspaceId}/${destPath}${urlSearch}`, {
+					replace: true,
+				});
+			}
+		}, [
+			workspaceId,
+			segment,
+			activeTab,
+			navigate,
+			urlSearch,
+			settings,
+			defaultTab,
+			pathname,
+		]);
 
 	// Members list order (2026-04-24): internals first — sorted by role
 	// (owner → admin → billing → member) — then externals at the bottom.
