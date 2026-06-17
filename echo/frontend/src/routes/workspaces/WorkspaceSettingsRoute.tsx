@@ -30,6 +30,10 @@ import { IconLock, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
+import {
+	BillingManager,
+	OrgManagedBillingNotice,
+} from "@/components/billing/BillingManager";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
@@ -48,7 +52,6 @@ import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { UsageCard } from "@/components/workspace/UsageCard";
-import { WorkspaceRequestHistory } from "@/components/workspace/WorkspaceRequestHistory";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
@@ -57,7 +60,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { logoUrl, memberInitials } from "@/lib/avatar";
 import { displayRole } from "@/lib/roles";
-import { type BillingPeriod, type Tier } from "@/lib/tiers";
+import type { BillingPeriod, Tier } from "@/lib/tiers";
 
 interface WorkspaceMember {
 	id: string;
@@ -101,6 +104,7 @@ interface WorkspaceDetail {
 	billing_period: BillingPeriod | null;
 	billing_account_id: string | null;
 	billing_status: string | null;
+	billing_org_managed: boolean;
 }
 
 async function deleteWorkspace(workspaceId: string) {
@@ -232,146 +236,6 @@ async function updateWorkspace(
 		const data = await res.json().catch(() => ({}));
 		throw new Error(data.detail || "Failed to update workspace");
 	}
-}
-
-/**
- * Self-serve subscription on the org's billing account. Picks tier + period,
- * starts a Mollie checkout, and on return reconciles via /sync. Replaces the
- * old "email upgrades@dembrane.com" placeholder.
- */
-function BillingCheckout({
-	accountId,
-	status,
-	currentTier,
-	workspaceId,
-}: {
-	accountId: string | null;
-	status: string | null;
-	currentTier: string;
-	workspaceId: string;
-}) {
-	const queryClient = useQueryClient();
-	const [tier, setTier] = useState<string>(
-		currentTier && currentTier !== "free" ? currentTier : "changemaker",
-	);
-	const [period, setPeriod] = useState<BillingPeriod>("annual");
-	const [submitting, setSubmitting] = useState(false);
-
-	// Returning from Mollie checkout: reconcile then refresh the panel.
-	useEffect(() => {
-		const sp = new URLSearchParams(window.location.search);
-		if (sp.get("billing") !== "return" || !accountId) return;
-		(async () => {
-			try {
-				await fetch(`${API_BASE_URL}/v2/billing-accounts/${accountId}/sync`, {
-					method: "POST",
-					credentials: "include",
-				});
-				await queryClient.invalidateQueries({
-					queryKey: ["v2", "workspace-settings", workspaceId],
-				});
-				toast.success(t`Subscription updated.`);
-			} catch {
-				toast.error(t`Could not confirm payment. Refresh to retry.`);
-			}
-			// Drop the return param so a refresh doesn't re-sync.
-			window.history.replaceState({}, "", window.location.pathname);
-		})();
-	}, [accountId, workspaceId, queryClient]);
-
-	const startCheckout = async () => {
-		if (!accountId) return;
-		setSubmitting(true);
-		try {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/billing-accounts/${accountId}/checkout`,
-				{
-					body: JSON.stringify({
-						billing_period: period,
-						redirect_url: `${window.location.origin}${window.location.pathname}?billing=return`,
-						tier,
-					}),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				},
-			);
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
-			}
-			const data = await res.json();
-			window.location.href = data.checkout_url; // hosted Mollie checkout
-		} catch (e) {
-			toast.error((e as Error).message);
-			setSubmitting(false);
-		}
-	};
-
-	const isActive = status === "active";
-
-	return (
-		<Paper withBorder p="md" radius="sm">
-			<Stack gap={8}>
-				<Group justify="space-between" align="center">
-					<Text size="sm" fw={500}>
-						{isActive ? <Trans>Subscription</Trans> : <Trans>Subscribe</Trans>}
-					</Text>
-					{status && (
-						<Badge
-							size="xs"
-							variant="light"
-							color={
-								isActive ? "green" : status === "past_due" ? "red" : "gray"
-							}
-						>
-							{status}
-						</Badge>
-					)}
-				</Group>
-				{isActive ? (
-					<Text size="xs" c="dimmed">
-						<Trans>
-							Your organisation is subscribed. Manage seats and billing from
-							here; changes are prorated.
-						</Trans>
-					</Text>
-				) : (
-					<>
-						<Text size="xs" c="dimmed">
-							<Trans>
-								Pick a plan to subscribe your organisation. Billed per seat;
-								you can change it anytime.
-							</Trans>
-						</Text>
-						<Group align="end" gap="sm">
-							<Select
-								label={t`Plan`}
-								data={[
-									{ label: "Innovator — €20/seat", value: "innovator" },
-									{ label: "Changemaker — €75/seat", value: "changemaker" },
-									{ label: "Guardian — €150/seat", value: "guardian" },
-								]}
-								value={tier}
-								onChange={(v) => v && setTier(v)}
-								size="xs"
-								allowDeselect={false}
-							/>
-							<BillingPeriodToggle value={period} onChange={setPeriod} />
-							<Button
-								size="xs"
-								loading={submitting}
-								disabled={!accountId}
-								onClick={startCheckout}
-							>
-								<Trans>Subscribe</Trans>
-							</Button>
-						</Group>
-					</>
-				)}
-			</Stack>
-		</Paper>
-	);
 }
 
 export const WorkspaceSettingsRoute = () => {
@@ -792,8 +656,11 @@ export const WorkspaceSettingsRoute = () => {
 							<Tabs.Panel value="billing" pt="md">
 								<Stack gap={16}>
 									{workspaceId && <UsageCard workspaceId={workspaceId} />}
-									{workspaceId && (
-										<WorkspaceRequestHistory workspaceId={workspaceId} />
+									{seesFinancials && settings.billing_org_managed && (
+										<OrgManagedBillingNotice
+											orgId={settings.org_id}
+											orgName={settings.org_name}
+										/>
 									)}
 
 									{/* Seats explainer — audit feedback: users need to
@@ -846,14 +713,20 @@ export const WorkspaceSettingsRoute = () => {
 											"annual"
 										}
 									/>
-									{seesFinancials && workspaceId && (
-										<BillingCheckout
-											accountId={settings.billing_account_id}
-											status={settings.billing_status}
-											currentTier={settings.tier}
-											workspaceId={workspaceId}
-										/>
-									)}
+									{seesFinancials &&
+										workspaceId &&
+										!settings.billing_org_managed && (
+											<BillingManager
+												accountId={settings.billing_account_id}
+												currentTier={settings.tier}
+												status={settings.billing_status}
+												defaultPeriod={settings.billing_period ?? "annual"}
+												invalidateKeys={[
+													["v2", "workspace-settings", workspaceId],
+												]}
+												source="workspace_billing"
+											/>
+										)}
 								</Stack>
 							</Tabs.Panel>
 
