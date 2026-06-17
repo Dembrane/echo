@@ -14,7 +14,6 @@ import { useState } from "react";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { API_BASE_URL } from "@/config";
 import { validatePassword } from "@/lib/passwordPolicy";
-import { clearWeakPasswordFlag } from "@/lib/weakPasswordFlag";
 import { toast } from "../common/Toaster";
 
 export const ChangePasswordCard = () => {
@@ -43,7 +42,6 @@ export const ChangePasswordCard = () => {
 		},
 		onSuccess: () => {
 			toast.success(t`Password changed`);
-			clearWeakPasswordFlag();
 			setCurrentPassword("");
 			setNewPassword("");
 			setConfirmPassword("");
