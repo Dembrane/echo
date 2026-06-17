@@ -2,6 +2,7 @@ import { i18n } from "@lingui/core";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { SUPPORTED_LANGUAGES } from "@/config";
+import { readStoredLanguage } from "@/lib/language";
 
 export const defaultLanguage = "en-US";
 
@@ -25,11 +26,14 @@ i18n.load({
 	"cs-CZ": csMessages,
 });
 
-i18n.activate(defaultLanguage);
+// Seed from the saved preference so a prefix-less entry doesn't flash English.
+i18n.activate(readStoredLanguage() ?? defaultLanguage);
 
 export const useLanguage = () => {
 	const params = useParams();
-	const language = params.language ?? i18n.locale ?? defaultLanguage;
+	// URL prefix wins (shareable/explicit); otherwise restore the saved choice.
+	const language =
+		params.language ?? readStoredLanguage() ?? i18n.locale ?? defaultLanguage;
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
