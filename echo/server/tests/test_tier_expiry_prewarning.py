@@ -446,7 +446,7 @@ class TestPreWarningSentReset:
         """When _upgrade_workspace_for_request sets tier_expires_at, it resets pre_warning_sent."""
         def _get_item(coll, item_id, *_args, **_kwargs):
             if coll == "billing_account":
-                return {"id": item_id, "tier": "pilot"}
+                return {"id": item_id, "tier": "free"}
             return {"id": "ws-1", "org_id": "org-1", "deleted_at": None, "billing_account_id": "acc-1"}
 
         with patch("dembrane.api.v2.admin.async_directus") as mock_admin, \
@@ -485,7 +485,7 @@ class TestPreWarningSentReset:
         """When tier_expires_at is not set, pre_warning_sent is not touched."""
         def _get_item(coll, item_id, *_args, **_kwargs):
             if coll == "billing_account":
-                return {"id": item_id, "tier": "pilot"}
+                return {"id": item_id, "tier": "free"}
             return {"id": "ws-1", "org_id": "org-1", "deleted_at": None, "billing_account_id": "acc-1"}
 
         with patch("dembrane.api.v2.admin.async_directus") as mock_admin, \
