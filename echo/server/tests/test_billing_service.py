@@ -62,35 +62,42 @@ class TestCancelSubscription:
     @pytest.mark.asyncio
     @patch("dembrane.billing_service.async_directus")
     @patch("dembrane.billing_service.mollie")
-    async def test_cancels_mollie_and_reverts_to_free(self, mock_mollie, mock_directus):
+    async def test_cancel_keeps_tier_until_period_end(self, mock_mollie, mock_directus):
         from dembrane.billing_service import cancel_subscription
 
         mock_directus.get_item = AsyncMock(
             return_value={
                 "id": "acc-1",
                 "tier": "changemaker",
+                "billing_period": "monthly",
                 "mollie_subscription_id": "sub_1",
                 "mollie_customer_id": "cst_1",
             }
         )
         mock_directus.update_item = AsyncMock()
+        mock_mollie.MollieError = Exception
+        mock_mollie.get_subscription = AsyncMock(
+            return_value={"nextPaymentDate": "2026-07-17"}
+        )
         mock_mollie.cancel_subscription = AsyncMock(return_value={"status": "canceled"})
 
         status = await cancel_subscription("acc-1", reason="too_expensive")
 
-        assert status == "free"
+        assert status == "canceled"
         mock_mollie.cancel_subscription.assert_awaited_once_with(
             customer_id="cst_1", subscription_id="sub_1"
         )
         patch_arg = mock_directus.update_item.call_args.args[2]
-        assert patch_arg["tier"] == "free"
+        # Tier is kept (not reverted) — they paid for the period.
+        assert "tier" not in patch_arg
         assert patch_arg["status"] == "canceled"
         assert patch_arg["mollie_subscription_id"] is None
+        assert patch_arg["tier_expires_at"] == "2026-07-17T00:00:00+00:00"
 
     @pytest.mark.asyncio
     @patch("dembrane.billing_service.async_directus")
     @patch("dembrane.billing_service.mollie")
-    async def test_no_subscription_is_noop_revert(self, mock_mollie, mock_directus):
+    async def test_no_subscription_is_noop(self, mock_mollie, mock_directus):
         from dembrane.billing_service import cancel_subscription
 
         mock_directus.get_item = AsyncMock(return_value={"id": "acc-1", "tier": "free"})
@@ -101,6 +108,7 @@ class TestCancelSubscription:
 
         assert status == "free"
         mock_mollie.cancel_subscription.assert_not_called()
+        mock_directus.update_item.assert_not_called()
 
 
 class TestEstimateAccountCost:

@@ -18,6 +18,7 @@ from pydantic import Field, BaseModel
 from dembrane import billing_service
 from dembrane.app_user import resolve_app_user
 from dembrane.directus_async import async_directus
+from dembrane.billing_account import get_org_account_id
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
@@ -43,20 +44,15 @@ async def _account_org_id(account: dict) -> Optional[str]:
     return None
 
 
-async def _require_billing_access(account: dict, auth: DependencyDirectusSession) -> None:
-    """Staff, or an owner/admin/billing member of the account's org. Raises 403."""
-    if auth.is_admin:
-        return
-    app_user = await resolve_app_user(auth.user_id)
-    if not app_user:
-        raise HTTPException(status_code=403, detail="Not allowed")
-    org_id = await _account_org_id(account)
+async def _has_billing_role(org_id: Optional[str], app_user_id: str) -> bool:
+    if not org_id:
+        return False
     rows = await async_directus.get_items(
         "org_membership",
         {
             "query": {
                 "filter": {
-                    "user_id": {"_eq": app_user["id"]},
+                    "user_id": {"_eq": app_user_id},
                     "org_id": {"_eq": org_id},
                     "role": {"_in": list(_BILLING_ROLES)},
                     "deleted_at": {"_null": True},
@@ -66,11 +62,52 @@ async def _require_billing_access(account: dict, auth: DependencyDirectusSession
             }
         },
     )
-    if not isinstance(rows, list) or not rows:
+    return isinstance(rows, list) and bool(rows)
+
+
+async def _require_org_billing_access(org_id: Optional[str], auth: DependencyDirectusSession) -> None:
+    """Staff, or an owner/admin/billing member of the org. Raises 403."""
+    if auth.is_admin:
+        return
+    app_user = await resolve_app_user(auth.user_id)
+    if not app_user:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    if not await _has_billing_role(org_id, app_user["id"]):
         raise HTTPException(
             status_code=403,
             detail="You must be an organisation owner, admin, or billing role.",
         )
+
+
+async def _require_billing_access(account: dict, auth: DependencyDirectusSession) -> None:
+    """Staff, or an owner/admin/billing member of the account's org. Raises 403."""
+    await _require_org_billing_access(await _account_org_id(account), auth)
+
+
+@router.get("/orgs/{org_id}/billing")
+async def org_billing(org_id: str, auth: DependencyDirectusSession) -> dict:
+    """The org's billing account snapshot for the org billing page: plan,
+    payment status, cadence, and current seat count. Returns a Free shell when
+    the org has no account yet."""
+    await _require_org_billing_access(org_id, auth)
+    account_id = await get_org_account_id(org_id)
+    if not account_id:
+        return {
+            "account_id": None,
+            "tier": "free",
+            "status": None,
+            "billing_period": None,
+            "seats": 0,
+        }
+    account = await async_directus.get_item("billing_account", account_id)
+    seats = await billing_service.count_account_seats(account_id)
+    return {
+        "account_id": account_id,
+        "tier": (account or {}).get("tier") or "free",
+        "status": (account or {}).get("status"),
+        "billing_period": (account or {}).get("billing_period"),
+        "seats": seats,
+    }
 
 
 @router.post("/billing-accounts/{account_id}/checkout")

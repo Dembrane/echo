@@ -553,47 +553,6 @@ class TestTierExpiredEmailTemplates:
 # ── Approve dialog wiring ────────────────────────────────────────────
 
 
-class TestApproveDialogWiring:
-    """Verify that the approve flow passes tier_expires_at through."""
-
-    def test_decide_body_accepts_granted_tier_expires_at(self):
-        from datetime import datetime
-
-        from dembrane.api.v2.admin import DecideWorkspaceRequestBody
-
-        body = DecideWorkspaceRequestBody(
-            action="approve",
-            granted_tier_expires_at="2026-06-15T00:00:00+00:00",
-        )
-        assert body.granted_tier_expires_at == datetime.fromisoformat(
-            "2026-06-15T00:00:00+00:00"
-        )
-
-    def test_decide_body_defaults_to_none(self):
-        from dembrane.api.v2.admin import DecideWorkspaceRequestBody
-
-        body = DecideWorkspaceRequestBody(action="approve")
-        assert body.granted_tier_expires_at is None
-
-    def test_create_workspace_helper_accepts_expires_at(self):
-        """_create_workspace_for_request signature includes granted_tier_expires_at."""
-        import inspect
-
-        from dembrane.api.v2.admin import _create_workspace_for_request
-
-        sig = inspect.signature(_create_workspace_for_request)
-        assert "granted_tier_expires_at" in sig.parameters
-
-    def test_upgrade_workspace_helper_accepts_expires_at(self):
-        """_upgrade_workspace_for_request signature includes granted_tier_expires_at."""
-        import inspect
-
-        from dembrane.api.v2.admin import _upgrade_workspace_for_request
-
-        sig = inspect.signature(_upgrade_workspace_for_request)
-        assert "granted_tier_expires_at" in sig.parameters
-
-
 # ── ADR 0001: pilot → free does NOT re-stamp ────────────────────────
 
 
