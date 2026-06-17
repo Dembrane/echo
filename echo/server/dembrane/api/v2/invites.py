@@ -19,6 +19,7 @@ from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.schemas import WorkspaceInviteRequest, WorkspaceInviteResponse
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
+from dembrane.api.v2._invite_helpers import build_invite_accept_url
 
 router = APIRouter()
 logger = getLogger("api.v2.invites")
@@ -197,9 +198,7 @@ async def invite_to_workspace(
                 )
 
             # Net-new seat or reactivation of soft-deleted row: include pending invites in the cap.
-            await assert_can_add_seat(
-                ctx.workspace, audience="admin", include_pending=True
-            )
+            await assert_can_add_seat(ctx.workspace, audience="admin", include_pending=True)
 
             ws_org_id = ctx.workspace.get("org_id")
 
@@ -276,9 +275,7 @@ async def invite_to_workspace(
 
             await invalidate_workspace_and_org_usage(workspace_id, ws_org_id)
 
-            logger.info(
-                f"Added {email} to workspace {workspace_id} as {role} by {ctx.app_user_id}"
-            )
+            logger.info(f"Added {email} to workspace {workspace_id} as {role} by {ctx.app_user_id}")
 
             from dembrane.notifications import emit
 
@@ -376,6 +373,20 @@ async def invite_to_workspace(
     expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
 
     now_iso = datetime.now(timezone.utc).isoformat()
+    inviter_name = "Your organisation"
+    inviter_app_user_data = await async_directus.get_items(
+        "app_user",
+        {
+            "query": {
+                "filter": {"id": {"_eq": ctx.app_user_id}},
+                "fields": ["display_name"],
+                "limit": 1,
+            }
+        },
+    )
+    if isinstance(inviter_app_user_data, list) and len(inviter_app_user_data) > 0:
+        inviter_name = inviter_app_user_data[0].get("display_name") or "Your organisation"
+
     existing_invites = await async_directus.get_items(
         "workspace_invite",
         {
@@ -394,27 +405,24 @@ async def invite_to_workspace(
     )
 
     if isinstance(existing_invites, list) and len(existing_invites) > 0:
+        existing_id = existing_invites[0]["id"]
+        invite_url = build_invite_accept_url(
+            invite_type="workspace",
+            admin_base_url=settings.urls.admin_base_url,
+            hash_value=compute_invite_hash(existing_id),
+            inviter_name=inviter_name,
+            subject_name=ctx.workspace.get("name", ""),
+            role=role,
+            email=email,
+        )
         # 200 with status string so the modal renders this per-row rather than as a global failure.
         return WorkspaceInviteResponse(
             status="already_invited",
             email=email,
             user_existed=user_existed,
             email_sent=False,
+            invite_url=invite_url,
         )
-
-    inviter_name = "Your organisation"
-    inviter_app_user_data = await async_directus.get_items(
-        "app_user",
-        {
-            "query": {
-                "filter": {"id": {"_eq": ctx.app_user_id}},
-                "fields": ["display_name"],
-                "limit": 1,
-            }
-        },
-    )
-    if isinstance(inviter_app_user_data, list) and len(inviter_app_user_data) > 0:
-        inviter_name = inviter_app_user_data[0].get("display_name") or "Your organisation"
 
     invite_id = generate_uuid()
     await async_directus.create_item(
@@ -429,19 +437,16 @@ async def invite_to_workspace(
         },
     )
 
-    from urllib.parse import urlencode
-
     invite_hash = compute_invite_hash(invite_id)
-    ctx_params = urlencode(
-        {
-            "iss": inviter_name,
-            "ws": ctx.workspace.get("name", ""),
-            "role": role,
-            "email": email,
-            "h": invite_hash,
-        }
+    invite_url = build_invite_accept_url(
+        invite_type="workspace",
+        admin_base_url=settings.urls.admin_base_url,
+        hash_value=invite_hash,
+        inviter_name=inviter_name,
+        subject_name=ctx.workspace.get("name", ""),
+        role=role,
+        email=email,
     )
-    invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
 
     email_queued = _enqueue_invite_email(
         to=email,
@@ -465,4 +470,5 @@ async def invite_to_workspace(
         email=email,
         user_existed=user_existed,
         email_sent=email_queued,
+        invite_url=invite_url,
     )

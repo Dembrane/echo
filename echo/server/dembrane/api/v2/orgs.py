@@ -45,6 +45,7 @@ from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.invites import compute_invite_hash, _enqueue_invite_email
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.api.v2._invite_helpers import build_invite_accept_url
 
 # Only http/https logos allowed — blocks javascript:/data: URIs. Shared
 # logic lives in workspace_settings; duplicated here to avoid a cross-router
@@ -156,6 +157,7 @@ class InviteToOrganisationResponse(BaseModel):
     email: str
     user_existed: bool
     email_sent: bool = True
+    invite_url: Optional[str] = None  # present only for invited / already_invited
 
 
 class ChangeMemberRoleRequest(BaseModel):
@@ -800,6 +802,7 @@ class OrgPendingInviteResponse(BaseModel):
     invited_by_id: Optional[str] = None
     invited_by_name: Optional[str] = None
     invited_by_email: Optional[str] = None
+    invite_url: Optional[str] = None
 
 
 @router.get("/{org_id}/pending-invites", response_model=list[OrgPendingInviteResponse])
@@ -942,6 +945,11 @@ async def list_org_pending_invites(
         if isinstance(inviter_rows, list):
             inviter_map = {u["id"]: u for u in inviter_rows if u.get("id")}
 
+    org_name = "your organisation"
+    if include_org_invites:
+        org_row = await async_directus.get_item("org", org_id)
+        org_name = (org_row or {}).get("name") or "your organisation"
+
     def _inviter_fields(inv: dict) -> dict:
         info = inviter_map.get(inv.get("invited_by") or "", {})
         return {
@@ -949,6 +957,19 @@ async def list_org_pending_invites(
             "invited_by_name": (info.get("display_name") or None) if info else None,
             "invited_by_email": (info.get("email") or None) if info else None,
         }
+
+    def _invite_url_for(inv: dict, invite_type: str, subject_name: str) -> str:
+        info = inviter_map.get(inv.get("invited_by") or "", {})
+        inviter_name = (info.get("display_name") if info else None) or "Your organisation"
+        return build_invite_accept_url(
+            invite_type=invite_type,  # type: ignore[arg-type]
+            admin_base_url=get_settings().urls.admin_base_url,
+            hash_value=compute_invite_hash(inv["id"]),
+            inviter_name=inviter_name,
+            subject_name=subject_name,
+            role=inv.get("role", "member"),
+            email=inv.get("email", ""),
+        )
 
     org_rows = [
         OrgPendingInviteResponse(
@@ -960,6 +981,7 @@ async def list_org_pending_invites(
             workspace_name=None,
             created_at=inv.get("created_at"),
             expires_at=inv.get("expires_at"),
+            invite_url=_invite_url_for(inv, "org", org_name),
             **_inviter_fields(inv),
         )
         for inv in org_invites
@@ -974,6 +996,9 @@ async def list_org_pending_invites(
             workspace_name=ws_name_map.get(inv.get("workspace_id") or "", ""),
             created_at=inv.get("created_at"),
             expires_at=inv.get("expires_at"),
+            invite_url=_invite_url_for(
+                inv, "workspace", ws_name_map.get(inv.get("workspace_id") or "", "")
+            ),
             **_inviter_fields(inv),
         )
         for inv in workspace_invites
@@ -981,7 +1006,7 @@ async def list_org_pending_invites(
 
     # Merge-sort by created_at DESC; null created_at goes last.
     combined = org_rows + ws_rows_out
-    combined.sort(key=lambda r: (r.created_at or ""), reverse=True)
+    combined.sort(key=lambda r: r.created_at or "", reverse=True)
     return combined
 
 
@@ -1181,12 +1206,23 @@ async def invite_to_organisation(
         },
     )
     if isinstance(existing_invites, list) and len(existing_invites) > 0:
+        existing_id = existing_invites[0]["id"]
+        invite_url = build_invite_accept_url(
+            invite_type="org",
+            admin_base_url=settings.urls.admin_base_url,
+            hash_value=compute_invite_hash(existing_id),
+            inviter_name=inviter_name,
+            subject_name=org_name,
+            role=role,
+            email=email,
+        )
         # 200 with status string so the modal renders this per-row rather than as a global failure.
         return InviteToOrganisationResponse(
             status="already_invited",
             email=email,
             user_existed=user_existed,
             email_sent=False,
+            invite_url=invite_url,
         )
 
     invite_id = generate_uuid()
@@ -1206,19 +1242,16 @@ async def invite_to_organisation(
         },
     )
 
-    from urllib.parse import urlencode
-
     invite_hash = compute_invite_hash(invite_id)
-    ctx_params = urlencode(
-        {
-            "iss": inviter_name,
-            "org": org_name,
-            "role": role,
-            "email": email,
-            "h": invite_hash,
-        }
+    invite_url = build_invite_accept_url(
+        invite_type="org",
+        admin_base_url=settings.urls.admin_base_url,
+        hash_value=invite_hash,
+        inviter_name=inviter_name,
+        subject_name=org_name,
+        role=role,
+        email=email,
     )
-    invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
 
     email_queued = _enqueue_invite_email(
         to=email,
@@ -1243,6 +1276,7 @@ async def invite_to_organisation(
         email=email,
         user_existed=user_existed,
         email_sent=email_queued,
+        invite_url=invite_url,
     )
 
 
@@ -1426,9 +1460,7 @@ async def _get_org_workspace_pinned(
     if not isinstance(rows, list):
         return []
     return [
-        OrgWorkspacePinnedProject(id=r["id"], name=r.get("name") or "")
-        for r in rows
-        if r.get("id")
+        OrgWorkspacePinnedProject(id=r["id"], name=r.get("name") or "") for r in rows if r.get("id")
     ]
 
 
