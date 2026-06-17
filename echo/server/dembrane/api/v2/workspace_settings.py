@@ -75,6 +75,10 @@ class WorkspaceDetailResponse(BaseModel):
     # approved_billing_period. `None` for legacy workspaces with no
     # approved request — UI defaults those to annual for display.
     billing_period: Optional[str] = None
+    # Billing account this workspace resolves to (the payer) + its payment
+    # status, so the billing tab can drive checkout / show subscription state.
+    billing_account_id: Optional[str] = None
+    billing_status: Optional[str] = None
 
 
 @router.get("/{workspace_id}/settings", response_model=WorkspaceDetailResponse)
@@ -274,6 +278,8 @@ async def get_workspace_settings(
         type_discount=billing.get("type_discount"),
         percent_discount=billing.get("percent_discount"),
         billing_period=billing_period,
+        billing_account_id=ws.get("billing_account_id"),
+        billing_status=billing.get("status"),
     )
 
 
