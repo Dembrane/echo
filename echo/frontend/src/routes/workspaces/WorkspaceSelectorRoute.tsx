@@ -278,9 +278,9 @@ export const WorkspaceSelectorRoute = () => {
 					autoFocus
 					rightSectionPointerEvents="auto"
 					rightSection={
-						q ? (
-							<CloseButton aria-label={t`Clear search`} onClick={onClear} />
-						) : undefined
+							q ? (
+								<CloseButton aria-label={t`Clear search`} radius="none" onClick={onClear} />
+							) : undefined
 					}
 					role="combobox"
 					aria-expanded={hits.length > 0}
@@ -358,11 +358,12 @@ export const WorkspaceSelectorRoute = () => {
 							</Trans>
 						)}
 					</Text>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => navigate("/invites")}
-					>
+						<Button
+							variant="outline"
+							size="sm"
+							radius="none"
+							onClick={() => navigate("/invites")}
+						>
 						<Trans>View invite</Trans>
 					</Button>
 				</Stack>
