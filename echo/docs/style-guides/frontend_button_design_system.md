@@ -20,12 +20,12 @@ This document describes the button design system implemented in the ECHO fronten
 - **Loading**: Graphite (`#2D2D2C`) background with white spinner
 
 ### Secondary Button (outline)
-- **Default**: Institution Blue border, Institution Blue text, transparent background, **standard corners**
+- **Default**: Institution Blue border, Institution Blue text, transparent background, **fully squared corners (0px / none border-radius, no rounding)**
 - **Hover**: 10% Institution Blue background
 - **Click/Active**: 20% Institution Blue background
 
 ### Tertiary Button (subtle)
-- **Default**: No border, Institution Blue text, transparent background, **standard corners**
+- **Default**: No border, Institution Blue text, transparent background, **fully squared corners (0px / none border-radius, no rounding)**
 - **Hover**: 10% Institution Blue background
 - **Click/Active**: 20% Institution Blue background
 
@@ -134,16 +134,16 @@ All buttons automatically get:
 - `color="primary"` (Institution Blue)
 - `variant="filled"` (Primary style)
 
-**Only primary (filled) buttons are pill-shaped.** Secondary and tertiary buttons use standard rounded corners.
+**Only primary (filled) buttons acting as the main CTA on a page are pill-shaped (fully rounded). Secondary and tertiary buttons, along with all inputs, search bars, and other UI items, must be fully squared (0px / none border-radius, no rounding).**
 
 Override these by passing props:
 ```tsx
 <Button variant="outline" color="red">
-  Custom Button (standard corners)
+  Custom Button (fully squared corners)
 </Button>
 
 <Button variant="filled" radius="sm">
-  Primary Button (override pill shape with small radius)
+  Primary Button (override pill shape with custom radius)
 </Button>
 ```
 

@@ -9,6 +9,9 @@
 - **Layout Options**: Single-column, Two-column with preview
 - **Input Types**: Text, Select, Checkbox, Rich Text, Custom Components
 
+## Border-Radius & Corner Policy
+All form inputs, including text inputs, textareas, select inputs, checkboxes, custom inputs, search inputs, pills, and dropdown list items, must be **fully squared (0px / none border-radius)**. Under our lowest level style guides, absolutely nothing should be rounded except the main CTA on a page, which should be fully rounded (pill-shaped) and blue. Do not apply rounding to form components.
+
 ## Key Features
 
 ### 1. Auto-save Functionality
