@@ -100,7 +100,7 @@ export const PortalSettingsOverview = ({
 	const navigate = useI18nNavigate();
 
 	return (
-		<Card withBorder p="md" radius="sm">
+		<Card withBorder p="md" radius="sm" w={{ base: "100%", md: 320 }} style={{ flexShrink: 0 }}>
 			<Stack gap="md">
 				<Text size="sm" fw={500}>
 					<Trans>Portal settings overview</Trans>
