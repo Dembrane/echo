@@ -121,6 +121,7 @@ def _build_directus_mock(
     invitee_directus_user: dict[str, Any] | None,
     existing_workspace_membership: list[dict[str, Any]] | None = None,
     existing_org_membership_for_invitee: list[dict[str, Any]] | None = None,
+    existing_workspace_invite: list[dict[str, Any]] | None = None,
 ) -> AsyncMock:
     """Mock async_directus for the workspace invite codepath.
 
@@ -139,6 +140,9 @@ def _build_directus_mock(
 
     workspace_membership_rows = existing_workspace_membership or []
     org_membership_rows = existing_org_membership_for_invitee or []
+    workspace_invite_rows = (
+        existing_workspace_invite if existing_workspace_invite is not None else []
+    )
 
     async def _fake_get_items(collection: str, _params: dict) -> Any:
         if collection == "app_user":
@@ -154,7 +158,7 @@ def _build_directus_mock(
         if collection == "org_membership":
             return org_membership_rows
         if collection == "workspace_invite":
-            return []
+            return workspace_invite_rows
         return []
 
     mock.get_items = AsyncMock(side_effect=_fake_get_items)
@@ -217,6 +221,7 @@ async def test_reinvite_existing_member_returns_already_member_no_email():
     # No state changes on the idempotent path.
     mock.create_item.assert_not_called()
     mock.update_item.assert_not_called()
+    assert body.get("invite_url") is None
 
 
 # ────────────────────────────────────────────────────────────────────
@@ -431,11 +436,13 @@ async def test_revoked_invite_does_not_block_reinvite():
     mock.get_items = AsyncMock(side_effect=_fake_get_items)
     mock.get_users = AsyncMock(return_value=[])  # net-new path: no Directus user
     mock.get_item = AsyncMock(
-        side_effect=lambda col, _id: {"id": _APP_USER_ID, "display_name": "WS Admin"}
-        if col == "app_user"
-        else {"id": _ORG_ID, "name": "Acme"}
-        if col == "org"
-        else None
+        side_effect=lambda col, _id: (
+            {"id": _APP_USER_ID, "display_name": "WS Admin"}
+            if col == "app_user"
+            else {"id": _ORG_ID, "name": "Acme"}
+            if col == "org"
+            else None
+        )
     )
     mock.create_item = AsyncMock(return_value={"data": {"id": "new-id"}})
     mock.update_item = AsyncMock(return_value={"data": {}})
@@ -460,9 +467,7 @@ async def test_revoked_invite_does_not_block_reinvite():
     # Pin the filter so a future refactor that drops deleted_at:_null
     # from the live-row predicate fails this test instead of silently
     # re-introducing the regression.
-    live_filters = [
-        f for f in seen_filters if "accepted_at" in f and "expires_at" in f
-    ]
+    live_filters = [f for f in seen_filters if "accepted_at" in f and "expires_at" in f]
     assert live_filters, "Expected a live-invite filter on workspace_invite"
     assert live_filters[0].get("deleted_at") == {"_null": True}, (
         "workspace_invite live-row filter must include deleted_at:_null "
@@ -471,3 +476,87 @@ async def test_revoked_invite_does_not_block_reinvite():
 
     creates = [c.args[0] for c in mock.create_item.call_args_list]
     assert "workspace_invite" in creates
+
+
+@pytest.mark.asyncio
+async def test_new_invitee_returns_invite_url_with_valid_hash():
+    """Inviting a brand-new email creates a workspace_invite and the
+    response carries invite_url whose h matches compute_invite_hash."""
+    from urllib.parse import parse_qs, urlparse
+
+    from dembrane.api.v2.invites import compute_invite_hash
+
+    mock = _build_directus_mock(invitee_directus_user=None)
+
+    with (
+        patch("dembrane.api.v2.invites.async_directus", mock),
+        patch("dembrane.api.v2.invites.resolve_app_user", return_value=None),
+        patch("dembrane.api.v2.invites._enqueue_invite_email", return_value=True),
+    ):
+        app = _build_app(_make_ctx())
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.post(
+                f"/v2/workspaces/{_WORKSPACE_ID}/invite",
+                json={"email": "new@example.com", "role": "member"},
+            )
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["status"] == "invited"
+    assert body["invite_url"]
+    assert "/invite/accept" in body["invite_url"]
+
+    created = next(
+        c.args for c in mock.create_item.call_args_list if c.args[0] == "workspace_invite"
+    )
+    created_id = created[1]["id"]
+    parsed = parse_qs(urlparse(body["invite_url"]).query)
+    assert parsed["h"][0] == compute_invite_hash(created_id)
+    assert parsed["email"][0] == "new@example.com"
+
+
+# ────────────────────────────────────────────────────────────────────
+# already_invited branch: existing pending invite returns invite_url
+# ────────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_already_invited_returns_invite_url_with_valid_hash():
+    """Inviting a brand-new email when a pending workspace_invite already
+    exists returns status='already_invited' with an invite_url whose h
+    param matches compute_invite_hash of the existing invite id."""
+    from urllib.parse import parse_qs, urlparse
+
+    from dembrane.api.v2.invites import compute_invite_hash
+
+    _EXISTING_INVITE_ID = "existing-wi-1"
+
+    mock = _build_directus_mock(
+        invitee_directus_user=None,
+        existing_workspace_invite=[{"id": _EXISTING_INVITE_ID}],
+    )
+
+    with (
+        patch("dembrane.api.v2.invites.async_directus", mock),
+        patch("dembrane.api.v2.invites.resolve_app_user", return_value=None),
+        patch("dembrane.api.v2.invites._enqueue_invite_email", return_value=True),
+    ):
+        app = _build_app(_make_ctx())
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.post(
+                f"/v2/workspaces/{_WORKSPACE_ID}/invite",
+                json={"email": "pending@example.com", "role": "member"},
+            )
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["status"] == "already_invited"
+    assert body["invite_url"], "invite_url must be present on already_invited"
+    assert "/invite/accept" in body["invite_url"]
+
+    parsed = parse_qs(urlparse(body["invite_url"]).query)
+    assert parsed["h"][0] == compute_invite_hash(_EXISTING_INVITE_ID)
+
+    # No new workspace_invite row should be created on this path.
+    creates = [c.args[0] for c in mock.create_item.call_args_list]
+    assert "workspace_invite" not in creates

@@ -14,7 +14,8 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconRefresh, IconX } from "@tabler/icons-react";
+import { usePostHog } from "@posthog/react";
+import { IconLink, IconRefresh, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
@@ -55,6 +56,7 @@ export function PendingInvitesSection({ orgId, scope, workspaceId }: Props) {
 		orgId,
 		workspaceId: isWorkspaceScope ? workspaceId : undefined,
 	});
+	const posthog = usePostHog();
 
 	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
 		useDisclosure(false);
@@ -73,6 +75,20 @@ export function PendingInvitesSection({ orgId, scope, workspaceId }: Props) {
 		);
 	}
 	if (invites.length === 0) return null;
+
+	const handleCopyLink = (inv: PendingInvite) => {
+		if (!inv.invite_url) return;
+		void navigator.clipboard.writeText(inv.invite_url).then(
+			() => {
+				toast.success(t`Link copied`);
+				posthog?.capture("invite_link_copied", {
+					source: "pending_list",
+					type: inv.type,
+				});
+			},
+			() => toast.error(t`Couldn't copy the link.`),
+		);
+	};
 
 	const handleResend = (inv: PendingInvite) => {
 		resend.mutate(inv.id, {
@@ -145,6 +161,19 @@ export function PendingInvitesSection({ orgId, scope, workspaceId }: Props) {
 									<Badge size="xs" variant="light" color="yellow">
 										<Trans>Pending</Trans>
 									</Badge>
+									{inv.invite_url && (
+										<Tooltip label={t`Copy invite link`}>
+											<ActionIcon
+												size="sm"
+												variant="subtle"
+												onClick={() => handleCopyLink(inv)}
+												aria-label={t`Copy invite link`}
+												data-testid={`pending-invite-copy-link-${inv.id}`}
+											>
+												<IconLink size={14} />
+											</ActionIcon>
+										</Tooltip>
+									)}
 									<Tooltip label={t`Resend invite email`}>
 										<ActionIcon
 											size="sm"

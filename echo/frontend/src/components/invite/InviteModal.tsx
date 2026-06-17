@@ -68,6 +68,7 @@ type WorkspaceInvitePayload = {
 	status: string;
 	email: string;
 	email_sent: boolean;
+	invite_url?: string | null;
 };
 
 async function inviteToWorkspace(
@@ -99,7 +100,7 @@ async function inviteToOrg(
 	orgId: string,
 	email: string,
 	role: InviteRole,
-): Promise<{ status: string; email: string }> {
+): Promise<{ status: string; email: string; invite_url?: string | null }> {
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/invites`, {
 		body: JSON.stringify({ email, role }),
 		credentials: "include",
@@ -114,7 +115,7 @@ async function inviteToOrg(
 		(err as Error & { status?: number }).status = res.status;
 		throw err;
 	}
-	return data as { status: string; email: string };
+	return data as { status: string; email: string; invite_url?: string | null };
 }
 
 function mapHttpStatusToState(status: number | undefined): InviteResultState {
@@ -294,7 +295,11 @@ export function InviteModal({
 			const rows = settled.map((res, i) => {
 				const call = calls[i];
 				if (res.status === "fulfilled") {
-					const status = (res.value as { status?: string }).status ?? "sent";
+					const value = res.value as {
+						status?: string;
+						invite_url?: string | null;
+					};
+					const status = value.status ?? "sent";
 					// invited/added/reactivated → sent; already_member / already_invited surface as their own states.
 					let state: InviteResultState = "sent";
 					if (status === "already_member") state = "already_member";
@@ -304,6 +309,7 @@ export function InviteModal({
 						workspaceId: call.workspaceId,
 						workspaceName: call.workspaceName,
 						state,
+						inviteUrl: value.invite_url ?? null,
 					};
 				}
 				const err = res.reason as Error & { status?: number };

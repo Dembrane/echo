@@ -46,9 +46,7 @@ def _noop_rate_limiter() -> AsyncMock:
 
 @pytest.fixture(autouse=True)
 def _patch_rate_limiter():
-    with patch(
-        "dembrane.api.v2.orgs._org_invite_rate_limiter", _noop_rate_limiter()
-    ):
+    with patch("dembrane.api.v2.orgs._org_invite_rate_limiter", _noop_rate_limiter()):
         yield
 
 
@@ -78,9 +76,7 @@ def _make_directus_mock(
       7. org_invite (existing pending)
     """
     mock = AsyncMock()
-    mock.get_item = AsyncMock(
-        side_effect=lambda col, _id: _ORG_ROW if col == "org" else None
-    )
+    mock.get_item = AsyncMock(side_effect=lambda col, _id: _ORG_ROW if col == "org" else None)
 
     call_state = {"org_membership_call": 0}
 
@@ -136,9 +132,7 @@ async def test_invite_new_user_creates_org_invite_row():
         patch("dembrane.api.v2.orgs.resolve_app_user", return_value=None),
     ):
         app = _build_app()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
                 f"/v2/orgs/{_ORG_ID}/invites",
                 json={"email": "newbie@example.com", "role": "member"},
@@ -153,12 +147,21 @@ async def test_invite_new_user_creates_org_invite_row():
     creates = [c.args for c in mock.create_item.call_args_list]
     collections_created = [c[0] for c in creates]
     assert "org_invite" in collections_created
-    org_invite_payload = next(
-        c[1] for c in creates if c[0] == "org_invite"
-    )
+    org_invite_payload = next(c[1] for c in creates if c[0] == "org_invite")
     assert org_invite_payload["org_id"] == _ORG_ID
     assert org_invite_payload["email"] == "newbie@example.com"
     assert org_invite_payload["role"] == "member"
+
+    from urllib.parse import parse_qs, urlparse
+
+    from dembrane.api.v2.invites import compute_invite_hash
+
+    assert body["invite_url"]
+    assert "/invite/accept" in body["invite_url"]
+    created_invite_id = org_invite_payload["id"]
+    parsed = parse_qs(urlparse(body["invite_url"]).query)
+    assert parsed["h"][0] == compute_invite_hash(created_invite_id)
+    assert parsed["org"][0] == "Acme Org"
 
 
 @pytest.mark.asyncio
@@ -173,9 +176,7 @@ async def test_invite_existing_user_not_in_org_creates_org_membership():
     with (
         patch("dembrane.api.v2.orgs.async_directus", mock),
         patch("dembrane.api.v2.orgs.get_app_user_or_raise", return_value=_APP_USER),
-        patch(
-            "dembrane.api.v2.orgs.resolve_app_user", return_value=invitee_app_user
-        ),
+        patch("dembrane.api.v2.orgs.resolve_app_user", return_value=invitee_app_user),
         patch("dembrane.notifications.emit_to_audience", new_callable=AsyncMock),
         patch(
             "dembrane.notifications.audience_organisation_admins",
@@ -184,9 +185,7 @@ async def test_invite_existing_user_not_in_org_creates_org_membership():
         ),
     ):
         app = _build_app()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
                 f"/v2/orgs/{_ORG_ID}/invites",
                 json={"email": "bob@example.com", "role": "member"},
@@ -197,9 +196,7 @@ async def test_invite_existing_user_not_in_org_creates_org_membership():
     assert body["status"] == "added"
     assert body["user_existed"] is True
 
-    om_creates = [
-        c.args for c in mock.create_item.call_args_list if c.args[0] == "org_membership"
-    ]
+    om_creates = [c.args for c in mock.create_item.call_args_list if c.args[0] == "org_membership"]
     assert len(om_creates) == 1
     payload = om_creates[0][1]
     assert payload["org_id"] == _ORG_ID
@@ -215,25 +212,17 @@ async def test_invite_existing_member_is_idempotent_no_email():
 
     mock = _make_directus_mock(
         invitee_directus_user=invitee_directus,
-        existing_org_membership=[
-            {"id": "om-1", "role": "member", "deleted_at": None}
-        ],
+        existing_org_membership=[{"id": "om-1", "role": "member", "deleted_at": None}],
     )
 
     with (
         patch("dembrane.api.v2.orgs.async_directus", mock),
         patch("dembrane.api.v2.orgs.get_app_user_or_raise", return_value=_APP_USER),
-        patch(
-            "dembrane.api.v2.orgs.resolve_app_user", return_value=invitee_app_user
-        ),
-        patch(
-            "dembrane.api.v2.orgs._enqueue_invite_email", return_value=True
-        ) as enqueue_mock,
+        patch("dembrane.api.v2.orgs.resolve_app_user", return_value=invitee_app_user),
+        patch("dembrane.api.v2.orgs._enqueue_invite_email", return_value=True) as enqueue_mock,
     ):
         app = _build_app()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
                 f"/v2/orgs/{_ORG_ID}/invites",
                 json={"email": "carol@example.com", "role": "admin"},
@@ -263,14 +252,10 @@ async def test_invite_reactivates_soft_deleted_org_membership():
     with (
         patch("dembrane.api.v2.orgs.async_directus", mock),
         patch("dembrane.api.v2.orgs.get_app_user_or_raise", return_value=_APP_USER),
-        patch(
-            "dembrane.api.v2.orgs.resolve_app_user", return_value=invitee_app_user
-        ),
+        patch("dembrane.api.v2.orgs.resolve_app_user", return_value=invitee_app_user),
     ):
         app = _build_app()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
                 f"/v2/orgs/{_ORG_ID}/invites",
                 json={"email": "dave@example.com", "role": "admin"},
@@ -299,9 +284,7 @@ async def test_invite_rejects_role_escalation_above_caller_level():
         patch("dembrane.api.v2.orgs.get_app_user_or_raise", return_value=_APP_USER),
     ):
         app = _build_app()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
                 f"/v2/orgs/{_ORG_ID}/invites",
                 json={"email": "claimer@example.com", "role": "owner"},
@@ -321,9 +304,7 @@ async def test_invite_rejects_non_admin_caller():
         patch("dembrane.api.v2.orgs.get_app_user_or_raise", return_value=_APP_USER),
     ):
         app = _build_app()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
                 f"/v2/orgs/{_ORG_ID}/invites",
                 json={"email": "x@example.com", "role": "member"},
@@ -342,9 +323,7 @@ async def test_invite_blocks_self_invite():
         patch("dembrane.api.v2.orgs.get_app_user_or_raise", return_value=_APP_USER),
     ):
         app = _build_app()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
                 f"/v2/orgs/{_ORG_ID}/invites",
                 json={"email": _APP_USER["email"], "role": "member"},
@@ -369,9 +348,7 @@ async def test_invite_is_idempotent_when_pending_invite_exists():
         patch("dembrane.api.v2.orgs.resolve_app_user", return_value=None),
     ):
         app = _build_app()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
                 f"/v2/orgs/{_ORG_ID}/invites",
                 json={"email": "ghost@example.com", "role": "member"},
@@ -382,9 +359,7 @@ async def test_invite_is_idempotent_when_pending_invite_exists():
     assert body["status"] == "already_invited"
     assert body["email_sent"] is False
     # No new org_invite row should have been created on the idempotent path.
-    create_calls = [
-        c.args for c in mock.create_item.call_args_list if c.args[0] == "org_invite"
-    ]
+    create_calls = [c.args for c in mock.create_item.call_args_list if c.args[0] == "org_invite"]
     assert not create_calls
 
 
@@ -406,9 +381,7 @@ async def test_invite_rate_limit_returns_429():
         patch("dembrane.api.v2.orgs.get_app_user_or_raise", return_value=_APP_USER),
     ):
         app = _build_app()
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
                 f"/v2/orgs/{_ORG_ID}/invites",
                 json={"email": "y@example.com", "role": "member"},
