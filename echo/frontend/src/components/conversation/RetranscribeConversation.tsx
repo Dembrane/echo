@@ -22,6 +22,8 @@ import { toast } from "sonner";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 import { ExponentialProgress } from "../common/ExponentialProgress";
+import { useQuery } from "@tanstack/react-query";
+import { getVerificationArtefacts } from "@/lib/api";
 import { useProjectById } from "../project/hooks";
 import { useRetranscribeConversationMutation } from "./hooks";
 
@@ -84,29 +86,39 @@ export const RetranscribeConversationModal = ({
 	const projectQuery = useProjectById({ projectId: projectId ?? "" });
 	const projectAnonymize = projectQuery.data?.anonymize_transcripts ?? false;
 
-	const retranscribeMutation = useRetranscribeConversationMutation();
+		const retranscribeMutation = useRetranscribeConversationMutation();
+	
+		const [newConversationName, setNewConversationName] = useState(
+			conversationName ?? "",
+		);
+		const [usePiiRedaction, setUsePiiRedaction] = useState(false);
+		const [attachVerifiedArtifacts, setAttachVerifiedArtifacts] = useState(true);
 
-	const [newConversationName, setNewConversationName] = useState(
-		conversationName ?? "",
-	);
-	const [usePiiRedaction, setUsePiiRedaction] = useState(false);
-
-	useEffect(() => {
-		setUsePiiRedaction(projectAnonymize);
-	}, [projectAnonymize]);
-
-	const navigate = useI18nNavigate();
-
-	const handleRetranscribe = async () => {
-		if (!conversationId || !newConversationName.trim()) return;
-
-		posthog.capture("conversation_retranscribed");
-
-		const { new_conversation_id } = await retranscribeMutation.mutateAsync({
-			conversationId,
-			newConversationName: newConversationName.trim(),
-			usePiiRedaction,
+		const { data: artefacts } = useQuery({
+			enabled: opened && !!conversationId,
+			queryFn: () => getVerificationArtefacts(conversationId),
+			queryKey: ["verify", "conversation_artifacts", conversationId],
 		});
+
+		const hasVerifiedArtifacts = artefacts?.some((art) => !!art.approved_at) ?? false;
+	
+		useEffect(() => {
+			setUsePiiRedaction(projectAnonymize);
+		}, [projectAnonymize]);
+	
+		const navigate = useI18nNavigate();
+	
+		const handleRetranscribe = async () => {
+			if (!conversationId || !newConversationName.trim()) return;
+	
+			posthog.capture("conversation_retranscribed");
+	
+			const { new_conversation_id } = await retranscribeMutation.mutateAsync({
+				conversationId,
+				newConversationName: newConversationName.trim(),
+				usePiiRedaction,
+				attachVerifiedArtifacts: hasVerifiedArtifacts ? attachVerifiedArtifacts : false,
+			});
 		if (new_conversation_id) {
 			onClose();
 			toast.success(
@@ -169,18 +181,27 @@ export const RetranscribeConversationModal = ({
 						required
 						{...testId("transcript-retranscribe-name-input")}
 					/>
-					<Switch
-						label={t`Anonymize transcript`}
-						description={
-							projectAnonymize
-								? t`Project default: enabled. Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation.`
-								: t`Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation.`
-						}
-						checked={usePiiRedaction}
-						onChange={(e) => setUsePiiRedaction(e.currentTarget.checked)}
-						{...testId("transcript-retranscribe-pii-toggle")}
-					/>
-					<Button
+						<Switch
+							label={t`Anonymize transcript`}
+							description={
+								projectAnonymize
+									? t`Project default: enabled. Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation.`
+									: t`Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation.`
+							}
+							checked={usePiiRedaction}
+							onChange={(e) => setUsePiiRedaction(e.currentTarget.checked)}
+							{...testId("transcript-retranscribe-pii-toggle")}
+						/>
+						{hasVerifiedArtifacts && (
+							<Switch
+								label={t`Attach verified artifacts`}
+								description={t`Copy approved outcomes to the new conversation so they aren't lost when the original is deleted.`}
+								checked={attachVerifiedArtifacts}
+								onChange={(e) => setAttachVerifiedArtifacts(e.currentTarget.checked)}
+								{...testId("transcript-retranscribe-attach-artifacts-toggle")}
+							/>
+						)}
+						<Button
 						onClick={handleRetranscribe}
 						rightSection={<IconRefresh size="1rem" />}
 						disabled={!newConversationName.trim()}
