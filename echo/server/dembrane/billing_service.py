@@ -59,6 +59,43 @@ async def count_account_seats(account_id: str) -> int:
     return total
 
 
+def _plan_description(tier: str, seats: int, billing_period: str) -> str:
+    """Customer-facing line shown on the Mollie checkout + each charge.
+
+    Mollie's hosted page shows this verbatim, so it has to read like a real
+    receipt, not a code string: capitalised plan, seat count, cadence, and the
+    cancel-anytime reassurance. Keeps the page from feeling sketchy.
+    """
+    label = tier.capitalize()
+    seat_txt = f"{seats} seat" + ("s" if seats != 1 else "")
+    cadence = "billed monthly" if billing_period == "monthly" else "billed yearly"
+    renews = "renews monthly" if billing_period == "monthly" else "renews yearly"
+    return f"dembrane {label} plan. {seat_txt}, {cadence}, {renews}. Cancel anytime."
+
+
+async def estimate_account_cost(account_id: str) -> dict:
+    """What each payable tier would cost the account at its current seat count.
+
+    Powers the "cost to move" preview before someone upgrades. Per-seat figures
+    plus the rolled-up totals for both cadences, so the UI can show "Xeur/mo per
+    seat, Yeur/yr for your N seats" without re-deriving the math."""
+    seats = max(await count_account_seats(account_id), 1)
+    tiers: dict[str, dict] = {}
+    for tier in ("innovator", "changemaker", "guardian"):
+        cap = get_capacity(tier)
+        if cap is None or cap.price_eur_monthly is None:
+            continue
+        annual_per_seat = cap.price_eur_monthly  # annual-billing monthly per-seat rate
+        monthly_per_seat = compute_monthly_billing_price(annual_per_seat)
+        tiers[tier] = {
+            "annual_per_seat_monthly": annual_per_seat,
+            "monthly_per_seat": monthly_per_seat,
+            "annual_total_yearly": annual_per_seat * 12 * seats,
+            "monthly_total_monthly": monthly_per_seat * seats,
+        }
+    return {"seats": seats, "tiers": tiers}
+
+
 def _per_interval_amount(tier: str, seats: int, billing_period: str) -> tuple[float, str]:
     """(amount_eur, interval) for the subscription. Annual bills 12x the annual
     per-seat rate once a year; monthly bills the +20% rate each month."""
@@ -116,6 +153,12 @@ async def start_subscription_checkout(
     # webhook_url is optional: Mollie rejects non-public URLs, so in dev we omit
     # it and reconcile via the return-poll / reconcile job.
     webhook_url = settings.billing.mollie_webhook_url
+    if not webhook_url:
+        logger.warning(
+            "MOLLIE_WEBHOOK_URL is not set — Mollie cannot push payment updates; "
+            "relying on /sync (return-poll / reconcile). Fine for local; set it in "
+            "deployed environments for push activation."
+        )
 
     account = await async_directus.get_item("billing_account", account_id)
     if not account:
@@ -128,7 +171,7 @@ async def start_subscription_checkout(
     payment = await mollie.create_first_payment(
         customer_id=customer_id,
         amount_eur=amount,
-        description=f"dembrane {tier} ({seats} seat{'s' if seats != 1 else ''})",
+        description=_plan_description(tier, seats, billing_period),
         redirect_url=redirect_url,
         webhook_url=webhook_url,
         metadata={
@@ -160,11 +203,13 @@ async def _activate_from_first_payment(account_id: str, meta: dict, customer_id:
     tier = meta.get("tier") or account.get("tier")
     interval = meta.get("interval") or "12 months"
     amount = float(meta.get("amount_eur") or 0)
+    seats = int(meta.get("seats") or 1)
+    billing_period = meta.get("billing_period") or "annual"
     sub = await mollie.create_subscription(
         customer_id=customer_id,
         amount_eur=amount,
         interval=interval,
-        description=f"dembrane {tier}",
+        description=_plan_description(tier, seats, billing_period),
         webhook_url=settings.billing.mollie_webhook_url or "",
         metadata={"billing_account_id": account_id},
     )
@@ -216,6 +261,46 @@ async def sync_account_from_mollie(account_id: str) -> str:
         await _activate_from_first_payment(account_id, first_paid.get("metadata") or {}, customer_id)
         return "active"
     return account.get("status") or "pending"
+
+
+async def cancel_subscription(
+    account_id: str, *, reason: str | None = None, feedback: str | None = None
+) -> str:
+    """Cancel the account's Mollie subscription and revert it to Free.
+
+    Stops future charges right away and drops the account back to the Free
+    tier. The churn reason is logged for the team (the client also emits a
+    PostHog event). Idempotent — safe to call on an account with no
+    subscription. Returns the resulting status ('free')."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account:
+        raise BillingError("billing account not found")
+
+    sub_id = account.get("mollie_subscription_id")
+    customer_id = account.get("mollie_customer_id")
+    if sub_id and customer_id:
+        try:
+            await mollie.cancel_subscription(customer_id=customer_id, subscription_id=sub_id)
+        except mollie.MollieError as exc:
+            # A 404/410 from Mollie means it's already gone — treat as cancelled.
+            logger.warning("Mollie cancel for sub %s returned %s; reverting locally", sub_id, exc)
+
+    logger.info(
+        "billing account %s cancelled (reason=%r feedback=%r)", account_id, reason, feedback
+    )
+    await async_directus.update_item(
+        "billing_account",
+        account_id,
+        {
+            "tier": "free",
+            "status": "canceled",
+            "payment_mode": "none",
+            "mollie_subscription_id": None,
+            "billing_period": None,
+            "tier_expires_at": None,
+        },
+    )
+    return "free"
 
 
 async def handle_mollie_webhook(payment_id: str) -> None:

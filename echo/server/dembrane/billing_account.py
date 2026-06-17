@@ -230,7 +230,11 @@ async def resolve_workspace_billing(workspace_id: str) -> dict[str, Any]:
     account = await directus_async.async_directus.get_item("billing_account", account_id)
     if not account:
         return {}
-    return {f: account.get(f) for f in BILLING_FIELDS}
+    result: dict[str, Any] = {f: account.get(f) for f in BILLING_FIELDS}
+    # Scope of the owning account: org-scoped (shared, org manages billing) vs
+    # workspace-scoped (billed separately). Drives the "managed by org" notice.
+    result["org_scoped"] = bool(account.get("org_id"))
+    return result
 
 
 async def resolve_workspace_tier(workspace_id: str) -> Optional[str]:
