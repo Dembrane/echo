@@ -43,6 +43,36 @@ async def _account_org_id(account: dict) -> Optional[str]:
     return None
 
 
+async def _require_billing_access(account: dict, auth: DependencyDirectusSession) -> None:
+    """Staff, or an owner/admin/billing member of the account's org. Raises 403."""
+    if auth.is_admin:
+        return
+    app_user = await resolve_app_user(auth.user_id)
+    if not app_user:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    org_id = await _account_org_id(account)
+    rows = await async_directus.get_items(
+        "org_membership",
+        {
+            "query": {
+                "filter": {
+                    "user_id": {"_eq": app_user["id"]},
+                    "org_id": {"_eq": org_id},
+                    "role": {"_in": list(_BILLING_ROLES)},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": 1,
+            }
+        },
+    )
+    if not isinstance(rows, list) or not rows:
+        raise HTTPException(
+            status_code=403,
+            detail="You must be an organisation owner, admin, or billing role.",
+        )
+
+
 @router.post("/billing-accounts/{account_id}/checkout")
 async def start_checkout(
     account_id: str,
@@ -53,32 +83,7 @@ async def start_checkout(
     account = await async_directus.get_item("billing_account", account_id)
     if not account or account.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Billing account not found")
-
-    if not auth.is_admin:
-        app_user = await resolve_app_user(auth.user_id)
-        if not app_user:
-            raise HTTPException(status_code=403, detail="Not allowed")
-        org_id = await _account_org_id(account)
-        rows = await async_directus.get_items(
-            "org_membership",
-            {
-                "query": {
-                    "filter": {
-                        "user_id": {"_eq": app_user["id"]},
-                        "org_id": {"_eq": org_id},
-                        "role": {"_in": list(_BILLING_ROLES)},
-                        "deleted_at": {"_null": True},
-                    },
-                    "fields": ["id"],
-                    "limit": 1,
-                }
-            },
-        )
-        if not isinstance(rows, list) or not rows:
-            raise HTTPException(
-                status_code=403,
-                detail="You must be an organisation owner, admin, or billing role.",
-            )
+    await _require_billing_access(account, auth)
 
     try:
         url = await billing_service.start_subscription_checkout(
@@ -99,29 +104,49 @@ async def sync_account(account_id: str, auth: DependencyDirectusSession) -> dict
     account = await async_directus.get_item("billing_account", account_id)
     if not account or account.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Billing account not found")
-    if not auth.is_admin:
-        app_user = await resolve_app_user(auth.user_id)
-        if not app_user:
-            raise HTTPException(status_code=403, detail="Not allowed")
-        org_id = await _account_org_id(account)
-        rows = await async_directus.get_items(
-            "org_membership",
-            {
-                "query": {
-                    "filter": {
-                        "user_id": {"_eq": app_user["id"]},
-                        "org_id": {"_eq": org_id},
-                        "role": {"_in": list(_BILLING_ROLES)},
-                        "deleted_at": {"_null": True},
-                    },
-                    "fields": ["id"],
-                    "limit": 1,
-                }
-            },
-        )
-        if not isinstance(rows, list) or not rows:
-            raise HTTPException(status_code=403, detail="Not allowed")
+    await _require_billing_access(account, auth)
     status = await billing_service.sync_account_from_mollie(account_id)
+    return {"status": status}
+
+
+@router.get("/billing-accounts/{account_id}/estimate")
+async def estimate_cost(account_id: str, auth: DependencyDirectusSession) -> dict:
+    """Per-tier cost preview at the account's current seat count (cost-to-move)."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
+    await _require_billing_access(account, auth)
+    return await billing_service.estimate_account_cost(account_id)
+
+
+class CancelBody(BaseModel):
+    # Survey: why are they leaving? Stored on the account + emitted to PostHog
+    # from the client. Optional so a cancel never blocks on the survey.
+    reason: Optional[str] = None
+    feedback: Optional[str] = None
+
+
+@router.post("/billing-accounts/{account_id}/cancel")
+async def cancel_subscription(
+    account_id: str,
+    body: CancelBody,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Cancel the account's Mollie subscription and revert to Free.
+
+    Stops future charges immediately. The cancellation reason is captured for
+    the team (churn survey). Idempotent: cancelling an already-free account is
+    a no-op."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
+    await _require_billing_access(account, auth)
+    try:
+        status = await billing_service.cancel_subscription(
+            account_id, reason=body.reason, feedback=body.feedback
+        )
+    except billing_service.BillingError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"status": status}
 
 

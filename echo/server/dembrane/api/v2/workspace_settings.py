@@ -71,14 +71,17 @@ class WorkspaceDetailResponse(BaseModel):
     logo_url: Optional[str] = None
     type_discount: Optional[str] = None
     percent_discount: Optional[int] = None
-    # Derived cadence: most-recently approved workspace_request's
-    # approved_billing_period. `None` for legacy workspaces with no
-    # approved request — UI defaults those to annual for display.
+    # Billing cadence sourced from the billing account. `None` defaults to
+    # annual for display.
     billing_period: Optional[str] = None
     # Billing account this workspace resolves to (the payer) + its payment
     # status, so the billing tab can drive checkout / show subscription state.
     billing_account_id: Optional[str] = None
     billing_status: Optional[str] = None
+    # True when the account is org-scoped (the org manages billing and this
+    # workspace just attaches). The billing tab shows a "managed by {org}"
+    # notice + link instead of a checkout when this is set.
+    billing_org_managed: bool = False
 
 
 @router.get("/{workspace_id}/settings", response_model=WorkspaceDetailResponse)
@@ -268,6 +271,7 @@ async def get_workspace_settings(
         billing_period=billing_period,
         billing_account_id=ws.get("billing_account_id"),
         billing_status=billing.get("status"),
+        billing_org_managed=bool(billing.get("org_scoped")),
     )
 
 

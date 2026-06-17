@@ -39,6 +39,96 @@ class TestPerIntervalAmount:
             _per_interval_amount("free", 1, "annual")
 
 
+class TestPlanDescription:
+    def test_capitalises_tier_and_states_terms(self):
+        from dembrane.billing_service import _plan_description
+
+        d = _plan_description("changemaker", 3, "monthly")
+        assert "Changemaker" in d  # capitalised, not "changemaker"
+        assert "3 seats" in d
+        assert "billed monthly" in d
+        assert "Cancel anytime." in d
+        assert "—" not in d  # no em dashes (brand rule)
+
+    def test_singular_seat_and_annual(self):
+        from dembrane.billing_service import _plan_description
+
+        d = _plan_description("guardian", 1, "annual")
+        assert "1 seat," in d
+        assert "billed yearly" in d
+
+
+class TestCancelSubscription:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    async def test_cancels_mollie_and_reverts_to_free(self, mock_mollie, mock_directus):
+        from dembrane.billing_service import cancel_subscription
+
+        mock_directus.get_item = AsyncMock(
+            return_value={
+                "id": "acc-1",
+                "tier": "changemaker",
+                "mollie_subscription_id": "sub_1",
+                "mollie_customer_id": "cst_1",
+            }
+        )
+        mock_directus.update_item = AsyncMock()
+        mock_mollie.cancel_subscription = AsyncMock(return_value={"status": "canceled"})
+
+        status = await cancel_subscription("acc-1", reason="too_expensive")
+
+        assert status == "free"
+        mock_mollie.cancel_subscription.assert_awaited_once_with(
+            customer_id="cst_1", subscription_id="sub_1"
+        )
+        patch_arg = mock_directus.update_item.call_args.args[2]
+        assert patch_arg["tier"] == "free"
+        assert patch_arg["status"] == "canceled"
+        assert patch_arg["mollie_subscription_id"] is None
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    async def test_no_subscription_is_noop_revert(self, mock_mollie, mock_directus):
+        from dembrane.billing_service import cancel_subscription
+
+        mock_directus.get_item = AsyncMock(return_value={"id": "acc-1", "tier": "free"})
+        mock_directus.update_item = AsyncMock()
+        mock_mollie.cancel_subscription = AsyncMock()
+
+        status = await cancel_subscription("acc-1")
+
+        assert status == "free"
+        mock_mollie.cancel_subscription.assert_not_called()
+
+
+class TestEstimateAccountCost:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.count_account_seats", new_callable=AsyncMock)
+    async def test_estimate_uses_seat_count(self, mock_seats):
+        from dembrane.billing_service import estimate_account_cost
+
+        mock_seats.return_value = 3
+        out = await estimate_account_cost("acc-1")
+
+        assert out["seats"] == 3
+        cm = out["tiers"]["changemaker"]
+        assert cm["annual_per_seat_monthly"] == 75
+        assert cm["annual_total_yearly"] == 75 * 12 * 3
+        assert cm["monthly_total_monthly"] == 90 * 3  # round(75*1.2)=90
+        assert "free" not in out["tiers"]
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.count_account_seats", new_callable=AsyncMock)
+    async def test_floor_one_seat(self, mock_seats):
+        from dembrane.billing_service import estimate_account_cost
+
+        mock_seats.return_value = 0
+        out = await estimate_account_cost("acc-1")
+        assert out["seats"] == 1
+
+
 class TestWebhookActivation:
     @pytest.mark.asyncio
     @patch("dembrane.billing_service.async_directus")
