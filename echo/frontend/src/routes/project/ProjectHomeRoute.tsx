@@ -5,7 +5,6 @@ import {
 	Button,
 	Card,
 	Flex,
-	Grid,
 	Group,
 	SimpleGrid,
 	Skeleton,
@@ -93,36 +92,36 @@ export const ProjectHomeRoute = () => {
 
 	return (
 		<PageContainer width="xl">
-			<Grid gutter="xl">
-				<Grid.Col span={{ base: 12, md: 9 }}>
-					<Stack gap="xl">
-						<Stack gap={4}>
-							{project?.name ? (
-								<Title order={2} fw={500} style={{ color: "#2d2d2c" }}>
-									{project.name}
-								</Title>
-							) : (
-								<Skeleton height={32} width={240} />
-							)}
-							<Text size="sm" c="dimmed" maw={560}>
-								<Trans>
-									Share the project, watch live activity, and jump into the main
-									tools from one place.
-								</Trans>
-							</Text>
-						</Stack>
+			<Stack gap="xl">
+				<Stack gap={4}>
+					{project?.name ? (
+						<Title order={2} fw={500} style={{ color: "#2d2d2c" }}>
+							{project.name}
+						</Title>
+					) : (
+						<Skeleton height={32} width={240} />
+					)}
+					<Text size="sm" c="dimmed" maw={560}>
+						<Trans>
+							Share the project, watch live activity, and jump into the main
+							tools from one place.
+						</Trans>
+					</Text>
+				</Stack>
 
-						<Flex
-							direction={{ base: "column", md: "row" }}
-							align={{ base: "stretch", md: "flex-start" }}
-							gap="xl"
-						>
-							<ProjectQRCode project={projectQuery.data} />
+				<Flex
+					direction={{ base: "column", md: "row" }}
+					align={{ base: "stretch", md: "flex-start" }}
+					gap="xl"
+				>
+					<PortalSettingsOverview project={project} base={base} />
 
-							<Stack gap="sm" style={{ flex: 1 }}>
-								<Text size="xs" c="dimmed" tt="uppercase">
-									<Trans>Jump to</Trans>
-								</Text>
+					<ProjectQRCode project={projectQuery.data} />
+
+					<Stack gap="sm" style={{ flex: 1 }}>
+						<Text size="xs" c="dimmed" tt="uppercase">
+							<Trans>Jump to</Trans>
+						</Text>
 								<Group gap="sm" wrap="wrap">
 									<Button
 										size="sm"
@@ -279,11 +278,6 @@ export const ProjectHomeRoute = () => {
 							</Stack>
 						)}
 					</Stack>
-				</Grid.Col>
-				<Grid.Col span={{ base: 12, md: 3 }} mt={{ base: 0, md: "md" }}>
-					<PortalSettingsOverview project={project} base={base} />
-				</Grid.Col>
-			</Grid>
-		</PageContainer>
-	);
-};
+			</PageContainer>
+		);
+	};
