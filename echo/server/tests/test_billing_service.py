@@ -140,11 +140,32 @@ class TestListAccountInvoices:
             ]
         )
 
-        out = await list_account_invoices("acc-1")
+        out = await list_account_invoices("acc-1", limit=20)
 
-        assert [i["status"] for i in out] == ["paid", "canceled"]
-        assert out[0]["amount"] == "900.00"
-        assert out[0]["currency"] == "EUR"
+        assert [i["status"] for i in out["invoices"]] == ["paid", "canceled"]
+        assert out["invoices"][0]["amount"] == "900.00"
+        assert out["next"] is None  # fewer than limit -> no next page
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    async def test_pagination_cursor_when_more(self, mock_mollie, mock_directus):
+        from dembrane.billing_service import list_account_invoices
+
+        mock_directus.get_item = AsyncMock(
+            return_value={"id": "acc-1", "mollie_customer_id": "cst_1"}
+        )
+        # limit=1 -> ask for 2; returning 2 means there's a next page.
+        mock_mollie.list_customer_payments = AsyncMock(
+            return_value=[
+                {"id": "tr_1", "amount": {"value": "90.00", "currency": "EUR"}, "status": "paid"},
+                {"id": "tr_2", "amount": {"value": "90.00", "currency": "EUR"}, "status": "paid"},
+            ]
+        )
+
+        out = await list_account_invoices("acc-1", limit=1)
+        assert len(out["invoices"]) == 1
+        assert out["next"] == "tr_2"
 
     @pytest.mark.asyncio
     @patch("dembrane.billing_service.async_directus")
@@ -157,7 +178,7 @@ class TestListAccountInvoices:
 
         out = await list_account_invoices("acc-1")
 
-        assert out == []
+        assert out == {"invoices": [], "next": None}
         mock_mollie.list_customer_payments.assert_not_called()
 
 

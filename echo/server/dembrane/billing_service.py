@@ -74,19 +74,26 @@ def _plan_description(tier: str, seats: int, billing_period: str) -> str:
     return f"dembrane {label} plan. {seat_txt}, {cadence}, {renews}. Cancel anytime."
 
 
-async def list_account_invoices(account_id: str) -> list[dict]:
-    """Payment history for the account's Mollie customer, newest first.
+async def list_account_invoices(
+    account_id: str, *, limit: int = 20, from_id: str | None = None
+) -> dict:
+    """Paginated payment history for the account's Mollie customer, newest first.
 
     Mollie has no customer-facing portal, so this is the in-app invoice list:
-    each consent + recurring charge, with date / amount / status. Returns []
-    when there's no customer yet."""
+    each consent + recurring charge, with date / amount / status. Returns
+    {"invoices": [...], "next": <cursor or None>}. `next` is the payment-id
+    cursor for "load more"; None when there are no more."""
     account = await async_directus.get_item("billing_account", account_id)
     customer_id = (account or {}).get("mollie_customer_id")
     if not customer_id:
-        return []
-    payments = await mollie.list_customer_payments(customer_id)
+        return {"invoices": [], "next": None}
+    # Fetch one extra to know whether there's a next page.
+    payments = await mollie.list_customer_payments(
+        customer_id, limit=limit + 1, from_id=from_id
+    )
+    next_cursor = payments[limit]["id"] if len(payments) > limit else None
     out: list[dict] = []
-    for p in payments:
+    for p in payments[:limit]:
         amt = p.get("amount") or {}
         out.append(
             {
@@ -98,7 +105,86 @@ async def list_account_invoices(account_id: str) -> list[dict]:
                 "description": p.get("description") or "",
             }
         )
-    return out
+    return {"invoices": out, "next": next_cursor}
+
+
+def _payment_method_label(mandate: dict) -> str:
+    """Human label for a Mollie mandate, e.g. 'Card ending 1234' / 'SEPA Direct Debit'."""
+    method = mandate.get("method")
+    details = mandate.get("details") or {}
+    if method == "creditcard":
+        last4 = details.get("cardNumber") or details.get("cardLabel")
+        return f"Card ending {last4}" if last4 else "Card"
+    if method == "directdebit":
+        acct = details.get("consumerAccount")
+        tail = acct[-4:] if acct else None
+        return f"SEPA Direct Debit ({tail})" if tail else "SEPA Direct Debit"
+    return method or "Unknown"
+
+
+async def get_billing_overview(account_id: str) -> dict:
+    """Everything the billing dashboard needs in one call: plan, seats, next
+    invoice, projected monthly total, and the current payment method."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account:
+        return {}
+    tier = account.get("tier") or "free"
+    billing_period = account.get("billing_period") or "annual"
+    status = account.get("status")
+    seats = max(await count_account_seats(account_id), 1)
+    customer_id = account.get("mollie_customer_id")
+    sub_id = account.get("mollie_subscription_id")
+
+    # Projected monthly total at the current tier + cadence.
+    projected_monthly_eur: float | None = None
+    per_seat_monthly_eur: float | None = None
+    cap = get_capacity(tier)
+    if cap is not None and cap.price_eur_monthly is not None:
+        per_seat_monthly_eur = (
+            compute_monthly_billing_price(cap.price_eur_monthly)
+            if billing_period == "monthly"
+            else cap.price_eur_monthly
+        )
+        projected_monthly_eur = round(per_seat_monthly_eur * seats, 2)
+
+    # Next invoice + payment method come from Mollie (best-effort).
+    next_invoice = None
+    payment_method = None
+    if customer_id and sub_id:
+        try:
+            sub = await mollie.get_subscription(customer_id=customer_id, subscription_id=sub_id)
+            amt = sub.get("amount") or {}
+            next_invoice = {
+                "date": sub.get("nextPaymentDate"),
+                "amount": amt.get("value"),
+                "currency": amt.get("currency"),
+            }
+        except mollie.MollieError:
+            pass
+    if customer_id:
+        try:
+            mandates = await mollie.list_mandates(customer_id)
+            valid = next((m for m in mandates if m.get("status") == "valid"), None) or (
+                mandates[0] if mandates else None
+            )
+            if valid:
+                payment_method = {
+                    "type": valid.get("method"),
+                    "label": _payment_method_label(valid),
+                }
+        except mollie.MollieError:
+            pass
+
+    return {
+        "tier": tier,
+        "status": status,
+        "billing_period": billing_period,
+        "seats": seats,
+        "next_invoice": next_invoice,
+        "projected_monthly_eur": projected_monthly_eur,
+        "per_seat_monthly_eur": per_seat_monthly_eur,
+        "payment_method": payment_method,
+    }
 
 
 async def estimate_account_cost(account_id: str) -> dict:
@@ -295,6 +381,51 @@ def _period_end_iso(billing_period: str | None) -> str:
     """Fallback period end from now (when Mollie can't give us nextPaymentDate)."""
     days = 365 if billing_period == "annual" else 30
     return (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
+
+
+async def sync_subscription_seats(account_id: str) -> float | None:
+    """Re-price an active subscription to match the account's current seat count.
+
+    Per-seat billing with no Mollie quantity field, so a seat change means
+    PATCHing the subscription's flat amount (= seats x per-seat price for the
+    account's tier + cadence). No-op unless the account is active with a Mollie
+    subscription, and skips the PATCH when the amount already matches. The new
+    amount applies to the next charge. Returns the amount it set, or None."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("status") != "active":
+        return None
+    sub_id = account.get("mollie_subscription_id")
+    customer_id = account.get("mollie_customer_id")
+    tier = account.get("tier")
+    if not sub_id or not customer_id or not tier or tier == "free":
+        return None
+    billing_period = account.get("billing_period") or "annual"
+    seats = max(await count_account_seats(account_id), 1)
+    try:
+        amount, _interval = _per_interval_amount(tier, seats, billing_period)
+    except BillingError:
+        return None
+
+    # Skip the PATCH when nothing changed (cron runs often; Mollie calls aren't free).
+    try:
+        sub = await mollie.get_subscription(customer_id=customer_id, subscription_id=sub_id)
+        current = float((sub.get("amount") or {}).get("value") or 0)
+    except (mollie.MollieError, ValueError):
+        current = None
+    if current is not None and abs(current - amount) < 0.01:
+        return amount
+
+    await mollie.update_subscription_amount(
+        customer_id=customer_id, subscription_id=sub_id, amount_eur=amount
+    )
+    logger.info(
+        "re-priced sub %s to %s EUR for %d seat(s) on account %s",
+        sub_id,
+        amount,
+        seats,
+        account_id,
+    )
+    return amount
 
 
 async def cancel_subscription(

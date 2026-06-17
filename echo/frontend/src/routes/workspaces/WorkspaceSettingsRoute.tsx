@@ -718,9 +718,6 @@ export const WorkspaceSettingsRoute = () => {
 										!settings.billing_org_managed && (
 											<BillingManager
 												accountId={settings.billing_account_id}
-												currentTier={settings.tier}
-												status={settings.billing_status}
-												defaultPeriod={settings.billing_period ?? "annual"}
 												invalidateKeys={[
 													["v2", "workspace-settings", workspaceId],
 												]}

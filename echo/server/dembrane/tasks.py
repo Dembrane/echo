@@ -2170,6 +2170,74 @@ def _format_expiry_date(expires_at_raw: str) -> str:
 
 
 @dramatiq.actor(queue_name="network")
+def task_reconcile_pending_billing() -> None:
+    """Catch-up: activate billing accounts whose first payment cleared but whose
+    return-sync was missed (e.g. the customer closed the tab, or no public
+    webhook in dev). Finds accounts in `pending` with a Mollie customer and
+    reconciles each from Mollie. Idempotent — activation is a no-op if already
+    active."""
+    task_logger = getLogger("dembrane.tasks.task_reconcile_pending_billing")
+    from dembrane.billing_service import sync_account_from_mollie
+    from dembrane.directus import directus, directus_client_context
+
+    with directus_client_context(directus) as client:
+        pending = client.get_items("billing_account", {
+            "query": {
+                "filter": {
+                    "status": {"_eq": "pending"},
+                    "mollie_customer_id": {"_nnull": True},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": -1,
+            }
+        })
+    if not isinstance(pending, list) or not pending:
+        return
+    task_logger.info("Reconciling %d pending billing account(s)", len(pending))
+    for acc in pending:
+        try:
+            status = run_async_in_new_loop(sync_account_from_mollie(acc["id"]))
+            if status == "active":
+                task_logger.info("Activated billing account %s via catch-up", acc["id"])
+        except Exception:
+            task_logger.exception("Failed reconciling billing account %s", acc.get("id"))
+
+
+@dramatiq.actor(queue_name="network")
+def task_reconcile_subscription_seats() -> None:
+    """Keep each active subscription's amount in line with its live seat count.
+
+    Per-seat billing has no Mollie quantity, so a member added/removed anywhere
+    in the org only reaches the bill when we PATCH the subscription amount. This
+    reconciles all active subscriptions; the service layer skips the PATCH when
+    the amount is unchanged."""
+    task_logger = getLogger("dembrane.tasks.task_reconcile_subscription_seats")
+    from dembrane.billing_service import sync_subscription_seats
+    from dembrane.directus import directus, directus_client_context
+
+    with directus_client_context(directus) as client:
+        active = client.get_items("billing_account", {
+            "query": {
+                "filter": {
+                    "status": {"_eq": "active"},
+                    "mollie_subscription_id": {"_nnull": True},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": -1,
+            }
+        })
+    if not isinstance(active, list) or not active:
+        return
+    for acc in active:
+        try:
+            run_async_in_new_loop(sync_subscription_seats(acc["id"]))
+        except Exception:
+            task_logger.exception("Failed seat-sync for billing account %s", acc.get("id"))
+
+
+@dramatiq.actor(queue_name="network")
 def task_flush_email_digests() -> None:
     """Daily digest flush — sends one summary email per recipient.
 
