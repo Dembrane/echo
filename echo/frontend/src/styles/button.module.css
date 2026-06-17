@@ -24,9 +24,9 @@
 	opacity: 1; /* Override any default opacity */
 }
 
-/* Secondary (outline) - transparent bg, blue border/text, hover/active adds blue background, standard corners */
+/* Secondary (outline) - transparent bg, blue border/text, hover/active adds blue background, fully squared corners */
 .root[data-variant="outline"] {
-	border-radius: var(--mantine-radius-default); /* Standard corners, not pill-shaped */
+	border-radius: 0px; /* Fully squared corners, no rounding */
 }
 
 .root[data-variant="outline"]:not(:disabled) {
@@ -41,9 +41,9 @@
 	background-color: rgba(65, 105, 225, 0.2); /* 20% Institution Blue */
 }
 
-/* Tertiary (subtle) - no border, transparent bg, blue text, same hover/active as outline, standard corners */
+/* Tertiary (subtle) - no border, transparent bg, blue text, same hover/active as outline, fully squared corners */
 .root[data-variant="subtle"] {
-	border-radius: var(--mantine-radius-default); /* Standard corners, not pill-shaped */
+	border-radius: 0px; /* Fully squared corners, no rounding */
 }
 
 .root[data-variant="subtle"]:not(:disabled) {

@@ -71,17 +71,18 @@ export const theme = createTheme({
 				variant: "light",
 			},
 		},
-		Autocomplete: {
-			defaultProps: {
-				styles: {
-					dropdown: {
-						backgroundColor: "var(--app-background)",
-					},
-					input: {
-						backgroundColor: "var(--app-background)",
+			Autocomplete: {
+				defaultProps: {
+					radius: "none",
+					styles: {
+						dropdown: {
+							backgroundColor: "var(--app-background)",
+						},
+						input: {
+							backgroundColor: "var(--app-background)",
+						},
 					},
 				},
-			},
 			styles: {
 				option: {
 					"&[data-combobox-selected]": {
@@ -189,17 +190,18 @@ export const theme = createTheme({
 				},
 			},
 		},
-		MultiSelect: {
-			defaultProps: {
-				styles: {
-					dropdown: {
-						backgroundColor: "var(--app-background)",
-					},
-					input: {
-						backgroundColor: "var(--app-background)",
+			MultiSelect: {
+				defaultProps: {
+					radius: "none",
+					styles: {
+						dropdown: {
+							backgroundColor: "var(--app-background)",
+						},
+						input: {
+							backgroundColor: "var(--app-background)",
+						},
 					},
 				},
-			},
 			styles: {
 				option: {
 					"&[data-combobox-selected]": {
@@ -208,15 +210,36 @@ export const theme = createTheme({
 				},
 			},
 		},
-		NativeSelect: {
-			defaultProps: {
-				styles: {
-					input: {
-						backgroundColor: "var(--app-background)",
+			NativeSelect: {
+				defaultProps: {
+					radius: "none",
+					styles: {
+						input: {
+							backgroundColor: "var(--app-background)",
+						},
 					},
 				},
 			},
-		},
+			NumberInput: {
+				defaultProps: {
+					radius: "none",
+					styles: {
+						input: {
+							backgroundColor: "var(--app-background)",
+						},
+					},
+				},
+			},
+			PasswordInput: {
+				defaultProps: {
+					radius: "none",
+					styles: {
+						input: {
+							backgroundColor: "var(--app-background)",
+						},
+					},
+				},
+			},
 		Paper: {
 			defaultProps: {
 				border: { dark: "dark.8", light: "gray.1" },
@@ -243,17 +266,18 @@ export const theme = createTheme({
 				},
 			},
 		},
-		Select: {
-			defaultProps: {
-				styles: {
-					dropdown: {
-						backgroundColor: "var(--app-background)",
-					},
-					input: {
-						backgroundColor: "var(--app-background)",
+			Select: {
+				defaultProps: {
+					radius: "none",
+					styles: {
+						dropdown: {
+							backgroundColor: "var(--app-background)",
+						},
+						input: {
+							backgroundColor: "var(--app-background)",
+						},
 					},
 				},
-			},
 			styles: {
 				option: {
 					"&[data-combobox-selected]": {
@@ -284,25 +308,27 @@ export const theme = createTheme({
 				},
 			},
 		},
-		Textarea: {
-			defaultProps: {
-				resize: "vertical",
-				styles: {
-					input: {
-						backgroundColor: "var(--app-background)",
+			Textarea: {
+				defaultProps: {
+					radius: "none",
+					resize: "vertical",
+					styles: {
+						input: {
+							backgroundColor: "var(--app-background)",
+						},
 					},
 				},
 			},
-		},
-		TextInput: {
-			defaultProps: {
-				styles: {
-					input: {
-						backgroundColor: "var(--app-background)",
+			TextInput: {
+				defaultProps: {
+					radius: "none",
+					styles: {
+						input: {
+							backgroundColor: "var(--app-background)",
+						},
 					},
 				},
 			},
-		},
 		Title: {
 			defaultProps: {
 				c: "var(--app-text)",
@@ -361,8 +387,9 @@ export const theme = createTheme({
 		xl: "var(--app-line-height-xl)",
 		xs: "var(--app-line-height-xs)",
 	},
-	primaryColor: "primary",
-	// Updated to match Tailwind radius
+			primaryColor: "primary",
+			defaultRadius: "none",
+			// Updated to match Tailwind radius
 	radius: {
 		"2xl": "1rem",
 		"3xl": "1.5rem",
