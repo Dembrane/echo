@@ -64,6 +64,7 @@ const ORG_SECTION_LABELS: Record<string, string> = {
 	billing: "Billing",
 	overview: "Overview",
 	people: "Members",
+	members: "Members",
 	"request-workspace": "Request workspace",
 	usage: "Usage",
 };
@@ -163,14 +164,18 @@ export const AppBreadcrumbs = () => {
 				}
 				return out;
 			}
-			case "workspace-home": {
-				if (!workspace) return out;
-				pushWorkspaceCrumbs(workspace);
-				if (window.location.pathname.endsWith("/projects/new")) {
-					out.push({ label: "New project" });
+				case "workspace-home": {
+					if (!workspace) return out;
+					pushWorkspaceCrumbs(workspace);
+					if (window.location.pathname.endsWith("/projects/new")) {
+						out.push({ label: "New project" });
+					}
+					const section = params.section;
+					if (section === "members") {
+						out.push({ label: "Members" });
+					}
+					return out;
 				}
-				return out;
-			}
 			case "workspace-settings": {
 				if (workspace) {
 					pushWorkspaceCrumbs(workspace);

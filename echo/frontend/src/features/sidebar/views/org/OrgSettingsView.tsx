@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { ChartLineIcon, CreditCardIcon, GearIcon, UsersIcon } from "@phosphor-icons/react";
+import { ChartLineIcon, CreditCardIcon, GearIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useV2Me } from "@/hooks/useV2Me";
 import { BackButton } from "../../primitives/BackButton";
@@ -34,18 +34,13 @@ export const OrgSettingsView = () => {
 					icon={ChartLineIcon}
 				/>
 			)}
-			<NavItem
-				to={`/o/${orgId}/settings/members`}
-				label={<Trans>Members</Trans>}
-				icon={UsersIcon}
-			/>
-			{canSeeFinancials && (
-				<NavItem
-					to={`/o/${orgId}/settings/billing`}
-					label={<Trans>Billing</Trans>}
-					icon={CreditCardIcon}
-				/>
-			)}
+				{canSeeFinancials && (
+					<NavItem
+						to={`/o/${orgId}/settings/billing`}
+						label={<Trans>Billing</Trans>}
+						icon={CreditCardIcon}
+					/>
+				)}
 		</nav>
 	);
 };

@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { AppWindow, Gear, Plus, PushPin } from "@phosphor-icons/react";
+import { AppWindow, Gear, Plus, PushPin, Users } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -30,13 +30,10 @@ export const WorkspaceHomeView = () => {
 	const backLabel = workspace?.org_name ?? "Home";
 	const isExternal = workspace?.role === "external";
 	const canCreateProject = !isExternal;
-	const isAdmin = isAdminRole(workspace?.role);
-	const isBilling = workspace?.role === "billing";
-	const settingsPath = isAdmin
-		? `${base}/settings/general`
-		: isBilling
-			? `${base}/settings/billing`
-			: `${base}/settings/members`;
+		const isAdmin = isAdminRole(workspace?.role);
+		const settingsPath = isAdmin
+			? `${base}/settings/general`
+			: `${base}/settings/billing`;
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
@@ -58,14 +55,21 @@ export const WorkspaceHomeView = () => {
 			)}
 			{/* Settings is the last clickable item under the workspace title,
 			    directly below New project and above the Pinned projects section. */}
-			{!isExternal && (
-				<NavItem
-					to={settingsPath}
-					label={<Trans>Settings</Trans>}
-					icon={Gear}
-					pushes
-				/>
-			)}
+				{!isExternal && (
+					<>
+							<NavItem
+								to={`${base}/members`}
+								label={<Trans>Members</Trans>}
+								icon={Users}
+							/>
+						<NavItem
+							to={settingsPath}
+							label={<Trans>Settings</Trans>}
+							icon={Gear}
+							pushes
+						/>
+					</>
+				)}
 			{pinnedProjects.length > 0 && (
 				<>
 					<SectionLabel>

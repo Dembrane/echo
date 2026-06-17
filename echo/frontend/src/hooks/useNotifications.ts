@@ -165,9 +165,9 @@ export function resolveNotificationHref(
 		case "NAVIGATE_WORKSPACE_SETTINGS":
 			if (!refs.workspace_id) return null;
 			// Workspace access requests are approved on the Members tab.
-			if (event_code === "MEMBERSHIP_REQUESTED") {
-				return `/w/${refs.workspace_id}/settings/members`;
-			}
+				if (event_code === "MEMBERSHIP_REQUESTED") {
+					return `/w/${refs.workspace_id}/members`;
+				}
 			return `/w/${refs.workspace_id}/settings/general`;
 		default:
 			return null;

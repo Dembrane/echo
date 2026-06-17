@@ -313,31 +313,33 @@ export const OrganisationRoute = () => {
 	const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
 	const [inviteOpen, setInviteOpen] = useState(false);
 	const queryClient = useQueryClient();
-	// URL-driven tab state. Tab lives in the path segment
-	// (`/o/:organisationId/<tab>`) so browser back steps between tabs and URLs
-	// are shareable. We ALSO recognise sidebar-driven URLs:
-	//   /o/:id/settings/<section>  → maps to an existing tab
-	// The sidebar pushes those URLs so its view resolver lands on
-	// "org-settings" while the content panel keeps using existing tabs.
-	const allowedTabs = ["overview", "usage", "people", "billing"] as const;
-	type TabValue = (typeof allowedTabs)[number];
-	const segments = (splat ?? "").split("/").filter(Boolean);
-	const segment = segments[0] ?? "";
+		// URL-driven tab state. Tab lives in the path segment
+		// (`/o/:organisationId/<tab>`) so browser back steps between tabs and URLs
+		// are shareable. We ALSO recognise sidebar-driven URLs:
+		//   /o/:id/settings/<section>  → maps to an existing tab
+		// The sidebar pushes those URLs so its view resolver lands on
+		// "org-settings" while the content panel keeps using existing tabs.
+		const allowedTabs = ["overview", "usage", "members", "billing"] as const;
+		type TabValue = (typeof allowedTabs)[number];
+		const segments = (splat ?? "").split("/").filter(Boolean);
+		const segment = segments[0] ?? "";
 
-	const isSettingsPath = segment === "settings";
+		const isSettingsPath = segment === "settings";
 
-	const viewRaw: TabValue = isSettingsPath
-		? (() => {
-				const section = segments[1] ?? "general";
-				if (section === "usage") return "usage";
-				if (section === "members") return "people";
-				if (section === "billing") return "billing";
-				// general / anything else → overview (general settings).
-				return "overview";
-			})()
-		: (allowedTabs as readonly string[]).includes(segment)
-			? (segment as TabValue)
-			: "overview";
+		const viewRaw: TabValue = isSettingsPath
+			? (() => {
+					const section = segments[1] ?? "general";
+					if (section === "usage") return "usage";
+					if (section === "members") return "members";
+					if (section === "billing") return "billing";
+					// general / anything else → overview (general settings).
+					return "overview";
+				})()
+			: segment === "people"
+				? "members"
+				: (allowedTabs as readonly string[]).includes(segment)
+					? (segment as TabValue)
+					: "overview";
 
 	useEffect(() => {
 		// Bounce bare /o/:id to /o/:id/overview. Don't bounce /settings/*; those are canonical sidebar URLs.
@@ -397,12 +399,12 @@ export const OrganisationRoute = () => {
 	// finance-only role, so it must reach Usage + Billing even though it
 	// isn't an admin.
 	const canSeeFinancials = isAdmin || organisation?.role === "billing";
-	// Views the caller can't open fall back to People so landing state is
-	// never an empty panel for them.
-	const view: TabValue =
-		!canSeeFinancials && (viewRaw === "usage" || viewRaw === "billing")
-			? "people"
-			: viewRaw;
+		// Views the caller can't open fall back to Members so landing state is
+		// never an empty panel for them.
+		const view: TabValue =
+			!canSeeFinancials && (viewRaw === "usage" || viewRaw === "billing")
+				? "members"
+				: viewRaw;
 
 	// Organisation-level role change — admin + owner can edit; owner-only offers
 	// the "owner" option (only owners can grant owner).
@@ -755,7 +757,7 @@ export const OrganisationRoute = () => {
 						</Tabs.Panel>
 					)}
 
-					<Tabs.Panel value="people" pt="md">
+											<Tabs.Panel value="members" pt="md">
 						<Stack gap="md">
 							<MembersToolbar
 								search={search}
