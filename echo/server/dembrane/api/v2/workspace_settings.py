@@ -239,24 +239,12 @@ async def get_workspace_settings(
                     all_policies.add(p)
         effective = sorted(all_policies)
 
-    from dembrane.billing_period import resolve_workspace_billing_period
-
-    # Soft-degrade on resolver failure — billing_period is informational
-    # (UI defaults to "annual" when null) and we'd rather return the rest
-    # of the settings than 500 the whole panel on a transient Directus blip.
-    try:
-        billing_period = await resolve_workspace_billing_period(ctx.workspace_id)
-    except Exception as e:
-        logger.warning(
-            "Failed to resolve billing_period for workspace %s: %s",
-            ctx.workspace_id,
-            e,
-        )
-        billing_period = None
-
     from dembrane.billing_account import resolve_workspace_billing
 
     billing = await resolve_workspace_billing(ctx.workspace_id)
+    # Cadence now lives on the billing account (single source of truth).
+    # UI defaults to "annual" for display when null.
+    billing_period = billing.get("billing_period")
 
     return WorkspaceDetailResponse(
         id=ws["id"],
