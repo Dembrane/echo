@@ -148,5 +148,13 @@ async def update_subscription_amount(
     )
 
 
+async def get_subscription(*, customer_id: str, subscription_id: str) -> dict:
+    """Fetch a subscription. `nextPaymentDate` is the end of the current paid
+    period — what we use to set the local tier expiry on cancel."""
+    return await _request(
+        "GET", f"/customers/{customer_id}/subscriptions/{subscription_id}"
+    )
+
+
 async def cancel_subscription(*, customer_id: str, subscription_id: str) -> dict:
     return await _request("DELETE", f"/customers/{customer_id}/subscriptions/{subscription_id}")

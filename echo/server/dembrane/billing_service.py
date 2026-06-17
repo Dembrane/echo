@@ -21,6 +21,7 @@ change later means PATCHing the subscription amount.
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone, timedelta
 
 from dembrane import mollie
 from dembrane.settings import get_settings
@@ -263,44 +264,71 @@ async def sync_account_from_mollie(account_id: str) -> str:
     return account.get("status") or "pending"
 
 
+def _period_end_iso(billing_period: str | None) -> str:
+    """Fallback period end from now (when Mollie can't give us nextPaymentDate)."""
+    days = 365 if billing_period == "annual" else 30
+    return (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
+
+
 async def cancel_subscription(
     account_id: str, *, reason: str | None = None, feedback: str | None = None
 ) -> str:
-    """Cancel the account's Mollie subscription and revert it to Free.
+    """Stop the account's subscription from renewing, keeping the paid tier
+    until the end of the current period.
 
-    Stops future charges right away and drops the account back to the Free
-    tier. The churn reason is logged for the team (the client also emits a
-    PostHog event). Idempotent — safe to call on an account with no
-    subscription. Returns the resulting status ('free')."""
+    We cancel the Mollie subscription (no more charges) but the customer keeps
+    what they paid for: the tier stays and `tier_expires_at` is set to the end
+    of the current period. The existing tier-expiry cron reverts to Free when it
+    lapses. The churn reason is logged for the team (the client also emits a
+    PostHog event). Idempotent. Returns the resulting status ('canceled', or
+    'free' if there was nothing to cancel)."""
     account = await async_directus.get_item("billing_account", account_id)
     if not account:
         raise BillingError("billing account not found")
 
     sub_id = account.get("mollie_subscription_id")
     customer_id = account.get("mollie_customer_id")
-    if sub_id and customer_id:
-        try:
-            await mollie.cancel_subscription(customer_id=customer_id, subscription_id=sub_id)
-        except mollie.MollieError as exc:
-            # A 404/410 from Mollie means it's already gone — treat as cancelled.
-            logger.warning("Mollie cancel for sub %s returned %s; reverting locally", sub_id, exc)
+    if not sub_id or not customer_id:
+        # Nothing to cancel (e.g. a comped trial or never-subscribed account).
+        return account.get("status") or "free"
 
+    # Read the period end before cancelling — Mollie clears it on cancel.
+    period_end: str | None = None
+    try:
+        sub = await mollie.get_subscription(customer_id=customer_id, subscription_id=sub_id)
+        next_date = sub.get("nextPaymentDate")  # "YYYY-MM-DD"
+        if next_date:
+            period_end = f"{next_date}T00:00:00+00:00"
+    except mollie.MollieError as exc:
+        logger.warning("Could not read Mollie sub %s before cancel: %s", sub_id, exc)
+
+    try:
+        await mollie.cancel_subscription(customer_id=customer_id, subscription_id=sub_id)
+    except mollie.MollieError as exc:
+        # 404/410 means it's already gone — proceed to wind down locally.
+        logger.warning("Mollie cancel for sub %s returned %s; winding down locally", sub_id, exc)
+
+    expires_at = period_end or _period_end_iso(account.get("billing_period"))
     logger.info(
-        "billing account %s cancelled (reason=%r feedback=%r)", account_id, reason, feedback
+        "billing account %s cancelled, tier kept until %s (reason=%r feedback=%r)",
+        account_id,
+        expires_at,
+        reason,
+        feedback,
     )
     await async_directus.update_item(
         "billing_account",
         account_id,
         {
-            "tier": "free",
+            # Keep tier + billing_period: they paid for this period.
             "status": "canceled",
             "payment_mode": "none",
             "mollie_subscription_id": None,
-            "billing_period": None,
-            "tier_expires_at": None,
+            "tier_expires_at": expires_at,
+            "pre_warning_sent": False,
         },
     )
-    return "free"
+    return "canceled"
 
 
 async def handle_mollie_webhook(payment_id: str) -> None:

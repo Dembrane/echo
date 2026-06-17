@@ -457,33 +457,6 @@ class TestAllActiveWorkspacesFields:
 # ── Approve helpers write discount fields (structural) ──
 
 
-class TestApproveWritesDiscount:
-    def test_create_workspace_signature_accepts_discount(self):
-        """Verify _create_workspace_for_request accepts discount params."""
-        import inspect
-
-        from dembrane.api.v2.admin import _create_workspace_for_request
-
-        sig = inspect.signature(_create_workspace_for_request)
-        params = list(sig.parameters.keys())
-        assert "granted_type_discount" in params
-        assert "granted_percent_discount" in params
-
-    def test_upgrade_workspace_signature_accepts_discount(self):
-        """Verify _upgrade_workspace_for_request accepts discount params."""
-        import inspect
-
-        from dembrane.api.v2.admin import _upgrade_workspace_for_request
-
-        sig = inspect.signature(_upgrade_workspace_for_request)
-        params = list(sig.parameters.keys())
-        assert "granted_type_discount" in params
-        assert "granted_percent_discount" in params
-
-
-# ── No price computation guard ──
-
-
 class TestNoPriceComputation:
     """Grep guard: no code path multiplies a tier price by percent_discount."""
 

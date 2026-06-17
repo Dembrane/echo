@@ -1831,34 +1831,54 @@ def task_expire_workspace_tiers() -> None:
     for acc in expired_accounts:
         from_tier = acc.get("tier", "pioneer")
         ws_id = acc.get("workspace_id")
-        if not ws_id:
-            task_logger.warning(
-                "Billing account %s has no workspace_id; org-scoped fan-out not implemented, skipping",
-                acc.get("id"),
-            )
-            continue
-        with directus_client_context(directus) as client:
-            ws = client.get_item("workspace", ws_id)
-        if not ws or ws.get("deleted_at"):
-            continue
-        ws_name = ws.get("name") or "Untitled"
+        # Resolve the workspace(s) the account covers. Workspace-scoped accounts
+        # point at one; org-scoped accounts fan out to every attached workspace.
+        if ws_id:
+            covered_ws_ids = [ws_id]
+        else:
+            with directus_client_context(directus) as client:
+                covered = client.get_items("workspace", {
+                    "query": {
+                        "filter": {
+                            "billing_account_id": {"_eq": acc.get("id")},
+                            "deleted_at": {"_null": True},
+                        },
+                        "fields": ["id"],
+                        "limit": -1,
+                    }
+                })
+            covered_ws_ids = [w["id"] for w in covered] if isinstance(covered, list) else []
+            if not covered_ws_ids:
+                # Org account with no workspaces yet: just clear expiry on the
+                # account so it doesn't re-trigger every run.
+                with directus_client_context(directus) as client:
+                    client.update_item("billing_account", acc.get("id"), {
+                        "tier": "free",
+                        "tier_expires_at": None,
+                        "pre_warning_sent": False,
+                    })
+                task_logger.info("Expired org account %s -> free (no workspaces)", acc.get("id"))
+                continue
 
-        try:
-            effects = run_async_in_new_loop(
-                _apply_tier_expiry(ws_id, from_tier)
-            )
-
-            task_logger.info(
-                "Expired workspace %s (%s): %s -> free, %d effects applied",
-                ws_id, ws_name, from_tier, len(effects),
-            )
-
-            _send_tier_expired_notifications(ws_id, ws_name, from_tier, effects)
-
-        except Exception:
-            task_logger.exception(
-                "Failed to expire workspace %s (%s)", ws_id, ws_name,
-            )
+        for target_ws_id in covered_ws_ids:
+            with directus_client_context(directus) as client:
+                ws = client.get_item("workspace", target_ws_id)
+            if not ws or ws.get("deleted_at"):
+                continue
+            ws_name = ws.get("name") or "Untitled"
+            try:
+                effects = run_async_in_new_loop(
+                    _apply_tier_expiry(target_ws_id, from_tier)
+                )
+                task_logger.info(
+                    "Expired workspace %s (%s): %s -> free, %d effects applied",
+                    target_ws_id, ws_name, from_tier, len(effects),
+                )
+                _send_tier_expired_notifications(target_ws_id, ws_name, from_tier, effects)
+            except Exception:
+                task_logger.exception(
+                    "Failed to expire workspace %s (%s)", target_ws_id, ws_name,
+                )
 
 
 async def _apply_tier_expiry(workspace_id: str, from_tier: str) -> list[dict]:
