@@ -44,7 +44,6 @@ import {
 	MembersToolbar,
 	PendingInvitesSection,
 } from "@/components/members";
-import { OrganisationCapBanner } from "@/components/organisation/OrganisationCapBanner";
 import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
 import { OrganisationUsageRollup } from "@/components/workspace/OrganisationUsageRollup";
 import { API_BASE_URL } from "@/config";
@@ -632,14 +631,6 @@ export const OrganisationRoute = () => {
 
 	return (
 		<Container size="xl" py="xl" px="lg">
-			{/* Skipped on overview (cards + top SeatCapBanner already cover it);
-			    kept on other tabs where it's the only org-wide cap signal. */}
-			{organisationId && view !== "overview" && (
-				<OrganisationCapBanner
-					organisationId={organisationId}
-					workspaces={workspaces}
-				/>
-			)}
 			<Stack gap={24}>
 				{/* Header — minimal. Name + counts on the left, action cluster
 				    on the right. Tier is intentionally absent (it's a
