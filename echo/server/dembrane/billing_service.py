@@ -185,6 +185,39 @@ async def _activate_from_first_payment(account_id: str, meta: dict, customer_id:
     logger.info("activated billing account %s on %s via Mollie sub %s", account_id, tier, sub.get("id"))
 
 
+async def sync_account_from_mollie(account_id: str) -> str:
+    """Reconcile an account's status from Mollie (return-poll / missed-webhook /
+    scheduled catch-up). If a consent 'first' payment has cleared and no
+    subscription exists yet, activate. Returns the resulting status.
+
+    Safe to call repeatedly — activation is idempotent.
+    """
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account:
+        return "none"
+    customer_id = account.get("mollie_customer_id")
+    if not customer_id:
+        return account.get("status") or "none"
+    if account.get("mollie_subscription_id"):
+        return account.get("status") or "active"
+
+    payments = await mollie.list_customer_payments(customer_id)
+    first_paid = next(
+        (
+            p
+            for p in payments
+            if p.get("sequenceType") == "first"
+            and p.get("status") == "paid"
+            and (p.get("metadata") or {}).get("billing_account_id") == account_id
+        ),
+        None,
+    )
+    if first_paid:
+        await _activate_from_first_payment(account_id, first_paid.get("metadata") or {}, customer_id)
+        return "active"
+    return account.get("status") or "pending"
+
+
 async def handle_mollie_webhook(payment_id: str) -> None:
     """Process a Mollie payment webhook. Re-fetches the payment (never trusts the
     POST body), then reconciles the billing account. Idempotent."""

@@ -92,6 +92,39 @@ async def start_checkout(
     return {"checkout_url": url}
 
 
+@router.post("/billing-accounts/{account_id}/sync")
+async def sync_account(account_id: str, auth: DependencyDirectusSession) -> dict:
+    """Reconcile an account from Mollie (called on return from checkout, or as a
+    catch-up). Activates if a first payment cleared without a webhook."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
+    if not auth.is_admin:
+        app_user = await resolve_app_user(auth.user_id)
+        if not app_user:
+            raise HTTPException(status_code=403, detail="Not allowed")
+        org_id = await _account_org_id(account)
+        rows = await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "user_id": {"_eq": app_user["id"]},
+                        "org_id": {"_eq": org_id},
+                        "role": {"_in": list(_BILLING_ROLES)},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": 1,
+                }
+            },
+        )
+        if not isinstance(rows, list) or not rows:
+            raise HTTPException(status_code=403, detail="Not allowed")
+    status = await billing_service.sync_account_from_mollie(account_id)
+    return {"status": status}
+
+
 @webhook_router.post("/mollie/webhook")
 async def mollie_webhook(id: str = Form(...)) -> dict:
     """Mollie payment webhook. Re-fetches the payment and reconciles the account.
