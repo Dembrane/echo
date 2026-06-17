@@ -110,7 +110,6 @@ class WorkspaceSummary(BaseModel):
     # a frozen feature.
     downgraded_at: Optional[str] = None
     downgraded_from_tier: Optional[str] = None
-    has_pending_upgrade_request: bool = False
     created_at: Optional[str] = None
 
 
@@ -138,17 +137,6 @@ class RecentRemoval(BaseModel):
     ended_at: str  # ISO timestamp from workspace_membership.deleted_at
 
 
-class PendingWorkspaceRequest(BaseModel):
-    id: str
-    kind: str
-    status: str
-    proposed_name: Optional[str] = None
-    proposed_tier: str
-    org_id: str
-    org_name: str = ""
-    created_at: Optional[str] = None
-
-
 class WorkspaceListResponse(BaseModel):
     workspaces: list[WorkspaceSummary]
     organisations: list[OrganisationRollup] = []
@@ -156,7 +144,6 @@ class WorkspaceListResponse(BaseModel):
     # message on /w so a removed guest sees "your access ended" instead of
     # "create your first workspace".
     recent_removals: list[RecentRemoval] = []
-    pending_workspace_requests: list[PendingWorkspaceRequest] = []
 
 
 # ── /v2/workspaces CRUD ──

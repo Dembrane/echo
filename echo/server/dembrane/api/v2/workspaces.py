@@ -21,7 +21,6 @@ from dembrane.api.v2.schemas import (
     WorkspaceListResponse,
     CreateWorkspaceRequest,
     CreateWorkspaceResponse,
-    PendingWorkspaceRequest,
 )
 from dembrane.directus_async import async_directus
 from dembrane.tier_downgrade import preview_downgrade, apply_downgrade_effects
@@ -315,28 +314,6 @@ async def list_workspaces(
         *[_get_workspace_aggregates(ws["id"]) for _, ws in valid_memberships]
     )
 
-    # Batch-fetch pending workspace_requests for badge rendering on /w
-    all_ws_ids = [ws["id"] for _, ws in valid_memberships]
-    pending_request_ws_ids: set[str] = set()
-    if all_ws_ids:
-        pending_reqs = await async_directus.get_items(
-            "workspace_request",
-            {
-                "query": {
-                    "filter": {
-                        "workspace_id": {"_in": all_ws_ids},
-                        "status": {"_eq": "pending"},
-                    },
-                    "fields": ["workspace_id"],
-                    "limit": -1,
-                }
-            },
-        )
-        if isinstance(pending_reqs, list):
-            pending_request_ws_ids = {
-                r["workspace_id"] for r in pending_reqs if r.get("workspace_id")
-            }
-
     results: list[WorkspaceSummary] = []
     from dembrane.tier_capacity import next_tier as tier_next, get_capacity, compute_usage_gates
     from dembrane.api.v2.schemas import UsageGatesSummary
@@ -386,7 +363,6 @@ async def list_workspaces(
                 usage=usage,
                 downgraded_at=ws.get("downgraded_at"),
                 downgraded_from_tier=ws.get("downgraded_from_tier"),
-                has_pending_upgrade_request=ws["id"] in pending_request_ws_ids,
                 created_at=ws.get("created_at"),
             )
         )
@@ -542,51 +518,10 @@ async def list_workspaces(
                     )
                 )
 
-    # Fetch the caller's pending workspace requests (new_workspace + tier_upgrade)
-    # so the /w selector can show "request submitted" cards.
-    pending_requests_raw = await async_directus.get_items(
-        "workspace_request",
-        {
-            "query": {
-                "filter": {
-                    "requested_by": {"_eq": app_user_id},
-                    "status": {"_eq": "pending"},
-                },
-                "fields": [
-                    "id",
-                    "kind",
-                    "status",
-                    "proposed_name",
-                    "proposed_tier",
-                    "org_id",
-                    "created_at",
-                ],
-                "sort": ["-created_at"],
-                "limit": 20,
-            }
-        },
-    )
-    pending_ws_requests: list[PendingWorkspaceRequest] = []
-    if isinstance(pending_requests_raw, list):
-        for pr in pending_requests_raw:
-            pending_ws_requests.append(
-                PendingWorkspaceRequest(
-                    id=pr["id"],
-                    kind=pr.get("kind", ""),
-                    status=pr.get("status", "pending"),
-                    proposed_name=pr.get("proposed_name"),
-                    proposed_tier=pr.get("proposed_tier", ""),
-                    org_id=pr.get("org_id", ""),
-                    org_name=org_map.get(pr.get("org_id", ""), ""),
-                    created_at=pr.get("created_at"),
-                )
-            )
-
     return WorkspaceListResponse(
         workspaces=results,
         organisations=organisations,
         recent_removals=recent_removals,
-        pending_workspace_requests=pending_ws_requests,
     )
 
 
