@@ -271,9 +271,12 @@ function ChangePlanModal({
 			centered
 		>
 			<Stack gap="md">
-				<Group justify="center">
-					<BillingPeriodToggle value={period} onChange={setPeriod} compact />
-				</Group>
+				<Stack gap={6} align="center">
+					<Text size="xs" fw={500} c="dimmed" tt="uppercase">
+						<Trans>Billing period</Trans>
+					</Text>
+					<BillingPeriodToggle value={period} onChange={setPeriod} />
+				</Stack>
 				<TierPricingCards
 					value={tier}
 					onChange={setTier}
