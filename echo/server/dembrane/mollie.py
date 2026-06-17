@@ -72,19 +72,22 @@ async def create_first_payment(
     amount_eur: float,
     description: str,
     redirect_url: str,
-    webhook_url: str,
+    webhook_url: Optional[str] = None,
     metadata: Optional[dict] = None,
 ) -> dict:
     """Create the consent ('first') payment. The hosted checkout URL is at
-    `_links.checkout.href`. Completing it yields a reusable mandate."""
+    `_links.checkout.href`. Completing it yields a reusable mandate. `webhook_url`
+    is optional — Mollie rejects non-public URLs, so omit it in local dev and
+    reconcile via the return-poll / reconcile job instead."""
     body: dict[str, Any] = {
         "amount": _amount(amount_eur),
         "customerId": customer_id,
         "sequenceType": "first",
         "description": description,
         "redirectUrl": redirect_url,
-        "webhookUrl": webhook_url,
     }
+    if webhook_url:
+        body["webhookUrl"] = webhook_url
     if metadata:
         body["metadata"] = metadata
     return await _request("POST", "/payments", json=body)
@@ -108,7 +111,7 @@ async def create_subscription(
     amount_eur: float,
     interval: str,
     description: str,
-    webhook_url: str,
+    webhook_url: Optional[str] = None,
     metadata: Optional[dict] = None,
 ) -> dict:
     """Create a recurring subscription. `amount` is the full per-interval charge
@@ -118,8 +121,9 @@ async def create_subscription(
         "amount": _amount(amount_eur),
         "interval": interval,
         "description": description,
-        "webhookUrl": webhook_url,
     }
+    if webhook_url:
+        body["webhookUrl"] = webhook_url
     if metadata:
         body["metadata"] = metadata
     return await _request("POST", f"/customers/{customer_id}/subscriptions", json=body)
