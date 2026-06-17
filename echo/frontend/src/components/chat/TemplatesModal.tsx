@@ -33,7 +33,6 @@ import {
 	Textarea,
 	TextInput,
 	Tooltip,
-	UnstyledButton,
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
@@ -95,9 +94,9 @@ type TemplatesModalProps = {
 	onToggleAiSuggestions?: (hide: boolean) => void;
 	saveAsTemplateContent?: string | null;
 	onClearSaveAsTemplate?: () => void;
-	// When true, the create form shows a "Share with organisation" toggle. Set
+	// When true, the create form shows a "Share with workspace" toggle. Set
 	// false for contexts without a workspace (e.g. agentic playground) or
-	// when the caller is an external guest who can't create organisation templates.
+	// when the caller is an external guest who can't create workspace templates.
 	canCreateWorkspaceTemplate?: boolean;
 };
 
@@ -197,7 +196,7 @@ export const TemplatesModal = ({
 	const [animateList, enableAnimations] = useAutoAnimate();
 	const [formTitle, setFormTitle] = useState("");
 	const [formContent, setFormContent] = useState("");
-	// Defaults to 'workspace' when the caller can create organisation templates —
+	// Defaults to 'workspace' when the caller can create workspace templates,
 	// that's the more useful setting in most chats. User can flip to
 	// personal via the switch.
 	const [formScope, setFormScope] = useState<"user" | "workspace">("user");
@@ -447,17 +446,19 @@ export const TemplatesModal = ({
 			<>
 				<Modal {...modalProps}>
 					<div className="flex h-full flex-col">
-						<UnstyledButton onClick={handleBack} className="mb-4">
-							<Group gap={4}>
-								<ArrowLeftIcon size={16} />
-								<Text size="sm" c="dimmed">
-									<Trans>Back to templates</Trans>
-								</Text>
-							</Group>
-						</UnstyledButton>
+						<Button
+							variant="subtle"
+							size="compact-sm"
+							leftSection={<ArrowLeftIcon size={16} />}
+							onClick={handleBack}
+							className="mb-4 self-start"
+						>
+							<Trans>Back to templates</Trans>
+						</Button>
 						<Stack gap="md" className="flex-1">
 							<TextInput
 								label={t`Template name`}
+								withAsterisk
 								value={formTitle}
 								onChange={(e) => setFormTitle(e.currentTarget.value)}
 								placeholder={t`e.g. Weekly stakeholder digest`}
@@ -465,6 +466,7 @@ export const TemplatesModal = ({
 							/>
 							<Textarea
 								label={t`Prompt`}
+								withAsterisk
 								value={formContent}
 								onChange={(e) => setFormContent(e.currentTarget.value)}
 								placeholder={t`What should ECHO analyse or generate from the conversations?`}
@@ -477,12 +479,12 @@ export const TemplatesModal = ({
 									<Group justify="space-between" wrap="nowrap" gap="sm">
 										<Stack gap={2} style={{ minWidth: 0 }}>
 											<Text size="sm">
-												<Trans>Share with organisation</Trans>
+												<Trans>Share with workspace</Trans>
 											</Text>
 											<Text size="xs" c="dimmed" lineClamp={2}>
 												<Trans>
-													Organisation templates are visible to everyone in this
-													workspace. Leave off to keep it personal.
+													Visible to everyone in this workspace. Leave off to keep
+													it personal.
 												</Trans>
 											</Text>
 										</Stack>
@@ -493,7 +495,7 @@ export const TemplatesModal = ({
 													e.currentTarget.checked ? "workspace" : "user",
 												)
 											}
-											aria-label={t`Share with organisation`}
+											aria-label={t`Share with workspace`}
 										/>
 									</Group>
 								</Paper>

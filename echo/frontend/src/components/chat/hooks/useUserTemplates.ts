@@ -1,4 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type AxiosError } from "axios";
+import { t } from "@lingui/core/macro";
+
+import { toast } from "@/components/common/Toaster";
 import {
 	createPromptTemplate,
 	deletePromptTemplate,
@@ -10,6 +14,10 @@ import {
 	toggleAiSuggestions,
 	updatePromptTemplate,
 } from "@/lib/api";
+
+// Prefer the backend's error detail; fall back to a generic message.
+const templateError = (error: unknown, fallback: string): string =>
+	(error as AxiosError<{ detail?: string }>)?.response?.data?.detail ?? fallback;
 
 // ── Prompt Templates CRUD ──
 
@@ -41,6 +49,10 @@ export const useCreateUserTemplate = (workspaceId?: string | null) => {
 			await queryClient.refetchQueries({
 				queryKey: ["prompt_templates", workspaceId ?? "__personal__"],
 			});
+			toast.success(t`Template created`);
+		},
+		onError: (error) => {
+			toast.error(templateError(error, t`Could not create template`));
 		},
 	});
 };
@@ -61,6 +73,10 @@ export const useUpdateUserTemplate = (workspaceId?: string | null) => {
 			await queryClient.refetchQueries({
 				queryKey: ["prompt_templates", workspaceId ?? "__personal__"],
 			});
+			toast.success(t`Template updated`);
+		},
+		onError: (error) => {
+			toast.error(templateError(error, t`Could not update template`));
 		},
 	});
 };
@@ -72,12 +88,16 @@ export const useDeleteUserTemplate = (workspaceId?: string | null) => {
 		onSuccess: async (_, deletedId) => {
 			queryClient.setQueryData<PromptTemplateResponse[]>(
 				["prompt_templates", workspaceId ?? "__personal__"],
-				(old) => old?.filter((t) => t.id !== deletedId) ?? [],
+				(old) => old?.filter((tmpl) => tmpl.id !== deletedId) ?? [],
 			);
 			queryClient.invalidateQueries({ queryKey: ["quick_access_preferences"] });
 			await queryClient.refetchQueries({
 				queryKey: ["prompt_templates", workspaceId ?? "__personal__"],
 			});
+			toast.success(t`Template deleted`);
+		},
+		onError: (error) => {
+			toast.error(templateError(error, t`Could not delete template`));
 		},
 	});
 };
