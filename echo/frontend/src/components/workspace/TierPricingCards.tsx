@@ -18,7 +18,9 @@ import {
 	type BillingPeriod,
 	capacityShortFor,
 	fetchTierCapacities,
+	isComingSoon,
 	isTier,
+	MONTHLY_BILLING_PREMIUM_PCT,
 	pricingForBillingPeriod,
 	TIER_BADGE_COLOR,
 	type Tier,
@@ -107,7 +109,10 @@ function buildFallbackCardData(tier: Tier, billingPeriod: BillingPeriod) {
 			innovator: 20,
 		};
 		const base = annualPerSeat[tier] ?? 0;
-		const value = billingPeriod === "monthly" ? Math.round(base * 1.2) : base;
+		const value =
+			billingPeriod === "monthly"
+				? Math.round(base * (1 + MONTHLY_BILLING_PREMIUM_PCT / 100))
+				: base;
 		priceAmount = `€${value.toLocaleString("en-IE")}`;
 		pricePeriod = t`/seat/mo`;
 		if (billingPeriod === "annual") {
@@ -136,12 +141,14 @@ function WideCard({
 	selected,
 	highlighted,
 	highlightLabel,
+	comingSoon,
 	onSelect,
 }: {
 	card: CardData;
 	selected: boolean;
 	highlighted: boolean;
 	highlightLabel: ReactNode;
+	comingSoon: boolean;
 	onSelect: () => void;
 }) {
 	const wrapClasses = [
@@ -155,30 +162,38 @@ function WideCard({
 		// biome-ignore lint/a11y/useSemanticElements: card-as-radio; the entire card is the click target
 		<div
 			className={wrapClasses}
-			onClick={onSelect}
+			onClick={comingSoon ? undefined : onSelect}
 			onKeyDown={(e) => {
-				if (e.key === "Enter" || e.key === " ") {
+				if (!comingSoon && (e.key === "Enter" || e.key === " ")) {
 					e.preventDefault();
 					onSelect();
 				}
 			}}
 			role="radio"
 			aria-checked={selected}
-			tabIndex={0}
+			aria-disabled={comingSoon}
+			tabIndex={comingSoon ? -1 : 0}
+			style={comingSoon ? { opacity: 0.6 } : undefined}
 		>
 			<Stack gap={0} className={classes.wideInner}>
 				<Group gap={8} wrap="nowrap">
 					<Text size="lg" className={classes.tierName}>
 						{card.tier}
 					</Text>
-					{highlighted && (
-						<Badge
-							variant="light"
-							color={TIER_BADGE_COLOR[card.tier as Tier] ?? "blue"}
-							size="xs"
-						>
-							{highlightLabel}
+					{comingSoon ? (
+						<Badge variant="light" color="gray" size="xs">
+							<Trans>Coming soon</Trans>
 						</Badge>
+					) : (
+						highlighted && (
+							<Badge
+								variant="light"
+								color={TIER_BADGE_COLOR[card.tier as Tier] ?? "blue"}
+								size="xs"
+							>
+								{highlightLabel}
+							</Badge>
+						)
 					)}
 				</Group>
 				<Text size="xs" c="dimmed" mt={4}>
@@ -234,12 +249,14 @@ function MobileCard({
 	selected,
 	highlighted,
 	highlightLabel,
+	comingSoon,
 	onSelect,
 }: {
 	card: CardData;
 	selected: boolean;
 	highlighted: boolean;
 	highlightLabel: ReactNode;
+	comingSoon: boolean;
 	onSelect: () => void;
 }) {
 	const wrapClasses = [
@@ -253,31 +270,44 @@ function MobileCard({
 		// biome-ignore lint/a11y/useSemanticElements: card-as-radio; the entire card is the click target
 		<div
 			className={wrapClasses}
-			onClick={onSelect}
+			onClick={comingSoon ? undefined : onSelect}
 			onKeyDown={(e) => {
-				if (e.key === "Enter" || e.key === " ") {
+				if (!comingSoon && (e.key === "Enter" || e.key === " ")) {
 					e.preventDefault();
 					onSelect();
 				}
 			}}
 			role="radio"
 			aria-checked={selected}
-			tabIndex={0}
+			aria-disabled={comingSoon}
+			tabIndex={comingSoon ? -1 : 0}
+			style={comingSoon ? { opacity: 0.6 } : undefined}
 		>
 			<Stack gap={0} className={classes.mobileInner}>
-				<Group justify="space-between" wrap="nowrap" align="flex-start" gap={12}>
+				<Group
+					justify="space-between"
+					wrap="nowrap"
+					align="flex-start"
+					gap={12}
+				>
 					<Group gap={8} wrap="nowrap">
 						<Text size="md" fw={500} className={classes.tierName}>
 							{card.tier}
 						</Text>
-						{highlighted && (
-							<Badge
-								variant="light"
-								color={TIER_BADGE_COLOR[card.tier as Tier] ?? "blue"}
-								size="xs"
-							>
-								{highlightLabel}
+						{comingSoon ? (
+							<Badge variant="light" color="gray" size="xs">
+								<Trans>Coming soon</Trans>
 							</Badge>
+						) : (
+							highlighted && (
+								<Badge
+									variant="light"
+									color={TIER_BADGE_COLOR[card.tier as Tier] ?? "blue"}
+									size="xs"
+								>
+									{highlightLabel}
+								</Badge>
+							)
 						)}
 					</Group>
 					<Stack gap={2} align="flex-end">
@@ -359,7 +389,7 @@ export const TierPricingCards = ({
 	tiers = REQUESTABLE_TIERS,
 	value,
 	onChange,
-	highlightTier = "innovator",
+	highlightTier = "changemaker",
 	highlightLabel,
 	compact = false,
 	billingPeriod = "annual",
@@ -394,6 +424,7 @@ export const TierPricingCards = ({
 					selected={value === card.tier}
 					highlighted={card.tier === highlightTier}
 					highlightLabel={resolvedHighlightLabel}
+					comingSoon={isComingSoon(card.tier)}
 					onSelect={() => onChange(card.tier)}
 				/>
 			))}

@@ -1,4 +1,4 @@
-import { ArrowFatLineUp, ChartBar, Handshake } from "@phosphor-icons/react";
+import { ChartBar, Handshake } from "@phosphor-icons/react";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
 
@@ -12,7 +12,6 @@ export const AdminHomeView = () => {
 				icon={ChartBar}
 			/>
 			<NavItem to="/admin/partners" label="Partners" icon={Handshake} />
-			<NavItem to="/admin/upgrades" label="Upgrades" icon={ArrowFatLineUp} />
 		</nav>
 	);
 };

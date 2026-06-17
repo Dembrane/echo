@@ -12,7 +12,12 @@ import { t } from "@lingui/core/macro";
 export type Tier = "free" | "innovator" | "changemaker" | "guardian";
 
 // Lowest -> highest. Free stays for ordering/comparison (meetsTier).
-export const TIER_ORDER: Tier[] = ["free", "innovator", "changemaker", "guardian"];
+export const TIER_ORDER: Tier[] = [
+	"free",
+	"innovator",
+	"changemaker",
+	"guardian",
+];
 
 // Customer-facing, selectable plans (pricing cards, plan picker). Free is
 // hidden for now; re-add it here to expose it again. Innovator/Guardian are
@@ -23,6 +28,25 @@ export const VISIBLE_TIERS: Tier[] = [
 	"changemaker",
 	"guardian",
 ];
+
+// Tiers shown but not yet purchasable: Innovator waits on the MCP, Guardian on
+// the EU-sovereign stack. They render with a "Coming soon" badge and can't be
+// selected/checked out. Changemaker is the only sellable plan today. Single
+// source of truth — used by the pricing cards, plan picker, and checkout.
+export const COMING_SOON_TIERS: Tier[] = ["innovator", "guardian"];
+
+export function isComingSoon(tier: string | null | undefined): boolean {
+	return !!tier && (COMING_SOON_TIERS as string[]).includes(tier);
+}
+
+// The plan we sell today + default selection.
+export const SELLABLE_TIER: Tier = "changemaker";
+
+// Annual is the anchor price; monthly cadence is surcharged by this percent
+// ("X% off when you pay annually"). Single knob — mirrors
+// MONTHLY_BILLING_PREMIUM_PCT in server/dembrane/tier_capacity.py. Change both
+// together. Drives the toggle badge + the offline price fallback.
+export const MONTHLY_BILLING_PREMIUM_PCT = 20;
 
 export const TIER_TAGLINE: Record<Tier, string> = {
 	changemaker: "Built-in analysis, audit logs, white labeling",
