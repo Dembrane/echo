@@ -618,15 +618,18 @@ export const useRetranscribeConversationMutation = () => {
 			conversationId,
 			newConversationName,
 			usePiiRedaction,
+			attachVerifiedArtifacts,
 		}: {
 			conversationId: string;
 			newConversationName: string;
 			usePiiRedaction: boolean;
+			attachVerifiedArtifacts?: boolean;
 		}) =>
 			retranscribeConversation(
 				conversationId,
 				newConversationName,
 				usePiiRedaction,
+				attachVerifiedArtifacts,
 			),
 		onError: (error) => {
 			toast.error(t`Failed to retranscribe conversation. Please try again.`);

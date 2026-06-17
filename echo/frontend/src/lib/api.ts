@@ -937,6 +937,7 @@ export const retranscribeConversation = async (
 	conversationId: string,
 	newConversationName: string,
 	usePiiRedaction: boolean,
+	attachVerifiedArtifacts?: boolean,
 ) => {
 	return api.post<
 		unknown,
@@ -944,6 +945,7 @@ export const retranscribeConversation = async (
 	>(`/conversations/${conversationId}/retranscribe`, {
 		new_conversation_name: newConversationName,
 		use_pii_redaction: usePiiRedaction,
+		attach_verified_artifacts: attachVerifiedArtifacts,
 	});
 };
 

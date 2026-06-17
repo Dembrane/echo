@@ -714,6 +714,7 @@ async def generate_title_for_conversation(
 class RetranscribeConversationBodySchema(BaseModel):
     new_conversation_name: str
     use_pii_redaction: bool | None = None
+    attach_verified_artifacts: bool | None = None
 
 
 @ConversationRouter.post("/{conversation_id}/retranscribe")
@@ -862,6 +863,43 @@ async def retranscribe_conversation(
             logger.info(f"Link created: {link_id}")
         except Exception as e:
             logger.error(f"Error creating links: {str(e)}")
+
+        # Copy verified artifacts to the new conversation if requested
+        attach_verified_artifacts = body.attach_verified_artifacts if body.attach_verified_artifacts is not None else False
+        if attach_verified_artifacts:
+            try:
+                original_artifacts = await run_in_thread_pool(
+                    admin_client.get_items,
+                    "conversation_artifact",
+                    {
+                        "query": {
+                            "filter": {
+                                "conversation_id": {"_eq": conversation_id},
+                                "approved_at": {"_nnull": True},
+                            },
+                            "fields": ["key", "topic_label", "content", "approved_at", "read_aloud_stream_url"],
+                        }
+                    },
+                )
+
+                if original_artifacts:
+                    for artifact in original_artifacts:
+                        await run_in_thread_pool(
+                            admin_client.create_item,
+                            "conversation_artifact",
+                            item_data={
+                                "id": generate_uuid(),
+                                "conversation_id": new_conversation_id,
+                                "key": artifact.get("key"),
+                                "topic_label": artifact.get("topic_label"),
+                                "content": artifact.get("content"),
+                                "approved_at": artifact.get("approved_at"),
+                                "read_aloud_stream_url": artifact.get("read_aloud_stream_url") or "",
+                            }
+                        )
+                    logger.info(f"Copied {len(original_artifacts)} verified artifacts from {conversation_id} to {new_conversation_id}")
+            except Exception as e:
+                logger.error(f"Error copying verified artifacts: {str(e)}")
 
         try:
             # Create a new conversation chunk
