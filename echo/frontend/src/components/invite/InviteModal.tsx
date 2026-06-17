@@ -119,6 +119,25 @@ async function inviteToOrg(
 	return data as { status: string; email: string; invite_url?: string | null };
 }
 
+type SeatEstimate = {
+	active: boolean;
+	prorated_now_eur: number;
+	recurring_delta_eur: number;
+	currency: string;
+};
+
+async function fetchSeatEstimate(
+	workspaceId: string,
+	addedSeats: number,
+): Promise<SeatEstimate | null> {
+	const res = await fetch(
+		`${API_BASE_URL}/v2/workspaces/${workspaceId}/seat-estimate?added_seats=${addedSeats}`,
+		{ credentials: "include" },
+	);
+	if (!res.ok) return null;
+	return (await res.json()) as SeatEstimate;
+}
+
 function mapHttpStatusToState(
 	status: number | undefined,
 	detail?: string,
@@ -155,6 +174,12 @@ export function InviteModal({
 		new Set(),
 	);
 	const [results, setResults] = useState<InviteResultRow[]>([]);
+	// Prorated cost preview shown before sending a paid, seat-consuming invite.
+	const [confirm, setConfirm] = useState<{
+		proratedNow: number;
+		recurringDelta: number;
+	} | null>(null);
+	const [estimating, setEstimating] = useState(false);
 
 	// Owners/admins get the zero-workspace submit path; everyone else must pick a workspace.
 	const myOrgRole = useMemo(() => {
@@ -392,6 +417,45 @@ export function InviteModal({
 		},
 	});
 
+	// Changing the recipients, role, or workspaces invalidates the preview.
+	useEffect(() => {
+		setConfirm(null);
+	}, [chips, role, selectedWorkspaces]);
+
+	const fmtEur = (n: number) => `€${n.toFixed(2)}`;
+
+	// Workspace invites consume a seat and may incur a prorated charge, so show a
+	// cost preview before sending. Org-only (zero-workspace) invites don't.
+	const handleSend = async () => {
+		const workspaceIds = Array.from(selectedWorkspaces);
+		if (workspaceIds.length > 0 && !confirm) {
+			setEstimating(true);
+			try {
+				const estimates = await Promise.all(
+					workspaceIds.map((id) => fetchSeatEstimate(id, validChips.length)),
+				);
+				let proratedNow = 0;
+				let recurringDelta = 0;
+				for (const e of estimates) {
+					if (e?.active) {
+						proratedNow += e.prorated_now_eur;
+						recurringDelta += e.recurring_delta_eur;
+					}
+				}
+				if (proratedNow > 0) {
+					setConfirm({ proratedNow, recurringDelta });
+					return;
+				}
+			} catch {
+				// Estimate is best-effort: fall through and send if it fails.
+			} finally {
+				setEstimating(false);
+			}
+		}
+		setConfirm(null);
+		submit.mutate();
+	};
+
 	// Don't block close while the fan-out runs (e.g. 20×5 = 100 sequential calls ~30s); mutation continues in the background.
 	const onCloseClick = () => {
 		onClose();
@@ -515,6 +579,19 @@ export function InviteModal({
 					</>
 				)}
 
+				{confirm && results.length === 0 && (
+					<Alert variant="light" p="sm" data-testid="invite-proration-confirm">
+						<Text size="sm">
+							<Trans>
+								Adding {validChips.length} member(s) charges about{" "}
+								{fmtEur(confirm.proratedNow)} now, prorated for the rest of this
+								billing period, and raises your renewal by about{" "}
+								{fmtEur(confirm.recurringDelta)}.
+							</Trans>
+						</Text>
+					</Alert>
+				)}
+
 				<Group justify="flex-end" gap="xs">
 					<Button
 						variant="subtle"
@@ -525,12 +602,14 @@ export function InviteModal({
 					</Button>
 					{results.length === 0 && (
 						<Button
-							onClick={() => submit.mutate()}
-							loading={submit.isPending}
+							onClick={() => void handleSend()}
+							loading={submit.isPending || estimating}
 							disabled={!canSubmit}
 							data-testid="invite-modal-send"
 						>
-							{validChips.length > 1 ? (
+							{confirm ? (
+								<Trans>Confirm and send</Trans>
+							) : validChips.length > 1 ? (
 								<Trans>Send {validChips.length} invites</Trans>
 							) : (
 								<Trans>Send invite</Trans>
