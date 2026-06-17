@@ -71,7 +71,7 @@ def _plan_description(tier: str, seats: int, billing_period: str) -> str:
     seat_txt = f"{seats} seat" + ("s" if seats != 1 else "")
     cadence = "billed monthly" if billing_period == "monthly" else "billed yearly"
     renews = "renews monthly" if billing_period == "monthly" else "renews yearly"
-    return f"dembrane {label} plan. {seat_txt}, {cadence}, {renews}. Cancel anytime."
+    return f"{label} plan. {seat_txt}, {cadence}, {renews}. Cancel anytime."
 
 
 async def list_account_invoices(
