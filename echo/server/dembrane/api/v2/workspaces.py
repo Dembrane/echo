@@ -595,16 +595,14 @@ async def create_workspace(
     body: CreateWorkspaceRequest,
     auth: DependencyDirectusSession,
 ) -> CreateWorkspaceResponse:
-    """Create a new workspace. Staff-only — self-serve creation is retired.
+    """Create a new workspace (self-serve).
 
-    Post-onboarding workspaces go through the workspace_request flow
-    (POST /v2/workspace-requests). This endpoint is now the internal
-    endpoint called by the approval orchestrator. The onboarding auto-seed
-    writes directly to Directus and is unaffected.
+    Any org admin/owner can create a workspace in their org; staff can create
+    in any org. Billing is provisioned at create time: the workspace joins the
+    org's billing account, or gets its own when `bill_separately` (partner
+    "for another client"). Payment is the gate, not staff approval — so the
+    workspace_request flow is no longer needed for new workspaces.
     """
-    if not auth.is_admin:
-        raise HTTPException(status_code=403, detail="Staff-only. Use workspace requests.")
-
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
 
@@ -630,15 +628,31 @@ async def create_workspace(
                 status_code=403, detail="No organisation found. Complete onboarding first."
             )
         org_id = orgs[0]["org_id"]
+    elif not auth.is_admin:
+        # Caller named an org: they must be an admin/owner of it.
+        mem = await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "user_id": {"_eq": app_user_id},
+                        "org_id": {"_eq": org_id},
+                        "role": {"_in": ["owner", "admin"]},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": 1,
+                }
+            },
+        )
+        if not isinstance(mem, list) or len(mem) == 0:
+            raise HTTPException(
+                status_code=403,
+                detail="You must be an organisation admin or owner to create a workspace here.",
+            )
 
-    # Org access check skipped for staff — they can create in any org.
-    # The approval orchestrator validates org existence before calling.
-
-    # Matrix §9: new workspaces default to Pilot. Tier upgrades go through
-    # the staff upgrade-request flow (matrix §11), never client-driven.
-    # Visibility (matrix v1.1 §6) is stored on workspace.visibility — the
-    # enum is the sole source of truth on new rows; legacy settings flags
-    # are no longer written (resolver still reads them for pre-enum data).
+    # Visibility is stored on workspace.visibility (sole source of truth on new
+    # rows). Private requires a paid tier; the set_private policy enforces that.
     visibility = "open_to_organisation" if body.inherit_organisation_admins else "private"
     ws_id = generate_uuid()
 
@@ -649,6 +663,7 @@ async def create_workspace(
         link_account_to_workspace,
         org_account_for_new_workspace,
         create_workspace_scoped_account,
+        billing_account_blocks_new_workspace,
     )
 
     separate = getattr(body, "bill_separately", False)
@@ -660,6 +675,11 @@ async def create_workspace(
         account_id = await org_account_for_new_workspace(
             org_id=org_id, created_by=app_user_id
         )
+        # Validate the org's billing account can take a new workspace.
+        account = await async_directus.get_item("billing_account", account_id)
+        blocked = billing_account_blocks_new_workspace(account)
+        if blocked:
+            raise HTTPException(status_code=402, detail=blocked)
     await async_directus.create_item(
         "workspace",
         {
