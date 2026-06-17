@@ -392,19 +392,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				id: "audio_hours",
 			},
 			{
-				accessorKey: "hours_over",
-				cell: ({ row }) => {
-					const v = row.original.hours_over;
-					return (
-						<Text size="xs" c={v > 0 ? "orange" : "dimmed"}>
-							{v > 0 ? formatDurationFromHours(v) : "—"}
-						</Text>
-					);
-				},
-				header: t`Over hrs`,
-				id: "hours_over",
-			},
-			{
 				accessorKey: "seat_count",
 				cell: ({ row }) => (
 					<UsageBar
@@ -415,24 +402,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				),
 				header: t`Seats`,
 				id: "seat_count",
-			},
-			{
-				accessorFn: (r) => {
-					if (r.seats_included == null) return 0;
-					return Math.max(0, r.seat_count - r.seats_included);
-				},
-				cell: ({ row }) => {
-					const cap = row.original.seats_included;
-					const over =
-						cap == null ? 0 : Math.max(0, row.original.seat_count - cap);
-					return (
-						<Text size="xs" c={over > 0 ? "orange" : "dimmed"}>
-							{over}
-						</Text>
-					);
-				},
-				header: t`Over seats`,
-				id: "seats_over",
 			},
 			{
 				accessorFn: (r) => (isActive(r) ? "active" : "inactive"),
@@ -498,11 +467,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 	// rollup.
 	const totalsHours = rows.reduce((s, r) => s + r.original.audio_hours, 0);
 	const totalsSeats = rows.reduce((s, r) => s + r.original.seat_count, 0);
-	const totalsHoursOver = rows.reduce((s, r) => s + r.original.hours_over, 0);
-	const totalsSeatsOver = rows.reduce((s, r) => {
-		const cap = r.original.seats_included;
-		return s + (cap == null ? 0 : Math.max(0, r.original.seat_count - cap));
-	}, 0);
 	if (isLoading) return null;
 
 	if (isError || !data) {
@@ -766,29 +730,9 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 														{formatDurationFromHours(totalsHours)}
 													</Text>
 												),
-												hours_over: (
-													<Text
-														size="xs"
-														fw={600}
-														c={totalsHoursOver > 0 ? "orange" : "dimmed"}
-													>
-														{totalsHoursOver > 0
-															? formatDurationFromHours(totalsHoursOver)
-															: "—"}
-													</Text>
-												),
 												seat_count: (
 													<Text size="xs" fw={600}>
 														{totalsSeats}
-													</Text>
-												),
-												seats_over: (
-													<Text
-														size="xs"
-														fw={600}
-														c={totalsSeatsOver > 0 ? "orange" : "dimmed"}
-													>
-														{totalsSeatsOver}
 													</Text>
 												),
 											};

@@ -1,56 +1,22 @@
-import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Anchor, Badge, Box, Group, Stack, Table, Text } from "@mantine/core";
+import { Anchor, Box, Group, Stack, Table, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { API_BASE_URL } from "@/config";
 import {
 	type BillingPeriod,
 	fetchTierCapacities,
+	formatTierHours as fmtHours,
+	formatTierPrice as fmtPrice,
+	formatTierPricePeriod as fmtPricePeriod,
+	formatTierSeats as fmtSeats,
 	isTier,
-	pricingForBillingPeriod,
 	TIER_ORDER,
 	type Tier,
 	type TierCapacity,
 	taglineFor,
 } from "@/lib/tiers";
-
-function fmtPrice(cap: TierCapacity, billingPeriod: BillingPeriod): string {
-	const resolved = pricingForBillingPeriod(cap, billingPeriod);
-	if (!resolved) return t`Free`;
-	return `€${resolved.per_month_eur.toLocaleString("en-IE")}`;
-}
-
-function fmtPricePeriod(
-	cap: TierCapacity,
-	billingPeriod: BillingPeriod,
-): string {
-	const resolved = pricingForBillingPeriod(cap, billingPeriod);
-	if (!resolved) return "";
-	if (resolved.kind === "annual") return t`/seat/mo · billed annually`;
-	return t`/seat/mo · billed monthly`;
-}
-
-function fmtSeats(cap: TierCapacity): string {
-	if (cap.included_seats == null) return "∞";
-	return String(cap.included_seats);
-}
-
-function fmtHours(cap: TierCapacity): string {
-	if (cap.included_hours == null) return "∞";
-	return String(cap.included_hours);
-}
-
-function fmtSeatOverage(cap: TierCapacity): string {
-	if (cap.seat_overage_eur == null) return "—";
-	return t`+€${cap.seat_overage_eur}/seat`;
-}
-
-function fmtHourOverage(cap: TierCapacity): string {
-	if (cap.hard_block_on_hours) return "€0";
-	if (cap.hour_overage_eur == null) return "—";
-	return t`€${cap.hour_overage_eur}/h`;
-}
+import { TierStatusBadge } from "./TierStatusBadge";
 
 interface Props {
 	highlightTier?: string;
@@ -139,21 +105,8 @@ export const TierCapacityMatrix = ({
 	}
 
 	const usageRows: Row[] = [
-		{ key: "seats", label: <Trans>Seats (included)</Trans>, render: fmtSeats },
-		{ key: "hours", label: <Trans>Hours (included)</Trans>, render: fmtHours },
-	];
-
-	const overageRows: Row[] = [
-		{
-			key: "seat-overage",
-			label: <Trans>Additional seat</Trans>,
-			render: fmtSeatOverage,
-		},
-		{
-			key: "hour-overage",
-			label: <Trans>Additional hour</Trans>,
-			render: fmtHourOverage,
-		},
+		{ key: "seats", label: <Trans>Seats</Trans>, render: fmtSeats },
+		{ key: "hours", label: <Trans>Hours</Trans>, render: fmtHours },
 	];
 
 	function renderRows(rows: Row[]) {
@@ -236,11 +189,7 @@ export const TierCapacityMatrix = ({
 												>
 													{cap.tier}
 												</Text>
-												{cap.tier === "innovator" && (
-													<Badge variant="light" size="xs">
-														<Trans>Popular</Trans>
-													</Badge>
-												)}
+												<TierStatusBadge tier={cap.tier} />
 											</Group>
 											<Text size="xs" c="dimmed" lh={1.3}>
 												{tagline}
@@ -253,18 +202,7 @@ export const TierCapacityMatrix = ({
 					</Table.Thead>
 					<Table.Tbody>
 						{renderRows(mainRows)}
-						{!compact && (
-							<>
-								{renderRows(usageRows)}
-								{renderRows(overageRows)}
-							</>
-						)}
-						{compact && (
-							<>
-								{renderRows(usageRows)}
-								{renderRows(overageRows)}
-							</>
-						)}
+						{renderRows(usageRows)}
 					</Table.Tbody>
 				</Table>
 			</Box>
