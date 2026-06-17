@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Alert,
-	Anchor,
 	Button,
 	Center,
 	Container,
@@ -14,44 +13,32 @@ import {
 	Stack,
 	Stepper,
 	Text,
-	Textarea,
 	TextInput,
-	ThemeIcon,
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import { IconCheck } from "@tabler/icons-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
-import { CharsRemainingIndicator } from "@/components/common/CharsRemainingIndicator";
 import { toast } from "@/components/common/Toaster";
-import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
-import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
-import {
-	type BillingPeriod,
-	capacityShortFor,
-	fetchTierCapacities,
-	pricingForBillingPeriod,
-	type Tier,
-	type TierCapacity,
-} from "@/lib/tiers";
 
-async function submitWorkspaceRequest(payload: {
-	kind: "new_workspace";
+interface CreatedWorkspace {
+	id: string;
+	name: string;
+}
+
+async function createWorkspace(payload: {
+	name: string;
 	org_id: string;
-	proposed_name: string;
-	proposed_tier: string;
-	proposed_visibility: string;
-	proposed_billing_period: BillingPeriod | null;
-	requester_message?: string;
-}) {
-	const res = await fetch(`${API_BASE_URL}/v2/workspace-requests`, {
+	inherit_organisation_admins: boolean;
+	bill_separately: boolean;
+}): Promise<CreatedWorkspace> {
+	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		body: JSON.stringify(payload),
 		credentials: "include",
 		headers: { "Content-Type": "application/json" },
@@ -59,26 +46,25 @@ async function submitWorkspaceRequest(payload: {
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to submit request");
+		throw new Error(data.detail || "Failed to create workspace");
 	}
 	return res.json();
 }
 
 type Privacy = "open" | "private";
+type BillFor = "internal" | "client";
 
 /**
- * Workspace request wizard — matrix §6 Slack-style model.
+ * Self-serve workspace creation.
  *
- * Four steps: Name → Tier → Access → Review. Back + cancel on each.
+ * Steps: Name → Billing → Access → Review. Org admins/owners create directly
+ * (no staff approval). By default the workspace joins the org's billing
+ * account ("internal"). Partners (org.is_partner) get a second choice — "for
+ * another client" — which bills the workspace on its own account, handoff-ready;
+ * they finish by subscribing it on its billing tab.
  *
- * The final button submits a workspace request (not a direct create).
- * Staff review at /admin/upgrades; the user sees a confirmation panel.
- *
- * Tier picker shows paid tiers only (pilot through guardian); innovator
- * is the default. Free is never offered.
- *
- * Entry: `/w/new?organisationId=<org>`. Without organisationId, falls back to the
- * caller's primary admin organisation (with a quiet notice).
+ * Entry: `/w/new?organisationId=<org>`. Without it, falls back to the caller's
+ * primary admin organisation.
  */
 export const CreateWorkspaceRoute = () => {
 	const navigate = useI18nNavigate();
@@ -89,13 +75,10 @@ export const CreateWorkspaceRoute = () => {
 
 	const [step, setStep] = useState(0);
 	const [name, setName] = useState("");
-	const [selectedTier, setSelectedTier] = useState<Tier>("innovator");
-	const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
 	const [privacy, setPrivacy] = useState<Privacy>("open");
-	const [message, setMessage] = useState("");
-	const [submitted, setSubmitted] = useState(false);
+	const [billFor, setBillFor] = useState<BillFor>("internal");
 
-	useDocumentTitle(t`Request workspace | dembrane`);
+	useDocumentTitle(t`Create workspace | dembrane`);
 
 	const adminOrganisations = useMemo(
 		() =>
@@ -116,104 +99,41 @@ export const CreateWorkspaceRoute = () => {
 		organisationIdFromQuery || adminOrganisations[0]?.id || null;
 	const targetOrganisation =
 		adminOrganisations.find((o) => o.id === targetOrganisationId) ?? null;
+	const isPartner = Boolean(targetOrganisation?.is_partner);
 
-	// Launched from an org overview, so exiting returns there (not to /o home).
 	const backDestination = targetOrganisationId
 		? `/o/${targetOrganisationId}/overview`
 		: "/o";
-
-	const { data: workspacesData } = useQuery<{
-		workspaces: Array<{
-			id: string;
-			org_id: string;
-			tier: string;
-			name: string;
-		}>;
-	}>({
-		queryFn: async () => {
-			const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
-				credentials: "include",
-			});
-			if (!res.ok) throw new Error("Failed to fetch workspaces");
-			return res.json();
-		},
-		queryKey: ["v2", "workspaces"],
-		staleTime: 60_000,
-	});
-
-	// Tier capacities for the review-step price summary. Shares the query
-	// key with TierPricingCards so this is a free read from the cache.
-	const { data: tierCapacities } = useQuery({
-		queryFn: () => fetchTierCapacities(API_BASE_URL),
-		queryKey: ["v2", "tier-capacities"],
-		staleTime: 60 * 60 * 1000,
-	});
-
-	const reviewTierSummary = useMemo(() => {
-		const cap = tierCapacities?.find(
-			(c: TierCapacity) => c.tier === selectedTier,
-		);
-		if (!cap) return capacityShortFor(selectedTier);
-		const resolved = pricingForBillingPeriod(cap, billingPeriod);
-		if (!resolved) return capacityShortFor(selectedTier);
-		if (resolved.kind === "annual") {
-			return t`€${resolved.per_month_eur}/seat/mo · billed annually · €${resolved.total_per_year_eur}/seat/yr`;
-		}
-		return t`€${resolved.per_month_eur}/seat/mo · billed monthly`;
-	}, [tierCapacities, selectedTier, billingPeriod]);
-
-	const freeWorkspaceForOrg = useMemo(() => {
-		if (!workspacesData?.workspaces || !targetOrganisationId) return null;
-		return (
-			workspacesData.workspaces.find(
-				(w) => w.org_id === targetOrganisationId && w.tier === "free",
-			) ?? null
-		);
-	}, [workspacesData, targetOrganisationId]);
-
-	// Private visibility is a paid-tier feature; Free can't pick it.
-	const canPickPrivate = selectedTier !== "free";
-
-	useEffect(() => {
-		if (!canPickPrivate && privacy === "private") {
-			setPrivacy("open");
-		}
-	}, [canPickPrivate, privacy]);
-
-	// Free has no billing period; paid tiers carry the annual/monthly choice.
-	const submittedBillingPeriod: BillingPeriod | null =
-		selectedTier === "free" ? null : billingPeriod;
 
 	const mutation = useMutation({
 		mutationFn: () => {
 			if (!targetOrganisationId) {
 				throw new Error(t`Choose an organisation first`);
 			}
-			return submitWorkspaceRequest({
-				kind: "new_workspace",
+			return createWorkspace({
+				bill_separately: isPartner && billFor === "client",
+				inherit_organisation_admins: privacy === "open",
+				name: name.trim(),
 				org_id: targetOrganisationId,
-				proposed_billing_period: submittedBillingPeriod,
-				proposed_name: name.trim(),
-				proposed_tier: selectedTier,
-				proposed_visibility:
-					privacy === "open" ? "open_to_organisation" : "private",
-				requester_message: message.trim() || undefined,
 			});
 		},
 		onError: (error: Error) => {
 			toast.error(error.message);
 		},
-		onSuccess: () => {
-			setSubmitted(true);
-			// /v2/workspaces returns `pending_workspace_requests`; without an
-			// invalidation, the selector keeps stale data and the new request
-			// only appears after a hard refresh.
+		onSuccess: (ws) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
-			posthog.capture("workspace_request_submitted", {
-				kind: "new_workspace",
-				proposed_billing_period: submittedBillingPeriod,
-				proposed_tier: selectedTier,
+			posthog.capture("workspace_created", {
+				bill_separately: isPartner && billFor === "client",
+				visibility: privacy === "open" ? "open_to_organisation" : "private",
 			});
+			toast.success(t`Workspace created.`);
+			// A separately-billed (client) workspace lands on its billing tab to
+			// subscribe; an org-billed one goes straight to the workspace.
+			if (isPartner && billFor === "client") {
+				navigate(`/w/${ws.id}/settings/billing`);
+			} else {
+				navigate(`/w/${ws.id}/home`);
+			}
 		},
 	});
 
@@ -228,7 +148,7 @@ export const CreateWorkspaceRoute = () => {
 				confirmProps: { color: "red" },
 				labels: { cancel: t`Keep editing`, confirm: t`Discard` },
 				onConfirm: () => navigate(backDestination),
-				title: t`Discard this request?`,
+				title: t`Discard this workspace?`,
 			});
 		} else {
 			navigate(backDestination);
@@ -248,108 +168,19 @@ export const CreateWorkspaceRoute = () => {
 			<Container size="xs" py="xl" px="lg">
 				<Stack gap="md">
 					<Title order={3} fw={400}>
-						<Trans>You can't request a workspace yet</Trans>
+						<Trans>You can't create a workspace yet</Trans>
 					</Title>
 					<Text size="sm" c="dimmed">
 						<Trans>
-							Only organisation admins and owners can request workspaces. Ask an
-							admin on your organisation to create one, or ask them to promote
-							you first.
+							Only organisation admins and owners can create workspaces. Ask an
+							admin on your organisation to create one, or to promote you first.
 						</Trans>
 					</Text>
 					<Group>
-						<Button variant="default" onClick={() => navigate(backDestination)}>
+						<Button variant="outline" onClick={() => navigate(backDestination)}>
 							<Trans>Back</Trans>
 						</Button>
 					</Group>
-				</Stack>
-			</Container>
-		);
-	}
-
-	if (submitted) {
-		const capitalizedTier =
-			selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1);
-
-		return (
-			<Container size="xs" py="xl" px="lg">
-				<Stack gap={24}>
-					<Group gap="sm" align="center" justify="space-between">
-						<Stack gap={2}>
-							<Title order={3} fw={500}>
-								<Trans>Request submitted</Trans>
-							</Title>
-							<Text size="sm" c="dimmed">
-								<Trans>We'll review it within 1 business day.</Trans>
-							</Text>
-						</Stack>
-						<ThemeIcon size={46} radius="md" color="green" variant="light">
-							<IconCheck size={22} />
-						</ThemeIcon>
-					</Group>
-
-					<Paper withBorder p="md" radius="sm">
-						<Stack gap={8}>
-							<Group gap={12} align="baseline">
-								<Text size="xs" c="dimmed" w={90}>
-									<Trans>Workspace</Trans>
-								</Text>
-								<Text size="sm" fw={500}>
-									{name.trim()}
-								</Text>
-							</Group>
-							<Group gap={12} align="baseline">
-								<Text size="xs" c="dimmed" w={90}>
-									<Trans>Organisation</Trans>
-								</Text>
-								<Text size="sm">{targetOrganisation?.name ?? ""}</Text>
-							</Group>
-							<Group gap={12} align="baseline">
-								<Text size="xs" c="dimmed" w={90}>
-									<Trans>Tier</Trans>
-								</Text>
-								<Text size="sm">{capitalizedTier}</Text>
-							</Group>
-							{submittedBillingPeriod && (
-								<Group gap={12} align="baseline">
-									<Text size="xs" c="dimmed" w={90}>
-										<Trans>Billing</Trans>
-									</Text>
-									<Text size="sm" tt="capitalize">
-										{submittedBillingPeriod === "annual" ? (
-											<Trans>Annual</Trans>
-										) : (
-											<Trans>Monthly</Trans>
-										)}
-									</Text>
-								</Group>
-							)}
-							<Group gap={12} align="baseline">
-								<Text size="xs" c="dimmed" w={90}>
-									<Trans>Access</Trans>
-								</Text>
-								<Text size="sm">
-									{privacy === "open" ? (
-										<Trans>Open to the organisation</Trans>
-									) : (
-										<Trans>Private</Trans>
-									)}
-								</Text>
-							</Group>
-						</Stack>
-					</Paper>
-
-					<Text size="xs" c="dimmed">
-						<Trans>
-							You'll get a notification once the request is approved or if we
-							need more details. You can track the status on your workspaces
-							page.
-						</Trans>
-					</Text>
-
-					<Button variant="outline" onClick={() => navigate(backDestination)}>
-						<Trans>Back to workspaces</Trans>
-					</Button>
 				</Stack>
 			</Container>
 		);
@@ -363,7 +194,7 @@ export const CreateWorkspaceRoute = () => {
 			<Stack gap={28}>
 				<Stack gap={6}>
 					<Title order={3} fw={400}>
-						<Trans>Request workspace</Trans>
+						<Trans>Create workspace</Trans>
 					</Title>
 					{targetOrganisation && (
 						<Text size="sm" c="dimmed">
@@ -396,23 +227,6 @@ export const CreateWorkspaceRoute = () => {
 							<Text size="sm" c="dimmed">
 								<Trans>Name your workspace.</Trans>
 							</Text>
-							{freeWorkspaceForOrg && (
-								<Alert variant="light" color="blue" py="xs">
-									<Text size="sm">
-										<Trans>
-											You already have a free workspace.{" "}
-											<Anchor
-												size="sm"
-												onClick={() =>
-													navigate(`/w/${freeWorkspaceForOrg.id}/home`)
-												}
-											>
-												Open {freeWorkspaceForOrg.name}
-											</Anchor>
-										</Trans>
-									</Text>
-								</Alert>
-							)}
 							<TextInput
 								autoFocus
 								label={t`Workspace name`}
@@ -447,22 +261,67 @@ export const CreateWorkspaceRoute = () => {
 						</Stack>
 					</Stepper.Step>
 
-					<Stepper.Step label={t`Tier`}>
+					<Stepper.Step label={t`Billing`}>
 						<Stack gap={14} mt="md">
-							<Text size="sm" c="dimmed">
-								<Trans>Pick a plan for your team.</Trans>
-							</Text>
-							<Group justify="center" mb="xs">
-								<BillingPeriodToggle
-									value={billingPeriod}
-									onChange={setBillingPeriod}
-								/>
-							</Group>
-							<TierPricingCards
-								value={selectedTier}
-								onChange={(v) => setSelectedTier(v as Tier)}
-								billingPeriod={billingPeriod}
-							/>
+							{isPartner ? (
+								<>
+									<Text size="sm" c="dimmed">
+										<Trans>Is this for internal use, or for another client?</Trans>
+									</Text>
+									<Radio.Group
+										value={billFor}
+										onChange={(v) => setBillFor(v as BillFor)}
+									>
+										<Stack gap={10} mt={8}>
+											<Radio
+												value="internal"
+												label={
+													<Stack gap={2}>
+														<Text size="sm">
+															<Trans>For internal use</Trans>
+														</Text>
+														<Text size="xs" c="dimmed">
+															<Trans>
+																Billed under your organisation's plan, alongside
+																your other workspaces.
+															</Trans>
+														</Text>
+													</Stack>
+												}
+											/>
+											<Radio
+												value="client"
+												label={
+													<Stack gap={2}>
+														<Text size="sm">
+															<Trans>For another client</Trans>
+														</Text>
+														<Text size="xs" c="dimmed">
+															<Trans>
+																A separate subscription, per the partner agreement,
+																so it can be handed off to the client later with
+																no data movement. You'll subscribe it next.
+															</Trans>
+														</Text>
+													</Stack>
+												}
+											/>
+										</Stack>
+									</Radio.Group>
+								</>
+							) : (
+								<Paper withBorder p="md" radius="sm">
+									<Text size="sm">
+										<Trans>Billed under your organisation</Trans>
+									</Text>
+									<Text size="xs" c="dimmed" mt={4}>
+										<Trans>
+											This workspace joins your organisation's plan. Manage the
+											plan and seats from the organisation's billing.
+										</Trans>
+									</Text>
+								</Paper>
+							)}
 						</Stack>
 					</Stepper.Step>
 
@@ -487,8 +346,8 @@ export const CreateWorkspaceRoute = () => {
 												</Text>
 												<Text size="xs" c="dimmed">
 													<Trans>
-														Everyone on your organisation can find it. Admins
-														can join directly; members can ask to join.
+														Everyone on your organisation can find it. Admins can
+														join directly; members can ask to join.
 													</Trans>
 												</Text>
 											</Stack>
@@ -496,20 +355,10 @@ export const CreateWorkspaceRoute = () => {
 									/>
 									<Radio
 										value="private"
-										disabled={!canPickPrivate}
 										label={
 											<Stack gap={2}>
-												<Text
-													size="sm"
-													c={canPickPrivate ? undefined : "dimmed"}
-												>
+												<Text size="sm">
 													<Trans>Private</Trans>
-													{!canPickPrivate && (
-														<Text span size="xs" c="dimmed">
-															{" "}
-															(<Trans>requires Innovator or higher</Trans>)
-														</Text>
-													)}
 												</Text>
 												<Text size="xs" c="dimmed">
 													<Trans>
@@ -527,12 +376,12 @@ export const CreateWorkspaceRoute = () => {
 					<Stepper.Step label={t`Review`}>
 						<Stack gap={14} mt="md">
 							<Text size="sm" c="dimmed">
-								<Trans>Review before submitting.</Trans>
+								<Trans>Review before creating.</Trans>
 							</Text>
 							<Paper withBorder p="md" radius="sm">
 								<Stack gap={10}>
 									<Group gap={12} align="baseline">
-										<Text size="xs" c="dimmed" w={80}>
+										<Text size="xs" c="dimmed" w={90}>
 											<Trans>Name</Trans>
 										</Text>
 										<Text size="sm" fw={500}>
@@ -540,7 +389,7 @@ export const CreateWorkspaceRoute = () => {
 										</Text>
 									</Group>
 									<Group gap={12} align="baseline">
-										<Text size="xs" c="dimmed" w={80}>
+										<Text size="xs" c="dimmed" w={90}>
 											<Trans>Organisation</Trans>
 										</Text>
 										<Text size="sm">
@@ -548,7 +397,19 @@ export const CreateWorkspaceRoute = () => {
 										</Text>
 									</Group>
 									<Group gap={12} align="baseline">
-										<Text size="xs" c="dimmed" w={80}>
+										<Text size="xs" c="dimmed" w={90}>
+											<Trans>Billing</Trans>
+										</Text>
+										<Text size="sm">
+											{isPartner && billFor === "client" ? (
+												<Trans>Separate (client)</Trans>
+											) : (
+												<Trans>Under your organisation</Trans>
+											)}
+										</Text>
+									</Group>
+									<Group gap={12} align="baseline">
+										<Text size="xs" c="dimmed" w={90}>
 											<Trans>Access</Trans>
 										</Text>
 										<Text size="sm">
@@ -559,51 +420,8 @@ export const CreateWorkspaceRoute = () => {
 											)}
 										</Text>
 									</Group>
-									<Group gap={12} align="baseline">
-										<Text size="xs" c="dimmed" w={80}>
-											<Trans>Tier</Trans>
-										</Text>
-										<Text size="sm" tt="capitalize">
-											{selectedTier}
-											<Text span c="dimmed" size="xs">
-												{" · "}
-												{reviewTierSummary}
-											</Text>
-										</Text>
-									</Group>
-									{submittedBillingPeriod && (
-										<Group gap={12} align="baseline">
-											<Text size="xs" c="dimmed" w={80}>
-												<Trans>Billing</Trans>
-											</Text>
-											<Text size="sm" tt="capitalize">
-												{submittedBillingPeriod === "annual" ? (
-													<Trans>Annual</Trans>
-												) : (
-													<Trans>Monthly</Trans>
-												)}
-											</Text>
-										</Group>
-									)}
 								</Stack>
 							</Paper>
-
-							<Textarea
-								label={t`Message (optional)`}
-								description={t`Anything we should know? Team size, timelines, intended use.`}
-								placeholder={t`e.g. 12-person research team starting in June.`}
-								value={message}
-								onChange={(e) => setMessage(e.currentTarget.value)}
-								maxLength={1000}
-								autosize
-								minRows={2}
-								maxRows={5}
-							/>
-							<CharsRemainingIndicator
-								value={message}
-								max={1000}
-								numberThresholdRatio={0.9}
-							/>
 						</Stack>
 					</Stepper.Step>
 				</Stepper>
@@ -634,7 +452,7 @@ export const CreateWorkspaceRoute = () => {
 							disabled={!canSubmit}
 							onClick={() => mutation.mutate()}
 						>
-							<Trans>Request workspace</Trans>
+							<Trans>Create workspace</Trans>
 						</Button>
 					)}
 				</Group>
