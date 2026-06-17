@@ -83,6 +83,29 @@ Staff create an org- or workspace-scoped account with `payment_mode=offline`,
 set tier + provisioned seats, and invoice out of band. No Mollie. This is the
 Guardian / bespoke path.
 
+## Partner billing & the "bill separately" choice
+
+`org.is_partner` is a **staff-set boolean** on the org. It gates whether the
+partner branching shows at all — non-partners never see it.
+
+Workspace creation:
+
+- **Non-partner org:** the workspace bills under the org account (default). No
+  choice shown.
+- **Partner org:** show two big buttons — "Is this for internal use, or for
+  another client?"
+  - **For internal use** -> bill under your own org (the org account), same as
+    the default.
+  - **For another client** -> per the partner agreement, create a **new
+    subscription / workspace-scoped billing account** for that client, so it can
+    be cleanly handed off later (re-pointed to the client's own org account).
+    Surface incentives here (partner margin, clean handoff, the client can take
+    it over without data movement).
+
+So "bill this workspace separately" is, concretely, the partner "for another
+client" path: a workspace-scoped account created with handoff in mind. Only
+partners see it; everyone else is org-billed.
+
 ## Mollie integration model (from the Mollie docs, via MCP)
 
 Mollie has **no plan / product / tier catalog**. We do not create tiers in

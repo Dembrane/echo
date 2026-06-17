@@ -49,6 +49,7 @@ class TestPlanDescription:
         assert "billed monthly" in d
         assert "Cancel anytime." in d
         assert "—" not in d  # no em dashes (brand rule)
+        assert not d.startswith("dembrane")  # no brand prefix on the receipt line
 
     def test_singular_seat_and_annual(self):
         from dembrane.billing_service import _plan_description
@@ -128,14 +129,14 @@ class TestListAccountInvoices:
                     "createdAt": "2026-06-17T09:00:00+00:00",
                     "amount": {"value": "900.00", "currency": "EUR"},
                     "status": "paid",
-                    "description": "dembrane Changemaker plan.",
+                    "description": "Changemaker plan.",
                 },
                 {
                     "id": "tr_2",
                     "createdAt": "2026-05-17T09:00:00+00:00",
                     "amount": {"value": "900.00", "currency": "EUR"},
                     "status": "canceled",
-                    "description": "dembrane Changemaker plan.",
+                    "description": "Changemaker plan.",
                 },
             ]
         )
