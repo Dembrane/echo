@@ -24,6 +24,8 @@ from datetime import datetime, timezone, timedelta
 from fastapi import Query, APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
+from dembrane import mollie
+from dembrane.settings import get_settings
 from dembrane.seat_capacity import compute_effective_seat_state
 from dembrane.tier_capacity import get_capacity
 from dembrane.directus_async import async_directus
@@ -207,7 +209,12 @@ async def _all_active_workspaces() -> list[dict]:
                     "id",
                     "name",
                     "org_id",
-                    "billing_account_id",
+                    # Request the account id explicitly. Asking for nested
+                    # fields (billing_account_id.tier, ...) makes Directus
+                    # return billing_account_id as a joined object, so a bare
+                    # "billing_account_id" entry would come back as that dict,
+                    # not the scalar id BillingRow expects.
+                    "billing_account_id.id",
                     "billed_to_team_id",
                     "effective_client_team_id",
                     *nested_billing_fields(),
@@ -219,9 +226,13 @@ async def _all_active_workspaces() -> list[dict]:
     if not isinstance(out, list):
         return []
     # Flatten the joined billing account fields to the top level so callers
-    # read ws["tier"], ws["downgraded_at"], etc. unchanged.
+    # read ws["tier"], ws["downgraded_at"], etc. unchanged, then collapse
+    # billing_account_id back to the scalar account id (it arrives as the
+    # joined object because we requested nested fields on it).
     for ws in out:
+        account = ws.get("billing_account_id")
         ws.update(billing_from_workspace(ws))
+        ws["billing_account_id"] = account.get("id") if isinstance(account, dict) else account
     return out
 
 
@@ -730,7 +741,9 @@ async def at_risk(
     if not auth.is_admin:
         raise HTTPException(status_code=403, detail="Staff-only")
 
-    rollup = await billing_rollup(auth)
+    # Pass month_offset explicitly: called as a plain coroutine (not via
+    # FastAPI), the parameter default is the Query() marker, not an int.
+    rollup = await billing_rollup(auth, month_offset=0)
     out: list[AtRiskRow] = []
 
     now = datetime.now(timezone.utc)
@@ -792,3 +805,178 @@ async def at_risk(
             except Exception:
                 pass
     return out
+
+
+# ── Payments rollup (Wave B) ──
+#
+# Read-only surfacing of recent Mollie transactions across every billing
+# account. dembrane never auto-blocks a customer for non-payment (Wave B
+# decision): staff watch this list and action non-payment by hand, so the
+# view also links out to the Mollie dashboard where refunds / chargebacks /
+# customer detail live.
+
+
+# Mollie has no per-organisation dashboard deep link, so we point staff at the
+# right environment's payments index. Test and live are separate dashboards.
+_MOLLIE_DASHBOARD_LIVE = "https://www.mollie.com/dashboard/payments"
+_MOLLIE_DASHBOARD_TEST = "https://www.mollie.com/dashboard/org_test/payments"
+
+
+class PaymentRow(BaseModel):
+    """One Mollie transaction, enriched with the local account it belongs to."""
+
+    payment_id: str
+    billing_account_id: Optional[str] = None
+    account_label: Optional[str] = None
+    org_id: Optional[str] = None
+    org_name: Optional[str] = None
+    tier: Optional[str] = None
+    created_at: Optional[str] = None
+    amount: Optional[str] = None
+    currency: str = "EUR"
+    # Mollie status: open / pending / paid / failed / expired / canceled.
+    status: Optional[str] = None
+    # first (consent) / recurring / oneoff. Lets staff tell a renewal from a
+    # proration charge from the initial checkout.
+    sequence_type: Optional[str] = None
+    method: Optional[str] = None
+    description: str = ""
+    # Per-payment Mollie dashboard deep link when available.
+    dashboard_url: Optional[str] = None
+
+
+class PaymentsRollupResponse(BaseModel):
+    # Configuration / environment state so the UI can explain an empty list.
+    mollie_enabled: bool
+    mollie_test_mode: bool
+    mollie_dashboard_url: str
+    accounts_with_customer: int
+    # Headline counters over the returned window.
+    payment_count: int
+    paid_eur: float
+    failed_count: int
+    open_count: int
+    rows: list[PaymentRow]
+
+
+def _payment_dashboard_url(payment: dict, *, test_mode: bool) -> Optional[str]:
+    """Mollie embeds a dashboard link in `_links.dashboard.href` on each
+    payment. Prefer it; fall back to None (the response carries the index URL)."""
+    href = (((payment or {}).get("_links") or {}).get("dashboard") or {}).get("href")
+    return href or None
+
+
+@router.get("/payments", response_model=PaymentsRollupResponse)
+async def payments_rollup(
+    auth: DependencyDirectusSession,
+    per_account: int = Query(
+        default=10,
+        ge=1,
+        le=50,
+        description="Most-recent payments to pull per billing account.",
+    ),
+) -> PaymentsRollupResponse:
+    """Recent Mollie transactions across every billing account, newest first.
+
+    Aggregates each account's most-recent payments (same list-payments pattern
+    as the in-app invoice list, but pooled across accounts) so staff have one
+    place to watch for failed / overdue charges. Read-only: nobody is blocked
+    from here, this is where staff decide who to chase. The response carries a
+    deep link to the Mollie dashboard for refunds and customer detail.
+    """
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    settings = get_settings()
+    test_mode = settings.billing.mollie_test_mode
+    dashboard_url = _MOLLIE_DASHBOARD_TEST if test_mode else _MOLLIE_DASHBOARD_LIVE
+
+    accounts = await async_directus.get_items(
+        "billing_account",
+        {
+            "query": {
+                "filter": {
+                    "deleted_at": {"_null": True},
+                    "mollie_customer_id": {"_nnull": True},
+                },
+                "fields": ["id", "label", "org_id", "tier", "mollie_customer_id"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(accounts, list):
+        accounts = []
+
+    org_name_by_id = await _org_name_map([a["org_id"] for a in accounts if a.get("org_id")])
+
+    rows: list[PaymentRow] = []
+    paid_eur = 0.0
+    failed_count = 0
+    open_count = 0
+
+    # Mollie isn't configured (local / unset key): return the empty shell with
+    # the flags set so the UI can say "connect Mollie" instead of erroring.
+    if settings.billing.mollie_enabled:
+        for account in accounts:
+            customer_id = account.get("mollie_customer_id")
+            if not customer_id:
+                continue
+            try:
+                payments = await mollie.list_customer_payments(
+                    customer_id, limit=per_account
+                )
+            except mollie.MollieError as exc:
+                # One bad customer must not sink the whole rollup; skip and log.
+                logger.warning(
+                    "Mollie payments fetch failed for account %s: %s",
+                    account.get("id"),
+                    exc,
+                )
+                continue
+            for p in payments:
+                amt = p.get("amount") or {}
+                status = p.get("status")
+                value = amt.get("value")
+                if status == "paid":
+                    try:
+                        paid_eur += float(value)
+                    except (TypeError, ValueError):
+                        pass
+                elif status in ("failed", "expired", "canceled"):
+                    failed_count += 1
+                elif status in ("open", "pending"):
+                    open_count += 1
+                rows.append(
+                    PaymentRow(
+                        payment_id=str(p.get("id")),
+                        billing_account_id=account.get("id"),
+                        account_label=account.get("label"),
+                        org_id=account.get("org_id"),
+                        org_name=org_name_by_id.get(account.get("org_id") or ""),
+                        tier=account.get("tier"),
+                        created_at=p.get("createdAt"),
+                        amount=value,
+                        currency=amt.get("currency") or "EUR",
+                        status=status,
+                        sequence_type=p.get("sequenceType"),
+                        method=p.get("method"),
+                        description=p.get("description") or "",
+                        dashboard_url=_payment_dashboard_url(p, test_mode=test_mode),
+                    )
+                )
+
+    # Newest first across all accounts. createdAt is ISO-8601, so string sort
+    # is chronological; missing dates sort last.
+    rows.sort(key=lambda r: r.created_at or "", reverse=True)
+
+    return PaymentsRollupResponse(
+        mollie_enabled=settings.billing.mollie_enabled,
+        mollie_test_mode=test_mode,
+        mollie_dashboard_url=dashboard_url,
+        accounts_with_customer=len([a for a in accounts if a.get("mollie_customer_id")]),
+        payment_count=len(rows),
+        paid_eur=round(paid_eur, 2),
+        failed_count=failed_count,
+        open_count=open_count,
+        rows=rows,
+    )

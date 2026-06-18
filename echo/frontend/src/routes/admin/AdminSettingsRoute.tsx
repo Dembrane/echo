@@ -38,6 +38,7 @@ import {
 	IconChevronRight,
 	IconDots,
 	IconDownload,
+	IconExternalLink,
 	IconSearch,
 	IconSortAscending,
 	IconSortDescending,
@@ -1900,6 +1901,368 @@ function PartnersPanel() {
 	);
 }
 
+type PaymentRow = {
+	payment_id: string;
+	billing_account_id: string | null;
+	account_label: string | null;
+	org_id: string | null;
+	org_name: string | null;
+	tier: string | null;
+	created_at: string | null;
+	amount: string | null;
+	currency: string;
+	status: string | null;
+	sequence_type: string | null;
+	method: string | null;
+	description: string;
+	dashboard_url: string | null;
+};
+
+type PaymentsRollup = {
+	mollie_enabled: boolean;
+	mollie_test_mode: boolean;
+	mollie_dashboard_url: string;
+	accounts_with_customer: number;
+	payment_count: number;
+	paid_eur: number;
+	failed_count: number;
+	open_count: number;
+	rows: PaymentRow[];
+};
+
+// Mollie payment status to a brand-safe badge color. Paid is primary (Royal
+// Blue), trouble states red, in-flight gray.
+const paymentStatusColor = (status: string | null): string => {
+	switch (status) {
+		case "paid":
+			return "primary";
+		case "failed":
+		case "expired":
+		case "canceled":
+			return "red";
+		default:
+			return "gray";
+	}
+};
+
+const formatPaymentAmount = (amount: string | null, currency: string): string => {
+	if (!amount) return "";
+	const n = Number(amount);
+	if (Number.isNaN(n)) return amount;
+	const symbol = currency === "EUR" ? "€" : `${currency} `;
+	return `${symbol}${n.toLocaleString(undefined, {
+		maximumFractionDigits: 2,
+		minimumFractionDigits: 2,
+	})}`;
+};
+
+/**
+ * Payments rollup (Wave B). Read-only view of recent Mollie transactions
+ * pooled across every billing account, newest first, plus a deep link to the
+ * Mollie dashboard. dembrane never auto-blocks for non-payment, so this is how
+ * staff spot failed / overdue charges and decide who to chase.
+ */
+function PaymentsPanel() {
+	const { data, isLoading } = useQuery({
+		queryFn: () => fetchJson<PaymentsRollup>("/v2/admin/payments"),
+		queryKey: ["v2", "admin", "payments"],
+		staleTime: 60_000,
+	});
+	const [globalFilter, setGlobalFilter] = useState("");
+
+	const columns = useMemo<ColumnDef<PaymentRow, unknown>[]>(
+		() => [
+			{
+				accessorKey: "created_at",
+				cell: ({ row }) => formatDate(row.original.created_at),
+				header: t`Date`,
+				id: "created_at",
+			},
+			{
+				accessorFn: (r) => r.account_label ?? r.org_name ?? "",
+				cell: ({ row }) =>
+					row.original.org_id ? (
+						<Anchor
+							component={I18nLink}
+							to={`/o/${row.original.org_id}`}
+							size="xs"
+							fw={500}
+						>
+							{row.original.account_label ??
+								row.original.org_name ??
+								row.original.billing_account_id?.slice(0, 8) ??
+								"."}
+						</Anchor>
+					) : (
+						<Text size="xs">
+							{row.original.account_label ??
+								row.original.billing_account_id?.slice(0, 8) ??
+								"."}
+						</Text>
+					),
+				header: t`Account`,
+				id: "account",
+			},
+			{
+				accessorKey: "tier",
+				cell: ({ row }) =>
+					row.original.tier ? (
+						<Badge
+							size="xs"
+							color={tierColors[row.original.tier] ?? "gray"}
+							variant="light"
+							tt="capitalize"
+						>
+							{row.original.tier}
+						</Badge>
+					) : null,
+				header: t`Tier`,
+				id: "tier",
+			},
+			{
+				accessorKey: "amount",
+				cell: ({ row }) => (
+					<Text size="xs" fw={500}>
+						{formatPaymentAmount(row.original.amount, row.original.currency)}
+					</Text>
+				),
+				header: t`Amount`,
+				id: "amount",
+				meta: { align: "right" },
+			},
+			{
+				accessorKey: "status",
+				cell: ({ row }) => (
+					<Badge
+						size="xs"
+						color={paymentStatusColor(row.original.status)}
+						variant="light"
+						tt="capitalize"
+					>
+						{row.original.status ?? "."}
+					</Badge>
+				),
+				header: t`Status`,
+				id: "status",
+			},
+			{
+				accessorKey: "sequence_type",
+				cell: ({ row }) => {
+					const seq = row.original.sequence_type;
+					const label =
+						seq === "first"
+							? t`Initial`
+							: seq === "recurring"
+								? t`Renewal`
+								: seq === "oneoff"
+									? t`One-off`
+									: (seq ?? "");
+					return (
+						<Text size="xs" c="dimmed">
+							{label}
+						</Text>
+					);
+				},
+				header: t`Type`,
+				id: "sequence_type",
+			},
+			{
+				accessorKey: "description",
+				cell: ({ row }) => (
+					<Text size="xs" c="dimmed" lineClamp={1} maw={280}>
+						{row.original.description}
+					</Text>
+				),
+				header: t`Description`,
+				id: "description",
+			},
+			{
+				cell: ({ row }) =>
+					row.original.dashboard_url ? (
+						<Anchor
+							href={row.original.dashboard_url}
+							target="_blank"
+							rel="noopener noreferrer"
+							size="xs"
+						>
+							<Group gap={4} wrap="nowrap">
+								<Trans>Open</Trans>
+								<IconExternalLink size={12} />
+							</Group>
+						</Anchor>
+					) : null,
+				enableSorting: false,
+				header: "",
+				id: "dashboard",
+			},
+		],
+		[],
+	);
+
+	if (isLoading) {
+		return (
+			<Center py="xl">
+				<Loader size="sm" color="gray" />
+			</Center>
+		);
+	}
+	if (!data) {
+		return (
+			<Text c="red" size="sm">
+				<Trans>Could not load payments. Check auth and backend logs.</Trans>
+			</Text>
+		);
+	}
+
+	const rows = data.rows;
+
+	return (
+		<Stack gap="md">
+			<Group justify="space-between" align="flex-end" wrap="wrap">
+				<Stack gap={2}>
+					<Group gap="xs" align="center">
+						<Text size="sm" c="dimmed">
+							<Trans>Recent payments across all accounts</Trans>
+						</Text>
+						{data.mollie_test_mode && (
+							<Badge size="xs" color="gray" variant="light">
+								<Trans>test mode</Trans>
+							</Badge>
+						)}
+					</Group>
+					<Text size="xs" c="dimmed">
+						<Trans>
+							No one is auto-blocked for non-payment. Watch failed charges here
+							and follow up.
+						</Trans>
+					</Text>
+				</Stack>
+				<Button
+					component="a"
+					href={data.mollie_dashboard_url}
+					target="_blank"
+					rel="noopener noreferrer"
+					size="xs"
+					variant="outline"
+					rightSection={<IconExternalLink size={14} />}
+				>
+					<Trans>Open Mollie dashboard</Trans>
+				</Button>
+			</Group>
+
+			{!data.mollie_enabled && (
+				<Paper withBorder radius="sm" p="sm">
+					<Text size="xs" c="dimmed">
+						<Trans>
+							Mollie is not configured in this environment, so no live
+							transactions are shown. The dashboard link still points to the
+							right Mollie environment.
+						</Trans>
+					</Text>
+				</Paper>
+			)}
+
+			<SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
+				<Paper withBorder radius="sm" p="sm">
+					<Stack gap={2}>
+						<Text size="xs" c="dimmed">
+							<Trans>Paid</Trans>
+						</Text>
+						<Text size="lg" fw={500}>
+							{formatEur(data.paid_eur)}
+						</Text>
+					</Stack>
+				</Paper>
+				<Paper withBorder radius="sm" p="sm">
+					<Stack gap={2}>
+						<Text size="xs" c="dimmed">
+							<Trans>Failed</Trans>
+						</Text>
+						<Text size="lg" fw={500} c={data.failed_count > 0 ? "red" : undefined}>
+							{data.failed_count}
+						</Text>
+					</Stack>
+				</Paper>
+				<Paper withBorder radius="sm" p="sm">
+					<Stack gap={2}>
+						<Text size="xs" c="dimmed">
+							<Trans>Pending</Trans>
+						</Text>
+						<Text size="lg" fw={500}>
+							{data.open_count}
+						</Text>
+					</Stack>
+				</Paper>
+				<Paper withBorder radius="sm" p="sm">
+					<Stack gap={2}>
+						<Text size="xs" c="dimmed">
+							<Trans>Accounts billed</Trans>
+						</Text>
+						<Text size="lg" fw={500}>
+							{data.accounts_with_customer}
+						</Text>
+					</Stack>
+				</Paper>
+			</SimpleGrid>
+
+			<Group justify="space-between" align="center" wrap="wrap">
+				<Text size="xs" c="dimmed">
+					<Plural value={rows.length} one="# payment" other="# payments" />
+				</Text>
+				<TextInput
+					leftSection={<IconSearch size={14} />}
+					placeholder={t`Search account, status, description`}
+					value={globalFilter}
+					onChange={(e) => setGlobalFilter(e.currentTarget.value)}
+					size="xs"
+					style={{ maxWidth: 320 }}
+				/>
+			</Group>
+
+			<SimpleDataTable<PaymentRow>
+				columns={columns}
+				data={rows}
+				globalFilter={globalFilter}
+				onGlobalFilterChange={setGlobalFilter}
+				initialSorting={[{ desc: true, id: "created_at" }]}
+				emptyLabel={t`No payments yet.`}
+			/>
+		</Stack>
+	);
+}
+
+/**
+ * Stable host for a staff section a later wave fills in. Wave C
+ * (managed-billing controls) and Wave E (training provisioning) each mount
+ * onto one of these so they only add a panel, never touch routing or the tab
+ * switch. Replace the body with the real controls when the wave lands.
+ */
+function StaffSectionPlaceholder({
+	title,
+	description,
+}: {
+	title: string;
+	description: string;
+}) {
+	return (
+		<Paper withBorder radius="sm" p="lg">
+			<Stack gap="xs">
+				<Group gap="xs" align="center">
+					<Text size="sm" fw={500}>
+						{title}
+					</Text>
+					<Badge size="xs" color="gray" variant="light">
+						<Trans>Coming soon</Trans>
+					</Badge>
+				</Group>
+				<Text size="xs" c="dimmed">
+					{description}
+				</Text>
+			</Stack>
+		</Paper>
+	);
+}
+
 export const AdminSettingsRoute = () => {
 	useDocumentTitle(t`Admin, dembrane`);
 	const { data: me } = useV2Me();
@@ -1941,8 +2304,8 @@ export const AdminSettingsRoute = () => {
 						</Group>
 						<Text size="xs" c="dimmed">
 							<Trans>
-								Usage and billing, partner ledger. Any Directus admin has
-								access.
+								Usage and billing, payments, partner ledger. Any Directus admin
+								has access.
 							</Trans>
 						</Text>
 					</Stack>
@@ -1957,8 +2320,28 @@ export const AdminSettingsRoute = () => {
 					<Tabs.Panel value="usage-and-billing" pt="md">
 						<UsageAndBillingPanel />
 					</Tabs.Panel>
+					<Tabs.Panel value="payments" pt="md">
+						<PaymentsPanel />
+					</Tabs.Panel>
 					<Tabs.Panel value="partners" pt="md">
 						<PartnersPanel />
+					</Tabs.Panel>
+					{/* Stable hosts for later waves. Wave C swaps in managed-billing
+					    controls (set managed, assign an @dembrane.com account
+					    manager, issue an offline invoice); Wave E swaps in training
+					    provisioning + the trained-vs-not verification view. Each
+					    only replaces its panel body. Routing + tab switch stay. */}
+					<Tabs.Panel value="managed-billing" pt="md">
+						<StaffSectionPlaceholder
+							title={t`Managed billing`}
+							description={t`Set an account managed, assign an account manager, and issue an offline invoice. Lands with Wave C.`}
+						/>
+					</Tabs.Panel>
+					<Tabs.Panel value="training" pt="md">
+						<StaffSectionPlaceholder
+							title={t`Training`}
+							description={t`Provision a training, mark completion, and see who is trained. Lands with Wave E.`}
+						/>
 					</Tabs.Panel>
 				</Tabs>
 			</Stack>
