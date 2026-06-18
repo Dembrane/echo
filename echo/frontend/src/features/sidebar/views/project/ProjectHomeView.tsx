@@ -5,6 +5,7 @@ import { Trans } from "@lingui/react/macro";
 		BroadcastIcon,
 		ChatCircleDotsIcon,
 		ChatCircleTextIcon,
+		ChartLineIcon,
 		FileTextIcon,
 		GearIcon,
 		GraphIcon,
@@ -97,11 +98,16 @@ export const ProjectHomeView = () => {
 					icon={ChatCircleTextIcon}
 					badge={conversationsCountQuery.data || undefined}
 				/>
-				<NavItem
-					to={`${base}/access`}
-					label={<Trans>Access & sharing</Trans>}
-					icon={UsersThreeIcon}
-				/>
+					<NavItem
+						to={`${base}/access`}
+						label={<Trans>Access</Trans>}
+						icon={UsersThreeIcon}
+					/>
+					<NavItem
+						to={`${base}/usage`}
+						label={<Trans>Usage</Trans>}
+						icon={ChartLineIcon}
+					/>
 				{/* Settings is the last clickable item, directly after the rest of
 				    the project items. */}
 				<NavItem

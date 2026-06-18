@@ -31,6 +31,7 @@ import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
 // Tab-based routes - import directly for now to debug
 import {
 	ProjectAccessRoute,
+	ProjectUsageRoute,
 	ProjectConversationsRoute,
 	ProjectIntegrationsRoute,
 	ProjectPortalSettingsRoute,
@@ -186,13 +187,17 @@ const projectRouteChildren = [
 								element: <ProjectPortalSettingsRoute />,
 								path: "portal-editor",
 							},
-							{
-								// "Access & usage" tab (2026-04-24) — dedicated
-								// surface for per-project usage, sharing, and the
-								// list of who can actually see the project.
-								element: <ProjectAccessRoute />,
-								path: "access",
-							},
+								{
+									// "Access" tab — dedicated surface for project sharing,
+									// and the list of who can actually see the project.
+									element: <ProjectAccessRoute />,
+									path: "access",
+								},
+								{
+									// "Usage" tab — dedicated surface for per-project usage.
+									element: <ProjectUsageRoute />,
+									path: "usage",
+								},
 							{
 								// /sharing tab retired 2026-04-23 — bookmark redirect
 								// now points at the new /access tab.

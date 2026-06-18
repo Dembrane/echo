@@ -13,7 +13,7 @@ import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
 import { ProjectExportSection } from "@/components/project/ProjectExportSection";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
 import { ProjectUploadSection } from "@/components/project/ProjectUploadSection";
-import { ProjectUsageAndSharing } from "@/components/project/ProjectUsageAndSharing";
+import { ProjectAccess, ProjectUsage } from "@/components/project/ProjectUsageAndSharing";
 import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
 import { FeatureGate } from "@/components/workspace/FeatureGate";
 import { ENABLE_WEBHOOKS } from "@/config";
@@ -285,7 +285,7 @@ export const ProjectAccessRoute = () => {
 				</Alert>
 			)}
 			{projectQuery.data && projectId && (
-				<ProjectUsageAndSharing
+				<ProjectAccess
 					projectId={projectId}
 					visibility={
 						(projectQuery.data.visibility as "workspace" | "private") ??
@@ -293,6 +293,21 @@ export const ProjectAccessRoute = () => {
 					}
 				/>
 			)}
+		</Stack>
+	);
+};
+
+export const ProjectUsageRoute = () => {
+	const { projectId } = useParams();
+
+	return (
+		<Stack
+			gap="3rem"
+			className="relative"
+			px={{ base: "1rem", md: "2rem" }}
+			py={{ base: "2rem", md: "4rem" }}
+		>
+			{projectId && <ProjectUsage projectId={projectId} />}
 		</Stack>
 	);
 };
