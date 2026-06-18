@@ -167,6 +167,66 @@ async def estimate_cost(account_id: str, auth: DependencyDirectusSession) -> dic
     return await billing_service.estimate_account_cost(account_id)
 
 
+class BillingDetailsBody(BaseModel):
+    """VAT + billing address capture (ISSUE-005). Capture only: prices are quoted
+    excl. VAT and no rate logic runs here (reverse-charge ruleset gated on Marco)."""
+
+    billing_legal_name: Optional[str] = None
+    billing_vat_id: Optional[str] = None
+    billing_vat_region: Optional[Literal["eu", "non_eu", "international"]] = None
+    billing_country: Optional[str] = None
+    billing_address_line1: Optional[str] = None
+    billing_address_line2: Optional[str] = None
+    billing_postal_code: Optional[str] = None
+    billing_city: Optional[str] = None
+
+
+@router.get("/billing-accounts/{account_id}/billing-details")
+async def get_billing_details(account_id: str, auth: DependencyDirectusSession) -> dict:
+    """The captured VAT/address for the billing-details form (universal: any
+    account, managed or self-serve)."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
+    await _require_billing_access(account, auth)
+    return billing_service.billing_details_from_account(account)
+
+
+@router.put("/billing-accounts/{account_id}/billing-details")
+async def save_billing_details(
+    account_id: str,
+    body: BillingDetailsBody,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Save VAT/address capture on the account (universal)."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
+    await _require_billing_access(account, auth)
+    saved = await billing_service.save_billing_details(
+        account_id, body.model_dump(exclude_unset=True)
+    )
+    return {"status": "ok", "billing_details": saved}
+
+
+@router.get("/billing-accounts/{account_id}/invoices/{invoice_id}/pdf")
+async def invoice_pdf(
+    account_id: str,
+    invoice_id: str,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Return the downloadable PDF URL for a Mollie sales invoice (ISSUE-004).
+    The frontend opens this URL; we don't proxy the bytes."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
+    await _require_billing_access(account, auth)
+    url = await billing_service.get_sales_invoice_pdf_url(invoice_id)
+    if not url:
+        raise HTTPException(status_code=404, detail="No PDF available for this invoice")
+    return {"pdf_url": url}
+
+
 class CancelBody(BaseModel):
     # Survey: why are they leaving? Stored on the account + emitted to PostHog
     # from the client. Optional so a cancel never blocks on the survey.

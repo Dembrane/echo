@@ -13,6 +13,7 @@ from dembrane.api.v2.me import router as me_router
 from dembrane.api.v2.auth import router as auth_router
 from dembrane.api.v2.orgs import router as orgs_router
 from dembrane.api.v2.admin import router as admin_router
+from dembrane.api.v2.admin_managed import router as admin_managed_router
 from dembrane.api.v2.billing import (
     router as billing_router,
     webhook_router as billing_webhook_router,
@@ -129,3 +130,6 @@ v2_router.include_router(
 # is_admin JWT claim is the gate for now; storage-backed staff policies
 # (staff:can_set_tier etc.) are declared in policies.py but not wired.
 v2_router.include_router(admin_router, prefix="/admin", tags=["v2:admin"])
+# Staff-only managed-billing endpoints (set-managed, account manager, invoices).
+# Additive router so it stays clear of the staff-dashboard work in 022 / Wave E.
+v2_router.include_router(admin_managed_router, prefix="/admin", tags=["v2:admin:managed"])

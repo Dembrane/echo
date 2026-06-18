@@ -1815,6 +1815,9 @@ def task_expire_workspace_tiers() -> None:
                 "filter": {
                     "tier_expires_at": {"_nnull": True, "_lt": now_iso},
                     "tier": {"_neq": "free"},
+                    # Managed (offline) accounts never auto-downgrade: entitlements
+                    # are decoupled from payment (ISSUE-021). Staff manages expiry.
+                    "payment_mode": {"_neq": "offline"},
                     "deleted_at": {"_null": True},
                 },
                 "fields": ["id", "tier", "workspace_id"],
@@ -2031,6 +2034,9 @@ def task_send_tier_expiry_prewarning() -> None:
                     "tier_expires_at": {"_nnull": True, "_gte": now_iso, "_lte": three_days_iso},
                     "tier": {"_neq": "free"},
                     "pre_warning_sent": {"_eq": False},
+                    # Managed (offline) accounts never get an auto-expiry warning;
+                    # they don't auto-downgrade (ISSUE-021).
+                    "payment_mode": {"_neq": "offline"},
                     "deleted_at": {"_null": True},
                 },
                 "fields": ["id", "tier", "tier_expires_at", "workspace_id"],
