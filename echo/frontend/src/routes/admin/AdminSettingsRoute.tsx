@@ -1103,6 +1103,24 @@ function accountRowScopeLabel(scope: AccountRow["account_scope"]): string {
 }
 
 /**
+ * Human identifying name for an account row. Staff want "who is this", not an
+ * id: prefer the org name for an organisation account and the single
+ * workspace's name for a workspace account, then fall back to the account
+ * label, then a short id.
+ */
+function accountIdentifyingName(account: AccountRow): string {
+	if (account.account_scope === "organisation" && account.org_name) {
+		return account.org_name;
+	}
+	if (account.account_scope === "workspace") {
+		const ws = account.workspaces[0];
+		if (ws?.workspace_name) return ws.workspace_name;
+	}
+	if (account.label) return account.label;
+	return account.billing_account_id.slice(0, 8);
+}
+
+/**
  * Trial / Managed badges for an account. Trial shows the expiry; both add €0 to
  * the paying revenue total (Managed is offline-invoiced and so counts, but we
  * still flag it so staff know there is no Mollie mandate behind it).
@@ -1162,7 +1180,7 @@ function AccountActionsModal({
 			onClose={onClose}
 			title={
 				<Group gap="xs">
-					<Text fw={500}>{account.label}</Text>
+					<Text fw={500}>{accountIdentifyingName(account)}</Text>
 					<Badge
 						size="xs"
 						color={tierColors[account.tier] ?? "gray"}
@@ -1310,7 +1328,7 @@ function AccountBillingTable({
 										<Stack gap={2} style={{ minWidth: 0 }}>
 											<Group gap={6} wrap="nowrap">
 												<Text size="xs" fw={500} truncate maw={220}>
-													{account.label}
+													{accountIdentifyingName(account)}
 												</Text>
 												<AccountBadges account={account} />
 											</Group>

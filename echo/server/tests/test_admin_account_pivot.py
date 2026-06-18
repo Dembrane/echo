@@ -315,9 +315,11 @@ def _two_workspace_rollup(*, second_is_trial: bool):
 @patch("dembrane.api.v2.admin._workspace_hours_this_cycle", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._workspace_admins", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._all_active_workspaces", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._org_partner_map", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_name_map", new_callable=AsyncMock)
 async def test_trial_does_not_inflate_total(
     mock_org_names,
+    mock_org_partner,
     mock_workspaces,
     mock_admins,
     mock_hours,
@@ -328,6 +330,7 @@ async def test_trial_does_not_inflate_total(
     from dembrane.api.v2.admin import billing_rollup
 
     mock_org_names.return_value = {"org-1": "Acme", "org-2": "Beta"}
+    mock_org_partner.return_value = {}
     mock_admins.return_value = []
     mock_hours.return_value = 1.0
     mock_seats.return_value = (1, 1, 0)
@@ -366,9 +369,11 @@ async def test_trial_does_not_inflate_total(
 @patch("dembrane.api.v2.admin._workspace_hours_this_cycle", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._workspace_admins", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._all_active_workspaces", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._org_partner_map", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_name_map", new_callable=AsyncMock)
 async def test_rollup_pools_org_account_across_workspaces(
     mock_org_names,
+    mock_org_partner,
     mock_workspaces,
     mock_admins,
     mock_hours,
@@ -379,6 +384,7 @@ async def test_rollup_pools_org_account_across_workspaces(
     from dembrane.api.v2.admin import billing_rollup
 
     mock_org_names.return_value = {"org-1": "Acme"}
+    mock_org_partner.return_value = {}
     mock_admins.return_value = []
     mock_hours.return_value = 1.0
     mock_seats.return_value = (2, 2, 1)  # 2 members + 1 external per workspace
@@ -499,9 +505,11 @@ def test_full_discount_floors_forecast_to_zero_but_not_comped():
 @patch("dembrane.api.v2.admin._workspace_hours_this_cycle", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._workspace_admins", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._all_active_workspaces", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._org_partner_map", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_name_map", new_callable=AsyncMock)
 async def test_rollup_headline_forecast_and_mrr_are_discounted(
     mock_org_names,
+    mock_org_partner,
     mock_workspaces,
     mock_admins,
     mock_hours,
@@ -512,6 +520,7 @@ async def test_rollup_headline_forecast_and_mrr_are_discounted(
     from dembrane.api.v2.admin import billing_rollup
 
     mock_org_names.return_value = {"org-1": "Acme"}
+    mock_org_partner.return_value = {}
     mock_admins.return_value = []
     mock_hours.return_value = 1.0
     mock_seats.return_value = (1, 1, 0)
@@ -591,9 +600,11 @@ def test_five_seat_changemaker_annual_matches_monthly_equivalent():
 @patch("dembrane.api.v2.admin._workspace_hours_this_cycle", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._workspace_admins", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._all_active_workspaces", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._org_partner_map", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_name_map", new_callable=AsyncMock)
 async def test_rollup_headline_is_per_seat(
     mock_org_names,
+    mock_org_partner,
     mock_workspaces,
     mock_admins,
     mock_hours,
@@ -604,6 +615,7 @@ async def test_rollup_headline_is_per_seat(
     from dembrane.api.v2.admin import billing_rollup
 
     mock_org_names.return_value = {"org-1": "Acme"}
+    mock_org_partner.return_value = {}
     mock_admins.return_value = []
     mock_hours.return_value = 1.0
     mock_seats.return_value = (5, 5, 0)
