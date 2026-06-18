@@ -379,6 +379,10 @@ class TestManagedOverview:
             return {"id": "mgr-1", "email": "sam@dembrane.com", "display_name": "Sam"}
 
         mock_directus.get_item = AsyncMock(side_effect=fake_get_item)
+        # Pending-invite lookup (Wave A) walks the account's workspaces; a managed
+        # account still surfaces pending invites, so the overview hits get_items.
+        # No workspaces here means no pending invites.
+        mock_directus.get_items = AsyncMock(return_value=[])
         mock_seats.return_value = 3
         # Mollie methods must never be called for a managed account.
         mock_mollie.get_subscription = AsyncMock(

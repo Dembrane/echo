@@ -59,7 +59,12 @@ import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
-import { type BillingPeriod, TIER_ORDER, type Tier } from "@/lib/tiers";
+import {
+	type BillingPeriod,
+	PURCHASABLE_TIERS,
+	TIER_ORDER,
+	type Tier,
+} from "@/lib/tiers";
 
 const _tierRank = (tier: string): number => TIER_ORDER.indexOf(tier as Tier);
 
@@ -2674,10 +2679,7 @@ function ManagedBillingPanel() {
 									tt="capitalize"
 									w={180}
 								/>
-								<Button
-									loading={busy === "set-managed"}
-									onClick={onSetManaged}
-								>
+								<Button loading={busy === "set-managed"} onClick={onSetManaged}>
 									<Trans>Set managed</Trans>
 								</Button>
 							</Group>
@@ -2712,8 +2714,8 @@ function ManagedBillingPanel() {
 						</Text>
 						<Text size="xs">
 							<Trans>
-								Amounts default to the account's seats times the per-seat
-								price. Override only when you need to.
+								Amounts default to the account's seats times the per-seat price.
+								Override only when you need to.
 							</Trans>
 						</Text>
 

@@ -370,7 +370,9 @@ function BillingDetailsForm({
 				size="sm"
 				label={t`Legal entity name`}
 				value={form.billing_legal_name ?? ""}
-				onChange={(e) => set("billing_legal_name", e.currentTarget.value || null)}
+				onChange={(e) =>
+					set("billing_legal_name", e.currentTarget.value || null)
+				}
 			/>
 			<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
 				<TextInput
@@ -427,7 +429,9 @@ function BillingDetailsForm({
 					size="sm"
 					label={t`Country`}
 					value={form.billing_country ?? ""}
-					onChange={(e) => set("billing_country", e.currentTarget.value || null)}
+					onChange={(e) =>
+						set("billing_country", e.currentTarget.value || null)
+					}
 				/>
 			</SimpleGrid>
 			<Group justify="flex-end">
@@ -756,7 +760,10 @@ function InvoiceList({
 													size="xs"
 													variant="subtle"
 													onClick={() =>
-														openInvoicePdf(accountId, inv.sales_invoice_id as string)
+														openInvoicePdf(
+															accountId,
+															inv.sales_invoice_id as string,
+														)
 													}
 												>
 													<Trans>Download PDF</Trans>
