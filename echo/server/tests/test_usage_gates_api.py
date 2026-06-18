@@ -208,10 +208,11 @@ class TestWorkspaceUsageResponseIncludesGates:
 class TestMemberVsAdminFinancialGating:
     """ISSUE-017 D4/D5: members see counts, € amounts are admin-only.
 
-    The usage endpoint computes the full (admin) response, caches it, then —
-    when the caller lacks workspace:view_invoices — nulls the financial
-    fields (overage_forecast_eur, seat_overage_eur, next_tier) while leaving
-    every count intact. These tests exercise that exact transform.
+    The usage endpoint computes the full (admin) response, caches it, then,
+    when the caller lacks workspace:view_invoices, nulls the admin-only
+    upgrade recommendation (next_tier) while leaving every count intact. Per-seat
+    overage was removed, so there are no euro amounts on this response. These
+    tests exercise that transform.
     """
 
     def _full_admin_response(self):
@@ -237,8 +238,6 @@ class TestMemberVsAdminFinancialGating:
             projects=[],
             pilot_hard_block_active=False,
             usage_gates=UsageGatesResponse(),
-            overage_forecast_eur=42.0,
-            seat_overage_eur=18.0,
             next_tier=NextTierRecommendation(
                 tier="changemaker",
                 tagline="grow further.",
@@ -254,22 +253,20 @@ class TestMemberVsAdminFinancialGating:
         return WorkspaceUsageResponse(
             **{
                 **full.model_dump(),
-                "overage_forecast_eur": None,
-                "seat_overage_eur": None,
                 "next_tier": None,
             }
         )
 
-    def test_admin_sees_euro_amounts(self):
+    def test_admin_sees_upgrade_recommendation(self):
+        # Per-seat overage was removed, so the only admin-gated financial hint
+        # left on the workspace usage response is the upgrade recommendation.
         full = self._full_admin_response()
-        assert full.overage_forecast_eur == 42.0
-        assert full.seat_overage_eur == 18.0
+        assert full.next_tier is not None
+        assert full.next_tier.tier == "changemaker"
 
-    def test_member_sees_counts_but_no_euro_amounts(self):
+    def test_member_sees_counts_but_not_upgrade_recommendation(self):
         member = self._member_view(self._full_admin_response())
-        # € amounts hidden
-        assert member.overage_forecast_eur is None
-        assert member.seat_overage_eur is None
+        # the admin-only upgrade recommendation is hidden from members
         assert member.next_tier is None
         # counts still visible
         assert member.seat_count == 4

@@ -20,7 +20,7 @@ from dembrane.api.chat import (
 )
 from dembrane.tier_capacity import is_conversation_locked
 
-TIERS_OVERAGE = ["pioneer", "innovator", "changemaker", "guardian"]
+TIERS_OVERAGE = ["innovator", "changemaker", "guardian"]
 TIERS_NO_OVERAGE = ["free", "pilot"]
 ALL_TIERS = TIERS_NO_OVERAGE + TIERS_OVERAGE
 
@@ -82,14 +82,14 @@ class TestResolveWorkspaceTier:
         def _da_get_item(coll, _item_id, *_args, **_kwargs):
             if coll == "workspace":
                 return {"id": "w1", "billing_account_id": "acc-1"}
-            return {"id": "acc-1", "tier": "pioneer"}
+            return {"id": "acc-1", "tier": "changemaker"}
 
         mock_da = AsyncMock()
         mock_da.get_item = AsyncMock(side_effect=_da_get_item)
         with patch("dembrane.api.chat.async_directus", mock_chat), \
              patch("dembrane.directus_async.async_directus", mock_da):
             tier = await _resolve_workspace_tier("p1")
-        assert tier == "pioneer"
+        assert tier == "changemaker"
 
     @pytest.mark.asyncio
     async def test_missing_project(self) -> None:
@@ -157,8 +157,8 @@ class TestCheckConversationNotLocked:
             assert exc_info.value.status_code == 402
 
     @pytest.mark.asyncio
-    async def test_over_cap_on_pioneer_passes(self) -> None:
-        mock_chat, mock_da = _chat_and_account({"id": "c1", "is_over_cap": True}, "pioneer")
+    async def test_over_cap_on_changemaker_passes(self) -> None:
+        mock_chat, mock_da = _chat_and_account({"id": "c1", "is_over_cap": True}, "changemaker")
         with patch("dembrane.api.chat.async_directus", mock_chat), \
              patch("dembrane.directus_async.async_directus", mock_da):
             await _check_conversation_not_locked("c1", "p1")
@@ -198,12 +198,12 @@ class TestSelectAllLockedFiltering:
         assert len(non_locked) == 1
         assert non_locked[0]["id"] == "c1"
 
-    def test_no_filtering_on_pioneer(self) -> None:
+    def test_no_filtering_on_changemaker(self) -> None:
         conversations = [
             {"id": "c1", "is_over_cap": False},
             {"id": "c2", "is_over_cap": True},
         ]
-        tier = "pioneer"
+        tier = "changemaker"
         non_locked = [c for c in conversations if not is_conversation_locked(c, tier)]
         assert len(non_locked) == 2
 
