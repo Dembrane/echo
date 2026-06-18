@@ -2043,8 +2043,6 @@ class OrgUsageWorkspaceRow(BaseModel):
     downgraded_at: Optional[str] = None
     # Externals share the seat pool. Count exposed separately for breakdown.
     external_count: int = 0
-    # Admin / billing only:
-    overage_forecast_eur: Optional[float] = None
 
 
 class OrgUsageResponse(BaseModel):
@@ -2059,8 +2057,6 @@ class OrgUsageResponse(BaseModel):
     workspaces_at_cap: int  # Pilot + over cap (hard block active)
     workspaces_approaching_cap: int  # tier with cap, usage >= 80%
     workspaces: list[OrgUsageWorkspaceRow] = []
-    # Admin / billing only (null for plain members):
-    total_overage_forecast_eur: Optional[float] = None
 
 
 @router.get("/{org_id}/usage", response_model=OrgUsageResponse)
@@ -2078,25 +2074,18 @@ async def get_org_usage(
     Cached 30 min, keyed by (org_id, month_offset). Pass `?refresh=true`
     to bypass.
 
-    Access:
-      - Any organisation member can read raw numbers.
-      - Admin / billing (org:view_invoices) additionally receive
-        total_overage_forecast_eur.
+    Access: any organisation member can read these numbers.
     """
     from dembrane.cache_utils import (
         USAGE_TTL_SECONDS,
         cache_get_json,
         cache_set_json,
     )
-    from dembrane.tier_capacity import (
-        get_capacity,
-        compute_hour_overage_eur,
-    )
+    from dembrane.tier_capacity import get_capacity
     from dembrane.api.v2.workspaces import _calendar_month_bounds
 
     app_user = await get_app_user_or_raise(auth.user_id)
-    caller_role = await _require_org_role(org_id, app_user["id"], minimum="member")
-    sees_financials = caller_role in ("admin", "owner", "billing")
+    await _require_org_role(org_id, app_user["id"], minimum="member")
 
     if month_offset < 0 or month_offset > 12:
         raise HTTPException(status_code=400, detail="month_offset must be 0–12")
@@ -2108,8 +2097,6 @@ async def get_org_usage(
     if not refresh:
         cached = await cache_get_json(cache_key)
         if isinstance(cached, dict):
-            if not sees_financials:
-                cached = {**cached, "total_overage_forecast_eur": None}
             return OrgUsageResponse(**cached)
 
     # Cycle bounds.
@@ -2241,7 +2228,6 @@ async def get_org_usage(
     total_hours = 0.0
     at_cap = 0
     approaching = 0
-    forecast = 0.0
     ws_rows: list[dict] = []
     for w in workspaces:
         wid = w.get("id") or ""
@@ -2271,7 +2257,6 @@ async def get_org_usage(
         external_count = per_ws_externals.get(wid, 0)
         ws_at_cap = False
         ws_approaching = False
-        ws_forecast_eur = 0.0
 
         if cap and cap.included_hours is not None:
             pct = hours / cap.included_hours if cap.included_hours else 0.0
@@ -2282,9 +2267,6 @@ async def get_org_usage(
             elif pct >= 0.8:
                 approaching += 1
                 ws_approaching = True
-            # Forecast is end-of-cycle; nonsensical for closed months.
-            ws_forecast_eur = compute_hour_overage_eur(tier, hours) if is_current_month else 0.0
-            forecast += ws_forecast_eur
 
         hours_over = (
             round(max(0.0, hours - hours_included), 2) if hours_included is not None else 0.0
@@ -2308,7 +2290,6 @@ async def get_org_usage(
                 "at_cap": ws_at_cap,
                 "approaching_cap": ws_approaching,
                 "downgraded_at": w.get("downgraded_at"),
-                "overage_forecast_eur": (round(ws_forecast_eur, 2) if is_current_month else None),
             }
         )
 
@@ -2332,20 +2313,9 @@ async def get_org_usage(
         "workspaces_at_cap": at_cap,
         "workspaces_approaching_cap": approaching,
         "workspaces": ws_rows,
-        "total_overage_forecast_eur": (round(forecast, 2) if is_current_month else None),
     }
 
     await cache_set_json(cache_key, payload, USAGE_TTL_SECONDS)
-
-    if not sees_financials:
-        # Strip both the aggregate and each per-workspace € figure for
-        # plain members — matrix §8 says members see raw hours only.
-        stripped_rows = [{**r, "overage_forecast_eur": None} for r in ws_rows]
-        payload = {
-            **payload,
-            "total_overage_forecast_eur": None,
-            "workspaces": stripped_rows,
-        }
 
     return OrgUsageResponse.model_validate(payload)
 

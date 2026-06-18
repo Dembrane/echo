@@ -54,7 +54,7 @@ function formatCycleMonth(iso: string): string {
  *
  * Role-aware rendering:
  *   - Member: hours / seats / projects, raw numbers.
- *   - Admin + Billing: adds overage forecast and next-tier recommendation.
+ *   - Admin + Billing: adds the next-tier recommendation.
  *
  * Seat block: single bar over the unified pool (members + externals),
  * with three optional sub-rows beneath — Members, Externals, Pending

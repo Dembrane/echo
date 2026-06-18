@@ -65,6 +65,8 @@ interface Invoice {
 	currency: string;
 	status: string;
 	description: string;
+	/** Hosted checkout link on an open/pending charge, so it can be paid now. */
+	pay_url: string | null;
 }
 
 function formatDate(iso: string | null): string {
@@ -426,6 +428,8 @@ export function BillingManager({
 }) {
 	const queryClient = useQueryClient();
 	const [submitting, setSubmitting] = useState(false);
+	const [updatingMethod, setUpdatingMethod] = useState(false);
+	const [retrying, setRetrying] = useState(false);
 	const [invoices, setInvoices] = useState<Invoice[]>([]);
 	const [cursor, setCursor] = useState<string | null>(null);
 	const [loadingInvoices, setLoadingInvoices] = useState(false);
@@ -535,6 +539,68 @@ export function BillingManager({
 		}
 	};
 
+	// ISSUE-002: capture a new payment method via a EUR 0.00 Mollie consent
+	// payment. Returns to the billing page, where the sync effect reconciles.
+	const updatePaymentMethod = async () => {
+		if (!accountId) return;
+		setUpdatingMethod(true);
+		try {
+			posthog.capture("payment_method_update_started", { source });
+			const res = await fetch(
+				`${API_BASE_URL}/v2/billing-accounts/${accountId}/payment-method/checkout`,
+				{
+					body: JSON.stringify({
+						redirect_url: `${window.location.origin}${window.location.pathname}?billing=return`,
+					}),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			const data = await res.json();
+			window.location.href = data.checkout_url; // hosted Mollie checkout
+		} catch (e) {
+			toast.error((e as Error).message);
+			setUpdatingMethod(false);
+		}
+	};
+
+	// ISSUE-008: retry the outstanding charge off-session against the newest
+	// valid mandate. On success the account flips back to active.
+	const retryCharge = async () => {
+		if (!accountId) return;
+		setRetrying(true);
+		try {
+			posthog.capture("payment_retry_clicked", { source });
+			const res = await fetch(
+				`${API_BASE_URL}/v2/billing-accounts/${accountId}/retry-charge`,
+				{ credentials: "include", method: "POST" },
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			const data = await res.json();
+			if (data.status === "active") {
+				toast.success(t`Payment went through. Your plan is up to date.`);
+			} else {
+				toast.error(
+					t`We still couldn't charge your method. Update it and try again.`,
+				);
+			}
+			refreshAll();
+			loadInvoices(null);
+		} catch (e) {
+			toast.error((e as Error).message);
+		} finally {
+			setRetrying(false);
+		}
+	};
+
 	if (!accountId) {
 		return (
 			<Paper withBorder p="md" radius="sm">
@@ -606,6 +672,43 @@ export function BillingManager({
 	return (
 		<Paper withBorder p="md" radius="sm">
 			<Stack gap={16}>
+				{status === "past_due" && (
+					<Alert
+						color="red"
+						title={t`We couldn't charge your payment method`}
+						styles={{
+							message: { color: "var(--app-text)" },
+							title: { color: "var(--app-text)" },
+						}}
+					>
+						<Stack gap={10}>
+							<Text size="sm">
+								<Trans>
+									Your last payment didn't go through. Your plan stays active.
+									Update your payment method or retry the charge to settle up.
+								</Trans>
+							</Text>
+							<Group gap="sm">
+								<Button
+									size="xs"
+									color="red"
+									loading={retrying}
+									onClick={retryCharge}
+								>
+									<Trans>Retry now</Trans>
+								</Button>
+								<Button
+									size="xs"
+									variant="outline"
+									loading={updatingMethod}
+									onClick={updatePaymentMethod}
+								>
+									<Trans>Change payment method</Trans>
+								</Button>
+							</Group>
+						</Stack>
+					</Alert>
+				)}
 				<SectionRow
 					label={t`Current plan`}
 					action={
@@ -742,10 +845,14 @@ export function BillingManager({
 						<Button
 							size="xs"
 							variant="subtle"
-							component="a"
-							href="mailto:support@dembrane.com?subject=Change payment method"
+							loading={updatingMethod}
+							onClick={updatePaymentMethod}
 						>
-							<Trans>Change</Trans>
+							{overview.payment_method ? (
+								<Trans>Change</Trans>
+							) : (
+								<Trans>Add</Trans>
+							)}
 						</Button>
 					}
 				>
@@ -798,9 +905,24 @@ export function BillingManager({
 												{meta.settled ? `€${inv.amount}` : ""}
 											</Table.Td>
 											<Table.Td ta="right">
-												<Badge size="xs" variant="light" color={meta.color}>
-													{meta.label}
-												</Badge>
+												<Group gap={8} justify="flex-end" wrap="nowrap">
+													{inv.pay_url && (
+														<Anchor
+															size="xs"
+															href={inv.pay_url}
+															onClick={() =>
+																posthog.capture("invoice_pay_now_clicked", {
+																	source,
+																})
+															}
+														>
+															<Trans>Pay now</Trans>
+														</Anchor>
+													)}
+													<Badge size="xs" variant="light" color={meta.color}>
+														{meta.label}
+													</Badge>
+												</Group>
 											</Table.Td>
 										</Table.Tr>
 									);

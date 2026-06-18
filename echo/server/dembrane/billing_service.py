@@ -99,14 +99,21 @@ async def list_account_invoices(
     out: list[dict] = []
     for p in payments[:limit]:
         amt = p.get("amount") or {}
+        status = p.get("status")
+        # An open/pending charge still has its hosted checkout link, so the
+        # customer can finish paying it in one click (ISSUE-003 "Pay now"). The
+        # link is absent once the payment settles, so this is naturally null on
+        # paid/failed rows.
+        pay_url = mollie.checkout_url(p) if status in ("open", "pending") else None
         out.append(
             {
                 "id": p.get("id"),
                 "created_at": p.get("createdAt"),
                 "amount": amt.get("value"),
                 "currency": amt.get("currency"),
-                "status": p.get("status"),
+                "status": status,
                 "description": p.get("description") or "",
+                "pay_url": pay_url,
             }
         )
     return {"invoices": out, "next": next_cursor}
@@ -328,6 +335,97 @@ async def start_subscription_checkout(
     return url
 
 
+async def start_update_payment_method(account_id: str, *, redirect_url: str) -> str:
+    """Capture a new payment method on an existing account; return the checkout
+    URL (ISSUE-002).
+
+    Mollie has no customer portal, so a method change is a fresh consent
+    ('first') payment of EUR 0.00: the card / PayPal mandate is captured without
+    charging anything. The `intent="update_payment_method"` metadata is the gate
+    the webhook + sync read so this consent payment does NOT spin up a second
+    subscription (that would double-bill). The existing subscription rides the
+    newest valid mandate, so once this one confirms we revoke the old mandates
+    and the next renewal charges the new method.
+
+    Status is left untouched (it stays active / past_due): this is a method swap,
+    not a new purchase."""
+    settings = get_settings()
+    if not settings.billing.mollie_enabled:
+        raise BillingError("Mollie is not configured")
+
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account:
+        raise BillingError("billing account not found")
+    if not account.get("mollie_customer_id"):
+        # No customer means no subscription to keep paying — there's nothing to
+        # swap a method for. They should subscribe via checkout instead.
+        raise BillingError("no payment profile to update; subscribe first")
+
+    webhook_url = settings.billing.mollie_webhook_url
+    customer_id = account["mollie_customer_id"]
+    payment = await mollie.create_first_payment(
+        customer_id=customer_id,
+        amount_eur=0.0,
+        description="Update payment method. No charge.",
+        redirect_url=redirect_url,
+        webhook_url=webhook_url,
+        metadata={
+            "billing_account_id": account_id,
+            "intent": "update_payment_method",
+        },
+    )
+    url = mollie.checkout_url(payment)
+    if not url:
+        raise BillingError("Mollie did not return a checkout URL")
+    return url
+
+
+async def _revoke_superseded_mandates(customer_id: str) -> int:
+    """Revoke every valid mandate except the newest one (ISSUE-002).
+
+    Called after a method-update consent payment confirms a fresh mandate. The
+    subscription rides the newest valid mandate (never pinned), so dropping the
+    older valid mandates leaves exactly the new method in place without touching
+    the subscription. Returns how many were revoked. Best-effort: a failed
+    revoke is logged, not raised (the new method already works)."""
+    try:
+        mandates = await mollie.list_mandates(customer_id)
+    except mollie.MollieError as exc:
+        logger.warning("Could not list mandates for %s: %s", customer_id, exc)
+        return 0
+    valid = [m for m in mandates if m.get("status") == "valid"]
+    if len(valid) <= 1:
+        return 0
+    # Newest-first: Mollie returns mandates newest-first, so keep index 0 and
+    # revoke the rest. Falling back to createdAt keeps us correct if that ever
+    # changes.
+    valid.sort(key=lambda m: m.get("createdAt") or "", reverse=True)
+    revoked = 0
+    for stale in valid[1:]:
+        mid = stale.get("id")
+        if not mid:
+            continue
+        try:
+            await mollie.revoke_mandate(customer_id, mid)
+            revoked += 1
+        except mollie.MollieError as exc:
+            logger.warning("Could not revoke mandate %s for %s: %s", mid, customer_id, exc)
+    if revoked:
+        logger.info("Revoked %d superseded mandate(s) for customer %s", revoked, customer_id)
+    return revoked
+
+
+async def handle_payment_method_updated(account_id: str, customer_id: str) -> None:
+    """A method-update consent payment cleared (ISSUE-002 + ISSUE-008).
+
+    Revoke the now-stale mandates so only the new method remains, then auto-retry
+    any outstanding failed charge against the fresh mandate (founder decision:
+    auto-retry on mandate update). Idempotent."""
+    await _revoke_superseded_mandates(customer_id)
+    # Updating the method is the natural recovery trigger for a past_due account.
+    await retry_charge(account_id)
+
+
 async def _activate_from_first_payment(account_id: str, meta: dict, customer_id: str) -> None:
     """First consent payment cleared: create the recurring subscription and
     activate the account."""
@@ -391,6 +489,9 @@ async def sync_account_from_mollie(account_id: str) -> str:
             if p.get("sequenceType") == "first"
             and p.get("status") == "paid"
             and (p.get("metadata") or {}).get("billing_account_id") == account_id
+            # A method-update consent payment must never activate / create a
+            # subscription (ISSUE-002). It only swaps the stored mandate.
+            and (p.get("metadata") or {}).get("intent") != "update_payment_method"
         ),
         None,
     )
@@ -546,6 +647,8 @@ async def _charge_seat_proration(account: dict, added_seats: int) -> float | Non
         logger.warning(
             "No valid mandate on account %s; skipping the proration charge", account_id
         )
+        # Dead mandate: surface it (ISSUE-008) instead of failing silently.
+        await _notify_payment_failed(account)
         return None
 
     try:
@@ -562,6 +665,8 @@ async def _charge_seat_proration(account: dict, added_seats: int) -> float | Non
         )
     except mollie.MollieError as exc:
         logger.error("Proration charge failed for account %s: %s", account_id, exc)
+        # Surface the failed charge (ISSUE-008) rather than under-charging quietly.
+        await _notify_payment_failed(account)
         return None
 
     logger.info(
@@ -714,6 +819,180 @@ async def cancel_subscription(
     return "canceled"
 
 
+# ── Failed-charge surfacing (ISSUE-008) — notify only, never block ──────────
+
+
+async def _notify_payment_failed(account: dict) -> None:
+    """Notify the account's owner + admins that a charge failed (ISSUE-008).
+
+    Founder decision (2026-06-18): the plan stays fully ACTIVE. We only surface
+    the failure (Inbox + email) so they can fix the payment method. Throttled by
+    the `payment_failed_notified` flag so a string of failed retries in one
+    past_due window doesn't spam. The email omits the EUR amount on purpose (B1:
+    shown in-app, not in the email). Best-effort: never raises."""
+    account_id = account.get("id")
+    if account.get("payment_failed_notified"):
+        return  # already told them this cycle
+
+    from dembrane.notifications import emit_to_audience, audience_billing_account_admins
+
+    try:
+        audience = await audience_billing_account_admins(account)
+    except Exception as exc:  # noqa: BLE001 — notifications are best-effort
+        logger.warning("Could not resolve payment-failed audience for %s: %s", account_id, exc)
+        audience = []
+
+    if audience:
+        # ref_workspace_id / ref_org_id drive the NAVIGATE_BILLING deep link.
+        await emit_to_audience(
+            audience_user_ids=audience,
+            event_code="PAYMENT_FAILED",
+            title="We couldn't charge your payment method",
+            message=(
+                "Your last payment didn't go through. Update your payment method "
+                "to keep your plan. Your access stays on while you sort it out."
+            ),
+            action="NAVIGATE_BILLING",
+            ref_workspace_id=account.get("workspace_id"),
+            ref_org_id=account.get("org_id"),
+        )
+
+    # Email the owner + admins. Same tone, no amount.
+    try:
+        await _email_payment_failed(account, audience)
+    except Exception as exc:  # noqa: BLE001 — email is best-effort
+        logger.warning("payment-failed email failed for %s: %s", account_id, exc)
+
+    await async_directus.update_item(
+        "billing_account", account_id, {"payment_failed_notified": True}
+    )
+    logger.info("notified owner+admins of failed charge on account %s", account_id)
+
+
+async def _email_payment_failed(account: dict, audience_user_ids: list[str]) -> None:
+    """Send the failed-charge email to the audience's addresses (ISSUE-008)."""
+    if not audience_user_ids:
+        return
+    from dembrane.email import send_email
+
+    rows = await async_directus.get_items(
+        "app_user",
+        {"query": {"filter": {"id": {"_in": audience_user_ids}}, "fields": ["email"], "limit": -1}},
+    )
+    emails = sorted(
+        {
+            (r.get("email") or "").strip()
+            for r in (rows if isinstance(rows, list) else [])
+            if isinstance(r, dict) and r.get("email")
+        }
+    )
+    if not emails:
+        return
+
+    settings = get_settings()
+    base = (settings.urls.admin_base_url or "").rstrip("/")
+    workspace_id = account.get("workspace_id")
+    org_id = account.get("org_id")
+    if workspace_id:
+        billing_url = f"{base}/w/{workspace_id}/settings/billing"
+    elif org_id:
+        billing_url = f"{base}/o/{org_id}/settings/billing"
+    else:
+        billing_url = base or "/"
+
+    for email_addr in emails:
+        await send_email(
+            to=email_addr,
+            subject="Action needed: update your payment method",
+            template="payment_failed",
+            template_data={"billing_url": billing_url},
+        )
+
+
+async def _mark_past_due(account_id: str) -> None:
+    """A recurring charge failed: mark past_due and notify once (ISSUE-008).
+
+    No downgrade, no cap, no lockout (founder decision). The plan stays active;
+    only the status flips so the UI can show the banner and we can prompt a fix."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account:
+        return
+    await async_directus.update_item("billing_account", account_id, {"status": "past_due"})
+    # Re-read just the flag off the fetched account; status was just written.
+    await _notify_payment_failed(account)
+
+
+async def _mark_recovered(account_id: str) -> None:
+    """A recurring charge cleared: back to active and clear the throttle flag so
+    the next failure can notify again (ISSUE-008 recovery, B5)."""
+    account = await async_directus.get_item("billing_account", account_id)
+    patch: dict = {"status": "active"}
+    if account and account.get("payment_failed_notified"):
+        patch["payment_failed_notified"] = False
+    await async_directus.update_item("billing_account", account_id, patch)
+
+
+async def retry_charge(account_id: str) -> str:
+    """Retry the outstanding charge off-session against the newest valid mandate
+    (ISSUE-008 "retry now" button + auto-retry on mandate update).
+
+    No-op unless the account is past_due with a customer and a valid mandate. On
+    a successful charge we flip status back to active and clear the notification
+    throttle. The Mollie payment's webhook also reconciles, so this is a fast
+    path, not the only path. Returns the resulting status."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account:
+        return "none"
+    if account.get("status") != "past_due":
+        return account.get("status") or "none"
+
+    customer_id = account.get("mollie_customer_id")
+    tier = account.get("tier")
+    billing_period = account.get("billing_period") or "annual"
+    if not customer_id or not tier or tier == "free":
+        return "past_due"
+
+    try:
+        mandates = await mollie.list_mandates(customer_id)
+    except mollie.MollieError as exc:
+        logger.warning("Could not list mandates for retry on %s: %s", account_id, exc)
+        return "past_due"
+    valid = next((m for m in mandates if m.get("status") == "valid"), None)
+    if not valid:
+        logger.info("No valid mandate to retry charge on account %s", account_id)
+        return "past_due"
+
+    seats = max(await count_account_seats(account_id), 1)
+    try:
+        amount, _interval = _per_interval_amount(tier, seats, billing_period)
+    except BillingError:
+        return "past_due"
+
+    try:
+        payment = await mollie.create_recurring_payment(
+            customer_id=customer_id,
+            amount_eur=amount,
+            description=_plan_description(tier, seats, billing_period),
+            mandate_id=valid.get("id"),
+            webhook_url=get_settings().billing.mollie_webhook_url or None,
+            metadata={"billing_account_id": account_id, "intent": "retry_charge"},
+        )
+    except mollie.MollieError as exc:
+        logger.warning("Retry charge failed for account %s: %s", account_id, exc)
+        return "past_due"
+
+    # Mollie returns the created payment; a recurring charge against a valid
+    # mandate is typically 'paid' or 'pending' immediately. Treat anything that
+    # is not an outright failure as recovered locally; the webhook confirms.
+    status = payment.get("status")
+    if status in ("failed", "expired", "canceled"):
+        logger.info("Retry charge for account %s came back %s", account_id, status)
+        return "past_due"
+    await _mark_recovered(account_id)
+    logger.info("retry charge succeeded for account %s (%s)", account_id, status)
+    return "active"
+
+
 async def handle_mollie_webhook(payment_id: str) -> None:
     """Process a Mollie payment webhook. Re-fetches the payment (never trusts the
     POST body), then reconciles the billing account. Idempotent."""
@@ -726,8 +1005,16 @@ async def handle_mollie_webhook(payment_id: str) -> None:
     status = payment.get("status")
     customer_id = payment.get("customerId")
     sequence = payment.get("sequenceType")
+    intent = meta.get("intent")
 
     if sequence == "first" and status == "paid":
+        if intent == "update_payment_method":
+            # Method swap: capture the new mandate, drop the stale ones, and
+            # auto-retry any outstanding charge. NEVER create a subscription
+            # (ISSUE-002 — the duplicate-subscription gate).
+            if customer_id:
+                await handle_payment_method_updated(account_id, customer_id)
+            return
         if customer_id:
             await _activate_from_first_payment(account_id, meta, customer_id)
         return
@@ -735,9 +1022,9 @@ async def handle_mollie_webhook(payment_id: str) -> None:
     # Recurring payment outcomes.
     if payment.get("subscriptionId"):
         if status == "paid":
-            await async_directus.update_item("billing_account", account_id, {"status": "active"})
+            await _mark_recovered(account_id)
         elif status in ("failed", "expired", "canceled"):
-            await async_directus.update_item("billing_account", account_id, {"status": "past_due"})
+            await _mark_past_due(account_id)
         return
 
     # First payment that did not succeed: leave the account un-activated.

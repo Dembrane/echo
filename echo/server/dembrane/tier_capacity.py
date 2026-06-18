@@ -40,9 +40,7 @@ class TierCapacity:
     price_eur_monthly: Optional[int]      # Per-seat annual-billing rate, EUR/seat/mo. None = Free.
     price_note: str                        # "free" / "per seat / month"
     included_seats: Optional[int]          # Hard seat cap. Free = 1; paid = None (unlimited, metered).
-    seat_overage_eur: Optional[int]        # Always None — price is per seat, no overage concept.
     included_hours: Optional[int]          # Free = 1; paid = None (unlimited, fair use).
-    hour_overage_eur: Optional[int]        # Always None — no hour overage.
     hard_block_on_hours: bool              # Deprecated: always False. Kept for call-site compat.
     training_included: str                 # human-readable
     duration: str                          # "ongoing" / etc
@@ -69,9 +67,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         price_eur_monthly=None,
         price_note="free",
         included_seats=1,
-        seat_overage_eur=None,
         included_hours=1,
-        hour_overage_eur=None,
         hard_block_on_hours=False,
         training_included="—",
         duration="—",
@@ -82,9 +78,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         price_eur_monthly=20,
         price_note="per seat / month",
         included_seats=None,
-        seat_overage_eur=None,
         included_hours=None,
-        hour_overage_eur=None,
         hard_block_on_hours=False,
         training_included="—",
         duration="ongoing",
@@ -96,9 +90,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         price_eur_monthly=75,
         price_note="per seat / month",
         included_seats=None,
-        seat_overage_eur=None,
         included_hours=None,
-        hour_overage_eur=None,
         hard_block_on_hours=False,
         training_included="—",
         duration="ongoing",
@@ -110,9 +102,7 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         price_eur_monthly=150,
         price_note="per seat / month",
         included_seats=None,
-        seat_overage_eur=None,
         included_hours=None,
-        hour_overage_eur=None,
         hard_block_on_hours=False,
         training_included="—",
         duration="ongoing",
@@ -183,19 +173,6 @@ def next_tier(tier: str) -> Optional[str]:
     if idx + 1 >= len(order):
         return None
     return order[idx + 1]
-
-
-def compute_hour_overage_eur(_tier: str, _hours_used: float) -> float:
-    """Hour overage no longer exists (unlimited hours under fair use). Always 0.
-    Kept for call-site compatibility."""
-    return 0.0
-
-
-def compute_seat_overage_eur(_tier: str, _seats_used: int) -> float:
-    """Seat overage no longer exists — seats are billed per seat, not as
-    overage above an included bundle. Always 0. Kept for call-site
-    compatibility; the per-seat bill is seats × price_eur_monthly."""
-    return 0.0
 
 
 def monthly_seat_bill_eur(tier: str, seats_used: int) -> float:

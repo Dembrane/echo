@@ -386,14 +386,12 @@ async def billing_rollup(
         over_hours = max(0.0, hours - included_hours) if included_hours is not None else 0.0
         unified_seats = seat_count + external_count
         over_seats = max(0, unified_seats - included_seats) if included_seats is not None else 0
-        hour_rate = cap.hour_overage_eur if cap else None
-        seat_rate = cap.seat_overage_eur if cap else None
-        hour_overage_eur = round(over_hours * hour_rate, 2) if hour_rate else 0.0
-        seat_overage_eur = round(over_seats * seat_rate, 2) if seat_rate else 0.0
+        # Per-seat model (ADR 0005): no hour/seat overage charge. The columns
+        # stay in the staff rollup contract for layout stability, always 0.
+        hour_overage_eur = 0.0
+        seat_overage_eur = 0.0
         base_price = TIER_BASE_PRICE_EUR.get(tier)
-        total = None
-        if base_price is not None:
-            total = round(base_price + hour_overage_eur + seat_overage_eur, 2)
+        total = round(base_price, 2) if base_price is not None else None
 
         hours_pct = round(hours / included_hours, 3) if included_hours else None
         pilot_block = bool(
@@ -757,7 +755,7 @@ async def at_risk(
                     org_name=r.org_name,
                     tier=r.tier,
                     reason="at_cap",
-                    detail=f"{r.audio_hours:.1f}h / {r.audio_hours_included}h — {r.hour_overage_eur:.0f} EUR overage",
+                    detail=f"{r.audio_hours:.1f}h / {r.audio_hours_included}h at cap",
                 )
             )
             continue

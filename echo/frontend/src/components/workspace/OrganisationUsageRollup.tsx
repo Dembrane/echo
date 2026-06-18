@@ -24,7 +24,6 @@ import {
 	IconArrowsSort,
 	IconChevronDown,
 	IconChevronRight,
-	IconInfoCircle,
 	IconLock,
 	IconSearch,
 	IconSortAscending,
@@ -85,7 +84,6 @@ interface OrgUsageWorkspaceRow {
 	downgraded_at: string | null;
 	at_cap: boolean;
 	approaching_cap: boolean;
-	overage_forecast_eur: number | null;
 }
 
 interface OrgUsage {
@@ -99,7 +97,6 @@ interface OrgUsage {
 	workspaces_at_cap: number;
 	workspaces_approaching_cap: number;
 	workspaces: OrgUsageWorkspaceRow[];
-	total_overage_forecast_eur: number | null;
 }
 
 // Active = any activity this period. Matches the admin surface. Hoisted
@@ -272,10 +269,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 
 	const attention = useMemo(
 		() => (data ? buildAttention(data.workspaces) : []),
-		[data],
-	);
-	const overage = useMemo(
-		() => (data ? buildOverage(data.workspaces) : []),
 		[data],
 	);
 
@@ -515,14 +508,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				{attention.length > 0 && (
 					<NeedsAttentionPanel
 						items={attention}
-						onOpen={(id) => navigate(`/w/${id}/settings/billing`)}
-					/>
-				)}
-
-				{overage.length > 0 && (
-					<OverageThisCyclePanel
-						items={overage}
-						totalForecastEur={data.total_overage_forecast_eur ?? null}
 						onOpen={(id) => navigate(`/w/${id}/settings/billing`)}
 					/>
 				)}
@@ -907,18 +892,7 @@ interface AttentionItem {
 	workspaceId: string;
 }
 
-interface OverageItem {
-	id: string;
-	key: string;
-	reason: "seats_overage" | "hours_overage";
-	message: string;
-	subline: string | null;
-	workspaceId: string;
-}
-
-// Free + pilot gate consumption (no overage billing). Pioneer+ allow
-// overage with monthly billing. Gated tiers go in "Needs attention",
-// overage tiers go in "Overage this cycle".
+// Free + pilot gate consumption. Gated tiers go in "Needs attention".
 function isHardBlockTier(tier: string): boolean {
 	return tier === "free" || tier === "pilot";
 }
@@ -934,16 +908,8 @@ function formatHourFraction(hours: number, cap: number | null): string {
 	return cap != null ? `${hours.toFixed(1)}/${cap}h` : `${hours.toFixed(1)}h`;
 }
 
-function formatEur(value: number | null | undefined): string {
-	if (value == null) return "-";
-	if (value === 0) return "€0";
-	return `€${Math.round(value)}`;
-}
-
 // Items that genuinely need admin action: hard-block tiers at cap,
 // approaching-cap on hard-block tiers, recently-downgraded workspaces.
-// Pioneer+ over-cap rows are intentionally excluded — they accrue
-// overage but nothing is broken; those rows live in OverageItem below.
 function buildAttention(workspaces: OrgUsageWorkspaceRow[]): AttentionItem[] {
 	const out: AttentionItem[] = [];
 	// Only used by the disabled "recently downgraded" check below.
@@ -1017,52 +983,6 @@ function buildAttention(workspaces: OrgUsageWorkspaceRow[]): AttentionItem[] {
 	return out;
 }
 
-// Pioneer+ rows that are over included seats / hours. Informational, not
-// action-required — admin chose this tier knowing overage applies.
-// Subline carries the per-workspace forecast in € when available.
-function buildOverage(workspaces: OrgUsageWorkspaceRow[]): OverageItem[] {
-	const out: OverageItem[] = [];
-	for (const ws of workspaces) {
-		const hardBlock = isHardBlockTier(ws.tier);
-		if (hardBlock) continue;
-
-		// Seat overage: count exceeds included on a non-hard-block tier.
-		if (ws.seat_cap_hit && ws.seats_included != null) {
-			const over = Math.max(0, ws.seat_count - ws.seats_included);
-			out.push({
-				id: ws.id,
-				key: `${ws.id}:seats_overage`,
-				message: `${ws.name} is ${over} seat${over === 1 ? "" : "s"} over included (${formatSeatFraction(ws.seat_count, ws.seats_included)}) on ${ws.tier}`,
-				reason: "seats_overage",
-				subline:
-					ws.overage_forecast_eur != null && ws.overage_forecast_eur > 0
-						? `Forecasted overage this cycle: ${formatEur(ws.overage_forecast_eur)}`
-						: "Overage applies. Check billing for the per-seat rate.",
-				workspaceId: ws.id,
-			});
-		}
-
-		// Hours overage on Pioneer+: no hard block, just billed. We don't
-		// have a server-side `hours_cap_hit`, so use the audio_hours vs
-		// hours_included comparison.
-		if (ws.hours_included != null && ws.audio_hours > ws.hours_included) {
-			const over = ws.audio_hours - ws.hours_included;
-			out.push({
-				id: ws.id,
-				key: `${ws.id}:hours_overage`,
-				message: `${ws.name} is ${over.toFixed(1)}h over included (${formatHourFraction(ws.audio_hours, ws.hours_included)}) on ${ws.tier}`,
-				reason: "hours_overage",
-				subline:
-					ws.overage_forecast_eur != null && ws.overage_forecast_eur > 0
-						? `Forecasted overage this cycle: ${formatEur(ws.overage_forecast_eur)}`
-						: null,
-				workspaceId: ws.id,
-			});
-		}
-	}
-	return out;
-}
-
 const MAX_ATTENTION_VISIBLE = 4;
 
 function NeedsAttentionPanel({
@@ -1119,86 +1039,3 @@ function NeedsAttentionPanel({
 	);
 }
 
-// ── Overage this cycle panel ───────────────────────────────────────────
-//
-// Pioneer+ workspaces over their included caps. Distinct from the
-// "Needs attention" panel because matrix §8 says these tiers bill
-// overage and keep going — there's nothing to "fix", just to be aware
-// of. Neutral primary styling, info icon, "View billing" CTA (no upgrade
-// nag — the admin already knowingly accepted the overage rate when
-// they picked the tier).
-
-function OverageThisCyclePanel({
-	items,
-	totalForecastEur,
-	onOpen,
-}: {
-	items: OverageItem[];
-	totalForecastEur: number | null;
-	onOpen: (workspaceId: string) => void;
-}) {
-	const [showAll, setShowAll] = useState(false);
-	const visible = showAll ? items : items.slice(0, MAX_ATTENTION_VISIBLE);
-	const hidden = items.length - visible.length;
-
-	return (
-		<Paper
-			withBorder
-			p="sm"
-			radius="sm"
-			style={{ borderColor: "var(--mantine-color-primary-3)" }}
-		>
-			<Stack gap={6}>
-				<Group gap="xs" wrap="nowrap" justify="space-between">
-					<Group gap="xs" wrap="nowrap">
-						<IconInfoCircle size={14} color="var(--mantine-color-primary-7)" />
-						<Text size="xs" fw={500} tt="uppercase" lts={0.5}>
-							<Trans>Overage this cycle</Trans>
-						</Text>
-					</Group>
-					{totalForecastEur != null && totalForecastEur > 0 && (
-						<Text size="xs" c="dimmed">
-							<Trans>Forecast: ~{formatEur(totalForecastEur)}</Trans>
-						</Text>
-					)}
-				</Group>
-				<Stack gap={4}>
-					{visible.map((item) => (
-						<Group
-							key={item.key}
-							gap="xs"
-							wrap="nowrap"
-							justify="space-between"
-							align="flex-start"
-						>
-							<Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-								<Text size="sm" lineClamp={1}>
-									{item.message}
-								</Text>
-								{item.subline && (
-									<Text size="xs" c="dimmed">
-										{item.subline}
-									</Text>
-								)}
-							</Stack>
-							<Button
-								size="xs"
-								variant="outline"
-								onClick={() => onOpen(item.workspaceId)}
-							>
-								<Trans>View billing</Trans>
-							</Button>
-						</Group>
-					))}
-				</Stack>
-				{hidden > 0 && !showAll && (
-					<UnstyledButton onClick={() => setShowAll(true)}>
-						<Text size="xs" c="primary">
-							<Trans>Show {hidden} more</Trans>
-						</Text>
-					</UnstyledButton>
-				)}
-			</Stack>
-		</Paper>
-	);
-}

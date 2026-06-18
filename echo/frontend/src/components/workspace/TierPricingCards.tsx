@@ -36,12 +36,6 @@ function buildCardData(cap: TierCapacity, billingPeriod: BillingPeriod) {
 	} else {
 		specs.push(t`${cap.included_hours} hours / month`);
 	}
-	if (cap.seat_overage_eur != null) {
-		specs.push(t`€${cap.seat_overage_eur} / extra seat`);
-	}
-	if (cap.hour_overage_eur != null && !cap.hard_block_on_hours) {
-		specs.push(t`€${cap.hour_overage_eur} / extra hour`);
-	}
 	if (cap.training_included && cap.training_included !== "—") {
 		specs.push(t`Training: ${cap.training_included}`);
 	}

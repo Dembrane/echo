@@ -1003,8 +1003,6 @@ class WorkspaceUsageResponse(BaseModel):
     usage_gates: UsageGatesResponse = UsageGatesResponse()
 
     # Admin + billing only — None for members.
-    overage_forecast_eur: Optional[float] = None
-    seat_overage_eur: Optional[float] = None
     next_tier: Optional[NextTierRecommendation] = None
 
 
@@ -1015,9 +1013,7 @@ class TierCapacityItem(BaseModel):
     billing_period_applicable: bool
     duration: str
     included_seats: Optional[int]
-    seat_overage_eur: Optional[int]
     included_hours: Optional[int]
-    hour_overage_eur: Optional[int]
     hard_block_on_hours: bool
     training_included: str
 
@@ -1046,9 +1042,7 @@ async def list_tier_capacities() -> list[TierCapacityItem]:
                 billing_period_applicable=cap.billing_period_applicable,
                 duration=cap.duration,
                 included_seats=cap.included_seats,
-                seat_overage_eur=cap.seat_overage_eur,
                 included_hours=cap.included_hours,
-                hour_overage_eur=cap.hour_overage_eur,
                 hard_block_on_hours=cap.hard_block_on_hours,
                 training_included=cap.training_included,
             )
@@ -1073,8 +1067,8 @@ async def get_workspace_usage(
     month — they describe end-of-cycle behaviour, which is nonsensical
     for a completed month.
 
-    Members see raw numbers. Admin + billing additionally see overage
-    forecast and tier recommendation (matrix §8).
+    Members see raw numbers. Admin + billing additionally see the next-tier
+    recommendation (matrix §8).
 
     Caching: per-(workspace, month_offset) Redis cache. Current-month
     cache busts on tier change (see set_workspace_tier). Pass
@@ -1090,8 +1084,6 @@ async def get_workspace_usage(
         next_tier as tier_next,
         get_capacity,
         compute_usage_gates,
-        compute_hour_overage_eur,
-        compute_seat_overage_eur,
     )
 
     ctx.require_policy("workspace:view_usage")
@@ -1112,12 +1104,7 @@ async def get_workspace_usage(
         cached = await cache_get_json(cache_key)
         if isinstance(cached, dict):
             if not sees_financials:
-                cached = {
-                    **cached,
-                    "overage_forecast_eur": None,
-                    "seat_overage_eur": None,
-                    "next_tier": None,
-                }
+                cached = {**cached, "next_tier": None}
             return WorkspaceUsageResponse(**cached)
 
     now = datetime.now(timezone.utc)
@@ -1243,16 +1230,9 @@ async def get_workspace_usage(
 
     # Always compute the full admin-view payload so the cache holds one
     # variant; members get a filtered copy at serialisation time.
-    # Forecast + next-tier describe the current cycle's end state; they're
+    # The next-tier recommendation describes the current cycle's end state; it's
     # null for historical months (where the cycle already closed).
-    if is_current_month:
-        overage_forecast = compute_hour_overage_eur(tier, audio_hours)
-        seat_overage = compute_seat_overage_eur(tier, seat_count)
-        recommended = tier_next(tier)
-    else:
-        overage_forecast = None
-        seat_overage = None
-        recommended = None
+    recommended = tier_next(tier) if is_current_month else None
     next_rec: Optional[NextTierRecommendation] = None
     if recommended:
         rcap = get_capacity(recommended)
@@ -1305,8 +1285,6 @@ async def get_workspace_usage(
         pilot_hard_block_active=hard_block,
         seat_invite_blocked=seat_invite_blocked,
         usage_gates=gates,
-        overage_forecast_eur=overage_forecast,
-        seat_overage_eur=seat_overage,
         next_tier=next_rec,
     )
 
@@ -1315,14 +1293,7 @@ async def get_workspace_usage(
     await cache_set_json(cache_key, full.model_dump(), USAGE_TTL_SECONDS)
 
     if not sees_financials:
-        return WorkspaceUsageResponse(
-            **{
-                **full.model_dump(),
-                "overage_forecast_eur": None,
-                "seat_overage_eur": None,
-                "next_tier": None,
-            }
-        )
+        return WorkspaceUsageResponse(**{**full.model_dump(), "next_tier": None})
 
     return full
 
