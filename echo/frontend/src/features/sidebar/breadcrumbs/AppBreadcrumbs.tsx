@@ -37,7 +37,8 @@ const WORKSPACE_SETTINGS_LABELS: Record<string, string> = {
 };
 
 const PROJECT_SECTION_LABELS: Record<string, string> = {
-	access: "Access & sharing",
+	access: "Access",
+	usage: "Usage",
 	chats: "Ask",
 	conversation: "Conversation",
 	conversations: "Conversations",
@@ -230,9 +231,10 @@ export const AppBreadcrumbs = () => {
 					});
 				}
 				out.push({ label: "Settings" });
-				const section = params.section;
-				if (section === "access") out.push({ label: "Access & sharing" });
-				else if (section === "overview") out.push({ label: "General" });
+									const section = params.section;
+									if (section === "access") out.push({ label: "Access" });
+									else if (section === "usage") out.push({ label: "Usage" });
+									else if (section === "overview") out.push({ label: "General" });
 				else if (section === "integrations")
 					out.push({ label: "Integrations & Export" });
 				return out;
