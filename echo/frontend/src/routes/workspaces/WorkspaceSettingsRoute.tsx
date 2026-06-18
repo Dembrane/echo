@@ -46,6 +46,7 @@ import {
 	PendingInvitesSection,
 } from "@/components/members";
 import { usePendingInvites } from "@/components/members/hooks";
+import { WorkspaceTrainingPanel } from "@/components/training";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { TierBadge } from "@/components/workspace/TierBadge";
@@ -271,7 +272,13 @@ export const WorkspaceSettingsRoute = () => {
 	// Tab state — path-driven (/w/:id/settings/<tab> or /w/:id/members). Declared BEFORE
 	// the loading early-return below; moving any hook below the early
 	// return changes hook count between renders and crashes React.
-	const allowedTabs = ["general", "members", "billing", "danger"] as const;
+	const allowedTabs = [
+		"general",
+		"members",
+		"training",
+		"billing",
+		"danger",
+	] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const { pathname } = useLocation();
 	const segment = pathname.includes("/members")
@@ -692,6 +699,12 @@ export const WorkspaceSettingsRoute = () => {
 											/>
 										)}
 								</Stack>
+							</Tabs.Panel>
+
+							<Tabs.Panel value="training" pt="md">
+								{settings.org_id && (
+									<WorkspaceTrainingPanel orgId={settings.org_id} />
+								)}
 							</Tabs.Panel>
 
 							<Tabs.Panel value="general" pt="md">

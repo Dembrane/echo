@@ -33,7 +33,8 @@ export type NotificationAction =
 	| "NAVIGATE_INVITE"
 	| "NAVIGATE_ORGANISATION_SETTINGS"
 	| "NAVIGATE_WORKSPACE_SETTINGS"
-	| "NAVIGATE_BILLING";
+	| "NAVIGATE_BILLING"
+	| "NAVIGATE_TRAINING";
 
 export type NotificationSeverity = "info" | "action_required" | "destructive";
 
@@ -180,6 +181,8 @@ export function resolveNotificationHref(
 				return `/o/${refs.org_id}/settings/billing`;
 			}
 			return null;
+		case "NAVIGATE_TRAINING":
+			return refs.org_id ? `/o/${refs.org_id}/training` : null;
 		default:
 			return null;
 	}

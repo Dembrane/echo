@@ -28,6 +28,14 @@ export interface V2MeData {
 		version: string;
 		data: Array<Record<string, unknown>>;
 	} | null;
+	// Training (ISSUE-020): per-user license status + the high-risk flag that,
+	// with no active license, drives the non-blocking Inbox nudge (ISSUE-014).
+	training_status?: {
+		trained: boolean;
+		trained_until: string | null;
+		expiring_soon: boolean;
+	};
+	high_risk_context?: boolean;
 }
 
 async function fetchV2Me(): Promise<V2MeData | null> {

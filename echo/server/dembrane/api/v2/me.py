@@ -12,7 +12,7 @@ from dembrane.policies import ROLE_HIERARCHY as _ROLE_LEVEL
 from dembrane.seat_capacity import assert_can_add_seat
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.invites import compute_invite_hash
-from dembrane.api.v2.schemas import MeResponse, OrgSummary
+from dembrane.api.v2.schemas import MeResponse, OrgSummary, TrainingStatus
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.api.v2._invite_helpers import (
@@ -170,6 +170,22 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
     if not isinstance(onboarding_answers, dict):
         onboarding_answers = None
 
+    # Training (ISSUE-020): per-user license status + high-risk flag. Best-effort:
+    # a training lookup hiccup must never fail the page-load /me call.
+    training_status = TrainingStatus()
+    high_risk_context = False
+    try:
+        from dembrane.training_service import (
+            is_high_risk_context,
+            get_user_training_status,
+        )
+
+        status_dict = await get_user_training_status(app_user["id"])
+        training_status = TrainingStatus(**status_dict)
+        high_risk_context = await is_high_risk_context(app_user["id"])
+    except Exception:
+        logger.exception("training status lookup failed for %s", app_user["id"])
+
     return MeResponse(
         id=app_user["id"],
         directus_user_id=auth.user_id,
@@ -182,6 +198,8 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
         has_legacy_projects=has_legacy_projects,
         is_staff=bool(auth.is_admin),
         onboarding_answer_json=onboarding_answers,
+        training_status=training_status,
+        high_risk_context=high_risk_context,
     )
 
 

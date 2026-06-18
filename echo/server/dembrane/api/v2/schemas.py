@@ -18,6 +18,15 @@ class OrgSummary(BaseModel):
     is_partner: bool = False  # staff-set; gates the partner create-workspace branch
 
 
+class TrainingStatus(BaseModel):
+    """Per-user training (high-risk license) status. The training_license row
+    is the verification record; `trained_until` is its expiry."""
+
+    trained: bool = False
+    trained_until: Optional[str] = None  # ISO expiry of the active license
+    expiring_soon: bool = False  # within 30 days of expiry
+
+
 class MeResponse(BaseModel):
     """Lightweight user profile. Called on every page load — must be fast."""
 
@@ -43,6 +52,10 @@ class MeResponse(BaseModel):
     # reads this to decide whether to nudge the (required but non-blocking)
     # questions step.
     onboarding_answer_json: Optional[dict[str, Any]] = None
+    # Training (ISSUE-020): per-user license status + the high-risk flag that
+    # (with no active license) drives the non-blocking Inbox nudge (ISSUE-014).
+    training_status: TrainingStatus = TrainingStatus()
+    high_risk_context: bool = False
 
 
 # ── /v2/onboarding ──

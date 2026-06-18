@@ -57,6 +57,7 @@ import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
+import { StaffTrainingPanel } from "@/components/training";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 import {
@@ -2784,38 +2785,6 @@ function ManagedBillingPanel() {
 	);
 }
 
-/**
- * Stable host for a staff section a later wave fills in. Wave E (training
- * provisioning) mounts onto one of these so it only adds a panel, never touches
- * routing or the tab switch. Replace the body with the real controls when the
- * wave lands.
- */
-function StaffSectionPlaceholder({
-	title,
-	description,
-}: {
-	title: string;
-	description: string;
-}) {
-	return (
-		<Paper withBorder radius="sm" p="lg">
-			<Stack gap="xs">
-				<Group gap="xs" align="center">
-					<Text size="sm" fw={500}>
-						{title}
-					</Text>
-					<Badge size="xs" color="gray" variant="light">
-						<Trans>Coming soon</Trans>
-					</Badge>
-				</Group>
-				<Text size="xs" c="dimmed">
-					{description}
-				</Text>
-			</Stack>
-		</Paper>
-	);
-}
-
 export const AdminSettingsRoute = () => {
 	useDocumentTitle(t`Admin, dembrane`);
 	const { data: me } = useV2Me();
@@ -2879,17 +2848,13 @@ export const AdminSettingsRoute = () => {
 					<Tabs.Panel value="partners" pt="md">
 						<PartnersPanel />
 					</Tabs.Panel>
-					{/* Wave E still swaps in training provisioning + the
-					    trained-vs-not verification view onto its placeholder. The
-					    managed-billing panel is live (Wave C). */}
+					{/* Managed-billing panel is live (Wave C); training panel is live
+					    (Wave E): provisioning, completion, and the trained-vs-not view. */}
 					<Tabs.Panel value="managed-billing" pt="md">
 						<ManagedBillingPanel />
 					</Tabs.Panel>
 					<Tabs.Panel value="training" pt="md">
-						<StaffSectionPlaceholder
-							title={t`Training`}
-							description={t`Provision a training, mark completion, and see who is trained. Lands with Wave E.`}
-						/>
+						<StaffTrainingPanel />
 					</Tabs.Panel>
 				</Tabs>
 			</Stack>
