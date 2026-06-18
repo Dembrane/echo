@@ -13,6 +13,10 @@ from dembrane.api.v2.me import router as me_router
 from dembrane.api.v2.auth import router as auth_router
 from dembrane.api.v2.orgs import router as orgs_router
 from dembrane.api.v2.admin import router as admin_router
+from dembrane.api.v2.billing import (
+    router as billing_router,
+    webhook_router as billing_webhook_router,
+)
 from dembrane.api.v2.invites import router as invites_router
 from dembrane.api.v2.bff.tags import (
     router as bff_tags_router,
@@ -43,10 +47,6 @@ from dembrane.api.v2.bff.conversations import (
     junction_router as bff_conv_tag_router,
 )
 from dembrane.api.v2.workspace_projects import router as workspace_projects_router
-from dembrane.api.v2.workspace_requests import (
-    router as workspace_requests_router,
-    history_router as workspace_request_history_router,
-)
 from dembrane.api.v2.workspace_settings import router as workspace_settings_router
 
 v2_router = APIRouter()
@@ -75,12 +75,10 @@ v2_router.include_router(
     workspace_settings_router, prefix="/workspaces", tags=["v2:workspace-settings"]
 )
 v2_router.include_router(access_requests_router, prefix="/workspaces", tags=["v2:access-requests"])
-v2_router.include_router(
-    workspace_requests_router, prefix="/workspace-requests", tags=["v2:workspace-requests"]
-)
-v2_router.include_router(
-    workspace_request_history_router, prefix="/workspaces", tags=["v2:workspace-requests"]
-)
+
+# Billing: self-serve checkout (auth'd) + Mollie webhook (public).
+v2_router.include_router(billing_router, tags=["v2:billing"])
+v2_router.include_router(billing_webhook_router, prefix="/billing", tags=["v2:billing"])
 
 # Project-level: /projects/{id}/move + /projects/{id}/members (private sharing)
 v2_router.include_router(projects_router, prefix="/projects", tags=["v2:projects"])

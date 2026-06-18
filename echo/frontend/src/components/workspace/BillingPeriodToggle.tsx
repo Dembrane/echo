@@ -1,15 +1,15 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Group, SegmentedControl, Text } from "@mantine/core";
-import type { BillingPeriod } from "@/lib/tiers";
+import { type BillingPeriod, MONTHLY_BILLING_PREMIUM_PCT } from "@/lib/tiers";
 
 /**
  * Shared annual/monthly toggle. Sits above tier pricing cards and the tier
  * capacity matrix on every pricing surface (creation wizard, upgrade modal,
  * admin approval dialog, workspace + admin settings matrix).
  *
- * Fully controlled — parent owns the state. The only place the "10% off"
- * copy lives is here; callers do not duplicate it.
+ * Fully controlled — parent owns the state. The discount badge is driven by
+ * MONTHLY_BILLING_PREMIUM_PCT (single knob); callers do not duplicate it.
  */
 
 interface BillingPeriodToggleProps {
@@ -29,13 +29,13 @@ export function BillingPeriodToggle({
 			value={value}
 			onChange={(v) => onChange(v as BillingPeriod)}
 			styles={{
-				root: { overflow: "visible" },
 				control: { overflow: "visible" },
 				label: {
 					overflow: "visible",
-					textOverflow: "clip",
 					paddingInline: 18,
+					textOverflow: "clip",
 				},
+				root: { overflow: "visible" },
 			}}
 			data={[
 				{
@@ -57,15 +57,15 @@ export function BillingPeriodToggle({
 								variant="light"
 								color="primary"
 								styles={{
+									label: { overflow: "visible", textOverflow: "clip" },
 									root: {
 										flex: "0 0 auto",
 										overflow: "visible",
 										textOverflow: "clip",
 									},
-									label: { overflow: "visible", textOverflow: "clip" },
 								}}
 							>
-								<Trans>10% off</Trans>
+								<Trans>{MONTHLY_BILLING_PREMIUM_PCT}% off</Trans>
 							</Badge>
 						</Group>
 					),

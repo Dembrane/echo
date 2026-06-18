@@ -138,8 +138,8 @@ Keep it simple. One or two font weights max. Let whitespace do the work.
 | Display | 48-64px | Regular |
 | Headline | 32-40px | Regular |
 | Title | 24-28px | Regular |
-| Body | 16-18px | Regular |
-| Caption | 12-14px | Regular |
+| Body | 20px | Regular |
+| Caption | 12-15px | Regular |
 
 ### Rules
 

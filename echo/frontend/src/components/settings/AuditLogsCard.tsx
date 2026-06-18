@@ -608,7 +608,7 @@ export const AuditLogsCard = () => {
 																		<Text size="xs" c="dimmed" className="mb-2">
 																			<Trans>Revision #{revisionNumber}</Trans>
 																		</Text>
-																		<pre className="whitespace-pre-wrap break-words text-[11px] leading-relaxed">
+																		<pre className="whitespace-pre-wrap break-words text-xs leading-relaxed">
 																			{JSON.stringify(delta, null, 2)}
 																		</pre>
 																	</div>

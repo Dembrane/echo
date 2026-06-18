@@ -126,7 +126,7 @@ export const InboxView = () => {
 						type="button"
 						onClick={handleMarkAllReadForActiveTab}
 						disabled={markAllDisabled || markAllPending}
-						className="flex items-center gap-1 rounded px-1.5 py-1 text-[0.6875rem] transition-colors enabled:hover:bg-black/[0.04] disabled:opacity-40"
+						className="flex items-center gap-1 rounded px-1.5 py-1 text-xs transition-colors enabled:hover:bg-black/[0.04] disabled:opacity-40"
 						style={{ color: "rgba(45, 45, 44, 0.6)" }}
 						aria-label={t`Mark all as read`}
 					>
@@ -188,7 +188,7 @@ const TabButton = ({ active, onClick, badge, children }: TabButtonProps) => (
 		<span>{children}</span>
 		{badge > 0 && (
 			<span
-				className="rounded px-1 text-[0.625rem] leading-none"
+				className="rounded px-1 text-xs leading-none"
 				style={{
 					backgroundColor: "rgba(65, 105, 225, 0.18)",
 					color: "#4169e1",
@@ -403,7 +403,7 @@ const NotificationRowItem = ({
 							aria-hidden="true"
 						>
 							{row.actor_user_id && row.actor_name ? (
-								<span className="text-[0.625rem] font-medium">
+								<span className="text-xs font-medium">
 									{row.actor_name.slice(0, 2).toUpperCase()}
 								</span>
 							) : (
@@ -420,7 +420,7 @@ const NotificationRowItem = ({
 						</div>
 						{row.scope && (
 							<div
-								className="mt-0.5 truncate text-[0.6875rem]"
+								className="mt-0.5 truncate text-xs"
 								style={{ color: "rgba(45, 45, 44, 0.55)" }}
 							>
 								{row.scope}
@@ -428,7 +428,7 @@ const NotificationRowItem = ({
 						)}
 						{row.message && (
 							<div
-								className="mt-0.5 line-clamp-2 text-[0.6875rem] leading-snug"
+								className="mt-0.5 line-clamp-2 text-xs leading-snug"
 								style={{ color: "rgba(45, 45, 44, 0.6)" }}
 							>
 								{renderInlineMarkdown(row.message)}
@@ -437,7 +437,7 @@ const NotificationRowItem = ({
 						<div className="mt-1 flex items-center justify-between gap-2">
 							{createdLabel && (
 								<span
-									className="truncate text-[0.625rem]"
+									className="truncate text-xs"
 									style={{ color: "rgba(45, 45, 44, 0.45)" }}
 								>
 									{createdLabel}
@@ -445,7 +445,7 @@ const NotificationRowItem = ({
 							)}
 							{isActionRequired && (
 								<span
-									className="shrink-0 rounded px-1.5 py-0.5 text-[0.625rem] leading-none"
+									className="shrink-0 rounded px-1.5 py-0.5 text-xs leading-none"
 									style={{
 										backgroundColor: "rgba(65, 105, 225, 0.12)",
 										color: "#4169e1",
@@ -538,7 +538,7 @@ const AnnouncementRowItem = ({
 				</div>
 				{announcement.message && (
 					<div
-						className={`mt-0.5 text-[0.6875rem] leading-snug ${expanded ? "" : "line-clamp-2"}`}
+						className={`mt-0.5 text-xs leading-snug ${expanded ? "" : "line-clamp-2"}`}
 						style={{ color: "rgba(45, 45, 44, 0.65)" }}
 					>
 						<Markdown content={announcement.message} />
@@ -546,13 +546,13 @@ const AnnouncementRowItem = ({
 				)}
 				<div className="mt-1 flex items-center justify-between gap-2">
 					<span
-						className="truncate text-[0.625rem]"
+						className="truncate text-xs"
 						style={{ color: "rgba(45, 45, 44, 0.45)" }}
 					>
 						{formatDate(announcement.created_at)}
 					</span>
 					<span
-						className="text-[0.625rem] underline decoration-dotted"
+						className="text-xs underline decoration-dotted"
 						style={{ color: "rgba(45, 45, 44, 0.55)" }}
 					>
 						{expanded ? <Trans>Show less</Trans> : <Trans>Show more</Trans>}

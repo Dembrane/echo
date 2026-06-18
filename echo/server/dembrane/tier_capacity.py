@@ -1,16 +1,24 @@
-"""Per-tier capacity + pricing — the canonical matrix.
+"""Per-tier capacity + pricing — the canonical matrix (ADR 0005).
 
-Single source of truth for matrix v1.1 §1 (tier × capacity). Every surface
-that shows a tier's limits, taglines, or pricing should read from here —
-no duplication in i18n strings, UI components, or email templates.
+Single source of truth for the tier × capability map. Every surface that shows
+a tier's price, taglines, or limits reads from here — no duplication in i18n
+strings, UI components, or email templates.
 
-Hard truths encoded here:
-    - Free + pilot have lifetime caps; no overage billing.
-    - Pioneer+ tiers bill overage; no hard block.
-    - Guardian is unlimited, subject to commercial agreement.
+The model (ADR 0005, per-seat tiers):
+    - Four tiers: free, innovator, changemaker, guardian.
+    - Pricing is per seat / month, EUR, billed annually by default; monthly is
+      +20%. `price_eur_monthly` is the per-seat annual-billing rate.
+    - Hours are unlimited under fair use on every paid tier. Only Free keeps a
+      cap (1 hour) — so the over-cap machinery (ADR 0001) is Free-only now.
+    - Seats are metered and billed per seat; there is no "included bundle" or
+      seat overage. Free is the one tier that hard-caps seats (single user).
+    - Capability, not capacity, is what separates the paid tiers: BYO-LLM/MCP
+      from Innovator, built-in analysis + audit logs + white labeling from
+      Changemaker, the EU-sovereign stack at Guardian. Those gates live in
+      `policies.py`; this file is price + the Free hour/seat cap.
 
-When pricing changes, edit here. Downstream code reads these records and
-never hard-codes the numbers.
+When pricing changes, edit here. Downstream code reads these records and never
+hard-codes the numbers.
 """
 
 from __future__ import annotations
@@ -18,40 +26,37 @@ from __future__ import annotations
 from typing import Optional
 from dataclasses import dataclass
 
-# Single source of truth for the monthly-billing premium. The annual-billing
-# price stored in `price_eur_monthly` is anchored as the regular price; the
-# monthly cadence is the surcharged variant (matches standard SaaS framing
-# of "X% off when billed annually"). Editing this constant + a deploy is the
-# entire workflow for adjusting the premium — no env var, no Directus row.
-MONTHLY_BILLING_PREMIUM_PCT = 10
+# Single source of truth for the monthly-billing premium. The per-seat price in
+# `price_eur_monthly` is the annual-billing anchor; monthly cadence is the
+# surcharged variant ("X% off when billed annually"). Editing this constant +
+# a deploy is the entire workflow — no env var, no Directus row.
+MONTHLY_BILLING_PREMIUM_PCT = 20
 
 
 @dataclass(frozen=True)
 class TierCapacity:
     tier: str
     tagline: str
-    price_eur_monthly: Optional[int]      # Annual-billing per-month rate. None for one-off Pilot + Free.
-    price_note: str                        # "one-time" / "per month" / "negotiated"
-    included_seats: Optional[int]          # None = unlimited; guests share this pool
-    seat_overage_eur: Optional[int]        # None = not billed
-    included_hours: Optional[int]          # None = unlimited
-    hour_overage_eur: Optional[int]        # None = no overage (free/pilot) or unlimited (guardian)
+    price_eur_monthly: Optional[int]      # Per-seat annual-billing rate, EUR/seat/mo. None = Free.
+    price_note: str                        # "free" / "per seat / month"
+    included_seats: Optional[int]          # Hard seat cap. Free = 1; paid = None (unlimited, metered).
+    seat_overage_eur: Optional[int]        # Always None — price is per seat, no overage concept.
+    included_hours: Optional[int]          # Free = 1; paid = None (unlimited, fair use).
+    hour_overage_eur: Optional[int]        # Always None — no hour overage.
     hard_block_on_hours: bool              # Deprecated: always False. Kept for call-site compat.
     training_included: str                 # human-readable
-    duration: str                          # "1 month" / "ongoing" / etc
-    # True when the tier supports annual + monthly cadences (pioneer+).
-    # False for free (no price) and pilot (one-time fee). The API serializer
-    # uses this to populate `pricing.annual_billing` + `pricing.monthly_billing`
-    # vs `pricing.one_time` vs leaving `pricing` null.
+    duration: str                          # "ongoing" / etc
+    # True when the tier supports annual + monthly cadences (all paid tiers).
+    # False for Free (no price). The API serializer uses this to populate
+    # `pricing.annual_billing` + `pricing.monthly_billing` vs leaving it null.
     billing_period_applicable: bool = False
-    # One-time fee for tiers that aren't subscription-billed (currently pilot).
-    # `build_tier_pricing` reads this so the constant has one home.
+    # Unused since Pilot's removal; kept so build_tier_pricing stays total.
     one_time_amount_eur: Optional[int] = None
 
 
 @dataclass(frozen=True)
 class UsageGates:
-    """Workspace-level gate flags for over-cap UI gating."""
+    """Workspace-level gate flags for over-cap UI gating (Free only)."""
     over_cap_active: bool
     uploads_locked: bool
 
@@ -71,43 +76,15 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         training_included="—",
         duration="—",
     ),
-    "pilot": TierCapacity(
-        tier="pilot",
-        tagline="one month to try it.",
-        price_eur_monthly=None,
-        price_note="€349 one-time",
-        included_seats=2,
-        seat_overage_eur=None,
-        included_hours=10,
-        hour_overage_eur=None,
-        hard_block_on_hours=False,
-        training_included="2 people",
-        duration="1 month",
-        one_time_amount_eur=349,
-    ),
-    "pioneer": TierCapacity(
-        tier="pioneer",
-        tagline="For small teams and single projects",
-        price_eur_monthly=200,
-        price_note="per month",
-        included_seats=3,
-        seat_overage_eur=25,
-        included_hours=25,
-        hour_overage_eur=5,
-        hard_block_on_hours=False,
-        training_included="—",
-        duration="ongoing",
-        billing_period_applicable=True,
-    ),
     "innovator": TierCapacity(
         tier="innovator",
-        tagline="For organisations with ongoing participation",
-        price_eur_monthly=500,
-        price_note="per month",
-        included_seats=10,
-        seat_overage_eur=30,
-        included_hours=50,
-        hour_overage_eur=4,
+        tagline="Bring your own LLM",
+        price_eur_monthly=20,
+        price_note="per seat / month",
+        included_seats=None,
+        seat_overage_eur=None,
+        included_hours=None,
+        hour_overage_eur=None,
         hard_block_on_hours=False,
         training_included="—",
         duration="ongoing",
@@ -115,13 +92,13 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
     ),
     "changemaker": TierCapacity(
         tier="changemaker",
-        tagline="For governments and enterprises",
-        price_eur_monthly=1500,
-        price_note="per month",
-        included_seats=20,
-        seat_overage_eur=60,
-        included_hours=100,
-        hour_overage_eur=3,
+        tagline="EU hosted LLMs included",
+        price_eur_monthly=75,
+        price_note="per seat / month",
+        included_seats=None,
+        seat_overage_eur=None,
+        included_hours=None,
+        hour_overage_eur=None,
         hard_block_on_hours=False,
         training_included="—",
         duration="ongoing",
@@ -129,59 +106,59 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
     ),
     "guardian": TierCapacity(
         tier="guardian",
-        tagline="For highest-compliance environments",
-        price_eur_monthly=5000,
-        price_note="per month",
+        tagline="Cloud Act Safe",
+        price_eur_monthly=150,
+        price_note="per seat / month",
         included_seats=None,
         seat_overage_eur=None,
         included_hours=None,
         hour_overage_eur=None,
         hard_block_on_hours=False,
-        training_included="negotiable",
+        training_included="—",
         duration="ongoing",
         billing_period_applicable=True,
     ),
 }
 
 
-def compute_monthly_billing_price(annual_per_month: int) -> int:
-    """Monthly-cadence per-month price derived from the annual-billing rate.
+# Tiers a customer can self-serve checkout for today. Innovator and Guardian have
+# prices but are "coming soon" (BYO-LLM / EU-sovereign stack not shipped), so the
+# checkout API rejects them even though their capacities exist. Mirrors
+# COMING_SOON_TIERS in frontend/src/lib/tiers.ts; widen this as tiers go live.
+PURCHASABLE_TIERS: frozenset[str] = frozenset({"changemaker"})
 
-    The annual rate is treated as the anchor (regular price); the monthly
-    cadence is `annual × (1 + MONTHLY_BILLING_PREMIUM_PCT/100)`, rounded to
-    whole euros. Pure function — same input, same output.
+
+def compute_monthly_billing_price(annual_per_month: int) -> int:
+    """Monthly-cadence per-seat price derived from the annual-billing rate.
+
+    The annual rate is the anchor; monthly cadence is
+    `annual × (1 + MONTHLY_BILLING_PREMIUM_PCT/100)`, rounded to whole euros.
+    Pure function — same input, same output.
     """
     return round(annual_per_month * (1 + MONTHLY_BILLING_PREMIUM_PCT / 100))
 
 
 def build_tier_pricing(tier: str) -> Optional[dict]:
-    """Nested pricing dict for the public API.
+    """Nested per-seat pricing dict for the public API.
 
-    Returns one of:
-        - None for free (no price to display)
-        - {"one_time": {"amount_eur": <pilot fee>}} for tiers with a one-time fee
-        - {"annual_billing": {...}, "monthly_billing": {...}} for pioneer+
-
-    The shape matches the `TierPricing` Pydantic model in
-    `dembrane.api.v2.workspaces`; the function lives here so the math has
-    one home and downstream consumers cannot drift.
+    Returns None for Free (no price), else
+    `{"annual_billing": {...}, "monthly_billing": {...}}` where the figures are
+    per seat / month. The shape matches the `TierPricing` Pydantic model in
+    `dembrane.api.v2.workspaces`; the math lives here so consumers can't drift.
     """
     cap = TIER_CAPACITIES.get(tier)
     if cap is None:
         return None
 
-    if cap.one_time_amount_eur is not None:
-        return {"one_time": {"amount_eur": cap.one_time_amount_eur}}
-
     if cap.billing_period_applicable and cap.price_eur_monthly is not None:
-        annual_per_month = cap.price_eur_monthly
+        annual_per_seat = cap.price_eur_monthly
         return {
             "annual_billing": {
-                "per_month_eur": annual_per_month,
-                "total_per_year_eur": annual_per_month * 12,
+                "per_month_eur": annual_per_seat,
+                "total_per_year_eur": annual_per_seat * 12,
             },
             "monthly_billing": {
-                "per_month_eur": compute_monthly_billing_price(annual_per_month),
+                "per_month_eur": compute_monthly_billing_price(annual_per_seat),
             },
         }
 
@@ -208,43 +185,43 @@ def next_tier(tier: str) -> Optional[str]:
     return order[idx + 1]
 
 
-def compute_hour_overage_eur(tier: str, hours_used: float) -> float:
-    """Monthly overage cost in EUR. Zero when under cap, for free/pilot
-    (no overage billing), and for Guardian (unlimited)."""
-    cap = get_capacity(tier)
-    if cap is None or cap.included_hours is None or cap.hour_overage_eur is None:
-        return 0.0
-    over = max(0.0, hours_used - cap.included_hours)
-    return round(over * cap.hour_overage_eur, 2)
+def compute_hour_overage_eur(_tier: str, _hours_used: float) -> float:
+    """Hour overage no longer exists (unlimited hours under fair use). Always 0.
+    Kept for call-site compatibility."""
+    return 0.0
 
 
-def compute_seat_overage_eur(tier: str, seats_used: int) -> float:
-    """Monthly overage cost in € for exceeding the included seat count."""
+def compute_seat_overage_eur(_tier: str, _seats_used: int) -> float:
+    """Seat overage no longer exists — seats are billed per seat, not as
+    overage above an included bundle. Always 0. Kept for call-site
+    compatibility; the per-seat bill is seats × price_eur_monthly."""
+    return 0.0
+
+
+def monthly_seat_bill_eur(tier: str, seats_used: int) -> float:
+    """Per-seat monthly bill: seats × the tier's per-seat price. 0 for Free."""
     cap = get_capacity(tier)
-    if cap is None or cap.included_seats is None or cap.seat_overage_eur is None:
+    if cap is None or cap.price_eur_monthly is None:
         return 0.0
-    over = max(0, seats_used - cap.included_seats)
-    return round(over * cap.seat_overage_eur, 2)
+    return round(seats_used * cap.price_eur_monthly, 2)
 
 
 def is_hard_blocked(_tier: str, _hours_used: float) -> bool:
-    """Deprecated: always returns False.
-
-    Recording never fails on any tier. Free + pilot gate UI instead of
-    blocking host operations. Kept for call-site compatibility.
-    """
+    """Deprecated: always returns False. Recording never fails on any tier."""
     return False
 
 
-_OVERAGE_TIERS = frozenset({"pioneer", "innovator", "changemaker", "guardian"})
+# Paid tiers bill per seat and have unlimited hours — they never gate on hours.
+# Free is the only tier that gates consumption (1-hour cap).
+_OVERAGE_TIERS = frozenset({"innovator", "changemaker", "guardian"})
 
 
 def tier_allows_overage(tier: str) -> bool:
-    """Does this tier bill overage instead of gating?
+    """True for paid tiers (unlimited hours, never gated). False for Free, which
+    gates consumption via is_over_cap / uploads_locked at its 1-hour cap.
 
-    Pioneer+ allow overage (monthly billing). Free + pilot do not — they
-    gate consumption via is_over_cap / uploads_locked when the lifetime
-    cap is reached.
+    Name kept for call-site compatibility; reads as "this tier is not
+    hour-capped" under the per-seat model.
     """
     return tier in _OVERAGE_TIERS
 
@@ -254,14 +231,14 @@ def compute_is_over_cap(
     workspace_audio_hours: float,
     conversation_duration_hours: float,
 ) -> bool:
-    """Soft-edge stamp for a conversation finishing on a non-overage tier.
+    """Soft-edge stamp for a conversation finishing on a capped tier (Free only).
 
     Formula (ADR 0001): is_over_cap = NOT tier_allows_overage(tier)
         AND (workspace_audio_hours - conversation_duration_hours) >= included_hours
 
     Subtracting this conversation's own duration means a conversation that
     *started* under cap stays unlocked even if its recording crossed the cap.
-    Pioneer+ conversations always return False (overage is billed, not gated).
+    Paid tiers always return False (unlimited hours).
     """
     if tier_allows_overage(tier):
         return False
@@ -273,7 +250,7 @@ def compute_is_over_cap(
 
 
 def is_conversation_locked(conv: dict, tier: Optional[str]) -> bool:
-    """Live lock: is_over_cap AND the current tier does not allow overage."""
+    """Live lock: is_over_cap AND the current tier is hour-capped (Free)."""
     if not conv.get("is_over_cap"):
         return False
     if tier is None:
@@ -288,9 +265,8 @@ def compute_usage_gates(
 ) -> UsageGates:
     """Workspace-level gate flags for over-cap UI gating.
 
-    Two cap regimes:
-    - Free + pilot (lifetime cap): compare hours_lifetime >= included_hours.
-    - Pioneer+ (monthly cap, overage billed): gates never fire.
+    Only Free gates (1-hour cap): compare hours_lifetime >= included_hours.
+    Paid tiers (unlimited hours) never gate.
     """
     if tier_allows_overage(tier):
         return UsageGates(over_cap_active=False, uploads_locked=False)

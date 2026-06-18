@@ -1,9 +1,9 @@
 {
-  "collection": "workspace",
+  "collection": "billing_account",
   "field": "type_discount",
   "type": "string",
   "meta": {
-    "collection": "workspace",
+    "collection": "billing_account",
     "conditions": null,
     "display": null,
     "display_options": null,
@@ -11,7 +11,7 @@
     "group": null,
     "hidden": false,
     "interface": "select-dropdown",
-    "note": "Categorical discount label. Staff write, members read. Descriptive only — not enforced by any billing code path.",
+    "note": "Categorical discount label. Descriptive only.",
     "options": {
       "choices": [
         {
@@ -27,7 +27,7 @@
     "readonly": false,
     "required": false,
     "searchable": true,
-    "sort": 25,
+    "sort": 11,
     "special": null,
     "translations": null,
     "validation": null,
@@ -36,7 +36,7 @@
   },
   "schema": {
     "name": "type_discount",
-    "table": "workspace",
+    "table": "billing_account",
     "data_type": "character varying",
     "default_value": null,
     "max_length": 255,

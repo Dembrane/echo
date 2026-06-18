@@ -77,8 +77,20 @@ async def test_direct_signup_seeds_free_workspace():
 
     mock_directus.create_item = AsyncMock(side_effect=_tracking_create)
 
+    # The seed workspace's tier lives on its billing account; track that client.
+    mock_ba = _mock_async_directus()
+    ba_log: list[tuple[str, dict[str, Any]]] = []
+    _orig_ba_create = mock_ba.create_item
+
+    async def _track_ba(collection: str, payload: dict[str, Any]) -> dict:
+        ba_log.append((collection, payload))
+        return await _orig_ba_create(collection, payload)
+
+    mock_ba.create_item = AsyncMock(side_effect=_track_ba)
+
     with (
         patch("dembrane.api.v2.onboarding.async_directus", mock_directus),
+        patch("dembrane.directus_async.async_directus", mock_ba),
         patch("dembrane.api.v2.onboarding.resolve_app_user", return_value=_APP_USER),
         patch(
             "dembrane.api.v2.onboarding.get_directus_user_profile",
@@ -102,11 +114,12 @@ async def test_direct_signup_seeds_free_workspace():
 
     ws_creates = [(col, p) for col, p in call_log if col == "workspace"]
     assert len(ws_creates) == 1, f"Expected 1 workspace create, got {len(ws_creates)}"
-    _, ws_payload = ws_creates[0]
-    assert ws_payload["tier"] == "free", (
-        f"Seed workspace should be tier=free, got {ws_payload['tier']}"
-    )
-    assert ws_payload["is_default"] is True
+    assert ws_creates[0][1]["is_default"] is True
+
+    # The seed workspace's billing account is created at tier=free.
+    account_creates = [p for col, p in ba_log if col == "billing_account"]
+    assert len(account_creates) == 1, f"Expected 1 account create, got {len(account_creates)}"
+    assert account_creates[0]["tier"] == "free"
 
 
 @pytest.mark.asyncio
@@ -148,6 +161,7 @@ async def test_invite_user_gets_no_personal_workspace():
 
     with (
         patch("dembrane.api.v2.onboarding.async_directus", mock_directus),
+        patch("dembrane.directus_async.async_directus", _mock_async_directus()),
         patch("dembrane.api.v2.onboarding.resolve_app_user", return_value=_APP_USER),
         patch(
             "dembrane.api.v2.onboarding.get_directus_user_profile",
@@ -226,6 +240,7 @@ async def test_existing_owner_does_not_get_duplicate_workspace():
 
     with (
         patch("dembrane.api.v2.onboarding.async_directus", mock_directus),
+        patch("dembrane.directus_async.async_directus", _mock_async_directus()),
         patch("dembrane.api.v2.onboarding.resolve_app_user", return_value=_APP_USER),
         patch(
             "dembrane.api.v2.onboarding.get_directus_user_profile",

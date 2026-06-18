@@ -30,7 +30,7 @@ export const OrgSettingsView = () => {
 			{canSeeFinancials && (
 				<NavItem
 					to={`/o/${orgId}/settings/usage`}
-					label={<Trans>Usage and tier</Trans>}
+					label={<Trans>Usage</Trans>}
 					icon={ChartLineIcon}
 				/>
 			)}

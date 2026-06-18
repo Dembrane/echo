@@ -1,10 +1,9 @@
 """Tests for dembrane.seat_capacity — unified workspace seat cap gate.
 
-Covers:
-    - Per-tier hard-block matrix: free + pilot hard-block; pioneer+ allow
-      seat overage; guardian + unknown tiers are unlimited.
+Covers (ADR 0005):
+    - Free is the only hard-block tier (single seat). Paid tiers are per-seat
+      metered and never block.
     - Externals (role='external') count toward the same seat pool as members.
-    - A free workspace (1 seat = the owner) rejects any invite.
     - Effective seat state returns (seats_used, member_count, external_count).
 """
 
@@ -131,10 +130,7 @@ async def test_seat_state_externals_count_toward_seats_used(patch_members):
 @pytest.mark.asyncio
 async def test_derived_org_admins_do_not_consume_seats(patch_members):
     """Org-only admins/owners derive workspace access for oversight but must
-    NOT consume a seat — a seat is taken only when someone joins a workspace
-    directly. Reproduces the 'free tier shows 2/1' bug: the org owner is a
-    direct member and an org-only admin is derived; seats must stay at 1.
-    """
+    NOT consume a seat — a seat is taken only when someone joins directly."""
     patch_members(
         [
             _direct_member("u-owner", role="owner"),
@@ -144,9 +140,9 @@ async def test_derived_org_admins_do_not_consume_seats(patch_members):
     seats_used, member_count, external_count = await seat_capacity.compute_effective_seat_state(
         "w-1"
     )
-    assert member_count == 1  # only the direct owner occupies a seat
+    assert member_count == 1
     assert external_count == 0
-    assert seats_used == 1  # derived org admin does NOT count
+    assert seats_used == 1
 
 
 @pytest.mark.asyncio
@@ -162,7 +158,7 @@ async def test_derived_only_workspace_has_zero_seats(patch_members):
     assert seats_used == 0
 
 
-# ── assert_can_add_seat (unified gate) ──────────────────────────────────
+# ── assert_can_add_seat (Free-only hard cap) ────────────────────────────
 
 
 @pytest.mark.asyncio
@@ -176,76 +172,24 @@ async def test_free_rejects_any_invite(patch_members):
 
 
 @pytest.mark.asyncio
-async def test_pilot_blocks_at_cap_member(patch_members):
-    """Pilot has 2 seats — blocks the 3rd member."""
-    patch_members([_direct_member("u-1", role="owner"), _direct_member("u-2")])
-    with pytest.raises(HTTPException) as exc:
-        await seat_capacity.assert_can_add_seat(_ws("pilot"))
-    assert exc.value.status_code == 402
-    assert "pilot" in str(exc.value.detail).lower()
+async def test_free_passes_when_empty(patch_members):
+    """Free with no direct members (only derived oversight) is 0/1 — passes."""
+    patch_members([_derived_admin("u-org-admin")])
+    await seat_capacity.assert_can_add_seat(_ws("free"))  # no raise
 
 
 @pytest.mark.asyncio
-async def test_pilot_blocks_at_cap_external(patch_members):
-    """Pilot has 2 seats — an external also counts, blocking the 3rd."""
-    patch_members(
-        [
-            _direct_member("u-1", role="owner"),
-            _direct_external("u-2"),
-        ]
-    )
-    with pytest.raises(HTTPException) as exc:
-        await seat_capacity.assert_can_add_seat(_ws("pilot"))
-    assert exc.value.status_code == 402
+@pytest.mark.parametrize("tier", ["innovator", "changemaker", "guardian"])
+async def test_paid_tiers_never_block(patch_members, tier: str):
+    """Paid tiers are per-seat metered — they never block, even far over."""
+    patch_members([_direct_member(f"u-{i}", role="member") for i in range(50)])
+    await seat_capacity.assert_can_add_seat(_ws(tier))  # no raise
 
 
 @pytest.mark.asyncio
-async def test_pilot_pass_under_cap(patch_members):
-    patch_members([_direct_member("u-1", role="owner")])
-    await seat_capacity.assert_can_add_seat(_ws("pilot"))
-
-
-@pytest.mark.asyncio
-async def test_pilot_mixed_members_and_externals_share_cap(patch_members):
-    """1 member + 1 external = 2/2 seats on pilot → blocked."""
-    patch_members(
-        [
-            _direct_member("u-1", role="owner"),
-            _direct_external("u-2"),
-        ]
-    )
-    with pytest.raises(HTTPException) as exc:
-        await seat_capacity.assert_can_add_seat(_ws("pilot"))
-    assert exc.value.status_code == 402
-
-
-@pytest.mark.asyncio
-async def test_pioneer_never_blocks_overage(patch_members):
-    """Pioneer at seat cap allows new seats — overage applies."""
-    patch_members(
-        [
-            _direct_member("u-1", role="owner"),
-            _direct_member("u-2"),
-            _direct_member("u-3"),
-        ]
-    )
-    await seat_capacity.assert_can_add_seat(_ws("pioneer"))
-    # Even well over cap, no raise on Pioneer
-    patch_members([_direct_member(f"u-{i}", role="member") for i in range(8)])
-    await seat_capacity.assert_can_add_seat(_ws("pioneer"))
-
-
-@pytest.mark.asyncio
-async def test_pioneer_external_also_allowed_overage(patch_members):
-    """Pioneer: externals also benefit from overage — no separate cap."""
-    patch_members([_direct_external(f"u-{i}") for i in range(10)])
-    await seat_capacity.assert_can_add_seat(_ws("pioneer"))
-
-
-@pytest.mark.asyncio
-async def test_guardian_unlimited(patch_members):
-    patch_members([_direct_member(f"u-{i}") for i in range(50)])
-    await seat_capacity.assert_can_add_seat(_ws("guardian"))
+async def test_paid_tier_external_never_blocks(patch_members):
+    patch_members([_direct_external(f"u-{i}") for i in range(20)])
+    await seat_capacity.assert_can_add_seat(_ws("changemaker"))  # no raise
 
 
 @pytest.mark.asyncio
@@ -254,35 +198,26 @@ async def test_unknown_tier_unlimited(patch_members):
     await seat_capacity.assert_can_add_seat(_ws("legacy-mystery-tier"))
 
 
-@pytest.mark.asyncio
-async def test_derived_admins_do_not_count_toward_cap(patch_members):
-    """Org admins with only derived (oversight) access do NOT consume seats,
-    so they never push a workspace to its cap. A pilot workspace whose only
-    effective members are two derived org admins is 0/2 — an invite passes."""
-    patch_members([_derived_admin("u-org-admin-1"), _derived_admin("u-org-admin-2")])
-    await seat_capacity.assert_can_add_seat(_ws("pilot"))  # no raise
+# ── include_pending (Free cap) ──────────────────────────────────────────
 
 
 @pytest.mark.asyncio
-async def test_pending_invites_count_when_requested(patch_members, patch_pending):
-    """include_pending=True: 2 used + 2 pending against 3-seat cap → 402."""
-    patch_members([_direct_member("u-1", role="owner"), _direct_member("u-2")])
-    patch_pending(member_pending=2, external_pending=0)
-    # Cap on free is 1; use pilot (2) to test include_pending: 2 used + 2 pending ≥ 2 → block.
+async def test_pending_invites_count_on_free(patch_members, patch_pending):
+    """include_pending=True: 0 used + 1 pending against Free's 1-seat cap → 402."""
+    patch_members([])  # only derived/no direct seats
+    patch_pending(member_pending=1, external_pending=0)
     with pytest.raises(HTTPException) as exc:
-        await seat_capacity.assert_can_add_seat(_ws("pilot"), include_pending=True)
+        await seat_capacity.assert_can_add_seat(_ws("free"), include_pending=True)
     assert exc.value.status_code == 402
 
 
 @pytest.mark.asyncio
-async def test_pending_external_invites_count_toward_cap(patch_members, patch_pending):
-    """include_pending=True: pending externals count just like pending members
-    (unified seat pool). 2 used + 2 pending externals against pilot's 2-seat
-    cap → 402."""
-    patch_members([_direct_member("u-1", role="owner"), _direct_member("u-2")])
-    patch_pending(member_pending=0, external_pending=2)
+async def test_pending_external_invites_count_on_free(patch_members, patch_pending):
+    """Pending externals count like pending members (unified pool)."""
+    patch_members([])
+    patch_pending(member_pending=0, external_pending=1)
     with pytest.raises(HTTPException) as exc:
-        await seat_capacity.assert_can_add_seat(_ws("pilot"), include_pending=True)
+        await seat_capacity.assert_can_add_seat(_ws("free"), include_pending=True)
     assert exc.value.status_code == 402
 
 
@@ -291,27 +226,26 @@ async def test_pending_external_invites_count_toward_cap(patch_members, patch_pe
 
 @pytest.mark.asyncio
 async def test_invitee_message_is_friendly(patch_members):
-    patch_members([_direct_member("u-1", role="owner"), _direct_member("u-2")])
+    patch_members([_direct_member("u-owner", role="owner")])
     with pytest.raises(HTTPException) as exc:
-        await seat_capacity.assert_can_add_seat(_ws("pilot"), audience="invitee")
+        await seat_capacity.assert_can_add_seat(_ws("free"), audience="invitee")
     assert "contact the workspace admin" in str(exc.value.detail).lower()
 
 
 @pytest.mark.asyncio
 async def test_admin_message_names_tier_and_cap(patch_members):
-    patch_members([_direct_member("u-1", role="owner"), _direct_member("u-2")])
+    patch_members([_direct_member("u-owner", role="owner")])
     with pytest.raises(HTTPException) as exc:
-        await seat_capacity.assert_can_add_seat(_ws("pilot"), audience="admin")
+        await seat_capacity.assert_can_add_seat(_ws("free"), audience="admin")
     detail = str(exc.value.detail).lower()
-    assert "2-seat" in detail
-    assert "pilot" in detail
+    assert "1-seat" in detail
+    assert "free" in detail
 
 
 # ── tier_hard_blocks_seats ──────────────────────────────────────────────
 
 
-def test_tier_hard_blocks_seats_free_and_pilot():
+def test_only_free_hard_blocks_seats():
     assert seat_capacity.tier_hard_blocks_seats("free") is True
-    assert seat_capacity.tier_hard_blocks_seats("pilot") is True
-    for tier in ("pioneer", "innovator", "changemaker", "guardian", "unknown"):
+    for tier in ("innovator", "changemaker", "guardian", "pilot", "pioneer", "unknown"):
         assert seat_capacity.tier_hard_blocks_seats(tier) is False

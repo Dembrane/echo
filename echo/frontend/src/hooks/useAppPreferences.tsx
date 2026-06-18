@@ -137,62 +137,65 @@ export const AppPreferencesProvider = ({
 		// Space Grotesk: Original Mantine-based sizes with medium weight
 		const typography = isDmSans
 			? {
-					fontSizeLg: "1.125rem",
-					fontSizeMd: "1rem",
-					fontSizeSm: "0.875rem",
-					fontSizeXl: "1.333rem",
-					// Font sizes
-					fontSizeXs: "0.75rem",
-					h1LineHeight: "1.2",
-					// Heading sizes
-					h1Size: "2.778rem",
-					h2LineHeight: "1.25",
-					h2Size: "2.369rem",
-					h3LineHeight: "1.3",
-					h3Size: "1.777rem",
-					h4LineHeight: "1.4",
-					h4Size: "1.333rem",
-					h5LineHeight: "1.5",
-					h5Size: "1rem",
-					h6LineHeight: "1.5",
-					h6Size: "0.875rem",
-					// Heading font weight
-					headingFontWeight: "300",
-					lineHeightLg: "1.6",
-					lineHeightMd: "1.55",
-					lineHeightSm: "1.45",
-					lineHeightXl: "1.65",
+					// Distinct type ramp: Body3 12 / Body2 15 / Body1 20 (default body)
+					// / Heading3 24 / Heading2 28. Steps are kept far enough apart to
+					// avoid the 2px "uncanny valley" gaps the old scale had.
+					fontSizeXs: "0.75rem", // Body3: 12px (captions, gentle labels)
+					fontSizeSm: "0.9375rem", // Body2: 15px (low-emphasis secondary)
+					fontSizeMd: "1.25rem", // Body1: 20px (standard body, default)
+					fontSizeLg: "1.5rem", // Heading3: 24px (larger body)
+					fontSizeXl: "1.75rem", // Heading2: 28px
+					// Heading sizes: Title 36 / H1 32 / H2 28 / H3 24, then graceful
+					// descent to body sizes for h5/h6.
+					h1Size: "2.25rem", // Title: 36px
+					h1LineHeight: "1.15",
+					h2Size: "2rem", // Heading1: 32px
+					h2LineHeight: "1.2",
+					h3Size: "1.75rem", // Heading2: 28px
+					h3LineHeight: "1.25",
+					h4Size: "1.5rem", // Heading3: 24px
+					h4LineHeight: "1.3",
+					h5Size: "1.25rem", // Body1: 20px
+					h5LineHeight: "1.4",
+					h6Size: "0.9375rem", // Body2: 15px
+					h6LineHeight: "1.45",
+					// Heading font weight: Regular per brand STYLE_GUIDE.md
+					headingFontWeight: "400",
 					// Line heights
 					lineHeightXs: "1.4",
+					lineHeightSm: "1.45",
+					lineHeightMd: "1.55",
+					lineHeightLg: "1.5",
+					lineHeightXl: "1.4",
 				}
 			: {
-					fontSizeLg: "1.125rem",
-					fontSizeMd: "1rem",
-					fontSizeSm: "0.875rem",
-					fontSizeXl: "1.25rem",
-					// Font sizes (original Mantine defaults)
-					fontSizeXs: "0.75rem",
-					h1LineHeight: "1.3",
-					// Heading sizes (original Mantine defaults with --mantine-scale)
-					h1Size: "2.125rem",
-					h2LineHeight: "1.35",
-					h2Size: "1.875rem",
-					h3LineHeight: "1.4",
-					h3Size: "1.5rem",
-					h4LineHeight: "1.45",
-					h4Size: "1.25rem",
-					h5LineHeight: "1.5",
-					h5Size: "1rem",
-					h6LineHeight: "1.5",
-					h6Size: "0.875rem",
+					// Same distinct type ramp as the DM Sans palette; only the heading
+					// weight differs (Space Grotesk reads better at medium weight).
+					fontSizeXs: "0.75rem", // Body3: 12px
+					fontSizeSm: "0.9375rem", // Body2: 15px
+					fontSizeMd: "1.25rem", // Body1: 20px (default body)
+					fontSizeLg: "1.5rem", // Heading3: 24px
+					fontSizeXl: "1.75rem", // Heading2: 28px
+					h1Size: "2.25rem", // Title: 36px
+					h1LineHeight: "1.15",
+					h2Size: "2rem", // Heading1: 32px
+					h2LineHeight: "1.2",
+					h3Size: "1.75rem", // Heading2: 28px
+					h3LineHeight: "1.25",
+					h4Size: "1.5rem", // Heading3: 24px
+					h4LineHeight: "1.3",
+					h5Size: "1.25rem", // Body1: 20px
+					h5LineHeight: "1.4",
+					h6Size: "0.9375rem", // Body2: 15px
+					h6LineHeight: "1.45",
 					// Heading font weight
 					headingFontWeight: "500",
-					lineHeightLg: "1.6",
-					lineHeightMd: "1.55",
-					lineHeightSm: "1.45",
-					lineHeightXl: "1.65",
 					// Line heights
 					lineHeightXs: "1.4",
+					lineHeightSm: "1.45",
+					lineHeightMd: "1.55",
+					lineHeightLg: "1.5",
+					lineHeightXl: "1.4",
 				};
 
 		// Icon sizes: DM Sans uses larger icons to match the bolder typography
@@ -266,6 +269,16 @@ export const AppPreferencesProvider = ({
 		root.style.setProperty("--mantine-color-black", textColor);
 		root.style.setProperty("--mantine-color-text", textColor);
 		root.style.setProperty("--mantine-color-body", backgroundColor);
+
+		// Style rule: never the off-brand Mantine "dimmed" gray, and never on
+		// primary text. We keep a single subtle secondary tone (a softened
+		// version of the real text color) so hierarchy survives without the
+		// washed-out gray. Pair it with a smaller size (Body2/Body3) for
+		// secondary copy; use full --app-text for anything primary.
+		root.style.setProperty(
+			"--mantine-color-dimmed",
+			"color-mix(in srgb, var(--app-text) 70%, transparent)",
+		);
 
 		// Apply to body
 		document.body.style.fontFamily = fontValue;

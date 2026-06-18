@@ -148,7 +148,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
             {
                 "query": {
                     "filter": {"id": {"_in": org_ids}, "deleted_at": {"_null": True}},
-                    "fields": ["id", "name"],
+                    "fields": ["id", "name", "is_partner"],
                     "limit": -1,
                 }
             },
@@ -162,6 +162,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
                         id=org["id"],
                         name=org.get("name", ""),
                         role=m["role"],
+                        is_partner=bool(org.get("is_partner")),
                     )
                 )
 
@@ -545,6 +546,26 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
             "accepted_at": now_iso,
         },
     )
+
+    # Seat consumed now: reconcile billing so the prorated charge lands at the
+    # accept moment and the next renewal reflects the new seat. Best-effort: a
+    # billing hiccup must never fail the accept. Idempotent (provisioned_seats),
+    # so the periodic cron stays a safe backstop.
+    try:
+        from dembrane.billing_service import (
+            reconcile_account_seats,
+            get_account_for_workspace,
+        )
+
+        billing_account = await get_account_for_workspace(invite["workspace_id"])
+        if billing_account:
+            await reconcile_account_seats(billing_account["id"])
+    except Exception:
+        logger.exception(
+            "Seat reconcile failed after %s accepted invite to workspace %s",
+            app_user_id,
+            invite["workspace_id"],
+        )
 
     # Notify the inviter that their invite was accepted. inviter_id is
     # already hoisted at the top of the function (defensive — see comment

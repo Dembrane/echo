@@ -128,6 +128,10 @@ async def complete_onboarding(
             ws = await async_directus.get_item("workspace", ws_id)
             if not ws or ws.get("deleted_at"):
                 continue
+            # Seat cap keys off tier, which lives on the billing account.
+            from dembrane.billing_account import resolve_workspace_billing
+
+            ws.update(await resolve_workspace_billing(ws_id))
 
             # Mark "had a valid pending invite" before the cap check —
             # so a blocked invite still suppresses the personal-org branch.
@@ -302,6 +306,28 @@ async def complete_onboarding(
                     "in pending lists until next re-invite cleanup",
                     invite.get("id"),
                 )
+
+            # New seat consumed on auto-accept: reconcile billing so the prorated
+            # charge lands now and the next renewal reflects the seat. Only when a
+            # membership was actually created this run. Best-effort + idempotent
+            # (provisioned_seats); the periodic cron is the backstop.
+            if not has_ws_mem:
+                try:
+                    from dembrane.billing_service import (
+                        reconcile_account_seats,
+                        get_account_for_workspace,
+                    )
+
+                    billing_account = await get_account_for_workspace(ws_id)
+                    if billing_account:
+                        await reconcile_account_seats(billing_account["id"])
+                except Exception:
+                    logger.exception(
+                        "Seat reconcile failed after auto-accepting invite "
+                        "for %s into workspace %s",
+                        app_user_email,
+                        ws_id,
+                    )
 
             # Notify the inviter (INVITE_ACCEPTED #3). Mirrors the
             # notification fired by me.accept_my_invite — same event
@@ -572,7 +598,13 @@ async def complete_onboarding(
         else:
             personal_ws_id = generate_uuid()
             # System-seeded workspace — bypasses workspace_request flow intentionally.
-            # Only user-initiated workspace creation goes through requests.
+            # Org manages billing: the default workspace attaches to the org's
+            # (org-scoped) billing account, created here on first need.
+            from dembrane.billing_account import org_account_for_new_workspace
+
+            account_id = await org_account_for_new_workspace(
+                org_id=org_id, default_tier="free", created_by=app_user_id
+            )
             await async_directus.create_item(
                 "workspace",
                 {
@@ -580,8 +612,8 @@ async def complete_onboarding(
                     "org_id": org_id,
                     "name": "Default",
                     "is_default": True,
-                    "tier": "free",
                     "created_by": app_user_id,
+                    "billing_account_id": account_id,
                 },
             )
             logger.info(f"Created default workspace {personal_ws_id} for org {org_id}")

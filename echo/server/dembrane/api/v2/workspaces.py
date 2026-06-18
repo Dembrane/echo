@@ -21,7 +21,6 @@ from dembrane.api.v2.schemas import (
     WorkspaceListResponse,
     CreateWorkspaceRequest,
     CreateWorkspaceResponse,
-    PendingWorkspaceRequest,
 )
 from dembrane.directus_async import async_directus
 from dembrane.tier_downgrade import preview_downgrade, apply_downgrade_effects
@@ -208,6 +207,8 @@ async def list_workspaces(
 
     # Fetch workspace details — guard against empty _in (some Directus
     # adapters treat that as "no filter" and return every workspace).
+    from dembrane.billing_account import nested_billing_fields, billing_from_workspace
+
     workspaces: list[dict] = []
     if workspace_ids:
         fetched = await async_directus.get_items(
@@ -223,11 +224,9 @@ async def list_workspaces(
                         "name",
                         "org_id",
                         "is_default",
-                        "tier",
-                        "downgraded_at",
-                        "downgraded_from_tier",
                         "logo_url",
                         "created_at",
+                        *nested_billing_fields(),
                     ],
                     "limit": -1,
                 }
@@ -236,6 +235,8 @@ async def list_workspaces(
         if isinstance(fetched, list):
             workspaces = fetched
 
+    for ws in workspaces:
+        ws.update(billing_from_workspace(ws))
     ws_map = {ws["id"]: ws for ws in workspaces}
 
     # Fetch org names + logos (logo powers the OrganisationHeroCard on /w).
@@ -313,28 +314,6 @@ async def list_workspaces(
         *[_get_workspace_aggregates(ws["id"]) for _, ws in valid_memberships]
     )
 
-    # Batch-fetch pending workspace_requests for badge rendering on /w
-    all_ws_ids = [ws["id"] for _, ws in valid_memberships]
-    pending_request_ws_ids: set[str] = set()
-    if all_ws_ids:
-        pending_reqs = await async_directus.get_items(
-            "workspace_request",
-            {
-                "query": {
-                    "filter": {
-                        "workspace_id": {"_in": all_ws_ids},
-                        "status": {"_eq": "pending"},
-                    },
-                    "fields": ["workspace_id"],
-                    "limit": -1,
-                }
-            },
-        )
-        if isinstance(pending_reqs, list):
-            pending_request_ws_ids = {
-                r["workspace_id"] for r in pending_reqs if r.get("workspace_id")
-            }
-
     results: list[WorkspaceSummary] = []
     from dembrane.tier_capacity import next_tier as tier_next, get_capacity, compute_usage_gates
     from dembrane.api.v2.schemas import UsageGatesSummary
@@ -384,7 +363,6 @@ async def list_workspaces(
                 usage=usage,
                 downgraded_at=ws.get("downgraded_at"),
                 downgraded_from_tier=ws.get("downgraded_from_tier"),
-                has_pending_upgrade_request=ws["id"] in pending_request_ws_ids,
                 created_at=ws.get("created_at"),
             )
         )
@@ -540,51 +518,10 @@ async def list_workspaces(
                     )
                 )
 
-    # Fetch the caller's pending workspace requests (new_workspace + tier_upgrade)
-    # so the /w selector can show "request submitted" cards.
-    pending_requests_raw = await async_directus.get_items(
-        "workspace_request",
-        {
-            "query": {
-                "filter": {
-                    "requested_by": {"_eq": app_user_id},
-                    "status": {"_eq": "pending"},
-                },
-                "fields": [
-                    "id",
-                    "kind",
-                    "status",
-                    "proposed_name",
-                    "proposed_tier",
-                    "org_id",
-                    "created_at",
-                ],
-                "sort": ["-created_at"],
-                "limit": 20,
-            }
-        },
-    )
-    pending_ws_requests: list[PendingWorkspaceRequest] = []
-    if isinstance(pending_requests_raw, list):
-        for pr in pending_requests_raw:
-            pending_ws_requests.append(
-                PendingWorkspaceRequest(
-                    id=pr["id"],
-                    kind=pr.get("kind", ""),
-                    status=pr.get("status", "pending"),
-                    proposed_name=pr.get("proposed_name"),
-                    proposed_tier=pr.get("proposed_tier", ""),
-                    org_id=pr.get("org_id", ""),
-                    org_name=org_map.get(pr.get("org_id", ""), ""),
-                    created_at=pr.get("created_at"),
-                )
-            )
-
     return WorkspaceListResponse(
         workspaces=results,
         organisations=organisations,
         recent_removals=recent_removals,
-        pending_workspace_requests=pending_ws_requests,
     )
 
 
@@ -593,16 +530,14 @@ async def create_workspace(
     body: CreateWorkspaceRequest,
     auth: DependencyDirectusSession,
 ) -> CreateWorkspaceResponse:
-    """Create a new workspace. Staff-only — self-serve creation is retired.
+    """Create a new workspace (self-serve).
 
-    Post-onboarding workspaces go through the workspace_request flow
-    (POST /v2/workspace-requests). This endpoint is now the internal
-    endpoint called by the approval orchestrator. The onboarding auto-seed
-    writes directly to Directus and is unaffected.
+    Any org admin/owner can create a workspace in their org; staff can create
+    in any org. Billing is provisioned at create time: the workspace joins the
+    org's billing account, or gets its own when `bill_separately` (partner
+    "for another client"). Payment is the gate, not staff approval — so the
+    workspace_request flow is no longer needed for new workspaces.
     """
-    if not auth.is_admin:
-        raise HTTPException(status_code=403, detail="Staff-only. Use workspace requests.")
-
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
 
@@ -628,29 +563,72 @@ async def create_workspace(
                 status_code=403, detail="No organisation found. Complete onboarding first."
             )
         org_id = orgs[0]["org_id"]
+    elif not auth.is_admin:
+        # Caller named an org: they must be an admin/owner of it.
+        mem = await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "user_id": {"_eq": app_user_id},
+                        "org_id": {"_eq": org_id},
+                        "role": {"_in": ["owner", "admin"]},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": 1,
+                }
+            },
+        )
+        if not isinstance(mem, list) or len(mem) == 0:
+            raise HTTPException(
+                status_code=403,
+                detail="You must be an organisation admin or owner to create a workspace here.",
+            )
 
-    # Org access check skipped for staff — they can create in any org.
-    # The approval orchestrator validates org existence before calling.
-
-    # Matrix §9: new workspaces default to Pilot. Tier upgrades go through
-    # the staff upgrade-request flow (matrix §11), never client-driven.
-    # Visibility (matrix v1.1 §6) is stored on workspace.visibility — the
-    # enum is the sole source of truth on new rows; legacy settings flags
-    # are no longer written (resolver still reads them for pre-enum data).
+    # Visibility is stored on workspace.visibility (sole source of truth on new
+    # rows). Private requires a paid tier; the set_private policy enforces that.
     visibility = "open_to_organisation" if body.inherit_organisation_admins else "private"
     ws_id = generate_uuid()
+
+    # Org manages billing by default: the workspace joins the org's account.
+    # bill_separately (partner "for another client") mints a workspace-scoped
+    # account instead, billed on its own and handoff-ready.
+    from dembrane.billing_account import (
+        link_account_to_workspace,
+        org_account_for_new_workspace,
+        create_workspace_scoped_account,
+        billing_account_blocks_new_workspace,
+    )
+
+    separate = getattr(body, "bill_separately", False)
+    if separate:
+        account_id = await create_workspace_scoped_account(
+            tier="free", created_by=app_user_id, label=f"{body.name.strip()} billing"
+        )
+    else:
+        account_id = await org_account_for_new_workspace(
+            org_id=org_id, created_by=app_user_id
+        )
+        # Validate the org's billing account can take a new workspace.
+        account = await async_directus.get_item("billing_account", account_id)
+        blocked = billing_account_blocks_new_workspace(account)
+        if blocked:
+            raise HTTPException(status_code=402, detail=blocked)
     await async_directus.create_item(
         "workspace",
         {
             "id": ws_id,
             "org_id": org_id,
             "name": body.name.strip(),
-            "tier": "pilot",
             "visibility": visibility,
             "is_default": False,
             "created_by": app_user_id,
+            "billing_account_id": account_id,
         },
     )
+    if separate:
+        await link_account_to_workspace(account_id, ws_id)
 
     # Insert the creator as source='direct', role='owner'. No settings
     # flags (matrix v1.1 §6 — derivation is retired for new rows).
@@ -787,7 +765,9 @@ async def set_workspace_tier(
     if not workspace or workspace.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Workspace not found")
 
-    from_tier = workspace.get("tier", "pioneer")
+    from dembrane.billing_account import resolve_workspace_tier, update_workspace_billing
+
+    from_tier = (await resolve_workspace_tier(workspace_id)) or "pioneer"
     to_tier = body.tier
 
     try:
@@ -817,14 +797,14 @@ async def set_workspace_tier(
     # banner goes away immediately — an upgrade makes the old downgrade
     # irrelevant. No-change: touch nothing.
     now_iso = datetime.now(timezone.utc).isoformat()
-    ws_update: dict = {"tier": to_tier}
+    account_update: dict = {"tier": to_tier}
     if direction == "downgrade":
-        ws_update["downgraded_at"] = now_iso
-        ws_update["downgraded_from_tier"] = from_tier
+        account_update["downgraded_at"] = now_iso
+        account_update["downgraded_from_tier"] = from_tier
     elif direction == "upgrade":
-        ws_update["downgraded_at"] = None
-        ws_update["downgraded_from_tier"] = None
-    await async_directus.update_item("workspace", workspace_id, ws_update)
+        account_update["downgraded_at"] = None
+        account_update["downgraded_from_tier"] = None
+    await update_workspace_billing(workspace_id, account_update)
 
     # Bust the cached usage rollup so the UI reflects the new tier's
     # caps + rates on the next read. Both the workspace-scope cache and
@@ -967,22 +947,15 @@ class MonthlyPricing(BaseModel):
     per_month_eur: int
 
 
-class OneTimePricing(BaseModel):
-    amount_eur: int
-
-
 class TierPricing(BaseModel):
-    """Per-tier nested pricing payload.
+    """Per-tier nested pricing payload (per seat / month).
 
-    Exactly one of the cadence groups is populated per tier:
         - Free: pricing is None at the parent level (never instantiated).
-        - Pilot: `one_time` only.
-        - Pioneer+: `annual_billing` + `monthly_billing`.
+        - Paid tiers: `annual_billing` + `monthly_billing` populated.
     """
 
     annual_billing: Optional[AnnualPricing] = None
     monthly_billing: Optional[MonthlyPricing] = None
-    one_time: Optional[OneTimePricing] = None
 
 
 class NextTierRecommendation(BaseModel):

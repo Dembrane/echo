@@ -15,6 +15,7 @@ class OrgSummary(BaseModel):
     id: str
     name: str
     role: str  # owner / admin / member
+    is_partner: bool = False  # staff-set; gates the partner create-workspace branch
 
 
 class MeResponse(BaseModel):
@@ -109,7 +110,6 @@ class WorkspaceSummary(BaseModel):
     # a frozen feature.
     downgraded_at: Optional[str] = None
     downgraded_from_tier: Optional[str] = None
-    has_pending_upgrade_request: bool = False
     created_at: Optional[str] = None
 
 
@@ -137,17 +137,6 @@ class RecentRemoval(BaseModel):
     ended_at: str  # ISO timestamp from workspace_membership.deleted_at
 
 
-class PendingWorkspaceRequest(BaseModel):
-    id: str
-    kind: str
-    status: str
-    proposed_name: Optional[str] = None
-    proposed_tier: str
-    org_id: str
-    org_name: str = ""
-    created_at: Optional[str] = None
-
-
 class WorkspaceListResponse(BaseModel):
     workspaces: list[WorkspaceSummary]
     organisations: list[OrganisationRollup] = []
@@ -155,7 +144,6 @@ class WorkspaceListResponse(BaseModel):
     # message on /w so a removed guest sees "your access ended" instead of
     # "create your first workspace".
     recent_removals: list[RecentRemoval] = []
-    pending_workspace_requests: list[PendingWorkspaceRequest] = []
 
 
 # ── /v2/workspaces CRUD ──
@@ -173,7 +161,10 @@ class CreateWorkspaceRequest(BaseModel):
     # no longer auto-inherit access (matrix §6 retires derivation). They
     # use Request access.
     inherit_organisation_members: bool = False
-    # tier is always "pioneer" on creation — upgrades happen via billing/admin
+    # Billing: default false → the workspace joins the org's billing account
+    # (org manages billing). True → mint a workspace-scoped account billed
+    # separately (the partner "for another client" path; handoff-ready).
+    bill_separately: bool = False
 
 
 class CreateWorkspaceResponse(BaseModel):

@@ -36,8 +36,19 @@ def _make_project(project_id: str = "proj-1", workspace_id: str = "ws-1") -> dic
     return {"id": project_id, "workspace_id": workspace_id}
 
 
-def _make_workspace(workspace_id: str = "ws-1", tier: str = "free") -> dict:
-    return {"id": workspace_id, "tier": tier}
+def _make_workspace(workspace_id: str = "ws-1", _tier: str = "free") -> dict:
+    return {"id": workspace_id, "billing_account_id": "acc-1"}
+
+
+def _get_item_for(tier: str, workspace_id: str = "ws-1"):
+    """Sync get_item side-effect: tier now lives on the billing account."""
+
+    def _side(collection, item_id, *_args, **_kwargs):
+        if collection == "billing_account":
+            return {"id": item_id, "tier": tier}
+        return _make_workspace(workspace_id)
+
+    return _side
 
 
 def _setup_mocks(mock_conv_svc, mock_proj_svc, _mock_directus, conversation, project, workspace, all_projects, all_conversations):
@@ -73,7 +84,7 @@ class TestStampOverCapWiring:
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.return_value = _make_workspace(tier="free")
+        mock_client.get_item.side_effect = _get_item_for("free")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}],
             [{"duration": 5400}],  # 1.5h total
@@ -101,7 +112,7 @@ class TestStampOverCapWiring:
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.return_value = _make_workspace(tier="free")
+        mock_client.get_item.side_effect = _get_item_for("free")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}],
             [{"duration": 2160}],  # 0.6h total
@@ -129,7 +140,7 @@ class TestStampOverCapWiring:
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.return_value = _make_workspace(tier="pioneer")
+        mock_client.get_item.side_effect = _get_item_for("pioneer")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}],
             [{"duration": 3596400}],
@@ -157,7 +168,7 @@ class TestStampOverCapWiring:
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.return_value = _make_workspace(tier="free")
+        mock_client.get_item.side_effect = _get_item_for("free")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}],
             [{"duration": 3960}],  # 1.1h
@@ -210,18 +221,18 @@ class TestStampOverCapWiring:
     @patch("dembrane.directus.directus")
     @patch("dembrane.service.project_service")
     @patch("dembrane.service.conversation_service")
-    def test_pilot_at_cap_stamps_true(
+    def test_free_started_at_cap_stamps_true(
         self, mock_conv_svc, mock_proj_svc, _mock_directus, mock_ctx_fn, mock_logger
     ):
-        """Pilot at 10.5h after 0.5h recording → started at 10.0h, exactly at 10h cap."""
+        """Free at 1.5h after 0.5h recording → started at 1.0h, exactly at the 1h cap."""
         mock_conv_svc.get_by_id_or_raise.return_value = _make_conversation(duration=1800)
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.return_value = _make_workspace(tier="pilot")
+        mock_client.get_item.side_effect = _get_item_for("free")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}],
-            [{"duration": 37800}],  # 10.5h
+            [{"duration": 5400}],  # 1.5h
         ]
         mock_ctx = MagicMock()
         mock_ctx.__enter__ = MagicMock(return_value=mock_client)
@@ -246,7 +257,7 @@ class TestStampOverCapWiring:
         mock_proj_svc.get_by_id_or_raise.return_value = _make_project()
 
         mock_client = MagicMock()
-        mock_client.get_item.return_value = _make_workspace(tier="free")
+        mock_client.get_item.side_effect = _get_item_for("free")
         mock_client.get_items.side_effect = [
             [{"id": "proj-1"}, {"id": "proj-2"}],
             [
