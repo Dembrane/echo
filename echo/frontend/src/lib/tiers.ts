@@ -38,6 +38,14 @@ export function isComingSoon(tier: string | null | undefined): boolean {
 	return !!tier && (COMING_SOON_TIERS as string[]).includes(tier);
 }
 
+// Tiers a customer can actually buy right now: visible minus coming-soon.
+// Single source for "how many plans are sellable" -- drives the Popular badge
+// (ISSUE-011: a "Popular" tag on the sole buyable option reads oddly, so it is
+// hidden while exactly one tier is purchasable and auto-restores at >=2).
+export const PURCHASABLE_TIERS: Tier[] = VISIBLE_TIERS.filter(
+	(tier) => !isComingSoon(tier),
+);
+
 // Recently launched: render a "New" badge. None currently.
 export const NEW_TIERS: Tier[] = [];
 

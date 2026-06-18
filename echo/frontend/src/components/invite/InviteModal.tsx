@@ -121,6 +121,9 @@ async function inviteToOrg(
 
 type SeatEstimate = {
 	active: boolean;
+	/** Net-new seats the server actually charges for (recipients already on the
+	 *  account are deduped out). */
+	added_seats: number;
 	prorated_now_eur: number;
 	recurring_delta_eur: number;
 	currency: string;
@@ -128,10 +131,14 @@ type SeatEstimate = {
 
 async function fetchSeatEstimate(
 	workspaceId: string,
-	addedSeats: number,
+	emails: string[],
 ): Promise<SeatEstimate | null> {
+	// Send the recipient emails so the server computes net-new seats: a recipient
+	// already holding a seat anywhere on the account, or already pending, costs
+	// nothing (seats are pooled). The server never echoes the roster back.
+	const qs = new URLSearchParams({ emails: emails.join(",") });
 	const res = await fetch(
-		`${API_BASE_URL}/v2/workspaces/${workspaceId}/seat-estimate?added_seats=${addedSeats}`,
+		`${API_BASE_URL}/v2/workspaces/${workspaceId}/seat-estimate?${qs}`,
 		{ credentials: "include" },
 	);
 	if (!res.ok) return null;
@@ -175,9 +182,12 @@ export function InviteModal({
 	);
 	const [results, setResults] = useState<InviteResultRow[]>([]);
 	// Prorated cost preview shown before sending a paid, seat-consuming invite.
+	// netNew is the deduped seat count the server will actually bill (recipients
+	// already on the account cost nothing).
 	const [confirm, setConfirm] = useState<{
 		proratedNow: number;
 		recurringDelta: number;
+		netNew: number;
 	} | null>(null);
 	const [estimating, setEstimating] = useState(false);
 
@@ -432,19 +442,22 @@ export function InviteModal({
 		if (workspaceIds.length > 0 && !confirm) {
 			setEstimating(true);
 			try {
+				const emails = validChips.map((c) => c.value.trim().toLowerCase());
 				const estimates = await Promise.all(
-					workspaceIds.map((id) => fetchSeatEstimate(id, validChips.length)),
+					workspaceIds.map((id) => fetchSeatEstimate(id, emails)),
 				);
 				let proratedNow = 0;
 				let recurringDelta = 0;
+				let netNew = 0;
 				for (const e of estimates) {
 					if (e?.active) {
 						proratedNow += e.prorated_now_eur;
 						recurringDelta += e.recurring_delta_eur;
+						netNew = Math.max(netNew, e.added_seats);
 					}
 				}
 				if (proratedNow > 0) {
-					setConfirm({ proratedNow, recurringDelta });
+					setConfirm({ netNew, proratedNow, recurringDelta });
 					return;
 				}
 			} catch {
@@ -584,7 +597,7 @@ export function InviteModal({
 					<Alert variant="light" p="sm" data-testid="invite-proration-confirm">
 						<Text size="sm">
 							<Trans>
-								Adding {validChips.length} member(s) charges about{" "}
+								Adding {confirm.netNew} new seat(s) charges about{" "}
 								{fmtEur(confirm.proratedNow)} now, prorated for the rest of this
 								billing period, and raises your renewal by about{" "}
 								{fmtEur(confirm.recurringDelta)}.

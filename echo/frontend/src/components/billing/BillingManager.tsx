@@ -56,6 +56,14 @@ interface Overview {
 	projected_monthly_eur: number | null;
 	per_seat_monthly_eur: number | null;
 	payment_method: PaymentMethod | null;
+	/** Pending (un-accepted) invites across the account. The bill rises by this
+	 *  many seats when they're accepted. */
+	pending_invites: number;
+	/** Projected total once every pending invite is accepted. Null when none pending. */
+	projected_with_pending_eur: number | null;
+	/** Set when a seat re-price against Mollie last failed (dead mandate / API
+	 *  error); null when reconcile is clean. Drives the "fix your payment" prompt. */
+	reconcile_failed_at: string | null;
 }
 
 interface Invoice {
@@ -573,6 +581,16 @@ export function BillingManager({
 			? overview.projected_monthly_eur * 12
 			: overview.projected_monthly_eur;
 
+	// Pending invites aren't billed until accepted; surface where the total lands
+	// once they are so the figure never quietly understates the bill.
+	const pendingInvites = overview.pending_invites ?? 0;
+	const hasPending = !isCanceling && pendingInvites > 0;
+	const withPendingValue =
+		isAnnual && overview.projected_with_pending_eur != null
+			? overview.projected_with_pending_eur * 12
+			: overview.projected_with_pending_eur;
+	const reconcileFailed = !!overview.reconcile_failed_at;
+
 	// Free / never-subscribed: a focused subscribe prompt.
 	if (!hasPaidPlan) {
 		return (
@@ -606,6 +624,35 @@ export function BillingManager({
 	return (
 		<Paper withBorder p="md" radius="sm">
 			<Stack gap={16}>
+				{reconcileFailed && (
+					<Alert
+						color="red"
+						variant="light"
+						title={t`We couldn't update your billing`}
+						data-testid="billing-reconcile-failed"
+						styles={{
+							message: { color: "var(--app-text)" },
+							title: { color: "var(--app-text)" },
+						}}
+					>
+						<Stack gap={8} align="flex-start">
+							<Text size="sm">
+								<Trans>
+									A seat change couldn't be charged to your payment method. Your
+									team keeps full access. Update your payment method so the next
+									charge goes through.
+								</Trans>
+							</Text>
+							<Button
+								size="xs"
+								component="a"
+								href="mailto:support@dembrane.com?subject=Fix my payment method"
+							>
+								<Trans>Fix payment</Trans>
+							</Button>
+						</Stack>
+					</Alert>
+				)}
 				<SectionRow
 					label={t`Current plan`}
 					action={
@@ -653,6 +700,13 @@ export function BillingManager({
 					<Text size="sm">
 						<Trans>{overview.seats} seats</Trans>
 					</Text>
+					{hasPending && (
+						<Text size="xs" c="var(--mantine-color-primary-6)">
+							<Trans>
+								{pendingInvites} invite(s) pending. Counted once accepted.
+							</Trans>
+						</Text>
+					)}
 					<Text size="xs">
 						{isCanceling ? (
 							<Trans>
@@ -729,6 +783,11 @@ export function BillingManager({
 										{overview.seats}. Excludes VAT.
 									</Trans>
 								)}
+							</Text>
+						)}
+						{hasPending && withPendingValue != null && (
+							<Text size="xs" c="var(--mantine-color-primary-6)">
+								<Trans>* rises to {eur(withPendingValue)} when accepted</Trans>
 							</Text>
 						)}
 					</SectionRow>

@@ -209,6 +209,65 @@ class TestEstimateAccountCost:
         assert out["seats"] == 1
 
 
+class TestEstimateSeatAdditionFallback:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service._period_fraction_remaining", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    async def test_added_seats_path_when_no_emails(self, mock_directus, mock_fraction):
+        """Without recipient_emails the quote falls back to the raw added_seats
+        count (back-compat for callers that don't pass a roster)."""
+        from dembrane.billing_service import estimate_seat_addition
+
+        mock_directus.get_item = AsyncMock(
+            return_value={
+                "id": "acc-1",
+                "tier": "changemaker",
+                "status": "active",
+                "billing_period": "annual",
+                "mollie_subscription_id": "sub_1",
+                "mollie_customer_id": "cst_1",
+            }
+        )
+        mock_fraction.return_value = 1.0
+
+        out = await estimate_seat_addition("acc-1", 2)
+        assert out["added_seats"] == 2
+        assert out["recurring_delta_eur"] == 1800.0  # 75 * 12 * 2
+
+
+class TestDeletionReprices:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.reconcile_account_seats", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.get_account_for_workspace", new_callable=AsyncMock)
+    @patch("dembrane.api.v2.workspaces.async_directus")
+    async def test_delete_workspace_reconciles_after_soft_delete(
+        self, mock_directus, mock_get_account, mock_reconcile
+    ):
+        """ISSUE-010: deleting a workspace re-prices the account immediately
+        (after the soft-delete, so the freed seats no longer count) instead of
+        waiting for the cron."""
+        from types import SimpleNamespace
+
+        from dembrane.api.v2.workspaces import delete_workspace
+
+        # No live projects -> deletion proceeds.
+        mock_directus.get_items = AsyncMock(return_value=[{"count": {"id": 0}}])
+        mock_directus.update_item = AsyncMock()
+        mock_get_account.return_value = {"id": "acc-1"}
+
+        ctx = SimpleNamespace(role="admin", workspace_id="ws-1", app_user_id="u-1")
+        out = await delete_workspace(ctx)  # type: ignore[arg-type]
+
+        assert out == {"status": "deleted"}
+        # Soft-delete happened...
+        soft_delete = mock_directus.update_item.call_args.args
+        assert soft_delete[0] == "workspace"
+        assert soft_delete[1] == "ws-1"
+        assert "deleted_at" in soft_delete[2]
+        # ...then the account re-priced.
+        mock_reconcile.assert_awaited_once_with("acc-1")
+
+
 class TestWebhookActivation:
     @pytest.mark.asyncio
     @patch("dembrane.billing_service.async_directus")
