@@ -325,14 +325,17 @@ function UsageBar({
 }
 
 /**
- * Inline discount editor used in WorkspaceActionsModal.
+ * Inline discount editor. The discount is canonical on the billing account, so
+ * this writes the account row (not the workspace): the account-level value is
+ * what every price path reads, and editing the workspace would let the two
+ * diverge. Lives on the account in AccountActionsModal.
  */
 function DiscountEditor({
-	workspaceId,
+	accountId,
 	initialType,
 	initialPercent,
 }: {
-	workspaceId: string;
+	accountId: string;
 	initialType: string | null;
 	initialPercent: number | null;
 }) {
@@ -366,7 +369,7 @@ function DiscountEditor({
 				}
 			}
 			const res = await fetch(
-				`${API_BASE_URL}/v2/admin/workspaces/${workspaceId}/discount`,
+				`${API_BASE_URL}/v2/admin/billing-accounts/${accountId}/discount`,
 				{
 					body: JSON.stringify(body),
 					credentials: "include",
@@ -885,12 +888,6 @@ function WorkspaceActionsModal({
 				</Text>
 				<Divider my={4} />
 
-				<DiscountEditor
-					workspaceId={row.workspace_id}
-					initialType={row.type_discount ?? null}
-					initialPercent={row.percent_discount ?? null}
-				/>
-
 				{row.billing_account_id && (
 					<GrantTrialControl accountId={row.billing_account_id} />
 				)}
@@ -1111,6 +1108,12 @@ function AccountActionsModal({
 					</Trans>
 				</Text>
 				<Divider my={4} />
+
+				<DiscountEditor
+					accountId={account.billing_account_id}
+					initialType={account.type_discount ?? null}
+					initialPercent={account.percent_discount ?? null}
+				/>
 
 				{tierHandle && <ChangeTierControl row={tierHandle} />}
 				<GrantTrialControl accountId={account.billing_account_id} />
