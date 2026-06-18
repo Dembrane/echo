@@ -13,7 +13,6 @@ from dembrane.api.v2.me import router as me_router
 from dembrane.api.v2.auth import router as auth_router
 from dembrane.api.v2.orgs import router as orgs_router
 from dembrane.api.v2.admin import router as admin_router
-from dembrane.api.v2.admin_managed import router as admin_managed_router
 from dembrane.api.v2.billing import (
     router as billing_router,
     webhook_router as billing_webhook_router,
@@ -25,6 +24,7 @@ from dembrane.api.v2.bff.tags import (
     project_router as bff_projects_write_router,
 )
 from dembrane.api.v2.projects import router as projects_router
+from dembrane.api.v2.training import router as training_router
 from dembrane.api.v2.bff.chats import (
     router as bff_chats_router,
     message_router as bff_chat_message_router,
@@ -35,7 +35,9 @@ from dembrane.api.v2.bff.reports import (
     router as bff_reports_router,
     metric_router as bff_report_metric_router,
 )
+from dembrane.api.v2.admin_managed import router as admin_managed_router
 from dembrane.api.v2.notifications import router as notifications_router
+from dembrane.api.v2.admin_training import router as admin_training_router
 from dembrane.api.v2.invite_actions import router as invite_actions_router
 from dembrane.api.v2.access_requests import (
     router as access_requests_router,
@@ -49,8 +51,6 @@ from dembrane.api.v2.bff.conversations import (
 )
 from dembrane.api.v2.workspace_projects import router as workspace_projects_router
 from dembrane.api.v2.workspace_settings import router as workspace_settings_router
-from dembrane.api.v2.training import router as training_router
-from dembrane.api.v2.admin_training import router as admin_training_router
 
 v2_router = APIRouter()
 

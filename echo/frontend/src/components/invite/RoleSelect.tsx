@@ -31,26 +31,26 @@ export function RoleSelect({
 	const options = useMemo(() => {
 		const rows: { value: InviteRole; label: string; description: string }[] = [
 			{
-				value: "member",
-				label: t`Member`,
 				description: t`Standard access. Collaborates in the workspaces they're added to.`,
+				label: t`Member`,
+				value: "member",
 			},
 			{
-				value: "billing",
-				label: t`Billing`,
 				description: t`Sees usage and invoices. No project or content access.`,
+				label: t`Billing`,
+				value: "billing",
 			},
 			{
-				value: "admin",
-				label: t`Admin`,
 				description: t`Manages members, workspaces, and organisation settings.`,
+				label: t`Admin`,
+				value: "admin",
 			},
 		];
 		if (allowExternal) {
 			rows.push({
-				value: "external",
-				label: t`External`,
 				description: t`Workspace-only guest. Not added to the organisation.`,
+				label: t`External`,
+				value: "external",
 			});
 		}
 		// Funnel every option through the same hierarchy gate; levels come from lib/roles.ts (mirrors backend policies.py).
@@ -88,7 +88,12 @@ export function RoleSelect({
 				</Stack>
 			</Radio.Group>
 			{value === "external" && (
-				<Alert color="yellow" variant="light" p="xs" styles={{ wrapper: { alignItems: "center" } }}>
+				<Alert
+					color="yellow"
+					variant="light"
+					p="xs"
+					styles={{ wrapper: { alignItems: "center" } }}
+				>
 					<Text size="xs">
 						<Trans>
 							Externals are not added to your organisation. They can only see

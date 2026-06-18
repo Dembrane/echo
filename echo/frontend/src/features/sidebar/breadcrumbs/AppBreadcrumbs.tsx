@@ -38,7 +38,6 @@ const WORKSPACE_SETTINGS_LABELS: Record<string, string> = {
 
 const PROJECT_SECTION_LABELS: Record<string, string> = {
 	access: "Access",
-	usage: "Usage",
 	chats: "Ask",
 	conversation: "Conversation",
 	conversations: "Conversations",
@@ -52,6 +51,7 @@ const PROJECT_SECTION_LABELS: Record<string, string> = {
 	"portal-editor": "Portal editor",
 	report: "Report",
 	upload: "Upload",
+	usage: "Usage",
 };
 
 const USER_SETTINGS_LABELS: Record<string, string> = {
@@ -63,9 +63,9 @@ const USER_SETTINGS_LABELS: Record<string, string> = {
 
 const ORG_SECTION_LABELS: Record<string, string> = {
 	billing: "Billing",
+	members: "Members",
 	overview: "Overview",
 	people: "Members",
-	members: "Members",
 	"request-workspace": "Request workspace",
 	usage: "Usage",
 };
@@ -122,8 +122,8 @@ export const AppBreadcrumbs = () => {
 			case "inbox":
 			case "help":
 				return out;
-				case "user-home":
-					return out;
+			case "user-home":
+				return out;
 			case "user-settings": {
 				out.push({ href: "/settings/account", label: "User settings" });
 				const section = params.section;
@@ -165,18 +165,18 @@ export const AppBreadcrumbs = () => {
 				}
 				return out;
 			}
-				case "workspace-home": {
-					if (!workspace) return out;
-					pushWorkspaceCrumbs(workspace);
-					if (window.location.pathname.endsWith("/projects/new")) {
-						out.push({ label: "New project" });
-					}
-					const section = params.section;
-					if (section === "members") {
-						out.push({ label: "Members" });
-					}
-					return out;
+			case "workspace-home": {
+				if (!workspace) return out;
+				pushWorkspaceCrumbs(workspace);
+				if (window.location.pathname.endsWith("/projects/new")) {
+					out.push({ label: "New project" });
 				}
+				const section = params.section;
+				if (section === "members") {
+					out.push({ label: "Members" });
+				}
+				return out;
+			}
 			case "workspace-settings": {
 				if (workspace) {
 					pushWorkspaceCrumbs(workspace);
@@ -231,10 +231,10 @@ export const AppBreadcrumbs = () => {
 					});
 				}
 				out.push({ label: "Settings" });
-									const section = params.section;
-									if (section === "access") out.push({ label: "Access" });
-									else if (section === "usage") out.push({ label: "Usage" });
-									else if (section === "overview") out.push({ label: "General" });
+				const section = params.section;
+				if (section === "access") out.push({ label: "Access" });
+				else if (section === "usage") out.push({ label: "Usage" });
+				else if (section === "overview") out.push({ label: "General" });
 				else if (section === "integrations")
 					out.push({ label: "Integrations & Export" });
 				return out;

@@ -354,10 +354,10 @@ export function InviteModal({
 					else if (status === "already_invited") state = "already_invited";
 					return {
 						email: call.email,
+						inviteUrl: value.invite_url ?? null,
 						state,
 						workspaceId: call.workspaceId,
 						workspaceName: call.workspaceName,
-						inviteUrl: value.invite_url ?? null,
 					};
 				}
 				const err = res.reason as Error & { status?: number };

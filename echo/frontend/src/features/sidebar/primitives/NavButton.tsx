@@ -1,4 +1,8 @@
-import { ArrowUpRightIcon, CaretRightIcon, type Icon } from "@phosphor-icons/react";
+import {
+	ArrowUpRightIcon,
+	CaretRightIcon,
+	type Icon,
+} from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { BADGE_TONES } from "./NavItem";
 

@@ -1,15 +1,8 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	ActionIcon,
-	Box,
-	Group,
-	Stack,
-	Text,
-	TextInput,
-} from "@mantine/core";
+import { ActionIcon, Box, Group, Stack, Text, TextInput } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
-import { useState, type KeyboardEvent, type ChangeEvent } from "react";
+import { type ChangeEvent, type KeyboardEvent, useState } from "react";
 
 export interface EmailChip {
 	id: string;
@@ -29,22 +22,31 @@ interface Props {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SEPARATORS = /[\s,;]+/;
 
-function classify(value: string, selfEmail: string | null | undefined): EmailChip["state"] {
+function classify(
+	value: string,
+	selfEmail: string | null | undefined,
+): EmailChip["state"] {
 	const trimmed = value.trim().toLowerCase();
 	if (!EMAIL_RE.test(trimmed)) return "invalid";
 	if (selfEmail && trimmed === selfEmail.toLowerCase()) return "self";
 	return "valid";
 }
 
-function makeChip(value: string, selfEmail: string | null | undefined): EmailChip {
+function makeChip(
+	value: string,
+	selfEmail: string | null | undefined,
+): EmailChip {
 	return {
 		id: `${value}-${Math.random().toString(36).slice(2, 8)}`,
-		value: value.trim(),
 		state: classify(value, selfEmail),
+		value: value.trim(),
 	};
 }
 
-function dedupeAppend(existing: EmailChip[], additions: EmailChip[]): EmailChip[] {
+function dedupeAppend(
+	existing: EmailChip[],
+	additions: EmailChip[],
+): EmailChip[] {
 	const seen = new Set(existing.map((c) => c.value.toLowerCase()));
 	const out = [...existing];
 	for (const chip of additions) {
@@ -139,8 +141,8 @@ export function EmailChipsInput({
 			<Box
 				p={6}
 				style={{
-					borderRadius: 6,
 					border: "1px solid var(--mantine-color-gray-3)",
+					borderRadius: 6,
 					minHeight: 44,
 				}}
 			>
@@ -156,9 +158,7 @@ export function EmailChipsInput({
 					<TextInput
 						variant="unstyled"
 						placeholder={
-							chips.length === 0
-								? t`name@example.com, name2@example.com`
-								: ""
+							chips.length === 0 ? t`name@example.com, name2@example.com` : ""
 						}
 						value={draft}
 						onChange={handleChange}
@@ -201,11 +201,23 @@ function EmailChipPill({
 }) {
 	const baseTone =
 		chip.state === "valid"
-			? { bg: "var(--mantine-color-gray-1)", fg: "var(--mantine-color-gray-9)", border: "var(--mantine-color-gray-3)" }
-			: { bg: "var(--mantine-color-red-0)", fg: "var(--mantine-color-red-9)", border: "var(--mantine-color-red-3)" };
+			? {
+					bg: "var(--mantine-color-gray-1)",
+					border: "var(--mantine-color-gray-3)",
+					fg: "var(--mantine-color-gray-9)",
+				}
+			: {
+					bg: "var(--mantine-color-red-0)",
+					border: "var(--mantine-color-red-3)",
+					fg: "var(--mantine-color-red-9)",
+				};
 	// "Armed" highlight before second-Backspace delete.
 	const tone = highlighted
-		? { bg: "var(--mantine-primary-color-light)", fg: "var(--mantine-primary-color-filled)", border: "var(--mantine-primary-color-filled)" }
+		? {
+				bg: "var(--mantine-primary-color-light)",
+				border: "var(--mantine-primary-color-filled)",
+				fg: "var(--mantine-primary-color-filled)",
+			}
 		: baseTone;
 	const title =
 		chip.state === "self"

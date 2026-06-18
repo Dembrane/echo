@@ -9,8 +9,8 @@ import {
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
-import { IconChevronDown, IconLock, IconPlus } from "@tabler/icons-react";
 import { usePostHog } from "@posthog/react";
+import { IconChevronDown, IconLock, IconPlus } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
@@ -25,7 +25,9 @@ interface DiscoverableWorkspace {
 	member_count: number;
 }
 
-async function fetchDiscoverable(orgId: string): Promise<DiscoverableWorkspace[]> {
+async function fetchDiscoverable(
+	orgId: string,
+): Promise<DiscoverableWorkspace[]> {
 	const res = await fetch(
 		`${API_BASE_URL}/v2/orgs/${orgId}/discoverable-workspaces`,
 		{ credentials: "include" },
@@ -37,8 +39,8 @@ async function fetchDiscoverable(orgId: string): Promise<DiscoverableWorkspace[]
 
 async function postJoin(workspaceId: string) {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces/${workspaceId}/join`, {
-		method: "POST",
 		credentials: "include",
+		method: "POST",
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
@@ -50,7 +52,7 @@ async function postJoin(workspaceId: string) {
 async function postRequestAccess(workspaceId: string) {
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/access-requests`,
-		{ method: "POST", credentials: "include" },
+		{ credentials: "include", method: "POST" },
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
@@ -76,20 +78,24 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 	const [open, setOpen] = useState(false);
 
 	const { data, isLoading } = useQuery({
-		queryKey: ["v2", "discoverable-workspaces", orgId],
 		queryFn: () => fetchDiscoverable(orgId),
-		staleTime: 30_000,
+		queryKey: ["v2", "discoverable-workspaces", orgId],
 		// Privacy toggles elsewhere don't invalidate this query on other users'
 		// clients — refetch when the tab regains focus so lists catch up quickly.
 		refetchOnWindowFocus: "always",
+		staleTime: 30_000,
 	});
 
 	const joinable = (data ?? []).filter(
-		(w) => w.action === "join" || w.action === "request-access" || w.action === "pending",
+		(w) =>
+			w.action === "join" ||
+			w.action === "request-access" ||
+			w.action === "pending",
 	);
 
 	const joinMutation = useMutation({
 		mutationFn: postJoin,
+		onError: (error: Error) => toast.error(error.message),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({
@@ -100,25 +106,10 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 			});
 			toast.success(t`Joined`);
 		},
-		onError: (error: Error) => toast.error(error.message),
 	});
 
 	const requestMutation = useMutation({
 		mutationFn: postRequestAccess,
-		// Optimistic update: flip to "Requested" on click; rollback on error, refetch on settle.
-		onMutate: async (workspaceId) => {
-			const key = ["v2", "discoverable-workspaces", orgId] as const;
-			await queryClient.cancelQueries({ queryKey: key });
-			const previous = queryClient.getQueryData<DiscoverableWorkspace[]>(key);
-			queryClient.setQueryData<DiscoverableWorkspace[]>(key, (rows) =>
-				(rows ?? []).map((ws) =>
-					ws.id === workspaceId
-						? { ...ws, action: "pending" as const }
-						: ws,
-				),
-			);
-			return { previous };
-		},
 		onError: (error: Error, _workspaceId, ctx) => {
 			if (ctx?.previous) {
 				queryClient.setQueryData(
@@ -128,17 +119,29 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 			}
 			toast.error(error.message);
 		},
-		onSuccess: (_data, workspaceId) => {
-			posthog?.capture("workspace_access_requested", {
-				workspace_id: workspaceId,
-				org_id: orgId,
-			});
-			toast.success(t`Request sent`);
+		// Optimistic update: flip to "Requested" on click; rollback on error, refetch on settle.
+		onMutate: async (workspaceId) => {
+			const key = ["v2", "discoverable-workspaces", orgId] as const;
+			await queryClient.cancelQueries({ queryKey: key });
+			const previous = queryClient.getQueryData<DiscoverableWorkspace[]>(key);
+			queryClient.setQueryData<DiscoverableWorkspace[]>(key, (rows) =>
+				(rows ?? []).map((ws) =>
+					ws.id === workspaceId ? { ...ws, action: "pending" as const } : ws,
+				),
+			);
+			return { previous };
 		},
 		onSettled: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "discoverable-workspaces", orgId],
 			});
+		},
+		onSuccess: (_data, workspaceId) => {
+			posthog?.capture("workspace_access_requested", {
+				org_id: orgId,
+				workspace_id: workspaceId,
+			});
+			toast.success(t`Request sent`);
 		},
 	});
 
@@ -150,8 +153,8 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 				onClick={() => setOpen((v) => !v)}
 				aria-expanded={open}
 				style={{
-					display: "inline-flex",
 					alignItems: "center",
+					display: "inline-flex",
 					gap: 6,
 					padding: "2px 0",
 				}}
@@ -176,75 +179,74 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 				</Text>
 			</UnstyledButton>
 			<Collapse in={open}>
-			<Stack gap={6}>
-				{joinable.map((ws) => (
-					<Paper
-						key={ws.id}
-						p="sm"
-						radius="sm"
-						withBorder
-						style={{ background: "transparent" }}
-					>
-						<Group justify="space-between" wrap="nowrap">
-							<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-								{ws.visibility === "private" && (
-									<IconLock
-										size={14}
-										style={{ color: "var(--mantine-color-gray-6)" }}
-									/>
-								)}
-								<Text size="sm" lineClamp={1}>
-									{ws.name}
-								</Text>
-								{ws.visibility === "private" && (
+				<Stack gap={6}>
+					{joinable.map((ws) => (
+						<Paper
+							key={ws.id}
+							p="sm"
+							radius="sm"
+							withBorder
+							style={{ background: "transparent" }}
+						>
+							<Group justify="space-between" wrap="nowrap">
+								<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+									{ws.visibility === "private" && (
+										<IconLock
+											size={14}
+											style={{ color: "var(--mantine-color-gray-6)" }}
+										/>
+									)}
+									<Text size="sm" lineClamp={1}>
+										{ws.name}
+									</Text>
+									{ws.visibility === "private" && (
+										<Text size="xs" c="dimmed">
+											<Trans>Private</Trans>
+										</Text>
+									)}
 									<Text size="xs" c="dimmed">
-										<Trans>Private</Trans>
+										<Plural
+											value={ws.member_count}
+											one="# member"
+											other="# members"
+										/>
+									</Text>
+								</Group>
+								{ws.action === "join" && (
+									<Button
+										size="compact-xs"
+										variant="outline"
+										leftSection={<IconPlus size={12} />}
+										loading={
+											joinMutation.isPending && joinMutation.variables === ws.id
+										}
+										onClick={() => joinMutation.mutate(ws.id)}
+									>
+										<Trans>Join</Trans>
+									</Button>
+								)}
+								{ws.action === "request-access" && (
+									<Button
+										size="compact-xs"
+										variant="outline"
+										loading={
+											requestMutation.isPending &&
+											requestMutation.variables === ws.id
+										}
+										onClick={() => requestMutation.mutate(ws.id)}
+									>
+										<Trans>Request access</Trans>
+									</Button>
+								)}
+								{ws.action === "pending" && (
+									<Text size="xs" c="dimmed" fs="italic">
+										<Trans>Request sent</Trans>
 									</Text>
 								)}
-								<Text size="xs" c="dimmed">
-									<Plural
-										value={ws.member_count}
-										one="# member"
-										other="# members"
-									/>
-								</Text>
 							</Group>
-							{ws.action === "join" && (
-								<Button
-									size="compact-xs"
-									variant="outline"
-									leftSection={<IconPlus size={12} />}
-									loading={
-										joinMutation.isPending &&
-										joinMutation.variables === ws.id
-									}
-									onClick={() => joinMutation.mutate(ws.id)}
-								>
-									<Trans>Join</Trans>
-								</Button>
-							)}
-							{ws.action === "request-access" && (
-								<Button
-									size="compact-xs"
-									variant="outline"
-									loading={
-										requestMutation.isPending &&
-										requestMutation.variables === ws.id
-									}
-									onClick={() => requestMutation.mutate(ws.id)}
-								>
-									<Trans>Request access</Trans>
-								</Button>
-							)}
-							{ws.action === "pending" && (
-								<Text size="xs" c="dimmed" fs="italic">
-									<Trans>Request sent</Trans>
-								</Text>
-							)}
-						</Group>
-					</Paper>
-				))}
-			</Stack>
+						</Paper>
+					))}
+				</Stack>
 			</Collapse>
 		</Stack>
 	);

@@ -18,8 +18,8 @@ All Directus access goes through async_directus. Money is EUR.
 from __future__ import annotations
 
 from typing import Optional
-from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
+from dataclasses import dataclass
 
 from dembrane.utils import generate_uuid
 from dembrane.directus_async import async_directus

@@ -21,7 +21,11 @@ export const OrgSettingsView = () => {
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
-			<BackButton to={`/o/${orgId}/overview`} label={<Trans>Settings</Trans>} center />
+			<BackButton
+				to={`/o/${orgId}/overview`}
+				label={<Trans>Settings</Trans>}
+				center
+			/>
 			<NavItem
 				to={`/o/${orgId}/settings/general`}
 				label={<Trans>General</Trans>}
@@ -34,13 +38,13 @@ export const OrgSettingsView = () => {
 					icon={ChartLineIcon}
 				/>
 			)}
-				{canSeeFinancials && (
-					<NavItem
-						to={`/o/${orgId}/settings/billing`}
-						label={<Trans>Billing</Trans>}
-						icon={CreditCardIcon}
-					/>
-				)}
+			{canSeeFinancials && (
+				<NavItem
+					to={`/o/${orgId}/settings/billing`}
+					label={<Trans>Billing</Trans>}
+					icon={CreditCardIcon}
+				/>
+			)}
 		</nav>
 	);
 };

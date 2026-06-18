@@ -28,13 +28,13 @@ from dembrane import mollie
 from dembrane.settings import get_settings
 from dembrane.seat_capacity import compute_effective_seat_state
 from dembrane.tier_capacity import get_capacity
+from dembrane.directus_async import async_directus
 from dembrane.billing_service import (
     BillingError,
     apply_discount,
     count_account_seats,
     _per_interval_amount,
 )
-from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
@@ -1482,7 +1482,7 @@ class PaymentsRollupResponse(BaseModel):
     rows: list[PaymentRow]
 
 
-def _payment_dashboard_url(payment: dict, *, test_mode: bool) -> Optional[str]:
+def _payment_dashboard_url(payment: dict) -> Optional[str]:
     """Mollie embeds a dashboard link in `_links.dashboard.href` on each
     payment. Prefer it; fall back to None (the response carries the index URL)."""
     href = (((payment or {}).get("_links") or {}).get("dashboard") or {}).get("href")
@@ -1584,7 +1584,7 @@ async def payments_rollup(
                         sequence_type=p.get("sequenceType"),
                         method=p.get("method"),
                         description=p.get("description") or "",
-                        dashboard_url=_payment_dashboard_url(p, test_mode=test_mode),
+                        dashboard_url=_payment_dashboard_url(p),
                     )
                 )
 

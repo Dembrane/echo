@@ -13,8 +13,8 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { usePostHog } from "@posthog/react";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
@@ -48,7 +48,7 @@ async function postAction(
 ) {
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/access-requests/${reqId}/${action}`,
-		{ method: "POST", credentials: "include" },
+		{ credentials: "include", method: "POST" },
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
@@ -76,45 +76,49 @@ export const AccessRequestsList = ({
 	const posthog = usePostHog();
 
 	const { data } = useQuery({
-		queryKey: ["v2", "access-requests", workspaceId],
 		queryFn: () => fetchRequests(workspaceId),
+		queryKey: ["v2", "access-requests", workspaceId],
 		staleTime: 15_000,
 	});
 
 	const rows = data ?? [];
 
 	const invalidateAll = () => {
-		queryClient.invalidateQueries({ queryKey: ["v2", "access-requests", workspaceId] });
-		queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings", workspaceId] });
+		queryClient.invalidateQueries({
+			queryKey: ["v2", "access-requests", workspaceId],
+		});
+		queryClient.invalidateQueries({
+			queryKey: ["v2", "workspace-settings", workspaceId],
+		});
 		queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 	};
 
 	const approveMutation = useMutation({
 		mutationFn: (reqId: string) => postAction(workspaceId, reqId, "approve"),
+		onError: (e: Error) => toast.error(e.message),
 		onSuccess: (_data, reqId) => {
 			posthog?.capture("workspace_access_actioned", {
 				action: "approved",
-				request_id: reqId,
 				actioned_by_role: actionedByRole,
+				request_id: reqId,
 			});
 			toast.success(t`Request approved`);
 			invalidateAll();
 		},
-		onError: (e: Error) => toast.error(e.message),
 	});
 
 	const rejectMutation = useMutation({
 		mutationFn: (reqId: string) => postAction(workspaceId, reqId, "reject"),
+		onError: (e: Error) => toast.error(e.message),
 		onSuccess: (_data, reqId) => {
 			posthog?.capture("workspace_access_actioned", {
 				action: "rejected",
-				request_id: reqId,
 				actioned_by_role: actionedByRole,
+				request_id: reqId,
 			});
 			toast.success(t`Request declined`);
 			invalidateAll();
 		},
-		onError: (e: Error) => toast.error(e.message),
 	});
 
 	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
@@ -143,7 +147,9 @@ export const AccessRequestsList = ({
 							<Group justify="space-between" wrap="nowrap">
 								<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
 									<Text size="sm" lineClamp={1}>
-										{r.user_display_name || r.user_email || t`Organisation member`}
+										{r.user_display_name ||
+											r.user_email ||
+											t`Organisation member`}
 									</Text>
 									{r.user_email && r.user_display_name && (
 										<Tooltip label={r.user_email}>

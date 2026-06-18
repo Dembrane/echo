@@ -24,8 +24,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
 from dembrane.utils import generate_uuid
-from dembrane.settings import get_settings
 from dembrane.app_user import get_app_user_or_raise
+from dembrane.settings import get_settings
 from dembrane.directus_async import async_directus
 from dembrane.training_service import (
     CATALOG,
@@ -302,7 +302,7 @@ async def request_training(
 
     # Notify staff in-product (inbox) — best-effort, never fails the request.
     try:
-        from dembrane.notifications import emit_to_audience, audience_staff
+        from dembrane.notifications import audience_staff, emit_to_audience
 
         staff_ids = await audience_staff()
         await emit_to_audience(
