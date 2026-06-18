@@ -25,7 +25,6 @@ from datetime import datetime, timezone, timedelta
 
 from dembrane import mollie
 from dembrane.settings import get_settings
-from dembrane.seat_capacity import compute_effective_seat_state
 from dembrane.tier_capacity import (
     PURCHASABLE_TIERS,
     get_capacity,
@@ -40,8 +39,29 @@ class BillingError(RuntimeError):
     pass
 
 
+def apply_discount(amount: float, percent_discount: int | None) -> float:
+    """Reduce `amount` by `percent_discount` (0..100), rounded to cents.
+
+    The single source of truth for "a discount lowers a price". Used for the
+    live Mollie charge, the prorated one-off, every customer-facing figure, and
+    the admin forecast — so the amount displayed always equals the amount Mollie
+    charges (seat-integrity invariant). A null/zero/out-of-range discount is a
+    no-op; 100% floors to 0."""
+    if not percent_discount:
+        return round(amount, 2)
+    pct = max(0, min(int(percent_discount), 100))
+    return round(amount * (1 - pct / 100), 2)
+
+
 async def count_account_seats(account_id: str) -> int:
-    """Total billable seats across every workspace the account covers."""
+    """Total billable seats across every workspace the account covers.
+
+    Pooled-seat model (ADR 0005): a seat is a *distinct user* under the account,
+    not a per-workspace membership. Someone who is an active member of three
+    workspaces on the same account is one billable seat, not three. So a user
+    who already has a seat anywhere under the account adding/creating another
+    workspace is €0 net-new. We dedupe user ids across every workspace before
+    counting."""
     workspaces = await async_directus.get_items(
         "workspace",
         {
@@ -57,11 +77,32 @@ async def count_account_seats(account_id: str) -> int:
     )
     if not isinstance(workspaces, list):
         return 0
-    total = 0
+    seat_users: set[str] = set()
     for ws in workspaces:
-        seats_used, _m, _e = await compute_effective_seat_state(ws["id"])
-        total += seats_used
-    return total
+        users = await _seat_user_ids(ws["id"])
+        seat_users.update(users)
+    return len(seat_users)
+
+
+async def _seat_user_ids(workspace_id: str) -> set[str]:
+    """Distinct user ids occupying a seat on one workspace (direct members +
+    externals; derived oversight access doesn't count). Mirrors
+    compute_effective_seat_state's counting rule but returns the ids so the
+    account can pool them across workspaces."""
+    from dembrane.inheritance import get_effective_members
+    from dembrane.seat_capacity import _SEAT_ROLES
+
+    members = await get_effective_members(workspace_id)
+    seat_users: set[str] = set()
+    for m in members:
+        if m.get("source") != "direct":
+            continue
+        uid = m.get("user_id")
+        if not uid:
+            continue
+        if (m.get("role") or "") in _SEAT_ROLES:
+            seat_users.add(uid)
+    return seat_users
 
 
 def _plan_description(tier: str, seats: int, billing_period: str) -> str:
@@ -138,8 +179,11 @@ async def get_billing_overview(account_id: str) -> dict:
     seats = max(await count_account_seats(account_id), 1)
     customer_id = account.get("mollie_customer_id")
     sub_id = account.get("mollie_subscription_id")
+    percent_discount = account.get("percent_discount")
 
-    # Projected monthly total at the current tier + cadence.
+    # Projected monthly total at the current tier + cadence, net of any account
+    # discount. per_seat is shown at sticker (the "before discount" rate); the
+    # projected total carries the discount so it matches the actual charge.
     projected_monthly_eur: float | None = None
     per_seat_monthly_eur: float | None = None
     cap = get_capacity(tier)
@@ -149,7 +193,7 @@ async def get_billing_overview(account_id: str) -> dict:
             if billing_period == "monthly"
             else cap.price_eur_monthly
         )
-        projected_monthly_eur = round(per_seat_monthly_eur * seats, 2)
+        projected_monthly_eur = apply_discount(per_seat_monthly_eur * seats, percent_discount)
 
     # Next invoice + payment method come from Mollie (best-effort).
     next_invoice = None
@@ -165,7 +209,9 @@ async def get_billing_overview(account_id: str) -> dict:
             # already computed live, so this keeps the two consistent. Date and
             # currency still come from Mollie.
             try:
-                renewal_eur, _interval = _per_interval_amount(tier, seats, billing_period)
+                renewal_eur, _interval = _per_interval_amount(
+                    tier, seats, billing_period, percent_discount
+                )
                 amount_value = f"{renewal_eur:.2f}"
             except BillingError:
                 amount_value = amt.get("value")
@@ -202,6 +248,10 @@ async def get_billing_overview(account_id: str) -> dict:
         "projected_monthly_eur": projected_monthly_eur,
         "per_seat_monthly_eur": per_seat_monthly_eur,
         "payment_method": payment_method,
+        # Surfaced so the customer sees the discount that's already baked into
+        # projected_monthly_eur + next_invoice (not a second deduction).
+        "percent_discount": percent_discount or None,
+        "type_discount": account.get("type_discount"),
     }
 
 
@@ -228,18 +278,25 @@ async def estimate_account_cost(account_id: str) -> dict:
     return {"seats": seats, "tiers": tiers}
 
 
-def _per_interval_amount(tier: str, seats: int, billing_period: str) -> tuple[float, str]:
-    """(amount_eur, interval) for the subscription. Annual bills 12x the annual
-    per-seat rate once a year; monthly bills the +20% rate each month."""
+def _per_interval_amount(
+    tier: str, seats: int, billing_period: str, percent_discount: int | None = None
+) -> tuple[float, str]:
+    """(amount_eur, interval) for the subscription, net of any account discount.
+
+    Annual bills 12x the annual per-seat rate once a year; monthly bills the
+    +20% rate each month. `percent_discount` reduces the amount by
+    `(1 - percent_discount/100)` so the figure here is exactly what Mollie
+    charges and what we display (seat-integrity invariant). Pass the account's
+    `percent_discount`; None/0 is full price."""
     cap = get_capacity(tier)
     if cap is None or cap.price_eur_monthly is None:
         raise BillingError(f"tier {tier} is not payable")
     seats = max(seats, 1)
     if billing_period == "monthly":
         per_seat = compute_monthly_billing_price(cap.price_eur_monthly)
-        return round(per_seat * seats, 2), "1 month"
+        return apply_discount(per_seat * seats, percent_discount), "1 month"
     # annual: pay 12 months of the annual per-seat rate, once per year
-    return round(cap.price_eur_monthly * 12 * seats, 2), "12 months"
+    return apply_discount(cap.price_eur_monthly * 12 * seats, percent_discount), "12 months"
 
 
 async def _billing_contact(account: dict) -> tuple[str, str]:
@@ -302,7 +359,9 @@ async def start_subscription_checkout(
         raise BillingError("billing account not found")
 
     seats = await count_account_seats(account_id)
-    amount, interval = _per_interval_amount(tier, seats, billing_period)
+    amount, interval = _per_interval_amount(
+        tier, seats, billing_period, account.get("percent_discount")
+    )
 
     customer_id = await _ensure_customer(account)
     payment = await mollie.create_first_payment(
@@ -425,7 +484,9 @@ async def sync_subscription_seats(account_id: str) -> float | None:
     billing_period = account.get("billing_period") or "annual"
     seats = max(await count_account_seats(account_id), 1)
     try:
-        amount, _interval = _per_interval_amount(tier, seats, billing_period)
+        amount, _interval = _per_interval_amount(
+            tier, seats, billing_period, account.get("percent_discount")
+        )
     except BillingError:
         return None
 
@@ -530,7 +591,9 @@ async def _charge_seat_proration(account: dict, added_seats: int) -> float | Non
     if fraction <= 0:
         return None
     try:
-        full_added, _interval = _per_interval_amount(tier, added_seats, billing_period)
+        full_added, _interval = _per_interval_amount(
+            tier, added_seats, billing_period, account.get("percent_discount")
+        )
     except BillingError:
         return None
     prorated = round(full_added * fraction, 2)
@@ -643,7 +706,9 @@ async def estimate_seat_addition(account_id: str, added_seats: int = 1) -> dict:
     if not tier or tier == "free" or not account.get("mollie_subscription_id"):
         return result
     try:
-        full_added, _interval = _per_interval_amount(tier, added_seats, billing_period)
+        full_added, _interval = _per_interval_amount(
+            tier, added_seats, billing_period, account.get("percent_discount")
+        )
     except BillingError:
         return result
     fraction = await _period_fraction_remaining(account)

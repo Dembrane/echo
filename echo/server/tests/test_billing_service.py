@@ -324,4 +324,224 @@ class TestWebhookActivation:
         mock_directus.update_item = AsyncMock()
 
         await handle_mollie_webhook("tr_x")
+
+
+class TestApplyDiscount:
+    def test_none_and_zero_are_noops(self):
+        from dembrane.billing_service import apply_discount
+
+        assert apply_discount(900.0, None) == 900.0
+        assert apply_discount(900.0, 0) == 900.0
+
+    def test_percent_reduces_and_rounds(self):
+        from dembrane.billing_service import apply_discount
+
+        assert apply_discount(900.0, 10) == 810.0
+        assert apply_discount(75.0, 33) == 50.25
+
+    def test_hundred_floors_to_zero(self):
+        from dembrane.billing_service import apply_discount
+
+        assert apply_discount(900.0, 100) == 0.0
+
+    def test_out_of_range_is_clamped(self):
+        from dembrane.billing_service import apply_discount
+
+        assert apply_discount(900.0, 150) == 0.0  # clamps to 100%
+        assert apply_discount(900.0, -10) == 900.0  # clamps to 0%
+
+
+class TestPerIntervalDiscount:
+    def test_annual_discounted(self):
+        from dembrane.billing_service import _per_interval_amount
+
+        full, interval = _per_interval_amount("changemaker", 2, "annual")
+        disc, _ = _per_interval_amount("changemaker", 2, "annual", 25)
+        assert full == 75 * 12 * 2  # 1800
+        assert disc == 1350.0  # 1800 * 0.75
+        assert interval == "12 months"
+
+    def test_monthly_discounted(self):
+        from dembrane.billing_service import _per_interval_amount
+
+        disc, _ = _per_interval_amount("changemaker", 1, "monthly", 50)
+        # monthly per-seat = round(75*1.2)=90; *1 seat; *0.5 = 45
+        assert disc == 45.0
+
+
+class TestSyncSubscriptionSeatsDiscount:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.count_account_seats", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    async def test_repriced_amount_is_discounted(
+        self, mock_mollie, mock_directus, mock_seats
+    ):
+        from dembrane.billing_service import sync_subscription_seats
+
+        mock_seats.return_value = 2
+        mock_directus.get_item = AsyncMock(
+            return_value={
+                "id": "acc-1",
+                "status": "active",
+                "tier": "changemaker",
+                "billing_period": "annual",
+                "mollie_subscription_id": "sub_1",
+                "mollie_customer_id": "cst_1",
+                "percent_discount": 25,
+            }
+        )
+        mock_mollie.MollieError = Exception
+        # Mollie currently shows the old undiscounted amount, forcing a PATCH.
+        mock_mollie.get_subscription = AsyncMock(
+            return_value={"amount": {"value": "1800.00"}}
+        )
+        mock_mollie.update_subscription_amount = AsyncMock()
+
+        amount = await sync_subscription_seats("acc-1")
+
+        # 75 * 12 * 2 = 1800, discounted 25% -> 1350. This is the LIVE Mollie charge.
+        assert amount == 1350.0
+        mock_mollie.update_subscription_amount.assert_awaited_once_with(
+            customer_id="cst_1", subscription_id="sub_1", amount_eur=1350.0
+        )
+
+
+class TestChargeProrationDiscount:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service._period_fraction_remaining", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.mollie")
+    async def test_prorated_one_off_is_discounted(self, mock_mollie, mock_fraction):
+        from dembrane.billing_service import _charge_seat_proration
+
+        mock_fraction.return_value = 0.5  # half the period remaining
+        mock_mollie.MollieError = Exception
+        mock_mollie.list_mandates = AsyncMock(
+            return_value=[{"id": "mdt_1", "status": "valid"}]
+        )
+        mock_mollie.create_recurring_payment = AsyncMock()
+
+        account = {
+            "id": "acc-1",
+            "tier": "changemaker",
+            "mollie_customer_id": "cst_1",
+            "billing_period": "annual",
+            "percent_discount": 20,
+        }
+        charged = await _charge_seat_proration(account, added_seats=1)
+
+        # full added = 75*12 = 900, discounted 20% -> 720, prorated *0.5 -> 360.
+        assert charged == 360.0
+        _, kwargs = mock_mollie.create_recurring_payment.call_args
+        assert kwargs["amount_eur"] == 360.0
+
+
+class TestEstimateSeatAdditionDiscount:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service._period_fraction_remaining", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    async def test_estimate_carries_discount(self, mock_directus, mock_fraction):
+        from dembrane.billing_service import estimate_seat_addition
+
+        mock_fraction.return_value = 1.0
+        mock_directus.get_item = AsyncMock(
+            return_value={
+                "id": "acc-1",
+                "status": "active",
+                "tier": "changemaker",
+                "billing_period": "annual",
+                "mollie_subscription_id": "sub_1",
+                "percent_discount": 10,
+            }
+        )
+        out = await estimate_seat_addition("acc-1", 1)
+        assert out["active"] is True
+        # 900 * 0.9 = 810
+        assert out["recurring_delta_eur"] == 810.0
+        assert out["prorated_now_eur"] == 810.0
+
+
+class TestBillingOverviewDiscount:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.count_account_seats", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    async def test_projected_and_next_invoice_discounted(
+        self, mock_mollie, mock_directus, mock_seats
+    ):
+        from dembrane.billing_service import get_billing_overview
+
+        mock_seats.return_value = 2
+        mock_directus.get_item = AsyncMock(
+            return_value={
+                "id": "acc-1",
+                "tier": "changemaker",
+                "billing_period": "annual",
+                "status": "active",
+                "mollie_customer_id": "cst_1",
+                "mollie_subscription_id": "sub_1",
+                "percent_discount": 25,
+            }
+        )
+        mock_mollie.MollieError = Exception
+        mock_mollie.get_subscription = AsyncMock(
+            return_value={
+                "amount": {"value": "1800.00", "currency": "EUR"},
+                "nextPaymentDate": "2026-12-01",
+            }
+        )
+        mock_mollie.list_mandates = AsyncMock(return_value=[])
+
+        out = await get_billing_overview("acc-1")
+
+        # projected_monthly: 75/seat * 2 = 150, discounted 25% -> 112.5
+        assert out["projected_monthly_eur"] == 112.5
+        # per_seat stays at sticker (75); discount carried on the totals.
+        assert out["per_seat_monthly_eur"] == 75
+        # next invoice (annual renewal) = 1800 discounted -> 1350.00, displayed.
+        assert out["next_invoice"]["amount"] == "1350.00"
+        assert out["percent_discount"] == 25
+
+
+class TestCountAccountSeatsPooled:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service._seat_user_ids", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    async def test_same_user_across_workspaces_counts_once(
+        self, mock_directus, mock_seat_users
+    ):
+        from dembrane.billing_service import count_account_seats
+
+        mock_directus.get_items = AsyncMock(
+            return_value=[{"id": "ws-1"}, {"id": "ws-2"}]
+        )
+        # u1 is a member of BOTH workspaces; u2 only of ws-2.
+        mock_seat_users.side_effect = [
+            {"u1"},  # ws-1
+            {"u1", "u2"},  # ws-2
+        ]
+        total = await count_account_seats("acc-1")
+        # Pooled: distinct users {u1, u2} = 2, NOT 1 + 2 = 3.
+        assert total == 2
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service._seat_user_ids", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    async def test_existing_member_new_workspace_is_zero_net_new(
+        self, mock_directus, mock_seat_users
+    ):
+        """Tester bug #4: an existing member creating a new workspace adds €0.
+
+        Before the new workspace, the account had {u1}. The new workspace adds
+        u1 as owner. Pooled count stays 1 -> net-new 0 -> reconcile charges
+        nothing."""
+        from dembrane.billing_service import count_account_seats
+
+        # Two workspaces now exist; u1 owns both.
+        mock_directus.get_items = AsyncMock(
+            return_value=[{"id": "ws-existing"}, {"id": "ws-new"}]
+        )
+        mock_seat_users.side_effect = [{"u1"}, {"u1"}]
+        total = await count_account_seats("acc-1")
+        assert total == 1  # was 1 before the new workspace; unchanged.
         mock_directus.update_item.assert_not_called()

@@ -38,6 +38,20 @@ export function isComingSoon(tier: string | null | undefined): boolean {
 	return !!tier && (COMING_SOON_TIERS as string[]).includes(tier);
 }
 
+// Tiers a customer can actually buy today: visible and not coming-soon. Mirrors
+// PURCHASABLE_TIERS in server/dembrane/tier_capacity.py. When this has fewer
+// than two entries there is no plan to switch to, so the "change plan"
+// affordance hides itself (it auto-restores once a second tier goes live).
+export const PURCHASABLE_TIERS: Tier[] = VISIBLE_TIERS.filter(
+	(tier) => !isComingSoon(tier),
+);
+
+// True when more than one tier is purchasable, i.e. switching plans is a real
+// choice. Drives the "change plan" button visibility in BillingManager.
+export function hasMultiplePurchasableTiers(): boolean {
+	return PURCHASABLE_TIERS.length > 1;
+}
+
 // Recently launched: render a "New" badge. None currently.
 export const NEW_TIERS: Tier[] = [];
 

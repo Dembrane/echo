@@ -26,7 +26,12 @@ import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle"
 import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { type BillingPeriod, isComingSoon, SELLABLE_TIER } from "@/lib/tiers";
+import {
+	type BillingPeriod,
+	hasMultiplePurchasableTiers,
+	isComingSoon,
+	SELLABLE_TIER,
+} from "@/lib/tiers";
 
 export function tierLabel(tier: string | null | undefined): string {
 	if (!tier) return "";
@@ -56,6 +61,9 @@ interface Overview {
 	projected_monthly_eur: number | null;
 	per_seat_monthly_eur: number | null;
 	payment_method: PaymentMethod | null;
+	/** Discount already baked into projected_monthly_eur + next_invoice. */
+	percent_discount: number | null;
+	type_discount: string | null;
 }
 
 interface Invoice {
@@ -609,7 +617,10 @@ export function BillingManager({
 				<SectionRow
 					label={t`Current plan`}
 					action={
-						isCanceling ? undefined : (
+						// Hide "Change plan" when there's nothing to switch to: with a
+						// single purchasable tier there's no other plan to pick. Auto-
+						// restores once a second tier becomes sellable.
+						isCanceling || !hasMultiplePurchasableTiers() ? undefined : (
 							<Button size="xs" variant="subtle" onClick={openPlan}>
 								<Trans>Change plan</Trans>
 							</Button>
@@ -711,6 +722,12 @@ export function BillingManager({
 						}
 					>
 						<Text size="sm">{eur(totalValue)}</Text>
+						{overview.percent_discount != null &&
+							overview.percent_discount > 0 && (
+								<Text size="xs" c="primary">
+									<Trans>{overview.percent_discount}% discount applied</Trans>
+								</Text>
+							)}
 						{overview.per_seat_monthly_eur != null && (
 							<Text size="xs">
 								{isCanceling ? (

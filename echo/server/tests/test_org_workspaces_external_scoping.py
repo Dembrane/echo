@@ -76,6 +76,17 @@ async def test_external_only_caller_sees_only_direct_workspaces():
         patch("dembrane.api.v2.orgs.get_app_user_or_raise", AsyncMock(return_value=_APP_USER)),
         patch("dembrane.api.v2.orgs.is_org_external_only", AsyncMock(return_value=True)),
         patch("dembrane.api.v2.orgs.get_capacity", lambda *_a, **_k: None),
+        # Seat usage is computed for every workspace now (so paid tiers don't
+        # show "0 seats"); stub the seat helpers so this scoping test stays
+        # data-layer independent.
+        patch(
+            "dembrane.api.v2.orgs.compute_effective_seat_state",
+            AsyncMock(return_value=(0, 0, 0)),
+        ),
+        patch(
+            "dembrane.seat_capacity.count_pending_invites",
+            AsyncMock(return_value=(0, 0)),
+        ),
     ):
         app = _build_app()
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -93,6 +104,14 @@ async def test_real_member_still_sees_full_list():
         patch("dembrane.api.v2.orgs.get_app_user_or_raise", AsyncMock(return_value=_APP_USER)),
         patch("dembrane.api.v2.orgs.is_org_external_only", AsyncMock(return_value=False)),
         patch("dembrane.api.v2.orgs.get_capacity", lambda *_a, **_k: None),
+        patch(
+            "dembrane.api.v2.orgs.compute_effective_seat_state",
+            AsyncMock(return_value=(0, 0, 0)),
+        ),
+        patch(
+            "dembrane.seat_capacity.count_pending_invites",
+            AsyncMock(return_value=(0, 0)),
+        ),
     ):
         app = _build_app()
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -100,3 +119,38 @@ async def test_real_member_still_sees_full_list():
     assert res.status_code == 200
     ids = sorted(w["id"] for w in res.json())
     assert ids == ["ws-mine", "ws-other"]
+
+
+@pytest.mark.asyncio
+async def test_paid_tier_reports_live_seat_count():
+    """Tester bug #6: paid (uncapped) workspaces must report their real seat
+    usage, not 0. Before the fix the seat block only ran for capped tiers
+    (Free), so guardian/changemaker always returned seats_used=0 and the invite
+    modal showed '0 seats'. seat_cap stays null on an unlimited tier."""
+    mock = _mock()
+    with (
+        patch("dembrane.api.v2.orgs.async_directus", mock),
+        patch("dembrane.api.v2.orgs.get_app_user_or_raise", AsyncMock(return_value=_APP_USER)),
+        patch("dembrane.api.v2.orgs.is_org_external_only", AsyncMock(return_value=False)),
+        # Real capacity lookup: guardian has included_seats=None (unlimited).
+        patch(
+            "dembrane.api.v2.orgs.compute_effective_seat_state",
+            AsyncMock(return_value=(4, 3, 1)),
+        ),
+        patch(
+            "dembrane.seat_capacity.count_pending_invites",
+            AsyncMock(return_value=(1, 0)),
+        ),
+    ):
+        app = _build_app()
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            res = await client.get(f"/v2/orgs/{_ORG_ID}/workspaces")
+    assert res.status_code == 200
+    rows = res.json()
+    assert rows, "expected at least one workspace"
+    for row in rows:
+        # 4 effective seats + 1 pending = 5; NOT 0.
+        assert row["seats_used_including_pending"] == 5
+        # Unlimited tier -> no denominator.
+        assert row["seat_cap"] is None
+        assert row["seat_invite_blocked"] is False

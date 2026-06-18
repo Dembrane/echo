@@ -1624,30 +1624,31 @@ async def list_organisation_workspaces(
         if is_org_member and is_private and not caller_is_manager:
             continue
 
-        # Cap-blocked flags. Compute lazily — only call get_effective_members
-        # when the tier has finite caps, since the whole point of the wizard
-        # disabling cards is hard-block tiers (Pilot) and finite guest caps.
-        # Skip for Guardian (unlimited) and unknown tiers. Counts pending
-        # workspace_invite rows on top of effective members so the wizard
-        # disables a card the moment outstanding invites have saturated
-        # the cap, not only after they're accepted.
+        # Seat usage drives the per-row "N seats" / "N/M seats" display in the
+        # invite modal. Compute it for EVERY tier — paid tiers have no cap
+        # (included_seats=None) but still occupy seats, and showing "0 seats" on
+        # a populated paid workspace reads as a bug. seat_cap stays None on
+        # unlimited tiers (UI shows "N seats" without a denominator). Pending
+        # workspace_invite rows count on top so the wizard disables a card the
+        # moment outstanding invites saturate a hard-cap tier.
+        from dembrane.seat_capacity import count_pending_invites
+
         tier = (ws.get("tier") or "").lower()
         cap = get_capacity(tier)
         seat_blocked = False
-        seats_used_total: int = 0
-        seat_cap_value: int | None = None
-        if cap is not None and cap.included_seats is not None:
-            from dembrane.seat_capacity import count_pending_invites
-
-            seats_used, _member_count, _external_count = await compute_effective_seat_state(
-                ws["id"]
-            )
-            member_pending, external_pending = await count_pending_invites(ws["id"])
-            total_pending = member_pending + external_pending
-            seats_used_total = seats_used + total_pending
-            seat_cap_value = cap.included_seats
-            if tier_hard_blocks_seats(tier) and seats_used_total >= cap.included_seats:
-                seat_blocked = True
+        seats_used, _member_count, _external_count = await compute_effective_seat_state(
+            ws["id"]
+        )
+        member_pending, external_pending = await count_pending_invites(ws["id"])
+        total_pending = member_pending + external_pending
+        seats_used_total = seats_used + total_pending
+        seat_cap_value: int | None = cap.included_seats if cap is not None else None
+        if (
+            seat_cap_value is not None
+            and tier_hard_blocks_seats(tier)
+            and seats_used_total >= seat_cap_value
+        ):
+            seat_blocked = True
 
         out.append(
             OrgWorkspaceSummary(

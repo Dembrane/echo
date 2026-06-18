@@ -373,19 +373,19 @@ msgstr "{0}"
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:722
+#: src/components/billing/BillingManager.tsx:739
 msgid "{0} / seat / month × {1}, billed yearly. Excludes VAT."
 msgstr ""
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:727
+#: src/components/billing/BillingManager.tsx:744
 msgid "{0} / seat × {1}. Excludes VAT."
 msgstr ""
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:717
+#: src/components/billing/BillingManager.tsx:734
 msgid "{0} / seat × {1}. Not charged after this period."
 msgstr ""
 
@@ -455,7 +455,7 @@ msgstr "{0} nicht hinzugefügt"
 #. placeholder {0}: ws.seats_used_including_pending
 #. placeholder {0}: overview.seats
 #: src/components/invite/WorkspaceSelectList.tsx:126
-#: src/components/billing/BillingManager.tsx:654
+#: src/components/billing/BillingManager.tsx:665
 msgid "{0} seats"
 msgstr ""
 
@@ -491,6 +491,11 @@ msgstr ""
 #. placeholder {1}: row.workspace_id.slice(0, 8)
 #: src/routes/admin/AdminSettingsRoute.tsx:543
 msgid "{0}, workspace id {1}"
+msgstr ""
+
+#. placeholder {0}: overview.percent_discount
+#: src/components/billing/BillingManager.tsx:728
+msgid "{0}% discount applied"
 msgstr ""
 
 #: src/components/project/ProjectUsageAndSharing.tsx:226
@@ -643,11 +648,11 @@ msgstr "*Transkription wird durchgeführt.*"
 msgid "/seat/mo"
 msgstr ""
 
-#: src/lib/tiers.ts:216
+#: src/lib/tiers.ts:230
 msgid "/seat/mo · billed annually"
 msgstr ""
 
-#: src/lib/tiers.ts:217
+#: src/lib/tiers.ts:231
 msgid "/seat/mo · billed monthly"
 msgstr ""
 
@@ -667,7 +672,7 @@ msgid "+{hiddenCount} conversations"
 msgstr "+{hiddenCount} Unterhaltungen"
 
 #. placeholder {0}: cap.seat_overage_eur
-#: src/lib/tiers.ts:232
+#: src/lib/tiers.ts:246
 msgid "+€{0}/seat"
 msgstr ""
 
@@ -696,7 +701,7 @@ msgstr ""
 #~ msgstr ""
 
 #. placeholder {0}: cap.hour_overage_eur
-#: src/lib/tiers.ts:238
+#: src/lib/tiers.ts:252
 msgid "€{0}/h"
 msgstr ""
 
@@ -708,15 +713,15 @@ msgstr ""
 #~ msgid "€{0}/mo · billed monthly"
 #~ msgstr ""
 
-#: src/lib/tiers.ts:93
+#: src/lib/tiers.ts:107
 msgid "€150 / seat / month"
 msgstr ""
 
-#: src/lib/tiers.ts:94
+#: src/lib/tiers.ts:108
 msgid "€20 / seat / month"
 msgstr ""
 
-#: src/lib/tiers.ts:91
+#: src/lib/tiers.ts:105
 msgid "€75 / seat / month"
 msgstr ""
 
@@ -733,7 +738,7 @@ msgstr ""
 #~ msgid "1 included"
 #~ msgstr "1 enthalten"
 
-#: src/lib/tiers.ts:92
+#: src/lib/tiers.ts:106
 msgid "1 seat · 1 h"
 msgstr ""
 
@@ -822,11 +827,11 @@ msgstr ""
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "Für dieses Projekt wird bereits ein Bericht erstellt. Bitte warte, bis er fertig ist."
 
-#: src/components/billing/BillingManager.tsx:663
+#: src/components/billing/BillingManager.tsx:674
 msgid "A seat is one member. Add or remove members in each workspace's People tab; your next charge follows automatically."
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:658
+#: src/components/billing/BillingManager.tsx:669
 msgid "A seat is one member. Seats stay available until the plan ends; changes won't be charged."
 msgstr ""
 
@@ -937,7 +942,7 @@ msgstr "Aktionen"
 #: src/routes/admin/AdminSettingsRoute.tsx:1479
 #: src/components/workspace/OrganisationUsageRollup.tsx:411
 #: src/components/workspace/OrganisationUsageRollup.tsx:571
-#: src/components/billing/BillingManager.tsx:635
+#: src/components/billing/BillingManager.tsx:646
 msgid "Active"
 msgstr ""
 
@@ -1357,7 +1362,7 @@ msgstr ""
 msgid "Already used in this chat"
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:776
+#: src/components/billing/BillingManager.tsx:793
 msgid "Amount"
 msgstr ""
 
@@ -1482,7 +1487,7 @@ msgstr ""
 #~ msgid "Anything to add?"
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:282
+#: src/components/billing/BillingManager.tsx:290
 msgid "Anything we could have done better?"
 msgstr ""
 
@@ -1712,7 +1717,7 @@ msgstr "Mindestens ein Thema muss ausgewählt werden, um Verify zu aktivieren"
 #~ msgid "At limit"
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:680
+#: src/components/billing/BillingManager.tsx:691
 msgid "At the end of this period"
 msgstr ""
 
@@ -1941,7 +1946,7 @@ msgstr "Beta"
 #~ msgid "Big Picture - Themes & patterns"
 #~ msgstr "Big Picture – Themen & Muster"
 
-#: src/components/billing/BillingManager.tsx:645
+#: src/components/billing/BillingManager.tsx:656
 msgid "Billed annually"
 msgstr ""
 
@@ -1960,7 +1965,7 @@ msgstr ""
 msgid "billed monthly"
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:643
+#: src/components/billing/BillingManager.tsx:654
 msgid "Billed monthly"
 msgstr ""
 
@@ -1968,7 +1973,7 @@ msgstr ""
 msgid "Billed per seat across the organisation. Cancel anytime. Scholarships are available for eligible organisations: email <0>support@dembrane.com</0>."
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:585
+#: src/components/billing/BillingManager.tsx:593
 msgid "Billed per user. A seat is one member, counted automatically. Cancel anytime."
 msgstr ""
 
@@ -1997,12 +2002,12 @@ msgstr ""
 #~ msgid "Billing — sees usage and invoices only"
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:177
+#: src/components/billing/BillingManager.tsx:185
 msgid "Billing is managed by your organisation"
 msgstr ""
 
 #: src/components/workspace/BillingPeriodToggle.tsx:75
-#: src/components/billing/BillingManager.tsx:372
+#: src/components/billing/BillingManager.tsx:380
 msgid "Billing period"
 msgstr ""
 
@@ -2032,11 +2037,11 @@ msgstr ""
 msgid "Breakdown by tier"
 msgstr ""
 
-#: src/lib/tiers.ts:125
+#: src/lib/tiers.ts:139
 msgid "Bring your own LLM"
 msgstr ""
 
-#: src/lib/tiers.ts:105
+#: src/lib/tiers.ts:119
 msgid "Bring your own LLM via the MCP."
 msgstr ""
 
@@ -2138,7 +2143,7 @@ msgstr "Abbrechen"
 msgid "add.tag.filter.modal.cancel"
 msgstr "Abbrechen"
 
-#: src/components/billing/BillingManager.tsx:836
+#: src/components/billing/BillingManager.tsx:853
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr ""
 
@@ -2149,8 +2154,8 @@ msgstr ""
 #~ msgid "Cancel invite"
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:295
-#: src/components/billing/BillingManager.tsx:851
+#: src/components/billing/BillingManager.tsx:303
+#: src/components/billing/BillingManager.tsx:868
 msgid "Cancel plan"
 msgstr ""
 
@@ -2162,16 +2167,16 @@ msgstr "Planung abbrechen"
 #~ msgid "Cancel the invite sent to {0}? You can invite them again later."
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:261
+#: src/components/billing/BillingManager.tsx:269
 msgid "Cancel your plan"
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:121
+#: src/components/billing/BillingManager.tsx:129
 msgid "Cancelled"
 msgstr ""
 
 #. placeholder {0}: tierLabel(currentTier)
-#: src/components/billing/BillingManager.tsx:267
+#: src/components/billing/BillingManager.tsx:275
 msgid "Cancelling stops your plan from renewing. You keep {0} until your current billing period ends, then you move to Free."
 msgstr ""
 
@@ -2187,7 +2192,7 @@ msgstr "Kann nicht innerhalb von 10 Minuten vor dem geplanten Zeitpunkt umgeplan
 msgid "Card"
 msgstr "Karte"
 
-#: src/components/billing/BillingManager.tsx:748
+#: src/components/billing/BillingManager.tsx:765
 msgid "Change"
 msgstr ""
 
@@ -2227,7 +2232,7 @@ msgstr ""
 msgid "Change password"
 msgstr "Passwort ändern"
 
-#: src/components/billing/BillingManager.tsx:614
+#: src/components/billing/BillingManager.tsx:625
 msgid "Change plan"
 msgstr ""
 
@@ -2327,8 +2332,8 @@ msgstr ""
 msgid "Choose a logo file"
 msgstr "Ein Logo-Datei auswählen"
 
-#: src/components/billing/BillingManager.tsx:364
-#: src/components/billing/BillingManager.tsx:582
+#: src/components/billing/BillingManager.tsx:372
+#: src/components/billing/BillingManager.tsx:590
 msgid "Choose a plan"
 msgstr ""
 
@@ -2438,11 +2443,11 @@ msgstr "Schließen"
 msgid "select.all.modal.close"
 msgstr "Schließen"
 
-#: src/lib/tiers.ts:124
+#: src/lib/tiers.ts:138
 msgid "Cloud Act Safe"
 msgstr ""
 
-#: src/lib/tiers.ts:104
+#: src/lib/tiers.ts:118
 msgid "Cloud Act safe. EU-sovereign stack for the strictest compliance."
 msgstr ""
 
@@ -2460,7 +2465,7 @@ msgid "Columns"
 msgstr ""
 
 #: src/components/workspace/TierStatusBadge.tsx:29
-#: src/components/billing/BillingManager.tsx:401
+#: src/components/billing/BillingManager.tsx:409
 msgid "Coming soon"
 msgstr ""
 
@@ -2616,7 +2621,7 @@ msgstr "Weiter"
 msgid "participant.button.continue"
 msgstr "Weiter"
 
-#: src/components/billing/BillingManager.tsx:403
+#: src/components/billing/BillingManager.tsx:411
 msgid "Continue to payment"
 msgstr ""
 
@@ -2802,7 +2807,7 @@ msgstr "In die Zwischenablage kopieren"
 msgid "Copying..."
 msgstr "Kopieren..."
 
-#: src/components/billing/BillingManager.tsx:502
+#: src/components/billing/BillingManager.tsx:510
 msgid "Could not confirm payment. Refresh to retry."
 msgstr ""
 
@@ -3045,11 +3050,11 @@ msgstr "Aktuelles Logo"
 msgid "Current password"
 msgstr "Aktuelles Passwort"
 
-#: src/components/billing/BillingManager.tsx:610
+#: src/components/billing/BillingManager.tsx:618
 msgid "Current plan"
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:707
+#: src/components/billing/BillingManager.tsx:718
 msgid "Current rate"
 msgstr ""
 
@@ -3118,7 +3123,7 @@ msgstr "Dashboard-URL (direkter Link zur Gesprächsübersicht)"
 #~ msgstr "Select which topics participants can use for verification."
 
 #: src/components/report/ScheduleDateTimePicker.tsx:89
-#: src/components/billing/BillingManager.tsx:770
+#: src/components/billing/BillingManager.tsx:787
 msgid "Date"
 msgstr "Datum"
 
@@ -3369,7 +3374,7 @@ msgstr "Beschreiben Sie, was die Sprachmodell aus dem Gespräch extrahieren oder
 #: src/routes/project/CreateProjectRoute.tsx:202
 #: src/routes/project/CreateProjectRoute.tsx:312
 #: src/routes/organisation/OrganisationRoute.tsx:1004
-#: src/components/billing/BillingManager.tsx:773
+#: src/components/billing/BillingManager.tsx:790
 msgid "Description"
 msgstr ""
 
@@ -3852,7 +3857,7 @@ msgstr "Aktiviert"
 #~ msgid "End of list • All {0} conversations loaded"
 #~ msgstr "Ende der Liste • Alle {0} Gespräche geladen"
 
-#: src/components/billing/BillingManager.tsx:641
+#: src/components/billing/BillingManager.tsx:652
 msgid "Ends on {endDate}, then moves to Free"
 msgstr ""
 
@@ -3975,11 +3980,11 @@ msgstr "Fehler aufgetreten"
 msgid "Error uploading \"{0}\": {1}"
 msgstr "Fehler beim Hochladen von \"{0}\": {1}"
 
-#: src/lib/tiers.ts:122
+#: src/lib/tiers.ts:136
 msgid "EU hosted LLMs included"
 msgstr ""
 
-#: src/lib/tiers.ts:102
+#: src/lib/tiers.ts:116
 msgid "EU-hosted analysis, audit logs, and white labeling."
 msgstr ""
 
@@ -4053,7 +4058,7 @@ msgstr "Vollbild verlassen"
 #~ msgid "Experimental"
 #~ msgstr "Experimentell"
 
-#: src/components/billing/BillingManager.tsx:123
+#: src/components/billing/BillingManager.tsx:131
 msgid "Expired"
 msgstr ""
 
@@ -4125,7 +4130,7 @@ msgstr ""
 
 #: src/components/invite/InviteResultsList.tsx:58
 #: src/components/dropzone/UploadConversationDropzone.tsx:789
-#: src/components/billing/BillingManager.tsx:119
+#: src/components/billing/BillingManager.tsx:127
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
@@ -4472,7 +4477,7 @@ msgstr "Für erfahrene Benutzer: Ein Geheimnis-Schlüssel, um die Authentizität
 msgid "For another client"
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:386
+#: src/components/billing/BillingManager.tsx:394
 msgid "For bespoke compliance requirements, <0>call us for a quote</0>."
 msgstr ""
 
@@ -4518,7 +4523,7 @@ msgstr ""
 msgid "Forgot your password?"
 msgstr "Passwort vergessen?"
 
-#: src/lib/tiers.ts:206
+#: src/lib/tiers.ts:220
 #: src/components/workspace/TierPricingCards.tsx:68
 #: src/components/workspace/TierPricingCards.tsx:95
 msgid "Free"
@@ -4635,7 +4640,7 @@ msgstr "Erhalte eine sofortige Antwort von dembrane, um das Gespräch zu vertief
 msgid "Get started"
 msgstr ""
 
-#: src/lib/tiers.ts:123
+#: src/lib/tiers.ts:137
 msgid "get started."
 msgstr ""
 
@@ -4831,7 +4836,7 @@ msgstr ""
 msgid "Hide revision data"
 msgstr "Revisionsdaten verbergen"
 
-#: src/components/billing/BillingManager.tsx:314
+#: src/components/billing/BillingManager.tsx:322
 msgid "High-risk use needs training first"
 msgstr ""
 
@@ -5176,7 +5181,7 @@ msgstr ""
 #~ msgid "Invites sent to {ok} workspaces."
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:759
+#: src/components/billing/BillingManager.tsx:776
 msgid "Invoices"
 msgstr ""
 
@@ -5337,7 +5342,7 @@ msgstr ""
 msgid "Keep it"
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:292
+#: src/components/billing/BillingManager.tsx:300
 msgid "Keep my plan"
 msgstr ""
 
@@ -5522,7 +5527,7 @@ msgstr "Live Audiopegel:"
 msgid "Live Preview"
 msgstr "Live Vorschau"
 
-#: src/components/billing/BillingManager.tsx:819
+#: src/components/billing/BillingManager.tsx:836
 msgid "Load more"
 msgstr ""
 
@@ -5706,7 +5711,7 @@ msgstr ""
 #~ msgid "Manage organisation"
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:191
+#: src/components/billing/BillingManager.tsx:199
 msgid "Manage organisation billing"
 msgstr ""
 
@@ -6079,7 +6084,7 @@ msgstr "Weiter"
 msgid "participant.verify.instructions.button.next"
 msgstr "Weiter"
 
-#: src/components/billing/BillingManager.tsx:688
+#: src/components/billing/BillingManager.tsx:699
 msgid "Next invoice"
 msgstr ""
 
@@ -6112,7 +6117,7 @@ msgstr "Keine Aktionen gefunden"
 msgid "No audit logs match the current filters."
 msgstr "Keine Audit-Protokolle entsprechen den aktuellen Filtern."
 
-#: src/components/billing/BillingManager.tsx:542
+#: src/components/billing/BillingManager.tsx:550
 msgid "No billing account yet. Email <0>support@dembrane.com</0> and we'll set one up."
 msgstr ""
 
@@ -6201,7 +6206,7 @@ msgstr ""
 #~ msgid "No externals yet. Add one if you want someone outside your organisation to join this workspace."
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:684
+#: src/components/billing/BillingManager.tsx:695
 msgid "No further charges"
 msgstr ""
 
@@ -6281,7 +6286,7 @@ msgstr ""
 msgid "No organisation role. Access via workspace invites."
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:763
+#: src/components/billing/BillingManager.tsx:780
 msgid "No payments yet."
 msgstr ""
 
@@ -6450,7 +6455,7 @@ msgstr ""
 #~ msgid "No workspaces yet. Create your first one to get started."
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:698
+#: src/components/billing/BillingManager.tsx:709
 msgid "None scheduled"
 msgstr ""
 
@@ -6475,12 +6480,12 @@ msgstr ""
 #~ msgid "Not on your team. Workspace-only access, doesn't count as a seat."
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:631
+#: src/components/billing/BillingManager.tsx:642
 msgid "Not renewing"
 msgstr ""
 
 #: src/components/project/PortalSettingsOverview.tsx:53
-#: src/components/billing/BillingManager.tsx:752
+#: src/components/billing/BillingManager.tsx:769
 msgid "Not set"
 msgstr ""
 
@@ -6768,7 +6773,7 @@ msgstr "Öffnen Sie Ihre Authentifizierungs-App und geben Sie den aktuellen 6-st
 #: src/routes/auth/Register.tsx:151
 #: src/components/project/CustomTopicModal.tsx:240
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:450
-#: src/components/billing/BillingManager.tsx:283
+#: src/components/billing/BillingManager.tsx:291
 msgid "Optional"
 msgstr "Optional"
 
@@ -6991,7 +6996,7 @@ msgstr "Seite nicht gefunden"
 msgid "Page Title"
 msgstr "Seitentitel"
 
-#: src/components/billing/BillingManager.tsx:113
+#: src/components/billing/BillingManager.tsx:121
 msgid "Paid"
 msgstr ""
 
@@ -7181,11 +7186,11 @@ msgstr "Passwörter stimmen nicht überein"
 msgid "Pause reading"
 msgstr "Vorlesen pausieren"
 
-#: src/components/billing/BillingManager.tsx:633
+#: src/components/billing/BillingManager.tsx:644
 msgid "Payment failed"
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:740
+#: src/components/billing/BillingManager.tsx:757
 msgid "Payment method"
 msgstr ""
 
@@ -7196,7 +7201,7 @@ msgstr ""
 #: src/components/workspace/AccessRequestsList.tsx:156
 #: src/components/report/ConversationStatusTable.tsx:86
 #: src/components/members/PendingInvitesSection.tsx:162
-#: src/components/billing/BillingManager.tsx:117
+#: src/components/billing/BillingManager.tsx:125
 msgid "Pending"
 msgstr "Ausstehend"
 
@@ -7304,7 +7309,7 @@ msgstr ""
 #~ msgid "Pick members to bring into this workspace."
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:275
+#: src/components/billing/BillingManager.tsx:283
 msgid "Pick one"
 msgstr ""
 
@@ -7373,7 +7378,7 @@ msgstr "Angeheftete Vorlagen"
 #~ msgid "Pioneer"
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:675
+#: src/components/billing/BillingManager.tsx:686
 msgid "Plan ends"
 msgstr ""
 
@@ -7588,7 +7593,7 @@ msgstr "Vorschau: Der schnelle braune Fuchs springt über den faulen Hund."
 msgid "Price"
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:383
+#: src/components/billing/BillingManager.tsx:391
 msgid "Prices exclude VAT."
 msgstr ""
 
@@ -7814,11 +7819,11 @@ msgstr "Projekt Einstellungen"
 #~ msgid "project.sidebar.chat.end.description"
 #~ msgstr "Ende der Liste • Alle {0} Gespräche geladen"
 
-#: src/components/billing/BillingManager.tsx:710
+#: src/components/billing/BillingManager.tsx:721
 msgid "Projected monthly total"
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:709
+#: src/components/billing/BillingManager.tsx:720
 msgid "Projected yearly total"
 msgstr ""
 
@@ -8490,7 +8495,7 @@ msgstr "Fortsetzen"
 #~ msgid "Resume"
 #~ msgstr "Fortsetzen"
 
-#: src/components/billing/BillingManager.tsx:847
+#: src/components/billing/BillingManager.tsx:864
 msgid "Resume plan"
 msgstr ""
 
@@ -8809,7 +8814,7 @@ msgstr ""
 #: src/components/workspace/UsageCard.tsx:195
 #: src/components/workspace/TierCapacityMatrix.tsx:108
 #: src/components/workspace/OrganisationUsageRollup.tsx:403
-#: src/components/billing/BillingManager.tsx:652
+#: src/components/billing/BillingManager.tsx:663
 msgid "Seats"
 msgstr ""
 
@@ -8833,7 +8838,7 @@ msgstr "Geheimnis kopiert"
 #~ msgid "See conversation status details"
 #~ msgstr "Gesprächstatusdetails ansehen"
 
-#: src/components/billing/BillingManager.tsx:591
+#: src/components/billing/BillingManager.tsx:599
 msgid "See plans"
 msgstr ""
 
@@ -9523,7 +9528,7 @@ msgstr ""
 #: src/routes/admin/AdminSettingsRoute.tsx:1282
 #: src/components/workspace/OrganisationUsageRollup.tsx:418
 #: src/components/report/ConversationStatusTable.tsx:62
-#: src/components/billing/BillingManager.tsx:779
+#: src/components/billing/BillingManager.tsx:796
 msgid "Status"
 msgstr "Status"
 
@@ -9566,7 +9571,7 @@ msgstr "Absenden"
 #~ msgid "Submitted via text input"
 #~ msgstr "Über Text eingereicht"
 
-#: src/components/billing/BillingManager.tsx:500
+#: src/components/billing/BillingManager.tsx:508
 msgid "Subscription updated."
 msgstr ""
 
@@ -9693,7 +9698,7 @@ msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag f
 msgid "participant.refine.make.concrete.description"
 msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag festhält."
 
-#: src/components/billing/BillingManager.tsx:332
+#: src/components/billing/BillingManager.tsx:340
 msgid "Talk to us about training"
 msgstr ""
 
@@ -10206,7 +10211,7 @@ msgstr ""
 #~ msgid "This workspace is at its seat limit on the {0} tier. Free a seat by removing someone, or upgrade the workspace tier to invite more members."
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:180
+#: src/components/billing/BillingManager.tsx:188
 msgid "This workspace is billed through {orgName}. Plans and payment are managed once for the whole organisation, and every workspace shares it."
 msgstr ""
 
@@ -10943,7 +10948,7 @@ msgstr "Benutzername"
 msgid "Using default dembrane logo"
 msgstr "Standard-dembrane-Logo verwendet"
 
-#: src/components/billing/BillingManager.tsx:322
+#: src/components/billing/BillingManager.tsx:330
 msgid "Using dembrane in health, education, recruitment, critical infrastructure, law enforcement, or justice? Those are high-risk contexts and need a mandatory training before live use."
 msgstr ""
 
@@ -11414,7 +11419,7 @@ msgstr "Was willst du dir anschauen?"
 #~ msgid "What's new"
 #~ msgstr "Was ist neu?"
 
-#: src/components/billing/BillingManager.tsx:274
+#: src/components/billing/BillingManager.tsx:282
 msgid "What's the main reason?"
 msgstr ""
 
@@ -11956,11 +11961,11 @@ msgstr ""
 #~ msgid "Your password no longer meets our security requirements. Set a stronger one to keep your account secure."
 #~ msgstr ""
 
-#: src/components/billing/BillingManager.tsx:833
+#: src/components/billing/BillingManager.tsx:850
 msgid "Your plan ends at the period end."
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:831
+#: src/components/billing/BillingManager.tsx:848
 msgid "Your plan ends on {endDate}."
 msgstr ""
 
@@ -11968,7 +11973,7 @@ msgstr ""
 msgid "Your plan is inactive. Reactivate it to add members."
 msgstr ""
 
-#: src/components/billing/BillingManager.tsx:246
+#: src/components/billing/BillingManager.tsx:254
 msgid "Your plan won't renew. You keep access until the period ends."
 msgstr ""
 

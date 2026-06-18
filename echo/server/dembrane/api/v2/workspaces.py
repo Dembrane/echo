@@ -639,6 +639,24 @@ async def create_workspace(
         creator_app_user_id=app_user_id,
     )
 
+    # Seats are pooled per account (ADR 0005): the creator is one distinct user
+    # under the account. If they already hold a seat on another workspace on the
+    # same account, count_account_seats is unchanged and this reconcile is a €0
+    # no-op (no phantom +1 charge). Only a brand-new workspace-scoped account, or
+    # a creator with no other seat, moves the count. Best-effort + idempotent
+    # (provisioned_seats); the cron is the backstop.
+    try:
+        from dembrane.billing_service import (
+            reconcile_account_seats,
+            get_account_for_workspace,
+        )
+
+        billing_account = await get_account_for_workspace(ws_id)
+        if billing_account:
+            await reconcile_account_seats(billing_account["id"])
+    except Exception:
+        logger.exception("Seat reconcile failed after creating workspace %s", ws_id)
+
     logger.info(
         f"Created workspace {ws_id} '{body.name}' in org {org_id} by {app_user_id} "
         f"(visibility={visibility})"

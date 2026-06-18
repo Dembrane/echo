@@ -27,6 +27,7 @@ from pydantic import Field, BaseModel
 from dembrane.seat_capacity import compute_effective_seat_state
 from dembrane.tier_capacity import get_capacity
 from dembrane.directus_async import async_directus
+from dembrane.billing_service import apply_discount
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
@@ -391,9 +392,16 @@ async def billing_rollup(
         hour_overage_eur = round(over_hours * hour_rate, 2) if hour_rate else 0.0
         seat_overage_eur = round(over_seats * seat_rate, 2) if seat_rate else 0.0
         base_price = TIER_BASE_PRICE_EUR.get(tier)
+        # Discount applies to real money everywhere (ISSUE-024 sub-item 5): the
+        # admin forecast must mirror what Mollie charges, so reduce the row total
+        # by the account's percent_discount. Trials/comped accounts already net
+        # to 0 elsewhere; a 100% discount floors to 0 here too.
+        discount_pct = ws.get("percent_discount")
         total = None
         if base_price is not None:
-            total = round(base_price + hour_overage_eur + seat_overage_eur, 2)
+            total = apply_discount(
+                base_price + hour_overage_eur + seat_overage_eur, discount_pct
+            )
 
         hours_pct = round(hours / included_hours, 3) if included_hours else None
         pilot_block = bool(
@@ -469,12 +477,18 @@ async def billing_rollup(
 
     rows.sort(key=lambda r: (_risk(r), -(r.total_forecast_eur or 0.0)))
 
-    # MRR: sum of recurring (non-pilot) base prices of ACTIVE workspaces.
+    # MRR: sum of recurring (non-pilot) base prices of ACTIVE workspaces, net of
+    # each account's discount so MRR reflects booked revenue, not sticker.
     # Pilot is one-time so it's pure revenue-this-month, not ARR-like.
     mrr = 0.0
     for r in rows:
         if r.is_active and r.tier != "pilot" and r.base_price_eur:
-            mrr += r.base_price_eur
+            mrr += apply_discount(r.base_price_eur, r.percent_discount)
+
+    # Headline forecast = sum of the per-row (already discounted) totals, so the
+    # KPI matches the column it sums. total_base/total_overage stay at sticker
+    # for the breakdown lens.
+    forecast_total = round(sum(r.total_forecast_eur or 0.0 for r in rows), 2)
 
     active_count = sum(1 for r in rows if r.is_active)
 
@@ -489,7 +503,7 @@ async def billing_rollup(
         active_workspace_count=active_count,
         total_base_eur=round(total_base, 2),
         total_overage_eur=round(total_overage, 2),
-        total_forecast_eur=round(total_base + total_overage, 2),
+        total_forecast_eur=forecast_total,
         mrr_eur=round(mrr, 2),
         logins_last_30d=logins_30d,
         rows=rows,
