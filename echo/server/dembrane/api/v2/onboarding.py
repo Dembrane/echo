@@ -314,8 +314,8 @@ async def complete_onboarding(
             if not has_ws_mem:
                 try:
                     from dembrane.billing_service import (
-                        get_account_for_workspace,
                         reconcile_account_seats,
+                        get_account_for_workspace,
                     )
 
                     billing_account = await get_account_for_workspace(ws_id)

@@ -553,8 +553,8 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
     # so the periodic cron stays a safe backstop.
     try:
         from dembrane.billing_service import (
-            get_account_for_workspace,
             reconcile_account_seats,
+            get_account_for_workspace,
         )
 
         billing_account = await get_account_for_workspace(invite["workspace_id"])

@@ -1974,8 +1974,8 @@ async def remove_organisation_member(
     # idempotent (provisioned_seats); removals only reduce at renewal, no refund.
     try:
         from dembrane.billing_service import (
-            get_account_for_workspace,
             reconcile_account_seats,
+            get_account_for_workspace,
         )
 
         seen_accounts: set[str] = set()

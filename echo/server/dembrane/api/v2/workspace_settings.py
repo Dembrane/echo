@@ -769,8 +769,8 @@ async def change_member_role(
     # account now instead of waiting for the cron. Best-effort + idempotent.
     try:
         from dembrane.billing_service import (
-            get_account_for_workspace,
             reconcile_account_seats,
+            get_account_for_workspace,
         )
 
         account = await get_account_for_workspace(ctx.workspace_id)

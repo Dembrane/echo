@@ -2177,8 +2177,8 @@ def task_reconcile_pending_billing() -> None:
     reconciles each from Mollie. Idempotent — activation is a no-op if already
     active."""
     task_logger = getLogger("dembrane.tasks.task_reconcile_pending_billing")
-    from dembrane.billing_service import sync_account_from_mollie
     from dembrane.directus import directus, directus_client_context
+    from dembrane.billing_service import sync_account_from_mollie
 
     with directus_client_context(directus) as client:
         pending = client.get_items("billing_account", {
@@ -2213,8 +2213,8 @@ def task_reconcile_subscription_seats() -> None:
     reconciles all active subscriptions; the service layer skips the PATCH when
     the amount is unchanged."""
     task_logger = getLogger("dembrane.tasks.task_reconcile_subscription_seats")
-    from dembrane.billing_service import reconcile_account_seats
     from dembrane.directus import directus, directus_client_context
+    from dembrane.billing_service import reconcile_account_seats
 
     with directus_client_context(directus) as client:
         active = client.get_items("billing_account", {

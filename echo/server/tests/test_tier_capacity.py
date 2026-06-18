@@ -22,9 +22,9 @@ from dembrane.tier_capacity import (
     is_hard_blocked,
     build_tier_pricing,
     compute_is_over_cap,
-    monthly_seat_bill_eur,
     compute_usage_gates,
     tier_allows_overage,
+    monthly_seat_bill_eur,
     compute_monthly_billing_price,
 )
 
