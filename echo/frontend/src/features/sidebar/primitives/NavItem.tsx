@@ -13,7 +13,7 @@ interface NavItemProps {
 	pushes?: boolean;
 	end?: boolean;
 	badge?: ReactNode;
-	badgeTone?: "muted" | "notification";
+	badgeTone?: "muted" | "notification" | "pending";
 	active?: boolean;
 	muted?: boolean;
 	accent?: string;
@@ -27,6 +27,14 @@ export const BADGE_TONES = {
 	notification: {
 		backgroundColor: "rgba(65, 105, 225, 0.18)",
 		color: "#4169e1",
+	},
+	// Pending action (e.g. high-risk training nudge). No yellow exists in the
+	// palette, so we use the closest warm tone — Peach (#FFD166, from
+	// colors.ts) at a soft tint. Badge text stays graphite (--app-text), not
+	// colored, per the founder decision.
+	pending: {
+		backgroundColor: "rgba(255, 209, 102, 0.35)",
+		color: "#2d2d2c",
 	},
 } as const;
 

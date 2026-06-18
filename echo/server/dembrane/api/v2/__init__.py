@@ -48,6 +48,8 @@ from dembrane.api.v2.bff.conversations import (
 )
 from dembrane.api.v2.workspace_projects import router as workspace_projects_router
 from dembrane.api.v2.workspace_settings import router as workspace_settings_router
+from dembrane.api.v2.training import router as training_router
+from dembrane.api.v2.admin_training import router as admin_training_router
 
 v2_router = APIRouter()
 
@@ -129,3 +131,12 @@ v2_router.include_router(
 # is_admin JWT claim is the gate for now; storage-backed staff policies
 # (staff:can_set_tier etc.) are declared in policies.py but not wired.
 v2_router.include_router(admin_router, prefix="/admin", tags=["v2:admin"])
+
+# Training (ISSUE-020) — its own product, separate from billing tiers.
+# User-facing catalog + roster + request + my-licenses, plus staff
+# provisioning/completion in a separate admin_training router (kept out of
+# admin.py so this wave doesn't conflict with 022 / Wave C edits there).
+v2_router.include_router(training_router, prefix="/training", tags=["v2:training"])
+v2_router.include_router(
+    admin_training_router, prefix="/admin", tags=["v2:admin:training"]
+)

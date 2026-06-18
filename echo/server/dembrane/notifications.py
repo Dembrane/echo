@@ -40,6 +40,9 @@ NotificationAction = Literal[
     "NAVIGATE_INVITE",
     "NAVIGATE_ORGANISATION_SETTINGS",
     "NAVIGATE_WORKSPACE_SETTINGS",
+    # Training (ISSUE-020): take the recipient to the org training surface
+    # (catalog + roster).
+    "NAVIGATE_TRAINING",
 ]
 
 NotificationSeverity = Literal["info", "action_required", "destructive"]
@@ -79,6 +82,11 @@ _SEVERITY_BY_EVENT: dict[str, NotificationSeverity] = {
     # required, so it falls through to the default "info" tint.
     # NB: MEMBERSHIP_REQUEST_REJECTED is deliberately absent — matrix §6
     # specifies silent rejection, and emit() is never called for that code.
+    # Training (ISSUE-020). Staff gets action_required when an org requests a
+    # training; the requester gets info confirmation. Completion is info.
+    "TRAINING_REQUESTED": "action_required",
+    # TRAINING_REQUEST_SUBMITTED (requester confirmation) and
+    # TRAINING_COMPLETED default to "info".
     # Matrix §10 partner handoff.
     "PARTNER_HANDOFF_PENDING": "action_required",
     # PARTNER_HANDOFF_ACCEPTED defaults to 'info' — no action needed.
