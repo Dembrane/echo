@@ -14,6 +14,7 @@ import {
 	isTier,
 	MONTHLY_BILLING_PREMIUM_PCT,
 	pricingForBillingPeriod,
+	PURCHASABLE_TIERS,
 	TIER_FALLBACK_PRICE_EUR,
 	type Tier,
 	type TierCapacity,
@@ -350,6 +351,13 @@ export const TierPricingCards = ({
 
 	const resolvedHighlightLabel = highlightLabel ?? <Trans>Popular</Trans>;
 
+	// ISSUE-011: a "Popular" badge on the sole buyable plan reads oddly, so hide
+	// it while exactly one tier is purchasable. It auto-restores once a second
+	// tier ships (PURCHASABLE_TIERS derives from the coming-soon list). Only the
+	// badge is suppressed; the card's visual highlight stays.
+	const badgePopularTier =
+		PURCHASABLE_TIERS.length >= 2 ? highlightTier : null;
+
 	return (
 		<div
 			className={useWideLayout ? classes.groupWide : classes.group}
@@ -362,7 +370,7 @@ export const TierPricingCards = ({
 					layout={useWideLayout ? "wide" : "mobile"}
 					selected={value === card.tier}
 					highlighted={card.tier === highlightTier}
-					highlightTier={highlightTier}
+					highlightTier={badgePopularTier}
 					highlightLabel={resolvedHighlightLabel}
 					comingSoon={isComingSoon(card.tier)}
 					onSelect={() => onChange(card.tier)}

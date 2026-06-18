@@ -721,9 +721,32 @@ async def delete_workspace(
             ),
         )
 
+    # Resolve the billing account before the soft-delete (the workspace row still
+    # carries billing_account_id afterwards, but resolve up front to be explicit).
+    from dembrane.billing_service import get_account_for_workspace
+
+    billing_account = await get_account_for_workspace(ctx.workspace_id)
+
     now_iso = datetime.now(timezone.utc).isoformat()
     await async_directus.update_item("workspace", ctx.workspace_id, {"deleted_at": now_iso})
     logger.info(f"Deleted workspace {ctx.workspace_id} by {ctx.app_user_id} (role={ctx.role})")
+
+    # Deletion frees this workspace's seats (count_account_seats ignores deleted
+    # workspaces), so re-price immediately rather than waiting for the cron
+    # (ISSUE-010). Min-1-seat is preserved inside reconcile; deleting the last
+    # workspace does not auto-cancel -- cancellation stays an explicit action.
+    # Best-effort: a billing hiccup must never fail the delete (reconcile flags
+    # the account on its own).
+    if billing_account:
+        from dembrane.billing_service import reconcile_account_seats
+
+        try:
+            await reconcile_account_seats(billing_account["id"])
+        except Exception:
+            logger.exception(
+                "Seat reconcile failed after deleting workspace %s", ctx.workspace_id
+            )
+
     return {"status": "deleted"}
 
 

@@ -25,7 +25,10 @@ from datetime import datetime, timezone, timedelta
 
 from dembrane import mollie
 from dembrane.settings import get_settings
-from dembrane.seat_capacity import compute_effective_seat_state
+from dembrane.seat_capacity import (
+    count_pending_invites,
+    compute_effective_seat_state,
+)
 from dembrane.tier_capacity import (
     PURCHASABLE_TIERS,
     get_capacity,
@@ -38,6 +41,14 @@ logger = logging.getLogger("billing_service")
 
 class BillingError(RuntimeError):
     pass
+
+
+class ReconcileChargeError(RuntimeError):
+    """A needed mid-cycle proration charge could not be placed against Mollie:
+    a dead/invalid mandate or a Mollie API error. Distinct from "nothing to
+    charge" so reconcile can flag the account (reconcile_failed_at) without
+    advancing the provisioned-seat baseline. Never surfaced to a request: it
+    is caught inside reconcile_account_seats."""
 
 
 async def count_account_seats(account_id: str) -> int:
@@ -62,6 +73,103 @@ async def count_account_seats(account_id: str) -> int:
         seats_used, _m, _e = await compute_effective_seat_state(ws["id"])
         total += seats_used
     return total
+
+
+async def _account_workspace_ids(account_id: str) -> list[str]:
+    """Live (non-deleted) workspace ids the account covers."""
+    workspaces = await async_directus.get_items(
+        "workspace",
+        {
+            "query": {
+                "filter": {
+                    "billing_account_id": {"_eq": account_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(workspaces, list):
+        return []
+    return [w["id"] for w in workspaces if w.get("id")]
+
+
+async def count_account_pending_invites(account_id: str) -> int:
+    """Pending (un-accepted, unexpired) workspace invites across the whole
+    account. Seats are pooled, so the billing footnote counts pending across
+    every workspace the account covers."""
+    total = 0
+    for ws_id in await _account_workspace_ids(account_id):
+        member_pending, external_pending = await count_pending_invites(ws_id)
+        total += member_pending + external_pending
+    return total
+
+
+async def account_active_seat_emails(account_id: str) -> set[str]:
+    """Lower-cased emails of every active (direct) seat-holder across the
+    account. Used to dedupe net-new seats in the invite preview: a recipient
+    already holding a seat anywhere on the account is not net-new (seats are
+    pooled)."""
+    emails: set[str] = set()
+    for ws_id in await _account_workspace_ids(account_id):
+        from dembrane.inheritance import get_effective_members
+
+        members = await get_effective_members(ws_id)
+        user_ids = {
+            m.get("user_id")
+            for m in members
+            if m.get("source") == "direct" and m.get("user_id")
+        }
+        for uid in user_ids:
+            user = await async_directus.get_item("app_user", uid)
+            email = (user or {}).get("email")
+            if email:
+                emails.add(email.strip().lower())
+    return emails
+
+
+async def account_pending_invite_emails(account_id: str) -> set[str]:
+    """Lower-cased emails with an active pending invite anywhere on the account.
+    A recipient already invited counts once toward net-new, not twice."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    emails: set[str] = set()
+    for ws_id in await _account_workspace_ids(account_id):
+        rows = await async_directus.get_items(
+            "workspace_invite",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_eq": ws_id},
+                        "accepted_at": {"_null": True},
+                        "deleted_at": {"_null": True},
+                        "expires_at": {"_gt": now_iso},
+                    },
+                    "fields": ["email"],
+                    "limit": -1,
+                }
+            },
+        )
+        if not isinstance(rows, list):
+            continue
+        for r in rows:
+            email = r.get("email")
+            if email:
+                emails.add(email.strip().lower())
+    return emails
+
+
+async def count_net_new_seats(account_id: str, recipient_emails: list[str]) -> int:
+    """Net-new seats for a batch of invite recipients. Excludes recipients who
+    already hold an active seat anywhere on the account or already have a pending
+    invite (deduped, counted once). Founder rule A1: inviting an existing active
+    member under the paying account is EUR0 net-new."""
+    cleaned = {e.strip().lower() for e in recipient_emails if e and e.strip()}
+    if not cleaned:
+        return 0
+    already = await account_active_seat_emails(account_id)
+    already |= await account_pending_invite_emails(account_id)
+    return len(cleaned - already)
 
 
 def _plan_description(tier: str, seats: int, billing_period: str) -> str:
@@ -158,20 +266,15 @@ async def get_billing_overview(account_id: str) -> dict:
         try:
             sub = await mollie.get_subscription(customer_id=customer_id, subscription_id=sub_id)
             amt = sub.get("amount") or {}
-            # Amount reflects the LIVE seat count, not Mollie's stored value. The
-            # subscription re-price (sync_subscription_seats) can lag a seat change
-            # by up to the cron interval, and a stale figure here reads as a bug
-            # ("2 seats but next invoice still shows 900"). projected_monthly_eur is
-            # already computed live, so this keeps the two consistent. Date and
-            # currency still come from Mollie.
-            try:
-                renewal_eur, _interval = _per_interval_amount(tier, seats, billing_period)
-                amount_value = f"{renewal_eur:.2f}"
-            except BillingError:
-                amount_value = amt.get("value")
+            # Display = Mollie's stored subscription amount (the real charge), not
+            # a live re-derivation. Reconcile is now synchronous + flagged on every
+            # seat path (ISSUE-001), so Mollie's amount is the source of truth: what
+            # we show is exactly what will be debited. If reconcile failed, the flag
+            # surfaces a "fix your payment" prompt rather than us quietly papering
+            # over a stale amount.
             next_invoice = {
                 "date": sub.get("nextPaymentDate"),
-                "amount": amount_value,
+                "amount": amt.get("value"),
                 "currency": amt.get("currency") or "EUR",
             }
         except mollie.MollieError:
@@ -190,6 +293,17 @@ async def get_billing_overview(account_id: str) -> dict:
         except mollie.MollieError:
             pass
 
+    # Pending (un-accepted) invites are invisible in the seat count, so an admin
+    # who just invited people would see a total that quietly understates the bill.
+    # Surface the count + the projected total once those invites are accepted so
+    # the dashboard can show a "rises to EURX when accepted" footnote.
+    pending_invites = await count_account_pending_invites(account_id)
+    projected_with_pending_eur: float | None = None
+    if per_seat_monthly_eur is not None and pending_invites > 0:
+        projected_with_pending_eur = round(
+            per_seat_monthly_eur * (seats + pending_invites), 2
+        )
+
     return {
         "tier": tier,
         "status": status,
@@ -202,6 +316,12 @@ async def get_billing_overview(account_id: str) -> dict:
         "projected_monthly_eur": projected_monthly_eur,
         "per_seat_monthly_eur": per_seat_monthly_eur,
         "payment_method": payment_method,
+        "pending_invites": pending_invites,
+        "projected_with_pending_eur": projected_with_pending_eur,
+        # Observable seat-reconcile health: set when a re-price last failed
+        # (dead mandate / Mollie error), null when clean. Drives the
+        # "fix your payment" prompt.
+        "reconcile_failed_at": account.get("reconcile_failed_at"),
     }
 
 
@@ -518,7 +638,13 @@ async def _period_fraction_remaining(account: dict) -> float:
 async def _charge_seat_proration(account: dict, added_seats: int) -> float | None:
     """One-off prorated charge for `added_seats` added mid-cycle, off-session
     against the stored mandate. The caller has verified the account is active on
-    a paid tier with a subscription. Returns the amount charged, else None."""
+    a paid tier with a subscription.
+
+    Returns the amount charged, or None when there is legitimately nothing to
+    charge (no remaining period, sub-cent amount, non-payable tier). Raises
+    ReconcileChargeError when a charge was DUE but could not be placed: a
+    dead/invalid mandate or a Mollie API error. The distinction lets reconcile
+    flag the account on a real failure while staying silent on a no-op."""
     if added_seats < 1:
         return None
     tier = account.get("tier")
@@ -539,14 +665,18 @@ async def _charge_seat_proration(account: dict, added_seats: int) -> float | Non
 
     try:
         mandates = await mollie.list_mandates(customer_id)
-    except mollie.MollieError:
-        mandates = []
+    except mollie.MollieError as exc:
+        raise ReconcileChargeError(
+            f"Could not read mandates for account {account_id}: {exc}"
+        ) from exc
     valid = next((m for m in mandates if m.get("status") == "valid"), None)
     if not valid:
-        logger.warning(
-            "No valid mandate on account %s; skipping the proration charge", account_id
+        # A1/A2: a dead or invalid mandate is a real failure, not a no-op. The
+        # seats were added; the charge is owed. Flag the account so the admin
+        # gets the "fix your payment" prompt, and let the next reconcile retry.
+        raise ReconcileChargeError(
+            f"No valid mandate on account {account_id}; proration charge owed but unpayable"
         )
-        return None
 
     try:
         await mollie.create_recurring_payment(
@@ -562,7 +692,9 @@ async def _charge_seat_proration(account: dict, added_seats: int) -> float | Non
         )
     except mollie.MollieError as exc:
         logger.error("Proration charge failed for account %s: %s", account_id, exc)
-        return None
+        raise ReconcileChargeError(
+            f"Proration charge failed for account {account_id}: {exc}"
+        ) from exc
 
     logger.info(
         "charged %.2f EUR proration for %d seat(s) on account %s",
@@ -571,6 +703,24 @@ async def _charge_seat_proration(account: dict, added_seats: int) -> float | Non
         account_id,
     )
     return prorated
+
+
+async def _set_reconcile_failed(account_id: str, account: dict, failed: bool) -> None:
+    """Flip the observable reconcile-health flag (`reconcile_failed_at`), writing
+    only on a real transition. Set to now on failure; clear to None on a clean
+    pass. Idempotent: a clean account stays clean without a write, a flagged one
+    stays flagged with the original timestamp until it recovers."""
+    currently_failed = account.get("reconcile_failed_at") is not None
+    if failed and not currently_failed:
+        await async_directus.update_item(
+            "billing_account",
+            account_id,
+            {"reconcile_failed_at": datetime.now(timezone.utc).isoformat()},
+        )
+    elif not failed and currently_failed:
+        await async_directus.update_item(
+            "billing_account", account_id, {"reconcile_failed_at": None}
+        )
 
 
 async def reconcile_account_seats(account_id: str) -> None:
@@ -585,7 +735,14 @@ async def reconcile_account_seats(account_id: str) -> None:
 
     `provisioned_seats` records the count already charged for, so re-running never
     double-charges. No-op unless the account is active on a paid tier with a
-    Mollie subscription."""
+    Mollie subscription.
+
+    Flag contract (Wave A / ISSUE-001): on a Mollie failure -- a re-price error
+    or a dead/invalid mandate when a proration charge is owed -- this sets
+    `reconcile_failed_at=now`, does NOT advance `provisioned_seats`, and does NOT
+    re-raise (a billing hiccup never blocks collaboration). A clean pass clears
+    the flag. The seat change always stands; the flag is what the dashboard reads
+    to show the "fix your payment" prompt, and the next reconcile retries."""
     account = await async_directus.get_item("billing_account", account_id)
     if not account or account.get("status") != "active":
         return
@@ -593,45 +750,84 @@ async def reconcile_account_seats(account_id: str) -> None:
     if not tier or tier == "free" or not account.get("mollie_subscription_id"):
         return
 
-    # The next renewal always reflects the live seat count.
-    await sync_subscription_seats(account_id)
+    try:
+        # Test-mode escape hatch (A2): emulate a Mollie reconcile failure on
+        # demand so the failure path (flag + "fix your payment" prompt) can be
+        # tested together. Only honoured under a Mollie test key; never in prod.
+        if get_settings().billing.reconcile_failure_forced:
+            raise ReconcileChargeError(
+                f"Forced reconcile failure (MOLLIE_FORCE_RECONCILE_FAILURE) on {account_id}"
+            )
 
-    current = max(await count_account_seats(account_id), 1)
-    provisioned = account.get("provisioned_seats")
+        # The next renewal always reflects the live seat count. A re-price error
+        # (Mollie PATCH) propagates here and flags the account.
+        await sync_subscription_seats(account_id)
 
-    # First reconcile for this account: set the baseline, never charge for seats
-    # that predate proration tracking.
-    if provisioned is None:
-        await async_directus.update_item(
-            "billing_account", account_id, {"provisioned_seats": current}
-        )
-        return
+        current = max(await count_account_seats(account_id), 1)
+        provisioned = account.get("provisioned_seats")
 
-    if current > provisioned:
-        charged = await _charge_seat_proration(account, current - provisioned)
-        # Only advance the baseline once the charge lands, so a failed charge
-        # (e.g. dead mandate) retries on the next reconcile rather than being lost.
-        if charged is not None:
+        # First reconcile for this account: set the baseline, never charge for
+        # seats that predate proration tracking.
+        if provisioned is None:
             await async_directus.update_item(
                 "billing_account", account_id, {"provisioned_seats": current}
             )
-    elif current < provisioned:
-        # Removal takes effect at renewal (re-priced above); no mid-cycle refund.
-        await async_directus.update_item(
-            "billing_account", account_id, {"provisioned_seats": current}
-        )
+            await _set_reconcile_failed(account_id, account, failed=False)
+            return
+
+        if current > provisioned:
+            # Raises ReconcileChargeError on a dead mandate / Mollie failure; the
+            # baseline only advances once the charge lands, so a failure retries
+            # on the next reconcile rather than being silently dropped.
+            charged = await _charge_seat_proration(account, current - provisioned)
+            if charged is not None:
+                await async_directus.update_item(
+                    "billing_account", account_id, {"provisioned_seats": current}
+                )
+        elif current < provisioned:
+            # Removal takes effect at renewal (re-priced above); no mid-cycle refund.
+            await async_directus.update_item(
+                "billing_account", account_id, {"provisioned_seats": current}
+            )
+    except (ReconcileChargeError, mollie.MollieError) as exc:
+        # Allow + flag: the seat change already happened, the bill is owed, but
+        # Mollie couldn't be brought in line. Flag for the prompt; do not re-raise.
+        logger.error("Seat reconcile failed for account %s: %s", account_id, exc)
+        await _set_reconcile_failed(account_id, account, failed=True)
+        return
+
+    # Clean pass: clear any stale failure flag.
+    await _set_reconcile_failed(account_id, account, failed=False)
 
 
-async def estimate_seat_addition(account_id: str, added_seats: int = 1) -> dict:
-    """Preview the cost of adding `added_seats`, for the invite confirm dialog:
-    the one-off prorated charge now plus how much the recurring renewal goes up.
+async def estimate_seat_addition(
+    account_id: str,
+    added_seats: int = 1,
+    *,
+    recipient_emails: list[str] | None = None,
+) -> dict:
+    """Preview the cost of adding seats, for the invite confirm dialog: the
+    one-off prorated charge now plus how much the recurring renewal goes up.
     `active` is False when there's nothing to charge (free / not subscribed), and
-    the UI shows no charge (or the reactivate gate) in that case."""
+    the UI shows no charge (or the reactivate gate) in that case.
+
+    Net-new (founder rule A1): when `recipient_emails` is given, the quote is
+    computed server-side over the NET-NEW seats only. A recipient who already
+    holds an active seat anywhere on the account, or already has a pending
+    invite, adds nothing (seats are pooled). Inviting only existing members
+    quotes EUR0. The roster is never returned to the client, only the resulting
+    seat count + amounts. When no emails are given, fall back to `added_seats`."""
     account = await async_directus.get_item("billing_account", account_id)
     billing_period = (account or {}).get("billing_period") or "annual"
+
+    if recipient_emails is not None:
+        effective_added = await count_net_new_seats(account_id, recipient_emails)
+    else:
+        effective_added = max(0, added_seats)
+
     result = {
         "active": False,
-        "added_seats": added_seats,
+        "added_seats": effective_added,
         "billing_period": billing_period,
         "currency": "EUR",
         "prorated_now_eur": 0.0,
@@ -642,8 +838,14 @@ async def estimate_seat_addition(account_id: str, added_seats: int = 1) -> dict:
     tier = account.get("tier")
     if not tier or tier == "free" or not account.get("mollie_subscription_id"):
         return result
+    # Active subscription, but every recipient is already a seat: net-new is 0,
+    # so the quote is EUR0. `active` stays True so the UI can say "this costs
+    # nothing" rather than misreading it as an inactive plan.
+    if effective_added < 1:
+        result["active"] = True
+        return result
     try:
-        full_added, _interval = _per_interval_amount(tier, added_seats, billing_period)
+        full_added, _interval = _per_interval_amount(tier, effective_added, billing_period)
     except BillingError:
         return result
     fraction = await _period_fraction_remaining(account)
