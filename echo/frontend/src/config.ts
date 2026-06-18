@@ -130,6 +130,14 @@ export const SUPPORTED_LANGUAGES = [
 export const PRIVACY_POLICY_URL =
 	"https://dembrane.notion.site/Privacy-statements-all-languages-fa97a183f9d841f7a1089079e77ffb52" as const;
 
+// Legal pages (ISSUE-016). Absolute www.dembrane.com/legal/* links so they
+// render even if the pages 404 for now (Founder decision D4). Wire now,
+// resolve later.
+export const LEGAL_TERMS_URL = "https://www.dembrane.com/legal/terms" as const;
+export const LEGAL_PRIVACY_URL =
+	"https://www.dembrane.com/legal/privacy" as const;
+export const LEGAL_DPA_URL = "https://www.dembrane.com/legal/DPA" as const;
+
 export const COMMUNITY_SLACK_URL =
 	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
 

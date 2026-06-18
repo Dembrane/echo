@@ -350,6 +350,16 @@ class EmailSettings(BaseSettings):
             "UPGRADE_REQUEST_INBOX", "EMAIL__UPGRADE_REQUEST_INBOX"
         ),
     )
+    # Where onboarding training follow-ups route (ISSUE-012). Pauline owns
+    # training verification/scheduling. FOLLOW-UP: confirm Pauline's address;
+    # default is a shared inbox placeholder until then.
+    onboarding_followup_inbox: str = Field(
+        default="training@dembrane.com",
+        alias="ONBOARDING_FOLLOWUP_INBOX",
+        validation_alias=AliasChoices(
+            "ONBOARDING_FOLLOWUP_INBOX", "EMAIL__ONBOARDING_FOLLOWUP_INBOX"
+        ),
+    )
 
 
 class DatabaseSettings(BaseSettings):

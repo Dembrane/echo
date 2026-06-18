@@ -205,6 +205,80 @@ class TestWorkspaceUsageResponseIncludesGates:
         assert resp.usage_gates.upgrade_cta_tier == "innovator"
 
 
+class TestMemberVsAdminFinancialGating:
+    """ISSUE-017 D4/D5: members see counts, € amounts are admin-only.
+
+    The usage endpoint computes the full (admin) response, caches it, then —
+    when the caller lacks workspace:view_invoices — nulls the financial
+    fields (overage_forecast_eur, seat_overage_eur, next_tier) while leaving
+    every count intact. These tests exercise that exact transform.
+    """
+
+    def _full_admin_response(self):
+        from dembrane.api.v2.workspaces import (
+            NextTierRecommendation,
+            UsageGatesResponse,
+            WorkspaceUsageResponse,
+        )
+
+        return WorkspaceUsageResponse(
+            cycle_start="2026-05-01T00:00:00Z",
+            cycle_end_exclusive="2026-06-01T00:00:00Z",
+            tier="innovator",
+            tier_tagline="grow.",
+            audio_hours=12.0,
+            audio_hours_included=20,
+            seat_count=4,
+            seat_count_included=5,
+            member_count=3,
+            external_count=1,
+            pending_count=2,
+            project_count=6,
+            projects=[],
+            pilot_hard_block_active=False,
+            usage_gates=UsageGatesResponse(),
+            overage_forecast_eur=42.0,
+            seat_overage_eur=18.0,
+            next_tier=NextTierRecommendation(
+                tier="changemaker",
+                tagline="grow further.",
+                included_hours=60,
+                included_seats=10,
+            ),
+        )
+
+    def _member_view(self, full):
+        """Mirror the endpoint's member transform."""
+        from dembrane.api.v2.workspaces import WorkspaceUsageResponse
+
+        return WorkspaceUsageResponse(
+            **{
+                **full.model_dump(),
+                "overage_forecast_eur": None,
+                "seat_overage_eur": None,
+                "next_tier": None,
+            }
+        )
+
+    def test_admin_sees_euro_amounts(self):
+        full = self._full_admin_response()
+        assert full.overage_forecast_eur == 42.0
+        assert full.seat_overage_eur == 18.0
+
+    def test_member_sees_counts_but_no_euro_amounts(self):
+        member = self._member_view(self._full_admin_response())
+        # € amounts hidden
+        assert member.overage_forecast_eur is None
+        assert member.seat_overage_eur is None
+        assert member.next_tier is None
+        # counts still visible
+        assert member.seat_count == 4
+        assert member.member_count == 3
+        assert member.external_count == 1
+        assert member.audio_hours == 12.0
+        assert member.project_count == 6
+
+
 class TestWorkspaceUsageSchemaIncludesGates:
     """Verify WorkspaceUsage (list endpoint schema) includes usage_gates."""
 

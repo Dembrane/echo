@@ -4,8 +4,10 @@ import {
 	ActionIcon,
 	Box,
 	Button,
+	Checkbox,
 	Group,
 	Loader,
+	Radio,
 	Stack,
 	Text,
 	TextInput,
@@ -85,22 +87,41 @@ export const OnboardingRoute = () => {
 
 	const [orgName, setOrgName] = useState(defaultOrgName);
 	const [inviteEmails, setInviteEmails] = useState<string[]>([""]);
-	const [step, setStep] = useState<"loading" | "org" | "invite">("loading");
+	const [step, setStep] = useState<"loading" | "org" | "invite" | "questions">(
+		"loading",
+	);
 	const [workspaceId, setWorkspaceId] = useState<string | null>(null);
 	const [sendingInvites, setSendingInvites] = useState(false);
 	const [ready, setReady] = useState(false);
+	// ISSUE-012 questionnaire. Required but non-blocking — the user can skip
+	// and still reach /o. q1 is select-many; q2/q3 are yes/no.
+	const [q1, setQ1] = useState<string[]>([]);
+	const [q2, setQ2] = useState<string | null>(null);
+	const [q3, setQ3] = useState<string | null>(null);
+	const [submittingAnswers, setSubmittingAnswers] = useState(false);
+	// Skip the questions step if the user already answered (re-onboarding).
+	const alreadyAnswered = Boolean(meV2?.onboarding_answer_json);
 
-	// useCallback so the effect below can list goToWorkspaceHome as a dep
-	// without re-firing on every render. workspaceId / navigate are the
-	// real triggers — wrapping them via this callback satisfies the
-	// exhaustive-deps lint without hiding an actual dependency.
-	const goToWorkspaceHome = useCallback(() => {
-		if (workspaceId) {
-			navigate(`/w/${workspaceId}/home`);
-		} else {
-			navigate("/o");
+	// Everyone lands on the general home /o after onboarding (ISSUE-015 /
+	// Founder decision D3) — not a specific workspace. useCallback keeps the
+	// effect dep stable.
+	const goToHome = useCallback(() => {
+		navigate("/o");
+	}, [navigate]);
+
+	// Advance to the questionnaire, or skip straight to /o when the user has
+	// already answered it.
+	const goToQuestionsOrHome = useCallback(() => {
+		if (alreadyAnswered) {
+			goToHome();
+			return;
 		}
-	}, [workspaceId, navigate]);
+		setReady(false);
+		setTimeout(() => {
+			setStep("questions");
+			requestAnimationFrame(() => setReady(true));
+		}, 150);
+	}, [alreadyAnswered, goToHome]);
 
 	useDocumentTitle(t`Set up your workspace | dembrane`);
 
@@ -114,7 +135,15 @@ export const OnboardingRoute = () => {
 		if (meLoading) return;
 
 		if (meV2?.onboarding_completed === true) {
-			goToWorkspaceHome();
+			// Onboarded already. If they never answered the questionnaire
+			// (ISSUE-012, required but non-blocking), nudge them through it;
+			// otherwise straight to /o.
+			if (meV2?.onboarding_answer_json) {
+				goToHome();
+			} else {
+				setStep("questions");
+				requestAnimationFrame(() => setReady(true));
+			}
 			return;
 		}
 
@@ -124,7 +153,7 @@ export const OnboardingRoute = () => {
 		}, 1200);
 
 		return () => clearTimeout(timer);
-	}, [meV2, meLoading, step, goToWorkspaceHome]);
+	}, [meV2, meLoading, step, goToHome]);
 
 	const onboardingMutation = useMutation({
 		mutationFn: () => completeOnboarding(orgName.trim() || defaultOrgName),
@@ -152,9 +181,10 @@ export const OnboardingRoute = () => {
 				setWorkspace(data.workspace_id);
 			}
 
-			// Invited users skip the invite step — they don't have a organisation to invite
+			// Invited users skip the invite step — they don't have a organisation
+			// to invite. They still see the questionnaire (unless answered).
 			if (hasInvites) {
-				goToWorkspaceHome();
+				goToQuestionsOrHome();
 				return;
 			}
 
@@ -172,7 +202,7 @@ export const OnboardingRoute = () => {
 		const validEmails = inviteEmails.filter((e) => e.trim() && e.includes("@"));
 
 		if (validEmails.length === 0) {
-			goToWorkspaceHome();
+			goToQuestionsOrHome();
 			return;
 		}
 
@@ -192,7 +222,33 @@ export const OnboardingRoute = () => {
 		if (sent > 0) {
 			toast.success(sent === 1 ? t`Invite sent` : t`${sent} invites sent`);
 		}
-		goToWorkspaceHome();
+		goToQuestionsOrHome();
+	};
+
+	// ISSUE-012: persist the questionnaire answers, then route to /o. Required
+	// but non-blocking — on a skip we still route on, and a submit failure
+	// must not trap the user on this screen.
+	const submitAnswers = async (skip: boolean) => {
+		if (!skip) {
+			setSubmittingAnswers(true);
+			try {
+				await fetch(`${API_BASE_URL}/v2/onboarding/answers`, {
+					body: JSON.stringify({
+						data: [{ q1 }, { q2: q2 ?? "" }, { q3: q3 ?? "" }],
+						version: "17-jun-26",
+					}),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				});
+				queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
+			} catch {
+				// Non-blocking: never trap the user. They reach /o regardless.
+			} finally {
+				setSubmittingAnswers(false);
+			}
+		}
+		goToHome();
 	};
 
 	const addEmailField = () => setInviteEmails([...inviteEmails, ""]);
@@ -306,7 +362,7 @@ export const OnboardingRoute = () => {
 							<Button
 								size="md"
 								variant="outline"
-								onClick={() => goToWorkspaceHome()}
+								onClick={() => goToQuestionsOrHome()}
 							>
 								<Trans>Skip</Trans>
 							</Button>
@@ -320,6 +376,102 @@ export const OnboardingRoute = () => {
 								onClick={handleSendInvites}
 							>
 								<Trans>Send invites</Trans>
+							</Button>
+						</Group>
+					</Stack>
+				</div>
+			</div>
+		);
+	}
+
+	// ── Questions step (ISSUE-012) ──
+	if (step === "questions") {
+		const allAnswered = q1.length > 0 && q2 !== null && q3 !== null;
+		return (
+			<div
+				style={{
+					alignItems: "center",
+					background: "var(--app-background, #f6f4f1)",
+					display: "flex",
+					justifyContent: "center",
+					minHeight: "100dvh",
+					overflow: "hidden",
+					padding: "40px 24px",
+					position: "relative",
+				}}
+			>
+				<GradientBlurs />
+				<div
+					style={{
+						opacity: ready ? 1 : 0,
+						position: "relative",
+						transform: ready ? "translateY(0)" : "translateY(12px)",
+						transition: "opacity 0.5s ease, transform 0.5s ease",
+						width: "min(440px, 100%)",
+					}}
+				>
+					<Stack gap={28}>
+						<Stack gap={6}>
+							<Title order={3} fw={500}>
+								<Trans>A few quick questions</Trans>
+							</Title>
+							<Text size="sm" lh={1.6}>
+								<Trans>
+									This helps us set you up well. You can skip and answer later.
+								</Trans>
+							</Text>
+						</Stack>
+
+						<Checkbox.Group
+							label={t`Do you plan to use dembrane internally, or to provide services to other client organisations?`}
+							value={q1}
+							onChange={setQ1}
+						>
+							<Stack gap={8} mt={8}>
+								<Checkbox value="only internally" label={t`Only internally`} />
+								<Checkbox value="with partners" label={t`With partners`} />
+								<Checkbox value="with clients" label={t`With clients`} />
+							</Stack>
+						</Checkbox.Group>
+
+						<Radio.Group
+							label={t`Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?`}
+							value={q2}
+							onChange={setQ2}
+						>
+							<Group gap={16} mt={8}>
+								<Radio value="yes" label={t`Yes`} />
+								<Radio value="no" label={t`No`} />
+							</Group>
+						</Radio.Group>
+
+						<Radio.Group
+							label={t`Have you followed a training?`}
+							value={q3}
+							onChange={setQ3}
+						>
+							<Group gap={16} mt={8}>
+								<Radio value="yes" label={t`Yes`} />
+								<Radio value="no" label={t`No`} />
+							</Group>
+						</Radio.Group>
+
+						<Group gap={12}>
+							<Button
+								size="md"
+								variant="subtle"
+								onClick={() => submitAnswers(true)}
+							>
+								<Trans>Skip</Trans>
+							</Button>
+							<Button
+								flex={1}
+								size="md"
+								loading={submittingAnswers}
+								disabled={!allAnswered}
+								onClick={() => submitAnswers(false)}
+							>
+								<Trans>Continue</Trans>
 							</Button>
 						</Group>
 					</Stack>

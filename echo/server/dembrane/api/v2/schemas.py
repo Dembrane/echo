@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import Field, EmailStr, BaseModel
 
@@ -37,6 +37,12 @@ class MeResponse(BaseModel):
     # organisation-name field; existing users (true) get the "Welcome back, we've
     # added organisations" migration screen. Independent of onboarding_completed.
     has_legacy_projects: bool = False
+    # Post-register questionnaire answers (ISSUE-012). Null until the user
+    # submits the questions step. Shape:
+    # {"version": "17-jun-26", "data": [{"q1": "..."}, ...]}. The frontend
+    # reads this to decide whether to nudge the (required but non-blocking)
+    # questions step.
+    onboarding_answer_json: Optional[dict[str, Any]] = None
 
 
 # ── /v2/onboarding ──
@@ -50,6 +56,24 @@ class OnboardingCompleteResponse(BaseModel):
     app_user_id: str
     org_id: str
     workspace_id: str
+
+
+class OnboardingAnswersRequest(BaseModel):
+    """Post-register questionnaire answers (ISSUE-012). Required but
+    non-blocking — a skip still routes the user on. `version` tags the
+    question set so answers stay interpretable as questions evolve."""
+
+    version: str = Field(default="17-jun-26", max_length=40)
+    # Free-form per-question answers. Stored verbatim under the `data` key.
+    # Known keys today: q1 (use context), q2 (high-risk yes/no), q3 (training).
+    data: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class OnboardingAnswersResponse(BaseModel):
+    status: str
+    # Echoes back what got persisted so the client can update its cache
+    # without a refetch.
+    onboarding_answer_json: dict[str, Any]
 
 
 # ── /v2/workspaces ──

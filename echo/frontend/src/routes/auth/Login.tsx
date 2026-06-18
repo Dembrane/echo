@@ -23,7 +23,6 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { lastWorkspaceKey } from "@/hooks/useWorkspace";
 import { testId } from "@/lib/testUtils";
 
 // Same-origin path guard against open-redirect via ?next=//evil.com.
@@ -143,14 +142,15 @@ export const LoginRoute = () => {
 				message: isNewUser ? t`Welcome to dembrane` : t`Welcome back`,
 			});
 
-			// Check onboarding + workspace count in parallel with transition.
-			// Small delay ensures the session cookie from login is available.
+			// Check onboarding in parallel with the transition. Small delay
+			// ensures the session cookie from login is available. Routing is
+			// deliberately simple now (ISSUE-015 / Founder decision D3):
+			// everyone lands on the general home /o, with ?next as the only
+			// exception. The old single-workspace / last-used auto-redirects
+			// were removed — /o is the canonical landing.
 			let needsOnboarding = false;
-			let workspaceCount = 0;
-			let firstWorkspaceId: string | null = null;
-			let isOrganisationAdmin = false;
+			let onboardingIncomplete = false;
 			let wsList: { id: string }[] = [];
-			let currentUserId: string | null = null;
 			try {
 				await new Promise((r) => setTimeout(r, 300));
 				const meResponse = await fetch(`${API_BASE_URL}/v2/me`, {
@@ -159,13 +159,17 @@ export const LoginRoute = () => {
 				if (meResponse.ok) {
 					const meData = await meResponse.json();
 					needsOnboarding = meData.onboarding_completed === false;
-					currentUserId = meData.directus_user_id ?? null;
-					isOrganisationAdmin = (meData.orgs ?? []).some(
-						(o: { role: string }) => o.role === "owner" || o.role === "admin",
-					);
+					// Required-but-non-blocking questionnaire (ISSUE-012): if the
+					// user is onboarded but never answered, route through the
+					// stepper first so they get nudged. The stepper still lets
+					// them skip on to /o.
+					onboardingIncomplete =
+						meData.onboarding_completed === true &&
+						!meData.onboarding_answer_json;
 				}
 
-				// If onboarded, check workspace count for routing
+				// Workspace list still needed to validate a ?next deep-link
+				// target (block cross-user leaks).
 				if (!needsOnboarding) {
 					const wsResponse = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 						credentials: "include",
@@ -173,10 +177,6 @@ export const LoginRoute = () => {
 					if (wsResponse.ok) {
 						const wsData = await wsResponse.json();
 						wsList = wsData.workspaces ?? [];
-						workspaceCount = wsList.length;
-						if (wsList.length > 0) {
-							firstWorkspaceId = wsList[0].id;
-						}
 					}
 				}
 			} catch {
@@ -185,7 +185,7 @@ export const LoginRoute = () => {
 
 			await transitionPromise;
 
-			if (needsOnboarding) {
+			if (needsOnboarding || onboardingIncomplete) {
 				navigate("/onboarding");
 				return;
 			}
@@ -200,27 +200,8 @@ export const LoginRoute = () => {
 				return;
 			}
 
-			// Routing:
-			// - Solo user (1 workspace) → straight to workspace home
-			// - Returning multi-workspace user → last-used workspace (if still valid)
-			// - First-time multi-workspace user → selector
-			const lastUsedId = currentUserId
-				? localStorage.getItem(lastWorkspaceKey(currentUserId))
-				: null;
-			const lastStillValid =
-				!!lastUsedId && wsList.some((w) => w.id === lastUsedId);
-
-			if (workspaceCount === 1 && firstWorkspaceId) {
-				navigate(`/w/${firstWorkspaceId}/home`);
-			} else if (lastStillValid) {
-				navigate(`/w/${lastUsedId}/home`);
-			} else if (workspaceCount > 1 || isOrganisationAdmin) {
-				navigate("/o");
-			} else if (firstWorkspaceId) {
-				navigate(`/w/${firstWorkspaceId}/home`);
-			} else {
-				navigate("/o");
-			}
+			// Everyone else: the general home.
+			navigate("/o");
 		} catch (error) {
 			// biome-ignore lint/suspicious/noExplicitAny: <todo>
 			const errors = (error as any)?.errors;

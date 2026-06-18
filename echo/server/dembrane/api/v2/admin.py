@@ -64,6 +64,11 @@ class BillingRow(BaseModel):
     account_scope: Optional[Literal["organisation", "workspace"]] = None
     tier: str
     is_partner_owned: bool = False
+    # Staff-set org partner flag (org.is_partner). Gates the workspace
+    # internal-vs-client self-identify branch. Editable from the staff
+    # dashboard (Founder decision D1). Distinct from `is_partner_owned`,
+    # which is derived from billing handoff state.
+    org_is_partner: bool = False
     billed_to_team_id: Optional[str] = None
     billed_to_team_name: Optional[str] = None
     # Usage
@@ -342,6 +347,25 @@ async def _org_name_map(org_ids: list[str]) -> dict[str, str]:
     if not isinstance(rows, list):
         return {}
     return {r["id"]: r.get("name", "") for r in rows}
+
+
+async def _org_partner_map(org_ids: list[str]) -> dict[str, bool]:
+    """Map org_id → is_partner for the staff billing rollup."""
+    if not org_ids:
+        return {}
+    rows = await async_directus.get_items(
+        "org",
+        {
+            "query": {
+                "filter": {"id": {"_in": list(set(org_ids))}},
+                "fields": ["id", "is_partner"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return {}
+    return {r["id"]: bool(r.get("is_partner")) for r in rows}
 
 
 async def _workspace_hours_this_cycle(
@@ -644,6 +668,7 @@ async def billing_rollup(
     workspaces = await _all_active_workspaces()
     org_ids = [w["org_id"] for w in workspaces if w.get("org_id")]
     org_name_by_id = await _org_name_map(org_ids)
+    org_partner_by_id = await _org_partner_map(org_ids)
 
     rows: list[BillingRow] = []
     total_base = 0.0
@@ -713,6 +738,7 @@ async def billing_rollup(
             account_scope=ws.get("account_scope"),
             tier=tier,
             is_partner_owned=is_partner,
+            org_is_partner=org_partner_by_id.get(ws.get("org_id", ""), False),
             billed_to_team_id=billed_to,
             billed_to_team_name=billed_to_name,
             audio_hours=hours,
@@ -1010,7 +1036,7 @@ async def update_billing_account_discount(
     The billing account is the canonical home of the discount: `percent_discount`
     reduces every price the account is charged or shown (live Mollie subscription
     amount, prorated seat charges, customer overview, and the admin forecast +
-    MRR — see `billing_service.apply_discount`), and `type_discount` is the
+    MRR, see `billing_service.apply_discount`), and `type_discount` is the
     descriptive reason tag (scholarship / staff_discount / trial). Writing the
     workspace row instead would let the workspace- and account-level values
     diverge, so the staff editor targets the account. Idempotent.
@@ -1046,6 +1072,42 @@ async def update_billing_account_discount(
         auth.user_id,
     )
     return {"status": "ok", **payload, "account_id": updated.get("id", account_id)}
+
+
+class UpdateOrgPartnerBody(BaseModel):
+    is_partner: bool = Field(
+        description="Staff-set org partner flag. Gates the workspace "
+        "internal-vs-client self-identify branch (Founder decision D1)."
+    )
+
+
+@router.patch("/orgs/{org_id}/partner")
+async def update_org_partner(
+    org_id: str,
+    body: UpdateOrgPartnerBody,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Staff-only: toggle org.is_partner.
+
+    A partner org's workspaces self-identify internal vs external client use
+    on creation. No secret code (Founder decision D1), this flag is the
+    whole gate.
+    """
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    org = await async_directus.get_item("org", org_id)
+    if not org or org.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Organisation not found")
+
+    await async_directus.update_item("org", org_id, {"is_partner": body.is_partner})
+    logger.info(
+        "staff set org %s is_partner=%s by staff %s",
+        org_id,
+        body.is_partner,
+        auth.user_id,
+    )
+    return {"status": "ok", "org_id": org_id, "is_partner": body.is_partner}
 
 
 class GrantTrialBody(BaseModel):

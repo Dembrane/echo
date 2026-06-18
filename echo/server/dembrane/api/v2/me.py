@@ -166,6 +166,10 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
                     )
                 )
 
+    onboarding_answers = app_user.get("onboarding_answer_json")
+    if not isinstance(onboarding_answers, dict):
+        onboarding_answers = None
+
     return MeResponse(
         id=app_user["id"],
         directus_user_id=auth.user_id,
@@ -177,6 +181,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
         has_pending_invites=has_pending_invites,
         has_legacy_projects=has_legacy_projects,
         is_staff=bool(auth.is_admin),
+        onboarding_answer_json=onboarding_answers,
     )
 
 
