@@ -26,7 +26,12 @@ import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle"
 import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { type BillingPeriod, isComingSoon, SELLABLE_TIER } from "@/lib/tiers";
+import {
+	type BillingPeriod,
+	hasMultiplePurchasableTiers,
+	isComingSoon,
+	SELLABLE_TIER,
+} from "@/lib/tiers";
 
 export function tierLabel(tier: string | null | undefined): string {
 	if (!tier) return "";
@@ -61,6 +66,11 @@ interface Overview {
 	pending_invites: number;
 	/** Projected total once every pending invite is accepted. Null when none pending. */
 	projected_with_pending_eur: number | null;
+	/** Discount already applied to every amount above (and to the live Mollie
+	 *  charge). 0 / null when there is no discount. */
+	percent_discount: number | null;
+	/** Reason tag for the discount (scholarship / staff_discount / trial). */
+	type_discount: string | null;
 	/** Set when a seat re-price against Mollie last failed (dead mandate / API
 	 *  error); null when reconcile is clean. Drives the "fix your payment" prompt. */
 	reconcile_failed_at: string | null;
@@ -571,6 +581,11 @@ export function BillingManager({
 	const status = overview.status;
 	const hasPaidPlan = tier !== "free";
 	const isCanceling = status === "canceled";
+	// "Change plan" only makes sense when there's another tier to switch to.
+	// Today only Changemaker is purchasable, so hide it; it auto-restores when a
+	// second tier goes live (single source: hasMultiplePurchasableTiers).
+	const canChangePlan = hasMultiplePurchasableTiers();
+	const discountPct = overview.percent_discount ?? 0;
 	const period = overview.billing_period ?? "annual";
 	const endDate = formatDate(overview.current_period_end);
 	// Show the total at the cadence the customer is actually billed: a "monthly
@@ -656,7 +671,7 @@ export function BillingManager({
 				<SectionRow
 					label={t`Current plan`}
 					action={
-						isCanceling ? undefined : (
+						isCanceling || !canChangePlan ? undefined : (
 							<Button size="xs" variant="subtle" onClick={openPlan}>
 								<Trans>Change plan</Trans>
 							</Button>
@@ -788,6 +803,11 @@ export function BillingManager({
 						{hasPending && withPendingValue != null && (
 							<Text size="xs" c="var(--mantine-color-primary-6)">
 								<Trans>* rises to {eur(withPendingValue)} when accepted</Trans>
+							</Text>
+						)}
+						{discountPct > 0 && (
+							<Text size="xs" c="primary">
+								<Trans>{discountPct}% discount applied</Trans>
 							</Text>
 						)}
 					</SectionRow>

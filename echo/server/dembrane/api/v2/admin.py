@@ -28,6 +28,7 @@ from dembrane import mollie
 from dembrane.settings import get_settings
 from dembrane.seat_capacity import compute_effective_seat_state
 from dembrane.tier_capacity import get_capacity
+from dembrane.billing_service import apply_discount
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
@@ -529,7 +530,12 @@ def _aggregate_accounts(
 
         active_count = sum(1 for m in members if m.is_active)
         # Forecast: tier base charged once per account, €0 when comped/trial.
-        forecast = 0.0 if is_comped else (base_price or 0.0)
+        # Apply the account discount to the per-account forecast so the admin
+        # figure matches the (discounted) amount the customer is actually
+        # billed via Mollie. Comped/trial stay €0 (apply_discount(0, …) == 0).
+        forecast = (
+            0.0 if is_comped else apply_discount(base_price or 0.0, first.percent_discount)
+        )
 
         accounts.append(
             AccountRow(
@@ -721,12 +727,13 @@ async def billing_rollup(
     )
 
     # Paying revenue only: comped/trial accounts add €0 (forecast already
-    # zeroed). MRR is the recurring (non-pilot) base of paying accounts.
+    # zeroed). MRR is the recurring (non-pilot) base of paying accounts, after
+    # the per-account discount so it reflects real recurring revenue.
     total_forecast = sum(a.total_forecast_eur for a in accounts)
     mrr = 0.0
     for a in accounts:
         if not a.is_comped and a.tier != "pilot" and a.base_price_eur:
-            mrr += a.base_price_eur
+            mrr += apply_discount(a.base_price_eur, a.percent_discount)
 
     active_count = sum(1 for r in rows if r.is_active)
     active_account_count = sum(1 for a in accounts if a.is_active)
@@ -897,8 +904,11 @@ async def update_workspace_discount(
 ) -> dict:
     """Staff-only: edit type_discount / percent_discount on a workspace.
 
-    These fields are descriptive metadata for finance; no code path
-    multiplies a price by (1 - percent_discount/100).
+    `percent_discount` is applied as `amount × (1 - percent_discount/100)`
+    everywhere a price is shown or charged: the live Mollie subscription amount,
+    prorated seat charges, the customer billing overview / estimate, and the
+    admin forecast + MRR (see `billing_service.apply_discount`). `type_discount`
+    is the descriptive reason tag (scholarship / staff_discount / trial).
     """
     if not auth.is_admin:
         raise HTTPException(status_code=403, detail="Staff-only")

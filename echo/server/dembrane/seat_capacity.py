@@ -59,6 +59,27 @@ def tier_hard_blocks_seats(tier: str) -> bool:
     return tier in _HARD_BLOCK_SEAT_TIERS
 
 
+async def effective_seat_user_ids(workspace_id: str) -> set[str]:
+    """Distinct app_user ids that occupy a seat in this workspace.
+
+    Same predicate as `compute_effective_seat_state` (direct members only,
+    role in the seat pool incl. external), but returns the ids so callers can
+    pool seats across an account's workspaces and dedupe a user who is a member
+    of several of them (otherwise they'd be counted once per workspace — the
+    phantom-seat bug)."""
+    members = await get_effective_members(workspace_id)
+    user_ids: set[str] = set()
+    for m in members:
+        if m.get("source") != "direct":
+            continue
+        uid = m.get("user_id")
+        if not uid:
+            continue
+        if (m.get("role") or "") in _SEAT_ROLES:
+            user_ids.add(uid)
+    return user_ids
+
+
 async def compute_effective_seat_state(workspace_id: str) -> tuple[int, int, int]:
     """Return (seats_used, member_count, external_count) for a workspace.
 

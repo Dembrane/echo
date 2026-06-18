@@ -462,3 +462,99 @@ class TestOverviewMollieSourced:
         assert out["projected_with_pending_eur"] == 375.0
         # Flag passes through for the "fix your payment" prompt.
         assert out["reconcile_failed_at"] == "2026-06-17T00:00:00+00:00"
+
+
+# ── ISSUE-024·5: discount reaches the customer-facing displays ────────────
+
+
+class TestOverviewDiscounted:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.count_account_pending_invites", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.count_account_seats", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    async def test_projected_total_is_discounted(
+        self, mock_mollie, mock_directus, mock_seats, mock_pending
+    ):
+        from dembrane.billing_service import get_billing_overview
+
+        mock_mollie.MollieError = Exception
+        mock_directus.get_item = AsyncMock(
+            return_value=_active_account(percent_discount=10, type_discount="scholarship")
+        )
+        mock_seats.return_value = 2
+        mock_pending.return_value = 3
+        mock_mollie.get_subscription = AsyncMock(
+            return_value={"amount": {"value": "1620.00", "currency": "EUR"}, "nextPaymentDate": "2026-07-01"}
+        )
+        mock_mollie.list_mandates = AsyncMock(return_value=[])
+
+        out = await get_billing_overview("acc-1")
+        # annual per-seat monthly = 75; 2 seats * 75 = 150; 10% off = 135.
+        assert out["projected_monthly_eur"] == 135.0
+        # (2 + 3 pending) * 75 = 375; 10% off = 337.5.
+        assert out["projected_with_pending_eur"] == 337.5
+        # Discount metadata surfaced for the "10% discount applied" label.
+        assert out["percent_discount"] == 10
+        assert out["type_discount"] == "scholarship"
+
+
+class TestEstimateSeatAdditionDiscounted:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service._period_fraction_remaining", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.count_net_new_seats", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    async def test_estimate_quote_is_discounted(
+        self, mock_directus, mock_net_new, mock_fraction
+    ):
+        from dembrane.billing_service import estimate_seat_addition
+
+        mock_directus.get_item = AsyncMock(return_value=_active_account(percent_discount=25))
+        mock_net_new.return_value = 2
+        mock_fraction.return_value = 1.0
+
+        out = await estimate_seat_addition("acc-1", recipient_emails=["a@x.com", "b@x.com"])
+        # 75*12*2 = 1800; 25% off = 1350.
+        assert out["recurring_delta_eur"] == 1350.0
+        assert out["prorated_now_eur"] == 1350.0
+
+
+# ── Bug #4: account seats pool DISTINCT users across workspaces ───────────
+
+
+class TestCountAccountSeatsDistinctUsers:
+    @pytest.mark.asyncio
+    @patch("dembrane.seat_capacity.effective_seat_user_ids", new_callable=AsyncMock)
+    @patch("dembrane.billing_service._account_workspace_ids", new_callable=AsyncMock)
+    async def test_user_in_two_workspaces_counts_once(self, mock_ws_ids, mock_seat_ids):
+        from dembrane.billing_service import count_account_seats
+
+        mock_ws_ids.return_value = ["ws-1", "ws-2"]
+        # Alice is in both workspaces; Bob only in ws-1. Pooled distinct = 2.
+        mock_seat_ids.side_effect = [{"alice", "bob"}, {"alice"}]
+
+        assert await count_account_seats("acc-1") == 2
+
+    @pytest.mark.asyncio
+    @patch("dembrane.seat_capacity.effective_seat_user_ids", new_callable=AsyncMock)
+    @patch("dembrane.billing_service._account_workspace_ids", new_callable=AsyncMock)
+    async def test_existing_member_creating_workspace_is_zero_net_new(
+        self, mock_ws_ids, mock_seat_ids
+    ):
+        """Bug #4: an existing seat-holder who creates (and owns) a new workspace
+        adds no distinct user, so the account seat count is unchanged -> EUR0
+        net-new, no phantom seat."""
+        from dembrane.billing_service import count_account_seats
+
+        # Before: one workspace, alice is the only seat.
+        mock_ws_ids.return_value = ["ws-1"]
+        mock_seat_ids.side_effect = [{"alice"}]
+        before = await count_account_seats("acc-1")
+
+        # After: alice created ws-2 and is its owner; she's already counted.
+        mock_ws_ids.return_value = ["ws-1", "ws-2"]
+        mock_seat_ids.side_effect = [{"alice"}, {"alice"}]
+        after = await count_account_seats("acc-1")
+
+        assert before == 1
+        assert after == 1  # unchanged: no phantom +1 seat

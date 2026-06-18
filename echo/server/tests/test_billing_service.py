@@ -384,3 +384,147 @@ class TestWebhookActivation:
 
         await handle_mollie_webhook("tr_x")
         mock_directus.update_item.assert_not_called()
+
+
+# ── ISSUE-024 sub-item 5: discount applies everywhere (incl. real charges) ──
+
+
+class TestApplyDiscount:
+    def test_none_and_zero_are_noop(self):
+        from dembrane.billing_service import apply_discount
+
+        assert apply_discount(900.0, None) == 900.0
+        assert apply_discount(900.0, 0) == 900.0
+
+    def test_percentage_reduces(self):
+        from dembrane.billing_service import apply_discount
+
+        assert apply_discount(900.0, 10) == 810.0
+        assert apply_discount(1000.0, 25) == 750.0
+
+    def test_hundred_percent_floors_to_zero(self):
+        from dembrane.billing_service import apply_discount
+
+        assert apply_discount(900.0, 100) == 0.0
+
+    def test_clamps_out_of_range(self):
+        from dembrane.billing_service import apply_discount
+
+        # >100 clamps to 100 (free), <0 clamps to 0 (no discount).
+        assert apply_discount(900.0, 150) == 0.0
+        assert apply_discount(900.0, -20) == 900.0
+
+    def test_rounds_to_cents(self):
+        from dembrane.billing_service import apply_discount
+
+        assert apply_discount(99.99, 33) == round(99.99 * 0.67, 2)
+
+
+class TestDiscountedReprice:
+    """sync_subscription_seats sends Mollie the DISCOUNTED amount."""
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.count_account_seats", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    async def test_reprice_uses_discounted_amount(
+        self, mock_mollie, mock_directus, mock_seats
+    ):
+        from dembrane.billing_service import sync_subscription_seats
+
+        mock_mollie.MollieError = Exception
+        mock_directus.get_item = AsyncMock(
+            return_value={
+                "id": "acc-1",
+                "tier": "changemaker",
+                "status": "active",
+                "billing_period": "annual",
+                "mollie_subscription_id": "sub_1",
+                "mollie_customer_id": "cst_1",
+                "percent_discount": 10,
+            }
+        )
+        mock_seats.return_value = 2
+        # Mollie currently carries a stale amount so the PATCH is not skipped.
+        mock_mollie.get_subscription = AsyncMock(
+            return_value={"amount": {"value": "0.00", "currency": "EUR"}}
+        )
+        mock_mollie.update_subscription_amount = AsyncMock()
+
+        amount = await sync_subscription_seats("acc-1")
+        # 75 * 12 * 2 = 1800; 10% off = 1620.
+        assert amount == 1620.0
+        _args, kwargs = mock_mollie.update_subscription_amount.call_args
+        assert kwargs["amount_eur"] == 1620.0
+
+
+class TestDiscountedProration:
+    """_charge_seat_proration charges the DISCOUNTED prorated amount."""
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service._period_fraction_remaining", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.mollie")
+    async def test_proration_is_discounted(self, mock_mollie, mock_fraction):
+        from dembrane.billing_service import _charge_seat_proration
+
+        mock_mollie.MollieError = Exception
+        mock_fraction.return_value = 0.5
+        mock_mollie.list_mandates = AsyncMock(
+            return_value=[{"status": "valid", "id": "mdt_1"}]
+        )
+        mock_mollie.create_recurring_payment = AsyncMock(return_value={"id": "tr_x"})
+
+        account = {
+            "id": "acc-1",
+            "tier": "changemaker",
+            "billing_period": "annual",
+            "mollie_customer_id": "cst_1",
+            "percent_discount": 20,
+        }
+        result = await _charge_seat_proration(account, added_seats=1)
+        # full = 75*12*1 = 900; 20% off = 720; half period = 360.
+        assert result == 360.0
+        _a, kwargs = mock_mollie.create_recurring_payment.call_args
+        assert kwargs["amount_eur"] == 360.0
+
+
+class TestDiscountedCheckout:
+    """start_subscription_checkout creates the first payment at the discounted
+    amount, so the recurring subscription (which inherits amount via metadata)
+    is also discounted."""
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.count_account_seats", new_callable=AsyncMock)
+    @patch("dembrane.billing_service._ensure_customer", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    @patch("dembrane.billing_service.get_settings")
+    async def test_checkout_amount_is_discounted(
+        self, mock_settings, mock_mollie, mock_directus, mock_customer, mock_seats
+    ):
+        from dembrane.billing_service import start_subscription_checkout
+
+        mock_settings.return_value.billing.mollie_enabled = True
+        mock_settings.return_value.billing.mollie_webhook_url = None
+        mock_directus.get_item = AsyncMock(
+            return_value={
+                "id": "acc-1",
+                "tier": "changemaker",
+                "percent_discount": 50,
+            }
+        )
+        mock_directus.update_item = AsyncMock()
+        mock_customer.return_value = "cst_1"
+        mock_seats.return_value = 1
+        mock_mollie.create_first_payment = AsyncMock(return_value={"id": "tr_1"})
+        mock_mollie.checkout_url = lambda p: "https://pay.mollie/x"
+
+        url = await start_subscription_checkout(
+            "acc-1", tier="changemaker", billing_period="annual",
+            redirect_url="https://app/return",
+        )
+        assert url == "https://pay.mollie/x"
+        _a, kwargs = mock_mollie.create_first_payment.call_args
+        # 75*12*1 = 900; 50% off = 450; carried in metadata for the subscription.
+        assert kwargs["amount_eur"] == 450.0
+        assert kwargs["metadata"]["amount_eur"] == 450.0
