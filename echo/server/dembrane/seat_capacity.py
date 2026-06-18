@@ -1,8 +1,8 @@
 """Workspace seat capacity enforcement (unified model).
 
 Single source of truth for "is there room on this workspace for one more
-user?" Builds on inheritance.get_effective_members so the count includes
-derived org admins/owners — they count toward seats just like direct members.
+user?" Only direct workspace members consume a seat; derived org-admin/owner
+access does not (ADR-0004).
 
 Externals (role='external') share the same seat pool as members. There is
 no separate external cap — only `included_seats` matters. The `external`
@@ -48,12 +48,14 @@ _SEAT_ROLES = {"owner", "admin", "member", "billing", "external"}
 _EXTERNAL_ROLE = "external"
 
 # Tiers that hard-block on seat cap (no overage mechanism).
-_HARD_BLOCK_SEAT_TIERS = frozenset({"free", "pilot"})
+# Free is single-user: the one tier that hard-caps seats. Paid tiers are
+# per-seat metered and never block (ADR 0005).
+_HARD_BLOCK_SEAT_TIERS = frozenset({"free"})
 
 
 def tier_hard_blocks_seats(tier: str) -> bool:
-    """Free and pilot hard-block on seat cap. Pioneer+ accrue overage.
-    Guardian + unknown tiers don't block."""
+    """Only Free hard-caps seats (single user). Paid tiers bill per seat and
+    never block. Unknown tiers don't block."""
     return tier in _HARD_BLOCK_SEAT_TIERS
 
 
@@ -65,15 +67,17 @@ async def compute_effective_seat_state(workspace_id: str) -> tuple[int, int, int
         (owner/admin/member/billing).
     external_count: distinct users with role='external'.
 
-    Includes derived org admins/owners (via get_effective_members). A user
-    with both a direct row and a derived path counts once. Derived rows
-    are never external (inheritance.get_effective_members enforces).
+    Only direct members occupy a seat; derived org-admin/owner access
+    (source='inherited') grants oversight but does not (ADR-0004).
     """
     members = await get_effective_members(workspace_id)
 
     member_users: set[str] = set()
     external_users: set[str] = set()
     for m in members:
+        # Derived oversight access doesn't consume a seat.
+        if m.get("source") != "direct":
+            continue
         uid = m.get("user_id")
         if not uid:
             continue
@@ -156,6 +160,8 @@ async def assert_can_add_seat(
     over-issue invites). Acceptance paths pass False — they're
     transitioning pending → actual, so counting pending would double-count.
     """
+    # `tier` here is the billing-account tier: callers resolve it onto the
+    # workspace dict (via the account) before calling.
     tier = (workspace.get("tier") or "").lower()
     cap = get_capacity(tier)
     if cap is None or cap.included_seats is None:

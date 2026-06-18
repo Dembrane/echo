@@ -9,11 +9,10 @@ import {
 	Text,
 } from "@mantine/core";
 import { IconBulb, IconCheck, IconLock } from "@tabler/icons-react";
+import posthog from "posthog-js";
 import { useParams } from "react-router";
 import { useProjectChatContext } from "@/components/chat/hooks";
 import { useProjectById } from "@/components/project/hooks";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { SalesLinks } from "@/lib/links";
 import {
 	useAddChatContextMutation,
@@ -65,11 +64,7 @@ export const AutoSelectConversations = () => {
 				chatId: chatId ?? "",
 			});
 		} else {
-			try {
-				analytics.trackEvent(events.AUTO_SELECT_CONTACT_SALES);
-			} catch (error) {
-				console.warn("Analytics tracking failed:", error);
-			}
+			posthog.capture("contact_sales_clicked", { source: "auto_select" });
 			window.open(SalesLinks.AUTO_SELECT_CONTACT, "_blank");
 		}
 	};

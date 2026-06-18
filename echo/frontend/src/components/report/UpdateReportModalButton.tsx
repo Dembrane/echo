@@ -14,24 +14,23 @@ import {
 	Text,
 	Tooltip,
 } from "@mantine/core";
-import {
-	isDateFarEnough,
-	ScheduleDateTimePicker,
-} from "./ScheduleDateTimePicker";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft, IconClock, IconPencil } from "@tabler/icons-react";
 import { AxiosError } from "axios";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { FeedbackPortalModal } from "@/components/common/FeedbackPortalModal";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 import { useLanguage } from "@/hooks/useLanguage";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { useCreateProjectReportMutation, useProjectReport } from "./hooks";
 import { ReportFocusSelector } from "./ReportFocusSelector";
+import {
+	isDateFarEnough,
+	ScheduleDateTimePicker,
+} from "./ScheduleDateTimePicker";
 
 function getLanguageLabel(iso: string): string {
 	return languageOptionsByIso639_1.find((o) => o.value === iso)?.label ?? iso;
@@ -103,11 +102,7 @@ export const UpdateReportModalButton = ({
 	};
 
 	const handleSubmit = async (schedule?: boolean) => {
-		try {
-			analytics.trackEvent(events.UPDATE_REPORT);
-		} catch (error) {
-			console.warn("Analytics tracking failed:", error);
-		}
+		posthog.capture("report_updated");
 		await mutateAsync(
 			{
 				language,

@@ -19,6 +19,7 @@ from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.schemas import WorkspaceInviteRequest, WorkspaceInviteResponse
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
+from dembrane.api.v2._invite_helpers import build_invite_accept_url
 
 router = APIRouter()
 logger = getLogger("api.v2.invites")
@@ -62,6 +63,33 @@ def _enqueue_invite_email(
         return False
 
 
+@router.get("/{workspace_id}/seat-estimate")
+async def workspace_seat_estimate(
+    workspace_id: str,
+    ctx: DependencyWorkspaceContext,
+    added_seats: int = 1,
+) -> dict:
+    """Cost preview for adding a member: the one-off prorated charge now plus how
+    much the recurring renewal goes up. Drives the invite confirm dialog."""
+    ctx.require_policy("member:invite")
+    from dembrane.billing_service import (
+        estimate_seat_addition,
+        get_account_for_workspace,
+    )
+
+    account = await get_account_for_workspace(workspace_id)
+    if not account:
+        return {
+            "active": False,
+            "added_seats": added_seats,
+            "billing_period": "annual",
+            "currency": "EUR",
+            "prorated_now_eur": 0.0,
+            "recurring_delta_eur": 0.0,
+        }
+    return await estimate_seat_addition(account["id"], max(1, added_seats))
+
+
 @router.post("/{workspace_id}/invite", response_model=WorkspaceInviteResponse)
 async def invite_to_workspace(
     workspace_id: str,
@@ -86,6 +114,21 @@ async def invite_to_workspace(
       → On register + onboard the invite is auto-accepted (status: "invited")
     """
     ctx.require_policy("member:invite")
+
+    # Adding a member consumes a seat, and seats can only be added on an active
+    # plan. A canceled or past_due account must reactivate first (per-seat
+    # proration model): block here and let the UI route them to billing.
+    from dembrane.billing_service import (
+        account_blocks_seat_add,
+        get_account_for_workspace,
+    )
+
+    billing_account = await get_account_for_workspace(workspace_id)
+    if account_blocks_seat_add(billing_account) == "reactivate_required":
+        raise HTTPException(
+            status_code=402,
+            detail="Reactivate your plan to add members.",
+        )
 
     email = body.email.strip().lower()
     role = body.role
@@ -197,9 +240,7 @@ async def invite_to_workspace(
                 )
 
             # Net-new seat or reactivation of soft-deleted row: include pending invites in the cap.
-            await assert_can_add_seat(
-                ctx.workspace, audience="admin", include_pending=True
-            )
+            await assert_can_add_seat(ctx.workspace, audience="admin", include_pending=True)
 
             ws_org_id = ctx.workspace.get("org_id")
 
@@ -220,7 +261,10 @@ async def invite_to_workspace(
                     },
                 )
                 if not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0):
-                    await async_directus.create_item(
+                    from dembrane.api.v2._invite_helpers import create_membership_row
+
+                    newly_joined_organisation = await create_membership_row(
+                        async_directus,
                         "org_membership",
                         {
                             "id": generate_uuid(),
@@ -229,8 +273,8 @@ async def invite_to_workspace(
                             "role": "member",
                         },
                     )
-                    logger.info(f"Added {email} to org {ws_org_id} as member")
-                    newly_joined_organisation = True
+                    if newly_joined_organisation:
+                        logger.info(f"Added {email} to org {ws_org_id} as member")
 
             # External add: enforce insider XOR outsider before creating the
             # external row (removes a stale org_membership, or rejects if the
@@ -243,16 +287,22 @@ async def invite_to_workspace(
                 await reconcile_external_membership_org_row(ws_org_id, app_user["id"])
 
             # Reactivate a soft-deleted row if present; otherwise create fresh. Distinct status so UI can show "reactivated" vs "added".
+            from dembrane.api.v2._invite_helpers import (
+                create_membership_row,
+                reactivate_membership_row,
+            )
+
             reactivated = False
             if existing_row and existing_row.get("deleted_at"):
-                await async_directus.update_item(
+                reactivated = await reactivate_membership_row(
+                    async_directus,
                     "workspace_membership",
                     existing_row["id"],
                     {"deleted_at": None, "role": role, "source": "direct"},
                 )
-                reactivated = True
             else:
-                await async_directus.create_item(
+                await create_membership_row(
+                    async_directus,
                     "workspace_membership",
                     {
                         "id": generate_uuid(),
@@ -266,6 +316,21 @@ async def invite_to_workspace(
             from dembrane.cache_utils import invalidate_workspace_and_org_usage
 
             await invalidate_workspace_and_org_usage(workspace_id, ws_org_id)
+
+            # Seat consumed now: reconcile billing immediately so the prorated
+            # charge lands on add rather than waiting for the periodic cron.
+            # Best-effort: a billing hiccup must never fail the invite.
+            if billing_account:
+                from dembrane.billing_service import reconcile_account_seats
+
+                try:
+                    await reconcile_account_seats(billing_account["id"])
+                except Exception:
+                    logger.exception(
+                        "Seat reconcile failed after adding %s to workspace %s",
+                        email,
+                        workspace_id,
+                    )
 
             logger.info(
                 f"Added {email} to workspace {workspace_id} as {role} by {ctx.app_user_id}"
@@ -367,6 +432,20 @@ async def invite_to_workspace(
     expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
 
     now_iso = datetime.now(timezone.utc).isoformat()
+    inviter_name = "Your organisation"
+    inviter_app_user_data = await async_directus.get_items(
+        "app_user",
+        {
+            "query": {
+                "filter": {"id": {"_eq": ctx.app_user_id}},
+                "fields": ["display_name"],
+                "limit": 1,
+            }
+        },
+    )
+    if isinstance(inviter_app_user_data, list) and len(inviter_app_user_data) > 0:
+        inviter_name = inviter_app_user_data[0].get("display_name") or "Your organisation"
+
     existing_invites = await async_directus.get_items(
         "workspace_invite",
         {
@@ -385,27 +464,24 @@ async def invite_to_workspace(
     )
 
     if isinstance(existing_invites, list) and len(existing_invites) > 0:
+        existing_id = existing_invites[0]["id"]
+        invite_url = build_invite_accept_url(
+            invite_type="workspace",
+            admin_base_url=settings.urls.admin_base_url,
+            hash_value=compute_invite_hash(existing_id),
+            inviter_name=inviter_name,
+            subject_name=ctx.workspace.get("name", ""),
+            role=role,
+            email=email,
+        )
         # 200 with status string so the modal renders this per-row rather than as a global failure.
         return WorkspaceInviteResponse(
             status="already_invited",
             email=email,
             user_existed=user_existed,
             email_sent=False,
+            invite_url=invite_url,
         )
-
-    inviter_name = "Your organisation"
-    inviter_app_user_data = await async_directus.get_items(
-        "app_user",
-        {
-            "query": {
-                "filter": {"id": {"_eq": ctx.app_user_id}},
-                "fields": ["display_name"],
-                "limit": 1,
-            }
-        },
-    )
-    if isinstance(inviter_app_user_data, list) and len(inviter_app_user_data) > 0:
-        inviter_name = inviter_app_user_data[0].get("display_name") or "Your organisation"
 
     invite_id = generate_uuid()
     await async_directus.create_item(
@@ -420,19 +496,16 @@ async def invite_to_workspace(
         },
     )
 
-    from urllib.parse import urlencode
-
     invite_hash = compute_invite_hash(invite_id)
-    ctx_params = urlencode(
-        {
-            "iss": inviter_name,
-            "ws": ctx.workspace.get("name", ""),
-            "role": role,
-            "email": email,
-            "h": invite_hash,
-        }
+    invite_url = build_invite_accept_url(
+        invite_type="workspace",
+        admin_base_url=settings.urls.admin_base_url,
+        hash_value=invite_hash,
+        inviter_name=inviter_name,
+        subject_name=ctx.workspace.get("name", ""),
+        role=role,
+        email=email,
     )
-    invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
 
     email_queued = _enqueue_invite_email(
         to=email,
@@ -456,4 +529,5 @@ async def invite_to_workspace(
         email=email,
         user_existed=user_existed,
         email_sent=email_queued,
+        invite_url=invite_url,
     )

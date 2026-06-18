@@ -5,7 +5,6 @@ import {
 	Alert,
 	Anchor,
 	Button,
-	Container,
 	Divider,
 	PasswordInput,
 	PinInput,
@@ -24,6 +23,7 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { lastWorkspaceKey } from "@/hooks/useWorkspace";
 import { testId } from "@/lib/testUtils";
 
 // Same-origin path guard against open-redirect via ?next=//evil.com.
@@ -150,6 +150,7 @@ export const LoginRoute = () => {
 			let firstWorkspaceId: string | null = null;
 			let isOrganisationAdmin = false;
 			let wsList: { id: string }[] = [];
+			let currentUserId: string | null = null;
 			try {
 				await new Promise((r) => setTimeout(r, 300));
 				const meResponse = await fetch(`${API_BASE_URL}/v2/me`, {
@@ -158,6 +159,7 @@ export const LoginRoute = () => {
 				if (meResponse.ok) {
 					const meData = await meResponse.json();
 					needsOnboarding = meData.onboarding_completed === false;
+					currentUserId = meData.directus_user_id ?? null;
 					isOrganisationAdmin = (meData.orgs ?? []).some(
 						(o: { role: string }) => o.role === "owner" || o.role === "admin",
 					);
@@ -202,7 +204,9 @@ export const LoginRoute = () => {
 			// - Solo user (1 workspace) → straight to workspace home
 			// - Returning multi-workspace user → last-used workspace (if still valid)
 			// - First-time multi-workspace user → selector
-			const lastUsedId = localStorage.getItem("dembrane_last_workspace_id");
+			const lastUsedId = currentUserId
+				? localStorage.getItem(lastWorkspaceKey(currentUserId))
+				: null;
 			const lastStillValid =
 				!!lastUsedId && wsList.some((w) => w.id === lastUsedId);
 
@@ -211,11 +215,11 @@ export const LoginRoute = () => {
 			} else if (lastStillValid) {
 				navigate(`/w/${lastUsedId}/home`);
 			} else if (workspaceCount > 1 || isOrganisationAdmin) {
-				navigate("/w");
+				navigate("/o");
 			} else if (firstWorkspaceId) {
 				navigate(`/w/${firstWorkspaceId}/home`);
 			} else {
-				navigate("/w");
+				navigate("/o");
 			}
 		} catch (error) {
 			// biome-ignore lint/suspicious/noExplicitAny: <todo>
@@ -282,7 +286,7 @@ export const LoginRoute = () => {
 	}, [otpRequired]);
 
 	return (
-		<Container size="sm" className="!h-full">
+		<div className="h-full w-full">
 			<Stack className="h-full">
 				<Stack className="flex-grow" gap="md">
 					<Title order={1}>
@@ -436,6 +440,6 @@ export const LoginRoute = () => {
 					</Box> */}
 				</Stack>
 			</Stack>
-		</Container>
+		</div>
 	);
 };

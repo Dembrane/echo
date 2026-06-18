@@ -14,9 +14,11 @@ import {
 	Loader,
 	Menu,
 	Paper,
+	SimpleGrid,
 	Stack,
 	Tabs,
 	Text,
+	Textarea,
 	TextInput,
 	Title,
 	Tooltip,
@@ -28,10 +30,12 @@ import {
 	IconChevronRight,
 	IconLock,
 	IconPlus,
+	IconSparkles,
 } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
+import { OrgBillingTab } from "@/components/billing/BillingManager";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
 import { InviteModal } from "@/components/invite/InviteModal";
@@ -40,7 +44,7 @@ import {
 	MembersToolbar,
 	PendingInvitesSection,
 } from "@/components/members";
-import { OrganisationCapBanner } from "@/components/organisation/OrganisationCapBanner";
+import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
 import { OrganisationUsageRollup } from "@/components/workspace/OrganisationUsageRollup";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -68,11 +72,22 @@ import { OrganisationExternalView } from "./OrganisationExternalView";
 interface OrganisationDetail {
 	id: string;
 	name: string;
+	description: string | null;
 	logo_url: string | null;
 	role: string;
 	member_count: number;
 	workspace_count: number;
 	external_count: number;
+}
+
+interface WorkspaceMemberPreview {
+	display_name: string;
+	avatar: string | null;
+}
+
+interface WorkspacePinnedProject {
+	id: string;
+	name: string;
 }
 
 interface OrganisationMember {
@@ -104,6 +119,9 @@ interface OrganisationWorkspace {
 	member_count: number;
 	is_private: boolean;
 	seat_invite_blocked?: boolean;
+	// Top pinned projects per workspace — backend-enriched on
+	// GET /v2/orgs/:id/workspaces. Merged into the access-scoped overview cards.
+	pinned_projects?: WorkspacePinnedProject[];
 }
 
 async function fetchOrganisation(
@@ -299,12 +317,7 @@ export const OrganisationRoute = () => {
 	//   /o/:id/settings/<section>  → maps to an existing tab
 	// The sidebar pushes those URLs so its view resolver lands on
 	// "org-settings" while the content panel keeps using existing tabs.
-	const allowedTabs = [
-		"overview",
-		"usage",
-		"people",
-		"billing",
-	] as const;
+	const allowedTabs = ["overview", "usage", "members", "billing"] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const segments = (splat ?? "").split("/").filter(Boolean);
 	const segment = segments[0] ?? "";
@@ -315,32 +328,36 @@ export const OrganisationRoute = () => {
 		? (() => {
 				const section = segments[1] ?? "general";
 				if (section === "usage") return "usage";
-				if (section === "members") return "people";
+				if (section === "members") return "members";
 				if (section === "billing") return "billing";
 				// general / anything else → overview (general settings).
 				return "overview";
 			})()
-		: (allowedTabs as readonly string[]).includes(segment)
-			? (segment as TabValue)
-			: "overview";
+		: segment === "people"
+			? "members"
+			: (allowedTabs as readonly string[]).includes(segment)
+				? (segment as TabValue)
+				: "overview";
 
 	useEffect(() => {
 		// Bounce bare /o/:id to /o/:id/overview. Don't bounce /settings/*; those are canonical sidebar URLs.
 		if (!organisationId) return;
 		if (isSettingsPath) return;
+		// Billing lives under settings in the sidebar, so the naked /o/:id/billing
+		// route leaves the sidebar inactive. Redirect it to the canonical
+		// settings path instead of keeping a naked billing route.
+		if (segment === "billing") {
+			navigate(`/o/${organisationId}/settings/billing${urlSearch}`, {
+				replace: true,
+			});
+			return;
+		}
 		if (segment !== viewRaw) {
 			navigate(`/o/${organisationId}/${viewRaw}${urlSearch}`, {
 				replace: true,
 			});
 		}
-	}, [
-		organisationId,
-		viewRaw,
-		segment,
-		isSettingsPath,
-		navigate,
-		urlSearch,
-	]);
+	}, [organisationId, viewRaw, segment, isSettingsPath, navigate, urlSearch]);
 
 	const setView = (value: string | null) => {
 		if (!value || !organisationId) return;
@@ -359,7 +376,11 @@ export const OrganisationRoute = () => {
 		queryKey: ["v2", "organisation", organisationId],
 		staleTime: 30_000,
 	});
-	const { data: membersData, error: membersError } = useQuery({
+	const {
+		data: membersData,
+		error: membersError,
+		isLoading: membersLoading,
+	} = useQuery({
 		enabled: Boolean(organisationId),
 		queryFn: () => fetchOrganisationMembers(organisationId as string),
 		queryKey: ["v2", "organisation", organisationId, "members"],
@@ -380,11 +401,16 @@ export const OrganisationRoute = () => {
 
 	const isAdmin =
 		organisation?.role === "owner" || organisation?.role === "admin";
-	// Admin-only views fall back to People for other roles so landing
-	// state is never an empty panel for them.
+	// Financial visibility mirrors the backend's `sees_financials`
+	// (orgs.py get_org_usage): owner/admin/billing. Billing is a
+	// finance-only role, so it must reach Usage + Billing even though it
+	// isn't an admin.
+	const canSeeFinancials = isAdmin || organisation?.role === "billing";
+	// Views the caller can't open fall back to Members so landing state is
+	// never an empty panel for them.
 	const view: TabValue =
-		!isAdmin && (viewRaw === "usage" || viewRaw === "billing")
-			? "people"
+		!canSeeFinancials && (viewRaw === "usage" || viewRaw === "billing")
+			? "members"
 			: viewRaw;
 
 	// Organisation-level role change — admin + owner can edit; owner-only offers
@@ -399,6 +425,8 @@ export const OrganisationRoute = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
 			});
+			// Org admins derive workspace seats; role changes shift effective seat counts.
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 			toast.success(t`Role changed`);
 		},
 	});
@@ -451,6 +479,12 @@ export const OrganisationRoute = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "members"],
 			});
+			// Removal cascades direct memberships across all org workspaces.
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "organisation", organisationId, "workspaces"],
+			});
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 			toast.success(t`Removed from organisation`);
 		},
 	});
@@ -496,6 +530,9 @@ export const OrganisationRoute = () => {
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "workspace-settings", variables.workspaceId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "workspace-usage", variables.workspaceId],
 			});
 			toast.success(t`Added to workspace`);
 		},
@@ -572,7 +609,7 @@ export const OrganisationRoute = () => {
 				}
 				secondaryAction={{
 					label: <Trans>Back</Trans>,
-					onClick: () => navigate("/w"),
+					onClick: () => navigate("/o"),
 				}}
 			/>
 		);
@@ -595,7 +632,7 @@ export const OrganisationRoute = () => {
 					<Title order={3} fw={400}>
 						<Trans>Organisation not found</Trans>
 					</Title>
-					<Button variant="outline" onClick={() => navigate("/w")}>
+					<Button variant="outline" onClick={() => navigate("/o")}>
 						<Trans>Back</Trans>
 					</Button>
 				</Stack>
@@ -605,12 +642,6 @@ export const OrganisationRoute = () => {
 
 	return (
 		<Container size="xl" py="xl" px="lg">
-			{organisationId && (
-				<OrganisationCapBanner
-					organisationId={organisationId}
-					workspaces={workspaces}
-				/>
-			)}
 			<Stack gap={24}>
 				{/* Header — minimal. Name + counts on the left, action cluster
 				    on the right. Tier is intentionally absent (it's a
@@ -644,12 +675,6 @@ export const OrganisationRoute = () => {
 							    dropped from the header summary (HCD audit). */}
 						</Stack>
 					</Group>
-					{/* Back link top-right per the canonical header pattern
-					    (design review 2026-04-23). No gear icon — organisation-name
-					    + logo editing live inline in the Overview tab. */}
-					<Button variant="subtle" size="xs" onClick={() => navigate("/w")}>
-						<Trans>Back to workspaces</Trans>
-					</Button>
 				</Group>
 
 				{/* Tabbed canvas per demo feedback. Overview holds organisation name
@@ -671,15 +696,35 @@ export const OrganisationRoute = () => {
 				    navigation. Internal Tabs.value still wires the panels via URL. */}
 				<Tabs value={view} onChange={setView} keepMounted={false}>
 					<Tabs.Panel value="overview" pt="md">
-						<OverviewPanel
-							organisation={organisation}
-							organisationId={organisationId!}
-							canEdit={isAdmin}
-							queryClient={queryClient}
-						/>
+						{isSettingsPath ? (
+							// Sidebar "Settings" lands here (/o/:id/settings/general):
+							// organisation name + logo editing lives in settings, not
+							// on the at-a-glance overview.
+							<OverviewPanel
+								organisation={organisation}
+								organisationId={organisationId as string}
+								canEdit={isAdmin}
+								queryClient={queryClient}
+							/>
+						) : (
+							<OrganisationOverviewPanel
+								organisation={organisation}
+								members={members}
+								membersLoading={membersLoading}
+								workspaces={workspaces}
+								isManager={isAdmin}
+								onOpenWorkspace={(id) => navigate(`/w/${id}/home`)}
+								onOpenProject={(wsId, projectId) =>
+									navigate(`/w/${wsId}/projects/${projectId}/home`)
+								}
+								onRequestWorkspace={() =>
+									navigate(`/w/new?organisationId=${organisationId}`)
+								}
+							/>
+						)}
 					</Tabs.Panel>
 
-					{isAdmin && (
+					{canSeeFinancials && (
 						<Tabs.Panel value="usage" pt="md">
 							<Stack gap="md">
 								{organisationId && (
@@ -689,29 +734,35 @@ export const OrganisationRoute = () => {
 						</Tabs.Panel>
 					)}
 
-					{isAdmin && (
+					{canSeeFinancials && (
 						<Tabs.Panel value="billing" pt="md">
-							<Paper withBorder p="md" radius="sm">
-								<Stack gap={8}>
+							<Stack gap="md">
+								<div>
 									<Text size="sm" fw={500}>
 										<Trans>Billing</Trans>
 									</Text>
-									<Text size="sm" c="dimmed">
+									<Text size="xs" c="dimmed">
 										<Trans>
-											Organisation billing is handled through support. For
-											invoices, payment changes, or a shared contract, email{" "}
-											<Anchor href="mailto:support@dembrane.com">
-												support@dembrane.com
-											</Anchor>
-											.
+											One plan for the whole organisation. Every workspace
+											shares it and is billed per seat.
 										</Trans>
 									</Text>
-								</Stack>
-							</Paper>
+								</div>
+								{organisationId && <OrgBillingTab orgId={organisationId} />}
+								<Text size="xs" c="dimmed">
+									<Trans>
+										For invoices, a shared contract, or anything custom, email{" "}
+										<Anchor href="mailto:support@dembrane.com">
+											support@dembrane.com
+										</Anchor>
+										.
+									</Trans>
+								</Text>
+							</Stack>
 						</Tabs.Panel>
 					)}
 
-					<Tabs.Panel value="people" pt="md">
+					<Tabs.Panel value="members" pt="md">
 						<Stack gap="md">
 							<MembersToolbar
 								search={search}
@@ -862,7 +913,7 @@ export const OrganisationRoute = () => {
 
 async function updateOrganisationFromOverview(
 	organisationId: string,
-	body: { name?: string },
+	body: { name?: string; description?: string },
 ) {
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${organisationId}`, {
 		body: JSON.stringify(body),
@@ -894,6 +945,9 @@ function OverviewPanel({
 	// app (HostGuide titles, project portal). Local state lets the user
 	// type without every keystroke round-tripping; blur commits.
 	const [name, setName] = useState(organisation.name);
+	const [description, setDescription] = useState(
+		organisation.description ?? "",
+	);
 
 	const invalidate = () => {
 		queryClient.invalidateQueries({
@@ -903,12 +957,13 @@ function OverviewPanel({
 	};
 
 	const saveMutation = useMutation({
-		mutationFn: (body: { name?: string }) =>
+		mutationFn: (body: { name?: string; description?: string }) =>
 			updateOrganisationFromOverview(organisationId, body),
 		onError: (err: Error) => {
 			// Roll back local state on failure so what's shown matches
 			// what's actually stored.
 			setName(organisation.name);
+			setDescription(organisation.description ?? "");
 			toast.error(err.message);
 		},
 		onSuccess: () => {
@@ -919,7 +974,8 @@ function OverviewPanel({
 
 	return (
 		<Stack gap="lg">
-			{/* Organisation identity — name + logo. Admins edit inline; others read. */}
+			{/* Organisation identity — name + description + logo. Admins edit
+			    inline; others read. */}
 			<Stack gap="md">
 				<TextInput
 					label={t`Organisation name`}
@@ -943,6 +999,23 @@ function OverviewPanel({
 						}
 					}}
 					maxLength={100}
+				/>
+				<Textarea
+					label={t`Description`}
+					description={t`A short blurb shown on the organisation overview.`}
+					value={description}
+					disabled={!canEdit || saveMutation.isPending}
+					autosize
+					minRows={2}
+					maxRows={6}
+					onChange={(e) => setDescription(e.currentTarget.value)}
+					onBlur={() => {
+						const next = description.trim();
+						if (next !== (organisation.description ?? "")) {
+							saveMutation.mutate({ description: next });
+						}
+					}}
+					maxLength={2000}
 				/>
 			</Stack>
 
@@ -973,6 +1046,421 @@ function OverviewPanel({
 				</Stack>
 			)}
 		</Stack>
+	);
+}
+
+// ── Organisation overview — people bubbles + workspace cards ────────────────
+//
+// The at-a-glance landing for /o/:id/overview. People first (who's on the
+// team), then the workspaces the caller actually has access to (same
+// membership-scoped source the sidebar uses), then a discovery surface for
+// workspaces they can join/request, plus any pending workspace requests.
+// Editing (name/logo) lives in Settings, reached from the sidebar.
+
+interface MyWorkspace {
+	id: string;
+	name: string;
+	org_id: string;
+	role: string;
+	tier: string;
+	project_count: number;
+	member_count: number;
+	members_preview?: WorkspaceMemberPreview[];
+	usage?: { audio_hours?: number; conversation_count?: number };
+	created_at?: string | null;
+}
+
+async function fetchMyWorkspaces(): Promise<{
+	workspaces: MyWorkspace[];
+}> {
+	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
+		credentials: "include",
+	});
+	if (!res.ok) {
+		throw new Error(`Workspaces request failed (${res.status})`);
+	}
+	return res.json();
+}
+
+interface WorkspaceCardModel {
+	id: string;
+	name: string;
+	tier: string;
+	project_count: number;
+	member_count: number;
+	members_preview: WorkspaceMemberPreview[];
+	audio_hours: number;
+	conversation_count: number;
+	is_private: boolean;
+	pinned_projects: WorkspacePinnedProject[];
+	recently_approved: boolean;
+}
+
+function OrganisationOverviewPanel({
+	organisation,
+	members,
+	membersLoading,
+	workspaces,
+	isManager,
+	onOpenWorkspace,
+	onOpenProject,
+	onRequestWorkspace,
+}: {
+	organisation: OrganisationDetail;
+	members: OrganisationMember[];
+	membersLoading: boolean;
+	// Org roster (manager view / People matrix). Only consulted here for
+	// per-workspace pinned projects + private flag — the cards themselves are
+	// driven by the caller's own membership list so we never show a workspace
+	// the user can't actually open.
+	workspaces: OrganisationWorkspace[];
+	isManager: boolean;
+	onOpenWorkspace: (workspaceId: string) => void;
+	onOpenProject: (workspaceId: string, projectId: string) => void;
+	onRequestWorkspace: () => void;
+}) {
+	const orgId = organisation.id;
+	const navigate = useI18nNavigate();
+
+	const handlePeopleClick = () => {
+		navigate(`/o/${orgId}/settings/members`);
+	};
+
+	// The caller's own workspaces (direct memberships) + their pending
+	// new-workspace / upgrade requests. Same endpoint the home page used.
+	const { data: mine, isLoading: workspacesLoading } = useQuery({
+		queryFn: fetchMyWorkspaces,
+		queryKey: ["v2", "workspaces"],
+		staleTime: 30_000,
+	});
+
+	// Pinned projects + private flag live on the enriched org roster; key them
+	// by workspace id so the access-scoped cards can pull them in.
+	const rosterMap = useMemo(
+		() => new Map(workspaces.map((w) => [w.id, w])),
+		[workspaces],
+	);
+
+	const ONE_DAY_MS = 86_400_000;
+	const myCards: WorkspaceCardModel[] = useMemo(() => {
+		const list = (mine?.workspaces ?? []).filter((w) => w.org_id === orgId);
+		return list
+			.map((w) => {
+				const roster = rosterMap.get(w.id);
+				// Free workspaces are auto-created on signup, never "approved".
+				const recentlyApproved =
+					!!w.created_at &&
+					w.tier !== "free" &&
+					Date.now() - new Date(w.created_at).getTime() < ONE_DAY_MS;
+				return {
+					audio_hours: w.usage?.audio_hours ?? 0,
+					conversation_count: w.usage?.conversation_count ?? 0,
+					id: w.id,
+					is_private: roster?.is_private ?? false,
+					member_count: w.member_count,
+					members_preview: w.members_preview ?? [],
+					name: w.name,
+					pinned_projects: roster?.pinned_projects ?? [],
+					project_count: w.project_count,
+					recently_approved: recentlyApproved,
+					tier: w.tier,
+				};
+			})
+			.sort((a, b) => a.name.localeCompare(b.name));
+	}, [mine, orgId, rosterMap]);
+
+	// Pending invites aren't on the team yet, so they don't count toward the
+	// people glance. Everyone with access (incl. externals) shows as a bubble.
+	const people = members.filter((m) => !m.is_pending);
+	const MAX_BUBBLES = 8;
+	const visiblePeople = people.slice(0, MAX_BUBBLES);
+	const overflowPeople = people.length - visiblePeople.length;
+
+	return (
+		<Stack gap={32}>
+			{organisation.description && (
+				<Text
+					size="sm"
+					c="dimmed"
+					style={{ maxWidth: 640, whiteSpace: "pre-wrap" }}
+				>
+					{organisation.description}
+				</Text>
+			)}
+
+			<Stack gap="sm">
+				<Group gap="xs" align="baseline">
+					<Title order={4} fw={500}>
+						<Trans>People</Trans>
+					</Title>
+					{!membersLoading && (
+						<Text size="sm" c="dimmed">
+							{people.length}
+						</Text>
+					)}
+				</Group>
+				{membersLoading && people.length === 0 ? (
+					<Loader size="sm" color="gray" />
+				) : people.length === 0 ? (
+					<Text size="sm" c="dimmed">
+						<Trans>No one on this organisation yet.</Trans>
+					</Text>
+				) : (
+					<Tooltip.Group>
+						<Avatar.Group spacing="sm">
+							{visiblePeople.map((m) => (
+								<Tooltip
+									key={m.user_id}
+									label={`${m.display_name} · ${
+										m.is_external ? t`External` : displayRole(m.role)
+									}`}
+									withArrow
+								>
+									<Avatar
+										size={36}
+										radius="full"
+										src={avatarUrl(m.avatar)}
+										color="primary"
+										style={{ cursor: "pointer" }}
+										onClick={handlePeopleClick}
+									>
+										{memberInitials(m.display_name, m.email)}
+									</Avatar>
+								</Tooltip>
+							))}
+							{overflowPeople > 0 && (
+								<Avatar
+									size={36}
+									radius="full"
+									color="gray"
+									style={{ cursor: "pointer" }}
+									onClick={handlePeopleClick}
+								>
+									+{overflowPeople}
+								</Avatar>
+							)}
+							{isManager && (
+								<Tooltip label={t`Manage members`} withArrow>
+									<Avatar
+										size={36}
+										radius="full"
+										color="primary"
+										variant="light"
+										style={{ cursor: "pointer" }}
+										onClick={handlePeopleClick}
+									>
+										<IconPlus size={16} />
+									</Avatar>
+								</Tooltip>
+							)}
+						</Avatar.Group>
+					</Tooltip.Group>
+				)}
+			</Stack>
+
+			<Stack gap="sm">
+				<Group justify="space-between" align="center">
+					<Group gap="xs" align="baseline">
+						<Title order={4} fw={500}>
+							<Trans>Workspaces</Trans>
+						</Title>
+						{!workspacesLoading && (
+							<Text size="sm" c="dimmed">
+								{myCards.length}
+							</Text>
+						)}
+					</Group>
+					{isManager && (
+						<Button
+							variant="subtle"
+							size="xs"
+							leftSection={<IconPlus size={14} />}
+							onClick={onRequestWorkspace}
+						>
+							<Trans>New workspace</Trans>
+						</Button>
+					)}
+				</Group>
+				{workspacesLoading && myCards.length === 0 ? (
+					<Loader size="sm" color="gray" />
+				) : myCards.length === 0 ? (
+					<Text size="sm" c="dimmed">
+						<Trans>
+							You haven't joined any workspace in this organisation yet.
+						</Trans>
+					</Text>
+				) : (
+					<SimpleGrid cols={{ base: 1, lg: 3, sm: 2 }} spacing="md">
+						{myCards.map((ws) => (
+							<OrganisationWorkspaceCard
+								key={ws.id}
+								workspace={ws}
+								onOpen={() => onOpenWorkspace(ws.id)}
+								onOpenProject={(projectId) => onOpenProject(ws.id, projectId)}
+							/>
+						))}
+					</SimpleGrid>
+				)}
+			</Stack>
+
+			{/* Workspaces in this org the caller isn't a member of but can join or
+			    request access to. Self-hides when there's nothing to surface. */}
+			<DiscoverableWorkspaces orgId={orgId} />
+		</Stack>
+	);
+}
+
+function WorkspaceMemberBubbles({
+	members,
+	count,
+}: {
+	members: WorkspaceMemberPreview[];
+	count: number;
+}) {
+	const MAX_VISIBLE = 3;
+	const visible = members.slice(0, MAX_VISIBLE);
+	const overflow = count - visible.length;
+	if (visible.length === 0 && overflow <= 0) return null;
+
+	return (
+		<Tooltip.Group>
+			<Avatar.Group spacing="sm">
+				{visible.map((m, i) => (
+					<Tooltip
+						key={`${m.display_name}-${i}`}
+						label={m.display_name}
+						withArrow
+					>
+						<Avatar
+							size={26}
+							radius="full"
+							src={avatarUrl(m.avatar)}
+							color="primary"
+						>
+							{memberInitials(m.display_name)}
+						</Avatar>
+					</Tooltip>
+				))}
+				{overflow > 0 && (
+					<Avatar size={26} radius="full" color="gray">
+						+{overflow}
+					</Avatar>
+				)}
+			</Avatar.Group>
+		</Tooltip.Group>
+	);
+}
+
+function OrganisationWorkspaceCard({
+	workspace,
+	onOpen,
+	onOpenProject,
+}: {
+	workspace: WorkspaceCardModel;
+	onOpen: () => void;
+	onOpenProject: (projectId: string) => void;
+}) {
+	const capitalizedTier =
+		workspace.tier.charAt(0).toUpperCase() + workspace.tier.slice(1);
+	const audioHours = workspace.audio_hours;
+	const conversationCount = workspace.conversation_count;
+	const membersPreview = workspace.members_preview;
+	const pinned = workspace.pinned_projects;
+
+	return (
+		<Paper
+			p="lg"
+			radius="md"
+			withBorder
+			role="button"
+			tabIndex={0}
+			className="hover:!border-primary-400 transition-colors"
+			style={{
+				cursor: "pointer",
+			}}
+			onClick={onOpen}
+			onKeyDown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					onOpen();
+				}
+			}}
+		>
+			<Stack gap={12}>
+				<Group gap="xs" wrap="nowrap" align="center">
+					<Text
+						fw={500}
+						size="md"
+						lineClamp={1}
+						style={{ flex: 1, minWidth: 0 }}
+					>
+						{workspace.name}
+					</Text>
+					{workspace.is_private && (
+						<Tooltip label={t`Private workspace`}>
+							<span style={{ display: "inline-flex", flexShrink: 0 }}>
+								<IconLock size={14} color="var(--mantine-color-gray-6)" />
+							</span>
+						</Tooltip>
+					)}
+				</Group>
+				<Text size="xs" c="dimmed" lineClamp={1}>
+					{capitalizedTier}
+				</Text>
+
+				<Group gap="lg" wrap="wrap">
+					<Text size="xs" c="dimmed">
+						{workspace.project_count}{" "}
+						{workspace.project_count === 1 ? t`project` : t`projects`}
+					</Text>
+					<Text size="xs" c="dimmed">
+						{audioHours}h {t`total`}
+					</Text>
+					<Text size="xs" c="dimmed">
+						{conversationCount}{" "}
+						{conversationCount === 1 ? t`conversation` : t`conversations`}
+					</Text>
+				</Group>
+
+				{pinned.length > 0 && (
+					<Group gap={6} wrap="wrap">
+						{pinned.map((p) => (
+							<Badge
+								key={p.id}
+								size="sm"
+								variant="light"
+								color="gray"
+								style={{ cursor: "pointer", textTransform: "none" }}
+								onClick={(e) => {
+									e.stopPropagation();
+									onOpenProject(p.id);
+								}}
+							>
+								{p.name || t`Untitled`}
+							</Badge>
+						))}
+					</Group>
+				)}
+
+				<WorkspaceMemberBubbles
+					members={membersPreview}
+					count={workspace.member_count}
+				/>
+
+				{workspace.recently_approved && (
+					<Group gap={6}>
+						<Badge
+							size="xs"
+							color="green"
+							variant="light"
+							leftSection={<IconSparkles size={10} />}
+						>
+							<Trans>New</Trans>
+						</Badge>
+					</Group>
+				)}
+			</Stack>
+		</Paper>
 	);
 }
 
@@ -1130,7 +1618,7 @@ function OrganisationPersonCard({
 			<Stack gap={open ? 12 : 0}>
 				<Group justify="space-between" wrap="nowrap" gap="md">
 					<Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-						<Avatar src={avatarUrl(member.avatar, 64)} size="md" radius="xl">
+						<Avatar src={avatarUrl(member.avatar, 64)} size="md" radius="full">
 							{memberInitials(member.display_name, member.email)}
 						</Avatar>
 						<Stack gap={0} style={{ minWidth: 0 }}>

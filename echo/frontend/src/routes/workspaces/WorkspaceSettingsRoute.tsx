@@ -3,6 +3,7 @@ import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
+	Anchor,
 	Avatar,
 	Badge,
 	Box,
@@ -29,6 +30,10 @@ import { IconLock, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
+import {
+	BillingManager,
+	OrgManagedBillingNotice,
+} from "@/components/billing/BillingManager";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
@@ -42,11 +47,9 @@ import {
 } from "@/components/members";
 import { usePendingInvites } from "@/components/members/hooks";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
-import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { TierBadge } from "@/components/workspace/TierBadge";
-import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { UsageCard } from "@/components/workspace/UsageCard";
-import { WorkspaceRequestHistory } from "@/components/workspace/WorkspaceRequestHistory";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
@@ -55,7 +58,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { logoUrl, memberInitials } from "@/lib/avatar";
 import { displayRole } from "@/lib/roles";
-import { type BillingPeriod, seatOverageRateFor } from "@/lib/tiers";
+import type { BillingPeriod, Tier } from "@/lib/tiers";
 
 interface WorkspaceMember {
 	id: string;
@@ -97,6 +100,9 @@ interface WorkspaceDetail {
 	type_discount: string | null;
 	percent_discount: number | null;
 	billing_period: BillingPeriod | null;
+	billing_account_id: string | null;
+	billing_status: string | null;
+	billing_org_managed: boolean;
 }
 
 async function deleteWorkspace(workspaceId: string) {
@@ -261,18 +267,16 @@ export const WorkspaceSettingsRoute = () => {
 
 	type WsRoleFilter = "all" | "admins" | "billing" | "members" | "externals";
 	const [memberRoleFilter, setMemberRoleFilter] = useState<WsRoleFilter>("all");
-	// User override for the matrix toggle. `null` means "follow whatever the
-	// workspace is currently on" (seeded from settings.billing_period when it
-	// loads); once the user clicks the toggle we hold their choice.
-	const [billingPeriodOverride, setBillingPeriodOverride] =
-		useState<BillingPeriod | null>(null);
 
-	// Tab state — path-driven (/w/:id/settings/<tab>). Declared BEFORE
+	// Tab state — path-driven (/w/:id/settings/<tab> or /w/:id/members). Declared BEFORE
 	// the loading early-return below; moving any hook below the early
 	// return changes hook count between renders and crashes React.
 	const allowedTabs = ["general", "members", "billing", "danger"] as const;
 	type TabValue = (typeof allowedTabs)[number];
-	const segment = (splat ?? "").split("/")[0] || "";
+	const { pathname } = useLocation();
+	const segment = pathname.includes("/members")
+		? "members"
+		: (splat ?? "").split("/")[0] || "";
 	const segmentIsValid = (allowedTabs as readonly string[]).includes(segment);
 
 	useDocumentTitle(t`Workspace settings | dembrane`);
@@ -338,10 +342,8 @@ export const WorkspaceSettingsRoute = () => {
 		usageProbe.seat_count_included != null &&
 		usageProbe.seat_count >= usageProbe.seat_count_included;
 	const seatInviteBlocked = usageProbe?.seat_invite_blocked ?? seatCapHit;
-	const tierHardBlocks =
-		usageProbe?.tier === "free" || usageProbe?.tier === "pilot";
-	const seatOverageActive = !tierHardBlocks && seatCapHit;
-	const seatOverageRate = seatOverageRateFor(usageProbe?.tier);
+	// Only Free hard-caps seats now; paid tiers are per-seat metered (never block).
+	const tierHardBlocks = usageProbe?.tier === "free";
 
 	// The bulk-invite wizard handles its own POSTs + success toasts, so
 	// there's no top-level inviteMutation anymore. Pending invites are
@@ -361,6 +363,7 @@ export const WorkspaceSettingsRoute = () => {
 		onError: (err: Error) => toast.error(err.message),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 			toast.success(t`Role updated`);
 		},
 	});
@@ -389,7 +392,7 @@ export const WorkspaceSettingsRoute = () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "organisation"] });
 			toast.success(t`Workspace deleted`);
-			navigate("/w");
+			navigate("/o");
 		},
 	});
 
@@ -404,8 +407,9 @@ export const WorkspaceSettingsRoute = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 			toast.success(t`You left the workspace`);
-			navigate("/w");
+			navigate("/o");
 		},
 	});
 
@@ -448,8 +452,16 @@ export const WorkspaceSettingsRoute = () => {
 
 	useEffect(() => {
 		if (!workspaceId || !settings || !defaultTab) return;
+		if (pathname.includes("/settings/members")) {
+			navigate(`/w/${workspaceId}/members${urlSearch}`, {
+				replace: true,
+			});
+			return;
+		}
 		if (segment !== activeTab) {
-			navigate(`/w/${workspaceId}/settings/${activeTab}${urlSearch}`, {
+			const destPath =
+				activeTab === "members" ? "members" : `settings/${activeTab}`;
+			navigate(`/w/${workspaceId}/${destPath}${urlSearch}`, {
 				replace: true,
 			});
 		}
@@ -461,6 +473,7 @@ export const WorkspaceSettingsRoute = () => {
 		urlSearch,
 		settings,
 		defaultTab,
+		pathname,
 	]);
 
 	// Members list order (2026-04-24): internals first — sorted by role
@@ -630,7 +643,7 @@ export const WorkspaceSettingsRoute = () => {
 							variant="subtle"
 							size="xs"
 							color="gray"
-							onClick={() => navigate("/w")}
+							onClick={() => navigate("/o")}
 						>
 							<Trans>Back to workspaces</Trans>
 						</Button>
@@ -648,75 +661,24 @@ export const WorkspaceSettingsRoute = () => {
 							<Tabs.Panel value="billing" pt="md">
 								<Stack gap={16}>
 									{workspaceId && <UsageCard workspaceId={workspaceId} />}
-									{workspaceId && (
-										<WorkspaceRequestHistory workspaceId={workspaceId} />
-									)}
-
-									{/* Seats explainer — audit feedback: users need to
-								    know "how do seats work as a user" without
-								    reading the matrix row. Short, matches §7. */}
-									<Paper withBorder p="md" radius="sm">
-										<Stack gap={8}>
-											<Text size="sm" fw={500}>
-												<Trans>How seats work</Trans>
-											</Text>
-											<Text size="xs" c="dimmed">
-												<Trans>
-													Every workspace member, including externals, counts as
-													one seat. One person never takes more than one seat
-													per workspace, even if they're on multiple
-													organisations.
-												</Trans>
-											</Text>
-											<Text size="xs" c="dimmed">
-												<Trans>
-													Going over your tier's included seats bills extra per
-													month. See the matrix below for the per-seat rate on
-													each tier.
-												</Trans>
-											</Text>
-										</Stack>
-									</Paper>
-
-									{/* Matrix §1 full capacity matrix on the billing tab.
-								    Non-compact: price / duration / seats / overage /
-								    hours / externals / training. Highlights the current
-								    tier so admins can see what they have vs what's
-								    next. */}
-									<Group justify="center" mb="xs">
-										<BillingPeriodToggle
-											value={
-												billingPeriodOverride ??
-												settings.billing_period ??
-												"annual"
-											}
-											onChange={setBillingPeriodOverride}
+									{seesFinancials && settings.billing_org_managed && (
+										<OrgManagedBillingNotice
+											orgId={settings.org_id}
+											orgName={settings.org_name}
 										/>
-									</Group>
-									<TierCapacityMatrix
-										highlightTier={settings.tier}
-										compact={false}
-										billingPeriod={
-											billingPeriodOverride ??
-											settings.billing_period ??
-											"annual"
-										}
-									/>
-									{seesFinancials && (
-										<Text size="xs" c="dimmed">
-											<Trans>
-												Invoices and payment method will land here in a future
-												release. To upgrade, email{" "}
-												<a
-													href="mailto:upgrades@dembrane.com"
-													style={{ color: "#4169e1" }}
-												>
-													upgrades@dembrane.com
-												</a>
-												.
-											</Trans>
-										</Text>
 									)}
+
+									{seesFinancials &&
+										workspaceId &&
+										!settings.billing_org_managed && (
+											<BillingManager
+												accountId={settings.billing_account_id}
+												invalidateKeys={[
+													["v2", "workspace-settings", workspaceId],
+												]}
+												source="workspace_billing"
+											/>
+										)}
 								</Stack>
 							</Tabs.Panel>
 
@@ -803,15 +765,9 @@ export const WorkspaceSettingsRoute = () => {
 															All seats are taken. Free a seat or upgrade to
 															invite more.
 														</Trans>
-													) : seatOverageActive && seatOverageRate != null ? (
+													) : !tierHardBlocks && seatCapHit ? (
 														<Trans>
-															You're over your included seats. Each new member
-															adds €{seatOverageRate}/month to next bill.
-														</Trans>
-													) : seatOverageActive ? (
-														<Trans>
-															You're over your included seats. Overage applies
-															on the next bill.
+															Each new member is billed per seat on your plan.
 														</Trans>
 													) : (
 														<Trans>
@@ -1316,13 +1272,24 @@ function PrivacyAndDefaultsSection({
 	section?: "general" | "access";
 }) {
 	const queryClient = useQueryClient();
-	const navigate = useI18nNavigate();
 	// Description autosaves on blur; privacy keeps explicit Save.
 	const [description, setDescription] = useState<string>(
 		settings.description ?? "",
 	);
 	const [name, setName] = useState<string>(settings.name ?? "");
 	const [isOpen, setIsOpen] = useState<boolean | null>(null);
+
+	// Tier-gated features open the upgrade modal in place rather than
+	// bouncing to the billing tab (page-feedback: upgrade paths are modals).
+	const canRequestUpgrade =
+		settings.my_role === "owner" ||
+		settings.my_role === "admin" ||
+		settings.my_role === "billing";
+	const [upgradeFeature, setUpgradeFeature] = useState<{
+		requiredTier: Tier;
+		featureName: string;
+		benefit: string;
+	} | null>(null);
 
 	const effectiveIsOpen = isOpen ?? settings.inherit_organisation_admins;
 	const privacyDirty = isOpen !== null;
@@ -1431,7 +1398,7 @@ function PrivacyAndDefaultsSection({
 				<Stack gap={16}>
 					<TextInput
 						label={t`Name`}
-						description={t`Workspace name. Autosaves on blur.`}
+						description={t`Workspace name. Saves automatically.`}
 						placeholder={t`e.g. Client Alpha`}
 						value={name}
 						onChange={(e) => setName(e.currentTarget.value)}
@@ -1483,10 +1450,6 @@ function PrivacyAndDefaultsSection({
 						// Whitelabel branding is changemaker+
 						const whitelabelTiers = ["changemaker", "guardian"];
 						const canWhitelabel = whitelabelTiers.includes(settings.tier);
-						const canRequestUpgrade =
-							settings.my_role === "owner" ||
-							settings.my_role === "admin" ||
-							settings.my_role === "billing";
 
 						if (canWhitelabel) {
 							return (
@@ -1633,9 +1596,12 @@ function PrivacyAndDefaultsSection({
 											</Text>
 											<Button
 												size="xs"
-												disabled={!canRequestUpgrade}
 												onClick={() =>
-													navigate(`/w/${workspaceId}/settings/billing`)
+													setUpgradeFeature({
+														benefit: t`Your brand on every participant screen.`,
+														featureName: t`Custom logo`,
+														requiredTier: "changemaker",
+													})
 												}
 											>
 												<Trans>Upgrade to unlock</Trans>
@@ -1678,6 +1644,16 @@ function PrivacyAndDefaultsSection({
 					confirmColor="red"
 					loading={removeLogoMutation.isPending}
 					data-testid="workspace-logo-remove-modal"
+				/>
+				<UpgradeModal
+					opened={upgradeFeature !== null}
+					onClose={() => setUpgradeFeature(null)}
+					currentTier={settings.tier as Tier}
+					requiredTier={upgradeFeature?.requiredTier ?? "changemaker"}
+					featureName={upgradeFeature?.featureName ?? ""}
+					benefit={upgradeFeature?.benefit ?? ""}
+					canRequestUpgrade={canRequestUpgrade}
+					workspaceId={workspaceId}
 				/>
 			</>
 		);
@@ -1736,9 +1712,26 @@ function PrivacyAndDefaultsSection({
 											</Trans>
 										</Text>
 										{!canGoPrivate && !currentlyPrivate && (
-											<Text size="xs" c="dimmed">
-												<Trans>Available on innovator and above.</Trans>
-											</Text>
+											<Anchor
+												component="button"
+												type="button"
+												size="xs"
+												ta="left"
+												style={{ alignSelf: "flex-start" }}
+												onClick={(e) => {
+													e.preventDefault();
+													e.stopPropagation();
+													setUpgradeFeature({
+														benefit: t`Keep this workspace invite-only.`,
+														featureName: t`Private workspaces`,
+														requiredTier: "innovator",
+													});
+												}}
+											>
+												<Trans>
+													Available on innovator and above. Upgrade to unlock.
+												</Trans>
+											</Anchor>
 										)}
 									</Stack>
 								}
@@ -1768,6 +1761,16 @@ function PrivacyAndDefaultsSection({
 					</Button>
 				</Group>
 			)}
+			<UpgradeModal
+				opened={upgradeFeature !== null}
+				onClose={() => setUpgradeFeature(null)}
+				currentTier={settings.tier as Tier}
+				requiredTier={upgradeFeature?.requiredTier ?? "innovator"}
+				featureName={upgradeFeature?.featureName ?? ""}
+				benefit={upgradeFeature?.benefit ?? ""}
+				canRequestUpgrade={canRequestUpgrade}
+				workspaceId={workspaceId}
+			/>
 		</Stack>
 	);
 }

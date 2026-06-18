@@ -1,0 +1,42 @@
+{
+  "formatter": "language_server",
+  "format_on_save": "on",
+  "languages": {
+    "Python": {
+      "language_servers": ["ruff", "ty", "!pylsp"],
+      "formatter": {
+        "language_server": { "name": "ruff" }
+      },
+      "format_on_save": "on",
+      "code_actions_on_format": {
+        "source.fixAll.ruff": true,
+        "source.organizeImports.ruff": true
+      }
+    },
+    "TypeScript": {
+      "language_servers": ["biome", "!eslint", "!prettier"],
+      "formatter": { "language_server": { "name": "biome" } }
+    },
+    "TSX": {
+      "language_servers": ["biome", "!eslint", "!prettier"],
+      "formatter": { "language_server": { "name": "biome" } }
+    },
+    "JavaScript": {
+      "language_servers": ["biome", "!eslint", "!prettier"],
+      "formatter": { "language_server": { "name": "biome" } }
+    },
+    "JSON": {
+      "language_servers": ["biome"],
+      "formatter": { "language_server": { "name": "biome" } }
+    }
+  },
+  "lsp": {
+    "ruff": {
+      "initialization_options": {
+        "settings": {
+          "configuration": "server/pyproject.toml"
+        }
+      }
+    }
+  }
+}

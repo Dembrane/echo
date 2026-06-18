@@ -3,7 +3,6 @@ import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Badge,
 	Button,
-	Divider,
 	Group,
 	Paper,
 	Progress,
@@ -15,15 +14,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
-import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
 import { API_BASE_URL } from "@/config";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import {
 	useWorkspaceUsage,
 	type WorkspaceUsageData,
 } from "@/hooks/useWorkspaceUsage";
-import { isTier, type Tier } from "@/lib/tiers";
 import { formatDurationFromHours } from "@/lib/time";
 
 async function fetchUsageFresh(
@@ -53,12 +49,6 @@ function formatCycleMonth(iso: string): string {
 	return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 }
 
-function formatEur(value: number | null | undefined): string {
-	if (value == null) return "—";
-	if (value === 0) return "€0";
-	return `€${Math.round(value)}`;
-}
-
 /**
  * Workspace usage card (matrix v1.1 §8).
  *
@@ -74,9 +64,7 @@ function formatEur(value: number | null | undefined): string {
  */
 export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const queryClient = useQueryClient();
-	const { workspace } = useWorkspace();
 	const [refreshing, setRefreshing] = useState(false);
-	const [upgradeOpen, setUpgradeOpen] = useState(false);
 	const [monthOffset, setMonthOffset] = useState(0);
 
 	const { data, isLoading, isError, refetch, dataUpdatedAt } =
@@ -125,12 +113,6 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 		);
 	}
 
-	// Matrix §11: admin + billing + owner can request upgrades. Role comes
-	// from the workspace context (the selector response includes role).
-	const role = workspace?.role;
-	const canRequestUpgrade =
-		role === "admin" || role === "owner" || role === "billing";
-
 	const hoursPct =
 		data.audio_hours_included && data.audio_hours_included > 0
 			? Math.min(100, (data.audio_hours / data.audio_hours_included) * 100)
@@ -157,25 +139,8 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 				? "yellow"
 				: "primary";
 
-	const nextTier = data.next_tier;
-	const currentTierName = isTier(data.tier) ? (data.tier as Tier) : "pioneer";
-	const nextTierName =
-		nextTier && isTier(nextTier.tier) ? (nextTier.tier as Tier) : null;
-
 	return (
 		<Paper p="lg" withBorder radius="sm">
-			{nextTierName && (
-				<UpgradeModal
-					opened={upgradeOpen}
-					onClose={() => setUpgradeOpen(false)}
-					currentTier={currentTierName}
-					requiredTier={nextTierName}
-					featureName={t`Upgrade to ${nextTier?.tier ?? ""}`}
-					benefit={nextTier?.tagline ?? ""}
-					canRequestUpgrade={canRequestUpgrade}
-					workspaceId={workspaceId}
-				/>
-			)}
 			<Stack gap={16}>
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Stack gap={2} style={{ minWidth: 0 }}>
@@ -247,7 +212,9 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 							<Text size="xs" c="dimmed">
 								<Trans>Members</Trans>
 							</Text>
-							<Text size="xs" c="dimmed">{data.member_count}</Text>
+							<Text size="xs" c="dimmed">
+								{data.member_count}
+							</Text>
 						</Group>
 					)}
 					{data.external_count > 0 && (
@@ -255,7 +222,9 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 							<Text size="xs" c="dimmed">
 								<Trans>Externals</Trans>
 							</Text>
-							<Text size="xs" c="dimmed">{data.external_count}</Text>
+							<Text size="xs" c="dimmed">
+								{data.external_count}
+							</Text>
 						</Group>
 					)}
 					{data.pending_count > 0 && (
@@ -263,7 +232,9 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 							<Text size="xs" c="dimmed">
 								<Trans>Pending invites</Trans>
 							</Text>
-							<Text size="xs" c="dimmed">{data.pending_count}</Text>
+							<Text size="xs" c="dimmed">
+								{data.pending_count}
+							</Text>
 						</Group>
 					)}
 				</Stack>
@@ -289,37 +260,6 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 					refreshing={refreshing}
 					onRefresh={handleRefresh}
 				/>
-
-				{/* Next-tier hint (admin / billing only). Overage forecast
-				    removed per demo feedback; we'll put it back with a
-				    clearer "what happens at overage" explanation later. */}
-				{data.next_tier && (
-					<>
-						<Divider />
-						<Group justify="space-between" align="center" wrap="nowrap">
-							<Text size="xs" c="dimmed">
-								<Trans>
-									Next tier: {data.next_tier.tier} · {data.next_tier.tagline}
-								</Trans>
-								{data.next_tier.pricing?.annual_billing?.per_month_eur !=
-									null && (
-									<>
-										{" · "}
-										{formatEur(
-											data.next_tier.pricing.annual_billing.per_month_eur,
-										)}
-										/mo
-									</>
-								)}
-							</Text>
-							{canRequestUpgrade && (
-								<Button onClick={() => setUpgradeOpen(true)}>
-									<Trans>Request upgrade</Trans>
-								</Button>
-							)}
-						</Group>
-					</>
-				)}
 			</Stack>
 		</Paper>
 	);

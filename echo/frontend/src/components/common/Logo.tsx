@@ -4,6 +4,7 @@ import aiconlLogoHQ from "@/assets/aiconl-logo-hq.png";
 
 import dembraneLogoFull from "@/assets/dembrane-logo-new.svg";
 import dembraneLogomark from "@/assets/logomark-no-bg.svg";
+import { APP_ENVIRONMENT } from "@/config";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 
 type LogoProps = {
@@ -12,18 +13,16 @@ type LogoProps = {
 	alwaysDembrane?: boolean;
 } & GroupProps;
 
-const STAGING_HOSTNAMES = new Set([
-	"dashboard.echo-next.dembrane.com",
-	"portal.echo-next.dembrane.com",
-]);
-
-const isStagingHost = () =>
-	typeof window !== "undefined" && STAGING_HOSTNAMES.has(window.location.hostname);
-
-export const LogoDembrane = ({ hideLogo, hideTitle, alwaysDembrane, ...props }: LogoProps) => {
+export const LogoDembrane = ({
+	hideLogo,
+	hideTitle,
+	alwaysDembrane,
+	...props
+}: LogoProps) => {
 	const { logoUrl } = useWhitelabelLogo();
 	const effectiveLogoUrl = alwaysDembrane ? null : logoUrl;
-	const showStagingBadge = isStagingHost();
+	// Show an env badge everywhere except production.
+	const hostEnv = APP_ENVIRONMENT === "production" ? null : APP_ENVIRONMENT;
 
 	return (
 		<Group gap="sm" h="32px" align="center" {...props}>
@@ -32,16 +31,19 @@ export const LogoDembrane = ({ hideLogo, hideTitle, alwaysDembrane, ...props }: 
 			) : !hideLogo ? (
 				<span className="relative inline-flex h-full items-center">
 					<img
-						src={effectiveLogoUrl ?? (hideTitle ? dembraneLogomark : dembraneLogoFull)}
+						src={
+							effectiveLogoUrl ??
+							(hideTitle ? dembraneLogomark : dembraneLogoFull)
+						}
 						alt="Logo"
 						className="h-full object-contain"
 					/>
-					{showStagingBadge && (
+					{hostEnv && (
 						<span
-							className="pointer-events-none absolute -bottom-1 -right-[20px] -translate-x-1/2 pl-1 text-[10px] font-medium leading-none"
+							className="pointer-events-none absolute capitalize -bottom-1 -right-[15px] -translate-x-1/2 pl-1 text-xs font-medium leading-none"
 							style={{ color: "var(--mantine-color-primary-6)" }}
 						>
-							Staging
+							{hostEnv}
 						</span>
 					)}
 				</span>

@@ -9,7 +9,7 @@ live here so we can retire the frontend's direct Directus calls.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 from logging import getLogger
 from datetime import datetime, timezone
 
@@ -18,6 +18,7 @@ from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.directus_async import async_directus
+from dembrane.search_filters import merge_search_filter
 from dembrane.api.v2.bff._access import (
     resolve_tag_access,
     resolve_project_access,
@@ -246,13 +247,16 @@ class ProjectUpdate(BaseModel):
     is_get_reply_enabled: Optional[bool] = None
     is_verify_enabled: Optional[bool] = None
     is_verify_on_finish_enabled: Optional[bool] = None
-    selected_verification_key_list: Optional[list] = None
+    # CSV string, not a list: matches the text column and verify.py's
+    # serialization (null clears the selection).
+    selected_verification_key_list: Optional[str] = None
     is_project_notification_subscription_allowed: Optional[bool] = None
     anonymize_transcripts: Optional[bool] = None
     enable_ai_title_and_tags: Optional[bool] = None
     conversation_title_prompt: Optional[str] = None
     image_generation_model: Optional[str] = None
     tutorial_slug: Optional[str] = None
+    host_guide: Optional[dict[str, Any]] = None
 
 
 @project_router.get("")
@@ -357,9 +361,6 @@ async def list_my_projects(
         "workspace_id": {"_in": ws_ids},
         "deleted_at": {"_null": True},
     }
-    # Directus project rows don't have a full-text index; `search` param
-    # does a LIKE match across string fields when the server-side
-    # directus_client supports it.
     query: dict = {
         "filter": filt,
         "fields": [
@@ -376,7 +377,7 @@ async def list_my_projects(
         "offset": offset,
     }
     if search and search.strip():
-        query["search"] = search.strip()
+        query["filter"] = merge_search_filter(filt, search.strip(), ["name"])
     raw = await async_directus.get_items("project", {"query": query}) or []
     raw_list = raw if isinstance(raw, list) else []
 
@@ -411,7 +412,9 @@ async def update_project(
     access = await resolve_project_access(project_id, auth)
     access.require("project:update")
 
-    payload = {k: v for k, v in body.model_dump().items() if v is not None}
+    # exclude_unset (not a None-filter) so explicitly-sent nulls clear
+    # fields; a None-filter made clearing verification topics a no-op.
+    payload = body.model_dump(exclude_unset=True)
     if not payload:
         raise HTTPException(status_code=400, detail="No fields to update")
 

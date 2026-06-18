@@ -25,12 +25,10 @@ import {
 	Table,
 	Tabs,
 	Text,
-	Textarea,
 	TextInput,
 	Title,
 	Tooltip,
 	UnstyledButton,
-	useModalsStack,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import {
@@ -40,7 +38,6 @@ import {
 	IconChevronRight,
 	IconDots,
 	IconDownload,
-	IconEye,
 	IconSearch,
 	IconSortAscending,
 	IconSortDescending,
@@ -57,19 +54,16 @@ import {
 	getFilteredRowModel,
 	getGroupedRowModel,
 	getSortedRowModel,
-	type Row,
 	type SortingState,
 	useReactTable,
 	type VisibilityState,
 } from "@tanstack/react-table";
-import { formatDistance } from "date-fns";
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
-import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 import { type BillingPeriod, TIER_ORDER, type Tier } from "@/lib/tiers";
@@ -97,6 +91,7 @@ type BillingRow = {
 	workspace_name: string;
 	org_id: string;
 	org_name: string;
+	billing_account_id: string | null;
 	tier: string;
 	is_partner_owned: boolean;
 	billed_to_team_id: string | null;
@@ -422,6 +417,72 @@ function DiscountEditor({
 }
 
 /**
+ * Live staff action: grant a comped one-month Changemaker reverse trial on the
+ * row's org billing account. Auto-reverts to Free at expiry (expiry cron).
+ */
+function GrantTrialControl({ accountId }: { accountId: string }) {
+	const queryClient = useQueryClient();
+	const mutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/billing-accounts/${accountId}/grant-trial`,
+				{
+					body: JSON.stringify({ months: 1, tier: "changemaker" }),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "admin", "billing-rollup"],
+			});
+		},
+	});
+	return (
+		<Paper withBorder radius="sm" p="sm">
+			<Group justify="space-between" wrap="nowrap" align="center">
+				<Stack gap={0} style={{ minWidth: 0 }}>
+					<Text size="sm" fw={500}>
+						<Trans>Grant Changemaker trial</Trans>
+					</Text>
+					<Text size="xs" c="dimmed">
+						<Trans>
+							One month of Changemaker on this org, comped. Auto-reverts to Free
+							at expiry.
+						</Trans>
+					</Text>
+					{mutation.isError && (
+						<Text size="xs" c="red">
+							{(mutation.error as Error).message}
+						</Text>
+					)}
+					{mutation.isSuccess && (
+						<Text size="xs" c="primary">
+							<Trans>Trial granted</Trans>
+						</Text>
+					)}
+				</Stack>
+				<Button
+					size="xs"
+					variant="light"
+					loading={mutation.isPending}
+					onClick={() => mutation.mutate()}
+				>
+					<Trans>Grant</Trans>
+				</Button>
+			</Group>
+		</Paper>
+	);
+}
+
+/**
  * Actions modal for a workspace row. Includes the discount editor
  * (live, staff-only) and mocked placeholders for future actions.
  */
@@ -490,6 +551,12 @@ function WorkspaceActionsModal({
 					initialType={row.type_discount ?? null}
 					initialPercent={row.percent_discount ?? null}
 				/>
+
+				<Divider my={4} />
+
+				{row.billing_account_id && (
+					<GrantTrialControl accountId={row.billing_account_id} />
+				)}
 
 				<Divider my={4} />
 				{actions.map((a) => (
@@ -1833,1041 +1900,6 @@ function PartnersPanel() {
 	);
 }
 
-type WorkspaceRequestRequester = {
-	id: string;
-	display_name: string | null;
-	email: string | null;
-};
-
-type WorkspaceRequestRow = {
-	id: string;
-	kind: string;
-	status: string;
-	requester: WorkspaceRequestRequester | null;
-	org_id: string;
-	org_name: string | null;
-	workspace_id: string | null;
-	workspace_name: string | null;
-	proposed_name: string | null;
-	proposed_tier: string;
-	proposed_visibility: string | null;
-	proposed_billing_period: BillingPeriod | null;
-	requester_message: string | null;
-	granted_tier: string | null;
-	granted_tier_expires_at: string | null;
-	granted_type_discount: string | null;
-	granted_percent_discount: number | null;
-	approved_billing_period: BillingPeriod | null;
-	resulting_workspace_id: string | null;
-	decided_at: string | null;
-	decided_by: WorkspaceRequestRequester | null;
-	denial_reason: string | null;
-	staff_notes: string | null;
-	created_at: string | null;
-};
-
-type WorkspaceRequestListResponse = {
-	items: WorkspaceRequestRow[];
-	counts: Record<string, number>;
-};
-
-const kindLabels: Record<string, string> = {
-	new_workspace: "New workspace",
-	tier_upgrade: "Tier upgrade",
-};
-
-const visibilityLabels: Record<string, string> = {
-	open_to_organisation: "Open to organisation",
-	private: "Private",
-};
-
-async function patchWorkspaceRequest(
-	requestId: string,
-	body: Record<string, unknown>,
-): Promise<{ id: string; status: string; resulting_workspace_id?: string }> {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/admin/workspace-requests/${requestId}`,
-		{
-			body: JSON.stringify(body),
-			credentials: "include",
-			headers: { "Content-Type": "application/json" },
-			method: "PATCH",
-		},
-	);
-	if (!res.ok) {
-		const err = await res.json().catch(() => ({}));
-		throw new Error(err.detail || `Request failed (${res.status})`);
-	}
-	return res.json();
-}
-
-function ApproveDialog({
-	request: req,
-	opened,
-	onClose,
-	onSuccess,
-}: {
-	request: WorkspaceRequestRow;
-	opened: boolean;
-	onClose: () => void;
-	onSuccess: () => void;
-}) {
-	const queryClient = useQueryClient();
-	const [grantedTier, setGrantedTier] = useState<string>(req.proposed_tier);
-	const [typeDiscount, setTypeDiscount] = useState<string | null>(null);
-	const [percentDiscount, setPercentDiscount] = useState<number | string>("");
-	const [staffNotes, setStaffNotes] = useState("");
-	// Default to whatever the requester proposed; fallback to annual when
-	// the request has no proposed cadence (e.g. pilot, or a pre-feature row).
-	// On confirm we send null for pilot/free regardless of the toggle.
-	const [approvedBillingPeriod, setApprovedBillingPeriod] =
-		useState<BillingPeriod>(req.proposed_billing_period ?? "annual");
-
-	const cadenceApplies = grantedTier !== "pilot" && grantedTier !== "free";
-
-	const mutation = useMutation({
-		mutationFn: () =>
-			patchWorkspaceRequest(req.id, {
-				action: "approve",
-				approved_billing_period: cadenceApplies ? approvedBillingPeriod : null,
-				granted_percent_discount:
-					percentDiscount !== "" ? Number(percentDiscount) : undefined,
-				granted_tier: grantedTier,
-				granted_type_discount: typeDiscount || undefined,
-				staff_notes: staffNotes || undefined,
-			}),
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "admin", "workspace-requests"],
-			});
-			onSuccess();
-		},
-	});
-
-	return (
-		<Modal
-			opened={opened}
-			onClose={onClose}
-			title={t`Approve request`}
-			size="72rem"
-		>
-			<Stack gap="md">
-				<Text size="sm">
-					<Trans>
-						Approving request from {req.requester?.display_name ?? "unknown"}{" "}
-						for a {kindLabels[req.kind]} ({req.proposed_tier}).
-					</Trans>
-				</Text>
-
-				{cadenceApplies && (
-					<Group justify="center" mb="xs">
-						<BillingPeriodToggle
-							value={approvedBillingPeriod}
-							onChange={setApprovedBillingPeriod}
-							compact
-						/>
-					</Group>
-				)}
-				<TierPricingCards
-					value={grantedTier}
-					onChange={(v) => setGrantedTier(v)}
-					billingPeriod={approvedBillingPeriod}
-				/>
-				{cadenceApplies &&
-					req.proposed_billing_period &&
-					req.proposed_billing_period !== approvedBillingPeriod && (
-						<Text size="xs" c="orange">
-							<Trans>
-								Requester proposed {req.proposed_billing_period} billing —
-								approving as {approvedBillingPeriod}.
-							</Trans>
-						</Text>
-					)}
-
-				<Select
-					label={t`Discount type (optional)`}
-					data={[
-						{ label: "Scholarship", value: "scholarship" },
-						{ label: "Staff discount", value: "staff_discount" },
-					]}
-					value={typeDiscount}
-					onChange={setTypeDiscount}
-					clearable
-				/>
-
-				<NumberInput
-					label={t`Discount % (optional)`}
-					min={0}
-					max={100}
-					value={percentDiscount}
-					onChange={setPercentDiscount}
-				/>
-
-				<Textarea
-					label={t`Staff notes (internal, optional)`}
-					value={staffNotes}
-					onChange={(e) => setStaffNotes(e.currentTarget.value)}
-					maxLength={2000}
-					autosize
-					minRows={2}
-				/>
-
-				{mutation.isError && (
-					<Text size="xs" c="red">
-						{(mutation.error as Error).message}
-					</Text>
-				)}
-
-				<Group justify="flex-end">
-					<Button variant="subtle" onClick={onClose}>
-						<Trans>Cancel</Trans>
-					</Button>
-					<Button
-						color="primary"
-						loading={mutation.isPending}
-						onClick={() => mutation.mutate()}
-					>
-						<Trans>Approve</Trans>
-					</Button>
-				</Group>
-			</Stack>
-		</Modal>
-	);
-}
-
-function DenyDialog({
-	request: req,
-	opened,
-	onClose,
-	onSuccess,
-}: {
-	request: WorkspaceRequestRow;
-	opened: boolean;
-	onClose: () => void;
-	onSuccess: () => void;
-}) {
-	const queryClient = useQueryClient();
-	const [reason, setReason] = useState("");
-	const [staffNotes, setStaffNotes] = useState("");
-
-	const mutation = useMutation({
-		mutationFn: () =>
-			patchWorkspaceRequest(req.id, {
-				action: "deny",
-				denial_reason: reason,
-				staff_notes: staffNotes || undefined,
-			}),
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "admin", "workspace-requests"],
-			});
-			onSuccess();
-		},
-	});
-
-	return (
-		<Modal opened={opened} onClose={onClose} title={t`Deny request`} size="md">
-			<Stack gap="md">
-				<Text size="sm">
-					<Trans>
-						Denying request from {req.requester?.display_name ?? "unknown"} for
-						a {kindLabels[req.kind]} ({req.proposed_tier}).
-					</Trans>
-				</Text>
-
-				<Textarea
-					label={t`Denial reason (required)`}
-					value={reason}
-					onChange={(e) => setReason(e.currentTarget.value)}
-					maxLength={2000}
-					autosize
-					minRows={3}
-					required
-				/>
-
-				<Textarea
-					label={t`Staff notes (internal, optional)`}
-					value={staffNotes}
-					onChange={(e) => setStaffNotes(e.currentTarget.value)}
-					maxLength={2000}
-					autosize
-					minRows={2}
-				/>
-
-				{mutation.isError && (
-					<Text size="xs" c="red">
-						{(mutation.error as Error).message}
-					</Text>
-				)}
-
-				<Group justify="flex-end">
-					<Button variant="subtle" onClick={onClose}>
-						<Trans>Cancel</Trans>
-					</Button>
-					<Button
-						color="red"
-						loading={mutation.isPending}
-						onClick={() => mutation.mutate()}
-						disabled={!reason.trim()}
-					>
-						<Trans>Deny</Trans>
-					</Button>
-				</Group>
-			</Stack>
-		</Modal>
-	);
-}
-
-function WorkspaceRequestDetail({
-	request: req,
-	onClose,
-}: {
-	request: WorkspaceRequestRow;
-	onClose: () => void;
-}) {
-	const stack = useModalsStack(["approve-dialog", "deny-dialog"]);
-	const showDetail =
-		!stack.state["approve-dialog"] && !stack.state["deny-dialog"];
-
-	const handleActionSuccess = () => {
-		stack.closeAll();
-		onClose();
-	};
-
-	return (
-		<>
-			<Modal
-				opened={showDetail}
-				onClose={onClose}
-				title={
-					<Group gap="xs">
-						<Text fw={500}>{kindLabels[req.kind] ?? req.kind}</Text>
-						<Badge
-							size="xs"
-							color={
-								req.status === "pending"
-									? "yellow"
-									: req.status === "approved"
-										? "primary"
-										: "red"
-							}
-							variant="light"
-							tt="capitalize"
-						>
-							{req.status}
-						</Badge>
-					</Group>
-				}
-				size="lg"
-			>
-				<Stack gap="md">
-					<Divider label={t`Requester`} labelPosition="left" />
-					<SimpleGrid cols={2}>
-						<Box>
-							<Text size="xs" c="dimmed">
-								<Trans>Requester</Trans>
-							</Text>
-							<Text size="sm">
-								{req.requester?.display_name ?? req.requester?.id ?? "-"}
-							</Text>
-							{req.requester?.email && (
-								<Text size="xs" c="dimmed">
-									{req.requester.email}
-								</Text>
-							)}
-						</Box>
-						<Box>
-							<Text size="xs" c="dimmed">
-								<Trans>Organisation</Trans>
-							</Text>
-							<Text size="sm">{req.org_name ?? req.org_id}</Text>
-						</Box>
-						<Box>
-							<Text size="xs" c="dimmed">
-								<Trans>Submitted</Trans>
-							</Text>
-							<Text size="sm">{formatDate(req.created_at)}</Text>
-						</Box>
-						<Box>
-							<Text size="xs" c="dimmed">
-								<Trans>Kind</Trans>
-							</Text>
-							<Text size="sm">{kindLabels[req.kind] ?? req.kind}</Text>
-						</Box>
-					</SimpleGrid>
-
-					<Divider label={t`Proposed`} labelPosition="left" />
-					<SimpleGrid cols={2}>
-						{req.proposed_name && (
-							<Box>
-								<Text size="xs" c="dimmed">
-									<Trans>Workspace name</Trans>
-								</Text>
-								<Text size="sm">{req.proposed_name}</Text>
-							</Box>
-						)}
-						<Box>
-							<Text size="xs" c="dimmed">
-								<Trans>Proposed tier</Trans>
-							</Text>
-							<Badge
-								size="sm"
-								color={tierColors[req.proposed_tier] ?? "gray"}
-								variant="filled"
-								tt="capitalize"
-							>
-								{req.proposed_tier}
-							</Badge>
-						</Box>
-						{req.proposed_billing_period && (
-							<Box>
-								<Text size="xs" c="dimmed">
-									<Trans>Proposed billing</Trans>
-								</Text>
-								<Badge
-									size="sm"
-									variant="light"
-									color={
-										req.proposed_billing_period === "annual" ? "blue" : "gray"
-									}
-									tt="capitalize"
-								>
-									{req.proposed_billing_period}
-								</Badge>
-							</Box>
-						)}
-						{req.proposed_visibility && (
-							<Box>
-								<Text size="xs" c="dimmed">
-									<Trans>Visibility</Trans>
-								</Text>
-								<Text size="sm">
-									{visibilityLabels[req.proposed_visibility] ??
-										req.proposed_visibility}
-								</Text>
-							</Box>
-						)}
-						{req.workspace_id && (
-							<Box>
-								<Text size="xs" c="dimmed">
-									<Trans>Target workspace</Trans>
-								</Text>
-								<Anchor
-									component={I18nLink}
-									to={`/w/${req.workspace_id}/settings`}
-									size="sm"
-								>
-									{req.workspace_name ?? req.workspace_id}
-								</Anchor>
-							</Box>
-						)}
-					</SimpleGrid>
-
-					{req.requester_message && (
-						<>
-							<Divider label={t`Message`} labelPosition="left" />
-							<Paper withBorder p="sm" radius="sm">
-								<Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-									{req.requester_message}
-								</Text>
-							</Paper>
-						</>
-					)}
-
-					{req.status !== "pending" && (
-						<>
-							<Divider label={t`Decision`} labelPosition="left" />
-							<SimpleGrid cols={2}>
-								<Box>
-									<Text size="xs" c="dimmed">
-										<Trans>Decided at</Trans>
-									</Text>
-									<Text size="sm">{formatDate(req.decided_at)}</Text>
-								</Box>
-								<Box>
-									<Text size="xs" c="dimmed">
-										<Trans>Decided by</Trans>
-									</Text>
-									<Text size="sm">
-										{req.decided_by?.display_name ?? req.decided_by?.id ?? "-"}
-									</Text>
-								</Box>
-								{req.granted_tier && (
-									<Box>
-										<Text size="xs" c="dimmed">
-											<Trans>Granted tier</Trans>
-										</Text>
-										<Badge
-											size="sm"
-											color={tierColors[req.granted_tier] ?? "gray"}
-											variant="filled"
-											tt="capitalize"
-										>
-											{req.granted_tier}
-										</Badge>
-									</Box>
-								)}
-								{req.approved_billing_period && (
-									<Box>
-										<Text size="xs" c="dimmed">
-											<Trans>Approved billing</Trans>
-										</Text>
-										<Group gap={6}>
-											<Badge
-												size="sm"
-												variant="light"
-												color={
-													req.approved_billing_period === "annual"
-														? "blue"
-														: "gray"
-												}
-												tt="capitalize"
-											>
-												{req.approved_billing_period}
-											</Badge>
-											{req.proposed_billing_period &&
-												req.proposed_billing_period !==
-													req.approved_billing_period && (
-													<Text size="xs" c="orange">
-														<Trans>
-															(overrode {req.proposed_billing_period})
-														</Trans>
-													</Text>
-												)}
-										</Group>
-									</Box>
-								)}
-								{req.granted_tier_expires_at && (
-									<Box>
-										<Text size="xs" c="dimmed">
-											<Trans>Tier expires</Trans>
-										</Text>
-										<Text size="sm">
-											{formatDate(req.granted_tier_expires_at)}
-										</Text>
-									</Box>
-								)}
-								{req.granted_type_discount && (
-									<Box>
-										<Text size="xs" c="dimmed">
-											<Trans>Discount type</Trans>
-										</Text>
-										<Badge size="sm" variant="light" tt="capitalize">
-											{req.granted_type_discount.replace(/_/g, " ")}
-										</Badge>
-									</Box>
-								)}
-								{req.granted_percent_discount != null && (
-									<Box>
-										<Text size="xs" c="dimmed">
-											<Trans>Discount %</Trans>
-										</Text>
-										<Text size="sm">{req.granted_percent_discount}%</Text>
-									</Box>
-								)}
-								{req.denial_reason && (
-									<Box style={{ gridColumn: "1 / -1" }}>
-										<Text size="xs" c="dimmed">
-											<Trans>Denial reason</Trans>
-										</Text>
-										<Paper withBorder p="xs" radius="sm" mt={4}>
-											<Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-												{req.denial_reason}
-											</Text>
-										</Paper>
-									</Box>
-								)}
-								{req.resulting_workspace_id && (
-									<Box>
-										<Text size="xs" c="dimmed">
-											<Trans>Resulting workspace</Trans>
-										</Text>
-										<Anchor
-											component={I18nLink}
-											to={`/w/${req.resulting_workspace_id}/settings`}
-											size="sm"
-										>
-											<Trans>View workspace</Trans>
-										</Anchor>
-									</Box>
-								)}
-							</SimpleGrid>
-						</>
-					)}
-
-					{req.staff_notes && (
-						<>
-							<Divider label={t`Staff notes`} labelPosition="left" />
-							<Paper withBorder p="sm" radius="sm" bg="gray.0">
-								<Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-									{req.staff_notes}
-								</Text>
-							</Paper>
-						</>
-					)}
-
-					{req.status === "pending" && (
-						<>
-							<Divider />
-							<Group justify="flex-end">
-								<Button
-									variant="subtle"
-									color="red"
-									onClick={() => stack.open("deny-dialog")}
-								>
-									<Trans>Deny</Trans>
-								</Button>
-								<Button
-									color="primary"
-									onClick={() => stack.open("approve-dialog")}
-								>
-									<Trans>Approve</Trans>
-								</Button>
-							</Group>
-						</>
-					)}
-				</Stack>
-			</Modal>
-
-			<ApproveDialog
-				request={req}
-				opened={stack.state["approve-dialog"]}
-				onClose={() => stack.close("approve-dialog")}
-				onSuccess={handleActionSuccess}
-			/>
-			<DenyDialog
-				request={req}
-				opened={stack.state["deny-dialog"]}
-				onClose={() => stack.close("deny-dialog")}
-				onSuccess={handleActionSuccess}
-			/>
-		</>
-	);
-}
-
-function UpgradesPanel() {
-	const [statusFilter, setStatusFilter] = useState<string>("pending");
-	const [selectedRequest, setSelectedRequest] =
-		useState<WorkspaceRequestRow | null>(null);
-	const { data, isLoading } = useQuery({
-		queryFn: () =>
-			fetchJson<WorkspaceRequestListResponse>(
-				`/v2/admin/workspace-requests?status=${statusFilter}`,
-			),
-		queryKey: ["v2", "admin", "workspace-requests", statusFilter],
-		staleTime: 30_000,
-	});
-	const [globalFilter, setGlobalFilter] = useState("");
-
-	const columns = useMemo<ColumnDef<WorkspaceRequestRow, unknown>[]>(
-		() => [
-			{
-				accessorKey: "kind",
-				cell: ({ row }) => (
-					<Badge
-						size="xs"
-						variant="light"
-						color={row.original.kind === "new_workspace" ? "primary" : "violet"}
-					>
-						{kindLabels[row.original.kind] ?? row.original.kind}
-					</Badge>
-				),
-				header: t`Kind`,
-				id: "kind",
-			},
-			{
-				accessorFn: (r) =>
-					r.requester?.display_name ?? r.requester?.email ?? "",
-				cell: ({ row }) => (
-					<Text size="xs" fw={500}>
-						{row.original.requester?.display_name ?? "-"}
-					</Text>
-				),
-				header: t`Requester`,
-				id: "requester",
-			},
-			{
-				accessorFn: (r) => r.org_name ?? "",
-				cell: ({ row }) => (
-					<Text size="xs" c="dimmed">
-						{row.original.org_name ?? "-"}
-					</Text>
-				),
-				header: t`Organisation`,
-				id: "org_name",
-			},
-			{
-				accessorKey: "proposed_tier",
-				cell: ({ row }) => (
-					<Badge
-						size="xs"
-						color={tierColors[row.original.proposed_tier] ?? "gray"}
-						variant="filled"
-						tt="capitalize"
-					>
-						{row.original.proposed_tier}
-					</Badge>
-				),
-				header: t`Proposed tier`,
-				id: "proposed_tier",
-				sortingFn: (a, b) =>
-					tierRank(a.original.proposed_tier) -
-					tierRank(b.original.proposed_tier),
-			},
-			{
-				// "Billing" column shows proposed → approved divergence at a
-				// glance. For pending rows there's no approved cadence yet, so
-				// we just show the proposed value. For decided rows where the
-				// two differ, render "annual → monthly" so admins can spot
-				// overrides in the list before opening the detail panel.
-				accessorFn: (r) =>
-					`${r.proposed_billing_period ?? ""}/${r.approved_billing_period ?? ""}`,
-				cell: ({ row }) => {
-					const proposed = row.original.proposed_billing_period;
-					const approved = row.original.approved_billing_period;
-					if (!proposed && !approved) {
-						return (
-							<Text size="xs" c="dimmed">
-								—
-							</Text>
-						);
-					}
-					const diverges =
-						approved !== null && proposed !== null && approved !== proposed;
-					return (
-						<Group gap={4} wrap="nowrap">
-							<Badge
-								size="xs"
-								variant="light"
-								color={proposed === "annual" ? "blue" : "gray"}
-								tt="capitalize"
-							>
-								{proposed ?? "—"}
-							</Badge>
-							{approved && diverges && (
-								<>
-									<Text size="xs" c="dimmed">
-										→
-									</Text>
-									<Badge
-										size="xs"
-										variant="light"
-										color="orange"
-										tt="capitalize"
-									>
-										{approved}
-									</Badge>
-								</>
-							)}
-						</Group>
-					);
-				},
-				header: t`Billing`,
-				id: "billing_period",
-			},
-			{
-				accessorFn: (r) => r.requester_message ?? "",
-				cell: ({ row }) => (
-					<Text size="xs" c="dimmed" lineClamp={1} maw={200}>
-						{row.original.requester_message ?? "-"}
-					</Text>
-				),
-				header: t`Message`,
-				id: "message",
-			},
-			{
-				accessorKey: "created_at",
-				cell: ({ row }) => (
-					<Tooltip
-						label={formatDate(row.original.created_at)}
-						withArrow
-						position="top"
-					>
-						<Text size="sm" c="dimmed">
-							{row.original.created_at
-								? formatDistance(
-										new Date(row.original.created_at),
-										new Date(),
-										{ addSuffix: true },
-									)
-								: "-"}
-						</Text>
-					</Tooltip>
-				),
-				header: t`Submitted`,
-				id: "created_at",
-			},
-			{
-				cell: ({ row }) => (
-					<Button
-						size="compact-xs"
-						variant="outline"
-						leftSection={<IconEye size={14} />}
-						onClick={(e) => {
-							e.stopPropagation();
-							setSelectedRequest(row.original);
-						}}
-					>
-						<Trans>Open details</Trans>
-					</Button>
-				),
-				header: "",
-				id: "actions",
-			},
-		],
-		[],
-	);
-
-	const items = data?.items ?? [];
-	const counts = data?.counts ?? { approved: 0, denied: 0, pending: 0 };
-
-	return (
-		<Stack gap="sm">
-			<Tabs
-				value={statusFilter}
-				onChange={(v) => {
-					if (v) {
-						setStatusFilter(v);
-						setGlobalFilter("");
-					}
-				}}
-			>
-				<Tabs.List>
-					<Tabs.Tab value="pending">
-						<Group gap={6}>
-							<Trans>Pending</Trans>
-							<Badge size="xs" variant="filled" color="yellow" circle>
-								{counts.pending}
-							</Badge>
-						</Group>
-					</Tabs.Tab>
-					<Tabs.Tab value="approved">
-						<Group gap={6}>
-							<Trans>Approved</Trans>
-							<Badge size="xs" variant="filled" color="primary" circle>
-								{counts.approved}
-							</Badge>
-						</Group>
-					</Tabs.Tab>
-					<Tabs.Tab value="denied">
-						<Group gap={6}>
-							<Trans>Denied</Trans>
-							<Badge size="xs" variant="filled" color="red" circle>
-								{counts.denied}
-							</Badge>
-						</Group>
-					</Tabs.Tab>
-				</Tabs.List>
-			</Tabs>
-
-			{isLoading ? (
-				<Center py="xl">
-					<Loader size="sm" color="gray" />
-				</Center>
-			) : (
-				<>
-					<Group justify="space-between" align="center" wrap="wrap">
-						<Text size="xs" c="dimmed">
-							<Plural value={items.length} one="# request" other="# requests" />
-						</Text>
-						<TextInput
-							leftSection={<IconSearch size={14} />}
-							placeholder={t`Search requester, organisation, tier`}
-							value={globalFilter}
-							onChange={(e) => setGlobalFilter(e.currentTarget.value)}
-							size="xs"
-							style={{ maxWidth: 320 }}
-						/>
-					</Group>
-					<Paper withBorder radius="sm" style={{ overflowX: "auto" }}>
-						<Table highlightOnHover verticalSpacing="sm" fz="sm">
-							<Table.Thead>
-								<Table.Tr>
-									{columns.map((col) => (
-										<Table.Th key={col.id}>
-											<Text
-												size="xs"
-												fw={500}
-												c="dimmed"
-												tt="uppercase"
-												lts={0.3}
-											>
-												{typeof col.header === "string" ? col.header : ""}
-											</Text>
-										</Table.Th>
-									))}
-								</Table.Tr>
-							</Table.Thead>
-							<Table.Tbody>
-								{items.length === 0 ? (
-									<Table.Tr>
-										<Table.Td colSpan={columns.length}>
-											<Text size="xs" c="dimmed" ta="center" py="md">
-												{statusFilter === "pending"
-													? t`No pending requests.`
-													: statusFilter === "approved"
-														? t`No approved requests.`
-														: t`No denied requests.`}
-											</Text>
-										</Table.Td>
-									</Table.Tr>
-								) : (
-									items
-										.filter((item) => {
-											if (!globalFilter) return true;
-											const q = globalFilter.toLowerCase();
-											return (
-												(item.requester?.display_name ?? "")
-													.toLowerCase()
-													.includes(q) ||
-												(item.requester?.email ?? "")
-													.toLowerCase()
-													.includes(q) ||
-												(item.org_name ?? "").toLowerCase().includes(q) ||
-												(item.proposed_tier ?? "").toLowerCase().includes(q) ||
-												(item.proposed_name ?? "").toLowerCase().includes(q) ||
-												(item.requester_message ?? "").toLowerCase().includes(q)
-											);
-										})
-										.map((item) => (
-											<Table.Tr
-												key={item.id}
-												style={{ cursor: "pointer" }}
-												onClick={() => setSelectedRequest(item)}
-											>
-												<Table.Td>
-													<Badge
-														size="xs"
-														variant="light"
-														color={
-															item.kind === "new_workspace"
-																? "primary"
-																: "violet"
-														}
-													>
-														{kindLabels[item.kind] ?? item.kind}
-													</Badge>
-												</Table.Td>
-												<Table.Td>
-													<Text size="sm" fw={500}>
-														{item.requester?.display_name ?? "-"}
-													</Text>
-												</Table.Td>
-												<Table.Td>
-													<Text size="sm" c="dimmed">
-														{item.org_name ?? "-"}
-													</Text>
-												</Table.Td>
-												<Table.Td>
-													<Badge
-														size="xs"
-														color={tierColors[item.proposed_tier] ?? "gray"}
-														variant="filled"
-														tt="capitalize"
-													>
-														{item.proposed_tier}
-													</Badge>
-												</Table.Td>
-												<Table.Td>
-													{(() => {
-														const proposed = item.proposed_billing_period;
-														const approved = item.approved_billing_period;
-														if (!proposed && !approved) {
-															return (
-																<Text size="xs" c="dimmed">
-																	—
-																</Text>
-															);
-														}
-														const diverges =
-															approved !== null &&
-															proposed !== null &&
-															approved !== proposed;
-														return (
-															<Group gap={4} wrap="nowrap">
-																<Badge
-																	size="xs"
-																	variant="light"
-																	color={
-																		proposed === "annual" ? "blue" : "gray"
-																	}
-																	tt="capitalize"
-																>
-																	{proposed ?? "—"}
-																</Badge>
-																{approved && diverges && (
-																	<>
-																		<Text size="xs" c="dimmed">
-																			→
-																		</Text>
-																		<Badge
-																			size="xs"
-																			variant="light"
-																			color="orange"
-																			tt="capitalize"
-																		>
-																			{approved}
-																		</Badge>
-																	</>
-																)}
-															</Group>
-														);
-													})()}
-												</Table.Td>
-												<Table.Td>
-													<Text size="sm" c="dimmed" lineClamp={1} maw={200}>
-														{item.requester_message ?? "-"}
-													</Text>
-												</Table.Td>
-												<Table.Td>
-													<Tooltip
-														label={formatDate(item.created_at)}
-														withArrow
-														position="top"
-													>
-														<Text size="sm" c="dimmed">
-															{item.created_at
-																? formatDistance(
-																		new Date(item.created_at),
-																		new Date(),
-																		{ addSuffix: true },
-																	)
-																: "-"}
-														</Text>
-													</Tooltip>
-												</Table.Td>
-												<Table.Td>
-													<Button
-														size="compact-xs"
-														variant="outline"
-														leftSection={<IconEye size={14} />}
-														onClick={(e) => {
-															e.stopPropagation();
-															setSelectedRequest(item);
-														}}
-													>
-														<Trans>Open details</Trans>
-													</Button>
-												</Table.Td>
-											</Table.Tr>
-										))
-								)}
-							</Table.Tbody>
-						</Table>
-					</Paper>
-				</>
-			)}
-
-			{selectedRequest && (
-				<WorkspaceRequestDetail
-					request={selectedRequest}
-					onClose={() => setSelectedRequest(null)}
-				/>
-			)}
-		</Stack>
-	);
-}
-
 export const AdminSettingsRoute = () => {
 	useDocumentTitle(t`Admin, dembrane`);
 	const { data: me } = useV2Me();
@@ -2909,8 +1941,8 @@ export const AdminSettingsRoute = () => {
 						</Group>
 						<Text size="xs" c="dimmed">
 							<Trans>
-								Usage and billing, partner ledger, upgrade triage. Any Directus
-								admin has access.
+								Usage and billing, partner ledger. Any Directus admin has
+								access.
 							</Trans>
 						</Text>
 					</Stack>
@@ -2927,9 +1959,6 @@ export const AdminSettingsRoute = () => {
 					</Tabs.Panel>
 					<Tabs.Panel value="partners" pt="md">
 						<PartnersPanel />
-					</Tabs.Panel>
-					<Tabs.Panel value="upgrades" pt="md">
-						<UpgradesPanel />
 					</Tabs.Panel>
 				</Tabs>
 			</Stack>

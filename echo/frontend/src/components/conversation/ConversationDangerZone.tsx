@@ -3,12 +3,11 @@ import { Trans } from "@lingui/react/macro";
 import { Button, Group, Stack, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDownload, IconTrash } from "@tabler/icons-react";
+import posthog from "posthog-js";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { MoveConversationButton } from "@/components/conversation/MoveConversationButton";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { getConversationContentLink } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { useDeleteConversationByIdMutation } from "./hooks";
@@ -29,11 +28,7 @@ export const ConversationDangerZone = ({
 		useDisclosure(false);
 
 	const handleDownloadAudio = () => {
-		try {
-			analytics.trackEvent(events.DOWNLOAD_AUDIO);
-		} catch (error) {
-			console.warn("Analytics tracking failed:", error);
-		}
+		posthog.capture("conversation_audio_downloaded");
 	};
 
 	return (
@@ -65,7 +60,11 @@ export const ConversationDangerZone = ({
 										? undefined
 										: getConversationContentLink(conversation.id)
 								}
-								onClick={disableDownloadAudio || locked ? undefined : handleDownloadAudio}
+								onClick={
+									disableDownloadAudio || locked
+										? undefined
+										: handleDownloadAudio
+								}
 								disabled={disableDownloadAudio || locked}
 								{...testId("conversation-download-audio-button")}
 							>
@@ -97,13 +96,9 @@ export const ConversationDangerZone = ({
 				confirmLabel={<Trans>Delete</Trans>}
 				confirmColor="red"
 				onConfirm={() => {
-					try {
-						analytics.trackEvent(events.DELETE_CONVERSATION);
-					} catch (error) {
-						console.warn("Analytics tracking failed:", error);
-					}
+					posthog.capture("conversation_deleted");
 					deleteConversationByIdMutation.mutate(conversation.id);
-					navigate(`/w/${workspaceId}/projects/${projectId}/overview`);
+					navigate(`/w/${workspaceId}/projects/${projectId}/conversations`);
 					closeConfirm();
 				}}
 			/>

@@ -90,7 +90,7 @@ export const ConversationStatusTable = ({
 						<Table.Td>
 							<Anchor
 								component={Link}
-								to={`/w/${workspaceId}/projects/${projectId}/conversation/${conv.id}/overview`}
+								to={`/w/${workspaceId}/projects/${projectId}/conversation/${conv.id}`}
 							>
 								<Trans>View</Trans>
 							</Anchor>

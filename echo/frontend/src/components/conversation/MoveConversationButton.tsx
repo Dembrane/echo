@@ -15,16 +15,15 @@ import {
 } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { IconArrowsExchange, IconSearch } from "@tabler/icons-react";
+import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useInView } from "react-intersection-observer";
 import { useParams } from "react-router";
 import { FormLabel } from "@/components/form/FormLabel";
 import { useInfiniteProjects } from "@/components/project/hooks";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { testId } from "@/lib/testUtils";
 import { useMoveConversationMutation } from "./hooks";
 
@@ -84,11 +83,7 @@ export const MoveConversationButton = ({
 	const handleMove = handleSubmit((data) => {
 		if (!data.targetProjectId) return;
 
-		try {
-			analytics.trackEvent(events.MOVE_TO_ANOTHER_PROJECT);
-		} catch (error) {
-			console.warn("Analytics tracking failed:", error);
-		}
+		posthog.capture("conversation_moved");
 
 		moveConversationMutation.mutate(
 			{
@@ -99,7 +94,7 @@ export const MoveConversationButton = ({
 				onSuccess: () => {
 					close();
 					navigate(
-						`/w/${workspaceId}/projects/${data.targetProjectId}/conversation/${conversation.id}/overview`,
+						`/w/${workspaceId}/projects/${data.targetProjectId}/conversation/${conversation.id}`,
 					);
 				},
 			},

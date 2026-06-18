@@ -21,6 +21,7 @@ import {
 	IconPlus,
 } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
+import posthog from "posthog-js";
 import { useParams } from "react-router";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { CloseableAlert } from "@/components/common/ClosableAlert";
@@ -39,8 +40,6 @@ import { CreateView } from "@/components/view/CreateViewForm";
 import { ViewExpandedCard } from "@/components/view/View";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Icons } from "@/icons";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { SalesLinks } from "@/lib/links";
 import { DummyViews } from "../../../components/view/DummyViews";
 
@@ -106,11 +105,7 @@ export const ProjectLibraryRoute = () => {
 
 	const contactSales = () => {
 		if (!isLibraryEnabled) {
-			try {
-				analytics.trackEvent(events.LIBRARY_CONTACT_SALES);
-			} catch (error) {
-				console.warn("Analytics tracking failed:", error);
-			}
+			posthog.capture("contact_sales_clicked", { source: "library" });
 			window.open(SalesLinks.AUTO_SELECT_CONTACT, "_blank");
 		}
 	};

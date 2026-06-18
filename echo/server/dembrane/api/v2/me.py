@@ -15,6 +15,10 @@ from dembrane.api.v2.invites import compute_invite_hash
 from dembrane.api.v2.schemas import MeResponse, OrgSummary
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.api.v2._invite_helpers import (
+    create_membership_row,
+    reactivate_membership_row,
+)
 
 router = APIRouter()
 logger = getLogger("api.v2.me")
@@ -144,7 +148,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
             {
                 "query": {
                     "filter": {"id": {"_in": org_ids}, "deleted_at": {"_null": True}},
-                    "fields": ["id", "name"],
+                    "fields": ["id", "name", "is_partner"],
                     "limit": -1,
                 }
             },
@@ -158,6 +162,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
                         id=org["id"],
                         name=org.get("name", ""),
                         role=m["role"],
+                        is_partner=bool(org.get("is_partner")),
                     )
                 )
 
@@ -483,7 +488,8 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
             },
         )
         if not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0):
-            await async_directus.create_item(
+            newly_joined_organisation = await create_membership_row(
+                async_directus,
                 "org_membership",
                 {
                     "id": generate_uuid(),
@@ -492,7 +498,6 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
                     "role": "member",
                 },
             )
-            newly_joined_organisation = True
 
     # External acceptance: enforce insider XOR outsider before creating the
     # external row.
@@ -518,7 +523,8 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
         },
     )
     if not (isinstance(existing_ws_mem, list) and len(existing_ws_mem) > 0):
-        await async_directus.create_item(
+        if await create_membership_row(
+            async_directus,
             "workspace_membership",
             {
                 "id": generate_uuid(),
@@ -527,10 +533,10 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
                 "role": invite_role,
                 "source": "direct",
             },
-        )
-        from dembrane.cache_utils import invalidate_workspace_and_org_usage
+        ):
+            from dembrane.cache_utils import invalidate_workspace_and_org_usage
 
-        await invalidate_workspace_and_org_usage(invite["workspace_id"], ws.get("org_id"))
+            await invalidate_workspace_and_org_usage(invite["workspace_id"], ws.get("org_id"))
 
     # Mark invite as accepted
     await async_directus.update_item(
@@ -540,6 +546,26 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
             "accepted_at": now_iso,
         },
     )
+
+    # Seat consumed now: reconcile billing so the prorated charge lands at the
+    # accept moment and the next renewal reflects the new seat. Best-effort: a
+    # billing hiccup must never fail the accept. Idempotent (provisioned_seats),
+    # so the periodic cron stays a safe backstop.
+    try:
+        from dembrane.billing_service import (
+            reconcile_account_seats,
+            get_account_for_workspace,
+        )
+
+        billing_account = await get_account_for_workspace(invite["workspace_id"])
+        if billing_account:
+            await reconcile_account_seats(billing_account["id"])
+    except Exception:
+        logger.exception(
+            "Seat reconcile failed after %s accepted invite to workspace %s",
+            app_user_id,
+            invite["workspace_id"],
+        )
 
     # Notify the inviter that their invite was accepted. inviter_id is
     # already hoisted at the top of the function (defensive — see comment
@@ -685,13 +711,16 @@ async def _accept_org_invite_by_id(
     if active_row is not None:
         already_active_member = True
     elif deleted_row is not None:
-        await async_directus.update_item(
+        if not await reactivate_membership_row(
+            async_directus,
             "org_membership",
             deleted_row["id"],
             {"deleted_at": None, "role": invite_role},
-        )
+        ):
+            already_active_member = True
     else:
-        await async_directus.create_item(
+        if not await create_membership_row(
+            async_directus,
             "org_membership",
             {
                 "id": generate_uuid(),
@@ -699,7 +728,8 @@ async def _accept_org_invite_by_id(
                 "user_id": app_user_id,
                 "role": invite_role,
             },
-        )
+        ):
+            already_active_member = True
 
     await async_directus.update_item(
         "org_invite",
@@ -784,8 +814,11 @@ async def decline_my_invite(invite_id: str, auth: DependencyDirectusSession) -> 
             ref_org_id=invite.get("org_id"),
         )
 
-    await async_directus.delete_item(
-        "org_invite" if is_org_invite else "workspace_invite", invite_id
+    # Soft-delete, mirroring revoke (invite_actions.py) — keeps the audit trail.
+    await async_directus.update_item(
+        "org_invite" if is_org_invite else "workspace_invite",
+        invite_id,
+        {"deleted_at": datetime.now(timezone.utc).isoformat()},
     )
     return {"status": "success"}
 
@@ -1131,7 +1164,8 @@ async def _consume_pending_invites_in_org(
                             elif row.get("deleted_at") is not None and deleted_row is None:
                                 deleted_row = row
                     if active_row is None and deleted_row is not None:
-                        await async_directus.update_item(
+                        await reactivate_membership_row(
+                            async_directus,
                             "workspace_membership",
                             deleted_row["id"],
                             {
@@ -1141,7 +1175,8 @@ async def _consume_pending_invites_in_org(
                             },
                         )
                     elif active_row is None:
-                        await async_directus.create_item(
+                        await create_membership_row(
+                            async_directus,
                             "workspace_membership",
                             {
                                 "id": generate_uuid(),
@@ -1362,13 +1397,16 @@ async def accept_invite_by_hash(
             if active_row is not None:
                 already_active_member = True
             elif deleted_row is not None:
-                await async_directus.update_item(
+                if not await reactivate_membership_row(
+                    async_directus,
                     "org_membership",
                     deleted_row["id"],
                     {"deleted_at": None, "role": actual_role},
-                )
+                ):
+                    already_active_member = True
             else:
-                await async_directus.create_item(
+                if not await create_membership_row(
+                    async_directus,
                     "org_membership",
                     {
                         "id": generate_uuid(),
@@ -1376,7 +1414,8 @@ async def accept_invite_by_hash(
                         "user_id": app_user_id,
                         "role": actual_role,
                     },
-                )
+                ):
+                    already_active_member = True
 
             await async_directus.update_item(
                 "org_invite",
@@ -1495,7 +1534,8 @@ async def accept_invite_by_hash(
                         },
                     )
                     if not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0):
-                        await async_directus.create_item(
+                        await create_membership_row(
+                            async_directus,
                             "org_membership",
                             {
                                 "id": generate_uuid(),
@@ -1516,7 +1556,8 @@ async def accept_invite_by_hash(
                         ws["org_id"], app_user_id
                     )
 
-                await async_directus.create_item(
+                await create_membership_row(
+                    async_directus,
                     "workspace_membership",
                     {
                         "id": generate_uuid(),
@@ -1666,7 +1707,8 @@ async def accept_invite_by_hash(
             },
         )
         if not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0):
-            await async_directus.create_item(
+            await create_membership_row(
+                async_directus,
                 "org_membership",
                 {
                     "id": generate_uuid(),
@@ -1701,7 +1743,8 @@ async def accept_invite_by_hash(
         },
     )
     if not (isinstance(existing_ws_mem, list) and len(existing_ws_mem) > 0):
-        await async_directus.create_item(
+        if await create_membership_row(
+            async_directus,
             "workspace_membership",
             {
                 "id": generate_uuid(),
@@ -1710,10 +1753,10 @@ async def accept_invite_by_hash(
                 "role": actual_role,
                 "source": "direct",
             },
-        )
-        from dembrane.cache_utils import invalidate_workspace_and_org_usage
+        ):
+            from dembrane.cache_utils import invalidate_workspace_and_org_usage
 
-        await invalidate_workspace_and_org_usage(target_invite["workspace_id"], ws.get("org_id"))
+            await invalidate_workspace_and_org_usage(target_invite["workspace_id"], ws.get("org_id"))
 
     await async_directus.update_item(
         "workspace_invite",

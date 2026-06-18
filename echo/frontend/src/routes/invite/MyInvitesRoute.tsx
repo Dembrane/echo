@@ -50,9 +50,9 @@ export const MyInvitesRoute = () => {
 		try {
 			const data = await acceptMutation.mutateAsync(inviteId);
 			toast.success(t`Joined ${subjectName}`);
-			// Org-only invites have no workspace target; land on /w where DiscoverableWorkspaces is mounted.
+			// Org-only invites have no workspace target; land on /o where DiscoverableWorkspaces is mounted.
 			if (data.type === "org" || !data.workspace_id) {
-				navigate("/w");
+				navigate("/o");
 			} else {
 				navigate(`/w/${data.workspace_id}/home`);
 			}
@@ -118,7 +118,7 @@ export const MyInvitesRoute = () => {
 					<Title order={4} fw={400} c="dimmed">
 						<Trans>No pending invites</Trans>
 					</Title>
-					<Button variant="outline" size="sm" onClick={() => navigate("/w")}>
+					<Button variant="outline" size="sm" onClick={() => navigate("/o")}>
 						<Trans>Back to workspaces</Trans>
 					</Button>
 				</Stack>

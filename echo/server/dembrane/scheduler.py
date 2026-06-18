@@ -12,7 +12,13 @@ jobstores = {
 }
 
 scheduler = BlockingScheduler()
-scheduler.configure(jobstores=jobstores, timezone=utc)
+scheduler.configure(
+    jobstores=jobstores,
+    timezone=utc,
+    # The default 1s misfire_grace_time silently skips any run whose wakeup
+    # lands late (routine on WSL2/loaded hosts); these jobs must run late, not never.
+    job_defaults={"misfire_grace_time": 60, "coalesce": True},
+)
 
 settings = get_settings()
 DEBUG_MODE = settings.feature_flags.debug_mode
@@ -63,6 +69,22 @@ scheduler.add_job(
     trigger=CronTrigger(minute=0),
     id="task_send_tier_expiry_prewarning",
     name="Send 3-day pre-warning emails for expiring workspace tiers",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_reconcile_pending_billing.send",
+    trigger=CronTrigger(minute="*/5"),
+    id="task_reconcile_pending_billing",
+    name="Activate billing accounts whose first payment cleared (missed webhook/return)",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_reconcile_subscription_seats.send",
+    trigger=CronTrigger(minute="*/15"),
+    id="task_reconcile_subscription_seats",
+    name="Re-price active subscriptions to match live seat counts",
     replace_existing=True,
 )
 

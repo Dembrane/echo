@@ -29,10 +29,10 @@
     /* Apple Mail + iOS render this; Gmail / Outlook strip and fall back
        to the inline system stack. That's fine — DM Sans on Apple, system
        sans on the rest. Both read the same. */
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap');
   </style>
 </head>
-<body style="margin:0; padding:0; background-color:#F6F4F1; font-family:'DM Sans','DM Sans Variable',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; color:#2D2D2C; font-weight:300;">
+<body style="margin:0; padding:0; background-color:#F6F4F1; font-family:'DM Sans','DM Sans Variable',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; color:#2D2D2C; font-weight: 400;">
   <div style="display:none; font-size:1px; color:#F6F4F1; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;">
     {% block preview %}{% endblock %}
   </div>
@@ -43,18 +43,18 @@
           <!-- Logo -->
           <tr>
             <td style="padding:32px 48px 0;">
-              <img src="https://directus.dembrane.com/assets/36aa0e6d-eac0-4a56-9478-8afb01131134" alt="dembrane" width="158" height="32" border="0" style="height:32px; width:auto; max-width:100%; display:block; border:0; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic;">
+              <img src="https://dashboard.echo-next.dembrane.com/dembrane-logo-email.png" alt="dembrane" width="147" height="30" border="0" style="height:30px; width:auto; max-width:100%; display:block; border:0; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic;">
             </td>
           </tr>
 
           <!-- Content -->
           <tr>
             <td style="padding:28px 48px 0;">
-              <h1 style="margin:0 0 20px; font-family:inherit; font-size:32px; font-weight:300; letter-spacing:-0.01em; line-height:1.15; color:#2D2D2C; text-wrap:balance;">
+              <h1 style="margin:0 0 20px; font-family:inherit; font-size:32px; font-weight: 400; letter-spacing:-0.01em; line-height:1.15; color:#2D2D2C; text-wrap:balance;">
                 {% block heading %}{% endblock %}
               </h1>
 
-              <div style="font-size:17px; line-height:1.65; color:#2D2D2C; font-weight:300;">
+              <div style="font-size:17px; line-height:1.65; color:#2D2D2C; font-weight: 400;">
                 {% block body %}{% endblock %}
               </div>
 
@@ -64,7 +64,7 @@
 
               {% block disclaim %}{% endblock %}
 
-              <p style="font-size:17px; line-height:1.65; margin:0 0 32px; color:#2D2D2C; font-weight:300;">
+              <p style="font-size:17px; line-height:1.65; margin:0 0 32px; color:#2D2D2C; font-weight: 400;">
                 — the dembrane team
               </p>
 
@@ -105,7 +105,7 @@
    that contains a magic link so recipients whose mail client mangles
    the button still have a way through. #}
 {% macro fallback_url(url) -%}
-<p style="font-size:13px; line-height:1.65; margin:0 0 28px; color:#6B6B6A; font-weight:300;">
+<p style="font-size:13px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight: 400;">
   Or paste this into your browser:<br>
   <span style="color:#4169E1; word-break:break-all;">{{ url }}</span>
 </p>

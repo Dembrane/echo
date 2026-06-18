@@ -33,9 +33,9 @@ from logging import getLogger
 from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 
-from dembrane.utils import generate_uuid
 from dembrane.tier_capacity import is_conversation_locked
 from dembrane.directus_async import async_directus
+from dembrane.search_filters import merge_search_filter
 from dembrane.api.v2.bff._access import (
     filter_exclude_deleted,
     resolve_project_access,
@@ -66,6 +66,15 @@ _CONVERSATION_DEFAULT_FIELDS = [
     "is_audio_processing_finished",
     "is_anonymized",
     "is_over_cap",
+]
+
+# Shared by the list/count/select-all endpoints so they stay consistent.
+# No `id`: Directus rejects _icontains on uuid fields and errors the query.
+_CONVERSATION_SEARCH_FIELDS = [
+    "participant_name",
+    "participant_email",
+    "title",
+    "summary",
 ]
 
 
@@ -164,7 +173,9 @@ async def list_conversations(
         "offset": offset,
     }
     if search_text and search_text.strip():
-        query_dict["search"] = search_text.strip()
+        query_dict["filter"] = merge_search_filter(
+            conv_filter, search_text.strip(), _CONVERSATION_SEARCH_FIELDS
+        )
 
     convs = (
         await async_directus.get_items(
@@ -235,6 +246,66 @@ async def list_conversations(
         for conv in convs:
             conv["conversation_artifacts"] = artifact_map.get(conv["id"], [])
 
+        # Derived chunk fields (has_transcript, last_chunk_at,
+        # has_only_text_chunks) so list views don't need the full chunk embed.
+        lean_chunks = (
+            await async_directus.get_items(
+                "conversation_chunk",
+                {
+                    "query": {
+                        "filter": {"conversation_id": {"_in": conv_ids}},
+                        "fields": ["conversation_id", "source", "timestamp", "created_at"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        transcript_hits = (
+            await async_directus.get_items(
+                "conversation_chunk",
+                {
+                    "query": {
+                        "filter": {
+                            "conversation_id": {"_in": conv_ids},
+                            "transcript": {"_nempty": True},
+                        },
+                        "fields": ["conversation_id"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        has_transcript_ids: set[str] = set()
+        if isinstance(transcript_hits, list):
+            for row in transcript_hits:
+                cid = row.get("conversation_id")
+                if cid:
+                    has_transcript_ids.add(cid)
+        last_chunk_at: dict[str, str] = {}
+        chunk_counts: dict[str, int] = {}
+        non_text_ids: set[str] = set()
+        if isinstance(lean_chunks, list):
+            for ch in lean_chunks:
+                cid = ch.get("conversation_id")
+                if not cid:
+                    continue
+                chunk_counts[cid] = chunk_counts.get(cid, 0) + 1
+                # null source counts as "not text"
+                if ch.get("source") != "PORTAL_TEXT":
+                    non_text_ids.add(cid)
+                ts = ch.get("timestamp") or ch.get("created_at")
+                if ts and (cid not in last_chunk_at or ts > last_chunk_at[cid]):
+                    last_chunk_at[cid] = ts
+        for conv in convs:
+            cid = conv["id"]
+            conv["has_transcript"] = cid in has_transcript_ids
+            conv["last_chunk_at"] = last_chunk_at.get(cid)
+            conv["has_only_text_chunks"] = (
+                chunk_counts.get(cid, 0) > 0 and cid not in non_text_ids
+            )
+
         if include_chunks:
             chunks = (
                 await async_directus.get_items(
@@ -281,7 +352,9 @@ async def list_conversations(
                             "fields": [
                                 "id",
                                 "conversation_id",
-                                {"project_tag_id": ["id", "text", "created_at"]},
+                                "project_tag_id.id",
+                                "project_tag_id.text",
+                                "project_tag_id.created_at",
                             ],
                             "limit": -1,
                         }
@@ -333,7 +406,9 @@ async def count_conversations(
         "filter": filt,
     }
     if search_text and search_text.strip():
-        query_dict["search"] = search_text.strip()
+        query_dict["filter"] = merge_search_filter(
+            filt, search_text.strip(), _CONVERSATION_SEARCH_FIELDS
+        )
 
     agg = await async_directus.get_items(
         "conversation",
@@ -393,6 +468,56 @@ async def count_live_conversations(
     return {"count": 0}
 
 
+@router.get("/live")
+async def list_live_conversations(
+    auth: DependencyDirectusSession,
+    project_id: str = Query(...),
+    window_seconds: int = Query(
+        30,
+        ge=5,
+        le=600,
+        description="Conversation is 'live' if a chunk landed within this many seconds.",
+    ),
+) -> list[dict]:
+    """Lean rows for conversations with a chunk in the last `window_seconds`,
+    portal-initiated only. Same filter as /live-count. Backs the host
+    guide's live-recordings list; replaces the frontend's direct
+    conversation_chunk read that the ACL lockdown broke.
+    """
+    from datetime import datetime, timezone, timedelta
+
+    access = await resolve_project_access(project_id, auth)
+    access.require("conversation:read")
+
+    cutoff = (datetime.now(timezone.utc) - timedelta(seconds=window_seconds)).isoformat()
+
+    chunks = await async_directus.get_items(
+        "conversation_chunk",
+        {
+            "query": {
+                "filter": {
+                    "conversation_id": {"project_id": {"_eq": project_id}},
+                    "source": {"_nin": ["DASHBOARD_UPLOAD", "CLONE"]},
+                    "timestamp": {"_gt": cutoff},
+                },
+                "fields": ["conversation_id.id", "conversation_id.participant_name"],
+                "limit": 200,
+            }
+        },
+    )
+
+    out: dict[str, dict] = {}
+    if isinstance(chunks, list):
+        for chunk in chunks:
+            conv = chunk.get("conversation_id")
+            if isinstance(conv, dict) and conv.get("id") and conv["id"] not in out:
+                out[conv["id"]] = {
+                    "id": conv["id"],
+                    "participant_name": conv.get("participant_name"),
+                }
+    return list(out.values())
+
+
 @router.get("/remaining-count")
 async def count_remaining_conversations(
     auth: DependencyDirectusSession,
@@ -436,7 +561,9 @@ async def count_remaining_conversations(
 
     query: dict = {"fields": ["id"], "filter": filt, "limit": -1}
     if search_text and search_text.strip():
-        query["search"] = search_text.strip()
+        query["filter"] = merge_search_filter(
+            filt, search_text.strip(), _CONVERSATION_SEARCH_FIELDS
+        )
 
     candidates = await async_directus.get_items("conversation", {"query": query})
     if not isinstance(candidates, list) or not candidates:
@@ -513,7 +640,9 @@ async def get_conversation(
                         "filter": {"conversation_id": {"_eq": conversation_id}},
                         "fields": [
                             "id",
-                            {"project_tag_id": ["id", "text", "created_at"]},
+                            "project_tag_id.id",
+                            "project_tag_id.text",
+                            "project_tag_id.created_at",
                         ],
                         "limit": -1,
                     }
@@ -737,7 +866,9 @@ async def list_conversation_tags(
                 "fields": [
                     "id",
                     "conversation_id",
-                    {"project_tag_id": ["id", "text", "created_at"]},
+                    "project_tag_id.id",
+                    "project_tag_id.text",
+                    "project_tag_id.created_at",
                 ],
                 "limit": -1,
             }
@@ -797,7 +928,7 @@ async def replace_conversation_tags(
                     "filter": {"conversation_id": {"_eq": body.conversation_id}},
                     "fields": [
                         "id",
-                        {"project_tag_id": ["id"]},
+                        "project_tag_id.id",
                     ],
                     "limit": -1,
                 }
@@ -844,7 +975,7 @@ async def replace_conversation_tags(
             await async_directus.create_item(
                 "conversation_project_tag",
                 {
-                    "id": generate_uuid(),
+                    # PK is integer auto-increment; let Directus assign it.
                     "conversation_id": body.conversation_id,
                     "project_tag_id": tag_id,
                 },
@@ -865,7 +996,9 @@ async def replace_conversation_tags(
                 "fields": [
                     "id",
                     "conversation_id",
-                    {"project_tag_id": ["id", "text", "created_at"]},
+                    "project_tag_id.id",
+                    "project_tag_id.text",
+                    "project_tag_id.created_at",
                 ],
                 "limit": -1,
             }

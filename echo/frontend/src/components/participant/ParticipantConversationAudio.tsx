@@ -11,7 +11,6 @@ import {
 	Text,
 } from "@mantine/core";
 import { useDisclosure, useLocalStorage, useWindowEvent } from "@mantine/hooks";
-import * as Sentry from "@sentry/react";
 import {
 	IconAlertTriangle,
 	IconCheck,
@@ -22,6 +21,7 @@ import {
 } from "@tabler/icons-react";
 import clsx from "clsx";
 import Cookies from "js-cookie";
+import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
 
@@ -29,8 +29,6 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { finishConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { I18nLink } from "../common/i18nLink";
@@ -326,42 +324,29 @@ export const ParticipantConversationAudio = () => {
 		}
 	}, [isRecording, stoppedRecordingTime]);
 
-	// Report interruption to Sentry and Plausible
+	// Report interruption to PostHog error tracking
 	const reportInterruption = () => {
 		if (!audioRecorder.hadInterruption) return;
 
 		const chunkHistory = audioRecorder.getChunkHistory();
 
-		// Send to Sentry
-		Sentry.captureMessage(
-			"Recording interrupted by consecutive suspicious chunks",
+		// Send to PostHog error tracking
+		posthog.captureException(
+			new Error("Recording interrupted by consecutive suspicious chunks"),
 			{
-				extra: {
-					chunkSizes: chunkHistory.map((c) => c.size),
-					conversationId,
-					deviceInfo: navigator.userAgent,
-					projectId,
-					recordingDurationSeconds: interruptionRecordingTimeRef.current,
-					suspiciousChunkIndices: chunkHistory
-						.map((c, i) => (c.size < 1024 ? i : -1))
-						.filter((i) => i >= 0),
-					timestamp: new Date().toISOString(),
-					totalChunks: chunkHistory.length,
-				},
-				level: "warning",
-				tags: {
-					issue_type: "audio_interruption",
-					platform: "participant_portal",
-				},
+				chunkSizes: chunkHistory.map((c) => c.size),
+				conversationId,
+				deviceInfo: navigator.userAgent,
+				issue_type: "audio_interruption",
+				platform: "participant_portal",
+				projectId,
+				recordingDurationSeconds: interruptionRecordingTimeRef.current,
+				suspiciousChunkIndices: chunkHistory
+					.map((c, i) => (c.size < 1024 ? i : -1))
+					.filter((i) => i >= 0),
+				totalChunks: chunkHistory.length,
 			},
 		);
-
-		// Send to Plausible
-		try {
-			analytics.trackEvent(events.AUDIO_CHUNK_INTERRUPTION_ERROR);
-		} catch (error) {
-			console.warn("Analytics tracking failed:", error);
-		}
 	};
 
 	// Handler for reconnect button - waits for uploads, reports error, then reloads
@@ -445,13 +430,13 @@ export const ParticipantConversationAudio = () => {
 
 	const getRefineInfoText = () => {
 		if (showVerify && showEcho) {
-			return t`Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation.`;
+			return t`Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation.`;
 		}
 		if (showVerify) {
 			return t`Take some time to create an outcome that makes your contribution concrete.`;
 		}
 		if (showEcho) {
-			return t`Get an immediate reply from Dembrane to help you deepen the conversation.`;
+			return t`Get an immediate reply from dembrane to help you deepen the conversation.`;
 		}
 		return "";
 	};

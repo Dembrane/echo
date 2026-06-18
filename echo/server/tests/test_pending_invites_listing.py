@@ -53,9 +53,7 @@ def _make_directus_mock(
         if collection == "workspace_invite":
             # honor _in filter on workspace_id so the ?workspace_id= path
             # test can isolate a single workspace's rows.
-            wid_filter = (
-                params.get("query", {}).get("filter", {}).get("workspace_id", {})
-            )
+            wid_filter = params.get("query", {}).get("filter", {}).get("workspace_id", {})
             wanted = set(wid_filter.get("_in", []))
             base = workspace_invites or []
             if wanted:
@@ -239,6 +237,62 @@ async def test_empty_when_no_invites():
 
 
 @pytest.mark.asyncio
+async def test_rows_include_invite_url_with_matching_hash():
+    """Every row carries an invite_url whose h param equals
+    compute_invite_hash(row id), for both org and workspace rows."""
+    from urllib.parse import parse_qs, urlparse
+
+    from dembrane.api.v2.invites import compute_invite_hash
+
+    org_inv = {
+        "id": "oi-1",
+        "email": "a@x.com",
+        "role": "member",
+        "created_at": "2026-05-01T10:00:00Z",
+        "expires_at": "2026-05-08T10:00:00Z",
+        "invited_by": _APP_USER_ID,
+    }
+    ws_inv = {
+        "id": "wi-1",
+        "email": "b@x.com",
+        "role": "admin",
+        "workspace_id": "ws-a",
+        "created_at": "2026-05-02T10:00:00Z",
+        "expires_at": "2026-05-09T10:00:00Z",
+        "invited_by": _APP_USER_ID,
+    }
+    mock = _make_directus_mock(
+        org_invites=[org_inv],
+        workspace_invites=[ws_inv],
+        inviters=[{"id": _APP_USER_ID, "display_name": "Org Admin", "email": "admin@example.com"}],
+    )
+    mock.get_item = AsyncMock(
+        side_effect=lambda col, _id: {"id": _ORG_ID, "name": "Acme Org"} if col == "org" else None
+    )
+
+    with (
+        patch("dembrane.api.v2.orgs.async_directus", mock),
+        patch("dembrane.api.v2.orgs.get_app_user_or_raise", return_value=_APP_USER),
+    ):
+        app = _build_app()
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.get(f"/v2/orgs/{_ORG_ID}/pending-invites")
+
+    assert resp.status_code == 200, resp.text
+    by_id = {r["id"]: r for r in resp.json()}
+
+    ws_url = by_id["wi-1"]["invite_url"]
+    assert "/invite/accept" in ws_url
+    assert parse_qs(urlparse(ws_url).query)["h"][0] == compute_invite_hash("wi-1")
+    assert parse_qs(urlparse(ws_url).query)["ws"][0] == "Alpha"
+
+    org_url = by_id["oi-1"]["invite_url"]
+    assert "/invite/accept" in org_url
+    assert parse_qs(urlparse(org_url).query)["h"][0] == compute_invite_hash("oi-1")
+    assert parse_qs(urlparse(org_url).query)["org"][0] == "Acme Org"
+
+
+@pytest.mark.asyncio
 async def test_query_excludes_soft_deleted_expired_and_accepted_rows():
     """Pin the filter contract: both invite tables must be queried with
     accepted_at:_null, deleted_at:_null, and expires_at:_gt:now. If
@@ -273,6 +327,5 @@ async def test_query_excludes_soft_deleted_expired_and_accepted_rows():
             f"invites would leak (security regression)"
         )
         assert "_gt" in f.get("expires_at", {}), (
-            f"{collection} query is missing expires_at:_gt filter — "
-            f"expired invites would leak"
+            f"{collection} query is missing expires_at:_gt filter — expired invites would leak"
         )

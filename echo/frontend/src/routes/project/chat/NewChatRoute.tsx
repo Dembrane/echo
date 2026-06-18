@@ -20,13 +20,13 @@ import {
 	ChatModeIndicator,
 } from "@/components/chat/ChatAccordion";
 import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
-import { ChatSkeleton } from "@/components/chat/ChatSkeleton";
 import {
 	useInfiniteProjectChats,
 	useInitializeChatModeMutation,
 	usePrefetchSuggestions,
 	useProjectChatsCount,
 } from "@/components/chat/hooks";
+import { BaseSkeleton } from "@/components/common/BaseSkeleton";
 import { NavigationButton } from "@/components/common/NavigationButton";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useCreateChatMutation } from "@/components/project/hooks";
@@ -35,6 +35,15 @@ import { useLanguage } from "@/hooks/useLanguage";
 import type { ChatMode } from "@/lib/api";
 
 const CHATS_PAGE_SIZE = 10;
+
+// Standalone fallback: ChatSkeleton renders a bare Accordion.Item and
+// throws when mounted outside an <Accordion>.
+const ChatsSectionSkeleton = () => (
+	<Stack gap="lg">
+		<BaseSkeleton width="120px" height="28px" radius="xs" />
+		<BaseSkeleton count={3} height="40px" width="100%" radius="xs" />
+	</Stack>
+);
 
 const ProjectChatsSection = ({
 	projectId,
@@ -48,8 +57,8 @@ const ProjectChatsSection = ({
 		hasMessages: true,
 	});
 	const chatsQuery = useInfiniteProjectChats(projectId, undefined, {
-		initialLimit: CHATS_PAGE_SIZE,
 		hasMessages: true,
+		initialLimit: CHATS_PAGE_SIZE,
 	});
 
 	useEffect(() => {
@@ -207,7 +216,7 @@ export const NewChatRoute = () => {
 					onModeSelected={handleModeSelected}
 				/>
 
-				<Suspense fallback={<ChatSkeleton />}>
+				<Suspense fallback={<ChatsSectionSkeleton />}>
 					<ProjectChatsSection
 						projectId={projectId}
 						workspaceId={workspaceId}

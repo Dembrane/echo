@@ -50,25 +50,29 @@ export const useProjectSharingLink = (project?: Project) => {
 			"it-IT": "it-IT",
 			nl: "nl-NL",
 			"nl-NL": "nl-NL",
-			uk: "uk-UA",
-			"uk-UA": "uk-UA",
-		}[
-			project.language as
-				| "en"
-				| "nl"
-				| "de"
-				| "fr"
-				| "es"
-				| "it"
-				| "uk"
-				| "en-US"
-				| "nl-NL"
-				| "de-DE"
-				| "fr-FR"
-				| "es-ES"
-				| "it-IT"
-				| "uk-UA"
-		];
+				uk: "uk-UA",
+				"uk-UA": "uk-UA",
+				cs: "cs-CZ",
+				"cs-CZ": "cs-CZ",
+			}[
+				project.language as
+					| "en"
+					| "nl"
+					| "de"
+					| "fr"
+					| "es"
+					| "it"
+					| "uk"
+					| "cs"
+					| "en-US"
+					| "nl-NL"
+					| "de-DE"
+					| "fr-FR"
+					| "es-ES"
+					| "it-IT"
+					| "uk-UA"
+					| "cs-CZ"
+			];
 
 		// Include theme in URL so participant portal uses the same theme
 		const baseLink = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;
@@ -106,29 +110,31 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 	}
 
 	// Quick start is only available for supported languages
-	const supportedLanguages = [
-		"en",
-		"nl",
-		"de",
-		"fr",
-		"es",
-		"it",
-		"uk",
-		"en-US",
-		"nl-NL",
-		"de-DE",
-		"fr-FR",
-		"es-ES",
-		"it-IT",
-		"uk-UA",
-	];
+		const supportedLanguages = [
+			"en",
+			"nl",
+			"de",
+			"fr",
+			"es",
+			"it",
+			"uk",
+			"cs",
+			"en-US",
+			"nl-NL",
+			"de-DE",
+			"fr-FR",
+			"es-ES",
+			"it-IT",
+			"uk-UA",
+			"cs-CZ",
+		];
 	const showQuickStart =
 		project?.language && supportedLanguages.includes(project.language);
 
 	return (
 		<Paper
 			p="md"
-			className="relative flex h-full flex-col items-start justify-center"
+			className="relative flex w-fit flex-col items-start justify-center"
 		>
 			{project?.is_conversation_allowed ? (
 				<Group align="center" justify="start" gap="lg">

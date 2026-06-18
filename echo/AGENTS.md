@@ -75,6 +75,28 @@ The Mantine theme already sets `<Button>` defaults to `color="primary"` and `var
 - Single-field prompts: `InputModal`, never `window.prompt`
 - Status messages: `toast.*` from `@/components/common/Toaster`, never `window.alert`
 
+### Typography hierarchy
+
+The type ramp is defined once in `frontend/src/hooks/useAppPreferences.tsx` (runtime CSS vars) with static fallbacks in `frontend/src/index.css`. `theme.tsx` only references the vars. Edit the scale there, never per-component.
+
+The ramp is intentionally spaced so steps feel distinct (no 2px "uncanny valley" gaps):
+
+- Body3 `12px` (`size="xs"`): captions, references, gentle labels. This is the smallest size, never go below it
+- Body2 `15px` (`size="sm"`): low-emphasis secondary copy
+- Body1 `20px` (`size="md"`, the default): standard body and paragraphs
+- Heading3 `24px` (`size="lg"` / `Title order={4}`): larger body
+- Heading2 `28px` (`size="xl"` / `order={3}`), Heading1 `32px` (`order={2}`), Title `36px` (`order={1}`)
+
+Don't pair two adjacent steps (e.g. a 15px label over a 12px disclaimer). Step at least one level so the contrast reads.
+
+Tailwind and Mantine read from the same source. `tailwind.config.js` maps `fontSize` to the same `--app-font-size-*` / `--app-heading-*` vars, so `text-sm` == `size="sm"` (15px), `text-base` == Body1 (20px), etc. Use named classes (`text-xs`..`text-3xl`) or Mantine `size`, never hardcoded `text-[13px]` / `fontSize: 14` / `fz={14}`. Those magic numbers are what let the sidebar drift off-scale.
+
+### Text color and emphasis
+
+- **Never use `c="dimmed"` (or `color="dimmed"`), especially on primary text.** Primary text uses the default color (`--app-text`). Derive hierarchy from size and weight, not by greying text out
+- The only allowed muted cases are disabled controls and `variant="outline"` affordances
+- `dimmed` is redefined at the theme level (`--mantine-color-dimmed` in `useAppPreferences.tsx`) to a subtle softened text tone, not Mantine's off-brand gray, so legacy usages degrade gracefully. New code should still avoid it
+
 ## Translations
 
 - Lingui: `<Trans>` component or `` t` `` template literal
@@ -83,10 +105,8 @@ The Mantine theme already sets `<Button>` defaults to `color="primary"` and `var
 
 ## Feature Flags
 
-- Naming: `ENABLE_*` (backend), `VITE_ENABLE_*` (frontend)
-- Backend lives in `server/dembrane/settings.py` `FeatureFlagSettings`
-- Frontend lives in `frontend/src/config.ts`
-- Document in `.env.example` files
+- Backend: `ENABLE_*` env vars on `FeatureFlagSettings` in `server/dembrane/settings.py`; document them in `server/.env.sample`
+- Frontend: plain `ENABLE_*` constants in `frontend/src/config.ts`, resolved per environment in code via `byEnv()` (no env vars; see `frontend/AGENTS.md`)
 
 ## Branching & Deployment
 
@@ -168,6 +188,7 @@ Which group powers which feature is non-obvious, so don't downgrade silently.
 - `create_item` / `update_item` return `{"data": {...}}`. **MUST** unwrap with `["data"]`
 - `get_items` / `get_item` return data directly (no wrapper)
 - `get_items` requires `{"query": {filter, fields, sort, ...}}` wrapper
+- Nested relational fields use dot notation strings: `"project_tag_id.id"`, never `{"project_tag_id": ["id"]}`. The dict form is a TS SDK convenience; the Python client passes queries to the REST API verbatim, and Directus 500s on it
 - `search()` silently returns `{"error": "..."}` on failure; always validate the return is a list before iterating
 
 ### TypeScript Directus SDK

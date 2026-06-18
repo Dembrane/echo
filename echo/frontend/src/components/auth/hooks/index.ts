@@ -194,23 +194,16 @@ export const useLoginMutation = () => {
 			);
 		},
 		onSuccess: async () => {
-			queryClient.removeQueries({ queryKey: ["users", "me"] });
-			queryClient.removeQueries({ queryKey: ["v2", "workspaces"] });
-			queryClient.removeQueries({ queryKey: ["v2", "workspaces-context"] });
+			// Clear everything, not an allowlist: a targeted list silently leaks
+			// any user-scoped query it forgets to the next user.
+			queryClient.clear();
 			if (typeof window !== "undefined") {
 				try {
 					sessionStorage.removeItem("dembrane_ws_selected");
 				} catch {}
 			}
 			emitAuthCacheBoundary();
-			await Promise.all([
-				queryClient.invalidateQueries({ queryKey: ["auth", "session"] }),
-				queryClient.invalidateQueries({ queryKey: ["users", "me"] }),
-				queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] }),
-				queryClient.invalidateQueries({
-					queryKey: ["v2", "workspaces-context"],
-				}),
-			]);
+			await queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
 		},
 	});
 };
@@ -270,13 +263,16 @@ export const useLogoutMutation = () => {
 	});
 };
 
-export const useAuthenticated = (doRedirect = false) => {
+export const useAuthenticated = (doRedirect = false, enabled = true) => {
 	const logoutMutation = useLogoutMutation();
 	const location = useLocation();
 	const [searchParams] = useSearchParams();
 	const hasLoggedOutRef = useRef(false);
 
 	const sessionQuery = useQuery({
+		// Callers that don't need the session (e.g. ErrorPage on the participant
+		// portal) disable the query so no refresh call is fired at all.
+		enabled,
 		queryFn: async () => {
 			await directus.refresh();
 			return true as const;

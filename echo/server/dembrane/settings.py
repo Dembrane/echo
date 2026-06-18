@@ -323,6 +323,15 @@ class EmailSettings(BaseSettings):
             "SENDGRID_API_KEY", "EMAIL__SENDGRID_API_KEY", "EMAIL_SMTP_PASSWORD"
         ),
     )
+    # SendGrid data residency region. "eu" routes sends through
+    # api.eu.sendgrid.com so recipient PII and content stay in EU data
+    # centers (GDPR). Requires an EU regional subuser key. "global" uses
+    # api.sendgrid.com. The key must belong to a subuser in this region.
+    sendgrid_region: str = Field(
+        default="eu",
+        alias="SENDGRID_REGION",
+        validation_alias=AliasChoices("SENDGRID_REGION", "EMAIL__SENDGRID_REGION"),
+    )
     from_email: str = Field(
         default="do-not-reply@dembrane.com",
         alias="EMAIL_FROM",
@@ -577,6 +586,34 @@ class TranscriptionSettings(BaseSettings):
                 )
 
 
+class BillingSettings(BaseSettings):
+    """Mollie payment config. Test vs live is determined by the key prefix
+    (`test_` / `live_`); use a test key in non-prod. See docs/plans/
+    self-serve-billing-and-payments.md."""
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
+
+    mollie_api_key: Optional[str] = Field(
+        default=None,
+        alias="MOLLIE_API_KEY",
+        validation_alias=AliasChoices("MOLLIE_API_KEY", "BILLING__MOLLIE_API_KEY"),
+    )
+    # Public URL Mollie POSTs payment status to. Set per environment.
+    mollie_webhook_url: Optional[str] = Field(
+        default=None,
+        alias="MOLLIE_WEBHOOK_URL",
+        validation_alias=AliasChoices("MOLLIE_WEBHOOK_URL", "BILLING__MOLLIE_WEBHOOK_URL"),
+    )
+
+    @property
+    def mollie_enabled(self) -> bool:
+        return bool(self.mollie_api_key)
+
+    @property
+    def mollie_test_mode(self) -> bool:
+        return bool(self.mollie_api_key and self.mollie_api_key.startswith("test_"))
+
+
 class AppSettings:
     """
     Aggregate application settings composed from modular sections.
@@ -597,6 +634,7 @@ class AppSettings:
         self.llms = LLMSettings()
         self.embedding = EmbeddingSettings()
         self.agentic = AgenticSettings()
+        self.billing = BillingSettings()
 
         self.transcription.ensure_valid()
 

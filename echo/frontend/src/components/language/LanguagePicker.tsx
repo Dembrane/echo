@@ -6,10 +6,11 @@ import { useLocation } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { SUPPORTED_LANGUAGES } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
+import { storeLanguage } from "@/lib/language";
 import { testId } from "@/lib/testUtils";
 import classes from "./LanguagePicker.module.css";
 
-const PARTIAL_LANGUAGES = new Set(["it-IT", "uk-UA"]);
+const PARTIAL_LANGUAGES = new Set(["it-IT", "uk-UA", "cs-CZ"]);
 
 const data: Array<{
 	language: (typeof SUPPORTED_LANGUAGES)[number];
@@ -53,12 +54,18 @@ const data: Array<{
 		label: "Español",
 		language: "es-ES",
 	},
-	{
-		flag: "🇺🇦",
-		iso639_1: "uk",
-		label: "Ukrainian",
-		language: "uk-UA",
-	},
+		{
+			flag: "🇺🇦",
+			iso639_1: "uk",
+			label: "Ukrainian",
+			language: "uk-UA",
+		},
+		{
+			flag: "🇨🇿",
+			iso639_1: "cs",
+			label: "Czech",
+			language: "cs-CZ",
+		},
 ];
 
 export const languageOptions = data.map((d) => ({
@@ -81,6 +88,9 @@ export const LanguagePicker = () => {
 			(lang) => lang === selectedLanguage,
 		);
 		if (!validLanguage) return;
+
+		// Persist the choice so it survives the reload and future sessions.
+		storeLanguage(validLanguage);
 
 		let newPathname = pathname;
 

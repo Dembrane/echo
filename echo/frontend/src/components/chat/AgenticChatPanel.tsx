@@ -540,7 +540,7 @@ export const AgenticChatPanel = ({
 														</Text>
 														{showStatusBadge && (
 															<Box
-																className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusMeta.badgeClass}`}
+																className={`rounded-full border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${statusMeta.badgeClass}`}
 															>
 																{statusMeta.label}
 															</Box>

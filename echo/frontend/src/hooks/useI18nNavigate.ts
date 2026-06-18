@@ -4,7 +4,7 @@ import {
 	useNavigate,
 	useParams,
 } from "react-router";
-import { SUPPORTED_LANGUAGES } from "@/config";
+import { stripLanguagePrefix } from "@/lib/language";
 import { useLanguage } from "./useLanguage";
 
 export function useI18nNavigate() {
@@ -39,26 +39,17 @@ export function useI18nNavigate() {
 			return;
 		}
 
-		// Check if 'to' starts with any supported language prefix
-		const pathToCheck = targetPath ?? to.toString();
-		const hasLanguagePrefix = SUPPORTED_LANGUAGES.some((lang) =>
-			pathToCheck.startsWith(`/${lang}`),
-		);
-
-		if (hasLanguagePrefix) {
-			navigate(to, options);
+		// Strip any prefix already on the target and re-apply the active one, so a
+		// stale prefix in ?next (e.g. /en-US/...) can't revert the UI after login.
+		const languagePrefix = finalLanguage ? `/${finalLanguage}` : "";
+		if (typeof to === "string") {
+			navigate(`${languagePrefix}${stripLanguagePrefix(to)}`, options);
 		} else {
-			// Add the language prefix if it's not already present
-			const languagePrefix = finalLanguage ? `/${finalLanguage}` : "";
-			if (typeof to === "string") {
-				navigate(`${languagePrefix}${to}`, options);
-			} else {
-				const nextTo = {
-					...to,
-					pathname: `${languagePrefix}${to.pathname ?? ""}`,
-				};
-				navigate(nextTo, options);
-			}
+			const nextTo = {
+				...to,
+				pathname: `${languagePrefix}${stripLanguagePrefix(to.pathname ?? "")}`,
+			};
+			navigate(nextTo, options);
 		}
 	};
 }

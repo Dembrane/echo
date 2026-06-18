@@ -47,10 +47,24 @@ def _mock(*, org_role: str | None) -> AsyncMock:
     return mock
 
 
+def _ba_mock() -> AsyncMock:
+    """billing_account directus client: tier resolves to the workspace's tier."""
+
+    def _gi(coll, item_id, *_args, **_kwargs):
+        if coll == "billing_account":
+            return {"id": item_id, "tier": _WS["tier"]}
+        return {"id": _WS_ID, "billing_account_id": "acc-1"}
+
+    mock = AsyncMock()
+    mock.get_item = AsyncMock(side_effect=_gi)
+    return mock
+
+
 async def _post(*, org_role: str, is_external: bool) -> int:
     mock = _mock(org_role=org_role)
     with (
         patch("dembrane.api.v2.access_requests.async_directus", mock),
+        patch("dembrane.directus_async.async_directus", _ba_mock()),
         patch("dembrane.api.v2.access_requests._request_access_rate_limiter.check", AsyncMock()),
         patch("dembrane.api.v2.access_requests.get_app_user_or_raise", AsyncMock(return_value=_APP_USER)),
         patch("dembrane.api.v2.access_requests.is_org_external_only", AsyncMock(return_value=is_external)),

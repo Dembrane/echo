@@ -1,0 +1,25 @@
+{
+  "collection": "workspace",
+  "field": "billing_account_id",
+  "related_collection": "billing_account",
+  "meta": {
+    "junction_field": null,
+    "many_collection": "workspace",
+    "many_field": "billing_account_id",
+    "one_allowed_collections": null,
+    "one_collection": "billing_account",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": null,
+    "sort_field": null
+  },
+  "schema": {
+    "table": "workspace",
+    "column": "billing_account_id",
+    "foreign_key_table": "billing_account",
+    "foreign_key_column": "id",
+    "constraint_name": "workspace_billing_account_id_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "NO ACTION"
+  }
+}

@@ -14,6 +14,7 @@ export interface PendingInvite {
 	invited_by_id: string | null;
 	invited_by_name: string | null;
 	invited_by_email: string | null;
+	invite_url: string | null;
 }
 
 const pendingInvitesKey = (orgId: string, workspaceId?: string) =>

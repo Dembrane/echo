@@ -18,26 +18,23 @@ import {
 import { useDebouncedValue, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import { IconSearch, IconSettings, IconX } from "@tabler/icons-react";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useSearchParams } from "react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useCurrentUser } from "@/components/auth/hooks";
+import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { toast } from "@/components/common/Toaster";
-import { API_BASE_URL } from "@/config";
-import {
-	useProjectsHome,
-	useTogglePinMutation,
-} from "@/components/project/hooks";
+import { useTogglePinMutation } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
+import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
-import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
-import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { Icons } from "@/icons";
+import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { getDirectusErrorString } from "@/lib/directus";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
@@ -64,7 +61,7 @@ export const ProjectsHomeRoute = () => {
 	// quota monitoring.
 	const isPilot = workspace?.tier === "pilot";
 	const { data: pilotHours } = useQuery({
-		queryKey: ["v2", "workspace-usage", workspaceId, 0],
+		enabled: Boolean(isPilot && workspaceId),
 		queryFn: async () => {
 			const res = await fetch(
 				`${API_BASE_URL}/v2/workspaces/${workspaceId}/usage`,
@@ -76,20 +73,13 @@ export const ProjectsHomeRoute = () => {
 				audio_hours_included: number | null;
 			}>;
 		},
-		enabled: Boolean(isPilot && workspaceId),
+		queryKey: ["v2", "workspace-usage", workspaceId, 0],
 		staleTime: 60_000,
 	});
 
-	// Use v2 (workspace-scoped) when workspace context exists, v1 otherwise
-	const v1Query = useProjectsHome({
-		search: debouncedSearchValue,
-		workspaceId,
-	});
-	const v2Query = useWorkspaceProjects({
-		search: debouncedSearchValue,
-	});
-
-	const activeQuery = workspaceId ? v2Query : v1Query;
+	// Workspace-scoped only; the legacy /projects/home query (v1) is gone.
+	// The hook is disabled until workspaceId resolves, which keeps the
+	// skeleton up instead of firing a workspace-less request.
 	const {
 		data: homeData,
 		fetchNextPage,
@@ -98,7 +88,9 @@ export const ProjectsHomeRoute = () => {
 		status,
 		isError,
 		error,
-	} = activeQuery;
+	} = useWorkspaceProjects({
+		search: debouncedSearchValue,
+	});
 
 	const togglePinMutation = useTogglePinMutation();
 
@@ -195,8 +187,7 @@ export const ProjectsHomeRoute = () => {
 	// view-only on the workspace level. Gate the CTAs up front so we
 	// don't lure them into a click that 403s.
 	const isExternal = workspace?.role === "external";
-	const canCreateProject =
-		!isExternal && !user.data?.disable_create_project;
+	const canCreateProject = !isExternal && !user.data?.disable_create_project;
 	const canPinOnThisWorkspace = !isExternal;
 	const totallyEmpty =
 		allProjects.length === 0 &&
@@ -209,7 +200,7 @@ export const ProjectsHomeRoute = () => {
 	}
 
 	return (
-		<Container>
+		<Container size="xl" px="lg" py="xl">
 			<Stack gap="lg">
 				{/* Quiet workspace identity — replaces the old tier-card hero.
 				    Per audit §1: the user is deciding WHICH project to open;
@@ -226,11 +217,9 @@ export const ProjectsHomeRoute = () => {
 									size="xs"
 									color="gray"
 									leftSection={<IconSettings size={14} />}
-									onClick={() =>
-										navigate(`/w/${workspace.id}/settings`)
-									}
+									onClick={() => navigate(`/w/${workspace.id}/settings`)}
 								>
-									<Trans>Manage</Trans>
+									<Trans>Settings</Trans>
 								</Button>
 							)}
 						</Group>
@@ -262,7 +251,7 @@ export const ProjectsHomeRoute = () => {
 				    for them isn't "empty, go make something" — it's "nothing
 				    has been shared with you yet." */}
 				{totallyEmpty ? (
-					<Stack align="center" gap={12} py={48}>
+					<Stack gap={12} py={48}>
 						<Title order={3} fw={400}>
 							{isExternal ? (
 								<Trans>Nothing here for you yet.</Trans>
@@ -270,7 +259,7 @@ export const ProjectsHomeRoute = () => {
 								<Trans>Let's hear your first conversation.</Trans>
 							)}
 						</Title>
-						<Text size="sm" c="dimmed" ta="center" maw={440}>
+						<Text size="sm" maw={440}>
 							{isExternal ? (
 								<Trans>
 									You're an external in this workspace. Projects will show up
@@ -278,15 +267,16 @@ export const ProjectsHomeRoute = () => {
 								</Trans>
 							) : (
 								<Trans>
-									A project holds everything for one topic. Share its link
-									with participants, gather voices, then let dembrane turn
-									them into insights.
+									A project holds everything for one topic. Share its link with
+									participants, gather voices, then let dembrane turn them into
+									insights.
 								</Trans>
 							)}
 						</Text>
 						{canCreateProject && (
 							<Button
 								size="sm"
+								w="fit-content"
 								rightSection={<Icons.Plus stroke="white" fill="white" />}
 								onClick={handleCreateProject}
 								{...testId("project-home-create-button")}
@@ -312,9 +302,7 @@ export const ProjectsHomeRoute = () => {
 												canPinOnThisWorkspace ? handleTogglePin : undefined
 											}
 											isUnpinning={togglePinMutation.isPending}
-											onSearchOwner={
-												isAdmin ? handleSearchOwner : undefined
-											}
+											onSearchOwner={isAdmin ? handleSearchOwner : undefined}
 										/>
 									))}
 								</SimpleGrid>
@@ -331,9 +319,7 @@ export const ProjectsHomeRoute = () => {
 								{canCreateProject && (
 									<Button
 										size="sm"
-										rightSection={
-											<Icons.Plus stroke="white" fill="white" />
-										}
+										rightSection={<Icons.Plus stroke="white" fill="white" />}
 										onClick={handleCreateProject}
 										{...testId("project-home-create-button")}
 									>
@@ -343,9 +329,7 @@ export const ProjectsHomeRoute = () => {
 							</Group>
 
 							<TextInput
-								leftSection={
-									<IconSearch {...testId("project-search-icon")} />
-								}
+								leftSection={<IconSearch {...testId("project-search-icon")} />}
 								rightSection={
 									!!search && (
 										<ActionIcon
@@ -382,8 +366,8 @@ export const ProjectsHomeRoute = () => {
 								showPinnedSection && (
 									<Text size="sm" c="dimmed">
 										<Trans>
-											Everything is pinned. Unpin a project to see it
-											in this list.
+											Everything is pinned. Unpin a project to see it in this
+											list.
 										</Trans>
 									</Text>
 								)}
@@ -405,8 +389,8 @@ export const ProjectsHomeRoute = () => {
 											<Box
 												key={project.id}
 												ref={
-													nonPinnedProjects[nonPinnedProjects.length - 1]
-														.id === project.id
+													nonPinnedProjects[nonPinnedProjects.length - 1].id ===
+													project.id
 														? loadMoreRef
 														: undefined
 												}
@@ -414,9 +398,7 @@ export const ProjectsHomeRoute = () => {
 												<ProjectListItem
 													project={project as Project}
 													onTogglePin={
-														canPinOnThisWorkspace
-															? handleTogglePin
-															: undefined
+														canPinOnThisWorkspace ? handleTogglePin : undefined
 													}
 													isPinned={pinnedIds.has(project.id)}
 													canPin={canPin && canPinOnThisWorkspace}
@@ -447,7 +429,11 @@ export const ProjectsHomeRoute = () => {
 
 // Fetches just enough for the Pilot inline hour indicator. Uses the
 // same /usage query key the Billing card uses so they share cache.
-function PilotHoursInline({ usage }: { usage: { audio_hours: number; audio_hours_included: number | null } }) {
+function PilotHoursInline({
+	usage,
+}: {
+	usage: { audio_hours: number; audio_hours_included: number | null };
+}) {
 	const used = usage.audio_hours;
 	const cap = usage.audio_hours_included;
 	if (cap == null) return null;

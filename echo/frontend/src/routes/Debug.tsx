@@ -19,7 +19,7 @@ import { useProjectById } from "@/components/project/hooks";
 import {
 	ADMIN_BASE_URL,
 	API_BASE_URL,
-	BUILD_VERSION,
+	APP_ENVIRONMENT,
 	DIRECTUS_PUBLIC_URL,
 	ENABLE_CHAT_AUTO_SELECT,
 	PARTICIPANT_BASE_URL,
@@ -238,7 +238,7 @@ export default function DebugPage() {
 	});
 
 	const variables = {
-		BUILD_VERSION,
+		APP_ENVIRONMENT,
 		DEBUG_MODE: true,
 		ff: {
 			ENABLE_CHAT_AUTO_SELECT,

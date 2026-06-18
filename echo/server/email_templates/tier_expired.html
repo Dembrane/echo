@@ -4,29 +4,29 @@
 {% block preview %}{{ workspace_name }} moved to free. Some features are limited.{% endblock %}
 {% block heading %}{{ workspace_name }} is now on free.{% endblock %}
 {% block body %}
-<p style="font-size:17px; line-height:1.65; margin:0 0 20px; color:#2D2D2C; font-weight:300;">
+<p style="font-size:17px; line-height:1.65; margin:0 0 20px; color:#2D2D2C; font-weight:400;">
   Your <em style="color:#4169E1; font-style:normal;">{{ from_tier }}</em> tier on <em style="color:#4169E1; font-style:normal;">{{ workspace_name }}</em> has expired. The workspace is now on the free tier.
 </p>
 
 {% if freeze_items %}
-<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:300;">
+<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:400;">
   These features are frozen — existing state stays; no new use until upgrade:
 </p>
-<ul style="margin:0 0 20px; padding-left:20px; color:#2D2D2C; font-size:15px; line-height:1.7; font-weight:300;">
+<ul style="margin:0 0 20px; padding-left:20px; color:#2D2D2C; font-size:15px; line-height:1.7; font-weight:400;">
   {% for item in freeze_items %}<li>{{ item }}</li>{% endfor %}
 </ul>
 {% endif %}
 
 {% if revert_items %}
-<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:300;">
+<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:400;">
   These features were reverted:
 </p>
-<ul style="margin:0 0 20px; padding-left:20px; color:#2D2D2C; font-size:15px; line-height:1.7; font-weight:300;">
+<ul style="margin:0 0 20px; padding-left:20px; color:#2D2D2C; font-size:15px; line-height:1.7; font-weight:400;">
   {% for item in revert_items %}<li>{{ item }}</li>{% endfor %}
 </ul>
 {% endif %}
 
-<p style="font-size:15px; line-height:1.65; margin:0 0 24px; color:#2D2D2C; font-weight:300;">
+<p style="font-size:15px; line-height:1.65; margin:0 0 24px; color:#2D2D2C; font-weight:400;">
   Your existing content stays accessible. Request an upgrade to restore full features.
 </p>
 {% endblock %}

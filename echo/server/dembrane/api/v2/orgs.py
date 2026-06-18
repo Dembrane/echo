@@ -45,6 +45,7 @@ from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.invites import compute_invite_hash, _enqueue_invite_email
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.api.v2._invite_helpers import build_invite_accept_url
 
 # Only http/https logos allowed — blocks javascript:/data: URIs. Shared
 # logic lives in workspace_settings; duplicated here to avoid a cross-router
@@ -121,6 +122,8 @@ class OrgMemberResponse(BaseModel):
 class OrgDetailResponse(BaseModel):
     id: str
     name: str
+    # Short blurb shown on the organisation overview. Editable in settings.
+    description: Optional[str] = None
     logo_url: Optional[str] = None
     role: str
     member_count: int
@@ -130,6 +133,8 @@ class OrgDetailResponse(BaseModel):
 
 class UpdateOrgRequest(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    # Empty string clears the description; None leaves it untouched.
+    description: Optional[str] = Field(default=None, max_length=2000)
     logo_url: Optional[str] = None
 
 
@@ -152,6 +157,7 @@ class InviteToOrganisationResponse(BaseModel):
     email: str
     user_existed: bool
     email_sent: bool = True
+    invite_url: Optional[str] = None  # present only for invited / already_invited
 
 
 class ChangeMemberRoleRequest(BaseModel):
@@ -437,6 +443,7 @@ async def get_org(
     return OrgDetailResponse(
         id=org_id,
         name=org.get("name", ""),
+        description=org.get("description"),
         logo_url=org.get("logo_url"),
         role=role,
         member_count=await _count_organisation_members(org_id),
@@ -459,6 +466,10 @@ async def update_org(
         # Strip control chars — org name can land in email subject lines
         # (upgrade_request, workspace_invite) via templating.
         payload["name"] = body.name.replace("\r", " ").replace("\n", " ").strip()
+    if body.description is not None:
+        # Trim trailing whitespace; an empty string clears the field.
+        cleaned_description = body.description.strip()
+        payload["description"] = cleaned_description or None
     if body.logo_url is not None:
         # Org-level logo is legacy/optional — workspace-level whitelabel
         # takes precedence per the release lock (workspace-scoped, not
@@ -791,6 +802,7 @@ class OrgPendingInviteResponse(BaseModel):
     invited_by_id: Optional[str] = None
     invited_by_name: Optional[str] = None
     invited_by_email: Optional[str] = None
+    invite_url: Optional[str] = None
 
 
 @router.get("/{org_id}/pending-invites", response_model=list[OrgPendingInviteResponse])
@@ -933,6 +945,11 @@ async def list_org_pending_invites(
         if isinstance(inviter_rows, list):
             inviter_map = {u["id"]: u for u in inviter_rows if u.get("id")}
 
+    org_name = "your organisation"
+    if include_org_invites:
+        org_row = await async_directus.get_item("org", org_id)
+        org_name = (org_row or {}).get("name") or "your organisation"
+
     def _inviter_fields(inv: dict) -> dict:
         info = inviter_map.get(inv.get("invited_by") or "", {})
         return {
@@ -940,6 +957,19 @@ async def list_org_pending_invites(
             "invited_by_name": (info.get("display_name") or None) if info else None,
             "invited_by_email": (info.get("email") or None) if info else None,
         }
+
+    def _invite_url_for(inv: dict, invite_type: str, subject_name: str) -> str:
+        info = inviter_map.get(inv.get("invited_by") or "", {})
+        inviter_name = (info.get("display_name") if info else None) or "Your organisation"
+        return build_invite_accept_url(
+            invite_type=invite_type,  # type: ignore[arg-type]
+            admin_base_url=get_settings().urls.admin_base_url,
+            hash_value=compute_invite_hash(inv["id"]),
+            inviter_name=inviter_name,
+            subject_name=subject_name,
+            role=inv.get("role", "member"),
+            email=inv.get("email", ""),
+        )
 
     org_rows = [
         OrgPendingInviteResponse(
@@ -951,6 +981,7 @@ async def list_org_pending_invites(
             workspace_name=None,
             created_at=inv.get("created_at"),
             expires_at=inv.get("expires_at"),
+            invite_url=_invite_url_for(inv, "org", org_name),
             **_inviter_fields(inv),
         )
         for inv in org_invites
@@ -965,6 +996,9 @@ async def list_org_pending_invites(
             workspace_name=ws_name_map.get(inv.get("workspace_id") or "", ""),
             created_at=inv.get("created_at"),
             expires_at=inv.get("expires_at"),
+            invite_url=_invite_url_for(
+                inv, "workspace", ws_name_map.get(inv.get("workspace_id") or "", "")
+            ),
             **_inviter_fields(inv),
         )
         for inv in workspace_invites
@@ -972,7 +1006,7 @@ async def list_org_pending_invites(
 
     # Merge-sort by created_at DESC; null created_at goes last.
     combined = org_rows + ws_rows_out
-    combined.sort(key=lambda r: (r.created_at or ""), reverse=True)
+    combined.sort(key=lambda r: r.created_at or "", reverse=True)
     return combined
 
 
@@ -1095,7 +1129,10 @@ async def invite_to_organisation(
                     email_sent=email_queued,
                 )
 
-            await async_directus.create_item(
+            from dembrane.api.v2._invite_helpers import create_membership_row
+
+            await create_membership_row(
+                async_directus,
                 "org_membership",
                 {
                     "id": generate_uuid(),
@@ -1169,12 +1206,23 @@ async def invite_to_organisation(
         },
     )
     if isinstance(existing_invites, list) and len(existing_invites) > 0:
+        existing_id = existing_invites[0]["id"]
+        invite_url = build_invite_accept_url(
+            invite_type="org",
+            admin_base_url=settings.urls.admin_base_url,
+            hash_value=compute_invite_hash(existing_id),
+            inviter_name=inviter_name,
+            subject_name=org_name,
+            role=role,
+            email=email,
+        )
         # 200 with status string so the modal renders this per-row rather than as a global failure.
         return InviteToOrganisationResponse(
             status="already_invited",
             email=email,
             user_existed=user_existed,
             email_sent=False,
+            invite_url=invite_url,
         )
 
     invite_id = generate_uuid()
@@ -1194,19 +1242,16 @@ async def invite_to_organisation(
         },
     )
 
-    from urllib.parse import urlencode
-
     invite_hash = compute_invite_hash(invite_id)
-    ctx_params = urlencode(
-        {
-            "iss": inviter_name,
-            "org": org_name,
-            "role": role,
-            "email": email,
-            "h": invite_hash,
-        }
+    invite_url = build_invite_accept_url(
+        invite_type="org",
+        admin_base_url=settings.urls.admin_base_url,
+        hash_value=invite_hash,
+        inviter_name=inviter_name,
+        subject_name=org_name,
+        role=role,
+        email=email,
     )
-    invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
 
     email_queued = _enqueue_invite_email(
         to=email,
@@ -1231,6 +1276,7 @@ async def invite_to_organisation(
         email=email,
         user_existed=user_existed,
         email_sent=email_queued,
+        invite_url=invite_url,
     )
 
 
@@ -1350,6 +1396,13 @@ async def _rollup_workspace_access(org_id: str, user_ids: list[str]) -> dict[str
     return counts
 
 
+class OrgWorkspacePinnedProject(BaseModel):
+    """Minimal pinned-project info for the org overview workspace cards."""
+
+    id: str
+    name: str = ""
+
+
 class OrgWorkspaceSummary(BaseModel):
     id: str
     name: str
@@ -1364,6 +1417,51 @@ class OrgWorkspaceSummary(BaseModel):
     # Includes pending workspace_invite rows; conservatively overestimates re-invites (backend dedups at submit).
     seats_used_including_pending: int = 0
     seat_cap: int | None = None  # null on unlimited tiers
+    # Top pinned projects per workspace, for the org overview cards. Member
+    # avatars + usage hours are NOT here: the overview drives those from the
+    # caller's own /v2/workspaces list (membership-scoped), so we only enrich
+    # the one thing that endpoint can't provide. Default keeps id/name-only
+    # consumers (the sidebar) unaffected.
+    pinned_projects: list[OrgWorkspacePinnedProject] = []
+
+
+async def _get_org_workspace_pinned(
+    ws_id: str, caller_is_manager: bool
+) -> list[OrgWorkspacePinnedProject]:
+    """Top-3 pinned projects for a workspace, for the org overview cards.
+
+    Managers see every pinned project; everyone else only non-private ones so
+    a member never sees a pinned private project they can't open. (Mirrors the
+    conservative end of workspace_projects._visibility_filter_for_caller — we
+    skip the shared/creator ladder here and just hide private, which can omit a
+    shared-private pin but never leaks one.)
+    """
+    filt: dict = {
+        "workspace_id": {"_eq": ws_id},
+        "deleted_at": {"_null": True},
+        "pin_order": {"_nnull": True},
+    }
+    if not caller_is_manager:
+        filt["_or"] = [
+            {"visibility": {"_neq": "private"}},
+            {"visibility": {"_null": True}},
+        ]
+    rows = await async_directus.get_items(
+        "project",
+        {
+            "query": {
+                "fields": ["id", "name", "pin_order"],
+                "filter": filt,
+                "sort": ["pin_order"],
+                "limit": 3,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return []
+    return [
+        OrgWorkspacePinnedProject(id=r["id"], name=r.get("name") or "") for r in rows if r.get("id")
+    ]
 
 
 @router.get("/{org_id}/workspaces", response_model=list[OrgWorkspaceSummary])
@@ -1440,6 +1538,8 @@ async def list_organisation_workspaces(
     # Pull settings.inherit_organisation_admins explicitly (sub-field projection)
     # so we don't need to send the whole JSON. Counts come from separate
     # aggregates because the workspace collection doesn't declare O2M aliases.
+    from dembrane.billing_account import nested_billing_fields, billing_from_workspace
+
     workspaces = (
         await async_directus.get_items(
             "workspace",
@@ -1449,9 +1549,9 @@ async def list_organisation_workspaces(
                     "fields": [
                         "id",
                         "name",
-                        "tier",
                         "is_default",
                         "settings",
+                        *nested_billing_fields(),
                     ],
                     "sort": ["-is_default", "name"],
                     "limit": -1,
@@ -1462,6 +1562,8 @@ async def list_organisation_workspaces(
     )
     if not isinstance(workspaces, list) or not workspaces:
         return []
+    for w in workspaces:
+        w.update(billing_from_workspace(w))
 
     ws_ids = [w["id"] for w in workspaces if w.get("id")]
 
@@ -1561,6 +1663,17 @@ async def list_organisation_workspaces(
                 seat_cap=seat_cap_value,
             )
         )
+
+    # Pinned-projects enrichment for the overview cards. Member avatars + usage
+    # hours come from the caller's own /v2/workspaces list (membership-scoped),
+    # so we don't recompute them per org workspace here. Fanned out in parallel.
+    if out:
+        pinned_lists = await asyncio.gather(
+            *[_get_org_workspace_pinned(o.id, caller_is_manager) for o in out]
+        )
+        for o, pinned in zip(out, pinned_lists, strict=True):
+            o.pinned_projects = pinned
+
     return out
 
 
@@ -1855,6 +1968,27 @@ async def remove_organisation_member(
     # serves stale numbers for up to USAGE_TTL_SECONDS.
     await _invalidate_org_workspace_usage(org_id)
 
+    # Removing an org member soft-deletes their direct workspace seats, dropping
+    # the billed seat count. Reconcile now so the pooled account re-prices the
+    # next renewal immediately rather than waiting for the cron. Best-effort +
+    # idempotent (provisioned_seats); removals only reduce at renewal, no refund.
+    try:
+        from dembrane.billing_service import (
+            reconcile_account_seats,
+            get_account_for_workspace,
+        )
+
+        seen_accounts: set[str] = set()
+        for ws_id in affected:
+            account = await get_account_for_workspace(ws_id)
+            if account and account["id"] not in seen_accounts:
+                seen_accounts.add(account["id"])
+                await reconcile_account_seats(account["id"])
+    except Exception:
+        logger.exception(
+            "Seat reconcile failed after removing %s from org %s", user_id, org_id
+        )
+
     # Notify the removed user — they'll see workspaces drop from their
     # selector; this gives them the honest explanation.
     if user_id != app_user["id"]:
@@ -1986,6 +2120,8 @@ async def get_org_usage(
     # so the per-workspace row can surface private-state and recent
     # downgrades (powers the "Needs attention" panel on the organisation usage
     # tab).
+    from dembrane.billing_account import nested_billing_fields, billing_from_workspace
+
     workspaces = (
         await async_directus.get_items(
             "workspace",
@@ -1998,9 +2134,8 @@ async def get_org_usage(
                     "fields": [
                         "id",
                         "name",
-                        "tier",
                         "settings",
-                        "downgraded_at",
+                        *nested_billing_fields(),
                     ],
                     "limit": -1,
                 }
@@ -2008,6 +2143,9 @@ async def get_org_usage(
         )
         or []
     )
+    if isinstance(workspaces, list):
+        for w in workspaces:
+            w.update(billing_from_workspace(w))
     if not isinstance(workspaces, list):
         workspaces = []
 

@@ -46,6 +46,23 @@ DEFAULT_MAX_RETRIES = 3
 DEFAULT_RETRY_DELAY = 1.0
 
 
+def _is_forbidden_record(response: "httpx.Response") -> bool:
+    """Directus returns 403 FORBIDDEN (not 404) for a missing/inaccessible
+    single item. Matches only that, never a 401/token failure."""
+    if response.status_code != 403:
+        return False
+    try:
+        body = response.json()
+    except Exception:
+        return False
+    if not isinstance(body, dict):
+        return False
+    errors = body.get("errors") or []
+    first = errors[0] if errors else {}
+    code = (first.get("extensions") or {}).get("code")
+    return code == "FORBIDDEN"
+
+
 class AsyncDirectusClient:
     """Async Directus HTTP client using httpx.AsyncClient."""
 
@@ -88,46 +105,60 @@ class AsyncDirectusClient:
         *,
         max_retries: int = DEFAULT_MAX_RETRIES,
         retry_delay: float = DEFAULT_RETRY_DELAY,
+        recoverable_status_codes: "set[int] | None" = None,
         **kwargs: Any,
     ) -> httpx.Response:
-        """Make an HTTP request with retry logic for recoverable errors."""
+        """Make an HTTP request with retry logic for recoverable errors.
+
+        At most `max_retries` requests are sent. A response with a
+        recoverable status that persists through every attempt is
+        returned as-is so callers can interpret the Directus error
+        envelope; transport errors raise once retries are exhausted.
+        """
         client = self._get_client()
+        recoverable = (
+            recoverable_status_codes
+            if recoverable_status_codes is not None
+            else RECOVERABLE_STATUS_CODES
+        )
         retries = 0
 
-        while retries < max_retries:
+        while True:
             try:
                 response = await client.request(method, path, **kwargs)
-
-                if response.status_code in RECOVERABLE_STATUS_CODES:
-                    retries += 1
-                    if retries == max_retries:
-                        response.raise_for_status()
-
-                    wait_time = retry_delay * (2 ** (retries - 1))
-                    await asyncio.sleep(wait_time)
-                    continue
-
-                return response
-
             except httpx.HTTPError:
                 retries += 1
-                if retries == max_retries:
+                if retries >= max_retries:
                     raise
-
-                wait_time = retry_delay * (2 ** (retries - 1))
-                await asyncio.sleep(wait_time)
+                await asyncio.sleep(retry_delay * (2 ** (retries - 1)))
                 continue
 
-        return await client.request(method, path, **kwargs)
+            if response.status_code in recoverable:
+                retries += 1
+                if retries >= max_retries:
+                    return response
+                await asyncio.sleep(retry_delay * (2 ** (retries - 1)))
+                continue
+
+            return response
 
     # ------------------------------------------------------------------
     # HTTP verbs (match sync client return semantics)
     # ------------------------------------------------------------------
 
-    async def get(self, path: str, **kwargs: Any) -> Any:
-        """GET request. Returns response.json()["data"]."""
+    async def get(self, path: str, none_on_forbidden: bool = False, **kwargs: Any) -> Any:
+        """GET request. Returns response.json()["data"].
+
+        none_on_forbidden: return None (not raise, not retried) on a record-level
+        403 FORBIDDEN, so callers can do ``if not item: raise 404``.
+        """
+        recoverable = RECOVERABLE_STATUS_CODES - {403} if none_on_forbidden else None
         try:
-            response = await self._request("GET", path, **kwargs)
+            response = await self._request(
+                "GET", path, recoverable_status_codes=recoverable, **kwargs
+            )
+            if none_on_forbidden and _is_forbidden_record(response):
+                return None
             try:
                 data = response.json()
             except json.JSONDecodeError:
@@ -234,8 +265,11 @@ class AsyncDirectusClient:
         return await self.search(f"/items/{collection}", query=params, **kwargs)
 
     async def get_item(self, collection: str, item_id: str, **kwargs: Any) -> Any:
-        """Get a single item. Returns dict directly."""
-        return await self.get(f"/items/{collection}/{item_id}", **kwargs)
+        """Get a single item, or None when it doesn't exist / isn't accessible
+        (Directus answers 403 FORBIDDEN for both)."""
+        return await self.get(
+            f"/items/{collection}/{item_id}", none_on_forbidden=True, **kwargs
+        )
 
     async def create_item(
         self, collection: str, data: dict[str, Any] | list[dict[str, Any]], **kwargs: Any

@@ -1,85 +1,55 @@
 import { t } from "@lingui/core/macro";
-import { Plural, Trans } from "@lingui/react/macro";
+import { Trans } from "@lingui/react/macro";
 import {
-	Avatar,
-	Badge,
 	Box,
 	Button,
+	CloseButton,
 	Container,
-	Divider,
-	Group,
-	Image,
 	Loader,
-	Paper,
-	SimpleGrid,
 	Stack,
 	Text,
 	TextInput,
 	Title,
-	Tooltip,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import {
-	IconClock,
-	IconPlus,
-	IconSettings,
-	IconSparkles,
-} from "@tabler/icons-react";
+import { House, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { Navigate } from "react-router";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
-import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
-import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
+import { API_BASE_URL } from "@/config";
+import {
+	type SearchHit,
+	useSearchHits,
+} from "@/features/sidebar/hooks/useSearchHits";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useMyInvites } from "@/hooks/useMyInvites";
-import { useUrlSearch } from "@/hooks/useUrlSearch";
-import { useWorkspace } from "@/hooks/useWorkspace";
-import { logoUrl as resolveLogoUrl } from "@/lib/avatar";
-import { displayRole } from "@/lib/roles";
-import { formatDurationFromHours } from "@/lib/time";
+import { useV2Me } from "@/hooks/useV2Me";
+import classes from "./WorkspaceSelectorRoute.module.css";
 
-interface MemberPreview {
-	display_name: string;
-	avatar: string | null;
-}
+// Full-page search over the orgs, workspaces, projects and settings the user
+// can reach. Rich workspace cards live a level down at the org overview.
 
-interface WorkspaceUsage {
-	audio_hours: number;
-	conversation_count: number;
-	hours_included?: number | null;
-	hours_pct?: number | null;
-	at_cap?: boolean;
-	approaching_cap?: boolean;
-}
-
-interface Workspace {
-	id: string;
-	name: string;
-	org_id: string;
-	org_name: string;
-	role: string;
-	is_default: boolean;
-	tier: string;
-	logo_url: string | null;
-	org_logo_url: string | null;
-	project_count: number;
-	member_count: number;
-	members_preview: MemberPreview[];
-	usage: WorkspaceUsage;
-	has_pending_upgrade_request?: boolean;
-	created_at?: string | null;
-}
+// Centered frame shared by every state on this page.
+const FRAME_MAX_WIDTH = 580;
+const FRAME_TOP_MARGIN = "20vh";
 
 interface OrganisationRollup {
 	id: string;
 	name: string;
 	role: string;
 	logo_url: string | null;
-	total_projects: number;
 	total_members: number;
-	total_audio_hours: number;
-	total_conversations: number;
 	workspace_count: number;
+}
+
+interface WorkspaceLite {
+	id: string;
+	name: string;
+	org_id: string;
+	org_name: string;
+	org_logo_url: string | null;
+	role: string;
 }
 
 interface RecentRemoval {
@@ -89,481 +59,112 @@ interface RecentRemoval {
 	ended_at: string;
 }
 
-interface PendingWorkspaceRequest {
-	id: string;
-	kind: string;
-	status: string;
-	proposed_name: string | null;
-	proposed_tier: string;
-	org_id: string;
-	org_name: string;
-	created_at: string | null;
-}
-
 async function fetchWorkspaces(): Promise<{
-	workspaces: Workspace[];
+	workspaces: WorkspaceLite[];
 	organisations: OrganisationRollup[];
 	recent_removals: RecentRemoval[];
-	pending_workspace_requests: PendingWorkspaceRequest[];
 }> {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		credentials: "include",
 	});
-	// Throw rather than [] — empty list is indistinguishable from "no workspaces".
+	// Throw rather than [] — empty list is indistinguishable from "no access".
 	if (!res.ok) {
 		throw new Error(`Workspaces request failed (${res.status})`);
 	}
 	return res.json();
 }
 
-function AvatarBubbles({
-	members,
-	count,
-}: {
-	members: MemberPreview[];
-	count: number;
-}) {
-	const MAX_VISIBLE = 3;
-	const visible = members.slice(0, MAX_VISIBLE);
-	const overflow = count - visible.length;
-
-	return (
-		<Tooltip.Group>
-			<Avatar.Group spacing="sm">
-				{visible.map((m, i) => (
-					<Tooltip
-						key={`${m.display_name}-${i}`}
-						label={m.display_name}
-						withArrow
-					>
-						<Avatar
-							size={28}
-							radius="xl"
-							src={
-								m.avatar ? `${DIRECTUS_PUBLIC_URL}/assets/${m.avatar}` : null
-							}
-							color="blue"
-						>
-							{m.display_name?.charAt(0)?.toUpperCase()}
-						</Avatar>
-					</Tooltip>
-				))}
-				{overflow > 0 && (
-					<Avatar size={28} radius="xl" color="gray">
-						+{overflow}
-					</Avatar>
-				)}
-			</Avatar.Group>
-		</Tooltip.Group>
-	);
+interface OrgListItem {
+	id: string;
+	name: string;
+	logo_url: string | null;
+	memberCount: number | null;
+	isExternal: boolean;
 }
 
-function WorkspaceCard({
-	workspace,
-	onSelect,
-	onManage,
-}: {
-	workspace: Workspace;
-	onSelect: () => void;
-	onManage?: () => void;
-}) {
-	const isAdminOrOwner =
-		workspace.role === "admin" || workspace.role === "owner";
-	const ONE_DAY_MS = 86_400_000;
-	// Free workspaces are auto-created on signup, never "approved".
-	const isRecentlyApproved =
-		!!workspace.created_at &&
-		workspace.tier !== "free" &&
-		Date.now() - new Date(workspace.created_at).getTime() < ONE_DAY_MS;
-	const [hovered, setHovered] = useState(false);
-	const wsLogo = resolveLogoUrl(workspace.logo_url);
-	const organisationLogo = resolveLogoUrl(workspace.org_logo_url);
-	// Logo rules (2026-04-24 ask, refined):
-	//   - External workspace: ws logo if set, else organisation logo. An external's
-	//     anchor is the organisation that invited them — always show something
-	//     so the card has a visual hook.
-	//   - Internal workspace: only show the ws logo. No ws logo → no
-	//     logo at all. The selector grid is already grouped under the
-	//     organisation, so repeating the organisation logo on every internal card is
-	//     just visual noise ("see here there is no special workspace
-	//     icon so no need to show").
-	const headerLogo =
-		workspace.role === "external" ? wsLogo || organisationLogo : wsLogo;
-	// Calmer meta-line: role + tier as a single dimmed string, no
-	// colored badges. The old design stacked two blue pills which made
-	// every card shout "admin! pioneer!" at once. Only the at-limit
-	// warning keeps color — it's the one actionable exception.
-	const capitalizedTier =
-		workspace.tier.charAt(0).toUpperCase() + workspace.tier.slice(1);
-	const metaParts =
-		workspace.role === "external"
-			? [t`External of ${workspace.org_name}`]
-			: [displayRole(workspace.role), capitalizedTier];
+// External orgs are derived from external workspaces: they aren't in the
+// membership rollup but the user still needs a way into them.
+function deriveOrgList(
+	organisations: OrganisationRollup[],
+	workspaces: WorkspaceLite[],
+): OrgListItem[] {
+	const internalOrgs: OrgListItem[] = organisations.map((o) => ({
+		id: o.id,
+		isExternal: false,
+		logo_url: o.logo_url,
+		memberCount: o.total_members,
+		name: o.name,
+	}));
 
-	return (
-		<Paper
-			p="lg"
-			radius="md"
-			withBorder
-			style={{
-				boxShadow: hovered ? "0 2px 12px rgba(0,0,0,0.08)" : undefined,
-				cursor: "pointer",
-				transition: "box-shadow 0.15s ease, transform 0.15s ease",
-			}}
-			onClick={onSelect}
-			onMouseEnter={() => setHovered(true)}
-			onMouseLeave={() => setHovered(false)}
-			onFocus={() => setHovered(true)}
-			onBlur={() => setHovered(false)}
-		>
-			<Stack gap={12}>
-				<Group gap="sm" wrap="nowrap" align="flex-start">
-					{headerLogo && (
-						<Tooltip
-							label={`${capitalizedTier} · ${displayRole(workspace.role)}`}
-						>
-							<Image
-								src={headerLogo}
-								alt={t`${workspace.name} logo`}
-								h={36}
-								w="auto"
-								fit="contain"
-								style={{ flexShrink: 0, maxWidth: 80 }}
-							/>
-						</Tooltip>
-					)}
-					<Box flex={1} style={{ minWidth: 0 }}>
-						<Text fw={500} size="md" lineClamp={1}>
-							{workspace.name}
-						</Text>
-						<Tooltip
-							label={t`${capitalizedTier} · tap to see what's included`}
-							position="bottom-start"
-							withArrow
-							disabled={workspace.role === "external"}
-						>
-							<Text size="xs" c="dimmed" lineClamp={1}>
-								{metaParts.join(" · ")}
-							</Text>
-						</Tooltip>
-					</Box>
-				</Group>
+	const internalOrgIds = new Set(internalOrgs.map((o) => o.id));
+	const externalOrgMap = new Map<string, OrgListItem>();
+	for (const w of workspaces) {
+		if (w.role !== "external" || !w.org_id) continue;
+		if (internalOrgIds.has(w.org_id)) continue;
+		if (!externalOrgMap.has(w.org_id)) {
+			externalOrgMap.set(w.org_id, {
+				id: w.org_id,
+				isExternal: true,
+				logo_url: w.org_logo_url,
+				memberCount: null,
+				name: w.org_name || t`Organisation`,
+			});
+		}
+	}
 
-				<Group gap="lg" wrap="wrap">
-					<Text size="xs" c="dimmed">
-						<Plural
-							value={workspace.project_count}
-							one="# project"
-							other="# projects"
-						/>
-					</Text>
-					<Text size="xs" c="dimmed">
-						{workspace.usage.audio_hours}h {t`total`}
-					</Text>
-					<Text size="xs" c="dimmed">
-						<Plural
-							value={workspace.usage.conversation_count}
-							one="# conversation"
-							other="# conversations"
-						/>
-					</Text>
-				</Group>
-
-				<Group justify="space-between" align="center">
-					<AvatarBubbles
-						members={workspace.members_preview}
-						count={workspace.member_count}
-					/>
-					<Group gap={8}>
-						{isAdminOrOwner && onManage && (
-							<Button
-								size="compact-xs"
-								variant="subtle"
-								color="gray"
-								leftSection={<IconSettings size={12} />}
-								onClick={(e) => {
-									e.stopPropagation();
-									onManage();
-								}}
-								style={{
-									opacity: hovered ? 1 : 0,
-									transition: "opacity 0.15s ease",
-								}}
-							>
-								<Trans>Manage</Trans>
-							</Button>
-						)}
-					</Group>
-				</Group>
-				{(isRecentlyApproved ||
-					workspace.has_pending_upgrade_request ||
-					workspace.usage.at_cap) && (
-					<Group gap={6}>
-						{isRecentlyApproved && (
-							<Badge
-								size="xs"
-								color="green"
-								variant="light"
-								leftSection={<IconSparkles size={10} />}
-							>
-								<Trans>Recently approved</Trans>
-							</Badge>
-						)}
-						{workspace.has_pending_upgrade_request && (
-							<Badge size="xs" color="yellow" variant="light">
-								<Trans>Upgrade pending</Trans>
-							</Badge>
-						)}
-						{workspace.usage.at_cap && (
-							<Badge size="xs" color="red" variant="light">
-								<Trans>Included hours used up</Trans>
-							</Badge>
-						)}
-					</Group>
-				)}
-			</Stack>
-		</Paper>
-	);
-}
-
-/**
- * Dashed placeholder card that lives at the end of each organisation's workspace
- * grid for admins/owners. Clicking it navigates to /w/new?organisationId=<org>
- * so the create form knows which organisation to create inside.
- *
- * Solves the "create workspace BUT WHERE?" ambiguity — the card sits
- * physically under the organisation it belongs to, no confusion.
- */
-function PendingRequestCard({ request }: { request: PendingWorkspaceRequest }) {
-	const capitalizedTier =
-		request.proposed_tier.charAt(0).toUpperCase() +
-		request.proposed_tier.slice(1);
-
-	return (
-		<Paper
-			p="lg"
-			radius="md"
-			style={{
-				background: "var(--mantine-color-yellow-0)",
-				border: "1px dashed var(--mantine-color-yellow-4)",
-				opacity: 0.85,
-			}}
-		>
-			<Stack gap={12}>
-				<Group gap="sm" wrap="nowrap" align="flex-start">
-					<IconClock
-						size={20}
-						style={{
-							color: "var(--mantine-color-yellow-6)",
-							flexShrink: 0,
-							marginTop: 2,
-						}}
-					/>
-					<Box flex={1} style={{ minWidth: 0 }}>
-						<Text fw={500} size="md" lineClamp={1}>
-							{request.kind === "new_workspace"
-								? (request.proposed_name ?? t`New workspace`)
-								: t`Upgrade request`}
-						</Text>
-						<Text size="xs" c="dimmed" lineClamp={1}>
-							{capitalizedTier}
-						</Text>
-					</Box>
-				</Group>
-
-				<Text size="xs" c="dimmed">
-					<Trans>Pending review</Trans>
-					{request.created_at && (
-						<>
-							{" · "}
-							{t`requested on ${new Date(request.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}`}
-						</>
-					)}
-				</Text>
-			</Stack>
-		</Paper>
-	);
-}
-
-function AddWorkspaceCard({ organisationId }: { organisationId: string }) {
-	const navigate = useI18nNavigate();
-	return (
-		<Paper
-			p="lg"
-			radius="md"
-			role="button"
-			tabIndex={0}
-			style={{
-				alignItems: "center",
-				background: "transparent",
-				border: "1px dashed var(--mantine-color-gray-4)",
-				cursor: "pointer",
-				display: "flex",
-				justifyContent: "center",
-				minHeight: 140,
-				transition: "border-color 0.15s ease, background 0.15s ease",
-			}}
-			onMouseEnter={(e) => {
-				e.currentTarget.style.borderColor = "var(--mantine-color-blue-5)";
-				e.currentTarget.style.background = "rgba(65,105,225,0.03)";
-			}}
-			onMouseLeave={(e) => {
-				e.currentTarget.style.borderColor = "var(--mantine-color-gray-4)";
-				e.currentTarget.style.background = "transparent";
-			}}
-			onClick={() => navigate(`/w/new?organisationId=${organisationId}`)}
-			onKeyDown={(e) => {
-				if (e.key === "Enter" || e.key === " ") {
-					e.preventDefault();
-					navigate(`/w/new?organisationId=${organisationId}`);
-				}
-			}}
-		>
-			<Stack gap={6} align="center">
-				<IconPlus size={20} style={{ color: "var(--mantine-color-gray-6)" }} />
-				<Text size="sm" c="dimmed">
-					<Trans>Request workspace</Trans>
-				</Text>
-			</Stack>
-		</Paper>
-	);
-}
-
-function sortWorkspaceCards(a: Workspace, b: Workspace) {
-	if (a.is_default !== b.is_default) return a.is_default ? -1 : 1;
-	return a.name.localeCompare(b.name);
-}
-
-interface OrgUsageLite {
-	total_audio_hours: number;
-	workspaces_at_cap: number;
-	workspaces_approaching_cap: number;
-	total_overage_forecast_eur: number | null;
-}
-
-async function fetchOrgUsageLite(orgId: string): Promise<OrgUsageLite | null> {
-	const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/usage`, {
-		credentials: "include",
+	return [...internalOrgs, ...externalOrgMap.values()].sort((a, b) => {
+		if (a.isExternal !== b.isExternal) return a.isExternal ? 1 : -1;
+		return a.name.localeCompare(b.name);
 	});
-	if (!res.ok) return null;
-	return res.json();
 }
 
-function OrganisationHeroCard({
-	organisation,
-	onManage,
-}: {
-	organisation: OrganisationRollup;
-	onManage: () => void;
-}) {
-	const isAdminOrOwner =
-		organisation.role === "admin" || organisation.role === "owner";
+const CenteredLoader = () => (
+	<Container size="sm" py="xl">
+		<Stack align="center" gap={16} mt={FRAME_TOP_MARGIN}>
+			<Loader size="sm" color="gray" />
+		</Stack>
+	</Container>
+);
 
-	// Health hint — hours this cycle + at-cap count. Admin/billing get €
-	// (server-gated). Non-admins still see cap warnings: knowing "2
-	// workspaces are at limit" is actionable even for a plain member (they
-	// can ask an admin for a different workspace to work in).
-	const { data: usage } = useQuery({
-		queryFn: () => fetchOrgUsageLite(organisation.id),
-		queryKey: ["v2", "org-usage", organisation.id],
-		// Same rationale as the full rollup: re-entering /w should show
-		// fresh numbers on the org hero cards. Without this the at-limit
-		// badges go stale until a manual hard-refresh.
-		refetchOnMount: "always",
-		refetchOnWindowFocus: "always",
-		staleTime: 60_000,
+// Entry decision: single-org users go straight to their org overview, everyone
+// else to the home list. Lives at the root (not inside /o) so the shortcut
+// fires once on entry and doesn't bounce single-org users off /o on every visit.
+export const RootRedirect = () => {
+	const { data, isLoading, isError } = useQuery({
+		queryFn: fetchWorkspaces,
+		queryKey: ["v2", "workspaces"],
+		staleTime: 30_000,
 	});
 
-	const organisationLogo = resolveLogoUrl(organisation.logo_url);
+	if (isLoading) {
+		return <CenteredLoader />;
+	}
 
-	return (
-		<Paper p="lg" radius="md" withBorder>
-			<Group justify="space-between" align="flex-start" wrap="nowrap">
-				<Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-					{organisationLogo && (
-						<Image
-							src={organisationLogo}
-							alt={t`${organisation.name} logo`}
-							h={40}
-							w="auto"
-							fit="contain"
-							style={{ flexShrink: 0, maxWidth: 120 }}
-						/>
-					)}
-					<Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
-						<Text fw={500} size="lg" lineClamp={1}>
-							{organisation.name}
-						</Text>
-						<Text size="xs" c="dimmed">
-							{isAdminOrOwner ? (
-								<>
-									<Plural
-										value={organisation.workspace_count}
-										one="# workspace"
-										other="# workspaces"
-									/>
-									{" · "}
-									<Plural
-										value={organisation.total_members}
-										one="# person"
-										other="# people"
-									/>
-									{" · "}
-									<Plural
-										value={organisation.total_projects}
-										one="# project"
-										other="# projects"
-									/>
-								</>
-							) : (
-								// Server scopes counts to caller's memberships, so for
-								// non-admins "0 workspaces" looks like "org is empty" — make scope explicit.
-								<Plural
-									value={organisation.workspace_count}
-									one="# workspace you can access"
-									other="# workspaces you can access"
-								/>
-							)}
-							{usage && (
-								<>
-									{" · "}
-									{formatDurationFromHours(usage.total_audio_hours)}{" "}
-									{t`this month`}
-								</>
-							)}
-						</Text>
-						{/* Only at-cap Pilot blocks surface as a warning; the rest
-					    is billed overage, not a hard limit. */}
-						{usage && usage.workspaces_at_cap > 0 && (
-							<Group gap={6} mt={4}>
-								<Badge size="xs" color="red" variant="light">
-									<Trans>{usage.workspaces_at_cap} at limit</Trans>
-								</Badge>
-							</Group>
-						)}
-					</Stack>
-				</Group>
-				{isAdminOrOwner && (
-					<Button
-						variant="subtle"
-						size="xs"
-						leftSection={<IconSettings size={14} />}
-						onClick={onManage}
-					>
-						<Trans>Manage organisation</Trans>
-					</Button>
-				)}
-			</Group>
-		</Paper>
+	// On error fall through to the home list, which renders its own error panel.
+	// Relative targets keep any active /:language prefix intact.
+	if (isError || !data) {
+		return <Navigate to="o" replace />;
+	}
+
+	const orgList = deriveOrgList(
+		data.organisations ?? [],
+		data.workspaces ?? [],
 	);
-}
+	if (orgList.length === 1) {
+		return <Navigate to={`o/${orgList[0].id}/overview`} replace />;
+	}
+	return <Navigate to="o" replace />;
+};
 
 export const WorkspaceSelectorRoute = () => {
 	const navigate = useI18nNavigate();
-	const { setWorkspace } = useWorkspace();
-	const [search, setSearch] = useUrlSearch();
 
-	useDocumentTitle(t`Workspaces | dembrane`);
+	useDocumentTitle(t`Organisations | dembrane`);
+
+	const [q, setQ] = useState("");
+	// Keyboard highlight: first result while searching, -1 (none) when empty.
+	const [activeIndex, setActiveIndex] = useState(-1);
+	const searchInputRef = useRef<HTMLInputElement>(null);
 
 	const { data, isLoading, isError, refetch } = useQuery({
 		queryFn: fetchWorkspaces,
@@ -571,87 +172,64 @@ export const WorkspaceSelectorRoute = () => {
 		staleTime: 30_000,
 	});
 
-	// Pending invites for this user. Used by the empty state so a guest
-	// who got bounced at the cap (or hasn't accepted yet) doesn't see the
-	// "create your first workspace" copy that they can't act on.
+	// Logged-in user, for the greeting.
+	const { data: me } = useV2Me();
+
+	// Pending invites for this user. Used by the empty state so a guest who got
+	// bounced at the cap (or hasn't accepted yet) doesn't see the "no access"
+	// copy that they can't act on.
 	const { data: pendingInvites } = useMyInvites();
 
-	const workspaces = data?.workspaces ?? [];
 	const organisations = data?.organisations ?? [];
+	const workspaces = data?.workspaces ?? [];
 	const recentRemovals = data?.recent_removals ?? [];
-	const pendingRequests = data?.pending_workspace_requests ?? [];
 	const invites = pendingInvites ?? [];
 
-	const filtered = search
-		? workspaces.filter(
-				(w) =>
-					w.name.toLowerCase().includes(search.toLowerCase()) ||
-					w.org_name.toLowerCase().includes(search.toLowerCase()),
-			)
-		: workspaces;
+	// No single-org redirect here (it's in RootRedirect), so this list stays
+	// reachable for single-org users.
+	const orgList = useMemo(
+		() => deriveOrgList(organisations, workspaces),
+		[organisations, workspaces],
+	);
 
-	// Group by organisation (org)
-	const internalWorkspaces = filtered
-		.filter((w) => !(w.role === "external"))
-		.sort(sortWorkspaceCards);
-	const externalWorkspaces = filtered
-		.filter((w) => w.role === "external")
-		.sort((a, b) => {
-			const orgCompare = a.org_name.localeCompare(b.org_name);
-			if (orgCompare !== 0) return orgCompare;
-			return sortWorkspaceCards(a, b);
-		});
+	const { hits, isFetching } = useSearchHits(q, workspaces);
 
-	// Seed groups from `organisations` first — that way a organisation with zero workspaces
-	// still renders a hero card + AddWorkspace affordance instead of getting
-	// swallowed by the "no workspaces yet" empty state.
-	const orgGroups = new Map<
-		string,
-		{ name: string; role: string; workspaces: Workspace[] }
-	>();
-	for (const organisation of organisations) {
-		orgGroups.set(organisation.id, {
-			name: organisation.name,
-			role: organisation.role,
-			workspaces: [],
-		});
-	}
-	for (const w of internalWorkspaces) {
-		const existing = orgGroups.get(w.org_id);
-		if (existing) {
-			existing.workspaces.push(w);
-		} else {
-			orgGroups.set(w.org_id, {
-				name: w.org_name,
-				role: w.role,
-				workspaces: [w],
-			});
+	const onSelect = (hit: SearchHit) => {
+		navigate(hit.href);
+	};
+
+	const onClear = () => {
+		setQ("");
+		setActiveIndex(-1);
+		searchInputRef.current?.focus();
+	};
+
+	const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "ArrowDown") {
+			e.preventDefault();
+			setActiveIndex((i) => Math.min(i + 1, hits.length - 1));
+		} else if (e.key === "ArrowUp") {
+			e.preventDefault();
+			setActiveIndex((i) => Math.max(i - 1, 0));
+		} else if (e.key === "Enter") {
+			e.preventDefault();
+			const hit = hits[activeIndex];
+			if (hit) onSelect(hit);
 		}
-	}
-
-	const handleSelect = (ws: Workspace) => {
-		setWorkspace(ws.id);
-		navigate(`/w/${ws.id}/home`);
 	};
 
 	if (isLoading) {
-		return (
-			<Container size="md" py="xl">
-				<Stack align="center" gap={16} mt="20vh">
-					<Loader size="sm" color="gray" />
-				</Stack>
-			</Container>
-		);
+		return <CenteredLoader />;
 	}
 
-	// Distinct from the empty-state branch below — a 5xx is not "no workspaces."
+	// Distinct from the empty-state branch below — a 5xx is not "no access."
 	if (isError) {
 		return (
 			<FetchErrorPanel
 				onRetry={() => refetch()}
 				message={
 					<Trans>
-						We couldn't load your workspaces. Check your connection and try
+						We couldn't load your organisations. Check your connection and try
 						again.
 					</Trans>
 				}
@@ -659,157 +237,173 @@ export const WorkspaceSelectorRoute = () => {
 		);
 	}
 
-	return (
-		<Container size="md" py="xl" px="lg">
-			<Stack gap={32}>
-				{/* Header — create-workspace is NOT up here. We put
-					    "Add workspace" dashed cards inside each organisation's grid
-					    so the placement answers "create where?" by itself. */}
-				<Title order={3} fw={400}>
-					<Trans>Workspaces</Trans>
+	const firstName = me?.display_name ? me.display_name.split(" ")[0] : "";
+
+	let content: React.ReactNode;
+	if (orgList.length > 0) {
+		content = (
+			<Box w="100%" maw={FRAME_MAX_WIDTH} mt={FRAME_TOP_MARGIN}>
+				<House aria-hidden size={32} style={{ marginBottom: 12 }} />
+				<Title order={1}>
+					{firstName ? <Trans>Hi {firstName}</Trans> : <Trans>Hi</Trans>}
 				</Title>
+				<Text size="md" mt={8}>
+					<Trans>Where would you like to go?</Trans>
+				</Text>
 
-				{/* Search (show when >3 workspaces) */}
-				{workspaces.length > 3 && (
-					<TextInput
-						placeholder={t`Search workspaces...`}
-						size="sm"
-						value={search}
-						onChange={(e) => setSearch(e.currentTarget.value)}
-					/>
-				)}
+				<TextInput
+					ref={searchInputRef}
+					mt={32}
+					size="lg"
+					leftSection={<MagnifyingGlassIcon size={20} />}
+					placeholder={t`Search projects, organisations, workspaces, settings…`}
+					value={q}
+					onChange={(e) => {
+						const value = e.currentTarget.value;
+						setQ(value);
+						setActiveIndex(value ? 0 : -1);
+					}}
+					onKeyDown={onKeyDown}
+					classNames={{ input: classes.searchInput }}
+					autoFocus
+					rightSectionPointerEvents="auto"
+					rightSection={
+						q ? (
+							<CloseButton aria-label={t`Clear search`} onClick={onClear} />
+						) : undefined
+					}
+					role="combobox"
+					aria-expanded={hits.length > 0}
+					aria-controls="search-results-list"
+					aria-activedescendant={
+						hits[activeIndex] ? `search-option-${activeIndex}` : undefined
+					}
+				/>
 
-				{/* Organisation groups -- organisation hero card tops each group when a rollup
-					    exists; falls back to a plain heading otherwise (designer
-					    Ask 5: organisation-level context at top). Dividers between groups
-					    (2026-04-24 ask) so each organisation/guest section reads as a
-					    distinct block instead of one big stream. */}
-				{Array.from(orgGroups.entries())
-					.sort(([, a], [, b]) => a.name.localeCompare(b.name))
-					.map(([orgId, group], idx) => {
-						const organisation = organisations.find((t) => t.id === orgId);
-
-						return (
-							<Stack key={orgId} gap={16}>
-								{idx > 0 && <Divider />}
-								{organisation ? (
-									<OrganisationHeroCard
-										organisation={organisation}
-										onManage={() => navigate(`/o/${orgId}`)}
-									/>
-								) : (
-									<Text size="sm" fw={500}>
-										{group.name}
-									</Text>
-								)}
-
-								<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
-									{group.workspaces.map((ws) => (
-										<WorkspaceCard
-											key={ws.id}
-											workspace={ws}
-											onSelect={() => handleSelect(ws)}
-											onManage={() => navigate(`/w/${ws.id}/settings`)}
-										/>
-									))}
-									{pendingRequests
-										.filter((r) => r.org_id === orgId)
-										.map((r) => (
-											<PendingRequestCard key={r.id} request={r} />
-										))}
-									{(group.role === "owner" || group.role === "admin") && (
-										<AddWorkspaceCard organisationId={orgId} />
-									)}
-								</SimpleGrid>
-
-								{/* Matrix §6: Slack-style discovery. Renders only
-								    when there's something joinable/requestable and
-								    hides itself otherwise. */}
-								<DiscoverableWorkspaces orgId={orgId} />
-							</Stack>
-						);
-					})}
-
-				{/* External workspaces — quieter section, individual "guest of"
-					    labels live on each card (designer Ask 5). */}
-				{externalWorkspaces.length > 0 && (
-					<Stack gap={12}>
-						{orgGroups.size > 0 && <Divider />}
-						<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.5}>
-							<Trans>As an external</Trans>
+				<Stack
+					id="search-results-list"
+					role="listbox"
+					aria-label={t`Search results`}
+					gap={8}
+					mt={16}
+					py={4}
+				>
+					{hits.length === 0 ? (
+						<Text ta="center" py={24} size="sm">
+							{isFetching ? (
+								<Trans>Searching…</Trans>
+							) : (
+								<Trans>No matches found</Trans>
+							)}
 						</Text>
-						<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
-							{externalWorkspaces.map((ws) => (
-								<WorkspaceCard
-									key={ws.id}
-									workspace={ws}
-									onSelect={() => handleSelect(ws)}
-									// External guests don't manage the workspace they visit
-									// — suppress the affordance.
-									onManage={undefined}
-								/>
-							))}
-						</SimpleGrid>
-					</Stack>
-				)}
-
-				{/* Empty-state branches: pending invite (cap-bounced guest),
-				    recent removal (admin freed a seat), or generic fallback. */}
-				{workspaces.length === 0 &&
-					organisations.length === 0 &&
-					!isLoading &&
-					(invites.length > 0 ? (
-						<Stack align="center" gap={12} mt="10vh">
-							<Text c="dimmed" size="sm" ta="center">
-								{/* Org-only invites (ADR 0004) have no workspace name —
-								    surface the org name; skip seat-cap copy. */}
-								{invites[0].type === "org" ? (
-									<Trans>
-										You have a pending invite to {invites[0].org_name}. Open it
-										to join the organisation.
-									</Trans>
-								) : (
-									<Trans>
-										You have a pending invite to{" "}
-										{invites[0].workspace_name ?? "a workspace"}. The
-										admin needs to free a seat before you can join.
-									</Trans>
-								)}
-							</Text>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => navigate("/invites")}
-							>
-								<Trans>View invite</Trans>
-							</Button>
-						</Stack>
-					) : recentRemovals.length > 0 ? (
-						<Stack align="center" gap={8} mt="10vh">
-							<Text c="dimmed" size="sm" ta="center">
-								<Trans>
-									Your access to {recentRemovals[0].workspace_name} ended on{" "}
-									{new Date(recentRemovals[0].ended_at).toLocaleDateString()}.
-								</Trans>
-							</Text>
-							<Text c="dimmed" size="xs" ta="center">
-								<Trans>Contact the admin if this was unexpected.</Trans>
-							</Text>
-						</Stack>
 					) : (
-						<Stack align="center" gap={8} mt="10vh">
-							<Text c="dimmed" size="sm" ta="center">
-								<Trans>You don't have access to any workspace right now.</Trans>
-							</Text>
-							<Text c="dimmed" size="sm" ta="center">
-								<Trans>
-									If you were expecting one, please ask the person who invited
-									you to send it again.
-								</Trans>
-							</Text>
-						</Stack>
-					))}
-			</Stack>
-		</Container>
+						hits.map((hit, i) => {
+							const Icon = hit.icon;
+							const active = i === activeIndex;
+							return (
+								<button
+									type="button"
+									key={hit.id}
+									id={`search-option-${i}`}
+									role="option"
+									aria-selected={active}
+									onClick={() => onSelect(hit)}
+									className={
+										active
+											? `${classes.resultRow} ${classes.resultRowActive}`
+											: classes.resultRow
+									}
+								>
+									<Icon size={20} className={classes.resultIcon} />
+									<span className={classes.resultLabel}>
+										<span className={classes.resultTitle}>{hit.label}</span>
+										{hit.subtitle ? (
+											<span className={classes.resultSubtitle}>
+												{hit.subtitle}
+											</span>
+										) : null}
+									</span>
+								</button>
+							);
+						})
+					)}
+				</Stack>
+			</Box>
+		);
+	} else if (invites.length > 0) {
+		content = (
+			<Box w="100%" maw={FRAME_MAX_WIDTH} mt={FRAME_TOP_MARGIN}>
+				<Stack align="center" gap={12}>
+					<Text c="dimmed" size="sm" ta="center">
+						{invites[0].type === "org" ? (
+							<Trans>
+								You have a pending invite to {invites[0].org_name}. Open it to
+								join the organisation.
+							</Trans>
+						) : (
+							<Trans>
+								You have a pending invite to{" "}
+								{invites[0].workspace_name ?? "a workspace"}. The admin needs to
+								free a seat before you can join.
+							</Trans>
+						)}
+					</Text>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => navigate("/invites")}
+					>
+						<Trans>View invite</Trans>
+					</Button>
+				</Stack>
+			</Box>
+		);
+	} else if (recentRemovals.length > 0) {
+		content = (
+			<Box w="100%" maw={FRAME_MAX_WIDTH} mt={FRAME_TOP_MARGIN}>
+				<Stack align="center" gap={8}>
+					<Text c="dimmed" size="sm" ta="center">
+						<Trans>
+							Your access to {recentRemovals[0].workspace_name} ended on{" "}
+							{new Date(recentRemovals[0].ended_at).toLocaleDateString()}.
+						</Trans>
+					</Text>
+					<Text c="dimmed" size="xs" ta="center">
+						<Trans>Contact the admin if this was unexpected.</Trans>
+					</Text>
+				</Stack>
+			</Box>
+		);
+	} else {
+		content = (
+			<Box w="100%" maw={FRAME_MAX_WIDTH} mt={FRAME_TOP_MARGIN}>
+				<Stack align="center" gap={8}>
+					<Text c="dimmed" size="sm" ta="center">
+						<Trans>You're not part of any organisation right now.</Trans>
+					</Text>
+					<Text c="dimmed" size="sm" ta="center">
+						<Trans>
+							If you were expecting access, please ask the person who invited
+							you to send it again.
+						</Trans>
+					</Text>
+				</Stack>
+			</Box>
+		);
+	}
+
+	return (
+		<Box
+			w="100%"
+			px={16}
+			style={{
+				alignItems: "center",
+				display: "flex",
+				flexDirection: "column",
+				position: "relative",
+			}}
+		>
+			{content}
+		</Box>
 	);
 };

@@ -48,16 +48,16 @@ Rules:
 
 ## Analytics (PostHog)
 
+PostHog is the only analytics tool (Plausible was migrated and removed). Pageviews, including SPA history changes, come from the `defaults` option in `posthog.init`; never add a pageview tracker.
+
 - `posthog-js` + `@posthog/react` are initialized in `src/main.tsx`; the app is wrapped in `PostHogProvider`
 - Call `posthog.identify(email)` on login and registration, `posthog.reset()` on logout. Never identify by Directus user id
-- Event naming: `snake_case` past-tense verb (`user_logged_in`, `project_created`, `chat_message_sent`)
-- Current tracked events (grep for `posthog.capture(` to verify the live set):
-  - `user_logged_in`, `user_login_failed`, `user_registered`, `user_logged_out`
-  - `project_created`
-  - `chat_mode_selected`, `chat_message_sent`
-  - `report_generated`
-  - `conversation_upload_started`
-- Dashboard + insights live in the PostHog EU project (id 160282). Don't add new dashboards from code; wire the event and let analytics own the visualization
+- Event naming: `snake_case` past-tense verb (`user_logged_in`, `project_created`, `chat_message_sent`). Prefer one event with a property over near-duplicate events (`contact_sales_clicked` with `source`, not two events)
+- Funnel pairs are intentional; keep both ends when touching a flow: `workspace_request_started` -> `workspace_request_submitted`, `$pageview` -> `registration_details_completed` -> `user_registered`, `select_all_clicked` -> `select_all_confirmed` -> `select_all_completed`/`select_all_failed`
+- Grep for `posthog.capture(` to see the live event set; auth, project, chat, report, conversation, and workspace-request flows are covered
+- Dashboard + insights live in the PostHog EU projects (production id 160282, echo-next id 197841). Don't add new dashboards from code; wire the event and let analytics own the visualization
+- Insights, cohorts, and other PostHog artifacts must always be created in both projects (echo production and echo-next), never just one
+- One-off error reports use `posthog.captureException`, not a capture event (see `ErrorBoundary`, participant audio interruption)
 
 ## Modal conventions
 
@@ -84,6 +84,30 @@ Theme is driven by CSS variables, not Tailwind tokens, so `dark:` classes don't 
   ```
 - User preferences persist in `localStorage` under `dembrane-app-preferences`
 
+## Type scale (single source)
+
+There is one type ramp. Both Mantine and Tailwind read it from the same CSS variables, so `text-sm` (Tailwind) and `size="sm"` (Mantine) render the identical size. The ramp is intentionally spaced so each step feels distinct (no 2px "uncanny valley" gaps).
+
+Where it lives:
+- Runtime values: `src/hooks/useAppPreferences.tsx` sets `--app-font-size-*` and `--app-heading-*` per font palette. Static fallbacks: `src/index.css`. This is the only place to edit sizes.
+- Mantine reads the vars in `src/theme.tsx` (`fontSizes`, `headings`).
+- Tailwind maps `fontSize` to the same vars in `tailwind.config.js` (`4xl+` keep Tailwind display defaults).
+
+| Token | Tailwind | Mantine | px | Role |
+|-------|----------|---------|----|------|
+| Body3 | `text-xs` | `size="xs"` | 12 | captions, references, gentle labels. Smallest, never go below |
+| Body2 | `text-sm` | `size="sm"` | 15 | low-emphasis secondary |
+| Body1 | `text-base` | `size="md"` (default) | 20 | standard body, paragraphs |
+| Heading3 | `text-lg` | `size="lg"` / `Title order={4}` | 24 | larger body |
+| Heading2 | `text-xl` | `size="xl"` / `order={3}` | 28 | |
+| Heading1 | `text-2xl` | `order={2}` | 32 | |
+| Title | `text-3xl` | `order={1}` | 36 | rare, few words |
+
+Rules:
+- Never hardcode sizes: no `text-[13px]`, `fontSize: 14`, `fz={14}`, or `style={{ fontSize }}`. Use the token classes/props above. Hardcoded values are what let the sidebar drift off-scale.
+- Don't pair two adjacent steps (e.g. a 15px label over a 12px disclaimer). Step at least one level.
+- Brand `STYLE_GUIDE.md` defines the design intent (Display/Headline/Title/Body/Caption). The token names above are the code mapping; keep them reconciled if the brand ramp changes.
+
 ## Mode-specific colors (intentionally hardcoded)
 
 Chat mode accents are theme-independent (consistent identification across themes), defined in `src/components/chat/ChatModeSelector.tsx` `MODE_COLORS`:
@@ -93,5 +117,5 @@ Chat mode accents are theme-independent (consistent identification across themes
 
 ## Local dev gotchas
 
-- Directus clients need `DIRECTUS_PUBLIC_URL` and `DIRECTUS_CONTENT_PUBLIC_URL` in `.env`
-- `pnpm dev` sets `VITE_DISABLE_SENTRY` and `VITE_PARTICIPANT_BASE_URL`; the participant subtree has its own dev server via `pnpm participant:dev`
+- No env vars, locally or on Vercel. Base URLs, feature flags, PostHog, and router selection all resolve in code per environment (`src/config.ts`, `byEnv()` keyed on hostname). Only `VITE_DEBUG_MODE` and the `VITE_ENABLE_AGENTATION=0` build escape hatch remain
+- The participant subtree has its own dev server via `pnpm participant:dev`; the participant router activates on `portal.*` hostnames or local port 5174

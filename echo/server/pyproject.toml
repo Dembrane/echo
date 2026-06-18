@@ -9,10 +9,6 @@ dependencies = [
     "uvicorn[standard]==0.27.*",
     "gunicorn==21.2.*",
     "python-multipart==0.0.*",
-    # Langchain
-    "langchain==0.1.*",
-    "langchain-community==0.0.*",
-    "langchain-experimental==0.0.*",
     "pypdf==4.0.*",
     # SDKs for Models
     # Data
@@ -38,24 +34,22 @@ dependencies = [
     "pandas-stubs>=2.2.2.240514",
     "types-requests>=2.32.0.20240602",
     "types-python-jose>=3.3.4.20240106",
-    "litellm==1.83.0",
+    "litellm==1.83.10",
     # Additional Dependencies
     "nest-asyncio==1.6.0",
-    "pydantic==2.10.6",
+    "pydantic==2.12.5",
     "pydantic-settings==2.6.1",
     "pydub==0.25.1",
     "pytest==8.3.4",
     "PyYAML==6.0.2",
     # Network and HTTP
-    "aiohttp==3.11.14",
+    "aiohttp==3.13.3",
     # Configuration
     "configparser==7.2.0",
     # Data and Analysis
     "pipmaster==0.5.1",
     # Utils
     "setuptools==75.8.0",
-    # LLM Tools
-    "tiktoken==0.9.0",
     "boto3==1.37.*",
     # Uncategorized
     "mypy>=1.16.0",
@@ -90,6 +84,7 @@ package = false
 
 [tool.mypy]
 plugins = 'pydantic.mypy'
+# Keep in sync with [tool.ty.src].exclude below (editor type checker).
 exclude = ['scripts', 'tests']
 warn_redundant_casts = true
 warn_unused_ignores = true
@@ -214,6 +209,14 @@ project-excludes = [
     "**/tests*",
 ]
 ignore-missing-imports = ["*"]
+
+# ty (Astral's Rust type checker) — editor-only fast diagnostics.
+# mypy in check-code.sh / CI remains the source of truth.
+[tool.ty.src]
+exclude = ["tests", "scripts"]  # keep in sync with [tool.mypy].exclude
+
+[tool.ty.environment]
+python = ".venv"
 
 [tool.ruff.format]
 quote-style = "double"

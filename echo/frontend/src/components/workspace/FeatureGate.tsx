@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Anchor,
 	Avatar,
 	Badge,
 	Box,
@@ -9,17 +10,17 @@ import {
 	Modal,
 	Stack,
 	Text,
-	Textarea,
 	Tooltip,
 } from "@mantine/core";
 import { IconLock } from "@tabler/icons-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { type ReactNode, useEffect, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
 import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { avatarUrl } from "@/lib/avatar";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
@@ -275,12 +276,9 @@ export function UpgradeModal({
 	featureName,
 	benefit,
 	canRequestUpgrade,
-	workspaceId,
 }: UpgradeModalProps) {
 	const { workspace } = useWorkspace();
-	const queryClient = useQueryClient();
-	const [message, setMessage] = useState("");
-	const [sending, setSending] = useState(false);
+	const navigate = useI18nNavigate();
 	const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
 
 	const tiersAboveCurrent = TIER_ORDER.filter(
@@ -295,56 +293,32 @@ export function UpgradeModal({
 		if (opened) setSelectedTier(defaultSelectedTier);
 	}, [opened, defaultSelectedTier]);
 
-	const handleRequest = async () => {
-		if (sending) return;
+	// Funnel start: pairs with upgrade_billing_opened below, so PostHog can
+	// show conversion and time-to-upgrade per gated feature.
+	useEffect(() => {
+		if (opened) {
+			posthog.capture("upgrade_prompt_viewed", {
+				can_request_upgrade: canRequestUpgrade,
+				current_tier: currentTier,
+				feature_name: featureName,
+				required_tier: requiredTier,
+			});
+		}
+	}, [opened, canRequestUpgrade, currentTier, featureName, requiredTier]);
+
+	const goToBilling = () => {
 		if (!workspace?.org_id) {
 			toast.error(t`Workspace data not loaded yet. Please try again.`);
 			return;
 		}
-		setSending(true);
-		const submittedBillingPeriod: BillingPeriod | null =
-			selectedTier === "pilot" ? null : billingPeriod;
-		try {
-			const res = await fetch(`${API_BASE_URL}/v2/workspace-requests`, {
-				body: JSON.stringify({
-					kind: "tier_upgrade",
-					org_id: workspace.org_id,
-					proposed_billing_period: submittedBillingPeriod,
-					proposed_tier: selectedTier,
-					requester_message: message.trim() || undefined,
-					workspace_id: workspaceId,
-				}),
-				credentials: "include",
-				headers: { "Content-Type": "application/json" },
-				method: "POST",
-			});
-			if (!res.ok) {
-				const data = await res.json().catch(() => ({}));
-				const detail =
-					typeof data.detail === "string"
-						? data.detail
-						: t`Couldn't send the request`;
-				throw new Error(detail);
-			}
-			toast.success(
-				t`Request submitted. We'll be in touch within 1 business day.`,
-			);
-			// /v2/workspaces returns pending workspace_requests; invalidate so
-			// the selector + workspace settings reflect the new request without
-			// a hard refresh.
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
-			posthog.capture("workspace_request_submitted", {
-				kind: "tier_upgrade",
-				proposed_billing_period: submittedBillingPeriod,
-				proposed_tier: selectedTier,
-			});
-			onClose();
-			setMessage("");
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t`Couldn't send`);
-		} finally {
-			setSending(false);
-		}
+		posthog.capture("upgrade_billing_opened", {
+			feature_name: featureName,
+			proposed_tier: selectedTier,
+		});
+		onClose();
+		// Billing is managed at the organisation level; send them there to pick
+		// a plan and pay. Self-serve replaced the staff request flow.
+		navigate(`/o/${workspace.org_id}/settings/billing`);
 	};
 
 	const displayTier = canRequestUpgrade ? selectedTier : requiredTier;
@@ -368,6 +342,15 @@ export function UpgradeModal({
 					{displayBenefit}
 				</Text>
 
+				<Group gap={8} align="center">
+					<Text size="sm" c="dimmed">
+						<Trans>Your current plan</Trans>
+					</Text>
+					<Badge variant="light" tt="capitalize">
+						{currentTier}
+					</Badge>
+				</Group>
+
 				{canRequestUpgrade ? (
 					<>
 						<Group justify="center" mb="xs">
@@ -383,20 +366,14 @@ export function UpgradeModal({
 							onChange={(tier) => setSelectedTier(tier as Tier)}
 							billingPeriod={billingPeriod}
 						/>
-
-						<Textarea
-							label={t`Anything to add?`}
-							placeholder={t`Optional. Context for our team.`}
-							value={message}
-							onChange={(e) => setMessage(e.currentTarget.value)}
-							minRows={2}
-							maxRows={5}
-							autosize
-						/>
 						<Text size="xs" c="dimmed">
 							<Trans>
-								Pricing is still a conversation. We'll email you to work out
-								what fits.
+								Billed per seat across the organisation. Cancel anytime.
+								Scholarships are available for eligible organisations: email{" "}
+								<Anchor href="mailto:support@dembrane.com">
+									support@dembrane.com
+								</Anchor>
+								.
 							</Trans>
 						</Text>
 					</>
@@ -419,17 +396,29 @@ export function UpgradeModal({
 					</>
 				)}
 
+				<Text size="xs" c="dimmed">
+					<Trans>
+						Teams in the EU using dembrane in scenarios classified as high risk
+						under the EU AI Act must complete a training before using their
+						workspace.
+					</Trans>{" "}
+					<Anchor
+						href="https://www.dembrane.com/platform/pricing#training"
+						target="_blank"
+						rel="noopener noreferrer"
+						inherit
+					>
+						<Trans>Learn more</Trans>
+					</Anchor>
+				</Text>
+
 				<Box style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
 					<Button variant="subtle" onClick={onClose}>
 						<Trans>Close</Trans>
 					</Button>
 					{canRequestUpgrade && (
-						<Button
-							loading={sending}
-							disabled={sending}
-							onClick={handleRequest}
-						>
-							<Trans>Request upgrade</Trans>
+						<Button onClick={goToBilling}>
+							<Trans>Go to billing</Trans>
 						</Button>
 					)}
 				</Box>

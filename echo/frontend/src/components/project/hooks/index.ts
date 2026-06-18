@@ -26,55 +26,6 @@ import {
 	type VerificationTopicsResponse,
 } from "@/lib/api";
 
-// ── BFF: Projects Home ──────────────────────────────────────────────────
-
-interface BffProjectSummary {
-	id: string;
-	name: string | null;
-	updated_at: string | null;
-	language: string | null;
-	pin_order: number | null;
-	conversations_count: number;
-	owner_name?: string;
-	owner_email?: string;
-}
-
-interface BffProjectsHomeResponse {
-	pinned: BffProjectSummary[];
-	projects: BffProjectSummary[];
-	total_count: number;
-	has_more: boolean;
-	is_admin: boolean;
-}
-
-export const useProjectsHome = ({
-	search,
-	limit = 15,
-	workspaceId,
-}: {
-	search?: string;
-	limit?: number;
-	workspaceId?: string | null;
-}) => {
-	return useInfiniteQuery({
-		queryKey: ["projects", "home", workspaceId ?? null, search],
-		initialPageParam: 0,
-		getNextPageParam: (lastPage: BffProjectsHomeResponse, _allPages, lastPageParam) =>
-			lastPage.has_more ? lastPageParam + 1 : undefined,
-		queryFn: async ({ pageParam = 0 }) => {
-			const params = new URLSearchParams();
-			if (search) params.set("search", search);
-			if (workspaceId) params.set("workspace_id", workspaceId);
-			params.set("offset", String(pageParam * limit));
-			params.set("limit", String(limit));
-			const resp = await api.get<unknown, BffProjectsHomeResponse>(
-				`/projects/home?${params.toString()}`,
-			);
-			return resp;
-		},
-	});
-};
-
 export const useTogglePinMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -91,11 +42,8 @@ export const useTogglePinMutation = () => {
 		// immediately so the UI responds to the click. Without this the
 		// user waits on the full refetch before the card jumps — on a
 		// slow connection it looks like nothing happened. Rolls back
-		// on error. Applies to BOTH the v1 (/projects/home) cache and
-		// the v2 workspace-projects cache — pre-fix the mutation only
-		// invalidated v1, so pinning on /w/:id/projects looked broken.
+		// on error.
 		onMutate: async ({ projectId, pin_order }) => {
-			await queryClient.cancelQueries({ queryKey: ["projects", "home"] });
 			await queryClient.cancelQueries({ queryKey: ["v2", "workspace-projects"] });
 
 			type PageShape = {
@@ -142,12 +90,6 @@ export const useTogglePinMutation = () => {
 
 			const snapshots: Array<[readonly unknown[], CacheShape | undefined]> = [];
 			for (const [key, data] of queryClient.getQueriesData<CacheShape>({
-				queryKey: ["projects", "home"],
-			})) {
-				snapshots.push([key, data]);
-				queryClient.setQueryData(key, applyOptimistic(data));
-			}
-			for (const [key, data] of queryClient.getQueriesData<CacheShape>({
 				queryKey: ["v2", "workspace-projects"],
 			})) {
 				snapshots.push([key, data]);
@@ -166,11 +108,7 @@ export const useTogglePinMutation = () => {
 		},
 		onSettled: () => {
 			// Reconcile with the server regardless — optimistic state is a
-			// guess; this is the ground truth. Both caches must be busted;
-			// the v1 invalidate-alone version pre-fix missed the v2 key
-			// and was the reported "pinned projects doesn't work without
-			// refresh" bug.
-			queryClient.invalidateQueries({ queryKey: ["projects", "home"] });
+			// guess; this is the ground truth.
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
 		},
@@ -409,19 +347,36 @@ export const useUpdateProjectByIdMutation = () => {
 	});
 };
 
-export const useCreateProjectMutation = () => {
+// Autosaves the shared host guide on the project; success is silent
+export const useUpdateProjectHostGuideMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (payload: Partial<Project>) => {
-			return api.post<unknown, TProject>("/projects", payload);
+		mutationFn: async ({
+			id,
+			hostGuide,
+		}: {
+			id: string;
+			hostGuide: Record<string, unknown> | null;
+		}) => {
+			const res = await fetch(`${API_BASE_URL}/v2/bff/projects/${id}`, {
+				body: JSON.stringify({ host_guide: hostGuide }),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "PATCH",
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to save the host guide");
+			}
+			return (await res.json()) as Project;
 		},
-		onError: (e) => {
-			console.error(e);
-			toast.error("Error creating project");
+		onError: () => {
+			toast.error(t`Could not save the host guide`);
 		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["projects"] });
-			toast.success("Project created successfully");
+		onSuccess: (_values, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["projects", variables.id],
+			});
 		},
 	});
 };

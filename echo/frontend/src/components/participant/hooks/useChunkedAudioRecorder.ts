@@ -162,7 +162,7 @@ const useChunkedAudioRecorder = ({
 			const chunkBlob = new Blob(chunkBufferRef.current, { type: mimeType });
 			const chunkSize = chunkBlob.size;
 
-			// Track chunk history for Sentry reporting
+			// Track chunk history for interruption reporting
 			chunkHistoryRef.current.push({
 				size: chunkSize,
 				timestamp: Date.now(),

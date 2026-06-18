@@ -27,11 +27,12 @@ from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import get_app_user_or_raise
-from dembrane.inheritance import is_org_external_only
+from dembrane.inheritance import is_org_billing_only, is_org_external_only
 from dembrane.seat_capacity import assert_can_add_seat
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.api.v2._invite_helpers import create_membership_row
 
 router = APIRouter()
 logger = getLogger("api.v2.access_requests")
@@ -153,11 +154,13 @@ async def _require_can_action_requests(workspace: dict, app_user_id: str) -> Non
     )
     if isinstance(direct_rows, list) and direct_rows:
         row = direct_rows[0]
+        from dembrane.billing_account import resolve_workspace_tier
+
         if has_policy(
             row.get("role") or "",
             row.get("custom_policies") or [],
             "member:manage",
-            workspace_tier=workspace.get("tier"),
+            workspace_tier=await resolve_workspace_tier(workspace["id"]),
         ):
             return
 
@@ -232,7 +235,8 @@ async def join_workspace(
             role="admin",
         )
 
-    await async_directus.create_item(
+    await create_membership_row(
+        async_directus,
         "workspace_membership",
         {
             "id": generate_uuid(),
@@ -316,7 +320,9 @@ async def request_workspace_access(
             detail="Workspace not found",  # intentional — don't confirm existence
         )
 
-    if workspace.get("tier") == "free":
+    from dembrane.billing_account import resolve_workspace_tier
+
+    if (await resolve_workspace_tier(workspace["id"])) == "free":
         raise HTTPException(
             status_code=404,
             detail="Workspace not found",
@@ -529,13 +535,26 @@ async def approve_access_request(
         # pending so the approving admin sees an upgrade prompt and can
         # act later.
         await assert_can_add_seat(workspace, audience="admin")
-        await async_directus.create_item(
+
+        # Billers are finance-visibility only (matrix v1.1 §4/§5): they get
+        # the workspace 'billing' preset (usage/invoices/payment, no project
+        # or content access), never the operational 'member' role. Biller-ness
+        # covers both org-level billers (org_membership.role='billing') and
+        # workspace-scoped billers (only 'billing' workspace roles in this
+        # org) — see inheritance.is_org_billing_only. Everyone else gets
+        # 'member'.
+        requester_is_biller = await is_org_billing_only(
+            workspace.get("org_id") or "", requester_id
+        )
+        granted_role = "billing" if requester_is_biller else "member"
+        await create_membership_row(
+            async_directus,
             "workspace_membership",
             {
                 "id": generate_uuid(),
                 "workspace_id": workspace_id,
                 "user_id": requester_id,
-                "role": "member",
+                "role": granted_role,
                 "source": "direct",
             },
         )

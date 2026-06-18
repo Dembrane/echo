@@ -106,20 +106,7 @@ interface Props {
 	visibility: "workspace" | "private";
 }
 
-/**
- * "Usage and sharing" surface — now the content of the Access & usage
- * tab (2026-04-24). Three blocks:
- *
- *   1. Per-project usage (audio hours + conversation count this cycle).
- *      Piggybacks on the workspace /usage endpoint — already cached.
- *   2. Who has access: actual people with names/emails/roles. For
- *      private projects this comes from the project_membership shares;
- *      for workspace-visible projects we pull the workspace settings
- *      member list so the tab can answer "who is this project exposed
- *      to?" without bouncing to workspace settings.
- *   3. The visibility toggle strip (Make private / Manage).
- */
-export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
+export function ProjectAccess({ projectId, visibility }: Props) {
 	const { workspaceId, workspace } = useWorkspace();
 	const { data: meV2 } = useV2Me();
 	const myAppUserId = meV2?.id ?? null;
@@ -130,49 +117,8 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 	>("all");
 	const [inviteOpen, setInviteOpen] = useState(false);
 
-	const {
-		data: usage,
-		isLoading: usageLoading,
-		dataUpdatedAt: usageUpdatedAt,
-		refetch: refetchUsage,
-	} = useQuery({
-		queryKey: ["v2", "workspace-usage", workspaceId, 0],
-		queryFn: () => (workspaceId ? fetchWorkspaceUsage(workspaceId) : null),
-		enabled: Boolean(workspaceId),
-		staleTime: 60_000,
-	});
-
-	const {
-		data: convUsage,
-		dataUpdatedAt: convUsageUpdatedAt,
-		refetch: refetchConvUsage,
-	} = useQuery({
-		queryKey: ["v2", "project-conv-usage", projectId],
-		queryFn: () => fetchConversationUsage(projectId),
-		enabled: Boolean(projectId),
-		staleTime: 60_000,
-	});
-
-	// Surface the older of the two timestamps so "Updated X ago" is
-	// truthful about how stale the card is as a whole.
-	const usageDataUpdatedAt = Math.min(
-		usageUpdatedAt || Date.now(),
-		convUsageUpdatedAt || Date.now(),
-	);
-	const [usageRefreshing, setUsageRefreshing] = useState(false);
-	const handleUsageRefresh = async () => {
-		setUsageRefreshing(true);
-		try {
-			await Promise.all([refetchUsage(), refetchConvUsage()]);
-		} finally {
-			setUsageRefreshing(false);
-		}
-	};
-
 	const isWorkspaceVisible = visibility === "workspace";
 
-	// Fetch workspace members only when we need them (workspace-visible
-	// projects). Private projects rely on the shares list below.
 	const { data: wsSettings, isLoading: membersLoading } = useQuery({
 		queryKey: ["v2", "workspace-settings", workspaceId],
 		queryFn: () => (workspaceId ? fetchWorkspaceSettings(workspaceId) : null),
@@ -180,13 +126,6 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 		staleTime: 60_000,
 	});
 
-	const projectUsage = usage?.projects?.find((p) => p.id === projectId) ?? null;
-
-	// ── "Who has access" rows ──
-	// For workspace-visible projects, we render the workspace member
-	// roster. For private, we render the explicit share rows. Both get
-	// projected into the same shape (name/email/role/avatar/external) so
-	// the list renders uniformly.
 	type AccessRow = {
 		key: string;
 		user_id: string;
@@ -248,17 +187,240 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 		<Stack gap="lg">
 			<Stack gap={4}>
 				<Title order={4} fw={500}>
-					<Trans>Access & usage</Trans>
+					<Trans>Access</Trans>
 				</Title>
 				<Text size="sm" c="dimmed">
 					<Trans>
-						What this project is using, and who can see it.
+						Who can see and collaborate on this project.
 					</Trans>
 				</Text>
 			</Stack>
 
-			{/* Usage block — small, quiet. Tier info lives on the workspace
-			    usage card; this is just per-project consumption. */}
+			<ProjectSharingStrip
+				projectId={projectId}
+				visibility={visibility}
+				workspaceName={workspace?.name ?? undefined}
+			/>
+
+			<Stack gap="md">
+				<Group justify="space-between" align="center">
+					<Title order={5} fw={400}>
+						<Trans>Members</Trans>
+					</Title>
+					<Text size="xs" c="dimmed">
+						{accessLoading ? (
+							<Trans>Loading…</Trans>
+						) : isWorkspaceVisible ? (
+							<Trans>
+								<Plural
+									value={accessCount}
+									one="# person"
+									other="# people"
+								/>{" "}
+								in {workspace?.name ?? t`this workspace`}
+							</Trans>
+						) : accessCount === 0 ? (
+							<Trans>Just you — plus workspace admins.</Trans>
+						) : (
+							<>
+								<Plural
+									value={accessCount}
+									one="# person"
+									other="# people"
+								/>
+								{" · "}
+								<Trans>plus workspace admins</Trans>
+							</>
+						)}
+					</Text>
+				</Group>
+
+				<MembersToolbar
+					search={memberSearch}
+					onSearchChange={setMemberSearch}
+					filter={{
+						value: memberFilter,
+						onChange: (v) =>
+							setMemberFilter(v as typeof memberFilter),
+						options: [
+							{ value: "all", label: t`All` },
+							{ value: "admins", label: t`Admins` },
+							{ value: "members", label: t`Members` },
+							...(hasGuestRows
+								? [{ value: "externals", label: t`Externals` }]
+								: []),
+						],
+					}}
+					count={{
+						shown: filteredAccessRows.length,
+						total: accessCount,
+					}}
+				/>
+
+				<Stack gap="xs">
+					{!isWorkspaceVisible && isAdminRole(workspace?.role) && (
+						<InviteMemberCard
+							label={<Trans>Share with someone</Trans>}
+							helperText={<Trans>Add a member and pick their access.</Trans>}
+							onClick={() => setInviteOpen(true)}
+						/>
+					)}
+
+					{accessLoading ? (
+						<Loader size="xs" />
+					) : accessRows.length === 0 ? (
+						<Paper withBorder p="md" radius="md">
+							<Text size="sm" c="dimmed">
+								{isWorkspaceVisible ? (
+									<Trans>No one's on the workspace yet.</Trans>
+								) : (
+									<Trans>
+										No explicit shares. Workspace admins still have access.
+									</Trans>
+								)}
+							</Text>
+						</Paper>
+					) : (
+						filteredAccessRows.map((row) => (
+							<Paper key={row.key} withBorder p="md" radius="md">
+								<Group
+									justify="space-between"
+									align="center"
+									wrap="nowrap"
+								>
+									<Group
+										gap={10}
+										wrap="nowrap"
+										style={{ minWidth: 0 }}
+									>
+										<Avatar
+											size={32}
+											radius="xl"
+											src={avatarUrl(row.avatar, 48)}
+										>
+											{memberInitials(row.display_name, row.email)}
+										</Avatar>
+										<Box style={{ minWidth: 0 }}>
+											<Group gap={6} wrap="nowrap">
+												<Text size="sm" fw={500} lineClamp={1}>
+													{row.display_name || row.email}
+													{row.user_id === myAppUserId && (
+														<Text component="span" c="dimmed" fw={400}>
+															{" "}
+															<Trans>(You)</Trans>
+														</Text>
+													)}
+												</Text>
+												{row.is_external && (
+													<Badge
+														size="xs"
+														variant="light"
+														color="gray"
+													>
+														<Trans>External</Trans>
+													</Badge>
+												)}
+											</Group>
+											{row.email &&
+												row.email !== row.display_name && (
+													<Text
+														size="xs"
+														c="dimmed"
+														lineClamp={1}
+													>
+														{row.email}
+													</Text>
+												)}
+										</Box>
+									</Group>
+									<Badge
+										size="xs"
+										variant="light"
+										color="gray"
+										style={{ textTransform: "capitalize" }}
+									>
+										{displayRole(row.role)}
+									</Badge>
+								</Group>
+							</Paper>
+						))
+					)}
+					{!accessLoading &&
+						accessRows.length > 0 &&
+						filteredAccessRows.length === 0 && (
+							<Text size="sm" c="dimmed" ta="center" py="md">
+								<Trans>No one matches that filter.</Trans>
+							</Text>
+						)}
+				</Stack>
+			</Stack>
+
+			<ProjectSharingModal
+				projectId={projectId}
+				opened={inviteOpen}
+				visibility={visibility}
+				workspaceName={workspace?.name ?? undefined}
+				onClose={() => setInviteOpen(false)}
+			/>
+		</Stack>
+	);
+}
+
+export function ProjectUsage({ projectId }: { projectId: string }) {
+	const { workspaceId } = useWorkspace();
+
+	const {
+		data: usage,
+		isLoading: usageLoading,
+		dataUpdatedAt: usageUpdatedAt,
+		refetch: refetchUsage,
+	} = useQuery({
+		queryKey: ["v2", "workspace-usage", workspaceId, 0],
+		queryFn: () => (workspaceId ? fetchWorkspaceUsage(workspaceId) : null),
+		enabled: Boolean(workspaceId),
+		staleTime: 60_000,
+	});
+
+	const {
+		data: convUsage,
+		dataUpdatedAt: convUsageUpdatedAt,
+		refetch: refetchConvUsage,
+	} = useQuery({
+		queryKey: ["v2", "project-conv-usage", projectId],
+		queryFn: () => fetchConversationUsage(projectId),
+		enabled: Boolean(projectId),
+		staleTime: 60_000,
+	});
+
+	const usageDataUpdatedAt = Math.min(
+		usageUpdatedAt || Date.now(),
+		convUsageUpdatedAt || Date.now(),
+	);
+	const [usageRefreshing, setUsageRefreshing] = useState(false);
+	const handleUsageRefresh = async () => {
+		setUsageRefreshing(true);
+		try {
+			await Promise.all([refetchUsage(), refetchConvUsage()]);
+		} finally {
+			setUsageRefreshing(false);
+		}
+	};
+
+	const projectUsage = usage?.projects?.find((p) => p.id === projectId) ?? null;
+
+	return (
+		<Stack gap="lg">
+			<Stack gap={4}>
+				<Title order={4} fw={500}>
+					<Trans>Usage</Trans>
+				</Title>
+				<Text size="sm" c="dimmed">
+					<Trans>
+						What this project is consuming this cycle.
+					</Trans>
+				</Text>
+			</Stack>
+
 			<Paper withBorder p="md" radius="sm">
 				<Stack gap="sm">
 					<Group justify="space-between" align="center">
@@ -303,10 +465,6 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 						</Text>
 					)}
 
-					{/* Per-conversation breakdown (2026-04-24 ask). Stacked bar:
-					    each active conversation is its own segment; soft-deleted
-					    conversations are aggregated into a single red "deleted"
-					    bucket at the end. Hover reveals name + hours per segment. */}
 					{convUsage && convUsage.total_hours > 0 && (
 						<Stack gap={6} mt={4}>
 							<Text size="xs" c="dimmed">
@@ -433,193 +591,10 @@ export function ProjectUsageAndSharing({ projectId, visibility }: Props) {
 					/>
 				</Stack>
 			</Paper>
-
-			{/* The visibility toggle — keeps the "Make private" / "Manage"
-			    action in one predictable place. Sits above the list so
-			    the action is above the fold regardless of roster size. */}
-			<ProjectSharingStrip
-				projectId={projectId}
-				visibility={visibility}
-				workspaceName={workspace?.name ?? undefined}
-			/>
-
-			{/* Members — same shape as Organisation + Workspace: toolbar, dotted
-			    invite card as first row, then one Paper per person. The
-			    "Make private / Manage" toggle lives on the strip above;
-			    this list is read-only for workspace-visible projects and
-			    editable (via the modal) for private ones. */}
-			<Stack gap="md">
-				<Group justify="space-between" align="center">
-					<Title order={5} fw={400}>
-						<Trans>Members</Trans>
-					</Title>
-					<Text size="xs" c="dimmed">
-						{accessLoading ? (
-							<Trans>Loading…</Trans>
-						) : isWorkspaceVisible ? (
-							<Trans>
-								<Plural
-									value={accessCount}
-									one="# person"
-									other="# people"
-								/>{" "}
-								in {workspace?.name ?? t`this workspace`}
-							</Trans>
-						) : accessCount === 0 ? (
-							<Trans>Just you — plus workspace admins.</Trans>
-						) : (
-							<>
-								<Plural
-									value={accessCount}
-									one="# person"
-									other="# people"
-								/>
-								{" · "}
-								<Trans>plus workspace admins</Trans>
-							</>
-						)}
-					</Text>
-				</Group>
-
-				<MembersToolbar
-					search={memberSearch}
-					onSearchChange={setMemberSearch}
-					filter={{
-						value: memberFilter,
-						onChange: (v) =>
-							setMemberFilter(v as typeof memberFilter),
-						options: [
-							{ value: "all", label: t`All` },
-							{ value: "admins", label: t`Admins` },
-							{ value: "members", label: t`Members` },
-							...(hasGuestRows
-								? [{ value: "externals", label: t`Externals` }]
-								: []),
-						],
-					}}
-					count={{
-						shown: filteredAccessRows.length,
-						total: accessCount,
-					}}
-				/>
-
-				<Stack gap="xs">
-					{/* Invite card — for a private project it opens the
-					    add-share modal. For a workspace-visible project
-					    it opens the same modal which surfaces "Make
-					    private" as the path to specific-member access. */}
-					{!isWorkspaceVisible && isAdminRole(workspace?.role) && (
-						<InviteMemberCard
-							label={<Trans>Share with someone</Trans>}
-							helperText={<Trans>Add a member and pick their access.</Trans>}
-							onClick={() => setInviteOpen(true)}
-						/>
-					)}
-
-					{accessLoading ? (
-						<Loader size="xs" />
-					) : accessRows.length === 0 ? (
-						<Paper withBorder p="md" radius="md">
-							<Text size="sm" c="dimmed">
-								{isWorkspaceVisible ? (
-									<Trans>No one's on the workspace yet.</Trans>
-								) : (
-									<Trans>
-										No explicit shares. Workspace admins still have access.
-									</Trans>
-								)}
-							</Text>
-						</Paper>
-					) : (
-						filteredAccessRows.map((row) => (
-							<Paper key={row.key} withBorder p="md" radius="md">
-								<Group
-									justify="space-between"
-									align="center"
-									wrap="nowrap"
-								>
-									<Group
-										gap={10}
-										wrap="nowrap"
-										style={{ minWidth: 0 }}
-									>
-										<Avatar
-											size={32}
-											radius="xl"
-											src={avatarUrl(row.avatar, 48)}
-										>
-											{memberInitials(row.display_name, row.email)}
-										</Avatar>
-										<Box style={{ minWidth: 0 }}>
-											<Group gap={6} wrap="nowrap">
-												<Text size="sm" fw={500} lineClamp={1}>
-													{row.display_name || row.email}
-													{row.user_id === myAppUserId && (
-														<Text component="span" c="dimmed" fw={400}>
-															{" "}
-															<Trans>(You)</Trans>
-														</Text>
-													)}
-												</Text>
-												{row.is_external && (
-													<Badge
-														size="xs"
-														variant="light"
-														color="gray"
-													>
-														<Trans>External</Trans>
-													</Badge>
-												)}
-											</Group>
-											{row.email &&
-												row.email !== row.display_name && (
-													<Text
-														size="xs"
-														c="dimmed"
-														lineClamp={1}
-													>
-														{row.email}
-													</Text>
-												)}
-										</Box>
-									</Group>
-									<Badge
-										size="xs"
-										variant="light"
-										color="gray"
-										style={{ textTransform: "capitalize" }}
-									>
-										{displayRole(row.role)}
-									</Badge>
-								</Group>
-							</Paper>
-						))
-					)}
-					{!accessLoading &&
-						accessRows.length > 0 &&
-						filteredAccessRows.length === 0 && (
-							<Text size="sm" c="dimmed" ta="center" py="md">
-								<Trans>No one matches that filter.</Trans>
-							</Text>
-						)}
-				</Stack>
-			</Stack>
-
-			<ProjectSharingModal
-				projectId={projectId}
-				opened={inviteOpen}
-				visibility={visibility}
-				workspaceName={workspace?.name ?? undefined}
-				onClose={() => setInviteOpen(false)}
-			/>
 		</Stack>
 	);
 }
 
-// Sort helper — internals before externals, then by role weight, then by
-// name. Matches the WorkspaceSettings members tab so the two lists feel
-// the same. Kept outside the component to avoid re-creating the weight
-// map on every render.
 const ROLE_WEIGHT: Record<string, number> = {
 	owner: 0,
 	admin: 1,

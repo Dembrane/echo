@@ -50,6 +50,7 @@ import {
 	IconX,
 } from "@tabler/icons-react";
 import { formatRelative, intervalToDuration } from "date-fns";
+import posthog from "posthog-js";
 import {
 	type RefObject,
 	useCallback,
@@ -72,8 +73,6 @@ import {
 } from "@/components/project/hooks";
 import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
-import { analytics } from "@/lib/analytics";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
 import { BaseSkeleton } from "../common/BaseSkeleton";
 import { NavigationButton } from "../common/NavigationButton";
@@ -383,15 +382,7 @@ export const ConversationStatusIndicators = ({
 	// 	[conversation.chunks],
 	// );
 
-	const hasOnlyTextContent = useMemo(
-		() =>
-			conversation.chunks?.length > 0 &&
-			conversation.chunks?.every(
-				(chunk) =>
-					(chunk as unknown as ConversationChunk).source === "PORTAL_TEXT",
-			),
-		[conversation.chunks],
-	);
+	const hasOnlyTextContent = conversation.has_only_text_chunks ?? false;
 
 	const fDuration = useCallback((duration: number) => {
 		const d = intervalToDuration({
@@ -544,7 +535,7 @@ const ConversationAccordionItem = ({
 
 	return (
 		<NavigationButton
-			to={`/w/${workspaceId}/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
+			to={`/w/${workspaceId}/projects/${conversation.project_id}/conversation/${conversation.id}`}
 			active={highlight}
 			className="w-full"
 			rightSection={
@@ -975,11 +966,7 @@ export const ConversationAccordion = ({
 
 	// Handle select all
 	const handleSelectAllClick = () => {
-		try {
-			analytics.trackEvent(events.SELECT_ALL_CLICK);
-		} catch (error) {
-			console.warn("Analytics tracking failed:", error);
-		}
+		posthog.capture("select_all_clicked");
 		setSelectAllModalOpened(true);
 		setSelectAllResult(null);
 	};
@@ -991,11 +978,7 @@ export const ConversationAccordion = ({
 			return;
 		}
 
-		try {
-			analytics.trackEvent(events.SELECT_ALL_CONFIRM);
-		} catch (error) {
-			console.warn("Analytics tracking failed:", error);
-		}
+		posthog.capture("select_all_confirmed");
 
 		setSelectAllLoading(true);
 		try {
@@ -1007,17 +990,9 @@ export const ConversationAccordion = ({
 				verifiedOnly: showOnlyVerified || undefined,
 			});
 			setSelectAllResult(result);
-			try {
-				analytics.trackEvent(events.SELECT_ALL_SUCCESS);
-			} catch (error) {
-				console.warn("Analytics tracking failed:", error);
-			}
+			posthog.capture("select_all_completed");
 		} catch (_error) {
-			try {
-				analytics.trackEvent(events.SELECT_ALL_ERROR);
-			} catch (error) {
-				console.warn("Analytics tracking failed:", error);
-			}
+			posthog.capture("select_all_failed");
 			toast.error(t`Failed to add conversations to context`);
 			setSelectAllModalOpened(false);
 		} finally {

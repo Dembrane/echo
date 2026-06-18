@@ -10,9 +10,60 @@ from urllib.parse import urlencode
 from fastapi import HTTPException
 
 from dembrane.utils import generate_uuid
+from dembrane.directus import DirectusBadRequest
 from dembrane.directus_async import async_directus
 
 logger = getLogger("api.v2._invite_helpers")
+
+
+# ---------------------------------------------------------------------------
+# Race-safe membership writes
+# ---------------------------------------------------------------------------
+# The membership tables have partial unique indexes on (parent_id, user_id)
+# WHERE deleted_at IS NULL; a lost concurrent write surfaces as RECORD_NOT_UNIQUE.
+
+
+def _is_unique_violation(exc: Exception) -> bool:
+    text = str(exc)
+    return "RECORD_NOT_UNIQUE" in text or "23505" in text
+
+
+async def create_membership_row(
+    client: Any, collection: str, payload: dict[str, Any]
+) -> bool:
+    """Insert a membership row. False = an active row already exists (lost race).
+
+    `client` is the caller's async_directus so per-module test patches apply."""
+    try:
+        await client.create_item(collection, payload)
+        return True
+    except DirectusBadRequest as exc:
+        if not _is_unique_violation(exc):
+            raise
+        logger.info(
+            "%s create lost a concurrent race (user=%s); treating as already-member",
+            collection,
+            payload.get("user_id"),
+        )
+        return False
+
+
+async def reactivate_membership_row(
+    client: Any, collection: str, row_id: str, patch: dict[str, Any]
+) -> bool:
+    """Clear deleted_at on a membership row. False = active row exists (lost race)."""
+    try:
+        await client.update_item(collection, row_id, patch)
+        return True
+    except DirectusBadRequest as exc:
+        if not _is_unique_violation(exc):
+            raise
+        logger.info(
+            "%s reactivation lost a concurrent race (row=%s); treating as already-member",
+            collection,
+            row_id,
+        )
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -77,14 +128,17 @@ async def ensure_active_org_membership(
         return "already_active"
 
     if deleted_row is not None:
-        await async_directus.update_item(
+        if not await reactivate_membership_row(
+            async_directus,
             "org_membership",
             deleted_row["id"],
             {"deleted_at": None, "role": role},
-        )
+        ):
+            return "already_active"
         return "reactivated"
 
-    await async_directus.create_item(
+    if not await create_membership_row(
+        async_directus,
         "org_membership",
         {
             "id": generate_uuid(),
@@ -92,7 +146,8 @@ async def ensure_active_org_membership(
             "user_id": user_id,
             "role": role,
         },
-    )
+    ):
+        return "already_active"
     return "created"
 
 
@@ -130,14 +185,17 @@ async def ensure_active_workspace_membership(
         return "already_active"
 
     if deleted_row is not None:
-        await async_directus.update_item(
+        if not await reactivate_membership_row(
+            async_directus,
             "workspace_membership",
             deleted_row["id"],
             {"deleted_at": None, "role": role, "source": "direct"},
-        )
+        ):
+            return "already_active"
         return "reactivated"
 
-    await async_directus.create_item(
+    if not await create_membership_row(
+        async_directus,
         "workspace_membership",
         {
             "id": generate_uuid(),
@@ -146,7 +204,8 @@ async def ensure_active_workspace_membership(
             "role": role,
             "source": "direct",
         },
-    )
+    ):
+        return "already_active"
     return "created"
 
 

@@ -1,6 +1,5 @@
 import type { Query, QueryFields } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
-import * as Sentry from "@sentry/react";
 import {
 	type UseQueryOptions,
 	useInfiniteQuery,
@@ -9,6 +8,7 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import posthog from "posthog-js";
 import { useProjectChatContext } from "@/components/chat/hooks";
 import { toast } from "@/components/common/Toaster";
 import {
@@ -266,7 +266,6 @@ export const useMoveConversationMutation = () => {
 export const useAddChatContextMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationKey: ["chat-context", "add"],
 		mutationFn: (payload: {
 			chatId: string;
 			conversationId?: string;
@@ -276,8 +275,9 @@ export const useAddChatContextMutation = () => {
 				auto_select_bool: payload.auto_select_bool,
 				conversationId: payload.conversationId,
 			}),
+		mutationKey: ["chat-context", "add"],
 		onError: (error, variables, context) => {
-			Sentry.captureException(error);
+			posthog.captureException(error);
 			const mutationContext = context as
 				| AddChatContextMutationContext
 				| undefined;
@@ -401,7 +401,6 @@ export const useAddChatContextMutation = () => {
 export const useDeleteChatContextMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationKey: ["chat-context", "delete"],
 		mutationFn: (payload: {
 			chatId: string;
 			conversationId?: string;
@@ -412,9 +411,9 @@ export const useDeleteChatContextMutation = () => {
 				payload.conversationId,
 				payload.auto_select_bool,
 			),
+		mutationKey: ["chat-context", "delete"],
 		onError: (error, variables, context) => {
-			Sentry.captureException(error);
-
+			posthog.captureException(error);
 			// Only rollback the failed optimistic entry
 			const conversationId = (context as { conversationId?: string })
 				?.conversationId;
@@ -556,9 +555,6 @@ export const useSelectAllContextMutation = () => {
 				tagIds: payload.tagIds,
 				verifiedOnly: payload.verifiedOnly,
 			}),
-		onError: (error) => {
-			Sentry.captureException(error);
-		},
 		onSettled: (_, __, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["chats", "context", variables.chatId],
@@ -622,15 +618,18 @@ export const useRetranscribeConversationMutation = () => {
 			conversationId,
 			newConversationName,
 			usePiiRedaction,
+			attachVerifiedArtifacts,
 		}: {
 			conversationId: string;
 			newConversationName: string;
 			usePiiRedaction: boolean;
+			attachVerifiedArtifacts?: boolean;
 		}) =>
 			retranscribeConversation(
 				conversationId,
 				newConversationName,
 				usePiiRedaction,
+				attachVerifiedArtifacts,
 			),
 		onError: (error) => {
 			toast.error(t`Failed to retranscribe conversation. Please try again.`);
@@ -695,7 +694,7 @@ export const useConversationsByProjectId = (
 			void loadWhereTranscriptExists;
 			const params = conversationQueryToBffParams(query);
 			const conversations = await bff.get<Conversation[]>("/conversations", {
-				include_chunks: true,
+				include_chunks: Boolean(loadChunks),
 				include_tags: true,
 				limit: 1000,
 				project_id: projectId,
@@ -715,35 +714,25 @@ export const useConversationsByProjectId = (
 		],
 		refetchInterval: 30000,
 		select: (data) => {
-			// Add live field to each conversation based on recent chunk activity
+			// Add live field based on the server-derived last_chunk_at
 			const cutoffTime = new Date(Date.now() - TIME_INTERVAL_SECONDS * 1000);
 
 			if (data.length === 0) return [];
 
 			return data.map((conversation) => {
-				// Skip upload chunks
-				if (["upload", "clone"].includes(conversation.source ?? ""))
+				// Only portal sessions can show as live/Ongoing
+				if (
+					!["PORTAL_AUDIO", "PORTAL_TEXT"].includes(conversation.source ?? "")
+				)
 					return {
 						...conversation,
 						live: false,
 					};
 
-				if (conversation.chunks?.length === 0)
-					return {
-						...conversation,
-						live: false,
-					};
-
-				const hasRecentChunks = conversation.chunks?.some((chunk) => {
-					if (typeof chunk !== "object" || !chunk) return false;
-					// Check if chunk timestamp is recent
-					const chunkTime = new Date(chunk.timestamp || chunk.created_at || 0);
-					return chunkTime > cutoffTime;
-				});
-
+				const lastChunkAt = conversation.last_chunk_at;
 				return {
 					...conversation,
-					live: hasRecentChunks || false,
+					live: lastChunkAt ? new Date(lastChunkAt) > cutoffTime : false,
 				};
 			});
 		},
@@ -849,7 +838,7 @@ export const useInfiniteConversationsByProjectId = (
 		],
 		refetchInterval: 30000,
 		select: (data) => {
-			// Add live field to each conversation based on recent chunk activity
+			// Add live field based on the server-derived last_chunk_at
 			const cutoffTime = new Date(Date.now() - TIME_INTERVAL_SECONDS * 1000);
 
 			return {
@@ -857,31 +846,21 @@ export const useInfiniteConversationsByProjectId = (
 				pages: data.pages.map((page) => ({
 					...page,
 					conversations: page.conversations.map((conversation) => {
-						// Skip upload chunks
-						if (["upload", "clone"].includes(conversation.source ?? ""))
+						// Only portal sessions can show as live/Ongoing
+						if (
+							!["PORTAL_AUDIO", "PORTAL_TEXT"].includes(
+								conversation.source ?? "",
+							)
+						)
 							return {
 								...conversation,
 								live: false,
 							};
 
-						if (conversation.chunks?.length === 0)
-							return {
-								...conversation,
-								live: false,
-							};
-
-						const hasRecentChunks = conversation.chunks?.some((chunk) => {
-							if (typeof chunk !== "object" || !chunk) return false;
-							// Check if chunk timestamp is recent
-							const chunkTime = new Date(
-								chunk.timestamp || chunk.created_at || 0,
-							);
-							return chunkTime > cutoffTime;
-						});
-
+						const lastChunkAt = conversation.last_chunk_at;
 						return {
 							...conversation,
-							live: hasRecentChunks || false,
+							live: lastChunkAt ? new Date(lastChunkAt) > cutoffTime : false,
 						};
 					}),
 				})),

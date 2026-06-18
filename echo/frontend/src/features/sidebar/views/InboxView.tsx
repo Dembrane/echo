@@ -102,7 +102,7 @@ export const InboxView = () => {
 		<div className="flex h-full w-full justify-center overflow-hidden">
 			<nav className="flex h-full w-full max-w-2xl flex-col px-4 py-6">
 				<div className="shrink-0 p-1.5">
-					<ViewHeader to={backTo ?? "/w"} title={<Trans>Inbox</Trans>} />
+					<ViewHeader to={backTo ?? "/o"} title={<Trans>Inbox</Trans>} />
 				</div>
 	
 				<div className="flex shrink-0 items-center justify-between gap-1 px-3 pb-2">
@@ -126,7 +126,7 @@ export const InboxView = () => {
 						type="button"
 						onClick={handleMarkAllReadForActiveTab}
 						disabled={markAllDisabled || markAllPending}
-						className="flex items-center gap-1 rounded px-1.5 py-1 text-[11px] transition-colors enabled:hover:bg-black/[0.04] disabled:opacity-40"
+						className="flex items-center gap-1 rounded px-1.5 py-1 text-xs transition-colors enabled:hover:bg-black/[0.04] disabled:opacity-40"
 						style={{ color: "rgba(45, 45, 44, 0.6)" }}
 						aria-label={t`Mark all as read`}
 					>
@@ -179,7 +179,7 @@ const TabButton = ({ active, onClick, badge, children }: TabButtonProps) => (
 	<button
 		type="button"
 		onClick={onClick}
-		className="flex items-center gap-1 rounded px-2 py-1 text-[12px] transition-colors"
+		className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors"
 		style={{
 			backgroundColor: active ? "rgba(65, 105, 225, 0.08)" : "transparent",
 			color: active ? "#4169e1" : "rgba(45, 45, 44, 0.7)",
@@ -188,12 +188,10 @@ const TabButton = ({ active, onClick, badge, children }: TabButtonProps) => (
 		<span>{children}</span>
 		{badge > 0 && (
 			<span
-				className="rounded px-1 text-[10px] leading-none"
+				className="rounded px-1 text-xs leading-none"
 				style={{
-					backgroundColor: active
-						? "rgba(65, 105, 225, 0.18)"
-						: "rgba(45, 45, 44, 0.08)",
-					color: active ? "#4169e1" : "rgba(45, 45, 44, 0.6)",
+					backgroundColor: "rgba(65, 105, 225, 0.18)",
+					color: "#4169e1",
 					paddingBlock: 2,
 				}}
 			>
@@ -311,7 +309,7 @@ const EmptyState = ({
 	message: ReactNode;
 }) => (
 	<div
-		className="flex flex-col items-center gap-2 px-4 py-10 text-center text-[12px]"
+		className="flex flex-col items-center gap-2 px-4 py-10 text-center text-xs"
 		style={{ color: "rgba(45, 45, 44, 0.55)" }}
 	>
 		{icon}
@@ -405,7 +403,7 @@ const NotificationRowItem = ({
 							aria-hidden="true"
 						>
 							{row.actor_user_id && row.actor_name ? (
-								<span className="text-[10px] font-medium">
+								<span className="text-xs font-medium">
 									{row.actor_name.slice(0, 2).toUpperCase()}
 								</span>
 							) : (
@@ -415,14 +413,14 @@ const NotificationRowItem = ({
 					)}
 					<div className="min-w-0 flex-1">
 						<div
-							className="line-clamp-2 pr-3 text-[12px] leading-snug"
+							className="line-clamp-2 pr-3 text-xs leading-snug"
 							style={{ fontWeight: row.read ? 400 : 500 }}
 						>
 							{renderInlineMarkdown(row.title)}
 						</div>
 						{row.scope && (
 							<div
-								className="mt-0.5 truncate text-[11px]"
+								className="mt-0.5 truncate text-xs"
 								style={{ color: "rgba(45, 45, 44, 0.55)" }}
 							>
 								{row.scope}
@@ -430,7 +428,7 @@ const NotificationRowItem = ({
 						)}
 						{row.message && (
 							<div
-								className="mt-0.5 line-clamp-2 text-[11px] leading-snug"
+								className="mt-0.5 line-clamp-2 text-xs leading-snug"
 								style={{ color: "rgba(45, 45, 44, 0.6)" }}
 							>
 								{renderInlineMarkdown(row.message)}
@@ -439,7 +437,7 @@ const NotificationRowItem = ({
 						<div className="mt-1 flex items-center justify-between gap-2">
 							{createdLabel && (
 								<span
-									className="truncate text-[10px]"
+									className="truncate text-xs"
 									style={{ color: "rgba(45, 45, 44, 0.45)" }}
 								>
 									{createdLabel}
@@ -447,7 +445,7 @@ const NotificationRowItem = ({
 							)}
 							{isActionRequired && (
 								<span
-									className="shrink-0 rounded px-1.5 py-0.5 text-[10px] leading-none"
+									className="shrink-0 rounded px-1.5 py-0.5 text-xs leading-none"
 									style={{
 										backgroundColor: "rgba(65, 105, 225, 0.12)",
 										color: "#4169e1",
@@ -533,14 +531,14 @@ const AnnouncementRowItem = ({
 				aria-expanded={expanded}
 			>
 				<div
-					className="line-clamp-2 pr-3 text-[12px] leading-snug"
+					className="line-clamp-2 pr-3 text-xs leading-snug"
 					style={{ fontWeight: isRead ? 400 : 500 }}
 				>
 					{announcement.title}
 				</div>
 				{announcement.message && (
 					<div
-						className={`mt-0.5 text-[11px] leading-snug ${expanded ? "" : "line-clamp-2"}`}
+						className={`mt-0.5 text-xs leading-snug ${expanded ? "" : "line-clamp-2"}`}
 						style={{ color: "rgba(45, 45, 44, 0.65)" }}
 					>
 						<Markdown content={announcement.message} />
@@ -548,13 +546,13 @@ const AnnouncementRowItem = ({
 				)}
 				<div className="mt-1 flex items-center justify-between gap-2">
 					<span
-						className="truncate text-[10px]"
+						className="truncate text-xs"
 						style={{ color: "rgba(45, 45, 44, 0.45)" }}
 					>
 						{formatDate(announcement.created_at)}
 					</span>
 					<span
-						className="text-[10px] underline decoration-dotted"
+						className="text-xs underline decoration-dotted"
 						style={{ color: "rgba(45, 45, 44, 0.55)" }}
 					>
 						{expanded ? <Trans>Show less</Trans> : <Trans>Show more</Trans>}

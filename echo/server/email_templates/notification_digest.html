@@ -4,16 +4,16 @@
 {% block preview %}{{ item_count }} notification{{ "s" if item_count != 1 else "" }} since yesterday.{% endblock %}
 {% block heading %}Your daily digest.{% endblock %}
 {% block body %}
-<p style="font-size:17px; line-height:1.65; margin:0 0 20px; color:#2D2D2C; font-weight:300;">
+<p style="font-size:17px; line-height:1.65; margin:0 0 20px; color:#2D2D2C; font-weight:400;">
   You received <em style="color:#4169E1; font-style:normal;">{{ item_count }}</em> notification{{ "s" if item_count != 1 else "" }} since yesterday. Here's the summary:
 </p>
 {% for item in items %}
 <div style="margin:0 0 12px; padding:12px 16px; background-color:#F6F4F1; border-left:2px solid #4169E1;">
-  <div style="font-size:14px; line-height:1.5; color:#2D2D2C; font-weight:300;">{{ item.summary }}</div>
-  <div style="font-size:12px; color:#6B6B6A; margin-top:4px; font-weight:300;">{{ item.timestamp }}</div>
+  <div style="font-size:14px; line-height:1.5; color:#2D2D2C; font-weight:400;">{{ item.summary }}</div>
+  <div style="font-size:12px; color:#2D2D2C; margin-top:4px; font-weight:400;">{{ item.timestamp }}</div>
 </div>
 {% endfor %}
-<p style="font-size:15px; line-height:1.65; margin:20px 0 24px; color:#6B6B6A; font-weight:300;">
+<p style="font-size:15px; line-height:1.65; margin:20px 0 24px; color:#2D2D2C; font-weight:400;">
   Individual emails will resume when volume drops below the batching threshold.
 </p>
 {% endblock %}

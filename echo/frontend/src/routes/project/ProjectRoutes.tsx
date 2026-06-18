@@ -13,10 +13,13 @@ import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
 import { ProjectExportSection } from "@/components/project/ProjectExportSection";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
 import { ProjectUploadSection } from "@/components/project/ProjectUploadSection";
-import { ProjectUsageAndSharing } from "@/components/project/ProjectUsageAndSharing";
+import { ProjectAccess, ProjectUsage } from "@/components/project/ProjectUsageAndSharing";
 import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
+import { FeatureGate } from "@/components/workspace/FeatureGate";
 import { ENABLE_WEBHOOKS } from "@/config";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { getProjectTranscriptsLink } from "@/lib/api";
+import type { Tier } from "@/lib/tiers";
 
 export const ProjectConversationsRoute = () => {
 	const { projectId, workspaceId } = useParams();
@@ -109,6 +112,7 @@ export const ProjectUploadRoute = () => {
 
 export const ProjectIntegrationsRoute = () => {
 	const { projectId } = useParams();
+	const { workspace, workspaceId } = useWorkspace();
 	const query = useMemo(
 		() => ({
 			fields: ["id", "name", "is_conversation_allowed"],
@@ -122,6 +126,13 @@ export const ProjectIntegrationsRoute = () => {
 	});
 
 	if (!projectId) return null;
+
+	// Webhooks are a workspace admin surface (workspace:webhooks policy):
+	// members never see the section, and below the changemaker tier the
+	// FeatureGate placeholder renders instead of the live section, so no
+	// webhook request is ever sent for callers the backend would 403.
+	const isWorkspaceAdmin =
+		workspace?.role === "admin" || workspace?.role === "owner";
 
 	return (
 		<PageContainer>
@@ -139,13 +150,28 @@ export const ProjectIntegrationsRoute = () => {
 						project={projectQuery.data}
 					/>
 				)}
-				<Divider />
-				{ENABLE_WEBHOOKS ? (
-					<WebhookSection projectId={projectId} />
-				) : (
-					<Alert variant="light">
-						<Trans>Webhooks are not enabled for this environment.</Trans>
-					</Alert>
+				{!ENABLE_WEBHOOKS && (
+					<>
+						<Divider />
+						<Alert variant="light">
+							<Trans>Webhooks are not enabled for this environment.</Trans>
+						</Alert>
+					</>
+				)}
+				{ENABLE_WEBHOOKS && isWorkspaceAdmin && workspace && workspaceId && (
+					<>
+						<Divider />
+						<FeatureGate
+							currentTier={workspace.tier as Tier}
+							requiredTier="changemaker"
+							featureName="Webhooks"
+							benefit="Send conversation and report events to your own systems."
+							canRequestUpgrade={isWorkspaceAdmin}
+							workspaceId={workspaceId}
+						>
+							<WebhookSection projectId={projectId} />
+						</FeatureGate>
+					</>
 				)}
 			</Stack>
 		</PageContainer>
@@ -259,7 +285,7 @@ export const ProjectAccessRoute = () => {
 				</Alert>
 			)}
 			{projectQuery.data && projectId && (
-				<ProjectUsageAndSharing
+				<ProjectAccess
 					projectId={projectId}
 					visibility={
 						(projectQuery.data.visibility as "workspace" | "private") ??
@@ -267,6 +293,21 @@ export const ProjectAccessRoute = () => {
 					}
 				/>
 			)}
+		</Stack>
+	);
+};
+
+export const ProjectUsageRoute = () => {
+	const { projectId } = useParams();
+
+	return (
+		<Stack
+			gap="3rem"
+			className="relative"
+			px={{ base: "1rem", md: "2rem" }}
+			py={{ base: "2rem", md: "4rem" }}
+		>
+			{projectId && <ProjectUsage projectId={projectId} />}
 		</Stack>
 	);
 };

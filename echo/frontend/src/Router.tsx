@@ -10,7 +10,6 @@ import { AuthLayout } from "./components/layout/AuthLayout";
 import { BaseLayout } from "./components/layout/BaseLayout";
 import { LanguageLayout } from "./components/layout/LanguageLayout";
 import { ParticipantLayout } from "./components/layout/ParticipantLayout";
-import { ProjectConversationLayout } from "./components/layout/ProjectConversationLayout";
 import { ProjectLayout } from "./components/layout/ProjectLayout";
 import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
 import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
@@ -27,12 +26,12 @@ import {
 } from "./routes/participant/ParticipantConversation";
 import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
 import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
-import { ProjectConversationOverviewRoute } from "./routes/project/conversation/ProjectConversationOverview";
-import { ProjectConversationTranscript } from "./routes/project/conversation/ProjectConversationTranscript";
+import { ProjectConversationRoute } from "./routes/project/conversation/ProjectConversationRoute";
 import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
 // Tab-based routes - import directly for now to debug
 import {
 	ProjectAccessRoute,
+	ProjectUsageRoute,
 	ProjectConversationsRoute,
 	ProjectIntegrationsRoute,
 	ProjectPortalSettingsRoute,
@@ -124,6 +123,10 @@ const WorkspaceSelectorRoute = createLazyNamedRoute(
 	() => import("./routes/workspaces/WorkspaceSelectorRoute"),
 	"WorkspaceSelectorRoute",
 );
+const RootRedirect = createLazyNamedRoute(
+	() => import("./routes/workspaces/WorkspaceSelectorRoute"),
+	"RootRedirect",
+);
 const CreateWorkspaceRoute = createLazyNamedRoute(
 	() => import("./routes/workspaces/CreateWorkspaceRoute"),
 	"CreateWorkspaceRoute",
@@ -184,13 +187,17 @@ const projectRouteChildren = [
 								element: <ProjectPortalSettingsRoute />,
 								path: "portal-editor",
 							},
-							{
-								// "Access & usage" tab (2026-04-24) — dedicated
-								// surface for per-project usage, sharing, and the
-								// list of who can actually see the project.
-								element: <ProjectAccessRoute />,
-								path: "access",
-							},
+								{
+									// "Access" tab — dedicated surface for project sharing,
+									// and the list of who can actually see the project.
+									element: <ProjectAccessRoute />,
+									path: "access",
+								},
+								{
+									// "Usage" tab — dedicated surface for per-project usage.
+									element: <ProjectUsageRoute />,
+									path: "usage",
+								},
 							{
 								// /sharing tab retired 2026-04-23 — bookmark redirect
 								// now points at the new /access tab.
@@ -216,15 +223,15 @@ const projectRouteChildren = [
 					{
 						children: [
 							{
-								element: <Navigate to="overview" replace />,
+								element: <ProjectConversationRoute />,
 								index: true,
 							},
 							{
-								element: <ProjectConversationOverviewRoute />,
+								element: <Navigate to=".." replace />,
 								path: "overview",
 							},
 							{
-								element: <ProjectConversationTranscript />,
+								element: <Navigate to=".." replace />,
 								path: "transcript",
 							},
 							{
@@ -232,7 +239,6 @@ const projectRouteChildren = [
 								path: "debug",
 							},
 						],
-						element: <ProjectConversationLayout />,
 						path: "conversation/:conversationId",
 					},
 					{
@@ -293,9 +299,13 @@ export const mainRouter = createBrowserRouter([
 	{
 		children: [
 			{
-				// Root → workspace selector. Legacy /projects routes are gone;
-				// the canonical "home" for an authed user is /w.
-				element: <Navigate to="w" replace />,
+				// Root entry: RootRedirect sends single-org users to their org
+				// overview, everyone else to the /o home list.
+				element: (
+					<Protected>
+						<RootRedirect />
+					</Protected>
+				),
 				path: "",
 			},
 			{
@@ -371,15 +381,12 @@ export const mainRouter = createBrowserRouter([
 				path: "invites",
 			},
 			{
-				// Workspace selector + create — canonical path is /w.
+				// Request-workspace wizard. Bare /w is retired (home moved to /o)
+				// and falls through to the 404; /w/:workspaceId/* is defined below.
 				children: [
 					{
-						element: <WorkspaceSelectorRoute />,
-						index: true,
-					},
-					{
 						element: <CreateWorkspaceRoute />,
-						path: "new",
+						index: true,
 					},
 				],
 				element: (
@@ -387,12 +394,16 @@ export const mainRouter = createBrowserRouter([
 						<BaseLayout />
 					</Protected>
 				),
-				path: "w",
+				path: "w/new",
 			},
 			{
-				// Organisation (org) admin surface. Canonical path is /o/:organisationId —
-				// matches the /w/:workspaceId pattern.
+				// Bare /o is the home list (organisations); /o/:organisationId is a
+				// single org's admin surface.
 				children: [
+					{
+						element: <WorkspaceSelectorRoute />,
+						index: true,
+					},
 					{
 						// Splat so tab state lives in the path
 						// (/o/:organisationId/:tab) — matches the project-tab pattern.
@@ -426,13 +437,18 @@ export const mainRouter = createBrowserRouter([
 								element: <HostGuidePage />,
 								path: "projects/:projectId/host-guide",
 							},
-							{
-								// Splat so the tab lives in the path
-								// (/w/:workspaceId/settings/:tab). The component parses
-								// the trailing segment.
-								element: <WorkspaceSettingsRoute />,
-								path: "settings/*",
-							},
+								{
+									// Splat so the tab lives in the path
+									// (/w/:workspaceId/settings/:tab). The component parses
+									// the trailing segment.
+									element: <WorkspaceSettingsRoute />,
+									path: "settings/*",
+								},
+								{
+									// Map /w/:workspaceId/members under the same component
+									element: <WorkspaceSettingsRoute />,
+									path: "members/*",
+								},
 							{
 								children: projectRouteChildren,
 								path: "projects",

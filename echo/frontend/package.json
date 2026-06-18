@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "VITE_DISABLE_SENTRY=1 VITE_PARTICIPANT_BASE_URL='http://localhost:5174' vite --host 0.0.0.0",
-    "participant:dev": "VITE_DISABLE_SENTRY=1 VITE_USE_PARTICIPANT_ROUTER=1 vite --port 5174 --host 0.0.0.0",
+    "dev": "vite --host 0.0.0.0",
+    "participant:dev": "vite --port 5174 --host 0.0.0.0",
     "messages:extract": "lingui extract",
     "messages:compile": "lingui compile --typescript",
     "build": "tsc && vite build",
@@ -42,7 +42,6 @@
     "@phosphor-icons/react": "^2.1.10",
     "@posthog/react": "^1.9.0",
     "@react-pdf/renderer": "^4.3.0",
-    "@sentry/react": "^8.55.0",
     "@tabler/icons-react": "^3.34.1",
     "@tanstack/react-query": "^5.83.0",
     "@tanstack/react-query-devtools": "^5.84.1",
@@ -69,7 +68,6 @@
     "match-sorter": "^8.0.3",
     "motion": "^11.18.2",
     "next-themes": "^0.4.6",
-    "plausible-tracker": "^0.3.9",
     "posthog-js": "^1.367.0",
     "re-resizable": "^6.11.2",
     "react": "^19.0.0",
@@ -127,10 +125,5 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.2",
     "vite": "^6.3.5"
-  },
-  "pnpm": {
-    "overrides": {
-      "tar-fs": "^2.1.3"
-    }
   }
 }

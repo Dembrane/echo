@@ -23,7 +23,7 @@ export const ProjectOverviewLayout = () => {
 		},
 	});
 
-	useDocumentTitle(t`Project Overview | Dembrane`);
+	useDocumentTitle(t`Project Overview | dembrane`);
 	const project = projectQuery.data;
 	const isPrivate = project?.visibility === "private";
 	// The project name already lives in the sidebar title (ProjectSidebar).
@@ -46,11 +46,12 @@ export const ProjectOverviewLayout = () => {
 			)}
 			<TabsWithRouter
 				basePath="/w/:workspaceId/projects/:projectId"
-				tabs={[
-					{ label: t`Portal Editor`, value: "portal-editor" },
-					{ label: t`Project Settings`, value: "overview" },
-					{ label: t`Access & usage`, value: "access" },
-				]}
+					tabs={[
+						{ label: t`Portal Editor`, value: "portal-editor" },
+						{ label: t`Project Settings`, value: "overview" },
+						{ label: t`Access`, value: "access" },
+						{ label: t`Usage`, value: "usage" },
+					]}
 				loading={projectQuery.isLoading}
 				{...testId("project-overview-tabs")}
 			/>

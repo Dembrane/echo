@@ -40,18 +40,18 @@ export function resolveSidebarView(
 		if (overlay === "inbox") {
 			return {
 				backTo: `${pathname}${withoutSidebarSearch(search)}`,
+				overlay: "inbox",
 				params: base.params,
 				scope: base.scope,
 				view: base.view,
-				overlay: "inbox",
 			};
 		}
 		return {
 			backTo: `${pathname}${withoutSidebarSearch(search)}`,
+			overlay: "help",
 			params: base.params,
 			scope: base.scope,
 			view: "help",
-			overlay: "help",
 		};
 	}
 
@@ -94,6 +94,20 @@ export function resolveSidebarView(
 		};
 	}
 
+	// /w/new (request-workspace) carries its org in ?organisationId=, so surface
+	// it under that org's context. No org param → fall through to user-home.
+	if (segs[0] === "w" && segs[1] === "new") {
+		const orgId = new URLSearchParams(search).get("organisationId");
+		if (orgId) {
+			return {
+				backTo: `/o/${orgId}/overview`,
+				params: { orgId, section: "request-workspace" },
+				scope: "org",
+				view: "org-home",
+			};
+		}
+	}
+
 	// /w/:workspaceId/...
 	if (segs[0] === "w" && segs[1] && segs[1] !== "new") {
 		const workspaceId = segs[1];
@@ -101,27 +115,35 @@ export function resolveSidebarView(
 		// /w/:wsId/projects/:projectId/...
 		if (segs[2] === "projects" && segs[3] && segs[3] !== "new") {
 			const projectId = segs[3];
-			// Settings context: explicit /settings/<section> or the legacy
-			// /overview and /access pages which ARE the settings panels.
-			if (
-				segs[4] === "settings" ||
-				segs[4] === "overview" ||
-				segs[4] === "access"
-			) {
-				return {
-					backTo: `/w/${workspaceId}/projects/${projectId}/home`,
-					params: {
-						projectId,
-						section: segs[4] === "settings" ? segs[5] : segs[4],
-						workspaceId,
-					},
-					scope: "project",
-					view: "project-settings",
-				};
-			}
+				// Settings context: explicit /settings/<section> or the legacy
+				// /overview and /integrations pages which ARE the
+				// settings panels.
+				if (
+					segs[4] === "settings" ||
+					segs[4] === "overview" ||
+					segs[4] === "integrations"
+				) {
+					return {
+						backTo: `/w/${workspaceId}/projects/${projectId}/home`,
+						params: {
+							projectId,
+							section: segs[4] === "settings" ? segs[5] : segs[4],
+							workspaceId,
+						},
+						scope: "project",
+						view: "project-settings",
+					};
+				}
 			return {
 				backTo: `/w/${workspaceId}/home`,
-				params: { projectId, section: segs[4], workspaceId },
+				params: {
+					projectId,
+					section: segs[4],
+					workspaceId,
+					...(segs[4] === "conversation" && segs[5]
+						? { conversationId: segs[5] }
+						: {}),
+				},
 				scope: "project",
 				view: "project-home",
 			};

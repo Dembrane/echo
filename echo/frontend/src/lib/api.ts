@@ -847,25 +847,17 @@ export const initiateAndUploadConversationChunk = async (payload: {
 };
 
 export const getProjectConversationCounts = async (projectId: string) => {
-	const conversations = await directus.request(
-		readItems("conversation", {
-			fields: [
-				"id",
-				"is_finished",
-				"participant_name",
-				"updated_at",
-				"created_at",
-			],
-			filter: {
-				deleted_at: {
-					_null: true,
-				},
-				project_id: {
-					_eq: projectId,
-				},
-			},
-		}),
-	);
+	// Direct Directus reads 403 since the lockdown; go through the BFF.
+	const conversations = await bff.get<
+		Pick<
+			Conversation,
+			"id" | "is_finished" | "participant_name" | "updated_at" | "created_at"
+		>[]
+	>("/conversations", {
+		fields: "id,is_finished,participant_name,updated_at,created_at",
+		limit: 1000,
+		project_id: projectId,
+	});
 
 	const finishedConversations = conversations.filter(
 		(conversation) => conversation.is_finished,
@@ -945,6 +937,7 @@ export const retranscribeConversation = async (
 	conversationId: string,
 	newConversationName: string,
 	usePiiRedaction: boolean,
+	attachVerifiedArtifacts?: boolean,
 ) => {
 	return api.post<
 		unknown,
@@ -952,6 +945,7 @@ export const retranscribeConversation = async (
 	>(`/conversations/${conversationId}/retranscribe`, {
 		new_conversation_name: newConversationName,
 		use_pii_redaction: usePiiRedaction,
+		attach_verified_artifacts: attachVerifiedArtifacts,
 	});
 };
 

@@ -35,6 +35,7 @@ const formatArtefactTime = (timestamp: string | null | undefined): string => {
 };
 
 const LANGUAGE_TO_LOCALE: Record<string, string> = {
+	cs: "cs-CZ",
 	de: "de-DE",
 	en: "en-US",
 	es: "es-ES",

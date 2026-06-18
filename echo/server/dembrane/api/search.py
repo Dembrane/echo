@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Callable, Optional
 from asyncio import gather
 from datetime import datetime
 
 from fastapi import Query, Depends, APIRouter
 from pydantic import Field, BaseModel
 
-from dembrane.directus import DirectusClient
+from dembrane.directus import DirectusClient, directus
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.rate_limit import create_user_rate_limiter
+from dembrane.search_filters import all_tokens_filter
 from dembrane.api.dependency_auth import DependencyDirectusSession, require_directus_client
 
 SearchRouter = APIRouter(
@@ -25,6 +26,7 @@ class ConversationCard(BaseModel):
     id: str
     projectId: Optional[str] = None
     projectName: Optional[str] = None
+    workspaceId: Optional[str] = None
     displayLabel: str
     status: str
     startedAt: Optional[datetime] = None
@@ -34,6 +36,7 @@ class ConversationCard(BaseModel):
 class ProjectCard(BaseModel):
     id: str
     name: Optional[str] = None
+    workspaceId: Optional[str] = None
     lastActivityAt: Optional[datetime] = None
     conversationsCount: Optional[int] = None
 
@@ -50,6 +53,8 @@ class SearchChunkResult(BaseModel):
     id: str
     conversationId: Optional[str] = None
     conversationLabel: Optional[str] = None
+    projectId: Optional[str] = None
+    workspaceId: Optional[str] = None
     excerpt: Optional[str] = None
     timestamp: Optional[datetime] = None
 
@@ -58,6 +63,7 @@ class SearchChatResult(BaseModel):
     id: str
     projectId: Optional[str] = None
     projectName: Optional[str] = None
+    workspaceId: Optional[str] = None
     name: Optional[str] = None
 
 
@@ -105,12 +111,13 @@ def _conversation_display_label(payload: Dict[str, Any]) -> str:
 
 def _extract_project_reference(project_payload: Any) -> Dict[str, Optional[str]]:
     if isinstance(project_payload, dict):
-        project_id = _safe_str(project_payload.get("id"))
-        name = _safe_str(project_payload.get("name"))
-        return {"id": project_id, "name": name}
+        return {
+            "id": _safe_str(project_payload.get("id")),
+            "name": _safe_str(project_payload.get("name")),
+            "workspace_id": _safe_str(project_payload.get("workspace_id")),
+        }
 
-    project_id = _safe_str(project_payload)
-    return {"id": project_id, "name": None}
+    return {"id": _safe_str(project_payload), "name": None, "workspace_id": None}
 
 
 def _extract_latest_chunk_timestamp(payload: Dict[str, Any]) -> Optional[datetime]:
@@ -142,6 +149,7 @@ def _normalize_conversation(payload: Dict[str, Any]) -> ConversationCard:
         id=_safe_str(payload.get("id")) or "",
         projectId=project_ref.get("id"),
         projectName=project_ref.get("name"),
+        workspaceId=project_ref.get("workspace_id"),
         displayLabel=_conversation_display_label(payload),
         status=_conversation_status(payload),
         startedAt=started_at,
@@ -176,6 +184,7 @@ def _normalize_project(payload: Dict[str, Any]) -> ProjectCard:
     return ProjectCard(
         id=_safe_str(payload.get("id")) or "",
         name=_safe_str(payload.get("name")),
+        workspaceId=_safe_str(payload.get("workspace_id")),
         lastActivityAt=updated_at,
         conversationsCount=conversations_count,
     )
@@ -185,30 +194,31 @@ def _search_like_filter(field: str, term: str) -> Dict[str, Any]:
     return {field: {"_icontains": term}}
 
 
-def _search_projects(client: DirectusClient, term: str, limit: int) -> List[SearchProjectResult]:
+# Alias to the private name the fetchers below call.
+_all_tokens_filter = all_tokens_filter
+
+
+def _fetch_projects(client: DirectusClient, term: str, limit: int) -> List[dict]:
     payload = client.get_items(
         "project",
         {
             "query": {
-                "filter": {**_search_like_filter("name", term), "deleted_at": {"_null": True}},
-                "fields": ["id", "name", "updated_at", "count(conversations)"],
+                "filter": {
+                    "_and": [
+                        _all_tokens_filter(["name"], term),
+                        {"deleted_at": {"_null": True}},
+                    ]
+                },
+                "fields": ["id", "name", "workspace_id", "updated_at", "count(conversations)"],
                 "sort": ["-updated_at"],
                 "limit": limit,
             }
         },
     )
-    if not isinstance(payload, list):
-        return []
-    results: List[SearchProjectResult] = []
-    for item in payload:
-        card = _normalize_project(item)
-        results.append(SearchProjectResult.model_validate(card.model_dump()))
-    return results
+    return payload if isinstance(payload, list) else []
 
 
-def _search_conversations(
-    client: DirectusClient, term: str, limit: int
-) -> List[SearchConversationResult]:
+def _fetch_conversations(client: DirectusClient, term: str, limit: int) -> List[dict]:
     payload = client.get_items(
         "conversation",
         {
@@ -216,12 +226,9 @@ def _search_conversations(
                 "filter": {
                     "_and": [
                         {"deleted_at": {"_null": True}},
-                        {"_or": [
-                            _search_like_filter("participant_name", term),
-                            _search_like_filter("participant_email", term),
-                            _search_like_filter("summary", term),
-                            _search_like_filter("id", term),
-                        ]},
+                        _all_tokens_filter(
+                            ["participant_name", "participant_email", "summary"], term
+                        ),
                     ]
                 },
                 "fields": [
@@ -232,15 +239,11 @@ def _search_conversations(
                     "participant_name",
                     "participant_email",
                     "summary",
-                    {
-                        "project_id": ["id", "name"],
-                    },
-                    {
-                        "chunks": [
-                            "timestamp",
-                            "created_at",
-                        ],
-                    },
+                    "project_id.id",
+                    "project_id.name",
+                    "project_id.workspace_id",
+                    "chunks.timestamp",
+                    "chunks.created_at",
                 ],
                 "deep": {
                     "chunks": {
@@ -253,27 +256,15 @@ def _search_conversations(
             }
         },
     )
-
-    if not isinstance(payload, list):
-        return []
-
-    results: List[SearchConversationResult] = []
-    for item in payload:
-        card = _normalize_conversation(item)
-        results.append(
-            SearchConversationResult(
-                **card.model_dump(),
-                summary=_safe_str(item.get("summary")),
-            )
-        )
-    return results
+    return payload if isinstance(payload, list) else []
 
 
-def _search_chunks(client: DirectusClient, term: str, limit: int) -> List[SearchChunkResult]:
+def _fetch_chunks(client: DirectusClient, term: str, limit: int) -> List[dict]:
     payload = client.get_items(
         "conversation_chunk",
         {
             "query": {
+                # Phrase match (not token-AND): transcripts match a contiguous spoken phrase.
                 "filter": {
                     "_or": [
                         _search_like_filter("transcript", term),
@@ -285,55 +276,20 @@ def _search_chunks(client: DirectusClient, term: str, limit: int) -> List[Search
                     "transcript",
                     "timestamp",
                     "created_at",
-                    {
-                        "conversation_id": ["id", "participant_name"],
-                    },
+                    "conversation_id.id",
+                    "conversation_id.participant_name",
+                    "conversation_id.project_id.id",
+                    "conversation_id.project_id.workspace_id",
                 ],
                 "sort": ["-timestamp"],
                 "limit": limit,
             }
         },
     )
-
-    if not isinstance(payload, list):
-        return []
-
-    results: List[SearchChunkResult] = []
-    for item in payload:
-        conversation_ref = item.get("conversation_id")
-        conversation_id = None
-        conversation_label = None
-        if isinstance(conversation_ref, dict):
-            conversation_id = _safe_str(conversation_ref.get("id"))
-            conversation_label = _safe_str(conversation_ref.get("participant_name"))
-        elif isinstance(conversation_ref, str):
-            conversation_id = conversation_ref
-
-        timestamp = item.get("timestamp") or item.get("created_at")
-        parsed_timestamp = None
-        if isinstance(timestamp, str):
-            try:
-                parsed_timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-            except ValueError:
-                parsed_timestamp = None
-
-        excerpt = _safe_str(item.get("transcript"))
-        if excerpt and len(excerpt) > 280:
-            excerpt = f"{excerpt[:277]}…"
-
-        results.append(
-            SearchChunkResult(
-                id=_safe_str(item.get("id")) or "",
-                conversationId=conversation_id,
-                conversationLabel=conversation_label,
-                excerpt=excerpt,
-                timestamp=parsed_timestamp,
-            )
-        )
-    return results
+    return payload if isinstance(payload, list) else []
 
 
-def _search_chats(client: DirectusClient, term: str, limit: int) -> List[SearchChatResult]:
+def _fetch_chats(client: DirectusClient, term: str, limit: int) -> List[dict]:
     payload = client.get_items(
         "project_chat",
         {
@@ -341,40 +297,92 @@ def _search_chats(client: DirectusClient, term: str, limit: int) -> List[SearchC
                 "filter": {
                     "_and": [
                         {"deleted_at": {"_null": True}},
-                        {"_or": [
-                            _search_like_filter("name", term),
-                            _search_like_filter("id", term),
-                        ]},
+                        _all_tokens_filter(["name"], term),
                     ]
                 },
                 "fields": [
                     "id",
                     "name",
-                    {
-                        "project_id": ["id", "name"],
-                    },
+                    "project_id.id",
+                    "project_id.name",
+                    "project_id.workspace_id",
                 ],
                 "sort": ["-date_updated", "-date_created"],
                 "limit": limit,
             }
         },
     )
+    return payload if isinstance(payload, list) else []
 
-    if not isinstance(payload, list):
-        return []
 
-    results: List[SearchChatResult] = []
-    for item in payload:
-        project_ref = _extract_project_reference(item.get("project_id"))
-        results.append(
-            SearchChatResult(
-                id=_safe_str(item.get("id")) or "",
-                name=_safe_str(item.get("name")),
-                projectId=project_ref.get("id"),
-                projectName=project_ref.get("name"),
-            )
-        )
-    return results
+def _project_id_of_row(row: Dict[str, Any]) -> Optional[str]:
+    """Project id from a row with a `project_id` M2O (conversation, chat)."""
+    ref = row.get("project_id")
+    if isinstance(ref, dict):
+        return _safe_str(ref.get("id"))
+    return _safe_str(ref)
+
+
+def _project_id_of_chunk(row: Dict[str, Any]) -> Optional[str]:
+    conv = row.get("conversation_id")
+    if not isinstance(conv, dict):
+        return None
+    proj = conv.get("project_id")
+    if isinstance(proj, dict):
+        return _safe_str(proj.get("id"))
+    return _safe_str(proj)
+
+
+def _normalize_chunk(item: Dict[str, Any]) -> SearchChunkResult:
+    conversation_ref = item.get("conversation_id")
+    conversation_id = None
+    conversation_label = None
+    project_id = None
+    workspace_id = None
+    if isinstance(conversation_ref, dict):
+        conversation_id = _safe_str(conversation_ref.get("id"))
+        conversation_label = _safe_str(conversation_ref.get("participant_name"))
+        project_ref = conversation_ref.get("project_id")
+        if isinstance(project_ref, dict):
+            project_id = _safe_str(project_ref.get("id"))
+            workspace_id = _safe_str(project_ref.get("workspace_id"))
+        else:
+            project_id = _safe_str(project_ref)
+    elif isinstance(conversation_ref, str):
+        conversation_id = conversation_ref
+
+    timestamp = item.get("timestamp") or item.get("created_at")
+    parsed_timestamp = None
+    if isinstance(timestamp, str):
+        try:
+            parsed_timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        except ValueError:
+            parsed_timestamp = None
+
+    excerpt = _safe_str(item.get("transcript"))
+    if excerpt and len(excerpt) > 280:
+        excerpt = f"{excerpt[:277]}…"
+
+    return SearchChunkResult(
+        id=_safe_str(item.get("id")) or "",
+        conversationId=conversation_id,
+        conversationLabel=conversation_label,
+        projectId=project_id,
+        workspaceId=workspace_id,
+        excerpt=excerpt,
+        timestamp=parsed_timestamp,
+    )
+
+
+def _normalize_chat(item: Dict[str, Any]) -> SearchChatResult:
+    project_ref = _extract_project_reference(item.get("project_id"))
+    return SearchChatResult(
+        id=_safe_str(item.get("id")) or "",
+        name=_safe_str(item.get("name")),
+        projectId=project_ref.get("id"),
+        projectName=project_ref.get("name"),
+        workspaceId=project_ref.get("workspace_id"),
+    )
 
 
 @SearchRouter.get("/search", response_model=SearchResponse)
@@ -388,20 +396,74 @@ async def search_home(
     if not term:
         return SearchResponse()
 
-    client = auth.client
     limit = max(1, min(limit, 25))
-    projects_task = run_in_thread_pool(_search_projects, client, term, limit)
-    conversations_task = run_in_thread_pool(_search_conversations, client, term, limit)
-    chunks_task = run_in_thread_pool(_search_chunks, client, term, limit)
-    chats_task = run_in_thread_pool(_search_chats, client, term, limit)
+    # Post-lockdown the user token can't read app collections, so search
+    # runs with the admin client and results are scoped in the app layer.
+    # Over-fetch so access filtering doesn't starve the visible result count.
+    fetch_limit = limit * 3
 
-    projects, conversations, chunks, chats = await gather(
-        projects_task, conversations_task, chunks_task, chats_task
+    projects_raw, conversations_raw, chunks_raw, chats_raw = await gather(
+        run_in_thread_pool(_fetch_projects, directus, term, fetch_limit),
+        run_in_thread_pool(_fetch_conversations, directus, term, fetch_limit),
+        run_in_thread_pool(_fetch_chunks, directus, term, fetch_limit),
+        run_in_thread_pool(_fetch_chats, directus, term, fetch_limit),
     )
 
+    # Scope every session, including is_admin (Directus staff). The
+    # click-time guard (GET /v2/projects/{id}) has no staff bypass, so an
+    # unscoped staff search returns hits that 404 on click.
+    from dembrane.app_user import resolve_app_user
+    from dembrane.inheritance import get_user_project_access
+
+    app_user = await resolve_app_user(auth.user_id)
+    if not app_user:
+        # Not onboarded: nothing is accessible; mirror the old
+        # empty-results behavior instead of erroring the palette.
+        return SearchResponse()
+    app_user_id = app_user["id"]
+
+    allowed: Dict[str, bool] = {}
+
+    async def _can_access(project_id: Optional[str]) -> bool:
+        if not project_id:
+            return False
+        if project_id not in allowed:
+            access = await get_user_project_access(
+                project_id=project_id,
+                user_id=app_user_id,
+                directus_user_id=auth.user_id,
+            )
+            allowed[project_id] = access is not None
+        return allowed[project_id]
+
+    async def _scope(
+        rows: List[dict], project_id_of: Callable[[Dict[str, Any]], Optional[str]]
+    ) -> List[dict]:
+        out: List[dict] = []
+        for row in rows:
+            if await _can_access(project_id_of(row)):
+                out.append(row)
+                if len(out) >= limit:
+                    break
+        return out
+
+    projects_raw = await _scope(projects_raw, lambda r: _safe_str(r.get("id")))
+    conversations_raw = await _scope(conversations_raw, _project_id_of_row)
+    chunks_raw = await _scope(chunks_raw, _project_id_of_chunk)
+    chats_raw = await _scope(chats_raw, _project_id_of_row)
+
     return SearchResponse(
-        projects=projects,
-        conversations=conversations,
-        transcripts=chunks,
-        chats=chats,
+        projects=[
+            SearchProjectResult.model_validate(_normalize_project(item).model_dump())
+            for item in projects_raw[:limit]
+        ],
+        conversations=[
+            SearchConversationResult(
+                **_normalize_conversation(item).model_dump(),
+                summary=_safe_str(item.get("summary")),
+            )
+            for item in conversations_raw[:limit]
+        ],
+        transcripts=[_normalize_chunk(item) for item in chunks_raw[:limit]],
+        chats=[_normalize_chat(item) for item in chats_raw[:limit]],
     )

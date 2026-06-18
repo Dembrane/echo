@@ -131,6 +131,9 @@ interface Conversation {
 	replies: string[] | ConversationReply[];
 	tags: string[] | ConversationProjectTag[];
 	conversation_artifacts: string[] | ConversationArtifact[];
+	has_transcript?: boolean;
+	last_chunk_at?: string | null;
+	has_only_text_chunks?: boolean;
 }
 
 interface ConversationArtifact {
@@ -271,6 +274,7 @@ interface Project {
 	enable_ai_title_and_tags: boolean | null;
 	get_reply_mode: "summarize" | "brainstorm" | "custom" | null;
 	get_reply_prompt: string | null;
+	host_guide: Record<string, unknown> | null;
 	id: string;
 	image_generation_model: "MODEST" | "EXTRAVAGANT" | "PLACEHOLDER" | null;
 	is_conversation_allowed: boolean;

@@ -6,13 +6,14 @@ import {
 	Group,
 	PasswordInput,
 	Stack,
-	Text,
 	Title,
 } from "@mantine/core";
 import { IconKey } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
+import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { API_BASE_URL } from "@/config";
+import { validatePassword } from "@/lib/passwordPolicy";
 import { toast } from "../common/Toaster";
 
 export const ChangePasswordCard = () => {
@@ -22,22 +23,22 @@ export const ChangePasswordCard = () => {
 
 	const mutation = useMutation({
 		mutationFn: async () => {
-			const response = await fetch(
-				`${API_BASE_URL}/user-settings/password`,
-				{
-					body: JSON.stringify({
-						current_password: currentPassword,
-						new_password: newPassword,
-					}),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "PATCH",
-				},
-			);
+			const response = await fetch(`${API_BASE_URL}/user-settings/password`, {
+				body: JSON.stringify({
+					current_password: currentPassword,
+					new_password: newPassword,
+				}),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "PATCH",
+			});
 			if (!response.ok) {
 				const data = await response.json().catch(() => ({}));
 				throw new Error(data.detail || "Failed to change password");
 			}
+		},
+		onError: (error: Error) => {
+			toast.error(error.message);
 		},
 		onSuccess: () => {
 			toast.success(t`Password changed`);
@@ -45,16 +46,12 @@ export const ChangePasswordCard = () => {
 			setNewPassword("");
 			setConfirmPassword("");
 		},
-		onError: (error: Error) => {
-			toast.error(error.message);
-		},
 	});
 
 	const passwordsMatch = newPassword === confirmPassword;
 	const canSubmit =
 		currentPassword.trim() !== "" &&
-		newPassword.trim() !== "" &&
-		newPassword.length >= 8 &&
+		validatePassword(newPassword).isValid &&
 		passwordsMatch;
 
 	return (
@@ -79,8 +76,9 @@ export const ChangePasswordCard = () => {
 					value={newPassword}
 					onChange={(e) => setNewPassword(e.currentTarget.value)}
 					placeholder={t`Enter new password`}
-					description={t`Minimum 8 characters`}
 				/>
+
+				<PasswordRequirements value={newPassword} />
 
 				<PasswordInput
 					label={t`Confirm new password`}

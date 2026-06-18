@@ -2,6 +2,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Buildings,
 	FolderOpen,
+	Folders,
 	House,
 	ShieldStar,
 	Sparkle,
@@ -9,7 +10,6 @@ import {
 import { useMemo } from "react";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { SettingsBlock } from "../../blocks/SettingsBlock";
 import { NavItem } from "../../primitives/NavItem";
 import { SectionLabel } from "../../primitives/SectionLabel";
 
@@ -71,7 +71,7 @@ export const UserHomeView = () => {
 			{needsOnboarding && (
 				<NavItem to="/onboarding" label={<Trans>Setup</Trans>} icon={Sparkle} />
 			)}
-			<NavItem to="/w" label={<Trans>Home</Trans>} icon={House} end />
+			<NavItem to="/o" label={<Trans>Home</Trans>} icon={House} end />
 
 			{noWorkspaces ? (
 				<>
@@ -112,15 +112,15 @@ export const UserHomeView = () => {
 							pushes
 						/>
 					))}
-					{workspacesWithoutOrg.map((workspace) => (
-						<NavItem
-							key={workspace.id}
-							to={`/w/${workspace.id}/home`}
-							label={workspace.name}
-							icon={FolderOpen}
-							pushes
-						/>
-					))}
+						{workspacesWithoutOrg.map((workspace) => (
+							<NavItem
+								key={workspace.id}
+								to={`/w/${workspace.id}/home`}
+								label={workspace.name}
+								icon={Folders}
+								pushes
+							/>
+						))}
 					{isStaff && (
 						<NavItem
 							to="/admin"
@@ -132,8 +132,6 @@ export const UserHomeView = () => {
 					)}
 				</>
 			)}
-			<div className="mt-auto" />
-			<SettingsBlock />
 		</nav>
 	);
 };

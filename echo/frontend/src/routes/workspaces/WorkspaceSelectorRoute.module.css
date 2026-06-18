@@ -1,0 +1,86 @@
+/* In CSS because Mantine v7 `styles` does not support the :focus selector. */
+.searchInput {
+	height: 52px;
+	font-size: 16px;
+	border-radius: 8px;
+	border: 1px solid var(--mantine-color-gray-3);
+	background-color: transparent;
+}
+
+.searchInput:focus {
+	border-color: var(--mantine-primary-color-filled);
+}
+
+.resultRow {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 16px;
+	padding: 16px 20px;
+	border-radius: 4px;
+	text-align: left;
+	cursor: pointer;
+	color: var(--app-text);
+	background-color: transparent;
+	border: 1px solid var(--mantine-color-gray-3);
+	transition:
+		border-color 0.15s ease,
+		background-color 0.15s ease;
+}
+
+/* Hover is CSS; `.resultRowActive` is the keyboard highlight. */
+.resultRow:hover,
+.resultRowActive {
+	border-color: var(--mantine-primary-color-filled);
+	background-color: var(--mantine-primary-color-light);
+}
+
+.resultIcon {
+	flex-shrink: 0;
+	color: var(--mantine-color-dimmed);
+}
+
+.resultRow:hover .resultIcon,
+.resultRowActive .resultIcon {
+	color: var(--mantine-primary-color-filled);
+}
+
+.resultLabel {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.resultTitle {
+	font-size: 16px;
+	font-weight: 500;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.resultSubtitle {
+	margin-top: 2px;
+	font-size: 12px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--mantine-color-dimmed);
+}
+
+.resultRow:hover .resultSubtitle,
+.resultRowActive .resultSubtitle {
+	color: var(--mantine-primary-color-filled);
+}
+
+/* While hovering, the hovered row wins; the keyboard highlight yields. */
+.resultList:has(.resultRow:hover) .resultRowActive:not(:hover) {
+	border-color: var(--mantine-color-gray-3);
+	background-color: transparent;
+}
+
+.resultList:has(.resultRow:hover) .resultRowActive:not(:hover) .resultIcon,
+.resultList:has(.resultRow:hover) .resultRowActive:not(:hover) .resultSubtitle {
+	color: var(--mantine-color-dimmed);
+}

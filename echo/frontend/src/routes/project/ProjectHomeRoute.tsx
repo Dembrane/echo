@@ -4,6 +4,7 @@ import {
 	Badge,
 	Button,
 	Card,
+	Flex,
 	Group,
 	SimpleGrid,
 	Skeleton,
@@ -12,16 +13,17 @@ import {
 	Title,
 } from "@mantine/core";
 import {
-	ChatCircleDots,
-	ClockClockwise,
-	FileText,
-	PaintBrush,
-	UploadSimple,
+	ChatCircleDotsIcon,
+	FileTextIcon,
+	PaintBrushIcon,
+	UploadSimpleIcon,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
+import { I18nLink } from "@/components/common/i18nLink";
 import { useInfiniteConversationsByProjectId } from "@/components/conversation/hooks";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectById } from "@/components/project/hooks";
+import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
 import { ProjectQRCode } from "@/components/project/ProjectQRCode";
 import { useLatestProjectReport } from "@/components/report/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -60,6 +62,11 @@ export const ProjectHomeRoute = () => {
 				"visibility",
 				"is_conversation_allowed",
 				"default_conversation_title",
+				"anonymize_transcripts",
+				"is_get_reply_enabled",
+				"is_verify_enabled",
+				"default_conversation_ask_for_participant_name",
+				"default_conversation_ask_for_participant_email",
 			],
 		},
 	});
@@ -84,7 +91,7 @@ export const ProjectHomeRoute = () => {
 	const base = `/w/${workspaceId}/projects/${projectId}`;
 
 	return (
-		<PageContainer>
+		<PageContainer width="xl">
 			<Stack gap="xl">
 				<Stack gap={4}>
 					{project?.name ? (
@@ -102,167 +109,175 @@ export const ProjectHomeRoute = () => {
 					</Text>
 				</Stack>
 
-				<ProjectQRCode project={projectQuery.data} />
+				<Flex
+					direction={{ base: "column", md: "row" }}
+					align={{ base: "stretch", md: "flex-start" }}
+					gap="xl"
+				>
+					<PortalSettingsOverview project={project} base={base} />
 
-				<Stack gap="sm">
-					<Text size="xs" c="dimmed" tt="uppercase">
-						<Trans>Jump to</Trans>
-					</Text>
-					<Group gap="sm" wrap="wrap">
-						<Button
-							leftSection={<ChatCircleDots size={16} />}
-							onClick={() => navigate(`${base}/chats/new`)}
-						>
-							<Trans>Start a chat</Trans>
-						</Button>
-						<Button
-							leftSection={<UploadSimple size={16} />}
-							variant="outline"
-							onClick={() => navigate(`${base}/upload`)}
-						>
-							<Trans>Upload</Trans>
-						</Button>
-						<Button
-							leftSection={<PaintBrush size={16} />}
-							variant="outline"
-							onClick={() => navigate(`${base}/portal-editor`)}
-						>
-							<Trans>Portal editor</Trans>
-						</Button>
-						<Button
-							leftSection={<FileText size={16} />}
-							variant="outline"
-							onClick={() => navigate(`${base}/report`)}
-						>
-							<Trans>Report</Trans>
-						</Button>
-					</Group>
-				</Stack>
+					<ProjectQRCode project={projectQuery.data} />
 
-				<Stack gap="sm">
-					<Group justify="space-between" align="center">
+					<Stack gap="sm" style={{ flex: 1 }}>
 						<Text size="xs" c="dimmed" tt="uppercase">
-							<Trans>Latest conversations</Trans>
+							<Trans>Jump to</Trans>
 						</Text>
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => navigate(`${base}/conversations`)}
-						>
-							<Trans>Open all</Trans>
-						</Button>
-					</Group>
+								<Group gap="sm" wrap="wrap">
+									<Button
+										size="sm"
+										leftSection={<ChatCircleDotsIcon size={16} />}
+										onClick={() => navigate(`${base}/chats/new`)}
+									>
+										<Trans>Start a chat</Trans>
+									</Button>
+									<Button
+										size="sm"
+										leftSection={<UploadSimpleIcon size={16} />}
+										variant="outline"
+										onClick={() => navigate(`${base}/upload`)}
+									>
+										<Trans>Upload</Trans>
+									</Button>
+									<Button
+										size="sm"
+										leftSection={<PaintBrushIcon size={16} />}
+										variant="outline"
+										onClick={() => navigate(`${base}/portal-editor`)}
+									>
+										<Trans>Portal editor</Trans>
+									</Button>
+									<Button
+										size="sm"
+										leftSection={<FileTextIcon size={16} />}
+										variant="outline"
+										onClick={() => navigate(`${base}/report`)}
+									>
+										<Trans>Report</Trans>
+									</Button>
+								</Group>
+							</Stack>
+						</Flex>
 
-					{recentConversationsQuery.isLoading ? (
-						<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-							<Skeleton height={128} radius="sm" />
-							<Skeleton height={128} radius="sm" />
-						</SimpleGrid>
-					) : recentConversations.length > 0 ? (
-						<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-							{recentConversations.slice(0, 2).map((conversation) => {
-								const tags =
-									(conversation.tags as ConversationProjectTag[] | undefined) ??
-									[];
-								return (
-									<Card key={conversation.id} withBorder p="md" radius="sm">
-										<Stack gap="xs">
-											<Group
-												justify="space-between"
-												align="flex-start"
-												wrap="nowrap"
+						<Stack gap="sm">
+							<Group justify="space-between" align="center">
+								<Text size="xs" c="dimmed" tt="uppercase">
+									<Trans>Latest conversations</Trans>
+								</Text>
+								<Button
+									variant="subtle"
+									size="xs"
+									onClick={() => navigate(`${base}/conversations`)}
+								>
+									<Trans>Open all</Trans>
+								</Button>
+							</Group>
+
+							{recentConversationsQuery.isLoading ? (
+								<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+									<Skeleton height={128} radius="sm" />
+									<Skeleton height={128} radius="sm" />
+								</SimpleGrid>
+							) : recentConversations.length > 0 ? (
+								<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+									{recentConversations.slice(0, 2).map((conversation) => {
+										const tags =
+											(conversation.tags as
+												| ConversationProjectTag[]
+												| undefined) ?? [];
+										return (
+											<I18nLink
+												key={conversation.id}
+												to={`${base}/conversation/${conversation.id}`}
+												className="no-underline block h-full"
 											>
-												<Stack gap={2} style={{ minWidth: 0 }}>
-													<Text size="sm" fw={500} truncate>
-														{conversationTitle(conversation)}
-													</Text>
-													<Text size="xs" c="dimmed">
-														{conversation.created_at
-															? new Date(
-																	conversation.created_at,
-																).toLocaleDateString()
-															: ""}
-													</Text>
-												</Stack>
-												<Button
-													variant="light"
-													size="xs"
-													onClick={() =>
-														navigate(
-															`${base}/conversation/${conversation.id}/overview`,
-														)
-													}
+												<Card
+													component="a"
+													withBorder
+													p="md"
+													radius="sm"
+													className="h-full hover:!border-primary-400 transition-colors"
 												>
-													<Trans>Open</Trans>
-												</Button>
+													<Stack gap="xs">
+														<Stack gap={2} style={{ minWidth: 0 }}>
+															<Text size="sm" fw={500} truncate>
+																{conversationTitle(conversation)}
+															</Text>
+															<Text size="xs" c="dimmed">
+																{conversation.created_at
+																	? new Date(
+																			conversation.created_at,
+																		).toLocaleDateString()
+																	: ""}
+															</Text>
+														</Stack>
+
+														<Text size="sm" c="dimmed" style={lineClampStyle}>
+															{conversation.summary?.trim() || (
+																<Trans>No summary yet</Trans>
+															)}
+														</Text>
+
+														{tags.length > 0 && (
+															<Group gap={6} wrap="wrap">
+																{tags.slice(0, 4).map((tag) => {
+																	const label = tagText(tag);
+																	if (!label) return null;
+																	return (
+																		<Badge
+																			key={tag.id}
+																			size="xs"
+																			variant="light"
+																			color="gray"
+																			radius="sm"
+																		>
+																			{label}
+																		</Badge>
+																	);
+																})}
+															</Group>
+														)}
+													</Stack>
+												</Card>
+											</I18nLink>
+										);
+									})}
+								</SimpleGrid>
+							) : null}
+						</Stack>
+
+						{report && reportTitle && (
+							<Stack gap="sm">
+								<Text size="xs" c="dimmed" tt="uppercase">
+									<Trans>Latest report</Trans>
+								</Text>
+								<I18nLink to={`${base}/report`} className="no-underline block">
+									<Card
+										component="a"
+										withBorder
+										p="md"
+										radius="sm"
+										className="hover:!border-primary-400 transition-colors"
+									>
+										<Stack gap={2}>
+											<Group gap="xs" align="center">
+												<Text size="sm" fw={500}>
+													{reportTitle}
+												</Text>
+												<Badge size="xs" variant="light">
+													{report.status}
+												</Badge>
 											</Group>
-
-											<Text size="sm" c="dimmed" style={lineClampStyle}>
-												{conversation.summary?.trim() || (
-													<Trans>No summary yet</Trans>
-												)}
-											</Text>
-
-											{tags.length > 0 && (
-												<Group gap={6} wrap="wrap">
-													{tags.slice(0, 4).map((tag) => {
-														const label = tagText(tag);
-														if (!label) return null;
-														return (
-															<Badge
-																key={tag.id}
-																size="xs"
-																variant="light"
-																color="gray"
-																radius="sm"
-															>
-																{label}
-															</Badge>
-														);
-													})}
-												</Group>
+											{report.date_created && (
+												<Text size="xs" c="dimmed">
+													{new Date(report.date_created).toLocaleString()}
+												</Text>
 											)}
 										</Stack>
 									</Card>
-								);
-							})}
-						</SimpleGrid>
-					) : null}
-				</Stack>
-
-				{report && reportTitle && (
-					<Card withBorder p="md" radius="sm">
-						<Group justify="space-between" align="center">
-							<Stack gap={2}>
-								<Group gap="xs" align="center">
-									<ClockClockwise size={14} />
-									<Text size="sm" fw={500}>
-										<Trans>Latest report</Trans>
-									</Text>
-									<Badge size="xs" variant="light">
-										{report.status}
-									</Badge>
-								</Group>
-								<Text size="sm" fw={500}>
-									{reportTitle}
-								</Text>
-								{report.date_created && (
-									<Text size="xs" c="dimmed">
-										{new Date(report.date_created).toLocaleString()}
-									</Text>
-								)}
+								</I18nLink>
 							</Stack>
-							<Button
-								variant="light"
-								size="xs"
-								onClick={() => navigate(`${base}/report`)}
-							>
-								<Trans>Open</Trans>
-							</Button>
-						</Group>
-					</Card>
-				)}
-			</Stack>
-		</PageContainer>
-	);
-};
+						)}
+					</Stack>
+			</PageContainer>
+		);
+	};

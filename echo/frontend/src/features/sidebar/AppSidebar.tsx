@@ -7,6 +7,7 @@ import { useRecordRecents } from "./hooks/useRecordRecents";
 import { useSidebarView } from "./hooks/useSidebarView";
 import { SidebarHeader } from "./shell/SidebarHeader";
 import { SidebarShell } from "./shell/SidebarShell";
+import { UserMenu } from "./shell/UserMenu";
 import { useSidebarWhitelabelLogo } from "./shell/useSidebarWhitelabelLogo";
 import { AdminHomeView } from "./views/admin/AdminHomeView";
 import { HelpView } from "./views/HelpView";
@@ -50,7 +51,20 @@ export const AppSidebar = () => {
 	})();
 
 	return (
-		<SidebarShell header={<SidebarHeader />} footer={<HelpBlock />}>
+		<SidebarShell
+			header={<SidebarHeader />}
+			footer={
+				<>
+					<HelpBlock />
+					<div
+						className="mt-1 border-t pt-1.5 pb-1"
+						style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
+					>
+						<UserMenu />
+					</div>
+				</>
+			}
+		>
 			<div
 				className="flex shrink-0 flex-col gap-0.5 border-b p-1.5"
 				style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
@@ -67,7 +81,7 @@ export const AppSidebar = () => {
 
 const ViewError = () => (
 	<div
-		className="flex flex-col items-start gap-1 p-3 text-[12px]"
+		className="flex flex-col items-start gap-1 p-3 text-xs"
 		style={{ color: "rgba(45, 45, 44, 0.55)" }}
 	>
 		<div>This view couldn't load.</div>

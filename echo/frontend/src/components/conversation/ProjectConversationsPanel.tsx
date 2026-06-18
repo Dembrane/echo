@@ -19,7 +19,6 @@ import {
 	Stack,
 	Switch,
 	Text,
-	Textarea,
 	TextInput,
 	ThemeIcon,
 	Title,
@@ -28,7 +27,6 @@ import {
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { DetectiveIcon } from "@phosphor-icons/react";
 import {
-	IconCheck,
 	IconEdit,
 	IconExternalLink,
 	IconInfoCircle,
@@ -55,6 +53,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { testId } from "@/lib/testUtils";
 import { ConversationStatusIndicators } from "./ConversationAccordion";
+import { ConversationEdit } from "./ConversationEdit";
 import {
 	useAddChatContextMutation,
 	useConversationsCountByProjectId,
@@ -62,7 +61,6 @@ import {
 	useInfiniteConversationsByProjectId,
 	useRemainingConversationsCount,
 	useSelectAllContextMutation,
-	useUpdateConversationByIdMutation,
 } from "./hooks";
 
 type SortOption = {
@@ -82,12 +80,6 @@ type ProjectConversationsPanelProps = {
 	selectionChatId?: string;
 	selectionMode?: boolean;
 	showUpload?: boolean;
-};
-
-type EditConversationValues = {
-	participant_name: string;
-	summary: string;
-	title: string;
 };
 
 const lineClampStyle = {
@@ -110,12 +102,6 @@ const getTagText = (tag: ConversationProjectTag) => {
 	const projectTag = tag.project_tag_id as ProjectTag | string | null;
 	return typeof projectTag === "object" && projectTag ? projectTag.text : null;
 };
-
-const hasTranscriptContent = (conversation: Conversation) =>
-	conversation.chunks?.some((chunk) => {
-		const transcript = (chunk as ConversationChunk).transcript;
-		return typeof transcript === "string" && transcript.trim().length > 0;
-	}) ?? false;
 
 const hasVerifiedArtifacts = (conversation: Conversation) =>
 	conversation.conversation_artifacts?.some(
@@ -172,18 +158,15 @@ const ConversationSelectionCheckbox = ({
 		(c) => c.conversation_id === conversation.id && c.locked,
 	);
 	const isOverCapLocked = !!conversation.locked;
-	const hasContent = hasTranscriptContent(conversation);
-	const isDisabled = isChatLocked || isOverCapLocked || !hasContent;
+	const isDisabled = isChatLocked || isOverCapLocked;
 
 	const tooltipLabel = isOverCapLocked
 		? t`Conversation locked. Upgrade to add it.`
 		: isChatLocked
 			? t`Already used in this chat`
-			: !hasContent
-				? t`This conversation has no transcript yet`
-				: isSelected
-					? t`Remove from chat`
-					: t`Add to chat`;
+			: isSelected
+				? t`Remove from chat`
+				: t`Add to chat`;
 
 	const handleChange = () => {
 		if (isSelected) {
@@ -428,11 +411,6 @@ export const ProjectConversationsPanel = ({
 	const [editOpened, editHandlers] = useDisclosure(false);
 	const [editingConversation, setEditingConversation] =
 		useState<Conversation | null>(null);
-	const [editValues, setEditValues] = useState<EditConversationValues>({
-		participant_name: "",
-		summary: "",
-		title: "",
-	});
 
 	const projectQuery = useProjectById({
 		projectId,
@@ -457,7 +435,6 @@ export const ProjectConversationsPanel = ({
 			?.workspace_id ??
 		null;
 	const { usageGates } = useWorkspaceUsage(resolvedWorkspaceId);
-	const updateConversationMutation = useUpdateConversationByIdMutation();
 	const selectAllMutation = useSelectAllContextMutation();
 
 	const allProjectTags = useMemo(
@@ -507,7 +484,7 @@ export const ProjectConversationsPanel = ({
 
 	const conversationsQuery = useInfiniteConversationsByProjectId(
 		projectId,
-		true,
+		false,
 		false,
 		conversationQuery,
 		undefined,
@@ -580,41 +557,18 @@ export const ProjectConversationsPanel = ({
 	const openConversation = (conversation: Conversation) => {
 		if (!resolvedWorkspaceId) return;
 		navigate(
-			`/w/${resolvedWorkspaceId}/projects/${projectId}/conversation/${conversation.id}/overview`,
+			`/w/${resolvedWorkspaceId}/projects/${projectId}/conversation/${conversation.id}`,
 		);
 	};
 
 	const openEdit = (conversation: Conversation) => {
 		setEditingConversation(conversation);
-		setEditValues({
-			participant_name: conversation.participant_name ?? "",
-			summary: conversation.summary ?? "",
-			title: conversation.title ?? "",
-		});
 		editHandlers.open();
 	};
 
 	const closeEdit = () => {
 		editHandlers.close();
 		setEditingConversation(null);
-	};
-
-	const saveConversation = async () => {
-		if (!editingConversation) return;
-		try {
-			await updateConversationMutation.mutateAsync({
-				id: editingConversation.id,
-				payload: {
-					participant_name: editValues.participant_name.trim(),
-					summary: editValues.summary.trim(),
-					title: editValues.title.trim(),
-				},
-			});
-			toast.success(t`Conversation saved`);
-			closeEdit();
-		} catch (_error) {
-			toast.error(t`Failed to save conversation`);
-		}
 	};
 
 	const resetFilters = () => {
@@ -667,7 +621,7 @@ export const ProjectConversationsPanel = ({
 						<Text size="sm" c="dimmed">
 							{selectionMode ? (
 								<Trans>
-									Search and choose the conversations for this chat.
+									Search and select the conversations for this chat.
 								</Trans>
 							) : (
 								<Trans>
@@ -861,55 +815,17 @@ export const ProjectConversationsPanel = ({
 			<Modal
 				opened={editOpened}
 				onClose={closeEdit}
-				title={t`Edit conversation`}
 				size="lg"
+				{...testId("conversation-edit-modal")}
 			>
-				<Stack>
-					<TextInput
-						label={t`Title`}
-						value={editValues.title}
-						onChange={(event) =>
-							setEditValues((current) => ({
-								...current,
-								title: event.currentTarget.value,
-							}))
-						}
+				{editingConversation && (
+					<ConversationEdit
+						key={editingConversation.id}
+						conversation={editingConversation}
+						projectTags={allProjectTags}
+						showSummary
 					/>
-					<TextInput
-						label={t`Participant name`}
-						value={editValues.participant_name}
-						onChange={(event) =>
-							setEditValues((current) => ({
-								...current,
-								participant_name: event.currentTarget.value,
-							}))
-						}
-					/>
-					<Textarea
-						label={t`Summary`}
-						minRows={4}
-						autosize
-						value={editValues.summary}
-						onChange={(event) =>
-							setEditValues((current) => ({
-								...current,
-								summary: event.currentTarget.value,
-							}))
-						}
-					/>
-					<Group justify="flex-end">
-						<Button variant="subtle" onClick={closeEdit}>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button
-							onClick={saveConversation}
-							loading={updateConversationMutation.isPending}
-							leftSection={<IconCheck size={16} />}
-						>
-							<Trans>Save</Trans>
-						</Button>
-					</Group>
-				</Stack>
+				)}
 			</Modal>
 
 			{selectionMode && ENABLE_CHAT_SELECT_ALL && (

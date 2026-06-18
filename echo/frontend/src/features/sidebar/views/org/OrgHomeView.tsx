@@ -1,12 +1,13 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { AppWindowIcon, FolderIcon, GearIcon } from "@phosphor-icons/react";
+import { AppWindowIcon, FolderIcon, Folders, GearIcon, UsersIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useSidebarView } from "../../hooks/useSidebarView";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
 import { SectionLabel } from "../../primitives/SectionLabel";
@@ -36,7 +37,10 @@ export const OrgHomeView = () => {
 		orgId?: string;
 		organisationId?: string;
 	}>();
-	const orgId = routeOrgId ?? organisationId;
+	// On /w/new (request-workspace) the org isn't a path param — it rides in on
+	// the query string and is surfaced through the resolved sidebar view.
+	const { params: sidebarParams } = useSidebarView();
+	const orgId = routeOrgId ?? organisationId ?? sidebarParams.orgId;
 	const { workspaces: myWorkspaces } = useWorkspace();
 	const { data: me } = useV2Me();
 	const isManager = useMemo(() => {
@@ -63,13 +67,16 @@ export const OrgHomeView = () => {
 		(myOrgWorkspaces.length > 0 &&
 			myOrgWorkspaces.every((w) => w.role === "external"));
 
-	const orgName = myOrgWorkspaces[0]?.org_name ?? t`Organisation`;
+	const orgName =
+		myOrgWorkspaces[0]?.org_name ??
+		me?.orgs.find((o) => o.id === orgId)?.name ??
+		t`Organisation`;
 
 	const displayList = useMemo(() => {
 		// Admins/owners see the whole org roster (they can open any workspace).
 		// Everyone else (member, billing, external) sees only the workspaces
 		// they directly belong to, so the sidebar never shows a workspace that
-		// dead-links on click. Discovering other workspaces happens on /w.
+		// dead-links on click. Discovering other workspaces happens on /o.
 		if (!isManager) {
 			return myOrgWorkspaces.map((w) => ({
 				id: w.id,
@@ -104,22 +111,32 @@ export const OrgHomeView = () => {
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
-			<BackButton to="/w" label={<Trans>Home</Trans>} />
-
-			<div
-				className="px-2 pb-1 pt-2 text-[13px] leading-tight"
-				style={{ color: "#2d2d2c" }}
-			>
-				<div className="truncate">{orgName}</div>
-			</div>
+			{/* The back button doubles as the section title: its centered label is
+			    the org name (the current context), not the destination. */}
+			<BackButton to="/o" label={orgName} center />
 
 			{!isExternal && (
-				<NavItem
-					to={`${base}/overview`}
-					label={<Trans>Overview</Trans>}
-					icon={AppWindowIcon}
-					end
-				/>
+				<>
+						<NavItem
+							to={`${base}/overview`}
+							label={<Trans>Overview</Trans>}
+							icon={AppWindowIcon}
+							end
+						/>
+							<NavItem
+								to={`${base}/members`}
+								label={<Trans>Members</Trans>}
+								icon={UsersIcon}
+							/>
+						{/* Settings is the last clickable item under the org title,
+						    directly below Overview and above the Workspaces section. */}
+						<NavItem
+							to={`${base}/settings/general`}
+							label={<Trans>Settings</Trans>}
+							icon={GearIcon}
+							pushes
+						/>
+				</>
 			)}
 
 			{showWorkspaces && (
@@ -127,28 +144,16 @@ export const OrgHomeView = () => {
 					<SectionLabel>
 						<Trans>Workspaces</Trans>
 					</SectionLabel>
-					{displayList.map((ws) => (
-						<NavItem
-							key={ws.id}
-							to={`/w/${ws.id}/home`}
-							label={ws.name}
-							icon={FolderIcon}
-							badge={ws.isExternal ? <Trans>External</Trans> : undefined}
-							pushes
-						/>
-					))}
-				</>
-			)}
-
-			{!isExternal && (
-				<>
-					<div className="mt-auto" />
-					<NavItem
-						to={`${base}/settings/general`}
-						label={<Trans>Settings</Trans>}
-						icon={GearIcon}
-						pushes
-					/>
+						{displayList.map((ws) => (
+							<NavItem
+								key={ws.id}
+								to={`/w/${ws.id}/home`}
+								label={ws.name}
+								icon={Folders}
+								badge={ws.isExternal ? <Trans>External</Trans> : undefined}
+								pushes
+							/>
+						))}
 				</>
 			)}
 		</nav>

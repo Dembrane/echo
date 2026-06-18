@@ -127,7 +127,7 @@ export const RefineSelection = () => {
 						</Group>
 						<Text c="dimmed" ta="center">
 							<Trans id="participant.refine.go.deeper.description">
-								Get an immediate reply from Dembrane to help you deepen the
+								Get an immediate reply from dembrane to help you deepen the
 								conversation.
 							</Trans>
 						</Text>
