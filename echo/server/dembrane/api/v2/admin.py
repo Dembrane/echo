@@ -52,6 +52,10 @@ class BillingRow(BaseModel):
     org_id: str
     org_name: str
     billing_account_id: Optional[str] = None
+    # Scope of the owning billing account: "organisation" (org-scoped, the org
+    # is the payer and may pool many workspaces) or "workspace" (billed on its
+    # own). Drives the "Organisation account" / "Workspace account" label.
+    account_scope: Optional[Literal["organisation", "workspace"]] = None
     tier: str
     is_partner_owned: bool = False
     billed_to_team_id: Optional[str] = None
@@ -209,12 +213,19 @@ async def _all_active_workspaces() -> list[dict]:
                     "id",
                     "name",
                     "org_id",
+                    # JSON column; staff "reset monthly usage" stamps
+                    # settings.usage_reset_at here as a per-cycle floor.
+                    "settings",
                     # Request the account id explicitly. Asking for nested
                     # fields (billing_account_id.tier, ...) makes Directus
                     # return billing_account_id as a joined object, so a bare
                     # "billing_account_id" entry would come back as that dict,
                     # not the scalar id BillingRow expects.
                     "billing_account_id.id",
+                    # Scope discriminator: an org-scoped account carries org_id;
+                    # a workspace-scoped account carries workspace_id instead.
+                    "billing_account_id.org_id",
+                    "billing_account_id.workspace_id",
                     "billed_to_team_id",
                     "effective_client_team_id",
                     *nested_billing_fields(),
@@ -232,7 +243,16 @@ async def _all_active_workspaces() -> list[dict]:
     for ws in out:
         account = ws.get("billing_account_id")
         ws.update(billing_from_workspace(ws))
-        ws["billing_account_id"] = account.get("id") if isinstance(account, dict) else account
+        if isinstance(account, dict):
+            ws["billing_account_id"] = account.get("id")
+            # Org-scoped accounts carry org_id; workspace-scoped ones carry
+            # workspace_id. org_id wins when both are present (shared account).
+            ws["account_scope"] = (
+                "organisation" if account.get("org_id") else "workspace"
+            )
+        else:
+            ws["billing_account_id"] = account
+            ws["account_scope"] = None
     return out
 
 
@@ -254,9 +274,23 @@ async def _org_name_map(org_ids: list[str]) -> dict[str, str]:
     return {r["id"]: r.get("name", "") for r in rows}
 
 
-async def _workspace_hours_this_cycle(ws_id: str, cycle_start: str, cycle_end: str) -> float:
+async def _workspace_hours_this_cycle(
+    ws_id: str,
+    cycle_start: str,
+    cycle_end: str,
+    reset_at: Optional[str] = None,
+) -> float:
     """Sum conversation.duration (seconds) → hours for this workspace's
-    projects in the current cycle."""
+    projects in the current cycle.
+
+    `reset_at` (workspace.settings.usage_reset_at) acts as a per-cycle floor:
+    a staff "reset monthly usage" stamps it, and we then only count
+    conversations created at/after it. It only applies when it falls inside
+    the displayed cycle, so past months and later cycles are unaffected.
+    """
+    effective_start = cycle_start
+    if reset_at and cycle_start <= reset_at < cycle_end:
+        effective_start = reset_at
     projects = await async_directus.get_items(
         "project",
         {
@@ -278,7 +312,7 @@ async def _workspace_hours_this_cycle(ws_id: str, cycle_start: str, cycle_end: s
             "query": {
                 "filter": {
                     "project_id": {"_in": project_ids},
-                    "created_at": {"_gte": cycle_start, "_lt": cycle_end},
+                    "created_at": {"_gte": effective_start, "_lt": cycle_end},
                     "deleted_at": {"_null": True},
                 },
                 "fields": ["duration"],
@@ -385,7 +419,10 @@ async def billing_rollup(
         ws_id = ws["id"]
         tier = ws.get("tier", "pioneer")
         cap = get_capacity(tier)
-        hours = await _workspace_hours_this_cycle(ws_id, cycle_start, cycle_end)
+        reset_at = (ws.get("settings") or {}).get("usage_reset_at")
+        hours = await _workspace_hours_this_cycle(
+            ws_id, cycle_start, cycle_end, reset_at=reset_at
+        )
         # Use the unified inheritance-aware count so billing arithmetic
         # matches what enforcement/usage endpoints see (derived org admins
         # included). Direct workspace_membership queries miss derived rows
@@ -402,9 +439,9 @@ async def billing_rollup(
         hour_overage_eur = round(over_hours * hour_rate, 2) if hour_rate else 0.0
         seat_overage_eur = round(over_seats * seat_rate, 2) if seat_rate else 0.0
         base_price = TIER_BASE_PRICE_EUR.get(tier)
-        total = None
-        if base_price is not None:
-            total = round(base_price + hour_overage_eur + seat_overage_eur, 2)
+        # Per-seat rework removed seat/hour overage, so the monthly forecast is
+        # just the tier base. (Discount is applied separately in Wave A.)
+        total = base_price
 
         hours_pct = round(hours / included_hours, 3) if included_hours else None
         pilot_block = bool(
@@ -435,6 +472,7 @@ async def billing_rollup(
             org_id=ws.get("org_id", ""),
             org_name=org_name_by_id.get(ws.get("org_id", "")) or "",
             billing_account_id=ws.get("billing_account_id"),
+            account_scope=ws.get("account_scope"),
             tier=tier,
             is_partner_owned=is_partner,
             billed_to_team_id=billed_to,
@@ -500,7 +538,9 @@ async def billing_rollup(
         active_workspace_count=active_count,
         total_base_eur=round(total_base, 2),
         total_overage_eur=round(total_overage, 2),
-        total_forecast_eur=round(total_base + total_overage, 2),
+        # Forecast is the base total now; overage was removed by the per-seat
+        # rework. Kept as a field so the UI headline stays stable.
+        total_forecast_eur=round(total_base, 2),
         mrr_eur=round(mrr, 2),
         logins_last_30d=logins_30d,
         rows=rows,
@@ -725,6 +765,197 @@ async def grant_account_trial(
         "billing_account_id": account_id,
         "tier": body.tier,
         "tier_expires_at": expires_at,
+    }
+
+
+# ── Staff workspace controls (ISSUE-024 sub-item 6) ──
+#
+# Safe staff edits wired from the dashboard kebab. "Change tier" reuses the
+# existing PATCH /v2/workspaces/{id}/tier (downgrade effects + notifications
+# live there); only the two below are new here. transfer-to-partner and
+# delete-workspace stay unwired (destructive, deferred to their own issues).
+
+
+class WorkspaceMemberRow(BaseModel):
+    membership_id: str
+    user_id: Optional[str] = None
+    display_name: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
+
+
+@router.get(
+    "/workspaces/{workspace_id}/members", response_model=list[WorkspaceMemberRow]
+)
+async def list_workspace_members(
+    workspace_id: str,
+    auth: DependencyDirectusSession,
+) -> list[WorkspaceMemberRow]:
+    """Staff-only: every non-deleted membership of a workspace, enriched with
+    the user's name + email. Feeds the "change workspace admin" picker. Skips
+    the workspace-context policy plumbing because staff already cleared the
+    is_admin gate."""
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    mems = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": workspace_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id", "user_id", "role"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(mems, list) or not mems:
+        return []
+    user_ids = [m["user_id"] for m in mems if m.get("user_id")]
+    users_by_id: dict[str, dict] = {}
+    if user_ids:
+        users = await async_directus.get_items(
+            "app_user",
+            {
+                "query": {
+                    "filter": {"id": {"_in": user_ids}},
+                    "fields": ["id", "display_name", "email"],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(users, list):
+            users_by_id = {u["id"]: u for u in users}
+    out: list[WorkspaceMemberRow] = []
+    for m in mems:
+        u = users_by_id.get(m.get("user_id") or "", {})
+        out.append(
+            WorkspaceMemberRow(
+                membership_id=str(m["id"]),
+                user_id=m.get("user_id"),
+                display_name=u.get("display_name"),
+                email=u.get("email"),
+                role=m.get("role"),
+            )
+        )
+    return out
+
+
+class ChangeWorkspaceAdminBody(BaseModel):
+    membership_id: str = Field(
+        description="workspace_membership row to promote to admin.",
+    )
+
+
+@router.post("/workspaces/{workspace_id}/change-admin")
+async def change_workspace_admin(
+    workspace_id: str,
+    body: ChangeWorkspaceAdminBody,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Staff-only: promote a workspace member to admin.
+
+    Used when the current admin is unreachable. Promotes the named membership
+    to "admin"; existing admins keep their role (no demotion, so the workspace
+    can never be stranded without an admin). The membership must belong to this
+    workspace and not be an external row (ADR-0003 boundary).
+    """
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    ws = await async_directus.get_item("workspace", workspace_id)
+    if not ws or ws.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    membership = await async_directus.get_item("workspace_membership", body.membership_id)
+    if (
+        not membership
+        or membership.get("deleted_at")
+        or membership.get("workspace_id") != workspace_id
+    ):
+        raise HTTPException(
+            status_code=404, detail="Membership not found in this workspace"
+        )
+    if membership.get("role") == "external":
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot promote an external member to admin. Add them to the org first.",
+        )
+
+    if membership.get("role") not in ("admin", "owner"):
+        await async_directus.update_item(
+            "workspace_membership", body.membership_id, {"role": "admin"}
+        )
+    logger.info(
+        "staff promoted membership %s to admin on workspace %s by staff %s",
+        body.membership_id,
+        workspace_id,
+        auth.user_id,
+    )
+    return {
+        "status": "ok",
+        "workspace_id": workspace_id,
+        "membership_id": body.membership_id,
+        "role": "admin",
+    }
+
+
+class ResetUsageBody(BaseModel):
+    reason: str = Field(
+        min_length=1,
+        max_length=500,
+        description="Internal note for the staff audit trail.",
+    )
+
+
+@router.post("/workspaces/{workspace_id}/reset-usage")
+async def reset_workspace_usage(
+    workspace_id: str,
+    body: ResetUsageBody,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Staff-only: zero this cycle's recorded audio hours for a workspace.
+
+    Q3 (ISSUE-024) default: stamps `settings.usage_reset_at` to now. The hours
+    rollup treats that timestamp as a per-cycle floor, so only conversations
+    created after it count toward this month's usage. Conversation rows are NOT
+    deleted (audit-preserving). The Directus update on the workspace produces a
+    directus_activity row; the reason is logged for the staff audit trail.
+    """
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    ws = await async_directus.get_item("workspace", workspace_id)
+    if not ws or ws.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    settings = ws.get("settings") or {}
+    settings["usage_reset_at"] = now_iso
+    settings["usage_reset_by"] = auth.user_id
+    settings["usage_reset_reason"] = body.reason
+    await async_directus.update_item("workspace", workspace_id, {"settings": settings})
+
+    # Bust cached usage so the new floor takes effect on the next read.
+    from dembrane.cache_utils import invalidate_org_usage, invalidate_workspace_usage
+
+    await invalidate_workspace_usage(workspace_id)
+    if ws.get("org_id"):
+        await invalidate_org_usage(ws["org_id"])
+
+    logger.info(
+        "staff reset monthly usage on workspace %s at %s by staff %s, reason=%r",
+        workspace_id,
+        now_iso,
+        auth.user_id,
+        body.reason,
+    )
+    return {
+        "status": "ok",
+        "workspace_id": workspace_id,
+        "usage_reset_at": now_iso,
     }
 
 

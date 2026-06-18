@@ -61,10 +61,10 @@ import {
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { I18nLink } from "@/components/common/i18nLink";
+import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
-import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
-import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 import { type BillingPeriod, TIER_ORDER, type Tier } from "@/lib/tiers";
@@ -93,6 +93,7 @@ type BillingRow = {
 	org_id: string;
 	org_name: string;
 	billing_account_id: string | null;
+	account_scope: "organisation" | "workspace" | null;
 	tier: string;
 	is_partner_owned: boolean;
 	billed_to_team_id: string | null;
@@ -419,7 +420,7 @@ function DiscountEditor({
 
 /**
  * Live staff action: grant a comped one-month Changemaker reverse trial on the
- * row's org billing account. Auto-reverts to Free at expiry (expiry cron).
+ * row's billing account. Auto-reverts to Free at expiry (expiry cron).
  */
 function GrantTrialControl({ accountId }: { accountId: string }) {
 	const queryClient = useQueryClient();
@@ -455,8 +456,8 @@ function GrantTrialControl({ accountId }: { accountId: string }) {
 					</Text>
 					<Text size="xs" c="dimmed">
 						<Trans>
-							One month of Changemaker on this org, comped. Auto-reverts to Free
-							at expiry.
+							One month of Changemaker on this account, comped. Auto-reverts to
+							Free at expiry.
 						</Trans>
 					</Text>
 					{mutation.isError && (
@@ -484,8 +485,331 @@ function GrantTrialControl({ accountId }: { accountId: string }) {
 }
 
 /**
- * Actions modal for a workspace row. Includes the discount editor
- * (live, staff-only) and mocked placeholders for future actions.
+ * Account-scope label for a workspace row. An org-scoped billing account is
+ * the org's shared account ("Organisation account"); a workspace-scoped one is
+ * billed on its own ("Workspace account").
+ */
+function accountScopeLabel(scope: BillingRow["account_scope"]): string {
+	if (scope === "organisation") return t`Organisation account`;
+	if (scope === "workspace") return t`Workspace account`;
+	return t`Account`;
+}
+
+/**
+ * Staff action: change a workspace's tier. Reuses the existing staff endpoint
+ * PATCH /v2/workspaces/{id}/tier (downgrade effects + notifications live
+ * there). Confirms before applying because a downgrade strips features.
+ */
+function ChangeTierControl({ row }: { row: BillingRow }) {
+	const queryClient = useQueryClient();
+	const [tier, setTier] = useState<string | null>(row.tier);
+	const [confirmOpen, { open: openConfirm, close: closeConfirm }] =
+		useDisclosure(false);
+
+	const mutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/workspaces/${row.workspace_id}/tier`,
+				{
+					body: JSON.stringify({ reason: "Staff dashboard tier change", tier }),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "PATCH",
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json();
+		},
+		onError: (e) => {
+			closeConfirm();
+			toast.error((e as Error).message);
+		},
+		onSuccess: () => {
+			closeConfirm();
+			toast.success(t`Tier changed`);
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "admin", "billing-rollup"],
+			});
+		},
+	});
+
+	// pilot is staff-only legacy; offer the live per-seat tiers.
+	const tierData = TIER_ORDER.map((value) => ({
+		label: value.charAt(0).toUpperCase() + value.slice(1),
+		value,
+	}));
+
+	return (
+		<Paper withBorder radius="sm" p="sm">
+			<Stack gap="xs">
+				<Text size="sm" fw={500}>
+					<Trans>Change tier</Trans>
+				</Text>
+				<Text size="xs" c="dimmed">
+					<Trans>
+						A downgrade applies the matrix downgrade effects and notifies
+						workspace admins.
+					</Trans>
+				</Text>
+				<Group gap="xs" align="flex-end">
+					<Select
+						data={tierData}
+						value={tier}
+						onChange={setTier}
+						size="xs"
+						style={{ flex: 1 }}
+						aria-label={t`New tier`}
+					/>
+					<Button
+						size="xs"
+						variant="light"
+						disabled={!tier || tier === row.tier}
+						loading={mutation.isPending}
+						onClick={openConfirm}
+					>
+						<Trans>Apply</Trans>
+					</Button>
+				</Group>
+			</Stack>
+			<ConfirmModal
+				opened={confirmOpen}
+				onClose={closeConfirm}
+				onConfirm={() => mutation.mutate()}
+				loading={mutation.isPending}
+				title={t`Change tier`}
+				data-testid="admin-change-tier-modal"
+				confirmLabel={<Trans>Change tier</Trans>}
+				message={
+					<Trans>
+						Move {row.workspace_name} from {row.tier} to {tier}? A downgrade
+						limits features immediately.
+					</Trans>
+				}
+			/>
+		</Paper>
+	);
+}
+
+/**
+ * Staff action: promote a workspace member to admin. Used when the current
+ * admin is unreachable; never demotes anyone, so an admin always remains.
+ */
+function ChangeAdminControl({ row }: { row: BillingRow }) {
+	const queryClient = useQueryClient();
+	const [membershipId, setMembershipId] = useState<string | null>(null);
+	const [confirmOpen, { open: openConfirm, close: closeConfirm }] =
+		useDisclosure(false);
+
+	const { data: members, isLoading } = useQuery({
+		queryFn: () =>
+			fetchJson<
+				{
+					membership_id: string;
+					display_name: string | null;
+					email: string | null;
+					role: string | null;
+				}[]
+			>(`/v2/admin/workspaces/${row.workspace_id}/members`),
+		queryKey: ["v2", "admin", "workspace-members", row.workspace_id],
+		staleTime: 30_000,
+	});
+
+	const mutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/change-admin`,
+				{
+					body: JSON.stringify({ membership_id: membershipId }),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json();
+		},
+		onError: (e) => {
+			closeConfirm();
+			toast.error((e as Error).message);
+		},
+		onSuccess: () => {
+			closeConfirm();
+			toast.success(t`Workspace admin changed`);
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "admin", "billing-rollup"],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "admin", "workspace-members", row.workspace_id],
+			});
+		},
+	});
+
+	const memberData = (members ?? [])
+		.filter((m) => m.role !== "external")
+		.map((m) => ({
+			label: `${m.display_name ?? m.email ?? m.membership_id.slice(0, 8)}${
+				m.role === "admin" || m.role === "owner" ? ` (${m.role})` : ""
+			}`,
+			value: m.membership_id,
+		}));
+	const selected = members?.find((m) => m.membership_id === membershipId);
+
+	return (
+		<Paper withBorder radius="sm" p="sm">
+			<Stack gap="xs">
+				<Text size="sm" fw={500}>
+					<Trans>Change workspace admin</Trans>
+				</Text>
+				<Text size="xs" c="dimmed">
+					<Trans>
+						Promote a member to admin. Existing admins keep their role.
+					</Trans>
+				</Text>
+				<Group gap="xs" align="flex-end">
+					<Select
+						data={memberData}
+						value={membershipId}
+						onChange={setMembershipId}
+						placeholder={isLoading ? t`Loading members` : t`Pick a member`}
+						searchable
+						size="xs"
+						style={{ flex: 1 }}
+						aria-label={t`Member to promote`}
+					/>
+					<Button
+						size="xs"
+						variant="light"
+						disabled={!membershipId}
+						loading={mutation.isPending}
+						onClick={openConfirm}
+					>
+						<Trans>Promote</Trans>
+					</Button>
+				</Group>
+			</Stack>
+			<ConfirmModal
+				opened={confirmOpen}
+				onClose={closeConfirm}
+				onConfirm={() => mutation.mutate()}
+				loading={mutation.isPending}
+				title={t`Change workspace admin`}
+				data-testid="admin-change-admin-modal"
+				confirmLabel={<Trans>Promote to admin</Trans>}
+				message={
+					<Trans>
+						Promote{" "}
+						{selected?.display_name ?? selected?.email ?? t`this member`} to
+						admin of {row.workspace_name}?
+					</Trans>
+				}
+			/>
+		</Paper>
+	);
+}
+
+/**
+ * Staff action: reset this cycle's recorded audio hours. Stamps a
+ * usage_reset_at floor (conversations are not deleted). Confirms first; the
+ * reason is recorded for the audit trail.
+ */
+function ResetUsageControl({ row }: { row: BillingRow }) {
+	const queryClient = useQueryClient();
+	const [reason, setReason] = useState("");
+	const [confirmOpen, { open: openConfirm, close: closeConfirm }] =
+		useDisclosure(false);
+
+	const mutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/reset-usage`,
+				{
+					body: JSON.stringify({ reason: reason.trim() }),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json();
+		},
+		onError: (e) => {
+			closeConfirm();
+			toast.error((e as Error).message);
+		},
+		onSuccess: () => {
+			closeConfirm();
+			toast.success(t`Monthly usage reset`);
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "admin", "billing-rollup"],
+			});
+		},
+	});
+
+	return (
+		<Paper withBorder radius="sm" p="sm">
+			<Stack gap="xs">
+				<Text size="sm" fw={500}>
+					<Trans>Reset monthly usage</Trans>
+				</Text>
+				<Text size="xs" c="dimmed">
+					<Trans>
+						Zeroes this cycle's recorded hours from now on. Conversations are
+						kept; only the billing count resets.
+					</Trans>
+				</Text>
+				<TextInput
+					label={t`Reason`}
+					placeholder={t`Support incident, double-counted upload, etc.`}
+					value={reason}
+					onChange={(e) => setReason(e.currentTarget.value)}
+					size="xs"
+				/>
+				<Group justify="flex-end">
+					<Button
+						size="xs"
+						variant="light"
+						color="red"
+						disabled={reason.trim().length === 0}
+						loading={mutation.isPending}
+						onClick={openConfirm}
+					>
+						<Trans>Reset usage</Trans>
+					</Button>
+				</Group>
+			</Stack>
+			<ConfirmModal
+				opened={confirmOpen}
+				onClose={closeConfirm}
+				onConfirm={() => mutation.mutate()}
+				loading={mutation.isPending}
+				confirmColor="red"
+				title={t`Reset monthly usage`}
+				data-testid="admin-reset-usage-modal"
+				confirmLabel={<Trans>Reset usage</Trans>}
+				message={
+					<Trans>
+						Reset this cycle's recorded hours for {row.workspace_name}? This is
+						recorded in the audit trail.
+					</Trans>
+				}
+			/>
+		</Paper>
+	);
+}
+
+/**
+ * Actions modal for a workspace row. Live staff edits (discount, trial, change
+ * tier, change admin, reset usage). Transfer-to-partner and delete-workspace
+ * stay disabled (destructive, deferred to their own issues).
  */
 function WorkspaceActionsModal({
 	row,
@@ -497,19 +821,7 @@ function WorkspaceActionsModal({
 	onClose: () => void;
 }) {
 	if (!row) return null;
-	const actions: { label: string; hint: string; color?: string }[] = [
-		{
-			hint: t`Pick a new tier and apply downgrade effects per matrix.`,
-			label: t`Change tier`,
-		},
-		{
-			hint: t`Transfer the primary admin role to another member.`,
-			label: t`Change workspace admin`,
-		},
-		{
-			hint: t`Back out this cycle's hour count after a support incident.`,
-			label: t`Reset monthly usage`,
-		},
+	const deferredActions: { label: string; hint: string; color?: string }[] = [
 		{
 			hint: t`Partner handoff. Writes billed_to_team_id and notifies both organisations.`,
 			label: t`Transfer workspace to another organisation`,
@@ -535,6 +847,9 @@ function WorkspaceActionsModal({
 					>
 						{row.tier}
 					</Badge>
+					<Badge size="xs" color="gray" variant="outline">
+						{accountScopeLabel(row.account_scope)}
+					</Badge>
 				</Group>
 			}
 			size="md"
@@ -553,14 +868,16 @@ function WorkspaceActionsModal({
 					initialPercent={row.percent_discount ?? null}
 				/>
 
-				<Divider my={4} />
-
 				{row.billing_account_id && (
 					<GrantTrialControl accountId={row.billing_account_id} />
 				)}
 
+				<ChangeTierControl row={row} />
+				<ChangeAdminControl row={row} />
+				<ResetUsageControl row={row} />
+
 				<Divider my={4} />
-				{actions.map((a) => (
+				{deferredActions.map((a) => (
 					<Paper key={a.label} withBorder radius="sm" p="sm">
 						<Group justify="space-between" wrap="nowrap" align="center">
 							<Stack gap={0} style={{ minWidth: 0 }}>
@@ -571,14 +888,16 @@ function WorkspaceActionsModal({
 									{a.hint}
 								</Text>
 							</Stack>
-							<Button
-								size="xs"
-								variant="default"
-								color={a.color ?? "gray"}
-								disabled
-							>
-								<Trans>Run</Trans>
-							</Button>
+							<Tooltip label={t`Deferred to its own reviewed issue`} withArrow>
+								<Button
+									size="xs"
+									variant="outline"
+									color={a.color ?? "gray"}
+									disabled
+								>
+									<Trans>Run</Trans>
+								</Button>
+							</Tooltip>
 						</Group>
 					</Paper>
 				))}
@@ -622,8 +941,6 @@ function BillingTable({
 		audio_hours: number;
 		seat_count: number;
 		base_price_eur: number;
-		hour_overage_eur: number;
-		seat_overage_eur: number;
 		total_forecast_eur: number;
 	};
 }) {
@@ -771,13 +1088,6 @@ function BillingTable({
 									(s, r) => s + (r.original.base_price_eur ?? 0),
 									0,
 								);
-								const organisationOverage = descendants.reduce(
-									(s, r) =>
-										s +
-										r.original.hour_overage_eur +
-										r.original.seat_overage_eur,
-									0,
-								);
 								const organisationTotal = descendants.reduce(
 									(s, r) => s + (r.original.total_forecast_eur ?? 0),
 									0,
@@ -812,10 +1122,6 @@ function BillingTable({
 													<Group gap="md">
 														<Text size="xs" c="dimmed">
 															<Trans>Base</Trans> {formatEur(organisationBase)}
-														</Text>
-														<Text size="xs" c="dimmed">
-															<Trans>Overage</Trans>{" "}
-															{formatEur(organisationOverage)}
 														</Text>
 														<Text size="xs" fw={500}>
 															<Trans>Total</Trans>{" "}
@@ -889,33 +1195,9 @@ function BillingTable({
 											{formatEur(footerTotals.base_price_eur)}
 										</Text>
 									),
-									hour_overage_eur: (
-										<Text
-											size="xs"
-											fw={600}
-											ta="right"
-											c={
-												footerTotals.hour_overage_eur > 0 ? "orange" : undefined
-											}
-										>
-											{formatEur(footerTotals.hour_overage_eur)}
-										</Text>
-									),
 									seat_count: (
 										<Text size="xs" fw={600} ta="right">
 											{footerTotals.seat_count}
-										</Text>
-									),
-									seat_overage_eur: (
-										<Text
-											size="xs"
-											fw={600}
-											ta="right"
-											c={
-												footerTotals.seat_overage_eur > 0 ? "orange" : undefined
-											}
-										>
-											{formatEur(footerTotals.seat_overage_eur)}
 										</Text>
 									),
 									total_forecast_eur: (
@@ -942,27 +1224,25 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 	const byTier = useMemo(() => {
 		const groups = new Map<
 			string,
-			{ count: number; base: number; overage: number; active: number }
+			{ count: number; base: number; active: number }
 		>();
 		for (const tier of TIER_ORDER) {
-			groups.set(tier, { active: 0, base: 0, count: 0, overage: 0 });
+			groups.set(tier, { active: 0, base: 0, count: 0 });
 		}
 		for (const r of rows) {
 			const g = groups.get(r.tier) ?? {
 				active: 0,
 				base: 0,
 				count: 0,
-				overage: 0,
 			};
 			g.count += 1;
 			g.base += r.base_price_eur ?? 0;
-			g.overage += r.hour_overage_eur + r.seat_overage_eur;
 			if (r.is_active) g.active += 1;
 			groups.set(r.tier, g);
 		}
 		return TIER_ORDER.map((tier) => ({
 			tier,
-			...(groups.get(tier) ?? { active: 0, base: 0, count: 0, overage: 0 }),
+			...(groups.get(tier) ?? { active: 0, base: 0, count: 0 }),
 		}));
 	}, [rows]);
 
@@ -1015,12 +1295,6 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 										</Text>
 										<Text size="xs">{formatEur(b.base)}</Text>
 									</Group>
-									<Group gap={4}>
-										<Text size="xs" c="dimmed">
-											<Trans>Overage</Trans>
-										</Text>
-										<Text size="xs">{formatEur(b.overage)}</Text>
-									</Group>
 								</Stack>
 							</Paper>
 						))}
@@ -1055,27 +1329,23 @@ function UsageAndBillingPanel() {
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 	const [grouping, setGrouping] = useState<GroupingState>([]);
-	const [onlyOver, setOnlyOver] = useState(false);
 	const [statusFilter, setStatusFilter] = useState<
 		"all" | "active" | "inactive"
 	>("all");
 	const [tierFilter, setTierFilter] = useState<string[]>([]);
 	const [actionsRow, setActionsRow] = useState<BillingRow | null>(null);
-	const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
 
 	// Pre-filter handles the fast chip-toggles; column filters inside
 	// TanStack handle per-column multiselects (currently tier).
 	const prefiltered = useMemo(() => {
 		const rows = data?.rows ?? [];
 		return rows.filter((r) => {
-			if (onlyOver && r.hour_overage_eur === 0 && r.seat_overage_eur === 0)
-				return false;
 			if (statusFilter === "active" && !r.is_active) return false;
 			if (statusFilter === "inactive" && r.is_active) return false;
 			if (tierFilter.length > 0 && !tierFilter.includes(r.tier)) return false;
 			return true;
 		});
-	}, [data, onlyOver, statusFilter, tierFilter]);
+	}, [data, statusFilter, tierFilter]);
 
 	const columns = useMemo<ColumnDef<BillingRow, unknown>[]>(
 		() => [
@@ -1207,31 +1477,6 @@ function UsageAndBillingPanel() {
 				meta: { align: "right" },
 			},
 			{
-				accessorKey: "hour_overage_eur",
-				cell: ({ row }) => {
-					const v = row.original.hour_overage_eur;
-					const over = row.original.over_hours;
-					const hasOverage = v > 0 || over > 0;
-					return (
-						<Stack gap={0} align="flex-end">
-							<Text
-								size="xs"
-								c={hasOverage ? "orange" : "dimmed"}
-								fw={hasOverage ? 500 : 400}
-							>
-								{formatEur(v)}
-							</Text>
-							<Text size="xs" c="dimmed">
-								{formatDurationFromHours(over)} over
-							</Text>
-						</Stack>
-					);
-				},
-				header: t`Overage hrs`,
-				id: "hour_overage_eur",
-				meta: { align: "right" },
-			},
-			{
 				accessorFn: (r) => r.seat_count + r.external_count,
 				cell: ({ row }) => (
 					<UsageBar
@@ -1241,31 +1486,6 @@ function UsageAndBillingPanel() {
 				),
 				header: t`Seats`,
 				id: "seat_count",
-				meta: { align: "right" },
-			},
-			{
-				accessorKey: "seat_overage_eur",
-				cell: ({ row }) => {
-					const v = row.original.seat_overage_eur;
-					const over = row.original.over_seats;
-					const hasOverage = v > 0 || over > 0;
-					return (
-						<Stack gap={0} align="flex-end">
-							<Text
-								size="xs"
-								c={hasOverage ? "orange" : "dimmed"}
-								fw={hasOverage ? 500 : 400}
-							>
-								{formatEur(v)}
-							</Text>
-							<Text size="xs" c="dimmed">
-								{over} over
-							</Text>
-						</Stack>
-					);
-				},
-				header: t`Overage seats`,
-				id: "seat_overage_eur",
 				meta: { align: "right" },
 			},
 			{
@@ -1323,12 +1543,10 @@ function UsageAndBillingPanel() {
 				(s, r) => s + (r.base_price_eur ?? 0),
 				0,
 			),
-			hour_overage_eur: prefiltered.reduce((s, r) => s + r.hour_overage_eur, 0),
 			seat_count: prefiltered.reduce(
 				(s, r) => s + r.seat_count + r.external_count,
 				0,
 			),
-			seat_overage_eur: prefiltered.reduce((s, r) => s + r.seat_overage_eur, 0),
 			total_forecast_eur: prefiltered.reduce(
 				(s, r) => s + (r.total_forecast_eur ?? 0),
 				0,
@@ -1362,16 +1580,15 @@ function UsageAndBillingPanel() {
 			"workspace_id",
 			"workspace_name",
 			"organisation",
+			"account_scope",
 			"tier",
 			"tier_expires_at",
 			"type_discount",
 			"percent_discount",
 			"audio_hours",
 			"audio_hours_included",
-			"hour_overage_eur",
 			"seat_count",
 			"seats_included",
-			"seat_overage_eur",
 			"external_count",
 			"base_price_eur",
 			"total_forecast_eur",
@@ -1383,16 +1600,15 @@ function UsageAndBillingPanel() {
 				r.workspace_id,
 				r.workspace_name,
 				r.billed_to_team_name ?? r.org_name,
+				r.account_scope ?? "",
 				r.tier,
 				r.tier_expires_at ?? "",
 				r.type_discount ?? "",
 				r.percent_discount ?? "",
 				r.audio_hours.toFixed(2),
 				r.audio_hours_included ?? "",
-				r.hour_overage_eur.toFixed(2),
 				r.seat_count,
 				r.seats_included ?? "",
-				r.seat_overage_eur.toFixed(2),
 				r.external_count,
 				r.base_price_eur ?? "",
 				r.total_forecast_eur ?? "",
@@ -1490,14 +1706,6 @@ function UsageAndBillingPanel() {
 				</Button.Group>
 				<Button
 					size="xs"
-					variant={onlyOver ? "filled" : "default"}
-					color={onlyOver ? "red" : "gray"}
-					onClick={() => setOnlyOver((v) => !v)}
-				>
-					<Trans>Over cap only</Trans>
-				</Button>
-				<Button
-					size="xs"
 					variant={isGrouped ? "filled" : "default"}
 					color={isGrouped ? "primary" : "gray"}
 					leftSection={<IconUsersGroup size={14} />}
@@ -1572,31 +1780,6 @@ function UsageAndBillingPanel() {
 			/>
 
 			<TierBreakdownPanel rows={prefiltered} />
-			<Paper withBorder radius="sm" p="sm">
-				<Stack gap={4}>
-					<Text size="sm" fw={500}>
-						<Trans>Pricing matrix</Trans>
-					</Text>
-					<Text size="xs" c="dimmed">
-						<Trans>
-							Every tier at a glance. Same table customers see on the workspace
-							billing tab.
-						</Trans>
-					</Text>
-					<Box mt="xs">
-						<Stack gap={8}>
-							<Group justify="center" mb="xs">
-								<BillingPeriodToggle
-									value={billingPeriod}
-									onChange={setBillingPeriod}
-									compact
-								/>
-							</Group>
-							<TierCapacityMatrix billingPeriod={billingPeriod} />
-						</Stack>
-					</Box>
-				</Stack>
-			</Paper>
 
 			<UsageFreshness
 				dataUpdatedAt={dataUpdatedAt}
@@ -1945,7 +2128,10 @@ const paymentStatusColor = (status: string | null): string => {
 	}
 };
 
-const formatPaymentAmount = (amount: string | null, currency: string): string => {
+const formatPaymentAmount = (
+	amount: string | null,
+	currency: string,
+): string => {
 	if (!amount) return "";
 	const n = Number(amount);
 	if (Number.isNaN(n)) return amount;
@@ -1962,6 +2148,53 @@ const formatPaymentAmount = (amount: string | null, currency: string): string =>
  * Mollie dashboard. dembrane never auto-blocks for non-payment, so this is how
  * staff spot failed / overdue charges and decide who to chase.
  */
+// Group payments by calendar month, newest month first, so the staff list
+// reads as "this month / last month / ...". Returns an ordered list of
+// { key, label, rows } the panel renders as a section per month.
+const groupPaymentsByMonth = (
+	rows: PaymentRow[],
+): { key: string; label: string; rows: PaymentRow[] }[] => {
+	const byMonth = new Map<string, PaymentRow[]>();
+	for (const r of rows) {
+		// Sort key is YYYY-MM (chronological as a string); missing dates bucket
+		// under "unknown" which sorts last.
+		const key = r.created_at ? r.created_at.slice(0, 7) : "unknown";
+		const list = byMonth.get(key);
+		if (list) {
+			list.push(r);
+		} else {
+			byMonth.set(key, [r]);
+		}
+	}
+	return [...byMonth.entries()]
+		.sort((a, b) => (a[0] < b[0] ? 1 : -1))
+		.map(([key, monthRows]) => ({
+			key,
+			label:
+				key === "unknown"
+					? t`Unknown date`
+					: new Date(`${key}-01T00:00:00`).toLocaleDateString(undefined, {
+							month: "long",
+							year: "numeric",
+						}),
+			rows: monthRows,
+		}));
+};
+
+type PaymentStatusFilter = "all" | "paid" | "failed" | "pending" | "open";
+
+// Maps the filter chip to the Mollie statuses it covers. "failed" folds in
+// expired + canceled (the same bucket the headline "Failed" counter uses).
+const paymentMatchesStatus = (
+	status: string | null,
+	filter: PaymentStatusFilter,
+): boolean => {
+	if (filter === "all") return true;
+	if (filter === "failed")
+		return status === "failed" || status === "expired" || status === "canceled";
+	return status === filter;
+};
+
 function PaymentsPanel() {
 	const { data, isLoading } = useQuery({
 		queryFn: () => fetchJson<PaymentsRollup>("/v2/admin/payments"),
@@ -1969,6 +2202,7 @@ function PaymentsPanel() {
 		staleTime: 60_000,
 	});
 	const [globalFilter, setGlobalFilter] = useState("");
+	const [statusFilter, setStatusFilter] = useState<PaymentStatusFilter>("all");
 
 	const columns = useMemo<ColumnDef<PaymentRow, unknown>[]>(
 		() => [
@@ -2114,7 +2348,18 @@ function PaymentsPanel() {
 		);
 	}
 
-	const rows = data.rows;
+	const filteredRows = data.rows.filter((r) =>
+		paymentMatchesStatus(r.status, statusFilter),
+	);
+	const monthGroups = groupPaymentsByMonth(filteredRows);
+
+	const statusChips: { value: PaymentStatusFilter; label: string }[] = [
+		{ label: t`All`, value: "all" },
+		{ label: t`Paid`, value: "paid" },
+		{ label: t`Failed`, value: "failed" },
+		{ label: t`Pending`, value: "pending" },
+		{ label: t`Open`, value: "open" },
+	];
 
 	return (
 		<Stack gap="md">
@@ -2178,7 +2423,11 @@ function PaymentsPanel() {
 						<Text size="xs" c="dimmed">
 							<Trans>Failed</Trans>
 						</Text>
-						<Text size="lg" fw={500} c={data.failed_count > 0 ? "red" : undefined}>
+						<Text
+							size="lg"
+							fw={500}
+							c={data.failed_count > 0 ? "red" : undefined}
+						>
 							{data.failed_count}
 						</Text>
 					</Stack>
@@ -2206,9 +2455,28 @@ function PaymentsPanel() {
 			</SimpleGrid>
 
 			<Group justify="space-between" align="center" wrap="wrap">
-				<Text size="xs" c="dimmed">
-					<Plural value={rows.length} one="# payment" other="# payments" />
-				</Text>
+				<Group gap="sm" wrap="wrap" align="center">
+					<Text size="xs" c="dimmed">
+						<Plural
+							value={filteredRows.length}
+							one="# payment"
+							other="# payments"
+						/>
+					</Text>
+					<Button.Group>
+						{statusChips.map((chip) => (
+							<Button
+								key={chip.value}
+								size="xs"
+								variant={statusFilter === chip.value ? "filled" : "default"}
+								color={statusFilter === chip.value ? "primary" : "gray"}
+								onClick={() => setStatusFilter(chip.value)}
+							>
+								{chip.label}
+							</Button>
+						))}
+					</Button.Group>
+				</Group>
 				<TextInput
 					leftSection={<IconSearch size={14} />}
 					placeholder={t`Search account, status, description`}
@@ -2219,14 +2487,38 @@ function PaymentsPanel() {
 				/>
 			</Group>
 
-			<SimpleDataTable<PaymentRow>
-				columns={columns}
-				data={rows}
-				globalFilter={globalFilter}
-				onGlobalFilterChange={setGlobalFilter}
-				initialSorting={[{ desc: true, id: "created_at" }]}
-				emptyLabel={t`No payments yet.`}
-			/>
+			{monthGroups.length === 0 ? (
+				<Paper withBorder radius="sm" p="md">
+					<Text size="xs" c="dimmed" ta="center">
+						<Trans>No payments match the filter.</Trans>
+					</Text>
+				</Paper>
+			) : (
+				monthGroups.map((group) => (
+					<Stack key={group.key} gap="xs">
+						<Group justify="space-between" align="baseline">
+							<Text size="sm" fw={500}>
+								{group.label}
+							</Text>
+							<Text size="xs" c="dimmed">
+								<Plural
+									value={group.rows.length}
+									one="# payment"
+									other="# payments"
+								/>
+							</Text>
+						</Group>
+						<SimpleDataTable<PaymentRow>
+							columns={columns}
+							data={group.rows}
+							globalFilter={globalFilter}
+							onGlobalFilterChange={setGlobalFilter}
+							initialSorting={[{ desc: true, id: "created_at" }]}
+							emptyLabel={t`No payments match the filter.`}
+						/>
+					</Stack>
+				))
+			)}
 		</Stack>
 	);
 }
