@@ -2490,10 +2490,303 @@ function PaymentsPanel() {
 }
 
 /**
- * Stable host for a staff section a later wave fills in. Wave C
- * (managed-billing controls) and Wave E (training provisioning) each mount
- * onto one of these so they only add a panel, never touch routing or the tab
- * switch. Replace the body with the real controls when the wave lands.
+ * Staff managed-billing controls (Wave C / ISSUE-021). Pick an account, set it
+ * managed (offline payment_mode), assign a dembrane account manager, and issue
+ * an offline payment link or sales invoice. Mark an invoice paid records an
+ * already-settled invoice (the buyer paid out-of-band against a PO). All writes
+ * hit the admin_managed router under /v2/admin. Reads reuse the billing-rollup
+ * BFF, so the account picker shows the same identifying names as the usage view.
+ */
+function ManagedBillingPanel() {
+	const queryClient = useQueryClient();
+	const { data, isLoading } = useQuery({
+		queryFn: () => fetchJson<BillingRollup>("/v2/admin/billing-rollup"),
+		queryKey: ["v2", "admin", "billing-rollup", 0],
+		staleTime: 60_000,
+	});
+
+	const [accountId, setAccountId] = useState<string | null>(null);
+	const [tier, setTier] = useState<Tier>("changemaker");
+	const [managerId, setManagerId] = useState("");
+	const [linkAmount, setLinkAmount] = useState<number | string>("");
+	const [invoiceAmount, setInvoiceAmount] = useState<number | string>("");
+	const [isEinvoice, setIsEinvoice] = useState(false);
+	const [paymentReference, setPaymentReference] = useState("");
+	const [busy, setBusy] = useState<string | null>(null);
+
+	const accounts = data?.accounts ?? [];
+	const selected = accounts.find((a) => a.billing_account_id === accountId);
+
+	const accountOptions = useMemo(
+		() =>
+			accounts.map((a) => ({
+				label: `${accountIdentifyingName(a)}${a.is_managed ? " (managed)" : ""}`,
+				value: a.billing_account_id,
+			})),
+		[accounts],
+	);
+
+	const refresh = () => {
+		queryClient.invalidateQueries({
+			queryKey: ["v2", "admin", "billing-rollup", 0],
+		});
+	};
+
+	// Every write is a POST/DELETE to the admin_managed router. One helper keeps
+	// the busy-flag + toast + refresh consistent across all five actions.
+	const callAction = async (
+		key: string,
+		path: string,
+		body: Record<string, unknown> | null,
+		successMessage: string,
+		method: "POST" | "DELETE" = "POST",
+	) => {
+		if (!accountId) return null;
+		setBusy(key);
+		try {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/billing-accounts/${accountId}${path}`,
+				{
+					body: body ? JSON.stringify(body) : undefined,
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method,
+				},
+			);
+			if (!res.ok) {
+				const detail = await res.json().catch(() => null);
+				toast.error(detail?.detail ?? t`Could not complete that action.`);
+				return null;
+			}
+			toast.success(successMessage);
+			refresh();
+			return res.json().catch(() => null);
+		} finally {
+			setBusy(null);
+		}
+	};
+
+	const onSetManaged = () =>
+		callAction(
+			"set-managed",
+			"/set-managed",
+			{
+				account_manager_id: null,
+				tier,
+			},
+			t`Account set to managed.`,
+		);
+
+	const onAssignManager = () =>
+		callAction(
+			"assign-manager",
+			"/account-manager",
+			{ account_manager_id: managerId.trim() },
+			t`Account manager assigned.`,
+		);
+
+	const onIssueLink = async () => {
+		const out = await callAction(
+			"issue-link",
+			"/issue-payment-link",
+			{ amount_eur: linkAmount === "" ? null : Number(linkAmount) },
+			t`Payment link issued.`,
+		);
+		if (out?.url) window.open(out.url, "_blank", "noopener");
+	};
+
+	const onIssueInvoice = () =>
+		callAction(
+			"issue-invoice",
+			"/issue-invoice",
+			{
+				amount_eur: invoiceAmount === "" ? null : Number(invoiceAmount),
+				is_einvoice: isEinvoice,
+			},
+			t`Sales invoice issued.`,
+		);
+
+	const onMarkPaid = () =>
+		callAction(
+			"mark-paid",
+			"/mark-invoice-paid",
+			{
+				amount_eur: invoiceAmount === "" ? null : Number(invoiceAmount),
+				is_einvoice: isEinvoice,
+				payment_reference: paymentReference.trim() || null,
+				payment_source: "bank-transfer",
+			},
+			t`Invoice recorded as paid.`,
+		);
+
+	if (isLoading) {
+		return (
+			<Center py="xl">
+				<Loader size="sm" />
+			</Center>
+		);
+	}
+
+	return (
+		<Stack gap="md">
+			<Paper withBorder radius="sm" p="lg">
+				<Stack gap="md">
+					<Text size="sm" fw={500}>
+						<Trans>Managed billing</Trans>
+					</Text>
+					<Text size="xs">
+						<Trans>
+							Managed accounts pay by invoice, not by card. Setting an account
+							managed keeps every feature on and turns off auto-charging,
+							dunning, and expiry. Assign a dembrane account manager so the
+							client knows who to contact.
+						</Trans>
+					</Text>
+					<Select
+						label={t`Account`}
+						placeholder={t`Pick an account`}
+						data={accountOptions}
+						value={accountId}
+						onChange={setAccountId}
+						searchable
+						nothingFoundMessage={t`No accounts`}
+					/>
+
+					{selected && (
+						<>
+							<Divider />
+							<Group gap="xs" align="center">
+								<Text size="sm" fw={500}>
+									{accountIdentifyingName(selected)}
+								</Text>
+								<AccountBadges account={selected} />
+							</Group>
+
+							<Group align="flex-end" gap="sm">
+								<Select
+									label={t`Tier`}
+									data={PURCHASABLE_TIERS.map((value) => ({
+										label: value,
+										value,
+									}))}
+									value={tier}
+									onChange={(v) => v && setTier(v as Tier)}
+									tt="capitalize"
+									w={180}
+								/>
+								<Button
+									loading={busy === "set-managed"}
+									onClick={onSetManaged}
+								>
+									<Trans>Set managed</Trans>
+								</Button>
+							</Group>
+
+							<Group align="flex-end" gap="sm">
+								<TextInput
+									label={t`Account manager`}
+									description={t`A dembrane staff app_user id. The server checks the @dembrane.com address.`}
+									value={managerId}
+									onChange={(e) => setManagerId(e.currentTarget.value)}
+									w={320}
+								/>
+								<Button
+									variant="outline"
+									loading={busy === "assign-manager"}
+									disabled={!managerId.trim()}
+									onClick={onAssignManager}
+								>
+									<Trans>Assign</Trans>
+								</Button>
+							</Group>
+						</>
+					)}
+				</Stack>
+			</Paper>
+
+			{selected && (
+				<Paper withBorder radius="sm" p="lg">
+					<Stack gap="md">
+						<Text size="sm" fw={500}>
+							<Trans>Invoicing</Trans>
+						</Text>
+						<Text size="xs">
+							<Trans>
+								Amounts default to the account's seats times the per-seat
+								price. Override only when you need to.
+							</Trans>
+						</Text>
+
+						<Group align="flex-end" gap="sm">
+							<NumberInput
+								label={t`Payment link amount, EUR`}
+								placeholder={t`Default`}
+								value={linkAmount}
+								onChange={setLinkAmount}
+								min={0}
+								w={220}
+							/>
+							<Button
+								variant="outline"
+								loading={busy === "issue-link"}
+								onClick={onIssueLink}
+							>
+								<Trans>Issue payment link</Trans>
+							</Button>
+						</Group>
+
+						<Divider />
+
+						<Group align="flex-end" gap="sm">
+							<NumberInput
+								label={t`Invoice amount, EUR`}
+								placeholder={t`Default`}
+								value={invoiceAmount}
+								onChange={setInvoiceAmount}
+								min={0}
+								w={220}
+							/>
+							<Checkbox
+								label={t`E-invoice`}
+								checked={isEinvoice}
+								onChange={(e) => setIsEinvoice(e.currentTarget.checked)}
+							/>
+						</Group>
+						<TextInput
+							label={t`Payment reference`}
+							description={t`Only when recording an invoice already paid out-of-band.`}
+							value={paymentReference}
+							onChange={(e) => setPaymentReference(e.currentTarget.value)}
+							w={320}
+						/>
+						<Group gap="sm">
+							<Button
+								variant="outline"
+								loading={busy === "issue-invoice"}
+								onClick={onIssueInvoice}
+							>
+								<Trans>Issue invoice</Trans>
+							</Button>
+							<Button
+								variant="subtle"
+								loading={busy === "mark-paid"}
+								onClick={onMarkPaid}
+							>
+								<Trans>Mark invoice paid</Trans>
+							</Button>
+						</Group>
+					</Stack>
+				</Paper>
+			)}
+		</Stack>
+	);
+}
+
+/**
+ * Stable host for a staff section a later wave fills in. Wave E (training
+ * provisioning) mounts onto one of these so it only adds a panel, never touches
+ * routing or the tab switch. Replace the body with the real controls when the
+ * wave lands.
  */
 function StaffSectionPlaceholder({
 	title,
@@ -2584,16 +2877,11 @@ export const AdminSettingsRoute = () => {
 					<Tabs.Panel value="partners" pt="md">
 						<PartnersPanel />
 					</Tabs.Panel>
-					{/* Stable hosts for later waves. Wave C swaps in managed-billing
-					    controls (set managed, assign an @dembrane.com account
-					    manager, issue an offline invoice); Wave E swaps in training
-					    provisioning + the trained-vs-not verification view. Each
-					    only replaces its panel body. Routing + tab switch stay. */}
+					{/* Wave E still swaps in training provisioning + the
+					    trained-vs-not verification view onto its placeholder. The
+					    managed-billing panel is live (Wave C). */}
 					<Tabs.Panel value="managed-billing" pt="md">
-						<StaffSectionPlaceholder
-							title={t`Managed billing`}
-							description={t`Set an account managed, assign an account manager, and issue an offline invoice. Lands with Wave C.`}
-						/>
+						<ManagedBillingPanel />
 					</Tabs.Panel>
 					<Tabs.Panel value="training" pt="md">
 						<StaffSectionPlaceholder

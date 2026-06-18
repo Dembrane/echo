@@ -61,6 +61,17 @@ class ReconcileChargeError(RuntimeError):
     is caught inside reconcile_account_seats."""
 
 
+def is_managed(account: dict | None) -> bool:
+    """A managed ('managed by dembrane') account: `payment_mode == 'offline'`.
+
+    Managed is a payment distinction, not a capability one (ISSUE-021): the plan
+    works fully, but every Mollie auto-debit behaviour is off. Dunning,
+    pre-warning expiry, failed-charge banners, and reconcile auto-charge all skip
+    managed accounts. Staff issues invoices (pay-link / sales invoice) instead.
+    Entitlements come from tier + status, never from a successful charge."""
+    return bool(account) and (account or {}).get("payment_mode") == "offline"
+
+
 async def count_account_seats(account_id: str) -> int:
     """Billable seats for the account: the count of DISTINCT users across every
     workspace the account covers, not the per-workspace sum.
@@ -260,6 +271,7 @@ async def get_billing_overview(account_id: str) -> dict:
     seats = max(await count_account_seats(account_id), 1)
     customer_id = account.get("mollie_customer_id")
     sub_id = account.get("mollie_subscription_id")
+    managed = is_managed(account)
 
     # Projected monthly total at the current tier + cadence. The discount applies
     # to the rolled-up totals, not the per-seat sticker rate: the sticker stays
@@ -276,10 +288,16 @@ async def get_billing_overview(account_id: str) -> dict:
         )
         projected_monthly_eur = apply_discount(per_seat_monthly_eur * seats, percent_discount)
 
-    # Next invoice + payment method come from Mollie (best-effort).
+    # Next invoice + payment method come from Mollie (best-effort). Managed
+    # accounts have no Mollie subscription / mandate, so we skip those calls and
+    # derive the next-invoice amount live from the seat count instead.
     next_invoice = None
     payment_method = None
-    if customer_id and sub_id:
+    if managed:
+        amount = managed_next_invoice_amount(account, seats)
+        if amount is not None:
+            next_invoice = {"date": None, "amount": f"{amount:.2f}", "currency": "EUR"}
+    elif customer_id and sub_id:
         try:
             sub = await mollie.get_subscription(customer_id=customer_id, subscription_id=sub_id)
             amt = sub.get("amount") or {}
@@ -296,7 +314,7 @@ async def get_billing_overview(account_id: str) -> dict:
             }
         except mollie.MollieError:
             pass
-    if customer_id:
+    if customer_id and not managed:
         try:
             mandates = await mollie.list_mandates(customer_id)
             valid = next((m for m in mandates if m.get("status") == "valid"), None) or (
@@ -321,6 +339,8 @@ async def get_billing_overview(account_id: str) -> dict:
             per_seat_monthly_eur * (seats + pending_invites), percent_discount
         )
 
+    account_manager = await _resolve_account_manager(account)
+
     return {
         "tier": tier,
         "status": status,
@@ -344,7 +364,56 @@ async def get_billing_overview(account_id: str) -> dict:
         # (dead mandate / Mollie error), null when clean. Drives the
         # "fix your payment" prompt.
         "reconcile_failed_at": account.get("reconcile_failed_at"),
+        # Managed mode (ISSUE-021): the client UI hides self-serve controls and
+        # shows a "managed by dembrane" panel with the account manager's contact.
+        "is_managed": managed,
+        "account_manager": account_manager,
+        # Captured VAT + billing address (ISSUE-005, capture only).
+        "billing_details": billing_details_from_account(account),
     }
+
+
+async def _resolve_account_manager(account: dict) -> dict | None:
+    """{name, email} of the assigned dembrane account manager (app_user), or
+    None when unassigned. Shown on the billing page for managed accounts."""
+    manager_id = account.get("account_manager_id")
+    if not manager_id:
+        return None
+    # account_manager_id may arrive as a bare id or a joined dict.
+    if isinstance(manager_id, dict):
+        user = manager_id
+    else:
+        user = await async_directus.get_item("app_user", manager_id)
+    if not user:
+        return None
+    return {"name": user.get("display_name") or user.get("email"), "email": user.get("email")}
+
+
+# Captured VAT + address fields (ISSUE-005). Capture only: no rate logic.
+BILLING_DETAIL_FIELDS = (
+    "billing_legal_name",
+    "billing_vat_id",
+    "billing_vat_region",
+    "billing_country",
+    "billing_address_line1",
+    "billing_address_line2",
+    "billing_postal_code",
+    "billing_city",
+)
+
+
+def billing_details_from_account(account: dict) -> dict:
+    """The captured VAT/address fields off a billing_account dict."""
+    return {f: account.get(f) for f in BILLING_DETAIL_FIELDS}
+
+
+async def save_billing_details(account_id: str, details: dict) -> dict:
+    """Persist VAT/address capture on the account (ISSUE-005). Only known fields
+    are written; unknown keys are ignored. Returns the saved subset."""
+    patch = {f: details[f] for f in BILLING_DETAIL_FIELDS if f in details}
+    if patch:
+        await async_directus.update_item("billing_account", account_id, patch)
+    return patch
 
 
 async def estimate_account_cost(account_id: str) -> dict:
@@ -873,12 +942,25 @@ async def reconcile_account_seats(account_id: str) -> None:
     `reconcile_failed_at=now`, does NOT advance `provisioned_seats`, and does NOT
     re-raise (a billing hiccup never blocks collaboration). A clean pass clears
     the flag. The seat change always stands; the flag is what the dashboard reads
-    to show the "fix your payment" prompt, and the next reconcile retries."""
+    to show the "fix your payment" prompt, and the next reconcile retries.
+
+    Managed accounts (`payment_mode == 'offline'`) take the invoice-only path:
+    the seat count + next-invoice amount are recorded, but no Mollie charge
+    (proration or subscription re-price) ever fires. Staff issues the invoice."""
     account = await async_directus.get_item("billing_account", account_id)
     if not account or account.get("status") != "active":
         return
     tier = account.get("tier")
-    if not tier or tier == "free" or not account.get("mollie_subscription_id"):
+    if not tier or tier == "free":
+        return
+
+    # Managed: record the number, never charge. No Mollie subscription is
+    # required (managed accounts pay by invoice, not by mandate).
+    if is_managed(account):
+        await _reconcile_managed_seats(account)
+        return
+
+    if not account.get("mollie_subscription_id"):
         return
 
     try:
@@ -931,6 +1013,184 @@ async def reconcile_account_seats(account_id: str) -> None:
     await _set_reconcile_failed(account_id, account, failed=False)
 
 
+def managed_next_invoice_amount(account: dict, seats: int) -> float | None:
+    """The amount staff would invoice for `seats` at the account's tier +
+    cadence. None when the tier isn't payable. Used to record the next-invoice
+    figure on a managed account without charging anything."""
+    tier = account.get("tier")
+    billing_period = account.get("billing_period") or "annual"
+    if not tier or tier == "free":
+        return None
+    try:
+        amount, _interval = _per_interval_amount(tier, seats, billing_period)
+    except BillingError:
+        return None
+    return amount
+
+
+async def _reconcile_managed_seats(account: dict) -> None:
+    """Managed-account reconcile: record the live seat count (`provisioned_seats`)
+    so staff can see what to invoice. Never charges — managed accounts have no
+    mandate and pay by invoice (ISSUE-021). The next-invoice amount is derived
+    live in the overview from this count, not persisted. Idempotent."""
+    account_id = account["id"]
+    current = max(await count_account_seats(account_id), 1)
+    amount = managed_next_invoice_amount(account, current)
+    await async_directus.update_item(
+        "billing_account", account_id, {"provisioned_seats": current}
+    )
+    logger.info(
+        "managed reconcile for account %s: %d seat(s), next invoice %s EUR (no charge)",
+        account_id,
+        current,
+        amount,
+    )
+
+
+async def issue_offline_payment_link(
+    account_id: str,
+    *,
+    amount_eur: float | None = None,
+    description: str | None = None,
+    redirect_url: str | None = None,
+) -> dict:
+    """Create a Mollie payment link for a managed account's invoice (C2 default).
+
+    The buyer pays out-of-band (bank transfer is offered on the hosted page) and
+    the existing webhook reconcile marks the account active. No subscription or
+    mandate. When `amount_eur` is omitted it defaults to the account's current
+    seats x per-seat price. Returns {"payment_link_id", "url", "amount_eur"}."""
+    settings = get_settings()
+    if not settings.billing.mollie_enabled:
+        raise BillingError("Mollie is not configured")
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account:
+        raise BillingError("billing account not found")
+
+    seats = max(await count_account_seats(account_id), 1)
+    if amount_eur is None:
+        amount_eur = managed_next_invoice_amount(account, seats)
+    if amount_eur is None or amount_eur < 0.01:
+        raise BillingError("no invoice amount for this account")
+
+    tier = account.get("tier") or "managed"
+    desc = description or _plan_description(
+        tier, seats, account.get("billing_period") or "annual"
+    )
+    link = await mollie.create_payment_link(
+        amount_eur=amount_eur,
+        description=desc,
+        webhook_url=settings.billing.mollie_webhook_url or None,
+        redirect_url=redirect_url,
+        metadata={
+            "billing_account_id": account_id,
+            "intent": "offline_invoice",
+            "tier": tier,
+            "seats": seats,
+        },
+    )
+    url = mollie.payment_link_url(link)
+    if not url:
+        raise BillingError("Mollie did not return a payment link URL")
+    logger.info(
+        "issued offline payment link for managed account %s: %.2f EUR",
+        account_id,
+        amount_eur,
+    )
+    return {"payment_link_id": link.get("id"), "url": url, "amount_eur": amount_eur}
+
+
+def _invoice_recipient(account: dict) -> dict:
+    """Build the Mollie sales-invoice recipient from the captured VAT/address
+    fields. Capture only: we forward what the customer entered, Mollie computes
+    VAT (no rate logic here — ISSUE-005 Q1, blocked on Marco)."""
+    recipient: dict = {
+        "type": "business" if account.get("billing_vat_id") else "consumer",
+        "organizationName": account.get("billing_legal_name") or account.get("label"),
+        "streetAndNumber": account.get("billing_address_line1"),
+        "postalCode": account.get("billing_postal_code"),
+        "city": account.get("billing_city"),
+        "country": account.get("billing_country"),
+    }
+    if account.get("billing_address_line2"):
+        recipient["streetAdditional"] = account["billing_address_line2"]
+    if account.get("billing_vat_id"):
+        recipient["vatNumber"] = account["billing_vat_id"]
+    # Drop empty keys so we never send blanks to Mollie.
+    return {k: v for k, v in recipient.items() if v}
+
+
+async def issue_sales_invoice(
+    account_id: str,
+    *,
+    seats: int | None = None,
+    amount_eur: float | None = None,
+    mark_paid: bool = False,
+    is_einvoice: bool = False,
+    payment_details: dict | None = None,
+) -> dict:
+    """Create a Mollie sales invoice for a managed account (ISSUE-004).
+
+    `mark_paid=False` issues it (status='issued' -> Mollie auto-numbers).
+    `mark_paid=True` records an already-paid invoice (status='paid', requires
+    `payment_details`) — the managed flow where the buyer paid out-of-band.
+    Carries the captured VAT/address as the recipient and the e-invoice flag.
+    Returns {"invoice_id", "status"}."""
+    settings = get_settings()
+    if not settings.billing.mollie_enabled:
+        raise BillingError("Mollie is not configured")
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account:
+        raise BillingError("billing account not found")
+
+    if seats is None:
+        seats = max(await count_account_seats(account_id), 1)
+    if amount_eur is None:
+        amount_eur = managed_next_invoice_amount(account, seats)
+    if amount_eur is None or amount_eur < 0.01:
+        raise BillingError("no invoice amount for this account")
+
+    tier = account.get("tier") or "managed"
+    line_desc = _plan_description(tier, seats, account.get("billing_period") or "annual")
+    # Quantity 1 with the full amount: per-seat math is already rolled into the
+    # amount, matching how the subscription is priced (no Mollie quantity field).
+    lines = [
+        {
+            "description": line_desc,
+            "quantity": 1,
+            "vatRate": "0.00",  # capture-only; rate ruleset gated on Marco (ISSUE-005 Q1)
+            "unitPrice": _amount_dict(amount_eur),
+        }
+    ]
+    status = "paid" if mark_paid else "issued"
+    invoice = await mollie.create_sales_invoice(
+        status=status,
+        recipient=_invoice_recipient(account),
+        lines=lines,
+        payment_details=payment_details if mark_paid else None,
+        is_einvoice=is_einvoice,
+        metadata={"billing_account_id": account_id, "tier": tier, "seats": seats},
+    )
+    logger.info(
+        "issued sales invoice %s (status=%s) for account %s: %.2f EUR",
+        invoice.get("id"),
+        status,
+        account_id,
+        amount_eur,
+    )
+    return {"invoice_id": invoice.get("id"), "status": invoice.get("status") or status}
+
+
+async def get_sales_invoice_pdf_url(invoice_id: str) -> str | None:
+    """The downloadable PDF URL for a sales invoice (`_links.pdfLink.href`)."""
+    invoice = await mollie.get_sales_invoice(invoice_id)
+    return mollie.sales_invoice_pdf_url(invoice)
+
+
+def _amount_dict(value_eur: float) -> dict[str, str]:
+    return {"currency": "EUR", "value": f"{value_eur:.2f}"}
+
+
 async def estimate_seat_addition(
     account_id: str,
     added_seats: int = 1,
@@ -939,6 +1199,7 @@ async def estimate_seat_addition(
 ) -> dict:
     """Preview the cost of adding seats, for the invite confirm dialog: the
     one-off prorated charge now plus how much the recurring renewal goes up.
+
     `active` is False when there's nothing to charge (free / not subscribed), and
     the UI shows no charge (or the reactivate gate) in that case.
 
@@ -1241,6 +1502,21 @@ async def handle_mollie_webhook(payment_id: str) -> None:
     customer_id = payment.get("customerId")
     sequence = payment.get("sequenceType")
     intent = meta.get("intent")
+
+    # Offline / managed invoice paid via a payment link (ISSUE-006 / C2). No
+    # subscription, no mandate: just mark the account active and keep it managed.
+    # Entitlements are decoupled from payment in managed mode, so a failed /
+    # expired offline payment must NOT drop the account (the buyer pays
+    # out-of-band on their own timeline against a PO).
+    if meta.get("intent") == "offline_invoice":
+        if status == "paid":
+            await async_directus.update_item(
+                "billing_account",
+                account_id,
+                {"status": "active", "payment_mode": "offline", "tier_expires_at": None},
+            )
+            logger.info("offline invoice paid for managed account %s; kept active", account_id)
+        return
 
     if sequence == "first" and status == "paid":
         if intent == "update_payment_method":
