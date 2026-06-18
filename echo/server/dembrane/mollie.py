@@ -153,6 +153,16 @@ async def list_mandates(customer_id: str) -> list[dict]:
     return ((data or {}).get("_embedded") or {}).get("mandates") or []
 
 
+async def revoke_mandate(customer_id: str, mandate_id: str) -> None:
+    """Revoke a stored mandate (DELETE /customers/{id}/mandates/{mid}).
+
+    Used after a customer captures a new payment method, to drop the stale
+    one. Safe only because our subscription never pins a `mandateId`: it rides
+    the newest valid mandate, so revoking an old mandate never cancels the
+    subscription (ADR 0005 / ISSUE-002 Q2). Returns 204 No Content."""
+    await _request("DELETE", f"/customers/{customer_id}/mandates/{mandate_id}")
+
+
 # ── Subscriptions ────────────────────────────────────────────────────
 
 

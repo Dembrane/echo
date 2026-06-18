@@ -32,7 +32,8 @@ export type NotificationAction =
 	| "NAVIGATE_CHAT"
 	| "NAVIGATE_INVITE"
 	| "NAVIGATE_ORGANISATION_SETTINGS"
-	| "NAVIGATE_WORKSPACE_SETTINGS";
+	| "NAVIGATE_WORKSPACE_SETTINGS"
+	| "NAVIGATE_BILLING";
 
 export type NotificationSeverity = "info" | "action_required" | "destructive";
 
@@ -165,10 +166,20 @@ export function resolveNotificationHref(
 		case "NAVIGATE_WORKSPACE_SETTINGS":
 			if (!refs.workspace_id) return null;
 			// Workspace access requests are approved on the Members tab.
-				if (event_code === "MEMBERSHIP_REQUESTED") {
-					return `/w/${refs.workspace_id}/members`;
-				}
+			if (event_code === "MEMBERSHIP_REQUESTED") {
+				return `/w/${refs.workspace_id}/members`;
+			}
 			return `/w/${refs.workspace_id}/settings/general`;
+		case "NAVIGATE_BILLING":
+			// Billing lives on the payer: a workspace-scoped account links to the
+			// workspace billing tab, an org-scoped one to the org billing tab.
+			if (refs.workspace_id) {
+				return `/w/${refs.workspace_id}/settings/billing`;
+			}
+			if (refs.org_id) {
+				return `/o/${refs.org_id}/settings/billing`;
+			}
+			return null;
 		default:
 			return null;
 	}

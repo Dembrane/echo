@@ -198,6 +198,47 @@ async def cancel_subscription(
     return {"status": status}
 
 
+class UpdatePaymentMethodBody(BaseModel):
+    redirect_url: str = Field(min_length=1)
+
+
+@router.post("/billing-accounts/{account_id}/payment-method/checkout")
+async def update_payment_method(
+    account_id: str,
+    body: UpdatePaymentMethodBody,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Capture a new payment method (ISSUE-002); returns a Mollie checkout URL.
+
+    A EUR 0.00 consent payment grabs a fresh card / PayPal mandate without
+    charging. On return the old mandate is revoked and the subscription rides
+    the new one. No subscription is created (webhook intent gate)."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
+    await _require_billing_access(account, auth)
+    try:
+        url = await billing_service.start_update_payment_method(
+            account_id, redirect_url=body.redirect_url
+        )
+    except billing_service.BillingError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"checkout_url": url}
+
+
+@router.post("/billing-accounts/{account_id}/retry-charge")
+async def retry_charge(account_id: str, auth: DependencyDirectusSession) -> dict:
+    """Retry the outstanding charge off-session against the newest valid mandate
+    (ISSUE-008 "retry now"). On success the account flips back to active and the
+    failed-charge notification flag clears. No-op unless past_due."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
+    await _require_billing_access(account, auth)
+    status = await billing_service.retry_charge(account_id)
+    return {"status": status}
+
+
 @webhook_router.post("/mollie/webhook")
 async def mollie_webhook(id: str = Form(...)) -> dict:
     """Mollie payment webhook. Re-fetches the payment and reconciles the account.

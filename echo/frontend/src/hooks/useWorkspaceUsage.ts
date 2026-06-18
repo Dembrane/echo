@@ -31,8 +31,6 @@ export interface WorkspaceUsageData {
 	pilot_hard_block_active: boolean;
 	seat_invite_blocked?: boolean;
 	usage_gates: UsageGates;
-	overage_forecast_eur?: number | null;
-	seat_overage_eur?: number | null;
 	next_tier?: {
 		tier: string;
 		tagline: string;

@@ -13,8 +13,8 @@ import {
 	isComingSoon,
 	isTier,
 	MONTHLY_BILLING_PREMIUM_PCT,
-	pricingForBillingPeriod,
 	PURCHASABLE_TIERS,
+	pricingForBillingPeriod,
 	TIER_FALLBACK_PRICE_EUR,
 	type Tier,
 	type TierCapacity,
@@ -36,12 +36,6 @@ function buildCardData(cap: TierCapacity, billingPeriod: BillingPeriod) {
 		specs.push(t`${cap.included_hours} hours total`);
 	} else {
 		specs.push(t`${cap.included_hours} hours / month`);
-	}
-	if (cap.seat_overage_eur != null) {
-		specs.push(t`€${cap.seat_overage_eur} / extra seat`);
-	}
-	if (cap.hour_overage_eur != null && !cap.hard_block_on_hours) {
-		specs.push(t`€${cap.hour_overage_eur} / extra hour`);
 	}
 	if (cap.training_included && cap.training_included !== "—") {
 		specs.push(t`Training: ${cap.training_included}`);
@@ -355,8 +349,7 @@ export const TierPricingCards = ({
 	// it while exactly one tier is purchasable. It auto-restores once a second
 	// tier ships (PURCHASABLE_TIERS derives from the coming-soon list). Only the
 	// badge is suppressed; the card's visual highlight stays.
-	const badgePopularTier =
-		PURCHASABLE_TIERS.length >= 2 ? highlightTier : null;
+	const badgePopularTier = PURCHASABLE_TIERS.length >= 2 ? highlightTier : null;
 
 	return (
 		<div

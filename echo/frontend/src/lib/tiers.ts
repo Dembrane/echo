@@ -174,9 +174,7 @@ export interface TierCapacity {
 	billing_period_applicable: boolean;
 	duration: string;
 	included_seats: number | null;
-	seat_overage_eur: number | null;
 	included_hours: number | null;
-	hour_overage_eur: number | null;
 	hard_block_on_hours: boolean;
 	training_included: string;
 }
@@ -242,17 +240,6 @@ export function formatTierSeats(cap: TierCapacity): string {
 export function formatTierHours(cap: TierCapacity): string {
 	if (cap.included_hours == null) return "∞";
 	return String(cap.included_hours);
-}
-
-export function formatTierSeatOverage(cap: TierCapacity): string {
-	if (cap.seat_overage_eur == null) return "—";
-	return t`+€${cap.seat_overage_eur}/seat`;
-}
-
-export function formatTierHourOverage(cap: TierCapacity): string {
-	if (cap.hard_block_on_hours) return "€0";
-	if (cap.hour_overage_eur == null) return "—";
-	return t`€${cap.hour_overage_eur}/h`;
 }
 
 export async function fetchTierCapacities(
