@@ -418,6 +418,7 @@ export function InviteModal({
 	});
 
 	// Changing the recipients, role, or workspaces invalidates the preview.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional, reset the preview when recipients, role, or workspaces change
 	useEffect(() => {
 		setConfirm(null);
 	}, [chips, role, selectedWorkspaces]);
