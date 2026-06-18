@@ -7,13 +7,11 @@ import {
 	Box,
 	Button,
 	Center,
-	Checkbox,
 	Collapse,
 	Container,
 	Divider,
 	Group,
 	Loader,
-	Menu,
 	Modal,
 	MultiSelect,
 	NumberInput,
@@ -32,7 +30,6 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import {
-	IconAdjustments,
 	IconArrowsSort,
 	IconChevronDown,
 	IconChevronRight,
@@ -42,24 +39,18 @@ import {
 	IconSearch,
 	IconSortAscending,
 	IconSortDescending,
-	IconUsersGroup,
 } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	type ColumnDef,
-	type ColumnFiltersState,
 	flexRender,
-	type GroupingState,
 	getCoreRowModel,
-	getExpandedRowModel,
 	getFilteredRowModel,
-	getGroupedRowModel,
 	getSortedRowModel,
 	type SortingState,
 	useReactTable,
-	type VisibilityState,
 } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -68,9 +59,8 @@ import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 import { type BillingPeriod, TIER_ORDER, type Tier } from "@/lib/tiers";
-import { formatDurationFromHours } from "@/lib/time";
 
-const tierRank = (tier: string): number => TIER_ORDER.indexOf(tier as Tier);
+const _tierRank = (tier: string): number => TIER_ORDER.indexOf(tier as Tier);
 
 const tierColors: Record<string, string> = {
 	changemaker: "grape",
@@ -123,16 +113,49 @@ type BillingRow = {
 	billing_period: BillingPeriod | null;
 };
 
+// One billing account: the paying entity, pooling its workspaces' seats. The
+// dashboard pivots on this (ISSUE-025); per-workspace detail lives in
+// `workspaces` for drill-down.
+type AccountRow = {
+	billing_account_id: string;
+	label: string;
+	account_scope: "organisation" | "workspace" | null;
+	org_id: string | null;
+	org_name: string | null;
+	tier: string;
+	workspace_count: number;
+	active_workspace_count: number;
+	seat_count: number;
+	external_count: number;
+	base_price_eur: number | null;
+	total_forecast_eur: number;
+	is_trial: boolean;
+	is_managed: boolean;
+	is_comped: boolean;
+	is_active: boolean;
+	tier_expires_at: string | null;
+	type_discount: string | null;
+	percent_discount: number | null;
+	payment_mode: string | null;
+	workspaces: BillingRow[];
+};
+
 type BillingRollup = {
 	cycle_start: string;
 	cycle_end_exclusive: string;
 	workspace_count: number;
 	active_workspace_count: number;
+	account_count: number;
+	active_account_count: number;
+	trial_account_count: number;
+	managed_account_count: number;
+	comped_account_count: number;
 	total_base_eur: number;
 	total_overage_eur: number;
 	total_forecast_eur: number;
 	mrr_eur: number;
 	logins_last_30d: number;
+	accounts: AccountRow[];
 	rows: BillingRow[];
 };
 
@@ -906,318 +929,6 @@ function WorkspaceActionsModal({
 	);
 }
 
-/**
- * TanStack Table wrapper with extra features: column visibility menu,
- * grouping, footer totals row, per-column sort. The Billing panel
- * drives all of its state from outside so it can wire filter chips,
- * KPI rollups, and the actions modal.
- */
-function BillingTable({
-	columns,
-	data,
-	globalFilter,
-	onGlobalFilterChange,
-	columnFilters,
-	onColumnFiltersChange,
-	columnVisibility,
-	onColumnVisibilityChange,
-	grouping,
-	onGroupingChange,
-	initialSorting,
-	footerTotals,
-}: {
-	columns: ColumnDef<BillingRow, unknown>[];
-	data: BillingRow[];
-	globalFilter: string;
-	onGlobalFilterChange: (v: string) => void;
-	columnFilters: ColumnFiltersState;
-	onColumnFiltersChange: (v: ColumnFiltersState) => void;
-	columnVisibility: VisibilityState;
-	onColumnVisibilityChange: (v: VisibilityState) => void;
-	grouping: GroupingState;
-	onGroupingChange: (v: GroupingState) => void;
-	initialSorting?: SortingState;
-	footerTotals: {
-		audio_hours: number;
-		seat_count: number;
-		base_price_eur: number;
-		total_forecast_eur: number;
-	};
-}) {
-	// useReactTable returns a stable ref; React Compiler caches our JSX on
-	// it, so state changes never reach the DOM. See frontend/AGENTS.md.
-	"use no memo";
-	const [sorting, setSorting] = useState<SortingState>(initialSorting ?? []);
-	// TanStack's ExpandedState is Record<string, boolean> | true, but the
-	// 'true' shorthand isn't useful to us — we always track per-row
-	// expansion. Hold local state and let the table pass full updates.
-	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-
-	const table = useReactTable<BillingRow>({
-		autoResetExpanded: false,
-		columns,
-		data,
-		getCoreRowModel: getCoreRowModel(),
-		getExpandedRowModel: getExpandedRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
-		getGroupedRowModel: getGroupedRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		// 'reorder' (default) moves grouped columns to the front so organisation
-		// renders first when group-by-organisation is active; being explicit here
-		// makes that contract impossible to miss during future edits.
-		groupedColumnMode: "reorder",
-		onColumnFiltersChange: (updater) =>
-			onColumnFiltersChange(
-				typeof updater === "function" ? updater(columnFilters) : updater,
-			),
-		onColumnVisibilityChange: (updater) =>
-			onColumnVisibilityChange(
-				typeof updater === "function" ? updater(columnVisibility) : updater,
-			),
-		onExpandedChange: (updater) => {
-			const next = typeof updater === "function" ? updater(expanded) : updater;
-			// Reject the 'true' shorthand; we never set that state.
-			if (next === true) return;
-			setExpanded(next as Record<string, boolean>);
-		},
-		onGlobalFilterChange,
-		onGroupingChange: (updater) =>
-			onGroupingChange(
-				typeof updater === "function" ? updater(grouping) : updater,
-			),
-		onSortingChange: setSorting,
-		state: {
-			columnFilters,
-			columnVisibility,
-			expanded,
-			globalFilter,
-			grouping,
-			sorting,
-		},
-	});
-
-	const rows = table.getRowModel().rows;
-	const leafColumns = table.getVisibleLeafColumns();
-
-	return (
-		<Paper withBorder radius="sm" style={{ overflowX: "auto" }}>
-			<Table striped highlightOnHover verticalSpacing="xs" fz="xs">
-				<Table.Thead>
-					{table.getHeaderGroups().map((headerGroup) => (
-						<Table.Tr key={headerGroup.id}>
-							{headerGroup.headers.map((header) => {
-								const canSort = header.column.getCanSort();
-								const sorted = header.column.getIsSorted();
-								const align =
-									(
-										header.column.columnDef.meta as
-											| { align?: "left" | "right" }
-											| undefined
-									)?.align ?? "left";
-								return (
-									<Table.Th key={header.id} ta={align} style={{ padding: 0 }}>
-										{canSort ? (
-											<UnstyledButton
-												onClick={header.column.getToggleSortingHandler()}
-												title={t`Click to sort`}
-												style={{
-													cursor: "pointer",
-													display: "block",
-													padding: "8px 12px",
-													transition: "background 0.1s ease",
-													width: "100%",
-												}}
-												onMouseEnter={(e) => {
-													e.currentTarget.style.background =
-														"var(--mantine-color-gray-1)";
-												}}
-												onMouseLeave={(e) => {
-													e.currentTarget.style.background = "transparent";
-												}}
-											>
-												<SortableHeader
-													label={
-														typeof header.column.columnDef.header === "string"
-															? (header.column.columnDef.header as string)
-															: ""
-													}
-													sorted={sorted}
-													align={align}
-												/>
-											</UnstyledButton>
-										) : (
-											<Box px={12} py={8}>
-												<Text
-													size="xs"
-													fw={500}
-													c="dimmed"
-													tt="uppercase"
-													lts={0.3}
-												>
-													{flexRender(
-														header.column.columnDef.header,
-														header.getContext(),
-													)}
-												</Text>
-											</Box>
-										)}
-									</Table.Th>
-								);
-							})}
-						</Table.Tr>
-					))}
-				</Table.Thead>
-				<Table.Tbody>
-					{rows.length === 0 ? (
-						<Table.Tr>
-							<Table.Td colSpan={leafColumns.length}>
-								<Text size="xs" c="dimmed" ta="center" py="md">
-									<Trans>Nothing matches the filter.</Trans>
-								</Text>
-							</Table.Td>
-						</Table.Tr>
-					) : (
-						rows.map((row) => {
-							// Grouping renders header rows with a single merged cell.
-							if (row.getIsGrouped()) {
-								const groupValue = String(
-									row.getValue(row.groupingColumnId ?? ""),
-								);
-								const descendants = row.getLeafRows();
-								const organisationBase = descendants.reduce(
-									(s, r) => s + (r.original.base_price_eur ?? 0),
-									0,
-								);
-								const organisationTotal = descendants.reduce(
-									(s, r) => s + (r.original.total_forecast_eur ?? 0),
-									0,
-								);
-								return (
-									<Table.Tr
-										key={row.id}
-										style={{ background: "var(--mantine-color-gray-0)" }}
-									>
-										<Table.Td colSpan={leafColumns.length}>
-											<UnstyledButton
-												onClick={row.getToggleExpandedHandler()}
-												style={{ width: "100%" }}
-											>
-												<Group justify="space-between" wrap="nowrap">
-													<Group gap="xs">
-														{row.getIsExpanded() ? (
-															<IconChevronDown size={14} />
-														) : (
-															<IconChevronRight size={14} />
-														)}
-														<Text size="sm" fw={500}>
-															{groupValue || t`Unassigned organisation`}
-														</Text>
-														<Text size="xs" c="dimmed">
-															{descendants.length}{" "}
-															{descendants.length === 1
-																? t`workspace`
-																: t`workspaces`}
-														</Text>
-													</Group>
-													<Group gap="md">
-														<Text size="xs" c="dimmed">
-															<Trans>Base</Trans> {formatEur(organisationBase)}
-														</Text>
-														<Text size="xs" fw={500}>
-															<Trans>Total</Trans>{" "}
-															{formatEur(organisationTotal)}
-														</Text>
-													</Group>
-												</Group>
-											</UnstyledButton>
-										</Table.Td>
-									</Table.Tr>
-								);
-							}
-							return (
-								<Table.Tr key={row.id}>
-									{row.getVisibleCells().map((cell) => {
-										const align =
-											(
-												cell.column.columnDef.meta as
-													| { align?: "left" | "right" }
-													| undefined
-											)?.align ?? "left";
-										return (
-											<Table.Td key={cell.id} ta={align}>
-												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext(),
-												)}
-											</Table.Td>
-										);
-									})}
-								</Table.Tr>
-							);
-						})
-					)}
-				</Table.Tbody>
-				{rows.length > 0 && (
-					<Table.Tfoot>
-						<Table.Tr
-							style={{
-								// Visibly distinct: graphite-tinted row, thicker
-								// top border, bold text. Reads as a summary bar
-								// not "another data row".
-								background: "var(--mantine-color-dark-0, #f1f3f5)",
-								borderTop: "2px solid var(--mantine-color-gray-5)",
-							}}
-						>
-							{leafColumns.map((col, i) => {
-								const key = col.id;
-								// Render "Total" label under the first visible
-								// column (works with / without grouping which
-								// moves organisation to leaf[0]).
-								if (i === 0) {
-									return (
-										<Table.Td key={col.id}>
-											<Text size="xs" fw={700} tt="uppercase" lts={0.3}>
-												<Trans>Total</Trans>
-											</Text>
-										</Table.Td>
-									);
-								}
-								// Lookup table keyed by column id — immune to
-								// column-visibility or reorder churn.
-								const footerById: Record<string, React.ReactNode> = {
-									audio_hours: (
-										<Text size="xs" fw={600} ta="right">
-											{formatDurationFromHours(footerTotals.audio_hours)}
-										</Text>
-									),
-									base_price_eur: (
-										<Text size="xs" fw={600} ta="right">
-											{formatEur(footerTotals.base_price_eur)}
-										</Text>
-									),
-									seat_count: (
-										<Text size="xs" fw={600} ta="right">
-											{footerTotals.seat_count}
-										</Text>
-									),
-									total_forecast_eur: (
-										<Text size="xs" fw={700} ta="right">
-											{formatEur(footerTotals.total_forecast_eur)}
-										</Text>
-									),
-								};
-								return (
-									<Table.Td key={col.id}>{footerById[key] ?? null}</Table.Td>
-								);
-							})}
-						</Table.Tr>
-					</Table.Tfoot>
-				)}
-			</Table>
-		</Paper>
-	);
-}
-
 function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 	const [opened, { toggle }] = useDisclosure(true);
 
@@ -1305,6 +1016,365 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 	);
 }
 
+/**
+ * Account label for an account row. Mirrors `accountScopeLabel` but reads the
+ * account's own scope.
+ */
+function accountRowScopeLabel(scope: AccountRow["account_scope"]): string {
+	if (scope === "organisation") return t`Organisation account`;
+	if (scope === "workspace") return t`Workspace account`;
+	return t`Account`;
+}
+
+/**
+ * Trial / Managed badges for an account. Trial shows the expiry; both add €0 to
+ * the paying revenue total (Managed is offline-invoiced and so counts, but we
+ * still flag it so staff know there is no Mollie mandate behind it).
+ */
+function AccountBadges({ account }: { account: AccountRow }) {
+	return (
+		<>
+			{account.is_trial && (
+				<Tooltip
+					label={
+						account.tier_expires_at
+							? t`Comped trial. Expires ${formatDate(account.tier_expires_at)}. €0 revenue.`
+							: t`Comped trial. €0 revenue.`
+					}
+					withArrow
+				>
+					<Badge size="xs" color="orange" variant="light">
+						<Trans>Trial</Trans>
+					</Badge>
+				</Tooltip>
+			)}
+			{account.is_managed && (
+				<Tooltip label={t`Invoiced offline, no Mollie mandate.`} withArrow>
+					<Badge size="xs" color="grape" variant="light">
+						<Trans>Managed</Trans>
+					</Badge>
+				</Tooltip>
+			)}
+		</>
+	);
+}
+
+/**
+ * Account-scoped actions modal. Tier lives on the billing account, so changing
+ * it here applies to every workspace the account pools. Grant-trial is keyed on
+ * the account id. Workspace-scoped actions (change admin, reset usage, discount)
+ * are reached per workspace through `WorkspaceActionsModal`.
+ */
+function AccountActionsModal({
+	account,
+	opened,
+	onClose,
+	onOpenWorkspace,
+}: {
+	account: AccountRow | null;
+	opened: boolean;
+	onClose: () => void;
+	onOpenWorkspace: (row: BillingRow) => void;
+}) {
+	if (!account) return null;
+	// Tier writes target the account; any of its workspaces routes there via
+	// PATCH /v2/workspaces/{id}/tier. Use the first workspace as the handle.
+	const tierHandle = account.workspaces[0] ?? null;
+	return (
+		<Modal
+			opened={opened}
+			onClose={onClose}
+			title={
+				<Group gap="xs">
+					<Text fw={500}>{account.label}</Text>
+					<Badge
+						size="xs"
+						color={tierColors[account.tier] ?? "gray"}
+						variant="light"
+						tt="capitalize"
+					>
+						{account.tier}
+					</Badge>
+					<Badge size="xs" color="gray" variant="outline">
+						{accountRowScopeLabel(account.account_scope)}
+					</Badge>
+					<AccountBadges account={account} />
+				</Group>
+			}
+			size="md"
+		>
+			<Stack gap="xs">
+				<Text size="xs" c="dimmed">
+					<Trans>
+						{account.workspace_count} workspaces,{" "}
+						{account.seat_count + account.external_count} seats pooled
+					</Trans>
+				</Text>
+				<Divider my={4} />
+
+				{tierHandle && <ChangeTierControl row={tierHandle} />}
+				<GrantTrialControl accountId={account.billing_account_id} />
+
+				<Divider my={4} />
+				<Text size="xs" c="dimmed">
+					<Trans>Workspaces in this account</Trans>
+				</Text>
+				{account.workspaces.map((ws) => (
+					<Paper key={ws.workspace_id} withBorder radius="sm" p="sm">
+						<Group justify="space-between" wrap="nowrap" align="center">
+							<Stack gap={0} style={{ minWidth: 0 }}>
+								<Text size="sm" fw={500} truncate>
+									{ws.workspace_name}
+								</Text>
+								<Text size="xs" c="dimmed">
+									{ws.is_active ? t`Active` : t`Inactive`},{" "}
+									{ws.seat_count + ws.external_count} seats
+								</Text>
+							</Stack>
+							<Button
+								size="xs"
+								variant="outline"
+								color="gray"
+								onClick={() => {
+									onClose();
+									onOpenWorkspace(ws);
+								}}
+							>
+								<Trans>Workspace actions</Trans>
+							</Button>
+						</Group>
+					</Paper>
+				))}
+			</Stack>
+		</Modal>
+	);
+}
+
+/**
+ * Account-primary rollup table. Each row is a billing account; expanding it
+ * reveals the account's workspaces with a per-workspace kebab. Comped/trial
+ * accounts sort to the bottom (server-side) and never feed the paying total.
+ */
+function AccountBillingTable({
+	accounts,
+	onOpenAccount,
+	onOpenWorkspace,
+	payingTotal,
+}: {
+	accounts: AccountRow[];
+	onOpenAccount: (account: AccountRow) => void;
+	onOpenWorkspace: (row: BillingRow) => void;
+	payingTotal: number;
+}) {
+	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+	const toggle = (id: string) => setExpanded((e) => ({ ...e, [id]: !e[id] }));
+
+	if (accounts.length === 0) {
+		return (
+			<Text size="sm" c="dimmed">
+				<Trans>No billing accounts match the current filters.</Trans>
+			</Text>
+		);
+	}
+
+	return (
+		<Table.ScrollContainer minWidth={720}>
+			<Table verticalSpacing="xs" highlightOnHover>
+				<Table.Thead>
+					<Table.Tr>
+						<Table.Th style={{ width: 28 }} />
+						<Table.Th>
+							<Trans>Account</Trans>
+						</Table.Th>
+						<Table.Th>
+							<Trans>Tier</Trans>
+						</Table.Th>
+						<Table.Th style={{ textAlign: "right" }}>
+							<Trans>Workspaces</Trans>
+						</Table.Th>
+						<Table.Th style={{ textAlign: "right" }}>
+							<Trans>Seats</Trans>
+						</Table.Th>
+						<Table.Th style={{ textAlign: "right" }}>
+							<Trans>Forecast</Trans>
+						</Table.Th>
+						<Table.Th style={{ width: 36 }} />
+					</Table.Tr>
+				</Table.Thead>
+				<Table.Tbody>
+					{accounts.map((account) => {
+						const isOpen = expanded[account.billing_account_id] ?? false;
+						return (
+							<Fragment key={account.billing_account_id}>
+								<Table.Tr
+									style={account.is_comped ? { opacity: 0.85 } : undefined}
+								>
+									<Table.Td>
+										<ActionIcon
+											size="sm"
+											variant="subtle"
+											color="gray"
+											onClick={() => toggle(account.billing_account_id)}
+											aria-label={t`Expand workspaces`}
+										>
+											{isOpen ? (
+												<IconChevronDown size={14} />
+											) : (
+												<IconChevronRight size={14} />
+											)}
+										</ActionIcon>
+									</Table.Td>
+									<Table.Td>
+										<Stack gap={2} style={{ minWidth: 0 }}>
+											<Group gap={6} wrap="nowrap">
+												<Text size="xs" fw={500} truncate maw={220}>
+													{account.label}
+												</Text>
+												<AccountBadges account={account} />
+											</Group>
+											<Text size="xs" c="dimmed">
+												{accountRowScopeLabel(account.account_scope)}
+											</Text>
+										</Stack>
+									</Table.Td>
+									<Table.Td>
+										<Badge
+											size="xs"
+											color={tierColors[account.tier] ?? "gray"}
+											variant="light"
+											tt="capitalize"
+										>
+											{account.tier}
+										</Badge>
+									</Table.Td>
+									<Table.Td style={{ textAlign: "right" }}>
+										<Text size="xs">
+											{account.active_workspace_count}/{account.workspace_count}
+										</Text>
+									</Table.Td>
+									<Table.Td style={{ textAlign: "right" }}>
+										<Text size="xs">
+											{account.seat_count + account.external_count}
+										</Text>
+									</Table.Td>
+									<Table.Td style={{ textAlign: "right" }}>
+										{account.is_comped ? (
+											<Text size="xs" c="dimmed">
+												€0
+											</Text>
+										) : (
+											<Text size="xs" fw={500}>
+												{formatEur(account.total_forecast_eur)}
+											</Text>
+										)}
+									</Table.Td>
+									<Table.Td>
+										<ActionIcon
+											size="sm"
+											variant="subtle"
+											color="gray"
+											onClick={() => onOpenAccount(account)}
+											aria-label={t`Open account actions`}
+										>
+											<IconDots size={14} />
+										</ActionIcon>
+									</Table.Td>
+								</Table.Tr>
+								<Table.Tr>
+									<Table.Td colSpan={7} p={0} style={{ border: 0 }}>
+										<Collapse in={isOpen}>
+											<Box px="md" py="xs">
+												<Table verticalSpacing={4} withRowBorders={false}>
+													<Table.Tbody>
+														{account.workspaces.map((ws) => (
+															<Table.Tr key={ws.workspace_id}>
+																<Table.Td>
+																	<Anchor
+																		component={I18nLink}
+																		to={`/w/${ws.workspace_id}/settings/billing`}
+																		size="xs"
+																	>
+																		{ws.workspace_name}
+																	</Anchor>
+																</Table.Td>
+																<Table.Td>
+																	{ws.is_active ? (
+																		<Badge
+																			size="xs"
+																			color="primary"
+																			variant="light"
+																		>
+																			<Trans>Active</Trans>
+																		</Badge>
+																	) : (
+																		<Badge
+																			size="xs"
+																			color="gray"
+																			variant="light"
+																		>
+																			<Trans>Inactive</Trans>
+																		</Badge>
+																	)}
+																</Table.Td>
+																<Table.Td style={{ textAlign: "right" }}>
+																	<UsageBar
+																		used={ws.audio_hours}
+																		cap={ws.audio_hours_included}
+																		unit="h"
+																		block={ws.pilot_hard_block}
+																	/>
+																</Table.Td>
+																<Table.Td style={{ textAlign: "right" }}>
+																	<Text size="xs">
+																		{ws.seat_count + ws.external_count}{" "}
+																		<Trans>seats</Trans>
+																	</Text>
+																</Table.Td>
+																<Table.Td style={{ width: 36 }}>
+																	<ActionIcon
+																		size="sm"
+																		variant="subtle"
+																		color="gray"
+																		onClick={() => onOpenWorkspace(ws)}
+																		aria-label={t`Open workspace actions`}
+																	>
+																		<IconDots size={14} />
+																	</ActionIcon>
+																</Table.Td>
+															</Table.Tr>
+														))}
+													</Table.Tbody>
+												</Table>
+											</Box>
+										</Collapse>
+									</Table.Td>
+								</Table.Tr>
+							</Fragment>
+						);
+					})}
+				</Table.Tbody>
+				<Table.Tfoot>
+					<Table.Tr>
+						<Table.Td />
+						<Table.Td>
+							<Text size="xs" fw={500}>
+								<Trans>Paying revenue</Trans>
+							</Text>
+						</Table.Td>
+						<Table.Td colSpan={3} />
+						<Table.Td style={{ textAlign: "right" }}>
+							<Text size="xs" fw={500}>
+								{formatEur(payingTotal)}
+							</Text>
+						</Table.Td>
+						<Table.Td />
+					</Table.Tr>
+				</Table.Tfoot>
+			</Table>
+		</Table.ScrollContainer>
+	);
+}
+
 function UsageAndBillingPanel() {
 	const [periodOffset, setPeriodOffset] = useState(0);
 	const [refreshing, setRefreshing] = useState(false);
@@ -1326,233 +1396,58 @@ function UsageAndBillingPanel() {
 	};
 
 	const [globalFilter, setGlobalFilter] = useState("");
-	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-	const [grouping, setGrouping] = useState<GroupingState>([]);
 	const [statusFilter, setStatusFilter] = useState<
 		"all" | "active" | "inactive"
 	>("all");
 	const [tierFilter, setTierFilter] = useState<string[]>([]);
+	// Workspace-scoped actions (change admin, reset usage, discount). Reached by
+	// drilling into an account row's workspaces.
 	const [actionsRow, setActionsRow] = useState<BillingRow | null>(null);
+	// Account-scoped actions (change tier, grant trial). Tier lives on the
+	// account, so this is the right unit for it.
+	const [actionsAccount, setActionsAccount] = useState<AccountRow | null>(null);
 
-	// Pre-filter handles the fast chip-toggles; column filters inside
-	// TanStack handle per-column multiselects (currently tier).
-	const prefiltered = useMemo(() => {
-		const rows = data?.rows ?? [];
-		return rows.filter((r) => {
-			if (statusFilter === "active" && !r.is_active) return false;
-			if (statusFilter === "inactive" && r.is_active) return false;
-			if (tierFilter.length > 0 && !tierFilter.includes(r.tier)) return false;
+	// Account-primary view: filter accounts by the chips. A search/tier/status
+	// match on any of an account's workspaces keeps the account.
+	const accountsForView = useMemo(() => {
+		const accounts = data?.accounts ?? [];
+		const q = globalFilter.trim().toLowerCase();
+		return accounts.filter((a) => {
+			if (statusFilter === "active" && !a.is_active) return false;
+			if (statusFilter === "inactive" && a.is_active) return false;
+			if (tierFilter.length > 0 && !tierFilter.includes(a.tier)) return false;
+			if (q) {
+				const haystack = [
+					a.label,
+					a.org_name ?? "",
+					a.tier,
+					...a.workspaces.map((w) => w.workspace_name),
+					...a.workspaces.flatMap((w) =>
+						w.workspace_admins.map((c) => c.email ?? ""),
+					),
+				]
+					.join(" ")
+					.toLowerCase();
+				if (!haystack.includes(q)) return false;
+			}
 			return true;
 		});
-	}, [data, statusFilter, tierFilter]);
+	}, [data, globalFilter, statusFilter, tierFilter]);
 
-	const columns = useMemo<ColumnDef<BillingRow, unknown>[]>(
-		() => [
-			{
-				accessorKey: "workspace_name",
-				cell: ({ row }) => {
-					const admins = row.original.workspace_admins;
-					const adminEmail = admins[0]?.email ?? null;
-					return (
-						<Stack gap={0} style={{ minWidth: 0 }}>
-							<Anchor
-								component={I18nLink}
-								to={`/w/${row.original.workspace_id}/settings/billing`}
-								size="xs"
-								fw={500}
-							>
-								{row.original.workspace_name}
-							</Anchor>
-							{adminEmail && (
-								<Tooltip
-									label={admins
-										.map((a) => `${a.display_name ?? "?"} ${a.email ?? ""}`)
-										.join(" / ")}
-									withArrow
-									disabled={admins.length <= 1}
-								>
-									<Text size="xs" c="dimmed" truncate maw={220}>
-										{adminEmail}
-									</Text>
-								</Tooltip>
-							)}
-						</Stack>
-					);
-				},
-				// Workspace name anchors the whole row — if the user hides
-				// it, the total row + every other column becomes unreadable.
-				// The menu already filters it out; this belts-and-braces
-				// prevents it via a stray columnVisibility write too.
-				enableHiding: false,
-				header: t`Workspace`,
-				id: "workspace_name",
-			},
-			{
-				accessorFn: (r) => r.billed_to_team_name ?? r.org_name,
-				cell: ({ row }) => (
-					<Group gap={4} wrap="nowrap">
-						<Anchor
-							component={I18nLink}
-							to={`/o/${row.original.org_id}`}
-							size="xs"
-							c="dimmed"
-						>
-							{row.original.billed_to_team_name ?? row.original.org_name}
-						</Anchor>
-						{row.original.is_partner_owned && (
-							<Badge size="xs" color="violet" variant="light">
-								<Trans>partner</Trans>
-							</Badge>
-						)}
-					</Group>
-				),
-				// Used for grouping; the grouped-row renderer in BillingTable
-				// reads this to label the header.
-				getGroupingValue: (r) => r.billed_to_team_name ?? r.org_name,
-				header: t`Organisation`,
-				id: "organisation",
-			},
-			{
-				accessorFn: (r) => r.tier,
-				cell: ({ row }) => (
-					<Badge
-						size="xs"
-						color={tierColors[row.original.tier] ?? "gray"}
-						variant="light"
-						tt="capitalize"
-					>
-						{row.original.tier}
-					</Badge>
-				),
-				header: t`Tier`,
-				id: "tier",
-				sortingFn: (a, b) =>
-					tierRank(a.original.tier) - tierRank(b.original.tier),
-			},
-			{
-				accessorFn: (r) => r.billing_period ?? "",
-				cell: ({ row }) => {
-					const bp = row.original.billing_period;
-					if (!bp) {
-						return (
-							<Text size="xs" c="dimmed">
-								—
-							</Text>
-						);
-					}
-					return (
-						<Badge
-							size="xs"
-							variant="light"
-							color={bp === "annual" ? "blue" : "gray"}
-							tt="capitalize"
-						>
-							{bp}
-						</Badge>
-					);
-				},
-				header: t`Billing`,
-				id: "billing_period",
-			},
-			{
-				accessorKey: "base_price_eur",
-				cell: ({ row }) => formatEur(row.original.base_price_eur),
-				header: t`Base`,
-				id: "base_price_eur",
-				meta: { align: "right" },
-			},
-			{
-				accessorKey: "audio_hours",
-				cell: ({ row }) => (
-					<UsageBar
-						used={row.original.audio_hours}
-						cap={row.original.audio_hours_included}
-						unit="h"
-						block={row.original.pilot_hard_block}
-					/>
-				),
-				header: t`Hours`,
-				id: "audio_hours",
-				meta: { align: "right" },
-			},
-			{
-				accessorFn: (r) => r.seat_count + r.external_count,
-				cell: ({ row }) => (
-					<UsageBar
-						used={row.original.seat_count + row.original.external_count}
-						cap={row.original.seats_included}
-					/>
-				),
-				header: t`Seats`,
-				id: "seat_count",
-				meta: { align: "right" },
-			},
-			{
-				accessorFn: (r) => (r.is_active ? "active" : "inactive"),
-				cell: ({ row }) =>
-					row.original.is_active ? (
-						<Badge size="xs" color="primary" variant="light">
-							<Trans>Active</Trans>
-						</Badge>
-					) : (
-						<Badge size="xs" color="gray" variant="light">
-							<Trans>Inactive</Trans>
-						</Badge>
-					),
-				header: t`Status`,
-				id: "is_active",
-			},
-			{
-				accessorKey: "total_forecast_eur",
-				cell: ({ row }) => (
-					<Text size="xs" fw={500}>
-						{formatEur(row.original.total_forecast_eur)}
-					</Text>
-				),
-				header: t`Total`,
-				id: "total_forecast_eur",
-				meta: { align: "right" },
-			},
-			{
-				cell: ({ row }) => (
-					<ActionIcon
-						size="sm"
-						variant="subtle"
-						color="gray"
-						onClick={() => setActionsRow(row.original)}
-						aria-label={t`Open actions`}
-					>
-						<IconDots size={14} />
-					</ActionIcon>
-				),
-				enableGrouping: false,
-				enableHiding: false,
-				enableSorting: false,
-				header: "",
-				id: "actions",
-			},
-		],
-		[],
+	// Workspace rows behind the filtered accounts, for the tier breakdown + CSV.
+	const prefiltered = useMemo(
+		() => accountsForView.flatMap((a) => a.workspaces),
+		[accountsForView],
 	);
 
-	const footerTotals = useMemo(
-		() => ({
-			audio_hours: prefiltered.reduce((s, r) => s + r.audio_hours, 0),
-			base_price_eur: prefiltered.reduce(
-				(s, r) => s + (r.base_price_eur ?? 0),
-				0,
-			),
-			seat_count: prefiltered.reduce(
-				(s, r) => s + r.seat_count + r.external_count,
-				0,
-			),
-			total_forecast_eur: prefiltered.reduce(
-				(s, r) => s + (r.total_forecast_eur ?? 0),
-				0,
-			),
-		}),
-		[prefiltered],
+	// Paying total over the filtered accounts (comped/trial already forecast €0).
+	const payingTotal = useMemo(
+		() => accountsForView.reduce((s, a) => s + a.total_forecast_eur, 0),
+		[accountsForView],
+	);
+	const compedCount = useMemo(
+		() => accountsForView.filter((a) => a.is_comped).length,
+		[accountsForView],
 	);
 
 	if (isLoading) {
@@ -1577,11 +1472,16 @@ function UsageAndBillingPanel() {
 
 	const handleExport = () => {
 		const headers = [
+			"billing_account_id",
+			"account_label",
+			"account_scope",
 			"workspace_id",
 			"workspace_name",
 			"organisation",
-			"account_scope",
 			"tier",
+			"payment_mode",
+			"is_trial",
+			"is_managed",
 			"tier_expires_at",
 			"type_discount",
 			"percent_discount",
@@ -1591,32 +1491,39 @@ function UsageAndBillingPanel() {
 			"seats_included",
 			"external_count",
 			"base_price_eur",
-			"total_forecast_eur",
+			"account_forecast_eur",
 			"workspace_admin_email",
 			"is_active",
 		];
-		const lines = prefiltered.map((r) =>
-			[
-				r.workspace_id,
-				r.workspace_name,
-				r.billed_to_team_name ?? r.org_name,
-				r.account_scope ?? "",
-				r.tier,
-				r.tier_expires_at ?? "",
-				r.type_discount ?? "",
-				r.percent_discount ?? "",
-				r.audio_hours.toFixed(2),
-				r.audio_hours_included ?? "",
-				r.seat_count,
-				r.seats_included ?? "",
-				r.external_count,
-				r.base_price_eur ?? "",
-				r.total_forecast_eur ?? "",
-				r.workspace_admins[0]?.email ?? "",
-				r.is_active ? "yes" : "no",
-			]
-				.map((v) => `"${String(v).replace(/"/g, '""')}"`)
-				.join(","),
+		const lines = accountsForView.flatMap((a) =>
+			a.workspaces.map((r) =>
+				[
+					a.billing_account_id,
+					a.label,
+					a.account_scope ?? "",
+					r.workspace_id,
+					r.workspace_name,
+					r.billed_to_team_name ?? r.org_name,
+					a.tier,
+					a.payment_mode ?? "",
+					a.is_trial ? "yes" : "no",
+					a.is_managed ? "yes" : "no",
+					a.tier_expires_at ?? "",
+					a.type_discount ?? "",
+					a.percent_discount ?? "",
+					r.audio_hours.toFixed(2),
+					r.audio_hours_included ?? "",
+					r.seat_count,
+					r.seats_included ?? "",
+					r.external_count,
+					a.base_price_eur ?? "",
+					a.total_forecast_eur,
+					r.workspace_admins[0]?.email ?? "",
+					r.is_active ? "yes" : "no",
+				]
+					.map((v) => `"${String(v).replace(/"/g, '""')}"`)
+					.join(","),
+			),
 		);
 		const csv = [headers.join(","), ...lines].join("\n");
 		const blob = new Blob([csv], { type: "text/csv" });
@@ -1633,16 +1540,6 @@ function UsageAndBillingPanel() {
 		value: t,
 	}));
 
-	// Column visibility menu: let staff hide noisy columns.
-	const columnMenuItems = columns
-		.filter((c) => c.id && c.id !== "actions" && c.id !== "workspace_name")
-		.map((c) => ({
-			id: c.id ?? "",
-			label: typeof c.header === "string" ? (c.header as string) : (c.id ?? ""),
-		}));
-
-	const isGrouped = grouping.includes("organisation");
-
 	return (
 		<Stack gap="md">
 			<Group justify="space-between" align="flex-end" wrap="wrap">
@@ -1652,18 +1549,37 @@ function UsageAndBillingPanel() {
 					</Text>
 					<Text size="xs" c="dimmed">
 						<Trans>
-							{data.workspace_count} workspaces, {data.active_workspace_count}{" "}
-							active
+							{data.account_count} accounts, {data.workspace_count} workspaces,{" "}
+							{data.active_workspace_count} active
 						</Trans>
 					</Text>
 				</Stack>
 				<PeriodSelector value={periodOffset} onChange={setPeriodOffset} />
 			</Group>
 
+			<Group gap="md" wrap="wrap" align="center">
+				<Text size="sm">
+					<Trans>Paying revenue this month</Trans>{" "}
+					<Text span fw={600}>
+						{formatEur(payingTotal)}
+					</Text>
+				</Text>
+				{compedCount > 0 && (
+					<Tooltip
+						label={t`Trial and comped accounts, excluded from the paying total.`}
+						withArrow
+					>
+						<Badge size="sm" color="orange" variant="light">
+							<Plural value={compedCount} one="# comped" other="# comped" />
+						</Badge>
+					</Tooltip>
+				)}
+			</Group>
+
 			<Group gap="sm" wrap="wrap" align="center">
 				<TextInput
 					leftSection={<IconSearch size={14} />}
-					placeholder={t`Search workspace, organisation, email, tier`}
+					placeholder={t`Search account, workspace, organisation, email, tier`}
 					value={globalFilter}
 					onChange={(e) => setGlobalFilter(e.currentTarget.value)}
 					size="sm"
@@ -1681,7 +1597,7 @@ function UsageAndBillingPanel() {
 				<Button.Group>
 					<Button
 						size="xs"
-						variant={statusFilter === "all" ? "filled" : "default"}
+						variant={statusFilter === "all" ? "filled" : "outline"}
 						color={statusFilter === "all" ? "primary" : "gray"}
 						onClick={() => setStatusFilter("all")}
 					>
@@ -1689,7 +1605,7 @@ function UsageAndBillingPanel() {
 					</Button>
 					<Button
 						size="xs"
-						variant={statusFilter === "active" ? "filled" : "default"}
+						variant={statusFilter === "active" ? "filled" : "outline"}
 						color={statusFilter === "active" ? "primary" : "gray"}
 						onClick={() => setStatusFilter("active")}
 					>
@@ -1697,7 +1613,7 @@ function UsageAndBillingPanel() {
 					</Button>
 					<Button
 						size="xs"
-						variant={statusFilter === "inactive" ? "filled" : "default"}
+						variant={statusFilter === "inactive" ? "filled" : "outline"}
 						color="gray"
 						onClick={() => setStatusFilter("inactive")}
 					>
@@ -1706,57 +1622,8 @@ function UsageAndBillingPanel() {
 				</Button.Group>
 				<Button
 					size="xs"
-					variant={isGrouped ? "filled" : "default"}
-					color={isGrouped ? "primary" : "gray"}
-					leftSection={<IconUsersGroup size={14} />}
-					onClick={() => setGrouping(isGrouped ? [] : ["organisation"])}
-				>
-					<Trans>Group by organisation</Trans>
-				</Button>
-				<Menu shadow="md" width={220} position="bottom-end">
-					<Menu.Target>
-						<Button
-							size="xs"
-							variant="default"
-							leftSection={<IconAdjustments size={14} />}
-						>
-							<Trans>Columns</Trans>
-						</Button>
-					</Menu.Target>
-					<Menu.Dropdown>
-						<Menu.Label>
-							<Trans>Visible columns</Trans>
-						</Menu.Label>
-						{columnMenuItems.map((c) => (
-							<Menu.Item
-								key={c.id}
-								closeMenuOnClick={false}
-								onClick={() =>
-									setColumnVisibility((v) => ({
-										...v,
-										[c.id]: v[c.id] === false,
-									}))
-								}
-							>
-								<Checkbox
-									size="xs"
-									label={c.label}
-									checked={columnVisibility[c.id] !== false}
-									onChange={() =>
-										setColumnVisibility((v) => ({
-											...v,
-											[c.id]: v[c.id] === false,
-										}))
-									}
-									onClick={(e) => e.stopPropagation()}
-								/>
-							</Menu.Item>
-						))}
-					</Menu.Dropdown>
-				</Menu>
-				<Button
-					size="xs"
-					variant="default"
+					variant="outline"
+					color="gray"
 					leftSection={<IconDownload size={14} />}
 					onClick={handleExport}
 				>
@@ -1764,19 +1631,11 @@ function UsageAndBillingPanel() {
 				</Button>
 			</Group>
 
-			<BillingTable
-				columns={columns}
-				data={prefiltered}
-				globalFilter={globalFilter}
-				onGlobalFilterChange={setGlobalFilter}
-				columnFilters={columnFilters}
-				onColumnFiltersChange={setColumnFilters}
-				columnVisibility={columnVisibility}
-				onColumnVisibilityChange={setColumnVisibility}
-				grouping={grouping}
-				onGroupingChange={setGrouping}
-				initialSorting={[{ desc: true, id: "total_forecast_eur" }]}
-				footerTotals={footerTotals}
+			<AccountBillingTable
+				accounts={accountsForView}
+				onOpenAccount={setActionsAccount}
+				onOpenWorkspace={setActionsRow}
+				payingTotal={payingTotal}
 			/>
 
 			<TierBreakdownPanel rows={prefiltered} />
@@ -1785,6 +1644,13 @@ function UsageAndBillingPanel() {
 				dataUpdatedAt={dataUpdatedAt}
 				refreshing={refreshing}
 				onRefresh={handleRefresh}
+			/>
+
+			<AccountActionsModal
+				account={actionsAccount}
+				opened={actionsAccount !== null}
+				onClose={() => setActionsAccount(null)}
+				onOpenWorkspace={setActionsRow}
 			/>
 
 			<WorkspaceActionsModal

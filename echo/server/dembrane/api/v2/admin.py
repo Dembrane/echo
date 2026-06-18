@@ -99,22 +99,77 @@ class BillingRow(BaseModel):
     billing_period: Optional[str] = None
 
 
+class AccountRow(BaseModel):
+    """One row = one billing account (the paying entity).
+
+    An org-scoped account pools every workspace in the org; a workspace-scoped
+    account is a single workspace. Seats (members + external) and forecast are
+    aggregated across the account's workspaces. Per-workspace detail stays in
+    `workspaces` for drill-down.
+    """
+
+    billing_account_id: str
+    # Human label: account.label, else the org / workspace name.
+    label: str
+    # "organisation" (org-scoped, pools workspaces) or "workspace" (single).
+    account_scope: Optional[Literal["organisation", "workspace"]] = None
+    org_id: Optional[str] = None
+    org_name: Optional[str] = None
+    # Tier lives on the account, so change-tier acts here (not per workspace).
+    tier: str
+    # Account counts.
+    workspace_count: int = 0
+    active_workspace_count: int = 0
+    # Pooled seats across the account's workspaces.
+    seat_count: int = 0
+    external_count: int = 0
+    # Forecast = tier base, charged once per account (not per workspace).
+    # €0 for trial / comped accounts so they never inflate revenue.
+    base_price_eur: Optional[float] = None
+    total_forecast_eur: float = 0.0
+    # Revenue classification.
+    is_trial: bool = False
+    is_managed: bool = False
+    # Comped = does not contribute to MRR (trial, or a free/comped tier with no
+    # paying payment_mode). Surfaced as a separate count, never in the total.
+    is_comped: bool = False
+    # An account is active when any of its workspaces is active.
+    is_active: bool = True
+    tier_expires_at: Optional[str] = None
+    type_discount: Optional[str] = None
+    percent_discount: Optional[int] = None
+    payment_mode: Optional[str] = None
+    # Per-workspace drill-down: the workspace-scoped kebab actions act on these.
+    workspaces: list[BillingRow] = []
+
+
 class BillingRollupResponse(BaseModel):
     cycle_start: str
     cycle_end_exclusive: str
     workspace_count: int
     active_workspace_count: int
+    # Account counts (the pivot unit). account_count = len(accounts).
+    account_count: int = 0
+    active_account_count: int = 0
+    # Trial + managed + comped subtotals, kept separate from paying revenue.
+    trial_account_count: int = 0
+    managed_account_count: int = 0
+    comped_account_count: int = 0
     total_base_eur: float
     total_overage_eur: float
+    # Paying revenue only: trial + comped accounts contribute €0 here. A granted
+    # trial therefore never raises this total.
     total_forecast_eur: float
-    # MRR = sum of (active workspace base prices) for non-pilot tiers.
-    # Pilot is one-time so its base doesn't recur; excluded from MRR
-    # but included in total_forecast_eur as this-month revenue.
+    # MRR = sum of (paying account base prices) for non-pilot tiers. Trials and
+    # comped accounts are excluded.
     mrr_eur: float
     # Count of workspace admins (non-external, admin+owner) who logged
     # in in the last 30 days. Proxy for "active accounts you can
     # reach" since we don't have a full DAU pipeline.
     logins_last_30d: int
+    # Account-primary rows (the dashboard pivot).
+    accounts: list[AccountRow] = []
+    # Per-workspace rows, retained for CSV export + backward compatibility.
     rows: list[BillingRow]
 
 
@@ -226,6 +281,10 @@ async def _all_active_workspaces() -> list[dict]:
                     # a workspace-scoped account carries workspace_id instead.
                     "billing_account_id.org_id",
                     "billing_account_id.workspace_id",
+                    # Revenue classification: payment_mode ("mollie" paying /
+                    # "offline" managed / "none" comped) + the account label.
+                    "billing_account_id.payment_mode",
+                    "billing_account_id.label",
                     "billed_to_team_id",
                     "effective_client_team_id",
                     *nested_billing_fields(),
@@ -250,9 +309,14 @@ async def _all_active_workspaces() -> list[dict]:
             ws["account_scope"] = (
                 "organisation" if account.get("org_id") else "workspace"
             )
+            # Account-level revenue classification, carried to the aggregator.
+            ws["account_payment_mode"] = account.get("payment_mode")
+            ws["account_label"] = account.get("label")
         else:
             ws["billing_account_id"] = account
             ws["account_scope"] = None
+            ws["account_payment_mode"] = None
+            ws["account_label"] = None
     return out
 
 
@@ -380,6 +444,125 @@ async def _workspace_admins(ws_id: str) -> list[BillingContact]:
     return out
 
 
+def _is_trial_account(
+    *,
+    type_discount: Optional[str],
+    payment_mode: Optional[str],
+    tier: Optional[str],
+    tier_expires_at: Optional[str],
+    now_iso: str,
+) -> bool:
+    """A reverse trial: explicitly flagged `type_discount="trial"`, or the
+    grant_reverse_trial shape (comped `payment_mode="none"` on a real tier with
+    a future expiry)."""
+    if type_discount == "trial":
+        return True
+    if (
+        payment_mode == "none"
+        and tier
+        and tier != "free"
+        and tier_expires_at
+        and tier_expires_at > now_iso
+    ):
+        return True
+    return False
+
+
+def _aggregate_accounts(
+    rows: list[BillingRow],
+    *,
+    org_name_by_id: dict[str, str],
+    label_by_account: dict[str, Optional[str]],
+    payment_mode_by_account: dict[str, Optional[str]],
+    now_iso: str,
+) -> list[AccountRow]:
+    """Collapse per-workspace BillingRows into one AccountRow per billing
+    account. Org-scoped accounts pool every workspace; workspace-scoped accounts
+    carry exactly one. Seats sum across the account's workspaces; the tier base
+    is charged once per account.
+
+    Trial / comped accounts contribute €0 to total_forecast_eur so granting a
+    trial never inflates paying revenue; managed (offline) accounts are billed
+    and so do count.
+    """
+    by_account: dict[str, list[BillingRow]] = {}
+    order: list[str] = []
+    for r in rows:
+        # Workspaces with no resolvable account (legacy / unjoined) can't be
+        # billed as an account; skip them from the account pivot. They remain in
+        # the per-workspace `rows` for visibility.
+        acc_id = r.billing_account_id
+        if not acc_id:
+            continue
+        if acc_id not in by_account:
+            by_account[acc_id] = []
+            order.append(acc_id)
+        by_account[acc_id].append(r)
+
+    accounts: list[AccountRow] = []
+    for acc_id in order:
+        members = by_account[acc_id]
+        first = members[0]
+        tier = first.tier
+        payment_mode = payment_mode_by_account.get(acc_id)
+        label = label_by_account.get(acc_id) or (
+            first.org_name if first.account_scope == "organisation" else first.workspace_name
+        )
+        base_price = TIER_BASE_PRICE_EUR.get(tier)
+
+        is_trial = _is_trial_account(
+            type_discount=first.type_discount,
+            payment_mode=payment_mode,
+            tier=tier,
+            tier_expires_at=first.tier_expires_at,
+            now_iso=now_iso,
+        )
+        is_managed = payment_mode == "offline"
+        # Comped = no real payment relationship behind a paid tier: a trial, or a
+        # paid tier sitting on payment_mode="none" (a hand-granted comp). Managed
+        # (offline) and mollie are real revenue. Free tier has no base, so it is
+        # never counted regardless.
+        is_comped = is_trial or (
+            payment_mode not in ("mollie", "offline")
+            and base_price is not None
+        )
+
+        active_count = sum(1 for m in members if m.is_active)
+        # Forecast: tier base charged once per account, €0 when comped/trial.
+        forecast = 0.0 if is_comped else (base_price or 0.0)
+
+        accounts.append(
+            AccountRow(
+                billing_account_id=acc_id,
+                label=label or "",
+                account_scope=first.account_scope,
+                org_id=first.org_id or None,
+                org_name=org_name_by_id.get(first.org_id or "") or first.org_name or None,
+                tier=tier,
+                workspace_count=len(members),
+                active_workspace_count=active_count,
+                seat_count=sum(m.seat_count for m in members),
+                external_count=sum(m.external_count for m in members),
+                base_price_eur=base_price,
+                total_forecast_eur=round(forecast, 2),
+                is_trial=is_trial,
+                is_managed=is_managed,
+                is_comped=is_comped,
+                is_active=active_count > 0,
+                tier_expires_at=first.tier_expires_at,
+                type_discount=first.type_discount,
+                percent_discount=first.percent_discount,
+                payment_mode=payment_mode,
+                workspaces=members,
+            )
+        )
+
+    # Comped/trial last, then paying accounts by forecast desc so revenue floats
+    # to the top and the comped block reads as a clearly separate tail.
+    accounts.sort(key=lambda a: (a.is_comped, -a.total_forecast_eur))
+    return accounts
+
+
 # ── Endpoints ──
 
 
@@ -414,6 +597,10 @@ async def billing_rollup(
     rows: list[BillingRow] = []
     total_base = 0.0
     total_overage = 0.0
+    # Account-level metadata captured during the workspace loop, keyed by
+    # account id, for the account aggregation below.
+    label_by_account: dict[str, Optional[str]] = {}
+    payment_mode_by_account: dict[str, Optional[str]] = {}
 
     for ws in workspaces:
         ws_id = ws["id"]
@@ -502,6 +689,10 @@ async def billing_rollup(
             billing_period=ws.get("billing_period"),
         )
         rows.append(row)
+        acc_id = ws.get("billing_account_id")
+        if acc_id:
+            label_by_account[acc_id] = ws.get("account_label")
+            payment_mode_by_account[acc_id] = ws.get("account_payment_mode")
         if base_price is not None:
             total_base += base_price
         total_overage += hour_overage_eur + seat_overage_eur
@@ -518,14 +709,30 @@ async def billing_rollup(
 
     rows.sort(key=lambda r: (_risk(r), -(r.total_forecast_eur or 0.0)))
 
-    # MRR: sum of recurring (non-pilot) base prices of ACTIVE workspaces.
-    # Pilot is one-time so it's pure revenue-this-month, not ARR-like.
+    # Pivot to the billing account: one row per account, seats pooled across its
+    # workspaces, tier base charged once. Trials + comped contribute €0.
+    now_iso = datetime.now(timezone.utc).isoformat()
+    accounts = _aggregate_accounts(
+        rows,
+        org_name_by_id=org_name_by_id,
+        label_by_account=label_by_account,
+        payment_mode_by_account=payment_mode_by_account,
+        now_iso=now_iso,
+    )
+
+    # Paying revenue only: comped/trial accounts add €0 (forecast already
+    # zeroed). MRR is the recurring (non-pilot) base of paying accounts.
+    total_forecast = sum(a.total_forecast_eur for a in accounts)
     mrr = 0.0
-    for r in rows:
-        if r.is_active and r.tier != "pilot" and r.base_price_eur:
-            mrr += r.base_price_eur
+    for a in accounts:
+        if not a.is_comped and a.tier != "pilot" and a.base_price_eur:
+            mrr += a.base_price_eur
 
     active_count = sum(1 for r in rows if r.is_active)
+    active_account_count = sum(1 for a in accounts if a.is_active)
+    trial_account_count = sum(1 for a in accounts if a.is_trial)
+    managed_account_count = sum(1 for a in accounts if a.is_managed)
+    comped_account_count = sum(1 for a in accounts if a.is_comped)
 
     # Last 30 days of calendar time, not the selected period.
     since = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
@@ -536,13 +743,19 @@ async def billing_rollup(
         cycle_end_exclusive=cycle_end,
         workspace_count=len(rows),
         active_workspace_count=active_count,
+        account_count=len(accounts),
+        active_account_count=active_account_count,
+        trial_account_count=trial_account_count,
+        managed_account_count=managed_account_count,
+        comped_account_count=comped_account_count,
         total_base_eur=round(total_base, 2),
         total_overage_eur=round(total_overage, 2),
-        # Forecast is the base total now; overage was removed by the per-seat
-        # rework. Kept as a field so the UI headline stays stable.
-        total_forecast_eur=round(total_base, 2),
+        # Paying revenue: comped/trial accounts excluded, so a granted trial
+        # never raises this total.
+        total_forecast_eur=round(total_forecast, 2),
         mrr_eur=round(mrr, 2),
         logins_last_30d=logins_30d,
+        accounts=accounts,
         rows=rows,
     )
 

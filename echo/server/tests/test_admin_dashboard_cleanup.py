@@ -113,6 +113,9 @@ async def test_forecast_is_base_only(
             "tier": "changemaker",
             "billing_account_id": "acc-1",
             "account_scope": "organisation",
+            # Paying account (ISSUE-025): a comped/trial account would forecast
+            # €0; here we want to confirm overage is NOT added to the base.
+            "account_payment_mode": "mollie",
             "settings": {},
         }
     ]
