@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 from logging import getLogger
+from urllib.parse import urlparse
 
 import httpx
 
@@ -39,10 +40,14 @@ def _resolve_posthog_token() -> Optional[str]:
     """Pick the project ingest key from the default admin URL, or None to
     opt out. Only production and echo-next capture; everything else (local,
     testing, previews) returns None."""
-    admin_url = (get_settings().urls.admin_base_url or "").lower()
-    if "dashboard.dembrane.com" in admin_url:
+    raw = (get_settings().urls.admin_base_url or "").lower().strip()
+    # Match on the exact host, not a substring: `"dashboard.dembrane.com" in url`
+    # would also accept `evil.com/dashboard.dembrane.com`. Add a scheme when the
+    # configured value is bare so urlparse populates `.hostname`.
+    host = urlparse(raw if "://" in raw else f"https://{raw}").hostname or ""
+    if host == "dashboard.dembrane.com":
         return _POSTHOG_TOKEN_PRODUCTION
-    if "dashboard.echo-next.dembrane.com" in admin_url:
+    if host == "dashboard.echo-next.dembrane.com":
         return _POSTHOG_TOKEN_NEXT
     return None
 
