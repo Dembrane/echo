@@ -15,7 +15,7 @@ const Breadcrumbs = () => {
 	if (segs.length < 2) return null;
 	return (
 		<div
-			className="flex items-center gap-1.5 px-4 text-[12px]"
+			className="flex items-center gap-1.5 px-4 text-xs"
 			style={{ color: "rgba(45, 45, 44, 0.55)" }}
 		>
 			{segs.map((s, i) => (

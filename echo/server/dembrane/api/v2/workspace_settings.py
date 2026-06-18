@@ -765,6 +765,23 @@ async def change_member_role(
 
     await invalidate_workspace_and_org_usage(ctx.workspace_id, ctx.workspace.get("org_id"))
 
+    # A member <-> external flip changes the billed seat count, so reconcile the
+    # account now instead of waiting for the cron. Best-effort + idempotent.
+    try:
+        from dembrane.billing_service import (
+            get_account_for_workspace,
+            reconcile_account_seats,
+        )
+
+        account = await get_account_for_workspace(ctx.workspace_id)
+        if account:
+            await reconcile_account_seats(account["id"])
+    except Exception:
+        logger.exception(
+            "Seat reconcile failed after role change in workspace %s",
+            ctx.workspace_id,
+        )
+
     # Notify the affected user (unless they're the one making the change).
     if membership.get("user_id") and membership["user_id"] != ctx.app_user_id:
         from dembrane.notifications import emit

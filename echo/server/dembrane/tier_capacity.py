@@ -121,6 +121,13 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
 }
 
 
+# Tiers a customer can self-serve checkout for today. Innovator and Guardian have
+# prices but are "coming soon" (BYO-LLM / EU-sovereign stack not shipped), so the
+# checkout API rejects them even though their capacities exist. Mirrors
+# COMING_SOON_TIERS in frontend/src/lib/tiers.ts; widen this as tiers go live.
+PURCHASABLE_TIERS: frozenset[str] = frozenset({"changemaker"})
+
+
 def compute_monthly_billing_price(annual_per_month: int) -> int:
     """Monthly-cadence per-seat price derived from the annual-billing rate.
 

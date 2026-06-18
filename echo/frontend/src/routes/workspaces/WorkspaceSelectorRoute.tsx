@@ -12,7 +12,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { House, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { Navigate } from "react-router";
@@ -243,21 +243,11 @@ export const WorkspaceSelectorRoute = () => {
 	if (orgList.length > 0) {
 		content = (
 			<Box w="100%" maw={FRAME_MAX_WIDTH} mt={FRAME_TOP_MARGIN}>
-				<Text aria-hidden mb={12} style={{ fontSize: 32 }}>
-					🏠
-				</Text>
-				<Title
-					order={1}
-					style={{
-						color: "var(--app-text)",
-						fontSize: 36,
-						fontWeight: 500,
-						lineHeight: 1.2,
-					}}
-				>
+				<House aria-hidden size={32} style={{ marginBottom: 12 }} />
+				<Title order={1}>
 					{firstName ? <Trans>Hi {firstName}</Trans> : <Trans>Hi</Trans>}
 				</Title>
-				<Text size="md" c="dimmed" mt={8}>
+				<Text size="md" mt={8}>
 					<Trans>Where would you like to go?</Trans>
 				</Text>
 
@@ -299,7 +289,7 @@ export const WorkspaceSelectorRoute = () => {
 					py={4}
 				>
 					{hits.length === 0 ? (
-						<Text ta="center" c="dimmed" py={24} fz={14}>
+						<Text ta="center" py={24} size="sm">
 							{isFetching ? (
 								<Trans>Searching…</Trans>
 							) : (

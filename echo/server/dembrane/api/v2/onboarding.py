@@ -307,6 +307,28 @@ async def complete_onboarding(
                     invite.get("id"),
                 )
 
+            # New seat consumed on auto-accept: reconcile billing so the prorated
+            # charge lands now and the next renewal reflects the seat. Only when a
+            # membership was actually created this run. Best-effort + idempotent
+            # (provisioned_seats); the periodic cron is the backstop.
+            if not has_ws_mem:
+                try:
+                    from dembrane.billing_service import (
+                        get_account_for_workspace,
+                        reconcile_account_seats,
+                    )
+
+                    billing_account = await get_account_for_workspace(ws_id)
+                    if billing_account:
+                        await reconcile_account_seats(billing_account["id"])
+                except Exception:
+                    logger.exception(
+                        "Seat reconcile failed after auto-accepting invite "
+                        "for %s into workspace %s",
+                        app_user_email,
+                        ws_id,
+                    )
+
             # Notify the inviter (INVITE_ACCEPTED #3). Mirrors the
             # notification fired by me.accept_my_invite — same event
             # so the inviter sees a consistent inbox row regardless of

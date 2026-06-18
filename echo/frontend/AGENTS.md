@@ -84,6 +84,30 @@ Theme is driven by CSS variables, not Tailwind tokens, so `dark:` classes don't 
   ```
 - User preferences persist in `localStorage` under `dembrane-app-preferences`
 
+## Type scale (single source)
+
+There is one type ramp. Both Mantine and Tailwind read it from the same CSS variables, so `text-sm` (Tailwind) and `size="sm"` (Mantine) render the identical size. The ramp is intentionally spaced so each step feels distinct (no 2px "uncanny valley" gaps).
+
+Where it lives:
+- Runtime values: `src/hooks/useAppPreferences.tsx` sets `--app-font-size-*` and `--app-heading-*` per font palette. Static fallbacks: `src/index.css`. This is the only place to edit sizes.
+- Mantine reads the vars in `src/theme.tsx` (`fontSizes`, `headings`).
+- Tailwind maps `fontSize` to the same vars in `tailwind.config.js` (`4xl+` keep Tailwind display defaults).
+
+| Token | Tailwind | Mantine | px | Role |
+|-------|----------|---------|----|------|
+| Body3 | `text-xs` | `size="xs"` | 12 | captions, references, gentle labels. Smallest, never go below |
+| Body2 | `text-sm` | `size="sm"` | 15 | low-emphasis secondary |
+| Body1 | `text-base` | `size="md"` (default) | 20 | standard body, paragraphs |
+| Heading3 | `text-lg` | `size="lg"` / `Title order={4}` | 24 | larger body |
+| Heading2 | `text-xl` | `size="xl"` / `order={3}` | 28 | |
+| Heading1 | `text-2xl` | `order={2}` | 32 | |
+| Title | `text-3xl` | `order={1}` | 36 | rare, few words |
+
+Rules:
+- Never hardcode sizes: no `text-[13px]`, `fontSize: 14`, `fz={14}`, or `style={{ fontSize }}`. Use the token classes/props above. Hardcoded values are what let the sidebar drift off-scale.
+- Don't pair two adjacent steps (e.g. a 15px label over a 12px disclaimer). Step at least one level.
+- Brand `STYLE_GUIDE.md` defines the design intent (Display/Headline/Title/Body/Caption). The token names above are the code mapping; keep them reconciled if the brand ramp changes.
+
 ## Mode-specific colors (intentionally hardcoded)
 
 Chat mode accents are theme-independent (consistent identification across themes), defined in `src/components/chat/ChatModeSelector.tsx` `MODE_COLORS`:

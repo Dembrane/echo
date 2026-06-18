@@ -26,7 +26,11 @@ from datetime import datetime, timezone, timedelta
 from dembrane import mollie
 from dembrane.settings import get_settings
 from dembrane.seat_capacity import compute_effective_seat_state
-from dembrane.tier_capacity import get_capacity, compute_monthly_billing_price
+from dembrane.tier_capacity import (
+    PURCHASABLE_TIERS,
+    get_capacity,
+    compute_monthly_billing_price,
+)
 from dembrane.directus_async import async_directus
 
 logger = logging.getLogger("billing_service")
@@ -118,7 +122,7 @@ def _payment_method_label(mandate: dict) -> str:
     if method == "directdebit":
         acct = details.get("consumerAccount")
         tail = acct[-4:] if acct else None
-        return f"SEPA Direct Debit ({tail})" if tail else "SEPA Direct Debit"
+        return f"SEPA Direct Debit, account ending {tail}" if tail else "SEPA Direct Debit"
     return method or "Unknown"
 
 
@@ -154,10 +158,21 @@ async def get_billing_overview(account_id: str) -> dict:
         try:
             sub = await mollie.get_subscription(customer_id=customer_id, subscription_id=sub_id)
             amt = sub.get("amount") or {}
+            # Amount reflects the LIVE seat count, not Mollie's stored value. The
+            # subscription re-price (sync_subscription_seats) can lag a seat change
+            # by up to the cron interval, and a stale figure here reads as a bug
+            # ("2 seats but next invoice still shows 900"). projected_monthly_eur is
+            # already computed live, so this keeps the two consistent. Date and
+            # currency still come from Mollie.
+            try:
+                renewal_eur, _interval = _per_interval_amount(tier, seats, billing_period)
+                amount_value = f"{renewal_eur:.2f}"
+            except BillingError:
+                amount_value = amt.get("value")
             next_invoice = {
                 "date": sub.get("nextPaymentDate"),
-                "amount": amt.get("value"),
-                "currency": amt.get("currency"),
+                "amount": amount_value,
+                "currency": amt.get("currency") or "EUR",
             }
         except mollie.MollieError:
             pass
@@ -180,6 +195,9 @@ async def get_billing_overview(account_id: str) -> dict:
         "status": status,
         "billing_period": billing_period,
         "seats": seats,
+        # When the plan is winding down (status=="canceled") this is the date
+        # access ends and the account drops to Free. Null while renewing.
+        "current_period_end": account.get("tier_expires_at"),
         "next_invoice": next_invoice,
         "projected_monthly_eur": projected_monthly_eur,
         "per_seat_monthly_eur": per_seat_monthly_eur,
@@ -264,6 +282,11 @@ async def start_subscription_checkout(
     settings = get_settings()
     if not settings.billing.mollie_enabled:
         raise BillingError("Mollie is not configured")
+    # Coming-soon tiers carry a price but can't be bought yet. The frontend hides
+    # the button; this is the server-side backstop so a crafted request can't
+    # check out a tier we haven't shipped.
+    if tier not in PURCHASABLE_TIERS:
+        raise BillingError(f"tier {tier} is not available for checkout")
     # webhook_url is optional: Mollie rejects non-public URLs, so in dev we omit
     # it and reconcile via the return-poll / reconcile job.
     webhook_url = settings.billing.mollie_webhook_url
@@ -481,7 +504,12 @@ async def _period_fraction_remaining(account: dict) -> float:
         return 0.0
     if next_date.tzinfo is None:
         next_date = next_date.replace(tzinfo=timezone.utc)
-    days_remaining = (next_date - datetime.now(timezone.utc)).days
+    # Whole-calendar-day granularity (not a raw timedelta). The pre-invite estimate
+    # and the actual charge call this at different sub-second moments; counting by
+    # calendar day makes them agree as long as they happen on the same day, so the
+    # preview ("897") matches the charge ("900") instead of drifting by the hours
+    # elapsed between them.
+    days_remaining = (next_date.date() - datetime.now(timezone.utc).date()).days
     if days_remaining <= 0:
         return 0.0
     return min(days_remaining / period_days, 1.0)

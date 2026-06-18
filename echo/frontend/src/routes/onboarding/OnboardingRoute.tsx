@@ -383,7 +383,7 @@ export const OnboardingRoute = () => {
 									<Trans>Set up your organisation</Trans>
 								)}
 							</Title>
-							<Text size="sm" c="dimmed" lh={1.6}>
+							<Text size="sm" lh={1.6}>
 								{hasInvites ? (
 									inviteOrganisations.length === 1 ? (
 										<Trans>

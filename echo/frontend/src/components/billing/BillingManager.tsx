@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Alert,
 	Anchor,
 	Badge,
 	Button,
@@ -11,6 +12,7 @@ import {
 	Paper,
 	Select,
 	Stack,
+	Table,
 	Text,
 	Textarea,
 } from "@mantine/core";
@@ -48,6 +50,8 @@ interface Overview {
 	status: string | null;
 	billing_period: BillingPeriod | null;
 	seats: number;
+	/** Date access ends when a plan is winding down (status "canceled"). Null while renewing. */
+	current_period_end: string | null;
 	next_invoice: NextInvoice | null;
 	projected_monthly_eur: number | null;
 	per_seat_monthly_eur: number | null;
@@ -74,9 +78,61 @@ function formatDate(iso: string | null): string {
 	});
 }
 
+/** Date + time, for the invoice table (two charges can land on the same day). */
+function formatDateTime(iso: string | null): string {
+	if (!iso) return "";
+	const d = new Date(iso);
+	if (Number.isNaN(d.getTime())) return "";
+	return d.toLocaleString(undefined, {
+		day: "numeric",
+		hour: "2-digit",
+		minute: "2-digit",
+		month: "short",
+		year: "numeric",
+	});
+}
+
 function eur(n: number | null | undefined): string {
 	if (n == null) return "—";
 	return `€${Math.round(n).toLocaleString()}`;
+}
+
+/**
+ * A Mollie payment status, mapped to a customer-facing label, a badge colour,
+ * and whether the amount represents a real charge. We hide the amount on
+ * non-settled rows (failed / cancelled / expired): those were never debited, so
+ * showing €900 next to them reads like an outstanding balance.
+ */
+function invoiceStatusMeta(status: string): {
+	label: string;
+	color: string;
+	settled: boolean;
+} {
+	switch (status) {
+		case "paid":
+			return { color: "green", label: t`Paid`, settled: true };
+		case "pending":
+		case "open":
+		case "authorized":
+			return { color: "yellow", label: t`Pending`, settled: true };
+		case "failed":
+			return { color: "red", label: t`Failed`, settled: false };
+		case "canceled":
+			return { color: "gray", label: t`Cancelled`, settled: false };
+		case "expired":
+			return { color: "gray", label: t`Expired`, settled: false };
+		default:
+			return { color: "gray", label: status, settled: false };
+	}
+}
+
+/**
+ * The Mollie description carries a "Cancel anytime." marketing tail that reads
+ * fine on the hosted checkout but doesn't belong on a financial record. Strip it
+ * for the in-app invoice list so each row stays factual.
+ */
+function cleanInvoiceDescription(desc: string): string {
+	return desc.replace(/\s*Cancel anytime\.?\s*$/i, "").trim();
 }
 
 function SectionRow({
@@ -91,7 +147,7 @@ function SectionRow({
 	return (
 		<Group justify="space-between" align="flex-start" wrap="nowrap" gap="md">
 			<Stack gap={2} style={{ minWidth: 0 }}>
-				<Text size="xs" fw={500} c="dimmed" tt="uppercase">
+				<Text size="xs" fw={500} tt="uppercase">
 					{label}
 				</Text>
 				{children}
@@ -120,7 +176,7 @@ export function OrgManagedBillingNotice({
 				<Text size="sm" fw={500}>
 					<Trans>Billing is managed by your organisation</Trans>
 				</Text>
-				<Text size="xs" c="dimmed">
+				<Text size="xs">
 					<Trans>
 						This workspace is billed through {orgName}. Plans and payment are
 						managed once for the whole organisation, and every workspace shares
@@ -244,6 +300,42 @@ function CancelSubscriptionModal({
 	);
 }
 
+/**
+ * Mandatory-training warning for high-risk deployments. Surfaced up front on the
+ * plan picker (not as small print) so the training requirement never reads as a
+ * hidden cost. Eventually this links to the onboarding questionnaire answers; for
+ * now it states the rule and points to us.
+ */
+function HighRiskTrainingNotice() {
+	return (
+		<Alert
+			color="yellow"
+			variant="light"
+			title={t`High-risk use needs training first`}
+			styles={{
+				message: { color: "var(--app-text)" },
+				title: { color: "var(--app-text)" },
+			}}
+		>
+			<Stack gap={6}>
+				<Text size="sm">
+					<Trans>
+						Using dembrane in health, education, recruitment, critical
+						infrastructure, law enforcement, or justice? Those are high-risk
+						contexts and need a mandatory training before live use.
+					</Trans>
+				</Text>
+				<Anchor
+					size="sm"
+					href="mailto:support@dembrane.com?subject=High-risk training"
+				>
+					<Trans>Talk to us about training</Trans>
+				</Anchor>
+			</Stack>
+		</Alert>
+	);
+}
+
 /** Pick a plan + cadence — used for first subscribe and for changing plan. */
 function ChangePlanModal({
 	opened,
@@ -274,8 +366,9 @@ function ChangePlanModal({
 			centered
 		>
 			<Stack gap="md">
-				<Stack gap={6} align="center">
-					<Text size="xs" fw={500} c="dimmed" tt="uppercase">
+				<HighRiskTrainingNotice />
+				<Stack gap={6} align="flex-start">
+					<Text size="xs" fw={500} tt="uppercase">
 						<Trans>Billing period</Trans>
 					</Text>
 					<BillingPeriodToggle value={period} onChange={setPeriod} />
@@ -286,13 +379,12 @@ function ChangePlanModal({
 					highlightTier={SELLABLE_TIER}
 					billingPeriod={period}
 				/>
-				<Text size="xs" c="dimmed" ta="center">
-					<Trans>Pricing is per user, not per workspace.</Trans>
+				<Text size="xs">
+					<Trans>Prices exclude VAT.</Trans>
 				</Text>
-				<Text size="xs" c="dimmed" ta="center">
+				<Text size="xs">
 					<Trans>
-						You can use dembrane for free by self-hosting it. For bespoke
-						compliance requirements,{" "}
+						For bespoke compliance requirements,{" "}
 						<Anchor href="mailto:support@dembrane.com" inherit>
 							call us for a quote
 						</Anchor>
@@ -446,7 +538,7 @@ export function BillingManager({
 	if (!accountId) {
 		return (
 			<Paper withBorder p="md" radius="sm">
-				<Text size="sm" c="dimmed">
+				<Text size="sm">
 					<Trans>
 						No billing account yet. Email{" "}
 						<Anchor href="mailto:support@dembrane.com">
@@ -472,6 +564,14 @@ export function BillingManager({
 	const hasPaidPlan = tier !== "free";
 	const isCanceling = status === "canceled";
 	const period = overview.billing_period ?? "annual";
+	const endDate = formatDate(overview.current_period_end);
+	// Show the total at the cadence the customer is actually billed: a "monthly
+	// total" next to an annual charge reads as irrelevant. Annual = monthly x 12.
+	const isAnnual = !isCanceling && period === "annual";
+	const totalValue =
+		isAnnual && overview.projected_monthly_eur != null
+			? overview.projected_monthly_eur * 12
+			: overview.projected_monthly_eur;
 
 	// Free / never-subscribed: a focused subscribe prompt.
 	if (!hasPaidPlan) {
@@ -481,7 +581,7 @@ export function BillingManager({
 					<Text size="sm" fw={500}>
 						<Trans>Choose a plan</Trans>
 					</Text>
-					<Text size="xs" c="dimmed">
+					<Text size="xs">
 						<Trans>
 							Billed per user. A seat is one member, counted automatically.
 							Cancel anytime.
@@ -509,9 +609,11 @@ export function BillingManager({
 				<SectionRow
 					label={t`Current plan`}
 					action={
-						<Button size="xs" variant="subtle" onClick={openPlan}>
-							<Trans>Change plan</Trans>
-						</Button>
+						isCanceling ? undefined : (
+							<Button size="xs" variant="subtle" onClick={openPlan}>
+								<Trans>Change plan</Trans>
+							</Button>
+						)
 					}
 				>
 					<Group gap={8}>
@@ -534,8 +636,10 @@ export function BillingManager({
 							)}
 						</Badge>
 					</Group>
-					<Text size="xs" c="dimmed">
-						{period === "monthly" ? (
+					<Text size="xs">
+						{isCanceling && endDate ? (
+							<Trans>Ends on {endDate}, then moves to Free</Trans>
+						) : period === "monthly" ? (
 							<Trans>Billed monthly</Trans>
 						) : (
 							<Trans>Billed annually</Trans>
@@ -549,39 +653,82 @@ export function BillingManager({
 					<Text size="sm">
 						<Trans>{overview.seats} seats</Trans>
 					</Text>
-					<Text size="xs" c="dimmed">
-						<Trans>
-							A seat is one member. Add or remove members in each workspace's
-							People tab; your next charge follows automatically.
-						</Trans>
+					<Text size="xs">
+						{isCanceling ? (
+							<Trans>
+								A seat is one member. Seats stay available until the plan ends;
+								changes won't be charged.
+							</Trans>
+						) : (
+							<Trans>
+								A seat is one member. Add or remove members in each workspace's
+								People tab; your next charge follows automatically.
+							</Trans>
+						)}
 					</Text>
 				</SectionRow>
 
 				<Divider />
 
 				<Group grow align="flex-start">
-					<SectionRow label={t`Next invoice`}>
-						{overview.next_invoice?.date ? (
-							<>
-								<Text size="sm">€{overview.next_invoice.amount}</Text>
-								<Text size="xs" c="dimmed">
-									{formatDate(overview.next_invoice.date)}
+					{isCanceling ? (
+						<SectionRow label={t`Plan ends`}>
+							{endDate ? (
+								<Text size="sm">{endDate}</Text>
+							) : (
+								<Text size="sm">
+									<Trans>At the end of this period</Trans>
 								</Text>
-							</>
-						) : (
-							<Text size="sm" c="dimmed">
-								<Trans>None scheduled</Trans>
+							)}
+							<Text size="xs">
+								<Trans>No further charges</Trans>
 							</Text>
-						)}
-					</SectionRow>
+						</SectionRow>
+					) : (
+						<SectionRow label={t`Next invoice`}>
+							{overview.next_invoice?.date ? (
+								<>
+									<Text size="sm">€{overview.next_invoice.amount}</Text>
+									<Text size="xs">
+										{formatDate(overview.next_invoice.date)}
+									</Text>
+								</>
+							) : (
+								<Text size="sm">
+									<Trans>None scheduled</Trans>
+								</Text>
+							)}
+						</SectionRow>
+					)}
 
-					<SectionRow label={t`Projected monthly total`}>
-						<Text size="sm">{eur(overview.projected_monthly_eur)}</Text>
+					<SectionRow
+						label={
+							isCanceling
+								? t`Current rate`
+								: isAnnual
+									? t`Projected yearly total`
+									: t`Projected monthly total`
+						}
+					>
+						<Text size="sm">{eur(totalValue)}</Text>
 						{overview.per_seat_monthly_eur != null && (
-							<Text size="xs" c="dimmed">
-								<Trans>
-									{eur(overview.per_seat_monthly_eur)} / seat × {overview.seats}
-								</Trans>
+							<Text size="xs">
+								{isCanceling ? (
+									<Trans>
+										{eur(overview.per_seat_monthly_eur)} / seat ×{" "}
+										{overview.seats}. Not charged after this period.
+									</Trans>
+								) : isAnnual ? (
+									<Trans>
+										{eur(overview.per_seat_monthly_eur)} / seat / month ×{" "}
+										{overview.seats}, billed yearly. Excludes VAT.
+									</Trans>
+								) : (
+									<Trans>
+										{eur(overview.per_seat_monthly_eur)} / seat ×{" "}
+										{overview.seats}. Excludes VAT.
+									</Trans>
+								)}
 							</Text>
 						)}
 					</SectionRow>
@@ -608,37 +755,58 @@ export function BillingManager({
 				<Divider />
 
 				<Stack gap={6}>
-					<Text size="xs" fw={500} c="dimmed" tt="uppercase">
+					<Text size="xs" fw={500} tt="uppercase">
 						<Trans>Invoices</Trans>
 					</Text>
 					{invoices.length === 0 ? (
-						<Text size="xs" c="dimmed">
+						<Text size="xs">
 							<Trans>No payments yet.</Trans>
 						</Text>
 					) : (
-						invoices.map((inv) => (
-							<Group
-								key={inv.id}
-								justify="space-between"
-								gap="sm"
-								wrap="nowrap"
-							>
-								<Text size="xs" c="dimmed" w={90}>
-									{formatDate(inv.created_at)}
-								</Text>
-								<Text size="xs" style={{ flex: 1, minWidth: 0 }} truncate>
-									{inv.description}
-								</Text>
-								<Text size="xs">€{inv.amount}</Text>
-								<Badge
-									size="xs"
-									variant="light"
-									color={inv.status === "paid" ? "green" : "gray"}
-								>
-									{inv.status}
-								</Badge>
-							</Group>
-						))
+						<Table verticalSpacing="xs" horizontalSpacing="sm" fz="xs">
+							<Table.Thead>
+								<Table.Tr>
+									<Table.Th>
+										<Trans>Date</Trans>
+									</Table.Th>
+									<Table.Th>
+										<Trans>Description</Trans>
+									</Table.Th>
+									<Table.Th ta="right">
+										<Trans>Amount</Trans>
+									</Table.Th>
+									<Table.Th ta="right">
+										<Trans>Status</Trans>
+									</Table.Th>
+								</Table.Tr>
+							</Table.Thead>
+							<Table.Tbody>
+								{invoices.map((inv) => {
+									const meta = invoiceStatusMeta(inv.status);
+									return (
+										<Table.Tr key={inv.id}>
+											<Table.Td style={{ whiteSpace: "nowrap" }}>
+												{formatDateTime(inv.created_at)}
+											</Table.Td>
+											<Table.Td
+												title={cleanInvoiceDescription(inv.description)}
+											>
+												{cleanInvoiceDescription(inv.description)}
+											</Table.Td>
+											{/* Amount only on settled rows; failed/cancelled/expired were never debited. */}
+											<Table.Td ta="right" style={{ whiteSpace: "nowrap" }}>
+												{meta.settled ? `€${inv.amount}` : ""}
+											</Table.Td>
+											<Table.Td ta="right">
+												<Badge size="xs" variant="light" color={meta.color}>
+													{meta.label}
+												</Badge>
+											</Table.Td>
+										</Table.Tr>
+									);
+								})}
+							</Table.Tbody>
+						</Table>
 					)}
 					{cursor && (
 						<Group justify="center">
@@ -657,9 +825,13 @@ export function BillingManager({
 				<Divider />
 
 				<Group justify="space-between" align="center">
-					<Text size="xs" c="dimmed">
+					<Text size="xs">
 						{isCanceling ? (
-							<Trans>Your plan ends at the period end.</Trans>
+							endDate ? (
+								<Trans>Your plan ends on {endDate}.</Trans>
+							) : (
+								<Trans>Your plan ends at the period end.</Trans>
+							)
 						) : (
 							<Trans>
 								Cancel anytime. You keep access until the period ends.

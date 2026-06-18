@@ -10,7 +10,7 @@ import { TransitionCurtainProvider } from "./TransitionCurtainProvider";
 
 const SidebarFailure = () => (
 	<aside
-		className="flex h-screen w-[240px] shrink-0 flex-col items-center justify-center border-r p-4 text-center text-[12px]"
+		className="flex h-screen w-[240px] shrink-0 flex-col items-center justify-center border-r p-4 text-center text-xs"
 		style={{
 			backgroundColor: "#f6f4f1",
 			borderColor: "rgba(45, 45, 44, 0.08)",

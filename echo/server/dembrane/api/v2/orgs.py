@@ -1968,6 +1968,27 @@ async def remove_organisation_member(
     # serves stale numbers for up to USAGE_TTL_SECONDS.
     await _invalidate_org_workspace_usage(org_id)
 
+    # Removing an org member soft-deletes their direct workspace seats, dropping
+    # the billed seat count. Reconcile now so the pooled account re-prices the
+    # next renewal immediately rather than waiting for the cron. Best-effort +
+    # idempotent (provisioned_seats); removals only reduce at renewal, no refund.
+    try:
+        from dembrane.billing_service import (
+            get_account_for_workspace,
+            reconcile_account_seats,
+        )
+
+        seen_accounts: set[str] = set()
+        for ws_id in affected:
+            account = await get_account_for_workspace(ws_id)
+            if account and account["id"] not in seen_accounts:
+                seen_accounts.add(account["id"])
+                await reconcile_account_seats(account["id"])
+    except Exception:
+        logger.exception(
+            "Seat reconcile failed after removing %s from org %s", user_id, org_id
+        )
+
     # Notify the removed user — they'll see workspaces drop from their
     # selector; this gives them the honest explanation.
     if user_id != app_user["id"]:

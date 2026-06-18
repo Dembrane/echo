@@ -70,7 +70,7 @@ export const NavItem = ({
 		<NavLink
 			to={localePath}
 			end={end}
-			className="relative flex h-[30px] items-center gap-2 rounded-md px-2 text-[0.8125rem] leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
+			className="relative flex h-[30px] items-center gap-2 rounded-md px-2 text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
 			style={{
 				color: active
 					? (accent ?? "#4169e1")
@@ -94,7 +94,7 @@ export const NavItem = ({
 			{/* != null, not truthiness: badge={0} would render a bare "0" */}
 			{badge != null && (
 				<span
-					className="relative shrink-0 rounded px-1.5 py-0.5 text-[0.625rem] leading-none"
+					className="relative shrink-0 rounded px-1.5 py-0.5 text-xs leading-none"
 					style={BADGE_TONES[badgeTone]}
 				>
 					{badge}

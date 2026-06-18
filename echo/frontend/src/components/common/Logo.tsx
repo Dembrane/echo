@@ -40,7 +40,7 @@ export const LogoDembrane = ({
 					/>
 					{hostEnv && (
 						<span
-							className="pointer-events-none absolute capitalize -bottom-1 -right-[15px] -translate-x-1/2 pl-1 text-[10px] font-medium leading-none"
+							className="pointer-events-none absolute capitalize -bottom-1 -right-[15px] -translate-x-1/2 pl-1 text-xs font-medium leading-none"
 							style={{ color: "var(--mantine-color-primary-6)" }}
 						>
 							{hostEnv}
