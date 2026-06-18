@@ -28,7 +28,12 @@ from dembrane import mollie
 from dembrane.settings import get_settings
 from dembrane.seat_capacity import compute_effective_seat_state
 from dembrane.tier_capacity import get_capacity
-from dembrane.billing_service import apply_discount
+from dembrane.billing_service import (
+    BillingError,
+    apply_discount,
+    count_account_seats,
+    _per_interval_amount,
+)
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
@@ -469,6 +474,27 @@ def _is_trial_account(
     return False
 
 
+def _account_monthly_forecast(
+    tier: str, seats: int, billing_period: Optional[str], percent_discount: Optional[int]
+) -> float:
+    """Discounted monthly revenue for a paying account under the per-seat model:
+    `seats × per-seat price × (1 - discount)`, normalised to a monthly figure.
+
+    Reuses `billing_service._per_interval_amount` (the same seats × per-seat math
+    the real Mollie charge + customer overview use) so the staff forecast matches
+    what the account is actually billed. Annual cadence bills 12 months at once,
+    so its interval amount is divided by 12 to land on the monthly headline the
+    rollup reports. Free / unpriced tiers (no per-seat rate) forecast €0.
+    """
+    period = billing_period or "annual"
+    try:
+        amount, _interval = _per_interval_amount(tier, max(seats, 1), period)
+    except BillingError:
+        return 0.0
+    monthly = amount / 12 if period == "annual" else amount
+    return apply_discount(monthly, percent_discount)
+
+
 def _aggregate_accounts(
     rows: list[BillingRow],
     *,
@@ -476,6 +502,7 @@ def _aggregate_accounts(
     label_by_account: dict[str, Optional[str]],
     payment_mode_by_account: dict[str, Optional[str]],
     now_iso: str,
+    pooled_seats_by_account: Optional[dict[str, int]] = None,
 ) -> list[AccountRow]:
     """Collapse per-workspace BillingRows into one AccountRow per billing
     account. Org-scoped accounts pool every workspace; workspace-scoped accounts
@@ -529,12 +556,30 @@ def _aggregate_accounts(
         )
 
         active_count = sum(1 for m in members if m.is_active)
-        # Forecast: tier base charged once per account, €0 when comped/trial.
-        # Apply the account discount to the per-account forecast so the admin
-        # figure matches the (discounted) amount the customer is actually
-        # billed via Mollie. Comped/trial stay €0 (apply_discount(0, …) == 0).
+        # Pooled billable seats (members + externals, who share the one seat
+        # pool). Prefer the deduped account-level count when supplied: summing
+        # each workspace's seat_count double-counts a user who belongs to more
+        # than one pooled workspace. Fall back to the per-workspace sum when no
+        # pooled map is given (single-workspace accounts can't double-count).
+        member_seats = sum(m.seat_count for m in members)
+        external_seats = sum(m.external_count for m in members)
+        billable_seats = (
+            pooled_seats_by_account.get(acc_id)
+            if pooled_seats_by_account is not None
+            else None
+        )
+        if billable_seats is None:
+            billable_seats = member_seats + external_seats
+        # Forecast: per-seat model = seats × per-seat price × (1 - discount),
+        # charged per account (not per workspace), €0 when comped/trial. Matches
+        # the (discounted) amount the customer is actually billed via Mollie.
+        # Comped/trial stay €0.
         forecast = (
-            0.0 if is_comped else apply_discount(base_price or 0.0, first.percent_discount)
+            0.0
+            if is_comped
+            else _account_monthly_forecast(
+                tier, billable_seats, first.billing_period, first.percent_discount
+            )
         )
 
         accounts.append(
@@ -715,8 +760,20 @@ async def billing_rollup(
 
     rows.sort(key=lambda r: (_risk(r), -(r.total_forecast_eur or 0.0)))
 
+    # Pooled billable seats per account: distinct users across the account's
+    # workspaces (members + externals share one pool), deduped so a user in two
+    # pooled workspaces is one seat, not two. This is the canonical seat count
+    # the per-seat forecast multiplies by, matching count_account_seats.
+    pooled_seats_by_account: dict[str, int] = {}
+    for acc_id in {r.billing_account_id for r in rows if r.billing_account_id}:
+        try:
+            pooled_seats_by_account[acc_id] = await count_account_seats(acc_id)
+        except Exception:  # noqa: BLE001 - never let one account break the rollup
+            logger.exception("pooled seat count failed for account %s", acc_id)
+
     # Pivot to the billing account: one row per account, seats pooled across its
-    # workspaces, tier base charged once. Trials + comped contribute €0.
+    # workspaces, forecast = seats × per-seat × (1 - discount). Trials + comped
+    # contribute €0.
     now_iso = datetime.now(timezone.utc).isoformat()
     accounts = _aggregate_accounts(
         rows,
@@ -724,16 +781,17 @@ async def billing_rollup(
         label_by_account=label_by_account,
         payment_mode_by_account=payment_mode_by_account,
         now_iso=now_iso,
+        pooled_seats_by_account=pooled_seats_by_account,
     )
 
     # Paying revenue only: comped/trial accounts add €0 (forecast already
-    # zeroed). MRR is the recurring (non-pilot) base of paying accounts, after
-    # the per-account discount so it reflects real recurring revenue.
+    # zeroed). MRR = the recurring (non-pilot) per-seat revenue of paying
+    # accounts, identical to each account's discounted monthly forecast.
     total_forecast = sum(a.total_forecast_eur for a in accounts)
     mrr = 0.0
     for a in accounts:
-        if not a.is_comped and a.tier != "pilot" and a.base_price_eur:
-            mrr += apply_discount(a.base_price_eur, a.percent_discount)
+        if not a.is_comped and a.tier != "pilot":
+            mrr += a.total_forecast_eur
 
     active_count = sum(1 for r in rows if r.is_active)
     active_account_count = sum(1 for a in accounts if a.is_active)
@@ -939,6 +997,55 @@ async def update_workspace_discount(
         auth.user_id,
     )
     return {"status": "ok", **payload}
+
+
+@router.patch("/billing-accounts/{account_id}/discount")
+async def update_billing_account_discount(
+    account_id: str,
+    body: UpdateWorkspaceDiscountBody,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Staff-only: edit type_discount / percent_discount on a billing account.
+
+    The billing account is the canonical home of the discount: `percent_discount`
+    reduces every price the account is charged or shown (live Mollie subscription
+    amount, prorated seat charges, customer overview, and the admin forecast +
+    MRR — see `billing_service.apply_discount`), and `type_discount` is the
+    descriptive reason tag (scholarship / staff_discount / trial). Writing the
+    workspace row instead would let the workspace- and account-level values
+    diverge, so the staff editor targets the account. Idempotent.
+    """
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
+
+    payload: dict = {}
+    if body.clear_type_discount:
+        payload["type_discount"] = None
+    elif body.type_discount is not None:
+        payload["type_discount"] = body.type_discount
+
+    if body.clear_percent_discount:
+        payload["percent_discount"] = None
+    elif body.percent_discount is not None:
+        payload["percent_discount"] = body.percent_discount
+
+    if not payload:
+        raise HTTPException(status_code=400, detail="Nothing to update")
+
+    updated = (await async_directus.update_item("billing_account", account_id, payload))[
+        "data"
+    ]
+    logger.info(
+        "staff discount update on billing account %s: %s by staff %s",
+        account_id,
+        payload,
+        auth.user_id,
+    )
+    return {"status": "ok", **payload, "account_id": updated.get("id", account_id)}
 
 
 class GrantTrialBody(BaseModel):

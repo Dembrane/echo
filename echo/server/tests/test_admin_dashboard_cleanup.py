@@ -88,6 +88,7 @@ def _rollup_settings():
 
 
 @pytest.mark.asyncio
+@patch("dembrane.api.v2.admin.count_account_seats", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._recent_login_count", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin.compute_effective_seat_state", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._workspace_hours_this_cycle", new_callable=AsyncMock)
@@ -101,6 +102,7 @@ async def test_forecast_is_base_only(
     mock_hours,
     mock_seats,
     mock_logins,
+    mock_pooled_seats,
 ):
     from dembrane.api.v2.admin import billing_rollup
 
@@ -120,17 +122,21 @@ async def test_forecast_is_base_only(
         }
     ]
     mock_admins.return_value = []
-    # Way over the cap: if overage were still added this would inflate forecast.
+    # Way over the cap: if hour/seat overage were still added this would inflate
+    # forecast. The per-seat model has no overage, so it must not appear.
     mock_hours.return_value = 9999.0
     mock_seats.return_value = (50, 50, 20)
+    mock_pooled_seats.return_value = 70  # 50 members + 20 external, pooled
     mock_logins.return_value = 0
 
     result = await billing_rollup(_auth(), month_offset=0)
     row = result.rows[0]
-    # Forecast equals the tier base (Changemaker = 1500), overage NOT added.
+    # Per-workspace row keeps the tier-base sticker for display, no overage.
     assert row.base_price_eur == 1500.0
     assert row.total_forecast_eur == 1500.0
-    assert result.total_forecast_eur == 1500.0
+    # Account headline is per-seat: 70 seats × Changemaker €75 = €5250, with no
+    # hour/seat overage piled on top.
+    assert result.total_forecast_eur == 5250.0
 
 
 # ── reset-usage floor in hours computation ──
