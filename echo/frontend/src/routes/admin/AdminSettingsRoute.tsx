@@ -94,6 +94,7 @@ type BillingRow = {
 	billing_account_id: string | null;
 	tier: string;
 	is_partner_owned: boolean;
+	org_is_partner: boolean;
 	billed_to_team_id: string | null;
 	billed_to_team_name: string | null;
 	audio_hours: number;
@@ -483,6 +484,74 @@ function GrantTrialControl({ accountId }: { accountId: string }) {
 }
 
 /**
+ * Live staff action: toggle the org partner flag (Founder decision D1).
+ * A partner org's workspaces self-identify internal vs external client use on
+ * creation. There is no secret code — this flag is the whole gate.
+ */
+function OrgPartnerToggle({
+	orgId,
+	orgName,
+	isPartner,
+}: {
+	orgId: string;
+	orgName: string;
+	isPartner: boolean;
+}) {
+	const queryClient = useQueryClient();
+	const mutation = useMutation({
+		mutationFn: async (next: boolean) => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/orgs/${orgId}/partner`,
+				{
+					body: JSON.stringify({ is_partner: next }),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "PATCH",
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "admin", "billing-rollup"],
+			});
+		},
+	});
+	return (
+		<Paper withBorder radius="sm" p="sm">
+			<Group justify="space-between" wrap="nowrap" align="center">
+				<Stack gap={0} style={{ minWidth: 0 }}>
+					<Text size="sm" fw={500}>
+						<Trans>Partner organisation</Trans>
+					</Text>
+					<Text size="xs" c="dimmed">
+						<Trans>
+							Marks {orgName} as a partner. Its workspaces self-identify
+							internal vs external client use on creation.
+						</Trans>
+					</Text>
+					{mutation.isError && (
+						<Text size="xs" c="red">
+							{(mutation.error as Error).message}
+						</Text>
+					)}
+				</Stack>
+				<Checkbox
+					checked={isPartner}
+					disabled={mutation.isPending}
+					onChange={(e) => mutation.mutate(e.currentTarget.checked)}
+					label={<Trans>Partner</Trans>}
+				/>
+			</Group>
+		</Paper>
+	);
+}
+
+/**
  * Actions modal for a workspace row. Includes the discount editor
  * (live, staff-only) and mocked placeholders for future actions.
  */
@@ -544,6 +613,14 @@ function WorkspaceActionsModal({
 						{row.org_name}, workspace id {row.workspace_id.slice(0, 8)}
 					</Trans>
 				</Text>
+				<Divider my={4} />
+
+				<OrgPartnerToggle
+					orgId={row.org_id}
+					orgName={row.org_name}
+					isPartner={row.org_is_partner}
+				/>
+
 				<Divider my={4} />
 
 				<DiscountEditor

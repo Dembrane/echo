@@ -667,6 +667,18 @@ export const WorkspaceSettingsRoute = () => {
 											orgName={settings.org_name}
 										/>
 									)}
+									{/* ISSUE-017: members (no view_invoices) still see usage
+									    counts above, plus a one-line pointer to org settings
+									    where billing lives when org-managed. Admins get the
+									    full OrgManagedBillingNotice instead. */}
+									{!seesFinancials && settings.billing_org_managed && (
+										<Text size="sm">
+											<Trans>
+												Usage is tracked for your organisation. View it in
+												organisation settings.
+											</Trans>
+										</Text>
+									)}
 
 									{seesFinancials &&
 										workspaceId &&

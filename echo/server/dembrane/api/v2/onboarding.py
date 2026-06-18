@@ -16,16 +16,27 @@ Decision tree:
 
 from __future__ import annotations
 
+from typing import Optional
 from logging import getLogger
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 
 from dembrane.utils import generate_uuid
-from dembrane.app_user import create_app_user, resolve_app_user, get_directus_user_profile
+from dembrane.app_user import (
+    create_app_user,
+    resolve_app_user,
+    get_app_user_or_raise,
+    get_directus_user_profile,
+)
 from dembrane.seat_capacity import assert_can_add_seat
 from dembrane.api.rate_limit import create_user_rate_limiter
-from dembrane.api.v2.schemas import OnboardingCompleteRequest, OnboardingCompleteResponse
+from dembrane.api.v2.schemas import (
+    OnboardingAnswersRequest,
+    OnboardingAnswersResponse,
+    OnboardingCompleteRequest,
+    OnboardingCompleteResponse,
+)
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.api.v2._invite_helpers import create_membership_row
@@ -35,6 +46,42 @@ logger = getLogger("api.v2.onboarding")
 _onboarding_rate_limiter = create_user_rate_limiter(
     name="onboarding", capacity=5, window_seconds=3600
 )
+_answers_rate_limiter = create_user_rate_limiter(
+    name="onboarding_answers", capacity=10, window_seconds=3600
+)
+
+
+def _flag_review(answers: list[dict]) -> tuple[bool, bool, Optional[str]]:
+    """Inspect the questionnaire answers for the staff-review branches.
+
+    Returns (wants_partner_review, is_high_risk, training_status).
+      - q1 == "with clients" → staff partner-flag review.
+      - q2 == "yes" → high-risk context (training required).
+      - q3 → "yes" (verify training) / "no" (organise training).
+    Tolerant of missing keys; the questionnaire is non-blocking.
+    """
+    wants_partner_review = False
+    is_high_risk = False
+    training_status: Optional[str] = None
+    for entry in answers:
+        if not isinstance(entry, dict):
+            continue
+        q1 = entry.get("q1")
+        if isinstance(q1, str) and "client" in q1.lower():
+            wants_partner_review = True
+        elif isinstance(q1, list) and any(
+            isinstance(v, str) and "client" in v.lower() for v in q1
+        ):
+            wants_partner_review = True
+        q2 = entry.get("q2")
+        if isinstance(q2, str) and q2.strip().lower() in ("yes", "true"):
+            is_high_risk = True
+        elif q2 is True:
+            is_high_risk = True
+        q3 = entry.get("q3")
+        if isinstance(q3, str) and q3.strip():
+            training_status = q3.strip().lower()
+    return wants_partner_review, is_high_risk, training_status
 
 
 @router.post("/complete", response_model=OnboardingCompleteResponse)
@@ -681,3 +728,133 @@ async def complete_onboarding(
         org_id=org_id or "",
         workspace_id=workspace_id or "",
     )
+
+
+@router.post("/answers", response_model=OnboardingAnswersResponse)
+async def submit_onboarding_answers(
+    body: OnboardingAnswersRequest,
+    auth: DependencyDirectusSession,
+) -> OnboardingAnswersResponse:
+    """Persist the post-register questionnaire answers (ISSUE-012).
+
+    Dual-write: Directus on `app_user.onboarding_answer_json` is the durable
+    store; a server-side PostHog event mirrors it for analytics (resilient to
+    ad blockers). High-risk / with-clients / training answers notify staff for
+    follow-up (partner review, training scheduling) without blocking the user.
+    """
+    await _answers_rate_limiter.check(auth.user_id)
+
+    app_user = await get_app_user_or_raise(auth.user_id)
+    app_user_id = app_user["id"]
+
+    onboarding_answer_json = {"version": body.version, "data": body.data}
+
+    await async_directus.update_item(
+        "app_user",
+        app_user_id,
+        {"onboarding_answer_json": onboarding_answer_json},
+    )
+    logger.info("Stored onboarding answers for app_user %s", app_user_id)
+
+    wants_partner_review, is_high_risk, training_status = _flag_review(body.data)
+
+    # ── Analytics mirror (server-side PostHog) ──
+    try:
+        from dembrane.analytics import capture_event
+
+        email = (app_user.get("email") or "").lower()
+        await capture_event(
+            distinct_id=email or app_user_id,
+            event="onboarding_questionnaire_completed",
+            properties={
+                "version": body.version,
+                "answers": body.data,
+                "wants_partner_review": wants_partner_review,
+                "is_high_risk": is_high_risk,
+                "training_status": training_status,
+            },
+        )
+    except Exception:
+        logger.exception("PostHog mirror failed for onboarding answers")
+
+    # ── Staff follow-up (in-app + email) ──
+    # Best-effort: a notify failure must never fail the answer write.
+    if wants_partner_review or is_high_risk or training_status is not None:
+        try:
+            await _notify_staff_onboarding_followup(
+                app_user=app_user,
+                wants_partner_review=wants_partner_review,
+                is_high_risk=is_high_risk,
+                training_status=training_status,
+            )
+        except Exception:
+            logger.exception("Staff onboarding follow-up notify failed")
+
+    return OnboardingAnswersResponse(
+        status="success",
+        onboarding_answer_json=onboarding_answer_json,
+    )
+
+
+async def _notify_staff_onboarding_followup(
+    *,
+    app_user: dict,
+    wants_partner_review: bool,
+    is_high_risk: bool,
+    training_status: Optional[str],
+) -> None:
+    """In-app + email staff notification for onboarding follow-ups.
+
+    Training branches (ISSUE-012):
+      - training_status == "yes" → verify the training they followed.
+      - training_status == "no"  → organise a training.
+    Partner branch: "with clients" → staff partner-flag review.
+    High-risk branch: yes → training required.
+    """
+    from dembrane.email import send_email
+    from dembrane.settings import get_settings
+    from dembrane.notifications import audience_staff, emit_to_audience
+
+    who = app_user.get("display_name") or app_user.get("email") or "A new user"
+    email = app_user.get("email") or ""
+
+    lines: list[str] = []
+    if wants_partner_review:
+        lines.append("Selected serving external clients. Review for the partner flag.")
+    if is_high_risk:
+        lines.append("Flagged a high-risk context. Training is required.")
+    if training_status == "yes":
+        lines.append("Says they followed a training. Verify it.")
+    elif training_status == "no":
+        lines.append("Has not followed a training. Organise one.")
+
+    summary = " ".join(lines) or "Needs onboarding follow-up."
+    title = f"Onboarding follow-up: {who}"
+
+    # In-app inbox to all staff.
+    staff_ids = await audience_staff()
+    if staff_ids:
+        await emit_to_audience(
+            staff_ids,
+            actor_user_id=app_user.get("id"),
+            event_code="ONBOARDING_FOLLOWUP",
+            title=title,
+            message=f"{email}: {summary}".strip(),
+            # No staff-dashboard action type in the enum yet; the row is
+            # informational and staff act from the dashboard manually.
+            action="NONE",
+        )
+
+    # Email the training owner (Pauline) for the human follow-up.
+    settings = get_settings()
+    to_addr = settings.email.onboarding_followup_inbox
+    if to_addr:
+        body_lines = "\n".join(f"- {line}" for line in lines)
+        await send_email(
+            to=to_addr,
+            subject=title,
+            plain_text=(
+                f"{who} ({email}) just completed onboarding and needs follow-up:\n\n"
+                f"{body_lines}\n"
+            ),
+        )

@@ -82,6 +82,10 @@ _SEVERITY_BY_EVENT: dict[str, NotificationSeverity] = {
     # Matrix §10 partner handoff.
     "PARTNER_HANDOFF_PENDING": "action_required",
     # PARTNER_HANDOFF_ACCEPTED defaults to 'info' — no action needed.
+    # Onboarding questionnaire follow-up (ISSUE-012): staff verifies the
+    # partner flag / organises training. Action_required so it stands out
+    # in the staff inbox.
+    "ONBOARDING_FOLLOWUP": "action_required",
 }
 
 

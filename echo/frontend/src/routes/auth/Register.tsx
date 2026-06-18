@@ -5,6 +5,7 @@ import {
 	Anchor,
 	Box,
 	Button,
+	Checkbox,
 	Collapse,
 	Divider,
 	List,
@@ -23,7 +24,12 @@ import { useSearchParams } from "react-router";
 import { useRegisterMutation } from "@/components/auth/hooks";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { I18nLink } from "@/components/common/i18nLink";
-import { ADMIN_BASE_URL } from "@/config";
+import {
+	ADMIN_BASE_URL,
+	LEGAL_DPA_URL,
+	LEGAL_PRIVACY_URL,
+	LEGAL_TERMS_URL,
+} from "@/config";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { testId } from "@/lib/testUtils";
 
@@ -52,6 +58,9 @@ export const RegisterRoute = () => {
 	const [error, setError] = useState("");
 	const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
 	const [orgHelpOpen, { toggle: toggleOrgHelp }] = useDisclosure(false);
+	// ISSUE-013: explicit acceptance of the general terms. Required before
+	// continuing; the timestamp is recorded server-side at app_user creation.
+	const [termsAccepted, setTermsAccepted] = useState(false);
 
 	const registerMutation = useRegisterMutation();
 	const posthog = usePostHog();
@@ -63,6 +72,10 @@ export const RegisterRoute = () => {
 		const { email } = getValues();
 		if (!email.includes("@")) {
 			setError(t`Enter a valid email address`);
+			return;
+		}
+		if (!termsAccepted) {
+			setError(t`Please accept the terms to continue.`);
 			return;
 		}
 		// Funnel step: $pageview (/register) -> registration_details_completed
@@ -176,9 +189,64 @@ export const RegisterRoute = () => {
 											: undefined
 									}
 								/>
-								<Button size="md" onClick={handleNext}>
+								<Checkbox
+									checked={termsAccepted}
+									onChange={(e) => setTermsAccepted(e.currentTarget.checked)}
+									{...testId("auth-register-terms-checkbox")}
+									label={
+										<Text size="sm">
+											<Trans>
+												I accept the{" "}
+												<Anchor
+													href={LEGAL_TERMS_URL}
+													target="_blank"
+													rel="noreferrer"
+												>
+													terms
+												</Anchor>
+											</Trans>
+										</Text>
+									}
+								/>
+								<Button
+									size="md"
+									onClick={handleNext}
+									disabled={!termsAccepted}
+								>
 									<Trans>Continue</Trans>
 								</Button>
+								<Text size="xs">
+									<Trans>
+										By continuing you agree to our{" "}
+										<Anchor
+											size="xs"
+											href={LEGAL_TERMS_URL}
+											target="_blank"
+											rel="noreferrer"
+										>
+											terms
+										</Anchor>
+										. See our{" "}
+										<Anchor
+											size="xs"
+											href={LEGAL_PRIVACY_URL}
+											target="_blank"
+											rel="noreferrer"
+										>
+											privacy policy
+										</Anchor>{" "}
+										and{" "}
+										<Anchor
+											size="xs"
+											href={LEGAL_DPA_URL}
+											target="_blank"
+											rel="noreferrer"
+										>
+											DPA
+										</Anchor>
+										.
+									</Trans>
+								</Text>
 							</>
 						)}
 
