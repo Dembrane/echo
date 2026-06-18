@@ -46,6 +46,15 @@ export const PURCHASABLE_TIERS: Tier[] = VISIBLE_TIERS.filter(
 	(tier) => !isComingSoon(tier),
 );
 
+// True only when there are at least two tiers a customer can actually buy.
+// Drives "Change plan": with a single purchasable tier (today, only
+// Changemaker) there is nothing to change to, so the button is hidden; it
+// auto-restores the moment a second tier goes live (mirrors backend
+// PURCHASABLE_TIERS in server/dembrane/tier_capacity.py).
+export function hasMultiplePurchasableTiers(): boolean {
+	return PURCHASABLE_TIERS.length >= 2;
+}
+
 // Recently launched: render a "New" badge. None currently.
 export const NEW_TIERS: Tier[] = [];
 

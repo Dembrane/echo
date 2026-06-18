@@ -644,6 +644,21 @@ async def create_workspace(
         f"(visibility={visibility})"
     )
 
+    # Pool seats across the account's workspaces. Adding the creator as owner of
+    # a new workspace is a net-new seat only if they weren't already a seat-holder
+    # anywhere on the account; count_account_seats dedupes distinct users, so an
+    # existing member creating a workspace reconciles to €0 net-new (no-op).
+    # Best-effort: a billing hiccup must never fail workspace creation (reconcile
+    # flags the account on its own).
+    from dembrane.billing_service import reconcile_account_seats
+
+    try:
+        await reconcile_account_seats(account_id)
+    except Exception:
+        logger.exception(
+            "Seat reconcile failed after creating workspace %s", ws_id
+        )
+
     # Tell the organisation's other admins/owners that a new workspace exists.
     # Open workspaces are discoverable via the discovery endpoint so they
     # can explicitly join; private workspaces are still discoverable to

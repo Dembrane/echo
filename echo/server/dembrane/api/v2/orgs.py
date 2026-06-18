@@ -1624,19 +1624,18 @@ async def list_organisation_workspaces(
         if is_org_member and is_private and not caller_is_manager:
             continue
 
-        # Cap-blocked flags. Compute lazily — only call get_effective_members
-        # when the tier has finite caps, since the whole point of the wizard
-        # disabling cards is hard-block tiers (Pilot) and finite guest caps.
-        # Skip for Guardian (unlimited) and unknown tiers. Counts pending
-        # workspace_invite rows on top of effective members so the wizard
-        # disables a card the moment outstanding invites have saturated
-        # the cap, not only after they're accepted.
+        # Seat usage is shown for EVERY tier so the invite modal can read "N
+        # seats" (the paid tiers are per-seat metered with no included bundle;
+        # gating this on a finite cap left them stuck at 0). Counts effective
+        # members plus pending workspace_invite rows. `seat_cap` stays null on
+        # unlimited tiers (UI shows "N seats" with no denominator); the
+        # hard-block flag only trips when there is a finite cap to saturate.
         tier = (ws.get("tier") or "").lower()
         cap = get_capacity(tier)
         seat_blocked = False
         seats_used_total: int = 0
         seat_cap_value: int | None = None
-        if cap is not None and cap.included_seats is not None:
+        if cap is not None:
             from dembrane.seat_capacity import count_pending_invites
 
             seats_used, _member_count, _external_count = await compute_effective_seat_state(
@@ -1645,9 +1644,11 @@ async def list_organisation_workspaces(
             member_pending, external_pending = await count_pending_invites(ws["id"])
             total_pending = member_pending + external_pending
             seats_used_total = seats_used + total_pending
-            seat_cap_value = cap.included_seats
-            if tier_hard_blocks_seats(tier) and seats_used_total >= cap.included_seats:
-                seat_blocked = True
+            # Only a finite cap yields a denominator + a possible hard block.
+            if cap.included_seats is not None:
+                seat_cap_value = cap.included_seats
+                if tier_hard_blocks_seats(tier) and seats_used_total >= cap.included_seats:
+                    seat_blocked = True
 
         out.append(
             OrgWorkspaceSummary(

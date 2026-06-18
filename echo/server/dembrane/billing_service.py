@@ -25,10 +25,7 @@ from datetime import datetime, timezone, timedelta
 
 from dembrane import mollie
 from dembrane.settings import get_settings
-from dembrane.seat_capacity import (
-    count_pending_invites,
-    compute_effective_seat_state,
-)
+from dembrane.seat_capacity import count_pending_invites
 from dembrane.tier_capacity import (
     PURCHASABLE_TIERS,
     get_capacity,
@@ -37,6 +34,19 @@ from dembrane.tier_capacity import (
 from dembrane.directus_async import async_directus
 
 logger = logging.getLogger("billing_service")
+
+
+def apply_discount(amount: float, percent_discount: int | None) -> float:
+    """Apply a billing-account discount to an amount: `amount × (1 - pct/100)`.
+
+    Single source for the discount math so every pricing path (real Mollie
+    charges, customer display, admin forecast) reduces by the same rule. The
+    percent is clamped to 0..100: a null / out-of-range value is a no-op, 100%
+    floors the charge to EUR0. Rounded to cents."""
+    if not percent_discount:
+        return round(amount, 2)
+    pct = max(0, min(100, int(percent_discount)))
+    return round(amount * (1 - pct / 100), 2)
 
 
 class BillingError(RuntimeError):
@@ -52,27 +62,22 @@ class ReconcileChargeError(RuntimeError):
 
 
 async def count_account_seats(account_id: str) -> int:
-    """Total billable seats across every workspace the account covers."""
-    workspaces = await async_directus.get_items(
-        "workspace",
-        {
-            "query": {
-                "filter": {
-                    "billing_account_id": {"_eq": account_id},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["id"],
-                "limit": -1,
-            }
-        },
-    )
-    if not isinstance(workspaces, list):
-        return 0
-    total = 0
-    for ws in workspaces:
-        seats_used, _m, _e = await compute_effective_seat_state(ws["id"])
-        total += seats_used
-    return total
+    """Billable seats for the account: the count of DISTINCT users across every
+    workspace the account covers, not the per-workspace sum.
+
+    Seats are pooled (ADR 0005): one paying account, one bill, however many
+    workspaces. A user who belongs to N of the account's workspaces is one seat,
+    not N. Summing each workspace's seat count double-counts them — that is the
+    phantom-seat bug where an existing member who creates (and so owns) another
+    workspace looked like a brand-new seat. Pooling distinct user ids makes that
+    a no-op: the new workspace adds no user the account wasn't already paying
+    for, so net-new is 0 and the bill is unchanged."""
+    from dembrane.seat_capacity import effective_seat_user_ids
+
+    seat_user_ids: set[str] = set()
+    for ws_id in await _account_workspace_ids(account_id):
+        seat_user_ids |= await effective_seat_user_ids(ws_id)
+    return len(seat_user_ids)
 
 
 async def _account_workspace_ids(account_id: str) -> list[str]:
@@ -243,11 +248,16 @@ async def get_billing_overview(account_id: str) -> dict:
     tier = account.get("tier") or "free"
     billing_period = account.get("billing_period") or "annual"
     status = account.get("status")
+    percent_discount = account.get("percent_discount")
+    type_discount = account.get("type_discount")
     seats = max(await count_account_seats(account_id), 1)
     customer_id = account.get("mollie_customer_id")
     sub_id = account.get("mollie_subscription_id")
 
-    # Projected monthly total at the current tier + cadence.
+    # Projected monthly total at the current tier + cadence. The discount applies
+    # to the rolled-up totals, not the per-seat sticker rate: the sticker stays
+    # the headline price and the discount is what reduces the actual bill, so the
+    # displayed projection matches the (discounted) amount we send to Mollie.
     projected_monthly_eur: float | None = None
     per_seat_monthly_eur: float | None = None
     cap = get_capacity(tier)
@@ -257,7 +267,7 @@ async def get_billing_overview(account_id: str) -> dict:
             if billing_period == "monthly"
             else cap.price_eur_monthly
         )
-        projected_monthly_eur = round(per_seat_monthly_eur * seats, 2)
+        projected_monthly_eur = apply_discount(per_seat_monthly_eur * seats, percent_discount)
 
     # Next invoice + payment method come from Mollie (best-effort).
     next_invoice = None
@@ -300,8 +310,8 @@ async def get_billing_overview(account_id: str) -> dict:
     pending_invites = await count_account_pending_invites(account_id)
     projected_with_pending_eur: float | None = None
     if per_seat_monthly_eur is not None and pending_invites > 0:
-        projected_with_pending_eur = round(
-            per_seat_monthly_eur * (seats + pending_invites), 2
+        projected_with_pending_eur = apply_discount(
+            per_seat_monthly_eur * (seats + pending_invites), percent_discount
         )
 
     return {
@@ -318,6 +328,11 @@ async def get_billing_overview(account_id: str) -> dict:
         "payment_method": payment_method,
         "pending_invites": pending_invites,
         "projected_with_pending_eur": projected_with_pending_eur,
+        # Discount applied to every figure above (and to the live Mollie charge).
+        # Surfaced so the UI can show "{n}% discount applied"; type is the reason
+        # tag (scholarship / staff_discount / trial).
+        "percent_discount": percent_discount,
+        "type_discount": type_discount,
         # Observable seat-reconcile health: set when a re-price last failed
         # (dead mandate / Mollie error), null when clean. Drives the
         # "fix your payment" prompt.
@@ -423,6 +438,10 @@ async def start_subscription_checkout(
 
     seats = await count_account_seats(account_id)
     amount, interval = _per_interval_amount(tier, seats, billing_period)
+    # Real money: reduce the first charge by the account's discount so the
+    # consent payment + the recurring subscription it spawns both bill the
+    # discounted figure (the subscription inherits `amount` via metadata).
+    amount = apply_discount(amount, account.get("percent_discount"))
 
     customer_id = await _ensure_customer(account)
     payment = await mollie.create_first_payment(
@@ -548,6 +567,9 @@ async def sync_subscription_seats(account_id: str) -> float | None:
         amount, _interval = _per_interval_amount(tier, seats, billing_period)
     except BillingError:
         return None
+    # Real money: the live subscription amount is the discounted figure, so a
+    # re-price never silently restores the full rate.
+    amount = apply_discount(amount, account.get("percent_discount"))
 
     # Skip the PATCH when nothing changed (cron runs often; Mollie calls aren't free).
     try:
@@ -659,6 +681,8 @@ async def _charge_seat_proration(account: dict, added_seats: int) -> float | Non
         full_added, _interval = _per_interval_amount(tier, added_seats, billing_period)
     except BillingError:
         return None
+    # Real money: discount the added-seat cost before prorating it.
+    full_added = apply_discount(full_added, account.get("percent_discount"))
     prorated = round(full_added * fraction, 2)
     if prorated < 0.01:
         return None
@@ -848,6 +872,9 @@ async def estimate_seat_addition(
         full_added, _interval = _per_interval_amount(tier, effective_added, billing_period)
     except BillingError:
         return result
+    # Match the real charge: discount the added-seat cost so the preview equals
+    # what _charge_seat_proration will actually bill.
+    full_added = apply_discount(full_added, account.get("percent_discount"))
     fraction = await _period_fraction_remaining(account)
     result["active"] = True
     result["recurring_delta_eur"] = round(full_added, 2)

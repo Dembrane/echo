@@ -417,3 +417,102 @@ async def test_billing_rollup_rejects_non_staff():
     with pytest.raises(HTTPException) as exc:
         await billing_rollup(_auth(is_admin=False), month_offset=0)
     assert exc.value.status_code == 403
+
+
+# ── ISSUE-024·5: discount applies to the per-account forecast + MRR ──
+
+
+def test_discount_reduces_account_forecast():
+    from dembrane.api.v2.admin import _aggregate_accounts
+
+    rows = [
+        _ws_row(
+            workspace_id="ws-d",
+            account_id="acc-d",
+            tier="changemaker",
+            seats=2,
+            percent_discount=20,
+        )
+    ]
+    accounts = _aggregate_accounts(
+        rows,
+        org_name_by_id={"org-1": "Acme"},
+        label_by_account={"acc-d": "Disc co"},
+        payment_mode_by_account={"acc-d": "mollie"},
+        now_iso="2026-06-18T00:00:00+00:00",
+    )
+    acc = accounts[0]
+    # 1500 base, 20% off = 1200; base_price_eur stays the sticker.
+    assert acc.base_price_eur == 1500.0
+    assert acc.total_forecast_eur == 1200.0
+    assert acc.percent_discount == 20
+
+
+def test_full_discount_floors_forecast_to_zero_but_not_comped():
+    from dembrane.api.v2.admin import _aggregate_accounts
+
+    rows = [
+        _ws_row(
+            workspace_id="ws-100",
+            account_id="acc-100",
+            tier="guardian",
+            percent_discount=100,
+        )
+    ]
+    accounts = _aggregate_accounts(
+        rows,
+        org_name_by_id={"org-1": "Acme"},
+        label_by_account={"acc-100": None},
+        payment_mode_by_account={"acc-100": "mollie"},
+        now_iso="2026-06-18T00:00:00+00:00",
+    )
+    acc = accounts[0]
+    # 100% discount on a real (mollie) account: €0 forecast, but it is a paying
+    # relationship, not comped.
+    assert acc.total_forecast_eur == 0.0
+    assert acc.is_comped is False
+
+
+@pytest.mark.asyncio
+@patch("dembrane.api.v2.admin._recent_login_count", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin.compute_effective_seat_state", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._workspace_hours_this_cycle", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._workspace_admins", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._all_active_workspaces", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._org_name_map", new_callable=AsyncMock)
+async def test_rollup_headline_forecast_and_mrr_are_discounted(
+    mock_org_names,
+    mock_workspaces,
+    mock_admins,
+    mock_hours,
+    mock_seats,
+    mock_logins,
+):
+    from dembrane.api.v2.admin import billing_rollup
+
+    mock_org_names.return_value = {"org-1": "Acme"}
+    mock_admins.return_value = []
+    mock_hours.return_value = 1.0
+    mock_seats.return_value = (1, 1, 0)
+    mock_logins.return_value = 0
+    mock_workspaces.return_value = [
+        {
+            "id": "ws-1",
+            "name": "WS One",
+            "org_id": "org-1",
+            "tier": "changemaker",
+            "billing_account_id": "acc-1",
+            "account_scope": "workspace",
+            "account_label": "Acme billing",
+            "account_payment_mode": "mollie",
+            "type_discount": "staff_discount",
+            "percent_discount": 10,
+            "tier_expires_at": None,
+            "settings": {},
+        }
+    ]
+
+    result = await billing_rollup(_auth(), month_offset=0)
+    # 1500 base, 10% off = 1350, in both the headline forecast and MRR.
+    assert result.total_forecast_eur == 1350.0
+    assert result.mrr_eur == 1350.0
