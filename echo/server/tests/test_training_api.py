@@ -21,12 +21,12 @@ from fastapi import FastAPI
 
 from dembrane.training_service import (
     CATALOG,
-    compute_expires_at,
     provision_license,
+    compute_expires_at,
     is_high_risk_context,
     get_user_training_status,
-    get_high_risk_pending_action,
     get_org_roster_training_map,
+    get_high_risk_pending_action,
 )
 from dembrane.api.dependency_auth import DirectusSession, require_directus_session
 

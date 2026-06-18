@@ -108,7 +108,12 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 		},
 	});
 
-	const requestMutation = useMutation({
+	const requestMutation = useMutation<
+		Awaited<ReturnType<typeof postRequestAccess>>,
+		Error,
+		string,
+		{ previous: DiscoverableWorkspace[] | undefined }
+	>({
 		mutationFn: postRequestAccess,
 		onError: (error: Error, _workspaceId, ctx) => {
 			if (ctx?.previous) {

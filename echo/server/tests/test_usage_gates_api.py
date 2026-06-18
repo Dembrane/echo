@@ -217,8 +217,8 @@ class TestMemberVsAdminFinancialGating:
 
     def _full_admin_response(self):
         from dembrane.api.v2.workspaces import (
-            NextTierRecommendation,
             UsageGatesResponse,
+            NextTierRecommendation,
             WorkspaceUsageResponse,
         )
 

@@ -680,7 +680,7 @@ async def test_discount_edit_writes_billing_account(mock_directus):
 
 @pytest.mark.asyncio
 @patch("dembrane.api.v2.admin.async_directus")
-async def test_discount_edit_rejects_non_staff(mock_directus):
+async def test_discount_edit_rejects_non_staff(_mock_directus):
     from fastapi import HTTPException
 
     from dembrane.api.v2.admin import (

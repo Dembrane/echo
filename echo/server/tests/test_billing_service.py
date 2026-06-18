@@ -531,7 +531,7 @@ class TestDiscountedCheckout:
         mock_customer.return_value = "cst_1"
         mock_seats.return_value = 1
         mock_mollie.create_first_payment = AsyncMock(return_value={"id": "tr_1"})
-        mock_mollie.checkout_url = lambda p: "https://pay.mollie/x"
+        mock_mollie.checkout_url = lambda _p: "https://pay.mollie/x"
 
         url = await start_subscription_checkout(
             "acc-1", tier="changemaker", billing_period="annual",
@@ -561,7 +561,7 @@ class TestUpdatePaymentMethod:
         mock_mollie.create_first_payment = AsyncMock(
             return_value={"_links": {"checkout": {"href": "https://pay.mollie/x"}}}
         )
-        mock_mollie.checkout_url = lambda p: "https://pay.mollie/x"
+        mock_mollie.checkout_url = lambda _p: "https://pay.mollie/x"
 
         with patch("dembrane.billing_service.get_settings") as mock_settings:
             mock_settings.return_value.billing.mollie_enabled = True
@@ -578,7 +578,7 @@ class TestUpdatePaymentMethod:
     @pytest.mark.asyncio
     @patch("dembrane.billing_service.async_directus")
     @patch("dembrane.billing_service.mollie")
-    async def test_no_customer_refuses(self, mock_mollie, mock_directus):
+    async def test_no_customer_refuses(self, _mock_mollie, mock_directus):
         from dembrane.billing_service import BillingError, start_update_payment_method
 
         mock_directus.get_item = AsyncMock(return_value={"id": "acc-1"})

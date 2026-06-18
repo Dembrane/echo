@@ -199,7 +199,7 @@ async def test_change_admin_rejects_non_staff():
 async def test_change_admin_promotes_member(mock_directus):
     from dembrane.api.v2.admin import ChangeWorkspaceAdminBody, change_workspace_admin
 
-    async def _get_item(collection, item_id):
+    async def _get_item(collection, _item_id):
         if collection == "workspace":
             return {"id": "ws-1", "deleted_at": None, "org_id": "org-1"}
         if collection == "workspace_membership":
@@ -230,7 +230,7 @@ async def test_change_admin_rejects_external(mock_directus):
 
     from dembrane.api.v2.admin import ChangeWorkspaceAdminBody, change_workspace_admin
 
-    async def _get_item(collection, item_id):
+    async def _get_item(collection, _item_id):
         if collection == "workspace":
             return {"id": "ws-1", "deleted_at": None}
         if collection == "workspace_membership":
@@ -260,7 +260,7 @@ async def test_change_admin_membership_in_other_workspace_404(mock_directus):
 
     from dembrane.api.v2.admin import ChangeWorkspaceAdminBody, change_workspace_admin
 
-    async def _get_item(collection, item_id):
+    async def _get_item(collection, _item_id):
         if collection == "workspace":
             return {"id": "ws-1", "deleted_at": None}
         if collection == "workspace_membership":
@@ -360,7 +360,7 @@ async def test_list_members_rejects_non_staff():
 async def test_list_members_enriches_users(mock_directus):
     from dembrane.api.v2.admin import list_workspace_members
 
-    async def _get_items(collection, query):
+    async def _get_items(collection, _query):
         if collection == "workspace_membership":
             return [
                 {"id": "m-1", "user_id": "u-1", "role": "admin"},
