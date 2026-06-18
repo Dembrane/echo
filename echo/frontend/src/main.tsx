@@ -9,6 +9,9 @@ import { POSTHOG_CAPTURE, POSTHOG_HOST, POSTHOG_TOKEN } from "./config";
 
 posthog.init(POSTHOG_TOKEN, {
 	api_host: POSTHOG_HOST,
+	// Share the cookie across .dembrane.com so a visitor's distinct id carries
+	// over from the marketing site, stitching both into one person profile.
+	cross_subdomain_cookie: true,
 	// Error tracking: autocapture unhandled errors and promise rejections.
 	// React render errors are reported separately via ErrorBoundary.
 	capture_exceptions: {
