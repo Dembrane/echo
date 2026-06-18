@@ -1,104 +1,108 @@
 import { t } from "@lingui/core/macro";
 
 /**
- * Tier taglines (matrix v1.1 §1).
+ * Tier copy + helpers (ADR 0005, per-seat tiers).
  *
- * Every surface that shows a tier name must pair it with a tagline.
- * Kept in sync with server/dembrane/tier_capacity.py — if copy changes,
- * update both sides. The two-source pattern is intentional: the backend
- * uses taglines in email templates; the frontend uses them in UI; they
- * don't need a round-trip.
+ * Kept in sync with server/dembrane/tier_capacity.py. Free is retained in the
+ * type as the internal baseline (default workspace, downgrade target) and for
+ * rendering an existing workspace's badge, but it is HIDDEN from customer-facing
+ * plan selection for now — see VISIBLE_TIERS.
  */
 
-export type Tier =
-	| "free"
-	| "pilot"
-	| "pioneer"
-	| "innovator"
-	| "changemaker"
-	| "guardian";
+export type Tier = "free" | "innovator" | "changemaker" | "guardian";
 
+// Lowest -> highest. Free stays for ordering/comparison (meetsTier).
 export const TIER_ORDER: Tier[] = [
 	"free",
-	"pilot",
-	"pioneer",
 	"innovator",
 	"changemaker",
 	"guardian",
 ];
 
-export const TIER_TAGLINE: Record<Tier, string> = {
-	changemaker: "For governments and enterprises",
-	free: "get started.",
-	guardian: "For highest-compliance environments",
-	innovator: "For organisations with ongoing participation",
-	pilot: "one month to try it.",
-	pioneer: "For small teams and single projects",
-};
+// Customer-facing, selectable plans (pricing cards, plan picker). Free is
+// hidden for now; re-add it here to expose it again. Innovator/Guardian are
+// "coming soon" (gated on the MCP / sovereign stack) but still shown.
+export const VISIBLE_TIERS: Tier[] = [
+	// "free",  // hidden for now
+	"innovator",
+	"changemaker",
+	"guardian",
+];
 
-// Capacity line appended to tooltips so a new customer can answer
-// "what does Pioneer mean?" without hitting the billing tab. Numbers
-// mirror server/dembrane/tier_capacity.py — keep in sync. Annual-billing
-// per-month prices (matches the matrix's anchor cadence).
-export const TIER_CAPACITY_SHORT: Record<Tier, string> = {
-	changemaker: "20 seats · 100 h/mo · €1500/mo",
-	free: "1 seat · 1 h · free",
-	guardian: "unlimited · €5000/mo",
-	innovator: "10 seats · 50 h/mo · €500/mo",
-	pilot: "2 seats · 10 h · €349 one-time",
-	pioneer: "3 seats · 25 h/mo · €200/mo",
-};
+// Innovator and Guardian are shown with a "Coming soon" badge, not
+// selectable/checkout-able. Changemaker is live. Single source of truth:
+// used by the pricing cards, plan picker, and checkout.
+export const COMING_SOON_TIERS: Tier[] = ["innovator", "guardian"];
 
-// Per-seat overage rate (euros, monthly) when a workspace exceeds
-// included seats. Free + pilot have no overage billing; Guardian is
-// unlimited. Pioneer/Innovator/Changemaker bill per matrix §8. Mirror
-// of seat_overage_eur in tier_capacity.py — keep in sync.
-export const TIER_SEAT_OVERAGE_EUR: Record<Tier, number | null> = {
-	changemaker: 60,
-	free: null,
-	guardian: null,
-	innovator: 30,
-	pilot: null,
-	pioneer: 25,
-};
-
-export function seatOverageRateFor(
-	tier: string | null | undefined,
-): number | null {
-	return isTier(tier) ? TIER_SEAT_OVERAGE_EUR[tier] : null;
+export function isComingSoon(tier: string | null | undefined): boolean {
+	return !!tier && (COMING_SOON_TIERS as string[]).includes(tier);
 }
 
-export const TIER_BEST_FOR: Record<Tier, string> = {
-	changemaker: "Best for large organisations with complex needs.",
-	free: "",
-	guardian: "Sovereign infrastructure and full set up.",
-	innovator: "Best for organisations running regular engagements.",
-	pilot: "",
-	pioneer: "Best for smaller teams running individual projects.",
+// Recently launched: render a "New" badge. None currently.
+export const NEW_TIERS: Tier[] = [];
+
+export function isNewTier(tier: string | null | undefined): boolean {
+	return !!tier && (NEW_TIERS as string[]).includes(tier);
+}
+
+export type TierBadgeKind = "coming-soon" | "new" | "popular" | null;
+
+// One precedence for every tier surface (pricing cards + capacity matrix):
+// coming-soon wins, then new, then the single popular tier. Keeps the badge
+// consistent so a "coming soon" tier can never also read as "popular". Pass an
+// explicit `popularTier` to override the default (SELLABLE_TIER).
+export function resolveTierBadge(
+	tier: string | null | undefined,
+	opts?: { popularTier?: string | null },
+): TierBadgeKind {
+	if (isComingSoon(tier)) return "coming-soon";
+	if (isNewTier(tier)) return "new";
+	const popular =
+		opts && "popularTier" in opts ? opts.popularTier : SELLABLE_TIER;
+	if (popular && tier === popular) return "popular";
+	return null;
+}
+
+// Default selection in the plan picker (also carries the POPULAR badge).
+export const SELLABLE_TIER: Tier = "changemaker";
+
+// Annual is the anchor price; monthly cadence is surcharged by this percent
+// ("X% off when you pay annually"). Single knob — mirrors
+// MONTHLY_BILLING_PREMIUM_PCT in server/dembrane/tier_capacity.py. Change both
+// together. Drives the toggle badge + the offline price fallback.
+export const MONTHLY_BILLING_PREMIUM_PCT = 20;
+
+// Single source for the offline/fallback per-seat annual price (EUR/seat/mo).
+// Mirrors price_eur_monthly in server/dembrane/tier_capacity.py; the live price
+// comes from the API, this only backstops first paint before the call returns.
+export const TIER_FALLBACK_PRICE_EUR: Record<Tier, number | null> = {
+	changemaker: 75,
+	free: null,
+	guardian: 150,
+	innovator: 20,
 };
 
-export function tierBestFor(tier: string | null | undefined): string {
+// One-liner capacity summary. The prices here are translatable display copy
+// (kept literal so the i18n catalogs stay stable); the numeric source of truth
+// for computation is TIER_FALLBACK_PRICE_EUR + the live API.
+export function capacityShortFor(tier: string | null | undefined): string {
 	if (!isTier(tier)) return "";
 	const map: Record<Tier, string> = {
-		changemaker: t`Best for large organisations with complex needs.`,
-		free: "",
-		guardian: t`Sovereign infrastructure and full set up.`,
-		innovator: t`Best for organisations running regular engagements.`,
-		pilot: "",
-		pioneer: t`Best for smaller teams running individual projects.`,
+		changemaker: t`€75 / seat / month`,
+		free: t`1 seat · 1 h`,
+		guardian: t`€150 / seat / month`,
+		innovator: t`€20 / seat / month`,
 	};
 	return map[tier];
 }
 
-export function capacityShortFor(tier: string | null | undefined): string {
+export function tierBestFor(tier: string | null | undefined): string {
 	if (!isTier(tier)) return "";
 	const map: Record<Tier, string> = {
-		changemaker: t`20 seats · 100 h/mo · €1500/mo`,
-		free: t`1 seat · 1 h · free`,
-		guardian: t`unlimited · €5000/mo`,
-		innovator: t`10 seats · 50 h/mo · €500/mo`,
-		pilot: t`2 seats · 10 h · €349 one-time`,
-		pioneer: t`3 seats · 25 h/mo · €200/mo`,
+		changemaker: t`EU-hosted analysis, audit logs, and white labeling.`,
+		free: "",
+		guardian: t`Cloud Act safe. EU-sovereign stack for the strictest compliance.`,
+		innovator: t`Bring your own LLM via the MCP.`,
 	};
 	return map[tier];
 }
@@ -106,8 +110,6 @@ export function capacityShortFor(tier: string | null | undefined): string {
 export function isTier(value: string | null | undefined): value is Tier {
 	return (
 		value === "free" ||
-		value === "pilot" ||
-		value === "pioneer" ||
 		value === "innovator" ||
 		value === "changemaker" ||
 		value === "guardian"
@@ -117,12 +119,10 @@ export function isTier(value: string | null | undefined): value is Tier {
 export function taglineFor(tier: string | null | undefined): string {
 	if (!isTier(tier)) return "";
 	const map: Record<Tier, string> = {
-		changemaker: t`For governments and enterprises`,
+		changemaker: t`EU hosted LLMs included`,
 		free: t`get started.`,
-		guardian: t`For highest-compliance environments`,
-		innovator: t`For organisations with ongoing participation`,
-		pilot: t`one month to try it.`,
-		pioneer: t`For small teams and single projects`,
+		guardian: t`Cloud Act Safe`,
+		innovator: t`Bring your own LLM`,
 	};
 	return map[tier];
 }
@@ -132,8 +132,6 @@ export const TIER_BADGE_COLOR: Record<Tier, string> = {
 	free: "gray",
 	guardian: "orange",
 	innovator: "violet",
-	pilot: "gray",
-	pioneer: "blue",
 };
 
 export type BillingPeriod = "annual" | "monthly";
@@ -147,14 +145,9 @@ export interface MonthlyPricing {
 	per_month_eur: number;
 }
 
-export interface OneTimePricing {
-	amount_eur: number;
-}
-
 export interface TierPricing {
 	annual_billing?: AnnualPricing | null;
 	monthly_billing?: MonthlyPricing | null;
-	one_time?: OneTimePricing | null;
 }
 
 export interface TierCapacity {
@@ -172,15 +165,11 @@ export interface TierCapacity {
 }
 
 /**
- * Resolve the active-cadence pricing slot for a tier capacity.
+ * Resolve the active-cadence pricing slot for a tier capacity (per seat).
  *
- * Returns the slot the UI should render in for the active billing period,
- * or `null` when the tier has no displayable price (free).
- *
- * - Annual selected, pioneer+ → `annual_billing`
- * - Monthly selected, pioneer+ → `monthly_billing`
- * - Pilot → `one_time` (ignores billing period — toggle does not move pilot)
- * - Free → null
+ * - Annual selected -> `annual_billing`
+ * - Monthly selected -> `monthly_billing`
+ * - Free -> null (no displayable price)
  */
 export function pricingForBillingPeriod(
 	cap: TierCapacity,
@@ -188,13 +177,9 @@ export function pricingForBillingPeriod(
 ):
 	| { kind: "annual"; per_month_eur: number; total_per_year_eur: number }
 	| { kind: "monthly"; per_month_eur: number }
-	| { kind: "one_time"; amount_eur: number }
 	| null {
 	const p = cap.pricing;
 	if (!p) return null;
-	if (p.one_time) {
-		return { amount_eur: p.one_time.amount_eur, kind: "one_time" };
-	}
 	if (period === "monthly" && p.monthly_billing) {
 		return {
 			kind: "monthly",
@@ -209,6 +194,48 @@ export function pricingForBillingPeriod(
 		};
 	}
 	return null;
+}
+
+// Shared display formatters. Single source so the pricing cards and the
+// capacity matrix render the same numbers identically.
+export function formatTierPrice(
+	cap: TierCapacity,
+	billingPeriod: BillingPeriod,
+): string {
+	const resolved = pricingForBillingPeriod(cap, billingPeriod);
+	if (!resolved) return t`Free`;
+	return `€${resolved.per_month_eur.toLocaleString("en-IE")}`;
+}
+
+export function formatTierPricePeriod(
+	cap: TierCapacity,
+	billingPeriod: BillingPeriod,
+): string {
+	const resolved = pricingForBillingPeriod(cap, billingPeriod);
+	if (!resolved) return "";
+	if (resolved.kind === "annual") return t`/seat/mo · billed annually`;
+	return t`/seat/mo · billed monthly`;
+}
+
+export function formatTierSeats(cap: TierCapacity): string {
+	if (cap.included_seats == null) return "∞";
+	return String(cap.included_seats);
+}
+
+export function formatTierHours(cap: TierCapacity): string {
+	if (cap.included_hours == null) return "∞";
+	return String(cap.included_hours);
+}
+
+export function formatTierSeatOverage(cap: TierCapacity): string {
+	if (cap.seat_overage_eur == null) return "—";
+	return t`+€${cap.seat_overage_eur}/seat`;
+}
+
+export function formatTierHourOverage(cap: TierCapacity): string {
+	if (cap.hard_block_on_hours) return "€0";
+	if (cap.hour_overage_eur == null) return "—";
+	return t`€${cap.hour_overage_eur}/h`;
 }
 
 export async function fetchTierCapacities(

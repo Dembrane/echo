@@ -151,8 +151,11 @@ async def _get_workspace_bits(
         return None, [], None
 
     workspace = await async_directus.get_item("workspace", workspace_id)
-    tier: Optional[str] = (workspace or {}).get("tier")
     org_id: Optional[str] = (workspace or {}).get("org_id")
+    # Tier lives on the billing account, not the workspace.
+    from dembrane.billing_account import resolve_workspace_tier
+
+    tier: Optional[str] = await resolve_workspace_tier(workspace_id) if workspace else None
 
     # Caller's direct row, if any. This is where custom_policies live;
     # derived rows (organisation admin inheritance) don't carry them.

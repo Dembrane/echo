@@ -1,7 +1,6 @@
 import type { PropsWithChildren } from "react";
 import { Outlet } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
-import { SeatCapBanner } from "@/components/workspace/SeatCapBanner";
 import { AppSidebar, useSidebarView } from "@/features/sidebar";
 import { AppBreadcrumbs } from "@/features/sidebar/breadcrumbs/AppBreadcrumbs";
 import { InboxView } from "@/features/sidebar/views/InboxView";
@@ -11,7 +10,7 @@ import { TransitionCurtainProvider } from "./TransitionCurtainProvider";
 
 const SidebarFailure = () => (
 	<aside
-		className="flex h-screen w-[240px] shrink-0 flex-col items-center justify-center border-r p-4 text-center text-[12px]"
+		className="flex h-screen w-[240px] shrink-0 flex-col items-center justify-center border-r p-4 text-center text-xs"
 		style={{
 			backgroundColor: "#f6f4f1",
 			borderColor: "rgba(45, 45, 44, 0.08)",
@@ -44,13 +43,6 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 				<ErrorBoundary>
 					<main className="relative flex flex-1 flex-col overflow-hidden">
 						{isAuthenticated ? <AppBreadcrumbs /> : null}
-						{/* SeatCapBanner self-gates on workspace context, so it only
-						    appears on /w/:workspaceId/* routes. Lives here (inside
-						    main) instead of WorkspaceLayout so it doesn't stretch
-						    across the sidebar column. */}
-						<div className="print:hidden">
-							<SeatCapBanner />
-						</div>
 						<div className="flex-1 overflow-auto">
 							<Outlet />
 							{children}

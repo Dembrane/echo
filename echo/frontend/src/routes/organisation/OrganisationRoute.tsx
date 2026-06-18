@@ -6,7 +6,6 @@ import {
 	Anchor,
 	Avatar,
 	Badge,
-	Box,
 	Button,
 	Center,
 	Container,
@@ -29,7 +28,6 @@ import { modals } from "@mantine/modals";
 import {
 	IconChevronDown,
 	IconChevronRight,
-	IconClock,
 	IconLock,
 	IconPlus,
 	IconSparkles,
@@ -37,6 +35,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
+import { OrgBillingTab } from "@/components/billing/BillingManager";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
 import { InviteModal } from "@/components/invite/InviteModal";
@@ -45,7 +44,6 @@ import {
 	MembersToolbar,
 	PendingInvitesSection,
 } from "@/components/members";
-import { OrganisationCapBanner } from "@/components/organisation/OrganisationCapBanner";
 import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
 import { OrganisationUsageRollup } from "@/components/workspace/OrganisationUsageRollup";
 import { API_BASE_URL } from "@/config";
@@ -313,38 +311,47 @@ export const OrganisationRoute = () => {
 	const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
 	const [inviteOpen, setInviteOpen] = useState(false);
 	const queryClient = useQueryClient();
-		// URL-driven tab state. Tab lives in the path segment
-		// (`/o/:organisationId/<tab>`) so browser back steps between tabs and URLs
-		// are shareable. We ALSO recognise sidebar-driven URLs:
-		//   /o/:id/settings/<section>  → maps to an existing tab
-		// The sidebar pushes those URLs so its view resolver lands on
-		// "org-settings" while the content panel keeps using existing tabs.
-		const allowedTabs = ["overview", "usage", "members", "billing"] as const;
-		type TabValue = (typeof allowedTabs)[number];
-		const segments = (splat ?? "").split("/").filter(Boolean);
-		const segment = segments[0] ?? "";
+	// URL-driven tab state. Tab lives in the path segment
+	// (`/o/:organisationId/<tab>`) so browser back steps between tabs and URLs
+	// are shareable. We ALSO recognise sidebar-driven URLs:
+	//   /o/:id/settings/<section>  → maps to an existing tab
+	// The sidebar pushes those URLs so its view resolver lands on
+	// "org-settings" while the content panel keeps using existing tabs.
+	const allowedTabs = ["overview", "usage", "members", "billing"] as const;
+	type TabValue = (typeof allowedTabs)[number];
+	const segments = (splat ?? "").split("/").filter(Boolean);
+	const segment = segments[0] ?? "";
 
-		const isSettingsPath = segment === "settings";
+	const isSettingsPath = segment === "settings";
 
-		const viewRaw: TabValue = isSettingsPath
-			? (() => {
-					const section = segments[1] ?? "general";
-					if (section === "usage") return "usage";
-					if (section === "members") return "members";
-					if (section === "billing") return "billing";
-					// general / anything else → overview (general settings).
-					return "overview";
-				})()
-			: segment === "people"
-				? "members"
-				: (allowedTabs as readonly string[]).includes(segment)
-					? (segment as TabValue)
-					: "overview";
+	const viewRaw: TabValue = isSettingsPath
+		? (() => {
+				const section = segments[1] ?? "general";
+				if (section === "usage") return "usage";
+				if (section === "members") return "members";
+				if (section === "billing") return "billing";
+				// general / anything else → overview (general settings).
+				return "overview";
+			})()
+		: segment === "people"
+			? "members"
+			: (allowedTabs as readonly string[]).includes(segment)
+				? (segment as TabValue)
+				: "overview";
 
 	useEffect(() => {
 		// Bounce bare /o/:id to /o/:id/overview. Don't bounce /settings/*; those are canonical sidebar URLs.
 		if (!organisationId) return;
 		if (isSettingsPath) return;
+		// Billing lives under settings in the sidebar, so the naked /o/:id/billing
+		// route leaves the sidebar inactive. Redirect it to the canonical
+		// settings path instead of keeping a naked billing route.
+		if (segment === "billing") {
+			navigate(`/o/${organisationId}/settings/billing${urlSearch}`, {
+				replace: true,
+			});
+			return;
+		}
 		if (segment !== viewRaw) {
 			navigate(`/o/${organisationId}/${viewRaw}${urlSearch}`, {
 				replace: true,
@@ -399,12 +406,12 @@ export const OrganisationRoute = () => {
 	// finance-only role, so it must reach Usage + Billing even though it
 	// isn't an admin.
 	const canSeeFinancials = isAdmin || organisation?.role === "billing";
-		// Views the caller can't open fall back to Members so landing state is
-		// never an empty panel for them.
-		const view: TabValue =
-			!canSeeFinancials && (viewRaw === "usage" || viewRaw === "billing")
-				? "members"
-				: viewRaw;
+	// Views the caller can't open fall back to Members so landing state is
+	// never an empty panel for them.
+	const view: TabValue =
+		!canSeeFinancials && (viewRaw === "usage" || viewRaw === "billing")
+			? "members"
+			: viewRaw;
 
 	// Organisation-level role change — admin + owner can edit; owner-only offers
 	// the "owner" option (only owners can grant owner).
@@ -635,14 +642,6 @@ export const OrganisationRoute = () => {
 
 	return (
 		<Container size="xl" py="xl" px="lg">
-			{/* Skipped on overview (cards + top SeatCapBanner already cover it);
-			    kept on other tabs where it's the only org-wide cap signal. */}
-			{organisationId && view !== "overview" && (
-				<OrganisationCapBanner
-					organisationId={organisationId}
-					workspaces={workspaces}
-				/>
-			)}
 			<Stack gap={24}>
 				{/* Header — minimal. Name + counts on the left, action cluster
 				    on the right. Tier is intentionally absent (it's a
@@ -676,7 +675,7 @@ export const OrganisationRoute = () => {
 							    dropped from the header summary (HCD audit). */}
 						</Stack>
 					</Group>
-					</Group>
+				</Group>
 
 				{/* Tabbed canvas per demo feedback. Overview holds organisation name
 				    + logo (no more hunting for /o/:id/settings). Usage pulls
@@ -703,7 +702,7 @@ export const OrganisationRoute = () => {
 							// on the at-a-glance overview.
 							<OverviewPanel
 								organisation={organisation}
-								organisationId={organisationId!}
+								organisationId={organisationId as string}
 								canEdit={isAdmin}
 								queryClient={queryClient}
 							/>
@@ -737,27 +736,33 @@ export const OrganisationRoute = () => {
 
 					{canSeeFinancials && (
 						<Tabs.Panel value="billing" pt="md">
-							<Paper withBorder p="md" radius="sm">
-								<Stack gap={8}>
+							<Stack gap="md">
+								<div>
 									<Text size="sm" fw={500}>
 										<Trans>Billing</Trans>
 									</Text>
-									<Text size="sm" c="dimmed">
+									<Text size="xs" c="dimmed">
 										<Trans>
-											Organisation billing is handled through support. For
-											invoices, payment changes, or a shared contract, email{" "}
-											<Anchor href="mailto:support@dembrane.com">
-												support@dembrane.com
-											</Anchor>
-											.
+											One plan for the whole organisation. Every workspace
+											shares it and is billed per seat.
 										</Trans>
 									</Text>
-								</Stack>
-							</Paper>
+								</div>
+								{organisationId && <OrgBillingTab orgId={organisationId} />}
+								<Text size="xs" c="dimmed">
+									<Trans>
+										For invoices, a shared contract, or anything custom, email{" "}
+										<Anchor href="mailto:support@dembrane.com">
+											support@dembrane.com
+										</Anchor>
+										.
+									</Trans>
+								</Text>
+							</Stack>
 						</Tabs.Panel>
 					)}
 
-											<Tabs.Panel value="members" pt="md">
+					<Tabs.Panel value="members" pt="md">
 						<Stack gap="md">
 							<MembersToolbar
 								search={search}
@@ -1062,22 +1067,11 @@ interface MyWorkspace {
 	member_count: number;
 	members_preview?: WorkspaceMemberPreview[];
 	usage?: { audio_hours?: number; conversation_count?: number };
-	has_pending_upgrade_request?: boolean;
 	created_at?: string | null;
-}
-
-interface PendingWorkspaceRequest {
-	id: string;
-	kind: string;
-	proposed_name: string | null;
-	proposed_tier: string;
-	org_id: string;
-	created_at: string | null;
 }
 
 async function fetchMyWorkspaces(): Promise<{
 	workspaces: MyWorkspace[];
-	pending_workspace_requests: PendingWorkspaceRequest[];
 }> {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		credentials: "include",
@@ -1100,7 +1094,6 @@ interface WorkspaceCardModel {
 	is_private: boolean;
 	pinned_projects: WorkspacePinnedProject[];
 	recently_approved: boolean;
-	has_pending_upgrade_request: boolean;
 }
 
 function OrganisationOverviewPanel({
@@ -1125,15 +1118,15 @@ function OrganisationOverviewPanel({
 	onOpenWorkspace: (workspaceId: string) => void;
 	onOpenProject: (workspaceId: string, projectId: string) => void;
 	onRequestWorkspace: () => void;
-	}) {
-		const orgId = organisation.id;
-		const navigate = useI18nNavigate();
+}) {
+	const orgId = organisation.id;
+	const navigate = useI18nNavigate();
 
-		const handlePeopleClick = () => {
-			navigate(`/o/${orgId}/settings/members`);
-		};
+	const handlePeopleClick = () => {
+		navigate(`/o/${orgId}/settings/members`);
+	};
 
-		// The caller's own workspaces (direct memberships) + their pending
+	// The caller's own workspaces (direct memberships) + their pending
 	// new-workspace / upgrade requests. Same endpoint the home page used.
 	const { data: mine, isLoading: workspacesLoading } = useQuery({
 		queryFn: fetchMyWorkspaces,
@@ -1162,7 +1155,6 @@ function OrganisationOverviewPanel({
 				return {
 					audio_hours: w.usage?.audio_hours ?? 0,
 					conversation_count: w.usage?.conversation_count ?? 0,
-					has_pending_upgrade_request: !!w.has_pending_upgrade_request,
 					id: w.id,
 					is_private: roster?.is_private ?? false,
 					member_count: w.member_count,
@@ -1176,10 +1168,6 @@ function OrganisationOverviewPanel({
 			})
 			.sort((a, b) => a.name.localeCompare(b.name));
 	}, [mine, orgId, rosterMap]);
-
-	const pendingRequests = (mine?.pending_workspace_requests ?? []).filter(
-		(r) => r.org_id === orgId,
-	);
 
 	// Pending invites aren't on the team yet, so they don't count toward the
 	// people glance. Everyone with access (incl. externals) shows as a bubble.
@@ -1211,63 +1199,63 @@ function OrganisationOverviewPanel({
 						</Text>
 					)}
 				</Group>
-					{membersLoading && people.length === 0 ? (
-						<Loader size="sm" color="gray" />
-					) : people.length === 0 ? (
-						<Text size="sm" c="dimmed">
-							<Trans>No one on this organisation yet.</Trans>
-						</Text>
-					) : (
-						<Tooltip.Group>
-							<Avatar.Group spacing="sm">
-								{visiblePeople.map((m) => (
-									<Tooltip
-										key={m.user_id}
-										label={`${m.display_name} · ${
-											m.is_external ? t`External` : displayRole(m.role)
-										}`}
-										withArrow
-									>
-										<Avatar
-											size={36}
-											radius="full"
-											src={avatarUrl(m.avatar)}
-											color="primary"
-											style={{ cursor: "pointer" }}
-											onClick={handlePeopleClick}
-										>
-											{memberInitials(m.display_name, m.email)}
-										</Avatar>
-									</Tooltip>
-								))}
-								{overflowPeople > 0 && (
+				{membersLoading && people.length === 0 ? (
+					<Loader size="sm" color="gray" />
+				) : people.length === 0 ? (
+					<Text size="sm" c="dimmed">
+						<Trans>No one on this organisation yet.</Trans>
+					</Text>
+				) : (
+					<Tooltip.Group>
+						<Avatar.Group spacing="sm">
+							{visiblePeople.map((m) => (
+								<Tooltip
+									key={m.user_id}
+									label={`${m.display_name} · ${
+										m.is_external ? t`External` : displayRole(m.role)
+									}`}
+									withArrow
+								>
 									<Avatar
 										size={36}
 										radius="full"
-										color="gray"
+										src={avatarUrl(m.avatar)}
+										color="primary"
 										style={{ cursor: "pointer" }}
 										onClick={handlePeopleClick}
 									>
-										+{overflowPeople}
+										{memberInitials(m.display_name, m.email)}
 									</Avatar>
-								)}
-								{isManager && (
-									<Tooltip label={t`Manage members`} withArrow>
-										<Avatar
-											size={36}
-											radius="full"
-											color="primary"
-											variant="light"
-											style={{ cursor: "pointer" }}
-											onClick={handlePeopleClick}
-										>
-											<IconPlus size={16} />
-										</Avatar>
-									</Tooltip>
-								)}
-							</Avatar.Group>
-						</Tooltip.Group>
-					)}
+								</Tooltip>
+							))}
+							{overflowPeople > 0 && (
+								<Avatar
+									size={36}
+									radius="full"
+									color="gray"
+									style={{ cursor: "pointer" }}
+									onClick={handlePeopleClick}
+								>
+									+{overflowPeople}
+								</Avatar>
+							)}
+							{isManager && (
+								<Tooltip label={t`Manage members`} withArrow>
+									<Avatar
+										size={36}
+										radius="full"
+										color="primary"
+										variant="light"
+										style={{ cursor: "pointer" }}
+										onClick={handlePeopleClick}
+									>
+										<IconPlus size={16} />
+									</Avatar>
+								</Tooltip>
+							)}
+						</Avatar.Group>
+					</Tooltip.Group>
+				)}
 			</Stack>
 
 			<Stack gap="sm">
@@ -1289,13 +1277,13 @@ function OrganisationOverviewPanel({
 							leftSection={<IconPlus size={14} />}
 							onClick={onRequestWorkspace}
 						>
-							<Trans>Request workspace</Trans>
+							<Trans>New workspace</Trans>
 						</Button>
 					)}
 				</Group>
-				{workspacesLoading && myCards.length === 0 && pendingRequests.length === 0 ? (
+				{workspacesLoading && myCards.length === 0 ? (
 					<Loader size="sm" color="gray" />
-				) : myCards.length === 0 && pendingRequests.length === 0 ? (
+				) : myCards.length === 0 ? (
 					<Text size="sm" c="dimmed">
 						<Trans>
 							You haven't joined any workspace in this organisation yet.
@@ -1311,9 +1299,6 @@ function OrganisationOverviewPanel({
 								onOpenProject={(projectId) => onOpenProject(ws.id, projectId)}
 							/>
 						))}
-						{pendingRequests.map((r) => (
-							<PendingRequestCard key={r.id} request={r} />
-						))}
 					</SimpleGrid>
 				)}
 			</Stack>
@@ -1322,54 +1307,6 @@ function OrganisationOverviewPanel({
 			    request access to. Self-hides when there's nothing to surface. */}
 			<DiscoverableWorkspaces orgId={orgId} />
 		</Stack>
-	);
-}
-
-/**
- * "Request submitted" placeholder card for a pending new-workspace or
- * tier-upgrade request, so the requester sees their ask is in flight.
- */
-function PendingRequestCard({ request }: { request: PendingWorkspaceRequest }) {
-	const capitalizedTier =
-		request.proposed_tier.charAt(0).toUpperCase() +
-		request.proposed_tier.slice(1);
-
-	return (
-		<Paper
-			p="lg"
-			radius="md"
-			style={{
-				background: "var(--mantine-color-yellow-0)",
-				border: "1px dashed var(--mantine-color-yellow-4)",
-				opacity: 0.85,
-			}}
-		>
-			<Stack gap={12}>
-				<Group gap="sm" wrap="nowrap" align="flex-start">
-					<IconClock
-						size={20}
-						style={{
-							color: "var(--mantine-color-yellow-6)",
-							flexShrink: 0,
-							marginTop: 2,
-						}}
-					/>
-					<Box flex={1} style={{ minWidth: 0 }}>
-						<Text fw={500} size="md" lineClamp={1}>
-							{request.kind === "new_workspace"
-								? (request.proposed_name ?? t`New workspace`)
-								: t`Upgrade request`}
-						</Text>
-						<Text size="xs" c="dimmed" lineClamp={1}>
-							{capitalizedTier}
-						</Text>
-					</Box>
-				</Group>
-				<Text size="xs" c="dimmed">
-					<Trans>Pending review</Trans>
-				</Text>
-			</Stack>
-		</Paper>
 	);
 }
 
@@ -1510,24 +1447,16 @@ function OrganisationWorkspaceCard({
 					count={workspace.member_count}
 				/>
 
-				{(workspace.recently_approved ||
-					workspace.has_pending_upgrade_request) && (
+				{workspace.recently_approved && (
 					<Group gap={6}>
-						{workspace.recently_approved && (
-							<Badge
-								size="xs"
-								color="green"
-								variant="light"
-								leftSection={<IconSparkles size={10} />}
-							>
-								<Trans>Recently approved</Trans>
-							</Badge>
-						)}
-						{workspace.has_pending_upgrade_request && (
-							<Badge size="xs" color="yellow" variant="light">
-								<Trans>Upgrade pending</Trans>
-							</Badge>
-						)}
+						<Badge
+							size="xs"
+							color="green"
+							variant="light"
+							leftSection={<IconSparkles size={10} />}
+						>
+							<Trans>New</Trans>
+						</Badge>
 					</Group>
 				)}
 			</Stack>

@@ -1538,6 +1538,8 @@ async def list_organisation_workspaces(
     # Pull settings.inherit_organisation_admins explicitly (sub-field projection)
     # so we don't need to send the whole JSON. Counts come from separate
     # aggregates because the workspace collection doesn't declare O2M aliases.
+    from dembrane.billing_account import nested_billing_fields, billing_from_workspace
+
     workspaces = (
         await async_directus.get_items(
             "workspace",
@@ -1547,9 +1549,9 @@ async def list_organisation_workspaces(
                     "fields": [
                         "id",
                         "name",
-                        "tier",
                         "is_default",
                         "settings",
+                        *nested_billing_fields(),
                     ],
                     "sort": ["-is_default", "name"],
                     "limit": -1,
@@ -1560,6 +1562,8 @@ async def list_organisation_workspaces(
     )
     if not isinstance(workspaces, list) or not workspaces:
         return []
+    for w in workspaces:
+        w.update(billing_from_workspace(w))
 
     ws_ids = [w["id"] for w in workspaces if w.get("id")]
 
@@ -1964,6 +1968,27 @@ async def remove_organisation_member(
     # serves stale numbers for up to USAGE_TTL_SECONDS.
     await _invalidate_org_workspace_usage(org_id)
 
+    # Removing an org member soft-deletes their direct workspace seats, dropping
+    # the billed seat count. Reconcile now so the pooled account re-prices the
+    # next renewal immediately rather than waiting for the cron. Best-effort +
+    # idempotent (provisioned_seats); removals only reduce at renewal, no refund.
+    try:
+        from dembrane.billing_service import (
+            reconcile_account_seats,
+            get_account_for_workspace,
+        )
+
+        seen_accounts: set[str] = set()
+        for ws_id in affected:
+            account = await get_account_for_workspace(ws_id)
+            if account and account["id"] not in seen_accounts:
+                seen_accounts.add(account["id"])
+                await reconcile_account_seats(account["id"])
+    except Exception:
+        logger.exception(
+            "Seat reconcile failed after removing %s from org %s", user_id, org_id
+        )
+
     # Notify the removed user — they'll see workspaces drop from their
     # selector; this gives them the honest explanation.
     if user_id != app_user["id"]:
@@ -2095,6 +2120,8 @@ async def get_org_usage(
     # so the per-workspace row can surface private-state and recent
     # downgrades (powers the "Needs attention" panel on the organisation usage
     # tab).
+    from dembrane.billing_account import nested_billing_fields, billing_from_workspace
+
     workspaces = (
         await async_directus.get_items(
             "workspace",
@@ -2107,9 +2134,8 @@ async def get_org_usage(
                     "fields": [
                         "id",
                         "name",
-                        "tier",
                         "settings",
-                        "downgraded_at",
+                        *nested_billing_fields(),
                     ],
                     "limit": -1,
                 }
@@ -2117,6 +2143,9 @@ async def get_org_usage(
         )
         or []
     )
+    if isinstance(workspaces, list):
+        for w in workspaces:
+            w.update(billing_from_workspace(w))
     if not isinstance(workspaces, list):
         workspaces = []
 

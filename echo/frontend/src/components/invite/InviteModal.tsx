@@ -13,27 +13,25 @@ import {
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import { toast } from "@/components/common/Toaster";
-import { API_BASE_URL } from "@/config";
-import { useV2Me } from "@/hooks/useV2Me";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import {
-	EmailChipsInput,
 	type EmailChip,
+	EmailChipsInput,
 } from "@/components/invite/EmailChipsInput";
-import {
-	type InviteRole,
-	RoleSelect,
-} from "@/components/invite/RoleSelect";
-import {
-	type InviteableWorkspace,
-	WorkspaceSelectList,
-} from "@/components/invite/WorkspaceSelectList";
 import {
 	type InviteResultRow,
 	type InviteResultState,
 	InviteResultsList,
 } from "@/components/invite/InviteResultsList";
+import { type InviteRole, RoleSelect } from "@/components/invite/RoleSelect";
+import {
+	type InviteableWorkspace,
+	WorkspaceSelectList,
+} from "@/components/invite/WorkspaceSelectList";
+import { API_BASE_URL } from "@/config";
+import { useV2Me } from "@/hooks/useV2Me";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import {
 	invalidateOrgMembersEverywhere,
 	invalidateOrgWorkspacesEverywhere,
@@ -49,7 +47,9 @@ interface Props {
 	defaultWorkspaceId?: string;
 }
 
-async function fetchOrgWorkspaces(orgId: string): Promise<InviteableWorkspace[]> {
+async function fetchOrgWorkspaces(
+	orgId: string,
+): Promise<InviteableWorkspace[]> {
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/workspaces`, {
 		credentials: "include",
 	});
@@ -88,7 +88,8 @@ async function inviteToWorkspace(
 	const data = await res.json().catch(() => ({}));
 	if (!res.ok) {
 		const err = new Error(
-			(data && (data.detail as string)) || `Workspace invite failed (${res.status})`,
+			(data && (data.detail as string)) ||
+				`Workspace invite failed (${res.status})`,
 		);
 		(err as Error & { status?: number }).status = res.status;
 		throw err;
@@ -118,8 +119,35 @@ async function inviteToOrg(
 	return data as { status: string; email: string; invite_url?: string | null };
 }
 
-function mapHttpStatusToState(status: number | undefined): InviteResultState {
-	if (status === 402) return "seat_cap";
+type SeatEstimate = {
+	active: boolean;
+	prorated_now_eur: number;
+	recurring_delta_eur: number;
+	currency: string;
+};
+
+async function fetchSeatEstimate(
+	workspaceId: string,
+	addedSeats: number,
+): Promise<SeatEstimate | null> {
+	const res = await fetch(
+		`${API_BASE_URL}/v2/workspaces/${workspaceId}/seat-estimate?added_seats=${addedSeats}`,
+		{ credentials: "include" },
+	);
+	if (!res.ok) return null;
+	return (await res.json()) as SeatEstimate;
+}
+
+function mapHttpStatusToState(
+	status: number | undefined,
+	detail?: string,
+): InviteResultState {
+	// Both seat-cap and "billing inactive" return 402; the detail disambiguates.
+	if (status === 402) {
+		return detail?.toLowerCase().includes("reactivate")
+			? "reactivate_required"
+			: "seat_cap";
+	}
 	if (status === 429) return "rate_limited";
 	// 409 isn't returned anymore (duplicate-pending is a 200 with status "already_invited"); kept defensively.
 	if (status === 409) return "already_invited";
@@ -135,6 +163,7 @@ export function InviteModal({
 	defaultWorkspaceId,
 }: Props) {
 	const queryClient = useQueryClient();
+	const navigate = useNavigate();
 	const posthog = usePostHog();
 	const { data: me } = useV2Me();
 	const { workspaces: myWorkspaces } = useWorkspace();
@@ -145,6 +174,12 @@ export function InviteModal({
 		new Set(),
 	);
 	const [results, setResults] = useState<InviteResultRow[]>([]);
+	// Prorated cost preview shown before sending a paid, seat-consuming invite.
+	const [confirm, setConfirm] = useState<{
+		proratedNow: number;
+		recurringDelta: number;
+	} | null>(null);
+	const [estimating, setEstimating] = useState(false);
 
 	// Owners/admins get the zero-workspace submit path; everyone else must pick a workspace.
 	const myOrgRole = useMemo(() => {
@@ -254,9 +289,9 @@ export function InviteModal({
 				for (const email of emails) {
 					calls.push({
 						email,
+						run: () => inviteToOrg(orgId, email, role),
 						workspaceId: null,
 						workspaceName: null,
-						run: () => inviteToOrg(orgId, email, role),
 					});
 				}
 			} else {
@@ -264,9 +299,9 @@ export function InviteModal({
 					for (const wsId of workspaceIds) {
 						calls.push({
 							email,
+							run: () => inviteToWorkspace(wsId, email, role),
 							workspaceId: wsId,
 							workspaceName: workspaceMap.get(wsId) ?? null,
-							run: () => inviteToWorkspace(wsId, email, role),
 						});
 					}
 				}
@@ -274,22 +309,25 @@ export function InviteModal({
 
 			// Cap concurrency: 20 emails × 5 workspaces = 100 in-flight POSTs would trip the per-account 429.
 			const CONCURRENCY = 4;
-			const settled: PromiseSettledResult<WorkspaceInvitePayload | { status: string }>[] = new Array(
-				calls.length,
-			);
+			const settled: PromiseSettledResult<
+				WorkspaceInvitePayload | { status: string }
+			>[] = new Array(calls.length);
 			let cursor = 0;
-			const workers = Array.from({ length: Math.min(CONCURRENCY, calls.length) }, async () => {
-				while (true) {
-					const idx = cursor++;
-					if (idx >= calls.length) return;
-					try {
-						const value = await calls[idx].run();
-						settled[idx] = { status: "fulfilled", value };
-					} catch (reason) {
-						settled[idx] = { status: "rejected", reason };
+			const workers = Array.from(
+				{ length: Math.min(CONCURRENCY, calls.length) },
+				async () => {
+					while (true) {
+						const idx = cursor++;
+						if (idx >= calls.length) return;
+						try {
+							const value = await calls[idx].run();
+							settled[idx] = { status: "fulfilled", value };
+						} catch (reason) {
+							settled[idx] = { reason, status: "rejected" };
+						}
 					}
-				}
-			});
+				},
+			);
 			await Promise.all(workers);
 
 			const rows = settled.map((res, i) => {
@@ -306,24 +344,29 @@ export function InviteModal({
 					else if (status === "already_invited") state = "already_invited";
 					return {
 						email: call.email,
+						state,
 						workspaceId: call.workspaceId,
 						workspaceName: call.workspaceName,
-						state,
 						inviteUrl: value.invite_url ?? null,
 					};
 				}
 				const err = res.reason as Error & { status?: number };
-				const state = mapHttpStatusToState(err.status);
+				const state = mapHttpStatusToState(err.status, err.message);
 				return {
+					detail: err.message,
 					email: call.email,
+					state,
 					workspaceId: call.workspaceId,
 					workspaceName: call.workspaceName,
-					state,
-					detail: err.message,
 				};
 			});
 
-			return { rows, emailCount: emails.length, workspaceIds, role: submittedRole };
+			return {
+				emailCount: emails.length,
+				role: submittedRole,
+				rows,
+				workspaceIds,
+			};
 		},
 		onError: (e: Error) => toast.error(e.message),
 		onSuccess: ({ rows, emailCount, workspaceIds, role: submittedRole }) => {
@@ -331,8 +374,8 @@ export function InviteModal({
 			// Telemetry on input intent, not result counts (429s still count as attempts).
 			posthog?.capture("invite_sent", {
 				count: emailCount,
-				workspace_count: workspaceIds.length,
 				role: submittedRole,
+				workspace_count: workspaceIds.length,
 			});
 			// Centralised helpers fan out to both query namespaces during the migration window.
 			invalidateOrgMembersEverywhere(queryClient, orgId);
@@ -373,6 +416,46 @@ export function InviteModal({
 			}
 		},
 	});
+
+	// Changing the recipients, role, or workspaces invalidates the preview.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional, reset the preview when recipients, role, or workspaces change
+	useEffect(() => {
+		setConfirm(null);
+	}, [chips, role, selectedWorkspaces]);
+
+	const fmtEur = (n: number) => `€${n.toFixed(2)}`;
+
+	// Workspace invites consume a seat and may incur a prorated charge, so show a
+	// cost preview before sending. Org-only (zero-workspace) invites don't.
+	const handleSend = async () => {
+		const workspaceIds = Array.from(selectedWorkspaces);
+		if (workspaceIds.length > 0 && !confirm) {
+			setEstimating(true);
+			try {
+				const estimates = await Promise.all(
+					workspaceIds.map((id) => fetchSeatEstimate(id, validChips.length)),
+				);
+				let proratedNow = 0;
+				let recurringDelta = 0;
+				for (const e of estimates) {
+					if (e?.active) {
+						proratedNow += e.prorated_now_eur;
+						recurringDelta += e.recurring_delta_eur;
+					}
+				}
+				if (proratedNow > 0) {
+					setConfirm({ proratedNow, recurringDelta });
+					return;
+				}
+			} catch {
+				// Estimate is best-effort: fall through and send if it fails.
+			} finally {
+				setEstimating(false);
+			}
+		}
+		setConfirm(null);
+		submit.mutate();
+	};
 
 	// Don't block close while the fan-out runs (e.g. 20×5 = 100 sequential calls ~30s); mutation continues in the background.
 	const onCloseClick = () => {
@@ -434,8 +517,8 @@ export function InviteModal({
 							/>
 						)}
 
-						{zeroWorkspaceSubmit && (
-							externalNeedsWorkspace ? (
+						{zeroWorkspaceSubmit &&
+							(externalNeedsWorkspace ? (
 								<Alert
 									color="yellow"
 									variant="light"
@@ -444,8 +527,8 @@ export function InviteModal({
 								>
 									<Text size="xs">
 										<Trans>
-											Externals only exist inside a workspace. Pick at least
-											one to send the invite.
+											Externals only exist inside a workspace. Pick at least one
+											to send the invite.
 										</Trans>
 									</Text>
 								</Alert>
@@ -453,8 +536,8 @@ export function InviteModal({
 								<Alert color="gray" variant="light" p="xs">
 									<Text size="xs">
 										<Trans>
-											No workspace picked. They'll be added to {orgName} and
-											can request workspace access themselves.
+											No workspace picked. They'll be added to {orgName} and can
+											request workspace access themselves.
 										</Trans>
 									</Text>
 								</Alert>
@@ -466,8 +549,7 @@ export function InviteModal({
 										</Trans>
 									</Text>
 								</Alert>
-							)
-						)}
+							))}
 					</>
 				) : (
 					<>
@@ -478,7 +560,37 @@ export function InviteModal({
 							rows={results}
 							data-testid="invite-modal-results"
 						/>
+						{results.some((r) => r.state === "reactivate_required") && (
+							<Alert color="yellow" variant="light" p="xs">
+								<Group justify="space-between" wrap="nowrap" gap="sm">
+									<Text size="xs">
+										<Trans>
+											Your plan is inactive. Reactivate it to add members.
+										</Trans>
+									</Text>
+									<Button
+										size="xs"
+										onClick={() => navigate(`/o/${orgId}/settings/billing`)}
+									>
+										<Trans>Reactivate</Trans>
+									</Button>
+								</Group>
+							</Alert>
+						)}
 					</>
+				)}
+
+				{confirm && results.length === 0 && (
+					<Alert variant="light" p="sm" data-testid="invite-proration-confirm">
+						<Text size="sm">
+							<Trans>
+								Adding {validChips.length} member(s) charges about{" "}
+								{fmtEur(confirm.proratedNow)} now, prorated for the rest of this
+								billing period, and raises your renewal by about{" "}
+								{fmtEur(confirm.recurringDelta)}.
+							</Trans>
+						</Text>
+					</Alert>
 				)}
 
 				<Group justify="flex-end" gap="xs">
@@ -491,12 +603,14 @@ export function InviteModal({
 					</Button>
 					{results.length === 0 && (
 						<Button
-							onClick={() => submit.mutate()}
-							loading={submit.isPending}
+							onClick={() => void handleSend()}
+							loading={submit.isPending || estimating}
 							disabled={!canSubmit}
 							data-testid="invite-modal-send"
 						>
-							{validChips.length > 1 ? (
+							{confirm ? (
+								<Trans>Confirm and send</Trans>
+							) : validChips.length > 1 ? (
 								<Trans>Send {validChips.length} invites</Trans>
 							) : (
 								<Trans>Send invite</Trans>

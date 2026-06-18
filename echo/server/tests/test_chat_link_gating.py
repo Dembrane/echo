@@ -25,6 +25,23 @@ TIERS_NO_OVERAGE = ["free", "pilot"]
 ALL_TIERS = TIERS_NO_OVERAGE + TIERS_OVERAGE
 
 
+def _chat_and_account(conversation: dict, tier: str):
+    """Mocks for the two clients in the lock check: chat.async_directus serves
+    conversation + project; directus_async serves the workspace's billing
+    account (where tier now lives)."""
+    mock_chat = AsyncMock()
+    mock_chat.get_item = AsyncMock(side_effect=[conversation, {"id": "p1", "workspace_id": "w1"}])
+
+    def _da_get_item(coll, _item_id, *_args, **_kwargs):
+        if coll == "workspace":
+            return {"id": "w1", "billing_account_id": "acc-1"}
+        return {"id": "acc-1", "tier": tier}
+
+    mock_da = AsyncMock()
+    mock_da.get_item = AsyncMock(side_effect=_da_get_item)
+    return mock_chat, mock_da
+
+
 # ── is_conversation_locked (tier_capacity, shared with BFF) ────────
 
 
@@ -59,14 +76,18 @@ class TestIsConversationLockedChat:
 class TestResolveWorkspaceTier:
     @pytest.mark.asyncio
     async def test_resolves_tier(self) -> None:
-        mock_directus = AsyncMock()
-        mock_directus.get_item = AsyncMock(
-            side_effect=[
-                {"id": "p1", "workspace_id": "w1"},
-                {"id": "w1", "tier": "pioneer"},
-            ]
-        )
-        with patch("dembrane.api.chat.async_directus", mock_directus):
+        mock_chat = AsyncMock()
+        mock_chat.get_item = AsyncMock(return_value={"id": "p1", "workspace_id": "w1"})
+
+        def _da_get_item(coll, _item_id, *_args, **_kwargs):
+            if coll == "workspace":
+                return {"id": "w1", "billing_account_id": "acc-1"}
+            return {"id": "acc-1", "tier": "pioneer"}
+
+        mock_da = AsyncMock()
+        mock_da.get_item = AsyncMock(side_effect=_da_get_item)
+        with patch("dembrane.api.chat.async_directus", mock_chat), \
+             patch("dembrane.directus_async.async_directus", mock_da):
             tier = await _resolve_workspace_tier("p1")
         assert tier == "pioneer"
 
@@ -88,14 +109,12 @@ class TestResolveWorkspaceTier:
 
     @pytest.mark.asyncio
     async def test_missing_workspace(self) -> None:
-        mock_directus = AsyncMock()
-        mock_directus.get_item = AsyncMock(
-            side_effect=[
-                {"id": "p1", "workspace_id": "w1"},
-                None,
-            ]
-        )
-        with patch("dembrane.api.chat.async_directus", mock_directus):
+        mock_chat = AsyncMock()
+        mock_chat.get_item = AsyncMock(return_value={"id": "p1", "workspace_id": "w1"})
+        mock_da = AsyncMock()
+        mock_da.get_item = AsyncMock(return_value=None)  # workspace gone
+        with patch("dembrane.api.chat.async_directus", mock_chat), \
+             patch("dembrane.directus_async.async_directus", mock_da):
             tier = await _resolve_workspace_tier("p1")
         assert tier is None
 
@@ -120,15 +139,9 @@ class TestCheckConversationNotLocked:
 
     @pytest.mark.asyncio
     async def test_over_cap_on_free_raises_402(self) -> None:
-        mock_directus = AsyncMock()
-        mock_directus.get_item = AsyncMock(
-            side_effect=[
-                {"id": "c1", "is_over_cap": True},
-                {"id": "p1", "workspace_id": "w1"},
-                {"id": "w1", "tier": "free"},
-            ]
-        )
-        with patch("dembrane.api.chat.async_directus", mock_directus):
+        mock_chat, mock_da = _chat_and_account({"id": "c1", "is_over_cap": True}, "free")
+        with patch("dembrane.api.chat.async_directus", mock_chat), \
+             patch("dembrane.directus_async.async_directus", mock_da):
             with pytest.raises(HTTPException) as exc_info:
                 await _check_conversation_not_locked("c1", "p1")
             assert exc_info.value.status_code == 402
@@ -136,44 +149,26 @@ class TestCheckConversationNotLocked:
 
     @pytest.mark.asyncio
     async def test_over_cap_on_pilot_raises_402(self) -> None:
-        mock_directus = AsyncMock()
-        mock_directus.get_item = AsyncMock(
-            side_effect=[
-                {"id": "c1", "is_over_cap": True},
-                {"id": "p1", "workspace_id": "w1"},
-                {"id": "w1", "tier": "pilot"},
-            ]
-        )
-        with patch("dembrane.api.chat.async_directus", mock_directus):
+        mock_chat, mock_da = _chat_and_account({"id": "c1", "is_over_cap": True}, "pilot")
+        with patch("dembrane.api.chat.async_directus", mock_chat), \
+             patch("dembrane.directus_async.async_directus", mock_da):
             with pytest.raises(HTTPException) as exc_info:
                 await _check_conversation_not_locked("c1", "p1")
             assert exc_info.value.status_code == 402
 
     @pytest.mark.asyncio
     async def test_over_cap_on_pioneer_passes(self) -> None:
-        mock_directus = AsyncMock()
-        mock_directus.get_item = AsyncMock(
-            side_effect=[
-                {"id": "c1", "is_over_cap": True},
-                {"id": "p1", "workspace_id": "w1"},
-                {"id": "w1", "tier": "pioneer"},
-            ]
-        )
-        with patch("dembrane.api.chat.async_directus", mock_directus):
+        mock_chat, mock_da = _chat_and_account({"id": "c1", "is_over_cap": True}, "pioneer")
+        with patch("dembrane.api.chat.async_directus", mock_chat), \
+             patch("dembrane.directus_async.async_directus", mock_da):
             await _check_conversation_not_locked("c1", "p1")
 
     @pytest.mark.asyncio
     async def test_over_cap_upgrade_unlocks(self) -> None:
         """ADR 0001: upgrading to a tier with overage unlocks locked conversations."""
-        mock_directus = AsyncMock()
-        mock_directus.get_item = AsyncMock(
-            side_effect=[
-                {"id": "c1", "is_over_cap": True},
-                {"id": "p1", "workspace_id": "w1"},
-                {"id": "w1", "tier": "innovator"},
-            ]
-        )
-        with patch("dembrane.api.chat.async_directus", mock_directus):
+        mock_chat, mock_da = _chat_and_account({"id": "c1", "is_over_cap": True}, "innovator")
+        with patch("dembrane.api.chat.async_directus", mock_chat), \
+             patch("dembrane.directus_async.async_directus", mock_da):
             await _check_conversation_not_locked("c1", "p1")
 
     @pytest.mark.asyncio

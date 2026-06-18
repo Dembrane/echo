@@ -1,49 +1,33 @@
 {
-  "collection": "workspace",
-  "field": "tier",
+  "collection": "billing_account",
+  "field": "billing_period",
   "type": "string",
   "meta": {
-    "collection": "workspace",
+    "collection": "billing_account",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "tier",
+    "field": "billing_period",
     "group": null,
     "hidden": false,
     "interface": "select-dropdown",
-    "note": null,
+    "note": "Billing cadence. Null until set; resolver falls back to workspace_request during Phase 1.",
     "options": {
       "choices": [
         {
-          "text": "Free",
-          "value": "free"
+          "text": "Annual",
+          "value": "annual"
         },
         {
-          "text": "Pilot",
-          "value": "pilot"
-        },
-        {
-          "text": "Pioneer",
-          "value": "pioneer"
-        },
-        {
-          "text": "Innovator",
-          "value": "innovator"
-        },
-        {
-          "text": "Changemaker",
-          "value": "changemaker"
-        },
-        {
-          "text": "Guardian",
-          "value": "guardian"
+          "text": "Monthly",
+          "value": "monthly"
         }
       ]
     },
     "readonly": false,
     "required": false,
     "searchable": true,
-    "sort": 6,
+    "sort": 12,
     "special": null,
     "translations": null,
     "validation": null,
@@ -51,14 +35,14 @@
     "width": "full"
   },
   "schema": {
-    "name": "tier",
-    "table": "workspace",
+    "name": "billing_period",
+    "table": "billing_account",
     "data_type": "character varying",
-    "default_value": "free",
+    "default_value": null,
     "max_length": 255,
     "numeric_precision": null,
     "numeric_scale": null,
-    "is_nullable": false,
+    "is_nullable": true,
     "is_unique": false,
     "is_indexed": false,
     "is_primary_key": false,

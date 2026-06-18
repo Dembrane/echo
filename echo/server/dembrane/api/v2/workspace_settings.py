@@ -71,10 +71,17 @@ class WorkspaceDetailResponse(BaseModel):
     logo_url: Optional[str] = None
     type_discount: Optional[str] = None
     percent_discount: Optional[int] = None
-    # Derived cadence: most-recently approved workspace_request's
-    # approved_billing_period. `None` for legacy workspaces with no
-    # approved request — UI defaults those to annual for display.
+    # Billing cadence sourced from the billing account. `None` defaults to
+    # annual for display.
     billing_period: Optional[str] = None
+    # Billing account this workspace resolves to (the payer) + its payment
+    # status, so the billing tab can drive checkout / show subscription state.
+    billing_account_id: Optional[str] = None
+    billing_status: Optional[str] = None
+    # True when the account is org-scoped (the org manages billing and this
+    # workspace just attaches). The billing tab shows a "managed by {org}"
+    # notice + link instead of a checkout when this is set.
+    billing_org_managed: bool = False
 
 
 @router.get("/{workspace_id}/settings", response_model=WorkspaceDetailResponse)
@@ -235,25 +242,17 @@ async def get_workspace_settings(
                     all_policies.add(p)
         effective = sorted(all_policies)
 
-    from dembrane.billing_period import resolve_workspace_billing_period
+    from dembrane.billing_account import resolve_workspace_billing
 
-    # Soft-degrade on resolver failure — billing_period is informational
-    # (UI defaults to "annual" when null) and we'd rather return the rest
-    # of the settings than 500 the whole panel on a transient Directus blip.
-    try:
-        billing_period = await resolve_workspace_billing_period(ctx.workspace_id)
-    except Exception as e:
-        logger.warning(
-            "Failed to resolve billing_period for workspace %s: %s",
-            ctx.workspace_id,
-            e,
-        )
-        billing_period = None
+    billing = await resolve_workspace_billing(ctx.workspace_id)
+    # Cadence now lives on the billing account (single source of truth).
+    # UI defaults to "annual" for display when null.
+    billing_period = billing.get("billing_period")
 
     return WorkspaceDetailResponse(
         id=ws["id"],
         name=ws.get("name", ""),
-        tier=ws.get("tier", ""),
+        tier=billing.get("tier") or "",
         org_id=ws.get("org_id", ""),
         org_name=org_name,
         is_default=ws.get("is_default", False),
@@ -267,9 +266,12 @@ async def get_workspace_settings(
         inherit_organisation_admins=workspace_follows_organisation_admins(ws),
         inherit_organisation_members=workspace_follows_organisation_members(ws),
         logo_url=ws.get("logo_url"),
-        type_discount=ws.get("type_discount"),
-        percent_discount=ws.get("percent_discount"),
+        type_discount=billing.get("type_discount"),
+        percent_discount=billing.get("percent_discount"),
         billing_period=billing_period,
+        billing_account_id=ws.get("billing_account_id"),
+        billing_status=billing.get("status"),
+        billing_org_managed=bool(billing.get("org_scoped")),
     )
 
 
@@ -589,6 +591,23 @@ async def remove_workspace_member(
 
     await invalidate_workspace_and_org_usage(ctx.workspace_id, ctx.workspace.get("org_id"))
 
+    # Seat freed: reconcile billing so the next renewal drops to the new count
+    # (no mid-cycle refund). Best-effort, never fail the removal on a billing hiccup.
+    from dembrane.billing_service import (
+        reconcile_account_seats,
+        get_account_for_workspace,
+    )
+
+    try:
+        billing_account = await get_account_for_workspace(ctx.workspace_id)
+        if billing_account:
+            await reconcile_account_seats(billing_account["id"])
+    except Exception:
+        logger.exception(
+            "Seat reconcile failed after removing member from workspace %s",
+            ctx.workspace_id,
+        )
+
     removed_user_id = membership.get("user_id")
     if removed_user_id and removed_user_id != ctx.app_user_id:
         from dembrane.notifications import emit
@@ -745,6 +764,23 @@ async def change_member_role(
     from dembrane.cache_utils import invalidate_workspace_and_org_usage
 
     await invalidate_workspace_and_org_usage(ctx.workspace_id, ctx.workspace.get("org_id"))
+
+    # A member <-> external flip changes the billed seat count, so reconcile the
+    # account now instead of waiting for the cron. Best-effort + idempotent.
+    try:
+        from dembrane.billing_service import (
+            reconcile_account_seats,
+            get_account_for_workspace,
+        )
+
+        account = await get_account_for_workspace(ctx.workspace_id)
+        if account:
+            await reconcile_account_seats(account["id"])
+    except Exception:
+        logger.exception(
+            "Seat reconcile failed after role change in workspace %s",
+            ctx.workspace_id,
+        )
 
     # Notify the affected user (unless they're the one making the change).
     if membership.get("user_id") and membership["user_id"] != ctx.app_user_id:

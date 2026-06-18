@@ -22,7 +22,9 @@ const DISMISS_KEY_PREFIX = "dembrane_downgrade_banner_dismissed:";
 export const DowngradeBanner = () => {
 	const { workspace } = useWorkspace();
 	const navigate = useI18nNavigate();
-	const downgradedAt = workspace?.downgraded_at;
+	// Downgrade tracking moved off the workspace onto the billing account and is
+	// being reworked with the new pricing; banner disabled for now.
+	const downgradedAt: string | undefined = undefined; // workspace?.downgraded_at;
 	const tier = workspace?.tier;
 	const workspaceId = workspace?.id;
 

@@ -56,10 +56,9 @@ async def _resolve_workspace_tier(project_id: str) -> Optional[str]:
     project = await async_directus.get_item("project", project_id)
     if not project or not project.get("workspace_id"):
         return None
-    workspace = await async_directus.get_item("workspace", project["workspace_id"])
-    if not workspace:
-        return None
-    return workspace.get("tier")
+    from dembrane.billing_account import resolve_workspace_tier
+
+    return await resolve_workspace_tier(project["workspace_id"])
 
 
 async def _check_conversation_not_locked(conversation_id: str, project_id: str) -> None:

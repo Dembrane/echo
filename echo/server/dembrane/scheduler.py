@@ -73,6 +73,22 @@ scheduler.add_job(
 )
 
 scheduler.add_job(
+    func="dembrane.tasks:task_reconcile_pending_billing.send",
+    trigger=CronTrigger(minute="*/5"),
+    id="task_reconcile_pending_billing",
+    name="Activate billing accounts whose first payment cleared (missed webhook/return)",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_reconcile_subscription_seats.send",
+    trigger=CronTrigger(minute="*/15"),
+    id="task_reconcile_subscription_seats",
+    name="Re-price active subscriptions to match live seat counts",
+    replace_existing=True,
+)
+
+scheduler.add_job(
     func="dembrane.tasks:task_flush_email_digests.send",
     trigger=CronTrigger(hour=9, minute=0),
     id="task_flush_email_digests",

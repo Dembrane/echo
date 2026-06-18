@@ -586,6 +586,34 @@ class TranscriptionSettings(BaseSettings):
                 )
 
 
+class BillingSettings(BaseSettings):
+    """Mollie payment config. Test vs live is determined by the key prefix
+    (`test_` / `live_`); use a test key in non-prod. See docs/plans/
+    self-serve-billing-and-payments.md."""
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
+
+    mollie_api_key: Optional[str] = Field(
+        default=None,
+        alias="MOLLIE_API_KEY",
+        validation_alias=AliasChoices("MOLLIE_API_KEY", "BILLING__MOLLIE_API_KEY"),
+    )
+    # Public URL Mollie POSTs payment status to. Set per environment.
+    mollie_webhook_url: Optional[str] = Field(
+        default=None,
+        alias="MOLLIE_WEBHOOK_URL",
+        validation_alias=AliasChoices("MOLLIE_WEBHOOK_URL", "BILLING__MOLLIE_WEBHOOK_URL"),
+    )
+
+    @property
+    def mollie_enabled(self) -> bool:
+        return bool(self.mollie_api_key)
+
+    @property
+    def mollie_test_mode(self) -> bool:
+        return bool(self.mollie_api_key and self.mollie_api_key.startswith("test_"))
+
+
 class AppSettings:
     """
     Aggregate application settings composed from modular sections.
@@ -606,6 +634,7 @@ class AppSettings:
         self.llms = LLMSettings()
         self.embedding = EmbeddingSettings()
         self.agentic = AgenticSettings()
+        self.billing = BillingSettings()
 
         self.transcription.ensure_valid()
 

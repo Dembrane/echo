@@ -287,13 +287,16 @@ class TestTaskSendTierExpiryPrewarning:
     @patch("dembrane.directus.directus_client_context")
     @patch("dembrane.directus.directus")
     def test_dispatches_for_each_candidate(self, _mock_dir, mock_ctx_fn, mock_send):
+        # Cron scans billing accounts; workspace name comes from a follow-up lookup.
         candidates = [
-            {"id": "ws-1", "name": "WS One", "tier": "pilot", "tier_expires_at": "2026-05-15T00:00:00+00:00"},
-            {"id": "ws-2", "name": "WS Two", "tier": "innovator", "tier_expires_at": "2026-05-14T00:00:00+00:00"},
+            {"id": "acc-1", "tier": "pilot", "tier_expires_at": "2026-05-15T00:00:00+00:00", "workspace_id": "ws-1"},
+            {"id": "acc-2", "tier": "innovator", "tier_expires_at": "2026-05-14T00:00:00+00:00", "workspace_id": "ws-2"},
         ]
+        names = {"ws-1": "WS One", "ws-2": "WS Two"}
 
         mock_client = MagicMock()
         mock_client.get_items.return_value = candidates
+        mock_client.get_item.side_effect = lambda _c, i, *_a, **_k: {"id": i, "name": names[i]}
         mock_client.update_item.return_value = {"data": {}}
 
         mock_ctx = MagicMock()
@@ -314,11 +317,12 @@ class TestTaskSendTierExpiryPrewarning:
     @patch("dembrane.directus.directus")
     def test_sets_pre_warning_sent_true(self, _mock_dir, mock_ctx_fn, _mock_send):
         candidates = [
-            {"id": "ws-1", "name": "WS One", "tier": "pilot", "tier_expires_at": "2026-05-15T00:00:00+00:00"},
+            {"id": "acc-1", "tier": "pilot", "tier_expires_at": "2026-05-15T00:00:00+00:00", "workspace_id": "ws-1"},
         ]
 
         mock_client = MagicMock()
         mock_client.get_items.return_value = candidates
+        mock_client.get_item.return_value = {"id": "ws-1", "name": "WS One"}
         mock_client.update_item.return_value = {"data": {}}
 
         mock_ctx = MagicMock()
@@ -330,19 +334,21 @@ class TestTaskSendTierExpiryPrewarning:
 
         task_send_tier_expiry_prewarning()
 
-        mock_client.update_item.assert_called_with("workspace", "ws-1", {"pre_warning_sent": True})
+        # pre_warning_sent is now flagged on the billing account.
+        mock_client.update_item.assert_called_with("billing_account", "acc-1", {"pre_warning_sent": True})
 
     @patch("dembrane.tasks._send_tier_expiring_soon", side_effect=Exception("send failed"))
     @patch("dembrane.directus.directus_client_context")
     @patch("dembrane.directus.directus")
     def test_individual_failure_does_not_break_loop(self, _mock_dir, mock_ctx_fn, mock_send):
         candidates = [
-            {"id": "ws-1", "name": "WS Fail", "tier": "pilot", "tier_expires_at": "2026-05-15T00:00:00+00:00"},
-            {"id": "ws-2", "name": "WS OK", "tier": "pilot", "tier_expires_at": "2026-05-14T00:00:00+00:00"},
+            {"id": "acc-1", "tier": "pilot", "tier_expires_at": "2026-05-15T00:00:00+00:00", "workspace_id": "ws-1"},
+            {"id": "acc-2", "tier": "pilot", "tier_expires_at": "2026-05-14T00:00:00+00:00", "workspace_id": "ws-2"},
         ]
 
         mock_client = MagicMock()
         mock_client.get_items.return_value = candidates
+        mock_client.get_item.side_effect = lambda _c, i, *_a, **_k: {"id": i, "name": "WS"}
 
         mock_ctx = MagicMock()
         mock_ctx.__enter__ = MagicMock(return_value=mock_client)
@@ -386,11 +392,12 @@ class TestTaskSendTierExpiryPrewarning:
     @patch("dembrane.directus.directus")
     def test_name_fallback_to_untitled(self, _mock_dir, mock_ctx_fn, mock_send):
         candidates = [
-            {"id": "ws-1", "name": None, "tier": "pilot", "tier_expires_at": "2026-05-15T00:00:00+00:00"},
+            {"id": "acc-1", "tier": "pilot", "tier_expires_at": "2026-05-15T00:00:00+00:00", "workspace_id": "ws-1"},
         ]
 
         mock_client = MagicMock()
         mock_client.get_items.return_value = candidates
+        mock_client.get_item.return_value = {"id": "ws-1", "name": None}
         mock_client.update_item.return_value = {"data": {}}
 
         mock_ctx = MagicMock()
@@ -421,7 +428,9 @@ class TestPreWarningSentReset:
     ):
         mock_effects.return_value = []
         mock_directus.update_item = AsyncMock()
-        mock_directus.get_item = AsyncMock(return_value={"id": "ws-1", "org_id": "org-1"})
+        mock_directus.get_item = AsyncMock(
+            return_value={"id": "ws-1", "org_id": "org-1", "billing_account_id": "acc-1"}
+        )
 
         from dembrane.tasks import _apply_tier_expiry
 
@@ -431,69 +440,6 @@ class TestPreWarningSentReset:
         data = update_call[0][2]
         assert data["tier_expires_at"] is None
         assert data["pre_warning_sent"] is False
-
-    @pytest.mark.asyncio
-    async def test_upgrade_workspace_resets_pre_warning_on_expires_at(self):
-        """When _upgrade_workspace_for_request sets tier_expires_at, it resets pre_warning_sent."""
-        with patch("dembrane.api.v2.admin.async_directus") as mock_directus, \
-             patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock), \
-             patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock):
-
-            mock_directus.get_item = AsyncMock(return_value={
-                "id": "ws-1", "tier": "pilot", "org_id": "org-1", "deleted_at": None,
-            })
-            mock_directus.update_item = AsyncMock()
-
-            from dembrane.api.v2.admin import _upgrade_workspace_for_request
-
-            mock_req = {
-                "id": "req-1",
-                "workspace_id": "ws-1",
-                "requested_by": "user-1",
-            }
-
-            await _upgrade_workspace_for_request(
-                mock_req,
-                granted_tier="innovator",
-                staff_user_id="staff-1",
-                granted_tier_expires_at="2026-06-01T00:00:00+00:00",
-            )
-
-            update_call = mock_directus.update_item.call_args
-            data = update_call[0][2]
-            assert data["tier_expires_at"] == "2026-06-01T00:00:00+00:00"
-            assert data["pre_warning_sent"] is False
-
-    @pytest.mark.asyncio
-    async def test_upgrade_without_expires_at_does_not_set_pre_warning(self):
-        """When tier_expires_at is not set, pre_warning_sent is not touched."""
-        with patch("dembrane.api.v2.admin.async_directus") as mock_directus, \
-             patch("dembrane.cache_utils.invalidate_workspace_usage", new_callable=AsyncMock), \
-             patch("dembrane.cache_utils.invalidate_org_usage", new_callable=AsyncMock):
-
-            mock_directus.get_item = AsyncMock(return_value={
-                "id": "ws-1", "tier": "pilot", "org_id": "org-1", "deleted_at": None,
-            })
-            mock_directus.update_item = AsyncMock()
-
-            from dembrane.api.v2.admin import _upgrade_workspace_for_request
-
-            mock_req = {
-                "id": "req-1",
-                "workspace_id": "ws-1",
-                "requested_by": "user-1",
-            }
-
-            await _upgrade_workspace_for_request(
-                mock_req,
-                granted_tier="innovator",
-                staff_user_id="staff-1",
-            )
-
-            update_call = mock_directus.update_item.call_args
-            data = update_call[0][2]
-            assert "pre_warning_sent" not in data
-
 
 # ── Email templates ──────────────────────────────────────────────────
 

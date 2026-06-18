@@ -30,6 +30,10 @@ import { IconLock, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
+import {
+	BillingManager,
+	OrgManagedBillingNotice,
+} from "@/components/billing/BillingManager";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
@@ -43,12 +47,9 @@ import {
 } from "@/components/members";
 import { usePendingInvites } from "@/components/members/hooks";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
-import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { TierBadge } from "@/components/workspace/TierBadge";
-import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { UsageCard } from "@/components/workspace/UsageCard";
-import { WorkspaceRequestHistory } from "@/components/workspace/WorkspaceRequestHistory";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
@@ -57,7 +58,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { logoUrl, memberInitials } from "@/lib/avatar";
 import { displayRole } from "@/lib/roles";
-import { type BillingPeriod, seatOverageRateFor, type Tier } from "@/lib/tiers";
+import type { BillingPeriod, Tier } from "@/lib/tiers";
 
 interface WorkspaceMember {
 	id: string;
@@ -99,6 +100,9 @@ interface WorkspaceDetail {
 	type_discount: string | null;
 	percent_discount: number | null;
 	billing_period: BillingPeriod | null;
+	billing_account_id: string | null;
+	billing_status: string | null;
+	billing_org_managed: boolean;
 }
 
 async function deleteWorkspace(workspaceId: string) {
@@ -263,20 +267,17 @@ export const WorkspaceSettingsRoute = () => {
 
 	type WsRoleFilter = "all" | "admins" | "billing" | "members" | "externals";
 	const [memberRoleFilter, setMemberRoleFilter] = useState<WsRoleFilter>("all");
-	// User override for the matrix toggle. `null` means "follow whatever the
-	// workspace is currently on" (seeded from settings.billing_period when it
-	// loads); once the user clicks the toggle we hold their choice.
-	const [billingPeriodOverride, setBillingPeriodOverride] =
-		useState<BillingPeriod | null>(null);
 
-			// Tab state — path-driven (/w/:id/settings/<tab> or /w/:id/members). Declared BEFORE
-			// the loading early-return below; moving any hook below the early
-			// return changes hook count between renders and crashes React.
-			const allowedTabs = ["general", "members", "billing", "danger"] as const;
-			type TabValue = (typeof allowedTabs)[number];
-			const { pathname } = useLocation();
-			const segment = pathname.includes("/members") ? "members" : (splat ?? "").split("/")[0] || "";
-			const segmentIsValid = (allowedTabs as readonly string[]).includes(segment);
+	// Tab state — path-driven (/w/:id/settings/<tab> or /w/:id/members). Declared BEFORE
+	// the loading early-return below; moving any hook below the early
+	// return changes hook count between renders and crashes React.
+	const allowedTabs = ["general", "members", "billing", "danger"] as const;
+	type TabValue = (typeof allowedTabs)[number];
+	const { pathname } = useLocation();
+	const segment = pathname.includes("/members")
+		? "members"
+		: (splat ?? "").split("/")[0] || "";
+	const segmentIsValid = (allowedTabs as readonly string[]).includes(segment);
 
 	useDocumentTitle(t`Workspace settings | dembrane`);
 
@@ -341,10 +342,8 @@ export const WorkspaceSettingsRoute = () => {
 		usageProbe.seat_count_included != null &&
 		usageProbe.seat_count >= usageProbe.seat_count_included;
 	const seatInviteBlocked = usageProbe?.seat_invite_blocked ?? seatCapHit;
-	const tierHardBlocks =
-		usageProbe?.tier === "free" || usageProbe?.tier === "pilot";
-	const seatOverageActive = !tierHardBlocks && seatCapHit;
-	const seatOverageRate = seatOverageRateFor(usageProbe?.tier);
+	// Only Free hard-caps seats now; paid tiers are per-seat metered (never block).
+	const tierHardBlocks = usageProbe?.tier === "free";
 
 	// The bulk-invite wizard handles its own POSTs + success toasts, so
 	// there's no top-level inviteMutation anymore. Pending invites are
@@ -451,30 +450,31 @@ export const WorkspaceSettingsRoute = () => {
 		});
 	};
 
-		useEffect(() => {
-			if (!workspaceId || !settings || !defaultTab) return;
-			if (pathname.includes("/settings/members")) {
-				navigate(`/w/${workspaceId}/members${urlSearch}`, {
-					replace: true,
-				});
-				return;
-			}
-			if (segment !== activeTab) {
-				const destPath = activeTab === "members" ? "members" : `settings/${activeTab}`;
-				navigate(`/w/${workspaceId}/${destPath}${urlSearch}`, {
-					replace: true,
-				});
-			}
-		}, [
-			workspaceId,
-			segment,
-			activeTab,
-			navigate,
-			urlSearch,
-			settings,
-			defaultTab,
-			pathname,
-		]);
+	useEffect(() => {
+		if (!workspaceId || !settings || !defaultTab) return;
+		if (pathname.includes("/settings/members")) {
+			navigate(`/w/${workspaceId}/members${urlSearch}`, {
+				replace: true,
+			});
+			return;
+		}
+		if (segment !== activeTab) {
+			const destPath =
+				activeTab === "members" ? "members" : `settings/${activeTab}`;
+			navigate(`/w/${workspaceId}/${destPath}${urlSearch}`, {
+				replace: true,
+			});
+		}
+	}, [
+		workspaceId,
+		segment,
+		activeTab,
+		navigate,
+		urlSearch,
+		settings,
+		defaultTab,
+		pathname,
+	]);
 
 	// Members list order (2026-04-24): internals first — sorted by role
 	// (owner → admin → billing → member) — then externals at the bottom.
@@ -661,75 +661,24 @@ export const WorkspaceSettingsRoute = () => {
 							<Tabs.Panel value="billing" pt="md">
 								<Stack gap={16}>
 									{workspaceId && <UsageCard workspaceId={workspaceId} />}
-									{workspaceId && (
-										<WorkspaceRequestHistory workspaceId={workspaceId} />
-									)}
-
-									{/* Seats explainer — audit feedback: users need to
-								    know "how do seats work as a user" without
-								    reading the matrix row. Short, matches §7. */}
-									<Paper withBorder p="md" radius="sm">
-										<Stack gap={8}>
-											<Text size="sm" fw={500}>
-												<Trans>How seats work</Trans>
-											</Text>
-											<Text size="xs" c="dimmed">
-												<Trans>
-													Every workspace member, including externals, counts as
-													one seat. One person never takes more than one seat
-													per workspace, even if they're on multiple
-													organisations.
-												</Trans>
-											</Text>
-											<Text size="xs" c="dimmed">
-												<Trans>
-													Going over your tier's included seats bills extra per
-													month. See the matrix below for the per-seat rate on
-													each tier.
-												</Trans>
-											</Text>
-										</Stack>
-									</Paper>
-
-									{/* Matrix §1 full capacity matrix on the billing tab.
-								    Non-compact: price / duration / seats / overage /
-								    hours / externals / training. Highlights the current
-								    tier so admins can see what they have vs what's
-								    next. */}
-									<Group justify="center" mb="xs">
-										<BillingPeriodToggle
-											value={
-												billingPeriodOverride ??
-												settings.billing_period ??
-												"annual"
-											}
-											onChange={setBillingPeriodOverride}
+									{seesFinancials && settings.billing_org_managed && (
+										<OrgManagedBillingNotice
+											orgId={settings.org_id}
+											orgName={settings.org_name}
 										/>
-									</Group>
-									<TierCapacityMatrix
-										highlightTier={settings.tier}
-										compact={false}
-										billingPeriod={
-											billingPeriodOverride ??
-											settings.billing_period ??
-											"annual"
-										}
-									/>
-									{seesFinancials && (
-										<Text size="xs" c="dimmed">
-											<Trans>
-												Invoices and payment method will land here in a future
-												release. To upgrade, email{" "}
-												<a
-													href="mailto:upgrades@dembrane.com"
-													style={{ color: "#4169e1" }}
-												>
-													upgrades@dembrane.com
-												</a>
-												.
-											</Trans>
-										</Text>
 									)}
+
+									{seesFinancials &&
+										workspaceId &&
+										!settings.billing_org_managed && (
+											<BillingManager
+												accountId={settings.billing_account_id}
+												invalidateKeys={[
+													["v2", "workspace-settings", workspaceId],
+												]}
+												source="workspace_billing"
+											/>
+										)}
 								</Stack>
 							</Tabs.Panel>
 
@@ -816,15 +765,9 @@ export const WorkspaceSettingsRoute = () => {
 															All seats are taken. Free a seat or upgrade to
 															invite more.
 														</Trans>
-													) : seatOverageActive && seatOverageRate != null ? (
+													) : !tierHardBlocks && seatCapHit ? (
 														<Trans>
-															You're over your included seats. Each new member
-															adds €{seatOverageRate}/month to next bill.
-														</Trans>
-													) : seatOverageActive ? (
-														<Trans>
-															You're over your included seats. Overage applies
-															on the next bill.
+															Each new member is billed per seat on your plan.
 														</Trans>
 													) : (
 														<Trans>

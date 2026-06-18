@@ -274,7 +274,9 @@ async def set_project_visibility(
             detail="Only workspace admins can change project visibility",
         )
 
-    tier = workspace.get("tier", "pioneer")
+    from dembrane.billing_account import resolve_workspace_tier
+
+    tier = (await resolve_workspace_tier(workspace["id"])) or "pioneer"
 
     current = project.get("visibility") or "workspace"
     if current == body.visibility:

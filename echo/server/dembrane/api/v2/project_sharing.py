@@ -100,7 +100,9 @@ async def _require_share_admin(
     if not workspace:
         raise HTTPException(status_code=404, detail="Workspace not found")
 
-    tier = workspace.get("tier", "pioneer")
+    from dembrane.billing_account import resolve_workspace_tier
+
+    tier = (await resolve_workspace_tier(workspace_id)) or "pioneer"
     if not has_policy(role, [], "project:share", workspace_tier=tier):
         required_tier = TIER_REQUIRED_FOR_POLICY.get("project:share", "innovator")
         if not meets_tier(tier, required_tier):

@@ -41,12 +41,12 @@ class TestUsageGatesResponseShape:
         gates = UsageGatesResponse(
             over_cap_active=True,
             uploads_locked=True,
-            upgrade_cta_tier="pilot",
+            upgrade_cta_tier="innovator",
         )
         d = gates.model_dump()
         assert d["over_cap_active"] is True
         assert d["uploads_locked"] is True
-        assert d["upgrade_cta_tier"] == "pilot"
+        assert d["upgrade_cta_tier"] == "innovator"
 
 
 class TestUsageGatesSummaryShape:
@@ -83,11 +83,11 @@ class TestUpgradeCtaTier:
     def test_guardian_has_no_cta(self):
         assert next_tier("guardian") is None
 
-    def test_free_cta_is_pilot(self):
-        assert next_tier("free") == "pilot"
+    def test_free_cta_is_innovator(self):
+        assert next_tier("free") == "innovator"
 
-    def test_pilot_cta_is_pioneer(self):
-        assert next_tier("pilot") == "pioneer"
+    def test_innovator_cta_is_changemaker(self):
+        assert next_tier("innovator") == "changemaker"
 
 
 class TestUsageGatesIntegration:
@@ -107,45 +107,27 @@ class TestUsageGatesIntegration:
         r = self._build_response("free", 0.5, 0.5)
         assert r.over_cap_active is False
         assert r.uploads_locked is False
-        assert r.upgrade_cta_tier == "pilot"
+        assert r.upgrade_cta_tier == "innovator"
 
     def test_free_at_cap(self):
         r = self._build_response("free", 1.0, 0.5)
         assert r.over_cap_active is True
         assert r.uploads_locked is True
-        assert r.upgrade_cta_tier == "pilot"
+        assert r.upgrade_cta_tier == "innovator"
 
     def test_free_over_cap(self):
         r = self._build_response("free", 3.0, 0.0)
         assert r.over_cap_active is True
         assert r.uploads_locked is True
-        assert r.upgrade_cta_tier == "pilot"
+        assert r.upgrade_cta_tier == "innovator"
 
-    def test_pilot_under_cap(self):
-        r = self._build_response("pilot", 5.0, 5.0)
-        assert r.over_cap_active is False
-        assert r.uploads_locked is False
-        assert r.upgrade_cta_tier == "pioneer"
-
-    def test_pilot_at_cap(self):
-        r = self._build_response("pilot", 10.0, 3.0)
-        assert r.over_cap_active is True
-        assert r.uploads_locked is True
-        assert r.upgrade_cta_tier == "pioneer"
-
-    def test_pilot_over_cap(self):
-        r = self._build_response("pilot", 15.0, 1.0)
-        assert r.over_cap_active is True
-        assert r.uploads_locked is True
-        assert r.upgrade_cta_tier == "pioneer"
-
-    @pytest.mark.parametrize("tier", ["pioneer", "innovator", "changemaker", "guardian"])
+    @pytest.mark.parametrize("tier", ["innovator", "changemaker", "guardian"])
     def test_overage_tier_never_gates(self, tier: str):
         r = self._build_response(tier, 999.0, 999.0)
         assert r.over_cap_active is False
         assert r.uploads_locked is False
 
-    @pytest.mark.parametrize("tier", ["pioneer", "innovator", "changemaker"])
+    @pytest.mark.parametrize("tier", ["innovator", "changemaker"])
     def test_overage_tier_has_cta(self, tier: str):
         r = self._build_response(tier, 0.0, 0.0)
         assert r.upgrade_cta_tier is not None
@@ -199,7 +181,7 @@ class TestWorkspaceUsageResponseIncludesGates:
         gates = UsageGatesResponse(
             over_cap_active=True,
             uploads_locked=True,
-            upgrade_cta_tier="pilot",
+            upgrade_cta_tier="innovator",
         )
         resp = WorkspaceUsageResponse(
             cycle_start="2026-05-01T00:00:00Z",
@@ -220,7 +202,7 @@ class TestWorkspaceUsageResponseIncludesGates:
         )
         assert resp.usage_gates.over_cap_active is True
         assert resp.usage_gates.uploads_locked is True
-        assert resp.usage_gates.upgrade_cta_tier == "pilot"
+        assert resp.usage_gates.upgrade_cta_tier == "innovator"
 
 
 class TestWorkspaceUsageSchemaIncludesGates:

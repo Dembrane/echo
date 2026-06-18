@@ -8,7 +8,12 @@ export interface V2MeData {
 	display_name: string;
 	avatar: string | null;
 	onboarding_completed: boolean;
-	orgs: Array<{ id: string; name: string; role: string }>;
+	orgs: Array<{
+		id: string;
+		name: string;
+		role: string;
+		is_partner?: boolean;
+	}>;
 	has_pending_invites: boolean;
 	// Gates internal-only UI (workspace tier-set, future audit controls).
 	// Derived from Directus Administrator role / JWT admin_access claim.

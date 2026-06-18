@@ -1,38 +1,32 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	Badge,
-	Box,
-	Collapse,
-	Divider,
-	Group,
-	Stack,
-	Text,
-} from "@mantine/core";
+import { Box, Collapse, Divider, Group, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconCheck } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { API_BASE_URL } from "@/config";
 import {
 	type BillingPeriod,
 	capacityShortFor,
 	fetchTierCapacities,
+	isComingSoon,
 	isTier,
+	MONTHLY_BILLING_PREMIUM_PCT,
 	pricingForBillingPeriod,
-	TIER_BADGE_COLOR,
+	TIER_FALLBACK_PRICE_EUR,
 	type Tier,
 	type TierCapacity,
 	taglineFor,
 	tierBestFor,
 } from "@/lib/tiers";
+import { TierStatusBadge } from "./TierStatusBadge";
 import classes from "./tier-pricing-cards.module.css";
 
 function buildCardData(cap: TierCapacity, billingPeriod: BillingPeriod) {
 	const specs: string[] = [];
-	if (cap.included_seats == null) {
-		specs.push(t`Unlimited seats`);
-	} else {
+	// No "unlimited seats" line — billing is per user, so seats aren't a cap.
+	if (cap.included_seats != null) {
 		specs.push(t`${cap.included_seats} seats included`);
 	}
 	if (cap.included_hours == null) {
@@ -51,7 +45,8 @@ function buildCardData(cap: TierCapacity, billingPeriod: BillingPeriod) {
 	if (cap.training_included && cap.training_included !== "—") {
 		specs.push(t`Training: ${cap.training_included}`);
 	}
-	if (cap.included_seats == null) {
+	// Innovator intentionally omits the dedicated-support line for now.
+	if (cap.included_seats == null && cap.tier !== "innovator") {
 		specs.push(t`Dedicated support`);
 	}
 
@@ -62,16 +57,13 @@ function buildCardData(cap: TierCapacity, billingPeriod: BillingPeriod) {
 	const resolved = pricingForBillingPeriod(cap, billingPeriod);
 	if (resolved?.kind === "annual") {
 		priceAmount = `€${resolved.per_month_eur.toLocaleString("en-IE")}`;
-		pricePeriod = t`/mo`;
+		pricePeriod = t`/seat/mo`;
 		const total = `€${resolved.total_per_year_eur.toLocaleString("en-IE")}`;
-		priceSubtext = t`billed annually · ${total}/yr`;
+		priceSubtext = t`billed annually · ${total}/seat/yr`;
 	} else if (resolved?.kind === "monthly") {
 		priceAmount = `€${resolved.per_month_eur.toLocaleString("en-IE")}`;
-		pricePeriod = t`/mo`;
+		pricePeriod = t`/seat/mo`;
 		priceSubtext = t`billed monthly`;
-	} else if (resolved?.kind === "one_time") {
-		priceAmount = `€${resolved.amount_eur.toLocaleString("en-IE")}`;
-		pricePeriod = t`one-time`;
 	} else {
 		priceAmount = t`Free`;
 		pricePeriod = "";
@@ -101,25 +93,19 @@ function buildFallbackCardData(tier: Tier, billingPeriod: BillingPeriod) {
 
 	if (tier === "free") {
 		priceAmount = t`Free`;
-	} else if (tier === "pilot") {
-		priceAmount = "€349";
-		pricePeriod = t`one-time`;
 	} else {
-		// Pioneer+. Fallback hard-codes the annual-billing rates so the
-		// component still renders if the network call hasn't returned.
-		const annualPerMonth: Record<string, number> = {
-			changemaker: 1500,
-			guardian: 5000,
-			innovator: 500,
-			pioneer: 200,
-		};
-		const base = annualPerMonth[tier] ?? 0;
-		const value = billingPeriod === "monthly" ? Math.round(base * 1.1) : base;
+		// Paid tiers. The fallback per-seat rates live in TIER_FALLBACK_PRICE_EUR
+		// (one place) so the component still renders before the API call returns.
+		const base = TIER_FALLBACK_PRICE_EUR[tier] ?? 0;
+		const value =
+			billingPeriod === "monthly"
+				? Math.round(base * (1 + MONTHLY_BILLING_PREMIUM_PCT / 100))
+				: base;
 		priceAmount = `€${value.toLocaleString("en-IE")}`;
-		pricePeriod = t`/mo`;
+		pricePeriod = t`/seat/mo`;
 		if (billingPeriod === "annual") {
 			const total = `€${(base * 12).toLocaleString("en-IE")}`;
-			priceSubtext = t`billed annually · ${total}/yr`;
+			priceSubtext = t`billed annually · ${total}/seat/yr`;
 		} else {
 			priceSubtext = t`billed monthly`;
 		}
@@ -138,154 +124,148 @@ function buildFallbackCardData(tier: Tier, billingPeriod: BillingPeriod) {
 
 type CardData = ReturnType<typeof buildCardData>;
 
-function WideCard({
+type CardLayout = "wide" | "mobile";
+
+function TierCard({
 	card,
+	layout,
 	selected,
 	highlighted,
+	highlightTier,
 	highlightLabel,
+	comingSoon,
 	onSelect,
 }: {
 	card: CardData;
+	layout: CardLayout;
 	selected: boolean;
 	highlighted: boolean;
+	highlightTier?: string | null;
 	highlightLabel: ReactNode;
+	comingSoon: boolean;
 	onSelect: () => void;
 }) {
+	const isWide = layout === "wide";
 	const wrapClasses = [
-		classes.wideWrap,
+		isWide ? classes.wideWrap : classes.wrap,
 		selected ? classes.selected : "",
 		highlighted ? classes.highlighted : "",
 	]
 		.filter(Boolean)
 		.join(" ");
-	return (
-		// biome-ignore lint/a11y/useSemanticElements: card-as-radio; the entire card is the click target
-		<div
-			className={wrapClasses}
-			onClick={onSelect}
-			onKeyDown={(e) => {
-				if (e.key === "Enter" || e.key === " ") {
-					e.preventDefault();
-					onSelect();
-				}
-			}}
-			role="radio"
-			aria-checked={selected}
-			tabIndex={0}
-		>
-			<Stack gap={0} className={classes.wideInner}>
-				<Group gap={8} wrap="nowrap">
-					<Text size="lg" className={classes.tierName}>
-						{card.tier}
+
+	const handleKeyDown = (e: KeyboardEvent) => {
+		if (!comingSoon && (e.key === "Enter" || e.key === " ")) {
+			e.preventDefault();
+			onSelect();
+		}
+	};
+
+	// Shared badge + spec list — the only parts that were duplicated between
+	// the wide and mobile layouts.
+	const badge = (
+		<TierStatusBadge
+			tier={card.tier}
+			popularTier={highlightTier}
+			popularLabel={highlightLabel}
+		/>
+	);
+	const specRows = card.specs.map((spec) => (
+		<Group key={spec} gap={7} wrap="nowrap" className={classes.specRow}>
+			<IconCheck
+				size={isWide ? 13 : 14}
+				stroke={1.5}
+				color="var(--mantine-color-primary-6)"
+			/>
+			<Text size={isWide ? "xs" : "sm"} c="dimmed">
+				{spec}
+			</Text>
+		</Group>
+	));
+
+	if (isWide) {
+		return (
+			// biome-ignore lint/a11y/useSemanticElements: card-as-radio; the entire card is the click target
+			<div
+				className={wrapClasses}
+				onClick={comingSoon ? undefined : onSelect}
+				onKeyDown={handleKeyDown}
+				role="radio"
+				aria-checked={selected}
+				aria-disabled={comingSoon}
+				tabIndex={comingSoon ? -1 : 0}
+				style={comingSoon ? { opacity: 0.6 } : undefined}
+			>
+				<Stack gap={0} className={classes.wideInner}>
+					<Group gap={8} wrap="nowrap">
+						<Text size="lg" className={classes.tierName}>
+							{card.tier}
+						</Text>
+						{badge}
+					</Group>
+					<Text size="xs" c="dimmed" mt={4}>
+						{card.tagline}
 					</Text>
-					{highlighted && (
-						<Badge
-							variant="light"
-							color={TIER_BADGE_COLOR[card.tier as Tier] ?? "blue"}
-							size="xs"
-						>
-							{highlightLabel}
-						</Badge>
-					)}
-				</Group>
-				<Text size="xs" c="dimmed" mt={4}>
-					{card.tagline}
-				</Text>
-				<Divider my={14} color="var(--mantine-color-gray-2)" />
-				<Stack gap={0}>
-					{card.specs.map((spec) => (
-						<Group key={spec} gap={7} wrap="nowrap" className={classes.specRow}>
-							<IconCheck
-								size={13}
-								stroke={1.5}
-								color="var(--mantine-color-primary-6)"
-							/>
-							<Text size="xs" c="dimmed">
-								{spec}
-							</Text>
-						</Group>
-					))}
-				</Stack>
-				<Box className={classes.priceFooter}>
-					{card.bestFor && (
-						<Text size="xs" c="dimmed" fs="italic" mb={10} lh={1.4}>
-							{card.bestFor}
-						</Text>
-					)}
-					<Group gap={3} align="baseline">
-						<Text size="xs" c="dimmed">
-							<Trans>from</Trans>
-						</Text>
-						<Text size="xl" className={classes.priceAmount} c="var(--app-text)">
-							{card.priceAmount}
-						</Text>
-						{card.pricePeriod && (
-							<Text size="xs" c="dimmed">
-								{card.pricePeriod}
+					<Divider my={14} color="var(--mantine-color-gray-2)" />
+					<Stack gap={0}>{specRows}</Stack>
+					<Box className={classes.priceFooter}>
+						{card.bestFor && (
+							<Text size="xs" c="dimmed" fs="italic" mb={10} lh={1.4}>
+								{card.bestFor}
 							</Text>
 						)}
-					</Group>
-					{card.priceSubtext && (
-						<Text size="xs" c="dimmed" mt={2}>
-							{card.priceSubtext}
-						</Text>
-					)}
-				</Box>
-			</Stack>
-		</div>
-	);
-}
+						<Group gap={3} align="baseline">
+							<Text size="xs" c="dimmed">
+								<Trans>from</Trans>
+							</Text>
+							<Text
+								size="xl"
+								className={classes.priceAmount}
+								c="var(--app-text)"
+							>
+								{card.priceAmount}
+							</Text>
+							{card.pricePeriod && (
+								<Text size="xs" c="dimmed">
+									{card.pricePeriod}
+								</Text>
+							)}
+						</Group>
+						{card.priceSubtext && (
+							<Text size="xs" c="dimmed" mt={2}>
+								{card.priceSubtext}
+							</Text>
+						)}
+					</Box>
+				</Stack>
+			</div>
+		);
+	}
 
-function MobileCard({
-	card,
-	selected,
-	highlighted,
-	highlightLabel,
-	onSelect,
-}: {
-	card: CardData;
-	selected: boolean;
-	highlighted: boolean;
-	highlightLabel: ReactNode;
-	onSelect: () => void;
-}) {
-	const wrapClasses = [
-		classes.wrap,
-		selected ? classes.selected : "",
-		highlighted ? classes.highlighted : "",
-	]
-		.filter(Boolean)
-		.join(" ");
 	return (
 		// biome-ignore lint/a11y/useSemanticElements: card-as-radio; the entire card is the click target
 		<div
 			className={wrapClasses}
-			onClick={onSelect}
-			onKeyDown={(e) => {
-				if (e.key === "Enter" || e.key === " ") {
-					e.preventDefault();
-					onSelect();
-				}
-			}}
+			onClick={comingSoon ? undefined : onSelect}
+			onKeyDown={handleKeyDown}
 			role="radio"
 			aria-checked={selected}
-			tabIndex={0}
+			aria-disabled={comingSoon}
+			tabIndex={comingSoon ? -1 : 0}
+			style={comingSoon ? { opacity: 0.6 } : undefined}
 		>
 			<Stack gap={0} className={classes.mobileInner}>
-				<Group justify="space-between" wrap="nowrap" align="flex-start" gap={12}>
+				<Group
+					justify="space-between"
+					wrap="nowrap"
+					align="flex-start"
+					gap={12}
+				>
 					<Group gap={8} wrap="nowrap">
 						<Text size="md" fw={500} className={classes.tierName}>
 							{card.tier}
 						</Text>
-						{highlighted && (
-							<Badge
-								variant="light"
-								color={TIER_BADGE_COLOR[card.tier as Tier] ?? "blue"}
-								size="xs"
-							>
-								{highlightLabel}
-							</Badge>
-						)}
+						{badge}
 					</Group>
 					<Stack gap={2} align="flex-end">
 						<Group gap={3} align="baseline" wrap="nowrap">
@@ -316,25 +296,7 @@ function MobileCard({
 							{card.tagline}
 						</Text>
 						<Divider color="var(--mantine-color-gray-2)" />
-						<Stack gap={0}>
-							{card.specs.map((spec) => (
-								<Group
-									key={spec}
-									gap={7}
-									wrap="nowrap"
-									className={classes.specRow}
-								>
-									<IconCheck
-										size={14}
-										stroke={1.5}
-										color="var(--mantine-color-primary-6)"
-									/>
-									<Text size="sm" c="dimmed">
-										{spec}
-									</Text>
-								</Group>
-							))}
-						</Stack>
+						<Stack gap={0}>{specRows}</Stack>
 						{card.bestFor && (
 							<Text size="xs" c="dimmed" fs="italic" lh={1.4}>
 								{card.bestFor}
@@ -359,19 +321,14 @@ interface TierPricingCardsProps {
 	billingPeriod?: BillingPeriod;
 }
 
-const REQUESTABLE_TIERS: Tier[] = [
-	"pilot",
-	"pioneer",
-	"innovator",
-	"changemaker",
-	"guardian",
-];
+// Free is hidden from selection (see VISIBLE_TIERS in lib/tiers).
+const REQUESTABLE_TIERS: Tier[] = ["innovator", "changemaker", "guardian"];
 
 export const TierPricingCards = ({
 	tiers = REQUESTABLE_TIERS,
 	value,
 	onChange,
-	highlightTier = "innovator",
+	highlightTier = "changemaker",
 	highlightLabel,
 	compact = false,
 	billingPeriod = "annual",
@@ -391,7 +348,6 @@ export const TierPricingCards = ({
 		return buildFallbackCardData(tier, billingPeriod);
 	});
 
-	const CardComponent = useWideLayout ? WideCard : MobileCard;
 	const resolvedHighlightLabel = highlightLabel ?? <Trans>Popular</Trans>;
 
 	return (
@@ -400,12 +356,15 @@ export const TierPricingCards = ({
 			role="radiogroup"
 		>
 			{cards.map((card) => (
-				<CardComponent
+				<TierCard
 					key={card.tier}
 					card={card}
+					layout={useWideLayout ? "wide" : "mobile"}
 					selected={value === card.tier}
 					highlighted={card.tier === highlightTier}
+					highlightTier={highlightTier}
 					highlightLabel={resolvedHighlightLabel}
+					comingSoon={isComingSoon(card.tier)}
 					onSelect={() => onChange(card.tier)}
 				/>
 			))}

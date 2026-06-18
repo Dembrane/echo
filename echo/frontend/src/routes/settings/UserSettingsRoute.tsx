@@ -65,7 +65,7 @@ export const UserSettingsRoute = () => {
 	const isTwoFactorEnabled = Boolean(user?.tfa_enabled);
 
 	return (
-		<Container size="xl" py="xl">
+		<Container size="xl" px="lg" py="xl">
 			<Stack gap="lg">
 				<div className="flex items-center">
 					<div className="hidden md:flex w-[57px] shrink-0 items-center">
