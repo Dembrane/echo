@@ -205,6 +205,7 @@ class WorkspaceInviteResponse(BaseModel):
     email: str
     user_existed: bool
     email_sent: bool = True  # False if SendGrid failed or was not configured
+    invite_url: Optional[str] = None  # present only for invited / already_invited
 
 
 # ── /v2/projects/:id/move ──

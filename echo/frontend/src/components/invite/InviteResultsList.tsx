@@ -1,5 +1,17 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Badge, Group, Paper, Stack, Text } from "@mantine/core";
+import {
+	ActionIcon,
+	Badge,
+	Group,
+	Paper,
+	Stack,
+	Text,
+	Tooltip,
+} from "@mantine/core";
+import { usePostHog } from "@posthog/react";
+import { IconLink } from "@tabler/icons-react";
+import { toast } from "@/components/common/Toaster";
 
 export type InviteResultState =
 	| "sent" // status: invited (new user) / added (existing user) / reactivated
@@ -16,6 +28,7 @@ export interface InviteResultRow {
 	workspaceName: string | null;
 	state: InviteResultState;
 	detail?: string;
+	inviteUrl?: string | null;
 }
 
 interface Props {
@@ -45,6 +58,19 @@ function badgeForState(state: InviteResultState) {
 
 // Per-email result rows shown after submit.
 export function InviteResultsList({ rows, "data-testid": dataTestId }: Props) {
+	const posthog = usePostHog();
+	const copy = (url: string, workspaceId: string | null) => {
+		void navigator.clipboard.writeText(url).then(
+			() => {
+				toast.success(t`Link copied`);
+				posthog?.capture("invite_link_copied", {
+					source: "create",
+					type: workspaceId ? "workspace" : "org",
+				});
+			},
+			() => toast.error(t`Couldn't copy the link.`),
+		);
+	};
 	if (rows.length === 0) return null;
 	return (
 		<Stack gap={6} data-testid={dataTestId}>
@@ -57,8 +83,8 @@ export function InviteResultsList({ rows, "data-testid": dataTestId }: Props) {
 						p="xs"
 						radius="sm"
 					>
-						<Group justify="space-between" wrap="nowrap" gap="xs">
-							<Stack gap={0} style={{ minWidth: 0 }}>
+						<Group wrap="nowrap" gap="xs">
+							<Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
 								<Text size="sm" lineClamp={1}>
 									{row.email}
 								</Text>
@@ -79,6 +105,22 @@ export function InviteResultsList({ rows, "data-testid": dataTestId }: Props) {
 									</Text>
 								) : null}
 							</Stack>
+							{row.inviteUrl && (
+								<Tooltip label={t`Copy invite link`}>
+									<ActionIcon
+										size="sm"
+										variant="subtle"
+										onClick={() =>
+											copy(row.inviteUrl as string, row.workspaceId)
+										}
+										aria-label={t`Copy invite link`}
+										style={{ flexShrink: 0 }}
+										data-testid={`invite-result-copy-link-${idx}`}
+									>
+										<IconLink size={14} />
+									</ActionIcon>
+								</Tooltip>
+							)}
 							<Badge
 								size="sm"
 								variant="light"
