@@ -33,8 +33,8 @@ export const PeriodSelect = ({
 	const data = useMemo(
 		() =>
 			Array.from({ length: monthsBack + 1 }, (_, i) => ({
-				value: String(i),
 				label: monthLabel(i),
+				value: String(i),
 			})),
 		[monthsBack],
 	);

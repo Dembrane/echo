@@ -115,25 +115,25 @@ export function resolveSidebarView(
 		// /w/:wsId/projects/:projectId/...
 		if (segs[2] === "projects" && segs[3] && segs[3] !== "new") {
 			const projectId = segs[3];
-				// Settings context: explicit /settings/<section> or the legacy
-				// /overview and /integrations pages which ARE the
-				// settings panels.
-				if (
-					segs[4] === "settings" ||
-					segs[4] === "overview" ||
-					segs[4] === "integrations"
-				) {
-					return {
-						backTo: `/w/${workspaceId}/projects/${projectId}/home`,
-						params: {
-							projectId,
-							section: segs[4] === "settings" ? segs[5] : segs[4],
-							workspaceId,
-						},
-						scope: "project",
-						view: "project-settings",
-					};
-				}
+			// Settings context: explicit /settings/<section> or the legacy
+			// /overview and /integrations pages which ARE the
+			// settings panels.
+			if (
+				segs[4] === "settings" ||
+				segs[4] === "overview" ||
+				segs[4] === "integrations"
+			) {
+				return {
+					backTo: `/w/${workspaceId}/projects/${projectId}/home`,
+					params: {
+						projectId,
+						section: segs[4] === "settings" ? segs[5] : segs[4],
+						workspaceId,
+					},
+					scope: "project",
+					view: "project-settings",
+				};
+			}
 			return {
 				backTo: `/w/${workspaceId}/home`,
 				params: {

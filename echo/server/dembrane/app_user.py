@@ -46,7 +46,14 @@ async def create_app_user(
     email: str,
     display_name: str,
 ) -> dict:
-    """Create a new app_user. Returns the created record (unwrapped)."""
+    """Create a new app_user. Returns the created record (unwrapped).
+
+    Records `terms_accepted_at` (ISSUE-013): registration cannot complete
+    without ticking "I accept the terms", so reaching app_user creation
+    implies acceptance. No version string yet — presence means accepted.
+    """
+    from datetime import datetime, timezone
+
     app_user_id = generate_uuid()
     result = await async_directus.create_item(
         "app_user",
@@ -55,6 +62,7 @@ async def create_app_user(
             "directus_user_id": directus_user_id,
             "email": email,
             "display_name": display_name,
+            "terms_accepted_at": datetime.now(timezone.utc).isoformat(),
         },
     )
     return result["data"]

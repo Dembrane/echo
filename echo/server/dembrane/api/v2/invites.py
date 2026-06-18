@@ -68,25 +68,42 @@ async def workspace_seat_estimate(
     workspace_id: str,
     ctx: DependencyWorkspaceContext,
     added_seats: int = 1,
+    emails: str | None = None,
 ) -> dict:
-    """Cost preview for adding a member: the one-off prorated charge now plus how
-    much the recurring renewal goes up. Drives the invite confirm dialog."""
+    """Cost preview for inviting people: the one-off prorated charge now plus how
+    much the recurring renewal goes up. Drives the invite confirm dialog.
+
+    `emails` (comma-separated recipients) lets the server compute net-new seats:
+    a recipient who already holds an active seat anywhere on the account, or is
+    already pending, adds nothing (seats are pooled, founder rule A1). The roster
+    is never echoed back. When `emails` is absent the quote falls back to the raw
+    `added_seats` count."""
     ctx.require_policy("member:invite")
     from dembrane.billing_service import (
         estimate_seat_addition,
         get_account_for_workspace,
     )
 
+    recipient_emails: list[str] | None = None
+    if emails is not None:
+        recipient_emails = [e.strip() for e in emails.split(",") if e.strip()]
+
     account = await get_account_for_workspace(workspace_id)
     if not account:
         return {
             "active": False,
-            "added_seats": added_seats,
+            "added_seats": (
+                len(recipient_emails) if recipient_emails is not None else added_seats
+            ),
             "billing_period": "annual",
             "currency": "EUR",
             "prorated_now_eur": 0.0,
             "recurring_delta_eur": 0.0,
         }
+    if recipient_emails is not None:
+        return await estimate_seat_addition(
+            account["id"], recipient_emails=recipient_emails
+        )
     return await estimate_seat_addition(account["id"], max(1, added_seats))
 
 

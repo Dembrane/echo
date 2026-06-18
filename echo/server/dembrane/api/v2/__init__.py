@@ -24,6 +24,7 @@ from dembrane.api.v2.bff.tags import (
     project_router as bff_projects_write_router,
 )
 from dembrane.api.v2.projects import router as projects_router
+from dembrane.api.v2.training import router as training_router
 from dembrane.api.v2.bff.chats import (
     router as bff_chats_router,
     message_router as bff_chat_message_router,
@@ -34,7 +35,9 @@ from dembrane.api.v2.bff.reports import (
     router as bff_reports_router,
     metric_router as bff_report_metric_router,
 )
+from dembrane.api.v2.admin_managed import router as admin_managed_router
 from dembrane.api.v2.notifications import router as notifications_router
+from dembrane.api.v2.admin_training import router as admin_training_router
 from dembrane.api.v2.invite_actions import router as invite_actions_router
 from dembrane.api.v2.access_requests import (
     router as access_requests_router,
@@ -129,3 +132,15 @@ v2_router.include_router(
 # is_admin JWT claim is the gate for now; storage-backed staff policies
 # (staff:can_set_tier etc.) are declared in policies.py but not wired.
 v2_router.include_router(admin_router, prefix="/admin", tags=["v2:admin"])
+# Staff-only managed-billing endpoints (set-managed, account manager, invoices).
+# Additive router so it stays clear of the staff-dashboard work in 022 / Wave E.
+v2_router.include_router(admin_managed_router, prefix="/admin", tags=["v2:admin:managed"])
+
+# Training (ISSUE-020). Its own product, separate from billing tiers.
+# User-facing catalog + roster + request + my-licenses, plus staff
+# provisioning/completion in a separate admin_training router (kept out of
+# admin.py so this wave doesn't conflict with 022 / Wave C edits there).
+v2_router.include_router(training_router, prefix="/training", tags=["v2:training"])
+v2_router.include_router(
+    admin_training_router, prefix="/admin", tags=["v2:admin:training"]
+)

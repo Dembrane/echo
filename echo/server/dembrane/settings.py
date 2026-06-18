@@ -350,6 +350,16 @@ class EmailSettings(BaseSettings):
             "UPGRADE_REQUEST_INBOX", "EMAIL__UPGRADE_REQUEST_INBOX"
         ),
     )
+    # Where onboarding training follow-ups route (ISSUE-012). Pauline owns
+    # training verification/scheduling. FOLLOW-UP: confirm Pauline's address;
+    # default is a shared inbox placeholder until then.
+    onboarding_followup_inbox: str = Field(
+        default="training@dembrane.com",
+        alias="ONBOARDING_FOLLOWUP_INBOX",
+        validation_alias=AliasChoices(
+            "ONBOARDING_FOLLOWUP_INBOX", "EMAIL__ONBOARDING_FOLLOWUP_INBOX"
+        ),
+    )
 
 
 class DatabaseSettings(BaseSettings):
@@ -604,6 +614,19 @@ class BillingSettings(BaseSettings):
         alias="MOLLIE_WEBHOOK_URL",
         validation_alias=AliasChoices("MOLLIE_WEBHOOK_URL", "BILLING__MOLLIE_WEBHOOK_URL"),
     )
+    # Test-only switch to exercise the seat-reconcile failure path on demand:
+    # when set, reconcile_account_seats raises before touching Mollie, so the
+    # account gets flagged (reconcile_failed_at) and the "fix your payment"
+    # prompt shows. Ignored outside Mollie test mode so it can never bite prod.
+    # Founder uses this to test the error path together (Wave A / A2).
+    mollie_force_reconcile_failure: bool = Field(
+        default=False,
+        alias="MOLLIE_FORCE_RECONCILE_FAILURE",
+        validation_alias=AliasChoices(
+            "MOLLIE_FORCE_RECONCILE_FAILURE",
+            "BILLING__MOLLIE_FORCE_RECONCILE_FAILURE",
+        ),
+    )
 
     @property
     def mollie_enabled(self) -> bool:
@@ -612,6 +635,11 @@ class BillingSettings(BaseSettings):
     @property
     def mollie_test_mode(self) -> bool:
         return bool(self.mollie_api_key and self.mollie_api_key.startswith("test_"))
+
+    @property
+    def reconcile_failure_forced(self) -> bool:
+        """Force the seat-reconcile failure path, but only in Mollie test mode."""
+        return self.mollie_test_mode and self.mollie_force_reconcile_failure
 
 
 class AppSettings:

@@ -174,9 +174,7 @@ export const SearchBlock = () => {
 										<Icon size={16} />
 										<span className="flex-1 truncate">{hit.label}</span>
 										{hit.subtitle && (
-											<span
-												className={`${classes.subtitle} truncate text-xs`}
-											>
+											<span className={`${classes.subtitle} truncate text-xs`}>
 												{hit.subtitle}
 											</span>
 										)}

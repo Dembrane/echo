@@ -11,10 +11,12 @@ import {
 	Modal,
 	Paper,
 	Select,
+	SimpleGrid,
 	Stack,
 	Table,
 	Text,
 	Textarea,
+	TextInput,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,7 +28,12 @@ import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle"
 import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { type BillingPeriod, isComingSoon, SELLABLE_TIER } from "@/lib/tiers";
+import {
+	type BillingPeriod,
+	hasMultiplePurchasableTiers,
+	isComingSoon,
+	SELLABLE_TIER,
+} from "@/lib/tiers";
 
 export function tierLabel(tier: string | null | undefined): string {
 	if (!tier) return "";
@@ -44,6 +51,22 @@ interface PaymentMethod {
 	label: string;
 }
 
+interface AccountManager {
+	name: string | null;
+	email: string | null;
+}
+
+interface BillingDetails {
+	billing_legal_name: string | null;
+	billing_vat_id: string | null;
+	billing_vat_region: "eu" | "non_eu" | "international" | null;
+	billing_country: string | null;
+	billing_address_line1: string | null;
+	billing_address_line2: string | null;
+	billing_postal_code: string | null;
+	billing_city: string | null;
+}
+
 interface Overview {
 	account_id: string | null;
 	tier: string;
@@ -56,6 +79,23 @@ interface Overview {
 	projected_monthly_eur: number | null;
 	per_seat_monthly_eur: number | null;
 	payment_method: PaymentMethod | null;
+	/** Pending (un-accepted) invites across the account. The bill rises by this
+	 *  many seats when they're accepted. */
+	pending_invites: number;
+	/** Projected total once every pending invite is accepted. Null when none pending. */
+	projected_with_pending_eur: number | null;
+	/** Discount already applied to every amount above (and to the live Mollie
+	 *  charge). 0 / null when there is no discount. */
+	percent_discount: number | null;
+	/** Reason tag for the discount (scholarship / staff_discount / trial). */
+	type_discount: string | null;
+	/** Set when a seat re-price against Mollie last failed (dead mandate / API
+	 *  error); null when reconcile is clean. Drives the "fix your payment" prompt. */
+	reconcile_failed_at: string | null;
+	/** Managed by dembrane (payment_mode "offline"): hide self-serve controls. */
+	is_managed: boolean;
+	account_manager: AccountManager | null;
+	billing_details: BillingDetails | null;
 }
 
 interface Invoice {
@@ -65,6 +105,10 @@ interface Invoice {
 	currency: string;
 	status: string;
 	description: string;
+	/** Hosted checkout link on an open/pending charge, so it can be paid now. */
+	pay_url: string | null;
+	/** Mollie sales-invoice id, when this row has a downloadable PDF (ISSUE-004). */
+	sales_invoice_id?: string | null;
 }
 
 function formatDate(iso: string | null): string {
@@ -193,6 +237,209 @@ export function OrgManagedBillingNotice({
 				</Group>
 			</Stack>
 		</Paper>
+	);
+}
+
+/**
+ * Shown instead of the plan picker / checkout / change-method / cancel controls
+ * when the account is managed by dembrane (payment_mode "offline"). Full feature
+ * access is unchanged; only the self-serve payment controls are replaced.
+ */
+function ManagedBillingPanel({
+	tier,
+	seats,
+	manager,
+}: {
+	tier: string;
+	seats: number;
+	manager: AccountManager | null;
+}) {
+	return (
+		<Paper withBorder p="md" radius="sm">
+			<Stack gap={16}>
+				<SectionRow label={t`Current plan`}>
+					<Group gap={8}>
+						<Text size="sm" fw={500}>
+							{tierLabel(tier)}
+						</Text>
+						<Badge size="xs" variant="light" color="green">
+							<Trans>Managed by dembrane</Trans>
+						</Badge>
+					</Group>
+					<Text size="xs">
+						<Trans>
+							Your plan is managed by dembrane. Contact your account manager to
+							make changes.
+						</Trans>
+					</Text>
+				</SectionRow>
+
+				<Divider />
+
+				<SectionRow label={t`Seats`}>
+					<Text size="sm">
+						<Trans>{seats} seats</Trans>
+					</Text>
+				</SectionRow>
+
+				{manager?.email && (
+					<>
+						<Divider />
+						<SectionRow label={t`Account manager`}>
+							<Text size="sm">{manager.name ?? manager.email}</Text>
+							<Anchor size="xs" href={`mailto:${manager.email}`}>
+								{manager.email}
+							</Anchor>
+						</SectionRow>
+					</>
+				)}
+			</Stack>
+		</Paper>
+	);
+}
+
+const VAT_REGIONS: { value: string; label: string }[] = [
+	{ label: "EU", value: "eu" },
+	{ label: "Non-EU", value: "non_eu" },
+	{ label: "International", value: "international" },
+];
+
+/**
+ * VAT + billing address capture (ISSUE-005). Universal: shown for every account
+ * (managed and self-serve). Capture only, prices are quoted excl. VAT, no rate
+ * logic runs here.
+ */
+function BillingDetailsForm({
+	accountId,
+	initial,
+	onSaved,
+}: {
+	accountId: string;
+	initial: BillingDetails | null;
+	onSaved: () => void;
+}) {
+	const [form, setForm] = useState<BillingDetails>({
+		billing_address_line1: initial?.billing_address_line1 ?? null,
+		billing_address_line2: initial?.billing_address_line2 ?? null,
+		billing_city: initial?.billing_city ?? null,
+		billing_country: initial?.billing_country ?? null,
+		billing_legal_name: initial?.billing_legal_name ?? null,
+		billing_postal_code: initial?.billing_postal_code ?? null,
+		billing_vat_id: initial?.billing_vat_id ?? null,
+		billing_vat_region: initial?.billing_vat_region ?? null,
+	});
+	const [saving, setSaving] = useState(false);
+
+	const set = (key: keyof BillingDetails, value: string | null) =>
+		setForm((prev) => ({ ...prev, [key]: value }));
+
+	const save = async () => {
+		setSaving(true);
+		try {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/billing-accounts/${accountId}/billing-details`,
+				{
+					body: JSON.stringify(form),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "PUT",
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			toast.success(t`Billing details saved.`);
+			onSaved();
+		} catch (e) {
+			toast.error((e as Error).message);
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	return (
+		<Stack gap={12}>
+			<Text size="xs" fw={500} tt="uppercase">
+				<Trans>Billing details</Trans>
+			</Text>
+			<Text size="xs">
+				<Trans>Used on your invoices. Prices exclude VAT.</Trans>
+			</Text>
+			<TextInput
+				size="sm"
+				label={t`Legal entity name`}
+				value={form.billing_legal_name ?? ""}
+				onChange={(e) =>
+					set("billing_legal_name", e.currentTarget.value || null)
+				}
+			/>
+			<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+				<TextInput
+					size="sm"
+					label={t`VAT ID`}
+					placeholder={t`Optional`}
+					value={form.billing_vat_id ?? ""}
+					onChange={(e) => set("billing_vat_id", e.currentTarget.value || null)}
+				/>
+				<Select
+					size="sm"
+					label={t`VAT region`}
+					placeholder={t`Select`}
+					data={VAT_REGIONS}
+					value={form.billing_vat_region}
+					onChange={(v) =>
+						set("billing_vat_region", v as BillingDetails["billing_vat_region"])
+					}
+				/>
+			</SimpleGrid>
+			<TextInput
+				size="sm"
+				label={t`Address line 1`}
+				value={form.billing_address_line1 ?? ""}
+				onChange={(e) =>
+					set("billing_address_line1", e.currentTarget.value || null)
+				}
+			/>
+			<TextInput
+				size="sm"
+				label={t`Address line 2`}
+				placeholder={t`Optional`}
+				value={form.billing_address_line2 ?? ""}
+				onChange={(e) =>
+					set("billing_address_line2", e.currentTarget.value || null)
+				}
+			/>
+			<SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
+				<TextInput
+					size="sm"
+					label={t`Postal code`}
+					value={form.billing_postal_code ?? ""}
+					onChange={(e) =>
+						set("billing_postal_code", e.currentTarget.value || null)
+					}
+				/>
+				<TextInput
+					size="sm"
+					label={t`City`}
+					value={form.billing_city ?? ""}
+					onChange={(e) => set("billing_city", e.currentTarget.value || null)}
+				/>
+				<TextInput
+					size="sm"
+					label={t`Country`}
+					value={form.billing_country ?? ""}
+					onChange={(e) =>
+						set("billing_country", e.currentTarget.value || null)
+					}
+				/>
+			</SimpleGrid>
+			<Group justify="flex-end">
+				<Button size="xs" loading={saving} onClick={save}>
+					<Trans>Save billing details</Trans>
+				</Button>
+			</Group>
+		</Stack>
 	);
 }
 
@@ -409,6 +656,143 @@ function ChangePlanModal({
 	);
 }
 
+/** Open the downloadable PDF for a Mollie sales invoice (ISSUE-004). */
+async function openInvoicePdf(accountId: string, salesInvoiceId: string) {
+	try {
+		const res = await fetch(
+			`${API_BASE_URL}/v2/billing-accounts/${accountId}/invoices/${salesInvoiceId}/pdf`,
+			{ credentials: "include" },
+		);
+		if (!res.ok) throw new Error(`Failed (${res.status})`);
+		const data = await res.json();
+		if (data.pdf_url) window.open(data.pdf_url, "_blank", "noopener");
+		else toast.error(t`No PDF available for this invoice.`);
+	} catch (e) {
+		toast.error((e as Error).message);
+	}
+}
+
+/** The in-app invoice table, with an optional PDF download per row. Shared by the
+ *  self-serve dashboard and the managed-state view. */
+function InvoiceList({
+	invoices,
+	cursor,
+	loadingInvoices,
+	onLoadMore,
+	accountId,
+	source,
+}: {
+	invoices: Invoice[];
+	cursor: string | null;
+	loadingInvoices: boolean;
+	onLoadMore: () => void;
+	accountId: string;
+	source: string;
+}) {
+	const hasPdf = invoices.some((inv) => inv.sales_invoice_id);
+	return (
+		<Stack gap={6}>
+			<Text size="xs" fw={500} tt="uppercase">
+				<Trans>Invoices</Trans>
+			</Text>
+			{invoices.length === 0 ? (
+				<Text size="xs">
+					<Trans>No payments yet.</Trans>
+				</Text>
+			) : (
+				<Table verticalSpacing="xs" horizontalSpacing="sm" fz="xs">
+					<Table.Thead>
+						<Table.Tr>
+							<Table.Th>
+								<Trans>Date</Trans>
+							</Table.Th>
+							<Table.Th>
+								<Trans>Description</Trans>
+							</Table.Th>
+							<Table.Th ta="right">
+								<Trans>Amount</Trans>
+							</Table.Th>
+							<Table.Th ta="right">
+								<Trans>Status</Trans>
+							</Table.Th>
+							{hasPdf && <Table.Th ta="right" />}
+						</Table.Tr>
+					</Table.Thead>
+					<Table.Tbody>
+						{invoices.map((inv) => {
+							const meta = invoiceStatusMeta(inv.status);
+							return (
+								<Table.Tr key={inv.id}>
+									<Table.Td style={{ whiteSpace: "nowrap" }}>
+										{formatDateTime(inv.created_at)}
+									</Table.Td>
+									<Table.Td title={cleanInvoiceDescription(inv.description)}>
+										{cleanInvoiceDescription(inv.description)}
+									</Table.Td>
+									{/* Amount only on settled rows; failed/cancelled/expired were never debited. */}
+									<Table.Td ta="right" style={{ whiteSpace: "nowrap" }}>
+										{meta.settled ? `€${inv.amount}` : ""}
+									</Table.Td>
+									<Table.Td ta="right">
+										<Group gap={8} justify="flex-end" wrap="nowrap">
+											{inv.pay_url && (
+												<Anchor
+													size="xs"
+													href={inv.pay_url}
+													onClick={() =>
+														posthog.capture("invoice_pay_now_clicked", {
+															source,
+														})
+													}
+												>
+													<Trans>Pay now</Trans>
+												</Anchor>
+											)}
+											<Badge size="xs" variant="light" color={meta.color}>
+												{meta.label}
+											</Badge>
+										</Group>
+									</Table.Td>
+									{hasPdf && (
+										<Table.Td ta="right">
+											{inv.sales_invoice_id && (
+												<Button
+													size="xs"
+													variant="subtle"
+													onClick={() =>
+														openInvoicePdf(
+															accountId,
+															inv.sales_invoice_id as string,
+														)
+													}
+												>
+													<Trans>Download PDF</Trans>
+												</Button>
+											)}
+										</Table.Td>
+									)}
+								</Table.Tr>
+							);
+						})}
+					</Table.Tbody>
+				</Table>
+			)}
+			{cursor && (
+				<Group justify="center">
+					<Button
+						size="xs"
+						variant="subtle"
+						loading={loadingInvoices}
+						onClick={onLoadMore}
+					>
+						<Trans>Load more</Trans>
+					</Button>
+				</Group>
+			)}
+		</Stack>
+	);
+}
+
 /**
  * Self-contained billing dashboard for an account. Fetches its own overview +
  * invoices. Renders a subscribe prompt on Free, or the full dashboard (plan,
@@ -426,6 +810,8 @@ export function BillingManager({
 }) {
 	const queryClient = useQueryClient();
 	const [submitting, setSubmitting] = useState(false);
+	const [updatingMethod, setUpdatingMethod] = useState(false);
+	const [retrying, setRetrying] = useState(false);
 	const [invoices, setInvoices] = useState<Invoice[]>([]);
 	const [cursor, setCursor] = useState<string | null>(null);
 	const [loadingInvoices, setLoadingInvoices] = useState(false);
@@ -535,6 +921,68 @@ export function BillingManager({
 		}
 	};
 
+	// ISSUE-002: capture a new payment method via a EUR 0.00 Mollie consent
+	// payment. Returns to the billing page, where the sync effect reconciles.
+	const updatePaymentMethod = async () => {
+		if (!accountId) return;
+		setUpdatingMethod(true);
+		try {
+			posthog.capture("payment_method_update_started", { source });
+			const res = await fetch(
+				`${API_BASE_URL}/v2/billing-accounts/${accountId}/payment-method/checkout`,
+				{
+					body: JSON.stringify({
+						redirect_url: `${window.location.origin}${window.location.pathname}?billing=return`,
+					}),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			const data = await res.json();
+			window.location.href = data.checkout_url; // hosted Mollie checkout
+		} catch (e) {
+			toast.error((e as Error).message);
+			setUpdatingMethod(false);
+		}
+	};
+
+	// ISSUE-008: retry the outstanding charge off-session against the newest
+	// valid mandate. On success the account flips back to active.
+	const retryCharge = async () => {
+		if (!accountId) return;
+		setRetrying(true);
+		try {
+			posthog.capture("payment_retry_clicked", { source });
+			const res = await fetch(
+				`${API_BASE_URL}/v2/billing-accounts/${accountId}/retry-charge`,
+				{ credentials: "include", method: "POST" },
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			const data = await res.json();
+			if (data.status === "active") {
+				toast.success(t`Payment went through. Your plan is up to date.`);
+			} else {
+				toast.error(
+					t`We still couldn't charge your method. Update it and try again.`,
+				);
+			}
+			refreshAll();
+			loadInvoices(null);
+		} catch (e) {
+			toast.error((e as Error).message);
+		} finally {
+			setRetrying(false);
+		}
+	};
+
 	if (!accountId) {
 		return (
 			<Paper withBorder p="md" radius="sm">
@@ -563,6 +1011,11 @@ export function BillingManager({
 	const status = overview.status;
 	const hasPaidPlan = tier !== "free";
 	const isCanceling = status === "canceled";
+	// "Change plan" only makes sense when there's another tier to switch to.
+	// Today only Changemaker is purchasable, so hide it; it auto-restores when a
+	// second tier goes live (single source: hasMultiplePurchasableTiers).
+	const canChangePlan = hasMultiplePurchasableTiers();
+	const discountPct = overview.percent_discount ?? 0;
 	const period = overview.billing_period ?? "annual";
 	const endDate = formatDate(overview.current_period_end);
 	// Show the total at the cadence the customer is actually billed: a "monthly
@@ -572,6 +1025,49 @@ export function BillingManager({
 		isAnnual && overview.projected_monthly_eur != null
 			? overview.projected_monthly_eur * 12
 			: overview.projected_monthly_eur;
+
+	// Pending invites aren't billed until accepted; surface where the total lands
+	// once they are so the figure never quietly understates the bill.
+	const pendingInvites = overview.pending_invites ?? 0;
+	const hasPending = !isCanceling && pendingInvites > 0;
+	const withPendingValue =
+		isAnnual && overview.projected_with_pending_eur != null
+			? overview.projected_with_pending_eur * 12
+			: overview.projected_with_pending_eur;
+	const reconcileFailed = !!overview.reconcile_failed_at;
+
+	// Managed by dembrane (payment_mode "offline"): no self-serve controls.
+	// Show the managed-state panel + the invoice list + billing-details capture.
+	// Full feature access is unchanged; this is only the payment surface.
+	if (overview.is_managed) {
+		return (
+			<Stack gap={16}>
+				<ManagedBillingPanel
+					tier={tier}
+					seats={overview.seats}
+					manager={overview.account_manager}
+				/>
+				<Paper withBorder p="md" radius="sm">
+					<Stack gap={16}>
+						<InvoiceList
+							invoices={invoices}
+							cursor={cursor}
+							loadingInvoices={loadingInvoices}
+							onLoadMore={() => loadInvoices(cursor)}
+							accountId={accountId}
+							source={source}
+						/>
+						<Divider />
+						<BillingDetailsForm
+							accountId={accountId}
+							initial={overview.billing_details}
+							onSaved={refreshAll}
+						/>
+					</Stack>
+				</Paper>
+			</Stack>
+		);
+	}
 
 	// Free / never-subscribed: a focused subscribe prompt.
 	if (!hasPaidPlan) {
@@ -606,10 +1102,48 @@ export function BillingManager({
 	return (
 		<Paper withBorder p="md" radius="sm">
 			<Stack gap={16}>
+				{(status === "past_due" || reconcileFailed) && (
+					<Alert
+						color="red"
+						title={t`We couldn't charge your payment method`}
+						data-testid="billing-payment-failed"
+						styles={{
+							message: { color: "var(--app-text)" },
+							title: { color: "var(--app-text)" },
+						}}
+					>
+						<Stack gap={10}>
+							<Text size="sm">
+								<Trans>
+									Your last payment didn't go through. Your plan stays active.
+									Update your payment method or retry the charge to settle up.
+								</Trans>
+							</Text>
+							<Group gap="sm">
+								<Button
+									size="xs"
+									color="red"
+									loading={retrying}
+									onClick={retryCharge}
+								>
+									<Trans>Retry now</Trans>
+								</Button>
+								<Button
+									size="xs"
+									variant="outline"
+									loading={updatingMethod}
+									onClick={updatePaymentMethod}
+								>
+									<Trans>Change payment method</Trans>
+								</Button>
+							</Group>
+						</Stack>
+					</Alert>
+				)}
 				<SectionRow
 					label={t`Current plan`}
 					action={
-						isCanceling ? undefined : (
+						isCanceling || !canChangePlan ? undefined : (
 							<Button size="xs" variant="subtle" onClick={openPlan}>
 								<Trans>Change plan</Trans>
 							</Button>
@@ -653,6 +1187,13 @@ export function BillingManager({
 					<Text size="sm">
 						<Trans>{overview.seats} seats</Trans>
 					</Text>
+					{hasPending && (
+						<Text size="xs" c="var(--mantine-color-primary-6)">
+							<Trans>
+								{pendingInvites} invite(s) pending. Counted once accepted.
+							</Trans>
+						</Text>
+					)}
 					<Text size="xs">
 						{isCanceling ? (
 							<Trans>
@@ -731,6 +1272,16 @@ export function BillingManager({
 								)}
 							</Text>
 						)}
+						{hasPending && withPendingValue != null && (
+							<Text size="xs" c="var(--mantine-color-primary-6)">
+								<Trans>* rises to {eur(withPendingValue)} when accepted</Trans>
+							</Text>
+						)}
+						{discountPct > 0 && (
+							<Text size="xs" c="primary">
+								<Trans>{discountPct}% discount applied</Trans>
+							</Text>
+						)}
 					</SectionRow>
 				</Group>
 
@@ -742,10 +1293,14 @@ export function BillingManager({
 						<Button
 							size="xs"
 							variant="subtle"
-							component="a"
-							href="mailto:support@dembrane.com?subject=Change payment method"
+							loading={updatingMethod}
+							onClick={updatePaymentMethod}
 						>
-							<Trans>Change</Trans>
+							{overview.payment_method ? (
+								<Trans>Change</Trans>
+							) : (
+								<Trans>Add</Trans>
+							)}
 						</Button>
 					}
 				>
@@ -754,73 +1309,22 @@ export function BillingManager({
 
 				<Divider />
 
-				<Stack gap={6}>
-					<Text size="xs" fw={500} tt="uppercase">
-						<Trans>Invoices</Trans>
-					</Text>
-					{invoices.length === 0 ? (
-						<Text size="xs">
-							<Trans>No payments yet.</Trans>
-						</Text>
-					) : (
-						<Table verticalSpacing="xs" horizontalSpacing="sm" fz="xs">
-							<Table.Thead>
-								<Table.Tr>
-									<Table.Th>
-										<Trans>Date</Trans>
-									</Table.Th>
-									<Table.Th>
-										<Trans>Description</Trans>
-									</Table.Th>
-									<Table.Th ta="right">
-										<Trans>Amount</Trans>
-									</Table.Th>
-									<Table.Th ta="right">
-										<Trans>Status</Trans>
-									</Table.Th>
-								</Table.Tr>
-							</Table.Thead>
-							<Table.Tbody>
-								{invoices.map((inv) => {
-									const meta = invoiceStatusMeta(inv.status);
-									return (
-										<Table.Tr key={inv.id}>
-											<Table.Td style={{ whiteSpace: "nowrap" }}>
-												{formatDateTime(inv.created_at)}
-											</Table.Td>
-											<Table.Td
-												title={cleanInvoiceDescription(inv.description)}
-											>
-												{cleanInvoiceDescription(inv.description)}
-											</Table.Td>
-											{/* Amount only on settled rows; failed/cancelled/expired were never debited. */}
-											<Table.Td ta="right" style={{ whiteSpace: "nowrap" }}>
-												{meta.settled ? `€${inv.amount}` : ""}
-											</Table.Td>
-											<Table.Td ta="right">
-												<Badge size="xs" variant="light" color={meta.color}>
-													{meta.label}
-												</Badge>
-											</Table.Td>
-										</Table.Tr>
-									);
-								})}
-							</Table.Tbody>
-						</Table>
-					)}
-					{cursor && (
-						<Group justify="center">
-							<Button
-								size="xs"
-								variant="subtle"
-								loading={loadingInvoices}
-								onClick={() => loadInvoices(cursor)}
-							>
-								<Trans>Load more</Trans>
-							</Button>
-						</Group>
-					)}
-				</Stack>
+				<InvoiceList
+					invoices={invoices}
+					cursor={cursor}
+					loadingInvoices={loadingInvoices}
+					onLoadMore={() => loadInvoices(cursor)}
+					accountId={accountId}
+					source={source}
+				/>
+
+				<Divider />
+
+				<BillingDetailsForm
+					accountId={accountId}
+					initial={overview.billing_details}
+					onSaved={refreshAll}
+				/>
 
 				<Divider />
 

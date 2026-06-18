@@ -644,6 +644,21 @@ async def create_workspace(
         f"(visibility={visibility})"
     )
 
+    # Pool seats across the account's workspaces. Adding the creator as owner of
+    # a new workspace is a net-new seat only if they weren't already a seat-holder
+    # anywhere on the account; count_account_seats dedupes distinct users, so an
+    # existing member creating a workspace reconciles to €0 net-new (no-op).
+    # Best-effort: a billing hiccup must never fail workspace creation (reconcile
+    # flags the account on its own).
+    from dembrane.billing_service import reconcile_account_seats
+
+    try:
+        await reconcile_account_seats(account_id)
+    except Exception:
+        logger.exception(
+            "Seat reconcile failed after creating workspace %s", ws_id
+        )
+
     # Tell the organisation's other admins/owners that a new workspace exists.
     # Open workspaces are discoverable via the discovery endpoint so they
     # can explicitly join; private workspaces are still discoverable to
@@ -721,9 +736,32 @@ async def delete_workspace(
             ),
         )
 
+    # Resolve the billing account before the soft-delete (the workspace row still
+    # carries billing_account_id afterwards, but resolve up front to be explicit).
+    from dembrane.billing_service import get_account_for_workspace
+
+    billing_account = await get_account_for_workspace(ctx.workspace_id)
+
     now_iso = datetime.now(timezone.utc).isoformat()
     await async_directus.update_item("workspace", ctx.workspace_id, {"deleted_at": now_iso})
     logger.info(f"Deleted workspace {ctx.workspace_id} by {ctx.app_user_id} (role={ctx.role})")
+
+    # Deletion frees this workspace's seats (count_account_seats ignores deleted
+    # workspaces), so re-price immediately rather than waiting for the cron
+    # (ISSUE-010). Min-1-seat is preserved inside reconcile; deleting the last
+    # workspace does not auto-cancel -- cancellation stays an explicit action.
+    # Best-effort: a billing hiccup must never fail the delete (reconcile flags
+    # the account on its own).
+    if billing_account:
+        from dembrane.billing_service import reconcile_account_seats
+
+        try:
+            await reconcile_account_seats(billing_account["id"])
+        except Exception:
+            logger.exception(
+                "Seat reconcile failed after deleting workspace %s", ctx.workspace_id
+            )
+
     return {"status": "deleted"}
 
 
@@ -1003,8 +1041,6 @@ class WorkspaceUsageResponse(BaseModel):
     usage_gates: UsageGatesResponse = UsageGatesResponse()
 
     # Admin + billing only — None for members.
-    overage_forecast_eur: Optional[float] = None
-    seat_overage_eur: Optional[float] = None
     next_tier: Optional[NextTierRecommendation] = None
 
 
@@ -1015,9 +1051,7 @@ class TierCapacityItem(BaseModel):
     billing_period_applicable: bool
     duration: str
     included_seats: Optional[int]
-    seat_overage_eur: Optional[int]
     included_hours: Optional[int]
-    hour_overage_eur: Optional[int]
     hard_block_on_hours: bool
     training_included: str
 
@@ -1046,9 +1080,7 @@ async def list_tier_capacities() -> list[TierCapacityItem]:
                 billing_period_applicable=cap.billing_period_applicable,
                 duration=cap.duration,
                 included_seats=cap.included_seats,
-                seat_overage_eur=cap.seat_overage_eur,
                 included_hours=cap.included_hours,
-                hour_overage_eur=cap.hour_overage_eur,
                 hard_block_on_hours=cap.hard_block_on_hours,
                 training_included=cap.training_included,
             )
@@ -1073,8 +1105,8 @@ async def get_workspace_usage(
     month — they describe end-of-cycle behaviour, which is nonsensical
     for a completed month.
 
-    Members see raw numbers. Admin + billing additionally see overage
-    forecast and tier recommendation (matrix §8).
+    Members see raw numbers. Admin + billing additionally see the next-tier
+    recommendation (matrix §8).
 
     Caching: per-(workspace, month_offset) Redis cache. Current-month
     cache busts on tier change (see set_workspace_tier). Pass
@@ -1090,8 +1122,6 @@ async def get_workspace_usage(
         next_tier as tier_next,
         get_capacity,
         compute_usage_gates,
-        compute_hour_overage_eur,
-        compute_seat_overage_eur,
     )
 
     ctx.require_policy("workspace:view_usage")
@@ -1112,12 +1142,7 @@ async def get_workspace_usage(
         cached = await cache_get_json(cache_key)
         if isinstance(cached, dict):
             if not sees_financials:
-                cached = {
-                    **cached,
-                    "overage_forecast_eur": None,
-                    "seat_overage_eur": None,
-                    "next_tier": None,
-                }
+                cached = {**cached, "next_tier": None}
             return WorkspaceUsageResponse(**cached)
 
     now = datetime.now(timezone.utc)
@@ -1243,16 +1268,9 @@ async def get_workspace_usage(
 
     # Always compute the full admin-view payload so the cache holds one
     # variant; members get a filtered copy at serialisation time.
-    # Forecast + next-tier describe the current cycle's end state; they're
+    # The next-tier recommendation describes the current cycle's end state; it's
     # null for historical months (where the cycle already closed).
-    if is_current_month:
-        overage_forecast = compute_hour_overage_eur(tier, audio_hours)
-        seat_overage = compute_seat_overage_eur(tier, seat_count)
-        recommended = tier_next(tier)
-    else:
-        overage_forecast = None
-        seat_overage = None
-        recommended = None
+    recommended = tier_next(tier) if is_current_month else None
     next_rec: Optional[NextTierRecommendation] = None
     if recommended:
         rcap = get_capacity(recommended)
@@ -1305,8 +1323,6 @@ async def get_workspace_usage(
         pilot_hard_block_active=hard_block,
         seat_invite_blocked=seat_invite_blocked,
         usage_gates=gates,
-        overage_forecast_eur=overage_forecast,
-        seat_overage_eur=seat_overage,
         next_tier=next_rec,
     )
 
@@ -1315,14 +1331,7 @@ async def get_workspace_usage(
     await cache_set_json(cache_key, full.model_dump(), USAGE_TTL_SECONDS)
 
     if not sees_financials:
-        return WorkspaceUsageResponse(
-            **{
-                **full.model_dump(),
-                "overage_forecast_eur": None,
-                "seat_overage_eur": None,
-                "next_tier": None,
-            }
-        )
+        return WorkspaceUsageResponse(**{**full.model_dump(), "next_tier": None})
 
     return full
 

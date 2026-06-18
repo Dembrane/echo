@@ -40,6 +40,10 @@ NotificationAction = Literal[
     "NAVIGATE_INVITE",
     "NAVIGATE_ORGANISATION_SETTINGS",
     "NAVIGATE_WORKSPACE_SETTINGS",
+    "NAVIGATE_BILLING",
+    # Training (ISSUE-020): take the recipient to the org training surface
+    # (catalog + roster).
+    "NAVIGATE_TRAINING",
 ]
 
 NotificationSeverity = Literal["info", "action_required", "destructive"]
@@ -79,9 +83,23 @@ _SEVERITY_BY_EVENT: dict[str, NotificationSeverity] = {
     # required, so it falls through to the default "info" tint.
     # NB: MEMBERSHIP_REQUEST_REJECTED is deliberately absent — matrix §6
     # specifies silent rejection, and emit() is never called for that code.
+    # Training (ISSUE-020). Staff gets action_required when an org requests a
+    # training; the requester gets info confirmation. Completion is info.
+    "TRAINING_REQUESTED": "action_required",
+    # TRAINING_REQUEST_SUBMITTED (requester confirmation) and
+    # TRAINING_COMPLETED default to "info".
     # Matrix §10 partner handoff.
     "PARTNER_HANDOFF_PENDING": "action_required",
     # PARTNER_HANDOFF_ACCEPTED defaults to 'info' — no action needed.
+    # Onboarding questionnaire follow-up (ISSUE-012): staff verifies the
+    # partner flag / organises training. Action_required so it stands out
+    # in the staff inbox.
+    "ONBOARDING_FOLLOWUP": "action_required",
+    # A recurring charge failed or the mandate died (ISSUE-008). The plan
+    # stays fully active (no block, founder decision 2026-06-18); this only
+    # surfaces the failure so the owner/admins fix the payment method.
+    "PAYMENT_FAILED": "action_required",
+    # PAYMENT_RECOVERED defaults to 'info' — the charge went through, no action.
 }
 
 
@@ -326,6 +344,22 @@ async def audience_organisation(org_id: str) -> list[str]:
     if not isinstance(rows, list):
         return []
     return [r["user_id"] for r in rows if r.get("user_id")]
+
+
+async def audience_billing_account_admins(account: dict) -> list[str]:
+    """Owner + admins who should hear about this account's billing (ISSUE-008).
+
+    A billing account is either org-scoped (`org_id`) or workspace-scoped
+    (`workspace_id`). Org-scoped notifies the org's owners/admins; workspace-
+    scoped notifies the workspace's admins/owners (which already folds in the
+    derived org admins via inheritance). Returns a de-duplicated list of
+    app_user ids."""
+    if account.get("org_id"):
+        return await audience_organisation_admins(account["org_id"])
+    workspace_id = account.get("workspace_id")
+    if workspace_id:
+        return await audience_workspace_admins(workspace_id)
+    return []
 
 
 async def emit_to_audience(

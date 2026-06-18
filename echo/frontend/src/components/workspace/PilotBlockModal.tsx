@@ -30,7 +30,7 @@ export const PilotBlockModal = () => {
 			withCloseButton={false}
 			centered
 			size="md"
-			overlayProps={{ opacity: 0.5, blur: 2 }}
+			overlayProps={{ blur: 2, opacity: 0.5 }}
 		>
 			<Stack gap={16}>
 				<Title order={4} fw={400}>
@@ -38,8 +38,8 @@ export const PilotBlockModal = () => {
 				</Title>
 				<Text size="sm" c="dimmed">
 					<Trans>
-						You've used all 10 hours of the pilot. Host-side tools
-						(chat, reports, analysis, exports) are paused.
+						You've used all 10 hours of the pilot. Host-side tools (chat,
+						reports, analysis, exports) are paused.
 					</Trans>
 				</Text>
 				<Text size="sm">

@@ -44,6 +44,7 @@ import {
 	MembersToolbar,
 	PendingInvitesSection,
 } from "@/components/members";
+import { OrgTrainingPanel } from "@/components/training";
 import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
 import { OrganisationUsageRollup } from "@/components/workspace/OrganisationUsageRollup";
 import { API_BASE_URL } from "@/config";
@@ -317,7 +318,13 @@ export const OrganisationRoute = () => {
 	//   /o/:id/settings/<section>  → maps to an existing tab
 	// The sidebar pushes those URLs so its view resolver lands on
 	// "org-settings" while the content panel keeps using existing tabs.
-	const allowedTabs = ["overview", "usage", "members", "billing"] as const;
+	const allowedTabs = [
+		"overview",
+		"usage",
+		"members",
+		"training",
+		"billing",
+	] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const segments = (splat ?? "").split("/").filter(Boolean);
 	const segment = segments[0] ?? "";
@@ -329,6 +336,7 @@ export const OrganisationRoute = () => {
 				const section = segments[1] ?? "general";
 				if (section === "usage") return "usage";
 				if (section === "members") return "members";
+				if (section === "training") return "training";
 				if (section === "billing") return "billing";
 				// general / anything else → overview (general settings).
 				return "overview";
@@ -761,6 +769,10 @@ export const OrganisationRoute = () => {
 							</Stack>
 						</Tabs.Panel>
 					)}
+
+					<Tabs.Panel value="training" pt="md">
+						{organisationId && <OrgTrainingPanel orgId={organisationId} />}
+					</Tabs.Panel>
 
 					<Tabs.Panel value="members" pt="md">
 						<Stack gap="md">

@@ -60,8 +60,6 @@ class TestTierMatrix:
         assert cap.price_eur_monthly == price          # per seat / month
         assert cap.included_seats is None              # unlimited, metered
         assert cap.included_hours is None              # unlimited hours
-        assert cap.seat_overage_eur is None            # no overage concept
-        assert cap.hour_overage_eur is None
         assert cap.billing_period_applicable is True
 
     def test_all_tiers_have_hard_block_false(self):

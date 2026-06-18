@@ -1,5 +1,5 @@
-import { Badge, Group, Stack, Text, Tooltip } from "@mantine/core";
 import type { MantineSize } from "@mantine/core";
+import { Badge, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { capacityShortFor, taglineFor } from "@/lib/tiers";
 
 interface TierBadgeProps {

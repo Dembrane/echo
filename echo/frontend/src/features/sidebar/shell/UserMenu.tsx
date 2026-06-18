@@ -86,64 +86,64 @@ export const UserMenu = () => {
 				</UnstyledButton>
 			</Menu.Target>
 
-				<Menu.Dropdown className="py-2 [&_.mantine-Menu-item]:my-0.5">
-					{needsOnboarding && (
-						<Menu.Item
-							leftSection={<Sparkle size={14} />}
-							onClick={() => navigate("/onboarding")}
-							color="primary"
-						>
-							<Trans>Set up workspace</Trans>
-						</Menu.Item>
-					)}
-					{hasPendingInvites && (
-						<Menu.Item
-							leftSection={<Envelope size={14} />}
-							onClick={() => navigate("/invites")}
-							color="primary"
-						>
-							<Trans>You have a pending invite</Trans>
-						</Menu.Item>
-					)}
-
-					{(needsOnboarding || hasPendingInvites) && <Menu.Divider my={6} />}
-
-					<Box px="sm" py={4}>
-						<Group justify="space-between" align="center">
-							<Text size="xs" c="dimmed">
-								<Trans>Language</Trans>
-							</Text>
-							<LanguagePicker />
-						</Group>
-					</Box>
-
-					<Menu.Divider my={6} />
-
-					{isStaff && (
-						<Menu.Item
-							leftSection={<ShieldStar size={14} />}
-							onClick={() => navigate("/admin")}
-						>
-							<Trans>Staff</Trans>
-						</Menu.Item>
-					)}
+			<Menu.Dropdown className="py-2 [&_.mantine-Menu-item]:my-0.5">
+				{needsOnboarding && (
 					<Menu.Item
-						leftSection={<Gear size={14} />}
-						onClick={() => navigate("/settings")}
+						leftSection={<Sparkle size={14} />}
+						onClick={() => navigate("/onboarding")}
+						color="primary"
 					>
-						<Trans>Settings</Trans>
+						<Trans>Set up workspace</Trans>
 					</Menu.Item>
-
-					<Menu.Divider my={6} />
-
+				)}
+				{hasPendingInvites && (
 					<Menu.Item
-						leftSection={<SignOut size={14} />}
-						onClick={handleLogout}
-						color="red"
+						leftSection={<Envelope size={14} />}
+						onClick={() => navigate("/invites")}
+						color="primary"
 					>
-						<Trans>Logout</Trans>
+						<Trans>You have a pending invite</Trans>
 					</Menu.Item>
-				</Menu.Dropdown>
+				)}
+
+				{(needsOnboarding || hasPendingInvites) && <Menu.Divider my={6} />}
+
+				<Box px="sm" py={4}>
+					<Group justify="space-between" align="center">
+						<Text size="xs" c="dimmed">
+							<Trans>Language</Trans>
+						</Text>
+						<LanguagePicker />
+					</Group>
+				</Box>
+
+				<Menu.Divider my={6} />
+
+				{isStaff && (
+					<Menu.Item
+						leftSection={<ShieldStar size={14} />}
+						onClick={() => navigate("/admin")}
+					>
+						<Trans>Staff</Trans>
+					</Menu.Item>
+				)}
+				<Menu.Item
+					leftSection={<Gear size={14} />}
+					onClick={() => navigate("/settings")}
+				>
+					<Trans>Settings</Trans>
+				</Menu.Item>
+
+				<Menu.Divider my={6} />
+
+				<Menu.Item
+					leftSection={<SignOut size={14} />}
+					onClick={handleLogout}
+					color="red"
+				>
+					<Trans>Logout</Trans>
+				</Menu.Item>
+			</Menu.Dropdown>
 		</Menu>
 	);
 };

@@ -112,15 +112,15 @@ export const UserHomeView = () => {
 							pushes
 						/>
 					))}
-						{workspacesWithoutOrg.map((workspace) => (
-							<NavItem
-								key={workspace.id}
-								to={`/w/${workspace.id}/home`}
-								label={workspace.name}
-								icon={Folders}
-								pushes
-							/>
-						))}
+					{workspacesWithoutOrg.map((workspace) => (
+						<NavItem
+							key={workspace.id}
+							to={`/w/${workspace.id}/home`}
+							label={workspace.name}
+							icon={Folders}
+							pushes
+						/>
+					))}
 					{isStaff && (
 						<NavItem
 							to="/admin"

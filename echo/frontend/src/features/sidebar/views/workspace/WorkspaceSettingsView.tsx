@@ -1,5 +1,10 @@
 import { Trans } from "@lingui/react/macro";
-import { CreditCard, Gear, Warning } from "@phosphor-icons/react";
+import {
+	CreditCard,
+	Gear,
+	GraduationCapIcon,
+	Warning,
+} from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isAdminRole } from "@/lib/roles";
@@ -23,18 +28,25 @@ export const WorkspaceSettingsView = () => {
 				label={<Trans>Settings</Trans>}
 				center
 			/>
-				{isAdmin && (
-					<NavItem
-						to={`${base}/general`}
-						label={<Trans>General</Trans>}
-						icon={Gear}
-					/>
-				)}
+			{isAdmin && (
 				<NavItem
-					to={`${base}/billing`}
-					label={<Trans>Usage and billing</Trans>}
-					icon={CreditCard}
+					to={`${base}/general`}
+					label={<Trans>General</Trans>}
+					icon={Gear}
 				/>
+			)}
+			<NavItem
+				to={`${base}/billing`}
+				label={<Trans>Usage and billing</Trans>}
+				icon={CreditCard}
+			/>
+			{isAdmin && (
+				<NavItem
+					to={`${base}/training`}
+					label={<Trans>Training</Trans>}
+					icon={GraduationCapIcon}
+				/>
+			)}
 			{isAdmin && (
 				<NavItem
 					to={`${base}/danger`}

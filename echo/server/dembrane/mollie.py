@@ -153,6 +153,16 @@ async def list_mandates(customer_id: str) -> list[dict]:
     return ((data or {}).get("_embedded") or {}).get("mandates") or []
 
 
+async def revoke_mandate(customer_id: str, mandate_id: str) -> None:
+    """Revoke a stored mandate (DELETE /customers/{id}/mandates/{mid}).
+
+    Used after a customer captures a new payment method, to drop the stale
+    one. Safe only because our subscription never pins a `mandateId`: it rides
+    the newest valid mandate, so revoking an old mandate never cancels the
+    subscription (ADR 0005 / ISSUE-002 Q2). Returns 204 No Content."""
+    await _request("DELETE", f"/customers/{customer_id}/mandates/{mandate_id}")
+
+
 # ── Subscriptions ────────────────────────────────────────────────────
 
 
@@ -202,3 +212,99 @@ async def get_subscription(*, customer_id: str, subscription_id: str) -> dict:
 
 async def cancel_subscription(*, customer_id: str, subscription_id: str) -> dict:
     return await _request("DELETE", f"/customers/{customer_id}/subscriptions/{subscription_id}")
+
+
+# ── Payment links (offline / managed invoicing) ──────────────────────
+
+
+async def create_payment_link(
+    *,
+    amount_eur: float,
+    description: str,
+    webhook_url: Optional[str] = None,
+    redirect_url: Optional[str] = None,
+    metadata: Optional[dict] = None,
+) -> dict:
+    """Create a Mollie payment link for an offline / managed invoice (ISSUE-006,
+    C2). The buyer opens `_links.paymentLink.href` and pays however they like
+    (bank transfer is supported on the hosted page). Mollie still fires our
+    webhook when the link is paid, so the existing reconcile path activates the
+    account. No mandate or subscription is involved."""
+    body: dict[str, Any] = {
+        "amount": _amount(amount_eur),
+        "description": description,
+    }
+    if webhook_url:
+        body["webhookUrl"] = webhook_url
+    if redirect_url:
+        body["redirectUrl"] = redirect_url
+    if metadata:
+        body["metadata"] = metadata
+    return await _request("POST", "/payment-links", json=body)
+
+
+def payment_link_url(link: dict) -> Optional[str]:
+    return (((link or {}).get("_links") or {}).get("paymentLink") or {}).get("href")
+
+
+# ── Sales Invoices (beta REST — the MCP does not expose this) ─────────
+
+
+async def create_sales_invoice(
+    *,
+    status: str,
+    currency: str = "EUR",
+    recipient: Optional[dict] = None,
+    lines: Optional[list[dict]] = None,
+    payment_term: Optional[str] = None,
+    payment_details: Optional[dict] = None,
+    email_details: Optional[dict] = None,
+    vat_mode: Optional[str] = None,
+    vat_scheme: Optional[str] = None,
+    is_einvoice: bool = False,
+    memo: Optional[str] = None,
+    metadata: Optional[dict] = None,
+) -> dict:
+    """Create a Mollie Sales Invoice (POST /v2/sales-invoices). The Sales
+    Invoices API is in beta and the Mollie MCP does not surface it, so this is a
+    direct REST call (ISSUE-004).
+
+    - status='issued' -> Mollie auto-assigns the sequential invoice number; we
+      don't own the numbering scheme.
+    - status='paid' -> set manually with `payment_details` (fits managed mode:
+      the buyer paid out-of-band, we just record it). Mollie still numbers it.
+    - `is_einvoice=True` toggles the e-invoice flag (ISSUE-005 Q5).
+
+    The resulting PDF lives at `_links.pdfLink.href` (see `get_sales_invoice`)."""
+    body: dict[str, Any] = {"status": status, "currency": currency}
+    if recipient:
+        body["recipient"] = recipient
+    if lines is not None:
+        body["lines"] = lines
+    if payment_term:
+        body["paymentTerm"] = payment_term
+    if payment_details:
+        body["paymentDetails"] = payment_details
+    if email_details:
+        body["emailDetails"] = email_details
+    if vat_mode:
+        body["vatMode"] = vat_mode
+    if vat_scheme:
+        body["vatScheme"] = vat_scheme
+    if is_einvoice:
+        body["isEInvoice"] = True
+    if memo:
+        body["memo"] = memo
+    if metadata:
+        body["metadata"] = metadata
+    return await _request("POST", "/sales-invoices", json=body)
+
+
+async def get_sales_invoice(invoice_id: str) -> dict:
+    """Fetch a sales invoice. The downloadable PDF is at
+    `_links.pdfLink.href` (locale-aware, set by Mollie)."""
+    return await _request("GET", f"/sales-invoices/{invoice_id}")
+
+
+def sales_invoice_pdf_url(invoice: dict) -> Optional[str]:
+    return (((invoice or {}).get("_links") or {}).get("pdfLink") or {}).get("href")

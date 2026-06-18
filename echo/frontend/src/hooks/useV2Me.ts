@@ -22,6 +22,20 @@ export interface V2MeData {
 	// the onboarding split: new users (false) see signup-time organisation name;
 	// legacy users (true) see the migration screen copy.
 	has_legacy_projects: boolean;
+	// Post-register questionnaire answers (ISSUE-012). Null until submitted.
+	// Drives whether the (required but non-blocking) questions step is shown.
+	onboarding_answer_json: {
+		version: string;
+		data: Array<Record<string, unknown>>;
+	} | null;
+	// Training (ISSUE-020): per-user license status + the high-risk flag that,
+	// with no active license, drives the non-blocking Inbox nudge (ISSUE-014).
+	training_status?: {
+		trained: boolean;
+		trained_until: string | null;
+		expiring_soon: boolean;
+	};
+	high_risk_context?: boolean;
 }
 
 async function fetchV2Me(): Promise<V2MeData | null> {
@@ -34,9 +48,9 @@ async function fetchV2Me(): Promise<V2MeData | null> {
 
 export const useV2Me = ({ enabled = true }: { enabled?: boolean } = {}) =>
 	useQuery({
-		queryKey: ["v2", "me"],
-		queryFn: fetchV2Me,
 		enabled,
-		staleTime: 60_000,
+		queryFn: fetchV2Me,
+		queryKey: ["v2", "me"],
 		retry: false,
+		staleTime: 60_000,
 	});

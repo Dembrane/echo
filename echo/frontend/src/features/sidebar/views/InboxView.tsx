@@ -28,6 +28,10 @@ import {
 	useUnreadNotificationCount,
 } from "@/hooks/useNotifications";
 import { avatarUrl } from "@/lib/avatar";
+import {
+	type PendingAction,
+	useTrainingPendingActions,
+} from "../hooks/usePendingActions";
 import { useSidebarView } from "../hooks/useSidebarView";
 import { ViewHeader } from "../primitives/ViewHeader";
 
@@ -42,6 +46,8 @@ export const InboxView = () => {
 	const { data: notifications = [], isLoading: loadingNotifs } =
 		useNotifications();
 	const { data: unreadNotifs = 0 } = useUnreadNotificationCount();
+	// Non-blocking pending actions (high-risk training nudge + future sources).
+	const pendingActions = useTrainingPendingActions();
 	const markNotifRead = useMarkNotificationRead();
 	const markAllNotifsRead = useMarkAllNotificationsRead();
 
@@ -104,7 +110,7 @@ export const InboxView = () => {
 				<div className="shrink-0 p-1.5">
 					<ViewHeader to={backTo ?? "/o"} title={<Trans>Inbox</Trans>} />
 				</div>
-	
+
 				<div className="flex shrink-0 items-center justify-between gap-1 px-3 pb-2">
 					<div className="flex gap-1">
 						<TabButton
@@ -134,12 +140,14 @@ export const InboxView = () => {
 						<Trans>All read</Trans>
 					</button>
 				</div>
-	
+
 				<div className="flex-1 overflow-y-auto px-1.5 pb-2">
 					{activeTab === "for-you" ? (
 						<ForYouPanel
 							loading={loadingNotifs}
 							rows={notifications}
+							pendingActions={pendingActions}
+							onPendingActionClick={(action) => navigate(action.href)}
 							onRowClick={handleNotificationClick}
 							onMarkRead={(row) => {
 								if (!row.read) markNotifRead.mutate(row.id);
@@ -204,6 +212,8 @@ const TabButton = ({ active, onClick, badge, children }: TabButtonProps) => (
 interface ForYouPanelProps {
 	loading: boolean;
 	rows: NotificationRow[];
+	pendingActions: PendingAction[];
+	onPendingActionClick: (action: PendingAction) => void;
 	onRowClick: (row: NotificationRow) => void;
 	onMarkRead: (row: NotificationRow) => void;
 }
@@ -211,13 +221,15 @@ interface ForYouPanelProps {
 const ForYouPanel = ({
 	loading,
 	rows,
+	pendingActions,
+	onPendingActionClick,
 	onRowClick,
 	onMarkRead,
 }: ForYouPanelProps) => {
 	if (loading) {
 		return <SkeletonList />;
 	}
-	if (rows.length === 0) {
+	if (rows.length === 0 && pendingActions.length === 0) {
 		return (
 			<EmptyState
 				icon={<Bell size={22} weight="duotone" />}
@@ -227,6 +239,14 @@ const ForYouPanel = ({
 	}
 	return (
 		<ul className="flex flex-col gap-1">
+			{pendingActions.map((action) => (
+				<li key={action.code}>
+					<PendingActionRow
+						action={action}
+						onClick={() => onPendingActionClick(action)}
+					/>
+				</li>
+			))}
 			{rows.map((row) => (
 				<li key={row.id}>
 					<NotificationRowItem
@@ -239,6 +259,46 @@ const ForYouPanel = ({
 		</ul>
 	);
 };
+
+/**
+ * A non-blocking pending action (e.g. the high-risk training nudge). Warns,
+ * never blocks: it's a tappable row that points to the action. The warm
+ * "pending" accent (Peach tint) matches the Inbox nav badge tone; text stays
+ * graphite.
+ */
+const PendingActionRow = ({
+	action,
+	onClick,
+}: {
+	action: PendingAction;
+	onClick: () => void;
+}) => (
+	<button
+		type="button"
+		onClick={onClick}
+		className="w-full rounded-md border px-2 py-2 text-left transition-colors hover:bg-black/[0.025]"
+		style={{
+			backgroundColor: "rgba(255, 209, 102, 0.18)",
+			borderColor: "rgba(255, 209, 102, 0.5)",
+			color: "#2d2d2c",
+		}}
+		data-testid="inbox-pending-action"
+	>
+		<div className="text-xs font-medium leading-snug">{action.title}</div>
+		<div className="mt-0.5 text-xs leading-snug">{action.message}</div>
+		<div className="mt-1">
+			<span
+				className="inline-block rounded px-1.5 py-0.5 text-xs leading-none"
+				style={{
+					backgroundColor: "rgba(255, 209, 102, 0.45)",
+					color: "#2d2d2c",
+				}}
+			>
+				<Trans>Pending action</Trans>
+			</span>
+		</div>
+	</button>
+);
 
 interface AnnouncementsPanelProps {
 	loading: boolean;

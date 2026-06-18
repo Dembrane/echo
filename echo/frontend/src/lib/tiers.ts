@@ -38,6 +38,23 @@ export function isComingSoon(tier: string | null | undefined): boolean {
 	return !!tier && (COMING_SOON_TIERS as string[]).includes(tier);
 }
 
+// Tiers a customer can actually buy right now: visible minus coming-soon.
+// Single source for "how many plans are sellable" -- drives the Popular badge
+// (ISSUE-011: a "Popular" tag on the sole buyable option reads oddly, so it is
+// hidden while exactly one tier is purchasable and auto-restores at >=2).
+export const PURCHASABLE_TIERS: Tier[] = VISIBLE_TIERS.filter(
+	(tier) => !isComingSoon(tier),
+);
+
+// True only when there are at least two tiers a customer can actually buy.
+// Drives "Change plan": with a single purchasable tier (today, only
+// Changemaker) there is nothing to change to, so the button is hidden; it
+// auto-restores the moment a second tier goes live (mirrors backend
+// PURCHASABLE_TIERS in server/dembrane/tier_capacity.py).
+export function hasMultiplePurchasableTiers(): boolean {
+	return PURCHASABLE_TIERS.length >= 2;
+}
+
 // Recently launched: render a "New" badge. None currently.
 export const NEW_TIERS: Tier[] = [];
 
@@ -157,9 +174,7 @@ export interface TierCapacity {
 	billing_period_applicable: boolean;
 	duration: string;
 	included_seats: number | null;
-	seat_overage_eur: number | null;
 	included_hours: number | null;
-	hour_overage_eur: number | null;
 	hard_block_on_hours: boolean;
 	training_included: string;
 }
@@ -225,17 +240,6 @@ export function formatTierSeats(cap: TierCapacity): string {
 export function formatTierHours(cap: TierCapacity): string {
 	if (cap.included_hours == null) return "∞";
 	return String(cap.included_hours);
-}
-
-export function formatTierSeatOverage(cap: TierCapacity): string {
-	if (cap.seat_overage_eur == null) return "—";
-	return t`+€${cap.seat_overage_eur}/seat`;
-}
-
-export function formatTierHourOverage(cap: TierCapacity): string {
-	if (cap.hard_block_on_hours) return "€0";
-	if (cap.hour_overage_eur == null) return "—";
-	return t`€${cap.hour_overage_eur}/h`;
 }
 
 export async function fetchTierCapacities(

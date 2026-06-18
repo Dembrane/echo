@@ -12,8 +12,8 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { IconDots, IconSearch, IconTrash } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
+import { IconDots, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
@@ -43,8 +43,8 @@ async function fetchOrgProjects(orgId: string): Promise<OrgProject[]> {
 async function deleteProject(projectId: string) {
 	// v1 endpoint; soft-deletes via deleted_at.
 	const res = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
-		method: "DELETE",
 		credentials: "include",
+		method: "DELETE",
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
@@ -60,8 +60,8 @@ function formatDate(iso: string | null): string {
 	const d = new Date(iso);
 	if (Number.isNaN(d.getTime())) return "";
 	return d.toLocaleDateString(undefined, {
-		month: "short",
 		day: "numeric",
+		month: "short",
 		year: "numeric",
 	});
 }
@@ -83,8 +83,8 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 	const [workspaceFilter, setWorkspaceFilter] = useState<string | null>(null);
 
 	const { data: projects = [], isLoading } = useQuery({
-		queryKey: ["v2", "org", orgId, "projects"],
 		queryFn: () => fetchOrgProjects(orgId),
+		queryKey: ["v2", "org", orgId, "projects"],
 		staleTime: 30_000,
 	});
 
@@ -96,8 +96,8 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 			}
 		}
 		return Array.from(seen.entries()).map(([value, label]) => ({
-			value,
 			label,
+			value,
 		}));
 	}, [projects]);
 
@@ -108,8 +108,7 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 		// conversations project."
 		return projects
 			.filter((p) => {
-				if (workspaceFilter && p.workspace_id !== workspaceFilter)
-					return false;
+				if (workspaceFilter && p.workspace_id !== workspaceFilter) return false;
 				if (!q) return true;
 				return (
 					p.name.toLowerCase().includes(q) ||
@@ -122,6 +121,7 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 
 	const deleteMutation = useMutation({
 		mutationFn: deleteProject,
+		onError: (e: Error) => toast.error(e.message),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "org", orgId, "projects"],
@@ -131,18 +131,16 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 			});
 			toast.success(t`Project deleted`);
 		},
-		onError: (e: Error) => toast.error(e.message),
 	});
 
 	const handleDelete = (p: OrgProject) => {
 		modals.openConfirmModal({
-			title: t`Delete ${p.name}?`,
 			children: (
 				<Stack gap={8}>
 					<Text size="sm">
 						<Trans>
-							Delete this project in {p.workspace_name}? All
-							conversations and data are permanently removed.
+							Delete this project in {p.workspace_name}? All conversations and
+							data are permanently removed.
 						</Trans>
 					</Text>
 					{p.conversation_count > 0 && (
@@ -156,9 +154,10 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 					)}
 				</Stack>
 			),
-			labels: { confirm: t`Delete`, cancel: t`Cancel` },
 			confirmProps: { color: "red" },
+			labels: { cancel: t`Cancel`, confirm: t`Delete` },
 			onConfirm: () => deleteMutation.mutate(p.id),
+			title: t`Delete ${p.name}?`,
 		});
 	};
 
@@ -249,7 +248,9 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 										</Text>
 									</Table.Td>
 									<Table.Td>
-										<Text size="xs">{formatDurationFromHours(p.audio_hours)}</Text>
+										<Text size="xs">
+											{formatDurationFromHours(p.audio_hours)}
+										</Text>
 									</Table.Td>
 									<Table.Td>
 										<Text size="xs">{p.conversation_count}</Text>

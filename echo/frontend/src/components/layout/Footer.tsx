@@ -1,12 +1,18 @@
 import { Trans } from "@lingui/react/macro";
 import { Anchor, Group, Stack, Text } from "@mantine/core";
-import { PRIVACY_POLICY_URL } from "@/config";
+import { LEGAL_DPA_URL, LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "@/config";
 
 export const Footer = () => (
 	<Stack gap="xs" justify="center" align="center">
-		<Group>
-			<Anchor size="sm" target="_blank" href={PRIVACY_POLICY_URL}>
-				<Trans>Privacy Statements</Trans>
+		<Group gap="lg">
+			<Anchor size="sm" target="_blank" href={LEGAL_TERMS_URL}>
+				<Trans>Terms</Trans>
+			</Anchor>
+			<Anchor size="sm" target="_blank" href={LEGAL_PRIVACY_URL}>
+				<Trans>Privacy</Trans>
+			</Anchor>
+			<Anchor size="sm" target="_blank" href={LEGAL_DPA_URL}>
+				<Trans>DPA</Trans>
 			</Anchor>
 		</Group>
 		<Text size="sm">
