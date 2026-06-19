@@ -128,6 +128,8 @@ type ConfirmLine = {
 	proratedNow: number;
 	recurringDelta: number;
 	billingPeriod: string;
+	/** Seats covered by capacity already paid for this period (free now). */
+	coveredByExisting: number;
 };
 
 type SeatEstimate = {
@@ -137,6 +139,8 @@ type SeatEstimate = {
 	added_seats: number;
 	prorated_now_eur: number;
 	recurring_delta_eur: number;
+	/** Invited seats covered by capacity already paid for this period (free now). */
+	covered_by_existing_seats: number;
 	currency: string;
 	/** Cadence of the account's plan ("annual" | "monthly"); cycles can differ across contexts. */
 	billing_period: string;
@@ -510,6 +514,7 @@ export function InviteModal({
 							addedSeats: est.added_seats,
 							billingPeriod: est.billing_period,
 							billsSeparately: c.billsSeparately,
+							coveredByExisting: est.covered_by_existing_seats ?? 0,
 							label: c.label,
 							proratedNow: est.prorated_now_eur,
 							recurringDelta: est.recurring_delta_eur,
@@ -699,6 +704,15 @@ export function InviteModal({
 									</Group>
 								);
 							})}
+							{confirm.some((l) => l.coveredByExisting > 0) && (
+								<Text size="xs">
+									<Trans>
+										You're reusing seats you already paid for this period
+										(someone left), so there's no charge now for those. The
+										renewal reflects them.
+									</Trans>
+								</Text>
+							)}
 							{confirm.length > 1 ? (
 								<>
 									<Divider my={2} />

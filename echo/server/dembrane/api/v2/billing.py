@@ -177,15 +177,27 @@ async def start_checkout(
 
 
 @router.post("/billing-accounts/{account_id}/sync")
-async def sync_account(account_id: str, auth: DependencyDirectusSession) -> dict:
+async def sync_account(
+    account_id: str,
+    auth: DependencyDirectusSession,
+    flow: Optional[str] = Query(default=None, description="Originating flow: checkout | method | resume."),
+) -> dict:
     """Reconcile an account from Mollie (called on return from checkout, or as a
-    catch-up). Activates if a first payment cleared without a webhook."""
+    catch-up). Activates if a first payment cleared without a webhook.
+
+    When `flow=method`, also returns `method_update`: the real outcome of the
+    latest payment-method change ('paid' / 'failed' / 'expired' / 'canceled' /
+    'open' / 'pending' / null). A method swap doesn't move the account status,
+    so the return UI needs this to avoid reporting a failed change as success."""
     account = await async_directus.get_item("billing_account", account_id)
     if not account or account.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Billing account not found")
     await _require_billing_access(account, auth)
     status = await billing_service.sync_account_from_mollie(account_id)
-    return {"status": status}
+    result: dict[str, str | None] = {"status": status}
+    if flow == "method":
+        result["method_update"] = await billing_service.latest_method_update_status(account_id)
+    return result
 
 
 @router.get("/billing-accounts/{account_id}/invoices")
@@ -302,6 +314,23 @@ async def cancel_subscription(
     except billing_service.BillingError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"status": status}
+
+
+@router.post("/billing-accounts/{account_id}/resume")
+async def resume_subscription(account_id: str, auth: DependencyDirectusSession) -> dict:
+    """Resume a canceled plan. When the customer is still inside the period they
+    already paid for (and a live mandate remains), this re-instates the
+    subscription with no new charge and returns {"resumed": true}. Otherwise it
+    returns {"resumed": false} and the client falls back to a fresh checkout
+    (which legitimately charges for a new period)."""
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account or account.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Billing account not found")
+    await _require_billing_access(account, auth)
+    try:
+        return await billing_service.resume_subscription(account_id)
+    except billing_service.BillingError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 class UpdatePaymentMethodBody(BaseModel):
