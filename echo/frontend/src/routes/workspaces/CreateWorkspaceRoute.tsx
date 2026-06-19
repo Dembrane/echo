@@ -30,6 +30,7 @@ import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 interface CreatedWorkspace {
 	id: string;
@@ -103,6 +104,7 @@ type BillFor = "internal" | "client";
 export const CreateWorkspaceRoute = () => {
 	const navigate = useI18nNavigate();
 	const queryClient = useQueryClient();
+	const { setWorkspace } = useWorkspace();
 	const [searchParams] = useSearchParams();
 	const organisationIdFromQuery = searchParams.get("organisationId") ?? null;
 	const { data: meV2, isLoading: meLoading } = useV2Me();
@@ -204,14 +206,23 @@ export const CreateWorkspaceRoute = () => {
 		onError: (error: Error) => {
 			toast.error(error.message);
 		},
-		onSuccess: (ws) => {
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+		onSuccess: async (ws) => {
 			posthog.capture("workspace_created", {
 				bill_separately: isPartner && billFor === "client",
 				member_adds: access === "invite" ? memberEmails.length : 0,
 				visibility: access === "everyone" ? "open_to_organisation" : "private",
 			});
 			toast.success(t`Workspace created.`);
+			// useWorkspace's context list is keyed ["v2","workspaces-context",...],
+			// not ["v2","workspaces"]; refresh both and pre-select so /w/<id>/home
+			// resolves the new workspace instead of falling back to the default.
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] }),
+				queryClient.invalidateQueries({
+					queryKey: ["v2", "workspaces-context"],
+				}),
+			]);
+			setWorkspace(ws.id);
 			// A separately-billed (client) workspace lands on its billing tab to
 			// subscribe; an org-billed one goes straight to the workspace.
 			if (isPartner && billFor === "client") {
@@ -596,8 +607,10 @@ export const CreateWorkspaceRoute = () => {
 						<Button
 							size="md"
 							px="xl"
-							loading={mutation.isPending}
-							disabled={!canSubmit}
+							// isSuccess keeps the button locked through the async onSuccess
+							// window (refetch + navigate) so it can't double-submit.
+							loading={mutation.isPending || mutation.isSuccess}
+							disabled={!canSubmit || mutation.isSuccess}
 							onClick={() => mutation.mutate()}
 						>
 							<Trans>Create workspace</Trans>
