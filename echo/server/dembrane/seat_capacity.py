@@ -47,15 +47,16 @@ Audience = Literal["admin", "invitee"]
 _SEAT_ROLES = {"owner", "admin", "member", "billing", "external"}
 _EXTERNAL_ROLE = "external"
 
-# Tiers that hard-block on seat cap (no overage mechanism).
-# Free is single-user: the one tier that hard-caps seats. Paid tiers are
-# per-seat metered and never block (ADR 0005).
-_HARD_BLOCK_SEAT_TIERS = frozenset({"free"})
+# Tiers that hard-block on seat cap (no overage mechanism). Currently none:
+# Free is uncapped on seats (the 1-hour recording cap bounds the plan instead),
+# and paid tiers are per-seat metered and never block (ADR 0005). The mechanism
+# is kept for a future capped tier; widen this set to re-enable a seat wall.
+_HARD_BLOCK_SEAT_TIERS: frozenset[str] = frozenset()
 
 
 def tier_hard_blocks_seats(tier: str) -> bool:
-    """Only Free hard-caps seats (single user). Paid tiers bill per seat and
-    never block. Unknown tiers don't block."""
+    """Whether a tier hard-caps seats. No tier does today (Free is uncapped on
+    seats; paid tiers bill per seat). Unknown tiers don't block."""
     return tier in _HARD_BLOCK_SEAT_TIERS
 
 

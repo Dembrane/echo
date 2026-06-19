@@ -39,7 +39,7 @@ class TierCapacity:
     tagline: str
     price_eur_monthly: Optional[int]      # Per-seat annual-billing rate, EUR/seat/mo. None = Free.
     price_note: str                        # "free" / "per seat / month"
-    included_seats: Optional[int]          # Hard seat cap. Free = 1; paid = None (unlimited, metered).
+    included_seats: Optional[int]          # Hard seat cap. None = no cap (Free + paid; paid is metered).
     included_hours: Optional[int]          # Free = 1; paid = None (unlimited, fair use).
     hard_block_on_hours: bool              # Deprecated: always False. Kept for call-site compat.
     training_included: str                 # human-readable
@@ -66,7 +66,10 @@ TIER_CAPACITIES: dict[str, TierCapacity] = {
         tagline="get started.",
         price_eur_monthly=None,
         price_note="free",
-        included_seats=1,
+        # Seats are not capped on Free: the 1-hour recording cap (and over-cap
+        # chat/upload blocking) already bound the plan, so a team can collaborate
+        # on Free without a seat wall. None = no hard seat cap (same as paid).
+        included_seats=None,
         included_hours=1,
         hard_block_on_hours=False,
         training_included="Sold separately",

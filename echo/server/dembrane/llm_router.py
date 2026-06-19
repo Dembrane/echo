@@ -66,8 +66,15 @@ def _build_litellm_params(config: LLMProviderConfig) -> Dict[str, Any]:
         params["api_base"] = resolved.api_base
     if resolved.api_version:
         params["api_version"] = resolved.api_version
-    if resolved.vertex_credentials:
-        params["vertex_credentials"] = json.dumps(resolved.vertex_credentials)
+    # Vertex AI models fall back to the global GCP service account when no
+    # per-group credential is set, mirroring get_completion_kwargs in llms.py.
+    # Without this, router deployments get no credentials and litellm tries
+    # Application Default Credentials, which fail outside GCP.
+    vertex_credentials = resolved.vertex_credentials
+    if not vertex_credentials and resolved.model.startswith("vertex_ai/"):
+        vertex_credentials = get_settings().transcription.gcp_sa_json
+    if vertex_credentials:
+        params["vertex_credentials"] = json.dumps(vertex_credentials)
     if resolved.vertex_project:
         params["vertex_project"] = resolved.vertex_project
     if resolved.vertex_location:

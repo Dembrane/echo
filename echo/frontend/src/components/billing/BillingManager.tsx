@@ -1379,8 +1379,20 @@ export function BillingManager({
 }
 
 /** Org billing tab body: resolves the org's billing account, then manages it. */
+interface SeparateWorkspaceAccount {
+	workspace_id: string;
+	name: string;
+	account_id: string;
+	tier: string;
+	status: string;
+}
+
 export function OrgBillingTab({ orgId }: { orgId: string }) {
-	const { data, isLoading } = useQuery<{ account_id: string | null } | null>({
+	const navigate = useI18nNavigate();
+	const { data, isLoading } = useQuery<{
+		account_id: string | null;
+		separate_workspaces?: SeparateWorkspaceAccount[];
+	} | null>({
 		queryFn: async () => {
 			const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/billing`, {
 				credentials: "include",
@@ -1399,11 +1411,54 @@ export function OrgBillingTab({ orgId }: { orgId: string }) {
 		);
 	}
 
+	const separate = data?.separate_workspaces ?? [];
+
 	return (
-		<BillingManager
-			accountId={data?.account_id ?? null}
-			invalidateKeys={[["v2", "orgs", orgId, "billing"]]}
-			source="org_billing"
-		/>
+		<Stack gap="xl">
+			<BillingManager
+				accountId={data?.account_id ?? null}
+				invalidateKeys={[["v2", "orgs", orgId, "billing"]]}
+				source="org_billing"
+			/>
+
+			{separate.length > 0 && (
+				<Stack gap="sm">
+					<div>
+						<Text size="sm" fw={500}>
+							<Trans>Workspaces billed separately</Trans>
+						</Text>
+						<Text size="xs" c="dimmed">
+							<Trans>
+								These workspaces have their own plan, managed from each
+								workspace. They aren't part of this organisation's plan.
+							</Trans>
+						</Text>
+					</div>
+					{separate.map((w) => (
+						<Paper key={w.workspace_id} withBorder p="md" radius="sm">
+							<Group justify="space-between" wrap="nowrap">
+								<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+									<Text size="sm" fw={500} truncate>
+										{w.name}
+									</Text>
+									<Badge size="xs" variant="light" color="gray" tt="capitalize">
+										{w.tier}
+									</Badge>
+								</Group>
+								<Button
+									size="xs"
+									variant="subtle"
+									onClick={() =>
+										navigate(`/w/${w.workspace_id}/settings/billing`)
+									}
+								>
+									<Trans>Manage</Trans>
+								</Button>
+							</Group>
+						</Paper>
+					))}
+				</Stack>
+			)}
+		</Stack>
 	);
 }

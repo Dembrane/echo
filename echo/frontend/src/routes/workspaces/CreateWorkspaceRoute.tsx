@@ -7,18 +7,22 @@ import {
 	Container,
 	Group,
 	Loader,
+	MultiSelect,
 	Paper,
 	Radio,
 	Select,
+	SimpleGrid,
 	Stack,
 	Stepper,
 	Text,
 	TextInput,
 	Title,
+	UnstyledButton,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Buildings, Lock, UsersThree } from "@phosphor-icons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
@@ -51,7 +55,37 @@ async function createWorkspace(payload: {
 	return res.json();
 }
 
-type Privacy = "open" | "private";
+// Add an existing org member to the freshly-created workspace. Reuses the
+// workspace invite endpoint, which adds existing users as members directly.
+async function addWorkspaceMember(workspaceId: string, email: string) {
+	const res = await fetch(
+		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`,
+		{
+			body: JSON.stringify({ email, role: "member" }),
+			credentials: "include",
+			headers: { "Content-Type": "application/json" },
+			method: "POST",
+		},
+	);
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(data.detail || "Failed to add member");
+	}
+	return res.json();
+}
+
+interface OrgMemberRow {
+	app_user_id: string;
+	email: string;
+	display_name: string;
+	role: string;
+	is_external?: boolean;
+}
+
+// "everyone" = open to org; "invite" = private + hand-pick members; "just_me" =
+// private with no one else. The last two both create a private workspace
+// (inherit_organisation_admins=false); they differ only in who gets added.
+type Access = "everyone" | "invite" | "just_me";
 type BillFor = "internal" | "client";
 
 /**
@@ -75,7 +109,8 @@ export const CreateWorkspaceRoute = () => {
 
 	const [step, setStep] = useState(0);
 	const [name, setName] = useState("");
-	const [privacy, setPrivacy] = useState<Privacy>("open");
+	const [access, setAccess] = useState<Access>("everyone");
+	const [memberEmails, setMemberEmails] = useState<string[]>([]);
 	const [billFor, setBillFor] = useState<BillFor>("internal");
 
 	useDocumentTitle(t`Create workspace | dembrane`);
@@ -101,21 +136,70 @@ export const CreateWorkspaceRoute = () => {
 		adminOrganisations.find((o) => o.id === targetOrganisationId) ?? null;
 	const isPartner = Boolean(targetOrganisation?.is_partner);
 
+	// Existing org members the creator can hand-pick for an invite-only
+	// workspace. The caller is an org admin/owner here, so emails are visible.
+	const { data: orgMembers } = useQuery({
+		enabled: Boolean(targetOrganisationId),
+		queryFn: async (): Promise<OrgMemberRow[]> => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/orgs/${targetOrganisationId}/members`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) return [];
+			const rows = await res.json();
+			return Array.isArray(rows) ? rows : [];
+		},
+		queryKey: ["v2", "orgs", targetOrganisationId, "members"],
+		staleTime: 60_000,
+	});
+
+	const memberOptions = useMemo(() => {
+		const selfEmail = (meV2?.email ?? "").toLowerCase();
+		return (orgMembers ?? [])
+			.filter(
+				(m) => !m.is_external && m.email && m.email.toLowerCase() !== selfEmail,
+			)
+			.map((m) => ({
+				label: m.display_name ? `${m.display_name} (${m.email})` : m.email,
+				value: m.email,
+			}));
+	}, [orgMembers, meV2]);
+
 	const backDestination = targetOrganisationId
 		? `/o/${targetOrganisationId}/overview`
 		: "/o";
 
 	const mutation = useMutation({
-		mutationFn: () => {
+		mutationFn: async () => {
 			if (!targetOrganisationId) {
 				throw new Error(t`Choose an organisation first`);
 			}
-			return createWorkspace({
+			const ws = await createWorkspace({
 				bill_separately: isPartner && billFor === "client",
-				inherit_organisation_admins: privacy === "open",
+				inherit_organisation_admins: access === "everyone",
 				name: name.trim(),
 				org_id: targetOrganisationId,
 			});
+			// Invite-only: add the hand-picked members now. The workspace already
+			// exists, so a per-member failure is surfaced but never unwinds it.
+			if (access === "invite" && memberEmails.length > 0) {
+				let failed = 0;
+				for (const email of memberEmails) {
+					try {
+						await addWorkspaceMember(ws.id, email);
+					} catch {
+						failed++;
+					}
+				}
+				if (failed > 0) {
+					toast.error(
+						failed === 1
+							? t`Couldn't add 1 member. Add them from workspace settings.`
+							: t`Couldn't add ${failed} members. Add them from workspace settings.`,
+					);
+				}
+			}
+			return ws;
 		},
 		onError: (error: Error) => {
 			toast.error(error.message);
@@ -124,7 +208,8 @@ export const CreateWorkspaceRoute = () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			posthog.capture("workspace_created", {
 				bill_separately: isPartner && billFor === "client",
-				visibility: privacy === "open" ? "open_to_organisation" : "private",
+				member_adds: access === "invite" ? memberEmails.length : 0,
+				visibility: access === "everyone" ? "open_to_organisation" : "private",
 			});
 			toast.success(t`Workspace created.`);
 			// A separately-billed (client) workspace lands on its billing tab to
@@ -185,6 +270,35 @@ export const CreateWorkspaceRoute = () => {
 			</Container>
 		);
 	}
+
+	const accessOptions: {
+		value: Access;
+		title: string;
+		description: string;
+		icon: typeof Buildings;
+	}[] = [
+		{
+			description: t`Everyone can find it. Admins join directly; members can ask.`,
+			icon: Buildings,
+			title: t`Everyone in your organisation`,
+			value: "everyone",
+		},
+		{
+			description: t`Only the people you add or invite can see it.`,
+			icon: UsersThree,
+			title: t`Invite only`,
+			value: "invite",
+		},
+		{
+			description: t`Only you can see this workspace.`,
+			icon: Lock,
+			title: t`Private, just me`,
+			value: "just_me",
+		},
+	];
+
+	const accessLabel =
+		accessOptions.find((o) => o.value === access)?.title ?? "";
 
 	const canAdvanceFromName = name.trim().length > 0;
 	const canSubmit = canAdvanceFromName && Boolean(targetOrganisationId);
@@ -266,7 +380,9 @@ export const CreateWorkspaceRoute = () => {
 							{isPartner ? (
 								<>
 									<Text size="sm" c="dimmed">
-										<Trans>Is this for internal use, or for another client?</Trans>
+										<Trans>
+											Is this for internal use, or for another client?
+										</Trans>
 									</Text>
 									<Radio.Group
 										value={billFor}
@@ -294,13 +410,13 @@ export const CreateWorkspaceRoute = () => {
 												label={
 													<Stack gap={2}>
 														<Text size="sm">
-															<Trans>For another client</Trans>
+															<Trans>For another client (Partner)</Trans>
 														</Text>
 														<Text size="xs" c="dimmed">
 															<Trans>
-																A separate subscription, per the partner agreement,
-																so it can be handed off to the client later with
-																no data movement. You'll subscribe it next.
+																A separate subscription, per the partner
+																agreement, so it can be handed off to the client
+																later with no data movement.
 															</Trans>
 														</Text>
 													</Stack>
@@ -326,50 +442,72 @@ export const CreateWorkspaceRoute = () => {
 					</Stepper.Step>
 
 					<Stepper.Step label={t`Access`}>
-						<Stack gap={14} mt="md">
+						<Stack gap={16} mt="md">
 							<Text size="sm" c="dimmed">
 								<Trans>Set who can see and join.</Trans>
 							</Text>
-							<Radio.Group
-								label={t`Who can see this workspace?`}
-								description={t`You can change this later in workspace settings.`}
-								value={privacy}
-								onChange={(v) => setPrivacy(v as Privacy)}
-							>
-								<Stack gap={10} mt={8}>
-									<Radio
-										value="open"
-										label={
-											<Stack gap={2}>
-												<Text size="sm">
-													<Trans>Open to the organisation</Trans>
-												</Text>
-												<Text size="xs" c="dimmed">
-													<Trans>
-														Everyone on your organisation can find it. Admins can
-														join directly; members can ask to join.
-													</Trans>
-												</Text>
-											</Stack>
-										}
-									/>
-									<Radio
-										value="private"
-										label={
-											<Stack gap={2}>
-												<Text size="sm">
-													<Trans>Private</Trans>
-												</Text>
-												<Text size="xs" c="dimmed">
-													<Trans>
-														Only people you invite can see this workspace.
-													</Trans>
-												</Text>
-											</Stack>
-										}
-									/>
-								</Stack>
-							</Radio.Group>
+							<SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
+								{accessOptions.map((opt) => {
+									const Icon = opt.icon;
+									const selected = access === opt.value;
+									return (
+										<UnstyledButton
+											key={opt.value}
+											onClick={() => setAccess(opt.value)}
+											aria-pressed={selected}
+										>
+											<Paper
+												withBorder
+												p="md"
+												radius="sm"
+												h="100%"
+												className="transition-colors hover:!border-primary-400"
+												style={{
+													background: selected
+														? "rgba(65, 105, 225, 0.06)"
+														: undefined,
+													borderColor: selected ? "#4169e1" : undefined,
+												}}
+											>
+												<Stack gap={6}>
+													<Group gap={8} wrap="nowrap">
+														<Icon size={18} />
+														<Text size="sm" fw={500}>
+															{opt.title}
+														</Text>
+													</Group>
+													<Text size="xs" c="dimmed">
+														{opt.description}
+													</Text>
+												</Stack>
+											</Paper>
+										</UnstyledButton>
+									);
+								})}
+							</SimpleGrid>
+
+							{access === "invite" && (
+								<MultiSelect
+									label={t`Add people from your organisation`}
+									description={t`They'll be added as members. You can add more later.`}
+									placeholder={
+										memberOptions.length > 0
+											? t`Search people`
+											: t`No one else in this organisation yet`
+									}
+									data={memberOptions}
+									value={memberEmails}
+									onChange={setMemberEmails}
+									searchable
+									clearable
+									disabled={memberOptions.length === 0}
+									nothingFoundMessage={t`No matches`}
+								/>
+							)}
+
+							<Text size="xs" c="dimmed">
+								<Trans>You can change this later in workspace settings.</Trans>
+							</Text>
 						</Stack>
 					</Stepper.Step>
 
@@ -412,14 +550,24 @@ export const CreateWorkspaceRoute = () => {
 										<Text size="xs" c="dimmed" w={90}>
 											<Trans>Access</Trans>
 										</Text>
-										<Text size="sm">
-											{privacy === "open" ? (
-												<Trans>Open to the organisation</Trans>
-											) : (
-												<Trans>Private</Trans>
-											)}
-										</Text>
+										<Text size="sm">{accessLabel}</Text>
 									</Group>
+									{access === "invite" && (
+										<Group gap={12} align="baseline">
+											<Text size="xs" c="dimmed" w={90}>
+												<Trans>People</Trans>
+											</Text>
+											<Text size="sm">
+												{memberEmails.length > 0 ? (
+													<Trans>
+														{memberEmails.length} added from your organisation
+													</Trans>
+												) : (
+													<Trans>No one added yet</Trans>
+												)}
+											</Text>
+										</Group>
+									)}
 								</Stack>
 							</Paper>
 						</Stack>

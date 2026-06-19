@@ -8,8 +8,10 @@ import { useGetConversationTranscriptStringMutation } from "./hooks";
 
 export const CopyConversationTranscriptActionIcon = (props: {
 	conversationId: string;
+	/** Icon size in px. Defaults to 20 (transcript header). */
+	size?: number;
 }) => {
-	const { conversationId } = props;
+	const { conversationId, size = 20 } = props;
 
 	const clipboard = useClipboard({ timeout: 2000 });
 
@@ -52,15 +54,20 @@ export const CopyConversationTranscriptActionIcon = (props: {
 			<ActionIcon
 				variant="transparent"
 				color={clipboard.copied ? "blue" : "gray"}
-				onClick={handleCopy}
+				onClick={(e) => {
+					// Stop the click bubbling to an enclosing card anchor (the
+					// conversations list rows are clickable links).
+					e.stopPropagation();
+					handleCopy();
+				}}
 				{...testId("transcript-copy-button")}
 			>
 				{isLoading ? (
-					<Loader size={20} />
+					<Loader size={size} />
 				) : clipboard.copied ? (
-					<IconCheck size={20} />
+					<IconCheck size={size} />
 				) : (
-					<IconCopy size={20} />
+					<IconCopy size={size} />
 				)}
 			</ActionIcon>
 		</Tooltip>

@@ -10,7 +10,8 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { getProductFeedbackUrl } from "@/config";
+import { UsersThree } from "@phosphor-icons/react";
+import { COMMUNITY_SLACK_URL, getProductFeedbackUrl } from "@/config";
 import { QRCode } from "./QRCode";
 
 interface FeedbackPortalModalProps {
@@ -75,9 +76,16 @@ export const FeedbackPortalModal = ({
 						className="h-auto w-full min-w-[80px] max-w-[128px]"
 					/>
 					<Stack gap={4}>
-						<Text fw={600}>
-							<Trans>Scan or click to open the feedback portal</Trans>
-						</Text>
+						<Anchor
+							href={feedbackUrl}
+							target="_blank"
+							rel="noopener noreferrer"
+							fw={600}
+							c="inherit"
+							underline="hover"
+						>
+							<Trans>Scan or click the QR code to open the feedback portal</Trans>
+						</Anchor>
 						<Group gap="xs">
 							<Text size="xs" c="dimmed">
 								<Trans>Or prefer to chat directly?</Trans>
@@ -95,9 +103,20 @@ export const FeedbackPortalModal = ({
 
 				<Divider />
 
-				<Group justify="flex-end" gap="sm" align="center">
+				<Group justify="space-between" gap="sm" align="center">
+					<Anchor
+						href={COMMUNITY_SLACK_URL}
+						target="_blank"
+						rel="noopener noreferrer"
+						size="sm"
+					>
+						<Group gap={6} wrap="nowrap">
+							<UsersThree size={16} />
+							<Trans>Join our Slack community</Trans>
+						</Group>
+					</Anchor>
 					<Button
-						variant="default"
+						variant="subtle"
 						size="md"
 						onClick={onClose}
 						styles={actionButtonStyles}

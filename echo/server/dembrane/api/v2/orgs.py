@@ -78,6 +78,12 @@ _org_invite_rate_limiter = create_user_rate_limiter(
     name="org_invite", capacity=20, window_seconds=3600
 )
 
+# Org creation is a heavier write (org + workspace + billing account + memberships).
+# Cap it well below the invite limiter so a loop can't spam orgs.
+_org_create_rate_limiter = create_user_rate_limiter(
+    name="org_create", capacity=10, window_seconds=3600
+)
+
 
 # ── Response shapes ─────────────────────────────────────────────────────
 
@@ -162,6 +168,17 @@ class InviteToOrganisationResponse(BaseModel):
 
 class ChangeMemberRoleRequest(BaseModel):
     role: str  # member/admin/owner
+
+
+class CreateOrgRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+
+
+class CreateOrgResponse(BaseModel):
+    org_id: str
+    # The org's default workspace, created alongside it. The create-org flow
+    # sends its invites here and the UI navigates into the org afterwards.
+    workspace_id: str
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────
@@ -426,6 +443,69 @@ async def list_my_orgs(
             )
         )
     return out
+
+
+@router.post("", response_model=CreateOrgResponse)
+async def create_org(
+    body: CreateOrgRequest,
+    auth: DependencyDirectusSession,
+) -> CreateOrgResponse:
+    """Create a new organisation for the current user (owner), with a default
+    workspace + free billing account. Mirrors the personal-org branch of
+    /v2/onboarding/complete, but for already-onboarded users spinning up
+    additional organisations from the create-org flow.
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+    app_user_id = app_user["id"]
+
+    await _org_create_rate_limiter.check(app_user_id)
+
+    # Strip control chars — org name lands in email subject lines (invites)
+    # via templating, same as update_org.
+    name = body.name.replace("\r", " ").replace("\n", " ").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Organisation name is required")
+
+    from dembrane.inheritance import on_workspace_created
+    from dembrane.billing_account import org_account_for_new_workspace
+
+    org_id = generate_uuid()
+    await async_directus.create_item(
+        "org",
+        {"id": org_id, "name": name, "created_by": app_user_id},
+    )
+    await async_directus.create_item(
+        "org_membership",
+        {
+            "id": generate_uuid(),
+            "org_id": org_id,
+            "user_id": app_user_id,
+            "role": "owner",
+        },
+    )
+
+    # Default workspace attaches to the org's (org-scoped) billing account,
+    # created free on first need — same path as onboarding.
+    ws_id = generate_uuid()
+    account_id = await org_account_for_new_workspace(
+        org_id=org_id, default_tier="free", created_by=app_user_id
+    )
+    await async_directus.create_item(
+        "workspace",
+        {
+            "id": ws_id,
+            "org_id": org_id,
+            "name": "Default",
+            "is_default": True,
+            "created_by": app_user_id,
+            "billing_account_id": account_id,
+        },
+    )
+    # Writes the creator's workspace_membership + inheritance wiring.
+    await on_workspace_created(workspace_id=ws_id, creator_app_user_id=app_user_id)
+
+    logger.info(f"Created org {org_id} '{name}' + default workspace {ws_id} for {app_user_id}")
+    return CreateOrgResponse(org_id=org_id, workspace_id=ws_id)
 
 
 @router.get("/{org_id}", response_model=OrgDetailResponse)
@@ -738,6 +818,44 @@ async def list_org_members(
     # user_id) with direct-over-inherited priority. Includes externals
     # since their workspace_membership rows match the same query.
     direct_roles, direct_membership_ids = await _direct_workspace_roles_by_user(org_id, user_ids)
+
+    # Non-managers must not learn who has access to workspaces they can't
+    # reach. They can read this list (to find their admins), but the
+    # per-workspace access matrix is admin-only: redact every member's
+    # roles down to the workspaces the caller is themselves a direct
+    # member of. The caller's own row is unaffected (all its workspaces
+    # are in the caller's set). Managers see the full matrix.
+    if not can_manage and organisation_ws_ids:
+        caller_ws_rows = (
+            await async_directus.get_items(
+                "workspace_membership",
+                {
+                    "query": {
+                        "filter": {
+                            "user_id": {"_eq": app_user["id"]},
+                            "workspace_id": {"_in": organisation_ws_ids},
+                            "deleted_at": {"_null": True},
+                        },
+                        "fields": ["workspace_id"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        caller_ws_ids = {
+            r["workspace_id"]
+            for r in (caller_ws_rows if isinstance(caller_ws_rows, list) else [])
+            if r.get("workspace_id")
+        }
+        direct_roles = {
+            uid: {wid: role for wid, role in roles.items() if wid in caller_ws_ids}
+            for uid, roles in direct_roles.items()
+        }
+        direct_membership_ids = {
+            uid: {wid: mid for wid, mid in ids.items() if wid in caller_ws_ids}
+            for uid, ids in direct_membership_ids.items()
+        }
 
     out: list[OrgMemberResponse] = []
     for m in memberships:
@@ -1411,6 +1529,9 @@ class OrgWorkspaceSummary(BaseModel):
     project_count: int = 0
     member_count: int = 0
     is_private: bool = False  # settings.inherit_organisation_admins == false
+    # True when this workspace bills on its own (workspace-scoped) account
+    # rather than the org's pooled plan — the overview card marks it softly.
+    bills_separately: bool = False
     # Unified seat cap gate. True when seats_used (members + guests) meets
     # or exceeds included_seats on a hard-blocking tier (free, pilot).
     seat_invite_blocked: bool = False
@@ -1551,6 +1672,9 @@ async def list_organisation_workspaces(
                         "name",
                         "is_default",
                         "settings",
+                        # Account scope → distinguishes a pooled (org) plan from a
+                        # workspace-scoped one billed on its own.
+                        "billing_account_id.org_id",
                         *nested_billing_fields(),
                     ],
                     "sort": ["-is_default", "name"],
@@ -1624,6 +1748,10 @@ async def list_organisation_workspaces(
         if is_org_member and is_private and not caller_is_manager:
             continue
 
+        # Workspace-scoped billing account → no org_id on the account.
+        ws_acct = ws.get("billing_account_id")
+        bills_separately = isinstance(ws_acct, dict) and not ws_acct.get("org_id")
+
         # Seat usage is shown for EVERY tier so the invite modal can read "N
         # seats" (the paid tiers are per-seat metered with no included bundle;
         # gating this on a finite cap left them stuck at 0). Counts effective
@@ -1659,6 +1787,7 @@ async def list_organisation_workspaces(
                 project_count=project_counts.get(ws["id"], 0),
                 member_count=member_counts.get(ws["id"], 0),
                 is_private=is_private,
+                bills_separately=bills_separately,
                 seat_invite_blocked=seat_blocked,
                 seats_used_including_pending=seats_used_total,
                 seat_cap=seat_cap_value,
@@ -2044,6 +2173,10 @@ class OrgUsageWorkspaceRow(BaseModel):
     downgraded_at: Optional[str] = None
     # Externals share the seat pool. Count exposed separately for breakdown.
     external_count: int = 0
+    # True when this workspace bills on its own (workspace-scoped) account
+    # rather than the org's pooled plan — e.g. a partner's client workspace.
+    # The org admin can't manage its plan from here; the UI marks it.
+    bills_separately: bool = False
 
 
 class OrgUsageResponse(BaseModel):
@@ -2123,6 +2256,9 @@ async def get_org_usage(
                         "id",
                         "name",
                         "settings",
+                        # Account scope: an org-scoped account has org_id set; a
+                        # workspace-scoped one (billed separately) does not.
+                        "billing_account_id.org_id",
                         *nested_billing_fields(),
                     ],
                     "limit": -1,
@@ -2234,6 +2370,9 @@ async def get_org_usage(
         wid = w.get("id") or ""
         name = w.get("name") or ""
         tier = w.get("tier") or ""
+        # Workspace-scoped billing account → no org_id on the account.
+        acct = w.get("billing_account_id")
+        bills_separately = isinstance(acct, dict) and not acct.get("org_id")
         settings = w.get("settings") or {}
         if not isinstance(settings, dict):
             settings = {}
@@ -2291,6 +2430,7 @@ async def get_org_usage(
                 "at_cap": ws_at_cap,
                 "approaching_cap": ws_approaching,
                 "downgraded_at": w.get("downgraded_at"),
+                "bills_separately": bills_separately,
             }
         )
 

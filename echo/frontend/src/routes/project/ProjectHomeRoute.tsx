@@ -4,7 +4,6 @@ import {
 	Badge,
 	Button,
 	Card,
-	Flex,
 	Group,
 	SimpleGrid,
 	Skeleton,
@@ -13,6 +12,7 @@ import {
 	Title,
 } from "@mantine/core";
 import {
+	BookOpenIcon,
 	ChatCircleDotsIcon,
 	FileTextIcon,
 	PaintBrushIcon,
@@ -24,7 +24,6 @@ import { useInfiniteConversationsByProjectId } from "@/components/conversation/h
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectById } from "@/components/project/hooks";
 import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
-import { ProjectQRCode } from "@/components/project/ProjectQRCode";
 import { useLatestProjectReport } from "@/components/report/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
@@ -109,175 +108,181 @@ export const ProjectHomeRoute = () => {
 					</Text>
 				</Stack>
 
-				<Flex
-					direction={{ base: "column", md: "row" }}
-					align={{ base: "stretch", md: "flex-start" }}
-					gap="xl"
-				>
-					<PortalSettingsOverview project={project} base={base} />
+				<PortalSettingsOverview project={project} base={base} />
 
-					<ProjectQRCode project={projectQuery.data} />
+				<Stack gap="sm">
+					<Text size="xs" c="dimmed" tt="uppercase">
+						<Trans>Jump to</Trans>
+					</Text>
+					<Group gap="sm" wrap="wrap">
+						<Button
+							size="sm"
+							leftSection={<ChatCircleDotsIcon size={16} />}
+							onClick={() => navigate(`${base}/chats/new`)}
+						>
+							<Trans>Start a chat</Trans>
+						</Button>
+						<Button
+							size="sm"
+							leftSection={<UploadSimpleIcon size={16} />}
+							variant="outline"
+							onClick={() => navigate(`${base}/upload`)}
+						>
+							<Trans>Upload</Trans>
+						</Button>
+						<Button
+							size="sm"
+							leftSection={<PaintBrushIcon size={16} />}
+							variant="outline"
+							onClick={() => navigate(`${base}/portal-editor`)}
+						>
+							<Trans>Portal editor</Trans>
+						</Button>
+						<Button
+							size="sm"
+							leftSection={<BookOpenIcon size={16} />}
+							variant="outline"
+							onClick={() => navigate(`${base}/host-guide`)}
+						>
+							<Trans>Host guide</Trans>
+						</Button>
+						<Button
+							size="sm"
+							leftSection={<FileTextIcon size={16} />}
+							variant="outline"
+							onClick={() => navigate(`${base}/report`)}
+						>
+							<Trans>Report</Trans>
+						</Button>
+					</Group>
+				</Stack>
 
-					<Stack gap="sm" style={{ flex: 1 }}>
+				<Stack gap="sm">
+					<Group justify="flex-start" align="center" gap="sm">
 						<Text size="xs" c="dimmed" tt="uppercase">
-							<Trans>Jump to</Trans>
+							<Trans>Latest conversations</Trans>
 						</Text>
-								<Group gap="sm" wrap="wrap">
-									<Button
-										size="sm"
-										leftSection={<ChatCircleDotsIcon size={16} />}
-										onClick={() => navigate(`${base}/chats/new`)}
-									>
-										<Trans>Start a chat</Trans>
-									</Button>
-									<Button
-										size="sm"
-										leftSection={<UploadSimpleIcon size={16} />}
-										variant="outline"
-										onClick={() => navigate(`${base}/upload`)}
-									>
-										<Trans>Upload</Trans>
-									</Button>
-									<Button
-										size="sm"
-										leftSection={<PaintBrushIcon size={16} />}
-										variant="outline"
-										onClick={() => navigate(`${base}/portal-editor`)}
-									>
-										<Trans>Portal editor</Trans>
-									</Button>
-									<Button
-										size="sm"
-										leftSection={<FileTextIcon size={16} />}
-										variant="outline"
-										onClick={() => navigate(`${base}/report`)}
-									>
-										<Trans>Report</Trans>
-									</Button>
-								</Group>
-							</Stack>
-						</Flex>
+						<Button
+							variant="subtle"
+							size="xs"
+							onClick={() => navigate(`${base}/conversations`)}
+						>
+							<Trans>Open all</Trans>
+						</Button>
+					</Group>
 
-						<Stack gap="sm">
-							<Group justify="space-between" align="center">
-								<Text size="xs" c="dimmed" tt="uppercase">
-									<Trans>Latest conversations</Trans>
-								</Text>
-								<Button
-									variant="subtle"
-									size="xs"
-									onClick={() => navigate(`${base}/conversations`)}
-								>
-									<Trans>Open all</Trans>
-								</Button>
-							</Group>
-
-							{recentConversationsQuery.isLoading ? (
-								<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-									<Skeleton height={128} radius="sm" />
-									<Skeleton height={128} radius="sm" />
-								</SimpleGrid>
-							) : recentConversations.length > 0 ? (
-								<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-									{recentConversations.slice(0, 2).map((conversation) => {
-										const tags =
-											(conversation.tags as
-												| ConversationProjectTag[]
-												| undefined) ?? [];
-										return (
-											<I18nLink
-												key={conversation.id}
-												to={`${base}/conversation/${conversation.id}`}
-												className="no-underline block h-full"
-											>
-												<Card
-													component="a"
-													withBorder
-													p="md"
-													radius="sm"
-													className="h-full hover:!border-primary-400 transition-colors"
-												>
-													<Stack gap="xs">
-														<Stack gap={2} style={{ minWidth: 0 }}>
-															<Text size="sm" fw={500} truncate>
-																{conversationTitle(conversation)}
-															</Text>
-															<Text size="xs" c="dimmed">
-																{conversation.created_at
-																	? new Date(
-																			conversation.created_at,
-																		).toLocaleDateString()
-																	: ""}
-															</Text>
-														</Stack>
-
-														<Text size="sm" c="dimmed" style={lineClampStyle}>
-															{conversation.summary?.trim() || (
-																<Trans>No summary yet</Trans>
-															)}
+					{recentConversationsQuery.isLoading ? (
+						<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+							<Skeleton height={128} radius="sm" />
+							<Skeleton height={128} radius="sm" />
+						</SimpleGrid>
+					) : recentConversations.length > 0 ? (
+						<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+							{recentConversations.slice(0, 2).map((conversation) => {
+								const tags =
+									(conversation.tags as ConversationProjectTag[] | undefined) ??
+									[];
+								return (
+									<I18nLink
+										key={conversation.id}
+										to={`${base}/conversation/${conversation.id}`}
+										className="no-underline block h-full"
+									>
+										<Card
+											component="a"
+											withBorder
+											p="md"
+											radius="sm"
+											className="h-full hover:!border-primary-400 transition-colors"
+										>
+											<Stack gap="xs">
+												<Stack gap={2} style={{ minWidth: 0 }}>
+													<Text size="sm" fw={500} truncate>
+														{conversationTitle(conversation)}
+													</Text>
+													<Group gap="xs" align="center" wrap="nowrap">
+														<Text size="xs" c="dimmed">
+															{conversation.created_at
+																? new Date(
+																		conversation.created_at,
+																	).toLocaleDateString()
+																: ""}
 														</Text>
-
-														{tags.length > 0 && (
-															<Group gap={6} wrap="wrap">
-																{tags.slice(0, 4).map((tag) => {
-																	const label = tagText(tag);
-																	if (!label) return null;
-																	return (
-																		<Badge
-																			key={tag.id}
-																			size="xs"
-																			variant="light"
-																			color="gray"
-																			radius="sm"
-																		>
-																			{label}
-																		</Badge>
-																	);
-																})}
-															</Group>
+														{conversation.live && (
+															<Badge size="xs" color="red" variant="light">
+																<Trans>Ongoing</Trans>
+															</Badge>
 														)}
-													</Stack>
-												</Card>
-											</I18nLink>
-										);
-									})}
-								</SimpleGrid>
-							) : null}
-						</Stack>
+													</Group>
+												</Stack>
 
-						{report && reportTitle && (
-							<Stack gap="sm">
-								<Text size="xs" c="dimmed" tt="uppercase">
-									<Trans>Latest report</Trans>
-								</Text>
-								<I18nLink to={`${base}/report`} className="no-underline block">
-									<Card
-										component="a"
-										withBorder
-										p="md"
-										radius="sm"
-										className="hover:!border-primary-400 transition-colors"
-									>
-										<Stack gap={2}>
-											<Group gap="xs" align="center">
-												<Text size="sm" fw={500}>
-													{reportTitle}
+												<Text size="sm" c="dimmed" style={lineClampStyle}>
+													{conversation.summary?.trim() || (
+														<Trans>No summary yet</Trans>
+													)}
 												</Text>
-												<Badge size="xs" variant="light">
-													{report.status}
-												</Badge>
-											</Group>
-											{report.date_created && (
-												<Text size="xs" c="dimmed">
-													{new Date(report.date_created).toLocaleString()}
-												</Text>
-											)}
-										</Stack>
-									</Card>
-								</I18nLink>
-							</Stack>
-						)}
+
+												{tags.length > 0 && (
+													<Group gap={6} wrap="wrap">
+														{tags.slice(0, 4).map((tag) => {
+															const label = tagText(tag);
+															if (!label) return null;
+															return (
+																<Badge
+																	key={tag.id}
+																	size="xs"
+																	variant="light"
+																	color="gray"
+																	radius="sm"
+																>
+																	{label}
+																</Badge>
+															);
+														})}
+													</Group>
+												)}
+											</Stack>
+										</Card>
+									</I18nLink>
+								);
+							})}
+						</SimpleGrid>
+					) : null}
+				</Stack>
+
+				{report && reportTitle && (
+					<Stack gap="sm">
+						<Text size="xs" c="dimmed" tt="uppercase">
+							<Trans>Latest report</Trans>
+						</Text>
+						<I18nLink to={`${base}/report`} className="no-underline block">
+							<Card
+								component="a"
+								withBorder
+								p="md"
+								radius="sm"
+								className="hover:!border-primary-400 transition-colors"
+							>
+								<Stack gap={2}>
+									<Group gap="xs" align="center">
+										<Text size="sm" fw={500}>
+											{reportTitle}
+										</Text>
+										<Badge size="xs" variant="light">
+											{report.status}
+										</Badge>
+									</Group>
+									{report.date_created && (
+										<Text size="xs" c="dimmed">
+											{new Date(report.date_created).toLocaleString()}
+										</Text>
+									)}
+								</Stack>
+							</Card>
+						</I18nLink>
 					</Stack>
-			</PageContainer>
-		);
-	};
+				)}
+			</Stack>
+		</PageContainer>
+	);
+};

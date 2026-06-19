@@ -172,17 +172,25 @@ async def create_subscription(
     amount_eur: float,
     interval: str,
     description: str,
+    start_date: Optional[str] = None,
     webhook_url: Optional[str] = None,
     metadata: Optional[dict] = None,
 ) -> dict:
     """Create a recurring subscription. `amount` is the full per-interval charge
     (= seats x per-seat price; no quantity field). `interval` like '1 month' or
-    '12 months'. `description` must be unique per customer."""
+    '12 months'. `description` must be unique per customer.
+
+    `start_date` (YYYY-MM-DD) defers the FIRST subscription charge. Omitting it
+    makes Mollie start today and charge immediately — which double-bills when a
+    consent payment already covered the first period. Pass one interval out so
+    the subscription only charges from the next renewal onward."""
     body: dict[str, Any] = {
         "amount": _amount(amount_eur),
         "interval": interval,
         "description": description,
     }
+    if start_date:
+        body["startDate"] = start_date
     if webhook_url:
         body["webhookUrl"] = webhook_url
     if metadata:

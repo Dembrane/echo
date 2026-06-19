@@ -1,22 +1,8 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	Button,
-	CopyButton,
-	Group,
-	Paper,
-	rem,
-	Skeleton,
-	Text,
-} from "@mantine/core";
-import {
-	IconCheck,
-	IconCopy,
-	IconDownload,
-	IconPresentation,
-} from "@tabler/icons-react";
+import { Button, CopyButton, rem, Skeleton, Stack, Text } from "@mantine/core";
+import { IconCheck, IconCopy, IconDownload } from "@tabler/icons-react";
 import { useMemo, useRef } from "react";
-import { useParams } from "react-router";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { useAppPreferences } from "@/hooks/useAppPreferences";
 import { testId } from "@/lib/testUtils";
@@ -38,6 +24,8 @@ export const useProjectSharingLink = (project?: Project) => {
 
 		// map the project.language to the language code
 		const languageCode = {
+			cs: "cs-CZ",
+			"cs-CZ": "cs-CZ",
 			de: "de-DE",
 			"de-DE": "de-DE",
 			en: "en-US",
@@ -50,29 +38,27 @@ export const useProjectSharingLink = (project?: Project) => {
 			"it-IT": "it-IT",
 			nl: "nl-NL",
 			"nl-NL": "nl-NL",
-				uk: "uk-UA",
-				"uk-UA": "uk-UA",
-				cs: "cs-CZ",
-				"cs-CZ": "cs-CZ",
-			}[
-				project.language as
-					| "en"
-					| "nl"
-					| "de"
-					| "fr"
-					| "es"
-					| "it"
-					| "uk"
-					| "cs"
-					| "en-US"
-					| "nl-NL"
-					| "de-DE"
-					| "fr-FR"
-					| "es-ES"
-					| "it-IT"
-					| "uk-UA"
-					| "cs-CZ"
-			];
+			uk: "uk-UA",
+			"uk-UA": "uk-UA",
+		}[
+			project.language as
+				| "en"
+				| "nl"
+				| "de"
+				| "fr"
+				| "es"
+				| "it"
+				| "uk"
+				| "cs"
+				| "en-US"
+				| "nl-NL"
+				| "de-DE"
+				| "fr-FR"
+				| "es-ES"
+				| "it-IT"
+				| "uk-UA"
+				| "cs-CZ"
+		];
 
 		// Include theme in URL so participant portal uses the same theme
 		const baseLink = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;
@@ -85,14 +71,6 @@ export const useProjectSharingLink = (project?: Project) => {
 export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 	const link = useProjectSharingLink(project);
 	const qrRef = useRef<HTMLDivElement>(null);
-	const { workspaceId } = useParams();
-
-	const handleOpenHostGuide = () => {
-		if (!project) return;
-		// Open quick start page in new tab
-		const hostGuideUrl = `/w/${workspaceId}/projects/${project.id}/host-guide`;
-		window.open(hostGuideUrl, "_blank");
-	};
 
 	const handleDownloadQR = () => {
 		if (!qrRef.current) return;
@@ -109,107 +87,55 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 		return <Skeleton height={200} />;
 	}
 
-	// Quick start is only available for supported languages
-		const supportedLanguages = [
-			"en",
-			"nl",
-			"de",
-			"fr",
-			"es",
-			"it",
-			"uk",
-			"cs",
-			"en-US",
-			"nl-NL",
-			"de-DE",
-			"fr-FR",
-			"es-ES",
-			"it-IT",
-			"uk-UA",
-			"cs-CZ",
-		];
-	const showQuickStart =
-		project?.language && supportedLanguages.includes(project.language);
+	if (!project?.is_conversation_allowed) {
+		return (
+			<Text size="sm">
+				<Trans>Please enable participation to enable sharing</Trans>
+			</Text>
+		);
+	}
 
+	// QR on top, sharing actions stacked directly below it (the left column
+	// of the portal overview card).
 	return (
-		<Paper
-			p="md"
-			className="relative flex w-fit flex-col items-start justify-center"
-		>
-			{project?.is_conversation_allowed ? (
-				<Group align="center" justify="start" gap="lg">
-					<QRCode
-						value={link}
-						href={link}
-						ref={qrRef}
-						className="h-auto w-full min-w-[80px] max-w-[128px]"
-						{...testId("project-qr-code")}
-					/>
-					<div className="flex flex-col flex-wrap gap-2">
-						{showQuickStart && (
-							<Button
-								size="sm"
-								variant="outline"
-								onClick={handleOpenHostGuide}
-								rightSection={<IconPresentation style={{ width: rem(16) }} />}
-								{...testId("project-share-button")}
-							>
-								<Trans>Open guide</Trans>
-							</Button>
-						)}
-						<CopyButton value={link} timeout={2000}>
-							{({ copied, copy }) => (
-								<Button
-									size="sm"
-									variant="outline"
-									onClick={copy}
-									rightSection={
-										copied ? (
-											<IconCheck style={{ width: rem(16) }} />
-										) : (
-											<IconCopy style={{ width: rem(16) }} />
-										)
-									}
-									{...testId("project-copy-link-button")}
-								>
-									{copied ? t`Copied` : t`Copy link`}
-								</Button>
-							)}
-						</CopyButton>
+		<Stack gap="sm" align="center" w="100%">
+			<QRCode
+				value={link}
+				href={link}
+				ref={qrRef}
+				className="h-auto w-full"
+				{...testId("project-qr-code")}
+			/>
+			<Stack gap="xs" w="100%">
+				<CopyButton value={link} timeout={2000}>
+					{({ copied, copy }) => (
 						<Button
 							size="sm"
 							variant="outline"
-							onClick={handleDownloadQR}
-							rightSection={<IconDownload style={{ width: rem(16) }} />}
-							{...testId("project-download-qr-button")}
+							onClick={copy}
+							rightSection={
+								copied ? (
+									<IconCheck style={{ width: rem(16) }} />
+								) : (
+									<IconCopy style={{ width: rem(16) }} />
+								)
+							}
+							{...testId("project-copy-link-button")}
 						>
-							<Trans>Download QR code</Trans>
+							{copied ? t`Copied` : t`Copy link`}
 						</Button>
-						{/* Share button - commented out
-						{canShare && (
-							<Button
-								className="lg:hidden"
-								size="sm"
-								rightSection={<IconShare style={{ width: rem(16) }} />}
-								variant="outline"
-								onClick={async () => {
-									await navigator.share({
-										title: t`Join ${project?.default_conversation_title ?? "the conversation"} on Dembrane`,
-										url: link,
-									});
-								}}
-							>
-								<Trans>Share</Trans>
-							</Button>
-						)}
-						*/}
-					</div>
-				</Group>
-			) : (
-				<Text size="sm">
-					<Trans>Please enable participation to enable sharing</Trans>
-				</Text>
-			)}
-		</Paper>
+					)}
+				</CopyButton>
+				<Button
+					size="sm"
+					variant="outline"
+					onClick={handleDownloadQR}
+					rightSection={<IconDownload style={{ width: rem(16) }} />}
+					{...testId("project-download-qr-button")}
+				>
+					<Trans>Download QR code</Trans>
+				</Button>
+			</Stack>
+		</Stack>
 	);
 };

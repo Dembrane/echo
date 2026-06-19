@@ -27,6 +27,7 @@ import {
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { DetectiveIcon } from "@phosphor-icons/react";
 import {
+	IconDownload,
 	IconEdit,
 	IconExternalLink,
 	IconInfoCircle,
@@ -37,11 +38,12 @@ import {
 	IconUpload,
 	IconX,
 } from "@tabler/icons-react";
+import { useIsMutating } from "@tanstack/react-query";
 import { formatDistanceToNowStrict } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { useIsMutating } from "@tanstack/react-query";
 import { useProjectChatContext } from "@/components/chat/hooks";
+import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { AutoSelectConversations } from "@/components/conversation/AutoSelectConversations";
 import { SelectAllConfirmationModal } from "@/components/conversation/SelectAllConfirmationModal";
@@ -51,9 +53,12 @@ import { UploadLockedCard } from "@/components/project/UploadLockedCard";
 import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
+import { getConversationContentLink } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { ConversationStatusIndicators } from "./ConversationAccordion";
+import { ConversationDangerZone } from "./ConversationDangerZone";
 import { ConversationEdit } from "./ConversationEdit";
+import { CopyConversationTranscriptActionIcon } from "./CopyConversationTranscript";
 import {
 	useAddChatContextMutation,
 	useConversationsCountByProjectId,
@@ -204,6 +209,8 @@ const MODE_COLOR = "blue";
 
 type ConversationRowProps = {
 	conversation: Conversation & { live?: boolean };
+	/** Link target for the whole card. Omitted in selection mode. */
+	href?: string;
 	isActive?: boolean;
 	isSelected?: boolean;
 	onEdit: (conversation: Conversation) => void;
@@ -214,6 +221,7 @@ type ConversationRowProps = {
 
 const ConversationRow = ({
 	conversation,
+	href,
 	isActive,
 	isSelected,
 	onEdit,
@@ -230,162 +238,231 @@ const ConversationRow = ({
 	const tags =
 		(conversation.tags as ConversationProjectTag[] | undefined) ?? [];
 	const verified = hasVerifiedArtifacts(conversation);
+	const canCopyTranscript = !conversation.locked;
+	const canDownloadAudio =
+		!conversation.locked &&
+		!conversation.is_anonymized &&
+		!conversation.has_only_text_chunks;
+
+	const body = (
+		<Group align="flex-start" gap="md" wrap="nowrap">
+			{selectionMode && selectionChatId && (
+				<Box pt={4}>
+					<ConversationSelectionCheckbox
+						conversation={conversation}
+						chatId={selectionChatId}
+					/>
+				</Box>
+			)}
+
+			<Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
+				<Group justify="space-between" align="flex-start" wrap="nowrap">
+					<Stack gap={2} style={{ minWidth: 0 }}>
+						<Group gap="xs" wrap="nowrap">
+							<Text size="sm" fw={500} truncate style={{ color: "#2d2d2c" }}>
+								{primary}
+							</Text>
+							{conversation.title && conversation.participant_name && (
+								<Tooltip label={t`Title generated from the conversation`}>
+									<IconInfoCircle
+										size={14}
+										style={{ color: "#8a8f98", flexShrink: 0 }}
+									/>
+								</Tooltip>
+							)}
+							{verified && (
+								<Tooltip label={t`Has verified artifacts`}>
+									<ThemeIcon
+										variant="subtle"
+										color="blue"
+										size={18}
+										aria-label={t`Verified artifacts`}
+									>
+										<IconRosetteDiscountCheck size={16} />
+									</ThemeIcon>
+								</Tooltip>
+							)}
+							{conversation.is_anonymized && (
+								<Tooltip label={t`Anonymized conversation`}>
+									<ThemeIcon
+										variant="subtle"
+										color="blue"
+										size={18}
+										aria-label={t`Anonymized conversation`}
+									>
+										<DetectiveIcon size={16} />
+									</ThemeIcon>
+								</Tooltip>
+							)}
+							{conversation.locked && (
+								<Tooltip
+									label={t`Upgrade your workspace to view this conversation`}
+								>
+									<Badge
+										size="xs"
+										color="blue"
+										variant="light"
+										leftSection={<IconLock size={10} />}
+									>
+										<Trans>Locked</Trans>
+									</Badge>
+								</Tooltip>
+							)}
+						</Group>
+
+						<Group gap="xs" wrap="wrap">
+							<Tooltip
+								label={conversation.participant_email ?? undefined}
+								disabled={!conversation.participant_email}
+							>
+								<Text size="xs" c="dimmed">
+									{participantLabel}
+								</Text>
+							</Tooltip>
+							<Text size="xs" c="dimmed">
+								{formatCreatedAt(conversation.created_at)}
+							</Text>
+							{conversation.live && (
+								<Badge size="xs" color="red" variant="light">
+									<Trans>Ongoing</Trans>
+								</Badge>
+							)}
+							<ConversationStatusIndicators
+								conversation={conversation}
+								showDuration
+							/>
+						</Group>
+					</Stack>
+
+					<Group gap="xs" wrap="nowrap">
+						{!selectionMode && canCopyTranscript && (
+							<CopyConversationTranscriptActionIcon
+								conversationId={conversation.id}
+								size={16}
+							/>
+						)}
+						{!selectionMode && canDownloadAudio && (
+							<Tooltip label={t`Download audio`}>
+								<ActionIcon
+									variant="subtle"
+									color="gray"
+									aria-label={t`Download audio`}
+									onClick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										window.open(
+											getConversationContentLink(conversation.id),
+											"_blank",
+										);
+									}}
+								>
+									<IconDownload size={16} />
+								</ActionIcon>
+							</Tooltip>
+						)}
+						{!selectionMode && (
+							<Tooltip label={t`Manage`}>
+								<ActionIcon
+									variant="subtle"
+									color="gray"
+									aria-label={t`Manage`}
+									onClick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										onEdit(conversation);
+									}}
+								>
+									<IconEdit size={16} />
+								</ActionIcon>
+							</Tooltip>
+						)}
+						<Tooltip label={t`Open conversation`}>
+							<ActionIcon
+								variant="subtle"
+								color="blue"
+								aria-label={t`Open conversation`}
+								onClick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									onOpen(conversation);
+								}}
+							>
+								<IconExternalLink size={16} />
+							</ActionIcon>
+						</Tooltip>
+					</Group>
+				</Group>
+
+				<Text
+					size="sm"
+					c={summary ? "gray.7" : "dimmed"}
+					style={lineClampStyle}
+				>
+					{summary || <Trans>No summary yet</Trans>}
+				</Text>
+
+				{tags.length > 0 && (
+					<Group gap={6} wrap="wrap">
+						{tags.map((tag) => {
+							const tagText = getTagText(tag);
+							if (!tagText) return null;
+							return (
+								<Badge
+									key={tag.id}
+									size="xs"
+									variant="light"
+									color="gray"
+									radius="sm"
+								>
+									{tagText}
+								</Badge>
+							);
+						})}
+					</Group>
+				)}
+			</Stack>
+		</Group>
+	);
+
+	const cardStyle = {
+		background: isSelected ? "rgba(65, 105, 225, 0.06)" : "white",
+		borderColor: isActive || isSelected ? "#4169e1" : undefined,
+	} as const;
+
+	// Render as a real anchor when navigable, so the whole card is clickable
+	// (and supports cmd/middle-click) exactly like the project cards on the
+	// workspace home page. Selection mode keeps the plain card + checkbox.
+	if (!selectionMode && href) {
+		return (
+			<I18nLink
+				to={href}
+				className="no-underline block"
+				style={{ color: "inherit" }}
+			>
+				<Paper
+					component="a"
+					withBorder
+					radius="sm"
+					p="md"
+					className="cursor-pointer transition-colors hover:!border-primary-400"
+					style={cardStyle}
+					{...testId(`project-conversation-row-${conversation.id}`)}
+				>
+					{body}
+				</Paper>
+			</I18nLink>
+		);
+	}
 
 	return (
 		<Paper
 			withBorder
 			radius="sm"
 			p="md"
-			style={{
-				background: isSelected ? "rgba(65, 105, 225, 0.06)" : "white",
-				borderColor: isActive || isSelected ? "#4169e1" : undefined,
-			}}
+			style={cardStyle}
 			{...testId(`project-conversation-row-${conversation.id}`)}
 		>
-			<Group align="flex-start" gap="md" wrap="nowrap">
-				{selectionMode && selectionChatId && (
-					<Box pt={4}>
-						<ConversationSelectionCheckbox
-							conversation={conversation}
-							chatId={selectionChatId}
-						/>
-					</Box>
-				)}
-
-				<Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
-					<Group justify="space-between" align="flex-start" wrap="nowrap">
-						<Stack gap={2} style={{ minWidth: 0 }}>
-							<Group gap="xs" wrap="nowrap">
-								<Text size="sm" fw={500} truncate style={{ color: "#2d2d2c" }}>
-									{primary}
-								</Text>
-								{conversation.title && conversation.participant_name && (
-									<Tooltip label={t`Title generated from the conversation`}>
-										<IconInfoCircle
-											size={14}
-											style={{ color: "#8a8f98", flexShrink: 0 }}
-										/>
-									</Tooltip>
-								)}
-								{verified && (
-									<Tooltip label={t`Has verified artifacts`}>
-										<ThemeIcon
-											variant="subtle"
-											color="blue"
-											size={18}
-											aria-label={t`Verified artifacts`}
-										>
-											<IconRosetteDiscountCheck size={16} />
-										</ThemeIcon>
-									</Tooltip>
-								)}
-								{conversation.is_anonymized && (
-									<Tooltip label={t`Anonymized conversation`}>
-										<ThemeIcon
-											variant="subtle"
-											color="blue"
-											size={18}
-											aria-label={t`Anonymized conversation`}
-										>
-											<DetectiveIcon size={16} />
-										</ThemeIcon>
-									</Tooltip>
-								)}
-								{conversation.locked && (
-									<Tooltip
-										label={t`Upgrade your workspace to view this conversation`}
-									>
-										<Badge
-											size="xs"
-											color="blue"
-											variant="light"
-											leftSection={<IconLock size={10} />}
-										>
-											<Trans>Locked</Trans>
-										</Badge>
-									</Tooltip>
-								)}
-							</Group>
-
-							<Group gap="xs" wrap="wrap">
-								<Tooltip
-									label={conversation.participant_email ?? undefined}
-									disabled={!conversation.participant_email}
-								>
-									<Text size="xs" c="dimmed">
-										{participantLabel}
-									</Text>
-								</Tooltip>
-								<Text size="xs" c="dimmed">
-									{formatCreatedAt(conversation.created_at)}
-								</Text>
-								{conversation.live && (
-									<Badge size="xs" color="red" variant="light">
-										<Trans>Ongoing</Trans>
-									</Badge>
-								)}
-								<ConversationStatusIndicators
-									conversation={conversation}
-									showDuration
-								/>
-							</Group>
-						</Stack>
-
-						<Group gap="xs" wrap="nowrap">
-							{!selectionMode && (
-								<Tooltip label={t`Edit details`}>
-									<ActionIcon
-										variant="subtle"
-										color="gray"
-										aria-label={t`Edit details`}
-										onClick={() => onEdit(conversation)}
-									>
-										<IconEdit size={16} />
-									</ActionIcon>
-								</Tooltip>
-							)}
-							<Tooltip label={t`Open conversation`}>
-								<ActionIcon
-									variant="subtle"
-									color="blue"
-									aria-label={t`Open conversation`}
-									onClick={() => onOpen(conversation)}
-								>
-									<IconExternalLink size={16} />
-								</ActionIcon>
-							</Tooltip>
-						</Group>
-					</Group>
-
-					<Text
-						size="sm"
-						c={summary ? "gray.7" : "dimmed"}
-						style={lineClampStyle}
-					>
-						{summary || <Trans>No summary yet</Trans>}
-					</Text>
-
-					{tags.length > 0 && (
-						<Group gap={6} wrap="wrap">
-							{tags.map((tag) => {
-								const tagText = getTagText(tag);
-								if (!tagText) return null;
-								return (
-									<Badge
-										key={tag.id}
-										size="xs"
-										variant="light"
-										color="gray"
-										radius="sm"
-									>
-										{tagText}
-									</Badge>
-								);
-							})}
-						</Group>
-					)}
-				</Stack>
-			</Group>
+			{body}
 		</Paper>
 	);
 };
@@ -796,6 +873,11 @@ export const ProjectConversationsPanel = ({
 					>
 						<ConversationRow
 							conversation={conversation as Conversation & { live?: boolean }}
+							href={
+								selectionMode || !resolvedWorkspaceId
+									? undefined
+									: `/w/${resolvedWorkspaceId}/projects/${projectId}/conversation/${conversation.id}`
+							}
 							isSelected={selectedConversationIds.has(conversation.id)}
 							onEdit={openEdit}
 							onOpen={openConversation}
@@ -819,12 +901,21 @@ export const ProjectConversationsPanel = ({
 				{...testId("conversation-edit-modal")}
 			>
 				{editingConversation && (
-					<ConversationEdit
-						key={editingConversation.id}
-						conversation={editingConversation}
-						projectTags={allProjectTags}
-						showSummary
-					/>
+					<Stack gap="lg">
+						<ConversationEdit
+							key={editingConversation.id}
+							conversation={editingConversation}
+							projectTags={allProjectTags}
+							showSummary
+						/>
+						<Divider />
+						<ConversationDangerZone
+							conversation={editingConversation}
+							disableDownloadAudio={!!editingConversation.is_anonymized}
+							locked={!!editingConversation.locked}
+							onAfterDelete={closeEdit}
+						/>
+					</Stack>
 				)}
 			</Modal>
 

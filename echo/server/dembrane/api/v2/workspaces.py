@@ -226,6 +226,8 @@ async def list_workspaces(
                         "is_default",
                         "logo_url",
                         "created_at",
+                        # Account scope → pooled (org) vs billed-on-its-own.
+                        "billing_account_id.org_id",
                         *nested_billing_fields(),
                     ],
                     "limit": -1,
@@ -355,6 +357,10 @@ async def list_workspaces(
                 role=role,
                 is_default=ws.get("is_default", False),
                 tier=ws.get("tier", "pioneer"),
+                bills_separately=(
+                    isinstance(ws.get("billing_account_id"), dict)
+                    and not ws["billing_account_id"].get("org_id")
+                ),
                 logo_url=ws.get("logo_url"),
                 org_logo_url=org_logo_map.get(org_id),
                 project_count=project_count,
@@ -769,7 +775,9 @@ async def delete_workspace(
 
 
 class SetTierRequest(BaseModel):
-    tier: Literal["pilot", "pioneer", "innovator", "changemaker", "guardian"]
+    # "free" must be accepted: staff downgrade an account to free from the
+    # dashboard. Omitting it made the /tier PATCH 422 on a free selection.
+    tier: Literal["free", "pilot", "pioneer", "innovator", "changemaker", "guardian"]
     reason: str = Field(
         min_length=1,
         max_length=500,

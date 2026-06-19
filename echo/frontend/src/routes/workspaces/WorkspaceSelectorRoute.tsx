@@ -32,7 +32,7 @@ import classes from "./WorkspaceSelectorRoute.module.css";
 
 // Centered frame shared by every state on this page.
 const FRAME_MAX_WIDTH = 580;
-const FRAME_TOP_MARGIN = "20vh";
+const FRAME_TOP_MARGIN = "13.33vh";
 
 interface OrganisationRollup {
 	id: string;

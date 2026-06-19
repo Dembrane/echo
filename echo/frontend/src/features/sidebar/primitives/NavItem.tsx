@@ -17,6 +17,8 @@ interface NavItemProps {
 	active?: boolean;
 	muted?: boolean;
 	accent?: string;
+	/** Render as a non-navigable, greyed-out row (e.g. a planned page). */
+	disabled?: boolean;
 }
 
 export const BADGE_TONES = {
@@ -68,11 +70,35 @@ export const NavItem = ({
 	active: forcedActive,
 	muted,
 	accent,
+	disabled,
 }: NavItemProps) => {
 	const localePath = useLocalePath(to);
 	const resolved = useResolvedPath(localePath);
 	const match = useMatch({ end: end ?? false, path: resolved.pathname });
 	const active = forcedActive ?? match != null;
+
+	if (disabled) {
+		return (
+			<div
+				className="relative flex h-[30px] cursor-not-allowed items-center gap-2 rounded-md px-2 text-sm leading-tight opacity-60"
+				style={{ color: "rgba(45, 45, 44, 0.55)" }}
+				aria-disabled="true"
+			>
+				<span className="relative flex flex-1 items-center gap-2 truncate">
+					{Icon ? <Icon size={16} /> : null}
+					<span className="truncate">{label}</span>
+				</span>
+				{badge != null && (
+					<span
+						className="relative shrink-0 rounded px-1.5 py-0.5 text-xs leading-none"
+						style={BADGE_TONES[badgeTone]}
+					>
+						{badge}
+					</span>
+				)}
+			</div>
+		);
+	}
 
 	return (
 		<NavLink

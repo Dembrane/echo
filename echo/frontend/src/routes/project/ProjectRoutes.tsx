@@ -11,6 +11,7 @@ import {
 import ProjectBasicEdit from "@/components/project/ProjectBasicEdit";
 import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
 import { ProjectExportSection } from "@/components/project/ProjectExportSection";
+import { ProjectMoveWorkspace } from "@/components/project/ProjectMoveWorkspace";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
 import { ProjectUploadSection } from "@/components/project/ProjectUploadSection";
 import { ProjectAccess, ProjectUsage } from "@/components/project/ProjectUsageAndSharing";
@@ -46,6 +47,7 @@ export const ProjectSettingsRoute = () => {
 				"name",
 				"context",
 				"visibility",
+				"workspace_id",
 				"updated_at",
 				"language",
 				"is_conversation_allowed",
@@ -89,6 +91,9 @@ export const ProjectSettingsRoute = () => {
               <ProjectConversationStatusSection projectId={projectId} />
             </>
           )} */}
+
+					<Divider />
+					<ProjectMoveWorkspace project={projectQuery.data} />
 
 					<Divider />
 					<ProjectDangerZone project={projectQuery.data} />

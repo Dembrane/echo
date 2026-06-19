@@ -229,13 +229,12 @@ export const ProjectConversationRoute = () => {
 			</Stack>
 
 			{/*
-			  Responsive grid. DOM order: (1) summary + verified artifacts,
-			  (2) transcript, (3) edit + links + danger zone. On small screens
-			  this stacks naturally, putting the transcript below summary and
-			  verified artifacts. On lg+ the transcript takes column 2 and
-			  spans both left-column rows.
+			  Single column: summary + verified artifacts, then the transcript
+			  directly below the summary, then links + danger zone. The
+			  transcript used to sit in a sticky right-hand column; product
+			  feedback (2026-06-18) asked for it stacked below the summary.
 			*/}
-			<div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+			<Stack gap="3rem">
 				<Stack gap="3rem" className="min-w-0">
 					{(conversation?.summary ||
 						(conversationChunksQuery.data &&
@@ -340,7 +339,7 @@ export const ProjectConversationRoute = () => {
 					)}
 				</Stack>
 
-				<div className="min-w-0 lg:sticky lg:top-4 lg:row-span-2 lg:max-h-[calc(100vh-7rem)] lg:self-start lg:overflow-y-auto">
+				<div className="min-w-0">
 					{conversationId && (
 						<ConversationTranscriptSection
 							conversationId={conversationId}
@@ -352,7 +351,7 @@ export const ProjectConversationRoute = () => {
 					)}
 				</div>
 
-				<Stack gap="3rem" className="min-w-0 lg:col-start-1">
+				<Stack gap="3rem" className="min-w-0">
 					{conversation && (
 						<>
 							{ENABLE_DISPLAY_CONVERSATION_LINKS && (
@@ -378,7 +377,7 @@ export const ProjectConversationRoute = () => {
 						</>
 					)}
 				</Stack>
-			</div>
+			</Stack>
 
 			<ConfirmModal
 				opened={regenerateConfirmOpened}

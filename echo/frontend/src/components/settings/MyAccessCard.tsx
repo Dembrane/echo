@@ -1,14 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
-import {
-	Badge,
-	Button,
-	Card,
-	Group,
-	Loader,
-	Stack,
-	Text,
-} from "@mantine/core";
+import { Badge, Button, Card, Group, Loader, Stack, Text } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
@@ -23,6 +15,7 @@ export interface Workspace {
 	org_name: string;
 	role: string;
 	tier: string;
+	bills_separately?: boolean;
 	project_count: number;
 	member_count: number;
 }
@@ -206,7 +199,9 @@ export const MyAccessCard = () => {
 													/>
 													{" · "}
 													<span style={{ textTransform: "capitalize" }}>
-														{ws.tier}
+														{ws.bills_separately
+															? `${ws.tier} (partner)`
+															: ws.tier}
 													</span>
 												</Text>
 											</Group>

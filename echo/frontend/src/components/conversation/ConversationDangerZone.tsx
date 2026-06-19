@@ -16,10 +16,13 @@ export const ConversationDangerZone = ({
 	conversation,
 	disableDownloadAudio = false,
 	locked = false,
+	onAfterDelete,
 }: {
 	conversation: Conversation;
 	disableDownloadAudio?: boolean;
 	locked?: boolean;
+	/** Called after a delete is dispatched, e.g. to close a host modal. */
+	onAfterDelete?: () => void;
 }) => {
 	const deleteConversationByIdMutation = useDeleteConversationByIdMutation();
 	const navigate = useI18nNavigate();
@@ -100,6 +103,7 @@ export const ConversationDangerZone = ({
 					deleteConversationByIdMutation.mutate(conversation.id);
 					navigate(`/w/${workspaceId}/projects/${projectId}/conversations`);
 					closeConfirm();
+					onAfterDelete?.();
 				}}
 			/>
 		</Stack>

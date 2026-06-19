@@ -416,9 +416,22 @@ async def update_name(
     body: UpdateNameSchema,
     auth: DependencyDirectusSession,
 ) -> dict:
-    """Update the user's display name."""
+    """Update the user's display name.
+
+    Writes both `directus_users.first_name` (legacy auth profile) and
+    `app_user.display_name`. The app shows `app_user.display_name`
+    everywhere (sidebar, member lists, org views) and MeResponse reads it
+    first, so updating only the directus field left the visible name
+    unchanged.
+    """
+    # display_name lands in email subject lines (invite "{inviter} invited
+    # you..."), so strip CR/LF the same way PATCH /v2/me does.
+    cleaned = body.first_name.replace("\r", " ").replace("\n", " ").strip()
     try:
         directus.update_user(auth.user_id, {"first_name": body.first_name})
+        app_user = await resolve_app_user(auth.user_id)
+        if app_user and cleaned:
+            directus.update_item("app_user", app_user["id"], {"display_name": cleaned})
     except Exception as e:
         logger.error(f"Failed to update user name: {e}")
         raise HTTPException(status_code=500, detail="Failed to update name") from None

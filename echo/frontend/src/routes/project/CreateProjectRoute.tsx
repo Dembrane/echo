@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Alert,
 	Button,
 	Center,
 	Container,
@@ -28,7 +27,6 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCreateWorkspaceProject } from "@/hooks/useWorkspaceProjects";
-import { capacityShortFor, taglineFor } from "@/lib/tiers";
 
 type Access = "workspace" | "private";
 
@@ -156,9 +154,6 @@ export const CreateProjectRoute = () => {
 	const canAdvanceFromName = name.trim().length > 0;
 	const canCreate = canAdvanceFromName;
 
-	const tierCapacity = capacityShortFor(tier);
-	const tierTagline = taglineFor(tier);
-
 	return (
 		<Container size="sm" py="xl" px="lg">
 			<Stack gap={28}>
@@ -264,34 +259,6 @@ export const CreateProjectRoute = () => {
 								</Stack>
 							</Radio.Group>
 
-							{/* Tier context — spells out what the workspace's tier
-							    includes so the creator can see why Private is or
-							    isn't available without leaving the wizard. */}
-							<Alert color="gray" variant="light">
-								<Stack gap={6}>
-									<Text size="xs" fw={500}>
-										<Trans>
-											This workspace is on{" "}
-											<span style={{ textTransform: "capitalize" }}>
-												{tier}
-											</span>
-										</Trans>
-									</Text>
-									{tierCapacity && (
-										<Text size="xs" c="dimmed">
-											{tierCapacity}
-											{tierTagline ? ` — ${tierTagline}` : ""}
-										</Text>
-									)}
-									{!privateAvailable && (
-										<Text size="xs" c="dimmed">
-											<Trans>
-												Private projects unlock on Innovator or higher.
-											</Trans>
-										</Text>
-									)}
-								</Stack>
-							</Alert>
 						</Stack>
 					</Stepper.Step>
 

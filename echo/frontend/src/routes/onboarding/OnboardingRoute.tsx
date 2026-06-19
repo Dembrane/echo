@@ -1,24 +1,24 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	ActionIcon,
-	Box,
 	Button,
 	Checkbox,
 	Group,
 	Loader,
 	Radio,
 	Stack,
+	Stepper,
 	Text,
 	TextInput,
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconPlus, IconX } from "@tabler/icons-react";
+import { IconArrowLeft } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
+import { InviteEmailList } from "@/components/organisation/InviteEmailList";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useMyInvites } from "@/hooks/useMyInvites";
@@ -98,9 +98,32 @@ export const OnboardingRoute = () => {
 	const [q1, setQ1] = useState<string[]>([]);
 	const [q2, setQ2] = useState<string | null>(null);
 	const [q3, setQ3] = useState<string | null>(null);
+	// Step 3 asks one question at a time. The training question (q3) only
+	// appears when the high-risk answer (q2) is "yes", so the ordered list of
+	// sub-questions is derived from q2. qSubStep indexes into it.
+	const [qSubStep, setQSubStep] = useState(0);
+	const questionFlow =
+		q2 === "yes" ? ["risk", "training", "usage"] : ["risk", "usage"];
 	const [submittingAnswers, setSubmittingAnswers] = useState(false);
 	// Skip the questions step if the user already answered (re-onboarding).
 	const alreadyAnswered = Boolean(meV2?.onboarding_answer_json);
+
+	// Visible progress for the flow. Invited users skip the invite step
+	// (they're joining, not building a organisation), so their stepper is
+	// shorter. The stepper is a progress indicator only, not clickable: the
+	// org-creation mutation has side effects, so we don't let users jump back.
+	const flowSteps = hasInvites
+		? [t`Welcome`, t`About you`]
+		: [t`Organisation`, t`Invite`, t`About you`];
+	const activeStep = hasInvites
+		? step === "questions"
+			? 1
+			: 0
+		: step === "invite"
+			? 1
+			: step === "questions"
+				? 2
+				: 0;
 
 	// Everyone lands on the general home /o after onboarding (ISSUE-015 /
 	// Founder decision D3) — not a specific workspace. useCallback keeps the
@@ -251,17 +274,6 @@ export const OnboardingRoute = () => {
 		goToHome();
 	};
 
-	const addEmailField = () => setInviteEmails([...inviteEmails, ""]);
-
-	const removeEmailField = (index: number) =>
-		setInviteEmails(inviteEmails.filter((_, i) => i !== index));
-
-	const updateEmail = (index: number, value: string) => {
-		const updated = [...inviteEmails];
-		updated[index] = value;
-		setInviteEmails(updated);
-	};
-
 	// ── Loading ──
 	if (step === "loading") {
 		return (
@@ -310,9 +322,10 @@ export const OnboardingRoute = () => {
 					}}
 				>
 					<Stack gap={24}>
+						<FlowStepper steps={flowSteps} active={activeStep} />
 						<Stack gap={6}>
 							<Title order={3} fw={500}>
-								<Trans>Invite your organisation</Trans>
+								<Trans>Invite your team</Trans>
 							</Title>
 							<Text size="sm" c="dimmed" lh={1.6}>
 								<Trans>
@@ -322,41 +335,11 @@ export const OnboardingRoute = () => {
 							</Text>
 						</Stack>
 
-						<Stack gap={10}>
-							{inviteEmails.map((email, index) => (
-								// biome-ignore lint/suspicious/noArrayIndexKey: row identity tracks position; emails are user-editable so value-based keys cause remount-on-keystroke (focus loss)
-								<Group key={`invite-${index}`} gap={8} wrap="nowrap">
-									<TextInput
-										flex={1}
-										placeholder={t`name@example.com`}
-										size="sm"
-										value={email}
-										autoFocus={index === 0}
-										onChange={(e) => updateEmail(index, e.currentTarget.value)}
-									/>
-									{inviteEmails.length > 1 && (
-										<ActionIcon
-											color="gray"
-											size="sm"
-											variant="subtle"
-											onClick={() => removeEmailField(index)}
-										>
-											<IconX size={14} />
-										</ActionIcon>
-									)}
-								</Group>
-							))}
-							<Box>
-								<Button
-									leftSection={<IconPlus size={14} />}
-									size="sm"
-									variant="subtle"
-									onClick={addEmailField}
-								>
-									<Trans>Add another</Trans>
-								</Button>
-							</Box>
-						</Stack>
+						<InviteEmailList
+							emails={inviteEmails}
+							onChange={setInviteEmails}
+							autoFocusFirst
+						/>
 
 						<Group gap={12}>
 							<Button
@@ -386,7 +369,36 @@ export const OnboardingRoute = () => {
 
 	// ── Questions step (ISSUE-012) ──
 	if (step === "questions") {
-		const allAnswered = q1.length > 0 && q2 !== null && q3 !== null;
+		const currentQ = questionFlow[Math.min(qSubStep, questionFlow.length - 1)];
+		const isLastQ = qSubStep >= questionFlow.length - 1;
+		const canContinue =
+			currentQ === "risk"
+				? q2 !== null
+				: currentQ === "training"
+					? q3 !== null
+					: q1.length > 0;
+
+		const goNext = () => {
+			if (isLastQ) {
+				submitAnswers(false);
+				return;
+			}
+			setQSubStep((i) => i + 1);
+		};
+		const goBack = () => {
+			if (qSubStep > 0) {
+				setQSubStep((i) => i - 1);
+				return;
+			}
+			// First question: step back to the previous onboarding screen
+			// (invite for a new organisation, the welcome screen for invitees).
+			setReady(false);
+			setTimeout(() => {
+				setStep(hasInvites ? "org" : "invite");
+				requestAnimationFrame(() => setReady(true));
+			}, 150);
+		};
+
 		return (
 			<div
 				style={{
@@ -411,50 +423,88 @@ export const OnboardingRoute = () => {
 					}}
 				>
 					<Stack gap={28}>
-						<Stack gap={6}>
+						<Button
+							variant="subtle"
+							size="sm"
+							leftSection={<IconArrowLeft size={16} />}
+							onClick={goBack}
+							px={4}
+							style={{ alignSelf: "flex-start" }}
+						>
+							<Trans>Back</Trans>
+						</Button>
+
+						<FlowStepper steps={flowSteps} active={activeStep} />
+
+						{/* A reassuring title so users who land here unexpectedly
+						    (e.g. existing users nudged through the questionnaire)
+						    aren't surprised. */}
+						<Stack gap={4}>
 							<Title order={3} fw={500}>
-								<Trans>A few quick questions</Trans>
+								<Trans>Almost ready</Trans>
 							</Title>
-							<Text size="sm" lh={1.6}>
-								<Trans>
-									This helps us set you up well. You can skip and answer later.
-								</Trans>
+							<Text size="sm" lh={1.5}>
+								<Trans>A couple of quick questions and you're in.</Trans>
 							</Text>
 						</Stack>
 
-						<Checkbox.Group
-							label={t`Do you plan to use dembrane internally, or to provide services to other client organisations?`}
-							value={q1}
-							onChange={setQ1}
-						>
-							<Stack gap={8} mt={8}>
-								<Checkbox value="only internally" label={t`Only internally`} />
-								<Checkbox value="with partners" label={t`With partners`} />
-								<Checkbox value="with clients" label={t`With clients`} />
+						{currentQ === "risk" && (
+							<Stack key="risk" gap={12}>
+								<Text size="md" fw={500} lh={1.4}>
+									{t`Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?`}
+								</Text>
+								<Radio.Group
+									value={q2}
+									onChange={(v) => {
+										setQ2(v);
+										// Dropping out of high-risk hides the training question,
+										// so clear any stale answer to it.
+										if (v === "no") setQ3(null);
+									}}
+								>
+									<Group gap={16}>
+										<Radio size="md" value="yes" label={t`Yes`} />
+										<Radio size="md" value="no" label={t`No`} />
+									</Group>
+								</Radio.Group>
 							</Stack>
-						</Checkbox.Group>
+						)}
 
-						<Radio.Group
-							label={t`Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?`}
-							value={q2}
-							onChange={setQ2}
-						>
-							<Group gap={16} mt={8}>
-								<Radio value="yes" label={t`Yes`} />
-								<Radio value="no" label={t`No`} />
-							</Group>
-						</Radio.Group>
+						{currentQ === "training" && (
+							<Stack key="training" gap={12}>
+								<Text size="md" fw={500} lh={1.4}>
+									{t`Have you completed a training?`}
+								</Text>
+								<Radio.Group value={q3} onChange={setQ3}>
+									<Group gap={16}>
+										<Radio size="md" value="yes" label={t`Yes`} />
+										<Radio size="md" value="no" label={t`No`} />
+									</Group>
+								</Radio.Group>
+							</Stack>
+						)}
 
-						<Radio.Group
-							label={t`Have you followed a training?`}
-							value={q3}
-							onChange={setQ3}
-						>
-							<Group gap={16} mt={8}>
-								<Radio value="yes" label={t`Yes`} />
-								<Radio value="no" label={t`No`} />
-							</Group>
-						</Radio.Group>
+						{currentQ === "usage" && (
+							<Stack key="usage" gap={12}>
+								<Text size="md" fw={500} lh={1.4}>
+									{t`What do you plan to use dembrane for?`}
+								</Text>
+								<Checkbox.Group value={q1} onChange={setQ1}>
+									<Stack gap={10}>
+										<Checkbox
+											size="md"
+											value="within my organisation"
+											label={t`Within my organisation`}
+										/>
+										<Checkbox
+											size="md"
+											value="with external clients"
+											label={t`With external clients`}
+										/>
+									</Stack>
+								</Checkbox.Group>
+							</Stack>
+						)}
 
 						<Group gap={12}>
 							<Button
@@ -468,10 +518,10 @@ export const OnboardingRoute = () => {
 								flex={1}
 								size="md"
 								loading={submittingAnswers}
-								disabled={!allAnswered}
-								onClick={() => submitAnswers(false)}
+								disabled={!canContinue}
+								onClick={goNext}
 							>
-								<Trans>Continue</Trans>
+								{isLastQ ? <Trans>Done</Trans> : <Trans>Continue</Trans>}
 							</Button>
 						</Group>
 					</Stack>
@@ -519,6 +569,7 @@ export const OnboardingRoute = () => {
 					}}
 				>
 					<Stack gap={24}>
+						<FlowStepper steps={flowSteps} active={activeStep} />
 						<Stack gap={6}>
 							<Title order={3} fw={400}>
 								{hasInvites ? (
@@ -632,6 +683,16 @@ export const OnboardingRoute = () => {
 		</div>
 	);
 };
+
+function FlowStepper({ steps, active }: { steps: string[]; active: number }) {
+	return (
+		<Stepper active={active} size="sm" iconSize={28} mb={8}>
+			{steps.map((label) => (
+				<Stepper.Step key={label} label={label} />
+			))}
+		</Stepper>
+	);
+}
 
 function GradientBlurs() {
 	return (

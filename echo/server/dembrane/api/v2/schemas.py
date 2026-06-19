@@ -133,6 +133,9 @@ class WorkspaceSummary(BaseModel):
     role: str
     is_default: bool
     tier: str
+    # Bills on its own (workspace-scoped) account rather than the org's pooled
+    # plan — surfaced so tier displays can mark it "(Partner)".
+    bills_separately: bool = False
     logo_url: Optional[str] = None
     # Parent organisation's logo — handy for card rendering so the client doesn't
     # need a second lookup. Nullable because organisations without a logo exist.
