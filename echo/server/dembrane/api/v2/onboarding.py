@@ -747,7 +747,11 @@ async def submit_onboarding_answers(
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
 
-    onboarding_answer_json = {"version": body.version, "data": body.data}
+    onboarding_answer_json = {
+        "version": body.version,
+        "data": body.data,
+        "skipped": body.skipped,
+    }
 
     await async_directus.update_item(
         "app_user",
@@ -769,6 +773,7 @@ async def submit_onboarding_answers(
             properties={
                 "version": body.version,
                 "answers": body.data,
+                "skipped": body.skipped,
                 "wants_partner_review": wants_partner_review,
                 "is_high_risk": is_high_risk,
                 "training_status": training_status,
@@ -778,8 +783,11 @@ async def submit_onboarding_answers(
         logger.exception("PostHog mirror failed for onboarding answers")
 
     # ── Staff follow-up (in-app + email) ──
-    # Best-effort: a notify failure must never fail the answer write.
-    if wants_partner_review or is_high_risk or training_status is not None:
+    # Best-effort: a notify failure must never fail the answer write. A skip
+    # carries no answers, so nothing to follow up on.
+    if not body.skipped and (
+        wants_partner_review or is_high_risk or training_status is not None
+    ):
         try:
             await _notify_staff_onboarding_followup(
                 app_user=app_user,

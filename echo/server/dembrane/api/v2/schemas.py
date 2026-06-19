@@ -80,6 +80,9 @@ class OnboardingAnswersRequest(BaseModel):
     # Free-form per-question answers. Stored verbatim under the `data` key.
     # Known keys today: q1 (use context), q2 (high-risk yes/no), q3 (training).
     data: list[dict[str, Any]] = Field(default_factory=list)
+    # User dismissed the questionnaire. Still persisted (with no answers) so the
+    # login gate stops re-nudging them; never triggers staff follow-up.
+    skipped: bool = False
 
 
 class OnboardingAnswersResponse(BaseModel):
