@@ -59,6 +59,10 @@ export const AccountSettingsCard = () => {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["users", "me"] });
+			// The app shows app_user.display_name (sidebar, member lists) via
+			// useV2Me, so refresh that cache too or the new name only appears
+			// after a reload.
+			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
 			toast.success(t`Name updated`);
 		},
 	});

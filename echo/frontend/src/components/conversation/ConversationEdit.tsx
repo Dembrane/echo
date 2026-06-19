@@ -20,9 +20,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useAutoSave } from "@/hooks/useAutoSave";
-import { generateConversationTitle } from "@/lib/api";
+import {
+	generateConversationSummary,
+	generateConversationTitle,
+} from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { CloseableAlert } from "../common/ClosableAlert";
+import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
 import { SaveStatus } from "../form/SaveStatus";
 import {
@@ -201,6 +205,37 @@ export const ConversationEdit = ({
 		},
 	});
 
+	const generateSummaryMutation = useMutation({
+		mutationFn: async () => {
+			const result = await generateConversationSummary(conversation.id);
+			return result;
+		},
+		mutationKey: ["generateSummary", conversation.id],
+		onError: () => {
+			toast.error(t`Could not generate a summary. Please try again.`);
+		},
+		onSuccess: (data) => {
+			// The /summarize endpoint persists the summary (and an optional title)
+			// itself, so we only mirror the result into the form and refetch.
+			if (
+				data &&
+				typeof data === "object" &&
+				"summary" in data &&
+				data.summary
+			) {
+				setValue("summary", data.summary, { shouldDirty: false });
+			} else if (data && typeof data === "object" && "message" in data) {
+				toast.info(data.message);
+			}
+			queryClient.invalidateQueries({
+				queryKey: ["conversations", conversation.id],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["projects", conversation.project_id, "conversations"],
+			});
+		},
+	});
+
 	useEffect(() => {
 		const nextTitle = conversation.title ?? "";
 		if (!formState.dirtyFields.title && getValues("title") !== nextTitle) {
@@ -210,7 +245,6 @@ export const ConversationEdit = ({
 
 	const hasSummary = !!conversation.summary;
 	const hasTitle = !!watch("title");
-	const showGenerateTitle = !hasTitle;
 	const canGenerateTitle = hasSummary;
 	const isGeneratingTitle = generateTitleMutation.isPending;
 
@@ -337,22 +371,20 @@ export const ConversationEdit = ({
 										label={t`Title`}
 										isDirty={formState.dirtyFields.title}
 									/>
-									{showGenerateTitle && (
-										<Tooltip
-											label={t`Generate a summary first`}
-											disabled={canGenerateTitle}
+									<Tooltip
+										label={t`Generate a summary first`}
+										disabled={canGenerateTitle}
+									>
+										<Button
+											variant="subtle"
+											size="compact-xs"
+											loading={isGeneratingTitle}
+											disabled={!canGenerateTitle}
+											onClick={() => generateTitleMutation.mutate()}
 										>
-											<Button
-												variant="subtle"
-												size="compact-xs"
-												loading={isGeneratingTitle}
-												disabled={!canGenerateTitle}
-												onClick={() => generateTitleMutation.mutate()}
-											>
-												{t`Generate`}
-											</Button>
-										</Tooltip>
-									)}
+											{hasTitle ? t`Regenerate` : t`Generate`}
+										</Button>
+									</Tooltip>
 								</Group>
 							}
 							description={t`Topic-based title describing what was discussed`}
@@ -397,8 +429,8 @@ export const ConversationEdit = ({
 							<CloseableAlert color="primary">
 								<Text size="sm">
 									<Trans>
-										To assign a new tag, please create it first in the project
-										overview.
+										To assign a new tag, please create it first in the portal
+										settings.
 									</Trans>
 								</Text>
 							</CloseableAlert>
@@ -408,11 +440,22 @@ export const ConversationEdit = ({
 					{showSummary && (
 						<Textarea
 							label={
-								<FormLabel
-									label={t`Summary`}
-									isDirty={!!formState.dirtyFields.summary}
-								/>
+								<Group gap="xs" justify="space-between" className="w-full">
+									<FormLabel
+										label={t`Summary`}
+										isDirty={!!formState.dirtyFields.summary}
+									/>
+									<Button
+										variant="subtle"
+										size="compact-xs"
+										loading={generateSummaryMutation.isPending}
+										onClick={() => generateSummaryMutation.mutate()}
+									>
+										{watch("summary")?.trim() ? t`Regenerate` : t`Generate`}
+									</Button>
+								</Group>
 							}
+							description={t`Generated from the transcript. You can edit it.`}
 							minRows={4}
 							autosize
 							{...register("summary")}

@@ -24,12 +24,7 @@ import { useSearchParams } from "react-router";
 import { useRegisterMutation } from "@/components/auth/hooks";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { I18nLink } from "@/components/common/i18nLink";
-import {
-	ADMIN_BASE_URL,
-	LEGAL_DPA_URL,
-	LEGAL_PRIVACY_URL,
-	LEGAL_TERMS_URL,
-} from "@/config";
+import { ADMIN_BASE_URL, LEGAL_TERMS_URL } from "@/config";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { testId } from "@/lib/testUtils";
 
@@ -190,13 +185,14 @@ export const RegisterRoute = () => {
 									}
 								/>
 								<Checkbox
+									size="md"
 									checked={termsAccepted}
 									onChange={(e) => setTermsAccepted(e.currentTarget.checked)}
 									{...testId("auth-register-terms-checkbox")}
 									label={
 										<Text size="sm">
 											<Trans>
-												I accept the{" "}
+												I have read and accept the{" "}
 												<Anchor
 													href={LEGAL_TERMS_URL}
 													target="_blank"
@@ -215,38 +211,6 @@ export const RegisterRoute = () => {
 								>
 									<Trans>Continue</Trans>
 								</Button>
-								<Text size="xs">
-									<Trans>
-										By continuing you agree to our{" "}
-										<Anchor
-											size="xs"
-											href={LEGAL_TERMS_URL}
-											target="_blank"
-											rel="noreferrer"
-										>
-											terms
-										</Anchor>
-										. See our{" "}
-										<Anchor
-											size="xs"
-											href={LEGAL_PRIVACY_URL}
-											target="_blank"
-											rel="noreferrer"
-										>
-											privacy policy
-										</Anchor>{" "}
-										and{" "}
-										<Anchor
-											size="xs"
-											href={LEGAL_DPA_URL}
-											target="_blank"
-											rel="noreferrer"
-										>
-											DPA
-										</Anchor>
-										.
-									</Trans>
-								</Text>
 							</>
 						)}
 

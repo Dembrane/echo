@@ -14,6 +14,7 @@ from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.invites import compute_invite_hash
 from dembrane.api.v2.schemas import MeResponse, OrgSummary, TrainingStatus
 from dembrane.directus_async import async_directus
+from dembrane.billing_account import resolve_workspace_billing
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.api.v2._invite_helpers import (
     create_membership_row,
@@ -486,6 +487,9 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
 
     # Race-protection: cap may have shrunk between invite-send and accept.
     # Unified seat pool — members and externals share capacity (ADR-0003).
+    # Seat cap keys off tier, which lives on the billing account — hydrate it
+    # onto the workspace dict (a plain get_item doesn't join billing fields).
+    ws.update(await resolve_workspace_billing(ws["id"]))
     await assert_can_add_seat(ws, audience="invitee")
 
     # Rate-limit AFTER the cap check so a user retrying while waiting for
@@ -1153,6 +1157,8 @@ async def _consume_pending_invites_in_org(
                         )
                         continue
                     try:
+                        # Hydrate tier from the billing account before the cap check.
+                        ws_row.update(await resolve_workspace_billing(ws_row["id"]))
                         await assert_can_add_seat(ws_row, audience="invitee")
                     except HTTPException as cap_exc:
                         if cap_exc.status_code == 402:
@@ -1540,6 +1546,8 @@ async def accept_invite_by_hash(
                 )
 
                 # Race-protection on the heal write. Unified seat pool.
+                # Hydrate tier from the billing account before the cap check.
+                ws.update(await resolve_workspace_billing(ws["id"]))
                 await assert_can_add_seat(ws, audience="invitee")
 
                 if not heal_is_external and ws.get("org_id"):
@@ -1705,6 +1713,8 @@ async def accept_invite_by_hash(
     # Race-protection: cap may have shrunk between invite-send and accept.
     # On 402 we return without touching accepted_at, so admin can free a
     # seat and the invitee can retry the same link.
+    # Hydrate tier from the billing account before the cap check.
+    ws.update(await resolve_workspace_billing(ws["id"]))
     await assert_can_add_seat(ws, audience="invitee")
 
     # Rate-limit AFTER all the validation gates above (HMAC match, honeypot,

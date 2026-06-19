@@ -12,7 +12,13 @@ export const AdminHomeView = () => {
 				icon={ChartBar}
 			/>
 			<NavItem to="/admin/payments" label="Payments" icon={CreditCard} />
-			<NavItem to="/admin/partners" label="Partners" icon={Handshake} />
+			<NavItem
+				to="/admin/partners"
+				label="Partners"
+				icon={Handshake}
+				disabled
+				badge="Soon"
+			/>
 		</nav>
 	);
 };

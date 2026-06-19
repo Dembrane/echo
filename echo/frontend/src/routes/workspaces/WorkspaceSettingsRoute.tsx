@@ -630,7 +630,13 @@ export const WorkspaceSettingsRoute = () => {
 										<Trans>External of {settings.org_name}</Trans>
 									</Badge>
 								) : (
-									<TierBadge tier={settings.tier} size="xs" />
+									<TierBadge
+										tier={settings.tier}
+										size="xs"
+										billsSeparately={
+											!settings.billing_org_managed && !!settings.org_id
+										}
+									/>
 								)}
 								{!iAmExternal && settings.type_discount && (
 									<Badge size="xs" variant="light" color="teal" tt="capitalize">
@@ -686,6 +692,23 @@ export const WorkspaceSettingsRoute = () => {
 											</Trans>
 										</Text>
 									)}
+
+									{seesFinancials &&
+										!settings.billing_org_managed &&
+										settings.org_id && (
+											<Paper withBorder p="md" radius="sm">
+												<Text size="sm">
+													<Trans>This workspace is billed separately</Trans>
+												</Text>
+												<Text size="xs" c="dimmed" mt={4}>
+													<Trans>
+														It has its own plan and seats, not{" "}
+														{settings.org_name}'s pooled plan. Changes here only
+														affect this workspace.
+													</Trans>
+												</Text>
+											</Paper>
+										)}
 
 									{seesFinancials &&
 										workspaceId &&

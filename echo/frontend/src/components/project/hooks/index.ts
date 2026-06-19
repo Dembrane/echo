@@ -165,6 +165,50 @@ export const useCloneProjectByIdMutation = () => {
 	});
 };
 
+export const useMoveProjectMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({
+			projectId,
+			targetWorkspaceId,
+		}: {
+			projectId: string;
+			targetWorkspaceId: string;
+		}) => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/projects/${projectId}/move`,
+				{
+					body: JSON.stringify({ target_workspace_id: targetWorkspaceId }),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || t`Failed to move project`);
+			}
+			return (await res.json()) as {
+				project_id: string;
+				workspace_id: string;
+			};
+		},
+		onSuccess: (_data, variables) => {
+			queryClient.invalidateQueries({ queryKey: ["projects"] });
+			queryClient.invalidateQueries({
+				queryKey: ["projects", variables.projectId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "workspace-projects"],
+			});
+			toast.success(t`Project moved`);
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || t`Failed to move project`);
+		},
+	});
+};
+
 export const useCreateProjectTagMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({

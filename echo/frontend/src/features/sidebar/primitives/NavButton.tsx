@@ -9,6 +9,10 @@ import { BADGE_TONES } from "./NavItem";
 interface NavButtonProps {
 	label: ReactNode;
 	icon?: Icon;
+	/** Override the icon color (e.g. a brand accent). Defaults to the text color. */
+	iconColor?: string;
+	/** Override the label color (e.g. a brand accent). Defaults to the text color. */
+	labelColor?: string;
 	onClick: () => void;
 	pushes?: boolean;
 	badge?: ReactNode;
@@ -21,6 +25,8 @@ interface NavButtonProps {
 export const NavButton = ({
 	label,
 	icon: Icon,
+	iconColor,
+	labelColor,
 	onClick,
 	pushes,
 	badge,
@@ -38,8 +44,13 @@ export const NavButton = ({
 			style={{ color: destructive ? "#c0392b" : "#2d2d2c" }}
 		>
 			<span className="relative flex flex-1 items-center gap-2 truncate">
-				{Icon ? <Icon size={16} /> : null}
-				<span className="truncate">{label}</span>
+				{Icon ? <Icon size={16} color={iconColor} /> : null}
+				<span
+					className="truncate"
+					style={labelColor ? { color: labelColor } : undefined}
+				>
+					{label}
+				</span>
 			</span>
 			{/* != null, not truthiness: badge={0} would render a bare "0" */}
 			{badge != null && (

@@ -1,15 +1,8 @@
 import { Trans } from "@lingui/react/macro";
-import {
-	ChatCircle,
-	EnvelopeSimple,
-	Note,
-	Pulse,
-	Users,
-} from "@phosphor-icons/react";
+import { ChatCircle, EnvelopeSimple, Note, Pulse } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { FeedbackPortalModal } from "@/components/common/FeedbackPortalModal";
-import { COMMUNITY_SLACK_URL } from "@/config";
 import { NavButton } from "../primitives/NavButton";
 import { SectionLabel } from "../primitives/SectionLabel";
 
@@ -28,26 +21,17 @@ export const HelpBlock = () => {
 					<Trans>Help</Trans>
 				</SectionLabel>
 				<NavButton
-					label={<Trans>Contact support</Trans>}
-					icon={EnvelopeSimple}
-					external
-					onClick={() => {
-						window.location.href = "mailto:support@dembrane.com";
-					}}
+					label={<Trans>Feedback</Trans>}
+					icon={ChatCircle}
+					iconColor="var(--mantine-color-primary-6)"
+					labelColor="var(--mantine-color-primary-6)"
+					onClick={() => setFeedbackOpen(true)}
 				/>
 				<NavButton
 					label={<Trans>Documentation</Trans>}
 					icon={Note}
 					external
 					onClick={() => window.open(docUrl, "_blank", "noopener,noreferrer")}
-				/>
-				<NavButton
-					label={<Trans>Slack community</Trans>}
-					icon={Users}
-					external
-					onClick={() =>
-						window.open(COMMUNITY_SLACK_URL, "_blank", "noopener,noreferrer")
-					}
 				/>
 				<NavButton
 					label={<Trans>System status</Trans>}
@@ -57,9 +41,12 @@ export const HelpBlock = () => {
 					disabled
 				/>
 				<NavButton
-					label={<Trans>Feedback</Trans>}
-					icon={ChatCircle}
-					onClick={() => setFeedbackOpen(true)}
+					label={<Trans>Contact support</Trans>}
+					icon={EnvelopeSimple}
+					external
+					onClick={() => {
+						window.location.href = "mailto:support@dembrane.com";
+					}}
 				/>
 			</div>
 			<FeedbackPortalModal

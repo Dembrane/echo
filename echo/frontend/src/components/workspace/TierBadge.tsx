@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import type { MantineSize } from "@mantine/core";
 import { Badge, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { capacityShortFor, taglineFor } from "@/lib/tiers";
@@ -8,6 +9,9 @@ interface TierBadgeProps {
 	/** When true, render the tagline inline next to the badge. Use on
 	 * surfaces with enough width. Defaults to false (tagline via tooltip). */
 	showTagline?: boolean;
+	/** True when the workspace bills on its own (workspace-scoped) account
+	 * rather than the org's pooled plan — appends "(Partner)" to the tier. */
+	billsSeparately?: boolean;
 }
 
 /**
@@ -26,6 +30,7 @@ export const TierBadge = ({
 	tier,
 	size = "sm",
 	showTagline = false,
+	billsSeparately = false,
 }: TierBadgeProps) => {
 	const tagline = taglineFor(tier);
 	const capacity = capacityShortFor(tier);
@@ -37,19 +42,25 @@ export const TierBadge = ({
 			color="blue"
 			style={{ textTransform: "capitalize" }}
 		>
-			{tier}
+			{billsSeparately ? `${tier} (partner)` : tier}
 		</Badge>
 	);
 
 	// Tooltip always shows tagline + capacity so every surface answers
-	// "what does this tier get me?" without leaving the page.
+	// "what does this tier get me?" without leaving the page. The partner line
+	// clarifies that this workspace bills on its own, not the org's plan.
 	const tooltipLabel =
-		tagline || capacity ? (
+		tagline || capacity || billsSeparately ? (
 			<Stack gap={2}>
 				{tagline && <Text size="xs">{tagline}</Text>}
 				{capacity && (
 					<Text size="xs" c="dimmed">
 						{capacity}
+					</Text>
+				)}
+				{billsSeparately && (
+					<Text size="xs" c="dimmed">
+						{t`Billed separately, not part of the organisation's plan.`}
 					</Text>
 				)}
 			</Stack>

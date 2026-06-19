@@ -183,6 +183,33 @@ async def grant_reverse_trial(
         "downgraded_from_tier": None,
     }
     await directus_async.async_directus.update_item("billing_account", account_id, patch)
+
+    # Tier just changed; the usage rollups cache a flattened per-workspace tier
+    # for USAGE_TTL_SECONDS, so bust them or the "Needs attention / Upgrade"
+    # panel lingers on the pre-grant tier.
+    from dembrane.cache_utils import invalidate_org_usage, invalidate_workspace_usage
+
+    account = await directus_async.async_directus.get_item("billing_account", account_id)
+    covered = await directus_async.async_directus.get_items(
+        "workspace",
+        {
+            "query": {
+                "filter": {
+                    "billing_account_id": {"_eq": account_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    )
+    if isinstance(covered, list):
+        for w in covered:
+            if w.get("id"):
+                await invalidate_workspace_usage(w["id"])
+    if account and account.get("org_id"):
+        await invalidate_org_usage(account["org_id"])
+
     return expires_at
 
 

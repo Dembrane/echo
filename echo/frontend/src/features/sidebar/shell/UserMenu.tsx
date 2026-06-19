@@ -1,7 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Group, Menu, Text, UnstyledButton } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
+	Buildings,
 	DotsThree,
 	Envelope,
 	Gear,
@@ -19,6 +21,7 @@ import { isAuthPath } from "@/components/auth/utils/authPaths";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { LanguagePicker } from "@/components/language/LanguagePicker";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
+import { CreateOrganisationModal } from "@/components/organisation/CreateOrganisationModal";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
 
@@ -33,6 +36,7 @@ export const UserMenu = () => {
 	const location = useLocation();
 	const navigate = useI18nNavigate();
 	const { runTransition } = useTransitionCurtain();
+	const [createOrgOpened, createOrgHandlers] = useDisclosure(false);
 
 	if (!isAuthenticated || !user) return null;
 
@@ -51,99 +55,111 @@ export const UserMenu = () => {
 	};
 
 	return (
-		<Menu
-			withArrow
-			arrowPosition="center"
-			width={240}
-			position="right-end"
-			offset={8}
-			keepMounted
-		>
-			<Menu.Target>
-				<UnstyledButton
-					className="flex h-[36px] w-full items-center gap-2 rounded-md px-2 transition-colors hover:bg-black/[0.04]"
-					style={{ color: "#2d2d2c" }}
-				>
-					<UserAvatar size={22} />
-					<Box className="min-w-0 flex-1 text-left">
-						<Text size="xs" lh={1.1} truncate>
-							{user.first_name ?? t`there`}
-						</Text>
-						<Text size="xs" c="dimmed" lh={1.1} truncate>
-							{user.email ?? ""}
-						</Text>
-					</Box>
-					{/* Visible affordance that the row opens a menu (settings +
+		<>
+			<Menu
+				withArrow
+				arrowPosition="center"
+				width={240}
+				position="right-end"
+				offset={8}
+				keepMounted
+			>
+				<Menu.Target>
+					<UnstyledButton
+						className="flex h-[36px] w-full items-center gap-2 rounded-md px-2 transition-colors hover:bg-black/[0.04]"
+						style={{ color: "#2d2d2c" }}
+					>
+						<UserAvatar size={22} />
+						<Box className="min-w-0 flex-1 text-left">
+							<Text size="xs" lh={1.1} truncate>
+								{user.first_name ?? t`there`}
+							</Text>
+							<Text size="xs" c="dimmed" lh={1.1} truncate>
+								{user.email ?? ""}
+							</Text>
+						</Box>
+						{/* Visible affordance that the row opens a menu (settings +
 					    logout). The whole row is the menu target; the dots just
 					    signal it. */}
-					<DotsThree
-						size={18}
-						weight="bold"
-						className="shrink-0"
-						style={{ color: "rgba(45, 45, 44, 0.55)" }}
-						aria-hidden="true"
-					/>
-				</UnstyledButton>
-			</Menu.Target>
+						<DotsThree
+							size={18}
+							weight="bold"
+							className="shrink-0"
+							style={{ color: "rgba(45, 45, 44, 0.55)" }}
+							aria-hidden="true"
+						/>
+					</UnstyledButton>
+				</Menu.Target>
 
-			<Menu.Dropdown className="py-2 [&_.mantine-Menu-item]:my-0.5">
-				{needsOnboarding && (
+				<Menu.Dropdown className="py-2 [&_.mantine-Menu-item]:my-0.5">
+					{needsOnboarding && (
+						<Menu.Item
+							leftSection={<Sparkle size={14} />}
+							onClick={() => navigate("/onboarding")}
+							color="primary"
+						>
+							<Trans>Set up workspace</Trans>
+						</Menu.Item>
+					)}
+					{hasPendingInvites && (
+						<Menu.Item
+							leftSection={<Envelope size={14} />}
+							onClick={() => navigate("/invites")}
+							color="primary"
+						>
+							<Trans>You have a pending invite</Trans>
+						</Menu.Item>
+					)}
+
+					{(needsOnboarding || hasPendingInvites) && <Menu.Divider my={6} />}
+
+					<Box px="sm" py={4}>
+						<Group justify="space-between" align="center">
+							<Text size="xs" c="dimmed">
+								<Trans>Language</Trans>
+							</Text>
+							<LanguagePicker />
+						</Group>
+					</Box>
+
+					<Menu.Divider my={6} />
+
+					{isStaff && (
+						<Menu.Item
+							leftSection={<ShieldStar size={14} />}
+							onClick={() => navigate("/admin")}
+						>
+							<Trans>Staff</Trans>
+						</Menu.Item>
+					)}
 					<Menu.Item
-						leftSection={<Sparkle size={14} />}
-						onClick={() => navigate("/onboarding")}
-						color="primary"
+						leftSection={<Gear size={14} />}
+						onClick={() => navigate("/settings")}
 					>
-						<Trans>Set up workspace</Trans>
+						<Trans>User settings</Trans>
 					</Menu.Item>
-				)}
-				{hasPendingInvites && (
 					<Menu.Item
-						leftSection={<Envelope size={14} />}
-						onClick={() => navigate("/invites")}
-						color="primary"
+						leftSection={<Buildings size={14} />}
+						onClick={createOrgHandlers.open}
 					>
-						<Trans>You have a pending invite</Trans>
+						<Trans>Create new organisation</Trans>
 					</Menu.Item>
-				)}
 
-				{(needsOnboarding || hasPendingInvites) && <Menu.Divider my={6} />}
+					<Menu.Divider my={6} />
 
-				<Box px="sm" py={4}>
-					<Group justify="space-between" align="center">
-						<Text size="xs" c="dimmed">
-							<Trans>Language</Trans>
-						</Text>
-						<LanguagePicker />
-					</Group>
-				</Box>
-
-				<Menu.Divider my={6} />
-
-				{isStaff && (
 					<Menu.Item
-						leftSection={<ShieldStar size={14} />}
-						onClick={() => navigate("/admin")}
+						leftSection={<SignOut size={14} />}
+						onClick={handleLogout}
+						color="red"
 					>
-						<Trans>Staff</Trans>
+						<Trans>Logout</Trans>
 					</Menu.Item>
-				)}
-				<Menu.Item
-					leftSection={<Gear size={14} />}
-					onClick={() => navigate("/settings")}
-				>
-					<Trans>Settings</Trans>
-				</Menu.Item>
-
-				<Menu.Divider my={6} />
-
-				<Menu.Item
-					leftSection={<SignOut size={14} />}
-					onClick={handleLogout}
-					color="red"
-				>
-					<Trans>Logout</Trans>
-				</Menu.Item>
-			</Menu.Dropdown>
-		</Menu>
+				</Menu.Dropdown>
+			</Menu>
+			<CreateOrganisationModal
+				opened={createOrgOpened}
+				onClose={createOrgHandlers.close}
+			/>
+		</>
 	);
 };

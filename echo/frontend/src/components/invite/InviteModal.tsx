@@ -119,6 +119,17 @@ async function inviteToOrg(
 	return data as { status: string; email: string; invite_url?: string | null };
 }
 
+// One row of the cost preview, scoped to a single billing context (the org's
+// pooled account, or a partner workspace's own account).
+type ConfirmLine = {
+	label: string;
+	billsSeparately: boolean;
+	addedSeats: number;
+	proratedNow: number;
+	recurringDelta: number;
+	billingPeriod: string;
+};
+
 type SeatEstimate = {
 	active: boolean;
 	/** Net-new seats the server actually charges for (recipients already on the
@@ -127,6 +138,8 @@ type SeatEstimate = {
 	prorated_now_eur: number;
 	recurring_delta_eur: number;
 	currency: string;
+	/** Cadence of the account's plan ("annual" | "monthly"); cycles can differ across contexts. */
+	billing_period: string;
 };
 
 async function fetchSeatEstimate(
@@ -182,13 +195,10 @@ export function InviteModal({
 	);
 	const [results, setResults] = useState<InviteResultRow[]>([]);
 	// Prorated cost preview shown before sending a paid, seat-consuming invite.
-	// netNew is the deduped seat count the server will actually bill (recipients
-	// already on the account cost nothing).
-	const [confirm, setConfirm] = useState<{
-		proratedNow: number;
-		recurringDelta: number;
-		netNew: number;
-	} | null>(null);
+	// One line per BILLING CONTEXT (not per workspace): all pooled workspaces
+	// share the org account so they're charged once, while each partner
+	// workspace is its own account with its own cadence.
+	const [confirm, setConfirm] = useState<ConfirmLine[] | null>(null);
 	const [estimating, setEstimating] = useState(false);
 
 	// Owners/admins get the zero-workspace submit path; everyone else must pick a workspace.
@@ -248,6 +258,22 @@ export function InviteModal({
 	const validChips = chips.filter((c) => c.state === "valid");
 	const hasInvalidChips = chips.some((c) => c.state !== "valid");
 	const pendingCount = validChips.length;
+
+	// Distinct billing contexts the current selection spans: all pooled (org)
+	// workspaces share one account, while each separately-billed (partner)
+	// workspace is its own. >1 means a recipient takes a seat in several
+	// independently-billed accounts, which we call out before sending.
+	const billingContextCount = useMemo(() => {
+		let pooled = false;
+		let separate = 0;
+		for (const id of selectedWorkspaces) {
+			const ws = inviteableWorkspaces.find((w) => w.id === id);
+			if (!ws) continue;
+			if (ws.bills_separately) separate += 1;
+			else pooled = true;
+		}
+		return separate + (pooled ? 1 : 0);
+	}, [selectedWorkspaces, inviteableWorkspaces]);
 
 	const toggleWorkspace = (workspaceId: string) => {
 		setSelectedWorkspaces((prev) => {
@@ -443,21 +469,55 @@ export function InviteModal({
 			setEstimating(true);
 			try {
 				const emails = validChips.map((c) => c.value.trim().toLowerCase());
+				const selected = workspaceIds
+					.map((id) => inviteableWorkspaces.find((w) => w.id === id))
+					.filter((w): w is InviteableWorkspace => Boolean(w));
+				// One estimate per billing context. Pooled workspaces share the org
+				// account, so querying any one of them covers them all (querying each
+				// would double-count the same charge); each partner workspace is its
+				// own account with its own cadence.
+				const pooled = selected.filter((w) => !w.bills_separately);
+				const separate = selected.filter((w) => w.bills_separately);
+				const contexts: {
+					id: string;
+					label: string;
+					billsSeparately: boolean;
+				}[] = [];
+				if (pooled.length > 0) {
+					contexts.push({
+						billsSeparately: false,
+						id: pooled[0].id,
+						label: orgName,
+					});
+				}
+				for (const w of separate) {
+					contexts.push({ billsSeparately: true, id: w.id, label: w.name });
+				}
+
 				const estimates = await Promise.all(
-					workspaceIds.map((id) => fetchSeatEstimate(id, emails)),
+					contexts.map(async (c) => ({
+						c,
+						est: await fetchSeatEstimate(c.id, emails),
+					})),
 				);
-				let proratedNow = 0;
-				let recurringDelta = 0;
-				let netNew = 0;
-				for (const e of estimates) {
-					if (e?.active) {
-						proratedNow += e.prorated_now_eur;
-						recurringDelta += e.recurring_delta_eur;
-						netNew = Math.max(netNew, e.added_seats);
+				const lines: ConfirmLine[] = [];
+				for (const { c, est } of estimates) {
+					if (
+						est?.active &&
+						(est.prorated_now_eur > 0 || est.recurring_delta_eur > 0)
+					) {
+						lines.push({
+							addedSeats: est.added_seats,
+							billingPeriod: est.billing_period,
+							billsSeparately: c.billsSeparately,
+							label: c.label,
+							proratedNow: est.prorated_now_eur,
+							recurringDelta: est.recurring_delta_eur,
+						});
 					}
 				}
-				if (proratedNow > 0) {
-					setConfirm({ netNew, proratedNow, recurringDelta });
+				if (lines.length > 0) {
+					setConfirm(lines);
 					return;
 				}
 			} catch {
@@ -530,6 +590,16 @@ export function InviteModal({
 							/>
 						)}
 
+						{billingContextCount > 1 && (
+							<Text size="xs" c="dimmed" data-testid="invite-billing-contexts">
+								<Trans>
+									These workspaces are billed separately. Each person you add
+									takes a seat in {billingContextCount} billing contexts, each
+									invoiced on its own.
+								</Trans>
+							</Text>
+						)}
+
 						{zeroWorkspaceSubmit &&
 							(externalNeedsWorkspace ? (
 								<Alert
@@ -593,16 +663,62 @@ export function InviteModal({
 					</>
 				)}
 
-				{confirm && results.length === 0 && (
+				{confirm && confirm.length > 0 && results.length === 0 && (
 					<Alert variant="light" p="sm" data-testid="invite-proration-confirm">
-						<Text size="sm">
-							<Trans>
-								Adding {confirm.netNew} new seat(s) charges about{" "}
-								{fmtEur(confirm.proratedNow)} now, prorated for the rest of this
-								billing period, and raises your renewal by about{" "}
-								{fmtEur(confirm.recurringDelta)}.
-							</Trans>
-						</Text>
+						<Stack gap={8}>
+							{confirm.length > 1 && (
+								<Text size="sm" fw={500}>
+									<Trans>
+										This invite spans {confirm.length} billing contexts, each
+										invoiced on its own:
+									</Trans>
+								</Text>
+							)}
+							{confirm.map((line) => {
+								const cadence =
+									line.billingPeriod === "monthly" ? t`mo` : t`yr`;
+								return (
+									<Group
+										key={line.label}
+										justify="space-between"
+										wrap="nowrap"
+										gap="sm"
+										align="flex-start"
+									>
+										<Text size="xs">
+											{line.label}
+											{line.billsSeparately ? " (Partner)" : ""}
+										</Text>
+										<Text size="xs" ta="right">
+											<Trans>
+												{line.addedSeats} seat(s) · {fmtEur(line.proratedNow)}{" "}
+												now · +{fmtEur(line.recurringDelta)}/{cadence} at
+												renewal
+											</Trans>
+										</Text>
+									</Group>
+								);
+							})}
+							{confirm.length > 1 ? (
+								<>
+									<Divider my={2} />
+									<Group justify="space-between" wrap="nowrap">
+										<Text size="xs" fw={500}>
+											<Trans>Total due now</Trans>
+										</Text>
+										<Text size="xs" fw={500}>
+											{fmtEur(
+												confirm.reduce((sum, l) => sum + l.proratedNow, 0),
+											)}
+										</Text>
+									</Group>
+								</>
+							) : (
+								<Text size="xs" c="dimmed">
+									<Trans>Prorated for the rest of this billing period.</Trans>
+								</Text>
+							)}
+						</Stack>
 					</Alert>
 				)}
 
@@ -623,6 +739,8 @@ export function InviteModal({
 						>
 							{confirm ? (
 								<Trans>Confirm and send</Trans>
+							) : selectedWorkspaces.size > 0 ? (
+								<Trans>Next</Trans>
 							) : validChips.length > 1 ? (
 								<Trans>Send {validChips.length} invites</Trans>
 							) : (

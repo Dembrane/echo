@@ -119,6 +119,7 @@ interface OrganisationWorkspace {
 	project_count: number;
 	member_count: number;
 	is_private: boolean;
+	bills_separately?: boolean;
 	seat_invite_blocked?: boolean;
 	// Top pinned projects per workspace — backend-enriched on
 	// GET /v2/orgs/:id/workspaces. Merged into the access-scoped overview cards.
@@ -749,17 +750,18 @@ export const OrganisationRoute = () => {
 									<Text size="sm" fw={500}>
 										<Trans>Billing</Trans>
 									</Text>
-									<Text size="xs" c="dimmed">
+									<Text size="xs">
 										<Trans>
-											One plan for the whole organisation. Every workspace
-											shares it and is billed per seat.
+											Your organisation is on the free plan by default. One plan
+											covers every workspace, billed per seat once you upgrade.
 										</Trans>
 									</Text>
 								</div>
 								{organisationId && <OrgBillingTab orgId={organisationId} />}
-								<Text size="xs" c="dimmed">
+								<Text size="xs">
 									<Trans>
-										For invoices, a shared contract, or anything custom, email{" "}
+										For invoices, a shared contract, to discuss a partnership,
+										or anything custom, email{" "}
 										<Anchor href="mailto:support@dembrane.com">
 											support@dembrane.com
 										</Anchor>
@@ -1104,6 +1106,7 @@ interface WorkspaceCardModel {
 	audio_hours: number;
 	conversation_count: number;
 	is_private: boolean;
+	bills_separately: boolean;
 	pinned_projects: WorkspacePinnedProject[];
 	recently_approved: boolean;
 }
@@ -1166,6 +1169,7 @@ function OrganisationOverviewPanel({
 					Date.now() - new Date(w.created_at).getTime() < ONE_DAY_MS;
 				return {
 					audio_hours: w.usage?.audio_hours ?? 0,
+					bills_separately: roster?.bills_separately ?? false,
 					conversation_count: w.usage?.conversation_count ?? 0,
 					id: w.id,
 					is_private: roster?.is_private ?? false,
@@ -1418,6 +1422,17 @@ function OrganisationWorkspaceCard({
 				</Group>
 				<Text size="xs" c="dimmed" lineClamp={1}>
 					{capitalizedTier}
+					{workspace.bills_separately && (
+						<Tooltip
+							label={t`Partner workspace, billed on its own and not part of the organisation's plan.`}
+						>
+							<Text component="span" size="xs" c="dimmed">
+								{" ("}
+								<Trans>partner</Trans>
+								{")"}
+							</Text>
+						</Tooltip>
+					)}
 				</Text>
 
 				<Group gap="lg" wrap="wrap">
@@ -1512,11 +1527,22 @@ function OrganisationPersonCard({
 }) {
 	const [open, setOpen] = useState(false);
 
+	// Workspaces the viewer themselves belongs to. The per-workspace access
+	// matrix is admin-only; a non-admin must not see access info (or even the
+	// names) of workspaces they can't reach. Admins see the full matrix, and a
+	// member always sees their own self-row, scoped to their own workspaces.
+	const { workspaces: myWorkspaces } = useWorkspace();
+	const myWorkspaceIds = useMemo(
+		() => new Set(myWorkspaces.map((w) => w.id)),
+		[myWorkspaces],
+	);
+	const canSeeWorkspaceBreakdown = isAdmin || isSelf;
+
 	// Workspace access summary — direct role wins; derivation fills in
 	// for admin/owner rows on non-private workspaces. Matches the old
 	// matrix rules so the upgrade doesn't hide access state.
 	const perWorkspace = useMemo(() => {
-		return workspaces.map((ws) => {
+		const rows = workspaces.map((ws) => {
 			const directRole = member.direct_workspace_roles?.[ws.id];
 			const membershipId = member.direct_workspace_membership_ids?.[ws.id];
 			const derivedAdmin =
@@ -1535,11 +1561,18 @@ function OrganisationPersonCard({
 				ws,
 			};
 		});
+		// Non-admins only ever see workspaces they belong to (the backend
+		// already redacts the roles; this drops the rows so their names
+		// never render either).
+		if (isAdmin) return rows;
+		return rows.filter((r) => myWorkspaceIds.has(r.ws.id));
 	}, [
 		workspaces,
 		member.direct_workspace_roles,
 		member.direct_workspace_membership_ids,
 		member.role,
+		isAdmin,
+		myWorkspaceIds,
 	]);
 
 	// Summary line: "Admin across all" when uniform, otherwise a short
@@ -1548,7 +1581,7 @@ function OrganisationPersonCard({
 	const summary = useMemo(() => {
 		if (reached.length === 0) return t`No workspace access yet`;
 		const roleSet = new Set(reached.map((w) => w.role as string));
-		if (reached.length === workspaces.length && roleSet.size === 1) {
+		if (reached.length === perWorkspace.length && roleSet.size === 1) {
 			return t`${displayRole(reached[0].role as string)} across all`;
 		}
 		// Mixed state — "Admin on 3 · Member on 2"
@@ -1560,7 +1593,7 @@ function OrganisationPersonCard({
 		return Array.from(counts.entries())
 			.map(([r, n]) => `${displayRole(r)} on ${n}`)
 			.join(" · ");
-	}, [reached, workspaces.length]);
+	}, [reached, perWorkspace.length]);
 
 	const handleOrganisationRoleChange = (next: string) => {
 		const person = member.display_name || member.email || t`this person`;
@@ -1642,9 +1675,11 @@ function OrganisationPersonCard({
 									{member.email}
 								</Text>
 							)}
-							<Text size="xs" c="dimmed" mt={4}>
-								{summary}
-							</Text>
+							{canSeeWorkspaceBreakdown && (
+								<Text size="xs" c="dimmed" mt={4}>
+									{summary}
+								</Text>
+							)}
 						</Stack>
 					</Group>
 					<Group gap="xs" wrap="nowrap">
@@ -1666,19 +1701,21 @@ function OrganisationPersonCard({
 								onChange={handleOrganisationRoleChange}
 							/>
 						)}
-						<ActionIcon
-							variant="subtle"
-							color="gray"
-							size="sm"
-							onClick={() => setOpen((v) => !v)}
-							aria-label={open ? t`Hide detail` : t`Show detail`}
-						>
-							{open ? (
-								<IconChevronDown size={14} />
-							) : (
-								<IconChevronRight size={14} />
-							)}
-						</ActionIcon>
+						{canSeeWorkspaceBreakdown && (
+							<ActionIcon
+								variant="subtle"
+								color="gray"
+								size="sm"
+								onClick={() => setOpen((v) => !v)}
+								aria-label={open ? t`Hide detail` : t`Show detail`}
+							>
+								{open ? (
+									<IconChevronDown size={14} />
+								) : (
+									<IconChevronRight size={14} />
+								)}
+							</ActionIcon>
+						)}
 					</Group>
 				</Group>
 

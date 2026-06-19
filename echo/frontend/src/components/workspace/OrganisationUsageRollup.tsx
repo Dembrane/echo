@@ -84,6 +84,8 @@ interface OrgUsageWorkspaceRow {
 	downgraded_at: string | null;
 	at_cap: boolean;
 	approaching_cap: boolean;
+	// Billed on its own (workspace-scoped) account, not the org's pooled plan.
+	bills_separately: boolean;
 }
 
 interface OrgUsage {
@@ -348,6 +350,15 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 								{row.original.name}
 							</Text>
 						</UnstyledButton>
+						{row.original.bills_separately && (
+							<Tooltip
+								label={t`Billed on its own plan, not your organisation's. Manage it from this workspace's billing.`}
+							>
+								<Badge size="xs" variant="light" color="gray" tt="none">
+									<Trans>Billed separately</Trans>
+								</Badge>
+							</Tooltip>
+						)}
 					</Group>
 				),
 				enableHiding: false,
@@ -917,6 +928,10 @@ function buildAttention(workspaces: OrgUsageWorkspaceRow[]): AttentionItem[] {
 	// const now = Date.now();
 
 	for (const ws of workspaces) {
+		// Separately-billed workspaces run on their own plan; the org admin can't
+		// act on their caps from here, so they don't belong in the org's panel.
+		if (ws.bills_separately) continue;
+
 		const hardBlock = isHardBlockTier(ws.tier);
 
 		if (ws.seat_cap_hit && hardBlock) {
@@ -924,7 +939,7 @@ function buildAttention(workspaces: OrgUsageWorkspaceRow[]): AttentionItem[] {
 				actionLabel: "Upgrade",
 				id: ws.id,
 				key: `${ws.id}:seats_full`,
-				message: `${ws.name} at seat cap (${formatSeatFraction(ws.seat_count, ws.seats_included)}) on ${ws.tier}. Invites blocked.`,
+				message: `${ws.name} has reached its seats. Upgrade to Changemaker for unlimited transcription and to invite your team.`,
 				reason: "seats_full",
 				workspaceId: ws.id,
 			});
@@ -1017,11 +1032,16 @@ function NeedsAttentionPanel({
 							gap="xs"
 							wrap="nowrap"
 							justify="space-between"
+							align="flex-start"
 						>
-							<Text size="sm" style={{ flex: 1 }} lineClamp={1}>
+							<Text size="sm" style={{ flex: 1 }}>
 								{item.message}
 							</Text>
-							<Button size="xs" onClick={() => onOpen(item.workspaceId)}>
+							<Button
+								size="xs"
+								flex="0 0 auto"
+								onClick={() => onOpen(item.workspaceId)}
+							>
 								{item.actionLabel}
 							</Button>
 						</Group>

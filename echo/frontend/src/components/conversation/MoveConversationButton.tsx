@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Badge,
 	Button,
 	Center,
 	Divider,
@@ -139,12 +138,7 @@ export const MoveConversationButton = ({
 				rightSection={<IconArrowsExchange size={16} />}
 				{...testId("conversation-move-button")}
 			>
-				<Group>
-					<Badge color="mauve" c="graphite" size="sm">
-						<Trans>Beta</Trans>
-					</Badge>
-					<Trans>Move to Another Project</Trans>
-				</Group>
+				<Trans>Move to Another Project</Trans>
 			</Button>
 
 			<Modal

@@ -533,7 +533,11 @@ async def approve_access_request(
         # Seat cap gate. Unified seat pool — access requests create
         # direct members (never externals). On 402 the request stays
         # pending so the approving admin sees an upgrade prompt and can
-        # act later.
+        # act later. Seat cap keys off tier, which lives on the billing
+        # account — hydrate it (a plain get_item doesn't join billing fields).
+        from dembrane.billing_account import resolve_workspace_billing
+
+        workspace.update(await resolve_workspace_billing(workspace_id))
         await assert_can_add_seat(workspace, audience="admin")
 
         # Billers are finance-visibility only (matrix v1.1 §4/§5): they get

@@ -434,20 +434,24 @@ class ChatService:
         chat_id: str,
     ) -> List[dict]:
         """
-        Get locked conversations for a chat with their summaries.
+        Get the conversations committed to a chat, with their summaries.
         Returns list of dicts with id, name, and summary fields.
+
+        These are the chat's `project_chat_conversation` links. There is no
+        `locked` field on that collection (tier-locking is computed via
+        tier_capacity.is_conversation_locked, never stored here), so we select
+        every link for the chat. Deep-dive suggestions use these summaries.
         """
         try:
             with self._client_context() as client:
-                # Fetch locked conversations with nested fields using dot notation
-                # This ensures Directus returns the full nested object, not just ID
+                # Fetch the chat's conversations with nested fields using dot
+                # notation so Directus returns the full nested object, not just ID.
                 links: Optional[List[dict]] = client.get_items(
                     "project_chat_conversation",
                     {
                         "query": {
                             "filter": {
                                 "project_chat_id": {"_eq": chat_id},
-                                "locked": {"_eq": True},
                             },
                             "fields": [
                                 "id",

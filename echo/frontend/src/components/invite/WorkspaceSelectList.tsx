@@ -24,6 +24,8 @@ export interface InviteableWorkspace {
 	name: string;
 	tier: string;
 	is_private?: boolean;
+	// Bills on its own (workspace-scoped) account, not the org's pooled plan.
+	bills_separately?: boolean;
 	member_count: number;
 	// Includes pending invite rows; the preview adds pendingCount on top (backend dedups at submit).
 	seats_used_including_pending: number;
@@ -171,11 +173,22 @@ export function WorkspaceSelectList({
 												)}
 											</Group>
 											<Group gap={6} wrap="nowrap" mt={2}>
-												<Badge size="xs" variant="light" color="gray">
-													<span style={{ textTransform: "capitalize" }}>
-														{ws.tier}
-													</span>
-												</Badge>
+												<Tooltip
+													label={t`Partner workspace, billed separately from the organisation.`}
+													disabled={!ws.bills_separately}
+												>
+													<Badge size="xs" variant="light" color="gray">
+														<span style={{ textTransform: "capitalize" }}>
+															{ws.tier}
+														</span>
+														{ws.bills_separately && (
+															<>
+																{" "}
+																<Trans>(Partner)</Trans>
+															</>
+														)}
+													</Badge>
+												</Tooltip>
 												<Text size="xs" c="dimmed">
 													{capLabel}
 												</Text>

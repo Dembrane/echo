@@ -88,10 +88,56 @@ async def _require_billing_access(account: dict, auth: DependencyDirectusSession
 async def org_billing(org_id: str, auth: DependencyDirectusSession) -> dict:
     """The org's billing account snapshot for the org billing page: plan,
     payment status, cadence, and current seat count. Returns a Free shell when
-    the org has no account yet."""
+    the org has no account yet.
+
+    Also lists workspaces in the org that bill on their own (workspace-scoped)
+    account rather than the pooled org plan, so the page can expose them as
+    separate billing accounts (each managed from its own workspace).
+    """
     await _require_org_billing_access(org_id, auth)
     account_id = await get_org_account_id(org_id)
-    return {"account_id": account_id}
+
+    from dembrane.billing_account import nested_billing_fields
+
+    ws_rows = (
+        await async_directus.get_items(
+            "workspace",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": [
+                        "id",
+                        "name",
+                        "billing_account_id.id",
+                        "billing_account_id.org_id",
+                        *nested_billing_fields(),
+                    ],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
+    separate_workspaces = []
+    if isinstance(ws_rows, list):
+        for w in ws_rows:
+            acct = w.get("billing_account_id")
+            # Workspace-scoped account = no org_id on the account.
+            if isinstance(acct, dict) and acct.get("id") and not acct.get("org_id"):
+                separate_workspaces.append(
+                    {
+                        "workspace_id": w["id"],
+                        "name": w.get("name") or "",
+                        "account_id": acct.get("id"),
+                        "tier": acct.get("tier") or "free",
+                        "status": acct.get("status") or "free",
+                    }
+                )
+
+    return {"account_id": account_id, "separate_workspaces": separate_workspaces}
 
 
 @router.get("/billing-accounts/{account_id}/overview")

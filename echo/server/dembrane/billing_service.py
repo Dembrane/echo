@@ -20,11 +20,14 @@ change later means PATCHing the subscription amount.
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from uuid import uuid4
 from datetime import datetime, timezone, timedelta
 
 from dembrane import mollie
 from dembrane.settings import get_settings
+from dembrane.redis_async import get_redis_client
 from dembrane.seat_capacity import count_pending_invites
 from dembrane.tier_capacity import (
     PURCHASABLE_TIERS,
@@ -34,6 +37,49 @@ from dembrane.tier_capacity import (
 from dembrane.directus_async import async_directus
 
 logger = logging.getLogger("billing_service")
+
+
+# Serializes activation for one account across its concurrent triggers (Mollie
+# webhook, return-poll /sync, reconcile cron). Without it, two callers both see
+# "no subscription yet" and both POST a subscription; Mollie rejects the second
+# (unique description) with a noisy 422. Short TTL so a crashed holder can't
+# wedge activation. Fail-open if Redis is down — same as the pre-lock behavior.
+_ACTIVATION_LOCK_TTL_SECONDS = 30
+
+
+async def _try_acquire_activation_lock(account_id: str):
+    """Return (client, token). token is None when another caller holds the lock
+    (skip activation) or when Redis is unavailable (proceed without a lock —
+    distinguished by client being None)."""
+    key = f"dembrane:billing:activation_lock:{account_id}"
+    try:
+        client = await get_redis_client()
+    except Exception:
+        logger.warning("Redis unavailable for activation lock on %s; proceeding", account_id)
+        return None, None
+    token = str(uuid4())
+    try:
+        acquired = await client.set(key, token, ex=_ACTIVATION_LOCK_TTL_SECONDS, nx=True)
+    except Exception:
+        logger.warning("Activation lock set failed on %s; proceeding", account_id)
+        return None, None
+    return (client, token) if acquired else (client, None)
+
+
+async def _release_activation_lock(account_id: str, client, token) -> None:
+    if client is None or token is None:
+        return
+    key = f"dembrane:billing:activation_lock:{account_id}"
+    script = (
+        'if redis.call("get", KEYS[1]) == ARGV[1] then '
+        'return redis.call("del", KEYS[1]) else return 0 end'
+    )
+    try:
+        result = client.eval(script, 1, key, token)
+        if asyncio.iscoroutine(result):
+            await result
+    except Exception:
+        logger.warning("Failed to release activation lock for %s", account_id, exc_info=True)
 
 
 def apply_discount(amount: float, percent_discount: int | None) -> float:
@@ -109,6 +155,29 @@ async def _account_workspace_ids(account_id: str) -> list[str]:
     if not isinstance(workspaces, list):
         return []
     return [w["id"] for w in workspaces if w.get("id")]
+
+
+async def invalidate_account_usage_caches(account_id: str) -> None:
+    """Bust the workspace + org usage rollups for every workspace the account
+    covers. Tier/status live on the account but the rollups cache a flattened
+    per-workspace `tier` (and the seat-cap/needs-attention flags derived from
+    it) for USAGE_TTL_SECONDS. Without this, a tier change (e.g. free →
+    changemaker on activation) keeps serving the pre-upgrade snapshot — the
+    "Needs attention / Upgrade" panel lingers for up to 30 minutes.
+
+    Call after any write that changes `tier` or `status` on a billing account.
+    """
+    from dembrane.cache_utils import (
+        invalidate_org_usage,
+        invalidate_workspace_usage,
+    )
+
+    account = await async_directus.get_item("billing_account", account_id)
+    org_id = (account or {}).get("org_id")
+    for ws_id in await _account_workspace_ids(account_id):
+        await invalidate_workspace_usage(ws_id)
+    if org_id:
+        await invalidate_org_usage(org_id)
 
 
 async def count_account_pending_invites(account_id: str) -> int:
@@ -520,6 +589,31 @@ async def start_subscription_checkout(
     amount = apply_discount(amount, account.get("percent_discount"))
 
     customer_id = await _ensure_customer(account)
+
+    # Idempotency: reuse an in-flight consent payment rather than minting a
+    # second one (double-click, back-button, two tabs). Two paid consent
+    # payments would each be a real first-period charge — a double charge.
+    try:
+        for existing in await mollie.list_customer_payments(customer_id):
+            existing_meta = existing.get("metadata") or {}
+            if (
+                existing.get("sequenceType") == "first"
+                and existing.get("status") in ("open", "pending")
+                and existing_meta.get("intent") == "activate"
+                and existing_meta.get("billing_account_id") == account_id
+            ):
+                existing_url = mollie.checkout_url(existing)
+                if existing_url:
+                    logger.info(
+                        "reusing in-flight consent payment %s for account %s",
+                        existing.get("id"),
+                        account_id,
+                    )
+                    return existing_url
+    except mollie.MollieError as exc:
+        # Non-fatal: fall through and create a fresh consent payment.
+        logger.warning("Could not check for in-flight consent payment on %s: %s", account_id, exc)
+
     payment = await mollie.create_first_payment(
         customer_id=customer_id,
         amount_eur=amount,
@@ -636,41 +730,65 @@ async def handle_payment_method_updated(account_id: str, customer_id: str) -> No
 
 async def _activate_from_first_payment(account_id: str, meta: dict, customer_id: str) -> None:
     """First consent payment cleared: create the recurring subscription and
-    activate the account."""
-    account = await async_directus.get_item("billing_account", account_id)
-    if not account:
+    activate the account.
+
+    Serialized by a per-account Redis lock so the webhook, return-poll, and
+    reconcile cron can't race into two `create_subscription` calls (the source
+    of the duplicate-description 422). The `mollie_subscription_id` re-check
+    inside the lock is the real idempotency guard; the lock just removes the
+    window between read and write."""
+    client, token = await _try_acquire_activation_lock(account_id)
+    # Held by another in-flight activation (Redis up, lock taken) → let it win.
+    if client is not None and token is None:
+        logger.info("activation already in progress for %s; skipping", account_id)
         return
-    if account.get("mollie_subscription_id"):
-        return  # idempotent — subscription already created
-    settings = get_settings()
-    tier = meta.get("tier") or account.get("tier")
-    interval = meta.get("interval") or "12 months"
-    amount = float(meta.get("amount_eur") or 0)
-    seats = int(meta.get("seats") or 1)
-    billing_period = meta.get("billing_period") or "annual"
-    sub = await mollie.create_subscription(
-        customer_id=customer_id,
-        amount_eur=amount,
-        interval=interval,
-        description=_plan_description(tier, seats, billing_period),
-        webhook_url=settings.billing.mollie_webhook_url or "",
-        metadata={"billing_account_id": account_id},
-    )
-    await async_directus.update_item(
-        "billing_account",
-        account_id,
-        {
-            "tier": tier,
-            "status": "active",
-            "payment_mode": "mollie",
-            "mollie_subscription_id": sub.get("id"),
-            "billing_period": meta.get("billing_period"),
-            # Subscription now carries continuity; clear any trial expiry.
-            "tier_expires_at": None,
-            "type_discount": None,
-        },
-    )
-    logger.info("activated billing account %s on %s via Mollie sub %s", account_id, tier, sub.get("id"))
+    try:
+        account = await async_directus.get_item("billing_account", account_id)
+        if not account:
+            return
+        if account.get("mollie_subscription_id"):
+            return  # idempotent — subscription already created
+        settings = get_settings()
+        tier = meta.get("tier") or account.get("tier")
+        interval = meta.get("interval") or "12 months"
+        amount = float(meta.get("amount_eur") or 0)
+        seats = int(meta.get("seats") or 1)
+        billing_period = meta.get("billing_period") or "annual"
+        sub = await mollie.create_subscription(
+            customer_id=customer_id,
+            amount_eur=amount,
+            interval=interval,
+            description=_plan_description(tier, seats, billing_period),
+            # Defer the first recurring charge by one full period: the consent
+            # payment already covered period 1, so charging on the start date
+            # (Mollie's default) double-bills it.
+            start_date=_subscription_start_date(billing_period),
+            webhook_url=settings.billing.mollie_webhook_url or "",
+            metadata={"billing_account_id": account_id},
+        )
+        await async_directus.update_item(
+            "billing_account",
+            account_id,
+            {
+                "tier": tier,
+                "status": "active",
+                "payment_mode": "mollie",
+                "mollie_subscription_id": sub.get("id"),
+                "billing_period": meta.get("billing_period"),
+                # Subscription now carries continuity; clear any trial expiry.
+                "tier_expires_at": None,
+                "type_discount": None,
+            },
+        )
+        await invalidate_account_usage_caches(account_id)
+        logger.info(
+            "activated billing account %s on %s via Mollie sub %s",
+            account_id,
+            tier,
+            sub.get("id"),
+        )
+    finally:
+        await _release_activation_lock(account_id, client, token)
 
 
 async def sync_account_from_mollie(account_id: str) -> str:
@@ -713,6 +831,21 @@ def _period_end_iso(billing_period: str | None) -> str:
     """Fallback period end from now (when Mollie can't give us nextPaymentDate)."""
     days = 365 if billing_period == "annual" else 30
     return (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
+
+
+def _subscription_start_date(billing_period: str | None) -> str:
+    """First subscription-charge date (YYYY-MM-DD), one full period out from
+    today. The consent payment covers period 1, so the subscription must not
+    charge again until the next renewal — otherwise the customer is billed
+    twice for the first period."""
+    import calendar
+
+    months = 12 if billing_period == "annual" else 1
+    today = datetime.now(timezone.utc).date()
+    year = today.year + (today.month - 1 + months) // 12
+    month = (today.month - 1 + months) % 12 + 1
+    day = min(today.day, calendar.monthrange(year, month)[1])
+    return today.replace(year=year, month=month, day=day).isoformat()
 
 
 async def sync_subscription_seats(account_id: str) -> float | None:

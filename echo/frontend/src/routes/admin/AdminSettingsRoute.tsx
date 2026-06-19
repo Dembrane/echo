@@ -639,8 +639,11 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 		},
 	});
 
-	// pilot is staff-only legacy; offer the live per-seat tiers.
-	const tierData = TIER_ORDER.map((value) => ({
+	// Staff move accounts between Free and Changemaker (the only sellable paid
+	// tier today). Innovator/Guardian aren't offered from the dashboard.
+	const tierData = TIER_ORDER.filter(
+		(value) => value === "free" || value === "changemaker",
+	).map((value) => ({
 		label: value.charAt(0).toUpperCase() + value.slice(1),
 		value,
 	}));
@@ -965,14 +968,6 @@ function WorkspaceActionsModal({
 				</Text>
 				<Divider my={4} />
 
-				<OrgPartnerToggle
-					orgId={row.org_id}
-					orgName={row.org_name}
-					isPartner={row.org_is_partner}
-				/>
-
-				<Divider my={4} />
-
 				{row.billing_account_id && (
 					<GrantTrialControl accountId={row.billing_account_id} />
 				)}
@@ -1212,14 +1207,27 @@ function AccountActionsModal({
 				</Text>
 				<Divider my={4} />
 
+				{/* Partner is an org-level concept, so it lives on the org-scoped
+				    account here (not on individual workspaces). It gates the
+				    internal-vs-external-client choice when creating workspaces. */}
+				{account.account_scope === "organisation" &&
+					account.org_id &&
+					tierHandle && (
+						<OrgPartnerToggle
+							orgId={account.org_id}
+							orgName={account.org_name ?? account.label}
+							isPartner={tierHandle.org_is_partner}
+						/>
+					)}
+
+				{tierHandle && <ChangeTierControl row={tierHandle} />}
+				<GrantTrialControl accountId={account.billing_account_id} />
+
 				<DiscountEditor
 					accountId={account.billing_account_id}
 					initialType={account.type_discount ?? null}
 					initialPercent={account.percent_discount ?? null}
 				/>
-
-				{tierHandle && <ChangeTierControl row={tierHandle} />}
-				<GrantTrialControl accountId={account.billing_account_id} />
 
 				<Divider my={4} />
 				<Text size="xs" c="dimmed">
@@ -1296,7 +1304,7 @@ function AccountBillingTable({
 							<Trans>Tier</Trans>
 						</Table.Th>
 						<Table.Th style={{ textAlign: "right" }}>
-							<Trans>Workspaces</Trans>
+							<Trans>Hours</Trans>
 						</Table.Th>
 						<Table.Th style={{ textAlign: "right" }}>
 							<Trans>Seats</Trans>
@@ -1310,6 +1318,11 @@ function AccountBillingTable({
 				<Table.Tbody>
 					{accounts.map((account) => {
 						const isOpen = expanded[account.billing_account_id] ?? false;
+						// Account-level hours = sum of its workspaces' hours this cycle.
+						const totalHours = account.workspaces.reduce(
+							(sum, ws) => sum + (ws.audio_hours || 0),
+							0,
+						);
 						return (
 							<Fragment key={account.billing_account_id}>
 								<Table.Tr
@@ -1354,9 +1367,7 @@ function AccountBillingTable({
 										</Badge>
 									</Table.Td>
 									<Table.Td style={{ textAlign: "right" }}>
-										<Text size="xs">
-											{account.active_workspace_count}/{account.workspace_count}
-										</Text>
+										<Text size="xs">{totalHours.toFixed(1)}h</Text>
 									</Table.Td>
 									<Table.Td style={{ textAlign: "right" }}>
 										<Text size="xs">
@@ -1390,7 +1401,35 @@ function AccountBillingTable({
 									<Table.Td colSpan={7} p={0} style={{ border: 0 }}>
 										<Collapse in={isOpen}>
 											<Box px="md" py="xs">
+												<Text size="xs" fw={600} tt="uppercase" lts={0.5} mb={6}>
+													<Trans>Workspaces</Trans>
+												</Text>
 												<Table verticalSpacing={4} withRowBorders={false}>
+													<Table.Thead>
+														<Table.Tr>
+															<Table.Th>
+																<Text size="xs" fw={500}>
+																	<Trans>Workspace</Trans>
+																</Text>
+															</Table.Th>
+															<Table.Th>
+																<Text size="xs" fw={500}>
+																	<Trans>Status</Trans>
+																</Text>
+															</Table.Th>
+															<Table.Th style={{ textAlign: "right" }}>
+																<Text size="xs" fw={500}>
+																	<Trans>Hours</Trans>
+																</Text>
+															</Table.Th>
+															<Table.Th style={{ textAlign: "right" }}>
+																<Text size="xs" fw={500}>
+																	<Trans>Seats</Trans>
+																</Text>
+															</Table.Th>
+															<Table.Th style={{ width: 36 }} />
+														</Table.Tr>
+													</Table.Thead>
 													<Table.Tbody>
 														{account.workspaces.map((ws) => (
 															<Table.Tr key={ws.workspace_id}>
@@ -1432,8 +1471,7 @@ function AccountBillingTable({
 																</Table.Td>
 																<Table.Td style={{ textAlign: "right" }}>
 																	<Text size="xs">
-																		{ws.seat_count + ws.external_count}{" "}
-																		<Trans>seats</Trans>
+																		{ws.seat_count + ws.external_count}
 																	</Text>
 																</Table.Td>
 																<Table.Td style={{ width: 36 }}>
