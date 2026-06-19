@@ -19,21 +19,21 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	useInfiniteQuery,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { useCallback, useEffect, useState } from "react";
 
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
 import { BillingPeriodToggle } from "@/components/workspace/BillingPeriodToggle";
 import { TierPricingCards } from "@/components/workspace/TierPricingCards";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import {
-	type BillingPeriod,
-	hasMultiplePurchasableTiers,
-	isComingSoon,
-	SELLABLE_TIER,
-} from "@/lib/tiers";
+import { type BillingPeriod, isComingSoon, SELLABLE_TIER } from "@/lib/tiers";
 
 export function tierLabel(tier: string | null | undefined): string {
 	if (!tier) return "";
@@ -73,6 +73,10 @@ interface Overview {
 	status: string | null;
 	billing_period: BillingPeriod | null;
 	seats: number;
+	/** Paid-for-but-unfilled seats this period (a member left). Free to reassign until renewal. */
+	available_seats: number;
+	/** Resume link for an unfinished first checkout (set only when pending + open). */
+	pending_checkout_url: string | null;
 	/** Date access ends when a plan is winding down (status "canceled"). Null while renewing. */
 	current_period_end: string | null;
 	next_invoice: NextInvoice | null;
@@ -109,6 +113,12 @@ interface Invoice {
 	pay_url: string | null;
 	/** Mollie sales-invoice id, when this row has a downloadable PDF (ISSUE-004). */
 	sales_invoice_id?: string | null;
+}
+
+/** One page of the invoice ledger; `next` is the cursor for the following page. */
+interface InvoicePage {
+	invoices: Invoice[];
+	next: string | null;
 }
 
 function formatDate(iso: string | null): string {
@@ -676,14 +686,14 @@ async function openInvoicePdf(accountId: string, salesInvoiceId: string) {
  *  self-serve dashboard and the managed-state view. */
 function InvoiceList({
 	invoices,
-	cursor,
+	hasMore,
 	loadingInvoices,
 	onLoadMore,
 	accountId,
 	source,
 }: {
 	invoices: Invoice[];
-	cursor: string | null;
+	hasMore: boolean;
 	loadingInvoices: boolean;
 	onLoadMore: () => void;
 	accountId: string;
@@ -696,9 +706,15 @@ function InvoiceList({
 				<Trans>Invoices</Trans>
 			</Text>
 			{invoices.length === 0 ? (
-				<Text size="xs">
-					<Trans>No payments yet.</Trans>
-				</Text>
+				loadingInvoices ? (
+					<Group justify="center" py="sm">
+						<Loader size="sm" />
+					</Group>
+				) : (
+					<Text size="xs">
+						<Trans>No payments yet.</Trans>
+					</Text>
+				)
 			) : (
 				<Table verticalSpacing="xs" horizontalSpacing="sm" fz="xs">
 					<Table.Thead>
@@ -777,7 +793,7 @@ function InvoiceList({
 					</Table.Tbody>
 				</Table>
 			)}
-			{cursor && (
+			{hasMore && (
 				<Group justify="center">
 					<Button
 						size="xs"
@@ -812,12 +828,15 @@ export function BillingManager({
 	const [submitting, setSubmitting] = useState(false);
 	const [updatingMethod, setUpdatingMethod] = useState(false);
 	const [retrying, setRetrying] = useState(false);
-	const [invoices, setInvoices] = useState<Invoice[]>([]);
-	const [cursor, setCursor] = useState<string | null>(null);
-	const [loadingInvoices, setLoadingInvoices] = useState(false);
 	const [planOpen, { open: openPlan, close: closePlan }] = useDisclosure(false);
 	const [cancelOpen, { open: openCancel, close: closeCancel }] =
 		useDisclosure(false);
+	// Pre-redirect note so the EUR 0.00 verification on Mollie's hosted page
+	// isn't a surprise: the swap captures a new mandate, it doesn't charge.
+	const [
+		methodConfirmOpen,
+		{ open: openMethodConfirm, close: closeMethodConfirm },
+	] = useDisclosure(false);
 
 	const { data: overview, isLoading } = useQuery<Overview | null>({
 		enabled: !!accountId,
@@ -832,62 +851,96 @@ export function BillingManager({
 		queryKey: ["v2", "billing", "overview", accountId],
 	});
 
+	// Invoice ledger as a cached infinite list (deduped, refreshed by the same
+	// invalidation as the rest of billing). Each page is { invoices, next }.
+	const {
+		data: invoicePages,
+		isLoading: invoicesInitialLoading,
+		isFetchingNextPage,
+		hasNextPage,
+		fetchNextPage,
+	} = useInfiniteQuery({
+		enabled: !!accountId,
+		getNextPageParam: (last: InvoicePage) => last.next ?? undefined,
+		initialPageParam: null as string | null,
+		queryFn: async ({ pageParam }): Promise<InvoicePage> => {
+			const qs = new URLSearchParams({ limit: "8" });
+			if (pageParam) qs.set("cursor", pageParam);
+			const res = await fetch(
+				`${API_BASE_URL}/v2/billing-accounts/${accountId}/invoices?${qs}`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) throw new Error(`Failed (${res.status})`);
+			return res.json() as Promise<InvoicePage>;
+		},
+		queryKey: ["v2", "billing", "invoices", accountId],
+	});
+
+	const invoices =
+		invoicePages?.pages.flatMap((p: InvoicePage) => p.invoices ?? []) ?? [];
+	// One flag for both render branches: initial load shows the empty-state
+	// spinner, a "load more" shows the button spinner (they never overlap).
+	const loadingInvoices = invoicesInitialLoading || isFetchingNextPage;
+
 	const refreshAll = useCallback(() => {
 		queryClient.invalidateQueries({
 			queryKey: ["v2", "billing", "overview", accountId],
+		});
+		queryClient.invalidateQueries({
+			queryKey: ["v2", "billing", "invoices", accountId],
 		});
 		for (const key of invalidateKeys) {
 			queryClient.invalidateQueries({ queryKey: key as unknown[] });
 		}
 	}, [queryClient, accountId, invalidateKeys]);
 
-	const loadInvoices = useCallback(
-		async (from: string | null) => {
-			if (!accountId) return;
-			setLoadingInvoices(true);
-			try {
-				const qs = new URLSearchParams({ limit: "8" });
-				if (from) qs.set("cursor", from);
-				const res = await fetch(
-					`${API_BASE_URL}/v2/billing-accounts/${accountId}/invoices?${qs}`,
-					{ credentials: "include" },
-				);
-				if (res.ok) {
-					const data = await res.json();
-					setInvoices((prev) =>
-						from ? [...prev, ...(data.invoices ?? [])] : (data.invoices ?? []),
-					);
-					setCursor(data.next ?? null);
-				}
-			} finally {
-				setLoadingInvoices(false);
-			}
-		},
-		[accountId],
-	);
-
-	useEffect(() => {
-		if (accountId) loadInvoices(null);
-	}, [accountId, loadInvoices]);
-
-	// Returning from Mollie checkout: reconcile then refresh.
+	// Returning from Mollie checkout: reconcile, then report the real outcome.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: run once per accountId on return from checkout
 	useEffect(() => {
 		const sp = new URLSearchParams(window.location.search);
 		if (sp.get("billing") !== "return" || !accountId) return;
+		const flow = sp.get("flow"); // "checkout" | "method" | null
+		// Consume the return marker synchronously (before any await) so React
+		// StrictMode's double-invoke runs the reconcile + toast exactly once.
+		window.history.replaceState({}, "", window.location.pathname);
 		(async () => {
 			try {
-				await fetch(`${API_BASE_URL}/v2/billing-accounts/${accountId}/sync`, {
+				const syncUrl = `${API_BASE_URL}/v2/billing-accounts/${accountId}/sync${
+					flow ? `?flow=${encodeURIComponent(flow)}` : ""
+				}`;
+				const res = await fetch(syncUrl, {
 					credentials: "include",
 					method: "POST",
 				});
+				const data = res.ok ? await res.json().catch(() => ({})) : {};
 				refreshAll();
-				loadInvoices(null);
-				toast.success(t`Subscription updated.`);
+				// Status-driven messaging: a method swap reads its real outcome from
+				// `method_update`; checkout/resume is success only when active.
+				if (flow === "method") {
+					const m = data.method_update;
+					if (m === "paid") {
+						toast.success(t`Your payment method has been updated.`);
+					} else if (m === "failed" || m === "expired" || m === "canceled") {
+						toast.error(
+							t`We couldn't update your payment method. Your old one is still active. Please try again.`,
+						);
+					} else {
+						toast(t`Your payment method update is still processing.`);
+					}
+				} else if (data.status === "active") {
+					toast.success(t`Your plan is active.`);
+				} else if (data.status === "past_due") {
+					toast.error(
+						t`Your payment didn't go through. Update your payment method to continue.`,
+					);
+				} else {
+					toast(
+						t`Your payment is still processing. Refresh in a moment to check.`,
+					);
+				}
 			} catch {
 				toast.error(t`Could not confirm payment. Refresh to retry.`);
 			}
-			window.history.replaceState({}, "", window.location.pathname);
 		})();
 	}, [accountId]);
 
@@ -901,7 +954,7 @@ export function BillingManager({
 				{
 					body: JSON.stringify({
 						billing_period: period,
-						redirect_url: `${window.location.origin}${window.location.pathname}?billing=return`,
+						redirect_url: `${window.location.origin}${window.location.pathname}?billing=return&flow=checkout`,
 						tier,
 					}),
 					credentials: "include",
@@ -921,6 +974,36 @@ export function BillingManager({
 		}
 	};
 
+	// Resume a canceled plan; the backend re-instates it with no charge while
+	// inside the paid period, else returns resumed=false to fall back to checkout.
+	const resumePlan = async (tier: string, period: BillingPeriod) => {
+		if (!accountId) return;
+		setSubmitting(true);
+		try {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/billing-accounts/${accountId}/resume`,
+				{ credentials: "include", method: "POST" },
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			const data = await res.json();
+			if (data.resumed) {
+				posthog.capture("subscription_resumed", { source, tier });
+				toast.success(t`Your plan is back on. You keep your current period.`);
+				refreshAll();
+				setSubmitting(false);
+				return;
+			}
+			// Nothing pre-paid to preserve: start a fresh checkout (charges now).
+			await startCheckout(tier, period);
+		} catch (e) {
+			toast.error((e as Error).message);
+			setSubmitting(false);
+		}
+	};
+
 	// ISSUE-002: capture a new payment method via a EUR 0.00 Mollie consent
 	// payment. Returns to the billing page, where the sync effect reconciles.
 	const updatePaymentMethod = async () => {
@@ -932,7 +1015,7 @@ export function BillingManager({
 				`${API_BASE_URL}/v2/billing-accounts/${accountId}/payment-method/checkout`,
 				{
 					body: JSON.stringify({
-						redirect_url: `${window.location.origin}${window.location.pathname}?billing=return`,
+						redirect_url: `${window.location.origin}${window.location.pathname}?billing=return&flow=method`,
 					}),
 					credentials: "include",
 					headers: { "Content-Type": "application/json" },
@@ -975,7 +1058,6 @@ export function BillingManager({
 				);
 			}
 			refreshAll();
-			loadInvoices(null);
 		} catch (e) {
 			toast.error((e as Error).message);
 		} finally {
@@ -1011,10 +1093,6 @@ export function BillingManager({
 	const status = overview.status;
 	const hasPaidPlan = tier !== "free";
 	const isCanceling = status === "canceled";
-	// "Change plan" only makes sense when there's another tier to switch to.
-	// Today only Changemaker is purchasable, so hide it; it auto-restores when a
-	// second tier goes live (single source: hasMultiplePurchasableTiers).
-	const canChangePlan = hasMultiplePurchasableTiers();
 	const discountPct = overview.percent_discount ?? 0;
 	const period = overview.billing_period ?? "annual";
 	const endDate = formatDate(overview.current_period_end);
@@ -1051,9 +1129,9 @@ export function BillingManager({
 					<Stack gap={16}>
 						<InvoiceList
 							invoices={invoices}
-							cursor={cursor}
+							hasMore={hasNextPage}
 							loadingInvoices={loadingInvoices}
-							onLoadMore={() => loadInvoices(cursor)}
+							onLoadMore={() => fetchNextPage()}
 							accountId={accountId}
 							source={source}
 						/>
@@ -1071,6 +1149,32 @@ export function BillingManager({
 
 	// Free / never-subscribed: a focused subscribe prompt.
 	if (!hasPaidPlan) {
+		// Unfinished first checkout (e.g. closed the Mollie tab): offer to resume
+		// the exact same payment instead of a bare plan picker.
+		if (status === "pending" && overview.pending_checkout_url) {
+			return (
+				<Paper withBorder p="md" radius="sm">
+					<Stack gap={12}>
+						<Text size="sm" fw={500}>
+							<Trans>Finish setting up your plan</Trans>
+						</Text>
+						<Text size="xs">
+							<Trans>
+								Your payment hasn't been completed yet. Pick up where you left
+								off to activate your plan. You won't be charged twice.
+							</Trans>
+						</Text>
+						<Button
+							component="a"
+							href={overview.pending_checkout_url}
+							w="fit-content"
+						>
+							<Trans>Finish paying</Trans>
+						</Button>
+					</Stack>
+				</Paper>
+			);
+		}
 		return (
 			<Paper withBorder p="md" radius="sm">
 				<Stack gap={12}>
@@ -1132,7 +1236,7 @@ export function BillingManager({
 									size="xs"
 									variant="outline"
 									loading={updatingMethod}
-									onClick={updatePaymentMethod}
+									onClick={openMethodConfirm}
 								>
 									<Trans>Change payment method</Trans>
 								</Button>
@@ -1140,16 +1244,7 @@ export function BillingManager({
 						</Stack>
 					</Alert>
 				)}
-				<SectionRow
-					label={t`Current plan`}
-					action={
-						isCanceling || !canChangePlan ? undefined : (
-							<Button size="xs" variant="subtle" onClick={openPlan}>
-								<Trans>Change plan</Trans>
-							</Button>
-						)
-					}
-				>
+				<SectionRow label={t`Current plan`}>
 					<Group gap={8}>
 						<Text size="sm" fw={500}>
 							{tierLabel(tier)}
@@ -1187,6 +1282,14 @@ export function BillingManager({
 					<Text size="sm">
 						<Trans>{overview.seats} seats</Trans>
 					</Text>
+					{overview.available_seats > 0 && (
+						<Text size="xs" c="var(--mantine-color-primary-6)">
+							<Trans>
+								{overview.available_seats} seat(s) paid for this period and
+								unused. Invite someone to fill them at no charge until renewal.
+							</Trans>
+						</Text>
+					)}
 					{hasPending && (
 						<Text size="xs" c="var(--mantine-color-primary-6)">
 							<Trans>
@@ -1294,7 +1397,7 @@ export function BillingManager({
 							size="xs"
 							variant="subtle"
 							loading={updatingMethod}
-							onClick={updatePaymentMethod}
+							onClick={openMethodConfirm}
 						>
 							{overview.payment_method ? (
 								<Trans>Change</Trans>
@@ -1311,9 +1414,9 @@ export function BillingManager({
 
 				<InvoiceList
 					invoices={invoices}
-					cursor={cursor}
+					hasMore={hasNextPage}
 					loadingInvoices={loadingInvoices}
-					onLoadMore={() => loadInvoices(cursor)}
+					onLoadMore={() => fetchNextPage()}
 					accountId={accountId}
 					source={source}
 				/>
@@ -1346,7 +1449,7 @@ export function BillingManager({
 						<Button
 							size="xs"
 							loading={submitting}
-							onClick={() => startCheckout(tier, period)}
+							onClick={() => resumePlan(tier, period)}
 						>
 							<Trans>Resume plan</Trans>
 						</Button>
@@ -1358,14 +1461,6 @@ export function BillingManager({
 				</Group>
 			</Stack>
 
-			<ChangePlanModal
-				opened={planOpen}
-				onClose={closePlan}
-				currentTier={tier}
-				defaultPeriod={period}
-				submitting={submitting}
-				onConfirm={startCheckout}
-			/>
 			<CancelSubscriptionModal
 				opened={cancelOpen}
 				onClose={closeCancel}
@@ -1373,6 +1468,18 @@ export function BillingManager({
 				currentTier={tier}
 				source={source}
 				onCancelled={refreshAll}
+			/>
+			<ConfirmModal
+				opened={methodConfirmOpen}
+				onClose={closeMethodConfirm}
+				onConfirm={() => {
+					closeMethodConfirm();
+					updatePaymentMethod();
+				}}
+				title={t`Change payment method`}
+				message={t`You'll verify your new payment method on the next screen. You won't be charged, it just confirms the new card.`}
+				confirmLabel={t`Continue`}
+				loading={updatingMethod}
 			/>
 		</Paper>
 	);

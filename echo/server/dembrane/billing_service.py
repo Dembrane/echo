@@ -23,6 +23,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from uuid import uuid4
+from typing import Any
 from datetime import datetime, timezone, timedelta
 
 from dembrane import mollie
@@ -47,7 +48,7 @@ logger = logging.getLogger("billing_service")
 _ACTIVATION_LOCK_TTL_SECONDS = 30
 
 
-async def _try_acquire_activation_lock(account_id: str):
+async def _try_acquire_activation_lock(account_id: str) -> tuple[Any, str | None]:
     """Return (client, token). token is None when another caller holds the lock
     (skip activation) or when Redis is unavailable (proceed without a lock —
     distinguished by client being None)."""
@@ -66,7 +67,7 @@ async def _try_acquire_activation_lock(account_id: str):
     return (client, token) if acquired else (client, None)
 
 
-async def _release_activation_lock(account_id: str, client, token) -> None:
+async def _release_activation_lock(account_id: str, client: Any, token: str | None) -> None:
     if client is None or token is None:
         return
     key = f"dembrane:billing:activation_lock:{account_id}"
@@ -202,11 +203,11 @@ async def account_active_seat_emails(account_id: str) -> set[str]:
 
         members = await get_effective_members(ws_id)
         user_ids = {
-            m.get("user_id")
-            for m in members
-            if m.get("source") == "direct" and m.get("user_id")
+            m.get("user_id") for m in members if m.get("source") == "direct" and m.get("user_id")
         }
         for uid in user_ids:
+            if not uid:
+                continue
             user = await async_directus.get_item("app_user", uid)
             email = (user or {}).get("email")
             if email:
@@ -271,6 +272,34 @@ def _plan_description(tier: str, seats: int, billing_period: str) -> str:
     return f"{label} plan. {seat_txt}, {cadence}, {renews}. Cancel anytime."
 
 
+def _invoice_row(p: dict) -> dict:
+    """Shape one Mollie payment into an invoice-ledger row."""
+    amt = p.get("amount") or {}
+    status = p.get("status")
+    # Open/pending charges keep a "Pay now" checkout link; null once settled.
+    pay_url = mollie.checkout_url(p) if status in ("open", "pending") else None
+    return {
+        "id": p.get("id"),
+        "created_at": p.get("createdAt"),
+        "amount": amt.get("value"),
+        "currency": amt.get("currency"),
+        "status": status,
+        "description": p.get("description") or "",
+        "pay_url": pay_url,
+    }
+
+
+def _is_ledger_hidden(p: dict) -> bool:
+    """Method-update consents (EUR0 mandate captures) are not invoices and are
+    hidden from the ledger (Fix H)."""
+    return (p.get("metadata") or {}).get("intent") == "update_payment_method"
+
+
+# Pull successive pages until enough non-consent rows; cap the scan for safety.
+_LEDGER_FETCH = 50
+_LEDGER_MAX_FETCHES = 12
+
+
 async def list_account_invoices(
     account_id: str, *, limit: int = 20, from_id: str | None = None
 ) -> dict:
@@ -279,37 +308,91 @@ async def list_account_invoices(
     Mollie has no customer-facing portal, so this is the in-app invoice list:
     each consent + recurring charge, with date / amount / status. Returns
     {"invoices": [...], "next": <cursor or None>}. `next` is the payment-id
-    cursor for "load more"; None when there are no more."""
+    cursor for "load more"; None when there are no more.
+
+    Method-update consents are hidden (Fix H). Filtering one raw page can empty
+    it while real invoices sit further back, so we pull successive Mollie pages
+    (skipping consents) until we have one more displayable row than the page
+    needs — that extra row tells us a next page exists and supplies its cursor —
+    or Mollie is exhausted. Mollie's `from` is INCLUSIVE, so a continued fetch
+    repeats the previous page's last row; we drop that duplicate."""
     account = await async_directus.get_item("billing_account", account_id)
     customer_id = (account or {}).get("mollie_customer_id")
     if not customer_id:
         return {"invoices": [], "next": None}
-    # Fetch one extra to know whether there's a next page.
-    payments = await mollie.list_customer_payments(
-        customer_id, limit=limit + 1, from_id=from_id
-    )
-    next_cursor = payments[limit]["id"] if len(payments) > limit else None
-    out: list[dict] = []
-    for p in payments[:limit]:
-        amt = p.get("amount") or {}
-        status = p.get("status")
-        # An open/pending charge still has its hosted checkout link, so the
-        # customer can finish paying it in one click (ISSUE-003 "Pay now"). The
-        # link is absent once the payment settles, so this is naturally null on
-        # paid/failed rows.
-        pay_url = mollie.checkout_url(p) if status in ("open", "pending") else None
-        out.append(
-            {
-                "id": p.get("id"),
-                "created_at": p.get("createdAt"),
-                "amount": amt.get("value"),
-                "currency": amt.get("currency"),
-                "status": status,
-                "description": p.get("description") or "",
-                "pay_url": pay_url,
-            }
+
+    shown: list[dict] = []
+    cursor = from_id
+    first = True
+    for _ in range(_LEDGER_MAX_FETCHES):
+        raw = await mollie.list_customer_payments(
+            customer_id, limit=_LEDGER_FETCH, from_id=cursor
         )
-    return {"invoices": out, "next": next_cursor}
+        if not raw:
+            break
+        # Inclusive cursor: a continued fetch repeats the cursor row, so drop it.
+        window = raw if first else (raw[1:] if raw and raw[0].get("id") == cursor else raw)
+        first = False
+        for p in window:
+            if _is_ledger_hidden(p):
+                continue
+            shown.append(p)
+            if len(shown) > limit:  # one past the page: a next page exists
+                break
+        if len(shown) > limit or len(raw) < _LEDGER_FETCH:
+            break
+        cursor = raw[-1].get("id")
+
+    next_cursor = shown[limit].get("id") if len(shown) > limit else None
+    invoices = [_invoice_row(p) for p in shown[:limit]]
+    return {"invoices": invoices, "next": next_cursor}
+
+
+async def latest_method_update_status(account_id: str) -> str | None:
+    """Mollie status of the most recent 'update payment method' consent, or None
+    if the account never started one.
+
+    A method swap doesn't move the account status (it stays active / past_due),
+    so the return-from-checkout UI can't tell a successful change from a
+    cancelled / failed one by status alone. This reports the real outcome
+    ('paid' / 'failed' / 'expired' / 'canceled' / 'open' / 'pending')."""
+    account = await async_directus.get_item("billing_account", account_id)
+    customer_id = (account or {}).get("mollie_customer_id")
+    if not customer_id:
+        return None
+    payments = await mollie.list_customer_payments(customer_id, limit=_LEDGER_FETCH)
+    for p in payments:  # newest first
+        if (p.get("metadata") or {}).get("intent") == "update_payment_method":
+            return p.get("status")
+    return None
+
+
+async def pending_checkout_url(account_id: str) -> str | None:
+    """The hosted checkout URL of an in-flight activation consent, so a customer
+    who didn't finish their first payment can resume the exact same Mollie
+    checkout instead of being stuck.
+
+    Only meaningful while the account is 'pending' (checkout started, not yet
+    activated) and an 'open'/'pending' first payment with intent='activate'
+    exists. None otherwise — the caller then shows the plan picker."""
+    account = await async_directus.get_item("billing_account", account_id)
+    customer_id = (account or {}).get("mollie_customer_id")
+    if not customer_id or (account or {}).get("status") != "pending":
+        return None
+    try:
+        payments = await mollie.list_customer_payments(customer_id, limit=_LEDGER_FETCH)
+    except mollie.MollieError:
+        return None
+    for p in payments:  # newest first
+        meta = p.get("metadata") or {}
+        if (
+            p.get("sequenceType") == "first"
+            and p.get("status") in ("open", "pending")
+            and meta.get("intent") == "activate"
+            and meta.get("billing_account_id") == account_id
+        ):
+            return mollie.checkout_url(p)
+    return None
 
 
 def _payment_method_label(mandate: dict) -> str:
@@ -410,11 +493,20 @@ async def get_billing_overview(account_id: str) -> dict:
 
     account_manager = await _resolve_account_manager(account)
 
+    # Paid-for-but-unfilled seats (watermark minus live): free to fill until renewal.
+    watermark = account.get("provisioned_seats")
+    available_seats = max(0, int(watermark) - seats) if watermark is not None else 0
+
+    # Resume link for an unfinished first checkout (UI offers "Finish paying").
+    pending_url = await pending_checkout_url(account_id) if status == "pending" else None
+
     return {
         "tier": tier,
         "status": status,
         "billing_period": billing_period,
         "seats": seats,
+        "available_seats": available_seats,
+        "pending_checkout_url": pending_url,
         # When the plan is winding down (status=="canceled") this is the date
         # access ends and the account drops to Free. Null while renewing.
         "current_period_end": account.get("tier_expires_at"),
@@ -580,6 +672,15 @@ async def start_subscription_checkout(
     account = await async_directus.get_item("billing_account", account_id)
     if not account:
         raise BillingError("billing account not found")
+
+    # A subscription already exists (active or past_due): a consent checkout would
+    # charge but _activate_from_first_payment no-ops. Past_due recovers via retry.
+    # (Canceled clears the sub id, so the resume-fallback checkout still works.)
+    if account.get("mollie_subscription_id") and account.get("status") in (
+        "active",
+        "past_due",
+    ):
+        raise BillingError("this account already has an active subscription")
 
     seats = await count_account_seats(account_id)
     amount, interval = _per_interval_amount(tier, seats, billing_period)
@@ -778,6 +879,13 @@ async def _activate_from_first_payment(account_id: str, meta: dict, customer_id:
                 # Subscription now carries continuity; clear any trial expiry.
                 "tier_expires_at": None,
                 "type_discount": None,
+                # Seed the proration baseline so a later seat-add prorates
+                # (else the first reconcile baselines without charging).
+                "provisioned_seats": seats,
+                # Reactivation starts clean: stale flags would swallow the next
+                # failure alert or show a phantom "fix your payment" prompt.
+                "payment_failed_notified": False,
+                "reconcile_failed_at": None,
             },
         )
         await invalidate_account_usage_caches(account_id)
@@ -804,10 +912,24 @@ async def sync_account_from_mollie(account_id: str) -> str:
     customer_id = account.get("mollie_customer_id")
     if not customer_id:
         return account.get("status") or "none"
+
+    payments = await mollie.list_customer_payments(customer_id)
+
+    # Missed-webhook fallback: revoke superseded mandates after a paid method
+    # update (idempotent). Auto-retry stays webhook/button-driven, never here.
+    method_update_paid = any(
+        p.get("sequenceType") == "first"
+        and p.get("status") == "paid"
+        and (p.get("metadata") or {}).get("billing_account_id") == account_id
+        and (p.get("metadata") or {}).get("intent") == "update_payment_method"
+        for p in payments
+    )
+    if method_update_paid:
+        await _revoke_superseded_mandates(customer_id)
+
     if account.get("mollie_subscription_id"):
         return account.get("status") or "active"
 
-    payments = await mollie.list_customer_payments(customer_id)
     first_paid = next(
         (
             p
@@ -822,7 +944,9 @@ async def sync_account_from_mollie(account_id: str) -> str:
         None,
     )
     if first_paid:
-        await _activate_from_first_payment(account_id, first_paid.get("metadata") or {}, customer_id)
+        await _activate_from_first_payment(
+            account_id, first_paid.get("metadata") or {}, customer_id
+        )
         return "active"
     return account.get("status") or "pending"
 
@@ -960,10 +1084,17 @@ async def _period_fraction_remaining(account: dict) -> float:
     return min(days_remaining / period_days, 1.0)
 
 
-async def _charge_seat_proration(account: dict, added_seats: int) -> float | None:
+async def _charge_seat_proration(
+    account: dict, added_seats: int, *, provisioned_before: int | None = None
+) -> float | None:
     """One-off prorated charge for `added_seats` added mid-cycle, off-session
     against the stored mandate. The caller has verified the account is active on
     a paid tier with a subscription.
+
+    `provisioned_before` is the provisioned-seat baseline before this charge; it
+    rides the payment metadata so the webhook can roll the baseline back if the
+    charge later fails to settle (async methods like SEPA), letting the next
+    reconcile retry it instead of silently dropping the owed amount (Fix D).
 
     Returns the amount charged, or None when there is legitimately nothing to
     charge (no remaining period, sub-cent amount, non-payable tier). Raises
@@ -972,8 +1103,10 @@ async def _charge_seat_proration(account: dict, added_seats: int) -> float | Non
     flag the account on a real failure while staying silent on a no-op."""
     if added_seats < 1:
         return None
-    tier = account.get("tier")
-    customer_id = account.get("mollie_customer_id")
+    # The caller (reconcile) has verified an active, paid-tier account with a
+    # Mollie subscription, so tier + customer id are present.
+    tier: str = account["tier"]
+    customer_id: str = account["mollie_customer_id"]
     account_id = account.get("id")
     billing_period = account.get("billing_period") or "annual"
 
@@ -1014,10 +1147,15 @@ async def _charge_seat_proration(account: dict, added_seats: int) -> float | Non
             amount_eur=prorated,
             description=f"{added_seats} seat(s) added, prorated for the rest of this period",
             mandate_id=valid.get("id"),
+            # Wire the webhook so a failed/async (SEPA) charge fires
+            # _wh_seat_proration to roll back the optimistic baseline + flag.
+            webhook_url=get_settings().billing.mollie_webhook_url or None,
             metadata={
-                "account_id": account_id,
-                "kind": "seat_proration",
+                # billing_account_id + intent so the webhook can route this charge.
+                "billing_account_id": account_id,
+                "intent": "seat_proration",
                 "added_seats": str(added_seats),
+                "provisioned_before": provisioned_before,
             },
         )
     except mollie.MollieError as exc:
@@ -1062,13 +1200,17 @@ async def reconcile_account_seats(account_id: str) -> None:
 
     - Re-prices the recurring subscription so the NEXT renewal matches current
       seats (both up and down).
-    - On a net INCREASE, charges a one-off prorated payment for the added seats
-      covering the days left in the current period.
-    - On a DECREASE, only the next renewal drops (no mid-cycle refund).
+    - On a net INCREASE above the high-watermark, charges a one-off prorated
+      payment for the added seats covering the days left in the current period.
+    - On a DECREASE, only the next renewal drops (no mid-cycle refund); the freed
+      seat stays paid-for and reassignable until renewal (see below).
 
-    `provisioned_seats` records the count already charged for, so re-running never
-    double-charges. No-op unless the account is active on a paid tier with a
-    Mollie subscription.
+    `provisioned_seats` is the within-period HIGH-WATERMARK of seats paid for, not
+    a live mirror: it only moves up here (on a charged increase) and is reset to
+    the live count by the renewal webhook (_wh_subscription_charge). So removing a
+    seat and backfilling it within the same period never re-charges — you pay for
+    your peak concurrent seats once per period. No-op unless the account is active
+    on a paid tier with a Mollie subscription.
 
     Flag contract (Wave A / ISSUE-001): on a Mollie failure -- a re-price error
     or a dead/invalid mandate when a proration charge is owed -- this sets
@@ -1122,19 +1264,17 @@ async def reconcile_account_seats(account_id: str) -> None:
             return
 
         if current > provisioned:
-            # Raises ReconcileChargeError on a dead mandate / Mollie failure; the
-            # baseline only advances once the charge lands, so a failure retries
-            # on the next reconcile rather than being silently dropped.
-            charged = await _charge_seat_proration(account, current - provisioned)
+            # Advance the baseline optimistically so a re-reconcile can't double-
+            # charge; the webhook rolls it back if the charge fails to settle.
+            charged = await _charge_seat_proration(
+                account, current - provisioned, provisioned_before=provisioned
+            )
             if charged is not None:
                 await async_directus.update_item(
                     "billing_account", account_id, {"provisioned_seats": current}
                 )
-        elif current < provisioned:
-            # Removal takes effect at renewal (re-priced above); no mid-cycle refund.
-            await async_directus.update_item(
-                "billing_account", account_id, {"provisioned_seats": current}
-            )
+        # Don't lower provisioned_seats on a decrease: it's the period's high-
+        # watermark (freed seats stay reassignable; the renewal webhook resets it).
     except (ReconcileChargeError, mollie.MollieError) as exc:
         # Allow + flag: the seat change already happened, the bill is owed, but
         # Mollie couldn't be brought in line. Flag for the prompt; do not re-raise.
@@ -1169,9 +1309,7 @@ async def _reconcile_managed_seats(account: dict) -> None:
     account_id = account["id"]
     current = max(await count_account_seats(account_id), 1)
     amount = managed_next_invoice_amount(account, current)
-    await async_directus.update_item(
-        "billing_account", account_id, {"provisioned_seats": current}
-    )
+    await async_directus.update_item("billing_account", account_id, {"provisioned_seats": current})
     logger.info(
         "managed reconcile for account %s: %d seat(s), next invoice %s EUR (no charge)",
         account_id,
@@ -1207,9 +1345,7 @@ async def issue_offline_payment_link(
         raise BillingError("no invoice amount for this account")
 
     tier = account.get("tier") or "managed"
-    desc = description or _plan_description(
-        tier, seats, account.get("billing_period") or "annual"
-    )
+    desc = description or _plan_description(tier, seats, account.get("billing_period") or "annual")
     link = await mollie.create_payment_link(
         amount_eur=amount_eur,
         description=desc,
@@ -1357,6 +1493,9 @@ async def estimate_seat_addition(
         "currency": "EUR",
         "prorated_now_eur": 0.0,
         "recurring_delta_eur": 0.0,
+        # Invited seats covered by capacity already paid for (a seat freed
+        # earlier): free now, only the renewal rises.
+        "covered_by_existing_seats": 0,
     }
     if not account or account.get("status") != "active":
         return result
@@ -1369,17 +1508,29 @@ async def estimate_seat_addition(
     if effective_added < 1:
         result["active"] = True
         return result
+
+    # Charge only seats beyond the high-watermark now; the rest reuse paid-for
+    # capacity. Renewal still rises by every net-new seat (it bills live count).
+    watermark = account.get("provisioned_seats")
+    if watermark is None:
+        chargeable_now = effective_added
+    else:
+        current_live = max(await count_account_seats(account_id), 1)
+        chargeable_now = max(0, (current_live + effective_added) - int(watermark))
+    result["covered_by_existing_seats"] = effective_added - chargeable_now
+
+    discount = account.get("percent_discount")
     try:
         full_added, _interval = _per_interval_amount(tier, effective_added, billing_period)
     except BillingError:
         return result
-    # Match the real charge: discount the added-seat cost so the preview equals
-    # what _charge_seat_proration will actually bill.
-    full_added = apply_discount(full_added, account.get("percent_discount"))
     fraction = await _period_fraction_remaining(account)
     result["active"] = True
-    result["recurring_delta_eur"] = round(full_added, 2)
-    result["prorated_now_eur"] = round(full_added * fraction, 2)
+    # Match the real charge: discount so the preview equals what reconcile bills.
+    result["recurring_delta_eur"] = round(apply_discount(full_added, discount), 2)
+    if chargeable_now > 0:
+        chargeable, _ = _per_interval_amount(tier, chargeable_now, billing_period)
+        result["prorated_now_eur"] = round(apply_discount(chargeable, discount) * fraction, 2)
     return result
 
 
@@ -1444,6 +1595,117 @@ async def cancel_subscription(
     return "canceled"
 
 
+def _still_within_paid_period(tier_expires_at: str | None) -> bool:
+    """True when `tier_expires_at` is a future instant: the customer still holds
+    a period they already paid for. Used so a resume inside that window does not
+    re-charge it (Fix C)."""
+    if not tier_expires_at:
+        return False
+    try:
+        end = datetime.fromisoformat(tier_expires_at)
+    except ValueError:
+        return False
+    if end.tzinfo is None:
+        end = end.replace(tzinfo=timezone.utc)
+    return end > datetime.now(timezone.utc)
+
+
+async def resume_subscription(account_id: str) -> dict:
+    """Undo a cancellation without re-charging a period already paid for (Fix C).
+
+    A canceled account keeps its tier until `tier_expires_at`. If the customer
+    resumes inside that window and a live mandate still exists, we recreate the
+    Mollie subscription starting at the existing period end (no consent charge,
+    no lost days) and flip the account back to active. The old subscription was
+    deleted on cancel; the mandate was not, so the new subscription rides it.
+
+    Returns {"resumed": bool, "status": str}. `resumed=False` means there is
+    nothing pre-paid to preserve (period lapsed, tier no longer payable) or no
+    live mandate to ride, so the caller should start a fresh checkout instead —
+    that path captures a new mandate and legitimately charges for a new period.
+    Idempotent: resuming an already-active account is a no-op (resumed False)."""
+    settings = get_settings()
+    if not settings.billing.mollie_enabled:
+        raise BillingError("Mollie is not configured")
+
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account:
+        raise BillingError("billing account not found")
+
+    status = account.get("status")
+    tier = account.get("tier")
+    customer_id = account.get("mollie_customer_id")
+    billing_period = account.get("billing_period") or "annual"
+    expires_at = account.get("tier_expires_at")
+
+    # Only a canceled account, still inside its pre-paid period, on a payable
+    # tier, with a Mollie customer, can resume without paying again.
+    if (
+        status != "canceled"
+        or not tier
+        or tier == "free"
+        or not customer_id
+        or not _still_within_paid_period(expires_at)
+    ):
+        return {"resumed": False, "status": status or "none"}
+
+    # The subscription rides the newest valid mandate. With none left we can't
+    # set up off-session billing, so fall back to checkout (re-captures consent).
+    try:
+        mandates = await mollie.list_mandates(customer_id)
+    except mollie.MollieError as exc:
+        logger.warning("Could not list mandates to resume %s: %s", account_id, exc)
+        return {"resumed": False, "status": status}
+    if not any(m.get("status") == "valid" for m in mandates):
+        return {"resumed": False, "status": status}
+
+    seats = max(await count_account_seats(account_id), 1)
+    try:
+        amount, interval = _per_interval_amount(tier, seats, billing_period)
+    except BillingError:
+        return {"resumed": False, "status": status}
+    amount = apply_discount(amount, account.get("percent_discount"))
+
+    # Start the new subscription at the existing period end: no charge now, the
+    # customer keeps the days already paid for.
+    try:
+        start_date = datetime.fromisoformat(expires_at).date().isoformat()
+    except ValueError:
+        start_date = _subscription_start_date(billing_period)
+
+    sub = await mollie.create_subscription(
+        customer_id=customer_id,
+        amount_eur=amount,
+        interval=interval,
+        description=_plan_description(tier, seats, billing_period),
+        start_date=start_date,
+        webhook_url=settings.billing.mollie_webhook_url or "",
+        metadata={"billing_account_id": account_id},
+    )
+    await async_directus.update_item(
+        "billing_account",
+        account_id,
+        {
+            "status": "active",
+            "payment_mode": "mollie",
+            "mollie_subscription_id": sub.get("id"),
+            # Re-baseline to the resumed seat count; clear stale dunning flags.
+            "provisioned_seats": seats,
+            "payment_failed_notified": False,
+            "reconcile_failed_at": None,
+        },
+    )
+    await invalidate_account_usage_caches(account_id)
+    logger.info(
+        "resumed billing account %s on %s; new sub %s starts %s (no charge now)",
+        account_id,
+        tier,
+        sub.get("id"),
+        start_date,
+    )
+    return {"resumed": True, "status": "active"}
+
+
 # ── Failed-charge surfacing (ISSUE-008) — notify only, never block ──────────
 
 
@@ -1455,7 +1717,7 @@ async def _notify_payment_failed(account: dict) -> None:
     the `payment_failed_notified` flag so a string of failed retries in one
     past_due window doesn't spam. The email omits the EUR amount on purpose (B1:
     shown in-app, not in the email). Best-effort: never raises."""
-    account_id = account.get("id")
+    account_id: str = account["id"]
     if account.get("payment_failed_notified"):
         return  # already told them this cycle
 
@@ -1610,21 +1872,123 @@ async def retry_charge(account_id: str) -> str:
         logger.warning("Retry charge failed for account %s: %s", account_id, exc)
         return "past_due"
 
-    # Mollie returns the created payment; a recurring charge against a valid
-    # mandate is typically 'paid' or 'pending' immediately. Treat anything that
-    # is not an outright failure as recovered locally; the webhook confirms.
+    # Only a settled 'paid' recovers; 'pending' (e.g. SEPA) stays past_due until
+    # the webhook confirms, so a later failure can't leave it falsely active.
     status = payment.get("status")
-    if status in ("failed", "expired", "canceled"):
-        logger.info("Retry charge for account %s came back %s", account_id, status)
+    if status != "paid":
+        logger.info(
+            "Retry charge for account %s came back %s; awaiting webhook", account_id, status
+        )
         return "past_due"
     await _mark_recovered(account_id)
     logger.info("retry charge succeeded for account %s (%s)", account_id, status)
     return "active"
 
 
+_FAILED_STATUSES = ("failed", "expired", "canceled")
+
+
+async def _wh_offline_invoice(account_id: str, status: str | None) -> None:
+    """Managed/offline invoice paid via a payment link (ISSUE-006 / C2). No
+    subscription or mandate: mark active and keep it managed. Entitlements are
+    decoupled from payment in managed mode, so a failed/expired offline payment
+    must NOT drop the account (the buyer pays out-of-band against a PO)."""
+    if status == "paid":
+        await async_directus.update_item(
+            "billing_account",
+            account_id,
+            {"status": "active", "payment_mode": "offline", "tier_expires_at": None},
+        )
+        logger.info("offline invoice paid for managed account %s; kept active", account_id)
+
+
+async def _wh_retry_charge(account_id: str, status: str | None) -> None:
+    """Outcome of a past_due 'retry now' charge (Fix D). Paid recovers; a failed
+    settlement re-flips past_due (so an optimistic local 'active' is corrected)."""
+    if status == "paid":
+        await _mark_recovered(account_id)
+    elif status in _FAILED_STATUSES:
+        await _mark_past_due(account_id)
+
+
+async def _wh_seat_proration(account_id: str, meta: dict, status: str | None) -> None:
+    """Outcome of a mid-cycle seat-proration charge (Fix D). On failure, roll the
+    provisioned-seat baseline back to before this charge so the next reconcile
+    retries the owed amount, then flag + notify. 'paid' is a no-op (the baseline
+    already advanced optimistically at charge time)."""
+    if status not in _FAILED_STATUSES:
+        return
+    account = await async_directus.get_item("billing_account", account_id)
+    if not account:
+        return
+    before = meta.get("provisioned_before")
+    if before is not None:
+        await async_directus.update_item(
+            "billing_account", account_id, {"provisioned_seats": int(before)}
+        )
+    await _set_reconcile_failed(account_id, account, failed=True)
+    await _notify_payment_failed(account)
+
+
+async def _wh_method_update(account_id: str, customer_id: str | None, status: str | None) -> None:
+    """Outcome of a method-update consent (ISSUE-002 + Fix A). On 'paid', capture
+    the new mandate, drop the stale ones, and auto-retry any outstanding charge —
+    NEVER create a subscription. Any non-paid outcome (including a cancelled /
+    expired consent) is a no-op: a method swap never changes account status."""
+    if status == "paid" and customer_id:
+        await handle_payment_method_updated(account_id, customer_id)
+
+
+async def _wh_first_payment(
+    account_id: str, meta: dict, customer_id: str | None, status: str | None
+) -> None:
+    """Outcome of a new-purchase consent ('first' payment, intent=activate). Paid
+    activates the account (creates the subscription); a failed/expired/canceled
+    consent only rolls the 'pending' account it created back to 'none' (Fix A:
+    never downgrade an already-active/past_due/canceled account)."""
+    if status == "paid":
+        if customer_id:
+            await _activate_from_first_payment(account_id, meta, customer_id)
+        return
+    if status in _FAILED_STATUSES:
+        account = await async_directus.get_item("billing_account", account_id)
+        if account and account.get("status") == "pending":
+            await async_directus.update_item("billing_account", account_id, {"status": "none"})
+
+
+async def _reset_provisioned_baseline(account_id: str) -> None:
+    """Reset the seat high-watermark to the live seat count. Called when a
+    renewal opens a new period: seats freed during the prior period (kept on the
+    watermark so they stayed reassignable) stop being paid-for from here, and the
+    renewal itself bills the live count."""
+    current = max(await count_account_seats(account_id), 1)
+    await async_directus.update_item(
+        "billing_account", account_id, {"provisioned_seats": current}
+    )
+
+
+async def _wh_subscription_charge(account_id: str, status: str | None) -> None:
+    """Outcome of a recurring subscription charge: paid keeps it active (recovers
+    a past_due) and opens a new period, a failed/expired/canceled charge marks
+    past_due (ISSUE-008)."""
+    if status == "paid":
+        await _mark_recovered(account_id)
+        # A renewal opens a new period: reset the seat high-watermark to live count.
+        await _reset_provisioned_baseline(account_id)
+    elif status in _FAILED_STATUSES:
+        await _mark_past_due(account_id)
+
+
 async def handle_mollie_webhook(payment_id: str) -> None:
     """Process a Mollie payment webhook. Re-fetches the payment (never trusts the
-    POST body), then reconciles the billing account. Idempotent."""
+    POST body), then routes it to the handler for its (intent, shape, status).
+    Idempotent.
+
+    Routing is explicit and exhaustive: every payment is dispatched by its
+    metadata intent (the charges we placed ourselves carry one), then by payment
+    shape (first-payment consent vs subscription renewal). Anything that matches
+    no handler is logged rather than silently dropped, so a new payment kind
+    can't quietly fall through to the wrong default."""
     payment = await mollie.get_payment(payment_id)
     meta = payment.get("metadata") or {}
     account_id = meta.get("billing_account_id")
@@ -1636,41 +2000,32 @@ async def handle_mollie_webhook(payment_id: str) -> None:
     sequence = payment.get("sequenceType")
     intent = meta.get("intent")
 
-    # Offline / managed invoice paid via a payment link (ISSUE-006 / C2). No
-    # subscription, no mandate: just mark the account active and keep it managed.
-    # Entitlements are decoupled from payment in managed mode, so a failed /
-    # expired offline payment must NOT drop the account (the buyer pays
-    # out-of-band on their own timeline against a PO).
-    if meta.get("intent") == "offline_invoice":
-        if status == "paid":
-            await async_directus.update_item(
-                "billing_account",
-                account_id,
-                {"status": "active", "payment_mode": "offline", "tier_expires_at": None},
-            )
-            logger.info("offline invoice paid for managed account %s; kept active", account_id)
+    # 1) Charges that carry an explicit intent we set ourselves.
+    if intent == "offline_invoice":
+        await _wh_offline_invoice(account_id, status)
+        return
+    if intent == "retry_charge":
+        await _wh_retry_charge(account_id, status)
+        return
+    if intent == "seat_proration":
+        await _wh_seat_proration(account_id, meta, status)
+        return
+    if intent == "update_payment_method":
+        await _wh_method_update(account_id, customer_id, status)
         return
 
-    if sequence == "first" and status == "paid":
-        if intent == "update_payment_method":
-            # Method swap: capture the new mandate, drop the stale ones, and
-            # auto-retry any outstanding charge. NEVER create a subscription
-            # (ISSUE-002 — the duplicate-subscription gate).
-            if customer_id:
-                await handle_payment_method_updated(account_id, customer_id)
-            return
-        if customer_id:
-            await _activate_from_first_payment(account_id, meta, customer_id)
+    # 2) Routed by shape: a new-purchase consent, then a subscription renewal.
+    if sequence == "first":
+        await _wh_first_payment(account_id, meta, customer_id, status)
         return
-
-    # Recurring payment outcomes.
     if payment.get("subscriptionId"):
-        if status == "paid":
-            await _mark_recovered(account_id)
-        elif status in ("failed", "expired", "canceled"):
-            await _mark_past_due(account_id)
+        await _wh_subscription_charge(account_id, status)
         return
 
-    # First payment that did not succeed: leave the account un-activated.
-    if sequence == "first" and status in ("failed", "expired", "canceled"):
-        await async_directus.update_item("billing_account", account_id, {"status": "none"})
+    logger.info(
+        "Mollie webhook %s (intent=%r sequence=%r status=%r) matched no handler; ignoring",
+        payment_id,
+        intent,
+        sequence,
+        status,
+    )
