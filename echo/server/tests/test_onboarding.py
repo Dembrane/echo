@@ -399,6 +399,49 @@ async def test_submit_answers_high_risk_notifies_staff():
 
 
 @pytest.mark.asyncio
+async def test_skip_persists_marker_and_skips_staff_notify():
+    """A skip still writes onboarding_answer_json (with skipped=true) so the
+    login gate stops re-nudging, and never fires the staff follow-up."""
+    mock_directus = _mock_async_directus()
+    update_log: list[tuple[str, str, dict]] = []
+
+    async def _track_update(collection: str, item_id: str, payload: dict):
+        update_log.append((collection, item_id, payload))
+        return {"data": {}}
+
+    mock_directus.update_item = AsyncMock(side_effect=_track_update)
+    notify_mock = AsyncMock()
+
+    with (
+        patch("dembrane.api.v2.onboarding.async_directus", mock_directus),
+        patch("dembrane.api.v2.onboarding.get_app_user_or_raise", return_value=_APP_USER),
+        patch("dembrane.analytics.capture_event", new_callable=AsyncMock),
+        patch(
+            "dembrane.api.v2.onboarding._notify_staff_onboarding_followup",
+            notify_mock,
+        ),
+    ):
+        app = _build_answers_app()
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.post(
+                "/v2/onboarding/answers",
+                json={"version": "17-jun-26", "data": [], "skipped": True},
+            )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    # onboarding_answer_json is now truthy → login gate won't re-nudge.
+    assert body["onboarding_answer_json"]["skipped"] is True
+    answer_updates = [
+        u for u in update_log if u[0] == "app_user" and "onboarding_answer_json" in u[2]
+    ]
+    assert len(answer_updates) == 1
+    assert answer_updates[0][2]["onboarding_answer_json"]["skipped"] is True
+    # A skip carries no answers → no staff follow-up.
+    notify_mock.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_notify_staff_emits_and_emails():
     """The staff follow-up helper fans an in-app row to staff and emails the
     training owner."""

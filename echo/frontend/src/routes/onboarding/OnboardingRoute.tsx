@@ -249,27 +249,27 @@ export const OnboardingRoute = () => {
 	};
 
 	// ISSUE-012: persist the questionnaire answers, then route to /o. Required
-	// but non-blocking — on a skip we still route on, and a submit failure
-	// must not trap the user on this screen.
+	// but non-blocking — a submit failure must not trap the user on this screen.
+	// A skip persists too (skipped=true): the login gate re-nudges anyone with
+	// no onboarding_answer_json, so a skip that wrote nothing looped every login.
 	const submitAnswers = async (skip: boolean) => {
-		if (!skip) {
-			setSubmittingAnswers(true);
-			try {
-				await fetch(`${API_BASE_URL}/v2/onboarding/answers`, {
-					body: JSON.stringify({
-						data: [{ q1 }, { q2: q2 ?? "" }, { q3: q3 ?? "" }],
-						version: "17-jun-26",
-					}),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				});
-				queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
-			} catch {
-				// Non-blocking: never trap the user. They reach /o regardless.
-			} finally {
-				setSubmittingAnswers(false);
-			}
+		setSubmittingAnswers(true);
+		try {
+			await fetch(`${API_BASE_URL}/v2/onboarding/answers`, {
+				body: JSON.stringify({
+					data: skip ? [] : [{ q1 }, { q2: q2 ?? "" }, { q3: q3 ?? "" }],
+					skipped: skip,
+					version: "17-jun-26",
+				}),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "POST",
+			});
+			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
+		} catch {
+			// Non-blocking: never trap the user. They reach /o regardless.
+		} finally {
+			setSubmittingAnswers(false);
 		}
 		goToHome();
 	};
@@ -510,6 +510,7 @@ export const OnboardingRoute = () => {
 							<Button
 								size="md"
 								variant="subtle"
+								disabled={submittingAnswers}
 								onClick={() => submitAnswers(true)}
 							>
 								<Trans>Skip</Trans>
