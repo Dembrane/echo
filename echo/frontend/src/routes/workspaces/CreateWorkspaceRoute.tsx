@@ -476,7 +476,7 @@ export const CreateWorkspaceRoute = () => {
 														sets the data and compliance context.
 													</Trans>
 												}
-												placeholder="Essential Energy"
+												placeholder="Acme Organisation"
 												value={dataOwnerOrgName}
 												onChange={(e) =>
 													setDataOwnerOrgName(e.currentTarget.value)
@@ -494,7 +494,7 @@ export const CreateWorkspaceRoute = () => {
 														the data owner, and become the handoff contact.
 													</Trans>
 												}
-												placeholder="owner@client.com"
+												placeholder="jane.doe@acme.org"
 												value={dataOwnerEmail}
 												onChange={(e) =>
 													setDataOwnerEmail(e.currentTarget.value)

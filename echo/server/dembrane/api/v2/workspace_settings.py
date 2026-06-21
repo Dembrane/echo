@@ -14,8 +14,8 @@ from dembrane.inheritance import (
     workspace_follows_organisation_members,
 )
 from dembrane.async_helpers import run_in_thread_pool
-from dembrane.billing_account import workspace_is_external_client
 from dembrane.directus_async import async_directus
+from dembrane.billing_account import workspace_is_external_client
 from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 
 router = APIRouter()
