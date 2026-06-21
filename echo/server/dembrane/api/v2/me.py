@@ -483,7 +483,12 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
         raise HTTPException(status_code=404, detail="Workspace no longer exists")
 
     invite_role = invite.get("role") or "member"
-    is_external_invite = invite_role == "external"
+    # Outsider = external OR observer (Wave G): neither gets an org_membership.
+    # Must match the invite SEND path or an observer would be escalated to a
+    # full org member on accept. Single source of truth in _invite_helpers.
+    from dembrane.api.v2._invite_helpers import is_outsider_role
+
+    is_outsider_invite = is_outsider_role(invite_role)
 
     # Race-protection: cap may have shrunk between invite-send and accept.
     # Unified seat pool — members and externals share capacity (ADR-0003).
@@ -497,10 +502,10 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
     # that never had a chance to succeed.
     await _accept_rate_limiter.check(app_user_id)
 
-    # Invariant (ADR-0003): role='external' ⟺ no org_membership row in
-    # this org. Non-external invites ensure an org_membership row exists.
+    # Invariant (ADR-0003): outsider roles (external/observer) ⟺ no
+    # org_membership row in this org. Insider invites ensure one exists.
     newly_joined_organisation = False
-    if not is_external_invite and ws.get("org_id"):
+    if not is_outsider_invite and ws.get("org_id"):
         existing_org_mem = await async_directus.get_items(
             "org_membership",
             {
@@ -526,9 +531,9 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
                 },
             )
 
-    # External acceptance: enforce insider XOR outsider before creating the
-    # external row.
-    if is_external_invite and ws.get("org_id"):
+    # Outsider acceptance (external/observer): enforce insider XOR outsider
+    # before creating the workspace row (strips any stale org_membership).
+    if is_outsider_invite and ws.get("org_id"):
         from dembrane.api.v2._invite_helpers import (
             reconcile_external_membership_org_row,
         )
@@ -638,7 +643,7 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
     # Guests don't fire ORGANISATION_MEMBER_ADDED, so without this admins
     # never hear about them joining. Excludes the inviter (already
     # notified by INVITE_ACCEPTED) and the invitee.
-    if is_external_invite:
+    if is_outsider_invite:
         from dembrane.notifications import (
             emit_to_audience,
             audience_workspace_admins,
@@ -646,24 +651,34 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
 
         admin_ids = await audience_workspace_admins(invite["workspace_id"])
         admin_ids = [a for a in admin_ids if a != app_user_id and a != inviter_id]
-        external_name = app_user.get("display_name") or app_user.get("email") or "An external"
+        guest_name = app_user.get("display_name") or app_user.get("email") or "A guest"
         ws_name = ws.get("name") or "your workspace"
+        email_label = app_user.get("email") or "A guest"
+        if invite_role == "observer":
+            guest_title = f"{guest_name} joined {ws_name} as an observer"
+            guest_message = (
+                f"{email_label} now has free, read-only observer access. "
+                "Observers don't count against your seat cap."
+            )
+        else:
+            guest_title = f"{guest_name} joined {ws_name} as an external"
+            guest_message = (
+                f"{email_label} now has external access. "
+                "Externals count against your tier's seat cap."
+            )
         await emit_to_audience(
             admin_ids,
             actor_user_id=app_user_id,
             event_code="WORKSPACE_GUEST_ADDED",
-            title=f"{external_name} joined {ws_name} as an external",
-            message=(
-                f"{app_user.get('email') or 'An external'} now has external access. "
-                "Externals count against your tier's seat cap."
-            ),
+            title=guest_title,
+            message=guest_message,
             action="NAVIGATE_WORKSPACE_SETTINGS",
             ref_workspace_id=invite["workspace_id"],
             ref_org_id=ws.get("org_id"),
         )
 
     # Multi-pending consume: apply every other pending invite for (email, org_id) so the user gets all promised memberships in one accept.
-    if ws.get("org_id") and not is_external_invite:
+    if ws.get("org_id") and not is_outsider_invite:
         await _consume_pending_invites_in_org(
             email=email,
             org_id=ws["org_id"],
@@ -1539,7 +1554,9 @@ async def accept_invite_by_hash(
                 # Heal the missing membership. Role comes from the invite
                 # row — we don't trust any client-provided role here.
                 invite_role = inv.get("role") or "member"
-                heal_is_external = invite_role == "external"
+                from dembrane.api.v2._invite_helpers import is_outsider_role
+
+                heal_is_external = is_outsider_role(invite_role)
                 logger.warning(
                     "accept-by-hash fallback healed missing workspace_membership "
                     f"for user={app_user_id} invite={inv['id']} ws={inv['workspace_id']}"
@@ -1686,7 +1703,9 @@ async def accept_invite_by_hash(
         raise HTTPException(status_code=404, detail="Invite not found or already handled")
 
     actual_role = target_invite.get("role") or "member"
-    is_external_invite = actual_role == "external"
+    from dembrane.api.v2._invite_helpers import is_outsider_role
+
+    is_external_invite = is_outsider_role(actual_role)
 
     # Honeypot
     if body.claimed_role:

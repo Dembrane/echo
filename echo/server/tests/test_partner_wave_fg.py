@@ -16,8 +16,23 @@ from fastapi import FastAPI, HTTPException
 from httpx import AsyncClient, ASGITransport
 
 from dembrane.billing_account import workspace_is_external_client
+from dembrane.api.v2._invite_helpers import is_outsider_role
 from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 from dembrane.api.dependency_auth import DirectusSession, require_directus_session
+
+
+# ── Outsider classification (security-critical: send + all accept paths) ─
+
+
+def test_is_outsider_role_covers_external_and_observer():
+    """Both outsider roles must classify identically across invite send AND
+    every accept path; otherwise accepting an observer invite would create an
+    org_membership and escalate the user to a full org member (regression guard
+    for the Wave G acceptance-path fix)."""
+    assert is_outsider_role("external") is True
+    assert is_outsider_role("observer") is True
+    for insider in ("member", "billing", "admin", "owner", None, ""):
+        assert is_outsider_role(insider) is False
 
 
 # ── workspace_is_external_client (pure) ─────────────────────────────────

@@ -16,6 +16,18 @@ from dembrane.directus_async import async_directus
 logger = getLogger("api.v2._invite_helpers")
 
 
+# Outsider workspace roles: NO org_membership row in the workspace's org
+# (ADR-0003, extended for the free read-only `observer` in Wave G). Both the
+# invite SEND and every invite ACCEPT path must classify these identically —
+# otherwise accepting an observer invite would wrongly create an org_membership
+# and escalate the user to a full org member. Use this single source of truth.
+OUTSIDER_ROLES = frozenset({"external", "observer"})
+
+
+def is_outsider_role(role: str | None) -> bool:
+    return (role or "") in OUTSIDER_ROLES
+
+
 # ---------------------------------------------------------------------------
 # Race-safe membership writes
 # ---------------------------------------------------------------------------

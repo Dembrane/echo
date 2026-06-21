@@ -331,10 +331,17 @@ async def list_workspaces(
         org_id = ws.get("org_id", "")
         raw_role = membership.get("role", "")
         source = membership.get("source", "")
-        is_external_access = raw_role == "external" or (
-            source == "direct" and org_id not in internal_org_ids
-        )
-        role = "external" if is_external_access else raw_role
+        # Preserve the free read-only observer role verbatim (Wave G) — it is a
+        # distinct outsider role and must NOT be collapsed into "external", or
+        # the frontend would treat the observer as a chat-capable external and
+        # skip the read-only wall.
+        if raw_role == "observer":
+            role = "observer"
+        else:
+            is_external_access = raw_role == "external" or (
+                source == "direct" and org_id not in internal_org_ids
+            )
+            role = "external" if is_external_access else raw_role
         # Fill in matrix §8 cap signals on the usage object so card-level
         # rendering doesn't need to join tier → cap client-side.
         tier = ws.get("tier") or ""

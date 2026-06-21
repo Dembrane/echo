@@ -1410,10 +1410,10 @@ async def change_workspace_admin(
         raise HTTPException(
             status_code=404, detail="Membership not found in this workspace"
         )
-    if membership.get("role") == "external":
+    if membership.get("role") in ("external", "observer"):
         raise HTTPException(
             status_code=400,
-            detail="Cannot promote an external member to admin. Add them to the org first.",
+            detail="Cannot promote an outside collaborator to admin. Add them to the org first.",
         )
 
     if membership.get("role") not in ("admin", "owner"):

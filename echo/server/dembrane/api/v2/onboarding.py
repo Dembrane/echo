@@ -204,16 +204,20 @@ async def complete_onboarding(
                 )
             user_has_org_mem = isinstance(existing_org_mem, list) and len(existing_org_mem) > 0
 
-            # ADR-0003 invariant: external ⇔ no org_membership. Promote to
-            # member if the user is already in this workspace's org.
-            if invite_role == "external" and user_has_org_mem:
+            # ADR-0003 invariant (extended for observer, Wave G): outsider roles
+            # (external/observer) ⇔ no org_membership. If the user is already an
+            # insider of this workspace's org, an outsider invite is contradictory
+            # — promote it to member.
+            from dembrane.api.v2._invite_helpers import is_outsider_role
+
+            if is_outsider_role(invite_role) and user_has_org_mem:
                 logger.info(
-                    f"Promoting external invite {invite.get('id')} to member: "
+                    f"Promoting outsider invite {invite.get('id')} to member: "
                     f"{app_user_email} already in org {ws_org_id}"
                 )
                 invite_role = "member"
 
-            is_external = invite_role == "external"
+            is_external = is_outsider_role(invite_role)
             is_org_invite = not is_external
 
             existing_ws_mem = await async_directus.get_items(
