@@ -494,8 +494,11 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
     # Unified seat pool — members and externals share capacity (ADR-0003).
     # Seat cap keys off tier, which lives on the billing account — hydrate it
     # onto the workspace dict (a plain get_item doesn't join billing fields).
+    # Observers are free and never consume a seat, so they skip the cap (mirrors
+    # the invite SEND path; otherwise a full workspace couldn't accept one).
     ws.update(await resolve_workspace_billing(ws["id"]))
-    await assert_can_add_seat(ws, audience="invitee")
+    if invite_role != "observer":
+        await assert_can_add_seat(ws, audience="invitee")
 
     # Rate-limit AFTER the cap check so a user retrying while waiting for
     # an admin to free a seat doesn't burn through their quota on attempts
@@ -1174,7 +1177,8 @@ async def _consume_pending_invites_in_org(
                     try:
                         # Hydrate tier from the billing account before the cap check.
                         ws_row.update(await resolve_workspace_billing(ws_row["id"]))
-                        await assert_can_add_seat(ws_row, audience="invitee")
+                        if (inv.get("role") or "") != "observer":  # observers are free
+                            await assert_can_add_seat(ws_row, audience="invitee")
                     except HTTPException as cap_exc:
                         if cap_exc.status_code == 402:
                             logger.info(
@@ -1564,8 +1568,10 @@ async def accept_invite_by_hash(
 
                 # Race-protection on the heal write. Unified seat pool.
                 # Hydrate tier from the billing account before the cap check.
+                # Observers are free and skip the cap (mirrors the send path).
                 ws.update(await resolve_workspace_billing(ws["id"]))
-                await assert_can_add_seat(ws, audience="invitee")
+                if invite_role != "observer":
+                    await assert_can_add_seat(ws, audience="invitee")
 
                 if not heal_is_external and ws.get("org_id"):
                     existing_org_mem = await async_directus.get_items(
@@ -1733,8 +1739,10 @@ async def accept_invite_by_hash(
     # On 402 we return without touching accepted_at, so admin can free a
     # seat and the invitee can retry the same link.
     # Hydrate tier from the billing account before the cap check.
+    # Observers are free and skip the cap (mirrors the send path).
     ws.update(await resolve_workspace_billing(ws["id"]))
-    await assert_can_add_seat(ws, audience="invitee")
+    if actual_role != "observer":
+        await assert_can_add_seat(ws, audience="invitee")
 
     # Rate-limit AFTER all the validation gates above (HMAC match, honeypot,
     # workspace exists, cap check). Brute-force protection still works

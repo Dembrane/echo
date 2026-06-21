@@ -53,14 +53,21 @@ def workspace_is_external_client(ws: dict[str, Any]) -> bool:
     observer.
 
     Canonical signal is `workspace.usage_context == "external"` (written at
-    creation for partner "for another client" workspaces). Falls back, for rows
-    created before usage_context was written, to the post-handoff client marker
-    (`billed_to_team_id` set and different from `org_id`). The `ws` dict must be
-    a full workspace row (e.g. from `get_item`), not a billing-joined subset.
+    creation for every external workspace). For robustness on rows that predate
+    usage_context, falls back to two equivalent markers that an external
+    workspace also carries: a named data owner (`data_owner_email`), and the
+    post-handoff client marker (`billed_to_team_id` set and different from
+    `org_id`). The `ws` dict must be a full workspace row (e.g. from `get_item`),
+    not a billing-joined subset. The fully authoritative signal for billing
+    moves is the account scope (see `billing_service.same_billing_context`); this
+    helper is the cheap per-row classifier used by the observer/whitelabel gates.
     """
     uc = (ws.get("usage_context") or "").strip().lower()
     if uc:
         return uc == "external"
+    # Fallbacks for legacy rows with no usage_context.
+    if (ws.get("data_owner_email") or "").strip():
+        return True
     billed_to = ws.get("billed_to_team_id")
     return bool(billed_to) and billed_to != ws.get("org_id")
 

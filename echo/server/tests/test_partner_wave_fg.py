@@ -397,3 +397,74 @@ async def test_data_owner_org_member_check():
 
     with patch.object(ws_mod.async_directus, "get_items", new=AsyncMock(side_effect=get_items_no_membership)):
         assert await ws_mod._is_org_member_by_email("org-1", "ext@client.com") is False
+
+
+@pytest.mark.asyncio
+async def test_move_orphan_project_blocked_into_external_workspace():
+    """An orphaned project (no source workspace) cannot be dropped into an
+    external-client workspace's isolated context (code-review fix)."""
+    from dembrane.api.v2 import projects as proj_mod
+
+    project = {"id": "p-1", "workspace_id": None, "directus_user_id": "du-1", "deleted_at": None}
+    target_ws = {"id": "ws-ext", "deleted_at": None, "usage_context": "external"}
+
+    async def fake_get_item(collection, item_id):
+        return project if collection == "project" else target_ws
+
+    app = FastAPI()
+
+    async def _fake_auth():
+        return DirectusSession(user_id="du-1", is_admin=False)
+
+    app.dependency_overrides[require_directus_session] = _fake_auth
+    app.include_router(proj_mod.router, prefix="/v2/projects")
+
+    with (
+        patch.object(proj_mod, "get_app_user_or_raise", new=AsyncMock(return_value={"id": "au-1"})),
+        patch.object(proj_mod.async_directus, "get_item", new=AsyncMock(side_effect=fake_get_item)),
+        patch.object(proj_mod, "user_can_access", new=AsyncMock(return_value=("admin", "direct"))),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://t") as client:
+            r = await client.post("/v2/projects/p-1/move", json={"target_workspace_id": "ws-ext"})
+    assert r.status_code == 403
+    assert "context" in r.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_move_orphan_project_allowed_into_internal_workspace():
+    """An orphaned project CAN move into an internal (org-pooled) workspace."""
+    from dembrane.api.v2 import projects as proj_mod
+
+    project = {"id": "p-1", "workspace_id": None, "directus_user_id": "du-1", "deleted_at": None}
+    target_ws = {"id": "ws-int", "deleted_at": None, "usage_context": "internal"}
+
+    async def fake_get_item(collection, item_id):
+        return project if collection == "project" else target_ws
+
+    app = FastAPI()
+
+    async def _fake_auth():
+        return DirectusSession(user_id="du-1", is_admin=False)
+
+    app.dependency_overrides[require_directus_session] = _fake_auth
+    app.include_router(proj_mod.router, prefix="/v2/projects")
+
+    with (
+        patch.object(proj_mod, "get_app_user_or_raise", new=AsyncMock(return_value={"id": "au-1"})),
+        patch.object(proj_mod.async_directus, "get_item", new=AsyncMock(side_effect=fake_get_item)),
+        patch.object(proj_mod.async_directus, "update_item", new=AsyncMock(return_value={})),
+        patch.object(proj_mod, "user_can_access", new=AsyncMock(return_value=("owner", "direct"))),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://t") as client:
+            r = await client.post("/v2/projects/p-1/move", json={"target_workspace_id": "ws-int"})
+    assert r.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_workspace_is_external_client_data_owner_fallback():
+    """Legacy row with no usage_context but a data_owner_email is still external."""
+    assert workspace_is_external_client(
+        {"usage_context": None, "data_owner_email": "owner@client.com"}
+    ) is True

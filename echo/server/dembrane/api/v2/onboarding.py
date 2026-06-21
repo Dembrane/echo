@@ -236,8 +236,9 @@ async def complete_onboarding(
             has_ws_mem = isinstance(existing_ws_mem, list) and len(existing_ws_mem) > 0
 
             # Cap gate only when adding a new seat — skip on retries so an
-            # over-cap workspace doesn't 402 an existing member.
-            if not has_ws_mem:
+            # over-cap workspace doesn't 402 an existing member. Observers are
+            # free and never consume a seat, so they skip the cap entirely.
+            if not has_ws_mem and invite_role != "observer":
                 try:
                     await assert_can_add_seat(ws, audience="invitee")
                 except HTTPException as cap_err:
