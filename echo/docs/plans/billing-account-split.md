@@ -98,7 +98,7 @@ Ship Model A first. It lets us extract the entity, move the writes, and wire Mol
 
 The current matrix splits by compliance context. Customer research says the valued things are: EU hosting and the security that implies, reduced admin burden (we help them run events, produce trainings, use the tool well, reach their goals), and that the product is a genuine time-saver. The pricing pain points: getting started was expensive (a usable single-user setup on Pioneer was about €200/mo), and every tier capped hours. The hour cap was originally a proxy for chat/analysis context cost, not for recording or transcription, which are cheap. Combined with EU AI Act high-risk concerns across much of the customer base, the model was hard to start with. The new direction simplifies and lowers the entry price.
 
-### New tiers (all prices billed yearly; monthly is 20% more)
+### New tiers (all prices billed yearly; monthly is 15% more)
 
 - **Free** (unchanged): 1 hour of recording, single user, open registration.
 - **Innovator** (coming soon): $20 per seat / month. No built-in analysis. Chat and analysis are bring-your-own: connect ChatGPT or Claude through an MCP we will release.
@@ -111,7 +111,7 @@ The current matrix splits by compliance context. Customer research says the valu
 - **Pricing is per seat, not a flat tier price.** This fits the pooled account model directly: the pool is seats. The account's seat count sums across its covered workspaces, and billing is seat_count times the tier's per-seat price.
 - **Hours stop being a paid-tier lever.** All paid tiers have unlimited recording and transcription under fair use (fair use = a legitimate purpose). Only Free keeps an hour cap (1 hour). The over-cap machinery (ADR 0001, `is_over_cap` stamping, hour overage in `tier_capacity.py`) collapses to a Free-tier-only check.
 - **Tier now encodes analysis capability and compliance level, not capacity.** Innovator has no built-in analysis. Changemaker includes EU Gemini analysis. Guardian is the sovereign EU stack. This introduces an analysis/chat feature gate keyed on tier (changemaker and above) in `policies.py`.
-- **Monthly premium is 20%** (`MONTHLY_BILLING_PREMIUM_PCT` was 10 per ADR 0002, becomes 20).
+- **Monthly premium is 15%** (`MONTHLY_BILLING_PREMIUM_PCT`; 10 per ADR 0002, then 20, now 15 as of 2026-06-21).
 - **Pilot and Pioneer are removed.** The `tier` enum and all copy shrink to free / innovator / changemaker / guardian.
 
 ### Migration
@@ -235,7 +235,7 @@ The work order is deliberate: build the billing-account entity first, then its U
 - **Phase 2: UX flows for the billing account.** Attach a billing account to an org or a workspace, re-point workspaces (the partner/handoff flow), org-scoped pooled seat metering and usage views, billing surfaces that follow the account's scope. Seats metered and shown, never blocked.
 - **Phase 3: Mollie and payments.** Customer per account, subscription per tier with seat quantity, webhook endpoint, payment-method and invoice surfaces. This is where we settle who pays, how, the admin overrides (for example provisioning seats on an offline/invoice sale), and the visibility rules (who sees invoices and payment, via the existing `billing`/`admin`/`owner` roles).
 
-The pricing overhaul (new tiers, EUR per-seat, +20% monthly, drop Pilot/Pioneer, hours-to-fair-use, analysis-as-integration, migrate existing customers to Changemaker) is a parallel track that lands on top of the account once Phase 1 exists. It is large enough to warrant its own ADR; this plan depends on it but does not block on it for Phase 1, since Phase 1 preserves the current tiers.
+The pricing overhaul (new tiers, EUR per-seat, +15% monthly, drop Pilot/Pioneer, hours-to-fair-use, analysis-as-integration, migrate existing customers to Changemaker) is a parallel track that lands on top of the account once Phase 1 exists. It is large enough to warrant its own ADR; this plan depends on it but does not block on it for Phase 1, since Phase 1 preserves the current tiers.
 
 ## Open questions
 

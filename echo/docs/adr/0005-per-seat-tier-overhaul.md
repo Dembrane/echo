@@ -33,7 +33,7 @@ We are simplifying to per-seat pricing, removing hour caps on paid tiers, and re
   | White labeling | — | — | ✓ | ✓ |
   | EU-sovereign stack (OVH, sovereign LLMs) | — | — | — | ✓ |
 
-- **Pricing is per seat / month, EUR for all tiers**, billed yearly by default; monthly is 20% more. `MONTHLY_BILLING_PREMIUM_PCT` becomes 20 (was 10 in ADR 0002). Figures: Innovator €20, Changemaker €75, Guardian €150.
+- **Pricing is per seat / month, EUR for all tiers**, billed yearly by default; monthly is 15% more. `MONTHLY_BILLING_PREMIUM_PCT` is 15 (2026-06-21; was 20, and 10 in ADR 0002). Figures: Innovator €20, Changemaker €75, Guardian €150.
 
 - **Hours stop being a paid-tier lever.** All paid tiers have unlimited recording and transcription under fair use (fair use = a legitimate purpose). Only Free keeps an hour cap (1 hour). The per-tier `included_hours` / `hour_overage_eur` matrix fields and the over-cap machinery from ADR 0001 apply to Free only.
 
@@ -55,7 +55,7 @@ We are simplifying to per-seat pricing, removing hour caps on paid tiers, and re
 
 - **ADR 0001 reduces to Free-only.** The `is_over_cap` stamp, `task_stamp_conversation_on_finish`, live-lock computation, and hour overage now only ever matter on Free. The paid-tier branches of that logic are dead and should be removed, not left dormant.
 
-- **ADR 0002 is amended.** The monthly premium constant becomes 20, and the `pricing` object becomes per-seat. The annual/monthly toggle and the proposed/approved billing-period capture on `workspace_request` are unchanged in shape.
+- **ADR 0002 is amended.** The monthly premium constant is 15 (2026-06-21; initially 20 under this ADR), and the `pricing` object becomes per-seat. The annual/monthly toggle and the proposed/approved billing-period capture on `workspace_request` are unchanged in shape.
 
 - **ADR 0004's invite modal stops blocking.** The hard-disable of workspace rows on hard-block tiers and the soft-cap overage warning both go away; the modal shows a metered seat count and never prevents an invite.
 

@@ -30,7 +30,7 @@ from dataclasses import dataclass
 # `price_eur_monthly` is the annual-billing anchor; monthly cadence is the
 # surcharged variant ("X% off when billed annually"). Editing this constant +
 # a deploy is the entire workflow — no env var, no Directus row.
-MONTHLY_BILLING_PREMIUM_PCT = 20
+MONTHLY_BILLING_PREMIUM_PCT = 15
 
 
 @dataclass(frozen=True)
