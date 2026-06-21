@@ -33,36 +33,56 @@ function useCopyToRichText() {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
 	const copy = useCallback(
-		async (markdown: string) => {
-			const html = await markdownToHtml(markdown);
+		(input: string | Promise<string> | (() => Promise<string>)) => {
+			let textPromise: Promise<string>;
+			if (typeof input === "string") {
+				textPromise = Promise.resolve(input);
+			} else if (input instanceof Promise) {
+				textPromise = input;
+			} else if (typeof input === "function") {
+				textPromise = input();
+			} else {
+				textPromise = Promise.resolve("");
+			}
 
-			const richText = new Blob([html], { type: "text/html" });
-			const text = new Blob([markdown], { type: "text/plain" });
-
-			const data = [
-				new ClipboardItem({
-					"text/html": richText,
-					"text/plain": text,
-				}),
-			];
-
-			const fallBackData = new ClipboardItem({
-				"text/plain": text,
+			const htmlPromise = textPromise.then(async (markdown) => {
+				return await markdownToHtml(markdown);
 			});
 
-			navigator.clipboard.write(data).then(
+			const textBlobPromise = textPromise.then(
+				(text) => new Blob([text], { type: "text/plain" }),
+			);
+			const htmlBlobPromise = htmlPromise.then(
+				(html) => new Blob([html], { type: "text/html" }),
+			);
+
+			const clipboardItem = new ClipboardItem({
+				"text/plain": textBlobPromise,
+				"text/html": htmlBlobPromise,
+			});
+
+			return navigator.clipboard.write([clipboardItem]).then(
 				() => {
 					setCopied(true);
 				},
-				(_e) => {
-					navigator.clipboard.write([fallBackData]).catch((e) => {
-						console.error("Rich text copy failed:", e);
+				async (err) => {
+					console.error("Rich text copy failed, trying fallback:", err);
+					const text = await textPromise;
+					if (navigator.clipboard?.writeText) {
+						try {
+							await navigator.clipboard.writeText(text);
+							setCopied(true);
+						} catch (e) {
+							console.error("writeText fallback failed:", e);
+							toast.error(t`Could not copy to clipboard. Please try again.`);
+							throw e;
+						}
+					} else {
 						toast.error(t`Could not copy to clipboard. Please try again.`);
-					});
+						throw err;
+					}
 				},
 			);
-
-			setCopied(true);
 		},
 		[setCopied],
 	);

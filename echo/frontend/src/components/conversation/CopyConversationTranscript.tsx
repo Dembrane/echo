@@ -1,9 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { ActionIcon, Loader, Tooltip } from "@mantine/core";
-import { useClipboard } from "@mantine/hooks";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { toast } from "@/components/common/Toaster";
 import { testId } from "@/lib/testUtils";
+import useCopyToRichText from "@/hooks/useCopyToRichText";
 import { useGetConversationTranscriptStringMutation } from "./hooks";
 
 export const CopyConversationTranscriptActionIcon = (props: {
@@ -13,12 +13,12 @@ export const CopyConversationTranscriptActionIcon = (props: {
 }) => {
 	const { conversationId, size = 20 } = props;
 
-	const clipboard = useClipboard({ timeout: 2000 });
+	const { copy, copied } = useCopyToRichText();
 
 	const getConversationTranscriptStringMutation =
 		useGetConversationTranscriptStringMutation();
 
-	const handleCopy = async () => {
+	const handleCopy = () => {
 		if (isLoading) return;
 
 		const promise =
@@ -30,13 +30,7 @@ export const CopyConversationTranscriptActionIcon = (props: {
 			success: t`Transcript copied to clipboard`,
 		});
 
-		try {
-			const transcript = await promise;
-			clipboard.copy(transcript);
-		} catch (error) {
-			// Error is already handled by toast.promise
-			console.error("Failed to copy transcript:", error);
-		}
+		copy(promise);
 	};
 
 	const isLoading = getConversationTranscriptStringMutation.isPending;
@@ -46,14 +40,14 @@ export const CopyConversationTranscriptActionIcon = (props: {
 			label={
 				isLoading
 					? t`Loading transcript...`
-					: clipboard.copied
+					: copied
 						? t`Copied`
 						: t`Copy to clipboard`
 			}
 		>
 			<ActionIcon
 				variant="transparent"
-				color={clipboard.copied ? "blue" : "gray"}
+				color={copied ? "blue" : "gray"}
 				onClick={(e) => {
 					// Stop the click bubbling to an enclosing card anchor (the
 					// conversations list rows are clickable links).
@@ -64,7 +58,7 @@ export const CopyConversationTranscriptActionIcon = (props: {
 			>
 				{isLoading ? (
 					<Loader size={size} />
-				) : clipboard.copied ? (
+				) : copied ? (
 					<IconCheck size={size} />
 				) : (
 					<IconCopy size={size} />
