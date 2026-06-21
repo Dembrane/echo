@@ -152,11 +152,11 @@ export const ENABLE_WEBHOOKS = true;
 // Temporarily disabled everywhere. Restore with: byEnv({ production: false }, true)
 // (on everywhere except production: local, testing/dev, next/staging → on).
 export const ENABLE_AGENTIC_CHAT = false;
-// Temporarily disabled everywhere. Restore with: byEnv({ production: false }, true).
-// Same rollout as agentic chat. Runtime render gate only; the build always
-// ships the (lazy) agentation chunk and JSX source metadata, production just
-// never renders or downloads it.
-export const ENABLE_AGENTATION = false;
+// Re-enabled on echo-next (2026-06-21). Runtime render gate only; the build
+// always ships the (lazy) agentation chunk and JSX source metadata — other
+// environments just never render or download it. Widen to more envs by adding
+// keys here (e.g. local/testing) when ready to roll out further.
+export const ENABLE_AGENTATION = byEnv({ next: true }, false);
 
 export const getProductFeedbackUrl = (locale = "en-US") =>
 	`https://portal.dembrane.com/${locale}/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start?theme=dm-sans`;
