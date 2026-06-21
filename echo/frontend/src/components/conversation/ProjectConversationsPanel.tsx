@@ -43,9 +43,12 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useProjectChatContext } from "@/components/chat/hooks";
+import { BulkActionBar } from "@/components/common/BulkActionBar";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { AutoSelectConversations } from "@/components/conversation/AutoSelectConversations";
+import { BulkMoveConversationsModal } from "@/components/conversation/BulkMoveConversationsModal";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { SelectAllConfirmationModal } from "@/components/conversation/SelectAllConfirmationModal";
 import { UploadConversationDropzone } from "@/components/dropzone/UploadConversationDropzone";
 import { useProjectById } from "@/components/project/hooks";
@@ -577,6 +580,14 @@ export const ProjectConversationsPanel = ({
 	const allConversations =
 		conversationsQuery.data?.pages.flatMap((page) => page.conversations) ?? [];
 
+	// Bulk-move selection — only on the standalone overview (not the chat
+	// context-selection embedding). Server enforces project:update on move.
+	const bulkEnabled = !selectionMode;
+	const bulkSelection = useBulkSelection(
+		bulkEnabled ? allConversations.map((c) => c.id) : [],
+	);
+	const [bulkMoveOpen, bulkMoveHandlers] = useDisclosure(false);
+
 	useEffect(() => {
 		if (
 			inView &&
@@ -808,6 +819,18 @@ export const ProjectConversationsPanel = ({
 					</Group>
 				</Paper>
 
+				{bulkEnabled && allConversations.length > 0 && (
+					<BulkActionBar
+						allSelected={bulkSelection.allSelected}
+						someSelected={bulkSelection.someSelected}
+						onToggleAll={bulkSelection.toggleAll}
+						selectedCount={bulkSelection.count}
+						moveLabel={<Trans>Move conversations</Trans>}
+						onMove={bulkMoveHandlers.open}
+						data-testid="conversations-bulk-bar"
+					/>
+				)}
+
 				{selectionMode &&
 					ENABLE_CHAT_SELECT_ALL &&
 					chatMode === "deep_dive" &&
@@ -864,13 +887,8 @@ export const ProjectConversationsPanel = ({
 					</Paper>
 				)}
 
-				{allConversations.map((conversation, index) => (
-					<div
-						key={conversation.id}
-						ref={
-							index === allConversations.length - 1 ? loadMoreRef : undefined
-						}
-					>
+				{allConversations.map((conversation, index) => {
+					const row = (
 						<ConversationRow
 							conversation={conversation as Conversation & { live?: boolean }}
 							href={
@@ -884,8 +902,28 @@ export const ProjectConversationsPanel = ({
 							selectionChatId={selectionChatId}
 							selectionMode={selectionMode}
 						/>
-					</div>
-				))}
+					);
+					const isLast = index === allConversations.length - 1;
+					return (
+						<div key={conversation.id} ref={isLast ? loadMoreRef : undefined}>
+							{bulkEnabled ? (
+								<Group wrap="nowrap" align="flex-start" gap="sm">
+									<Box pt={4}>
+										<Checkbox
+											checked={bulkSelection.isSelected(conversation.id)}
+											onChange={() => bulkSelection.toggle(conversation.id)}
+											aria-label={t`Select conversation`}
+											data-testid={`conversation-select-${conversation.id}`}
+										/>
+									</Box>
+									<Box style={{ flex: 1, minWidth: 0 }}>{row}</Box>
+								</Group>
+							) : (
+								row
+							)}
+						</div>
+					);
+				})}
 
 				{conversationsQuery.isFetchingNextPage && (
 					<Center py="md">
@@ -918,6 +956,16 @@ export const ProjectConversationsPanel = ({
 					</Stack>
 				)}
 			</Modal>
+
+			{bulkEnabled && (
+				<BulkMoveConversationsModal
+					opened={bulkMoveOpen}
+					onClose={bulkMoveHandlers.close}
+					conversationIds={bulkSelection.selectedIds}
+					currentProjectId={projectId}
+					onMoved={bulkSelection.clear}
+				/>
+			)}
 
 			{selectionMode && ENABLE_CHAT_SELECT_ALL && (
 				<SelectAllConfirmationModal

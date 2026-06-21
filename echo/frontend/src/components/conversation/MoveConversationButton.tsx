@@ -19,6 +19,10 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useInView } from "react-intersection-observer";
 import { useParams } from "react-router";
+import {
+	MoveHistory,
+	type MoveHistoryEntry,
+} from "@/components/common/MoveHistory";
 import { FormLabel } from "@/components/form/FormLabel";
 import { useInfiniteProjects } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -238,6 +242,14 @@ export const MoveConversationButton = ({
 								{t`Move`}
 							</Button>
 						</Group>
+
+						<MoveHistory
+							entries={
+								(conversation as { move_history?: MoveHistoryEntry[] })
+									.move_history
+							}
+							title={<Trans>Move history</Trans>}
+						/>
 					</Stack>
 				</form>
 			</Modal>

@@ -7,6 +7,7 @@ import {
 	Badge,
 	Box,
 	Button,
+	Checkbox,
 	Container,
 	Group,
 	SimpleGrid,
@@ -15,7 +16,11 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDebouncedValue, useDocumentTitle } from "@mantine/hooks";
+import {
+	useDebouncedValue,
+	useDisclosure,
+	useDocumentTitle,
+} from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import { IconSearch, IconSettings, IconX } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
@@ -25,9 +30,12 @@ import { useSearchParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { toast } from "@/components/common/Toaster";
+import { BulkActionBar } from "@/components/common/BulkActionBar";
+import { BulkMoveProjectsModal } from "@/components/project/BulkMoveProjectsModal";
 import { useTogglePinMutation } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -176,10 +184,17 @@ export const ProjectsHomeRoute = () => {
 
 	// Pinned rail shouldn't also appear in the "All projects" list —
 	// audit 2026-04-23 called the duplication out. One surface per project.
-	const nonPinnedProjects = useMemo(
-		() => allProjects.filter((p) => !pinnedIds.has(p.id)),
-		[allProjects, pinnedIds],
+	// Pinned projects also appear in the default "All projects" list as a
+	// shortcut (they're not removed from it), so the list — and the bulk-move
+	// selection — operate on the full set.
+	const displayProjects = allProjects;
+
+	const selectableIds = useMemo(
+		() => displayProjects.map((p) => p.id),
+		[displayProjects],
 	);
+	const selection = useBulkSelection(selectableIds);
+	const [moveOpen, moveHandlers] = useDisclosure(false);
 
 	const canManageWorkspace =
 		workspace?.role === "owner" || workspace?.role === "admin";
@@ -351,24 +366,12 @@ export const ProjectsHomeRoute = () => {
 								{...testId("project-search-input")}
 							/>
 
-							{nonPinnedProjects.length === 0 &&
+							{displayProjects.length === 0 &&
 								debouncedSearchValue !== "" &&
 								status === "success" && (
 									<Text c="dimmed">
 										<Trans>No projects found for search term</Trans>{" "}
 										<i>{debouncedSearchValue}</i>
-									</Text>
-								)}
-
-							{nonPinnedProjects.length === 0 &&
-								debouncedSearchValue === "" &&
-								status === "success" &&
-								showPinnedSection && (
-									<Text size="sm" c="dimmed">
-										<Trans>
-											Everything is pinned. Unpin a project to see it in this
-											list.
-										</Trans>
 									</Text>
 								)}
 
@@ -382,31 +385,58 @@ export const ProjectsHomeRoute = () => {
 								<ProjectListSkeleton searchValue={debouncedSearchValue} />
 							)}
 
-							{nonPinnedProjects.length > 0 && (
+							{/* Bulk-move select row (admin/owner only) — between the
+							    search and the list, consistent with conversations. */}
+							{canManageWorkspace && displayProjects.length > 0 && (
+								<BulkActionBar
+									allSelected={selection.allSelected}
+									someSelected={selection.someSelected}
+									onToggleAll={selection.toggleAll}
+									selectedCount={selection.count}
+									moveLabel={<Trans>Move projects</Trans>}
+									onMove={moveHandlers.open}
+									data-testid="projects-bulk-bar"
+								/>
+							)}
+
+							{displayProjects.length > 0 && (
 								<Box className="relative">
 									<Stack ref={listParent} gap="sm">
-										{nonPinnedProjects.map((project) => (
-											<Box
+										{displayProjects.map((project) => (
+											<Group
 												key={project.id}
+												wrap="nowrap"
+												align="center"
+												gap="xs"
 												ref={
-													nonPinnedProjects[nonPinnedProjects.length - 1].id ===
+													displayProjects[displayProjects.length - 1].id ===
 													project.id
 														? loadMoreRef
 														: undefined
 												}
 											>
-												<ProjectListItem
-													project={project as Project}
-													onTogglePin={
-														canPinOnThisWorkspace ? handleTogglePin : undefined
-													}
-													isPinned={pinnedIds.has(project.id)}
-													canPin={canPin && canPinOnThisWorkspace}
-													onSearchOwner={
-														isAdmin ? handleSearchOwner : undefined
-													}
-												/>
-											</Box>
+												{canManageWorkspace && (
+													<Checkbox
+														checked={selection.isSelected(project.id)}
+														onChange={() => selection.toggle(project.id)}
+														aria-label={t`Select project`}
+														data-testid={`project-select-${project.id}`}
+													/>
+												)}
+												<Box style={{ flex: 1, minWidth: 0 }}>
+													<ProjectListItem
+														project={project as Project}
+														onTogglePin={
+															canPinOnThisWorkspace ? handleTogglePin : undefined
+														}
+														isPinned={pinnedIds.has(project.id)}
+														canPin={canPin && canPinOnThisWorkspace}
+														onSearchOwner={
+															isAdmin ? handleSearchOwner : undefined
+														}
+													/>
+												</Box>
+											</Group>
 										))}
 
 										{isFetchingNextPage && (
@@ -418,6 +448,16 @@ export const ProjectsHomeRoute = () => {
 										)}
 									</Stack>
 								</Box>
+							)}
+
+							{workspaceId && (
+								<BulkMoveProjectsModal
+									opened={moveOpen}
+									onClose={moveHandlers.close}
+									projectIds={selection.selectedIds}
+									sourceWorkspaceId={workspaceId}
+									onMoved={selection.clear}
+								/>
 							)}
 						</Stack>
 					</>

@@ -209,6 +209,42 @@ export const useMoveProjectMutation = () => {
 	});
 };
 
+export const useBulkMoveProjectsMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({
+			projectIds,
+			targetWorkspaceId,
+		}: {
+			projectIds: string[];
+			targetWorkspaceId: string;
+		}) => {
+			const res = await fetch(`${API_BASE_URL}/v2/projects/bulk-move`, {
+				body: JSON.stringify({
+					project_ids: projectIds,
+					target_workspace_id: targetWorkspaceId,
+				}),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "POST",
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || t`Failed to move projects`);
+			}
+			return (await res.json()) as { moved: string[]; count: number };
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["projects"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
+			toast.success(t`Projects moved`);
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || t`Failed to move projects`);
+		},
+	});
+};
+
 export const useCreateProjectTagMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({

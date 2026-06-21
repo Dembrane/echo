@@ -142,6 +142,66 @@ async def get_project_bff(
     return project
 
 
+async def _authorize_project_move(
+    *,
+    project: dict,
+    target_workspace_id: str,
+    target_workspace: dict,
+    app_user_id: str,
+    directus_user_id: str,
+) -> Optional[str]:
+    """Run the full project-move authorization for one project and return its
+    source workspace id. Raises HTTPException on any denial. Shared by the single
+    and bulk move endpoints so they enforce identical rules.
+
+    - admin/owner on BOTH source and target workspace (via user_can_access, which
+      honors derived org-admin/owner inheritance, ADR-0004).
+    - orphaned project (no source workspace): only its creator may move it.
+    - same billing / data-ownership context (ISSUE-033): a project can't leave an
+      external (workspace-scoped) workspace, nor enter one from another context.
+    """
+    source_workspace_id = project.get("workspace_id")
+
+    if not source_workspace_id:
+        if project.get("directus_user_id") != directus_user_id:
+            raise HTTPException(status_code=403, detail="Not the owner of this project")
+    else:
+        src = await user_can_access(source_workspace_id, app_user_id)
+        if src is None:
+            raise HTTPException(status_code=403, detail="No access to source workspace")
+        if src[0] not in ("admin", "owner"):
+            raise HTTPException(
+                status_code=403, detail="Must be admin or owner of source workspace"
+            )
+
+    tgt = await user_can_access(target_workspace_id, app_user_id)
+    if tgt is None:
+        raise HTTPException(status_code=403, detail="No access to target workspace")
+    if tgt[0] not in ("admin", "owner"):
+        raise HTTPException(
+            status_code=403, detail="Must be admin or owner of target workspace"
+        )
+
+    from dembrane.billing_account import workspace_is_external_client
+    from dembrane.billing_service import same_billing_context
+
+    cross_context = (
+        not await same_billing_context(source_workspace_id, target_workspace_id)
+        if source_workspace_id
+        else workspace_is_external_client(target_workspace)
+    )
+    if cross_context:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Projects can only move between workspaces in the same billing "
+                "and data-ownership context. External-client workspaces keep "
+                "their projects within their own context."
+            ),
+        )
+    return source_workspace_id
+
+
 @router.post("/{project_id}/move", response_model=MoveProjectResponse)
 async def move_project(
     project_id: str,
@@ -157,73 +217,43 @@ async def move_project(
     target_workspace_id = body.target_workspace_id
 
     project = await async_directus.get_item("project", project_id)
-    if not project:
+    if not project or project.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Project not found")
-    if project.get("deleted_at"):
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    source_workspace_id = project.get("workspace_id")
-
-    # Orphaned projects: verify ownership via directus_user_id
-    if not source_workspace_id:
-        if project.get("directus_user_id") != auth.user_id:
-            raise HTTPException(status_code=403, detail="Not the owner of this project")
-
-    # Source + target access must both resolve as admin/owner. Using
-    # user_can_access honors derived inheritance — a organisation owner who has
-    # no direct workspace row still legitimately administers the
-    # workspace. The previous raw workspace_membership lookup 403'd them
-    # incorrectly. (Audit round 2026-04-21, HIGH.)
-    if source_workspace_id:
-        src = await user_can_access(source_workspace_id, app_user_id)
-        if src is None:
-            raise HTTPException(status_code=403, detail="No access to source workspace")
-        if src[0] not in ("admin", "owner"):
-            raise HTTPException(
-                status_code=403,
-                detail="Must be admin or owner of source workspace",
-            )
-
-    tgt = await user_can_access(target_workspace_id, app_user_id)
-    if tgt is None:
-        raise HTTPException(status_code=403, detail="No access to target workspace")
-    if tgt[0] not in ("admin", "owner"):
-        raise HTTPException(status_code=403, detail="Must be admin or owner of target workspace")
 
     target_workspace = await async_directus.get_item("workspace", target_workspace_id)
     if not target_workspace or target_workspace.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Target workspace not found")
 
-    # Projects move only within one billing / data-ownership context (ISSUE-033):
-    # internal workspaces of the same org share the org context and move freely;
-    # an external (workspace-scoped) workspace is its own isolated context. A
-    # project can't move OUT of an external workspace, nor INTO one from a
-    # different context — including an orphaned project (no source workspace),
-    # which must never be dropped into a client's isolated compliance context.
-    from dembrane.billing_account import workspace_is_external_client
-    from dembrane.billing_service import same_billing_context
-
-    cross_context = (
-        not await same_billing_context(source_workspace_id, target_workspace_id)
-        if source_workspace_id
-        # Orphan: only blocked from entering an external-client workspace.
-        else workspace_is_external_client(target_workspace)
+    source_workspace_id = await _authorize_project_move(
+        project=project,
+        target_workspace_id=target_workspace_id,
+        target_workspace=target_workspace,
+        app_user_id=app_user_id,
+        directus_user_id=auth.user_id,
     )
-    if cross_context:
-        raise HTTPException(
-            status_code=403,
-            detail=(
-                "Projects can only move between workspaces in the same billing "
-                "and data-ownership context. External-client workspaces keep "
-                "their projects within their own context."
-            ),
-        )
+
+    from dembrane.move_history import append_move_entry
+
+    by_label = app_user.get("display_name") or app_user.get("email")
+    from_label = None
+    if source_workspace_id:
+        src_ws = await async_directus.get_item("workspace", source_workspace_id)
+        from_label = (src_ws or {}).get("name")
 
     await async_directus.update_item(
         "project",
         project_id,
         {
             "workspace_id": target_workspace_id,
+            "move_history": append_move_entry(
+                project.get("move_history"),
+                from_id=source_workspace_id,
+                to_id=target_workspace_id,
+                by=app_user_id,
+                from_label=from_label,
+                to_label=target_workspace.get("name"),
+                by_label=by_label,
+            ),
         },
     )
 
@@ -236,6 +266,99 @@ async def move_project(
         project_id=project_id,
         workspace_id=target_workspace_id,
     )
+
+
+class BulkMoveProjectsRequest(BaseModel):
+    project_ids: list[str]
+    target_workspace_id: str
+
+
+class BulkMoveProjectsResponse(BaseModel):
+    moved: list[str]
+    count: int
+
+
+@router.post("/bulk-move", response_model=BulkMoveProjectsResponse)
+async def bulk_move_projects(
+    body: BulkMoveProjectsRequest,
+    auth: DependencyDirectusSession,
+) -> BulkMoveProjectsResponse:
+    """Move several projects to one target workspace in a single action.
+
+    Same authorization as the single move, enforced per project (admin/owner on
+    each source + the target, plus the billing-context guard). All-or-nothing:
+    every project is authorized before any is moved, so a partial-permission
+    request fails without moving anything. Records move-history per project.
+    """
+    if not body.project_ids:
+        raise HTTPException(status_code=400, detail="No projects selected")
+    ids = list(dict.fromkeys(body.project_ids))
+    if len(ids) > 500:
+        raise HTTPException(status_code=400, detail="Too many projects (max 500)")
+
+    app_user = await get_app_user_or_raise(auth.user_id)
+    app_user_id = app_user["id"]
+    target_workspace_id = body.target_workspace_id
+
+    target_workspace = await async_directus.get_item("workspace", target_workspace_id)
+    if not target_workspace or target_workspace.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Target workspace not found")
+
+    # Phase 1: fetch + authorize every project before mutating any.
+    pending: list[tuple[dict, Optional[str]]] = []
+    for pid in ids:
+        project = await async_directus.get_item("project", pid)
+        if not project or project.get("deleted_at"):
+            raise HTTPException(status_code=404, detail=f"Project {pid} not found")
+        source_workspace_id = await _authorize_project_move(
+            project=project,
+            target_workspace_id=target_workspace_id,
+            target_workspace=target_workspace,
+            app_user_id=app_user_id,
+            directus_user_id=auth.user_id,
+        )
+        pending.append((project, source_workspace_id))
+
+    # Phase 2: apply. Resolve source-workspace names once per distinct source.
+    from dembrane.move_history import append_move_entry
+
+    by_label = app_user.get("display_name") or app_user.get("email")
+    to_label = target_workspace.get("name")
+    name_cache: dict[str, Optional[str]] = {}
+
+    async def _ws_name(ws_id: Optional[str]) -> Optional[str]:
+        if not ws_id:
+            return None
+        if ws_id not in name_cache:
+            row = await async_directus.get_item("workspace", ws_id)
+            name_cache[ws_id] = (row or {}).get("name")
+        return name_cache[ws_id]
+
+    moved: list[str] = []
+    for project, source_workspace_id in pending:
+        await async_directus.update_item(
+            "project",
+            project["id"],
+            {
+                "workspace_id": target_workspace_id,
+                "move_history": append_move_entry(
+                    project.get("move_history"),
+                    from_id=source_workspace_id,
+                    to_id=target_workspace_id,
+                    by=app_user_id,
+                    from_label=await _ws_name(source_workspace_id),
+                    to_label=to_label,
+                    by_label=by_label,
+                ),
+            },
+        )
+        moved.append(project["id"])
+
+    logger.info(
+        f"Bulk-moved {len(moved)} projects to workspace {target_workspace_id} "
+        f"by user {app_user_id}"
+    )
+    return BulkMoveProjectsResponse(moved=moved, count=len(moved))
 
 
 # ── Visibility toggle (workspace ↔ private) ─────────────────────────────
