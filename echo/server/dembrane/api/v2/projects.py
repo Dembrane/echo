@@ -200,8 +200,8 @@ async def move_project(
     # project can't move OUT of an external workspace, nor INTO one from a
     # different context — including an orphaned project (no source workspace),
     # which must never be dropped into a client's isolated compliance context.
-    from dembrane.billing_service import same_billing_context
     from dembrane.billing_account import workspace_is_external_client
+    from dembrane.billing_service import same_billing_context
 
     cross_context = (
         not await same_billing_context(source_workspace_id, target_workspace_id)
