@@ -75,12 +75,12 @@ export const Quote = ({
 					</Text>
 				</div>
 
-				<CopyIconButton
-					onCopy={() => copyQuote(data.description || "")}
-					copied={copied}
-					copyTooltip="Copy"
-					size={16}
-				/>
+					<CopyIconButton
+						onCopy={() => copyQuote(data.id)}
+						copied={copied}
+						copyTooltip="Copy"
+						size={16}
+					/>
 			</Group>
 
 			{/* Supporting transcript */}
