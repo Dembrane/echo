@@ -51,6 +51,7 @@ import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { UsageCard } from "@/components/workspace/UsageCard";
+import { WorkspaceDataOwnershipSection } from "@/components/workspace/WorkspaceDataOwnershipSection";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
@@ -106,6 +107,8 @@ interface WorkspaceDetail {
 	billing_org_managed: boolean;
 	usage_context: string | null;
 	is_external_client: boolean;
+	data_owner_org_name: string | null;
+	data_owner_email: string | null;
 }
 
 async function deleteWorkspace(workspaceId: string) {
@@ -747,6 +750,12 @@ export const WorkspaceSettingsRoute = () => {
 												canEdit={canEditSettings}
 												workspaceId={workspaceId}
 												section="access"
+											/>
+											<Divider />
+											<WorkspaceDataOwnershipSection
+												settings={settings}
+												canEdit={canEditSettings}
+												workspaceId={workspaceId}
 											/>
 										</>
 									)}
