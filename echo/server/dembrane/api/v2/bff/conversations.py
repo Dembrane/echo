@@ -66,6 +66,7 @@ _CONVERSATION_DEFAULT_FIELDS = [
     "is_audio_processing_finished",
     "is_anonymized",
     "is_over_cap",
+    "move_history",
 ]
 
 # Shared by the list/count/select-all endpoints so they stay consistent.
@@ -709,16 +710,33 @@ async def move_conversation(
     on the target. Same-workspace is not required — cross-workspace
     moves are allowed when the user administers both.
     """
-    src_access, _ = await resolve_conversation_access(conversation_id, auth)
+    src_access, conv = await resolve_conversation_access(conversation_id, auth)
     src_access.require("project:update")
 
     dst_access = await resolve_project_access(body.target_project_id, auth)
     dst_access.require("project:update")
 
+    from dembrane.app_user import resolve_app_user
+    from dembrane.move_history import append_move_entry
+
+    me = await resolve_app_user(auth.user_id)
+    by_label = (me or {}).get("display_name") or (me or {}).get("email")
+
     updated = await async_directus.update_item(
         "conversation",
         conversation_id,
-        {"project_id": body.target_project_id},
+        {
+            "project_id": body.target_project_id,
+            "move_history": append_move_entry(
+                conv.get("move_history"),
+                from_id=conv.get("project_id"),
+                to_id=body.target_project_id,
+                by=src_access.app_user_id,
+                from_label=src_access.project.get("name"),
+                to_label=dst_access.project.get("name"),
+                by_label=by_label,
+            ),
+        },
     )
 
     from dembrane.cache_utils import invalidate_workspace_and_org_usage
@@ -733,6 +751,92 @@ async def move_conversation(
     if isinstance(updated, dict) and "data" in updated:
         return updated["data"]
     return updated or {}
+
+
+class BulkMoveConversations(BaseModel):
+    conversation_ids: list[str]
+    target_project_id: str
+
+
+@router.post("/bulk-move")
+async def bulk_move_conversations(
+    body: BulkMoveConversations,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Move several conversations to one target project in a single action.
+
+    Same authorization as the single move (`project:update` on the source of
+    each conversation AND on the target). All-or-nothing: every permission is
+    checked before any conversation is updated, so a partial-permission request
+    fails cleanly without moving anything. Records a move-history entry per
+    conversation.
+    """
+    if not body.conversation_ids:
+        raise HTTPException(status_code=400, detail="No conversations selected")
+    # De-dupe while preserving order.
+    ids = list(dict.fromkeys(body.conversation_ids))
+    if len(ids) > 500:
+        raise HTTPException(status_code=400, detail="Too many conversations (max 500)")
+
+    dst_access = await resolve_project_access(body.target_project_id, auth)
+    dst_access.require("project:update")
+    to_label = dst_access.project.get("name")
+
+    from dembrane.app_user import resolve_app_user
+
+    me = await resolve_app_user(auth.user_id)
+    by_label = (me or {}).get("display_name") or (me or {}).get("email")
+
+    # Phase 1: resolve + authorize every conversation before mutating any.
+    resolved: list[dict] = []
+    src_ws_ids: set[str] = set()
+    for cid in ids:
+        src_access, conv = await resolve_conversation_access(cid, auth)
+        src_access.require("project:update")
+        resolved.append(
+            {
+                "conv": conv,
+                "app_user_id": src_access.app_user_id,
+                "from_label": src_access.project.get("name"),
+            }
+        )
+        if src_access.workspace_id:
+            src_ws_ids.add(src_access.workspace_id)
+
+    # Phase 2: apply.
+    from dembrane.move_history import append_move_entry
+
+    moved: list[str] = []
+    for r in resolved:
+        conv = r["conv"]
+        await async_directus.update_item(
+            "conversation",
+            conv["id"],
+            {
+                "project_id": body.target_project_id,
+                "move_history": append_move_entry(
+                    conv.get("move_history"),
+                    from_id=conv.get("project_id"),
+                    to_id=body.target_project_id,
+                    by=r["app_user_id"],
+                    from_label=r["from_label"],
+                    to_label=to_label,
+                    by_label=by_label,
+                ),
+            },
+        )
+        moved.append(conv["id"])
+
+    from dembrane.cache_utils import invalidate_workspace_and_org_usage
+
+    for ws_id in src_ws_ids:
+        await invalidate_workspace_and_org_usage(ws_id, None)
+    if dst_access.workspace_id:
+        await invalidate_workspace_and_org_usage(
+            dst_access.workspace_id, dst_access.org_id
+        )
+
+    return {"moved": moved, "count": len(moved)}
 
 
 # ── /v2/bff/conversations/:id/chunks (paginated) ──────────────────────

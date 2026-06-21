@@ -7,6 +7,10 @@ import posthog from "posthog-js";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import {
+	MoveHistory,
+	type MoveHistoryEntry,
+} from "@/components/common/MoveHistory";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { testId } from "@/lib/testUtils";
@@ -121,6 +125,12 @@ export const ProjectMoveWorkspace = ({ project }: { project: Project }) => {
 					</Button>
 				</Stack>
 			)}
+			<MoveHistory
+				entries={
+					(project as { move_history?: MoveHistoryEntry[] }).move_history
+				}
+				title={<Trans>Move history</Trans>}
+			/>
 			<ConfirmModal
 				opened={isConfirmOpen}
 				onClose={closeConfirm}

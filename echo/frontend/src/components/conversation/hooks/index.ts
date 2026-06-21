@@ -263,6 +263,34 @@ export const useMoveConversationMutation = () => {
 	});
 };
 
+export const useBulkMoveConversationsMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({
+			conversationIds,
+			targetProjectId,
+		}: {
+			conversationIds: string[];
+			targetProjectId: string;
+		}) => {
+			// Let errors propagate so onError fires and the modal stays open on
+			// a permission failure (all-or-nothing on the server).
+			return bff.post("/conversations/bulk-move", {
+				conversation_ids: conversationIds,
+				target_project_id: targetProjectId,
+			});
+		},
+		onError: (error: Error) => {
+			toast.error(`Couldn't move conversations: ${error.message}`);
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["conversations"] });
+			queryClient.invalidateQueries({ queryKey: ["projects"] });
+			toast.success("Conversations moved");
+		},
+	});
+};
+
 export const useAddChatContextMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
