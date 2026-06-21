@@ -213,8 +213,10 @@ class CreateWorkspaceRequest(BaseModel):
     # separately (the partner "for another client" path; handoff-ready).
     bill_separately: bool = False
     # External-client (ISSUE-026): when bill_separately is true, the creator must
-    # name the client's data owner (email only for now) and accept the partner
-    # agreement. The server hard-blocks external creation without these.
+    # name the owning organisation (compliance/data context) + its representative
+    # (the data owner email) and accept the partner agreement. The server
+    # hard-blocks external creation without these.
+    data_owner_org_name: Optional[str] = Field(default=None, max_length=255)
     data_owner_email: Optional[EmailStr] = None
     partner_agreement_accepted: bool = False
 

@@ -48,6 +48,7 @@ async function createWorkspace(payload: {
 	org_id: string;
 	inherit_organisation_admins: boolean;
 	bill_separately: boolean;
+	data_owner_org_name?: string;
 	data_owner_email?: string;
 	partner_agreement_accepted?: boolean;
 }): Promise<CreatedWorkspace> {
@@ -122,7 +123,8 @@ export const CreateWorkspaceRoute = () => {
 	const [access, setAccess] = useState<Access>("everyone");
 	const [memberEmails, setMemberEmails] = useState<string[]>([]);
 	const [billFor, setBillFor] = useState<BillFor>("internal");
-	// External-client (ISSUE-026): data owner + partner-agreement acceptance.
+	// External-client (ISSUE-026): owning-org name + data owner rep + agreement.
+	const [dataOwnerOrgName, setDataOwnerOrgName] = useState("");
 	const [dataOwnerEmail, setDataOwnerEmail] = useState("");
 	const [agreementAccepted, setAgreementAccepted] = useState(false);
 
@@ -195,6 +197,7 @@ export const CreateWorkspaceRoute = () => {
 				org_id: targetOrganisationId,
 				...(isClient
 					? {
+							data_owner_org_name: dataOwnerOrgName.trim(),
 							data_owner_email: dataOwnerEmail.trim(),
 							partner_agreement_accepted: agreementAccepted,
 						}
@@ -334,8 +337,10 @@ export const CreateWorkspaceRoute = () => {
 	// agreement acceptance before leaving the Billing step / submitting.
 	const isClientWorkspace = isPartner && billFor === "client";
 	const dataOwnerValid = /.+@.+\..+/.test(dataOwnerEmail.trim());
+	const ownerOrgValid = dataOwnerOrgName.trim().length > 0;
 	const canAdvanceFromBilling =
-		!isClientWorkspace || (dataOwnerValid && agreementAccepted);
+		!isClientWorkspace ||
+		(ownerOrgValid && dataOwnerValid && agreementAccepted);
 	const canSubmit =
 		canAdvanceFromName && canAdvanceFromBilling && Boolean(targetOrganisationId);
 
@@ -464,14 +469,30 @@ export const CreateWorkspaceRoute = () => {
 									{billFor === "client" && (
 										<Stack gap={10} mt={4}>
 											<TextInput
-												type="email"
 												required
-												label={<Trans>Client data owner email</Trans>}
+												label={<Trans>Owning organisation</Trans>}
 												description={
 													<Trans>
-														The person at the client who owns this data. They
-														become the workspace's data owner and the contact
-														for handing it off later.
+														Which organisation owns this workspace's data? This
+														sets the data and compliance context.
+													</Trans>
+												}
+												placeholder="Essential Energy"
+												value={dataOwnerOrgName}
+												onChange={(e) =>
+													setDataOwnerOrgName(e.currentTarget.value)
+												}
+												data-testid="create-workspace-data-owner-org"
+											/>
+											<TextInput
+												type="email"
+												required
+												label={<Trans>Data owner email</Trans>}
+												description={
+													<Trans>
+														Their representative who owns this data. They are
+														added as a free observer and emailed that they are
+														the data owner, and become the handoff contact.
 													</Trans>
 												}
 												placeholder="owner@client.com"

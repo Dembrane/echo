@@ -194,6 +194,24 @@ async def move_project(
     if not target_workspace or target_workspace.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Target workspace not found")
 
+    # Projects move only within one billing / data-ownership context (ISSUE-033):
+    # internal workspaces of the same org share the org context and move freely;
+    # an external (workspace-scoped) workspace is its own context, so a project
+    # can't move out of it (or into it from a different context). Orphaned
+    # projects (no source workspace) have no context to violate.
+    if source_workspace_id:
+        from dembrane.billing_service import same_billing_context
+
+        if not await same_billing_context(source_workspace_id, target_workspace_id):
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Projects can only move between workspaces in the same billing "
+                    "and data-ownership context. External-client workspaces keep "
+                    "their projects within their own context."
+                ),
+            )
+
     await async_directus.update_item(
         "project",
         project_id,

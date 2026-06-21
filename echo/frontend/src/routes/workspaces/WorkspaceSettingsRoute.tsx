@@ -104,6 +104,8 @@ interface WorkspaceDetail {
 	billing_account_id: string | null;
 	billing_status: string | null;
 	billing_org_managed: boolean;
+	usage_context: string | null;
+	is_external_client: boolean;
 }
 
 async function deleteWorkspace(workspaceId: string) {
@@ -1495,9 +1497,13 @@ function PrivacyAndDefaultsSection({
 						maxLength={500}
 					/>
 					{(() => {
-						// Whitelabel branding is changemaker+
+						// Whitelabel branding is changemaker+ AND a per-workspace logo
+						// override is only for external-client workspaces (ISSUE-032);
+						// internal workspaces inherit the org's branding.
 						const whitelabelTiers = ["changemaker", "guardian"];
-						const canWhitelabel = whitelabelTiers.includes(settings.tier);
+						const canWhitelabel =
+							whitelabelTiers.includes(settings.tier) &&
+							settings.is_external_client;
 
 						if (canWhitelabel) {
 							return (

@@ -545,6 +545,61 @@ async def list_workspaces(
     )
 
 
+async def _invite_data_owner_observer(
+    *,
+    workspace_id: str,
+    workspace_name: str,
+    org_name: str,
+    email: str,
+    invited_by: str,
+) -> None:
+    """Add the external client's data-owner representative as a free `observer`
+    and email them that they're the data owner of this workspace (ISSUE-026).
+
+    Observers are free and valid only on external-client workspaces (which this
+    always is when called). Creates a pending workspace_invite + sends the mail
+    via the same path as the invite endpoint.
+    """
+    from datetime import timedelta
+
+    from dembrane.api.v2.invites import compute_invite_hash, _enqueue_invite_email
+    from dembrane.api.v2._invite_helpers import build_invite_accept_url
+
+    expires_at = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+    invite_id = generate_uuid()
+    await async_directus.create_item(
+        "workspace_invite",
+        {
+            "id": invite_id,
+            "workspace_id": workspace_id,
+            "email": email,
+            "role": "observer",
+            "invited_by": invited_by,
+            "expires_at": expires_at,
+        },
+    )
+    invite_url = build_invite_accept_url(
+        invite_type="workspace",
+        admin_base_url=settings.urls.admin_base_url,
+        hash_value=compute_invite_hash(invite_id),
+        inviter_name=org_name or "dembrane",
+        subject_name=workspace_name,
+        role="observer",
+        email=email,
+    )
+    _enqueue_invite_email(
+        to=email,
+        subject=f"You're the data owner for {workspace_name} on dembrane",
+        template="workspace_invite",
+        template_data={
+            "inviter_name": org_name or "dembrane",
+            "workspace_name": workspace_name,
+            "invite_url": invite_url,
+        },
+        failure_context=f"data_owner_observer / workspace {workspace_id}",
+    )
+
+
 @router.post("", response_model=CreateWorkspaceResponse)
 async def create_workspace(
     body: CreateWorkspaceRequest,
@@ -616,7 +671,13 @@ async def create_workspace(
     # the compliance gate that makes the data-ownership claim real.
     separate = getattr(body, "bill_separately", False)
     data_owner_email = (body.data_owner_email or "").strip().lower() or None
+    data_owner_org_name = (getattr(body, "data_owner_org_name", None) or "").strip() or None
     if separate:
+        if not data_owner_org_name:
+            raise HTTPException(
+                status_code=400,
+                detail="The owning organisation's name is required for an external-client workspace.",
+            )
         if not data_owner_email:
             raise HTTPException(
                 status_code=400,
@@ -668,7 +729,8 @@ async def create_workspace(
         "usage_context": usage_context,
     }
     if separate:
-        # Data owner + agreement acceptance for the external-client workspace.
+        # Owning org + data owner + agreement acceptance for the external workspace.
+        ws_row["data_owner_org_name"] = data_owner_org_name
         ws_row["data_owner_email"] = data_owner_email
         ws_row["partner_agreement_accepted_at"] = datetime.now(timezone.utc).isoformat()
     await async_directus.create_item("workspace", ws_row)
@@ -703,6 +765,23 @@ async def create_workspace(
         logger.exception(
             "Seat reconcile failed after creating workspace %s", ws_id
         )
+
+    # External-client workspace: add the data owner's representative as a free
+    # observer and email them that they're the data owner (ISSUE-026). Best-effort
+    # — a mail/invite hiccup must never fail workspace creation.
+    if separate and data_owner_email:
+        try:
+            await _invite_data_owner_observer(
+                workspace_id=ws_id,
+                workspace_name=body.name.strip(),
+                org_name=data_owner_org_name or "",
+                email=data_owner_email,
+                invited_by=app_user_id,
+            )
+        except Exception:
+            logger.exception(
+                "Failed to add data-owner observer for workspace %s", ws_id
+            )
 
     # Tell the organisation's other admins/owners that a new workspace exists.
     # Open workspaces are discoverable via the discovery endpoint so they

@@ -47,6 +47,9 @@ interface WorkspaceSummary {
 	// True when the current user is the named data owner of this external-client
 	// workspace (ISSUE-026).
 	is_data_owner?: boolean;
+	// True when this workspace bills on its own (workspace-scoped) account — i.e.
+	// an external-client workspace, its own billing/data-ownership context.
+	bills_separately?: boolean;
 	logo_url: string | null;
 	org_logo_url: string | null;
 	project_count: number;
