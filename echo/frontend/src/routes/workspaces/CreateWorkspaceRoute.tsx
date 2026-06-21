@@ -103,7 +103,7 @@ type BillFor = "internal" | "client";
 /**
  * Self-serve workspace creation.
  *
- * Steps: Name → Billing → Access → Review. Org admins/owners create directly
+ * Steps: Name → Ownership → Access → Review. Org admins/owners create directly
  * (no staff approval). By default the workspace joins the org's billing
  * account ("internal"). Partners (org.is_partner) get a second choice — "for
  * another client" — which bills the workspace on its own account, handoff-ready;
@@ -151,7 +151,6 @@ export const CreateWorkspaceRoute = () => {
 		organisationIdFromQuery || adminOrganisations[0]?.id || null;
 	const targetOrganisation =
 		adminOrganisations.find((o) => o.id === targetOrganisationId) ?? null;
-	const isPartner = Boolean(targetOrganisation?.is_partner);
 
 	// Existing org members the creator can hand-pick for an invite-only
 	// workspace. The caller is an org admin/owner here, so emails are visible.
@@ -191,7 +190,7 @@ export const CreateWorkspaceRoute = () => {
 			if (!targetOrganisationId) {
 				throw new Error(t`Choose an organisation first`);
 			}
-			const isClient = isPartner && billFor === "client";
+			const isClient = billFor === "client";
 			const ws = await createWorkspace({
 				inherit_organisation_admins: access === "everyone",
 				name: name.trim(),
@@ -231,7 +230,7 @@ export const CreateWorkspaceRoute = () => {
 		},
 		onSuccess: async (ws) => {
 			posthog.capture("workspace_created", {
-				bill_separately: isPartner && billFor === "client",
+				bill_separately: billFor === "client",
 				member_adds: access === "invite" ? memberEmails.length : 0,
 				visibility: access === "everyone" ? "open_to_organisation" : "private",
 			});
@@ -248,7 +247,7 @@ export const CreateWorkspaceRoute = () => {
 			setWorkspace(ws.id);
 			// A separately-billed (client) workspace lands on its billing tab to
 			// subscribe; an org-billed one goes straight to the workspace.
-			if (isPartner && billFor === "client") {
+			if (billFor === "client") {
 				navigate(`/w/${ws.id}/settings/billing`);
 			} else {
 				navigate(`/w/${ws.id}/home`);
@@ -337,7 +336,7 @@ export const CreateWorkspaceRoute = () => {
 	const canAdvanceFromName = name.trim().length > 0;
 	// External-client billing step (ISSUE-026): require a data owner email and
 	// agreement acceptance before leaving the Billing step / submitting.
-	const isClientWorkspace = isPartner && billFor === "client";
+	const isClientWorkspace = billFor === "client";
 	const dataOwnerValid = /.+@.+\..+/.test(dataOwnerEmail.trim());
 	const ownerOrgValid = dataOwnerOrgName.trim().length > 0;
 	const canAdvanceFromBilling =
@@ -418,13 +417,13 @@ export const CreateWorkspaceRoute = () => {
 						</Stack>
 					</Stepper.Step>
 
-					<Stepper.Step label={t`Billing`}>
+					<Stepper.Step label={t`Ownership`}>
 						<Stack gap={14} mt="md">
-							{isPartner ? (
+							{(
 								<>
 									<Text size="sm" c="dimmed">
 										<Trans>
-											Is this for internal use, or for another client?
+											Is this for your organisation's internal use, or for an external organisation?
 										</Trans>
 									</Text>
 									<Radio.Group
@@ -453,13 +452,11 @@ export const CreateWorkspaceRoute = () => {
 												label={
 													<Stack gap={2}>
 														<Text size="sm">
-															<Trans>For another client (Partner)</Trans>
+															<Trans>For an external organisation</Trans>
 														</Text>
 														<Text size="xs" c="dimmed">
 															<Trans>
-																A separate subscription, per the partner
-																agreement, so it can be handed off to the client
-																later with no data movement.
+																A separate data-ownership and billing context. It can be handed off to that organisation later with no data movement.
 															</Trans>
 														</Text>
 													</Stack>
@@ -517,7 +514,7 @@ export const CreateWorkspaceRoute = () => {
 															<Anchor href={PARTNER_AGREEMENT_URL} target="_blank">
 																partner agreement
 															</Anchor>{" "}
-															for using dembrane with an external client.
+															for using dembrane with an external organisation.
 														</Trans>
 													</Text>
 												}
@@ -525,18 +522,6 @@ export const CreateWorkspaceRoute = () => {
 										</Stack>
 									)}
 								</>
-							) : (
-								<Paper withBorder p="md" radius="sm">
-									<Text size="sm">
-										<Trans>Billed under your organisation</Trans>
-									</Text>
-									<Text size="xs" c="dimmed" mt={4}>
-										<Trans>
-											This workspace joins your organisation's plan. Manage the
-											plan and seats from the organisation's billing.
-										</Trans>
-									</Text>
-								</Paper>
 							)}
 						</Stack>
 					</Stepper.Step>
@@ -636,10 +621,10 @@ export const CreateWorkspaceRoute = () => {
 									</Group>
 									<Group gap={12} align="baseline">
 										<Text size="xs" c="dimmed" w={90}>
-											<Trans>Billing</Trans>
+											<Trans>Ownership</Trans>
 										</Text>
 										<Text size="sm">
-											{isPartner && billFor === "client" ? (
+											{billFor === "client" ? (
 												<Trans>Separate (client)</Trans>
 											) : (
 												<Trans>Under your organisation</Trans>

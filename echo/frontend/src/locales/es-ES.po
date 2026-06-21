@@ -260,7 +260,7 @@ msgstr ""
 #~ msgid "(for enhanced audio processing)"
 #~ msgstr "(para procesamiento de audio mejorado)"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:626
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:611
 #: src/routes/project/CreateProjectRoute.tsx:274
 msgid "(missing)"
 msgstr ""
@@ -281,7 +281,7 @@ msgstr "(opcional)"
 msgid "(Partner)"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:634
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:619
 msgid "(unknown)"
 msgstr ""
 
@@ -424,7 +424,7 @@ msgid "select.all.modal.added.count"
 msgstr "{0} añadidas"
 
 #. placeholder {0}: memberEmails.length
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:662
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:647
 msgid "{0} added from your organisation"
 msgstr ""
 
@@ -939,9 +939,13 @@ msgstr ""
 msgid "A seat is one member. Seats stay available until the plan ends; changes won't be charged."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:459
-msgid "A separate subscription, per the partner agreement, so it can be handed off to the client later with no data movement."
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:458
+msgid "A separate data-ownership and billing context. It can be handed off to that organisation later with no data movement."
 msgstr ""
+
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:459
+#~ msgid "A separate subscription, per the partner agreement, so it can be handed off to the client later with no data movement."
+#~ msgstr ""
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:300
 #~ msgid "A separate subscription, per the partner agreement, so it can be handed off to the client later with no data movement. You'll subscribe it next."
@@ -990,8 +994,8 @@ msgstr ""
 #~ msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1728
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:544
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:651
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:529
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:636
 #: src/routes/project/CreateProjectRoute.tsx:208
 #: src/routes/project/CreateProjectRoute.tsx:297
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:103
@@ -1156,7 +1160,7 @@ msgstr "Añade términos clave o nombres propios para mejorar la calidad y preci
 msgid "Add new recordings to this project. Files you upload here will be processed and appear in conversations."
 msgstr "Añade nuevas grabaciones a este proyecto. Los archivos que subas aquí serán procesados y aparecerán en las conversaciones."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:591
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:576
 msgid "Add people from your organisation"
 msgstr ""
 
@@ -2008,8 +2012,8 @@ msgstr "Avatar eliminado"
 msgid "Avatar updated"
 msgstr "Avatar actualizado"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:300
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:684
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:299
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:669
 #: src/routes/project/CreateProjectRoute.tsx:327
 #: src/routes/project/report/ProjectReportRoute.tsx:603
 #: src/routes/organisation/OrganisationRoute.tsx:620
@@ -2156,17 +2160,15 @@ msgid "Billed separately, not part of the organisation's plan."
 msgstr ""
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:531
-msgid "Billed under your organisation"
-msgstr ""
+#~ msgid "Billed under your organisation"
+#~ msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:443
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:442
 msgid "Billed under your organisation's plan, alongside your other workspaces."
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:787
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:983
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:421
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:639
 #: src/routes/organisation/OrganisationRoute.tsx:751
 #: src/routes/organisation/OrganisationRoute.tsx:790
 #: src/lib/roles.ts:13
@@ -2285,7 +2287,7 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1106
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1280
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1808
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:684
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:669
 #: src/routes/project/CreateProjectRoute.tsx:327
 #: src/routes/project/report/ProjectReportRoute.tsx:287
 #: src/routes/project/report/ProjectReportRoute.tsx:1443
@@ -2548,7 +2550,7 @@ msgstr "Elegir un archivo de logo"
 msgid "Choose a plan"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:192
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:191
 msgid "Choose an organisation first"
 msgstr ""
 
@@ -3088,11 +3090,11 @@ msgstr ""
 msgid "Could not update template"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:223
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:222
 msgid "Couldn't add {failed} members. Add them from workspace settings."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:222
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:221
 msgid "Couldn't add 1 member. Add them from workspace settings."
 msgstr ""
 
@@ -3269,8 +3271,8 @@ msgstr "Crear Vista"
 msgid "Create Webhook"
 msgstr "Crear Webhook"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:354
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:708
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:353
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:693
 msgid "Create workspace"
 msgstr ""
 
@@ -3401,7 +3403,7 @@ msgstr "URL del panel de control (enlace directo a la vista de conversaciones)"
 #~ msgid "dashboard.dembrane.verify.topic.select"
 #~ msgstr "Select which topics participants can use for verification."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:492
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:489
 msgid "Data owner email"
 msgstr ""
 
@@ -3739,7 +3741,7 @@ msgstr "Desactivar autenticación de dos factores"
 msgid "Disabled"
 msgstr "Desactivado"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:268
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:267
 #: src/routes/project/CreateProjectRoute.tsx:137
 msgid "Discard"
 msgstr ""
@@ -3752,7 +3754,7 @@ msgstr ""
 #~ msgid "Discard this request?"
 #~ msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:270
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:269
 msgid "Discard this workspace?"
 msgstr ""
 
@@ -3928,7 +3930,7 @@ msgstr "por ejemplo, \"Usar frases de sustantivos cortas como 'Espacios verdes u
 msgid "e.g. Client Alpha"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:391
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:390
 msgid "e.g. Client Alpha, Q1 Research"
 msgstr ""
 
@@ -4342,7 +4344,7 @@ msgstr "Eventos a Escuchar"
 #~ msgid "Every workspace member, including externals, counts as one seat. One person never takes more than one seat per workspace, even if they're on multiple organisations."
 #~ msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:315
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:314
 msgid "Everyone can find it. Admins join directly; members can ask."
 msgstr ""
 
@@ -4355,7 +4357,7 @@ msgstr ""
 msgid "Everyone in {0} can find and open this project."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:317
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:316
 msgid "Everyone in your organisation"
 msgstr ""
 
@@ -4847,7 +4849,7 @@ msgid "Font Size"
 msgstr "Tamaño de fuente"
 
 #. placeholder {0}: targetOrganisation.name
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:358
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:357
 msgid "For <0>{0}</0>"
 msgstr ""
 
@@ -4855,13 +4857,17 @@ msgstr ""
 msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 msgstr "Para usuarios avanzados: Una clave secreta para verificar la autenticidad del webhook. Solo necesario si tu servicio de recepción requiere verificación de firma."
 
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:455
+msgid "For an external organisation"
+msgstr ""
+
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:297
 #~ msgid "For another client"
 #~ msgstr ""
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:456
-msgid "For another client (Partner)"
-msgstr ""
+#~ msgid "For another client (Partner)"
+#~ msgstr ""
 
 #: src/components/billing/BillingManager.tsx:643
 msgid "For bespoke compliance requirements, <0>call us for a quote</0>."
@@ -4875,7 +4881,7 @@ msgstr ""
 #~ msgid "For highest-compliance environments"
 #~ msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:440
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:439
 msgid "For internal use"
 msgstr ""
 
@@ -5302,7 +5308,11 @@ msgstr ""
 "* ¿Cómo se ve el éxito?"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:515
-msgid "I accept the <0>partner agreement</0> for using dembrane with an external client."
+#~ msgid "I accept the <0>partner agreement</0> for using dembrane with an external client."
+#~ msgstr ""
+
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:512
+msgid "I accept the <0>partner agreement</0> for using dembrane with an external organisation."
 msgstr ""
 
 #: src/routes/auth/Register.tsx:198
@@ -5539,7 +5549,7 @@ msgstr ""
 msgid "Invite members to collaborate on projects and conversations in this workspace."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:323
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:322
 msgid "Invite only"
 msgstr ""
 
@@ -5657,7 +5667,11 @@ msgid "IP Address"
 msgstr "Dirección IP"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:426
-msgid "Is this for internal use, or for another client?"
+#~ msgid "Is this for internal use, or for another client?"
+#~ msgstr ""
+
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:425
+msgid "Is this for your organisation's internal use, or for an external organisation?"
 msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2919
@@ -5804,7 +5818,7 @@ msgstr ""
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Mantén el acceso seguro con un código de un solo uso de tu aplicación de autenticación. Activa o desactiva la autenticación de dos factores para esta cuenta."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:268
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:267
 #: src/routes/project/CreateProjectRoute.tsx:137
 msgid "Keep editing"
 msgstr ""
@@ -6466,8 +6480,8 @@ msgstr "Mis plantillas"
 #~ msgstr "Mis plantillas"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1450
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:382
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:623
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:381
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:608
 #: src/routes/project/CreateProjectRoute.tsx:179
 #: src/routes/project/CreateProjectRoute.tsx:271
 #: src/components/project/ProjectBasicEdit.tsx:104
@@ -6486,7 +6500,7 @@ msgstr "Nombre A-Z"
 msgid "Name is required"
 msgstr "El nombre es requerido"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:390
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:389
 msgid "Name it after the client, engagement, or purpose."
 msgstr ""
 
@@ -6506,7 +6520,7 @@ msgstr ""
 msgid "Name your organisation. You can invite people next, or do it later from settings."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:385
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:384
 msgid "Name your workspace."
 msgstr ""
 
@@ -6633,7 +6647,7 @@ msgstr ""
 msgid "Newest First"
 msgstr "Más nuevos primero"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:696
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:681
 #: src/routes/project/CreateProjectRoute.tsx:335
 #: src/components/invite/InviteModal.tsx:783
 msgid "Next"
@@ -6822,7 +6836,7 @@ msgstr ""
 msgid "No logo set. dembrane default will be used."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:604
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:589
 #: src/features/sidebar/blocks/SearchBlock.tsx:156
 msgid "No matches"
 msgstr ""
@@ -6847,11 +6861,11 @@ msgstr "No se han detectado nuevos comentarios aún. Por favor, continúa tu dis
 msgid "No new invites needed. Check the list below."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:666
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:651
 msgid "No one added yet"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:596
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:581
 msgid "No one else in this organisation yet"
 msgstr ""
 
@@ -7270,7 +7284,7 @@ msgstr ""
 #~ msgid "Only invited participants. Team admins can still find and join."
 #~ msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:293
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:292
 msgid "Only organisation admins and owners can create workspaces. Ask an admin on your organisation to create one, or to promote you first."
 msgstr ""
 
@@ -7317,7 +7331,7 @@ msgstr ""
 #~ msgid "Only the {0} finished {1} will be included in the report right now. "
 #~ msgstr "Solo las {0} conversaciones finalizadas {1} serán incluidas en el informe en este momento. "
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:321
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:320
 msgid "Only the people you add or invite can see it."
 msgstr ""
 
@@ -7333,7 +7347,7 @@ msgstr ""
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:327
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:326
 msgid "Only you can see this workspace."
 msgstr ""
 
@@ -7513,8 +7527,8 @@ msgid "Org only"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:110
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:404
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:631
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:403
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:616
 #: src/routes/onboarding/OnboardingRoute.tsx:117
 #: src/features/sidebar/views/org/OrgHomeView.tsx:80
 #: src/features/sidebar/hooks/useSearchHits.ts:134
@@ -7676,11 +7690,16 @@ msgstr "Overview - Temas y patrones"
 #~ msgid "Owner"
 #~ msgstr ""
 
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:420
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:624
+msgid "Ownership"
+msgstr ""
+
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:933
 msgid "Ownership is locked. Contact support to transfer."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:475
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:472
 msgid "Owning organisation"
 msgstr ""
 
@@ -7982,7 +8001,7 @@ msgstr ""
 msgid "people"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:658
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:643
 #: src/routes/organisation/OrganisationRoute.tsx:1210
 msgid "People"
 msgstr ""
@@ -8462,7 +8481,7 @@ msgstr ""
 msgid "Private workspaces"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:329
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:328
 msgid "Private, just me"
 msgstr ""
 
@@ -9391,7 +9410,7 @@ msgstr "Reintentar subida"
 msgid "Return home"
 msgstr "Volver al inicio"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:614
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:599
 #: src/routes/project/CreateProjectRoute.tsx:265
 msgid "Review"
 msgstr ""
@@ -9400,7 +9419,7 @@ msgstr ""
 msgid "Review activity for your workspace. Filter by collection or action, and export the current view for further investigation."
 msgstr "Revisa la actividad de tu espacio de trabajo. Filtra por colección o acción, y exporta la vista actual para una investigación más detallada."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:617
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:602
 msgid "Review before creating."
 msgstr ""
 
@@ -9613,7 +9632,7 @@ msgstr ""
 msgid "Search partner, client, workspace"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:595
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:580
 msgid "Search people"
 msgstr ""
 
@@ -9926,7 +9945,7 @@ msgstr ""
 #~ msgid "Sentiment"
 #~ msgstr "Sentimiento"
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:643
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:628
 msgid "Separate (client)"
 msgstr ""
 
@@ -9967,7 +9986,7 @@ msgstr ""
 msgid "Set up your workspace | dembrane"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:547
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:532
 msgid "Set who can see and join."
 msgstr ""
 
@@ -10849,7 +10868,7 @@ msgstr "La URL del webhook y los eventos se clonarán. Necesitarás volver a int
 msgid "The workspace this invite was for has been deleted. There's nothing to join."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:494
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:491
 msgid "Their representative who owns this data. They are added as a free observer and emailed that they are the data owner, and become the handoff contact."
 msgstr ""
 
@@ -10913,7 +10932,7 @@ msgstr ""
 msgid "These workspaces have their own plan, managed from each workspace. They aren't part of this organisation's plan."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:592
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:577
 msgid "They'll be added as members. You can add more later."
 msgstr ""
 
@@ -11179,8 +11198,8 @@ msgid "This workspace is on a tier that doesn't allow more seats. Upgrade the wo
 msgstr ""
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:534
-msgid "This workspace joins your organisation's plan. Manage the plan and seats from the organisation's billing."
-msgstr ""
+#~ msgid "This workspace joins your organisation's plan. Manage the plan and seats from the organisation's billing."
+#~ msgstr ""
 
 #: src/routes/invite/AcceptInviteRoute.tsx:230
 #: src/routes/invite/AcceptInviteRoute.tsx:413
@@ -11594,7 +11613,7 @@ msgstr "No se puede procesar este fragmento"
 #~ msgid "Unassigned organisation"
 #~ msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:645
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:630
 msgid "Under your organisation"
 msgstr ""
 
@@ -12528,11 +12547,11 @@ msgstr "Cuando el resumen esté listo (incluye tanto la transcripción como el r
 msgid "Where would you like to go?"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:405
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:404
 msgid "Which organisation does this workspace belong to?"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:477
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:474
 msgid "Which organisation owns this workspace's data? This sets the data and compliance context."
 msgstr ""
 
@@ -12615,7 +12634,7 @@ msgstr ""
 #~ msgid "Workspace created"
 #~ msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:238
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:237
 msgid "Workspace created."
 msgstr ""
 
@@ -12636,7 +12655,7 @@ msgstr ""
 msgid "Workspace logo"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:389
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:388
 msgid "Workspace name"
 msgstr ""
 
@@ -12751,7 +12770,7 @@ msgstr ""
 msgid "You can change this later in project settings."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:609
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:594
 msgid "You can change this later in workspace settings."
 msgstr ""
 
@@ -12779,7 +12798,7 @@ msgstr ""
 msgid "You can try again below."
 msgstr "Puede intentarlo de nuevo a continuación."
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:290
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:289
 msgid "You can't create a workspace yet"
 msgstr ""
 
@@ -12799,7 +12818,7 @@ msgstr ""
 msgid "You don't have access to this workspace."
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:367
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:366
 msgid "You don't have permission to create workspaces in that organisation. Falling back to your primary organisation instead."
 msgstr ""
 
@@ -13026,7 +13045,7 @@ msgstr ""
 msgid "Your details"
 msgstr ""
 
-#: src/routes/workspaces/CreateWorkspaceRoute.tsx:264
+#: src/routes/workspaces/CreateWorkspaceRoute.tsx:263
 #: src/routes/project/CreateProjectRoute.tsx:133
 msgid "Your draft won't be saved."
 msgstr ""
