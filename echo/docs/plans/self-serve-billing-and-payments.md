@@ -45,7 +45,7 @@ Unchanged in spirit: a new user gets a personal org + a default workspace on a
      then checkout starts for the upgrade (see below). The workspace is never
      blocked from existing while payment is pending.
    - **Coming-soon / bespoke** -> "contact sales", no checkout.
-3. Billing period: annual (default) or monthly (+20%). Price shown = seats x
+3. Billing period: annual (default) or monthly (+15%). Price shown = seats x
    per-seat. At creation seats = 1 (the creator); seats meter up as members are
    invited.
 4. **Mollie hosted checkout** (test mode first): redirect, pay.

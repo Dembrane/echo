@@ -87,7 +87,7 @@ export const SELLABLE_TIER: Tier = "changemaker";
 // ("X% off when you pay annually"). Single knob — mirrors
 // MONTHLY_BILLING_PREMIUM_PCT in server/dembrane/tier_capacity.py. Change both
 // together. Drives the toggle badge + the offline price fallback.
-export const MONTHLY_BILLING_PREMIUM_PCT = 20;
+export const MONTHLY_BILLING_PREMIUM_PCT = 15;
 
 // Single source for the offline/fallback per-seat annual price (EUR/seat/mo).
 // Mirrors price_eur_monthly in server/dembrane/tier_capacity.py; the live price
