@@ -351,3 +351,18 @@ def test_whitelabel_gate_external_only():
     assert exc.value.status_code == 403
     # External-client workspace → allowed (no raise).
     _require_external_for_whitelabel(ctx_for({"id": "w", "usage_context": "external"}))
+
+
+# ── Generalization: no bill_separately flag; data owner implies external ─
+
+
+def test_create_request_has_no_bill_separately_flag():
+    """External/separate billing is derived from a named data owner, not a
+    boolean (generalized 2026-06-21). The flag must be gone from the contract."""
+    from dembrane.api.v2.schemas import CreateWorkspaceRequest
+
+    fields = CreateWorkspaceRequest.model_fields
+    assert "bill_separately" not in fields
+    assert "data_owner_org_name" in fields
+    assert "data_owner_email" in fields
+    assert "partner_agreement_accepted" in fields

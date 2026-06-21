@@ -47,7 +47,8 @@ async function createWorkspace(payload: {
 	name: string;
 	org_id: string;
 	inherit_organisation_admins: boolean;
-	bill_separately: boolean;
+	// No bill_separately flag: naming a data owner (org + rep email) is what
+	// makes the workspace external / separately billed (the server derives it).
 	data_owner_org_name?: string;
 	data_owner_email?: string;
 	partner_agreement_accepted?: boolean;
@@ -191,10 +192,10 @@ export const CreateWorkspaceRoute = () => {
 			}
 			const isClient = isPartner && billFor === "client";
 			const ws = await createWorkspace({
-				bill_separately: isClient,
 				inherit_organisation_admins: access === "everyone",
 				name: name.trim(),
 				org_id: targetOrganisationId,
+				// Sending a data owner is what makes the workspace external/separate.
 				...(isClient
 					? {
 							data_owner_org_name: dataOwnerOrgName.trim(),

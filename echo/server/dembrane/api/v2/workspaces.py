@@ -609,9 +609,10 @@ async def create_workspace(
 
     Any org admin/owner can create a workspace in their org; staff can create
     in any org. Billing is provisioned at create time: the workspace joins the
-    org's billing account, or gets its own when `bill_separately` (partner
-    "for another client"). Payment is the gate, not staff approval — so the
-    workspace_request flow is no longer needed for new workspaces.
+    org's pooled billing account, or gets its own (workspace-scoped) account when
+    a data owner is named (the external "for another client" case — see below).
+    Payment is the gate, not staff approval — so the workspace_request flow is no
+    longer needed for new workspaces.
     """
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
@@ -666,22 +667,21 @@ async def create_workspace(
     visibility = "open_to_organisation" if body.inherit_organisation_admins else "private"
     ws_id = generate_uuid()
 
-    # External-client workspaces (ISSUE-026): the creator must name the client's
-    # data owner and accept the partner agreement. Hard-block otherwise — this is
-    # the compliance gate that makes the data-ownership claim real.
-    separate = getattr(body, "bill_separately", False)
+    # A workspace is external (separate billing + compliance context) when the
+    # creator names a data owner — an owning organisation + representative email
+    # distinct from this org (ISSUE-026, generalized 2026-06-21). There is no
+    # `bill_separately` flag: the presence of a data owner IS the signal, and the
+    # billing context is then carried by the workspace-scoped billing account
+    # (read off billing_account_id), not a boolean. Absent a data owner the
+    # workspace is internal and joins the org's pooled account.
     data_owner_email = (body.data_owner_email or "").strip().lower() or None
     data_owner_org_name = (getattr(body, "data_owner_org_name", None) or "").strip() or None
+    separate = bool(data_owner_email)
     if separate:
         if not data_owner_org_name:
             raise HTTPException(
                 status_code=400,
-                detail="The owning organisation's name is required for an external-client workspace.",
-            )
-        if not data_owner_email:
-            raise HTTPException(
-                status_code=400,
-                detail="A data owner email is required for an external-client workspace.",
+                detail="The owning organisation's name is required when you name a data owner.",
             )
         if not body.partner_agreement_accepted:
             raise HTTPException(
@@ -690,8 +690,8 @@ async def create_workspace(
             )
 
     # Org manages billing by default: the workspace joins the org's account.
-    # bill_separately (partner "for another client") mints a workspace-scoped
-    # account instead, billed on its own and handoff-ready.
+    # A named data owner (external client) mints a workspace-scoped account
+    # instead, billed on its own and handoff-ready.
     from dembrane.billing_account import (
         link_account_to_workspace,
         org_account_for_new_workspace,
@@ -712,11 +712,10 @@ async def create_workspace(
         blocked = billing_account_blocks_new_workspace(account)
         if blocked:
             raise HTTPException(status_code=402, detail=blocked)
-    # Record internal-vs-external use. bill_separately is only offered to
-    # partner orgs choosing "for another client", so it maps 1:1 to external
-    # client use. This is the canonical marker the free-observer role keys on
-    # (observers exist only in external-client workspaces) and what the
-    # data-owner step (ISSUE-026) builds on.
+    # Record internal-vs-external use, derived purely from whether a data owner
+    # was named (`separate`). This is the canonical marker the free-observer role
+    # keys on (observers exist only in external-client workspaces); the billing
+    # context itself is carried by the workspace-scoped account.
     usage_context = "external" if separate else "internal"
     ws_row: dict = {
         "id": ws_id,

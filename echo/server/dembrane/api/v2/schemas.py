@@ -208,14 +208,15 @@ class CreateWorkspaceRequest(BaseModel):
     # no longer auto-inherit access (matrix §6 retires derivation). They
     # use Request access.
     inherit_organisation_members: bool = False
-    # Billing: default false → the workspace joins the org's billing account
-    # (org manages billing). True → mint a workspace-scoped account billed
-    # separately (the partner "for another client" path; handoff-ready).
-    bill_separately: bool = False
-    # External-client (ISSUE-026): when bill_separately is true, the creator must
-    # name the owning organisation (compliance/data context) + its representative
-    # (the data owner email) and accept the partner agreement. The server
-    # hard-blocks external creation without these.
+    # External-client / separate billing context (ISSUE-026, generalized
+    # 2026-06-21): there is NO `bill_separately` boolean. Providing a data owner
+    # — an owning organisation distinct from the creating org, named by
+    # `data_owner_org_name` + a representative `data_owner_email` — is what makes
+    # the workspace external: it gets its own (workspace-scoped) billing account
+    # and `usage_context="external"`. Absent a data owner, the workspace is
+    # internal and joins the org's pooled account. The billing context is then
+    # read off `billing_account_id` scope, not a flag. When a data owner is
+    # given, the creator must also accept the partner agreement.
     data_owner_org_name: Optional[str] = Field(default=None, max_length=255)
     data_owner_email: Optional[EmailStr] = None
     partner_agreement_accepted: bool = False
