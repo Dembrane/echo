@@ -132,24 +132,44 @@ async def invite_to_workspace(
     """
     ctx.require_policy("member:invite")
 
-    # Adding a member consumes a seat, and seats can only be added on an active
-    # plan. A canceled or past_due account must reactivate first (per-seat
-    # proration model): block here and let the UI route them to billing.
+    email = body.email.strip().lower()
+    role = body.role
+    is_observer_invite = role == "observer"
+    # Both external and observer are outsiders: no org_membership row in this
+    # org (ADR-0003 invariant extended to observer in Wave G). observer differs
+    # only in being free + read-only.
+    is_outsider_invite = role in ("external", "observer")
+
+    # The free observer role exists ONLY in external-client (partner) workspaces.
+    # Internal-use workspaces have no free observer (a read-only role there would
+    # be a paid seat — not built). Reject observer invites to internal workspaces.
+    if is_observer_invite:
+        from dembrane.billing_account import workspace_is_external_client
+
+        if not workspace_is_external_client(ctx.workspace):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Observers are only available in workspaces for an external "
+                    "client. This workspace is for internal use."
+                ),
+            )
+
+    # Adding a paid seat requires an active plan: a canceled or past_due account
+    # must reactivate first (per-seat proration model). Observers are free and
+    # never consume a seat, so they can always be added — skip the gate for them.
     from dembrane.billing_service import (
         account_blocks_seat_add,
         get_account_for_workspace,
     )
 
-    billing_account = await get_account_for_workspace(workspace_id)
-    if account_blocks_seat_add(billing_account) == "reactivate_required":
-        raise HTTPException(
-            status_code=402,
-            detail="Reactivate your plan to add members.",
-        )
-
-    email = body.email.strip().lower()
-    role = body.role
-    is_external_invite = role == "external"
+    if not is_observer_invite:
+        billing_account = await get_account_for_workspace(workspace_id)
+        if account_blocks_seat_add(billing_account) == "reactivate_required":
+            raise HTTPException(
+                status_code=402,
+                detail="Reactivate your plan to add members.",
+            )
 
     # Role-escalation guard: caller can only grant roles at or below their
     # own level. external sits at the bottom (0) so anyone with
@@ -256,14 +276,20 @@ async def invite_to_workspace(
                     email_sent=False,
                 )
 
-            # Net-new seat or reactivation of soft-deleted row: include pending invites in the cap.
-            await assert_can_add_seat(ctx.workspace, audience="admin", include_pending=True)
+            # Net-new seat or reactivation of soft-deleted row: include pending
+            # invites in the cap. Observers are free and never occupy a seat, so
+            # the cap never applies to them (otherwise a full workspace couldn't
+            # take a free read-only observer).
+            if not is_observer_invite:
+                await assert_can_add_seat(
+                    ctx.workspace, audience="admin", include_pending=True
+                )
 
             ws_org_id = ctx.workspace.get("org_id")
 
-            # Invariant: role='external' ⟺ no org_membership in this org. Non-external invites create org_membership if missing (also the external-to-member promotion path).
+            # Invariant: outsider roles (external / observer) ⟺ no org_membership in this org. Insider invites create org_membership if missing (also the outsider-to-member promotion path).
             newly_joined_organisation = False
-            if not is_external_invite and ws_org_id:
+            if not is_outsider_invite and ws_org_id:
                 existing_org_mem = await async_directus.get_items(
                     "org_membership",
                     {
@@ -293,10 +319,10 @@ async def invite_to_workspace(
                     if newly_joined_organisation:
                         logger.info(f"Added {email} to org {ws_org_id} as member")
 
-            # External add: enforce insider XOR outsider before creating the
-            # external row (removes a stale org_membership, or rejects if the
-            # user is already an internal member of this org).
-            if is_external_invite and ws_org_id:
+            # Outsider add (external / observer): enforce insider XOR outsider
+            # before creating the row (removes a stale org_membership, or rejects
+            # if the user is already an internal member of this org).
+            if is_outsider_invite and ws_org_id:
                 from dembrane.api.v2._invite_helpers import (
                     reconcile_external_membership_org_row,
                 )
@@ -386,11 +412,10 @@ async def invite_to_workspace(
                     ref_org_id=ws_org_id,
                 )
 
-            # WORKSPACE_GUEST_ADDED → workspace admins/owners when an
-            # external collaborator joins. (Event code retained for
-            # backwards-compatible notification stream; the user-facing
-            # copy uses "external".)
-            if is_external_invite:
+            # WORKSPACE_GUEST_ADDED → workspace admins/owners when an outside
+            # collaborator joins (external or the free read-only observer).
+            # (Event code retained for backwards-compatible notification stream.)
+            if is_outsider_invite:
                 from dembrane.notifications import (
                     emit_to_audience,
                     audience_workspace_admins,
@@ -398,17 +423,27 @@ async def invite_to_workspace(
 
                 admin_ids = await audience_workspace_admins(workspace_id)
                 admin_ids = [a for a in admin_ids if a != ctx.app_user_id and a != app_user["id"]]
-                external_name = app_user.get("display_name") or email or "An external"
                 ws_name = ctx.workspace.get("name", "your workspace")
+                if is_observer_invite:
+                    guest_name = app_user.get("display_name") or email or "An observer"
+                    title = f"{guest_name} joined {ws_name} as an observer"
+                    message = (
+                        f"{email} now has free, read-only observer access. "
+                        "Observers don't count against your seat cap."
+                    )
+                else:
+                    guest_name = app_user.get("display_name") or email or "An external"
+                    title = f"{guest_name} joined {ws_name} as an external"
+                    message = (
+                        f"{email} now has external access. Externals count "
+                        "against your tier's seat cap."
+                    )
                 await emit_to_audience(
                     admin_ids,
                     actor_user_id=ctx.app_user_id,
                     event_code="WORKSPACE_GUEST_ADDED",
-                    title=f"{external_name} joined {ws_name} as an external",
-                    message=(
-                        f"{email} now has external access. Externals count "
-                        "against your tier's seat cap."
-                    ),
+                    title=title,
+                    message=message,
                     action="NAVIGATE_WORKSPACE_SETTINGS",
                     ref_workspace_id=workspace_id,
                     ref_org_id=ws_org_id,
@@ -444,7 +479,9 @@ async def invite_to_workspace(
 
     # User doesn't exist or doesn't have app_user — create an invite.
     # Pending invites reserve seats elsewhere, so cap-check before issuing one.
-    await assert_can_add_seat(ctx.workspace, audience="admin", include_pending=True)
+    # Observer invites are free and skip the cap (see the net-new branch above).
+    if not is_observer_invite:
+        await assert_can_add_seat(ctx.workspace, audience="admin", include_pending=True)
 
     expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
 

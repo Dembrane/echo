@@ -4,7 +4,7 @@ import { Alert, Radio, Stack, Text } from "@mantine/core";
 import { useMemo } from "react";
 import { roleLevel } from "@/lib/roles";
 
-export type InviteRole = "member" | "billing" | "admin" | "external";
+export type InviteRole = "member" | "billing" | "admin" | "external" | "observer";
 
 interface Props {
 	value: InviteRole;
@@ -52,6 +52,11 @@ export function RoleSelect({
 				label: t`External`,
 				value: "external",
 			});
+			rows.push({
+				description: t`Free, read-only. Sees projects, conversations, and reports. Cannot chat or generate reports.`,
+				label: t`Observer`,
+				value: "observer",
+			});
 		}
 		// Funnel every option through the same hierarchy gate; levels come from lib/roles.ts (mirrors backend policies.py).
 		return rows.filter((r) => roleLevel(r.value) <= inviterRank);
@@ -98,6 +103,23 @@ export function RoleSelect({
 						<Trans>
 							Externals are not added to your organisation. They can only see
 							the workspaces you select here.
+						</Trans>
+					</Text>
+				</Alert>
+			)}
+			{value === "observer" && (
+				<Alert
+					color="primary"
+					variant="light"
+					p="xs"
+					styles={{ wrapper: { alignItems: "center" } }}
+				>
+					<Text size="xs">
+						<Trans>
+							Observers are free and read-only, and only for external-client
+							workspaces. They can view the workspace but cannot chat, generate
+							reports, or edit. To let them do more, change their role to
+							External.
 						</Trans>
 					</Text>
 				</Alert>

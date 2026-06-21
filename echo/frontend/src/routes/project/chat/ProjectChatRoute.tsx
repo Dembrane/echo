@@ -82,6 +82,8 @@ import {
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
@@ -316,6 +318,10 @@ export const ProjectChatRoute = () => {
 	useDocumentTitle(t`Chat | dembrane`);
 
 	const { chatId, projectId, workspaceId: routeWorkspaceId } = useParams();
+	const { workspace } = useWorkspace();
+	// Observers are free, read-only: chat is the upgrade wall. Server denies
+	// chat:use (403); the UI blocks here with a clear path to upgrade.
+	const isObserver = isReadOnlyRole(workspace?.role);
 	const queryClient = useQueryClient();
 	const chatQuery = useProjectChat(chatId ?? "");
 	const chatContextQuery = useProjectChatContext(chatId ?? "");
@@ -569,6 +575,28 @@ export const ProjectChatRoute = () => {
 			<div className="flex h-full items-center justify-center">
 				<LoadingOverlay visible={true} />
 			</div>
+		);
+	}
+
+	// Observer read-only wall: no chat. Point them at their workspace admin
+	// (the upgrade is an admin changing their role to External).
+	if (isObserver) {
+		return (
+			<Box className="flex min-h-full items-center justify-center px-2 pr-4">
+				<Alert
+					icon={<IconAlertCircle size="1rem" />}
+					color="primary"
+					variant="light"
+					maw={420}
+				>
+					<Text size="sm">
+						<Trans>
+							Chat isn't available on your access level. Reach out to your
+							workspace admin to request an upgrade.
+						</Trans>
+					</Text>
+				</Alert>
+			</Box>
 		);
 	}
 

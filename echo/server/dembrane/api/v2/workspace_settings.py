@@ -689,22 +689,23 @@ async def change_member_role(
     if membership.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Membership already removed")
 
-    # Cross-boundary lever (ADR-0003): the role dropdown is not used to
-    # promote an external into a non-external role (or vice versa). The
-    # admin must take the cross-table action through the org settings
-    # page: add to org, return to workspace, remove external row, re-invite
-    # as member. Reject any attempt to flip the row across that boundary.
+    # Cross-boundary lever (ADR-0003, extended for observer in Wave G): the
+    # role dropdown is not used to promote an outsider (external / observer)
+    # into an insider role (or vice versa) — that crosses the org_membership
+    # invariant. The admin must take the cross-table action by re-inviting:
+    # e.g. to upgrade a free observer, re-invite them as external. Reject any
+    # attempt to flip the row across that boundary here.
+    _OUTSIDER_ROLES = {"external", "observer"}
     current_role = membership.get("role")
-    crossing_external_boundary = (current_role == "external" and body.role != "external") or (
-        current_role != "external" and body.role == "external"
-    )
-    if crossing_external_boundary:
+    current_is_outsider = current_role in _OUTSIDER_ROLES
+    target_is_outsider = body.role in _OUTSIDER_ROLES
+    if current_is_outsider != target_is_outsider:
         raise HTTPException(
             status_code=400,
             detail=(
-                "Cannot change a member into an external (or vice versa) from this "
-                "dropdown. Add or remove the user via the org settings page, then "
-                "re-invite them to the workspace."
+                "Cannot change an outside collaborator (external or observer) into "
+                "a member, or vice versa, from this dropdown. Re-invite the user to "
+                "the workspace with the new role instead."
             ),
         )
 

@@ -333,7 +333,7 @@ async def test_trial_does_not_inflate_total(
     mock_org_partner.return_value = {}
     mock_admins.return_value = []
     mock_hours.return_value = 1.0
-    mock_seats.return_value = (1, 1, 0)
+    mock_seats.return_value = (1, 1, 0, 0)
     mock_logins.return_value = 0
     # 1 pooled seat per account. Changemaker per-seat €75 → €75 per account.
     mock_pooled_seats.return_value = 1
@@ -387,7 +387,7 @@ async def test_rollup_pools_org_account_across_workspaces(
     mock_org_partner.return_value = {}
     mock_admins.return_value = []
     mock_hours.return_value = 1.0
-    mock_seats.return_value = (2, 2, 1)  # 2 members + 1 external per workspace
+    mock_seats.return_value = (2, 2, 1, 0)  # 2 members + 1 external per workspace
     mock_logins.return_value = 0
     # Pooled across the org account: 6 distinct billable seats (deduped), the
     # canonical per-seat multiplier, not the 2+1 per-workspace sum doubled.
@@ -523,7 +523,7 @@ async def test_rollup_headline_forecast_and_mrr_are_discounted(
     mock_org_partner.return_value = {}
     mock_admins.return_value = []
     mock_hours.return_value = 1.0
-    mock_seats.return_value = (1, 1, 0)
+    mock_seats.return_value = (1, 1, 0, 0)
     mock_logins.return_value = 0
     mock_pooled_seats.return_value = 1
     mock_workspaces.return_value = [
@@ -618,7 +618,7 @@ async def test_rollup_headline_is_per_seat(
     mock_org_partner.return_value = {}
     mock_admins.return_value = []
     mock_hours.return_value = 1.0
-    mock_seats.return_value = (5, 5, 0)
+    mock_seats.return_value = (5, 5, 0, 0)
     mock_logins.return_value = 0
     mock_pooled_seats.return_value = 5
     mock_workspaces.return_value = [

@@ -383,14 +383,15 @@ async def _org_workspace_roles_local(org_id: str, user_id: str) -> list[str]:
 
 
 async def reconcile_external_membership_org_row(org_id: str, user_id: str) -> None:
-    """Keep the insider/outsider invariant when a user is being made external.
+    """Keep the insider/outsider invariant when a user is being made an outsider
+    (external, or the free read-only observer — Wave G).
 
-    Call this BEFORE creating the external workspace_membership, so the roles
+    Call this BEFORE creating the outsider workspace_membership, so the roles
     read here are the user's OTHER memberships in the org:
-      - If any is internal (member/billing/admin/owner), being external too is
+      - If any is internal (member/billing/admin/owner), being an outsider too is
         contradictory: raise 400.
       - Otherwise soft-delete any active org_membership so the outsider rule
-        (external implies no org_membership) holds.
+        (external/observer implies no org_membership) holds.
     """
     roles = await _org_workspace_roles_local(org_id, user_id)
     if any(r in ("member", "billing", "admin", "owner") for r in roles):
@@ -398,7 +399,8 @@ async def reconcile_external_membership_org_row(org_id: str, user_id: str) -> No
             status_code=400,
             detail=(
                 "This person is already a member of the organisation and cannot "
-                "also be added as an external. Remove them from the organisation first."
+                "also be added as an outside collaborator. Remove them from the "
+                "organisation first."
             ),
         )
     rows = await async_directus.get_items(
@@ -427,7 +429,8 @@ async def reconcile_external_membership_org_row(org_id: str, user_id: str) -> No
             status_code=400,
             detail=(
                 "This person is an organisation admin, owner, or billing member and "
-                "cannot be added as an external. Change their organisation role first."
+                "cannot be added as an outside collaborator. Change their "
+                "organisation role first."
             ),
         )
     for row in rows:

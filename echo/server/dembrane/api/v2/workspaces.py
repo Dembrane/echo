@@ -621,6 +621,12 @@ async def create_workspace(
         blocked = billing_account_blocks_new_workspace(account)
         if blocked:
             raise HTTPException(status_code=402, detail=blocked)
+    # Record internal-vs-external use. bill_separately is only offered to
+    # partner orgs choosing "for another client", so it maps 1:1 to external
+    # client use. This is the canonical marker the free-observer role keys on
+    # (observers exist only in external-client workspaces) and what the
+    # data-owner step (ISSUE-026) builds on.
+    usage_context = "external" if separate else "internal"
     await async_directus.create_item(
         "workspace",
         {
@@ -631,6 +637,7 @@ async def create_workspace(
             "is_default": False,
             "created_by": app_user_id,
             "billing_account_id": account_id,
+            "usage_context": usage_context,
         },
     )
     if separate:
@@ -1033,9 +1040,11 @@ class WorkspaceUsageResponse(BaseModel):
     seat_count: int
     seat_count_included: Optional[int]
     # Breakdown for the host-facing card. Sum of member_count +
-    # external_count == seat_count.
+    # external_count == seat_count. observer_count is the free, read-only
+    # bucket and is NOT part of seat_count (free-vs-paid distribution).
     member_count: int
     external_count: int
+    observer_count: int = 0
     # Pending workspace_invite rows (not yet accepted, not expired). Counted
     # in the bar via seat_invite_blocked; surfaced separately for the
     # "Pending invites" sub-row.
@@ -1247,8 +1256,8 @@ async def get_workspace_usage(
     # Seat breakdown via the shared counter so this matches /v2/orgs/:id/usage.
     from dembrane.seat_capacity import compute_effective_seat_state
 
-    seat_count, member_count, external_count = await compute_effective_seat_state(
-        ctx.workspace_id
+    seat_count, member_count, external_count, observer_count = (
+        await compute_effective_seat_state(ctx.workspace_id)
     )
 
     # Tier capacity lookup. Legacy rows with NULL tier fall through to the
@@ -1299,7 +1308,9 @@ async def get_workspace_usage(
     # so the UI disables the invite button as soon as the cap is taken.
     from dembrane.seat_capacity import count_pending_invites
 
-    member_pending, external_pending = await count_pending_invites(ctx.workspace_id)
+    member_pending, external_pending, _observer_pending = await count_pending_invites(
+        ctx.workspace_id
+    )
     pending_count = member_pending + external_pending
     seat_invite_blocked = (
         included_seats is not None
@@ -1325,6 +1336,7 @@ async def get_workspace_usage(
         seat_count_included=included_seats,
         member_count=member_count,
         external_count=external_count,
+        observer_count=observer_count,
         pending_count=pending_count,
         project_count=live_project_count,
         projects=per_project_items,

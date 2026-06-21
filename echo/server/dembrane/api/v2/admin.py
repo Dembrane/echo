@@ -84,6 +84,9 @@ class BillingRow(BaseModel):
     seat_overage_eur: float = 0.0
     # Externals share the main seat pool. Count exposed for visibility.
     external_count: int = 0
+    # Observers are free, read-only, and NOT in the seat pool. Exposed so
+    # staff can spot high-free-observer workspaces as upsell targets (Wave G).
+    observer_count: int = 0
     # Base monthly price (tier sticker). Pilot shows its one-time fee.
     base_price_eur: Optional[float] = None
     total_forecast_eur: Optional[float] = None
@@ -134,6 +137,8 @@ class AccountRow(BaseModel):
     # Pooled seats across the account's workspaces.
     seat_count: int = 0
     external_count: int = 0
+    # Pooled free, read-only observers across the account's workspaces (Wave G).
+    observer_count: int = 0
     # Forecast = tier base, charged once per account (not per workspace).
     # €0 for trial / comped accounts so they never inflate revenue.
     base_price_eur: Optional[float] = None
@@ -618,6 +623,7 @@ def _aggregate_accounts(
                 active_workspace_count=active_count,
                 seat_count=sum(m.seat_count for m in members),
                 external_count=sum(m.external_count for m in members),
+                observer_count=sum(m.observer_count for m in members),
                 base_price_eur=base_price,
                 total_forecast_eur=round(forecast, 2),
                 is_trial=is_trial,
@@ -690,7 +696,9 @@ async def billing_rollup(
         # matches what enforcement/usage endpoints see (derived org admins
         # included). Direct workspace_membership queries miss derived rows
         # and would understate over_seats/seat_overage_eur.
-        _seats_used, seat_count, external_count = await compute_effective_seat_state(ws_id)
+        _seats_used, seat_count, external_count, observer_count = (
+            await compute_effective_seat_state(ws_id)
+        )
 
         included_hours = cap.included_hours if cap else None
         included_seats = cap.included_seats if cap else None
@@ -751,6 +759,7 @@ async def billing_rollup(
             over_seats=over_seats,
             seat_overage_eur=seat_overage_eur,
             external_count=external_count,
+            observer_count=observer_count,
             base_price_eur=base_price,
             total_forecast_eur=total,
             pilot_hard_block=pilot_block,

@@ -224,13 +224,14 @@ class WorkspaceInviteRequest(BaseModel):
     """Invite payload.
 
     `role` is the single axis for the invite — external collaborators are
-    invited as role='external' (ADR-0003). Out-of-enum values fail at
-    Pydantic validation (422); the endpoint enforces role-hierarchy
+    invited as role='external' (ADR-0003); the free read-only collaborator is
+    role='observer' (Wave G). Both are outsiders (no org_membership). Out-of-enum
+    values fail at Pydantic validation (422); the endpoint enforces role-hierarchy
     escalation rules separately.
     """
 
     email: EmailStr
-    role: Literal["admin", "member", "billing", "external"] = "member"
+    role: Literal["admin", "member", "billing", "external", "observer"] = "member"
 
 
 class WorkspaceInviteResponse(BaseModel):

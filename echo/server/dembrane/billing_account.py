@@ -44,6 +44,27 @@ def nested_billing_fields(prefix: str = "billing_account_id") -> list[str]:
     return [f"{prefix}.{f}" for f in BILLING_FIELDS]
 
 
+def workspace_is_external_client(ws: dict[str, Any]) -> bool:
+    """Whether a workspace is "for an external client" (a partner workspace),
+    as opposed to internal-use.
+
+    This is the gate for the free, read-only observer role (Wave G): observers
+    exist only in external-client workspaces. Internal workspaces have no free
+    observer.
+
+    Canonical signal is `workspace.usage_context == "external"` (written at
+    creation for partner "for another client" workspaces). Falls back, for rows
+    created before usage_context was written, to the post-handoff client marker
+    (`billed_to_team_id` set and different from `org_id`). The `ws` dict must be
+    a full workspace row (e.g. from `get_item`), not a billing-joined subset.
+    """
+    uc = (ws.get("usage_context") or "").strip().lower()
+    if uc:
+        return uc == "external"
+    billed_to = ws.get("billed_to_team_id")
+    return bool(billed_to) and billed_to != ws.get("org_id")
+
+
 def billing_from_workspace(ws: dict[str, Any], prefix: str = "billing_account_id") -> dict[str, Any]:
     """Pull the commercial fields off a workspace dict that joined the account
     via `nested_billing_fields()`. Returns {} when the account wasn't joined

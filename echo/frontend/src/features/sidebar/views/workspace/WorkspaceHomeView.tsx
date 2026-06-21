@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useParams } from "react-router";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
-import { isAdminRole } from "@/lib/roles";
+import { isAdminRole, isOutsiderRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
 import { SectionLabel } from "../../primitives/SectionLabel";
@@ -28,8 +28,8 @@ export const WorkspaceHomeView = () => {
 	const base = `/w/${workspaceId}`;
 	const backTo = workspace?.org_id ? `/o/${workspace.org_id}/overview` : "/";
 	const backLabel = workspace?.org_name ?? "Home";
-	const isExternal = workspace?.role === "external";
-	const canCreateProject = !isExternal;
+	// Outsiders (external + free read-only observer) can't create projects.
+	const canCreateProject = !isOutsiderRole(workspace?.role);
 	const isAdmin = isAdminRole(workspace?.role);
 	const settingsPath = isAdmin
 		? `${base}/settings/general`
@@ -55,7 +55,7 @@ export const WorkspaceHomeView = () => {
 			)}
 			{/* Settings is the last clickable item under the workspace title,
 			    directly below New project and above the Pinned projects section. */}
-			{!isExternal && (
+			{!isOutsiderRole(workspace?.role) && (
 				<>
 					<NavItem
 						to={`${base}/members`}

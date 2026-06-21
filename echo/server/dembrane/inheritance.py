@@ -177,20 +177,20 @@ async def org_workspace_membership_roles(org_id: str, user_id: str) -> list[str]
 
 
 async def is_org_external_only(org_id: str, user_id: str) -> bool:
-    """True when the user is an outsider (external) in this org regardless of
-    any org_membership row.
+    """True when the user is an outsider (external or observer) in this org
+    regardless of any org_membership row.
 
     Per the confirmed invariant (insider XOR outsider per org), this holds
     when the org role is not admin/owner/billing, the user has at least one
-    external workspace membership in the org, and zero internal workspace
-    memberships in the org. Robust to a stale org_membership left behind when
-    someone was converted to external.
+    outsider workspace membership in the org (external or the free read-only
+    observer), and zero internal workspace memberships in the org. Robust to a
+    stale org_membership left behind when someone was converted to an outsider.
     """
     role = await _get_org_role(org_id, user_id)
     if role in ("admin", "owner", "billing"):
         return False
     roles = await org_workspace_membership_roles(org_id, user_id)
-    has_external = any(r == "external" for r in roles)
+    has_external = any(r in ("external", "observer") for r in roles)
     has_internal = any(r in ("member", "billing", "admin", "owner") for r in roles)
     return has_external and not has_internal
 

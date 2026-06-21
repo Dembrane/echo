@@ -9,6 +9,11 @@ no separate external cap — only `included_seats` matters. The `external`
 role drives policy (read-mostly per matrix §4) but no longer has a
 parallel capacity limit. See ADR-0003.
 
+Observers (role='observer', Wave G) are free, read-only outside
+collaborators and do NOT occupy a seat. They are counted separately
+(observer_count) for the free-vs-paid distribution surfaces but never
+enter seats_used or the cap check.
+
 Policy (free-tier unification, 2026-05):
 
     | Tier             | Behaviour at seat cap                      |
@@ -42,10 +47,13 @@ from dembrane.directus_async import async_directus
 Audience = Literal["admin", "invitee"]
 
 
-# Every workspace role consumes a seat. external sits in the same pool as
-# member/admin/billing/owner — the unified-pool decision in ADR-0003.
+# Every billable workspace role consumes a seat. external sits in the same
+# pool as member/admin/billing/owner — the unified-pool decision in ADR-0003.
+# observer is deliberately NOT here: it is a free, read-only outsider role
+# (Wave G) and never occupies a paid seat.
 _SEAT_ROLES = {"owner", "admin", "member", "billing", "external"}
 _EXTERNAL_ROLE = "external"
+_OBSERVER_ROLE = "observer"  # free, read-only; excluded from the seat pool
 
 # Tiers that hard-block on seat cap (no overage mechanism). Currently none:
 # Free is uncapped on seats (the 1-hour recording cap bounds the plan instead),
@@ -76,18 +84,24 @@ async def effective_seat_user_ids(workspace_id: str) -> set[str]:
         uid = m.get("user_id")
         if not uid:
             continue
+        # observer is intentionally absent from _SEAT_ROLES, so free
+        # read-only collaborators never enter the billed set this feeds.
         if (m.get("role") or "") in _SEAT_ROLES:
             user_ids.add(uid)
     return user_ids
 
 
-async def compute_effective_seat_state(workspace_id: str) -> tuple[int, int, int]:
-    """Return (seats_used, member_count, external_count) for a workspace.
+async def compute_effective_seat_state(
+    workspace_id: str,
+) -> tuple[int, int, int, int]:
+    """Return (seats_used, member_count, external_count, observer_count).
 
-    seats_used: total distinct users — the enforcement value.
+    seats_used: total distinct PAID users — the enforcement value
+        (members + externals; observers are free and excluded).
     member_count: distinct users with a non-external seat role
         (owner/admin/member/billing).
-    external_count: distinct users with role='external'.
+    external_count: distinct users with role='external' (paid).
+    observer_count: distinct users with role='observer' (free, read-only).
 
     Only direct members occupy a seat; derived org-admin/owner access
     (source='inherited') grants oversight but does not (ADR-0004).
@@ -96,6 +110,7 @@ async def compute_effective_seat_state(workspace_id: str) -> tuple[int, int, int
 
     member_users: set[str] = set()
     external_users: set[str] = set()
+    observer_users: set[str] = set()
     for m in members:
         # Derived oversight access doesn't consume a seat.
         if m.get("source") != "direct":
@@ -104,19 +119,23 @@ async def compute_effective_seat_state(workspace_id: str) -> tuple[int, int, int
         if not uid:
             continue
         role = m.get("role") or ""
-        if role == _EXTERNAL_ROLE:
+        if role == _OBSERVER_ROLE:
+            observer_users.add(uid)  # free — never added to seats_used
+        elif role == _EXTERNAL_ROLE:
             external_users.add(uid)
         elif role in _SEAT_ROLES:
             member_users.add(uid)
 
     seats_used = len(member_users) + len(external_users)
-    return seats_used, len(member_users), len(external_users)
+    return seats_used, len(member_users), len(external_users), len(observer_users)
 
 
-async def count_pending_invites(workspace_id: str) -> tuple[int, int]:
-    """Return (pending_member_invites, pending_external_invites) for a
-    workspace. Counts active workspace_invite rows: not yet accepted, not
-    expired. Buckets by the invite's `role` column.
+async def count_pending_invites(workspace_id: str) -> tuple[int, int, int]:
+    """Return (pending_member_invites, pending_external_invites,
+    pending_observer_invites) for a workspace. Counts active
+    workspace_invite rows: not yet accepted, not expired. Buckets by the
+    invite's `role` column. Observer invites are free — they are reported
+    separately and must NOT count toward the seat cap.
 
     Used at invite-send time so the cap check accounts for outstanding
     commitments, not just realised memberships. Without this an admin can
@@ -144,19 +163,23 @@ async def count_pending_invites(workspace_id: str) -> tuple[int, int]:
         },
     )
     if not isinstance(rows, list):
-        return 0, 0
+        return 0, 0, 0
     member_pending = 0
     external_pending = 0
+    observer_pending = 0
     for r in rows:
         # NULL-role rows (pre-ADR-0003, before invite.role was populated)
         # default to member_pending — the safer bucket. The migration backfills
         # these to 'member', so this branch is only for in-flight rows during
         # the rollout window.
-        if (r.get("role") or "") == _EXTERNAL_ROLE:
+        role = r.get("role") or ""
+        if role == _OBSERVER_ROLE:
+            observer_pending += 1
+        elif role == _EXTERNAL_ROLE:
             external_pending += 1
         else:
             member_pending += 1
-    return member_pending, external_pending
+    return member_pending, external_pending, observer_pending
 
 
 def _format_message(*, audience: Audience, tier: str, cap: int) -> str:
@@ -194,10 +217,15 @@ async def assert_can_add_seat(
     workspace_id = workspace.get("id")
     if not workspace_id:
         return  # defensive — should never happen
-    seats_used, _member_count, _external_count = await compute_effective_seat_state(workspace_id)
+    seats_used, _member_count, _external_count, _observer_count = (
+        await compute_effective_seat_state(workspace_id)
+    )
     pending = 0
     if include_pending:
-        member_pending, external_pending = await count_pending_invites(workspace_id)
+        # observer_pending is free and intentionally excluded from the cap.
+        member_pending, external_pending, _observer_pending = (
+            await count_pending_invites(workspace_id)
+        )
         pending = member_pending + external_pending
     if seats_used + pending < cap.included_seats:
         return

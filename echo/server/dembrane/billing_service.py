@@ -187,7 +187,10 @@ async def count_account_pending_invites(account_id: str) -> int:
     every workspace the account covers."""
     total = 0
     for ws_id in await _account_workspace_ids(account_id):
-        member_pending, external_pending = await count_pending_invites(ws_id)
+        # observer_pending is free and excluded from the billable footnote.
+        member_pending, external_pending, _observer_pending = await count_pending_invites(
+            ws_id
+        )
         total += member_pending + external_pending
     return total
 

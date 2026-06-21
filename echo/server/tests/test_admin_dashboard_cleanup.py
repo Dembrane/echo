@@ -125,7 +125,7 @@ async def test_forecast_is_base_only(
     # Way over the cap: if hour/seat overage were still added this would inflate
     # forecast. The per-seat model has no overage, so it must not appear.
     mock_hours.return_value = 9999.0
-    mock_seats.return_value = (50, 50, 20)
+    mock_seats.return_value = (50, 50, 20, 0)
     mock_pooled_seats.return_value = 70  # 50 members + 20 external, pooled
     mock_logins.return_value = 0
 

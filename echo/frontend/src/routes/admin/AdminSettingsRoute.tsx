@@ -106,6 +106,8 @@ type BillingRow = {
 	over_seats: number;
 	seat_overage_eur: number;
 	external_count: number;
+	// Free, read-only observers — not in the seat pool (Wave G).
+	observer_count: number;
 	base_price_eur: number | null;
 	total_forecast_eur: number | null;
 	pilot_hard_block: boolean;
@@ -135,6 +137,8 @@ type AccountRow = {
 	active_workspace_count: number;
 	seat_count: number;
 	external_count: number;
+	// Pooled free, read-only observers across the account's workspaces (Wave G).
+	observer_count: number;
 	base_price_eur: number | null;
 	total_forecast_eur: number;
 	is_trial: boolean;
@@ -1203,6 +1207,9 @@ function AccountActionsModal({
 					<Trans>
 						{account.workspace_count} workspaces,{" "}
 						{account.seat_count + account.external_count} seats pooled
+						{account.observer_count > 0
+							? ` · ${account.observer_count} free observers`
+							: ""}
 					</Trans>
 				</Text>
 				<Divider my={4} />
@@ -1634,6 +1641,7 @@ function UsageAndBillingPanel() {
 			"seat_count",
 			"seats_included",
 			"external_count",
+			"observer_count",
 			"base_price_eur",
 			"account_forecast_eur",
 			"workspace_admin_email",
@@ -1660,6 +1668,7 @@ function UsageAndBillingPanel() {
 					r.seat_count,
 					r.seats_included ?? "",
 					r.external_count,
+					r.observer_count,
 					a.base_price_eur ?? "",
 					a.total_forecast_eur,
 					r.workspace_admins[0]?.email ?? "",
