@@ -141,6 +141,15 @@ export const LEGAL_DPA_URL = "https://www.dembrane.com/legal/DPA" as const;
 export const COMMUNITY_SLACK_URL =
 	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
 
+// Info Hub (documentation): published Notion pages, locale-aware.
+export const DOCS_URL_EN =
+	"https://dembrane.notion.site/Info-Hub-Welcome-to-dembrane-26f9cd84270580049be7cb1e7a472162" as const;
+export const DOCS_URL_NL =
+	"https://dembrane.notion.site/Welkom-bij-het-info-portaal-van-dembrane-2959cd842705804c815ac315464b6fa0" as const;
+
+export const getDocumentationUrl = (locale = "en-US") =>
+	locale === "nl-NL" ? DOCS_URL_NL : DOCS_URL_EN;
+
 export const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "1";
 
 export const ENABLE_CHAT_AUTO_SELECT = false;

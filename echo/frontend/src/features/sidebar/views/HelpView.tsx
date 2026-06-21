@@ -9,7 +9,7 @@ import {
 import { useState } from "react";
 import { useParams } from "react-router";
 import { FeedbackPortalModal } from "@/components/common/FeedbackPortalModal";
-import { COMMUNITY_SLACK_URL } from "@/config";
+import { COMMUNITY_SLACK_URL, getDocumentationUrl } from "@/config";
 import { useSidebarView } from "../hooks/useSidebarView";
 import { NavButton } from "../primitives/NavButton";
 import { ViewHeader } from "../primitives/ViewHeader";
@@ -18,10 +18,7 @@ export const HelpView = () => {
 	const { backTo } = useSidebarView();
 	const { language } = useParams();
 	const [feedbackOpen, setFeedbackOpen] = useState(false);
-	const docUrl =
-		language === "nl-NL"
-			? "https://docs.dembrane.com/nl-NL"
-			: "https://docs.dembrane.com/en-US";
+	const docUrl = getDocumentationUrl(language);
 
 	return (
 		<>

@@ -3,16 +3,14 @@ import { ChatCircle, EnvelopeSimple, Note, Pulse } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { FeedbackPortalModal } from "@/components/common/FeedbackPortalModal";
+import { getDocumentationUrl } from "@/config";
 import { NavButton } from "../primitives/NavButton";
 import { SectionLabel } from "../primitives/SectionLabel";
 
 export const HelpBlock = () => {
 	const { language } = useParams();
 	const [feedbackOpen, setFeedbackOpen] = useState(false);
-	const docUrl =
-		language === "nl-NL"
-			? "https://docs.dembrane.com/nl-NL"
-			: "https://docs.dembrane.com/en-US";
+	const docUrl = getDocumentationUrl(language);
 
 	return (
 		<>
