@@ -20,6 +20,8 @@ export interface WorkspaceUsageData {
 	seat_count_included: number | null;
 	member_count: number;
 	external_count: number;
+	// Free, read-only observers — not part of seat_count (Wave G).
+	observer_count: number;
 	pending_count: number;
 	project_count: number;
 	projects: {

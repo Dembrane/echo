@@ -290,14 +290,28 @@ export function InviteModal({
 
 	const zeroWorkspaceSubmit = selectedWorkspaces.size === 0;
 	const workspaceAdminBlocked = zeroWorkspaceSubmit && !canInviteOrgOnly;
-	// External is workspace-scoped only; gate at the modal so the user never hits the backend 422.
-	const externalNeedsWorkspace = role === "external" && zeroWorkspaceSubmit;
+	// External and observer are workspace-scoped outsiders (no org_membership);
+	// gate at the modal so the user never hits the backend 422 / wrong org path.
+	const externalNeedsWorkspace =
+		(role === "external" || role === "observer") && zeroWorkspaceSubmit;
+
+	// The free observer role exists only in external-client (partner)
+	// workspaces — those billed separately. Block observer when any selected
+	// workspace is internal-use (the backend rejects it too).
+	const selectedAreAllExternalClient =
+		selectedWorkspaces.size > 0 &&
+		Array.from(selectedWorkspaces).every(
+			(id) => inviteableWorkspaces.find((w) => w.id === id)?.bills_separately,
+		);
+	const observerNeedsExternalWorkspace =
+		role === "observer" && !zeroWorkspaceSubmit && !selectedAreAllExternalClient;
 
 	const canSubmit =
 		validChips.length > 0 &&
 		!hasInvalidChips &&
 		!workspaceAdminBlocked &&
-		!externalNeedsWorkspace;
+		!externalNeedsWorkspace &&
+		!observerNeedsExternalWorkspace;
 
 	type SubmitResult = {
 		rows: InviteResultRow[];
@@ -638,6 +652,18 @@ export function InviteModal({
 									</Text>
 								</Alert>
 							))}
+
+						{observerNeedsExternalWorkspace && (
+							<Alert color="yellow" variant="light" p="xs">
+								<Text size="xs">
+									<Trans>
+										Observers are only available in workspaces for an
+										external client. Pick only external-client workspaces,
+										or choose a different role.
+									</Trans>
+								</Text>
+							</Alert>
+						)}
 					</>
 				) : (
 					<>

@@ -227,6 +227,16 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 							</Text>
 						</Group>
 					)}
+					{data.observer_count > 0 && (
+						<Group justify="space-between">
+							<Text size="xs" c="dimmed">
+								<Trans>Observers (free)</Trans>
+							</Text>
+							<Text size="xs" c="dimmed">
+								{data.observer_count}
+							</Text>
+						</Group>
+					)}
 					{data.pending_count > 0 && (
 						<Group justify="space-between">
 							<Text size="xs" c="dimmed">

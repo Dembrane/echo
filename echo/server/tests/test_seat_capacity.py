@@ -4,7 +4,9 @@ Covers (ADR 0005):
     - Free is the only hard-block tier (single seat). Paid tiers are per-seat
       metered and never block.
     - Externals (role='external') count toward the same seat pool as members.
-    - Effective seat state returns (seats_used, member_count, external_count).
+    - Observers (role='observer') are free, read-only, and excluded from seats.
+    - Effective seat state returns
+      (seats_used, member_count, external_count, observer_count).
 """
 
 from __future__ import annotations
@@ -31,6 +33,10 @@ def _direct_member(uid: str, role: str = "member") -> dict:
 
 def _direct_external(uid: str) -> dict:
     return _direct_member(uid, role="external")
+
+
+def _direct_observer(uid: str) -> dict:
+    return _direct_member(uid, role="observer")
 
 
 def _derived_admin(uid: str) -> dict:
@@ -60,9 +66,9 @@ def patch_members(monkeypatch):
 def patch_pending(monkeypatch):
     """Stub count_pending_invites so include_pending tests don't hit Directus."""
 
-    def _set(member_pending: int, external_pending: int):
+    def _set(member_pending: int, external_pending: int, observer_pending: int = 0):
         async def _stub(_ws_id):
-            return member_pending, external_pending
+            return member_pending, external_pending, observer_pending
 
         monkeypatch.setattr(seat_capacity, "count_pending_invites", _stub)
 
@@ -83,8 +89,8 @@ async def test_seat_state_counts_direct_members_and_externals_unified(patch_memb
             _direct_external("u-ext"),
         ]
     )
-    seats_used, member_count, external_count = await seat_capacity.compute_effective_seat_state(
-        "w-1"
+    seats_used, member_count, external_count, observer_count = (
+        await seat_capacity.compute_effective_seat_state("w-1")
     )
     assert member_count == 1  # only the direct owner
     assert external_count == 1
@@ -101,8 +107,8 @@ async def test_seat_state_dedups_by_user(patch_members):
             _derived_admin("u-2"),  # same user, derived — already direct, no double count
         ]
     )
-    seats_used, member_count, external_count = await seat_capacity.compute_effective_seat_state(
-        "w-1"
+    seats_used, member_count, external_count, observer_count = (
+        await seat_capacity.compute_effective_seat_state("w-1")
     )
     assert member_count == 2
     assert external_count == 0
@@ -119,8 +125,8 @@ async def test_seat_state_externals_count_toward_seats_used(patch_members):
             _direct_external("u-3"),
         ]
     )
-    seats_used, member_count, external_count = await seat_capacity.compute_effective_seat_state(
-        "w-1"
+    seats_used, member_count, external_count, observer_count = (
+        await seat_capacity.compute_effective_seat_state("w-1")
     )
     assert member_count == 1
     assert external_count == 2
@@ -137,8 +143,8 @@ async def test_derived_org_admins_do_not_consume_seats(patch_members):
             _derived_admin("u-org-only-admin"),
         ]
     )
-    seats_used, member_count, external_count = await seat_capacity.compute_effective_seat_state(
-        "w-1"
+    seats_used, member_count, external_count, observer_count = (
+        await seat_capacity.compute_effective_seat_state("w-1")
     )
     assert member_count == 1
     assert external_count == 0
@@ -150,15 +156,45 @@ async def test_derived_only_workspace_has_zero_seats(patch_members):
     """A workspace whose only effective members are derived org admins/owners
     (no direct rows) consumes zero seats."""
     patch_members([_derived_admin("u-a"), _derived_admin("u-b")])
-    seats_used, member_count, external_count = await seat_capacity.compute_effective_seat_state(
-        "w-1"
+    seats_used, member_count, external_count, observer_count = (
+        await seat_capacity.compute_effective_seat_state("w-1")
     )
     assert member_count == 0
     assert external_count == 0
     assert seats_used == 0
 
 
+@pytest.mark.asyncio
+async def test_observers_are_free_and_excluded_from_seats(patch_members):
+    """Observers are free, read-only: counted separately, never in seats_used."""
+    patch_members(
+        [
+            _direct_member("u-owner", role="owner"),
+            _direct_external("u-ext"),
+            _direct_observer("u-obs-1"),
+            _direct_observer("u-obs-2"),
+        ]
+    )
+    seats_used, member_count, external_count, observer_count = (
+        await seat_capacity.compute_effective_seat_state("w-1")
+    )
+    assert member_count == 1
+    assert external_count == 1
+    assert observer_count == 2
+    assert seats_used == 2  # owner + external only; observers excluded
+
+
 # ── assert_can_add_seat (Free-only hard cap) ────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_pending_observers_excluded_from_seat_cap(patch_members, patch_pending):
+    """Pending observer invites are free and must NOT count toward the cap:
+    an empty Free workspace (0/1) with 5 pending observers still passes."""
+    patch_members([])
+    patch_pending(member_pending=0, external_pending=0, observer_pending=5)
+    # No raise: observer_pending is excluded from the cap arithmetic.
+    await seat_capacity.assert_can_add_seat(_ws("free"), include_pending=True)
 
 
 @pytest.mark.asyncio

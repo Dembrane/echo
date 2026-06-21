@@ -14,11 +14,27 @@ from dembrane.inheritance import (
     workspace_follows_organisation_members,
 )
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.billing_account import workspace_is_external_client
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 
 router = APIRouter()
 logger = getLogger("api.v2.workspace_settings")
+
+
+def _require_external_for_whitelabel(ctx: WorkspaceContext) -> None:
+    """Per-workspace whitelabel logo override is only for external-client
+    workspaces (ISSUE-032). Internal workspaces inherit the org's branding."""
+    from dembrane.billing_account import workspace_is_external_client
+
+    if not workspace_is_external_client(ctx.workspace):
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "A per-workspace logo is only available for external-client "
+                "workspaces. Internal workspaces use the organisation's branding."
+            ),
+        )
 
 
 # Reusable Annotated alias keeps handler signatures readable and avoids
@@ -82,6 +98,10 @@ class WorkspaceDetailResponse(BaseModel):
     # workspace just attaches). The billing tab shows a "managed by {org}"
     # notice + link instead of a checkout when this is set.
     billing_org_managed: bool = False
+    # "internal" | "external" (ISSUE-026/032). External-client workspaces may
+    # override the whitelabel logo per workspace; internal ones may not.
+    usage_context: Optional[str] = None
+    is_external_client: bool = False
 
 
 @router.get("/{workspace_id}/settings", response_model=WorkspaceDetailResponse)
@@ -272,6 +292,8 @@ async def get_workspace_settings(
         billing_account_id=ws.get("billing_account_id"),
         billing_status=billing.get("status"),
         billing_org_managed=bool(billing.get("org_scoped")),
+        usage_context=ws.get("usage_context"),
+        is_external_client=workspace_is_external_client(ws),
     )
 
 
@@ -341,6 +363,9 @@ async def update_workspace_settings(
         current_logo = ctx.workspace.get("logo_url") or ""
         if cleaned_logo != current_logo:
             ctx.require_policy("workspace:whitelabel")
+            # Setting/overriding a logo is external-only; clearing it is allowed.
+            if cleaned_logo:
+                _require_external_for_whitelabel(ctx)
         payload["logo_url"] = cleaned_logo or None
 
     # Privacy flags write into workspace.settings (existing JSON column).
@@ -433,6 +458,7 @@ async def upload_workspace_logo(
     """
     ctx.require_policy("settings:manage")
     ctx.require_policy("workspace:whitelabel")
+    _require_external_for_whitelabel(ctx)
 
     if file.content_type and file.content_type not in _ALLOWED_LOGO_TYPES:
         raise HTTPException(
@@ -689,22 +715,23 @@ async def change_member_role(
     if membership.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Membership already removed")
 
-    # Cross-boundary lever (ADR-0003): the role dropdown is not used to
-    # promote an external into a non-external role (or vice versa). The
-    # admin must take the cross-table action through the org settings
-    # page: add to org, return to workspace, remove external row, re-invite
-    # as member. Reject any attempt to flip the row across that boundary.
+    # Cross-boundary lever (ADR-0003, extended for observer in Wave G): the
+    # role dropdown is not used to promote an outsider (external / observer)
+    # into an insider role (or vice versa) — that crosses the org_membership
+    # invariant. The admin must take the cross-table action by re-inviting:
+    # e.g. to upgrade a free observer, re-invite them as external. Reject any
+    # attempt to flip the row across that boundary here.
+    _OUTSIDER_ROLES = {"external", "observer"}
     current_role = membership.get("role")
-    crossing_external_boundary = (current_role == "external" and body.role != "external") or (
-        current_role != "external" and body.role == "external"
-    )
-    if crossing_external_boundary:
+    current_is_outsider = current_role in _OUTSIDER_ROLES
+    target_is_outsider = body.role in _OUTSIDER_ROLES
+    if current_is_outsider != target_is_outsider:
         raise HTTPException(
             status_code=400,
             detail=(
-                "Cannot change a member into an external (or vice versa) from this "
-                "dropdown. Add or remove the user via the org settings page, then "
-                "re-invite them to the workspace."
+                "Cannot change an outside collaborator (external or observer) into "
+                "a member, or vice versa, from this dropdown. Re-invite the user to "
+                "the workspace with the new role instead."
             ),
         )
 

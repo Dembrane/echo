@@ -80,14 +80,18 @@ ORG_ROLE_PRESETS: dict[str, list[str]] = {
 # ── Workspace role presets ──
 #
 # Matrix v1.1 §4 collapses to five roles: Owner / Admin / Billing / Member /
-# External.
+# External — plus Observer (Wave G).
 # - Owner / Admin — full workspace control + billing.
 # - Billing — financial surface only; no project capabilities.
 # - Member — content author.
 # - External — outside collaborator (no org_membership in this org).
 #   Strictly scoped per matrix §4: edit projects, capture conversations,
 #   run chat, generate reports — nothing else. No invite, no settings,
-#   no usage, no publish, no org-level visibility. See ADR-0003.
+#   no usage, no publish, no org-level visibility. Consumes a paid seat.
+#   See ADR-0003.
+# - Observer — free, read-only outside collaborator (also no org_membership).
+#   View projects/conversations/reports only; no chat, no generate, no edit.
+#   Does NOT consume a paid seat. See the preset below.
 #
 # Retired: 'viewer' (matrix has no viewer role; D11). If any stray rows
 # surface with role='viewer', _normalize_legacy_role treats them as 'member'.
@@ -115,6 +119,18 @@ WORKSPACE_ROLE_PRESETS: dict[str, list[str]] = {
         "chat:use",
         "report:view",
         "report:generate",
+    ],
+    # Observer (Wave G) — free, read-only outside collaborator (no
+    # org_membership in this org, same outsider invariant as external).
+    # Strictly view-only: read projects/conversations and view reports.
+    # Does NOT consume a paid seat (see seat_capacity._SEAT_ROLES) and
+    # deliberately lacks chat:use / report:generate / project:update —
+    # hitting that wall is the upgrade trigger. Upgrade = a workspace admin
+    # changes the role observer->external (paid seat).
+    "observer": [
+        "project:read",
+        "conversation:read",
+        "report:view",
     ],
     "admin": [
         "project:read",
@@ -218,17 +234,19 @@ def get_effective_policies(
 #
 # Used by the invite endpoint (and any future role-change endpoints) to
 # block role escalation: a caller can only grant a role at or below their
-# own level. External sits at the bottom because outside collaborators
-# cannot invite anyone (no member:invite policy). Owner is highest and
-# can only be granted by another owner — currently not exposed in any
-# invite UI, but the ordering is here for completeness. See ADR-0003.
+# own level. Observer sits at the very bottom (free, read-only outsider),
+# external just above it; both are outside collaborators that cannot invite
+# anyone (no member:invite policy). Owner is highest and can only be granted
+# by another owner — currently not exposed in any invite UI, but the ordering
+# is here for completeness. See ADR-0003.
 
 ROLE_HIERARCHY: dict[str, int] = {
-    "external": 0,
-    "member": 1,
-    "billing": 2,
-    "admin": 3,
-    "owner": 4,
+    "observer": 0,
+    "external": 1,
+    "member": 2,
+    "billing": 3,
+    "admin": 4,
+    "owner": 5,
 }
 
 

@@ -25,21 +25,29 @@ export const ProjectMoveWorkspace = ({ project }: { project: Project }) => {
 	const [isConfirmOpen, { open: openConfirm, close: closeConfirm }] =
 		useDisclosure(false);
 
-	// Only workspaces the user administers can receive a project, and the
-	// current one is never a valid target. The backend enforces this too;
+	// Only workspaces the user administers can receive a project, the current
+	// one is never a target, AND the move must stay within one billing /
+	// data-ownership context (ISSUE-033): internal workspaces of the same org
+	// share the org context; an external (bills_separately) workspace is its own
+	// context, so its projects can't move out. The backend enforces all three;
 	// filtering here keeps the picker from offering moves that would 403.
 	const currentWorkspaceId = project.workspace_id ?? workspaceId ?? null;
-	const options = useMemo(
-		() =>
-			workspaces
-				.filter(
-					(w) =>
-						(w.role === "admin" || w.role === "owner") &&
-						w.id !== currentWorkspaceId,
-				)
-				.map((w) => ({ label: w.name, value: w.id })),
-		[workspaces, currentWorkspaceId],
-	);
+	const options = useMemo(() => {
+		// Context key mirrors billing_service._billing_context_key.
+		const contextKey = (w: (typeof workspaces)[number]) =>
+			w.bills_separately ? `ws:${w.id}` : `org:${w.org_id}`;
+		const sourceWs = workspaces.find((w) => w.id === currentWorkspaceId);
+		// Orphaned project (no source workspace) has no context to violate.
+		const sourceKey = sourceWs ? contextKey(sourceWs) : null;
+		return workspaces
+			.filter(
+				(w) =>
+					(w.role === "admin" || w.role === "owner") &&
+					w.id !== currentWorkspaceId &&
+					(sourceKey === null || contextKey(w) === sourceKey),
+			)
+			.map((w) => ({ label: w.name, value: w.id }));
+	}, [workspaces, currentWorkspaceId]);
 
 	const targetWorkspaceName = workspaces.find(
 		(w) => w.id === targetWorkspaceId,

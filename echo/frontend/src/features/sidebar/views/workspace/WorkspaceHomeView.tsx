@@ -1,10 +1,11 @@
 import { Trans } from "@lingui/react/macro";
+import { Badge } from "@mantine/core";
 import { AppWindow, Gear, Plus, PushPin, Users } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
-import { isAdminRole } from "@/lib/roles";
+import { isAdminRole, isOutsiderRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
 import { SectionLabel } from "../../primitives/SectionLabel";
@@ -28,8 +29,8 @@ export const WorkspaceHomeView = () => {
 	const base = `/w/${workspaceId}`;
 	const backTo = workspace?.org_id ? `/o/${workspace.org_id}/overview` : "/";
 	const backLabel = workspace?.org_name ?? "Home";
-	const isExternal = workspace?.role === "external";
-	const canCreateProject = !isExternal;
+	// Outsiders (external + free read-only observer) can't create projects.
+	const canCreateProject = !isOutsiderRole(workspace?.role);
 	const isAdmin = isAdminRole(workspace?.role);
 	const settingsPath = isAdmin
 		? `${base}/settings/general`
@@ -40,6 +41,18 @@ export const WorkspaceHomeView = () => {
 			{/* Back button doubles as the section title: centered label is the
 			    current context (the workspace), not the destination. */}
 			<BackButton to={backTo} label={workspace?.name ?? backLabel} center />
+
+			{workspace?.is_data_owner && (
+				<Badge
+					color="primary"
+					variant="light"
+					radius="sm"
+					className="mx-auto my-1"
+					data-testid="data-owner-badge"
+				>
+					<Trans>You are the data owner</Trans>
+				</Badge>
+			)}
 
 			<NavItem
 				to={`${base}/home`}
@@ -55,7 +68,7 @@ export const WorkspaceHomeView = () => {
 			)}
 			{/* Settings is the last clickable item under the workspace title,
 			    directly below New project and above the Pinned projects section. */}
-			{!isExternal && (
+			{!isOutsiderRole(workspace?.role) && (
 				<>
 					<NavItem
 						to={`${base}/members`}

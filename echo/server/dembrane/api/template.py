@@ -69,6 +69,16 @@ class AiSuggestionsToggleIn(BaseModel):
 # ── Helpers ──
 
 
+# Outsider roles that get read-only access to workspace templates: paid
+# `external` and the free read-only `observer` (Wave G). Neither may create,
+# edit, or delete workspace templates.
+_READ_ONLY_WORKSPACE_ROLES = {"external", "observer"}
+
+
+def _is_read_only_role(role: str | None) -> bool:
+    return (role or "") in _READ_ONLY_WORKSPACE_ROLES
+
+
 async def _get_workspace_membership(
     app_user_id: str, workspace_id: str
 ) -> Optional[dict]:
@@ -142,7 +152,7 @@ async def list_prompt_templates(
             if app_user:
                 mem = await _get_workspace_membership(app_user["id"], workspace_id)
                 if mem is not None:
-                    is_external_in_ws = mem.get("role") == "external"
+                    is_external_in_ws = _is_read_only_role(mem.get("role"))
                     workspace_rows_raw = directus.get_items(
                         "prompt_template",
                         {
@@ -228,10 +238,10 @@ async def create_prompt_template(
         mem = await _get_workspace_membership(app_user["id"], body.workspace_id)
         if mem is None:
             raise HTTPException(status_code=403, detail="Not a workspace member")
-        if mem.get("role") == "external":
+        if _is_read_only_role(mem.get("role")):
             raise HTTPException(
                 status_code=403,
-                detail="Externals cannot create workspace templates",
+                detail="Read-only collaborators cannot create workspace templates",
             )
 
     payload: dict = {
@@ -290,7 +300,7 @@ async def update_prompt_template(
         if not app_user:
             raise HTTPException(status_code=403, detail="Not a workspace member")
         mem = await _get_workspace_membership(app_user["id"], ws_id)
-        if mem is None or mem.get("role") == "external":
+        if mem is None or _is_read_only_role(mem.get("role")):
             raise HTTPException(status_code=403, detail="Not allowed to edit this template")
     else:
         if existing.get("user_created") != auth.user_id:
@@ -336,7 +346,7 @@ async def delete_prompt_template(
         if not app_user:
             raise HTTPException(status_code=403, detail="Not a workspace member")
         mem = await _get_workspace_membership(app_user["id"], ws_id)
-        if mem is None or mem.get("role") == "external":
+        if mem is None or _is_read_only_role(mem.get("role")):
             raise HTTPException(status_code=403, detail="Not allowed to delete this template")
     else:
         if existing.get("user_created") != auth.user_id:

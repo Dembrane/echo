@@ -44,6 +44,34 @@ def nested_billing_fields(prefix: str = "billing_account_id") -> list[str]:
     return [f"{prefix}.{f}" for f in BILLING_FIELDS]
 
 
+def workspace_is_external_client(ws: dict[str, Any]) -> bool:
+    """Whether a workspace is "for an external client" (a partner workspace),
+    as opposed to internal-use.
+
+    This is the gate for the free, read-only observer role (Wave G): observers
+    exist only in external-client workspaces. Internal workspaces have no free
+    observer.
+
+    Canonical signal is `workspace.usage_context == "external"` (written at
+    creation for every external workspace). For robustness on rows that predate
+    usage_context, falls back to two equivalent markers that an external
+    workspace also carries: a named data owner (`data_owner_email`), and the
+    post-handoff client marker (`billed_to_team_id` set and different from
+    `org_id`). The `ws` dict must be a full workspace row (e.g. from `get_item`),
+    not a billing-joined subset. The fully authoritative signal for billing
+    moves is the account scope (see `billing_service.same_billing_context`); this
+    helper is the cheap per-row classifier used by the observer/whitelabel gates.
+    """
+    uc = (ws.get("usage_context") or "").strip().lower()
+    if uc:
+        return uc == "external"
+    # Fallbacks for legacy rows with no usage_context.
+    if (ws.get("data_owner_email") or "").strip():
+        return True
+    billed_to = ws.get("billed_to_team_id")
+    return bool(billed_to) and billed_to != ws.get("org_id")
+
+
 def billing_from_workspace(ws: dict[str, Any], prefix: str = "billing_account_id") -> dict[str, Any]:
     """Pull the commercial fields off a workspace dict that joined the account
     via `nested_billing_fields()`. Returns {} when the account wasn't joined

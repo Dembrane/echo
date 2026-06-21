@@ -445,6 +445,50 @@ async def list_my_orgs(
     return out
 
 
+async def _partner_orgs_user_is_external_of(app_user_id: str) -> list[str]:
+    """Names of PARTNER orgs in which this user is an external collaborator.
+
+    External (role='external') ⟺ no org_membership; the user holds the role on a
+    workspace owned by a partner org. Used to flag external-led org signups
+    (ISSUE-028). Returns [] when the user isn't an external of any partner.
+    """
+    mems = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "user_id": {"_eq": app_user_id},
+                    "role": {"_eq": "external"},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["workspace_id"],
+                "limit": -1,
+            }
+        },
+    )
+    ws_ids = [m["workspace_id"] for m in mems if isinstance(m, dict) and m.get("workspace_id")]
+    if not ws_ids:
+        return []
+    workspaces = await async_directus.get_items(
+        "workspace",
+        {"query": {"filter": {"id": {"_in": ws_ids}}, "fields": ["org_id"], "limit": -1}},
+    )
+    org_ids = list({w["org_id"] for w in workspaces if isinstance(w, dict) and w.get("org_id")})
+    if not org_ids:
+        return []
+    partner_orgs = await async_directus.get_items(
+        "org",
+        {
+            "query": {
+                "filter": {"id": {"_in": org_ids}, "is_partner": {"_eq": True}},
+                "fields": ["name"],
+                "limit": -1,
+            }
+        },
+    )
+    return [o["name"] for o in partner_orgs if isinstance(o, dict) and o.get("name")]
+
+
 @router.post("", response_model=CreateOrgResponse)
 async def create_org(
     body: CreateOrgRequest,
@@ -505,6 +549,33 @@ async def create_org(
     await on_workspace_created(workspace_id=ws_id, creator_app_user_id=app_user_id)
 
     logger.info(f"Created org {org_id} '{name}' + default workspace {ws_id} for {app_user_id}")
+
+    # ISSUE-028: when an external collaborator of a PARTNER workspace spins up
+    # their own org, that is a strong upsell signal — notify staff. Best-effort:
+    # never fail org creation on a notification hiccup.
+    try:
+        partner_org_names = await _partner_orgs_user_is_external_of(app_user_id)
+        if partner_org_names:
+            from dembrane.notifications import audience_staff, emit_to_audience
+
+            who = app_user.get("display_name") or app_user.get("email") or "An external user"
+            partners = ", ".join(partner_org_names)
+            staff_ids = await audience_staff()
+            if staff_ids:
+                await emit_to_audience(
+                    staff_ids,
+                    actor_user_id=app_user_id,
+                    event_code="EXTERNAL_CREATED_ORG",
+                    title=f"External of a partner created an org: {name}",
+                    message=(
+                        f"{who} is an external collaborator of {partners} and just "
+                        f"created their own organisation '{name}'. Possible upsell."
+                    ),
+                    action="NONE",
+                )
+    except Exception:  # noqa: BLE001 — notification must never break org creation
+        logger.exception("external-led-org staff notification failed for org %s", org_id)
+
     return CreateOrgResponse(org_id=org_id, workspace_id=ws_id)
 
 
@@ -1766,10 +1837,12 @@ async def list_organisation_workspaces(
         if cap is not None:
             from dembrane.seat_capacity import count_pending_invites
 
-            seats_used, _member_count, _external_count = await compute_effective_seat_state(
-                ws["id"]
+            seats_used, _member_count, _external_count, _observer_count = (
+                await compute_effective_seat_state(ws["id"])
             )
-            member_pending, external_pending = await count_pending_invites(ws["id"])
+            member_pending, external_pending, _observer_pending = (
+                await count_pending_invites(ws["id"])
+            )
             total_pending = member_pending + external_pending
             seats_used_total = seats_used + total_pending
             # Only a finite cap yields a denominator + a possible hard block.
@@ -2173,6 +2246,9 @@ class OrgUsageWorkspaceRow(BaseModel):
     downgraded_at: Optional[str] = None
     # Externals share the seat pool. Count exposed separately for breakdown.
     external_count: int = 0
+    # Observers are free, read-only, and NOT in the seat pool. Exposed for
+    # the free-vs-paid distribution (Wave G).
+    observer_count: int = 0
     # True when this workspace bills on its own (workspace-scoped) account
     # rather than the org's pooled plan — e.g. a partner's client workspace.
     # The org admin can't manage its plan from here; the UI marks it.
@@ -2187,6 +2263,8 @@ class OrgUsageResponse(BaseModel):
     # Unified seat total across all workspaces (members + externals).
     total_seat_count: int
     total_external_count: int
+    # Free, read-only observers across all workspaces (not in seat total).
+    total_observer_count: int = 0
     total_project_count: int
     workspaces_at_cap: int  # Pilot + over cap (hard block active)
     workspaces_approaching_cap: int  # tier with cap, usage >= 80%
@@ -2346,19 +2424,23 @@ async def get_org_usage(
     # ADR-0003. Per-workspace rows expose member/external split.
     total_seat_count = 0
     total_external_count = 0
+    total_observer_count = 0
     per_ws_seats: dict[str, int] = {wid: 0 for wid in ws_ids}
     per_ws_externals: dict[str, int] = {wid: 0 for wid in ws_ids}
+    per_ws_observers: dict[str, int] = {wid: 0 for wid in ws_ids}
     if ws_ids:
         seat_state_results = await asyncio.gather(
             *[compute_effective_seat_state(wid) for wid in ws_ids]
         )
-        for wid, (seats_used, _member_count, external_count) in zip(
+        for wid, (seats_used, _member_count, external_count, observer_count) in zip(
             ws_ids, seat_state_results, strict=True
         ):
             per_ws_seats[wid] = seats_used
             per_ws_externals[wid] = external_count
+            per_ws_observers[wid] = observer_count
             total_seat_count += seats_used
             total_external_count += external_count
+            total_observer_count += observer_count
 
     # Per-workspace rows + aggregation. We build the rows even when the
     # caller doesn't see financials — the €-field is stripped below.
@@ -2395,6 +2477,7 @@ async def get_org_usage(
         seat_cap_hit = seats_included is not None and seat_count >= seats_included
         approaching_seat_cap = seats_pct is not None and seats_pct >= 0.8 and not seat_cap_hit
         external_count = per_ws_externals.get(wid, 0)
+        observer_count = per_ws_observers.get(wid, 0)
         ws_at_cap = False
         ws_approaching = False
 
@@ -2427,6 +2510,7 @@ async def get_org_usage(
                 "seat_cap_hit": seat_cap_hit,
                 "approaching_seat_cap": approaching_seat_cap,
                 "external_count": external_count,
+                "observer_count": observer_count,
                 "at_cap": ws_at_cap,
                 "approaching_cap": ws_approaching,
                 "downgraded_at": w.get("downgraded_at"),
@@ -2450,6 +2534,7 @@ async def get_org_usage(
         "total_audio_hours": round(total_hours, 2),
         "total_seat_count": total_seat_count,
         "total_external_count": total_external_count,
+        "total_observer_count": total_observer_count,
         "total_project_count": project_count,
         "workspaces_at_cap": at_cap,
         "workspaces_approaching_cap": approaching,

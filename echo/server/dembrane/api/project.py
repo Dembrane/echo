@@ -87,10 +87,11 @@ async def toggle_project_pin(
         )
         if not isinstance(mems, list) or len(mems) == 0:
             raise HTTPException(status_code=403, detail="Not a member of this workspace")
-        if mems[0].get("role") == "external":
+        # Outsiders (external + the read-only observer, Wave G) cannot pin.
+        if mems[0].get("role") in ("external", "observer"):
             raise HTTPException(
                 status_code=403,
-                detail="Externals cannot pin projects",
+                detail="Read-only collaborators cannot pin projects",
             )
     else:
         # Legacy path: project not yet attached to a workspace. Fall back to

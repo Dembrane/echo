@@ -106,6 +106,8 @@ type BillingRow = {
 	over_seats: number;
 	seat_overage_eur: number;
 	external_count: number;
+	// Free, read-only observers — not in the seat pool (Wave G).
+	observer_count: number;
 	base_price_eur: number | null;
 	total_forecast_eur: number | null;
 	pilot_hard_block: boolean;
@@ -135,6 +137,8 @@ type AccountRow = {
 	active_workspace_count: number;
 	seat_count: number;
 	external_count: number;
+	// Pooled free, read-only observers across the account's workspaces (Wave G).
+	observer_count: number;
 	base_price_eur: number | null;
 	total_forecast_eur: number;
 	is_trial: boolean;
@@ -181,6 +185,17 @@ type ReferralLedgerRow = {
 	starts_at: string | null;
 	expires_at: string | null;
 	notes: string | null;
+};
+
+// Orgs created by externals of a partner — the conversion signal (ISSUE-028).
+type ExternalLedOrgRow = {
+	org_id: string;
+	org_name: string;
+	created_at: string | null;
+	creator_user_id: string | null;
+	creator_email: string | null;
+	creator_name: string | null;
+	partner_org_names: string[];
 };
 
 async function fetchJson<T>(path: string): Promise<T | null> {
@@ -1203,6 +1218,9 @@ function AccountActionsModal({
 					<Trans>
 						{account.workspace_count} workspaces,{" "}
 						{account.seat_count + account.external_count} seats pooled
+						{account.observer_count > 0
+							? ` · ${account.observer_count} free observers`
+							: ""}
 					</Trans>
 				</Text>
 				<Divider my={4} />
@@ -1634,6 +1652,7 @@ function UsageAndBillingPanel() {
 			"seat_count",
 			"seats_included",
 			"external_count",
+			"observer_count",
 			"base_price_eur",
 			"account_forecast_eur",
 			"workspace_admin_email",
@@ -1660,6 +1679,7 @@ function UsageAndBillingPanel() {
 					r.seat_count,
 					r.seats_included ?? "",
 					r.external_count,
+					r.observer_count,
 					a.base_price_eur ?? "",
 					a.total_forecast_eur,
 					r.workspace_admins[0]?.email ?? "",
@@ -2069,26 +2089,116 @@ function PartnersPanel() {
 	}
 	const rows = data ?? [];
 	return (
-		<Stack gap="sm">
-			<Group justify="space-between" align="center" wrap="wrap">
-				<Text size="xs" c="dimmed">
-					<Plural value={rows.length} one="# agreement" other="# agreements" />
-				</Text>
-				<TextInput
-					leftSection={<IconSearch size={14} />}
-					placeholder={t`Search partner, client, workspace`}
-					value={globalFilter}
-					onChange={(e) => setGlobalFilter(e.currentTarget.value)}
-					size="xs"
-					style={{ maxWidth: 320 }}
+		<Stack gap="lg">
+			<Stack gap="sm">
+				<Group justify="space-between" align="center" wrap="wrap">
+					<Text size="xs" c="dimmed">
+						<Plural
+							value={rows.length}
+							one="# agreement"
+							other="# agreements"
+						/>
+					</Text>
+					<TextInput
+						leftSection={<IconSearch size={14} />}
+						placeholder={t`Search partner, client, workspace`}
+						value={globalFilter}
+						onChange={(e) => setGlobalFilter(e.currentTarget.value)}
+						size="xs"
+						style={{ maxWidth: 320 }}
+					/>
+				</Group>
+				<SimpleDataTable<ReferralLedgerRow>
+					columns={columns}
+					data={rows}
+					globalFilter={globalFilter}
+					onGlobalFilterChange={setGlobalFilter}
+					emptyLabel={t`No referral agreements yet.`}
 				/>
-			</Group>
-			<SimpleDataTable<ReferralLedgerRow>
+			</Stack>
+			<ExternalLedOrgsSection />
+		</Stack>
+	);
+}
+
+// Staff visibility (ISSUE-028): orgs created by users who are external
+// collaborators of a partner — a conversion / upsell signal.
+function ExternalLedOrgsSection() {
+	const { data, isLoading } = useQuery({
+		queryFn: () =>
+			fetchJson<ExternalLedOrgRow[]>("/v2/admin/external-led-orgs"),
+		queryKey: ["v2", "admin", "external-led-orgs"],
+		staleTime: 60_000,
+	});
+	const columns = useMemo<ColumnDef<ExternalLedOrgRow, unknown>[]>(
+		() => [
+			{
+				accessorFn: (r) => r.org_name ?? "",
+				cell: ({ row }) => (
+					<Anchor
+						component={I18nLink}
+						to={`/o/${row.original.org_id}/overview`}
+						size="xs"
+						fw={500}
+					>
+						{row.original.org_name || row.original.org_id.slice(0, 8)}
+					</Anchor>
+				),
+				header: t`New organisation`,
+				id: "org_name",
+			},
+			{
+				accessorFn: (r) => r.partner_org_names.join(", "),
+				cell: ({ row }) => (
+					<Text size="xs">{row.original.partner_org_names.join(", ")}</Text>
+				),
+				header: t`External of partner`,
+				id: "partner_org_names",
+			},
+			{
+				accessorFn: (r) => r.creator_email ?? r.creator_name ?? "",
+				cell: ({ row }) => (
+					<Text size="xs">
+						{row.original.creator_name || row.original.creator_email || ""}
+					</Text>
+				),
+				header: t`Created by`,
+				id: "creator",
+			},
+			{
+				accessorKey: "created_at",
+				cell: ({ row }) => formatDate(row.original.created_at),
+				header: t`Created`,
+				id: "created_at",
+			},
+		],
+		[],
+	);
+	if (isLoading) {
+		return (
+			<Center py="md">
+				<Loader size="sm" color="gray" />
+			</Center>
+		);
+	}
+	const rows = data ?? [];
+	return (
+		<Stack gap="sm">
+			<Text size="sm" fw={600}>
+				<Trans>Client orgs from partners</Trans>
+			</Text>
+			<Text size="xs" c="dimmed">
+				<Trans>
+					Organisations created by people who are external collaborators of a
+					partner. A signal they may want their own plan.
+				</Trans>
+			</Text>
+			<SimpleDataTable<ExternalLedOrgRow>
 				columns={columns}
 				data={rows}
-				globalFilter={globalFilter}
-				onGlobalFilterChange={setGlobalFilter}
-				emptyLabel={t`No referral agreements yet.`}
+				globalFilter=""
+				onGlobalFilterChange={() => {}}
+				emptyLabel={t`No external-led organisations yet.`}
 			/>
 		</Stack>
 	);

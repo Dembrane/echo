@@ -187,7 +187,10 @@ async def count_account_pending_invites(account_id: str) -> int:
     every workspace the account covers."""
     total = 0
     for ws_id in await _account_workspace_ids(account_id):
-        member_pending, external_pending = await count_pending_invites(ws_id)
+        # observer_pending is free and excluded from the billable footnote.
+        member_pending, external_pending, _observer_pending = await count_pending_invites(
+            ws_id
+        )
         total += member_pending + external_pending
     return total
 
@@ -1048,6 +1051,32 @@ async def get_account_for_workspace(workspace_id: str) -> dict | None:
     if not account_id:
         return None
     return await async_directus.get_item("billing_account", account_id)
+
+
+def _billing_context_key(account: dict | None) -> tuple[str, str] | None:
+    """The data-ownership / billing context a workspace's account belongs to
+    (ISSUE-033). Org-scoped → the org (internal workspaces in one org share it);
+    workspace-scoped → that single external workspace (its own context). Returns
+    None when the account is missing (can't establish a shared context)."""
+    if not account:
+        return None
+    org_id = account.get("org_id")
+    if org_id:
+        return ("org", org_id)
+    return ("workspace", account.get("id") or account.get("workspace_id") or "")
+
+
+async def same_billing_context(workspace_a_id: str, workspace_b_id: str) -> bool:
+    """Whether two workspaces share one billing / data-ownership context, so a
+    project may move between them (ISSUE-033). Internal workspaces of the same
+    org share the org context; an external (workspace-scoped) workspace is its
+    own context and a project can't move out of it."""
+    if workspace_a_id == workspace_b_id:
+        return True
+    key_a = _billing_context_key(await get_account_for_workspace(workspace_a_id))
+    key_b = _billing_context_key(await get_account_for_workspace(workspace_b_id))
+    # Unresolvable context (missing account) is never "same" — fail closed.
+    return key_a is not None and key_a == key_b
 
 
 async def _period_fraction_remaining(account: dict) -> float:

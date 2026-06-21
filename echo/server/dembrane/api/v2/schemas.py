@@ -139,6 +139,10 @@ class WorkspaceSummary(BaseModel):
     # Bills on its own (workspace-scoped) account rather than the org's pooled
     # plan — surfaced so tier displays can mark it "(Partner)".
     bills_separately: bool = False
+    # True when the current user is the named data owner of this external-client
+    # workspace (their email matches workspace.data_owner_email). ISSUE-026.
+    # We return a boolean, not the email, to respect the email-privacy rule.
+    is_data_owner: bool = False
     logo_url: Optional[str] = None
     # Parent organisation's logo — handy for card rendering so the client doesn't
     # need a second lookup. Nullable because organisations without a logo exist.
@@ -204,10 +208,18 @@ class CreateWorkspaceRequest(BaseModel):
     # no longer auto-inherit access (matrix §6 retires derivation). They
     # use Request access.
     inherit_organisation_members: bool = False
-    # Billing: default false → the workspace joins the org's billing account
-    # (org manages billing). True → mint a workspace-scoped account billed
-    # separately (the partner "for another client" path; handoff-ready).
-    bill_separately: bool = False
+    # External-client / separate billing context (ISSUE-026, generalized
+    # 2026-06-21): there is NO `bill_separately` boolean. Providing a data owner
+    # — an owning organisation distinct from the creating org, named by
+    # `data_owner_org_name` + a representative `data_owner_email` — is what makes
+    # the workspace external: it gets its own (workspace-scoped) billing account
+    # and `usage_context="external"`. Absent a data owner, the workspace is
+    # internal and joins the org's pooled account. The billing context is then
+    # read off `billing_account_id` scope, not a flag. When a data owner is
+    # given, the creator must also accept the partner agreement.
+    data_owner_org_name: Optional[str] = Field(default=None, max_length=255)
+    data_owner_email: Optional[EmailStr] = None
+    partner_agreement_accepted: bool = False
 
 
 class CreateWorkspaceResponse(BaseModel):
@@ -224,13 +236,14 @@ class WorkspaceInviteRequest(BaseModel):
     """Invite payload.
 
     `role` is the single axis for the invite — external collaborators are
-    invited as role='external' (ADR-0003). Out-of-enum values fail at
-    Pydantic validation (422); the endpoint enforces role-hierarchy
+    invited as role='external' (ADR-0003); the free read-only collaborator is
+    role='observer' (Wave G). Both are outsiders (no org_membership). Out-of-enum
+    values fail at Pydantic validation (422); the endpoint enforces role-hierarchy
     escalation rules separately.
     """
 
     email: EmailStr
-    role: Literal["admin", "member", "billing", "external"] = "member"
+    role: Literal["admin", "member", "billing", "external", "observer"] = "member"
 
 
 class WorkspaceInviteResponse(BaseModel):

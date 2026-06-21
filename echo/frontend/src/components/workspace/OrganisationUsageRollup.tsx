@@ -81,6 +81,8 @@ interface OrgUsageWorkspaceRow {
 	seat_cap_hit: boolean;
 	approaching_seat_cap: boolean;
 	external_count: number;
+	// Free, read-only observers — not part of seat_count (Wave G).
+	observer_count: number;
 	downgraded_at: string | null;
 	at_cap: boolean;
 	approaching_cap: boolean;
@@ -95,6 +97,8 @@ interface OrgUsage {
 	total_audio_hours: number;
 	total_seat_count: number;
 	total_external_count: number;
+	// Free, read-only observers across all workspaces (not in seat total).
+	total_observer_count: number;
 	total_project_count: number;
 	workspaces_at_cap: number;
 	workspaces_approaching_cap: number;
@@ -525,7 +529,8 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 
 				<Text size="sm" c="dimmed">
 					<Trans>
-						{data.workspace_count} workspaces · {data.total_seat_count} seats ·{" "}
+						{data.workspace_count} workspaces · {data.total_seat_count} paid
+						seats · {data.total_observer_count} free observers ·{" "}
 						{formatDurationFromHours(data.total_audio_hours)} in{" "}
 						{formatCycleMonth(data.cycle_start)}
 					</Trans>
