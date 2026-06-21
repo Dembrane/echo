@@ -1,6 +1,6 @@
 """Workspace settings: detail, update, members, and invite (from settings)."""
 
-from typing import Optional, Annotated
+from typing import Literal, Optional, Annotated
 from logging import getLogger
 from datetime import datetime, timezone
 
@@ -102,6 +102,10 @@ class WorkspaceDetailResponse(BaseModel):
     # override the whitelabel logo per workspace; internal ones may not.
     usage_context: Optional[str] = None
     is_external_client: bool = False
+    # Data-ownership fields for the admin edit form (ISSUE-026). Only meaningful
+    # on external workspaces; null on internal ones.
+    data_owner_org_name: Optional[str] = None
+    data_owner_email: Optional[str] = None
 
 
 @router.get("/{workspace_id}/settings", response_model=WorkspaceDetailResponse)
@@ -294,6 +298,8 @@ async def get_workspace_settings(
         billing_org_managed=bool(billing.get("org_scoped")),
         usage_context=ws.get("usage_context"),
         is_external_client=workspace_is_external_client(ws),
+        data_owner_org_name=ws.get("data_owner_org_name"),
+        data_owner_email=ws.get("data_owner_email"),
     )
 
 
@@ -401,6 +407,237 @@ async def update_workspace_settings(
         raise HTTPException(status_code=400, detail="Nothing to update")
 
     await async_directus.update_item("workspace", ctx.workspace_id, payload)
+    return {"status": "success"}
+
+
+# ── Data ownership (internal vs external client) ──
+#
+# Data ownership is set at workspace creation and was intended to be immutable.
+# It is editable by workspace admins (founder decision 2026-06-21): some users
+# need to correct the owning organisation / data-owner contact, or reclassify a
+# workspace internal↔external after the fact.
+#
+# The internal/external label (`usage_context`) and the actual billing /
+# data-ownership context (the SCOPE of the billing account — org-scoped vs
+# workspace-scoped) are two things set together at create time. Flipping only the
+# label would split them: the workspace would read "external" while still billing
+# through the shared org account, so project-move context (which keys on account
+# scope, ISSUE-033) would disagree with the label. So a flip re-scopes the billing
+# account too, keeping both consistent.
+
+
+class UpdateWorkspaceDataOwnershipRequest(BaseModel):
+    # Target internal/external classification. Omit to keep the current one and
+    # only edit the data-owner fields.
+    usage_context: Optional[Literal["internal", "external"]] = None
+    # Owning organisation name + representative email (external workspaces only).
+    data_owner_org_name: Optional[str] = None
+    data_owner_email: Optional[str] = None
+    # Required when reclassifying an internal workspace to external (mirrors the
+    # create flow); ignored when already external or going internal.
+    partner_agreement_accepted: Optional[bool] = None
+
+
+def _account_has_active_billing(account: Optional[dict]) -> bool:
+    """Whether a billing account carries paid/active billing we must not silently
+    disturb when re-scoping. Free + comped accounts with no Mollie subscription
+    are safe to re-scope; anything paid needs human billing handling."""
+    if not account:
+        return False
+    if (account.get("tier") or "free") != "free":
+        return True
+    if account.get("mollie_subscription_id"):
+        return True
+    if (account.get("payment_mode") or "none") not in ("", "none"):
+        return True
+    return False
+
+
+_PAID_RESCOPE_MESSAGE = (
+    "This workspace has active or paid billing attached, so its internal/external "
+    "classification can't be changed automatically. Reach out to your account "
+    "manager to move the billing first."
+)
+
+
+@router.patch("/{workspace_id}/data-ownership")
+async def update_workspace_data_ownership(
+    body: UpdateWorkspaceDataOwnershipRequest,
+    ctx: DependencyWorkspaceContext,
+) -> dict:
+    """Edit a workspace's data-ownership: internal/external classification and the
+    data-owner organisation + contact. Workspace admins only (settings:manage).
+
+    Flipping internal↔external re-scopes the billing account so the label and the
+    billing/data-ownership context stay in sync; a paid/active account blocks the
+    flip (needs manual billing handling). Editing the data-owner fields on an
+    already-external workspace is a simple field update.
+    """
+    ctx.require_policy("settings:manage")
+
+    from dembrane.cache_utils import invalidate_org_usage, invalidate_workspace_usage
+    from dembrane.billing_account import (
+        link_account_to_workspace,
+        org_account_for_new_workspace,
+        create_workspace_scoped_account,
+        billing_account_blocks_new_workspace,
+    )
+    from dembrane.billing_service import reconcile_account_seats
+    from dembrane.api.v2.workspaces import _is_org_member_by_email
+
+    ws = ctx.workspace
+    ws_id = ctx.workspace_id
+    org_id = ws.get("org_id")
+    currently_external = workspace_is_external_client(ws)
+
+    # Target classification: explicit if provided, else unchanged.
+    target_external = (
+        (body.usage_context == "external")
+        if body.usage_context is not None
+        else currently_external
+    )
+
+    # Effective data-owner fields: fall back to what's already stored so a caller
+    # editing only one field doesn't blank the other.
+    email = (body.data_owner_email if body.data_owner_email is not None else ws.get("data_owner_email"))
+    email = (email or "").strip().lower() or None
+    org_name = (
+        body.data_owner_org_name
+        if body.data_owner_org_name is not None
+        else ws.get("data_owner_org_name")
+    )
+    org_name = (org_name or "").strip() or None
+
+    payload: dict = {}
+
+    if target_external:
+        # External requires both an owning org and a data-owner email.
+        if not email or not org_name:
+            raise HTTPException(
+                status_code=400,
+                detail="An external workspace needs an owning organisation name and a data owner email.",
+            )
+        # Reclassifying internal→external requires accepting the partner agreement,
+        # same as creation.
+        if not currently_external and not body.partner_agreement_accepted:
+            raise HTTPException(
+                status_code=400,
+                detail="You must accept the partner agreement to mark this workspace as external.",
+            )
+        # The data owner must be outside this org (same guard as creation).
+        if org_id and await _is_org_member_by_email(org_id, email):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "That data owner is already a member of your organisation. "
+                    "External-client workspaces need a data owner outside your "
+                    "organisation."
+                ),
+            )
+
+        old_account_id = ws.get("billing_account_id")
+        if not currently_external:
+            # internal→external: give the workspace its own (workspace-scoped)
+            # account so it bills on its own and is handoff-ready. Never touch the
+            # shared org account; just create a new one and re-point.
+            old_account = (
+                await async_directus.get_item("billing_account", old_account_id)
+                if old_account_id
+                else None
+            )
+            if _account_has_active_billing(old_account):
+                raise HTTPException(status_code=409, detail=_PAID_RESCOPE_MESSAGE)
+            new_account_id = await create_workspace_scoped_account(
+                tier="free", created_by=ctx.app_user_id, label=f"{ws.get('name') or 'Workspace'} billing"
+            )
+            payload["billing_account_id"] = new_account_id
+            await async_directus.update_item("workspace", ws_id, {"billing_account_id": new_account_id})
+            await link_account_to_workspace(new_account_id, ws_id)
+            for aid in {old_account_id, new_account_id}:
+                if aid:
+                    try:
+                        await reconcile_account_seats(aid)
+                    except Exception:
+                        logger.exception("Seat reconcile failed re-scoping workspace %s", ws_id)
+
+        payload["usage_context"] = "external"
+        payload["data_owner_org_name"] = org_name
+        payload["data_owner_email"] = email
+        if not ws.get("partner_agreement_accepted_at"):
+            payload["partner_agreement_accepted_at"] = datetime.now(timezone.utc).isoformat()
+    else:
+        # Internal: clear the data-owner / external markers.
+        if currently_external:
+            # external→internal: move the workspace onto the org's pooled account.
+            old_account_id = ws.get("billing_account_id")
+            old_account = (
+                await async_directus.get_item("billing_account", old_account_id)
+                if old_account_id
+                else None
+            )
+            if _account_has_active_billing(old_account):
+                raise HTTPException(status_code=409, detail=_PAID_RESCOPE_MESSAGE)
+            if not org_id:
+                raise HTTPException(
+                    status_code=409,
+                    detail="This workspace has no organisation to bill through; it can't be made internal.",
+                )
+            new_account_id = await org_account_for_new_workspace(
+                org_id=org_id, created_by=ctx.app_user_id
+            )
+            blocked = billing_account_blocks_new_workspace(
+                await async_directus.get_item("billing_account", new_account_id)
+            )
+            if blocked:
+                raise HTTPException(status_code=402, detail=blocked)
+            payload["billing_account_id"] = new_account_id
+            await async_directus.update_item("workspace", ws_id, {"billing_account_id": new_account_id})
+            # Retire the now-orphaned workspace-scoped account (free, unpaid).
+            if old_account_id and old_account_id != new_account_id:
+                await async_directus.update_item(
+                    "billing_account",
+                    old_account_id,
+                    {"deleted_at": datetime.now(timezone.utc).isoformat(), "workspace_id": None},
+                )
+            for aid in {old_account_id, new_account_id}:
+                if aid:
+                    try:
+                        await reconcile_account_seats(aid)
+                    except Exception:
+                        logger.exception("Seat reconcile failed re-scoping workspace %s", ws_id)
+
+        payload["usage_context"] = "internal"
+        payload["data_owner_org_name"] = None
+        payload["data_owner_email"] = None
+        payload["partner_agreement_accepted_at"] = None
+
+    await async_directus.update_item("workspace", ws_id, payload)
+
+    # Tier/scope and the external flag drive cached usage rollups + the observer
+    # role surface; bust the caches so the UI doesn't linger on the old state.
+    try:
+        await invalidate_workspace_usage(ws_id)
+        if org_id:
+            await invalidate_org_usage(org_id)
+    except Exception:
+        logger.exception("Usage cache invalidation failed for workspace %s", ws_id)
+
+    # Newly external (or changed data owner on an external workspace): add the
+    # data owner as a free observer and email them, same as creation. Best-effort.
+    if target_external and email and email != (ws.get("data_owner_email") or "").strip().lower():
+        try:
+            from dembrane.api.v2.workspaces import _invite_data_owner_observer
+
+            await _invite_data_owner_observer(
+                workspace_id=ws_id,
+                workspace_name=ws.get("name") or "",
+                org_name=org_name or "",
+                email=email,
+                invited_by=ctx.app_user_id,
+            )
+        except Exception:
+            logger.exception("Failed to add data-owner observer for workspace %s", ws_id)
+
     return {"status": "success"}
 
 
