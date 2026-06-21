@@ -132,7 +132,6 @@ line-length = 100
 output-format = "grouped"
 target-version = "py311"
 
-select = []
 exclude = [
     ".bzr",
     ".direnv",
@@ -163,16 +162,6 @@ exclude = [
     "alembic",
     'scripts',
 ]
-ignore = [
-    # mutable defaults
-    "B006",
-]
-unfixable = [
-    # disable auto fix for print statements
-    "T201",
-    "T203",
-]
-ignore-init-module-imports = true
 indent-width = 4
 
 [tool.ruff.lint]
@@ -194,13 +183,15 @@ select = [
     # "T201",
     # "T203",
     # misuse of typing.TYPE_CHECKING
-    "TCH004",
+    "TC004",
     # import rules
     "TID251",
 ]
-ignore = []
+ignore = [
+    "B006",  # mutable default arguments
+]
 fixable = ["ALL"]
-unfixable = []
+unfixable = ["T201", "T203"]  # never auto-strip print/pprint
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.pyrefly]
@@ -225,6 +216,10 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 docstring-code-format = true
 docstring-code-line-length = "dynamic"
+
+[tool.ruff.lint.per-file-ignores]
+# Test mocks/fixtures match real signatures but ignore some args.
+"tests/**" = ["ARG001", "ARG002"]
 
 [tool.ruff.lint.isort]
 length-sort = true

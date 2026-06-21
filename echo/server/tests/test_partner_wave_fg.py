@@ -12,14 +12,13 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi import FastAPI, HTTPException
 from httpx import AsyncClient, ASGITransport
+from fastapi import FastAPI
 
 from dembrane.billing_account import workspace_is_external_client
-from dembrane.api.v2._invite_helpers import is_outsider_role
 from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 from dembrane.api.dependency_auth import DirectusSession, require_directus_session
-
+from dembrane.api.v2._invite_helpers import is_outsider_role
 
 # ── Outsider classification (security-critical: send + all accept paths) ─
 
