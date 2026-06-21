@@ -44,6 +44,9 @@ interface WorkspaceSummary {
 	role: string;
 	is_default: boolean;
 	tier: string;
+	// True when the current user is the named data owner of this external-client
+	// workspace (ISSUE-026).
+	is_data_owner?: boolean;
 	logo_url: string | null;
 	org_logo_url: string | null;
 	project_count: number;

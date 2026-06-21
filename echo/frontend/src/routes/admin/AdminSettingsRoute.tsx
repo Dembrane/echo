@@ -187,6 +187,17 @@ type ReferralLedgerRow = {
 	notes: string | null;
 };
 
+// Orgs created by externals of a partner — the conversion signal (ISSUE-028).
+type ExternalLedOrgRow = {
+	org_id: string;
+	org_name: string;
+	created_at: string | null;
+	creator_user_id: string | null;
+	creator_email: string | null;
+	creator_name: string | null;
+	partner_org_names: string[];
+};
+
 async function fetchJson<T>(path: string): Promise<T | null> {
 	const res = await fetch(`${API_BASE_URL}${path}`, { credentials: "include" });
 	if (!res.ok) return null;
@@ -2078,26 +2089,116 @@ function PartnersPanel() {
 	}
 	const rows = data ?? [];
 	return (
-		<Stack gap="sm">
-			<Group justify="space-between" align="center" wrap="wrap">
-				<Text size="xs" c="dimmed">
-					<Plural value={rows.length} one="# agreement" other="# agreements" />
-				</Text>
-				<TextInput
-					leftSection={<IconSearch size={14} />}
-					placeholder={t`Search partner, client, workspace`}
-					value={globalFilter}
-					onChange={(e) => setGlobalFilter(e.currentTarget.value)}
-					size="xs"
-					style={{ maxWidth: 320 }}
+		<Stack gap="lg">
+			<Stack gap="sm">
+				<Group justify="space-between" align="center" wrap="wrap">
+					<Text size="xs" c="dimmed">
+						<Plural
+							value={rows.length}
+							one="# agreement"
+							other="# agreements"
+						/>
+					</Text>
+					<TextInput
+						leftSection={<IconSearch size={14} />}
+						placeholder={t`Search partner, client, workspace`}
+						value={globalFilter}
+						onChange={(e) => setGlobalFilter(e.currentTarget.value)}
+						size="xs"
+						style={{ maxWidth: 320 }}
+					/>
+				</Group>
+				<SimpleDataTable<ReferralLedgerRow>
+					columns={columns}
+					data={rows}
+					globalFilter={globalFilter}
+					onGlobalFilterChange={setGlobalFilter}
+					emptyLabel={t`No referral agreements yet.`}
 				/>
-			</Group>
-			<SimpleDataTable<ReferralLedgerRow>
+			</Stack>
+			<ExternalLedOrgsSection />
+		</Stack>
+	);
+}
+
+// Staff visibility (ISSUE-028): orgs created by users who are external
+// collaborators of a partner — a conversion / upsell signal.
+function ExternalLedOrgsSection() {
+	const { data, isLoading } = useQuery({
+		queryFn: () =>
+			fetchJson<ExternalLedOrgRow[]>("/v2/admin/external-led-orgs"),
+		queryKey: ["v2", "admin", "external-led-orgs"],
+		staleTime: 60_000,
+	});
+	const columns = useMemo<ColumnDef<ExternalLedOrgRow, unknown>[]>(
+		() => [
+			{
+				accessorFn: (r) => r.org_name ?? "",
+				cell: ({ row }) => (
+					<Anchor
+						component={I18nLink}
+						to={`/o/${row.original.org_id}/overview`}
+						size="xs"
+						fw={500}
+					>
+						{row.original.org_name || row.original.org_id.slice(0, 8)}
+					</Anchor>
+				),
+				header: t`New organisation`,
+				id: "org_name",
+			},
+			{
+				accessorFn: (r) => r.partner_org_names.join(", "),
+				cell: ({ row }) => (
+					<Text size="xs">{row.original.partner_org_names.join(", ")}</Text>
+				),
+				header: t`External of partner`,
+				id: "partner_org_names",
+			},
+			{
+				accessorFn: (r) => r.creator_email ?? r.creator_name ?? "",
+				cell: ({ row }) => (
+					<Text size="xs">
+						{row.original.creator_name || row.original.creator_email || ""}
+					</Text>
+				),
+				header: t`Created by`,
+				id: "creator",
+			},
+			{
+				accessorKey: "created_at",
+				cell: ({ row }) => formatDate(row.original.created_at),
+				header: t`Created`,
+				id: "created_at",
+			},
+		],
+		[],
+	);
+	if (isLoading) {
+		return (
+			<Center py="md">
+				<Loader size="sm" color="gray" />
+			</Center>
+		);
+	}
+	const rows = data ?? [];
+	return (
+		<Stack gap="sm">
+			<Text size="sm" fw={600}>
+				<Trans>Client orgs from partners</Trans>
+			</Text>
+			<Text size="xs" c="dimmed">
+				<Trans>
+					Organisations created by people who are external collaborators of a
+					partner. A signal they may want their own plan.
+				</Trans>
+			</Text>
+			<SimpleDataTable<ExternalLedOrgRow>
 				columns={columns}
 				data={rows}
-				globalFilter={globalFilter}
-				onGlobalFilterChange={setGlobalFilter}
-				emptyLabel={t`No referral agreements yet.`}
+				globalFilter=""
+				onGlobalFilterChange={() => {}}
+				emptyLabel={t`No external-led organisations yet.`}
 			/>
 		</Stack>
 	);

@@ -2,8 +2,10 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Alert,
+	Anchor,
 	Button,
 	Center,
+	Checkbox,
 	Container,
 	Group,
 	Loader,
@@ -37,11 +39,17 @@ interface CreatedWorkspace {
 	name: string;
 }
 
+// Placeholder until the partner agreement page exists (ISSUE-026). Swap for the
+// real URL when ready.
+const PARTNER_AGREEMENT_URL = "#";
+
 async function createWorkspace(payload: {
 	name: string;
 	org_id: string;
 	inherit_organisation_admins: boolean;
 	bill_separately: boolean;
+	data_owner_email?: string;
+	partner_agreement_accepted?: boolean;
 }): Promise<CreatedWorkspace> {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		body: JSON.stringify(payload),
@@ -114,6 +122,9 @@ export const CreateWorkspaceRoute = () => {
 	const [access, setAccess] = useState<Access>("everyone");
 	const [memberEmails, setMemberEmails] = useState<string[]>([]);
 	const [billFor, setBillFor] = useState<BillFor>("internal");
+	// External-client (ISSUE-026): data owner + partner-agreement acceptance.
+	const [dataOwnerEmail, setDataOwnerEmail] = useState("");
+	const [agreementAccepted, setAgreementAccepted] = useState(false);
 
 	useDocumentTitle(t`Create workspace | dembrane`);
 
@@ -176,11 +187,18 @@ export const CreateWorkspaceRoute = () => {
 			if (!targetOrganisationId) {
 				throw new Error(t`Choose an organisation first`);
 			}
+			const isClient = isPartner && billFor === "client";
 			const ws = await createWorkspace({
-				bill_separately: isPartner && billFor === "client",
+				bill_separately: isClient,
 				inherit_organisation_admins: access === "everyone",
 				name: name.trim(),
 				org_id: targetOrganisationId,
+				...(isClient
+					? {
+							data_owner_email: dataOwnerEmail.trim(),
+							partner_agreement_accepted: agreementAccepted,
+						}
+					: {}),
 			});
 			// Invite-only: add the hand-picked members now. The workspace already
 			// exists, so a per-member failure is surfaced but never unwinds it.
@@ -312,7 +330,14 @@ export const CreateWorkspaceRoute = () => {
 		accessOptions.find((o) => o.value === access)?.title ?? "";
 
 	const canAdvanceFromName = name.trim().length > 0;
-	const canSubmit = canAdvanceFromName && Boolean(targetOrganisationId);
+	// External-client billing step (ISSUE-026): require a data owner email and
+	// agreement acceptance before leaving the Billing step / submitting.
+	const isClientWorkspace = isPartner && billFor === "client";
+	const dataOwnerValid = /.+@.+\..+/.test(dataOwnerEmail.trim());
+	const canAdvanceFromBilling =
+		!isClientWorkspace || (dataOwnerValid && agreementAccepted);
+	const canSubmit =
+		canAdvanceFromName && canAdvanceFromBilling && Boolean(targetOrganisationId);
 
 	return (
 		<Container size="xl" py="xl" px="lg">
@@ -435,6 +460,47 @@ export const CreateWorkspaceRoute = () => {
 											/>
 										</Stack>
 									</Radio.Group>
+
+									{billFor === "client" && (
+										<Stack gap={10} mt={4}>
+											<TextInput
+												type="email"
+												required
+												label={<Trans>Client data owner email</Trans>}
+												description={
+													<Trans>
+														The person at the client who owns this data. They
+														become the workspace's data owner and the contact
+														for handing it off later.
+													</Trans>
+												}
+												placeholder="owner@client.com"
+												value={dataOwnerEmail}
+												onChange={(e) =>
+													setDataOwnerEmail(e.currentTarget.value)
+												}
+												data-testid="create-workspace-data-owner"
+											/>
+											<Checkbox
+												checked={agreementAccepted}
+												onChange={(e) =>
+													setAgreementAccepted(e.currentTarget.checked)
+												}
+												data-testid="create-workspace-agreement"
+												label={
+													<Text size="sm">
+														<Trans>
+															I accept the{" "}
+															<Anchor href={PARTNER_AGREEMENT_URL} target="_blank">
+																partner agreement
+															</Anchor>{" "}
+															for using dembrane with an external client.
+														</Trans>
+													</Text>
+												}
+											/>
+										</Stack>
+									)}
 								</>
 							) : (
 								<Paper withBorder p="md" radius="sm">
@@ -598,7 +664,10 @@ export const CreateWorkspaceRoute = () => {
 						<Button
 							size="md"
 							px="xl"
-							disabled={step === 0 && !canAdvanceFromName}
+							disabled={
+								(step === 0 && !canAdvanceFromName) ||
+								(step === 1 && !canAdvanceFromBilling)
+							}
 							onClick={() => setStep(step + 1)}
 						>
 							<Trans>Next</Trans>

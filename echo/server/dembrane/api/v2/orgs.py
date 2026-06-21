@@ -445,6 +445,50 @@ async def list_my_orgs(
     return out
 
 
+async def _partner_orgs_user_is_external_of(app_user_id: str) -> list[str]:
+    """Names of PARTNER orgs in which this user is an external collaborator.
+
+    External (role='external') ⟺ no org_membership; the user holds the role on a
+    workspace owned by a partner org. Used to flag external-led org signups
+    (ISSUE-028). Returns [] when the user isn't an external of any partner.
+    """
+    mems = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "user_id": {"_eq": app_user_id},
+                    "role": {"_eq": "external"},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["workspace_id"],
+                "limit": -1,
+            }
+        },
+    )
+    ws_ids = [m["workspace_id"] for m in mems if isinstance(m, dict) and m.get("workspace_id")]
+    if not ws_ids:
+        return []
+    workspaces = await async_directus.get_items(
+        "workspace",
+        {"query": {"filter": {"id": {"_in": ws_ids}}, "fields": ["org_id"], "limit": -1}},
+    )
+    org_ids = list({w["org_id"] for w in workspaces if isinstance(w, dict) and w.get("org_id")})
+    if not org_ids:
+        return []
+    partner_orgs = await async_directus.get_items(
+        "org",
+        {
+            "query": {
+                "filter": {"id": {"_in": org_ids}, "is_partner": {"_eq": True}},
+                "fields": ["name"],
+                "limit": -1,
+            }
+        },
+    )
+    return [o["name"] for o in partner_orgs if isinstance(o, dict) and o.get("name")]
+
+
 @router.post("", response_model=CreateOrgResponse)
 async def create_org(
     body: CreateOrgRequest,
@@ -505,6 +549,33 @@ async def create_org(
     await on_workspace_created(workspace_id=ws_id, creator_app_user_id=app_user_id)
 
     logger.info(f"Created org {org_id} '{name}' + default workspace {ws_id} for {app_user_id}")
+
+    # ISSUE-028: when an external collaborator of a PARTNER workspace spins up
+    # their own org, that is a strong upsell signal — notify staff. Best-effort:
+    # never fail org creation on a notification hiccup.
+    try:
+        partner_org_names = await _partner_orgs_user_is_external_of(app_user_id)
+        if partner_org_names:
+            from dembrane.notifications import audience_staff, emit_to_audience
+
+            who = app_user.get("display_name") or app_user.get("email") or "An external user"
+            partners = ", ".join(partner_org_names)
+            staff_ids = await audience_staff()
+            if staff_ids:
+                await emit_to_audience(
+                    staff_ids,
+                    actor_user_id=app_user_id,
+                    event_code="EXTERNAL_CREATED_ORG",
+                    title=f"External of a partner created an org: {name}",
+                    message=(
+                        f"{who} is an external collaborator of {partners} and just "
+                        f"created their own organisation '{name}'. Possible upsell."
+                    ),
+                    action="NONE",
+                )
+    except Exception:  # noqa: BLE001 — notification must never break org creation
+        logger.exception("external-led-org staff notification failed for org %s", org_id)
+
     return CreateOrgResponse(org_id=org_id, workspace_id=ws_id)
 
 

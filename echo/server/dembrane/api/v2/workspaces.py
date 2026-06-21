@@ -160,6 +160,9 @@ async def list_workspaces(
         return WorkspaceListResponse(workspaces=[], organisations=[])
 
     app_user_id = app_user["id"]
+    # For the data-owner self-view (ISSUE-026): compare the workspace's
+    # data_owner_email against the current user's email.
+    me_email = (app_user.get("email") or "").strip().lower()
 
     # Get all active workspace memberships
     memberships = await async_directus.get_items(
@@ -228,6 +231,8 @@ async def list_workspaces(
                         "created_at",
                         # Account scope → pooled (org) vs billed-on-its-own.
                         "billing_account_id.org_id",
+                        # Data owner of an external-client workspace (ISSUE-026).
+                        "data_owner_email",
                         *nested_billing_fields(),
                     ],
                     "limit": -1,
@@ -361,6 +366,8 @@ async def list_workspaces(
                     isinstance(ws.get("billing_account_id"), dict)
                     and not ws["billing_account_id"].get("org_id")
                 ),
+                is_data_owner=bool(me_email)
+                and (ws.get("data_owner_email") or "").strip().lower() == me_email,
                 logo_url=ws.get("logo_url"),
                 org_logo_url=org_logo_map.get(org_id),
                 project_count=project_count,
@@ -597,6 +604,23 @@ async def create_workspace(
     visibility = "open_to_organisation" if body.inherit_organisation_admins else "private"
     ws_id = generate_uuid()
 
+    # External-client workspaces (ISSUE-026): the creator must name the client's
+    # data owner and accept the partner agreement. Hard-block otherwise — this is
+    # the compliance gate that makes the data-ownership claim real.
+    separate = getattr(body, "bill_separately", False)
+    data_owner_email = (body.data_owner_email or "").strip().lower() or None
+    if separate:
+        if not data_owner_email:
+            raise HTTPException(
+                status_code=400,
+                detail="A data owner email is required for an external-client workspace.",
+            )
+        if not body.partner_agreement_accepted:
+            raise HTTPException(
+                status_code=400,
+                detail="You must accept the partner agreement to create an external-client workspace.",
+            )
+
     # Org manages billing by default: the workspace joins the org's account.
     # bill_separately (partner "for another client") mints a workspace-scoped
     # account instead, billed on its own and handoff-ready.
@@ -607,7 +631,6 @@ async def create_workspace(
         billing_account_blocks_new_workspace,
     )
 
-    separate = getattr(body, "bill_separately", False)
     if separate:
         account_id = await create_workspace_scoped_account(
             tier="free", created_by=app_user_id, label=f"{body.name.strip()} billing"
@@ -627,19 +650,21 @@ async def create_workspace(
     # (observers exist only in external-client workspaces) and what the
     # data-owner step (ISSUE-026) builds on.
     usage_context = "external" if separate else "internal"
-    await async_directus.create_item(
-        "workspace",
-        {
-            "id": ws_id,
-            "org_id": org_id,
-            "name": body.name.strip(),
-            "visibility": visibility,
-            "is_default": False,
-            "created_by": app_user_id,
-            "billing_account_id": account_id,
-            "usage_context": usage_context,
-        },
-    )
+    ws_row: dict = {
+        "id": ws_id,
+        "org_id": org_id,
+        "name": body.name.strip(),
+        "visibility": visibility,
+        "is_default": False,
+        "created_by": app_user_id,
+        "billing_account_id": account_id,
+        "usage_context": usage_context,
+    }
+    if separate:
+        # Data owner + agreement acceptance for the external-client workspace.
+        ws_row["data_owner_email"] = data_owner_email
+        ws_row["partner_agreement_accepted_at"] = datetime.now(timezone.utc).isoformat()
+    await async_directus.create_item("workspace", ws_row)
     if separate:
         await link_account_to_workspace(account_id, ws_id)
 
@@ -1392,6 +1417,32 @@ async def _caller_admins_organisation(org_id: str, app_user_id: str) -> bool:
     return isinstance(rows, list) and bool(rows)
 
 
+async def _assert_workspace_scoped_billing(ws: dict) -> dict:
+    """Raise 409 unless the workspace bills on its own (workspace-scoped) account.
+
+    Returns the billing-account row so callers can reuse it. The authoritative
+    test for "external collaboration" in a billing context is account scope: an
+    org-scoped account pools many workspaces (internal); a workspace-scoped one
+    funds exactly this workspace (the partner / external-client case). ISSUE-027.
+    """
+    account_id = ws.get("billing_account_id")
+    account = (
+        await async_directus.get_item("billing_account", account_id)
+        if account_id
+        else None
+    )
+    if not account or account.get("org_id"):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "This workspace is billed under its organisation's shared plan, so "
+                "it can't be handed off. Only workspaces billed on their own "
+                "(for an external client) can be transferred."
+            ),
+        )
+    return account
+
+
 @router.post(
     "/{workspace_id}/handoff/initiate",
     response_model=HandoffResponse,
@@ -1421,6 +1472,12 @@ async def initiate_handoff(
             status_code=403,
             detail="Only the billing organisation's admins can initiate handoff",
         )
+
+    # ISSUE-027: handoff only applies to external-client workspaces, which bill on
+    # their OWN (workspace-scoped) account. An org-pooled (internal) workspace was
+    # never an external collaboration — refuse, otherwise the re-parent would
+    # detach a workspace from a shared org plan.
+    await _assert_workspace_scoped_billing(ws)
 
     if body.target_organisation_id == billing_organisation_id:
         raise HTTPException(
@@ -1506,6 +1563,15 @@ async def accept_handoff(
             detail="Only the target organisation's admins can accept this handoff",
         )
 
+    # Defensive: must still be a workspace-scoped account (ISSUE-027). The
+    # account is NOT re-scoped to the client org — it stays workspace-scoped so
+    # the prepaid term/seats stay isolated to this one workspace and notification
+    # routing keeps resolving through the workspace's admins (which now include
+    # the client org via inheritance). Billing follows the workspace because
+    # billed_to_team_id flips below; tier/seats/paid-through carry over for free
+    # since it is the same account row — no credit math.
+    account = await _assert_workspace_scoped_billing(ws)
+
     prior_billing_organisation = ws.get("billed_to_team_id") or ws.get("org_id")
 
     await async_directus.update_item(
@@ -1518,6 +1584,18 @@ async def accept_handoff(
             "handoff_target_team_id": None,
         },
     )
+
+    # The workspace's resolved org changed: refresh usage caches for both orgs +
+    # the workspace + the account so the client org's usage box shows it at once.
+    from dembrane.cache_utils import invalidate_org_usage, invalidate_workspace_usage
+    from dembrane.billing_service import invalidate_account_usage_caches
+
+    await invalidate_workspace_usage(ctx.workspace_id)
+    await invalidate_org_usage(target_organisation_id)
+    if prior_billing_organisation:
+        await invalidate_org_usage(prior_billing_organisation)
+    if account.get("id"):
+        await invalidate_account_usage_caches(account["id"])
 
     # Notify both sides: partner loses billing, client gains ownership.
     from dembrane.notifications import emit_to_audience, audience_organisation_admins
@@ -1546,16 +1624,25 @@ async def accept_handoff(
         actor_user_id=ctx.app_user_id,
         event_code="PARTNER_HANDOFF_ACCEPTED",
         title=f"{ws_name} is now yours",
-        message="Your organisation now owns this workspace's subscription.",
+        message=(
+            "Your organisation now owns this workspace's subscription. The current "
+            "plan and seats carry over. You won't be billed until renewal."
+        ),
         action="NAVIGATE_WS",
         ref_workspace_id=ctx.workspace_id,
         ref_org_id=target_organisation_id,
     )
 
-    # org/user IDs redacted: CodeQL flags them as sensitive.
+    # org/user IDs redacted (CodeQL flags them as sensitive); billing facts of the
+    # transfer are non-PII and logged for the account manager (ISSUE-027 AC).
     logger.info(
-        "handoff_accepted workspace=%s from=[redacted] to=[redacted] by=[redacted]",
+        "handoff_accepted workspace=%s account=%s tier=%s provisioned_seats=%s "
+        "paid_through=%s from=[redacted] to=[redacted] by=[redacted]",
         ctx.workspace_id,
+        account.get("id"),
+        account.get("tier"),
+        account.get("provisioned_seats"),
+        account.get("tier_expires_at"),
     )
 
     return HandoffResponse(status="completed", workspace_id=ctx.workspace_id)

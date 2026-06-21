@@ -971,6 +971,137 @@ async def list_referral_ledger(
     return out
 
 
+class ExternalLedOrgRow(BaseModel):
+    """An org created by a user who is an external collaborator of a partner.
+
+    The signal we watch (ISSUE-028): an external of a partner's workspace spun up
+    their own org — a strong upsell / handoff opportunity.
+    """
+
+    org_id: str
+    org_name: str
+    created_at: Optional[str] = None
+    creator_user_id: Optional[str] = None
+    creator_email: Optional[str] = None
+    creator_name: Optional[str] = None
+    # Partner orgs the creator is an external collaborator of.
+    partner_org_names: list[str] = []
+
+
+@router.get("/external-led-orgs", response_model=list[ExternalLedOrgRow])
+async def list_external_led_orgs(
+    auth: DependencyDirectusSession,
+) -> list[ExternalLedOrgRow]:
+    """Orgs created by users who are external collaborators of a partner org.
+
+    Staff visibility for the conversion signal in ISSUE-028: when a partner's
+    external client creates their own org, surface it here so staff can follow up.
+    """
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    # 1. All external workspace memberships → user_id, workspace_id.
+    ext_mems = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {"role": {"_eq": "external"}, "deleted_at": {"_null": True}},
+                "fields": ["user_id", "workspace_id"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(ext_mems, list) or not ext_mems:
+        return []
+
+    ws_ids = list({m["workspace_id"] for m in ext_mems if m.get("workspace_id")})
+    ws_rows = await async_directus.get_items(
+        "workspace",
+        {"query": {"filter": {"id": {"_in": ws_ids}}, "fields": ["id", "org_id"], "limit": -1}},
+    )
+    ws_to_org = {
+        w["id"]: w["org_id"]
+        for w in (ws_rows if isinstance(ws_rows, list) else [])
+        if w.get("org_id")
+    }
+
+    # 2. Which of those orgs are partners.
+    org_ids = list(set(ws_to_org.values()))
+    partner_rows = await async_directus.get_items(
+        "org",
+        {
+            "query": {
+                "filter": {"id": {"_in": org_ids}, "is_partner": {"_eq": True}},
+                "fields": ["id", "name"],
+                "limit": -1,
+            }
+        },
+    ) if org_ids else []
+    partner_name_by_id = {
+        o["id"]: o.get("name", "")
+        for o in (partner_rows if isinstance(partner_rows, list) else [])
+    }
+
+    # 3. Map each external user → the partner org names they collaborate with.
+    user_to_partners: dict[str, set[str]] = {}
+    for m in ext_mems:
+        uid, wid = m.get("user_id"), m.get("workspace_id")
+        oid = ws_to_org.get(wid)
+        if uid and oid and oid in partner_name_by_id:
+            user_to_partners.setdefault(uid, set()).add(partner_name_by_id[oid])
+    if not user_to_partners:
+        return []
+
+    # 4. Orgs created by those external users.
+    created_orgs = await async_directus.get_items(
+        "org",
+        {
+            "query": {
+                "filter": {
+                    "created_by": {"_in": list(user_to_partners.keys())},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id", "name", "created_at", "created_by"],
+                "sort": ["-created_at"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(created_orgs, list) or not created_orgs:
+        return []
+
+    # 5. Enrich with creator identity.
+    creator_ids = list({o["created_by"] for o in created_orgs if o.get("created_by")})
+    users = await async_directus.get_items(
+        "app_user",
+        {
+            "query": {
+                "filter": {"id": {"_in": creator_ids}},
+                "fields": ["id", "email", "display_name"],
+                "limit": -1,
+            }
+        },
+    ) if creator_ids else []
+    user_by_id = {u["id"]: u for u in (users if isinstance(users, list) else [])}
+
+    out: list[ExternalLedOrgRow] = []
+    for o in created_orgs:
+        creator_id = o.get("created_by")
+        u = user_by_id.get(creator_id or "", {})
+        out.append(
+            ExternalLedOrgRow(
+                org_id=str(o.get("id")),
+                org_name=o.get("name", ""),
+                created_at=o.get("created_at"),
+                creator_user_id=creator_id,
+                creator_email=u.get("email"),
+                creator_name=u.get("display_name"),
+                partner_org_names=sorted(user_to_partners.get(creator_id or "", set())),
+            )
+        )
+    return out
+
+
 # ── Staff workspace discount edit ──
 
 

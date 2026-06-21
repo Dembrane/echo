@@ -1,4 +1,5 @@
 import { Trans } from "@lingui/react/macro";
+import { Badge } from "@mantine/core";
 import { AppWindow, Gear, Plus, PushPin, Users } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
@@ -40,6 +41,18 @@ export const WorkspaceHomeView = () => {
 			{/* Back button doubles as the section title: centered label is the
 			    current context (the workspace), not the destination. */}
 			<BackButton to={backTo} label={workspace?.name ?? backLabel} center />
+
+			{workspace?.is_data_owner && (
+				<Badge
+					color="primary"
+					variant="light"
+					radius="sm"
+					className="mx-auto my-1"
+					data-testid="data-owner-badge"
+				>
+					<Trans>You are the data owner</Trans>
+				</Badge>
+			)}
 
 			<NavItem
 				to={`${base}/home`}

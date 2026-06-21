@@ -139,6 +139,10 @@ class WorkspaceSummary(BaseModel):
     # Bills on its own (workspace-scoped) account rather than the org's pooled
     # plan — surfaced so tier displays can mark it "(Partner)".
     bills_separately: bool = False
+    # True when the current user is the named data owner of this external-client
+    # workspace (their email matches workspace.data_owner_email). ISSUE-026.
+    # We return a boolean, not the email, to respect the email-privacy rule.
+    is_data_owner: bool = False
     logo_url: Optional[str] = None
     # Parent organisation's logo — handy for card rendering so the client doesn't
     # need a second lookup. Nullable because organisations without a logo exist.
@@ -208,6 +212,11 @@ class CreateWorkspaceRequest(BaseModel):
     # (org manages billing). True → mint a workspace-scoped account billed
     # separately (the partner "for another client" path; handoff-ready).
     bill_separately: bool = False
+    # External-client (ISSUE-026): when bill_separately is true, the creator must
+    # name the client's data owner (email only for now) and accept the partner
+    # agreement. The server hard-blocks external creation without these.
+    data_owner_email: Optional[EmailStr] = None
+    partner_agreement_accepted: bool = False
 
 
 class CreateWorkspaceResponse(BaseModel):

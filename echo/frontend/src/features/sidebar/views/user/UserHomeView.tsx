@@ -1,13 +1,16 @@
 import { Trans } from "@lingui/react/macro";
+import { useDisclosure } from "@mantine/hooks";
 import {
 	Buildings,
 	FolderOpen,
 	Folders,
 	House,
+	Plus,
 	ShieldStar,
 	Sparkle,
 } from "@phosphor-icons/react";
 import { useMemo } from "react";
+import { CreateOrganisationModal } from "@/components/organisation/CreateOrganisationModal";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { NavItem } from "../../primitives/NavItem";
@@ -59,6 +62,11 @@ export const UserHomeView = () => {
 		[orgs],
 	);
 	const noWorkspaces = !isLoading && workspaces.length === 0;
+	// Owns no organisation of their own (org_membership). External-only users
+	// have workspaces (as external) but no owned org — they can always spin up
+	// their own org (ISSUE-028). meV2.orgs is the owned-org list.
+	const ownsNoOrg = (meV2?.orgs?.length ?? 0) === 0;
+	const [createOrgOpened, createOrgHandlers] = useDisclosure(false);
 	const isStaff = meV2?.is_staff === true;
 	const needsOnboarding = meV2?.onboarding_completed === false;
 	const workspacesWithoutOrg = useMemo(
@@ -112,6 +120,20 @@ export const UserHomeView = () => {
 							pushes
 						/>
 					))}
+					{ownsNoOrg && (
+						<button
+							type="button"
+							onClick={createOrgHandlers.open}
+							className="relative flex h-[30px] items-center gap-2 rounded-md px-2 text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
+							style={{ color: "#4169e1" }}
+							data-testid="sidebar-create-org"
+						>
+							<Plus size={16} />
+							<span className="truncate">
+								<Trans>Set up your organisation</Trans>
+							</span>
+						</button>
+					)}
 					{workspacesWithoutOrg.map((workspace) => (
 						<NavItem
 							key={workspace.id}
@@ -132,6 +154,10 @@ export const UserHomeView = () => {
 					)}
 				</>
 			)}
+			<CreateOrganisationModal
+				opened={createOrgOpened}
+				onClose={createOrgHandlers.close}
+			/>
 		</nav>
 	);
 };
