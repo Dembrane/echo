@@ -366,3 +366,34 @@ def test_create_request_has_no_bill_separately_flag():
     assert "data_owner_org_name" in fields
     assert "data_owner_email" in fields
     assert "partner_agreement_accepted" in fields
+
+
+# ── ISSUE-026 guard: data owner must be external to the org ─────────────
+
+
+@pytest.mark.asyncio
+async def test_data_owner_org_member_check():
+    from dembrane.api.v2 import workspaces as ws_mod
+
+    # email maps to an app_user who IS an active member of the org → True (block).
+    async def get_items_member(collection, query=None):
+        if collection == "app_user":
+            return [{"id": "au-x"}]
+        return [{"id": "m-1"}]  # org_membership row exists
+
+    with patch.object(ws_mod.async_directus, "get_items", new=AsyncMock(side_effect=get_items_member)):
+        assert await ws_mod._is_org_member_by_email("org-1", "x@org.com") is True
+
+    # email has no app_user → not a member.
+    async def get_items_no_user(collection, query=None):
+        return []
+
+    with patch.object(ws_mod.async_directus, "get_items", new=AsyncMock(side_effect=get_items_no_user)):
+        assert await ws_mod._is_org_member_by_email("org-1", "ext@client.com") is False
+
+    # app_user exists but no membership in this org → external, allowed.
+    async def get_items_no_membership(collection, query=None):
+        return [{"id": "au-x"}] if collection == "app_user" else []
+
+    with patch.object(ws_mod.async_directus, "get_items", new=AsyncMock(side_effect=get_items_no_membership)):
+        assert await ws_mod._is_org_member_by_email("org-1", "ext@client.com") is False

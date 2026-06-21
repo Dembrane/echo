@@ -545,6 +545,36 @@ async def list_workspaces(
     )
 
 
+async def _is_org_member_by_email(org_id: str, email: str) -> bool:
+    """Whether `email` belongs to an active member of `org_id` (ISSUE-026 guard).
+
+    Used to reject naming an existing org member as an external workspace's data
+    owner — the data owner must be outside the org for the separate
+    compliance/billing context to make sense.
+    """
+    users = await async_directus.get_items(
+        "app_user",
+        {"query": {"filter": {"email": {"_eq": email}}, "fields": ["id"], "limit": 1}},
+    )
+    if not isinstance(users, list) or not users:
+        return False
+    uid = users[0].get("id")
+    rows = await async_directus.get_items(
+        "org_membership",
+        {
+            "query": {
+                "filter": {
+                    "org_id": {"_eq": org_id},
+                    "user_id": {"_eq": uid},
+                    "deleted_at": {"_null": True},
+                },
+                "limit": 1,
+            }
+        },
+    )
+    return isinstance(rows, list) and len(rows) > 0
+
+
 async def _invite_data_owner_observer(
     *,
     workspace_id: str,
@@ -687,6 +717,20 @@ async def create_workspace(
             raise HTTPException(
                 status_code=400,
                 detail="You must accept the partner agreement to create an external-client workspace.",
+            )
+        # The data owner must be EXTERNAL to this org (ISSUE-026): an external
+        # workspace exists for a separate compliance/billing context, so naming
+        # an existing org member as its data owner is contradictory. Block it;
+        # for internal collaborators, create an internal workspace instead.
+        if await _is_org_member_by_email(org_id, data_owner_email):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "That data owner is already a member of your organisation. "
+                    "External-client workspaces need a data owner outside your "
+                    "organisation; for internal collaborators, create an "
+                    "internal workspace instead."
+                ),
             )
 
     # Org manages billing by default: the workspace joins the org's account.
@@ -1710,8 +1754,8 @@ async def accept_handoff(
         event_code="PARTNER_HANDOFF_ACCEPTED",
         title=f"{ws_name} is now yours",
         message=(
-            "Your organisation now owns this workspace's subscription. The current "
-            "plan and seats carry over. You won't be billed until renewal."
+            "Your organisation now owns this workspace. Our team will coordinate "
+            "the billing transfer with you. Nothing changes until then."
         ),
         action="NAVIGATE_WS",
         ref_workspace_id=ctx.workspace_id,

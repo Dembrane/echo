@@ -29,7 +29,7 @@ import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
-import { API_BASE_URL } from "@/config";
+import { API_BASE_URL, LEGAL_TERMS_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -39,9 +39,10 @@ interface CreatedWorkspace {
 	name: string;
 }
 
-// Placeholder until the partner agreement page exists (ISSUE-026). Swap for the
-// real URL when ready.
-const PARTNER_AGREEMENT_URL = "#";
+// The partner agreement is, for now, the same legal terms accepted at
+// registration (founder decision 2026-06-21). Swap for a dedicated partner
+// agreement page if one is published later.
+const PARTNER_AGREEMENT_URL = LEGAL_TERMS_URL;
 
 async function createWorkspace(payload: {
 	name: string;
