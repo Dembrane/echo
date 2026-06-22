@@ -15,6 +15,7 @@ import {
 	Menu,
 	Paper,
 	SimpleGrid,
+	Skeleton,
 	Stack,
 	Tabs,
 	Text,
@@ -547,6 +548,45 @@ export const OrganisationRoute = () => {
 		},
 	});
 
+	// Org admins self-join a workspace they're not in yet. /invite would 403
+	// (it needs existing workspace access via member:invite); /join authorizes on
+	// the caller's org role and writes their own direct admin row.
+	const joinWorkspaceMutation = useMutation({
+		mutationFn: async (workspaceId: string) => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/workspaces/${workspaceId}/join`,
+				{ credentials: "include", method: "POST" },
+			);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(
+					typeof data.detail === "string"
+						? data.detail
+						: "Couldn't join workspace",
+				);
+			}
+			return res.json();
+		},
+		onError: (e: Error) => toast.error(e.message),
+		onSuccess: (_data, workspaceId) => {
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "organisation", organisationId, "members"],
+			});
+			// Refresh the workspace lists so the joined workspace shows in the
+			// sidebar and overview right away.
+			for (const key of [
+				["v2", "workspaces"],
+				["v2", "workspaces-context"],
+				["v2", "discoverable-workspaces", organisationId],
+				["v2", "workspace-settings", workspaceId],
+				["v2", "workspace-usage", workspaceId],
+			]) {
+				queryClient.invalidateQueries({ queryKey: key });
+			}
+			toast.success(t`Joined as admin`);
+		},
+	});
+
 	const { data: meV2 } = useV2Me();
 	const myAppUserId = meV2?.id ?? null;
 
@@ -564,7 +604,7 @@ export const OrganisationRoute = () => {
 
 	const filteredMembers = useMemo(() => {
 		const q = search.trim().toLowerCase();
-		return members.filter((m) => {
+		const list = members.filter((m) => {
 			// Matrix §5: internal organisation roles are Admin / Billing / Member.
 			// Externals show up as a fourth bucket ("externals") — they have
 			// no org_membership, only per-workspace external rows. The
@@ -589,7 +629,17 @@ export const OrganisationRoute = () => {
 				(m.email || "").toLowerCase().includes(q)
 			);
 		});
-	}, [members, search, roleFilter]);
+		// Pin the viewer's own row to the top (stable sort keeps the rest in
+		// place) so "you" are always the first card you see.
+		if (myAppUserId) {
+			list.sort(
+				(a, b) =>
+					(a.app_user_id === myAppUserId ? 0 : 1) -
+					(b.app_user_id === myAppUserId ? 0 : 1),
+			);
+		}
+		return list;
+	}, [members, search, roleFilter, myAppUserId]);
 
 	if (organisationLoading) {
 		return (
@@ -841,7 +891,18 @@ export const OrganisationRoute = () => {
 											onClick={() => setInviteOpen(true)}
 										/>
 									)}
-									{members.length === 0 && (
+									{membersLoading && (
+										<Stack
+											gap="xs"
+											aria-busy="true"
+											aria-label={t`Loading members`}
+										>
+											{["s1", "s2", "s3", "s4"].map((k) => (
+												<Skeleton key={k} height={64} radius="sm" />
+											))}
+										</Stack>
+									)}
+									{!membersLoading && members.length === 0 && (
 										<Stack align="center" gap={6} py={48}>
 											<Title order={4} fw={400}>
 												<Trans>No one on the organisation yet.</Trans>
@@ -881,6 +942,7 @@ export const OrganisationRoute = () => {
 													workspaceId: ws,
 												})
 											}
+											onJoinWorkspace={(ws) => joinWorkspaceMutation.mutate(ws)}
 											onRemove={() =>
 												removeOrganisationMemberMutation.mutate({
 													userId: m.user_id,
@@ -1510,6 +1572,7 @@ function OrganisationPersonCard({
 	onOrganisationRoleChange,
 	onWorkspaceRoleChange,
 	onAddToWorkspace,
+	onJoinWorkspace,
 	onRemove,
 }: {
 	member: OrganisationMember;
@@ -1523,6 +1586,7 @@ function OrganisationPersonCard({
 		next: string,
 	) => void;
 	onAddToWorkspace: (workspaceId: string, role: string) => void;
+	onJoinWorkspace: (workspaceId: string) => void;
 	onRemove: () => void;
 }) {
 	const [open, setOpen] = useState(false);
@@ -1534,6 +1598,18 @@ function OrganisationPersonCard({
 	const { workspaces: myWorkspaces } = useWorkspace();
 	const myWorkspaceIds = useMemo(
 		() => new Set(myWorkspaces.map((w) => w.id)),
+		[myWorkspaces],
+	);
+	// Workspaces the VIEWER can invite others into (they're admin/owner there).
+	// Inviting requires existing workspace access — for any other workspace we
+	// surface a "join first" hint instead of a button that 403s server-side.
+	const myInvitableWorkspaceIds = useMemo(
+		() =>
+			new Set(
+				myWorkspaces
+					.filter((w) => w.role === "owner" || w.role === "admin")
+					.map((w) => w.id),
+			),
 		[myWorkspaces],
 	);
 	const canSeeWorkspaceBreakdown = isAdmin || isSelf;
@@ -1724,13 +1800,17 @@ function OrganisationPersonCard({
 						<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
 							<Trans>Per-workspace access</Trans>
 						</Text>
-						<Stack gap={6}>
+						{/* Capped width + per-row hover band so the workspace name (left)
+						    and its control (right) read as one row instead of drifting
+						    apart across a wide card. */}
+						<Stack gap={2} maw={560}>
 							{perWorkspace.map(({ ws, role, isDirect, membershipId }) => (
 								<Group
 									key={ws.id}
 									justify="space-between"
 									wrap="nowrap"
 									gap="sm"
+									className="rounded px-2 py-1 hover:bg-[var(--mantine-color-default-hover)]"
 								>
 									<Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
 										{ws.is_private && (
@@ -1796,7 +1876,45 @@ function OrganisationPersonCard({
 										// workspace invite endpoint with a non-external role
 										// so the server sees this as a direct grant,
 										// not a fresh invitation.
-										member.is_external ? (
+										isSelf ? (
+											// Self-join uses /join (authorized on org role). /invite would
+											// 403 here — an org admin isn't a member of a private
+											// workspace yet. Always grants admin.
+											<Button
+												size="compact-xs"
+												variant="subtle"
+												leftSection={<IconPlus size={12} />}
+												onClick={() =>
+													modals.openConfirmModal({
+														children: (
+															<Text size="sm">
+																<Trans>
+																	Join {ws.name} as <em>admin</em>? It'll show
+																	in your sidebar right after.
+																</Trans>
+															</Text>
+														),
+														labels: { cancel: t`Cancel`, confirm: t`Join` },
+														onConfirm: () => onJoinWorkspace(ws.id),
+														title: t`Join ${ws.name}?`,
+													})
+												}
+											>
+												<Trans>Join</Trans>
+											</Button>
+										) : ws.is_private && !myInvitableWorkspaceIds.has(ws.id) ? (
+											// Can't invite others into a private workspace the viewer
+											// isn't an admin of — say so instead of a button that 403s.
+											<Tooltip
+												label={t`Join ${ws.name} as an admin first to add others.`}
+												multiline
+												w={240}
+											>
+												<Text size="xs" c="dimmed" fs="italic">
+													<Trans>Join first</Trans>
+												</Text>
+											</Tooltip>
+										) : member.is_external ? (
 											// External members can only be added back as external
 											// (ADR-0003), so no role choice here.
 											<Button
