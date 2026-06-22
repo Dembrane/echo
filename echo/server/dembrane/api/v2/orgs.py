@@ -1554,10 +1554,17 @@ async def _rollup_workspace_access(org_id: str, user_ids: list[str]) -> dict[str
     """For each user, count how many workspaces in this organisation they can access.
 
     Access = direct workspace_membership OR derived via org role + settings.
-    Done in Python over the organisation's workspaces to match the derivation logic
-    in dembrane.inheritance exactly.
+    Same result as calling dembrane.inheritance.user_can_access per (workspace,
+    user) pair, but derives in-process from three batched fetches (workspaces,
+    org roles, direct memberships) instead of O(workspaces × users) round-trips.
+    The derived ladder is NOT reimplemented here: direct membership is checked
+    inline (it short-circuits derivation, any role counts) and everything else
+    delegates to the shared derive_workspace_role helper.
     """
-    from dembrane.inheritance import user_can_access
+    from dembrane.inheritance import derive_workspace_role
+
+    if not user_ids:
+        return {}
 
     workspaces = (
         await async_directus.get_items(
@@ -1568,7 +1575,7 @@ async def _rollup_workspace_access(org_id: str, user_ids: list[str]) -> dict[str
                         "org_id": {"_eq": org_id},
                         "deleted_at": {"_null": True},
                     },
-                    "fields": ["id"],
+                    "fields": ["id", "visibility", "settings"],
                     "limit": -1,
                 }
             },
@@ -1578,14 +1585,66 @@ async def _rollup_workspace_access(org_id: str, user_ids: list[str]) -> dict[str
     if not isinstance(workspaces, list) or not workspaces:
         return {uid: 0 for uid in user_ids}
 
+    ws_ids = [w["id"] for w in workspaces if w.get("id")]
+
+    # Org role per user (active rows only) — drives derived access.
+    org_rows = (
+        await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "user_id": {"_in": user_ids},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["user_id", "role"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
+    org_role: dict[str, Optional[str]] = {
+        r["user_id"]: r.get("role")
+        for r in (org_rows if isinstance(org_rows, list) else [])
+        if r.get("user_id")
+    }
+
+    # Direct membership pairs — presence short-circuits derivation (any role counts).
+    mem_rows = (
+        await async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_in": ws_ids},
+                        "user_id": {"_in": user_ids},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["workspace_id", "user_id"],
+                    "limit": -1,
+                }
+            },
+        )
+        or []
+    )
+    direct_pairs: set[tuple[str, str]] = {
+        (r["workspace_id"], r["user_id"])
+        for r in (mem_rows if isinstance(mem_rows, list) else [])
+        if r.get("workspace_id") and r.get("user_id")
+    }
+
     counts = {uid: 0 for uid in user_ids}
     for w in workspaces:
+        wid = w["id"]
         for uid in user_ids:
-            if await user_can_access(w["id"], uid):
+            # Direct membership wins outright (any role). Otherwise fall back to
+            # the shared derived-access ladder.
+            if (wid, uid) in direct_pairs or derive_workspace_role(
+                w, org_role.get(uid), uid
+            ):
                 counts[uid] += 1
-    # Note: O(users × workspaces) round-trips. Fine at current scale; if a
-    # organisation ever grows past ~50 workspaces × 50 members we should batch-fetch
-    # org_memberships + workspace.settings once and derive in-process.
     return counts
 
 
