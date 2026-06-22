@@ -1137,17 +1137,22 @@ msgid "select.all.modal.loading.filters"
 msgstr "Filtres actifs"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:177
-#: src/routes/organisation/OrganisationRoute.tsx:1822
-#: src/routes/organisation/OrganisationRoute.tsx:1829
+#: src/routes/organisation/OrganisationRoute.tsx:1820
+#: src/routes/organisation/OrganisationRoute.tsx:1827
+#: src/routes/organisation/OrganisationRoute.tsx:1841
+#: src/routes/organisation/OrganisationRoute.tsx:1864
 #: src/components/project/ProjectSharingModal.tsx:252
 #: src/components/billing/BillingManager.tsx:1405
 msgid "Add"
 msgstr "Ajouter"
 
 #. placeholder {0}: member.display_name || member.email || t`this person`
+#. placeholder {0}: member.display_name || member.email || t`this person`
 #. placeholder {1}: ws.name
-#. placeholder {2}: displayRole(nextRole)
+#. placeholder {2}: displayRole("external")
+#. placeholder {2}: displayRole(roleOpt)
 #: src/routes/organisation/OrganisationRoute.tsx:1810
+#: src/routes/organisation/OrganisationRoute.tsx:1852
 msgid "Add {0} to {1} as <0>{2}</0>?"
 msgstr ""
 
@@ -1218,7 +1223,8 @@ msgid "Add Tags"
 msgstr "Ajouter des étiquettes"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1825
+#: src/routes/organisation/OrganisationRoute.tsx:1823
+#: src/routes/organisation/OrganisationRoute.tsx:1868
 msgid "Add to {0}?"
 msgstr ""
 
@@ -2352,7 +2358,8 @@ msgstr ""
 #: src/routes/organisation/OrganisationRoute.tsx:1609
 #: src/routes/organisation/OrganisationRoute.tsx:1632
 #: src/routes/organisation/OrganisationRoute.tsx:1655
-#: src/routes/organisation/OrganisationRoute.tsx:1821
+#: src/routes/organisation/OrganisationRoute.tsx:1820
+#: src/routes/organisation/OrganisationRoute.tsx:1863
 #: src/components/workspace/OrganisationProjectsTable.tsx:158
 #: src/components/training/RequestTrainingModal.tsx:97
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
@@ -6793,7 +6800,7 @@ msgstr ""
 msgid "participant.button.finish.no.text.mode"
 msgstr "Non"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1833
+#: src/routes/organisation/OrganisationRoute.tsx:1880
 msgid "No access"
 msgstr ""
 
@@ -9150,7 +9157,7 @@ msgstr ""
 #~ msgid "Remove from favorites"
 #~ msgstr "Retirer des favoris"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1851
+#: src/routes/organisation/OrganisationRoute.tsx:1898
 msgid "Remove from organisation"
 msgstr ""
 
@@ -11234,6 +11241,7 @@ msgstr "Cette partie de la page n'a pas pu se charger. Recharger la page règle 
 #: src/routes/organisation/OrganisationRoute.tsx:1622
 #: src/routes/organisation/OrganisationRoute.tsx:1639
 #: src/routes/organisation/OrganisationRoute.tsx:1814
+#: src/routes/organisation/OrganisationRoute.tsx:1856
 msgid "this person"
 msgstr ""
 
