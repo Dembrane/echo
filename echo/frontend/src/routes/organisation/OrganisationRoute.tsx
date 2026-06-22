@@ -1796,38 +1796,85 @@ function OrganisationPersonCard({
 										// workspace invite endpoint with a non-external role
 										// so the server sees this as a direct grant,
 										// not a fresh invitation.
-										<Button
-											size="compact-xs"
-											variant="subtle"
-											leftSection={<IconPlus size={12} />}
-											onClick={() => {
-												const nextRole = member.is_external
-													? "external"
-													: "member";
-												modals.openConfirmModal({
-													children: (
-														<Text size="sm">
-															<Trans>
-																Add{" "}
-																{member.display_name ||
-																	member.email ||
-																	t`this person`}{" "}
-																to {ws.name} as <em>{displayRole(nextRole)}</em>
-																?
-															</Trans>
-														</Text>
-													),
-													labels: {
-														cancel: t`Cancel`,
-														confirm: t`Add`,
-													},
-													onConfirm: () => onAddToWorkspace(ws.id, nextRole),
-													title: t`Add to ${ws.name}?`,
-												});
-											}}
-										>
-											<Trans>Add</Trans>
-										</Button>
+										member.is_external ? (
+											// External members can only be added back as external
+											// (ADR-0003), so no role choice here.
+											<Button
+												size="compact-xs"
+												variant="subtle"
+												leftSection={<IconPlus size={12} />}
+												onClick={() =>
+													modals.openConfirmModal({
+														children: (
+															<Text size="sm">
+																<Trans>
+																	Add{" "}
+																	{member.display_name ||
+																		member.email ||
+																		t`this person`}{" "}
+																	to {ws.name} as{" "}
+																	<em>{displayRole("external")}</em>?
+																</Trans>
+															</Text>
+														),
+														labels: { cancel: t`Cancel`, confirm: t`Add` },
+														onConfirm: () =>
+															onAddToWorkspace(ws.id, "external"),
+														title: t`Add to ${ws.name}?`,
+													})
+												}
+											>
+												<Trans>Add</Trans>
+											</Button>
+										) : (
+											// No role on this workspace yet: pick the role to grant.
+											// Default state shows "+ Add"; choosing a role creates a
+											// direct grant via onAddToWorkspace.
+											<Menu shadow="md" width={150} position="bottom-end">
+												<Menu.Target>
+													<Button
+														size="compact-xs"
+														variant="subtle"
+														leftSection={<IconPlus size={12} />}
+														rightSection={<IconChevronDown size={10} />}
+													>
+														<Trans>Add</Trans>
+													</Button>
+												</Menu.Target>
+												<Menu.Dropdown>
+													{WS_ROLE_OPTIONS.map((roleOpt) => (
+														<Menu.Item
+															key={roleOpt}
+															onClick={() =>
+																modals.openConfirmModal({
+																	children: (
+																		<Text size="sm">
+																			<Trans>
+																				Add{" "}
+																				{member.display_name ||
+																					member.email ||
+																					t`this person`}{" "}
+																				to {ws.name} as{" "}
+																				<em>{displayRole(roleOpt)}</em>?
+																			</Trans>
+																		</Text>
+																	),
+																	labels: {
+																		cancel: t`Cancel`,
+																		confirm: t`Add`,
+																	},
+																	onConfirm: () =>
+																		onAddToWorkspace(ws.id, roleOpt),
+																	title: t`Add to ${ws.name}?`,
+																})
+															}
+														>
+															{displayRole(roleOpt)}
+														</Menu.Item>
+													))}
+												</Menu.Dropdown>
+											</Menu>
+										)
 									) : ws.is_private ? (
 										<Text size="xs" c="dimmed">
 											<Trans>No access</Trans>

@@ -34,7 +34,11 @@ from dembrane.app_user import resolve_app_user, get_app_user_or_raise
 from dembrane.directus import directus
 from dembrane.policies import ROLE_HIERARCHY
 from dembrane.settings import get_settings
-from dembrane.inheritance import is_org_external_only, on_organisation_member_removed
+from dembrane.inheritance import (
+    is_org_external_only,
+    on_organisation_member_removed,
+    workspace_follows_organisation_admins,
+)
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.seat_capacity import (
     tier_hard_blocks_seats,
@@ -1743,6 +1747,7 @@ async def list_organisation_workspaces(
                         "name",
                         "is_default",
                         "settings",
+                        "visibility",
                         # Account scope → distinguishes a pooled (org) plan from a
                         # workspace-scoped one billed on its own.
                         "billing_account_id.org_id",
@@ -1814,8 +1819,9 @@ async def list_organisation_workspaces(
     # for those private workspaces).
     out: list[OrgWorkspaceSummary] = []
     for ws in workspaces:
-        settings = ws.get("settings") if isinstance(ws.get("settings"), dict) else {}
-        is_private = (settings or {}).get("inherit_organisation_admins") is False
+        # Mirror the access resolver (visibility enum first) instead of the legacy
+        # settings flag, so the UI never claims org-admin access that doesn't exist.
+        is_private = not workspace_follows_organisation_admins(ws)
         if is_org_member and is_private and not caller_is_manager:
             continue
 
@@ -2334,6 +2340,7 @@ async def get_org_usage(
                         "id",
                         "name",
                         "settings",
+                        "visibility",
                         # Account scope: an org-scoped account has org_id set; a
                         # workspace-scoped one (billed separately) does not.
                         "billing_account_id.org_id",
@@ -2455,12 +2462,9 @@ async def get_org_usage(
         # Workspace-scoped billing account → no org_id on the account.
         acct = w.get("billing_account_id")
         bills_separately = isinstance(acct, dict) and not acct.get("org_id")
-        settings = w.get("settings") or {}
-        if not isinstance(settings, dict):
-            settings = {}
-        # Private = inherit_organisation_admins flipped off (matrix §6). Absence
-        # of the flag means "open" (legacy default).
-        is_private = settings.get("inherit_organisation_admins") is False
+        # Mirror the access resolver (visibility enum first), not the legacy
+        # settings flag, so private workspaces are reported consistently.
+        is_private = not workspace_follows_organisation_admins(w)
         hours = per_ws_hours.get(wid, 0.0) if wid else 0.0
         total_hours += hours
 
