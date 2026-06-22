@@ -82,6 +82,42 @@ def is_sticky_removed(workspace: dict, user_id: str) -> bool:
     return any(t.get("user_id") == user_id for t in tombstones)
 
 
+def derive_workspace_role(
+    workspace: dict, org_role: Optional[str], user_id: str
+) -> Optional[str]:
+    """Derived (non-direct) workspace role for this user, or None. Pure, no I/O.
+
+    This is the single source of truth for the derived-access ladder. Direct
+    workspace_membership is checked by the caller and takes precedence — it is
+    NOT considered here. Callers pass the workspace row (needs visibility +
+    settings) and the user's org_membership.role for this workspace's org.
+
+    Resolution order (must stay in sync with user_can_access's documented order):
+        1. Sticky-removed → None (an explicit tombstone is never re-granted,
+           even for org owners).
+        2. Organisation owner → 'admin', regardless of workspace privacy
+           (owner carve-out: an owner can't be locked out of their own org).
+        3. Private workspace → None (blocks all remaining derivation).
+        4. Organisation admin → 'admin'.
+        5. Organisation member → 'member', iff the workspace opts in via
+           settings.inherit_organisation_members.
+
+    Returns the derived role string ('admin' / 'member'); the caller wraps it
+    with source='inherited'.
+    """
+    if is_sticky_removed(workspace, user_id):
+        return None
+    if org_role == "owner":
+        return "admin"
+    if not workspace_follows_organisation_admins(workspace):
+        return None
+    if org_role == "admin":
+        return "admin"
+    if org_role == "member" and workspace_follows_organisation_members(workspace):
+        return "member"
+    return None
+
+
 # ── Read-side resolvers ─────────────────────────────────────────────────
 
 
@@ -244,33 +280,18 @@ async def user_can_access(workspace_id: str, user_id: str) -> Optional[tuple[str
     if not workspace or workspace.get("deleted_at"):
         return None
 
-    if is_sticky_removed(workspace, user_id):
-        return None
-
     org_id = workspace.get("org_id")
     if not org_id:
         return None
 
     org_role = await _get_org_role(org_id, user_id)
 
-    # Organisation-owner carve-out: owners always derive admin access, regardless
-    # of workspace privacy. Otherwise, any workspace admin could set
-    # inherit_organisation_admins=false and lock the owner out of their own
-    # workspace — which breaks the "workspace lives in a organisation" contract.
-    if org_role == "owner":
-        return "admin", "inherited"
-
-    # Private workspace short-circuits organisation-admin and organisation-member
-    # derivation below.
-    if not workspace_follows_organisation_admins(workspace):
-        return None
-
-    if org_role == "admin":
-        return "admin", "inherited"
-
-    if org_role == "member" and workspace_follows_organisation_members(workspace):
-        return "member", "inherited"
-
+    # Derived ladder (sticky → owner carve-out → privacy → admin → member-opt-in)
+    # lives in derive_workspace_role so the batched org-members rollup
+    # (_rollup_workspace_access) shares one copy of the rules.
+    derived = derive_workspace_role(workspace, org_role, user_id)
+    if derived:
+        return derived, "inherited"
     return None
 
 
