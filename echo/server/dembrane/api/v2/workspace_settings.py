@@ -10,7 +10,6 @@ from pydantic import BaseModel
 
 from dembrane.directus import directus
 from dembrane.inheritance import (
-    workspace_follows_organisation_admins,
     workspace_follows_organisation_members,
 )
 from dembrane.async_helpers import run_in_thread_pool
@@ -82,7 +81,7 @@ class WorkspaceDetailResponse(BaseModel):
     my_policies: list[str] = []
     # Privacy + settings context for the settings page controls.
     # `description` lives above (shared with legacy consumers).
-    inherit_organisation_admins: bool = True
+    visibility: str = "open_to_organisation"
     inherit_organisation_members: bool = False
     logo_url: Optional[str] = None
     type_discount: Optional[str] = None
@@ -287,7 +286,7 @@ async def get_workspace_settings(
         pending_invites=pending_invites,
         my_role=ctx.role,
         my_policies=effective,
-        inherit_organisation_admins=workspace_follows_organisation_admins(ws),
+        visibility=ws.get("visibility") or "open_to_organisation",
         inherit_organisation_members=workspace_follows_organisation_members(ws),
         logo_url=ws.get("logo_url"),
         type_discount=billing.get("type_discount"),
@@ -306,15 +305,23 @@ async def get_workspace_settings(
 # ── Update ──
 
 
+_VISIBILITY_VALUES = ("open_to_organisation", "invite_only", "private")
+
+
+def visibility_change_needs_paywall(current: str, target: str) -> bool:
+    """The Innovator+ paywall fires only when crossing OUT of open_to_organisation.
+    Transitions among non-open states, or back to open, are free."""
+    return target != "open_to_organisation" and current == "open_to_organisation"
+
+
 class UpdateWorkspaceRequest(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     logo_url: Optional[str] = None
-    # Privacy flags — wizard step 2 equivalents. Flipping true→false makes
-    # the workspace private; derivation stops on next access check.
-    # Flipping false→true re-enables organisation-admin derivation (subject to the
-    # per-user sticky_removed tombstones).
-    inherit_organisation_admins: Optional[bool] = None
+    # Visibility enum (open_to_organisation | invite_only | private). Moving OUT
+    # of open is gated at Innovator+ (workspace:set_private). inherit_organisation_members
+    # is still accepted but ignored (member derivation retired).
+    visibility: Optional[Literal["open_to_organisation", "invite_only", "private"]] = None
     inherit_organisation_members: Optional[bool] = None
 
 
@@ -375,21 +382,17 @@ async def update_workspace_settings(
         payload["logo_url"] = cleaned_logo or None
 
     # Privacy: the `visibility` enum is the source of truth (discovery and
-    # POST /access-requests filter on it). The request still speaks the
-    # inherit_organisation_admins boolean as the API boundary; map it onto
-    # visibility and no longer write the legacy settings.inherit_organisation_admins
-    # flag. inherit_organisation_members is accepted but ignored — member
-    # derivation is retired (matrix v1.1 §6).
-    if body.inherit_organisation_admins is not None:
-        # Open -> Private is gated. Read current state from visibility (the
-        # helper falls back to the legacy flag for not-yet-backfilled rows).
-        currently_open = workspace_follows_organisation_admins(ctx.workspace)
-        going_private = body.inherit_organisation_admins is False and currently_open
-        if going_private:
+    # POST /access-requests filter on it). Moving OUT of open_to_organisation
+    # (to invite_only or private) is gated at Innovator+; transitions among
+    # non-open states or back to open are free. inherit_organisation_members is
+    # accepted but ignored — member derivation is retired (matrix v1.1 §6).
+    if body.visibility is not None:
+        current = ctx.workspace.get("visibility") or "open_to_organisation"
+        if visibility_change_needs_paywall(current, body.visibility):
+            # ctx.workspace["tier"] is hydrated from the billing account by
+            # get_workspace_context, so this gates against the correct tier.
             ctx.require_policy("workspace:set_private")
-        payload["visibility"] = (
-            "open_to_organisation" if body.inherit_organisation_admins else "private"
-        )
+        payload["visibility"] = body.visibility
 
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")

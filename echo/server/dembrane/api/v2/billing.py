@@ -97,6 +97,14 @@ async def org_billing(org_id: str, auth: DependencyDirectusSession) -> dict:
     await _require_org_billing_access(org_id, auth)
     account_id = await get_org_account_id(org_id)
 
+    # Pooled-account tier — the tier a new internal workspace would inherit. The
+    # create-workspace flow reads this to gate non-open visibility (invite_only /
+    # private need Innovator+), mirroring the server-side gate in create_workspace.
+    account_tier = "free"
+    if account_id:
+        pooled = await async_directus.get_item("billing_account", account_id)
+        account_tier = (pooled or {}).get("tier") or "free"
+
     from dembrane.billing_account import nested_billing_fields
 
     ws_rows = (
@@ -137,7 +145,11 @@ async def org_billing(org_id: str, auth: DependencyDirectusSession) -> dict:
                     }
                 )
 
-    return {"account_id": account_id, "separate_workspaces": separate_workspaces}
+    return {
+        "account_id": account_id,
+        "tier": account_tier,
+        "separate_workspaces": separate_workspaces,
+    }
 
 
 @router.get("/billing-accounts/{account_id}/overview")

@@ -46,15 +46,13 @@ def _settings(workspace: dict) -> dict:
 def workspace_follows_organisation_admins(workspace: dict) -> bool:
     """True if organisation admins follow this workspace's access (inherit admin role).
 
-    Driven solely by the workspace.visibility enum: 'private' → False, everything
-    else (the 'open_to_organisation' default, or an absent value) → True, matching
-    the matrix v1.1 §9 default-open rule.
-
-    The legacy settings.inherit_organisation_admins fallback was removed once
-    directus/migrations/backfill_workspace_visibility.py had run in every
-    environment, so no row reaches here with a NULL visibility.
+    Only the open_to_organisation visibility fans org admins into derived access.
+    invite_only and private require an explicit join (admins can still discover +
+    join both; they just don't get access automatically). The org-owner carve-out
+    in derive_workspace_role / get_effective_members is independent and still
+    grants owners access on every visibility.
     """
-    return workspace.get("visibility") != "private"
+    return workspace.get("visibility") == "open_to_organisation"
 
 
 def workspace_follows_organisation_members(workspace: dict) -> bool:

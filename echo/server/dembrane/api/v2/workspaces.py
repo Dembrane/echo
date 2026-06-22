@@ -693,8 +693,9 @@ async def create_workspace(
             )
 
     # Visibility is stored on workspace.visibility (sole source of truth on new
-    # rows). Private requires a paid tier; the set_private policy enforces that.
-    visibility = "open_to_organisation" if body.inherit_organisation_admins else "private"
+    # rows). Non-open visibility is gated at Innovator+ below, once the billing
+    # account (which carries the tier) is resolved.
+    visibility = body.visibility
     ws_id = generate_uuid()
 
     # A workspace is external (separate billing + compliance context) when the
@@ -756,6 +757,24 @@ async def create_workspace(
         blocked = billing_account_blocks_new_workspace(account)
         if blocked:
             raise HTTPException(status_code=402, detail=blocked)
+    # Paywall: non-open visibility at creation requires Innovator+ on the account
+    # the workspace will bill to. The account may already be a paid org-pooled
+    # account, so resolve the real tier rather than assuming free. Staff bypass.
+    if visibility != "open_to_organisation" and not auth.is_admin:
+        from dembrane.policies import has_policy
+
+        acct = await async_directus.get_item("billing_account", account_id)
+        acct_tier = (acct or {}).get("tier") or "free"
+        if not has_policy("owner", [], "workspace:set_private", workspace_tier=acct_tier):
+            raise HTTPException(
+                status_code=402,
+                detail=(
+                    "Invite-only and private workspaces require the Innovator plan "
+                    "or above. Create the workspace as open, then change its "
+                    "visibility after upgrading."
+                ),
+            )
+
     # Record internal-vs-external use, derived purely from whether a data owner
     # was named (`separate`). This is the canonical marker the free-observer role
     # keys on (observers exist only in external-client workspaces); the billing
@@ -843,7 +862,7 @@ async def create_workspace(
         message=(
             "The new workspace is open to the organisation — discover it from your organisation page."
             if visibility == "open_to_organisation"
-            else "The new workspace is private — only explicitly invited people and organisation admins have access."
+            else "The new workspace is restricted — organisation admins can join it; members can't see it."
         ),
         action="NAVIGATE_WS",
         ref_workspace_id=ws_id,

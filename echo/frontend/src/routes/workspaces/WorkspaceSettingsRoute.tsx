@@ -95,7 +95,7 @@ interface WorkspaceDetail {
 	}>;
 	my_role: string;
 	my_policies: string[];
-	inherit_organisation_admins: boolean;
+	visibility: "open_to_organisation" | "invite_only" | "private";
 	inherit_organisation_members: boolean;
 	description: string | null;
 	logo_url: string | null;
@@ -223,7 +223,7 @@ async function updateWorkspace(
 		name?: string;
 		description?: string;
 		logo_url?: string;
-		inherit_organisation_admins?: boolean;
+		visibility?: "open_to_organisation" | "invite_only" | "private";
 		inherit_organisation_members?: boolean;
 	},
 ) {
@@ -1336,7 +1336,8 @@ function PrivacyAndDefaultsSection({
 		settings.description ?? "",
 	);
 	const [name, setName] = useState<string>(settings.name ?? "");
-	const [isOpen, setIsOpen] = useState<boolean | null>(null);
+	type Visibility = "open_to_organisation" | "invite_only" | "private";
+	const [visibility, setVisibility] = useState<Visibility | null>(null);
 
 	// Tier-gated features open the upgrade modal in place rather than
 	// bouncing to the billing tab (page-feedback: upgrade paths are modals).
@@ -1350,8 +1351,8 @@ function PrivacyAndDefaultsSection({
 		benefit: string;
 	} | null>(null);
 
-	const effectiveIsOpen = isOpen ?? settings.inherit_organisation_admins;
-	const privacyDirty = isOpen !== null;
+	const effectiveVisibility: Visibility = visibility ?? settings.visibility;
+	const privacyDirty = visibility !== null;
 
 	const descriptionMutation = useMutation({
 		mutationFn: (value: string) =>
@@ -1385,10 +1386,8 @@ function PrivacyAndDefaultsSection({
 
 	const privacyMutation = useMutation({
 		mutationFn: async () => {
-			if (isOpen === null) return;
-			await updateWorkspace(workspaceId, {
-				inherit_organisation_admins: isOpen,
-			});
+			if (visibility === null) return;
+			await updateWorkspace(workspaceId, { visibility });
 		},
 		onError: (err: Error) => toast.error(err.message),
 		onSuccess: () => {
@@ -1397,7 +1396,7 @@ function PrivacyAndDefaultsSection({
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "discoverable-workspaces", settings.org_id],
 			});
-			setIsOpen(null);
+			setVisibility(null);
 			toast.success(t`Saved`);
 		},
 	});
@@ -1722,96 +1721,102 @@ function PrivacyAndDefaultsSection({
 		);
 
 	// section === "access"
+	// Matrix §2: non-open visibility (invite_only / private) is innovator+. The
+	// gate fires only when crossing OUT of open; an already-non-open workspace
+	// (e.g. migrated invite_only) can switch freely, so disable the non-open
+	// options only when currently open on a low tier.
+	const privateGateTiers = ["innovator", "changemaker", "guardian"];
+	const canGoPrivate = privateGateTiers.includes(settings.tier);
+	const currentlyOpen = effectiveVisibility === "open_to_organisation";
+	const nonOpenDisabled = !canEdit || (!canGoPrivate && currentlyOpen);
+	const upgradeLink = !canGoPrivate && currentlyOpen && (
+		<Anchor
+			component="button"
+			type="button"
+			size="xs"
+			ta="left"
+			style={{ alignSelf: "flex-start" }}
+			onClick={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				setUpgradeFeature({
+					benefit: t`Limit who can find and join this workspace.`,
+					featureName: t`Private workspaces`,
+					requiredTier: "innovator",
+				});
+			}}
+		>
+			<Trans>Available on innovator and above. Upgrade to unlock.</Trans>
+		</Anchor>
+	);
 	return (
 		<Stack gap={16}>
-			{(() => {
-				// Matrix §2: Private workspaces are innovator+. If the current
-				// tier can't go private, disable the radio + surface the
-				// reason inline. Avoid the footgun of clicking Private on
-				// Pioneer and getting a cryptic 403.
-				const privateGateTiers = ["innovator", "changemaker", "guardian"];
-				const canGoPrivate = privateGateTiers.includes(settings.tier);
-				const currentlyPrivate = !effectiveIsOpen;
-				return (
-					<Radio.Group
-						label={t`Access`}
-						value={effectiveIsOpen ? "open" : "private"}
-						onChange={(v) => setIsOpen(v === "open")}
-					>
-						<Stack gap={8} mt={4}>
-							<Radio
-								value="open"
-								label={
-									<Stack gap={0}>
-										<Text size="sm">
-											<Trans>Open to the organisation</Trans>
-										</Text>
-										<Text size="xs" c="dimmed">
-											<Trans>
-												Anyone in your organisation can find this workspace.
-												Organisation admins can join; organisation members can
-												request access.
-											</Trans>
-										</Text>
-									</Stack>
-								}
-								disabled={!canEdit}
-							/>
-							<Radio
-								value="private"
-								// Keep enabled if already private (matrix §3 freeze:
-								// existing stays private even after downgrade) — just
-								// block flipping-back-to-private on a lower tier.
-								disabled={!canEdit || (!canGoPrivate && !currentlyPrivate)}
-								label={
-									<Stack gap={0}>
-										<Text size="sm">
-											<Trans>Private</Trans>
-										</Text>
-										<Text size="xs" c="dimmed">
-											<Trans>
-												Only invited participants. Organisation admins can still
-												find and join.
-											</Trans>
-										</Text>
-										{!canGoPrivate && !currentlyPrivate && (
-											<Anchor
-												component="button"
-												type="button"
-												size="xs"
-												ta="left"
-												style={{ alignSelf: "flex-start" }}
-												onClick={(e) => {
-													e.preventDefault();
-													e.stopPropagation();
-													setUpgradeFeature({
-														benefit: t`Keep this workspace invite-only.`,
-														featureName: t`Private workspaces`,
-														requiredTier: "innovator",
-													});
-												}}
-											>
-												<Trans>
-													Available on innovator and above. Upgrade to unlock.
-												</Trans>
-											</Anchor>
-										)}
-									</Stack>
-								}
-							/>
-						</Stack>
-					</Radio.Group>
-				);
-			})()}
-			{/* inherit_organisation_members toggle removed per matrix §6 — organisation members
-			    now go through the explicit Request-access flow; no automatic
-			    derivation. Backend still accepts the flag for legacy rows
-			    but we don't expose it. */}
+			<Radio.Group
+				label={t`Access`}
+				value={effectiveVisibility}
+				onChange={(v) => setVisibility(v as Visibility)}
+			>
+				<Stack gap={8} mt={4}>
+					<Radio
+						value="open_to_organisation"
+						disabled={!canEdit}
+						label={
+							<Stack gap={0}>
+								<Text size="sm">
+									<Trans>Everyone in your organisation</Trans>
+								</Text>
+								<Text size="xs">
+									<Trans>
+										Anyone in your organisation can find this workspace. Admins
+										can join; members can request access.
+									</Trans>
+								</Text>
+							</Stack>
+						}
+					/>
+					<Radio
+						value="invite_only"
+						disabled={nonOpenDisabled}
+						label={
+							<Stack gap={0}>
+								<Text size="sm">
+									<Trans>Invite only</Trans>
+								</Text>
+								<Text size="xs">
+									<Trans>
+										Hidden from organisation members. Organisation admins can
+										still find and join.
+									</Trans>
+								</Text>
+								{upgradeLink}
+							</Stack>
+						}
+					/>
+					<Radio
+						value="private"
+						disabled={nonOpenDisabled}
+						label={
+							<Stack gap={0}>
+								<Text size="sm">
+									<Trans>Private</Trans>
+								</Text>
+								<Text size="xs">
+									<Trans>
+										Hidden from organisation members. Organisation admins can
+										still find and join.
+									</Trans>
+								</Text>
+								{upgradeLink}
+							</Stack>
+						}
+					/>
+				</Stack>
+			</Radio.Group>
 			{canEdit && privacyDirty && (
 				<Group justify="flex-end">
 					<Button
 						variant="outline"
-						onClick={() => setIsOpen(null)}
+						onClick={() => setVisibility(null)}
 						disabled={privacyMutation.isPending}
 					>
 						<Trans>Cancel</Trans>
@@ -1820,7 +1825,7 @@ function PrivacyAndDefaultsSection({
 						loading={privacyMutation.isPending}
 						onClick={() => privacyMutation.mutate()}
 					>
-						<Trans>Confirm privacy change</Trans>
+						<Trans>Save access</Trans>
 					</Button>
 				</Group>
 			)}

@@ -40,7 +40,7 @@ interface CreatedWorkspace {
 async function createWorkspace(payload: {
 	name: string;
 	org_id: string;
-	inherit_organisation_admins: boolean;
+	visibility: "open_to_organisation" | "invite_only" | "private";
 	// No bill_separately flag: naming a data owner (org + rep email) is what
 	// makes the workspace external / separately billed (the server derives it).
 	data_owner_org_name?: string;
@@ -87,9 +87,9 @@ interface OrgMemberRow {
 	is_external?: boolean;
 }
 
-// "everyone" = open to org; "invite" = private + hand-pick members; "just_me" =
-// private with no one else. The last two both create a private workspace
-// (inherit_organisation_admins=false); they differ only in who gets added.
+// "everyone" = open_to_organisation; "invite" = invite_only + hand-pick members;
+// "just_me" = private (no one else added). invite_only and private are gated at
+// Innovator+ on the backend; a free org gets a 402 surfaced as an error toast.
 type Access = "everyone" | "invite" | "just_me";
 type BillFor = "internal" | "client";
 
@@ -161,6 +161,34 @@ export const CreateWorkspaceRoute = () => {
 		staleTime: 60_000,
 	});
 
+	// Pooled org tier gates non-open visibility at create time, mirroring the
+	// server gate in create_workspace. A new internal workspace inherits the
+	// org's plan; a client workspace starts on its own free account, so non-open
+	// is gated there regardless of the org's plan.
+	const { data: orgBilling } = useQuery({
+		enabled: Boolean(targetOrganisationId),
+		queryFn: async (): Promise<{ tier?: string } | null> => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/orgs/${targetOrganisationId}/billing`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) return null;
+			return res.json();
+		},
+		queryKey: ["v2", "orgs", targetOrganisationId, "billing"],
+		staleTime: 60_000,
+	});
+	const orgTier = orgBilling?.tier ?? "free";
+	const canGoPrivate =
+		["innovator", "changemaker", "guardian"].includes(orgTier) &&
+		billFor !== "client";
+
+	// Never leave a gated visibility selected (e.g. after switching to a client
+	// workspace) — it would 402 on submit.
+	useEffect(() => {
+		if (!canGoPrivate && access !== "everyone") setAccess("everyone");
+	}, [canGoPrivate, access]);
+
 	const memberOptions = useMemo(() => {
 		const selfEmail = (meV2?.email ?? "").toLowerCase();
 		return (orgMembers ?? [])
@@ -177,6 +205,15 @@ export const CreateWorkspaceRoute = () => {
 		? `/o/${targetOrganisationId}/overview`
 		: "/o";
 
+	// Single source for the three-state visibility the workspace is created with,
+	// shared by the create payload and the analytics event.
+	const visibilityForCreate: "open_to_organisation" | "invite_only" | "private" =
+		access === "everyone"
+			? "open_to_organisation"
+			: access === "invite"
+				? "invite_only"
+				: "private";
+
 	const mutation = useMutation({
 		mutationFn: async () => {
 			if (!targetOrganisationId) {
@@ -184,7 +221,7 @@ export const CreateWorkspaceRoute = () => {
 			}
 			const isClient = billFor === "client";
 			const ws = await createWorkspace({
-				inherit_organisation_admins: access === "everyone",
+				visibility: visibilityForCreate,
 				name: name.trim(),
 				org_id: targetOrganisationId,
 				// Sending a data owner is what makes the workspace external/separate.
@@ -224,7 +261,7 @@ export const CreateWorkspaceRoute = () => {
 			posthog.capture("workspace_created", {
 				bill_separately: billFor === "client",
 				member_adds: access === "invite" ? memberEmails.length : 0,
-				visibility: access === "everyone" ? "open_to_organisation" : "private",
+				visibility: visibilityForCreate,
 			});
 			toast.success(t`Workspace created.`);
 			// useWorkspace's context list is keyed ["v2","workspaces-context",...],
@@ -317,7 +354,7 @@ export const CreateWorkspaceRoute = () => {
 		{
 			description: t`Only you can see this workspace.`,
 			icon: Lock,
-			title: t`Private, just me`,
+			title: t`Private`,
 			value: "just_me",
 		},
 	];
@@ -513,23 +550,37 @@ export const CreateWorkspaceRoute = () => {
 								{accessOptions.map((opt) => {
 									const Icon = opt.icon;
 									const selected = access === opt.value;
+									// invite_only / private need Innovator+ (mirrors the
+									// server gate). Show them visibly locked instead of
+									// failing at submit.
+									const gated = opt.value !== "everyone" && !canGoPrivate;
 									return (
 										<UnstyledButton
 											key={opt.value}
-											onClick={() => setAccess(opt.value)}
+											onClick={() => {
+												if (!gated) setAccess(opt.value);
+											}}
 											aria-pressed={selected}
+											aria-disabled={gated}
+											disabled={gated}
+											style={{ cursor: gated ? "not-allowed" : undefined }}
 										>
 											<Paper
 												withBorder
 												p="md"
 												radius="sm"
 												h="100%"
-												className="transition-colors hover:!border-primary-400"
+												className={
+													gated
+														? undefined
+														: "transition-colors hover:!border-primary-400"
+												}
 												style={{
 													background: selected
 														? "rgba(65, 105, 225, 0.06)"
 														: undefined,
 													borderColor: selected ? "#4169e1" : undefined,
+													opacity: gated ? 0.55 : undefined,
 												}}
 											>
 												<Stack gap={6}>
@@ -542,6 +593,11 @@ export const CreateWorkspaceRoute = () => {
 													<Text size="xs" c="dimmed">
 														{opt.description}
 													</Text>
+													{gated && (
+														<Text size="xs">
+															<Trans>Available on innovator and above.</Trans>
+														</Text>
+													)}
 												</Stack>
 											</Paper>
 										</UnstyledButton>
