@@ -2,9 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Alert,
-	Anchor,
 	Button,
-	Checkbox,
 	Group,
 	Radio,
 	Stack,
@@ -15,11 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
-import { API_BASE_URL, LEGAL_TERMS_URL } from "@/config";
-
-// The partner agreement is, for now, the same legal terms accepted at
-// registration (mirrors CreateWorkspaceRoute).
-const PARTNER_AGREEMENT_URL = LEGAL_TERMS_URL;
+import { API_BASE_URL } from "@/config";
 
 type UsageContext = "internal" | "external";
 
@@ -78,10 +72,9 @@ export const WorkspaceDataOwnershipSection = ({
 	const [usage, setUsage] = useState<UsageContext>(initialUsage);
 	const [orgName, setOrgName] = useState(settings.data_owner_org_name ?? "");
 	const [email, setEmail] = useState(settings.data_owner_email ?? "");
-	const [agreement, setAgreement] = useState(false);
 
-	// Going internal→external for the first time needs the agreement; an already
-	// external workspace already accepted it.
+	// Going internal→external for the first time carries the (implicit) partner
+	// agreement; an already external workspace already accepted it.
 	const goingExternalFresh =
 		usage === "external" && !settings.is_external_client;
 	const emailValid = /.+@.+\..+/.test(email.trim());
@@ -94,17 +87,14 @@ export const WorkspaceDataOwnershipSection = ({
 			(settings.data_owner_email ?? "").trim().toLowerCase();
 
 	const canSubmit =
-		canEdit &&
-		dirty &&
-		(usage === "internal" ||
-			(orgValid && emailValid && (!goingExternalFresh || agreement)));
+		canEdit && dirty && (usage === "internal" || (orgValid && emailValid));
 
 	const mutation = useMutation({
 		mutationFn: () =>
 			updateDataOwnership(workspaceId, {
 				data_owner_email: usage === "external" ? email.trim() : undefined,
 				data_owner_org_name: usage === "external" ? orgName.trim() : undefined,
-				partner_agreement_accepted: goingExternalFresh ? agreement : undefined,
+				partner_agreement_accepted: goingExternalFresh ? true : undefined,
 				usage_context: usage,
 			}),
 		onError: (err: Error) => toast.error(err.message),
@@ -116,7 +106,6 @@ export const WorkspaceDataOwnershipSection = ({
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
-			setAgreement(false);
 			toast.success(t`Saved`);
 		},
 	});
@@ -185,25 +174,6 @@ export const WorkspaceDataOwnershipSection = ({
 						disabled={!canEdit}
 						data-testid="data-ownership-email"
 					/>
-					{goingExternalFresh && (
-						<Checkbox
-							checked={agreement}
-							onChange={(e) => setAgreement(e.currentTarget.checked)}
-							disabled={!canEdit}
-							data-testid="data-ownership-agreement"
-							label={
-								<Text size="sm">
-									<Trans>
-										I accept the{" "}
-										<Anchor href={PARTNER_AGREEMENT_URL} target="_blank">
-											partner agreement
-										</Anchor>{" "}
-										for using dembrane with an external organisation.
-									</Trans>
-								</Text>
-							}
-						/>
-					)}
 				</Stack>
 			)}
 

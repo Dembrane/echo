@@ -1,6 +1,17 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { ActionIcon, Avatar, Badge, Box, Group, Paper, Stack, Text, Tooltip } from "@mantine/core";
+import {
+	ActionIcon,
+	Avatar,
+	Badge,
+	Box,
+	Checkbox,
+	Group,
+	Paper,
+	Stack,
+	Text,
+	Tooltip,
+} from "@mantine/core";
 import { IconLock, IconPin, IconPinFilled } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import type { PropsWithChildren } from "react";
@@ -41,7 +52,12 @@ function AccessBubbles({ project }: { project: Project }) {
 	// placeholder bubble so the column alignment doesn't break.
 	if (preview.length === 0) {
 		return (
-			<Avatar size="sm" radius="xl" color="gray" aria-label={t`No one shared yet`}>
+			<Avatar
+				size="sm"
+				radius="xl"
+				color="gray"
+				aria-label={t`No one shared yet`}
+			>
 				?
 			</Avatar>
 		);
@@ -89,13 +105,13 @@ function AccessBubbles({ project }: { project: Project }) {
 }
 
 const LANGUAGE_LABELS: Record<string, string> = {
-	en: "EN",
-	nl: "NL",
 	de: "DE",
-	fr: "FR",
+	en: "EN",
 	es: "ES",
+	fr: "FR",
 	it: "IT",
 	multi: "Multi",
+	nl: "NL",
 };
 
 export const ProjectListItem = ({
@@ -104,31 +120,62 @@ export const ProjectListItem = ({
 	isPinned,
 	canPin,
 	onSearchOwner,
+	selectable,
+	selected,
+	onToggleSelect,
 }: PropsWithChildren<{
 	project: Project;
 	onTogglePin?: (projectId: string) => void;
 	isPinned?: boolean;
 	canPin?: boolean;
 	onSearchOwner?: (term: string) => void;
+	/** Select mode is active: show the inline checkbox and toggle instead of navigating. */
+	selectable?: boolean;
+	selected?: boolean;
+	onToggleSelect?: () => void;
 }>) => {
 	const { workspaceId } = useParams();
 	const link = `/w/${workspaceId}/projects/${project.id}/home`;
 	const languageLabel = project.language
-		? LANGUAGE_LABELS[project.language] ?? project.language.toUpperCase()
+		? (LANGUAGE_LABELS[project.language] ?? project.language.toUpperCase())
 		: null;
 	const ownerName = (project as any).owner_name as string | undefined;
 	const ownerEmail = (project as any).owner_email as string | undefined;
 
-	return (
-		<I18nLink to={link}>
-			<Paper
-				component="a"
-				p="sm"
-				className="group relative hover:!border-primary-400"
-				withBorder
-				{...testId(`project-list-item-${project.id}`)}
-			>
-				<Group justify="space-between" wrap="nowrap">
+	const body = (
+		<Paper
+			component={selectable ? "div" : "a"}
+			p="sm"
+			className={
+				selectable
+					? `group relative cursor-pointer ${selected ? "!border-primary-400" : "hover:!border-primary-400"}`
+					: "group relative hover:!border-primary-400"
+			}
+			withBorder
+			{...(selectable
+				? {
+						"aria-checked": selected,
+						"aria-label": t`Select project`,
+						onClick: onToggleSelect,
+						role: "checkbox",
+					}
+				: {})}
+			{...testId(`project-list-item-${project.id}`)}
+		>
+			<Group justify="space-between" wrap="nowrap">
+				<Group wrap="nowrap" gap="sm" style={{ flex: 1, minWidth: 0 }}>
+					{/* Checkbox sits inside the card's left padding so its inset
+					    mirrors the pin on the right. Read-only: the whole card is
+					    the click target in select mode. */}
+					{selectable && (
+						<Checkbox
+							checked={!!selected}
+							readOnly
+							tabIndex={-1}
+							aria-hidden
+							data-testid={`project-select-${project.id}`}
+						/>
+					)}
 					<Stack gap="0" style={{ flex: 1, minWidth: 0 }}>
 						<Group align="center" gap="xs" wrap="nowrap">
 							<Icons.Calendar />
@@ -140,8 +187,8 @@ export const ProjectListItem = ({
 								{project.name}
 							</Text>
 							{/* Muted lock marks private projects on the list. */}
-							{(project as unknown as { visibility?: string })
-								.visibility === "private" && (
+							{(project as unknown as { visibility?: string }).visibility ===
+								"private" && (
 								<Tooltip label={t`Private project`} withArrow>
 									<IconLock
 										size={14}
@@ -157,10 +204,12 @@ export const ProjectListItem = ({
 							)}
 						</Group>
 						<Text size="sm" c="dimmed">
-							{((project as unknown as { audio_hours?: number }).audio_hours ?? 0) > 0 && (
+							{((project as unknown as { audio_hours?: number }).audio_hours ??
+								0) > 0 && (
 								<>
 									{formatDurationFromHours(
-										(project as unknown as { audio_hours?: number }).audio_hours ?? 0,
+										(project as unknown as { audio_hours?: number })
+											.audio_hours ?? 0,
 									)}
 									{" • "}
 								</>
@@ -201,43 +250,57 @@ export const ProjectListItem = ({
 							)}
 						</Text>
 					</Stack>
+				</Group>
 
-					{/* Access bubbles — dedicated slot directly left of the pin.
+				{/* Access bubbles — dedicated slot directly left of the pin.
 					    Fixed min-width keeps them aligned down the column so rows
 					    scan cleanly. See design-subagent decision 2026-04-21. */}
-					<Group gap="md" wrap="nowrap" align="center">
-						<Box style={{ minWidth: 96, display: "flex", justifyContent: "flex-end" }}>
-							<AccessBubbles project={project} />
-						</Box>
-						{onTogglePin && (
-							<Tooltip
-								label={
+				<Group gap="md" wrap="nowrap" align="center">
+					<Box
+						style={{
+							display: "flex",
+							justifyContent: "flex-end",
+							minWidth: 96,
+						}}
+					>
+						<AccessBubbles project={project} />
+					</Box>
+					{onTogglePin && (
+						<Tooltip
+							label={
+								isPinned
+									? t`Unpin project`
+									: canPin
+										? t`Pin project`
+										: t`Unpin a project first (max 3)`
+							}
+						>
+							<ActionIcon
+								variant="subtle"
+								color={isPinned ? "primary" : "gray"}
+								className={
 									isPinned
-										? t`Unpin project`
-										: canPin
-											? t`Pin project`
-											: t`Unpin a project first (max 3)`
+										? ""
+										: "opacity-0 group-hover:opacity-100 transition-opacity"
 								}
+								onClick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									if (isPinned || canPin) {
+										onTogglePin(project.id);
+									}
+								}}
 							>
-								<ActionIcon
-									variant="subtle"
-									color={isPinned ? "primary" : "gray"}
-									className={isPinned ? "" : "opacity-0 group-hover:opacity-100 transition-opacity"}
-									onClick={(e) => {
-										e.preventDefault();
-										e.stopPropagation();
-										if (isPinned || canPin) {
-											onTogglePin(project.id);
-										}
-									}}
-								>
-									{isPinned ? <IconPinFilled size={18} /> : <IconPin size={18} />}
-								</ActionIcon>
-							</Tooltip>
-						)}
-					</Group>
+								{isPinned ? <IconPinFilled size={18} /> : <IconPin size={18} />}
+							</ActionIcon>
+						</Tooltip>
+					)}
 				</Group>
-			</Paper>
-		</I18nLink>
+			</Group>
+		</Paper>
 	);
+
+	// In select mode the card is the toggle target, so it must not navigate.
+	if (selectable) return body;
+	return <I18nLink to={link}>{body}</I18nLink>;
 };
