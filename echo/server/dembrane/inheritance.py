@@ -54,7 +54,10 @@ def workspace_follows_organisation_admins(workspace: dict) -> bool:
         return True
     if visibility == "private":
         return False
-    # Legacy fallback until the walkback purges settings flags.
+    # Legacy fallback for rows whose visibility predates the enum and is still
+    # NULL. directus/migrations/backfill_workspace_visibility.py backfills these;
+    # once it has run in every environment this branch is dead and can be removed
+    # (visibility-only), making the settings flag fully retired.
     return _settings(workspace).get("inherit_organisation_admins", True)
 
 

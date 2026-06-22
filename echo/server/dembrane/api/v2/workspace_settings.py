@@ -374,34 +374,22 @@ async def update_workspace_settings(
                 _require_external_for_whitelabel(ctx)
         payload["logo_url"] = cleaned_logo or None
 
-    # Privacy flags write into workspace.settings (existing JSON column).
-    if (
-        body.inherit_organisation_admins is not None
-        or body.inherit_organisation_members is not None
-    ):
-        # Normalise NULL settings (legacy rows) to {} before dict ops.
-        current_settings = ctx.workspace.get("settings") or {}
-        if not isinstance(current_settings, dict):
-            current_settings = {}
-        # Setting inherit_organisation_admins=false makes the workspace private — gated.
-        going_private = (
-            body.inherit_organisation_admins is False
-            and current_settings.get("inherit_organisation_admins", True) is not False
-        )
+    # Privacy: the `visibility` enum is the source of truth (discovery and
+    # POST /access-requests filter on it). The request still speaks the
+    # inherit_organisation_admins boolean as the API boundary; map it onto
+    # visibility and no longer write the legacy settings.inherit_organisation_admins
+    # flag. inherit_organisation_members is accepted but ignored — member
+    # derivation is retired (matrix v1.1 §6).
+    if body.inherit_organisation_admins is not None:
+        # Open -> Private is gated. Read current state from visibility (the
+        # helper falls back to the legacy flag for not-yet-backfilled rows).
+        currently_open = workspace_follows_organisation_admins(ctx.workspace)
+        going_private = body.inherit_organisation_admins is False and currently_open
         if going_private:
             ctx.require_policy("workspace:set_private")
-
-        merged = dict(current_settings)
-        if body.inherit_organisation_admins is not None:
-            merged["inherit_organisation_admins"] = bool(body.inherit_organisation_admins)
-        if body.inherit_organisation_members is not None:
-            merged["inherit_organisation_members"] = bool(body.inherit_organisation_members)
-        payload["settings"] = merged
-        # Same mapping as workspace create (workspaces.py): discovery and
-        # POST /access-requests filter on workspace.visibility — it must move
-        # whenever Open↔Private toggles, not only settings JSON.
-        inherit_admins_effective = bool(merged.get("inherit_organisation_admins", True))
-        payload["visibility"] = "open_to_organisation" if inherit_admins_effective else "private"
+        payload["visibility"] = (
+            "open_to_organisation" if body.inherit_organisation_admins else "private"
+        )
 
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")
