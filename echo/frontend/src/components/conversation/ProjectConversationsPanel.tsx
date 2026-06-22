@@ -413,6 +413,7 @@ const ConversationRow = ({
 									variant="light"
 									color="gray"
 									radius="sm"
+									classNames={{ label: "!text-graphite" }}
 								>
 									{tagText}
 								</Badge>
