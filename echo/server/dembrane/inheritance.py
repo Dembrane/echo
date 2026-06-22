@@ -9,7 +9,10 @@ See docs/workspaces/inheritance-rules.md for the full spec.
 
 Settings shape on workspace.settings (JSON):
     {
-        "inherit_organisation_admins": bool  (default True)  # organisation admins follow organisation access
+        # inherit_organisation_admins: RETIRED. Admin inheritance is now driven
+        # solely by the workspace.visibility enum (see
+        # workspace_follows_organisation_admins). Stale values may linger in old
+        # rows' JSON but are never read.
         "inherit_organisation_members": bool (default False) # organisation members follow organisation access
         "sticky_removed": [                          # tombstones: no re-grant
             {"user_id": str, "removed_at": ISO8601, "removed_by": str}, ...
@@ -43,22 +46,15 @@ def _settings(workspace: dict) -> dict:
 def workspace_follows_organisation_admins(workspace: dict) -> bool:
     """True if organisation admins follow this workspace's access (inherit admin role).
 
-    Resolution order (matrix v1.1 §6 transition):
-      1. workspace.visibility column, when present: 'open_to_organisation' → True,
-         'private' → False.
-      2. Legacy settings.inherit_organisation_admins flag on pre-enum rows.
-      3. Default True (open) — matches matrix §9 default.
+    Driven solely by the workspace.visibility enum: 'private' → False, everything
+    else (the 'open_to_organisation' default, or an absent value) → True, matching
+    the matrix v1.1 §9 default-open rule.
+
+    The legacy settings.inherit_organisation_admins fallback was removed once
+    directus/migrations/backfill_workspace_visibility.py had run in every
+    environment, so no row reaches here with a NULL visibility.
     """
-    visibility = workspace.get("visibility")
-    if visibility == "open_to_organisation":
-        return True
-    if visibility == "private":
-        return False
-    # Legacy fallback for rows whose visibility predates the enum and is still
-    # NULL. directus/migrations/backfill_workspace_visibility.py backfills these;
-    # once it has run in every environment this branch is dead and can be removed
-    # (visibility-only), making the settings flag fully retired.
-    return _settings(workspace).get("inherit_organisation_admins", True)
+    return workspace.get("visibility") != "private"
 
 
 def workspace_follows_organisation_members(workspace: dict) -> bool:
