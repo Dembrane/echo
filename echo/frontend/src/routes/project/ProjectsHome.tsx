@@ -21,6 +21,7 @@ import {
 	useDisclosure,
 	useDocumentTitle,
 } from "@mantine/hooks";
+import { TrayArrowUp } from "@phosphor-icons/react";
 import { usePostHog } from "@posthog/react";
 import { IconSearch, IconSettings, IconX } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
@@ -30,14 +31,13 @@ import { useSearchParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { toast } from "@/components/common/Toaster";
-import { BulkActionBar } from "@/components/common/BulkActionBar";
 import { BulkMoveProjectsModal } from "@/components/project/BulkMoveProjectsModal";
 import { useTogglePinMutation } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
-import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
 import { API_BASE_URL } from "@/config";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
@@ -195,6 +195,14 @@ export const ProjectsHomeRoute = () => {
 	);
 	const selection = useBulkSelection(selectableIds);
 	const [moveOpen, moveHandlers] = useDisclosure(false);
+	// Select mode is off by default: the checkboxes only appear once the user
+	// clicks "Select", keeping the list clean for the common (browse) case.
+	const [selectMode, setSelectMode] = useState(false);
+
+	const exitSelectMode = useCallback(() => {
+		selection.clear();
+		setSelectMode(false);
+	}, [selection]);
 
 	const canManageWorkspace =
 		workspace?.role === "owner" || workspace?.role === "admin";
@@ -385,58 +393,100 @@ export const ProjectsHomeRoute = () => {
 								<ProjectListSkeleton searchValue={debouncedSearchValue} />
 							)}
 
-							{/* Bulk-move select row (admin/owner only) — between the
-							    search and the list, consistent with conversations. */}
-							{canManageWorkspace && displayProjects.length > 0 && (
-								<BulkActionBar
-									allSelected={selection.allSelected}
-									someSelected={selection.someSelected}
-									onToggleAll={selection.toggleAll}
-									selectedCount={selection.count}
-									moveLabel={<Trans>Move projects</Trans>}
-									onMove={moveHandlers.open}
-									data-testid="projects-bulk-bar"
-								/>
-							)}
+							{/* Bulk-move affordance (admin/owner only). A quiet "Select"
+							    button on the right turns on select mode; the row then
+							    becomes select-all + Move + Cancel. No divider borders. */}
+							{canManageWorkspace &&
+								displayProjects.length > 0 &&
+								(selectMode ? (
+									<Group justify="space-between" align="center" wrap="nowrap">
+										<Checkbox
+											checked={selection.allSelected}
+											indeterminate={selection.someSelected}
+											onChange={selection.toggleAll}
+											data-testid="projects-select-all"
+											label={
+												<Text size="sm">
+													{selection.count > 0 ? (
+														<Plural
+															value={selection.count}
+															one="# selected"
+															other="# selected"
+														/>
+													) : (
+														<Trans>Select all</Trans>
+													)}
+												</Text>
+											}
+										/>
+										<Group gap="xs" wrap="nowrap">
+											{selection.count > 0 && (
+												<Button
+													variant="subtle"
+													size="xs"
+													leftSection={<TrayArrowUp size={16} />}
+													onClick={moveHandlers.open}
+													data-testid="projects-bulk-move"
+												>
+													<Trans>Move projects</Trans>
+												</Button>
+											)}
+											<Button
+												variant="subtle"
+												size="xs"
+												color="gray"
+												onClick={exitSelectMode}
+												data-testid="projects-select-cancel"
+											>
+												<Trans>Cancel</Trans>
+											</Button>
+										</Group>
+									</Group>
+								) : (
+									<Group justify="flex-end">
+										<Button
+											variant="subtle"
+											size="xs"
+											onClick={() => setSelectMode(true)}
+											data-testid="projects-select-button"
+										>
+											<Trans>Select</Trans>
+										</Button>
+									</Group>
+								))}
 
 							{displayProjects.length > 0 && (
 								<Box className="relative">
 									<Stack ref={listParent} gap="sm">
-										{displayProjects.map((project) => (
-											<Group
+										{displayProjects.map((project, index) => (
+											<div
 												key={project.id}
-												wrap="nowrap"
-												align="center"
-												gap="xs"
 												ref={
-													displayProjects[displayProjects.length - 1].id ===
-													project.id
+													index === displayProjects.length - 1
 														? loadMoreRef
 														: undefined
 												}
 											>
-												{canManageWorkspace && (
-													<Checkbox
-														checked={selection.isSelected(project.id)}
-														onChange={() => selection.toggle(project.id)}
-														aria-label={t`Select project`}
-														data-testid={`project-select-${project.id}`}
-													/>
-												)}
-												<Box style={{ flex: 1, minWidth: 0 }}>
-													<ProjectListItem
-														project={project as Project}
-														onTogglePin={
-															canPinOnThisWorkspace ? handleTogglePin : undefined
-														}
-														isPinned={pinnedIds.has(project.id)}
-														canPin={canPin && canPinOnThisWorkspace}
-														onSearchOwner={
-															isAdmin ? handleSearchOwner : undefined
-														}
-													/>
-												</Box>
-											</Group>
+												<ProjectListItem
+													project={project as Project}
+													// Pin and select are mutually exclusive interactions;
+													// hide the pin while selecting so the row click is
+													// unambiguous.
+													onTogglePin={
+														!selectMode && canPinOnThisWorkspace
+															? handleTogglePin
+															: undefined
+													}
+													isPinned={pinnedIds.has(project.id)}
+													canPin={canPin && canPinOnThisWorkspace}
+													onSearchOwner={
+														isAdmin ? handleSearchOwner : undefined
+													}
+													selectable={selectMode && canManageWorkspace}
+													selected={selection.isSelected(project.id)}
+													onToggleSelect={() => selection.toggle(project.id)}
+												/>
+											</div>
 										))}
 
 										{isFetchingNextPage && (

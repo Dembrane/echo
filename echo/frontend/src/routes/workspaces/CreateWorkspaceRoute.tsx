@@ -2,10 +2,8 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Alert,
-	Anchor,
 	Button,
 	Center,
-	Checkbox,
 	Container,
 	Group,
 	Loader,
@@ -29,7 +27,7 @@ import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
-import { API_BASE_URL, LEGAL_TERMS_URL } from "@/config";
+import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -38,11 +36,6 @@ interface CreatedWorkspace {
 	id: string;
 	name: string;
 }
-
-// The partner agreement is, for now, the same legal terms accepted at
-// registration (founder decision 2026-06-21). Swap for a dedicated partner
-// agreement page if one is published later.
-const PARTNER_AGREEMENT_URL = LEGAL_TERMS_URL;
 
 async function createWorkspace(payload: {
 	name: string;
@@ -125,10 +118,9 @@ export const CreateWorkspaceRoute = () => {
 	const [access, setAccess] = useState<Access>("everyone");
 	const [memberEmails, setMemberEmails] = useState<string[]>([]);
 	const [billFor, setBillFor] = useState<BillFor>("internal");
-	// External-client (ISSUE-026): owning-org name + data owner rep + agreement.
+	// External-client (ISSUE-026): owning-org name + data owner rep.
 	const [dataOwnerOrgName, setDataOwnerOrgName] = useState("");
 	const [dataOwnerEmail, setDataOwnerEmail] = useState("");
-	const [agreementAccepted, setAgreementAccepted] = useState(false);
 
 	useDocumentTitle(t`Create workspace | dembrane`);
 
@@ -198,9 +190,9 @@ export const CreateWorkspaceRoute = () => {
 				// Sending a data owner is what makes the workspace external/separate.
 				...(isClient
 					? {
-							data_owner_org_name: dataOwnerOrgName.trim(),
 							data_owner_email: dataOwnerEmail.trim(),
-							partner_agreement_accepted: agreementAccepted,
+							data_owner_org_name: dataOwnerOrgName.trim(),
+							partner_agreement_accepted: true,
 						}
 					: {}),
 			});
@@ -334,16 +326,17 @@ export const CreateWorkspaceRoute = () => {
 		accessOptions.find((o) => o.value === access)?.title ?? "";
 
 	const canAdvanceFromName = name.trim().length > 0;
-	// External-client billing step (ISSUE-026): require a data owner email and
-	// agreement acceptance before leaving the Billing step / submitting.
+	// External-client billing step (ISSUE-026): require a data owner email
+	// before leaving the Billing step / submitting.
 	const isClientWorkspace = billFor === "client";
 	const dataOwnerValid = /.+@.+\..+/.test(dataOwnerEmail.trim());
 	const ownerOrgValid = dataOwnerOrgName.trim().length > 0;
 	const canAdvanceFromBilling =
-		!isClientWorkspace ||
-		(ownerOrgValid && dataOwnerValid && agreementAccepted);
+		!isClientWorkspace || (ownerOrgValid && dataOwnerValid);
 	const canSubmit =
-		canAdvanceFromName && canAdvanceFromBilling && Boolean(targetOrganisationId);
+		canAdvanceFromName &&
+		canAdvanceFromBilling &&
+		Boolean(targetOrganisationId);
 
 	return (
 		<Container size="xl" py="xl" px="lg">
@@ -419,11 +412,12 @@ export const CreateWorkspaceRoute = () => {
 
 					<Stepper.Step label={t`Ownership`}>
 						<Stack gap={14} mt="md">
-							{(
+							{
 								<>
 									<Text size="sm" c="dimmed">
 										<Trans>
-											Is this for your organisation's internal use, or for an external organisation?
+											Is this for your organisation's internal use, or for an
+											external organisation?
 										</Trans>
 									</Text>
 									<Radio.Group
@@ -456,7 +450,9 @@ export const CreateWorkspaceRoute = () => {
 														</Text>
 														<Text size="xs" c="dimmed">
 															<Trans>
-																A separate data-ownership and billing context. It can be handed off to that organisation later with no data movement.
+																A separate data-ownership and billing context.
+																It can be handed off to that organisation later
+																with no data movement.
 															</Trans>
 														</Text>
 													</Stack>
@@ -501,28 +497,10 @@ export const CreateWorkspaceRoute = () => {
 												}
 												data-testid="create-workspace-data-owner"
 											/>
-											<Checkbox
-												checked={agreementAccepted}
-												onChange={(e) =>
-													setAgreementAccepted(e.currentTarget.checked)
-												}
-												data-testid="create-workspace-agreement"
-												label={
-													<Text size="sm">
-														<Trans>
-															I accept the{" "}
-															<Anchor href={PARTNER_AGREEMENT_URL} target="_blank">
-																partner agreement
-															</Anchor>{" "}
-															for using dembrane with an external organisation.
-														</Trans>
-													</Text>
-												}
-											/>
 										</Stack>
 									)}
 								</>
-							)}
+							}
 						</Stack>
 					</Stepper.Step>
 

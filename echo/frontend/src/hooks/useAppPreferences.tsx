@@ -6,6 +6,23 @@ import {
 	useState,
 } from "react";
 
+import { USE_PARTICIPANT_ROUTER } from "../config";
+
+// The portal (participant) app shares the dashboard type scale, which was
+// recently bumped up everywhere. At participant reading distances that ramp
+// reads a touch large, so the portal renders one notch smaller. This only
+// scales the size-bearing vars (font + heading sizes); line heights and
+// weights are ratios and stay as-is.
+const PORTAL_FONT_SCALE = USE_PARTICIPANT_ROUTER ? 0.9 : 1;
+
+const scaleTypeSize = (value: string): string => {
+	if (PORTAL_FONT_SCALE === 1) return value;
+	const match = value.match(/^([\d.]+)(rem|px)$/);
+	if (!match) return value;
+	const scaled = Number.parseFloat(match[1]) * PORTAL_FONT_SCALE;
+	return `${Number.parseFloat(scaled.toFixed(4))}${match[2]}`;
+};
+
 export type FontFamily = "dm-sans" | "space-grotesk";
 export type FontSizeScale = "xs" | "small" | "normal" | "large" | "xl";
 
@@ -137,72 +154,72 @@ export const AppPreferencesProvider = ({
 		// Space Grotesk: Original Mantine-based sizes with medium weight
 		const typography = isDmSans
 			? {
+					fontSizeLg: "1.5rem", // Heading3: 24px (larger body)
+					fontSizeMd: "1.25rem", // Body1: 20px (standard body, default)
+					fontSizeSm: "0.9375rem", // Body2: 15px (low-emphasis secondary)
+					fontSizeXl: "1.75rem", // Heading2: 28px
 					// Distinct type ramp: Body3 12 / Body2 15 / Body1 20 (default body)
 					// / Heading3 24 / Heading2 28. Steps are kept far enough apart to
 					// avoid the 2px "uncanny valley" gaps the old scale had.
 					fontSizeXs: "0.75rem", // Body3: 12px (captions, gentle labels)
-					fontSizeSm: "0.9375rem", // Body2: 15px (low-emphasis secondary)
-					fontSizeMd: "1.25rem", // Body1: 20px (standard body, default)
-					fontSizeLg: "1.5rem", // Heading3: 24px (larger body)
-					fontSizeXl: "1.75rem", // Heading2: 28px
+					h1LineHeight: "1.15",
 					// Heading sizes: Title 36 / H1 32 / H2 28 / H3 24, then graceful
 					// descent to body sizes for h5/h6.
 					h1Size: "2.25rem", // Title: 36px
-					h1LineHeight: "1.15",
-					h2Size: "2rem", // Heading1: 32px
 					h2LineHeight: "1.2",
-					h3Size: "1.75rem", // Heading2: 28px
+					h2Size: "2rem", // Heading1: 32px
 					h3LineHeight: "1.25",
-					h4Size: "1.5rem", // Heading3: 24px
+					h3Size: "1.75rem", // Heading2: 28px
 					h4LineHeight: "1.3",
-					h5Size: "1.25rem", // Body1: 20px
+					h4Size: "1.5rem", // Heading3: 24px
 					h5LineHeight: "1.4",
-					h6Size: "0.9375rem", // Body2: 15px
+					h5Size: "1.25rem", // Body1: 20px
 					h6LineHeight: "1.45",
+					h6Size: "0.9375rem", // Body2: 15px
 					// Heading font weight: Regular per brand STYLE_GUIDE.md
 					headingFontWeight: "400",
+					lineHeightLg: "1.5",
+					lineHeightMd: "1.55",
+					lineHeightSm: "1.45",
+					lineHeightXl: "1.4",
 					// Line heights
 					lineHeightXs: "1.4",
-					lineHeightSm: "1.45",
-					lineHeightMd: "1.55",
-					lineHeightLg: "1.5",
-					lineHeightXl: "1.4",
 				}
 			: {
+					fontSizeLg: "1.5rem", // Heading3: 24px
+					fontSizeMd: "1.25rem", // Body1: 20px (default body)
+					fontSizeSm: "0.9375rem", // Body2: 15px
+					fontSizeXl: "1.75rem", // Heading2: 28px
 					// Same distinct type ramp as the DM Sans palette; only the heading
 					// weight differs (Space Grotesk reads better at medium weight).
 					fontSizeXs: "0.75rem", // Body3: 12px
-					fontSizeSm: "0.9375rem", // Body2: 15px
-					fontSizeMd: "1.25rem", // Body1: 20px (default body)
-					fontSizeLg: "1.5rem", // Heading3: 24px
-					fontSizeXl: "1.75rem", // Heading2: 28px
-					h1Size: "2.25rem", // Title: 36px
 					h1LineHeight: "1.15",
-					h2Size: "2rem", // Heading1: 32px
+					h1Size: "2.25rem", // Title: 36px
 					h2LineHeight: "1.2",
-					h3Size: "1.75rem", // Heading2: 28px
+					h2Size: "2rem", // Heading1: 32px
 					h3LineHeight: "1.25",
-					h4Size: "1.5rem", // Heading3: 24px
+					h3Size: "1.75rem", // Heading2: 28px
 					h4LineHeight: "1.3",
-					h5Size: "1.25rem", // Body1: 20px
+					h4Size: "1.5rem", // Heading3: 24px
 					h5LineHeight: "1.4",
-					h6Size: "0.9375rem", // Body2: 15px
+					h5Size: "1.25rem", // Body1: 20px
 					h6LineHeight: "1.45",
+					h6Size: "0.9375rem", // Body2: 15px
 					// Heading font weight
 					headingFontWeight: "500",
+					lineHeightLg: "1.5",
+					lineHeightMd: "1.55",
+					lineHeightSm: "1.45",
+					lineHeightXl: "1.4",
 					// Line heights
 					lineHeightXs: "1.4",
-					lineHeightSm: "1.45",
-					lineHeightMd: "1.55",
-					lineHeightLg: "1.5",
-					lineHeightXl: "1.4",
 				};
 
 		// Icon sizes: DM Sans uses larger icons to match the bolder typography
 		const homeIconSize = typography?.h2Size ?? "2.369rem";
 
 		// Set base font size
-		root.style.setProperty("--app-base-font-size", baseFontSize);
+		root.style.setProperty("--app-base-font-size", scaleTypeSize(baseFontSize));
 
 		// Set font family
 		root.style.setProperty("--app-font-family", fontValue);
@@ -212,14 +229,29 @@ export const AppPreferencesProvider = ({
 		root.style.setProperty("--app-text", textColor);
 
 		// Set icon sizes
-		root.style.setProperty("--app-home-icon-size", homeIconSize);
+		root.style.setProperty("--app-home-icon-size", scaleTypeSize(homeIconSize));
 
 		// Set typography - font sizes
-		root.style.setProperty("--app-font-size-xs", typography.fontSizeXs);
-		root.style.setProperty("--app-font-size-sm", typography.fontSizeSm);
-		root.style.setProperty("--app-font-size-md", typography.fontSizeMd);
-		root.style.setProperty("--app-font-size-lg", typography.fontSizeLg);
-		root.style.setProperty("--app-font-size-xl", typography.fontSizeXl);
+		root.style.setProperty(
+			"--app-font-size-xs",
+			scaleTypeSize(typography.fontSizeXs),
+		);
+		root.style.setProperty(
+			"--app-font-size-sm",
+			scaleTypeSize(typography.fontSizeSm),
+		);
+		root.style.setProperty(
+			"--app-font-size-md",
+			scaleTypeSize(typography.fontSizeMd),
+		);
+		root.style.setProperty(
+			"--app-font-size-lg",
+			scaleTypeSize(typography.fontSizeLg),
+		);
+		root.style.setProperty(
+			"--app-font-size-xl",
+			scaleTypeSize(typography.fontSizeXl),
+		);
 
 		// Set typography - line heights
 		root.style.setProperty("--app-line-height-xs", typography.lineHeightXs);
@@ -233,32 +265,50 @@ export const AppPreferencesProvider = ({
 			"--app-heading-font-weight",
 			typography.headingFontWeight,
 		);
-		root.style.setProperty("--app-heading-h1-size", typography.h1Size);
+		root.style.setProperty(
+			"--app-heading-h1-size",
+			scaleTypeSize(typography.h1Size),
+		);
 		root.style.setProperty(
 			"--app-heading-h1-line-height",
 			typography.h1LineHeight,
 		);
-		root.style.setProperty("--app-heading-h2-size", typography.h2Size);
+		root.style.setProperty(
+			"--app-heading-h2-size",
+			scaleTypeSize(typography.h2Size),
+		);
 		root.style.setProperty(
 			"--app-heading-h2-line-height",
 			typography.h2LineHeight,
 		);
-		root.style.setProperty("--app-heading-h3-size", typography.h3Size);
+		root.style.setProperty(
+			"--app-heading-h3-size",
+			scaleTypeSize(typography.h3Size),
+		);
 		root.style.setProperty(
 			"--app-heading-h3-line-height",
 			typography.h3LineHeight,
 		);
-		root.style.setProperty("--app-heading-h4-size", typography.h4Size);
+		root.style.setProperty(
+			"--app-heading-h4-size",
+			scaleTypeSize(typography.h4Size),
+		);
 		root.style.setProperty(
 			"--app-heading-h4-line-height",
 			typography.h4LineHeight,
 		);
-		root.style.setProperty("--app-heading-h5-size", typography.h5Size);
+		root.style.setProperty(
+			"--app-heading-h5-size",
+			scaleTypeSize(typography.h5Size),
+		);
 		root.style.setProperty(
 			"--app-heading-h5-line-height",
 			typography.h5LineHeight,
 		);
-		root.style.setProperty("--app-heading-h6-size", typography.h6Size);
+		root.style.setProperty(
+			"--app-heading-h6-size",
+			scaleTypeSize(typography.h6Size),
+		);
 		root.style.setProperty(
 			"--app-heading-h6-line-height",
 			typography.h6LineHeight,

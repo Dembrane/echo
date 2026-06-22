@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	AppWindowIcon,
-	FolderIcon,
 	Folders,
 	GearIcon,
 	GraduationCapIcon,
@@ -84,29 +83,33 @@ export const OrgHomeView = () => {
 		// Everyone else (member, billing, external) sees only the workspaces
 		// they directly belong to, so the sidebar never shows a workspace that
 		// dead-links on click. Discovering other workspaces happens on /o.
-		if (!isManager) {
+		const buildList = () => {
+			if (!isManager) {
+				return myOrgWorkspaces.map((w) => ({
+					id: w.id,
+					isExternal: w.role === "external",
+					name: w.name,
+				}));
+			}
+			const externalSet = new Set(
+				myOrgWorkspaces.filter((w) => w.role === "external").map((w) => w.id),
+			);
+			const full = orgWsQuery.data;
+			if (full && full.length > 0) {
+				return full.map((w) => ({
+					id: w.id,
+					isExternal: externalSet.has(w.id),
+					name: w.name,
+				}));
+			}
 			return myOrgWorkspaces.map((w) => ({
 				id: w.id,
 				isExternal: w.role === "external",
 				name: w.name,
 			}));
-		}
-		const externalSet = new Set(
-			myOrgWorkspaces.filter((w) => w.role === "external").map((w) => w.id),
-		);
-		const full = orgWsQuery.data;
-		if (full && full.length > 0) {
-			return full.map((w) => ({
-				id: w.id,
-				isExternal: externalSet.has(w.id),
-				name: w.name,
-			}));
-		}
-		return myOrgWorkspaces.map((w) => ({
-			id: w.id,
-			isExternal: w.role === "external",
-			name: w.name,
-		}));
+		};
+		// Sort alphabetically by name to match the org overview page ordering.
+		return buildList().sort((a, b) => a.name.localeCompare(b.name));
 	}, [isManager, myOrgWorkspaces, orgWsQuery.data]);
 
 	// Show the Workspaces section whenever there is something to show — for
