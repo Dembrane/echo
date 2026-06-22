@@ -199,11 +199,9 @@ class WorkspaceListResponse(BaseModel):
 class CreateWorkspaceRequest(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     org_id: Optional[str] = None  # defaults to user's primary org
-    # Visibility choice on the create form. Maps to workspace.visibility
-    # (matrix v1.1 §6). True → 'open_to_organisation', False → 'private'.
-    # Private requires innovator+ tier — solo users can still pick it but
-    # the set_private policy enforces at mutation time.
-    inherit_organisation_admins: bool = True
+    # Initial visibility (open_to_organisation | invite_only | private). Non-open
+    # at creation is gated at Innovator+ (see create_workspace). Defaults open.
+    visibility: Literal["open_to_organisation", "invite_only", "private"] = "open_to_organisation"
     # Accepted for backward compatibility; ignored on write. Organisation members
     # no longer auto-inherit access (matrix §6 retires derivation). They
     # use Request access.

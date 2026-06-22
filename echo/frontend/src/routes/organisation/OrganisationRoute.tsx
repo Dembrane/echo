@@ -29,6 +29,7 @@ import { modals } from "@mantine/modals";
 import {
 	IconChevronDown,
 	IconChevronRight,
+	IconDoor,
 	IconLock,
 	IconPlus,
 	IconSparkles,
@@ -120,6 +121,7 @@ interface OrganisationWorkspace {
 	project_count: number;
 	member_count: number;
 	is_private: boolean;
+	visibility?: string;
 	bills_separately?: boolean;
 	seat_invite_blocked?: boolean;
 	// Top pinned projects per workspace — backend-enriched on
@@ -1168,9 +1170,43 @@ interface WorkspaceCardModel {
 	audio_hours: number;
 	conversation_count: number;
 	is_private: boolean;
+	visibility: string;
 	bills_separately: boolean;
 	pinned_projects: WorkspacePinnedProject[];
 	recently_approved: boolean;
+}
+
+/**
+ * Visibility indicator for a workspace. invite_only and private are both
+ * restricted (hidden from members), but read differently, so they get distinct
+ * icons + tooltips. Renders nothing for open_to_organisation.
+ */
+function WorkspaceVisibilityIcon({
+	visibility,
+	size = 14,
+}: {
+	visibility: string | undefined;
+	size?: number;
+}) {
+	if (visibility === "private") {
+		return (
+			<Tooltip label={t`Private workspace`}>
+				<span style={{ display: "inline-flex", flexShrink: 0 }}>
+					<IconLock size={size} color="var(--mantine-color-gray-6)" />
+				</span>
+			</Tooltip>
+		);
+	}
+	if (visibility === "invite_only") {
+		return (
+			<Tooltip label={t`Invite-only workspace`}>
+				<span style={{ display: "inline-flex", flexShrink: 0 }}>
+					<IconDoor size={size} color="var(--mantine-color-gray-6)" />
+				</span>
+			</Tooltip>
+		);
+	}
+	return null;
 }
 
 function OrganisationOverviewPanel({
@@ -1235,6 +1271,7 @@ function OrganisationOverviewPanel({
 					conversation_count: w.usage?.conversation_count ?? 0,
 					id: w.id,
 					is_private: roster?.is_private ?? false,
+					visibility: roster?.visibility ?? "open_to_organisation",
 					member_count: w.member_count,
 					members_preview: w.members_preview ?? [],
 					name: w.name,
@@ -1474,13 +1511,7 @@ function OrganisationWorkspaceCard({
 					>
 						{workspace.name}
 					</Text>
-					{workspace.is_private && (
-						<Tooltip label={t`Private workspace`}>
-							<span style={{ display: "inline-flex", flexShrink: 0 }}>
-								<IconLock size={14} color="var(--mantine-color-gray-6)" />
-							</span>
-						</Tooltip>
-					)}
+					<WorkspaceVisibilityIcon visibility={workspace.visibility} size={14} />
 				</Group>
 				<Text size="xs" c="dimmed" lineClamp={1}>
 					{capitalizedTier}
@@ -1813,9 +1844,7 @@ function OrganisationPersonCard({
 									className="rounded px-2 py-1 hover:bg-[var(--mantine-color-default-hover)]"
 								>
 									<Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
-										{ws.is_private && (
-											<IconLock size={12} color="var(--mantine-color-gray-6)" />
-										)}
+										<WorkspaceVisibilityIcon visibility={ws.visibility} size={12} />
 										<Text size="sm" truncate>
 											{ws.name}
 										</Text>

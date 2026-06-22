@@ -320,14 +320,6 @@ async def request_workspace_access(
             detail="Workspace not found",  # intentional — don't confirm existence
         )
 
-    from dembrane.billing_account import resolve_workspace_tier
-
-    if (await resolve_workspace_tier(workspace["id"])) == "free":
-        raise HTTPException(
-            status_code=404,
-            detail="Workspace not found",
-        )
-
     org_role = await _org_role(org_id, app_user_id)
     if org_role is None:
         raise HTTPException(status_code=403, detail="Not a member of this organisation")
@@ -692,14 +684,16 @@ async def list_discoverable_workspaces(
 
     is_org_admin = org_role in ("admin", "owner")
 
+    # No tier filter: tier lives on the billing account now (workspace.tier was
+    # dropped), and free is fully shareable under per-seat billing. Admins see
+    # every visibility; members only open_to_organisation.
     filters: dict = {
         "org_id": {"_eq": org_id},
         "deleted_at": {"_null": True},
-        # Free tier is the admin's personal allotment; not joinable by anyone else, even org admins.
-        "tier": {"_neq": "free"},
     }
     if not is_org_admin:
-        # Positive-match mirrors request_workspace_access so NULL-visibility rows don't surface a CTA that 404s on submit.
+        # Positive-match: only open workspaces are member-discoverable. invite_only
+        # and private stay hidden from members.
         filters["visibility"] = {"_eq": "open_to_organisation"}
 
     workspaces = await async_directus.get_items(

@@ -1662,7 +1662,10 @@ class OrgWorkspaceSummary(BaseModel):
     is_default: bool
     project_count: int = 0
     member_count: int = 0
-    is_private: bool = False  # settings.inherit_organisation_admins == false
+    is_private: bool = False  # true when visibility != open_to_organisation
+    # Exact visibility so the UI can distinguish invite_only from private (they
+    # share is_private but get different icons/labels).
+    visibility: str = "open_to_organisation"
     # True when this workspace bills on its own (workspace-scoped) account
     # rather than the org's pooled plan — the overview card marks it softly.
     bills_separately: bool = False
@@ -1790,8 +1793,7 @@ async def list_organisation_workspaces(
             raise HTTPException(status_code=403, detail="No access to this organisation")
         ws_filter["id"] = {"_in": accessible_ids}
 
-    # Pull settings.inherit_organisation_admins explicitly (sub-field projection)
-    # so we don't need to send the whole JSON. Counts come from separate
+    # `visibility` drives is_private (see below). Counts come from separate
     # aggregates because the workspace collection doesn't declare O2M aliases.
     from dembrane.billing_account import nested_billing_fields, billing_from_workspace
 
@@ -1925,6 +1927,7 @@ async def list_organisation_workspaces(
                 project_count=project_counts.get(ws["id"], 0),
                 member_count=member_counts.get(ws["id"], 0),
                 is_private=is_private,
+                visibility=ws.get("visibility") or "open_to_organisation",
                 bills_separately=bills_separately,
                 seat_invite_blocked=seat_blocked,
                 seats_used_including_pending=seats_used_total,

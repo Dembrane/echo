@@ -230,14 +230,12 @@ async def test_org_admin_sees_all_workspaces_with_action_join():
 
 
 @pytest.mark.asyncio
-async def test_workspace_query_filters_deleted_tier_and_for_member_filters_visibility():
-    """Pins three filters: deleted_at:_null, tier:_neq:free, and (non-admin)
-    visibility:_eq:open_to_organisation — the positive match prevents
-    NULL-visibility rows from surfacing a CTA that submit 404s on."""
-    mock = _make_directus_mock(
-        caller_role="member",
-        workspaces=[],
-    )
+async def test_workspace_query_excludes_deleted_has_no_tier_filter_and_member_matches_open():
+    """Regression guard: the discovery query must NOT filter on workspace.tier
+    (that column was dropped when tier moved to the billing account; filtering
+    it errors the whole Directus query and empties discovery). Members still
+    positive-match visibility=open_to_organisation."""
+    mock = _make_directus_mock(caller_role="member", workspaces=[])
 
     with (
         patch("dembrane.api.v2.access_requests.async_directus", mock),
@@ -251,22 +249,65 @@ async def test_workspace_query_filters_deleted_tier_and_for_member_filters_visib
             res = await client.get(f"/v2/orgs/{_ORG_ID}/discoverable-workspaces")
 
     assert res.status_code == 200
-
-    workspace_calls = [
-        c for c in mock.get_items.call_args_list if c.args[0] == "workspace"
-    ]
+    workspace_calls = [c for c in mock.get_items.call_args_list if c.args[0] == "workspace"]
     assert workspace_calls, "Expected a get_items('workspace', ...) call"
     filt = workspace_calls[0].args[1].get("query", {}).get("filter", {})
-    assert filt.get("deleted_at") == {"_null": True}, (
-        "workspace query must exclude deleted rows"
+    assert filt.get("deleted_at") == {"_null": True}
+    assert "tier" not in filt, "discovery must NOT filter on the dropped workspace.tier column"
+    assert filt.get("visibility") == {"_eq": "open_to_organisation"}
+
+
+@pytest.mark.asyncio
+async def test_free_workspaces_are_discoverable():
+    """Free is fully shareable now (billing moved to per-seat). A free, open
+    workspace surfaces for a member with action='request-access'."""
+    free_open = {"id": "ws-free", "name": "Free WS", "visibility": "open_to_organisation"}
+    mock = _make_directus_mock(
+        caller_role="member",
+        workspaces=[free_open],
+        member_counts_by_ws={"ws-free": 1},
     )
-    assert filt.get("tier") == {"_neq": "free"}, (
-        "workspace query must exclude free-tier (personal) workspaces from discovery"
+    with (
+        patch("dembrane.api.v2.access_requests.async_directus", mock),
+        patch(
+            "dembrane.api.v2.access_requests.get_app_user_or_raise",
+            AsyncMock(return_value=_APP_USER),
+        ),
+    ):
+        app = _build_app()
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            res = await client.get(f"/v2/orgs/{_ORG_ID}/discoverable-workspaces")
+    assert res.status_code == 200
+    rows = res.json()["workspaces"]
+    assert [w["id"] for w in rows] == ["ws-free"]
+    assert rows[0]["action"] == "request-access"
+
+
+@pytest.mark.asyncio
+async def test_org_admin_sees_invite_only_and_private_with_join():
+    """Admins see open + invite_only + private, all action='join'
+    (invite_only and private are identical for now)."""
+    ws_invite = {"id": "ws-inv", "name": "Invite WS", "visibility": "invite_only"}
+    mock = _make_directus_mock(
+        caller_role="admin",
+        workspaces=[_WS_OPEN_A, ws_invite, _WS_PRIVATE],
+        member_counts_by_ws={"ws-open-a": 2, "ws-inv": 1, "ws-priv": 1},
     )
-    assert filt.get("visibility") == {"_eq": "open_to_organisation"}, (
-        "non-admin caller must positive-match open_to_organisation; "
-        "_neq:private would surface NULL-visibility rows that the submit endpoint 404s on"
-    )
+    with (
+        patch("dembrane.api.v2.access_requests.async_directus", mock),
+        patch(
+            "dembrane.api.v2.access_requests.get_app_user_or_raise",
+            AsyncMock(return_value=_APP_USER),
+        ),
+    ):
+        app = _build_app()
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            res = await client.get(f"/v2/orgs/{_ORG_ID}/discoverable-workspaces")
+    assert res.status_code == 200
+    by_id = {w["id"]: w for w in res.json()["workspaces"]}
+    assert set(by_id) == {"ws-open-a", "ws-inv", "ws-priv"}
+    assert by_id["ws-inv"]["action"] == "join"
+    assert by_id["ws-priv"]["action"] == "join"
 
 
 @pytest.mark.asyncio

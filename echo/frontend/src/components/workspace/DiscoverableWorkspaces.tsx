@@ -219,7 +219,7 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 
 	const headerLabel =
 		joinRows.length > 0 && otherRows.length === 0
-			? t`Private workspaces`
+			? t`Workspaces you can join`
 			: t`Discoverable in this organisation`;
 	const singleName =
 		selectedIds.length === 1
@@ -298,7 +298,13 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 												{ws.name}
 											</Text>
 											<Text size="xs" c="dimmed">
-												<Trans>Private</Trans>
+												{ws.visibility === "open_to_organisation" ? (
+													<Trans>Everyone in your organisation</Trans>
+												) : ws.visibility === "invite_only" ? (
+													<Trans>Invite only</Trans>
+												) : (
+													<Trans>Private</Trans>
+												)}
 											</Text>
 											<Text size="xs" c="dimmed">
 												<Plural

@@ -16,56 +16,49 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { NavItem } from "../../primitives/NavItem";
 import { SectionLabel } from "../../primitives/SectionLabel";
 
-interface OrgGroup {
-	id: string;
-	name: string;
-	workspaceCount: number;
-	isExternal: boolean;
-}
-
-function groupByOrg(
-	workspaces: ReturnType<typeof useWorkspace>["workspaces"],
-): OrgGroup[] {
-	const map = new Map<string, OrgGroup>();
-	for (const ws of workspaces) {
-		if (!ws.org_id) continue;
-		const isExternal = ws.role === "external";
-		const existing = map.get(ws.org_id);
-		if (existing) {
-			existing.workspaceCount += 1;
-			if (!isExternal) existing.isExternal = false;
-		} else {
-			map.set(ws.org_id, {
-				id: ws.org_id,
-				isExternal,
-				name: ws.org_name || "Untitled organisation",
-				workspaceCount: 1,
-			});
-		}
-	}
-	return [...map.values()].sort((a, b) => {
-		if (a.isExternal !== b.isExternal) return a.isExternal ? 1 : -1;
-		return a.name.localeCompare(b.name);
-	});
-}
-
 export const UserHomeView = () => {
 	const { workspaces, isLoading } = useWorkspace();
 	const { data: meV2 } = useV2Me({ enabled: true });
-	const orgs = useMemo(() => groupByOrg(workspaces), [workspaces]);
+
+	// Internal orgs come from org membership (meV2.orgs), NOT the workspace list.
+	// A user invited to an org with no workspace yet still belongs to it and must
+	// see it — that's how they reach workspace discovery (request access / join).
+	// Deriving from `workspaces` (direct memberships only) hid org-only members.
 	const internalOrgs = useMemo(
-		() => orgs.filter((org) => !org.isExternal),
-		[orgs],
+		() =>
+			(meV2?.orgs ?? [])
+				.map((o) => ({ id: o.id, name: o.name || "Untitled organisation" }))
+				.sort((a, b) => a.name.localeCompare(b.name)),
+		[meV2],
 	);
-	const externalOrgs = useMemo(
-		() => orgs.filter((org) => org.isExternal),
-		[orgs],
+	const internalOrgIds = useMemo(
+		() => new Set(internalOrgs.map((o) => o.id)),
+		[internalOrgs],
 	);
-	const noWorkspaces = !isLoading && workspaces.length === 0;
+	// External orgs: the user only holds an external workspace role there (no
+	// org_membership), so they're absent from meV2.orgs. Derive from workspaces.
+	const externalOrgs = useMemo(() => {
+		const map = new Map<string, { id: string; name: string }>();
+		for (const ws of workspaces) {
+			if (!ws.org_id || ws.role !== "external") continue;
+			if (internalOrgIds.has(ws.org_id) || map.has(ws.org_id)) continue;
+			map.set(ws.org_id, {
+				id: ws.org_id,
+				name: ws.org_name || "Untitled organisation",
+			});
+		}
+		return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+	}, [workspaces, internalOrgIds]);
+
 	// Owns no organisation of their own (org_membership). External-only users
 	// have workspaces (as external) but no owned org — they can always spin up
 	// their own org (ISSUE-028). meV2.orgs is the owned-org list.
 	const ownsNoOrg = (meV2?.orgs?.length ?? 0) === 0;
+	// "Brand new" empty state = no org membership AND no workspaces. Gated on
+	// meV2 being loaded so an org-only member never flashes this. They must see
+	// their org links instead.
+	const showFirstOrgSetup =
+		!isLoading && meV2 != null && ownsNoOrg && workspaces.length === 0;
 	const [createOrgOpened, createOrgHandlers] = useDisclosure(false);
 	const isStaff = meV2?.is_staff === true;
 	const needsOnboarding = meV2?.onboarding_completed === false;
@@ -81,7 +74,7 @@ export const UserHomeView = () => {
 			)}
 			<NavItem to="/o" label={<Trans>Home</Trans>} icon={House} end />
 
-			{noWorkspaces ? (
+			{showFirstOrgSetup ? (
 				<>
 					<SectionLabel>
 						<Trans>Get started</Trans>

@@ -11,12 +11,16 @@
     "group": null,
     "hidden": false,
     "interface": "select-dropdown",
-    "note": "Matrix v1.1 §6. open_to_organisation = discoverable by organisation admins (join) and members (request access). private = visible only to organisation admins in discovery. Innovator+ tier to create.",
+    "note": "Discovery + derived access (matrix v1.1 §6). open_to_organisation = members can request and admins can join; admins also inherit access. invite_only = hidden from members, admins can discover + join. private = same as invite_only for now (admins can discover + join); reserved to diverge later. invite_only and private require Innovator+ to set.",
     "options": {
       "choices": [
         {
-          "text": "Open to organisation",
+          "text": "Everyone in your organisation",
           "value": "open_to_organisation"
+        },
+        {
+          "text": "Invite only",
+          "value": "invite_only"
         },
         {
           "text": "Private",
