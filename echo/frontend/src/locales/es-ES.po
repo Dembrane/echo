@@ -291,7 +291,7 @@ msgid "(You)"
 msgstr ""
 
 #. placeholder {0}: joinable.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:179
+#: src/components/workspace/DiscoverableWorkspaces.tsx:254
 msgid "{0, plural, one {(# workspace)} other {(# workspaces)}}"
 msgstr ""
 
@@ -317,7 +317,8 @@ msgstr ""
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
 #: src/routes/project/ProjectsHome.tsx:250
-#: src/components/workspace/DiscoverableWorkspaces.tsx:213
+#: src/components/workspace/DiscoverableWorkspaces.tsx:304
+#: src/components/workspace/DiscoverableWorkspaces.tsx:358
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr ""
 
@@ -344,7 +345,9 @@ msgstr ""
 #~ msgstr ""
 
 #. placeholder {0}: selection.count
+#. placeholder {0}: selectedIds.length
 #: src/routes/project/ProjectsHome.tsx:411
+#: src/components/workspace/DiscoverableWorkspaces.tsx:316
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr ""
 
@@ -1282,6 +1285,19 @@ msgstr "E-mails añadidos"
 
 #: src/routes/organisation/OrganisationRoute.tsx:546
 msgid "Added to workspace"
+msgstr ""
+
+#: src/components/workspace/DiscoverableWorkspaces.tsx:159
+msgid "Added you to {okCount} workspaces"
+msgstr ""
+
+#. placeholder {0}: failedIds.length
+#: src/components/workspace/DiscoverableWorkspaces.tsx:167
+msgid "Added you to {okCount}. {0} couldn't be added, try again."
+msgstr ""
+
+#: src/components/workspace/DiscoverableWorkspaces.tsx:158
+msgid "Added you to 1 workspace"
 msgstr ""
 
 #: src/components/workspace/WorkspaceInviteWizard.tsx:249
@@ -3812,7 +3828,7 @@ msgstr ""
 #~ msgid "Discount type (optional)"
 #~ msgstr ""
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:176
+#: src/components/workspace/DiscoverableWorkspaces.tsx:223
 msgid "Discoverable in this organisation"
 msgstr ""
 
@@ -4488,7 +4504,7 @@ msgstr ""
 #: src/routes/organisation/OrganisationExternalView.tsx:57
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:119
-#: src/features/sidebar/views/org/OrgHomeView.tsx:168
+#: src/features/sidebar/views/org/OrgHomeView.tsx:147
 #: src/components/project/ProjectUsageAndSharing.tsx:320
 #: src/components/invite/RoleSelect.tsx:52
 msgid "External"
@@ -5784,8 +5800,8 @@ msgid "john@doe.com"
 msgstr ""
 
 #: src/components/workspace/DiscoverableWorkspaces.tsx:230
-msgid "Join"
-msgstr ""
+#~ msgid "Join"
+#~ msgstr ""
 
 #: src/components/project/ProjectQRCode.tsx:103
 #~ msgid "Join {0} on dembrane"
@@ -5802,6 +5818,15 @@ msgstr ""
 #: src/routes/invite/AcceptInviteRoute.tsx:70
 #~ msgid "Join {workspaceNameParam} | dembrane"
 #~ msgstr ""
+
+#: src/components/workspace/DiscoverableWorkspaces.tsx:332
+#: src/components/workspace/DiscoverableWorkspaces.tsx:407
+msgid "Join as admin"
+msgstr ""
+
+#: src/components/workspace/DiscoverableWorkspaces.tsx:393
+msgid "Join as admin?"
+msgstr ""
 
 #: src/components/common/FeedbackPortalModal.tsx:115
 msgid "Join our Slack community"
@@ -5822,8 +5847,8 @@ msgid "Join this workspace to collaborate on conversations, share insights, and 
 msgstr ""
 
 #: src/components/workspace/DiscoverableWorkspaces.tsx:107
-msgid "Joined"
-msgstr ""
+#~ msgid "Joined"
+#~ msgstr ""
 
 #: src/routes/invite/MyInvitesRoute.tsx:52
 msgid "Joined {subjectName}"
@@ -6366,7 +6391,7 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:798
 #: src/routes/organisation/OrganisationRoute.tsx:792
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:75
-#: src/features/sidebar/views/org/OrgHomeView.tsx:138
+#: src/features/sidebar/views/org/OrgHomeView.tsx:117
 #: src/components/workspace/UsageCard.tsx:213
 #: src/components/project/ProjectUsageAndSharing.tsx:208
 #: src/components/project/ProjectUsageAndSharing.tsx:248
@@ -7596,7 +7621,7 @@ msgstr ""
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:396
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:594
 #: src/routes/onboarding/OnboardingRoute.tsx:117
-#: src/features/sidebar/views/org/OrgHomeView.tsx:79
+#: src/features/sidebar/views/org/OrgHomeView.tsx:75
 #: src/features/sidebar/hooks/useSearchHits.ts:134
 #: src/components/training/StaffTrainingPanel.tsx:71
 #: src/components/organisation/CreateOrganisationModal.tsx:165
@@ -7742,7 +7767,7 @@ msgstr ""
 
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:59
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:57
-#: src/features/sidebar/views/org/OrgHomeView.tsx:132
+#: src/features/sidebar/views/org/OrgHomeView.tsx:111
 #: src/components/chat/ChatModeSelector.tsx:294
 #: src/components/chat/ChatModeBanner.tsx:36
 msgid "Overview"
@@ -8509,7 +8534,7 @@ msgstr ""
 #: src/routes/project/CreateProjectRoute.tsx:242
 #: src/routes/project/CreateProjectRoute.tsx:303
 #: src/components/workspace/OrganisationProjectsTable.tsx:240
-#: src/components/workspace/DiscoverableWorkspaces.tsx:209
+#: src/components/workspace/DiscoverableWorkspaces.tsx:301
 #: src/components/project/ProjectSharingStrip.tsx:59
 msgid "Private"
 msgstr ""
@@ -8545,6 +8570,7 @@ msgstr ""
 #~ msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1789
+#: src/components/workspace/DiscoverableWorkspaces.tsx:222
 msgid "Private workspaces"
 msgstr ""
 
@@ -9262,7 +9288,7 @@ msgstr ""
 msgid "Request a training"
 msgstr ""
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:243
+#: src/components/workspace/DiscoverableWorkspaces.tsx:375
 msgid "Request access"
 msgstr ""
 
@@ -9291,8 +9317,8 @@ msgstr "Solicitar Restablecimiento de Contraseña"
 msgid "Request Password Reset | dembrane"
 msgstr "Solicitar Restablecimiento de Contraseña | dembrane"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:149
-#: src/components/workspace/DiscoverableWorkspaces.tsx:248
+#: src/components/workspace/DiscoverableWorkspaces.tsx:214
+#: src/components/workspace/DiscoverableWorkspaces.tsx:380
 msgid "Request sent"
 msgstr ""
 
@@ -9864,6 +9890,7 @@ msgid "Select a workspace"
 msgstr ""
 
 #: src/routes/project/ProjectsHome.tsx:417
+#: src/components/workspace/DiscoverableWorkspaces.tsx:276
 #: src/components/conversation/ConversationAccordion.tsx:1456
 msgid "Select all"
 msgstr "Seleccionar todo"
@@ -10091,7 +10118,7 @@ msgstr ""
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:18
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:115
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:26
-#: src/features/sidebar/views/org/OrgHomeView.tsx:150
+#: src/features/sidebar/views/org/OrgHomeView.tsx:129
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
 #: src/components/layout/ParticipantHeader.tsx:97
 #: src/components/layout/ParticipantHeader.tsx:98
@@ -11447,7 +11474,7 @@ msgid "Trained until {until}"
 msgstr ""
 
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:46
-#: src/features/sidebar/views/org/OrgHomeView.tsx:143
+#: src/features/sidebar/views/org/OrgHomeView.tsx:122
 #: src/components/training/WorkspaceTrainingPanel.tsx:37
 #: src/components/training/TrainingRoster.tsx:47
 #: src/components/training/OrgTrainingPanel.tsx:68
@@ -12803,7 +12830,7 @@ msgstr ""
 
 #: src/routes/organisation/OrganisationRoute.tsx:1281
 #: src/routes/admin/AdminSettingsRoute.tsx:1423
-#: src/features/sidebar/views/org/OrgHomeView.tsx:160
+#: src/features/sidebar/views/org/OrgHomeView.tsx:139
 msgid "Workspaces"
 msgstr ""
 
@@ -12817,6 +12844,10 @@ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1252
 msgid "Workspaces in this account"
+msgstr ""
+
+#: src/components/workspace/DiscoverableWorkspaces.tsx:266
+msgid "Workspaces in this organisation you haven't joined yet. As an admin you can add yourself to manage them."
 msgstr ""
 
 #: src/routes/organisation/OrganisationExternalView.tsx:71
@@ -12991,6 +13022,15 @@ msgstr ""
 #: src/components/participant/ParticipantBody.tsx:148
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Pareces estar desconectado, por favor verifica tu conexión a internet"
+
+#. placeholder {0}: selectedIds.length
+#: src/components/workspace/DiscoverableWorkspaces.tsx:401
+msgid "You'll be added as an admin to {0} private workspaces. They'll appear in your sidebar right after."
+msgstr ""
+
+#: src/components/workspace/DiscoverableWorkspaces.tsx:396
+msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
+msgstr ""
 
 #: src/routes/onboarding/OnboardingRoute.tsx:673
 msgid "You'll find all your projects waiting for you."

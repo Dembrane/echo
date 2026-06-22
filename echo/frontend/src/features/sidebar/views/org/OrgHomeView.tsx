@@ -49,10 +49,6 @@ export const OrgHomeView = () => {
 	const orgId = routeOrgId ?? organisationId ?? sidebarParams.orgId;
 	const { workspaces: myWorkspaces } = useWorkspace();
 	const { data: me } = useV2Me();
-	const isManager = useMemo(() => {
-		const role = me?.orgs.find((o) => o.id === orgId)?.role;
-		return role === "admin" || role === "owner";
-	}, [me, orgId]);
 
 	const myOrgWorkspaces = useMemo(
 		() => myWorkspaces.filter((w) => w.org_id === orgId),
@@ -78,39 +74,22 @@ export const OrgHomeView = () => {
 		me?.orgs.find((o) => o.id === orgId)?.name ??
 		t`Organisation`;
 
-	const displayList = useMemo(() => {
-		// Admins/owners see the whole org roster (they can open any workspace).
-		// Everyone else (member, billing, external) sees only the workspaces
-		// they directly belong to, so the sidebar never shows a workspace that
-		// dead-links on click. Discovering other workspaces happens on /o.
-		const buildList = () => {
-			if (!isManager) {
-				return myOrgWorkspaces.map((w) => ({
+	// The sidebar lists ONLY workspaces the user can actually open — their direct
+	// memberships (membership-scoped /v2/workspaces), for admins too. Org admins
+	// discover and self-join other (private) workspaces from /o; once joined they
+	// appear here. This stops the sidebar from listing workspaces the admin isn't
+	// a member of yet (which dead-link on click). Sorted to match the /o ordering.
+	const displayList = useMemo(
+		() =>
+			myOrgWorkspaces
+				.map((w) => ({
 					id: w.id,
 					isExternal: w.role === "external",
 					name: w.name,
-				}));
-			}
-			const externalSet = new Set(
-				myOrgWorkspaces.filter((w) => w.role === "external").map((w) => w.id),
-			);
-			const full = orgWsQuery.data;
-			if (full && full.length > 0) {
-				return full.map((w) => ({
-					id: w.id,
-					isExternal: externalSet.has(w.id),
-					name: w.name,
-				}));
-			}
-			return myOrgWorkspaces.map((w) => ({
-				id: w.id,
-				isExternal: w.role === "external",
-				name: w.name,
-			}));
-		};
-		// Sort alphabetically by name to match the org overview page ordering.
-		return buildList().sort((a, b) => a.name.localeCompare(b.name));
-	}, [isManager, myOrgWorkspaces, orgWsQuery.data]);
+				}))
+				.sort((a, b) => a.name.localeCompare(b.name)),
+		[myOrgWorkspaces],
+	);
 
 	// Show the Workspaces section whenever there is something to show — for
 	// managers that is the full org list, for everyone else their direct rows.
