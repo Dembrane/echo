@@ -29,7 +29,6 @@ import {
 	SELLABLE_TIER,
 	TIER_ORDER,
 	type Tier,
-	taglineFor,
 } from "@/lib/tiers";
 
 /**
@@ -329,11 +328,9 @@ export function UpgradeModal({
 
 	const displayTier = canRequestUpgrade ? selectedTier : requiredTier;
 	const displayName = canRequestUpgrade
-		? t`Upgrade to ${displayTier}`
+		? featureName || t`Upgrade to ${displayTier}`
 		: featureName;
-	const displayBenefit = canRequestUpgrade
-		? taglineFor(displayTier) || benefit
-		: benefit;
+	const displayBenefit = benefit;
 
 	return (
 		<Modal

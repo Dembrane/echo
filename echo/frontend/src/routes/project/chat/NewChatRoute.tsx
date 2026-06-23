@@ -228,12 +228,13 @@ export const NewChatRoute = () => {
 	return (
 		<PageContainer>
 			<Stack gap="xl">
-				<ChatModeSelector
-					isNewChat
-					isCreating={isPending}
-					projectId={projectId}
-					onModeSelected={handleModeSelected}
-				/>
+			<ChatModeSelector
+				isNewChat
+				isCreating={isPending}
+				projectId={projectId}
+				onModeSelected={handleModeSelected}
+				atChatLimit={atChatLimit}
+			/>
 
 				<Suspense fallback={<ChatsSectionSkeleton />}>
 					<ProjectChatsSection

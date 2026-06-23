@@ -11,6 +11,7 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import {
+	IconLock,
 	IconMessageCircle,
 	IconQuote,
 	IconSparkles,
@@ -75,6 +76,7 @@ type ModeCardProps = {
 	examples: string[];
 	icon: typeof IconSparkles;
 	isBeta?: boolean;
+	atLimit?: boolean;
 	selectedMode: ChatMode | null;
 	isLoading: boolean;
 	onSelectMode: (mode: ChatMode) => void;
@@ -87,6 +89,7 @@ const ModeCard = ({
 	examples,
 	icon: Icon,
 	isBeta = false,
+	atLimit = false,
 	selectedMode,
 	isLoading,
 	onSelectMode,
@@ -155,6 +158,16 @@ const ModeCard = ({
 											<Trans>Beta</Trans>
 										</Badge>
 									)}
+									{atLimit && (
+										<Badge
+											size="sm"
+											color="primary"
+											variant="light"
+											leftSection={<IconLock size={10} />}
+										>
+											<Trans>Chat limit reached</Trans>
+										</Badge>
+									)}
 								</Group>
 								<Text size="sm" c="dimmed">
 									{subtitle}
@@ -201,6 +214,7 @@ type ChatModeSelectorProps = {
 	// For new chat flow (mode selection before chat created)
 	isNewChat?: boolean;
 	isCreating?: boolean;
+	atChatLimit?: boolean;
 };
 
 export const ChatModeSelector = ({
@@ -209,6 +223,7 @@ export const ChatModeSelector = ({
 	onModeSelected,
 	isNewChat = false,
 	isCreating = false,
+	atChatLimit = false,
 }: ChatModeSelectorProps) => {
 	const [selectedMode, setSelectedMode] = useState<ChatMode | null>(null);
 	const initializeModeMutation = useInitializeChatModeMutation();
@@ -264,42 +279,45 @@ export const ChatModeSelector = ({
 
 				{/* Mode Cards */}
 				<Stack gap="lg">
-					{ENABLE_AGENTIC_CHAT && (
-						<ModeCard
-							mode="agentic"
-							title={t`Agentic`}
-							subtitle={t`Delegate multi-step analysis with live tool execution`}
-							examples={getAgenticExamples()}
-							icon={IconSparkles}
-							isBeta
-							selectedMode={selectedMode}
-							isLoading={isLoading}
-							onSelectMode={handleSelectMode}
-						/>
-					)}
-
+				{ENABLE_AGENTIC_CHAT && (
 					<ModeCard
-						mode="deep_dive"
-						title={t`Specific Details`}
-						subtitle={t`Select conversations and find exact quotes`}
-						examples={getDeepDiveExamples()}
-						icon={IconMessageCircle}
-						selectedMode={selectedMode}
-						isLoading={isLoading}
-						onSelectMode={handleSelectMode}
-					/>
-
-					<ModeCard
-						mode="overview"
-						title={t`Overview`}
-						subtitle={t`Explore themes & patterns across all conversations`}
-						examples={getOverviewExamples()}
+						mode="agentic"
+						title={t`Agentic`}
+						subtitle={t`Delegate multi-step analysis with live tool execution`}
+						examples={getAgenticExamples()}
 						icon={IconSparkles}
 						isBeta
+						atLimit={atChatLimit}
 						selectedMode={selectedMode}
 						isLoading={isLoading}
 						onSelectMode={handleSelectMode}
 					/>
+				)}
+
+				<ModeCard
+					mode="deep_dive"
+					title={t`Specific Details`}
+					subtitle={t`Select conversations and find exact quotes`}
+					examples={getDeepDiveExamples()}
+					icon={IconMessageCircle}
+					atLimit={atChatLimit}
+					selectedMode={selectedMode}
+					isLoading={isLoading}
+					onSelectMode={handleSelectMode}
+				/>
+
+				<ModeCard
+					mode="overview"
+					title={t`Overview`}
+					subtitle={t`Explore themes & patterns across all conversations`}
+					examples={getOverviewExamples()}
+					icon={IconSparkles}
+					isBeta
+					atLimit={atChatLimit}
+					selectedMode={selectedMode}
+					isLoading={isLoading}
+					onSelectMode={handleSelectMode}
+				/>
 				</Stack>
 
 				{/* Loading message */}

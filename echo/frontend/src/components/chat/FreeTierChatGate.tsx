@@ -27,21 +27,24 @@ export function ChatUpgradeModal({
 	// only for the tier/role it needs as props.
 	const { workspace } = useWorkspace();
 	const isChatLimit = reason === "chats";
+	const isAdmin = workspace?.role === "admin" || workspace?.role === "owner";
 	return (
 		<UpgradeModal
 			opened={opened}
 			onClose={onClose}
 			currentTier={(workspace?.tier ?? "free") as Tier}
 			requiredTier={UPGRADE_TIER}
-			featureName={isChatLimit ? t`Chats` : t`Chat messages`}
+			featureName={isChatLimit ? t`Chat limit reached` : t`Message limit reached`}
 			benefit={
 				isChatLimit
-					? t`Upgrade your plan to start more chats in this workspace.`
-					: t`Upgrade your plan to keep chatting in this workspace.`
+					? isAdmin
+						? t`The free plan includes 1 chat per workspace. Upgrade to start more chats.`
+						: t`The free plan includes 1 chat per workspace. Ask a organisation admin to upgrade.`
+					: isAdmin
+						? t`You've reached the message limit on the free plan. Upgrade to keep chatting.`
+						: t`You've reached the message limit on the free plan. Ask a organisation admin to upgrade.`
 			}
-			canRequestUpgrade={
-				workspace?.role === "admin" || workspace?.role === "owner"
-			}
+			canRequestUpgrade={isAdmin}
 			workspaceId={workspace?.id ?? ""}
 		/>
 	);

@@ -29,11 +29,12 @@ import { modals } from "@mantine/modals";
 import {
 	IconChevronDown,
 	IconChevronRight,
-	IconDoor,
+	IconInfoCircle,
 	IconLock,
 	IconPlus,
 	IconSparkles,
 } from "@tabler/icons-react";
+import { UsersThree } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
@@ -795,6 +796,7 @@ export const OrganisationRoute = () => {
 								membersLoading={membersLoading}
 								workspaces={workspaces}
 								isManager={isAdmin}
+								atWorkspaceLimit={atWorkspaceLimit}
 								onOpenWorkspace={(id) => navigate(`/w/${id}/home`)}
 								onOpenProject={(wsId, projectId) =>
 									navigate(`/w/${wsId}/projects/${projectId}/home`)
@@ -1013,8 +1015,8 @@ export const OrganisationRoute = () => {
 				onClose={wsUpgradeHandlers.close}
 				currentTier={orgTier as Tier}
 				requiredTier={SELLABLE_TIER}
-				featureName={t`Workspaces`}
-				benefit={t`Upgrade your plan to create more workspaces in this organisation.`}
+				featureName={t`Workspace limit reached`}
+				benefit={t`The free plan includes 1 workspace per organisation. Upgrade to create additional workspaces.`}
 				canRequestUpgrade={isAdmin}
 				workspaceId=""
 			/>
@@ -1236,7 +1238,7 @@ function WorkspaceVisibilityIcon({
 		return (
 			<Tooltip label={t`Invite-only workspace`}>
 				<span style={{ display: "inline-flex", flexShrink: 0 }}>
-					<IconDoor size={size} color="var(--mantine-color-gray-6)" />
+					<UsersThree size={size} color="var(--mantine-color-gray-6)" />
 				</span>
 			</Tooltip>
 		);
@@ -1250,6 +1252,7 @@ function OrganisationOverviewPanel({
 	membersLoading,
 	workspaces,
 	isManager,
+	atWorkspaceLimit = false,
 	onOpenWorkspace,
 	onOpenProject,
 	onRequestWorkspace,
@@ -1263,6 +1266,7 @@ function OrganisationOverviewPanel({
 	// the user can't actually open.
 	workspaces: OrganisationWorkspace[];
 	isManager: boolean;
+	atWorkspaceLimit?: boolean;
 	onOpenWorkspace: (workspaceId: string) => void;
 	onOpenProject: (workspaceId: string, projectId: string) => void;
 	onRequestWorkspace: () => void;
@@ -1421,14 +1425,25 @@ function OrganisationOverviewPanel({
 						)}
 					</Group>
 					{isManager && (
-						<Button
-							variant="subtle"
-							size="xs"
-							leftSection={<IconPlus size={14} />}
-							onClick={onRequestWorkspace}
-						>
-							<Trans>New workspace</Trans>
-						</Button>
+						<Group gap={4}>
+							<Button
+								variant="subtle"
+								size="xs"
+								leftSection={<IconPlus size={14} />}
+								onClick={onRequestWorkspace}
+								opacity={atWorkspaceLimit ? 0.8 : 1}
+							>
+								<Trans>New workspace</Trans>
+							</Button>
+							{atWorkspaceLimit && (
+								<Tooltip label={t`Free plan allows 1 workspace per organisation`}>
+									<IconInfoCircle
+										size={14}
+										style={{ color: "var(--mantine-color-primary-6)", cursor: "help" }}
+									/>
+								</Tooltip>
+							)}
+						</Group>
 					)}
 				</Group>
 				{workspacesLoading && myCards.length === 0 ? (
