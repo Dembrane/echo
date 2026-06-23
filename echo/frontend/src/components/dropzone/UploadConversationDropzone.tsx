@@ -35,7 +35,9 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { useLocation, useParams } from "react-router";
 import { useProjectById } from "@/components/project/hooks";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 import { toast } from "../common/Toaster";
 import { CommonDropzone } from "./Dropzone";
@@ -255,6 +257,9 @@ export const UploadConversationDropzone = (
 	// Modal state
 	const [opened, { open, close }] = useDisclosure(false);
 	const posthog = usePostHog();
+	const { workspaceId } = useParams<{ workspaceId: string }>();
+	const location = useLocation();
+	const navigate = useI18nNavigate();
 
 	// File selection and upload tracking state
 	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -351,6 +356,8 @@ export const UploadConversationDropzone = (
 	useEffect(() => {
 		// Run cleanup only if the modal was previously open and is now closed
 		if (prevOpenedRef.current && !opened) {
+			const isSuccess = uploader.isSuccess;
+
 			// Reset in a specific order to prevent circular dependencies
 			const cleanup = () => {
 				fileEditor.cancelEditing();
@@ -364,6 +371,11 @@ export const UploadConversationDropzone = (
 			};
 
 			cleanup();
+
+			// If upload was successful and we are on the upload page, redirect to conversations
+			if (isSuccess && location.pathname.endsWith("/upload") && workspaceId) {
+				navigate(`/w/${workspaceId}/projects/${props.projectId}/conversations`);
+			}
 		}
 
 		// Update the ref for the next render cycle
@@ -372,7 +384,22 @@ export const UploadConversationDropzone = (
 		opened,
 		fileEditor.cancelEditing, // This should come last as it might trigger other state changes
 		uploader.resetUpload,
+		uploader.isSuccess,
+		location.pathname,
+		workspaceId,
+		props.projectId,
+		navigate,
 	]);
+
+	// Automatically close the modal after 1.5 seconds on successful upload if we are on the upload page
+	useEffect(() => {
+		if (uploader.isSuccess && location.pathname.endsWith("/upload") && opened) {
+			const timer = setTimeout(() => {
+				close();
+			}, 1500);
+			return () => clearTimeout(timer);
+		}
+	}, [uploader.isSuccess, location.pathname, opened, close]);
 
 	// Handle file selection - make this a useCallback to ensure stability
 	const handleFileSelection = useCallback(
