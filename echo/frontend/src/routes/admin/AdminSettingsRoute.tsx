@@ -928,6 +928,84 @@ function ResetUsageControl({ row }: { row: BillingRow }) {
 }
 
 /**
+ * Staff self-join a workspace for support (ECHO-863). Only works when the
+ * customer has enabled allow_support_access (else the endpoint 403s with a
+ * clear message). Access is granted as admin and auto-revokes after 24h.
+ */
+function JoinSupportControl({ row }: { row: BillingRow }) {
+	const [joined, setJoined] = useState(false);
+
+	const mutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/join-support`,
+				{
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json() as Promise<{
+				status: "joined" | "extended" | "already_member";
+				expires_at: string | null;
+			}>;
+		},
+		onError: (e) => toast.error((e as Error).message),
+		onSuccess: (data) => {
+			setJoined(true);
+			if (data.status === "already_member") {
+				toast.success(t`You already have access to this workspace.`);
+			} else if (data.status === "extended") {
+				toast.success(t`Support access extended for another 24 hours.`);
+			} else {
+				toast.success(
+					t`Support access granted. It ends automatically in 24 hours.`,
+				);
+			}
+		},
+	});
+
+	return (
+		<Paper withBorder radius="sm" p="sm">
+			<Stack gap="xs">
+				<Text size="sm" fw={500}>
+					<Trans>Join for support</Trans>
+				</Text>
+				<Text size="xs">
+					<Trans>
+						Join this workspace as an admin to help with support. The customer
+						must have turned on staff support access. Your access ends
+						automatically after 24 hours.
+					</Trans>
+				</Text>
+				<Group justify="flex-end" gap="sm">
+					{joined && (
+						<Anchor
+							component={I18nLink}
+							to={`/w/${row.workspace_id}/home`}
+							size="xs"
+						>
+							<Trans>Open workspace</Trans>
+						</Anchor>
+					)}
+					<Button
+						size="xs"
+						loading={mutation.isPending}
+						onClick={() => mutation.mutate()}
+					>
+						<Trans>Join for support (24h)</Trans>
+					</Button>
+				</Group>
+			</Stack>
+		</Paper>
+	);
+}
+
+/**
  * Actions modal for a workspace row. Live staff edits (partner toggle, discount,
  * trial, change tier, change admin, reset usage). Transfer-to-partner and
  * delete-workspace stay disabled (destructive, deferred to their own issues).
@@ -989,6 +1067,7 @@ function WorkspaceActionsModal({
 
 				<ChangeTierControl row={row} />
 				<ChangeAdminControl row={row} />
+				<JoinSupportControl row={row} />
 				<ResetUsageControl row={row} />
 
 				<Divider my={4} />
@@ -1419,7 +1498,13 @@ function AccountBillingTable({
 									<Table.Td colSpan={7} p={0} style={{ border: 0 }}>
 										<Collapse in={isOpen}>
 											<Box px="md" py="xs">
-												<Text size="xs" fw={600} tt="uppercase" lts={0.5} mb={6}>
+												<Text
+													size="xs"
+													fw={600}
+													tt="uppercase"
+													lts={0.5}
+													mb={6}
+												>
 													<Trans>Workspaces</Trans>
 												</Text>
 												<Table verticalSpacing={4} withRowBorders={false}>

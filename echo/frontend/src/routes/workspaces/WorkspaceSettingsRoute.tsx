@@ -18,6 +18,7 @@ import {
 	Radio,
 	Select,
 	Stack,
+	Switch,
 	Tabs,
 	Text,
 	TextInput,
@@ -97,6 +98,7 @@ interface WorkspaceDetail {
 	my_policies: string[];
 	visibility: "open_to_organisation" | "invite_only" | "private";
 	inherit_organisation_members: boolean;
+	allow_support_access: boolean;
 	description: string | null;
 	logo_url: string | null;
 	type_discount: string | null;
@@ -225,6 +227,7 @@ async function updateWorkspace(
 		logo_url?: string;
 		visibility?: "open_to_organisation" | "invite_only" | "private";
 		inherit_organisation_members?: boolean;
+		allow_support_access?: boolean;
 	},
 ) {
 	const res = await fetch(
@@ -1401,6 +1404,25 @@ function PrivacyAndDefaultsSection({
 		},
 	});
 
+	// Support access is a single boolean; autosave on toggle (no Save button),
+	// mirroring how description autosaves. Local state gives instant feedback.
+	const [allowSupportAccess, setAllowSupportAccess] = useState<boolean>(
+		settings.allow_support_access ?? false,
+	);
+	const supportAccessMutation = useMutation({
+		mutationFn: (value: boolean) =>
+			updateWorkspace(workspaceId, { allow_support_access: value }),
+		onError: (err: Error) => {
+			setAllowSupportAccess(settings.allow_support_access ?? false);
+			toast.error(err.message);
+		},
+		onMutate: (value: boolean) => setAllowSupportAccess(value),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			toast.success(t`Saved`);
+		},
+	});
+
 	const logoResetRef = useRef<() => void>(null);
 	const [cropSrc, setCropSrc] = useState<string | null>(null);
 	const [cropOpened, { open: openCrop, close: closeCrop }] =
@@ -1829,6 +1851,27 @@ function PrivacyAndDefaultsSection({
 					</Button>
 				</Group>
 			)}
+			<Divider />
+			<Switch
+				checked={allowSupportAccess}
+				disabled={!canEdit || supportAccessMutation.isPending}
+				onChange={(e) => supportAccessMutation.mutate(e.currentTarget.checked)}
+				label={
+					<Stack gap={0}>
+						<Text size="sm">
+							<Trans>
+								Allow dembrane staff to access this workspace for support
+							</Trans>
+						</Text>
+						<Text size="xs">
+							<Trans>
+								When on, dembrane support staff can join this workspace to help
+								you. Their access ends automatically after 24 hours.
+							</Trans>
+						</Text>
+					</Stack>
+				}
+			/>
 			<UpgradeModal
 				opened={upgradeFeature !== null}
 				onClose={() => setUpgradeFeature(null)}

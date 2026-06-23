@@ -546,6 +546,21 @@ async def create_report(
             f"Report generation task dispatched for project {project_id}, report {report['id']}"
         )
     else:
+        # Enqueue a durable scheduled_task; the unified runner fires it at
+        # scheduled_dt (replaces the old 5-min report poll). scheduled_dt is the
+        # validated, tz-aware datetime parsed above.
+        from dembrane.scheduled_tasks import TASK_GENERATE_REPORT, schedule_task
+
+        await schedule_task(
+            task_type=TASK_GENERATE_REPORT,
+            scheduled_at=scheduled_dt,
+            payload={
+                "report_id": report["id"],
+                "project_id": project_id,
+                "language": language,
+                "user_instructions": body.user_instructions or "",
+            },
+        )
         logger.info(
             f"Report {report['id']} scheduled for {body.scheduled_at} for project {project_id}"
         )
@@ -807,7 +822,35 @@ async def update_report(
         str(report_id),
         payload,
     )
-    return result.get("data", result)
+    updated = result.get("data", result)
+
+    # If the schedule moved (or was set), re-point the durable scheduled_task:
+    # cancel any pending generate_report for this report, then enqueue at the new
+    # time. Only when the report is actually in the scheduled state — otherwise a
+    # stray task would just be skipped by the runner's status guard.
+    if body.scheduled_at is not None and (updated or {}).get("status") == "scheduled":
+        from dembrane.scheduled_tasks import (
+            TASK_GENERATE_REPORT,
+            schedule_task,
+            cancel_pending_tasks,
+        )
+
+        await cancel_pending_tasks(
+            task_type=TASK_GENERATE_REPORT,
+            payload_match={"report_id": report_id},
+        )
+        await schedule_task(
+            task_type=TASK_GENERATE_REPORT,
+            scheduled_at=scheduled_dt,
+            payload={
+                "report_id": report_id,
+                "project_id": project_id,
+                "language": updated.get("language") or "en",
+                "user_instructions": updated.get("user_instructions") or "",
+            },
+        )
+
+    return updated
 
 
 @ProjectRouter.delete("/{project_id}/reports/{report_id}")
@@ -834,6 +877,11 @@ async def delete_report(
         "project_report",
         str(report_id),
         {"deleted_at": datetime.utcnow().isoformat()},
+    )
+    from dembrane.scheduled_tasks import TASK_GENERATE_REPORT, cancel_pending_tasks
+
+    await cancel_pending_tasks(
+        task_type=TASK_GENERATE_REPORT, payload_match={"report_id": report_id}
     )
     return {"deleted": True}
 
@@ -864,6 +912,11 @@ async def cancel_scheduled_report(
         "project_report",
         str(report_id),
         {"status": "cancelled"},
+    )
+    from dembrane.scheduled_tasks import TASK_GENERATE_REPORT, cancel_pending_tasks
+
+    await cancel_pending_tasks(
+        task_type=TASK_GENERATE_REPORT, payload_match={"report_id": report_id}
     )
     return {"cancelled": True}
 

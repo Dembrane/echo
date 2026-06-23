@@ -25,6 +25,7 @@ from fastapi import Query, APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
 from dembrane import mollie
+from dembrane.utils import generate_uuid
 from dembrane.settings import get_settings
 from dembrane.seat_capacity import compute_effective_seat_state
 from dembrane.tier_capacity import get_capacity
@@ -1489,6 +1490,182 @@ async def reset_workspace_usage(
         "workspace_id": workspace_id,
         "usage_reset_at": now_iso,
     }
+
+
+# ── Staff support access (ECHO-863) ──
+#
+# A dembrane staff member can temporarily self-join a customer workspace as
+# admin to help with support, but ONLY when the customer has turned on
+# allow_support_access. Access auto-revokes 24h later via a durable
+# scheduled_task (so it survives restarts and is inspectable/cancellable in
+# Directus). Re-calling extends the window.
+
+SUPPORT_ACCESS_TTL = timedelta(hours=24)
+
+
+class JoinSupportResponse(BaseModel):
+    status: Literal["joined", "extended", "already_member"]
+    workspace_id: str
+    membership_id: str
+    role: str
+    # null only when the caller was already a normal (non-support) member.
+    expires_at: Optional[str] = None
+
+
+@router.post(
+    "/workspaces/{workspace_id}/join-support", response_model=JoinSupportResponse
+)
+async def join_workspace_support(
+    workspace_id: str,
+    auth: DependencyDirectusSession,
+) -> JoinSupportResponse:
+    """Staff-only: temporarily self-join a workspace as admin for support.
+
+    Gated twice: the is_admin staff claim AND the customer's
+    allow_support_access toggle. On success, writes (or reactivates / extends) a
+    `staff_support` admin membership with expires_at = now + 24h and enqueues a
+    durable revoke_staff_support task for that time.
+
+    403 if not staff, or if the workspace has not enabled support access.
+    404 if the workspace doesn't exist or is soft-deleted.
+    """
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    ws = await async_directus.get_item("workspace", workspace_id)
+    if not ws or ws.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    if not ws.get("allow_support_access"):
+        raise HTTPException(
+            status_code=403,
+            detail="This workspace has not enabled dembrane staff support access.",
+        )
+
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.cache_utils import invalidate_workspace_and_org_usage
+    from dembrane.scheduled_tasks import (
+        TASK_REVOKE_STAFF_SUPPORT,
+        schedule_task,
+        cancel_pending_tasks,
+    )
+    from dembrane.api.v2._invite_helpers import (
+        create_membership_row,
+        reactivate_membership_row,
+    )
+
+    app_user = await get_app_user_or_raise(auth.user_id)
+    app_user_id = app_user["id"]
+    org_id = ws.get("org_id")
+
+    now = datetime.now(timezone.utc)
+    expires_at = now + SUPPORT_ACCESS_TTL
+    expires_iso = expires_at.isoformat()
+
+    # Fetch active + soft-deleted rows for this (workspace, user) in one trip.
+    rows = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": workspace_id},
+                    "user_id": {"_eq": app_user_id},
+                },
+                "fields": ["id", "role", "source", "deleted_at"],
+                "limit": -1,
+            }
+        },
+    )
+    active_row = None
+    deleted_row = None
+    if isinstance(rows, list):
+        for row in rows:
+            if row.get("deleted_at") is None and active_row is None:
+                active_row = row
+            elif row.get("deleted_at") is not None and deleted_row is None:
+                deleted_row = row
+
+    if active_row is not None and active_row.get("source") != "staff_support":
+        # Caller is already a real member (they belong to this org). Don't slap
+        # an expiry on a genuine membership — just report it.
+        return JoinSupportResponse(
+            status="already_member",
+            workspace_id=workspace_id,
+            membership_id=str(active_row["id"]),
+            role=active_row.get("role") or "",
+            expires_at=None,
+        )
+
+    if active_row is not None:
+        # Existing support row → extend the 24h window.
+        membership_id = str(active_row["id"])
+        await async_directus.update_item(
+            "workspace_membership", membership_id, {"expires_at": expires_iso}
+        )
+        status: Literal["joined", "extended"] = "extended"
+    elif deleted_row is not None:
+        membership_id = str(deleted_row["id"])
+        await reactivate_membership_row(
+            async_directus,
+            "workspace_membership",
+            membership_id,
+            {
+                "deleted_at": None,
+                "role": "admin",
+                "source": "staff_support",
+                "expires_at": expires_iso,
+            },
+        )
+        status = "joined"
+    else:
+        membership_id = generate_uuid()
+        await create_membership_row(
+            async_directus,
+            "workspace_membership",
+            {
+                "id": membership_id,
+                "workspace_id": workspace_id,
+                "user_id": app_user_id,
+                "role": "admin",
+                "source": "staff_support",
+                "expires_at": expires_iso,
+            },
+        )
+        status = "joined"
+
+    # Replace any prior pending revoke for this membership so extending doesn't
+    # leave an earlier timer that would revoke mid-session.
+    await cancel_pending_tasks(
+        task_type=TASK_REVOKE_STAFF_SUPPORT,
+        payload_match={"membership_id": membership_id},
+    )
+    await schedule_task(
+        task_type=TASK_REVOKE_STAFF_SUPPORT,
+        scheduled_at=expires_at,
+        payload={
+            "workspace_id": workspace_id,
+            "membership_id": membership_id,
+            "org_id": org_id,
+        },
+    )
+
+    # Seat/guest counts changed.
+    await invalidate_workspace_and_org_usage(workspace_id, org_id)
+
+    logger.info(
+        "staff %s %s support access on workspace %s (membership=%s, expires=%s)",
+        auth.user_id,
+        status,
+        workspace_id,
+        membership_id,
+        expires_iso,
+    )
+    return JoinSupportResponse(
+        status=status,
+        workspace_id=workspace_id,
+        membership_id=membership_id,
+        role="admin",
+        expires_at=expires_iso,
+    )
 
 
 @router.get("/at-risk", response_model=list[AtRiskRow])

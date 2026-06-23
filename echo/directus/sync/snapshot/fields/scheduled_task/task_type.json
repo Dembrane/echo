@@ -1,48 +1,44 @@
 {
-  "collection": "workspace_membership",
-  "field": "source",
+  "collection": "scheduled_task",
+  "field": "task_type",
   "type": "string",
   "meta": {
-    "collection": "workspace_membership",
+    "collection": "scheduled_task",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "source",
+    "field": "task_type",
     "group": null,
     "hidden": false,
     "interface": "select-dropdown",
-    "note": "direct = explicitly invited. inherited = auto-added from org role. staff_support = dembrane staff temporary support access.",
+    "note": "What to run when due.",
     "options": {
       "choices": [
         {
-          "text": "Direct",
-          "value": "direct"
+          "text": "Revoke Staff Support",
+          "value": "revoke_staff_support"
         },
         {
-          "text": "Inherited",
-          "value": "inherited"
-        },
-        {
-          "text": "Staff Support",
-          "value": "staff_support"
+          "text": "Generate Report",
+          "value": "generate_report"
         }
       ]
     },
     "readonly": false,
     "required": false,
     "searchable": true,
-    "sort": 6,
+    "sort": 2,
     "special": null,
     "translations": null,
     "validation": null,
     "validation_message": null,
-    "width": "full"
+    "width": "half"
   },
   "schema": {
-    "name": "source",
-    "table": "workspace_membership",
+    "name": "task_type",
+    "table": "scheduled_task",
     "data_type": "character varying",
-    "default_value": "direct",
+    "default_value": "revoke_staff_support",
     "max_length": 255,
     "numeric_precision": null,
     "numeric_scale": null,
