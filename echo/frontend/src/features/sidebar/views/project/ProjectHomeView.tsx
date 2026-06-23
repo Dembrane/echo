@@ -12,7 +12,7 @@ import {
 	PaintBrushIcon,
 	UsersThreeIcon,
 } from "@phosphor-icons/react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { useProjectChatsCountQuery } from "@/components/chat/hooks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
@@ -38,9 +38,14 @@ export const ProjectHomeView = () => {
 		hasMessages: true,
 	});
 	const project = projectQuery.data;
+	const { pathname } = useLocation();
 
 	if (!workspaceId || !projectId) return null;
 	const base = `/w/${workspaceId}/projects/${projectId}`;
+
+	const isConversationsActive =
+		pathname.includes(`/projects/${projectId}/conversations`) ||
+		pathname.includes(`/projects/${projectId}/conversation`);
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
@@ -97,6 +102,7 @@ export const ProjectHomeView = () => {
 				label={<Trans>Conversations</Trans>}
 				icon={ChatCircleTextIcon}
 				badge={conversationsCountQuery.data || undefined}
+				active={isConversationsActive}
 			/>
 			<NavItem
 				to={`${base}/access`}
