@@ -224,39 +224,100 @@ def _get_thread_event_loop() -> asyncio.AbstractEventLoop:
         return loop
 
 
+# ---------------------------------------------------------------------------
+# Shared background event loop for running async code from sync contexts.
+#
+# Dramatiq actors (and CLI scripts) are synchronous but must call async code
+# (the async Directus client, LLM helpers, etc.). The previous approach created
+# a *fresh* event loop on every call and closed it immediately. That:
+#   * orphaned the connection pool of long-lived httpx.AsyncClient singletons
+#     (e.g. async_directus) -> RuntimeError("Event loop is closed"), and
+#   * under dramatiq-gevent, broke sniffio's async-library detection
+#     -> sniffio.AsyncLibraryNotFoundError,
+# so task_summarize_conversation / task_merge_conversation_chunks failed on
+# every run.
+#
+# Instead we run ONE asyncio loop for the lifetime of the process in a
+# dedicated *real* OS thread and submit coroutines to it. Because the loop
+# never closes, httpx clients bind to it once and keep pooling, and sniffio
+# sees a genuinely running asyncio loop (no nest_asyncio required). The loop
+# must live on a real OS thread (not a gevent greenlet) so its selector blocks
+# only that thread, never the gevent hub; gevent (>=25) cooperatively yields
+# while a greenlet waits on the cross-thread Future.
+# ---------------------------------------------------------------------------
+_bg_loop: Optional[asyncio.AbstractEventLoop] = None
+_bg_loop_lock = threading.Lock()
+
+
+def _real_thread_class() -> type:
+    """Return a true OS-thread class even when gevent has monkey-patched threading."""
+    try:
+        from gevent.monkey import get_original
+
+        return get_original("threading", "Thread")
+    except Exception:
+        return threading.Thread
+
+
+def _ensure_background_loop() -> asyncio.AbstractEventLoop:
+    """Get (or lazily start) the shared background event loop."""
+    global _bg_loop
+    if _bg_loop is not None and not _bg_loop.is_closed():
+        return _bg_loop
+    with _bg_loop_lock:
+        if _bg_loop is not None and not _bg_loop.is_closed():
+            return _bg_loop
+        loop = asyncio.new_event_loop()
+        ready = threading.Event()
+
+        def _runner() -> None:
+            asyncio.set_event_loop(loop)
+            loop.call_soon(ready.set)
+            loop.run_forever()
+
+        thread = _real_thread_class()(target=_runner, name="dembrane-async-loop", daemon=True)
+        thread.start()
+        ready.wait()
+        _bg_loop = loop
+        logger.info("Started shared background event loop on thread %s", thread.name)
+        return loop
+
+
 def run_async_in_new_loop(coro: Coroutine[Any, Any, T]) -> T:
     """
-    Execute an async coroutine in a fresh, isolated event loop.
+    Run an async coroutine to completion from a synchronous context.
 
-    Use from synchronous contexts such as Dramatiq actors or CLI scripts to
-    invoke async FastAPI handlers.
+    Use from Dramatiq actors or CLI scripts to invoke async code (async FastAPI
+    handlers, the async Directus client, LLM helpers, etc.).
 
-    A fresh loop is created per call rather than reusing a cached thread loop.
-    This prevents "Future attached to a different loop" errors when multiple
-    concurrent Dramatiq greenlets (dramatiq-gevent uses one OS thread with many
-    greenlets) share the same thread ID and would otherwise share the same loop.
-    The coroutines invoked here (summarize_conversation, get_conversation_content)
-    use only stateless async operations so fresh loops per call is safe.
+    The coroutine runs on a single long-lived background event loop (see
+    _ensure_background_loop); the calling thread/greenlet blocks on the result.
+    When called from *within* an already-running loop (e.g. a FastAPI request
+    that calls this sync helper) we fall back to nested execution on that loop
+    via nest_asyncio, preserving the previous behavior for that path.
     """
     if not asyncio.iscoroutine(coro) and not asyncio.isfuture(coro):
         raise TypeError("run_async_in_new_loop expects a coroutine or Future.")
 
-    import nest_asyncio
-
-    loop = asyncio.new_event_loop()
-    _worker_loop.set(loop)
-    # Apply nest_asyncio in case dramatiq-gevent has patched asyncio's running
-    # loop detection on this thread.
-    nest_asyncio.apply(loop)
-    logger.debug(
-        "Running async coroutine in fresh event loop: %s",
-        getattr(coro, "__qualname__", type(coro).__name__),
-    )
     try:
-        result = loop.run_until_complete(coro)
-        logger.debug(
-            "Completed async coroutine: %s", getattr(coro, "__qualname__", type(coro).__name__)
-        )
-        return result
-    finally:
-        loop.close()
+        running_loop: Optional[asyncio.AbstractEventLoop] = asyncio.get_running_loop()
+    except RuntimeError:
+        running_loop = None
+
+    if running_loop is not None:
+        # Inside a running loop (FastAPI): run nested to avoid deadlocking it.
+        import nest_asyncio
+
+        nest_asyncio.apply(running_loop)
+        return running_loop.run_until_complete(coro)
+
+    loop = _ensure_background_loop()
+    if asyncio.iscoroutine(coro):
+        future = asyncio.run_coroutine_threadsafe(coro, loop)
+    else:
+        # A bare Future/awaitable: adapt it onto the background loop.
+        async def _await_it() -> T:
+            return await coro
+
+        future = asyncio.run_coroutine_threadsafe(_await_it(), loop)
+    return future.result()
