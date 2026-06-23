@@ -259,6 +259,16 @@ def _real_thread_class() -> "type[threading.Thread]":
         return threading.Thread
 
 
+def _is_gevent_patched() -> bool:
+    """True when gevent has monkey-patched the runtime (i.e. the dramatiq-gevent worker)."""
+    try:
+        from gevent import monkey
+
+        return bool(monkey.is_anything_patched())
+    except Exception:
+        return False
+
+
 def _ensure_background_loop() -> asyncio.AbstractEventLoop:
     """Get (or lazily start) the shared background event loop."""
     global _bg_loop
@@ -292,24 +302,33 @@ def run_async_in_new_loop(coro: Coroutine[Any, Any, T]) -> T:
 
     The coroutine runs on a single long-lived background event loop (see
     _ensure_background_loop); the calling thread/greenlet blocks on the result.
-    When called from *within* an already-running loop (e.g. a FastAPI request
-    that calls this sync helper) we fall back to nested execution on that loop
-    via nest_asyncio, preserving the previous behavior for that path.
+
+    When called from *within* an already-running loop on the FastAPI (asyncio
+    uvicorn) server we fall back to nested execution on that loop via
+    nest_asyncio, preserving the previous behavior for that path.
+
+    Under dramatiq-gevent we must NOT use that fallback: asyncio's running-loop
+    is thread-local and shared across greenlets, so get_running_loop() can return
+    a loop that a *different* greenlet is driving. Taking the nested path then
+    drives a foreign/contended loop and the actor hangs until TimeLimitExceeded.
+    In the gevent worker we always use the dedicated background loop (its own OS
+    thread), which is immune to greenlet interleaving.
     """
     if not asyncio.iscoroutine(coro) and not asyncio.isfuture(coro):
         raise TypeError("run_async_in_new_loop expects a coroutine or Future.")
 
-    try:
-        running_loop: Optional[asyncio.AbstractEventLoop] = asyncio.get_running_loop()
-    except RuntimeError:
-        running_loop = None
+    if not _is_gevent_patched():
+        try:
+            running_loop: Optional[asyncio.AbstractEventLoop] = asyncio.get_running_loop()
+        except RuntimeError:
+            running_loop = None
 
-    if running_loop is not None:
-        # Inside a running loop (FastAPI): run nested to avoid deadlocking it.
-        import nest_asyncio
+        if running_loop is not None:
+            # Inside a real running loop (FastAPI): run nested to avoid deadlocking it.
+            import nest_asyncio
 
-        nest_asyncio.apply(running_loop)
-        return running_loop.run_until_complete(coro)
+            nest_asyncio.apply(running_loop)
+            return running_loop.run_until_complete(coro)
 
     loop = _ensure_background_loop()
     if asyncio.iscoroutine(coro):
