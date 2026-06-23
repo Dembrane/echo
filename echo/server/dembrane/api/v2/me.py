@@ -1,6 +1,6 @@
 """GET /v2/me — lightweight user profile with onboarding status."""
 
-from typing import Optional
+from typing import Optional, Any
 from logging import getLogger
 from datetime import datetime, timezone
 
@@ -201,11 +201,13 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
         onboarding_answer_json=onboarding_answers,
         training_status=training_status,
         high_risk_context=high_risk_context,
+        settings=app_user.get("settings") if isinstance(app_user.get("settings"), dict) else {},
     )
 
 
 class UpdateMeRequest(BaseModel):
     display_name: Optional[str] = Field(default=None, min_length=1, max_length=80)
+    settings: Optional[dict[str, Any]] = None
 
 
 @router.patch("")
@@ -213,7 +215,7 @@ async def update_me(
     body: UpdateMeRequest,
     auth: DependencyDirectusSession,
 ) -> dict:
-    """Update the current user's profile (display_name only for now)."""
+    """Update the current user's profile (display_name and settings)."""
     app_user = await get_app_user_or_raise(auth.user_id)
 
     payload = {}
@@ -222,6 +224,13 @@ async def update_me(
         # (invite "{inviter_name} invited you...") so CR/LF must not pass.
         cleaned = body.display_name.replace("\r", " ").replace("\n", " ").strip()
         payload["display_name"] = cleaned
+
+    if body.settings is not None:
+        existing_settings = app_user.get("settings") or {}
+        if not isinstance(existing_settings, dict):
+            existing_settings = {}
+        merged_settings = {**existing_settings, **body.settings}
+        payload["settings"] = merged_settings
 
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")

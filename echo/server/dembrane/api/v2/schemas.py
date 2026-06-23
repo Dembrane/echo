@@ -56,6 +56,8 @@ class MeResponse(BaseModel):
     # (with no active license) drives the non-blocking Inbox nudge (ISSUE-014).
     training_status: TrainingStatus = TrainingStatus()
     high_risk_context: bool = False
+    # User-specific settings JSON (e.g. feature flags, UI preferences)
+    settings: dict[str, Any] = Field(default_factory=dict)
 
 
 # ── /v2/onboarding ──

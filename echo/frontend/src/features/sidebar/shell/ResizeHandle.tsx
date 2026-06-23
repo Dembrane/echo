@@ -16,6 +16,8 @@ export const ResizeHandle = () => {
 	const startXRef = useRef(0);
 	const startWidthRef = useRef(width);
 
+	if (width === 0) return null;
+
 	useEffect(() => {
 		if (!dragging) return;
 		const onMove = (e: MouseEvent) => {
