@@ -765,7 +765,8 @@ async def create_workspace(
         if (
             not auth.is_admin
             and is_free_tier((account or {}).get("tier"))
-            and await count_org_workspaces(org_id) >= FREE_TIER_MAX_WORKSPACES
+            and await count_org_workspaces(org_id, billing_account_id=account_id)
+            >= FREE_TIER_MAX_WORKSPACES
         ):
             raise free_tier_limit_error("workspaces")
     # Paywall: non-open visibility at creation requires Innovator+ on the account

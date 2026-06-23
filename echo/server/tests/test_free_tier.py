@@ -230,6 +230,35 @@ class TestCountOrgWorkspaces:
         with patch("dembrane.directus_async.async_directus", mock):
             assert await count_org_workspaces("org1") == 0
 
+    @pytest.mark.asyncio
+    async def test_filters_by_billing_account_when_given(self):
+        # When a pooled billing_account_id is passed, the count must be scoped
+        # to it so separately-billed (workspace-scoped) client workspaces don't
+        # consume the org's free-tier allowance.
+        captured: dict = {}
+
+        def _handler(q):
+            captured["filter"] = q.get("filter")
+            return [{"count": {"id": 1}}]
+
+        mock = _mock_directus({"workspace": _handler})
+        with patch("dembrane.directus_async.async_directus", mock):
+            assert await count_org_workspaces("org1", billing_account_id="acc-1") == 1
+        assert captured["filter"].get("billing_account_id") == {"_eq": "acc-1"}
+
+    @pytest.mark.asyncio
+    async def test_no_billing_account_filter_when_absent(self):
+        captured: dict = {}
+
+        def _handler(q):
+            captured["filter"] = q.get("filter")
+            return [{"count": {"id": 2}}]
+
+        mock = _mock_directus({"workspace": _handler})
+        with patch("dembrane.directus_async.async_directus", mock):
+            assert await count_org_workspaces("org1") == 2
+        assert "billing_account_id" not in captured["filter"]
+
 
 # ── build_free_tier_usage_block (Task 3) ──────────────────────────────
 

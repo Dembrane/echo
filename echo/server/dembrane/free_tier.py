@@ -184,11 +184,17 @@ async def resolve_workspace_primary_report_id(
     )
 
 
-async def count_org_workspaces(org_id: str) -> int:
-    return await _agg_count(
-        "workspace",
-        {"org_id": {"_eq": org_id}, "deleted_at": {"_null": True}},
-    )
+async def count_org_workspaces(
+    org_id: str, billing_account_id: Optional[str] = None
+) -> int:
+    """Count an org's non-deleted workspaces. When `billing_account_id` is
+    given, count only workspaces that bill to that (org-pooled) account, so
+    separately-billed client workspaces (which carry their own
+    workspace-scoped account) don't consume the org's free-tier allowance."""
+    filter_: dict = {"org_id": {"_eq": org_id}, "deleted_at": {"_null": True}}
+    if billing_account_id is not None:
+        filter_["billing_account_id"] = {"_eq": billing_account_id}
+    return await _agg_count("workspace", filter_)
 
 
 def build_free_tier_usage_block(
