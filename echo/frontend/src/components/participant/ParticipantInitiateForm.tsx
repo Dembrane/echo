@@ -10,8 +10,9 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { AxiosError } from "axios";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
+import { useSearchParams } from "react-router";
 import { z } from "zod";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
@@ -19,6 +20,7 @@ import { useInitiateConversationMutation } from "./hooks";
 
 const FormSchema = z.object({
 	name: z.string().optional(),
+	email: z.string().optional(),
 	tagIdList: z.array(z.string()).default([]),
 });
 
@@ -26,6 +28,24 @@ type FormValues = z.infer<typeof FormSchema>;
 
 export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 	const navigate = useI18nNavigate();
+	const [searchParams] = useSearchParams();
+
+	const defaultName = searchParams.get("participant_name") || searchParams.get("name") || "";
+	const defaultEmail = searchParams.get("participant_email") || searchParams.get("email") || "";
+	const defaultTagsParam = searchParams.get("tags") || searchParams.get("tag_id_list") || "";
+
+	const defaultTagIdList = useMemo(() => {
+		if (!defaultTagsParam) return [];
+		const splitTags = defaultTagsParam.split(",").map((t) => t.trim().toLowerCase());
+		return (project.tags as unknown as ProjectTag[])
+			.filter((tag) => tag && tag.id && tag.text)
+			.filter(
+				(tag) =>
+					splitTags.includes(tag.id.toLowerCase()) ||
+					splitTags.includes((tag.text ?? "").toLowerCase()),
+			)
+			.map((tag) => tag.id);
+	}, [defaultTagsParam, project.tags]);
 
 	const {
 		register,
@@ -35,6 +55,11 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		formState: { errors },
 	} = useForm<FormValues>({
 		resolver: zodResolver(FormSchema),
+		defaultValues: useMemo(() => ({
+			name: defaultName,
+			email: defaultEmail,
+			tagIdList: defaultTagIdList,
+		}), [defaultName, defaultEmail, defaultTagIdList]),
 	});
 
 	const { isSuccess, isError, ...initiateConversationMutation } =
@@ -43,6 +68,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 	const onSubmit = (data: FormValues) => {
 		initiateConversationMutation.mutate({
 			name: data.name ?? t`Participant`,
+			email: data.email || undefined,
 			pin: "",
 			projectId: project.id,
 			source: "PORTAL_AUDIO",
@@ -50,11 +76,43 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		});
 	};
 
+	// Auto-submit if skipOnboarding is requested and we have required fields prefilled
+	useEffect(() => {
+		const skipOnboarding = searchParams.get("skipOnboarding") === "1";
+		const hasRequiredName = !project.default_conversation_ask_for_participant_name || defaultName;
+
+		if (skipOnboarding && hasRequiredName && !initiateConversationMutation.isPending && !isSuccess && !isError) {
+			initiateConversationMutation.mutate({
+				name: defaultName || t`Participant`,
+				email: defaultEmail || undefined,
+				pin: "",
+				projectId: project.id,
+				source: "PORTAL_AUDIO",
+				tagIdList: defaultTagIdList,
+			});
+		}
+	}, [
+		project.id,
+		project.default_conversation_ask_for_participant_name,
+		defaultName,
+		defaultEmail,
+		defaultTagIdList,
+		isSuccess,
+		isError,
+		searchParams,
+	]);
+
 	useEffect(() => {
 		if (isSuccess) {
 			if (initiateConversationMutation.data?.id) {
+				const mode = searchParams.get("mode") || (searchParams.get("general_feedback") || searchParams.get("feedback") ? "text" : "audio");
+				const pathSuffix = mode === "text" ? "/text" : "";
+
+				const searchStr = searchParams.toString();
+				const queryStr = searchStr ? `?${searchStr}` : "";
+
 				navigate(
-					`/${project.id}/conversation/${initiateConversationMutation.data?.id}`,
+					`/${project.id}/conversation/${initiateConversationMutation.data?.id}${pathSuffix}${queryStr}`,
 				);
 			} else {
 				reset();
@@ -66,6 +124,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		initiateConversationMutation.data?.id,
 		navigate,
 		project.id,
+		searchParams,
 	]);
 
 	useEffect(() => {
