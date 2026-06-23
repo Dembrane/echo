@@ -249,7 +249,7 @@ _bg_loop: Optional[asyncio.AbstractEventLoop] = None
 _bg_loop_lock = threading.Lock()
 
 
-def _real_thread_class() -> type:
+def _real_thread_class() -> "type[threading.Thread]":
     """Return a true OS-thread class even when gevent has monkey-patched threading."""
     try:
         from gevent.monkey import get_original

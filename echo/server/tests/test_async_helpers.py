@@ -14,8 +14,8 @@ production failures this design fixes:
 
 import sys
 import asyncio
-import threading
 import textwrap
+import threading
 import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -155,7 +155,7 @@ def test_reused_async_client_across_calls():
     import httpx
 
     client = httpx.AsyncClient(
-        transport=httpx.MockTransport(lambda r: httpx.Response(200, json={"ok": True})),
+        transport=httpx.MockTransport(lambda _request: httpx.Response(200, json={"ok": True})),
         base_url="http://test",
     )
 
@@ -186,7 +186,7 @@ def test_gevent_async_httpx():
         from dembrane.async_helpers import run_async_in_new_loop
 
         _client = httpx.AsyncClient(
-            transport=httpx.MockTransport(lambda r: httpx.Response(200, json={"ok": True})),
+            transport=httpx.MockTransport(lambda _request: httpx.Response(200, json={"ok": True})),
             base_url="http://test",
         )
 
