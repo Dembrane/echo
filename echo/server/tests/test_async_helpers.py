@@ -208,3 +208,55 @@ def test_gevent_async_httpx():
     )
     assert proc.returncode == 0, f"stdout={proc.stdout}\nstderr={proc.stderr}"
     assert "PASS" in proc.stdout
+
+
+def test_gevent_ignores_running_loop_detection():
+    """
+    Regression for the stuck-summary hang seen on Echo Next.
+
+    Under dramatiq-gevent, asyncio's running-loop is thread-local and shared
+    across greenlets, so get_running_loop() can return a loop a *different*
+    greenlet is driving. The old fallback then drove that foreign loop and the
+    actor hung until dramatiq's TimeLimitExceeded. Under gevent,
+    run_async_in_new_loop must IGNORE get_running_loop() and always use the
+    dedicated background loop (its own real OS thread).
+
+    Deterministic: we make get_running_loop() on the *calling* greenlet return a
+    sentinel that raises if driven (the bg loop runs on a separate real thread,
+    so it keeps the real get_running_loop). The fix must never touch the sentinel.
+    Runs in a subprocess so gevent patches before imports.
+    """
+    script = textwrap.dedent(
+        """
+        from gevent import monkey; monkey.patch_all()
+        import asyncio, threading
+        from dembrane.async_helpers import run_async_in_new_loop
+
+        class _BoomLoop:
+            def run_until_complete(self, coro):
+                raise AssertionError("took the contended running-loop fallback path")
+
+        _real = asyncio.get_running_loop
+        _caller_ident = threading.get_ident()
+        def _fake_get_running_loop():
+            # Only lie to the calling greenlet; the bg loop's real OS thread
+            # (different ident) keeps the genuine implementation.
+            if threading.get_ident() == _caller_ident:
+                return _BoomLoop()
+            return _real()
+        asyncio.get_running_loop = _fake_get_running_loop
+
+        async def work():
+            await asyncio.sleep(0.02)
+            return threading.current_thread().name
+
+        ran_on = run_async_in_new_loop(work())
+        assert ran_on == "dembrane-async-loop", ran_on  # used the bg loop, not the sentinel
+        print("PASS")
+        """
+    )
+    proc = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, timeout=120
+    )
+    assert proc.returncode == 0, f"stdout={proc.stdout}\nstderr={proc.stderr}"
+    assert "PASS" in proc.stdout
