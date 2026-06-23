@@ -569,6 +569,21 @@ class ConversationService:
         if detected_language_confidence is not _UNSET:
             update["detected_language_confidence"] = detected_language_confidence
 
+        # Postgres text/jsonb cannot store NUL bytes (0x00). Gemini transcript
+        # correction occasionally emits them, which made the chunk update fail
+        # with: invalid byte sequence for encoding "UTF8": 0x00. Strip them from
+        # every string value (including nested diarization fields) before write.
+        def _strip_null_bytes(value: Any) -> Any:
+            if isinstance(value, str):
+                return value.replace("\x00", "")
+            if isinstance(value, dict):
+                return {k: _strip_null_bytes(v) for k, v in value.items()}
+            if isinstance(value, list):
+                return [_strip_null_bytes(v) for v in value]
+            return value
+
+        update = {k: _strip_null_bytes(v) for k, v in update.items()}
+
         if update.keys():
             try:
                 with self._client_context() as client:

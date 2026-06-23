@@ -81,6 +81,14 @@ redis_connection_string = REDIS_URL + "/1" + ssl_params
 
 broker = RedisBroker(
     url=redis_connection_string,
+    # Managed Redis closes idle connections; without health checks the
+    # scheduler's pooled broker connection goes stale between cron firings and
+    # enqueue() raises ConnectionError("Connection closed by server"), so the
+    # dispatched task is silently dropped. health_check_interval revives idle
+    # connections before use; keepalive keeps the socket warm. (passed through
+    # to the underlying redis-py client)
+    health_check_interval=25,
+    socket_keepalive=True,
     # this is to disable Prometheus (https://groups.io/g/dramatiq-users/topic/disabling_prometheus/80745532)
     # middleware=[
     #     AgeLimit,
