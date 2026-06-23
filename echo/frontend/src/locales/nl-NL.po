@@ -1002,8 +1002,8 @@ msgstr "Trefwoorden toevoegen"
 msgid "Add to {0}?"
 msgstr "Toevoegen aan {0}?"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:177
-#: src/components/conversation/ProjectConversationsPanel.tsx:199
+#: src/components/conversation/ProjectConversationsPanel.tsx:180
+#: src/components/conversation/ProjectConversationsPanel.tsx:202
 msgid "Add to chat"
 msgstr "Toevoegen aan Chat"
 
@@ -1295,7 +1295,7 @@ msgstr "Alle sjablonen"
 msgid "All tiers"
 msgstr "Alle niveaus"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:868
+#: src/components/conversation/ProjectConversationsPanel.tsx:872
 msgid "All visible conversations selected"
 msgstr "Alle zichtbare gesprekken geselecteerd"
 
@@ -1336,7 +1336,7 @@ msgstr "Al in context"
 msgid "Already invited"
 msgstr "Al uitgenodigd"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:174
+#: src/components/conversation/ProjectConversationsPanel.tsx:175
 msgid "Already used in this chat"
 msgstr "Al gebruikt in deze chat"
 
@@ -1440,8 +1440,8 @@ msgstr "anoniem gesprek"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:179
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:184
-#: src/components/conversation/ProjectConversationsPanel.tsx:295
-#: src/components/conversation/ProjectConversationsPanel.tsx:300
+#: src/components/conversation/ProjectConversationsPanel.tsx:298
+#: src/components/conversation/ProjectConversationsPanel.tsx:303
 #: src/components/conversation/ConversationAccordion.tsx:584
 msgid "Anonymized conversation"
 msgstr "Anoniem gesprek"
@@ -1456,7 +1456,7 @@ msgstr "Anoniem gesprek"
 msgid "Another admin or owner will need to restore you."
 msgstr "Een andere admin of eigenaar moet je herstellen."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:819
+#: src/components/conversation/ProjectConversationsPanel.tsx:823
 msgid "Any tag"
 msgstr "Elke tag"
 
@@ -2193,6 +2193,7 @@ msgstr "Opgezegd"
 msgid "Cancelling stops your plan from renewing. You keep {0} until your current billing period ends, then you move to Free."
 msgstr "Bij opzeggen wordt je abonnement niet verlengd. Je houdt {0} tot het einde van je huidige factureringsperiode en gaat daarna over naar Free."
 
+#: src/components/conversation/ProjectConversationsPanel.tsx:177
 #: src/components/conversation/ConversationAccordion.tsx:165
 msgid "Cannot add empty conversation"
 msgstr "Kan geen leeg gesprek toevoegen"
@@ -2401,7 +2402,7 @@ msgstr "Kies je favoriete thema voor de interface"
 msgid "City"
 msgstr "Plaats"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:899
+#: src/components/conversation/ProjectConversationsPanel.tsx:903
 msgid "Clear filters"
 msgstr "Filters wissen"
 
@@ -2409,7 +2410,7 @@ msgstr "Filters wissen"
 #: src/routes/project/ProjectsHome.tsx:362
 #: src/features/sidebar/blocks/SearchBlock.tsx:136
 #: src/components/invite/WorkspaceSelectList.tsx:98
-#: src/components/conversation/ProjectConversationsPanel.tsx:795
+#: src/components/conversation/ProjectConversationsPanel.tsx:799
 msgid "Clear search"
 msgstr "Zoekopdracht wissen"
 
@@ -2691,12 +2692,12 @@ msgstr "Gesprek beëindigd"
 #~ msgstr "Gesprek beëindigd"
 
 #: src/components/conversation/ConversationAccordion.tsx:161
-msgid "Conversation locked, upgrade to add to chat"
-msgstr "Gesprek vergrendeld, upgrade om aan chat toe te voegen"
+#~ msgid "Conversation locked, upgrade to add to chat"
+#~ msgstr "Gesprek vergrendeld, upgrade om aan chat toe te voegen"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:172
-msgid "Conversation locked. Upgrade to add it."
-msgstr "Gesprek vergrendeld. Upgrade om het toe te voegen."
+#~ msgid "Conversation locked. Upgrade to add it."
+#~ msgstr "Gesprek vergrendeld. Upgrade om het toe te voegen."
 
 #~ msgid "Conversation processing"
 #~ msgstr "Gesprek wordt verwerkt"
@@ -2735,7 +2736,7 @@ msgstr "gesprekken"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:97
 #: src/components/workspace/OrganisationProjectsTable.tsx:219
 #: src/components/project/ProjectUsageAndSharing.tsx:453
-#: src/components/conversation/ProjectConversationsPanel.tsx:727
+#: src/components/conversation/ProjectConversationsPanel.tsx:731
 #: src/components/conversation/ConversationAccordion.tsx:1099
 msgid "Conversations"
 msgstr "Gesprekken"
@@ -3650,8 +3651,8 @@ msgstr "Alle transcripties downloaden"
 msgid "Download as"
 msgstr "Downloaden als"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:342
-#: src/components/conversation/ProjectConversationsPanel.tsx:346
+#: src/components/conversation/ProjectConversationsPanel.tsx:345
+#: src/components/conversation/ProjectConversationsPanel.tsx:349
 msgid "Download audio"
 msgstr "Download audio"
 
@@ -4278,7 +4279,7 @@ msgstr "Fout bij het toevoegen van het gesprek aan de chat"
 msgid "Failed to add conversation to chat{0}"
 msgstr "Fout bij het toevoegen van het gesprek aan de chat{0}"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:710
+#: src/components/conversation/ProjectConversationsPanel.tsx:714
 #: src/components/conversation/ConversationAccordion.tsx:976
 #: src/components/conversation/ConversationAccordion.tsx:996
 msgid "Failed to add conversations to context"
@@ -4932,7 +4933,7 @@ msgstr "Begeleid"
 #~ msgstr ""
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:167
-#: src/components/conversation/ProjectConversationsPanel.tsx:283
+#: src/components/conversation/ProjectConversationsPanel.tsx:286
 #: src/components/conversation/ConversationAccordion.tsx:570
 msgid "Has verified artifacts"
 msgstr "Bevat geverifieerde artefacten"
@@ -5882,7 +5883,7 @@ msgstr "Bezig met laden…"
 msgid "Locked"
 msgstr "Vergrendeld"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:454
+#: src/components/conversation/ProjectConversationsPanel.tsx:458
 msgid "Locked conversation, upgrade to view"
 msgstr ""
 
@@ -5967,8 +5968,8 @@ msgid "Make visible to the whole workspace"
 msgstr "Zichtbaar maken voor de hele werkruimte"
 
 #: src/components/project/ProjectSharingStrip.tsx:98
-#: src/components/conversation/ProjectConversationsPanel.tsx:361
-#: src/components/conversation/ProjectConversationsPanel.tsx:365
+#: src/components/conversation/ProjectConversationsPanel.tsx:364
+#: src/components/conversation/ProjectConversationsPanel.tsx:368
 #: src/components/billing/BillingManager.tsx:1566
 msgid "Manage"
 msgstr "Beheren"
@@ -6518,7 +6519,7 @@ msgstr "Geen gesprekken gevonden."
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Geen gesprekken gevonden. Start een gesprek met behulp van de deelname-uitnodigingslink uit het <0><1>projectoverzicht.</1></0>"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:892
+#: src/components/conversation/ProjectConversationsPanel.tsx:896
 msgid "No conversations match these filters."
 msgstr "Geen gesprekken voldoen aan deze filters."
 
@@ -6530,7 +6531,7 @@ msgstr "Er zijn geen gesprekken verwerkt. Dit kan gebeuren als alle gesprekken a
 #~ msgid "No conversations yet"
 #~ msgstr "Nog geen gesprekken"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:894
+#: src/components/conversation/ProjectConversationsPanel.tsx:898
 msgid "No conversations yet."
 msgstr "Nog geen gesprekken."
 
@@ -6597,8 +6598,8 @@ msgstr "Geen resultaten gevonden"
 msgid "No members yet."
 msgstr "Nog geen leden."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:242
-#: src/components/conversation/ProjectConversationsPanel.tsx:244
+#: src/components/conversation/ProjectConversationsPanel.tsx:245
+#: src/components/conversation/ProjectConversationsPanel.tsx:247
 msgid "No name"
 msgstr "Geen naam"
 
@@ -6728,7 +6729,7 @@ msgstr "Nog geen rapporten"
 msgid "No results"
 msgstr "Geen resultaten"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:870
+#: src/components/conversation/ProjectConversationsPanel.tsx:874
 msgid "No selectable conversations"
 msgstr "Geen selecteerbare gesprekken"
 
@@ -6736,7 +6737,7 @@ msgstr "Geen selecteerbare gesprekken"
 #~ msgstr "Geen specifieke focus"
 
 #: src/routes/project/ProjectHomeRoute.tsx:237
-#: src/components/conversation/ProjectConversationsPanel.tsx:409
+#: src/components/conversation/ProjectConversationsPanel.tsx:413
 msgid "No summary yet"
 msgstr "Nog geen samenvatting"
 
@@ -6983,7 +6984,7 @@ msgstr "Eenmalig"
 #~ msgstr ""
 
 #: src/routes/project/ProjectHomeRoute.tsx:222
-#: src/components/conversation/ProjectConversationsPanel.tsx:324
+#: src/components/conversation/ProjectConversationsPanel.tsx:327
 msgid "Ongoing"
 msgstr "Actief"
 
@@ -7101,8 +7102,8 @@ msgstr "Accountacties openen"
 msgid "Open all"
 msgstr "Alles openen"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:376
-#: src/components/conversation/ProjectConversationsPanel.tsx:380
+#: src/components/conversation/ProjectConversationsPanel.tsx:379
+#: src/components/conversation/ProjectConversationsPanel.tsx:383
 msgid "Open conversation"
 msgstr "Gesprek openen"
 
@@ -8747,8 +8748,8 @@ msgstr "E-mail verwijderen"
 msgid "Remove file"
 msgstr "Bestand verwijderen"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:176
-#: src/components/conversation/ProjectConversationsPanel.tsx:199
+#: src/components/conversation/ProjectConversationsPanel.tsx:179
+#: src/components/conversation/ProjectConversationsPanel.tsx:202
 msgid "Remove from chat"
 msgstr "Uit chat verwijderen"
 
@@ -9016,8 +9017,8 @@ msgstr "Resetten"
 #~ msgid "Reset All Options"
 #~ msgstr "Alle opties resetten"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:835
 #: src/components/conversation/ProjectConversationsPanel.tsx:839
+#: src/components/conversation/ProjectConversationsPanel.tsx:843
 msgid "Reset filters"
 msgstr "Filters resetten"
 
@@ -9132,7 +9133,7 @@ msgstr "Bestanden bekijken voordat u uploadt"
 msgid "Review processing status for every conversation collected in this project."
 msgstr "Bekijk de verwerkingsstatus voor elk gesprek dat in dit project is verzameld."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:743
+#: src/components/conversation/ProjectConversationsPanel.tsx:747
 msgid "Review, edit, and open every conversation in this project."
 msgstr "Bekijk, bewerk en open elk gesprek in dit project."
 
@@ -9291,7 +9292,7 @@ msgid "Scroll to bottom"
 msgstr "Scroll naar beneden"
 
 #: src/features/sidebar/blocks/SearchBlock.tsx:89
-#: src/components/conversation/ProjectConversationsPanel.tsx:788
+#: src/components/conversation/ProjectConversationsPanel.tsx:792
 #: src/components/conversation/MoveConversationButton.tsx:158
 msgid "Search"
 msgstr "Zoeken"
@@ -9312,7 +9313,7 @@ msgstr "Zoek op account, werkruimte, organisatie, e-mail, tier"
 #~ msgid "Search and choose the conversations for this chat."
 #~ msgstr ""
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:739
+#: src/components/conversation/ProjectConversationsPanel.tsx:743
 msgid "Search and select the conversations for this chat."
 msgstr "Zoek en selecteer de gesprekken voor deze chat."
 
@@ -9500,7 +9501,7 @@ msgstr "Alles selecteren ({remainingCount})"
 msgid "select.all.modal.title.results"
 msgstr "Alle resultaten selecteren"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:866
+#: src/components/conversation/ProjectConversationsPanel.tsx:870
 msgid "Select all visible ({remainingCount})"
 msgstr "Selecteer alle zichtbare ({remainingCount})"
 
@@ -10034,7 +10035,7 @@ msgstr "Er is iets misgegaan. Probeer het alstublieft opnieuw."
 msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "We kunnen hier niet dieper op ingaan door onze contentregels."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:808
+#: src/components/conversation/ProjectConversationsPanel.tsx:812
 #: src/components/conversation/ConversationAccordion.tsx:1217
 #: src/components/conversation/ConversationAccordion.tsx:1224
 msgid "Sort"
@@ -10270,7 +10271,7 @@ msgstr "Tag verwijderd"
 
 #: src/components/project/ProjectTagsInput.tsx:256
 #: src/components/participant/ParticipantInitiateForm.tsx:117
-#: src/components/conversation/ProjectConversationsPanel.tsx:818
+#: src/components/conversation/ProjectConversationsPanel.tsx:822
 #: src/components/conversation/ConversationEdit.tsx:415
 #: src/components/conversation/ConversationAccordion.tsx:1287
 #: src/components/conversation/ConversationAccordion.tsx:1290
@@ -10943,11 +10944,11 @@ msgstr "Titel"
 msgid "Title auto-generated"
 msgstr "Titel automatisch gegenereerd"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:275
+#: src/components/conversation/ProjectConversationsPanel.tsx:278
 msgid "Title generated from the conversation"
 msgstr "Titel gegenereerd uit het gesprek"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:789
+#: src/components/conversation/ProjectConversationsPanel.tsx:793
 msgid "Title or participant"
 msgstr "Titel of deelnemer"
 
@@ -11384,7 +11385,7 @@ msgstr "Naamloos"
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:94
 #: src/components/project/ProjectUsageAndSharing.tsx:501
 #: src/components/project/ProjectUsageAndSharing.tsx:529
-#: src/components/conversation/ProjectConversationsPanel.tsx:241
+#: src/components/conversation/ProjectConversationsPanel.tsx:244
 msgid "Untitled conversation"
 msgstr "Naamloos gesprek"
 
@@ -11462,6 +11463,12 @@ msgstr "Upgraden"
 msgid "Upgrade to {displayTier}"
 msgstr "Upgraden naar {displayTier}"
 
+#: src/components/conversation/ProjectConversationsPanel.tsx:173
+#: src/components/conversation/LockedTranscriptOverlay.tsx:33
+#: src/components/conversation/ConversationAccordion.tsx:161
+msgid "Upgrade to add this to the chat"
+msgstr ""
+
 #: src/components/chat/FreeTierChatGate.tsx:69
 msgid "Upgrade to continue"
 msgstr ""
@@ -11482,7 +11489,7 @@ msgstr "Upgraden om te ontgrendelen"
 msgid "Upgrade to unlock Auto-select and analyze 10x more conversations in half the time—no more manual selection, just deeper insights instantly."
 msgstr "Upgrade om automatisch selecteren te ontgrendelen en analyseer 10x meer gesprekken in de helft van de tijd - geen handmatige selectie meer, gewoon diepere inzichten direct."
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:30
+#: src/components/conversation/LockedTranscriptOverlay.tsx:34
 msgid "Upgrade to view this"
 msgstr ""
 
@@ -11506,7 +11513,7 @@ msgstr ""
 msgid "Upgrade your workspace to download audio for conversations recorded after the cap"
 msgstr "Upgrade je werkruimte om audio te downloaden van gesprekken die na de limiet zijn opgenomen"
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:38
+#: src/components/conversation/LockedTranscriptOverlay.tsx:44
 msgid "Upgrade your workspace to view summaries for new conversations."
 msgstr "Upgrade je werkruimte om samenvattingen van nieuwe gesprekken te bekijken."
 
@@ -11515,14 +11522,14 @@ msgstr "Upgrade je werkruimte om samenvattingen van nieuwe gesprekken te bekijke
 msgid "Upgrade your workspace to view this conversation"
 msgstr "Upgrade je werkruimte om dit gesprek te bekijken"
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:39
+#: src/components/conversation/LockedTranscriptOverlay.tsx:45
 msgid "Upgrade your workspace to view transcripts for new conversations."
 msgstr "Upgrade je werkruimte om transcripties van nieuwe gesprekken te bekijken."
 
 #: src/routes/project/ProjectHomeRoute.tsx:138
 #: src/components/project/ProjectUploadSection.tsx:28
 #: src/components/dropzone/UploadConversationDropzone.tsx:540
-#: src/components/conversation/ProjectConversationsPanel.tsx:761
+#: src/components/conversation/ProjectConversationsPanel.tsx:765
 #: src/components/conversation/ConversationAccordion.tsx:411
 #: src/components/conversation/ConversationAccordion.tsx:1112
 msgid "Upload"
@@ -11565,7 +11572,7 @@ msgstr "Bestanden uploaden"
 msgid "Upload limit reached"
 msgstr ""
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:754
+#: src/components/conversation/ProjectConversationsPanel.tsx:758
 #: src/components/conversation/ConversationAccordion.tsx:1106
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Uploadlimiet bereikt. Upgrade je werkruimte."
@@ -11733,7 +11740,7 @@ msgstr "Geverifieerd"
 msgid "select.all.modal.loading.verified"
 msgstr "Geverifieerd"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:828
+#: src/components/conversation/ProjectConversationsPanel.tsx:832
 msgid "Verified"
 msgstr "Geverifieerd"
 
@@ -11753,7 +11760,7 @@ msgid "verified artifacts"
 msgstr "geverifieerde artefacten"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:172
-#: src/components/conversation/ProjectConversationsPanel.tsx:288
+#: src/components/conversation/ProjectConversationsPanel.tsx:291
 msgid "Verified artifacts"
 msgstr "Geverifieerde artefacten"
 
@@ -12675,11 +12682,11 @@ msgstr ""
 msgid "You've reached the message limit on the free plan. Upgrade to keep chatting."
 msgstr ""
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:32
+#: src/components/conversation/LockedTranscriptOverlay.tsx:36
 msgid "You've reached your summary limit"
 msgstr "Je hebt je samenvattingslimiet bereikt"
 
-#: src/components/conversation/LockedTranscriptOverlay.tsx:33
+#: src/components/conversation/LockedTranscriptOverlay.tsx:37
 msgid "You've reached your transcript limit"
 msgstr "Je hebt je transcriptielimiet bereikt"
 
@@ -12740,8 +12747,12 @@ msgstr "Je e-mailadres is geverifieerd. Log in om door te gaan."
 msgid "Your email is verified. Taking you to the login page."
 msgstr "Je e-mailadres is geverifieerd. We brengen je naar de loginpagina."
 
+#: src/components/conversation/LockedTranscriptOverlay.tsx:41
+msgid "Your free plan includes one conversation. Upgrade to add more to the chat."
+msgstr ""
+
 #: src/routes/project/ProjectHomeRoute.tsx:323
-#: src/components/conversation/LockedTranscriptOverlay.tsx:36
+#: src/components/conversation/LockedTranscriptOverlay.tsx:42
 msgid "Your free plan includes one conversation. Upgrade to open the rest."
 msgstr ""
 

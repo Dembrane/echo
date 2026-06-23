@@ -166,15 +166,18 @@ const ConversationSelectionCheckbox = ({
 		(c) => c.conversation_id === conversation.id && c.locked,
 	);
 	const isOverCapLocked = !!conversation.locked;
-	const isDisabled = isChatLocked || isOverCapLocked;
+	const isEmpty = conversation.has_transcript === false;
+	const isDisabled = isChatLocked || isOverCapLocked || isEmpty;
 
 	const tooltipLabel = isOverCapLocked
-		? t`Conversation locked. Upgrade to add it.`
+		? t`Upgrade to add this to the chat`
 		: isChatLocked
 			? t`Already used in this chat`
-			: isSelected
-				? t`Remove from chat`
-				: t`Add to chat`;
+			: isEmpty
+				? t`Cannot add empty conversation`
+				: isSelected
+					? t`Remove from chat`
+					: t`Add to chat`;
 
 	const handleChange = () => {
 		if (isSelected) {
@@ -399,6 +402,7 @@ const ConversationRow = ({
 						compact
 						variant="summary"
 						reason={conversation.lock_reason ?? "free_tier"}
+						context={selectionMode ? "selection" : "view"}
 					/>
 				) : (
 					<Text

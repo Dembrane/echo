@@ -158,7 +158,7 @@ const ConversationAccordionLabelChatSelection = ({
 	};
 
 	const tooltipLabel = isOverCapLocked
-		? t`Conversation locked, upgrade to add to chat`
+		? t`Upgrade to add this to the chat`
 		: isChatLocked
 			? t`Already added to this chat`
 			: !hasContent
