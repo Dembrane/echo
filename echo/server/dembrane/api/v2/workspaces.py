@@ -199,9 +199,7 @@ async def list_workspaces(
     )
     if not isinstance(org_membership_data, list):
         org_membership_data = []
-    internal_org_ids = {
-        om["org_id"] for om in org_membership_data if om.get("org_id")
-    }
+    internal_org_ids = {om["org_id"] for om in org_membership_data if om.get("org_id")}
 
     if len(memberships) == 0 and len(org_membership_data) == 0:
         return WorkspaceListResponse(workspaces=[], organisations=[])
@@ -723,7 +721,7 @@ async def create_workspace(
         # workspace exists for a separate compliance/billing context, so naming
         # an existing org member as its data owner is contradictory. Block it;
         # for internal collaborators, create an internal workspace instead.
-        if await _is_org_member_by_email(org_id, data_owner_email):
+        if data_owner_email and await _is_org_member_by_email(org_id, data_owner_email):
             raise HTTPException(
                 status_code=400,
                 detail=(
@@ -749,14 +747,27 @@ async def create_workspace(
             tier="free", created_by=app_user_id, label=f"{body.name.strip()} billing"
         )
     else:
-        account_id = await org_account_for_new_workspace(
-            org_id=org_id, created_by=app_user_id
-        )
+        account_id = await org_account_for_new_workspace(org_id=org_id, created_by=app_user_id)
         # Validate the org's billing account can take a new workspace.
         account = await async_directus.get_item("billing_account", account_id)
         blocked = billing_account_blocks_new_workspace(account)
         if blocked:
             raise HTTPException(status_code=402, detail=blocked)
+        # Free tier: one workspace per org (org-pooled accounts only; separate
+        # client-billed workspaces are unrestricted). Staff bypass.
+        from dembrane.free_tier import (
+            FREE_TIER_MAX_WORKSPACES,
+            is_free_tier,
+            count_org_workspaces,
+            free_tier_limit_error,
+        )
+
+        if (
+            not auth.is_admin
+            and is_free_tier((account or {}).get("tier"))
+            and await count_org_workspaces(org_id) >= FREE_TIER_MAX_WORKSPACES
+        ):
+            raise free_tier_limit_error("workspaces")
     # Paywall: non-open visibility at creation requires Innovator+ on the account
     # the workspace will bill to. The account may already be a paid org-pooled
     # account, so resolve the real tier rather than assuming free. Staff bypass.
@@ -824,9 +835,7 @@ async def create_workspace(
     try:
         await reconcile_account_seats(account_id)
     except Exception:
-        logger.exception(
-            "Seat reconcile failed after creating workspace %s", ws_id
-        )
+        logger.exception("Seat reconcile failed after creating workspace %s", ws_id)
 
     # External-client workspace: add the data owner's representative as a free
     # observer and email them that they're the data owner (ISSUE-026). Best-effort
@@ -841,9 +850,7 @@ async def create_workspace(
                 invited_by=app_user_id,
             )
         except Exception:
-            logger.exception(
-                "Failed to add data-owner observer for workspace %s", ws_id
-            )
+            logger.exception("Failed to add data-owner observer for workspace %s", ws_id)
 
     # Tell the organisation's other admins/owners that a new workspace exists.
     # Open workspaces are discoverable via the discovery endpoint so they
@@ -944,9 +951,7 @@ async def delete_workspace(
         try:
             await reconcile_account_seats(billing_account["id"])
         except Exception:
-            logger.exception(
-                "Seat reconcile failed after deleting workspace %s", ctx.workspace_id
-            )
+            logger.exception("Seat reconcile failed after deleting workspace %s", ctx.workspace_id)
 
     return {"status": "deleted"}
 
@@ -1176,8 +1181,8 @@ class MonthlyPricing(BaseModel):
 class TierPricing(BaseModel):
     """Per-tier nested pricing payload (per seat / month).
 
-        - Free: pricing is None at the parent level (never instantiated).
-        - Paid tiers: `annual_billing` + `monthly_billing` populated.
+    - Free: pricing is None at the parent level (never instantiated).
+    - Paid tiers: `annual_billing` + `monthly_billing` populated.
     """
 
     annual_billing: Optional[AnnualPricing] = None
@@ -1232,6 +1237,10 @@ class WorkspaceUsageResponse(BaseModel):
 
     # Admin + billing only — None for members.
     next_tier: Optional[NextTierRecommendation] = None
+
+    # Free-tier gating block. None on paid tiers and on pre-deploy cached
+    # payloads. See dembrane.free_tier.build_free_tier_usage_block.
+    free_tier: Optional[dict] = None
 
 
 class TierCapacityItem(BaseModel):
@@ -1429,8 +1438,8 @@ async def get_workspace_usage(
     # Seat breakdown via the shared counter so this matches /v2/orgs/:id/usage.
     from dembrane.seat_capacity import compute_effective_seat_state
 
-    seat_count, member_count, external_count, observer_count = (
-        await compute_effective_seat_state(ctx.workspace_id)
+    seat_count, member_count, external_count, observer_count = await compute_effective_seat_state(
+        ctx.workspace_id
     )
 
     # Tier capacity lookup. Legacy rows with NULL tier fall through to the
@@ -1498,6 +1507,54 @@ async def get_workspace_usage(
         upgrade_cta_tier=tier_next(tier),
     )
 
+    # Free-tier gating block (single source the frontend reads for blur /
+    # locked-composer / disabled-create states). Computed on the fresh path
+    # only; the cached branch carries whatever it stored (None pre-deploy).
+    # The extra Directus fan-out runs for free tier only; paid and legacy
+    # (None) tiers get an inactive block with no queries. project_ids is
+    # reused from above so the helpers don't refetch it five times.
+    from dembrane.free_tier import is_free_tier, build_free_tier_usage_block
+
+    if is_free_tier(tier):
+        from dembrane.free_tier import (
+            count_workspace_chats,
+            count_workspace_reports,
+            resolve_workspace_primary_chat_id,
+            resolve_workspace_primary_report_id,
+            resolve_workspace_unlocked_conversation_id,
+        )
+
+        (
+            free_unlocked_conv_id,
+            free_chats_used,
+            free_primary_chat_id,
+            free_reports_used,
+            free_primary_report_id,
+        ) = await asyncio.gather(
+            resolve_workspace_unlocked_conversation_id(ctx.workspace_id, project_ids),
+            count_workspace_chats(ctx.workspace_id, project_ids),
+            resolve_workspace_primary_chat_id(ctx.workspace_id, project_ids),
+            count_workspace_reports(ctx.workspace_id, project_ids),
+            resolve_workspace_primary_report_id(ctx.workspace_id, project_ids),
+        )
+        free_tier_block = build_free_tier_usage_block(
+            tier=tier,
+            unlocked_conversation_id=free_unlocked_conv_id,
+            chats_used=free_chats_used,
+            primary_chat_id=free_primary_chat_id,
+            reports_used=free_reports_used,
+            primary_report_id=free_primary_report_id,
+        )
+    else:
+        free_tier_block = build_free_tier_usage_block(
+            tier=tier,
+            unlocked_conversation_id=None,
+            chats_used=0,
+            primary_chat_id=None,
+            reports_used=0,
+            primary_report_id=None,
+        )
+
     full = WorkspaceUsageResponse(
         cycle_start=cycle_start,
         cycle_end_exclusive=cycle_end_exclusive,
@@ -1517,6 +1574,7 @@ async def get_workspace_usage(
         seat_invite_blocked=seat_invite_blocked,
         usage_gates=gates,
         next_tier=next_rec,
+        free_tier=free_tier_block,
     )
 
     # Cache the full payload (admin view). Best-effort — failure to cache
@@ -1574,11 +1632,7 @@ async def _assert_workspace_scoped_billing(ws: dict) -> dict:
     funds exactly this workspace (the partner / external-client case). ISSUE-027.
     """
     account_id = ws.get("billing_account_id")
-    account = (
-        await async_directus.get_item("billing_account", account_id)
-        if account_id
-        else None
-    )
+    account = await async_directus.get_item("billing_account", account_id) if account_id else None
     if not account or account.get("org_id"):
         raise HTTPException(
             status_code=409,

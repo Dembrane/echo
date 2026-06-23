@@ -536,6 +536,33 @@ async def summarize_conversation(
         conversation_id, auth, require="project:update"
     )
 
+    # Gate: never (re)generate a summary for a locked conversation. That would
+    # surface transcript-derived content past the free-tier / hours-cap gate
+    # (the edit modal's Generate button is also disabled; this is the backstop).
+    from dembrane.free_tier import (
+        is_free_tier,
+        resolve_project_tier,
+        conversation_is_locked,
+        resolve_project_unlocked_conversation_id,
+    )
+    from dembrane.directus_async import async_directus
+
+    _conv = await async_directus.get_item("conversation", conversation_id)
+    _project_id = (_conv or {}).get("project_id")
+    if isinstance(_project_id, dict):
+        _project_id = _project_id.get("id")
+    _tier = await resolve_project_tier(_project_id) if _project_id else None
+    _unlocked_id = (
+        await resolve_project_unlocked_conversation_id(_project_id)
+        if (_project_id and is_free_tier(_tier))
+        else None
+    )
+    if conversation_is_locked(_conv or {}, _tier, _unlocked_id):
+        raise HTTPException(
+            status_code=402,
+            detail="Conversation is locked. Upgrade to generate a summary.",
+        )
+
     conversation_data_result = await run_in_thread_pool(
         directus.get_items,
         "conversation",
@@ -653,6 +680,31 @@ async def generate_title_for_conversation(
     await raise_if_conversation_not_found_or_not_authorized(
         conversation_id, auth, require="project:update"
     )
+
+    # Gate: locked conversations are content-gated (see summarize_conversation).
+    from dembrane.free_tier import (
+        is_free_tier,
+        resolve_project_tier,
+        conversation_is_locked,
+        resolve_project_unlocked_conversation_id,
+    )
+    from dembrane.directus_async import async_directus
+
+    _conv = await async_directus.get_item("conversation", conversation_id)
+    _project_id = (_conv or {}).get("project_id")
+    if isinstance(_project_id, dict):
+        _project_id = _project_id.get("id")
+    _tier = await resolve_project_tier(_project_id) if _project_id else None
+    _unlocked_id = (
+        await resolve_project_unlocked_conversation_id(_project_id)
+        if (_project_id and is_free_tier(_tier))
+        else None
+    )
+    if conversation_is_locked(_conv or {}, _tier, _unlocked_id):
+        raise HTTPException(
+            status_code=402,
+            detail="Conversation is locked. Upgrade to generate a title.",
+        )
 
     conversation_data_result = await run_in_thread_pool(
         directus.get_items,
@@ -865,7 +917,9 @@ async def retranscribe_conversation(
             logger.error(f"Error creating links: {str(e)}")
 
         # Copy verified artifacts to the new conversation if requested
-        attach_verified_artifacts = body.attach_verified_artifacts if body.attach_verified_artifacts is not None else False
+        attach_verified_artifacts = (
+            body.attach_verified_artifacts if body.attach_verified_artifacts is not None else False
+        )
         if attach_verified_artifacts:
             try:
                 original_artifacts = await run_in_thread_pool(
@@ -877,7 +931,13 @@ async def retranscribe_conversation(
                                 "conversation_id": {"_eq": conversation_id},
                                 "approved_at": {"_nnull": True},
                             },
-                            "fields": ["key", "topic_label", "content", "approved_at", "read_aloud_stream_url"],
+                            "fields": [
+                                "key",
+                                "topic_label",
+                                "content",
+                                "approved_at",
+                                "read_aloud_stream_url",
+                            ],
                         }
                     },
                 )
@@ -894,10 +954,13 @@ async def retranscribe_conversation(
                                 "topic_label": artifact.get("topic_label"),
                                 "content": artifact.get("content"),
                                 "approved_at": artifact.get("approved_at"),
-                                "read_aloud_stream_url": artifact.get("read_aloud_stream_url") or "",
-                            }
+                                "read_aloud_stream_url": artifact.get("read_aloud_stream_url")
+                                or "",
+                            },
                         )
-                    logger.info(f"Copied {len(original_artifacts)} verified artifacts from {conversation_id} to {new_conversation_id}")
+                    logger.info(
+                        f"Copied {len(original_artifacts)} verified artifacts from {conversation_id} to {new_conversation_id}"
+                    )
             except Exception as e:
                 logger.error(f"Error copying verified artifacts: {str(e)}")
 

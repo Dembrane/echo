@@ -26,6 +26,7 @@ import { avatarUrl } from "@/lib/avatar";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 import {
 	type BillingPeriod,
+	SELLABLE_TIER,
 	TIER_ORDER,
 	type Tier,
 	taglineFor,
@@ -284,9 +285,14 @@ export function UpgradeModal({
 	const tiersAboveCurrent = TIER_ORDER.filter(
 		(t) => TIER_ORDER.indexOf(t) > TIER_ORDER.indexOf(currentTier),
 	);
-	const defaultSelectedTier = tiersAboveCurrent.includes(requiredTier)
-		? requiredTier
-		: (tiersAboveCurrent[0] ?? requiredTier);
+	// Default to the purchasable tier (changemaker) whenever it's an option, so
+	// every upgrade path preselects it. Fall back to the requiredTier, then the
+	// lowest tier above current.
+	const defaultSelectedTier = tiersAboveCurrent.includes(SELLABLE_TIER)
+		? SELLABLE_TIER
+		: tiersAboveCurrent.includes(requiredTier)
+			? requiredTier
+			: (tiersAboveCurrent[0] ?? requiredTier);
 	const [selectedTier, setSelectedTier] = useState<Tier>(defaultSelectedTier);
 
 	useEffect(() => {
