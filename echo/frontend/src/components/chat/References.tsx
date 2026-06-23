@@ -30,9 +30,9 @@ export const References = ({
 							<span className="mr-2">
 								<Trans>{citation.reference_text}</Trans>
 							</span>
-							<I18nLink
-								to={`/w/${workspaceId}/projects/${projectId}/conversation/${citation?.conversation?.id || citation?.conversation}`}
-							>
+								<I18nLink
+									to={`/w/${workspaceId}/projects/${projectId}/conversations/${citation?.conversation?.id || citation?.conversation}`}
+								>
 								<Badge
 									size="sm"
 									variant="light"

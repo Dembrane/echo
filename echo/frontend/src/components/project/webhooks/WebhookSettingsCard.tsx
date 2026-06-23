@@ -723,7 +723,7 @@ const EXAMPLE_WEBHOOK_PAYLOAD = `{
     "name": "Customer Interviews",
     "language": "en"
   },
-  "dashboardUrl": "https://app.example.com/en-US/projects/proj-789/conversation/abc123-def456/overview"
+  "dashboardUrl": "https://app.example.com/en-US/projects/proj-789/conversations/abc123-def456/overview"
 }`;
 
 interface WebhookHelpAccordionProps {

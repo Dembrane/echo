@@ -40,10 +40,10 @@ export const useCopyQuote = () => {
 			// Format timestamp if available
 			const timestamp = conversation?.created_at ?? "";
 
-			// Build the formatted quote with context
-			stringBuilder.push(
-				`# Quote from [${conversation?.participant_name}](${window.location.origin}/${language}/projects/${projectId}/conversation/${conversation?.id})`,
-			);
+				// Build the formatted quote with context
+				stringBuilder.push(
+					`# Quote from [${conversation?.participant_name}](${window.location.origin}/${language}/projects/${projectId}/conversations/${conversation?.id})`,
+				);
 			stringBuilder.push(`"${quote.description}"`);
 			stringBuilder.push(`${quote.verbatim_transcript}`);
 
