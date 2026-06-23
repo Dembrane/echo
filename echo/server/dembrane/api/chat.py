@@ -27,7 +27,7 @@ from dembrane.chat_utils import (
 from dembrane.service.chat import ChatServiceException, ChatNotFoundException
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.stream_status import stream_with_status
-from dembrane.tier_capacity import tier_allows_overage, is_conversation_locked
+from dembrane.tier_capacity import tier_allows_overage
 from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.directus_async import async_directus
 from dembrane.api.conversation import get_conversation_token_count
@@ -62,12 +62,27 @@ async def _resolve_workspace_tier(project_id: str) -> Optional[str]:
 
 
 async def _check_conversation_not_locked(conversation_id: str, project_id: str) -> None:
-    """Raise 402 if the conversation is locked (over-cap on a non-overage tier)."""
+    """Raise 402 if the conversation is locked: over-cap on a non-overage tier,
+    or a free-tier conversation that isn't the workspace's single unlocked one."""
     conv = await async_directus.get_item("conversation", conversation_id)
-    if not conv or not conv.get("is_over_cap"):
+    if not conv:
         return
     tier = await _resolve_workspace_tier(project_id)
-    if is_conversation_locked(conv, tier):
+    from dembrane.free_tier import (
+        is_free_tier,
+        conversation_is_locked,
+        resolve_project_unlocked_conversation_id,
+    )
+
+    if is_free_tier(tier):
+        free_unlocked_id = await resolve_project_unlocked_conversation_id(project_id)
+    elif not conv.get("is_over_cap"):
+        # Paid / legacy tiers only lock via the hours cap; skip the extra
+        # lookup when the conversation isn't even over-cap.
+        return
+    else:
+        free_unlocked_id = None
+    if conversation_is_locked(conv, tier, free_unlocked_id):
         raise HTTPException(
             status_code=402,
             detail={
@@ -146,7 +161,9 @@ class ChatContextSchema(BaseModel):
     conversation_id_list: List[str]
     locked_conversation_id_list: List[str]
     auto_select_bool: bool
-    chat_mode: Optional[Literal["overview", "deep_dive", "agentic"]] = None  # None = not yet selected
+    chat_mode: Optional[Literal["overview", "deep_dive", "agentic"]] = (
+        None  # None = not yet selected
+    )
 
 
 async def raise_if_chat_not_found_or_not_authorized(
@@ -462,6 +479,17 @@ async def add_chat_context(
         )
 
         workspace_tier = await _resolve_workspace_tier(project_id)
+        from dembrane.free_tier import (
+            is_free_tier,
+            conversation_is_locked,
+            resolve_project_unlocked_conversation_id,
+        )
+
+        free_unlocked_id = (
+            await resolve_project_unlocked_conversation_id(project_id)
+            if is_free_tier(workspace_tier)
+            else None
+        )
 
         added: List[SelectAllConversationResult] = []
         skipped: List[SelectAllConversationResult] = []
@@ -474,7 +502,7 @@ async def add_chat_context(
             if not conv_id:
                 continue
 
-            if is_conversation_locked(conversation, workspace_tier):
+            if conversation_is_locked(conversation, workspace_tier, free_unlocked_id):
                 skipped.append(
                     SelectAllConversationResult(
                         conversation_id=conv_id,
@@ -988,7 +1016,21 @@ async def post_chat(
 
     # Matrix §8: chat is a host-side operation → Pilot hard-block.
     from dembrane.api.v2.middleware import check_no_pilot_block_for_project
+
     await check_no_pilot_block_for_project(str(project_id))
+
+    # Free tier: max 3 user turns per chat. The 4th routes to upgrade.
+    from dembrane.free_tier import (
+        FREE_TIER_MAX_CHAT_USER_TURNS,
+        is_free_tier,
+        count_chat_user_turns,
+        free_tier_limit_error,
+    )
+
+    if is_free_tier(await _resolve_workspace_tier(project_id)) and (
+        await count_chat_user_turns(chat_id) >= FREE_TIER_MAX_CHAT_USER_TURNS
+    ):
+        raise free_tier_limit_error("chat_turns")
 
     user_message_content = body.messages[-1].content
     user_message_id = generate_uuid()
@@ -1104,7 +1146,11 @@ async def post_chat(
 
             auto_select_tier = await _resolve_workspace_tier(project_id)
             locked_ids: set[str] = set()
-            if selected_conversation_ids and auto_select_tier is not None and not tier_allows_overage(auto_select_tier):
+            if (
+                selected_conversation_ids
+                and auto_select_tier is not None
+                and not tier_allows_overage(auto_select_tier)
+            ):
                 caps = await async_directus.get_items(
                     "conversation",
                     {
@@ -1120,6 +1166,18 @@ async def post_chat(
                 )
                 if isinstance(caps, list):
                     locked_ids = {c["id"] for c in caps if c.get("id")}
+
+            # Free tier: only the workspace's single unlocked conversation may
+            # be auto-selected; every other id is treated as locked.
+            if selected_conversation_ids:
+                from dembrane.free_tier import (
+                    is_free_tier,
+                    resolve_project_unlocked_conversation_id,
+                )
+
+                if is_free_tier(auto_select_tier):
+                    unlocked_id = await resolve_project_unlocked_conversation_id(project_id)
+                    locked_ids |= {cid for cid in selected_conversation_ids if cid != unlocked_id}
 
             existing_conversation_ids = set(chat_context.conversation_id_list)
             max_context_threshold = int(MAX_CHAT_CONTEXT_LENGTH * 0.8)

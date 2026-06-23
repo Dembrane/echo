@@ -21,9 +21,14 @@ import posthog from "posthog-js";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { FeedbackPortalModal } from "@/components/common/FeedbackPortalModal";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
+import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { useCreateProjectReportMutation, useProjectReport } from "./hooks";
 import { ReportFocusSelector } from "./ReportFocusSelector";
@@ -68,8 +73,15 @@ export const UpdateReportModalButton = ({
 	needsUpdate?: boolean;
 }) => {
 	const [opened, { open, close }] = useDisclosure(false);
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	const { mutateAsync, isPending, error } = useCreateProjectReportMutation();
 	const { projectId } = useParams();
+	// Free tier: one report per workspace. Gate the "New Report" action on click.
+	const { workspace } = useWorkspace();
+	const { freeTier } = useWorkspaceUsage(workspace?.id);
+	const atReportLimit = Boolean(
+		freeTier?.active && freeTier.reports_used >= freeTier.reports_limit,
+	);
 	const { data: currentReport } = useProjectReport(
 		projectId ?? "",
 		currentReportId,
@@ -92,8 +104,15 @@ export const UpdateReportModalButton = ({
 
 	const is409Error =
 		error instanceof AxiosError && error.response?.status === 409;
+	const is402ReportError = isFreeTierLimitError(error) === "report";
 
 	const handleOpen = () => {
+		// At the free-tier limit, route straight to the upgrade path instead of
+		// opening the create flow (which would just 402 on submit).
+		if (atReportLimit) {
+			upgradeHandlers.open();
+			return;
+		}
 		setLanguage(currentReport.language ?? iso639_1 ?? "en");
 		setUserInstructions(currentReport.user_instructions ?? "");
 		setShowSchedule(false);
@@ -162,7 +181,26 @@ export const UpdateReportModalButton = ({
 					</Group>
 				}
 			>
-				{error ? (
+				{is402ReportError ? (
+					<Alert title={t`Report limit reached`} color="primary" variant="light">
+						<Stack gap="sm" align="flex-start">
+							<Text size="sm">
+								<Trans>
+									Your free plan includes one report. Upgrade to create more.
+								</Trans>
+							</Text>
+							<Button
+								size="xs"
+								onClick={() => {
+									close();
+									upgradeHandlers.open();
+								}}
+							>
+								{t`See upgrade options`}
+							</Button>
+						</Stack>
+					</Alert>
+				) : error ? (
 					<Alert
 						title={
 							is409Error
@@ -320,6 +358,18 @@ export const UpdateReportModalButton = ({
 				opened={feedbackOpen}
 				onClose={() => setFeedbackOpen(false)}
 				locale={appLocale}
+			/>
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				currentTier={(workspace?.tier ?? "free") as Tier}
+				requiredTier={SELLABLE_TIER}
+				featureName={t`Reports`}
+				benefit={t`Upgrade your plan to create more reports in this workspace.`}
+				canRequestUpgrade={
+					workspace?.role === "admin" || workspace?.role === "owner"
+				}
+				workspaceId={workspace?.id ?? ""}
 			/>
 		</>
 	);

@@ -33,6 +33,10 @@ from logging import getLogger
 from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 
+from dembrane.free_tier import (
+    is_free_tier,
+    resolve_workspace_unlocked_conversation_id,
+)
 from dembrane.tier_capacity import is_conversation_locked
 from dembrane.directus_async import async_directus
 from dembrane.search_filters import merge_search_filter
@@ -79,9 +83,59 @@ _CONVERSATION_SEARCH_FIELDS = [
 ]
 
 
-def _enrich_conversation(conv: dict, tier: Optional[str]) -> dict:
-    """Add derived `locked`, strip raw `is_over_cap` from client responses."""
-    conv["locked"] = is_conversation_locked(conv, tier)
+def _conversation_lock(
+    conv: dict, tier: Optional[str], free_tier_unlocked_id: Optional[str] = None
+) -> tuple[bool, Optional[str]]:
+    """Resolve (locked, lock_reason) for a conversation. Single source of the
+    lock decision, shared by the list/detail enrich step and the chunk
+    endpoints so they cannot diverge.
+
+    Free tier locks every conversation except the workspace's single unlocked
+    one (`free_tier_unlocked_id`, the oldest). The hours cap locks over-cap
+    conversations on non-overage tiers. Hours cap takes precedence in the
+    reason label.
+
+    When `free_tier_unlocked_id` is None (no unlocked id resolved, e.g. an
+    empty workspace, or a non-free tier) the free-tier branch is skipped and
+    only the hours-cap rule applies.
+    """
+    if is_conversation_locked(conv, tier):
+        return True, "hours_cap"
+    free_lock = (
+        is_free_tier(tier)
+        and free_tier_unlocked_id is not None
+        and conv.get("id") != free_tier_unlocked_id
+    )
+    if free_lock:
+        return True, "free_tier"
+    return False, None
+
+
+def _enrich_conversation(
+    conv: dict, tier: Optional[str], free_tier_unlocked_id: Optional[str] = None
+) -> dict:
+    """Add derived `locked` + `lock_reason`, scrub gated text (summary +
+    merged_transcript) on locked rows, strip raw `is_over_cap`.
+
+    Chunk transcripts are scrubbed separately by the chunk endpoints /
+    include_chunks path via `_scrub_chunk_transcript`.
+    """
+    locked, reason = _conversation_lock(conv, tier, free_tier_unlocked_id)
+    conv["locked"] = locked
+    # Keep lock_reason symmetric with locked (always present) for stable
+    # serialization; None when unlocked.
+    conv["lock_reason"] = reason
+    if locked:
+        conv["summary"] = None
+        conv["summary_locked"] = True
+        # merged_transcript carries the full text; scrub it where present
+        # (detail returns the full row; list with fields=* includes it).
+        if "merged_transcript" in conv:
+            conv["merged_transcript"] = None
+        # Scrub transcript text on any embedded relations (chunks /
+        # conversation_segments) the caller may have requested via `fields`,
+        # so the scalar scrub above cannot be bypassed by embedding relations.
+        _scrub_embedded_transcripts(conv)
     conv.pop("is_over_cap", None)
     return conv
 
@@ -91,6 +145,32 @@ def _scrub_chunk_transcript(chunk: dict) -> dict:
     chunk["transcript"] = None
     chunk["transcript_locked"] = True
     return chunk
+
+
+def _scrub_embedded_transcripts(conv: dict) -> None:
+    """Null transcript-bearing content on a locked conversation's embedded
+    relations.
+
+    The list endpoint accepts a caller-supplied `fields` param (incl. `*` and
+    relational paths), so transcript-bearing relations like `chunks.transcript`
+    or `conversation_segments.transcript` can be embedded inline on the row.
+    Scrub them here regardless of which fields were requested, so the scalar
+    summary/merged_transcript scrub in `_enrich_conversation` cannot be
+    bypassed by requesting the relations directly.
+    """
+    chunks = conv.get("chunks")
+    if isinstance(chunks, list):
+        for ch in chunks:
+            if isinstance(ch, dict):
+                _scrub_chunk_transcript(ch)
+    segments = conv.get("conversation_segments")
+    if isinstance(segments, list):
+        for seg in segments:
+            if isinstance(seg, dict):
+                if "transcript" in seg:
+                    seg["transcript"] = None
+                if "contextual_transcript" in seg:
+                    seg["contextual_transcript"] = None
 
 
 @router.get("")
@@ -218,8 +298,13 @@ async def list_conversations(
         convs = [c for c in convs if c["id"] in kept]
 
     tier = access.tier
+    free_unlocked_id = (
+        await resolve_workspace_unlocked_conversation_id(access.workspace_id)
+        if is_free_tier(tier)
+        else None
+    )
     for conv in convs:
-        _enrich_conversation(conv, tier)
+        _enrich_conversation(conv, tier, free_unlocked_id)
 
     if convs:
         conv_ids = [c["id"] for c in convs]
@@ -303,9 +388,7 @@ async def list_conversations(
             cid = conv["id"]
             conv["has_transcript"] = cid in has_transcript_ids
             conv["last_chunk_at"] = last_chunk_at.get(cid)
-            conv["has_only_text_chunks"] = (
-                chunk_counts.get(cid, 0) > 0 and cid not in non_text_ids
-            )
+            conv["has_only_text_chunks"] = chunk_counts.get(cid, 0) > 0 and cid not in non_text_ids
 
         if include_chunks:
             chunks = (
@@ -608,7 +691,12 @@ async def get_conversation(
 ) -> dict:
     """Read a single conversation with optional embeds."""
     access, conv = await resolve_conversation_access(conversation_id, auth)
-    _enrich_conversation(conv, access.tier)
+    free_unlocked_id = (
+        await resolve_workspace_unlocked_conversation_id(access.workspace_id)
+        if is_free_tier(access.tier)
+        else None
+    )
+    _enrich_conversation(conv, access.tier, free_unlocked_id)
     is_locked = conv.get("locked", False)
 
     if include_chunks:
@@ -832,9 +920,7 @@ async def bulk_move_conversations(
     for ws_id in src_ws_ids:
         await invalidate_workspace_and_org_usage(ws_id, None)
     if dst_access.workspace_id:
-        await invalidate_workspace_and_org_usage(
-            dst_access.workspace_id, dst_access.org_id
-        )
+        await invalidate_workspace_and_org_usage(dst_access.workspace_id, dst_access.org_id)
 
     return {"moved": moved, "count": len(moved)}
 
@@ -860,7 +946,12 @@ async def list_chunks(
     on the conversation detail view.
     """
     access, conv = await resolve_conversation_access(conversation_id, auth)
-    is_locked = is_conversation_locked(conv, access.tier)
+    free_unlocked_id = (
+        await resolve_workspace_unlocked_conversation_id(access.workspace_id)
+        if is_free_tier(access.tier)
+        else None
+    )
+    is_locked, _ = _conversation_lock(conv, access.tier, free_unlocked_id)
 
     default_fields = [
         "id",
@@ -939,7 +1030,13 @@ async def get_chunk(
 ) -> dict:
     """Single-chunk read. Rare path — most callers go through the list."""
     access, chunk, conv = await resolve_conversation_chunk_access(chunk_id, auth)
-    if is_conversation_locked(conv, access.tier):
+    free_unlocked_id = (
+        await resolve_workspace_unlocked_conversation_id(access.workspace_id)
+        if is_free_tier(access.tier)
+        else None
+    )
+    locked, _ = _conversation_lock(conv, access.tier, free_unlocked_id)
+    if locked:
         _scrub_chunk_transcript(chunk)
     return chunk
 

@@ -9,6 +9,17 @@ export interface UsageGates {
 	upgrade_cta_tier: string | null;
 }
 
+export interface FreeTierUsage {
+	active: boolean;
+	unlocked_conversation_id: string | null;
+	chats_used: number;
+	chats_limit: number;
+	primary_chat_id: string | null;
+	reports_used: number;
+	reports_limit: number;
+	primary_report_id: string | null;
+}
+
 export interface WorkspaceUsageData {
 	cycle_start: string;
 	cycle_end_exclusive: string;
@@ -40,6 +51,7 @@ export interface WorkspaceUsageData {
 		included_hours: number | null;
 		included_seats: number | null;
 	} | null;
+	free_tier?: FreeTierUsage | null;
 }
 
 async function fetchWorkspaceUsage(
@@ -86,8 +98,11 @@ export function useWorkspaceUsage(
 		uploads_locked: false,
 	};
 
+	const freeTier: FreeTierUsage | null = query.data?.free_tier ?? null;
+
 	return {
 		...query,
 		usageGates,
+		freeTier,
 	};
 }

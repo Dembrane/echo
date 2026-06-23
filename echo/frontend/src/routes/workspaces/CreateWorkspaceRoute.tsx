@@ -19,7 +19,7 @@ import {
 	Title,
 	UnstyledButton,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { Buildings, Lock, UsersThree } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -31,6 +31,9 @@ import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { isFreeTierLimitError } from "@/lib/freeTier";
+import type { Tier } from "@/lib/tiers";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 
 interface CreatedWorkspace {
 	id: string;
@@ -55,7 +58,16 @@ async function createWorkspace(payload: {
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to create workspace");
+		// Preserve the structured detail (e.g. the free-tier 402 body) so
+		// isFreeTierLimitError can read it; new Error(obj) would stringify it.
+		throw Object.assign(
+			new Error(
+				typeof data.detail === "string"
+					? data.detail
+					: "Failed to create workspace",
+			),
+			{ detail: data.detail },
+		);
 	}
 	return res.json();
 }
@@ -121,6 +133,7 @@ export const CreateWorkspaceRoute = () => {
 	// External-client (ISSUE-026): owning-org name + data owner rep.
 	const [dataOwnerOrgName, setDataOwnerOrgName] = useState("");
 	const [dataOwnerEmail, setDataOwnerEmail] = useState("");
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
 	useDocumentTitle(t`Create workspace | dembrane`);
 
@@ -255,6 +268,11 @@ export const CreateWorkspaceRoute = () => {
 			return ws;
 		},
 		onError: (error: Error) => {
+			// Free tier: one workspace per org. Backend returns 402; route to upgrade.
+			if (isFreeTierLimitError(error) === "workspaces") {
+				upgradeHandlers.open();
+				return;
+			}
 			toast.error(error.message);
 		},
 		onSuccess: async (ws) => {
@@ -729,6 +747,16 @@ export const CreateWorkspaceRoute = () => {
 					)}
 				</Group>
 			</Stack>
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				currentTier={orgTier as Tier}
+				requiredTier="changemaker"
+				featureName={t`Workspaces`}
+				benefit={t`Upgrade your plan to create more workspaces in this organisation.`}
+				canRequestUpgrade
+				workspaceId=""
+			/>
 		</Container>
 	);
 };
