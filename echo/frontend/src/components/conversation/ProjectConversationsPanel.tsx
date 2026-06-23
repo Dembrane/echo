@@ -31,7 +31,6 @@ import {
 	IconEdit,
 	IconExternalLink,
 	IconInfoCircle,
-	IconLock,
 	IconRosetteDiscountCheck,
 	IconSearch,
 	IconSelectAll,
@@ -241,6 +240,8 @@ const ConversationRow = ({
 		conversation.participant_name?.trim() ||
 		t`Untitled conversation`;
 	const participantLabel = conversation.participant_name?.trim() || t`No name`;
+	const showParticipantLabel =
+		participantLabel !== primary && participantLabel !== t`No name`;
 	const summary = conversation.summary?.trim();
 	const isLocked = !!conversation.locked;
 	const tags =
@@ -302,23 +303,10 @@ const ConversationRow = ({
 									</ThemeIcon>
 								</Tooltip>
 							)}
-							{conversation.locked && (
-								<Tooltip
-									label={t`Upgrade your workspace to view this conversation`}
-								>
-									<Badge
-										size="xs"
-										color="blue"
-										variant="light"
-										leftSection={<IconLock size={10} />}
-									>
-										<Trans>Locked</Trans>
-									</Badge>
-								</Tooltip>
-							)}
 						</Group>
 
-						<Group gap="xs" wrap="wrap">
+					<Group gap="xs" wrap="wrap">
+						{showParticipantLabel && (
 							<Tooltip
 								label={conversation.participant_email ?? undefined}
 								disabled={!conversation.participant_email}
@@ -327,19 +315,20 @@ const ConversationRow = ({
 									{participantLabel}
 								</Text>
 							</Tooltip>
-							<Text size="xs" c="dimmed">
-								{formatCreatedAt(conversation.created_at)}
-							</Text>
-							{conversation.live && (
-								<Badge size="xs" color="red" variant="light">
-									<Trans>Ongoing</Trans>
-								</Badge>
-							)}
-							<ConversationStatusIndicators
-								conversation={conversation}
-								showDuration
-							/>
-						</Group>
+						)}
+						<Text size="xs" c="dimmed">
+							{formatCreatedAt(conversation.created_at)}
+						</Text>
+						{conversation.live && (
+							<Badge size="xs" color="red" variant="light">
+								<Trans>Ongoing</Trans>
+							</Badge>
+						)}
+						<ConversationStatusIndicators
+							conversation={conversation}
+							showDuration
+						/>
+					</Group>
 					</Stack>
 
 					<Group gap="xs" wrap="nowrap">
