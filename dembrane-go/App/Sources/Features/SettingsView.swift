@@ -11,7 +11,7 @@ struct SettingsView: View {
                 Section("Account") {
                     LabeledContent("Signed in as", value: model.me?.email ?? "—")
                     Button("Sign out", role: .destructive) {
-                        // M1: clear session
+                        Task { await model.signOut() }
                     }
                 }
 

@@ -44,7 +44,7 @@ targets:
     info:
       path: App/Info.plist
       properties:
-        CFBundleDisplayName: "dembrane go"
+        CFBundleDisplayName: "dembrane Go"
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         UILaunchScreen: {}
@@ -73,7 +73,7 @@ targets:
     info:
       path: Widgets/Info.plist
       properties:
-        CFBundleDisplayName: "dembrane go"
+        CFBundleDisplayName: "dembrane Go"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
