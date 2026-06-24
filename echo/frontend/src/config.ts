@@ -103,9 +103,17 @@ export const DIRECTUS_PUBLIC_URL = byEnv(
 //
 // Tokens are project ingest keys, safe to ship publicly. production and next
 // report into their own EU projects; testing and local opt out entirely.
+//
+// POSTHOG_HOST is a first-party managed reverse proxy (CNAME r.dembrane.com ->
+// PostHog EU). Routing ingest through our own domain stops ad blockers from
+// dropping client events. One proxy host serves both EU projects; the token in
+// the payload selects the project. POSTHOG_UI_HOST stays the real PostHog host
+// so the toolbar and dashboard links still resolve.
 // ---------------------------------------------------------------------------
 
-export const POSTHOG_HOST = "https://eu.i.posthog.com";
+export const POSTHOG_HOST = "https://r.dembrane.com";
+
+export const POSTHOG_UI_HOST = "https://eu.posthog.com";
 
 export const POSTHOG_TOKEN = byEnv(
 	// echo (production): project 160282
