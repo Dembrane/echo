@@ -467,6 +467,7 @@ async def process_agentic_run(
                 "project_id": project_id,
                 "error_code": error_code,
                 "message": message[:300],
+                "mode": "agentic",
             },
         )
     latest_output: str | None = None
@@ -650,6 +651,7 @@ async def process_agentic_run(
                 "run_id": run_id,
                 "project_id": project_id,
                 "has_output": latest_output is not None,
+                "mode": "agentic",
             },
         )
     except (AgenticRunCancelledError, asyncio.CancelledError):
