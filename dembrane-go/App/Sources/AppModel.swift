@@ -26,9 +26,11 @@ final class AppModel {
     // Loaded data
     var me: Me?
     var workspaces: [Workspace] = []
-    var defaultWorkspace: Workspace?
-    var defaultProject: Project?
+    var allProjects: [WorkspaceProject] = []
+    var selectedProject: Project?
     var conversations: [Conversation] = []
+
+    private static let selectedProjectKey = "dembrane.go.selectedProjectId"
 
     private let sessionManager: SessionManager
     private let auth: AuthService
@@ -136,9 +138,9 @@ final class AppModel {
         await auth.logout()
         me = nil
         workspaces = []
+        allProjects = []
+        selectedProject = nil
         conversations = []
-        defaultWorkspace = nil
-        defaultProject = nil
         phase = .signedOut
     }
 
@@ -169,7 +171,7 @@ final class AppModel {
         isRecording = false
         endLiveActivity()
         guard let result = recorder.stop() else { return }
-        guard let projectId = defaultProject?.id else {
+        guard let projectId = selectedProject?.id else {
             statusMessage = "No project to save to yet."
             return
         }
@@ -177,10 +179,10 @@ final class AppModel {
         do {
             _ = try await uploader.upload(
                 projectId: projectId, fileURL: result.url,
-                displayName: me?.displayName ?? "dembrane go",
+                displayName: me?.displayName ?? "dembrane Go",
                 contentType: "audio/m4a", recordedAt: Date())
             statusMessage = "Processing audio…"
-            await loadData()
+            await loadConversations()
             statusMessage = nil
         } catch {
             statusMessage = "Upload failed — try again."
@@ -190,7 +192,7 @@ final class AppModel {
     private func startLiveActivity() {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         let state = RecordingActivityAttributes.ContentState(
-            startedAt: Date(), projectName: defaultProject?.name ?? defaultProjectName)
+            startedAt: Date(), projectName: selectedProject?.name ?? defaultProjectName)
         liveActivity = try? Activity.request(
             attributes: RecordingActivityAttributes(),
             content: .init(state: state, staleDate: nil))
@@ -210,20 +212,42 @@ final class AppModel {
     func loadData() async {
         me = try? await api.me()
         workspaces = (try? await api.workspaces()) ?? []
-        let workspace = workspaces.first(where: { $0.isDefault }) ?? workspaces.first
-        defaultWorkspace = workspace
-        guard let workspace else { return }
+        await loadAllProjects()
 
-        // Ensure the "go" capture project exists in this workspace (first run).
-        var projects = (try? await api.projects(workspaceId: workspace.id)) ?? []
-        if !projects.contains(where: { $0.name.lowercased() == defaultProjectName }),
-           let created = try? await api.createProject(workspaceId: workspace.id, name: defaultProjectName) {
-            projects.append(created)
+        // Ensure the "go" capture project exists in the default workspace.
+        if let dws = workspaces.first(where: { $0.isDefault }) ?? workspaces.first,
+           !allProjects.contains(where: { $0.workspace.id == dws.id && $0.project.name.lowercased() == defaultProjectName }),
+           let created = try? await api.createProject(workspaceId: dws.id, name: defaultProjectName) {
+            allProjects.append(WorkspaceProject(project: created, workspace: dws))
         }
-        defaultProject = projects.first { $0.name.lowercased() == defaultProjectName } ?? projects.first
 
-        if let project = defaultProject {
-            conversations = (try? await api.conversations(projectId: project.id)) ?? []
+        // Active project: last choice → "go" → first available.
+        let storedId = UserDefaults.standard.string(forKey: Self.selectedProjectKey)
+        selectedProject = allProjects.first(where: { $0.project.id == storedId })?.project
+            ?? allProjects.first(where: { $0.project.name.lowercased() == defaultProjectName })?.project
+            ?? allProjects.first?.project
+
+        await loadConversations()
+    }
+
+    /// Flat list of projects across every workspace the user can see.
+    func loadAllProjects() async {
+        var result: [WorkspaceProject] = []
+        for workspace in workspaces {
+            let projects = (try? await api.projects(workspaceId: workspace.id)) ?? []
+            result += projects.map { WorkspaceProject(project: $0, workspace: workspace) }
         }
+        allProjects = result
+    }
+
+    func loadConversations() async {
+        guard let projectId = selectedProject?.id else { conversations = []; return }
+        conversations = (try? await api.conversations(projectId: projectId)) ?? []
+    }
+
+    func selectProject(_ workspaceProject: WorkspaceProject) {
+        selectedProject = workspaceProject.project
+        UserDefaults.standard.set(workspaceProject.project.id, forKey: Self.selectedProjectKey)
+        Task { await loadConversations() }
     }
 }

@@ -3,6 +3,7 @@ import DembraneCore
 
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
+    @State private var showProjectPicker = false
 
     var body: some View {
         @Bindable var model = model
@@ -16,10 +17,14 @@ struct SettingsView: View {
                 }
 
                 Section("Recording") {
-                    LabeledContent("Default project", value: model.defaultProjectName)
-                    Picker("Environment", selection: $model.environment) {
-                        ForEach(AppEnvironment.allCases, id: \.self) { env in
-                            Text(env.displayName).tag(env)
+                    Button {
+                        showProjectPicker = true
+                    } label: {
+                        HStack {
+                            Text("Default project").foregroundStyle(BrandColor.graphite)
+                            Spacer()
+                            Text(model.selectedProject?.name ?? "—").foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
                         }
                     }
                 }
@@ -38,6 +43,9 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .sheet(isPresented: $showProjectPicker) {
+                ProjectPicker { model.selectProject($0) }
+            }
         }
     }
 }

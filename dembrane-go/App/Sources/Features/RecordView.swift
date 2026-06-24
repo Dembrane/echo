@@ -3,6 +3,7 @@ import DembraneCore
 
 struct RecordView: View {
     @Environment(AppModel.self) private var model
+    @State private var showProjectPicker = false
 
     var body: some View {
         NavigationStack {
@@ -12,9 +13,14 @@ struct RecordView: View {
                 Text(model.isRecording ? "Recording…" : "Tap to record")
                     .font(.title2)
                     .foregroundStyle(BrandColor.graphite)
-                Label("Saving to: \(model.defaultProjectName)", systemImage: "folder")
-                    .font(.callout)
-                    .foregroundStyle(BrandColor.graphite.opacity(0.6))
+                Button {
+                    showProjectPicker = true
+                } label: {
+                    Label("Saving to: \(model.selectedProject?.name ?? model.defaultProjectName)", systemImage: "folder")
+                        .font(.callout)
+                        .foregroundStyle(BrandColor.graphite.opacity(0.7))
+                }
+                .disabled(model.isRecording)
                 if let status = model.statusMessage {
                     Text(status)
                         .font(.callout)
@@ -25,6 +31,9 @@ struct RecordView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(BrandColor.parchment)
             .navigationTitle("Record")
+            .sheet(isPresented: $showProjectPicker) {
+                ProjectPicker { model.selectProject($0) }
+            }
         }
     }
 

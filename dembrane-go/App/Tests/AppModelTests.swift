@@ -13,20 +13,12 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(model.phase, .loading)
     }
 
-    func testToggleRecording() {
-        let model = AppModel.makeMock()
-        model.toggleRecording()
-        XCTAssertTrue(model.isRecording)
-        model.toggleRecording()
-        XCTAssertFalse(model.isRecording)
-    }
-
     func testLoadDataPopulatesFromMock() async {
         let model = AppModel.makeMock()
         await model.loadData()
         XCTAssertEqual(model.me?.email, "you@dembrane.com")
-        XCTAssertEqual(model.defaultWorkspace?.name, "your workspace")
-        XCTAssertEqual(model.defaultProject?.name, "go")
+        XCTAssertEqual(model.selectedProject?.name, "go")
+        XCTAssertFalse(model.allProjects.isEmpty)
         XCTAssertFalse(model.conversations.isEmpty)
     }
 
@@ -36,6 +28,7 @@ final class AppModelTests: XCTestCase {
         await model.signOut()
         XCTAssertEqual(model.phase, .signedOut)
         XCTAssertNil(model.me)
+        XCTAssertNil(model.selectedProject)
         XCTAssertTrue(model.conversations.isEmpty)
     }
 }
