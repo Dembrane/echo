@@ -18,6 +18,7 @@ import { toast } from "@/components/common/Toaster";
 import {
 	type EmailChip,
 	EmailChipsInput,
+	type MemberSuggestion,
 } from "@/components/invite/EmailChipsInput";
 import {
 	type InviteResultRow,
@@ -36,6 +37,7 @@ import {
 	invalidateOrgMembersEverywhere,
 	invalidateOrgWorkspacesEverywhere,
 	invalidatePendingInvitesEverywhere,
+	orgQueryKeys,
 } from "@/lib/orgQueryKeys";
 
 interface Props {
@@ -62,6 +64,24 @@ async function fetchOrgWorkspaces(
 		throw new Error("Workspaces response was not an array");
 	}
 	return data as InviteableWorkspace[];
+}
+
+// Minimal shape of GET /v2/orgs/:id/members — only the fields the autocomplete needs.
+type OrgMemberLite = {
+	email: string;
+	display_name: string;
+	is_external?: boolean;
+};
+
+// Best-effort: suggestions are a convenience, so a failed/forbidden fetch yields
+// an empty list rather than breaking the modal.
+async function fetchOrgMembers(orgId: string): Promise<OrgMemberLite[]> {
+	const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/members`, {
+		credentials: "include",
+	});
+	if (!res.ok) return [];
+	const data = await res.json().catch(() => null);
+	return Array.isArray(data) ? (data as OrgMemberLite[]) : [];
 }
 
 type WorkspaceInvitePayload = {
@@ -245,6 +265,24 @@ export function InviteModal({
 		staleTime: 30_000,
 	});
 
+	// Org admins/owners get a people-picker so they can add existing org members
+	// without retyping emails. Everyone else keeps the plain free-text input.
+	const { data: orgMembers = [] } = useQuery({
+		enabled: opened && canInviteOrgOnly && Boolean(orgId),
+		queryFn: () => fetchOrgMembers(orgId),
+		queryKey: orgQueryKeys.members(orgId),
+		staleTime: 60_000,
+	});
+
+	const memberSuggestions = useMemo<MemberSuggestion[] | undefined>(() => {
+		if (!canInviteOrgOnly) return undefined;
+		const selfLower = me?.email?.toLowerCase();
+		return orgMembers
+			.filter((m) => !m.is_external && m.email)
+			.filter((m) => m.email.toLowerCase() !== selfLower)
+			.map((m) => ({ displayName: m.display_name, email: m.email }));
+	}, [canInviteOrgOnly, orgMembers, me?.email]);
+
 	// Org admins/owners can invite everywhere; workspace admins only to workspaces they admin.
 	const inviteableWorkspaces = useMemo<InviteableWorkspace[]>(() => {
 		if (canInviteOrgOnly) return allWorkspaces;
@@ -304,7 +342,9 @@ export function InviteModal({
 			(id) => inviteableWorkspaces.find((w) => w.id === id)?.bills_separately,
 		);
 	const observerNeedsExternalWorkspace =
-		role === "observer" && !zeroWorkspaceSubmit && !selectedAreAllExternalClient;
+		role === "observer" &&
+		!zeroWorkspaceSubmit &&
+		!selectedAreAllExternalClient;
 
 	const canSubmit =
 		validChips.length > 0 &&
@@ -574,7 +614,7 @@ export function InviteModal({
 							chips={chips}
 							onChipsChange={setChips}
 							selfEmail={me?.email ?? null}
-							autoFocus
+							suggestions={memberSuggestions}
 							data-testid="invite-modal-emails"
 						/>
 
@@ -657,9 +697,9 @@ export function InviteModal({
 							<Alert color="yellow" variant="light" p="xs">
 								<Text size="xs">
 									<Trans>
-										Observers are only available in workspaces for an
-										external client. Pick only external-client workspaces,
-										or choose a different role.
+										Observers are only available in workspaces for an external
+										client. Pick only external-client workspaces, or choose a
+										different role.
 									</Trans>
 								</Text>
 							</Alert>
