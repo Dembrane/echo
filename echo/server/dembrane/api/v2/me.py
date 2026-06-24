@@ -1,25 +1,29 @@
 """GET /v2/me — lightweight user profile with onboarding status."""
 
-from typing import Optional, Any
-from logging import getLogger
 from datetime import datetime, timezone
+from logging import getLogger
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
-from dembrane.app_user import resolve_app_user, get_app_user_or_raise, get_directus_user_profile
-from dembrane.policies import ROLE_HIERARCHY as _ROLE_LEVEL
-from dembrane.seat_capacity import assert_can_add_seat
-from dembrane.api.rate_limit import create_user_rate_limiter
-from dembrane.api.v2.invites import compute_invite_hash
-from dembrane.api.v2.schemas import MeResponse, OrgSummary, TrainingStatus
-from dembrane.directus_async import async_directus
-from dembrane.billing_account import resolve_workspace_billing
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2._invite_helpers import (
     create_membership_row,
     reactivate_membership_row,
 )
+from dembrane.api.v2.invites import compute_invite_hash
+from dembrane.api.v2.schemas import MeResponse, OrgSummary, TrainingStatus
+from dembrane.app_user import (
+    get_app_user_or_raise,
+    get_directus_user_profile,
+    resolve_app_user,
+)
+from dembrane.billing_account import resolve_workspace_billing
+from dembrane.directus_async import async_directus
+from dembrane.policies import ROLE_HIERARCHY as _ROLE_LEVEL
+from dembrane.seat_capacity import assert_can_add_seat
 
 router = APIRouter()
 logger = getLogger("api.v2.me")
@@ -177,8 +181,8 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
     high_risk_context = False
     try:
         from dembrane.training_service import (
-            is_high_risk_context,
             get_user_training_status,
+            is_high_risk_context,
         )
 
         status_dict = await get_user_training_status(app_user["id"])
@@ -597,8 +601,8 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
     # so the periodic cron stays a safe backstop.
     try:
         from dembrane.billing_service import (
-            reconcile_account_seats,
             get_account_for_workspace,
+            reconcile_account_seats,
         )
 
         billing_account = await get_account_for_workspace(invite["workspace_id"])
@@ -633,8 +637,8 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
     # organisation. Announces the new member to organisation admins.
     if newly_joined_organisation and ws.get("org_id"):
         from dembrane.notifications import (
-            emit_to_audience,
             audience_organisation_admins,
+            emit_to_audience,
         )
 
         organisation_admin_ids = await audience_organisation_admins(ws["org_id"])
@@ -657,8 +661,8 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
     # notified by INVITE_ACCEPTED) and the invitee.
     if is_outsider_invite:
         from dembrane.notifications import (
-            emit_to_audience,
             audience_workspace_admins,
+            emit_to_audience,
         )
 
         admin_ids = await audience_workspace_admins(invite["workspace_id"])
@@ -1863,8 +1867,8 @@ async def accept_invite_by_hash(
         and not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0)
     ):
         from dembrane.notifications import (
-            emit_to_audience,
             audience_organisation_admins,
+            emit_to_audience,
         )
 
         organisation_admin_ids = await audience_organisation_admins(ws["org_id"])
@@ -1886,8 +1890,8 @@ async def accept_invite_by_hash(
     # accept-by-id path. Excludes the inviter and the invitee themselves.
     if is_external_invite:
         from dembrane.notifications import (
-            emit_to_audience,
             audience_workspace_admins,
+            emit_to_audience,
         )
 
         admin_ids = await audience_workspace_admins(target_invite["workspace_id"])

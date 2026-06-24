@@ -16,8 +16,6 @@ export const ResizeHandle = () => {
 	const startXRef = useRef(0);
 	const startWidthRef = useRef(width);
 
-	if (width === 0) return null;
-
 	useEffect(() => {
 		if (!dragging) return;
 		const onMove = (e: MouseEvent) => {
@@ -65,6 +63,8 @@ export const ResizeHandle = () => {
 			setWidth(SIDEBAR_WIDTH_MAX);
 		}
 	};
+
+	if (width === 0) return null;
 
 	return (
 		// biome-ignore lint/a11y/useSemanticElements: Resize grip needs pointer and keyboard handlers.

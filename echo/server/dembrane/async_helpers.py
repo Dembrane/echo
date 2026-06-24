@@ -19,15 +19,15 @@ Usage:
     result = await run_in_thread_pool(blocking_function, arg1, kwarg1=value, kwarg2=value)
 """
 
-import os
-import atexit
 import asyncio
-import threading
+import atexit
 import contextvars
-from typing import Any, TypeVar, Callable, Optional, Coroutine
-from logging import getLogger
-from functools import partial
+import os
+import threading
 from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+from logging import getLogger
+from typing import Any, Callable, Coroutine, Optional, TypeVar
 
 logger = getLogger("async_helpers")
 

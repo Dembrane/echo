@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal, Optional
 
-from pydantic import Field, EmailStr, BaseModel
+from pydantic import BaseModel, EmailStr, Field
 
 # ── /v2/me ──
 

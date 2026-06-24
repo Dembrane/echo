@@ -9,10 +9,9 @@ from __future__ import annotations
 
 from contextlib import nullcontext
 
-import pytest
-
-import dembrane.tasks as tasks
 import dembrane.coordination as coordination
+import dembrane.tasks as tasks
+import pytest
 from dembrane.service import conversation_service
 
 

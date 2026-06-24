@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from httpx import AsyncClient, ASGITransport
-from fastapi import FastAPI
-
-from dembrane.api.v2.me import router
 from dembrane.api.dependency_auth import DirectusSession, require_directus_session
+from dembrane.api.v2.me import router
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 
 _USER_ID = "test-user-123"
 _APP_USER_ID = "au-test-123"
