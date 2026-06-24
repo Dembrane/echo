@@ -7,6 +7,7 @@ import {
 	useSuspenseInfiniteQuery,
 	useSuspenseQuery,
 } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { toast } from "@/components/common/Toaster";
 import {
 	type ChatMode,
@@ -65,6 +66,10 @@ export const useDeleteChatMutation = () => {
 		mutationFn: (payload: { chatId: string; projectId: string }) =>
 			deleteChatById(payload.chatId),
 		onSuccess: (_, vars) => {
+			posthog.capture("chat_deleted", {
+				chat_id: vars.chatId,
+				project_id: vars.projectId,
+			});
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "chats"],
 			});

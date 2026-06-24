@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Text } from "@mantine/core";
+import posthog from "posthog-js";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 
@@ -32,6 +33,13 @@ export const References = ({
 							</span>
 							<I18nLink
 								to={`/w/${workspaceId}/projects/${projectId}/conversation/${citation?.conversation?.id || citation?.conversation}`}
+								onClick={() => {
+									posthog.capture("chat_citation_clicked", {
+										conversation_id:
+											citation?.conversation?.id || citation?.conversation,
+										project_id: projectId,
+									});
+								}}
 							>
 								<Badge
 									size="sm"
