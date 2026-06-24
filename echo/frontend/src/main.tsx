@@ -10,6 +10,7 @@ import {
 	POSTHOG_HOST,
 	POSTHOG_TOKEN,
 	POSTHOG_UI_HOST,
+	USE_PARTICIPANT_ROUTER,
 } from "./config";
 
 posthog.init(POSTHOG_TOKEN, {
@@ -17,6 +18,10 @@ posthog.init(POSTHOG_TOKEN, {
 	// api_host is our reverse proxy; ui_host must stay the real PostHog host so
 	// the toolbar and in-app links resolve (required when api_host is proxied).
 	ui_host: POSTHOG_UI_HOST,
+	// The portal serves anonymous participants on a privacy-sensitive flow, so
+	// never record their sessions. We track the journey with explicit events
+	// instead. The dashboard (hosts) is unaffected.
+	disable_session_recording: USE_PARTICIPANT_ROUTER,
 	// Share the cookie across .dembrane.com so a visitor's distinct id carries
 	// over from the marketing site, stitching both into one person profile.
 	cross_subdomain_cookie: true,

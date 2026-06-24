@@ -1,4 +1,5 @@
 import { Trans } from "@lingui/react/macro";
+import posthog from "posthog-js";
 // Start of Selection
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
@@ -246,6 +247,10 @@ const ParticipantOnboardingCards = ({
 			!checkboxStates[`${currentSlideIndex}`]
 		) {
 			return;
+		}
+		// Advancing past a required checkbox is the participant accepting consent.
+		if (currentCard.checkbox?.required) {
+			posthog.capture("consent_given", { project_id: project.id });
 		}
 		if (currentSlideIndex < allSlides.length - 1) {
 			setAnimationDirection("slide-left");
