@@ -12,8 +12,23 @@ interface ProjectQRCodeProps {
 	project?: Project;
 }
 
+// Where a participant link was handed out, carried as `utm_source` so PostHog
+// auto-attributes the landing. Lets us split "came from a QR vs a copied link
+// vs the printed host guide" the instant a participant lands.
+export type ShareLinkSource =
+	| "qr_scan"
+	| "qr_click"
+	| "copy_link"
+	| "qr_download"
+	| "host_guide"
+	| "report"
+	| "portal";
+
 // eslint-disable-next-line react-refresh/only-export-components
-export const useProjectSharingLink = (project?: Project) => {
+export const useProjectSharingLink = (
+	project?: Project,
+	source?: ShareLinkSource,
+) => {
 	const { preferences } = useAppPreferences();
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: not an issue
@@ -62,28 +77,38 @@ export const useProjectSharingLink = (project?: Project) => {
 
 		// Include theme in URL so participant portal uses the same theme
 		const baseLink = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;
-		const theme = preferences.fontFamily;
-		const link = `${baseLink}?theme=${theme}`;
-		return link;
-	}, [project?.language, project?.id, preferences.fontFamily]);
+		const params = new URLSearchParams({ theme: preferences.fontFamily });
+		if (source) {
+			params.set("utm_source", source);
+		}
+		return `${baseLink}?${params.toString()}`;
+	}, [project?.language, project?.id, preferences.fontFamily, source]);
 };
 
 export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
-	const link = useProjectSharingLink(project);
-	const qrRef = useRef<HTMLDivElement>(null);
+	// Each surface gets its own utm_source. The QR's encoded value (scanned off
+	// the screen) and its click target are distinct, so we can tell a scan from
+	// a host clicking the code. The downloaded PNG is rendered from a separate
+	// hidden QR so it carries its own `qr_download` tag instead of the on-screen
+	// scan link.
+	const scanLink = useProjectSharingLink(project, "qr_scan");
+	const clickLink = useProjectSharingLink(project, "qr_click");
+	const copyLink = useProjectSharingLink(project, "copy_link");
+	const downloadLink = useProjectSharingLink(project, "qr_download");
+	const downloadQrRef = useRef<HTMLDivElement>(null);
 
 	const handleDownloadQR = () => {
-		if (!qrRef.current) return;
-		const canvas = qrRef.current.querySelector("canvas");
+		if (!downloadQrRef.current) return;
+		const canvas = downloadQrRef.current.querySelector("canvas");
 		if (!canvas) return;
 
-		const downloadLink = document.createElement("a");
-		downloadLink.download = `qr-${project?.name || "code"}.png`;
-		downloadLink.href = canvas.toDataURL("image/png");
-		downloadLink.click();
+		const downloadAnchor = document.createElement("a");
+		downloadAnchor.download = `qr-${project?.name || "code"}.png`;
+		downloadAnchor.href = canvas.toDataURL("image/png");
+		downloadAnchor.click();
 	};
 
-	if (!link) {
+	if (!scanLink) {
 		return <Skeleton height={200} />;
 	}
 
@@ -100,14 +125,21 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 	return (
 		<Stack gap="sm" align="center" w="100%">
 			<QRCode
-				value={link}
-				href={link}
-				ref={qrRef}
+				value={scanLink}
+				href={clickLink ?? undefined}
 				className="h-auto w-full"
 				{...testId("project-qr-code")}
 			/>
+			{/* Offscreen QR carrying the qr_download tag; only used to export the PNG. */}
+			<div
+				ref={downloadQrRef}
+				aria-hidden
+				className="pointer-events-none absolute -left-[9999px] top-0 h-64 w-64 print:hidden"
+			>
+				{downloadLink && <QRCode value={downloadLink} />}
+			</div>
 			<Stack gap="xs" w="100%">
-				<CopyButton value={link} timeout={2000}>
+				<CopyButton value={copyLink ?? ""} timeout={2000}>
 					{({ copied, copy }) => (
 						<Button
 							size="sm"

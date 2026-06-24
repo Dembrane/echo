@@ -130,7 +130,7 @@ export const ParticipantConversationAudio = () => {
 
 	// Navigation and language
 	const navigate = useI18nNavigate();
-	const newConversationLink = useProjectSharingLink(projectQuery.data);
+	const newConversationLink = useProjectSharingLink(projectQuery.data, "portal");
 	const wakeLock = useWakeLock();
 
 	// Ref to store callback that will be set after audioRecorder is created
@@ -280,6 +280,10 @@ export const ParticipantConversationAudio = () => {
 			}
 
 			await finishConversation(conversationId ?? "");
+			posthog.capture("conversation_finished", {
+				conversation_id: conversationId,
+				project_id: projectId,
+			});
 			close();
 			navigate(finishUrl);
 		} catch (error) {
@@ -347,6 +351,16 @@ export const ParticipantConversationAudio = () => {
 				totalChunks: chunkHistory.length,
 			},
 		);
+
+		// Also emit a plain event so we can chart a recording-error rate (the
+		// exception above lands in error tracking, which doesn't funnel cleanly).
+		posthog.capture("portal_recording_error", {
+			conversation_id: conversationId,
+			issue_type: "audio_interruption",
+			project_id: projectId,
+			recording_duration_seconds: interruptionRecordingTimeRef.current,
+			total_chunks: chunkHistory.length,
+		});
 	};
 
 	// Handler for reconnect button - waits for uploads, reports error, then reloads
@@ -387,6 +401,10 @@ export const ParticipantConversationAudio = () => {
 		}
 
 		startRecording();
+		posthog.capture("recording_started", {
+			conversation_id: conversationId,
+			project_id: projectId,
+		});
 		if (wakeLock.isSupported) {
 			wakeLock.obtainWakeLock();
 			wakeLock.enableAutoReacquire();

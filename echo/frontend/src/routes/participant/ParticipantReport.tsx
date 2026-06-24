@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { LoadingOverlay, Stack, Text } from "@mantine/core";
+import posthog from "posthog-js";
 import { useCallback, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { Logo } from "@/components/common/Logo";
@@ -24,7 +25,7 @@ export const ParticipantReport = () => {
 		projectId ?? "",
 	);
 
-	const contributeLink = `${window.location.origin}/${language}/${projectId}/start`;
+	const contributeLink = `${window.location.origin}/${language}/${projectId}/start?utm_source=report`;
 
 	const recordView = useCallback(
 		(reportId: number) => {
@@ -56,6 +57,10 @@ export const ParticipantReport = () => {
 	useEffect(() => {
 		if (report) {
 			recordView(Number(report.id));
+			posthog.capture("report_viewed", {
+				project_id: projectId,
+				report_id: Number(report.id),
+			});
 
 			if (print) {
 				setTimeout(() => {
@@ -63,7 +68,7 @@ export const ParticipantReport = () => {
 				}, 1000);
 			}
 		}
-	}, [report, print, recordView]);
+	}, [report, print, recordView, projectId]);
 
 	if (isLoading) {
 		return <LoadingOverlay visible />;
