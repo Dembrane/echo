@@ -10,6 +10,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
@@ -88,6 +89,10 @@ export const CreateOrganisationModal = ({
 		onError: (err: Error) =>
 			toast.error(err.message || t`Could not create the organisation`),
 		onSuccess: (result) => {
+			posthog.capture("org_created", {
+				org_id: result.org_id,
+				workspace_id: result.workspace_id,
+			});
 			setCreated(result);
 			// New org + workspace: refresh the sidebar (orgs are derived from the
 			// workspaces context) and the me payload.

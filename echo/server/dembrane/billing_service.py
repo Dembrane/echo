@@ -28,6 +28,7 @@ from datetime import datetime, timezone, timedelta
 
 from dembrane import mollie
 from dembrane.settings import get_settings
+from dembrane.analytics import capture_event
 from dembrane.redis_async import get_redis_client
 from dembrane.seat_capacity import count_pending_invites
 from dembrane.tier_capacity import (
@@ -897,6 +898,22 @@ async def _activate_from_first_payment(account_id: str, meta: dict, customer_id:
             account_id,
             tier,
             sub.get("id"),
+        )
+        # Revenue conversion source of truth: a first payment cleared and the
+        # account is now active. Fired from the webhook so it can't be blocked
+        # or lost (unlike the client checkout_started). distinct_id is the org
+        # billing account; tying it to the checkout initiator's person is a
+        # follow-up (would thread the user id through Mollie metadata).
+        await capture_event(
+            account_id,
+            "server_subscription_activated",
+            {
+                "billing_account_id": account_id,
+                "tier": tier,
+                "billing_period": billing_period,
+                "amount_eur": amount,
+                "seats": seats,
+            },
         )
     finally:
         await _release_activation_lock(account_id, client, token)
