@@ -15,7 +15,12 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowLeft, IconClock, IconPencil } from "@tabler/icons-react";
+import {
+	IconArrowLeft,
+	IconClock,
+	IconInfoCircle,
+	IconPencil,
+} from "@tabler/icons-react";
 import { AxiosError } from "axios";
 import posthog from "posthog-js";
 import { useState } from "react";
@@ -82,6 +87,10 @@ export const UpdateReportModalButton = ({
 	const atReportLimit = Boolean(
 		freeTier?.active && freeTier.reports_used >= freeTier.reports_limit,
 	);
+	// This component only mounts when a report already exists. On the free tier
+	// (limit = 1), the user is always at the limit here even if the usage query
+	// hasn't refreshed yet.
+	const effectivelyAtLimit = atReportLimit || Boolean(freeTier?.active);
 	const { data: currentReport } = useProjectReport(
 		projectId ?? "",
 		currentReportId,
@@ -109,7 +118,9 @@ export const UpdateReportModalButton = ({
 	const handleOpen = () => {
 		// At the free-tier limit, route straight to the upgrade path instead of
 		// opening the create flow (which would just 402 on submit).
-		if (atReportLimit) {
+		// This component only renders when a report exists, so on the free tier
+		// (limit = 1) the user is always at the limit.
+		if (effectivelyAtLimit) {
 			upgradeHandlers.open();
 			return;
 		}
@@ -141,25 +152,38 @@ export const UpdateReportModalButton = ({
 
 	return (
 		<>
-			<Tooltip
-				label={
-					needsUpdate
-						? t`New conversations added since this report`
-						: t`Generate a new report`
-				}
-			>
-				<Indicator disabled={!needsUpdate} color="salmon" size={10} offset={4}>
-					<Button
-						variant="filled"
-						color="primary"
-						onClick={handleOpen}
-						leftSection={<IconPencil size={16} />}
-						{...testId("report-update-button")}
-					>
-						<Trans>New Report</Trans>
-					</Button>
-				</Indicator>
-			</Tooltip>
+			<Group gap={4}>
+				<Tooltip
+					label={
+						needsUpdate
+							? t`New conversations added since this report`
+							: effectivelyAtLimit
+								? t`Free plan allows 1 report per workspace`
+								: t`Generate a new report`
+					}
+				>
+					<Indicator disabled={!needsUpdate} color="salmon" size={10} offset={4}>
+						<Button
+							variant="filled"
+							color="primary"
+							onClick={handleOpen}
+							leftSection={<IconPencil size={16} />}
+							opacity={effectivelyAtLimit ? 0.7 : 1}
+							{...testId("report-update-button")}
+						>
+							<Trans>New Report</Trans>
+						</Button>
+					</Indicator>
+				</Tooltip>
+				{effectivelyAtLimit && (
+					<Tooltip label={t`Free plan allows 1 report per workspace`}>
+						<IconInfoCircle
+							size={16}
+							style={{ color: "var(--mantine-color-primary-6)", cursor: "help" }}
+						/>
+					</Tooltip>
+				)}
+			</Group>
 
 			<Modal
 				opened={opened}
@@ -364,8 +388,8 @@ export const UpdateReportModalButton = ({
 				onClose={upgradeHandlers.close}
 				currentTier={(workspace?.tier ?? "free") as Tier}
 				requiredTier={SELLABLE_TIER}
-				featureName={t`Reports`}
-				benefit={t`Upgrade your plan to create more reports in this workspace.`}
+				featureName={t`Report limit reached`}
+				benefit={t`Your free plan includes one report. Upgrade to create more.`}
 				canRequestUpgrade={
 					workspace?.role === "admin" || workspace?.role === "owner"
 				}

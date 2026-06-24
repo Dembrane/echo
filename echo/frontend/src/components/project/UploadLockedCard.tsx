@@ -45,7 +45,7 @@ export function UploadLockedCard({
 				}}
 				role="button"
 				tabIndex={0}
-				aria-label="Upload locked, workspace at cap"
+				aria-label="Upload limit reached"
 				onKeyDown={(e) => {
 					if (e.key === "Enter" || e.key === " ") {
 						e.preventDefault();
@@ -60,7 +60,7 @@ export function UploadLockedCard({
 						variant="light"
 						leftSection={<IconLock size={12} />}
 					>
-						<Trans>Upload locked</Trans>
+						<Trans>Upload limit reached</Trans>
 					</Badge>
 					<Text size="sm" ta="center" c="dimmed">
 						<Trans>

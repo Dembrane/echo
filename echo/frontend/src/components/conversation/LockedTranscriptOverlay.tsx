@@ -19,21 +19,27 @@ export function LockedTranscriptOverlay({
 	compact = false,
 	variant = "transcript",
 	reason = "hours_cap",
+	context = "view",
 }: {
 	compact?: boolean;
 	variant?: "transcript" | "summary";
 	reason?: "hours_cap" | "free_tier" | null;
+	context?: "view" | "selection";
 }) {
 	const isFreeTier = reason === "free_tier";
 
 	const label = isFreeTier
-		? t`Upgrade to view this`
+		? context === "selection"
+			? t`Upgrade to add this to the chat`
+			: t`Upgrade to view this`
 		: variant === "summary"
 			? t`You've reached your summary limit`
 			: t`You've reached your transcript limit`;
 
 	const description = isFreeTier
-		? t`Your free plan includes one conversation. Upgrade to open the rest.`
+		? context === "selection"
+			? t`Your free plan includes one conversation. Upgrade to add more to the chat.`
+			: t`Your free plan includes one conversation. Upgrade to open the rest.`
 		: variant === "summary"
 			? t`Upgrade your workspace to view summaries for new conversations.`
 			: t`Upgrade your workspace to view transcripts for new conversations.`;
