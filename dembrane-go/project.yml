@@ -19,7 +19,7 @@ settings:
     # versioned ios26.0-simulator triple; implicit modules resolve it cleanly.
     SWIFT_ENABLE_EXPLICIT_MODULES: "NO"
     MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "2"
     DEVELOPMENT_TEAM: "JMCP69LCSU"
     SWIFT_VERSION: "5.0"
   configs:
@@ -45,6 +45,8 @@ targets:
       path: App/Info.plist
       properties:
         CFBundleDisplayName: "dembrane go"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIBackgroundModes: [audio]            # keep recording alive when backgrounded / locked
@@ -57,7 +59,7 @@ targets:
         # Use our generated App/Info.plist (info: above), not an auto-generated one.
         GENERATE_INFOPLIST_FILE: "NO"
         CODE_SIGN_STYLE: "Automatic"
-        TARGETED_DEVICE_FAMILY: "1,2"
+        TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon"
 
   DembraneGoWidgets:
