@@ -15,6 +15,11 @@ struct RecordView: View {
                 Label("Saving to: \(model.defaultProjectName)", systemImage: "folder")
                     .font(.callout)
                     .foregroundStyle(BrandColor.graphite.opacity(0.6))
+                if let status = model.statusMessage {
+                    Text(status)
+                        .font(.callout)
+                        .foregroundStyle(BrandColor.royalBlue)
+                }
                 Spacer()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

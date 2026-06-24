@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 import Observation
 import DembraneCore
 
@@ -19,6 +20,7 @@ final class AppModel {
     var isRecording = false
     var loginError: String?
     var isSigningIn = false
+    var statusMessage: String?
 
     // Loaded data
     var me: Me?
@@ -30,6 +32,8 @@ final class AppModel {
     private let sessionManager: SessionManager
     private let auth: AuthService
     private let api: DembraneAPIClientProtocol
+    private let uploader: ParticipantUploadClient
+    private let recorder = AudioRecorder()
 
     init(environment: AppEnvironment,
          sessionManager: SessionManager,
@@ -39,6 +43,7 @@ final class AppModel {
         self.sessionManager = sessionManager
         self.auth = auth
         self.api = api
+        self.uploader = ParticipantUploadClient(env: environment)
     }
 
     /// Real app stack: Keychain-backed session + live API client (with a
@@ -65,20 +70,35 @@ final class AppModel {
             phase = .signedIn
             await loadData()
             applyDevTab()
-            return
+        } else {
+            #if DEBUG
+            // Dev-only: auto sign-in from env-var creds for simulator verification.
+            let env = ProcessInfo.processInfo.environment
+            if let email = env["DEMBRANE_DEV_EMAIL"], let password = env["DEMBRANE_DEV_PASSWORD"],
+               !email.isEmpty, !password.isEmpty {
+                await signIn(email: email, password: password)
+                applyDevTab()
+            } else {
+                phase = .signedOut
+            }
+            #else
+            phase = .signedOut
+            #endif
         }
         #if DEBUG
-        // Dev-only: auto sign-in from env-var creds for simulator verification.
-        // Never compiled into Release builds.
-        let env = ProcessInfo.processInfo.environment
-        if let email = env["DEMBRANE_DEV_EMAIL"], let password = env["DEMBRANE_DEV_PASSWORD"],
-           !email.isEmpty, !password.isEmpty {
-            await signIn(email: email, password: password)
-            applyDevTab()
-            return
-        }
+        await maybeDevAutoRecord()
         #endif
-        phase = .signedOut
+    }
+
+    /// Dev-only: record a short clip and upload it to verify the pipeline in the
+    /// simulator headlessly (env DEMBRANE_DEV_AUTORECORD=<seconds>).
+    private func maybeDevAutoRecord() async {
+        guard phase == .signedIn,
+              let seconds = ProcessInfo.processInfo.environment["DEMBRANE_DEV_AUTORECORD"].flatMap(Double.init)
+        else { return }
+        await startRecording()
+        try? await Task.sleep(for: .seconds(seconds))
+        await stopAndUpload()
     }
 
     private func applyDevTab() {
@@ -120,7 +140,48 @@ final class AppModel {
         phase = .signedOut
     }
 
-    func toggleRecording() { isRecording.toggle() }
+    func toggleRecording() {
+        if isRecording {
+            Task { await stopAndUpload() }
+        } else {
+            Task { await startRecording() }
+        }
+    }
+
+    func startRecording() async {
+        guard await AVAudioApplication.requestRecordPermission() else {
+            statusMessage = "Microphone access is off — enable it in Settings."
+            return
+        }
+        do {
+            try recorder.start()
+            isRecording = true
+            statusMessage = nil
+        } catch {
+            statusMessage = "Couldn't start recording."
+        }
+    }
+
+    func stopAndUpload() async {
+        isRecording = false
+        guard let result = recorder.stop() else { return }
+        guard let projectId = defaultProject?.id else {
+            statusMessage = "No project to save to yet."
+            return
+        }
+        statusMessage = "Uploading…"
+        do {
+            _ = try await uploader.upload(
+                projectId: projectId, fileURL: result.url,
+                displayName: me?.displayName ?? "dembrane go",
+                contentType: "audio/m4a", recordedAt: Date())
+            statusMessage = "Processing audio…"
+            await loadData()
+            statusMessage = nil
+        } catch {
+            statusMessage = "Upload failed — try again."
+        }
+    }
 
     func loadData() async {
         me = try? await api.me()
