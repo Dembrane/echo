@@ -26,6 +26,24 @@ public enum AppEnvironment: String, CaseIterable, Sendable, Codable {
         }
     }
 
+    /// Dashboard web app (used for forgot-password + email-verification links).
+    public var dashboardBaseURL: URL {
+        switch self {
+        case .production: return URL(string: "https://dashboard.dembrane.com")!
+        case .echoNext:   return URL(string: "https://dashboard.echo-next.dembrane.com")!
+        case .local:      return URL(string: "http://localhost:5173")!
+        }
+    }
+
+    /// Participant portal (used to open a project's portal editor).
+    public var portalBaseURL: URL {
+        switch self {
+        case .production: return URL(string: "https://portal.dembrane.com")!
+        case .echoNext:   return URL(string: "https://portal.echo-next.dembrane.com")!
+        case .local:      return URL(string: "http://localhost:5174")!
+        }
+    }
+
     public var displayName: String {
         switch self {
         case .production: return "Production"

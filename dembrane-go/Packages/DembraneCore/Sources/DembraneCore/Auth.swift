@@ -72,6 +72,26 @@ public actor AuthService {
         return newSession
     }
 
+    /// Register a new account (info-neutral on the backend — always succeeds
+    /// with 2xx). A verification email is sent; the user verifies via the web,
+    /// then signs in.
+    public func register(email: String, password: String, firstName: String,
+                         lastName: String?, verificationURL: String) async throws {
+        var body: [String: String] = [
+            "email": email, "password": password,
+            "first_name": firstName, "verification_url": verificationURL,
+        ]
+        if let lastName, !lastName.isEmpty { body["last_name"] = lastName }
+        var req = URLRequest(url: endpoints.register())
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (_, resp) = try await session.data(for: req)
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+        guard (200..<300).contains(code) else { throw AuthError.server(status: code) }
+    }
+
     /// Refresh the access token. Returns true on success (used by the API
     /// client's 401 retry).
     @discardableResult

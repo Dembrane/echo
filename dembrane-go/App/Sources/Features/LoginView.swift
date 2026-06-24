@@ -3,71 +3,93 @@ import DembraneCore
 
 struct LoginView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openURL) private var openURL
     @State private var email = ""
     @State private var password = ""
+    @State private var showRegister = false
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 18) {
             Spacer()
 
-            VStack(spacing: 8) {
-                Image(systemName: "waveform.circle.fill")
-                    .font(.system(size: 56))
-                    .foregroundStyle(BrandColor.royalBlue)
-                Text("dembrane go")
-                    .font(.largeTitle)
-                    .foregroundStyle(BrandColor.graphite)
-                Text("Record any conversation. Make sense of it.")
-                    .font(.callout)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(BrandColor.graphite.opacity(0.7))
+            Image("DembraneLogo")
+                .resizable().scaledToFit().frame(width: 200)
+                .accessibilityLabel("dembrane")
+
+            VStack(spacing: 6) {
+                Text("Welcome!")
+                    .font(.largeTitle).foregroundStyle(BrandColor.graphite)
+                Text("Please log in to continue.")
+                    .font(.callout).foregroundStyle(BrandColor.graphite.opacity(0.7))
             }
 
             VStack(spacing: 12) {
                 TextField("Email", text: $email)
-                    .textContentType(.emailAddress)
-                    .keyboardType(.emailAddress)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                SecureField("Password", text: $password)
-                    .textContentType(.password)
+                    .textContentType(.emailAddress).keyboardType(.emailAddress)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                SecureField("Password", text: $password).textContentType(.password)
             }
             .textFieldStyle(.roundedBorder)
 
             if let error = model.loginError {
-                Text(error)
-                    .font(.callout)
-                    .foregroundStyle(BrandColor.cottonCandy)
-                    .multilineTextAlignment(.center)
+                Text(error).font(.callout)
+                    .foregroundStyle(BrandColor.cottonCandy).multilineTextAlignment(.center)
             }
 
             Button {
                 Task { await model.signIn(email: email, password: password) }
             } label: {
-                if model.isSigningIn {
-                    ProgressView().frame(maxWidth: .infinity)
-                } else {
-                    Text("Sign in").frame(maxWidth: .infinity)
-                }
+                if model.isSigningIn { ProgressView().frame(maxWidth: .infinity) }
+                else { Text("Login").frame(maxWidth: .infinity) }
             }
-            .buttonStyle(.borderedProminent)
-            .tint(BrandColor.royalBlue)
+            .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
             .disabled(email.isEmpty || password.isEmpty || model.isSigningIn)
 
-            Text("Sign in with Apple — coming soon")
-                .font(.footnote)
-                .foregroundStyle(BrandColor.graphite.opacity(0.5))
+            Button("Forgot your password?") {
+                openURL(model.environment.dashboardBaseURL.appendingPathComponent("forgot-password"))
+            }
+            .font(.callout).tint(BrandColor.royalBlue)
+
+            Button("Create an account") { showRegister = true }
+                .font(.callout).tint(BrandColor.royalBlue)
 
             Spacer()
 
-            Text("source available · ISO 27001 · no training on your data · based in the Netherlands")
-                .font(.caption2)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(BrandColor.graphite.opacity(0.5))
+            HStack(spacing: 8) {
+                legalLink("Terms", "terms")
+                Text("·").foregroundStyle(.secondary)
+                legalLink("Privacy", "privacy")
+                Text("·").foregroundStyle(.secondary)
+                legalLink("DPA", "DPA")
+            }
+            .font(.caption)
+
+            Menu {
+                ForEach(AppEnvironment.allCases, id: \.self) { env in
+                    Button { model.setEnvironment(env) } label: {
+                        if env == model.environment {
+                            Label(env.displayName, systemImage: "checkmark")
+                        } else {
+                            Text(env.displayName)
+                        }
+                    }
+                }
+            } label: {
+                Text(model.environment.displayName)
+                    .font(.caption2).foregroundStyle(BrandColor.graphite.opacity(0.4))
+            }
         }
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(BrandColor.parchment)
+        .sheet(isPresented: $showRegister) { RegisterView() }
+    }
+
+    private func legalLink(_ title: String, _ path: String) -> some View {
+        Button(title) {
+            openURL(URL(string: "https://www.dembrane.com/legal/\(path)")!)
+        }
+        .tint(BrandColor.graphite.opacity(0.6))
     }
 }
 

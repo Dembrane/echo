@@ -22,6 +22,9 @@ final class AppModel {
     var loginError: String?
     var isSigningIn = false
     var statusMessage: String?
+    var isRegistering = false
+    var registerError: String?
+    var registrationSentTo: String?
 
     // Loaded data
     var me: Me?
@@ -31,10 +34,11 @@ final class AppModel {
     var conversations: [Conversation] = []
 
     private static let selectedProjectKey = "dembrane.go.selectedProjectId"
+    private static let environmentKey = "dembrane.go.environment"
 
     private let sessionManager: SessionManager
-    private let auth: AuthService
-    private let api: DembraneAPIClientProtocol
+    private var auth: AuthService
+    private var api: DembraneAPIClientProtocol
     private let uploader: ParticipantUploadClient
     private let recorder = AudioRecorder()
     private var liveActivity: Activity<RecordingActivityAttributes>?
@@ -52,14 +56,15 @@ final class AppModel {
 
     /// Real app stack: Keychain-backed session + live API client (with a
     /// refresh-on-401 retry).
-    convenience init(environment: AppEnvironment = .default) {
+    convenience init() {
+        let env = AppEnvironment(rawValue: UserDefaults.standard.string(forKey: Self.environmentKey) ?? "") ?? .default
         let sm = SessionManager(store: makeSessionStore())
-        let auth = AuthService(env: environment, sessionManager: sm)
+        let auth = AuthService(env: env, sessionManager: sm)
         let api = LiveAPIClient(
-            env: environment,
+            env: env,
             tokenProvider: { await sm.accessToken() },
             onUnauthorized: { (try? await auth.refresh()) ?? false })
-        self.init(environment: environment, sessionManager: sm, auth: auth, api: api)
+        self.init(environment: env, sessionManager: sm, auth: auth, api: api)
     }
 
     /// Preview/test stack: in-memory session + (by default) mock API.
@@ -131,6 +136,35 @@ final class AppModel {
             NSLog("dembrane-go sign-in failed: \(error)")
             loginError = "Couldn't sign in. Check your connection and try again."
             if phase == .loading { phase = .signedOut }
+        }
+    }
+
+    /// Switch backend environment (login screen). Rebuilds the auth + API
+    /// clients for the new env and persists the choice.
+    func setEnvironment(_ env: AppEnvironment) {
+        guard env != environment else { return }
+        environment = env
+        UserDefaults.standard.set(env.rawValue, forKey: Self.environmentKey)
+        let newAuth = AuthService(env: env, sessionManager: sessionManager)
+        auth = newAuth
+        api = LiveAPIClient(
+            env: env,
+            tokenProvider: { [sessionManager] in await sessionManager.accessToken() },
+            onUnauthorized: { [newAuth] in (try? await newAuth.refresh()) ?? false })
+    }
+
+    func register(firstName: String, lastName: String, email: String, password: String) async {
+        registerError = nil
+        isRegistering = true
+        defer { isRegistering = false }
+        let verificationURL = environment.dashboardBaseURL.appendingPathComponent("verify-email").absoluteString
+        do {
+            try await auth.register(email: email, password: password,
+                                    firstName: firstName, lastName: lastName,
+                                    verificationURL: verificationURL)
+            registrationSentTo = email
+        } catch {
+            registerError = "Couldn't create your account. Please try again."
         }
     }
 
