@@ -95,6 +95,7 @@ public struct WorkspaceUsage: Codable, Sendable, Equatable {
 public struct Conversation: Codable, Identifiable, Sendable, Hashable {
     public let id: String
     public let projectId: String?
+    public let participantName: String?
     public let title: String?
     public let summary: String?
     public let mergedTranscript: String?
@@ -104,6 +105,12 @@ public struct Conversation: Codable, Identifiable, Sendable, Hashable {
     public let locked: Bool?
     public let lockReason: String?
     public let createdAt: Date?
+
+    /// Display title: the auto-generated participant title, else the title,
+    /// else a placeholder (mirrors the web frontend).
+    public var displayTitle: String {
+        participantName ?? title ?? "Untitled conversation"
+    }
 
     /// Human label for the processing state shown on a card.
     public var statusLabel: String {
@@ -153,16 +160,16 @@ public extension Project {
 }
 public extension Conversation {
     static let previews: [Conversation] = [
-        Conversation(id: "c1", projectId: "p_preview", title: "Morning sync",
-                     summary: "Quick standup about the launch.", mergedTranscript: nil,
-                     duration: 312, isFinished: true, isAudioProcessingFinished: true,
-                     locked: false, lockReason: nil, createdAt: nil),
-        Conversation(id: "c2", projectId: "p_preview", title: "Field interview",
-                     summary: nil, mergedTranscript: nil, duration: 1840,
+        Conversation(id: "c1", projectId: "p_preview", participantName: "Morning sync",
+                     title: "Morning sync", summary: "Quick standup about the launch.",
+                     mergedTranscript: nil, duration: 312, isFinished: true,
+                     isAudioProcessingFinished: true, locked: false, lockReason: nil, createdAt: nil),
+        Conversation(id: "c2", projectId: "p_preview", participantName: nil,
+                     title: "Field interview", summary: nil, mergedTranscript: nil, duration: 1840,
                      isFinished: true, isAudioProcessingFinished: false,
                      locked: false, lockReason: nil, createdAt: nil),
-        Conversation(id: "c3", projectId: "p_preview", title: "Voice note",
-                     summary: nil, mergedTranscript: nil, duration: 47,
+        Conversation(id: "c3", projectId: "p_preview", participantName: nil,
+                     title: "Voice note", summary: nil, mergedTranscript: nil, duration: 47,
                      isFinished: true, isAudioProcessingFinished: true,
                      locked: true, lockReason: "free_tier", createdAt: nil),
     ]

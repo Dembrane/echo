@@ -4,12 +4,26 @@ import DembraneCore
 struct ConversationsView: View {
     @Environment(AppModel.self) private var model
     @State private var showProjectPicker = false
+    @State private var selected: Conversation?
 
     var body: some View {
         NavigationStack {
             List {
                 ForEach(model.conversations) { conversation in
-                    ConversationRow(conversation: conversation)
+                    Button {
+                        selected = conversation
+                    } label: {
+                        ConversationRow(conversation: conversation)
+                    }
+                    .buttonStyle(.plain)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button {
+                            model.askAbout(conversation)
+                        } label: {
+                            Label("Ask", systemImage: "sparkles")
+                        }
+                        .tint(BrandColor.royalBlue)
+                    }
                 }
             }
             .listStyle(.plain)
@@ -40,6 +54,9 @@ struct ConversationsView: View {
             }
             .sheet(isPresented: $showProjectPicker) {
                 ProjectPicker { model.selectProject($0) }
+            }
+            .sheet(item: $selected) { conversation in
+                ConversationDetailView(conversation: conversation)
             }
         }
     }

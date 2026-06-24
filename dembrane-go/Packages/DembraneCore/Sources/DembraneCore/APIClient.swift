@@ -12,6 +12,7 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func workspaces() async throws -> [Workspace]
     func projects(workspaceId: String) async throws -> [Project]
     func conversations(projectId: String) async throws -> [Conversation]
+    func conversation(id: String) async throws -> Conversation
     func createProject(workspaceId: String, name: String) async throws -> Project
 }
 
@@ -64,6 +65,10 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
         try await get(endpoints.conversations(projectId: projectId), as: [Conversation].self)
     }
 
+    public func conversation(id: String) async throws -> Conversation {
+        try await get(endpoints.conversation(id: id), as: Conversation.self)
+    }
+
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         try await post(endpoints.projects(workspaceId: workspaceId),
                        body: ["name": name, "language": "en"], as: Project.self)
@@ -96,6 +101,13 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
     public func workspaces() async throws -> [Workspace] { [.preview] }
     public func projects(workspaceId: String) async throws -> [Project] { [.preview] }
     public func conversations(projectId: String) async throws -> [Conversation] { Conversation.previews }
+    public func conversation(id: String) async throws -> Conversation {
+        Conversation(id: id, projectId: "p_preview", participantName: "Morning sync",
+                     title: "Morning sync", summary: "Quick standup about the launch.",
+                     mergedTranscript: "Alice: Morning everyone.\nBob: Let's review the launch plan.",
+                     duration: 312, isFinished: true, isAudioProcessingFinished: true,
+                     locked: false, lockReason: nil, createdAt: nil)
+    }
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         Project(id: "p_go", name: name, workspaceId: workspaceId, language: "en")
     }

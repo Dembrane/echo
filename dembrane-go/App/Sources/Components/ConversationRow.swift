@@ -10,7 +10,7 @@ struct ConversationRow: View {
                 .foregroundStyle(BrandColor.royalBlue)
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 3) {
-                Text(conversation.title ?? "Untitled conversation")
+                Text(conversation.displayTitle)
                     .foregroundStyle(BrandColor.graphite)
                 HStack(spacing: 8) {
                     Text(conversation.statusLabel)

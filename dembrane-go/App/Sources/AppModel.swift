@@ -25,6 +25,7 @@ final class AppModel {
     var isRegistering = false
     var registerError: String?
     var registrationSentTo: String?
+    var pendingAskConversationId: String?
 
     // Loaded data
     var me: Me?
@@ -283,5 +284,16 @@ final class AppModel {
         selectedProject = workspaceProject.project
         UserDefaults.standard.set(workspaceProject.project.id, forKey: Self.selectedProjectKey)
         Task { await loadConversations() }
+    }
+
+    /// Full conversation detail (summary + merged transcript).
+    func conversationDetail(id: String) async throws -> Conversation {
+        try await api.conversation(id: id)
+    }
+
+    /// Start an Ask scoped to a conversation (swipe action) and jump to Ask.
+    func askAbout(_ conversation: Conversation) {
+        pendingAskConversationId = conversation.id
+        selectedTab = .ask
     }
 }
