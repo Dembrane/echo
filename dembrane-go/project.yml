@@ -40,6 +40,7 @@ targets:
       - path: App/Resources
     dependencies:
       - package: DembraneCore
+      - target: DembraneGoWidgets
     info:
       path: App/Info.plist
       properties:
@@ -58,6 +59,24 @@ targets:
         CODE_SIGN_STYLE: "Automatic"
         TARGETED_DEVICE_FAMILY: "1,2"
         ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon"
+
+  DembraneGoWidgets:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Widgets
+    dependencies:
+      - package: DembraneCore
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: "dembrane go"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "com.dembrane.go.Widgets"
 
   DembraneGoTests:
     type: bundle.unit-test

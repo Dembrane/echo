@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import ActivityKit
 import Observation
 import DembraneCore
 
@@ -34,6 +35,7 @@ final class AppModel {
     private let api: DembraneAPIClientProtocol
     private let uploader: ParticipantUploadClient
     private let recorder = AudioRecorder()
+    private var liveActivity: Activity<RecordingActivityAttributes>?
 
     init(environment: AppEnvironment,
          sessionManager: SessionManager,
@@ -157,6 +159,7 @@ final class AppModel {
             try recorder.start()
             isRecording = true
             statusMessage = nil
+            startLiveActivity()
         } catch {
             statusMessage = "Couldn't start recording."
         }
@@ -164,6 +167,7 @@ final class AppModel {
 
     func stopAndUpload() async {
         isRecording = false
+        endLiveActivity()
         guard let result = recorder.stop() else { return }
         guard let projectId = defaultProject?.id else {
             statusMessage = "No project to save to yet."
@@ -180,6 +184,26 @@ final class AppModel {
             statusMessage = nil
         } catch {
             statusMessage = "Upload failed — try again."
+        }
+    }
+
+    private func startLiveActivity() {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        let state = RecordingActivityAttributes.ContentState(
+            startedAt: Date(), projectName: defaultProject?.name ?? defaultProjectName)
+        liveActivity = try? Activity.request(
+            attributes: RecordingActivityAttributes(),
+            content: .init(state: state, staleDate: nil))
+    }
+
+    private func endLiveActivity() {
+        let ending = liveActivity
+        liveActivity = nil
+        Task {
+            await ending?.end(nil, dismissalPolicy: .immediate)
+            for activity in Activity<RecordingActivityAttributes>.activities {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
         }
     }
 
