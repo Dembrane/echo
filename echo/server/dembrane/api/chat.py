@@ -16,6 +16,7 @@ from dembrane.service import (
     conversation_service,
 )
 from dembrane.settings import get_settings
+from dembrane.analytics import capture_event
 from dembrane.chat_utils import (
     CHAT_LLM,
     MAX_CHAT_CONTEXT_LENGTH,
@@ -1258,6 +1259,17 @@ async def post_chat(
         else:
             formatted_messages = await build_formatted_messages(chat_context.conversation_id_list)
 
+        # Resolve a distinct_id (email) so this server event merges with the
+        # user's frontend person. This is the prod chat path (agentic is gated
+        # off), so the server-side response/error events live here, not only in
+        # the agentic worker.
+        from dembrane.app_user import resolve_app_user
+
+        _chat_user = await resolve_app_user(auth.user_id)
+        chat_distinct_id = (
+            (_chat_user or {}).get("email") or ""
+        ).lower() or auth.user_id
+
         async def stream_response_async(
             formatted: List[Dict[str, str]],
             references: Optional[dict[str, List[Dict[str, str]]]] = None,
@@ -1281,8 +1293,24 @@ async def post_chat(
                             yield delta
                         else:
                             yield f"0:{json.dumps(delta)}\n"
+                await capture_event(
+                    chat_distinct_id,
+                    "server_chat_response_received",
+                    {"chat_id": chat_id, "project_id": project_id, "mode": "context"},
+                )
             except Exception as exc:  # pragma: no cover - runtime safeguard
                 logger.error("Error in litellm stream response: %s", exc)
+                await capture_event(
+                    chat_distinct_id,
+                    "server_chat_error",
+                    {
+                        "chat_id": chat_id,
+                        "project_id": project_id,
+                        "error_code": "STREAM_ERROR",
+                        "message": str(exc)[:300],
+                        "mode": "context",
+                    },
+                )
                 await run_in_thread_pool(chat_svc.delete_message, user_message_id)
                 if protocol == "text":
                     yield "Error: An error occurred while processing the chat response."
