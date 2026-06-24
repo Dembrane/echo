@@ -1,0 +1,21 @@
+# Generated Xcode project (regenerate with: .tooling/xcodegen generate)
+*.xcodeproj
+*.xcworkspace
+
+# Local tooling (fetched xcodegen binary)
+.tooling/
+
+# Build output
+.build/
+DerivedData/
+build/
+
+# macOS
+.DS_Store
+
+# fastlane secrets (added when we wire deployment)
+fastlane/api_key.json
+fastlane/AuthKey*.p8
+fastlane/*.p8
+fastlane/report.xml
+fastlane/Preview.html

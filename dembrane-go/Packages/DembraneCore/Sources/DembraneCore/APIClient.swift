@@ -1,0 +1,117 @@
+import Foundation
+
+public enum APIError: Error, Sendable, Equatable {
+    case badStatus(Int)
+    case notImplemented
+}
+
+/// The surface the app + previews talk to. A protocol so the UI can run against
+/// `MockAPIClient` with no network.
+public protocol DembraneAPIClientProtocol: Sendable {
+    func me() async throws -> Me
+    func workspaces() async throws -> [Workspace]
+    func projects(workspaceId: String) async throws -> [Project]
+    func conversations(projectId: String) async throws -> [Conversation]
+    func createProject(workspaceId: String, name: String) async throws -> Project
+}
+
+/// Real client. Cookie-based Directus session is carried by the injected
+/// URLSession's `HTTPCookieStorage`. Response envelopes are decoded leniently;
+/// they'll be tightened in M1 when wired against the live server.
+public actor LiveAPIClient: DembraneAPIClientProtocol {
+    private let endpoints: DembraneEndpoints
+    private let session: URLSession
+    private let tokenProvider: @Sendable () async -> String?
+    private let onUnauthorized: (@Sendable () async -> Bool)?
+
+    public init(env: AppEnvironment,
+                session: URLSession = .shared,
+                tokenProvider: @escaping @Sendable () async -> String? = { nil },
+                onUnauthorized: (@Sendable () async -> Bool)? = nil) {
+        self.endpoints = DembraneEndpoints(env: env)
+        self.session = session
+        self.tokenProvider = tokenProvider
+        self.onUnauthorized = onUnauthorized
+    }
+
+    private func get<T: Decodable>(_ url: URL, as type: T.Type, retrying: Bool = true) async throws -> T {
+        var req = URLRequest(url: url)
+        req.httpMethod = "GET"
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let token = await tokenProvider() {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        let (data, resp) = try await session.data(for: req)
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+        // One refresh-and-retry on 401.
+        if code == 401, retrying, let onUnauthorized, await onUnauthorized() {
+            return try await get(url, as: type, retrying: false)
+        }
+        guard (200..<300).contains(code) else { throw APIError.badStatus(code) }
+        return try DembraneJSON.decoder().decode(T.self, from: data)
+    }
+
+    public func me() async throws -> Me {
+        try await get(endpoints.me(), as: Me.self)
+    }
+    public func workspaces() async throws -> [Workspace] {
+        try await get(endpoints.workspaces(), as: WorkspaceListResponse.self).workspaces
+    }
+    public func projects(workspaceId: String) async throws -> [Project] {
+        try await get(endpoints.projects(workspaceId: workspaceId), as: ProjectsListResponse.self).items
+    }
+    public func conversations(projectId: String) async throws -> [Conversation] {
+        try await get(endpoints.conversations(projectId: projectId), as: [Conversation].self)
+    }
+
+    public func createProject(workspaceId: String, name: String) async throws -> Project {
+        try await post(endpoints.projects(workspaceId: workspaceId),
+                       body: ["name": name, "language": "en"], as: Project.self)
+    }
+
+    private func post<T: Decodable>(_ url: URL, body: [String: Any], as type: T.Type,
+                                    retrying: Bool = true) async throws -> T {
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let token = await tokenProvider() {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, resp) = try await session.data(for: req)
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+        if code == 401, retrying, let onUnauthorized, await onUnauthorized() {
+            return try await post(url, body: body, as: type, retrying: false)
+        }
+        guard (200..<300).contains(code) else { throw APIError.badStatus(code) }
+        return try DembraneJSON.decoder().decode(T.self, from: data)
+    }
+}
+
+/// In-memory client for previews, the app shell, and tests.
+public struct MockAPIClient: DembraneAPIClientProtocol {
+    public init() {}
+    public func me() async throws -> Me { .preview }
+    public func workspaces() async throws -> [Workspace] { [.preview] }
+    public func projects(workspaceId: String) async throws -> [Project] { [.preview] }
+    public func conversations(projectId: String) async throws -> [Conversation] { Conversation.previews }
+    public func createProject(workspaceId: String, name: String) async throws -> Project {
+        Project(id: "p_go", name: name, workspaceId: workspaceId, language: "en")
+    }
+}
+
+// MARK: - Response envelopes
+
+struct WorkspaceListResponse: Decodable { let workspaces: [Workspace] }
+
+struct ProjectsListResponse: Decodable {
+    let items: [Project]
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        items = (try? c.decode([Project].self, forKey: .data))
+            ?? (try? c.decode([Project].self, forKey: .projects))
+            ?? []
+    }
+    enum CodingKeys: String, CodingKey { case data, projects }
+}
