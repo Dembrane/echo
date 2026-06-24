@@ -793,7 +793,7 @@ export const ProjectReportRoute = () => {
 		closeDeleteModal();
 	};
 
-	const contributionLink = `${PARTICIPANT_BASE_URL}/${language}/${projectId}/start`;
+	const contributionLink = `${PARTICIPANT_BASE_URL}/${language}/${projectId}/start?utm_source=report`;
 
 	const getSharingLink = (pid: string) =>
 		`${PARTICIPANT_BASE_URL}/${language}/${pid}/report`;

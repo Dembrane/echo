@@ -10,6 +10,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { AxiosError } from "axios";
+import posthog from "posthog-js";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -41,6 +42,10 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		useInitiateConversationMutation();
 
 	const onSubmit = (data: FormValues) => {
+		posthog.capture("conversation_started", {
+			project_id: project.id,
+			source: "PORTAL_AUDIO",
+		});
 		initiateConversationMutation.mutate({
 			name: data.name ?? t`Participant`,
 			pin: "",
