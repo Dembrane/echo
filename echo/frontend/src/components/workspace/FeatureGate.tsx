@@ -170,6 +170,9 @@ interface UpgradeModalProps {
 	/** Admin/owner sees Request Upgrade. Member sees message-only per D9. */
 	canRequestUpgrade: boolean;
 	workspaceId: string;
+	/** Which wall opened this modal, so the upgrade funnel is attributable
+	 * (chat_cap, chat_turn_cap, upload_cap, report_cap, workspace_cap, ...). */
+	source?: string;
 }
 
 /**
@@ -276,6 +279,7 @@ export function UpgradeModal({
 	featureName,
 	benefit,
 	canRequestUpgrade,
+	source,
 }: UpgradeModalProps) {
 	const { workspace } = useWorkspace();
 	const navigate = useI18nNavigate();
@@ -307,9 +311,10 @@ export function UpgradeModal({
 				current_tier: currentTier,
 				feature_name: featureName,
 				required_tier: requiredTier,
+				source: source ?? "feature_gate",
 			});
 		}
-	}, [opened, canRequestUpgrade, currentTier, featureName, requiredTier]);
+	}, [opened, canRequestUpgrade, currentTier, featureName, requiredTier, source]);
 
 	const goToBilling = () => {
 		if (!workspace?.org_id) {
@@ -319,6 +324,7 @@ export function UpgradeModal({
 		posthog.capture("upgrade_billing_opened", {
 			feature_name: featureName,
 			proposed_tier: selectedTier,
+			source: source ?? "feature_gate",
 		});
 		onClose();
 		// Billing is managed at the organisation level; send them there to pick

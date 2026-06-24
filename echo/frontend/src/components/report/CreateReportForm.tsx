@@ -389,6 +389,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 					workspace?.role === "admin" || workspace?.role === "owner"
 				}
 				workspaceId={workspace?.id ?? ""}
+				source="report_cap"
 			/>
 		</Stack>
 	);
