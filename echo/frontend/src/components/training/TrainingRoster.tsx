@@ -68,10 +68,13 @@ export const TrainingRoster = ({
 	);
 };
 
+// Light badges use graphite text, not the accent colour (founder decision).
+const graphiteLabel = { label: { color: "var(--app-text)" } };
+
 const TrainingStatusCell = ({ entry }: { entry: RosterEntry }) => {
 	if (!entry.trained) {
 		return (
-			<Badge variant="light" color="parchment">
+			<Badge variant="light" color="parchment" styles={graphiteLabel}>
 				<Trans>Not trained</Trans>
 			</Badge>
 		);
@@ -79,11 +82,11 @@ const TrainingStatusCell = ({ entry }: { entry: RosterEntry }) => {
 	const until = formatUntil(entry.trained_until);
 	return (
 		<Group gap="xs">
-			<Badge variant="light" color="springGreen">
+			<Badge variant="light" color="springGreen" styles={graphiteLabel}>
 				{until ? <Trans>Trained until {until}</Trans> : <Trans>Trained</Trans>}
 			</Badge>
 			{entry.expiring_soon && (
-				<Badge variant="light" color="peach">
+				<Badge variant="light" color="peach" styles={graphiteLabel}>
 					<Trans>Expiring soon</Trans>
 				</Badge>
 			)}
