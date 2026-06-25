@@ -20,3 +20,8 @@ fastlane/AuthKey*.p8
 fastlane/*.p8
 fastlane/report.xml
 fastlane/Preview.html
+fastlane/README.md
+
+# gym / build artifacts
+*.ipa
+*.dSYM.zip
