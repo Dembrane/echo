@@ -25,6 +25,9 @@ final class AppModel {
     var recordingName: String?
     var audioLevels: [Float] = []
     var showRecordingScreen = false
+    /// Drives the "Saving… / Saved" confirmation banner after a recording stops.
+    enum SaveState: Equatable { case idle, saving, saved, failed }
+    var saveState: SaveState = .idle
     var loginError: String?
     var isSigningIn = false
     var statusMessage: String?
@@ -330,12 +333,14 @@ final class AppModel {
         endLiveActivity()
         recorder.stop()                       // emits the final segment synchronously
         statusMessage = "Finishing…"
+        saveState = .saving
 
         var resolved = captureConversationId
         if resolved == nil { resolved = await initiateTask?.value ?? nil }
         guard let conversationId = resolved else {
             statusMessage = "Upload failed — couldn't reach the server."
             cleanupCapture()
+            flashSaveState(.failed)
             return
         }
         captureConversationId = conversationId
@@ -348,6 +353,16 @@ final class AppModel {
         statusMessage = "Processing audio…"
         await loadConversations()
         statusMessage = nil
+        flashSaveState(.saved)
+    }
+
+    /// Show a save outcome, then auto-dismiss the banner.
+    private func flashSaveState(_ state: SaveState) {
+        saveState = state
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2.5))
+            if saveState == state { saveState = .idle }
+        }
     }
 
     private func handleSegment(_ segment: AudioRecorder.Segment) {

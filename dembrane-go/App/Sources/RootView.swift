@@ -57,8 +57,50 @@ struct MainTabView: View {
                 tabs
             }
         }
+        .overlay(alignment: .bottom) {
+            if model.saveState != .idle {
+                SaveBanner(state: model.saveState, project: model.selectedProject?.name)
+                    .padding(.bottom, 64)   // float just above the tab bar
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(duration: 0.35), value: model.saveState)
+        .sensoryFeedback(trigger: model.saveState) { _, new in
+            switch new { case .saved: .success; case .failed: .error; default: nil }
+        }
         .sheet(isPresented: $model.showRecordingScreen) { NowRecordingView() }
         .sheet(isPresented: $model.showOnboarding) { OnboardingView() }
+    }
+}
+
+/// Transient "Saving… / Saved" confirmation that floats above the tab bar after
+/// a recording stops — closes the loop so capture never feels like it vanished.
+private struct SaveBanner: View {
+    let state: AppModel.SaveState
+    let project: String?
+
+    var body: some View {
+        HStack(spacing: 8) {
+            switch state {
+            case .saving:
+                ProgressView().controlSize(.small)
+                Text("Saving…")
+            case .saved:
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                Text(project.map { "Saved to \($0)" } ?? "Saved")
+            case .failed:
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                Text("Couldn't save — check your connection")
+            case .idle:
+                EmptyView()
+            }
+        }
+        .font(.subheadline.weight(.medium))
+        .lineLimit(1)
+        .padding(.horizontal, 16).padding(.vertical, 10)
+        .background(.regularMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(.quaternary))
+        .shadow(color: .black.opacity(0.12), radius: 8, y: 2)
     }
 }
 
