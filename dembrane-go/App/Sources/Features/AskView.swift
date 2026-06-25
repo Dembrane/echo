@@ -37,7 +37,13 @@ struct AskView: View {
             }
             .sheet(isPresented: $showContextPicker) { AskContextPicker() }
             .sheet(isPresented: $showHistory) { AskHistoryView() }
-            .onAppear { model.startAskForPending() }
+            .onAppear {
+                model.startAskForPending()
+                if let query = model.pendingAskQuery {
+                    input = query
+                    model.pendingAskQuery = nil
+                }
+            }
         }
     }
 

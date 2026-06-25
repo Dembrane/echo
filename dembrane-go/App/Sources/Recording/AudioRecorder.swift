@@ -5,7 +5,7 @@ import Foundation
 /// every `segmentEvery` seconds so each segment can be uploaded as it's
 /// captured (the dembrane pipeline transcribes per chunk). Each finished
 /// segment — including the final partial one on `stop()` — is delivered via
-/// `onSegment`.
+/// `onSegment`. Metering is enabled for a live waveform.
 @MainActor
 final class AudioRecorder {
     struct Segment: Sendable {
@@ -20,6 +20,8 @@ final class AudioRecorder {
     private var timer: Timer?
     private var currentURL: URL?
     private var index = 0
+    private var segmentSeconds: TimeInterval = 30
+    private(set) var isPaused = false
 
     private static let settings: [String: Any] = [
         AVFormatIDKey: kAudioFormatMPEG4AAC,
@@ -33,17 +35,18 @@ final class AudioRecorder {
         try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.allowBluetooth])
         try session.setActive(true)
 
+        segmentSeconds = seconds
         index = 0
+        isPaused = false
         try beginSegment()
-        timer = Timer.scheduledTimer(withTimeInterval: seconds, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.rotate() }
-        }
+        startRotationTimer()
     }
 
     /// Stop recording; emits the final (partial) segment.
     func stop() {
         timer?.invalidate()
         timer = nil
+        isPaused = false
         guard let rec = recorder, let url = currentURL else { return }
         rec.stop()
         let finished = Segment(url: url, index: index)
@@ -53,12 +56,42 @@ final class AudioRecorder {
         onSegment?(finished)
     }
 
+    func pause() {
+        guard let rec = recorder, !isPaused else { return }
+        rec.pause()
+        timer?.invalidate()
+        timer = nil
+        isPaused = true
+    }
+
+    func resume() {
+        guard let rec = recorder, isPaused else { return }
+        rec.record()
+        isPaused = false
+        startRotationTimer()
+    }
+
     var isRecording: Bool { recorder != nil }
+
+    /// Current mic level, normalized 0…1, for the waveform.
+    func currentLevel() -> Float {
+        guard let rec = recorder, rec.isRecording, !isPaused else { return 0 }
+        rec.updateMeters()
+        let power = rec.averagePower(forChannel: 0)   // dBFS, ~-60 (quiet) … 0 (loud)
+        return max(0, min(1, (power + 55) / 55))
+    }
+
+    private func startRotationTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: segmentSeconds, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.rotate() }
+        }
+    }
 
     private func beginSegment() throws {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("dembrane-\(UUID().uuidString).m4a")
         let rec = try AVAudioRecorder(url: url, settings: Self.settings)
+        rec.isMeteringEnabled = true
         guard rec.record() else { throw RecorderError.couldNotStart }
         recorder = rec
         currentURL = url

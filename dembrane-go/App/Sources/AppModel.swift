@@ -10,16 +10,20 @@ import DembraneCore
 @Observable
 final class AppModel {
     enum Phase: Equatable { case loading, signedOut, signedIn }
-    enum AppTab: Hashable, Sendable { case record, conversations, ask, settings }
+    enum AppTab: Hashable, Sendable { case home, conversations, ask, search }
 
     // UI state
     var phase: Phase = .loading
-    var selectedTab: AppTab = .record
+    var selectedTab: AppTab = .home
     var environment: AppEnvironment
     var trainingOptIn = false
     let defaultProjectName = "Go Recordings"
     var isRecording = false
+    var isPaused = false
     var recordingStartedAt: Date?
+    var recordingElapsed: TimeInterval = 0
+    var audioLevels: [Float] = []
+    var showRecordingScreen = false
     var loginError: String?
     var isSigningIn = false
     var statusMessage: String?
@@ -27,6 +31,7 @@ final class AppModel {
     var registerError: String?
     var registrationSentTo: String?
     var pendingAskConversationId: String?
+    var pendingAskQuery: String?
 
     // Loaded data
     var me: Me?
@@ -62,6 +67,9 @@ final class AppModel {
     private var chunkUploads: [Task<Void, Never>] = []
     private var initiateTask: Task<String?, Never>?
     private let chunkSeconds: TimeInterval = 30
+    private var meterTimer: Timer?
+    private var pausedTotal: TimeInterval = 0
+    private var lastPauseAt: Date?
 
     init(environment: AppEnvironment,
          sessionManager: SessionManager,
@@ -97,6 +105,13 @@ final class AppModel {
     }
 
     func start() async {
+        #if DEBUG
+        // Dev-only: point the sim at a chosen backend (default is production).
+        if let envName = ProcessInfo.processInfo.environment["DEMBRANE_DEV_ENV"],
+           let devEnv = AppEnvironment(rawValue: envName) {
+            setEnvironment(devEnv)
+        }
+        #endif
         // Restore the last project instantly from disk so recording is never
         // blocked on "no project to save to" while the network catches up.
         if selectedProject == nil { selectedProject = restoredProject() }
@@ -152,9 +167,9 @@ final class AppModel {
     private func applyDevTab() {
         #if DEBUG
         switch ProcessInfo.processInfo.environment["DEMBRANE_DEV_TAB"] {
+        case "home": selectedTab = .home
         case "conversations": selectedTab = .conversations
         case "ask": selectedTab = .ask
-        case "settings": selectedTab = .settings
         default: break
         }
         #endif
@@ -244,11 +259,18 @@ final class AppModel {
         chunkUploads = []
         recorder.onSegment = { [weak self] segment in self?.handleSegment(segment) }
 
+        isPaused = false
+        pausedTotal = 0
+        lastPauseAt = nil
+        audioLevels = []
+        recordingElapsed = 0
         do {
             // Start capturing immediately — don't wait on the network.
             try recorder.start(segmentEvery: chunkSeconds)
             isRecording = true
             statusMessage = nil
+            showRecordingScreen = true        // open the Now-Recording screen
+            startMeterTimer()
             startLiveActivity()
         } catch {
             statusMessage = "Couldn't start recording."
@@ -276,6 +298,10 @@ final class AppModel {
     func stopAndUpload() async {
         guard isRecording else { return }
         isRecording = false
+        isPaused = false
+        showRecordingScreen = false
+        meterTimer?.invalidate()
+        meterTimer = nil
         endLiveActivity()
         recorder.stop()                       // emits the final segment synchronously
         statusMessage = "Finishing…"
@@ -328,10 +354,56 @@ final class AppModel {
         chunkUploads.append(task)
     }
 
+    /// Recent conversations for the Home tab.
+    var recentConversations: [Conversation] { Array(conversations.prefix(3)) }
+
+    func pauseRecording() {
+        guard isRecording, !isPaused else { return }
+        recorder.pause()
+        isPaused = true
+        lastPauseAt = Date()
+    }
+
+    func resumeRecording() {
+        guard isRecording, isPaused else { return }
+        if let pausedAt = lastPauseAt { pausedTotal += Date().timeIntervalSince(pausedAt) }
+        lastPauseAt = nil
+        recorder.resume()
+        isPaused = false
+    }
+
+    private func startMeterTimer() {
+        meterTimer?.invalidate()
+        meterTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 12.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.tickMeter() }
+        }
+    }
+
+    /// ~12 Hz: update the elapsed clock (date-based, so it survives backgrounding)
+    /// and push a level sample into the rolling waveform buffer.
+    private func tickMeter() {
+        guard isRecording else { return }
+        recordingElapsed = currentElapsed()
+        guard !isPaused else { return }
+        audioLevels.append(recorder.currentLevel())
+        if audioLevels.count > 64 { audioLevels.removeFirst(audioLevels.count - 64) }
+    }
+
+    private func currentElapsed() -> TimeInterval {
+        guard let start = recordingStartedAt else { return 0 }
+        var elapsed = Date().timeIntervalSince(start) - pausedTotal
+        if isPaused, let pausedAt = lastPauseAt { elapsed -= Date().timeIntervalSince(pausedAt) }
+        return max(0, elapsed)
+    }
+
     private func cleanupCapture() {
         captureConversationId = nil
         captureStart = nil
         recordingStartedAt = nil
+        meterTimer?.invalidate()
+        meterTimer = nil
+        isPaused = false
+        audioLevels = []
         pendingSegments = []
         chunkUploads = []
         initiateTask = nil

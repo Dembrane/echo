@@ -33,14 +33,15 @@ struct ConversationRow: View {
         .padding(.vertical, 4)
     }
 
-    /// Lead with the summary; fall back to a clean status.
+    /// Lead with the summary; fall back to a clean status. Use `isFinished` (the
+    /// reliable flag) — `isAudioProcessingFinished` stays false even when done.
     private var subtitle: String {
         if let summary = conversation.summary?.trimmingCharacters(in: .whitespacesAndNewlines),
            !summary.isEmpty {
             return summary
         }
         if conversation.locked == true { return "Locked" }
-        if conversation.isAudioProcessingFinished != true { return "Transcribing…" }
+        if conversation.isFinished != true { return "Recording…" }
         return "No summary yet"
     }
 

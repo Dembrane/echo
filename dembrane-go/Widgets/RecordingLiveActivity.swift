@@ -45,7 +45,7 @@ struct RecordingLiveActivity: Widget {
             } compactTrailing: {
                 timer(from: context.state.startedAt)
                     .foregroundStyle(.red)
-                    .frame(width: 50)
+                    .frame(minWidth: 36, maxWidth: 54, alignment: .trailing)
             } minimal: {
                 logomark.frame(width: 22, height: 22)
             }
@@ -54,7 +54,10 @@ struct RecordingLiveActivity: Widget {
     }
 
     private var logomark: some View {
-        Image("Logomark").resizable().scaledToFit()
+        Image("Logomark")
+            .renderingMode(.original)   // keep full color — was rendering as a gray (templated) blob
+            .resizable()
+            .scaledToFit()
     }
 
     private var recordingDot: some View {

@@ -19,11 +19,19 @@ struct ConversationsView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                projectHeader
-                Divider()
-                list
+            List {
+                // Scrolls with the content (not a sticky bar) so the large title
+                // fades and the tab bar collapses naturally on scroll.
+                Section {
+                    projectSelector
+                }
+                Section {
+                    content
+                }
             }
+            .listStyle(.insetGrouped)
+            .searchable(text: $search, prompt: "Search conversations")
+            .refreshable { await model.loadConversations() }
             .navigationTitle("Conversations")
             .sheet(isPresented: $showProjectPicker) {
                 ProjectPicker { model.selectProject($0) }
@@ -48,8 +56,7 @@ struct ConversationsView: View {
         }
     }
 
-    /// Full-width selected-project header (project name + workspace), tappable.
-    private var projectHeader: some View {
+    private var projectSelector: some View {
         Button { showProjectPicker = true } label: {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -64,67 +71,61 @@ struct ConversationsView: View {
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.subheadline).foregroundStyle(.secondary)
             }
-            .padding(.horizontal)
-            .padding(.vertical, 12)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
 
-    private var selectedWorkspaceName: String? {
-        guard let id = model.selectedProject?.id else { return nil }
-        return model.allProjects.first { $0.project.id == id }?.workspace.name
-    }
-
-    private var list: some View {
-        List {
+    @ViewBuilder private var content: some View {
+        if model.conversationsLoading && model.conversations.isEmpty {
+            HStack { Spacer(); ProgressView(); Spacer() }
+                .listRowSeparator(.hidden)
+        } else if model.conversationsError && model.conversations.isEmpty {
+            VStack(spacing: 8) {
+                Label("Couldn't load", systemImage: "wifi.exclamationmark")
+                    .font(.headline)
+                Text("Check your connection and try again.")
+                    .font(.caption).foregroundStyle(.secondary)
+                Button("Retry") { Task { await model.loadConversations() } }
+                    .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 24)
+            .listRowSeparator(.hidden)
+        } else if model.conversations.isEmpty {
+            Text("No conversations yet — tap Record to start.")
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 24)
+                .listRowSeparator(.hidden)
+        } else if filtered.isEmpty {
+            Text("No matches for “\(search)”.")
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 24)
+                .listRowSeparator(.hidden)
+        } else {
             ForEach(filtered) { conversation in
-                Button {
-                    selected = conversation
-                } label: {
+                Button { selected = conversation } label: {
                     ConversationRow(conversation: conversation)
                 }
                 .buttonStyle(.plain)
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        pendingDelete = conversation
-                    } label: {
+                    Button(role: .destructive) { pendingDelete = conversation } label: {
                         Label("Delete", systemImage: "trash")
                     }
-                    Button {
-                        model.askAbout(conversation)
-                    } label: {
+                    Button { model.askAbout(conversation) } label: {
                         Label("Ask", systemImage: "sparkles")
                     }
                     .tint(BrandColor.royalBlue)
                 }
             }
         }
-        .listStyle(.plain)
-        .overlay {
-            if model.conversationsLoading && model.conversations.isEmpty {
-                ProgressView()
-            } else if model.conversationsError && model.conversations.isEmpty {
-                ContentUnavailableView {
-                    Label("Couldn't load", systemImage: "wifi.exclamationmark")
-                } description: {
-                    Text("Check your connection and try again.")
-                } actions: {
-                    Button("Retry") { Task { await model.loadConversations() } }
-                        .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
-                }
-            } else if model.conversations.isEmpty {
-                ContentUnavailableView {
-                    Label("No conversations yet", systemImage: "waveform")
-                } description: {
-                    Text("Start your first one.")
-                }
-            } else if filtered.isEmpty {
-                ContentUnavailableView.search(text: search)
-            }
-        }
-        .searchable(text: $search, prompt: "Search conversations")
-        .refreshable { await model.loadConversations() }
+    }
+
+    private var selectedWorkspaceName: String? {
+        guard let id = model.selectedProject?.id else { return nil }
+        return model.allProjects.first { $0.project.id == id }?.workspace.name
     }
 }
 
