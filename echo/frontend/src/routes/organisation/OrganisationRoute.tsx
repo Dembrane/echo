@@ -24,16 +24,17 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import {
 	IconChevronDown,
 	IconChevronRight,
-	IconDoor,
+	IconInfoCircle,
 	IconLock,
 	IconPlus,
 	IconSparkles,
 } from "@tabler/icons-react";
+import { UsersThree } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
@@ -54,6 +55,8 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import {
 	avatarUrl,
 	memberInitials,
@@ -410,6 +413,25 @@ export const OrganisationRoute = () => {
 	// WorkspaceProvider). Used to detect external-only mode when the
 	// org-level fetches 403.
 	const { workspaces: userWorkspaces } = useWorkspace();
+
+	// Free tier: one workspace per org. Gate the "New workspace" action on click
+	// (open the upgrade modal) rather than letting the user fill the create flow.
+	const { data: orgBilling } = useQuery({
+		enabled: Boolean(organisationId),
+		queryFn: async (): Promise<{ tier?: string } | null> => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/orgs/${organisationId}/billing`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) return null;
+			return res.json();
+		},
+		queryKey: ["v2", "orgs", organisationId, "billing"],
+		staleTime: 60_000,
+	});
+	const orgTier = orgBilling?.tier ?? "free";
+	const atWorkspaceLimit = orgTier === "free" && workspaces.length >= 1;
+	const [wsUpgradeOpened, wsUpgradeHandlers] = useDisclosure(false);
 
 	const isAdmin =
 		organisation?.role === "owner" || organisation?.role === "admin";
@@ -774,13 +796,18 @@ export const OrganisationRoute = () => {
 								membersLoading={membersLoading}
 								workspaces={workspaces}
 								isManager={isAdmin}
+								atWorkspaceLimit={atWorkspaceLimit}
 								onOpenWorkspace={(id) => navigate(`/w/${id}/home`)}
 								onOpenProject={(wsId, projectId) =>
 									navigate(`/w/${wsId}/projects/${projectId}/home`)
 								}
-								onRequestWorkspace={() =>
-									navigate(`/w/new?organisationId=${organisationId}`)
-								}
+								onRequestWorkspace={() => {
+									if (atWorkspaceLimit) {
+										wsUpgradeHandlers.open();
+									} else {
+										navigate(`/w/new?organisationId=${organisationId}`);
+									}
+								}}
 							/>
 						)}
 					</Tabs.Panel>
@@ -983,6 +1010,16 @@ export const OrganisationRoute = () => {
 					</Tabs.Panel>
 				</Tabs>
 			</Stack>
+			<UpgradeModal
+				opened={wsUpgradeOpened}
+				onClose={wsUpgradeHandlers.close}
+				currentTier={orgTier as Tier}
+				requiredTier={SELLABLE_TIER}
+				featureName={t`Workspace limit reached`}
+				benefit={t`The free plan includes 1 workspace per organisation. Upgrade to create additional workspaces.`}
+				canRequestUpgrade={isAdmin}
+				workspaceId=""
+			/>
 		</Container>
 	);
 };
@@ -1201,7 +1238,7 @@ function WorkspaceVisibilityIcon({
 		return (
 			<Tooltip label={t`Invite-only workspace`}>
 				<span style={{ display: "inline-flex", flexShrink: 0 }}>
-					<IconDoor size={size} color="var(--mantine-color-gray-6)" />
+					<UsersThree size={size} color="var(--mantine-color-gray-6)" />
 				</span>
 			</Tooltip>
 		);
@@ -1215,6 +1252,7 @@ function OrganisationOverviewPanel({
 	membersLoading,
 	workspaces,
 	isManager,
+	atWorkspaceLimit = false,
 	onOpenWorkspace,
 	onOpenProject,
 	onRequestWorkspace,
@@ -1228,6 +1266,7 @@ function OrganisationOverviewPanel({
 	// the user can't actually open.
 	workspaces: OrganisationWorkspace[];
 	isManager: boolean;
+	atWorkspaceLimit?: boolean;
 	onOpenWorkspace: (workspaceId: string) => void;
 	onOpenProject: (workspaceId: string, projectId: string) => void;
 	onRequestWorkspace: () => void;
@@ -1386,14 +1425,25 @@ function OrganisationOverviewPanel({
 						)}
 					</Group>
 					{isManager && (
-						<Button
-							variant="subtle"
-							size="xs"
-							leftSection={<IconPlus size={14} />}
-							onClick={onRequestWorkspace}
-						>
-							<Trans>New workspace</Trans>
-						</Button>
+						<Group gap={4}>
+							<Button
+								variant="subtle"
+								size="xs"
+								leftSection={<IconPlus size={14} />}
+								onClick={onRequestWorkspace}
+								opacity={atWorkspaceLimit ? 0.8 : 1}
+							>
+								<Trans>New workspace</Trans>
+							</Button>
+							{atWorkspaceLimit && (
+								<Tooltip label={t`Free plan allows 1 workspace per organisation`}>
+									<IconInfoCircle
+										size={14}
+										style={{ color: "var(--mantine-color-primary-6)", cursor: "help" }}
+									/>
+								</Tooltip>
+							)}
+						</Group>
 					)}
 				</Group>
 				{workspacesLoading && myCards.length === 0 ? (

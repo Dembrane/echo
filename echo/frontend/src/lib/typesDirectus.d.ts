@@ -134,6 +134,10 @@ interface Conversation {
 	has_transcript?: boolean;
 	last_chunk_at?: string | null;
 	has_only_text_chunks?: boolean;
+	// Derived by the conversations BFF. lock_reason explains why `locked`;
+	// summary_locked marks a server-scrubbed summary (free-tier / hours-cap gate).
+	lock_reason?: "hours_cap" | "free_tier" | null;
+	summary_locked?: boolean;
 }
 
 interface ConversationArtifact {

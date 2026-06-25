@@ -245,7 +245,10 @@ export const ConversationEdit = ({
 
 	const hasSummary = !!conversation.summary;
 	const hasTitle = !!watch("title");
-	const canGenerateTitle = hasSummary;
+	// Locked (free-tier / hours-cap) conversations are gated: generating a
+	// summary or title would surface transcript-derived content. Block it.
+	const isLocked = !!conversation.locked;
+	const canGenerateTitle = hasSummary && !isLocked;
 	const isGeneratingTitle = generateTitleMutation.isPending;
 
 	useEffect(() => {
@@ -372,7 +375,11 @@ export const ConversationEdit = ({
 										isDirty={formState.dirtyFields.title}
 									/>
 									<Tooltip
-										label={t`Generate a summary first`}
+										label={
+											isLocked
+												? t`Upgrade to generate a title for this conversation`
+												: t`Generate a summary first`
+										}
 										disabled={canGenerateTitle}
 									>
 										<Button
@@ -445,14 +452,20 @@ export const ConversationEdit = ({
 										label={t`Summary`}
 										isDirty={!!formState.dirtyFields.summary}
 									/>
-									<Button
-										variant="subtle"
-										size="compact-xs"
-										loading={generateSummaryMutation.isPending}
-										onClick={() => generateSummaryMutation.mutate()}
+									<Tooltip
+										label={t`Upgrade to generate summaries for this conversation`}
+										disabled={!isLocked}
 									>
-										{watch("summary")?.trim() ? t`Regenerate` : t`Generate`}
-									</Button>
+										<Button
+											variant="subtle"
+											size="compact-xs"
+											loading={generateSummaryMutation.isPending}
+											disabled={isLocked}
+											onClick={() => generateSummaryMutation.mutate()}
+										>
+											{watch("summary")?.trim() ? t`Regenerate` : t`Generate`}
+										</Button>
+									</Tooltip>
 								</Group>
 							}
 							description={t`Generated from the transcript. You can edit it.`}

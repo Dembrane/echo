@@ -12,8 +12,12 @@ import {
 	Textarea,
 	Title,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { IconAlertCircle, IconPlayerStop, IconSend } from "@tabler/icons-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
+import { FREE_TIER_MAX_CHAT_USER_TURNS, isFreeTierLimitError } from "@/lib/freeTier";
 import type {
 	AgenticRunEvent,
 	AgenticRunEventsResponse,
@@ -35,6 +39,7 @@ import {
 } from "./agenticToolActivity";
 import { ChatMessage } from "./ChatMessage";
 import { ChatTemplatesMenu } from "./ChatTemplatesMenu";
+import { ChatTurnLimitCard, ChatUpgradeModal } from "./FreeTierChatGate";
 
 type AgenticChatPanelProps = {
 	chatId: string;
@@ -192,6 +197,21 @@ export const AgenticChatPanel = ({
 			.map((id) => byId.get(id))
 			.filter((item): item is TimelineItem => item !== undefined);
 	}, [events]);
+
+	// Free tier: max 3 user turns per chat. The 4th routes to upgrade.
+	const { workspace } = useWorkspace();
+	const { freeTier } = useWorkspaceUsage(workspace?.id);
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	const userTurnCount = useMemo(
+		() =>
+			timeline.filter(
+				(item) => item.kind === "message" && item.role === "user",
+			).length,
+		[timeline],
+	);
+	const atTurnLimit = Boolean(
+		freeTier?.active && userTurnCount >= FREE_TIER_MAX_CHAT_USER_TURNS,
+	);
 
 	const mergeEvents = useCallback((incoming: AgenticRunEvent[]) => {
 		if (incoming.length === 0) return;
@@ -400,6 +420,11 @@ export const AgenticChatPanel = ({
 		if (!message || !projectId || !chatId) return;
 		if (isInFlightStatus(runStatus)) return;
 
+		if (atTurnLimit) {
+			upgradeHandlers.open();
+			return;
+		}
+
 		setError(null);
 		setIsSubmitting(true);
 		setInput("");
@@ -430,11 +455,16 @@ export const AgenticChatPanel = ({
 				}
 			}
 		} catch (submitError) {
-			const message =
-				submitError instanceof Error
-					? submitError.message
-					: "Failed to submit agentic message";
-			setError(message);
+			// Backend safety net: free-tier turn cap returns 402.
+			if (isFreeTierLimitError(submitError) === "chat_turns") {
+				upgradeHandlers.open();
+			} else {
+				const message =
+					submitError instanceof Error
+						? submitError.message
+						: "Failed to submit agentic message";
+				setError(message);
+			}
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -626,6 +656,9 @@ export const AgenticChatPanel = ({
 				style={{ backgroundColor: "var(--app-background)" }}
 			>
 				<Stack className="pb-2" gap="xs">
+					{atTurnLimit && (
+						<ChatTurnLimitCard onUpgrade={upgradeHandlers.open} />
+					)}
 					<ChatTemplatesMenu
 						onTemplateSelect={handleTemplateSelect}
 						selectedTemplateKey={templateKey}
@@ -640,6 +673,7 @@ export const AgenticChatPanel = ({
 							value={input}
 							onChange={(event) => setInput(event.currentTarget.value)}
 							placeholder="Ask the agent..."
+							disabled={atTurnLimit}
 							onKeyDown={(event) => {
 								if (event.key === "Enter" && !event.shiftKey) {
 									event.preventDefault();
@@ -653,7 +687,10 @@ export const AgenticChatPanel = ({
 							}
 							onClick={() => void handleSubmit()}
 							disabled={
-								isSubmitting || isRunInFlight || input.trim().length === 0
+								isSubmitting ||
+								isRunInFlight ||
+								input.trim().length === 0 ||
+								atTurnLimit
 							}
 						>
 							<Trans>Send</Trans>
@@ -661,6 +698,11 @@ export const AgenticChatPanel = ({
 					</Group>
 				</Stack>
 			</Box>
+			<ChatUpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				reason="chat_turns"
+			/>
 		</Stack>
 	);
 };

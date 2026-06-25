@@ -277,7 +277,10 @@ export const ProjectConversationRoute = () => {
 							</Group>
 
 							{isLocked ? (
-								<LockedTranscriptOverlay variant="summary" />
+								<LockedTranscriptOverlay
+									variant="summary"
+									reason={conversation?.lock_reason ?? "free_tier"}
+								/>
 							) : (
 								<>
 									<div {...testId("conversation-overview-summary-content")}>
@@ -347,6 +350,7 @@ export const ProjectConversationRoute = () => {
 							isAnonymized={isAnonymized}
 							isFinished={isFinished}
 							isLocked={isLocked}
+							lockReason={conversation?.lock_reason ?? "free_tier"}
 							participantName={conversation?.participant_name ?? ""}
 						/>
 					)}

@@ -13,6 +13,7 @@ these endpoints.
     POST   /trainings                      — create a training for an org
     PATCH  /trainings/{id}                 — edit type/schedule/status/participants
     GET    /trainings/orgs/{org_id}/roster — an org's training roster (staff view)
+    GET    /trainings/{id}/licenses        — licenses a training granted (with names)
     POST   /trainings/{id}/complete        — mark users completed → write licenses
     PATCH  /licenses/{id}                  — edit completion date / status
     POST   /licenses/{id}/revoke           — revoke a license
@@ -64,9 +65,22 @@ class TrainingRow(BaseModel):
     status: str
     notes: Optional[str] = None
     requested_by: Optional[str] = None
+    requested_by_name: Optional[str] = None
+    requested_by_email: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
     license_count: int = 0
+    org_member_count: int = 0
+
+
+class TrainingLicenseRow(BaseModel):
+    id: str
+    app_user_id: str
+    app_user_name: Optional[str] = None
+    app_user_email: Optional[str] = None
+    status: str
+    completed_at: Optional[str] = None
+    expires_at: Optional[str] = None
 
 
 class CreateTrainingRequest(BaseModel):
@@ -166,6 +180,42 @@ async def list_trainings(
         if isinstance(orgs, list):
             org_name_map = {o["id"]: o.get("name", "") for o in orgs}
 
+    # Member count per org: the denominator for "fully completed" (active
+    # licenses must cover all members, not the larger seat capacity).
+    member_count_map: dict[str, int] = {oid: 0 for oid in org_ids}
+    if org_ids:
+        memberships = await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {"org_id": {"_in": org_ids}, "deleted_at": {"_null": True}},
+                    "fields": ["org_id"],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(memberships, list):
+            for m in memberships:
+                oid = m.get("org_id")
+                if oid in member_count_map:
+                    member_count_map[oid] += 1
+
+    requester_ids = list({r["requested_by"] for r in rows if r.get("requested_by")})
+    requester_map: dict[str, dict] = {}
+    if requester_ids:
+        users = await async_directus.get_items(
+            "app_user",
+            {
+                "query": {
+                    "filter": {"id": {"_in": requester_ids}},
+                    "fields": ["id", "display_name", "email"],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(users, list):
+            requester_map = {u["id"]: u for u in users}
+
     training_ids = [r["id"] for r in rows if r.get("id")]
     license_count_map: dict[str, int] = {tid: 0 for tid in training_ids}
     if training_ids:
@@ -174,15 +224,16 @@ async def list_trainings(
             {
                 "query": {
                     "filter": {"training_id": {"_in": training_ids}},
-                    "fields": ["training_id"],
+                    "fields": ["training_id", "status"],
                     "limit": -1,
                 }
             },
         )
         if isinstance(lic, list):
+            # Count only active licenses; a revoked one no longer means trained.
             for row in lic:
                 tid = row.get("training_id")
-                if tid in license_count_map:
+                if tid in license_count_map and row.get("status") == "active":
                     license_count_map[tid] += 1
 
     return [
@@ -200,9 +251,16 @@ async def list_trainings(
             status=r.get("status", ""),
             notes=r.get("notes"),
             requested_by=r.get("requested_by"),
+            requested_by_name=(requester_map.get(r.get("requested_by") or "") or {}).get(
+                "display_name"
+            ),
+            requested_by_email=(requester_map.get(r.get("requested_by") or "") or {}).get(
+                "email"
+            ),
             created_at=r.get("created_at"),
             updated_at=r.get("updated_at"),
             license_count=license_count_map.get(r["id"], 0),
+            org_member_count=member_count_map.get(r.get("org_id", ""), 0),
         )
         for r in rows
     ]
@@ -380,6 +438,60 @@ async def staff_org_roster(
     }
 
 
+@router.get("/trainings/{training_id}/licenses", response_model=list[TrainingLicenseRow])
+async def list_training_licenses(
+    training_id: str,
+    auth: DependencyDirectusSession,
+) -> list[TrainingLicenseRow]:
+    """The licenses granted by a training, with attendee names resolved. Used by
+    staff to review and revoke completions. Newest first."""
+    _require_staff(auth)
+
+    rows = await async_directus.get_items(
+        "training_license",
+        {
+            "query": {
+                "filter": {"training_id": {"_eq": training_id}},
+                "sort": ["-completed_at"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list) or not rows:
+        return []
+
+    user_ids = list({r["app_user_id"] for r in rows if r.get("app_user_id")})
+    user_map: dict[str, dict] = {}
+    if user_ids:
+        users = await async_directus.get_items(
+            "app_user",
+            {
+                "query": {
+                    "filter": {"id": {"_in": user_ids}},
+                    "fields": ["id", "display_name", "email"],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(users, list):
+            user_map = {u["id"]: u for u in users}
+
+    return [
+        TrainingLicenseRow(
+            id=r["id"],
+            app_user_id=r.get("app_user_id", ""),
+            app_user_name=(user_map.get(r.get("app_user_id") or "") or {}).get(
+                "display_name"
+            ),
+            app_user_email=(user_map.get(r.get("app_user_id") or "") or {}).get("email"),
+            status=r.get("status", ""),
+            completed_at=r.get("completed_at"),
+            expires_at=r.get("expires_at"),
+        )
+        for r in rows
+    ]
+
+
 @router.post("/trainings/{training_id}/complete")
 async def complete_training(
     training_id: str,
@@ -496,4 +608,37 @@ async def revoke_license(
         raise HTTPException(status_code=404, detail="License not found")
 
     await async_directus.update_item("training_license", license_id, {"status": "revoked"})
+
+    # If no active licenses remain, the training is no longer completed, so move
+    # it back to scheduled (if dated) or requested.
+    training_id = existing.get("training_id")
+    if training_id:
+        remaining = await async_directus.get_items(
+            "training_license",
+            {
+                "query": {
+                    "filter": {
+                        "training_id": {"_eq": training_id},
+                        "status": {"_eq": "active"},
+                    },
+                    "fields": ["id"],
+                    "limit": 1,
+                }
+            },
+        )
+        has_active = isinstance(remaining, list) and len(remaining) > 0
+        if not has_active:
+            training = await async_directus.get_item("training", training_id)
+            if training and training.get("status") == "completed":
+                await async_directus.update_item(
+                    "training",
+                    training_id,
+                    {
+                        "status": "scheduled"
+                        if training.get("scheduled_at")
+                        else "requested",
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    },
+                )
+
     return {"status": "success"}
