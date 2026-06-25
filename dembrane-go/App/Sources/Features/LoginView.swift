@@ -18,9 +18,9 @@ struct LoginView: View {
 
             VStack(spacing: 6) {
                 Text("Welcome!")
-                    .font(.largeTitle).foregroundStyle(BrandColor.graphite)
+                    .font(.largeTitle).foregroundStyle(.primary)
                 Text("Please log in to continue.")
-                    .font(.callout).foregroundStyle(BrandColor.graphite.opacity(0.7))
+                    .font(.callout).foregroundStyle(.secondary)
             }
 
             VStack(spacing: 12) {
@@ -76,12 +76,11 @@ struct LoginView: View {
                 }
             } label: {
                 Text(model.environment.displayName)
-                    .font(.caption2).foregroundStyle(BrandColor.graphite.opacity(0.4))
+                    .font(.caption2).foregroundStyle(.tertiary)
             }
         }
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(BrandColor.parchment)
         .sheet(isPresented: $showRegister) { RegisterView() }
     }
 
@@ -89,7 +88,7 @@ struct LoginView: View {
         Button(title) {
             openURL(URL(string: "https://www.dembrane.com/legal/\(path)")!)
         }
-        .tint(BrandColor.graphite.opacity(0.6))
+        .tint(.secondary)
     }
 }
 

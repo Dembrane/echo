@@ -12,7 +12,7 @@ struct RecordingMiniBar: View {
                 .fill(BrandColor.cottonCandy)
                 .frame(width: 10, height: 10)
             Text("Recording")
-                .foregroundStyle(BrandColor.graphite)
+                .foregroundStyle(.primary)
             Spacer()
             Button {
                 model.toggleRecording()

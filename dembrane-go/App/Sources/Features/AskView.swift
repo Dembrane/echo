@@ -13,7 +13,7 @@ struct AskView: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Ask your conversations anything. The language model answers from your recordings and cites them.")
                     .font(.callout)
-                    .foregroundStyle(BrandColor.graphite.opacity(0.7))
+                    .foregroundStyle(.secondary)
                     .padding(.horizontal)
 
                 ForEach(suggestions, id: \.self) { suggestion in
@@ -25,14 +25,13 @@ struct AskView: View {
                             .padding()
                     }
                     .glassEffect(.regular, in: .rect(cornerRadius: 16))
-                    .foregroundStyle(BrandColor.graphite)
+                    .foregroundStyle(.primary)
                     .padding(.horizontal)
                 }
                 Spacer()
             }
             .padding(.top)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(BrandColor.parchment)
             .navigationTitle("Ask")
         }
     }

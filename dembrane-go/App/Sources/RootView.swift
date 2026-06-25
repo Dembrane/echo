@@ -10,7 +10,6 @@ struct RootView: View {
         case .loading:
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(BrandColor.parchment)
         case .signedOut:
             LoginView()
         case .signedIn:

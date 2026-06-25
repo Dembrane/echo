@@ -33,7 +33,6 @@ struct ConversationsView: View {
                 }
             }
             .listStyle(.plain)
-            .background(BrandColor.parchment)
             .overlay {
                 if model.conversations.isEmpty {
                     ContentUnavailableView {

@@ -26,7 +26,6 @@ struct RegisterView: View {
             }
             .padding(24)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .background(BrandColor.parchment)
             .navigationTitle("Create an account")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -83,7 +82,7 @@ struct RegisterView: View {
             }
 
             HStack {
-                Button("Back") { step = 0 }.tint(BrandColor.graphite)
+                Button("Back") { step = 0 }.tint(.secondary)
                 Spacer()
                 Button {
                     Task { await model.register(firstName: firstName, lastName: lastName, email: email, password: password) }
@@ -101,11 +100,11 @@ struct RegisterView: View {
         VStack(spacing: 16) {
             Spacer()
             Image(systemName: "envelope.badge").font(.system(size: 48)).foregroundStyle(BrandColor.royalBlue)
-            Text("Check your email").font(.title).foregroundStyle(BrandColor.graphite)
+            Text("Check your email").font(.title).foregroundStyle(.primary)
             Text("We've sent a verification link to \(email). Open the email and click the link to continue.")
                 .multilineTextAlignment(.center).foregroundStyle(.secondary)
             Text("Didn't get it? Check your spam or junk folder. The email comes from dembrane.com.")
-                .font(.caption).multilineTextAlignment(.center).foregroundStyle(BrandColor.graphite.opacity(0.5))
+                .font(.caption).multilineTextAlignment(.center).foregroundStyle(.secondary)
             Button("Done") { model.registrationSentTo = nil; dismiss() }
                 .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
             Spacer()

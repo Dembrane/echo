@@ -21,7 +21,7 @@ struct SettingsView: View {
                         showProjectPicker = true
                     } label: {
                         HStack {
-                            Text("Default project").foregroundStyle(BrandColor.graphite)
+                            Text("Default project")
                             Spacer()
                             Text(model.selectedProject?.name ?? "—").foregroundStyle(.secondary)
                             Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)

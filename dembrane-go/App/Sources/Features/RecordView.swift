@@ -12,15 +12,24 @@ struct RecordView: View {
                 recordButton
                 Text(model.isRecording ? "Recording…" : "Tap to record")
                     .font(.title2)
-                    .foregroundStyle(BrandColor.graphite)
-                Button {
-                    showProjectPicker = true
-                } label: {
-                    Label("Saving to: \(model.selectedProject?.name ?? model.defaultProjectName)", systemImage: "folder")
-                        .font(.callout)
-                        .foregroundStyle(BrandColor.graphite.opacity(0.7))
+                    .foregroundStyle(.primary)
+
+                VStack(spacing: 6) {
+                    Text("Saving to").font(.caption).foregroundStyle(.secondary)
+                    Button {
+                        showProjectPicker = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "folder.fill").font(.footnote)
+                            Text(model.selectedProject?.name ?? model.defaultProjectName)
+                                .fontWeight(.medium)
+                            Image(systemName: "chevron.up.chevron.down").font(.caption2)
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(BrandColor.royalBlue)
+                    .disabled(model.isRecording)
                 }
-                .disabled(model.isRecording)
                 if let status = model.statusMessage {
                     Text(status)
                         .font(.callout)
@@ -29,7 +38,6 @@ struct RecordView: View {
                 Spacer()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(BrandColor.parchment)
             .navigationTitle("Record")
             .sheet(isPresented: $showProjectPicker) {
                 ProjectPicker { model.selectProject($0) }

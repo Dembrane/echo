@@ -19,7 +19,7 @@ settings:
     # versioned ios26.0-simulator triple; implicit modules resolve it cleanly.
     SWIFT_ENABLE_EXPLICIT_MODULES: "NO"
     MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "3"
+    CURRENT_PROJECT_VERSION: "4"
     DEVELOPMENT_TEAM: "JMCP69LCSU"
     SWIFT_VERSION: "5.0"
   configs:
@@ -53,7 +53,6 @@ targets:
         NSSupportsLiveActivities: true        # Dynamic Island / Live Activity
         NSMicrophoneUsageDescription: "dembrane go records audio so you can transcribe and revisit your conversations."
         ITSAppUsesNonExemptEncryption: false
-        UIUserInterfaceStyle: Light          # brand is light-first (parchment); lock to light until a dark-mode logo exists
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: "com.dembrane.go"

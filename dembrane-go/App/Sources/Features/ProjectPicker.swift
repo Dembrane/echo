@@ -19,7 +19,7 @@ struct ProjectPicker: View {
                 } label: {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(item.project.name).foregroundStyle(BrandColor.graphite)
+                            Text(item.project.name).foregroundStyle(.primary)
                             if !item.subtitle.isEmpty {
                                 Text(item.subtitle).font(.caption).foregroundStyle(.secondary)
                             }

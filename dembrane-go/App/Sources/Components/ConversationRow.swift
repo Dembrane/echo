@@ -11,20 +11,36 @@ struct ConversationRow: View {
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 3) {
                 Text(conversation.displayTitle)
-                    .foregroundStyle(BrandColor.graphite)
-                HStack(spacing: 8) {
-                    Text(conversation.statusLabel)
-                    if let duration = conversation.duration {
-                        Text("·")
-                        Text(Self.format(duration))
-                    }
-                }
-                .font(.caption)
-                .foregroundStyle(BrandColor.graphite.opacity(0.6))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
             }
-            Spacer()
+            Spacer(minLength: 0)
         }
         .padding(.vertical, 4)
+    }
+
+    /// Lead with the summary; fall back to a clean status + duration.
+    private var subtitle: String {
+        if let summary = conversation.summary?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !summary.isEmpty {
+            return summary
+        }
+        var parts: [String] = []
+        if conversation.locked == true {
+            parts.append("Locked")
+        } else if conversation.isAudioProcessingFinished != true {
+            parts.append("Transcribing…")
+        } else {
+            parts.append("No summary yet")
+        }
+        if let duration = conversation.duration, duration > 0 {
+            parts.append(Self.format(duration))
+        }
+        return parts.joined(separator: " · ")
     }
 
     private static func format(_ seconds: Double) -> String {
