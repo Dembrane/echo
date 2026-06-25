@@ -19,6 +19,21 @@ struct ConversationDetailView: View {
     @State private var tags: [ProjectTag] = []
     @State private var chunks: [ConversationChunk] = []
     @State private var loadingTranscript = true
+    @State private var working = false
+
+    private var hasSummary: Bool {
+        !((current.summary ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    }
+
+    /// Run a conversation action, then refresh the detail.
+    private func runAction(_ action: @escaping () async throws -> Void) {
+        Task {
+            working = true
+            defer { working = false }
+            try? await action()
+            full = try? await model.conversationDetail(id: conversation.id)
+        }
+    }
 
     private enum CopyTarget { case summary, transcript }
     private var current: Conversation { full ?? conversation }
@@ -51,12 +66,25 @@ struct ConversationDetailView: View {
                         Button { showEdit = true } label: { Label("Edit", systemImage: "pencil") }
                         Button { showTags = true } label: { Label("Tags", systemImage: "tag") }
                         Button { showMove = true } label: { Label("Move to project", systemImage: "folder") }
+                        Section {
+                            Button { runAction { try await model.summarizeConversation(conversation.id) } } label: {
+                                Label(hasSummary ? "Regenerate summary" : "Generate summary", systemImage: "sparkles")
+                            }
+                            Button { runAction { try await model.generateConversationTitle(conversation.id) } } label: {
+                                Label("Generate title", systemImage: "textformat")
+                            }
+                            .disabled(!hasSummary)
+                            Button { runAction { try await model.retranscribeConversation(conversation.id) } } label: {
+                                Label("Re-transcribe", systemImage: "arrow.clockwise")
+                            }
+                        }
                         Button(role: .destructive) { confirmDelete = true } label: {
                             Label("Delete", systemImage: "trash")
                         }
                     } label: {
-                        Image(systemName: "ellipsis.circle")
+                        if working { ProgressView() } else { Image(systemName: "ellipsis.circle") }
                     }
+                    .disabled(working)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }

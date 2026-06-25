@@ -39,6 +39,16 @@ public struct DembraneEndpoints: Sendable, Equatable {
     public func moveConversation(id: String) -> URL {
         api.appending(path: "v2/bff/conversations/\(id)/move")
     }
+    // Conversation actions (v1 /api/conversations/{id}/…, Bearer-authed, bodyless POST).
+    public func summarizeConversation(id: String) -> URL {
+        api.appending(path: "conversations/\(id)/summarize")
+    }
+    public func generateConversationTitle(id: String) -> URL {
+        api.appending(path: "conversations/\(id)/generate-title")
+    }
+    public func retranscribeConversation(id: String) -> URL {
+        api.appending(path: "conversations/\(id)/retranscribe")
+    }
     public func createChat() -> URL { api.appending(path: "v2/bff/chats") }
     public func chats(projectId: String) -> URL {
         var c = URLComponents(url: api.appending(path: "v2/bff/chats"), resolvingAgainstBaseURL: false)!

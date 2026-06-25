@@ -16,6 +16,9 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func conversationChunks(id: String) async throws -> [ConversationChunk]
     func updateConversation(id: String, fields: [String: String]) async throws
     func moveConversation(id: String, targetProjectId: String) async throws
+    func summarizeConversation(id: String) async throws
+    func generateConversationTitle(id: String) async throws
+    func retranscribeConversation(id: String) async throws
     func deleteConversation(id: String) async throws
     func createProject(workspaceId: String, name: String) async throws -> Project
     func projectTags(projectId: String) async throws -> [ProjectTag]
@@ -84,6 +87,15 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
     public func moveConversation(id: String, targetProjectId: String) async throws {
         try await sendJSON(endpoints.moveConversation(id: id), method: "POST",
                            body: ["target_project_id": targetProjectId])
+    }
+    public func summarizeConversation(id: String) async throws {
+        try await send(endpoints.summarizeConversation(id: id), method: "POST")
+    }
+    public func generateConversationTitle(id: String) async throws {
+        try await send(endpoints.generateConversationTitle(id: id), method: "POST")
+    }
+    public func retranscribeConversation(id: String) async throws {
+        try await send(endpoints.retranscribeConversation(id: id), method: "POST")
     }
 
     public func conversationChunks(id: String) async throws -> [ConversationChunk] {
@@ -185,6 +197,9 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
     }
     public func updateConversation(id: String, fields: [String: String]) async throws {}
     public func moveConversation(id: String, targetProjectId: String) async throws {}
+    public func summarizeConversation(id: String) async throws {}
+    public func generateConversationTitle(id: String) async throws {}
+    public func retranscribeConversation(id: String) async throws {}
     public func deleteConversation(id: String) async throws {}
     public func conversationChunks(id: String) async throws -> [ConversationChunk] {
         [ConversationChunk(id: "ck1", conversationId: id,

@@ -598,6 +598,20 @@ final class AppModel {
         try await api.conversationChunks(id: id)
     }
 
+    // Conversation actions (mirror the web's summary/title/retranscribe controls).
+    func summarizeConversation(_ id: String) async throws {
+        try await api.summarizeConversation(id: id)
+        await loadConversations()
+    }
+    func generateConversationTitle(_ id: String) async throws {
+        try await api.generateConversationTitle(id: id)
+        await loadConversations()
+    }
+    func retranscribeConversation(_ id: String) async throws {
+        try await api.retranscribeConversation(id: id)
+        await loadConversations()
+    }
+
     /// Edit a conversation's title / participant name / summary, then refresh
     /// the list so the row reflects the change.
     func updateConversation(id: String, title: String, participantName: String, summary: String) async throws {
