@@ -19,68 +19,12 @@ struct ConversationsView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(filtered) { conversation in
-                    Button {
-                        selected = conversation
-                    } label: {
-                        ConversationRow(conversation: conversation)
-                    }
-                    .buttonStyle(.plain)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            pendingDelete = conversation
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                        Button {
-                            model.askAbout(conversation)
-                        } label: {
-                            Label("Ask", systemImage: "sparkles")
-                        }
-                        .tint(BrandColor.royalBlue)
-                    }
-                }
+            VStack(spacing: 0) {
+                projectHeader
+                Divider()
+                list
             }
-            .listStyle(.plain)
-            .overlay {
-                if model.conversationsLoading && model.conversations.isEmpty {
-                    ProgressView()
-                } else if model.conversationsError && model.conversations.isEmpty {
-                    ContentUnavailableView {
-                        Label("Couldn't load", systemImage: "wifi.exclamationmark")
-                    } description: {
-                        Text("Check your connection and try again.")
-                    } actions: {
-                        Button("Retry") { Task { await model.loadConversations() } }
-                            .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
-                    }
-                } else if model.conversations.isEmpty {
-                    ContentUnavailableView {
-                        Label("No conversations yet", systemImage: "waveform")
-                    } description: {
-                        Text("Start your first one.")
-                    }
-                } else if filtered.isEmpty {
-                    ContentUnavailableView.search(text: search)
-                }
-            }
-            .searchable(text: $search, prompt: "Search conversations")
-            .refreshable { await model.loadConversations() }
             .navigationTitle("Conversations")
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        showProjectPicker = true
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text(model.selectedProject?.name ?? "Project")
-                            Image(systemName: "chevron.down").font(.caption2)
-                        }
-                        .foregroundStyle(BrandColor.royalBlue)
-                    }
-                }
-            }
             .sheet(isPresented: $showProjectPicker) {
                 ProjectPicker { model.selectProject($0) }
             }
@@ -102,6 +46,85 @@ struct ConversationsView: View {
                 Text("It'll be removed from this project. Audio is kept for a short grace period.")
             }
         }
+    }
+
+    /// Full-width selected-project header (project name + workspace), tappable.
+    private var projectHeader: some View {
+        Button { showProjectPicker = true } label: {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Selected project").font(.caption).foregroundStyle(.secondary)
+                    Text(model.selectedProject?.name ?? "Choose a project")
+                        .font(.headline).foregroundStyle(.primary).lineLimit(1)
+                    if let workspace = selectedWorkspaceName {
+                        Text(workspace).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                }
+                Spacer()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var selectedWorkspaceName: String? {
+        guard let id = model.selectedProject?.id else { return nil }
+        return model.allProjects.first { $0.project.id == id }?.workspace.name
+    }
+
+    private var list: some View {
+        List {
+            ForEach(filtered) { conversation in
+                Button {
+                    selected = conversation
+                } label: {
+                    ConversationRow(conversation: conversation)
+                }
+                .buttonStyle(.plain)
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        pendingDelete = conversation
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                    Button {
+                        model.askAbout(conversation)
+                    } label: {
+                        Label("Ask", systemImage: "sparkles")
+                    }
+                    .tint(BrandColor.royalBlue)
+                }
+            }
+        }
+        .listStyle(.plain)
+        .overlay {
+            if model.conversationsLoading && model.conversations.isEmpty {
+                ProgressView()
+            } else if model.conversationsError && model.conversations.isEmpty {
+                ContentUnavailableView {
+                    Label("Couldn't load", systemImage: "wifi.exclamationmark")
+                } description: {
+                    Text("Check your connection and try again.")
+                } actions: {
+                    Button("Retry") { Task { await model.loadConversations() } }
+                        .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
+                }
+            } else if model.conversations.isEmpty {
+                ContentUnavailableView {
+                    Label("No conversations yet", systemImage: "waveform")
+                } description: {
+                    Text("Start your first one.")
+                }
+            } else if filtered.isEmpty {
+                ContentUnavailableView.search(text: search)
+            }
+        }
+        .searchable(text: $search, prompt: "Search conversations")
+        .refreshable { await model.loadConversations() }
     }
 }
 

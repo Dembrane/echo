@@ -34,14 +34,6 @@ struct SettingsView: View {
                     }
                 }
 
-                Section {
-                    Toggle("Train language models on my data", isOn: $model.trainingOptIn)
-                } header: {
-                    Text("Privacy & data")
-                } footer: {
-                    Text("Off by default. We don't train language models on your recordings unless you opt in. Source available · ISO 27001 · based in the Netherlands.")
-                }
-
                 Section("About") {
                     LabeledContent("Version", value: "0.1.0")
                     Link("Source code", destination: URL(string: "https://github.com/dembrane")!)

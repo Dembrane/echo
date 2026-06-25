@@ -17,7 +17,7 @@ final class AppModel {
     var selectedTab: AppTab = .record
     var environment: AppEnvironment
     var trainingOptIn = false
-    let defaultProjectName = "go"
+    let defaultProjectName = "Go Recordings"
     var isRecording = false
     var recordingStartedAt: Date?
     var loginError: String?
@@ -44,7 +44,7 @@ final class AppModel {
     var askError: String?
     private var currentChatId: String?
 
-    private static let selectedProjectKey = "dembrane.go.selectedProjectId"
+    private static let selectedProjectKey = "dembrane.go.selectedProject"   // full Project JSON
     private static let environmentKey = "dembrane.go.environment"
 
     private let sessionManager: SessionManager
@@ -97,6 +97,9 @@ final class AppModel {
     }
 
     func start() async {
+        // Restore the last project instantly from disk so recording is never
+        // blocked on "no project to save to" while the network catches up.
+        if selectedProject == nil { selectedProject = restoredProject() }
         if await sessionManager.isAuthenticated() {
             phase = .signedIn
             await loadData()
@@ -253,7 +256,9 @@ final class AppModel {
         }
 
         // Create the conversation in parallel; flush buffered segments once ready.
-        let displayName = me?.displayName ?? "dembrane Go"
+        // Name it like Voice Memos (interim: date/time — location naming is a follow-up),
+        // never the user's name.
+        let displayName = Date().formatted(date: .abbreviated, time: .shortened)
         initiateTask = Task { [uploader] in
             try? await uploader.startConversation(projectId: projectId, displayName: displayName)
         }
@@ -358,18 +363,27 @@ final class AppModel {
         workspaces = (try? await api.workspaces()) ?? []
         await loadAllProjects()
 
-        // Ensure the "go" capture project exists in the default workspace.
+        // Ensure the default capture project ("Go Recordings") exists in the default workspace.
         if let dws = workspaces.first(where: { $0.isDefault }) ?? workspaces.first,
-           !allProjects.contains(where: { $0.workspace.id == dws.id && $0.project.name.lowercased() == defaultProjectName }),
+           !allProjects.contains(where: { $0.workspace.id == dws.id && $0.project.name.localizedCaseInsensitiveCompare(defaultProjectName) == .orderedSame }),
            let created = try? await api.createProject(workspaceId: dws.id, name: defaultProjectName) {
             allProjects.append(WorkspaceProject(project: created, workspace: dws))
         }
 
-        // Active project: last choice → "go" → first available.
-        let storedId = UserDefaults.standard.string(forKey: Self.selectedProjectKey)
-        selectedProject = allProjects.first(where: { $0.project.id == storedId })?.project
-            ?? allProjects.first(where: { $0.project.name.lowercased() == defaultProjectName })?.project
-            ?? allProjects.first?.project
+        // Active project: keep a valid current/restored selection; else stored → default → first.
+        // If the project list failed to load, keep whatever was restored (don't blank it out —
+        // that was the "no project to save to" bug on a cold/flaky launch).
+        if !allProjects.isEmpty {
+            let restored = restoredProject()
+            if let current = selectedProject, allProjects.contains(where: { $0.project.id == current.id }) {
+                // keep the current selection
+            } else {
+                selectedProject = allProjects.first(where: { $0.project.id == restored?.id })?.project
+                    ?? allProjects.first(where: { $0.project.name.localizedCaseInsensitiveCompare(defaultProjectName) == .orderedSame })?.project
+                    ?? allProjects.first?.project
+            }
+            persistSelectedProject()
+        }
 
         await loadConversations()
     }
@@ -417,8 +431,20 @@ final class AppModel {
 
     func selectProject(_ workspaceProject: WorkspaceProject) {
         selectedProject = workspaceProject.project
-        UserDefaults.standard.set(workspaceProject.project.id, forKey: Self.selectedProjectKey)
+        persistSelectedProject()
         Task { await loadConversations() }
+    }
+
+    /// Persist the whole selected project so it restores instantly on next launch
+    /// (even before — or without — a successful network fetch).
+    private func persistSelectedProject() {
+        guard let project = selectedProject, let data = try? JSONEncoder().encode(project) else { return }
+        UserDefaults.standard.set(data, forKey: Self.selectedProjectKey)
+    }
+
+    private func restoredProject() -> Project? {
+        guard let data = UserDefaults.standard.data(forKey: Self.selectedProjectKey) else { return nil }
+        return try? JSONDecoder().decode(Project.self, from: data)
     }
 
     /// Full conversation detail (summary + merged transcript).
