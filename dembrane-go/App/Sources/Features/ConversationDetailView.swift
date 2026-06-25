@@ -14,7 +14,9 @@ struct ConversationDetailView: View {
     @State private var copied: CopyTarget?
     @State private var showEdit = false
     @State private var showMove = false
+    @State private var showTags = false
     @State private var confirmDelete = false
+    @State private var tags: [ProjectTag] = []
 
     private enum CopyTarget { case summary, transcript }
     private var current: Conversation { full ?? conversation }
@@ -24,6 +26,7 @@ struct ConversationDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     metaLine
+                    tagsChips
                     summarySection
                     transcriptSection
                 }
@@ -44,6 +47,7 @@ struct ConversationDetailView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button { showEdit = true } label: { Label("Edit", systemImage: "pencil") }
+                        Button { showTags = true } label: { Label("Tags", systemImage: "tag") }
                         Button { showMove = true } label: { Label("Move to project", systemImage: "folder") }
                         Button(role: .destructive) { confirmDelete = true } label: {
                             Label("Delete", systemImage: "trash")
@@ -56,11 +60,19 @@ struct ConversationDetailView: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .task { full = try? await model.conversationDetail(id: conversation.id) }
+            .task {
+                full = try? await model.conversationDetail(id: conversation.id)
+                tags = (try? await model.conversationTags(conversation.id)) ?? []
+            }
             .sheet(isPresented: $showEdit, onDismiss: {
                 Task { full = try? await model.conversationDetail(id: conversation.id) }
             }) {
                 ConversationEditView(conversation: current)
+            }
+            .sheet(isPresented: $showTags, onDismiss: {
+                Task { tags = (try? await model.conversationTags(conversation.id)) ?? [] }
+            }) {
+                ConversationTagsView(conversation: current)
             }
             .sheet(isPresented: $showMove) {
                 ProjectPicker { workspaceProject in
@@ -91,6 +103,22 @@ struct ConversationDetailView: View {
             }
         }
         .font(.caption).foregroundStyle(.secondary)
+    }
+
+    @ViewBuilder private var tagsChips: some View {
+        if !tags.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(tags) { tag in
+                        Text(tag.text)
+                            .font(.caption)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .background(BrandColor.royalBlue.opacity(0.12), in: .capsule)
+                            .foregroundStyle(BrandColor.royalBlue)
+                    }
+                }
+            }
+        }
     }
 
     @ViewBuilder private var summarySection: some View {

@@ -38,6 +38,23 @@ public struct DembraneEndpoints: Sendable, Equatable {
     }
     public func createChat() -> URL { api.appending(path: "v2/bff/chats") }
 
+    // Tags (project-scoped)
+    public func tags(projectId: String) -> URL {
+        var c = URLComponents(url: api.appending(path: "v2/bff/tags"), resolvingAgainstBaseURL: false)!
+        c.queryItems = [URLQueryItem(name: "project_id", value: projectId)]
+        return c.url!
+    }
+    public func createTag() -> URL { api.appending(path: "v2/bff/tags") }
+    public func conversationTags(conversationId: String) -> URL {
+        var c = URLComponents(url: api.appending(path: "v2/bff/conversation-project-tags"),
+                              resolvingAgainstBaseURL: false)!
+        c.queryItems = [URLQueryItem(name: "conversation_id", value: conversationId)]
+        return c.url!
+    }
+    public func replaceConversationTags() -> URL {
+        api.appending(path: "v2/bff/conversation-project-tags/replace")
+    }
+
     // Chat (streaming + context)
     public func addChatContext(chatId: String) -> URL {
         api.appending(path: "chats/\(chatId)/add-context")

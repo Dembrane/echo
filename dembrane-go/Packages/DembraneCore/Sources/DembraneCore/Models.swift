@@ -129,6 +129,16 @@ public struct ConversationChunk: Codable, Identifiable, Sendable, Hashable {
     public let source: String?
 }
 
+/// A project-scoped tag (text only — the backend has no color field).
+public struct ProjectTag: Codable, Identifiable, Sendable, Hashable {
+    public let id: String
+    public let text: String
+    public init(id: String, text: String) {
+        self.id = id
+        self.text = text
+    }
+}
+
 /// A citation returned in the chat stream's `h:` header line.
 public struct ConversationReference: Codable, Sendable, Hashable {
     public let conversation: String

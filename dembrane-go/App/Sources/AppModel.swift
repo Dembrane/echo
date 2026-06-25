@@ -363,6 +363,21 @@ final class AppModel {
         }
     }
 
+    // MARK: - Tags
+
+    func projectTags(projectId: String) async throws -> [ProjectTag] {
+        try await api.projectTags(projectId: projectId)
+    }
+    func conversationTags(_ id: String) async throws -> [ProjectTag] {
+        try await api.conversationTags(conversationId: id)
+    }
+    func createTag(projectId: String, text: String) async throws -> ProjectTag {
+        try await api.createTag(projectId: projectId, text: text)
+    }
+    func setConversationTags(_ id: String, tagIds: [String]) async throws {
+        try await api.replaceConversationTags(conversationId: id, tagIds: tagIds)
+    }
+
     /// Start an Ask scoped to a conversation (swipe action) and jump to Ask.
     func askAbout(_ conversation: Conversation) {
         pendingAskConversationId = conversation.id

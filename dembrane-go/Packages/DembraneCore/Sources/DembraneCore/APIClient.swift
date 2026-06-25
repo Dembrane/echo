@@ -17,6 +17,10 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func moveConversation(id: String, targetProjectId: String) async throws
     func deleteConversation(id: String) async throws
     func createProject(workspaceId: String, name: String) async throws -> Project
+    func projectTags(projectId: String) async throws -> [ProjectTag]
+    func conversationTags(conversationId: String) async throws -> [ProjectTag]
+    func createTag(projectId: String, text: String) async throws -> ProjectTag
+    func replaceConversationTags(conversationId: String, tagIds: [String]) async throws
 }
 
 /// Real client. Cookie-based Directus session is carried by the injected
@@ -88,6 +92,22 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         try await post(endpoints.projects(workspaceId: workspaceId),
                        body: ["name": name, "language": "en"], as: Project.self)
+    }
+
+    public func projectTags(projectId: String) async throws -> [ProjectTag] {
+        try await get(endpoints.tags(projectId: projectId), as: [ProjectTag].self)
+    }
+    public func conversationTags(conversationId: String) async throws -> [ProjectTag] {
+        try await get(endpoints.conversationTags(conversationId: conversationId),
+                      as: [ConversationTagLink].self).map(\.projectTagId)
+    }
+    public func createTag(projectId: String, text: String) async throws -> ProjectTag {
+        try await post(endpoints.createTag(), body: ["project_id": projectId, "text": text],
+                       as: ProjectTag.self)
+    }
+    public func replaceConversationTags(conversationId: String, tagIds: [String]) async throws {
+        try await sendJSON(endpoints.replaceConversationTags(), method: "POST",
+                           body: ["conversation_id": conversationId, "project_tag_ids": tagIds])
     }
 
     /// Authed request with a JSON body and no decoded response (e.g. PATCH).
@@ -164,6 +184,20 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         Project(id: "p_go", name: name, workspaceId: workspaceId, language: "en")
     }
+    public func projectTags(projectId: String) async throws -> [ProjectTag] {
+        [ProjectTag(id: "t1", text: "Interview"), ProjectTag(id: "t2", text: "Idea")]
+    }
+    public func conversationTags(conversationId: String) async throws -> [ProjectTag] { [] }
+    public func createTag(projectId: String, text: String) async throws -> ProjectTag {
+        ProjectTag(id: "t_new", text: text)
+    }
+    public func replaceConversationTags(conversationId: String, tagIds: [String]) async throws {}
+}
+
+/// Junction row from `/v2/bff/conversation-project-tags` — the expanded
+/// `project_tag_id` carries the actual tag.
+private struct ConversationTagLink: Decodable {
+    let projectTagId: ProjectTag
 }
 
 // MARK: - Response envelopes
