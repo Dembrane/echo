@@ -1,5 +1,6 @@
 import CoreLocation
 import Foundation
+import MapKit
 
 /// Best-effort "where was this recorded" naming, like Voice Memos. Entirely
 /// optional: if permission is declined or anything fails, it returns nil and
@@ -21,9 +22,10 @@ final class LocationNamer: NSObject, CLLocationManagerDelegate {
         let status = await ensureAuthorized()
         guard status == .authorizedWhenInUse || status == .authorizedAlways else { return nil }
         guard let location = await requestOnce() else { return nil }
-        let placemarks = try? await CLGeocoder().reverseGeocodeLocation(location)
-        guard let place = placemarks?.first else { return nil }
-        return place.name ?? place.subLocality ?? place.locality ?? place.administrativeArea
+        // iOS 26 reverse geocoding (CLGeocoder is deprecated → MapKit).
+        guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
+        let mapItems = try? await request.mapItems
+        return mapItems?.first?.name
     }
 
     private func ensureAuthorized() async -> CLAuthorizationStatus {

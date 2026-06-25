@@ -32,7 +32,7 @@ final class AudioRecorder {
 
     func start(segmentEvery seconds: TimeInterval) throws {
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.allowBluetooth])
+        try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.allowBluetoothHFP])
         try session.setActive(true)
 
         segmentSeconds = seconds

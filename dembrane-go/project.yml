@@ -15,11 +15,13 @@ settings:
     # XcodeGen's SettingPresets aren't on this machine, so set the defaults we
     # rely on explicitly. $(TARGET_NAME) keeps bundle names space-free.
     PRODUCT_NAME: "$(TARGET_NAME)"
+    # Modern headermap style (traditional is unsupported on this toolchain).
+    ALWAYS_SEARCH_USER_PATHS: "NO"
     # Explicit module builds reject the local DembraneCore module on the
     # versioned ios26.0-simulator triple; implicit modules resolve it cleanly.
     SWIFT_ENABLE_EXPLICIT_MODULES: "NO"
     MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "25"
+    CURRENT_PROJECT_VERSION: "26"
     DEVELOPMENT_TEAM: "JMCP69LCSU"
     SWIFT_VERSION: "5.0"
   configs:
