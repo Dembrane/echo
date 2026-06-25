@@ -44,6 +44,10 @@ struct AskView: View {
                     Button("Done") { inputFocused = false }
                 }
             }
+            // Light impact when a question goes out; a soft success when the answer lands.
+            .sensoryFeedback(trigger: model.askStreaming) { _, streaming in
+                streaming ? .impact(weight: .light) : .success
+            }
             .sheet(isPresented: $showContextPicker) { AskContextPicker() }
             .sheet(isPresented: $showHistory) { AskHistoryView() }
             .task { templates = await model.chatTemplates() }

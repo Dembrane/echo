@@ -30,6 +30,9 @@ struct NowRecordingView: View {
             }
         }
         .presentationDragIndicator(.visible)
+        // Haptics for the core action: a firm cue on start/stop, a light tick on pause/resume.
+        .sensoryFeedback(trigger: model.isRecording) { _, recording in recording ? .start : .stop }
+        .sensoryFeedback(.selection, trigger: model.isPaused)
     }
 
     // MARK: Armed (tap to start)

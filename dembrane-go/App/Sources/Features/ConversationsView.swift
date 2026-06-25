@@ -14,6 +14,7 @@ struct ConversationsView: View {
     @State private var selectedIDs = Set<String>()
     @State private var showBulkDelete = false
     @State private var showBulkTag = false
+    @State private var deleteTick = 0
 
     private var filtered: [Conversation] {
         let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -49,6 +50,7 @@ struct ConversationsView: View {
                                                      set: { if !$0 { pendingDelete = nil } }),
                                 titleVisibility: .visible, presenting: pendingDelete) { conversation in
                 Button("Delete", role: .destructive) {
+                    deleteTick += 1
                     Task { await model.deleteConversation(conversation) }
                 }
                 Button("Cancel", role: .cancel) {}
@@ -59,6 +61,7 @@ struct ConversationsView: View {
                                 isPresented: $showBulkDelete, titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {
                     let ids = selectedIDs
+                    deleteTick += 1
                     exitSelect()
                     Task { await model.deleteConversations(ids) }
                 }
@@ -67,6 +70,9 @@ struct ConversationsView: View {
             .sheet(isPresented: $showBulkTag) {
                 BulkTagPicker(conversationIds: selectedIDs) { exitSelect() }
             }
+            // Selection tick entering/leaving multi-select; success cue on a confirmed delete.
+            .sensoryFeedback(.selection, trigger: selectMode)
+            .sensoryFeedback(.success, trigger: deleteTick)
         }
     }
 
