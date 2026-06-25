@@ -677,6 +677,12 @@ msgstr "{0} not added"
 msgid "{0} of {1} members are trained."
 msgstr ""
 
+#. placeholder {0}: roster.data?.trained_count ?? activeLicenses.length
+#. placeholder {1}: roster.data?.total_count ?? members.length
+#: src/components/training/TrainingRowActions.tsx:227
+msgid "{0} of {1} trained"
+msgstr ""
+
 #: src/routes/team/TeamRoute.tsx:711
 #~ msgid "{0} on this workspace · change in workspace settings"
 #~ msgstr ""
@@ -684,7 +690,7 @@ msgstr ""
 #. placeholder {0}: line.addedSeats
 #. placeholder {1}: fmtEur(line.proratedNow)
 #. placeholder {2}: fmtEur(line.recurringDelta)
-#: src/components/invite/InviteModal.tsx:724
+#: src/components/invite/InviteModal.tsx:764
 msgid "{0} seat(s) · {1} now · +{2}/{cadence} at renewal"
 msgstr ""
 
@@ -819,7 +825,7 @@ msgstr "{finishedConversationsCount, plural, one {Currently # conversation is re
 msgid "{from} → {to}"
 msgstr ""
 
-#: src/components/invite/EmailChipsInput.tsx:184
+#: src/components/invite/EmailChipsInput.tsx:297
 msgid "{invalidCount} addresses need attention"
 msgstr ""
 
@@ -889,7 +895,7 @@ msgstr ""
 msgid "{sent} invites sent"
 msgstr ""
 
-#: src/components/invite/InviteModal.tsx:462
+#: src/components/invite/InviteModal.tsx:502
 msgid "{sentCount} invites sent."
 msgstr ""
 
@@ -1029,7 +1035,7 @@ msgstr ""
 msgid "0 Aspects"
 msgstr "0 Aspects"
 
-#: src/components/invite/EmailChipsInput.tsx:182
+#: src/components/invite/EmailChipsInput.tsx:295
 msgid "1 address needs attention"
 msgstr ""
 
@@ -1432,7 +1438,7 @@ msgstr "Add to Filters"
 msgid "Add to this chat"
 msgstr "Add to this chat"
 
-#: src/components/invite/InviteModal.tsx:589
+#: src/components/invite/InviteModal.tsx:629
 msgid "Add to workspaces"
 msgstr ""
 
@@ -1652,6 +1658,7 @@ msgstr "Agentic Chat"
 #: src/routes/admin/AdminSettingsRoute.tsx:1768
 #: src/routes/admin/AdminSettingsRoute.tsx:2477
 #: src/components/workspace/OrganisationUsageRollup.tsx:564
+#: src/components/training/StaffTrainingPanel.tsx:117
 #: src/components/project/ProjectUsageAndSharing.tsx:246
 msgid "All"
 msgstr "All"
@@ -2571,6 +2578,8 @@ msgstr ""
 #: src/routes/organisation/OrganisationRoute.tsx:2017
 #: src/routes/organisation/OrganisationRoute.tsx:2060
 #: src/components/workspace/OrganisationProjectsTable.tsx:158
+#: src/components/training/TrainingRowActions.tsx:190
+#: src/components/training/TrainingRowActions.tsx:298
 #: src/components/training/RequestTrainingModal.tsx:97
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
 #: src/components/project/ProjectDangerZone.tsx:149
@@ -2579,7 +2588,7 @@ msgstr ""
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:530
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:684
 #: src/components/organisation/CreateOrganisationModal.tsx:195
-#: src/components/invite/InviteModal.tsx:771
+#: src/components/invite/InviteModal.tsx:811
 #: src/components/dropzone/UploadConversationDropzone.tsx:750
 #: src/components/dropzone/UploadConversationDropzone.tsx:872
 #: src/components/conversation/MoveConversationButton.tsx:231
@@ -2639,6 +2648,12 @@ msgstr "Cancel schedule"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1196
 #~ msgid "Cancel the invite sent to {0}? You can invite them again later."
 #~ msgstr ""
+
+#: src/components/training/TrainingRowActions.tsx:169
+#: src/components/training/TrainingRowActions.tsx:316
+#: src/components/training/TrainingRowActions.tsx:323
+msgid "Cancel training"
+msgstr ""
 
 #: src/components/billing/BillingManager.tsx:518
 msgid "Cancel your plan"
@@ -3022,6 +3037,14 @@ msgstr ""
 msgid "Complete"
 msgstr "Complete"
 
+#: src/components/training/StaffTrainingPanel.tsx:120
+msgid "Completed"
+msgstr ""
+
+#: src/components/training/TrainingRowActions.tsx:291
+msgid "Completed on"
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:893
 #~ msgid "Concrete Topics"
 #~ msgstr "Concrete Topics"
@@ -3035,7 +3058,7 @@ msgstr "Confirm"
 msgid "Confirm"
 msgstr "Confirm"
 
-#: src/components/invite/InviteModal.tsx:781
+#: src/components/invite/InviteModal.tsx:821
 msgid "Confirm and send"
 msgstr ""
 
@@ -3438,7 +3461,7 @@ msgstr ""
 msgid "Couldn't load workspace settings ({0})"
 msgstr ""
 
-#: src/components/invite/InviteModal.tsx:596
+#: src/components/invite/InviteModal.tsx:636
 msgid "Couldn't load workspaces. Close and reopen to retry."
 msgstr ""
 
@@ -4121,7 +4144,7 @@ msgstr ""
 
 #: src/routes/onboarding/OnboardingRoute.tsx:525
 #: src/components/project/ProjectSharingModal.tsx:268
-#: src/components/invite/InviteModal.tsx:771
+#: src/components/invite/InviteModal.tsx:811
 msgid "Done"
 msgstr ""
 
@@ -4368,8 +4391,8 @@ msgstr ""
 #~ msgstr ""
 
 #: src/components/training/StaffTrainingPanel.tsx:116
-msgid "Email Pauline"
-msgstr ""
+#~ msgid "Email Pauline"
+#~ msgstr ""
 
 #: src/routes/auth/VerifyEmail.tsx:73
 msgid "Email verification"
@@ -4623,6 +4646,10 @@ msgstr "Error occurred"
 msgid "Error uploading \"{0}\": {1}"
 msgstr "Error uploading \"{0}\": {1}"
 
+#: src/components/training/StaffTrainingPanel.tsx:154
+msgid "Estimated cost"
+msgstr ""
+
 #: src/components/training/RequestTrainingModal.tsx:92
 msgid "Estimated total: €{estimated}"
 msgstr ""
@@ -4672,6 +4699,10 @@ msgstr ""
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:363
 #: src/components/workspace/DiscoverableWorkspaces.tsx:302
 msgid "Everyone in your organisation"
+msgstr ""
+
+#: src/components/training/TrainingRowActions.tsx:280
+msgid "Everyone on the roster is trained."
 msgstr ""
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:348
@@ -4732,7 +4763,7 @@ msgstr ""
 msgid "Expires"
 msgstr ""
 
-#: src/components/training/TrainingRoster.tsx:87
+#: src/components/training/TrainingRoster.tsx:90
 msgid "Expiring soon"
 msgstr ""
 
@@ -4798,7 +4829,7 @@ msgstr ""
 msgid "Externals are not added to your organisation. They can only see the workspaces you select here."
 msgstr ""
 
-#: src/components/invite/InviteModal.tsx:631
+#: src/components/invite/InviteModal.tsx:671
 msgid "Externals only exist inside a workspace. Pick at least one to send the invite."
 msgstr ""
 
@@ -5107,9 +5138,13 @@ msgstr "Filter by action"
 msgid "Filter by collection"
 msgstr "Filter by collection"
 
-#: src/components/training/StaffTrainingPanel.tsx:55
-msgid "Filter by organisation id"
+#: src/components/training/StaffTrainingPanel.tsx:108
+msgid "Filter by name or id"
 msgstr ""
+
+#: src/components/training/StaffTrainingPanel.tsx:55
+#~ msgid "Filter by organisation id"
+#~ msgstr ""
 
 #: src/components/chat/ChatModeSelector.tsx:68
 msgid "Find contradictions and suggest follow-up questions"
@@ -5471,6 +5506,10 @@ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:504
 msgid "Grant Changemaker trial"
+msgstr ""
+
+#: src/components/training/TrainingRowActions.tsx:305
+msgid "Grant licenses"
 msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2298
@@ -5942,7 +5981,7 @@ msgstr ""
 #~ msgid "Invite people outside your organisation. They get workspace-only access and count toward the seat pool."
 #~ msgstr ""
 
-#: src/components/invite/InviteModal.tsx:565
+#: src/components/invite/InviteModal.tsx:605
 msgid "Invite people to {orgName}"
 msgstr ""
 
@@ -5963,7 +6002,7 @@ msgstr ""
 #~ msgid "Invite sent to 1 workspace."
 #~ msgstr ""
 
-#: src/components/invite/InviteModal.tsx:459
+#: src/components/invite/InviteModal.tsx:499
 msgid "Invite sent."
 msgstr ""
 
@@ -6247,8 +6286,13 @@ msgid "Keep editing"
 msgstr ""
 
 #: src/routes/invite/MyInvitesRoute.tsx:77
+#: src/components/training/TrainingRowActions.tsx:324
 #: src/components/members/PendingInvitesSection.tsx:227
 msgid "Keep it"
+msgstr ""
+
+#: src/components/training/TrainingRowActions.tsx:345
+msgid "Keep license"
 msgstr ""
 
 #: src/components/billing/BillingManager.tsx:549
@@ -6391,11 +6435,16 @@ msgstr "Library creation is in progress"
 msgid "License Plate"
 msgstr "License Plate"
 
-#: src/components/training/StaffTrainingPanel.tsx:83
+#: src/components/training/staffHooks.ts:259
+msgid "License revoked"
+msgstr ""
+
+#: src/components/training/StaffTrainingPanel.tsx:166
 msgid "Licenses"
 msgstr ""
 
-#: src/components/training/staffHooks.ts:127
+#: src/components/training/staffHooks.ts:131
+#: src/components/training/TrainingRowActions.tsx:236
 msgid "Licenses granted"
 msgstr ""
 
@@ -6626,11 +6675,17 @@ msgstr ""
 msgid "Make visible to the whole workspace"
 msgstr ""
 
+#: src/components/training/StaffTrainingPanel.tsx:168
 #: src/components/project/ProjectSharingStrip.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:364
 #: src/components/conversation/ProjectConversationsPanel.tsx:368
 #: src/components/billing/BillingManager.tsx:1566
 msgid "Manage"
+msgstr ""
+
+#: src/components/training/TrainingRowActions.tsx:159
+#: src/components/training/TrainingRowActions.tsx:209
+msgid "Manage attendees"
 msgstr ""
 
 #: src/routes/organisation/OrganisationRoute.tsx:1397
@@ -6652,6 +6707,10 @@ msgstr ""
 #: src/components/chat/ChatTemplatesMenu.tsx:367
 msgid "Manage templates"
 msgstr "Manage templates"
+
+#: src/components/training/TrainingRowActions.tsx:137
+msgid "Manage training"
+msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1164
 msgid "Managed"
@@ -6681,6 +6740,10 @@ msgstr ""
 msgid "Mark all read"
 msgstr "Mark all read"
 
+#: src/components/training/TrainingRowActions.tsx:266
+msgid "Mark as attended"
+msgstr ""
+
 #: src/features/sidebar/views/InboxView.tsx:524
 #: src/features/sidebar/views/InboxView.tsx:624
 #: src/components/inbox/Inbox.tsx:399
@@ -6693,8 +6756,16 @@ msgstr "Mark as read"
 msgid "Mark as unread"
 msgstr ""
 
+#: src/components/training/TrainingRowActions.tsx:161
+msgid "Mark completed"
+msgstr ""
+
 #: src/routes/admin/AdminSettingsRoute.tsx:2926
 msgid "Mark invoice paid"
+msgstr ""
+
+#: src/components/training/TrainingRowActions.tsx:210
+msgid "Mark training completed"
 msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:594
@@ -6787,7 +6858,7 @@ msgstr "Microphone access is still denied. Please check your settings and try ag
 #~ msgid "Minimum 8 characters"
 #~ msgstr "Minimum 8 characters"
 
-#: src/components/invite/InviteModal.tsx:710
+#: src/components/invite/InviteModal.tsx:750
 msgid "mo"
 msgstr ""
 
@@ -6979,7 +7050,7 @@ msgstr "Name Z-A"
 msgid "name@example.com"
 msgstr ""
 
-#: src/components/invite/EmailChipsInput.tsx:161
+#: src/components/invite/EmailChipsInput.tsx:263
 msgid "name@example.com, name2@example.com"
 msgstr ""
 
@@ -7096,7 +7167,7 @@ msgstr "Newest First"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:733
 #: src/routes/project/CreateProjectRoute.tsx:335
-#: src/components/invite/InviteModal.tsx:783
+#: src/components/invite/InviteModal.tsx:823
 msgid "Next"
 msgstr "Next"
 
@@ -7269,7 +7340,7 @@ msgstr ""
 #~ msgid "No insights available. Generate insights for this conversation by visiting<0><1> the project library.</1></0>"
 #~ msgstr "No insights available. Generate insights for this conversation by visiting<0><1> the project library.</1></0>"
 
-#: src/components/invite/InviteModal.tsx:465
+#: src/components/invite/InviteModal.tsx:505
 msgid "No invites went out. Check the list below."
 msgstr ""
 
@@ -7309,7 +7380,7 @@ msgstr ""
 msgid "No new feedback detected yet. Please continue your discussion and try again soon."
 msgstr "No new feedback detected yet. Please continue your discussion and try again soon."
 
-#: src/components/invite/InviteModal.tsx:461
+#: src/components/invite/InviteModal.tsx:501
 msgid "No new invites needed. Check the list below."
 msgstr ""
 
@@ -7465,7 +7536,11 @@ msgstr "No templates match '{searchQuery}'"
 #~ msgid "No templates yet. Create your own or browse All templates."
 #~ msgstr "No templates yet. Create your own or browse All templates."
 
-#: src/components/training/StaffTrainingPanel.tsx:63
+#: src/components/training/StaffTrainingPanel.tsx:130
+msgid "No trainings match your filters."
+msgstr ""
+
+#: src/components/training/StaffTrainingPanel.tsx:128
 msgid "No trainings yet."
 msgstr ""
 
@@ -7521,7 +7596,7 @@ msgstr "No webhooks found"
 msgid "No workspace access yet"
 msgstr ""
 
-#: src/components/invite/InviteModal.tsx:640
+#: src/components/invite/InviteModal.tsx:680
 msgid "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 msgstr ""
 
@@ -7557,7 +7632,7 @@ msgstr ""
 msgid "None scheduled"
 msgstr ""
 
-#: src/components/invite/EmailChipsInput.tsx:226
+#: src/components/invite/EmailChipsInput.tsx:368
 msgid "Not a valid email."
 msgstr ""
 
@@ -7582,16 +7657,21 @@ msgstr ""
 msgid "Not renewing"
 msgstr ""
 
+#: src/components/training/StaffTrainingPanel.tsx:227
+msgid "Not scheduled"
+msgstr ""
+
 #: src/components/project/PortalSettingsOverview.tsx:56
 #: src/components/billing/BillingManager.tsx:1414
 msgid "Not set"
 msgstr ""
 
-#: src/components/training/TrainingRoster.tsx:75
+#: src/components/training/TrainingRoster.tsx:78
 msgid "Not trained"
 msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2077
+#: src/components/training/StaffTrainingPanel.tsx:157
 msgid "Notes"
 msgstr ""
 
@@ -7633,7 +7713,7 @@ msgstr ""
 msgid "Observers are free and read-only, and only for external-client workspaces. They can view the workspace but cannot chat, generate reports, or edit. To let them do more, change their role to External."
 msgstr ""
 
-#: src/components/invite/InviteModal.tsx:659
+#: src/components/invite/InviteModal.tsx:699
 msgid "Observers are only available in workspaces for an external client. Pick only external-client workspaces, or choose a different role."
 msgstr ""
 
@@ -7999,7 +8079,7 @@ msgstr ""
 #: src/routes/onboarding/OnboardingRoute.tsx:117
 #: src/features/sidebar/views/org/OrgHomeView.tsx:75
 #: src/features/sidebar/hooks/useSearchHits.ts:134
-#: src/components/training/StaffTrainingPanel.tsx:71
+#: src/components/training/StaffTrainingPanel.tsx:139
 #: src/components/organisation/CreateOrganisationModal.tsx:165
 msgid "Organisation"
 msgstr ""
@@ -8194,6 +8274,10 @@ msgstr "Page Title"
 msgid "Paid"
 msgstr ""
 
+#: src/components/training/StaffTrainingPanel.tsx:52
+msgid "partially completed"
+msgstr ""
+
 #: src/components/report/ConversationStatusTable.tsx:56
 #: src/components/participant/ParticipantInitiateForm.tsx:45
 msgid "Participant"
@@ -8219,6 +8303,10 @@ msgstr "Participant Features"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:814
 msgid "Participant name and email"
 msgstr "Participant name and email"
+
+#: src/components/training/StaffTrainingPanel.tsx:151
+msgid "Participants"
+msgstr ""
 
 #: src/components/project/ProjectTagsInput.tsx:260
 msgid "Participants will be able to select tags when creating conversations"
@@ -8279,8 +8367,8 @@ msgid "Passwords do not match"
 msgstr "Passwords do not match"
 
 #: src/components/training/StaffTrainingPanel.tsx:56
-msgid "Paste an org id to narrow the list"
-msgstr ""
+#~ msgid "Paste an org id to narrow the list"
+#~ msgstr ""
 
 #: src/routes/participant/ParticipantConversation.tsx:567
 #~ msgid "Pause"
@@ -8376,7 +8464,7 @@ msgstr ""
 msgid "People with access"
 msgstr ""
 
-#: src/components/invite/InviteModal.tsx:671
+#: src/components/invite/InviteModal.tsx:711
 msgid "Per-recipient results:"
 msgstr ""
 
@@ -8416,6 +8504,7 @@ msgstr "Personal information will be replaced with placeholders. Audio playback,
 msgid "Phone"
 msgstr "Phone"
 
+#: src/components/training/TrainingRowActions.tsx:183
 #: src/components/report/ScheduleDateTimePicker.tsx:90
 msgid "Pick a date"
 msgstr "Scegli una data"
@@ -8440,7 +8529,7 @@ msgstr ""
 #~ msgid "Pick at least one member or add an email."
 #~ msgstr ""
 
-#: src/components/invite/InviteModal.tsx:649
+#: src/components/invite/InviteModal.tsx:689
 msgid "Pick at least one workspace to send the invite."
 msgstr ""
 
@@ -8451,6 +8540,10 @@ msgstr ""
 #: src/routes/project/report/ProjectReportRoute.tsx:543
 #~ msgid "Pick date and time"
 #~ msgstr "Pick date and time"
+
+#: src/components/invite/EmailChipsInput.tsx:285
+msgid "Pick from your organisation, or type an email to invite."
+msgstr ""
 
 #: src/components/workspace/WorkspaceInviteWizard.tsx:295
 #~ msgid "Pick members to bring into this workspace."
@@ -9093,7 +9186,7 @@ msgstr "Prompt"
 #~ msgid "Proposed tier"
 #~ msgstr ""
 
-#: src/components/invite/InviteModal.tsx:758
+#: src/components/invite/InviteModal.tsx:798
 msgid "Prorated for the rest of this billing period."
 msgstr ""
 
@@ -9175,7 +9268,7 @@ msgstr "Re-enter new password"
 msgid "Re-use settings from an existing webhook"
 msgstr "Re-use settings from an existing webhook"
 
-#: src/components/invite/InviteModal.tsx:689
+#: src/components/invite/InviteModal.tsx:729
 msgid "Reactivate"
 msgstr ""
 
@@ -9409,7 +9502,7 @@ msgid "Remove"
 msgstr "Remove"
 
 #. placeholder {0}: chip.value
-#: src/components/invite/EmailChipsInput.tsx:249
+#: src/components/invite/EmailChipsInput.tsx:391
 msgid "Remove {0}"
 msgstr ""
 
@@ -9507,6 +9600,10 @@ msgstr "Rename chat"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2410
 msgid "Renewal"
+msgstr ""
+
+#: src/components/training/TrainingRowActions.tsx:144
+msgid "Reopen"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1434
@@ -9672,7 +9769,12 @@ msgstr ""
 #~ msgid "Request workspace | dembrane"
 #~ msgstr ""
 
-#: src/components/training/StaffTrainingPanel.tsx:47
+#: src/components/training/StaffTrainingPanel.tsx:118
+#: src/components/training/StaffTrainingPanel.tsx:145
+msgid "Requested"
+msgstr ""
+
+#: src/components/training/StaffTrainingPanel.tsx:98
 msgid "Requested and scheduled trainings. Mark a training complete to grant each attendee a one-year license."
 msgstr ""
 
@@ -9680,11 +9782,9 @@ msgstr ""
 #~ msgid "requested on {0}"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2164
-#: src/routes/admin/AdminSettingsRoute.tsx:2168
-#: src/routes/admin/AdminSettingsRoute.tsx:2486
-#~ msgid "Requester"
-#~ msgstr ""
+#: src/components/training/StaffTrainingPanel.tsx:142
+msgid "Requester"
+msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1980
 #~ msgid "Requester proposed {0} billing — approving as {approvedBillingPeriod}."
@@ -9716,6 +9816,7 @@ msgstr ""
 #~ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:630
+#: src/components/training/TrainingRowActions.tsx:149
 msgid "Reschedule"
 msgstr "Reschedule"
 
@@ -9872,11 +9973,20 @@ msgstr "Revise"
 msgid "Revision #{revisionNumber}"
 msgstr "Revision #{revisionNumber}"
 
+#: src/components/training/TrainingRowActions.tsx:255
+msgid "Revoke"
+msgstr ""
+
 #: src/components/members/PendingInvitesSection.tsx:189
 #: src/components/members/PendingInvitesSection.tsx:196
 #: src/components/members/PendingInvitesSection.tsx:215
 #: src/components/members/PendingInvitesSection.tsx:226
 msgid "Revoke invite"
+msgstr ""
+
+#: src/components/training/TrainingRowActions.tsx:335
+#: src/components/training/TrainingRowActions.tsx:344
+msgid "Revoke license"
 msgstr ""
 
 #. placeholder {0}: pendingRevoke.email
@@ -9919,6 +10029,7 @@ msgid "Sales invoice issued."
 msgstr ""
 
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:204
+#: src/components/training/TrainingRowActions.tsx:197
 #: src/components/settings/LegalBasisSettingsCard.tsx:164
 #: src/components/settings/ChangePasswordCard.tsx:101
 #: src/components/settings/AccountSettingsCard.tsx:195
@@ -9993,6 +10104,7 @@ msgstr ""
 msgid "Scan the QR code or copy the secret into your app."
 msgstr "Scan the QR code or copy the secret into your app."
 
+#: src/components/training/TrainingRowActions.tsx:151
 #: src/components/report/UpdateReportModalButton.tsx:356
 #: src/components/report/CreateReportForm.tsx:355
 msgid "Schedule"
@@ -10010,7 +10122,12 @@ msgstr "Schedule"
 msgid "Schedule Report"
 msgstr "Schedule Report"
 
-#: src/components/training/StaffTrainingPanel.tsx:80
+#: src/components/training/TrainingRowActions.tsx:178
+msgid "Schedule training"
+msgstr ""
+
+#: src/components/training/StaffTrainingPanel.tsx:119
+#: src/components/training/StaffTrainingPanel.tsx:163
 msgid "Scheduled"
 msgstr ""
 
@@ -10050,6 +10167,10 @@ msgstr ""
 msgid "Search and select the conversations for this chat."
 msgstr "Cerca e seleziona le conversazioni per questa chat."
 
+#: src/components/training/StaffTrainingPanel.tsx:107
+msgid "Search by organisation"
+msgstr ""
+
 #: src/components/conversation/ConversationAccordion.tsx:1154
 msgid "Search conversations"
 msgstr "Search conversations"
@@ -10064,6 +10185,10 @@ msgstr ""
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:632
 msgid "Search people"
+msgstr ""
+
+#: src/components/invite/EmailChipsInput.tsx:262
+msgid "Search people, or type an email"
 msgstr ""
 
 #: src/components/workspace/OrganisationProjectsTable.tsx:176
@@ -10313,6 +10438,10 @@ msgstr "Seleziona fino a 2 aree di focus per il tuo report"
 msgid "dashboard.dembrane.feature.verify.topic.select"
 msgstr "Select which topics participants can use for \"Verify\"."
 
+#: src/components/training/TrainingRowActions.tsx:216
+msgid "Select who attended. Each gets a one-year license to use dembrane in high-risk settings."
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:307
 msgid "participant.select.microphone"
@@ -10347,7 +10476,7 @@ msgid "Send"
 msgstr "Send"
 
 #. placeholder {0}: validChips.length
-#: src/components/invite/InviteModal.tsx:785
+#: src/components/invite/InviteModal.tsx:825
 msgid "Send {0} invites"
 msgstr ""
 
@@ -10355,7 +10484,7 @@ msgstr ""
 msgid "Send a message to start an agentic run."
 msgstr "Send a message to start an agentic run."
 
-#: src/components/invite/InviteModal.tsx:787
+#: src/components/invite/InviteModal.tsx:827
 msgid "Send invite"
 msgstr ""
 
@@ -10389,7 +10518,7 @@ msgstr ""
 #~ msgstr ""
 
 #. placeholder {0}: rows.length
-#: src/components/invite/InviteModal.tsx:468
+#: src/components/invite/InviteModal.tsx:508
 msgid "Sent {sentCount} of {0}. Check the list below."
 msgstr ""
 
@@ -10401,7 +10530,7 @@ msgstr ""
 msgid "Separate (client)"
 msgstr ""
 
-#: src/components/invite/EmailChipsInput.tsx:177
+#: src/components/invite/EmailChipsInput.tsx:289
 msgid "Separate with commas, spaces, or new lines."
 msgstr ""
 
@@ -10872,6 +11001,10 @@ msgstr ""
 msgid "Staff only"
 msgstr ""
 
+#: src/components/training/StaffTrainingPanel.tsx:185
+msgid "Staff-created"
+msgstr ""
+
 #: src/components/invite/RoleSelect.tsx:34
 msgid "Standard access. Collaborates in the workspaces they're added to."
 msgstr ""
@@ -10918,7 +11051,7 @@ msgstr ""
 #: src/routes/admin/AdminSettingsRoute.tsx:1435
 #: src/routes/admin/AdminSettingsRoute.tsx:2399
 #: src/components/workspace/OrganisationUsageRollup.tsx:426
-#: src/components/training/StaffTrainingPanel.tsx:77
+#: src/components/training/StaffTrainingPanel.tsx:160
 #: src/components/report/ConversationStatusTable.tsx:62
 #: src/components/billing/BillingManager.tsx:732
 msgid "Status"
@@ -11424,7 +11557,7 @@ msgstr "These default view templates will be generated when you create your firs
 msgid "These settings are read-only. Only organisation administrators can modify project defaults."
 msgstr ""
 
-#: src/components/invite/InviteModal.tsx:614
+#: src/components/invite/InviteModal.tsx:654
 msgid "These workspaces are billed separately. Each person you add takes a seat in {billingContextCount} billing contexts, each invoiced on its own."
 msgstr ""
 
@@ -11519,7 +11652,7 @@ msgid "This invite link isn't valid for this account"
 msgstr ""
 
 #. placeholder {0}: confirm.length
-#: src/components/invite/InviteModal.tsx:702
+#: src/components/invite/InviteModal.tsx:742
 msgid "This invite spans {0} billing contexts, each invoiced on its own:"
 msgstr ""
 
@@ -11576,6 +11709,10 @@ msgstr ""
 msgid "This link is no longer valid"
 msgstr ""
 
+#: src/components/training/TrainingRowActions.tsx:318
+msgid "This marks the training cancelled. You can reopen it later from the same menu."
+msgstr ""
+
 #: src/routes/admin/AdminSettingsRoute.tsx:828
 msgid "this member"
 msgstr ""
@@ -11591,6 +11728,10 @@ msgstr ""
 
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:183
 msgid "This moves the workspace into its own billing and data context. Its projects will no longer move freely with the rest of your organisation."
+msgstr ""
+
+#: src/components/training/TrainingRowActions.tsx:286
+msgid "This organisation has no members to train yet."
 msgstr ""
 
 #: src/routes/invite/AcceptInviteRoute.tsx:247
@@ -11641,6 +11782,11 @@ msgstr ""
 #: src/components/project/ProjectPortalEditor.tsx:984
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 msgstr "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
+
+#. placeholder {0}: revokeTarget?.app_user_name ?? "this person"
+#: src/components/training/TrainingRowActions.tsx:337
+msgid "This removes the one-year license for {0}. They will no longer count as trained and lose access to high-risk settings. Only do this if the license was granted by mistake."
+msgstr ""
 
 #: src/routes/participant/ParticipantReport.tsx:84
 msgid "This report is not yet available. "
@@ -11864,15 +12010,15 @@ msgstr "total"
 msgid "Total"
 msgstr ""
 
-#: src/components/invite/InviteModal.tsx:747
+#: src/components/invite/InviteModal.tsx:787
 msgid "Total due now"
 msgstr ""
 
-#: src/components/training/TrainingRoster.tsx:83
+#: src/components/training/TrainingRoster.tsx:86
 msgid "Trained"
 msgstr ""
 
-#: src/components/training/TrainingRoster.tsx:83
+#: src/components/training/TrainingRoster.tsx:86
 msgid "Trained until {until}"
 msgstr ""
 
@@ -11884,8 +12030,12 @@ msgstr ""
 msgid "Training"
 msgstr ""
 
-#: src/components/training/staffHooks.ts:85
+#: src/components/training/staffHooks.ts:89
 msgid "Training created"
+msgstr ""
+
+#: src/components/training/TrainingRowActions.tsx:182
+msgid "Training date"
 msgstr ""
 
 #: src/components/training/hooks/index.ts:160
@@ -11894,6 +12044,10 @@ msgstr ""
 
 #: src/features/sidebar/hooks/usePendingActions.ts:41
 msgid "Training required for high-risk use"
+msgstr ""
+
+#: src/components/training/staffHooks.ts:176
+msgid "Training updated"
 msgstr ""
 
 #: src/components/training/WorkspaceTrainingPanel.tsx:28
@@ -11905,7 +12059,7 @@ msgstr ""
 msgid "Training: {0}"
 msgstr ""
 
-#: src/components/training/StaffTrainingPanel.tsx:44
+#: src/components/training/StaffTrainingPanel.tsx:95
 msgid "Trainings"
 msgstr ""
 
@@ -12096,7 +12250,7 @@ msgstr "Two-factor authentication enabled"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:424
 #: src/routes/admin/AdminSettingsRoute.tsx:2420
-#: src/components/training/StaffTrainingPanel.tsx:74
+#: src/components/training/StaffTrainingPanel.tsx:148
 #: src/components/settings/AuditLogsCard.tsx:190
 msgid "Type"
 msgstr "Type"
@@ -12238,6 +12392,11 @@ msgstr "Unsaved changes"
 #: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:77
 msgid "Unsubscribe"
 msgstr "Unsubscribe"
+
+#. placeholder {0}: format(new Date(lic.expires_at), "d MMM yyyy")
+#: src/components/training/TrainingRowActions.tsx:245
+msgid "until {0}"
+msgstr ""
 
 #: src/routes/organisation/OrganisationRoute.tsx:1609
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:95
@@ -13418,7 +13577,7 @@ msgstr "You can try again below."
 msgid "You can't create a workspace yet"
 msgstr ""
 
-#: src/components/invite/EmailChipsInput.tsx:224
+#: src/components/invite/EmailChipsInput.tsx:366
 msgid "You can't invite yourself."
 msgstr ""
 
@@ -13611,7 +13770,7 @@ msgstr ""
 #~ msgid "You're over your included seats. Overage applies on the next bill."
 #~ msgstr ""
 
-#: src/components/invite/InviteModal.tsx:735
+#: src/components/invite/InviteModal.tsx:775
 msgid "You're reusing seats you already paid for this period (someone left), so there's no charge now for those. The renewal reflects them."
 msgstr ""
 
@@ -13815,7 +13974,7 @@ msgstr ""
 msgid "Your plan is back on. You keep your current period."
 msgstr ""
 
-#: src/components/invite/InviteModal.tsx:681
+#: src/components/invite/InviteModal.tsx:721
 msgid "Your plan is inactive. Reactivate it to add members."
 msgstr ""
 
@@ -13872,7 +14031,7 @@ msgstr "Your Views"
 #~ msgid "Yours"
 #~ msgstr "Yours"
 
-#: src/components/invite/InviteModal.tsx:710
+#: src/components/invite/InviteModal.tsx:750
 msgid "yr"
 msgstr ""
 
