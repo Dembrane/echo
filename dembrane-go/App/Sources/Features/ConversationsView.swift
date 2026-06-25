@@ -6,11 +6,21 @@ struct ConversationsView: View {
     @State private var showProjectPicker = false
     @State private var selected: Conversation?
     @State private var pendingDelete: Conversation?
+    @State private var search = ""
+
+    private var filtered: [Conversation] {
+        let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return model.conversations }
+        return model.conversations.filter {
+            $0.displayTitle.localizedCaseInsensitiveContains(query)
+                || ($0.summary?.localizedCaseInsensitiveContains(query) ?? false)
+        }
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                ForEach(model.conversations) { conversation in
+                ForEach(filtered) { conversation in
                     Button {
                         selected = conversation
                     } label: {
@@ -40,8 +50,11 @@ struct ConversationsView: View {
                     } description: {
                         Text("Start your first one.")
                     }
+                } else if filtered.isEmpty {
+                    ContentUnavailableView.search(text: search)
                 }
             }
+            .searchable(text: $search, prompt: "Search conversations")
             .refreshable { await model.loadConversations() }
             .navigationTitle("Conversations")
             .toolbar {
