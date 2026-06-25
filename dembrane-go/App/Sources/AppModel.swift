@@ -28,6 +28,8 @@ final class AppModel {
     /// Drives the "Saving… / Saved" confirmation banner after a recording stops.
     enum SaveState: Equatable { case idle, saving, saved, failed }
     var saveState: SaveState = .idle
+    /// Set when a "Start Recording" intent fires before the app is ready; consumed once ready.
+    private var pendingStartRecording = false
     var loginError: String?
     var isSigningIn = false
     var statusMessage: String?
@@ -154,6 +156,23 @@ final class AppModel {
         await maybeDevAutoRecord()
         await maybeDevAutoAsk()
         #endif
+        processPendingRecordingIfReady()   // honor a "Start Recording" intent fired at launch
+    }
+
+    /// Called when the app becomes active: pick up a "Start Recording" signal
+    /// from the Action Button / Siri / Shortcuts and begin capture.
+    func handleLaunchIntents() {
+        if AppGroup.consumeStartRecordingSignal() { pendingStartRecording = true }
+        processPendingRecordingIfReady()
+    }
+
+    /// Starts capture if an intent asked for it and we're ready (project loaded,
+    /// not already recording). Held until `start()` restores the project, so a
+    /// cold launch from the Action Button still works.
+    private func processPendingRecordingIfReady() {
+        guard pendingStartRecording, !isRecording, selectedProject != nil else { return }
+        pendingStartRecording = false
+        Task { await startRecording() }
     }
 
     /// Dev-only: auto-send an Ask question to verify chat streaming headlessly

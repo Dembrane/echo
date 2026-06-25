@@ -4,6 +4,7 @@ import DembraneCore
 @main
 struct DembraneGoApp: App {
     @State private var model = AppModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -11,6 +12,10 @@ struct DembraneGoApp: App {
                 .environment(model)
                 .tint(BrandColor.royalBlue)   // brand accent app-wide (controls, sheets, alerts)
                 .task { await model.start() }
+                .onChange(of: scenePhase) { _, phase in
+                    // Action Button / Siri "Start Recording" foregrounds the app — act on it.
+                    if phase == .active { model.handleLaunchIntents() }
+                }
         }
     }
 }
