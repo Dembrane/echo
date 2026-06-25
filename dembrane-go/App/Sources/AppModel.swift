@@ -34,12 +34,20 @@ final class AppModel {
     var selectedProject: Project?
     var conversations: [Conversation] = []
 
+    // Ask (chat) state
+    var askConversationIds: Set<String> = []
+    var askMessages: [AskMessage] = []
+    var askStreaming = false
+    var askError: String?
+    private var currentChatId: String?
+
     private static let selectedProjectKey = "dembrane.go.selectedProjectId"
     private static let environmentKey = "dembrane.go.environment"
 
     private let sessionManager: SessionManager
     private var auth: AuthService
     private var api: DembraneAPIClientProtocol
+    private var chatService: ChatService
     private let uploader: ParticipantUploadClient
     private let recorder = AudioRecorder()
     private var liveActivity: Activity<RecordingActivityAttributes>?
@@ -53,6 +61,8 @@ final class AppModel {
         self.auth = auth
         self.api = api
         self.uploader = ParticipantUploadClient(env: environment)
+        self.chatService = ChatService(env: environment,
+                                       tokenProvider: { await sessionManager.accessToken() })
     }
 
     /// Real app stack: Keychain-backed session + live API client (with a
@@ -97,6 +107,20 @@ final class AppModel {
         }
         #if DEBUG
         await maybeDevAutoRecord()
+        await maybeDevAutoAsk()
+        #endif
+    }
+
+    /// Dev-only: auto-send an Ask question to verify chat streaming headlessly
+    /// (env DEMBRANE_DEV_ASK="your question").
+    private func maybeDevAutoAsk() async {
+        #if DEBUG
+        guard phase == .signedIn,
+              let question = ProcessInfo.processInfo.environment["DEMBRANE_DEV_ASK"],
+              !question.isEmpty
+        else { return }
+        selectedTab = .ask
+        await sendAsk(question)
         #endif
     }
 
@@ -152,6 +176,8 @@ final class AppModel {
             env: env,
             tokenProvider: { [sessionManager] in await sessionManager.accessToken() },
             onUnauthorized: { [newAuth] in (try? await newAuth.refresh()) ?? false })
+        chatService = ChatService(env: env,
+                                  tokenProvider: { [sessionManager] in await sessionManager.accessToken() })
     }
 
     func register(firstName: String, lastName: String, email: String, password: String) async {
@@ -320,4 +346,85 @@ final class AppModel {
         pendingAskConversationId = conversation.id
         selectedTab = .ask
     }
+
+    // MARK: - Ask (chat)
+
+    /// Consume a pending swipe-to-Ask: scope the thread to that conversation.
+    func startAskForPending() {
+        guard let id = pendingAskConversationId else { return }
+        pendingAskConversationId = nil
+        askConversationIds = [id]
+        resetAskThread()
+    }
+
+    /// Toggle a conversation in/out of the Ask context. Changing context starts
+    /// a fresh thread (the server scopes context at chat creation).
+    func toggleAskConversation(_ id: String) {
+        if askConversationIds.contains(id) {
+            askConversationIds.remove(id)
+        } else {
+            askConversationIds.insert(id)
+        }
+        resetAskThread()
+    }
+
+    func resetAskThread() {
+        currentChatId = nil
+        askMessages = []
+        askError = nil
+    }
+
+    /// Send a message: lazily create the chat (+ add the selected conversations
+    /// as context), then stream the assistant reply.
+    func sendAsk(_ text: String) async {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !askStreaming, let projectId = selectedProject?.id else { return }
+        askError = nil
+        askMessages.append(AskMessage(role: .user, text: trimmed))
+        askStreaming = true
+        defer { askStreaming = false }
+
+        do {
+            let chatId: String
+            if let existing = currentChatId {
+                chatId = existing
+            } else {
+                let specific = askConversationIds
+                let chat = try await chatService.createChat(
+                    projectId: projectId, autoSelect: specific.isEmpty)
+                currentChatId = chat.id
+                chatId = chat.id
+                for cid in specific {
+                    try? await chatService.addContext(chatId: chatId, conversationId: cid)
+                }
+            }
+
+            let wire = askMessages.map {
+                ChatWireMessage(role: $0.role == .user ? "user" : "assistant", content: $0.text)
+            }
+            askMessages.append(AskMessage(role: .assistant, text: ""))
+            let idx = askMessages.count - 1
+
+            for try await event in await chatService.streamMessage(chatId: chatId, messages: wire) {
+                switch event {
+                case .text(let delta): askMessages[idx].text += delta
+                case .references(let refs): askMessages[idx].references = refs
+                case .error(let message): askError = message
+                case .other: break
+                }
+            }
+        } catch {
+            NSLog("dembrane-go Ask failed: \(error)")
+            askError = "Couldn't get a response. Please try again."
+        }
+    }
+}
+
+/// A single Ask message for display.
+struct AskMessage: Identifiable, Equatable {
+    enum Role { case user, assistant }
+    let id = UUID()
+    let role: Role
+    var text: String
+    var references: [ConversationReference] = []
 }
