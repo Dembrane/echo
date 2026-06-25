@@ -3,43 +3,62 @@ import DembraneCore
 import SwiftUI
 import WidgetKit
 
-/// The recording Live Activity: a Voice-Memos-style red mic + live timer on the
-/// Lock Screen and across the Dynamic Island presentations.
+/// The recording Live Activity: the dembrane logomark + a live timer, with a
+/// red recording cue, across the Lock Screen and Dynamic Island presentations.
 struct RecordingLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: RecordingActivityAttributes.self) { context in
             // Lock Screen / banner
             HStack(spacing: 12) {
-                Image(systemName: "mic.fill").foregroundStyle(.red)
+                logomark.frame(width: 30, height: 30)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Recording")
+                    Text("Recording").font(.headline)
                     Text("saving to \(context.state.projectName)")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
+                recordingDot
                 timer(from: context.state.startedAt).font(.title3)
             }
             .padding()
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Label("Recording", systemImage: "mic.fill").foregroundStyle(.red)
+                    logomark.frame(width: 26, height: 26)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    timer(from: context.state.startedAt).frame(width: 60)
+                    HStack(spacing: 5) {
+                        recordingDot
+                        timer(from: context.state.startedAt)
+                    }
+                }
+                DynamicIslandExpandedRegion(.center) {
+                    Text("Recording").font(.headline)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     Text("saving to \(context.state.projectName)")
                         .font(.caption).foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
             } compactLeading: {
-                Image(systemName: "mic.fill").foregroundStyle(.red)
+                logomark.frame(width: 22, height: 22)
             } compactTrailing: {
-                timer(from: context.state.startedAt).frame(width: 44)
+                timer(from: context.state.startedAt)
+                    .foregroundStyle(.red)
+                    .frame(width: 50)
             } minimal: {
-                Image(systemName: "mic.fill").foregroundStyle(.red)
+                logomark.frame(width: 22, height: 22)
             }
+            .keylineTint(.red)
         }
+    }
+
+    private var logomark: some View {
+        Image("Logomark").resizable().scaledToFit()
+    }
+
+    private var recordingDot: some View {
+        Circle().fill(.red).frame(width: 7, height: 7)
     }
 
     private func timer(from start: Date) -> some View {
