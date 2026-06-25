@@ -7,6 +7,7 @@ struct AskView: View {
     @Environment(AppModel.self) private var model
     @State private var input = ""
     @State private var showContextPicker = false
+    @State private var showHistory = false
 
     var body: some View {
         NavigationStack {
@@ -19,6 +20,12 @@ struct AskView: View {
             .navigationTitle("Ask")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showHistory = true } label: {
+                        Image(systemName: "clock.arrow.circlepath")
+                    }
+                    .accessibilityLabel("Chat history")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { model.resetAskThread() } label: {
                         Image(systemName: "square.and.pencil")
@@ -28,6 +35,7 @@ struct AskView: View {
                 }
             }
             .sheet(isPresented: $showContextPicker) { AskContextPicker() }
+            .sheet(isPresented: $showHistory) { AskHistoryView() }
             .onAppear { model.startAskForPending() }
         }
     }
@@ -211,6 +219,48 @@ private struct AskContextPicker: View {
         guard !search.isEmpty else { return model.conversations }
         return model.conversations.filter {
             $0.displayTitle.localizedCaseInsensitiveContains(search)
+        }
+    }
+}
+
+/// Past chats for the project; tap to resume.
+private struct AskHistoryView: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
+    @State private var chats: [Chat] = []
+    @State private var loading = true
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if loading {
+                    HStack { Spacer(); ProgressView(); Spacer() }
+                } else if chats.isEmpty {
+                    Text("No past chats yet.").foregroundStyle(.secondary)
+                } else {
+                    ForEach(chats) { chat in
+                        Button {
+                            Task { await model.openChat(chat); dismiss() }
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(chat.name?.isEmpty == false ? chat.name! : "Chat")
+                                    .foregroundStyle(.primary).lineLimit(1)
+                                if let date = chat.dateCreated {
+                                    Text(date.formatted(date: .abbreviated, time: .shortened))
+                                        .font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("History")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .task {
+                chats = await model.recentChats()
+                loading = false
+            }
         }
     }
 }

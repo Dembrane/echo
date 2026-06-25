@@ -511,6 +511,24 @@ final class AppModel {
         askError = nil
     }
 
+    /// Past chats for the selected project (history).
+    func recentChats() async -> [Chat] {
+        guard let projectId = selectedProject?.id else { return [] }
+        return (try? await chatService.listChats(projectId: projectId)) ?? []
+    }
+
+    /// Resume a past chat: load its messages into the thread.
+    func openChat(_ chat: Chat) async {
+        let messages = (try? await chatService.chatMessages(chatId: chat.id)) ?? []
+        askMessages = messages.compactMap { message in
+            guard let text = message.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !text.isEmpty else { return nil }
+            return AskMessage(role: message.messageFrom == "user" ? .user : .assistant, text: text)
+        }
+        currentChatId = chat.id
+        askError = nil
+    }
+
     /// Send a message: lazily create the chat (+ add the selected conversations
     /// as context), then stream the assistant reply.
     func sendAsk(_ text: String) async {

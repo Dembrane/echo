@@ -4,7 +4,19 @@ import Foundation
 public struct Chat: Decodable, Sendable, Identifiable {
     public let id: String
     public let projectId: String?
+    public let name: String?
+    public let dateCreated: Date?
 }
+
+/// A persisted chat message (history).
+public struct ChatMessage: Decodable, Sendable, Identifiable {
+    public let id: String
+    public let messageFrom: String       // "user" | "assistant" | "dembrane"
+    public let text: String?
+    public let dateCreated: Date?
+}
+
+private struct ChatListResponse: Decodable { let chats: [Chat] }
 
 /// One message in the request body sent to the stream endpoint.
 public struct ChatWireMessage: Encodable, Sendable {
@@ -58,6 +70,24 @@ public actor ChatService {
         let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
         guard (200..<300).contains(code) else { throw APIError.badStatus(code) }
         return try DembraneJSON.decoder().decode(Chat.self, from: data)
+    }
+
+    /// Past chats for a project (those with messages), newest first.
+    public func listChats(projectId: String) async throws -> [Chat] {
+        let req = await authed(endpoints.chats(projectId: projectId), method: "GET")
+        let (data, resp) = try await session.data(for: req)
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+        guard (200..<300).contains(code) else { throw APIError.badStatus(code) }
+        return try DembraneJSON.decoder().decode(ChatListResponse.self, from: data).chats
+    }
+
+    /// Message history for a chat (oldest first for display).
+    public func chatMessages(chatId: String) async throws -> [ChatMessage] {
+        let req = await authed(endpoints.chatMessages(chatId: chatId), method: "GET")
+        let (data, resp) = try await session.data(for: req)
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+        guard (200..<300).contains(code) else { throw APIError.badStatus(code) }
+        return try DembraneJSON.decoder().decode([ChatMessage].self, from: data)
     }
 
     /// Scope the chat to one conversation (specific-context mode).
