@@ -46,6 +46,15 @@ struct ConversationsView: View {
             .overlay {
                 if model.conversationsLoading && model.conversations.isEmpty {
                     ProgressView()
+                } else if model.conversationsError && model.conversations.isEmpty {
+                    ContentUnavailableView {
+                        Label("Couldn't load", systemImage: "wifi.exclamationmark")
+                    } description: {
+                        Text("Check your connection and try again.")
+                    } actions: {
+                        Button("Retry") { Task { await model.loadConversations() } }
+                            .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
+                    }
                 } else if model.conversations.isEmpty {
                     ContentUnavailableView {
                         Label("No conversations yet", systemImage: "waveform")

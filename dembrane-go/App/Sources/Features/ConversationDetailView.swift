@@ -108,6 +108,9 @@ struct ConversationDetailView: View {
             if let duration = current.duration, duration > 0 {
                 Text("· \(Self.format(duration))")
             }
+            if let date = current.createdAt {
+                Text("· \(date.formatted(date: .abbreviated, time: .shortened))")
+            }
         }
         .font(.caption).foregroundStyle(.secondary)
     }

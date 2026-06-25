@@ -35,6 +35,7 @@ final class AppModel {
     var selectedProject: Project?
     var conversations: [Conversation] = []
     var conversationsLoading = false
+    var conversationsError = false
 
     // Ask (chat) state
     var askConversationIds: Set<String> = []
@@ -386,8 +387,13 @@ final class AppModel {
     func loadConversations() async {
         guard let projectId = selectedProject?.id else { conversations = []; return }
         conversationsLoading = true
+        conversationsError = false
         defer { conversationsLoading = false }
-        conversations = (try? await api.conversations(projectId: projectId)) ?? []
+        do {
+            conversations = try await api.conversations(projectId: projectId)
+        } catch {
+            conversationsError = true
+        }
     }
 
     /// Create a project in the default workspace, then select it.
