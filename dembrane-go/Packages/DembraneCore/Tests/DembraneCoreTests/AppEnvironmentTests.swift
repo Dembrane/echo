@@ -2,8 +2,8 @@ import XCTest
 @testable import DembraneCore
 
 final class AppEnvironmentTests: XCTestCase {
-    func testEchoNextIsDefault() {
-        XCTAssertEqual(AppEnvironment.default, .echoNext)
+    func testProductionIsDefault() {
+        XCTAssertEqual(AppEnvironment.default, .production)
     }
 
     func testEchoNextURLs() {
