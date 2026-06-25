@@ -12,6 +12,7 @@ struct ConversationDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var full: Conversation?
     @State private var copied: CopyTarget?
+    @State private var showEdit = false
 
     private enum CopyTarget { case summary, transcript }
     private var current: Conversation { full ?? conversation }
@@ -38,11 +39,21 @@ struct ConversationDetailView: View {
                         Label("Ask", systemImage: "sparkles")
                     }
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showEdit = true } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                 }
             }
             .task { full = try? await model.conversationDetail(id: conversation.id) }
+            .sheet(isPresented: $showEdit, onDismiss: {
+                Task { full = try? await model.conversationDetail(id: conversation.id) }
+            }) {
+                ConversationEditView(conversation: current)
+            }
         }
         .presentationDragIndicator(.visible)
     }
@@ -79,6 +90,7 @@ struct ConversationDetailView: View {
                 accessibilityCopy: "Copy transcript",
                 isCopied: copied == .transcript,
                 canCopy: hasTranscript,
+                shareText: hasTranscript ? transcript : nil,
                 onCopy: { if let transcript { copy(transcript, as: .transcript) } }) {
             if let transcript, hasTranscript {
                 Text(transcript)
@@ -98,13 +110,20 @@ struct ConversationDetailView: View {
         accessibilityCopy: String,
         isCopied: Bool,
         canCopy: Bool = true,
+        shareText: String? = nil,
         onCopy: @escaping () -> Void,
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
+            HStack(spacing: 16) {
                 Text(title).font(.headline).foregroundStyle(.primary)
                 Spacer()
+                if let shareText {
+                    ShareLink(item: shareText) {
+                        Image(systemName: "square.and.arrow.up").font(.subheadline)
+                    }
+                    .tint(BrandColor.royalBlue)
+                }
                 if canCopy {
                     Button(action: onCopy) {
                         Image(systemName: isCopied ? "checkmark" : "doc.on.doc")

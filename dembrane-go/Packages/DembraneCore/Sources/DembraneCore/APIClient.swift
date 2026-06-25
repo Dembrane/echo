@@ -13,6 +13,7 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func projects(workspaceId: String) async throws -> [Project]
     func conversations(projectId: String) async throws -> [Conversation]
     func conversation(id: String) async throws -> Conversation
+    func updateConversation(id: String, fields: [String: String]) async throws
     func deleteConversation(id: String) async throws
     func createProject(workspaceId: String, name: String) async throws -> Project
 }
@@ -70,6 +71,10 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
         try await get(endpoints.conversation(id: id), as: Conversation.self)
     }
 
+    public func updateConversation(id: String, fields: [String: String]) async throws {
+        try await sendJSON(endpoints.conversation(id: id), method: "PATCH", body: fields)
+    }
+
     public func deleteConversation(id: String) async throws {
         try await send(endpoints.deleteConversation(id: id), method: "DELETE")
     }
@@ -77,6 +82,24 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         try await post(endpoints.projects(workspaceId: workspaceId),
                        body: ["name": name, "language": "en"], as: Project.self)
+    }
+
+    /// Authed request with a JSON body and no decoded response (e.g. PATCH).
+    private func sendJSON(_ url: URL, method: String, body: [String: Any], retrying: Bool = true) async throws {
+        var req = URLRequest(url: url)
+        req.httpMethod = method
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let token = await tokenProvider() {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (_, resp) = try await session.data(for: req)
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+        if code == 401, retrying, let onUnauthorized, await onUnauthorized() {
+            return try await sendJSON(url, method: method, body: body, retrying: false)
+        }
+        guard (200..<300).contains(code) else { throw APIError.badStatus(code) }
     }
 
     /// Authed request with no body and no decoded response (e.g. DELETE).
@@ -129,6 +152,7 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
                      duration: 312, isFinished: true, isAudioProcessingFinished: true,
                      locked: false, lockReason: nil, createdAt: nil)
     }
+    public func updateConversation(id: String, fields: [String: String]) async throws {}
     public func deleteConversation(id: String) async throws {}
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         Project(id: "p_go", name: name, workspaceId: workspaceId, language: "en")

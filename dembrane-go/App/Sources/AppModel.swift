@@ -291,6 +291,17 @@ final class AppModel {
         try await api.conversation(id: id)
     }
 
+    /// Edit a conversation's title / participant name / summary, then refresh
+    /// the list so the row reflects the change.
+    func updateConversation(id: String, title: String, participantName: String, summary: String) async throws {
+        try await api.updateConversation(id: id, fields: [
+            "title": title,
+            "participant_name": participantName,
+            "summary": summary,
+        ])
+        await loadConversations()
+    }
+
     /// Soft-delete (recoverable for a grace period server-side). Removes the row
     /// optimistically and restores it if the request fails.
     func deleteConversation(_ conversation: Conversation) async {
