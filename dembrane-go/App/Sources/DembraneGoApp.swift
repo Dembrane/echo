@@ -9,6 +9,7 @@ struct DembraneGoApp: App {
         WindowGroup {
             RootView()
                 .environment(model)
+                .tint(BrandColor.royalBlue)   // brand accent app-wide (controls, sheets, alerts)
                 .task { await model.start() }
         }
     }
