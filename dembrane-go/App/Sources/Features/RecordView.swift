@@ -14,6 +14,13 @@ struct RecordView: View {
                     .font(.title2)
                     .foregroundStyle(.primary)
 
+                if model.isRecording, let start = model.recordingStartedAt {
+                    Text(timerInterval: start...Date.distantFuture, countsDown: false)
+                        .monospacedDigit()
+                        .font(.system(.title3, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+
                 VStack(spacing: 6) {
                     Text("Saving to").font(.caption).foregroundStyle(.secondary)
                     Button {

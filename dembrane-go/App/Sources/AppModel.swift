@@ -19,6 +19,7 @@ final class AppModel {
     var trainingOptIn = false
     let defaultProjectName = "go"
     var isRecording = false
+    var recordingStartedAt: Date?
     var loginError: String?
     var isSigningIn = false
     var statusMessage: String?
@@ -232,6 +233,7 @@ final class AppModel {
         }
 
         captureStart = Date()
+        recordingStartedAt = captureStart
         captureConversationId = nil
         pendingSegments = []
         chunkUploads = []
@@ -322,6 +324,7 @@ final class AppModel {
     private func cleanupCapture() {
         captureConversationId = nil
         captureStart = nil
+        recordingStartedAt = nil
         pendingSegments = []
         chunkUploads = []
         initiateTask = nil
@@ -382,6 +385,25 @@ final class AppModel {
     func loadConversations() async {
         guard let projectId = selectedProject?.id else { conversations = []; return }
         conversations = (try? await api.conversations(projectId: projectId)) ?? []
+    }
+
+    /// Create a project in the default workspace, then select it.
+    @discardableResult
+    func createProject(name: String) async -> Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              let workspace = workspaces.first(where: { $0.isDefault }) ?? workspaces.first
+        else { return false }
+        do {
+            let project = try await api.createProject(workspaceId: workspace.id, name: trimmed)
+            let wp = WorkspaceProject(project: project, workspace: workspace)
+            allProjects.append(wp)
+            selectProject(wp)
+            return true
+        } catch {
+            statusMessage = "Couldn't create the project."
+            return false
+        }
     }
 
     func selectProject(_ workspaceProject: WorkspaceProject) {

@@ -8,6 +8,9 @@ struct ProjectPicker: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var search = ""
+    @State private var showNewProject = false
+    @State private var newProjectName = ""
+    @State private var creating = false
     let onSelect: (WorkspaceProject) -> Void
 
     var body: some View {
@@ -37,6 +40,25 @@ struct ProjectPicker: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showNewProject = true } label: { Image(systemName: "plus") }
+                        .accessibilityLabel("New project")
+                }
+            }
+            .alert("New project", isPresented: $showNewProject) {
+                TextField("Project name", text: $newProjectName)
+                Button("Cancel", role: .cancel) { newProjectName = "" }
+                Button("Create") {
+                    let name = newProjectName
+                    newProjectName = ""
+                    Task {
+                        creating = true
+                        if await model.createProject(name: name) { dismiss() }
+                        creating = false
+                    }
+                }
+            } message: {
+                Text("Recordings and chats live inside a project.")
             }
         }
     }
