@@ -41,6 +41,12 @@ targets:
     dependencies:
       - package: DembraneCore
       - target: DembraneGoWidgets
+      - target: DembraneGoShare
+    entitlements:
+      path: App/DembraneGo.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.dembrane.go
     info:
       path: App/Info.plist
       properties:
@@ -82,6 +88,34 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: "com.dembrane.go.Widgets"
+
+  DembraneGoShare:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: ShareExtension
+    dependencies:
+      - package: DembraneCore
+    entitlements:
+      path: ShareExtension/DembraneGoShare.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.dembrane.go
+    info:
+      path: ShareExtension/Info.plist
+      properties:
+        CFBundleDisplayName: "dembrane Go"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule: "SUBQUERY(extensionItems, $item, SUBQUERY($item.attachments, $att, ANY $att.registeredTypeIdentifiers UTI-CONFORMS-TO \"public.audio\").@count >= 1).@count == 1"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "com.dembrane.go.Share"
 
   DembraneGoTests:
     type: bundle.unit-test

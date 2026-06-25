@@ -213,6 +213,7 @@ final class AppModel {
             onUnauthorized: { [newAuth] in (try? await newAuth.refresh()) ?? false })
         chatService = ChatService(env: env,
                                   tokenProvider: { [sessionManager] in await sessionManager.accessToken() })
+        AppGroup.write(projectId: selectedProject?.id, environment: env)   // keep the Share Extension in sync
     }
 
     func register(firstName: String, lastName: String, email: String, password: String) async {
@@ -580,6 +581,7 @@ final class AppModel {
     private func persistSelectedProject() {
         guard let project = selectedProject, let data = try? JSONEncoder().encode(project) else { return }
         UserDefaults.standard.set(data, forKey: Self.selectedProjectKey)
+        AppGroup.write(projectId: project.id, environment: environment)   // for the Share Extension
     }
 
     private func restoredProject() -> Project? {

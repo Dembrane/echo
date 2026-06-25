@@ -2,6 +2,9 @@
 *.xcodeproj
 *.xcworkspace
 App/Info.plist
+App/DembraneGo.entitlements
+ShareExtension/Info.plist
+ShareExtension/DembraneGoShare.entitlements
 
 # Local tooling (fetched xcodegen binary)
 .tooling/
