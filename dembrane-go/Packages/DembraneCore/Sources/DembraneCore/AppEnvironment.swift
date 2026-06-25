@@ -1,12 +1,12 @@
 import Foundation
 
-/// Which dembrane backend the app talks to. Default is echo-next.
+/// Which dembrane backend the app talks to. Default is production.
 public enum AppEnvironment: String, CaseIterable, Sendable, Codable {
-    case echoNext
     case production
+    case echoNext
     case local
 
-    public static let `default`: AppEnvironment = .echoNext
+    public static let `default`: AppEnvironment = .production
 
     /// FastAPI base, including the trailing `/api` segment.
     public var apiBaseURL: URL {

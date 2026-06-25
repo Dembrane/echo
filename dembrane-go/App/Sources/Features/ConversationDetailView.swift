@@ -142,33 +142,48 @@ struct ConversationDetailView: View {
         }
     }
 
-    /// Prefer the merged transcript; fall back to the per-chunk transcripts
-    /// (merged_transcript stays null until the full merge finishes).
+    /// Transcribed chunks in order (those with text).
+    private var orderedChunks: [ConversationChunk] {
+        chunks
+            .sorted { ($0.timestamp ?? .distantPast) < ($1.timestamp ?? .distantPast) }
+            .filter { !($0.transcript?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) }
+    }
+
+    /// Full transcript text for copy/share — merged if present, else chunks joined.
     private var transcriptText: String {
         if let merged = current.mergedTranscript?.trimmingCharacters(in: .whitespacesAndNewlines),
            !merged.isEmpty {
             return merged
         }
-        return chunks
-            .sorted { ($0.timestamp ?? .distantPast) < ($1.timestamp ?? .distantPast) }
+        return orderedChunks
             .compactMap { $0.transcript?.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
             .joined(separator: " ")
     }
 
     @ViewBuilder private var transcriptSection: some View {
-        let transcript = transcriptText
-        let hasTranscript = !transcript.isEmpty
+        let merged = current.mergedTranscript?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasText = !transcriptText.isEmpty
         section(title: "Transcript",
                 accessibilityCopy: "Copy transcript",
                 isCopied: copied == .transcript,
-                canCopy: hasTranscript,
-                shareText: hasTranscript ? transcript : nil,
-                onCopy: { if hasTranscript { copy(transcript, as: .transcript) } }) {
-            if hasTranscript {
-                Text(transcript)
-                    .textSelection(.enabled)
-                    .foregroundStyle(.primary)
+                canCopy: hasText,
+                shareText: hasText ? transcriptText : nil,
+                onCopy: { if hasText { copy(transcriptText, as: .transcript) } }) {
+            if let merged, !merged.isEmpty {
+                Text(merged).textSelection(.enabled).foregroundStyle(.primary)
+            } else if !orderedChunks.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(orderedChunks) { chunk in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(offsetLabel(chunk))
+                                .font(.caption2.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                            Text(chunk.transcript ?? "")
+                                .textSelection(.enabled)
+                                .foregroundStyle(.primary)
+                        }
+                    }
+                }
             } else if loadingTranscript {
                 HStack(spacing: 8) {
                     ProgressView()
@@ -181,6 +196,13 @@ struct ConversationDetailView: View {
                     .foregroundStyle(.secondary)
             }
         }
+    }
+
+    /// Timestamp of a chunk relative to the first chunk (M:SS).
+    private func offsetLabel(_ chunk: ConversationChunk) -> String {
+        guard let first = orderedChunks.first?.timestamp, let t = chunk.timestamp else { return "" }
+        let seconds = Int(max(0, t.timeIntervalSince(first)))
+        return String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
 
     private func section<Content: View>(

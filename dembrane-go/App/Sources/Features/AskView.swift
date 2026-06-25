@@ -13,6 +13,7 @@ struct AskView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 contextBar
+                if !contextConversations.isEmpty { contextChips }
                 Divider()
                 content
                 inputBar
@@ -62,11 +63,25 @@ struct AskView: View {
     }
 
     private var contextLabel: String {
-        let names = contextConversations.map(\.displayTitle)
-        switch names.count {
-        case 0: return "All of \(model.selectedProject?.name ?? "project")"
-        case 1: return names[0]
-        default: return "\(names.count) conversations"
+        let count = contextConversations.count
+        if count == 0 { return "Asking across all of \(model.selectedProject?.name ?? "project")" }
+        return "Focused on \(count) conversation\(count == 1 ? "" : "s")"
+    }
+
+    private var contextChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(contextConversations) { conv in
+                    Text(conv.displayTitle)
+                        .font(.caption)
+                        .lineLimit(1)
+                        .padding(.horizontal, 10).padding(.vertical, 5)
+                        .background(BrandColor.royalBlue.opacity(0.12), in: .capsule)
+                        .foregroundStyle(BrandColor.royalBlue)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 8)
         }
     }
 
