@@ -17,6 +17,8 @@ struct ConversationDetailView: View {
     @State private var showTags = false
     @State private var confirmDelete = false
     @State private var tags: [ProjectTag] = []
+    @State private var chunks: [ConversationChunk] = []
+    @State private var loadingTranscript = true
 
     private enum CopyTarget { case summary, transcript }
     private var current: Conversation { full ?? conversation }
@@ -61,8 +63,13 @@ struct ConversationDetailView: View {
                 }
             }
             .task {
-                full = try? await model.conversationDetail(id: conversation.id)
-                tags = (try? await model.conversationTags(conversation.id)) ?? []
+                async let detailTask = model.conversationDetail(id: conversation.id)
+                async let chunksTask = model.conversationChunks(id: conversation.id)
+                async let tagsTask = model.conversationTags(conversation.id)
+                full = try? await detailTask
+                chunks = (try? await chunksTask) ?? []
+                tags = (try? await tagsTask) ?? []
+                loadingTranscript = false
             }
             .sheet(isPresented: $showEdit, onDismiss: {
                 Task { full = try? await model.conversationDetail(id: conversation.id) }
@@ -135,22 +142,41 @@ struct ConversationDetailView: View {
         }
     }
 
+    /// Prefer the merged transcript; fall back to the per-chunk transcripts
+    /// (merged_transcript stays null until the full merge finishes).
+    private var transcriptText: String {
+        if let merged = current.mergedTranscript?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !merged.isEmpty {
+            return merged
+        }
+        return chunks
+            .sorted { ($0.timestamp ?? .distantPast) < ($1.timestamp ?? .distantPast) }
+            .compactMap { $0.transcript?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
     @ViewBuilder private var transcriptSection: some View {
-        let transcript = current.mergedTranscript?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let hasTranscript = !(transcript ?? "").isEmpty
+        let transcript = transcriptText
+        let hasTranscript = !transcript.isEmpty
         section(title: "Transcript",
                 accessibilityCopy: "Copy transcript",
                 isCopied: copied == .transcript,
                 canCopy: hasTranscript,
                 shareText: hasTranscript ? transcript : nil,
-                onCopy: { if let transcript { copy(transcript, as: .transcript) } }) {
-            if let transcript, hasTranscript {
+                onCopy: { if hasTranscript { copy(transcript, as: .transcript) } }) {
+            if hasTranscript {
                 Text(transcript)
                     .textSelection(.enabled)
                     .foregroundStyle(.primary)
+            } else if loadingTranscript {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Loading…").foregroundStyle(.secondary)
+                }
             } else {
                 Text(current.isAudioProcessingFinished == true
-                     ? "No transcript available yet."
+                     ? "No transcript available."
                      : "Transcribing…")
                     .foregroundStyle(.secondary)
             }

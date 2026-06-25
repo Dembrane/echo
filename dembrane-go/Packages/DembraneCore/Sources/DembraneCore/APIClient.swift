@@ -13,6 +13,7 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func projects(workspaceId: String) async throws -> [Project]
     func conversations(projectId: String) async throws -> [Conversation]
     func conversation(id: String) async throws -> Conversation
+    func conversationChunks(id: String) async throws -> [ConversationChunk]
     func updateConversation(id: String, fields: [String: String]) async throws
     func moveConversation(id: String, targetProjectId: String) async throws
     func deleteConversation(id: String) async throws
@@ -83,6 +84,10 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
     public func moveConversation(id: String, targetProjectId: String) async throws {
         try await sendJSON(endpoints.moveConversation(id: id), method: "POST",
                            body: ["target_project_id": targetProjectId])
+    }
+
+    public func conversationChunks(id: String) async throws -> [ConversationChunk] {
+        try await get(endpoints.conversationChunks(id: id), as: [ConversationChunk].self)
     }
 
     public func deleteConversation(id: String) async throws {
@@ -181,6 +186,11 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
     public func updateConversation(id: String, fields: [String: String]) async throws {}
     public func moveConversation(id: String, targetProjectId: String) async throws {}
     public func deleteConversation(id: String) async throws {}
+    public func conversationChunks(id: String) async throws -> [ConversationChunk] {
+        [ConversationChunk(id: "ck1", conversationId: id,
+                           transcript: "Alice: Morning everyone. Bob: Let's review the launch plan.",
+                           timestamp: nil, source: "GO_IOS")]
+    }
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         Project(id: "p_go", name: name, workspaceId: workspaceId, language: "en")
     }

@@ -44,7 +44,9 @@ struct ConversationsView: View {
             }
             .listStyle(.plain)
             .overlay {
-                if model.conversations.isEmpty {
+                if model.conversationsLoading && model.conversations.isEmpty {
+                    ProgressView()
+                } else if model.conversations.isEmpty {
                     ContentUnavailableView {
                         Label("No conversations yet", systemImage: "waveform")
                     } description: {

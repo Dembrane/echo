@@ -181,38 +181,70 @@ private struct AskBubble: View {
     }
 }
 
-/// Multi-select the conversations the chat should focus on.
+/// Multi-select the conversations the chat should focus on. Selection is local
+/// and applied on Done, so toggling several doesn't reset the thread each time.
 private struct AskContextPicker: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var search = ""
+    @State private var selected: Set<String> = []
+    @State private var primed = false
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
                     ForEach(filtered) { conv in
-                        Button { model.toggleAskConversation(conv.id) } label: {
-                            HStack {
-                                Text(conv.displayTitle).foregroundStyle(.primary).lineLimit(1)
-                                Spacer()
-                                if model.askConversationIds.contains(conv.id) {
-                                    Image(systemName: "checkmark").foregroundStyle(BrandColor.royalBlue)
+                        Button { toggle(conv.id) } label: {
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: selected.contains(conv.id) ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(selected.contains(conv.id) ? BrandColor.royalBlue : .secondary)
+                                    .font(.title3)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(conv.displayTitle).foregroundStyle(.primary).lineLimit(1)
+                                    if let summary = conv.summary?.trimmingCharacters(in: .whitespacesAndNewlines),
+                                       !summary.isEmpty {
+                                        Text(summary).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                                    }
                                 }
                             }
                         }
                     }
-                } header: {
-                    Text("Choose conversations to focus on. Leave empty to ask across the whole project.")
+                } footer: {
+                    Text("Leave empty to ask across the whole project.")
+                }
+            }
+            .overlay {
+                if model.conversations.isEmpty {
+                    if model.conversationsLoading {
+                        ProgressView()
+                    } else {
+                        ContentUnavailableView("No conversations",
+                                               systemImage: "waveform",
+                                               description: Text("Record one first."))
+                    }
                 }
             }
             .searchable(text: $search, prompt: "Search conversations")
-            .navigationTitle("Context")
+            .navigationTitle(selected.isEmpty ? "Choose context" : "\(selected.count) selected")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        model.setAskContext(selected)
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                if !primed { selected = model.askConversationIds; primed = true }
             }
         }
+    }
+
+    private func toggle(_ id: String) {
+        if selected.contains(id) { selected.remove(id) } else { selected.insert(id) }
     }
 
     private var filtered: [Conversation] {

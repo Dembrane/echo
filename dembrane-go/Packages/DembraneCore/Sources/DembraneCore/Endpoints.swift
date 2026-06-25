@@ -27,6 +27,9 @@ public struct DembraneEndpoints: Sendable, Equatable {
     public func conversation(id: String) -> URL {
         api.appending(path: "v2/bff/conversations/\(id)")
     }
+    public func conversationChunks(id: String) -> URL {
+        api.appending(path: "v2/bff/conversations/\(id)/chunks")
+    }
     /// Soft-delete (sets deleted_at; audio kept for a grace period). Note: this
     /// lives on the v1 `/api/conversations/{id}` route, not under `/v2/bff`.
     public func deleteConversation(id: String) -> URL {

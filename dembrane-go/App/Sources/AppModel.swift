@@ -34,6 +34,7 @@ final class AppModel {
     var allProjects: [WorkspaceProject] = []
     var selectedProject: Project?
     var conversations: [Conversation] = []
+    var conversationsLoading = false
 
     // Ask (chat) state
     var askConversationIds: Set<String> = []
@@ -384,6 +385,8 @@ final class AppModel {
 
     func loadConversations() async {
         guard let projectId = selectedProject?.id else { conversations = []; return }
+        conversationsLoading = true
+        defer { conversationsLoading = false }
         conversations = (try? await api.conversations(projectId: projectId)) ?? []
     }
 
@@ -415,6 +418,12 @@ final class AppModel {
     /// Full conversation detail (summary + merged transcript).
     func conversationDetail(id: String) async throws -> Conversation {
         try await api.conversation(id: id)
+    }
+
+    /// Per-chunk transcripts — shown while `merged_transcript` is still null
+    /// (it only fills in after the full merge finishes).
+    func conversationChunks(id: String) async throws -> [ConversationChunk] {
+        try await api.conversationChunks(id: id)
     }
 
     /// Edit a conversation's title / participant name / summary, then refresh
@@ -502,6 +511,14 @@ final class AppModel {
         } else {
             askConversationIds.insert(id)
         }
+        resetAskThread()
+    }
+
+    /// Replace the Ask context in one shot (from the context picker's Done).
+    /// Only resets the thread when the selection actually changed.
+    func setAskContext(_ ids: Set<String>) {
+        guard ids != askConversationIds else { return }
+        askConversationIds = ids
         resetAskThread()
     }
 
