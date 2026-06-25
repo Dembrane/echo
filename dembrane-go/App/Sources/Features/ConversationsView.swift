@@ -1,5 +1,8 @@
 import SwiftUI
 import DembraneCore
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct ConversationsView: View {
     @Environment(AppModel.self) private var model
@@ -79,24 +82,58 @@ struct ConversationsView: View {
     }
 
     private var selectionBar: some View {
-        HStack {
+        HStack(spacing: 24) {
             Button { model.askAboutMany(selectedIDs); exitSelect() } label: {
-                Label("Ask", systemImage: "sparkles")
+                Image(systemName: "sparkles").font(.title3)
             }
-            .disabled(selectedIDs.isEmpty)
+            .accessibilityLabel("Ask about selected")
+            ShareLink(item: selectedShareText) {
+                Image(systemName: "square.and.arrow.up").font(.title3)
+            }
             Spacer()
             Text(selectedIDs.isEmpty ? "Select conversations" : "\(selectedIDs.count) selected")
                 .font(.subheadline).foregroundStyle(.secondary)
             Spacer()
             Button(role: .destructive) { showBulkDelete = true } label: {
-                Label("Delete", systemImage: "trash")
+                Image(systemName: "trash").font(.title3)
             }
-            .disabled(selectedIDs.isEmpty)
             .tint(.red)
+            .accessibilityLabel("Delete selected")
         }
+        .disabled(selectedIDs.isEmpty)
+        .tint(BrandColor.royalBlue)
         .padding(.horizontal)
         .padding(.vertical, 10)
         .background(.bar)
+    }
+
+    private var selectedShareText: String {
+        filtered.filter { selectedIDs.contains($0.id) }
+            .map(shareText)
+            .joined(separator: "\n\n———\n\n")
+    }
+
+    private func shareText(_ conversation: Conversation) -> String {
+        if let summary = conversation.summary?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !summary.isEmpty {
+            return "\(conversation.displayTitle)\n\n\(summary)"
+        }
+        return conversation.displayTitle
+    }
+
+    private func copyTranscript(_ conversation: Conversation) {
+        Task {
+            let chunks = (try? await model.conversationChunks(id: conversation.id)) ?? []
+            let transcript = chunks
+                .sorted { ($0.timestamp ?? .distantPast) < ($1.timestamp ?? .distantPast) }
+                .compactMap { $0.transcript?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+            let text = transcript.isEmpty ? (conversation.summary ?? conversation.displayTitle) : transcript
+            #if canImport(UIKit)
+            UIPasteboard.general.string = text
+            #endif
+        }
     }
 
     private func exitSelect() {
@@ -156,6 +193,20 @@ struct ConversationsView: View {
                             Label("Ask", systemImage: "sparkles")
                         }
                         .tint(BrandColor.royalBlue)
+                    }
+                    .contextMenu {
+                        Button { model.askAbout(conversation) } label: {
+                            Label("Ask", systemImage: "sparkles")
+                        }
+                        ShareLink(item: shareText(conversation)) {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
+                        Button { copyTranscript(conversation) } label: {
+                            Label("Copy transcript", systemImage: "doc.on.doc")
+                        }
+                        Button(role: .destructive) { pendingDelete = conversation } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
                     }
             }
         }

@@ -215,7 +215,7 @@ private struct AskBubble: View {
                 if message.text.isEmpty {
                     ProgressView()
                 } else {
-                    Text(message.text).textSelection(.enabled).foregroundStyle(.primary)
+                    Text(Self.markdown(message.text)).textSelection(.enabled).foregroundStyle(.primary)
                 }
                 if !message.references.isEmpty { sources }
             }
@@ -240,6 +240,15 @@ private struct AskBubble: View {
             let title = ref.conversationTitle ?? ref.conversation
             return seen.insert(title).inserted ? title : nil
         }
+    }
+
+    /// Inline markdown (bold/italic/links, whitespace preserved) — robust while
+    /// the response is still streaming in.
+    static func markdown(_ string: String) -> AttributedString {
+        (try? AttributedString(
+            markdown: string,
+            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+            ?? AttributedString(string)
     }
 }
 

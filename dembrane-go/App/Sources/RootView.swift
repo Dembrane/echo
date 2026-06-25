@@ -46,7 +46,7 @@ struct MainTabView: View {
         .onChange(of: model.selectedTab) { _, newValue in
             if newValue == .record {
                 model.selectedTab = .home
-                Task { await model.startRecording() }
+                model.showRecordingScreen = true   // open the armed Record sheet (don't auto-start)
             }
         }
 

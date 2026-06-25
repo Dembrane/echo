@@ -49,7 +49,7 @@ struct HomeView: View {
 
     private var recordButton: some View {
         Button {
-            Task { await model.startRecording() }
+            model.showRecordingScreen = true
         } label: {
             Label("Record", systemImage: "record.circle.fill")
                 .font(.title3.weight(.semibold))
