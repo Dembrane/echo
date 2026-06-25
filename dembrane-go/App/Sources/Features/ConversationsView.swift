@@ -178,21 +178,28 @@ struct ConversationsView: View {
         if model.conversationsLoading && model.conversations.isEmpty {
             HStack { Spacer(); ProgressView(); Spacer() }.listRowSeparator(.hidden)
         } else if model.conversationsError && model.conversations.isEmpty {
-            VStack(spacing: 8) {
-                Label("Couldn't load", systemImage: "wifi.exclamationmark").font(.headline)
-                Text("Check your connection and try again.").font(.caption).foregroundStyle(.secondary)
+            ContentUnavailableView {
+                Label("Couldn't load", systemImage: "wifi.exclamationmark")
+            } description: {
+                Text("Check your connection and try again.")
+            } actions: {
                 Button("Retry") { Task { await model.loadConversations() } }
                     .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
             }
-            .frame(maxWidth: .infinity).padding(.vertical, 24).listRowSeparator(.hidden)
+            .listRowSeparator(.hidden).listRowBackground(Color.clear)
         } else if model.conversations.isEmpty {
-            Text("No conversations yet — tap Record to start.")
-                .foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 24).listRowSeparator(.hidden)
+            ContentUnavailableView {
+                Label("No conversations yet", systemImage: "waveform")
+            } description: {
+                Text("Tap Record to capture your first conversation.")
+            } actions: {
+                Button("Record") { model.showRecordingScreen = true }
+                    .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
+            }
+            .listRowSeparator(.hidden).listRowBackground(Color.clear)
         } else if filtered.isEmpty {
-            Text("No matches for “\(search)”.")
-                .foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 24).listRowSeparator(.hidden)
+            ContentUnavailableView.search(text: search)
+                .listRowSeparator(.hidden).listRowBackground(Color.clear)
         } else {
             ForEach(filtered) { conversation in
                 ConversationRow(conversation: conversation)
