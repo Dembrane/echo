@@ -8,6 +8,10 @@ struct AskView: View {
     @State private var input = ""
     @State private var showContextPicker = false
     @State private var showHistory = false
+    @State private var templates: [PromptTemplate] = []
+    @FocusState private var inputFocused: Bool
+
+    private var inputEmpty: Bool { input.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {
         NavigationStack {
@@ -16,6 +20,7 @@ struct AskView: View {
                 if !contextConversations.isEmpty { contextChips }
                 Divider()
                 content
+                if inputEmpty && !model.askStreaming && !templates.isEmpty { templateBar }
                 inputBar
             }
             .navigationTitle("Ask")
@@ -34,9 +39,14 @@ struct AskView: View {
                     .disabled(model.askMessages.isEmpty)
                     .accessibilityLabel("New chat")
                 }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { inputFocused = false }
+                }
             }
             .sheet(isPresented: $showContextPicker) { AskContextPicker() }
             .sheet(isPresented: $showHistory) { AskHistoryView() }
+            .task { templates = await model.chatTemplates() }
             .onAppear {
                 model.startAskForPending()
                 if let query = model.pendingAskQuery {
@@ -106,6 +116,7 @@ struct AskView: View {
                     }
                     .padding()
                 }
+                .scrollDismissesKeyboard(.interactively)
                 .onChange(of: model.askMessages.last?.text) { _, _ in
                     withAnimation { proxy.scrollTo("bottom", anchor: .bottom) }
                 }
@@ -114,20 +125,42 @@ struct AskView: View {
     }
 
     private var emptyState: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Ask your conversations anything. Answers cite the recordings they come from.")
+        VStack(spacing: 10) {
+            Spacer()
+            Image(systemName: "sparkles").font(.largeTitle).foregroundStyle(BrandColor.royalBlue)
+            Text("Ask your conversations anything").font(.headline)
+            Text("Answers cite the recordings they come from. Pick a starter below or type your own.")
                 .font(.callout).foregroundStyle(.secondary)
-            ForEach(Self.suggestions, id: \.self) { suggestion in
-                Button { input = suggestion } label: {
-                    Text(suggestion).frame(maxWidth: .infinity, alignment: .leading).padding()
-                }
-                .glassEffect(.regular, in: .rect(cornerRadius: 16))
-                .foregroundStyle(.primary)
-            }
+                .multilineTextAlignment(.center)
             Spacer()
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, 32)
+    }
+
+    /// Compact starter templates (built-ins + workspace), horizontally scrolling.
+    private var templateBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(templates) { template in
+                    Button {
+                        input = template.content
+                        inputFocused = true
+                    } label: {
+                        Text(template.title)
+                            .font(.subheadline)
+                            .lineLimit(1)
+                            .padding(.horizontal, 12).padding(.vertical, 7)
+                            .background(.regularMaterial, in: .capsule)
+                            .overlay(Capsule().strokeBorder(.quaternary))
+                            .foregroundStyle(.primary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 6)
+        }
     }
 
     private var canSend: Bool {
@@ -137,6 +170,7 @@ struct AskView: View {
     private var inputBar: some View {
         HStack(alignment: .bottom, spacing: 8) {
             TextField("Ask anything…", text: $input, axis: .vertical)
+                .focused($inputFocused)
                 .lineLimit(1...5)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 11)
@@ -161,12 +195,6 @@ struct AskView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
     }
-
-    private static let suggestions = [
-        "What did I talk about this week?",
-        "Summarize my last conversation.",
-        "What decisions did we make?",
-    ]
 }
 
 /// One chat bubble — user (trailing, tinted) or assistant (leading, with sources).
@@ -227,6 +255,14 @@ private struct AskContextPicker: View {
     var body: some View {
         NavigationStack {
             List {
+                if !model.conversations.isEmpty {
+                    Section {
+                        Button(allSelected ? "Clear all" : "Select all") {
+                            selected = allSelected ? [] : Set(model.conversations.map(\.id))
+                        }
+                        .foregroundStyle(BrandColor.royalBlue)
+                    }
+                }
                 Section {
                     ForEach(filtered) { conv in
                         Button { toggle(conv.id) } label: {
@@ -275,6 +311,10 @@ private struct AskContextPicker: View {
                 if !primed { selected = model.askConversationIds; primed = true }
             }
         }
+    }
+
+    private var allSelected: Bool {
+        !model.conversations.isEmpty && selected.count == model.conversations.count
     }
 
     private func toggle(_ id: String) {

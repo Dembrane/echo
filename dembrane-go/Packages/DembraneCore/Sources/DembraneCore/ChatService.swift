@@ -18,6 +18,29 @@ public struct ChatMessage: Decodable, Sendable, Identifiable {
 
 private struct ChatListResponse: Decodable { let chats: [Chat] }
 
+/// A prompt template (workspace-shared or personal) plus app built-ins.
+public struct PromptTemplate: Decodable, Identifiable, Sendable, Hashable {
+    public let id: String
+    public let title: String
+    public let content: String
+    public var scope: String? = nil
+    public init(id: String, title: String, content: String, scope: String? = nil) {
+        self.id = id; self.title = title; self.content = content; self.scope = scope
+    }
+
+    /// dembrane's built-in quick templates (mirrors the web defaults).
+    public static let builtins: [PromptTemplate] = [
+        .init(id: "dembrane:summarize", title: "Summarize",
+              content: "Summarize the key points from these conversations."),
+        .init(id: "dembrane:actions", title: "Action items",
+              content: "What are the action items and decisions from these conversations?"),
+        .init(id: "dembrane:topics", title: "Key topics",
+              content: "What were the main topics and themes discussed?"),
+        .init(id: "dembrane:followups", title: "Follow-ups",
+              content: "What follow-up questions or next steps came up?"),
+    ]
+}
+
 /// One message in the request body sent to the stream endpoint.
 public struct ChatWireMessage: Encodable, Sendable {
     public let role: String
@@ -70,6 +93,15 @@ public actor ChatService {
         let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
         guard (200..<300).contains(code) else { throw APIError.badStatus(code) }
         return try DembraneJSON.decoder().decode(Chat.self, from: data)
+    }
+
+    /// Workspace-shared + personal prompt templates.
+    public func listTemplates(workspaceId: String?) async throws -> [PromptTemplate] {
+        let req = await authed(endpoints.promptTemplates(workspaceId: workspaceId), method: "GET")
+        let (data, resp) = try await session.data(for: req)
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+        guard (200..<300).contains(code) else { throw APIError.badStatus(code) }
+        return try DembraneJSON.decoder().decode([PromptTemplate].self, from: data)
     }
 
     /// Past chats for a project (those with messages), newest first.

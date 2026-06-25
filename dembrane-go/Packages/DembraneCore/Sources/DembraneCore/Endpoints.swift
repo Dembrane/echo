@@ -49,6 +49,12 @@ public struct DembraneEndpoints: Sendable, Equatable {
         ]
         return c.url!
     }
+    public func promptTemplates(workspaceId: String?) -> URL {
+        var c = URLComponents(url: api.appending(path: "templates/prompt-templates"),
+                              resolvingAgainstBaseURL: false)!
+        if let workspaceId { c.queryItems = [URLQueryItem(name: "workspace_id", value: workspaceId)] }
+        return c.url!
+    }
     public func chatMessages(chatId: String) -> URL {
         var c = URLComponents(url: api.appending(path: "v2/bff/chat-messages"), resolvingAgainstBaseURL: false)!
         c.queryItems = [

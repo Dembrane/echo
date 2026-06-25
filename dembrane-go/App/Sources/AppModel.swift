@@ -689,6 +689,20 @@ final class AppModel {
         askError = nil
     }
 
+    /// Quick templates: dembrane built-ins + the workspace's shared/personal ones.
+    func chatTemplates() async -> [PromptTemplate] {
+        let workspaceId = selectedProject.flatMap { project in
+            allProjects.first { $0.project.id == project.id }?.workspace.id
+        }
+        let remote = (try? await chatService.listTemplates(workspaceId: workspaceId)) ?? []
+        return PromptTemplate.builtins + remote
+    }
+
+    /// Select all loaded conversations as Ask context.
+    func selectAllAskConversations() {
+        setAskContext(Set(conversations.map(\.id)))
+    }
+
     /// Past chats for the selected project (history).
     func recentChats() async -> [Chat] {
         guard let projectId = selectedProject?.id else { return [] }
