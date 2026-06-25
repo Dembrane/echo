@@ -2,7 +2,10 @@ import SwiftUI
 import DembraneCore
 
 struct ConversationRow: View {
+    @Environment(AppModel.self) private var model
     let conversation: Conversation
+
+    private var tags: [ProjectTag] { model.conversationTagsCache[conversation.id] ?? [] }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -19,6 +22,17 @@ struct ConversationRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
+                if !tags.isEmpty {
+                    HStack(spacing: 4) {
+                        ForEach(tags.prefix(4)) { tag in
+                            Text(tag.text)
+                                .font(.caption2)
+                                .padding(.horizontal, 7).padding(.vertical, 2)
+                                .background(BrandColor.royalBlue.opacity(0.12), in: .capsule)
+                                .foregroundStyle(BrandColor.royalBlue)
+                        }
+                    }
+                }
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 3) {
@@ -31,6 +45,7 @@ struct ConversationRow: View {
             }
         }
         .padding(.vertical, 4)
+        .task { await model.loadTagsForRow(conversation.id) }
     }
 
     /// Lead with the summary; fall back to a clean status. Use `isFinished` (the
@@ -64,4 +79,5 @@ struct ConversationRow: View {
 
 #Preview {
     List(Conversation.previews) { ConversationRow(conversation: $0) }
+        .environment(AppModel.makeMock())
 }

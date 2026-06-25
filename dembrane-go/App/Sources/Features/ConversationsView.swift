@@ -13,6 +13,7 @@ struct ConversationsView: View {
     @State private var selectMode = false
     @State private var selectedIDs = Set<String>()
     @State private var showBulkDelete = false
+    @State private var showBulkTag = false
 
     private var filtered: [Conversation] {
         let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -63,6 +64,9 @@ struct ConversationsView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             }
+            .sheet(isPresented: $showBulkTag) {
+                BulkTagPicker(conversationIds: selectedIDs) { exitSelect() }
+            }
         }
     }
 
@@ -90,6 +94,10 @@ struct ConversationsView: View {
             ShareLink(item: selectedShareText) {
                 Image(systemName: "square.and.arrow.up").font(.title3)
             }
+            Button { showBulkTag = true } label: {
+                Image(systemName: "tag").font(.title3)
+            }
+            .accessibilityLabel("Tag selected")
             Spacer()
             Text(selectedIDs.isEmpty ? "Select conversations" : "\(selectedIDs.count) selected")
                 .font(.subheadline).foregroundStyle(.secondary)
@@ -220,4 +228,90 @@ struct ConversationsView: View {
 
 #Preview {
     ConversationsView().environment(AppModel.makeMock())
+}
+
+/// Pick tags to add to several selected conversations (bulk-tag).
+private struct BulkTagPicker: View {
+    let conversationIds: Set<String>
+    let onApply: () -> Void
+    @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
+    @State private var tags: [ProjectTag] = []
+    @State private var picked = Set<String>()
+    @State private var newTag = ""
+    @State private var loading = true
+    @State private var applying = false
+
+    private var projectId: String { model.selectedProject?.id ?? "" }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    HStack {
+                        TextField("New tag", text: $newTag).autocorrectionDisabled()
+                        Button("Add") { Task { await addTag() } }
+                            .disabled(newTag.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                }
+                Section {
+                    if loading { HStack { Spacer(); ProgressView(); Spacer() } }
+                    else if tags.isEmpty { Text("No tags yet — add one above.").foregroundStyle(.secondary) }
+                    else {
+                        ForEach(tags) { tag in
+                            Button { toggle(tag.id) } label: {
+                                HStack {
+                                    Text(tag.text).foregroundStyle(.primary)
+                                    Spacer()
+                                    if picked.contains(tag.id) {
+                                        Image(systemName: "checkmark").foregroundStyle(BrandColor.royalBlue)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } footer: {
+                    Text("Adds the selected tags to \(conversationIds.count) conversation\(conversationIds.count == 1 ? "" : "s").")
+                }
+            }
+            .navigationTitle("Add tags")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    if applying { ProgressView() }
+                    else {
+                        Button("Apply") {
+                            Task {
+                                applying = true
+                                await model.addTags(picked, to: conversationIds)
+                                applying = false
+                                onApply()
+                                dismiss()
+                            }
+                        }
+                        .disabled(picked.isEmpty)
+                    }
+                }
+            }
+            .task {
+                tags = (try? await model.projectTags(projectId: projectId)) ?? []
+                loading = false
+            }
+        }
+    }
+
+    private func toggle(_ id: String) {
+        if picked.contains(id) { picked.remove(id) } else { picked.insert(id) }
+    }
+
+    private func addTag() async {
+        let text = newTag.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        if let tag = try? await model.createTag(projectId: projectId, text: text) {
+            if !tags.contains(where: { $0.id == tag.id }) { tags.insert(tag, at: 0) }
+            picked.insert(tag.id)
+            newTag = ""
+        }
+    }
 }

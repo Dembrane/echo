@@ -660,6 +660,33 @@ final class AppModel {
 
     // MARK: - Tags
 
+    /// Lazy per-row tag cache (in-memory) so list rows can show tag chips without
+    /// blocking — each row loads once on appear, then it's instant.
+    var conversationTagsCache: [String: [ProjectTag]] = [:]
+
+    func loadTagsForRow(_ id: String) async {
+        guard conversationTagsCache[id] == nil else { return }
+        let tags = (try? await api.conversationTags(conversationId: id)) ?? []
+        conversationTagsCache[id] = tags
+    }
+
+    /// Invalidate a conversation's cached row tags (after an edit).
+    func invalidateRowTags(_ id: String) { conversationTagsCache[id] = nil }
+
+    /// Add the given tags to every conversation (bulk-tag from multi-select),
+    /// preserving each conversation's existing tags.
+    func addTags(_ tagIds: Set<String>, to conversationIds: Set<String>) async {
+        guard !tagIds.isEmpty else { return }
+        for id in conversationIds {
+            let existing = Set(((try? await api.conversationTags(conversationId: id)) ?? []).map(\.id))
+            let merged = existing.union(tagIds)
+            if merged != existing {
+                try? await api.replaceConversationTags(conversationId: id, tagIds: Array(merged))
+            }
+            conversationTagsCache[id] = nil   // refresh on next view
+        }
+    }
+
     func projectTags(projectId: String) async throws -> [ProjectTag] {
         try await api.projectTags(projectId: projectId)
     }
@@ -671,6 +698,7 @@ final class AppModel {
     }
     func setConversationTags(_ id: String, tagIds: [String]) async throws {
         try await api.replaceConversationTags(conversationId: id, tagIds: tagIds)
+        conversationTagsCache[id] = nil   // row chips refresh on next view
     }
 
     /// Start an Ask scoped to a conversation (swipe action) and jump to Ask.
