@@ -42,6 +42,7 @@ targets:
       - package: DembraneCore
       - target: DembraneGoWidgets
       - target: DembraneGoShare
+      # - target: DembraneGoWatch   # re-enable to embed once a watchOS runtime / watch is available
     entitlements:
       path: App/DembraneGo.entitlements
       properties:
@@ -88,6 +89,23 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: "com.dembrane.go.Widgets"
+
+  # DembraneGoWatch (watchOS capture → WatchConnectivity transfer) is written and
+  # compiles standalone (xcodebuild -scheme DembraneGoWatch -sdk watchsimulator26.5
+  # BUILD SUCCEEDED), code in Watch/. It's kept OUT of the active project for now:
+  # this machine has the watchOS SDK but no watchOS *simulator runtime*, and adding
+  # the target leaves the iOS scheme with no resolvable simulator destination, which
+  # breaks the (shippable) iOS build. Re-add this target + the DembraneGoWatch
+  # dependency on DembraneGo, then verify the paired-sim/device archive, once a
+  # watchOS runtime or a real Apple Watch is available.
+  #
+  # DembraneGoWatch:
+  #   type: application
+  #   platform: watchOS
+  #   deploymentTarget: "26.0"
+  #   sources: [{ path: Watch }]
+  #   info: { path: Watch/Info.plist, properties: { WKApplication: true, WKCompanionAppBundleIdentifier: "com.dembrane.go", CFBundleDisplayName: "dembrane Go", CFBundleShortVersionString: "$(MARKETING_VERSION)", CFBundleVersion: "$(CURRENT_PROJECT_VERSION)", NSMicrophoneUsageDescription: "dembrane Go records audio so you can capture from your wrist." } }
+  #   settings: { base: { PRODUCT_BUNDLE_IDENTIFIER: "com.dembrane.go.watchkitapp", GENERATE_INFOPLIST_FILE: "NO", TARGETED_DEVICE_FAMILY: "4" } }
 
   DembraneGoShare:
     type: app-extension

@@ -64,6 +64,7 @@ final class AppModel {
     private let uploader: ParticipantUploadClient
     private let recorder = AudioRecorder()
     private let locationNamer = LocationNamer()
+    private let watchReceiver = WatchConnectivityManager()
     private var liveActivity: Activity<RecordingActivityAttributes>?
 
     // Chunked-capture state
@@ -118,6 +119,12 @@ final class AppModel {
             setEnvironment(devEnv)
         }
         #endif
+        // Listen for audio transferred from the Watch app and upload it.
+        watchReceiver.onReceiveFile = { [weak self] url in
+            Task { @MainActor in await self?.uploadWatchFile(url) }
+        }
+        watchReceiver.activate()
+
         // Restore the last project instantly from disk so recording is never
         // blocked on "no project to save to" while the network catches up.
         if selectedProject == nil { selectedProject = restoredProject() }
@@ -374,6 +381,19 @@ final class AppModel {
 
     /// Recent conversations for the Home tab.
     var recentConversations: [Conversation] { Array(conversations.prefix(3)) }
+
+    /// Upload an audio file transferred from the Apple Watch.
+    func uploadWatchFile(_ url: URL) async {
+        guard let projectId = selectedProject?.id else { return }
+        statusMessage = "Importing watch recording…"
+        _ = try? await uploader.upload(
+            projectId: projectId, fileURL: url,
+            displayName: Date().formatted(date: .abbreviated, time: .shortened),
+            contentType: "audio/m4a", source: "GO_WATCH", recordedAt: Date())
+        try? FileManager.default.removeItem(at: url)
+        await loadConversations()
+        statusMessage = nil
+    }
 
     // Mic / input selection (meaningful while the session is active).
     func availableInputs() -> [AudioRecorder.Input] { recorder.availableInputs() }
