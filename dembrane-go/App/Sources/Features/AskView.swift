@@ -191,6 +191,7 @@ struct AskView: View {
             }
             .buttonStyle(.plain)
             .disabled(!canSend)
+            .accessibilityLabel("Send")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)

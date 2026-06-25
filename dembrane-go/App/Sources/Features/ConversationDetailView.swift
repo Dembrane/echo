@@ -85,6 +85,7 @@ struct ConversationDetailView: View {
                         if working { ProgressView() } else { Image(systemName: "ellipsis.circle") }
                     }
                     .disabled(working)
+                    .accessibilityLabel("More actions")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
