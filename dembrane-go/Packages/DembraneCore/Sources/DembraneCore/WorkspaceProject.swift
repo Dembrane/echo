@@ -3,7 +3,7 @@ import Foundation
 /// A project paired with the workspace it belongs to — for the flat,
 /// cross-workspace project picker (workspace/org shown as the subtitle,
 /// mirroring the web frontend's selector).
-public struct WorkspaceProject: Identifiable, Sendable, Hashable {
+public struct WorkspaceProject: Identifiable, Sendable, Hashable, Codable {
     public let project: Project
     public let workspace: Workspace
 

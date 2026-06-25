@@ -488,23 +488,38 @@ final class AppModel {
 
     /// Flat list of projects across every workspace the user can see.
     func loadAllProjects() async {
+        if allProjects.isEmpty,
+           let cached = await DiskCache.shared.load([WorkspaceProject].self, key: "allProjects") {
+            allProjects = cached
+        }
         var result: [WorkspaceProject] = []
         for workspace in workspaces {
             let projects = (try? await api.projects(workspaceId: workspace.id)) ?? []
             result += projects.map { WorkspaceProject(project: $0, workspace: workspace) }
         }
-        allProjects = result
+        if !result.isEmpty {
+            allProjects = result
+            await DiskCache.shared.save(result, key: "allProjects")
+        }
     }
 
     func loadConversations() async {
         guard let projectId = selectedProject?.id else { conversations = []; return }
-        conversationsLoading = true
+        let cacheKey = "conversations.\(projectId)"
+        // Show the last fetch instantly, then reconcile with the network.
+        if let cached = await DiskCache.shared.load([Conversation].self, key: cacheKey) {
+            conversations = cached
+            didLoadConversationsOnce = true
+        }
+        conversationsLoading = conversations.isEmpty
         conversationsError = false
         defer { conversationsLoading = false; didLoadConversationsOnce = true }
         do {
-            conversations = try await api.conversations(projectId: projectId)
+            let fresh = try await api.conversations(projectId: projectId)
+            conversations = fresh
+            await DiskCache.shared.save(fresh, key: cacheKey)
         } catch {
-            conversationsError = true
+            conversationsError = conversations.isEmpty
         }
     }
 
@@ -528,8 +543,10 @@ final class AppModel {
     }
 
     func selectProject(_ workspaceProject: WorkspaceProject) {
+        guard workspaceProject.project.id != selectedProject?.id else { return }
         selectedProject = workspaceProject.project
         persistSelectedProject()
+        conversations = []   // drop the previous project's rows; cache/network repopulate
         Task { await loadConversations() }
     }
 
