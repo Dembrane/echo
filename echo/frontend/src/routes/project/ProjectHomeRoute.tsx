@@ -269,7 +269,7 @@ export const ProjectHomeRoute = () => {
 							return (
 								<I18nLink
 									key={conversation.id}
-									to={`${base}/conversation/${conversation.id}`}
+									to={`${base}/conversations/${conversation.id}`}
 									className="no-underline block h-full"
 								>
 									{card}

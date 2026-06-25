@@ -84,7 +84,7 @@ export const useCopyQuote = () => {
 			}
 
 			// Add source link
-			const sourceUrl = `${window.location.origin}/${language}/projects/${projectId}/conversation/${conversation?.id}`;
+			const sourceUrl = `${window.location.origin}/${language}/projects/${projectId}/conversations/${conversation?.id}`;
 			stringBuilder.push(""); // Empty line before source
 			stringBuilder.push(`[View in conversation](${sourceUrl})`);
 
