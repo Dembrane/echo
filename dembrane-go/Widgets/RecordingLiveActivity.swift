@@ -33,7 +33,10 @@ struct RecordingLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.center) {
-                    Text("Recording").font(.headline)
+                    Image(systemName: "waveform")
+                        .font(.title2)
+                        .foregroundStyle(.red)
+                        .symbolEffect(.variableColor.iterative, isActive: true)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     Text("saving to \(context.state.projectName)")

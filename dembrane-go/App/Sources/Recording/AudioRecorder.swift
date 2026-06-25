@@ -73,6 +73,26 @@ final class AudioRecorder {
 
     var isRecording: Bool { recorder != nil }
 
+    struct Input: Identifiable, Sendable, Hashable {
+        let id: String      // port UID
+        let name: String
+    }
+
+    func availableInputs() -> [Input] {
+        (AVAudioSession.sharedInstance().availableInputs ?? [])
+            .map { Input(id: $0.uid, name: $0.portName) }
+    }
+
+    var currentInputUID: String? {
+        AVAudioSession.sharedInstance().currentRoute.inputs.first?.uid
+    }
+
+    func selectInput(uid: String) {
+        guard let port = AVAudioSession.sharedInstance().availableInputs?.first(where: { $0.uid == uid })
+        else { return }
+        try? AVAudioSession.sharedInstance().setPreferredInput(port)
+    }
+
     /// Current mic level, normalized 0…1, for the waveform.
     func currentLevel() -> Float {
         guard let rec = recorder, rec.isRecording, !isPaused else { return 0 }

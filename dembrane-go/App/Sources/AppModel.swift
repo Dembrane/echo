@@ -58,6 +58,7 @@ final class AppModel {
     private var chatService: ChatService
     private let uploader: ParticipantUploadClient
     private let recorder = AudioRecorder()
+    private let locationNamer = LocationNamer()
     private var liveActivity: Activity<RecordingActivityAttributes>?
 
     // Chunked-capture state
@@ -293,6 +294,15 @@ final class AppModel {
                 statusMessage = "Couldn't reach the server."
             }
         }
+
+        // Voice Memos-style: rename the recording to where it was made, once both
+        // the place and the conversation resolve. Optional — silent if declined.
+        Task { [api] in
+            guard let place = await locationNamer.currentPlaceName(),
+                  let id = await initiateTask?.value ?? nil else { return }
+            try? await api.updateConversation(id: id, fields: ["participant_name": place])
+            await loadConversations()
+        }
     }
 
     func stopAndUpload() async {
@@ -356,6 +366,14 @@ final class AppModel {
 
     /// Recent conversations for the Home tab.
     var recentConversations: [Conversation] { Array(conversations.prefix(3)) }
+
+    // Mic / input selection (meaningful while the session is active).
+    func availableInputs() -> [AudioRecorder.Input] { recorder.availableInputs() }
+    var currentInputUID: String? { recorder.currentInputUID }
+    var currentInputName: String? {
+        recorder.availableInputs().first { $0.id == recorder.currentInputUID }?.name
+    }
+    func selectInput(uid: String) { recorder.selectInput(uid: uid) }
 
     func pauseRecording() {
         guard isRecording, !isPaused else { return }

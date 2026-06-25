@@ -34,6 +34,24 @@ struct NowRecordingView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                Menu {
+                    ForEach(model.availableInputs()) { input in
+                        Button {
+                            model.selectInput(uid: input.id)
+                        } label: {
+                            if input.id == model.currentInputUID {
+                                Label(input.name, systemImage: "checkmark")
+                            } else {
+                                Text(input.name)
+                            }
+                        }
+                    }
+                } label: {
+                    Label(model.currentInputName ?? "Microphone", systemImage: "mic")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 Spacer()
 
                 HStack(spacing: 44) {
