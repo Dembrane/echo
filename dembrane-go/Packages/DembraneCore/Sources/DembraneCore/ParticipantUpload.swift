@@ -42,6 +42,30 @@ public actor ParticipantUploadClient {
         return conversationId
     }
 
+    // MARK: - Chunked session (record start → upload each 30s segment → finish)
+
+    /// Create the conversation; returns its id. Call once at record start.
+    public func startConversation(projectId: String, displayName: String,
+                                  source: String = "GO_IOS") async throws -> String {
+        try await initiate(projectId: projectId, name: displayName, source: source)
+    }
+
+    /// Upload one audio segment as a chunk of an existing conversation.
+    public func uploadChunk(conversationId: String, fileURL: URL,
+                            contentType: String = "audio/m4a",
+                            source: String = "GO_IOS", timestamp: Date) async throws {
+        let ticket = try await uploadTicket(conversationId: conversationId,
+                                            filename: fileURL.lastPathComponent, contentType: contentType)
+        try await putToS3(ticket: ticket, fileURL: fileURL, contentType: contentType)
+        try await confirm(conversationId: conversationId, chunkId: ticket.chunkId,
+                          fileURL: ticket.fileURL, source: source, timestamp: timestamp)
+    }
+
+    /// Mark the conversation complete. Call once when recording stops.
+    public func finishConversation(conversationId: String) async throws {
+        try await finish(conversationId: conversationId)
+    }
+
     func initiate(projectId: String, name: String, source: String) async throws -> String {
         let data = try await postJSON(endpoints.initiateConversation(projectId: projectId),
                                       ["name": name, "pin": "go", "source": source, "tag_id_list": []])

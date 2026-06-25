@@ -52,6 +52,14 @@ final class AppModel {
     private let recorder = AudioRecorder()
     private var liveActivity: Activity<RecordingActivityAttributes>?
 
+    // Chunked-capture state
+    private var captureConversationId: String?
+    private var captureStart: Date?
+    private var pendingSegments: [AudioRecorder.Segment] = []
+    private var chunkUploads: [Task<Void, Never>] = []
+    private var initiateTask: Task<String?, Never>?
+    private let chunkSeconds: TimeInterval = 30
+
     init(environment: AppEnvironment,
          sessionManager: SessionManager,
          auth: AuthService,
@@ -218,36 +226,106 @@ final class AppModel {
             statusMessage = "Microphone access is off — enable it in Settings."
             return
         }
+        guard let projectId = selectedProject?.id else {
+            statusMessage = "No project to save to yet."
+            return
+        }
+
+        captureStart = Date()
+        captureConversationId = nil
+        pendingSegments = []
+        chunkUploads = []
+        recorder.onSegment = { [weak self] segment in self?.handleSegment(segment) }
+
         do {
-            try recorder.start()
+            // Start capturing immediately — don't wait on the network.
+            try recorder.start(segmentEvery: chunkSeconds)
             isRecording = true
             statusMessage = nil
             startLiveActivity()
         } catch {
             statusMessage = "Couldn't start recording."
+            return
+        }
+
+        // Create the conversation in parallel; flush buffered segments once ready.
+        let displayName = me?.displayName ?? "dembrane Go"
+        initiateTask = Task { [uploader] in
+            try? await uploader.startConversation(projectId: projectId, displayName: displayName)
+        }
+        Task {
+            let id = await initiateTask?.value ?? nil
+            if let id {
+                captureConversationId = id
+                flushPendingSegments(conversationId: id)
+            } else if isRecording {
+                statusMessage = "Couldn't reach the server."
+            }
         }
     }
 
     func stopAndUpload() async {
+        guard isRecording else { return }
         isRecording = false
         endLiveActivity()
-        guard let result = recorder.stop() else { return }
-        guard let projectId = selectedProject?.id else {
-            statusMessage = "No project to save to yet."
+        recorder.stop()                       // emits the final segment synchronously
+        statusMessage = "Finishing…"
+
+        var resolved = captureConversationId
+        if resolved == nil { resolved = await initiateTask?.value ?? nil }
+        guard let conversationId = resolved else {
+            statusMessage = "Upload failed — couldn't reach the server."
+            cleanupCapture()
             return
         }
-        statusMessage = "Uploading…"
-        do {
-            _ = try await uploader.upload(
-                projectId: projectId, fileURL: result.url,
-                displayName: me?.displayName ?? "dembrane Go",
-                contentType: "audio/m4a", recordedAt: Date())
-            statusMessage = "Processing audio…"
-            await loadConversations()
-            statusMessage = nil
-        } catch {
-            statusMessage = "Upload failed — try again."
+        captureConversationId = conversationId
+        flushPendingSegments(conversationId: conversationId)
+
+        for task in chunkUploads { await task.value }   // wait for every chunk
+        try? await uploader.finishConversation(conversationId: conversationId)
+
+        cleanupCapture()
+        statusMessage = "Processing audio…"
+        await loadConversations()
+        statusMessage = nil
+    }
+
+    private func handleSegment(_ segment: AudioRecorder.Segment) {
+        if let id = captureConversationId {
+            uploadSegment(segment, conversationId: id)
+        } else {
+            pendingSegments.append(segment)        // buffer until the conversation exists
         }
+    }
+
+    private func flushPendingSegments(conversationId: String) {
+        let buffered = pendingSegments
+        pendingSegments = []
+        for segment in buffered { uploadSegment(segment, conversationId: conversationId) }
+    }
+
+    private func uploadSegment(_ segment: AudioRecorder.Segment, conversationId: String) {
+        guard let start = captureStart else { return }
+        let timestamp = start.addingTimeInterval(Double(segment.index) * chunkSeconds)
+        let task = Task { [uploader] in
+            do {
+                try await uploader.uploadChunk(
+                    conversationId: conversationId, fileURL: segment.url, timestamp: timestamp)
+                try? FileManager.default.removeItem(at: segment.url)
+            } catch {
+                NSLog("dembrane-go chunk \(segment.index) upload failed: \(error)")
+            }
+        }
+        chunkUploads.append(task)
+    }
+
+    private func cleanupCapture() {
+        captureConversationId = nil
+        captureStart = nil
+        pendingSegments = []
+        chunkUploads = []
+        initiateTask = nil
+        recorder.onSegment = nil
     }
 
     private func startLiveActivity() {
