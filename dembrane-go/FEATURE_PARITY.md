@@ -21,6 +21,7 @@ Legend: ✅ built · � gated (needs echo backend, Sameer's OK) · 🖥️ desk
 - ✅ 30s chunked upload during capture (crash-safe) · background/locked recording
 - ✅ Live Activity / Dynamic Island (logomark + timer + waveform glyph)
 - ✅ Location-based naming (Voice Memos style, optional/graceful)
+- ✅ Share Extension — import audio shared from Voice Memos / Files (App Group passes the active project/env; uploads via the public participant flow, source `GO_SHARE`)
 
 ## Conversations
 - ✅ List (full-width project header, relative time + duration, summary, search, cache+reconcile)
@@ -28,8 +29,8 @@ Legend: ✅ built · � gated (needs echo backend, Sameer's OK) · 🖥️ desk
 - ✅ Edit screen (name + large summary editor w/ Regenerate + inline tags)
 - ✅ Delete · Move to project · Tags (view/assign/create)
 - ✅ Summarize / Generate title / Re-transcribe (detail menu)
-- ✅ Multi-select → Ask / Share / Delete; long-press → Photos-style context menu
-- ⏳ Tags shown on list rows — needs tags in the list payload (backend) to avoid per-row N+1 (the junction GET is single-conversation only)
+- ✅ Multi-select → Ask / Share / **Tag** / Delete; long-press → Photos-style context menu
+- ✅ Tags shown on list rows (lazy per-row cache; bulk-tag from multi-select). NB: a backend "tags in the conversations list payload" would let this batch-load instead of per-row — a nice future optimization, not required.
 - � In-app audio playback — needs a backend signed-playback-URL endpoint (`merged_audio_path` is a raw S3 key)
 
 ## Ask / chat
