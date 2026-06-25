@@ -14,6 +14,7 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func conversations(projectId: String) async throws -> [Conversation]
     func conversation(id: String) async throws -> Conversation
     func updateConversation(id: String, fields: [String: String]) async throws
+    func moveConversation(id: String, targetProjectId: String) async throws
     func deleteConversation(id: String) async throws
     func createProject(workspaceId: String, name: String) async throws -> Project
 }
@@ -73,6 +74,11 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
 
     public func updateConversation(id: String, fields: [String: String]) async throws {
         try await sendJSON(endpoints.conversation(id: id), method: "PATCH", body: fields)
+    }
+
+    public func moveConversation(id: String, targetProjectId: String) async throws {
+        try await sendJSON(endpoints.moveConversation(id: id), method: "POST",
+                           body: ["target_project_id": targetProjectId])
     }
 
     public func deleteConversation(id: String) async throws {
@@ -153,6 +159,7 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
                      locked: false, lockReason: nil, createdAt: nil)
     }
     public func updateConversation(id: String, fields: [String: String]) async throws {}
+    public func moveConversation(id: String, targetProjectId: String) async throws {}
     public func deleteConversation(id: String) async throws {}
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         Project(id: "p_go", name: name, workspaceId: workspaceId, language: "en")

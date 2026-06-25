@@ -16,7 +16,7 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Recording") {
+                Section("Project") {
                     Button {
                         showProjectPicker = true
                     } label: {
@@ -25,6 +25,11 @@ struct SettingsView: View {
                             Spacer()
                             Text(model.selectedProject?.name ?? "—").foregroundStyle(.secondary)
                             Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+                        }
+                    }
+                    if let url = model.portalEditorURL {
+                        Link(destination: url) {
+                            Label("Open project editor", systemImage: "slider.horizontal.3")
                         }
                     }
                 }

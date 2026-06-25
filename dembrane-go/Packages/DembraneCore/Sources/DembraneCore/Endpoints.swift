@@ -32,6 +32,10 @@ public struct DembraneEndpoints: Sendable, Equatable {
     public func deleteConversation(id: String) -> URL {
         api.appending(path: "conversations/\(id)")
     }
+    /// Move a conversation to another project. Body: {target_project_id}.
+    public func moveConversation(id: String) -> URL {
+        api.appending(path: "v2/bff/conversations/\(id)/move")
+    }
     public func createChat() -> URL { api.appending(path: "v2/bff/chats") }
 
     // Chat (streaming + context)

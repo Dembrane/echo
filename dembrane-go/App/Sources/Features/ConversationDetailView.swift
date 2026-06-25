@@ -13,6 +13,8 @@ struct ConversationDetailView: View {
     @State private var full: Conversation?
     @State private var copied: CopyTarget?
     @State private var showEdit = false
+    @State private var showMove = false
+    @State private var confirmDelete = false
 
     private enum CopyTarget { case summary, transcript }
     private var current: Conversation { full ?? conversation }
@@ -40,8 +42,14 @@ struct ConversationDetailView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { showEdit = true } label: {
-                        Label("Edit", systemImage: "pencil")
+                    Menu {
+                        Button { showEdit = true } label: { Label("Edit", systemImage: "pencil") }
+                        Button { showMove = true } label: { Label("Move to project", systemImage: "folder") }
+                        Button(role: .destructive) { confirmDelete = true } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -53,6 +61,22 @@ struct ConversationDetailView: View {
                 Task { full = try? await model.conversationDetail(id: conversation.id) }
             }) {
                 ConversationEditView(conversation: current)
+            }
+            .sheet(isPresented: $showMove) {
+                ProjectPicker { workspaceProject in
+                    Task { await model.moveConversation(conversation.id, to: workspaceProject.project.id) }
+                    dismiss()
+                }
+            }
+            .confirmationDialog("Delete this conversation?",
+                                isPresented: $confirmDelete, titleVisibility: .visible) {
+                Button("Delete", role: .destructive) {
+                    Task { await model.deleteConversation(conversation) }
+                    dismiss()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Audio is kept for a short grace period.")
             }
         }
         .presentationDragIndicator(.visible)

@@ -328,6 +328,28 @@ final class AppModel {
         await loadConversations()
     }
 
+    /// Move a conversation to another project. It leaves the current project's
+    /// list, so drop it locally on success.
+    func moveConversation(_ id: String, to projectId: String) async {
+        let snapshot = conversations
+        conversations.removeAll { $0.id == id }
+        do {
+            try await api.moveConversation(id: id, targetProjectId: projectId)
+        } catch {
+            conversations = snapshot
+            statusMessage = "Couldn't move — try again."
+        }
+    }
+
+    /// Dashboard portal-editor URL for the selected project (Settings link).
+    var portalEditorURL: URL? {
+        guard let project = selectedProject,
+              let wp = allProjects.first(where: { $0.project.id == project.id })
+        else { return nil }
+        return environment.dashboardBaseURL
+            .appending(path: "w/\(wp.workspace.id)/projects/\(project.id)/portal-editor")
+    }
+
     /// Soft-delete (recoverable for a grace period server-side). Removes the row
     /// optimistically and restores it if the request fails.
     func deleteConversation(_ conversation: Conversation) async {
