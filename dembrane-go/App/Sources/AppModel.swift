@@ -10,7 +10,7 @@ import DembraneCore
 @Observable
 final class AppModel {
     enum Phase: Equatable { case loading, signedOut, signedIn }
-    enum AppTab: Hashable, Sendable { case home, conversations, ask, search }
+    enum AppTab: Hashable, Sendable { case home, record, conversations, ask }
 
     // UI state
     var phase: Phase = .loading
@@ -22,6 +22,7 @@ final class AppModel {
     var isPaused = false
     var recordingStartedAt: Date?
     var recordingElapsed: TimeInterval = 0
+    var recordingName: String?
     var audioLevels: [Float] = []
     var showRecordingScreen = false
     var loginError: String?
@@ -284,6 +285,7 @@ final class AppModel {
         // Name it like Voice Memos (interim: date/time — location naming is a follow-up),
         // never the user's name.
         let displayName = Date().formatted(date: .abbreviated, time: .shortened)
+        recordingName = displayName
         initiateTask = Task { [uploader] in
             try? await uploader.startConversation(projectId: projectId, displayName: displayName)
         }
@@ -303,6 +305,7 @@ final class AppModel {
             guard let place = await locationNamer.currentPlaceName(),
                   let id = await initiateTask?.value ?? nil else { return }
             try? await api.updateConversation(id: id, fields: ["participant_name": place])
+            if isRecording { recordingName = place }   // reflect the auto location name live
             await loadConversations()
         }
     }
@@ -426,6 +429,7 @@ final class AppModel {
         meterTimer = nil
         isPaused = false
         audioLevels = []
+        recordingName = nil
         pendingSegments = []
         chunkUploads = []
         initiateTask = nil

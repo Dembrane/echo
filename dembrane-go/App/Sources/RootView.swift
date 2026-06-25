@@ -18,17 +18,22 @@ struct RootView: View {
     }
 }
 
-/// Liquid Glass shell: Home · Conversations · Ask · Search, with a persistent
-/// Record accessory above the tab bar (the prominent capture action) that
-/// expands into the Now-Recording screen.
+/// Tab bar: Home · Record · Conversations · Ask. Tapping Record starts capture
+/// (no idle accessory); while recording, the Record tab is hidden and a
+/// Now-Playing-style accessory bar appears -> Home · Conversations · Ask.
 struct MainTabView: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
         @Bindable var model = model
-        TabView(selection: $model.selectedTab) {
+        let tabs = TabView(selection: $model.selectedTab) {
             Tab("Home", systemImage: "house", value: AppModel.AppTab.home) {
                 HomeView()
+            }
+            if !model.isRecording {
+                Tab("Record", systemImage: "record.circle", value: AppModel.AppTab.record) {
+                    Color.clear   // action tab — selection is intercepted to start recording
+                }
             }
             Tab("Conversations", systemImage: "waveform", value: AppModel.AppTab.conversations) {
                 ConversationsView()
@@ -36,13 +41,22 @@ struct MainTabView: View {
             Tab("Ask", systemImage: "sparkles", value: AppModel.AppTab.ask) {
                 AskView()
             }
-            Tab(value: AppModel.AppTab.search, role: .search) {
-                SearchView()
-            }
         }
         .tint(BrandColor.royalBlue)
-        .tabBarMinimizeBehavior(.onScrollDown)
-        .tabViewBottomAccessory { RecordBar() }
+        .onChange(of: model.selectedTab) { _, newValue in
+            if newValue == .record {
+                model.selectedTab = .home
+                Task { await model.startRecording() }
+            }
+        }
+
+        Group {
+            if model.isRecording {
+                tabs.tabViewBottomAccessory { RecordBar() }
+            } else {
+                tabs
+            }
+        }
         .sheet(isPresented: $model.showRecordingScreen) { NowRecordingView() }
     }
 }
