@@ -58,6 +58,7 @@ struct MainTabView: View {
             }
         }
         .sheet(isPresented: $model.showRecordingScreen) { NowRecordingView() }
+        .sheet(isPresented: $model.showOnboarding) { OnboardingView() }
     }
 }
 

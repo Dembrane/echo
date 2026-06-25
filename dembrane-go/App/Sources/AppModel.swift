@@ -33,6 +33,7 @@ final class AppModel {
     var registrationSentTo: String?
     var pendingAskConversationId: String?
     var pendingAskQuery: String?
+    var showOnboarding = false
 
     // Loaded data
     var me: Me?
@@ -53,6 +54,7 @@ final class AppModel {
     private var currentChatId: String?
 
     private static let selectedProjectKey = "dembrane.go.selectedProject"   // full Project JSON
+    private static let didOnboardKey = "dembrane.go.didOnboard"
     private static let environmentKey = "dembrane.go.environment"
 
     private let sessionManager: SessionManager
@@ -483,7 +485,30 @@ final class AppModel {
             persistSelectedProject()
         }
 
+        // First run: let the user pick which workspace their "Go Recordings"
+        // project lives in (we still auto-picked a default so capture isn't blocked).
+        if !UserDefaults.standard.bool(forKey: Self.didOnboardKey), !workspaces.isEmpty {
+            showOnboarding = true
+        }
+
         await loadConversations()
+    }
+
+    /// Finish onboarding: find-or-create "Go Recordings" in the chosen workspace
+    /// and make it the active project.
+    func completeOnboarding(workspace: Workspace) async {
+        if let existing = allProjects.first(where: {
+            $0.workspace.id == workspace.id
+                && $0.project.name.localizedCaseInsensitiveCompare(defaultProjectName) == .orderedSame
+        }) {
+            selectProject(existing)
+        } else if let created = try? await api.createProject(workspaceId: workspace.id, name: defaultProjectName) {
+            let wp = WorkspaceProject(project: created, workspace: workspace)
+            allProjects.append(wp)
+            selectProject(wp)
+        }
+        UserDefaults.standard.set(true, forKey: Self.didOnboardKey)
+        showOnboarding = false
     }
 
     /// Flat list of projects across every workspace the user can see.
