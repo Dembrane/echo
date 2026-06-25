@@ -291,6 +291,19 @@ final class AppModel {
         try await api.conversation(id: id)
     }
 
+    /// Soft-delete (recoverable for a grace period server-side). Removes the row
+    /// optimistically and restores it if the request fails.
+    func deleteConversation(_ conversation: Conversation) async {
+        let snapshot = conversations
+        conversations.removeAll { $0.id == conversation.id }
+        do {
+            try await api.deleteConversation(id: conversation.id)
+        } catch {
+            conversations = snapshot
+            statusMessage = "Couldn't delete — try again."
+        }
+    }
+
     /// Start an Ask scoped to a conversation (swipe action) and jump to Ask.
     func askAbout(_ conversation: Conversation) {
         pendingAskConversationId = conversation.id

@@ -13,6 +13,7 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func projects(workspaceId: String) async throws -> [Project]
     func conversations(projectId: String) async throws -> [Conversation]
     func conversation(id: String) async throws -> Conversation
+    func deleteConversation(id: String) async throws
     func createProject(workspaceId: String, name: String) async throws -> Project
 }
 
@@ -69,9 +70,29 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
         try await get(endpoints.conversation(id: id), as: Conversation.self)
     }
 
+    public func deleteConversation(id: String) async throws {
+        try await send(endpoints.deleteConversation(id: id), method: "DELETE")
+    }
+
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         try await post(endpoints.projects(workspaceId: workspaceId),
                        body: ["name": name, "language": "en"], as: Project.self)
+    }
+
+    /// Authed request with no body and no decoded response (e.g. DELETE).
+    private func send(_ url: URL, method: String, retrying: Bool = true) async throws {
+        var req = URLRequest(url: url)
+        req.httpMethod = method
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let token = await tokenProvider() {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        let (_, resp) = try await session.data(for: req)
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+        if code == 401, retrying, let onUnauthorized, await onUnauthorized() {
+            return try await send(url, method: method, retrying: false)
+        }
+        guard (200..<300).contains(code) else { throw APIError.badStatus(code) }
     }
 
     private func post<T: Decodable>(_ url: URL, body: [String: Any], as type: T.Type,
@@ -108,6 +129,7 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
                      duration: 312, isFinished: true, isAudioProcessingFinished: true,
                      locked: false, lockReason: nil, createdAt: nil)
     }
+    public func deleteConversation(id: String) async throws {}
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         Project(id: "p_go", name: name, workspaceId: workspaceId, language: "en")
     }
