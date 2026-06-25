@@ -41,6 +41,8 @@ final class AppModel {
     var conversations: [Conversation] = []
     var conversationsLoading = false
     var conversationsError = false
+    var didLoadConversationsOnce = false
+    static let waveformBarCount = 48
 
     // Ask (chat) state
     var askConversationIds: Set<String> = []
@@ -263,7 +265,7 @@ final class AppModel {
         isPaused = false
         pausedTotal = 0
         lastPauseAt = nil
-        audioLevels = []
+        audioLevels = Array(repeating: 0, count: Self.waveformBarCount)   // fixed-width buffer (smooth)
         recordingElapsed = 0
         do {
             // Start capturing immediately — don't wait on the network.
@@ -404,7 +406,9 @@ final class AppModel {
         recordingElapsed = currentElapsed()
         guard !isPaused else { return }
         audioLevels.append(recorder.currentLevel())
-        if audioLevels.count > 64 { audioLevels.removeFirst(audioLevels.count - 64) }
+        if audioLevels.count > Self.waveformBarCount {
+            audioLevels.removeFirst(audioLevels.count - Self.waveformBarCount)
+        }
     }
 
     private func currentElapsed() -> TimeInterval {
@@ -492,7 +496,7 @@ final class AppModel {
         guard let projectId = selectedProject?.id else { conversations = []; return }
         conversationsLoading = true
         conversationsError = false
-        defer { conversationsLoading = false }
+        defer { conversationsLoading = false; didLoadConversationsOnce = true }
         do {
             conversations = try await api.conversations(projectId: projectId)
         } catch {
@@ -615,14 +619,45 @@ final class AppModel {
         selectedTab = .ask
     }
 
+    /// Ask scoped to several selected conversations (multi-select).
+    func askAboutMany(_ ids: Set<String>) {
+        setAskContext(ids)
+        pendingAskConversationId = nil
+        selectedTab = .ask
+    }
+
+    /// Delete several conversations (multi-select). Optimistic; restores on error.
+    func deleteConversations(_ ids: Set<String>) async {
+        guard !ids.isEmpty else { return }
+        let snapshot = conversations
+        conversations.removeAll { ids.contains($0.id) }
+        for id in ids {
+            do {
+                try await api.deleteConversation(id: id)
+            } catch {
+                conversations = snapshot
+                statusMessage = "Couldn't delete — try again."
+                return
+            }
+        }
+    }
+
     // MARK: - Ask (chat)
 
+    /// The conversation currently being recorded (if any), so Ask can scope to it.
+    var currentRecordingConversationId: String? { isRecording ? captureConversationId : nil }
+
     /// Consume a pending swipe-to-Ask: scope the thread to that conversation.
+    /// Also auto-adds the in-progress recording, if any (per product ask).
     func startAskForPending() {
-        guard let id = pendingAskConversationId else { return }
-        pendingAskConversationId = nil
-        askConversationIds = [id]
-        resetAskThread()
+        if let id = pendingAskConversationId {
+            pendingAskConversationId = nil
+            askConversationIds = [id]
+            resetAskThread()
+        } else if let live = currentRecordingConversationId, !askConversationIds.contains(live) {
+            askConversationIds.insert(live)
+            resetAskThread()
+        }
     }
 
     /// Toggle a conversation in/out of the Ask context. Changing context starts

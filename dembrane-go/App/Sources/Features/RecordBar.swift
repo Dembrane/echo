@@ -2,10 +2,12 @@ import SwiftUI
 import DembraneCore
 
 /// The persistent capture control in the tab bar's bottom accessory. Idle: a
-/// prominent Record button. Recording: a Now-Playing-style mini bar (waveform +
-/// elapsed + pause) that expands to the Now-Recording screen on tap.
+/// prominent Record button. Recording: a Now-Playing-style mini bar that taps to
+/// expand the Now-Recording screen. Adapts to the inline (collapsed) vs expanded
+/// accessory placement so the timer never gets overlapped by the waveform.
 struct RecordBar: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 
     var body: some View {
         if model.isRecording {
@@ -34,12 +36,23 @@ struct RecordBar: View {
                 .fill(.red)
                 .frame(width: 9, height: 9)
                 .opacity(model.isPaused ? 0.35 : 1)
-            WaveformView(levels: model.audioLevels)
-                .frame(maxWidth: .infinity)
-                .frame(height: 20)
-            Text(RecordingFormat.elapsed(model.recordingElapsed))
-                .font(.subheadline.monospacedDigit())
-                .foregroundStyle(.primary)
+
+            if placement == .inline {
+                Text(RecordingFormat.elapsed(model.recordingElapsed))
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.primary)
+                    .fixedSize()
+                Spacer(minLength: 0)
+            } else {
+                WaveformView(levels: model.audioLevels)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 22)
+                Text(RecordingFormat.elapsed(model.recordingElapsed))
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.primary)
+                    .fixedSize()
+            }
+
             Button {
                 model.isPaused ? model.resumeRecording() : model.pauseRecording()
             } label: {

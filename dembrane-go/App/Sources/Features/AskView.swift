@@ -130,22 +130,35 @@ struct AskView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
+    private var canSend: Bool {
+        !input.trimmingCharacters(in: .whitespaces).isEmpty && !model.askStreaming
+    }
+
     private var inputBar: some View {
-        HStack(spacing: 10) {
-            TextField("Ask…", text: $input, axis: .vertical)
-                .textFieldStyle(.roundedBorder)
-                .lineLimit(1...4)
+        HStack(alignment: .bottom, spacing: 8) {
+            TextField("Ask anything…", text: $input, axis: .vertical)
+                .lineLimit(1...5)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 11)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .strokeBorder(.quaternary)
+                )
             Button {
                 let text = input
                 input = ""
                 Task { await model.sendAsk(text) }
             } label: {
-                Image(systemName: "arrow.up.circle.fill").font(.title)
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.system(size: 34))
+                    .foregroundStyle(canSend ? BrandColor.royalBlue : Color(.systemGray3))
+                    .symbolRenderingMode(.hierarchical)
             }
-            .tint(BrandColor.royalBlue)
-            .disabled(input.trimmingCharacters(in: .whitespaces).isEmpty || model.askStreaming)
+            .buttonStyle(.plain)
+            .disabled(!canSend)
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 12)
         .padding(.vertical, 8)
     }
 

@@ -1,35 +1,37 @@
 import SwiftUI
 import DembraneCore
 
-/// A live level meter: newest sample on the right, scrolling left (like the
-/// Voice Memos / Music waveforms). Driven by `AppModel.audioLevels`.
+/// A live level meter. A fixed number of bars fill the width left→right (newest
+/// on the right edge); only the heights animate, so it scrolls smoothly instead
+/// of jittering as samples arrive (the layout never changes).
 struct WaveformView: View {
     var levels: [Float]
     var color: Color = BrandColor.royalBlue
-    var barWidth: CGFloat = 3
-    var spacing: CGFloat = 2
+    var spacing: CGFloat = 2.5
 
     var body: some View {
         GeometryReader { geo in
+            let count = max(levels.count, 1)
+            let barWidth = max(1.5, (geo.size.width - spacing * CGFloat(count - 1)) / CGFloat(count))
             HStack(alignment: .center, spacing: spacing) {
-                ForEach(Array(levels.enumerated()), id: \.offset) { _, level in
+                ForEach(0..<count, id: \.self) { index in
                     Capsule()
                         .fill(color)
-                        .frame(width: barWidth, height: max(2, CGFloat(level) * geo.size.height))
+                        .frame(width: barWidth, height: height(at: index, in: geo.size.height))
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
-            .clipped()
-            .overlay {
-                if levels.isEmpty {
-                    Capsule().fill(color.opacity(0.25)).frame(height: 2)
-                }
-            }
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .leading)
+            .animation(.easeOut(duration: 0.12), value: levels)
         }
+    }
+
+    private func height(at index: Int, in maxHeight: CGFloat) -> CGFloat {
+        let level = index < levels.count ? CGFloat(levels[index]) : 0
+        return max(2, level * maxHeight)
     }
 }
 
 #Preview {
-    WaveformView(levels: (0..<40).map { _ in Float.random(in: 0.1...1) })
+    WaveformView(levels: (0..<48).map { _ in Float.random(in: 0.1...1) })
         .frame(height: 80).padding()
 }

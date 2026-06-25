@@ -21,7 +21,7 @@ struct HomeView: View {
                     }
                     .padding(.horizontal)
 
-                    if model.conversationsLoading && model.recentConversations.isEmpty {
+                    if !model.didLoadConversationsOnce {
                         ProgressView().frame(maxWidth: .infinity).padding(.top, 40)
                     } else if model.recentConversations.isEmpty {
                         emptyState
