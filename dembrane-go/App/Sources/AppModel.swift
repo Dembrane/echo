@@ -738,11 +738,27 @@ final class AppModel {
         }
     }
 
+    /// If a request failed because the session is truly dead (401 even after the
+    /// refresh-retry), sign out so the user re-authenticates instead of staring at
+    /// a silently-empty app. Returns true if it signed out. Transient/offline
+    /// errors are ignored (we keep showing cached data).
+    @discardableResult
+    private func signOutIfUnauthorized(_ error: Error) async -> Bool {
+        guard case APIError.badStatus(401) = error else { return false }
+        await signOut()
+        return true
+    }
+
     func loadData() async {
         // Paint cached conversations first so Home recents are instant — don't make
         // them wait behind the me/workspaces/projects network waterfall below.
         await loadCachedConversations()
-        me = try? await api.me()
+        do {
+            me = try await api.me()
+        } catch {
+            // Validate the session on launch: a dead session → show login.
+            if await signOutIfUnauthorized(error) { return }
+        }
         workspaces = (try? await api.workspaces()) ?? []
         await loadAllProjects()
 
@@ -874,6 +890,8 @@ final class AppModel {
             conversations = fresh
             await DiskCache.shared.save(fresh, key: cacheKey)
         } catch {
+            // A dead session shows an empty/stale list silently — detect + sign out.
+            if await signOutIfUnauthorized(error) { return }
             conversationsError = conversations.isEmpty
         }
     }
