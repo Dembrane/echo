@@ -91,16 +91,18 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 				tagIdList: defaultTagIdList,
 			});
 		}
-	}, [
-		project.id,
-		project.default_conversation_ask_for_participant_name,
-		defaultName,
-		defaultEmail,
-		defaultTagIdList,
-		isSuccess,
-		isError,
-		searchParams,
-	]);
+		}, [
+			project.id,
+			project.default_conversation_ask_for_participant_name,
+			defaultName,
+			defaultEmail,
+			defaultTagIdList,
+			isSuccess,
+			isError,
+			searchParams,
+			initiateConversationMutation.isPending,
+			initiateConversationMutation.mutate,
+		]);
 
 	useEffect(() => {
 		if (isSuccess) {
