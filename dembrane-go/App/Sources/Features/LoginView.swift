@@ -7,14 +7,23 @@ struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var otp = ""
+    @FocusState private var focused: Field?
+    private enum Field { case email, password, otp }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Spacer()
 
-            Image("DembraneLogo")
-                .resizable().scaledToFit().frame(width: 180)
-                .accessibilityLabel("dembrane")
+            // Fades away when a field is focused (keyboard up) instead of shrinking.
+            // Offset left to cancel the logo art's internal padding so it lines up
+            // with where "Welcome" starts.
+            if focused == nil {
+                Image("DembraneLogo")
+                    .resizable().scaledToFit().frame(width: 180)
+                    .offset(x: -20)
+                    .transition(.opacity)
+                    .accessibilityLabel("dembrane")
+            }
 
             VStack(alignment: .leading, spacing: 6) {
                 Text("Welcome!")
@@ -28,13 +37,19 @@ struct LoginView: View {
                 TextField("Email", text: $email)
                     .textContentType(.emailAddress).keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .focused($focused, equals: .email)
+                    .loginFieldStyle()
                 SecureField("Password", text: $password).textContentType(.password)
+                    .focused($focused, equals: .password)
+                    .loginFieldStyle()
                 if model.needsOTP {
                     TextField("2FA code", text: $otp)
                         .textContentType(.oneTimeCode).keyboardType(.numberPad)
+                        .focused($focused, equals: .otp)
+                        .loginFieldStyle()
                 }
             }
-            .textFieldStyle(.roundedBorder)
+            .animation(.easeInOut(duration: 0.25), value: focused)
 
             if let error = model.loginError {
                 Text(error).font(.callout)
@@ -90,6 +105,18 @@ struct LoginView: View {
             openURL(URL(string: "https://www.dembrane.com/legal/\(path)")!)
         }
         .tint(.secondary)
+    }
+}
+
+private extension View {
+    /// Bigger, rounded login text fields.
+    func loginFieldStyle() -> some View {
+        font(.title3)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(Color(.secondarySystemBackground),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.quaternary))
     }
 }
 

@@ -39,17 +39,28 @@ struct HomeView: View {
             .navigationTitle(greeting)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { showSettings = true } label: {
-                        Image(systemName: "person.crop.circle")
-                            .font(.title2).foregroundStyle(BrandColor.royalBlue)
-                    }
-                    .accessibilityLabel("Settings")
+                    Button { showSettings = true } label: { avatarLabel }
+                        .accessibilityLabel("Settings")
                 }
             }
             .searchable(text: $search, prompt: "Search conversations or ask…")
             .refreshable { await model.loadConversations() }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(item: $selected) { ConversationDetailView(conversation: $0) }
+        }
+    }
+
+    // The user's avatar when available, else the default person glyph.
+    @ViewBuilder private var avatarLabel: some View {
+        if let url = model.avatarURL {
+            AsyncImage(url: url) { image in
+                image.resizable().scaledToFill()
+            } placeholder: {
+                Image(systemName: "person.crop.circle").font(.title2).foregroundStyle(BrandColor.royalBlue)
+            }
+            .frame(width: 30, height: 30).clipShape(.circle)
+        } else {
+            Image(systemName: "person.crop.circle").font(.title2).foregroundStyle(BrandColor.royalBlue)
         }
     }
 
@@ -76,7 +87,7 @@ struct HomeView: View {
     private var recordButton: some View {
         HStack(spacing: 12) {
             Button {
-                model.showRecordingScreen = true
+                Task { await model.startRecording() }   // start immediately, not the armed screen
             } label: {
                 Label("Record", systemImage: "record.circle.fill")
                     .font(.title3.weight(.semibold))
@@ -87,7 +98,7 @@ struct HomeView: View {
             .tint(.red)
 
             Button { showImporter = true } label: {
-                Image(systemName: "square.and.arrow.up")
+                Image(systemName: "icloud.and.arrow.up")
                     .font(.title3)
                     .frame(width: 30, height: 38)
             }

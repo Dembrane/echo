@@ -16,7 +16,7 @@ final class EndpointsTests: XCTestCase {
     func testProjects() {
         XCTAssertEqual(
             e.projects(workspaceId: "W1").absoluteString,
-            "\(base)/v2/workspaces/W1/projects")
+            "\(base)/v2/workspaces/W1/projects?limit=100")
     }
 
     func testConversationsCarriesProjectQuery() {

@@ -54,6 +54,7 @@ public struct Me: Codable, Sendable, Equatable {
     public let displayName: String
     public let onboardingCompleted: Bool
     public let orgs: [OrgSummary]
+    public let avatar: String?    // Directus file id for the profile avatar, if any
 }
 
 public struct OrgSummary: Codable, Sendable, Hashable {
@@ -176,7 +177,7 @@ public struct ConversationReference: Codable, Sendable, Hashable {
 public extension Me {
     static let preview = Me(
         id: "u_preview", directusUserId: "du_preview", email: "you@dembrane.com",
-        displayName: "you", onboardingCompleted: true, orgs: [.preview])
+        displayName: "you", onboardingCompleted: true, orgs: [.preview], avatar: nil)
 }
 public extension OrgSummary {
     static let preview = OrgSummary(id: "o_preview", name: "your org", role: "owner", isPartner: false)

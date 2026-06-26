@@ -189,7 +189,9 @@ struct ConversationsView: View {
     }
 
     @ViewBuilder private var content: some View {
-        if model.conversationsLoading && model.conversations.isEmpty {
+        if model.conversations.isEmpty && !model.didLoadConversationsOnce {
+            // Until the first load completes (e.g. just after login with an empty
+            // cache), show a loader — never flash the "no conversations" empty state.
             HStack { Spacer(); ProgressView(); Spacer() }.listRowSeparator(.hidden)
         } else if model.conversationsError && model.conversations.isEmpty {
             ContentUnavailableView {

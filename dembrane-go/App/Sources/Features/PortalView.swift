@@ -172,7 +172,15 @@ struct PortalSheet: View {
         let renderer = ImageRenderer(content: QRCodeImage(string: portalURL.absoluteString, size: 320))
         renderer.scale = 3
         var items: [Any] = []
-        if let image = renderer.uiImage { items.append(image) }
+        // Share the QR as a PNG *file* — share sheets (WhatsApp/iMessage) preview an
+        // image file, unlike a bare UIImage alongside text, which previews as text.
+        if let image = renderer.uiImage, let data = image.pngData() {
+            let safe = (title.trimmingCharacters(in: .whitespaces).isEmpty
+                        ? "dembrane invite" : title).replacingOccurrences(of: "/", with: "-")
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(safe).png")
+            try? data.write(to: url)
+            if FileManager.default.fileExists(atPath: url.path) { items.append(url) }
+        }
         if !imageOnly { items.append("\(inviteMessage)\n\(portalURL.absoluteString)") }
         if items.isEmpty { items = [portalURL] }
         activity = ShareableItems(items: items)

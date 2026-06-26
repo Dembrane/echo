@@ -695,6 +695,12 @@ final class AppModel {
     /// Recent conversations for the Home tab.
     var recentConversations: [Conversation] { Array(conversations.prefix(3)) }
 
+    /// The signed-in user's avatar (Directus asset), if they have one.
+    var avatarURL: URL? {
+        guard let avatar = me?.avatar, !avatar.isEmpty else { return nil }
+        return environment.directusBaseURL.appending(path: "assets/\(avatar)")
+    }
+
     /// Upload an audio file transferred from the Apple Watch.
     func uploadWatchFile(_ url: URL) async {
         guard let projectId = selectedProject?.id else { return }
