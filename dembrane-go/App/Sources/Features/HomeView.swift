@@ -40,6 +40,7 @@ struct HomeView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showSettings = true } label: { avatarLabel }
+                        .buttonStyle(.plain)   // no toolbar chrome around the avatar
                         .accessibilityLabel("Settings")
                 }
             }
@@ -50,18 +51,31 @@ struct HomeView: View {
         }
     }
 
-    // The user's avatar when available, else the default person glyph.
+    // The user's avatar when available, else the default person glyph — a clean
+    // 32pt circle that fills edge-to-edge (no internal padding), HIG nav-bar style.
+    private static let avatarSize: CGFloat = 32
     @ViewBuilder private var avatarLabel: some View {
         if let url = model.avatarURL {
-            AsyncImage(url: url) { image in
-                image.resizable().scaledToFill()
-            } placeholder: {
-                Image(systemName: "person.crop.circle").font(.title2).foregroundStyle(BrandColor.royalBlue)
+            AsyncImage(url: url) { phase in
+                if let image = phase.image {
+                    image.resizable().scaledToFill()
+                } else {
+                    placeholderAvatar
+                }
             }
-            .frame(width: 30, height: 30).clipShape(.circle)
+            .frame(width: Self.avatarSize, height: Self.avatarSize)
+            .clipShape(.circle)
+            .overlay(Circle().strokeBorder(.quaternary, lineWidth: 0.5))
         } else {
-            Image(systemName: "person.crop.circle").font(.title2).foregroundStyle(BrandColor.royalBlue)
+            placeholderAvatar
         }
+    }
+
+    private var placeholderAvatar: some View {
+        Image(systemName: "person.crop.circle.fill")
+            .resizable().scaledToFit()
+            .frame(width: Self.avatarSize, height: Self.avatarSize)
+            .foregroundStyle(BrandColor.royalBlue)
     }
 
     // Informational only — no in-app purchase button/link (App Store compliant
@@ -116,7 +130,7 @@ struct HomeView: View {
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Recent Conversations").font(.title3.weight(.semibold))
+                Text("Recent conversations").font(.title3.weight(.semibold))
                 Spacer()
                 if !model.recentConversations.isEmpty {
                     Button("See all") { model.selectedTab = .conversations }

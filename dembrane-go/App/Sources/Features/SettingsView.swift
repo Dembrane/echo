@@ -16,7 +16,6 @@ struct SettingsView: View {
                     Button("Sign out", role: .destructive) {
                         Task { await model.signOut() }
                     }
-                    Button("Delete account", role: .destructive) { confirmDelete = true }
                 }
 
                 Section("Project") {
@@ -41,6 +40,13 @@ struct SettingsView: View {
                     LabeledContent("Version", value: appVersion)
                     Link("Source code", destination: URL(string: "https://github.com/dembrane")!)
                 }
+
+                // Separated from Sign out so it's hard to hit by mistake.
+                Section {
+                    Button("Delete account", role: .destructive) { confirmDelete = true }
+                } footer: {
+                    Text("Permanently deletes your account and all its data. Handled on the dembrane website.")
+                }
             }
             .navigationTitle("Settings")
             .sheet(isPresented: $showProjectPicker) {
@@ -53,7 +59,7 @@ struct SettingsView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Account deletion happens on the web. We'll open the dembrane dashboard — sign in there to delete your account and all its data.")
+                Text("Account deletion happens on the dembrane website. We'll open it so you can sign in and delete your account and all its data.")
             }
         }
     }

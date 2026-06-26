@@ -54,7 +54,7 @@ struct PortalQRCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Invite others to record")
                         .font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
-                    Text("Share this project's link. People record on their own phone and it lands here for you to review and ask.")
+                    Text("Share this project's link. People record on their own phone and it lands here for you to review and ask questions about.")
                         .font(.caption).foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
                 }
@@ -105,7 +105,7 @@ struct PortalSheet: View {
                     Section {
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: "info.circle.fill").foregroundStyle(BrandColor.royalBlue)
-                            Text("People who scan this record on their own phone, no account needed. Their recordings appear in “\(project.name)” for you to review and ask about.")
+                            Text("People who scan this record on their own phone, no account needed. Their recordings appear in “\(project.name)” for you to review and ask questions about.")
                                 .font(.footnote).foregroundStyle(.secondary)
                             Spacer(minLength: 0)
                             Button { withAnimation { infoDismissed = true } } label: {
