@@ -6,7 +6,7 @@ import { useConversationById } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSidebarView } from "../hooks/useSidebarView";
-import { useSidebarState } from "../../hooks/useSidebarState";
+import { useSidebarState } from "../hooks/useSidebarState";
 import { useV2Me } from "@/hooks/useV2Me";
 
 interface Crumb {

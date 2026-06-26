@@ -1,7 +1,7 @@
 # ruff: noqa: E402
 import logging
-from logging import getLogger
 from typing import Any, Optional
+from logging import getLogger
 
 import dramatiq
 import nest_asyncio
@@ -13,33 +13,33 @@ nest_asyncio.apply()
 
 import lz4.frame
 from dramatiq import group
-from dramatiq.brokers.redis import RedisBroker
 from dramatiq.encoder import JSONEncoder, MessageData
-from dramatiq.middleware import GroupCallbacks
-from dramatiq.rate_limits.backends import RedisBackend as RateLimitRedisBackend
 from dramatiq.results import Results
-from dramatiq.results.backends.redis import RedisBackend as ResultsRedisBackend
 from dramatiq_workflow import WorkflowMiddleware
+from dramatiq.middleware import GroupCallbacks
+from dramatiq.brokers.redis import RedisBroker
+from dramatiq.rate_limits.backends import RedisBackend as RateLimitRedisBackend
+from dramatiq.results.backends.redis import RedisBackend as ResultsRedisBackend
 
-from dembrane.api.dependency_auth import DependencyDirectusSession
-from dembrane.async_helpers import run_async_in_new_loop
-from dembrane.conversation_utils import (
-    collect_conversations_needing_transcribed_flag,
-    collect_unfinished_conversations,
-    collect_unsummarized_conversations,
-)
+from dembrane.utils import generate_uuid, get_utc_timestamp
+from dembrane.sentry import init_sentry
 from dembrane.directus import (
     DirectusBadRequest,
     DirectusServerError,
     directus_client_context,
 )
+from dembrane.settings import get_settings
+from dembrane.transcribe import transcribe_conversation_chunk
+from dembrane.async_helpers import run_async_in_new_loop
+from dembrane.conversation_utils import (
+    collect_unfinished_conversations,
+    collect_unsummarized_conversations,
+    collect_conversations_needing_transcribed_flag,
+)
+from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.processing_status_utils import (
     ProcessingStatusContext,
 )
-from dembrane.sentry import init_sentry
-from dembrane.settings import get_settings
-from dembrane.transcribe import transcribe_conversation_chunk
-from dembrane.utils import generate_uuid, get_utc_timestamp
 
 settings = get_settings()
 REDIS_URL = settings.cache.redis_url
@@ -144,11 +144,11 @@ class SkipRetryOnUnrecoverableError(dramatiq.Middleware):
     def _load_domain_exceptions(cls) -> None:
         if cls.UNRECOVERABLE_DOMAIN:
             return
-        from dembrane.service.conversation import (
-            ConversationChunkNotFoundException,
-            ConversationNotFoundException,
-        )
         from dembrane.service.project import ProjectNotFoundException
+        from dembrane.service.conversation import (
+            ConversationNotFoundException,
+            ConversationChunkNotFoundException,
+        )
 
         cls.UNRECOVERABLE_DOMAIN = (
             ConversationChunkNotFoundException,
@@ -208,17 +208,17 @@ def task_transcribe_chunk(
             event_prefix="task_transcribe_chunk",
             message=f"for chunk {conversation_chunk_id}",
         ):
-            from dembrane.coordination import store_assemblyai_webhook_metadata
             from dembrane.s3 import get_signed_url
             from dembrane.transcribe import (
-                ASSEMBLYAI_WEBHOOK_SECRET,
                 ASSEMBLYAI_WEBHOOK_URL,
                 TRANSCRIPTION_PROVIDER,
-                _build_hotwords,
+                ASSEMBLYAI_WEBHOOK_SECRET,
                 _fetch_chunk,
+                _build_hotwords,
                 _fetch_conversation,
                 transcribe_audio_assemblyai,
             )
+            from dembrane.coordination import store_assemblyai_webhook_metadata
 
             if TRANSCRIPTION_PROVIDER == "Dembrane-25-09" and ASSEMBLYAI_WEBHOOK_URL:
                 chunk = _fetch_chunk(conversation_chunk_id)
@@ -303,8 +303,8 @@ def _on_chunk_transcription_done(
 
     Uses mark_chunk_decremented to prevent double-decrement on Dramatiq retry.
     """
-    from dembrane.coordination import decrement_pending_chunks, mark_chunk_decremented
     from dembrane.service import conversation_service
+    from dembrane.coordination import mark_chunk_decremented, decrement_pending_chunks
 
     # Prevent double-decrement on retry
     if not mark_chunk_decremented(conversation_id, chunk_id):
@@ -353,8 +353,8 @@ def task_correct_transcript(
     task_logger = getLogger("dembrane.tasks.task_correct_transcript")
 
     from dembrane.transcribe import (
-        _save_chunk_error,
         _save_transcript,
+        _save_chunk_error,
         _transcript_correction_workflow,
     )
 
@@ -456,12 +456,12 @@ def task_finalize_conversation(conversation_id: str) -> None:
     """
     logger = getLogger("dembrane.tasks.task_finalize_conversation")
 
+    from dembrane.service import conversation_service
     from dembrane.coordination import (
-        cleanup_conversation_coordination,
         get_pending_chunks,
         mark_finalize_in_progress,
+        cleanup_conversation_coordination,
     )
-    from dembrane.service import conversation_service
 
     try:
         logger.info(f"Finalizing conversation: {conversation_id}")
@@ -559,8 +559,8 @@ def task_summarize_conversation(conversation_id: str) -> None:
     logger = getLogger("dembrane.tasks.task_summarize_conversation")
 
     from dembrane.coordination import (
-        clear_summarize_in_progress,
         mark_summarize_in_progress,
+        clear_summarize_in_progress,
     )
     from dembrane.service.conversation import ConversationNotFoundException
 
@@ -681,8 +681,8 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
             return
 
         # local import to avoid circular imports
-        from dembrane.api.conversation import get_conversation_content
         from dembrane.api.exceptions import NoContentFoundException
+        from dembrane.api.conversation import get_conversation_content
 
         with ProcessingStatusContext(
             conversation_id=conversation_id,
@@ -719,8 +719,8 @@ def _stamp_over_cap(conversation_id: str, logger: Any) -> None:
 
     Only fires on free + pilot; pioneer+ always evaluates to False.
     """
+    from dembrane.service import project_service, conversation_service
     from dembrane.directus import directus, directus_client_context
-    from dembrane.service import conversation_service, project_service
     from dembrane.tier_capacity import compute_is_over_cap
 
     conversation = conversation_service.get_by_id_or_raise(conversation_id)
@@ -797,8 +797,8 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
     """
     logger = getLogger("dembrane.tasks.task_finish_conversation_hook")
 
-    from dembrane.coordination import get_pending_chunks, mark_finish_in_progress
     from dembrane.service import conversation_service
+    from dembrane.coordination import get_pending_chunks, mark_finish_in_progress
     from dembrane.service.conversation import ConversationNotFoundException
 
     try:
@@ -901,8 +901,8 @@ def task_process_conversation_chunk(
 
     logger = getLogger("dembrane.tasks.task_process_conversation_chunk")
     try:
-        from dembrane.coordination import increment_pending_chunks
         from dembrane.service import conversation_service
+        from dembrane.coordination import increment_pending_chunks
 
         chunk = conversation_service.get_chunk_by_id_or_raise(chunk_id)
         conversation_id = chunk["conversation_id"]
@@ -1264,9 +1264,9 @@ def task_create_report(project_id: str, report_id: int, language: str, user_inst
     logger = getLogger("dembrane.tasks.task_create_report")
     logger.info(f"Starting report generation (phase 1) for project {project_id}, report {report_id}")
 
+    from dembrane.report_utils import ReportGenerationError
     from dembrane.report_events import publish_report_progress
     from dembrane.report_generation import dispatch_summarization_if_needed
-    from dembrane.report_utils import ReportGenerationError
 
     with ProcessingStatusContext(
         project_id=project_id,
@@ -1379,9 +1379,9 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
     logger = getLogger("dembrane.tasks.task_create_report_continue")
     logger.info(f"Starting report generation (phase 2) for project {project_id}, report {report_id}")
 
+    from dembrane.report_utils import ReportGenerationError
     from dembrane.report_events import publish_report_progress
     from dembrane.report_generation import generate_report_after_summaries
-    from dembrane.report_utils import ReportGenerationError
 
     with ProcessingStatusContext(
         project_id=project_id,
@@ -1914,10 +1914,10 @@ async def _apply_tier_expiry(workspace_id: str, from_tier: str) -> list[dict]:
 
     Returns the list of downgrade effects applied.
     """
-    from dembrane.billing_account import update_workspace_billing
     from dembrane.cache_utils import invalidate_org_usage, invalidate_workspace_usage
     from dembrane.directus_async import async_directus
     from dembrane.tier_downgrade import apply_downgrade_effects
+    from dembrane.billing_account import update_workspace_billing
 
     effects = await apply_downgrade_effects(workspace_id, from_tier, "free")
 
@@ -1951,8 +1951,8 @@ def _send_tier_expired_notifications(
     """Emit TIER_EXPIRED in-app notification + email to admins + billing."""
     from dembrane.email import send_email_sync
     from dembrane.notifications import (
-        audience_workspace_admins_and_billing,
         emit_to_audience,
+        audience_workspace_admins_and_billing,
     )
 
     task_logger = getLogger("dembrane.tasks._send_tier_expired_notifications")
@@ -2041,8 +2041,7 @@ def task_send_tier_expiry_prewarning() -> None:
     task_logger = getLogger("dembrane.tasks.task_send_tier_expiry_prewarning")
     task_logger.info("Checking for workspaces needing tier expiry pre-warning @ %s", get_utc_timestamp())
 
-    from datetime import datetime as dt_cls
-    from datetime import timedelta, timezone
+    from datetime import datetime as dt_cls, timezone, timedelta
 
     from dembrane.directus import directus, directus_client_context
 
@@ -2119,8 +2118,8 @@ def _send_tier_expiring_soon(
     """Emit TIER_EXPIRING_SOON in-app notification + email to admins + billing."""
     from dembrane.email import send_email_sync
     from dembrane.notifications import (
-        audience_workspace_admins_and_billing,
         emit_to_audience,
+        audience_workspace_admins_and_billing,
     )
 
     task_logger = getLogger("dembrane.tasks._send_tier_expiring_soon")
@@ -2209,8 +2208,8 @@ def task_reconcile_pending_billing() -> None:
     reconciles each from Mollie. Idempotent — activation is a no-op if already
     active."""
     task_logger = getLogger("dembrane.tasks.task_reconcile_pending_billing")
-    from dembrane.billing_service import sync_account_from_mollie
     from dembrane.directus import directus, directus_client_context
+    from dembrane.billing_service import sync_account_from_mollie
 
     with directus_client_context(directus) as client:
         pending = client.get_items("billing_account", {
@@ -2245,8 +2244,8 @@ def task_reconcile_subscription_seats() -> None:
     reconciles all active subscriptions; the service layer skips the PATCH when
     the amount is unchanged."""
     task_logger = getLogger("dembrane.tasks.task_reconcile_subscription_seats")
-    from dembrane.billing_service import reconcile_account_seats
     from dembrane.directus import directus, directus_client_context
+    from dembrane.billing_service import reconcile_account_seats
 
     with directus_client_context(directus) as client:
         active = client.get_items("billing_account", {

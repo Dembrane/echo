@@ -5,10 +5,11 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from dembrane.api.dependency_auth import DirectusSession, require_directus_session
-from dembrane.api.v2.me import router
+from httpx import AsyncClient, ASGITransport
 from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
+
+from dembrane.api.v2.me import router
+from dembrane.api.dependency_auth import DirectusSession, require_directus_session
 
 _USER_ID = "test-user-123"
 _APP_USER_ID = "au-test-123"

@@ -12,15 +12,16 @@ production failures this design fixes:
     AsyncLibraryNotFoundError (covered by test_gevent_async_httpx).
 """
 
-import asyncio
-import subprocess
 import sys
+import asyncio
 import textwrap
 import threading
+import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pytest
-from dembrane.async_helpers import _ensure_background_loop, run_async_in_new_loop
+
+from dembrane.async_helpers import run_async_in_new_loop, _ensure_background_loop
 
 
 async def _simple_coro(value: int) -> int:
