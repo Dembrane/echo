@@ -22,6 +22,8 @@ final class AudioRecorder {
     private var index = 0
     private var segmentSeconds: TimeInterval = 30
     private(set) var isPaused = false
+    private var rotationSuspended = false
+    private var interruptionObserver: NSObjectProtocol?
 
     private static let settings: [String: Any] = [
         AVFormatIDKey: kAudioFormatMPEG4AAC,
@@ -38,6 +40,8 @@ final class AudioRecorder {
         segmentSeconds = seconds
         index = 0
         isPaused = false
+        rotationSuspended = false
+        observeInterruptions()
         try beginSegment()
         startRotationTimer()
     }
@@ -47,6 +51,11 @@ final class AudioRecorder {
         timer?.invalidate()
         timer = nil
         isPaused = false
+        rotationSuspended = false
+        if let interruptionObserver {
+            NotificationCenter.default.removeObserver(interruptionObserver)
+            self.interruptionObserver = nil
+        }
         guard let rec = recorder, let url = currentURL else { return }
         rec.stop()
         let finished = Segment(url: url, index: index)
@@ -54,6 +63,49 @@ final class AudioRecorder {
         currentURL = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         onSegment?(finished)
+    }
+
+    /// Backgrounding: keep ONE continuous recorder running (no stop/start), so
+    /// audio never drops. Rotating in the background is unreliable (starting a
+    /// fresh AVAudioRecorder can fail/gap) — that was the "goes silent, recovers
+    /// at the 30s tick" bug. We just stop emitting/uploading segments until the
+    /// app is foreground again.
+    func suspendRotation() {
+        guard recorder != nil, !rotationSuspended else { return }
+        rotationSuspended = true
+        timer?.invalidate()
+        timer = nil
+    }
+
+    /// Foreground: emit whatever was captured while suspended (one big segment →
+    /// uploads now), then resume the normal 30s rotation.
+    func resumeRotation() {
+        guard recorder != nil, rotationSuspended else { return }
+        rotationSuspended = false
+        rotate()
+        startRotationTimer()
+    }
+
+    private func observeInterruptions() {
+        if let interruptionObserver { NotificationCenter.default.removeObserver(interruptionObserver) }
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            guard let info = note.userInfo,
+                  let raw = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let type = AVAudioSession.InterruptionType(rawValue: raw) else { return }
+            let shouldResume = (info[AVAudioSessionInterruptionOptionKey] as? UInt)
+                .map { AVAudioSession.InterruptionOptions(rawValue: $0).contains(.shouldResume) } ?? false
+            MainActor.assumeIsolated { self?.onInterruption(type: type, shouldResume: shouldResume) }
+        }
+    }
+
+    /// When an interruption ends (call, Siri, another app's audio), reactivate
+    /// the session and resume recording so capture continues seamlessly.
+    private func onInterruption(type: AVAudioSession.InterruptionType, shouldResume: Bool) {
+        guard type == .ended, shouldResume, recorder != nil, !isPaused else { return }
+        try? AVAudioSession.sharedInstance().setActive(true)
+        recorder?.record()
     }
 
     func pause() {

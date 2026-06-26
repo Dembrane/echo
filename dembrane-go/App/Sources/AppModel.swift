@@ -186,12 +186,21 @@ final class AppModel {
         processPendingRecordingIfReady()
     }
 
-    /// On returning to the foreground while a recording is in progress, flush any
-    /// buffered segments and refresh the list so the recording is reflected.
+    /// Returning to the foreground while recording: resume segment rotation (which
+    /// emits + uploads everything captured while backgrounded), flush any buffered
+    /// segments, and refresh the list so the recording is reflected.
     func reconcileOnForeground() {
         guard isRecording else { return }
+        recorder.resumeRotation()
         if let id = captureConversationId { flushPendingSegments(conversationId: id) }
         Task { await loadConversations() }
+    }
+
+    /// Leaving the foreground while recording: stop rotating but keep capturing to
+    /// one continuous file (no stop/start in the background → no dropouts).
+    func handleBackgrounded() {
+        guard isRecording else { return }
+        recorder.suspendRotation()
     }
 
     /// Starts capture if an intent asked for it and we're ready (project loaded,

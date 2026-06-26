@@ -28,12 +28,12 @@ struct QRCodeImage: View {
             } else {
                 Image(systemName: "qrcode").resizable().scaledToFit().foregroundStyle(.secondary)
             }
-            // dembrane logomark in the center, like the web portal QR.
-            Image("Logomark")
+            // dembrane logomark (tightly cropped) in the center, like the web portal QR.
+            Image("LogomarkTight")
                 .resizable().scaledToFit()
-                .frame(width: size * 0.22, height: size * 0.22)
-                .padding(size * 0.025)
-                .background(.white, in: RoundedRectangle(cornerRadius: size * 0.05, style: .continuous))
+                .frame(width: size * 0.2, height: size * 0.2)
+                .padding(size * 0.03)
+                .background(.white, in: RoundedRectangle(cornerRadius: size * 0.045, style: .continuous))
         }
         .frame(width: size, height: size)
         .padding(8)
