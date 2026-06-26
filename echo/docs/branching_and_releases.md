@@ -43,6 +43,15 @@ main ──────────────────●──────
 
 Releases happen every ~2 weeks, aligned with Linear two-week cycles.
 
+### Release Timing & Constraints
+
+Until we can fully synchronize the Directus schema push and server deployment, please adhere to the following release scheduling rules to avoid deployment risks:
+
+- **Releases with Schema Changes:** Must be scheduled and executed during **off-hours** (e.g., evenings or weekends).
+- **Frontend-only Releases:** These are safe to deploy during **normal working hours**.
+
+### Release Steps
+
 1. **Accumulate changes** on `main` throughout the cycle
 2. **Pre-release checks**:
    - Check for new env vars (`settings.py` fields, `config.ts` exports)
