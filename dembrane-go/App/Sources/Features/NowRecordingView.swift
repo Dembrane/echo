@@ -8,6 +8,7 @@ struct NowRecordingView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var confirmDiscard = false
+    @State private var showTranscript = false
 
     var body: some View {
         NavigationStack {
@@ -19,7 +20,7 @@ struct NowRecordingView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .navigationTitle(model.isRecording ? "Recording" : "Record")
+            .navigationTitle(model.isRecording ? "" : "Record")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if model.isRecording {
@@ -76,54 +77,96 @@ struct NowRecordingView: View {
     // MARK: Recording
 
     private var recordingContent: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            VStack(spacing: 6) {
+        VStack(spacing: 16) {
+            // Heading: recording name, with the project left-aligned beneath it.
+            VStack(alignment: .leading, spacing: 4) {
                 Text(model.recordingName ?? "New recording")
-                    .font(.title2.weight(.semibold)).lineLimit(1).contentTransition(.opacity)
+                    .font(.title2.weight(.semibold)).lineLimit(2).contentTransition(.opacity)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 if let project = model.selectedProject {
                     Text(project.name).font(.subheadline).foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             .padding(.horizontal)
 
-            Text(RecordingFormat.elapsed(model.recordingElapsed))
-                .font(.system(size: 64, weight: .light, design: .rounded))
-                .monospacedDigit().contentTransition(.numericText())
+            liveTranscriptSection
 
-            Label(model.isPaused ? "Paused" : "Recording", systemImage: "circle.fill")
-                .font(.subheadline)
-                .foregroundStyle(model.isPaused ? Color.secondary : Color.red)
-                .symbolEffect(.pulse, options: .repeating, isActive: !model.isPaused)
+            Spacer(minLength: 12)
 
-            WaveformView(levels: model.audioLevels)
-                .frame(height: 140).padding(.horizontal)
+            // Bottom cluster: status · waveform · timer · controls.
+            VStack(spacing: 16) {
+                Label(model.isPaused ? "Paused" : "Recording", systemImage: "circle.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(model.isPaused ? Color.secondary : Color.red)
+                    .symbolEffect(.pulse, options: .repeating, isActive: !model.isPaused)
 
-            Spacer()
+                WaveformView(levels: model.audioLevels)
+                    .frame(height: 72).padding(.horizontal)
 
-            HStack(spacing: 44) {
-                Button {
-                    model.isPaused ? model.resumeRecording() : model.pauseRecording()
-                } label: {
-                    Image(systemName: model.isPaused ? "play.fill" : "pause.fill")
-                        .font(.title).frame(width: 76, height: 76)
-                }
-                .buttonStyle(.glass).clipShape(.circle)
-                .accessibilityLabel(model.isPaused ? "Resume" : "Pause")
+                Text(RecordingFormat.elapsed(model.recordingElapsed))
+                    .font(.system(size: 46, weight: .light, design: .rounded))
+                    .monospacedDigit().contentTransition(.numericText())
 
-                Button {
-                    Task { await model.stopAndUpload() }
-                } label: {
-                    Image(systemName: "stop.fill")
-                        .font(.title).foregroundStyle(.white)
-                        .frame(width: 76, height: 76).background(.red, in: .circle)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Stop and save")
+                controlsRow
             }
+            .padding(.bottom, 20)
+        }
+        .padding(.top, 8)
+    }
 
-            Spacer()
+    /// Live transcript — hidden by default, expandable. Lags behind by design
+    /// (chunks transcribe server-side after upload).
+    private var liveTranscriptSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button { withAnimation(.snappy) { showTranscript.toggle() } } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "text.alignleft")
+                    Text("Live transcript")
+                    Spacer()
+                    Image(systemName: showTranscript ? "chevron.down" : "chevron.right").font(.caption)
+                }
+                .font(.subheadline).foregroundStyle(.secondary)
+                .padding(.horizontal)
+            }
+            .buttonStyle(.plain)
+
+            if showTranscript {
+                ScrollView {
+                    Text(model.liveTranscript.isEmpty
+                         ? "Your transcript appears here as the recording is processed — it lags a little behind."
+                         : model.liveTranscript)
+                        .font(.callout)
+                        .foregroundStyle(model.liveTranscript.isEmpty ? .tertiary : .primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+                        .padding(.horizontal)
+                }
+                .frame(maxHeight: 240)
+            }
+        }
+    }
+
+    private var controlsRow: some View {
+        HStack(spacing: 44) {
+            Button {
+                model.isPaused ? model.resumeRecording() : model.pauseRecording()
+            } label: {
+                Image(systemName: model.isPaused ? "play.fill" : "pause.fill")
+                    .font(.title).frame(width: 72, height: 72)
+            }
+            .buttonStyle(.glass).clipShape(.circle)
+            .accessibilityLabel(model.isPaused ? "Resume" : "Pause")
+
+            Button {
+                Task { await model.stopAndUpload() }
+            } label: {
+                Image(systemName: "stop.fill")
+                    .font(.title).foregroundStyle(.white)
+                    .frame(width: 72, height: 72).background(.red, in: .circle)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Stop and save")
         }
     }
 

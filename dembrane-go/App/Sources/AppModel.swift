@@ -56,6 +56,11 @@ final class AppModel {
     /// The conversation currently being recorded (so its list row opens the
     /// Now-Recording screen instead of the transcript detail). Nil when idle.
     var activeRecordingConversationId: String? { isRecording ? captureConversationId : nil }
+
+    /// Transcript captured so far during the live recording (polled from chunks;
+    /// lags ~30–60s behind because chunks transcribe server-side after upload).
+    var liveTranscript = ""
+    private var transcriptPollTask: Task<Void, Never>?
     static let waveformBarCount = 48
 
     // Ask (chat) state
@@ -323,6 +328,7 @@ final class AppModel {
             showRecordingScreen = true        // open the Now-Recording screen
             startMeterTimer()
             startLiveActivity()
+            startLiveTranscriptPolling()
         } catch {
             statusMessage = "Couldn't start recording."
             return
@@ -365,6 +371,7 @@ final class AppModel {
         meterTimer?.invalidate()
         meterTimer = nil
         endLiveActivity()
+        stopLiveTranscriptPolling()
         recorder.stop()                       // emits the final segment synchronously
         statusMessage = "Finishing…"
         saveState = .saving
@@ -400,6 +407,7 @@ final class AppModel {
         showRecordingScreen = false
         recorder.onSegment = nil          // don't upload the final segment stop() emits
         endLiveActivity()
+        stopLiveTranscriptPolling()
         recorder.stop()
         for task in chunkUploads { task.cancel() }
         for segment in pendingSegments { try? FileManager.default.removeItem(at: segment.url) }
@@ -413,6 +421,31 @@ final class AppModel {
         cleanupCapture()
         saveState = .idle
         statusMessage = nil
+    }
+
+    /// Poll the in-progress conversation's chunks so the Now-Recording screen can
+    /// show a live (lagging) transcript.
+    private func startLiveTranscriptPolling() {
+        transcriptPollTask?.cancel()
+        liveTranscript = ""
+        transcriptPollTask = Task { [weak self] in
+            while !Task.isCancelled {
+                if let self, let id = self.captureConversationId,
+                   let chunks = try? await self.api.conversationChunks(id: id) {
+                    self.liveTranscript = chunks
+                        .sorted { ($0.timestamp ?? .distantPast) < ($1.timestamp ?? .distantPast) }
+                        .compactMap { $0.transcript?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                        .filter { !$0.isEmpty }
+                        .joined(separator: " ")
+                }
+                try? await Task.sleep(for: .seconds(8))
+            }
+        }
+    }
+
+    private func stopLiveTranscriptPolling() {
+        transcriptPollTask?.cancel()
+        transcriptPollTask = nil
     }
 
     /// Show a save outcome, then auto-dismiss the banner.
@@ -531,6 +564,7 @@ final class AppModel {
         chunkUploads = []
         initiateTask = nil
         recorder.onSegment = nil
+        liveTranscript = ""
     }
 
     private func startLiveActivity() {
