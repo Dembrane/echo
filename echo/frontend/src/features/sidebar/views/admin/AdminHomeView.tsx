@@ -1,4 +1,9 @@
-import { ChartBar, CreditCard, Handshake } from "@phosphor-icons/react";
+import {
+	ChartBar,
+	CreditCard,
+	GraduationCap,
+	Handshake,
+} from "@phosphor-icons/react";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
 
@@ -12,6 +17,7 @@ export const AdminHomeView = () => {
 				icon={ChartBar}
 			/>
 			<NavItem to="/admin/payments" label="Payments" icon={CreditCard} />
+			<NavItem to="/admin/training" label="Training" icon={GraduationCap} />
 			<NavItem
 				to="/admin/partners"
 				label="Partners"

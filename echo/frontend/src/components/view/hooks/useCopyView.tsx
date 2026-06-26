@@ -4,7 +4,7 @@ import useCopyToRichText from "@/hooks/useCopyToRichText";
 import { directus } from "@/lib/directus";
 
 export const useCopyView = () => {
-	const { language, projectId } = useParams();
+	const { language, workspaceId, projectId } = useParams();
 	const { copied, copy } = useCopyToRichText();
 
 	const copyView = (viewId: string) => {
@@ -28,9 +28,9 @@ export const useCopyView = () => {
 				}),
 			);
 
-			// http://localhost:5173/en-US/projects/f65cd477-9f4c-4067-80e5-43634bb1dcb4/library/views/3af65db5-53b9-4641-b482-3982bbc6b9be
+			// http://localhost:5173/en-US/w/<workspaceId>/projects/f65cd477-9f4c-4067-80e5-43634bb1dcb4/library/views/3af65db5-53b9-4641-b482-3982bbc6b9be
 			stringBuilder.push(
-				`# View: [${view.name}](${window.location.origin}/${language}/projects/${projectId}/library/views/${viewId})`,
+				`# View: [${view.name}](${window.location.origin}/${language}/w/${workspaceId}/projects/${projectId}/library/views/${viewId})`,
 			);
 
 			if (view.summary) {
@@ -44,9 +44,9 @@ export const useCopyView = () => {
 			stringBuilder.push("## Aspects");
 
 			for (const aspect of view.aspects as Aspect[]) {
-				// http://localhost:5173/en-US/projects/f65cd477-9f4c-4067-80e5-43634bb1dcb4/library/views/3af65db5-53b9-4641-b482-3982bbc6b9be/aspects/0b9d5691-d31b-430f-ab28-c38f86c078f4
+				// http://localhost:5173/en-US/w/<workspaceId>/projects/f65cd477-9f4c-4067-80e5-43634bb1dcb4/library/views/3af65db5-53b9-4641-b482-3982bbc6b9be/aspects/0b9d5691-d31b-430f-ab28-c38f86c078f4
 				stringBuilder.push(
-					`### [${aspect.name}](${window.location.origin}/${language}/projects/${projectId}/library/views/${viewId}/aspects/${aspect.id})`,
+					`### [${aspect.name}](${window.location.origin}/${language}/w/${workspaceId}/projects/${projectId}/library/views/${viewId}/aspects/${aspect.id})`,
 				);
 
 				if (aspect.image_url) {

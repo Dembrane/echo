@@ -223,7 +223,7 @@ export function useSearchHits(
 					? `${c.projectName} / ${c.displayLabel}`
 					: t`Conversation`;
 			push({
-				href: `/w/${c.workspaceId}/projects/${c.projectId}/conversation/${c.id}`,
+				href: `/w/${c.workspaceId}/projects/${c.projectId}/conversations/${c.id}`,
 				icon: ChatCircleIcon,
 				id: `conv-${c.id}`,
 				label: c.displayLabel,
@@ -240,7 +240,7 @@ export function useSearchHits(
 				? `${path}: "${tr.excerpt.slice(0, EXCERPT_LENGTH)}..."`
 				: path;
 			push({
-				href: `/w/${tr.workspaceId}/projects/${tr.projectId}/conversation/${tr.conversationId}`,
+				href: `/w/${tr.workspaceId}/projects/${tr.projectId}/conversations/${tr.conversationId}`,
 				icon: FileTextIcon,
 				id: `chunk-${tr.id}`,
 				label: tr.conversationLabel ?? t`Transcript`,
