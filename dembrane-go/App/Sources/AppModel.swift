@@ -968,23 +968,33 @@ final class AppModel {
         }
     }
 
-    /// Toggle a conversation in/out of the Ask context. Changing context starts
-    /// a fresh thread (the server scopes context at chat creation).
+    /// Toggle a conversation in/out of the Ask context. If a chat is already
+    /// underway, newly-added context is attached to that SAME chat (no reset);
+    /// only a fresh thread resets.
     func toggleAskConversation(_ id: String) {
-        if askConversationIds.contains(id) {
-            askConversationIds.remove(id)
+        let adding = !askConversationIds.contains(id)
+        if adding { askConversationIds.insert(id) } else { askConversationIds.remove(id) }
+        if let chatId = currentChatId {
+            if adding {
+                Task { try? await chatService.addContext(chatId: chatId, conversationId: id) }
+            }
         } else {
-            askConversationIds.insert(id)
+            resetAskThread()
         }
-        resetAskThread()
     }
 
     /// Replace the Ask context in one shot (from the context picker's Done).
-    /// Only resets the thread when the selection actually changed.
+    /// Within an active chat, attach the newly-added conversations to it instead
+    /// of starting over — so you can grow context mid-conversation.
     func setAskContext(_ ids: Set<String>) {
         guard ids != askConversationIds else { return }
+        let added = ids.subtracting(askConversationIds)
         askConversationIds = ids
-        resetAskThread()
+        if let chatId = currentChatId {
+            Task { for id in added { try? await chatService.addContext(chatId: chatId, conversationId: id) } }
+        } else {
+            resetAskThread()
+        }
     }
 
     func resetAskThread() {

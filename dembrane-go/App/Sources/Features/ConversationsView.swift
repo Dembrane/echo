@@ -15,6 +15,7 @@ struct ConversationsView: View {
     @State private var showBulkDelete = false
     @State private var showBulkTag = false
     @State private var deleteTick = 0
+    @State private var shareItem: ShareableText?
 
     private var filtered: [Conversation] {
         let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -70,6 +71,7 @@ struct ConversationsView: View {
             .sheet(isPresented: $showBulkTag) {
                 BulkTagPicker(conversationIds: selectedIDs) { exitSelect() }
             }
+            .sheet(item: $shareItem) { ActivityView(text: $0.text) }
             // Selection tick entering/leaving multi-select; success cue on a confirmed delete.
             .sensoryFeedback(.selection, trigger: selectMode)
             .sensoryFeedback(.success, trigger: deleteTick)
@@ -203,6 +205,7 @@ struct ConversationsView: View {
         } else {
             ForEach(filtered) { conversation in
                 ConversationRow(conversation: conversation)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .tag(conversation.id)
                     .contentShape(Rectangle())
                     .onTapGesture {
@@ -213,6 +216,7 @@ struct ConversationsView: View {
                             selected = conversation
                         }
                     }
+                    // Trailing (swipe left): destructive + Ask, per Apple's pattern.
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) { pendingDelete = conversation } label: {
                             Label("Delete", systemImage: "trash")
@@ -221,6 +225,17 @@ struct ConversationsView: View {
                             Label("Ask", systemImage: "sparkles")
                         }
                         .tint(BrandColor.royalBlue)
+                    }
+                    // Leading (swipe right): the same quick actions as the long-press menu.
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        Button { shareItem = ShareableText(text: shareText(conversation)) } label: {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
+                        .tint(.indigo)
+                        Button { copyTranscript(conversation) } label: {
+                            Label("Copy", systemImage: "doc.on.doc")
+                        }
+                        .tint(.gray)
                     }
                     .contextMenu {
                         Button { model.askAbout(conversation) } label: {

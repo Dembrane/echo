@@ -8,7 +8,8 @@ enum QRGenerator {
     static func image(from string: String) -> UIImage? {
         let filter = CIFilter.qrCodeGenerator()
         filter.message = Data(string.utf8)
-        filter.correctionLevel = "M"
+        // "H" (30% error correction) so it still scans with the logo over the center.
+        filter.correctionLevel = "H"
         guard let output = filter.outputImage?
                 .transformed(by: CGAffineTransform(scaleX: 12, y: 12)),
               let cg = context.createCGImage(output, from: output.extent) else { return nil }
@@ -21,12 +22,18 @@ struct QRCodeImage: View {
     var size: CGFloat = 200
 
     var body: some View {
-        Group {
+        ZStack {
             if let ui = QRGenerator.image(from: string) {
                 Image(uiImage: ui).resizable().interpolation(.none).scaledToFit()
             } else {
                 Image(systemName: "qrcode").resizable().scaledToFit().foregroundStyle(.secondary)
             }
+            // dembrane logomark in the center, like the web portal QR.
+            Image("Logomark")
+                .resizable().scaledToFit()
+                .frame(width: size * 0.22, height: size * 0.22)
+                .padding(size * 0.025)
+                .background(.white, in: RoundedRectangle(cornerRadius: size * 0.05, style: .continuous))
         }
         .frame(width: size, height: size)
         .padding(8)
@@ -74,33 +81,53 @@ struct PortalSheet: View {
 
     @State private var title = ""
     @State private var description = ""
-    @State private var keyTerms = ""
+    @State private var keyTerms: [String] = []
+    @State private var newTerm = ""
     @State private var loaded = false
     @State private var saving = false
+    @AppStorage("dembrane.go.portalInfoDismissed") private var infoDismissed = false
 
     private var portalURL: URL { model.portalURL(for: project) }
+    private var inviter: String {
+        model.me?.displayName.split(separator: " ").first.map(String.init) ?? "I"
+    }
+    private var inviteMessage: String {
+        let t = title.trimmingCharacters(in: .whitespaces)
+        return t.isEmpty ? "\(inviter) invited you to record on dembrane."
+                         : "\(inviter) invited you to record: \(t)"
+    }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    VStack(spacing: 12) {
-                        QRCodeImage(string: portalURL.absoluteString, size: 210)
-                        Text(portalURL.absoluteString)
-                            .font(.caption2).foregroundStyle(.secondary)
-                            .lineLimit(1).truncationMode(.middle)
-                        ShareLink(item: portalURL) {
-                            Label("Share link", systemImage: "square.and.arrow.up")
+                if !infoDismissed {
+                    Section {
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: "info.circle.fill").foregroundStyle(BrandColor.royalBlue)
+                            Text("People who scan this record on their own phone — no account needed. Their recordings appear in “\(project.name)” for you to review and ask about.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                            Spacer(minLength: 0)
+                            Button { withAnimation { infoDismissed = true } } label: {
+                                Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary)
+                            }
+                            .buttonStyle(.plain).accessibilityLabel("Dismiss")
                         }
-                        .buttonStyle(.bordered).tint(BrandColor.royalBlue)
                     }
-                    .frame(maxWidth: .infinity).padding(.vertical, 8)
-                    .listRowBackground(Color.clear)
                 }
 
                 Section {
-                    Text("People who scan this code record on their own phone — no account needed. Their recordings appear in “\(project.name)” for you to review, summarize, and ask about.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                    VStack(spacing: 14) {
+                        QRCodeImage(string: portalURL.absoluteString, size: 210)
+                        ShareLink(item: portalURL,
+                                  subject: Text(inviteMessage),
+                                  message: Text(inviteMessage)) {
+                            Label("Share invite", systemImage: "square.and.arrow.up")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
+                    }
+                    .frame(maxWidth: .infinity).padding(.vertical, 8)
+                    .listRowBackground(Color.clear)
                 }
 
                 Section("Default title") {
@@ -111,12 +138,11 @@ struct PortalSheet: View {
                         .lineLimit(2...5).disabled(!loaded)
                 }
                 Section {
-                    TextField("Names, jargon, or places to help transcription", text: $keyTerms, axis: .vertical)
-                        .lineLimit(1...4).disabled(!loaded)
+                    keyTermsEditor
                 } header: {
                     Text("Key terms")
                 } footer: {
-                    Text("Context that improves transcription accuracy for this project.")
+                    Text("Names, jargon, or places — add them one at a time to improve transcription.")
                 }
             }
             .navigationTitle("Share to record")
@@ -128,21 +154,62 @@ struct PortalSheet: View {
                     else { Button("Save") { Task { await save() } }.disabled(!loaded) }
                 }
             }
-            .task {
-                if let s = await model.portalSettings(projectId: project.id) {
-                    title = s.defaultConversationTitle ?? ""
-                    description = s.defaultConversationDescription ?? ""
-                    keyTerms = s.context ?? ""
+            .task { await load() }
+        }
+    }
+
+    private var keyTermsEditor: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if !keyTerms.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(keyTerms, id: \.self) { term in
+                            HStack(spacing: 4) {
+                                Text(term).font(.caption)
+                                Button { keyTerms.removeAll { $0 == term } } label: {
+                                    Image(systemName: "xmark.circle.fill").font(.caption2)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.horizontal, 10).padding(.vertical, 6)
+                            .background(BrandColor.royalBlue.opacity(0.12), in: .capsule)
+                            .foregroundStyle(BrandColor.royalBlue)
+                        }
+                    }
                 }
-                loaded = true
+            }
+            HStack {
+                TextField("Add a term", text: $newTerm).disabled(!loaded).onSubmit(addTerm)
+                Button(action: addTerm) { Image(systemName: "plus.circle.fill") }
+                    .disabled(newTerm.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         }
+    }
+
+    private func addTerm() {
+        let t = newTerm.trimmingCharacters(in: .whitespaces)
+        newTerm = ""
+        guard !t.isEmpty, !keyTerms.contains(t) else { return }
+        keyTerms.append(t)
+    }
+
+    private func load() async {
+        if let s = await model.portalSettings(projectId: project.id) {
+            title = s.defaultConversationTitle ?? ""
+            description = s.defaultConversationDescription ?? ""
+            keyTerms = (s.context ?? "")
+                .split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty }
+        }
+        loaded = true
     }
 
     private func save() async {
         saving = true
         let ok = await model.updatePortalSettings(
-            projectId: project.id, title: title, description: description, context: keyTerms)
+            projectId: project.id, title: title, description: description,
+            context: keyTerms.joined(separator: ", "))
         saving = false
         if ok { dismiss() }
     }

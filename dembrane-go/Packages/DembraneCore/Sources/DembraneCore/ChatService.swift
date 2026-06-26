@@ -8,12 +8,26 @@ public struct Chat: Decodable, Sendable, Identifiable {
     public let dateCreated: Date?
 }
 
-/// A persisted chat message (history).
+/// A persisted chat message (history). Decoded leniently — the Directus payload
+/// can send `id` as a string or an int, and we must never drop the whole history
+/// because one optional field is shaped unexpectedly.
 public struct ChatMessage: Decodable, Sendable, Identifiable {
     public let id: String
     public let messageFrom: String       // "user" | "assistant" | "dembrane"
     public let text: String?
     public let dateCreated: Date?
+
+    enum CodingKeys: String, CodingKey { case id, messageFrom, text, dateCreated }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        if let s = try? c.decode(String.self, forKey: .id) { id = s }
+        else if let i = try? c.decode(Int.self, forKey: .id) { id = String(i) }
+        else { id = UUID().uuidString }
+        messageFrom = (try? c.decode(String.self, forKey: .messageFrom)) ?? "assistant"
+        text = (try? c.decodeIfPresent(String.self, forKey: .text)) ?? nil
+        dateCreated = (try? c.decodeIfPresent(Date.self, forKey: .dateCreated)) ?? nil
+    }
 }
 
 private struct ChatListResponse: Decodable { let chats: [Chat] }
