@@ -11,6 +11,7 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
 	BookOpenIcon,
 	ChatCircleDotsIcon,
@@ -20,12 +21,16 @@ import {
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
+import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { useInfiniteConversationsByProjectId } from "@/components/conversation/hooks";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectById } from "@/components/project/hooks";
 import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
 import { useLatestProjectReport } from "@/components/report/hooks";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 
 const lineClampStyle = {
 	display: "-webkit-box",
@@ -50,6 +55,8 @@ export const ProjectHomeRoute = () => {
 		projectId: string;
 	}>();
 	const navigate = useI18nNavigate();
+	const { workspace } = useWorkspace();
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 
 	const projectQuery = useProjectById({
 		projectId: projectId ?? "",
@@ -157,6 +164,7 @@ export const ProjectHomeRoute = () => {
 					</Group>
 				</Stack>
 
+				{(recentConversationsQuery.isLoading || recentConversations.length > 0) && (
 				<Stack gap="sm">
 					<Group justify="flex-start" align="center" gap="sm">
 						<Text size="xs" c="dimmed" tt="uppercase">
@@ -176,79 +184,102 @@ export const ProjectHomeRoute = () => {
 							<Skeleton height={128} radius="sm" />
 							<Skeleton height={128} radius="sm" />
 						</SimpleGrid>
-					) : recentConversations.length > 0 ? (
-						<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-							{recentConversations.slice(0, 2).map((conversation) => {
-								const tags =
-									(conversation.tags as ConversationProjectTag[] | undefined) ??
-									[];
-								return (
-									<I18nLink
-										key={conversation.id}
-										to={`${base}/conversation/${conversation.id}`}
-										className="no-underline block h-full"
-									>
-										<Card
-											component="a"
-											withBorder
-											p="md"
-											radius="sm"
-											className="h-full hover:!border-primary-400 transition-colors"
-										>
-											<Stack gap="xs">
-												<Stack gap={2} style={{ minWidth: 0 }}>
-													<Text size="sm" fw={500} truncate>
-														{conversationTitle(conversation)}
-													</Text>
-													<Group gap="xs" align="center" wrap="nowrap">
-														<Text size="xs" c="dimmed">
-															{conversation.created_at
-																? new Date(
-																		conversation.created_at,
-																	).toLocaleDateString()
-																: ""}
-														</Text>
-														{conversation.live && (
-															<Badge size="xs" color="red" variant="light">
-																<Trans>Ongoing</Trans>
-															</Badge>
-														)}
-													</Group>
-												</Stack>
+				) : (
+					<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+						{recentConversations.slice(0, 2).map((conversation) => {
+							const tags =
+								(conversation.tags as ConversationProjectTag[] | undefined) ??
+								[];
+							const isLocked = !!conversation.locked;
 
-												<Text size="sm" c="dimmed" style={lineClampStyle}>
-													{conversation.summary?.trim() || (
-														<Trans>No summary yet</Trans>
-													)}
+							const card = (
+								<Card
+									withBorder
+									p="md"
+									radius="sm"
+									className={`h-full transition-colors ${isLocked ? "cursor-pointer" : ""} hover:!border-primary-400`}
+									onClick={
+										isLocked
+											? () => upgradeHandlers.open()
+											: undefined
+									}
+								>
+									<Stack gap="xs">
+										<Stack gap={2} style={{ minWidth: 0 }}>
+											<Text size="sm" fw={500} truncate>
+												{conversationTitle(conversation)}
+											</Text>
+											<Group gap="xs" align="center" wrap="nowrap">
+												<Text size="xs" c="dimmed">
+													{conversation.created_at
+														? new Date(
+																conversation.created_at,
+															).toLocaleDateString()
+														: ""}
 												</Text>
-
-												{tags.length > 0 && (
-													<Group gap={6} wrap="wrap">
-														{tags.slice(0, 4).map((tag) => {
-															const label = tagText(tag);
-															if (!label) return null;
-															return (
-																<Badge
-																	key={tag.id}
-																	size="xs"
-																	variant="light"
-																	color="gray"
-																	radius="sm"
-																>
-																	{label}
-																</Badge>
-															);
-														})}
-													</Group>
+												{conversation.live && (
+													<Badge size="xs" color="red" variant="light">
+														<Trans>Ongoing</Trans>
+													</Badge>
 												)}
-											</Stack>
-										</Card>
-									</I18nLink>
-								);
-							})}
-						</SimpleGrid>
-					) : null}
+											</Group>
+										</Stack>
+
+										{isLocked ? (
+											<LockedTranscriptOverlay
+												compact
+												variant="summary"
+												reason={conversation.lock_reason ?? "free_tier"}
+											/>
+										) : (
+											<Text size="sm" c="dimmed" style={lineClampStyle}>
+												{conversation.summary?.trim() || (
+													<Trans>No summary yet</Trans>
+												)}
+											</Text>
+										)}
+
+										{tags.length > 0 && (
+											<Group gap={6} wrap="wrap">
+												{tags.slice(0, 4).map((tag) => {
+													const label = tagText(tag);
+													if (!label) return null;
+													return (
+														<Badge
+															key={tag.id}
+															size="xs"
+															variant="light"
+															color="gray"
+															radius="sm"
+														>
+															{label}
+														</Badge>
+													);
+												})}
+											</Group>
+										)}
+									</Stack>
+								</Card>
+							);
+
+							if (isLocked) {
+								return <div key={conversation.id}>{card}</div>;
+							}
+
+							return (
+								<I18nLink
+									key={conversation.id}
+									to={`${base}/conversations/${conversation.id}`}
+									className="no-underline block h-full"
+								>
+									{card}
+								</I18nLink>
+							);
+						})}
+					</SimpleGrid>
+				)}
 				</Stack>
+			)}
 
 				{report && reportTitle && (
 					<Stack gap="sm">
@@ -283,6 +314,18 @@ export const ProjectHomeRoute = () => {
 					</Stack>
 				)}
 			</Stack>
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				currentTier={(workspace?.tier ?? "free") as Tier}
+				requiredTier={SELLABLE_TIER}
+				featureName="Conversations"
+				benefit={t`Your free plan includes one conversation. Upgrade to open the rest.`}
+				canRequestUpgrade={
+					workspace?.role === "admin" || workspace?.role === "owner"
+				}
+				workspaceId={workspaceId ?? ""}
+			/>
 		</PageContainer>
 	);
 };

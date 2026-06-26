@@ -172,7 +172,7 @@ export const Quote = ({
 					className="border-t border-gray-200 dark:border-gray-700"
 				>
 					<I18nLink
-						to={`/w/${workspaceId}/projects/${projectId}/conversation/${conversationId}`}
+						to={`/w/${workspaceId}/projects/${projectId}/conversations/${conversationId}`}
 					>
 						<Pill
 							size="sm"

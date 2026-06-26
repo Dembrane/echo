@@ -450,6 +450,19 @@ async def create_report(
 
         access = await resolve_project_access(project_id, auth)
         access.require("report:generate")
+
+        # Free tier: one report per workspace. Additional reports route to upgrade.
+        from dembrane.free_tier import (
+            FREE_TIER_MAX_REPORTS,
+            is_free_tier,
+            free_tier_limit_error,
+            count_workspace_reports,
+        )
+
+        if is_free_tier(access.tier) and (
+            await count_workspace_reports(access.workspace_id) >= FREE_TIER_MAX_REPORTS
+        ):
+            raise free_tier_limit_error("report")
     language = body.language or "en"
 
     from dembrane.directus import directus

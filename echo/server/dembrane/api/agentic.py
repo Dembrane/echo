@@ -263,7 +263,9 @@ def _list_project_conversations_for_agent(
             {"_or": transcript_or_filters},
         ]
         if normalized_conversation_id:
-            transcript_and_filters.append({"conversation_id": {"id": {"_eq": normalized_conversation_id}}})
+            transcript_and_filters.append(
+                {"conversation_id": {"id": {"_eq": normalized_conversation_id}}}
+            )
 
         chunk_limit = min(max(normalized_limit * 25, 25), 250)
         chunk_rows = directus_client.get_items(
@@ -395,7 +397,9 @@ async def _list_events_after(run_id: str, after_seq: int) -> list[dict[str, Any]
 
 
 async def _latest_user_turn(run_id: str) -> Optional[tuple[int, str]]:
-    event = await run_in_thread_pool(agentic_run_service.get_latest_event, run_id, event_type="user.message")
+    event = await run_in_thread_pool(
+        agentic_run_service.get_latest_event, run_id, event_type="user.message"
+    )
     if event is None:
         return None
 
@@ -487,7 +491,9 @@ async def _start_claimed_turn(
             try:
                 await release_turn_lease(run_id, turn_seq, owner_token)
             except Exception as exc:  # noqa: BLE001
-                logger.warning("Failed to release lease for run %s turn %s: %s", run_id, turn_seq, exc)
+                logger.warning(
+                    "Failed to release lease for run %s turn %s: %s", run_id, turn_seq, exc
+                )
             await _pop_active_task(run_id, turn_seq)
 
     task = asyncio.create_task(_runner(), name=f"agentic-run-{run_id}-{turn_seq}")
@@ -513,7 +519,23 @@ async def create_run(
 
     # Matrix §8: agentic analysis is a host-side operation → Pilot hard-block.
     from dembrane.api.v2.middleware import check_no_pilot_block_for_project
+
     await check_no_pilot_block_for_project(body.project_id)
+
+    # Free tier: max 3 user turns per chat. The 4th routes to upgrade.
+    if body.project_chat_id:
+        from dembrane.free_tier import (
+            FREE_TIER_MAX_CHAT_USER_TURNS,
+            is_free_tier,
+            resolve_project_tier,
+            count_chat_user_turns,
+            free_tier_limit_error,
+        )
+
+        if is_free_tier(await resolve_project_tier(body.project_id)) and (
+            await count_chat_user_turns(body.project_chat_id) >= FREE_TIER_MAX_CHAT_USER_TURNS
+        ):
+            raise free_tier_limit_error("chat_turns")
 
     run = await run_in_thread_pool(
         agentic_run_service.create_run,
@@ -561,7 +583,24 @@ async def append_message(
     project_id = run.get("project_id")
     if project_id:
         from dembrane.api.v2.middleware import check_no_pilot_block_for_project
+
         await check_no_pilot_block_for_project(str(project_id))
+
+    # Free tier: max 3 user turns per chat. The 4th routes to upgrade.
+    chat_id_for_turns = str(run.get("project_chat_id") or "")
+    if chat_id_for_turns:
+        from dembrane.free_tier import (
+            FREE_TIER_MAX_CHAT_USER_TURNS,
+            is_free_tier,
+            resolve_project_tier,
+            count_chat_user_turns,
+            free_tier_limit_error,
+        )
+
+        if is_free_tier(await resolve_project_tier(str(project_id or ""))) and (
+            await count_chat_user_turns(chat_id_for_turns) >= FREE_TIER_MAX_CHAT_USER_TURNS
+        ):
+            raise free_tier_limit_error("chat_turns")
 
     await run_in_thread_pool(
         agentic_run_service.append_event,

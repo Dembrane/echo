@@ -27,6 +27,7 @@ type ConversationTranscriptSectionProps = {
 	isAnonymized: boolean;
 	isFinished: boolean;
 	isLocked: boolean;
+	lockReason?: "hours_cap" | "free_tier" | null;
 	participantName: string;
 };
 
@@ -35,6 +36,7 @@ export const ConversationTranscriptSection = ({
 	isAnonymized,
 	isFinished,
 	isLocked,
+	lockReason,
 	participantName,
 }: ConversationTranscriptSectionProps) => {
 	const { ref: loadMoreRef, inView } = useInView();
@@ -135,7 +137,7 @@ export const ConversationTranscriptSection = ({
 			</Group>
 
 			{isLocked ? (
-				<LockedTranscriptOverlay />
+				<LockedTranscriptOverlay reason={lockReason ?? "free_tier"} />
 			) : (
 				<Stack>
 					{allChunks.length === 0 ? (

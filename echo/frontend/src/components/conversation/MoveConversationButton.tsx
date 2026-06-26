@@ -97,7 +97,7 @@ export const MoveConversationButton = ({
 				onSuccess: () => {
 					close();
 					navigate(
-						`/w/${workspaceId}/projects/${data.targetProjectId}/conversation/${conversation.id}`,
+						`/w/${workspaceId}/projects/${data.targetProjectId}/conversations/${conversation.id}`,
 					);
 				},
 			},

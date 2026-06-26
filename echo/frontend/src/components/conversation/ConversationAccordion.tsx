@@ -158,7 +158,7 @@ const ConversationAccordionLabelChatSelection = ({
 	};
 
 	const tooltipLabel = isOverCapLocked
-		? t`Conversation locked, upgrade to add to chat`
+		? t`Upgrade to add this to the chat`
 		: isChatLocked
 			? t`Already added to this chat`
 			: !hasContent
@@ -535,7 +535,7 @@ const ConversationAccordionItem = ({
 
 	return (
 		<NavigationButton
-			to={`/w/${workspaceId}/projects/${conversation.project_id}/conversation/${conversation.id}`}
+			to={`/w/${workspaceId}/projects/${conversation.project_id}/conversations/${conversation.id}`}
 			active={highlight}
 			className="w-full"
 			rightSection={

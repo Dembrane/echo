@@ -1375,11 +1375,15 @@ export function BillingManager({
 								)}
 							</Text>
 						)}
-						{hasPending && withPendingValue != null && (
-							<Text size="xs" c="var(--mantine-color-primary-6)">
-								<Trans>* rises to {eur(withPendingValue)} when accepted</Trans>
-							</Text>
-						)}
+					{hasPending && withPendingValue != null && (
+						<Text size="xs" c="var(--mantine-color-primary-6)">
+							<Trans>
+								{isAnnual ? "Yearly" : "Monthly"} total rises to{" "}
+								{eur(withPendingValue)} when {pendingInvites} pending{" "}
+								{pendingInvites === 1 ? "invite is" : "invites are"} accepted
+							</Trans>
+						</Text>
+					)}
 						{discountPct > 0 && (
 							<Text size="xs" c="primary">
 								<Trans>{discountPct}% discount applied</Trans>

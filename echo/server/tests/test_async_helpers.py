@@ -1,18 +1,27 @@
 """
-Tests for run_async_in_new_loop — specifically the concurrent-greenlet scenario
-that caused "Future attached to a different loop" errors under load.
+Tests for run_async_in_new_loop.
 
-Regression test for: multiple concurrent callers sharing the same OS thread
-(as dramatiq-gevent greenlets do) must not share an event loop.
+It runs coroutines from sync contexts (Dramatiq actors) on a single long-lived
+background event loop in a dedicated real OS thread. Regression coverage for the
+production failures this design fixes:
+  * concurrent callers sharing one OS thread (dramatiq-gevent greenlets) must not
+    corrupt each other's loop ("Future attached to a different loop"),
+  * a long-lived httpx.AsyncClient reused across calls must keep working
+    (no "Event loop is closed"), and
+  * async code that relies on sniffio must run under gevent without
+    AsyncLibraryNotFoundError (covered by test_gevent_async_httpx).
 """
 
+import sys
 import asyncio
+import textwrap
 import threading
+import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pytest
 
-from dembrane.async_helpers import run_async_in_new_loop
+from dembrane.async_helpers import run_async_in_new_loop, _ensure_background_loop
 
 
 async def _simple_coro(value: int) -> int:
@@ -74,8 +83,8 @@ def test_run_async_in_new_loop_concurrent_threads():
 
 def test_run_async_in_new_loop_same_thread_sequential():
     """
-    Calls from the same thread are safe when sequential.
-    Verifies loop is properly closed between calls (no 'loop is closed' error).
+    Sequential calls from the same thread all succeed. The background loop is
+    reused (never closed) between calls, so there is no 'loop is closed' error.
     """
     for i in range(5):
         result = run_async_in_new_loop(_simple_coro(i))
@@ -88,8 +97,9 @@ def test_run_async_in_new_loop_same_thread_id_concurrent():
     that all share the same thread ID (simulated by patching get_ident).
 
     Before the fix (persistent loop per thread ID), all concurrent callers
-    shared one loop → "Future attached to a different loop".
-    After the fix (fresh loop per call), each call is isolated.
+    shared one loop driven by multiple greenlets → "Future attached to a
+    different loop". The shared background loop runs on its own dedicated thread,
+    so caller thread IDs are irrelevant.
     """
     original_get_ident = threading.get_ident
     # Make all threads report the same thread ID — exactly what gevent does
@@ -121,3 +131,132 @@ def test_run_async_in_new_loop_rejects_non_coroutine():
     """Type guard still works."""
     with pytest.raises(TypeError, match="expects a coroutine or Future"):
         run_async_in_new_loop(42)  # type: ignore
+
+
+def test_background_loop_is_reused():
+    """The same long-lived loop backs every call (never recreated/closed)."""
+    run_async_in_new_loop(_simple_coro(1))
+    loop_a = _ensure_background_loop()
+    run_async_in_new_loop(_simple_coro(2))
+    loop_b = _ensure_background_loop()
+    assert loop_a is loop_b
+    assert not loop_a.is_closed()
+
+
+def test_reused_async_client_across_calls():
+    """
+    Regression for task_merge_conversation_chunks' "Event loop is closed".
+
+    A long-lived httpx.AsyncClient (like async_directus) bound to the background
+    loop on first use must keep working across many run_async_in_new_loop calls.
+    The old fresh-loop-per-call design orphaned the client's pool on the closed
+    loop, so the second call raised RuntimeError("Event loop is closed").
+    """
+    import httpx
+
+    client = httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda _request: httpx.Response(200, json={"ok": True})),
+        base_url="http://test",
+    )
+
+    async def _call() -> bool:
+        resp = await client.get("/ping")
+        return resp.json()["ok"]
+
+    try:
+        for _ in range(10):
+            assert run_async_in_new_loop(_call()) is True
+    finally:
+        run_async_in_new_loop(client.aclose())
+
+
+def test_gevent_async_httpx():
+    """
+    Regression for task_summarize_conversation's sniffio
+    AsyncLibraryNotFoundError under dramatiq-gevent.
+
+    Runs in a subprocess so gevent's monkeypatch is applied before imports (as
+    dramatiq-gevent does). Many greenlets drive async httpx (which calls
+    sniffio.current_async_library()) through run_async_in_new_loop concurrently.
+    """
+    script = textwrap.dedent(
+        """
+        from gevent import monkey; monkey.patch_all()
+        import asyncio, httpx, gevent
+        from dembrane.async_helpers import run_async_in_new_loop
+
+        _client = httpx.AsyncClient(
+            transport=httpx.MockTransport(lambda _request: httpx.Response(200, json={"ok": True})),
+            base_url="http://test",
+        )
+
+        async def work(_):
+            await asyncio.sleep(0.02)
+            r = await _client.get("/ping")  # sniffio detection happens here
+            return r.json()["ok"]
+
+        jobs = [gevent.spawn(lambda i=i: run_async_in_new_loop(work(i))) for i in range(20)]
+        gevent.joinall(jobs, timeout=30)
+        errs = [repr(j.exception) for j in jobs if j.exception is not None]
+        assert not errs, errs
+        assert all(j.value is True for j in jobs)
+        print("PASS")
+        """
+    )
+    proc = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, timeout=120
+    )
+    assert proc.returncode == 0, f"stdout={proc.stdout}\nstderr={proc.stderr}"
+    assert "PASS" in proc.stdout
+
+
+def test_gevent_ignores_running_loop_detection():
+    """
+    Regression for the stuck-summary hang seen on Echo Next.
+
+    Under dramatiq-gevent, asyncio's running-loop is thread-local and shared
+    across greenlets, so get_running_loop() can return a loop a *different*
+    greenlet is driving. The old fallback then drove that foreign loop and the
+    actor hung until dramatiq's TimeLimitExceeded. Under gevent,
+    run_async_in_new_loop must IGNORE get_running_loop() and always use the
+    dedicated background loop (its own real OS thread).
+
+    Deterministic: we make get_running_loop() on the *calling* greenlet return a
+    sentinel that raises if driven (the bg loop runs on a separate real thread,
+    so it keeps the real get_running_loop). The fix must never touch the sentinel.
+    Runs in a subprocess so gevent patches before imports.
+    """
+    script = textwrap.dedent(
+        """
+        from gevent import monkey; monkey.patch_all()
+        import asyncio, threading
+        from dembrane.async_helpers import run_async_in_new_loop
+
+        class _BoomLoop:
+            def run_until_complete(self, coro):
+                raise AssertionError("took the contended running-loop fallback path")
+
+        _real = asyncio.get_running_loop
+        _caller_ident = threading.get_ident()
+        def _fake_get_running_loop():
+            # Only lie to the calling greenlet; the bg loop's real OS thread
+            # (different ident) keeps the genuine implementation.
+            if threading.get_ident() == _caller_ident:
+                return _BoomLoop()
+            return _real()
+        asyncio.get_running_loop = _fake_get_running_loop
+
+        async def work():
+            await asyncio.sleep(0.02)
+            return threading.current_thread().name
+
+        ran_on = run_async_in_new_loop(work())
+        assert ran_on == "dembrane-async-loop", ran_on  # used the bg loop, not the sentinel
+        print("PASS")
+        """
+    )
+    proc = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, timeout=120
+    )
+    assert proc.returncode == 0, f"stdout={proc.stdout}\nstderr={proc.stderr}"
+    assert "PASS" in proc.stdout

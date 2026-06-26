@@ -81,6 +81,14 @@ redis_connection_string = REDIS_URL + "/1" + ssl_params
 
 broker = RedisBroker(
     url=redis_connection_string,
+    # Managed Redis closes idle connections; without health checks the
+    # scheduler's pooled broker connection goes stale between cron firings and
+    # enqueue() raises ConnectionError("Connection closed by server"), so the
+    # dispatched task is silently dropped. health_check_interval revives idle
+    # connections before use; keepalive keeps the socket warm. (passed through
+    # to the underlying redis-py client)
+    health_check_interval=25,
+    socket_keepalive=True,
     # this is to disable Prometheus (https://groups.io/g/dramatiq-users/topic/disabling_prometheus/80745532)
     # middleware=[
     #     AgeLimit,
@@ -622,6 +630,20 @@ def task_summarize_conversation(conversation_id: str) -> None:
         clear_summarize_in_progress(conversation_id)
         return
     except Exception as e:
+        # Tier-locked (free tier): summarize_conversation raises HTTPException 402
+        # when the conversation is locked. Retrying is pointless — the lock only
+        # lifts on upgrade, and dramatiq retries would just churn and eventually
+        # dead-letter the message (lost). Skip retries and CLEAR the lock so the
+        # catch-up scheduler (task_catch_up_unsummarized_conversations) can
+        # re-attempt cleanly: summary stays null, so the conversation remains in
+        # the catch-up set and gets summarized automatically once they upgrade.
+        if getattr(e, "status_code", None) == 402:
+            logger.info(
+                f"Conversation {conversation_id} is tier-locked (402); skipping summary "
+                "until the workspace upgrades (catch-up will retry)."
+            )
+            clear_summarize_in_progress(conversation_id)
+            return
         logger.error(f"Error: {e}")
         # Retriable error - don't clear lock, let TTL handle it
         # This prevents catch-up task from starting duplicate work during retry window

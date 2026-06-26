@@ -140,7 +140,7 @@ export function resolveSidebarView(
 					projectId,
 					section: segs[4],
 					workspaceId,
-					...(segs[4] === "conversation" && segs[5]
+					...(segs[4] === "conversations" && segs[5]
 						? { conversationId: segs[5] }
 						: {}),
 				},
