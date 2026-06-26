@@ -20,9 +20,13 @@ export interface StaffTrainingRow {
 	scheduled_at: string | null;
 	status: string;
 	notes: string | null;
+	requested_by: string | null;
+	requested_by_name: string | null;
+	requested_by_email: string | null;
 	created_at: string | null;
 	updated_at: string | null;
 	license_count: number;
+	org_member_count: number;
 }
 
 const trainingsKey = (orgId?: string, status?: string) =>
@@ -44,10 +48,10 @@ async function fetchTrainings(
 	return res.json();
 }
 
-export const useStaffTrainings = (orgId?: string, status?: string) =>
+export const useStaffTrainings = () =>
 	useQuery({
-		queryFn: () => fetchTrainings(orgId, status),
-		queryKey: trainingsKey(orgId, status),
+		queryFn: () => fetchTrainings(),
+		queryKey: trainingsKey(),
 		staleTime: 30_000,
 	});
 
@@ -125,6 +129,134 @@ export const useCompleteTraining = () => {
 		onError: (err: Error) => toast.error(err.message),
 		onSuccess: () => {
 			toast.success(t`Licenses granted`);
+			queryClient.invalidateQueries({ queryKey: ["v2", "admin", "trainings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "training"] });
+		},
+	});
+};
+
+export interface UpdateTrainingInput {
+	trainingId: string;
+	status?: "requested" | "scheduled" | "completed" | "cancelled";
+	scheduledAt?: string;
+}
+
+export const useUpdateTraining = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({
+			trainingId,
+			status,
+			scheduledAt,
+		}: UpdateTrainingInput) => {
+			const body: Record<string, unknown> = {};
+			if (status !== undefined) body.status = status;
+			if (scheduledAt !== undefined) body.scheduled_at = scheduledAt;
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/trainings/${trainingId}`,
+				{
+					body: JSON.stringify(body),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "PATCH",
+				},
+			);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(
+					typeof data.detail === "string"
+						? data.detail
+						: "Couldn't update training",
+				);
+			}
+			return res.json();
+		},
+		onError: (err: Error) => toast.error(err.message),
+		onSuccess: () => {
+			toast.success(t`Training updated`);
+			queryClient.invalidateQueries({ queryKey: ["v2", "admin", "trainings"] });
+		},
+	});
+};
+
+export interface StaffRosterMember {
+	app_user_id: string;
+	display_name: string;
+	email: string | null;
+	role: string;
+	trained: boolean;
+	trained_until: string | null;
+	expiring_soon: boolean;
+}
+
+export interface StaffOrgRoster {
+	org_id: string;
+	trained_count: number;
+	total_count: number;
+	members: StaffRosterMember[];
+}
+
+export const useStaffOrgRoster = (orgId: string | null, enabled: boolean) =>
+	useQuery({
+		queryFn: async (): Promise<StaffOrgRoster> => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/trainings/orgs/${orgId}/roster`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) throw new Error(`roster ${res.status}`);
+			return res.json();
+		},
+		queryKey: ["v2", "admin", "trainings", "roster", orgId] as const,
+		enabled: enabled && !!orgId,
+		staleTime: 30_000,
+	});
+
+export interface TrainingLicense {
+	id: string;
+	app_user_id: string;
+	app_user_name: string | null;
+	app_user_email: string | null;
+	status: string;
+	completed_at: string | null;
+	expires_at: string | null;
+}
+
+export const useTrainingLicenses = (trainingId: string, enabled: boolean) =>
+	useQuery({
+		queryFn: async (): Promise<TrainingLicense[]> => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/trainings/${trainingId}/licenses`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) throw new Error(`licenses ${res.status}`);
+			return res.json();
+		},
+		queryKey: ["v2", "admin", "trainings", "licenses", trainingId] as const,
+		enabled,
+		staleTime: 30_000,
+	});
+
+export const useRevokeLicense = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (licenseId: string) => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/licenses/${licenseId}/revoke`,
+				{ credentials: "include", method: "POST" },
+			);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(
+					typeof data.detail === "string"
+						? data.detail
+						: "Couldn't revoke license",
+				);
+			}
+			return res.json();
+		},
+		onError: (err: Error) => toast.error(err.message),
+		onSuccess: () => {
+			toast.success(t`License revoked`);
 			queryClient.invalidateQueries({ queryKey: ["v2", "admin", "trainings"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "training"] });
 		},
