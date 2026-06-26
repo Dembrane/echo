@@ -186,6 +186,14 @@ final class AppModel {
         processPendingRecordingIfReady()
     }
 
+    /// On returning to the foreground while a recording is in progress, flush any
+    /// buffered segments and refresh the list so the recording is reflected.
+    func reconcileOnForeground() {
+        guard isRecording else { return }
+        if let id = captureConversationId { flushPendingSegments(conversationId: id) }
+        Task { await loadConversations() }
+    }
+
     /// Starts capture if an intent asked for it and we're ready (project loaded,
     /// not already recording). Held until `start()` restores the project, so a
     /// cold launch from the Action Button still works.
@@ -339,8 +347,18 @@ final class AppModel {
         // never the user's name.
         let displayName = Date().formatted(date: .abbreviated, time: .shortened)
         recordingName = displayName
+        // Retry initiate with backoff — a transient failure (or being backgrounded
+        // before it completes) must NOT lose the recording. Segments keep buffering
+        // in pendingSegments until the conversation id resolves, then flush.
         initiateTask = Task { [uploader] in
-            try? await uploader.startConversation(projectId: projectId, displayName: displayName)
+            for attempt in 0..<12 {
+                if Task.isCancelled { return nil }
+                if let id = try? await uploader.startConversation(projectId: projectId, displayName: displayName) {
+                    return id
+                }
+                try? await Task.sleep(for: .seconds(min(Double(attempt + 1) * 2, 15)))
+            }
+            return nil
         }
         Task {
             let id = await initiateTask?.value ?? nil
@@ -527,9 +545,13 @@ final class AppModel {
 
     private func startMeterTimer() {
         meterTimer?.invalidate()
-        meterTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 12.0, repeats: true) { [weak self] _ in
+        // .common mode so the waveform + clock keep updating while the user
+        // scrolls or interacts elsewhere (default-mode timers pause during scroll).
+        let timer = Timer(timeInterval: 1.0 / 12.0, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.tickMeter() }
         }
+        RunLoop.main.add(timer, forMode: .common)
+        meterTimer = timer
     }
 
     /// ~12 Hz: update the elapsed clock (date-based, so it survives backgrounding)

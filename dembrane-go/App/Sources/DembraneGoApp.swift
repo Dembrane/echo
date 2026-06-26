@@ -13,8 +13,9 @@ struct DembraneGoApp: App {
                 .tint(BrandColor.royalBlue)   // brand accent app-wide (controls, sheets, alerts)
                 .task { await model.start() }
                 .onChange(of: scenePhase) { _, phase in
-                    // Action Button / Siri "Start Recording" foregrounds the app — act on it.
-                    if phase == .active { model.handleLaunchIntents() }
+                    guard phase == .active else { return }
+                    model.handleLaunchIntents()   // Action Button / Siri "Start Recording"
+                    model.reconcileOnForeground()  // flush + refresh if mid-recording
                 }
         }
     }

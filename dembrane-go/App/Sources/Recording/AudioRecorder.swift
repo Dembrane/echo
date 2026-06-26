@@ -102,9 +102,14 @@ final class AudioRecorder {
     }
 
     private func startRotationTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: segmentSeconds, repeats: true) { [weak self] _ in
+        // .common mode so segment rotation keeps firing while the user scrolls /
+        // navigates (default-mode timers pause during scroll tracking, which would
+        // stall chunk uploads).
+        let t = Timer(timeInterval: segmentSeconds, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.rotate() }
         }
+        RunLoop.main.add(t, forMode: .common)
+        timer = t
     }
 
     private func beginSegment() throws {
