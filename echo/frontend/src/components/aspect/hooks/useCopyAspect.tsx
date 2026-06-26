@@ -4,7 +4,7 @@ import useCopyToRichText from "@/hooks/useCopyToRichText";
 import { directus } from "@/lib/directus";
 
 export const useCopyAspect = () => {
-	const { language, projectId } = useParams();
+	const { language, workspaceId, projectId } = useParams();
 	const { copied, copy } = useCopyToRichText();
 
 	const copyAspect = (aspectId: string) => {
@@ -38,7 +38,7 @@ export const useCopyAspect = () => {
 			);
 
 			stringBuilder.push(
-				`# Aspect: [${aspect.name}](${window.location.origin}/${language}/projects/${projectId}/library/views/${aspect.view_id}/aspects/${aspectId})`,
+				`# Aspect: [${aspect.name}](${window.location.origin}/${language}/w/${workspaceId}/projects/${projectId}/library/views/${aspect.view_id}/aspects/${aspectId})`,
 			);
 
 			if (aspect.image_url) {
@@ -73,7 +73,7 @@ export const useCopyAspect = () => {
 
 					const conversationUrl =
 						window.location.origin +
-						`/${language}/projects/${projectId}/conversations/${conversationId}`;
+						`/${language}/w/${workspaceId}/projects/${projectId}/conversations/${conversationId}`;
 
 					stringBuilder.push(`"${description}"\n`);
 					stringBuilder.push(

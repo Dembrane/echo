@@ -122,6 +122,7 @@ class WebhookService:
             The webhook payload dictionary
         """
         project_id = project.get("id")
+        workspace_id = project.get("workspace_id")
         report_id = report.get("id")
 
         report_data: Dict[str, Any] = {
@@ -151,7 +152,9 @@ class WebhookService:
         }
         project_language = project.get("language") or "en"
         locale = language_to_locale.get(project_language, "en-US")
-        dashboard_url = f"{admin_base_url}/{locale}/projects/{project_id}/report"
+        dashboard_url = (
+            f"{admin_base_url}/{locale}/w/{workspace_id}/projects/{project_id}/report"
+        )
 
         return {
             "event": event,
@@ -268,6 +271,7 @@ class WebhookService:
         # Build conversation data
         conversation_id = conversation.get("id")
         project_id = project.get("id")
+        workspace_id = project.get("workspace_id")
         conversation_data: Dict[str, Any] = {
             "id": conversation_id,
             "created_at": conversation.get("created_at"),
@@ -311,7 +315,7 @@ class WebhookService:
         }
         project_language = project.get("language") or "en"
         locale = language_to_locale.get(project_language, "en-US")
-        dashboard_url = f"{admin_base_url}/{locale}/projects/{project_id}/conversations/{conversation_id}/overview"
+        dashboard_url = f"{admin_base_url}/{locale}/w/{workspace_id}/projects/{project_id}/conversations/{conversation_id}/overview"
 
         return {
             "event": event,
