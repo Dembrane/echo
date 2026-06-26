@@ -764,6 +764,7 @@ final class AppModel {
         recorder.pause()
         isPaused = true
         lastPauseAt = Date()
+        updateLiveActivity()   // freeze the Dynamic Island timer + show "Paused"
     }
 
     func resumeRecording() {
@@ -772,6 +773,7 @@ final class AppModel {
         lastPauseAt = nil
         recorder.resume()
         isPaused = false
+        updateLiveActivity()   // resume the running timer from the right elapsed
     }
 
     private func startMeterTimer() {
@@ -823,10 +825,24 @@ final class AppModel {
     private func startLiveActivity() {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         let state = RecordingActivityAttributes.ContentState(
-            startedAt: Date(), projectName: selectedProject?.name ?? defaultProjectName)
+            startedAt: Date(), projectName: selectedProject?.name ?? defaultProjectName,
+            isPaused: false, elapsed: 0)
         liveActivity = try? Activity.request(
             attributes: RecordingActivityAttributes(),
             content: .init(state: state, staleDate: nil))
+    }
+
+    /// Keep the Dynamic Island / Live Activity in sync with pause state. While
+    /// paused the widget shows a frozen time; running, it shows a live timer whose
+    /// effective start makes it read the correct elapsed.
+    private func updateLiveActivity() {
+        guard let liveActivity else { return }
+        let elapsed = currentElapsed()
+        let state = RecordingActivityAttributes.ContentState(
+            startedAt: Date().addingTimeInterval(-elapsed),
+            projectName: selectedProject?.name ?? defaultProjectName,
+            isPaused: isPaused, elapsed: elapsed)
+        Task { await liveActivity.update(ActivityContent(state: state, staleDate: nil)) }
     }
 
     private func endLiveActivity() {

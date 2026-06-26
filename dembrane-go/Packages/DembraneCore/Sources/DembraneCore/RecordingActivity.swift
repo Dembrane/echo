@@ -7,11 +7,19 @@ import Foundation
 /// (renders it). `startedAt` lets the widget show a live timer with no pushes.
 public struct RecordingActivityAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
+        /// Effective start: `Date() - startedAt` is the live elapsed, so the widget's
+        /// self-running timer reads correctly across pauses.
         public var startedAt: Date
         public var projectName: String
-        public init(startedAt: Date, projectName: String) {
+        public var isPaused: Bool
+        /// Frozen elapsed shown while paused (a running timer can't pause itself).
+        public var elapsed: TimeInterval
+        public init(startedAt: Date, projectName: String,
+                    isPaused: Bool = false, elapsed: TimeInterval = 0) {
             self.startedAt = startedAt
             self.projectName = projectName
+            self.isPaused = isPaused
+            self.elapsed = elapsed
         }
     }
     public init() {}
