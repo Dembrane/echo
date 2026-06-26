@@ -78,12 +78,10 @@ export const CreateOrganisationModal = ({
 
 	const finish = async () => {
 		const orgId = created?.org_id;
-		// Await a fresh workspaces-context fetch before landing on the org: the
-		// sidebar reads that (staleTime'd) list, so otherwise the new default
-		// workspace is missing until a manual refresh.
-		await queryClient.refetchQueries({
-			queryKey: ["v2", "workspaces-context"],
-		});
+		await Promise.all([
+			queryClient.refetchQueries({ queryKey: ["v2", "workspaces-context"] }),
+			queryClient.refetchQueries({ queryKey: ["v2", "workspaces"] }),
+		]);
 		reset();
 		onClose();
 		if (orgId) navigate(`/o/${orgId}`);

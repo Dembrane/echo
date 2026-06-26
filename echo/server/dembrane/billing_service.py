@@ -196,21 +196,16 @@ async def count_account_pending_invites(account_id: str) -> int:
 
 
 async def account_active_seat_emails(account_id: str) -> set[str]:
-    """Lower-cased emails of every active (direct) seat-holder across the
-    account. Used to dedupe net-new seats in the invite preview: a recipient
+    """Lower-cased emails of every active (direct) billable seat-holder across
+    the account. Used to dedupe net-new seats in the invite preview: a recipient
     already holding a seat anywhere on the account is not net-new (seats are
-    pooled)."""
+    pooled). Free observers never hold a seat, so they are excluded."""
+    from dembrane.seat_capacity import effective_seat_user_ids
+
     emails: set[str] = set()
     for ws_id in await _account_workspace_ids(account_id):
-        from dembrane.inheritance import get_effective_members
-
-        members = await get_effective_members(ws_id)
-        user_ids = {
-            m.get("user_id") for m in members if m.get("source") == "direct" and m.get("user_id")
-        }
-        for uid in user_ids:
-            if not uid:
-                continue
+        # effective_seat_user_ids already excludes observers and derived access.
+        for uid in await effective_seat_user_ids(ws_id):
             user = await async_directus.get_item("app_user", uid)
             email = (user or {}).get("email")
             if email:
@@ -219,8 +214,9 @@ async def account_active_seat_emails(account_id: str) -> set[str]:
 
 
 async def account_pending_invite_emails(account_id: str) -> set[str]:
-    """Lower-cased emails with an active pending invite anywhere on the account.
-    A recipient already invited counts once toward net-new, not twice."""
+    """Lower-cased emails with an active pending paid invite anywhere on the
+    account. A recipient already invited counts once toward net-new, not twice.
+    Free observer invites never consume a seat, so they are excluded."""
     now_iso = datetime.now(timezone.utc).isoformat()
     emails: set[str] = set()
     for ws_id in await _account_workspace_ids(account_id):
@@ -234,7 +230,7 @@ async def account_pending_invite_emails(account_id: str) -> set[str]:
                         "deleted_at": {"_null": True},
                         "expires_at": {"_gt": now_iso},
                     },
-                    "fields": ["email"],
+                    "fields": ["email", "role"],
                     "limit": -1,
                 }
             },
@@ -242,6 +238,9 @@ async def account_pending_invite_emails(account_id: str) -> set[str]:
         if not isinstance(rows, list):
             continue
         for r in rows:
+            # Observer invites are free, so they don't dedupe a net-new paid seat.
+            if (r.get("role") or "") == "observer":
+                continue
             email = r.get("email")
             if email:
                 emails.add(email.strip().lower())
