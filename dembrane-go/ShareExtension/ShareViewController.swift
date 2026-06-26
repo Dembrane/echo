@@ -3,28 +3,30 @@ import SwiftUI
 import UniformTypeIdentifiers
 import DembraneCore
 
-/// Share Extension: import an audio file shared from Voice Memos / Files into the
-/// active dembrane go project. Now shows a confirmation sheet — the destination
-/// project (passed via the App Group) and an editable name — before uploading via
-/// the public participant flow (no auth). Source `GO_SHARE`.
+/// Share Extension: import an audio file shared from Voice Memos / Files into a
+/// dembrane go project. Shows a confirmation sheet — editable name + a project
+/// picker mirroring the app (project list passed via the App Group) — then
+/// uploads via the public participant flow (no auth). Source `GO_SHARE`.
 final class ShareViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         Task {
-            let url = await loadAudioURL()
-            await present(url: url)
+            let loaded = await loadAudio()
+            await present(loaded)
         }
     }
 
-    @MainActor private func present(url: URL?) {
+    @MainActor private func present(_ loaded: (url: URL, name: String)?) {
+        let projects = AppGroup.readProjects()
         let form = ShareSheetView(
-            audioURL: url,
-            projectId: AppGroup.readProjectId(),
-            projectName: AppGroup.readProjectName(),
+            audioURL: loaded?.url,
+            defaultName: loaded?.name ?? "Shared recording",
+            contentType: loaded.map { Self.contentType(for: $0.url) } ?? "audio/m4a",
+            projects: projects,
+            initialProjectId: AppGroup.readProjectId() ?? projects.first?.project.id,
+            fallbackProjectName: AppGroup.readProjectName(),
             environment: AppGroup.readEnvironment(),
-            defaultName: url?.deletingPathExtension().lastPathComponent ?? "Shared recording",
-            contentType: url.map(Self.contentType(for:)) ?? "audio/m4a",
             onClose: { [weak self] in
                 self?.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
             }
@@ -37,17 +39,20 @@ final class ShareViewController: UIViewController {
         host.didMove(toParent: self)
     }
 
-    private func loadAudioURL() async -> URL? {
+    /// Returns the temp copy URL plus the ORIGINAL file's name (no UUID prefix).
+    private func loadAudio() async -> (url: URL, name: String)? {
         guard let item = extensionContext?.inputItems.first as? NSExtensionItem,
               let attachment = item.attachments?.first else { return nil }
         return await withCheckedContinuation { continuation in
             attachment.loadFileRepresentation(forTypeIdentifier: UTType.audio.identifier) { url, _ in
                 guard let url else { continuation.resume(returning: nil); return }
+                let original = url.deletingPathExtension().lastPathComponent
                 // The provided URL is reclaimed after this closure — copy it out.
                 let dest = FileManager.default.temporaryDirectory
                     .appendingPathComponent(UUID().uuidString + "-" + url.lastPathComponent)
                 try? FileManager.default.copyItem(at: url, to: dest)
-                continuation.resume(returning: FileManager.default.fileExists(atPath: dest.path) ? dest : nil)
+                let ok = FileManager.default.fileExists(atPath: dest.path)
+                continuation.resume(returning: ok ? (dest, original) : nil)
             }
         }
     }
@@ -62,32 +67,38 @@ final class ShareViewController: UIViewController {
     }
 }
 
-/// Confirmation form: shows the destination project, lets the user rename, then
-/// uploads on Save (or dismisses on Cancel).
+/// Confirmation form: editable name + destination project picker, then upload.
 private struct ShareSheetView: View {
     let audioURL: URL?
-    let projectId: String?
-    let projectName: String?
-    let environment: AppEnvironment
+    let defaultName: String
     let contentType: String
+    let projects: [WorkspaceProject]
+    let fallbackProjectName: String?
+    let environment: AppEnvironment
     let onClose: () -> Void
 
     @State private var name: String
+    @State private var projectId: String?
     @State private var phase: Phase = .confirm
     private enum Phase { case confirm, uploading, done, failed }
 
-    init(audioURL: URL?, projectId: String?, projectName: String?,
-         environment: AppEnvironment, defaultName: String, contentType: String,
+    init(audioURL: URL?, defaultName: String, contentType: String,
+         projects: [WorkspaceProject], initialProjectId: String?,
+         fallbackProjectName: String?, environment: AppEnvironment,
          onClose: @escaping () -> Void) {
         self.audioURL = audioURL
-        self.projectId = projectId
-        self.projectName = projectName
-        self.environment = environment
+        self.defaultName = defaultName
         self.contentType = contentType
+        self.projects = projects
+        self.fallbackProjectName = fallbackProjectName
+        self.environment = environment
         self.onClose = onClose
         _name = State(initialValue: defaultName)
+        _projectId = State(initialValue: initialProjectId)
     }
 
+    private var selectedProject: WorkspaceProject? { projects.first { $0.project.id == projectId } }
+    private var destinationName: String { selectedProject?.project.name ?? fallbackProjectName ?? "—" }
     private var canSave: Bool {
         projectId != nil && audioURL != nil
             && !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -98,36 +109,36 @@ private struct ShareSheetView: View {
         NavigationStack {
             Form {
                 Section("Recording name") {
-                    TextField("Name", text: $name)
-                        .disabled(phase != .confirm)
+                    TextField("Name", text: $name).disabled(phase != .confirm)
                 }
                 Section("Destination") {
-                    if let projectName {
-                        LabeledContent("Project", value: projectName)
+                    if projects.isEmpty {
+                        if let fallbackProjectName {
+                            LabeledContent("Project", value: fallbackProjectName)
+                        } else {
+                            Text("Open dembrane Go and choose a project first, then share again.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
                     } else {
-                        Text("Open dembrane go and choose a project first, then share again.")
-                            .font(.footnote).foregroundStyle(.secondary)
+                        NavigationLink {
+                            ProjectPickerList(projects: projects, selectedId: $projectId)
+                        } label: {
+                            LabeledContent("Project", value: destinationName)
+                        }
+                        .disabled(phase != .confirm)
                     }
                 }
                 if audioURL == nil {
-                    Text("Couldn't read that audio file.")
-                        .font(.footnote).foregroundStyle(.red)
+                    Text("Couldn't read that audio file.").font(.footnote).foregroundStyle(.red)
                 }
                 switch phase {
-                case .uploading:
-                    Label("Saving…", systemImage: "arrow.up.circle")
-                        .foregroundStyle(.secondary)
-                case .done:
-                    Label("Saved to dembrane go", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                case .failed:
-                    Label("Upload failed — try again.", systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.orange)
-                case .confirm:
-                    EmptyView()
+                case .uploading: Label("Saving…", systemImage: "arrow.up.circle").foregroundStyle(.secondary)
+                case .done: Label("Saved to dembrane Go", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                case .failed: Label("Upload failed — try again.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
+                case .confirm: EmptyView()
                 }
             }
-            .navigationTitle("Save to dembrane go")
+            .navigationTitle("Save to dembrane Go")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -158,5 +169,44 @@ private struct ShareSheetView: View {
         } catch {
             phase = .failed
         }
+    }
+}
+
+/// Workspace-grouped project chooser — the extension's equivalent of the app's
+/// ProjectPicker (which lives in the app target, so it's reimplemented here).
+private struct ProjectPickerList: View {
+    let projects: [WorkspaceProject]
+    @Binding var selectedId: String?
+    @Environment(\.dismiss) private var dismiss
+
+    private var groups: [(workspace: String, items: [WorkspaceProject])] {
+        Dictionary(grouping: projects, by: { $0.workspace.name })
+            .map { (workspace: $0.key, items: $0.value.sorted { $0.project.name < $1.project.name }) }
+            .sorted { $0.workspace < $1.workspace }
+    }
+
+    var body: some View {
+        List {
+            ForEach(groups, id: \.workspace) { group in
+                Section(group.workspace) {
+                    ForEach(group.items, id: \.project.id) { wp in
+                        Button {
+                            selectedId = wp.project.id
+                            dismiss()
+                        } label: {
+                            HStack {
+                                Text(wp.project.name).foregroundStyle(.primary)
+                                Spacer()
+                                if wp.project.id == selectedId {
+                                    Image(systemName: "checkmark").foregroundStyle(.tint)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle("Choose project")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

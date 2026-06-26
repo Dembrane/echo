@@ -624,6 +624,7 @@ final class AppModel {
         if !result.isEmpty {
             allProjects = result
             await DiskCache.shared.save(result, key: "allProjects")
+            AppGroup.writeProjects(result)   // let the Share Extension pick a destination
         }
     }
 

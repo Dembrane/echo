@@ -37,6 +37,19 @@ public enum AppGroup {
 
     public static func readProjectId() -> String? { defaults?.string(forKey: selectedProjectIdKey) }
     public static func readProjectName() -> String? { defaults?.string(forKey: selectedProjectNameKey) }
+
+    // Cross-workspace project list, mirrored so the Share Extension can offer the
+    // same destination picker as the app (it has no auth / API of its own).
+    public static let projectsKey = "dembrane.go.shared.projects"
+    public static func writeProjects(_ projects: [WorkspaceProject]) {
+        guard let data = try? JSONEncoder().encode(projects) else { return }
+        defaults?.set(data, forKey: projectsKey)
+    }
+    public static func readProjects() -> [WorkspaceProject] {
+        guard let data = defaults?.data(forKey: projectsKey),
+              let list = try? JSONDecoder().decode([WorkspaceProject].self, from: data) else { return [] }
+        return list
+    }
     public static func readEnvironment() -> AppEnvironment {
         AppEnvironment(rawValue: defaults?.string(forKey: environmentKey) ?? "") ?? .default
     }
