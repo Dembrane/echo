@@ -10,6 +10,7 @@ public enum APIError: Error, Sendable, Equatable {
 public protocol DembraneAPIClientProtocol: Sendable {
     func me() async throws -> Me
     func workspaces() async throws -> [Workspace]
+    func workspaceUsage(workspaceId: String) async throws -> WorkspaceUsage
     func projects(workspaceId: String) async throws -> [Project]
     func conversations(projectId: String) async throws -> [Conversation]
     func conversation(id: String) async throws -> Conversation
@@ -70,6 +71,15 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
     }
     public func workspaces() async throws -> [Workspace] {
         try await get(endpoints.workspaces(), as: WorkspaceListResponse.self).workspaces
+    }
+    public func workspaceUsage(workspaceId: String) async throws -> WorkspaceUsage {
+        // The endpoint may return the object directly or wrapped in {data:…}.
+        do {
+            return try await get(endpoints.workspaceUsage(workspaceId: workspaceId), as: WorkspaceUsage.self)
+        } catch {
+            struct Envelope: Decodable { let data: WorkspaceUsage }
+            return try await get(endpoints.workspaceUsage(workspaceId: workspaceId), as: Envelope.self).data
+        }
     }
     public func projects(workspaceId: String) async throws -> [Project] {
         try await get(endpoints.projects(workspaceId: workspaceId), as: ProjectsListResponse.self).items
@@ -214,6 +224,9 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
     public init() {}
     public func me() async throws -> Me { .preview }
     public func workspaces() async throws -> [Workspace] { [.preview] }
+    public func workspaceUsage(workspaceId: String) async throws -> WorkspaceUsage {
+        WorkspaceUsage(overCapActive: false, uploadsLocked: false, upgradeCtaTier: nil)
+    }
     public func projects(workspaceId: String) async throws -> [Project] { [.preview] }
     public func conversations(projectId: String) async throws -> [Conversation] { Conversation.previews }
     public func conversation(id: String) async throws -> Conversation {

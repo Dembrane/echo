@@ -1,61 +1,40 @@
 import UIKit
+import SwiftUI
 import UniformTypeIdentifiers
 import DembraneCore
 
-/// Share Extension: import an audio file shared from Voice Memos / Files into
-/// the active dembrane Go project. Uses the public participant upload flow
-/// (no auth) with the project + environment passed via the App Group.
+/// Share Extension: import an audio file shared from Voice Memos / Files into the
+/// active dembrane go project. Now shows a confirmation sheet — the destination
+/// project (passed via the App Group) and an editable name — before uploading via
+/// the public participant flow (no auth). Source `GO_SHARE`.
 final class ShareViewController: UIViewController {
-    private let label = UILabel()
-    private let spinner = UIActivityIndicatorView(style: .large)
-
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        setupUI()
-        Task { await run() }
+        Task {
+            let url = await loadAudioURL()
+            await present(url: url)
+        }
     }
 
-    private func setupUI() {
-        label.text = "Saving to dembrane Go…"
-        label.textAlignment = .center
-        label.numberOfLines = 0
-        label.font = .preferredFont(forTextStyle: .headline)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        spinner.translatesAutoresizingMaskIntoConstraints = false
-        spinner.startAnimating()
-        view.addSubview(label)
-        view.addSubview(spinner)
-        NSLayoutConstraint.activate([
-            spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -24),
-            label.topAnchor.constraint(equalTo: spinner.bottomAnchor, constant: 16),
-            label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32),
-            label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32),
-        ])
-    }
-
-    private func run() async {
-        guard let projectId = AppGroup.readProjectId() else {
-            await finish("Open dembrane Go and choose a project first."); return
-        }
-        let env = AppGroup.readEnvironment()
-        guard let url = await loadAudioURL() else {
-            await finish("Couldn't read that audio."); return
-        }
-        do {
-            let uploader = ParticipantUploadClient(env: env)
-            _ = try await uploader.upload(
-                projectId: projectId,
-                fileURL: url,
-                displayName: url.deletingPathExtension().lastPathComponent,
-                contentType: contentType(for: url),
-                source: "GO_SHARE",
-                recordedAt: Date())
-            await finish("Saved to dembrane Go ✓")
-        } catch {
-            await finish("Upload failed — try again.")
-        }
+    @MainActor private func present(url: URL?) {
+        let form = ShareSheetView(
+            audioURL: url,
+            projectId: AppGroup.readProjectId(),
+            projectName: AppGroup.readProjectName(),
+            environment: AppGroup.readEnvironment(),
+            defaultName: url?.deletingPathExtension().lastPathComponent ?? "Shared recording",
+            contentType: url.map(Self.contentType(for:)) ?? "audio/m4a",
+            onClose: { [weak self] in
+                self?.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+            }
+        )
+        let host = UIHostingController(rootView: form)
+        addChild(host)
+        host.view.frame = view.bounds
+        host.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(host.view)
+        host.didMove(toParent: self)
     }
 
     private func loadAudioURL() async -> URL? {
@@ -73,7 +52,7 @@ final class ShareViewController: UIViewController {
         }
     }
 
-    private func contentType(for url: URL) -> String {
+    static func contentType(for url: URL) -> String {
         switch url.pathExtension.lowercased() {
         case "mp3": return "audio/mpeg"
         case "wav": return "audio/wav"
@@ -81,11 +60,103 @@ final class ShareViewController: UIViewController {
         default: return "audio/m4a"
         }
     }
+}
 
-    @MainActor private func finish(_ message: String) async {
-        spinner.stopAnimating()
-        label.text = message
-        try? await Task.sleep(for: .seconds(1.2))
-        extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+/// Confirmation form: shows the destination project, lets the user rename, then
+/// uploads on Save (or dismisses on Cancel).
+private struct ShareSheetView: View {
+    let audioURL: URL?
+    let projectId: String?
+    let projectName: String?
+    let environment: AppEnvironment
+    let contentType: String
+    let onClose: () -> Void
+
+    @State private var name: String
+    @State private var phase: Phase = .confirm
+    private enum Phase { case confirm, uploading, done, failed }
+
+    init(audioURL: URL?, projectId: String?, projectName: String?,
+         environment: AppEnvironment, defaultName: String, contentType: String,
+         onClose: @escaping () -> Void) {
+        self.audioURL = audioURL
+        self.projectId = projectId
+        self.projectName = projectName
+        self.environment = environment
+        self.contentType = contentType
+        self.onClose = onClose
+        _name = State(initialValue: defaultName)
+    }
+
+    private var canSave: Bool {
+        projectId != nil && audioURL != nil
+            && !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && phase == .confirm
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Recording name") {
+                    TextField("Name", text: $name)
+                        .disabled(phase != .confirm)
+                }
+                Section("Destination") {
+                    if let projectName {
+                        LabeledContent("Project", value: projectName)
+                    } else {
+                        Text("Open dembrane go and choose a project first, then share again.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+                if audioURL == nil {
+                    Text("Couldn't read that audio file.")
+                        .font(.footnote).foregroundStyle(.red)
+                }
+                switch phase {
+                case .uploading:
+                    Label("Saving…", systemImage: "arrow.up.circle")
+                        .foregroundStyle(.secondary)
+                case .done:
+                    Label("Saved to dembrane go", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                case .failed:
+                    Label("Upload failed — try again.", systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.orange)
+                case .confirm:
+                    EmptyView()
+                }
+            }
+            .navigationTitle("Save to dembrane go")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", action: onClose).disabled(phase == .uploading)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { Task { await upload() } }.disabled(!canSave)
+                }
+            }
+        }
+    }
+
+    private func upload() async {
+        guard let projectId, let audioURL else { return }
+        phase = .uploading
+        do {
+            let uploader = ParticipantUploadClient(env: environment)
+            _ = try await uploader.upload(
+                projectId: projectId,
+                fileURL: audioURL,
+                displayName: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                contentType: contentType,
+                source: "GO_SHARE",
+                recordedAt: Date())
+            phase = .done
+            try? await Task.sleep(for: .seconds(0.7))
+            onClose()
+        } catch {
+            phase = .failed
+        }
     }
 }

@@ -49,6 +49,9 @@ final class AppModel {
     var conversationsLoading = false
     var conversationsError = false
     var didLoadConversationsOnce = false
+    /// Free-tier upload gating for the active workspace (informational only).
+    var workspaceUsage: WorkspaceUsage?
+    var uploadsLocked: Bool { workspaceUsage?.uploadsLocked == true || workspaceUsage?.overCapActive == true }
     static let waveformBarCount = 48
 
     // Ask (chat) state
@@ -250,7 +253,7 @@ final class AppModel {
             onUnauthorized: { [newAuth] in (try? await newAuth.refresh()) ?? false })
         chatService = ChatService(env: env,
                                   tokenProvider: { [sessionManager] in await sessionManager.accessToken() })
-        AppGroup.write(projectId: selectedProject?.id, environment: env)   // keep the Share Extension in sync
+        AppGroup.write(projectId: selectedProject?.id, projectName: selectedProject?.name, environment: env)   // keep the Share Extension in sync
     }
 
     func register(firstName: String, lastName: String, email: String, password: String) async {
@@ -583,6 +586,7 @@ final class AppModel {
         }
 
         await loadConversations()
+        await refreshWorkspaceUsage()
     }
 
     /// Finish onboarding: find-or-create "Go Recordings" in the chosen workspace
@@ -617,6 +621,14 @@ final class AppModel {
             allProjects = result
             await DiskCache.shared.save(result, key: "allProjects")
         }
+    }
+
+    /// Fetch free-tier upload gating for the active project's workspace.
+    func refreshWorkspaceUsage() async {
+        guard let projectId = selectedProject?.id,
+              let workspaceId = allProjects.first(where: { $0.project.id == projectId })?.workspace.id
+        else { return }
+        workspaceUsage = try? await api.workspaceUsage(workspaceId: workspaceId)
     }
 
     /// Cache-only paint (no network) for instant launch — recents render before
@@ -673,7 +685,7 @@ final class AppModel {
         selectedProject = workspaceProject.project
         persistSelectedProject()
         conversations = []   // drop the previous project's rows; cache/network repopulate
-        Task { await loadConversations() }
+        Task { await loadConversations(); await refreshWorkspaceUsage() }
     }
 
     /// Persist the whole selected project so it restores instantly on next launch
@@ -681,7 +693,7 @@ final class AppModel {
     private func persistSelectedProject() {
         guard let project = selectedProject, let data = try? JSONEncoder().encode(project) else { return }
         UserDefaults.standard.set(data, forKey: Self.selectedProjectKey)
-        AppGroup.write(projectId: project.id, environment: environment)   // for the Share Extension
+        AppGroup.write(projectId: project.id, projectName: project.name, environment: environment)   // for the Share Extension
     }
 
     private func restoredProject() -> Project? {

@@ -22,6 +22,7 @@ struct HomeView: View {
             ScrollView {
                 if trimmed.isEmpty {
                     VStack(alignment: .leading, spacing: 24) {
+                        freeTierBanner
                         recordButton
                         recentSection
                     }
@@ -44,6 +45,26 @@ struct HomeView: View {
             .refreshable { await model.loadConversations() }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(item: $selected) { ConversationDetailView(conversation: $0) }
+        }
+    }
+
+    // Informational only — no in-app purchase button/link (App Store compliant
+    // on every storefront; plan changes happen on the web dashboard).
+    @ViewBuilder private var freeTierBanner: some View {
+        if model.uploadsLocked {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Uploads paused").font(.subheadline.weight(.semibold))
+                    Text("You've reached your plan's limit. New recordings stay on this device until you manage your plan on the dembrane web dashboard.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(.horizontal)
         }
     }
 

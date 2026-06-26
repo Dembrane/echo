@@ -6,6 +6,7 @@ import Foundation
 public enum AppGroup {
     public static let identifier = "group.com.dembrane.go"
     public static let selectedProjectIdKey = "dembrane.go.shared.selectedProjectId"
+    public static let selectedProjectNameKey = "dembrane.go.shared.selectedProjectName"
     public static let environmentKey = "dembrane.go.shared.environment"
     public static let pendingRecordAtKey = "dembrane.go.shared.pendingRecordAt"
 
@@ -27,13 +28,15 @@ public enum AppGroup {
     }
 
     /// Called by the app whenever the active project / environment changes.
-    public static func write(projectId: String?, environment: AppEnvironment) {
+    public static func write(projectId: String?, projectName: String?, environment: AppEnvironment) {
         guard let defaults else { return }
         defaults.set(projectId, forKey: selectedProjectIdKey)
+        defaults.set(projectName, forKey: selectedProjectNameKey)
         defaults.set(environment.rawValue, forKey: environmentKey)
     }
 
     public static func readProjectId() -> String? { defaults?.string(forKey: selectedProjectIdKey) }
+    public static func readProjectName() -> String? { defaults?.string(forKey: selectedProjectNameKey) }
     public static func readEnvironment() -> AppEnvironment {
         AppEnvironment(rawValue: defaults?.string(forKey: environmentKey) ?? "") ?? .default
     }
