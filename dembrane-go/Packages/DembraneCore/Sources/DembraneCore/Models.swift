@@ -90,6 +90,22 @@ public struct WorkspaceUsage: Codable, Sendable, Equatable {
     public let upgradeCtaTier: String?
 }
 
+/// The participant-portal defaults a host can edit (what people see when they
+/// scan the QR to record). Mirrors `default_conversation_*` + `context` on the
+/// project. All optional — decoded leniently from the public project payload.
+public struct PortalSettings: Codable, Sendable, Equatable {
+    public var defaultConversationTitle: String?
+    public var defaultConversationDescription: String?
+    public var context: String?
+    public init(defaultConversationTitle: String? = nil,
+                defaultConversationDescription: String? = nil,
+                context: String? = nil) {
+        self.defaultConversationTitle = defaultConversationTitle
+        self.defaultConversationDescription = defaultConversationDescription
+        self.context = context
+    }
+}
+
 // MARK: - Conversation
 
 public struct Conversation: Codable, Identifiable, Sendable, Hashable {

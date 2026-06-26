@@ -628,6 +628,33 @@ final class AppModel {
         }
     }
 
+    /// Participant-portal URL a QR encodes: {portalBase}/{locale}/{projectId}/start.
+    func portalURL(for project: Project) -> URL {
+        let map = ["en": "en-US", "nl": "nl-NL", "de": "de-DE", "fr": "fr-FR",
+                   "es": "es-ES", "it": "it-IT", "uk": "uk-UA", "cs": "cs-CZ"]
+        let raw = project.language ?? "en"
+        let locale = raw.contains("-") ? raw : (map[raw] ?? "en-US")
+        return environment.portalBaseURL.appending(path: "\(locale)/\(project.id)/start")
+    }
+
+    /// Current portal defaults (title / description / key terms) for editing.
+    func portalSettings(projectId: String) async -> PortalSettings? {
+        try? await api.portalSettings(projectId: projectId)
+    }
+
+    @discardableResult
+    func updatePortalSettings(projectId: String, title: String,
+                              description: String, context: String) async -> Bool {
+        do {
+            try await api.updatePortalSettings(projectId: projectId, fields: [
+                "default_conversation_title": title,
+                "default_conversation_description": description,
+                "context": context,
+            ])
+            return true
+        } catch { return false }
+    }
+
     /// Fetch free-tier upload gating for the active project's workspace.
     func refreshWorkspaceUsage() async {
         guard let projectId = selectedProject?.id,

@@ -11,6 +11,8 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func me() async throws -> Me
     func workspaces() async throws -> [Workspace]
     func workspaceUsage(workspaceId: String) async throws -> WorkspaceUsage
+    func portalSettings(projectId: String) async throws -> PortalSettings
+    func updatePortalSettings(projectId: String, fields: [String: String]) async throws
     func projects(workspaceId: String) async throws -> [Project]
     func conversations(projectId: String) async throws -> [Conversation]
     func conversation(id: String) async throws -> Conversation
@@ -80,6 +82,12 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
             struct Envelope: Decodable { let data: WorkspaceUsage }
             return try await get(endpoints.workspaceUsage(workspaceId: workspaceId), as: Envelope.self).data
         }
+    }
+    public func portalSettings(projectId: String) async throws -> PortalSettings {
+        try await get(endpoints.participantProject(id: projectId), as: PortalSettings.self)
+    }
+    public func updatePortalSettings(projectId: String, fields: [String: String]) async throws {
+        try await sendJSON(endpoints.project(id: projectId), method: "PATCH", body: fields)
     }
     public func projects(workspaceId: String) async throws -> [Project] {
         try await get(endpoints.projects(workspaceId: workspaceId), as: ProjectsListResponse.self).items
@@ -227,6 +235,11 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
     public func workspaceUsage(workspaceId: String) async throws -> WorkspaceUsage {
         WorkspaceUsage(overCapActive: false, uploadsLocked: false, upgradeCtaTier: nil)
     }
+    public func portalSettings(projectId: String) async throws -> PortalSettings {
+        PortalSettings(defaultConversationTitle: "Share your thoughts",
+                       defaultConversationDescription: "Tell us about your experience.", context: nil)
+    }
+    public func updatePortalSettings(projectId: String, fields: [String: String]) async throws {}
     public func projects(workspaceId: String) async throws -> [Project] { [.preview] }
     public func conversations(projectId: String) async throws -> [Conversation] { Conversation.previews }
     public func conversation(id: String) async throws -> Conversation {

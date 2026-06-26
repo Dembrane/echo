@@ -15,6 +15,14 @@ public struct DembraneEndpoints: Sendable, Equatable {
     public func workspaceUsage(workspaceId: String) -> URL {
         api.appending(path: "v2/workspaces/\(workspaceId)/usage")
     }
+    /// Public participant view of a project (portal defaults; no auth).
+    public func participantProject(id: String) -> URL {
+        api.appending(path: "participant/projects/\(id)")
+    }
+    /// Authed project resource for PATCHing portal settings.
+    public func project(id: String) -> URL {
+        api.appending(path: "v2/bff/projects/\(id)")
+    }
     public func projects(workspaceId: String) -> URL {
         api.appending(path: "v2/workspaces/\(workspaceId)/projects")
     }
