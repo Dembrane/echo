@@ -20,7 +20,7 @@ struct LoginView: View {
             if focused == nil {
                 Image("DembraneLogo")
                     .resizable().scaledToFit().frame(width: 180)
-                    .offset(x: -20)
+                    .offset(x: -12)
                     .transition(.opacity)
                     .accessibilityLabel("dembrane")
             }
