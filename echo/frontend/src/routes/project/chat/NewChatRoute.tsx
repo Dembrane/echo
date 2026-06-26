@@ -10,7 +10,7 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { formatRelative } from "date-fns";
 import { Suspense, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
@@ -20,6 +20,7 @@ import {
 	ChatModeIndicator,
 } from "@/components/chat/ChatAccordion";
 import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
+import { ChatUpgradeModal } from "@/components/chat/FreeTierChatGate";
 import {
 	useInfiniteProjectChats,
 	useInitializeChatModeMutation,
@@ -32,7 +33,9 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { useCreateChatMutation } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import type { ChatMode } from "@/lib/api";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 
 const CHATS_PAGE_SIZE = 10;
 
@@ -153,9 +156,20 @@ export const NewChatRoute = () => {
 	const initializeModeMutation = useInitializeChatModeMutation();
 	const prefetchSuggestions = usePrefetchSuggestions();
 	const [isInitializing, setIsInitializing] = useState(false);
+	const { freeTier } = useWorkspaceUsage(workspaceId);
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	const atChatLimit = Boolean(
+		freeTier?.active && freeTier.chats_used >= freeTier.chats_limit,
+	);
 
 	const handleModeSelected = async (mode: ChatMode) => {
 		if (!projectId) return;
+
+		// Free tier: one chat per workspace. Route to upgrade instead of creating.
+		if (atChatLimit) {
+			upgradeHandlers.open();
+			return;
+		}
 
 		setIsInitializing(true);
 
@@ -186,7 +200,12 @@ export const NewChatRoute = () => {
 			// Step 4: Navigate to the new chat
 			navigate(`/w/${workspaceId}/projects/${projectId}/chats/${chat.id}`);
 		} catch (error) {
-			console.error("Failed to create chat with mode:", error);
+			// Backend safety net: free-tier chat cap returns 402.
+			if (isFreeTierLimitError(error) === "chats") {
+				upgradeHandlers.open();
+			} else {
+				console.error("Failed to create chat with mode:", error);
+			}
 			setIsInitializing(false);
 		}
 	};
@@ -209,12 +228,13 @@ export const NewChatRoute = () => {
 	return (
 		<PageContainer>
 			<Stack gap="xl">
-				<ChatModeSelector
-					isNewChat
-					isCreating={isPending}
-					projectId={projectId}
-					onModeSelected={handleModeSelected}
-				/>
+			<ChatModeSelector
+				isNewChat
+				isCreating={isPending}
+				projectId={projectId}
+				onModeSelected={handleModeSelected}
+				atChatLimit={atChatLimit}
+			/>
 
 				<Suspense fallback={<ChatsSectionSkeleton />}>
 					<ProjectChatsSection
@@ -223,6 +243,11 @@ export const NewChatRoute = () => {
 					/>
 				</Suspense>
 			</Stack>
+			<ChatUpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				reason="chats"
+			/>
 		</PageContainer>
 	);
 };

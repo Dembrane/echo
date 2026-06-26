@@ -31,7 +31,6 @@ import {
 	IconEdit,
 	IconExternalLink,
 	IconInfoCircle,
-	IconLock,
 	IconRosetteDiscountCheck,
 	IconSearch,
 	IconSelectAll,
@@ -53,6 +52,10 @@ import { UploadLockedCard } from "@/components/project/UploadLockedCard";
 import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
+import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
 import { getConversationContentLink } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { ConversationStatusIndicators } from "./ConversationAccordion";
@@ -163,15 +166,18 @@ const ConversationSelectionCheckbox = ({
 		(c) => c.conversation_id === conversation.id && c.locked,
 	);
 	const isOverCapLocked = !!conversation.locked;
-	const isDisabled = isChatLocked || isOverCapLocked;
+	const isEmpty = conversation.has_transcript === false;
+	const isDisabled = isChatLocked || isOverCapLocked || isEmpty;
 
 	const tooltipLabel = isOverCapLocked
-		? t`Conversation locked. Upgrade to add it.`
+		? t`Upgrade to add this to the chat`
 		: isChatLocked
 			? t`Already used in this chat`
-			: isSelected
-				? t`Remove from chat`
-				: t`Add to chat`;
+			: isEmpty
+				? t`Cannot add empty conversation`
+				: isSelected
+					? t`Remove from chat`
+					: t`Add to chat`;
 
 	const handleChange = () => {
 		if (isSelected) {
@@ -215,6 +221,8 @@ type ConversationRowProps = {
 	isSelected?: boolean;
 	onEdit: (conversation: Conversation) => void;
 	onOpen: (conversation: Conversation) => void;
+	/** Called instead of navigating when a locked (gated) row is clicked. */
+	onLockedClick?: (conversation: Conversation) => void;
 	selectionChatId?: string;
 	selectionMode?: boolean;
 };
@@ -226,6 +234,7 @@ const ConversationRow = ({
 	isSelected,
 	onEdit,
 	onOpen,
+	onLockedClick,
 	selectionChatId,
 	selectionMode,
 }: ConversationRowProps) => {
@@ -234,7 +243,10 @@ const ConversationRow = ({
 		conversation.participant_name?.trim() ||
 		t`Untitled conversation`;
 	const participantLabel = conversation.participant_name?.trim() || t`No name`;
+	const showParticipantLabel =
+		participantLabel !== primary && participantLabel !== t`No name`;
 	const summary = conversation.summary?.trim();
+	const isLocked = !!conversation.locked;
 	const tags =
 		(conversation.tags as ConversationProjectTag[] | undefined) ?? [];
 	const verified = hasVerifiedArtifacts(conversation);
@@ -294,23 +306,10 @@ const ConversationRow = ({
 									</ThemeIcon>
 								</Tooltip>
 							)}
-							{conversation.locked && (
-								<Tooltip
-									label={t`Upgrade your workspace to view this conversation`}
-								>
-									<Badge
-										size="xs"
-										color="blue"
-										variant="light"
-										leftSection={<IconLock size={10} />}
-									>
-										<Trans>Locked</Trans>
-									</Badge>
-								</Tooltip>
-							)}
 						</Group>
 
-						<Group gap="xs" wrap="wrap">
+					<Group gap="xs" wrap="wrap">
+						{showParticipantLabel && (
 							<Tooltip
 								label={conversation.participant_email ?? undefined}
 								disabled={!conversation.participant_email}
@@ -319,19 +318,20 @@ const ConversationRow = ({
 									{participantLabel}
 								</Text>
 							</Tooltip>
-							<Text size="xs" c="dimmed">
-								{formatCreatedAt(conversation.created_at)}
-							</Text>
-							{conversation.live && (
-								<Badge size="xs" color="red" variant="light">
-									<Trans>Ongoing</Trans>
-								</Badge>
-							)}
-							<ConversationStatusIndicators
-								conversation={conversation}
-								showDuration
-							/>
-						</Group>
+						)}
+						<Text size="xs" c="dimmed">
+							{formatCreatedAt(conversation.created_at)}
+						</Text>
+						{conversation.live && (
+							<Badge size="xs" color="red" variant="light">
+								<Trans>Ongoing</Trans>
+							</Badge>
+						)}
+						<ConversationStatusIndicators
+							conversation={conversation}
+							showDuration
+						/>
+					</Group>
 					</Stack>
 
 					<Group gap="xs" wrap="nowrap">
@@ -384,7 +384,11 @@ const ConversationRow = ({
 								onClick={(e) => {
 									e.preventDefault();
 									e.stopPropagation();
-									onOpen(conversation);
+									if (isLocked) {
+										onLockedClick?.(conversation);
+									} else {
+										onOpen(conversation);
+									}
 								}}
 							>
 								<IconExternalLink size={16} />
@@ -393,13 +397,22 @@ const ConversationRow = ({
 					</Group>
 				</Group>
 
-				<Text
-					size="sm"
-					c={summary ? "gray.7" : "dimmed"}
-					style={lineClampStyle}
-				>
-					{summary || <Trans>No summary yet</Trans>}
-				</Text>
+				{isLocked ? (
+					<LockedTranscriptOverlay
+						compact
+						variant="summary"
+						reason={conversation.lock_reason ?? "free_tier"}
+						context={selectionMode ? "selection" : "view"}
+					/>
+				) : (
+					<Text
+						size="sm"
+						c={summary ? "gray.7" : "dimmed"}
+						style={lineClampStyle}
+					>
+						{summary || <Trans>No summary yet</Trans>}
+					</Text>
+				)}
 
 				{tags.length > 0 && (
 					<Group gap={6} wrap="wrap">
@@ -429,6 +442,33 @@ const ConversationRow = ({
 		background: isSelected ? "rgba(65, 105, 225, 0.06)" : "white",
 		borderColor: isActive || isSelected ? "#4169e1" : undefined,
 	} as const;
+
+	// Locked (gated) rows stay visible but route to the upgrade path on click
+	// instead of opening the conversation.
+	if (!selectionMode && isLocked) {
+		return (
+			<Paper
+				withBorder
+				radius="sm"
+				p="md"
+				className="cursor-pointer transition-colors hover:!border-primary-400"
+				style={cardStyle}
+				role="button"
+				tabIndex={0}
+				aria-label={t`Locked conversation, upgrade to view`}
+				onClick={() => onLockedClick?.(conversation)}
+				onKeyDown={(e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						e.preventDefault();
+						onLockedClick?.(conversation);
+					}
+				}}
+				{...testId(`project-conversation-row-${conversation.id}`)}
+			>
+				{body}
+			</Paper>
+		);
+	}
 
 	// Render as a real anchor when navigable, so the whole card is clickable
 	// (and supports cmd/middle-click) exactly like the project cards on the
@@ -489,6 +529,8 @@ export const ProjectConversationsPanel = ({
 	const [editOpened, editHandlers] = useDisclosure(false);
 	const [editingConversation, setEditingConversation] =
 		useState<Conversation | null>(null);
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	const { workspace } = useWorkspace();
 
 	const projectQuery = useProjectById({
 		projectId,
@@ -877,6 +919,7 @@ export const ProjectConversationsPanel = ({
 							isSelected={selectedConversationIds.has(conversation.id)}
 							onEdit={openEdit}
 							onOpen={openConversation}
+							onLockedClick={upgradeHandlers.open}
 							selectionChatId={selectionChatId}
 							selectionMode={selectionMode}
 						/>
@@ -948,6 +991,19 @@ export const ProjectConversationsPanel = ({
 					}
 				/>
 			)}
+
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				currentTier={(workspace?.tier ?? "free") as Tier}
+				requiredTier={SELLABLE_TIER}
+				featureName="Conversations"
+				benefit="Upgrade your plan to open every conversation in this workspace."
+				canRequestUpgrade={
+					workspace?.role === "admin" || workspace?.role === "owner"
+				}
+				workspaceId={resolvedWorkspaceId ?? ""}
+			/>
 		</Stack>
 	);
 };

@@ -14,7 +14,7 @@ import {
 	Textarea,
 	Title,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import {
 	IconAlertCircle,
@@ -33,6 +33,10 @@ import {
 	ChatModeIndicator,
 } from "@/components/chat/ChatAccordion";
 import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
+import {
+	ChatTurnLimitCard,
+	ChatUpgradeModal,
+} from "@/components/chat/FreeTierChatGate";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import {
@@ -83,6 +87,8 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
+import { FREE_TIER_MAX_CHAT_USER_TURNS } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 
@@ -496,6 +502,24 @@ export const ProjectChatRoute = () => {
 		statusMessage,
 	} = useDembraneChat({ chatId: chatId ?? "" });
 	const normalizedInput = typeof input === "string" ? input : "";
+
+	// Free tier: max 3 user turns per chat. The 4th routes to upgrade.
+	const { freeTier } = useWorkspaceUsage(routeWorkspaceId);
+	const [chatUpgradeOpened, chatUpgradeHandlers] = useDisclosure(false);
+	const userTurnCount = useMemo(
+		() => (messages ?? []).filter((m) => m.role === "user").length,
+		[messages],
+	);
+	const atTurnLimit = Boolean(
+		freeTier?.active && userTurnCount >= FREE_TIER_MAX_CHAT_USER_TURNS,
+	);
+	const guardedSubmit = () => {
+		if (atTurnLimit) {
+			chatUpgradeHandlers.open();
+			return;
+		}
+		handleSubmit();
+	};
 
 	// check if assistant is typing by determining if the last message is an assistant message and has a text part
 	const isAssistantTyping =
@@ -916,10 +940,15 @@ export const ProjectChatRoute = () => {
 							<ChatContextProgress chatId={chatId ?? ""} />
 						</Box>
 					)}
+					{atTurnLimit && (
+						<Box className="mb-2">
+							<ChatTurnLimitCard onUpgrade={chatUpgradeHandlers.open} />
+						</Box>
+					)}
 					<form
 						onSubmit={(e) => {
 							e.preventDefault();
-							handleSubmit();
+							guardedSubmit();
 						}}
 					>
 						<Group className="flex-nowrap">
@@ -931,7 +960,7 @@ export const ProjectChatRoute = () => {
 									autosize
 									value={normalizedInput}
 									onChange={handleInputChange}
-									disabled={isLoading || isSubmitting}
+									disabled={isLoading || isSubmitting || atTurnLimit}
 									onKeyDown={(e) => {
 										if (e.key === "/" && normalizedInput.trim() === "") {
 											e.preventDefault();
@@ -941,7 +970,7 @@ export const ProjectChatRoute = () => {
 										if (e.key === "Enter" && !e.shiftKey) {
 											e.preventDefault();
 											e.stopPropagation();
-											handleSubmit();
+											guardedSubmit();
 										}
 									}}
 									color="gray"
@@ -970,11 +999,14 @@ export const ProjectChatRoute = () => {
 										onClick={(e) => {
 											e.preventDefault();
 											e.stopPropagation();
-											handleSubmit();
+											guardedSubmit();
 										}}
 										rightSection={<IconSend size={24} />}
 										disabled={
-											normalizedInput.trim() === "" || isLoading || isSubmitting
+											normalizedInput.trim() === "" ||
+											isLoading ||
+											isSubmitting ||
+											atTurnLimit
 										}
 										{...testId("chat-send-button")}
 									>
@@ -1012,6 +1044,11 @@ export const ProjectChatRoute = () => {
 					/>
 				)}
 			</Modal>
+			<ChatUpgradeModal
+				opened={chatUpgradeOpened}
+				onClose={chatUpgradeHandlers.close}
+				reason="chat_turns"
+			/>
 		</Stack>
 	);
 };

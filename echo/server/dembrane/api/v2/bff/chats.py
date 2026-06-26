@@ -56,11 +56,22 @@ async def create_chat(
     access = await resolve_project_access(body.project_id, auth)
     access.require("chat:use")
 
+    # Free tier: one chat per workspace. Additional chats route to upgrade.
+    from dembrane.free_tier import (
+        FREE_TIER_MAX_CHATS,
+        is_free_tier,
+        count_workspace_chats,
+        free_tier_limit_error,
+    )
+
+    if is_free_tier(access.tier) and (
+        await count_workspace_chats(access.workspace_id) >= FREE_TIER_MAX_CHATS
+    ):
+        raise free_tier_limit_error("chats")
+
     auto_select = body.auto_select
     if auto_select is None:
-        auto_select = bool(
-            (access.project or {}).get("is_enhanced_audio_processing_enabled")
-        )
+        auto_select = bool((access.project or {}).get("is_enhanced_audio_processing_enabled"))
 
     payload: dict = {
         "id": generate_uuid(),
@@ -96,25 +107,28 @@ async def list_chats(
         base_filter["count(project_chat_messages)"] = {"_gt": 0}
     filt = filter_exclude_deleted(base_filter)
 
-    chats = await async_directus.get_items(
-        "project_chat",
-        {
-            "query": {
-                "filter": filt,
-                "fields": [
-                    "id",
-                    "project_id",
-                    "date_created",
-                    "date_updated",
-                    "name",
-                    "chat_mode",
-                ],
-                "sort": ["-date_created"],
-                "limit": limit,
-                "offset": offset,
-            }
-        },
-    ) or []
+    chats = (
+        await async_directus.get_items(
+            "project_chat",
+            {
+                "query": {
+                    "filter": filt,
+                    "fields": [
+                        "id",
+                        "project_id",
+                        "date_created",
+                        "date_updated",
+                        "name",
+                        "chat_mode",
+                    ],
+                    "sort": ["-date_created"],
+                    "limit": limit,
+                    "offset": offset,
+                }
+            },
+        )
+        or []
+    )
     chats_list = chats if isinstance(chats, list) else []
 
     count_agg = await async_directus.get_items(

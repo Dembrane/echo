@@ -87,6 +87,152 @@ async def test_non_staff_revoke_license_403():
 
 
 @pytest.mark.asyncio
+async def test_list_trainings_resolves_requester_name_and_email():
+    app = _build_app(is_admin=True)
+
+    training_rows = [
+        {
+            "id": "tr-1", "org_id": "org-1", "type": "online", "status": "requested",
+            "included_participants": 10, "extra_participants": 3,
+            "requested_by": "au-req", "created_at": "2026-06-20T10:00:00+00:00",
+        },
+        {
+            "id": "tr-2", "org_id": "org-1", "type": "in_person", "status": "scheduled",
+            "requested_by": None, "created_at": "2026-06-19T10:00:00+00:00",
+        },
+    ]
+
+    async def _get_items(collection: str, query: dict):
+        if collection == "training":
+            return training_rows
+        if collection == "org":
+            return [{"id": "org-1", "name": "Org One"}]
+        if collection == "training_license":
+            return []
+        if collection == "app_user":
+            return [{"id": "au-req", "display_name": "Ada Lovelace", "email": "ada@org.com"}]
+        return []
+
+    mock = AsyncMock()
+    mock.get_items = AsyncMock(side_effect=_get_items)
+
+    with patch("dembrane.api.v2.admin_training.async_directus", mock):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.get("/v2/admin/trainings")
+
+    assert resp.status_code == 200, resp.text
+    by_id = {row["id"]: row for row in resp.json()}
+    assert by_id["tr-1"]["requested_by_name"] == "Ada Lovelace"
+    assert by_id["tr-1"]["requested_by_email"] == "ada@org.com"
+    # Staff-created row (no requester) resolves to null, never errors.
+    assert by_id["tr-2"]["requested_by_name"] is None
+    assert by_id["tr-2"]["requested_by_email"] is None
+
+
+@pytest.mark.asyncio
+async def test_list_trainings_includes_org_member_count():
+    app = _build_app(is_admin=True)
+
+    async def _get_items(collection: str, query: dict):
+        if collection == "training":
+            return [{"id": "tr-1", "org_id": "org-1", "type": "online", "status": "completed"}]
+        if collection == "org":
+            return [{"id": "org-1", "name": "Org One"}]
+        if collection == "org_membership":
+            return [{"org_id": "org-1"}, {"org_id": "org-1"}, {"org_id": "org-1"}]
+        if collection == "training_license":
+            return []
+        return []
+
+    mock = AsyncMock()
+    mock.get_items = AsyncMock(side_effect=_get_items)
+
+    with patch("dembrane.api.v2.admin_training.async_directus", mock):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.get("/v2/admin/trainings")
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json()[0]["org_member_count"] == 3
+
+
+@pytest.mark.asyncio
+async def test_list_trainings_license_count_excludes_revoked():
+    app = _build_app(is_admin=True)
+
+    async def _get_items(collection: str, query: dict):
+        if collection == "training":
+            return [{"id": "tr-1", "org_id": "org-1", "type": "online", "status": "completed"}]
+        if collection == "org":
+            return [{"id": "org-1", "name": "Org One"}]
+        if collection == "training_license":
+            return [
+                {"training_id": "tr-1", "status": "active"},
+                {"training_id": "tr-1", "status": "active"},
+                {"training_id": "tr-1", "status": "revoked"},
+            ]
+        return []
+
+    mock = AsyncMock()
+    mock.get_items = AsyncMock(side_effect=_get_items)
+
+    with patch("dembrane.api.v2.admin_training.async_directus", mock):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.get("/v2/admin/trainings")
+
+    assert resp.status_code == 200, resp.text
+    # 2 active + 1 revoked → count is the 2 active only.
+    assert resp.json()[0]["license_count"] == 2
+
+
+@pytest.mark.asyncio
+async def test_list_training_licenses_resolves_attendee_names():
+    app = _build_app(is_admin=True)
+
+    license_rows = [
+        {
+            "id": "l-1", "app_user_id": "au-1", "training_id": "tr-1",
+            "status": "active", "completed_at": "2026-03-01T00:00:00+00:00",
+            "expires_at": "2027-03-01T00:00:00+00:00",
+        },
+        {
+            "id": "l-2", "app_user_id": "au-2", "training_id": "tr-1",
+            "status": "revoked", "completed_at": None, "expires_at": None,
+        },
+    ]
+
+    async def _get_items(collection: str, query: dict):
+        if collection == "training_license":
+            return license_rows
+        if collection == "app_user":
+            return [{"id": "au-1", "display_name": "Ada Lovelace", "email": "ada@x.com"}]
+        return []
+
+    mock = AsyncMock()
+    mock.get_items = AsyncMock(side_effect=_get_items)
+
+    with patch("dembrane.api.v2.admin_training.async_directus", mock):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.get("/v2/admin/trainings/tr-1/licenses")
+
+    assert resp.status_code == 200, resp.text
+    by_id = {r["id"]: r for r in resp.json()}
+    assert by_id["l-1"]["app_user_name"] == "Ada Lovelace"
+    assert by_id["l-1"]["app_user_email"] == "ada@x.com"
+    assert by_id["l-1"]["status"] == "active"
+    # A license whose user isn't resolvable still returns, with null name.
+    assert by_id["l-2"]["app_user_name"] is None
+    assert by_id["l-2"]["status"] == "revoked"
+
+
+@pytest.mark.asyncio
 async def test_staff_create_training_applies_catalog_defaults():
     app = _build_app(is_admin=True)
 
@@ -229,6 +375,83 @@ async def test_staff_revoke_license():
 
     assert resp.status_code == 200
     assert updated["training_license"][1]["status"] == "revoked"
+
+
+@pytest.mark.asyncio
+async def test_revoke_last_license_reverts_completed_training_to_scheduled():
+    app = _build_app(is_admin=True)
+    updates: list[Any] = []
+
+    async def _get_item(collection: str, item_id: str):
+        if collection == "training_license":
+            return {"id": "l-1", "training_id": "tr-1", "status": "active"}
+        if collection == "training":
+            return {
+                "id": "tr-1",
+                "status": "completed",
+                "scheduled_at": "2026-05-01T00:00:00+00:00",
+            }
+        return None
+
+    async def _get_items(collection: str, query: dict):
+        return []  # no active licenses remain
+
+    async def _update_item(collection: str, item_id: str, payload: dict):
+        updates.append((collection, item_id, payload))
+        return {"data": {}}
+
+    mock = AsyncMock()
+    mock.get_item = AsyncMock(side_effect=_get_item)
+    mock.get_items = AsyncMock(side_effect=_get_items)
+    mock.update_item = AsyncMock(side_effect=_update_item)
+
+    with patch("dembrane.api.v2.admin_training.async_directus", mock):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post("/v2/admin/licenses/l-1/revoke")
+
+    assert resp.status_code == 200, resp.text
+    assert ("training_license", "l-1", {"status": "revoked"}) in updates
+    training_updates = [u for u in updates if u[0] == "training"]
+    assert len(training_updates) == 1
+    assert training_updates[0][2]["status"] == "scheduled"
+
+
+@pytest.mark.asyncio
+async def test_revoke_license_keeps_completed_when_active_remain():
+    app = _build_app(is_admin=True)
+    updates: list[Any] = []
+
+    async def _get_item(collection: str, item_id: str):
+        if collection == "training_license":
+            return {"id": "l-1", "training_id": "tr-1", "status": "active"}
+        if collection == "training":
+            return {"id": "tr-1", "status": "completed", "scheduled_at": None}
+        return None
+
+    async def _get_items(collection: str, query: dict):
+        return [{"id": "l-2"}]  # another active license remains
+
+    async def _update_item(collection: str, item_id: str, payload: dict):
+        updates.append((collection, item_id, payload))
+        return {"data": {}}
+
+    mock = AsyncMock()
+    mock.get_item = AsyncMock(side_effect=_get_item)
+    mock.get_items = AsyncMock(side_effect=_get_items)
+    mock.update_item = AsyncMock(side_effect=_update_item)
+
+    with patch("dembrane.api.v2.admin_training.async_directus", mock):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post("/v2/admin/licenses/l-1/revoke")
+
+    assert resp.status_code == 200, resp.text
+    assert ("training_license", "l-1", {"status": "revoked"}) in updates
+    # Training keeps its completed status — other active licenses remain.
+    assert [u for u in updates if u[0] == "training"] == []
 
 
 @pytest.mark.asyncio
