@@ -24,6 +24,9 @@ final class AudioRecorder {
     private(set) var isPaused = false
     private var rotationSuspended = false
     private var interruptionObserver: NSObjectProtocol?
+    /// Durable directory the segments are written into (so audio survives an app
+    /// kill). Falls back to temp if not provided.
+    private var segmentDir: URL?
 
     private static let settings: [String: Any] = [
         AVFormatIDKey: kAudioFormatMPEG4AAC,
@@ -32,7 +35,8 @@ final class AudioRecorder {
         AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
     ]
 
-    func start(segmentEvery seconds: TimeInterval) throws {
+    func start(segmentEvery seconds: TimeInterval, in directory: URL? = nil) throws {
+        segmentDir = directory
         let session = AVAudioSession.sharedInstance()
         // .mixWithOthers so another app starting audio doesn't interrupt/stop our
         // recording (robustness — capture must survive app-switching). Hard
@@ -168,9 +172,17 @@ final class AudioRecorder {
         timer = t
     }
 
-    private func beginSegment() throws {
-        let url = FileManager.default.temporaryDirectory
+    /// URL for a given segment index — in the durable dir if set, else temp.
+    private func segmentURL(_ index: Int) -> URL {
+        if let dir = segmentDir {
+            return dir.appendingPathComponent(String(format: "seg-%04d.m4a", index))
+        }
+        return FileManager.default.temporaryDirectory
             .appendingPathComponent("dembrane-\(UUID().uuidString).m4a")
+    }
+
+    private func beginSegment() throws {
+        let url = segmentURL(index)
         let rec = try AVAudioRecorder(url: url, settings: Self.settings)
         rec.isMeteringEnabled = true
         guard rec.record() else { throw RecorderError.couldNotStart }
@@ -184,8 +196,7 @@ final class AudioRecorder {
     /// gapless would need AVAudioEngine + a continuous tap — a bigger change.)
     private func rotate() {
         guard let rec = recorder, let url = currentURL else { return }
-        let nextURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("dembrane-\(UUID().uuidString).m4a")
+        let nextURL = segmentURL(index + 1)
         let next = try? AVAudioRecorder(url: nextURL, settings: Self.settings)
         next?.isMeteringEnabled = true
         next?.prepareToRecord()

@@ -7,13 +7,22 @@ struct ShareableText: Identifiable {
     let text: String
 }
 
+/// A shareable file (e.g. exported audio) for `.sheet(item:)` presentation.
+struct ShareableFile: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
 /// Presents the system share sheet (UIActivityViewController) — used to trigger
-/// Share from a swipe action, where a SwiftUI `ShareLink` can't live.
+/// Share from a swipe action / menu, where a SwiftUI `ShareLink` can't live.
 struct ActivityView: UIViewControllerRepresentable {
-    let text: String
+    let items: [Any]
+
+    init(text: String) { items = [text] }
+    init(url: URL) { items = [url] }
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
     }
 
     func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}

@@ -24,6 +24,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         freeTierBanner
                         recordButton
+                        PendingRecordingsCard()
                         if let project = model.selectedProject { PortalQRCard(project: project) }
                         recentSection
                     }

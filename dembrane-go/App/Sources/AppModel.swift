@@ -92,6 +92,14 @@ final class AppModel {
     private var initiateTask: Task<String?, Never>?
     private let chunkSeconds: TimeInterval = 30
     private var meterTimer: Timer?
+
+    // Local-first durable storage: segments are written to disk and survive an
+    // app kill; a recording is removed only once fully pushed to dembrane.
+    private let store = LocalRecordingStore.shared
+    private var activeLocalId: String?
+    /// Recordings captured but not yet fully uploaded (failed/interrupted/killed).
+    var pendingRecordings: [LocalRecording] = []
+    var uploadingRecordingIds: Set<String> = []
     private var pausedTotal: TimeInterval = 0
     private var lastPauseAt: Date?
 
@@ -177,6 +185,7 @@ final class AppModel {
         await maybeDevAutoAsk()
         #endif
         processPendingRecordingIfReady()   // honor a "Start Recording" intent fired at launch
+        await refreshPendingRecordings()   // recover any recordings left on disk (kills/failures)
     }
 
     /// Called when the app becomes active: pick up a "Start Recording" signal
@@ -332,6 +341,14 @@ final class AppModel {
         chunkUploads = []
         recorder.onSegment = { [weak self] segment in self?.handleSegment(segment) }
 
+        // Open a durable local recording first — segments are written here so the
+        // audio survives even if upload fails or the app is force-quit.
+        let displayName = Date().formatted(date: .abbreviated, time: .shortened)
+        recordingName = displayName
+        let local = await store.begin(projectId: projectId, displayName: displayName, createdAt: captureStart ?? Date())
+        activeLocalId = local.id
+        let segmentDir = await store.directoryURL(local.id)
+
         isPaused = false
         pausedTotal = 0
         lastPauseAt = nil
@@ -339,7 +356,7 @@ final class AppModel {
         recordingElapsed = 0
         do {
             // Start capturing immediately — don't wait on the network.
-            try recorder.start(segmentEvery: chunkSeconds)
+            try recorder.start(segmentEvery: chunkSeconds, in: segmentDir)
             isRecording = true
             statusMessage = nil
             showRecordingScreen = true        // open the Now-Recording screen
@@ -348,14 +365,12 @@ final class AppModel {
             startLiveTranscriptPolling()
         } catch {
             statusMessage = "Couldn't start recording."
+            await store.remove(local.id)
+            activeLocalId = nil
             return
         }
 
         // Create the conversation in parallel; flush buffered segments once ready.
-        // Name it like Voice Memos (interim: date/time — location naming is a follow-up),
-        // never the user's name.
-        let displayName = Date().formatted(date: .abbreviated, time: .shortened)
-        recordingName = displayName
         // Retry initiate with backoff — a transient failure (or being backgrounded
         // before it completes) must NOT lose the recording. Segments keep buffering
         // in pendingSegments until the conversation id resolves, then flush.
@@ -373,6 +388,7 @@ final class AppModel {
             let id = await initiateTask?.value ?? nil
             if let id {
                 captureConversationId = id
+                await store.setConversationId(local.id, id)   // remember the server id locally
                 flushPendingSegments(conversationId: id)
             } else if isRecording {
                 statusMessage = "Couldn't reach the server."
@@ -386,6 +402,7 @@ final class AppModel {
                   let id = await initiateTask?.value ?? nil else { return }
             try? await api.updateConversation(id: id, fields: ["participant_name": place])
             if isRecording { recordingName = place }   // reflect the auto location name live
+            await store.setName(local.id, place)
             await loadConversations()
         }
     }
@@ -403,23 +420,43 @@ final class AppModel {
         statusMessage = "Finishing…"
         saveState = .saving
 
+        let localId = activeLocalId
+        let duration = recordingElapsed
+        if let localId { await store.finish(localId, duration: duration) }
+
         var resolved = captureConversationId
         if resolved == nil { resolved = await initiateTask?.value ?? nil }
         guard let conversationId = resolved else {
-            statusMessage = "Upload failed — couldn't reach the server."
+            // Couldn't create the conversation — but the audio is safe on disk.
+            // Surface it as a pending upload instead of losing it.
+            statusMessage = nil
             cleanupCapture()
+            activeLocalId = nil
+            await refreshPendingRecordings()
             flashSaveState(.failed)
             return
         }
         captureConversationId = conversationId
+        if let localId { await store.setConversationId(localId, conversationId) }
         flushPendingSegments(conversationId: conversationId)
 
         for task in chunkUploads { await task.value }   // wait for every chunk
         try? await uploader.finishConversation(conversationId: conversationId)
 
+        // Fully uploaded? Drop the local copy; otherwise keep it as pending.
+        if let localId {
+            let onDisk = Set(await store.segmentFiles(localId).map(\.index))
+            let uploaded = Set(await store.get(localId)?.uploadedSegments ?? [])
+            if !onDisk.isEmpty, uploaded.isSuperset(of: onDisk) {
+                await store.remove(localId)
+            }
+        }
+        activeLocalId = nil
+
         cleanupCapture()
         statusMessage = "Processing audio…"
         await loadConversations()
+        await refreshPendingRecordings()
         statusMessage = nil
         flashSaveState(.saved)
     }
@@ -437,10 +474,12 @@ final class AppModel {
         stopLiveTranscriptPolling()
         recorder.stop()
         for task in chunkUploads { task.cancel() }
-        for segment in pendingSegments { try? FileManager.default.removeItem(at: segment.url) }
         let knownId = captureConversationId
         let pendingInitiate = initiateTask
-        Task { [api] in
+        let localId = activeLocalId
+        activeLocalId = nil
+        Task { [api, store] in
+            if let localId { await store.remove(localId) }   // delete the durable local copy
             var id = knownId
             if id == nil { id = await pendingInitiate?.value ?? nil }
             if let id { try? await api.deleteConversation(id: id) }
@@ -448,6 +487,81 @@ final class AppModel {
         cleanupCapture()
         saveState = .idle
         statusMessage = nil
+    }
+
+    // MARK: - Pending (local-first) recordings
+
+    /// Recordings still on disk that aren't the one being recorded right now —
+    /// i.e. failed/interrupted uploads or ones recovered after an app kill.
+    func refreshPendingRecordings() async {
+        let active = activeLocalId
+        pendingRecordings = (await store.all()).filter { $0.id != active }
+    }
+
+    /// Push a pending recording to dembrane: create the conversation if needed,
+    /// upload every on-disk segment not yet sent, finish, then drop the local copy.
+    func uploadPending(_ recording: LocalRecording) async {
+        guard !uploadingRecordingIds.contains(recording.id) else { return }
+        uploadingRecordingIds.insert(recording.id)
+        defer { uploadingRecordingIds.remove(recording.id) }
+
+        var conversationId = recording.conversationId
+        if conversationId == nil {
+            conversationId = try? await uploader.startConversation(
+                projectId: recording.projectId, displayName: recording.displayName)
+            if let cid = conversationId { await store.setConversationId(recording.id, cid) }
+        }
+        guard let conversationId else {
+            statusMessage = "Couldn't reach the server — try again."
+            return
+        }
+        let uploaded = Set(recording.uploadedSegments)
+        for seg in await store.segmentFiles(recording.id) where !uploaded.contains(seg.index) {
+            let timestamp = recording.createdAt.addingTimeInterval(Double(seg.index) * chunkSeconds)
+            do {
+                try await uploader.uploadChunk(
+                    conversationId: conversationId, fileURL: seg.url, timestamp: timestamp)
+                await store.markUploaded(recording.id, index: seg.index)
+            } catch {
+                await refreshPendingRecordings()   // still pending; leave the local copy
+                return
+            }
+        }
+        try? await uploader.finishConversation(conversationId: conversationId)
+        await store.remove(recording.id)
+        await loadConversations()
+        await refreshPendingRecordings()
+    }
+
+    func deletePending(_ recording: LocalRecording) async {
+        await store.remove(recording.id)
+        await refreshPendingRecordings()
+    }
+
+    /// Compose a pending recording's segments into one m4a for export/share.
+    func exportPending(_ recording: LocalRecording) async -> URL? {
+        let segs = await store.segmentFiles(recording.id)
+        guard !segs.isEmpty else { return nil }
+        if segs.count == 1 { return segs[0].url }
+        let composition = AVMutableComposition()
+        guard let track = composition.addMutableTrack(
+            withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else { return nil }
+        var cursor = CMTime.zero
+        for seg in segs {
+            let asset = AVURLAsset(url: seg.url)
+            guard let source = try? await asset.loadTracks(withMediaType: .audio).first,
+                  let duration = try? await asset.load(.duration) else { continue }
+            try? track.insertTimeRange(CMTimeRange(start: .zero, duration: duration), of: source, at: cursor)
+            cursor = cursor + duration
+        }
+        let safeName = recording.displayName.replacingOccurrences(of: "/", with: "-")
+        let out = FileManager.default.temporaryDirectory.appendingPathComponent("\(safeName).m4a")
+        try? FileManager.default.removeItem(at: out)
+        guard let export = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetAppleM4A) else { return nil }
+        do {
+            try await export.export(to: out, as: .m4a)
+            return out
+        } catch { return nil }
     }
 
     /// Poll the in-progress conversation's chunks so the Now-Recording screen can
@@ -485,6 +599,10 @@ final class AppModel {
     }
 
     private func handleSegment(_ segment: AudioRecorder.Segment) {
+        // The segment is already written to the durable local folder — record it.
+        if let lid = activeLocalId {
+            Task { await store.noteSegment(lid, index: segment.index) }
+        }
         if let id = captureConversationId {
             uploadSegment(segment, conversationId: id)
         } else {
@@ -501,11 +619,13 @@ final class AppModel {
     private func uploadSegment(_ segment: AudioRecorder.Segment, conversationId: String) {
         guard let start = captureStart else { return }
         let timestamp = start.addingTimeInterval(Double(segment.index) * chunkSeconds)
-        let task = Task { [uploader] in
+        let lid = activeLocalId
+        let task = Task { [uploader, store] in
             do {
                 try await uploader.uploadChunk(
                     conversationId: conversationId, fileURL: segment.url, timestamp: timestamp)
-                try? FileManager.default.removeItem(at: segment.url)
+                // Keep the durable file (cleaned up only on full upload); mark it sent.
+                if let lid { await store.markUploaded(lid, index: segment.index) }
             } catch {
                 NSLog("dembrane-go chunk \(segment.index) upload failed: \(error)")
             }

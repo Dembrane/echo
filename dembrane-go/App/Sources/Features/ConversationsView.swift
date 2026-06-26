@@ -16,6 +16,8 @@ struct ConversationsView: View {
     @State private var showBulkTag = false
     @State private var deleteTick = 0
     @State private var shareItem: ShareableText?
+    @State private var pendingShareFile: ShareableFile?
+    @State private var pendingExportingId: String?
 
     private var filtered: [Conversation] {
         let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -31,6 +33,15 @@ struct ConversationsView: View {
             List(selection: $selectedIDs) {
                 if !selectMode {
                     Section { projectSelector }
+                    if !model.pendingRecordings.isEmpty {
+                        Section("Pending uploads") {
+                            ForEach(model.pendingRecordings) { rec in
+                                PendingRecordingRow(recording: rec,
+                                                    shareFile: $pendingShareFile,
+                                                    exportingId: $pendingExportingId)
+                            }
+                        }
+                    }
                 }
                 Section { content }
             }
@@ -72,6 +83,7 @@ struct ConversationsView: View {
                 BulkTagPicker(conversationIds: selectedIDs) { exitSelect() }
             }
             .sheet(item: $shareItem) { ActivityView(text: $0.text) }
+            .sheet(item: $pendingShareFile) { ActivityView(url: $0.url) }
             // Selection tick entering/leaving multi-select; success cue on a confirmed delete.
             .sensoryFeedback(.selection, trigger: selectMode)
             .sensoryFeedback(.success, trigger: deleteTick)
