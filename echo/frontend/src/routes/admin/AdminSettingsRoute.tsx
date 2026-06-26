@@ -60,6 +60,7 @@ import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { StaffTrainingPanel } from "@/components/training";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
+import { isOutsiderRole } from "@/lib/roles";
 import {
 	type BillingPeriod,
 	PURCHASABLE_TIERS,
@@ -772,7 +773,8 @@ function ChangeAdminControl({ row }: { row: BillingRow }) {
 	});
 
 	const memberData = (members ?? [])
-		.filter((m) => m.role !== "external")
+		// Outsiders (external + observer) can't be made the workspace admin.
+		.filter((m) => !isOutsiderRole(m.role))
 		.map((m) => ({
 			label: `${m.display_name ?? m.email ?? m.membership_id.slice(0, 8)}${
 				m.role === "admin" || m.role === "owner" ? ` (${m.role})` : ""
@@ -933,9 +935,27 @@ function ResetUsageControl({ row }: { row: BillingRow }) {
  * clear message). Access is granted as admin and auto-revokes after 24h.
  */
 function JoinSupportControl({ row }: { row: BillingRow }) {
-	const [joined, setJoined] = useState(false);
+	const queryClient = useQueryClient();
+	const statusKey = ["v2", "admin", "support-access", row.workspace_id];
 
-	const mutation = useMutation({
+	// Reflect the caller's current session so a reopened modal shows "active
+	// until <time>" + Extend instead of always offering a fresh join.
+	const { data: status, isLoading } = useQuery({
+		queryKey: statusKey,
+		queryFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/join-support`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) throw new Error(`Failed (${res.status})`);
+			return res.json() as Promise<{
+				active: boolean;
+				expires_at: string | null;
+			}>;
+		},
+	});
+
+	const joinMutation = useMutation({
 		mutationFn: async () => {
 			const res = await fetch(
 				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/join-support`,
@@ -956,7 +976,6 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 		},
 		onError: (e) => toast.error((e as Error).message),
 		onSuccess: (data) => {
-			setJoined(true);
 			if (data.status === "already_member") {
 				toast.success(t`You already have access to this workspace.`);
 			} else if (data.status === "extended") {
@@ -966,8 +985,44 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 					t`Support access granted. It ends automatically in 24 hours.`,
 				);
 			}
+			queryClient.invalidateQueries({ queryKey: statusKey });
+			// Refresh the workspace list so the just-joined workspace resolves.
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
 		},
 	});
+
+	const leaveMutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/join-support`,
+				{ credentials: "include", method: "DELETE" },
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json();
+		},
+		onError: (e) => toast.error((e as Error).message),
+		onSuccess: () => {
+			toast.success(t`Support access ended.`);
+			queryClient.invalidateQueries({ queryKey: statusKey });
+		},
+	});
+
+	const active = status?.active ?? false;
+	const busy = joinMutation.isPending || leaveMutation.isPending;
+	const endsAt = ((iso: string | null | undefined): string => {
+		if (!iso) return "";
+		const d = new Date(iso);
+		if (Number.isNaN(d.getTime())) return "";
+		return d.toLocaleString(undefined, {
+			day: "numeric",
+			hour: "2-digit",
+			minute: "2-digit",
+			month: "short",
+		});
+	})(status?.expires_at);
 
 	return (
 		<Paper withBorder radius="sm" p="sm">
@@ -975,29 +1030,54 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 				<Text size="sm" fw={500}>
 					<Trans>Join for support</Trans>
 				</Text>
-				<Text size="xs">
-					<Trans>
-						Join this workspace as an admin to help with support. The customer
-						must have turned on staff support access. Your access ends
-						automatically after 24 hours.
-					</Trans>
-				</Text>
+				{active ? (
+					<Text size="xs">
+						<Trans>
+							You have support access to this workspace. It ends automatically
+							on {endsAt}.
+						</Trans>
+					</Text>
+				) : (
+					<Text size="xs">
+						<Trans>
+							Join this workspace as an admin to help with support. The customer
+							must have turned on staff support access. Your access ends
+							automatically after 24 hours.
+						</Trans>
+					</Text>
+				)}
 				<Group justify="flex-end" gap="sm">
-					{joined && (
-						<Anchor
-							component={I18nLink}
-							to={`/w/${row.workspace_id}/home`}
-							size="xs"
-						>
-							<Trans>Open workspace</Trans>
-						</Anchor>
+					{active && (
+						<>
+							<Anchor
+								component={I18nLink}
+								to={`/w/${row.workspace_id}/home`}
+								size="xs"
+							>
+								<Trans>Open workspace</Trans>
+							</Anchor>
+							<Button
+								size="xs"
+								variant="subtle"
+								loading={leaveMutation.isPending}
+								disabled={busy}
+								onClick={() => leaveMutation.mutate()}
+							>
+								<Trans>Leave now</Trans>
+							</Button>
+						</>
 					)}
 					<Button
 						size="xs"
-						loading={mutation.isPending}
-						onClick={() => mutation.mutate()}
+						loading={joinMutation.isPending}
+						disabled={busy || isLoading}
+						onClick={() => joinMutation.mutate()}
 					>
-						<Trans>Join for support (24h)</Trans>
+						{active ? (
+							<Trans>Extend 24h</Trans>
+						) : (
+							<Trans>Join for support (24h)</Trans>
+						)}
 					</Button>
 				</Group>
 			</Stack>

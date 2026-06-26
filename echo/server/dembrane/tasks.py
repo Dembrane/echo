@@ -1777,7 +1777,13 @@ async def _revoke_staff_support_async(
 
     revoked = False
     membership = await async_directus.get_item("workspace_membership", membership_id)
-    if membership and not membership.get("deleted_at"):
+    # Guard on source: a soft-deleted id can be reactivated as a genuine `direct`
+    # member (same row id), so a stale revoke must never strip a real membership.
+    if (
+        membership
+        and not membership.get("deleted_at")
+        and membership.get("source") == "staff_support"
+    ):
         await async_directus.update_item(
             "workspace_membership",
             membership_id,

@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Alert,
 	Badge,
 	Box,
 	Center,
@@ -11,6 +12,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
+import { IconAlertCircle } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import { Suspense, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
@@ -33,9 +35,11 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { useCreateChatMutation } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import type { ChatMode } from "@/lib/api";
 import { isFreeTierLimitError } from "@/lib/freeTier";
+import { isReadOnlyRole } from "@/lib/roles";
 
 const CHATS_PAGE_SIZE = 10;
 
@@ -151,6 +155,10 @@ export const NewChatRoute = () => {
 	useDocumentTitle(t`Ask | dembrane`);
 	const { projectId, workspaceId } = useParams();
 	const navigate = useI18nNavigate();
+	const { workspace } = useWorkspace();
+	// Observers can't chat; gate before the chat-list section mounts, since its
+	// queries 403 and otherwise surface as "Something went wrong".
+	const isObserver = isReadOnlyRole(workspace?.role);
 	const { language } = useLanguage();
 	const createChatMutation = useCreateChatMutation();
 	const initializeModeMutation = useInitializeChatModeMutation();
@@ -216,6 +224,27 @@ export const NewChatRoute = () => {
 				<Text c="dimmed">
 					<Trans>Project not found</Trans>
 				</Text>
+			</Box>
+		);
+	}
+
+	// Observer read-only wall: no chat. Gate before the chat-list section mounts.
+	if (isObserver) {
+		return (
+			<Box className="flex min-h-full items-center justify-center px-2 pr-4">
+				<Alert
+					icon={<IconAlertCircle size="1rem" />}
+					color="primary"
+					variant="light"
+					maw={420}
+				>
+					<Text size="sm">
+						<Trans>
+							Chat isn't available on your access level. Reach out to your
+							workspace admin to request an upgrade.
+						</Trans>
+					</Text>
+				</Alert>
 			</Box>
 		);
 	}

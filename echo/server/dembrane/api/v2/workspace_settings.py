@@ -134,7 +134,8 @@ async def get_workspace_settings(
         if org:
             org_name = org.get("name", "")
 
-    # Full member list
+    # Exclude staff_support: support sessions stay invisible here (the staff
+    # console is where they surface), matching the seat count and previews.
     memberships = await async_directus.get_items(
         "workspace_membership",
         {
@@ -142,6 +143,7 @@ async def get_workspace_settings(
                 "filter": {
                     "workspace_id": {"_eq": ctx.workspace_id},
                     "deleted_at": {"_null": True},
+                    "source": {"_neq": "staff_support"},
                 },
                 "fields": ["id", "user_id", "role", "source"],
                 "limit": -1,

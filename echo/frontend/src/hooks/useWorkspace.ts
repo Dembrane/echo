@@ -182,6 +182,15 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 		return null;
 	}, [workspaces, selectedId]);
 
+	// A workspace id pinned in the URL wins over the default-workspace fallback,
+	// even when the (stale/loading) list doesn't contain it yet — otherwise a deep
+	// link scopes queries to the wrong workspace until the list refetches.
+	const urlPinnedId = readWorkspaceIdFromPath();
+	const effectiveId = urlPinnedId ?? resolved?.id ?? null;
+	const effectiveWorkspace = effectiveId
+		? (workspaces.find((w) => w.id === effectiveId) ?? null)
+		: null;
+
 	const setWorkspace = useCallback(
 		(id: string) => {
 			sessionStorage.setItem(SESSION_KEY, id);
@@ -207,9 +216,9 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 			refetch();
 		},
 		setWorkspace,
-		workspace: resolved,
-		workspaceId: resolved?.id ?? null,
-		workspaceName: resolved?.name ?? null,
+		workspace: effectiveWorkspace,
+		workspaceId: effectiveId,
+		workspaceName: effectiveWorkspace?.name ?? null,
 		workspaces,
 	};
 }
