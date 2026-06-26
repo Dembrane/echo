@@ -39,10 +39,6 @@ struct AskView: View {
                     .disabled(model.askMessages.isEmpty)
                     .accessibilityLabel("New chat")
                 }
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") { inputFocused = false }
-                }
             }
             // Light impact when a question goes out; a soft success when the answer lands.
             .sensoryFeedback(trigger: model.askStreaming) { _, streaming in
@@ -220,7 +216,8 @@ private struct AskBubble: View {
                 if message.text.isEmpty {
                     ProgressView()
                 } else {
-                    Text(Self.markdown(message.text)).textSelection(.enabled).foregroundStyle(.primary)
+                    MarkdownText(markdown: message.text)
+                        .textSelection(.enabled).foregroundStyle(.primary)
                 }
                 if !message.references.isEmpty { sources }
             }
@@ -245,15 +242,6 @@ private struct AskBubble: View {
             let title = ref.conversationTitle ?? ref.conversation
             return seen.insert(title).inserted ? title : nil
         }
-    }
-
-    /// Inline markdown (bold/italic/links, whitespace preserved) — robust while
-    /// the response is still streaming in.
-    static func markdown(_ string: String) -> AttributedString {
-        (try? AttributedString(
-            markdown: string,
-            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
-            ?? AttributedString(string)
     }
 }
 

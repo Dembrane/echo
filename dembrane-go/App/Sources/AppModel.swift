@@ -52,6 +52,10 @@ final class AppModel {
     /// Free-tier upload gating for the active workspace (informational only).
     var workspaceUsage: WorkspaceUsage?
     var uploadsLocked: Bool { workspaceUsage?.uploadsLocked == true || workspaceUsage?.overCapActive == true }
+
+    /// The conversation currently being recorded (so its list row opens the
+    /// Now-Recording screen instead of the transcript detail). Nil when idle.
+    var activeRecordingConversationId: String? { isRecording ? captureConversationId : nil }
     static let waveformBarCount = 48
 
     // Ask (chat) state

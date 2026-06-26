@@ -117,13 +117,28 @@ final class AudioRecorder {
         currentURL = url
     }
 
-    /// Close the current segment, emit it, and immediately start the next.
+    /// Close the current segment, emit it, and immediately start the next. The
+    /// next recorder is *prepared* before the current one stops so the capture
+    /// gap at the 30s boundary is as small as AVAudioRecorder allows. (Fully
+    /// gapless would need AVAudioEngine + a continuous tap — a bigger change.)
     private func rotate() {
         guard let rec = recorder, let url = currentURL else { return }
+        let nextURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("dembrane-\(UUID().uuidString).m4a")
+        let next = try? AVAudioRecorder(url: nextURL, settings: Self.settings)
+        next?.isMeteringEnabled = true
+        next?.prepareToRecord()
+
         rec.stop()
         let finished = Segment(url: url, index: index)
         index += 1
-        try? beginSegment()
+
+        if let next, next.record() {
+            recorder = next
+            currentURL = nextURL
+        } else {
+            try? beginSegment()   // fallback if the prepared recorder failed
+        }
         onSegment?(finished)
     }
 

@@ -31,6 +31,7 @@ struct HomeView: View {
                     searchSection
                 }
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(greeting)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -134,16 +135,29 @@ struct HomeView: View {
     private func rows(_ conversations: [Conversation]) -> some View {
         VStack(spacing: 0) {
             ForEach(conversations) { conversation in
-                Button { selected = conversation } label: {
+                Button { open(conversation) } label: {
                     ConversationRow(conversation: conversation)
-                        .padding(.horizontal)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
                 }
                 .buttonStyle(.plain)
                 if conversation.id != conversations.last?.id {
-                    Divider().padding(.leading)
+                    Divider().padding(.leading, 16)
                 }
             }
+        }
+        .background(Color(.secondarySystemGroupedBackground),
+                    in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(.horizontal)
+    }
+
+    /// Tapping the in-progress recording reopens the Now-Recording screen; any
+    /// other row opens its transcript detail.
+    private func open(_ conversation: Conversation) {
+        if conversation.id == model.activeRecordingConversationId {
+            model.showRecordingScreen = true
+        } else {
+            selected = conversation
         }
     }
 

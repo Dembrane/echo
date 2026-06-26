@@ -205,7 +205,14 @@ struct ConversationsView: View {
                 ConversationRow(conversation: conversation)
                     .tag(conversation.id)
                     .contentShape(Rectangle())
-                    .onTapGesture { if !selectMode { selected = conversation } }
+                    .onTapGesture {
+                        guard !selectMode else { return }
+                        if conversation.id == model.activeRecordingConversationId {
+                            model.showRecordingScreen = true   // reopen Now-Recording, not the transcript
+                        } else {
+                            selected = conversation
+                        }
+                    }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) { pendingDelete = conversation } label: {
                             Label("Delete", systemImage: "trash")

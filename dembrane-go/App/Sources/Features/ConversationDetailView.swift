@@ -181,7 +181,7 @@ struct ConversationDetailView: View {
                     accessibilityCopy: "Copy summary",
                     isCopied: copied == .summary,
                     onCopy: { copy(summary, as: .summary) }) {
-                Text(Self.markdown(summary))
+                MarkdownText(markdown: summary)
                     .textSelection(.enabled)
                     .foregroundStyle(.primary)
             }
