@@ -915,13 +915,44 @@ final class AppModel {
         }
         var result: [WorkspaceProject] = []
         for workspace in workspaces {
-            let projects = (try? await api.projects(workspaceId: workspace.id)) ?? []
+            let projects = (try? await api.projects(workspaceId: workspace.id, search: nil)) ?? []
             result += projects.map { WorkspaceProject(project: $0, workspace: workspace) }
         }
         if !result.isEmpty {
             allProjects = result
             await DiskCache.shared.save(result, key: "allProjects")
             AppGroup.writeProjects(result)   // let the Share Extension pick a destination
+        }
+    }
+
+    /// Server-side search across every workspace, so projects beyond the loaded
+    /// page (the route returns recent-first) are still findable.
+    func searchProjects(_ query: String) async -> [WorkspaceProject] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        var result: [WorkspaceProject] = []
+        for workspace in workspaces {
+            let projects = (try? await api.projects(workspaceId: workspace.id, search: trimmed)) ?? []
+            result += projects.map { WorkspaceProject(project: $0, workspace: workspace) }
+        }
+        return result
+    }
+
+    /// Create a project in a specific workspace, then select it.
+    @discardableResult
+    func createProject(name: String, in workspace: Workspace) async -> Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        do {
+            let project = try await api.createProject(workspaceId: workspace.id, name: trimmed)
+            let wp = WorkspaceProject(project: project, workspace: workspace)
+            allProjects.append(wp)
+            AppGroup.writeProjects(allProjects)
+            selectProject(wp)
+            return true
+        } catch {
+            statusMessage = "Couldn't create the project. Try again."
+            return false
         }
     }
 

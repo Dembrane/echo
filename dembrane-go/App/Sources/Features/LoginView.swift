@@ -53,7 +53,7 @@ struct LoginView: View {
                         .font(.headline).frame(maxWidth: .infinity)
                 }
             }
-            .buttonStyle(.borderedProminent).controlSize(.large).tint(BrandColor.royalBlue)
+            .buttonStyle(.glassProminent).controlSize(.large).tint(BrandColor.royalBlue)
             .disabled(email.isEmpty || password.isEmpty || model.isSigningIn
                       || (model.needsOTP && otp.count < 6))
 

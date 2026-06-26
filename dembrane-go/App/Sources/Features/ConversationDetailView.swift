@@ -268,7 +268,7 @@ struct ConversationDetailView: View {
                     ShareLink(item: shareText) {
                         Image(systemName: "square.and.arrow.up").font(.body)
                     }
-                    .buttonStyle(.bordered).buttonBorderShape(.circle)
+                    .buttonStyle(.glass).buttonBorderShape(.circle)
                     .tint(BrandColor.royalBlue)
                     .accessibilityLabel("Share \(title.lowercased())")
                 }
@@ -276,7 +276,7 @@ struct ConversationDetailView: View {
                     Button(action: onCopy) {
                         Image(systemName: isCopied ? "checkmark" : "doc.on.doc").font(.body)
                     }
-                    .buttonStyle(.bordered).buttonBorderShape(.circle)
+                    .buttonStyle(.glass).buttonBorderShape(.circle)
                     .tint(isCopied ? .green : BrandColor.royalBlue)
                     .accessibilityLabel(isCopied ? "Copied" : accessibilityCopy)
                 }

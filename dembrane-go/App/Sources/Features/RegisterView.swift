@@ -60,7 +60,7 @@ struct RegisterView: View {
             }
 
             Button("Continue") { step = 1 }
-                .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
+                .buttonStyle(.glassProminent).tint(BrandColor.royalBlue)
                 .frame(maxWidth: .infinity)
                 .disabled(firstName.isEmpty || !email.contains("@") || !acceptedTerms)
             Spacer()
@@ -89,7 +89,7 @@ struct RegisterView: View {
                 } label: {
                     if model.isRegistering { ProgressView() } else { Text("Create account") }
                 }
-                .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
+                .buttonStyle(.glassProminent).tint(BrandColor.royalBlue)
                 .disabled(password.count < 8 || password != confirm || model.isRegistering)
             }
             Spacer()
@@ -106,7 +106,7 @@ struct RegisterView: View {
             Text("Didn't get it? Check your spam or junk folder. The email comes from dembrane.com.")
                 .font(.caption).multilineTextAlignment(.center).foregroundStyle(.secondary)
             Button("Done") { model.registrationSentTo = nil; dismiss() }
-                .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
+                .buttonStyle(.glassProminent).tint(BrandColor.royalBlue)
             Spacer()
         }
     }

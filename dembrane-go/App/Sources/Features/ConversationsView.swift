@@ -198,7 +198,7 @@ struct ConversationsView: View {
                 Text("Check your connection and try again.")
             } actions: {
                 Button("Retry") { Task { await model.loadConversations() } }
-                    .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
+                    .buttonStyle(.glassProminent).tint(BrandColor.royalBlue)
             }
             .listRowSeparator(.hidden).listRowBackground(Color.clear)
         } else if model.conversations.isEmpty {
@@ -208,7 +208,7 @@ struct ConversationsView: View {
                 Text("Tap Record to capture your first conversation.")
             } actions: {
                 Button("Record") { model.showRecordingScreen = true }
-                    .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
+                    .buttonStyle(.glassProminent).tint(BrandColor.royalBlue)
             }
             .listRowSeparator(.hidden).listRowBackground(Color.clear)
         } else if filtered.isEmpty {

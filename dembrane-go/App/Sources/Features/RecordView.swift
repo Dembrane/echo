@@ -33,7 +33,7 @@ struct RecordView: View {
                             Image(systemName: "chevron.up.chevron.down").font(.caption2)
                         }
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.glass)
                     .tint(BrandColor.royalBlue)
                     .disabled(model.isRecording)
                 }

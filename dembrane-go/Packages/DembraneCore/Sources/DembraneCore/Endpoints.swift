@@ -23,8 +23,16 @@ public struct DembraneEndpoints: Sendable, Equatable {
     public func project(id: String) -> URL {
         api.appending(path: "v2/bff/projects/\(id)")
     }
-    public func projects(workspaceId: String) -> URL {
-        api.appending(path: "v2/workspaces/\(workspaceId)/projects")
+    /// Projects in a workspace. The route defaults to 15/page (max 100) sorted by
+    /// recent, so pass the max limit and an optional server-side `search` so any
+    /// project is findable, not just the most recent few.
+    public func projects(workspaceId: String, search: String? = nil) -> URL {
+        var c = URLComponents(url: api.appending(path: "v2/workspaces/\(workspaceId)/projects"),
+                              resolvingAgainstBaseURL: false)!
+        var items = [URLQueryItem(name: "limit", value: "100")]
+        if let search, !search.isEmpty { items.append(URLQueryItem(name: "search", value: search)) }
+        c.queryItems = items
+        return c.url!
     }
     public func conversations(projectId: String) -> URL {
         var c = URLComponents(url: api.appending(path: "v2/bff/conversations"),

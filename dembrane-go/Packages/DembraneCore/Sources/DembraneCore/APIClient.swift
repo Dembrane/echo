@@ -13,7 +13,7 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func workspaceUsage(workspaceId: String) async throws -> WorkspaceUsage
     func portalSettings(projectId: String) async throws -> PortalSettings
     func updatePortalSettings(projectId: String, fields: [String: String]) async throws
-    func projects(workspaceId: String) async throws -> [Project]
+    func projects(workspaceId: String, search: String?) async throws -> [Project]
     func conversations(projectId: String) async throws -> [Conversation]
     func conversation(id: String) async throws -> Conversation
     func conversationChunks(id: String) async throws -> [ConversationChunk]
@@ -89,8 +89,9 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
     public func updatePortalSettings(projectId: String, fields: [String: String]) async throws {
         try await sendJSON(endpoints.project(id: projectId), method: "PATCH", body: fields)
     }
-    public func projects(workspaceId: String) async throws -> [Project] {
-        try await get(endpoints.projects(workspaceId: workspaceId), as: ProjectsListResponse.self).items
+    public func projects(workspaceId: String, search: String?) async throws -> [Project] {
+        try await get(endpoints.projects(workspaceId: workspaceId, search: search),
+                      as: ProjectsListResponse.self).items
     }
     public func conversations(projectId: String) async throws -> [Conversation] {
         try await get(endpoints.conversations(projectId: projectId), as: [Conversation].self)
@@ -240,7 +241,7 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
                        defaultConversationDescription: "Tell us about your experience.", context: nil)
     }
     public func updatePortalSettings(projectId: String, fields: [String: String]) async throws {}
-    public func projects(workspaceId: String) async throws -> [Project] { [.preview] }
+    public func projects(workspaceId: String, search: String?) async throws -> [Project] { [.preview] }
     public func conversations(projectId: String) async throws -> [Conversation] { Conversation.previews }
     public func conversation(id: String) async throws -> Conversation {
         Conversation(id: id, projectId: "p_preview", participantName: "Morning sync",
