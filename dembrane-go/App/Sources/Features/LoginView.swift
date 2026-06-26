@@ -12,10 +12,8 @@ struct LoginView: View {
         VStack(alignment: .leading, spacing: 18) {
             Spacer()
 
-            // Logo stays centered; everything else is left-aligned.
             Image("DembraneLogo")
-                .resizable().scaledToFit().frame(width: 200)
-                .frame(maxWidth: .infinity)
+                .resizable().scaledToFit().frame(width: 180)
                 .accessibilityLabel("dembrane")
 
             VStack(alignment: .leading, spacing: 6) {
@@ -71,13 +69,17 @@ struct LoginView: View {
 
             Spacer()
 
-            HStack(spacing: 8) {
-                legalLink("Terms", "terms")
-                Text("·").foregroundStyle(.secondary)
-                legalLink("Privacy", "privacy")
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    legalLink("Terms", "terms")
+                    Text("·").foregroundStyle(.secondary)
+                    legalLink("Privacy", "privacy")
+                }
+                Text("© dembrane BV \(String(Calendar.current.component(.year, from: Date())))")
+                    .foregroundStyle(.tertiary)
             }
             .font(.caption)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

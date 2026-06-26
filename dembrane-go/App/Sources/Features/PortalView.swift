@@ -54,7 +54,7 @@ struct PortalQRCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Invite others to record")
                         .font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
-                    Text("Share this project's link — people record on their own phone and it lands here for you to review and ask.")
+                    Text("Share this project's link. People record on their own phone and it lands here for you to review and ask.")
                         .font(.caption).foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
                 }
@@ -86,6 +86,7 @@ struct PortalSheet: View {
     @State private var loaded = false
     @State private var saving = false
     @AppStorage("dembrane.go.portalInfoDismissed") private var infoDismissed = false
+    @State private var activity: ShareableItems?
 
     private var portalURL: URL { model.portalURL(for: project) }
     private var inviter: String {
@@ -104,7 +105,7 @@ struct PortalSheet: View {
                     Section {
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: "info.circle.fill").foregroundStyle(BrandColor.royalBlue)
-                            Text("People who scan this record on their own phone — no account needed. Their recordings appear in “\(project.name)” for you to review and ask about.")
+                            Text("People who scan this record on their own phone, no account needed. Their recordings appear in “\(project.name)” for you to review and ask about.")
                                 .font(.footnote).foregroundStyle(.secondary)
                             Spacer(minLength: 0)
                             Button { withAnimation { infoDismissed = true } } label: {
@@ -116,15 +117,21 @@ struct PortalSheet: View {
                 }
 
                 Section {
-                    VStack(spacing: 14) {
+                    VStack(spacing: 16) {
                         QRCodeImage(string: portalURL.absoluteString, size: 210)
-                        ShareLink(item: portalURL,
-                                  subject: Text(inviteMessage),
-                                  message: Text(inviteMessage)) {
+                            .contextMenu {
+                                Button { shareInvite(imageOnly: true) } label: {
+                                    Label("Share image", systemImage: "photo")
+                                }
+                            }
+                        Button { shareInvite(imageOnly: false) } label: {
                             Label("Share invite", systemImage: "square.and.arrow.up")
+                                .labelStyle(.titleAndIcon)
+                                .font(.headline)
                                 .frame(maxWidth: .infinity)
+                                .padding(.vertical, 4)
                         }
-                        .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
+                        .buttonStyle(.glassProminent).tint(BrandColor.royalBlue)
                     }
                     .frame(maxWidth: .infinity).padding(.vertical, 8)
                     .listRowBackground(Color.clear)
@@ -142,7 +149,7 @@ struct PortalSheet: View {
                 } header: {
                     Text("Key terms")
                 } footer: {
-                    Text("Names, jargon, or places — add them one at a time to improve transcription.")
+                    Text("Names, jargon, or places. Add them one at a time to improve transcription.")
                 }
             }
             .navigationTitle("Share to record")
@@ -155,7 +162,20 @@ struct PortalSheet: View {
                 }
             }
             .task { await load() }
+            .sheet(item: $activity) { ActivityView(items: $0.items) }
         }
+    }
+
+    /// Share the invite: the QR image (so it works in WhatsApp/iMessage) plus the
+    /// invite text + link. `imageOnly` shares just the QR (from the long-press menu).
+    @MainActor private func shareInvite(imageOnly: Bool) {
+        let renderer = ImageRenderer(content: QRCodeImage(string: portalURL.absoluteString, size: 320))
+        renderer.scale = 3
+        var items: [Any] = []
+        if let image = renderer.uiImage { items.append(image) }
+        if !imageOnly { items.append("\(inviteMessage)\n\(portalURL.absoluteString)") }
+        if items.isEmpty { items = [portalURL] }
+        activity = ShareableItems(items: items)
     }
 
     private var keyTermsEditor: some View {

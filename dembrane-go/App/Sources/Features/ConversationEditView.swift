@@ -156,7 +156,7 @@ struct ConversationEditView: View {
                 }
                 dismiss()
             } catch {
-                self.error = "Couldn't save changes. Please try again."
+                self.error = "Couldn't save changes. Try again."
             }
         }
     }

@@ -10,7 +10,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section("Account") {
-                    LabeledContent("Signed in as", value: model.me?.email ?? "—")
+                    LabeledContent("Signed in as", value: model.me?.email ?? "Not set")
                     Button("Sign out", role: .destructive) {
                         Task { await model.signOut() }
                     }
@@ -23,7 +23,7 @@ struct SettingsView: View {
                         HStack {
                             Text("Default project")
                             Spacer()
-                            Text(model.selectedProject?.name ?? "—").foregroundStyle(.secondary)
+                            Text(model.selectedProject?.name ?? "Not set").foregroundStyle(.secondary)
                             Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
                         }
                     }

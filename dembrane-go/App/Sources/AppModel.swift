@@ -294,7 +294,7 @@ final class AppModel {
         } catch AuthError.otpRequired {
             // 2FA: reveal the code field. If a code was already entered, it was wrong.
             if needsOTP, otp?.isEmpty == false {
-                loginError = "That code didn't work — try again."
+                loginError = "That code didn't work. Try again."
             }
             needsOTP = true
             if phase == .loading { phase = .signedOut }
@@ -337,7 +337,7 @@ final class AppModel {
                                     verificationURL: verificationURL)
             registrationSentTo = email
         } catch {
-            registerError = "Couldn't create your account. Please try again."
+            registerError = "Couldn't create your account. Try again."
         }
     }
 
@@ -361,7 +361,7 @@ final class AppModel {
 
     func startRecording() async {
         guard await AVAudioApplication.requestRecordPermission() else {
-            statusMessage = "Microphone access is off — enable it in Settings."
+            statusMessage = "Microphone access is off. Enable it in Settings."
             return
         }
         guard let projectId = selectedProject?.id else {
@@ -570,7 +570,7 @@ final class AppModel {
             if let cid = conversationId { await store.setConversationId(recording.id, cid) }
         }
         guard let conversationId else {
-            statusMessage = "Couldn't reach the server — try again."
+            statusMessage = "Couldn't reach the server. Try again."
             return
         }
         var success = false
@@ -706,6 +706,43 @@ final class AppModel {
         try? FileManager.default.removeItem(at: url)
         await loadConversations()
         statusMessage = nil
+    }
+
+    /// Import an audio file the user picked from Files, and upload it to the
+    /// active project (source GO_IOS).
+    func importAudioFile(_ url: URL) async {
+        guard let projectId = selectedProject?.id else {
+            statusMessage = "No project to save to yet."; return
+        }
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        // Copy out of the (possibly sandboxed) source before uploading.
+        let dest = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString + "-" + url.lastPathComponent)
+        try? FileManager.default.copyItem(at: url, to: dest)
+        guard FileManager.default.fileExists(atPath: dest.path) else {
+            flashSaveState(.failed); return
+        }
+        saveState = .saving
+        let contentType: String
+        switch url.pathExtension.lowercased() {
+        case "mp3": contentType = "audio/mpeg"
+        case "wav": contentType = "audio/wav"
+        case "caf": contentType = "audio/x-caf"
+        default: contentType = "audio/m4a"
+        }
+        do {
+            _ = try await uploader.upload(
+                projectId: projectId, fileURL: dest,
+                displayName: url.deletingPathExtension().lastPathComponent,
+                contentType: contentType, source: "GO_IOS", recordedAt: Date())
+            try? FileManager.default.removeItem(at: dest)
+            await loadConversations()
+            flashSaveState(.saved)
+        } catch {
+            try? FileManager.default.removeItem(at: dest)
+            flashSaveState(.failed)
+        }
     }
 
     // Mic / input selection (meaningful while the session is active).
@@ -1058,7 +1095,7 @@ final class AppModel {
             try await api.moveConversation(id: id, targetProjectId: projectId)
         } catch {
             conversations = snapshot
-            statusMessage = "Couldn't move — try again."
+            statusMessage = "Couldn't move it. Try again."
         }
     }
 
@@ -1080,7 +1117,7 @@ final class AppModel {
             try await api.deleteConversation(id: conversation.id)
         } catch {
             conversations = snapshot
-            statusMessage = "Couldn't delete — try again."
+            statusMessage = "Couldn't delete it. Try again."
         }
     }
 
@@ -1150,7 +1187,7 @@ final class AppModel {
                 try await api.deleteConversation(id: id)
             } catch {
                 conversations = snapshot
-                statusMessage = "Couldn't delete — try again."
+                statusMessage = "Couldn't delete it. Try again."
                 return
             }
         }
@@ -1286,7 +1323,7 @@ final class AppModel {
             }
         } catch {
             NSLog("dembrane-go Ask failed: \(error)")
-            askError = "Couldn't get a response. Please try again."
+            askError = "Couldn't get a response. Try again."
         }
         // Drop a stuck empty bubble if the reply never produced any text.
         if idx < askMessages.count, askMessages[idx].role == .assistant, askMessages[idx].text.isEmpty {

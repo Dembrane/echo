@@ -138,7 +138,7 @@ struct ConversationsView: View {
     private var selectedShareText: String {
         filtered.filter { selectedIDs.contains($0.id) }
             .map(shareText)
-            .joined(separator: "\n\n———\n\n")
+            .joined(separator: "\n\n* * *\n\n")
     }
 
     private func shareText(_ conversation: Conversation) -> String {
@@ -303,7 +303,7 @@ private struct BulkTagPicker: View {
                 }
                 Section {
                     if loading { HStack { Spacer(); ProgressView(); Spacer() } }
-                    else if tags.isEmpty { Text("No tags yet — add one above.").foregroundStyle(.secondary) }
+                    else if tags.isEmpty { Text("No tags yet. Add one above.").foregroundStyle(.secondary) }
                     else {
                         ForEach(tags) { tag in
                             Button { toggle(tag.id) } label: {

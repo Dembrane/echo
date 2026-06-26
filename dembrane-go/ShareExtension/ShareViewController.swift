@@ -98,7 +98,7 @@ private struct ShareSheetView: View {
     }
 
     private var selectedProject: WorkspaceProject? { projects.first { $0.project.id == projectId } }
-    private var destinationName: String { selectedProject?.project.name ?? fallbackProjectName ?? "—" }
+    private var destinationName: String { selectedProject?.project.name ?? fallbackProjectName ?? "Not set" }
     private var canSave: Bool {
         projectId != nil && audioURL != nil
             && !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -134,7 +134,7 @@ private struct ShareSheetView: View {
                 switch phase {
                 case .uploading: Label("Saving…", systemImage: "arrow.up.circle").foregroundStyle(.secondary)
                 case .done: Label("Saved to dembrane Go", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                case .failed: Label("Upload failed — try again.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
+                case .failed: Label("Upload failed. Try again.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
                 case .confirm: EmptyView()
                 }
             }

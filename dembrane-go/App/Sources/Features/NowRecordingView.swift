@@ -56,11 +56,10 @@ struct NowRecordingView: View {
             Button {
                 Task { await model.startRecording() }
             } label: {
-                Image(systemName: "mic.fill")
-                    .font(.system(size: 52))
-                    .foregroundStyle(.white)
-                    .frame(width: 132, height: 132)
-                    .background(.red, in: .circle)
+                Image(systemName: "record.circle.fill")
+                    .font(.system(size: 120))
+                    .foregroundStyle(.red)
+                    .symbolRenderingMode(.hierarchical)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Start recording")
@@ -134,7 +133,7 @@ struct NowRecordingView: View {
             if showTranscript {
                 ScrollView {
                     Text(model.liveTranscript.isEmpty
-                         ? "Your transcript appears here as the recording is processed — it lags a little behind."
+                         ? "Your transcript appears here as the recording is processed. It lags a little behind."
                          : model.liveTranscript)
                         .font(.callout)
                         .foregroundStyle(model.liveTranscript.isEmpty ? .tertiary : .primary)

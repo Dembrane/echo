@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 import DembraneCore
 
 struct HomeView: View {
@@ -6,6 +7,7 @@ struct HomeView: View {
     @State private var showSettings = false
     @State private var selected: Conversation?
     @State private var search = ""
+    @State private var showImporter = false
 
     private var trimmed: String { search.trimmingCharacters(in: .whitespacesAndNewlines) }
 
@@ -72,17 +74,32 @@ struct HomeView: View {
     }
 
     private var recordButton: some View {
-        Button {
-            model.showRecordingScreen = true
-        } label: {
-            Label("Record", systemImage: "record.circle.fill")
-                .font(.title3.weight(.semibold))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
+        HStack(spacing: 12) {
+            Button {
+                model.showRecordingScreen = true
+            } label: {
+                Label("Record", systemImage: "record.circle.fill")
+                    .font(.title3.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+            }
+            .buttonStyle(.glassProminent)
+            .tint(.red)
+
+            Button { showImporter = true } label: {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.title3)
+                    .frame(width: 30, height: 38)
+            }
+            .buttonStyle(.glass)
+            .accessibilityLabel("Upload an audio file")
         }
-        .buttonStyle(.glassProminent)
-        .tint(.red)
         .padding(.horizontal)
+        .fileImporter(isPresented: $showImporter, allowedContentTypes: [.audio]) { result in
+            if case .success(let url) = result {
+                Task { await model.importAudioFile(url) }
+            }
+        }
     }
 
     private var recentSection: some View {

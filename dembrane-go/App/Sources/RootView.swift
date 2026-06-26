@@ -90,7 +90,7 @@ private struct SaveBanner: View {
                 Text(project.map { "Saved to \($0)" } ?? "Saved")
             case .failed:
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-                Text("Couldn't save — check your connection")
+                Text("Couldn't save. Check your connection.")
             case .idle:
                 EmptyView()
             }

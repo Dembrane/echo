@@ -35,7 +35,7 @@ struct ConversationTagsView: View {
                     if loading {
                         ProgressView()
                     } else if available.isEmpty {
-                        Text("No tags yet — add one above.").foregroundStyle(.secondary)
+                        Text("No tags yet. Add one above.").foregroundStyle(.secondary)
                     } else {
                         ForEach(available) { tag in
                             Button { toggle(tag.id) } label: {
@@ -101,7 +101,7 @@ struct ConversationTagsView: View {
             try await model.setConversationTags(conversation.id, tagIds: Array(selected))
             dismiss()
         } catch {
-            self.error = "Couldn't save tags. Please try again."
+            self.error = "Couldn't save tags. Try again."
         }
     }
 }

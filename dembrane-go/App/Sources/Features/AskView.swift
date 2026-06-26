@@ -80,7 +80,7 @@ struct AskView: View {
 
     private var contextLabel: String {
         let count = contextConversations.count
-        if count == 0 { return "Asking across all of \(model.selectedProject?.name ?? "project")" }
+        if count == 0 { return "Asking relevant conversations" }
         return "Focused on \(count) conversation\(count == 1 ? "" : "s")"
     }
 
@@ -283,7 +283,7 @@ private struct AskContextPicker: View {
                         }
                     }
                 } footer: {
-                    Text("Leave empty to ask across the whole project.")
+                    Text("Leave empty and dembrane picks relevant conversations, or Select All to include everything.")
                 }
             }
             .overlay {
