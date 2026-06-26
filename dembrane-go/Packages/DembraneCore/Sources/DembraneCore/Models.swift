@@ -101,7 +101,10 @@ public struct Conversation: Codable, Identifiable, Sendable, Hashable {
     public let mergedTranscript: String?
     public let duration: Double?
     public let isFinished: Bool?
-    public let isAudioProcessingFinished: Bool?
+    /// Maps to the API's `is_all_chunks_transcribed` (via convertFromSnakeCase).
+    /// Previously named `isAudioProcessingFinished`, which mapped to a field the
+    /// API never sends — always nil, so cards stuck on "Processing audio…".
+    public let isAllChunksTranscribed: Bool?
     public let locked: Bool?
     public let lockReason: String?
     public let createdAt: Date?
@@ -116,8 +119,10 @@ public struct Conversation: Codable, Identifiable, Sendable, Hashable {
     public var statusLabel: String {
         if locked == true { return "Locked" }
         if isFinished != true { return "Recording" }
-        if isAudioProcessingFinished == true { return "Ready" }
-        return "Processing audio…"
+        if isAllChunksTranscribed == true { return "Ready" }
+        // The flag can lag; a present transcript/summary means it's effectively ready.
+        if summary?.isEmpty == false || mergedTranscript?.isEmpty == false { return "Ready" }
+        return "Processing…"
     }
 }
 
@@ -173,14 +178,14 @@ public extension Conversation {
         Conversation(id: "c1", projectId: "p_preview", participantName: "Morning sync",
                      title: "Morning sync", summary: "Quick standup about the launch.",
                      mergedTranscript: nil, duration: 312, isFinished: true,
-                     isAudioProcessingFinished: true, locked: false, lockReason: nil, createdAt: nil),
+                     isAllChunksTranscribed: true, locked: false, lockReason: nil, createdAt: nil),
         Conversation(id: "c2", projectId: "p_preview", participantName: nil,
                      title: "Field interview", summary: nil, mergedTranscript: nil, duration: 1840,
-                     isFinished: true, isAudioProcessingFinished: false,
+                     isFinished: true, isAllChunksTranscribed: false,
                      locked: false, lockReason: nil, createdAt: nil),
         Conversation(id: "c3", projectId: "p_preview", participantName: nil,
                      title: "Voice note", summary: nil, mergedTranscript: nil, duration: 47,
-                     isFinished: true, isAudioProcessingFinished: true,
+                     isFinished: true, isAllChunksTranscribed: true,
                      locked: true, lockReason: "free_tier", createdAt: nil),
     ]
 }

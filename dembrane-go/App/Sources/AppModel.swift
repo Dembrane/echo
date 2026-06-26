@@ -124,6 +124,14 @@ final class AppModel {
             setEnvironment(devEnv)
         }
         #endif
+        // Reconcile: end any Live Activity left from a previous session. Recording
+        // state isn't restored across launches, so a still-running Dynamic Island
+        // is always stale — this fixes the "keeps counting up forever" bug. Awaited
+        // before any relaunch-triggered recording so we don't kill a fresh one.
+        for activity in Activity<RecordingActivityAttributes>.activities {
+            await activity.end(nil, dismissalPolicy: .immediate)
+        }
+
         // Listen for audio transferred from the Watch app and upload it.
         watchReceiver.onReceiveFile = { [weak self] url in
             Task { @MainActor in await self?.uploadWatchFile(url) }
@@ -375,6 +383,31 @@ final class AppModel {
         flashSaveState(.saved)
     }
 
+    /// Throw the in-progress recording away — no upload. Stops capture, cancels
+    /// in-flight chunk uploads, deletes local segments, and removes the server-side
+    /// conversation if one was already created.
+    func discardRecording() {
+        guard isRecording else { return }
+        isRecording = false
+        isPaused = false
+        showRecordingScreen = false
+        recorder.onSegment = nil          // don't upload the final segment stop() emits
+        endLiveActivity()
+        recorder.stop()
+        for task in chunkUploads { task.cancel() }
+        for segment in pendingSegments { try? FileManager.default.removeItem(at: segment.url) }
+        let knownId = captureConversationId
+        let pendingInitiate = initiateTask
+        Task { [api] in
+            var id = knownId
+            if id == nil { id = await pendingInitiate?.value ?? nil }
+            if let id { try? await api.deleteConversation(id: id) }
+        }
+        cleanupCapture()
+        saveState = .idle
+        statusMessage = nil
+    }
+
     /// Show a save outcome, then auto-dismiss the banner.
     private func flashSaveState(_ state: SaveState) {
         saveState = state
@@ -514,6 +547,9 @@ final class AppModel {
     }
 
     func loadData() async {
+        // Paint cached conversations first so Home recents are instant — don't make
+        // them wait behind the me/workspaces/projects network waterfall below.
+        await loadCachedConversations()
         me = try? await api.me()
         workspaces = (try? await api.workspaces()) ?? []
         await loadAllProjects()
@@ -583,6 +619,16 @@ final class AppModel {
         }
     }
 
+    /// Cache-only paint (no network) for instant launch — recents render before
+    /// the network waterfall in `loadData` even begins.
+    func loadCachedConversations() async {
+        guard conversations.isEmpty, let projectId = selectedProject?.id else { return }
+        if let cached = await DiskCache.shared.load([Conversation].self, key: "conversations.\(projectId)") {
+            conversations = cached
+            didLoadConversationsOnce = true
+        }
+    }
+
     func loadConversations() async {
         guard let projectId = selectedProject?.id else { conversations = []; return }
         let cacheKey = "conversations.\(projectId)"
@@ -643,15 +689,33 @@ final class AppModel {
         return try? JSONDecoder().decode(Project.self, from: data)
     }
 
-    /// Full conversation detail (summary + merged transcript).
+    /// Full conversation detail (summary + merged transcript), cached for an
+    /// optimistic open next time.
     func conversationDetail(id: String) async throws -> Conversation {
-        try await api.conversation(id: id)
+        let detail = try await api.conversation(id: id)
+        await DiskCache.shared.save(detail, key: "conv.\(id)")
+        return detail
     }
 
     /// Per-chunk transcripts — shown while `merged_transcript` is still null
-    /// (it only fills in after the full merge finishes).
+    /// (it only fills in after the full merge finishes). Cached for instant reopen.
     func conversationChunks(id: String) async throws -> [ConversationChunk] {
-        try await api.conversationChunks(id: id)
+        let chunks = try await api.conversationChunks(id: id)
+        await DiskCache.shared.save(chunks, key: "chunks.\(id)")
+        return chunks
+    }
+
+    /// Cached detail / chunks for an instant open (then reconciled with network).
+    func cachedDetail(id: String) async -> Conversation? {
+        await DiskCache.shared.load(Conversation.self, key: "conv.\(id)")
+    }
+    func cachedChunks(id: String) async -> [ConversationChunk]? {
+        await DiskCache.shared.load([ConversationChunk].self, key: "chunks.\(id)")
+    }
+
+    /// Signed playback URL for a conversation's merged audio (nil if unavailable).
+    func conversationAudioURL(id: String) async -> URL? {
+        try? await api.conversationAudioURL(id: id)
     }
 
     // Conversation actions (mirror the web's summary/title/retranscribe controls).
@@ -868,6 +932,11 @@ final class AppModel {
         guard !trimmed.isEmpty, !askStreaming, let projectId = selectedProject?.id else { return }
         askError = nil
         askMessages.append(AskMessage(role: .user, text: trimmed))
+        // Show the assistant typing bubble immediately — before the chat-creation
+        // and add-context round-trips — so feedback is instant on send. AskBubble
+        // renders a spinner while this message's text is empty.
+        askMessages.append(AskMessage(role: .assistant, text: ""))
+        let idx = askMessages.count - 1
         askStreaming = true
         defer { askStreaming = false }
 
@@ -886,11 +955,10 @@ final class AppModel {
                 }
             }
 
-            let wire = askMessages.map {
+            // Wire = the thread up to (not including) the empty assistant placeholder.
+            let wire = askMessages[..<idx].map {
                 ChatWireMessage(role: $0.role == .user ? "user" : "assistant", content: $0.text)
             }
-            askMessages.append(AskMessage(role: .assistant, text: ""))
-            let idx = askMessages.count - 1
 
             for try await event in await chatService.streamMessage(chatId: chatId, messages: wire) {
                 switch event {
@@ -903,6 +971,10 @@ final class AppModel {
         } catch {
             NSLog("dembrane-go Ask failed: \(error)")
             askError = "Couldn't get a response. Please try again."
+        }
+        // Drop a stuck empty bubble if the reply never produced any text.
+        if idx < askMessages.count, askMessages[idx].role == .assistant, askMessages[idx].text.isEmpty {
+            askMessages.remove(at: idx)
         }
     }
 }

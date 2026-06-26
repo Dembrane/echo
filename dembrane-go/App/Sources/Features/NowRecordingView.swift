@@ -7,6 +7,7 @@ import DembraneCore
 struct NowRecordingView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @State private var confirmDiscard = false
 
     var body: some View {
         NavigationStack {
@@ -23,10 +24,21 @@ struct NowRecordingView: View {
             .toolbar {
                 if model.isRecording {
                     ToolbarItem(placement: .topBarLeading) { micMenu }
+                    ToolbarItem(placement: .topBarTrailing) { moreMenu }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(model.isRecording ? "Done" : "Cancel") { dismiss() }
                 }
+            }
+            .confirmationDialog("Discard this recording?",
+                                isPresented: $confirmDiscard, titleVisibility: .visible) {
+                Button("Discard", role: .destructive) {
+                    model.discardRecording()
+                    dismiss()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This deletes the audio without saving it.")
             }
         }
         .presentationDragIndicator(.visible)
@@ -113,6 +125,17 @@ struct NowRecordingView: View {
 
             Spacer()
         }
+    }
+
+    private var moreMenu: some View {
+        Menu {
+            Button(role: .destructive) { confirmDiscard = true } label: {
+                Label("Discard recording", systemImage: "trash")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+        }
+        .accessibilityLabel("More options")
     }
 
     private var micMenu: some View {

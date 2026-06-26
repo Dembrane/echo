@@ -14,6 +14,8 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func conversations(projectId: String) async throws -> [Conversation]
     func conversation(id: String) async throws -> Conversation
     func conversationChunks(id: String) async throws -> [ConversationChunk]
+    /// Resolves the signed playback URL for a conversation's merged audio.
+    func conversationAudioURL(id: String) async throws -> URL
     func updateConversation(id: String, fields: [String: String]) async throws
     func moveConversation(id: String, targetProjectId: String) async throws
     func summarizeConversation(id: String) async throws
@@ -100,6 +102,32 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
 
     public func conversationChunks(id: String) async throws -> [ConversationChunk] {
         try await get(endpoints.conversationChunks(id: id), as: [ConversationChunk].self)
+    }
+
+    public func conversationAudioURL(id: String) async throws -> URL {
+        var req = URLRequest(url: endpoints.conversationContent(id: id))
+        req.httpMethod = "GET"
+        if let token = await tokenProvider() {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        let (data, resp) = try await session.data(for: req)
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+        guard (200..<300).contains(code) else { throw APIError.badStatus(code) }
+        // ?return_url=true returns the signed URL. Be lenient: it may arrive as a
+        // bare JSON string, a {"url": …} object, or plain text.
+        struct URLEnvelope: Decodable { let url: String? }
+        let raw: String
+        if let env = try? JSONDecoder().decode(URLEnvelope.self, from: data), let u = env.url {
+            raw = u
+        } else if let s = try? JSONDecoder().decode(String.self, from: data) {
+            raw = s
+        } else {
+            raw = String(decoding: data, as: UTF8.self)
+        }
+        let cleaned = raw.trimmingCharacters(
+            in: CharacterSet(charactersIn: "\"").union(.whitespacesAndNewlines))
+        guard let url = URL(string: cleaned), url.scheme != nil else { throw APIError.badStatus(-2) }
+        return url
     }
 
     public func deleteConversation(id: String) async throws {
@@ -192,7 +220,7 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
         Conversation(id: id, projectId: "p_preview", participantName: "Morning sync",
                      title: "Morning sync", summary: "Quick standup about the launch.",
                      mergedTranscript: "Alice: Morning everyone.\nBob: Let's review the launch plan.",
-                     duration: 312, isFinished: true, isAudioProcessingFinished: true,
+                     duration: 312, isFinished: true, isAllChunksTranscribed: true,
                      locked: false, lockReason: nil, createdAt: nil)
     }
     public func updateConversation(id: String, fields: [String: String]) async throws {}
@@ -206,6 +234,7 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
                            transcript: "Alice: Morning everyone. Bob: Let's review the launch plan.",
                            timestamp: nil, source: "GO_IOS")]
     }
+    public func conversationAudioURL(id: String) async throws -> URL { throw APIError.notImplemented }
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         Project(id: "p_go", name: name, workspaceId: workspaceId, language: "en")
     }

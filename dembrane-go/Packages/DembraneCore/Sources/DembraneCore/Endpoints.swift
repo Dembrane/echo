@@ -30,6 +30,14 @@ public struct DembraneEndpoints: Sendable, Equatable {
     public func conversationChunks(id: String) -> URL {
         api.appending(path: "v2/bff/conversations/\(id)/chunks")
     }
+    /// Signed URL for the merged conversation audio. `?return_url=true` returns the
+    /// signed S3 URL (as a string) instead of redirecting. v1 `/api` route.
+    public func conversationContent(id: String) -> URL {
+        var c = URLComponents(url: api.appending(path: "conversations/\(id)/content"),
+                              resolvingAgainstBaseURL: false)!
+        c.queryItems = [URLQueryItem(name: "return_url", value: "true")]
+        return c.url!
+    }
     /// Soft-delete (sets deleted_at; audio kept for a grace period). Note: this
     /// lives on the v1 `/api/conversations/{id}` route, not under `/v2/bff`.
     public func deleteConversation(id: String) -> URL {

@@ -20,6 +20,8 @@ struct ConversationDetailView: View {
     @State private var chunks: [ConversationChunk] = []
     @State private var loadingTranscript = true
     @State private var working = false
+    @State private var player = ConversationAudioPlayer()
+    @State private var hasAudio = false
 
     private var hasSummary: Bool {
         !((current.summary ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -43,6 +45,7 @@ struct ConversationDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     metaLine
+                    if hasAudio { ConversationAudioPlayerView(player: player) }
                     tagsChips
                     summarySection
                     transcriptSection
@@ -92,14 +95,25 @@ struct ConversationDetailView: View {
                 }
             }
             .task {
+                // Optimistic: paint cached detail + transcript instantly, then reconcile.
+                if full == nil, let cached = await model.cachedDetail(id: conversation.id) { full = cached }
+                if chunks.isEmpty, let cached = await model.cachedChunks(id: conversation.id) {
+                    chunks = cached; loadingTranscript = false
+                }
                 async let detailTask = model.conversationDetail(id: conversation.id)
                 async let chunksTask = model.conversationChunks(id: conversation.id)
                 async let tagsTask = model.conversationTags(conversation.id)
-                full = try? await detailTask
-                chunks = (try? await chunksTask) ?? []
-                tags = (try? await tagsTask) ?? []
+                full = (try? await detailTask) ?? full
+                chunks = (try? await chunksTask) ?? chunks
+                tags = (try? await tagsTask) ?? tags
                 loadingTranscript = false
+                // Resolve the signed audio URL; show the player only if it's available.
+                if let url = await model.conversationAudioURL(id: conversation.id) {
+                    hasAudio = true
+                    player.prepare(url: url, title: current.displayTitle)
+                }
             }
+            .onDisappear { player.teardown() }
             .sheet(isPresented: $showEdit, onDismiss: {
                 Task { full = try? await model.conversationDetail(id: conversation.id) }
             }) {
@@ -222,7 +236,7 @@ struct ConversationDetailView: View {
                     Text("Loading…").foregroundStyle(.secondary)
                 }
             } else {
-                Text(current.isAudioProcessingFinished == true
+                Text(current.isAllChunksTranscribed == true
                      ? "No transcript available."
                      : "Transcribing…")
                     .foregroundStyle(.secondary)
@@ -252,15 +266,17 @@ struct ConversationDetailView: View {
                 Spacer()
                 if let shareText {
                     ShareLink(item: shareText) {
-                        Image(systemName: "square.and.arrow.up").font(.subheadline)
+                        Image(systemName: "square.and.arrow.up").font(.body)
                     }
+                    .buttonStyle(.bordered).buttonBorderShape(.circle)
                     .tint(BrandColor.royalBlue)
+                    .accessibilityLabel("Share \(title.lowercased())")
                 }
                 if canCopy {
                     Button(action: onCopy) {
-                        Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
-                            .font(.subheadline)
+                        Image(systemName: isCopied ? "checkmark" : "doc.on.doc").font(.body)
                     }
+                    .buttonStyle(.bordered).buttonBorderShape(.circle)
                     .tint(isCopied ? .green : BrandColor.royalBlue)
                     .accessibilityLabel(isCopied ? "Copied" : accessibilityCopy)
                 }

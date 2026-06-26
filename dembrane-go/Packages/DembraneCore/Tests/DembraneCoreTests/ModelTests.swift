@@ -9,20 +9,20 @@ final class ModelTests: XCTestCase {
     func testConversationDecodesSnakeCaseAndDate() throws {
         let c = try decode(Conversation.self, """
         {"id":"c1","project_id":"p1","title":"Morning sync","summary":null,
-         "duration":123.5,"is_finished":true,"is_audio_processing_finished":false,
+         "duration":123.5,"is_finished":true,"is_all_chunks_transcribed":false,
          "locked":false,"lock_reason":null,"created_at":"2026-01-15T10:30:00Z"}
         """)
         XCTAssertEqual(c.id, "c1")
         XCTAssertEqual(c.projectId, "p1")
         XCTAssertEqual(c.duration, 123.5)
         XCTAssertEqual(c.isFinished, true)
-        XCTAssertEqual(c.isAudioProcessingFinished, false)
+        XCTAssertEqual(c.isAllChunksTranscribed, false)
         XCTAssertNotNil(c.createdAt)
     }
 
     func testConversationStatusLabel() {
         XCTAssertEqual(Conversation.previews[0].statusLabel, "Ready")
-        XCTAssertEqual(Conversation.previews[1].statusLabel, "Processing audio…")
+        XCTAssertEqual(Conversation.previews[1].statusLabel, "Processing…")
         XCTAssertEqual(Conversation.previews[2].statusLabel, "Locked")
     }
 

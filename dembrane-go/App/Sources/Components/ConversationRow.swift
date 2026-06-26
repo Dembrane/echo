@@ -48,8 +48,7 @@ struct ConversationRow: View {
         .task { await model.loadTagsForRow(conversation.id) }
     }
 
-    /// Lead with the summary; fall back to a clean status. Use `isFinished` (the
-    /// reliable flag) — `isAudioProcessingFinished` stays false even when done.
+    /// Lead with the summary; fall back to a clean status.
     private var subtitle: String {
         if let summary = conversation.summary?.trimmingCharacters(in: .whitespacesAndNewlines),
            !summary.isEmpty {
