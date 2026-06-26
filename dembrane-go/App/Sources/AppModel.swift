@@ -2,7 +2,13 @@ import Foundation
 import AVFoundation
 import ActivityKit
 import Observation
+import UIKit
 import DembraneCore
+
+extension Notification.Name {
+    /// Posted when a token refresh fails (session truly dead) — the app signs out.
+    static let dembraneSessionExpired = Notification.Name("dembrane.go.sessionExpired")
+}
 
 /// App-wide state. Real stack uses the Keychain session + live API client;
 /// previews/tests use an in-memory session + mock API.
@@ -125,7 +131,7 @@ final class AppModel {
         let api = LiveAPIClient(
             env: env,
             tokenProvider: { await sm.accessToken() },
-            onUnauthorized: { (try? await auth.refresh()) ?? false })
+            onUnauthorized: { await Self.refreshOrExpire(auth) })
         self.init(environment: env, sessionManager: sm, auth: auth, api: api)
     }
 
@@ -134,6 +140,15 @@ final class AppModel {
         let sm = SessionManager(store: InMemorySessionStore())
         let auth = AuthService(env: .echoNext, sessionManager: sm)
         return AppModel(environment: .echoNext, sessionManager: sm, auth: auth, api: api)
+    }
+
+    /// The API client's 401 handler: try to refresh; if that fails the session is
+    /// dead, so broadcast session-expired (the app signs out) and report failure.
+    /// Centralizes auth handling so EVERY authed call recovers the same way.
+    nonisolated private static func refreshOrExpire(_ auth: AuthService) async -> Bool {
+        if (try? await auth.refresh()) == true { return true }
+        NotificationCenter.default.post(name: .dembraneSessionExpired, object: nil)
+        return false
     }
 
     func start() async {
@@ -150,6 +165,16 @@ final class AppModel {
         // before any relaunch-triggered recording so we don't kill a fresh one.
         for activity in Activity<RecordingActivityAttributes>.activities {
             await activity.end(nil, dismissalPolicy: .immediate)
+        }
+
+        // Any authed call whose token refresh fails broadcasts this → sign out.
+        NotificationCenter.default.addObserver(
+            forName: .dembraneSessionExpired, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.phase == .signedIn else { return }
+                await self.signOut()
+            }
         }
 
         // Listen for audio transferred from the Watch app and upload it.
@@ -285,7 +310,7 @@ final class AppModel {
         api = LiveAPIClient(
             env: env,
             tokenProvider: { [sessionManager] in await sessionManager.accessToken() },
-            onUnauthorized: { [newAuth] in (try? await newAuth.refresh()) ?? false })
+            onUnauthorized: { await Self.refreshOrExpire(newAuth) })
         chatService = ChatService(env: env,
                                   tokenProvider: { [sessionManager] in await sessionManager.accessToken() })
         AppGroup.write(projectId: selectedProject?.id, projectName: selectedProject?.name, environment: env)   // keep the Share Extension in sync
@@ -440,14 +465,20 @@ final class AppModel {
         if let localId { await store.setConversationId(localId, conversationId) }
         flushPendingSegments(conversationId: conversationId)
 
-        for task in chunkUploads { await task.value }   // wait for every chunk
-        try? await uploader.finishConversation(conversationId: conversationId)
+        // Drain uploads + finalize under a background-task assertion so they get
+        // ~30s to complete even if the app is backgrounded mid-upload.
+        var finished = false
+        await withUploadBackgroundTask("stop-upload") { [self] in
+            for task in chunkUploads { await task.value }   // wait for every chunk
+            finished = await finishConversationSucceeds(conversationId)
+        }
 
-        // Fully uploaded? Drop the local copy; otherwise keep it as pending.
+        // Drop the local copy ONLY when the chunks are all uploaded AND the
+        // conversation was finalized; otherwise keep it pending so push retries.
         if let localId {
             let onDisk = Set(await store.segmentFiles(localId).map(\.index))
             let uploaded = Set(await store.get(localId)?.uploadedSegments ?? [])
-            if !onDisk.isEmpty, uploaded.isSuperset(of: onDisk) {
+            if finished, !onDisk.isEmpty, uploaded.isSuperset(of: onDisk) {
                 await store.remove(localId)
             }
         }
@@ -458,7 +489,24 @@ final class AppModel {
         await loadConversations()
         await refreshPendingRecordings()
         statusMessage = nil
-        flashSaveState(.saved)
+        flashSaveState(finished ? .saved : .failed)
+    }
+
+    private func finishConversationSucceeds(_ conversationId: String) async -> Bool {
+        do { try await uploader.finishConversation(conversationId: conversationId); return true }
+        catch { return false }
+    }
+
+    /// Run upload-critical work with a background-task assertion so iOS grants
+    /// extra time to finish even if the app is backgrounded mid-upload.
+    private func withUploadBackgroundTask(_ name: String, _ work: () async -> Void) async {
+        let app = UIApplication.shared
+        var taskId: UIBackgroundTaskIdentifier = .invalid
+        taskId = app.beginBackgroundTask(withName: name) {
+            if taskId != .invalid { app.endBackgroundTask(taskId); taskId = .invalid }
+        }
+        await work()
+        if taskId != .invalid { app.endBackgroundTask(taskId); taskId = .invalid }
     }
 
     /// Throw the in-progress recording away — no upload. Stops capture, cancels
@@ -515,20 +563,21 @@ final class AppModel {
             statusMessage = "Couldn't reach the server — try again."
             return
         }
-        let uploaded = Set(recording.uploadedSegments)
-        for seg in await store.segmentFiles(recording.id) where !uploaded.contains(seg.index) {
-            let timestamp = recording.createdAt.addingTimeInterval(Double(seg.index) * chunkSeconds)
-            do {
-                try await uploader.uploadChunk(
-                    conversationId: conversationId, fileURL: seg.url, timestamp: timestamp)
-                await store.markUploaded(recording.id, index: seg.index)
-            } catch {
-                await refreshPendingRecordings()   // still pending; leave the local copy
-                return
+        var success = false
+        await withUploadBackgroundTask("push-pending") { [self] in
+            let uploaded = Set(recording.uploadedSegments)
+            for seg in await store.segmentFiles(recording.id) where !uploaded.contains(seg.index) {
+                let timestamp = recording.createdAt.addingTimeInterval(Double(seg.index) * chunkSeconds)
+                do {
+                    try await uploader.uploadChunk(
+                        conversationId: conversationId, fileURL: seg.url, timestamp: timestamp)
+                    await store.markUploaded(recording.id, index: seg.index)
+                } catch { return }   // still pending; leave the local copy
             }
+            // Only drop the local copy once the conversation is finalized too.
+            success = await finishConversationSucceeds(conversationId)
         }
-        try? await uploader.finishConversation(conversationId: conversationId)
-        await store.remove(recording.id)
+        if success { await store.remove(recording.id) }
         await loadConversations()
         await refreshPendingRecordings()
     }
