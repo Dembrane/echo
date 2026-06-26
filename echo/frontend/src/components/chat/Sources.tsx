@@ -28,11 +28,11 @@ export const Sources = ({
 			</Group>
 			<Group gap="xs" mt={10}>
 				{references.map((ref, index) => (
-						<I18nLink
-							// biome-ignore lint/suspicious/noArrayIndexKey: needs to be fixed
-							key={index}
-							to={`/w/${workspaceId}/projects/${projectId}/conversations/${ref?.conversation?.id || ref?.conversation}`}
-						>
+					<I18nLink
+						// biome-ignore lint/suspicious/noArrayIndexKey: needs to be fixed
+						key={index}
+						to={`/w/${workspaceId}/projects/${projectId}/conversations/${ref?.conversation?.id || ref?.conversation}`}
+					>
 						<Badge className="cursor-pointer normal-case" variant="default">
 							{ref?.conversation_title ||
 								ref?.conversation?.participant_name || (

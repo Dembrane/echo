@@ -311,7 +311,7 @@ class WebhookService:
         }
         project_language = project.get("language") or "en"
         locale = language_to_locale.get(project_language, "en-US")
-        dashboard_url = f"{admin_base_url}/{locale}/projects/{project_id}/conversation/{conversation_id}/overview"
+        dashboard_url = f"{admin_base_url}/{locale}/projects/{project_id}/conversations/{conversation_id}/overview"
 
         return {
             "event": event,
