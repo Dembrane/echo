@@ -9,7 +9,7 @@ Legend: ✅ built · � gated (needs echo backend, Sameer's OK) · 🖥️ desk
 - ✅ Register (3-step) — `/api/v2/auth/register`
 - ✅ Forgot password — opens dashboard reset page (web)
 - ✅ Logout · session restore (Keychain on device / UserDefaults on sim)
-- � Sign in with Apple — needs a backend `POST /api/v2/auth/apple` route
+- ✅ Sign in with Apple — **not required** (Guideline 4.8: own email/password auth, no social login → exempt). Only becomes required if a social/third-party login is added.
 
 ## Home / navigation
 - ✅ Tab bar Home · Record · Conversations · Ask (Apple-native; Record is an armed action, hidden while recording; Now-Playing accessory bar while recording)

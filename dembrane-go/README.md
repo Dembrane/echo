@@ -65,7 +65,6 @@ frontend→app parity audit, and [TESTFLIGHT.md](TESTFLIGHT.md) for shipping.
 ## Notes — not yet in the app (gaps vs. the web frontend)
 
 **Server-dependent (need echo backend work):**
-- **Sign in with Apple** — needs a backend `POST /api/v2/auth/apple` route.
 - **In-app audio playback** — needs a signed-playback-URL endpoint (`merged_audio_path`
   is a raw S3 key, not directly playable).
 - **Tags in the conversations-list payload** — would let rows batch-load tags
@@ -89,12 +88,27 @@ frontend→app parity audit, and [TESTFLIGHT.md](TESTFLIGHT.md) for shipping.
 - **Home Screen + Lock Screen widgets** (recent conversations, quick-record) and a
   **Control Center** "Start Recording" control (extends the existing App Intent).
 - **In-app playback** once the backend signed-URL endpoint lands.
-- **Sign in with Apple** once the backend route lands.
 - **iPad-optimized** layout (currently iPhone device family only).
 - Read-only **Reports / Insights** on mobile, if wanted.
 - **Offline queue + retry surfacing** for failed chunk uploads.
 - **Completion notifications** when transcription / summary finishes (needs webhooks —
   explicitly deferred for now).
+
+## App Store compliance (verified June 2026)
+
+- **Sign in with Apple — not required.** Guideline 4.8 only triggers when an app
+  uses a third-party/social login to set up the primary account. dembrane-go uses
+  only its own email/password (Directus) auth, so it's covered by the "exclusively
+  uses your company's own account setup" carve-out. *Adding a social login (e.g.
+  "Continue with Google") would make Sign in with Apple — or an equivalent — required.*
+- **In-App Purchase — not triggered.** Nothing is sold or unlocked in-app; billing
+  happens on the web dashboard (the standard multiplatform-service pattern), so 3.1.1
+  doesn't apply. The `WorkspaceUsage.uploadsLocked` / `upgradeCtaTier` / `overCapActive`
+  fields are unused in the UI. If a free-tier gate is ever surfaced on iOS, keep it
+  **informational** (e.g. "uploads locked — manage your plan on the web") with **no
+  in-app purchase button/link** — that stays compliant on every storefront without an
+  External Purchase Link Entitlement (US-storefront external-payment CTAs are permitted
+  post-May 2025, but the rest of the world still restricts them).
 
 ## Delivery
 
