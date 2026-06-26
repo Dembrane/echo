@@ -15,6 +15,7 @@ public struct DembraneSession: Codable, Sendable, Equatable {
 
 public enum AuthError: Error, Sendable, Equatable {
     case invalidCredentials
+    case otpRequired          // 2FA enabled — a valid OTP is needed (or was wrong)
     case server(status: Int)
     case noRefreshToken
     case badResponse
@@ -64,8 +65,9 @@ public actor AuthService {
         self.sessionManager = sessionManager
     }
 
-    public func login(email: String, password: String) async throws -> DembraneSession {
-        let body = ["email": email, "password": password]
+    public func login(email: String, password: String, otp: String? = nil) async throws -> DembraneSession {
+        var body = ["email": email, "password": password]
+        if let otp, !otp.isEmpty { body["otp"] = otp }
         let auth = try await post(endpoints.directusLogin(), json: body)
         let newSession = makeSession(from: auth)
         try await sessionManager.set(newSession)
@@ -128,13 +130,28 @@ public actor AuthService {
         req.httpBody = try JSONSerialization.data(withJSONObject: json)
         let (data, resp) = try await session.data(for: req)
         let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
-        if code == 401 { throw AuthError.invalidCredentials }
-        guard (200..<300).contains(code) else { throw AuthError.server(status: code) }
+        guard (200..<300).contains(code) else {
+            // Directus signals 2FA with the error code INVALID_OTP (missing/wrong OTP).
+            if let err = try? DembraneJSON.decoder().decode(DirectusErrorResponse.self, from: data),
+               err.errors.first?.extensions?.code == "INVALID_OTP" {
+                throw AuthError.otpRequired
+            }
+            if code == 401 { throw AuthError.invalidCredentials }
+            throw AuthError.server(status: code)
+        }
         guard let decoded = try? DembraneJSON.decoder().decode(DirectusAuthResponse.self, from: data) else {
             throw AuthError.badResponse
         }
         return decoded.data
     }
+}
+
+struct DirectusErrorResponse: Decodable {
+    struct Item: Decodable {
+        struct Extensions: Decodable { let code: String? }
+        let extensions: Extensions?
+    }
+    let errors: [Item]
 }
 
 struct DirectusAuthResponse: Decodable { let data: DirectusAuthData }

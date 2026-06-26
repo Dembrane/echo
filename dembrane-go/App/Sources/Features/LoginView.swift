@@ -6,52 +6,68 @@ struct LoginView: View {
     @Environment(\.openURL) private var openURL
     @State private var email = ""
     @State private var password = ""
-    @State private var showRegister = false
+    @State private var otp = ""
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(alignment: .leading, spacing: 18) {
             Spacer()
 
+            // Logo stays centered; everything else is left-aligned.
             Image("DembraneLogo")
                 .resizable().scaledToFit().frame(width: 200)
+                .frame(maxWidth: .infinity)
                 .accessibilityLabel("dembrane")
 
-            VStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text("Welcome!")
-                    .font(.largeTitle).foregroundStyle(.primary)
+                    .font(.largeTitle.weight(.semibold)).foregroundStyle(.primary)
                 Text("Please log in to continue.")
                     .font(.callout).foregroundStyle(.secondary)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(spacing: 12) {
                 TextField("Email", text: $email)
                     .textContentType(.emailAddress).keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never).autocorrectionDisabled()
                 SecureField("Password", text: $password).textContentType(.password)
+                if model.needsOTP {
+                    TextField("2FA code", text: $otp)
+                        .textContentType(.oneTimeCode).keyboardType(.numberPad)
+                }
             }
             .textFieldStyle(.roundedBorder)
 
             if let error = model.loginError {
                 Text(error).font(.callout)
-                    .foregroundStyle(BrandColor.cottonCandy).multilineTextAlignment(.center)
+                    .foregroundStyle(BrandColor.cottonCandy)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Button {
-                Task { await model.signIn(email: email, password: password) }
+                Task { await model.signIn(email: email, password: password,
+                                          otp: model.needsOTP ? otp : nil) }
             } label: {
-                if model.isSigningIn { ProgressView().frame(maxWidth: .infinity) }
-                else { Text("Login").frame(maxWidth: .infinity) }
+                if model.isSigningIn {
+                    ProgressView().frame(maxWidth: .infinity)
+                } else {
+                    Text(model.needsOTP ? "Verify & sign in" : "Login")
+                        .font(.headline).frame(maxWidth: .infinity)
+                }
             }
-            .buttonStyle(.borderedProminent).tint(BrandColor.royalBlue)
-            .disabled(email.isEmpty || password.isEmpty || model.isSigningIn)
+            .buttonStyle(.borderedProminent).controlSize(.large).tint(BrandColor.royalBlue)
+            .disabled(email.isEmpty || password.isEmpty || model.isSigningIn
+                      || (model.needsOTP && otp.count < 6))
 
-            Button("Forgot your password?") {
-                openURL(model.environment.dashboardBaseURL.appendingPathComponent("forgot-password"))
+            VStack(alignment: .leading, spacing: 10) {
+                Button("Forgot your password?") {
+                    openURL(model.environment.dashboardBaseURL.appendingPathComponent("forgot-password"))
+                }
+                Button("Create an account") {
+                    openURL(model.environment.dashboardBaseURL.appendingPathComponent("register"))
+                }
             }
             .font(.callout).tint(BrandColor.royalBlue)
-
-            Button("Create an account") { showRegister = true }
-                .font(.callout).tint(BrandColor.royalBlue)
 
             Spacer()
 
@@ -59,29 +75,12 @@ struct LoginView: View {
                 legalLink("Terms", "terms")
                 Text("·").foregroundStyle(.secondary)
                 legalLink("Privacy", "privacy")
-                Text("·").foregroundStyle(.secondary)
-                legalLink("DPA", "DPA")
             }
             .font(.caption)
-
-            Menu {
-                ForEach(AppEnvironment.allCases, id: \.self) { env in
-                    Button { model.setEnvironment(env) } label: {
-                        if env == model.environment {
-                            Label(env.displayName, systemImage: "checkmark")
-                        } else {
-                            Text(env.displayName)
-                        }
-                    }
-                }
-            } label: {
-                Text(model.environment.displayName)
-                    .font(.caption2).foregroundStyle(.tertiary)
-            }
+            .frame(maxWidth: .infinity)
         }
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .sheet(isPresented: $showRegister) { RegisterView() }
     }
 
     private func legalLink(_ title: String, _ path: String) -> some View {

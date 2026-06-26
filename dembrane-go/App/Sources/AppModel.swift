@@ -38,6 +38,7 @@ final class AppModel {
     private var pendingStartRecording = false
     var loginError: String?
     var isSigningIn = false
+    var needsOTP = false        // 2FA: show the one-time-code field
     var statusMessage: String?
     var isRegistering = false
     var registerError: String?
@@ -281,16 +282,25 @@ final class AppModel {
         #endif
     }
 
-    func signIn(email: String, password: String) async {
+    func signIn(email: String, password: String, otp: String? = nil) async {
         loginError = nil
         isSigningIn = true
         defer { isSigningIn = false }
         do {
-            _ = try await auth.login(email: email, password: password)
+            _ = try await auth.login(email: email, password: password, otp: otp)
+            needsOTP = false
             phase = .signedIn
             await loadData()
+        } catch AuthError.otpRequired {
+            // 2FA: reveal the code field. If a code was already entered, it was wrong.
+            if needsOTP, otp?.isEmpty == false {
+                loginError = "That code didn't work — try again."
+            }
+            needsOTP = true
+            if phase == .loading { phase = .signedOut }
         } catch AuthError.invalidCredentials {
             loginError = "That email or password didn't work."
+            needsOTP = false
             if phase == .loading { phase = .signedOut }
         } catch {
             NSLog("dembrane-go sign-in failed: \(error)")
