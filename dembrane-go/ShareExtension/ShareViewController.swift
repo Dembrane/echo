@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 import DembraneCore
 
 /// Share Extension: import an audio file shared from Voice Memos / Files into a
-/// Dembrane Go project. Shows a confirmation sheet — editable name + a project
+/// dembrane Go project. Shows a confirmation sheet — editable name + a project
 /// picker mirroring the app (project list passed via the App Group) — then
 /// uploads via the public participant flow (no auth). Source `GO_SHARE`.
 final class ShareViewController: UIViewController {
@@ -116,7 +116,7 @@ private struct ShareSheetView: View {
                         if let fallbackProjectName {
                             LabeledContent("Project", value: fallbackProjectName)
                         } else {
-                            Text("Open Dembrane Go and choose a project first, then share again.")
+                            Text("Open dembrane Go and choose a project first, then share again.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
                     } else {
@@ -133,12 +133,12 @@ private struct ShareSheetView: View {
                 }
                 switch phase {
                 case .uploading: Label("Saving…", systemImage: "arrow.up.circle").foregroundStyle(.secondary)
-                case .done: Label("Saved to Dembrane Go", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                case .done: Label("Saved to dembrane Go", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
                 case .failed: Label("Upload failed. Try again.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
                 case .confirm: EmptyView()
                 }
             }
-            .navigationTitle("Save to Dembrane Go")
+            .navigationTitle("Save to dembrane Go")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

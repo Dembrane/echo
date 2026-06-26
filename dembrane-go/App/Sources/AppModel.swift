@@ -695,10 +695,20 @@ final class AppModel {
     /// Recent conversations for the Home tab.
     var recentConversations: [Conversation] { Array(conversations.prefix(3)) }
 
-    /// The signed-in user's avatar (Directus asset), if they have one.
-    var avatarURL: URL? {
-        guard let avatar = me?.avatar, !avatar.isEmpty else { return nil }
-        return environment.directusBaseURL.appending(path: "assets/\(avatar)")
+    /// The signed-in user's avatar (Directus asset) with an access token, since
+    /// asset reads are authed and AsyncImage can't attach a Bearer header.
+    /// Resolved after `me` loads.
+    var avatarURL: URL?
+
+    private func refreshAvatarURL() async {
+        guard let avatar = me?.avatar, !avatar.isEmpty else { avatarURL = nil; return }
+        var c = URLComponents(
+            url: environment.directusBaseURL.appending(path: "assets/\(avatar)"),
+            resolvingAgainstBaseURL: false)
+        if let token = await sessionManager.accessToken() {
+            c?.queryItems = [URLQueryItem(name: "access_token", value: token)]
+        }
+        avatarURL = c?.url
     }
 
     /// Upload an audio file transferred from the Apple Watch.
@@ -877,6 +887,7 @@ final class AppModel {
             // Validate the session on launch: a dead session → show login.
             if await signOutIfUnauthorized(error) { return }
         }
+        await refreshAvatarURL()
         workspaces = (try? await api.workspaces()) ?? []
         await loadAllProjects()
 

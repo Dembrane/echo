@@ -116,7 +116,7 @@ final class ConversationAudioPlayer {
     private func updateNowPlaying() {
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: title,
-            MPMediaItemPropertyArtist: "Dembrane Go",
+            MPMediaItemPropertyArtist: "dembrane Go",
             MPNowPlayingInfoPropertyElapsedPlaybackTime: currentTime,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
         ]

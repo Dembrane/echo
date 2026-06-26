@@ -7,7 +7,7 @@ import DembraneCore
 /// the app begins capture as soon as it's active and a project is loaded.
 struct StartRecordingIntent: AppIntent {
     static var title: LocalizedStringResource = "Start Recording"
-    static var description = IntentDescription("Start a new Dembrane Go recording.")
+    static var description = IntentDescription("Start a new dembrane Go recording.")
     static var openAppWhenRun = true
 
     @MainActor

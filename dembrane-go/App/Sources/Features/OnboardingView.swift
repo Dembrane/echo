@@ -15,7 +15,7 @@ struct OnboardingView: View {
                     .padding(.top, 24)
                 VStack(spacing: 6) {
                     Text("Choose a workspace").font(.title2.weight(.semibold))
-                    Text("Dembrane Go will set up your “Go Recordings” project here so you can capture in a tap.")
+                    Text("dembrane Go will set up your “Go Recordings” project here so you can capture in a tap.")
                         .font(.callout).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }

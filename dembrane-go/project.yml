@@ -53,15 +53,15 @@ targets:
     info:
       path: App/Info.plist
       properties:
-        CFBundleDisplayName: "Dembrane Go"
+        CFBundleDisplayName: "dembrane Go"
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIBackgroundModes: [audio]            # keep recording alive when backgrounded / locked
         NSSupportsLiveActivities: true        # Dynamic Island / Live Activity
-        NSMicrophoneUsageDescription: "Dembrane Go records audio so you can transcribe and revisit your conversations."
-        NSLocationWhenInUseUsageDescription: "Dembrane Go names each recording by where you made it — like Voice Memos. Your location is used only to label recordings. You can say no and we'll name them by date instead."
+        NSMicrophoneUsageDescription: "dembrane Go records audio so you can transcribe and revisit your conversations."
+        NSLocationWhenInUseUsageDescription: "dembrane Go names each recording by where you made it — like Voice Memos. Your location is used only to label recordings. You can say no and we'll name them by date instead."
         ITSAppUsesNonExemptEncryption: false
     settings:
       base:
@@ -83,7 +83,7 @@ targets:
     info:
       path: Widgets/Info.plist
       properties:
-        CFBundleDisplayName: "Dembrane Go"
+        CFBundleDisplayName: "dembrane Go"
         CFBundleShortVersionString: "$(MARKETING_VERSION)"   # must match the parent app
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"        # must match the parent app
         NSExtension:
@@ -106,7 +106,7 @@ targets:
   #   platform: watchOS
   #   deploymentTarget: "26.0"
   #   sources: [{ path: Watch }]
-  #   info: { path: Watch/Info.plist, properties: { WKApplication: true, WKCompanionAppBundleIdentifier: "com.dembrane.go", CFBundleDisplayName: "Dembrane Go", CFBundleShortVersionString: "$(MARKETING_VERSION)", CFBundleVersion: "$(CURRENT_PROJECT_VERSION)", NSMicrophoneUsageDescription: "Dembrane Go records audio so you can capture from your wrist." } }
+  #   info: { path: Watch/Info.plist, properties: { WKApplication: true, WKCompanionAppBundleIdentifier: "com.dembrane.go", CFBundleDisplayName: "dembrane Go", CFBundleShortVersionString: "$(MARKETING_VERSION)", CFBundleVersion: "$(CURRENT_PROJECT_VERSION)", NSMicrophoneUsageDescription: "dembrane Go records audio so you can capture from your wrist." } }
   #   settings: { base: { PRODUCT_BUNDLE_IDENTIFIER: "com.dembrane.go.watchkitapp", GENERATE_INFOPLIST_FILE: "NO", TARGETED_DEVICE_FAMILY: "4" } }
 
   DembraneGoShare:
@@ -125,7 +125,7 @@ targets:
     info:
       path: ShareExtension/Info.plist
       properties:
-        CFBundleDisplayName: "Dembrane Go"
+        CFBundleDisplayName: "dembrane Go"
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         NSExtension:
