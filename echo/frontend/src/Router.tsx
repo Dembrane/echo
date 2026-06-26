@@ -239,7 +239,7 @@ const projectRouteChildren = [
 								path: "debug",
 							},
 						],
-						path: "conversation/:conversationId",
+						path: "conversations/:conversationId",
 					},
 					{
 						children: [

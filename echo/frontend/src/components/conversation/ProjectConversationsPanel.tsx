@@ -677,7 +677,7 @@ export const ProjectConversationsPanel = ({
 	const openConversation = (conversation: Conversation) => {
 		if (!resolvedWorkspaceId) return;
 		navigate(
-			`/w/${resolvedWorkspaceId}/projects/${projectId}/conversation/${conversation.id}`,
+			`/w/${resolvedWorkspaceId}/projects/${projectId}/conversations/${conversation.id}`,
 		);
 	};
 
@@ -914,7 +914,7 @@ export const ProjectConversationsPanel = ({
 							href={
 								selectionMode || !resolvedWorkspaceId
 									? undefined
-									: `/w/${resolvedWorkspaceId}/projects/${projectId}/conversation/${conversation.id}`
+									: `/w/${resolvedWorkspaceId}/projects/${projectId}/conversations/${conversation.id}`
 							}
 							isSelected={selectedConversationIds.has(conversation.id)}
 							onEdit={openEdit}
