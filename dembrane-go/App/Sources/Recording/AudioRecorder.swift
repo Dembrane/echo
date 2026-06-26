@@ -34,7 +34,11 @@ final class AudioRecorder {
 
     func start(segmentEvery seconds: TimeInterval) throws {
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.allowBluetoothHFP])
+        // .mixWithOthers so another app starting audio doesn't interrupt/stop our
+        // recording (robustness — capture must survive app-switching). Hard
+        // interruptions (calls) are still handled via interruptionNotification.
+        try session.setCategory(.playAndRecord, mode: .spokenAudio,
+                                options: [.allowBluetoothHFP, .mixWithOthers])
         try session.setActive(true)
 
         segmentSeconds = seconds
