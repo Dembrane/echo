@@ -83,6 +83,8 @@ class WorkspaceDetailResponse(BaseModel):
     # `description` lives above (shared with legacy consumers).
     visibility: str = "open_to_organisation"
     inherit_organisation_members: bool = False
+    # Customer toggle: allow dembrane staff to self-join for support (24h).
+    allow_support_access: bool = False
     logo_url: Optional[str] = None
     type_discount: Optional[str] = None
     percent_discount: Optional[int] = None
@@ -132,7 +134,8 @@ async def get_workspace_settings(
         if org:
             org_name = org.get("name", "")
 
-    # Full member list
+    # Exclude staff_support: support sessions stay invisible here (the staff
+    # console is where they surface), matching the seat count and previews.
     memberships = await async_directus.get_items(
         "workspace_membership",
         {
@@ -140,6 +143,7 @@ async def get_workspace_settings(
                 "filter": {
                     "workspace_id": {"_eq": ctx.workspace_id},
                     "deleted_at": {"_null": True},
+                    "source": {"_neq": "staff_support"},
                 },
                 "fields": ["id", "user_id", "role", "source"],
                 "limit": -1,
@@ -288,6 +292,7 @@ async def get_workspace_settings(
         my_policies=effective,
         visibility=ws.get("visibility") or "open_to_organisation",
         inherit_organisation_members=workspace_follows_organisation_members(ws),
+        allow_support_access=bool(ws.get("allow_support_access", False)),
         logo_url=ws.get("logo_url"),
         type_discount=billing.get("type_discount"),
         percent_discount=billing.get("percent_discount"),
@@ -323,6 +328,10 @@ class UpdateWorkspaceRequest(BaseModel):
     # is still accepted but ignored (member derivation retired).
     visibility: Optional[Literal["open_to_organisation", "invite_only", "private"]] = None
     inherit_organisation_members: Optional[bool] = None
+    # Customer toggle: allow dembrane staff to self-join this workspace for
+    # support. Staff can only join while this is true; flipping it off does not
+    # auto-revoke an active support session (the 24h timer handles that).
+    allow_support_access: Optional[bool] = None
 
 
 # Only http/https logos allowed — blocks javascript:/data:/file:// URIs
@@ -393,6 +402,11 @@ async def update_workspace_settings(
             # get_workspace_context, so this gates against the correct tier.
             ctx.require_policy("workspace:set_private")
         payload["visibility"] = body.visibility
+
+    # Support access is a plain customer-controlled boolean. settings:manage
+    # (required above) already restricts this to workspace admins/owners.
+    if body.allow_support_access is not None:
+        payload["allow_support_access"] = body.allow_support_access
 
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")

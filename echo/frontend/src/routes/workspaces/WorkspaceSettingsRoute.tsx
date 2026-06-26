@@ -18,6 +18,7 @@ import {
 	Radio,
 	Select,
 	Stack,
+	Switch,
 	Tabs,
 	Text,
 	TextInput,
@@ -59,7 +60,7 @@ import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { logoUrl, memberInitials } from "@/lib/avatar";
-import { displayRole } from "@/lib/roles";
+import { displayRole, isOutsiderRole } from "@/lib/roles";
 import type { BillingPeriod, Tier } from "@/lib/tiers";
 
 interface WorkspaceMember {
@@ -97,6 +98,7 @@ interface WorkspaceDetail {
 	my_policies: string[];
 	visibility: "open_to_organisation" | "invite_only" | "private";
 	inherit_organisation_members: boolean;
+	allow_support_access: boolean;
 	description: string | null;
 	logo_url: string | null;
 	type_discount: string | null;
@@ -225,6 +227,7 @@ async function updateWorkspace(
 		logo_url?: string;
 		visibility?: "open_to_organisation" | "invite_only" | "private";
 		inherit_organisation_members?: boolean;
+		allow_support_access?: boolean;
 	},
 ) {
 	const res = await fetch(
@@ -252,18 +255,14 @@ export const WorkspaceSettingsRoute = () => {
 	const queryClient = useQueryClient();
 	const { data: meV2 } = useV2Me();
 	const { workspace: myWorkspaceSummary } = useWorkspace();
-	// External = role==='external' on my direct row (ADR-0003).
-	// Matrix §4: external permissions are strictly scoped — no settings,
-	// usage, privacy, or pending invites surfaces.
-	const iAmExternal = myWorkspaceSummary?.role === "external";
-	// Externals don't have a manage surface at all (2026-04-24). Bounce
-	// them back to the workspace home they came in on.
+	// Outsiders (external + observer) have no manage surface; bounce them home.
+	const iAmOutsider = isOutsiderRole(myWorkspaceSummary?.role);
 	// Keep the effect above the loading gate so hook order is stable.
 	useEffect(() => {
-		if (iAmExternal && workspaceId) {
+		if (iAmOutsider && workspaceId) {
 			navigate(`/w/${workspaceId}/home`, { replace: true });
 		}
-	}, [iAmExternal, workspaceId, navigate]);
+	}, [iAmOutsider, workspaceId, navigate]);
 	const [deleteConfirm, setDeleteConfirm] = useState("");
 	const [
 		inviteModalOpened,
@@ -597,7 +596,7 @@ export const WorkspaceSettingsRoute = () => {
 	// kicks them to workspace home, but that fires on the next tick — without
 	// this early return the settings tabs flash briefly. Render nothing
 	// while the redirect resolves.
-	if (iAmExternal) {
+	if (iAmOutsider) {
 		return null;
 	}
 
@@ -630,7 +629,7 @@ export const WorkspaceSettingsRoute = () => {
 						    is already in the nav breadcrumb; duplicating it here
 						    was audit noise (2026-04-23). */}
 							<Group gap={8} wrap="wrap">
-								{iAmExternal ? (
+								{iAmOutsider ? (
 									<Badge size="xs" variant="light" color="yellow">
 										<Trans>External of {settings.org_name}</Trans>
 									</Badge>
@@ -643,12 +642,12 @@ export const WorkspaceSettingsRoute = () => {
 										}
 									/>
 								)}
-								{!iAmExternal && settings.type_discount && (
+								{!iAmOutsider && settings.type_discount && (
 									<Badge size="xs" variant="light" color="teal" tt="capitalize">
 										{settings.type_discount.replace(/_/g, " ")}
 									</Badge>
 								)}
-								{!iAmExternal &&
+								{!iAmOutsider &&
 									settings.percent_discount != null &&
 									settings.percent_discount > 0 && (
 										<Badge size="xs" variant="light" color="teal">
@@ -671,7 +670,7 @@ export const WorkspaceSettingsRoute = () => {
 
 					{/* Externals bypass the tab structure — they have one workspace
 				    and nothing to navigate. Tabs come next for everyone else. */}
-					{!iAmExternal && (
+					{!iAmOutsider && (
 						<Tabs value={activeTab} onChange={setActiveTab} keepMounted={false}>
 							{/* Tab strip hidden — the main AppSidebar drives section
 							    navigation. Internal Tabs.value still wires the panels via URL. */}
@@ -980,6 +979,19 @@ export const WorkspaceSettingsRoute = () => {
 																	<Trans>External</Trans>
 																</Badge>
 															</Tooltip>
+														) : canManage && member.role === "observer" ? (
+															// Observer: locked to a badge. The Select below can't
+															// represent "observer" (renders blank) and changing it
+															// would turn a free seat into a paid one.
+															<Tooltip
+																label={t`Observers are free, read-only guests. To give edit access, remove them and re-invite as a member.`}
+																multiline
+																w={280}
+															>
+																<Badge size="sm" variant="light" color="gray">
+																	<Trans>Observer</Trans>
+																</Badge>
+															</Tooltip>
 														) : canManage ? (
 															<Select
 																// Matrix §5 retires "Owner" as a user-facing role
@@ -1256,7 +1268,7 @@ export const WorkspaceSettingsRoute = () => {
 
 					{/* External view — minimal, no tabs. They can see their own
 				    access block + leave affordance, nothing else. */}
-					{iAmExternal && (
+					{iAmOutsider && (
 						<Stack gap={12}>
 							<Title order={5} fw={400}>
 								<Trans>Your access</Trans>
@@ -1397,6 +1409,25 @@ function PrivacyAndDefaultsSection({
 				queryKey: ["v2", "discoverable-workspaces", settings.org_id],
 			});
 			setVisibility(null);
+			toast.success(t`Saved`);
+		},
+	});
+
+	// Support access is a single boolean; autosave on toggle (no Save button),
+	// mirroring how description autosaves. Local state gives instant feedback.
+	const [allowSupportAccess, setAllowSupportAccess] = useState<boolean>(
+		settings.allow_support_access ?? false,
+	);
+	const supportAccessMutation = useMutation({
+		mutationFn: (value: boolean) =>
+			updateWorkspace(workspaceId, { allow_support_access: value }),
+		onError: (err: Error) => {
+			setAllowSupportAccess(settings.allow_support_access ?? false);
+			toast.error(err.message);
+		},
+		onMutate: (value: boolean) => setAllowSupportAccess(value),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			toast.success(t`Saved`);
 		},
 	});
@@ -1829,6 +1860,27 @@ function PrivacyAndDefaultsSection({
 					</Button>
 				</Group>
 			)}
+			<Divider />
+			<Switch
+				checked={allowSupportAccess}
+				disabled={!canEdit || supportAccessMutation.isPending}
+				onChange={(e) => supportAccessMutation.mutate(e.currentTarget.checked)}
+				label={
+					<Stack gap={0}>
+						<Text size="sm">
+							<Trans>
+								Allow dembrane staff to access this workspace for support
+							</Trans>
+						</Text>
+						<Text size="xs">
+							<Trans>
+								When on, dembrane support staff can join this workspace to help
+								you. Their access ends automatically after 24 hours.
+							</Trans>
+						</Text>
+					</Stack>
+				}
+			/>
 			<UpgradeModal
 				opened={upgradeFeature !== null}
 				onClose={() => setUpgradeFeature(null)}

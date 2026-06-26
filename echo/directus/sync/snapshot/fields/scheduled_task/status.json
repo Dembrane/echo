@@ -1,54 +1,62 @@
 {
-  "collection": "workspace_membership",
-  "field": "source",
+  "collection": "scheduled_task",
+  "field": "status",
   "type": "string",
   "meta": {
-    "collection": "workspace_membership",
+    "collection": "scheduled_task",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "source",
+    "field": "status",
     "group": null,
     "hidden": false,
     "interface": "select-dropdown",
-    "note": "direct = explicitly invited. inherited = auto-added from org role. staff_support = dembrane staff temporary support access.",
+    "note": "Lifecycle. scheduled -> processing -> completed/failed. cancelled = won't run.",
     "options": {
       "choices": [
         {
-          "text": "Direct",
-          "value": "direct"
+          "text": "Scheduled",
+          "value": "scheduled"
         },
         {
-          "text": "Inherited",
-          "value": "inherited"
+          "text": "Processing",
+          "value": "processing"
         },
         {
-          "text": "Staff Support",
-          "value": "staff_support"
+          "text": "Completed",
+          "value": "completed"
+        },
+        {
+          "text": "Failed",
+          "value": "failed"
+        },
+        {
+          "text": "Cancelled",
+          "value": "cancelled"
         }
       ]
     },
     "readonly": false,
     "required": false,
     "searchable": true,
-    "sort": 6,
+    "sort": 5,
     "special": null,
     "translations": null,
     "validation": null,
     "validation_message": null,
-    "width": "full"
+    "width": "half"
   },
   "schema": {
-    "name": "source",
-    "table": "workspace_membership",
+    "name": "status",
+    "table": "scheduled_task",
     "data_type": "character varying",
-    "default_value": "direct",
+    "default_value": "scheduled",
     "max_length": 255,
     "numeric_precision": null,
     "numeric_scale": null,
     "is_nullable": false,
     "is_unique": false,
-    "is_indexed": false,
+    "is_indexed": true,
     "is_primary_key": false,
     "is_generated": false,
     "generation_expression": null,
