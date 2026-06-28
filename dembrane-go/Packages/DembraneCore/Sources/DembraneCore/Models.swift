@@ -92,18 +92,22 @@ public struct WorkspaceUsage: Codable, Sendable, Equatable {
 }
 
 /// The participant-portal defaults a host can edit (what people see when they
-/// scan the QR to record). Mirrors `default_conversation_*` + `context` on the
-/// project. All optional — decoded leniently from the public project payload.
+/// scan the QR to record). Mirrors `default_conversation_*` on the project.
+/// All optional — decoded leniently via convertFromSnakeCase.
 public struct PortalSettings: Codable, Sendable, Equatable {
     public var defaultConversationTitle: String?
     public var defaultConversationDescription: String?
-    public var context: String?
+    /// Comma-separated key terms / proper nouns that improve transcription.
+    /// This is the project's `default_conversation_transcript_prompt` — the
+    /// same field the dashboard's "Specific Context" editor writes (NOT
+    /// `context`, which is an unrelated project field).
+    public var defaultConversationTranscriptPrompt: String?
     public init(defaultConversationTitle: String? = nil,
                 defaultConversationDescription: String? = nil,
-                context: String? = nil) {
+                defaultConversationTranscriptPrompt: String? = nil) {
         self.defaultConversationTitle = defaultConversationTitle
         self.defaultConversationDescription = defaultConversationDescription
-        self.context = context
+        self.defaultConversationTranscriptPrompt = defaultConversationTranscriptPrompt
     }
 }
 
@@ -125,12 +129,19 @@ public struct Conversation: Codable, Identifiable, Sendable, Hashable {
     public let locked: Bool?
     public let lockReason: String?
     public let createdAt: Date?
+    /// Where the recording came from: "PORTAL_AUDIO" (a participant via the QR
+    /// portal), "GO_IOS"/"GO_SHARE"/"GO_WATCH" (this app), "DASHBOARD_AUDIO",
+    /// "CLONE", etc. Used to badge participant recordings.
+    public let source: String?
 
     /// Display title: the auto-generated participant title, else the title,
     /// else a placeholder (mirrors the web frontend).
     public var displayTitle: String {
         participantName ?? title ?? "Untitled conversation"
     }
+
+    /// True when a participant recorded this via the shared portal link.
+    public var isPortalAudio: Bool { source == "PORTAL_AUDIO" }
 
     /// Human label for the processing state shown on a card.
     public var statusLabel: String {
@@ -195,14 +206,15 @@ public extension Conversation {
         Conversation(id: "c1", projectId: "p_preview", participantName: "Morning sync",
                      title: "Morning sync", summary: "Quick standup about the launch.",
                      mergedTranscript: nil, duration: 312, isFinished: true,
-                     isAllChunksTranscribed: true, locked: false, lockReason: nil, createdAt: nil),
+                     isAllChunksTranscribed: true, locked: false, lockReason: nil, createdAt: nil,
+                     source: "GO_IOS"),
         Conversation(id: "c2", projectId: "p_preview", participantName: nil,
                      title: "Field interview", summary: nil, mergedTranscript: nil, duration: 1840,
                      isFinished: true, isAllChunksTranscribed: false,
-                     locked: false, lockReason: nil, createdAt: nil),
+                     locked: false, lockReason: nil, createdAt: nil, source: "PORTAL_AUDIO"),
         Conversation(id: "c3", projectId: "p_preview", participantName: nil,
                      title: "Voice note", summary: nil, mergedTranscript: nil, duration: 47,
                      isFinished: true, isAllChunksTranscribed: true,
-                     locked: true, lockReason: "free_tier", createdAt: nil),
+                     locked: true, lockReason: "free_tier", createdAt: nil, source: nil),
     ]
 }

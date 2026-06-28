@@ -88,6 +88,28 @@ struct PortalSheet: View {
     @AppStorage("dembrane.go.portalInfoDismissed") private var infoDismissed = false
     @State private var activity: ShareableItems?
 
+    // Snapshot of what's saved on the server, to detect unsaved edits.
+    @State private var originalTitle = ""
+    @State private var originalDescription = ""
+    @State private var originalTerms: [String] = []
+    @State private var confirmDiscard = false
+
+    /// A term typed but not yet added with the + button.
+    private var pendingTerm: String { newTerm.trimmingCharacters(in: .whitespaces) }
+    /// Key terms including a still-pending one, so a typed-but-unadded term
+    /// counts as a change and is kept on save.
+    private var effectiveTerms: [String] {
+        var t = keyTerms
+        if !pendingTerm.isEmpty, !t.contains(pendingTerm) { t.append(pendingTerm) }
+        return t
+    }
+    private var isDirty: Bool {
+        guard loaded else { return false }
+        return title != originalTitle
+            || description != originalDescription
+            || effectiveTerms != originalTerms
+    }
+
     private var portalURL: URL { model.portalURL(for: project) }
     private var inviter: String {
         model.me?.displayName.split(separator: " ").first.map(String.init) ?? "I"
@@ -155,14 +177,43 @@ struct PortalSheet: View {
             .navigationTitle("Share to record")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { if isDirty { confirmDiscard = true } else { dismiss() } }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     if saving { ProgressView() }
-                    else { Button("Save") { Task { await save() } }.disabled(!loaded) }
+                    else { Button("Save") { Task { await save() } }.disabled(!loaded || !isDirty) }
                 }
+            }
+            // Block accidental swipe-to-dismiss while there are unsaved edits.
+            .interactiveDismissDisabled(isDirty)
+            .safeAreaInset(edge: .bottom) { unsavedBar }
+            .confirmationDialog("You have unsaved changes",
+                                isPresented: $confirmDiscard, titleVisibility: .visible) {
+                Button("Discard changes", role: .destructive) { dismiss() }
+                Button("Keep editing", role: .cancel) {}
+            } message: {
+                Text("Your edits to this invite haven't been saved yet.")
             }
             .task { await load() }
             .sheet(item: $activity) { ActivityView(items: $0.items) }
+        }
+    }
+
+    /// A slim bar that surfaces unsaved edits with a one-tap Save.
+    @ViewBuilder private var unsavedBar: some View {
+        if isDirty {
+            HStack(spacing: 8) {
+                Image(systemName: "pencil.circle.fill").foregroundStyle(.orange)
+                Text("You have unsaved changes.").font(.footnote).foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+                if saving { ProgressView() }
+                else { Button("Save") { Task { await save() } }.font(.footnote.weight(.semibold)) }
+            }
+            .padding(.horizontal, 16).padding(.vertical, 10)
+            .background(.bar)
+            .overlay(Divider(), alignment: .top)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
         }
     }
 
@@ -225,20 +276,32 @@ struct PortalSheet: View {
         if let s = await model.portalSettings(projectId: project.id) {
             title = s.defaultConversationTitle ?? ""
             description = s.defaultConversationDescription ?? ""
-            keyTerms = (s.context ?? "")
+            keyTerms = (s.defaultConversationTranscriptPrompt ?? "")
                 .split(separator: ",")
                 .map { $0.trimmingCharacters(in: .whitespaces) }
                 .filter { !$0.isEmpty }
         }
+        // Capture the saved state so we can tell when the user changes something.
+        originalTitle = title
+        originalDescription = description
+        originalTerms = keyTerms
         loaded = true
     }
 
     private func save() async {
+        // Commit a term typed but not yet added, so it isn't silently dropped.
+        let terms = effectiveTerms
+        keyTerms = terms
+        newTerm = ""
         saving = true
         let ok = await model.updatePortalSettings(
             projectId: project.id, title: title, description: description,
-            context: keyTerms.joined(separator: ", "))
+            keyTerms: terms.joined(separator: ", "))
         saving = false
-        if ok { dismiss() }
+        guard ok else { return }   // leave the sheet open (and dirty) so they can retry
+        originalTitle = title
+        originalDescription = description
+        originalTerms = terms
+        dismiss()
     }
 }

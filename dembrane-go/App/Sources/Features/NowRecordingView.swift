@@ -77,6 +77,18 @@ struct NowRecordingView: View {
 
     private var recordingContent: some View {
         VStack(spacing: 16) {
+            // Hotlink to Ask, scoped to this in-progress recording. Recording
+            // keeps running in the background while you chat.
+            HStack {
+                Button { model.askAboutCurrentRecording() } label: {
+                    Label("Ask a question", systemImage: "sparkles")
+                }
+                .buttonStyle(.glass)
+                .tint(BrandColor.royalBlue)
+                Spacer()
+            }
+            .padding(.horizontal)
+
             // Heading: recording name, with the project left-aligned beneath it.
             VStack(alignment: .leading, spacing: 4) {
                 Text(model.recordingName ?? "New recording")

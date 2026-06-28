@@ -38,6 +38,7 @@ struct SearchView: View {
                         ForEach(results) { conversation in
                             Button { selected = conversation } label: {
                                 ConversationRow(conversation: conversation)
+                                    .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
                         }

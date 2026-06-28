@@ -16,6 +16,7 @@ struct ConversationDetailView: View {
     @State private var showMove = false
     @State private var showTags = false
     @State private var confirmDelete = false
+    @State private var confirmRetranscribe = false
     @State private var tags: [ProjectTag] = []
     @State private var chunks: [ConversationChunk] = []
     @State private var loadingTranscript = true
@@ -77,8 +78,8 @@ struct ConversationDetailView: View {
                                 Label("Generate title", systemImage: "textformat")
                             }
                             .disabled(!hasSummary)
-                            Button { runAction { try await model.retranscribeConversation(conversation.id) } } label: {
-                                Label("Re-transcribe", systemImage: "arrow.clockwise")
+                            Button { confirmRetranscribe = true } label: {
+                                Label("Duplicate & re-transcribe", systemImage: "doc.on.doc")
                             }
                         }
                         Button(role: .destructive) { confirmDelete = true } label: {
@@ -139,6 +140,18 @@ struct ConversationDetailView: View {
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("Audio is kept for a short grace period.")
+            }
+            .confirmationDialog("Duplicate and re-transcribe?",
+                                isPresented: $confirmRetranscribe, titleVisibility: .visible) {
+                Button("Duplicate & re-transcribe") {
+                    runAction {
+                        try await model.retranscribeConversation(
+                            conversation.id, newName: "\(current.displayTitle) (retranscribed)")
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Makes a copy of this conversation and transcribes the audio again. The original is left as is.")
             }
         }
         .presentationDragIndicator(.visible)

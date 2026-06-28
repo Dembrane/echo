@@ -55,7 +55,7 @@ struct SettingsView: View {
             .confirmationDialog("Delete your account?",
                                 isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Continue in browser", role: .destructive) {
-                    openURL(model.environment.dashboardBaseURL)
+                    openURL(model.environment.dashboardBaseURL.appendingUTMSource())
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {

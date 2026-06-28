@@ -23,7 +23,7 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func moveConversation(id: String, targetProjectId: String) async throws
     func summarizeConversation(id: String) async throws
     func generateConversationTitle(id: String) async throws
-    func retranscribeConversation(id: String) async throws
+    func retranscribeConversation(id: String, newName: String) async throws
     func deleteConversation(id: String) async throws
     func createProject(workspaceId: String, name: String) async throws -> Project
     func projectTags(projectId: String) async throws -> [ProjectTag]
@@ -51,9 +51,11 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
         self.onUnauthorized = onUnauthorized
     }
 
-    private func get<T: Decodable>(_ url: URL, as type: T.Type, retrying: Bool = true) async throws -> T {
+    private func get<T: Decodable>(_ url: URL, as type: T.Type, retrying: Bool = true,
+                                   cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> T {
         var req = URLRequest(url: url)
         req.httpMethod = "GET"
+        req.cachePolicy = cachePolicy
         req.setValue("application/json", forHTTPHeaderField: "Accept")
         if let token = await tokenProvider() {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -62,7 +64,7 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
         let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
         // One refresh-and-retry on 401.
         if code == 401, retrying, let onUnauthorized, await onUnauthorized() {
-            return try await get(url, as: type, retrying: false)
+            return try await get(url, as: type, retrying: false, cachePolicy: cachePolicy)
         }
         guard (200..<300).contains(code) else { throw APIError.badStatus(code) }
         return try DembraneJSON.decoder().decode(T.self, from: data)
@@ -84,7 +86,10 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
         }
     }
     public func portalSettings(projectId: String) async throws -> PortalSettings {
-        try await get(endpoints.participantProject(id: projectId), as: PortalSettings.self)
+        // Authed host read (includes `context`); never serve a cached copy so
+        // edits made moments ago are reflected when the editor reopens.
+        try await get(endpoints.projectPortalRead(id: projectId), as: PortalSettings.self,
+                      cachePolicy: .reloadIgnoringLocalCacheData)
     }
     public func updatePortalSettings(projectId: String, fields: [String: String]) async throws {
         try await sendJSON(endpoints.project(id: projectId), method: "PATCH", body: fields)
@@ -115,8 +120,11 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
     public func generateConversationTitle(id: String) async throws {
         try await send(endpoints.generateConversationTitle(id: id), method: "POST")
     }
-    public func retranscribeConversation(id: String) async throws {
-        try await send(endpoints.retranscribeConversation(id: id), method: "POST")
+    public func retranscribeConversation(id: String, newName: String) async throws {
+        // `new_conversation_name` is required by the API; it names the cloned
+        // conversation the retranscription runs into.
+        try await sendJSON(endpoints.retranscribeConversation(id: id), method: "POST",
+                           body: ["new_conversation_name": newName])
     }
 
     public func conversationChunks(id: String) async throws -> [ConversationChunk] {
@@ -238,7 +246,8 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
     }
     public func portalSettings(projectId: String) async throws -> PortalSettings {
         PortalSettings(defaultConversationTitle: "Share your thoughts",
-                       defaultConversationDescription: "Tell us about your experience.", context: nil)
+                       defaultConversationDescription: "Tell us about your experience.",
+                       defaultConversationTranscriptPrompt: nil)
     }
     public func updatePortalSettings(projectId: String, fields: [String: String]) async throws {}
     public func projects(workspaceId: String, search: String?) async throws -> [Project] { [.preview] }
@@ -248,13 +257,13 @@ public struct MockAPIClient: DembraneAPIClientProtocol {
                      title: "Morning sync", summary: "Quick standup about the launch.",
                      mergedTranscript: "Alice: Morning everyone.\nBob: Let's review the launch plan.",
                      duration: 312, isFinished: true, isAllChunksTranscribed: true,
-                     locked: false, lockReason: nil, createdAt: nil)
+                     locked: false, lockReason: nil, createdAt: nil, source: "GO_IOS")
     }
     public func updateConversation(id: String, fields: [String: String]) async throws {}
     public func moveConversation(id: String, targetProjectId: String) async throws {}
     public func summarizeConversation(id: String) async throws {}
     public func generateConversationTitle(id: String) async throws {}
-    public func retranscribeConversation(id: String) async throws {}
+    public func retranscribeConversation(id: String, newName: String) async throws {}
     public func deleteConversation(id: String) async throws {}
     public func conversationChunks(id: String) async throws -> [ConversationChunk] {
         [ConversationChunk(id: "ck1", conversationId: id,

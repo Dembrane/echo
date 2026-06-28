@@ -50,7 +50,7 @@ struct RegisterView: View {
 
             Toggle(isOn: $acceptedTerms) {
                 Button("I have read and accept the terms") {
-                    openURL(URL(string: "https://www.dembrane.com/legal/terms")!)
+                    openURL(URL(string: "https://www.dembrane.com/legal/terms")!.appendingUTMSource())
                 }
                 .font(.callout).tint(BrandColor.royalBlue)
             }

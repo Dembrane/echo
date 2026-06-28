@@ -20,6 +20,10 @@ struct AskView: View {
                 if !contextConversations.isEmpty { contextChips }
                 Divider()
                 content
+                    // Tap anywhere in the chat area to dismiss the keyboard
+                    // (so the tab bar is reachable again). Simultaneous so it
+                    // doesn't block taps on bubbles/sources.
+                    .simultaneousGesture(TapGesture().onEnded { inputFocused = false })
                 if inputEmpty && !model.askStreaming && !templates.isEmpty { templateBar }
                 inputBar
             }
@@ -38,6 +42,11 @@ struct AskView: View {
                     }
                     .disabled(model.askMessages.isEmpty)
                     .accessibilityLabel("New chat")
+                }
+                // Dismiss the keyboard so the tab bar is reachable again.
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { inputFocused = false }
                 }
             }
             // Light impact when a question goes out; a soft success when the answer lands.
@@ -273,7 +282,10 @@ private struct AskContextPicker: View {
                                     .foregroundStyle(selected.contains(conv.id) ? BrandColor.royalBlue : .secondary)
                                     .font(.title3)
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(conv.displayTitle).foregroundStyle(.primary).lineLimit(1)
+                                    HStack(spacing: 6) {
+                                        Text(conv.displayTitle).foregroundStyle(.primary).lineLimit(1)
+                                        if conv.isPortalAudio { ParticipantBadge() }
+                                    }
                                     if let summary = conv.summary?.trimmingCharacters(in: .whitespacesAndNewlines),
                                        !summary.isEmpty {
                                         Text(summary).font(.caption).foregroundStyle(.secondary).lineLimit(2)

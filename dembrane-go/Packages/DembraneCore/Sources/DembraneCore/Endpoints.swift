@@ -23,6 +23,19 @@ public struct DembraneEndpoints: Sendable, Equatable {
     public func project(id: String) -> URL {
         api.appending(path: "v2/bff/projects/\(id)")
     }
+    /// Authed host read of a project's portal defaults — the same row the
+    /// PATCH writes, so edits round-trip. `default_conversation_transcript_prompt`
+    /// is the dashboard's "Specific Context" (key terms) field.
+    public func projectPortalRead(id: String) -> URL {
+        var c = URLComponents(url: api.appending(path: "v2/projects/\(id)/bff"),
+                              resolvingAgainstBaseURL: false)!
+        c.queryItems = [
+            URLQueryItem(name: "include_tags", value: "false"),
+            URLQueryItem(name: "fields",
+                         value: "default_conversation_title,default_conversation_description,default_conversation_transcript_prompt"),
+        ]
+        return c.url!
+    }
     /// Projects in a workspace. The route defaults to 15/page (max 100) sorted by
     /// recent, so pass the max limit and an optional server-side `search` so any
     /// project is findable, not just the most recent few.

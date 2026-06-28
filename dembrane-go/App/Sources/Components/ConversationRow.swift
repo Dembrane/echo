@@ -17,6 +17,7 @@ struct ConversationRow: View {
                     Text(conversation.displayTitle)
                         .foregroundStyle(.primary)
                         .lineLimit(1)
+                    if conversation.isPortalAudio { ParticipantBadge() }
                 }
                 Text(subtitle)
                     .font(.caption)
@@ -73,6 +74,23 @@ struct ConversationRow: View {
     private static func duration(_ seconds: Double) -> String {
         let total = Int(seconds)
         return String(format: "%d:%02d", total / 60, total % 60)
+    }
+}
+
+/// Marks a conversation that a participant recorded via the shared QR portal
+/// (source = PORTAL_AUDIO), so hosts can tell it apart from their own recordings.
+struct ParticipantBadge: View {
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "person.wave.2.fill")
+            Text("Participant")
+        }
+        .font(.caption2.weight(.medium))
+        .padding(.horizontal, 6).padding(.vertical, 2)
+        .background(.quaternary, in: .capsule)
+        .foregroundStyle(.secondary)
+        .fixedSize()
+        .accessibilityLabel("Recorded by a participant")
     }
 }
 

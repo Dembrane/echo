@@ -367,6 +367,9 @@ final class AppModel {
     }
 
     func startRecording() async {
+        // Already recording? Don't start a second capture (which would orphan the
+        // first). Just reopen the in-progress screen.
+        guard !isRecording else { showRecordingScreen = true; return }
         guard await AVAudioApplication.requestRecordPermission() else {
             statusMessage = "Microphone access is off. Enable it in Settings."
             return
@@ -1008,6 +1011,7 @@ final class AppModel {
         let raw = project.language ?? "en"
         let locale = raw.contains("-") ? raw : (map[raw] ?? "en-US")
         return environment.portalBaseURL.appending(path: "\(locale)/\(project.id)/start")
+            .appendingUTMSource()
     }
 
     /// Current portal defaults (title / description / key terms) for editing.
@@ -1017,12 +1021,13 @@ final class AppModel {
 
     @discardableResult
     func updatePortalSettings(projectId: String, title: String,
-                              description: String, context: String) async -> Bool {
+                              description: String, keyTerms: String) async -> Bool {
         do {
             try await api.updatePortalSettings(projectId: projectId, fields: [
                 "default_conversation_title": title,
                 "default_conversation_description": description,
-                "context": context,
+                // The dashboard's "Specific Context" field — comma-separated terms.
+                "default_conversation_transcript_prompt": keyTerms,
             ])
             return true
         } catch { return false }
@@ -1146,8 +1151,10 @@ final class AppModel {
         try await api.generateConversationTitle(id: id)
         await loadConversations()
     }
-    func retranscribeConversation(_ id: String) async throws {
-        try await api.retranscribeConversation(id: id)
+    /// Clone a conversation and re-run transcription on its audio into the copy
+    /// named `newName`. The original is left untouched.
+    func retranscribeConversation(_ id: String, newName: String) async throws {
+        try await api.retranscribeConversation(id: id, newName: newName)
         await loadConversations()
     }
 
@@ -1182,6 +1189,7 @@ final class AppModel {
         else { return nil }
         return environment.dashboardBaseURL
             .appending(path: "w/\(wp.workspace.id)/projects/\(project.id)/portal-editor")
+            .appendingUTMSource()
     }
 
     /// Soft-delete (recoverable for a grace period server-side). Removes the row
@@ -1250,6 +1258,18 @@ final class AppModel {
     func askAboutMany(_ ids: Set<String>) {
         setAskContext(ids)
         pendingAskConversationId = nil
+        selectedTab = .ask
+    }
+
+    /// From the Now-Recording screen: jump to Ask scoped to the in-progress
+    /// recording (recording continues in the background). Sets context directly
+    /// so it works even if Ask's onAppear doesn't re-fire.
+    func askAboutCurrentRecording() {
+        if let id = currentRecordingConversationId {
+            askConversationIds = [id]
+            resetAskThread()
+        }
+        showRecordingScreen = false   // dismiss the recording sheet
         selectedTab = .ask
     }
 

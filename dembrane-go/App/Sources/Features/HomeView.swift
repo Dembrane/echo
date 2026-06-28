@@ -101,9 +101,13 @@ struct HomeView: View {
     private var recordButton: some View {
         HStack(spacing: 12) {
             Button {
-                Task { await model.startRecording() }   // start immediately, not the armed screen
+                // If a recording is already going, reopen it instead of starting a
+                // new one (which would discard the in-progress recording).
+                if model.isRecording { model.showRecordingScreen = true }
+                else { Task { await model.startRecording() } }
             } label: {
-                Label("Record", systemImage: "record.circle.fill")
+                Label(model.isRecording ? "View recording" : "Record",
+                      systemImage: model.isRecording ? "waveform" : "record.circle.fill")
                     .font(.title3.weight(.semibold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
@@ -162,8 +166,11 @@ struct HomeView: View {
             } label: {
                 Label("Ask dembrane “\(trimmed)”", systemImage: "sparkles")
                     .foregroundStyle(BrandColor.royalBlue)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
             if !searchResults.isEmpty {
                 rows(searchResults)
             } else {
@@ -183,6 +190,7 @@ struct HomeView: View {
                     ConversationRow(conversation: conversation)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
+                        .contentShape(Rectangle())   // whole row taps, not just the text
                 }
                 .buttonStyle(.plain)
                 if conversation.id != conversations.last?.id {

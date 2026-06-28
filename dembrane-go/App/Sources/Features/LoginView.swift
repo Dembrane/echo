@@ -74,10 +74,10 @@ struct LoginView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Button("Forgot your password?") {
-                    openURL(model.environment.dashboardBaseURL.appendingPathComponent("forgot-password"))
+                    openURL(model.environment.dashboardBaseURL.appendingPathComponent("forgot-password").appendingUTMSource())
                 }
                 Button("Create an account") {
-                    openURL(model.environment.dashboardBaseURL.appendingPathComponent("register"))
+                    openURL(model.environment.dashboardBaseURL.appendingPathComponent("register").appendingUTMSource())
                 }
             }
             .font(.callout).tint(BrandColor.royalBlue)
@@ -102,7 +102,7 @@ struct LoginView: View {
 
     private func legalLink(_ title: String, _ path: String) -> some View {
         Button(title) {
-            openURL(URL(string: "https://www.dembrane.com/legal/\(path)")!)
+            openURL(URL(string: "https://www.dembrane.com/legal/\(path)")!.appendingUTMSource())
         }
         .tint(.secondary)
     }
