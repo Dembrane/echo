@@ -64,16 +64,25 @@ public final class KeychainSessionStore: SessionStore, @unchecked Sendable {
 
     public func save(token: String) throws {
         let data = Data(token.utf8)
+        // AfterFirstUnlock so a token refreshed during a background upload (device
+        // locked) can still be written back and read on the next launch. The
+        // default (WhenUnlocked) drops background writes, which would leave the
+        // already-rotated stale token on disk → a spurious reauth.
+        let accessible = kSecAttrAccessibleAfterFirstUnlock
         let query = baseQuery()
         let status = SecItemCopyMatching(query as CFDictionary, nil)
         switch status {
         case errSecSuccess:
-            let attrs = [kSecValueData as String: data]
+            let attrs: [String: Any] = [
+                kSecValueData as String: data,
+                kSecAttrAccessible as String: accessible,
+            ]
             let s = SecItemUpdate(query as CFDictionary, attrs as CFDictionary)
             guard s == errSecSuccess else { throw KeychainError.unexpectedStatus(s) }
         case errSecItemNotFound:
             var add = query
             add[kSecValueData as String] = data
+            add[kSecAttrAccessible as String] = accessible
             let s = SecItemAdd(add as CFDictionary, nil)
             guard s == errSecSuccess else { throw KeychainError.unexpectedStatus(s) }
         default:

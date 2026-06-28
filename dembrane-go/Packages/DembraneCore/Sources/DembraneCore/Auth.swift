@@ -58,6 +58,9 @@ public actor AuthService {
     private let endpoints: DembraneEndpoints
     private let session: URLSession
     private let sessionManager: SessionManager
+    /// A refresh already in flight. Concurrent 401s share it instead of each
+    /// firing their own refresh (see `refresh()`).
+    private var inFlightRefresh: Task<Bool, Error>?
 
     public init(env: AppEnvironment, session: URLSession = .shared, sessionManager: SessionManager) {
         self.endpoints = DembraneEndpoints(env: env)
@@ -96,8 +99,24 @@ public actor AuthService {
 
     /// Refresh the access token. Returns true on success (used by the API
     /// client's 401 retry).
+    ///
+    /// Single-flighted: Directus rotates the refresh token on every use (the old
+    /// one is invalidated the moment a new pair is issued), so two refreshes
+    /// running with the same token would race — the loser is rejected and the
+    /// app would spuriously sign out. When several authed calls 401 at once they
+    /// therefore await one shared refresh rather than each firing their own.
     @discardableResult
     public func refresh() async throws -> Bool {
+        if let inFlightRefresh {
+            return try await inFlightRefresh.value
+        }
+        let task = Task { try await self.performRefresh() }
+        inFlightRefresh = task
+        defer { inFlightRefresh = nil }
+        return try await task.value
+    }
+
+    private func performRefresh() async throws -> Bool {
         guard let refreshToken = await sessionManager.refreshToken() else {
             throw AuthError.noRefreshToken
         }

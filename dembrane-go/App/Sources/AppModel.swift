@@ -56,6 +56,8 @@ final class AppModel {
     var conversationsLoading = false
     var conversationsError = false
     var didLoadConversationsOnce = false
+    /// True while `loadData()` is running, so overlapping foreground refreshes coalesce.
+    private var isLoadingData = false
     /// Free-tier upload gating for the active workspace (informational only).
     var workspaceUsage: WorkspaceUsage?
     var uploadsLocked: Bool { workspaceUsage?.uploadsLocked == true || workspaceUsage?.overCapActive == true }
@@ -221,14 +223,19 @@ final class AppModel {
         processPendingRecordingIfReady()
     }
 
-    /// Returning to the foreground while recording: resume segment rotation (which
-    /// emits + uploads everything captured while backgrounded), flush any buffered
-    /// segments, and refresh the list so the recording is reflected.
+    /// Returning to the foreground: when recording, resume segment rotation
+    /// (which emits + uploads everything captured while backgrounded) and flush
+    /// any buffered segments. Then, whenever signed in, refetch so data isn't
+    /// stale after time away — and so an access token that expired in the
+    /// background is renewed proactively (via the 401 → refresh retry) instead
+    /// of leaving the user staring at stale content.
     func reconcileOnForeground() {
-        guard isRecording else { return }
-        recorder.resumeRotation()
-        if let id = captureConversationId { flushPendingSegments(conversationId: id) }
-        Task { await loadConversations() }
+        if isRecording {
+            recorder.resumeRotation()
+            if let id = captureConversationId { flushPendingSegments(conversationId: id) }
+        }
+        guard phase == .signedIn else { return }
+        Task { await loadData() }
     }
 
     /// Leaving the foreground while recording: stop rotating but keep capturing to
@@ -878,6 +885,11 @@ final class AppModel {
     }
 
     func loadData() async {
+        // Coalesce overlapping loads (e.g. rapid background/foreground toggles)
+        // so we don't fire the me/workspaces/projects waterfall several times over.
+        guard !isLoadingData else { return }
+        isLoadingData = true
+        defer { isLoadingData = false }
         // Paint cached conversations first so Home recents are instant — don't make
         // them wait behind the me/workspaces/projects network waterfall below.
         await loadCachedConversations()
