@@ -981,6 +981,7 @@ class SetTierResponse(BaseModel):
     previous_tier: str
     new_tier: str
     direction: Literal["upgrade", "downgrade", "no-change"]
+    payment_mode: str
     effects_applied: list[dict] = []
 
 
@@ -1041,6 +1042,21 @@ async def set_workspace_tier(
     elif direction == "upgrade":
         account_update["downgraded_at"] = None
         account_update["downgraded_from_tier"] = None
+
+    # A staff tier change also sets billing management: a paid tier flips to
+    # managed (offline, no auto-charge/expiry, mirroring set-managed); free
+    # returns to the free default (none).
+    from dembrane.free_tier import is_free_tier
+
+    if is_free_tier(to_tier):
+        payment_mode = "none"
+        account_update["payment_mode"] = payment_mode
+    else:
+        payment_mode = "offline"
+        account_update["payment_mode"] = payment_mode
+        account_update["tier_expires_at"] = None
+        account_update["pre_warning_sent"] = False
+
     await update_workspace_billing(workspace_id, account_update)
 
     # Bust the cached usage rollup so the UI reflects the new tier's
@@ -1059,8 +1075,8 @@ async def set_workspace_tier(
 
     logger.info(
         f"STAFF tier change: workspace {workspace_id} {from_tier} → {to_tier} "
-        f"(direction={direction}, by={auth.user_id}, reason={body.reason!r}, "
-        f"effects={[e['policy'] for e in effects]})"
+        f"(direction={direction}, payment_mode={payment_mode}, by={auth.user_id}, "
+        f"reason={body.reason!r}, effects={[e['policy'] for e in effects]})"
     )
 
     # Notify workspace admins/owners + billing so they know about the tier
@@ -1118,6 +1134,7 @@ async def set_workspace_tier(
         previous_tier=from_tier,
         new_tier=to_tier,
         direction=direction,
+        payment_mode=payment_mode,
         effects_applied=effects,
     )
 
