@@ -41,7 +41,7 @@ export const ConversationLink = ({
 
 						<ConversationAnchor
 							key={linkingConversation?.id}
-							to={`/w/${workspaceId}/projects/${projectId}/conversation/${(linkingConversation?.source_conversation_id as Conversation)?.id}`}
+							to={`/w/${workspaceId}/projects/${projectId}/conversations/${(linkingConversation?.source_conversation_id as Conversation)?.id}`}
 							name={
 								(linkingConversation?.source_conversation_id as Conversation)
 									?.participant_name ?? ""
@@ -63,7 +63,7 @@ export const ConversationLink = ({
 									?.id && (
 									<List.Item key={conversationLink?.id}>
 										<ConversationAnchor
-											to={`/w/${workspaceId}/projects/${projectId}/conversation/${(conversationLink?.target_conversation_id as Conversation)?.id}`}
+											to={`/w/${workspaceId}/projects/${projectId}/conversations/${(conversationLink?.target_conversation_id as Conversation)?.id}`}
 											name={
 												(
 													conversationLink?.target_conversation_id as Conversation

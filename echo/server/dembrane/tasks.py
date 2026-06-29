@@ -1610,63 +1610,306 @@ def task_dispatch_webhook(webhook_id: str, payload: dict) -> None:
 
 @dramatiq.actor(queue_name="network", priority=50)
 def task_check_scheduled_reports() -> None:
-    """
-    Poll for scheduled reports whose scheduled_at time has passed.
+    """Reconciler: ensure every still-scheduled report has a generate_report
+    scheduled_task (ECHO-863).
 
-    For each matching report, transitions status from "scheduled" to "draft"
-    and dispatches task_create_report. Runs every 5 minutes via the scheduler.
+    The create/update report paths enqueue a durable scheduled_task directly and
+    the unified runner (task_process_scheduled_tasks) does the actual dispatch.
+    This no longer dispatches itself; it only backfills a scheduled_task for any
+    report still in `scheduled` that lacks one — covering reports scheduled
+    before this migration and any enqueue that failed. Idempotent.
     """
+    from dembrane.scheduled_tasks import TASK_GENERATE_REPORT, enqueue_task_sync
+
     logger = getLogger("dembrane.tasks.task_check_scheduled_reports")
 
     try:
-        logger.info("Checking for scheduled reports ready to generate @ %s", get_utc_timestamp())
-
         with directus_client_context() as client:
-            now = get_utc_timestamp().isoformat()
             reports = client.get_items(
                 "project_report",
                 {
                     "query": {
                         "filter": {
                             "status": {"_eq": "scheduled"},
-                            "scheduled_at": {"_lte": now},
                             "deleted_at": {"_null": True},
                         },
-                        "fields": ["id", "project_id", "language", "user_instructions", "scheduled_at"],
-                        "limit": 50,
+                        "fields": [
+                            "id",
+                            "project_id",
+                            "language",
+                            "user_instructions",
+                            "scheduled_at",
+                        ],
+                        "limit": 100,
                     }
                 },
             )
 
         if not reports:
-            logger.debug("No scheduled reports ready to generate")
             return
 
-        logger.info(f"Found {len(reports)} scheduled reports ready to generate")
+        # report_ids that already have a pending/processing generate_report task.
+        with directus_client_context() as client:
+            existing = client.get_items(
+                "scheduled_task",
+                {
+                    "query": {
+                        "filter": {
+                            "task_type": {"_eq": TASK_GENERATE_REPORT},
+                            "status": {"_in": ["scheduled", "processing"]},
+                        },
+                        "fields": ["payload"],
+                        "limit": -1,
+                    }
+                },
+            )
+        covered: set[str] = set()
+        if isinstance(existing, list):
+            for t in existing:
+                rid = (t.get("payload") or {}).get("report_id")
+                if rid is not None:
+                    covered.add(str(rid))
 
+        enqueued = 0
         for report in reports:
             report_id = report.get("id")
             project_id = report.get("project_id")
-            language = report.get("language") or "en"
-            user_instructions = report.get("user_instructions") or ""
-
-            if not report_id or not project_id:
+            scheduled_at = report.get("scheduled_at")
+            if not report_id or not project_id or not scheduled_at:
                 continue
-
+            if str(report_id) in covered:
+                continue
             try:
-                # Transition to draft
                 with directus_client_context() as client:
-                    client.update_item("project_report", str(report_id), {"status": "draft"})
-
-                # Dispatch generation task
-                task_create_report.send(project_id, report_id, language, user_instructions)
-                logger.info(f"Dispatched generation for scheduled report {report_id}")
+                    enqueue_task_sync(
+                        client,
+                        task_type=TASK_GENERATE_REPORT,
+                        scheduled_at_iso=scheduled_at,
+                        payload={
+                            "report_id": report_id,
+                            "project_id": project_id,
+                            "language": report.get("language") or "en",
+                            "user_instructions": report.get("user_instructions") or "",
+                        },
+                    )
+                enqueued += 1
             except Exception as e:
-                logger.error(f"Failed to dispatch scheduled report {report_id}: {e}")
+                logger.error(
+                    "Failed to backfill scheduled_task for report %s: %s", report_id, e
+                )
+
+        if enqueued:
+            logger.info("Backfilled %d scheduled report task(s)", enqueued)
 
     except Exception as e:
-        logger.error(f"Error checking scheduled reports: {e}")
+        logger.error(f"Error reconciling scheduled reports: {e}")
         raise
+
+
+# ── Generic durable scheduled-task runner (ECHO-863) ─────────────────────────
+# Polls the scheduled_task collection for due one-shot tasks, claims them, and
+# dispatches by task_type. See dembrane/scheduled_tasks.py for the model. Fired
+# once a minute by the scheduler; handlers must be idempotent.
+
+
+@dramatiq.actor(queue_name="network", priority=50)
+def task_process_scheduled_tasks() -> None:
+    """Claim and dispatch every scheduled_task whose time has come.
+
+    Reconciles stale `processing` rows first (crash recovery), then claims due
+    rows and runs each handler. A handler raising marks that one row `failed`
+    (with the error) and moves on; it does not abort the batch.
+    """
+    from dembrane.scheduled_tasks import (
+        claim_due_tasks,
+        mark_task_failed,
+        mark_task_completed,
+        reconcile_stale_claims,
+    )
+
+    task_logger = getLogger("dembrane.tasks.task_process_scheduled_tasks")
+
+    with directus_client_context() as client:
+        reset = reconcile_stale_claims(client)
+        if reset:
+            task_logger.info("reset %d stale scheduled_task claim(s)", reset)
+        due = claim_due_tasks(client, limit=50)
+
+    if not due:
+        return
+
+    task_logger.info("processing %d due scheduled_task(s)", len(due))
+    for row in due:
+        task_id = str(row.get("id"))
+        try:
+            _dispatch_scheduled_task(row)
+        except Exception as exc:
+            task_logger.exception(
+                "scheduled_task %s (%s) failed", task_id, row.get("task_type")
+            )
+            with directus_client_context() as client:
+                mark_task_failed(client, task_id, str(exc))
+            continue
+        with directus_client_context() as client:
+            mark_task_completed(client, task_id)
+
+
+def _dispatch_scheduled_task(row: dict) -> None:
+    from dembrane.scheduled_tasks import (
+        TASK_GENERATE_REPORT,
+        TASK_REVOKE_STAFF_SUPPORT,
+    )
+
+    task_type = row.get("task_type")
+    payload = row.get("payload") or {}
+    if task_type == TASK_REVOKE_STAFF_SUPPORT:
+        _run_revoke_staff_support(payload)
+    elif task_type == TASK_GENERATE_REPORT:
+        _run_generate_report(payload)
+    else:
+        raise ValueError(f"unknown scheduled_task type: {task_type!r}")
+
+
+async def _revoke_staff_support_async(
+    workspace_id: str, membership_id: str, org_id: Optional[str]
+) -> bool:
+    """Soft-delete the staff support membership and bust usage caches.
+    Returns True if a row was actually revoked (False = already gone)."""
+    from dembrane.cache_utils import invalidate_workspace_and_org_usage
+    from dembrane.directus_async import async_directus
+
+    revoked = False
+    membership = await async_directus.get_item("workspace_membership", membership_id)
+    # Guard on source: a soft-deleted id can be reactivated as a genuine `direct`
+    # member (same row id), so a stale revoke must never strip a real membership.
+    if (
+        membership
+        and not membership.get("deleted_at")
+        and membership.get("source") == "staff_support"
+    ):
+        await async_directus.update_item(
+            "workspace_membership",
+            membership_id,
+            {"deleted_at": get_utc_timestamp().isoformat()},
+        )
+        revoked = True
+    # Always invalidate — seat/usage counts must reflect the revocation even if a
+    # manual leave already removed the row.
+    await invalidate_workspace_and_org_usage(workspace_id, org_id)
+    return revoked
+
+
+def _run_revoke_staff_support(payload: dict) -> None:
+    """Handler: revoke a staff member's temporary support access (idempotent)."""
+    task_logger = getLogger("dembrane.tasks.revoke_staff_support")
+    workspace_id = payload.get("workspace_id")
+    membership_id = payload.get("membership_id")
+    org_id = payload.get("org_id")
+    if not workspace_id or not membership_id:
+        raise ValueError("revoke_staff_support payload missing workspace_id/membership_id")
+
+    revoked = run_async_in_new_loop(
+        _revoke_staff_support_async(workspace_id, membership_id, org_id)
+    )
+    if revoked:
+        task_logger.info(
+            "revoked staff support membership %s on workspace %s",
+            membership_id,
+            workspace_id,
+        )
+    else:
+        task_logger.info(
+            "staff support membership %s already gone on workspace %s; no-op",
+            membership_id,
+            workspace_id,
+        )
+
+
+def _run_generate_report(payload: dict) -> None:
+    """Handler: fire a scheduled report. Transitions the report scheduled->draft
+    and dispatches generation. Idempotent via the status guard — a report that
+    is no longer `scheduled` (already drafted, deleted) is skipped."""
+    task_logger = getLogger("dembrane.tasks.generate_report")
+    report_id = payload.get("report_id")
+    project_id = payload.get("project_id")
+    language = payload.get("language") or "en"
+    user_instructions = payload.get("user_instructions") or ""
+    if not report_id or not project_id:
+        raise ValueError("generate_report payload missing report_id/project_id")
+
+    try:
+        with directus_client_context() as client:
+            report = client.get_item("project_report", str(report_id))
+    except DirectusBadRequest:
+        # Hard-deleted / unresolvable id — nothing to generate.
+        task_logger.info("scheduled report %s not found; skipping", report_id)
+        return
+    if not report or report.get("deleted_at"):
+        task_logger.info("scheduled report %s gone; skipping", report_id)
+        return
+    if report.get("status") != "scheduled":
+        task_logger.info(
+            "scheduled report %s no longer scheduled (status=%s); skipping",
+            report_id,
+            report.get("status"),
+        )
+        return
+
+    with directus_client_context() as client:
+        client.update_item("project_report", str(report_id), {"status": "draft"})
+    task_create_report.send(project_id, report_id, language, user_instructions)
+    task_logger.info("dispatched generation for scheduled report %s", report_id)
+
+
+@dramatiq.actor(queue_name="network", priority=40)
+def task_expire_staff_support_memberships() -> None:
+    """Belt-and-suspenders sweep for staff support access (ECHO-863).
+
+    The per-join scheduled_task is the primary 24h revocation path. This catch-up
+    hard-stops any staff_support membership whose expires_at has elapsed but is
+    still active (e.g. its scheduled_task row was lost or cancelled by mistake).
+    Runs every 15 minutes. Idempotent: already-revoked rows are excluded by the
+    deleted_at filter.
+    """
+    task_logger = getLogger("dembrane.tasks.task_expire_staff_support_memberships")
+    now_iso = get_utc_timestamp().isoformat()
+
+    with directus_client_context() as client:
+        expired = client.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "filter": {
+                        "source": {"_eq": "staff_support"},
+                        "deleted_at": {"_null": True},
+                        "expires_at": {"_nnull": True, "_lt": now_iso},
+                    },
+                    "fields": ["id", "workspace_id"],
+                    "limit": -1,
+                }
+            },
+        )
+
+    if not isinstance(expired, list) or not expired:
+        return
+
+    task_logger.info("expiring %d overdue staff support membership(s)", len(expired))
+    for row in expired:
+        ws_id = row.get("workspace_id")
+        # Resolve org_id so org-level usage caches bust too.
+        org_id = None
+        if ws_id:
+            with directus_client_context() as client:
+                ws = client.get_item("workspace", str(ws_id))
+            org_id = ws.get("org_id") if ws else None
+        try:
+            run_async_in_new_loop(
+                _revoke_staff_support_async(str(ws_id), str(row["id"]), org_id)
+            )
+        except Exception:
+            task_logger.exception(
+                "failed to expire staff support membership %s", row.get("id")
+            )
 
 
 @dramatiq.actor(queue_name="network", priority=30)

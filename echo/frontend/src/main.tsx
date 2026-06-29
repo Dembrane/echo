@@ -5,10 +5,18 @@ import "./index.css";
 
 import { PostHogProvider } from "@posthog/react";
 import posthog from "posthog-js";
-import { POSTHOG_CAPTURE, POSTHOG_HOST, POSTHOG_TOKEN } from "./config";
+import {
+	POSTHOG_CAPTURE,
+	POSTHOG_HOST,
+	POSTHOG_TOKEN,
+	POSTHOG_UI_HOST,
+} from "./config";
 
 posthog.init(POSTHOG_TOKEN, {
 	api_host: POSTHOG_HOST,
+	// api_host is our reverse proxy; ui_host must stay the real PostHog host so
+	// the toolbar and in-app links resolve (required when api_host is proxied).
+	ui_host: POSTHOG_UI_HOST,
 	// Share the cookie across .dembrane.com so a visitor's distinct id carries
 	// over from the marketing site, stitching both into one person profile.
 	cross_subdomain_cookie: true,

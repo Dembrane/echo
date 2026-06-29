@@ -11,7 +11,7 @@
     "group": null,
     "hidden": false,
     "interface": "select-dropdown",
-    "note": "direct = explicitly invited. inherited = auto-added from org role.",
+    "note": "direct = explicitly invited. inherited = auto-added from org role. staff_support = dembrane staff temporary support access.",
     "options": {
       "choices": [
         {
@@ -21,6 +21,10 @@
         {
           "text": "Inherited",
           "value": "inherited"
+        },
+        {
+          "text": "Staff Support",
+          "value": "staff_support"
         }
       ]
     },

@@ -4,8 +4,9 @@ import useCopyToRichText from "@/hooks/useCopyToRichText";
 import { directus } from "@/lib/directus";
 
 export const useCopyQuote = () => {
-	const { language, projectId } = useParams<{
+	const { language, workspaceId, projectId } = useParams<{
 		language: string;
+		workspaceId: string;
 		projectId: string;
 	}>();
 	const { copied, copy } = useCopyToRichText();
@@ -42,7 +43,7 @@ export const useCopyQuote = () => {
 
 			// Build the formatted quote with context
 			stringBuilder.push(
-				`# Quote from [${conversation?.participant_name}](${window.location.origin}/${language}/projects/${projectId}/conversation/${conversation?.id})`,
+				`# Quote from [${conversation?.participant_name}](${window.location.origin}/${language}/w/${workspaceId}/projects/${projectId}/conversations/${conversation?.id})`,
 			);
 			stringBuilder.push(`"${quote.description}"`);
 			stringBuilder.push(`${quote.verbatim_transcript}`);
@@ -75,7 +76,9 @@ export const useCopyQuote = () => {
 
 			// Add metadata
 			if (conversation?.participant_name) {
-				stringBuilder.push(`**Conversation:** ${conversation.participant_name}`);
+				stringBuilder.push(
+					`**Conversation:** ${conversation.participant_name}`,
+				);
 			}
 
 			if (timestamp) {
@@ -84,7 +87,7 @@ export const useCopyQuote = () => {
 			}
 
 			// Add source link
-			const sourceUrl = `${window.location.origin}/${language}/projects/${projectId}/conversation/${conversation?.id}`;
+			const sourceUrl = `${window.location.origin}/${language}/w/${workspaceId}/projects/${projectId}/conversations/${conversation?.id}`;
 			stringBuilder.push(""); // Empty line before source
 			stringBuilder.push(`[View in conversation](${sourceUrl})`);
 

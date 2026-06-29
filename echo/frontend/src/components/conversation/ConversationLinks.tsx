@@ -36,7 +36,7 @@ const ConversationList = ({
 		{conversations.map((conversation, index) => (
 			<I18nLink
 				key={conversation.id}
-				to={`/w/${workspaceId}/projects/${projectId}/conversation/${conversation.id}`}
+				to={`/w/${workspaceId}/projects/${projectId}/conversations/${conversation.id}`}
 				onClick={onItemClick}
 			>
 				<Box className="cursor-pointer rounded-lg px-3.5 py-2.5 hover:bg-primary-100">
@@ -143,7 +143,7 @@ export const ConversationLinks = ({
 				{visibleConversations.map((conversation) => (
 					<I18nLink
 						key={conversation.id}
-						to={`/w/${workspaceId}/projects/${projectId}/conversation/${conversation.id}`}
+						to={`/w/${workspaceId}/projects/${projectId}/conversations/${conversation.id}`}
 					>
 						<Box maw={300} className="cursor-pointer hover:underline">
 							<Text size="xs" truncate="end" c="gray.7" pr={3}>

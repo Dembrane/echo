@@ -122,7 +122,7 @@ msgstr "(Partner)"
 msgid "(unknown)"
 msgstr "(onbekend)"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:892
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:891
 #: src/components/project/ProjectUsageAndSharing.tsx:310
 msgid "(You)"
 msgstr "(Jij)"
@@ -133,7 +133,7 @@ msgid "{0, plural, one {(# workspace)} other {(# workspaces)}}"
 msgstr "{0, plural, one {(# werkruimte)} other {(# werkruimtes)}}"
 
 #. placeholder {0}: rows.length
-#: src/routes/admin/AdminSettingsRoute.tsx:2096
+#: src/routes/admin/AdminSettingsRoute.tsx:2261
 msgid "{0, plural, one {# agreement} other {# agreements}}"
 msgstr "{0, plural, one {# overeenkomst} other {# overeenkomsten}}"
 
@@ -160,8 +160,8 @@ msgstr "{0, plural, one {# lid} other {# leden}}"
 
 #. placeholder {0}: filteredRows.length
 #. placeholder {0}: group.rows.length
-#: src/routes/admin/AdminSettingsRoute.tsx:2580
-#: src/routes/admin/AdminSettingsRoute.tsx:2624
+#: src/routes/admin/AdminSettingsRoute.tsx:2745
+#: src/routes/admin/AdminSettingsRoute.tsx:2789
 msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# betaling} other {# betalingen}}"
 
@@ -197,7 +197,7 @@ msgstr "{0, plural, one {# tag} other {# tags}}"
 #~ msgstr ""
 
 #. placeholder {0}: rows.length
-#: src/routes/admin/AdminSettingsRoute.tsx:1067
+#: src/routes/admin/AdminSettingsRoute.tsx:1226
 msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# werkruimte} other {# werkruimtes}}"
 
@@ -251,17 +251,17 @@ msgstr "{0} / plek × {1}. Wordt na deze periode niet meer in rekening gebracht.
 #. placeholder {0}: data.account_count
 #. placeholder {1}: data.workspace_count
 #. placeholder {2}: data.active_workspace_count
-#: src/routes/admin/AdminSettingsRoute.tsx:1715
+#: src/routes/admin/AdminSettingsRoute.tsx:1880
 msgid "{0} accounts, {1} workspaces, {2} active"
 msgstr "{0} accounts, {1} werkruimtes, {2} actief"
 
 #. placeholder {0}: displayRole(reached[0].role as string)
-#: src/routes/organisation/OrganisationRoute.tsx:1742
+#: src/routes/organisation/OrganisationRoute.tsx:1740
 msgid "{0} across all"
 msgstr "{0} over alles"
 
 #. placeholder {0}: b.active
-#: src/routes/admin/AdminSettingsRoute.tsx:1093
+#: src/routes/admin/AdminSettingsRoute.tsx:1252
 msgid "{0} active"
 msgstr "{0} actief"
 
@@ -307,7 +307,7 @@ msgid "{0} hours total"
 msgstr "{0} uur totaal"
 
 #. placeholder {0}: organisation.name
-#: src/routes/organisation/OrganisationRoute.tsx:737
+#: src/routes/organisation/OrganisationRoute.tsx:735
 msgid "{0} logo"
 msgstr "{0} logo"
 
@@ -324,13 +324,19 @@ msgstr "{0} niet toegevoegd"
 msgid "{0} of {1} members are trained."
 msgstr "{0} van {1} leden zijn getraind."
 
+#. placeholder {0}: roster.data?.trained_count ?? activeLicenses.length
+#. placeholder {1}: roster.data?.total_count ?? members.length
+#: src/components/training/TrainingRowActions.tsx:227
+msgid "{0} of {1} trained"
+msgstr ""
+
 #~ msgid "{0} on this workspace · change in workspace settings"
 #~ msgstr ""
 
 #. placeholder {0}: line.addedSeats
 #. placeholder {1}: fmtEur(line.proratedNow)
 #. placeholder {2}: fmtEur(line.recurringDelta)
-#: src/components/invite/InviteModal.tsx:724
+#: src/components/invite/InviteModal.tsx:764
 msgid "{0} seat(s) · {1} now · +{2}/{cadence} at renewal"
 msgstr "{0} plek(ken) · {1} nu · +{2}/{cadence} bij verlenging"
 
@@ -387,13 +393,13 @@ msgstr "{0} werkruimtes · {1} betaalde plekken · {2} gratis waarnemers · {3} 
 #. placeholder {0}: account.workspace_count
 #. placeholder {1}: account.seat_count + account.external_count
 #. placeholder {2}: account.observer_count > 0 ? ` · ${account.observer_count} free observers` : ""
-#: src/routes/admin/AdminSettingsRoute.tsx:1218
+#: src/routes/admin/AdminSettingsRoute.tsx:1377
 msgid "{0} workspaces, {1} seats pooled{2}"
 msgstr "{0} werkruimtes, {1} plekken gedeeld{2}"
 
 #. placeholder {0}: row.org_name
 #. placeholder {1}: row.workspace_id.slice(0, 8)
-#: src/routes/admin/AdminSettingsRoute.tsx:980
+#: src/routes/admin/AdminSettingsRoute.tsx:1138
 msgid "{0}, workspace id {1}"
 msgstr "{0}, werkruimte-id {1}"
 
@@ -412,7 +418,7 @@ msgstr "{accessCount, plural, one {# persoon} other {# personen}} in {0}"
 #~ msgid "{capitalizedTier} · tap to see what's included"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1737
+#: src/routes/admin/AdminSettingsRoute.tsx:1902
 msgid "{compedCount, plural, one {# comped} other {# comped}}"
 msgstr "{compedCount, plural, one {# gratis} other {# gratis}}"
 
@@ -454,7 +460,7 @@ msgstr "{finishedConversationsCount, plural, one {Momenteel is # gesprek klaar o
 msgid "{from} → {to}"
 msgstr "{from} → {to}"
 
-#: src/components/invite/EmailChipsInput.tsx:184
+#: src/components/invite/EmailChipsInput.tsx:297
 msgid "{invalidCount} addresses need attention"
 msgstr "{invalidCount} adressen hebben aandacht nodig"
 
@@ -468,7 +474,7 @@ msgstr "{inviterName} heeft je uitgenodigd voor {resolvedWorkspaceName}"
 #~ msgid "{liveProjectCount, plural, one {Clear the # project first. You can delete all projects across your team from the team page.} other {Clear the # projects first. You can delete all projects across your team from the team page.}}"
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1204
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1216
 msgid "{liveProjectCount, plural, one {Delete the # project in this workspace before deleting the workspace itself.} other {Delete the # projects in this workspace before deleting the workspace itself.}}"
 msgstr "{liveProjectCount, plural, one {Verwijder het # project in deze werkruimte voordat je de werkruimte zelf verwijdert.} other {Verwijder de # projecten in deze werkruimte voordat je de werkruimte zelf verwijdert.}}"
 
@@ -491,7 +497,7 @@ msgstr "{overflow} personen meer"
 msgid "{pendingInvites} invite(s) pending. Counted once accepted."
 msgstr "{pendingInvites} uitnodiging(en) in afwachting. Telt mee zodra geaccepteerd."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1801
+#: src/routes/organisation/OrganisationRoute.tsx:1799
 msgid "{person} will lose access to every workspace in this organisation. Direct-only workspace invites stay intact."
 msgstr "{person} verliest toegang tot elke werkruimte in deze organisatie. Directe uitnodigingen voor werkruimtes blijven intact."
 
@@ -513,11 +519,11 @@ msgstr "{seats} plekken"
 #~ msgstr ""
 
 #: src/routes/onboarding/OnboardingRoute.tsx:246
-#: src/components/organisation/CreateOrganisationModal.tsx:120
+#: src/components/organisation/CreateOrganisationModal.tsx:124
 msgid "{sent} invites sent"
 msgstr "{sent} uitnodigingen verstuurd"
 
-#: src/components/invite/InviteModal.tsx:462
+#: src/components/invite/InviteModal.tsx:502
 msgid "{sentCount} invites sent."
 msgstr "{sentCount} uitnodigingen verstuurd."
 
@@ -648,7 +654,7 @@ msgstr "€75 / zetel / maand"
 msgid "0 Aspects"
 msgstr "0 Aspecten"
 
-#: src/components/invite/EmailChipsInput.tsx:182
+#: src/components/invite/EmailChipsInput.tsx:295
 msgid "1 address needs attention"
 msgstr "1 adres vraagt om aandacht"
 
@@ -682,7 +688,7 @@ msgstr "1. Je geeft een URL op waar je meldingen wilt ontvangen"
 #~ msgid "10+ members have joined"
 #~ msgstr "10+ leden zijn lid geworden"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:240
+#: src/routes/admin/AdminSettingsRoute.tsx:241
 msgid "2 months ago"
 msgstr "2 maanden geleden"
 
@@ -699,7 +705,7 @@ msgstr "2. Wanneer een gesprek of rapport plaatsvindt, sturen we de data automat
 #~ msgid "20 seats · 100 h/mo · €1500/mo"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:241
+#: src/routes/admin/AdminSettingsRoute.tsx:242
 msgid "3 months ago"
 msgstr "3 maanden geleden"
 
@@ -717,11 +723,11 @@ msgstr "3. Uw systeem ontvangt de gegevens en kan erop reageren (bijvoorbeeld op
 msgid "A couple of quick questions and you're in."
 msgstr "Een paar korte vragen en je bent binnen."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2839
+#: src/routes/admin/AdminSettingsRoute.tsx:3004
 msgid "A dembrane staff app_user id. The server checks the @dembrane.com address."
 msgstr "Een app_user-id van dembrane-personeel. De server controleert het @dembrane.com-adres."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:673
+#: src/routes/admin/AdminSettingsRoute.tsx:674
 msgid "A downgrade applies the matrix downgrade effects and notifies workspace admins."
 msgstr "Een downgrade past de downgrade-effecten uit de matrix toe en brengt werkruimtebeheerders op de hoogte."
 
@@ -774,7 +780,7 @@ msgstr "Een aparte context voor data-eigendom en facturering. Je kunt deze later
 #~ msgid "A separate subscription, per the partner agreement, so it can be handed off to the client later with no data movement. You'll subscribe it next."
 #~ msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1120
+#: src/routes/organisation/OrganisationRoute.tsx:1118
 msgid "A short blurb shown on the organisation overview."
 msgstr "Een korte tekst die op het organisatieoverzicht wordt getoond."
 
@@ -811,12 +817,12 @@ msgstr "Accepteren en deelnemen"
 #~ msgid "accepted"
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1755
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1786
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:562
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:688
 #: src/routes/project/CreateProjectRoute.tsx:208
 #: src/routes/project/CreateProjectRoute.tsx:297
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:103
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:112
 #: src/components/project/ProjectUsageAndSharing.tsx:190
 #: src/components/layout/ProjectOverviewLayout.tsx:52
 msgid "Access"
@@ -832,11 +838,11 @@ msgstr "Toegang"
 msgid "Access requests"
 msgstr "Toegangsverzoeken"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:544
-#: src/routes/admin/AdminSettingsRoute.tsx:1118
-#: src/routes/admin/AdminSettingsRoute.tsx:1319
-#: src/routes/admin/AdminSettingsRoute.tsx:2357
-#: src/routes/admin/AdminSettingsRoute.tsx:2800
+#: src/routes/admin/AdminSettingsRoute.tsx:545
+#: src/routes/admin/AdminSettingsRoute.tsx:1277
+#: src/routes/admin/AdminSettingsRoute.tsx:1478
+#: src/routes/admin/AdminSettingsRoute.tsx:2522
+#: src/routes/admin/AdminSettingsRoute.tsx:2965
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:132
 msgid "Account"
@@ -851,12 +857,12 @@ msgstr "Account en beveiliging"
 #~ msgid "Account & Security"
 #~ msgstr "Account & Beveiliging"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2838
+#: src/routes/admin/AdminSettingsRoute.tsx:3003
 #: src/components/billing/BillingManager.tsx:298
 msgid "Account manager"
 msgstr "Accountmanager"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2739
+#: src/routes/admin/AdminSettingsRoute.tsx:2904
 msgid "Account manager assigned."
 msgstr "Accountmanager toegewezen."
 
@@ -864,11 +870,11 @@ msgstr "Accountmanager toegewezen."
 msgid "Account password"
 msgstr "Accountwachtwoord"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2731
+#: src/routes/admin/AdminSettingsRoute.tsx:2896
 msgid "Account set to managed."
 msgstr "Account op beheerd gezet."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2568
+#: src/routes/admin/AdminSettingsRoute.tsx:2733
 msgid "Accounts billed"
 msgstr "Gefactureerde accounts"
 
@@ -890,9 +896,9 @@ msgstr "Actie op"
 msgid "Actions"
 msgstr "Acties"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1262
-#: src/routes/admin/AdminSettingsRoute.tsx:1470
-#: src/routes/admin/AdminSettingsRoute.tsx:1776
+#: src/routes/admin/AdminSettingsRoute.tsx:1421
+#: src/routes/admin/AdminSettingsRoute.tsx:1635
+#: src/routes/admin/AdminSettingsRoute.tsx:1941
 #: src/components/workspace/OrganisationUsageRollup.tsx:419
 #: src/components/workspace/OrganisationUsageRollup.tsx:572
 #: src/components/billing/BillingManager.tsx:1264
@@ -910,10 +916,10 @@ msgid "select.all.modal.loading.filters"
 msgstr "Actieve filters"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:177
-#: src/routes/organisation/OrganisationRoute.tsx:2017
-#: src/routes/organisation/OrganisationRoute.tsx:2024
-#: src/routes/organisation/OrganisationRoute.tsx:2038
-#: src/routes/organisation/OrganisationRoute.tsx:2061
+#: src/routes/organisation/OrganisationRoute.tsx:2015
+#: src/routes/organisation/OrganisationRoute.tsx:2022
+#: src/routes/organisation/OrganisationRoute.tsx:2036
+#: src/routes/organisation/OrganisationRoute.tsx:2059
 #: src/components/project/ProjectSharingModal.tsx:252
 #: src/components/billing/BillingManager.tsx:1409
 msgid "Add"
@@ -924,8 +930,8 @@ msgstr "Toevoegen"
 #. placeholder {1}: ws.name
 #. placeholder {2}: displayRole("external")
 #. placeholder {2}: displayRole(roleOpt)
-#: src/routes/organisation/OrganisationRoute.tsx:2007
-#: src/routes/organisation/OrganisationRoute.tsx:2049
+#: src/routes/organisation/OrganisationRoute.tsx:2005
+#: src/routes/organisation/OrganisationRoute.tsx:2047
 msgid "Add {0} to {1} as <0>{2}</0>?"
 msgstr "{0} toevoegen aan {1} als <0>{2}</0>?"
 
@@ -997,8 +1003,8 @@ msgid "Add Tags"
 msgstr "Trefwoorden toevoegen"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2020
-#: src/routes/organisation/OrganisationRoute.tsx:2065
+#: src/routes/organisation/OrganisationRoute.tsx:2018
+#: src/routes/organisation/OrganisationRoute.tsx:2063
 msgid "Add to {0}?"
 msgstr "Toevoegen aan {0}?"
 
@@ -1022,7 +1028,7 @@ msgstr "Toevoegen aan filters"
 msgid "Add to this chat"
 msgstr "Voeg toe aan dit gesprek"
 
-#: src/components/invite/InviteModal.tsx:589
+#: src/components/invite/InviteModal.tsx:629
 msgid "Add to workspaces"
 msgstr "Toevoegen aan werkruimtes"
 
@@ -1154,10 +1160,10 @@ msgstr "Adresregel 2"
 msgid "Adjust the base font size for the interface"
 msgstr "Pas de basislettergrootte voor de interface aan"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:949
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:965
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:993
-#: src/routes/admin/AdminSettingsRoute.tsx:2969
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:948
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:964
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1005
+#: src/routes/admin/AdminSettingsRoute.tsx:3134
 #: src/lib/roles.ts:9
 #: src/components/invite/RoleSelect.tsx:45
 msgid "Admin"
@@ -1166,31 +1172,31 @@ msgstr "Beheerder"
 #~ msgid "Admin — manage the workspace and its members"
 #~ msgstr ""
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:142
+#: src/features/sidebar/views/user/UserHomeView.tsx:143
 msgid "Admin dashboard"
 msgstr "Beheerdersdashboard"
 
 #~ msgid "Admin here (from team role)"
 #~ msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1940
+#: src/routes/organisation/OrganisationRoute.tsx:1938
 msgid "Admin here via organisation role"
 msgstr "Hier beheerder via organisatierol"
 
 #~ msgid "Admin here via team role"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2937
+#: src/routes/admin/AdminSettingsRoute.tsx:3102
 msgid "Admin, dembrane"
 msgstr "Beheerder, dembrane"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:794
-#: src/routes/organisation/OrganisationRoute.tsx:867
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:793
+#: src/routes/organisation/OrganisationRoute.tsx:865
 #: src/components/project/ProjectUsageAndSharing.tsx:247
 msgid "Admins"
 msgstr "Beheerders"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1003
+#: src/routes/organisation/OrganisationRoute.tsx:1001
 msgid "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 msgstr "Beheerders hebben toegang tot elke werkruimte in deze organisatie. Leden en externen zien alleen de werkruimtes waartoe ze toegang hebben gekregen."
 
@@ -1226,11 +1232,12 @@ msgstr "Agentisch Gesprek"
 #~ msgid "AI Assistant"
 #~ msgstr "AI Assistent"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:793
-#: src/routes/organisation/OrganisationRoute.tsx:866
-#: src/routes/admin/AdminSettingsRoute.tsx:1768
-#: src/routes/admin/AdminSettingsRoute.tsx:2477
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:792
+#: src/routes/organisation/OrganisationRoute.tsx:864
+#: src/routes/admin/AdminSettingsRoute.tsx:1933
+#: src/routes/admin/AdminSettingsRoute.tsx:2642
 #: src/components/workspace/OrganisationUsageRollup.tsx:564
+#: src/components/training/StaffTrainingPanel.tsx:117
 #: src/components/project/ProjectUsageAndSharing.tsx:246
 msgid "All"
 msgstr "Alles"
@@ -1268,11 +1275,11 @@ msgstr "Alle projecten"
 msgid "All read"
 msgstr "Alles gelezen"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:840
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:839
 msgid "All seats are taken on this tier. Remove a member or external, or upgrade the workspace tier to invite more people."
 msgstr "Alle plekken in dit niveau zijn bezet. Verwijder een lid of externe, of upgrade het niveau van de werkruimte om meer mensen uit te nodigen."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:823
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:822
 msgid "All seats are taken. Free a seat or upgrade to invite more."
 msgstr "Alle plekken zijn bezet. Maak een plek vrij of upgrade om meer mensen uit te nodigen."
 
@@ -1290,7 +1297,7 @@ msgstr "Alle plekken bezet"
 msgid "All Templates"
 msgstr "Alle sjablonen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1756
+#: src/routes/admin/AdminSettingsRoute.tsx:1921
 #: src/components/workspace/OrganisationUsageRollup.tsx:552
 msgid "All tiers"
 msgstr "Alle niveaus"
@@ -1302,6 +1309,10 @@ msgstr "Alle zichtbare gesprekken geselecteerd"
 #: src/components/workspace/OrganisationProjectsTable.tsx:184
 msgid "All workspaces"
 msgstr "Alle werkruimtes"
+
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1871
+msgid "Allow dembrane staff to access this workspace for support"
+msgstr ""
 
 #: src/components/conversation/OpenForParticipationSummaryCard.tsx:45
 msgid "Allow participants using the link to start new conversations"
@@ -1340,12 +1351,12 @@ msgstr "Al uitgenodigd"
 msgid "Already used in this chat"
 msgstr "Al gebruikt in deze chat"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2383
+#: src/routes/admin/AdminSettingsRoute.tsx:2548
 #: src/components/billing/BillingManager.tsx:729
 msgid "Amount"
 msgstr "Bedrag"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2865
+#: src/routes/admin/AdminSettingsRoute.tsx:3030
 msgid "Amounts default to the account's seats times the per-seat price. Override only when you need to."
 msgstr "Bedragen zijn standaard het aantal plekken van het account maal de prijs per plek. Pas dit alleen aan wanneer dat nodig is."
 
@@ -1452,7 +1463,7 @@ msgstr "Anoniem gesprek"
 #~ msgid "Anonymous Participant"
 #~ msgstr "Anonieme deelnemer"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1023
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1035
 msgid "Another admin or owner will need to restore you."
 msgstr "Een andere admin of eigenaar moet je herstellen."
 
@@ -1460,7 +1471,7 @@ msgstr "Een andere admin of eigenaar moet je herstellen."
 msgid "Any tag"
 msgstr "Elke tag"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1769
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1800
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr ""
 
@@ -1490,7 +1501,7 @@ msgstr "Weergave"
 #~ msgid "Applies to the members you picked."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:694
+#: src/routes/admin/AdminSettingsRoute.tsx:695
 #: src/components/view/CreateViewForm.tsx:153
 #: src/components/common/ImageCropModal.tsx:148
 msgid "Apply"
@@ -1636,11 +1647,11 @@ msgstr "Weet je zeker dat je je aangepaste logo wilt verwijderen? Het standaard 
 #~ msgid "As an external"
 #~ msgstr ""
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:62
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:70
 msgid "Ask"
 msgstr "Stel vraag"
 
-#: src/routes/project/chat/NewChatRoute.tsx:151
+#: src/routes/project/chat/NewChatRoute.tsx:155
 msgid "Ask | dembrane"
 msgstr "Vragen | dembrane"
 
@@ -1690,7 +1701,7 @@ msgstr "Aspect"
 msgid "Aspects"
 msgstr "Aspecten"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2850
+#: src/routes/admin/AdminSettingsRoute.tsx:3015
 msgid "Assign"
 msgstr "Toewijzen"
 
@@ -1830,7 +1841,7 @@ msgstr "Beschikbaar"
 msgid "Available on innovator and above."
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1749
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1780
 msgid "Available on innovator and above. Upgrade to unlock."
 msgstr "Beschikbaar vanaf innovator en hoger. Upgrade om te ontgrendelen."
 
@@ -1847,7 +1858,7 @@ msgstr "Avatar bijgewerkt"
 #: src/routes/project/CreateProjectRoute.tsx:327
 #: src/routes/project/report/ProjectReportRoute.tsx:603
 #: src/routes/organisation/OrganisationRoute.tsx:694
-#: src/routes/organisation/OrganisationRoute.tsx:719
+#: src/routes/organisation/OrganisationRoute.tsx:717
 #: src/routes/onboarding/OnboardingRoute.tsx:434
 #: src/routes/auth/Register.tsx:240
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:334
@@ -1882,7 +1893,7 @@ msgstr "Terug naar selectie"
 msgid "Back to templates"
 msgstr "Terug naar templates"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:666
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:665
 #: src/routes/invite/MyInvitesRoute.tsx:122
 msgid "Back to workspaces"
 msgstr "Terug naar werkruimtes"
@@ -1891,7 +1902,7 @@ msgstr "Terug naar werkruimtes"
 msgid "Back to your workspaces"
 msgstr "Terug naar je werkruimtes"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1097
+#: src/routes/admin/AdminSettingsRoute.tsx:1256
 msgid "Base"
 msgstr "Basis"
 
@@ -1990,10 +2001,10 @@ msgstr "Apart gefactureerd, geen onderdeel van het abonnement van de organisatie
 msgid "Billed under your organisation's plan, alongside your other workspaces."
 msgstr "Gefactureerd onder het abonnement van je organisatie, samen met je andere werkruimtes."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:796
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:992
-#: src/routes/organisation/OrganisationRoute.tsx:830
-#: src/routes/organisation/OrganisationRoute.tsx:869
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:795
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1004
+#: src/routes/organisation/OrganisationRoute.tsx:828
+#: src/routes/organisation/OrganisationRoute.tsx:867
 #: src/lib/roles.ts:13
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:44
 #: src/components/invite/RoleSelect.tsx:40
@@ -2044,7 +2055,7 @@ msgstr "Brainstorm ideeën"
 msgid "Breakdown · {0} active"
 msgstr "Overzicht · {0} actief"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1063
+#: src/routes/admin/AdminSettingsRoute.tsx:1222
 msgid "Breakdown by tier"
 msgstr "Overzicht per niveau"
 
@@ -2099,23 +2110,25 @@ msgstr "kan lezen"
 #~ msgid "Can see and work inside the workspaces you give them access to."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1032
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1081
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1115
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1289
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1822
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1044
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1093
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1127
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1301
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1853
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:721
 #: src/routes/project/ProjectsHome.tsx:441
 #: src/routes/project/CreateProjectRoute.tsx:327
 #: src/routes/project/report/ProjectReportRoute.tsx:287
 #: src/routes/project/report/ProjectReportRoute.tsx:1443
-#: src/routes/organisation/OrganisationRoute.tsx:1766
-#: src/routes/organisation/OrganisationRoute.tsx:1789
-#: src/routes/organisation/OrganisationRoute.tsx:1812
-#: src/routes/organisation/OrganisationRoute.tsx:1976
-#: src/routes/organisation/OrganisationRoute.tsx:2017
-#: src/routes/organisation/OrganisationRoute.tsx:2060
+#: src/routes/organisation/OrganisationRoute.tsx:1764
+#: src/routes/organisation/OrganisationRoute.tsx:1787
+#: src/routes/organisation/OrganisationRoute.tsx:1810
+#: src/routes/organisation/OrganisationRoute.tsx:1974
+#: src/routes/organisation/OrganisationRoute.tsx:2015
+#: src/routes/organisation/OrganisationRoute.tsx:2058
 #: src/components/workspace/OrganisationProjectsTable.tsx:158
+#: src/components/training/TrainingRowActions.tsx:190
+#: src/components/training/TrainingRowActions.tsx:298
 #: src/components/training/RequestTrainingModal.tsx:97
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
 #: src/components/project/ProjectDangerZone.tsx:149
@@ -2123,8 +2136,8 @@ msgstr "kan lezen"
 #: src/components/project/BulkMoveProjectsModal.tsx:111
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:530
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:684
-#: src/components/organisation/CreateOrganisationModal.tsx:195
-#: src/components/invite/InviteModal.tsx:771
+#: src/components/organisation/CreateOrganisationModal.tsx:199
+#: src/components/invite/InviteModal.tsx:811
 #: src/components/dropzone/UploadConversationDropzone.tsx:750
 #: src/components/dropzone/UploadConversationDropzone.tsx:872
 #: src/components/conversation/MoveConversationButton.tsx:231
@@ -2180,6 +2193,12 @@ msgstr "Planning annuleren"
 #~ msgid "Cancel the invite sent to {0}? You can invite them again later."
 #~ msgstr ""
 
+#: src/components/training/TrainingRowActions.tsx:169
+#: src/components/training/TrainingRowActions.tsx:316
+#: src/components/training/TrainingRowActions.tsx:323
+msgid "Cancel training"
+msgstr ""
+
 #: src/components/billing/BillingManager.tsx:518
 msgid "Cancel your plan"
 msgstr "Je abonnement opzeggen"
@@ -2216,24 +2235,24 @@ msgstr "Wijzigen"
 
 #. placeholder {0}: displayRole(member.role)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1760
+#: src/routes/organisation/OrganisationRoute.tsx:1758
 msgid "Change {person}'s organisation role from <0>{0}</0> to <1>{1}</1>?"
 msgstr "De organisatierol van {person} wijzigen van <0>{0}</0> naar <1>{1}</1>?"
 
 #. placeholder {0}: displayRole(currentRole)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1783
+#: src/routes/organisation/OrganisationRoute.tsx:1781
 msgid "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgstr "De rol van {person} op {wsName} wijzigen van <0>{0}</0> naar <1>{1}</1>?"
 
 #~ msgid "Change {person}'s team role from <0>{0}</0> to <1>{1}</1>?"
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1033
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1045
 msgid "Change anyway"
 msgstr "Toch wijzigen"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1939
+#: src/routes/organisation/OrganisationRoute.tsx:1937
 msgid "Change in workspace settings"
 msgstr "Wijzigen in werkruimte-instellingen"
 
@@ -2241,7 +2260,7 @@ msgstr "Wijzigen in werkruimte-instellingen"
 msgid "Change language"
 msgstr "Taal wijzigen"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1768
+#: src/routes/organisation/OrganisationRoute.tsx:1766
 msgid "Change organisation role?"
 msgstr "Organisatierol wijzigen?"
 
@@ -2257,30 +2276,30 @@ msgstr "Betaalmethode wijzigen"
 #~ msgid "Change plan"
 #~ msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1766
-#: src/routes/organisation/OrganisationRoute.tsx:1789
+#: src/routes/organisation/OrganisationRoute.tsx:1764
+#: src/routes/organisation/OrganisationRoute.tsx:1787
 msgid "Change role"
 msgstr "Rol wijzigen"
 
 #~ msgid "Change team role?"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:670
-#: src/routes/admin/AdminSettingsRoute.tsx:703
-#: src/routes/admin/AdminSettingsRoute.tsx:705
+#: src/routes/admin/AdminSettingsRoute.tsx:671
+#: src/routes/admin/AdminSettingsRoute.tsx:704
+#: src/routes/admin/AdminSettingsRoute.tsx:706
 msgid "Change tier"
 msgstr "Niveau wijzigen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:788
-#: src/routes/admin/AdminSettingsRoute.tsx:822
+#: src/routes/admin/AdminSettingsRoute.tsx:790
+#: src/routes/admin/AdminSettingsRoute.tsx:824
 msgid "Change workspace admin"
 msgstr "Werkruimtebeheerder wijzigen"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1791
+#: src/routes/organisation/OrganisationRoute.tsx:1789
 msgid "Change workspace role?"
 msgstr "Werkruimterol wijzigen?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1040
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1052
 msgid "Change your own role?"
 msgstr "Je eigen rol wijzigen?"
 
@@ -2313,6 +2332,7 @@ msgid "Chat deleted"
 msgstr "Chat verwijderd"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:617
+#: src/routes/project/chat/NewChatRoute.tsx:242
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "Chat is niet beschikbaar op jouw toegangsniveau. Neem contact op met je werkruimtebeheerder om een upgrade aan te vragen."
 
@@ -2329,7 +2349,7 @@ msgstr ""
 msgid "Chat name"
 msgstr "Chatnaam"
 
-#: src/routes/project/chat/NewChatRoute.tsx:93
+#: src/routes/project/chat/NewChatRoute.tsx:97
 msgid "Chats"
 msgstr "Chats"
 
@@ -2406,7 +2426,7 @@ msgstr "Plaats"
 msgid "Clear filters"
 msgstr "Filters wissen"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:272
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:274
 #: src/routes/project/ProjectsHome.tsx:362
 #: src/features/sidebar/blocks/SearchBlock.tsx:136
 #: src/components/invite/WorkspaceSelectList.tsx:98
@@ -2432,20 +2452,20 @@ msgstr "Klik om alle {totalCount} gesprekken te zien"
 #~ msgid "Click to see which"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1878
+#: src/routes/admin/AdminSettingsRoute.tsx:2043
 #: src/components/workspace/OrganisationUsageRollup.tsx:640
 msgid "Click to sort"
 msgstr "Klik om te sorteren"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2047
+#: src/routes/admin/AdminSettingsRoute.tsx:2212
 msgid "Client discount %"
 msgstr "Klantkorting %"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2028
+#: src/routes/admin/AdminSettingsRoute.tsx:2193
 msgid "Client organisation"
 msgstr "Klantorganisatie"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2188
+#: src/routes/admin/AdminSettingsRoute.tsx:2353
 msgid "Client orgs from partners"
 msgstr "Klantorganisaties van partners"
 
@@ -2491,7 +2511,7 @@ msgid "Cloud Act safe. EU-sovereign stack for the strictest compliance."
 msgstr "Cloud Act-veilig. EU-soevereine stack voor de strengste naleving."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:331
-#: src/components/organisation/CreateOrganisationModal.tsx:206
+#: src/components/organisation/CreateOrganisationModal.tsx:210
 msgid "Colleagues you invite can explore conversations, share insights, and build reports with you."
 msgstr "Collega's die je uitnodigt kunnen gesprekken verkennen, inzichten delen en samen met jou rapporten maken."
 
@@ -2534,18 +2554,26 @@ msgstr "Vergelijk & Contrast Insights"
 #~ msgid "Compare and contrast the following items provided in the context."
 #~ msgstr "Vergelijk en contrast de volgende items die in de context zijn verstrekt.   "
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1152
+#: src/routes/admin/AdminSettingsRoute.tsx:1311
 msgid "Comped trial. €0 revenue."
 msgstr "Gratis proefperiode. €0 omzet."
 
 #. placeholder {0}: formatDate(account.tier_expires_at)
-#: src/routes/admin/AdminSettingsRoute.tsx:1151
+#: src/routes/admin/AdminSettingsRoute.tsx:1310
 msgid "Comped trial. Expires {0}. €0 revenue."
 msgstr "Gratis proefperiode. Verloopt op {0}. €0 omzet."
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:814
 msgid "Complete"
 msgstr "Voltooid"
+
+#: src/components/training/StaffTrainingPanel.tsx:120
+msgid "Completed"
+msgstr ""
+
+#: src/components/training/TrainingRowActions.tsx:291
+msgid "Completed on"
+msgstr ""
 
 #~ msgid "Concrete Topics"
 #~ msgstr "Concreet maken"
@@ -2559,7 +2587,7 @@ msgstr "Doorgaan"
 msgid "Confirm"
 msgstr "Bevestigen"
 
-#: src/components/invite/InviteModal.tsx:781
+#: src/components/invite/InviteModal.tsx:821
 msgid "Confirm and send"
 msgstr "Bevestigen en versturen"
 
@@ -2624,7 +2652,7 @@ msgstr "Toestemming"
 msgid "Contact support"
 msgstr "Contact met support"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:372
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:374
 msgid "Contact the admin if this was unexpected."
 msgstr "Neem contact op met de beheerder als dit onverwacht was."
 
@@ -2652,7 +2680,7 @@ msgstr "Contextuele suggesties"
 #: src/routes/onboarding/OnboardingRoute.tsx:525
 #: src/routes/onboarding/OnboardingRoute.tsx:639
 #: src/routes/auth/Register.tsx:212
-#: src/components/organisation/CreateOrganisationModal.tsx:198
+#: src/components/organisation/CreateOrganisationModal.tsx:202
 #: src/components/language/LanguagePicker.tsx:157
 #: src/components/billing/BillingManager.tsx:1485
 msgid "Continue"
@@ -2668,7 +2696,7 @@ msgstr "Doorgaan"
 msgid "Continue to payment"
 msgstr "Doorgaan naar betaling"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1591
+#: src/routes/organisation/OrganisationRoute.tsx:1589
 msgid "conversation"
 msgstr "gesprek"
 
@@ -2728,12 +2756,12 @@ msgstr "Gesprekslabels"
 #~ msgid "conversation.linking_conversations.deleted"
 #~ msgstr "De bron is verwijderd"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1591
+#: src/routes/organisation/OrganisationRoute.tsx:1589
 #: src/components/report/CreateReportForm.tsx:204
 msgid "conversations"
 msgstr "gesprekken"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:97
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:106
 #: src/components/workspace/OrganisationProjectsTable.tsx:219
 #: src/components/project/ProjectUsageAndSharing.tsx:453
 #: src/components/conversation/ProjectConversationsPanel.tsx:731
@@ -2846,7 +2874,7 @@ msgstr "Kopieer naar klembord"
 msgid "Copying..."
 msgstr "Kopieren..."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2712
+#: src/routes/admin/AdminSettingsRoute.tsx:2877
 msgid "Could not complete that action."
 msgstr "Kon die actie niet voltooien."
 
@@ -2863,7 +2891,7 @@ msgstr "Kon niet naar het klembord kopiëren. Probeer het opnieuw."
 msgid "Could not create template"
 msgstr "Sjabloon kon niet worden aangemaakt"
 
-#: src/components/organisation/CreateOrganisationModal.tsx:89
+#: src/components/organisation/CreateOrganisationModal.tsx:93
 msgid "Could not create the organisation"
 msgstr "De organisatie kon niet worden aangemaakt"
 
@@ -2875,11 +2903,11 @@ msgstr "Sjabloon kon niet worden verwijderd"
 msgid "Could not generate a summary. Please try again."
 msgstr "Er kon geen samenvatting worden gegenereerd. Probeer het opnieuw."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2466
+#: src/routes/admin/AdminSettingsRoute.tsx:2631
 msgid "Could not load payments. Check auth and backend logs."
 msgstr "Betalingen konden niet worden geladen. Controleer de authenticatie en de backend-logs."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1625
+#: src/routes/admin/AdminSettingsRoute.tsx:1790
 msgid "Could not load the rollup. Check auth and backend logs."
 msgstr "De rollup kon niet worden geladen. Controleer de authenticatie en de backend-logs."
 
@@ -2927,7 +2955,7 @@ msgstr "Deelnemen lukt nu niet"
 msgid "Couldn't load organisation ({0})"
 msgstr "Organisatie kon niet worden geladen ({0})"
 
-#: src/routes/organisation/OrganisationRoute.tsx:881
+#: src/routes/organisation/OrganisationRoute.tsx:879
 msgid "Couldn't load organisation members. Try refreshing, and if it keeps failing, contact support."
 msgstr "Organisatieleden konden niet worden geladen. Probeer te vernieuwen, en neem contact op met support als het blijft mislukken."
 
@@ -2946,11 +2974,11 @@ msgid "Couldn't load usage ({0})"
 msgstr "Gebruik kon niet worden geladen ({0})"
 
 #. placeholder {0}: res.status
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:148
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:150
 msgid "Couldn't load workspace settings ({0})"
 msgstr "Instellingen van de werkruimte konden niet worden geladen ({0})"
 
-#: src/components/invite/InviteModal.tsx:596
+#: src/components/invite/InviteModal.tsx:636
 msgid "Couldn't load workspaces. Close and reopen to retry."
 msgstr "Werkruimtes konden niet worden geladen. Sluit en open opnieuw om het nogmaals te proberen."
 
@@ -3037,7 +3065,7 @@ msgstr "Maak nieuwe view aan"
 #~ msgid "Create now instead"
 #~ msgstr "Nu aanmaken"
 
-#: src/components/organisation/CreateOrganisationModal.tsx:159
+#: src/components/organisation/CreateOrganisationModal.tsx:163
 msgid "Create organisation"
 msgstr "Organisatie aanmaken"
 
@@ -3083,7 +3111,7 @@ msgstr "Werkruimte aanmaken"
 msgid "Create workspace | dembrane"
 msgstr "Werkruimte aanmaken | dembrane"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2171
+#: src/routes/admin/AdminSettingsRoute.tsx:2336
 #: src/components/workspace/OrganisationProjectsTable.tsx:224
 msgid "Created"
 msgstr "Aangemaakt"
@@ -3091,7 +3119,7 @@ msgstr "Aangemaakt"
 #~ msgid "Created {createdDate}"
 #~ msgstr "Aangemaakt {createdDate}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2165
+#: src/routes/admin/AdminSettingsRoute.tsx:2330
 msgid "Created by"
 msgstr "Aangemaakt door"
 
@@ -3115,7 +3143,7 @@ msgstr "Avatar bijsnijden"
 msgid "Crop Image"
 msgstr "Afbeelding bijsnijden"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1689
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1720
 msgid "Crop logo"
 msgstr "Logo bijsnijden"
 
@@ -3151,7 +3179,7 @@ msgstr "Aangepast"
 msgid "Custom Filename"
 msgstr "Aangepaste bestandsnaam"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1664
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1695
 msgid "Custom logo"
 msgstr "Eigen logo"
 
@@ -3163,7 +3191,7 @@ msgstr "Aangepast logo"
 msgid "Custom title prompt"
 msgstr "Aangepaste titelprompt"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1523
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1554
 msgid "Custom workspace logo shown to participants."
 msgstr "Eigen logo van de werkruimte dat aan deelnemers wordt getoond."
 
@@ -3173,7 +3201,7 @@ msgstr "Eigen logo van de werkruimte dat aan deelnemers wordt getoond."
 #~ msgid "Customize how your report is structured. This feature is coming soon."
 #~ msgstr "Pas de structuur van uw rapport aan. Deze functie komt binnenkort."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1149
+#: src/routes/organisation/OrganisationRoute.tsx:1147
 msgid "Danger"
 msgstr "Gevaar"
 
@@ -3221,7 +3249,7 @@ msgstr "E-mail van de data-eigenaar"
 msgid "Data ownership"
 msgstr "Data-eigendom"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2332
+#: src/routes/admin/AdminSettingsRoute.tsx:2497
 #: src/components/report/ScheduleDateTimePicker.tsx:89
 #: src/components/billing/BillingManager.tsx:723
 msgid "Date"
@@ -3277,8 +3305,8 @@ msgstr "Dit toegangsverzoek weigeren? De aanvrager krijgt geen melding en zou op
 msgid "Dedicated support"
 msgstr "Toegewijde support"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2874
-#: src/routes/admin/AdminSettingsRoute.tsx:2894
+#: src/routes/admin/AdminSettingsRoute.tsx:3039
+#: src/routes/admin/AdminSettingsRoute.tsx:3059
 #: src/components/project/ProjectPortalEditor.tsx:894
 msgid "Default"
 msgstr "Standaard"
@@ -3287,7 +3315,7 @@ msgstr "Standaard"
 msgid "Default - No tutorial (Only privacy statements)"
 msgstr "Standaard - Geen tutorial (Alleen privacy verklaringen)"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1006
+#: src/routes/admin/AdminSettingsRoute.tsx:1165
 msgid "Deferred to its own reviewed issue"
 msgstr "Uitgesteld naar een eigen beoordeeld issue"
 
@@ -3376,11 +3404,11 @@ msgstr "Dit project in {0} verwijderen? Alle gesprekken en gegevens worden defin
 #~ msgid "Delete this project in {0}? Conversations and data stay recoverable for 30 days, then are permanently removed."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1176
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1188
 msgid "Delete this workspace"
 msgstr "Deze werkruimte verwijderen"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1179
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1191
 msgid "Delete this workspace. Members lose access immediately and all conversations and data are permanently removed."
 msgstr "Deze werkruimte verwijderen. Leden verliezen direct toegang en alle gesprekken en gegevens worden definitief verwijderd."
 
@@ -3391,8 +3419,8 @@ msgstr "Deze werkruimte verwijderen. Leden verliezen direct toegang en alle gesp
 msgid "Delete Webhook"
 msgstr "Webhook verwijderen"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1244
-#: src/routes/admin/AdminSettingsRoute.tsx:953
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1256
+#: src/routes/admin/AdminSettingsRoute.tsx:1111
 msgid "Delete workspace"
 msgstr "Werkruimte verwijderen"
 
@@ -3410,7 +3438,7 @@ msgstr "Verwijderd · {0}"
 msgid "Deleted successfully"
 msgstr "Verwijderd succesvol"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1152
+#: src/routes/organisation/OrganisationRoute.tsx:1150
 msgid "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 msgstr "Een organisatie verwijderen doen we samen met support. Mail <0>support@dembrane.com</0> en we lopen het met je door. Alle werkruimtes moeten eerst leeg zijn en verwijderd."
 
@@ -3463,11 +3491,11 @@ msgstr "dembrane events"
 msgid "Describe what the language model should extract or summarize from the conversation..."
 msgstr "Beschrijf wat de taalmodel moet extraheren of samenvatten uit het gesprek..."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1485
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1516
 #: src/routes/project/CreateProjectRoute.tsx:197
 #: src/routes/project/CreateProjectRoute.tsx:279
-#: src/routes/organisation/OrganisationRoute.tsx:1119
-#: src/routes/admin/AdminSettingsRoute.tsx:2430
+#: src/routes/organisation/OrganisationRoute.tsx:1117
+#: src/routes/admin/AdminSettingsRoute.tsx:2595
 #: src/components/billing/BillingManager.tsx:726
 msgid "Description"
 msgstr "Beschrijving"
@@ -3554,7 +3582,7 @@ msgstr "Dit project weggooien?"
 msgid "Discard this workspace?"
 msgstr "Deze werkruimte weggooien?"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:420
+#: src/routes/admin/AdminSettingsRoute.tsx:421
 msgid "Discount"
 msgstr "Korting"
 
@@ -3628,7 +3656,7 @@ msgstr "Doe"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:525
 #: src/components/project/ProjectSharingModal.tsx:268
-#: src/components/invite/InviteModal.tsx:771
+#: src/components/invite/InviteModal.tsx:811
 msgid "Done"
 msgstr "Klaar"
 
@@ -3711,7 +3739,7 @@ msgstr "Duur"
 msgid "Dutch"
 msgstr "Nederlands"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2901
+#: src/routes/admin/AdminSettingsRoute.tsx:3066
 msgid "E-invoice"
 msgstr "E-factuur"
 
@@ -3726,7 +3754,7 @@ msgstr "bijvoorbeeld \"Gebruik korte zinnen als 'Stedelijke Groene Ruimtes' of '
 #~ msgid "e.g. 12-person research team starting in June."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1460
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1491
 msgid "e.g. Client Alpha"
 msgstr "bijv. Klant Alpha"
 
@@ -3734,7 +3762,7 @@ msgstr "bijv. Klant Alpha"
 msgid "e.g. Client Alpha, Q1 Research"
 msgstr "bijv. Klant Alpha, Q1-onderzoek"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1487
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1518
 msgid "e.g. Client onboarding interviews, Q1 product research"
 msgstr "bijv. Onboardinggesprekken met klanten, Q1-productonderzoek"
 
@@ -3753,7 +3781,7 @@ msgstr "bijv. Wekelijkse samenvatting stakeholders"
 msgid "e.g., Slack Notifications, Make Workflow"
 msgstr "bijvoorbeeld, Slack meldingen, Make workflow"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:828
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:827
 msgid "Each new member is billed per seat on your plan."
 msgstr "Elk nieuw lid wordt per stoel in rekening gebracht volgens je abonnement."
 
@@ -3854,8 +3882,8 @@ msgstr "E-mailadres"
 #~ msgstr ""
 
 #: src/components/training/StaffTrainingPanel.tsx:116
-msgid "Email Pauline"
-msgstr "Mail Pauline"
+#~ msgid "Email Pauline"
+#~ msgstr "Mail Pauline"
 
 #: src/routes/auth/VerifyEmail.tsx:73
 msgid "Email verification"
@@ -4090,6 +4118,10 @@ msgstr "Fout opgetreden"
 msgid "Error uploading \"{0}\": {1}"
 msgstr "Fout bij het uploaden van \"{0}\": {1}"
 
+#: src/components/training/StaffTrainingPanel.tsx:154
+msgid "Estimated cost"
+msgstr ""
+
 #: src/components/training/RequestTrainingModal.tsx:92
 msgid "Estimated total: €{estimated}"
 msgstr "Geschat totaal: €{estimated}"
@@ -4131,11 +4163,15 @@ msgstr "Iedereen kan het vinden. Admins doen direct mee, leden kunnen het aanvra
 msgid "Everyone in {0} can find and open this project."
 msgstr "Iedereen in {0} kan dit project vinden en openen."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1766
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1797
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:363
 #: src/components/workspace/DiscoverableWorkspaces.tsx:302
 msgid "Everyone in your organisation"
 msgstr "Iedereen in je organisatie"
+
+#: src/components/training/TrainingRowActions.tsx:280
+msgid "Everyone on the roster is trained."
+msgstr ""
 
 #~ msgid "Everyone on your organisation can find it. Admins can join directly; members can ask to join."
 #~ msgstr ""
@@ -4172,7 +4208,7 @@ msgstr "Overschrijdt het maximum aantal stoelen. Er gelden extra kosten."
 msgid "Exit fullscreen"
 msgstr "Volledig scherm sluiten"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1355
+#: src/routes/admin/AdminSettingsRoute.tsx:1514
 msgid "Expand workspaces"
 msgstr "Werkruimtes uitvouwen"
 
@@ -4183,15 +4219,15 @@ msgstr "Werkruimtes uitvouwen"
 msgid "Expired"
 msgstr "Verlopen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2067
+#: src/routes/admin/AdminSettingsRoute.tsx:2232
 msgid "Expires"
 msgstr "Verloopt"
 
-#: src/components/training/TrainingRoster.tsx:87
+#: src/components/training/TrainingRoster.tsx:90
 msgid "Expiring soon"
 msgstr "Verloopt binnenkort"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:67
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:76
 #: src/components/project/ProjectPortalEditor.tsx:802
 #: src/components/project/PortalSettingsOverview.tsx:159
 msgid "Explore"
@@ -4215,35 +4251,39 @@ msgstr "{conversationCount} gesprekken aan het verkennen"
 msgid "Export"
 msgstr "Exporteer"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1794
+#: src/routes/admin/AdminSettingsRoute.tsx:1959
 msgid "Export CSV"
 msgstr "CSV exporteren"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:898
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:980
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1266
-#: src/routes/organisation/OrganisationRoute.tsx:1369
-#: src/routes/organisation/OrganisationRoute.tsx:1850
+#: src/routes/admin/AdminSettingsRoute.tsx:1077
+msgid "Extend 24h"
+msgstr ""
+
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:897
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:979
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1278
+#: src/routes/organisation/OrganisationRoute.tsx:1367
+#: src/routes/organisation/OrganisationRoute.tsx:1848
 #: src/routes/organisation/OrganisationExternalView.tsx:57
 #: src/lib/roles.ts:15
-#: src/features/sidebar/views/user/UserHomeView.tsx:112
-#: src/features/sidebar/views/org/OrgHomeView.tsx:147
+#: src/features/sidebar/views/user/UserHomeView.tsx:113
+#: src/features/sidebar/views/org/OrgHomeView.tsx:148
 #: src/components/project/ProjectUsageAndSharing.tsx:320
 #: src/components/invite/RoleSelect.tsx:52
 msgid "External"
 msgstr "Extern"
 
 #. placeholder {0}: settings.org_name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:635
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:634
 msgid "External of {0}"
 msgstr "Extern van {0}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2155
+#: src/routes/admin/AdminSettingsRoute.tsx:2320
 msgid "External of partner"
 msgstr "Extern van partner"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:800
-#: src/routes/organisation/OrganisationRoute.tsx:873
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:799
+#: src/routes/organisation/OrganisationRoute.tsx:871
 #: src/components/workspace/UsageCard.tsx:223
 #: src/components/project/ProjectUsageAndSharing.tsx:250
 msgid "Externals"
@@ -4253,7 +4293,7 @@ msgstr "Externen"
 msgid "Externals are not added to your organisation. They can only see the workspaces you select here."
 msgstr "Externen worden niet aan je organisatie toegevoegd. Ze zien alleen de werkruimtes die je hier selecteert."
 
-#: src/components/invite/InviteModal.tsx:631
+#: src/components/invite/InviteModal.tsx:671
 msgid "Externals only exist inside a workspace. Pick at least one to send the invite."
 msgstr "Externen bestaan alleen binnen een werkruimte. Kies er minstens één om de uitnodiging te versturen."
 
@@ -4261,9 +4301,9 @@ msgstr "Externen bestaan alleen binnen een werkruimte. Kies er minstens één om
 msgid "Extra participants"
 msgstr "Extra deelnemers"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2479
-#: src/routes/admin/AdminSettingsRoute.tsx:2544
-#: src/components/organisation/CreateOrganisationModal.tsx:112
+#: src/routes/admin/AdminSettingsRoute.tsx:2644
+#: src/routes/admin/AdminSettingsRoute.tsx:2709
+#: src/components/organisation/CreateOrganisationModal.tsx:116
 #: src/components/invite/InviteResultsList.tsx:58
 #: src/components/dropzone/UploadConversationDropzone.tsx:816
 #: src/components/billing/BillingManager.tsx:173
@@ -4545,9 +4585,13 @@ msgstr "Filter op actie"
 msgid "Filter by collection"
 msgstr "Filter op collectie"
 
+#: src/components/training/StaffTrainingPanel.tsx:108
+msgid "Filter by name or id"
+msgstr ""
+
 #: src/components/training/StaffTrainingPanel.tsx:55
-msgid "Filter by organisation id"
-msgstr "Filter op organisatie-id"
+#~ msgid "Filter by organisation id"
+#~ msgstr "Filter op organisatie-id"
 
 #: src/components/chat/ChatModeSelector.tsx:68
 msgid "Find contradictions and suggest follow-up questions"
@@ -4657,7 +4701,7 @@ msgstr "Voor intern gebruik"
 #~ msgid "For invoices, a shared contract, or anything custom, email <0>support@dembrane.com</0>."
 #~ msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:841
+#: src/routes/organisation/OrganisationRoute.tsx:839
 msgid "For invoices, a shared contract, to discuss a partnership, or anything custom, email <0>support@dembrane.com</0>."
 msgstr "Voor facturen, een gedeeld contract, om een samenwerking te bespreken of voor iets op maat, mail <0>support@dembrane.com</0>."
 
@@ -4675,7 +4719,7 @@ msgstr "Voor jou"
 #~ msgid "for your first real engagements."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1331
+#: src/routes/admin/AdminSettingsRoute.tsx:1490
 msgid "Forecast"
 msgstr "Prognose"
 
@@ -4700,7 +4744,7 @@ msgstr "Gratis"
 msgid "Free plan allows 1 report per workspace"
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1439
+#: src/routes/organisation/OrganisationRoute.tsx:1437
 msgid "Free plan allows 1 workspace per organisation"
 msgstr ""
 
@@ -4813,7 +4857,7 @@ msgid "participant.refine.go.deeper.description"
 msgstr "Krijg direct een reactie van dembrane om het gesprek te verdiepen."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:668
-#: src/features/sidebar/views/user/UserHomeView.tsx:80
+#: src/features/sidebar/views/user/UserHomeView.tsx:81
 msgid "Get started"
 msgstr "Aan de slag"
 
@@ -4881,13 +4925,17 @@ msgstr "Ga naar Instellingen"
 #~ msgid "Going over your tier's included seats bills extra per month. See the matrix below for the per-seat rate on each tier."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:529
+#: src/routes/admin/AdminSettingsRoute.tsx:530
 msgid "Grant"
 msgstr "Toekennen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:504
+#: src/routes/admin/AdminSettingsRoute.tsx:505
 msgid "Grant Changemaker trial"
 msgstr "Changemaker-proefperiode toekennen"
+
+#: src/components/training/TrainingRowActions.tsx:305
+msgid "Grant licenses"
+msgstr ""
 
 #~ msgid "Granted tier"
 #~ msgstr ""
@@ -4959,11 +5007,11 @@ msgstr "Help"
 #~ msgid "Help us translate"
 #~ msgstr "Help ons te vertalen"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:248
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:250
 msgid "Hi"
 msgstr "Hoi"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:248
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:250
 msgid "Hi {firstName}"
 msgstr "Hoi {firstName}"
 
@@ -4977,8 +5025,8 @@ msgstr "Hoi {firstName}"
 msgid "Hidden"
 msgstr "Verborgen"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1786
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1804
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1817
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1835
 msgid "Hidden from organisation members. Organisation admins can still find and join."
 msgstr ""
 
@@ -5006,7 +5054,7 @@ msgstr "Verbergen"
 msgid "Hide data"
 msgstr "Gegevens verbergen"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1867
+#: src/routes/organisation/OrganisationRoute.tsx:1865
 msgid "Hide detail"
 msgstr "Details verbergen"
 
@@ -5026,20 +5074,20 @@ msgstr "Gebruik met hoog risico vereist eerst een training"
 msgid "Highlight specific Concept"
 msgstr "Specifiek Concept markeren"
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:75
+#: src/features/sidebar/views/user/UserHomeView.tsx:76
 msgid "Home"
 msgstr "Home"
 
 #: src/routes/project/ProjectHomeRoute.tsx:154
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:87
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:96
 msgid "Host guide"
 msgstr "Hostgids"
 
 #~ msgid "hours"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1325
-#: src/routes/admin/AdminSettingsRoute.tsx:1440
+#: src/routes/admin/AdminSettingsRoute.tsx:1484
+#: src/routes/admin/AdminSettingsRoute.tsx:1605
 #: src/components/workspace/TierCapacityMatrix.tsx:109
 #: src/components/workspace/OrganisationUsageRollup.tsx:399
 #: src/components/workspace/OrganisationProjectsTable.tsx:214
@@ -5120,7 +5168,7 @@ msgstr "Identificeer herhalende thema's, onderwerpen en argumenten die consisten
 msgid "participant.verify.instructions.approve.artefact"
 msgstr "Als je tevreden bent met {objectLabel}, klik dan op \"Goedkeuren\" om te laten zien dat je je gehoord voelt."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:385
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:387
 msgid "If you were expecting access, please ask the person who invited you to send it again."
 msgstr "Verwachtte je toegang? Vraag de persoon die je heeft uitgenodigd om de uitnodiging opnieuw te sturen."
 
@@ -5151,9 +5199,9 @@ msgstr "Als je je bij een bestaande organisatie wilt aansluiten, maak dan geen n
 #~ msgid "In the meantime, if you want to analyze the conversations that are still processing, you can use the Chat feature"
 #~ msgstr "In de tussentijd, als je de gesprekken die nog worden verwerkt wilt analyseren, kun je de Chat-functie gebruiken"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1262
-#: src/routes/admin/AdminSettingsRoute.tsx:1478
-#: src/routes/admin/AdminSettingsRoute.tsx:1784
+#: src/routes/admin/AdminSettingsRoute.tsx:1421
+#: src/routes/admin/AdminSettingsRoute.tsx:1643
+#: src/routes/admin/AdminSettingsRoute.tsx:1949
 #: src/components/workspace/OrganisationUsageRollup.tsx:423
 #: src/components/workspace/OrganisationUsageRollup.tsx:580
 msgid "Inactive"
@@ -5187,15 +5235,15 @@ msgstr "Inbegrepen uren deze maand opgebruikt"
 #~ msgid "Info"
 #~ msgstr "Info"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:914
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:928
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:913
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:927
 msgid "inherited from organisation"
 msgstr "overgenomen van organisatie"
 
 #~ msgid "inherited from team"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2408
+#: src/routes/admin/AdminSettingsRoute.tsx:2573
 msgid "Initial"
 msgstr "Begin"
 
@@ -5258,7 +5306,7 @@ msgid "Invitations waiting for you. Accept to get started."
 msgstr "Er staan uitnodigingen voor je klaar. Accepteer om aan de slag te gaan."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:117
-#: src/components/organisation/CreateOrganisationModal.tsx:166
+#: src/components/organisation/CreateOrganisationModal.tsx:170
 msgid "Invite"
 msgstr "Uitnodigen"
 
@@ -5293,25 +5341,25 @@ msgstr "Uitnodiging afgewezen"
 #~ msgid "Invite members"
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:857
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:856
 msgid "Invite members to collaborate on projects and conversations in this workspace."
 msgstr "Nodig leden uit om samen te werken aan projecten en gesprekken in deze werkruimte."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1783
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1814
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:369
 #: src/components/workspace/DiscoverableWorkspaces.tsx:304
 msgid "Invite only"
 msgstr "Alleen op uitnodiging"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:818
-#: src/routes/organisation/OrganisationRoute.tsx:914
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:817
+#: src/routes/organisation/OrganisationRoute.tsx:912
 msgid "Invite people"
 msgstr "Mensen uitnodigen"
 
 #~ msgid "Invite people outside your organisation. They get workspace-only access and count toward the seat pool."
 #~ msgstr ""
 
-#: src/components/invite/InviteModal.tsx:565
+#: src/components/invite/InviteModal.tsx:605
 msgid "Invite people to {orgName}"
 msgstr "Nodig mensen uit voor {orgName}"
 
@@ -5324,14 +5372,14 @@ msgid "Invite revoked"
 msgstr "Uitnodiging ingetrokken"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:246
-#: src/components/organisation/CreateOrganisationModal.tsx:120
+#: src/components/organisation/CreateOrganisationModal.tsx:124
 msgid "Invite sent"
 msgstr "Uitnodiging verstuurd"
 
 #~ msgid "Invite sent to 1 workspace."
 #~ msgstr ""
 
-#: src/components/invite/InviteModal.tsx:459
+#: src/components/invite/InviteModal.tsx:499
 msgid "Invite sent."
 msgstr "Uitnodiging verstuurd."
 
@@ -5344,11 +5392,11 @@ msgstr "Uitnodiging verstuurd."
 #~ msgid "Invite teammates to collaborate on projects and conversations in this workspace."
 #~ msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:916
+#: src/routes/organisation/OrganisationRoute.tsx:914
 msgid "Invite to a workspace, or just the organisation."
 msgstr "Nodig uit voor een werkruimte, of alleen voor de organisatie."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:832
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:831
 msgid "Invite to this workspace, or just the organisation."
 msgstr "Nodig uit voor deze werkruimte, of alleen voor de organisatie."
 
@@ -5359,7 +5407,7 @@ msgstr "Nodig uit voor deze werkruimte, of alleen voor de organisatie."
 msgid "Invite your team"
 msgstr "Nodig je team uit"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1239
+#: src/routes/organisation/OrganisationRoute.tsx:1237
 msgid "Invite-only workspace"
 msgstr ""
 
@@ -5377,15 +5425,15 @@ msgstr "Uitnodigingen verlopen na 7 dagen. Vraag {inviterName} om een nieuwe te 
 #~ msgid "Invites sent to {ok} workspaces."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2893
+#: src/routes/admin/AdminSettingsRoute.tsx:3058
 msgid "Invoice amount, EUR"
 msgstr "Factuurbedrag, EUR"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2773
+#: src/routes/admin/AdminSettingsRoute.tsx:2938
 msgid "Invoice recorded as paid."
 msgstr "Factuur geregistreerd als betaald."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1162
+#: src/routes/admin/AdminSettingsRoute.tsx:1321
 msgid "Invoiced offline, no Mollie mandate."
 msgstr "Offline gefactureerd, geen Mollie-machtiging."
 
@@ -5402,7 +5450,7 @@ msgstr "Facturen"
 #~ msgid "Invoices and payment method will land here in a future release. To upgrade, email <0>upgrades@dembrane.com</0>."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2862
+#: src/routes/admin/AdminSettingsRoute.tsx:3027
 msgid "Invoicing"
 msgstr "Facturatie"
 
@@ -5421,16 +5469,16 @@ msgstr "Is dit voor intern gebruik binnen je organisatie, of voor een externe or
 msgid "Is this workspace for your organisation's internal use, or for an external organisation that owns its data?"
 msgstr "Is deze werkruimte voor intern gebruik binnen je organisatie, of voor een externe organisatie die eigenaar is van haar data?"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2919
+#: src/routes/admin/AdminSettingsRoute.tsx:3084
 msgid "Issue invoice"
 msgstr "Factuur uitgeven"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2885
+#: src/routes/admin/AdminSettingsRoute.tsx:3050
 msgid "Issue payment link"
 msgstr "Betaallink uitgeven"
 
 #. placeholder {0}: settings.org_name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:709
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:708
 msgid "It has its own plan and seats, not {0}'s pooled plan. Changes here only affect this workspace."
 msgstr "Het heeft een eigen abonnement en eigen plaatsen, niet het gedeelde abonnement van {0}. Wijzigingen hier gelden alleen voor deze werkruimte."
 
@@ -5482,18 +5530,18 @@ msgstr "Jan"
 msgid "john@doe.com"
 msgstr "jan@voorbeeld.com"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1976
-#: src/routes/organisation/OrganisationRoute.tsx:1982
+#: src/routes/organisation/OrganisationRoute.tsx:1974
+#: src/routes/organisation/OrganisationRoute.tsx:1980
 msgid "Join"
 msgstr "Aansluiten"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1970
+#: src/routes/organisation/OrganisationRoute.tsx:1968
 msgid "Join {0} as <0>admin</0>? It'll show in your sidebar right after."
 msgstr "Lid worden van {0} als <0>admin</0>? Het verschijnt daarna meteen in je zijbalk."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1988
+#: src/routes/organisation/OrganisationRoute.tsx:1986
 msgid "Join {0} as an admin first to add others."
 msgstr "Word eerst zelf admin van {0} om anderen toe te voegen."
 
@@ -5501,7 +5549,7 @@ msgstr "Word eerst zelf admin van {0} om anderen toe te voegen."
 #~ msgstr "Aansluiten {0} op dembrane"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1978
+#: src/routes/organisation/OrganisationRoute.tsx:1976
 msgid "Join {0}?"
 msgstr "Lid worden van {0}?"
 
@@ -5524,9 +5572,17 @@ msgstr "Lid worden als admin"
 msgid "Join as admin?"
 msgstr "Lid worden als admin?"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1993
+#: src/routes/organisation/OrganisationRoute.tsx:1991
 msgid "Join first"
 msgstr "Eerst lid worden"
+
+#: src/routes/admin/AdminSettingsRoute.tsx:1031
+msgid "Join for support"
+msgstr ""
+
+#: src/routes/admin/AdminSettingsRoute.tsx:1079
+msgid "Join for support (24h)"
+msgstr ""
 
 #: src/components/common/FeedbackPortalModal.tsx:115
 msgid "Join our Slack community"
@@ -5539,6 +5595,10 @@ msgstr "Word lid van onze Slack-community"
 #: src/routes/invite/AcceptInviteRoute.tsx:538
 msgid "Join this organisation to discover workspaces and collaborate with your team."
 msgstr "Word lid van deze organisatie om werkruimtes te ontdekken en samen te werken met je team."
+
+#: src/routes/admin/AdminSettingsRoute.tsx:1042
+msgid "Join this workspace as an admin to help with support. The customer must have turned on staff support access. Your access ends automatically after 24 hours."
+msgstr ""
 
 #: src/routes/invite/AcceptInviteRoute.tsx:300
 #: src/routes/invite/AcceptInviteRoute.tsx:543
@@ -5596,9 +5656,14 @@ msgid "Keep editing"
 msgstr "Verder bewerken"
 
 #: src/routes/invite/MyInvitesRoute.tsx:77
+#: src/components/training/TrainingRowActions.tsx:324
 #: src/components/members/PendingInvitesSection.tsx:227
 msgid "Keep it"
 msgstr "Behouden"
+
+#: src/components/training/TrainingRowActions.tsx:345
+msgid "Keep license"
+msgstr ""
 
 #: src/components/billing/BillingManager.tsx:549
 msgid "Keep my plan"
@@ -5612,7 +5677,7 @@ msgstr "In behandeling houden"
 #~ msgid "Keep this workspace invite-only."
 #~ msgstr "Houd deze werkruimte alleen op uitnodiging."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2037
+#: src/routes/admin/AdminSettingsRoute.tsx:2202
 msgid "Kickback %"
 msgstr "Kickback %"
 
@@ -5630,7 +5695,7 @@ msgstr "Kickback %"
 msgid "Language"
 msgstr "Taal"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:239
+#: src/routes/admin/AdminSettingsRoute.tsx:240
 #: src/components/workspace/PeriodSelect.tsx:17
 msgid "Last month"
 msgstr "Vorige maand"
@@ -5679,13 +5744,17 @@ msgstr "Meer informatie over webhooks"
 msgid "Leave empty to keep existing"
 msgstr "Laat leeg om bestaande te behouden"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1062
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1082
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1086
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1089
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1290
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1294
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1298
+#: src/routes/admin/AdminSettingsRoute.tsx:1066
+msgid "Leave now"
+msgstr ""
+
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1074
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1094
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1098
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1101
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1302
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1306
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1310
 msgid "Leave workspace"
 msgstr "Werkruimte verlaten"
 
@@ -5745,19 +5814,24 @@ msgstr "Bibliotheek wordt aangemaakt"
 msgid "License Plate"
 msgstr "Kenteken"
 
-#: src/components/training/StaffTrainingPanel.tsx:83
+#: src/components/training/staffHooks.ts:259
+msgid "License revoked"
+msgstr ""
+
+#: src/components/training/StaffTrainingPanel.tsx:166
 msgid "Licenses"
 msgstr "Licenties"
 
-#: src/components/training/staffHooks.ts:127
+#: src/components/training/staffHooks.ts:131
+#: src/components/training/TrainingRowActions.tsx:236
 msgid "Licenses granted"
 msgstr "Licenties verleend"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2054
+#: src/routes/admin/AdminSettingsRoute.tsx:2219
 msgid "Lifetime cap"
 msgstr "Levenslange limiet"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1743
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1774
 msgid "Limit who can find and join this workspace."
 msgstr ""
 
@@ -5829,8 +5903,8 @@ msgstr "Collecties worden geladen..."
 #~ msgid "Loading concrete topics…"
 #~ msgstr "Concrete onderwerpen aan het laden…"
 
-#: src/routes/organisation/OrganisationRoute.tsx:927
-#: src/routes/admin/AdminSettingsRoute.tsx:800
+#: src/routes/organisation/OrganisationRoute.tsx:925
+#: src/routes/admin/AdminSettingsRoute.tsx:802
 msgid "Loading members"
 msgstr "Leden laden"
 
@@ -5918,17 +5992,17 @@ msgstr "Inloggen | dembrane"
 #~ msgid "Login as an existing user"
 #~ msgstr "Inloggen als bestaande gebruiker"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1520
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1590
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1551
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1621
 msgid "Logo"
 msgstr "Logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1430
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1461
 #: src/components/settings/WhitelabelLogoCard.tsx:90
 msgid "Logo removed"
 msgstr "Logo verwijderd"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1420
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1451
 #: src/components/settings/WhitelabelLogoCard.tsx:67
 msgid "Logo updated"
 msgstr "Logo bijgewerkt"
@@ -5967,6 +6041,7 @@ msgstr "Privé maken"
 msgid "Make visible to the whole workspace"
 msgstr "Zichtbaar maken voor de hele werkruimte"
 
+#: src/components/training/StaffTrainingPanel.tsx:168
 #: src/components/project/ProjectSharingStrip.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:364
 #: src/components/conversation/ProjectConversationsPanel.tsx:368
@@ -5974,7 +6049,12 @@ msgstr "Zichtbaar maken voor de hele werkruimte"
 msgid "Manage"
 msgstr "Beheren"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1397
+#: src/components/training/TrainingRowActions.tsx:159
+#: src/components/training/TrainingRowActions.tsx:209
+msgid "Manage attendees"
+msgstr ""
+
+#: src/routes/organisation/OrganisationRoute.tsx:1395
 msgid "Manage members"
 msgstr "Leden beheren"
 
@@ -5992,15 +6072,19 @@ msgstr "Facturatie van organisatie beheren"
 msgid "Manage templates"
 msgstr "Templates beheren"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1164
+#: src/components/training/TrainingRowActions.tsx:137
+msgid "Manage training"
+msgstr ""
+
+#: src/routes/admin/AdminSettingsRoute.tsx:1323
 msgid "Managed"
 msgstr "Beheerd"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2792
+#: src/routes/admin/AdminSettingsRoute.tsx:2957
 msgid "Managed accounts pay by invoice, not by card. Setting an account managed keeps every feature on and turns off auto-charging, dunning, and expiry. Assign a dembrane account manager so the client knows who to contact."
 msgstr "Beheerde accounts betalen op factuur, niet met een kaart. Een account beheerd maken houdt alle functies aan en zet automatisch incasseren, aanmaningen en verlopen uit. Wijs een dembrane-accountmanager toe zodat de klant weet bij wie hij terechtkan."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2789
+#: src/routes/admin/AdminSettingsRoute.tsx:2954
 msgid "Managed billing"
 msgstr "Beheerde facturatie"
 
@@ -6020,6 +6104,10 @@ msgstr "Alles markeren als gelezen"
 msgid "Mark all read"
 msgstr "Alle als gelezen markeren"
 
+#: src/components/training/TrainingRowActions.tsx:266
+msgid "Mark as attended"
+msgstr ""
+
 #: src/features/sidebar/views/InboxView.tsx:524
 #: src/features/sidebar/views/InboxView.tsx:624
 #: src/components/inbox/Inbox.tsx:399
@@ -6032,11 +6120,19 @@ msgstr "Als gelezen markeren"
 msgid "Mark as unread"
 msgstr "Markeren als ongelezen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2926
+#: src/components/training/TrainingRowActions.tsx:161
+msgid "Mark completed"
+msgstr ""
+
+#: src/routes/admin/AdminSettingsRoute.tsx:3091
 msgid "Mark invoice paid"
 msgstr "Factuur markeren als betaald"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:594
+#: src/components/training/TrainingRowActions.tsx:210
+msgid "Mark training completed"
+msgstr ""
+
+#: src/routes/admin/AdminSettingsRoute.tsx:595
 msgid "Marks {orgName} as a partner. Its workspaces self-identify internal vs external client use on creation."
 msgstr "Markeert {orgName} als partner. De werkruimtes geven bij het aanmaken zelf aan of ze voor intern of extern klantgebruik zijn."
 
@@ -6044,11 +6140,11 @@ msgstr "Markeert {orgName} als partner. De werkruimtes geven bij het aanmaken ze
 msgid "Meeting Notes"
 msgstr "Vergadernotities"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:781
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:780
 msgid "member"
 msgstr "lid"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:991
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1003
 #: src/lib/roles.ts:11
 #: src/components/training/TrainingRoster.tsx:44
 #: src/components/training/TrainingRoster.tsx:56
@@ -6062,26 +6158,26 @@ msgstr "Lid"
 #~ msgid "Member added"
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:393
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:392
 msgid "Member removed"
 msgstr "Lid verwijderd"
 
 #~ msgid "Member seats full on this tier"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:804
+#: src/routes/admin/AdminSettingsRoute.tsx:806
 msgid "Member to promote"
 msgstr "Lid om te promoveren"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:781
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:780
 msgid "members"
 msgstr "leden"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:777
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:798
-#: src/routes/organisation/OrganisationRoute.tsx:871
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:776
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:797
+#: src/routes/organisation/OrganisationRoute.tsx:869
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:75
-#: src/features/sidebar/views/org/OrgHomeView.tsx:117
+#: src/features/sidebar/views/org/OrgHomeView.tsx:118
 #: src/components/workspace/UsageCard.tsx:213
 #: src/components/project/ProjectUsageAndSharing.tsx:208
 #: src/components/project/ProjectUsageAndSharing.tsx:248
@@ -6117,7 +6213,7 @@ msgstr "Toegang tot de microfoon wordt nog steeds geweigerd. Controleer uw inste
 #~ msgid "Minimum 8 characters"
 #~ msgstr "Minimaal 8 tekens"
 
-#: src/components/invite/InviteModal.tsx:710
+#: src/components/invite/InviteModal.tsx:750
 msgid "mo"
 msgstr "mnd"
 
@@ -6125,11 +6221,11 @@ msgstr "mnd"
 msgid "Mode"
 msgstr "Modus"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2521
+#: src/routes/admin/AdminSettingsRoute.tsx:2686
 msgid "Mollie is not configured in this environment, so no live transactions are shown. The dashboard link still points to the right Mollie environment."
 msgstr "Mollie is niet ingesteld in deze omgeving, dus er worden geen live transacties getoond. De Dashboard-link verwijst nog steeds naar de juiste Mollie-omgeving."
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:79
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:88
 msgid "Monitor"
 msgstr "Monitoren"
 
@@ -6140,7 +6236,7 @@ msgstr "Monitoren"
 msgid "Monthly billing"
 msgstr "Maandelijkse facturatie"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:871
+#: src/routes/admin/AdminSettingsRoute.tsx:873
 msgid "Monthly usage reset"
 msgstr "Maandelijkse reset van verbruik"
 
@@ -6174,7 +6270,7 @@ msgstr "\"{0}\" verplaatsen naar {targetWorkspaceName}? Leden van de huidige wer
 
 #. placeholder {0}: row.workspace_name
 #. placeholder {1}: row.tier
-#: src/routes/admin/AdminSettingsRoute.tsx:707
+#: src/routes/admin/AdminSettingsRoute.tsx:708
 msgid "Move {0} from {1} to {tier}? A downgrade limits features immediately."
 msgstr "{0} van {1} naar {tier} verplaatsen? Een downgrade beperkt functies meteen."
 
@@ -6246,7 +6342,7 @@ msgstr "Mijn sjablonen"
 #~ msgid "My Templates"
 #~ msgstr "Mijn templates"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1458
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1489
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:429
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:660
 #: src/routes/project/CreateProjectRoute.tsx:179
@@ -6283,7 +6379,7 @@ msgstr "Naam bijgewerkt"
 msgid "Name your organisation to get started. You can invite members right after, or join other organisations later from settings."
 msgstr "Geef je organisatie een naam om te beginnen. Je kunt daarna meteen leden uitnodigen, of later via instellingen lid worden van andere organisaties."
 
-#: src/components/organisation/CreateOrganisationModal.tsx:178
+#: src/components/organisation/CreateOrganisationModal.tsx:182
 msgid "Name your organisation. You can invite people next, or do it later from settings."
 msgstr "Geef je organisatie een naam. Je kunt daarna mensen uitnodigen, of dat later via instellingen doen."
 
@@ -6300,7 +6396,7 @@ msgstr "Naam Z-A"
 msgid "name@example.com"
 msgstr "naam@voorbeeld.com"
 
-#: src/components/invite/EmailChipsInput.tsx:161
+#: src/components/invite/EmailChipsInput.tsx:263
 msgid "name@example.com, name2@example.com"
 msgstr "naam@voorbeeld.com, naam2@voorbeeld.com"
 
@@ -6315,7 +6411,7 @@ msgstr "Meer toegang nodig? Vraag de persoon die je heeft uitgenodigd om je toe 
 msgid "Needs attention"
 msgstr "Vereist aandacht"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1628
+#: src/routes/organisation/OrganisationRoute.tsx:1626
 #: src/components/workspace/TierStatusBadge.tsx:37
 #: src/components/conversation/AutoSelectConversations.tsx:114
 msgid "New"
@@ -6346,7 +6442,7 @@ msgstr "Er zijn nieuwe gesprekken toegevoegd sinds de bibliotheek is gegenereerd
 #~ msgid "New date and time"
 #~ msgstr "Nieuwe datum en tijd"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2147
+#: src/routes/admin/AdminSettingsRoute.tsx:2312
 msgid "New organisation"
 msgstr "Nieuwe organisatie"
 
@@ -6382,11 +6478,11 @@ msgstr "Nieuw rapport"
 #~ msgid "New team workspace"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:685
+#: src/routes/admin/AdminSettingsRoute.tsx:686
 msgid "New tier"
 msgstr "Nieuw niveau"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1436
+#: src/routes/organisation/OrganisationRoute.tsx:1434
 msgid "New workspace"
 msgstr "Nieuwe werkruimte"
 
@@ -6406,7 +6502,7 @@ msgstr "Nieuwste eerst"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:733
 #: src/routes/project/CreateProjectRoute.tsx:335
-#: src/components/invite/InviteModal.tsx:783
+#: src/components/invite/InviteModal.tsx:823
 msgid "Next"
 msgstr "Volgende"
 
@@ -6447,11 +6543,11 @@ msgstr "Nee"
 msgid "participant.button.finish.no.text.mode"
 msgstr "Nee"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2077
+#: src/routes/organisation/OrganisationRoute.tsx:2075
 msgid "No access"
 msgstr "Geen toegang"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2806
+#: src/routes/admin/AdminSettingsRoute.tsx:2971
 msgid "No accounts"
 msgstr "Geen accounts"
 
@@ -6473,7 +6569,7 @@ msgstr "Geen auditlogboeken komen overeen met de huidige filters."
 msgid "No billing account yet. Email <0>support@dembrane.com</0> and we'll set one up."
 msgstr "Nog geen factureringsaccount. Mail naar <0>support@dembrane.com</0> en we stellen er een in."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1307
+#: src/routes/admin/AdminSettingsRoute.tsx:1466
 msgid "No billing accounts match the current filters."
 msgstr "Geen factureringsaccounts voldoen aan de huidige filters."
 
@@ -6548,7 +6644,7 @@ msgstr "Nog geen gesprekken. Je kunt nu een rapport plannen en gesprekken worden
 #~ msgid "No documents uploaded yet"
 #~ msgstr "Nog geen documenten geüpload"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2066
+#: src/routes/admin/AdminSettingsRoute.tsx:2231
 msgid "no expiry"
 msgstr "geen vervaldatum"
 
@@ -6556,7 +6652,7 @@ msgstr "geen vervaldatum"
 msgid "No explicit shares. Workspace admins still have access."
 msgstr "Geen expliciete delingen. Werkruimtebeheerders hebben nog steeds toegang."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2201
+#: src/routes/admin/AdminSettingsRoute.tsx:2366
 msgid "No external-led organisations yet."
 msgstr "Nog geen extern geleide organisaties."
 
@@ -6570,7 +6666,7 @@ msgstr "Geen verdere kosten"
 #~ msgid "No insights available. Generate insights for this conversation by visiting<0><1> the project library.</1></0>"
 #~ msgstr "Geen inzichten beschikbaar. Genereer inzichten voor dit gesprek door naar <0><1>de projectbibliotheek.</1></0> te gaan."
 
-#: src/components/invite/InviteModal.tsx:465
+#: src/components/invite/InviteModal.tsx:505
 msgid "No invites went out. Check the list below."
 msgstr "Er zijn geen uitnodigingen verstuurd. Bekijk de lijst hieronder."
 
@@ -6580,8 +6676,8 @@ msgstr "Er zijn geen uitnodigingen verstuurd. Bekijk de lijst hieronder."
 #~ msgid "No logo set — dembrane default will be used."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1549
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1625
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1580
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1656
 msgid "No logo set. dembrane default will be used."
 msgstr "Geen logo ingesteld. De standaard van dembrane wordt gebruikt."
 
@@ -6590,7 +6686,7 @@ msgstr "Geen logo ingesteld. De standaard van dembrane wordt gebruikt."
 msgid "No matches"
 msgstr "Geen resultaten"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:296
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:298
 msgid "No matches found"
 msgstr "Geen resultaten gevonden"
 
@@ -6607,7 +6703,7 @@ msgstr "Geen naam"
 msgid "No new feedback detected yet. Please continue your discussion and try again soon."
 msgstr "Noch geen nieuwe feedback gedetecteerd. Ga door met je gesprek en probeer het opnieuw binnenkort."
 
-#: src/components/invite/InviteModal.tsx:461
+#: src/components/invite/InviteModal.tsx:501
 msgid "No new invites needed. Check the list below."
 msgstr "Geen nieuwe uitnodigingen nodig. Bekijk de lijst hieronder."
 
@@ -6619,29 +6715,29 @@ msgstr "Nog niemand toegevoegd"
 msgid "No one else in this organisation yet"
 msgstr "Nog niemand anders in deze organisatie"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:854
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:853
 msgid "No one here yet."
 msgstr "Nog niemand hier."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2499
+#: src/routes/admin/AdminSettingsRoute.tsx:2664
 msgid "No one is auto-blocked for non-payment. Watch failed charges here and follow up."
 msgstr "Niemand wordt automatisch geblokkeerd bij niet-betalen. Houd mislukte betalingen hier in de gaten en volg ze op."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1137
-#: src/routes/organisation/OrganisationRoute.tsx:984
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1149
+#: src/routes/organisation/OrganisationRoute.tsx:982
 #: src/components/project/ProjectUsageAndSharing.tsx:352
 msgid "No one matches that filter."
 msgstr "Niemand voldoet aan dat filter."
 
-#: src/routes/organisation/OrganisationRoute.tsx:894
-#: src/routes/organisation/OrganisationRoute.tsx:937
+#: src/routes/organisation/OrganisationRoute.tsx:892
+#: src/routes/organisation/OrganisationRoute.tsx:935
 msgid "No one on the organisation yet."
 msgstr "Nog niemand in de organisatie."
 
 #~ msgid "No one on the team yet."
 #~ msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1360
+#: src/routes/organisation/OrganisationRoute.tsx:1358
 msgid "No one on this organisation yet."
 msgstr "Nog niemand in deze organisatie."
 
@@ -6654,15 +6750,15 @@ msgstr "Nog niemand gedeeld"
 msgid "No one's on the workspace yet."
 msgstr "Nog niemand in de werkruimte."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1845
+#: src/routes/organisation/OrganisationRoute.tsx:1843
 msgid "No organisation role. Access via workspace invites."
 msgstr "Geen organisatierol. Toegang via werkruimte-uitnodigingen."
 
 #~ msgid "No other projects in this workspace."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2613
-#: src/routes/admin/AdminSettingsRoute.tsx:2637
+#: src/routes/admin/AdminSettingsRoute.tsx:2778
+#: src/routes/admin/AdminSettingsRoute.tsx:2802
 msgid "No payments match the filter."
 msgstr "Geen betalingen voldoen aan het filter."
 
@@ -6707,7 +6803,7 @@ msgstr "Geen projecten gevonden."
 #~ msgid "No quotes available. Generate quotes for this conversation by visiting<0><1> the project library.</1></0>"
 #~ msgstr "Geen quotes beschikbaar. Genereer quotes voor dit gesprek door naar <0><1>de projectbibliotheek.</1></0> te gaan."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2116
+#: src/routes/admin/AdminSettingsRoute.tsx:2281
 msgid "No referral agreements yet."
 msgstr "Nog geen verwijsafspraken."
 
@@ -6756,7 +6852,11 @@ msgstr "Geen templates gevonden voor '{searchQuery}'"
 #~ msgid "No templates yet. Create your own or browse All templates."
 #~ msgstr "Nog geen templates. Maak je eigen template of blader door Alle templates."
 
-#: src/components/training/StaffTrainingPanel.tsx:63
+#: src/components/training/StaffTrainingPanel.tsx:130
+msgid "No trainings match your filters."
+msgstr ""
+
+#: src/components/training/StaffTrainingPanel.tsx:128
 msgid "No trainings yet."
 msgstr "Nog geen trainingen."
 
@@ -6804,15 +6904,15 @@ msgstr "Geen webhooks geconfigureerd"
 msgid "No webhooks found"
 msgstr "Geen webhooks gevonden"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1739
+#: src/routes/organisation/OrganisationRoute.tsx:1737
 msgid "No workspace access yet"
 msgstr "Nog geen werkruimtetoegang"
 
-#: src/components/invite/InviteModal.tsx:640
+#: src/components/invite/InviteModal.tsx:680
 msgid "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 msgstr "Geen werkruimte gekozen. Ze worden toegevoegd aan {orgName} en kunnen zelf werkruimtetoegang aanvragen."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1908
+#: src/routes/organisation/OrganisationRoute.tsx:1906
 msgid "No workspace role change. Add this person to the organisation, then re-invite from the workspace."
 msgstr "Geen wijziging van werkruimterol. Voeg deze persoon toe aan de organisatie en nodig ze daarna opnieuw uit vanuit de werkruimte."
 
@@ -6840,7 +6940,7 @@ msgstr "Geen werkruimtes komen overeen met \"{search}\"."
 msgid "None scheduled"
 msgstr "Niets gepland"
 
-#: src/components/invite/EmailChipsInput.tsx:226
+#: src/components/invite/EmailChipsInput.tsx:368
 msgid "Not a valid email."
 msgstr "Geen geldig e-mailadres."
 
@@ -6864,16 +6964,21 @@ msgstr "Niet nu"
 msgid "Not renewing"
 msgstr "Wordt niet verlengd"
 
+#: src/components/training/StaffTrainingPanel.tsx:227
+msgid "Not scheduled"
+msgstr ""
+
 #: src/components/project/PortalSettingsOverview.tsx:56
 #: src/components/billing/BillingManager.tsx:1414
 msgid "Not set"
 msgstr "Niet ingesteld"
 
-#: src/components/training/TrainingRoster.tsx:75
+#: src/components/training/TrainingRoster.tsx:78
 msgid "Not trained"
 msgstr "Niet getraind"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2077
+#: src/routes/admin/AdminSettingsRoute.tsx:2242
+#: src/components/training/StaffTrainingPanel.tsx:157
 msgid "Notes"
 msgstr "Notities"
 
@@ -6901,6 +7006,7 @@ msgstr "Deelnemers melden wanneer een rapport wordt gepubliceerd."
 #~ msgid "Now"
 #~ msgstr "Nu"
 
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:992
 #: src/lib/roles.ts:17
 #: src/components/invite/RoleSelect.tsx:57
 msgid "Observer"
@@ -6914,7 +7020,11 @@ msgstr "Waarnemers (gratis)"
 msgid "Observers are free and read-only, and only for external-client workspaces. They can view the workspace but cannot chat, generate reports, or edit. To let them do more, change their role to External."
 msgstr "Waarnemers zijn gratis en alleen-lezen, en alleen voor werkruimtes van externe klanten. Ze kunnen de werkruimte bekijken, maar niet chatten, rapporten genereren of bewerken. Wijzig hun rol naar Extern om ze meer te laten doen."
 
-#: src/components/invite/InviteModal.tsx:659
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:987
+msgid "Observers are free, read-only guests. To give edit access, remove them and re-invite as a member."
+msgstr ""
+
+#: src/components/invite/InviteModal.tsx:699
 msgid "Observers are only available in workspaces for an external client. Pick only external-client workspaces, or choose a different role."
 msgstr "Waarnemers zijn alleen beschikbaar in werkruimtes voor een externe klant. Kies alleen werkruimtes van externe klanten, of kies een andere rol."
 
@@ -6951,7 +7061,7 @@ msgstr "Lees {objectLabel} hardop voor en vertel wat je eventueel wilt aanpassen
 msgid "One lowercase letter"
 msgstr "Eén kleine letter"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:507
+#: src/routes/admin/AdminSettingsRoute.tsx:508
 msgid "One month of Changemaker on this account, comped. Auto-reverts to Free at expiry."
 msgstr "Eén maand Changemaker op dit account, gratis. Gaat na afloop automatisch terug naar Free."
 
@@ -6976,7 +7086,7 @@ msgstr "Eén symbool"
 msgid "One uppercase letter"
 msgstr "Eén hoofdletter"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2412
+#: src/routes/admin/AdminSettingsRoute.tsx:2577
 msgid "One-off"
 msgstr "Eenmalig"
 
@@ -7059,7 +7169,7 @@ msgstr "Alleen mensen die al in deze werkruimte zitten, kunnen worden toegevoegd
 msgid "Only the people you add or invite can see it."
 msgstr "Alleen de mensen die je toevoegt of uitnodigt, kunnen het zien."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2908
+#: src/routes/admin/AdminSettingsRoute.tsx:3073
 msgid "Only when recording an invoice already paid out-of-band."
 msgstr "Alleen bij het vastleggen van een factuur die al buiten het systeem is betaald."
 
@@ -7067,7 +7177,7 @@ msgstr "Alleen bij het vastleggen van een factuur die al buiten het systeem is b
 msgid "Only workspace admins and the people you invite can open this project."
 msgstr "Alleen werkruimtebeheerders en de mensen die je uitnodigt, kunnen dit project openen."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:764
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:763
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr "Alleen werkruimtebeheerders kunnen deze instellingen wijzigen. Vraag een beheerder als er iets bijgewerkt moet worden."
 
@@ -7084,14 +7194,14 @@ msgstr "Het lijkt erop dat toegang tot de microfoon geweigerd is. Geen zorgen, w
 #~ msgstr "Oeps! Het lijkt erop dat toegang tot de microfoon geweigerd is. Geen zorgen, we hebben een handige probleemoplossingsgids voor je. Voel je vrij om deze te bekijken. Zodra je het probleem hebt opgelost, kom dan terug naar deze pagina om te controleren of je microfoon klaar is voor gebruik."
 
 #: src/routes/organisation/OrganisationExternalView.tsx:115
-#: src/routes/admin/AdminSettingsRoute.tsx:2443
-#: src/routes/admin/AdminSettingsRoute.tsx:2481
+#: src/routes/admin/AdminSettingsRoute.tsx:2608
+#: src/routes/admin/AdminSettingsRoute.tsx:2646
 #: src/components/project/ProjectCard.tsx:62
 #: src/components/aspect/AspectCard.tsx:45
 msgid "Open"
 msgstr "Openen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1412
+#: src/routes/admin/AdminSettingsRoute.tsx:1571
 msgid "Open account actions"
 msgstr "Accountacties openen"
 
@@ -7136,7 +7246,7 @@ msgstr "Hostgids openen"
 #~ msgid "Open Host Guide"
 #~ msgstr "Open host gids"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2514
+#: src/routes/admin/AdminSettingsRoute.tsx:2679
 msgid "Open Mollie dashboard"
 msgstr "Mollie-dashboard openen"
 
@@ -7174,7 +7284,11 @@ msgstr "Open de probleemoplossingsgids"
 #~ msgid "Open troubleshooting guide"
 #~ msgstr "Open de probleemoplossingsgids"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1501
+#: src/routes/admin/AdminSettingsRoute.tsx:1057
+msgid "Open workspace"
+msgstr ""
+
+#: src/routes/admin/AdminSettingsRoute.tsx:1666
 msgid "Open workspace actions"
 msgstr "Werkruimteacties openen"
 
@@ -7212,7 +7326,7 @@ msgstr "Optioneel veld op de bedankpagina"
 #~ msgid "Optional. Context for our team."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1486
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1517
 msgid "Optional. What this workspace is for."
 msgstr "Optioneel. Waar deze werkruimte voor is."
 
@@ -7238,14 +7352,14 @@ msgstr "Of schrijf uw eigen"
 msgid "Org only"
 msgstr "Alleen organisatie"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:110
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:112
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:451
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:668
 #: src/routes/onboarding/OnboardingRoute.tsx:117
-#: src/features/sidebar/views/org/OrgHomeView.tsx:75
+#: src/features/sidebar/views/org/OrgHomeView.tsx:76
 #: src/features/sidebar/hooks/useSearchHits.ts:134
-#: src/components/training/StaffTrainingPanel.tsx:71
-#: src/components/organisation/CreateOrganisationModal.tsx:165
+#: src/components/training/StaffTrainingPanel.tsx:139
+#: src/components/organisation/CreateOrganisationModal.tsx:169
 msgid "Organisation"
 msgstr "Organisatie"
 
@@ -7253,8 +7367,8 @@ msgstr "Organisatie"
 msgid "Organisation | dembrane"
 msgstr "Organisatie | dembrane"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:542
-#: src/routes/admin/AdminSettingsRoute.tsx:1116
+#: src/routes/admin/AdminSettingsRoute.tsx:543
+#: src/routes/admin/AdminSettingsRoute.tsx:1275
 msgid "Organisation account"
 msgstr "Organisatieaccount"
 
@@ -7269,21 +7383,21 @@ msgstr "organisatiebeheerder"
 msgid "Organisation member"
 msgstr "Organisatielid"
 
-#: src/routes/organisation/OrganisationRoute.tsx:940
+#: src/routes/organisation/OrganisationRoute.tsx:938
 msgid "Organisation members appear here once they join a workspace."
 msgstr "Organisatieleden verschijnen hier zodra ze deelnemen aan een werkruimte."
 
-#: src/routes/organisation/OrganisationRoute.tsx:897
+#: src/routes/organisation/OrganisationRoute.tsx:895
 msgid "Organisation members appear here once they join a workspace. Invites are sent from each workspace's Members tab."
 msgstr "Organisatieleden verschijnen hier zodra ze deelnemen aan een werkruimte. Uitnodigingen worden verstuurd vanaf het tabblad Leden van elke werkruimte."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1096
+#: src/routes/organisation/OrganisationRoute.tsx:1094
 #: src/routes/onboarding/OnboardingRoute.tsx:653
-#: src/components/organisation/CreateOrganisationModal.tsx:185
+#: src/components/organisation/CreateOrganisationModal.tsx:189
 msgid "Organisation name"
 msgstr "Organisatienaam"
 
-#: src/routes/organisation/OrganisationRoute.tsx:716
+#: src/routes/organisation/OrganisationRoute.tsx:714
 msgid "Organisation not found"
 msgstr "Organisatie niet gevonden"
 
@@ -7302,15 +7416,15 @@ msgstr "Alleen organisatie"
 msgid "Organisation usage"
 msgstr "Organisatiegebruik"
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:93
+#: src/features/sidebar/views/user/UserHomeView.tsx:94
 msgid "Organisations"
 msgstr "Organisaties"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:162
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:164
 msgid "Organisations | dembrane"
 msgstr "Organisaties | dembrane"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2191
+#: src/routes/admin/AdminSettingsRoute.tsx:2356
 msgid "Organisations created by people who are external collaborators of a partner. A signal they may want their own plan."
 msgstr "Organisaties aangemaakt door mensen die externe samenwerkers van een partner zijn. Een signaal dat ze mogelijk hun eigen abonnement willen."
 
@@ -7377,8 +7491,8 @@ msgstr "Facturering voor overschrijding van toepassing"
 #~ msgstr ""
 
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:59
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:57
-#: src/features/sidebar/views/org/OrgHomeView.tsx:111
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:64
+#: src/features/sidebar/views/org/OrgHomeView.tsx:112
 #: src/components/chat/ChatModeSelector.tsx:311
 #: src/components/chat/ChatModeBanner.tsx:36
 msgid "Overview"
@@ -7396,7 +7510,7 @@ msgstr "Overview - Thema’s & patronen"
 msgid "Ownership"
 msgstr "Eigendom"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:942
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:941
 msgid "Ownership is locked. Contact support to transfer."
 msgstr "Eigendom is vergrendeld. Neem contact op met support om over te dragen."
 
@@ -7421,11 +7535,15 @@ msgstr "Pagina niet gevonden"
 msgid "Page Title"
 msgstr "Pagina titel"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2478
-#: src/routes/admin/AdminSettingsRoute.tsx:2534
+#: src/routes/admin/AdminSettingsRoute.tsx:2643
+#: src/routes/admin/AdminSettingsRoute.tsx:2699
 #: src/components/billing/BillingManager.tsx:167
 msgid "Paid"
 msgstr "Betaald"
+
+#: src/components/training/StaffTrainingPanel.tsx:52
+msgid "partially completed"
+msgstr ""
 
 #: src/components/report/ConversationStatusTable.tsx:56
 #: src/components/participant/ParticipantInitiateForm.tsx:45
@@ -7635,6 +7753,10 @@ msgstr "Deelnemer naam en e-mail"
 #~ msgid "participant.verify.selection.title"
 #~ msgstr "Wat wil je concreet maken?"
 
+#: src/components/training/StaffTrainingPanel.tsx:151
+msgid "Participants"
+msgstr ""
+
 #: src/components/project/ProjectTagsInput.tsx:260
 msgid "Participants will be able to select tags when creating conversations"
 msgstr "Deelnemers kunnen trefwoorden selecteren wanneer ze een gesprek starten"
@@ -7642,24 +7764,24 @@ msgstr "Deelnemers kunnen trefwoorden selecteren wanneer ze een gesprek starten"
 #~ msgid "Participation"
 #~ msgstr "Deelneming"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1574
+#: src/routes/organisation/OrganisationRoute.tsx:1572
 msgid "partner"
 msgstr "partner"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:609
+#: src/routes/admin/AdminSettingsRoute.tsx:610
 msgid "Partner"
 msgstr "Partner"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:947
+#: src/routes/admin/AdminSettingsRoute.tsx:1105
 msgid "Partner handoff. Writes billed_to_team_id and notifies both organisations."
 msgstr "Partneroverdracht. Schrijft billed_to_team_id en informeert beide organisaties."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:591
-#: src/routes/admin/AdminSettingsRoute.tsx:2009
+#: src/routes/admin/AdminSettingsRoute.tsx:592
+#: src/routes/admin/AdminSettingsRoute.tsx:2174
 msgid "Partner organisation"
 msgstr "Partnerorganisatie"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1570
+#: src/routes/organisation/OrganisationRoute.tsx:1568
 msgid "Partner workspace, billed on its own and not part of the organisation's plan."
 msgstr "Partnerwerkruimte, apart gefactureerd en geen onderdeel van het plan van de organisatie."
 
@@ -7695,8 +7817,8 @@ msgid "Passwords do not match"
 msgstr "Wachtwoorden komen niet overeen"
 
 #: src/components/training/StaffTrainingPanel.tsx:56
-msgid "Paste an org id to narrow the list"
-msgstr "Plak een organisatie-id om de lijst te beperken"
+#~ msgid "Paste an org id to narrow the list"
+#~ msgstr "Plak een organisatie-id om de lijst te beperken"
 
 #~ msgid "Pause"
 #~ msgstr "Pauze"
@@ -7709,11 +7831,11 @@ msgstr "Pauzeer het voorlezen"
 msgid "Pay now"
 msgstr "Nu betalen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1523
+#: src/routes/admin/AdminSettingsRoute.tsx:1688
 msgid "Paying revenue"
 msgstr "Betalende omzet"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1726
+#: src/routes/admin/AdminSettingsRoute.tsx:1891
 msgid "Paying revenue this month"
 msgstr "Betalende omzet deze maand"
 
@@ -7721,11 +7843,11 @@ msgstr "Betalende omzet deze maand"
 msgid "Payment failed"
 msgstr "Betaling mislukt"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2873
+#: src/routes/admin/AdminSettingsRoute.tsx:3038
 msgid "Payment link amount, EUR"
 msgstr "Bedrag betaallink, EUR"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2747
+#: src/routes/admin/AdminSettingsRoute.tsx:2912
 msgid "Payment link issued."
 msgstr "Betaallink uitgegeven."
 
@@ -7733,7 +7855,7 @@ msgstr "Betaallink uitgegeven."
 msgid "Payment method"
 msgstr "Betaalmethode"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2907
+#: src/routes/admin/AdminSettingsRoute.tsx:3072
 msgid "Payment reference"
 msgstr "Betalingskenmerk"
 
@@ -7741,12 +7863,12 @@ msgstr "Betalingskenmerk"
 msgid "Payment went through. Your plan is up to date."
 msgstr "De betaling is gelukt. Je plan is up-to-date."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:783
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:782
 msgid "pending"
 msgstr "in behandeling"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2480
-#: src/routes/admin/AdminSettingsRoute.tsx:2558
+#: src/routes/admin/AdminSettingsRoute.tsx:2645
+#: src/routes/admin/AdminSettingsRoute.tsx:2723
 #: src/components/workspace/AccessRequestsList.tsx:162
 #: src/components/report/ConversationStatusTable.tsx:86
 #: src/components/members/PendingInvitesSection.tsx:162
@@ -7774,12 +7896,12 @@ msgstr "Openstaande uitnodigingen | dembrane"
 #~ msgid "Pending review"
 #~ msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:754
+#: src/routes/organisation/OrganisationRoute.tsx:752
 msgid "people"
 msgstr "personen"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:695
-#: src/routes/organisation/OrganisationRoute.tsx:1348
+#: src/routes/organisation/OrganisationRoute.tsx:1346
 msgid "People"
 msgstr "Personen"
 
@@ -7788,18 +7910,18 @@ msgstr "Personen"
 msgid "People with access"
 msgstr "Personen met toegang"
 
-#: src/components/invite/InviteModal.tsx:671
+#: src/components/invite/InviteModal.tsx:711
 msgid "Per-recipient results:"
 msgstr "Resultaten per ontvanger:"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1882
+#: src/routes/organisation/OrganisationRoute.tsx:1880
 msgid "Per-workspace access"
 msgstr "Toegang per werkruimte"
 
 #~ msgid "Per-workspace breakdown"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:438
+#: src/routes/admin/AdminSettingsRoute.tsx:439
 msgid "Percent"
 msgstr "Procent"
 
@@ -7807,11 +7929,11 @@ msgstr "Procent"
 msgid "Period"
 msgstr "Periode"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:952
+#: src/routes/admin/AdminSettingsRoute.tsx:1110
 msgid "Permanent. Removes all conversations and data."
 msgstr "Permanent. Verwijdert alle gesprekken en data."
 
-#: src/routes/organisation/OrganisationRoute.tsx:754
+#: src/routes/organisation/OrganisationRoute.tsx:752
 msgid "person"
 msgstr "persoon"
 
@@ -7826,11 +7948,12 @@ msgstr "Persoonlijke informatie wordt vervangen door tijdelijke aanduidingen. Af
 msgid "Phone"
 msgstr "Telefoon"
 
+#: src/components/training/TrainingRowActions.tsx:183
 #: src/components/report/ScheduleDateTimePicker.tsx:90
 msgid "Pick a date"
 msgstr "Kies een datum"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:800
+#: src/routes/admin/AdminSettingsRoute.tsx:802
 msgid "Pick a member"
 msgstr "Kies een lid"
 
@@ -7840,14 +7963,14 @@ msgstr "Kies een lid"
 #~ msgid "Pick a plan for your team."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2801
+#: src/routes/admin/AdminSettingsRoute.tsx:2966
 msgid "Pick an account"
 msgstr "Kies een account"
 
 #~ msgid "Pick at least one member or add an email."
 #~ msgstr ""
 
-#: src/components/invite/InviteModal.tsx:649
+#: src/components/invite/InviteModal.tsx:689
 msgid "Pick at least one workspace to send the invite."
 msgstr "Kies minstens één werkruimte om de uitnodiging te versturen."
 
@@ -7856,6 +7979,10 @@ msgstr "Kies minstens één werkruimte om de uitnodiging te versturen."
 
 #~ msgid "Pick date and time"
 #~ msgstr "Kies datum en tijd"
+
+#: src/components/invite/EmailChipsInput.tsx:285
+msgid "Pick from your organisation, or type an email to invite."
+msgstr ""
 
 #~ msgid "Pick members to bring into this workspace."
 #~ msgstr ""
@@ -7926,8 +8053,8 @@ msgid "Plan ends"
 msgstr "Plan eindigt"
 
 #: src/features/sidebar/views/HelpView.tsx:53
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:70
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:82
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:79
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:91
 #: src/features/sidebar/blocks/HelpBlock.tsx:38
 msgid "Planned"
 msgstr "Gepland"
@@ -8089,7 +8216,7 @@ msgid "Portal Content"
 msgstr "Portal inhoud"
 
 #: src/routes/project/ProjectHomeRoute.tsx:146
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:75
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:84
 msgid "Portal editor"
 msgstr "Portaalbewerker"
 
@@ -8177,7 +8304,7 @@ msgstr "Privacy"
 #~ msgid "Privacy Statements"
 #~ msgstr "Privacy verklaring"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1801
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1832
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:375
 #: src/routes/project/CreateProjectRoute.tsx:242
 #: src/routes/project/CreateProjectRoute.tsx:303
@@ -8202,7 +8329,7 @@ msgstr "Privéproject"
 #~ msgid "Private projects unlock on Innovator or higher."
 #~ msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1230
+#: src/routes/organisation/OrganisationRoute.tsx:1228
 #: src/components/workspace/OrganisationUsageRollup.tsx:345
 msgid "Private workspace"
 msgstr "Privéwerkruimte"
@@ -8213,7 +8340,7 @@ msgstr "Privéwerkruimte"
 #~ msgid "Private workspace — ask the workspace owner for an invite"
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1744
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1775
 msgid "Private workspaces"
 msgstr "Privéwerkruimtes"
 
@@ -8261,11 +8388,11 @@ msgstr "<0>{totalCount, plural, one {# gesprek} other {# gesprekken}}</0> verwer
 msgid "Processing your retranscription request..."
 msgstr "Hertranscriptieaanvraag wordt verwerkt..."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1584
+#: src/routes/organisation/OrganisationRoute.tsx:1582
 msgid "project"
 msgstr "project"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:51
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:58
 #: src/features/sidebar/hooks/useSearchHits.ts:164
 #: src/features/sidebar/hooks/useSearchHits.ts:207
 #: src/features/sidebar/hooks/useSearchHits.ts:208
@@ -8341,7 +8468,7 @@ msgstr "Projectnaam en ID"
 msgid "Project name must be at least 4 characters long"
 msgstr "Projectnaam moet minstens 4 tekens lang zijn"
 
-#: src/routes/project/chat/NewChatRoute.tsx:217
+#: src/routes/project/chat/NewChatRoute.tsx:225
 msgid "Project not found"
 msgstr "Project niet gevonden"
 
@@ -8370,7 +8497,7 @@ msgstr "Verwacht maandtotaal"
 msgid "Projected yearly total"
 msgstr "Verwacht jaartotaal"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1584
+#: src/routes/organisation/OrganisationRoute.tsx:1582
 #: src/routes/organisation/OrganisationExternalView.tsx:103
 msgid "projects"
 msgstr "projecten"
@@ -8379,7 +8506,7 @@ msgstr "projecten"
 msgid "Projects"
 msgstr "Projecten"
 
-#: src/routes/project/ProjectsHome.tsx:53
+#: src/routes/project/ProjectsHome.tsx:54
 msgid "Projects | dembrane"
 msgstr "Projecten | dembrane"
 
@@ -8401,21 +8528,25 @@ msgstr "Projecten binnen organisatie · {0}"
 msgid "Projects moved"
 msgstr "Projecten verplaatst"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:813
+#: src/routes/project/ProjectsHome.tsx:287
+msgid "Projects will show up here once someone on the organisation shares one with you."
+msgstr ""
+
+#: src/routes/admin/AdminSettingsRoute.tsx:815
 msgid "Promote"
 msgstr "Promoveren"
 
 #. placeholder {0}: selected?.display_name ?? selected?.email ?? t`this member`
 #. placeholder {1}: row.workspace_name
-#: src/routes/admin/AdminSettingsRoute.tsx:826
+#: src/routes/admin/AdminSettingsRoute.tsx:828
 msgid "Promote {0} to admin of {1}?"
 msgstr "{0} promoveren tot beheerder van {1}?"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:791
+#: src/routes/admin/AdminSettingsRoute.tsx:793
 msgid "Promote a member to admin. Existing admins keep their role."
 msgstr "Promoveer een lid tot beheerder. Bestaande beheerders houden hun rol."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:824
+#: src/routes/admin/AdminSettingsRoute.tsx:826
 msgid "Promote to admin"
 msgstr "Promoveren tot beheerder"
 
@@ -8433,7 +8564,7 @@ msgstr "Prompt"
 #~ msgid "Proposed tier"
 #~ msgstr ""
 
-#: src/components/invite/InviteModal.tsx:758
+#: src/components/invite/InviteModal.tsx:798
 msgid "Prorated for the rest of this billing period."
 msgstr "Naar rato voor de rest van deze factureringsperiode."
 
@@ -8503,7 +8634,7 @@ msgstr "Voer het nieuwe wachtwoord opnieuw in"
 msgid "Re-use settings from an existing webhook"
 msgstr "Gebruik instellingen van een bestaande webhook"
 
-#: src/components/invite/InviteModal.tsx:689
+#: src/components/invite/InviteModal.tsx:729
 msgid "Reactivate"
 msgstr "Heractiveren"
 
@@ -8545,11 +8676,11 @@ msgstr "Klaar om je tools te verbinden? Voeg een webhook toe om automatisch gesp
 #~ msgid "Ready!"
 #~ msgstr "Klaar om te beginnen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:891
+#: src/routes/admin/AdminSettingsRoute.tsx:893
 msgid "Reason"
 msgstr "Reden"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2490
+#: src/routes/admin/AdminSettingsRoute.tsx:2655
 msgid "Recent payments across all accounts"
 msgstr "Recente betalingen over alle accounts"
 
@@ -8710,11 +8841,11 @@ msgstr "Opnieuw laden"
 msgid "Remind users to verify before finishing"
 msgstr "Gebruikers herinneren om te controleren voordat ze klaar zijn"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1116
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1544
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1612
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1705
-#: src/routes/organisation/OrganisationRoute.tsx:1812
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1128
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1575
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1643
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1736
+#: src/routes/organisation/OrganisationRoute.tsx:1810
 #: src/components/settings/WhitelabelLogoCard.tsx:149
 #: src/components/settings/WhitelabelLogoCard.tsx:184
 #: src/components/settings/AccountSettingsCard.tsx:167
@@ -8724,12 +8855,12 @@ msgid "Remove"
 msgstr "Verwijderen"
 
 #. placeholder {0}: chip.value
-#: src/components/invite/EmailChipsInput.tsx:249
+#: src/components/invite/EmailChipsInput.tsx:391
 msgid "Remove {0}"
 msgstr "{0} verwijderen"
 
 #. placeholder {0}: member.display_name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1106
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1118
 msgid "Remove {0} from this workspace? They'll lose access to all projects inside it."
 msgstr "{0} verwijderen uit deze werkruimte? Ze verliezen toegang tot alle projecten erin."
 
@@ -8756,11 +8887,11 @@ msgstr "Uit chat verwijderen"
 #~ msgid "Remove from favorites"
 #~ msgstr "Verwijderen uit favorieten"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2095
+#: src/routes/organisation/OrganisationRoute.tsx:2093
 msgid "Remove from organisation"
 msgstr "Uit organisatie verwijderen"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1814
+#: src/routes/organisation/OrganisationRoute.tsx:1812
 msgid "Remove from organisation?"
 msgstr "Uit organisatie verwijderen?"
 
@@ -8777,18 +8908,18 @@ msgstr "Uit organisatie verwijderen?"
 msgid "Remove from this chat"
 msgstr "Verwijder van dit gesprek"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1699
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1730
 #: src/components/settings/WhitelabelLogoCard.tsx:181
 msgid "Remove logo"
 msgstr "Logo verwijderen"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1096
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1120
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1123
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1108
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1132
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1135
 msgid "Remove member"
 msgstr "Lid verwijderen"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1701
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1732
 msgid "Remove the custom logo? The dembrane default will be used instead."
 msgstr "Het aangepaste logo verwijderen? In plaats daarvan wordt het standaardlogo van dembrane gebruikt."
 
@@ -8811,9 +8942,13 @@ msgstr "Naam wijzigen"
 msgid "Rename chat"
 msgstr "Chat hernoemen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2410
+#: src/routes/admin/AdminSettingsRoute.tsx:2575
 msgid "Renewal"
 msgstr "Verlenging"
+
+#: src/components/training/TrainingRowActions.tsx:144
+msgid "Reopen"
+msgstr ""
 
 #~ msgid "Replace logo"
 #~ msgstr ""
@@ -8824,7 +8959,7 @@ msgstr "Reactie prompt"
 
 #: src/routes/project/ProjectHomeRoute.tsx:162
 #: src/routes/project/report/ProjectReportRoute.tsx:184
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:92
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:101
 #: src/components/report/ReportRenderer.tsx:75
 #: src/components/report/ReportModalNavigationButton.tsx:92
 msgid "Report"
@@ -8958,15 +9093,21 @@ msgstr "Aanvraag verzonden"
 #~ msgid "Request workspace | dembrane"
 #~ msgstr ""
 
-#: src/components/training/StaffTrainingPanel.tsx:47
+#: src/components/training/StaffTrainingPanel.tsx:118
+#: src/components/training/StaffTrainingPanel.tsx:145
+msgid "Requested"
+msgstr ""
+
+#: src/components/training/StaffTrainingPanel.tsx:98
 msgid "Requested and scheduled trainings. Mark a training complete to grant each attendee a one-year license."
 msgstr "Aangevraagde en geplande trainingen. Markeer een training als voltooid om elke deelnemer een licentie van een jaar te geven."
 
 #~ msgid "requested on {0}"
 #~ msgstr ""
 
-#~ msgid "Requester"
-#~ msgstr ""
+#: src/components/training/StaffTrainingPanel.tsx:142
+msgid "Requester"
+msgstr ""
 
 #~ msgid "Requester proposed {0} billing — approving as {approvedBillingPeriod}."
 #~ msgstr ""
@@ -8987,7 +9128,7 @@ msgstr "Verplicht"
 msgid "Requires \"Ask for Email?\" to be enabled"
 msgstr "Vraagt om e-mailadres? moet zijn ingeschakeld"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1657
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1688
 msgid "Requires changemaker tier or above"
 msgstr "Vereist changemaker-niveau of hoger"
 
@@ -8995,6 +9136,7 @@ msgstr "Vereist changemaker-niveau of hoger"
 #~ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:630
+#: src/components/training/TrainingRowActions.tsx:149
 msgid "Reschedule"
 msgstr "Herplannen"
 
@@ -9022,8 +9164,8 @@ msgstr "Resetten"
 msgid "Reset filters"
 msgstr "Filters resetten"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:882
-#: src/routes/admin/AdminSettingsRoute.tsx:916
+#: src/routes/admin/AdminSettingsRoute.tsx:884
+#: src/routes/admin/AdminSettingsRoute.tsx:918
 msgid "Reset monthly usage"
 msgstr "Maandelijks gebruik resetten"
 
@@ -9037,7 +9179,7 @@ msgid "Reset Password | dembrane"
 msgstr "Wachtwoord resetten | dembrane"
 
 #. placeholder {0}: row.workspace_name
-#: src/routes/admin/AdminSettingsRoute.tsx:920
+#: src/routes/admin/AdminSettingsRoute.tsx:922
 msgid "Reset this cycle's recorded hours for {0}? This is recorded in the audit trail."
 msgstr "De geregistreerde uren van deze cyclus voor {0} resetten? Dit wordt vastgelegd in het auditlogboek."
 
@@ -9046,8 +9188,8 @@ msgstr "De geregistreerde uren van deze cyclus voor {0} resetten? Dit wordt vast
 msgid "Reset to default"
 msgstr "Resetten naar standaardinstellingen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:906
-#: src/routes/admin/AdminSettingsRoute.tsx:918
+#: src/routes/admin/AdminSettingsRoute.tsx:908
+#: src/routes/admin/AdminSettingsRoute.tsx:920
 msgid "Reset usage"
 msgstr "Gebruik resetten"
 
@@ -9146,12 +9288,21 @@ msgstr "Aanpassen"
 msgid "Revision #{revisionNumber}"
 msgstr "Revisie #{revisionNumber}"
 
+#: src/components/training/TrainingRowActions.tsx:255
+msgid "Revoke"
+msgstr ""
+
 #: src/components/members/PendingInvitesSection.tsx:189
 #: src/components/members/PendingInvitesSection.tsx:196
 #: src/components/members/PendingInvitesSection.tsx:215
 #: src/components/members/PendingInvitesSection.tsx:226
 msgid "Revoke invite"
 msgstr "Uitnodiging intrekken"
+
+#: src/components/training/TrainingRowActions.tsx:335
+#: src/components/training/TrainingRowActions.tsx:344
+msgid "Revoke license"
+msgstr ""
 
 #. placeholder {0}: pendingRevoke.email
 #: src/components/members/PendingInvitesSection.tsx:218
@@ -9172,7 +9323,7 @@ msgstr "Rol"
 msgid "Role changed"
 msgstr "Rol gewijzigd"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:379
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:378
 msgid "Role updated"
 msgstr "Rol bijgewerkt"
 
@@ -9180,7 +9331,7 @@ msgstr "Rol bijgewerkt"
 msgid "Rows per page"
 msgstr "Rijen per pagina"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1013
+#: src/routes/admin/AdminSettingsRoute.tsx:1172
 msgid "Run"
 msgstr "Uitvoeren"
 
@@ -9188,11 +9339,12 @@ msgstr "Uitvoeren"
 msgid "Run status:"
 msgstr "Uitvoeringsstatus:"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2760
+#: src/routes/admin/AdminSettingsRoute.tsx:2925
 msgid "Sales invoice issued."
 msgstr "Verkoopfactuur uitgegeven."
 
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:204
+#: src/components/training/TrainingRowActions.tsx:197
 #: src/components/settings/LegalBasisSettingsCard.tsx:164
 #: src/components/settings/ChangePasswordCard.tsx:101
 #: src/components/settings/AccountSettingsCard.tsx:195
@@ -9207,7 +9359,7 @@ msgstr "Opslaan"
 msgid "participant.concrete.action.button.save"
 msgstr "Opslaan"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1828
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1859
 msgid "Save access"
 msgstr ""
 
@@ -9223,7 +9375,7 @@ msgstr "Factuurgegevens opslaan"
 msgid "Save Changes"
 msgstr "Wijzigingen opslaan"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:463
+#: src/routes/admin/AdminSettingsRoute.tsx:464
 msgid "Save discount"
 msgstr "Korting opslaan"
 
@@ -9241,10 +9393,11 @@ msgstr "Template opslaan"
 #~ msgid "Save to my templates"
 #~ msgstr "Opslaan in mijn templates"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1368
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1400
-#: src/routes/organisation/OrganisationRoute.tsx:1086
-#: src/routes/admin/AdminSettingsRoute.tsx:453
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1380
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1412
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1431
+#: src/routes/organisation/OrganisationRoute.tsx:1084
+#: src/routes/admin/AdminSettingsRoute.tsx:454
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:109
 msgid "Saved"
 msgstr "Opgeslagen"
@@ -9264,6 +9417,7 @@ msgstr "Scan of klik op de QR-code om het feedbackportaal te openen"
 msgid "Scan the QR code or copy the secret into your app."
 msgstr "Scan de QR-code of kopieer het geheim naar je app."
 
+#: src/components/training/TrainingRowActions.tsx:151
 #: src/components/report/UpdateReportModalButton.tsx:356
 #: src/components/report/CreateReportForm.tsx:355
 msgid "Schedule"
@@ -9279,7 +9433,12 @@ msgstr "Plannen"
 msgid "Schedule Report"
 msgstr "Rapport inplannen"
 
-#: src/components/training/StaffTrainingPanel.tsx:80
+#: src/components/training/TrainingRowActions.tsx:178
+msgid "Schedule training"
+msgstr ""
+
+#: src/components/training/StaffTrainingPanel.tsx:119
+#: src/components/training/StaffTrainingPanel.tsx:163
 msgid "Scheduled"
 msgstr "Ingepland"
 
@@ -9302,11 +9461,11 @@ msgstr "Zoeken"
 msgid "select.all.modal.loading.search"
 msgstr "Zoeken"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2602
+#: src/routes/admin/AdminSettingsRoute.tsx:2767
 msgid "Search account, status, description"
 msgstr "Zoek op account, status, beschrijving"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1746
+#: src/routes/admin/AdminSettingsRoute.tsx:1911
 msgid "Search account, workspace, organisation, email, tier"
 msgstr "Zoek op account, werkruimte, organisatie, e-mail, tier"
 
@@ -9317,6 +9476,10 @@ msgstr "Zoek op account, werkruimte, organisatie, e-mail, tier"
 msgid "Search and select the conversations for this chat."
 msgstr "Zoek en selecteer de gesprekken voor deze chat."
 
+#: src/components/training/StaffTrainingPanel.tsx:107
+msgid "Search by organisation"
+msgstr ""
+
 #: src/components/conversation/ConversationAccordion.tsx:1154
 msgid "Search conversations"
 msgstr "Zoek gesprekken"
@@ -9325,13 +9488,17 @@ msgstr "Zoek gesprekken"
 msgid "Search name or email"
 msgstr "Zoek op naam of e-mail"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2104
+#: src/routes/admin/AdminSettingsRoute.tsx:2269
 msgid "Search partner, client, workspace"
 msgstr "Zoek op partner, klant, werkruimte"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:632
 msgid "Search people"
 msgstr "Zoek mensen"
+
+#: src/components/invite/EmailChipsInput.tsx:262
+msgid "Search people, or type an email"
+msgstr ""
 
 #: src/components/workspace/OrganisationProjectsTable.tsx:176
 msgid "Search project or workspace"
@@ -9345,7 +9512,7 @@ msgstr "Zoek projecten"
 msgid "Search Projects"
 msgstr "Zoek projecten"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:259
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:261
 msgid "Search projects, organisations, workspaces, settings…"
 msgstr "Zoek projecten, organisaties, werkruimtes, instellingen…"
 
@@ -9357,7 +9524,7 @@ msgstr "Zoek projecten..."
 #~ msgid "Search requester, organisation, tier"
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:286
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:288
 #: src/features/sidebar/blocks/SearchBlock.tsx:146
 msgid "Search results"
 msgstr "Zoekresultaten"
@@ -9398,7 +9565,7 @@ msgstr "Doorzocht de meest relevante bronnen"
 msgid "Searching through the most relevant sources"
 msgstr "Zoeken door de meest relevante bronnen"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:294
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:296
 #: src/features/sidebar/blocks/SearchBlock.tsx:154
 msgid "Searching…"
 msgstr "Zoeken…"
@@ -9407,8 +9574,8 @@ msgstr "Zoeken…"
 msgid "seats"
 msgstr "plekken"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1328
-#: src/routes/admin/AdminSettingsRoute.tsx:1445
+#: src/routes/admin/AdminSettingsRoute.tsx:1487
+#: src/routes/admin/AdminSettingsRoute.tsx:1610
 #: src/components/workspace/UsageCard.tsx:195
 #: src/components/workspace/TierCapacityMatrix.tsx:108
 #: src/components/workspace/OrganisationUsageRollup.tsx:411
@@ -9573,6 +9740,10 @@ msgstr "Selecteer maximaal 2 focusgebieden voor je rapport"
 msgid "dashboard.dembrane.feature.verify.topic.select"
 msgstr "Selecteer welke onderwerpen deelnemers kunnen gebruiken voor \"Controleren\"."
 
+#: src/components/training/TrainingRowActions.tsx:216
+msgid "Select who attended. Each gets a one-year license to use dembrane in high-risk settings."
+msgstr ""
+
 #~ msgid "Select your group"
 #~ msgstr "Selecteer je groep"
 
@@ -9612,7 +9783,7 @@ msgid "Send"
 msgstr "Verzenden"
 
 #. placeholder {0}: validChips.length
-#: src/components/invite/InviteModal.tsx:785
+#: src/components/invite/InviteModal.tsx:825
 msgid "Send {0} invites"
 msgstr "{0} uitnodigingen versturen"
 
@@ -9620,12 +9791,12 @@ msgstr "{0} uitnodigingen versturen"
 msgid "Send a message to start an agentic run."
 msgstr "Stuur een bericht om een agentisch uitvoeringsproces te starten."
 
-#: src/components/invite/InviteModal.tsx:787
+#: src/components/invite/InviteModal.tsx:827
 msgid "Send invite"
 msgstr "Uitnodiging versturen"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:361
-#: src/components/organisation/CreateOrganisationModal.tsx:225
+#: src/components/organisation/CreateOrganisationModal.tsx:229
 msgid "Send invites"
 msgstr "Uitnodigingen versturen"
 
@@ -9651,7 +9822,7 @@ msgstr "Verstuurd"
 #~ msgstr ""
 
 #. placeholder {0}: rows.length
-#: src/components/invite/InviteModal.tsx:468
+#: src/components/invite/InviteModal.tsx:508
 msgid "Sent {sentCount} of {0}. Check the list below."
 msgstr "{sentCount} van {0} verstuurd. Bekijk de lijst hieronder."
 
@@ -9662,7 +9833,7 @@ msgstr "{sentCount} van {0} verstuurd. Bekijk de lijst hieronder."
 msgid "Separate (client)"
 msgstr "Apart (klant)"
 
-#: src/components/invite/EmailChipsInput.tsx:177
+#: src/components/invite/EmailChipsInput.tsx:289
 msgid "Separate with commas, spaces, or new lines."
 msgstr "Scheid met komma's, spaties of nieuwe regels."
 
@@ -9673,7 +9844,7 @@ msgstr "Sessienaam"
 #~ msgid "Set an account managed, assign an account manager, and issue an offline invoice. Lands with Wave C."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2832
+#: src/routes/admin/AdminSettingsRoute.tsx:2997
 msgid "Set managed"
 msgstr "Instellen als beheerd"
 
@@ -9681,12 +9852,12 @@ msgstr "Instellen als beheerd"
 msgid "Set up workspace"
 msgstr "Werkruimte instellen"
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:84
+#: src/features/sidebar/views/user/UserHomeView.tsx:85
 msgid "Set up your first organisation"
 msgstr "Stel je eerste organisatie in"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:587
-#: src/features/sidebar/views/user/UserHomeView.tsx:126
+#: src/features/sidebar/views/user/UserHomeView.tsx:127
 msgid "Set up your organisation"
 msgstr "Stel je organisatie in"
 
@@ -9714,9 +9885,9 @@ msgstr "We zetten alles voor je klaar"
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:80
 #: src/features/sidebar/views/user/UserSettingsView.tsx:33
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:18
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:115
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:124
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:26
-#: src/features/sidebar/views/org/OrgHomeView.tsx:129
+#: src/features/sidebar/views/org/OrgHomeView.tsx:130
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
 #: src/components/layout/ParticipantHeader.tsx:97
 #: src/components/layout/ParticipantHeader.tsx:98
@@ -9732,7 +9903,7 @@ msgstr "Instellingen"
 msgid "Settings | dembrane"
 msgstr "Instellingen | dembrane"
 
-#: src/features/sidebar/views/user/UserHomeView.tsx:73
+#: src/features/sidebar/views/user/UserHomeView.tsx:74
 msgid "Setup"
 msgstr "Instellen"
 
@@ -9842,7 +10013,7 @@ msgstr "Toon audiospeler"
 msgid "Show data"
 msgstr "Gegevens tonen"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1867
+#: src/routes/organisation/OrganisationRoute.tsx:1865
 msgid "Show detail"
 msgstr "Toon details"
 
@@ -9899,7 +10070,7 @@ msgstr "Toont {displayFrom}–{displayTo} van {totalItems} items"
 msgid "Showing your most recent completed report."
 msgstr "Uw meest recente voltooide rapport wordt getoond."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1097
+#: src/routes/organisation/OrganisationRoute.tsx:1095
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Wordt getoond in de organisatiekop en in onderwerpregels van e-mails."
 
@@ -9914,7 +10085,7 @@ msgstr "Wordt getoond in de organisatiekop en in onderwerpregels van e-mails."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:350
 #: src/routes/onboarding/OnboardingRoute.tsx:516
-#: src/components/organisation/CreateOrganisationModal.tsx:218
+#: src/components/organisation/CreateOrganisationModal.tsx:222
 msgid "Skip"
 msgstr "Overslaan"
 
@@ -10076,7 +10247,7 @@ msgstr "Specifieke details - Geselecteerde gesprekken"
 msgid "Specific Details needs at least one conversation."
 msgstr "Specific Details heeft minstens één gesprek nodig."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2972
+#: src/routes/admin/AdminSettingsRoute.tsx:3137
 #: src/features/sidebar/shell/UserMenu.tsx:132
 msgid "Staff"
 msgstr "Personeel"
@@ -10087,9 +10258,13 @@ msgstr "Personeel"
 #~ msgid "Staff notes (internal, optional)"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2947
+#: src/routes/admin/AdminSettingsRoute.tsx:3112
 msgid "Staff only"
 msgstr "Alleen personeel"
+
+#: src/components/training/StaffTrainingPanel.tsx:185
+msgid "Staff-created"
+msgstr ""
 
 #: src/components/invite/RoleSelect.tsx:34
 msgid "Standard access. Collaborates in the workspaces they're added to."
@@ -10123,17 +10298,17 @@ msgstr "Opnieuw beginnen"
 #~ msgid "Start Recording"
 #~ msgstr "Opname starten"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2061
+#: src/routes/admin/AdminSettingsRoute.tsx:2226
 msgid "Starts"
 msgstr "Begint"
 
 #~ msgid "Stats light up once your first referral lands."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1435
-#: src/routes/admin/AdminSettingsRoute.tsx:2399
+#: src/routes/admin/AdminSettingsRoute.tsx:1600
+#: src/routes/admin/AdminSettingsRoute.tsx:2564
 #: src/components/workspace/OrganisationUsageRollup.tsx:426
-#: src/components/training/StaffTrainingPanel.tsx:77
+#: src/components/training/StaffTrainingPanel.tsx:160
 #: src/components/report/ConversationStatusTable.tsx:62
 #: src/components/billing/BillingManager.tsx:732
 msgid "Status"
@@ -10240,7 +10415,19 @@ msgstr "Samenvatting opnieuw gegenereerd."
 msgid "Summary will be available once the conversation is transcribed"
 msgstr "Samenvatting komt beschikbaar als het gesprek is uitgeschreven."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:892
+#: src/routes/admin/AdminSettingsRoute.tsx:1008
+msgid "Support access ended."
+msgstr ""
+
+#: src/routes/admin/AdminSettingsRoute.tsx:982
+msgid "Support access extended for another 24 hours."
+msgstr ""
+
+#: src/routes/admin/AdminSettingsRoute.tsx:985
+msgid "Support access granted. It ends automatically in 24 hours."
+msgstr ""
+
+#: src/routes/admin/AdminSettingsRoute.tsx:894
 msgid "Support incident, double-counted upload, etc."
 msgstr "Supportincident, dubbel geteld upload, enz."
 
@@ -10390,7 +10577,7 @@ msgstr "Sjablonen"
 msgid "Terms"
 msgstr "Voorwaarden"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2494
+#: src/routes/admin/AdminSettingsRoute.tsx:2659
 msgid "test mode"
 msgstr "testmodus"
 
@@ -10470,7 +10657,7 @@ msgstr ""
 msgid "The free plan includes 1 chat per workspace. Upgrade to start more chats."
 msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:1019
+#: src/routes/organisation/OrganisationRoute.tsx:1017
 msgid "The free plan includes 1 workspace per organisation. Upgrade to create additional workspaces."
 msgstr ""
 
@@ -10592,7 +10779,7 @@ msgstr "Deze standaardweergaven worden automatisch aangemaakt wanneer je je eers
 msgid "These settings are read-only. Only organisation administrators can modify project defaults."
 msgstr "Deze instellingen zijn alleen-lezen. Alleen organisatiebeheerders kunnen de projectstandaarden wijzigen."
 
-#: src/components/invite/InviteModal.tsx:614
+#: src/components/invite/InviteModal.tsx:654
 msgid "These workspaces are billed separately. Each person you add takes a seat in {billingContextCount} billing contexts, each invoiced on its own."
 msgstr "Deze werkruimtes worden apart gefactureerd. Elke persoon die je toevoegt neemt een plek in {billingContextCount} factureringscontexten in, die elk afzonderlijk worden gefactureerd."
 
@@ -10608,7 +10795,7 @@ msgstr "Ze worden toegevoegd als leden. Je kunt er later meer toevoegen."
 msgid "Thinking..."
 msgstr "Denken..."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2950
+#: src/routes/admin/AdminSettingsRoute.tsx:3115
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 msgstr "Dit gedeelte is voor dembrane-personeel. Denk je dat je toegang zou moeten hebben? Mail dan support@dembrane.com."
 
@@ -10682,7 +10869,7 @@ msgid "This invite link isn't valid for this account"
 msgstr "Deze uitnodigingslink is niet geldig voor dit account"
 
 #. placeholder {0}: confirm.length
-#: src/components/invite/InviteModal.tsx:702
+#: src/components/invite/InviteModal.tsx:742
 msgid "This invite spans {0} billing contexts, each invoiced on its own:"
 msgstr "Deze uitnodiging beslaat {0} factureringscontexten, die elk apart worden gefactureerd:"
 
@@ -10737,14 +10924,18 @@ msgstr "Deze link is al gebruikt. Je bent ingelogd en kunt aan de slag."
 msgid "This link is no longer valid"
 msgstr "Deze link is niet meer geldig"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:828
+#: src/components/training/TrainingRowActions.tsx:318
+msgid "This marks the training cancelled. You can reopen it later from the same menu."
+msgstr ""
+
+#: src/routes/admin/AdminSettingsRoute.tsx:830
 msgid "this member"
 msgstr "dit lid"
 
 #~ msgid "this month"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:238
+#: src/routes/admin/AdminSettingsRoute.tsx:239
 #: src/components/workspace/PeriodSelect.tsx:16
 msgid "This month"
 msgstr "Deze maand"
@@ -10752,6 +10943,10 @@ msgstr "Deze maand"
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:183
 msgid "This moves the workspace into its own billing and data context. Its projects will no longer move freely with the rest of your organisation."
 msgstr "Hiermee krijgt de werkruimte een eigen facturerings- en datacontext. De projecten verplaatsen niet meer vrij mee met de rest van je organisatie."
+
+#: src/components/training/TrainingRowActions.tsx:286
+msgid "This organisation has no members to train yet."
+msgstr ""
 
 #: src/routes/invite/AcceptInviteRoute.tsx:247
 #: src/routes/invite/AcceptInviteRoute.tsx:429
@@ -10770,11 +10965,11 @@ msgstr "Deze pagina wordt getoond aan deelnemers wanneer ze een gesprek starten 
 msgid "This part of the page failed to load. Reloading usually fixes it. If it keeps happening, head back home."
 msgstr "Dit deel van de pagina kon niet laden. Opnieuw laden lost het meestal op. Blijft het gebeuren, ga dan terug naar home."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1756
-#: src/routes/organisation/OrganisationRoute.tsx:1779
-#: src/routes/organisation/OrganisationRoute.tsx:1796
-#: src/routes/organisation/OrganisationRoute.tsx:2011
-#: src/routes/organisation/OrganisationRoute.tsx:2053
+#: src/routes/organisation/OrganisationRoute.tsx:1754
+#: src/routes/organisation/OrganisationRoute.tsx:1777
+#: src/routes/organisation/OrganisationRoute.tsx:1794
+#: src/routes/organisation/OrganisationRoute.tsx:2009
+#: src/routes/organisation/OrganisationRoute.tsx:2051
 msgid "this person"
 msgstr "deze persoon"
 
@@ -10798,6 +10993,11 @@ msgstr "Dit project is zichtbaar voor iedereen in de werkruimte."
 #: src/components/project/ProjectPortalEditor.tsx:984
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 msgstr "Deze prompt bepaalt hoe de AI reageert op deelnemers. Deze prompt stuurt aan hoe de AI reageert"
+
+#. placeholder {0}: revokeTarget?.app_user_name ?? "this person"
+#: src/components/training/TrainingRowActions.tsx:337
+msgid "This removes the one-year license for {0}. They will no longer count as trained and lose access to high-risk settings. Only do this if the license was granted by mistake."
+msgstr ""
 
 #: src/routes/participant/ParticipantReport.tsx:84
 msgid "This report is not yet available. "
@@ -10863,7 +11063,7 @@ msgstr "Deze werkruimte heeft de opnamelimiet bereikt. Upgrade om meer audio te 
 #~ msgid "This workspace is at its seat limit on the {0} tier. Free a seat by removing someone, or upgrade the workspace tier to invite more members."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:706
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:705
 msgid "This workspace is billed separately"
 msgstr "Deze werkruimte wordt apart gefactureerd"
 
@@ -10895,14 +11095,14 @@ msgid "Three quick steps and you're in."
 msgstr "Drie snelle stappen en je bent binnen."
 
 #: src/routes/project/CreateProjectRoute.tsx:309
-#: src/routes/admin/AdminSettingsRoute.tsx:1322
-#: src/routes/admin/AdminSettingsRoute.tsx:2373
-#: src/routes/admin/AdminSettingsRoute.tsx:2821
+#: src/routes/admin/AdminSettingsRoute.tsx:1481
+#: src/routes/admin/AdminSettingsRoute.tsx:2538
+#: src/routes/admin/AdminSettingsRoute.tsx:2986
 #: src/components/workspace/OrganisationUsageRollup.tsx:384
 msgid "Tier"
 msgstr "Niveau"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:650
+#: src/routes/admin/AdminSettingsRoute.tsx:651
 msgid "Tier changed"
 msgstr "Niveau gewijzigd"
 
@@ -10966,7 +11166,7 @@ msgstr "Om een nieuwe tag toe te wijzen, maak je deze eerst aan in de portalinst
 msgid "To help us act on it, try to include where it happened and what you were trying to do. For bugs, tell us what went wrong. For ideas, tell us what need it would solve for you."
 msgstr "Om ons te helpen actie te ondernemen, probeer aan te geven waar het gebeurde en wat u probeerde te doen. Bij bugs, vertel ons wat er mis ging. Bij ideeën, vertel ons welke behoefte het voor u zou oplossen."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:975
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:974
 msgid "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
 msgstr "Om iemand te promoveren tot lid van de werkruimte, voeg je deze persoon eerst toe aan de organisatie en nodig je daarna opnieuw uit vanuit de werkruimte."
 
@@ -11003,7 +11203,7 @@ msgstr "Titel op basis van onderwerp die beschrijft wat er werd besproken"
 msgid "Topics"
 msgstr "Onderwerpen"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1587
+#: src/routes/organisation/OrganisationRoute.tsx:1585
 msgid "total"
 msgstr "totaal"
 
@@ -11011,29 +11211,33 @@ msgstr "totaal"
 msgid "Total"
 msgstr "Totaal"
 
-#: src/components/invite/InviteModal.tsx:747
+#: src/components/invite/InviteModal.tsx:787
 msgid "Total due now"
 msgstr "Nu te betalen totaal"
 
-#: src/components/training/TrainingRoster.tsx:83
+#: src/components/training/TrainingRoster.tsx:86
 msgid "Trained"
 msgstr "Getraind"
 
-#: src/components/training/TrainingRoster.tsx:83
+#: src/components/training/TrainingRoster.tsx:86
 msgid "Trained until {until}"
 msgstr "Getraind tot {until}"
 
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:46
-#: src/features/sidebar/views/org/OrgHomeView.tsx:122
+#: src/features/sidebar/views/org/OrgHomeView.tsx:123
 #: src/components/training/WorkspaceTrainingPanel.tsx:37
 #: src/components/training/TrainingRoster.tsx:47
 #: src/components/training/OrgTrainingPanel.tsx:68
 msgid "Training"
 msgstr "Training"
 
-#: src/components/training/staffHooks.ts:85
+#: src/components/training/staffHooks.ts:89
 msgid "Training created"
 msgstr "Training aangemaakt"
+
+#: src/components/training/TrainingRowActions.tsx:182
+msgid "Training date"
+msgstr ""
 
 #: src/components/training/hooks/index.ts:160
 msgid "Training requested. We'll be in touch to schedule it."
@@ -11042,6 +11246,10 @@ msgstr "Training aangevraagd. We nemen contact op om het in te plannen."
 #: src/features/sidebar/hooks/usePendingActions.ts:41
 msgid "Training required for high-risk use"
 msgstr "Training vereist voor gebruik met hoog risico"
+
+#: src/components/training/staffHooks.ts:176
+msgid "Training updated"
+msgstr ""
 
 #: src/components/training/WorkspaceTrainingPanel.tsx:28
 msgid "Training verification isn't available here."
@@ -11052,7 +11260,7 @@ msgstr "Trainingsverificatie is hier niet beschikbaar."
 msgid "Training: {0}"
 msgstr "Training: {0}"
 
-#: src/components/training/StaffTrainingPanel.tsx:44
+#: src/components/training/StaffTrainingPanel.tsx:95
 msgid "Trainings"
 msgstr "Trainingen"
 
@@ -11089,7 +11297,7 @@ msgstr "Transcript gekopieerd naar klembord"
 #~ msgid "Transfer the primary admin role to another member."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:948
+#: src/routes/admin/AdminSettingsRoute.tsx:1106
 msgid "Transfer workspace to another organisation"
 msgstr "Werkruimte overdragen aan een andere organisatie"
 
@@ -11167,15 +11375,15 @@ msgstr ""
 "\n"
 "Opmerking: Als de discussie geen substantiële besluitpunten of inzichten bevat, flag het voor een diepere exploratie de volgende keer."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1157
+#: src/routes/admin/AdminSettingsRoute.tsx:1316
 msgid "Trial"
 msgstr "Proef"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1733
+#: src/routes/admin/AdminSettingsRoute.tsx:1898
 msgid "Trial and comped accounts, excluded from the paying total."
 msgstr "Proef- en gratis accounts, niet meegerekend in het betalende totaal."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:519
+#: src/routes/admin/AdminSettingsRoute.tsx:520
 msgid "Trial granted"
 msgstr "Proefperiode toegekend"
 
@@ -11234,15 +11442,15 @@ msgstr "Tweestapsverificatie uitgezet"
 msgid "Two-factor authentication enabled"
 msgstr "Tweestapsverificatie aangezet"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:424
-#: src/routes/admin/AdminSettingsRoute.tsx:2420
-#: src/components/training/StaffTrainingPanel.tsx:74
+#: src/routes/admin/AdminSettingsRoute.tsx:425
+#: src/routes/admin/AdminSettingsRoute.tsx:2585
+#: src/components/training/StaffTrainingPanel.tsx:148
 #: src/components/settings/AuditLogsCard.tsx:190
 msgid "Type"
 msgstr "Type"
 
 #. placeholder {0}: settings.name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1216
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1228
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Typ <0>{0}</0> om te bevestigen."
 
@@ -11310,13 +11518,13 @@ msgstr "Ongedaan maken"
 msgid "Unknown"
 msgstr "Onbekend"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2295
+#: src/routes/admin/AdminSettingsRoute.tsx:2460
 #: src/components/conversation/ProjectConversationsPanel.tsx:120
 msgid "Unknown date"
 msgstr "Onbekende datum"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:888
-#: src/routes/organisation/OrganisationRoute.tsx:1828
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:887
+#: src/routes/organisation/OrganisationRoute.tsx:1826
 msgid "Unknown member"
 msgstr "Onbekend lid"
 
@@ -11338,7 +11546,7 @@ msgstr "Onbeperkt aantal uren"
 msgid "Unpin"
 msgstr "Losmaken"
 
-#: src/routes/project/ProjectsHome.tsx:176
+#: src/routes/project/ProjectsHome.tsx:177
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Maak eerst een project los (max {MAX_PINNED})"
 
@@ -11375,7 +11583,12 @@ msgstr "Niet-opgeslagen wijzigingen"
 msgid "Unsubscribe"
 msgstr "Afmelden"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1609
+#. placeholder {0}: format(new Date(lic.expires_at), "d MMM yyyy")
+#: src/components/training/TrainingRowActions.tsx:245
+msgid "until {0}"
+msgstr ""
+
+#: src/routes/organisation/OrganisationRoute.tsx:1607
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:95
 #: src/components/workspace/OrganisationProjectsTable.tsx:236
 msgid "Untitled"
@@ -11481,7 +11694,7 @@ msgstr ""
 msgid "Upgrade to generate summaries for this conversation"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1669
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1700
 msgid "Upgrade to unlock"
 msgstr "Upgraden om te ontgrendelen"
 
@@ -11581,8 +11794,8 @@ msgstr "Uploadlimiet bereikt. Upgrade je werkruimte."
 #~ msgid "Upload locked"
 #~ msgstr "Upload vergrendeld"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1569
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1636
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1600
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1667
 msgid "Upload logo"
 msgstr "Logo uploaden"
 
@@ -11614,7 +11827,7 @@ msgstr "URL is vereist"
 msgid "URL must start with http:// or https://"
 msgstr "URL moet beginnen met http:// of https://"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:108
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:117
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:37
 #: src/components/project/ProjectUsageAndSharing.tsx:415
 #: src/components/layout/ProjectOverviewLayout.tsx:53
@@ -11630,7 +11843,7 @@ msgstr "Gebruik · {0}"
 msgid "Usage and billing"
 msgstr "Gebruik en facturering"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1712
+#: src/routes/admin/AdminSettingsRoute.tsx:1877
 msgid "Usage and billing, {cycleLabel}"
 msgstr "Gebruik en facturering, {cycleLabel}"
 
@@ -11640,14 +11853,14 @@ msgstr "Gebruik en facturering, {cycleLabel}"
 #~ msgid "Usage and billing, partner ledger. Any Directus admin has access."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2976
+#: src/routes/admin/AdminSettingsRoute.tsx:3141
 msgid "Usage and billing, payments, partner ledger. Any Directus admin has access."
 msgstr "Gebruik en facturering, betalingen, partnergrootboek. Elke Directus-beheerder heeft toegang."
 
 #~ msgid "Usage and tier"
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:694
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:693
 msgid "Usage is tracked for your organisation. View it in organisation settings."
 msgstr "Gebruik wordt bijgehouden voor je organisatie. Bekijk het in de organisatie-instellingen."
 
@@ -11823,7 +12036,7 @@ msgstr "Bekijk details"
 msgid "View example payload"
 msgstr "Voorbeeld payload bekijken"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:356
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:358
 msgid "View invite"
 msgstr "Uitnodiging bekijken"
 
@@ -11919,7 +12132,7 @@ msgstr "We konden deze organisatie niet laden. Probeer het zo meteen opnieuw."
 msgid "We couldn't load this organisation's usage."
 msgstr "We konden het gebruik van deze organisatie niet laden."
 
-#: src/routes/organisation/OrganisationRoute.tsx:771
+#: src/routes/organisation/OrganisationRoute.tsx:769
 msgid "We couldn't load this organisation's workspaces. Some controls may be missing. Try refreshing."
 msgstr "We konden de werkruimtes van deze organisatie niet laden. Sommige opties ontbreken mogelijk. Probeer te vernieuwen."
 
@@ -11930,7 +12143,7 @@ msgstr "We konden dit project niet laden. Controleer je verbinding en probeer he
 #~ msgid "We couldn't load this project. Try again."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:589
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:588
 msgid "We couldn't load this workspace. Try again in a moment."
 msgstr "We konden deze werkruimte niet laden. Probeer het zo meteen opnieuw."
 
@@ -11941,7 +12154,7 @@ msgstr "We konden het gebruik van deze werkruimte niet laden."
 #~ msgid "We couldn't load your organisation's members."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:231
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:233
 msgid "We couldn't load your organisations. Check your connection and try again."
 msgstr "We konden je organisaties niet laden. Controleer je verbinding en probeer het opnieuw."
 
@@ -12201,6 +12414,10 @@ msgstr "Wanneer ingeschakeld, zullen alle nieuwe transcripties persoonlijke info
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "Wanneer je het gesprek afmaakt, worden deelnemers die nog niet hebben geverifieerd gevraagd om te controleren of over te slaan"
 
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1876
+msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
+msgstr ""
+
 #: src/components/report/UpdateReportModalButton.tsx:290
 #: src/components/report/CreateReportForm.tsx:279
 msgid "When should the report be generated?"
@@ -12210,7 +12427,7 @@ msgstr "Wanneer moet het rapport gegenereerd worden?"
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Wanneer de samenvatting klaar is (bevat zowel transcript als samenvatting)"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:251
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:253
 msgid "Where would you like to go?"
 msgstr "Waar wil je naartoe?"
 
@@ -12266,29 +12483,29 @@ msgstr "Met externe klanten"
 msgid "Within my organisation"
 msgstr "Binnen mijn organisatie"
 
-#: src/routes/organisation/OrganisationRoute.tsx:751
+#: src/routes/organisation/OrganisationRoute.tsx:749
 msgid "workspace"
 msgstr "werkruimte"
 
 #: src/routes/project/CreateProjectRoute.tsx:291
-#: src/routes/admin/AdminSettingsRoute.tsx:1430
-#: src/routes/admin/AdminSettingsRoute.tsx:1990
+#: src/routes/admin/AdminSettingsRoute.tsx:1595
+#: src/routes/admin/AdminSettingsRoute.tsx:2155
 #: src/features/sidebar/hooks/useSearchHits.ts:164
 #: src/components/workspace/OrganisationUsageRollup.tsx:369
 #: src/components/workspace/OrganisationProjectsTable.tsx:209
 msgid "Workspace"
 msgstr "Werkruimte"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:543
-#: src/routes/admin/AdminSettingsRoute.tsx:1117
+#: src/routes/admin/AdminSettingsRoute.tsx:544
+#: src/routes/admin/AdminSettingsRoute.tsx:1276
 msgid "Workspace account"
 msgstr "Werkruimte-account"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1275
+#: src/routes/admin/AdminSettingsRoute.tsx:1434
 msgid "Workspace actions"
 msgstr "Werkruimte-acties"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:764
+#: src/routes/admin/AdminSettingsRoute.tsx:765
 msgid "Workspace admin changed"
 msgstr "Werkruimtebeheerder gewijzigd"
 
@@ -12303,20 +12520,20 @@ msgstr "Werkruimte aangemaakt."
 msgid "Workspace data not loaded yet. Please try again."
 msgstr "Werkruimtedata nog niet geladen. Probeer het opnieuw."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:406
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:405
 msgid "Workspace deleted"
 msgstr "Werkruimte verwijderd"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:816
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:815
 msgid "Workspace is full"
 msgstr "Werkruimte is vol"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1018
+#: src/routes/organisation/OrganisationRoute.tsx:1016
 msgid "Workspace limit reached"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1529
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1597
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1560
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1628
 msgid "Workspace logo"
 msgstr "Werkruimtelogo"
 
@@ -12324,11 +12541,11 @@ msgstr "Werkruimtelogo"
 msgid "Workspace name"
 msgstr "Naam van de werkruimte"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1459
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1490
 msgid "Workspace name. Saves automatically."
 msgstr "Naam van de werkruimte. Wordt automatisch opgeslagen."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1383
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1395
 msgid "Workspace renamed"
 msgstr "Werkruimte hernoemd"
 
@@ -12341,7 +12558,7 @@ msgstr "Werkruimte hernoemd"
 #~ msgid "Workspace settings"
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:294
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:293
 msgid "Workspace settings | dembrane"
 msgstr "Werkruimte-instellingen | dembrane"
 
@@ -12355,14 +12572,14 @@ msgstr "Werkruimte-instellingen | dembrane"
 msgid "Workspace-only guest. Not added to the organisation."
 msgstr "Gast met alleen toegang tot de werkruimte. Niet toegevoegd aan de organisatie."
 
-#: src/routes/organisation/OrganisationRoute.tsx:752
+#: src/routes/organisation/OrganisationRoute.tsx:750
 msgid "workspaces"
 msgstr "werkruimtes"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:755
-#: src/routes/organisation/OrganisationRoute.tsx:1419
-#: src/routes/admin/AdminSettingsRoute.tsx:1423
-#: src/features/sidebar/views/org/OrgHomeView.tsx:139
+#: src/routes/organisation/OrganisationRoute.tsx:1417
+#: src/routes/admin/AdminSettingsRoute.tsx:1588
+#: src/features/sidebar/views/org/OrgHomeView.tsx:140
 msgid "Workspaces"
 msgstr "Werkruimtes"
 
@@ -12373,7 +12590,7 @@ msgstr "Werkruimtes"
 msgid "Workspaces billed separately"
 msgstr "Werkruimtes apart gefactureerd"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1252
+#: src/routes/admin/AdminSettingsRoute.tsx:1411
 msgid "Workspaces in this account"
 msgstr "Werkruimtes in dit account"
 
@@ -12419,6 +12636,10 @@ msgstr "Jij"
 #~ msgid "You already have a free workspace. <0>Open {0}</0>"
 #~ msgstr ""
 
+#: src/routes/admin/AdminSettingsRoute.tsx:980
+msgid "You already have access to this workspace."
+msgstr ""
+
 #: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:81
 msgid "You are already unsubscribed or your link is invalid."
 msgstr "Je bent al afgemeld of je link is ongeldig."
@@ -12428,7 +12649,7 @@ msgid "You are the data owner"
 msgstr "Jij bent de data-eigenaar"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:652
-#: src/components/organisation/CreateOrganisationModal.tsx:186
+#: src/components/organisation/CreateOrganisationModal.tsx:190
 msgid "You can change this anytime in settings."
 msgstr "Je kunt dit altijd aanpassen in de instellingen."
 
@@ -12452,7 +12673,7 @@ msgstr "Je kunt wegnavigeren en later terugkomen. Je rapport wordt op de achterg
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "Je kunt maximaal {MAX_FILES} bestanden tegelijk uploaden. Alleen de eerste {0} bestanden worden toegevoegd."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1807
+#: src/routes/organisation/OrganisationRoute.tsx:1805
 msgid "You can re-invite them later from any workspace."
 msgstr "Je kunt ze later opnieuw uitnodigen vanuit elke werkruimte."
 
@@ -12470,7 +12691,7 @@ msgstr "U kunt het hieronder opnieuw proberen."
 msgid "You can't create a workspace yet"
 msgstr "Je kunt nog geen werkruimte aanmaken"
 
-#: src/components/invite/EmailChipsInput.tsx:224
+#: src/components/invite/EmailChipsInput.tsx:366
 msgid "You can't invite yourself."
 msgstr "Je kunt jezelf niet uitnodigen."
 
@@ -12500,12 +12721,12 @@ msgid "You have a pending invite"
 msgstr "Je hebt een openstaande uitnodiging"
 
 #. placeholder {0}: invites[0].org_name
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:339
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:341
 msgid "You have a pending invite to {0}. Open it to join the organisation."
 msgstr "Je hebt een openstaande uitnodiging voor {0}. Open deze om lid te worden van de organisatie."
 
 #. placeholder {0}: invites[0].workspace_name ?? "a workspace"
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:344
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:346
 msgid "You have a pending invite to {0}. The admin needs to free a seat before you can join."
 msgstr "Je hebt een openstaande uitnodiging voor {0}. De beheerder moet een plek vrijmaken voordat je lid kunt worden."
 
@@ -12530,7 +12751,11 @@ msgstr "Je hebt je microfoon gewisseld. Klik op \"Doorgaan\" om verder te gaan m
 msgid "You have successfully unsubscribed."
 msgstr "U hebt succesvol afgemeld."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1453
+#: src/routes/admin/AdminSettingsRoute.tsx:1035
+msgid "You have support access to this workspace. It ends automatically on {endsAt}."
+msgstr ""
+
+#: src/routes/organisation/OrganisationRoute.tsx:1451
 msgid "You haven't joined any workspace in this organisation yet."
 msgstr "Je bent nog geen lid van een werkruimte in deze organisatie."
 
@@ -12539,7 +12764,7 @@ msgstr "Je bent nog geen lid van een werkruimte in deze organisatie."
 msgid "participant.modal.verify_prompt.description"
 msgstr "Je hebt nog geen resultaten geverifieerd. Wil je controleren voordat je afsluit?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:423
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:422
 msgid "You left the workspace"
 msgstr "Je hebt de werkruimte verlaten"
 
@@ -12578,11 +12803,11 @@ msgstr "Al je projecten staan voor je klaar."
 #~ msgid "You'll get a notification once the request is approved or if we need more details. You can track the status on your workspaces page."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1282
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1294
 msgid "You'll lose access to this workspace."
 msgstr "Je verliest toegang tot deze werkruimte."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1072
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1084
 msgid "You'll lose access to this workspace. Projects you created stay; your role here is removed."
 msgstr "Je verliest toegang tot deze werkruimte. Projecten die je hebt gemaakt blijven; je rol hier wordt verwijderd."
 
@@ -12596,7 +12821,7 @@ msgid "You'll verify your new payment method on the next screen. You won't be ch
 msgstr "Je bevestigt je nieuwe betaalmethode op het volgende scherm. Er wordt niets in rekening gebracht, het bevestigt alleen de nieuwe kaart."
 
 #. placeholder {0}: displayRole(v)
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1014
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1026
 msgid "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 msgstr "Je staat op het punt je eigen rol te wijzigen naar <0>{0}</0>. Je verliest direct toegang tot de instellingen van de werkruimte, uitnodigingen en ledenbeheer."
 
@@ -12621,8 +12846,8 @@ msgid "You're an external collaborator in this organisation. Open one of the wor
 msgstr "Je bent een externe medewerker in deze organisatie. Open hieronder een van de werkruimtes die met je zijn gedeeld."
 
 #: src/routes/project/ProjectsHome.tsx:287
-msgid "You're an external in this workspace. Projects will show up here once someone on the organisation shares one with you."
-msgstr "Je bent een externe in deze werkruimte. Projecten verschijnen hier zodra iemand in de organisatie er een met je deelt."
+#~ msgid "You're an external in this workspace. Projects will show up here once someone on the organisation shares one with you."
+#~ msgstr "Je bent een externe in deze werkruimte. Projecten verschijnen hier zodra iemand in de organisatie er een met je deelt."
 
 #: src/routes/invite/AcceptInviteRoute.tsx:105
 msgid "You're in"
@@ -12639,7 +12864,7 @@ msgstr "Je zit nog in geen enkele organisatie. Maak een werkruimte om een organi
 #~ msgid "You're not in any team yet. Create a workspace to start a team, or ask a teammate for an invite."
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:382
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:384
 msgid "You're not part of any organisation right now."
 msgstr "Je maakt op dit moment deel uit van geen enkele organisatie."
 
@@ -12652,11 +12877,11 @@ msgstr "Je maakt op dit moment deel uit van geen enkele organisatie."
 #~ msgid "You're over your included seats. Overage applies on the next bill."
 #~ msgstr ""
 
-#: src/components/invite/InviteModal.tsx:735
+#: src/components/invite/InviteModal.tsx:775
 msgid "You're reusing seats you already paid for this period (someone left), so there's no charge now for those. The renewal reflects them."
 msgstr "Je hergebruikt plekken waarvoor je deze periode al hebt betaald (iemand is vertrokken), dus daar wordt nu niets voor in rekening gebracht. De verlenging houdt er rekening mee."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:958
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:957
 msgid "You're the only admin. Promote someone else before changing your role."
 msgstr "Je bent de enige beheerder. Maak iemand anders beheerder voordat je je rol wijzigt."
 
@@ -12694,13 +12919,13 @@ msgstr "Je hebt je transcriptielimiet bereikt"
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "Je hebt alle 10 uur van de pilot gebruikt. Tools voor hosts (Chat, rapporten, analyse, exports) staan op pauze."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1262
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1274
 msgid "Your access"
 msgstr "Jouw toegang"
 
 #. placeholder {0}: recentRemovals[0].workspace_name
 #. placeholder {1}: new Date(recentRemovals[0].ended_at).toLocaleDateString()
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:366
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:368
 msgid "Your access to {0} ended on {1}."
 msgstr "Jouw toegang tot {0} eindigde op {1}."
 
@@ -12709,7 +12934,7 @@ msgstr "Jouw toegang tot {0} eindigde op {1}."
 msgid "participant.verify.instructions.approval.helps"
 msgstr "Jouw goedkeuring helpt ons begrijpen wat je echt denkt!"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1663
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1694
 msgid "Your brand on every participant screen."
 msgstr "Jouw merk op elk scherm van deelnemers."
 
@@ -12787,7 +13012,7 @@ msgstr "De generatie van je laatste rapport is geannuleerd. Je meest recente vol
 #~ msgid "Your library is empty. Create a library to see your first insights."
 #~ msgstr "Je bibliotheek is leeg. Maak een bibliotheek om je eerste inzichten te bekijken."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1616
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1647
 msgid "Your logo is still active but can't be changed on this tier."
 msgstr "Je logo is nog actief, maar kan op dit niveau niet worden gewijzigd."
 
@@ -12798,7 +13023,7 @@ msgstr "Uw naam"
 #~ msgid "Your organisation"
 #~ msgstr ""
 
-#: src/routes/organisation/OrganisationRoute.tsx:833
+#: src/routes/organisation/OrganisationRoute.tsx:831
 msgid "Your organisation is on the free plan by default. One plan covers every workspace, billed per seat once you upgrade."
 msgstr "Je organisatie zit standaard op het gratis abonnement. Eén abonnement dekt elke werkruimte, per plek gefactureerd zodra je upgradet."
 
@@ -12807,7 +13032,7 @@ msgid "Your organisation is waiting for you. Click continue to join."
 msgstr "Je organisatie staat voor je klaar. Klik op doorgaan om mee te doen."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:655
-#: src/components/organisation/CreateOrganisationModal.tsx:187
+#: src/components/organisation/CreateOrganisationModal.tsx:191
 msgid "Your organisation or company"
 msgstr "Je organisatie of bedrijf"
 
@@ -12850,7 +13075,7 @@ msgstr "Je abonnement is actief."
 msgid "Your plan is back on. You keep your current period."
 msgstr "Je abonnement is weer actief. Je behoudt je huidige periode."
 
-#: src/components/invite/InviteModal.tsx:681
+#: src/components/invite/InviteModal.tsx:721
 msgid "Your plan is inactive. Reactivate it to add members."
 msgstr "Je abonnement is inactief. Activeer het opnieuw om leden toe te voegen."
 
@@ -12900,11 +13125,11 @@ msgstr "Je weergaven"
 #~ msgid "Yours"
 #~ msgstr "Van jou"
 
-#: src/components/invite/InviteModal.tsx:710
+#: src/components/invite/InviteModal.tsx:750
 msgid "yr"
 msgstr "jr"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:885
+#: src/routes/admin/AdminSettingsRoute.tsx:887
 msgid "Zeroes this cycle's recorded hours from now on. Conversations are kept; only the billing count resets."
 msgstr "Zet de geregistreerde uren van deze cyclus vanaf nu op nul. Gesprekken blijven behouden; alleen de factureringsteller wordt gereset."
 

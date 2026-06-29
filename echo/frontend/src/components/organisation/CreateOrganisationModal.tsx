@@ -76,8 +76,12 @@ export const CreateOrganisationModal = ({
 		setCreated(null);
 	};
 
-	const finish = () => {
+	const finish = async () => {
 		const orgId = created?.org_id;
+		await Promise.all([
+			queryClient.refetchQueries({ queryKey: ["v2", "workspaces-context"] }),
+			queryClient.refetchQueries({ queryKey: ["v2", "workspaces"] }),
+		]);
 		reset();
 		onClose();
 		if (orgId) navigate(`/o/${orgId}`);

@@ -60,6 +60,7 @@ import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { StaffTrainingPanel } from "@/components/training";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
+import { isOutsiderRole } from "@/lib/roles";
 import {
 	type BillingPeriod,
 	PURCHASABLE_TIERS,
@@ -772,7 +773,8 @@ function ChangeAdminControl({ row }: { row: BillingRow }) {
 	});
 
 	const memberData = (members ?? [])
-		.filter((m) => m.role !== "external")
+		// Outsiders (external + observer) can't be made the workspace admin.
+		.filter((m) => !isOutsiderRole(m.role))
 		.map((m) => ({
 			label: `${m.display_name ?? m.email ?? m.membership_id.slice(0, 8)}${
 				m.role === "admin" || m.role === "owner" ? ` (${m.role})` : ""
@@ -928,6 +930,162 @@ function ResetUsageControl({ row }: { row: BillingRow }) {
 }
 
 /**
+ * Staff self-join a workspace for support (ECHO-863). Only works when the
+ * customer has enabled allow_support_access (else the endpoint 403s with a
+ * clear message). Access is granted as admin and auto-revokes after 24h.
+ */
+function JoinSupportControl({ row }: { row: BillingRow }) {
+	const queryClient = useQueryClient();
+	const statusKey = ["v2", "admin", "support-access", row.workspace_id];
+
+	// Reflect the caller's current session so a reopened modal shows "active
+	// until <time>" + Extend instead of always offering a fresh join.
+	const { data: status, isLoading } = useQuery({
+		queryKey: statusKey,
+		queryFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/join-support`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) throw new Error(`Failed (${res.status})`);
+			return res.json() as Promise<{
+				active: boolean;
+				expires_at: string | null;
+			}>;
+		},
+	});
+
+	const joinMutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/join-support`,
+				{
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json() as Promise<{
+				status: "joined" | "extended" | "already_member";
+				expires_at: string | null;
+			}>;
+		},
+		onError: (e) => toast.error((e as Error).message),
+		onSuccess: (data) => {
+			if (data.status === "already_member") {
+				toast.success(t`You already have access to this workspace.`);
+			} else if (data.status === "extended") {
+				toast.success(t`Support access extended for another 24 hours.`);
+			} else {
+				toast.success(
+					t`Support access granted. It ends automatically in 24 hours.`,
+				);
+			}
+			queryClient.invalidateQueries({ queryKey: statusKey });
+			// Refresh the workspace list so the just-joined workspace resolves.
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
+		},
+	});
+
+	const leaveMutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/join-support`,
+				{ credentials: "include", method: "DELETE" },
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json();
+		},
+		onError: (e) => toast.error((e as Error).message),
+		onSuccess: () => {
+			toast.success(t`Support access ended.`);
+			queryClient.invalidateQueries({ queryKey: statusKey });
+		},
+	});
+
+	const active = status?.active ?? false;
+	const busy = joinMutation.isPending || leaveMutation.isPending;
+	const endsAt = ((iso: string | null | undefined): string => {
+		if (!iso) return "";
+		const d = new Date(iso);
+		if (Number.isNaN(d.getTime())) return "";
+		return d.toLocaleString(undefined, {
+			day: "numeric",
+			hour: "2-digit",
+			minute: "2-digit",
+			month: "short",
+		});
+	})(status?.expires_at);
+
+	return (
+		<Paper withBorder radius="sm" p="sm">
+			<Stack gap="xs">
+				<Text size="sm" fw={500}>
+					<Trans>Join for support</Trans>
+				</Text>
+				{active ? (
+					<Text size="xs">
+						<Trans>
+							You have support access to this workspace. It ends automatically
+							on {endsAt}.
+						</Trans>
+					</Text>
+				) : (
+					<Text size="xs">
+						<Trans>
+							Join this workspace as an admin to help with support. The customer
+							must have turned on staff support access. Your access ends
+							automatically after 24 hours.
+						</Trans>
+					</Text>
+				)}
+				<Group justify="flex-end" gap="sm">
+					{active && (
+						<>
+							<Anchor
+								component={I18nLink}
+								to={`/w/${row.workspace_id}/home`}
+								size="xs"
+							>
+								<Trans>Open workspace</Trans>
+							</Anchor>
+							<Button
+								size="xs"
+								variant="subtle"
+								loading={leaveMutation.isPending}
+								disabled={busy}
+								onClick={() => leaveMutation.mutate()}
+							>
+								<Trans>Leave now</Trans>
+							</Button>
+						</>
+					)}
+					<Button
+						size="xs"
+						loading={joinMutation.isPending}
+						disabled={busy || isLoading}
+						onClick={() => joinMutation.mutate()}
+					>
+						{active ? (
+							<Trans>Extend 24h</Trans>
+						) : (
+							<Trans>Join for support (24h)</Trans>
+						)}
+					</Button>
+				</Group>
+			</Stack>
+		</Paper>
+	);
+}
+
+/**
  * Actions modal for a workspace row. Live staff edits (partner toggle, discount,
  * trial, change tier, change admin, reset usage). Transfer-to-partner and
  * delete-workspace stay disabled (destructive, deferred to their own issues).
@@ -989,6 +1147,7 @@ function WorkspaceActionsModal({
 
 				<ChangeTierControl row={row} />
 				<ChangeAdminControl row={row} />
+				<JoinSupportControl row={row} />
 				<ResetUsageControl row={row} />
 
 				<Divider my={4} />
@@ -1419,7 +1578,13 @@ function AccountBillingTable({
 									<Table.Td colSpan={7} p={0} style={{ border: 0 }}>
 										<Collapse in={isOpen}>
 											<Box px="md" py="xs">
-												<Text size="xs" fw={600} tt="uppercase" lts={0.5} mb={6}>
+												<Text
+													size="xs"
+													fw={600}
+													tt="uppercase"
+													lts={0.5}
+													mb={6}
+												>
 													<Trans>Workspaces</Trans>
 												</Text>
 												<Table verticalSpacing={4} withRowBorders={false}>

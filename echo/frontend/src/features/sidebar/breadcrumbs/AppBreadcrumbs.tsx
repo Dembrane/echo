@@ -204,7 +204,7 @@ export const AppBreadcrumbs = () => {
 					});
 				}
 				const section = params.section;
-				if (section === "conversation") {
+				if (section === "conversations" && params.conversationId) {
 					// Detail page: link back to the conversations list first.
 					out.push({
 						href: `/w/${params.workspaceId}/projects/${params.projectId}/conversations`,

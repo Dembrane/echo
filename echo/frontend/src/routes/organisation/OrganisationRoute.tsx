@@ -62,7 +62,7 @@ import {
 	memberInitials,
 	logoUrl as resolveLogoUrl,
 } from "@/lib/avatar";
-import { displayRole, roleColor } from "@/lib/roles";
+import { displayRole, isOutsiderRole, roleColor } from "@/lib/roles";
 import { OrganisationExternalView } from "./OrganisationExternalView";
 
 /**
@@ -699,12 +699,10 @@ export const OrganisationRoute = () => {
 	}
 
 	if (!organisation) {
-		// 401/403/404 fall through here. If the user has an external
-		// workspace in this org, render the external landing instead of the
-		// generic "not found" — they're not lost, they're just not an
-		// org admin.
+		// Outsiders (external OR observer) aren't org members, so the org fetch
+		// 403s. Show the external landing instead of the generic "not found".
 		const externalWorkspaces = userWorkspaces.filter(
-			(w) => w.org_id === organisationId && w.role === "external",
+			(w) => w.org_id === organisationId && isOutsiderRole(w.role),
 		);
 		if (organisationId && externalWorkspaces.length > 0) {
 			return <OrganisationExternalView organisationId={organisationId} />;

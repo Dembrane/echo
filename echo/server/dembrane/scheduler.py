@@ -52,7 +52,23 @@ scheduler.add_job(
     func="dembrane.tasks:task_check_scheduled_reports.send",
     trigger=CronTrigger(minute="*/5"),
     id="task_check_scheduled_reports",
-    name="Check and dispatch scheduled report generation",
+    name="Backfill scheduled_task rows for still-scheduled reports (reconciler)",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_process_scheduled_tasks.send",
+    trigger=CronTrigger(minute="*"),
+    id="task_process_scheduled_tasks",
+    name="Dispatch due durable scheduled_task rows (revoke support, scheduled reports)",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_expire_staff_support_memberships.send",
+    trigger=CronTrigger(minute="*/15"),
+    id="task_expire_staff_support_memberships",
+    name="Revoke overdue staff support memberships (catch-up for the 24h timer)",
     replace_existing=True,
 )
 

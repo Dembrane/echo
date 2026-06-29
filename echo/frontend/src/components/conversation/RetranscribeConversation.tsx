@@ -131,7 +131,7 @@ export const RetranscribeConversationModal = ({
 						label: t`Go to new conversation`,
 						onClick: () => {
 							navigate(
-								`/w/${workspaceId}/projects/${projectId}/conversation/${new_conversation_id}`,
+								`/w/${workspaceId}/projects/${projectId}/conversations/${new_conversation_id}`,
 							);
 						},
 					},

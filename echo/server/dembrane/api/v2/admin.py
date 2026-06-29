@@ -25,6 +25,7 @@ from fastapi import Query, APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
 from dembrane import mollie
+from dembrane.utils import generate_uuid
 from dembrane.settings import get_settings
 from dembrane.seat_capacity import compute_effective_seat_state
 from dembrane.tier_capacity import get_capacity
@@ -322,9 +323,7 @@ async def _all_active_workspaces() -> list[dict]:
             ws["billing_account_id"] = account.get("id")
             # Org-scoped accounts carry org_id; workspace-scoped ones carry
             # workspace_id. org_id wins when both are present (shared account).
-            ws["account_scope"] = (
-                "organisation" if account.get("org_id") else "workspace"
-            )
+            ws["account_scope"] = "organisation" if account.get("org_id") else "workspace"
             # Account-level revenue classification, carried to the aggregator.
             ws["account_payment_mode"] = account.get("payment_mode")
             ws["account_label"] = account.get("label")
@@ -580,8 +579,7 @@ def _aggregate_accounts(
         # (offline) and mollie are real revenue. Free tier has no base, so it is
         # never counted regardless.
         is_comped = is_trial or (
-            payment_mode not in ("mollie", "offline")
-            and base_price is not None
+            payment_mode not in ("mollie", "offline") and base_price is not None
         )
 
         active_count = sum(1 for m in members if m.is_active)
@@ -593,9 +591,7 @@ def _aggregate_accounts(
         member_seats = sum(m.seat_count for m in members)
         external_seats = sum(m.external_count for m in members)
         billable_seats = (
-            pooled_seats_by_account.get(acc_id)
-            if pooled_seats_by_account is not None
-            else None
+            pooled_seats_by_account.get(acc_id) if pooled_seats_by_account is not None else None
         )
         if billable_seats is None:
             billable_seats = member_seats + external_seats
@@ -689,16 +685,17 @@ async def billing_rollup(
         tier = ws.get("tier", "pioneer")
         cap = get_capacity(tier)
         reset_at = (ws.get("settings") or {}).get("usage_reset_at")
-        hours = await _workspace_hours_this_cycle(
-            ws_id, cycle_start, cycle_end, reset_at=reset_at
-        )
+        hours = await _workspace_hours_this_cycle(ws_id, cycle_start, cycle_end, reset_at=reset_at)
         # Use the unified inheritance-aware count so billing arithmetic
         # matches what enforcement/usage endpoints see (derived org admins
         # included). Direct workspace_membership queries miss derived rows
         # and would understate over_seats/seat_overage_eur.
-        _seats_used, seat_count, external_count, observer_count = (
-            await compute_effective_seat_state(ws_id)
-        )
+        (
+            _seats_used,
+            seat_count,
+            external_count,
+            observer_count,
+        ) = await compute_effective_seat_state(ws_id)
 
         included_hours = cap.included_hours if cap else None
         included_seats = cap.included_seats if cap else None
@@ -1027,19 +1024,22 @@ async def list_external_led_orgs(
 
     # 2. Which of those orgs are partners.
     org_ids = list(set(ws_to_org.values()))
-    partner_rows = await async_directus.get_items(
-        "org",
-        {
-            "query": {
-                "filter": {"id": {"_in": org_ids}, "is_partner": {"_eq": True}},
-                "fields": ["id", "name"],
-                "limit": -1,
-            }
-        },
-    ) if org_ids else []
+    partner_rows = (
+        await async_directus.get_items(
+            "org",
+            {
+                "query": {
+                    "filter": {"id": {"_in": org_ids}, "is_partner": {"_eq": True}},
+                    "fields": ["id", "name"],
+                    "limit": -1,
+                }
+            },
+        )
+        if org_ids
+        else []
+    )
     partner_name_by_id = {
-        o["id"]: o.get("name", "")
-        for o in (partner_rows if isinstance(partner_rows, list) else [])
+        o["id"]: o.get("name", "") for o in (partner_rows if isinstance(partner_rows, list) else [])
     }
 
     # 3. Map each external user → the partner org names they collaborate with.
@@ -1072,16 +1072,20 @@ async def list_external_led_orgs(
 
     # 5. Enrich with creator identity.
     creator_ids = list({o["created_by"] for o in created_orgs if o.get("created_by")})
-    users = await async_directus.get_items(
-        "app_user",
-        {
-            "query": {
-                "filter": {"id": {"_in": creator_ids}},
-                "fields": ["id", "email", "display_name"],
-                "limit": -1,
-            }
-        },
-    ) if creator_ids else []
+    users = (
+        await async_directus.get_items(
+            "app_user",
+            {
+                "query": {
+                    "filter": {"id": {"_in": creator_ids}},
+                    "fields": ["id", "email", "display_name"],
+                    "limit": -1,
+                }
+            },
+        )
+        if creator_ids
+        else []
+    )
     user_by_id = {u["id"]: u for u in (users if isinstance(users, list) else [])}
 
     out: list[ExternalLedOrgRow] = []
@@ -1202,9 +1206,7 @@ async def update_billing_account_discount(
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")
 
-    updated = (await async_directus.update_item("billing_account", account_id, payload))[
-        "data"
-    ]
+    updated = (await async_directus.update_item("billing_account", account_id, payload))["data"]
     logger.info(
         "staff discount update on billing account %s: %s by staff %s",
         account_id,
@@ -1316,9 +1318,7 @@ class WorkspaceMemberRow(BaseModel):
     role: Optional[str] = None
 
 
-@router.get(
-    "/workspaces/{workspace_id}/members", response_model=list[WorkspaceMemberRow]
-)
+@router.get("/workspaces/{workspace_id}/members", response_model=list[WorkspaceMemberRow])
 async def list_workspace_members(
     workspace_id: str,
     auth: DependencyDirectusSession,
@@ -1407,9 +1407,7 @@ async def change_workspace_admin(
         or membership.get("deleted_at")
         or membership.get("workspace_id") != workspace_id
     ):
-        raise HTTPException(
-            status_code=404, detail="Membership not found in this workspace"
-        )
+        raise HTTPException(status_code=404, detail="Membership not found in this workspace")
     if membership.get("role") in ("external", "observer"):
         raise HTTPException(
             status_code=400,
@@ -1489,6 +1487,336 @@ async def reset_workspace_usage(
         "workspace_id": workspace_id,
         "usage_reset_at": now_iso,
     }
+
+
+# ── Staff support access (ECHO-863) ──
+#
+# A dembrane staff member can temporarily self-join a customer workspace as
+# admin to help with support, but ONLY when the customer has turned on
+# allow_support_access. Access auto-revokes 24h later via a durable
+# scheduled_task (so it survives restarts and is inspectable/cancellable in
+# Directus). Re-calling extends the window.
+
+SUPPORT_ACCESS_TTL = timedelta(hours=24)
+
+
+class JoinSupportResponse(BaseModel):
+    status: Literal["joined", "extended", "already_member"]
+    workspace_id: str
+    membership_id: str
+    role: str
+    # null only when the caller was already a normal (non-support) member.
+    expires_at: Optional[str] = None
+
+
+async def _reresolve_membership_after_join_race(
+    workspace_id: str, app_user_id: str, expires_iso: str
+) -> tuple[Optional[str], Optional[JoinSupportResponse]]:
+    """A concurrent join won the race: re-read the row that actually persisted so
+    we never schedule a revoke against the id we generated but failed to insert.
+
+    Returns (membership_id, None) to continue, or (None, response) to return when
+    the winner is a genuine member.
+    """
+    rows = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": workspace_id},
+                    "user_id": {"_eq": app_user_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id", "role", "source"],
+                "limit": 1,
+            }
+        },
+    )
+    row = rows[0] if isinstance(rows, list) and rows else None
+    if row is None:
+        # The row vanished again (extremely unlikely). Nothing safe to schedule.
+        raise HTTPException(
+            status_code=409, detail="Membership changed concurrently, please retry."
+        )
+    if row.get("source") != "staff_support":
+        return None, JoinSupportResponse(
+            status="already_member",
+            workspace_id=workspace_id,
+            membership_id=str(row["id"]),
+            role=row.get("role") or "",
+            expires_at=None,
+        )
+    membership_id = str(row["id"])
+    await async_directus.update_item(
+        "workspace_membership", membership_id, {"expires_at": expires_iso}
+    )
+    return membership_id, None
+
+
+@router.post("/workspaces/{workspace_id}/join-support", response_model=JoinSupportResponse)
+async def join_workspace_support(
+    workspace_id: str,
+    auth: DependencyDirectusSession,
+) -> JoinSupportResponse:
+    """Staff-only: temporarily self-join a workspace as admin for support.
+
+    Gated twice: the is_admin staff claim AND the customer's
+    allow_support_access toggle. On success, writes (or reactivates / extends) a
+    `staff_support` admin membership with expires_at = now + 24h and enqueues a
+    durable revoke_staff_support task for that time.
+
+    403 if not staff, or if the workspace has not enabled support access.
+    404 if the workspace doesn't exist or is soft-deleted.
+    """
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    ws = await async_directus.get_item("workspace", workspace_id)
+    if not ws or ws.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    if not ws.get("allow_support_access"):
+        raise HTTPException(
+            status_code=403,
+            detail="This workspace has not enabled dembrane staff support access.",
+        )
+
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.cache_utils import invalidate_workspace_and_org_usage
+    from dembrane.scheduled_tasks import (
+        TASK_REVOKE_STAFF_SUPPORT,
+        schedule_task,
+        cancel_pending_tasks,
+    )
+    from dembrane.api.v2._invite_helpers import (
+        create_membership_row,
+        reactivate_membership_row,
+    )
+
+    app_user = await get_app_user_or_raise(auth.user_id)
+    app_user_id = app_user["id"]
+    org_id = ws.get("org_id")
+
+    now = datetime.now(timezone.utc)
+    expires_at = now + SUPPORT_ACCESS_TTL
+    expires_iso = expires_at.isoformat()
+
+    # Fetch active + soft-deleted rows for this (workspace, user) in one trip.
+    rows = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": workspace_id},
+                    "user_id": {"_eq": app_user_id},
+                },
+                "fields": ["id", "role", "source", "deleted_at"],
+                "limit": -1,
+            }
+        },
+    )
+    active_row = None
+    deleted_row = None
+    if isinstance(rows, list):
+        for row in rows:
+            if row.get("deleted_at") is None and active_row is None:
+                active_row = row
+            elif row.get("deleted_at") is not None and deleted_row is None:
+                deleted_row = row
+
+    if active_row is not None and active_row.get("source") != "staff_support":
+        # Caller is already a real member (they belong to this org). Don't slap
+        # an expiry on a genuine membership — just report it.
+        return JoinSupportResponse(
+            status="already_member",
+            workspace_id=workspace_id,
+            membership_id=str(active_row["id"]),
+            role=active_row.get("role") or "",
+            expires_at=None,
+        )
+
+    if active_row is not None:
+        # Existing support row → extend the 24h window.
+        membership_id = str(active_row["id"])
+        await async_directus.update_item(
+            "workspace_membership", membership_id, {"expires_at": expires_iso}
+        )
+        status: Literal["joined", "extended"] = "extended"
+    elif deleted_row is not None:
+        membership_id = str(deleted_row["id"])
+        reactivated = await reactivate_membership_row(
+            async_directus,
+            "workspace_membership",
+            membership_id,
+            {
+                "deleted_at": None,
+                "role": "admin",
+                "source": "staff_support",
+                "expires_at": expires_iso,
+            },
+        )
+        if not reactivated:
+            resolved_id, raced_response = await _reresolve_membership_after_join_race(
+                workspace_id, app_user_id, expires_iso
+            )
+            if raced_response is not None:
+                return raced_response
+            assert resolved_id is not None  # guaranteed when raced_response is None
+            membership_id = resolved_id
+        status = "joined"
+    else:
+        membership_id = generate_uuid()
+        created = await create_membership_row(
+            async_directus,
+            "workspace_membership",
+            {
+                "id": membership_id,
+                "workspace_id": workspace_id,
+                "user_id": app_user_id,
+                "role": "admin",
+                "source": "staff_support",
+                "expires_at": expires_iso,
+            },
+        )
+        if not created:
+            resolved_id, raced_response = await _reresolve_membership_after_join_race(
+                workspace_id, app_user_id, expires_iso
+            )
+            if raced_response is not None:
+                return raced_response
+            assert resolved_id is not None  # guaranteed when raced_response is None
+            membership_id = resolved_id
+        status = "joined"
+
+    # Replace any prior pending revoke for this membership so extending doesn't
+    # leave an earlier timer that would revoke mid-session.
+    await cancel_pending_tasks(
+        task_type=TASK_REVOKE_STAFF_SUPPORT,
+        payload_match={"membership_id": membership_id},
+    )
+    await schedule_task(
+        task_type=TASK_REVOKE_STAFF_SUPPORT,
+        scheduled_at=expires_at,
+        payload={
+            "workspace_id": workspace_id,
+            "membership_id": membership_id,
+            "org_id": org_id,
+        },
+    )
+
+    # Seat/guest counts changed.
+    await invalidate_workspace_and_org_usage(workspace_id, org_id)
+
+    logger.info(
+        "staff %s %s support access on workspace %s (membership=%s, expires=%s)",
+        auth.user_id,
+        status,
+        workspace_id,
+        membership_id,
+        expires_iso,
+    )
+    return JoinSupportResponse(
+        status=status,
+        workspace_id=workspace_id,
+        membership_id=membership_id,
+        role="admin",
+        expires_at=expires_iso,
+    )
+
+
+class SupportAccessStatus(BaseModel):
+    # The calling staff member's own support session for a workspace.
+    active: bool
+    membership_id: Optional[str] = None
+    expires_at: Optional[str] = None
+
+
+async def _own_active_support_rows(workspace_id: str, app_user_id: str) -> list[dict]:
+    """Active staff_support rows for this user on this workspace (normally 0 or 1)."""
+    rows = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": workspace_id},
+                    "user_id": {"_eq": app_user_id},
+                    "source": {"_eq": "staff_support"},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id", "expires_at"],
+                "limit": -1,
+            }
+        },
+    )
+    return [r for r in rows if r.get("id")] if isinstance(rows, list) else []
+
+
+@router.get("/workspaces/{workspace_id}/join-support", response_model=SupportAccessStatus)
+async def get_workspace_support_status(
+    workspace_id: str,
+    auth: DependencyDirectusSession,
+) -> SupportAccessStatus:
+    """Staff-only: the caller's current support session, so the UI can show
+    "active until <time>" + Extend instead of always offering a fresh join."""
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.inheritance import membership_access_expired
+
+    app_user = await get_app_user_or_raise(auth.user_id)
+    rows = await _own_active_support_rows(workspace_id, app_user["id"])
+    # Elapsed expiry is not active, even if the revoke sweep hasn't run yet.
+    live = [r for r in rows if not membership_access_expired(r.get("expires_at"))]
+    if not live:
+        return SupportAccessStatus(active=False)
+    # Newest expiry wins if (unexpectedly) more than one row exists.
+    row = max(live, key=lambda r: r.get("expires_at") or "")
+    return SupportAccessStatus(
+        active=True,
+        membership_id=str(row["id"]),
+        expires_at=row.get("expires_at"),
+    )
+
+
+@router.delete("/workspaces/{workspace_id}/join-support", response_model=SupportAccessStatus)
+async def leave_workspace_support(
+    workspace_id: str,
+    auth: DependencyDirectusSession,
+) -> SupportAccessStatus:
+    """Staff-only: end the caller's own support session early (idempotent). Also
+    cancels the pending revoke task so it can't fire on a re-joined row later."""
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.cache_utils import invalidate_workspace_and_org_usage
+    from dembrane.scheduled_tasks import TASK_REVOKE_STAFF_SUPPORT, cancel_pending_tasks
+
+    app_user = await get_app_user_or_raise(auth.user_id)
+    rows = await _own_active_support_rows(workspace_id, app_user["id"])
+    if not rows:
+        return SupportAccessStatus(active=False)
+
+    ws = await async_directus.get_item("workspace", workspace_id)
+    org_id = ws.get("org_id") if ws else None
+    now_iso = datetime.now(timezone.utc).isoformat()
+    for row in rows:
+        membership_id = str(row["id"])
+        await async_directus.update_item(
+            "workspace_membership", membership_id, {"deleted_at": now_iso}
+        )
+        await cancel_pending_tasks(
+            task_type=TASK_REVOKE_STAFF_SUPPORT,
+            payload_match={"membership_id": membership_id},
+        )
+    await invalidate_workspace_and_org_usage(workspace_id, org_id)
+    logger.info(
+        "staff %s left support access on workspace %s (memberships=%s)",
+        auth.user_id,
+        workspace_id,
+        [str(r["id"]) for r in rows],
+    )
+    return SupportAccessStatus(active=False)
 
 
 @router.get("/at-risk", response_model=list[AtRiskRow])
@@ -1685,9 +2013,7 @@ async def payments_rollup(
             if not customer_id:
                 continue
             try:
-                payments = await mollie.list_customer_payments(
-                    customer_id, limit=per_account
-                )
+                payments = await mollie.list_customer_payments(customer_id, limit=per_account)
             except mollie.MollieError as exc:
                 # One bad customer must not sink the whole rollup; skip and log.
                 logger.warning(
@@ -1702,7 +2028,8 @@ async def payments_rollup(
                 value = amt.get("value")
                 if status == "paid":
                     try:
-                        paid_eur += float(value)
+                        if value is not None:
+                            paid_eur += float(value)
                     except (TypeError, ValueError):
                         pass
                 elif status in ("failed", "expired", "canceled"):
