@@ -21,21 +21,6 @@ router = APIRouter()
 logger = getLogger("api.v2.workspace_settings")
 
 
-def _require_external_for_whitelabel(ctx: WorkspaceContext) -> None:
-    """Per-workspace whitelabel logo override is only for external-client
-    workspaces (ISSUE-032). Internal workspaces inherit the org's branding."""
-    from dembrane.billing_account import workspace_is_external_client
-
-    if not workspace_is_external_client(ctx.workspace):
-        raise HTTPException(
-            status_code=403,
-            detail=(
-                "A per-workspace logo is only available for external-client "
-                "workspaces. Internal workspaces use the organisation's branding."
-            ),
-        )
-
-
 # Reusable Annotated alias keeps handler signatures readable and avoids
 # Ruff B008 ("Depends() in arg defaults"). Mirrors the convention in
 # dembrane/api/v2/workspaces.py.
@@ -385,9 +370,6 @@ async def update_workspace_settings(
         current_logo = ctx.workspace.get("logo_url") or ""
         if cleaned_logo != current_logo:
             ctx.require_policy("workspace:whitelabel")
-            # Setting/overriding a logo is external-only; clearing it is allowed.
-            if cleaned_logo:
-                _require_external_for_whitelabel(ctx)
         payload["logo_url"] = cleaned_logo or None
 
     # Privacy: the `visibility` enum is the source of truth (discovery and
@@ -700,7 +682,6 @@ async def upload_workspace_logo(
     """
     ctx.require_policy("settings:manage")
     ctx.require_policy("workspace:whitelabel")
-    _require_external_for_whitelabel(ctx)
 
     if file.content_type and file.content_type not in _ALLOWED_LOGO_TYPES:
         raise HTTPException(
