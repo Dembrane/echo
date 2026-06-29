@@ -1866,3 +1866,60 @@ class TestCheckoutGuard:
                 redirect_url="https://app/return",
             )
         mock_mollie.create_first_payment.assert_not_called()
+
+
+class TestSeatDedupExcludesObservers:
+    """Observers are free and never occupy a seat, so an existing/pending observer
+    must not dedupe a real paid seat in the invite preview (under-charge)."""
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.seat_capacity.get_effective_members", new_callable=AsyncMock)
+    @patch("dembrane.billing_service._account_workspace_ids", new_callable=AsyncMock)
+    async def test_active_seat_emails_excludes_observers_and_derived(
+        self, mock_ws_ids, mock_members, mock_directus
+    ):
+        from dembrane.billing_service import account_active_seat_emails
+
+        mock_ws_ids.return_value = ["ws-1"]
+        mock_members.return_value = [
+            {"user_id": "u-paid", "role": "member", "source": "direct"},
+            {"user_id": "u-obs", "role": "observer", "source": "direct"},
+            {"user_id": "u-derived", "role": "admin", "source": "inherited"},
+        ]
+        emails_by_uid = {
+            "u-paid": {"email": "Paid@X.com"},
+            "u-obs": {"email": "obs@x.com"},
+            "u-derived": {"email": "derived@x.com"},
+        }
+
+        async def _get_item(_collection, uid):
+            return emails_by_uid.get(uid)
+
+        mock_directus.get_item = AsyncMock(side_effect=_get_item)
+
+        result = await account_active_seat_emails("acc-1")
+
+        assert result == {"paid@x.com"}
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service._account_workspace_ids", new_callable=AsyncMock)
+    async def test_pending_invite_emails_excludes_observer_invites(
+        self, mock_ws_ids, mock_directus
+    ):
+        from dembrane.billing_service import account_pending_invite_emails
+
+        mock_ws_ids.return_value = ["ws-1"]
+        mock_directus.get_items = AsyncMock(
+            return_value=[
+                {"email": "Paid@X.com", "role": "member"},
+                {"email": "obs@x.com", "role": "observer"},
+                # NULL-role legacy rows default to the paid bucket (see count_pending_invites).
+                {"email": "legacy@x.com", "role": None},
+            ]
+        )
+
+        result = await account_pending_invite_emails("acc-1")
+
+        assert result == {"paid@x.com", "legacy@x.com"}

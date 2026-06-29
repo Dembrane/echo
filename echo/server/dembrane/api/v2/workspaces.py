@@ -293,7 +293,12 @@ async def list_workspaces(
             "workspace_membership",
             {
                 "query": {
-                    "filter": {"workspace_id": {"_eq": ws_id}, "deleted_at": {"_null": True}},
+                    # Exclude staff_support so support access never inflates the count.
+                    "filter": {
+                        "workspace_id": {"_eq": ws_id},
+                        "deleted_at": {"_null": True},
+                        "source": {"_neq": "staff_support"},
+                    },
                     "aggregate": {"count": ["id"]},
                 }
             },

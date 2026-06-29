@@ -119,11 +119,26 @@ def derive_workspace_role(
 # ── Read-side resolvers ─────────────────────────────────────────────────
 
 
-async def _get_direct_membership(workspace_id: str, user_id: str) -> Optional[dict]:
-    """Active (non-deleted) workspace_membership row for (ws, user), or None.
+def membership_access_expired(expires_at: Optional[str]) -> bool:
+    """True if a membership's expires_at has elapsed (None/unparseable = never).
 
-    Direct is the stored state. Its presence short-circuits derivation.
+    Expiry is authoritative at access time; the revoke task/sweep are just cleanup.
     """
+    if not expires_at:
+        return False
+    try:
+        dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return False
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt <= datetime.now(timezone.utc)
+
+
+async def _get_direct_membership(workspace_id: str, user_id: str) -> Optional[dict]:
+    """Active (non-deleted, non-expired) workspace_membership row for (ws, user),
+    or None. An elapsed expires_at (staff_support past its window) does not grant
+    access even before the revoke job soft-deletes the row."""
     rows = await async_directus.get_items(
         "workspace_membership",
         {
@@ -138,7 +153,10 @@ async def _get_direct_membership(workspace_id: str, user_id: str) -> Optional[di
         },
     )
     if isinstance(rows, list) and rows:
-        return rows[0]
+        row = rows[0]
+        if membership_access_expired(row.get("expires_at")):
+            return None
+        return row
     return None
 
 
@@ -308,6 +326,9 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
     Direct rows take precedence; a user with both a direct row and a derived
     path appears once with their direct role. External collaborators
     surface as role='external' (see ADR-0003) — no separate flag.
+
+    `staff_support` rows are excluded: they grant access (via
+    _get_direct_membership) but must never count as a member for seats/billing.
     """
     workspace = await async_directus.get_item("workspace", workspace_id)
     if not workspace or workspace.get("deleted_at"):
@@ -321,6 +342,7 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
                     "filter": {
                         "workspace_id": {"_eq": workspace_id},
                         "deleted_at": {"_null": True},
+                        "source": {"_neq": "staff_support"},
                     },
                     "fields": [
                         "user_id",

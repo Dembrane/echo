@@ -31,7 +31,7 @@ export const References = ({
 								<Trans>{citation.reference_text}</Trans>
 							</span>
 							<I18nLink
-								to={`/w/${workspaceId}/projects/${projectId}/conversation/${citation?.conversation?.id || citation?.conversation}`}
+								to={`/w/${workspaceId}/projects/${projectId}/conversations/${citation?.conversation?.id || citation?.conversation}`}
 							>
 								<Badge
 									size="sm"

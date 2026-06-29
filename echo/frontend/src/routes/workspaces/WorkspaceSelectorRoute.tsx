@@ -25,6 +25,7 @@ import {
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useMyInvites } from "@/hooks/useMyInvites";
 import { useV2Me } from "@/hooks/useV2Me";
+import { isOutsiderRole } from "@/lib/roles";
 import classes from "./WorkspaceSelectorRoute.module.css";
 
 // Full-page search over the orgs, workspaces, projects and settings the user
@@ -82,8 +83,9 @@ interface OrgListItem {
 	isExternal: boolean;
 }
 
-// External orgs are derived from external workspaces: they aren't in the
-// membership rollup but the user still needs a way into them.
+// External orgs are derived from outsider workspaces (external + observer):
+// outsiders have no org_membership, so without this an observer-only user gets an
+// empty org list and sees "you're not part of any organisation".
 function deriveOrgList(
 	organisations: OrganisationRollup[],
 	workspaces: WorkspaceLite[],
@@ -99,7 +101,7 @@ function deriveOrgList(
 	const internalOrgIds = new Set(internalOrgs.map((o) => o.id));
 	const externalOrgMap = new Map<string, OrgListItem>();
 	for (const w of workspaces) {
-		if (w.role !== "external" || !w.org_id) continue;
+		if (!isOutsiderRole(w.role) || !w.org_id) continue;
 		if (internalOrgIds.has(w.org_id)) continue;
 		if (!externalOrgMap.has(w.org_id)) {
 			externalOrgMap.set(w.org_id, {

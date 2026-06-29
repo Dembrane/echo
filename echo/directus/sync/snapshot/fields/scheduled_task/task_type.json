@@ -1,0 +1,55 @@
+{
+  "collection": "scheduled_task",
+  "field": "task_type",
+  "type": "string",
+  "meta": {
+    "collection": "scheduled_task",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "task_type",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": "What to run when due.",
+    "options": {
+      "choices": [
+        {
+          "text": "Revoke Staff Support",
+          "value": "revoke_staff_support"
+        },
+        {
+          "text": "Generate Report",
+          "value": "generate_report"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 2,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "half"
+  },
+  "schema": {
+    "name": "task_type",
+    "table": "scheduled_task",
+    "data_type": "character varying",
+    "default_value": "revoke_staff_support",
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": false,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

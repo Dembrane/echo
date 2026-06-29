@@ -13,6 +13,7 @@ import { useParams } from "react-router";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { isOutsiderRole } from "@/lib/roles";
 import { useSidebarView } from "../../hooks/useSidebarView";
 import { BackButton } from "../../primitives/BackButton";
 import { NavItem } from "../../primitives/NavItem";
@@ -67,7 +68,7 @@ export const OrgHomeView = () => {
 	const isExternal =
 		orgWsQuery.data === null ||
 		(myOrgWorkspaces.length > 0 &&
-			myOrgWorkspaces.every((w) => w.role === "external"));
+			myOrgWorkspaces.every((w) => isOutsiderRole(w.role)));
 
 	const orgName =
 		myOrgWorkspaces[0]?.org_name ??
@@ -84,7 +85,7 @@ export const OrgHomeView = () => {
 			myOrgWorkspaces
 				.map((w) => ({
 					id: w.id,
-					isExternal: w.role === "external",
+					isExternal: isOutsiderRole(w.role),
 					name: w.name,
 				}))
 				.sort((a, b) => a.name.localeCompare(b.name)),
