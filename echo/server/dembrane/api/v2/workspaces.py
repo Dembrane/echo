@@ -1527,17 +1527,14 @@ async def get_workspace_usage(
             count_workspace_reports,
             resolve_workspace_primary_chat_id,
             resolve_workspace_primary_report_id,
-            resolve_workspace_unlocked_conversation_id,
         )
 
         (
-            free_unlocked_conv_id,
             free_chats_used,
             free_primary_chat_id,
             free_reports_used,
             free_primary_report_id,
         ) = await asyncio.gather(
-            resolve_workspace_unlocked_conversation_id(ctx.workspace_id, project_ids),
             count_workspace_chats(ctx.workspace_id, project_ids),
             resolve_workspace_primary_chat_id(ctx.workspace_id, project_ids),
             count_workspace_reports(ctx.workspace_id, project_ids),
@@ -1545,7 +1542,6 @@ async def get_workspace_usage(
         )
         free_tier_block = build_free_tier_usage_block(
             tier=tier,
-            unlocked_conversation_id=free_unlocked_conv_id,
             chats_used=free_chats_used,
             primary_chat_id=free_primary_chat_id,
             reports_used=free_reports_used,
@@ -1554,7 +1550,6 @@ async def get_workspace_usage(
     else:
         free_tier_block = build_free_tier_usage_block(
             tier=tier,
-            unlocked_conversation_id=None,
             chats_used=0,
             primary_chat_id=None,
             reports_used=0,

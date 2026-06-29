@@ -19,44 +19,23 @@ from dembrane.free_tier import (  # noqa: E402
 
 
 class TestConversationIsLocked:
-    def test_hours_cap_locked(self):
+    def test_free_over_cap_locked(self):
         assert conversation_is_locked({"id": "c1", "is_over_cap": True}, "free") is True
 
-    def test_free_non_oldest_locked(self):
-        assert (
-            conversation_is_locked(
-                {"id": "c2", "is_over_cap": False}, "free", free_tier_unlocked_id="c1"
-            )
-            is True
-        )
+    def test_free_under_cap_unlocked(self):
+        assert conversation_is_locked({"id": "c2", "is_over_cap": False}, "free") is False
 
-    def test_free_oldest_unlocked(self):
+    def test_paid_over_cap_unlocked(self):
+        # paid tiers have unlimited hours; the over-cap stamp never locks them
         assert (
-            conversation_is_locked(
-                {"id": "c1", "is_over_cap": False}, "free", free_tier_unlocked_id="c1"
-            )
-            is False
-        )
-
-    def test_paid_unlocked(self):
-        assert (
-            conversation_is_locked(
-                {"id": "c2", "is_over_cap": False}, "changemaker", free_tier_unlocked_id="c1"
-            )
+            conversation_is_locked({"id": "c2", "is_over_cap": True}, "changemaker")
             is False
         )
 
     def test_none_tier_unlocked(self):
         assert (
-            conversation_is_locked(
-                {"id": "c2", "is_over_cap": False}, None, free_tier_unlocked_id="c1"
-            )
-            is False
+            conversation_is_locked({"id": "c2", "is_over_cap": True}, None) is False
         )
-
-    def test_free_no_unlocked_id_only_hours(self):
-        # no unlocked id -> only hours-cap applies
-        assert conversation_is_locked({"id": "c2", "is_over_cap": False}, "free") is False
 
 
 def _mock_directus_project(workspace_id):
