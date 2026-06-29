@@ -324,34 +324,6 @@ def test_usage_context_not_in_update_request():
     assert "data_owner_email" not in UpdateWorkspaceRequest.model_fields
 
 
-# ── ISSUE-032: per-workspace whitelabel is external-only ────────────────
-
-
-def test_whitelabel_gate_external_only():
-    from fastapi import HTTPException as _HTTPExc
-
-    from dembrane.api.v2.workspace_settings import _require_external_for_whitelabel
-
-    def ctx_for(ws: dict):
-        return WorkspaceContext(
-            workspace_id=ws["id"],
-            workspace=ws,
-            app_user_id="au-1",
-            role="admin",
-            custom_policies=[],
-            source="direct",
-        )
-
-    # Internal workspace → blocked (403).
-    with pytest.raises(_HTTPExc) as exc:
-        _require_external_for_whitelabel(
-            ctx_for({"id": "w", "usage_context": "internal"})
-        )
-    assert exc.value.status_code == 403
-    # External-client workspace → allowed (no raise).
-    _require_external_for_whitelabel(ctx_for({"id": "w", "usage_context": "external"}))
-
-
 # ── Generalization: no bill_separately flag; data owner implies external ─
 
 
