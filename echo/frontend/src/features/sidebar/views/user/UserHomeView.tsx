@@ -13,6 +13,7 @@ import { useMemo } from "react";
 import { CreateOrganisationModal } from "@/components/organisation/CreateOrganisationModal";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { isOutsiderRole } from "@/lib/roles";
 import { NavItem } from "../../primitives/NavItem";
 import { SectionLabel } from "../../primitives/SectionLabel";
 
@@ -35,12 +36,12 @@ export const UserHomeView = () => {
 		() => new Set(internalOrgs.map((o) => o.id)),
 		[internalOrgs],
 	);
-	// External orgs: the user only holds an external workspace role there (no
-	// org_membership), so they're absent from meV2.orgs. Derive from workspaces.
+	// External orgs: outsiders (external/observer) have no org_membership, so
+	// they're absent from meV2.orgs. Derive from workspaces.
 	const externalOrgs = useMemo(() => {
 		const map = new Map<string, { id: string; name: string }>();
 		for (const ws of workspaces) {
-			if (!ws.org_id || ws.role !== "external") continue;
+			if (!ws.org_id || !isOutsiderRole(ws.role)) continue;
 			if (internalOrgIds.has(ws.org_id) || map.has(ws.org_id)) continue;
 			map.set(ws.org_id, {
 				id: ws.org_id,

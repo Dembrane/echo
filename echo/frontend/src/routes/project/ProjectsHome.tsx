@@ -41,6 +41,7 @@ import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
+import { isOutsiderRole } from "@/lib/roles";
 import { Icons } from "@/icons";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { getDirectusErrorString } from "@/lib/directus";
@@ -206,12 +207,11 @@ export const ProjectsHomeRoute = () => {
 
 	const canManageWorkspace =
 		workspace?.role === "owner" || workspace?.role === "admin";
-	// Externals cannot create projects or pin — their surface is
-	// view-only on the workspace level. Gate the CTAs up front so we
-	// don't lure them into a click that 403s.
-	const isExternal = workspace?.role === "external";
-	const canCreateProject = !isExternal && !user.data?.disable_create_project;
-	const canPinOnThisWorkspace = !isExternal;
+	// Outsiders (external + observer) can't create projects or pin; gate the CTAs
+	// up front so we don't lure them into a click that 403s.
+	const isOutsider = isOutsiderRole(workspace?.role);
+	const canCreateProject = !isOutsider && !user.data?.disable_create_project;
+	const canPinOnThisWorkspace = !isOutsider;
 	const totallyEmpty =
 		allProjects.length === 0 &&
 		debouncedSearchValue === "" &&
@@ -276,17 +276,17 @@ export const ProjectsHomeRoute = () => {
 				{totallyEmpty ? (
 					<Stack gap={12} py={48}>
 						<Title order={3} fw={400}>
-							{isExternal ? (
+							{isOutsider ? (
 								<Trans>Nothing here for you yet.</Trans>
 							) : (
 								<Trans>Let's hear your first conversation.</Trans>
 							)}
 						</Title>
 						<Text size="sm" maw={440}>
-							{isExternal ? (
+							{isOutsider ? (
 								<Trans>
-									You're an external in this workspace. Projects will show up
-									here once someone on the organisation shares one with you.
+									Projects will show up here once someone on the organisation
+									shares one with you.
 								</Trans>
 							) : (
 								<Trans>

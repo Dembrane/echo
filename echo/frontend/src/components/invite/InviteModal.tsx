@@ -523,7 +523,7 @@ export function InviteModal({
 	// cost preview before sending. Org-only (zero-workspace) invites don't.
 	const handleSend = async () => {
 		const workspaceIds = Array.from(selectedWorkspaces);
-		if (workspaceIds.length > 0 && !confirm) {
+		if (workspaceIds.length > 0 && role !== "observer" && !confirm) {
 			setEstimating(true);
 			try {
 				const emails = validChips.map((c) => c.value.trim().toLowerCase());

@@ -16,6 +16,8 @@ import { useParams } from "react-router";
 import { useProjectChatsCountQuery } from "@/components/chat/hooks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { isReadOnlyRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
 import { NavButton } from "../../primitives/NavButton";
 import { NavItem } from "../../primitives/NavItem";
@@ -25,6 +27,10 @@ export const ProjectHomeView = () => {
 		workspaceId: string;
 		projectId: string;
 	}>();
+	const { workspace } = useWorkspace();
+	// Observers are read-only and have no chat access. Hide the Ask tab and skip
+	// its count query (it 403s for them); passing "" disables the query.
+	const isObserver = isReadOnlyRole(workspace?.role);
 	// Fetch by id so the project name renders even when the workspace
 	// context hasn't yet synced from the URL (saves a one-tick flash).
 	const projectQuery = useProjectById({
@@ -34,9 +40,10 @@ export const ProjectHomeView = () => {
 	const conversationsCountQuery = useConversationsCountByProjectId(
 		projectId ?? "",
 	);
-	const chatsCountQuery = useProjectChatsCountQuery(projectId ?? "", {
-		hasMessages: true,
-	});
+	const chatsCountQuery = useProjectChatsCountQuery(
+		isObserver ? "" : (projectId ?? ""),
+		{ hasMessages: true },
+	);
 	const project = projectQuery.data;
 
 	if (!workspaceId || !projectId) return null;
@@ -57,12 +64,14 @@ export const ProjectHomeView = () => {
 				label={<Trans>Overview</Trans>}
 				icon={AppWindowIcon}
 			/>
-			<NavItem
-				to={`${base}/chats/new`}
-				label={<Trans>Ask</Trans>}
-				icon={ChatCircleDotsIcon}
-				badge={chatsCountQuery.data || undefined}
-			/>
+			{!isObserver && (
+				<NavItem
+					to={`${base}/chats/new`}
+					label={<Trans>Ask</Trans>}
+					icon={ChatCircleDotsIcon}
+					badge={chatsCountQuery.data || undefined}
+				/>
+			)}
 			<NavButton
 				label={<Trans>Explore</Trans>}
 				icon={GraphIcon}
