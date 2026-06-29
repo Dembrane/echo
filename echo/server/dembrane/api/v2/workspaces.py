@@ -1293,6 +1293,59 @@ async def list_tier_capacities() -> list[TierCapacityItem]:
     return items
 
 
+async def _fresh_free_tier_block(
+    workspace_id: str,
+    tier: Optional[str],
+    project_ids: Optional[list[str]] = None,
+) -> dict:
+    """Build the free_tier usage block from live counts.
+
+    Kept out of the 30-minute usage cache so chat/report counts reflect reality
+    immediately: an empty chat (opened but never sent to) must not count, and a
+    deleted chat/report must free its slot without waiting for the cache to age
+    out. Runs Directus queries only for free tier; paid and legacy (None) tiers
+    return an inactive block with no queries. Passing `project_ids` lets the
+    fresh path reuse its already-fetched list; the cached path passes None and
+    the helpers resolve it.
+    """
+    from dembrane.free_tier import is_free_tier, build_free_tier_usage_block
+
+    if not is_free_tier(tier):
+        return build_free_tier_usage_block(
+            tier=tier,
+            chats_used=0,
+            primary_chat_id=None,
+            reports_used=0,
+            primary_report_id=None,
+        )
+
+    from dembrane.free_tier import (
+        count_workspace_chats,
+        count_workspace_reports,
+        resolve_workspace_primary_chat_id,
+        resolve_workspace_primary_report_id,
+    )
+
+    (
+        free_chats_used,
+        free_primary_chat_id,
+        free_reports_used,
+        free_primary_report_id,
+    ) = await asyncio.gather(
+        count_workspace_chats(workspace_id, project_ids),
+        resolve_workspace_primary_chat_id(workspace_id, project_ids),
+        count_workspace_reports(workspace_id, project_ids),
+        resolve_workspace_primary_report_id(workspace_id, project_ids),
+    )
+    return build_free_tier_usage_block(
+        tier=tier,
+        chats_used=free_chats_used,
+        primary_chat_id=free_primary_chat_id,
+        reports_used=free_reports_used,
+        primary_report_id=free_primary_report_id,
+    )
+
+
 @router.get(
     "/{workspace_id}/usage",
     response_model=WorkspaceUsageResponse,
@@ -1346,6 +1399,18 @@ async def get_workspace_usage(
     if not refresh:
         cached = await cache_get_json(cache_key)
         if isinstance(cached, dict):
+            # free_tier counts (chats/reports) are live, not cached: recompute
+            # so an empty chat that shouldn't count, or a deleted chat/report,
+            # reflects immediately instead of lagging up to USAGE_TTL_SECONDS.
+            from dembrane.free_tier import is_free_tier
+
+            if is_free_tier(cached.get("tier")):
+                cached = {
+                    **cached,
+                    "free_tier": await _fresh_free_tier_block(
+                        ctx.workspace_id, cached.get("tier")
+                    ),
+                }
             if not sees_financials:
                 cached = {**cached, "next_tier": None}
             return WorkspaceUsageResponse(**cached)
@@ -1514,47 +1579,11 @@ async def get_workspace_usage(
     )
 
     # Free-tier gating block (single source the frontend reads for blur /
-    # locked-composer / disabled-create states). Computed on the fresh path
-    # only; the cached branch carries whatever it stored (None pre-deploy).
-    # The extra Directus fan-out runs for free tier only; paid and legacy
-    # (None) tiers get an inactive block with no queries. project_ids is
-    # reused from above so the helpers don't refetch it five times.
-    from dembrane.free_tier import is_free_tier, build_free_tier_usage_block
-
-    if is_free_tier(tier):
-        from dembrane.free_tier import (
-            count_workspace_chats,
-            count_workspace_reports,
-            resolve_workspace_primary_chat_id,
-            resolve_workspace_primary_report_id,
-        )
-
-        (
-            free_chats_used,
-            free_primary_chat_id,
-            free_reports_used,
-            free_primary_report_id,
-        ) = await asyncio.gather(
-            count_workspace_chats(ctx.workspace_id, project_ids),
-            resolve_workspace_primary_chat_id(ctx.workspace_id, project_ids),
-            count_workspace_reports(ctx.workspace_id, project_ids),
-            resolve_workspace_primary_report_id(ctx.workspace_id, project_ids),
-        )
-        free_tier_block = build_free_tier_usage_block(
-            tier=tier,
-            chats_used=free_chats_used,
-            primary_chat_id=free_primary_chat_id,
-            reports_used=free_reports_used,
-            primary_report_id=free_primary_report_id,
-        )
-    else:
-        free_tier_block = build_free_tier_usage_block(
-            tier=tier,
-            chats_used=0,
-            primary_chat_id=None,
-            reports_used=0,
-            primary_report_id=None,
-        )
+    # locked-composer / disabled-create states). Always computed live (not
+    # cached) via _fresh_free_tier_block so chat/report counts stay accurate;
+    # the fan-out runs for free tier only. project_ids is reused from above so
+    # the helpers don't refetch it.
+    free_tier_block = await _fresh_free_tier_block(ctx.workspace_id, tier, project_ids)
 
     full = WorkspaceUsageResponse(
         cycle_start=cycle_start,

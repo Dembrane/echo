@@ -115,14 +115,49 @@ async def _resolve_project_ids(
     return await _workspace_project_ids(workspace_id)
 
 
+async def _live_chat_ids(project_ids: list[str]) -> list[str]:
+    """Ids of non-deleted chats across the given projects."""
+    rows = await directus_async.async_directus.get_items(
+        "project_chat",
+        {
+            "query": {
+                "filter": {"project_id": {"_in": project_ids}, "deleted_at": {"_null": True}},
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return []
+    return [r["id"] for r in rows if r.get("id")]
+
+
 async def count_workspace_chats(workspace_id: Optional[str], project_ids: Optional[list[str]] = None) -> int:
+    """Count chats that consume the free-tier allowance: chats with at least one
+    user message. An empty chat (a mode was picked but nothing was ever sent)
+    does not count, so opening the composer and leaving never locks a free
+    workspace out of starting a chat."""
     project_ids = await _resolve_project_ids(workspace_id, project_ids)
     if not project_ids:
         return 0
-    return await _agg_count(
-        "project_chat",
-        {"project_id": {"_in": project_ids}, "deleted_at": {"_null": True}},
+    chat_ids = await _live_chat_ids(project_ids)
+    if not chat_ids:
+        return 0
+    rows = await directus_async.async_directus.get_items(
+        "project_chat_message",
+        {
+            "query": {
+                "filter": {
+                    "project_chat_id": {"_in": chat_ids},
+                    "message_from": {"_eq": "user"},
+                },
+                "aggregate": {"countDistinct": ["project_chat_id"]},
+            }
+        },
     )
+    if isinstance(rows, list) and rows:
+        return int((rows[0].get("countDistinct") or {}).get("project_chat_id", 0) or 0)
+    return 0
 
 
 async def resolve_workspace_primary_chat_id(

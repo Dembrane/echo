@@ -104,15 +104,40 @@ class TestWorkspaceProjectIds:
 
 class TestCountWorkspaceChats:
     @pytest.mark.asyncio
-    async def test_counts_via_aggregate(self):
+    async def test_counts_only_chats_with_user_messages(self):
+        # two chats exist; countDistinct reports one has a user message
         mock = _mock_directus(
             {
                 "project": lambda _q: [{"id": "p1"}],
-                "project_chat": lambda _q: [{"count": {"id": 2}}],
+                "project_chat": lambda _q: [{"id": "chat1"}, {"id": "chat2"}],
+                "project_chat_message": lambda _q: [
+                    {"countDistinct": {"project_chat_id": 1}}
+                ],
             }
         )
         with patch("dembrane.directus_async.async_directus", mock):
-            assert await count_workspace_chats("w1") == 2
+            assert await count_workspace_chats("w1") == 1
+
+    @pytest.mark.asyncio
+    async def test_zero_when_chat_is_empty(self):
+        # an empty chat exists but has no user messages -> doesn't count
+        mock = _mock_directus(
+            {
+                "project": lambda _q: [{"id": "p1"}],
+                "project_chat": lambda _q: [{"id": "chat1"}],
+                "project_chat_message": lambda _q: [],
+            }
+        )
+        with patch("dembrane.directus_async.async_directus", mock):
+            assert await count_workspace_chats("w1") == 0
+
+    @pytest.mark.asyncio
+    async def test_zero_when_no_chats(self):
+        mock = _mock_directus(
+            {"project": lambda _q: [{"id": "p1"}], "project_chat": lambda _q: []}
+        )
+        with patch("dembrane.directus_async.async_directus", mock):
+            assert await count_workspace_chats("w1") == 0
 
     @pytest.mark.asyncio
     async def test_zero_when_no_projects(self):
