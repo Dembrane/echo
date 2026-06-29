@@ -226,11 +226,7 @@ export const ProjectHomeRoute = () => {
 										</Stack>
 
 										{isLocked ? (
-											<LockedTranscriptOverlay
-												compact
-												variant="summary"
-												reason={conversation.lock_reason ?? "free_tier"}
-											/>
+											<LockedTranscriptOverlay compact variant="summary" />
 										) : (
 											<Text size="sm" c="dimmed" style={lineClampStyle}>
 												{conversation.summary?.trim() || (

@@ -537,13 +537,11 @@ async def summarize_conversation(
     )
 
     # Gate: never (re)generate a summary for a locked conversation. That would
-    # surface transcript-derived content past the free-tier / hours-cap gate
-    # (the edit modal's Generate button is also disabled; this is the backstop).
+    # surface transcript-derived content past the hours-cap gate (the edit
+    # modal's Generate button is also disabled; this is the backstop).
     from dembrane.free_tier import (
-        is_free_tier,
         resolve_project_tier,
         conversation_is_locked,
-        resolve_project_unlocked_conversation_id,
     )
     from dembrane.directus_async import async_directus
 
@@ -552,12 +550,7 @@ async def summarize_conversation(
     if isinstance(_project_id, dict):
         _project_id = _project_id.get("id")
     _tier = await resolve_project_tier(_project_id) if _project_id else None
-    _unlocked_id = (
-        await resolve_project_unlocked_conversation_id(_project_id)
-        if (_project_id and is_free_tier(_tier))
-        else None
-    )
-    if conversation_is_locked(_conv or {}, _tier, _unlocked_id):
+    if conversation_is_locked(_conv or {}, _tier):
         raise HTTPException(
             status_code=402,
             detail="Conversation is locked. Upgrade to generate a summary.",
@@ -683,10 +676,8 @@ async def generate_title_for_conversation(
 
     # Gate: locked conversations are content-gated (see summarize_conversation).
     from dembrane.free_tier import (
-        is_free_tier,
         resolve_project_tier,
         conversation_is_locked,
-        resolve_project_unlocked_conversation_id,
     )
     from dembrane.directus_async import async_directus
 
@@ -695,12 +686,7 @@ async def generate_title_for_conversation(
     if isinstance(_project_id, dict):
         _project_id = _project_id.get("id")
     _tier = await resolve_project_tier(_project_id) if _project_id else None
-    _unlocked_id = (
-        await resolve_project_unlocked_conversation_id(_project_id)
-        if (_project_id and is_free_tier(_tier))
-        else None
-    )
-    if conversation_is_locked(_conv or {}, _tier, _unlocked_id):
+    if conversation_is_locked(_conv or {}, _tier):
         raise HTTPException(
             status_code=402,
             detail="Conversation is locked. Upgrade to generate a title.",

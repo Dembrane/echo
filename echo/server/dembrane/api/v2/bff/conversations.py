@@ -33,10 +33,6 @@ from logging import getLogger
 from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 
-from dembrane.free_tier import (
-    is_free_tier,
-    resolve_workspace_unlocked_conversation_id,
-)
 from dembrane.tier_capacity import is_conversation_locked
 from dembrane.directus_async import async_directus
 from dembrane.search_filters import merge_search_filter
@@ -84,43 +80,28 @@ _CONVERSATION_SEARCH_FIELDS = [
 
 
 def _conversation_lock(
-    conv: dict, tier: Optional[str], free_tier_unlocked_id: Optional[str] = None
+    conv: dict, tier: Optional[str]
 ) -> tuple[bool, Optional[str]]:
     """Resolve (locked, lock_reason) for a conversation. Single source of the
     lock decision, shared by the list/detail enrich step and the chunk
     endpoints so they cannot diverge.
 
-    Free tier locks every conversation except the workspace's single unlocked
-    one (`free_tier_unlocked_id`, the oldest). The hours cap locks over-cap
-    conversations on non-overage tiers. Hours cap takes precedence in the
-    reason label.
-
-    When `free_tier_unlocked_id` is None (no unlocked id resolved, e.g. an
-    empty workspace, or a non-free tier) the free-tier branch is skipped and
-    only the hours-cap rule applies.
+    The hours cap locks over-cap conversations on hour-capped tiers (Free's
+    1-hour recording cap); paid and legacy (None) tiers never lock.
     """
     if is_conversation_locked(conv, tier):
         return True, "hours_cap"
-    free_lock = (
-        is_free_tier(tier)
-        and free_tier_unlocked_id is not None
-        and conv.get("id") != free_tier_unlocked_id
-    )
-    if free_lock:
-        return True, "free_tier"
     return False, None
 
 
-def _enrich_conversation(
-    conv: dict, tier: Optional[str], free_tier_unlocked_id: Optional[str] = None
-) -> dict:
+def _enrich_conversation(conv: dict, tier: Optional[str]) -> dict:
     """Add derived `locked` + `lock_reason`, scrub gated text (summary +
     merged_transcript) on locked rows, strip raw `is_over_cap`.
 
     Chunk transcripts are scrubbed separately by the chunk endpoints /
     include_chunks path via `_scrub_chunk_transcript`.
     """
-    locked, reason = _conversation_lock(conv, tier, free_tier_unlocked_id)
+    locked, reason = _conversation_lock(conv, tier)
     conv["locked"] = locked
     # Keep lock_reason symmetric with locked (always present) for stable
     # serialization; None when unlocked.
@@ -298,13 +279,8 @@ async def list_conversations(
         convs = [c for c in convs if c["id"] in kept]
 
     tier = access.tier
-    free_unlocked_id = (
-        await resolve_workspace_unlocked_conversation_id(access.workspace_id)
-        if is_free_tier(tier)
-        else None
-    )
     for conv in convs:
-        _enrich_conversation(conv, tier, free_unlocked_id)
+        _enrich_conversation(conv, tier)
 
     if convs:
         conv_ids = [c["id"] for c in convs]
@@ -691,12 +667,7 @@ async def get_conversation(
 ) -> dict:
     """Read a single conversation with optional embeds."""
     access, conv = await resolve_conversation_access(conversation_id, auth)
-    free_unlocked_id = (
-        await resolve_workspace_unlocked_conversation_id(access.workspace_id)
-        if is_free_tier(access.tier)
-        else None
-    )
-    _enrich_conversation(conv, access.tier, free_unlocked_id)
+    _enrich_conversation(conv, access.tier)
     is_locked = conv.get("locked", False)
 
     if include_chunks:
@@ -946,12 +917,7 @@ async def list_chunks(
     on the conversation detail view.
     """
     access, conv = await resolve_conversation_access(conversation_id, auth)
-    free_unlocked_id = (
-        await resolve_workspace_unlocked_conversation_id(access.workspace_id)
-        if is_free_tier(access.tier)
-        else None
-    )
-    is_locked, _ = _conversation_lock(conv, access.tier, free_unlocked_id)
+    is_locked, _ = _conversation_lock(conv, access.tier)
 
     default_fields = [
         "id",
@@ -1030,12 +996,7 @@ async def get_chunk(
 ) -> dict:
     """Single-chunk read. Rare path — most callers go through the list."""
     access, chunk, conv = await resolve_conversation_chunk_access(chunk_id, auth)
-    free_unlocked_id = (
-        await resolve_workspace_unlocked_conversation_id(access.workspace_id)
-        if is_free_tier(access.tier)
-        else None
-    )
-    locked, _ = _conversation_lock(conv, access.tier, free_unlocked_id)
+    locked, _ = _conversation_lock(conv, access.tier)
     if locked:
         _scrub_chunk_transcript(chunk)
     return chunk
