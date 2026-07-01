@@ -21,12 +21,8 @@ def patch_python_project(dir_path, uses_requirements_lock=False):
     print(f"Auditing and Patching Python project: {dir_path}")
     print(f"==================================================")
     
-    # 1. Ensure pip-audit is installed in the uv environment or run it
-    run_cmd(["uv", "pip", "install", "pip-audit"], cwd=dir_path)
-    
-    # 2. Run pip-audit to find vulnerabilities
-    # Run uv run pip-audit --format json
-    res = run_cmd(["uv", "run", "pip-audit", "--format", "json"], cwd=dir_path)
+    # Run pip-audit using uv run with --with pip-audit to fetch it on the fly
+    res = run_cmd(["uv", "run", "--with", "pip-audit", "pip-audit", "--format", "json"], cwd=dir_path)
     
     stdout = res.stdout.strip()
     if not stdout:
