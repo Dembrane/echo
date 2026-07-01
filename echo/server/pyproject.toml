@@ -74,6 +74,7 @@ dependencies = [
     "google-cloud-aiplatform==1.120.*",
     "sendgrid>=6.12.5",
     "email-validator>=2.3.0",
+    "starlette>=0.36.3",
 ]
 
 [tool.setuptools]

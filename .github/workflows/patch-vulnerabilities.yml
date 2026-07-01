@@ -61,6 +61,19 @@ jobs:
         run: |
           python3 .github/workflows/scripts/patch_dependencies.py
 
+      - name: Generate Risk Analysis Report
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+        run: |
+          python3 .github/workflows/scripts/check_breaking_changes.py
+
+      - name: Read Risk Analysis Report
+        id: read_report
+        run: |
+          echo "BREAKING_CHANGES_REPORT<<EOF" >> $GITHUB_ENV
+          cat breaking_changes_report.md >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Create Pull Request with Patches
         uses: peter-evans/create-pull-request@v6
         with:
@@ -77,6 +90,8 @@ jobs:
             - Scanned Python packages with `pip-audit` and upgraded vulnerable ones using `uv`.
             - Scanned Node.js packages with `pnpm audit` and upgraded high/critical ones.
             - Regenerated `requirements.lock` and lockfiles to match.
+            
+            ${{ env.BREAKING_CHANGES_REPORT }}
             
             Please review the upgrades and run tests to ensure no regressions are introduced.
           branch: "security-patch/vulnerabilities"
