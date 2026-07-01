@@ -1,0 +1,86 @@
+name: Scheduled Security Patching
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Every Sunday at midnight UTC
+  workflow_dispatch: # Allow manual triggers
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  patch-vulnerabilities:
+    name: Patch Critical Vulnerabilities
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Bi-weekly filter for schedule
+        if: github.event_name == 'schedule'
+        run: |
+          # Only run on odd weeks of the year to achieve bi-weekly frequency
+          WEEK_NUM=$(date +%V)
+          if [ $(( WEEK_NUM % 2 )) -eq 0 ]; then
+            echo "Skipping scheduled run this week (maintaining bi-weekly schedule on odd weeks)"
+            exit 0
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+          run_install: false
+
+      - name: Set git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run Patch Script
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+        run: |
+          python3 .github/workflows/scripts/patch_dependencies.py
+
+      - name: Create Pull Request with Patches
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(deps): bi-weekly security patch of critical vulnerabilities"
+          title: "chore(deps): bi-weekly security patch of critical vulnerabilities"
+          body: |
+            ### Scheduled Security Patch
+            
+            This PR was automatically created by the bi-weekly scheduled security patching job.
+            It scans for dependency vulnerabilities and upgrades vulnerable packages to safe versions.
+            
+            #### Changes:
+            - Scanned Python packages with `pip-audit` and upgraded vulnerable ones using `uv`.
+            - Scanned Node.js packages with `pnpm audit` and upgraded high/critical ones.
+            - Regenerated `requirements.lock` and lockfiles to match.
+            
+            Please review the upgrades and run tests to ensure no regressions are introduced.
+          branch: "security-patch/vulnerabilities"
+          delete-branch: true
+          labels: |
+            security
+            dependencies
