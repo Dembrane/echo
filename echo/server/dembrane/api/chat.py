@@ -63,27 +63,19 @@ async def _resolve_workspace_tier(project_id: str) -> Optional[str]:
 
 
 async def _check_conversation_not_locked(conversation_id: str, project_id: str) -> None:
-    """Raise 402 if the conversation is locked: over-cap on a non-overage tier,
-    or a free-tier conversation that isn't the workspace's single unlocked one."""
+    """Raise 402 if the conversation is locked: over-cap on an hour-capped tier
+    (Free's 1-hour recording cap)."""
     conv = await async_directus.get_item("conversation", conversation_id)
     if not conv:
         return
-    tier = await _resolve_workspace_tier(project_id)
-    from dembrane.free_tier import (
-        is_free_tier,
-        conversation_is_locked,
-        resolve_project_unlocked_conversation_id,
-    )
-
-    if is_free_tier(tier):
-        free_unlocked_id = await resolve_project_unlocked_conversation_id(project_id)
-    elif not conv.get("is_over_cap"):
-        # Paid / legacy tiers only lock via the hours cap; skip the extra
-        # lookup when the conversation isn't even over-cap.
+    if not conv.get("is_over_cap"):
+        # Locking only ever happens via the hours cap; an under-cap conversation
+        # is never locked, so skip the tier lookup entirely.
         return
-    else:
-        free_unlocked_id = None
-    if conversation_is_locked(conv, tier, free_unlocked_id):
+    tier = await _resolve_workspace_tier(project_id)
+    from dembrane.free_tier import conversation_is_locked
+
+    if conversation_is_locked(conv, tier):
         raise HTTPException(
             status_code=402,
             detail={
@@ -480,17 +472,7 @@ async def add_chat_context(
         )
 
         workspace_tier = await _resolve_workspace_tier(project_id)
-        from dembrane.free_tier import (
-            is_free_tier,
-            conversation_is_locked,
-            resolve_project_unlocked_conversation_id,
-        )
-
-        free_unlocked_id = (
-            await resolve_project_unlocked_conversation_id(project_id)
-            if is_free_tier(workspace_tier)
-            else None
-        )
+        from dembrane.free_tier import conversation_is_locked
 
         added: List[SelectAllConversationResult] = []
         skipped: List[SelectAllConversationResult] = []
@@ -503,7 +485,7 @@ async def add_chat_context(
             if not conv_id:
                 continue
 
-            if conversation_is_locked(conversation, workspace_tier, free_unlocked_id):
+            if conversation_is_locked(conversation, workspace_tier):
                 skipped.append(
                     SelectAllConversationResult(
                         conversation_id=conv_id,
@@ -1167,18 +1149,6 @@ async def post_chat(
                 )
                 if isinstance(caps, list):
                     locked_ids = {c["id"] for c in caps if c.get("id")}
-
-            # Free tier: only the workspace's single unlocked conversation may
-            # be auto-selected; every other id is treated as locked.
-            if selected_conversation_ids:
-                from dembrane.free_tier import (
-                    is_free_tier,
-                    resolve_project_unlocked_conversation_id,
-                )
-
-                if is_free_tier(auto_select_tier):
-                    unlocked_id = await resolve_project_unlocked_conversation_id(project_id)
-                    locked_ids |= {cid for cid in selected_conversation_ids if cid != unlocked_id}
 
             existing_conversation_ids = set(chat_context.conversation_id_list)
             max_context_threshold = int(MAX_CHAT_CONTEXT_LENGTH * 0.8)

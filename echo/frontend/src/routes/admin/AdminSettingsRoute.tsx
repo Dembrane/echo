@@ -469,72 +469,6 @@ function DiscountEditor({
 }
 
 /**
- * Live staff action: grant a comped one-month Changemaker reverse trial on the
- * row's billing account. Auto-reverts to Free at expiry (expiry cron).
- */
-function GrantTrialControl({ accountId }: { accountId: string }) {
-	const queryClient = useQueryClient();
-	const mutation = useMutation({
-		mutationFn: async () => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/admin/billing-accounts/${accountId}/grant-trial`,
-				{
-					body: JSON.stringify({ months: 1, tier: "changemaker" }),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				},
-			);
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
-			}
-			return res.json();
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "admin", "billing-rollup"],
-			});
-		},
-	});
-	return (
-		<Paper withBorder radius="sm" p="sm">
-			<Group justify="space-between" wrap="nowrap" align="center">
-				<Stack gap={0} style={{ minWidth: 0 }}>
-					<Text size="sm" fw={500}>
-						<Trans>Grant Changemaker trial</Trans>
-					</Text>
-					<Text size="xs" c="dimmed">
-						<Trans>
-							One month of Changemaker on this account, comped. Auto-reverts to
-							Free at expiry.
-						</Trans>
-					</Text>
-					{mutation.isError && (
-						<Text size="xs" c="red">
-							{(mutation.error as Error).message}
-						</Text>
-					)}
-					{mutation.isSuccess && (
-						<Text size="xs" c="primary">
-							<Trans>Trial granted</Trans>
-						</Text>
-					)}
-				</Stack>
-				<Button
-					size="xs"
-					variant="light"
-					loading={mutation.isPending}
-					onClick={() => mutation.mutate()}
-				>
-					<Trans>Grant</Trans>
-				</Button>
-			</Group>
-		</Paper>
-	);
-}
-
-/**
  * Account-scope label for a workspace row. An org-scoped billing account is
  * the org's shared account ("Organisation account"); a workspace-scoped one is
  * billed on its own ("Workspace account").
@@ -640,7 +574,13 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 				const err = await res.json().catch(() => ({}));
 				throw new Error(err.detail || `Failed (${res.status})`);
 			}
-			return res.json();
+			const json = await res.json();
+			// Awaited here (not in onSuccess) so isPending stays true until the
+			// modal shows the new tier, keeping the Apply button loading.
+			await queryClient.invalidateQueries({
+				queryKey: ["v2", "admin", "billing-rollup"],
+			});
+			return json;
 		},
 		onError: (e) => {
 			closeConfirm();
@@ -649,9 +589,6 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 		onSuccess: () => {
 			closeConfirm();
 			toast.success(t`Tier changed`);
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "admin", "billing-rollup"],
-			});
 		},
 	});
 
@@ -664,6 +601,15 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 		value,
 	}));
 
+	// Paid target => account flips to dembrane-managed billing; free does not.
+	const isManagedTarget = !!tier && tier !== "free";
+
+	// Only warn about feature limits when this is actually a downgrade.
+	const tierRank = TIER_ORDER as readonly string[];
+	const fromIdx = tierRank.indexOf(row.tier);
+	const toIdx = tier ? tierRank.indexOf(tier) : fromIdx;
+	const isDowngrade = fromIdx >= 0 && toIdx >= 0 && toIdx < fromIdx;
+
 	return (
 		<Paper withBorder radius="sm" p="sm">
 			<Stack gap="xs">
@@ -673,7 +619,8 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 				<Text size="xs" c="dimmed">
 					<Trans>
 						A downgrade applies the matrix downgrade effects and notifies
-						workspace admins.
+						workspace admins. A paid tier puts the account on
+						dembrane-managed billing.
 					</Trans>
 				</Text>
 				<Group gap="xs" align="flex-end">
@@ -705,224 +652,24 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 				data-testid="admin-change-tier-modal"
 				confirmLabel={<Trans>Change tier</Trans>}
 				message={
-					<Trans>
-						Move {row.workspace_name} from {row.tier} to {tier}? A downgrade
-						limits features immediately.
-					</Trans>
-				}
-			/>
-		</Paper>
-	);
-}
-
-/**
- * Staff action: promote a workspace member to admin. Used when the current
- * admin is unreachable; never demotes anyone, so an admin always remains.
- */
-function ChangeAdminControl({ row }: { row: BillingRow }) {
-	const queryClient = useQueryClient();
-	const [membershipId, setMembershipId] = useState<string | null>(null);
-	const [confirmOpen, { open: openConfirm, close: closeConfirm }] =
-		useDisclosure(false);
-
-	const { data: members, isLoading } = useQuery({
-		queryFn: () =>
-			fetchJson<
-				{
-					membership_id: string;
-					display_name: string | null;
-					email: string | null;
-					role: string | null;
-				}[]
-			>(`/v2/admin/workspaces/${row.workspace_id}/members`),
-		queryKey: ["v2", "admin", "workspace-members", row.workspace_id],
-		staleTime: 30_000,
-	});
-
-	const mutation = useMutation({
-		mutationFn: async () => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/change-admin`,
-				{
-					body: JSON.stringify({ membership_id: membershipId }),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				},
-			);
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
-			}
-			return res.json();
-		},
-		onError: (e) => {
-			closeConfirm();
-			toast.error((e as Error).message);
-		},
-		onSuccess: () => {
-			closeConfirm();
-			toast.success(t`Workspace admin changed`);
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "admin", "billing-rollup"],
-			});
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "admin", "workspace-members", row.workspace_id],
-			});
-		},
-	});
-
-	const memberData = (members ?? [])
-		// Outsiders (external + observer) can't be made the workspace admin.
-		.filter((m) => !isOutsiderRole(m.role))
-		.map((m) => ({
-			label: `${m.display_name ?? m.email ?? m.membership_id.slice(0, 8)}${
-				m.role === "admin" || m.role === "owner" ? ` (${m.role})` : ""
-			}`,
-			value: m.membership_id,
-		}));
-	const selected = members?.find((m) => m.membership_id === membershipId);
-
-	return (
-		<Paper withBorder radius="sm" p="sm">
-			<Stack gap="xs">
-				<Text size="sm" fw={500}>
-					<Trans>Change workspace admin</Trans>
-				</Text>
-				<Text size="xs" c="dimmed">
-					<Trans>
-						Promote a member to admin. Existing admins keep their role.
-					</Trans>
-				</Text>
-				<Group gap="xs" align="flex-end">
-					<Select
-						data={memberData}
-						value={membershipId}
-						onChange={setMembershipId}
-						placeholder={isLoading ? t`Loading members` : t`Pick a member`}
-						searchable
-						size="xs"
-						style={{ flex: 1 }}
-						aria-label={t`Member to promote`}
-					/>
-					<Button
-						size="xs"
-						variant="light"
-						disabled={!membershipId}
-						loading={mutation.isPending}
-						onClick={openConfirm}
-					>
-						<Trans>Promote</Trans>
-					</Button>
-				</Group>
-			</Stack>
-			<ConfirmModal
-				opened={confirmOpen}
-				onClose={closeConfirm}
-				onConfirm={() => mutation.mutate()}
-				loading={mutation.isPending}
-				title={t`Change workspace admin`}
-				data-testid="admin-change-admin-modal"
-				confirmLabel={<Trans>Promote to admin</Trans>}
-				message={
-					<Trans>
-						Promote{" "}
-						{selected?.display_name ?? selected?.email ?? t`this member`} to
-						admin of {row.workspace_name}?
-					</Trans>
-				}
-			/>
-		</Paper>
-	);
-}
-
-/**
- * Staff action: reset this cycle's recorded audio hours. Stamps a
- * usage_reset_at floor (conversations are not deleted). Confirms first; the
- * reason is recorded for the audit trail.
- */
-function ResetUsageControl({ row }: { row: BillingRow }) {
-	const queryClient = useQueryClient();
-	const [reason, setReason] = useState("");
-	const [confirmOpen, { open: openConfirm, close: closeConfirm }] =
-		useDisclosure(false);
-
-	const mutation = useMutation({
-		mutationFn: async () => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/reset-usage`,
-				{
-					body: JSON.stringify({ reason: reason.trim() }),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				},
-			);
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
-			}
-			return res.json();
-		},
-		onError: (e) => {
-			closeConfirm();
-			toast.error((e as Error).message);
-		},
-		onSuccess: () => {
-			closeConfirm();
-			toast.success(t`Monthly usage reset`);
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "admin", "billing-rollup"],
-			});
-		},
-	});
-
-	return (
-		<Paper withBorder radius="sm" p="sm">
-			<Stack gap="xs">
-				<Text size="sm" fw={500}>
-					<Trans>Reset monthly usage</Trans>
-				</Text>
-				<Text size="xs" c="dimmed">
-					<Trans>
-						Zeroes this cycle's recorded hours from now on. Conversations are
-						kept; only the billing count resets.
-					</Trans>
-				</Text>
-				<TextInput
-					label={t`Reason`}
-					placeholder={t`Support incident, double-counted upload, etc.`}
-					value={reason}
-					onChange={(e) => setReason(e.currentTarget.value)}
-					size="xs"
-				/>
-				<Group justify="flex-end">
-					<Button
-						size="xs"
-						variant="light"
-						color="red"
-						disabled={reason.trim().length === 0}
-						loading={mutation.isPending}
-						onClick={openConfirm}
-					>
-						<Trans>Reset usage</Trans>
-					</Button>
-				</Group>
-			</Stack>
-			<ConfirmModal
-				opened={confirmOpen}
-				onClose={closeConfirm}
-				onConfirm={() => mutation.mutate()}
-				loading={mutation.isPending}
-				confirmColor="red"
-				title={t`Reset monthly usage`}
-				data-testid="admin-reset-usage-modal"
-				confirmLabel={<Trans>Reset usage</Trans>}
-				message={
-					<Trans>
-						Reset this cycle's recorded hours for {row.workspace_name}? This is
-						recorded in the audit trail.
-					</Trans>
+					<>
+						<Trans>
+							Move {row.workspace_name} from {row.tier} to {tier}?
+						</Trans>{" "}
+						{isDowngrade && (
+							<>
+								<Trans>A downgrade limits features immediately.</Trans>{" "}
+							</>
+						)}
+						{isManagedTarget ? (
+							<Trans>
+								This puts the account on dembrane-managed billing: no automatic
+								Mollie charges or auto-expiry.
+							</Trans>
+						) : (
+							<Trans>This returns the account to standard free billing.</Trans>
+						)}
+					</>
 				}
 			/>
 		</Paper>
@@ -1086,9 +833,8 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 }
 
 /**
- * Actions modal for a workspace row. Live staff edits (partner toggle, discount,
- * trial, change tier, change admin, reset usage). Transfer-to-partner and
- * delete-workspace stay disabled (destructive, deferred to their own issues).
+ * Actions modal for a workspace row: change tier (external workspaces only,
+ * pooled ones point to the org account) and staff support access.
  */
 function WorkspaceActionsModal({
 	row,
@@ -1100,17 +846,9 @@ function WorkspaceActionsModal({
 	onClose: () => void;
 }) {
 	if (!row) return null;
-	const deferredActions: { label: string; hint: string; color?: string }[] = [
-		{
-			hint: t`Partner handoff. Writes billed_to_team_id and notifies both organisations.`,
-			label: t`Transfer workspace to another organisation`,
-		},
-		{
-			color: "red",
-			hint: t`Permanent. Removes all conversations and data.`,
-			label: t`Delete workspace`,
-		},
-	];
+	// Only external workspaces have their own account; pooled ones would move
+	// the whole org, so their tier change belongs in the org-level modal.
+	const isExternalWorkspace = row.account_scope === "workspace";
 	return (
 		<Modal
 			opened={opened}
@@ -1141,40 +879,25 @@ function WorkspaceActionsModal({
 				</Text>
 				<Divider my={4} />
 
-				{row.billing_account_id && (
-					<GrantTrialControl accountId={row.billing_account_id} />
-				)}
-
-				<ChangeTierControl row={row} />
-				<ChangeAdminControl row={row} />
-				<JoinSupportControl row={row} />
-				<ResetUsageControl row={row} />
-
-				<Divider my={4} />
-				{deferredActions.map((a) => (
-					<Paper key={a.label} withBorder radius="sm" p="sm">
-						<Group justify="space-between" wrap="nowrap" align="center">
-							<Stack gap={0} style={{ minWidth: 0 }}>
-								<Text size="sm" fw={500}>
-									{a.label}
-								</Text>
-								<Text size="xs" c="dimmed">
-									{a.hint}
-								</Text>
-							</Stack>
-							<Tooltip label={t`Deferred to its own reviewed issue`} withArrow>
-								<Button
-									size="xs"
-									variant="outline"
-									color={a.color ?? "gray"}
-									disabled
-								>
-									<Trans>Run</Trans>
-								</Button>
-							</Tooltip>
-						</Group>
+				{isExternalWorkspace ? (
+					<ChangeTierControl row={row} />
+				) : (
+					<Paper withBorder radius="sm" p="sm">
+						<Stack gap={0}>
+							<Text size="sm" fw={500}>
+								<Trans>Change tier</Trans>
+							</Text>
+							<Text size="xs" c="dimmed">
+								<Trans>
+									This workspace shares its organisation's billing. Change the
+									tier from the organisation account, where it applies to every
+									internal workspace in the org.
+								</Trans>
+							</Text>
+						</Stack>
 					</Paper>
-				))}
+				)}
+				<JoinSupportControl row={row} />
 			</Stack>
 		</Modal>
 	);
@@ -1398,7 +1121,6 @@ function AccountActionsModal({
 					)}
 
 				{tierHandle && <ChangeTierControl row={tierHandle} />}
-				<GrantTrialControl accountId={account.billing_account_id} />
 
 				<DiscountEditor
 					accountId={account.billing_account_id}
@@ -1777,6 +1499,28 @@ function UsageAndBillingPanel() {
 		[accountsForView],
 	);
 
+	// Re-resolve the open modal's account/row from fresh `data` by id so a tier
+	// change reflects in the modal instead of the stale open-time snapshot.
+	const liveActionsAccount = useMemo(() => {
+		if (!actionsAccount) return null;
+		return (
+			(data?.accounts ?? []).find(
+				(a) => a.billing_account_id === actionsAccount.billing_account_id,
+			) ?? actionsAccount
+		);
+	}, [data, actionsAccount]);
+
+	const liveActionsRow = useMemo(() => {
+		if (!actionsRow) return null;
+		for (const a of data?.accounts ?? []) {
+			const match = a.workspaces.find(
+				(w) => w.workspace_id === actionsRow.workspace_id,
+			);
+			if (match) return match;
+		}
+		return actionsRow;
+	}, [data, actionsRow]);
+
 	if (isLoading) {
 		return (
 			<Center py="xl">
@@ -1976,14 +1720,14 @@ function UsageAndBillingPanel() {
 			/>
 
 			<AccountActionsModal
-				account={actionsAccount}
+				account={liveActionsAccount}
 				opened={actionsAccount !== null}
 				onClose={() => setActionsAccount(null)}
 				onOpenWorkspace={setActionsRow}
 			/>
 
 			<WorkspaceActionsModal
-				row={actionsRow}
+				row={liveActionsRow}
 				opened={actionsRow !== null}
 				onClose={() => setActionsRow(null)}
 			/>

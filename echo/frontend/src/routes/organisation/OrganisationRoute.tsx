@@ -1181,6 +1181,7 @@ interface MyWorkspace {
 	members_preview?: WorkspaceMemberPreview[];
 	usage?: { audio_hours?: number; conversation_count?: number };
 	created_at?: string | null;
+	logo_url?: string | null;
 }
 
 async function fetchMyWorkspaces(): Promise<{
@@ -1207,6 +1208,7 @@ interface WorkspaceCardModel {
 	is_private: boolean;
 	visibility: string;
 	bills_separately: boolean;
+	logo_url: string | null;
 	pinned_projects: WorkspacePinnedProject[];
 	recently_approved: boolean;
 }
@@ -1309,6 +1311,7 @@ function OrganisationOverviewPanel({
 					id: w.id,
 					is_private: roster?.is_private ?? false,
 					visibility: roster?.visibility ?? "open_to_organisation",
+					logo_url: w.logo_url ?? null,
 					member_count: w.member_count,
 					members_preview: w.members_preview ?? [],
 					name: w.name,
@@ -1551,6 +1554,16 @@ function OrganisationWorkspaceCard({
 		>
 			<Stack gap={12}>
 				<Group gap="xs" wrap="nowrap" align="center">
+					{workspace.logo_url && (
+						<Image
+							src={resolveLogoUrl(workspace.logo_url)}
+							alt={t`${workspace.name} logo`}
+							h={24}
+							w="auto"
+							fit="contain"
+							style={{ flexShrink: 0, maxWidth: 80 }}
+						/>
+					)}
 					<Text
 						fw={500}
 						size="md"

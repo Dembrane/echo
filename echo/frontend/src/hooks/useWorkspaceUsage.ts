@@ -11,7 +11,6 @@ export interface UsageGates {
 
 export interface FreeTierUsage {
 	active: boolean;
-	unlocked_conversation_id: string | null;
 	chats_used: number;
 	chats_limit: number;
 	primary_chat_id: string | null;

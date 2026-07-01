@@ -1536,13 +1536,10 @@ function PrivacyAndDefaultsSection({
 						maxLength={500}
 					/>
 					{(() => {
-						// Whitelabel branding is changemaker+ AND a per-workspace logo
-						// override is only for external-client workspaces (ISSUE-032);
-						// internal workspaces inherit the org's branding.
+						// Whitelabel branding is gated on tier (changemaker+).
+						// Any paid workspace can set a per-workspace logo.
 						const whitelabelTiers = ["changemaker", "guardian"];
-						const canWhitelabel =
-							whitelabelTiers.includes(settings.tier) &&
-							settings.is_external_client;
+						const canWhitelabel = whitelabelTiers.includes(settings.tier);
 
 						if (canWhitelabel) {
 							return (

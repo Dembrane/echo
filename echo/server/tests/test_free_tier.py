@@ -11,7 +11,6 @@ from dembrane.free_tier import (
     FREE_TIER_MAX_WORKSPACES,
     FREE_TIER_UPGRADE_CTA_TIER,
     FREE_TIER_MAX_CHAT_USER_TURNS,
-    FREE_TIER_MAX_UNLOCKED_CONVERSATIONS,
     is_free_tier,
     free_tier_limit_error,
 )
@@ -19,7 +18,6 @@ from dembrane.free_tier import (
 
 class TestConstants:
     def test_limits_are_one_except_turns(self):
-        assert FREE_TIER_MAX_UNLOCKED_CONVERSATIONS == 1
         assert FREE_TIER_MAX_CHATS == 1
         assert FREE_TIER_MAX_REPORTS == 1
         assert FREE_TIER_MAX_WORKSPACES == 1
@@ -70,7 +68,6 @@ from dembrane.free_tier import (  # noqa: E402
     count_workspace_reports,
     resolve_workspace_primary_chat_id,
     resolve_workspace_primary_report_id,
-    resolve_workspace_unlocked_conversation_id,
 )
 
 
@@ -105,55 +102,42 @@ class TestWorkspaceProjectIds:
             assert await _workspace_project_ids("w1") == []
 
 
-class TestUnlockedConversationId:
-    @pytest.mark.asyncio
-    async def test_oldest_conversation(self):
-        mock = _mock_directus(
-            {
-                "project": lambda _q: [{"id": "p1"}],
-                "conversation": lambda _q: [{"id": "c-old"}],
-            }
-        )
-        with patch("dembrane.directus_async.async_directus", mock):
-            assert await resolve_workspace_unlocked_conversation_id("w1") == "c-old"
-
-    @pytest.mark.asyncio
-    async def test_none_when_no_projects(self):
-        mock = _mock_directus({"project": lambda _q: []})
-        with patch("dembrane.directus_async.async_directus", mock):
-            assert await resolve_workspace_unlocked_conversation_id("w1") is None
-
-    @pytest.mark.asyncio
-    async def test_none_when_no_conversations(self):
-        mock = _mock_directus(
-            {"project": lambda _q: [{"id": "p1"}], "conversation": lambda _q: []}
-        )
-        with patch("dembrane.directus_async.async_directus", mock):
-            assert await resolve_workspace_unlocked_conversation_id("w1") is None
-
-    @pytest.mark.asyncio
-    async def test_uses_passed_project_ids_without_fetching(self):
-        # No "project" handler: if the helper tried to fetch project ids it
-        # would get [] and return None. Passing project_ids must bypass that.
-        mock = _mock_directus({"conversation": lambda _q: [{"id": "c-old"}]})
-        with patch("dembrane.directus_async.async_directus", mock):
-            result = await resolve_workspace_unlocked_conversation_id(
-                "w1", project_ids=["p1", "p2"]
-            )
-        assert result == "c-old"
-
-
 class TestCountWorkspaceChats:
     @pytest.mark.asyncio
-    async def test_counts_via_aggregate(self):
+    async def test_counts_only_chats_with_user_messages(self):
+        # two chats exist; countDistinct reports one has a user message
         mock = _mock_directus(
             {
                 "project": lambda _q: [{"id": "p1"}],
-                "project_chat": lambda _q: [{"count": {"id": 2}}],
+                "project_chat": lambda _q: [{"id": "chat1"}, {"id": "chat2"}],
+                "project_chat_message": lambda _q: [
+                    {"countDistinct": {"project_chat_id": 1}}
+                ],
             }
         )
         with patch("dembrane.directus_async.async_directus", mock):
-            assert await count_workspace_chats("w1") == 2
+            assert await count_workspace_chats("w1") == 1
+
+    @pytest.mark.asyncio
+    async def test_zero_when_chat_is_empty(self):
+        # an empty chat exists but has no user messages -> doesn't count
+        mock = _mock_directus(
+            {
+                "project": lambda _q: [{"id": "p1"}],
+                "project_chat": lambda _q: [{"id": "chat1"}],
+                "project_chat_message": lambda _q: [],
+            }
+        )
+        with patch("dembrane.directus_async.async_directus", mock):
+            assert await count_workspace_chats("w1") == 0
+
+    @pytest.mark.asyncio
+    async def test_zero_when_no_chats(self):
+        mock = _mock_directus(
+            {"project": lambda _q: [{"id": "p1"}], "project_chat": lambda _q: []}
+        )
+        with patch("dembrane.directus_async.async_directus", mock):
+            assert await count_workspace_chats("w1") == 0
 
     @pytest.mark.asyncio
     async def test_zero_when_no_projects(self):
@@ -269,7 +253,6 @@ class TestBuildFreeTierUsageBlock:
     def test_free_tier_active(self):
         block = build_free_tier_usage_block(
             tier="free",
-            unlocked_conversation_id="c1",
             chats_used=1,
             primary_chat_id="chat1",
             reports_used=0,
@@ -277,7 +260,6 @@ class TestBuildFreeTierUsageBlock:
         )
         assert block == {
             "active": True,
-            "unlocked_conversation_id": "c1",
             "chats_used": 1,
             "chats_limit": 1,
             "primary_chat_id": "chat1",
@@ -289,7 +271,6 @@ class TestBuildFreeTierUsageBlock:
     def test_paid_tier_inactive(self):
         block = build_free_tier_usage_block(
             tier="changemaker",
-            unlocked_conversation_id=None,
             chats_used=5,
             primary_chat_id="chat1",
             reports_used=3,
@@ -300,7 +281,6 @@ class TestBuildFreeTierUsageBlock:
     def test_none_tier_inactive(self):
         block = build_free_tier_usage_block(
             tier=None,
-            unlocked_conversation_id=None,
             chats_used=0,
             primary_chat_id=None,
             reports_used=0,

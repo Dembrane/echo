@@ -398,12 +398,7 @@ const ConversationRow = ({
 				</Group>
 
 				{isLocked ? (
-					<LockedTranscriptOverlay
-						compact
-						variant="summary"
-						reason={conversation.lock_reason ?? "free_tier"}
-						context={selectionMode ? "selection" : "view"}
-					/>
+					<LockedTranscriptOverlay compact variant="summary" />
 				) : (
 					<Text
 						size="sm"

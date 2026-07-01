@@ -1,6 +1,11 @@
 """Free-tier gating: limit constants, the 402 contract, and the workspace /
-org scoped counters and resolvers shared by all four free-tier gates
-(transcripts, chat, reports, workspaces).
+org scoped counters and resolvers shared by the count-based free-tier gates
+(chat, reports, workspaces).
+
+Transcript visibility is NOT a count gate: free workspaces see transcripts up to
+the 1-hour recording cap (the over-cap machinery in dembrane.tier_capacity), not
+a fixed number of conversations. conversation_is_locked therefore delegates
+straight to the hours cap.
 
 Gating applies only when tier == "free" exactly. None (legacy workspaces with
 no billing account) and paid tiers are never gated. Tier lives on
@@ -18,10 +23,9 @@ from dembrane.tier_capacity import is_conversation_locked
 
 FREE_TIER = "free"
 
-# Per-workspace limits (chats, reports, unlocked transcripts) and the
-# per-chat turn limit. Workspaces are limited per org. Named so product can
-# tune them in one place.
-FREE_TIER_MAX_UNLOCKED_CONVERSATIONS = 1
+# Per-workspace limits (chats, reports) and the per-chat turn limit. Workspaces
+# are limited per org. Transcripts are gated by the 1-hour recording cap, not a
+# conversation count. Named so product can tune them in one place.
 FREE_TIER_MAX_CHATS = 1
 FREE_TIER_MAX_CHAT_USER_TURNS = 3  # the 4th user message hits the upgrade path
 FREE_TIER_MAX_REPORTS = 1
@@ -111,29 +115,49 @@ async def _resolve_project_ids(
     return await _workspace_project_ids(workspace_id)
 
 
-async def resolve_workspace_unlocked_conversation_id(
-    workspace_id: Optional[str], project_ids: Optional[list[str]] = None
-) -> Optional[str]:
-    """The single conversation a free workspace keeps unlocked: the oldest
-    non-deleted conversation across the workspace's projects."""
-    project_ids = await _resolve_project_ids(workspace_id, project_ids)
-    if not project_ids:
-        return None
-    return await _oldest_id(
-        "conversation",
-        {"project_id": {"_in": project_ids}, "deleted_at": {"_null": True}},
-        "created_at",
+async def _live_chat_ids(project_ids: list[str]) -> list[str]:
+    """Ids of non-deleted chats across the given projects."""
+    rows = await directus_async.async_directus.get_items(
+        "project_chat",
+        {
+            "query": {
+                "filter": {"project_id": {"_in": project_ids}, "deleted_at": {"_null": True}},
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
     )
+    if not isinstance(rows, list):
+        return []
+    return [r["id"] for r in rows if r.get("id")]
 
 
 async def count_workspace_chats(workspace_id: Optional[str], project_ids: Optional[list[str]] = None) -> int:
+    """Count chats that consume the free-tier allowance: chats with at least one
+    user message. An empty chat (a mode was picked but nothing was ever sent)
+    does not count, so opening the composer and leaving never locks a free
+    workspace out of starting a chat."""
     project_ids = await _resolve_project_ids(workspace_id, project_ids)
     if not project_ids:
         return 0
-    return await _agg_count(
-        "project_chat",
-        {"project_id": {"_in": project_ids}, "deleted_at": {"_null": True}},
+    chat_ids = await _live_chat_ids(project_ids)
+    if not chat_ids:
+        return 0
+    rows = await directus_async.async_directus.get_items(
+        "project_chat_message",
+        {
+            "query": {
+                "filter": {
+                    "project_chat_id": {"_in": chat_ids},
+                    "message_from": {"_eq": "user"},
+                },
+                "aggregate": {"countDistinct": ["project_chat_id"]},
+            }
+        },
     )
+    if isinstance(rows, list) and rows:
+        return int((rows[0].get("countDistinct") or {}).get("project_chat_id", 0) or 0)
+    return 0
 
 
 async def resolve_workspace_primary_chat_id(
@@ -200,7 +224,6 @@ async def count_org_workspaces(
 def build_free_tier_usage_block(
     *,
     tier: Optional[str],
-    unlocked_conversation_id: Optional[str],
     chats_used: int,
     primary_chat_id: Optional[str],
     reports_used: int,
@@ -210,7 +233,6 @@ def build_free_tier_usage_block(
     frontend reads this instead of recomputing counts per component."""
     return {
         "active": is_free_tier(tier),
-        "unlocked_conversation_id": unlocked_conversation_id,
         "chats_used": chats_used,
         "chats_limit": FREE_TIER_MAX_CHATS,
         "primary_chat_id": primary_chat_id,
@@ -234,29 +256,9 @@ async def resolve_project_tier(project_id: str) -> Optional[str]:
     return await resolve_workspace_tier(workspace_id)
 
 
-async def resolve_project_unlocked_conversation_id(project_id: str) -> Optional[str]:
-    """The workspace's single unlocked conversation, resolved from a project id
-    (project -> workspace -> oldest conversation). None when the chain breaks."""
-    if not project_id:
-        return None
-    project = await directus_async.async_directus.get_item("project", project_id)
-    workspace_id = (project or {}).get("workspace_id")
-    if not workspace_id:
-        return None
-    return await resolve_workspace_unlocked_conversation_id(workspace_id)
-
-
-def conversation_is_locked(
-    conv: dict, tier: Optional[str], free_tier_unlocked_id: Optional[str] = None
-) -> bool:
-    """Whether a conversation is gated: the hours cap (over-cap on a
-    non-overage tier) OR the free-tier rule (every conversation except the
-    workspace's single unlocked one). Shared by the conversations BFF and the
-    chat context-add paths so they cannot diverge."""
-    if is_conversation_locked(conv, tier):
-        return True
-    return (
-        is_free_tier(tier)
-        and free_tier_unlocked_id is not None
-        and conv.get("id") != free_tier_unlocked_id
-    )
+def conversation_is_locked(conv: dict, tier: Optional[str]) -> bool:
+    """Whether a conversation is gated: over-cap on an hour-capped tier (Free's
+    1-hour recording cap). Thin wrapper over the hours-cap predicate so the
+    conversations BFF, the summarize/title gates, and the chat context-add paths
+    share one lock decision and cannot diverge."""
+    return is_conversation_locked(conv, tier)
