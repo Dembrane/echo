@@ -333,14 +333,22 @@ export const ParticipantConversationAudio = () => {
 		if (!audioRecorder.hadInterruption) return;
 
 		const chunkHistory = audioRecorder.getChunkHistory();
+		const interruptionReason =
+			audioRecorder.getInterruptionReason() ?? "suspicious_chunks";
 
-		// Send to PostHog error tracking
+		// Send to PostHog error tracking. Distinct messages so the two failure
+		// modes land as separate error tracking issues.
 		posthog.captureException(
-			new Error("Recording interrupted by consecutive suspicious chunks"),
+			new Error(
+				interruptionReason === "stalled_no_chunks"
+					? "Recording interrupted: chunk production stalled (page suspended or mic lost)"
+					: "Recording interrupted by consecutive suspicious chunks",
+			),
 			{
 				chunkSizes: chunkHistory.map((c) => c.size),
 				conversationId,
 				deviceInfo: navigator.userAgent,
+				interruptionReason,
 				issue_type: "audio_interruption",
 				platform: "participant_portal",
 				projectId,
@@ -356,6 +364,7 @@ export const ParticipantConversationAudio = () => {
 		// exception above lands in error tracking, which doesn't funnel cleanly).
 		posthog.capture("portal_recording_error", {
 			conversation_id: conversationId,
+			interruption_reason: interruptionReason,
 			issue_type: "audio_interruption",
 			project_id: projectId,
 			recording_duration_seconds: interruptionRecordingTimeRef.current,
