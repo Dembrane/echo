@@ -427,6 +427,10 @@ async def get_billing_overview(account_id: str) -> dict:
     customer_id = account.get("mollie_customer_id")
     sub_id = account.get("mollie_subscription_id")
     managed = is_managed(account)
+    # Live subscription drives the "Active" UI; `status` alone can be "active" as an
+    # entitlement flag with no subscription. History = checked out before.
+    has_active_subscription = account.get("payment_mode") == "mollie" and bool(sub_id)
+    has_payment_history = bool(customer_id)
 
     # Projected monthly total at the current tier + cadence. The discount applies
     # to the rolled-up totals, not the per-seat sticker rate: the sticker stays
@@ -531,6 +535,8 @@ async def get_billing_overview(account_id: str) -> dict:
         # Managed mode (ISSUE-021): the client UI hides self-serve controls and
         # shows a "managed by dembrane" panel with the account manager's contact.
         "is_managed": managed,
+        "has_active_subscription": has_active_subscription,
+        "has_payment_history": has_payment_history,
         "account_manager": account_manager,
         # Captured VAT + billing address (ISSUE-005, capture only).
         "billing_details": billing_details_from_account(account),

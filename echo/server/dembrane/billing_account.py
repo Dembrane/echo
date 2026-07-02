@@ -256,6 +256,16 @@ def billing_account_blocks_new_workspace(account: Optional[dict]) -> Optional[st
     return None
 
 
+def has_live_mollie_subscription(account: Optional[dict[str, Any]]) -> bool:
+    """True when the account has a running Mollie subscription (payment_mode
+    "mollie" plus a subscription id). Callers block tier changes that would orphan it."""
+    if not account:
+        return False
+    return account.get("payment_mode") == "mollie" and bool(
+        account.get("mollie_subscription_id")
+    )
+
+
 async def get_billing_account_id(workspace_id: str) -> Optional[str]:
     """The id of the billing account a workspace resolves to."""
     ws = await directus_async.async_directus.get_item("workspace", workspace_id)

@@ -3,6 +3,7 @@ import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Anchor,
+	Alert,
 	Badge,
 	Box,
 	Button,
@@ -18,6 +19,7 @@ import {
 	NumberInput,
 	Paper,
 	Progress,
+	Radio,
 	Select,
 	SimpleGrid,
 	Stack,
@@ -30,6 +32,7 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
+import { DatePickerInput } from "@mantine/dates";
 import {
 	IconArrowsSort,
 	IconChevronDown,
@@ -122,6 +125,7 @@ type BillingRow = {
 	type_discount: string | null;
 	percent_discount: number | null;
 	billing_period: BillingPeriod | null;
+	payment_mode?: string | null;
 };
 
 // One billing account: the paying entity, pooling its workspaces' seats. The
@@ -610,6 +614,8 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 	const toIdx = tier ? tierRank.indexOf(tier) : fromIdx;
 	const isDowngrade = fromIdx >= 0 && toIdx >= 0 && toIdx < fromIdx;
 
+	const hasLiveSubscription = row.payment_mode === "mollie";
+
 	return (
 		<Paper withBorder radius="sm" p="sm">
 			<Stack gap="xs">
@@ -623,6 +629,14 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 						dembrane-managed billing.
 					</Trans>
 				</Text>
+				{hasLiveSubscription && (
+					<Alert color="yellow" variant="light">
+						<Trans>
+							This account has an active subscription. Ask the customer to
+							cancel it from their billing page before you change the tier.
+						</Trans>
+					</Alert>
+				)}
 				<Group gap="xs" align="flex-end">
 					<Select
 						data={tierData}
@@ -635,7 +649,7 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 					<Button
 						size="xs"
 						variant="light"
-						disabled={!tier || tier === row.tier}
+						disabled={!tier || tier === row.tier || hasLiveSubscription}
 						loading={mutation.isPending}
 						onClick={openConfirm}
 					>
@@ -672,6 +686,212 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 					</>
 				}
 			/>
+		</Paper>
+	);
+}
+
+/**
+ * Staff switch an account between managed and self-serve billing (both ways), at
+ * its current tier. Disabled with a reason while a live Mollie subscription exists.
+ */
+function BillingModeControl({
+	billingAccountId,
+	paymentMode,
+	tier,
+	name,
+}: {
+	billingAccountId: string | null;
+	paymentMode: string | null | undefined;
+	tier: string;
+	name: string;
+}) {
+	const queryClient = useQueryClient();
+	const [confirmOpen, { open: openConfirm, close: closeConfirm }] =
+		useDisclosure(false);
+
+	// Managed accounts move to self-serve; every other mode moves to managed.
+	const isManaged = paymentMode === "offline";
+	// Self-serve switch options: staff either downgrade to Free, or keep the tier
+	// with an expiry date after which it reverts to Free unless they subscribe.
+	const [saasMode, setSaasMode] = useState<"free" | "keep">("free");
+	const [expiryDate, setExpiryDate] = useState<Date | null>(null);
+
+	const mutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(
+				isManaged
+					? `${API_BASE_URL}/v2/admin/billing-accounts/${billingAccountId}/set-saas`
+					: `${API_BASE_URL}/v2/admin/billing-accounts/${billingAccountId}/set-managed`,
+				{
+					body: JSON.stringify(
+						isManaged
+							? {
+									expires_at:
+										saasMode === "keep" && expiryDate
+											? expiryDate.toISOString()
+											: null,
+									to_free: saasMode === "free",
+								}
+							: { tier },
+					),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			const json = await res.json();
+			await queryClient.invalidateQueries({
+				queryKey: ["v2", "admin", "billing-rollup"],
+			});
+			return json;
+		},
+		onError: (e) => {
+			closeConfirm();
+			toast.error((e as Error).message);
+		},
+		onSuccess: () => {
+			closeConfirm();
+			toast.success(
+				isManaged
+					? t`Account moved to self-serve billing.`
+					: t`Account set to managed billing.`,
+			);
+		},
+	});
+
+	// A live Mollie subscription must be cancelled before either switch, else it
+	// would be orphaned (keeps charging). Explain rather than hide.
+	let disabledReason: string | null = null;
+	if (!billingAccountId) {
+		disabledReason = t`This record has no billing account.`;
+	} else if (paymentMode === "mollie") {
+		disabledReason = t`This account has a live Mollie subscription. Cancel it first.`;
+	}
+
+	// Binary: Managed (offline) vs Self-serve (everything else, incl. unsubscribed "none").
+	const modeLabel = isManaged ? t`Managed` : t`Self-serve`;
+
+	return (
+		<Paper withBorder radius="sm" p="sm">
+			<Stack gap="xs">
+				<Group gap="xs" align="center">
+					<Text size="sm" fw={500}>
+						<Trans>Billing mode</Trans>
+					</Text>
+					<Badge
+						size="xs"
+						variant="light"
+						color={isManaged ? "primary" : "gray"}
+					>
+						{modeLabel}
+					</Badge>
+				</Group>
+				<Text size="xs">
+					{disabledReason ??
+						(isManaged ? (
+							<Trans>
+								On dembrane-managed billing. Switching to self-serve keeps the
+								tier and shows the customer the checkout to set up card payment.
+							</Trans>
+						) : (
+							<Trans>
+								Not on managed billing. Set to managed to invoice this account at
+								the {tier} tier, with no automatic Mollie charges.
+							</Trans>
+						))}
+				</Text>
+				<Group>
+					<Button
+						size="xs"
+						variant="outline"
+						loading={mutation.isPending}
+						disabled={!!disabledReason}
+						onClick={openConfirm}
+					>
+						{isManaged ? (
+							<Trans>Switch to self-serve billing</Trans>
+						) : (
+							<Trans>Set to managed billing</Trans>
+						)}
+					</Button>
+				</Group>
+			</Stack>
+			{isManaged ? (
+				<Modal
+					opened={confirmOpen}
+					onClose={closeConfirm}
+					title={t`Switch to self-serve billing`}
+					data-testid="admin-billing-mode-modal"
+				>
+					<Stack gap="md">
+						<Text size="sm">
+							<Trans>
+								Move {name} off dembrane-managed billing. Choose what happens to
+								their plan.
+							</Trans>
+						</Text>
+						<Radio.Group
+							value={saasMode}
+							onChange={(v) => setSaasMode(v as "free" | "keep")}
+						>
+							<Stack gap="xs">
+								<Radio
+									value="free"
+									label={t`Downgrade to Free now`}
+									description={t`Drops to the free tier. They can subscribe to a paid plan anytime.`}
+								/>
+								<Radio
+									value="keep"
+									label={t`Keep ${tier} until a date`}
+									description={t`Keeps the tier until the date below, then reverts to Free unless they subscribe.`}
+								/>
+							</Stack>
+						</Radio.Group>
+						{saasMode === "keep" && (
+							<DatePickerInput
+								label={t`Access ends on`}
+								placeholder={t`Pick a date`}
+								value={expiryDate}
+								onChange={setExpiryDate}
+								minDate={new Date()}
+								required
+							/>
+						)}
+						<Group justify="flex-end" gap="sm">
+							<Button variant="subtle" onClick={closeConfirm}>
+								<Trans>Cancel</Trans>
+							</Button>
+							<Button
+								loading={mutation.isPending}
+								disabled={saasMode === "keep" && !expiryDate}
+								onClick={() => mutation.mutate()}
+							>
+								<Trans>Switch to self-serve</Trans>
+							</Button>
+						</Group>
+					</Stack>
+				</Modal>
+			) : (
+				<ConfirmModal
+					opened={confirmOpen}
+					onClose={closeConfirm}
+					onConfirm={() => mutation.mutate()}
+					loading={mutation.isPending}
+					title={t`Set to managed billing`}
+					data-testid="admin-billing-mode-modal"
+					confirmLabel={<Trans>Set to managed</Trans>}
+					message={
+						<Trans>
+							Put {name} on dembrane-managed billing at the {tier} tier? No
+							automatic Mollie charges or auto-expiry.
+						</Trans>
+					}
+				/>
+			)}
 		</Paper>
 	);
 }
@@ -880,7 +1100,15 @@ function WorkspaceActionsModal({
 				<Divider my={4} />
 
 				{isExternalWorkspace ? (
-					<ChangeTierControl row={row} />
+					<>
+						<ChangeTierControl row={row} />
+						<BillingModeControl
+							billingAccountId={row.billing_account_id}
+							paymentMode={row.payment_mode}
+							tier={row.tier}
+							name={row.workspace_name}
+						/>
+					</>
 				) : (
 					<Paper withBorder radius="sm" p="sm">
 						<Stack gap={0}>
@@ -1121,6 +1349,13 @@ function AccountActionsModal({
 					)}
 
 				{tierHandle && <ChangeTierControl row={tierHandle} />}
+
+				<BillingModeControl
+					billingAccountId={account.billing_account_id}
+					paymentMode={account.payment_mode}
+					tier={account.tier}
+					name={accountIdentifyingName(account)}
+				/>
 
 				<DiscountEditor
 					accountId={account.billing_account_id}
