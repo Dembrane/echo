@@ -402,7 +402,7 @@ msgstr "{0, plural, one {Étiquette :} other {Étiquettes :}}"
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionDescription
 #. placeholder {0}: selectedOption.transitionMessage
-#: src/routes/project/chat/ProjectChatRoute.tsx:711
+#: src/routes/project/chat/ProjectChatRoute.tsx:756
 #: src/components/settings/FontSettingsCard.tsx:49
 #: src/components/settings/FontSettingsCard.tsx:51
 #: src/components/project/ProjectPortalEditor.tsx:610
@@ -622,7 +622,7 @@ msgstr ""
 msgid "{conversationCount} Conversations • Edited {0}"
 msgstr "{conversationCount} conversations • Modifié {0}"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:832
+#: src/routes/project/chat/ProjectChatRoute.tsx:877
 msgid "{conversationCount} conversations selected for this chat"
 msgstr ""
 
@@ -1642,7 +1642,7 @@ msgstr "Une notification par e-mail sera envoyée à {0} participant{1}. Voulez-
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Une erreur s'est produite lors du chargement du Portail. Veuillez contacter l'équipe de support."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:758
+#: src/routes/project/chat/ProjectChatRoute.tsx:803
 msgid "An error occurred."
 msgstr "Une erreur s'est produite."
 
@@ -1698,6 +1698,10 @@ msgstr "Annonces"
 
 #: src/components/workspace/BillingPeriodToggle.tsx:53
 msgid "Annual billing"
+msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:39
+msgid "Anonymise transcripts"
 msgstr ""
 
 #: src/components/conversation/RetranscribeConversation.tsx:185
@@ -1765,8 +1769,8 @@ msgid "Appearance"
 msgstr "Apparence"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:96
-msgid "Applied"
-msgstr ""
+#~ msgid "Applied"
+#~ msgstr ""
 
 #: src/components/workspace/WorkspaceInviteWizard.tsx:437
 #~ msgid "Applies to the members you picked."
@@ -1778,7 +1782,7 @@ msgstr ""
 msgid "Apply"
 msgstr "Appliquer"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:167
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:330
 msgid "Apply selected"
 msgstr ""
 
@@ -1927,7 +1931,7 @@ msgstr "Êtes-vous sûr de vouloir supprimer votre logo personnalisé ? Le logo 
 msgid "Ask"
 msgstr "Demander"
 
-#: src/routes/project/chat/NewChatRoute.tsx:156
+#: src/routes/project/chat/NewChatRoute.tsx:158
 msgid "Ask | dembrane"
 msgstr ""
 
@@ -1943,6 +1947,14 @@ msgstr ""
 msgid "Ask a workspace admin for an invite, or pick a different workspace from your list."
 msgstr ""
 
+#: src/components/chat/AgenticChatPanel.tsx:867
+msgid "Ask about your conversations to get started."
+msgstr ""
+
+#: src/components/chat/AgenticChatPanel.tsx:1089
+msgid "Ask about your conversations..."
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:696
 #: src/components/project/PortalSettingsOverview.tsx:149
 msgid "Ask for Email?"
@@ -1953,13 +1965,21 @@ msgstr "Demander l'e-mail ?"
 msgid "Ask for Name?"
 msgstr "Demander le nom ?"
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:43
+msgid "Ask participants for their email"
+msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:45
+msgid "Ask participants for their name"
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:495
 #~ msgid "Ask participants to provide their name when they start a conversation"
 #~ msgstr "Demander aux participants de fournir leur nom lorsqu'ils commencent une conversation"
 
 #: src/components/chat/AgenticChatPanel.tsx:1096
-msgid "Ask the agent..."
-msgstr ""
+#~ msgid "Ask the agent..."
+#~ msgstr ""
 
 #: src/routes/project/library/ProjectLibraryAspect.tsx:51
 msgid "Aspect"
@@ -2086,6 +2106,10 @@ msgstr "Généré automatiquement ou saisi manuellement"
 
 #~ msgid "Auto-select sources to add to the chat"
 #~ msgstr "Sélectionner les sources à ajouter à la conversation"
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:51
+msgid "Automatic titles and tags"
+msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:1568
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
@@ -2603,6 +2627,10 @@ msgstr ""
 msgid "Change your own role?"
 msgstr ""
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:180
+msgid "Changes applied. You can fine-tune them anytime in project settings."
+msgstr ""
+
 #~ msgid "Changes are saved automatically as you continue to use the app. <0/>Once you have some unsaved changes, you can click anywhere to save the changes. <1/>You will also see a button to Cancel the changes."
 #~ msgstr "Les modifications sont enregistrées automatiquement pendant que vous utilisez l'application. <0/>Une fois que vous avez des modifications non enregistrées, vous pouvez cliquer n'importe où pour les sauvegarder. <1/>Vous verrez également un bouton pour annuler les modifications."
 
@@ -2614,8 +2642,8 @@ msgstr "Les modifications seront enregistrées automatiquement"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Changer de langue pendant une conversation active peut provoquer des résultats inattendus. Il est recommandé de commencer une nouvelle conversation après avoir changé la langue. Êtes-vous sûr de vouloir continuer ?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:626
-#: src/routes/project/chat/ProjectChatRoute.tsx:632
+#: src/routes/project/chat/ProjectChatRoute.tsx:671
+#: src/routes/project/chat/ProjectChatRoute.tsx:677
 #: src/features/sidebar/hooks/useSearchHits.ts:254
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
@@ -2624,7 +2652,7 @@ msgstr "Changer de langue pendant une conversation active peut provoquer des ré
 msgid "Chat"
 msgstr "Discussion"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:289
+#: src/routes/project/chat/ProjectChatRoute.tsx:322
 msgid "Chat | dembrane"
 msgstr "Discussion | dembrane"
 
@@ -2632,8 +2660,8 @@ msgstr "Discussion | dembrane"
 msgid "Chat deleted"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:579
-#: src/routes/project/chat/NewChatRoute.tsx:249
+#: src/routes/project/chat/ProjectChatRoute.tsx:612
+#: src/routes/project/chat/NewChatRoute.tsx:265
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr ""
 
@@ -2650,7 +2678,7 @@ msgstr ""
 msgid "Chat name"
 msgstr "Nom du chat"
 
-#: src/routes/project/chat/NewChatRoute.tsx:98
+#: src/routes/project/chat/NewChatRoute.tsx:100
 msgid "Chats"
 msgstr "Discussions"
 
@@ -2740,6 +2768,10 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:936
 #~ msgid "Clear the {liveProjectCount} project(s) first. You can delete all projects across your team from the team page."
 #~ msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:85
+msgid "cleared"
+msgstr ""
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:725
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
@@ -3091,7 +3123,7 @@ msgstr "Conversations"
 #~ msgid "Conversations from Upload"
 #~ msgstr "Conversations à partir du téléchargement"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:866
+#: src/routes/project/chat/ProjectChatRoute.tsx:911
 msgid "Conversations:"
 msgstr "Conversations :"
 
@@ -3193,9 +3225,13 @@ msgstr "Copier dans le presse-papiers"
 msgid "Copying..."
 msgstr "Copie en cours..."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:79
-msgid "Could not apply the suggested changes"
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:183
+msgid "Could not apply the changes. Nothing was saved."
 msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:79
+#~ msgid "Could not apply the suggested changes"
+#~ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2621
 msgid "Could not complete that action."
@@ -3770,8 +3806,8 @@ msgstr ""
 #~ msgid "Deleting a team is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 #~ msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:932
-#: src/routes/project/chat/ProjectChatRoute.tsx:967
+#: src/routes/project/chat/ProjectChatRoute.tsx:977
+#: src/routes/project/chat/ProjectChatRoute.tsx:1012
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr ""
 
@@ -3948,10 +3984,10 @@ msgstr ""
 #~ msgstr ""
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:158
-msgid "Dismiss"
-msgstr ""
+#~ msgid "Dismiss"
+#~ msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:100
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:218
 msgid "Dismissed"
 msgstr ""
 
@@ -4272,6 +4308,10 @@ msgstr "Emoji"
 msgid "Emoji shown next to the topic e.g. 💡 🔍 📊"
 msgstr "Emoji affiché à côté du sujet, par exemple : 💡 🔍 📊"
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:85
+msgid "empty"
+msgstr ""
+
 #: src/components/conversation/ConversationTranscriptSection.tsx:138
 msgid "Empty"
 msgstr "Vide"
@@ -4438,8 +4478,8 @@ msgstr "Entré par le participant sur le portail"
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
 #: src/components/chat/AgenticChatPanel.tsx:257
-#: src/components/chat/AgenticChatPanel.tsx:836
-#: src/components/chat/AgenticChatPanel.tsx:1006
+#: src/components/chat/AgenticChatPanel.tsx:829
+#: src/components/chat/AgenticChatPanel.tsx:999
 msgid "Error"
 msgstr "Erreur"
 
@@ -5474,8 +5514,8 @@ msgstr ""
 msgid "Hide projects"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:939
-#: src/components/chat/AgenticChatPanel.tsx:949
+#: src/components/chat/AgenticChatPanel.tsx:932
+#: src/components/chat/AgenticChatPanel.tsx:942
 msgid "Hide raw data"
 msgstr ""
 
@@ -5497,6 +5537,7 @@ msgstr "Accueil"
 
 #: src/routes/project/ProjectHomeRoute.tsx:154
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:96
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:54
 msgid "Host guide"
 msgstr ""
 
@@ -5617,6 +5658,10 @@ msgstr "Si vous configurez des intégrations webhook, nous aimerions en savoir p
 msgid "If you're trying to join an existing organization, you should not create a new one. Some reasons that you may accidentally end up here are:"
 msgstr ""
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:55
+msgid "Image style"
+msgstr ""
+
 #: src/components/workspace/TeamUsageRollup.tsx:146
 #~ msgid "in {0} · {1} workspaces"
 #~ msgstr ""
@@ -5682,7 +5727,7 @@ msgstr ""
 msgid "Innovator or higher"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:972
+#: src/components/chat/AgenticChatPanel.tsx:965
 msgid "Input"
 msgstr ""
 
@@ -6136,6 +6181,10 @@ msgstr ""
 #~ msgid "Keep this workspace invite-only."
 #~ msgstr ""
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:49
+msgid "Key terms"
+msgstr ""
+
 #: src/routes/admin/AdminSettingsRoute.tsx:1946
 msgid "Kickback %"
 msgstr ""
@@ -6319,6 +6368,10 @@ msgstr "Lien vers la politique de confidentialité de votre organisation qui ser
 msgid "List project conversations"
 msgstr ""
 
+#: src/components/chat/agenticToolActivity.ts:102
+msgid "Listing documentation pages"
+msgstr ""
+
 #~ msgid "Live"
 #~ msgstr "Direct"
 
@@ -6404,7 +6457,7 @@ msgstr ""
 #~ msgid "Loading projects…"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:847
+#: src/components/chat/AgenticChatPanel.tsx:840
 msgid "Loading this chat..."
 msgstr ""
 
@@ -7499,6 +7552,7 @@ msgid "Not available"
 msgstr "Non disponible"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:568
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:321
 msgid "Not now"
 msgstr ""
 
@@ -7574,6 +7628,10 @@ msgstr ""
 msgid "Observers are only available in workspaces for an external client. Pick only external-client workspaces, or choose a different role."
 msgstr ""
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:94
+msgid "off"
+msgstr ""
+
 #: src/components/project/PortalSettingsOverview.tsx:67
 msgid "Off"
 msgstr ""
@@ -7585,6 +7643,10 @@ msgstr ""
 #: src/components/conversation/ConversationAccordion.tsx:657
 msgid "Oldest First"
 msgstr "Plus ancien en premier"
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:92
+msgid "on"
+msgstr ""
 
 #: src/components/project/PortalSettingsOverview.tsx:63
 msgid "On"
@@ -8051,7 +8113,7 @@ msgstr "résultats"
 msgid "Outcomes"
 msgstr "Résultats"
 
-#: src/components/chat/AgenticChatPanel.tsx:986
+#: src/components/chat/AgenticChatPanel.tsx:979
 msgid "Output"
 msgstr ""
 
@@ -8171,6 +8233,14 @@ msgstr "Fonctionnalités participant"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:814
 msgid "Participant name and email"
 msgstr "Nom et email du participant"
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:59
+msgid "Participant updates subscription"
+msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:60
+msgid "Participant verification"
+msgstr ""
 
 #~ msgid "participant.button.echo"
 #~ msgstr "Echo"
@@ -8767,6 +8837,10 @@ msgstr ""
 msgid "Portal Content"
 msgstr "Contenu du Portail"
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:46
+msgid "Portal description"
+msgstr ""
+
 #: src/routes/project/ProjectHomeRoute.tsx:146
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:84
 msgid "Portal editor"
@@ -8777,9 +8851,21 @@ msgstr ""
 msgid "Portal Editor"
 msgstr "Éditeur de Portail"
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:47
+msgid "Portal finish message"
+msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:62
+msgid "Portal language"
+msgstr ""
+
 #: src/routes/project/report/ProjectReportRoute.tsx:996
 #~ msgid "Portal link"
 #~ msgstr "Lien du portail"
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:56
+msgid "Portal open for new conversations"
+msgstr ""
 
 #: src/components/project/PortalSettingsOverview.tsx:110
 msgid "Portal Overview"
@@ -8788,6 +8874,14 @@ msgstr ""
 #: src/components/project/PortalSettingsOverview.tsx:106
 #~ msgid "Portal settings overview"
 #~ msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:48
+msgid "Portal title"
+msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:50
+msgid "Portal tutorial"
+msgstr ""
 
 #: src/components/billing/BillingManager.tsx:426
 msgid "Postal code"
@@ -8980,6 +9074,10 @@ msgstr ""
 msgid "Project actions"
 msgstr ""
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:40
+msgid "Project context"
+msgstr ""
+
 #: src/routes/project/CreateProjectRoute.tsx:115
 msgid "Project created"
 msgstr ""
@@ -9033,6 +9131,7 @@ msgstr ""
 
 #: src/routes/project/CreateProjectRoute.tsx:183
 #: src/components/project/ProjectDangerZone.tsx:137
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:63
 msgid "Project name"
 msgstr "Nom du projet"
 
@@ -9044,7 +9143,7 @@ msgstr "Nom et ID du projet"
 msgid "Project name must be at least 4 characters long"
 msgstr "Le nom du projet doit comporter au moins 4 caractères"
 
-#: src/routes/project/chat/NewChatRoute.tsx:232
+#: src/routes/project/chat/NewChatRoute.tsx:248
 msgid "Project not found"
 msgstr "Projet introuvable"
 
@@ -9236,6 +9335,18 @@ msgstr ""
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:113
 msgid "Read-only"
+msgstr ""
+
+#: src/components/chat/agenticToolActivity.ts:100
+msgid "Reading a skill"
+msgstr ""
+
+#: src/components/chat/agenticToolActivity.ts:94
+msgid "Reading project settings"
+msgstr ""
+
+#: src/components/chat/agenticToolActivity.ts:98
+msgid "Reading the documentation"
 msgstr ""
 
 #. js-lingui-explicit-id
@@ -9550,6 +9661,18 @@ msgstr ""
 #~ msgid "Replace logo"
 #~ msgstr ""
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:57
+msgid "Replies to participants"
+msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:53
+msgid "Reply guidance"
+msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:52
+msgid "Reply mode"
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:973
 msgid "Reply Prompt"
 msgstr "Prompt de réponse"
@@ -9845,7 +9968,7 @@ msgstr "La rétranscrire n'est pas disponible pour les conversations anonymisée
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "La rétranscrire a commencé. La nouvelle conversation sera disponible bientôt."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:767
+#: src/routes/project/chat/ProjectChatRoute.tsx:812
 #: src/components/workspace/UsageCard.tsx:108
 #: src/components/workspace/OrganisationUsageRollup.tsx:494
 #: src/components/common/FetchErrorPanel.tsx:35
@@ -9881,6 +10004,10 @@ msgstr ""
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:536
 #~ msgid "Review before submitting."
 #~ msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:225
+msgid "Review each change below. You can edit the new text first. Nothing changes until you apply."
+msgstr ""
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:619
 msgid "Review files before uploading"
@@ -9951,8 +10078,8 @@ msgstr "Lignes par page"
 #~ msgstr ""
 
 #: src/components/chat/AgenticChatPanel.tsx:809
-msgid "Run status:"
-msgstr "Statut de l'exécution:"
+#~ msgid "Run status:"
+#~ msgstr "Statut de l'exécution:"
 
 #: src/components/chat/AgenticChatPanel.tsx:262
 msgid "Running"
@@ -10205,6 +10332,10 @@ msgstr ""
 msgid "Searched through the most relevant sources"
 msgstr "Recherché parmi les sources les plus pertinentes"
 
+#: src/components/chat/agenticToolActivity.ts:96
+msgid "Searching the documentation"
+msgstr ""
+
 #: src/components/chat/SourcesSearch.tsx:12
 #~ msgid "Searching through the most relevant sources"
 #~ msgstr "Recherche parmi les sources les plus pertinentes"
@@ -10336,8 +10467,8 @@ msgstr "Sélectionner les fichiers audio à télécharger"
 #~ msgid "Select conversation"
 #~ msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:843
-#: src/routes/project/chat/ProjectChatRoute.tsx:978
+#: src/routes/project/chat/ProjectChatRoute.tsx:888
+#: src/routes/project/chat/ProjectChatRoute.tsx:1023
 msgid "Select conversations"
 msgstr ""
 
@@ -10349,7 +10480,7 @@ msgstr "Sélectionne des conversations et trouve des citations précises"
 msgid "Select conversations from sidebar"
 msgstr "Sélectionne des conversations dans la barre latérale"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:850
+#: src/routes/project/chat/ProjectChatRoute.tsx:895
 msgid "Select conversations to continue"
 msgstr ""
 
@@ -10417,8 +10548,8 @@ msgstr "Sélection trop grande"
 msgid "select.all.modal.context.limit.reached"
 msgstr "Sélection trop grande. Certaines conversations n'ont pas été ajoutées."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:957
-#: src/components/chat/AgenticChatPanel.tsx:1119
+#: src/routes/project/chat/ProjectChatRoute.tsx:1002
+#: src/components/chat/AgenticChatPanel.tsx:1112
 msgid "Send"
 msgstr "Envoyer"
 
@@ -10428,8 +10559,8 @@ msgid "Send {0} invites"
 msgstr ""
 
 #: src/components/chat/AgenticChatPanel.tsx:874
-msgid "Send a message to start an agentic run."
-msgstr "Envoyez un message pour démarrer une exécution agentique."
+#~ msgid "Send a message to start an agentic run."
+#~ msgstr "Envoyez un message pour démarrer une exécution agentique."
 
 #: src/components/invite/InviteModal.tsx:827
 msgid "Send invite"
@@ -10705,8 +10836,8 @@ msgstr "Afficher plus"
 msgid "Show projects"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:939
-#: src/components/chat/AgenticChatPanel.tsx:950
+#: src/components/chat/AgenticChatPanel.tsx:932
+#: src/components/chat/AgenticChatPanel.tsx:943
 msgid "Show raw data"
 msgstr ""
 
@@ -10925,7 +11056,7 @@ msgstr "Détails précis"
 msgid "Specific Details - Selected conversations"
 msgstr "Détails précis - Conversations sélectionnées"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:856
+#: src/routes/project/chat/ProjectChatRoute.tsx:901
 msgid "Specific Details needs at least one conversation."
 msgstr "Specific Details nécessite au moins une conversation."
 
@@ -11004,8 +11135,8 @@ msgstr "Statut"
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:724
-#: src/components/chat/AgenticChatPanel.tsx:823
+#: src/routes/project/chat/ProjectChatRoute.tsx:769
+#: src/components/chat/AgenticChatPanel.tsx:816
 msgid "Stop"
 msgstr "Arrêter"
 
@@ -11059,14 +11190,22 @@ msgstr "Suggérer des suggestions dynamiques basées sur votre conversation."
 #~ msgid "Suggest prompts based on your conversations. Try sending a message to see it in action."
 #~ msgstr "Suggestions de prompts basées sur vos conversations. Essayez d'envoyer un message pour voir."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:92
-msgid "Suggested project changes"
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:214
+msgid "Suggested changes for your project"
 msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:92
+#~ msgid "Suggested project changes"
+#~ msgstr ""
 
 #: src/components/library/LibraryTemplatesMenu.tsx:33
 #: src/components/chat/ChatTemplatesMenu.tsx:288
 msgid "Suggested:"
 msgstr "Suggéré:"
+
+#: src/components/chat/agenticToolActivity.ts:92
+msgid "Suggesting project changes"
+msgstr ""
 
 #: src/components/chat/templates.ts:26
 msgid "Summarize"
@@ -11265,7 +11404,7 @@ msgstr ""
 msgid "Teams in the EU using dembrane in scenarios classified as high risk under the EU AI Act must complete a training before using their workspace."
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:521
+#: src/routes/project/chat/ProjectChatRoute.tsx:554
 #: src/components/chat/AgenticChatPanel.tsx:659
 msgid "Template applied"
 msgstr "Template appliqué"
@@ -11486,6 +11625,10 @@ msgstr "Il y avait une erreur lors de la création de votre rapport. Veuillez r�
 
 #~ msgid "These are your default view templates. Once you create your library these will be your first two views."
 #~ msgstr "Voici vos modèles de vue par défaut. Une fois que vous avez créé votre bibliothèque, ces deux vues seront vos premières."
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:197
+msgid "These changes are applied to your project."
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/conversation/SelectAllConfirmationModal.tsx:640
@@ -11879,6 +12022,10 @@ msgstr "Titre auto-généré"
 msgid "Title generated from the conversation"
 msgstr ""
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:41
+msgid "Title guidance"
+msgstr ""
+
 #: src/components/conversation/ProjectConversationsPanel.tsx:780
 msgid "Title or participant"
 msgstr ""
@@ -12176,6 +12323,10 @@ msgstr "Désactiver l'anonymisation ?"
 msgid "portal.anonymization.disable.warning"
 msgstr "La désactivation de l'anonymisation pendant les enregistrements en cours peut avoir des conséquences inattendues. Les conversations actives seront également affectées en cours d'enregistrement. Veuillez utiliser cette option avec prudence."
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:65
+msgid "Tutorial"
+msgstr ""
+
 #: src/components/settings/TwoFactorSettingsCard.tsx:304
 msgid "Two-factor authentication"
 msgstr "Authentification à deux facteurs"
@@ -12200,7 +12351,7 @@ msgstr "Type"
 msgid "Type <0>{0}</0> to confirm."
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:901
+#: src/routes/project/chat/ProjectChatRoute.tsx:946
 msgid "Type a message or press / for templates..."
 msgstr "Tapez un message ou appuyez sur / pour les templates..."
 
@@ -12249,7 +12400,7 @@ msgstr "Impossible de traiter ce fragment"
 msgid "Under your organisation"
 msgstr ""
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:523
+#: src/routes/project/chat/ProjectChatRoute.tsx:556
 #: src/components/chat/AgenticChatPanel.tsx:661
 msgid "Undo"
 msgstr "Annuler"
@@ -12651,8 +12802,8 @@ msgstr ""
 #~ msgid "Use PII Redaction"
 #~ msgstr "Utiliser la rédaction PII"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:929
-#: src/routes/project/chat/ProjectChatRoute.tsx:964
+#: src/routes/project/chat/ProjectChatRoute.tsx:974
+#: src/routes/project/chat/ProjectChatRoute.tsx:1009
 msgid "Use Shift + Enter to add a new line"
 msgstr "Utilisez Shift + Entrée pour ajouter une nouvelle ligne"
 
@@ -12696,6 +12847,10 @@ msgstr ""
 msgid "VAT region"
 msgstr ""
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:61
+msgid "Verification on the finish screen"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:73
 msgid "participant.modal.verify_prompt.title"
@@ -12705,6 +12860,10 @@ msgstr "Rappel de vérification"
 #: src/components/participant/ParticipantConversationAudioContent.tsx:167
 msgid "participant.banner.verification_required"
 msgstr "Vérification requise"
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:64
+msgid "Verification topics"
+msgstr ""
 
 #~ msgid "Verification Topics"
 #~ msgstr "Sujets de vérification"
@@ -13089,7 +13248,7 @@ msgstr ""
 #~ msgid "Welcome to dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 #~ msgstr "Bienvenue sur dembrane Chat ! Utilisez la barre latérale pour sélectionner les ressources et les conversations que vous souhaitez analyser. Ensuite, vous pouvez poser des questions sur les ressources et les conversations sélectionnées."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:655
+#: src/routes/project/chat/ProjectChatRoute.tsx:700
 msgid "Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries."
 msgstr ""
 
@@ -13100,7 +13259,7 @@ msgstr "Bienvenue sur dembrane!"
 #~ msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
 #~ msgstr "Bienvenue dans le mode Overview ! J’ai les résumés de toutes tes conversations. Pose-moi des questions sur les patterns, les thèmes et les insights dans tes données. Pour des citations exactes, démarre un nouveau chat en mode Deep Dive."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:654
+#: src/routes/project/chat/ProjectChatRoute.tsx:699
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Bienvenue en mode Vue d’ensemble ! J’ai chargé les résumés de toutes tes conversations. Pose-moi des questions sur les tendances, thèmes et insights de tes données. Pour des citations exactes, démarre un nouveau chat en mode Contexte précis."
 
