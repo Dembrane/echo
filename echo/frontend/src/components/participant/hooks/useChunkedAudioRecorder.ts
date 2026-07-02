@@ -4,6 +4,14 @@ import audioAlertSound from "@/assets/audio-alert.mp3";
 // Minimum chunk size in bytes - chunks smaller than this are considered suspicious
 const MIN_CHUNK_SIZE_BYTES = 1024; // 1KB
 
+// A healthy session finalizes a chunk roughly every `timeslice`. If no chunk
+// lands for this many timeslices the browser has stopped running the recorder
+// (tab suspended, screen locked, mic seized by another app) and no `onstop`
+// will ever fire to feed the suspicious-chunk counter.
+const STALE_CHUNK_TIMESLICE_MULTIPLIER = 4;
+
+export type InterruptionReason = "suspicious_chunks" | "stalled_no_chunks";
+
 type ChunkInfo = {
 	size: number;
 	timestamp: number;
@@ -35,6 +43,7 @@ type UseAudioRecorderResult = {
 	permissionError: string | null;
 	hadInterruption: boolean;
 	getChunkHistory: () => ChunkInfo[];
+	getInterruptionReason: () => InterruptionReason | null;
 };
 
 const preferredMimeTypes = ["audio/webm", "audio/wav", "video/mp4"];
@@ -85,6 +94,12 @@ const useChunkedAudioRecorder = ({
 	const hadConsecutiveSuspiciousChunksRef = useRef(false);
 	const chunkHistoryRef = useRef<ChunkInfo[]>([]);
 	const hasCalledInterruptionCallbackRef = useRef(false);
+	const interruptionReasonRef = useRef<InterruptionReason | null>(null);
+
+	// Stale-chunk watchdog: catches interruptions where the recorder stops
+	// producing chunks entirely, which the suspicious-chunk counter can't see.
+	const lastChunkFinalizedAtRef = useRef(0);
+	const watchdogIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
 	const log = (...args: any[]) => {
 		if (debug) {
@@ -115,6 +130,10 @@ const useChunkedAudioRecorder = ({
 				audioAlertRef.current.pause();
 				audioAlertRef.current = null;
 			}
+			if (watchdogIntervalRef.current) {
+				clearInterval(watchdogIntervalRef.current);
+				watchdogIntervalRef.current = null;
+			}
 		};
 	}, []);
 
@@ -123,6 +142,59 @@ const useChunkedAudioRecorder = ({
 	}, []);
 
 	const chunkBufferRef = useRef<Blob[]>([]);
+
+	// Shared interruption path: alarm + callback, fires at most once per session.
+	const triggerInterruption = useCallback(
+		(reason: InterruptionReason) => {
+			if (hasCalledInterruptionCallbackRef.current) {
+				return;
+			}
+			hadConsecutiveSuspiciousChunksRef.current = true;
+			hasCalledInterruptionCallbackRef.current = true;
+			interruptionReasonRef.current = reason;
+
+			// Play notification sound for interruption using pre-unlocked audio
+			if (audioAlertRef.current) {
+				audioAlertRef.current.muted = false;
+				audioAlertRef.current.currentTime = 0;
+				audioAlertRef.current.play().catch((error) => {
+					console.error("Failed to play notification sound:", error);
+				});
+			}
+
+			onRecordingInterrupted?.();
+		},
+		[onRecordingInterrupted],
+	);
+
+	const checkChunkStaleness = useCallback(() => {
+		if (
+			!isRecordingRef.current ||
+			isPausedRef.current ||
+			hasCalledInterruptionCallbackRef.current ||
+			lastChunkFinalizedAtRef.current === 0
+		) {
+			return;
+		}
+		const staleThresholdMs = timeslice * STALE_CHUNK_TIMESLICE_MULTIPLIER;
+		if (Date.now() - lastChunkFinalizedAtRef.current > staleThresholdMs) {
+			triggerInterruption("stalled_no_chunks");
+		}
+	}, [timeslice, triggerInterruption]);
+
+	// The interval below is throttled while the tab is hidden, so also check
+	// the moment the participant returns to the page.
+	useEffect(() => {
+		const onVisibilityChange = () => {
+			if (document.visibilityState === "visible") {
+				checkChunkStaleness();
+			}
+		};
+		document.addEventListener("visibilitychange", onVisibilityChange);
+		return () => {
+			document.removeEventListener("visibilitychange", onVisibilityChange);
+		};
+	}, [checkChunkStaleness]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be looked at
 	const startRecordingChunk = useCallback(() => {
@@ -167,6 +239,7 @@ const useChunkedAudioRecorder = ({
 				size: chunkSize,
 				timestamp: Date.now(),
 			});
+			lastChunkFinalizedAtRef.current = Date.now();
 
 			// Check if this is a suspicious chunk (< 1KB)
 			if (chunkSize < MIN_CHUNK_SIZE_BYTES) {
@@ -177,21 +250,9 @@ const useChunkedAudioRecorder = ({
 					suspiciousChunkCountRef.current >= 2 &&
 					!hasCalledInterruptionCallbackRef.current
 				) {
-					hadConsecutiveSuspiciousChunksRef.current = true;
-					hasCalledInterruptionCallbackRef.current = true;
-
-					// Play notification sound for interruption using pre-unlocked audio
-					if (audioAlertRef.current) {
-						audioAlertRef.current.muted = false;
-						audioAlertRef.current.currentTime = 0;
-						audioAlertRef.current.play().catch((error) => {
-							console.error("Failed to play notification sound:", error);
-						});
-					}
-
 					// Don't upload suspicious chunk, don't restart recording
 					chunkBufferRef.current = [];
-					onRecordingInterrupted?.();
+					triggerInterruption("suspicious_chunks");
 					return;
 				}
 
@@ -272,6 +333,17 @@ const useChunkedAudioRecorder = ({
 			hadConsecutiveSuspiciousChunksRef.current = false;
 			chunkHistoryRef.current = [];
 			hasCalledInterruptionCallbackRef.current = false;
+			interruptionReasonRef.current = null;
+			lastChunkFinalizedAtRef.current = Date.now();
+
+			// Watch for the recorder silently stopping to produce chunks
+			if (watchdogIntervalRef.current) {
+				clearInterval(watchdogIntervalRef.current);
+			}
+			watchdogIntervalRef.current = setInterval(
+				checkChunkStaleness,
+				Math.max(timeslice / 2, 1000),
+			);
 
 			setIsRecording(true);
 			setIsPaused(false);
@@ -325,6 +397,10 @@ const useChunkedAudioRecorder = ({
 		setRecordingTime(0);
 		if (startRecordingIntervalRef.current)
 			clearInterval(startRecordingIntervalRef.current);
+		if (watchdogIntervalRef.current) {
+			clearInterval(watchdogIntervalRef.current);
+			watchdogIntervalRef.current = null;
+		}
 		// remove the worker
 		audioProcessorRef.current?.disconnect();
 		audioProcessorRef.current = null;
@@ -360,6 +436,8 @@ const useChunkedAudioRecorder = ({
 			mediaRecorderRef.current &&
 			mediaRecorderRef.current.state === "paused"
 		) {
+			// Don't count time spent paused as chunk staleness
+			lastChunkFinalizedAtRef.current = Date.now();
 			mediaRecorderRef.current.resume();
 			if (intervalRef.current) {
 				clearInterval(intervalRef.current);
@@ -378,6 +456,7 @@ const useChunkedAudioRecorder = ({
 	return {
 		errored: false,
 		getChunkHistory: () => chunkHistoryRef.current,
+		getInterruptionReason: () => interruptionReasonRef.current,
 		hadInterruption: hadConsecutiveSuspiciousChunksRef.current,
 		isPaused,
 		isRecording,
