@@ -1003,6 +1003,25 @@ async def set_workspace_tier(
     if not workspace or workspace.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Workspace not found")
 
+    # Block the change while a live Mollie subscription runs: it would be
+    # orphaned (keeps charging). The customer must cancel it first.
+    from dembrane.billing_account import has_live_mollie_subscription
+
+    ws_account_id = workspace.get("billing_account_id")
+    ws_account = (
+        await async_directus.get_item("billing_account", ws_account_id)
+        if ws_account_id
+        else None
+    )
+    if has_live_mollie_subscription(ws_account):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "This account has an active subscription. Ask the customer to "
+                "cancel it from their billing page before you change the tier."
+            ),
+        )
+
     from dembrane.billing_account import resolve_workspace_tier, update_workspace_billing
 
     from_tier = (await resolve_workspace_tier(workspace_id)) or "pioneer"

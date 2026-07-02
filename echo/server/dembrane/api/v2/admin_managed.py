@@ -6,6 +6,7 @@ route here is staff-gated the same way as admin.py (the is_admin JWT claim).
 
 Surface:
   POST   /admin/billing-accounts/{id}/set-managed         flip to managed
+  POST   /admin/billing-accounts/{id}/set-saas            flip back to self-serve
   POST   /admin/billing-accounts/{id}/account-manager     assign manager
   DELETE /admin/billing-accounts/{id}/account-manager     clear manager
   POST   /admin/billing-accounts/{id}/issue-payment-link  offline pay link
@@ -26,6 +27,7 @@ from pydantic import Field, BaseModel
 
 from dembrane import billing_service
 from dembrane.directus_async import async_directus
+from dembrane.billing_account import has_live_mollie_subscription
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
@@ -81,7 +83,18 @@ async def set_managed(
     clears any auto-expiry (managed accounts never auto-downgrade). Full features
     stay on; no Mollie subscription is created."""
     _require_staff(auth)
-    await _get_account(account_id)
+    account = await _get_account(account_id)
+
+    # A live Mollie subscription must be cancelled first; setting managed would
+    # stamp payment_mode="offline" and orphan the subscription (it keeps charging).
+    if has_live_mollie_subscription(account):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "This account has an active subscription. Ask the customer to "
+                "cancel it from their billing page first."
+            ),
+        )
 
     patch: dict = {
         "payment_mode": "offline",
@@ -107,6 +120,68 @@ async def set_managed(
         body.account_manager_id,
     )
     return {"status": "ok", "billing_account_id": account_id, "payment_mode": "offline"}
+
+
+class SetSaasBody(BaseModel):
+    to_free: bool = Field(
+        description="Downgrade to the free tier. If false, keep the current tier "
+        "with a required expiry date."
+    )
+    expires_at: Optional[str] = Field(
+        default=None,
+        description="ISO date the tier reverts to free unless the customer "
+        "subscribes. Required when to_free is false.",
+    )
+
+
+@router.post("/billing-accounts/{account_id}/set-saas")
+async def set_saas(
+    account_id: str,
+    body: SetSaasBody,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Move a managed account to self-serve: either downgrade to free, or keep the
+    tier with an expiry after which it reverts to free unless the customer subscribes."""
+    _require_staff(auth)
+    account = await _get_account(account_id)
+
+    mode = account.get("payment_mode")
+    if mode == "mollie":
+        raise HTTPException(status_code=400, detail="Account already bills through Mollie.")
+    if mode != "offline":
+        raise HTTPException(status_code=400, detail="Account is not managed.")
+
+    if body.to_free:
+        patch: dict = {
+            "payment_mode": "none",
+            "tier": "free",
+            "status": "active",
+            "tier_expires_at": None,
+        }
+    else:
+        if not body.expires_at:
+            raise HTTPException(
+                status_code=400,
+                detail="An expiry date is required when keeping the tier.",
+            )
+        # Keep the tier; reverts to free at expiry unless they subscribe. status
+        # stays "active" so the billing page shows "ends on <date>", not resume-cancel.
+        patch = {
+            "payment_mode": "none",
+            "tier_expires_at": body.expires_at,
+            "status": "active",
+            "pre_warning_sent": False,
+        }
+
+    await async_directus.update_item("billing_account", account_id, patch)
+    logger.info(
+        "staff %s moved account %s to self-serve (to_free=%s, expires_at=%s)",
+        auth.user_id,
+        account_id,
+        body.to_free,
+        body.expires_at,
+    )
+    return {"status": "ok", "billing_account_id": account_id, "payment_mode": "none"}
 
 
 class AssignManagerBody(BaseModel):

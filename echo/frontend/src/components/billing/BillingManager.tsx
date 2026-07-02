@@ -98,6 +98,11 @@ interface Overview {
 	reconcile_failed_at: string | null;
 	/** Managed by dembrane (payment_mode "offline"): hide self-serve controls. */
 	is_managed: boolean;
+	/** A live Mollie subscription exists. The "Active" UI keys off this, not
+	 *  `status` (which can be "active" with no subscription). */
+	has_active_subscription: boolean;
+	/** Customer has checked out before (Mollie customer id): winding-down vs fresh. */
+	has_payment_history: boolean;
 	account_manager: AccountManager | null;
 	billing_details: BillingDetails | null;
 }
@@ -1189,6 +1194,53 @@ export function BillingManager({
 					</Text>
 					<Button onClick={openPlan} w="fit-content">
 						<Trans>See plans</Trans>
+					</Button>
+				</Stack>
+				<ChangePlanModal
+					opened={planOpen}
+					onClose={closePlan}
+					currentTier={tier}
+					defaultPeriod={period}
+					submitting={submitting}
+					onConfirm={startCheckout}
+				/>
+			</Paper>
+		);
+	}
+
+	// Paid tier with no live subscription (e.g. after managed->self-serve): show an
+	// honest "subscribe" prompt, not "Active". Canceled plans keep the Resume flow below.
+	if (hasPaidPlan && !isCanceling && !overview.has_active_subscription) {
+		return (
+			<Paper withBorder p="md" radius="sm">
+				<Stack gap={12}>
+					<Group gap={8}>
+						<Text size="sm" fw={500}>
+							{tierLabel(tier)}
+						</Text>
+						<Badge size="xs" variant="light" color="yellow">
+							{endDate ? (
+								<Trans>Ends {endDate}</Trans>
+							) : (
+								<Trans>No subscription</Trans>
+							)}
+						</Badge>
+					</Group>
+					<Text size="xs">
+						{endDate ? (
+							<Trans>
+								Your {tierLabel(tier)} access ends on {endDate}, then moves to
+								Free. Subscribe to keep it.
+							</Trans>
+						) : (
+							<Trans>
+								You're on {tierLabel(tier)}, but there's no active subscription.
+								Subscribe to set up billing and keep it.
+							</Trans>
+						)}
+					</Text>
+					<Button onClick={openPlan} w="fit-content">
+						<Trans>Subscribe</Trans>
 					</Button>
 				</Stack>
 				<ChangePlanModal

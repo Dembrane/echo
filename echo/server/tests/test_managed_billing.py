@@ -49,6 +49,47 @@ class TestIsManaged:
         assert is_managed({}) is False
 
 
+# ── has_live_mollie_subscription predicate ──
+
+
+class TestHasLiveMollieSubscription:
+    def test_mollie_with_subscription_id_is_live(self):
+        from dembrane.billing_account import has_live_mollie_subscription
+
+        assert (
+            has_live_mollie_subscription(
+                {"payment_mode": "mollie", "mollie_subscription_id": "sub_1"}
+            )
+            is True
+        )
+
+    def test_mollie_without_subscription_id_is_not_live(self):
+        from dembrane.billing_account import has_live_mollie_subscription
+
+        # payment_mode flips to mollie only on activation, but guard on the id too.
+        assert (
+            has_live_mollie_subscription({"payment_mode": "mollie", "mollie_subscription_id": None})
+            is False
+        )
+
+    def test_offline_is_not_live(self):
+        from dembrane.billing_account import has_live_mollie_subscription
+
+        assert (
+            has_live_mollie_subscription(
+                {"payment_mode": "offline", "mollie_subscription_id": "sub_1"}
+            )
+            is False
+        )
+
+    def test_none_mode_and_missing_account_are_not_live(self):
+        from dembrane.billing_account import has_live_mollie_subscription
+
+        assert has_live_mollie_subscription({"payment_mode": "none"}) is False
+        assert has_live_mollie_subscription(None) is False
+        assert has_live_mollie_subscription({}) is False
+
+
 # ── reconcile on a managed account ──
 
 
@@ -407,9 +448,303 @@ class TestManagedOverview:
 # ── VAT rate behaviour: gated on Marco (ISSUE-005 Q1) ──
 
 
+# ── overview honesty: subscription vs entitlement ──
+
+
+class TestSelfServeOverviewHonesty:
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.count_account_seats", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    async def test_paid_tier_no_subscription_with_history(
+        self, mock_mollie, mock_directus, mock_seats
+    ):
+        from dembrane.billing_service import get_billing_overview
+
+        # Managed -> self-serve leaves a paid tier + status active but no live
+        # Mollie subscription; the customer has transacted before (customer id).
+        account = {
+            "id": "acc-1",
+            "tier": "changemaker",
+            "billing_period": "annual",
+            "status": "active",
+            "payment_mode": "none",
+            "mollie_customer_id": "cst_1",
+            "mollie_subscription_id": None,
+        }
+        mock_directus.get_item = AsyncMock(return_value=account)
+        mock_directus.get_items = AsyncMock(return_value=[])
+        mock_seats.return_value = 2
+        mock_mollie.list_mandates = AsyncMock(return_value=[])
+        mock_mollie.MollieError = Exception
+
+        out = await get_billing_overview("acc-1")
+
+        assert out["is_managed"] is False
+        assert out["has_active_subscription"] is False
+        assert out["has_payment_history"] is True
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.count_account_seats", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    async def test_fresh_account_has_no_history(self, mock_mollie, mock_directus, mock_seats):
+        from dembrane.billing_service import get_billing_overview
+
+        account = {
+            "id": "acc-2",
+            "tier": "free",
+            "billing_period": "annual",
+            "status": "active",
+            "payment_mode": "none",
+            "mollie_customer_id": None,
+            "mollie_subscription_id": None,
+        }
+        mock_directus.get_item = AsyncMock(return_value=account)
+        mock_directus.get_items = AsyncMock(return_value=[])
+        mock_seats.return_value = 1
+        mock_mollie.MollieError = Exception
+
+        out = await get_billing_overview("acc-2")
+
+        assert out["has_active_subscription"] is False
+        assert out["has_payment_history"] is False
+
+    @pytest.mark.asyncio
+    @patch("dembrane.billing_service.count_account_seats", new_callable=AsyncMock)
+    @patch("dembrane.billing_service.async_directus")
+    @patch("dembrane.billing_service.mollie")
+    async def test_live_subscription_is_active(self, mock_mollie, mock_directus, mock_seats):
+        from dembrane.billing_service import get_billing_overview
+
+        account = {
+            "id": "acc-3",
+            "tier": "changemaker",
+            "billing_period": "annual",
+            "status": "active",
+            "payment_mode": "mollie",
+            "mollie_customer_id": "cst_3",
+            "mollie_subscription_id": "sub_3",
+        }
+        mock_directus.get_item = AsyncMock(return_value=account)
+        mock_directus.get_items = AsyncMock(return_value=[])
+        mock_seats.return_value = 1
+        mock_mollie.get_subscription = AsyncMock(
+            return_value={"amount": {"value": "900.00", "currency": "EUR"}, "nextPaymentDate": "2027-01-01"}
+        )
+        mock_mollie.list_mandates = AsyncMock(return_value=[])
+        mock_mollie.MollieError = Exception
+
+        out = await get_billing_overview("acc-3")
+
+        assert out["has_active_subscription"] is True
+        assert out["has_payment_history"] is True
+
+
 @pytest.mark.skip(reason="VAT rate / reverse-charge ruleset blocked on Marco (ISSUE-005 Q1)")
 def test_vat_rate_reverse_charge_treatment():
     """When the legal ruleset lands: an EU business with a valid VAT ID gets
     reverse-charge (btw verlegd) at 0%, a domestic buyer gets the domestic rate,
     prices quoted excl. VAT. Do not implement guessed rates."""
     raise NotImplementedError
+
+
+# ── tier-change guard: blocks a live Mollie subscription ──
+
+
+class TestTierChangeGuard:
+    @pytest.mark.asyncio
+    @patch("dembrane.api.v2.workspaces.async_directus")
+    async def test_blocks_when_live_mollie_subscription(self, mock_directus):
+        from fastapi import HTTPException
+
+        from dembrane.api.v2.workspaces import SetTierRequest, set_workspace_tier
+
+        async def fake_get_item(collection, item_id, *args, **kwargs):
+            if collection == "workspace":
+                return {"id": "ws-1", "billing_account_id": "acc-1"}
+            if collection == "billing_account":
+                return {
+                    "id": "acc-1",
+                    "payment_mode": "mollie",
+                    "mollie_subscription_id": "sub_1",
+                }
+            return None
+
+        mock_directus.get_item = AsyncMock(side_effect=fake_get_item)
+        mock_directus.update_item = AsyncMock()
+        auth = SimpleNamespace(is_admin=True, user_id="staff-1")
+
+        with pytest.raises(HTTPException) as ei:
+            await set_workspace_tier(
+                "ws-1", SetTierRequest(tier="free", reason="staff change"), auth
+            )
+
+        assert ei.value.status_code == 409
+        assert "cancel" in ei.value.detail.lower()
+        # Blocked before any write: the account is untouched.
+        mock_directus.update_item.assert_not_called()
+
+
+# ── set-saas endpoint (Managed -> SaaS) ──
+
+
+class TestSetSaas:
+    @pytest.mark.asyncio
+    @patch("dembrane.api.v2.admin_managed.async_directus")
+    async def test_to_free_downgrades_tier(self, mock_directus):
+        from dembrane.api.v2.admin_managed import SetSaasBody, set_saas
+
+        mock_directus.get_item = AsyncMock(
+            return_value={
+                "id": "acc-1",
+                "payment_mode": "offline",
+                "tier": "changemaker",
+                "status": "active",
+            }
+        )
+        mock_directus.update_item = AsyncMock()
+        auth = SimpleNamespace(is_admin=True, user_id="staff-1")
+
+        out = await set_saas("acc-1", SetSaasBody(to_free=True), auth)
+
+        assert out["payment_mode"] == "none"
+        patch_data = mock_directus.update_item.call_args.args[2]
+        assert patch_data["payment_mode"] == "none"
+        assert patch_data["tier"] == "free"
+        assert patch_data["tier_expires_at"] is None
+
+    @pytest.mark.asyncio
+    @patch("dembrane.api.v2.admin_managed.async_directus")
+    async def test_keep_tier_with_expiry(self, mock_directus):
+        from dembrane.api.v2.admin_managed import SetSaasBody, set_saas
+
+        mock_directus.get_item = AsyncMock(
+            return_value={
+                "id": "acc-1",
+                "payment_mode": "offline",
+                "tier": "changemaker",
+                "status": "active",
+            }
+        )
+        mock_directus.update_item = AsyncMock()
+        auth = SimpleNamespace(is_admin=True, user_id="staff-1")
+
+        out = await set_saas(
+            "acc-1", SetSaasBody(to_free=False, expires_at="2026-09-01"), auth
+        )
+
+        assert out["payment_mode"] == "none"
+        patch_data = mock_directus.update_item.call_args.args[2]
+        assert patch_data["payment_mode"] == "none"
+        assert patch_data["tier_expires_at"] == "2026-09-01"
+        # Tier is kept (not in the patch) and status stays active for honest UI.
+        assert "tier" not in patch_data
+        assert patch_data["status"] == "active"
+
+    @pytest.mark.asyncio
+    @patch("dembrane.api.v2.admin_managed.async_directus")
+    async def test_keep_tier_requires_expiry(self, mock_directus):
+        from fastapi import HTTPException
+
+        from dembrane.api.v2.admin_managed import SetSaasBody, set_saas
+
+        mock_directus.get_item = AsyncMock(
+            return_value={"id": "acc-1", "payment_mode": "offline", "tier": "changemaker"}
+        )
+        mock_directus.update_item = AsyncMock()
+        auth = SimpleNamespace(is_admin=True, user_id="staff-1")
+
+        with pytest.raises(HTTPException) as ei:
+            await set_saas("acc-1", SetSaasBody(to_free=False), auth)
+
+        assert ei.value.status_code == 400
+        mock_directus.update_item.assert_not_called()
+
+    @pytest.mark.asyncio
+    @patch("dembrane.api.v2.admin_managed.async_directus")
+    async def test_rejects_mollie_account(self, mock_directus):
+        from fastapi import HTTPException
+
+        from dembrane.api.v2.admin_managed import SetSaasBody, set_saas
+
+        mock_directus.get_item = AsyncMock(
+            return_value={"id": "acc-1", "payment_mode": "mollie"}
+        )
+        mock_directus.update_item = AsyncMock()
+        auth = SimpleNamespace(is_admin=True, user_id="staff-1")
+
+        with pytest.raises(HTTPException) as ei:
+            await set_saas("acc-1", SetSaasBody(to_free=True), auth)
+
+        assert ei.value.status_code == 400
+        mock_directus.update_item.assert_not_called()
+
+    @pytest.mark.asyncio
+    @patch("dembrane.api.v2.admin_managed.async_directus")
+    async def test_rejects_non_managed_account(self, mock_directus):
+        from fastapi import HTTPException
+
+        from dembrane.api.v2.admin_managed import SetSaasBody, set_saas
+
+        mock_directus.get_item = AsyncMock(
+            return_value={"id": "acc-1", "payment_mode": "none"}
+        )
+        mock_directus.update_item = AsyncMock()
+        auth = SimpleNamespace(is_admin=True, user_id="staff-1")
+
+        with pytest.raises(HTTPException) as ei:
+            await set_saas("acc-1", SetSaasBody(to_free=True), auth)
+
+        assert ei.value.status_code == 400
+        mock_directus.update_item.assert_not_called()
+
+
+# ── set-managed guard (blocks a live Mollie subscription) ──
+
+
+class TestSetManagedGuard:
+    @pytest.mark.asyncio
+    @patch("dembrane.api.v2.admin_managed.async_directus")
+    async def test_blocks_live_mollie_subscription(self, mock_directus):
+        from fastapi import HTTPException
+
+        from dembrane.api.v2.admin_managed import SetManagedBody, set_managed
+
+        mock_directus.get_item = AsyncMock(
+            return_value={
+                "id": "acc-1",
+                "payment_mode": "mollie",
+                "mollie_subscription_id": "sub_1",
+                "tier": "changemaker",
+            }
+        )
+        mock_directus.update_item = AsyncMock()
+        auth = SimpleNamespace(is_admin=True, user_id="staff-1")
+
+        with pytest.raises(HTTPException) as ei:
+            await set_managed("acc-1", SetManagedBody(tier="changemaker"), auth)
+
+        assert ei.value.status_code == 409
+        mock_directus.update_item.assert_not_called()
+
+    @pytest.mark.asyncio
+    @patch("dembrane.api.v2.admin_managed.async_directus")
+    async def test_allows_none_account_including_free(self, mock_directus):
+        from dembrane.api.v2.admin_managed import SetManagedBody, set_managed
+
+        # A cancelled/free (payment_mode="none") account can be set managed,
+        # keeping whatever tier is passed (free included).
+        mock_directus.get_item = AsyncMock(
+            return_value={"id": "acc-1", "payment_mode": "none", "tier": "free"}
+        )
+        mock_directus.update_item = AsyncMock()
+        auth = SimpleNamespace(is_admin=True, user_id="staff-1")
+
+        out = await set_managed("acc-1", SetManagedBody(tier="free"), auth)
+
+        assert out["payment_mode"] == "offline"
+        patch_data = mock_directus.update_item.call_args.args[2]
+        assert patch_data["payment_mode"] == "offline"
+        assert patch_data["tier"] == "free"
+        assert patch_data["status"] == "active"

@@ -112,6 +112,8 @@ class BillingRow(BaseModel):
     # Cadence derived from the workspace's most-recently approved
     # workspace_request. `None` for legacy workspaces.
     billing_period: Optional[str] = None
+    # Owning account's payment mode; the tier-change control blocks Apply when "mollie".
+    payment_mode: Optional[str] = None
 
 
 class AccountRow(BaseModel):
@@ -770,6 +772,7 @@ async def billing_rollup(
             type_discount=ws.get("type_discount"),
             percent_discount=ws.get("percent_discount"),
             billing_period=ws.get("billing_period"),
+            payment_mode=ws.get("account_payment_mode"),
         )
         rows.append(row)
         acc_id = ws.get("billing_account_id")
