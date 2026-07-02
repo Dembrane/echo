@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from copilotkit import CopilotKitRemoteEndpoint, LangGraphAGUIAgent
+from copilotkit import CopilotKitRemoteEndpoint, LangGraphAgent
 from copilotkit.integrations.fastapi import handler as copilotkit_handler
 
 from agent import create_agent_graph
@@ -57,12 +57,13 @@ async def copilotkit_endpoint(request: Request, project_id: str, path: Optional[
     request.scope.setdefault("path_params", {})
     request.scope["path_params"]["path"] = path or ""
 
-    agent = LangGraphAGUIAgent(
+    agent = LangGraphAgent(
         name="default",
         description="Echo Agentic Chat default agent",
         graph=create_agent_graph(project_id=project_id, bearer_token=bearer_token),
     )
-    # Pass agents as a callable (CopilotKit rejects a literal list here).
+    # CopilotKit currently rejects LangGraphAgent only for literal list inputs.
+    # Supplying a callable preserves expected runtime behavior in this SDK version.
     endpoint = CopilotKitRemoteEndpoint(agents=lambda _context: [agent])
     return await copilotkit_handler(request, endpoint)
 
