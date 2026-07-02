@@ -243,11 +243,6 @@ class FeatureFlagSettings(BaseSettings):
         alias="DISABLE_CORS",
         validation_alias=AliasChoices("DISABLE_CORS", "FEATURE_FLAGS__DISABLE_CORS"),
     )
-    disable_redaction: bool = Field(
-        default=False,
-        alias="DISABLE_REDACTION",
-        validation_alias=AliasChoices("DISABLE_REDACTION", "FEATURE_FLAGS__DISABLE_REDACTION"),
-    )
     disable_chat_title_generation: bool = Field(
         default=False,
         alias="DISABLE_CHAT_TITLE_GENERATION",
