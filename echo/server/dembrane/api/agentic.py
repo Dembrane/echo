@@ -19,6 +19,7 @@ from dembrane.settings import get_settings
 from dembrane.chat_utils import generate_title
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.agentic_worker import process_agentic_run
+from dembrane.directus_async import async_directus
 from dembrane.agentic_runtime import (
     request_cancel,
     read_live_event,
@@ -55,6 +56,12 @@ class AgenticCreateRunSchema(BaseModel):
 class AgenticAppendMessageSchema(BaseModel):
     message: str = Field(..., min_length=1)
     language: str = Field(default="en", min_length=1)
+
+
+class AgenticSupportRequestSchema(BaseModel):
+    message: str = Field(..., min_length=1)
+    # A short note from the assistant about what the host was doing / needs.
+    page_context: Optional[str] = None
 
 
 def _run_task_key(run_id: str, turn_seq: int) -> tuple[str, int]:
@@ -803,6 +810,39 @@ async def list_project_conversations(
         conversation_id=conversation_id,
         transcript_query=transcript_query,
         directus_client=directus,
+    )
+
+
+@AgenticRouter.post("/projects/{project_id}/support-request")
+async def create_support_request(
+    project_id: str,
+    body: AgenticSupportRequestSchema,
+    auth: DependencyDirectusSession,
+) -> JSONResponse:
+    """Raise a support request to the dembrane team on the host's behalf.
+
+    Writes a support_request row (an outbox); a separate job forwards new rows
+    to the team. The assistant never contacts anyone directly."""
+    await _assert_project_access(project_id, auth)
+
+    project = await async_directus.get_item("project", project_id)
+    workspace_id = project.get("workspace_id") if isinstance(project, dict) else None
+
+    created = await async_directus.create_item(
+        "support_request",
+        {
+            "workspace_id": workspace_id,
+            "project_id": project_id,
+            "directus_user_id": auth.user_id,
+            "message": body.message,
+            "page_context": body.page_context,
+            "status": "new",
+        },
+    )
+    support_request_id = created.get("id") if isinstance(created, dict) else None
+    return JSONResponse(
+        status_code=201,
+        content={"id": support_request_id, "status": "new"},
     )
 
 

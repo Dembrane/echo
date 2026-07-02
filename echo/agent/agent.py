@@ -67,6 +67,13 @@ Use tools when the question needs project data or product knowledge:
 Do not use tools for greetings, small talk, or questions about this chat.
 When intent is unclear, ask one focused question instead of guessing.
 
+## Getting help from the dembrane team
+When the host needs something you cannot give: something looks broken, a billing
+or account question, or a question about dembrane the documentation does not
+answer, offer to pass their question to the dembrane team. Tell the host what you
+will send first, send it in their own words where you can, and let them know the
+team will follow up. Do not promise a timeline.
+
 ## Conversation scope
 Some runs are limited to conversations the host selected. When the context
 contains a "Conversation scope" block:
@@ -684,6 +691,20 @@ def create_agent_graph(
             "visible_to_user": True,
         }
 
+    @tool
+    async def reachOutToDembrane(message: str, context: str = "") -> dict[str, Any]:
+        """Pass a question or problem to the dembrane team on the host's behalf. Use this when the host needs help you cannot give: something looks broken, a billing or account question, or a question about dembrane the documentation does not answer. `message` is what the host wants to ask, in their own words where you can. `context` is a short note about what they were doing. Tell the host what you are sending before you send it, and let them know the team will follow up."""
+        client = _create_echo_client()
+        try:
+            result = await client.create_support_request(
+                project_id,
+                message=message,
+                page_context=context or None,
+            )
+        finally:
+            await client.close()
+        return {"sent": True, "support_request_id": result.get("id")}
+
     tools = [
         get_project_scope,
         findConvosByKeywords,
@@ -698,6 +719,7 @@ def create_agent_graph(
         getProjectSettings,
         proposeProjectUpdate,
         sendProgressUpdate,
+        reachOutToDembrane,
     ]
     system_prompt = SYSTEM_PROMPT + knowledge.prompt_section()
     configured_llm = llm or _build_llm()
