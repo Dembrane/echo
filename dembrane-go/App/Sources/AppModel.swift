@@ -3,6 +3,7 @@ import AVFoundation
 import ActivityKit
 import Observation
 import UIKit
+import WidgetKit
 import DembraneCore
 
 extension Notification.Name {
@@ -16,7 +17,7 @@ extension Notification.Name {
 @Observable
 final class AppModel {
     enum Phase: Equatable { case loading, signedOut, signedIn }
-    enum AppTab: Hashable, Sendable { case home, record, conversations, ask }
+    enum AppTab: Hashable, Sendable { case home, record, conversations, ask, search }
 
     // UI state
     var phase: Phase = .loading
@@ -36,6 +37,8 @@ final class AppModel {
     var saveState: SaveState = .idle
     /// Set when a "Start Recording" intent fires before the app is ready; consumed once ready.
     private var pendingStartRecording = false
+    /// Destination project for a pending intent ("Record into [project]"); nil = default/current.
+    private var pendingRecordProjectId: String?
     var loginError: String?
     var isSigningIn = false
     var needsOTP = false        // 2FA: show the one-time-code field
@@ -52,6 +55,14 @@ final class AppModel {
     var workspaces: [Workspace] = []
     var allProjects: [WorkspaceProject] = []
     var selectedProject: Project?
+    /// Ordered favorite project ids (never includes the default project). The
+    /// single source of truth for the Home favorites shelf and the Home Screen
+    /// widget; persisted to UserDefaults and mirrored to the App Group.
+    private(set) var favoriteProjectIds: [String] = []
+    /// The user's chosen default project (the Home hero / Invite / Upload target).
+    /// Independent of favorites and of the active selection. Falls back to the
+    /// auto-created "Go Recordings" inbox when unset.
+    private(set) var defaultProjectId: String?
     var conversations: [Conversation] = []
     var conversationsLoading = false
     var conversationsError = false
@@ -82,6 +93,8 @@ final class AppModel {
     private static let selectedProjectKey = "dembrane.go.selectedProject"   // full Project JSON
     private static let didOnboardKey = "dembrane.go.didOnboard"
     private static let environmentKey = "dembrane.go.environment"
+    private static let favoritesKey = "dembrane.go.favoriteProjectIds"      // ordered [projectId]
+    private static let defaultProjectIdKey = "dembrane.go.defaultProjectId" // user-chosen hero target
 
     private let sessionManager: SessionManager
     private var auth: AuthService
@@ -123,6 +136,8 @@ final class AppModel {
         self.uploader = ParticipantUploadClient(env: environment)
         self.chatService = ChatService(env: environment,
                                        tokenProvider: { await sessionManager.accessToken() })
+        loadFavorites()
+        defaultProjectId = UserDefaults.standard.string(forKey: Self.defaultProjectIdKey)
     }
 
     /// Real app stack: Keychain-backed session + live API client (with a
@@ -191,6 +206,11 @@ final class AppModel {
         if selectedProject == nil { selectedProject = restoredProject() }
         if await sessionManager.isAuthenticated() {
             phase = .signedIn
+            // Paint from cache and honor a pending widget/intent recording BEFORE
+            // the network waterfall, so capture starts instantly and the favorites
+            // shelf + recents don't flash an empty state.
+            await seedFromCache()
+            processPendingRecordingIfReady()
             await loadData()
             applyDevTab()
         } else {
@@ -216,10 +236,14 @@ final class AppModel {
         await refreshPendingRecordings()   // recover any recordings left on disk (kills/failures)
     }
 
-    /// Called when the app becomes active: pick up a "Start Recording" signal
-    /// from the Action Button / Siri / Shortcuts and begin capture.
+    /// Called when the app becomes active: pick up a "Record into [project]" signal
+    /// from a widget tile / Action Button / Siri / Shortcuts and begin capture.
     func handleLaunchIntents() {
-        if AppGroup.consumeStartRecordingSignal() { pendingStartRecording = true }
+        let signal = AppGroup.consumeStartRecordingSignal()
+        if signal.fired {
+            pendingStartRecording = true
+            pendingRecordProjectId = signal.targetProjectId
+        }
         processPendingRecordingIfReady()
     }
 
@@ -249,7 +273,18 @@ final class AppModel {
     /// not already recording). Held until `start()` restores the project, so a
     /// cold launch from the Action Button still works.
     private func processPendingRecordingIfReady() {
-        guard pendingStartRecording, !isRecording, selectedProject != nil else { return }
+        guard pendingStartRecording, !isRecording else { return }
+        // A targeted destination ("Record into [project]") resolves from cache /
+        // the App Group instantly, so capture starts without waiting for the data
+        // load. If it's somehow not resolvable yet, this re-runs after seeding.
+        if let targetId = pendingRecordProjectId {
+            guard let project = resolveProject(targetId) else { return }
+            pendingStartRecording = false
+            pendingRecordProjectId = nil
+            Task { await startRecording(into: project) }
+            return
+        }
+        guard selectedProject != nil else { return }
         pendingStartRecording = false
         Task { await startRecording() }
     }
@@ -364,6 +399,21 @@ final class AppModel {
         } else {
             Task { await startRecording() }
         }
+    }
+
+    /// Start a recording whose destination is `project` — used by favorite cards,
+    /// widget tiles, and the "Record into [project]" intent. Switches the active
+    /// project first so capture, the Live Activity, and recents all target it, then
+    /// begins immediately. Mid-recording it just reopens the in-progress screen.
+    func startRecording(into project: Project) async {
+        guard !isRecording else { showRecordingScreen = true; return }
+        if project.id != selectedProject?.id {
+            selectedProject = project
+            persistSelectedProject()
+            conversations = []   // destination's rows repopulate from cache/network
+            Task { await loadConversations(); await refreshWorkspaceUsage() }
+        }
+        await startRecording()
     }
 
     func startRecording() async {
@@ -507,6 +557,7 @@ final class AppModel {
         cleanupCapture()
         statusMessage = "Processing audio…"
         await loadConversations()
+        await loadRecents()
         await refreshPendingRecordings()
         statusMessage = nil
         flashSaveState(finished ? .saved : .failed)
@@ -702,8 +753,94 @@ final class AppModel {
         chunkUploads.append(task)
     }
 
-    /// Recent conversations for the Home tab.
-    var recentConversations: [Conversation] { Array(conversations.prefix(3)) }
+    /// Cross-project recents for Home (newest-first across the default + favorite
+    /// projects). Everything device-recorded is included; participant (portal)
+    /// conversations only surface for the default project. Capped for the "See all"
+    /// list; Home shows the first handful.
+    var crossProjectRecents: [Conversation] = []
+    var didLoadRecentsOnce = false
+
+    /// Project name for a recent row's chip (resolved from the loaded project list).
+    func recentsProjectName(_ conversation: Conversation) -> String? {
+        guard let pid = conversation.projectId else { return nil }
+        return allProjects.first(where: { $0.project.id == pid })?.project.name
+    }
+
+    /// The projects recents are drawn from: the default + the favorites (and, if
+    /// none are resolved yet, the current selection).
+    private func recentsTargets() -> [(id: String, isDefault: Bool)] {
+        let defId = defaultProject?.id
+        var targets: [(id: String, isDefault: Bool)] = []
+        if let d = defaultProject { targets.append((id: d.id, isDefault: true)) }
+        for wp in favoriteProjects where wp.project.id != defId {
+            targets.append((id: wp.project.id, isDefault: false))
+        }
+        if targets.isEmpty, let sel = selectedProject?.id { targets.append((id: sel, isDefault: sel == defId)) }
+        return targets
+    }
+
+    // Participant (portal) conversations only belong in recents for the default
+    // project; everything device-recorded is kept everywhere.
+    private func keepRecent(_ c: Conversation, isDefault: Bool) -> Bool { c.isPortalAudio ? isDefault : true }
+
+    /// Instant paint from each project's on-disk cache (no network) so recents
+    /// show immediately on launch / foreground.
+    func paintRecentsFromCache() async {
+        let targets = recentsTargets()
+        guard !targets.isEmpty else { return }
+        var cached: [Conversation] = []
+        for t in targets {
+            if let cs = await DiskCache.shared.load([Conversation].self, key: "conversations.\(t.id)") {
+                cached += cs.filter { keepRecent($0, isDefault: t.isDefault) }
+            }
+        }
+        if !cached.isEmpty { crossProjectRecents = Self.mergeRecents(cached); didLoadRecentsOnce = true }
+    }
+
+    /// Network refresh: fan out over the targets, merge newest-first, falling back
+    /// to cache per project for any call that fails.
+    func loadRecents() async {
+        let targets = recentsTargets()
+        guard !targets.isEmpty else { crossProjectRecents = []; didLoadRecentsOnce = true; return }
+        var merged: [Conversation] = []
+        for t in targets {
+            if let cs = try? await api.conversations(projectId: t.id) {
+                await DiskCache.shared.save(cs, key: "conversations.\(t.id)")
+                merged += cs.filter { keepRecent($0, isDefault: t.isDefault) }
+            } else if let cs = await DiskCache.shared.load([Conversation].self, key: "conversations.\(t.id)") {
+                merged += cs.filter { keepRecent($0, isDefault: t.isDefault) }
+            }
+        }
+        crossProjectRecents = Self.mergeRecents(merged)
+        didLoadRecentsOnce = true
+    }
+
+    private static func mergeRecents(_ convos: [Conversation]) -> [Conversation] {
+        var seen = Set<String>()
+        let unique = convos.filter { seen.insert($0.id).inserted }
+        return Array(unique.sorted { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }.prefix(50))
+    }
+
+    /// Paint everything we can from disk before any network call: the project list
+    /// (so favorites + recents resolve), the selected project's conversations, and
+    /// the cross-project recents. Keeps the first frame instant on every launch.
+    private func seedFromCache() async {
+        if allProjects.isEmpty,
+           let cached = await DiskCache.shared.load([WorkspaceProject].self, key: "allProjects") {
+            allProjects = cached
+        }
+        await loadCachedConversations()
+        await paintRecentsFromCache()
+    }
+
+    /// Resolve a project id to a `Project` from whatever's already in memory or
+    /// mirrored to the App Group — no network — so a widget/intent recording can
+    /// start instantly without waiting for the data load.
+    private func resolveProject(_ id: String) -> Project? {
+        if let wp = allProjects.first(where: { $0.project.id == id }) { return wp.project }
+        if let wp = AppGroup.readProjects().first(where: { $0.project.id == id }) { return wp.project }
+        return nil
+    }
 
     /// The signed-in user's avatar (Directus asset) with an access token, since
     /// asset reads are authed and AsyncImage can't attach a Bearer header.
@@ -731,13 +868,14 @@ final class AppModel {
             contentType: "audio/m4a", source: "GO_WATCH", recordedAt: Date())
         try? FileManager.default.removeItem(at: url)
         await loadConversations()
+        await loadRecents()
         statusMessage = nil
     }
 
     /// Import an audio file the user picked from Files, and upload it to the
-    /// active project (source GO_IOS).
-    func importAudioFile(_ url: URL) async {
-        guard let projectId = selectedProject?.id else {
+    /// given project (defaults to the active project), source GO_IOS.
+    func importAudioFile(_ url: URL, into destinationProjectId: String? = nil) async {
+        guard let projectId = destinationProjectId ?? selectedProject?.id else {
             statusMessage = "No project to save to yet."; return
         }
         let scoped = url.startAccessingSecurityScopedResource()
@@ -764,6 +902,7 @@ final class AppModel {
                 contentType: contentType, source: "GO_IOS", recordedAt: Date())
             try? FileManager.default.removeItem(at: dest)
             await loadConversations()
+            await loadRecents()
             flashSaveState(.saved)
         } catch {
             try? FileManager.default.removeItem(at: dest)
@@ -893,9 +1032,10 @@ final class AppModel {
         guard !isLoadingData else { return }
         isLoadingData = true
         defer { isLoadingData = false }
-        // Paint cached conversations first so Home recents are instant — don't make
-        // them wait behind the me/workspaces/projects network waterfall below.
-        await loadCachedConversations()
+        // Paint projects + conversations + recents from disk first so the favorites
+        // shelf and recents are instant — don't make them wait behind the
+        // me/workspaces/projects network waterfall below.
+        await seedFromCache()
         do {
             me = try await api.me()
         } catch {
@@ -935,6 +1075,7 @@ final class AppModel {
         }
 
         await loadConversations()
+        await loadRecents()
         await refreshWorkspaceUsage()
     }
 
@@ -970,6 +1111,10 @@ final class AppModel {
             allProjects = result
             await DiskCache.shared.save(result, key: "allProjects")
             AppGroup.writeProjects(result)   // let the Share Extension pick a destination
+            // Projects are now resolvable, so the widget can render favorite names.
+            AppGroup.writeFavorites(favoriteProjectIds)
+            AppGroup.writeDefaultProjectId(defaultProject?.id)
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 
@@ -1111,6 +1256,100 @@ final class AppModel {
     private func restoredProject() -> Project? {
         guard let data = UserDefaults.standard.data(forKey: Self.selectedProjectKey) else { return nil }
         return try? JSONDecoder().decode(Project.self, from: data)
+    }
+
+    // MARK: - Favorites
+
+    /// The Home hero / Invite / Upload target. The user's chosen default if set
+    /// (and still present), otherwise the auto-created "Go Recordings" inbox in
+    /// the default workspace. Never also a favorite.
+    var defaultProject: Project? {
+        if let id = defaultProjectId, let wp = allProjects.first(where: { $0.project.id == id }) {
+            return wp.project
+        }
+        let dws = workspaces.first(where: { $0.isDefault }) ?? workspaces.first
+        if let dws, let wp = allProjects.first(where: {
+            $0.workspace.id == dws.id
+                && $0.project.name.localizedCaseInsensitiveCompare(defaultProjectName) == .orderedSame
+        }) { return wp.project }
+        return allProjects.first(where: {
+            $0.project.name.localizedCaseInsensitiveCompare(defaultProjectName) == .orderedSame
+        })?.project
+    }
+
+    func isDefaultProject(_ project: Project) -> Bool { project.id == defaultProject?.id }
+
+    /// Pick a project as the default hero target (long-press in the picker / on a
+    /// favorite card). Favoriting never touches this; conversely the default is
+    /// never also a favorite, so promoting a favorite drops it from the shelf.
+    func setDefaultProject(_ wp: WorkspaceProject) {
+        defaultProjectId = wp.project.id
+        UserDefaults.standard.set(wp.project.id, forKey: Self.defaultProjectIdKey)
+        if favoriteProjectIds.contains(wp.project.id) {
+            favoriteProjectIds.removeAll { $0 == wp.project.id }
+            persistFavorites()   // also rewrites App Group favorites + reloads the widget
+        }
+        AppGroup.writeDefaultProjectId(wp.project.id)
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+    func isFavorite(_ projectId: String) -> Bool { favoriteProjectIds.contains(projectId) }
+
+    /// Favorites resolved to projects, in the user's order, skipping the default
+    /// and any id that isn't in the loaded project list.
+    var favoriteProjects: [WorkspaceProject] {
+        let byId = Dictionary(allProjects.map { ($0.project.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let defId = defaultProject?.id
+        return favoriteProjectIds.compactMap { $0 == defId ? nil : byId[$0] }
+    }
+
+    func toggleFavorite(_ wp: WorkspaceProject) {
+        guard !isDefaultProject(wp.project) else { return }
+        if let idx = favoriteProjectIds.firstIndex(of: wp.project.id) {
+            favoriteProjectIds.remove(at: idx)
+        } else {
+            favoriteProjectIds.append(wp.project.id)
+        }
+        persistFavorites()
+    }
+
+    func unfavorite(_ projectId: String) {
+        guard favoriteProjectIds.contains(projectId) else { return }
+        favoriteProjectIds.removeAll { $0 == projectId }
+        persistFavorites()
+    }
+
+    /// Bulk-favorite from the picker's multi-select (skips the default + already-faved).
+    func favorite(_ workspaceProjects: [WorkspaceProject]) {
+        var changed = false
+        for wp in workspaceProjects
+        where !isDefaultProject(wp.project) && !favoriteProjectIds.contains(wp.project.id) {
+            favoriteProjectIds.append(wp.project.id)
+            changed = true
+        }
+        if changed { persistFavorites() }
+    }
+
+    /// Replace the favorites order (drag-to-reorder on the Home shelf).
+    func setFavorites(_ ids: [String]) {
+        favoriteProjectIds = ids
+        persistFavorites()
+    }
+
+    private func loadFavorites() {
+        favoriteProjectIds = UserDefaults.standard.stringArray(forKey: Self.favoritesKey) ?? []
+        AppGroup.writeFavorites(favoriteProjectIds)
+    }
+
+    /// Dedupe, drop the default id, persist to UserDefaults + App Group, and nudge
+    /// the widget. Unknown ids are kept (they resolve once projects load); only the
+    /// `favoriteProjects` view hides them.
+    private func persistFavorites() {
+        let defId = defaultProject?.id
+        var seen = Set<String>()
+        favoriteProjectIds = favoriteProjectIds.filter { $0 != defId && seen.insert($0).inserted }
+        UserDefaults.standard.set(favoriteProjectIds, forKey: Self.favoritesKey)
+        AppGroup.writeFavorites(favoriteProjectIds)
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     /// Full conversation detail (summary + merged transcript), cached for an

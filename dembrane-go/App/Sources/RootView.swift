@@ -41,6 +41,11 @@ struct MainTabView: View {
             Tab("Ask", systemImage: "sparkles", value: AppModel.AppTab.ask) {
                 AskView()
             }
+            // Search role → split out to its own spot on the bottom bar; expands
+            // into the Liquid Glass search field.
+            Tab(value: AppModel.AppTab.search, role: .search) {
+                SearchView()
+            }
         }
         .tint(BrandColor.royalBlue)
         .onChange(of: model.selectedTab) { _, newValue in

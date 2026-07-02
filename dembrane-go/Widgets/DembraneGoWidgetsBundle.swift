@@ -5,5 +5,6 @@ import WidgetKit
 struct DembraneGoWidgetsBundle: WidgetBundle {
     var body: some Widget {
         RecordingLiveActivity()
+        QuickRecordWidget()
     }
 }

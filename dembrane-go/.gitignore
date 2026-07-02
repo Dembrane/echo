@@ -5,12 +5,15 @@ App/Info.plist
 App/DembraneGo.entitlements
 ShareExtension/Info.plist
 ShareExtension/DembraneGoShare.entitlements
+Widgets/Info.plist
+Widgets/DembraneGoWidgets.entitlements
 
 # Local tooling (fetched xcodegen binary)
 .tooling/
 
 # Build output
 .build/
+.build-device/
 DerivedData/
 build/
 

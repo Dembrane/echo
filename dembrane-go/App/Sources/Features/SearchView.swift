@@ -13,7 +13,11 @@ struct SearchView: View {
 
     private var results: [Conversation] {
         guard !trimmed.isEmpty else { return [] }
-        return model.conversations.filter {
+        // Search across what we've loaded: cross-project recents + the current
+        // project's conversations, deduped.
+        var seen = Set<String>()
+        let pool = (model.crossProjectRecents + model.conversations).filter { seen.insert($0.id).inserted }
+        return pool.filter {
             $0.displayTitle.localizedCaseInsensitiveContains(trimmed)
                 || ($0.summary?.localizedCaseInsensitiveContains(trimmed) ?? false)
         }
@@ -37,7 +41,8 @@ struct SearchView: View {
                     Section("Conversations") {
                         ForEach(results) { conversation in
                             Button { selected = conversation } label: {
-                                ConversationRow(conversation: conversation)
+                                ConversationRow(conversation: conversation,
+                                                projectName: model.recentsProjectName(conversation))
                                     .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)

@@ -123,39 +123,56 @@ struct PortalSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                if !infoDismissed {
-                    Section {
-                        HStack(alignment: .top, spacing: 10) {
-                            Image(systemName: "info.circle.fill").foregroundStyle(BrandColor.royalBlue)
-                            Text("People who scan this record on their own phone, no account needed. Their recordings appear in “\(project.name)” for you to review and ask questions about.")
-                                .font(.footnote).foregroundStyle(.secondary)
-                            Spacer(minLength: 0)
-                            Button { withAnimation { infoDismissed = true } } label: {
-                                Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary)
-                            }
-                            .buttonStyle(.plain).accessibilityLabel("Dismiss")
-                        }
-                    }
-                }
-
                 Section {
-                    VStack(spacing: 16) {
-                        QRCodeImage(string: portalURL.absoluteString, size: 210)
-                            .contextMenu {
-                                Button { shareInvite(imageOnly: true) } label: {
-                                    Label("Share image", systemImage: "photo")
-                                }
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Project title — tap to open this project's conversations.
+                        Button { openConversations() } label: {
+                            HStack(spacing: 4) {
+                                Text(project.name)
+                                    .font(.title3.weight(.semibold)).foregroundStyle(.primary).lineLimit(1)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                                Spacer(minLength: 0)
                             }
-                        Button { shareInvite(imageOnly: false) } label: {
-                            Label("Share invite", systemImage: "square.and.arrow.up")
-                                .labelStyle(.titleAndIcon)
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 4)
+                            .contentShape(Rectangle())
                         }
-                        .buttonStyle(.glassProminent).tint(BrandColor.royalBlue)
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Opens this project's conversations")
+
+                        // Tooltip, below the title.
+                        if !infoDismissed {
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "info.circle.fill").foregroundStyle(BrandColor.royalBlue)
+                                Text("People who scan this record on their own phone, no account needed. Their recordings appear here for you to review and ask questions about.")
+                                    .font(.footnote).foregroundStyle(.secondary)
+                                Spacer(minLength: 0)
+                                Button { withAnimation { infoDismissed = true } } label: {
+                                    Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary)
+                                }
+                                .buttonStyle(.plain).accessibilityLabel("Dismiss")
+                            }
+                        }
+
+                        // QR + share, kept tight to the tooltip above.
+                        VStack(spacing: 12) {
+                            QRCodeImage(string: portalURL.absoluteString, size: 210)
+                                .contextMenu {
+                                    Button { shareInvite(imageOnly: true) } label: {
+                                        Label("Share image", systemImage: "photo")
+                                    }
+                                }
+                            Button { shareInvite(imageOnly: false) } label: {
+                                Label("Share invite", systemImage: "square.and.arrow.up")
+                                    .labelStyle(.titleAndIcon)
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 4)
+                            }
+                            .buttonStyle(.glassProminent).tint(BrandColor.royalBlue)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 4)
                     }
-                    .frame(maxWidth: .infinity).padding(.vertical, 8)
                     .listRowBackground(Color.clear)
                 }
 
@@ -270,6 +287,15 @@ struct PortalSheet: View {
         newTerm = ""
         guard !t.isEmpty, !keyTerms.contains(t) else { return }
         keyTerms.append(t)
+    }
+
+    /// Tap the title → open this project's conversations (the project-scoped tab).
+    private func openConversations() {
+        if let wp = model.allProjects.first(where: { $0.project.id == project.id }) {
+            model.selectProject(wp)
+        }
+        model.selectedTab = .conversations
+        dismiss()
     }
 
     private func load() async {

@@ -9,7 +9,7 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(model.environment, .echoNext)
         XCTAssertFalse(model.isRecording)
         XCTAssertFalse(model.trainingOptIn)
-        XCTAssertEqual(model.defaultProjectName, "go")
+        XCTAssertEqual(model.defaultProjectName, "Go Recordings")
         XCTAssertEqual(model.phase, .loading)
     }
 
@@ -17,7 +17,7 @@ final class AppModelTests: XCTestCase {
         let model = AppModel.makeMock()
         await model.loadData()
         XCTAssertEqual(model.me?.email, "you@dembrane.com")
-        XCTAssertEqual(model.selectedProject?.name, "go")
+        XCTAssertEqual(model.selectedProject?.name, "Go Recordings")
         XCTAssertFalse(model.allProjects.isEmpty)
         XCTAssertFalse(model.conversations.isEmpty)
     }

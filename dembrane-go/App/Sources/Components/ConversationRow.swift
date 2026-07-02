@@ -4,49 +4,68 @@ import DembraneCore
 struct ConversationRow: View {
     @Environment(AppModel.self) private var model
     let conversation: Conversation
+    /// Inline project chip for cross-project lists (Home recents); nil in
+    /// project-scoped lists where the project is already implied.
+    var projectName: String? = nil
 
     private var tags: [ProjectTag] { model.conversationTagsCache[conversation.id] ?? [] }
+    private var hasDuration: Bool { (conversation.duration ?? 0) > 0 }
+    /// Whether there's anything to show on the chip row. When false we skip the
+    /// row entirely (no empty gap) and tuck the duration up next to the time.
+    private var hasChips: Bool {
+        projectName != nil || conversation.isPortalAudio || !tags.isEmpty
+    }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    if conversation.locked == true {
-                        Image(systemName: "lock.fill").font(.caption2).foregroundStyle(.secondary)
-                    }
-                    Text(conversation.displayTitle)
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-                    if conversation.isPortalAudio { ParticipantBadge() }
+        VStack(alignment: .leading, spacing: 4) {
+            // Line 1: title + when (+ duration when there's no chip row to hold it).
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                if conversation.locked == true {
+                    Image(systemName: "lock.fill").font(.caption2).foregroundStyle(.secondary)
                 }
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                if !tags.isEmpty {
-                    HStack(spacing: 4) {
-                        ForEach(tags.prefix(4)) { tag in
-                            Text(tag.text)
-                                .font(.caption2)
-                                .padding(.horizontal, 7).padding(.vertical, 2)
-                                .background(BrandColor.royalBlue.opacity(0.12), in: .capsule)
-                                .foregroundStyle(BrandColor.royalBlue)
-                        }
-                    }
+                Text(conversation.displayTitle).foregroundStyle(.primary).lineLimit(1)
+                Spacer(minLength: 8)
+                if !hasChips, hasDuration, let duration = conversation.duration {
+                    Text(Self.duration(duration)).font(.caption2).foregroundStyle(.tertiary).fixedSize()
                 }
-            }
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 3) {
                 if let when = relativeTime {
-                    Text(when).font(.caption).foregroundStyle(.secondary)
-                }
-                if let duration = conversation.duration, duration > 0 {
-                    Text(Self.duration(duration)).font(.caption2).foregroundStyle(.tertiary)
+                    Text(when).font(.caption).foregroundStyle(.secondary).fixedSize()
                 }
             }
+            // Line 2: chips (project + participant + tags) on the left, duration on
+            // the right — only when there's at least one chip.
+            if hasChips {
+                HStack(spacing: 4) {
+                    if let projectName { projectChip(projectName) }
+                    if conversation.isPortalAudio { ParticipantBadge() }
+                    ForEach(tags.prefix(3)) { tag in tagChip(tag.text) }
+                    Spacer(minLength: 4)
+                    if hasDuration, let duration = conversation.duration {
+                        Text(Self.duration(duration)).font(.caption2).foregroundStyle(.tertiary).fixedSize()
+                    }
+                }
+            }
+            // Summary / status — always full width.
+            Text(subtitle)
+                .font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 4)
         .task { await model.loadTagsForRow(conversation.id) }
+    }
+
+    private func projectChip(_ name: String) -> some View {
+        Label(name, systemImage: "folder")
+            .font(.caption2.weight(.medium)).foregroundStyle(.secondary).lineLimit(1)
+            .padding(.horizontal, 7).padding(.vertical, 2)
+            .background(.quaternary, in: .capsule)
+    }
+
+    private func tagChip(_ text: String) -> some View {
+        Text(text).font(.caption2).lineLimit(1)
+            .padding(.horizontal, 7).padding(.vertical, 2)
+            .background(BrandColor.royalBlue.opacity(0.12), in: .capsule)
+            .foregroundStyle(BrandColor.royalBlue)
     }
 
     /// Lead with the summary; fall back to a clean status.

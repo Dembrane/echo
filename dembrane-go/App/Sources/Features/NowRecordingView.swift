@@ -9,6 +9,7 @@ struct NowRecordingView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var confirmDiscard = false
     @State private var showTranscript = false
+    @State private var entryToast = false
 
     var body: some View {
         NavigationStack {
@@ -25,7 +26,6 @@ struct NowRecordingView: View {
             .toolbar {
                 if model.isRecording {
                     ToolbarItem(placement: .topBarLeading) { micMenu }
-                    ToolbarItem(placement: .topBarTrailing) { moreMenu }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(model.isRecording ? "Done" : "Cancel") { dismiss() }
@@ -46,6 +46,29 @@ struct NowRecordingView: View {
         // Haptics for the core action: a firm cue on start/stop, a light tick on pause/resume.
         .sensoryFeedback(trigger: model.isRecording) { _, recording in recording ? .start : .stop }
         .sensoryFeedback(.selection, trigger: model.isPaused)
+        // Brief on-entry confirmation of the destination.
+        .overlay(alignment: .top) {
+            if entryToast, let project = model.selectedProject {
+                Text("Recording into \(project.name)…")
+                    .font(.subheadline.weight(.medium))
+                    .padding(.horizontal, 14).padding(.vertical, 8)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .overlay(Capsule().strokeBorder(.quaternary, lineWidth: 0.5))
+                    .padding(.top, 10)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .onAppear { if model.isRecording { triggerEntryToast() } }
+        .onChange(of: model.isRecording) { _, recording in if recording { triggerEntryToast() } }
+    }
+
+    /// Flash the "Recording into [project]…" confirmation for ~1s.
+    private func triggerEntryToast() {
+        withAnimation { entryToast = true }
+        Task {
+            try? await Task.sleep(for: .seconds(1.2))
+            withAnimation { entryToast = false }
+        }
     }
 
     // MARK: Armed (tap to start)
@@ -89,15 +112,15 @@ struct NowRecordingView: View {
             }
             .padding(.horizontal)
 
-            // Heading: recording name, with the project left-aligned beneath it.
+            // Heading: the destination is primary (consent-sensitive — make it
+            // obvious where this lands), with the recording name beneath.
             VStack(alignment: .leading, spacing: 4) {
-                Text(model.recordingName ?? "New recording")
-                    .font(.title2.weight(.semibold)).lineLimit(2).contentTransition(.opacity)
+                Text("Recording into \(model.selectedProject?.name ?? "…")")
+                    .font(.title2.weight(.semibold)).lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                if let project = model.selectedProject {
-                    Text(project.name).font(.subheadline).foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
+                Text(model.recordingName ?? "New recording")
+                    .font(.subheadline).foregroundStyle(.secondary).contentTransition(.opacity)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal)
 
@@ -120,6 +143,17 @@ struct NowRecordingView: View {
                     .monospacedDigit().contentTransition(.numericText())
 
                 controlsRow
+
+                // Always-visible and distinct from Stop: a mis-tapped recording
+                // must never silently land in a consent-sensitive project, so
+                // discarding is one tap away (with a confirm), not buried in a menu.
+                Button(role: .destructive) { confirmDiscard = true } label: {
+                    Label("Discard", systemImage: "trash")
+                        .font(.subheadline.weight(.medium))
+                }
+                .buttonStyle(.glass)
+                .tint(.red)
+                .accessibilityHint("Deletes this recording without saving")
             }
             .padding(.bottom, 20)
         }
@@ -179,17 +213,6 @@ struct NowRecordingView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Stop and save")
         }
-    }
-
-    private var moreMenu: some View {
-        Menu {
-            Button(role: .destructive) { confirmDiscard = true } label: {
-                Label("Discard recording", systemImage: "trash")
-            }
-        } label: {
-            Image(systemName: "ellipsis.circle")
-        }
-        .accessibilityLabel("More options")
     }
 
     private var micMenu: some View {
