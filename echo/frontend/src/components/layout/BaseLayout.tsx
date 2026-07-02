@@ -5,7 +5,6 @@ import { AppSidebar, useSidebarView } from "@/features/sidebar";
 import { AppBreadcrumbs } from "@/features/sidebar/breadcrumbs/AppBreadcrumbs";
 import { InboxView } from "@/features/sidebar/views/InboxView";
 import { useSidebarState } from "@/features/sidebar/hooks/useSidebarState";
-import { useV2Me } from "@/hooks/useV2Me";
 import { ActionIcon } from "@mantine/core";
 import { List } from "@phosphor-icons/react";
 import { Toaster } from "../common/Toaster";
@@ -36,8 +35,6 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 	const { isAuthenticated } = useAuthenticated();
 	const { overlay } = useSidebarView();
 	const { collapsed, setCollapsed } = useSidebarState();
-	const { data: me } = useV2Me();
-	const isCollapsible = !!me?.settings?.enable_collapsible_sidebar;
 
 	return (
 		<TransitionCurtainProvider>
@@ -49,7 +46,7 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 				) : null}
 				<ErrorBoundary>
 					<main className="relative flex flex-1 flex-col overflow-hidden">
-						{isAuthenticated && isCollapsible && collapsed && (
+						{isAuthenticated && collapsed && (
 							<div className="absolute left-3 top-[12.5px] z-40">
 								<ActionIcon
 									variant="subtle"

@@ -8,7 +8,6 @@ import { useProjectById } from "@/components/project/hooks";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSidebarView } from "../hooks/useSidebarView";
 import { useSidebarState } from "../hooks/useSidebarState";
-import { useV2Me } from "@/hooks/useV2Me";
 
 interface Crumb {
 	label: string;
@@ -84,8 +83,6 @@ const ORG_SETTINGS_LABELS: Record<string, string> = {
 export const AppBreadcrumbs = () => {
 	const { view, params } = useSidebarView();
 	const { collapsed } = useSidebarState();
-	const { data: me } = useV2Me();
-	const isCollapsible = !!me?.settings?.enable_collapsible_sidebar;
 	const { orgId: routeOrgId, organisationId } = useParams<{
 		orgId?: string;
 		organisationId?: string;
@@ -276,7 +273,7 @@ export const AppBreadcrumbs = () => {
 			aria-label="Breadcrumb"
 			style={{
 				color: "rgba(45, 45, 44, 0.55)",
-				paddingLeft: isCollapsible && collapsed ? "52px" : "16px",
+				paddingLeft: collapsed ? "52px" : "16px",
 				paddingRight: "16px",
 			}}
 		>
