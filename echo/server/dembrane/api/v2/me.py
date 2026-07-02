@@ -1,13 +1,17 @@
 """GET /v2/me — lightweight user profile with onboarding status."""
 
-from typing import Optional
+from typing import Any, Optional, cast
 from logging import getLogger
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
-from dembrane.app_user import resolve_app_user, get_app_user_or_raise, get_directus_user_profile
+from dembrane.app_user import (
+    resolve_app_user,
+    get_app_user_or_raise,
+    get_directus_user_profile,
+)
 from dembrane.policies import ROLE_HIERARCHY as _ROLE_LEVEL
 from dembrane.seat_capacity import assert_can_add_seat
 from dembrane.api.rate_limit import create_user_rate_limiter
@@ -201,11 +205,13 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
         onboarding_answer_json=onboarding_answers,
         training_status=training_status,
         high_risk_context=high_risk_context,
+        settings=cast(dict[str, Any], app_user.get("settings")) if isinstance(app_user.get("settings"), dict) else {},
     )
 
 
 class UpdateMeRequest(BaseModel):
     display_name: Optional[str] = Field(default=None, min_length=1, max_length=80)
+    settings: Optional[dict[str, Any]] = None
 
 
 @router.patch("")
@@ -213,15 +219,22 @@ async def update_me(
     body: UpdateMeRequest,
     auth: DependencyDirectusSession,
 ) -> dict:
-    """Update the current user's profile (display_name only for now)."""
+    """Update the current user's profile (display_name and settings)."""
     app_user = await get_app_user_or_raise(auth.user_id)
 
-    payload = {}
+    payload: dict[str, Any] = {}
     if body.display_name is not None:
         # Strip control chars — display_name lands in email subject lines
         # (invite "{inviter_name} invited you...") so CR/LF must not pass.
         cleaned = body.display_name.replace("\r", " ").replace("\n", " ").strip()
         payload["display_name"] = cleaned
+
+    if body.settings is not None:
+        existing_settings = app_user.get("settings") or {}
+        if not isinstance(existing_settings, dict):
+            existing_settings = {}
+        merged_settings = {**existing_settings, **body.settings}
+        payload["settings"] = merged_settings
 
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")

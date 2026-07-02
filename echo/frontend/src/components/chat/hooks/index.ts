@@ -151,6 +151,7 @@ export const useInitializeChatModeMutation = () => {
 
 export const useChat = (chatId: string) => {
 	return useQuery({
+		enabled: !!chatId && chatId !== "new",
 		queryFn: () => bff.get<ProjectChat>(`/chats/${chatId}`),
 		queryKey: ["chats", chatId],
 	});
