@@ -165,9 +165,10 @@ export const ENABLE_CONVERSATION_HEALTH = true;
 export const ENABLE_ANNOUNCEMENTS = true;
 export const ENABLE_DISPLAY_CONVERSATION_LINKS = true;
 export const ENABLE_WEBHOOKS = true;
-// Temporarily disabled everywhere. Restore with: byEnv({ production: false }, true)
-// (on everywhere except production: local, testing/dev, next/staging → on).
-export const ENABLE_AGENTIC_CHAT = false;
+// On everywhere except production: local, testing/dev, next/staging.
+// Re-enabled 2026-07-02 with the agent on gemini-3.5-flash via Vertex and the
+// #573 harvest (server-side grep, chunk citations, titles) on main.
+export const ENABLE_AGENTIC_CHAT = byEnv({ production: false }, true);
 // Re-enabled on echo-next (2026-06-21). Runtime render gate only; the build
 // always ships the (lazy) agentation chunk and JSX source metadata — other
 // environments just never render or download it. Widen to more envs by adding
