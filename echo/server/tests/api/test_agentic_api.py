@@ -1,20 +1,19 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import Any, AsyncIterator
 from contextlib import asynccontextmanager
 
 import pytest
 from httpx import AsyncClient, ASGITransport
-from types import SimpleNamespace
-
 from fastapi import FastAPI, HTTPException
 
 import dembrane.api.agentic as agentic_api
+from dembrane.api.v2.bff import _access as bff_access
 from tests.agentic.fakes import InMemoryDirectus
 from dembrane.api.agentic import AgenticRouter
 from dembrane.service.agentic import AgenticRunService
 from dembrane.api.dependency_auth import DirectusSession, require_directus_session
-from dembrane.api.v2.bff import _access as bff_access
 
 
 class _FakeProjectService:
@@ -183,7 +182,7 @@ async def _build_api_client(
         if owner_entry is None or owner_id != auth.user_id:
             # Ladder semantics: non-members get 404, not 403.
             raise HTTPException(status_code=404, detail="Project not found")
-        return SimpleNamespace(require=lambda policy: None, role="owner", project={})
+        return SimpleNamespace(require=lambda _policy: None, role="owner", project={})
 
     monkeypatch.setattr(bff_access, "resolve_project_access", _fake_resolve_project_access)
     monkeypatch.setattr(agentic_api, "agentic_run_service", run_service)
