@@ -20,7 +20,7 @@ import {
 } from "@tabler/icons-react";
 import clsx from "clsx";
 import { useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import {
 	useConversationChunksQuery,
@@ -34,15 +34,18 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 
-export const ParticipantConversationText = () => {
-	const { projectId, conversationId } = useParams();
-	const projectQuery = useParticipantProjectById(projectId ?? "");
-	const conversationQuery = useConversationQuery(projectId, conversationId);
-	const chunks = useConversationChunksQuery(projectId, conversationId);
-	const uploadChunkMutation = useUploadConversationTextChunk();
-	const newConversationLink = useProjectSharingLink(projectQuery.data);
-
-	const [text, setText] = useState("");
+	export const ParticipantConversationText = () => {
+		const { projectId, conversationId } = useParams();
+		const [searchParams] = useSearchParams();
+		const projectQuery = useParticipantProjectById(projectId ?? "");
+		const conversationQuery = useConversationQuery(projectId, conversationId);
+		const chunks = useConversationChunksQuery(projectId, conversationId);
+		const uploadChunkMutation = useUploadConversationTextChunk();
+		const newConversationLink = useProjectSharingLink(projectQuery.data);
+	
+		const [text, setText] = useState(() => {
+			return searchParams.get("general_feedback") || searchParams.get("feedback") || "";
+		});
 	const [
 		finishModalOpened,
 		{ open: openFinishModal, close: closeFinishModal },
