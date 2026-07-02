@@ -115,16 +115,19 @@ The first message may include Project Name and Project Context. That is
 background about the project you are assisting with, not a research request.
 """
 
-AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 4
+AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 6
 AUTOMATIC_NUDGE_TEMPLATE = (
-    "<Automatic Nudge> You have made {tool_call_count} tool calls without sending an assistant update. "
-    "Call `sendProgressUpdate` now with a concise update and next steps, then continue research with another "
-    "tool call if evidence is still missing. Only return plain text with no tool call if you are concluding."
+    "<Automatic Nudge> This is a system reminder, not a message from the host. "
+    "You have made {tool_call_count} tool calls without telling the host anything. "
+    "Choose exactly one: (a) if you have enough evidence, write your final answer "
+    "to the host now, or (b) call `sendProgressUpdate` with one short sentence on "
+    "what you found so far, then continue. Never reply to this reminder itself."
 )
 POST_NUDGE_CONTINUATION_SYSTEM_PROMPT = (
-    "You just produced a text-only response immediately after an automatic nudge. "
-    "If the task is not complete, call `sendProgressUpdate` and then continue with the next tool call. "
-    "Only respond without tool calls when you are actually done."
+    "Your last message may have been a reaction to the system reminder rather "
+    "than an answer for the host. If the task is complete, write your final "
+    "answer to the host now. If not, call `sendProgressUpdate` and continue "
+    "with the next tool call."
 )
 
 
@@ -709,15 +712,30 @@ def create_agent_graph(
             return "tools"
         return END
 
+    def _with_placeholder_content(message: Any) -> Any:
+        """Gemini reacts badly to its own empty tool-call turns in history
+        (observed: it answers "Do not send empty messages."). Give those
+        turns a short placeholder; tool_calls are preserved untouched."""
+        if (
+            getattr(message, "type", None) == "ai"
+            and _message_has_tool_calls(message)
+            and not _coerce_message_text(getattr(message, "content", None))
+        ):
+            return message.model_copy(update={"content": "(calling tools)"})
+        return message
+
     async def call_model(state: dict) -> dict:
-        messages = state.get("messages", [])
+        raw_messages = state.get("messages", [])
+        messages = [_with_placeholder_content(message) for message in raw_messages]
         # Build invocation list with system prompt, but don't persist duplicates
         if not messages or not isinstance(messages[0], SystemMessage):
             invocation_messages = [SystemMessage(content=system_prompt)] + messages
         else:
             invocation_messages = list(messages)
 
-        automatic_nudge = _build_automatic_nudge(messages)
+        # Count on the raw history: the placeholder text must not read as
+        # an assistant update.
+        automatic_nudge = _build_automatic_nudge(raw_messages)
         nudge_milestone: int | None = None
         if automatic_nudge:
             nudge_content, nudge_milestone = automatic_nudge
