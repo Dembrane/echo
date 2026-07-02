@@ -5,7 +5,8 @@ from typing import Any, Callable
 from copilotkit.langgraph import CopilotKitState
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.tools import tool
-from langchain_google_genai import ChatGoogleGenerativeAI
+from google.oauth2 import service_account
+from langchain_google_vertexai import ChatVertexAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
@@ -94,14 +95,29 @@ POST_NUDGE_CONTINUATION_SYSTEM_PROMPT = (
 )
 
 
-def _build_llm() -> ChatGoogleGenerativeAI:
-    settings = get_settings()
-    if not settings.gemini_api_key:
-        raise ValueError("GEMINI_API_KEY is required")
+VERTEX_AUTH_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 
-    return ChatGoogleGenerativeAI(
-        model=settings.llm_model,
-        google_api_key=settings.gemini_api_key,
+
+def _build_llm() -> ChatVertexAI:
+    settings = get_settings()
+
+    credentials = None
+    project = settings.vertex_project or None
+    credentials_payload = settings.vertex_credentials or settings.gcp_sa_json
+    if credentials_payload:
+        credentials = service_account.Credentials.from_service_account_info(
+            credentials_payload,
+            scopes=VERTEX_AUTH_SCOPES,
+        )
+        if not project:
+            project = credentials_payload.get("project_id")
+
+    return ChatVertexAI(
+        model_name=settings.llm_model,
+        project=project,
+        location=settings.vertex_location,
+        api_endpoint=settings.vertex_api_endpoint or None,
+        credentials=credentials,
     )
 
 
