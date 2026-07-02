@@ -1,0 +1,55 @@
+{
+  "collection": "agent_memory",
+  "field": "source",
+  "type": "string",
+  "meta": {
+    "collection": "agent_memory",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "source",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": null,
+    "options": {
+      "choices": [
+        {
+          "text": "agent",
+          "value": "agent"
+        },
+        {
+          "text": "host",
+          "value": "host"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 10,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "source",
+    "table": "agent_memory",
+    "data_type": "character varying",
+    "default_value": "agent",
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}
