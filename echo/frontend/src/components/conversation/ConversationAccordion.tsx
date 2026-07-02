@@ -71,14 +71,13 @@ import {
 	useInfiniteProjects,
 	useProjectById,
 } from "@/components/project/hooks";
-import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
+import { ENABLE_CHAT_SELECT_ALL } from "@/config";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { testId } from "@/lib/testUtils";
 import { BaseSkeleton } from "../common/BaseSkeleton";
 import { NavigationButton } from "../common/NavigationButton";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
 import { AddTagFilterModal } from "./AddTagFilterModal";
-import { AutoSelectConversations } from "./AutoSelectConversations";
 import {
 	useAddChatContextMutation,
 	useConversationsCountByProjectId,
@@ -131,9 +130,6 @@ const ConversationAccordionLabelChatSelection = ({
 	);
 	const isOverCapLocked = !!conversation.locked;
 
-	const isAutoSelectEnabled =
-		projectChatContextQuery.data?.auto_select_bool ?? false;
-
 	// Check if conversation has any content
 	const hasContent = conversation.chunks?.some((chunk) => {
 		const transcript = (chunk as unknown as ConversationChunk).transcript;
@@ -174,9 +170,6 @@ const ConversationAccordionLabelChatSelection = ({
 				checked={isSelected}
 				disabled={isDisabled}
 				onChange={handleSelectChat}
-				color={
-					ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled ? "green" : undefined
-				}
 				{...testId(`conversation-chat-selection-checkbox-${conversation.id}`)}
 			/>
 		</Tooltip>
@@ -1121,17 +1114,6 @@ export const ConversationAccordion = ({
 
 			<Accordion.Panel>
 				<Stack gap="sm" className="relative">
-					{/* Only show auto-select in deep dive mode */}
-					{inChatMode &&
-						!isOverviewMode &&
-						ENABLE_CHAT_AUTO_SELECT &&
-						totalConversations > 0 && (
-							<Stack gap="xs" className="relative">
-								<LoadingOverlay visible={conversationsQuery.isLoading} />
-								<AutoSelectConversations />
-							</Stack>
-						)}
-
 					{!(
 						totalConversations === 0 && debouncedConversationSearchValue === ""
 					) && (

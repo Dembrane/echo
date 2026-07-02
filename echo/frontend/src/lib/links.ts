@@ -1,3 +1,3 @@
 export const SalesLinks = {
-	AUTO_SELECT_CONTACT: "https://cal.com/evenib",
+	CONTACT_SALES: "https://cal.com/evenib",
 };

@@ -10,7 +10,6 @@ from fastapi.responses import StreamingResponse
 
 from dembrane.llms import MODELS, arouter_completion, get_completion_kwargs
 from dembrane.utils import generate_uuid
-from dembrane.prompts import render_prompt
 from dembrane.service import (
     chat_service,
     conversation_service,
@@ -22,13 +21,11 @@ from dembrane.chat_utils import (
     MAX_CHAT_CONTEXT_LENGTH,
     generate_title,
     get_project_chat_history,
-    auto_select_conversations,
     create_system_messages_for_chat,
 )
 from dembrane.service.chat import ChatServiceException, ChatNotFoundException
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.stream_status import stream_with_status
-from dembrane.tier_capacity import tier_allows_overage
 from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.directus_async import async_directus
 from dembrane.api.conversation import get_conversation_token_count
@@ -46,7 +43,6 @@ suggestions_rate_limiter = create_rate_limiter(
 logger = logging.getLogger("dembrane.chat")
 
 settings = get_settings()
-ENABLE_CHAT_AUTO_SELECT = settings.feature_flags.enable_chat_auto_select
 ENABLE_CHAT_SELECT_ALL = settings.feature_flags.enable_chat_select_all
 
 CONVERSATION_LOCKED_ERROR = "conversation_locked"
@@ -85,57 +81,6 @@ async def _check_conversation_not_locked(conversation_id: str, project_id: str) 
         )
 
 
-async def is_followup_question(
-    conversation_history: List[Dict[str, str]], language: str = "en"
-) -> bool:
-    """
-    Determine if the current question is a follow-up to previous messages.
-    Uses a small LLM call to check semantic relationship.
-
-    Returns:
-        True if it's a follow-up question, False if it's a new independent question
-    """
-    if len(conversation_history) < 2:
-        # No previous context, can't be a follow-up
-        return False
-
-    # Take last 4 messages for context (2 exchanges)
-    recent_messages = conversation_history[-4:]
-
-    # Format messages for the prompt
-    previous_messages = [
-        {"role": msg["role"], "content": msg["content"]} for msg in recent_messages[:-1]
-    ]
-    current_question = recent_messages[-1]["content"]
-
-    prompt = render_prompt(
-        "is_followup_question",
-        language,
-        {
-            "previous_messages": previous_messages,
-            "current_question": current_question,
-        },
-    )
-
-    try:
-        response = await arouter_completion(
-            MODELS.MULTI_MODAL_FAST,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0,  # Deterministic
-            timeout=60,  # 1 minute timeout for quick decision
-        )
-
-        result_text = response.choices[0].message.content.strip()
-        result = json.loads(result_text)
-        is_followup = result.get("is_followup", False)
-
-        logger.info(f"Follow-up detection: {is_followup} for query: {current_question[:50]}...")
-        return is_followup
-    except Exception as e:
-        logger.warning(f"Follow-up detection failed: {e}. Defaulting to False (run auto-select)")
-        return False
-
-
 class ChatContextConversationSchema(BaseModel):
     conversation_id: str
     conversation_participant_name: str
@@ -153,7 +98,6 @@ class ChatContextSchema(BaseModel):
     messages: List[ChatContextMessageSchema]
     conversation_id_list: List[str]
     locked_conversation_id_list: List[str]
-    auto_select_bool: bool
     chat_mode: Optional[Literal["overview", "deep_dive", "agentic"]] = (
         None  # None = not yet selected
     )
@@ -293,9 +237,6 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
     used_conversation_links = chat.get("used_conversations") or []
     logger.debug("Used conversation links: %s", used_conversation_links)
 
-    auto_select_value = chat.get("auto_select")
-    if auto_select_value is None:
-        raise HTTPException(status_code=400, detail="Auto select is not boolean")
 
     # Get chat mode (may be None if not yet selected)
     chat_mode = chat.get("chat_mode")
@@ -314,7 +255,6 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
                 token_usage=assistant_message_token_count / MAX_CHAT_CONTEXT_LENGTH,
             ),
         ],
-        auto_select_bool=bool(auto_select_value),
         chat_mode=chat_mode,
     )
 
@@ -362,7 +302,6 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
 
 class ChatAddContextSchema(BaseModel):
     conversation_id: Optional[str] = None
-    auto_select_bool: Optional[bool] = None
     select_all: Optional[bool] = None
     project_id: Optional[str] = None
     tag_ids: Optional[List[str]] = None
@@ -407,7 +346,6 @@ async def add_chat_context(
     options_provided = sum(
         [
             body.conversation_id is not None,
-            body.auto_select_bool is not None,
             body.select_all is not None,
         ]
     )
@@ -659,15 +597,11 @@ async def add_chat_context(
             include_used_conversations=True,
         )
 
-    if body.auto_select_bool is not None:
-        await run_in_thread_pool(chat_svc.set_auto_select, chat_id, body.auto_select_bool)
-
     return AddContextResponseSchema()
 
 
 class ChatDeleteContextSchema(BaseModel):
-    conversation_id: Optional[str] = None
-    auto_select_bool: Optional[bool] = None
+    conversation_id: str
 
 
 @ChatRouter.post("/{chat_id}/delete-context")
@@ -679,45 +613,28 @@ async def delete_chat_context(
     chat_svc = chat_service
 
     await raise_if_chat_not_found_or_not_authorized(chat_id, auth)
-    if body.conversation_id is None and body.auto_select_bool is None:
-        raise HTTPException(
-            status_code=400, detail="conversation_id or auto_select_bool is required"
-        )
+    chat_context = await get_chat_context(chat_id, auth)
 
-    if body.conversation_id is not None and body.auto_select_bool is not None:
-        raise HTTPException(
-            status_code=400, detail="conversation_id and auto_select_bool cannot both be provided"
-        )
+    conversation_entry = next(
+        (
+            conversation_resource
+            for conversation_resource in chat_context.conversations
+            if conversation_resource.conversation_id == body.conversation_id
+        ),
+        None,
+    )
 
-    if body.auto_select_bool is True:
-        raise HTTPException(status_code=400, detail="auto_select_bool cannot be True")
+    if conversation_entry is None:
+        raise HTTPException(status_code=404, detail="Conversation not found in the chat")
 
-    if body.conversation_id is not None:
-        chat_context = await get_chat_context(chat_id, auth)
+    if conversation_entry.locked:
+        raise HTTPException(status_code=400, detail="Conversation is locked")
 
-        conversation_entry = next(
-            (
-                conversation_resource
-                for conversation_resource in chat_context.conversations
-                if conversation_resource.conversation_id == body.conversation_id
-            ),
-            None,
-        )
-
-        if conversation_entry is None:
-            raise HTTPException(status_code=404, detail="Conversation not found in the chat")
-
-        if conversation_entry.locked:
-            raise HTTPException(status_code=400, detail="Conversation is locked")
-
-        await run_in_thread_pool(
-            chat_svc.detach_conversation,
-            chat_id,
-            body.conversation_id,
-        )
-
-    if body.auto_select_bool is not None:
-        await run_in_thread_pool(chat_svc.set_auto_select, chat_id, body.auto_select_bool)
+    await run_in_thread_pool(
+        chat_svc.detach_conversation,
+        chat_id,
+        body.conversation_id,
+    )
 
 
 @ChatRouter.post("/{chat_id}/lock-conversations", response_model=None)
@@ -990,7 +907,6 @@ async def post_chat(
         )
 
     chat_svc = chat_service
-    conversation_svc = conversation_service
 
     project_id: Optional[str] = _chat_project_id(chat)
 
@@ -1059,7 +975,6 @@ async def post_chat(
             )
         if write_tasks:
             await asyncio.gather(*write_tasks)
-        locked_conversation_id_list = chat_context.locked_conversation_id_list
 
         conversation_history = [
             {"role": message["role"], "content": message["content"]}
@@ -1097,137 +1012,7 @@ async def post_chat(
             formatted.extend(conversation_history)
             return formatted
 
-        conversations_added_ids: List[str] = []
-        conversation_references: dict[str, List[Dict[str, str]]] = {"references": []}
-
-        formatted_messages: List[Dict[str, str]]
-        should_reuse_locked = False
-        if locked_conversation_id_list:
-            should_reuse_locked = await is_followup_question(conversation_history, language)
-
-        if (
-            ENABLE_CHAT_AUTO_SELECT
-            and chat_context.auto_select_bool
-            and not should_reuse_locked
-            and conversation_history
-        ):
-            query = conversation_history[-1]["content"]
-
-            logger.info(f"Calling auto_select_conversations with query: {query}")
-            auto_select_result = await auto_select_conversations(
-                user_query_inputs=[query],
-                project_id_list=[project_id],
-                language=language,
-            )
-
-            logger.info("Auto-select result: %s", auto_select_result)
-
-            selected_conversation_ids: List[str] = []
-            if "results" in auto_select_result:
-                for proj_result in auto_select_result["results"].values():
-                    selected_conversation_ids.extend(proj_result.get("conversation_id_list", []))
-
-            auto_select_tier = await _resolve_workspace_tier(project_id)
-            locked_ids: set[str] = set()
-            if (
-                selected_conversation_ids
-                and auto_select_tier is not None
-                and not tier_allows_overage(auto_select_tier)
-            ):
-                caps = await async_directus.get_items(
-                    "conversation",
-                    {
-                        "query": {
-                            "filter": {
-                                "id": {"_in": selected_conversation_ids},
-                                "is_over_cap": {"_eq": True},
-                            },
-                            "fields": ["id"],
-                            "limit": len(selected_conversation_ids),
-                        }
-                    },
-                )
-                if isinstance(caps, list):
-                    locked_ids = {c["id"] for c in caps if c.get("id")}
-
-            existing_conversation_ids = set(chat_context.conversation_id_list)
-            max_context_threshold = int(MAX_CHAT_CONTEXT_LENGTH * 0.8)
-
-            for conversation_id in selected_conversation_ids:
-                if (
-                    conversation_id in existing_conversation_ids
-                    or conversation_id in conversations_added_ids
-                    or conversation_id in locked_ids
-                ):
-                    continue
-
-                temp_ids = (
-                    chat_context.conversation_id_list + conversations_added_ids + [conversation_id]
-                )
-                candidate_messages = await build_formatted_messages(temp_ids)
-                prompt_len = token_counter(
-                    messages=candidate_messages,
-                    model=get_completion_kwargs(CHAT_LLM)["model"],
-                )
-
-                if prompt_len > max_context_threshold:
-                    logger.info(
-                        "Reached 80%% context threshold (%s/%s tokens). Stopping conversation addition.",
-                        prompt_len,
-                        max_context_threshold,
-                    )
-                    break
-
-                await run_in_thread_pool(
-                    chat_svc.attach_conversations,
-                    chat_id,
-                    [conversation_id],
-                )
-                conversations_added_ids.append(conversation_id)
-                existing_conversation_ids.add(conversation_id)
-
-            if conversations_added_ids:
-                await run_in_thread_pool(
-                    chat_svc.create_message,
-                    chat_id,
-                    "dembrane",
-                    text=f"Auto-selected and added {len(conversations_added_ids)} conversations as context to the chat.",
-                    message_id=generate_uuid(),
-                    used_conversation_ids=conversations_added_ids,
-                    added_conversation_ids=conversations_added_ids,
-                )
-
-            updated_context = await get_chat_context(chat_id, auth)
-            formatted_messages = await build_formatted_messages(
-                updated_context.conversation_id_list
-            )
-
-            prompt_len = token_counter(
-                messages=formatted_messages,
-                model=get_completion_kwargs(CHAT_LLM)["model"],
-            )
-            if prompt_len > MAX_CHAT_CONTEXT_LENGTH:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Auto select returned too many conversations. The selected conversations exceed the maximum context length.",
-                )
-
-            if conversations_added_ids:
-                added_details = await run_in_thread_pool(
-                    conversation_svc.list_by_ids,
-                    conversations_added_ids,
-                    with_chunks=False,
-                    with_tags=False,
-                )
-                conversation_references["references"] = [
-                    {
-                        "conversation": item.get("id", ""),
-                        "conversation_title": str(item.get("participant_name") or ""),
-                    }
-                    for item in added_details
-                ]
-        else:
-            formatted_messages = await build_formatted_messages(chat_context.conversation_id_list)
+        formatted_messages = await build_formatted_messages(chat_context.conversation_id_list)
 
         # Resolve a distinct_id (email) so this server event merges with the
         # user's frontend person. This is the prod chat path (agentic is gated
@@ -1242,12 +1027,7 @@ async def post_chat(
 
         async def stream_response_async(
             formatted: List[Dict[str, str]],
-            references: Optional[dict[str, List[Dict[str, str]]]] = None,
         ) -> AsyncGenerator[str, None]:
-            if references is not None:
-                header_payload = f"h:{json.dumps([references])}\n"
-                yield header_payload
-
             try:
                 response = await arouter_completion(
                     MODELS.MULTI_MODAL_PRO,
@@ -1291,10 +1071,7 @@ async def post_chat(
         if protocol == "data":
             headers["x-vercel-ai-data-stream"] = "v1"
 
-        if conversations_added_ids and conversation_references["references"]:
-            raw_stream = stream_response_async(formatted_messages, conversation_references)
-        else:
-            raw_stream = stream_response_async(formatted_messages)
+        raw_stream = stream_response_async(formatted_messages)
 
         # Wrap with status notifications for high load scenarios
         stream = stream_with_status(raw_stream, protocol=protocol)

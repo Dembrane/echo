@@ -44,20 +44,18 @@ import { useInView } from "react-intersection-observer";
 import { useProjectChatContext } from "@/components/chat/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
-import { AutoSelectConversations } from "@/components/conversation/AutoSelectConversations";
 import { SelectAllConfirmationModal } from "@/components/conversation/SelectAllConfirmationModal";
 import { UploadConversationDropzone } from "@/components/dropzone/UploadConversationDropzone";
 import { useProjectById } from "@/components/project/hooks";
 import { UploadLockedCard } from "@/components/project/UploadLockedCard";
-import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
-import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
-import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
-import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
+import { ENABLE_CHAT_SELECT_ALL } from "@/config";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { getConversationContentLink } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
+import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import { ConversationStatusIndicators } from "./ConversationAccordion";
 import { ConversationDangerZone } from "./ConversationDangerZone";
 import { ConversationEdit } from "./ConversationEdit";
@@ -70,6 +68,7 @@ import {
 	useRemainingConversationsCount,
 	useSelectAllContextMutation,
 } from "./hooks";
+import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
 
 type SortOption = {
 	label: string;
@@ -308,30 +307,30 @@ const ConversationRow = ({
 							)}
 						</Group>
 
-					<Group gap="xs" wrap="wrap">
-						{showParticipantLabel && (
-							<Tooltip
-								label={conversation.participant_email ?? undefined}
-								disabled={!conversation.participant_email}
-							>
-								<Text size="xs" c="dimmed">
-									{participantLabel}
-								</Text>
-							</Tooltip>
-						)}
-						<Text size="xs" c="dimmed">
-							{formatCreatedAt(conversation.created_at)}
-						</Text>
-						{conversation.live && (
-							<Badge size="xs" color="red" variant="light">
-								<Trans>Ongoing</Trans>
-							</Badge>
-						)}
-						<ConversationStatusIndicators
-							conversation={conversation}
-							showDuration
-						/>
-					</Group>
+						<Group gap="xs" wrap="wrap">
+							{showParticipantLabel && (
+								<Tooltip
+									label={conversation.participant_email ?? undefined}
+									disabled={!conversation.participant_email}
+								>
+									<Text size="xs" c="dimmed">
+										{participantLabel}
+									</Text>
+								</Tooltip>
+							)}
+							<Text size="xs" c="dimmed">
+								{formatCreatedAt(conversation.created_at)}
+							</Text>
+							{conversation.live && (
+								<Badge size="xs" color="red" variant="light">
+									<Trans>Ongoing</Trans>
+								</Badge>
+							)}
+							<ConversationStatusIndicators
+								conversation={conversation}
+								showDuration
+							/>
+						</Group>
 					</Stack>
 
 					<Group gap="xs" wrap="nowrap">
@@ -773,13 +772,6 @@ export const ProjectConversationsPanel = ({
 						upgradeTier={usageGates.upgrade_cta_tier}
 					/>
 				)}
-
-				{selectionMode &&
-					ENABLE_CHAT_AUTO_SELECT &&
-					chatMode !== "overview" &&
-					(conversationsCountQuery.data ?? 0) > 0 && (
-						<AutoSelectConversations />
-					)}
 
 				<Paper withBorder radius="sm" p="sm">
 					<Group gap="sm" align="flex-end">

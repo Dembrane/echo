@@ -346,13 +346,9 @@ export const useCreateChatMutation = () => {
 				id: string;
 			};
 		}) => {
-			// BFF picks up auto_select default from the project's enhanced
-			// audio flag when we don't force a value. Only override when a
-			// specific conversation was passed — same rule as before.
 			const res = await fetch(`${API_BASE_URL}/v2/bff/chats`, {
 				body: JSON.stringify({
 					project_id: payload.project_id.id,
-					auto_select: payload.conversationId ? false : undefined,
 				}),
 				credentials: "include",
 				headers: { "Content-Type": "application/json" },

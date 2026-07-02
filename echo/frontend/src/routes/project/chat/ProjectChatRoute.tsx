@@ -33,10 +33,6 @@ import {
 	ChatModeIndicator,
 } from "@/components/chat/ChatAccordion";
 import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
-import {
-	ChatTurnLimitCard,
-	ChatUpgradeModal,
-} from "@/components/chat/FreeTierChatGate";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import {
@@ -48,6 +44,10 @@ import {
 	extractMessageMetadata,
 	formatMessage,
 } from "@/components/chat/chatUtils";
+import {
+	ChatTurnLimitCard,
+	ChatUpgradeModal,
+} from "@/components/chat/FreeTierChatGate";
 import {
 	useAddChatMessageMutation,
 	useChatHistory,
@@ -66,7 +66,6 @@ import {
 	useUpdateUserTemplate,
 	useUserTemplates,
 } from "@/components/chat/hooks/useUserTemplates";
-import SourcesSearch from "@/components/chat/SourcesSearch";
 import type { QuickAccessItem } from "@/components/chat/templateKey";
 import { Templates } from "@/components/chat/templates";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
@@ -78,11 +77,7 @@ import { useConversationsCountByProjectId } from "@/components/conversation/hook
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { useProjectById } from "@/components/project/hooks";
-import {
-	API_BASE_URL,
-	ENABLE_AGENTIC_CHAT,
-	ENABLE_CHAT_AUTO_SELECT,
-} from "@/config";
+import { API_BASE_URL, ENABLE_AGENTIC_CHAT } from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
@@ -98,8 +93,6 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const posthog = usePostHog();
 
 	const [templateKey, setTemplateKey] = useState<string | null>(null);
-	const [showProgress, setShowProgress] = useState(false);
-	const [progressValue, setProgressValue] = useState(0);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const addChatMessageMutation = useAddChatMessageMutation();
@@ -120,7 +113,6 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 			return null;
 		}
 		return {
-			auto_select_bool: chatContextQuery.data.auto_select_bool ?? false,
 			conversations: chatContextQuery.data.conversations.filter(
 				(c) => !c.locked,
 			),
@@ -178,36 +170,18 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 			// this uses the response stream from the backend and makes a chat message IN THE FRONTEND
 			// do this for now because - i dont want to do the stream text processing again in the backend
 			// if someone navigates away before onFinish is completed, the message will be lost
-			if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
-				const flattenedItems = extractMessageMetadata(message);
-
-				await addChatMessageMutation.mutateAsync({
-					chat_message_metadata: flattenedItems ?? [],
-					date_created: new Date().toISOString(),
-					message_from: "assistant",
-					project_chat_id: chatId,
-					text: message.content,
-				});
-			} else {
-				addChatMessageMutation.mutate({
-					chat_message_metadata: [],
-					date_created: new Date().toISOString(),
-					message_from: "assistant",
-					project_chat_id: chatId,
-					text: message.content,
-				});
-			}
+			addChatMessageMutation.mutate({
+				chat_message_metadata: [],
+				date_created: new Date().toISOString(),
+				message_from: "assistant",
+				project_chat_id: chatId,
+				text: message.content,
+			});
 
 			// scroll to the last message
 			lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
 		},
-		onResponse: async (_response) => {
-			setShowProgress(false);
-			setProgressValue(0);
-			if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
-				chatContextQuery.refetch();
-			}
-		},
+		onResponse: async (_response) => {},
 		streamProtocol: "data",
 	});
 
@@ -259,27 +233,8 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 			setTimeout(() => {
 				lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
 			}, 0);
-
-			if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
-				setShowProgress(true);
-				setProgressValue(0);
-				// Start progress animation
-				const interval = setInterval(() => {
-					setProgressValue((prev) => {
-						if (prev >= 95) {
-							clearInterval(interval);
-							return 95; // Cap at 95% to show it's still loading
-						}
-						return prev + 5;
-					});
-				}, 500);
-			}
 		} catch (error) {
 			console.error("Error in customHandleSubmit:", error);
-			if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
-				setShowProgress(false);
-				setProgressValue(0);
-			}
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -319,12 +274,10 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		lastInputRef: lastInput,
 		lastMessageRef,
 		messages,
-		progressValue,
 		reload,
 		scrollTargetRef,
 		setInput,
 		setTemplateKey,
-		showProgress,
 		status,
 		statusMessage,
 		stop: customHandleStop,
@@ -507,8 +460,6 @@ export const ProjectChatRoute = () => {
 		handleSubmit,
 		stop,
 		reload,
-		showProgress,
-		progressValue,
 		templateKey,
 		setTemplateKey,
 		statusMessage,
@@ -535,7 +486,6 @@ export const ProjectChatRoute = () => {
 
 	// check if assistant is typing by determining if the last message is an assistant message and has a text part
 	const isAssistantTyping =
-		showProgress === false &&
 		messages &&
 		messages.length > 0 &&
 		messages[messages.length - 1].role === "assistant" &&
@@ -747,11 +697,7 @@ export const ProjectChatRoute = () => {
 							</div>
 						)}
 
-					{ENABLE_CHAT_AUTO_SELECT && showProgress && (
-						<SourcesSearch progressValue={progressValue} />
-					)}
-
-					{isLoading && !showProgress && (
+					{isLoading && (
 						<Stack gap="xs">
 							<Group>
 								<Box className="animate-spin">
@@ -898,25 +844,19 @@ export const ProjectChatRoute = () => {
 							</Button>
 						</Group>
 					)}
-					{chatMode !== "overview" &&
-						(!ENABLE_CHAT_AUTO_SELECT
-							? noConversationsSelected
-							: noConversationsSelected &&
-								!contextToBeAdded?.auto_select_bool) && (
-							<Alert
-								icon={<IconAlertCircle size="1rem" />}
-								title={t`Select conversations to continue`}
-								color="orange"
-								variant="light"
-								{...testId("chat-no-conversations-alert")}
-							>
-								<Text size="sm">
-									<Trans>
-										Specific Details needs at least one conversation.
-									</Trans>
-								</Text>
-							</Alert>
-						)}
+					{chatMode !== "overview" && noConversationsSelected && (
+						<Alert
+							icon={<IconAlertCircle size="1rem" />}
+							title={t`Select conversations to continue`}
+							color="orange"
+							variant="light"
+							{...testId("chat-no-conversations-alert")}
+						>
+							<Text size="sm">
+								<Trans>Specific Details needs at least one conversation.</Trans>
+							</Text>
+						</Alert>
+					)}
 
 					{contextToBeAdded && contextToBeAdded.conversations.length > 0 && (
 						// biome-ignore lint/a11y/useValidAriaRole: this is not an ARIA attribute
@@ -931,16 +871,8 @@ export const ProjectChatRoute = () => {
 										id: c.conversation_id,
 										participant_name: c.conversation_participant_name,
 									}))}
-									color={
-										ENABLE_CHAT_AUTO_SELECT && contextToBeAdded.auto_select_bool
-											? "green"
-											: "var(--app-text)"
-									}
-									hoverUnderlineColor={
-										ENABLE_CHAT_AUTO_SELECT && contextToBeAdded.auto_select_bool
-											? undefined
-											: MODE_COLORS.deep_dive.primary
-									}
+									color="var(--app-text)"
+									hoverUnderlineColor={MODE_COLORS.deep_dive.primary}
 								/>
 							</Group>
 						</ChatMessage>

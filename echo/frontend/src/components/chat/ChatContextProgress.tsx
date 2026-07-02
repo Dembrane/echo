@@ -1,6 +1,5 @@
 import { t } from "@lingui/core/macro";
 import { Box, Progress, Skeleton, Tooltip } from "@mantine/core";
-import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
 import { capitalize } from "@/lib/utils";
 import { useProjectChatContext } from "./hooks";
 
@@ -18,14 +17,6 @@ export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
 		);
 	}
 
-	if (
-		ENABLE_CHAT_AUTO_SELECT &&
-		chatContextQuery.data?.auto_select_bool &&
-		chatContextQuery.data?.conversations.length === 0
-	) {
-		return null;
-	}
-
 	const conversationsAlreadyAdded = chatContextQuery.data?.conversations
 		.filter((c) => c.locked)
 		.sort((a, b) => b.token_usage - a.token_usage);
@@ -34,12 +25,9 @@ export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
 		.filter((c) => !c.locked)
 		.sort((a, b) => b.token_usage - a.token_usage);
 
-	const isAutoSelect =
-		ENABLE_CHAT_AUTO_SELECT && chatContextQuery.data?.auto_select_bool;
-
 	// Dark teal for locked conversations, lighter for new/to be added
-	const lockedColor = isAutoSelect ? "green.6" : "primary.5";
-	const newColor = isAutoSelect ? "green.3" : "primary.3";
+	const lockedColor = "primary.5";
+	const newColor = "primary.3";
 
 	return (
 		<Box>

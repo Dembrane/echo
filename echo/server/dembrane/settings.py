@@ -255,13 +255,6 @@ class FeatureFlagSettings(BaseSettings):
             "DISABLE_CHAT_TITLE_GENERATION", "FEATURE_FLAGS__DISABLE_CHAT_TITLE_GENERATION"
         ),
     )
-    enable_chat_auto_select: bool = Field(
-        default=False,
-        alias="ENABLE_CHAT_AUTO_SELECT",
-        validation_alias=AliasChoices(
-            "ENABLE_CHAT_AUTO_SELECT", "FEATURE_FLAGS__ENABLE_CHAT_AUTO_SELECT"
-        ),
-    )
     enable_chat_select_all: bool = Field(
         default=False,
         alias="ENABLE_CHAT_SELECT_ALL",

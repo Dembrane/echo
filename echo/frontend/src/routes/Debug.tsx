@@ -21,7 +21,6 @@ import {
 	API_BASE_URL,
 	APP_ENVIRONMENT,
 	DIRECTUS_PUBLIC_URL,
-	ENABLE_CHAT_AUTO_SELECT,
 	PARTICIPANT_BASE_URL,
 	SUPPORTED_LANGUAGES,
 } from "@/config";
@@ -241,7 +240,6 @@ export default function DebugPage() {
 		APP_ENVIRONMENT,
 		DEBUG_MODE: true,
 		ff: {
-			ENABLE_CHAT_AUTO_SELECT,
 			SUPPORTED_LANGUAGES,
 		},
 		urls: {

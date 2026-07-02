@@ -266,13 +266,8 @@ export const useMoveConversationMutation = () => {
 export const useAddChatContextMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (payload: {
-			chatId: string;
-			conversationId?: string;
-			auto_select_bool?: boolean;
-		}) =>
+		mutationFn: (payload: { chatId: string; conversationId?: string }) =>
 			addChatContext(payload.chatId, {
-				auto_select_bool: payload.auto_select_bool,
 				conversationId: payload.conversationId,
 			}),
 		mutationKey: ["chat-context", "add"],
@@ -306,18 +301,12 @@ export const useAddChatContextMutation = () => {
 				);
 			}
 			if (error instanceof AxiosError) {
-				let errorMessage = t`Failed to add conversation to chat${
+				const errorMessage = t`Failed to add conversation to chat${
 					error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
 				}`;
-				if (variables.auto_select_bool) {
-					errorMessage = t`Failed to enable Auto Select for this chat`;
-				}
 				toast.error(errorMessage);
 			} else {
-				let errorMessage = t`Failed to add conversation to chat`;
-				if (variables.auto_select_bool) {
-					errorMessage = t`Failed to enable Auto Select for this chat`;
-				}
+				const errorMessage = t`Failed to add conversation to chat`;
 				toast.error(errorMessage);
 			}
 		},
@@ -365,14 +354,6 @@ export const useAddChatContextMutation = () => {
 						}
 					}
 
-					// If auto_select_bool is provided, update it
-					if (variables.auto_select_bool !== undefined) {
-						return {
-							...oldData,
-							auto_select_bool: variables.auto_select_bool,
-						};
-					}
-
 					return oldData;
 				},
 			);
@@ -389,11 +370,8 @@ export const useAddChatContextMutation = () => {
 				queryKey: ["chats", "context", variables.chatId],
 			});
 		},
-		onSuccess: (_, variables) => {
-			const message = variables.auto_select_bool
-				? t`Auto-select enabled`
-				: t`Conversation added to chat`;
-			toast.success(message);
+		onSuccess: () => {
+			toast.success(t`Conversation added to chat`);
 		},
 	});
 };
@@ -401,16 +379,8 @@ export const useAddChatContextMutation = () => {
 export const useDeleteChatContextMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (payload: {
-			chatId: string;
-			conversationId?: string;
-			auto_select_bool?: boolean;
-		}) =>
-			deleteChatContext(
-				payload.chatId,
-				payload.conversationId,
-				payload.auto_select_bool,
-			),
+		mutationFn: (payload: { chatId: string; conversationId?: string }) =>
+			deleteChatContext(payload.chatId, payload.conversationId),
 		mutationKey: ["chat-context", "delete"],
 		onError: (error, variables, context) => {
 			posthog.captureException(error);
@@ -457,18 +427,12 @@ export const useDeleteChatContextMutation = () => {
 			}
 
 			if (error instanceof AxiosError) {
-				let errorMessage = t`Failed to remove conversation from chat${
+				const errorMessage = t`Failed to remove conversation from chat${
 					error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
 				}`;
-				if (variables.auto_select_bool === false) {
-					errorMessage = t`Failed to disable Auto Select for this chat`;
-				}
 				toast.error(errorMessage);
 			} else {
-				let errorMessage = t`Failed to remove conversation from chat`;
-				if (variables.auto_select_bool === false) {
-					errorMessage = t`Failed to disable Auto Select for this chat`;
-				}
+				const errorMessage = t`Failed to remove conversation from chat`;
 				toast.error(errorMessage);
 			}
 		},
@@ -507,14 +471,6 @@ export const useDeleteChatContextMutation = () => {
 						}
 					}
 
-					// If auto_select_bool is provided, update it
-					if (variables.auto_select_bool !== undefined) {
-						return {
-							...oldData,
-							auto_select_bool: variables.auto_select_bool,
-						};
-					}
-
 					return oldData;
 				},
 			);
@@ -530,12 +486,8 @@ export const useDeleteChatContextMutation = () => {
 				queryKey: ["chats", "context", variables.chatId],
 			});
 		},
-		onSuccess: (_, variables) => {
-			const message =
-				variables.auto_select_bool === false
-					? t`Auto-select disabled`
-					: t`Conversation removed from chat`;
-			toast.success(message);
+		onSuccess: () => {
+			toast.success(t`Conversation removed from chat`);
 		},
 	});
 };
