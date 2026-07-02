@@ -477,6 +477,11 @@ msgstr ""
 msgid "{0} hours total"
 msgstr ""
 
+#. placeholder {0}: summary.live
+#: src/components/conversation/LiveMonitorSection.tsx:117
+msgid "{0} live"
+msgstr ""
+
 #. placeholder {0}: organisation.name
 #. placeholder {0}: workspace.name
 #: src/routes/organisation/OrganisationRoute.tsx:735
@@ -506,6 +511,11 @@ msgstr ""
 #: src/routes/team/TeamRoute.tsx:711
 #~ msgid "{0} on this workspace · change in workspace settings"
 #~ msgstr ""
+
+#. placeholder {0}: conversation.chunk_count
+#: src/components/conversation/LiveMonitorSection.tsx:75
+msgid "{0} recordings"
+msgstr ""
 
 #. placeholder {0}: line.addedSeats
 #. placeholder {1}: fmtEur(line.proratedNow)
@@ -542,6 +552,11 @@ msgstr ""
 #: src/routes/project/report/ProjectReportRoute.tsx:1270
 msgid "{0} views"
 msgstr "{0} Aufrufe"
+
+#. placeholder {0}: summary.with_errors
+#: src/components/conversation/LiveMonitorSection.tsx:121
+msgid "{0} with errors"
+msgstr ""
 
 #. placeholder {0}: data.workspace_count
 #. placeholder {1}: data.total_seat_count
@@ -1473,7 +1488,7 @@ msgstr "Erweitert (Tipps und best practices)"
 msgid "Advanced Settings"
 msgstr "Erweiterte Einstellungen"
 
-#: src/components/chat/AgenticChatPanel.tsx:1052
+#: src/components/chat/AgenticChatPanel.tsx:1055
 msgid "Agent is working..."
 msgstr ""
 
@@ -1727,6 +1742,10 @@ msgstr "Anonymisierte Unterhaltung"
 #~ msgid "Anonymous host"
 #~ msgstr "Anonymer Host"
 
+#: src/components/conversation/LiveMonitorSection.tsx:35
+msgid "Anonymous participant"
+msgstr ""
+
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1035
 msgid "Another admin or owner will need to restore you."
 msgstr ""
@@ -1933,7 +1952,7 @@ msgstr ""
 msgid "Ask a organisation admin to request this upgrade."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1201
+#: src/components/chat/AgenticChatPanel.tsx:1204
 msgid "Ask a question about the conversations in this project, or get help setting it up. Any change is proposed for review first, and nothing is saved until it's approved."
 msgstr ""
 
@@ -1949,7 +1968,7 @@ msgstr ""
 #~ msgid "Ask about your conversations to get started."
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1334
+#: src/components/chat/AgenticChatPanel.tsx:1337
 msgid "Ask about your conversations..."
 msgstr ""
 
@@ -2651,7 +2670,7 @@ msgstr "Das Ändern der Sprache während eines aktiven Chats kann unerwartete Er
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:262
-#: src/components/chat/AgenticChatPanel.tsx:1027
+#: src/components/chat/AgenticChatPanel.tsx:1030
 msgid "Chat"
 msgstr "Chat"
 
@@ -4474,7 +4493,7 @@ msgstr "Geben Sie den 6-stelligen Code aus Ihrer Authentifizierungs-App ein."
 msgid "Enter the current six-digit code from your authenticator app."
 msgstr "Geben Sie den aktuellen 6-stelligen Code aus Ihrer Authentifizierungs-App ein."
 
-#: src/components/chat/AgenticChatPanel.tsx:1346
+#: src/components/chat/AgenticChatPanel.tsx:1349
 msgid "Enter to send, Shift+Enter for a new line"
 msgstr ""
 
@@ -4496,9 +4515,10 @@ msgstr "Von dem Teilnehmer auf dem Portal eingetragen"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
+#: src/components/conversation/LiveMonitorSection.tsx:64
 #: src/components/chat/AgenticChatPanel.tsx:262
 #: src/components/chat/AgenticChatPanel.tsx:393
-#: src/components/chat/AgenticChatPanel.tsx:1148
+#: src/components/chat/AgenticChatPanel.tsx:1151
 msgid "Error"
 msgstr "Fehler"
 
@@ -4925,11 +4945,11 @@ msgstr "Ergebnis konnte nicht überarbeitet werden. Bitte versuchen Sie es erneu
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fehler beim Beenden der Aufnahme bei Änderung des Mikrofons. Bitte versuchen Sie es erneut."
 
-#: src/components/chat/AgenticChatPanel.tsx:1019
+#: src/components/chat/AgenticChatPanel.tsx:1022
 msgid "Failed to stop run"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1003
+#: src/components/chat/AgenticChatPanel.tsx:1006
 msgid "Failed to submit agentic message"
 msgstr ""
 
@@ -5563,7 +5583,7 @@ msgstr "Bestimmtes Konzept hervorheben"
 msgid "Home"
 msgstr "Startseite"
 
-#: src/routes/project/ProjectHomeRoute.tsx:154
+#: src/routes/project/ProjectHomeRoute.tsx:155
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:96
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:54
 msgid "Host guide"
@@ -5656,6 +5676,10 @@ msgstr "ID"
 #: src/components/library/LibraryTemplatesMenu.tsx:22
 msgid "Identify recurring themes, topics, and arguments that appear consistently across conversations. Analyze their frequency, intensity, and consistency. Expected output: 3-7 aspects for small datasets, 5-12 for medium datasets, 8-15 for large datasets. Processing guidance: Focus on distinct patterns that emerge across multiple conversations."
 msgstr "Identifizieren Sie wiederkehrende Themen, Themen und Argumente, die in Gesprächen konsistent auftreten. Analysieren Sie ihre Häufigkeit, Intensität und Konsistenz. Erwartete Ausgabe: 3-7 Aspekte für kleine Datensätze, 5-12 für mittlere Datensätze, 8-15 für große Datensätze. Verarbeitungsanleitung: Konzentrieren Sie sich auf unterschiedliche Muster, die in mehreren Gesprächen auftreten."
+
+#: src/components/conversation/LiveMonitorSection.tsx:54
+msgid "Idle"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:44
@@ -6151,7 +6175,7 @@ msgstr ""
 msgid "Joined as admin"
 msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:122
+#: src/routes/project/ProjectHomeRoute.tsx:123
 msgid "Jump to"
 msgstr ""
 
@@ -6241,6 +6265,11 @@ msgstr ""
 msgid "Language"
 msgstr "Sprache"
 
+#. placeholder {0}: lastActivityLabel(conversation)
+#: src/components/conversation/LiveMonitorSection.tsx:72
+msgid "Last activity {0}"
+msgstr ""
+
 #: src/routes/admin/AdminSettingsRoute.tsx:244
 #: src/components/workspace/PeriodSelect.tsx:17
 msgid "Last month"
@@ -6270,11 +6299,11 @@ msgstr "Zuletzt aktualisiert"
 msgid "Latest"
 msgstr "Neueste"
 
-#: src/routes/project/ProjectHomeRoute.tsx:171
+#: src/routes/project/ProjectHomeRoute.tsx:174
 msgid "Latest conversations"
 msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:283
+#: src/routes/project/ProjectHomeRoute.tsx:286
 msgid "Latest report"
 msgstr ""
 
@@ -6408,8 +6437,9 @@ msgstr ""
 msgid "Listing documentation pages"
 msgstr ""
 
-#~ msgid "Live"
-#~ msgstr "Live"
+#: src/components/conversation/LiveMonitorSection.tsx:50
+msgid "Live"
+msgstr "Live"
 
 #: src/components/chat/ChatModeBanner.tsx:54
 msgid "Live agent execution mode"
@@ -6422,6 +6452,10 @@ msgstr "Live Audiopegel:"
 
 #~ msgid "Live audio level:"
 #~ msgstr "Live Audiopegel:"
+
+#: src/components/conversation/LiveMonitorSection.tsx:112
+msgid "Live monitoring"
+msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:1690
 msgid "Live Preview"
@@ -6493,7 +6527,7 @@ msgstr ""
 #~ msgid "Loading projects…"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1159
+#: src/components/chat/AgenticChatPanel.tsx:1162
 msgid "Loading this chat..."
 msgstr ""
 
@@ -7178,6 +7212,10 @@ msgstr ""
 msgid "No actions found"
 msgstr "Keine Aktionen gefunden"
 
+#: src/components/conversation/LiveMonitorSection.tsx:20
+msgid "No activity yet"
+msgstr ""
+
 #: src/components/announcement/Announcements.tsx:189
 #~ msgid "No announcements available"
 #~ msgstr "Keine Ankündigungen verfügbar"
@@ -7469,7 +7507,7 @@ msgstr ""
 msgid "No subscription"
 msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:233
+#: src/routes/project/ProjectHomeRoute.tsx:236
 #: src/components/conversation/ProjectConversationsPanel.tsx:407
 msgid "No summary yet"
 msgstr ""
@@ -7761,7 +7799,7 @@ msgstr ""
 #~ msgid "one-time"
 #~ msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:222
+#: src/routes/project/ProjectHomeRoute.tsx:225
 #: src/components/conversation/ProjectConversationsPanel.tsx:326
 msgid "Ongoing"
 msgstr "Laufend"
@@ -7890,7 +7928,7 @@ msgstr ""
 #~ msgid "Open actions"
 #~ msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:178
+#: src/routes/project/ProjectHomeRoute.tsx:181
 msgid "Open all"
 msgstr ""
 
@@ -8892,7 +8930,7 @@ msgstr "Portal Inhalt"
 msgid "Portal description"
 msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:146
+#: src/routes/project/ProjectHomeRoute.tsx:147
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:84
 msgid "Portal editor"
 msgstr ""
@@ -9700,7 +9738,7 @@ msgstr "Umbenennen"
 #~ msgstr "Umbenennen"
 
 #: src/components/chat/ChatAccordion.tsx:158
-#: src/components/chat/AgenticChatPanel.tsx:1093
+#: src/components/chat/AgenticChatPanel.tsx:1096
 msgid "Rename chat"
 msgstr "Chat umbenennen"
 
@@ -9733,7 +9771,7 @@ msgstr ""
 msgid "Reply Prompt"
 msgstr "Antwort Prompt"
 
-#: src/routes/project/ProjectHomeRoute.tsx:162
+#: src/routes/project/ProjectHomeRoute.tsx:163
 #: src/routes/project/report/ProjectReportRoute.tsx:185
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:101
 #: src/components/report/ReportRenderer.tsx:75
@@ -10609,7 +10647,7 @@ msgid "Self-serve"
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:1002
-#: src/components/chat/AgenticChatPanel.tsx:1363
+#: src/components/chat/AgenticChatPanel.tsx:1366
 msgid "Send"
 msgstr "Senden"
 
@@ -10766,7 +10804,7 @@ msgstr ""
 msgid "Share report"
 msgstr "Bericht teilen"
 
-#: src/routes/project/ProjectHomeRoute.tsx:111
+#: src/routes/project/ProjectHomeRoute.tsx:112
 msgid "Share the project, watch live activity, and jump into the main tools from one place."
 msgstr ""
 
@@ -11164,7 +11202,7 @@ msgstr ""
 msgid "Standard access. Collaborates in the workspaces they're added to."
 msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:130
+#: src/routes/project/ProjectHomeRoute.tsx:131
 msgid "Start a chat"
 msgstr ""
 
@@ -11214,7 +11252,7 @@ msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:769
-#: src/components/chat/AgenticChatPanel.tsx:1135
+#: src/components/chat/AgenticChatPanel.tsx:1138
 msgid "Stop"
 msgstr "Stopp"
 
@@ -12600,7 +12638,7 @@ msgstr ""
 msgid "Untitled"
 msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:50
+#: src/routes/project/ProjectHomeRoute.tsx:51
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:94
 #: src/components/project/ProjectUsageAndSharing.tsx:501
 #: src/components/project/ProjectUsageAndSharing.tsx:529
@@ -12758,7 +12796,7 @@ msgstr ""
 msgid "Upgrade your workspace to view transcripts for new conversations."
 msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:138
+#: src/routes/project/ProjectHomeRoute.tsx:139
 #: src/components/project/ProjectUploadSection.tsx:28
 #: src/components/dropzone/UploadConversationDropzone.tsx:540
 #: src/components/conversation/ProjectConversationsPanel.tsx:759
@@ -13492,7 +13530,7 @@ msgstr "Wenn die Zusammenfassung bereit ist (beinhaltet Transkript und Zusammenf
 msgid "Where would you like to go?"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1198
+#: src/components/chat/AgenticChatPanel.tsx:1201
 msgid "Where would you like to start?"
 msgstr ""
 
@@ -14077,7 +14115,7 @@ msgstr ""
 #~ msgid "Your free plan includes one conversation. Upgrade to add more to the chat."
 #~ msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:319
+#: src/routes/project/ProjectHomeRoute.tsx:322
 msgid "Your free plan includes one conversation. Upgrade to open the rest."
 msgstr ""
 

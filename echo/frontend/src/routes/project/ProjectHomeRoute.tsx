@@ -21,6 +21,7 @@ import {
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
+import { LiveMonitorSection } from "@/components/conversation/LiveMonitorSection";
 import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { useInfiniteConversationsByProjectId } from "@/components/conversation/hooks";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -163,6 +164,8 @@ export const ProjectHomeRoute = () => {
 						</Button>
 					</Group>
 				</Stack>
+
+				{projectId && <LiveMonitorSection projectId={projectId} />}
 
 				{(recentConversationsQuery.isLoading || recentConversations.length > 0) && (
 				<Stack gap="sm">

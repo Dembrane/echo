@@ -27,8 +27,9 @@ Design notes:
 
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 from logging import getLogger
+from datetime import datetime, timezone, timedelta
 
 from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
@@ -576,6 +577,223 @@ async def list_live_conversations(
                     "participant_name": conv.get("participant_name"),
                 }
     return list(out.values())
+
+
+# ── /v2/bff/conversations/monitor ─────────────────────────────────────
+#
+# Host-facing live monitoring + error exposure. Hosts need to see, at a
+# glance, whether a portal conversation is actually recording (chunks
+# arriving) and whether any recent chunk failed to transcribe. This is
+# deliberately a light query: one bounded read over recent chunks plus
+# one grouped count, aggregated in Python. No N+1 over every chunk of
+# every conversation.
+
+# A conversation is "live" if a chunk landed within this many seconds.
+MONITOR_LIVE_WINDOW_SECONDS = 45
+# Conversations with a chunk in the last this-many seconds are shown at
+# all (the "recent/active" set). Keeps the recent-chunk read bounded.
+MONITOR_LOOKBACK_SECONDS = 1800
+# Hard cap on the recent-chunk read so a busy project can't turn this
+# into a heavy query. Newest chunks first, so the live set is preserved.
+MONITOR_MAX_CHUNKS = 500
+# Truncate the surfaced error so a stack-trace-ish message stays a badge.
+MONITOR_ERROR_MESSAGE_MAX_LEN = 240
+
+
+def _parse_directus_timestamp(value: Any) -> Optional[datetime]:
+    """Parse a Directus ISO timestamp into an aware UTC datetime."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    raw = value.strip()
+    # Directus emits a trailing Z; fromisoformat on 3.11 accepts it, but
+    # normalize defensively across formats.
+    if raw.endswith("Z"):
+        raw = raw[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(raw)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _build_monitor_payload(
+    recent_chunks: list[dict],
+    chunk_counts: dict[str, int],
+    now: datetime,
+    live_window_seconds: int,
+) -> dict:
+    """Aggregate recent chunks into a per-conversation monitor view.
+
+    `recent_chunks` MUST be newest-first (sorted by -timestamp). Each row
+    carries conversation_id (dict with id + participant_name, or a bare
+    id string), timestamp, and error. Pure function so the liveness
+    threshold and error detection are unit-testable without Directus.
+    """
+    live_cutoff = now - timedelta(seconds=live_window_seconds)
+
+    order: list[str] = []
+    by_conv: dict[str, dict] = {}
+
+    for chunk in recent_chunks:
+        conv = chunk.get("conversation_id")
+        if isinstance(conv, dict):
+            conv_id = conv.get("id")
+            participant_name = conv.get("participant_name")
+        else:
+            conv_id = conv
+            participant_name = None
+        if not conv_id:
+            continue
+
+        entry = by_conv.get(conv_id)
+        if entry is None:
+            entry = {
+                "id": conv_id,
+                "label": (participant_name or "").strip() or None,
+                "last_chunk_at": None,
+                "last_chunk_dt": None,
+                "has_error": False,
+                "error_message": None,
+            }
+            by_conv[conv_id] = entry
+            order.append(conv_id)
+
+        chunk_dt = _parse_directus_timestamp(chunk.get("timestamp"))
+        if chunk_dt is not None and (
+            entry["last_chunk_dt"] is None or chunk_dt > entry["last_chunk_dt"]
+        ):
+            entry["last_chunk_dt"] = chunk_dt
+            entry["last_chunk_at"] = chunk.get("timestamp")
+
+        error = chunk.get("error")
+        if isinstance(error, str) and error.strip():
+            entry["has_error"] = True
+            # Rows are newest-first, so the first error we see for a
+            # conversation is its most recent failure — keep that one.
+            if entry["error_message"] is None:
+                entry["error_message"] = error.strip()[:MONITOR_ERROR_MESSAGE_MAX_LEN]
+
+    conversations: list[dict] = []
+    live_count = 0
+    error_count = 0
+    for conv_id in order:
+        entry = by_conv[conv_id]
+        last_dt = entry["last_chunk_dt"]
+        is_live = last_dt is not None and last_dt > live_cutoff
+        if is_live:
+            live_count += 1
+        if entry["has_error"]:
+            error_count += 1
+        conversations.append(
+            {
+                "id": conv_id,
+                "label": entry["label"],
+                "is_live": is_live,
+                "last_chunk_at": entry["last_chunk_at"],
+                "chunk_count": int(chunk_counts.get(conv_id, 0) or 0),
+                "has_error": entry["has_error"],
+                "error_message": entry["error_message"],
+            }
+        )
+
+    # Two stable sorts: most-recent activity first (None sinks to the
+    # end), then partition live conversations to the top.
+    conversations.sort(key=lambda c: (c["last_chunk_at"] or ""), reverse=True)
+    conversations.sort(key=lambda c: 0 if c["is_live"] else 1)
+
+    return {
+        "conversations": conversations,
+        "summary": {
+            "live": live_count,
+            "with_errors": error_count,
+            "total": len(conversations),
+        },
+        "live_window_seconds": live_window_seconds,
+    }
+
+
+@router.get("/monitor")
+async def monitor_conversations(
+    auth: DependencyDirectusSession,
+    project_id: str = Query(..., description="Parent project id."),
+    window_seconds: int = Query(
+        MONITOR_LIVE_WINDOW_SECONDS,
+        ge=5,
+        le=600,
+        description="Conversation is 'live' if a chunk landed within this many seconds.",
+    ),
+) -> dict:
+    """Host-facing live monitor for a project's portal conversations.
+
+    Returns one row per recently-active conversation (a chunk in the
+    last MONITOR_LOOKBACK_SECONDS), each with a live indicator, last
+    activity time, total chunk count, and an error state so hosts can
+    see a conversation that is failing to transcribe. Also a project
+    rollup (count live, count with errors).
+
+    Portal-initiated only (no DASHBOARD_UPLOAD / CLONE), matching the
+    /live endpoints. Two bounded Directus reads, aggregated in Python.
+    """
+    access = await resolve_project_access(project_id, auth)
+    access.require("conversation:read")
+
+    now = datetime.now(timezone.utc)
+    lookback_cutoff = (now - timedelta(seconds=MONITOR_LOOKBACK_SECONDS)).isoformat()
+
+    recent_chunks = await async_directus.get_items(
+        "conversation_chunk",
+        {
+            "query": {
+                "filter": {
+                    "conversation_id": {"project_id": {"_eq": project_id}},
+                    "source": {"_nin": ["DASHBOARD_UPLOAD", "CLONE"]},
+                    "timestamp": {"_gt": lookback_cutoff},
+                },
+                "fields": [
+                    "conversation_id.id",
+                    "conversation_id.participant_name",
+                    "timestamp",
+                    "error",
+                ],
+                "sort": ["-timestamp"],
+                "limit": MONITOR_MAX_CHUNKS,
+            }
+        },
+    )
+    if not isinstance(recent_chunks, list):
+        recent_chunks = []
+
+    conv_ids: list[str] = []
+    seen: set[str] = set()
+    for chunk in recent_chunks:
+        conv = chunk.get("conversation_id")
+        conv_id = conv.get("id") if isinstance(conv, dict) else conv
+        if conv_id and conv_id not in seen:
+            seen.add(conv_id)
+            conv_ids.append(conv_id)
+
+    chunk_counts: dict[str, int] = {}
+    if conv_ids:
+        agg = await async_directus.get_items(
+            "conversation_chunk",
+            {
+                "query": {
+                    "aggregate": {"count": "id"},
+                    "groupBy": ["conversation_id"],
+                    "filter": {"conversation_id": {"_in": conv_ids}},
+                }
+            },
+        )
+        if isinstance(agg, list):
+            for row in agg:
+                cid = row.get("conversation_id")
+                cnt = int((row.get("count") or {}).get("id", 0) or 0)
+                if cid:
+                    chunk_counts[cid] = cnt
+
+    return _build_monitor_payload(recent_chunks, chunk_counts, now, window_seconds)
 
 
 @router.get("/remaining-count")
