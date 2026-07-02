@@ -143,6 +143,9 @@ export function resolveSidebarView(
 					...(segs[4] === "conversations" && segs[5]
 						? { conversationId: segs[5] }
 						: {}),
+					...(segs[4] === "chats" && segs[5]
+						? { chatId: segs[5] }
+						: {}),
 				},
 				scope: "project",
 				view: "project-home",
