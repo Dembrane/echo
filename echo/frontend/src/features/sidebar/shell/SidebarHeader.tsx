@@ -2,13 +2,10 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { Logo } from "@/components/common/Logo";
 import { ActionIcon } from "@mantine/core";
 import { CaretLeft } from "@phosphor-icons/react";
-import { useV2Me } from "@/hooks/useV2Me";
 import { useSidebarState } from "../hooks/useSidebarState";
 
 export const SidebarHeader = () => {
-	const { data: me } = useV2Me();
 	const { setCollapsed } = useSidebarState();
-	const isCollapsible = !!me?.settings?.enable_collapsible_sidebar;
 
 	return (
 		<div
@@ -23,17 +20,15 @@ export const SidebarHeader = () => {
 				<Logo hideTitle={false} />
 			</I18nLink>
 
-			{isCollapsible && (
-				<ActionIcon
-					variant="subtle"
-					color="gray"
-					onClick={() => setCollapsed(true)}
-					aria-label="Collapse sidebar"
-					size={28}
-				>
-					<CaretLeft size={18} />
-				</ActionIcon>
-			)}
+			<ActionIcon
+				variant="subtle"
+				color="gray"
+				onClick={() => setCollapsed(true)}
+				aria-label="Collapse sidebar"
+				size={28}
+			>
+				<CaretLeft size={18} />
+			</ActionIcon>
 		</div>
 	);
 };
