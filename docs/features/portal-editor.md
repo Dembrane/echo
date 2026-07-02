@@ -77,6 +77,37 @@ send the link by email. Both open the same
 > anonymisation after collecting, you can [re-transcribe](./transcription.md) existing
 > conversations to apply it.
 
+## Why each setting exists (intent)
+
+Every field is here to steer one downstream behaviour. Knowing what a setting *drives*
+tells you when to touch it and when to leave it. This is also the reference the project
+onboarding assistant reads when it suggests changes.
+
+- *Context* (project setting, not on this screen but the most important field): the
+  purpose, audience and what you want to learn. It steers chat answers, report framing and
+  the assistant's suggestions. Vague context weakens everything downstream, so write 2-5
+  real sentences.
+- *Language*: sets the language of the intro screens only. Its intent is the participant's
+  first impression, not transcript language. Match it to who you're inviting.
+- *Default conversation title / description / finish text*: the participant's framing
+  before, during and after. Intent is clarity and trust - the finish text should say what
+  happens with their contribution, so write it for a person, in their language.
+- *Key terms* (`transcript_prompt`): the intent is transcript accuracy. These names and
+  jargon feed the transcription cleanup pass, so anything spelled wrong here stays wrong in
+  every transcript. Highest-leverage field for data quality.
+- *Anonymise transcripts*: a privacy decision that changes what is stored. Set it before
+  collecting; its intent is making transcripts shareable without exposing who spoke.
+- *Ask for name / email*: intent is post-event contact and report delivery, traded against
+  keeping onboarding light. Only turn on what you will use.
+- *AI title & tags*: intent is navigability of a long conversation list, not analysis. Safe
+  to leave on.
+- *Get Reply*: intent is giving participants a response in the moment; the mode and prompt
+  exist so you control tone. Only enable when you have decided what that reply should feel
+  like.
+- *Verification*: intent is participant agency - they, not the model, confirm how they're
+  represented. Enable when representation accuracy matters more than a shorter finish flow.
+- *Subscription*: intent is follow-up - people who leave an email hear when reports land.
+
 ## Related
 
 - [The participant portal](./portal-and-participant-experience.md) - the experience these

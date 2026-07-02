@@ -1461,12 +1461,12 @@ msgstr "Erweitert (Tipps und best practices)"
 msgid "Advanced Settings"
 msgstr "Erweiterte Einstellungen"
 
-#: src/components/chat/AgenticChatPanel.tsx:764
+#: src/components/chat/AgenticChatPanel.tsx:768
 msgid "Agent is working..."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:203
-#: src/components/chat/AgenticChatPanel.tsx:228
+#: src/components/chat/AgenticChatPanel.tsx:208
+#: src/components/chat/AgenticChatPanel.tsx:233
 msgid "Agent run failed"
 msgstr ""
 
@@ -1749,6 +1749,10 @@ msgstr ""
 msgid "Appearance"
 msgstr "Erscheinungsbild"
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:96
+msgid "Applied"
+msgstr ""
+
 #: src/components/workspace/WorkspaceInviteWizard.tsx:437
 #~ msgid "Applies to the members you picked."
 #~ msgstr ""
@@ -1758,6 +1762,10 @@ msgstr "Erscheinungsbild"
 #: src/components/common/ImageCropModal.tsx:148
 msgid "Apply"
 msgstr "Anwenden"
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:167
+msgid "Apply selected"
+msgstr ""
 
 #: src/components/view/CreateViewForm.tsx:150
 msgid "Apply template"
@@ -1931,7 +1939,7 @@ msgstr "Nach Namen fragen?"
 #~ msgid "Ask participants to provide their name when they start a conversation"
 #~ msgstr "Teilnehmer bitten, ihren Namen anzugeben, wenn sie ein Gespräch beginnen"
 
-#: src/components/chat/AgenticChatPanel.tsx:1083
+#: src/components/chat/AgenticChatPanel.tsx:1096
 msgid "Ask the agent..."
 msgstr ""
 
@@ -2594,7 +2602,7 @@ msgstr "Das Ändern der Sprache während eines aktiven Chats kann unerwartete Er
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:262
-#: src/components/chat/AgenticChatPanel.tsx:752
+#: src/components/chat/AgenticChatPanel.tsx:756
 msgid "Chat"
 msgstr "Chat"
 
@@ -3166,6 +3174,10 @@ msgstr "In die Zwischenablage kopieren"
 #: src/components/common/CopyRichTextIconButton.tsx:37
 msgid "Copying..."
 msgstr "Kopieren..."
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:79
+msgid "Could not apply the suggested changes"
+msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2621
 msgid "Could not complete that action."
@@ -3917,6 +3929,14 @@ msgstr ""
 #~ msgid "Discoverable in this team"
 #~ msgstr ""
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:158
+msgid "Dismiss"
+msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:100
+msgid "Dismissed"
+msgstr ""
+
 #: src/components/chat/TemplatesModal.tsx:701
 #~ msgid "Display contextual suggestion pills in the chat"
 #~ msgstr "Kontextbezogene Vorschläge im Chat anzeigen"
@@ -3961,7 +3981,7 @@ msgstr ""
 #: src/routes/onboarding/OnboardingRoute.tsx:525
 #: src/components/project/ProjectSharingModal.tsx:268
 #: src/components/invite/InviteModal.tsx:811
-#: src/components/chat/AgenticChatPanel.tsx:247
+#: src/components/chat/AgenticChatPanel.tsx:252
 msgid "Done"
 msgstr ""
 
@@ -4399,9 +4419,9 @@ msgstr "Von dem Teilnehmer auf dem Portal eingetragen"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
-#: src/components/chat/AgenticChatPanel.tsx:252
-#: src/components/chat/AgenticChatPanel.tsx:832
-#: src/components/chat/AgenticChatPanel.tsx:993
+#: src/components/chat/AgenticChatPanel.tsx:257
+#: src/components/chat/AgenticChatPanel.tsx:836
+#: src/components/chat/AgenticChatPanel.tsx:1006
 msgid "Error"
 msgstr "Fehler"
 
@@ -4828,11 +4848,11 @@ msgstr "Ergebnis konnte nicht überarbeitet werden. Bitte versuchen Sie es erneu
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fehler beim Beenden der Aufnahme bei Änderung des Mikrofons. Bitte versuchen Sie es erneut."
 
-#: src/components/chat/AgenticChatPanel.tsx:744
+#: src/components/chat/AgenticChatPanel.tsx:748
 msgid "Failed to stop run"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:728
+#: src/components/chat/AgenticChatPanel.tsx:732
 msgid "Failed to submit agentic message"
 msgstr ""
 
@@ -5436,8 +5456,8 @@ msgstr ""
 msgid "Hide projects"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:926
-#: src/components/chat/AgenticChatPanel.tsx:936
+#: src/components/chat/AgenticChatPanel.tsx:939
+#: src/components/chat/AgenticChatPanel.tsx:949
 msgid "Hide raw data"
 msgstr ""
 
@@ -5644,7 +5664,7 @@ msgstr ""
 msgid "Innovator or higher"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:959
+#: src/components/chat/AgenticChatPanel.tsx:972
 msgid "Input"
 msgstr ""
 
@@ -6277,7 +6297,7 @@ msgstr "Link zur Datenschutzerklärung Ihrer Organisation, die angezeigt wird"
 #~ msgid "LinkedIn Post (Experimental)"
 #~ msgstr "LinkedIn-Beitrag (Experimentell)"
 
-#: src/components/chat/agenticToolActivity.ts:94
+#: src/components/chat/agenticToolActivity.ts:106
 msgid "List project conversations"
 msgstr ""
 
@@ -6300,15 +6320,15 @@ msgstr "Live Audiopegel:"
 msgid "Live Preview"
 msgstr "Live Vorschau"
 
-#: src/components/chat/AgenticChatPanel.tsx:496
+#: src/components/chat/AgenticChatPanel.tsx:500
 msgid "Live stream interrupted. Falling back to polling."
 msgstr ""
 
-#: src/components/chat/agenticToolActivity.ts:100
+#: src/components/chat/agenticToolActivity.ts:112
 msgid "Load conversation summary"
 msgstr ""
 
-#: src/components/chat/agenticToolActivity.ts:102
+#: src/components/chat/agenticToolActivity.ts:114
 msgid "Load full transcript"
 msgstr ""
 
@@ -6316,7 +6336,7 @@ msgstr ""
 msgid "Load more"
 msgstr ""
 
-#: src/components/chat/agenticToolActivity.ts:92
+#: src/components/chat/agenticToolActivity.ts:104
 msgid "Load project context"
 msgstr ""
 
@@ -6366,7 +6386,7 @@ msgstr ""
 #~ msgid "Loading projects…"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:843
+#: src/components/chat/AgenticChatPanel.tsx:847
 msgid "Loading this chat..."
 msgstr ""
 
@@ -8013,7 +8033,7 @@ msgstr "Ergebnisse"
 msgid "Outcomes"
 msgstr "Ergebnisse"
 
-#: src/components/chat/AgenticChatPanel.tsx:973
+#: src/components/chat/AgenticChatPanel.tsx:986
 msgid "Output"
 msgstr ""
 
@@ -9909,11 +9929,11 @@ msgstr "Zeilen pro Seite"
 #~ msgid "Run"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:805
+#: src/components/chat/AgenticChatPanel.tsx:809
 msgid "Run status:"
 msgstr "Ausführungsstatus:"
 
-#: src/components/chat/AgenticChatPanel.tsx:257
+#: src/components/chat/AgenticChatPanel.tsx:262
 msgid "Running"
 msgstr ""
 
@@ -10066,12 +10086,12 @@ msgid "Search by organisation"
 msgstr ""
 
 #: src/components/conversation/ConversationAccordion.tsx:1135
-#: src/components/chat/agenticToolActivity.ts:98
+#: src/components/chat/agenticToolActivity.ts:110
 msgid "Search conversations"
 msgstr "Gespräche suchen"
 
 #. placeholder {0}: context.query
-#: src/components/chat/agenticToolActivity.ts:97
+#: src/components/chat/agenticToolActivity.ts:109
 msgid "Search conversations for \"{0}\""
 msgstr ""
 
@@ -10134,12 +10154,12 @@ msgstr "Vorlagen suchen..."
 msgid "select.all.modal.search.text"
 msgstr "Suchtext:"
 
-#: src/components/chat/agenticToolActivity.ts:106
+#: src/components/chat/agenticToolActivity.ts:118
 msgid "Search transcript"
 msgstr ""
 
 #. placeholder {0}: context.query
-#: src/components/chat/agenticToolActivity.ts:105
+#: src/components/chat/agenticToolActivity.ts:117
 msgid "Search transcript for \"{0}\""
 msgstr ""
 
@@ -10377,7 +10397,7 @@ msgid "select.all.modal.context.limit.reached"
 msgstr "Auswahl zu groß. Einige Gespräche wurden nicht hinzugefügt."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:957
-#: src/components/chat/AgenticChatPanel.tsx:1106
+#: src/components/chat/AgenticChatPanel.tsx:1119
 msgid "Send"
 msgstr "Senden"
 
@@ -10386,7 +10406,7 @@ msgstr "Senden"
 msgid "Send {0} invites"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:870
+#: src/components/chat/AgenticChatPanel.tsx:874
 msgid "Send a message to start an agentic run."
 msgstr "Einen Nachricht senden, um einen agentischen Lauf zu starten."
 
@@ -10664,8 +10684,8 @@ msgstr "Mehr anzeigen"
 msgid "Show projects"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:926
-#: src/components/chat/AgenticChatPanel.tsx:937
+#: src/components/chat/AgenticChatPanel.tsx:939
+#: src/components/chat/AgenticChatPanel.tsx:950
 msgid "Show raw data"
 msgstr ""
 
@@ -10964,7 +10984,7 @@ msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:724
-#: src/components/chat/AgenticChatPanel.tsx:819
+#: src/components/chat/AgenticChatPanel.tsx:823
 msgid "Stop"
 msgstr "Stopp"
 
@@ -11017,6 +11037,10 @@ msgstr "Dynamische Vorschläge basierend auf Ihrem Gespräch vorschlagen."
 #: src/components/chat/TemplatesModal.tsx:558
 #~ msgid "Suggest prompts based on your conversations. Try sending a message to see it in action."
 #~ msgstr "Vorschläge basierend auf Ihren Gesprächen. Senden Sie eine Nachricht, um es auszuprobieren."
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:92
+msgid "Suggested project changes"
+msgstr ""
 
 #: src/components/library/LibraryTemplatesMenu.tsx:33
 #: src/components/chat/ChatTemplatesMenu.tsx:288
@@ -11221,7 +11245,7 @@ msgid "Teams in the EU using dembrane in scenarios classified as high risk under
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:521
-#: src/components/chat/AgenticChatPanel.tsx:655
+#: src/components/chat/AgenticChatPanel.tsx:659
 msgid "Template applied"
 msgstr "Template übernommen"
 
@@ -11964,7 +11988,7 @@ msgstr ""
 msgid "Transcribing..."
 msgstr "Transcribieren..."
 
-#: src/components/chat/AgenticChatPanel.tsx:148
+#: src/components/chat/AgenticChatPanel.tsx:153
 msgid "transcript"
 msgstr ""
 
@@ -11980,7 +12004,7 @@ msgstr "Transkript"
 msgid "Transcript copied to clipboard"
 msgstr "Transkript in die Zwischenablage kopiert"
 
-#: src/components/chat/AgenticChatPanel.tsx:148
+#: src/components/chat/AgenticChatPanel.tsx:153
 msgid "transcript excerpt"
 msgstr ""
 
@@ -12207,7 +12231,7 @@ msgid "Under your organisation"
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:523
-#: src/components/chat/AgenticChatPanel.tsx:657
+#: src/components/chat/AgenticChatPanel.tsx:661
 msgid "Undo"
 msgstr "Rückgängig"
 

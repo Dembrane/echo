@@ -755,6 +755,30 @@ async def append_message(
     return await run_in_thread_pool(agentic_run_service.set_status, run_id, "queued")
 
 
+@AgenticRouter.get("/projects/{project_id}/settings")
+async def get_project_settings_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Current editable project settings for the agent (read-only).
+
+    Mirrors the BFF PATCH whitelist so proposeProjectUpdate diffs and the
+    apply path always agree on which fields exist."""
+    _require_agent_token(auth)
+
+    try:
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Project %s not found while reading settings", project_id)
+        raise HTTPException(status_code=404, detail="Project not found") from exc
+
+    await _assert_project_access(project_id, auth)
+
+    from dembrane.api.v2.bff.tags import ProjectUpdate
+
+    return {field: project.get(field) for field in ProjectUpdate.model_fields}
+
+
 @AgenticRouter.get("/projects/{project_id}/conversations")
 async def list_project_conversations(
     project_id: str,

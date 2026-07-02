@@ -720,6 +720,27 @@ async def test_list_project_conversations_returns_expected_shape(monkeypatch) ->
 
 
 @pytest.mark.asyncio
+async def test_get_project_settings_returns_whitelisted_fields(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/settings")
+
+    assert response.status_code == 200
+    payload = response.json()
+    from dembrane.api.v2.bff.tags import ProjectUpdate
+
+    assert set(payload.keys()) == set(ProjectUpdate.model_fields)
+    assert payload["name"] == "Project project-1"
+
+
+@pytest.mark.asyncio
 async def test_list_project_conversations_hides_project_from_non_members(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     session = _make_session(user_id="user-2")
