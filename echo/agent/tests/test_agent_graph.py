@@ -1,7 +1,9 @@
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
-from agent import POST_NUDGE_CONTINUATION_SYSTEM_PROMPT, create_agent_graph
+import agent
+from agent import POST_NUDGE_CONTINUATION_SYSTEM_PROMPT, _build_llm, create_agent_graph
+from settings import get_settings
 
 
 class FakeLLM:
@@ -72,22 +74,80 @@ def _count_corrective_retry_invocations(invocations: list[list[object]]) -> int:
     return count
 
 
-@pytest.mark.asyncio
-async def test_create_agent_graph_uses_mocked_llm_deterministically():
-    graph = create_agent_graph(
-        project_id="project-1",
-        bearer_token="token-1",
-        llm=FakeLLM(),
-    )
+def _fake_vertex_chat(monkeypatch):
+    class _FakeChatVertexAI:
+        def __init__(self, **kwargs) -> None:
+            self.kwargs = kwargs
 
-    result = await graph.ainvoke(
-        {"messages": [HumanMessage(content="hello")]},
-        config={"configurable": {"thread_id": "thread-test-1"}},
-    )
+    class _FakeCredentials:
+        def __init__(self, info, scopes) -> None:
+            self.info = info
+            self.scopes = scopes
 
-    # System message is used for LLM invocation but not persisted in state to avoid duplication
-    assert result["messages"][-1].content == "mocked-response"
-    assert any(msg.content == "mocked-response" for msg in result["messages"])
+    class _FakeServiceAccountModule:
+        class Credentials:
+            @staticmethod
+            def from_service_account_info(info, scopes=None):
+                return _FakeCredentials(info, scopes)
+
+    monkeypatch.setattr(agent, "ChatVertexAI", _FakeChatVertexAI)
+    monkeypatch.setattr(agent, "service_account", _FakeServiceAccountModule)
+    return _FakeChatVertexAI, _FakeCredentials
+
+
+def test_build_llm_prefers_explicit_vertex_credentials(monkeypatch):
+    get_settings.cache_clear()
+    fake_chat, fake_creds = _fake_vertex_chat(monkeypatch)
+    monkeypatch.setenv("LLM_MODEL", "gemini-3.5-flash")
+    monkeypatch.setenv("VERTEX_PROJECT", "vertex-project")
+    monkeypatch.setenv("VERTEX_LOCATION", "europe-west4")
+    monkeypatch.setenv("VERTEX_CREDENTIALS", '{"type":"service_account","project_id":"explicit"}')
+    monkeypatch.setenv("GCP_SA_JSON", '{"type":"service_account","project_id":"fallback"}')
+
+    llm = _build_llm()
+
+    assert isinstance(llm, fake_chat)
+    assert llm.kwargs["model_name"] == "gemini-3.5-flash"
+    assert llm.kwargs["project"] == "vertex-project"
+    assert llm.kwargs["location"] == "europe-west4"
+    assert isinstance(llm.kwargs["credentials"], fake_creds)
+    assert llm.kwargs["credentials"].info["project_id"] == "explicit"
+    assert llm.kwargs["credentials"].scopes == ["https://www.googleapis.com/auth/cloud-platform"]
+    get_settings.cache_clear()
+
+
+def test_build_llm_uses_adc_when_no_explicit_credentials(monkeypatch):
+    get_settings.cache_clear()
+    fake_chat, _ = _fake_vertex_chat(monkeypatch)
+    monkeypatch.delenv("VERTEX_CREDENTIALS", raising=False)
+    monkeypatch.delenv("GCP_SA_JSON", raising=False)
+    monkeypatch.setenv("VERTEX_PROJECT", "adc-project")
+
+    llm = _build_llm()
+
+    assert isinstance(llm, fake_chat)
+    assert llm.kwargs["credentials"] is None
+    assert llm.kwargs["project"] == "adc-project"
+    assert llm.kwargs["api_endpoint"] == "aiplatform.googleapis.com"
+    get_settings.cache_clear()
+
+
+def test_build_llm_falls_back_to_service_account_project_id(monkeypatch):
+    get_settings.cache_clear()
+    fake_chat, fake_creds = _fake_vertex_chat(monkeypatch)
+    monkeypatch.delenv("VERTEX_CREDENTIALS", raising=False)
+    monkeypatch.delenv("VERTEX_PROJECT", raising=False)
+    monkeypatch.setenv("LLM_MODEL", "gemini-3.5-flash")
+    monkeypatch.setenv("VERTEX_LOCATION", "eu")
+    monkeypatch.setenv("GCP_SA_JSON", '{"type":"service_account","project_id":"sa-project"}')
+
+    llm = _build_llm()
+
+    assert isinstance(llm, fake_chat)
+    assert llm.kwargs["project"] == "sa-project"
+    assert llm.kwargs["location"] == "eu"
+    assert isinstance(llm.kwargs["credentials"], fake_creds)
+    get_settings.cache_clear()
 
 
 def test_create_agent_graph_requires_bearer_token():

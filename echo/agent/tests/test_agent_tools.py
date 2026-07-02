@@ -119,22 +119,28 @@ def _tool_map(tools) -> dict[str, object]:  # noqa: ANN001
 
 def test_system_prompt_contains_conversational_and_research_directives():
     prompt = SYSTEM_PROMPT.lower()
+    # Brand voice: the word AI is banned, dembrane stays lowercase
+    assert 'never use the word "ai"' in prompt
+    assert "dembrane" in prompt and "Dembrane" not in SYSTEM_PROMPT
     # Conversational-first behavior
-    assert "conversational" in prompt
-    assert "greetings" in prompt
     assert "do not use tools for greetings" in prompt
-    # Writing/analysis guidance should be present
-    assert "writing style" in prompt
-    assert "analysis guidelines" in prompt
-    # Citation policy still anchors output quality
+    # Honesty + scope + turn-instruction sections exist
+    assert "honesty" in prompt
+    assert "conversation scope" in prompt
+    assert "turn instructions" in prompt
+    # The agent never applies changes itself
+    assert "you never apply" in prompt
+    # Citation policy still anchors output quality (format is load-bearing:
+    # parsed by AgenticChatPanel.tsx)
     assert '"[participant name]: quoted text"' in prompt
+    assert "[conversation_id:<id>;chunk_id:<chunk_id>]" in SYSTEM_PROMPT
     assert "[conversation_id:<id>]" in SYSTEM_PROMPT
-    assert "working from summaries only" in prompt
-    assert "retrieve the full transcript" in prompt
+    assert "worked from summaries only" in prompt
+    assert "read the full transcript" in prompt
     assert "never fabricate quotes" in prompt
     # Project context awareness
     assert "project context" in prompt
-    assert "background info" in prompt
+    assert "background about the project" in prompt
 
 
 @pytest.mark.asyncio
@@ -522,11 +528,35 @@ async def test_grep_convo_snippets_returns_matches_for_in_scope_conversation():
                 }
             ]
         },
-        transcripts={
-            "conv-1": "Minority representation matters for trust.\n"
-            "Some participants discussed representation gaps in media.\n"
-            "Other topics were unrelated.",
+        project_conversations_payload_by_transcript_query={
+            "representation": {
+                "project_id": "project-1",
+                "count": 1,
+                "conversations": [
+                    {
+                        "conversation_id": "conv-1",
+                        "participant_name": "Alice",
+                        "status": "done",
+                        "summary": "summary one",
+                        "started_at": "2026-01-01T00:00:00Z",
+                        "last_chunk_at": "2026-01-01T01:00:00Z",
+                        "matches": [
+                            {
+                                "chunk_id": "chunk-1",
+                                "timestamp": "2026-01-01T00:10:00Z",
+                                "snippet": "Minority representation matters for trust.",
+                            },
+                            {
+                                "chunk_id": "chunk-2",
+                                "timestamp": "2026-01-01T00:20:00Z",
+                                "snippet": "Some participants discussed representation gaps in media.",
+                            },
+                        ],
+                    }
+                ],
+            }
         },
+        transcripts={},
     )
 
     create_agent_graph(
@@ -544,7 +574,11 @@ async def test_grep_convo_snippets_returns_matches_for_in_scope_conversation():
     assert result["project_id"] == "project-1"
     assert result["conversation_id"] == "conv-1"
     assert result["count"] == 2
-    assert result["matches"][0]["snippet"]
+    assert result["matches"][0] == {
+        "chunk_id": "chunk-1",
+        "timestamp": "2026-01-01T00:10:00Z",
+        "snippet": "Minority representation matters for trust.",
+    }
     assert factory.instances[-1].closed is True
 
 
@@ -562,7 +596,24 @@ async def test_grep_convo_snippets_returns_empty_matches_when_no_hits():
                 }
             ]
         },
-        transcripts={"conv-1": "No relevant term in this transcript."},
+        project_conversations_payload_by_transcript_query={
+            "representation": {
+                "project_id": "project-1",
+                "count": 1,
+                "conversations": [
+                    {
+                        "conversation_id": "conv-1",
+                        "participant_name": "Alice",
+                        "status": "done",
+                        "summary": "summary one",
+                        "started_at": "2026-01-01T00:00:00Z",
+                        "last_chunk_at": "2026-01-01T01:00:00Z",
+                        "matches": [],
+                    }
+                ],
+            }
+        },
+        transcripts={},
     )
 
     create_agent_graph(

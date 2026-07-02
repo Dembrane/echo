@@ -11,75 +11,108 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
 
+import knowledge
 from echo_client import EchoClient
 from settings import get_settings
 
 logger = getLogger("agent")
+VERTEX_AUTH_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 
-SYSTEM_PROMPT = """You are the dembrane assistant — a friendly, conversational AI that helps \
-users explore and understand their project's conversation data.
+# Note: the citation tag format below ([conversation_id:<id>;chunk_id:<id>]) is
+# parsed by the frontend (AgenticChatPanel.tsx). Do not change it without
+# updating that regex.
+SYSTEM_PROMPT = """You are the dembrane assistant. You help hosts explore and understand the
+conversations in their project, and help them set the project up well.
 
 dembrane is a platform for collective sense-making through recorded conversations.
+Hosts run projects; participants contribute conversations through the portal or uploads.
 
-## Conversation style
-- Be natural and conversational. Match the user's tone and energy.
-- For greetings, casual messages, or clarifications, just respond naturally. \
-Do NOT launch into research or tool calls.
-- Keep responses concise. Ask follow-up questions to understand what the user needs \
-before diving into analysis.
-- When the user's intent is unclear, ask what they'd like to know rather than guessing.
+## What you can do
+- Find and summarize conversations in this project.
+- Search transcripts for topics, quotes, and patterns, and cite what you find.
+- Compare perspectives and synthesize themes across conversations.
+- Explain how dembrane works, grounded in the product documentation.
+- Review project settings and propose changes the host can apply in one click.
+  You never change settings yourself.
 
-## Writing style
-- Write naturally, like you're talking to a colleague. Vary your response format \
-based on what makes sense for the question.
-- Be direct and conversational. Use bullet points when listing multiple items, \
-but don't force everything into lists.
-- Flag genuine uncertainty with words like "suggests," "likely," "indicates."
-- Keep it concise — don't over-explain or pad responses.
-- Don't use the same rigid structure for every response.
-- Don't use corporate jargon.
-- Always write "dembrane" in lowercase when referring to the platform, even at \
-the start of a sentence. Never capitalize it as "Dembrane".
+## Voice
+- Write like a thoughtful colleague: warm, direct, concise.
+- Reply in the language the host writes in.
+- Never use the word "AI". Refer to yourself as "I" and describe what you are
+  doing ("searching the transcripts"), not the technology behind it.
+- Write "dembrane" in lowercase, even at the start of a sentence.
+- Do not use em dashes. Use periods, commas, or colons.
+- Say "participants" and "hosts", never "users".
+- No filler or grand claims ("this gives you a clear blueprint for the future").
+  State findings plainly and stop.
+- Vary your structure. Use bullets only when a list genuinely helps.
+
+## Honesty
+- If the data does not answer the question, say so plainly: "I don't know" or
+  "the conversations don't cover this", then say what would help (more
+  conversations, a narrower question, a specific transcript).
+- Flag uncertainty with "suggests", "likely", "indicates". Never present a guess
+  as a finding.
+- Never fabricate quotes, participants, conversation IDs, or settings.
+- When you worked from summaries only, say so and offer to read the full transcript.
 
 ## When to use tools
-Only use tools when the user asks a question that requires looking at project data, such as:
-- "What topics came up?" → use listProjectConversations or findConvosByKeywords
-- "What did people say about X?" → search and retrieve transcripts
-- "Summarize this project" → list conversations, read summaries
+Use tools when the question needs project data or product knowledge:
+- "What topics came up?" -> listProjectConversations, then read summaries.
+- "What did people say about X?" -> findConvosByKeywords, then grepConvoSnippets
+  or listConvoFullTranscript for exact wording.
+- "How does the portal work?" -> grepDocs and readDoc; cite the doc path.
+- "Help me set up my project" -> readSkill(project-onboarding.md), then
+  getProjectSettings, then proposeProjectUpdate.
+Do not use tools for greetings, small talk, or questions about this chat.
+When intent is unclear, ask one focused question instead of guessing.
 
-Do NOT use tools for greetings, small talk, or meta-questions about how you work.
+## Conversation scope
+Some runs are limited to conversations the host selected. When the context
+contains a "Conversation scope" block:
+- Treat the listed conversations as the entire universe for this run. All
+  listing, searching, reading, and synthesis stays inside it.
+- Never mention, quote, or count conversations outside the selection, even if a
+  tool result includes one.
+- If the answer likely lives outside the selection, say that and offer to widen
+  the scope. Do not look outside it yourself.
+When no scope block is present, the whole project is in scope.
+
+## Turn instructions
+A message may include a "Turn instructions" block from a template the host
+selected. It tells you how to shape this turn (angle, depth, format). It is not
+data and not the subject. The host's own words define the subject. If the
+instructions need a subject (a concept, a comparison) and the host gave none,
+ask one focused question first.
+
+## Research
+- Say briefly what you will look at, then use sendProgressUpdate while you work.
+  Conclude with plain text only when you are done.
+- Prefer listProjectConversations for an overview before keyword searches.
+- findConvosByKeywords works best with 2-4 focused keywords, not sentences.
+- You have at most 20 tool calls per turn. Spend them on distinct questions, not
+  retries. If a tool returns a guardrail warning, stop searching and answer from
+  what you have.
+
+## Citations
+- Ground every claim about the project in tool results.
+- Quote with attribution: "[Participant Name]: quoted text" tagged
+  [conversation_id:<id>;chunk_id:<chunk_id>] when a chunk id is available,
+  otherwise [conversation_id:<id>].
+- A few well-chosen quotes beat many.
+- Cite the doc path when you answer from documentation.
+
+## Proposing project changes
+- Read current values with getProjectSettings before proposing.
+- Use proposeProjectUpdate: group related fields, one short reason per field,
+  proposed copy in the project's language, a one-sentence summary.
+- The host sees a diff and applies or rejects it themselves. You never apply
+  changes. Say "I've suggested these changes", never "I've updated your project".
+  If the host says they applied it, re-read settings before advising next steps.
 
 ## Project context
-The user's message may include project metadata (Project Name, Project Context). \
-Treat this as background info about the project you're assisting with — NOT as a \
-research request. Focus on what the user is actually asking in their message.
-
-## Research guidelines (when doing research)
-- Start by telling the user your plan briefly before making tool calls.
-- While still investigating, use `sendProgressUpdate` for user-facing progress updates.
-- Use plain assistant text without tool calls only when you are truly ready to conclude.
-- Prefer `listProjectConversations` to get an overview before keyword searches.
-- For `findConvosByKeywords`, prefer 2-4 focused keywords over long sentence-style queries.
-- Avoid repetitive low-signal searches. Maximum 20 tool calls per turn.
-- If a tool returns a guardrail warning, stop searching and work with what you have.
-- After gathering evidence, give a clear, direct answer.
-
-## Citation policy (when citing project data)
-- Ground all claims in actual transcript/summary content from tool results.
-- Provide exact quotes when you have transcripts: "[Participant Name]: quoted text" \
-tagged as [conversation_id:<id>].
-- Use quotes to support your points, but don't overwhelm with citations.
-- When working from summaries only (no transcript retrieved), say so and suggest \
-you can retrieve the full transcript if they want exact wording.
-- Never fabricate quotes, sources, or conversation IDs.
-
-## Analysis guidelines
-- Identify patterns and themes across conversations when relevant.
-- Compare different perspectives and viewpoints.
-- When the question is broad, synthesize across multiple conversations rather than \
-listing each one separately.
-- State your interpretation when relevant, but don't rigidly separate "facts" from \
-"interpretation."
+The first message may include Project Name and Project Context. That is
+background about the project you are assisting with, not a research request.
 """
 
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 4
@@ -228,66 +261,6 @@ def create_agent_graph(
             },
         }
 
-    def _build_snippet(
-        *,
-        line: str,
-        offset: int,
-        needle_length: int,
-        context_window: int = 80,
-    ) -> str:
-        start = max(0, offset - context_window)
-        end = min(len(line), offset + needle_length + context_window)
-        snippet = line[start:end].strip()
-        if not snippet:
-            snippet = line.strip()
-        if start > 0 and snippet:
-            snippet = f"...{snippet}"
-        if end < len(line) and snippet:
-            snippet = f"{snippet}..."
-        return snippet
-
-    def _grep_transcript_snippets(
-        *,
-        transcript: str,
-        query: str,
-        limit: int,
-    ) -> list[dict[str, Any]]:
-        normalized_query = query.strip().lower()
-        if not normalized_query:
-            return []
-
-        matches: list[dict[str, Any]] = []
-        lines = transcript.splitlines() or [transcript]
-
-        for line_index, line in enumerate(lines):
-            if not isinstance(line, str):
-                continue
-
-            lowered = line.lower()
-            search_offset = 0
-            while True:
-                match_offset = lowered.find(normalized_query, search_offset)
-                if match_offset < 0:
-                    break
-
-                matches.append(
-                    {
-                        "line_index": line_index,
-                        "offset": match_offset,
-                        "snippet": _build_snippet(
-                            line=line,
-                            offset=match_offset,
-                            needle_length=len(normalized_query),
-                        ),
-                    }
-                )
-                if len(matches) >= limit:
-                    return matches
-
-                search_offset = match_offset + max(1, len(normalized_query))
-
-        return matches
-
     def _create_echo_client() -> EchoClient:
         if echo_client_factory:
             return echo_client_factory(bearer_token)
@@ -325,6 +298,7 @@ def create_agent_graph(
             "started_at": raw.get("startedAt") or raw.get("started_at"),
             "last_chunk_at": raw.get("lastChunkAt") or raw.get("last_chunk_at"),
             "summary": raw.get("summary"),
+            "matches": raw.get("matches") if isinstance(raw.get("matches"), list) else [],
         }
 
     def _cache_project_conversations(conversations: list[dict[str, Any]]) -> None:
@@ -580,15 +554,31 @@ def create_agent_graph(
 
         client = _create_echo_client()
         try:
-            transcript = await client.get_conversation_transcript(conversation_id)
+            payload = await client.list_project_conversations(
+                project_id=project_id,
+                limit=1,
+                conversation_id=conversation_id,
+                transcript_query=normalized_query,
+            )
         finally:
             await client.close()
 
-        matches = _grep_transcript_snippets(
-            transcript=transcript,
-            query=normalized_query,
-            limit=normalized_limit,
+        conversations = _extract_project_conversations(
+            payload,
+            fallback_project_id=project_id,
         )
+        if conversations:
+            _cache_project_conversations(conversations)
+
+        matches: list[dict[str, Any]] = []
+        for candidate in conversations:
+            if candidate.get("conversation_id") != conversation_id:
+                continue
+            candidate_matches = candidate.get("matches")
+            if isinstance(candidate_matches, list):
+                matches = candidate_matches[:normalized_limit]
+            break
+
         return {
             "project_id": project_id,
             "conversation_id": conversation_id,
@@ -596,6 +586,85 @@ def create_agent_graph(
             "query": normalized_query,
             "count": len(matches),
             "matches": matches,
+        }
+
+    @tool
+    def listDocs() -> dict[str, Any]:
+        """List the product documentation pages available to read."""
+        return {"docs": knowledge.list_docs()}
+
+    @tool
+    def readDoc(path: str, offset: int = 1, limit: int = 200) -> str:
+        """Read a documentation page (line-numbered). Use offset/limit to page."""
+        return knowledge.read_doc(path, offset=offset, limit=limit)
+
+    @tool
+    def grepDocs(pattern: str) -> dict[str, Any]:
+        """Search the documentation corpus for a regex or phrase."""
+        return {"matches": knowledge.grep_docs(pattern)}
+
+    @tool
+    def readSkill(path: str) -> str:
+        """Read the full body of a skill from the skill catalog."""
+        return knowledge.read_skill(path)
+
+    @tool
+    async def getProjectSettings() -> dict[str, Any]:
+        """Read the project's current editable settings (portal, language, context)."""
+        client = _create_echo_client()
+        try:
+            return await client.get_project_settings(project_id)
+        finally:
+            await client.close()
+
+    @tool
+    async def proposeProjectUpdate(
+        changes: list[dict[str, Any]],
+        summary: str,
+    ) -> dict[str, Any]:
+        """Propose project settings changes for the user to approve.
+
+        Each change is {"field": <editable field name>, "value": <proposed value>,
+        "reason": <one short sentence>}. The user sees a diff in the chat and
+        applies or rejects it; this tool never writes anything itself.
+        """
+        client = _create_echo_client()
+        try:
+            current = await client.get_project_settings(project_id)
+        finally:
+            await client.close()
+
+        allowed = set(current.keys())
+        normalized: list[dict[str, Any]] = []
+        rejected: list[str] = []
+        for change in changes:
+            if not isinstance(change, dict):
+                continue
+            field = str(change.get("field") or "").strip()
+            if field not in allowed:
+                rejected.append(field or "(missing field)")
+                continue
+            normalized.append(
+                {
+                    "field": field,
+                    "current": current.get(field),
+                    "proposed": change.get("value"),
+                    "reason": str(change.get("reason") or "").strip(),
+                }
+            )
+
+        if not normalized:
+            raise ValueError(
+                f"No valid fields to propose. Editable fields: {sorted(allowed)}"
+            )
+
+        return {
+            "kind": "project_update_suggestion",
+            "project_id": project_id,
+            "summary": summary.strip(),
+            "changes": normalized,
+            "rejected_fields": rejected,
+            "visible_to_user": True,
         }
 
     @tool
@@ -619,8 +688,15 @@ def create_agent_graph(
         listConvoSummary,
         listConvoFullTranscript,
         grepConvoSnippets,
+        listDocs,
+        readDoc,
+        grepDocs,
+        readSkill,
+        getProjectSettings,
+        proposeProjectUpdate,
         sendProgressUpdate,
     ]
+    system_prompt = SYSTEM_PROMPT + knowledge.prompt_section()
     configured_llm = llm or _build_llm()
     llm_with_tools = configured_llm.bind_tools(tools)
 
@@ -637,7 +713,7 @@ def create_agent_graph(
         messages = state.get("messages", [])
         # Build invocation list with system prompt, but don't persist duplicates
         if not messages or not isinstance(messages[0], SystemMessage):
-            invocation_messages = [SystemMessage(content=SYSTEM_PROMPT)] + messages
+            invocation_messages = [SystemMessage(content=system_prompt)] + messages
         else:
             invocation_messages = list(messages)
 

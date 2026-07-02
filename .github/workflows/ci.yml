@@ -130,8 +130,10 @@ jobs:
           # env; without this entry no main-SHA agent tag ever exists, so the
           # echo-next and prod agent deployments ImagePullBackOff.
           - name: dbr-echo-agent
-            context: ./echo/agent
-            dockerfile: Dockerfile
+            # Repo-root context: the image bakes docs/ as the agent's
+            # read-only knowledge corpus.
+            context: .
+            dockerfile: echo/agent/Dockerfile
             tag: dbr-echo-agent
             build_args: ""
     

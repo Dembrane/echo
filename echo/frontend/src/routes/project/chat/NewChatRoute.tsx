@@ -7,6 +7,7 @@ import {
 	Center,
 	Group,
 	Loader,
+	LoadingOverlay,
 	Stack,
 	Text,
 	Title,
@@ -15,7 +16,7 @@ import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import posthog from "posthog-js";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useParams } from "react-router";
 import {
@@ -34,6 +35,7 @@ import { BaseSkeleton } from "@/components/common/BaseSkeleton";
 import { NavigationButton } from "@/components/common/NavigationButton";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useCreateChatMutation } from "@/components/project/hooks";
+import { ENABLE_AGENTIC_CHAT } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -225,6 +227,20 @@ export const NewChatRoute = () => {
 		}
 	};
 
+	// Agentic-only experience: hosts never pick a "mode". When agentic chat
+	// is enabled, creating a chat is one click/visit; the selector remains only
+	// for environments where agentic is off (production until launch).
+	const autoStartAgentic = ENABLE_AGENTIC_CHAT;
+	const autoStartedRef = useRef(false);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: handleModeSelected is recreated per render; the ref guards a single run
+	useEffect(() => {
+		if (!autoStartAgentic || autoStartedRef.current) return;
+		if (!projectId || !workspaceId) return;
+		autoStartedRef.current = true;
+		// handleModeSelected routes the free-tier chat limit to the upgrade modal.
+		void handleModeSelected("agentic");
+	}, [autoStartAgentic, projectId, workspaceId]);
+
 	if (!projectId || !workspaceId) {
 		return (
 			<Box className="flex h-full items-center justify-center">
@@ -264,13 +280,22 @@ export const NewChatRoute = () => {
 	return (
 		<PageContainer>
 			<Stack gap="xl">
-			<ChatModeSelector
-				isNewChat
-				isCreating={isPending}
-				projectId={projectId}
-				onModeSelected={handleModeSelected}
-				atChatLimit={atChatLimit}
-			/>
+				{ENABLE_AGENTIC_CHAT ? (
+					<Box className="relative min-h-32">
+						<LoadingOverlay
+							visible={isPending}
+							overlayProps={{ backgroundOpacity: 0 }}
+						/>
+					</Box>
+				) : (
+					<ChatModeSelector
+						isNewChat
+						isCreating={isPending}
+						projectId={projectId}
+						onModeSelected={handleModeSelected}
+						atChatLimit={atChatLimit}
+					/>
+				)}
 
 				<Suspense fallback={<ChatsSectionSkeleton />}>
 					<ProjectChatsSection

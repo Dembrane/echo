@@ -52,6 +52,7 @@ import {
 	useAddChatMessageMutation,
 	useChatHistory,
 	useChatSuggestions,
+	useInitializeChatModeMutation,
 	useLockConversationsMutation,
 	usePrefetchSuggestions,
 	useChat as useProjectChat,
@@ -283,6 +284,38 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		stop: customHandleStop,
 		templateKey,
 	};
+};
+
+/** Initializes a mode-less chat as agentic, then hands off to the panel.
+ * Hosts never see a mode choice. */
+const AutoInitializeAgentic = ({
+	chatId,
+	projectId,
+	onInitialized,
+}: {
+	chatId: string;
+	projectId: string;
+	onInitialized: () => void;
+}) => {
+	const initializeModeMutation = useInitializeChatModeMutation();
+	const startedRef = useRef(false);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: mutation/callback identities change per render; the ref guards a single run
+	useEffect(() => {
+		if (startedRef.current || !chatId || !projectId) return;
+		startedRef.current = true;
+		initializeModeMutation
+			.mutateAsync({ chatId, mode: "agentic", projectId })
+			.then(onInitialized)
+			.catch(() => {
+				// The mutation surfaces its own toast; leave the screen calm.
+			});
+	}, [chatId, projectId]);
+
+	return (
+		<Box className="relative min-h-40">
+			<LoadingOverlay visible overlayProps={{ backgroundOpacity: 0 }} />
+		</Box>
+	);
 };
 
 export const ProjectChatRoute = () => {
@@ -586,7 +619,19 @@ export const ProjectChatRoute = () => {
 		);
 	}
 
-	// Show mode selector if mode not yet selected
+	// Agentic-only experience: a chat without a mode (and without legacy
+	// markers) becomes agentic automatically; hosts never pick a mode.
+	if (!isModeSelected && ENABLE_AGENTIC_CHAT) {
+		return (
+			<AutoInitializeAgentic
+				chatId={chatId ?? ""}
+				projectId={projectId ?? ""}
+				onInitialized={() => chatContextQuery.refetch()}
+			/>
+		);
+	}
+
+	// Legacy mode selector (environments where agentic chat is off)
 	if (!isModeSelected) {
 		return (
 			<Box className="flex min-h-full items-center justify-center px-2 pr-4">
@@ -783,7 +828,7 @@ export const ProjectChatRoute = () => {
 					{/* Scroll to bottom button */}
 					<Group
 						justify="center"
-						className="absolute bottom-[105%] left-1/2 z-50 hidden translate-x-[-50%] md:flex"
+						className="absolute bottom-[105%] right-4 z-50 hidden md:flex"
 					>
 						<ScrollToBottomButton
 							elementRef={scrollTargetRef}

@@ -23,12 +23,8 @@ AGENT_CANCELLED_MESSAGE = "Run cancelled by user"
 MAX_TOOL_CALLS_PER_RUN = 20
 TOOL_LIMIT_EXEMPT_TOOL_NAMES = {"sendProgressUpdate"}
 TOOL_LIMIT_SAFETY_MESSAGE = (
-    "I've reached my tool-call limit for this turn. "
-    "I'll stop searching here and summarize what I can reliably infer."
-)
-TOOL_LIMIT_FALLBACK_SUMMARY_MESSAGE = (
-    "I reached the tool-call limit before gathering enough additional evidence for a fuller synthesis. "
-    "If you want, send `go on` and I'll continue from this exact point."
+    "I've reached my tool-call limit for this turn, so I'll answer from what I've "
+    "gathered so far. If you'd like me to keep digging, just ask."
 )
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 4
 AUTOMATIC_NUDGE_TEMPLATE = (
@@ -201,13 +197,6 @@ def _build_automatic_nudge_content(*, tool_calls_without_assistant_message: int)
     return AUTOMATIC_NUDGE_TEMPLATE.format(tool_call_count=milestone)
 
 
-def _build_post_limit_summary(*, last_substantive_assistant_message: Optional[str]) -> str:
-    summary_source = _coerce_non_empty_text(last_substantive_assistant_message)
-    if summary_source is None:
-        return TOOL_LIMIT_FALLBACK_SUMMARY_MESSAGE
-    return f"Here is my best synthesis from the evidence gathered so far:\n\n{summary_source}"
-
-
 def _extract_progress_message_from_tool_end(event: dict[str, Any]) -> Optional[str]:
     if str(event.get("name") or "") != "sendProgressUpdate":
         return None
@@ -262,7 +251,9 @@ def _extract_progress_message_from_tool_end(event: dict[str, Any]) -> Optional[s
     next_steps = _coerce_non_empty_text(output_payload.get("next_steps"))
     if next_steps is None:
         return update_text
-    return f"{update_text}\n\nNext steps: {next_steps}"
+    # Render next steps as their own paragraph; no English "Next steps:" label
+    # (the agent writes in the host's language).
+    return f"{update_text}\n\n{next_steps}"
 
 
 async def _build_message_history(
@@ -476,7 +467,6 @@ async def process_agentic_run(
     tool_calls_without_assistant_message = 0
     nudged_tool_call_milestones: set[int] = set()
     has_sent_progress_intro = False
-    last_substantive_assistant_message: str | None = None
 
     logger.info("Processing run %s turn %s (owner=%s)", run_id, turn_seq, owner_token)
     await run_in_thread_pool(svc.set_status, run_id, "running")
@@ -515,7 +505,6 @@ async def process_agentic_run(
                                 content=planning_message,
                                 project_chat_id=project_chat_id,
                             )
-                            last_substantive_assistant_message = planning_message
                             tool_calls_without_assistant_message = 0
                             nudged_tool_call_milestones.clear()
                 else:
@@ -526,7 +515,6 @@ async def process_agentic_run(
                         project_chat_id=project_chat_id,
                     )
                     latest_output = model_text
-                    last_substantive_assistant_message = model_text
                     tool_calls_without_assistant_message = 0
                     nudged_tool_call_milestones.clear()
 
@@ -538,17 +526,11 @@ async def process_agentic_run(
                 tool_calls_without_assistant_message += 1
 
                 if not has_sent_progress_intro:
+                    # Don't post a synthetic "starting with `toolName`" line: it
+                    # leaks raw tool names, is English-only, and the frontend
+                    # already renders humane tool activity. The agent's own
+                    # sendProgressUpdate covers user-facing progress.
                     has_sent_progress_intro = True
-                    progress_intro_message = (
-                        f"I'll first gather evidence before answering. "
-                        f"Starting with `{tool_name}`."
-                    )
-                    await _append_assistant_message(
-                        svc=svc,
-                        run_id=run_id,
-                        content=progress_intro_message,
-                        project_chat_id=project_chat_id,
-                    )
                     tool_calls_without_assistant_message = 0
                     nudged_tool_call_milestones.clear()
                 else:
@@ -586,16 +568,9 @@ async def process_agentic_run(
                         content=TOOL_LIMIT_SAFETY_MESSAGE,
                         project_chat_id=project_chat_id,
                     )
-                    post_limit_summary = _build_post_limit_summary(
-                        last_substantive_assistant_message=last_substantive_assistant_message
-                    )
-                    await _append_assistant_message(
-                        svc=svc,
-                        run_id=run_id,
-                        content=post_limit_summary,
-                        project_chat_id=project_chat_id,
-                    )
-                    latest_output = post_limit_summary
+                    # One honest message only. The last substantive assistant
+                    # message is already in the chat; don't repeat it verbatim.
+                    latest_output = TOOL_LIMIT_SAFETY_MESSAGE
                     tool_calls_without_assistant_message = 0
                     nudged_tool_call_milestones.clear()
                     break
@@ -612,14 +587,12 @@ async def process_agentic_run(
                         content=progress_message,
                         project_chat_id=project_chat_id,
                     )
-                    last_substantive_assistant_message = progress_message
                     tool_calls_without_assistant_message = 0
                     nudged_tool_call_milestones.clear()
 
             content = event.get("content")
             if isinstance(content, str) and event_type == "assistant.message":
                 latest_output = content
-                last_substantive_assistant_message = content
                 tool_calls_without_assistant_message = 0
                 nudged_tool_call_milestones.clear()
                 if project_chat_id:

@@ -114,7 +114,7 @@ const TemplatePill = ({
 		<Tooltip label={label} openDelay={500} disabled={label.length < 25}>
 			<Paper
 				withBorder
-				className={`cursor-pointer whitespace-nowrap truncate rounded-xl px-2 py-1 transition-all hover:scale-[1.02] ${
+				className={`cursor-pointer rounded-xl px-2 py-1 transition-all hover:scale-[1.02] ${
 					isSelected
 						? "border-gray-400 bg-gray-100"
 						: "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -146,7 +146,7 @@ const TemplatePill = ({
 						size="xs"
 						fw={500}
 						c={colors ? MODE_COLORS.graphite : undefined}
-						lineClamp={2}
+						truncate
 					>
 						{label}
 					</Text>

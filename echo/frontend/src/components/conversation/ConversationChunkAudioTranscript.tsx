@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Divider, Skeleton, Text } from "@mantine/core";
-
+import { cn } from "@/lib/utils";
 import { BaseMessage } from "../chat/BaseMessage";
 import { RedactedText } from "../common/RedactedText";
 import { useConversationChunkContentUrl } from "./hooks";
@@ -10,6 +10,7 @@ export const ConversationChunkAudioTranscript = ({
 	chunk,
 	showAudioPlayer = true,
 	transcriptLocked = false,
+	highlighted = false,
 }: {
 	chunk: {
 		conversation_id: string;
@@ -21,6 +22,7 @@ export const ConversationChunkAudioTranscript = ({
 	};
 	showAudioPlayer?: boolean;
 	transcriptLocked?: boolean;
+	highlighted?: boolean;
 }) => {
 	const audioUrlQuery = useConversationChunkContentUrl(
 		chunk.conversation_id as string,
@@ -30,6 +32,12 @@ export const ConversationChunkAudioTranscript = ({
 
 	return (
 		<BaseMessage
+			paperProps={{
+				className: cn(
+					"scroll-mt-24 transition-colors duration-300",
+					highlighted && "!bg-cyan-50 ring-2 ring-cyan-300",
+				),
+			}}
 			title={
 				<span className="text-sm text-gray-500">
 					{new Date(chunk.timestamp).toLocaleTimeString()}
@@ -66,13 +74,13 @@ export const ConversationChunkAudioTranscript = ({
 			<LockedTranscriptOverlay compact />
 		) : (
 			<Text>
-			{chunk.error ? (
-				<span className="italic text-gray-500">{t`Unable to process this chunk`}</span>
-			) : !chunk.transcript ? (
-				<span className="italic text-gray-500">{t`Transcribing...`}</span>
-			) : (
-				<RedactedText>{chunk.transcript}</RedactedText>
-			)}
+				{chunk.error ? (
+					<span className="italic text-gray-500">{t`Unable to process this chunk`}</span>
+				) : !chunk.transcript ? (
+					<span className="italic text-gray-500">{t`Transcribing...`}</span>
+				) : (
+					<RedactedText>{chunk.transcript}</RedactedText>
+				)}
 			</Text>
 		)}
 		</BaseMessage>

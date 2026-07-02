@@ -38,6 +38,7 @@ class AgentProjectConversation(TypedDict, total=False):
     summary: Optional[str]
     started_at: Optional[str]
     last_chunk_at: Optional[str]
+    matches: list[dict[str, Optional[str]]]
 
 
 class AgentProjectConversationsResponse(TypedDict, total=False):
@@ -76,6 +77,10 @@ class EchoClient:
         if not isinstance(payload, dict):
             raise ValueError("Unexpected search response shape")
         return cast(HomeSearchResponse, payload)
+
+    async def get_project_settings(self, project_id: str) -> dict[str, Any]:
+        payload = await self.get(f"/agentic/projects/{project_id}/settings")
+        return payload if isinstance(payload, dict) else {}
 
     async def get_conversation_transcript(self, conversation_id: str) -> str:
         response = await self._client.get(f"/conversations/{conversation_id}/transcript")
