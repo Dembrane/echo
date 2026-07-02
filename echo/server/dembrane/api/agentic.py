@@ -19,6 +19,7 @@ from dembrane.settings import get_settings
 from dembrane.chat_utils import generate_title
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.agentic_worker import process_agentic_run
+from dembrane.directus_async import async_directus
 from dembrane.agentic_runtime import (
     request_cancel,
     read_live_event,
@@ -108,6 +109,99 @@ async def _assert_project_access(project_id: str, auth: DirectusSession) -> None
 
     access = await resolve_project_access(project_id, auth)
     access.require("chat:use")
+
+
+def _exclude_others_private_chats(base_filter: dict[str, Any], auth: DirectusSession) -> dict[str, Any]:
+    """Hide chats that are private and owned by someone else.
+
+    A chat is hidden when `is_private == true` AND `user_created != caller`.
+    Implemented as an AND with an OR of the visible cases: not-private
+    (false or legacy-null) OR owned-by-caller. Admins bypass, matching the
+    admin bypass in _assert_project_access."""
+    if auth.is_admin:
+        return base_filter
+    return {
+        **base_filter,
+        "_or": [
+            {"is_private": {"_neq": True}},
+            {"is_private": {"_null": True}},
+            {"user_created": {"_eq": auth.user_id}},
+        ],
+    }
+
+
+async def _visible_workspace_project_ids(workspace_id: str, auth: DirectusSession) -> list[str]:
+    """Project ids in `workspace_id` this caller may see.
+
+    Mirrors workspace_projects.list_workspace_projects visibility so a
+    workspace-wide chat listing can't leak chats from private projects the
+    caller isn't on. Uses the same helpers that endpoint relies on
+    (_visibility_filter_for_caller + _shared_private_project_ids), resolving
+    the caller's workspace role via inheritance.user_can_access rather than a
+    WorkspaceContext dependency (which agentic routes don't build). Admins
+    see every project in the workspace, consistent with _assert_project_access.
+    Callers who aren't workspace members (only a project-level share) see just
+    the projects they were explicitly shared on."""
+
+    async def _project_ids(filter_: dict[str, Any]) -> list[str]:
+        rows = await async_directus.get_items(
+            "project",
+            {"query": {"filter": filter_, "fields": ["id"], "limit": -1}},
+        )
+        if not isinstance(rows, list):
+            return []
+        return [row["id"] for row in rows if isinstance(row, dict) and row.get("id")]
+
+    base_filter: dict[str, Any] = {
+        "workspace_id": {"_eq": workspace_id},
+        "deleted_at": {"_null": True},
+    }
+
+    if auth.is_admin:
+        return await _project_ids(base_filter)
+
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.policies import _normalize_legacy_role
+    from dembrane.inheritance import user_can_access
+    from dembrane.api.v2.workspace_projects import (
+        _shared_private_project_ids,
+        _visibility_filter_for_caller,
+    )
+
+    app_user = await get_app_user_or_raise(auth.user_id)
+    app_user_id = app_user["id"]
+    shared_ids = await _shared_private_project_ids(app_user_id)
+
+    resolved = await user_can_access(workspace_id, app_user_id)
+    if resolved is None:
+        # Not a workspace member: only privately-shared projects are visible,
+        # never the workspace pool.
+        if not shared_ids:
+            return []
+        return await _project_ids({**base_filter, "id": {"_in": list(shared_ids)}})
+
+    role, _source = resolved
+    role = _normalize_legacy_role(role) or role
+    visibility_clause = _visibility_filter_for_caller(
+        caller_role=role,
+        shared_ids=shared_ids,
+        creator_directus_id=auth.user_id,
+    )
+    effective = base_filter if visibility_clause is None else {**base_filter, **visibility_clause}
+    return await _project_ids(effective)
+
+
+def _trim_agent_chat(row: dict[str, Any], auth: DirectusSession) -> dict[str, Any]:
+    """Shape a project_chat row for the agent, mirroring list_chats' trim."""
+    return {
+        "id": row.get("id"),
+        "name": row.get("name"),
+        "chat_mode": row.get("chat_mode"),
+        "is_private": bool(row.get("is_private")),
+        "is_own": row.get("user_created") == auth.user_id,
+        "date_updated": row.get("date_updated"),
+        "project_id": row.get("project_id"),
+    }
 
 
 def _assert_run_authorized(run: dict[str, Any], auth: DirectusSession) -> None:
@@ -804,6 +898,102 @@ async def list_project_conversations(
         transcript_query=transcript_query,
         directus_client=directus,
     )
+
+
+@AgenticRouter.get("/projects/{project_id}/chats")
+async def list_project_chats_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+    limit: int = Query(default=30, ge=1, le=200),
+    workspace_wide: bool = Query(default=False),
+) -> list[dict[str, Any]]:
+    """List previous chats the caller may see, so the agent can build on them.
+
+    Default is project-scoped. workspace_wide widens to every project in the
+    workspace the caller can access (visibility-filtered). Private chats owned
+    by other people are excluded in both modes (admins see all)."""
+    await _assert_project_access(project_id, auth)
+
+    from dembrane.api.v2.bff._access import filter_exclude_deleted
+
+    if workspace_wide:
+        project = await async_directus.get_item("project", project_id)
+        workspace_id = project.get("workspace_id") if isinstance(project, dict) else None
+        if not workspace_id:
+            base_filter = filter_exclude_deleted({"project_id": {"_eq": project_id}})
+        else:
+            visible_ids = await _visible_workspace_project_ids(workspace_id, auth)
+            if not visible_ids:
+                return []
+            base_filter = filter_exclude_deleted({"project_id": {"_in": visible_ids}})
+    else:
+        base_filter = filter_exclude_deleted({"project_id": {"_eq": project_id}})
+
+    filt = _exclude_others_private_chats(base_filter, auth)
+
+    chats = await async_directus.get_items(
+        "project_chat",
+        {
+            "query": {
+                "filter": filt,
+                "fields": [
+                    "id",
+                    "name",
+                    "chat_mode",
+                    "is_private",
+                    "user_created",
+                    "date_updated",
+                    "project_id",
+                ],
+                "sort": ["-date_updated"],
+                "limit": limit,
+            }
+        },
+    )
+    chats_list = chats if isinstance(chats, list) else []
+    return [_trim_agent_chat(row, auth) for row in chats_list if isinstance(row, dict)]
+
+
+@AgenticRouter.get("/chats/{chat_id}/messages")
+async def read_chat_for_agent(
+    chat_id: str,
+    auth: DependencyDirectusSession,
+    limit: int = Query(default=100, ge=1, le=500),
+) -> list[dict[str, Any]]:
+    """Read a previous chat's messages in order. Private chats owned by
+    someone else 404 (existence-hiding), matching the access ladder."""
+    from dembrane.api.v2.bff._access import resolve_chat_access
+
+    _access, chat = await resolve_chat_access(chat_id, auth)
+
+    if (
+        not auth.is_admin
+        and bool(chat.get("is_private"))
+        and chat.get("user_created") != auth.user_id
+    ):
+        raise HTTPException(status_code=404, detail="Chat not found")
+
+    msgs = await async_directus.get_items(
+        "project_chat_message",
+        {
+            "query": {
+                "filter": {"project_chat_id": {"_eq": chat_id}},
+                "fields": ["message_from", "text", "date_created"],
+                "sort": ["date_created"],
+                "limit": limit,
+            }
+        },
+    )
+    msgs_list = msgs if isinstance(msgs, list) else []
+    return [
+        {
+            "message_from": m.get("message_from"),
+            "text": m.get("text"),
+            "date_created": m.get("date_created"),
+        }
+        for m in msgs_list
+        if isinstance(m, dict)
+    ]
 
 
 @AgenticRouter.post("/runs/{run_id}/stream")

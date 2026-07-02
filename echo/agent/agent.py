@@ -64,6 +64,7 @@ Use tools when the question needs project data or product knowledge:
 - "How does the portal work?" -> grepDocs and readDoc; cite the doc path.
 - "Help me set up my project" -> readSkill(project-onboarding.md), then
   getProjectSettings, then proposeProjectUpdate.
+- "What did we discuss before / continue that chat" -> listProjectChats, then readChat.
 Do not use tools for greetings, small talk, or questions about this chat.
 When intent is unclear, ask one focused question instead of guessing.
 
@@ -684,6 +685,31 @@ def create_agent_graph(
             "visible_to_user": True,
         }
 
+    @tool
+    async def listProjectChats(limit: int = 20, workspace_wide: bool = False) -> dict[str, Any]:
+        """List previous chats in this project so you can build on earlier work. Set workspace_wide=true only when the host explicitly asks about other projects in their workspace. Returns each chat's id, title, and when it was last active. Use readChat to read one."""
+        normalized_limit = max(1, min(limit, 100))
+        client = _create_echo_client()
+        try:
+            chats = await client.list_project_chats(
+                project_id,
+                limit=normalized_limit,
+                workspace_wide=workspace_wide,
+            )
+        finally:
+            await client.close()
+        return {"chats": chats}
+
+    @tool
+    async def readChat(chat_id: str) -> dict[str, Any]:
+        """Read the messages of a previous chat by its id (from listProjectChats). Returns the messages in order."""
+        client = _create_echo_client()
+        try:
+            messages = await client.read_chat(chat_id)
+        finally:
+            await client.close()
+        return {"messages": messages}
+
     tools = [
         get_project_scope,
         findConvosByKeywords,
@@ -698,6 +724,8 @@ def create_agent_graph(
         getProjectSettings,
         proposeProjectUpdate,
         sendProgressUpdate,
+        listProjectChats,
+        readChat,
     ]
     system_prompt = SYSTEM_PROMPT + knowledge.prompt_section()
     configured_llm = llm or _build_llm()
