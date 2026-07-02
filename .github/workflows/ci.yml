@@ -126,6 +126,14 @@ jobs:
             dockerfile: Dockerfile
             tag: dbr-echo-server
             build_args: ""
+          # Agent service. Also built by deploy-testing.yml for the testing
+          # env; without this entry no main-SHA agent tag ever exists, so the
+          # echo-next and prod agent deployments ImagePullBackOff.
+          - name: dbr-echo-agent
+            context: ./echo/agent
+            dockerfile: Dockerfile
+            tag: dbr-echo-agent
+            build_args: ""
     
     steps:
       - name: Checkout Code

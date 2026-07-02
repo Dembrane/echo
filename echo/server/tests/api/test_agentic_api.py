@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import Any, AsyncIterator
 from contextlib import asynccontextmanager
 
 import pytest
 from httpx import AsyncClient, ASGITransport
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 import dembrane.api.agentic as agentic_api
+from dembrane.api.v2.bff import _access as bff_access
 from tests.agentic.fakes import InMemoryDirectus
 from dembrane.api.agentic import AgenticRouter
 from dembrane.service.agentic import AgenticRunService
@@ -171,6 +173,18 @@ async def _build_api_client(
     app.include_router(AgenticRouter, prefix="/api/agentic")
 
     monkeypatch.setattr(agentic_api, "project_service", _FakeProjectService(owner_by_project_id))
+
+    async def _fake_resolve_project_access(project_id: str, auth: Any) -> Any:
+        owner_entry = owner_by_project_id.get(project_id)
+        owner_id = (
+            owner_entry.get("directus_user_id") if isinstance(owner_entry, dict) else owner_entry
+        )
+        if owner_entry is None or owner_id != auth.user_id:
+            # Ladder semantics: non-members get 404, not 403.
+            raise HTTPException(status_code=404, detail="Project not found")
+        return SimpleNamespace(require=lambda _policy: None, role="owner", project={})
+
+    monkeypatch.setattr(bff_access, "resolve_project_access", _fake_resolve_project_access)
     monkeypatch.setattr(agentic_api, "agentic_run_service", run_service)
     if chat_service is not None:
         monkeypatch.setattr(agentic_api, "chat_service", chat_service)
@@ -524,7 +538,7 @@ async def test_list_project_conversations_returns_expected_shape(monkeypatch) ->
 
 
 @pytest.mark.asyncio
-async def test_list_project_conversations_rejects_unauthorized_user(monkeypatch) -> None:
+async def test_list_project_conversations_hides_project_from_non_members(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     session = _make_session(user_id="user-2")
 
@@ -536,7 +550,7 @@ async def test_list_project_conversations_rejects_unauthorized_user(monkeypatch)
     ) as client:
         response = await client.get("/api/agentic/projects/project-1/conversations")
 
-    assert response.status_code == 403
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio
