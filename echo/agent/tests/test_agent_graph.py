@@ -188,8 +188,10 @@ async def test_create_agent_graph_nudge_flow_can_continue_via_progress_tool_call
             _tool_call_response(2),
             _tool_call_response(3),
             _tool_call_response(4),
+            _tool_call_response(5),
+            _tool_call_response(6),
             _tool_call_response(
-                5,
+                7,
                 tool_name="sendProgressUpdate",
                 args={
                     "update": "I have a rough picture now.",
@@ -212,7 +214,7 @@ async def test_create_agent_graph_nudge_flow_can_continue_via_progress_tool_call
 
     nudges = _extract_automatic_nudges(llm.invocations)
     assert len(nudges) == 1
-    assert "4 tool calls" in nudges[0]
+    assert "6 tool calls" in nudges[0]
     assert result["messages"][-1].content == "done"
     assert not any(
         isinstance(getattr(message, "content", None), str)
@@ -229,6 +231,8 @@ async def test_create_agent_graph_retries_once_after_nudge_when_model_returns_te
             _tool_call_response(2),
             _tool_call_response(3),
             _tool_call_response(4),
+            _tool_call_response(5),
+            _tool_call_response(6),
             AIMessage(content="Progress update but no tool call."),
             AIMessage(content="Still text-only after retry."),
         ]
@@ -246,5 +250,30 @@ async def test_create_agent_graph_retries_once_after_nudge_when_model_returns_te
 
     nudges = _extract_automatic_nudges(llm.invocations)
     assert len(nudges) >= 1
-    assert all("4 tool calls" in nudge for nudge in nudges)
+    assert all("6 tool calls" in nudge for nudge in nudges)
     assert _count_corrective_retry_invocations(llm.invocations) == 1
+
+
+@pytest.mark.asyncio
+async def test_model_never_sees_its_own_empty_tool_call_turns():
+    """Regression: Gemini reacted to empty AI tool-call turns in history with
+    "Do not send empty messages." — the model input must carry placeholder
+    text on those turns (tool_calls preserved)."""
+    llm = SequenceLLM(
+        responses=[
+            _tool_call_response(1),
+            AIMessage(content="done"),
+        ]
+    )
+    graph = create_agent_graph(project_id="project-1", bearer_token="token-1", llm=llm)
+    await graph.ainvoke(
+        {"messages": [HumanMessage(content="hello")]},
+        config={"configurable": {"thread_id": "thread-placeholder"}},
+    )
+
+    final_invocation = llm.invocations[-1]
+    ai_turns = [m for m in final_invocation if getattr(m, "type", None) == "ai"]
+    assert ai_turns, "expected the prior tool-call turn in the model input"
+    for turn in ai_turns:
+        assert turn.content, "AI tool-call turn reached the model with empty content"
+        assert turn.tool_calls, "tool_calls must be preserved on the placeholder turn"
