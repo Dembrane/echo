@@ -25,7 +25,7 @@ async def _fake_handler(request, _endpoint):
 
 def test_copilotkit_root_post_rewrites_to_default_path(monkeypatch):
     monkeypatch.setattr(main, "copilotkit_handler", _fake_handler)
-    monkeypatch.setattr(main, "LangGraphAgent", _DummyLangGraphAgent)
+    monkeypatch.setattr(main, "LangGraphAGUIAgent", _DummyLangGraphAgent)
     monkeypatch.setattr(main, "CopilotKitRemoteEndpoint", _DummyEndpoint)
 
     client = TestClient(main.app)
@@ -42,7 +42,7 @@ def test_copilotkit_root_post_rewrites_to_default_path(monkeypatch):
 
 def test_copilotkit_nested_path_is_preserved(monkeypatch):
     monkeypatch.setattr(main, "copilotkit_handler", _fake_handler)
-    monkeypatch.setattr(main, "LangGraphAgent", _DummyLangGraphAgent)
+    monkeypatch.setattr(main, "LangGraphAGUIAgent", _DummyLangGraphAgent)
     monkeypatch.setattr(main, "CopilotKitRemoteEndpoint", _DummyEndpoint)
 
     client = TestClient(main.app)
