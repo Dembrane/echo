@@ -369,6 +369,50 @@ that gives Sam enough context to triage without opening the app.
 7. Action registry seed pair: tags + report generation (recommended) or other.
 8. Journal writes: propose-tier first (recommended) vs auto-append from day one.
 
+## Redesign directives (host feedback, 2026-07-02) + load sizing
+
+Prod load (30d): 1,099 chats, 5,546 messages, peak 79 msgs/hour and 10
+msgs/minute. Concurrency is low, so the multiplayer turn queue is a
+correctness concern (two people in one chat), not throughput. Multiplayer is
+real demand: ~230 projects already have 2+ distinct chat creators. The
+dominant scaling cost is storage: ~306 events/run x ~1,100 chats/mo, which the
+turn ledger fixes.
+
+Directives:
+- The chat must feel professional and brand-aligned, not a hobby project.
+  Distinctly dembrane, not a ChatGPT/Claude clone. Free rein on layout within
+  brand rules.
+- Pull agentic chat into its own frontend feature (feature/agentic), not
+  bolted onto the old chat foundations. Legacy overview/deep_dive chats stay,
+  as a separate mode with an explicit "switch to the old chat experience"
+  affordance. Keep the templates/suggestions that matter; drop the rest
+  (dynamic suggestions are effectively non-existent today).
+- Message must appear immediately on Enter (optimistic render), paired with the
+  instant ack.
+- Collapse consecutive tool calls into one quiet "working/thinking" strip with
+  humane labels ("Reading a skill" is not intuitive). Keep raw inputs/outputs
+  available but tucked behind an expand (fine for devs, hidden for hosts).
+- Composer polish: better send button, centered empty state, larger copy
+  control, click-to-rename title, Duplicate in the three-dots menu.
+- Fixed: the "Do not send empty messages." degenerate reply (empty AI
+  tool-call turns + an over-eager nudge; see agent-nudge-fix).
+
+Omnipresent chat:
+- Lives as a right-side drawer available across the app, carrying the current
+  page as ui_context (validated server-side against the access ladder).
+- Permission-aware: it can only propose actions the current user may perform.
+  An admin can send invites; a normal user is told plainly they cannot, rather
+  than failing opaquely. The action registry's per-action policy is the
+  mechanism.
+- Can read a slice of its own codebase/docs to reason about product logic
+  (bounded, read-only, cached), inspired by Sam.
+- Performance is the constraint: optimized, scoped queries, not the existing
+  O(all conversations) patterns. The BFF/agent read paths must be lean.
+
+Tie into project creation: the setup flow should hand off to (or embed) the
+agentic assistant so a new host is guided from the first screen, using the
+same suggest-and-approve rail.
+
 ## Suggested sequencing
 
 Phase 0 and 1 are safe and mostly independent; ship first. Phase 2 (scoping) and
