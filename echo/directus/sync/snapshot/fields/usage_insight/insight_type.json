@@ -1,0 +1,67 @@
+{
+  "collection": "usage_insight",
+  "field": "insight_type",
+  "type": "string",
+  "meta": {
+    "collection": "usage_insight",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "insight_type",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": null,
+    "options": {
+      "choices": [
+        {
+          "text": "intent",
+          "value": "intent"
+        },
+        {
+          "text": "friction",
+          "value": "friction"
+        },
+        {
+          "text": "feature_request",
+          "value": "feature_request"
+        },
+        {
+          "text": "success",
+          "value": "success"
+        },
+        {
+          "text": "other",
+          "value": "other"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 7,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "insight_type",
+    "table": "usage_insight",
+    "data_type": "character varying",
+    "default_value": "intent",
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}
