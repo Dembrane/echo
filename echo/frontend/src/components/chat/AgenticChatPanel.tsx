@@ -506,6 +506,12 @@ export const AgenticChatPanel = ({
 	const [afterSeq, setAfterSeq] = useState(0);
 	const [events, setEvents] = useState<AgenticRunEvent[]>([]);
 	const [input, setInput] = useState("");
+	// Optimistic echo of the host's message so it appears the instant they
+	// hit send, before the run persists and streams it back.
+	const [pendingUserMessage, setPendingUserMessage] = useState<{
+		content: string;
+		timestamp: string;
+	} | null>(null);
 	const [templateKey, setTemplateKey] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isStopping, setIsStopping] = useState(false);
@@ -597,6 +603,18 @@ export const AgenticChatPanel = ({
 		}
 		return nodes;
 	}, [timeline]);
+
+	// Drop the optimistic echo once the persisted user message arrives.
+	useEffect(() => {
+		if (!pendingUserMessage) return;
+		const landed = timeline.some(
+			(item) =>
+				item.kind === "message" &&
+				item.role === "user" &&
+				item.content === pendingUserMessage.content,
+		);
+		if (landed) setPendingUserMessage(null);
+	}, [timeline, pendingUserMessage]);
 
 	// Free tier: max 3 user turns per chat. The 4th routes to upgrade.
 	const { workspace } = useWorkspace();
@@ -933,6 +951,10 @@ export const AgenticChatPanel = ({
 		setError(null);
 		setIsSubmitting(true);
 		setInput("");
+		setPendingUserMessage({
+			content: message,
+			timestamp: new Date().toISOString(),
+		});
 
 		try {
 			let targetRunId = runId;
@@ -967,6 +989,7 @@ export const AgenticChatPanel = ({
 				}
 			}
 		} catch (submitError) {
+			setPendingUserMessage(null);
 			// Backend safety net: free-tier turn cap returns 402.
 			if (isFreeTierLimitError(submitError) === "chat_turns") {
 				upgradeHandlers.open();
@@ -1148,6 +1171,27 @@ export const AgenticChatPanel = ({
 							/>
 						);
 					})}
+
+					{pendingUserMessage &&
+						!timeline.some(
+							(item) =>
+								item.kind === "message" &&
+								item.role === "user" &&
+								item.content === pendingUserMessage.content,
+						) && (
+							<div key="pending-user-message">
+								<ChatHistoryMessage
+									message={toHistoryMessage({
+										content: pendingUserMessage.content,
+										id: "pending-user-message",
+										role: "user",
+										sortSeq: Number.MAX_SAFE_INTEGER,
+										timestamp: pendingUserMessage.timestamp,
+									})}
+									chatMode="agentic"
+								/>
+							</div>
+						)}
 				</Stack>
 			</Box>
 
