@@ -89,17 +89,17 @@ type ToolContext = {
 const buildHeadline = (toolName: string, context: ToolContext) => {
 	switch (toolName) {
 		case "proposeProjectUpdate":
-			return "Suggesting project changes";
+			return t`Suggesting project changes`;
 		case "getProjectSettings":
-			return "Reading project settings";
+			return t`Reading project settings`;
 		case "grepDocs":
-			return "Searching the documentation";
+			return t`Searching the documentation`;
 		case "readDoc":
-			return "Reading the documentation";
+			return t`Reading the documentation`;
 		case "readSkill":
-			return "Reading a skill";
+			return t`Reading a skill`;
 		case "listDocs":
-			return "Listing documentation pages";
+			return t`Listing documentation pages`;
 		case "get_project_scope":
 			return t`Load project context`;
 		case "listProjectConversations":

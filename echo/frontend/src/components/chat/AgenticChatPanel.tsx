@@ -380,7 +380,7 @@ export const AgenticChatPanel = ({
 
 	const computedChatForCopy = useMemo(() => {
 		const messagesList = historyMessages.map((message) =>
-			formatMessage(message, "User", "Dembrane"),
+			formatMessage(message, "User", "dembrane"),
 		);
 		return messagesList.join("\n\n\n\n");
 	}, [historyMessages]);
@@ -802,14 +802,7 @@ export const AgenticChatPanel = ({
 						</ErrorBoundary>
 					</Group>
 				</Group>
-				<Group justify="space-between" gap="sm">
-					<Group gap="xs">
-						{runStatus && (
-							<Text size="sm" c="dimmed">
-								<Trans>Run status:</Trans> {runStatus}
-							</Text>
-						)}
-					</Group>
+				<Group justify="flex-end" gap="sm">
 					{isRunInFlight && (
 						<Button
 							variant="outline"
@@ -871,7 +864,7 @@ export const AgenticChatPanel = ({
 
 					{!showExistingChatLoading && timeline.length === 0 && (
 						<Text c="dimmed" size="sm">
-							<Trans>Send a message to start an agentic run.</Trans>
+							<Trans>Ask about your conversations to get started.</Trans>
 						</Text>
 					)}
 
@@ -915,7 +908,7 @@ export const AgenticChatPanel = ({
 														className={`mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full ${item.status === "running" ? "animate-pulse" : ""}`}
 														style={{ backgroundColor: statusMeta.dotColor }}
 													/>
-													<Text className="min-w-0 flex-1 truncate text-[11px] font-medium leading-4 text-slate-700">
+													<Text className="min-w-0 flex-1 truncate text-xs font-medium leading-4 text-slate-700">
 														{item.headline}
 													</Text>
 												</Group>
@@ -925,12 +918,12 @@ export const AgenticChatPanel = ({
 													className="shrink-0 self-start"
 												>
 													<Text
-														className="pt-[1px] text-[10px] font-semibold uppercase tracking-wide"
+														className="pt-[1px] text-xs font-semibold uppercase tracking-wide"
 														style={{ color: statusMeta.textColor }}
 													>
 														{statusMeta.label}
 													</Text>
-													<Text className="pt-[1px] text-[10px] text-slate-500">
+													<Text className="pt-[1px] text-xs text-slate-500">
 														{formatDate(new Date(item.timestamp), "h:mm a")}
 													</Text>
 													{hasRawData && (
@@ -968,13 +961,13 @@ export const AgenticChatPanel = ({
 												>
 													{item.rawInput && (
 														<Box>
-															<Text className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+															<Text className="text-xs font-semibold uppercase tracking-wide text-slate-500">
 																<Trans>Input</Trans>
 															</Text>
 															<Text
 																size="xs"
 																component="pre"
-																className="mt-1 whitespace-pre-wrap break-words rounded border border-slate-200 bg-slate-50 p-2 font-mono text-[11px] leading-4"
+																className="mt-1 whitespace-pre-wrap break-words rounded border border-slate-200 bg-slate-50 p-2 font-mono text-xs leading-4"
 															>
 																{item.rawInput}
 															</Text>
@@ -982,13 +975,13 @@ export const AgenticChatPanel = ({
 													)}
 													{item.rawOutput && (
 														<Box>
-															<Text className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+															<Text className="text-xs font-semibold uppercase tracking-wide text-slate-500">
 																<Trans>Output</Trans>
 															</Text>
 															<Text
 																size="xs"
 																component="pre"
-																className="mt-1 whitespace-pre-wrap break-words rounded border border-slate-200 bg-slate-50 p-2 font-mono text-[11px] leading-4"
+																className="mt-1 whitespace-pre-wrap break-words rounded border border-slate-200 bg-slate-50 p-2 font-mono text-xs leading-4"
 															>
 																{item.rawOutput}
 															</Text>
@@ -997,7 +990,7 @@ export const AgenticChatPanel = ({
 													{item.rawError && (
 														<Box>
 															<Text
-																className="text-[10px] font-semibold uppercase tracking-wide"
+																className="text-xs font-semibold uppercase tracking-wide"
 																style={{
 																	color:
 																		"var(--agentic-tool-status-error-text)",
@@ -1008,7 +1001,7 @@ export const AgenticChatPanel = ({
 															<Text
 																size="xs"
 																component="pre"
-																className="mt-1 whitespace-pre-wrap break-words rounded border border-red-100 bg-red-50 p-2 font-mono text-[11px] leading-4"
+																className="mt-1 whitespace-pre-wrap break-words rounded border border-red-100 bg-red-50 p-2 font-mono text-xs leading-4"
 															>
 																{item.rawError}
 															</Text>
@@ -1034,7 +1027,7 @@ export const AgenticChatPanel = ({
 				<Stack className="pb-2" gap="xs">
 					<Group
 						justify="center"
-						className="absolute bottom-[105%] left-1/2 z-50 hidden translate-x-[-50%] md:flex"
+						className="absolute bottom-[105%] right-4 z-50 hidden md:flex"
 					>
 						<ScrollToBottomButton
 							elementRef={scrollTargetRef}
@@ -1063,7 +1056,7 @@ export const AgenticChatPanel = ({
 										}}
 									/>
 								</Box>
-								<Text className="max-w-[min(70vw,32rem)] truncate text-[11px] font-medium text-slate-600">
+								<Text className="max-w-[min(70vw,32rem)] truncate text-xs font-medium text-slate-600">
 									{liveRunStatusText}
 								</Text>
 							</Group>
@@ -1093,7 +1086,7 @@ export const AgenticChatPanel = ({
 								maxRows={10}
 								value={input}
 								onChange={(event) => setInput(event.currentTarget.value)}
-								placeholder={t`Ask the agent...`}
+								placeholder={t`Ask about your conversations...`}
 								disabled={atTurnLimit}
 								onKeyDown={(event) => {
 									if (event.key === "Enter" && !event.shiftKey) {
