@@ -1084,7 +1084,7 @@ export const HostGuidePage = () => {
 		},
 	});
 
-	const sharingLink = useProjectSharingLink(project);
+	const sharingLink = useProjectSharingLink(project, "host_guide");
 	const langCode = (project?.language?.slice(0, 2) || "en") as LanguageCode;
 	const defaults = defaultTranslations[langCode] || defaultTranslations.en;
 	const askForName =

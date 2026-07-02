@@ -137,6 +137,14 @@ export const CreateWorkspaceRoute = () => {
 
 	useDocumentTitle(t`Create workspace | dembrane`);
 
+	// Funnel entry for the create-workspace wizard (pairs with workspace_created
+	// and workspace_ownership_changed to show drop-off and internal/external
+	// backtracking).
+	// biome-ignore lint/correctness/useExhaustiveDependencies: fire once on open
+	useEffect(() => {
+		posthog.capture("workspace_create_started");
+	}, []);
+
 	const adminOrganisations = useMemo(
 		() =>
 			(meV2?.orgs ?? []).filter(
@@ -477,7 +485,13 @@ export const CreateWorkspaceRoute = () => {
 									</Text>
 									<Radio.Group
 										value={billFor}
-										onChange={(v) => setBillFor(v as BillFor)}
+										onChange={(v) => {
+											posthog.capture("workspace_ownership_changed", {
+												from: billFor,
+												to: v,
+											});
+											setBillFor(v as BillFor);
+										}}
 									>
 										<Stack gap={10} mt={8}>
 											<Radio
@@ -756,6 +770,7 @@ export const CreateWorkspaceRoute = () => {
 				benefit={t`Upgrade your plan to create more workspaces in this organisation.`}
 				canRequestUpgrade
 				workspaceId=""
+				source="workspace_cap"
 			/>
 		</Container>
 	);

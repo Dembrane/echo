@@ -6,6 +6,7 @@ from typing import Any, Optional, AsyncGenerator
 from logging import getLogger
 
 from dembrane.service import chat_service, agentic_run_service
+from dembrane.analytics import capture_event
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.agentic_client import (
     AgenticTimeoutError,
@@ -426,6 +427,22 @@ async def _append_assistant_message(
         )
 
 
+async def _chat_distinct_id(run: dict, run_id: str) -> str:
+    """Resolve a PostHog distinct_id (the chat user's email) so server chat
+    events merge with the user's frontend person. Falls back to the directus
+    user id, then the run id. Best-effort."""
+    directus_user_id = str(run.get("directus_user_id") or "")
+    if not directus_user_id:
+        return run_id
+    try:
+        from dembrane.app_user import resolve_app_user
+
+        app_user = await resolve_app_user(directus_user_id)
+        return ((app_user or {}).get("email") or "").lower() or directus_user_id
+    except Exception:  # noqa: BLE001 — analytics is best-effort
+        return directus_user_id
+
+
 async def process_agentic_run(
     *,
     run_id: str,
@@ -439,6 +456,20 @@ async def process_agentic_run(
     svc = run_service or agentic_run_service
     run = await run_in_thread_pool(svc.get_by_id_or_raise, run_id)
     project_chat_id = str(run.get("project_chat_id") or "")
+    chat_distinct_id = await _chat_distinct_id(run, run_id)
+
+    async def _emit_chat_error(error_code: str, message: str) -> None:
+        await capture_event(
+            chat_distinct_id,
+            "server_chat_error",
+            {
+                "run_id": run_id,
+                "project_id": project_id,
+                "error_code": error_code,
+                "message": message[:300],
+                "mode": "agentic",
+            },
+        )
     latest_output: str | None = None
     total_tool_start_count = 0
     counted_tool_start_count = 0
@@ -613,8 +644,19 @@ async def process_agentic_run(
             "completed",
             latest_output=latest_output,
         )
+        await capture_event(
+            chat_distinct_id,
+            "server_chat_response_received",
+            {
+                "run_id": run_id,
+                "project_id": project_id,
+                "has_output": latest_output is not None,
+                "mode": "agentic",
+            },
+        )
     except (AgenticRunCancelledError, asyncio.CancelledError):
         logger.info("Run %s cancelled for turn %s", run_id, turn_seq)
+        await _emit_chat_error(AGENT_CANCELLED_ERROR_CODE, AGENT_CANCELLED_MESSAGE)
         await _append_event_and_publish(
             svc,
             run_id,
@@ -633,6 +675,7 @@ async def process_agentic_run(
         )
     except AgenticTimeoutError as exc:
         logger.warning("Run %s timed out: %s", run_id, exc)
+        await _emit_chat_error("AGENT_TIMEOUT", str(exc))
         await _append_event_and_publish(
             svc,
             run_id,
@@ -648,6 +691,7 @@ async def process_agentic_run(
         )
     except AgenticUpstreamError as exc:
         logger.warning("Run %s failed upstream: %s", run_id, exc)
+        await _emit_chat_error(exc.error_code, exc.message)
         await _append_event_and_publish(
             svc,
             run_id,
@@ -667,6 +711,7 @@ async def process_agentic_run(
         )
     except Exception as exc:  # noqa: BLE001
         logger.exception("Run %s failed unexpectedly", run_id)
+        await _emit_chat_error("AGENT_UNEXPECTED_ERROR", str(exc))
         await _append_event_and_publish(
             svc,
             run_id,

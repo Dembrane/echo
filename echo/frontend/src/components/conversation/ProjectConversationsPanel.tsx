@@ -998,6 +998,7 @@ export const ProjectConversationsPanel = ({
 					workspace?.role === "admin" || workspace?.role === "owner"
 				}
 				workspaceId={resolvedWorkspaceId ?? ""}
+				source="transcript_locked"
 			/>
 		</Stack>
 	);

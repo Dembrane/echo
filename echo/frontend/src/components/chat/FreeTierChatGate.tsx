@@ -46,6 +46,7 @@ export function ChatUpgradeModal({
 			}
 			canRequestUpgrade={isAdmin}
 			workspaceId={workspace?.id ?? ""}
+			source={isChatLimit ? "chat_cap" : "chat_turn_cap"}
 		/>
 	);
 }

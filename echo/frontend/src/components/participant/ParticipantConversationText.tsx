@@ -40,7 +40,7 @@ export const ParticipantConversationText = () => {
 	const conversationQuery = useConversationQuery(projectId, conversationId);
 	const chunks = useConversationChunksQuery(projectId, conversationId);
 	const uploadChunkMutation = useUploadConversationTextChunk();
-	const newConversationLink = useProjectSharingLink(projectQuery.data);
+	const newConversationLink = useProjectSharingLink(projectQuery.data, "portal");
 
 	const [text, setText] = useState("");
 	const [
