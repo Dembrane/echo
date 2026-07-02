@@ -357,7 +357,7 @@ async def test_process_agentic_run_splits_planning_and_final_synthesis(monkeypat
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_falls_back_to_default_intro_when_model_has_no_plan(
+async def test_process_agentic_run_posts_no_synthetic_intro_when_model_has_no_plan(
     monkeypatch,
 ) -> None:
     service = _build_service()
@@ -413,10 +413,10 @@ async def test_process_agentic_run_falls_back_to_default_intro_when_model_has_no
     events = service.list_events(run["id"])
     assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
 
-    assert assistant_events[0]["payload"]["content"] == (
-        "I'll first gather evidence before answering. Starting with `listProjectConversations`."
-    )
-    assert assistant_events[1]["payload"]["content"] == "Final answer only."
+    # No synthetic "starting with `tool`" intro is posted anymore: it leaked
+    # raw tool names and was English-only. Only the model's own output lands.
+    assert len(assistant_events) == 1
+    assert assistant_events[0]["payload"]["content"] == "Final answer only."
 
 
 @pytest.mark.asyncio
@@ -499,21 +499,12 @@ async def test_process_agentic_run_logs_hidden_nudge_without_midpoint_fallback(m
         "total_tool_calls": 5,
     }
 
-    assert len(assistant_events) == 2
-    assert assistant_events[0]["payload"]["content"] == (
-        "I'll first gather evidence before answering. Starting with `tool-1`."
-    )
-    assert assistant_events[1]["payload"]["content"] == "Final answer only."
+    assert len(assistant_events) == 1
+    assert assistant_events[0]["payload"]["content"] == "Final answer only."
     assert all("rough picture" not in event["payload"]["content"] for event in assistant_events)
     assert fake_chat_service.created_messages == [
         {
             "id": "msg-1",
-            "project_chat_id": "chat-1",
-            "message_from": "assistant",
-            "text": "I'll first gather evidence before answering. Starting with `tool-1`.",
-        },
-        {
-            "id": "msg-2",
             "project_chat_id": "chat-1",
             "message_from": "assistant",
             "text": "Final answer only.",
@@ -614,7 +605,7 @@ async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_upd
     assistant_texts = [event["payload"]["content"] for event in assistant_events]
 
     assert assistant_texts == [
-        "I have a rough picture now.\n\nNext steps: I will verify two more conversations.",
+        "I have a rough picture now.\n\nI will verify two more conversations.",
         "Final answer only.",
     ]
     assert not any(text.startswith("I'll first gather evidence") for text in assistant_texts)
@@ -623,7 +614,7 @@ async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_upd
             "id": "msg-1",
             "project_chat_id": "chat-1",
             "message_from": "assistant",
-            "text": "I have a rough picture now.\n\nNext steps: I will verify two more conversations.",
+            "text": "I have a rough picture now.\n\nI will verify two more conversations.",
         },
         {
             "id": "msg-2",
@@ -713,8 +704,7 @@ async def test_process_agentic_run_uses_progress_tool_output_from_toolmessage_sh
     assistant_texts = [event["payload"]["content"] for event in assistant_events]
 
     assert assistant_texts == [
-        "I'll first gather evidence before answering. Starting with `sendProgressUpdate`.",
-        "I have a rough picture now.\n\nNext steps: I will verify two more conversations.",
+        "I have a rough picture now.\n\nI will verify two more conversations.",
         "Final answer only.",
     ]
     assert fake_chat_service.created_messages == [
@@ -722,16 +712,10 @@ async def test_process_agentic_run_uses_progress_tool_output_from_toolmessage_sh
             "id": "msg-1",
             "project_chat_id": "chat-1",
             "message_from": "assistant",
-            "text": "I'll first gather evidence before answering. Starting with `sendProgressUpdate`.",
+            "text": "I have a rough picture now.\n\nI will verify two more conversations.",
         },
         {
             "id": "msg-2",
-            "project_chat_id": "chat-1",
-            "message_from": "assistant",
-            "text": "I have a rough picture now.\n\nNext steps: I will verify two more conversations.",
-        },
-        {
-            "id": "msg-3",
             "project_chat_id": "chat-1",
             "message_from": "assistant",
             "text": "Final answer only.",
@@ -911,18 +895,10 @@ async def test_process_agentic_run_keeps_tool_call_limit_safety(monkeypatch) -> 
     assistant_texts = [event["payload"]["content"] for event in assistant_events]
 
     assert stored_run["status"] == "completed"
-    assert stored_run["latest_output"] == (
-        "I reached the tool-call limit before gathering enough additional evidence for a fuller synthesis. "
-        "If you want, send `go on` and I'll continue from this exact point."
-    )
-    assert (
-        "I've reached my tool-call limit for this turn. "
-        "I'll stop searching here and summarize what I can reliably infer."
-    ) in assistant_texts
-    assert assistant_events[-1]["payload"]["content"] == (
-        "I reached the tool-call limit before gathering enough additional evidence for a fuller synthesis. "
-        "If you want, send `go on` and I'll continue from this exact point."
-    )
+    # One honest message at the limit; no verbatim repeat of earlier output.
+    assert stored_run["latest_output"] == "I've reached my tool-call limit for this turn, so I'll answer from what I've gathered so far. If you'd like me to keep digging, just ask."
+    assert assistant_texts.count("I've reached my tool-call limit for this turn, so I'll answer from what I've gathered so far. If you'd like me to keep digging, just ask.") == 1
+    assert assistant_events[-1]["payload"]["content"] == "I've reached my tool-call limit for this turn, so I'll answer from what I've gathered so far. If you'd like me to keep digging, just ask."
 
 
 @pytest.mark.asyncio
@@ -1037,7 +1013,7 @@ async def test_process_agentic_run_excludes_send_progress_update_from_tool_limit
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_tool_limit_summary_uses_last_substantive_update(monkeypatch) -> None:
+async def test_process_agentic_run_tool_limit_does_not_repeat_last_update(monkeypatch) -> None:
     service = _build_service()
     run = service.create_run(project_id="project-1", directus_user_id="user-1")
 
@@ -1095,13 +1071,11 @@ async def test_process_agentic_run_tool_limit_summary_uses_last_substantive_upda
     assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
     assistant_texts = [event["payload"]["content"] for event in assistant_events]
 
-    assert assistant_texts[-2] == (
-        "I've reached my tool-call limit for this turn. "
-        "I'll stop searching here and summarize what I can reliably infer."
-    )
-    assert assistant_texts[-1] == (
-        "Here is my best synthesis from the evidence gathered so far:\n\nCurrent synthesis draft."
-    )
+    # The turn ends with the single limit message; the earlier substantive
+    # update ("Current synthesis draft.") is already in the thread and is not
+    # repeated verbatim.
+    assert assistant_texts[-1] == "I've reached my tool-call limit for this turn, so I'll answer from what I've gathered so far. If you'd like me to keep digging, just ask."
+    assert assistant_texts.count("Current synthesis draft.") == 1
 
 
 @pytest.mark.asyncio
