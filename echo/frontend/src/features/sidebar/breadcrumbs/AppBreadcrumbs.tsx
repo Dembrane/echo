@@ -7,6 +7,8 @@ import { useConversationById } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSidebarView } from "../hooks/useSidebarView";
+import { useSidebarState } from "../hooks/useSidebarState";
+import { useV2Me } from "@/hooks/useV2Me";
 
 interface Crumb {
 	label: string;
@@ -81,6 +83,9 @@ const ORG_SETTINGS_LABELS: Record<string, string> = {
 // Render when there is at least 1 meaningful crumb to show.
 export const AppBreadcrumbs = () => {
 	const { view, params } = useSidebarView();
+	const { collapsed } = useSidebarState();
+	const { data: me } = useV2Me();
+	const isCollapsible = !!me?.settings?.enable_collapsible_sidebar;
 	const { orgId: routeOrgId, organisationId } = useParams<{
 		orgId?: string;
 		organisationId?: string;
@@ -267,9 +272,13 @@ export const AppBreadcrumbs = () => {
 
 	return (
 		<nav
-			className="flex h-[57px] shrink-0 items-center gap-1 px-4 text-xs print:hidden"
+			className="flex h-[57px] shrink-0 items-center gap-1 text-xs print:hidden"
 			aria-label="Breadcrumb"
-			style={{ color: "rgba(45, 45, 44, 0.55)" }}
+			style={{
+				color: "rgba(45, 45, 44, 0.55)",
+				paddingLeft: isCollapsible && collapsed ? "52px" : "16px",
+				paddingRight: "16px",
+			}}
 		>
 			{crumbs.map((c, i) => {
 				const isLast = i === crumbs.length - 1;
