@@ -29,10 +29,11 @@ def docs_root() -> Optional[Path]:
     if override:
         return Path(override) if Path(override).is_dir() else None
     here = Path(__file__).resolve().parent
-    return _first_existing(
-        here / "knowledge" / "docs",       # container image
-        here.parents[1] / "docs",          # repo checkout (echo/agent -> repo root)
-    )
+    candidates = [here / "knowledge" / "docs"]  # container image (/app/knowledge/docs)
+    if len(here.parents) >= 2:
+        # repo checkout: echo/agent/knowledge.py -> <repo>/docs
+        candidates.append(here.parents[1] / "docs")
+    return _first_existing(*candidates)
 
 
 def skills_root() -> Optional[Path]:
@@ -72,7 +73,10 @@ def read_doc(path: str, offset: int = 1, limit: int = _MAX_READ_LINES) -> str:
     start = max(offset, 1)
     end = min(start - 1 + max(1, min(limit, _MAX_READ_LINES)), len(lines))
     numbered = [f"{i}: {lines[i - 1]}" for i in range(start, end + 1)]
-    suffix = "" if end >= len(lines) else f"\n... ({len(lines) - end} more lines; call readDoc with offset={end + 1})"
+    if end >= len(lines):
+        suffix = ""
+    else:
+        suffix = f"\n... ({len(lines) - end} more lines; call readDoc with offset={end + 1})"
     return "\n".join(numbered) + suffix
 
 

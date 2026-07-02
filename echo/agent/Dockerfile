@@ -10,8 +10,12 @@ RUN apt-get update \
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 WORKDIR /app
-COPY echo/agent/pyproject.toml ./
-RUN uv sync --frozen || uv sync
+# Copy the lockfile too so the build resolves the SAME, tested dependency
+# set (uv sync --frozen). Without the lock at this step, uv resolves fresh
+# against pyproject ranges and can pull a newer copilotkit that dropped
+# LangGraphAgent — which then gets baked in and served (CMD uses --no-sync).
+COPY echo/agent/pyproject.toml echo/agent/uv.lock ./
+RUN uv sync --frozen
 
 COPY echo/agent/ .
 # Product docs corpus for the agent's read-only knowledge FS
