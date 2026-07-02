@@ -993,6 +993,9 @@ export const AgenticChatPanel = ({
 			}
 		} catch (submitError) {
 			setPendingUserMessage(null);
+			// Don't strand the host's message when the send fails: restore it to
+			// the composer so it isn't lost (unless they've already typed a new one).
+			setInput((current) => (current.length === 0 ? message : current));
 			// Backend safety net: free-tier turn cap returns 402.
 			if (isFreeTierLimitError(submitError) === "chat_turns") {
 				upgradeHandlers.open();
