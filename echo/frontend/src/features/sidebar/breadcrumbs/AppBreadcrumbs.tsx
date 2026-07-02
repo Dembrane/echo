@@ -2,6 +2,7 @@ import { CaretRightIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
+import { useChat } from "@/components/chat/hooks";
 import { useConversationById } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -92,10 +93,11 @@ export const AppBreadcrumbs = () => {
 	});
 	// Same default args as the detail page, so this reads its cached entry
 	// instead of issuing a second request.
-	const conversationQuery = useConversationById({
-		conversationId: params.conversationId ?? "",
-		useQueryOpts: { enabled: !!params.conversationId },
-	});
+		const conversationQuery = useConversationById({
+			conversationId: params.conversationId ?? "",
+			useQueryOpts: { enabled: !!params.conversationId },
+		});
+		const chatQuery = useChat(params.chatId ?? "");
 
 	const workspace = useMemo(
 		() => workspaces.find((w) => w.id === params.workspaceId),
@@ -198,57 +200,68 @@ export const AppBreadcrumbs = () => {
 						label: projectQuery.data.name,
 					});
 				}
-				const section = params.section;
-				if (section === "conversations" && params.conversationId) {
-					// Detail page: link back to the conversations list first.
-					out.push({
-						href: `/w/${params.workspaceId}/projects/${params.projectId}/conversations`,
-						label: PROJECT_SECTION_LABELS.conversations,
-					});
-					out.push({
-						label:
-							conversationQuery.data?.title?.trim() ||
-							conversationQuery.data?.participant_name?.trim() ||
-							PROJECT_SECTION_LABELS.conversation,
-					});
-				} else if (
-					section &&
-					section !== "home" &&
-					PROJECT_SECTION_LABELS[section]
-				) {
-					out.push({ label: PROJECT_SECTION_LABELS[section] });
+					const section = params.section;
+					if (section === "conversations" && params.conversationId) {
+						// Detail page: link back to the conversations list first.
+						out.push({
+							href: `/w/${params.workspaceId}/projects/${params.projectId}/conversations`,
+							label: PROJECT_SECTION_LABELS.conversations,
+						});
+						out.push({
+							label:
+								conversationQuery.data?.title?.trim() ||
+								conversationQuery.data?.participant_name?.trim() ||
+								PROJECT_SECTION_LABELS.conversation,
+						});
+					} else if (section === "chats" && params.chatId && params.chatId !== "new") {
+						out.push({
+							href: `/w/${params.workspaceId}/projects/${params.projectId}/chats/new`,
+							label: PROJECT_SECTION_LABELS.chats,
+						});
+						out.push({
+							label:
+								chatQuery.data?.name?.trim() ||
+								PROJECT_SECTION_LABELS.chats,
+						});
+					} else if (
+						section &&
+						section !== "home" &&
+						PROJECT_SECTION_LABELS[section]
+					) {
+						out.push({ label: PROJECT_SECTION_LABELS[section] });
+					}
+					return out;
 				}
-				return out;
+				case "project-settings": {
+					if (workspace) {
+						pushWorkspaceCrumbs(workspace);
+					}
+					if (projectQuery.data?.name) {
+						out.push({
+							href: `/w/${params.workspaceId}/projects/${params.projectId}/home`,
+							label: projectQuery.data.name,
+						});
+					}
+					out.push({ label: "Settings" });
+					const section = params.section;
+					if (section === "access") out.push({ label: "Access" });
+					else if (section === "usage") out.push({ label: "Usage" });
+					else if (section === "overview") out.push({ label: "General" });
+					else if (section === "integrations")
+						out.push({ label: "Integrations & Export" });
+					return out;
+				}
 			}
-			case "project-settings": {
-				if (workspace) {
-					pushWorkspaceCrumbs(workspace);
-				}
-				if (projectQuery.data?.name) {
-					out.push({
-						href: `/w/${params.workspaceId}/projects/${params.projectId}/home`,
-						label: projectQuery.data.name,
-					});
-				}
-				out.push({ label: "Settings" });
-				const section = params.section;
-				if (section === "access") out.push({ label: "Access" });
-				else if (section === "usage") out.push({ label: "Usage" });
-				else if (section === "overview") out.push({ label: "General" });
-				else if (section === "integrations")
-					out.push({ label: "Integrations & Export" });
-				return out;
-			}
-		}
-		return out;
-	}, [
-		view,
-		params,
-		workspace,
-		orgNameForId,
-		projectQuery.data?.name,
-		conversationQuery.data,
-	]);
+			return out;
+		}, [
+			view,
+			params,
+			workspace,
+			orgNameForId,
+			projectQuery.data?.name,
+			conversationQuery.data,
+			chatQuery.data,
+		]);
 
 	if (crumbs.length === 0) return null;
 
