@@ -58,6 +58,12 @@ class AgenticAppendMessageSchema(BaseModel):
     language: str = Field(default="en", min_length=1)
 
 
+class AgenticSupportRequestSchema(BaseModel):
+    message: str = Field(..., min_length=1)
+    # A short note from the assistant about what the host was doing / needs.
+    page_context: Optional[str] = None
+
+
 def _run_task_key(run_id: str, turn_seq: int) -> tuple[str, int]:
     return (run_id, turn_seq)
 
@@ -994,6 +1000,39 @@ async def read_chat_for_agent(
         for m in msgs_list
         if isinstance(m, dict)
     ]
+
+
+@AgenticRouter.post("/projects/{project_id}/support-request")
+async def create_support_request(
+    project_id: str,
+    body: AgenticSupportRequestSchema,
+    auth: DependencyDirectusSession,
+) -> JSONResponse:
+    """Raise a support request to the dembrane team on the host's behalf.
+
+    Writes a support_request row (an outbox); a separate job forwards new rows
+    to the team. The assistant never contacts anyone directly."""
+    await _assert_project_access(project_id, auth)
+
+    project = await async_directus.get_item("project", project_id)
+    workspace_id = project.get("workspace_id") if isinstance(project, dict) else None
+
+    created = await async_directus.create_item(
+        "support_request",
+        {
+            "workspace_id": workspace_id,
+            "project_id": project_id,
+            "directus_user_id": auth.user_id,
+            "message": body.message,
+            "page_context": body.page_context,
+            "status": "new",
+        },
+    )
+    support_request_id = created.get("id") if isinstance(created, dict) else None
+    return JSONResponse(
+        status_code=201,
+        content={"id": support_request_id, "status": "new"},
+    )
 
 
 @AgenticRouter.post("/runs/{run_id}/stream")

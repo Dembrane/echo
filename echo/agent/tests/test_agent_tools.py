@@ -46,6 +46,7 @@ class _FakeEchoClient:
         self.project_conversations_calls: list[dict[str, object]] = []
         self.project_chats_calls: list[dict[str, object]] = []
         self.read_chat_calls: list[dict[str, object]] = []
+        self.support_request_calls: list[dict[str, object]] = []
         self.closed = False
 
     async def search_home(self, query: str, limit: int = 5) -> dict:
@@ -98,6 +99,21 @@ class _FakeEchoClient:
     async def read_chat(self, chat_id: str, limit: int = 100) -> list[dict]:
         self.read_chat_calls.append({"chat_id": chat_id, "limit": limit})
         return self.chat_messages_payload
+
+    async def create_support_request(
+        self,
+        project_id: str,
+        message: str,
+        page_context: str | None = None,
+    ) -> dict:
+        self.support_request_calls.append(
+            {
+                "project_id": project_id,
+                "message": message,
+                "page_context": page_context,
+            }
+        )
+        return {"id": "sr-1", "status": "new"}
 
     async def close(self) -> None:
         self.closed = True
@@ -770,3 +786,41 @@ async def test_read_chat_passes_chat_id_and_returns_messages():
     assert [m["message_from"] for m in result["messages"]] == ["user", "assistant"]
     assert factory.instances[0].read_chat_calls == [{"chat_id": "chat-1", "limit": 100}]
     assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_reach_out_to_dembrane_sends_support_request_for_current_project():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["reachOutToDembrane"].ainvoke(
+        {"message": "My exports are failing", "context": "on the reports page"}
+    )
+
+    assert result["sent"] is True
+    assert result["support_request_id"] == "sr-1"
+    assert factory.instances[0].support_request_calls == [
+        {
+            "project_id": "project-1",
+            "message": "My exports are failing",
+            "page_context": "on the reports page",
+        }
+    ]
+    assert factory.instances[0].closed is True
+
+
+def test_system_prompt_offers_dembrane_support_path():
+    prompt = SYSTEM_PROMPT.lower()
+    assert "getting help from the dembrane team" in prompt
+    assert "the dembrane team" in prompt

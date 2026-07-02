@@ -137,3 +137,17 @@ class EchoClient:
         response.raise_for_status()
         payload = response.json()
         return payload if isinstance(payload, list) else []
+
+    async def create_support_request(
+        self,
+        project_id: str,
+        message: str,
+        page_context: Optional[str] = None,
+    ) -> dict[str, Any]:
+        response = await self._client.post(
+            f"/agentic/projects/{project_id}/support-request",
+            json={"message": message, "page_context": page_context},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
