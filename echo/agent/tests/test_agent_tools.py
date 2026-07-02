@@ -119,23 +119,28 @@ def _tool_map(tools) -> dict[str, object]:  # noqa: ANN001
 
 def test_system_prompt_contains_conversational_and_research_directives():
     prompt = SYSTEM_PROMPT.lower()
+    # Brand voice: the word AI is banned, dembrane stays lowercase
+    assert 'never use the word "ai"' in prompt
+    assert "dembrane" in prompt and "Dembrane" not in SYSTEM_PROMPT
     # Conversational-first behavior
-    assert "conversational" in prompt
-    assert "greetings" in prompt
     assert "do not use tools for greetings" in prompt
-    # Writing/analysis guidance should be present
-    assert "writing style" in prompt
-    assert "analysis guidelines" in prompt
-    # Citation policy still anchors output quality
+    # Honesty + scope + turn-instruction sections exist
+    assert "honesty" in prompt
+    assert "conversation scope" in prompt
+    assert "turn instructions" in prompt
+    # The agent never applies changes itself
+    assert "you never apply" in prompt
+    # Citation policy still anchors output quality (format is load-bearing:
+    # parsed by AgenticChatPanel.tsx)
     assert '"[participant name]: quoted text"' in prompt
     assert "[conversation_id:<id>;chunk_id:<chunk_id>]" in SYSTEM_PROMPT
     assert "[conversation_id:<id>]" in SYSTEM_PROMPT
-    assert "working from summaries only" in prompt
-    assert "retrieve the full transcript" in prompt
+    assert "worked from summaries only" in prompt
+    assert "read the full transcript" in prompt
     assert "never fabricate quotes" in prompt
     # Project context awareness
     assert "project context" in prompt
-    assert "background info" in prompt
+    assert "background about the project" in prompt
 
 
 @pytest.mark.asyncio
