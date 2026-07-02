@@ -1,0 +1,40 @@
+{
+  "name": "dembrane documentation",
+  "short_name": "dembrane docs",
+  "description": "Capture, transcribe, and make sense of conversations at scale - guides for every kind of dembrane user.",
+  "background_color": "#f6f4f1",
+  "theme_color": "#4169e1",
+  "icons": [
+    { "src": "assets/logomark-on-light.png", "type": "image/png", "sizes": "1000x1000" }
+  ],
+  "readme_site": {
+    "fg": "#2d2d2c",
+    "font": "Lexend",
+    "logo_dark": "assets/logomark-on-dark.png",
+    "dark": {
+      "bg": "#2d2d2c",
+      "fg": "#f6f4f1",
+      "accent": "#9db4f0",
+      "line": "hsla(47, 43%, 96%, 0.22)",
+      "muted": "hsla(47, 43%, 96%, 0.62)"
+    },
+    "i18n": {
+      "defaultLocale": "en-UK",
+      "locales": [
+        { "code": "en-UK", "label": "EN" },
+        { "code": "nl-NL", "label": "NL" }
+      ]
+    },
+    "comments": {
+      "provider": "giscus",
+      "repo": "dembrane/echo",
+      "repoId": "R_kgDON3Eo9Q",
+      "category": "General",
+      "categoryId": "DIC_kwDON3Eo9c4Coxo5",
+      "mapping": "pathname",
+      "reactions": true,
+      "inputPosition": "top",
+      "lang": "en"
+    }
+  }
+}
