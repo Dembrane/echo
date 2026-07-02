@@ -674,7 +674,6 @@ export const ConversationAccordion = ({
 	// Get chat context to check mode
 	const chatContextQuery = useProjectChatContext(chatId ?? "");
 	const chatMode = chatContextQuery.data?.chat_mode;
-	const isOverviewMode = chatMode === "overview";
 
 	// Workspace usage gating for uploads
 	const projectForWs = useProjectById({
