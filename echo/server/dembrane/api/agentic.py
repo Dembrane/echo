@@ -93,12 +93,18 @@ def _require_agent_token(auth: DirectusSession) -> str:
     return auth.access_token
 
 
-def _assert_project_authorized(project: dict[str, Any], auth: DirectusSession) -> None:
-    owner_user_id = project.get("directus_user_id")
+async def _assert_project_access(project_id: str, auth: DirectusSession) -> None:
+    """v2 access gate shared with the chat BFF: any workspace member whose
+    role grants chat:use can drive the agent (the old check required the
+    project creator, which 403'd members the read tools already serve).
+    Staff admins bypass the app-layer model (they may have no app_user row).
+    Non-members get 404, matching the ladder's don't-confirm-existence rule."""
     if auth.is_admin:
         return
-    if owner_user_id != auth.user_id:
-        raise HTTPException(status_code=403, detail="Not authorized for this project")
+    from dembrane.api.v2.bff._access import resolve_project_access
+
+    access = await resolve_project_access(project_id, auth)
+    access.require("chat:use")
 
 
 def _assert_run_authorized(run: dict[str, Any], auth: DirectusSession) -> None:
@@ -515,7 +521,7 @@ async def create_run(
         logger.warning("Project %s not found while creating run", body.project_id)
         raise HTTPException(status_code=404, detail="Project not found") from exc
 
-    _assert_project_authorized(project, auth)
+    await _assert_project_access(body.project_id, auth)
 
     # Matrix §8: agentic analysis is a host-side operation → Pilot hard-block.
     from dembrane.api.v2.middleware import check_no_pilot_block_for_project
@@ -627,12 +633,12 @@ async def list_project_conversations(
     _require_agent_token(auth)
 
     try:
-        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
+        await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
     except Exception as exc:  # noqa: BLE001
         logger.warning("Project %s not found while listing project conversations", project_id)
         raise HTTPException(status_code=404, detail="Project not found") from exc
 
-    _assert_project_authorized(project, auth)
+    await _assert_project_access(project_id, auth)
     return await run_in_thread_pool(
         _list_project_conversations_for_agent,
         project_id=project_id,
