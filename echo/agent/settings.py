@@ -1,13 +1,30 @@
+import json
 from functools import lru_cache
+from typing import Any, Optional
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     echo_api_url: str = Field(default="http://localhost:8000/api", alias="ECHO_API_URL")
-    gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
-    llm_model: str = Field(default="gemini-3-pro-preview", alias="LLM_MODEL")
+    # Vertex model id (no provider prefix). Gemini 3.x is served on the
+    # global Vertex host only; see vertex_api_endpoint below.
+    llm_model: str = Field(default="gemini-3.5-flash", alias="LLM_MODEL")
+    vertex_location: str = Field(default="eu", alias="VERTEX_LOCATION")
+    # Pinning the global host while keeping locations/<region> in the request
+    # path mirrors the server's LiteLLM config (validated in production):
+    # the regional eu-aiplatform host 404s for gemini-3.x models.
+    vertex_api_endpoint: str = Field(
+        default="aiplatform.googleapis.com", alias="VERTEX_API_ENDPOINT"
+    )
+    vertex_project: str = Field(default="", alias="VERTEX_PROJECT")
+    # Service-account JSON blob. VERTEX_CREDENTIALS wins over GCP_SA_JSON;
+    # with neither set, Application Default Credentials apply.
+    vertex_credentials: Optional[dict[str, Any]] = Field(
+        default=None, alias="VERTEX_CREDENTIALS"
+    )
+    gcp_sa_json: Optional[dict[str, Any]] = Field(default=None, alias="GCP_SA_JSON")
     agent_graph_recursion_limit: int = Field(
         default=80,
         alias="AGENT_GRAPH_RECURSION_LIMIT",
@@ -16,6 +33,18 @@ class Settings(BaseSettings):
         default="http://localhost:5173,http://localhost:5174",
         alias="AGENT_CORS_ORIGINS",
     )
+
+    @field_validator("vertex_credentials", "gcp_sa_json", mode="before")
+    @classmethod
+    def _parse_service_account_json(cls, value: Any) -> Optional[dict[str, Any]]:
+        if value is None or isinstance(value, dict):
+            return value
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped:
+                return None
+            return json.loads(stripped)
+        raise ValueError("Expected a JSON object or JSON string")
 
     class Config:
         env_file = ".env"
