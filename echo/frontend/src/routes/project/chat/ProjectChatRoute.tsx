@@ -160,6 +160,18 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 			if (lastInput.current) {
 				setInput(lastInput.current);
 			}
+			// This is the non-agentic chat path, so the browser is the only place
+			// that sees a failed response. Split out rate limits (the explore /
+			// usage-cap signal) from other errors.
+			const msg = (error?.message ?? "").toLowerCase();
+			const isRateLimited =
+				msg.includes("429") ||
+				msg.includes("rate limit") ||
+				msg.includes("too many");
+			posthog?.capture(isRateLimited ? "chat_rate_limited" : "chat_error", {
+				chat_id: chatId,
+				message: error?.message?.slice(0, 300),
+			});
 			console.log("onError", error);
 		},
 		onFinish: async (message) => {

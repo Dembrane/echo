@@ -63,6 +63,7 @@ import {
 import { ReportRenderer } from "@/components/report/ReportRenderer";
 import { ReportTimeline } from "@/components/report/ReportTimeline";
 import { UpdateReportModalButton } from "@/components/report/UpdateReportModalButton";
+import posthog from "posthog-js";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -793,7 +794,7 @@ export const ProjectReportRoute = () => {
 		closeDeleteModal();
 	};
 
-	const contributionLink = `${PARTICIPANT_BASE_URL}/${language}/${projectId}/start`;
+	const contributionLink = `${PARTICIPANT_BASE_URL}/${language}/${projectId}/start?utm_source=report`;
 
 	const getSharingLink = (pid: string) =>
 		`${PARTICIPANT_BASE_URL}/${language}/${pid}/report`;
@@ -1107,6 +1108,10 @@ export const ProjectReportRoute = () => {
 														checked={data.show_portal_link ?? true}
 														size="sm"
 														onChange={(e) => {
+															posthog.capture("report_made_public", {
+																enabled: !!e.target.checked,
+																report_id: data.id,
+															});
 															updateReport({
 																payload: {
 																	show_portal_link: !!e.target.checked,
@@ -1144,6 +1149,9 @@ export const ProjectReportRoute = () => {
 														leftSection={<IconLink size={14} />}
 														onClick={() => {
 															if (data.status === "published") {
+																posthog.capture("report_link_copied", {
+																	report_id: data.id,
+																});
 																copyLink(getSharingLink(projectId ?? ""));
 															}
 														}}
@@ -1192,6 +1200,10 @@ export const ProjectReportRoute = () => {
 														onClick={() => {
 															const url = getSharingLink(projectId ?? "");
 															if (data.status === "published") {
+																posthog.capture("report_exported", {
+																	method: "share",
+																	report_id: data.id,
+																});
 																if (url && navigator.canShare?.({ url })) {
 																	navigator.share({ url });
 																} else {
@@ -1208,6 +1220,10 @@ export const ProjectReportRoute = () => {
 														leftSection={<IconPrinter size={16} />}
 														onClick={() => {
 															if (data.status === "published") {
+																posthog.capture("report_exported", {
+																	method: "print",
+																	report_id: data.id,
+																});
 																window.open(
 																	`${getSharingLink(projectId ?? "")}?print=true`,
 																	"_blank",

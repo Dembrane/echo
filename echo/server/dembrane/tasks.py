@@ -1246,6 +1246,27 @@ def task_report_summarization_done(report_id: int) -> None:
         client.close()
 
 
+def _report_event_distinct_id(report_id_str: str, project_id: str) -> str:
+    """Resolve the PostHog distinct_id for server-side report events: the
+    report creator's email, so these merge with the creator's frontend person.
+    Falls back to the directus user id, then the project id. Best-effort."""
+    log = getLogger("dembrane.tasks.analytics")
+    try:
+        from dembrane.app_user import resolve_app_user
+
+        with directus_client_context() as client:
+            report_row = client.get_item("project_report", report_id_str)
+        report_data = (report_row or {}).get("data") or report_row or {}
+        creator_directus_id = report_data.get("user_created")
+        if creator_directus_id:
+            creator = run_async_in_new_loop(resolve_app_user(creator_directus_id))
+            email = ((creator or {}).get("email") or "").lower()
+            return email or str(creator_directus_id)
+    except Exception:  # noqa: BLE001 — analytics is best-effort
+        log.warning("could not resolve report distinct_id for %s", report_id_str)
+    return project_id
+
+
 @dramatiq.actor(queue_name="network", priority=50)
 def task_create_report(project_id: str, report_id: int, language: str, user_instructions: str = "") -> None:
     """
@@ -1296,6 +1317,14 @@ def task_create_report(project_id: str, report_id: int, language: str, user_inst
                 publish_report_progress(report_id, event_type, message, detail)
             except Exception as e:
                 logger.warning(f"Failed to publish progress event: {e}")
+
+        from dembrane.analytics import capture_event_sync
+
+        capture_event_sync(
+            _report_event_distinct_id(report_id_str, project_id),
+            "server_report_generation_started",
+            {"project_id": project_id, "report_id": report_id, "language": language},
+        )
 
         try:
             # Store params in Redis so the completion callback can retrieve
@@ -1439,6 +1468,17 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
             publish_report_progress(report_id, "completed", "Report ready")
             logger.info(f"Report {report_id} generated for project {project_id}")
 
+            # Server-side success event: the client report_generated is fired
+            # from the browser on SSE completion, so it misses every host who
+            # closed the tab. This is the reliable count + generation-time anchor.
+            from dembrane.analytics import capture_event_sync
+
+            capture_event_sync(
+                _report_event_distinct_id(report_id_str, project_id),
+                "server_report_generated",
+                {"project_id": project_id, "report_id": report_id, "language": language},
+            )
+
             # Notify the report's creator. Keep the audience tight —
             # fanning to every workspace member on every report would
             # spam inboxes. If we want a wider broadcast later, derive
@@ -1514,10 +1554,32 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
                         )
             except Exception as notif_err:
                 logger.warning(f"Failed to emit REPORT_FAILED: {notif_err}")
+            from dembrane.analytics import capture_event_sync
+
+            capture_event_sync(
+                _report_event_distinct_id(report_id_str, project_id),
+                "server_report_generation_failed",
+                {
+                    "project_id": project_id,
+                    "report_id": report_id,
+                    "error_code": "GENERATION_FAILED",
+                },
+            )
             return
 
         except Exception as e:
             logger.error(f"Unexpected error generating report {report_id}: {e}")
+            from dembrane.analytics import capture_event_sync
+
+            capture_event_sync(
+                _report_event_distinct_id(report_id_str, project_id),
+                "server_report_generation_failed",
+                {
+                    "project_id": project_id,
+                    "report_id": report_id,
+                    "error_code": "UNEXPECTED_ERROR",
+                },
+            )
             try:
                 with directus_client_context() as client:
                     client.update_item("project_report", report_id_str, {

@@ -34,18 +34,18 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 
-	export const ParticipantConversationText = () => {
-		const { projectId, conversationId } = useParams();
-		const [searchParams] = useSearchParams();
-		const projectQuery = useParticipantProjectById(projectId ?? "");
-		const conversationQuery = useConversationQuery(projectId, conversationId);
-		const chunks = useConversationChunksQuery(projectId, conversationId);
-		const uploadChunkMutation = useUploadConversationTextChunk();
-		const newConversationLink = useProjectSharingLink(projectQuery.data);
-	
-		const [text, setText] = useState(() => {
-			return searchParams.get("general_feedback") || searchParams.get("feedback") || "";
-		});
+export const ParticipantConversationText = () => {
+	const { projectId, conversationId } = useParams();
+	const [searchParams] = useSearchParams();
+	const projectQuery = useParticipantProjectById(projectId ?? "");
+	const conversationQuery = useConversationQuery(projectId, conversationId);
+	const chunks = useConversationChunksQuery(projectId, conversationId);
+	const uploadChunkMutation = useUploadConversationTextChunk();
+	const newConversationLink = useProjectSharingLink(projectQuery.data, "portal");
+
+	const [text, setText] = useState(() => {
+		return searchParams.get("general_feedback") || searchParams.get("feedback") || "";
+	});
 	const [
 		finishModalOpened,
 		{ open: openFinishModal, close: closeFinishModal },

@@ -79,6 +79,7 @@ export function UploadLockedCard({
 				benefit="Upload recordings once your workspace is upgraded."
 				canRequestUpgrade={canRequestUpgrade}
 				workspaceId={workspaceId}
+				source="upload_cap"
 			/>
 		</>
 	);

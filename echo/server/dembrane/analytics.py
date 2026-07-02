@@ -94,3 +94,14 @@ async def capture_event(
         )
     except Exception:  # noqa: BLE001
         logger.exception("capture_event wrapper failed for %s", event)
+
+
+def capture_event_sync(
+    distinct_id: str,
+    event: str,
+    properties: Optional[dict[str, Any]] = None,
+) -> None:
+    """Synchronous fire-and-forget capture for Dramatiq actors (gevent, no
+    asyncio allowed). Mirror of capture_event for sync worker contexts. The
+    underlying HTTP call has a short timeout and never raises."""
+    _capture_sync(distinct_id, event, properties or {})

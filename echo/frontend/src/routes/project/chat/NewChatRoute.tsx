@@ -14,6 +14,7 @@ import {
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
+import posthog from "posthog-js";
 import { Suspense, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useParams } from "react-router";
@@ -191,6 +192,12 @@ export const NewChatRoute = () => {
 			if (!chat?.id) {
 				throw new Error("Failed to create chat");
 			}
+
+			posthog.capture("chat_started", {
+				chat_id: chat.id,
+				mode,
+				project_id: projectId,
+			});
 
 			// Step 2: Initialize the mode (this attaches conversations for overview mode)
 			await initializeModeMutation.mutateAsync({
