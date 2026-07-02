@@ -11,6 +11,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
 
+import knowledge
 from echo_client import EchoClient
 from settings import get_settings
 
@@ -559,6 +560,85 @@ def create_agent_graph(
         }
 
     @tool
+    def listDocs() -> dict[str, Any]:
+        """List the product documentation pages available to read."""
+        return {"docs": knowledge.list_docs()}
+
+    @tool
+    def readDoc(path: str, offset: int = 1, limit: int = 200) -> str:
+        """Read a documentation page (line-numbered). Use offset/limit to page."""
+        return knowledge.read_doc(path, offset=offset, limit=limit)
+
+    @tool
+    def grepDocs(pattern: str) -> dict[str, Any]:
+        """Search the documentation corpus for a regex or phrase."""
+        return {"matches": knowledge.grep_docs(pattern)}
+
+    @tool
+    def readSkill(path: str) -> str:
+        """Read the full body of a skill from the skill catalog."""
+        return knowledge.read_skill(path)
+
+    @tool
+    async def getProjectSettings() -> dict[str, Any]:
+        """Read the project's current editable settings (portal, language, context)."""
+        client = _create_echo_client()
+        try:
+            return await client.get_project_settings(project_id)
+        finally:
+            await client.close()
+
+    @tool
+    async def proposeProjectUpdate(
+        changes: list[dict[str, Any]],
+        summary: str,
+    ) -> dict[str, Any]:
+        """Propose project settings changes for the user to approve.
+
+        Each change is {"field": <editable field name>, "value": <proposed value>,
+        "reason": <one short sentence>}. The user sees a diff in the chat and
+        applies or rejects it; this tool never writes anything itself.
+        """
+        client = _create_echo_client()
+        try:
+            current = await client.get_project_settings(project_id)
+        finally:
+            await client.close()
+
+        allowed = set(current.keys())
+        normalized: list[dict[str, Any]] = []
+        rejected: list[str] = []
+        for change in changes:
+            if not isinstance(change, dict):
+                continue
+            field = str(change.get("field") or "").strip()
+            if field not in allowed:
+                rejected.append(field or "(missing field)")
+                continue
+            normalized.append(
+                {
+                    "field": field,
+                    "current": current.get(field),
+                    "proposed": change.get("value"),
+                    "reason": str(change.get("reason") or "").strip(),
+                }
+            )
+
+        if not normalized:
+            raise ValueError(
+                f"No valid fields to propose. Editable fields: {sorted(allowed)}"
+            )
+
+        return {
+            "kind": "project_update_suggestion",
+            "project_id": project_id,
+            "summary": summary.strip(),
+            "changes": normalized,
+            "rejected_fields": rejected,
+            "visible_to_user": True,
+        }
+
+    @tool
     async def sendProgressUpdate(update: str, next_steps: str = "") -> dict[str, Any]:
         """Emit a user-visible progress update without concluding the run."""
         normalized_update = update.strip()
@@ -579,8 +659,15 @@ def create_agent_graph(
         listConvoSummary,
         listConvoFullTranscript,
         grepConvoSnippets,
+        listDocs,
+        readDoc,
+        grepDocs,
+        readSkill,
+        getProjectSettings,
+        proposeProjectUpdate,
         sendProgressUpdate,
     ]
+    system_prompt = SYSTEM_PROMPT + knowledge.prompt_section()
     configured_llm = llm or _build_llm()
     llm_with_tools = configured_llm.bind_tools(tools)
 
@@ -597,7 +684,7 @@ def create_agent_graph(
         messages = state.get("messages", [])
         # Build invocation list with system prompt, but don't persist duplicates
         if not messages or not isinstance(messages[0], SystemMessage):
-            invocation_messages = [SystemMessage(content=SYSTEM_PROMPT)] + messages
+            invocation_messages = [SystemMessage(content=system_prompt)] + messages
         else:
             invocation_messages = list(messages)
 

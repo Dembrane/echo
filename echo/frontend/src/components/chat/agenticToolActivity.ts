@@ -88,6 +88,18 @@ type ToolContext = {
 
 const buildHeadline = (toolName: string, context: ToolContext) => {
 	switch (toolName) {
+		case "proposeProjectUpdate":
+			return "Suggesting project changes";
+		case "getProjectSettings":
+			return "Reading project settings";
+		case "grepDocs":
+			return "Searching the documentation";
+		case "readDoc":
+			return "Reading the documentation";
+		case "readSkill":
+			return "Reading a skill";
+		case "listDocs":
+			return "Listing documentation pages";
 		case "get_project_scope":
 			return t`Load project context`;
 		case "listProjectConversations":
@@ -265,4 +277,42 @@ export const extractTopLevelToolActivity = (
 	}
 
 	return activities;
+};
+
+export type ParsedProjectUpdateSuggestion = {
+	projectId: string;
+	summary: string;
+	changes: Array<{
+		field: string;
+		current: unknown;
+		proposed: unknown;
+		reason: string;
+	}>;
+};
+
+/** Returns the structured suggestion when a completed tool activity is a
+ * proposeProjectUpdate result, else null. */
+export const parseProjectUpdateSuggestion = (
+	activity: ToolActivity,
+): ParsedProjectUpdateSuggestion | null => {
+	if (activity.toolName !== "proposeProjectUpdate") return null;
+	if (activity.status !== "completed" || !activity.rawOutput) return null;
+	try {
+		const payload = JSON.parse(activity.rawOutput);
+		if (payload?.kind !== "project_update_suggestion") return null;
+		if (!Array.isArray(payload.changes) || payload.changes.length === 0)
+			return null;
+		return {
+			changes: payload.changes.map((change: Record<string, unknown>) => ({
+				current: change.current,
+				field: String(change.field ?? ""),
+				proposed: change.proposed,
+				reason: String(change.reason ?? ""),
+			})),
+			projectId: String(payload.project_id ?? ""),
+			summary: String(payload.summary ?? ""),
+		};
+	} catch {
+		return null;
+	}
 };

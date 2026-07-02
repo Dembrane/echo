@@ -1,0 +1,7 @@
+# Repo-root build context (agent image). Keep the context lean and the
+# baked docs corpus free of internal authoring assets.
+.git
+**/node_modules
+**/.venv
+echo/frontend/dist
+docs/_authoring

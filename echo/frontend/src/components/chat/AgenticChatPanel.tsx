@@ -18,7 +18,6 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import {
 	IconAlertCircle,
 	IconBraces,
@@ -35,11 +34,11 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
+import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
-import { FREE_TIER_MAX_CHAT_USER_TURNS, isFreeTierLimitError } from "@/lib/freeTier";
-import { useLanguage } from "@/hooks/useLanguage";
 import type {
 	AgenticRunEvent,
 	AgenticRunEventsResponse,
@@ -53,20 +52,26 @@ import {
 	stopAgenticRun,
 	streamAgenticRun,
 } from "@/lib/api";
+import {
+	FREE_TIER_MAX_CHAT_USER_TURNS,
+	isFreeTierLimitError,
+} from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
 import { toast } from "../common/Toaster";
 import {
 	extractTopLevelToolActivity,
+	parseProjectUpdateSuggestion,
 	type ToolActivity,
 } from "./agenticToolActivity";
 import { ChatAccordionItemMenu, ChatModeIndicator } from "./ChatAccordion";
 import { ChatHistoryMessage } from "./ChatHistoryMessage";
 import { ChatTemplatesMenu } from "./ChatTemplatesMenu";
-import { ChatTurnLimitCard, ChatUpgradeModal } from "./FreeTierChatGate";
 import { formatMessage } from "./chatUtils";
+import { ChatTurnLimitCard, ChatUpgradeModal } from "./FreeTierChatGate";
 import { useChat as useProjectChat } from "./hooks";
+import { ProjectUpdateSuggestionCard } from "./ProjectUpdateSuggestionCard";
 
 type AgenticChatPanelProps = {
 	chatId: string;
@@ -354,9 +359,8 @@ export const AgenticChatPanel = ({
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	const userTurnCount = useMemo(
 		() =>
-			timeline.filter(
-				(item) => item.kind === "message" && item.role === "user",
-			).length,
+			timeline.filter((item) => item.kind === "message" && item.role === "user")
+				.length,
 		[timeline],
 	);
 	const atTurnLimit = Boolean(
@@ -879,6 +883,15 @@ export const AgenticChatPanel = ({
 										message={toHistoryMessage(item)}
 										chatMode="agentic"
 									/>
+								</div>
+							);
+						}
+
+						const suggestion = parseProjectUpdateSuggestion(item);
+						if (suggestion) {
+							return (
+								<div key={item.id}>
+									<ProjectUpdateSuggestionCard suggestion={suggestion} />
 								</div>
 							);
 						}

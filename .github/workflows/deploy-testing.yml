@@ -73,7 +73,7 @@ jobs:
       - name: Build and Push Agent Service
         uses: docker/build-push-action@v5
         with:
-          context: ./echo/agent
+          context: .
           file: ./echo/agent/Dockerfile
           push: true
           tags: |
