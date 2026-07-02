@@ -35,7 +35,6 @@ class ChatService:
         fields = [
             "id",
             "name",
-            "auto_select",
             "chat_mode",
             "deleted_at",
             "project_id.id",
@@ -135,17 +134,6 @@ class ChatService:
 
         return messages or []
 
-    def set_auto_select(self, chat_id: str, value: bool) -> dict:
-        try:
-            with self._client_context() as client:
-                return client.update_item(
-                    "project_chat",
-                    chat_id,
-                    {"auto_select": bool(value)},
-                )["data"]
-        except DirectusBadRequest as e:
-            logger.error("Failed to update auto_select for chat %s: %s", chat_id, e)
-            raise ChatServiceException() from e
 
     def set_chat_mode(self, chat_id: str, mode: str) -> dict:
         """Set the chat mode (overview, deep_dive, or agentic)."""

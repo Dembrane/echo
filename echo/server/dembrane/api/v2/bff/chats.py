@@ -38,7 +38,6 @@ logger = getLogger("api.v2.bff.chats")
 
 class ChatCreate(BaseModel):
     project_id: str
-    auto_select: Optional[bool] = None
     name: Optional[str] = None
 
 
@@ -47,12 +46,7 @@ async def create_chat(
     body: ChatCreate,
     auth: DependencyDirectusSession,
 ) -> dict:
-    """Create a new project_chat.
-
-    Auto_select defaults to the project's enhanced-audio flag when
-    omitted — matches the frontend's prior behavior, kept server-side
-    so the hook can shrink to a one-line POST.
-    """
+    """Create a new project_chat."""
     access = await resolve_project_access(body.project_id, auth)
     access.require("chat:use")
 
@@ -69,14 +63,10 @@ async def create_chat(
     ):
         raise free_tier_limit_error("chats")
 
-    auto_select = body.auto_select
-    if auto_select is None:
-        auto_select = bool((access.project or {}).get("is_enhanced_audio_processing_enabled"))
 
     payload: dict = {
         "id": generate_uuid(),
         "project_id": body.project_id,
-        "auto_select": auto_select,
     }
     if body.name is not None:
         payload["name"] = body.name

@@ -1,8 +1,16 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { ActionIcon, Box, Collapse, Divider, Group, Text, Tooltip } from "@mantine/core";
-import { formatDate } from "date-fns";
+import {
+	ActionIcon,
+	Box,
+	Collapse,
+	Divider,
+	Group,
+	Text,
+	Tooltip,
+} from "@mantine/core";
 import { BookmarkSimple } from "@phosphor-icons/react";
+import { formatDate } from "date-fns";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
@@ -11,10 +19,8 @@ import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { Markdown } from "@/components/common/Markdown";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
-import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
 import { cn } from "@/lib/utils";
 import { ReferencesIconButton } from "../common/ReferencesIconButton";
-import { extractMessageMetadata } from "./chatUtils";
 import { References } from "./References";
 import { Sources } from "./Sources";
 import SourcesSearched from "./SourcesSearched";
@@ -36,13 +42,7 @@ export const ChatHistoryMessage = ({
 	chatMode?: ChatMode;
 	onSaveAsTemplate?: (content: string) => void;
 }) => {
-	const [metadata, setMetadata] = useState<ChatHistoryMessage["metadata"]>([]);
 	const { projectId } = useParams();
-
-	useEffect(() => {
-		const flattenedItems = extractMessageMetadata(message);
-		setMetadata(flattenedItems);
-	}, [message]);
 
 	const isSelected = referenceIds?.includes(message.id) ?? false;
 
@@ -53,13 +53,6 @@ export const ChatHistoryMessage = ({
 	if (["user", "assistant"].includes(message.role)) {
 		return (
 			<>
-				{ENABLE_CHAT_AUTO_SELECT &&
-					metadata?.length > 0 &&
-					metadata?.some((item) => item.type === "reference") && (
-						<div className="mb-3">
-							<Sources metadata={metadata} projectId={projectId} />
-						</div>
-					)}
 				{message?.metadata?.some(
 					(metadata) => metadata.type === "reference",
 				) && (
@@ -98,24 +91,6 @@ export const ChatHistoryMessage = ({
 									)}
 
 									{/* Info button for citations */}
-									{ENABLE_CHAT_AUTO_SELECT &&
-										metadata?.length > 0 &&
-										metadata?.some((item) => item.type === "citation") && (
-											<ReferencesIconButton
-												showCitations={isSelected}
-												setShowCitations={(show) => {
-													if (setReferenceIds) {
-														setReferenceIds(
-															show
-																? [...(referenceIds || []), message.id]
-																: (referenceIds || []).filter(
-																		(id) => id !== message.id,
-																	),
-														);
-													}
-												}}
-											/>
-										)}
 									{message?.metadata?.length > 0 &&
 										message?.metadata?.some(
 											(item) => item.type === "citation",
@@ -145,11 +120,6 @@ export const ChatHistoryMessage = ({
 						<Collapse in={isSelected} transitionDuration={200}>
 							<Divider className="my-7" />
 							<div className="my-3">
-								{ENABLE_CHAT_AUTO_SELECT &&
-									metadata.length > 0 &&
-									metadata.some((item) => item.type === "citation") && (
-										<References metadata={metadata} projectId={projectId} />
-									)}
 								{message?.metadata?.length > 0 &&
 									message?.metadata?.some(
 										(item) => item.type === "citation",

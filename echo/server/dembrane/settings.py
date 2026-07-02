@@ -243,23 +243,11 @@ class FeatureFlagSettings(BaseSettings):
         alias="DISABLE_CORS",
         validation_alias=AliasChoices("DISABLE_CORS", "FEATURE_FLAGS__DISABLE_CORS"),
     )
-    disable_redaction: bool = Field(
-        default=False,
-        alias="DISABLE_REDACTION",
-        validation_alias=AliasChoices("DISABLE_REDACTION", "FEATURE_FLAGS__DISABLE_REDACTION"),
-    )
     disable_chat_title_generation: bool = Field(
         default=False,
         alias="DISABLE_CHAT_TITLE_GENERATION",
         validation_alias=AliasChoices(
             "DISABLE_CHAT_TITLE_GENERATION", "FEATURE_FLAGS__DISABLE_CHAT_TITLE_GENERATION"
-        ),
-    )
-    enable_chat_auto_select: bool = Field(
-        default=False,
-        alias="ENABLE_CHAT_AUTO_SELECT",
-        validation_alias=AliasChoices(
-            "ENABLE_CHAT_AUTO_SELECT", "FEATURE_FLAGS__ENABLE_CHAT_AUTO_SELECT"
         ),
     )
     enable_chat_select_all: bool = Field(

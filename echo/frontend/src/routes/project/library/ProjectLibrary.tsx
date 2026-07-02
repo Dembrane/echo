@@ -106,7 +106,7 @@ export const ProjectLibraryRoute = () => {
 	const contactSales = () => {
 		if (!isLibraryEnabled) {
 			posthog.capture("contact_sales_clicked", { source: "library" });
-			window.open(SalesLinks.AUTO_SELECT_CONTACT, "_blank");
+			window.open(SalesLinks.CONTACT_SALES, "_blank");
 		}
 	};
 

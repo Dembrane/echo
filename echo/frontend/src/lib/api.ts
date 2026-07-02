@@ -943,9 +943,9 @@ export const retranscribeConversation = async (
 		unknown,
 		{ status: string; message: string; new_conversation_id: string }
 	>(`/conversations/${conversationId}/retranscribe`, {
+		attach_verified_artifacts: attachVerifiedArtifacts,
 		new_conversation_name: newConversationName,
 		use_pii_redaction: usePiiRedaction,
-		attach_verified_artifacts: attachVerifiedArtifacts,
 	});
 };
 
@@ -957,7 +957,6 @@ export const addChatContext = async (
 	chatId: string,
 	options?: {
 		conversationId?: string;
-		auto_select_bool?: boolean;
 		select_all?: boolean;
 		project_id?: string;
 		tag_ids?: string[];
@@ -966,7 +965,6 @@ export const addChatContext = async (
 	},
 ) => {
 	return api.post<unknown, AddContextResponse>(`/chats/${chatId}/add-context`, {
-		auto_select_bool: options?.auto_select_bool,
 		conversation_id: options?.conversationId,
 		project_id: options?.project_id,
 		search_text: options?.search_text,
@@ -979,12 +977,10 @@ export const addChatContext = async (
 export const deleteChatContext = async (
 	chatId: string,
 	conversationId?: string,
-	auto_select_bool?: boolean,
 ) => {
 	return api.post<unknown, TProjectChatContext>(
 		`/chats/${chatId}/delete-context`,
 		{
-			auto_select_bool: auto_select_bool,
 			conversation_id: conversationId,
 		},
 	);
