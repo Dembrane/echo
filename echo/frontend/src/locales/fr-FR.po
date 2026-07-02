@@ -1476,6 +1476,15 @@ msgstr "Avancé (Astuces et conseils)"
 msgid "Advanced Settings"
 msgstr "Paramètres avancés"
 
+#: src/components/chat/AgenticChatPanel.tsx:764
+msgid "Agent is working..."
+msgstr ""
+
+#: src/components/chat/AgenticChatPanel.tsx:203
+#: src/components/chat/AgenticChatPanel.tsx:228
+msgid "Agent run failed"
+msgstr ""
+
 #: src/components/chat/ChatModeSelector.tsx:285
 #: src/components/chat/ChatModeBanner.tsx:38
 msgid "Agentic"
@@ -1486,8 +1495,8 @@ msgid "Agentic - Tool-driven execution"
 msgstr "Agentic - Exécution guidée par les outils"
 
 #: src/components/chat/AgenticChatPanel.tsx:495
-msgid "Agentic Chat"
-msgstr "Chat Agentic"
+#~ msgid "Agentic Chat"
+#~ msgstr "Chat Agentic"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:792
 #: src/routes/organisation/OrganisationRoute.tsx:864
@@ -1940,6 +1949,10 @@ msgstr "Demander le nom ?"
 #~ msgid "Ask participants to provide their name when they start a conversation"
 #~ msgstr "Demander aux participants de fournir leur nom lorsqu'ils commencent une conversation"
 
+#: src/components/chat/AgenticChatPanel.tsx:1083
+msgid "Ask the agent..."
+msgstr ""
+
 #: src/routes/project/library/ProjectLibraryAspect.tsx:51
 msgid "Aspect"
 msgstr "Aspect"
@@ -2005,7 +2018,7 @@ msgstr "Le téléchargement de l'audio n'est pas disponible pour les conversatio
 #~ msgid "Audio hours"
 #~ msgstr ""
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:120
+#: src/components/conversation/ConversationTranscriptSection.tsx:160
 msgid "Audio playback not available for anonymized conversations"
 msgstr "La lecture de l'audio n'est pas disponible pour les conversations anonymisées"
 
@@ -2599,6 +2612,7 @@ msgstr "Changer de langue pendant une conversation active peut provoquer des ré
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:262
+#: src/components/chat/AgenticChatPanel.tsx:752
 msgid "Chat"
 msgstr "Discussion"
 
@@ -2958,7 +2972,7 @@ msgstr ""
 msgid "Context"
 msgstr "Contexte"
 
-#: src/components/chat/ChatHistoryMessage.tsx:162
+#: src/components/chat/ChatHistoryMessage.tsx:228
 msgid "Context added:"
 msgstr "Contexte ajouté :"
 
@@ -3059,7 +3073,7 @@ msgstr "conversations"
 #: src/components/workspace/OrganisationProjectsTable.tsx:219
 #: src/components/project/ProjectUsageAndSharing.tsx:453
 #: src/components/conversation/ProjectConversationsPanel.tsx:725
-#: src/components/conversation/ConversationAccordion.tsx:1092
+#: src/components/conversation/ConversationAccordion.tsx:1091
 msgid "Conversations"
 msgstr "Conversations"
 
@@ -3965,6 +3979,7 @@ msgstr ""
 #: src/routes/onboarding/OnboardingRoute.tsx:525
 #: src/components/project/ProjectSharingModal.tsx:268
 #: src/components/invite/InviteModal.tsx:811
+#: src/components/chat/AgenticChatPanel.tsx:247
 msgid "Done"
 msgstr ""
 
@@ -4237,7 +4252,7 @@ msgstr "Emoji"
 msgid "Emoji shown next to the topic e.g. 💡 🔍 📊"
 msgstr "Emoji affiché à côté du sujet, par exemple : 💡 🔍 📊"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:98
+#: src/components/conversation/ConversationTranscriptSection.tsx:138
 msgid "Empty"
 msgstr "Vide"
 
@@ -4402,7 +4417,9 @@ msgstr "Entré par le participant sur le portail"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
-#: src/components/chat/AgenticChatPanel.tsx:531
+#: src/components/chat/AgenticChatPanel.tsx:252
+#: src/components/chat/AgenticChatPanel.tsx:832
+#: src/components/chat/AgenticChatPanel.tsx:993
 msgid "Error"
 msgstr "Erreur"
 
@@ -4655,8 +4672,8 @@ msgid "Failed to add conversation to chat{0}"
 msgstr "Échec de l'ajout de la conversation à la discussion{0}"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:708
-#: src/components/conversation/ConversationAccordion.tsx:969
-#: src/components/conversation/ConversationAccordion.tsx:989
+#: src/components/conversation/ConversationAccordion.tsx:968
+#: src/components/conversation/ConversationAccordion.tsx:988
 msgid "Failed to add conversations to context"
 msgstr "Échec de l'ajout de conversations au contexte"
 
@@ -4828,6 +4845,14 @@ msgstr "Échec de la révision du résultat. Veuillez réessayer."
 #: src/components/participant/ParticipantConversationAudio.tsx:179
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Échec de l'arrêt de l'enregistrement lors du changement de périphérique. Veuillez réessayer."
+
+#: src/components/chat/AgenticChatPanel.tsx:744
+msgid "Failed to stop run"
+msgstr ""
+
+#: src/components/chat/AgenticChatPanel.tsx:728
+msgid "Failed to submit agentic message"
+msgstr ""
 
 #: src/components/project/hooks/index.ts:610
 msgid "Failed to update custom topic"
@@ -5429,6 +5454,11 @@ msgstr ""
 msgid "Hide projects"
 msgstr ""
 
+#: src/components/chat/AgenticChatPanel.tsx:926
+#: src/components/chat/AgenticChatPanel.tsx:936
+msgid "Hide raw data"
+msgstr ""
+
 #: src/components/settings/AuditLogsCard.tsx:245
 msgid "Hide revision data"
 msgstr "Masquer les données de révision"
@@ -5630,6 +5660,10 @@ msgstr ""
 
 #: src/routes/project/CreateProjectRoute.tsx:246
 msgid "Innovator or higher"
+msgstr ""
+
+#: src/components/chat/AgenticChatPanel.tsx:959
+msgid "Input"
 msgstr ""
 
 #~ msgid "Insight Library"
@@ -6261,6 +6295,10 @@ msgstr "Lien vers la politique de confidentialité de votre organisation qui ser
 #~ msgid "LinkedIn Post (Experimental)"
 #~ msgstr "Publication LinkedIn (Expérimental)"
 
+#: src/components/chat/agenticToolActivity.ts:94
+msgid "List project conversations"
+msgstr ""
+
 #~ msgid "Live"
 #~ msgstr "Direct"
 
@@ -6280,8 +6318,24 @@ msgstr "Niveau audio en direct:"
 msgid "Live Preview"
 msgstr "Vue en direct"
 
+#: src/components/chat/AgenticChatPanel.tsx:496
+msgid "Live stream interrupted. Falling back to polling."
+msgstr ""
+
+#: src/components/chat/agenticToolActivity.ts:100
+msgid "Load conversation summary"
+msgstr ""
+
+#: src/components/chat/agenticToolActivity.ts:102
+msgid "Load full transcript"
+msgstr ""
+
 #: src/components/billing/BillingManager.tsx:804
 msgid "Load more"
+msgstr ""
+
+#: src/components/chat/agenticToolActivity.ts:92
+msgid "Load project context"
 msgstr ""
 
 #. js-lingui-explicit-id
@@ -6329,6 +6383,10 @@ msgstr ""
 #: src/components/workspace/TeamUsageRollup.tsx:392
 #~ msgid "Loading projects…"
 #~ msgstr ""
+
+#: src/components/chat/AgenticChatPanel.tsx:843
+msgid "Loading this chat..."
+msgstr ""
 
 #: src/components/conversation/CopyConversationTranscript.tsx:29
 #: src/components/conversation/CopyConversationTranscript.tsx:42
@@ -7066,7 +7124,7 @@ msgstr "Aucune conversation disponible pour créer la bibliothèque"
 msgid "No conversations found."
 msgstr "Aucune conversation trouvée."
 
-#: src/components/conversation/ConversationAccordion.tsx:1458
+#: src/components/conversation/ConversationAccordion.tsx:1457
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Aucune conversation trouvée. Commencez une conversation en utilisant le lien d'invitation à participer depuis la <0><1>vue d'ensemble du projet.</1></0>"
 
@@ -7298,7 +7356,7 @@ msgstr ""
 msgid "No summary yet"
 msgstr ""
 
-#: src/components/conversation/ConversationAccordion.tsx:1370
+#: src/components/conversation/ConversationAccordion.tsx:1369
 msgid "No tags found"
 msgstr "Aucune étiquette trouvée"
 
@@ -7322,14 +7380,14 @@ msgstr ""
 msgid "No trainings yet."
 msgstr ""
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:144
+#: src/components/conversation/ConversationTranscriptSection.tsx:184
 msgid "No Transcript Available"
 msgstr "Aucune transcription disponible"
 
 #~ msgid "No transcript available for this conversation."
 #~ msgstr "Aucune transcription disponible pour cette conversation."
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:148
+#: src/components/conversation/ConversationTranscriptSection.tsx:188
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Aucune transcription n'existe pour cette conversation. Veuillez vérifier plus tard."
 
@@ -7773,6 +7831,12 @@ msgstr ""
 msgid "Open to the workspace"
 msgstr ""
 
+#: src/components/chat/ChatHistoryMessage.tsx:87
+#: src/components/chat/ChatHistoryMessage.tsx:94
+#: src/components/chat/ChatHistoryMessage.tsx:96
+msgid "Open transcript"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/PermissionErrorModal.tsx:60
 msgid "participant.button.open.troubleshooting.guide"
@@ -7834,8 +7898,8 @@ msgstr "Champ optionnel sur la page de remerciements"
 msgid "Optional. What this workspace is for."
 msgstr ""
 
-#: src/components/conversation/ConversationAccordion.tsx:1143
-#: src/components/conversation/ConversationAccordion.tsx:1148
+#: src/components/conversation/ConversationAccordion.tsx:1142
+#: src/components/conversation/ConversationAccordion.tsx:1147
 msgid "Options"
 msgstr "Options"
 
@@ -7966,6 +8030,10 @@ msgstr "résultats"
 #: src/components/conversation/VerifiedArtefactsSection.tsx:92
 msgid "Outcomes"
 msgstr "Résultats"
+
+#: src/components/chat/AgenticChatPanel.tsx:973
+msgid "Output"
+msgstr ""
 
 #: src/components/workspace/TeamUsageRollup.tsx:218
 #~ msgid "Over"
@@ -9708,8 +9776,8 @@ msgstr "Réinitialiser le Mot de Passe | dembrane"
 #~ msgid "Reset this cycle's recorded hours for {0}? This is recorded in the audit trail."
 #~ msgstr ""
 
-#: src/components/conversation/ConversationAccordion.tsx:1394
-#: src/components/conversation/ConversationAccordion.tsx:1399
+#: src/components/conversation/ConversationAccordion.tsx:1393
+#: src/components/conversation/ConversationAccordion.tsx:1398
 msgid "Reset to default"
 msgstr "Réinitialiser aux paramètres par défaut"
 
@@ -9862,9 +9930,13 @@ msgstr "Lignes par page"
 #~ msgid "Run"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:500
+#: src/components/chat/AgenticChatPanel.tsx:805
 msgid "Run status:"
 msgstr "Statut de l'exécution:"
+
+#: src/components/chat/AgenticChatPanel.tsx:257
+msgid "Running"
+msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2669
 msgid "Sales invoice issued."
@@ -9890,7 +9962,7 @@ msgstr "Enregistrer"
 msgid "Save access"
 msgstr ""
 
-#: src/components/chat/ChatHistoryMessage.tsx:81
+#: src/components/chat/ChatHistoryMessage.tsx:143
 msgid "Save as template"
 msgstr "Enregistrer comme modèle"
 
@@ -10014,9 +10086,15 @@ msgstr "Recherchez et sélectionnez les conversations pour ce chat."
 msgid "Search by organisation"
 msgstr ""
 
-#: src/components/conversation/ConversationAccordion.tsx:1136
+#: src/components/conversation/ConversationAccordion.tsx:1135
+#: src/components/chat/agenticToolActivity.ts:98
 msgid "Search conversations"
 msgstr "Rechercher des conversations"
+
+#. placeholder {0}: context.query
+#: src/components/chat/agenticToolActivity.ts:97
+msgid "Search conversations for \"{0}\""
+msgstr ""
 
 #: src/components/members/MembersToolbar.tsx:41
 msgid "Search name or email"
@@ -10064,7 +10142,7 @@ msgstr "Rechercher des projets..."
 msgid "Search results"
 msgstr ""
 
-#: src/components/conversation/ConversationAccordion.tsx:1279
+#: src/components/conversation/ConversationAccordion.tsx:1278
 msgid "Search tags"
 msgstr "Rechercher des tags"
 
@@ -10076,6 +10154,15 @@ msgstr "Rechercher des templates..."
 #: src/components/conversation/SelectAllConfirmationModal.tsx:70
 msgid "select.all.modal.search.text"
 msgstr "Texte de recherche :"
+
+#: src/components/chat/agenticToolActivity.ts:106
+msgid "Search transcript"
+msgstr ""
+
+#. placeholder {0}: context.query
+#: src/components/chat/agenticToolActivity.ts:105
+msgid "Search transcript for \"{0}\""
+msgstr ""
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:341
 msgid "Search webhooks..."
@@ -10196,11 +10283,11 @@ msgstr ""
 
 #: src/routes/project/ProjectsHome.tsx:417
 #: src/components/workspace/DiscoverableWorkspaces.tsx:276
-#: src/components/conversation/ConversationAccordion.tsx:1438
+#: src/components/conversation/ConversationAccordion.tsx:1437
 msgid "Select all"
 msgstr "Tout sélectionner"
 
-#: src/components/conversation/ConversationAccordion.tsx:1436
+#: src/components/conversation/ConversationAccordion.tsx:1435
 msgid "Select all ({remainingCount})"
 msgstr "Tout sélectionner ({remainingCount})"
 
@@ -10311,7 +10398,7 @@ msgid "select.all.modal.context.limit.reached"
 msgstr "Sélection trop grande. Certaines conversations n'ont pas été ajoutées."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:957
-#: src/components/chat/AgenticChatPanel.tsx:696
+#: src/components/chat/AgenticChatPanel.tsx:1106
 msgid "Send"
 msgstr "Envoyer"
 
@@ -10320,7 +10407,7 @@ msgstr "Envoyer"
 msgid "Send {0} invites"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:541
+#: src/components/chat/AgenticChatPanel.tsx:870
 msgid "Send a message to start an agentic run."
 msgstr "Envoyez un message pour démarrer une exécution agentique."
 
@@ -10561,7 +10648,7 @@ msgstr ""
 #~ msgid "Show all"
 #~ msgstr "Afficher tout"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:130
+#: src/components/conversation/ConversationTranscriptSection.tsx:170
 msgid "Show audio player"
 msgstr "Afficher le lecteur audio"
 
@@ -10596,6 +10683,11 @@ msgstr "Afficher plus"
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:302
 msgid "Show projects"
+msgstr ""
+
+#: src/components/chat/AgenticChatPanel.tsx:926
+#: src/components/chat/AgenticChatPanel.tsx:937
+msgid "Show raw data"
 msgstr ""
 
 #: src/components/common/ReferencesIconButton.tsx:15
@@ -10776,8 +10868,8 @@ msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Désolé, nous ne pouvons pas traiter cette demande en raison de la politique de contenu du fournisseur de LLM."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:799
-#: src/components/conversation/ConversationAccordion.tsx:1199
-#: src/components/conversation/ConversationAccordion.tsx:1206
+#: src/components/conversation/ConversationAccordion.tsx:1198
+#: src/components/conversation/ConversationAccordion.tsx:1205
 msgid "Sort"
 msgstr "Trier"
 
@@ -10893,7 +10985,7 @@ msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:724
-#: src/components/chat/AgenticChatPanel.tsx:517
+#: src/components/chat/AgenticChatPanel.tsx:819
 msgid "Stop"
 msgstr "Arrêter"
 
@@ -11043,8 +11135,8 @@ msgstr ""
 #: src/components/participant/ParticipantInitiateForm.tsx:183
 #: src/components/conversation/ProjectConversationsPanel.tsx:809
 #: src/components/conversation/ConversationEdit.tsx:415
-#: src/components/conversation/ConversationAccordion.tsx:1269
-#: src/components/conversation/ConversationAccordion.tsx:1272
+#: src/components/conversation/ConversationAccordion.tsx:1268
+#: src/components/conversation/ConversationAccordion.tsx:1271
 msgid "Tags"
 msgstr "Étiquettes"
 
@@ -11150,7 +11242,7 @@ msgid "Teams in the EU using dembrane in scenarios classified as high risk under
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:521
-#: src/components/chat/AgenticChatPanel.tsx:399
+#: src/components/chat/AgenticChatPanel.tsx:655
 msgid "Template applied"
 msgstr "Template appliqué"
 
@@ -11796,6 +11888,11 @@ msgstr "Trop grande"
 msgid "Too long"
 msgstr "Trop long"
 
+#: src/components/chat/agenticToolActivity.ts:80
+#: src/components/chat/agenticToolActivity.ts:81
+msgid "Tool"
+msgstr ""
+
 #: src/components/project/hooks/index.ts:591
 msgid "Topic created successfully"
 msgstr "Sujet créé avec succès"
@@ -11881,20 +11978,29 @@ msgstr ""
 msgid "Trainings"
 msgstr ""
 
-#: src/components/conversation/ConversationChunkAudioTranscript.tsx:72
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:80
 msgid "Transcribing..."
 msgstr "Transcription en cours..."
+
+#: src/components/chat/AgenticChatPanel.tsx:148
+msgid "transcript"
+msgstr ""
 
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:90
+#: src/components/conversation/ConversationTranscriptSection.tsx:130
+#: src/components/chat/ChatHistoryMessage.tsx:46
 msgid "Transcript"
 msgstr "Transcription"
 
 #: src/components/conversation/CopyConversationTranscript.tsx:30
 msgid "Transcript copied to clipboard"
 msgstr "Transcription copiée dans le presse-papiers"
+
+#: src/components/chat/AgenticChatPanel.tsx:148
+msgid "transcript excerpt"
+msgstr ""
 
 #~ msgid "Transcript not available"
 #~ msgstr "Transcription non disponible"
@@ -12107,7 +12213,7 @@ msgstr "Impossible de charger le résultat"
 msgid "Unable to load the generated outcome. Please try again."
 msgstr "Impossible de charger le résultat généré. Veuillez réessayer."
 
-#: src/components/conversation/ConversationChunkAudioTranscript.tsx:70
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:78
 msgid "Unable to process this chunk"
 msgstr "Impossible de traiter ce fragment"
 
@@ -12120,7 +12226,7 @@ msgid "Under your organisation"
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:523
-#: src/components/chat/AgenticChatPanel.tsx:401
+#: src/components/chat/AgenticChatPanel.tsx:657
 msgid "Undo"
 msgstr "Annuler"
 
@@ -12377,7 +12483,7 @@ msgstr ""
 #: src/components/dropzone/UploadConversationDropzone.tsx:540
 #: src/components/conversation/ProjectConversationsPanel.tsx:759
 #: src/components/conversation/ConversationAccordion.tsx:404
-#: src/components/conversation/ConversationAccordion.tsx:1105
+#: src/components/conversation/ConversationAccordion.tsx:1104
 msgid "Upload"
 msgstr "Télécharger"
 
@@ -12416,7 +12522,7 @@ msgid "Upload limit reached"
 msgstr ""
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:752
-#: src/components/conversation/ConversationAccordion.tsx:1099
+#: src/components/conversation/ConversationAccordion.tsx:1098
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr ""
 
@@ -12597,7 +12703,7 @@ msgid "Verified"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1389
+#: src/components/conversation/ConversationAccordion.tsx:1388
 msgid "conversation.filters.verified.text"
 msgstr "Vérifié"
 
@@ -13422,7 +13528,7 @@ msgstr ""
 msgid "select.all.modal.already.added"
 msgstr "Vous avez déjà ajouté <0>{existingContextCount, plural, one {# conversation} other {# conversations}}</0> à ce chat."
 
-#: src/components/conversation/ConversationAccordion.tsx:1420
+#: src/components/conversation/ConversationAccordion.tsx:1419
 msgid "You have already added all the conversations related to this"
 msgstr "Vous avez déjà ajouté toutes les conversations liées à ceci"
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from types import SimpleNamespace
 from typing import Any, AsyncIterator
 from contextlib import asynccontextmanager
@@ -40,8 +41,10 @@ class _FakeProjectService:
 
 
 class _FakeChatService:
-    def __init__(self) -> None:
+    def __init__(self, chats: dict[str, dict[str, Any]] | None = None) -> None:
         self.created_messages: list[dict[str, str]] = []
+        self.chats = chats or {}
+        self.updated_titles: list[tuple[str, str | None]] = []
 
     def create_message(self, chat_id: str, message_from: str, text: str) -> dict[str, str]:
         message = {
@@ -52,6 +55,30 @@ class _FakeChatService:
         }
         self.created_messages.append(message)
         return message
+
+    def get_by_id_or_raise(self, chat_id: str, with_used_conversations: bool = False) -> dict[str, Any]:  # noqa: ARG002
+        chat = self.chats.get(chat_id)
+        if chat is None:
+            raise ValueError("chat not found")
+        return chat
+
+    def set_chat_name(self, chat_id: str, name: str | None) -> dict[str, Any]:
+        chat = self.get_by_id_or_raise(chat_id)
+        chat["name"] = name
+        self.updated_titles.append((chat_id, name))
+        return chat
+
+
+async def _wait_for_updated_titles(
+    chat_service: _FakeChatService,
+    expected_count: int,
+) -> None:
+    for _ in range(20):
+        if len(chat_service.updated_titles) >= expected_count:
+            return
+        await asyncio.sleep(0)
+
+    assert len(chat_service.updated_titles) >= expected_count
 
 
 class _FakeDirectusClient:
@@ -67,6 +94,15 @@ class _FakeDirectusClient:
         for key, expected in condition.items():
             if key == "_eq":
                 if value != expected:
+                    return False
+                continue
+            if key == "_null":
+                is_null = value is None
+                if bool(expected) != is_null:
+                    return False
+                continue
+            if key == "_nnull":
+                if bool(expected) != (value is not None):
                     return False
                 continue
             if key == "_icontains":
@@ -185,6 +221,21 @@ async def _build_api_client(
         return SimpleNamespace(require=lambda _policy: None, role="owner", project={})
 
     monkeypatch.setattr(bff_access, "resolve_project_access", _fake_resolve_project_access)
+
+    # Hermetic seams: these hit Directus over the network in production.
+    from dembrane import free_tier as free_tier_module
+    from dembrane.api.v2 import middleware as middleware_module
+
+    async def _fake_check_no_pilot_block(project_id: str) -> None:
+        return None
+
+    async def _fake_resolve_project_tier(project_id: str) -> None:
+        return None
+
+    monkeypatch.setattr(
+        middleware_module, "check_no_pilot_block_for_project", _fake_check_no_pilot_block
+    )
+    monkeypatch.setattr(free_tier_module, "resolve_project_tier", _fake_resolve_project_tier)
     monkeypatch.setattr(agentic_api, "agentic_run_service", run_service)
     if chat_service is not None:
         monkeypatch.setattr(agentic_api, "chat_service", chat_service)
@@ -304,6 +355,50 @@ async def test_create_run_persists_user_message_without_dispatch(monkeypatch) ->
 
 
 @pytest.mark.asyncio
+async def test_create_run_generates_title_for_untitled_linked_chat(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_chat_service = _FakeChatService(
+        chats={
+            "chat-1": {
+                "id": "chat-1",
+                "name": None,
+                "project_id": {"id": "project-1"},
+                "directus_user_id": "user-1",
+            }
+        }
+    )
+    session = _make_session(user_id="user-1")
+
+    async def _fake_generate_title(user_query: str, language: str) -> str:
+        assert user_query == "hello"
+        assert language == "nl"
+        return "Generated agentic title"
+
+    monkeypatch.setattr(agentic_api, "generate_title", _fake_generate_title)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+        chat_service=fake_chat_service,
+    ) as client:
+        response = await client.post(
+            "/api/agentic/runs",
+            json={
+                "project_id": "project-1",
+                "project_chat_id": "chat-1",
+                "message": "hello",
+                "language": "nl",
+            },
+        )
+
+    assert response.status_code == 201
+    await _wait_for_updated_titles(fake_chat_service, 1)
+    assert fake_chat_service.updated_titles == [("chat-1", "Generated agentic title")]
+
+
+@pytest.mark.asyncio
 async def test_create_run_rejects_missing_passthrough_token(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     session = _make_session(user_id="user-1", access_token=None)
@@ -376,6 +471,93 @@ async def test_append_message_persists_user_chat_message(monkeypatch) -> None:
             "text": "hello-again",
         }
     ]
+
+
+@pytest.mark.asyncio
+async def test_append_message_generates_title_only_when_chat_is_untitled(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    run = run_service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+        status="completed",
+    )
+    fake_chat_service = _FakeChatService(
+        chats={
+            "chat-1": {
+                "id": "chat-1",
+                "name": None,
+                "project_id": {"id": "project-1"},
+                "directus_user_id": "user-1",
+            }
+        }
+    )
+    session = _make_session(user_id="user-1")
+
+    async def _fake_generate_title(user_query: str, language: str) -> str:
+        assert user_query == "hello-again"
+        assert language == "fr"
+        return "Follow-up title"
+
+    monkeypatch.setattr(agentic_api, "generate_title", _fake_generate_title)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+        chat_service=fake_chat_service,
+    ) as client:
+        response = await client.post(
+            f"/api/agentic/runs/{run['id']}/messages",
+            json={"message": "hello-again", "language": "fr"},
+        )
+
+    assert response.status_code == 200
+    await _wait_for_updated_titles(fake_chat_service, 1)
+    assert fake_chat_service.updated_titles == [("chat-1", "Follow-up title")]
+
+
+@pytest.mark.asyncio
+async def test_append_message_skips_title_generation_for_named_chat(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    run = run_service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+        status="completed",
+    )
+    fake_chat_service = _FakeChatService(
+        chats={
+            "chat-1": {
+                "id": "chat-1",
+                "name": "Already named",
+                "project_id": {"id": "project-1"},
+                "directus_user_id": "user-1",
+            }
+        }
+    )
+    session = _make_session(user_id="user-1")
+
+    async def _unexpected_generate_title(*args: Any, **kwargs: Any) -> str:  # noqa: ARG001
+        raise AssertionError("Title generation should not run for named chats")
+
+    monkeypatch.setattr(agentic_api, "generate_title", _unexpected_generate_title)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+        chat_service=fake_chat_service,
+    ) as client:
+        response = await client.post(
+            f"/api/agentic/runs/{run['id']}/messages",
+            json={"message": "hello-again", "language": "fr"},
+        )
+
+    assert response.status_code == 200
+    assert fake_chat_service.updated_titles == []
 
 
 @pytest.mark.asyncio
@@ -688,6 +870,18 @@ async def test_list_project_conversations_transcript_query_scopes_to_project_and
             "summary": "summary one",
             "started_at": "2026-02-01T10:00:00Z",
             "last_chunk_at": "2026-02-01T12:30:00Z",
+            "matches": [
+                {
+                    "chunk_id": "chunk-2",
+                    "timestamp": "2026-02-01T12:30:00Z",
+                    "snippet": "Bad Bunny halftime analysis",
+                },
+                {
+                    "chunk_id": "chunk-1",
+                    "timestamp": "2026-02-01T12:15:00Z",
+                    "snippet": "Another mention of Bunny",
+                },
+            ],
         }
     ]
     assert directus_client.calls[0]["collection"] == "conversation_chunk"
@@ -795,6 +989,8 @@ async def test_list_project_conversations_transcript_query_token_or_limit_and_or
     ]
     assert payload["conversations"][0]["status"] == "done"
     assert payload["conversations"][1]["status"] == "live"
+    assert payload["conversations"][0]["matches"][0]["chunk_id"] == "chunk-1"
+    assert payload["conversations"][1]["matches"][0]["chunk_id"] == "chunk-2"
 
 @pytest.mark.asyncio
 async def test_stop_run_sets_cancel_request(monkeypatch) -> None:
