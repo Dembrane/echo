@@ -558,7 +558,10 @@ def task_summarize_conversation(conversation_id: str) -> None:
     """
     logger = getLogger("dembrane.tasks.task_summarize_conversation")
 
-    from dembrane.coordination import mark_summarize_in_progress, clear_summarize_in_progress
+    from dembrane.coordination import (
+        mark_summarize_in_progress,
+        clear_summarize_in_progress,
+    )
     from dembrane.service.conversation import ConversationNotFoundException
 
     try:

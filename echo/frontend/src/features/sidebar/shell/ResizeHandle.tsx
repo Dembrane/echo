@@ -64,6 +64,8 @@ export const ResizeHandle = () => {
 		}
 	};
 
+	if (width === 0) return null;
+
 	return (
 		// biome-ignore lint/a11y/useSemanticElements: Resize grip needs pointer and keyboard handlers.
 		<div

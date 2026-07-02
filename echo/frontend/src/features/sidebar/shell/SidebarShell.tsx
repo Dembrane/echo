@@ -17,15 +17,17 @@ export const SidebarShell = ({
 }: SidebarShellProps) => {
 	const { width } = useSidebarState();
 
-	return (
-		<aside
-			className="relative flex h-screen flex-col border-r print:hidden"
-			style={{
-				backgroundColor: "#f6f4f1",
-				borderColor: "rgba(45, 45, 44, 0.08)",
-				width,
-			}}
-		>
+		return (
+			<aside
+				className="relative flex h-screen flex-col border-r print:hidden"
+				style={{
+					backgroundColor: "#f6f4f1",
+					borderColor: "rgba(45, 45, 44, 0.08)",
+					width,
+					borderRight: width === 0 ? "none" : undefined,
+					overflow: width === 0 ? "hidden" : undefined,
+				}}
+			>
 			{header ?? null}
 			<div className="flex flex-1 flex-col overflow-hidden">{children}</div>
 			{footer ? (
