@@ -12,9 +12,11 @@ import { cn } from "@/lib/utils";
 export const Markdown = ({
 	content,
 	className,
+	components: customComponents,
 }: {
 	content: string;
 	className?: string;
+	components?: Components;
 }) => {
 	// FIXME: workaround to load Tally embeds
 	useEffect(() => {
@@ -50,8 +52,9 @@ export const Markdown = ({
 					</code>
 				);
 			},
+			...customComponents,
 		}),
-		[],
+		[customComponents],
 	);
 
 	return (

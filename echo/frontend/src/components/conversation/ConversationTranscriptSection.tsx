@@ -11,7 +11,8 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router";
 import { useInView } from "react-intersection-observer";
 import useSessionStorageState from "use-session-storage-state";
 import { testId } from "@/lib/testUtils";
@@ -61,12 +62,51 @@ export const ConversationTranscriptSection = ({
 	);
 
 	const allChunks = (chunksData?.pages ?? []).flatMap((page) => page.chunks);
+	const location = useLocation();
+	const targetChunkId = location.hash.startsWith("#chunk-")
+		? decodeURIComponent(location.hash.slice("#chunk-".length))
+		: null;
+	const [highlightedChunkId, setHighlightedChunkId] = useState<string | null>(
+		null,
+	);
 
 	const hasValidTranscripts = allChunks.some(
 		(chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
 	);
 
 	const isEmptyConversation = !hasValidTranscripts && isFinished;
+
+	// Deep link: #chunk-<id> from agentic citations. Page in until the
+	// target chunk is loaded, then scroll to it and flash a highlight.
+	useEffect(() => {
+		if (!targetChunkId) return;
+		const hasTargetChunk = allChunks.some((chunk) => chunk.id === targetChunkId);
+		if (hasTargetChunk || !hasNextPage || isFetchingNextPage) return;
+		void fetchNextPage();
+	}, [allChunks, fetchNextPage, hasNextPage, isFetchingNextPage, targetChunkId]);
+
+	useEffect(() => {
+		if (!targetChunkId) return;
+		const targetChunk = allChunks.find((chunk) => chunk.id === targetChunkId);
+		if (!targetChunk) return;
+		const targetElement = document.getElementById(`chunk-${targetChunk.id}`);
+		if (!targetElement) return;
+		targetElement.scrollIntoView({
+			behavior: "smooth",
+			block: "center",
+		});
+		setHighlightedChunkId(targetChunkId);
+	}, [allChunks, targetChunkId]);
+
+	useEffect(() => {
+		if (!highlightedChunkId) return;
+		const timeoutId = window.setTimeout(() => {
+			setHighlightedChunkId(null);
+		}, 5000);
+		return () => {
+			window.clearTimeout(timeoutId);
+		};
+	}, [highlightedChunkId]);
 
 	if (status === "pending") {
 		return (
@@ -156,6 +196,7 @@ export const ConversationTranscriptSection = ({
 							return (
 								<div
 									key={chunk.id}
+									id={`chunk-${chunk.id}`}
 									ref={isLastChunk ? loadMoreRef : undefined}
 									{...testId(`transcript-chunk-${index}`)}
 								>
@@ -168,6 +209,7 @@ export const ConversationTranscriptSection = ({
 											timestamp: chunk.timestamp ?? "",
 											transcript: chunk.transcript ?? "",
 										}}
+										highlighted={highlightedChunkId === chunk.id}
 										showAudioPlayer={isAnonymized ? false : showAudioPlayer}
 										transcriptLocked={!!chunk.transcript_locked}
 									/>
