@@ -2,6 +2,7 @@
 import logging
 from typing import Any, Optional
 from logging import getLogger
+from datetime import datetime, timezone, timedelta
 
 import dramatiq
 import nest_asyncio
@@ -2629,3 +2630,169 @@ def _resolve_recipient_email_sync(app_user_id: str) -> str:
     except Exception:
         logger.warning("_resolve_recipient_email_sync: failed for %s", app_user_id)
     return ""
+
+
+def _parse_iso(value: Optional[str]) -> Optional[datetime]:
+    """Parse a Directus ISO timestamp into an aware datetime, or None."""
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+@dramatiq.actor(queue_name="network", priority=100)
+def task_capture_chat_insights() -> None:
+    """Summarize idle agentic chats into anonymized usage insights.
+
+    There is no reliable "chat ended" signal, so this sweep treats a chat as
+    ended once it has sat untouched for INSIGHT_IDLE_MINUTES. For each idle
+    agentic chat it writes a single anonymized usage_insight describing what the
+    host was trying to do or where they got stuck.
+
+    Idempotent / no-rework: for each candidate it looks up the most recent
+    usage_insight for that chat. If one exists whose created_at is at or after
+    the chat's date_updated, there has been no fresh activity since the last
+    insight, so it skips. A new insight therefore fires only after fresh
+    activity followed by idle time, i.e. roughly once per chat session. Safe to
+    run repeatedly. Per-chat work is isolated so one failure never aborts the
+    sweep.
+    """
+    from dembrane.insight_utils import (
+        INSIGHT_SWEEP_BATCH,
+        INSIGHT_IDLE_MINUTES,
+        generate_chat_insight,
+    )
+
+    task_logger = getLogger("dembrane.tasks.task_capture_chat_insights")
+
+    # Cap on how many messages we feed the model; longer chats are head+tail.
+    MAX_MESSAGES = 50
+
+    idle_cutoff = (get_utc_timestamp() - timedelta(minutes=INSIGHT_IDLE_MINUTES)).isoformat()
+
+    with directus_client_context() as client:
+        candidates = client.get_items(
+            "project_chat",
+            {
+                "query": {
+                    "filter": {
+                        "chat_mode": {"_eq": "agentic"},
+                        "deleted_at": {"_null": True},
+                        "date_updated": {"_nnull": True, "_lt": idle_cutoff},
+                    },
+                    "fields": [
+                        "id",
+                        "project_id",
+                        "user_created",
+                        "date_updated",
+                    ],
+                    "sort": ["date_updated"],
+                    "limit": INSIGHT_SWEEP_BATCH,
+                }
+            },
+        )
+
+    if not isinstance(candidates, list) or not candidates:
+        task_logger.debug("task_capture_chat_insights: no idle agentic chats")
+        return
+
+    scanned = len(candidates)
+    written = 0
+    skipped = 0
+
+    for chat in candidates:
+        chat_id = chat.get("id")
+        if not chat_id:
+            skipped += 1
+            continue
+        try:
+            chat_updated = _parse_iso(chat.get("date_updated"))
+
+            # Idempotency: skip if the newest insight already covers this idle window.
+            with directus_client_context() as client:
+                latest = client.get_items(
+                    "usage_insight",
+                    {
+                        "query": {
+                            "filter": {"project_chat_id": {"_eq": str(chat_id)}},
+                            "fields": ["id", "created_at"],
+                            "sort": ["-created_at"],
+                            "limit": 1,
+                        }
+                    },
+                )
+            if isinstance(latest, list) and latest:
+                last_created = _parse_iso(latest[0].get("created_at"))
+                if last_created and chat_updated and last_created >= chat_updated:
+                    skipped += 1
+                    continue
+
+            # Fetch the ordered messages, capped head+tail for long chats.
+            with directus_client_context() as client:
+                messages = client.get_items(
+                    "project_chat_message",
+                    {
+                        "query": {
+                            "filter": {"project_chat_id": {"_eq": str(chat_id)}},
+                            "fields": ["message_from", "text", "date_created"],
+                            "sort": ["date_created"],
+                            "limit": -1,
+                        }
+                    },
+                )
+            messages = messages if isinstance(messages, list) else []
+
+            user_turns = sum(1 for m in messages if m.get("message_from") == "user")
+            if user_turns < 1:
+                skipped += 1
+                continue
+
+            if len(messages) > MAX_MESSAGES:
+                head = MAX_MESSAGES // 2
+                tail = MAX_MESSAGES - head
+                messages = messages[:head] + messages[-tail:]
+
+            insight = run_async_in_new_loop(generate_chat_insight(messages))
+            if not insight:
+                skipped += 1
+                continue
+
+            # Resolve workspace_id from the chat's project.
+            project_id = chat.get("project_id")
+            workspace_id = None
+            if project_id:
+                with directus_client_context() as client:
+                    project = client.get_item("project", str(project_id))
+                workspace_id = project.get("workspace_id") if project else None
+
+            with directus_client_context() as client:
+                client.create_item(
+                    "usage_insight",
+                    {
+                        "workspace_id": workspace_id,
+                        "project_id": project_id,
+                        "directus_user_id": chat.get("user_created"),
+                        "project_chat_id": str(chat_id),
+                        "insight_type": insight["insight_type"],
+                        "summary": insight["summary"],
+                        "status": "new",
+                    },
+                )
+            written += 1
+        except Exception:
+            task_logger.exception(
+                "task_capture_chat_insights: failed for chat %s", chat_id
+            )
+            skipped += 1
+
+    task_logger.info(
+        "task_capture_chat_insights: scanned=%d written=%d skipped=%d",
+        scanned,
+        written,
+        skipped,
+    )

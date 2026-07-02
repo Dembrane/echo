@@ -112,6 +112,14 @@ scheduler.add_job(
     replace_existing=True,
 )
 
+scheduler.add_job(
+    func="dembrane.tasks:task_capture_chat_insights.send",
+    trigger=CronTrigger(minute="*/15"),
+    id="task_capture_chat_insights",
+    name="Summarize idle agentic chats into anonymized usage insights",
+    replace_existing=True,
+)
+
 logger = getLogger("dembrane.scheduler")
 
 # Start the scheduler when this module is run directly
