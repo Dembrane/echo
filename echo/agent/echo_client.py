@@ -114,3 +114,26 @@ class EchoClient:
         if not isinstance(payload, dict):
             raise ValueError("Unexpected list project conversations response shape")
         return cast(AgentProjectConversationsResponse, payload)
+
+    async def list_project_chats(
+        self,
+        project_id: str,
+        limit: int = 30,
+        workspace_wide: bool = False,
+    ) -> list[dict[str, Any]]:
+        response = await self._client.get(
+            f"/agentic/projects/{project_id}/chats",
+            params={"limit": limit, "workspace_wide": workspace_wide},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, list) else []
+
+    async def read_chat(self, chat_id: str, limit: int = 100) -> list[dict[str, Any]]:
+        response = await self._client.get(
+            f"/agentic/chats/{chat_id}/messages",
+            params={"limit": limit},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, list) else []

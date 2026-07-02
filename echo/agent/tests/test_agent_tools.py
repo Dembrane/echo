@@ -27,6 +27,8 @@ class _FakeEchoClient:
         project_conversations_payload: dict | None,
         project_conversations_payload_by_id: dict[str, dict] | None,
         project_conversations_payload_by_transcript_query: dict[str, dict] | None,
+        project_chats_payload: list[dict] | None = None,
+        chat_messages_payload: list[dict] | None = None,
     ):
         self.bearer_token = bearer_token
         self.search_payload = search_payload or {}
@@ -37,9 +39,13 @@ class _FakeEchoClient:
         self.project_conversations_payload_by_transcript_query = (
             project_conversations_payload_by_transcript_query or {}
         )
+        self.project_chats_payload = project_chats_payload or []
+        self.chat_messages_payload = chat_messages_payload or []
         self.search_calls: list[dict[str, object]] = []
         self.transcript_calls: list[str] = []
         self.project_conversations_calls: list[dict[str, object]] = []
+        self.project_chats_calls: list[dict[str, object]] = []
+        self.read_chat_calls: list[dict[str, object]] = []
         self.closed = False
 
     async def search_home(self, query: str, limit: int = 5) -> dict:
@@ -74,6 +80,25 @@ class _FakeEchoClient:
             return self.project_conversations_payload_by_transcript_query[transcript_query]
         return self.project_conversations_payload
 
+    async def list_project_chats(
+        self,
+        project_id: str,
+        limit: int = 30,
+        workspace_wide: bool = False,
+    ) -> list[dict]:
+        self.project_chats_calls.append(
+            {
+                "project_id": project_id,
+                "limit": limit,
+                "workspace_wide": workspace_wide,
+            }
+        )
+        return self.project_chats_payload
+
+    async def read_chat(self, chat_id: str, limit: int = 100) -> list[dict]:
+        self.read_chat_calls.append({"chat_id": chat_id, "limit": limit})
+        return self.chat_messages_payload
+
     async def close(self) -> None:
         self.closed = True
 
@@ -88,6 +113,8 @@ class _FakeEchoClientFactory:
         project_conversations_payload: dict | None = None,
         project_conversations_payload_by_id: dict[str, dict] | None = None,
         project_conversations_payload_by_transcript_query: dict[str, dict] | None = None,
+        project_chats_payload: list[dict] | None = None,
+        chat_messages_payload: list[dict] | None = None,
     ):
         self.search_payload = search_payload
         self.search_payload_by_query = search_payload_by_query
@@ -97,6 +124,8 @@ class _FakeEchoClientFactory:
         self.project_conversations_payload_by_transcript_query = (
             project_conversations_payload_by_transcript_query
         )
+        self.project_chats_payload = project_chats_payload
+        self.chat_messages_payload = chat_messages_payload
         self.instances: list[_FakeEchoClient] = []
 
     def __call__(self, bearer_token: str) -> _FakeEchoClient:
@@ -108,6 +137,8 @@ class _FakeEchoClientFactory:
             project_conversations_payload=self.project_conversations_payload,
             project_conversations_payload_by_id=self.project_conversations_payload_by_id,
             project_conversations_payload_by_transcript_query=self.project_conversations_payload_by_transcript_query,
+            project_chats_payload=self.project_chats_payload,
+            chat_messages_payload=self.chat_messages_payload,
         )
         self.instances.append(client)
         return client
@@ -668,3 +699,74 @@ async def test_list_convo_summary_raises_for_out_of_scope_or_missing_conversatio
         await tools["grepConvoSnippets"].ainvoke(
             {"conversation_id": "conv-9", "query": "representation", "limit": 3}
         )
+
+
+@pytest.mark.asyncio
+async def test_list_project_chats_scopes_to_current_project():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        project_chats_payload=[
+            {
+                "id": "chat-1",
+                "name": "Budget discussion",
+                "chat_mode": "agent",
+                "is_private": False,
+                "is_own": True,
+                "date_updated": "2026-02-01T00:00:00Z",
+                "project_id": "project-1",
+            }
+        ],
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["listProjectChats"].ainvoke({"limit": 5})
+
+    assert result["chats"][0]["id"] == "chat-1"
+    assert factory.instances[0].project_chats_calls == [
+        {"project_id": "project-1", "limit": 5, "workspace_wide": False}
+    ]
+    assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_read_chat_passes_chat_id_and_returns_messages():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        chat_messages_payload=[
+            {
+                "message_from": "user",
+                "text": "what did we decide",
+                "date_created": "2026-02-01T00:00:00Z",
+            },
+            {
+                "message_from": "assistant",
+                "text": "we decided to widen the scope",
+                "date_created": "2026-02-01T00:01:00Z",
+            },
+        ],
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["readChat"].ainvoke({"chat_id": "chat-1"})
+
+    assert [m["message_from"] for m in result["messages"]] == ["user", "assistant"]
+    assert factory.instances[0].read_chat_calls == [{"chat_id": "chat-1", "limit": 100}]
+    assert factory.instances[0].closed is True
