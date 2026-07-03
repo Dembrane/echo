@@ -50,6 +50,7 @@ from dembrane.visitor_session import (
     VALID_VISITOR_STAGES,
     get_visitors_many,
     get_active_visitor_ids,
+    get_linked_visitor_ids,
 )
 from dembrane.api.v2.bff._access import (
     filter_exclude_deleted,
@@ -1167,6 +1168,9 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
         )
         if visitor_ids:
             visitors = await get_visitors_many(project_id, visitor_ids)
+            # A visitor that already initiated is linked to a conversation;
+            # drop it from the funnel immediately, before its recording ping.
+            graduated |= await get_linked_visitor_ids(list(visitors.keys()))
     except Exception as exc:  # noqa: BLE001
         logger.warning("Monitor funnel read failed: %s", exc)
     payload["funnel"] = _build_funnel(visitors, graduated)

@@ -150,6 +150,30 @@ const durationLabel = (conversation: MonitorConversation): string | null => {
 	return null;
 };
 
+// A duration that ticks up once a second for a live session, and reconciles to
+// the server's value on each snapshot. Finished sessions just show the final
+// duration (no ticking).
+const LiveDuration = ({
+	conversation,
+}: {
+	conversation: MonitorConversation;
+}) => {
+	const ticking = conversation.is_live && !conversation.is_finished;
+	const [, setTick] = useState(0);
+	useEffect(() => {
+		if (!ticking) return;
+		const id = setInterval(() => setTick((value) => value + 1), 1000);
+		return () => clearInterval(id);
+	}, [ticking]);
+	const label = durationLabel(conversation);
+	if (!label) return null;
+	return (
+		<Text size="xs" c="dimmed">
+			{label}
+		</Text>
+	);
+};
+
 const lastActivityLabel = (conversation: MonitorConversation): string => {
 	const stamp = conversation.last_seen_at ?? conversation.last_chunk_at;
 	if (!stamp) return t`No activity yet`;
@@ -257,11 +281,7 @@ const MonitorRow = ({
 					<Text size="xs" c="dimmed">
 						<Trans>Last activity {lastActivityLabel(conversation)}</Trans>
 					</Text>
-					{durationLabel(conversation) && (
-						<Text size="xs" c="dimmed">
-							{durationLabel(conversation)}
-						</Text>
-					)}
+					<LiveDuration conversation={conversation} />
 				</Group>
 
 				{conversation.has_error && conversation.error_message && (
