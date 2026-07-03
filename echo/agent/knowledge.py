@@ -36,13 +36,6 @@ def docs_root() -> Optional[Path]:
     return _first_existing(*candidates)
 
 
-def docs_base_url() -> str:
-    """Public docs site prefix for citations, per environment (DOCS_BASE_URL,
-    e.g. https://docs.echo-next.dembrane.com). Empty means the corpus is not
-    published anywhere this deployment should link to; cite bare paths."""
-    return os.environ.get("DOCS_BASE_URL", "").strip().rstrip("/")
-
-
 def skills_root() -> Optional[Path]:
     override = os.environ.get("KNOWLEDGE_SKILLS_DIR")
     if override:
@@ -146,12 +139,16 @@ def read_skill(path: str) -> str:
     return target.read_text(encoding="utf-8", errors="replace")
 
 
-def prompt_section() -> str:
+def prompt_section(docs_base_url: str = "") -> str:
     """The knowledge block appended to the system prompt: how to use the
-    docs corpus plus the skill catalog (frontmatter only, bodies lazy)."""
+    docs corpus plus the skill catalog (frontmatter only, bodies lazy).
+
+    docs_base_url is where this environment's corpus is published (the server
+    resolves it in code from its own env and forwards it per request); empty
+    means unpublished, so citations stay bare paths."""
     parts: list[str] = []
     if docs_root() is not None:
-        base = docs_base_url()
+        base = docs_base_url.strip().rstrip("/")
         if base:
             citation = (
                 "When you cite a doc, link to its published page: drop the .md "
