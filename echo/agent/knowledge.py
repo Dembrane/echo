@@ -36,6 +36,13 @@ def docs_root() -> Optional[Path]:
     return _first_existing(*candidates)
 
 
+def docs_base_url() -> str:
+    """Public docs site prefix for citations, per environment (DOCS_BASE_URL,
+    e.g. https://docs.echo-next.dembrane.com). Empty means the corpus is not
+    published anywhere this deployment should link to; cite bare paths."""
+    return os.environ.get("DOCS_BASE_URL", "").strip().rstrip("/")
+
+
 def skills_root() -> Optional[Path]:
     override = os.environ.get("KNOWLEDGE_SKILLS_DIR")
     if override:
@@ -144,11 +151,20 @@ def prompt_section() -> str:
     docs corpus plus the skill catalog (frontmatter only, bodies lazy)."""
     parts: list[str] = []
     if docs_root() is not None:
+        base = docs_base_url()
+        if base:
+            citation = (
+                "When you cite a doc, link to its published page: drop the .md "
+                f"suffix, append .html, and prefix {base}/ (so users/host/index.md "
+                f"becomes {base}/users/host/index.html). Use a markdown link with "
+                "a readable title, never the bare path."
+            )
+        else:
+            citation = "Cite the doc path you used."
         parts.append(
             "You have a read-only product documentation corpus. Use grepDocs to "
             "search it and readDoc to read pages before answering questions about "
-            "how dembrane works, and cite the doc path you used. Prefer docs over "
-            "guessing."
+            "how dembrane works. Prefer docs over guessing. " + citation
         )
     catalog = skill_catalog()
     if catalog:
