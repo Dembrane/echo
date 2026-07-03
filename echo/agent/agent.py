@@ -103,8 +103,12 @@ ask one focused question first.
   Conclude with plain text only when you are done.
 - Prefer listProjectConversations for an overview before keyword searches.
 - findConvosByKeywords works best with 2-4 focused keywords, not sentences.
-- You have at most 20 tool calls per turn. Spend them on distinct questions, not
-  retries. If a tool returns a guardrail warning, stop searching and answer from
+- Batch your lookups. readDoc and grepDocs each take a list, so read every page
+  you need (or search every pattern) in one step instead of one call at a time.
+  When several independent lookups would answer the question, request them
+  together rather than sequentially.
+- You have at most 20 steps per turn. Spend them on distinct questions, not
+  retries. If a step returns a guardrail warning, stop searching and answer from
   what you have.
 
 ## Citations
@@ -622,14 +626,35 @@ def create_agent_graph(
         return {"docs": knowledge.list_docs()}
 
     @tool
-    def readDoc(path: str, offset: int = 1, limit: int = 200) -> str:
-        """Read a documentation page (line-numbered). Use offset/limit to page."""
-        return knowledge.read_doc(path, offset=offset, limit=limit)
+    def readDoc(paths: list[str], offset: int = 1, limit: int = 200) -> dict[str, Any]:
+        """Read one or more documentation pages (line-numbered). Pass several
+        paths at once to read them in a single step instead of one call each.
+        offset/limit page within each page: use a single path when you need to
+        deep-page one long page."""
+        normalized = [p for p in (paths or []) if isinstance(p, str) and p.strip()]
+        if not normalized:
+            raise ValueError("Provide at least one doc path in `paths`.")
+        return {
+            "docs": [
+                {"path": path, "content": knowledge.read_doc(path, offset=offset, limit=limit)}
+                for path in normalized
+            ]
+        }
 
     @tool
-    def grepDocs(pattern: str) -> dict[str, Any]:
-        """Search the documentation corpus for a regex or phrase."""
-        return {"matches": knowledge.grep_docs(pattern)}
+    def grepDocs(patterns: list[str]) -> dict[str, Any]:
+        """Search the documentation corpus for regexes or phrases. Pass several
+        patterns at once to search them all in a single step instead of one
+        call per pattern."""
+        normalized = [p for p in (patterns or []) if isinstance(p, str) and p.strip()]
+        if not normalized:
+            raise ValueError("Provide at least one pattern in `patterns`.")
+        return {
+            "results": [
+                {"pattern": pattern, "matches": knowledge.grep_docs(pattern)}
+                for pattern in normalized
+            ]
+        }
 
     @tool
     def readSkill(path: str) -> str:
