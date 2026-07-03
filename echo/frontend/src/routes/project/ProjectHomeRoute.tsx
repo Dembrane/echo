@@ -22,6 +22,7 @@ import {
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { LiveMonitorSection } from "@/components/conversation/LiveMonitorSection";
+import { useConversationMonitor } from "@/hooks/useConversationMonitor";
 import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { useInfiniteConversationsByProjectId } from "@/components/conversation/hooks";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -90,10 +91,20 @@ export const ProjectHomeRoute = () => {
 	const project = projectQuery.data;
 	const report = reportQuery.data;
 	const reportTitle = report?.title?.trim();
-	const recentConversations =
+	const allRecentConversations =
 		recentConversationsQuery.data?.pages.flatMap(
 			(page) => page.conversations,
 		) ?? [];
+	// The live monitor above already shows recently-active conversations; drop
+	// those from the recent-cards so nothing appears twice in "Live & recent".
+	const { conversations: monitorConversations } = useConversationMonitor(
+		projectId ?? "",
+		!!projectId,
+	);
+	const monitorIds = new Set(monitorConversations.map((c) => c.id));
+	const recentConversations = allRecentConversations.filter(
+		(conversation) => !monitorIds.has(conversation.id),
+	);
 
 	const base = `/w/${workspaceId}/projects/${projectId}`;
 
@@ -165,7 +176,7 @@ export const ProjectHomeRoute = () => {
 					</Group>
 				</Stack>
 
-				{(projectId ||
+				{(monitorConversations.length > 0 ||
 					recentConversationsQuery.isLoading ||
 					recentConversations.length > 0) && (
 				<Stack gap="sm">
