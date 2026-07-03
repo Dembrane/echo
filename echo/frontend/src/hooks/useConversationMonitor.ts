@@ -68,11 +68,40 @@ export type MonitorSummary = {
 	total: number;
 };
 
+export type FunnelStage =
+	| "scanned"
+	| "terms"
+	| "mic_ok"
+	| "mic_skipped"
+	| "mic_blocked"
+	| "profile";
+
+export type FunnelVisitor = {
+	id: string;
+	stage: FunnelStage;
+	name: string | null;
+	tags: string[];
+	tags_preselected: boolean;
+	scan_count: number;
+	device: string | null;
+	network: MonitorNetwork | null;
+	battery: MonitorBattery | null;
+	last_seen_at: string | null;
+};
+
+export type MonitorFunnel = {
+	visitors: FunnelVisitor[];
+	summary: Record<string, number> & { total: number };
+};
+
 export type MonitorResponse = {
 	conversations: MonitorConversation[];
 	summary: MonitorSummary;
+	funnel?: MonitorFunnel;
 	live_window_seconds: number;
 };
+
+const EMPTY_FUNNEL: MonitorFunnel = { visitors: [], summary: { total: 0 } };
 
 const EMPTY_SUMMARY: MonitorSummary = {
 	finished: 0,
@@ -145,6 +174,7 @@ export const useConversationMonitor = (
 	return {
 		conversations: data?.conversations ?? [],
 		error: query.error ? query.error.message : null,
+		funnel: data?.funnel ?? EMPTY_FUNNEL,
 		isLoading: query.isLoading && !streamData,
 		isStreaming: streamConnected,
 		summary: data?.summary ?? EMPTY_SUMMARY,
