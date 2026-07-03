@@ -369,6 +369,44 @@ def test_monitor_transcript_snippet_truncated() -> None:
     assert len(payload["conversations"][0]["latest_transcript"]) == MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN
 
 
+def test_build_funnel_groups_stages_and_dedupes_graduated() -> None:
+    from datetime import datetime, timezone
+
+    from dembrane.api.v2.bff.conversations import _build_funnel
+
+    now = datetime(2026, 7, 3, 12, 0, 0, tzinfo=timezone.utc)
+    visitors = {
+        "v-scan": {"seen": now, "stage": "scanned", "scan_count": 2},
+        "v-mic-skip": {"seen": now, "stage": "mic_skipped"},
+        "v-profile": {
+            "seen": now,
+            "stage": "profile",
+            "name": "Ada",
+            "tags": ["Table 3"],
+            "tags_preselected": True,
+        },
+        # already graduated into a live conversation -> excluded
+        "v-live": {"seen": now, "stage": "profile"},
+        # unknown stage -> defaults to scanned
+        "v-weird": {"seen": now, "stage": "banana"},
+    }
+    funnel = _build_funnel(visitors, graduated={"v-live"})
+    by_id = {v["id"]: v for v in funnel["visitors"]}
+
+    assert "v-live" not in by_id  # graduated dot is not double-counted
+    assert by_id["v-scan"]["scan_count"] == 2
+    assert by_id["v-mic-skip"]["stage"] == "mic_skipped"
+    assert by_id["v-profile"]["name"] == "Ada"
+    assert by_id["v-profile"]["tags"] == ["Table 3"]
+    assert by_id["v-profile"]["tags_preselected"] is True
+    assert by_id["v-weird"]["stage"] == "scanned"
+
+    assert funnel["summary"]["scanned"] == 2  # v-scan + v-weird
+    assert funnel["summary"]["mic_skipped"] == 1
+    assert funnel["summary"]["profile"] == 1
+    assert funnel["summary"]["total"] == 4
+
+
 # ── endpoint wiring: access gate + two-query aggregation ──────────────
 
 
@@ -431,6 +469,16 @@ async def _build_client(
         return []
 
     monkeypatch.setattr(conv_bff, "get_active_conversation_ids", _fake_active)
+
+    # Funnel (visitor) reads also hit Redis; stub to empty.
+    async def _fake_active_visitors(project_id: str, *, min_score: float) -> list:  # noqa: ARG001
+        return []
+
+    async def _fake_visitors_many(project_id: str, visitor_ids: list) -> dict:  # noqa: ARG001
+        return {}
+
+    monkeypatch.setattr(conv_bff, "get_active_visitor_ids", _fake_active_visitors)
+    monkeypatch.setattr(conv_bff, "get_visitors_many", _fake_visitors_many)
 
     # The snapshot cache also uses Redis; stub a always-miss client so the
     # endpoint recomputes (and the Directus query assertions still hold).
