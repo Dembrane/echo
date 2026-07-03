@@ -194,9 +194,11 @@ const TranscriptionBadge = ({
 const MonitorRow = ({
 	conversation,
 	to,
+	highlighted,
 }: {
 	conversation: MonitorConversation;
 	to: string | null;
+	highlighted?: boolean;
 }) => {
 	const label = conversation.label?.trim() || t`Anonymous participant`;
 	const weakNetwork = isWeakNetwork(conversation);
@@ -207,11 +209,7 @@ const MonitorRow = ({
 			withBorder
 			p="sm"
 			radius="md"
-			className={
-				to
-					? "transition-colors hover:!border-primary-400 cursor-pointer"
-					: undefined
-			}
+			className={`transition-colors ${to ? "hover:!border-primary-400 cursor-pointer" : ""} ${highlighted ? "!border-primary-500 ring-2 ring-primary-200" : ""}`}
 		>
 			<Stack gap={8}>
 				<Group justify="space-between" align="center" wrap="nowrap">
@@ -329,9 +327,11 @@ const groupByTag = (conversations: MonitorConversation[]): TagGroup[] => {
 const TagGroupSection = ({
 	group,
 	base,
+	highlightedConversationId,
 }: {
 	group: TagGroup;
 	base: string | null;
+	highlightedConversationId?: string | null;
 }) => {
 	const [opened, { toggle }] = useDisclosure(true);
 	const [expanded, setExpanded] = useState(false);
@@ -376,6 +376,7 @@ const TagGroupSection = ({
 							key={conversation.id}
 							conversation={conversation}
 							to={base ? `${base}/conversations/${conversation.id}` : null}
+							highlighted={conversation.id === highlightedConversationId}
 						/>
 					))}
 					{overflow > 0 && (
@@ -397,11 +398,14 @@ const TagGroupSection = ({
 export const LiveMonitorSection = ({
 	projectId,
 	standalone = false,
+	highlightedConversationId,
 }: {
 	projectId: string;
 	/** On the dedicated Monitor page, show an empty state instead of
 	 * collapsing to nothing when there is no recent activity. */
 	standalone?: boolean;
+	/** Row to highlight (hovered from the funnel above). */
+	highlightedConversationId?: string | null;
 }) => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const { conversations, summary } = useConversationMonitor(projectId);
@@ -468,7 +472,12 @@ export const LiveMonitorSection = ({
 
 			<Stack gap="lg">
 				{groups.map((group) => (
-					<TagGroupSection key={group.key} group={group} base={base} />
+					<TagGroupSection
+						key={group.key}
+						group={group}
+						base={base}
+						highlightedConversationId={highlightedConversationId}
+					/>
 				))}
 			</Stack>
 		</Stack>
