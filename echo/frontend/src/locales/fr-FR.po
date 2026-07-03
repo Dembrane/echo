@@ -326,7 +326,7 @@ msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr ""
 
 #. placeholder {0}: summary.live
-#: src/components/conversation/LiveMonitorSection.tsx:156
+#: src/components/conversation/LiveMonitorSection.tsx:183
 msgid "{0, plural, one {# live} other {# live}}"
 msgstr ""
 
@@ -382,12 +382,12 @@ msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# étiquette} other {# étiquettes}}"
 
 #. placeholder {0}: summary.transcribing
-#: src/components/conversation/LiveMonitorSection.tsx:160
+#: src/components/conversation/LiveMonitorSection.tsx:187
 msgid "{0, plural, one {# transcribing} other {# transcribing}}"
 msgstr ""
 
 #. placeholder {0}: summary.with_errors
-#: src/components/conversation/LiveMonitorSection.tsx:169
+#: src/components/conversation/LiveMonitorSection.tsx:196
 msgid "{0, plural, one {# with errors} other {# with errors}}"
 msgstr ""
 
@@ -1097,7 +1097,7 @@ msgstr ""
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:702
 #: src/routes/project/CreateProjectRoute.tsx:208
 #: src/routes/project/CreateProjectRoute.tsx:297
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:112
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:110
 #: src/components/project/ProjectUsageAndSharing.tsx:190
 #: src/components/layout/ProjectOverviewLayout.tsx:52
 msgid "Access"
@@ -2016,7 +2016,7 @@ msgstr ""
 #~ msgid "Ask about your conversations to get started."
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1329
+#: src/components/chat/AgenticChatPanel.tsx:1363
 msgid "Ask about your conversations..."
 msgstr ""
 
@@ -3183,7 +3183,7 @@ msgstr "Tags de conversation"
 msgid "conversations"
 msgstr "conversations"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:106
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:104
 #: src/components/workspace/OrganisationProjectsTable.tsx:219
 #: src/components/project/ProjectUsageAndSharing.tsx:453
 #: src/components/conversation/ProjectConversationsPanel.tsx:725
@@ -4546,7 +4546,7 @@ msgstr "Entrez le code à 6 chiffres de votre application d'authentification."
 msgid "Enter the current six-digit code from your authenticator app."
 msgstr "Entrez le code actuel à six chiffres de votre application d'authentification."
 
-#: src/components/chat/AgenticChatPanel.tsx:1341
+#: src/components/chat/AgenticChatPanel.tsx:1375
 msgid "Enter to send, Shift+Enter for a new line"
 msgstr ""
 
@@ -5638,7 +5638,7 @@ msgid "Home"
 msgstr "Accueil"
 
 #: src/routes/project/ProjectHomeRoute.tsx:155
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:96
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:94
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:54
 msgid "Host guide"
 msgstr ""
@@ -5766,6 +5766,10 @@ msgstr ""
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:55
 msgid "Image style"
+msgstr ""
+
+#: src/components/chat/AgenticChatPanel.tsx:1212
+msgid "Improve my setup"
 msgstr ""
 
 #: src/components/workspace/TeamUsageRollup.tsx:146
@@ -6483,8 +6487,16 @@ msgstr "Lien vers la politique de confidentialité de votre organisation qui ser
 #~ msgid "LinkedIn Post (Experimental)"
 #~ msgstr "Publication LinkedIn (Expérimental)"
 
+#: src/components/chat/AgenticChatPanel.tsx:1202
+msgid "List my conversations"
+msgstr ""
+
 #: src/components/chat/agenticToolActivity.ts:108
 msgid "List project conversations"
+msgstr ""
+
+#: src/components/chat/AgenticChatPanel.tsx:1203
+msgid "List the conversations in this project."
 msgstr ""
 
 #: src/components/chat/agenticToolActivity.ts:104
@@ -6507,13 +6519,17 @@ msgstr "Niveau audio en direct:"
 #~ msgid "Live audio level:"
 #~ msgstr "Niveau audio en direct:"
 
-#: src/components/conversation/LiveMonitorSection.tsx:151
+#: src/components/conversation/LiveMonitorSection.tsx:178
 msgid "Live monitoring"
 msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:1690
 msgid "Live Preview"
 msgstr "Vue en direct"
+
+#: src/components/conversation/LiveMonitorSection.tsx:162
+msgid "Live recordings, transcription progress, and errors show up here as participants start recording in the portal."
+msgstr ""
 
 #: src/components/chat/AgenticChatPanel.tsx:784
 msgid "Live stream interrupted. Falling back to polling."
@@ -6909,7 +6925,8 @@ msgstr "Mode"
 msgid "Mollie is not configured in this environment, so no live transactions are shown. The dashboard link still points to the right Mollie environment."
 msgstr ""
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:88
+#: src/routes/project/ProjectMonitorRoute.tsx:15
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:89
 msgid "Monitor"
 msgstr ""
 
@@ -7529,6 +7546,10 @@ msgstr ""
 
 #~ msgid "No quotes available. Generate quotes for this conversation by visiting<0><1> the project library.</1></0>"
 #~ msgstr "Aucune citation disponible. Générez des citations pour cette conversation en visitant<0><1> la bibliothèque du projet.</1></0>"
+
+#: src/components/conversation/LiveMonitorSection.tsx:159
+msgid "No recent activity"
+msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2260
 msgid "No referral agreements yet."
@@ -8816,7 +8837,6 @@ msgstr ""
 
 #: src/features/sidebar/views/HelpView.tsx:53
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:79
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:91
 #: src/features/sidebar/blocks/HelpBlock.tsx:38
 msgid "Planned"
 msgstr ""
@@ -9832,7 +9852,7 @@ msgstr "Prompt de réponse"
 
 #: src/routes/project/ProjectHomeRoute.tsx:163
 #: src/routes/project/report/ProjectReportRoute.tsx:185
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:101
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:99
 #: src/components/report/ReportRenderer.tsx:75
 #: src/components/report/ReportModalNavigationButton.tsx:92
 msgid "Report"
@@ -10173,6 +10193,10 @@ msgstr ""
 #: src/components/dropzone/UploadConversationDropzone.tsx:619
 msgid "Review files before uploading"
 msgstr "Examiner les fichiers avant le téléchargement"
+
+#: src/components/chat/AgenticChatPanel.tsx:1213
+msgid "Review my project settings and suggest improvements."
+msgstr ""
 
 #: src/components/project/ProjectConversationStatusSection.tsx:20
 msgid "Review processing status for every conversation collected in this project."
@@ -10714,7 +10738,7 @@ msgid "Self-serve"
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:1002
-#: src/components/chat/AgenticChatPanel.tsx:1358
+#: src/components/chat/AgenticChatPanel.tsx:1392
 msgid "Send"
 msgstr "Envoyer"
 
@@ -10837,7 +10861,7 @@ msgstr ""
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:80
 #: src/features/sidebar/views/user/UserSettingsView.tsx:33
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:18
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:124
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:122
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:26
 #: src/features/sidebar/views/org/OrgHomeView.tsx:130
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
@@ -12968,7 +12992,7 @@ msgstr "L'URL est requise"
 msgid "URL must start with http:// or https://"
 msgstr "L'URL doit commencer par http:// ou https://"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:117
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:115
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:37
 #: src/components/project/ProjectUsageAndSharing.tsx:415
 #: src/components/layout/ProjectOverviewLayout.tsx:53
@@ -13265,6 +13289,10 @@ msgstr "En attente de la fin des conversations avant de générer un rapport."
 #~ msgid "Warning: You have added {0} key terms. Only the first {ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine."
 #~ msgstr "Warning: You have added {0} key terms. Only the first {ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine."
 
+#: src/routes/project/ProjectMonitorRoute.tsx:18
+msgid "Watch live recordings, transcription progress, and errors across this project as they happen."
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:389
 msgid "participant.alert.microphone.access.issue"
@@ -13547,6 +13575,14 @@ msgstr "Que doit ECHO analyser ou générer à partir des conversations ?"
 #: src/components/report/CreateReportForm.tsx:236
 #~ msgid "What should this report focus on?"
 #~ msgstr "Sur quoi ce rapport doit-il se concentrer ?"
+
+#: src/components/chat/AgenticChatPanel.tsx:1208
+msgid "What themes came up across the conversations in this project?"
+msgstr ""
+
+#: src/components/chat/AgenticChatPanel.tsx:1207
+msgid "What themes came up?"
+msgstr ""
 
 #: src/components/project/ProjectUsageAndSharing.tsx:418
 msgid "What this project is consuming this cycle."

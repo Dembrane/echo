@@ -925,8 +925,8 @@ export const AgenticChatPanel = ({
 		});
 	}, [chatId, projectId, queryClient]);
 
-	const handleSubmit = async () => {
-		const message = input.trim();
+	const handleSubmit = async (overrideMessage?: string) => {
+		const message = (overrideMessage ?? input).trim();
 		if (!message || !projectId || !chatId) return;
 		if (isInFlightStatus(runStatus)) return;
 
@@ -1173,8 +1173,8 @@ export const AgenticChatPanel = ({
 							<Stack
 								align="center"
 								justify="center"
-								gap="sm"
-								className="absolute inset-0 px-6 text-center"
+								gap="md"
+								className="grow px-6 py-12 text-center"
 								{...testId("agentic-empty-state")}
 							>
 								<IconSparkles
@@ -1191,6 +1191,39 @@ export const AgenticChatPanel = ({
 										first, and nothing is saved until it's approved.
 									</Trans>
 								</Text>
+								<Group
+									justify="center"
+									gap="xs"
+									className="max-w-lg flex-wrap pt-1"
+								>
+									{[
+										{
+											key: "list",
+											label: t`List my conversations`,
+											prompt: t`List the conversations in this project.`,
+										},
+										{
+											key: "themes",
+											label: t`What themes came up?`,
+											prompt: t`What themes came up across the conversations in this project?`,
+										},
+										{
+											key: "settings",
+											label: t`Improve my setup`,
+											prompt: t`Review my project settings and suggest improvements.`,
+										},
+									].map((starter) => (
+										<Button
+											key={starter.key}
+											variant="default"
+											size="xs"
+											radius="xl"
+											onClick={() => void handleSubmit(starter.prompt)}
+										>
+											{starter.label}
+										</Button>
+									))}
+								</Group>
 							</Stack>
 						)}
 
@@ -1321,6 +1354,7 @@ export const AgenticChatPanel = ({
 						<Box className="rounded-xl border border-slate-200 bg-white px-3 pb-2 pt-2 shadow-sm transition-colors focus-within:border-slate-400">
 							<Textarea
 								variant="unstyled"
+								styles={{ input: { backgroundColor: "transparent" } }}
 								autosize
 								minRows={2}
 								maxRows={10}
