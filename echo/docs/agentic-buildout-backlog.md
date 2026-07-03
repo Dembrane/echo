@@ -70,6 +70,31 @@ The `usage_insight` and `support_request` rows are written; the **export job**
 that reads them and forwards to Slack is intended to be a separate Sam cron
 (owner to build). Also: add Cronitor monitoring for the new insight-sweep job.
 
+### Monitoring: intended liveness model (design)
+This is **not an infra problem**; it is aggregation and math over signals we
+already collect.
+
+- When a session starts, a channel opens between the server and the participant.
+  The participant sends a **ping every ~5s** (this piece exists). That ping is the
+  primary "still here" signal.
+- The host dashboard's MONITOR should decide whether a conversation is live by
+  **aggregating multiple signals**, not one: the 5s ping, transcription activity,
+  audio upload (chunk arrival), echo/verify events, and the **finish button**
+  (finish means the participant definitively ended, so: not live).
+- **What shipped is a first proxy:** `is_live` currently keys off recent
+  `conversation_chunk` arrival (audio upload) within 45s. That is one of the
+  signals above and a reasonable v1, but the richer model should fold in the 5s
+  ping (primary), transcription progress, echo/verify, and treat the finish
+  button as a definitive "ended" state. Follow-up: locate where the participant
+  5s ping is persisted (the monitor build found the server->client SSE keep-alive,
+  which is a different, connection-level ping) and incorporate it.
+
+### Monitoring: mobile + notifications (direction)
+- Make the monitor page **mobile-friendly** so a host can walk the room. The
+  sidebar is already collapsible (next release), so the app is mostly there.
+- Prefer **web push notifications + haptics** for "a conversation stopped / is
+  failing" alerts. **SMS delivery is unreliable**, so do not lean on it.
+
 ### Monitoring follow-ups
 - **Error badges inside the existing conversation-list rows.** The list endpoint
   (`useInfiniteConversationsByProjectId`) carries no chunk-error field; surfacing
