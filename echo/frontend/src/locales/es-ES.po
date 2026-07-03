@@ -313,7 +313,7 @@ msgstr ""
 #. placeholder {0}: group.liveCount
 #. placeholder {0}: summary.live
 #: src/components/conversation/LiveMonitorSection.tsx:397
-#: src/components/conversation/LiveMonitorSection.tsx:479
+#: src/components/conversation/LiveMonitorSection.tsx:484
 msgid "{0, plural, one {# live} other {# live}}"
 msgstr ""
 
@@ -368,12 +368,12 @@ msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# etiqueta} other {# etiquetas}}"
 
 #. placeholder {0}: summary.transcribing
-#: src/components/conversation/LiveMonitorSection.tsx:483
+#: src/components/conversation/LiveMonitorSection.tsx:488
 msgid "{0, plural, one {# transcribing} other {# transcribing}}"
 msgstr ""
 
 #. placeholder {0}: summary.with_errors
-#: src/components/conversation/LiveMonitorSection.tsx:492
+#: src/components/conversation/LiveMonitorSection.tsx:497
 msgid "{0, plural, one {# with errors} other {# with errors}}"
 msgstr ""
 
@@ -2627,7 +2627,7 @@ msgid "Card"
 msgstr "Tarjeta"
 
 #. placeholder {0}: catchUpLabel(summary.catch_up_eta_seconds)
-#: src/components/conversation/LiveMonitorSection.tsx:505
+#: src/components/conversation/LiveMonitorSection.tsx:510
 msgid "catch up {0}"
 msgstr ""
 
@@ -6402,10 +6402,10 @@ msgid "Latest"
 msgstr "Último"
 
 #: src/routes/project/ProjectHomeRoute.tsx:174
-msgid "Latest conversations"
-msgstr ""
+#~ msgid "Latest conversations"
+#~ msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:286
+#: src/routes/project/ProjectHomeRoute.tsx:290
 msgid "Latest report"
 msgstr ""
 
@@ -6551,6 +6551,10 @@ msgstr ""
 #~ msgid "Live"
 #~ msgstr "Vivo"
 
+#: src/routes/project/ProjectHomeRoute.tsx:174
+msgid "Live & recent"
+msgstr ""
+
 #: src/components/chat/ChatModeBanner.tsx:54
 msgid "Live agent execution mode"
 msgstr "Modo de ejecución de agente en vivo"
@@ -6563,7 +6567,7 @@ msgstr "Nivel de audio en vivo"
 #~ msgid "Live audio level:"
 #~ msgstr "Nivel de audio en vivo:"
 
-#: src/components/conversation/LiveMonitorSection.tsx:474
+#: src/components/conversation/LiveMonitorSection.tsx:479
 msgid "Live monitoring"
 msgstr ""
 
@@ -6575,7 +6579,7 @@ msgstr ""
 msgid "Live Preview"
 msgstr "Vista Previa en Vivo"
 
-#: src/components/conversation/LiveMonitorSection.tsx:458
+#: src/components/conversation/LiveMonitorSection.tsx:462
 msgid "Live recordings, transcription progress, and errors show up here as participants start recording in the portal."
 msgstr ""
 
@@ -7620,7 +7624,7 @@ msgstr ""
 #~ msgid "No quotes available. Generate quotes for this conversation by visiting<0><1> the project library.</1></0>"
 #~ msgstr "No hay citas disponibles. Genera citas para esta conversación visitando<0><1> la biblioteca del proyecto.</1></0>"
 
-#: src/components/conversation/LiveMonitorSection.tsx:455
+#: src/components/conversation/LiveMonitorSection.tsx:459
 msgid "No recent activity"
 msgstr ""
 
@@ -7656,7 +7660,7 @@ msgstr ""
 msgid "No subscription"
 msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:236
+#: src/routes/project/ProjectHomeRoute.tsx:240
 #: src/components/conversation/ProjectConversationsPanel.tsx:407
 msgid "No summary yet"
 msgstr ""
@@ -7952,7 +7956,7 @@ msgstr ""
 #~ msgid "one-time"
 #~ msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:225
+#: src/routes/project/ProjectHomeRoute.tsx:229
 #: src/components/conversation/ProjectConversationsPanel.tsx:326
 msgid "Ongoing"
 msgstr "En curso"
@@ -10345,7 +10349,7 @@ msgstr ""
 msgid "Role updated"
 msgstr ""
 
-#: src/components/conversation/LiveMonitorSection.tsx:501
+#: src/components/conversation/LiveMonitorSection.tsx:506
 msgid "Rough estimate to finish transcribing the backlog"
 msgstr ""
 
@@ -14405,7 +14409,7 @@ msgstr ""
 #~ msgid "Your free plan includes one conversation. Upgrade to add more to the chat."
 #~ msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:322
+#: src/routes/project/ProjectHomeRoute.tsx:326
 msgid "Your free plan includes one conversation. Upgrade to open the rest."
 msgstr ""
 

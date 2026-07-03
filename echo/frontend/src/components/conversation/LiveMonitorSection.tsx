@@ -428,6 +428,7 @@ export const LiveMonitorSection = ({
 	projectId,
 	standalone = false,
 	highlightedConversationId,
+	hideHeader = false,
 }: {
 	projectId: string;
 	/** On the dedicated Monitor page, show an empty state instead of
@@ -435,6 +436,9 @@ export const LiveMonitorSection = ({
 	standalone?: boolean;
 	/** Row to highlight (hovered from the funnel above). */
 	highlightedConversationId?: string | null;
+	/** Suppress the internal "Live monitoring" header + chips (when embedded
+	 * under a shared section header, e.g. the project home). */
+	hideHeader?: boolean;
 }) => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const { conversations, summary } = useConversationMonitor(projectId);
@@ -467,6 +471,7 @@ export const LiveMonitorSection = ({
 
 	return (
 		<Stack gap="lg">
+			{!hideHeader && (
 			<Group justify="space-between" align="center" gap="sm">
 				<Group gap="xs" align="center">
 					<BroadcastIcon size={16} />
@@ -510,6 +515,7 @@ export const LiveMonitorSection = ({
 					)}
 				</Group>
 			</Group>
+			)}
 
 			<Stack gap="lg">
 				{groups.map((group) => (
