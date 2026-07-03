@@ -146,6 +146,17 @@ export const LEGAL_PRIVACY_URL =
 	"https://www.dembrane.com/legal/privacy" as const;
 export const LEGAL_DPA_URL = "https://www.dembrane.com/legal/DPA" as const;
 
+// The new user documentation site only exists on echo-next today
+// (docs.dembrane.com still serves the old site with different paths), so the
+// "What can Ask do?" link hides everywhere else until the docs migrate.
+export const ASK_DOCS_URL = byEnv<string | null>(
+	{
+		local: "https://docs.echo-next.dembrane.com/users/host/chat-and-ask.html",
+		next: "https://docs.echo-next.dembrane.com/users/host/chat-and-ask.html",
+	},
+	null,
+);
+
 export const COMMUNITY_SLACK_URL =
 	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
 

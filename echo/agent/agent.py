@@ -128,7 +128,9 @@ ask one focused question first.
 - Ground every claim about the project in tool results.
 - Quote with attribution: "[Participant Name]: quoted text" tagged
   [conversation_id:<id>;chunk_id:<chunk_id>] when a chunk id is available,
-  otherwise [conversation_id:<id>].
+  otherwise [conversation_id:<id>]. One conversation per tag: never
+  conversation_ids, never comma-separated ids inside one tag. To cite several
+  conversations, write several tags.
 - A few well-chosen quotes beat many.
 - Cite the doc path when you answer from documentation.
 

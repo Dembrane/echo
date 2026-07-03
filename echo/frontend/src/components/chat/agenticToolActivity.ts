@@ -88,8 +88,11 @@ const humanizeToolName = (toolName: string) => {
 
 type ToolContext = {
 	query: string | null;
+	participantName: string | null;
 };
 
+// Gerund phrasing throughout: these lines double as the live status text in
+// the "working" pill, so they must read as something happening now.
 const buildHeadline = (toolName: string, context: ToolContext) => {
 	switch (toolName) {
 		case "proposeProjectUpdate":
@@ -107,23 +110,27 @@ const buildHeadline = (toolName: string, context: ToolContext) => {
 		case "listDocs":
 			return t`Listing documentation pages`;
 		case "get_project_scope":
-			return t`Load project context`;
+			return t`Reading project context`;
 		case "listProjectConversations":
-			return t`List project conversations`;
+			return t`Listing conversations`;
 		case "getLiveConversationStatus":
 			return t`Checking live conversations`;
 		case "findConvosByKeywords":
 			return context.query
-				? t`Search conversations for "${context.query}"`
-				: t`Search conversations`;
+				? t`Searching conversations for "${context.query}"`
+				: t`Searching conversations`;
 		case "listConvoSummary":
-			return t`Load conversation summary`;
+			return context.participantName
+				? t`Reading ${context.participantName}'s summary`
+				: t`Reading a conversation summary`;
 		case "listConvoFullTranscript":
-			return t`Load full transcript`;
+			return context.participantName
+				? t`Reading ${context.participantName}'s transcript`
+				: t`Reading a transcript`;
 		case "grepConvoSnippets":
 			return context.query
-				? t`Search transcript for "${context.query}"`
-				: t`Search transcript`;
+				? t`Searching transcripts for "${context.query}"`
+				: t`Searching transcripts`;
 		default: {
 			return humanizeToolName(toolName);
 		}
@@ -194,7 +201,15 @@ const parseToolEvent = (event: AgenticRunEvent): ParsedToolEvent | null => {
 		input?.query,
 		outputContent?.query,
 	);
+	// Tool outputs carry participant_name for conversation reads; the end
+	// event's headline wins in the merge below, so the name appears as soon
+	// as the read completes.
+	const participantName = firstString(
+		outputContent?.participant_name,
+		input?.participant_name,
+	);
 	const context: ToolContext = {
+		participantName,
 		query,
 	};
 

@@ -17,6 +17,7 @@ import {
 	TextInput,
 	Title,
 	Tooltip,
+	UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -39,8 +40,11 @@ import {
 } from "react";
 import { useLocation } from "react-router";
 import { useUpdateChatMutation } from "@/components/chat/hooks";
+import { InsertTemplateMenu } from "@/components/chat/InsertTemplateMenu";
+import { useConversationsByProjectId } from "@/components/conversation/hooks";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
@@ -129,6 +133,14 @@ const hasResponseStatus = (error: unknown, statusCode: number) => {
 const AGENTIC_REFERENCE_PATTERN =
 	/\[conversation_id:([^;\]\s]+)(?:;chunk_id:([^\]\s]+))?\]/g;
 
+// Fallback for malformed citations the model occasionally emits despite the
+// prompt: plural tags and comma-separated id lists. Whatever still parses
+// becomes links; a tag with nothing usable is dropped rather than rendered
+// as a raw UUID wall.
+const AGENTIC_REFERENCE_LIST_PATTERN = /\[conversation_ids?:\s*([^\]]+)\]/g;
+
+const LOOKS_LIKE_ID_PATTERN = /^[0-9a-f][0-9a-f-]{7,}$/i;
+
 const buildTranscriptLink = ({
 	chunkId,
 	conversationId,
@@ -151,37 +163,59 @@ const buildTranscriptLink = ({
 
 const enrichAgenticContent = ({
 	content,
+	conversationNames,
 	language,
 	projectId,
 	workspaceId,
 }: {
 	content: string;
+	conversationNames?: Map<string, string>;
 	language: string;
 	projectId: string;
 	workspaceId: string;
-}) =>
-	content.replace(
-		AGENTIC_REFERENCE_PATTERN,
-		(_match, conversationIdRaw: string, chunkIdRaw?: string) => {
-			const conversationId = conversationIdRaw.trim();
-			const chunkId = chunkIdRaw?.trim();
-			const label = chunkId ? t`transcript excerpt` : t`transcript`;
-			return `[${label}](${buildTranscriptLink({
-				chunkId,
-				conversationId,
-				language,
-				projectId,
-				workspaceId,
-			})})`;
-		},
-	);
+}) => {
+	const linkFor = (conversationId: string, chunkId?: string) => {
+		const name = conversationNames?.get(conversationId);
+		const label = name
+			? chunkId
+				? t`${name}'s transcript excerpt`
+				: t`${name}'s conversation`
+			: chunkId
+				? t`transcript excerpt`
+				: t`transcript`;
+		return `[${label}](${buildTranscriptLink({
+			chunkId,
+			conversationId,
+			language,
+			projectId,
+			workspaceId,
+		})})`;
+	};
+
+	return content
+		.replace(
+			AGENTIC_REFERENCE_PATTERN,
+			(_match, conversationIdRaw: string, chunkIdRaw?: string) =>
+				linkFor(conversationIdRaw.trim(), chunkIdRaw?.trim()),
+		)
+		.replace(AGENTIC_REFERENCE_LIST_PATTERN, (_match, body: string) => {
+			const links = body
+				.split(",")
+				.map((token) => token.split(";")[0]?.trim() ?? "")
+				.filter((token) => LOOKS_LIKE_ID_PATTERN.test(token))
+				.map((conversationId) => linkFor(conversationId));
+			return links.join(", ");
+		});
+};
 
 const toMessage = ({
+	conversationNames,
 	event,
 	language,
 	projectId,
 	workspaceId,
 }: {
+	conversationNames?: Map<string, string>;
 	event: AgenticRunEvent;
 	language: string;
 	projectId: string;
@@ -204,6 +238,7 @@ const toMessage = ({
 		return {
 			content: enrichAgenticContent({
 				content,
+				conversationNames,
 				language,
 				projectId,
 				workspaceId,
@@ -225,6 +260,7 @@ const toMessage = ({
 		return {
 			content: enrichAgenticContent({
 				content,
+				conversationNames,
 				language,
 				projectId,
 				workspaceId,
@@ -240,6 +276,7 @@ const toMessage = ({
 		return {
 			content: enrichAgenticContent({
 				content: content ?? t`Agent run failed`,
+				conversationNames,
 				language,
 				projectId,
 				workspaceId,
@@ -355,9 +392,6 @@ const ToolActivityRow = ({ item }: { item: ToolActivityItem }) => {
 					{item.headline}
 				</Text>
 			</Group>
-			<Text className="shrink-0 pt-[1px] text-xs text-slate-500">
-				{formatDate(new Date(item.timestamp), "h:mm a")}
-			</Text>
 		</Group>
 	);
 };
@@ -401,50 +435,54 @@ const ToolActivityGroup = ({
 		: running
 			? "var(--agentic-tool-status-running-dot)"
 			: "var(--agentic-tool-status-completed-dot)";
+	const lastTimestamp = items[items.length - 1]?.timestamp;
 
 	return (
 		<Box className="flex justify-start">
 			<Paper
+				// The theme defaults Paper to withBorder; tool activity is ambient,
+				// not a card, so it stays borderless.
+				withBorder={false}
 				className="w-full max-w-full rounded-md bg-slate-50/70 px-2.5 py-1.5 shadow-none md:max-w-[80%]"
 				{...testId("agentic-tool-group")}
 			>
-				<Group
-					justify="space-between"
-					gap="xs"
-					wrap="nowrap"
-					className={isSingle ? undefined : "cursor-pointer"}
+				{/* The whole summary row is the toggle (keyboard included); the
+				    chevron is decoration. Time shows once here, not per row. */}
+				<UnstyledButton
+					className="w-full"
+					disabled={isSingle}
+					aria-expanded={isSingle ? undefined : expanded}
+					aria-label={
+						isSingle ? undefined : expanded ? t`Hide steps` : t`Show steps`
+					}
 					onClick={isSingle ? undefined : onToggle}
 				>
-					<Group gap={8} wrap="nowrap" className="min-w-0 flex-1">
-						<Box
-							aria-hidden="true"
-							className={`h-1.5 w-1.5 shrink-0 rounded-full ${running ? "animate-pulse" : ""}`}
-							style={{ backgroundColor: dotColor }}
-						/>
-						<Text className="min-w-0 flex-1 truncate text-xs italic text-slate-600">
-							{summary}
-						</Text>
-					</Group>
-					{!isSingle && (
-						<ActionIcon
-							variant="subtle"
-							color="gray"
-							size="xs"
-							radius="xl"
-							aria-label={expanded ? t`Hide steps` : t`Show steps`}
-							onClick={(event) => {
-								event.stopPropagation();
-								onToggle();
-							}}
-						>
-							{expanded ? (
-								<IconChevronDown size={12} />
-							) : (
-								<IconChevronRight size={12} />
+					<Group justify="space-between" gap="xs" wrap="nowrap">
+						<Group gap={8} wrap="nowrap" className="min-w-0 flex-1">
+							<Box
+								aria-hidden="true"
+								className={`h-1.5 w-1.5 shrink-0 rounded-full ${running ? "animate-pulse" : ""}`}
+								style={{ backgroundColor: dotColor }}
+							/>
+							<Text className="min-w-0 flex-1 truncate text-xs italic text-slate-600">
+								{summary}
+							</Text>
+						</Group>
+						<Group gap={6} wrap="nowrap" className="shrink-0">
+							{lastTimestamp && (
+								<Text className="text-slate-500 text-xs">
+									{formatDate(new Date(lastTimestamp), "h:mm a")}
+								</Text>
 							)}
-						</ActionIcon>
-					)}
-				</Group>
+							{!isSingle &&
+								(expanded ? (
+									<IconChevronDown size={12} aria-hidden="true" />
+								) : (
+									<IconChevronRight size={12} aria-hidden="true" />
+								))}
+						</Group>
+					</Group>
+				</UnstyledButton>
 				{!isSingle && (
 					<Collapse in={expanded}>
 						{/* pl-3.5 = dot width (6px) + gap (8px): sub-step dots line up
@@ -468,6 +506,7 @@ export const AgenticChatPanel = ({
 	const { iso639_1, language } = useLanguage();
 	const { workspace, workspaceId } = useWorkspace();
 	const location = useLocation();
+	const navigate = useI18nNavigate();
 	// Seed question from the Ask home page (router state), consumed exactly once.
 	const initialMessageRef = useRef<string | null>(
 		typeof (location.state as { initialMessage?: unknown } | null)
@@ -504,12 +543,27 @@ export const AgenticChatPanel = ({
 		threshold: 0.1,
 	});
 
+	// Citation links carry the participant's name when it resolves; generic
+	// "transcript" is the fallback, never a raw id.
+	const conversationsQuery = useConversationsByProjectId(projectId);
+	const conversationNames = useMemo(() => {
+		const names = new Map<string, string>();
+		for (const conversation of conversationsQuery.data ?? []) {
+			const name = (conversation.participant_name ?? "").trim();
+			if (conversation.id && name) {
+				names.set(conversation.id, name);
+			}
+		}
+		return names;
+	}, [conversationsQuery.data]);
+
 	const timeline = useMemo(() => {
 		const sorted = [...events].sort((a, b) => a.seq - b.seq);
 		const items: TimelineItem[] = [];
 
 		for (const event of sorted) {
 			const topLevelMessage = toMessage({
+				conversationNames,
 				event,
 				language,
 				projectId,
@@ -531,7 +585,7 @@ export const AgenticChatPanel = ({
 		}
 
 		return items.sort((left, right) => left.sortSeq - right.sortSeq);
-	}, [events, language, projectId, workspaceId]);
+	}, [events, language, projectId, workspaceId, conversationNames]);
 
 	// Fold consecutive tool activities into one collapsible "working" group so
 	// the thread reads as a conversation, not a debug log. Messages and
@@ -866,9 +920,16 @@ export const AgenticChatPanel = ({
 
 	// Stick to the bottom only when the reader is already there (or just sent a
 	// message). Someone scrolled up to read must never be yanked back down by a
-	// streaming event; the scroll-to-bottom button is their way back.
+	// streaming event; the scroll-to-bottom button is their way back. Bottomness
+	// is read through a ref so this effect fires ONLY when new items land —
+	// re-firing on visibility transitions made manual scrolling feel like it
+	// bounced against the stream.
 	const hasScrolledInitiallyRef = useRef(false);
 	const forceNextScrollRef = useRef(false);
+	const isAtBottomRef = useRef(true);
+	useEffect(() => {
+		isAtBottomRef.current = isVisible;
+	}, [isVisible]);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: chatId is the trigger, not a read — switching chats re-arms the initial jump
 	useEffect(() => {
 		hasScrolledInitiallyRef.current = false;
@@ -880,11 +941,11 @@ export const AgenticChatPanel = ({
 			scrollToBottom("auto");
 			return;
 		}
-		if (forceNextScrollRef.current || isVisible) {
+		if (forceNextScrollRef.current || isAtBottomRef.current) {
 			forceNextScrollRef.current = false;
 			scrollToBottom("smooth");
 		}
-	}, [timeline.length, scrollToBottom, isVisible]);
+	}, [timeline.length, scrollToBottom]);
 
 	useEffect(() => {
 		return () => {
@@ -1034,19 +1095,22 @@ export const AgenticChatPanel = ({
 		[timeline],
 	);
 	const liveRunStatusText =
-		liveToolActivity?.headline ?? t`Agent is working...`;
+		liveToolActivity?.headline ?? t`Working on your answer...`;
 	const showExistingChatLoading = isHydratingStoredRun && timeline.length === 0;
 	const toggleGroupDetails = useCallback((groupId: string) => {
 		setExpandedGroupIds((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
 	}, []);
 
 	return (
+		// The panel owns its scrolling: fixed header, scrollable thread, fixed
+		// composer. Riding the app-level scroll container made the header
+		// collide with the breadcrumbs and the sticky composer misbehave.
 		<Stack
-			className="relative flex min-h-full flex-col px-2 pr-4"
+			className="relative flex h-full min-h-0 flex-col overflow-hidden px-2 pr-4"
 			style={AGENTIC_TOOL_STATUS_VARS}
 			{...testId("chat-interface")}
 		>
-			<Stack className="top-0 w-full pt-6">
+			<Stack className="w-full shrink-0 pt-4">
 				<Group justify="space-between">
 					<Group gap="xs" className="min-w-0 flex-1">
 						{isEditingTitle ? (
@@ -1100,25 +1164,28 @@ export const AgenticChatPanel = ({
 					</Group>
 				</Group>
 				<Group justify="flex-end" gap="sm">
-					{isRunInFlight && (
+					<Tooltip
+						label={<Trans>This is the new chat experience</Trans>}
+						openDelay={300}
+					>
 						<Button
-							variant="outline"
+							variant="subtle"
 							size="xs"
-							rightSection={
-								isStopping ? <Loader size={12} /> : <IconPlayerStop size={12} />
+							onClick={() =>
+								navigate(`/w/${workspaceId}/projects/${projectId}/chats/new`, {
+									state: { preferMode: "deep_dive" },
+								})
 							}
-							onClick={() => void handleStop()}
-							disabled={isStopping}
 						>
-							<Trans>Stop</Trans>
+							<Trans>Open the old chat experience</Trans>
 						</Button>
-					)}
+					</Tooltip>
 				</Group>
 				<Divider />
 			</Stack>
 
-			<Box className="flex-grow">
-				<Stack py="sm" pb="xl" className="relative h-full w-full">
+			<Box className="min-h-0 flex-1 overflow-y-auto">
+				<Stack py="sm" pb="xl" className="relative min-h-full w-full">
 					{error && (
 						<Alert
 							color="red"
@@ -1207,7 +1274,7 @@ export const AgenticChatPanel = ({
 									].map((starter) => (
 										<Button
 											key={starter.key}
-											variant="default"
+											variant="outline"
 											size="xs"
 											radius="xl"
 											onClick={() => void handleSubmit(starter.prompt)}
@@ -1284,12 +1351,11 @@ export const AgenticChatPanel = ({
 							</div>
 						)}
 				</Stack>
+				<div ref={scrollTargetRef} aria-hidden="true" />
 			</Box>
 
-			<div ref={scrollTargetRef} aria-hidden="true" />
-
 			<Box
-				className="bottom-0 w-full pb-2 pt-4 md:sticky"
+				className="relative w-full shrink-0 pb-2 pt-2"
 				style={{ backgroundColor: "var(--app-background)" }}
 			>
 				<Stack className="pb-2" gap="xs">
@@ -1361,26 +1427,56 @@ export const AgenticChatPanel = ({
 								{...testId("chat-input-textarea")}
 							/>
 							<Group justify="space-between" align="center" gap="xs">
-								<Text size="xs" c="dimmed" className="select-none">
-									<Trans>Enter to send, Shift+Enter for a new line</Trans>
-								</Text>
-								<Button
-									type="submit"
-									size="sm"
-									radius="md"
-									leftSection={
-										isSubmitting ? <Loader size={14} /> : <IconSend size={14} />
-									}
-									disabled={
-										isSubmitting ||
-										isRunInFlight ||
-										input.trim().length === 0 ||
-										atTurnLimit
-									}
-									{...testId("chat-send-button")}
-								>
-									<Trans>Send</Trans>
-								</Button>
+								<Group gap="xs">
+									<InsertTemplateMenu
+										workspaceId={workspaceId}
+										onInsert={(content) => setInput(content)}
+									/>
+									<Text size="xs" c="dimmed" className="select-none">
+										<Trans>Enter to send, Shift+Enter for a new line</Trans>
+									</Text>
+								</Group>
+								{/* One action slot: Send morphs into Stop while a run is in
+								    flight. A disabled Send next to a header-only Stop read
+								    as broken. */}
+								{isRunInFlight ? (
+									<Button
+										size="sm"
+										radius="md"
+										variant="outline"
+										leftSection={
+											isStopping ? (
+												<Loader size={14} />
+											) : (
+												<IconPlayerStop size={14} />
+											)
+										}
+										onClick={() => void handleStop()}
+										disabled={isStopping}
+										{...testId("chat-stop-button")}
+									>
+										<Trans>Stop</Trans>
+									</Button>
+								) : (
+									<Button
+										type="submit"
+										size="sm"
+										radius="md"
+										leftSection={
+											isSubmitting ? (
+												<Loader size={14} />
+											) : (
+												<IconSend size={14} />
+											)
+										}
+										disabled={
+											isSubmitting || input.trim().length === 0 || atTurnLimit
+										}
+										{...testId("chat-send-button")}
+									>
+										<Trans>Send</Trans>
+									</Button>
+								)}
 							</Group>
 						</Box>
 					</form>

@@ -199,16 +199,35 @@ export const ProjectUpdateSuggestionCard = ({
 							</Text>
 						</Group>
 						{/* Keep the record of what changed; a bare confirmation tells
-						    the host nothing when they come back to the chat later. */}
-						<Stack gap={4} className="pl-6">
-							{suggestion.changes.map((change) => (
-								<Group key={change.field} gap={6} wrap="wrap" align="baseline">
-									<Text size="xs" fw={500} className="shrink-0">
-										{fieldLabel(change.field)}
-									</Text>
-									<ValueText value={effectiveValue(change)} kind="new" />
-								</Group>
-							))}
+						    the host nothing when they come back to the chat later.
+						    Label-over-value rows in plain text: the green
+						    key-value soup was unreadable. */}
+						<Stack gap="sm" className="ml-6 border-slate-200 border-l-2 pl-3">
+							{suggestion.changes.map((change) => {
+								const value = effectiveValue(change);
+								return (
+									<Stack key={change.field} gap={2}>
+										<Text size="xs" fw={600}>
+											{fieldLabel(change.field)}
+										</Text>
+										<Text size="sm" lineClamp={3}>
+											{typeof value === "boolean" ? (
+												value ? (
+													<Trans>on</Trans>
+												) : (
+													<Trans>off</Trans>
+												)
+											) : isEmptyValue(value) ? (
+												<Text component="span" size="sm" fs="italic">
+													<Trans>cleared</Trans>
+												</Text>
+											) : (
+												String(value)
+											)}
+										</Text>
+									</Stack>
+								);
+							})}
 						</Stack>
 					</Stack>
 				</Paper>
