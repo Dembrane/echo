@@ -20,7 +20,9 @@ import {
 } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router";
 
+import { I18nLink } from "@/components/common/i18nLink";
 import {
 	type MonitorConversation,
 	type ParticipantState,
@@ -124,6 +126,30 @@ const isLowBattery = (conversation: MonitorConversation): boolean => {
 	return typeof battery.level === "number" && battery.level <= 0.15;
 };
 
+const formatClock = (totalSeconds: number): string => {
+	const s = Math.max(0, Math.floor(totalSeconds));
+	const hours = Math.floor(s / 3600);
+	const minutes = Math.floor((s % 3600) / 60);
+	const seconds = s % 60;
+	const pad = (n: number) => String(n).padStart(2, "0");
+	return hours > 0
+		? `${hours}:${pad(minutes)}:${pad(seconds)}`
+		: `${minutes}:${pad(seconds)}`;
+};
+
+// Recorded length when we have it (set on finish), otherwise elapsed since the
+// session started. It can be a little behind for a live session; that's fine.
+const durationLabel = (conversation: MonitorConversation): string | null => {
+	if (typeof conversation.duration === "number" && conversation.duration > 0) {
+		return formatClock(conversation.duration);
+	}
+	if (conversation.created_at) {
+		const start = new Date(conversation.created_at).getTime();
+		if (!Number.isNaN(start)) return formatClock((Date.now() - start) / 1000);
+	}
+	return null;
+};
+
 const lastActivityLabel = (conversation: MonitorConversation): string => {
 	const stamp = conversation.last_seen_at ?? conversation.last_chunk_at;
 	if (!stamp) return t`No activity yet`;
@@ -167,15 +193,26 @@ const TranscriptionBadge = ({
 
 const MonitorRow = ({
 	conversation,
+	to,
 }: {
 	conversation: MonitorConversation;
+	to: string | null;
 }) => {
 	const label = conversation.label?.trim() || t`Anonymous participant`;
 	const weakNetwork = isWeakNetwork(conversation);
 	const lowBattery = isLowBattery(conversation);
 
-	return (
-		<Card withBorder p="sm" radius="md">
+	const card = (
+		<Card
+			withBorder
+			p="sm"
+			radius="md"
+			className={
+				to
+					? "transition-colors hover:!border-primary-400 cursor-pointer"
+					: undefined
+			}
+		>
 			<Stack gap={8}>
 				<Group justify="space-between" align="center" wrap="nowrap">
 					<Group gap="xs" align="center" style={{ minWidth: 0 }}>
@@ -222,13 +259,11 @@ const MonitorRow = ({
 					<Text size="xs" c="dimmed">
 						<Trans>Last activity {lastActivityLabel(conversation)}</Trans>
 					</Text>
-					<Text size="xs" c="dimmed">
-						<Plural
-							value={conversation.chunk_count}
-							one="# recording"
-							other="# recordings"
-						/>
-					</Text>
+					{durationLabel(conversation) && (
+						<Text size="xs" c="dimmed">
+							{durationLabel(conversation)}
+						</Text>
+					)}
 				</Group>
 
 				{conversation.has_error && conversation.error_message && (
@@ -240,6 +275,13 @@ const MonitorRow = ({
 				)}
 			</Stack>
 		</Card>
+	);
+
+	if (!to) return card;
+	return (
+		<I18nLink to={to} className="block no-underline">
+			{card}
+		</I18nLink>
 	);
 };
 
@@ -284,7 +326,13 @@ const groupByTag = (conversations: MonitorConversation[]): TagGroup[] => {
 		});
 };
 
-const TagGroupSection = ({ group }: { group: TagGroup }) => {
+const TagGroupSection = ({
+	group,
+	base,
+}: {
+	group: TagGroup;
+	base: string | null;
+}) => {
 	const [opened, { toggle }] = useDisclosure(true);
 	const [expanded, setExpanded] = useState(false);
 	const visible = expanded
@@ -324,7 +372,11 @@ const TagGroupSection = ({ group }: { group: TagGroup }) => {
 			<Collapse in={opened}>
 				<Stack gap="xs">
 					{visible.map((conversation) => (
-						<MonitorRow key={conversation.id} conversation={conversation} />
+						<MonitorRow
+							key={conversation.id}
+							conversation={conversation}
+							to={base ? `${base}/conversations/${conversation.id}` : null}
+						/>
 					))}
 					{overflow > 0 && (
 						<Text
@@ -351,8 +403,14 @@ export const LiveMonitorSection = ({
 	 * collapsing to nothing when there is no recent activity. */
 	standalone?: boolean;
 }) => {
+	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const { conversations, summary } = useConversationMonitor(projectId);
 	const groups = useMemo(() => groupByTag(conversations), [conversations]);
+	// Rows link to the conversation detail page when we know the workspace.
+	const base =
+		workspaceId && projectId
+			? `/w/${workspaceId}/projects/${projectId}`
+			: null;
 
 	if (summary.total === 0) {
 		if (!standalone) return null;
@@ -410,7 +468,7 @@ export const LiveMonitorSection = ({
 
 			<Stack gap="lg">
 				{groups.map((group) => (
-					<TagGroupSection key={group.key} group={group} />
+					<TagGroupSection key={group.key} group={group} base={base} />
 				))}
 			</Stack>
 		</Stack>

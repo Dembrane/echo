@@ -35,8 +35,16 @@ def test_ping_conversation_persists_and_publishes_telemetry(monkeypatch) -> None
     async def _fake_publish(project_id: str) -> None:
         published.append(project_id)
 
+    registered: list[tuple[str, str]] = []
+
+    async def _fake_register(
+        project_id: str, conversation_id: str, *, score: float
+    ) -> None:  # noqa: ARG001
+        registered.append((project_id, conversation_id))
+
     monkeypatch.setattr(participant, "mark_conversation_seen", _fake_mark)
     monkeypatch.setattr(participant, "publish_monitor_dirty", _fake_publish)
+    monkeypatch.setattr(participant, "register_active_conversation", _fake_register)
 
     body = participant.ConversationPingRequest(
         project_id="proj-9",
@@ -56,6 +64,7 @@ def test_ping_conversation_persists_and_publishes_telemetry(monkeypatch) -> None
     assert telemetry["network"] == {"effective_type": "3g", "online": True}
     assert telemetry["battery"] == {"level": 0.4, "charging": False}
     assert published == ["proj-9"]
+    assert registered == [("proj-9", "conv-1")]
 
 
 def test_ping_conversation_drops_unknown_state(monkeypatch) -> None:

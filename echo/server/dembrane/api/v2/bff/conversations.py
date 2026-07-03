@@ -41,7 +41,10 @@ from fastapi.responses import StreamingResponse
 from dembrane.redis_async import get_redis_client
 from dembrane.tier_capacity import is_conversation_locked
 from dembrane.directus_async import async_directus
-from dembrane.monitor_stream import channel_for_project
+from dembrane.monitor_stream import (
+    channel_for_project,
+    get_active_conversation_ids,
+)
 from dembrane.search_filters import merge_search_filter
 from dembrane.api.v2.bff._access import (
     filter_exclude_deleted,
@@ -709,8 +712,13 @@ def _build_monitor_payload(
     live_window_seconds: int,
     telemetry: Optional[dict[str, dict]] = None,
     tag_map: Optional[dict[str, list[str]]] = None,
+    extra_conversations: Optional[list[dict]] = None,
 ) -> dict:
     """Aggregate recent chunks into a per-conversation monitor view.
+
+    `extra_conversations` seeds sessions that are pinging but have no audio
+    chunk yet (just-initiated / waiting), so they appear instantly. Each is a
+    dict with id, participant_name, is_finished, created_at, duration.
 
     `recent_chunks` MUST be newest-first (sorted by -timestamp). Each row
     carries conversation_id (dict with id + participant_name, or a bare id
@@ -732,16 +740,41 @@ def _build_monitor_payload(
     order: list[str] = []
     by_conv: dict[str, dict] = {}
 
+    # Seed chunk-less, currently-pinging sessions first so a just-initiated
+    # conversation shows up before its first audio chunk exists.
+    for extra in extra_conversations or []:
+        conv_id = extra.get("id")
+        if not conv_id or conv_id in by_conv:
+            continue
+        by_conv[conv_id] = {
+            "id": conv_id,
+            "label": (extra.get("participant_name") or "").strip() or None,
+            "is_finished": bool(extra.get("is_finished")),
+            "last_chunk_at": None,
+            "last_chunk_dt": None,
+            "has_error": False,
+            "error_message": None,
+            "latest_transcript": None,
+            "language": None,
+            "created_at": extra.get("created_at"),
+            "duration": extra.get("duration"),
+        }
+        order.append(conv_id)
+
     for chunk in recent_chunks:
         conv = chunk.get("conversation_id")
         if isinstance(conv, dict):
             conv_id = conv.get("id")
             participant_name = conv.get("participant_name")
             is_finished = bool(conv.get("is_finished"))
+            created_at = conv.get("created_at")
+            duration = conv.get("duration")
         else:
             conv_id = conv
             participant_name = None
             is_finished = False
+            created_at = None
+            duration = None
         if not conv_id:
             continue
 
@@ -757,6 +790,8 @@ def _build_monitor_payload(
                 "error_message": None,
                 "latest_transcript": None,
                 "language": None,
+                "created_at": created_at,
+                "duration": duration,
             }
             by_conv[conv_id] = entry
             order.append(conv_id)
@@ -839,6 +874,8 @@ def _build_monitor_payload(
                 "tags": tag_map.get(conv_id, []),
                 "language": entry["language"],
                 "latest_transcript": entry["latest_transcript"],
+                "created_at": entry["created_at"],
+                "duration": entry["duration"],
                 "network": tele.get("network"),
                 "battery": tele.get("battery"),
                 "last_chunk_at": entry["last_chunk_at"],
@@ -899,6 +936,8 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
                     "conversation_id.id",
                     "conversation_id.participant_name",
                     "conversation_id.is_finished",
+                    "conversation_id.created_at",
+                    "conversation_id.duration",
                     "timestamp",
                     "error",
                     "transcript",
@@ -921,6 +960,52 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
         if conv_id and conv_id not in seen:
             seen.add(conv_id)
             conv_ids.append(conv_id)
+
+    # Sessions that are pinging but have no chunk yet (just-initiated /
+    # waiting) live in the Redis active index, not in the chunk read. Union
+    # them in so the monitor shows a conversation the instant it starts.
+    ping_only_ids: list[str] = []
+    try:
+        active_ids = await get_active_conversation_ids(
+            project_id, min_score=(now - timedelta(seconds=MONITOR_LOOKBACK_SECONDS)).timestamp()
+        )
+        ping_only_ids = [cid for cid in active_ids if cid and cid not in seen]
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Monitor active-index read failed: %s", exc)
+
+    # Fetch metadata for the chunk-less sessions so they render with a name,
+    # tags, and duration. Bounded by the active-index size.
+    extra_conversations: list[dict] = []
+    if ping_only_ids:
+        try:
+            extra_rows = await async_directus.get_items(
+                "conversation",
+                {
+                    "query": {
+                        "filter": {
+                            "id": {"_in": ping_only_ids},
+                            "deleted_at": {"_null": True},
+                        },
+                        "fields": [
+                            "id",
+                            "participant_name",
+                            "is_finished",
+                            "created_at",
+                            "duration",
+                        ],
+                        "limit": len(ping_only_ids),
+                    }
+                },
+            )
+            if isinstance(extra_rows, list):
+                extra_conversations = extra_rows
+                for row in extra_rows:
+                    cid = row.get("id")
+                    if cid and cid not in seen:
+                        seen.add(cid)
+                        conv_ids.append(cid)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Monitor ping-only metadata read failed: %s", exc)
 
     chunk_counts: dict[str, int] = {}
     transcribed_counts: dict[str, int] = {}
@@ -1015,6 +1100,7 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
         window_seconds,
         telemetry,
         tag_map,
+        extra_conversations,
     )
 
 

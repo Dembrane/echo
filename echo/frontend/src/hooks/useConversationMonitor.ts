@@ -46,6 +46,8 @@ export type MonitorConversation = {
 	tags: string[];
 	language: string | null;
 	latest_transcript: string | null;
+	created_at: string | null;
+	duration: number | null;
 	network: MonitorNetwork | null;
 	battery: MonitorBattery | null;
 	last_chunk_at: string | null;
