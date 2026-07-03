@@ -84,12 +84,10 @@ export const ProjectHomeView = () => {
 				label={<Trans>Portal editor</Trans>}
 				icon={PaintBrushIcon}
 			/>
-			<NavButton
+			<NavItem
+				to={`${base}/monitor`}
 				label={<Trans>Monitor</Trans>}
 				icon={BroadcastIcon}
-				onClick={() => undefined}
-				badge={<Trans>Planned</Trans>}
-				disabled
 			/>
 			<NavItem
 				to={`${base}/host-guide`}

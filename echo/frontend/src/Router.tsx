@@ -28,6 +28,7 @@ import { ParticipantPostConversation } from "./routes/participant/ParticipantPos
 import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
 import { ProjectConversationRoute } from "./routes/project/conversation/ProjectConversationRoute";
 import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
+import { ProjectMonitorRoute } from "./routes/project/ProjectMonitorRoute";
 // Tab-based routes - import directly for now to debug
 import {
 	ProjectAccessRoute,
@@ -172,6 +173,10 @@ const projectRouteChildren = [
 					{
 						element: <ProjectHomeRoute />,
 						path: "home",
+					},
+					{
+						element: <ProjectMonitorRoute />,
+						path: "monitor",
 					},
 					{
 						children: [
