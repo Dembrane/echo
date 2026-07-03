@@ -96,3 +96,58 @@ def test_ping_conversation_swallows_redis_errors(monkeypatch) -> None:
     result = _run(participant.ping_conversation("conv-1"))
 
     assert result == {"ok": False}
+
+
+def test_ping_visitor_sanitises_and_publishes(monkeypatch) -> None:
+    import dembrane.api.participant as participant
+
+    marked: list[tuple[str, str, object]] = []
+    published: list[str] = []
+
+    async def _fake_mark(project_id, visitor_id, *, telemetry=None, score=None):  # noqa: ANN001, ARG001
+        marked.append((project_id, visitor_id, telemetry))
+
+    async def _fake_publish(project_id: str) -> None:
+        published.append(project_id)
+
+    monkeypatch.setattr(participant, "mark_visitor_seen", _fake_mark)
+    monkeypatch.setattr(participant, "publish_monitor_dirty", _fake_publish)
+
+    body = participant.VisitorPingRequest(
+        stage="mic_skipped",
+        name="Ada",
+        tags=["Table 3", "  "],
+        tags_preselected=True,
+        scan_count=2,
+    )
+    result = _run(participant.ping_visitor("proj-1", "vis-1", body))
+
+    assert result == {"ok": True}
+    project_id, visitor_id, telemetry = marked[0]
+    assert (project_id, visitor_id) == ("proj-1", "vis-1")
+    assert telemetry["stage"] == "mic_skipped"
+    assert telemetry["name"] == "Ada"
+    assert telemetry["tags"] == ["Table 3"]  # blank tag dropped
+    assert telemetry["tags_preselected"] is True
+    assert telemetry["scan_count"] == 2
+    assert published == ["proj-1"]
+
+
+def test_ping_visitor_drops_unknown_stage(monkeypatch) -> None:
+    import dembrane.api.participant as participant
+
+    marked: list[object] = []
+
+    async def _fake_mark(project_id, visitor_id, *, telemetry=None, score=None):  # noqa: ANN001, ARG001
+        marked.append(telemetry)
+
+    async def _fake_publish(project_id: str) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(participant, "mark_visitor_seen", _fake_mark)
+    monkeypatch.setattr(participant, "publish_monitor_dirty", _fake_publish)
+
+    body = participant.VisitorPingRequest(stage="banana")
+    _run(participant.ping_visitor("proj-1", "vis-1", body))
+    # Unknown stage dropped -> empty telemetry -> None passed to mark.
+    assert marked == [None]

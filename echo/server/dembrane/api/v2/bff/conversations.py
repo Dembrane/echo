@@ -46,6 +46,11 @@ from dembrane.monitor_stream import (
     get_active_conversation_ids,
 )
 from dembrane.search_filters import merge_search_filter
+from dembrane.visitor_session import (
+    VALID_VISITOR_STAGES,
+    get_visitors_many,
+    get_active_visitor_ids,
+)
 from dembrane.api.v2.bff._access import (
     filter_exclude_deleted,
     resolve_project_access,
@@ -912,6 +917,49 @@ def _build_monitor_payload(
     }
 
 
+_FUNNEL_STAGES = ("scanned", "terms", "mic_ok", "mic_skipped", "mic_blocked", "profile")
+
+
+def _build_funnel(
+    visitors: dict[str, dict], graduated: set[str]
+) -> dict:
+    """Shape pre-conversation visitor sessions into the host funnel.
+
+    `visitors` maps visitor_id -> telemetry (with a `seen` datetime). `graduated`
+    is the set of visitor_ids that already have a live conversation, so a dot
+    that became a recording isn't double-counted in the funnel.
+    """
+    entries: list[dict] = []
+    counts = {stage: 0 for stage in _FUNNEL_STAGES}
+    for visitor_id, tele in visitors.items():
+        if visitor_id in graduated:
+            continue
+        stage = tele.get("stage")
+        if stage not in VALID_VISITOR_STAGES:
+            stage = "scanned"
+        seen = tele.get("seen")
+        entries.append(
+            {
+                "id": visitor_id,
+                "stage": stage,
+                "name": (tele.get("name") or "").strip() or None,
+                "tags": tele.get("tags") or [],
+                "tags_preselected": bool(tele.get("tags_preselected")),
+                "scan_count": int(tele.get("scan_count") or 1),
+                "device": tele.get("device"),
+                "network": tele.get("network"),
+                "battery": tele.get("battery"),
+                "last_seen_at": seen.isoformat() if isinstance(seen, datetime) else None,
+                "_sort": seen.isoformat() if isinstance(seen, datetime) else "",
+            }
+        )
+        counts[stage] += 1
+    entries.sort(key=lambda e: e["_sort"], reverse=True)
+    for entry in entries:
+        entry.pop("_sort", None)
+    return {"visitors": entries, "summary": {**counts, "total": len(entries)}}
+
+
 async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
     """Assemble the live-monitor payload for a project (no access gate).
 
@@ -1092,7 +1140,7 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
         except Exception as exc:  # noqa: BLE001
             logger.warning("Monitor liveness ping read failed: %s", exc)
 
-    return _build_monitor_payload(
+    payload = _build_monitor_payload(
         recent_chunks,
         chunk_counts,
         transcribed_counts,
@@ -1102,6 +1150,27 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
         tag_map,
         extra_conversations,
     )
+
+    # Pre-conversation funnel: visitors still onboarding (scan -> terms -> mic
+    # -> profile), deduped against those that already graduated into a live
+    # conversation (their recording ping carries the visitor_id).
+    graduated: set[str] = {
+        str(tele["visitor_id"])
+        for tele in telemetry.values()
+        if tele.get("visitor_id")
+    }
+    visitors: dict[str, dict] = {}
+    try:
+        visitor_ids = await get_active_visitor_ids(
+            project_id,
+            min_score=(now - timedelta(seconds=MONITOR_LOOKBACK_SECONDS)).timestamp(),
+        )
+        if visitor_ids:
+            visitors = await get_visitors_many(project_id, visitor_ids)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Monitor funnel read failed: %s", exc)
+    payload["funnel"] = _build_funnel(visitors, graduated)
+    return payload
 
 
 # The monitor snapshot is cached in Redis so Directus is hit at most ~once per

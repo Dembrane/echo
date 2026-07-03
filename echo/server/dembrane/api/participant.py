@@ -18,6 +18,10 @@ from dembrane.monitor_stream import (
     register_active_conversation,
 )
 from dembrane.service.project import ProjectNotFoundException
+from dembrane.visitor_session import (
+    VALID_VISITOR_STAGES,
+    mark_visitor_seen,
+)
 from dembrane.service.conversation import (
     ConversationServiceException,
     ConversationNotFoundException,
@@ -408,6 +412,9 @@ class ConversationPingRequest(BaseModel):
     state: Optional[str] = None
     mode: Optional[str] = None  # "voice" | "text"
     screen: Optional[str] = None
+    # The pre-conversation funnel dot this recording grew out of. Lets the
+    # monitor dedupe a visitor that has graduated into a live conversation.
+    visitor_id: Optional[str] = None
     network: Optional[ConversationNetworkTelemetry] = None
     battery: Optional[ConversationBatteryTelemetry] = None
 
@@ -423,6 +430,8 @@ def _build_ping_telemetry(body: Optional[ConversationPingRequest]) -> dict:
         telemetry["mode"] = body.mode
     if body.screen:
         telemetry["screen"] = body.screen.strip()[:40]
+    if body.visitor_id:
+        telemetry["visitor_id"] = body.visitor_id.strip()[:64]
     if body.network is not None:
         network = body.network.model_dump(exclude_none=True)
         if isinstance(network.get("effective_type"), str):
@@ -464,6 +473,75 @@ async def ping_conversation(
             body.project_id, conversation_id, score=time()
         )
         await publish_monitor_dirty(body.project_id)
+    return {"ok": True}
+
+
+class VisitorPingRequest(BaseModel):
+    """Pre-conversation funnel beacon: where a participant is during onboarding,
+    before a conversation exists. All optional and best-effort."""
+
+    stage: Optional[str] = None
+    name: Optional[str] = None
+    tags: Optional[List[str]] = None
+    tags_preselected: Optional[bool] = None
+    scan_count: Optional[int] = None
+    device: Optional[str] = None
+    network: Optional[ConversationNetworkTelemetry] = None
+    battery: Optional[ConversationBatteryTelemetry] = None
+
+
+def _build_visitor_telemetry(body: Optional[VisitorPingRequest]) -> dict:
+    if body is None:
+        return {}
+    telemetry: dict = {}
+    if body.stage and body.stage in VALID_VISITOR_STAGES:
+        telemetry["stage"] = body.stage
+    if body.name:
+        telemetry["name"] = body.name.strip()[:120]
+    if isinstance(body.tags, list) and body.tags:
+        telemetry["tags"] = [str(t).strip()[:80] for t in body.tags[:20] if str(t).strip()]
+    if body.tags_preselected is not None:
+        telemetry["tags_preselected"] = bool(body.tags_preselected)
+    if isinstance(body.scan_count, int):
+        telemetry["scan_count"] = max(1, min(body.scan_count, 999))
+    if body.device:
+        telemetry["device"] = body.device.strip()[:60]
+    if body.network is not None:
+        network = body.network.model_dump(exclude_none=True)
+        if isinstance(network.get("effective_type"), str):
+            network["effective_type"] = network["effective_type"][:12]
+        if network:
+            telemetry["network"] = network
+    if body.battery is not None:
+        battery = body.battery.model_dump(exclude_none=True)
+        if battery:
+            telemetry["battery"] = battery
+    return telemetry
+
+
+@ParticipantRouter.post(
+    "/projects/{project_id}/visitors/{visitor_id}/ping", response_model=dict
+)
+async def ping_visitor(
+    project_id: str,
+    visitor_id: str,
+    body: Optional[VisitorPingRequest] = None,
+) -> dict:
+    """Pre-conversation funnel beacon (public), keyed by a client-minted
+    visitor_id. Cheap: stamps a short-lived Redis key + per-project index and
+    nudges open monitor streams. Swallows Redis errors so onboarding is never
+    disrupted."""
+    try:
+        await mark_visitor_seen(
+            project_id,
+            visitor_id,
+            telemetry=_build_visitor_telemetry(body) or None,
+            score=time(),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Visitor ping failed for %s/%s: %s", project_id, visitor_id, exc)
+        return {"ok": False}
+    await publish_monitor_dirty(project_id)
     return {"ok": True}
 
 
