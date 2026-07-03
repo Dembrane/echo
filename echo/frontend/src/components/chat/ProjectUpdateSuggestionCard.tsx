@@ -191,12 +191,26 @@ export const ProjectUpdateSuggestionCard = ({
 					className="w-full max-w-full rounded-md border border-slate-200/80 px-3 py-2 shadow-none md:max-w-[80%]"
 					{...testId("agentic-project-update-suggestion")}
 				>
-					<Group gap="xs" wrap="nowrap">
-						<IconCheck size={16} className="shrink-0 text-green-800" />
-						<Text size="sm">
-							<Trans>These changes are applied to your project.</Trans>
-						</Text>
-					</Group>
+					<Stack gap="xs">
+						<Group gap="xs" wrap="nowrap">
+							<IconCheck size={16} className="shrink-0 text-green-800" />
+							<Text size="sm">
+								<Trans>These changes are applied to your project.</Trans>
+							</Text>
+						</Group>
+						{/* Keep the record of what changed; a bare confirmation tells
+						    the host nothing when they come back to the chat later. */}
+						<Stack gap={4} className="pl-6">
+							{suggestion.changes.map((change) => (
+								<Group key={change.field} gap={6} wrap="wrap" align="baseline">
+									<Text size="xs" fw={500} className="shrink-0">
+										{fieldLabel(change.field)}
+									</Text>
+									<ValueText value={effectiveValue(change)} kind="new" />
+								</Group>
+							))}
+						</Stack>
+					</Stack>
 				</Paper>
 			</Box>
 		);
