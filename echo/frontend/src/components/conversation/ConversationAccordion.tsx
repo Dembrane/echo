@@ -417,6 +417,19 @@ export const ConversationStatusIndicators = ({
 				</Badge>
 			)}
 
+			{conversation.has_transcription_error && (
+				<Tooltip
+					label={t`Some audio in this conversation could not be transcribed. Open it to see which parts failed.`}
+					multiline
+					maw={280}
+					withArrow
+				>
+					<Badge size="xs" color="red" variant="light">
+						<Trans>Transcription error</Trans>
+					</Badge>
+				</Tooltip>
+			)}
+
 			{/* {!hasContent &&
 				conversation.is_finished === true &&
 				conversation.is_all_chunks_transcribed === true && (

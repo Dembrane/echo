@@ -19,6 +19,7 @@ from dembrane.service.conversation import (
     ConversationNotFoundException,
     ConversationNotOpenForParticipationException,
 )
+from dembrane.conversation_liveness import mark_conversation_seen
 
 logger = getLogger("api.participant")
 
@@ -372,6 +373,22 @@ async def upload_conversation_chunk(
         raise HTTPException(
             status_code=403, detail="Conversation not open for participation"
         ) from e
+
+
+@ParticipantRouter.post("/conversations/{conversation_id}/ping", response_model=dict)
+async def ping_conversation(conversation_id: str) -> dict:
+    """Participant liveness beacon, called every few seconds while recording.
+
+    Deliberately cheap: it only stamps a short-lived Redis key so the host
+    monitor can tell a conversation is still live between audio chunks. No DB
+    read, and a Redis failure is swallowed so it never disrupts recording.
+    """
+    try:
+        await mark_conversation_seen(conversation_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Liveness ping failed for %s: %s", conversation_id, exc)
+        return {"ok": False}
+    return {"ok": True}
 
 
 @ParticipantRouter.post(

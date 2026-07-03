@@ -44,6 +44,7 @@ from dembrane.api.v2.bff._access import (
     resolve_conversation_chunk_access,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.conversation_liveness import get_last_seen_many
 
 router = APIRouter()
 logger = getLogger("api.v2.bff.conversations")
@@ -346,6 +347,35 @@ async def list_conversations(
                 cid = row.get("conversation_id")
                 if cid:
                     has_transcript_ids.add(cid)
+
+        # Genuinely-failed chunks: an error set AND no transcript. This
+        # excludes transient errors that were later superseded by a successful
+        # transcript on the same chunk, so the list badge flags real problems
+        # only. Source-agnostic on purpose, so dashboard uploads surface too
+        # (the live monitor is portal-only, this list is not).
+        error_hits = (
+            await async_directus.get_items(
+                "conversation_chunk",
+                {
+                    "query": {
+                        "filter": {
+                            "conversation_id": {"_in": conv_ids},
+                            "error": {"_nempty": True},
+                            "transcript": {"_empty": True},
+                        },
+                        "fields": ["conversation_id"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        has_error_ids: set[str] = set()
+        if isinstance(error_hits, list):
+            for row in error_hits:
+                cid = row.get("conversation_id")
+                if cid:
+                    has_error_ids.add(cid)
         last_chunk_at: dict[str, str] = {}
         chunk_counts: dict[str, int] = {}
         non_text_ids: set[str] = set()
@@ -366,6 +396,7 @@ async def list_conversations(
             conv["has_transcript"] = cid in has_transcript_ids
             conv["last_chunk_at"] = last_chunk_at.get(cid)
             conv["has_only_text_chunks"] = chunk_counts.get(cid, 0) > 0 and cid not in non_text_ids
+            conv["has_transcription_error"] = cid in has_error_ids
 
         if include_chunks:
             chunks = (
@@ -645,6 +676,7 @@ def _build_monitor_payload(
     transcribed_counts: dict[str, int],
     now: datetime,
     live_window_seconds: int,
+    last_seen: Optional[dict[str, datetime]] = None,
 ) -> dict:
     """Aggregate recent chunks into a per-conversation monitor view.
 
@@ -653,9 +685,13 @@ def _build_monitor_payload(
     id string), timestamp, and error. `chunk_counts` /
     `transcribed_counts` are per-conversation totals (all chunks vs. those
     with a non-empty transcript) so the payload can show transcription
-    progress. Pure function so the liveness threshold, error detection,
-    and transcription state are unit-testable without Directus.
+    progress. `last_seen` maps conversation_id -> the latest participant
+    liveness ping (Redis), the primary "still here" signal: a conversation
+    is live if it pinged OR uploaded a chunk within the window. Pure
+    function so liveness, error detection, and transcription state are
+    unit-testable without Directus or Redis.
     """
+    last_seen = last_seen or {}
     live_cutoff = now - timedelta(seconds=live_window_seconds)
 
     order: list[str] = []
@@ -710,11 +746,18 @@ def _build_monitor_payload(
     transcribing_count = 0
     for conv_id in order:
         entry = by_conv[conv_id]
-        last_dt = entry["last_chunk_dt"]
+        # Liveness folds two signals: the participant ping (primary, arrives
+        # every few seconds) and audio-chunk arrival (chunks can be tens of
+        # seconds apart). Take the most recent of the two.
+        seen_dt = last_seen.get(conv_id)
+        activity_dt = entry["last_chunk_dt"]
+        if seen_dt is not None and (activity_dt is None or seen_dt > activity_dt):
+            activity_dt = seen_dt
         # The finish button is a definitive "ended" signal: a finished
-        # conversation is never live, even if a late chunk lands afterwards.
-        recent = last_dt is not None and last_dt > live_cutoff
+        # conversation is never live, even if a late ping/chunk lands after.
+        recent = activity_dt is not None and activity_dt > live_cutoff
         is_live = recent and not entry["is_finished"]
+        last_seen_at = seen_dt.isoformat() if seen_dt is not None else None
 
         chunk_count = int(chunk_counts.get(conv_id, 0) or 0)
         transcribed_count = min(int(transcribed_counts.get(conv_id, 0) or 0), chunk_count)
@@ -740,19 +783,25 @@ def _build_monitor_payload(
                 "is_live": is_live,
                 "is_finished": entry["is_finished"],
                 "last_chunk_at": entry["last_chunk_at"],
+                "last_seen_at": last_seen_at,
                 "chunk_count": chunk_count,
                 "transcribed_count": transcribed_count,
                 "pending_transcription": pending_transcription,
                 "transcription_status": transcription_status,
                 "has_error": entry["has_error"],
                 "error_message": entry["error_message"],
+                # Transient: combined activity recency (chunk or ping) for the
+                # sort below. Popped before returning.
+                "_activity_sort": activity_dt.isoformat() if activity_dt else "",
             }
         )
 
-    # Two stable sorts: most-recent activity first (None sinks to the
-    # end), then partition live conversations to the top.
-    conversations.sort(key=lambda c: (c["last_chunk_at"] or ""), reverse=True)
+    # Two stable sorts: most-recent activity first (None sinks to the end),
+    # then partition live conversations to the top.
+    conversations.sort(key=lambda c: c["_activity_sort"], reverse=True)
     conversations.sort(key=lambda c: 0 if c["is_live"] else 1)
+    for conv in conversations:
+        conv.pop("_activity_sort", None)
 
     return {
         "conversations": conversations,
@@ -877,8 +926,18 @@ async def monitor_conversations(
                 if cid:
                     transcribed_counts[cid] = cnt
 
+    # Participant liveness pings (Redis) — the primary "still here" signal,
+    # finer-grained than chunk arrival. Best-effort: a Redis blip degrades
+    # gracefully to chunk-only liveness rather than failing the monitor.
+    last_seen: dict[str, datetime] = {}
+    if conv_ids:
+        try:
+            last_seen = await get_last_seen_many(conv_ids)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Monitor liveness ping read failed: %s", exc)
+
     return _build_monitor_payload(
-        recent_chunks, chunk_counts, transcribed_counts, now, window_seconds
+        recent_chunks, chunk_counts, transcribed_counts, now, window_seconds, last_seen
     )
 
 

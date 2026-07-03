@@ -198,6 +198,43 @@ def test_monitor_transcribed_count_clamped_to_total() -> None:
     assert entry["transcription_status"] == "up_to_date"
 
 
+def test_monitor_ping_keeps_conversation_live_without_recent_chunk() -> None:
+    # A conversation whose last chunk is stale but which is still pinging
+    # (participant recording through a gap) must read as live: the ping is
+    # the primary signal.
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    stale_chunk = _iso(now - timedelta(seconds=120))  # outside the window
+    recent_chunks = [
+        {"conversation_id": {"id": "c-ping", "participant_name": "Ada"}, "timestamp": stale_chunk, "error": None},
+    ]
+    last_seen = {"c-ping": now - timedelta(seconds=6)}  # pinged 6s ago
+
+    payload = _build_monitor_payload(
+        recent_chunks, {"c-ping": 3}, {"c-ping": 3}, now, 45, last_seen
+    )
+    entry = payload["conversations"][0]
+    assert entry["is_live"] is True
+    assert entry["last_seen_at"] is not None
+    assert payload["summary"]["live"] == 1
+
+
+def test_monitor_finished_conversation_ignores_ping() -> None:
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    recent_chunks = [
+        {
+            "conversation_id": {"id": "c-fin", "participant_name": "Ada", "is_finished": True},
+            "timestamp": _iso(now - timedelta(seconds=5)),
+            "error": None,
+        },
+    ]
+    # Even a fresh ping cannot revive a finished conversation.
+    last_seen = {"c-fin": now - timedelta(seconds=2)}
+    payload = _build_monitor_payload(
+        recent_chunks, {"c-fin": 2}, {"c-fin": 2}, now, 45, last_seen
+    )
+    assert payload["conversations"][0]["is_live"] is False
+
+
 # ── endpoint wiring: access gate + two-query aggregation ──────────────
 
 
@@ -246,6 +283,12 @@ async def _build_client(
 
     fake_directus = _AsyncFakeDirectus(recent_chunks, counts, transcribed)
     monkeypatch.setattr(conv_bff, "async_directus", fake_directus)
+
+    # Liveness ping read hits Redis in production; stub it out here.
+    async def _fake_last_seen(conversation_ids: list[str]) -> dict:  # noqa: ARG001
+        return {}
+
+    monkeypatch.setattr(conv_bff, "get_last_seen_many", _fake_last_seen)
 
     async def _fake_resolve_project_access(project_id: str, auth: Any) -> Any:  # noqa: ARG001
         return SimpleNamespace(require=lambda _policy: None, role="owner", project={})

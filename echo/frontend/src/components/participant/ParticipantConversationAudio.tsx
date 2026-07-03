@@ -29,7 +29,7 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { finishConversation } from "@/lib/api";
+import { finishConversation, pingConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { I18nLink } from "../common/i18nLink";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
@@ -130,7 +130,10 @@ export const ParticipantConversationAudio = () => {
 
 	// Navigation and language
 	const navigate = useI18nNavigate();
-	const newConversationLink = useProjectSharingLink(projectQuery.data, "portal");
+	const newConversationLink = useProjectSharingLink(
+		projectQuery.data,
+		"portal",
+	);
 	const wakeLock = useWakeLock();
 
 	// Ref to store callback that will be set after audioRecorder is created
@@ -183,6 +186,18 @@ export const ParticipantConversationAudio = () => {
 	};
 
 	useWindowEvent("microphoneDeviceChanged", handleMicrophoneDeviceChanged);
+
+	// Liveness beacon: while recording, ping the server every few seconds so
+	// the host monitor sees this conversation as live between audio chunks
+	// (chunks can be tens of seconds apart, or gap during a pause).
+	useEffect(() => {
+		if (!isRecording || !conversationId) return;
+		void pingConversation(conversationId);
+		const interval = setInterval(() => {
+			void pingConversation(conversationId);
+		}, 5000);
+		return () => clearInterval(interval);
+	}, [isRecording, conversationId]);
 
 	// Monitor conversation status during recording - handle deletion mid-recording
 	useEffect(() => {
