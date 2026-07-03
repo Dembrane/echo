@@ -10,6 +10,10 @@ export type ToolActivity = {
 	toolName: string;
 	status: ToolActivityStatus;
 	sortSeq: number;
+	/** Seq of the start event and of the latest close event. Two activities
+	 * overlapped (ran at the same time) when one starts before the other ends. */
+	startSeq: number;
+	endSeq: number;
 	timestamp: string;
 	headline: string;
 	rawInput: string | null;
@@ -133,7 +137,7 @@ const toStatus = (eventType: string): ToolActivityStatus | null => {
 	return null;
 };
 
-type ParsedToolEvent = Omit<ToolActivity, "id"> & {
+type ParsedToolEvent = Omit<ToolActivity, "id" | "startSeq" | "endSeq"> & {
 	callId: string | null;
 	seq: number;
 };
@@ -250,7 +254,9 @@ export const extractTopLevelToolActivity = (
 			const nextIndex = activities.length;
 			activities.push({
 				...parsed,
+				endSeq: parsed.seq,
 				id: getToolActivityId(parsed),
+				startSeq: parsed.seq,
 			});
 			openToolIndexes.set(pairingKey, [
 				...(openToolIndexes.get(pairingKey) ?? []),
@@ -263,7 +269,9 @@ export const extractTopLevelToolActivity = (
 		if (openIndex === null) {
 			activities.push({
 				...parsed,
+				endSeq: parsed.seq,
 				id: getToolActivityId(parsed),
+				startSeq: parsed.seq,
 			});
 			continue;
 		}
@@ -271,6 +279,7 @@ export const extractTopLevelToolActivity = (
 		const existing = activities[openIndex];
 		activities[openIndex] = {
 			...existing,
+			endSeq: parsed.seq,
 			headline: parsed.headline || existing.headline,
 			rawError: parsed.rawError ?? existing.rawError,
 			rawInput: existing.rawInput ?? parsed.rawInput,

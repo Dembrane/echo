@@ -133,25 +133,31 @@ const buildTranscriptLink = ({
 	conversationId,
 	language,
 	projectId,
+	workspaceId,
 }: {
 	chunkId?: string;
 	conversationId: string;
 	language: string;
 	projectId: string;
+	workspaceId: string;
 }) => {
 	const encodedConversationId = encodeURIComponent(conversationId);
 	const hash = chunkId ? `#chunk-${encodeURIComponent(chunkId)}` : "";
-	return `/${language}/projects/${projectId}/conversation/${encodedConversationId}/transcript${hash}`;
+	// Dashboard routes are workspace-scoped; the conversation page handles the
+	// #chunk-<id> deep link (ConversationTranscriptSection).
+	return `/${language}/w/${workspaceId}/projects/${projectId}/conversations/${encodedConversationId}${hash}`;
 };
 
 const enrichAgenticContent = ({
 	content,
 	language,
 	projectId,
+	workspaceId,
 }: {
 	content: string;
 	language: string;
 	projectId: string;
+	workspaceId: string;
 }) =>
 	content.replace(
 		AGENTIC_REFERENCE_PATTERN,
@@ -164,6 +170,7 @@ const enrichAgenticContent = ({
 				conversationId,
 				language,
 				projectId,
+				workspaceId,
 			})})`;
 		},
 	);
@@ -172,10 +179,12 @@ const toMessage = ({
 	event,
 	language,
 	projectId,
+	workspaceId,
 }: {
 	event: AgenticRunEvent;
 	language: string;
 	projectId: string;
+	workspaceId: string;
 }): RenderMessage | null => {
 	const payload = asObject(event.payload);
 
@@ -192,7 +201,7 @@ const toMessage = ({
 
 	if (event.event_type === "user.message" && content) {
 		return {
-			content: enrichAgenticContent({ content, language, projectId }),
+			content: enrichAgenticContent({ content, language, projectId, workspaceId }),
 			id: `u-${event.seq}`,
 			role: "user",
 			sortSeq: event.seq,
@@ -208,7 +217,7 @@ const toMessage = ({
 			return null;
 		}
 		return {
-			content: enrichAgenticContent({ content, language, projectId }),
+			content: enrichAgenticContent({ content, language, projectId, workspaceId }),
 			id: `a-${event.seq}`,
 			role: "assistant",
 			sortSeq: event.seq,
@@ -222,6 +231,7 @@ const toMessage = ({
 				content: content ?? t`Agent run failed`,
 				language,
 				projectId,
+				workspaceId,
 			}),
 			id: `a-${event.seq}`,
 			role: "assistant",
@@ -357,11 +367,24 @@ const ToolActivityGroup = ({
 	const errored = items.some((i) => i.status === "error");
 	const runningItem = items.find((i) => i.status === "running");
 	const isSingle = items.length === 1;
+	// Steps whose start/end ranges overlap ran at the same time; say so
+	// instead of pretending they were sequential.
+	const ranAllAtOnce =
+		items.length > 1 &&
+		items.every((item) =>
+			items.every(
+				(other) =>
+					item === other ||
+					(item.startSeq < other.endSeq && other.startSeq < item.endSeq),
+			),
+		);
 	const summary = running
 		? (runningItem?.headline ?? t`Working...`)
 		: isSingle
 			? items[0].headline
-			: t`Worked through ${items.length} steps`;
+			: ranAllAtOnce
+				? t`Ran ${items.length} steps at once`
+				: t`Worked through ${items.length} steps`;
 	const dotColor = errored
 		? "var(--agentic-tool-status-error-dot)"
 		: running
@@ -371,7 +394,7 @@ const ToolActivityGroup = ({
 	return (
 		<Box className="flex justify-start">
 			<Paper
-				className="w-full max-w-full rounded-md border border-slate-200/70 bg-slate-50/70 px-2.5 py-1.5 shadow-none md:max-w-[80%]"
+				className="w-full max-w-full rounded-md bg-slate-50/70 px-2.5 py-1.5 shadow-none md:max-w-[80%]"
 				{...testId("agentic-tool-group")}
 			>
 				<Group
@@ -413,7 +436,9 @@ const ToolActivityGroup = ({
 				</Group>
 				{!isSingle && (
 					<Collapse in={expanded}>
-						<Stack gap={8} className="mt-2 pl-1">
+						{/* pl-3.5 = dot width (6px) + gap (8px): sub-step dots line up
+						    under the summary text, a clean one-level indent. */}
+						<Stack gap={8} className="mt-2 pl-3.5">
 							{items.map((item) => (
 								<ToolActivityRow key={item.id} item={item} />
 							))}
@@ -430,6 +455,7 @@ export const AgenticChatPanel = ({
 	projectId,
 }: AgenticChatPanelProps) => {
 	const { iso639_1, language } = useLanguage();
+	const { workspace, workspaceId } = useWorkspace();
 	const queryClient = useQueryClient();
 	const chatQuery = useProjectChat(chatId);
 	const [runId, setRunId] = useState<string | null>(null);
@@ -468,6 +494,7 @@ export const AgenticChatPanel = ({
 				event,
 				language,
 				projectId,
+				workspaceId: workspaceId ?? "",
 			});
 			if (topLevelMessage) {
 				items.push({
@@ -485,7 +512,7 @@ export const AgenticChatPanel = ({
 		}
 
 		return items.sort((left, right) => left.sortSeq - right.sortSeq);
-	}, [events, language, projectId]);
+	}, [events, language, projectId, workspaceId]);
 
 	// Fold consecutive tool activities into one collapsible "working" group so
 	// the thread reads as a conversation, not a debug log. Messages and
@@ -553,7 +580,6 @@ export const AgenticChatPanel = ({
 	}, [timeline, pendingUserMessage]);
 
 	// Free tier: max 3 user turns per chat. The 4th routes to upgrade.
-	const { workspace } = useWorkspace();
 	const { freeTier } = useWorkspaceUsage(workspace?.id);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	const userTurnCount = useMemo(
@@ -819,10 +845,26 @@ export const AgenticChatPanel = ({
 		[scrollTargetRef],
 	);
 
+	// Stick to the bottom only when the reader is already there (or just sent a
+	// message). Someone scrolled up to read must never be yanked back down by a
+	// streaming event; the scroll-to-bottom button is their way back.
+	const hasScrolledInitiallyRef = useRef(false);
+	const forceNextScrollRef = useRef(false);
+	useEffect(() => {
+		hasScrolledInitiallyRef.current = false;
+	}, [chatId]);
 	useEffect(() => {
 		if (timeline.length === 0) return;
-		scrollToBottom("smooth");
-	}, [timeline.length, scrollToBottom]);
+		if (!hasScrolledInitiallyRef.current) {
+			hasScrolledInitiallyRef.current = true;
+			scrollToBottom("auto");
+			return;
+		}
+		if (forceNextScrollRef.current || isVisible) {
+			forceNextScrollRef.current = false;
+			scrollToBottom("smooth");
+		}
+	}, [timeline.length, scrollToBottom, isVisible]);
 
 	useEffect(() => {
 		return () => {
@@ -856,6 +898,9 @@ export const AgenticChatPanel = ({
 			content: message,
 			timestamp: new Date().toISOString(),
 		});
+		// Sending is the one moment the host always wants the bottom.
+		forceNextScrollRef.current = true;
+		scrollToBottom("smooth");
 
 		try {
 			let targetRunId = runId;
