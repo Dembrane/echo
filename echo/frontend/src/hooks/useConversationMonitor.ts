@@ -14,6 +14,7 @@ export type MonitorConversation = {
 	is_live: boolean;
 	is_finished: boolean;
 	last_chunk_at: string | null;
+	last_seen_at: string | null;
 	chunk_count: number;
 	transcribed_count: number;
 	pending_transcription: number;

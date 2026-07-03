@@ -360,6 +360,21 @@ export const checkS3Connectivity = async (
 };
 
 /**
+ * Participant liveness beacon. Called every few seconds while recording so the
+ * host monitor can tell the conversation is still live between audio chunks.
+ * Best-effort: failures are swallowed so a blip never disrupts recording.
+ */
+export const pingConversation = async (
+	conversationId: string,
+): Promise<void> => {
+	try {
+		await apiNoAuth.post(`/participant/conversations/${conversationId}/ping`);
+	} catch {
+		// Non-critical; the next ping (or a chunk upload) re-establishes liveness.
+	}
+};
+
+/**
  * Upload a conversation chunk using presigned URL (direct to S3)
  *
  * This is the new, preferred method as it doesn't block the API server.
