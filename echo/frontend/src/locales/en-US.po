@@ -414,17 +414,17 @@ msgstr " Unsubscribe from Notifications"
 #~ msgstr "\"{0}\" is at capacity on {1}. New invites to that workspace are not available."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:465
+#: src/components/participant/ParticipantConversationAudio.tsx:480
 msgid "participant.modal.echo.info.title.generic"
 msgstr "\"ECHO\" available soon"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:479
+#: src/components/participant/ParticipantConversationAudio.tsx:494
 msgid "participant.modal.echo.info.title.go.deeper"
 msgstr "\"Explore\" available soon"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:472
+#: src/components/participant/ParticipantConversationAudio.tsx:487
 msgid "participant.modal.echo.info.title.concrete"
 msgstr "\"Verify\" available soon"
 
@@ -1948,7 +1948,7 @@ msgstr "Anonymize transcript"
 msgid "Anonymize Transcripts"
 msgstr "Anonymize Transcripts"
 
-#: src/components/conversation/ConversationAccordion.tsx:581
+#: src/components/conversation/ConversationAccordion.tsx:594
 msgid "anonymized conversation"
 msgstr "anonymized conversation"
 
@@ -1956,7 +1956,7 @@ msgstr "anonymized conversation"
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:184
 #: src/components/conversation/ProjectConversationsPanel.tsx:297
 #: src/components/conversation/ProjectConversationsPanel.tsx:302
-#: src/components/conversation/ConversationAccordion.tsx:577
+#: src/components/conversation/ConversationAccordion.tsx:590
 msgid "Anonymized conversation"
 msgstr "Anonymized conversation"
 
@@ -2282,7 +2282,7 @@ msgid "Attach verified artifacts"
 msgstr "Attach verified artifacts"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:647
+#: src/components/participant/ParticipantConversationAudio.tsx:662
 msgid "participant.modal.interruption.issue.message"
 msgstr "Attention! We lost the last 60 seconds or so of your recording due to some interruption. Please press the button below to reconnect."
 
@@ -3249,7 +3249,7 @@ msgid "Connection healthy"
 msgstr "Connection healthy"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:533
+#: src/components/participant/ParticipantConversationAudio.tsx:548
 msgid "participant.modal.s3check.title"
 msgstr "Connection issue"
 
@@ -3385,7 +3385,7 @@ msgstr "conversations"
 #: src/components/workspace/OrganisationProjectsTable.tsx:219
 #: src/components/project/ProjectUsageAndSharing.tsx:453
 #: src/components/conversation/ProjectConversationsPanel.tsx:725
-#: src/components/conversation/ConversationAccordion.tsx:1091
+#: src/components/conversation/ConversationAccordion.tsx:1104
 msgid "Conversations"
 msgstr "Conversations"
 
@@ -4448,7 +4448,7 @@ msgstr "Each new member is billed per seat on your plan."
 #~ msgstr "Earlier"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:828
+#: src/components/participant/ParticipantConversationAudio.tsx:843
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -5043,8 +5043,8 @@ msgid "Failed to add conversation to chat{0}"
 msgstr "Failed to add conversation to chat{0}"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:708
-#: src/components/conversation/ConversationAccordion.tsx:968
-#: src/components/conversation/ConversationAccordion.tsx:988
+#: src/components/conversation/ConversationAccordion.tsx:981
+#: src/components/conversation/ConversationAccordion.tsx:1001
 msgid "Failed to add conversations to context"
 msgstr "Failed to add conversations to context"
 
@@ -5106,7 +5106,7 @@ msgstr "Failed to delete tag"
 #~ msgid "Failed to finish conversation. Please try again or start a new conversation."
 #~ msgstr "Failed to finish conversation. Please try again or start a new conversation."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:291
+#: src/components/participant/ParticipantConversationAudio.tsx:306
 msgid "Failed to finish conversation. Please try again."
 msgstr "Failed to finish conversation. Please try again."
 
@@ -5168,7 +5168,7 @@ msgstr "Failed to move project"
 msgid "Failed to move projects"
 msgstr "Failed to move projects"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:393
+#: src/components/participant/ParticipantConversationAudio.tsx:408
 msgid "Failed to reconnect. Please try reloading the page."
 msgstr "Failed to reconnect. Please try reloading the page."
 
@@ -5221,7 +5221,7 @@ msgstr "Failed to revise outcome. Please try again."
 #~ msgid "Failed to start new conversation. Please try again."
 #~ msgstr "Failed to start new conversation. Please try again."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:179
+#: src/components/participant/ParticipantConversationAudio.tsx:182
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Failed to stop recording on device change. Please try again."
 
@@ -5271,7 +5271,7 @@ msgid "Fair password"
 msgstr "Fair password"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:485
+#: src/components/participant/ParticipantConversationAudio.tsx:500
 msgid "participant.modal.echo.info.title"
 msgstr "Feature available soon"
 
@@ -5360,7 +5360,7 @@ msgid "participant.button.finish.text.mode"
 msgstr "Finish"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:796
+#: src/components/participant/ParticipantConversationAudio.tsx:811
 msgid "participant.button.finish"
 msgstr "Finish"
 
@@ -5619,7 +5619,7 @@ msgstr "Generating your report..."
 msgid "German"
 msgstr "German"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:457
+#: src/components/participant/ParticipantConversationAudio.tsx:472
 msgid "Get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Get an immediate reply from dembrane to help you deepen the conversation."
 
@@ -5765,7 +5765,7 @@ msgstr "Guided"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:167
 #: src/components/conversation/ProjectConversationsPanel.tsx:285
-#: src/components/conversation/ConversationAccordion.tsx:563
+#: src/components/conversation/ConversationAccordion.tsx:576
 msgid "Has verified artifacts"
 msgstr "Has verified artifacts"
 
@@ -5939,7 +5939,7 @@ msgid "I have read and accept the <0>terms</0>"
 msgstr "I have read and accept the <0>terms</0>"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:612
+#: src/components/participant/ParticipantConversationAudio.tsx:627
 msgid "participant.button.i.understand"
 msgstr "I understand"
 
@@ -6872,7 +6872,7 @@ msgid "Loading…"
 msgstr "Loading…"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:200
-#: src/components/conversation/ConversationAccordion.tsx:600
+#: src/components/conversation/ConversationAccordion.tsx:613
 msgid "Locked"
 msgstr "Locked"
 
@@ -6945,7 +6945,7 @@ msgstr "Logout"
 msgid "Longest first"
 msgstr "Longest first"
 
-#: src/components/conversation/ConversationAccordion.tsx:660
+#: src/components/conversation/ConversationAccordion.tsx:673
 msgid "Longest First"
 msgstr "Longest First"
 
@@ -7310,7 +7310,7 @@ msgid "Name"
 msgstr "Name"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:102
-#: src/components/conversation/ConversationAccordion.tsx:658
+#: src/components/conversation/ConversationAccordion.tsx:671
 msgid "Name A-Z"
 msgstr "Name A-Z"
 
@@ -7343,7 +7343,7 @@ msgid "Name your workspace."
 msgstr "Name your workspace."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:103
-#: src/components/conversation/ConversationAccordion.tsx:659
+#: src/components/conversation/ConversationAccordion.tsx:672
 msgid "Name Z-A"
 msgstr "Name Z-A"
 
@@ -7461,7 +7461,7 @@ msgstr "New workspace"
 msgid "Newest first"
 msgstr "Newest first"
 
-#: src/components/conversation/ConversationAccordion.tsx:656
+#: src/components/conversation/ConversationAccordion.tsx:669
 msgid "Newest First"
 msgstr "Newest First"
 
@@ -7587,7 +7587,7 @@ msgstr "No conversations available to create library. Please add some conversati
 msgid "No conversations found."
 msgstr "No conversations found."
 
-#: src/components/conversation/ConversationAccordion.tsx:1457
+#: src/components/conversation/ConversationAccordion.tsx:1470
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
@@ -7828,7 +7828,7 @@ msgstr "No subscription"
 msgid "No summary yet"
 msgstr "No summary yet"
 
-#: src/components/conversation/ConversationAccordion.tsx:1369
+#: src/components/conversation/ConversationAccordion.tsx:1382
 msgid "No tags found"
 msgstr "No tags found"
 
@@ -8047,7 +8047,7 @@ msgstr "Off"
 msgid "Oldest first"
 msgstr "Oldest first"
 
-#: src/components/conversation/ConversationAccordion.tsx:657
+#: src/components/conversation/ConversationAccordion.tsx:670
 msgid "Oldest First"
 msgstr "Oldest First"
 
@@ -8125,7 +8125,7 @@ msgid "Ongoing"
 msgstr "Ongoing"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:627
+#: src/components/conversation/ConversationAccordion.tsx:640
 msgid "conversation.ongoing"
 msgstr "Ongoing"
 
@@ -8395,8 +8395,8 @@ msgstr "Optional field on the thank you page"
 msgid "Optional. What this workspace is for."
 msgstr "Optional. What this workspace is for."
 
-#: src/components/conversation/ConversationAccordion.tsx:1142
-#: src/components/conversation/ConversationAccordion.tsx:1147
+#: src/components/conversation/ConversationAccordion.tsx:1155
+#: src/components/conversation/ConversationAccordion.tsx:1160
 msgid "Options"
 msgstr "Options"
 
@@ -9733,17 +9733,17 @@ msgid "Recommended apps"
 msgstr "Recommended apps"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:561
+#: src/components/participant/ParticipantConversationAudio.tsx:576
 msgid "participant.button.s3check.reconnect"
 msgstr "Reconnect"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:674
+#: src/components/participant/ParticipantConversationAudio.tsx:689
 msgid "participant.button.interruption.reconnect"
 msgstr "Reconnect"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:771
+#: src/components/participant/ParticipantConversationAudio.tsx:786
 msgid "participant.button.record"
 msgstr "Record"
 
@@ -9756,7 +9756,7 @@ msgid "Record another conversation"
 msgstr "Record another conversation"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:640
+#: src/components/participant/ParticipantConversationAudio.tsx:655
 msgid "participant.modal.interruption.title"
 msgstr "Recording interrupted"
 
@@ -10282,8 +10282,8 @@ msgstr "Reset Password | dembrane"
 #~ msgid "Reset this cycle's recorded hours for {0}? This is recorded in the audit trail."
 #~ msgstr "Reset this cycle's recorded hours for {0}? This is recorded in the audit trail."
 
-#: src/components/conversation/ConversationAccordion.tsx:1393
-#: src/components/conversation/ConversationAccordion.tsx:1398
+#: src/components/conversation/ConversationAccordion.tsx:1406
+#: src/components/conversation/ConversationAccordion.tsx:1411
 msgid "Reset to default"
 msgstr "Reset to default"
 
@@ -10606,7 +10606,7 @@ msgstr "Search and select the conversations for this chat."
 msgid "Search by organisation"
 msgstr "Search by organisation"
 
-#: src/components/conversation/ConversationAccordion.tsx:1135
+#: src/components/conversation/ConversationAccordion.tsx:1148
 #: src/components/chat/agenticToolActivity.ts:112
 msgid "Search conversations"
 msgstr "Search conversations"
@@ -10662,7 +10662,7 @@ msgstr "Search projects..."
 msgid "Search results"
 msgstr "Search results"
 
-#: src/components/conversation/ConversationAccordion.tsx:1278
+#: src/components/conversation/ConversationAccordion.tsx:1291
 msgid "Search tags"
 msgstr "Search tags"
 
@@ -10809,11 +10809,11 @@ msgstr "Select a workspace"
 
 #: src/routes/project/ProjectsHome.tsx:417
 #: src/components/workspace/DiscoverableWorkspaces.tsx:276
-#: src/components/conversation/ConversationAccordion.tsx:1437
+#: src/components/conversation/ConversationAccordion.tsx:1450
 msgid "Select all"
 msgstr "Select all"
 
-#: src/components/conversation/ConversationAccordion.tsx:1435
+#: src/components/conversation/ConversationAccordion.tsx:1448
 msgid "Select all ({remainingCount})"
 msgstr "Select all ({remainingCount})"
 
@@ -11167,7 +11167,7 @@ msgstr "Shared with {0} and {overflow} others"
 msgid "Shortest first"
 msgstr "Shortest first"
 
-#: src/components/conversation/ConversationAccordion.tsx:661
+#: src/components/conversation/ConversationAccordion.tsx:674
 msgid "Shortest First"
 msgstr "Shortest First"
 
@@ -11328,6 +11328,10 @@ msgstr "Slack community"
 #~ msgid "Soft-delete the workspace from your team. Members lose access. Conversations stay in the database for the retention window but vanish from every view."
 #~ msgstr "Soft-delete the workspace from your team. Members lose access. Conversations stay in the database for the retention window but vanish from every view."
 
+#: src/components/conversation/ConversationAccordion.tsx:422
+msgid "Some audio in this conversation could not be transcribed. Open it to see which parts failed."
+msgstr "Some audio in this conversation could not be transcribed. Open it to see which parts failed."
+
 #: src/components/conversation/AutoSelectConversations.tsx:188
 #~ msgid "Some conversations are still being processed. Auto-select will work optimally once audio processing is complete."
 #~ msgstr "Some conversations are still being processed. Auto-select will work optimally once audio processing is complete."
@@ -11346,7 +11350,7 @@ msgid "Someone"
 msgstr "Someone"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:540
+#: src/components/participant/ParticipantConversationAudio.tsx:555
 msgid "participant.modal.s3check.message"
 msgstr "Something is blocking your connection. Your audio will not be saved unless this is resolved."
 
@@ -11425,8 +11429,8 @@ msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Sorry, we cannot process this request due to an LLM provider's content policy."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:799
-#: src/components/conversation/ConversationAccordion.tsx:1198
-#: src/components/conversation/ConversationAccordion.tsx:1205
+#: src/components/conversation/ConversationAccordion.tsx:1211
+#: src/components/conversation/ConversationAccordion.tsx:1218
 msgid "Sort"
 msgstr "Sort"
 
@@ -11552,7 +11556,7 @@ msgid "Stop"
 msgstr "Stop"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:848
+#: src/components/participant/ParticipantConversationAudio.tsx:863
 msgid "participant.button.stop"
 msgstr "Stop"
 
@@ -11733,8 +11737,8 @@ msgstr "Tag deleted"
 #: src/components/participant/ParticipantInitiateForm.tsx:183
 #: src/components/conversation/ProjectConversationsPanel.tsx:809
 #: src/components/conversation/ConversationEdit.tsx:415
-#: src/components/conversation/ConversationAccordion.tsx:1268
-#: src/components/conversation/ConversationAccordion.tsx:1271
+#: src/components/conversation/ConversationAccordion.tsx:1281
+#: src/components/conversation/ConversationAccordion.tsx:1284
 msgid "Tags"
 msgstr "Tags"
 
@@ -11747,11 +11751,11 @@ msgstr "Tags"
 msgid "Take me to {resolvedWorkspaceName}"
 msgstr "Take me to {resolvedWorkspaceName}"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:451
+#: src/components/participant/ParticipantConversationAudio.tsx:466
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:454
+#: src/components/participant/ParticipantConversationAudio.tsx:469
 msgid "Take some time to create an outcome that makes your contribution concrete."
 msgstr "Take some time to create an outcome that makes your contribution concrete."
 
@@ -12119,7 +12123,7 @@ msgid "This area is for dembrane staff. If you think you should have access, ema
 msgstr "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:546
+#: src/components/participant/ParticipantConversationAudio.tsx:561
 msgid "participant.modal.s3check.suggestions"
 msgstr "This can happen when a VPN or firewall is blocking the connection. Try disabling your VPN, switching to a different network (e.g. mobile hotspot), or contact your IT department for help."
 
@@ -12154,7 +12158,7 @@ msgstr "This email is already in the list."
 #~ msgstr "This email is already subscribed to notifications."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:601
+#: src/components/participant/ParticipantConversationAudio.tsx:616
 msgid "participant.modal.refine.info.available.in"
 msgstr "This feature will be available in {remainingTime} seconds."
 
@@ -12498,7 +12502,7 @@ msgstr "Tip: You can also create a template from any chat message you send, or d
 msgid "Title"
 msgstr "Title"
 
-#: src/components/conversation/ConversationAccordion.tsx:555
+#: src/components/conversation/ConversationAccordion.tsx:568
 msgid "Title auto-generated"
 msgstr "Title auto-generated"
 
@@ -12668,6 +12672,10 @@ msgstr "transcript excerpt"
 #: src/components/project/ProjectTranscriptSettings.tsx:95
 #~ msgid "Transcript Settings"
 #~ msgstr "Transcript Settings"
+
+#: src/components/conversation/ConversationAccordion.tsx:428
+msgid "Transcription error"
+msgstr "Transcription error"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:734
 #~ msgid "Transcription in progress..."
@@ -13140,7 +13148,7 @@ msgid "Upgrade your workspace to view summaries for new conversations."
 msgstr "Upgrade your workspace to view summaries for new conversations."
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:192
-#: src/components/conversation/ConversationAccordion.tsx:592
+#: src/components/conversation/ConversationAccordion.tsx:605
 msgid "Upgrade your workspace to view this conversation"
 msgstr "Upgrade your workspace to view this conversation"
 
@@ -13153,7 +13161,7 @@ msgstr "Upgrade your workspace to view transcripts for new conversations."
 #: src/components/dropzone/UploadConversationDropzone.tsx:540
 #: src/components/conversation/ProjectConversationsPanel.tsx:759
 #: src/components/conversation/ConversationAccordion.tsx:404
-#: src/components/conversation/ConversationAccordion.tsx:1104
+#: src/components/conversation/ConversationAccordion.tsx:1117
 msgid "Upload"
 msgstr "Upload"
 
@@ -13194,7 +13202,7 @@ msgid "Upload limit reached"
 msgstr "Upload limit reached"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:752
-#: src/components/conversation/ConversationAccordion.tsx:1098
+#: src/components/conversation/ConversationAccordion.tsx:1111
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Upload limit reached. Upgrade your workspace."
 
@@ -13225,7 +13233,7 @@ msgid "participant.modal.uploading"
 msgstr "Uploading audio..."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:658
+#: src/components/participant/ParticipantConversationAudio.tsx:673
 msgid "participant.modal.interruption.uploading"
 msgstr "Uploading audio..."
 
@@ -13388,7 +13396,7 @@ msgid "Verified"
 msgstr "Verified"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1388
+#: src/components/conversation/ConversationAccordion.tsx:1401
 msgid "conversation.filters.verified.text"
 msgstr "Verified"
 
@@ -13400,7 +13408,7 @@ msgstr "Verified"
 #~ msgid "Verified Artefacts"
 #~ msgstr "Verified Artefacts"
 
-#: src/components/conversation/ConversationAccordion.tsx:567
+#: src/components/conversation/ConversationAccordion.tsx:580
 msgid "verified artifacts"
 msgstr "verified artifacts"
 
@@ -13639,7 +13647,7 @@ msgstr "We couldn't update your payment method. Your old one is still active. Pl
 #~ msgstr "We have sent you an email with next steps. If you don't see it, check your spam folder. If you still don't see it, please contact jules@dembrane.com"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:493
+#: src/components/participant/ParticipantConversationAudio.tsx:508
 msgid "participant.modal.echo.info.reason"
 msgstr "We need a bit more context to help you use ECHO effectively. Please continue recording so we can provide better suggestions."
 
@@ -14238,7 +14246,7 @@ msgstr "You have a pending invite to {0}. The admin needs to free a seat before 
 msgid "select.all.modal.already.added"
 msgstr "You have already added <0>{existingContextCount, plural, one {# conversation} other {# conversations}}</0> to this chat."
 
-#: src/components/conversation/ConversationAccordion.tsx:1419
+#: src/components/conversation/ConversationAccordion.tsx:1432
 msgid "You have already added all the conversations related to this"
 msgstr "You have already added all the conversations related to this"
 
