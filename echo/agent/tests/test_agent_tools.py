@@ -29,6 +29,8 @@ class _FakeEchoClient:
         project_conversations_payload_by_transcript_query: dict[str, dict] | None,
         project_chats_payload: list[dict] | None = None,
         chat_messages_payload: list[dict] | None = None,
+        memory_payload: dict | None = None,
+        write_memory_response: dict | None = None,
     ):
         self.bearer_token = bearer_token
         self.search_payload = search_payload or {}
@@ -47,6 +49,13 @@ class _FakeEchoClient:
         self.project_chats_calls: list[dict[str, object]] = []
         self.read_chat_calls: list[dict[str, object]] = []
         self.support_request_calls: list[dict[str, object]] = []
+        self.memory_payload = memory_payload or {}
+        self.write_memory_response = write_memory_response or {}
+        self.search_calls: list[dict[str, object]] = []
+        self.transcript_calls: list[str] = []
+        self.project_conversations_calls: list[dict[str, object]] = []
+        self.list_memory_calls: list[str] = []
+        self.write_memory_calls: list[dict[str, object]] = []
         self.closed = False
 
     async def search_home(self, query: str, limit: int = 5) -> dict:
@@ -114,6 +123,26 @@ class _FakeEchoClient:
             }
         )
         return {"id": "sr-1", "status": "new"}
+    async def list_memory(self, project_id: str) -> dict:
+        self.list_memory_calls.append(project_id)
+        return self.memory_payload
+
+    async def write_memory(
+        self,
+        project_id: str,
+        scope: str,
+        content: str,
+        memory_key: str | None = None,
+    ) -> dict:
+        self.write_memory_calls.append(
+            {
+                "project_id": project_id,
+                "scope": scope,
+                "content": content,
+                "memory_key": memory_key,
+            }
+        )
+        return self.write_memory_response
 
     async def close(self) -> None:
         self.closed = True
@@ -131,6 +160,8 @@ class _FakeEchoClientFactory:
         project_conversations_payload_by_transcript_query: dict[str, dict] | None = None,
         project_chats_payload: list[dict] | None = None,
         chat_messages_payload: list[dict] | None = None,
+        memory_payload: dict | None = None,
+        write_memory_response: dict | None = None,
     ):
         self.search_payload = search_payload
         self.search_payload_by_query = search_payload_by_query
@@ -142,6 +173,8 @@ class _FakeEchoClientFactory:
         )
         self.project_chats_payload = project_chats_payload
         self.chat_messages_payload = chat_messages_payload
+        self.memory_payload = memory_payload
+        self.write_memory_response = write_memory_response
         self.instances: list[_FakeEchoClient] = []
 
     def __call__(self, bearer_token: str) -> _FakeEchoClient:
@@ -155,6 +188,8 @@ class _FakeEchoClientFactory:
             project_conversations_payload_by_transcript_query=self.project_conversations_payload_by_transcript_query,
             project_chats_payload=self.project_chats_payload,
             chat_messages_payload=self.chat_messages_payload,
+            memory_payload=self.memory_payload,
+            write_memory_response=self.write_memory_response,
         )
         self.instances.append(client)
         return client
@@ -815,6 +850,79 @@ async def test_reach_out_to_dembrane_sends_support_request_for_current_project()
             "project_id": "project-1",
             "message": "My exports are failing",
             "page_context": "on the reports page",
+        }
+    ]
+    assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_read_memory_returns_memories():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        memory_payload={
+            "project_id": "project-1",
+            "count": 1,
+            "memories": [
+                {
+                    "id": "mem-1",
+                    "scope": "project",
+                    "memory_key": "focus",
+                    "content": "Focus on housing themes.",
+                    "source": "agent",
+                    "updated_at": "2026-02-01T00:00:00Z",
+                }
+            ],
+        },
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["readMemory"].ainvoke({})
+
+    assert result["memories"][0]["memory_key"] == "focus"
+    assert result["memories"][0]["content"] == "Focus on housing themes."
+    assert factory.instances[0].list_memory_calls == ["project-1"]
+    assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_remember_saves_memory_scoped_to_project_by_default():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        write_memory_response={"id": "mem-1", "scope": "project", "action": "created"},
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["remember"].ainvoke(
+        {"content": "The host prefers short summaries.", "memory_key": "summary_style"}
+    )
+
+    assert result["action"] == "created"
+    assert result["scope"] == "project"
+    assert result["memory_key"] == "summary_style"
+    assert factory.instances[0].write_memory_calls == [
+        {
+            "project_id": "project-1",
+            "scope": "project",
+            "content": "The host prefers short summaries.",
+            "memory_key": "summary_style",
         }
     ]
     assert factory.instances[0].closed is True

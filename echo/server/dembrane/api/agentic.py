@@ -7,6 +7,7 @@ import asyncio
 from uuid import uuid4
 from typing import Any, Optional, AsyncIterator
 from logging import getLogger
+from datetime import datetime, timezone
 from contextlib import suppress
 
 from fastapi import Query, Request, APIRouter, HTTPException
@@ -62,6 +63,20 @@ class AgenticSupportRequestSchema(BaseModel):
     message: str = Field(..., min_length=1)
     # A short note from the assistant about what the host was doing / needs.
     page_context: Optional[str] = None
+
+
+# Agent memory: three scopes the agent both reads and writes. Private or
+# personal content is only ever allowed at user scope; workspace and project
+# memory content must stay generic.
+MEMORY_SCOPES = ("workspace", "project", "user")
+MEMORY_READ_LIMIT = 200
+MEMORY_CARD_FIELDS = ["id", "scope", "memory_key", "content", "source", "updated_at"]
+
+
+class AgenticMemoryWriteSchema(BaseModel):
+    scope: str = Field(..., min_length=1)
+    content: str = Field(..., min_length=1)
+    memory_key: Optional[str] = None
 
 
 def _run_task_key(run_id: str, turn_seq: int) -> tuple[str, int]:
@@ -301,6 +316,63 @@ def _to_related_id(value: Any) -> Optional[str]:
     if isinstance(value, dict):
         return _to_non_empty_string(value.get("id"))
     return _to_non_empty_string(value)
+
+
+def _memory_scope_owner_ids(
+    scope: str,
+    *,
+    directus_user_id: Optional[str],
+    workspace_id: Optional[str],
+    project_id: str,
+) -> dict[str, Any]:
+    """Owner id fields to persist on a memory row of the given scope.
+
+    User memory is owned by the host and may hold private content. Workspace
+    and project memory carry no per-user owner, so their content stays generic
+    and shared with everyone who can reach that scope."""
+    if scope == "user":
+        return {"directus_user_id": directus_user_id}
+    if scope == "workspace":
+        return {"workspace_id": workspace_id}
+    if scope == "project":
+        return {"project_id": project_id, "workspace_id": workspace_id}
+    raise ValueError(f"Unsupported memory scope: {scope}")
+
+
+def _memory_read_or_filter(
+    *,
+    directus_user_id: Optional[str],
+    workspace_id: Optional[str],
+    project_id: str,
+) -> dict[str, Any]:
+    """Directus _or filter for the three memory scopes the agent reads: this
+    host's own user memory, the workspace's memory, and the project's memory."""
+    return {
+        "_or": [
+            {
+                "_and": [
+                    {"scope": {"_eq": "user"}},
+                    {"directus_user_id": {"_eq": directus_user_id}},
+                ]
+            },
+            {
+                "_and": [
+                    {"scope": {"_eq": "workspace"}},
+                    {"workspace_id": {"_eq": workspace_id}},
+                ]
+            },
+            {
+                "_and": [
+                    {"scope": {"_eq": "project"}},
+                    {"project_id": {"_eq": project_id}},
+                ]
+            },
+        ]
+    }
+
+
+def _to_memory_card(row: dict[str, Any]) -> dict[str, Any]:
+    return {field: row.get(field) for field in MEMORY_CARD_FIELDS}
 
 
 def _normalize_transcript_query_tokens(query: str, *, max_tokens: int = 4) -> list[str]:
@@ -1033,6 +1105,123 @@ async def create_support_request(
         status_code=201,
         content={"id": support_request_id, "status": "new"},
     )
+
+
+async def _resolve_workspace_id_for_project(project_id: str) -> Optional[str]:
+    """Resolve the workspace a project belongs to. Workspace is the data
+    boundary, so it is never taken from the agent; the server derives it."""
+    project = await async_directus.get_item("project", project_id)
+    if not isinstance(project, dict):
+        return None
+    return _to_related_id(project.get("workspace_id"))
+
+
+@AgenticRouter.get("/projects/{project_id}/memory")
+async def list_project_memory(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Return the memory the agent may read for this project: the host's own
+    user memory, the workspace's memory, and the project's memory."""
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+
+    workspace_id = await _resolve_workspace_id_for_project(project_id)
+    read_filter = _memory_read_or_filter(
+        directus_user_id=auth.user_id,
+        workspace_id=workspace_id,
+        project_id=project_id,
+    )
+    rows = await async_directus.get_items(
+        "agent_memory",
+        {
+            "query": {
+                "filter": read_filter,
+                "fields": MEMORY_CARD_FIELDS,
+                "sort": "-updated_at",
+                "limit": MEMORY_READ_LIMIT,
+            }
+        },
+    )
+
+    memories = [_to_memory_card(row) for row in rows if isinstance(row, dict)]
+    return {
+        "project_id": project_id,
+        "count": len(memories),
+        "memories": memories,
+    }
+
+
+@AgenticRouter.post("/projects/{project_id}/memory")
+async def write_project_memory(
+    project_id: str,
+    body: AgenticMemoryWriteSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Save a memory for this project scope. Upserts on
+    (scope, owner, memory_key) when a memory_key is given, else appends."""
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+
+    scope = body.scope.strip().lower()
+    if scope not in MEMORY_SCOPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid scope. Use one of: {', '.join(MEMORY_SCOPES)}",
+        )
+
+    content = body.content.strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="content is required")
+
+    workspace_id = await _resolve_workspace_id_for_project(project_id)
+    if scope in {"workspace", "project"} and workspace_id is None:
+        raise HTTPException(status_code=500, detail="Project is missing a workspace reference")
+
+    owner_ids = _memory_scope_owner_ids(
+        scope,
+        directus_user_id=auth.user_id,
+        workspace_id=workspace_id,
+        project_id=project_id,
+    )
+    memory_key = _to_non_empty_string(body.memory_key)
+
+    if memory_key is not None:
+        existing_filter = {
+            "_and": [
+                {"scope": {"_eq": scope}},
+                {"memory_key": {"_eq": memory_key}},
+                *[{field: {"_eq": value}} for field, value in owner_ids.items()],
+            ]
+        }
+        existing = await async_directus.get_items(
+            "agent_memory",
+            {"query": {"filter": existing_filter, "fields": ["id"], "limit": 1}},
+        )
+        if isinstance(existing, list) and existing:
+            existing_id = _to_non_empty_string((existing[0] or {}).get("id"))
+            if existing_id is not None:
+                await async_directus.update_item(
+                    "agent_memory",
+                    existing_id,
+                    {
+                        "content": content,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    },
+                )
+                return {"id": existing_id, "scope": scope, "action": "updated"}
+
+    payload = {
+        "scope": scope,
+        "memory_key": memory_key,
+        "content": content,
+        "source": "agent",
+        **owner_ids,
+    }
+    created = await async_directus.create_item("agent_memory", payload)
+    created_row = created.get("data") if isinstance(created, dict) else {}
+    created_id = _to_non_empty_string((created_row or {}).get("id"))
+    return {"id": created_id, "scope": scope, "action": "created"}
 
 
 @AgenticRouter.post("/runs/{run_id}/stream")

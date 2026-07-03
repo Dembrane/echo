@@ -92,6 +92,29 @@ class EchoClient:
             return payload["transcript"]
         return str(payload)
 
+    async def list_memory(self, project_id: str) -> dict[str, Any]:
+        payload = await self.get(f"/agentic/projects/{project_id}/memory")
+        return payload if isinstance(payload, dict) else {}
+
+    async def write_memory(
+        self,
+        project_id: str,
+        scope: str,
+        content: str,
+        memory_key: str | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {"scope": scope, "content": content}
+        if memory_key:
+            body["memory_key"] = memory_key
+
+        response = await self._client.post(
+            f"/agentic/projects/{project_id}/memory",
+            json=body,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+
     async def list_project_conversations(
         self,
         project_id: str,

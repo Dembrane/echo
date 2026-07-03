@@ -118,6 +118,18 @@ ask one focused question first.
   changes. Say "I've suggested these changes", never "I've updated your project".
   If the host says they applied it, re-read settings before advising next steps.
 
+## Memory
+You can save durable notes with `remember` and recall them with `readMemory`.
+Read memory early in a task when earlier context would help. There are three
+scopes:
+- user: this host's own preferences. This is the only scope that may hold
+  private or personal details.
+- workspace: shared preferences for the whole workspace. Keep these generic.
+- project: notes about this project. Keep these generic.
+Prefer updating an existing note by passing the same memory_key over saving a
+near duplicate. Never store private or personal information outside user scope.
+When you save something, tell the host in one short sentence what you saved.
+
 ## Project context
 The first message may include Project Name and Project Context. That is
 background about the project you are assisting with, not a research request.
@@ -731,6 +743,57 @@ def create_agent_graph(
             await client.close()
         return {"sent": True, "support_request_id": result.get("id")}
 
+    @tool
+    async def readMemory() -> dict[str, Any]:
+        """Read saved memory for this project: your notes about the host (user
+        scope), the workspace, and the project. Use at the start of a task when
+        earlier context would help."""
+        client = _create_echo_client()
+        try:
+            payload = await client.list_memory(project_id)
+        finally:
+            await client.close()
+
+        memories = payload.get("memories") if isinstance(payload, dict) else None
+        return {"memories": memories if isinstance(memories, list) else []}
+
+    @tool
+    async def remember(
+        content: str,
+        scope: str = "project",
+        memory_key: str = "",
+    ) -> dict[str, Any]:
+        """Save a durable memory. scope is one of "user", "workspace", or
+        "project". Only user scope may hold private or personal details; keep
+        workspace and project memory generic. Pass a stable memory_key to update
+        an existing note instead of saving a near duplicate."""
+        normalized_content = content.strip()
+        if not normalized_content:
+            raise ValueError("content is required")
+
+        normalized_scope = (scope or "project").strip().lower()
+        normalized_key = memory_key.strip()
+
+        client = _create_echo_client()
+        try:
+            result = await client.write_memory(
+                project_id=project_id,
+                scope=normalized_scope,
+                content=normalized_content,
+                memory_key=normalized_key or None,
+            )
+        finally:
+            await client.close()
+
+        return {
+            "kind": "memory_saved",
+            "scope": result.get("scope") if isinstance(result, dict) else normalized_scope,
+            "memory_key": normalized_key,
+            "action": result.get("action") if isinstance(result, dict) else None,
+            "id": result.get("id") if isinstance(result, dict) else None,
+            "visible_to_user": True,
+        }
+
     tools = [
         get_project_scope,
         findConvosByKeywords,
@@ -748,6 +811,8 @@ def create_agent_graph(
         listProjectChats,
         readChat,
         reachOutToDembrane,
+        readMemory,
+        remember,
     ]
     system_prompt = SYSTEM_PROMPT + knowledge.prompt_section()
     configured_llm = llm or _build_llm()
