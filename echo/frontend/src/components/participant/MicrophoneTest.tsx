@@ -19,12 +19,14 @@ import { testId } from "@/lib/testUtils";
 interface MicrophoneTestProps {
 	onContinue: (deviceId: string) => void;
 	onMicTestSuccess: (success: boolean) => void;
+	onMicAccessDenied?: (denied: boolean) => void;
 	isInModal?: boolean;
 }
 
 const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 	onContinue,
 	onMicTestSuccess,
+	onMicAccessDenied,
 	isInModal = false,
 }) => {
 	const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
@@ -41,6 +43,11 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 	const [micAccessDenied, setMicAccessDenied] = useState(false);
 	const [isMicTestSuccessful, setIsMicTestSuccessful] = useState(false);
 	const isMicSuccessRef = useRef(false);
+
+	// Surface a blocked mic to the host funnel (best-effort; optional callback).
+	useEffect(() => {
+		if (micAccessDenied) onMicAccessDenied?.(true);
+	}, [micAccessDenied, onMicAccessDenied]);
 	const displayLevel = Math.min(Math.sqrt(level / 255) * 100, 100);
 
 	const streamRef = useRef<MediaStream | null>(null);

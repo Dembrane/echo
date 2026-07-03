@@ -366,6 +366,8 @@ export type ParticipantPingTelemetry = {
 	state?: string;
 	mode?: "voice" | "text";
 	screen?: string;
+	/** The pre-conversation funnel dot this recording grew out of. */
+	visitor_id?: string;
 	network?: {
 		online?: boolean;
 		effective_type?: string;
@@ -373,6 +375,42 @@ export type ParticipantPingTelemetry = {
 		rtt?: number;
 	};
 	battery?: { level?: number; charging?: boolean };
+};
+
+export type VisitorPingTelemetry = {
+	stage?: string;
+	name?: string;
+	tags?: string[];
+	tags_preselected?: boolean;
+	scan_count?: number;
+	device?: string;
+	network?: {
+		online?: boolean;
+		effective_type?: string;
+		downlink?: number;
+		rtt?: number;
+	};
+	battery?: { level?: number; charging?: boolean };
+};
+
+/**
+ * Pre-conversation funnel beacon. Reports where a visitor is in onboarding
+ * (scanned / terms / mic / profile) before a conversation exists, keyed by a
+ * device-persistent visitor id. Best-effort; failures are swallowed.
+ */
+export const pingVisitor = async (
+	projectId: string,
+	visitorId: string,
+	telemetry?: VisitorPingTelemetry,
+): Promise<void> => {
+	try {
+		await apiNoAuth.post(
+			`/participant/projects/${projectId}/visitors/${visitorId}/ping`,
+			telemetry ?? undefined,
+		);
+	} catch {
+		// Non-critical; the next beacon re-establishes funnel presence.
+	}
 };
 
 /**
