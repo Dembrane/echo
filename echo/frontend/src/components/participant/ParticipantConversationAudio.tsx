@@ -34,6 +34,7 @@ import {
 	type ParticipantPingTelemetry,
 	pingConversation,
 } from "@/lib/api";
+import { getVisitorId } from "@/lib/visitorId";
 import { testId } from "@/lib/testUtils";
 import { I18nLink } from "../common/i18nLink";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
@@ -251,6 +252,7 @@ export const ParticipantConversationAudio = () => {
 			if (cancelled) return;
 			void pingConversation(conversationId, {
 				project_id: projectId,
+				visitor_id: projectId ? getVisitorId(projectId) : undefined,
 				state: participantState,
 				mode: "voice",
 				network: readNetworkTelemetry(),
