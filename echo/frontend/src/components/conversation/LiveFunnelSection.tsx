@@ -6,7 +6,6 @@ import {
 	Box,
 	Button,
 	Card,
-	Collapse,
 	Group,
 	Modal,
 	Stack,
@@ -14,13 +13,9 @@ import {
 	TextInput,
 	Tooltip,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import {
 	BatteryLowIcon,
-	CaretRightIcon,
-	CheckIcon,
 	PencilSimpleIcon,
-	WarningCircleIcon,
 	WifiSlashIcon,
 } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
@@ -36,6 +31,7 @@ import {
 	type MonitorConversation,
 	useConversationMonitor,
 } from "@/hooks/useConversationMonitor";
+import { FunnelCanvas, type NodeDatum } from "./FunnelCanvas";
 
 const weakNetwork = (
 	network: { online?: boolean; effective_type?: string } | null,
@@ -61,157 +57,9 @@ const relativeTime = (stamp: string | null): string => {
 	}
 };
 
-const micStageLabel = (stage: FunnelStage): string | null => {
-	if (stage === "mic_ok") return t`Mic OK`;
-	if (stage === "mic_skipped") return t`Mic skipped`;
-	if (stage === "mic_blocked") return t`Mic blocked`;
-	return null;
-};
-
-const visitorDotColor = (stage: FunnelStage): string => {
-	if (stage === "mic_blocked") return "var(--mantine-color-red-6)";
-	if (stage === "mic_ok") return "var(--mantine-color-green-6)";
-	if (stage === "profile") return "var(--mantine-color-primary-6)";
-	return "var(--mantine-color-gray-5)";
-};
-
 type Selection =
 	| { kind: "visitor"; visitor: FunnelVisitor }
 	| { kind: "conversation"; conversation: MonitorConversation };
-
-// A small clickable dot; the atom of every lane. Hovering a recording dot
-// highlights its detailed card in the list below.
-const Dot = ({
-	color,
-	label,
-	pulse,
-	warn,
-	icon,
-	onOpen,
-	onHoverStart,
-	onHoverEnd,
-}: {
-	color: string;
-	label: string;
-	pulse?: boolean;
-	warn?: boolean;
-	icon?: React.ReactNode;
-	onOpen: () => void;
-	onHoverStart?: () => void;
-	onHoverEnd?: () => void;
-}) => (
-	<Tooltip label={label} openDelay={150} withArrow>
-		<button
-			type="button"
-			onClick={onOpen}
-			onMouseEnter={onHoverStart}
-			onMouseLeave={onHoverEnd}
-			onFocus={onHoverStart}
-			onBlur={onHoverEnd}
-			aria-label={label}
-			className="relative flex h-5 w-5 items-center justify-center rounded-full transition-transform hover:scale-125"
-			style={{ backgroundColor: color }}
-		>
-			{pulse && (
-				<span
-					className="absolute inset-0 rounded-full animate-ping"
-					style={{ backgroundColor: color, opacity: 0.5 }}
-				/>
-			)}
-			{icon}
-			{warn && (
-				<span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-orange-400" />
-			)}
-		</button>
-	</Tooltip>
-);
-
-type Lane = {
-	key: string;
-	label: string;
-	visitors: FunnelVisitor[];
-	recordings: MonitorConversation[];
-	count: number;
-};
-
-const FunnelLane = ({
-	lane,
-	onOpenVisitor,
-	onOpenConversation,
-	onHoverConversation,
-}: {
-	lane: Lane;
-	onOpenVisitor: (visitor: FunnelVisitor) => void;
-	onOpenConversation: (conversation: MonitorConversation) => void;
-	onHoverConversation: (id: string | null) => void;
-}) => {
-	const [opened, { toggle }] = useDisclosure(true);
-	return (
-		<Stack gap="xs" className="min-w-[150px] flex-1">
-			<Group
-				gap="xs"
-				align="center"
-				wrap="nowrap"
-				className="cursor-pointer select-none"
-				onClick={toggle}
-			>
-				<ActionIcon variant="subtle" color="gray" size="sm" aria-hidden>
-					<CaretRightIcon
-						size={14}
-						style={{
-							transition: "transform 150ms ease",
-							transform: opened ? "rotate(90deg)" : "none",
-						}}
-					/>
-				</ActionIcon>
-				<Text size="xs" fw={600} tt="uppercase" c="dimmed" truncate>
-					{lane.label}
-				</Text>
-				<Badge size="xs" variant="light" color="gray">
-					{lane.count}
-				</Badge>
-			</Group>
-			<Collapse in={opened}>
-				{lane.count === 0 ? (
-					<Text size="xs" c="dimmed" className="pl-1">
-						<Trans>Nobody here yet</Trans>
-					</Text>
-				) : (
-					<Group gap={8} wrap="wrap">
-						{lane.visitors.map((visitor) => (
-							<Dot
-								key={visitor.id}
-								color={visitorDotColor(visitor.stage)}
-								label={micStageLabel(visitor.stage) ?? visitor.name?.trim() ?? t`Anonymous`}
-								warn={weakNetwork(visitor.network) || lowBattery(visitor.battery)}
-								icon={
-									visitor.stage === "mic_ok" ? (
-										<CheckIcon size={10} color="white" weight="bold" />
-									) : visitor.stage === "mic_blocked" ? (
-										<WarningCircleIcon size={11} color="white" weight="bold" />
-									) : undefined
-								}
-								onOpen={() => onOpenVisitor(visitor)}
-							/>
-						))}
-						{lane.recordings.map((conversation) => (
-							<Dot
-								key={conversation.id}
-								color="var(--mantine-color-red-6)"
-								pulse
-								label={conversation.label?.trim() || t`Anonymous`}
-								warn={weakNetwork(conversation.network) || lowBattery(conversation.battery)}
-								onOpen={() => onOpenConversation(conversation)}
-								onHoverStart={() => onHoverConversation(conversation.id)}
-								onHoverEnd={() => onHoverConversation(null)}
-							/>
-						))}
-					</Group>
-				)}
-			</Collapse>
-		</Stack>
-	);
-};
 
 const STAGE_TIMELINE_ORDER: { stage: FunnelStage; label: string }[] = [
 	{ stage: "scanned", label: t`Scanned the QR` },
@@ -256,9 +104,6 @@ const VisitorDrilldown = ({ visitor }: { visitor: FunnelVisitor }) => (
 				</Badge>
 			)}
 		</Group>
-		<Text size="xs" c="dimmed">
-			<Trans>Last seen {relativeTime(visitor.last_seen_at)}</Trans>
-		</Text>
 		{visitor.tags.length > 0 && (
 			<Group gap={4} wrap="wrap">
 				{visitor.tags.map((tag) => (
@@ -366,13 +211,22 @@ const ConversationDrilldown = ({
 	);
 };
 
+const StageLabel = ({ label, count }: { label: string; count: number }) => (
+	<Group gap="xs" align="center" className="flex-1 justify-center">
+		<Text size="xs" fw={600} tt="uppercase" c="dimmed">
+			{label}
+		</Text>
+		<Badge size="xs" variant="light" color="gray">
+			{count}
+		</Badge>
+	</Group>
+);
+
 export const LiveFunnelSection = ({
 	projectId,
 	onHoverConversation,
 }: {
 	projectId: string;
-	/** Notifies the parent which recording is hovered, so the detailed card
-	 * below can highlight. */
 	onHoverConversation?: (id: string | null) => void;
 }) => {
 	const { funnel, conversations } = useConversationMonitor(projectId);
@@ -381,37 +235,28 @@ export const LiveFunnelSection = ({
 		workspaceId && projectId ? `/w/${workspaceId}/projects/${projectId}` : null;
 	const [selected, setSelected] = useState<Selection | null>(null);
 
-	const lanes = useMemo<Lane[]>(() => {
-		const byStage = (stages: FunnelStage[]) =>
-			funnel.visitors.filter((v) => stages.includes(v.stage));
+	const { nodes, counts } = useMemo(() => {
 		const recording = conversations.filter((c) => c.is_live);
-		const make = (
-			key: string,
-			label: string,
-			visitors: FunnelVisitor[],
-			recordings: MonitorConversation[] = [],
-		): Lane => ({
-			key,
-			label,
-			visitors,
-			recordings,
-			count: visitors.length + recordings.length,
-		});
-		// Three lanes, like a gravity drop: Scanned -> Setting up -> Recording.
-		// "Setting up" merges terms, mic check, and name/tags; a blocked mic
-		// still surfaces as a warning dot inside it.
-		return [
-			make("scanned", t`Scanned`, byStage(["scanned"])),
-			make(
-				"setup",
-				t`Setting up`,
-				byStage(["terms", "mic_ok", "mic_skipped", "mic_blocked", "profile"]),
-			),
-			make("recording", t`Recording`, [], recording),
-		];
+		const visitorNodes: NodeDatum[] = funnel.visitors.map((data) => ({
+			data,
+			kind: "visitor",
+		}));
+		const recordingNodes: NodeDatum[] = recording.map((data) => ({
+			data,
+			kind: "conversation",
+		}));
+		const scanned = funnel.visitors.filter((v) => v.stage === "scanned").length;
+		return {
+			counts: {
+				recording: recording.length,
+				scanned,
+				setup: funnel.visitors.length - scanned,
+			},
+			nodes: [...visitorNodes, ...recordingNodes],
+		};
 	}, [funnel.visitors, conversations]);
 
-	const totalActive = lanes.reduce((sum, lane) => sum + lane.count, 0);
+	const totalActive = nodes.length;
 
 	return (
 		<Stack gap="md">
@@ -428,26 +273,33 @@ export const LiveFunnelSection = ({
 				<Card withBorder p="lg" radius="sm">
 					<Text size="sm" c="dimmed" ta="center">
 						<Trans>
-							When participants scan the QR code, they'll appear here and move
+							When participants scan the QR code, they'll appear here and flow
 							across the stages in real time.
 						</Trans>
 					</Text>
 				</Card>
 			) : (
-				<Box className="flex flex-wrap gap-x-6 gap-y-4">
-					{lanes.map((lane) => (
-						<FunnelLane
-							key={lane.key}
-							lane={lane}
-							onOpenVisitor={(visitor) =>
-								setSelected({ kind: "visitor", visitor })
-							}
-							onOpenConversation={(conversation) =>
-								setSelected({ kind: "conversation", conversation })
-							}
-							onHoverConversation={(id) => onHoverConversation?.(id)}
-						/>
-					))}
+				<Box>
+					<Group gap={0} justify="space-between" mb={4}>
+						<StageLabel label={t`Scanned`} count={counts.scanned} />
+						<StageLabel label={t`Setting up`} count={counts.setup} />
+						<StageLabel label={t`Recording`} count={counts.recording} />
+					</Group>
+					<FunnelCanvas
+						nodes={nodes}
+						onSelect={(node) =>
+							setSelected(
+								node.kind === "visitor"
+									? { kind: "visitor", visitor: node.data }
+									: { conversation: node.data, kind: "conversation" },
+							)
+						}
+						onHover={(node) =>
+							onHoverConversation?.(
+								node?.kind === "conversation" ? node.data.id : null,
+							)
+						}
+					/>
 				</Box>
 			)}
 
