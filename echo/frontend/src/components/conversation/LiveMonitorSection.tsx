@@ -136,11 +136,38 @@ const MonitorRow = ({
 	);
 };
 
-export const LiveMonitorSection = ({ projectId }: { projectId: string }) => {
+export const LiveMonitorSection = ({
+	projectId,
+	standalone = false,
+}: {
+	projectId: string;
+	/** On the dedicated Monitor page, show an empty state instead of
+	 * collapsing to nothing when there is no recent activity. */
+	standalone?: boolean;
+}) => {
 	const { conversations, summary } = useConversationMonitor(projectId);
 
-	// Nothing recent to monitor — stay out of the way.
-	if (summary.total === 0) return null;
+	// Nothing recent to monitor. On the home page we stay out of the way; on the
+	// dedicated Monitor page we explain what the host is looking at.
+	if (summary.total === 0) {
+		if (!standalone) return null;
+		return (
+			<Card withBorder p="lg" radius="sm">
+				<Stack gap="xs" align="center">
+					<BroadcastIcon size={24} />
+					<Text size="sm" fw={500}>
+						<Trans>No recent activity</Trans>
+					</Text>
+					<Text size="xs" c="dimmed" ta="center" maw={420}>
+						<Trans>
+							Live recordings, transcription progress, and errors show up here
+							as participants start recording in the portal.
+						</Trans>
+					</Text>
+				</Stack>
+			</Card>
+		);
+	}
 
 	return (
 		<Stack gap="sm">
