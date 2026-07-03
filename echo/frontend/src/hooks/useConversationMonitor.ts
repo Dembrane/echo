@@ -6,6 +6,7 @@ export type MonitorConversation = {
 	id: string;
 	label: string | null;
 	is_live: boolean;
+	is_finished: boolean;
 	last_chunk_at: string | null;
 	chunk_count: number;
 	has_error: boolean;
@@ -14,6 +15,7 @@ export type MonitorConversation = {
 
 export type MonitorSummary = {
 	live: number;
+	finished: number;
 	with_errors: number;
 	total: number;
 };
@@ -44,7 +46,12 @@ export const useConversationMonitor = (
 
 	return {
 		conversations: query.data?.conversations ?? [],
-		summary: query.data?.summary ?? { live: 0, with_errors: 0, total: 0 },
+		summary: query.data?.summary ?? {
+			live: 0,
+			finished: 0,
+			with_errors: 0,
+			total: 0,
+		},
 		isLoading: query.isLoading,
 		error: query.error ? query.error.message : null,
 	};

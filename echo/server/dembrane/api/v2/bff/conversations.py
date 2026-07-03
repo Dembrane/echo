@@ -641,9 +641,11 @@ def _build_monitor_payload(
         if isinstance(conv, dict):
             conv_id = conv.get("id")
             participant_name = conv.get("participant_name")
+            is_finished = bool(conv.get("is_finished"))
         else:
             conv_id = conv
             participant_name = None
+            is_finished = False
         if not conv_id:
             continue
 
@@ -652,6 +654,7 @@ def _build_monitor_payload(
             entry = {
                 "id": conv_id,
                 "label": (participant_name or "").strip() or None,
+                "is_finished": is_finished,
                 "last_chunk_at": None,
                 "last_chunk_dt": None,
                 "has_error": False,
@@ -678,12 +681,18 @@ def _build_monitor_payload(
     conversations: list[dict] = []
     live_count = 0
     error_count = 0
+    finished_count = 0
     for conv_id in order:
         entry = by_conv[conv_id]
         last_dt = entry["last_chunk_dt"]
-        is_live = last_dt is not None and last_dt > live_cutoff
+        # The finish button is a definitive "ended" signal: a finished
+        # conversation is never live, even if a late chunk lands afterwards.
+        recent = last_dt is not None and last_dt > live_cutoff
+        is_live = recent and not entry["is_finished"]
         if is_live:
             live_count += 1
+        if entry["is_finished"]:
+            finished_count += 1
         if entry["has_error"]:
             error_count += 1
         conversations.append(
@@ -691,6 +700,7 @@ def _build_monitor_payload(
                 "id": conv_id,
                 "label": entry["label"],
                 "is_live": is_live,
+                "is_finished": entry["is_finished"],
                 "last_chunk_at": entry["last_chunk_at"],
                 "chunk_count": int(chunk_counts.get(conv_id, 0) or 0),
                 "has_error": entry["has_error"],
@@ -707,6 +717,7 @@ def _build_monitor_payload(
         "conversations": conversations,
         "summary": {
             "live": live_count,
+            "finished": finished_count,
             "with_errors": error_count,
             "total": len(conversations),
         },
@@ -754,6 +765,7 @@ async def monitor_conversations(
                 "fields": [
                     "conversation_id.id",
                     "conversation_id.participant_name",
+                    "conversation_id.is_finished",
                     "timestamp",
                     "error",
                 ],
@@ -782,7 +794,12 @@ async def monitor_conversations(
                 "query": {
                     "aggregate": {"count": "id"},
                     "groupBy": ["conversation_id"],
-                    "filter": {"conversation_id": {"_in": conv_ids}},
+                    # Re-apply the portal-only source filter so counts match the
+                    # live set and don't include dashboard/clone chunks.
+                    "filter": {
+                        "conversation_id": {"_in": conv_ids},
+                        "source": {"_nin": ["DASHBOARD_UPLOAD", "CLONE"]},
+                    },
                 }
             },
         )

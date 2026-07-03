@@ -310,6 +310,11 @@ msgstr ""
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr ""
 
+#. placeholder {0}: summary.live
+#: src/components/conversation/LiveMonitorSection.tsx:125
+msgid "{0, plural, one {# live} other {# live}}"
+msgstr ""
+
 #: src/components/workspace/WorkspaceInviteWizard.tsx:479
 #~ msgid "{0, plural, one {# member selected} other {# members selected}}"
 #~ msgstr ""
@@ -340,6 +345,11 @@ msgstr ""
 msgid "{0, plural, one {# project} other {# projects}}"
 msgstr ""
 
+#. placeholder {0}: conversation.chunk_count
+#: src/components/conversation/LiveMonitorSection.tsx:79
+msgid "{0, plural, one {# recording} other {# recordings}}"
+msgstr ""
+
 #: src/routes/admin/AdminSettingsRoute.tsx:2671
 #~ msgid "{0, plural, one {# request} other {# requests}}"
 #~ msgstr ""
@@ -355,6 +365,11 @@ msgstr ""
 #: src/components/conversation/SelectAllConfirmationModal.tsx:430
 msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# Tag} other {# Tags}}"
+
+#. placeholder {0}: summary.with_errors
+#: src/components/conversation/LiveMonitorSection.tsx:129
+msgid "{0, plural, one {# with errors} other {# with errors}}"
+msgstr ""
 
 #: src/components/workspace/TeamUsageRollup.tsx:187
 #~ msgid "{0, plural, one {# workspace used up its included hours} other {# workspaces used up their included hours}}"
@@ -477,10 +492,9 @@ msgstr ""
 msgid "{0} hours total"
 msgstr ""
 
-#. placeholder {0}: summary.live
 #: src/components/conversation/LiveMonitorSection.tsx:117
-msgid "{0} live"
-msgstr ""
+#~ msgid "{0} live"
+#~ msgstr ""
 
 #. placeholder {0}: organisation.name
 #. placeholder {0}: workspace.name
@@ -512,10 +526,9 @@ msgstr ""
 #~ msgid "{0} on this workspace · change in workspace settings"
 #~ msgstr ""
 
-#. placeholder {0}: conversation.chunk_count
 #: src/components/conversation/LiveMonitorSection.tsx:75
-msgid "{0} recordings"
-msgstr ""
+#~ msgid "{0} recordings"
+#~ msgstr ""
 
 #. placeholder {0}: line.addedSeats
 #. placeholder {1}: fmtEur(line.proratedNow)
@@ -553,10 +566,9 @@ msgstr ""
 msgid "{0} views"
 msgstr "{0} Aufrufe"
 
-#. placeholder {0}: summary.with_errors
 #: src/components/conversation/LiveMonitorSection.tsx:121
-msgid "{0} with errors"
-msgstr ""
+#~ msgid "{0} with errors"
+#~ msgstr ""
 
 #. placeholder {0}: data.workspace_count
 #. placeholder {1}: data.total_seat_count
@@ -4515,7 +4527,7 @@ msgstr "Von dem Teilnehmer auf dem Portal eingetragen"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
-#: src/components/conversation/LiveMonitorSection.tsx:64
+#: src/components/conversation/LiveMonitorSection.tsx:68
 #: src/components/chat/AgenticChatPanel.tsx:262
 #: src/components/chat/AgenticChatPanel.tsx:393
 #: src/components/chat/AgenticChatPanel.tsx:1151
@@ -5098,6 +5110,7 @@ msgid "Finish setting up your plan"
 msgstr ""
 
 #: src/components/report/ConversationStatusTable.tsx:82
+#: src/components/conversation/LiveMonitorSection.tsx:54
 msgid "Finished"
 msgstr "Beendet"
 
@@ -5677,7 +5690,7 @@ msgstr "ID"
 msgid "Identify recurring themes, topics, and arguments that appear consistently across conversations. Analyze their frequency, intensity, and consistency. Expected output: 3-7 aspects for small datasets, 5-12 for medium datasets, 8-15 for large datasets. Processing guidance: Focus on distinct patterns that emerge across multiple conversations."
 msgstr "Identifizieren Sie wiederkehrende Themen, Themen und Argumente, die in Gesprächen konsistent auftreten. Analysieren Sie ihre Häufigkeit, Intensität und Konsistenz. Erwartete Ausgabe: 3-7 Aspekte für kleine Datensätze, 5-12 für mittlere Datensätze, 8-15 für große Datensätze. Verarbeitungsanleitung: Konzentrieren Sie sich auf unterschiedliche Muster, die in mehreren Gesprächen auftreten."
 
-#: src/components/conversation/LiveMonitorSection.tsx:54
+#: src/components/conversation/LiveMonitorSection.tsx:58
 msgid "Idle"
 msgstr ""
 
@@ -6266,7 +6279,7 @@ msgid "Language"
 msgstr "Sprache"
 
 #. placeholder {0}: lastActivityLabel(conversation)
-#: src/components/conversation/LiveMonitorSection.tsx:72
+#: src/components/conversation/LiveMonitorSection.tsx:76
 msgid "Last activity {0}"
 msgstr ""
 
@@ -6453,7 +6466,7 @@ msgstr "Live Audiopegel:"
 #~ msgid "Live audio level:"
 #~ msgstr "Live Audiopegel:"
 
-#: src/components/conversation/LiveMonitorSection.tsx:112
+#: src/components/conversation/LiveMonitorSection.tsx:120
 msgid "Live monitoring"
 msgstr ""
 

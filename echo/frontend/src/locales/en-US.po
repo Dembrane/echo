@@ -486,6 +486,11 @@ msgstr "{0, plural, one {# conversation will be hidden along with it.} other {# 
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# conversation} other {# conversations}}"
 
+#. placeholder {0}: summary.live
+#: src/components/conversation/LiveMonitorSection.tsx:125
+msgid "{0, plural, one {# live} other {# live}}"
+msgstr "{0, plural, one {# live} other {# live}}"
+
 #: src/components/workspace/WorkspaceInviteWizard.tsx:479
 #~ msgid "{0, plural, one {# member selected} other {# members selected}}"
 #~ msgstr "{0, plural, one {# member selected} other {# members selected}}"
@@ -516,6 +521,11 @@ msgstr "{0, plural, one {# payment} other {# payments}}"
 msgid "{0, plural, one {# project} other {# projects}}"
 msgstr "{0, plural, one {# project} other {# projects}}"
 
+#. placeholder {0}: conversation.chunk_count
+#: src/components/conversation/LiveMonitorSection.tsx:79
+msgid "{0, plural, one {# recording} other {# recordings}}"
+msgstr "{0, plural, one {# recording} other {# recordings}}"
+
 #: src/routes/admin/AdminSettingsRoute.tsx:2671
 #~ msgid "{0, plural, one {# request} other {# requests}}"
 #~ msgstr "{0, plural, one {# request} other {# requests}}"
@@ -531,6 +541,11 @@ msgstr "{0, plural, one {# selected} other {# selected}}"
 #: src/components/conversation/SelectAllConfirmationModal.tsx:430
 msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# tag} other {# tags}}"
+
+#. placeholder {0}: summary.with_errors
+#: src/components/conversation/LiveMonitorSection.tsx:129
+msgid "{0, plural, one {# with errors} other {# with errors}}"
+msgstr "{0, plural, one {# with errors} other {# with errors}}"
 
 #: src/components/workspace/TeamUsageRollup.tsx:187
 #~ msgid "{0, plural, one {# workspace used up its included hours} other {# workspaces used up their included hours}}"
@@ -659,10 +674,9 @@ msgstr "{0} hours / month"
 msgid "{0} hours total"
 msgstr "{0} hours total"
 
-#. placeholder {0}: summary.live
 #: src/components/conversation/LiveMonitorSection.tsx:117
-msgid "{0} live"
-msgstr "{0} live"
+#~ msgid "{0} live"
+#~ msgstr "{0} live"
 
 #. placeholder {0}: organisation.name
 #. placeholder {0}: workspace.name
@@ -694,10 +708,9 @@ msgstr "{0} of {1} trained"
 #~ msgid "{0} on this workspace · change in workspace settings"
 #~ msgstr "{0} on this workspace · change in workspace settings"
 
-#. placeholder {0}: conversation.chunk_count
 #: src/components/conversation/LiveMonitorSection.tsx:75
-msgid "{0} recordings"
-msgstr "{0} recordings"
+#~ msgid "{0} recordings"
+#~ msgstr "{0} recordings"
 
 #. placeholder {0}: line.addedSeats
 #. placeholder {1}: fmtEur(line.proratedNow)
@@ -735,10 +748,9 @@ msgstr "{0} total rises to {1} when {pendingInvites} pending {2} accepted"
 msgid "{0} views"
 msgstr "{0} views"
 
-#. placeholder {0}: summary.with_errors
 #: src/components/conversation/LiveMonitorSection.tsx:121
-msgid "{0} with errors"
-msgstr "{0} with errors"
+#~ msgid "{0} with errors"
+#~ msgstr "{0} with errors"
 
 #. placeholder {0}: data.workspace_count
 #. placeholder {1}: data.total_seat_count
@@ -4749,7 +4761,7 @@ msgstr "Entered by the participant on the portal"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
-#: src/components/conversation/LiveMonitorSection.tsx:64
+#: src/components/conversation/LiveMonitorSection.tsx:68
 #: src/components/chat/AgenticChatPanel.tsx:262
 #: src/components/chat/AgenticChatPanel.tsx:393
 #: src/components/chat/AgenticChatPanel.tsx:1151
@@ -5352,6 +5364,7 @@ msgid "Finish setting up your plan"
 msgstr "Finish setting up your plan"
 
 #: src/components/report/ConversationStatusTable.tsx:82
+#: src/components/conversation/LiveMonitorSection.tsx:54
 msgid "Finished"
 msgstr "Finished"
 
@@ -5949,7 +5962,7 @@ msgstr "ID"
 msgid "Identify recurring themes, topics, and arguments that appear consistently across conversations. Analyze their frequency, intensity, and consistency. Expected output: 3-7 aspects for small datasets, 5-12 for medium datasets, 8-15 for large datasets. Processing guidance: Focus on distinct patterns that emerge across multiple conversations."
 msgstr "Identify recurring themes, topics, and arguments that appear consistently across conversations. Analyze their frequency, intensity, and consistency. Expected output: 3-7 aspects for small datasets, 5-12 for medium datasets, 8-15 for large datasets. Processing guidance: Focus on distinct patterns that emerge across multiple conversations."
 
-#: src/components/conversation/LiveMonitorSection.tsx:54
+#: src/components/conversation/LiveMonitorSection.tsx:58
 msgid "Idle"
 msgstr "Idle"
 
@@ -6547,7 +6560,7 @@ msgid "Language"
 msgstr "Language"
 
 #. placeholder {0}: lastActivityLabel(conversation)
-#: src/components/conversation/LiveMonitorSection.tsx:72
+#: src/components/conversation/LiveMonitorSection.tsx:76
 msgid "Last activity {0}"
 msgstr "Last activity {0}"
 
@@ -6726,7 +6739,7 @@ msgstr "Live audio level:"
 #~ msgid "Live audio level:"
 #~ msgstr "Live audio level:"
 
-#: src/components/conversation/LiveMonitorSection.tsx:112
+#: src/components/conversation/LiveMonitorSection.tsx:120
 msgid "Live monitoring"
 msgstr "Live monitoring"
 

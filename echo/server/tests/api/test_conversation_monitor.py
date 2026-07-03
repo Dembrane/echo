@@ -70,6 +70,36 @@ def test_monitor_liveness_threshold() -> None:
     assert payload["conversations"][0]["id"] == "c-live"
 
 
+def test_monitor_finished_conversation_is_not_live() -> None:
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    recent_ts = _iso(now - timedelta(seconds=10))  # within the live window
+
+    # A finished conversation with a fresh chunk must still read as not-live:
+    # the finish button is a definitive end signal.
+    recent_chunks = [
+        {
+            "conversation_id": {"id": "c-fin", "participant_name": "Ada", "is_finished": True},
+            "timestamp": recent_ts,
+            "error": None,
+        },
+        {
+            "conversation_id": {"id": "c-live", "participant_name": "Bo", "is_finished": False},
+            "timestamp": recent_ts,
+            "error": None,
+        },
+    ]
+
+    payload = _build_monitor_payload(recent_chunks, {"c-fin": 5, "c-live": 2}, now, live_window_seconds=45)
+    by_id = {c["id"]: c for c in payload["conversations"]}
+
+    assert by_id["c-fin"]["is_finished"] is True
+    assert by_id["c-fin"]["is_live"] is False
+    assert by_id["c-live"]["is_finished"] is False
+    assert by_id["c-live"]["is_live"] is True
+    assert payload["summary"]["live"] == 1
+    assert payload["summary"]["finished"] == 1
+
+
 def test_monitor_error_detection_takes_most_recent_error() -> None:
     now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
     newer_ts = _iso(now - timedelta(seconds=5))
@@ -104,7 +134,7 @@ def test_monitor_empty_project() -> None:
     now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
     payload = _build_monitor_payload([], {}, now, live_window_seconds=45)
     assert payload["conversations"] == []
-    assert payload["summary"] == {"live": 0, "with_errors": 0, "total": 0}
+    assert payload["summary"] == {"live": 0, "finished": 0, "with_errors": 0, "total": 0}
 
 
 # ── endpoint wiring: access gate + two-query aggregation ──────────────
@@ -198,6 +228,6 @@ async def test_monitor_endpoint_empty_skips_count_query(monkeypatch) -> None:
     assert res.status_code == 200
     body = res.json()
     assert body["conversations"] == []
-    assert body["summary"] == {"live": 0, "with_errors": 0, "total": 0}
+    assert body["summary"] == {"live": 0, "finished": 0, "with_errors": 0, "total": 0}
     # No conversation ids → no second (count) query.
     assert len(fake_directus.queries) == 1

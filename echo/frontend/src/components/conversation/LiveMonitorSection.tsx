@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import { Badge, Card, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { BroadcastIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
@@ -49,6 +49,10 @@ const MonitorRow = ({
 							<Badge size="xs" color="red" variant="light">
 								<Trans>Live</Trans>
 							</Badge>
+						) : conversation.is_finished ? (
+							<Badge size="xs" color="primary" variant="light">
+								<Trans>Finished</Trans>
+							</Badge>
 						) : (
 							<Badge size="xs" color="gray" variant="light">
 								<Trans>Idle</Trans>
@@ -72,7 +76,11 @@ const MonitorRow = ({
 						<Trans>Last activity {lastActivityLabel(conversation)}</Trans>
 					</Text>
 					<Text size="xs" c="dimmed">
-						<Trans>{conversation.chunk_count} recordings</Trans>
+						<Plural
+							value={conversation.chunk_count}
+							one="# recording"
+							other="# recordings"
+						/>
 					</Text>
 				</Group>
 
@@ -114,11 +122,15 @@ export const LiveMonitorSection = ({
 				</Group>
 				<Group gap="xs" align="center">
 					<Badge size="sm" color="primary" variant="light">
-						<Trans>{summary.live} live</Trans>
+						<Plural value={summary.live} one="# live" other="# live" />
 					</Badge>
 					{summary.with_errors > 0 && (
 						<Badge size="sm" color="red" variant="light">
-							<Trans>{summary.with_errors} with errors</Trans>
+							<Plural
+								value={summary.with_errors}
+								one="# with errors"
+								other="# with errors"
+							/>
 						</Badge>
 					)}
 				</Group>
