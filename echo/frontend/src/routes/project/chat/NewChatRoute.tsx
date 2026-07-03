@@ -3,8 +3,10 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
+	Anchor,
 	Badge,
 	Box,
+	Button,
 	Center,
 	Group,
 	Loader,
@@ -14,12 +16,12 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
-import { IconAlertCircle, IconSend } from "@tabler/icons-react";
+import { IconAlertCircle, IconArrowUp } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import posthog from "posthog-js";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import {
 	ChatAccordionItemMenu,
 	ChatModeIndicator,
@@ -32,11 +34,12 @@ import {
 	usePrefetchSuggestions,
 	useProjectChatsCount,
 } from "@/components/chat/hooks";
+import { InsertTemplateMenu } from "@/components/chat/InsertTemplateMenu";
 import { BaseSkeleton } from "@/components/common/BaseSkeleton";
 import { NavigationButton } from "@/components/common/NavigationButton";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useCreateChatMutation } from "@/components/project/hooks";
-import { ENABLE_AGENTIC_CHAT } from "@/config";
+import { ASK_DOCS_URL, ENABLE_AGENTIC_CHAT } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -108,7 +111,7 @@ const ProjectChatsSection = ({
 	if (totalChats === 0) return null;
 
 	return (
-		<Stack gap="lg" className="transition-opacity">
+		<Stack gap="lg" className="pt-4 transition-opacity">
 			<Group gap="sm" align="center">
 				<Title order={2} fw={500} style={{ color: "var(--app-text)" }}>
 					<Trans>Chats</Trans>
@@ -178,6 +181,7 @@ export const NewChatRoute = () => {
 	useDocumentTitle(t`Ask | dembrane`);
 	const { projectId, workspaceId } = useParams();
 	const navigate = useI18nNavigate();
+	const location = useLocation();
 	const { workspace } = useWorkspace();
 	// Observers can't chat; gate before the chat-list section mounts, since its
 	// queries 403 and otherwise surface as "Something went wrong".
@@ -254,6 +258,22 @@ export const NewChatRoute = () => {
 		}
 	};
 
+	// "Open the old chat experience" from inside an agentic chat lands here
+	// with a preferred mode; start that chat right away, once.
+	const preferredMode =
+		typeof (location.state as { preferMode?: unknown } | null)?.preferMode ===
+		"string"
+			? ((location.state as { preferMode: ChatMode }).preferMode as ChatMode)
+			: null;
+	const preferredModeStartedRef = useRef(false);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: handleModeSelected is recreated per render; the ref guards a single run
+	useEffect(() => {
+		if (!preferredMode || preferredModeStartedRef.current) return;
+		preferredModeStartedRef.current = true;
+		window.history.replaceState({}, "");
+		void handleModeSelected(preferredMode);
+	}, [preferredMode]);
+
 	if (!projectId || !workspaceId) {
 		return (
 			<Box className="flex h-full items-center justify-center">
@@ -299,16 +319,30 @@ export const NewChatRoute = () => {
 		<PageContainer>
 			<Stack gap="xl">
 				{ENABLE_AGENTIC_CHAT ? (
-					<Stack gap="sm" className="pt-6">
-						<Title order={2} fw={500}>
-							<Trans>Where would you like to start?</Trans>
-						</Title>
+					<Stack gap="lg" className="pb-4 pt-10">
+						<Group justify="space-between" align="baseline" gap="sm">
+							<Title order={2} fw={500}>
+								<Trans>Where would you like to start?</Trans>
+							</Title>
+							{/* Escape hatch to the classic experience while the new
+							    chat matures. */}
+							<Button
+								variant="subtle"
+								size="xs"
+								disabled={isPending}
+								onClick={() => void handleModeSelected("deep_dive")}
+							>
+								<Trans>
+									Prefer the old chat? Start a Specific Details chat
+								</Trans>
+							</Button>
+						</Group>
 						<Textarea
 							autosize
 							minRows={2}
 							maxRows={6}
 							radius="lg"
-							size="md"
+							size="sm"
 							autoFocus
 							value={draft}
 							onChange={(event) => setDraft(event.currentTarget.value)}
@@ -320,28 +354,44 @@ export const NewChatRoute = () => {
 							}}
 							placeholder={t`Ask about your conversations, or type to find an earlier chat`}
 							disabled={isPending}
-							styles={{ input: { backgroundColor: "transparent" } }}
+							styles={{
+								input: { backgroundColor: "transparent", resize: "none" },
+							}}
 							className="rounded-lg bg-white shadow-sm"
+							rightSectionWidth={52}
 							rightSection={
 								isPending ? (
 									<Loader size="xs" />
 								) : (
 									<ActionIcon
-										variant="subtle"
+										size="lg"
+										radius="xl"
 										aria-label={t`Start a chat`}
 										onClick={startChat}
+										disabled={draft.trim().length === 0}
 									>
-										<IconSend size={18} />
+										<IconArrowUp size={18} />
 									</ActionIcon>
 								)
 							}
 							{...{ "data-testid": "ask-home-input" }}
 						/>
-						<Text size="xs" fs="italic">
-							<Trans>
-								Enter starts a new chat. Your earlier chats stay listed below.
-							</Trans>
-						</Text>
+						<Group gap="lg">
+							<InsertTemplateMenu
+								workspaceId={workspaceId}
+								onInsert={(content) => setDraft(content)}
+							/>
+							{ASK_DOCS_URL && (
+								<Anchor
+									size="xs"
+									href={ASK_DOCS_URL}
+									target="_blank"
+									rel="noreferrer"
+								>
+									<Trans>What can Ask do?</Trans>
+								</Anchor>
+							)}
+						</Group>
 					</Stack>
 				) : (
 					<ChatModeSelector
