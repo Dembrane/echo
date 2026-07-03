@@ -253,6 +253,23 @@ const MonitorRow = ({
 						</Text>
 					</Group>
 					<Group gap={6} align="center" wrap="nowrap">
+						{conversation.recording_health === "stalled" && (
+							<Tooltip
+								label={t`Recording, but no audio has come in for a while — the participant may have lost connection.`}
+								multiline
+								maw={280}
+								withArrow
+							>
+								<Badge
+									size="xs"
+									color="red"
+									variant="filled"
+									leftSection={<WarningCircleIcon size={12} />}
+								>
+									<Trans>No audio</Trans>
+								</Badge>
+							</Tooltip>
+						)}
 						{conversation.language && (
 							<Badge size="xs" color="gray" variant="light" tt="uppercase">
 								{conversation.language}
@@ -483,6 +500,20 @@ export const LiveMonitorSection = ({
 					<Badge size="sm" color="primary" variant="light">
 						<Plural value={summary.live} one="# live" other="# live" />
 					</Badge>
+					{summary.not_receiving > 0 && (
+						<Badge
+							size="sm"
+							color="red"
+							variant="filled"
+							leftSection={<WarningCircleIcon size={12} />}
+						>
+							<Plural
+								value={summary.not_receiving}
+								one="# not receiving"
+								other="# not receiving"
+							/>
+						</Badge>
+					)}
 					{summary.transcribing > 0 && (
 						<Badge size="sm" color="blue" variant="light">
 							<Plural
