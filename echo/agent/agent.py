@@ -84,9 +84,14 @@ When intent is unclear, ask one focused question instead of guessing.
 ## Getting help from the dembrane team
 When the host needs something you cannot give: something looks broken, a billing
 or account question, or a question about dembrane the documentation does not
-answer, offer to pass their question to the dembrane team. Tell the host what you
-will send first, send it in their own words where you can, and let them know the
-team will follow up. Do not promise a timeline.
+answer, offer to log their question with the dembrane team. Tell the host what you
+will send first and send it in their own words where you can. Say it has been
+logged for the team to review. Never promise that someone will follow up, reply
+directly, or act by a certain time; you hand the message over and that is all
+you can guarantee. If logging fails, say so plainly and point the host at the
+direct routes on the Getting help page (users/host/getting-help.md), especially
+emailing support@dembrane.com. Be honest above all: a failed send is never
+"sent".
 
 ## Conversation scope
 Some runs are limited to conversations the host selected. When the context
@@ -677,12 +682,26 @@ def create_agent_graph(
 
     @tool
     async def getProjectSettings() -> dict[str, Any]:
-        """Read the project's current editable settings (portal, language, context)."""
+        """Read the project's current editable settings (portal, language, context).
+
+        Fields reading "default" are unset: dembrane's built-in behavior applies
+        (users/host/portal-editor.md describes what each default does). Report
+        them as "default", never as empty or missing. To keep a default, do not
+        propose that field."""
         client = _create_echo_client()
         try:
-            return await client.get_project_settings(project_id)
+            current = await client.get_project_settings(project_id)
         finally:
             await client.close()
+        # Hosts think in defaults, not empty database fields.
+        return {
+            key: (
+                "default"
+                if value is None or (isinstance(value, str) and not value.strip())
+                else value
+            )
+            for key, value in current.items()
+        }
 
     @tool
     async def proposeProjectUpdate(
@@ -822,7 +841,7 @@ def create_agent_graph(
 
     @tool
     async def reachOutToDembrane(message: str, context: str = "") -> dict[str, Any]:
-        """Pass a question or problem to the dembrane team on the host's behalf. Use this when the host needs help you cannot give: something looks broken, a billing or account question, or a question about dembrane the documentation does not answer. `message` is what the host wants to ask, in their own words where you can. `context` is a short note about what they were doing. Tell the host what you are sending before you send it, and let them know the team will follow up."""
+        """Log a question or problem with the dembrane team on the host's behalf. Use this when the host needs help you cannot give: something looks broken, a billing or account question, or a question about dembrane the documentation does not answer. `message` is what the host wants to ask, in their own words where you can. `context` is a short note about what they were doing. Tell the host what you are sending before you send it. Afterwards say it is logged for the team to review; never promise a direct follow-up or a timeline."""
         client = _create_echo_client()
         try:
             result = await client.create_support_request(
@@ -830,6 +849,17 @@ def create_agent_graph(
                 message=message,
                 page_context=context or None,
             )
+        except Exception:
+            # Honesty over reassurance: never pretend a failed send worked.
+            return {
+                "sent": False,
+                "error": (
+                    "The request could not be logged. Tell the host plainly that "
+                    "it did not go through, and give them the direct alternatives "
+                    "from the Getting help page (docs: users/host/getting-help.md), "
+                    "including emailing support@dembrane.com with the details."
+                ),
+            }
         finally:
             await client.close()
         return {"sent": True, "support_request_id": result.get("id")}

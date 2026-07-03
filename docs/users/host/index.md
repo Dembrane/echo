@@ -45,6 +45,7 @@ reading - the judgement stays yours.
 - [Setting up the portal](./portal-editor.md) - configuring the page participants see.
 - [Transcripts & conversations](./transcripts-and-conversations.md) - reading and tidying what you've collected.
 - [Using dembrane Go on mobile](./using-dembrane-go-mobile.md) - recording from your phone.
+- [Getting help](./getting-help.md) - every way to reach the dembrane team when you're stuck.
 
 ## Related
 

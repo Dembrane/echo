@@ -19,12 +19,17 @@ from dembrane.directus import directus
 from dembrane.settings import get_settings
 from dembrane.chat_utils import generate_title
 from dembrane.async_helpers import run_in_thread_pool
-from dembrane.agentic_worker import process_agentic_run
+from dembrane.agentic_worker import (
+    AGENT_CANCELLED_MESSAGE,
+    AGENT_CANCELLED_ERROR_CODE,
+    process_agentic_run,
+)
 from dembrane.directus_async import async_directus
 from dembrane.agentic_runtime import (
     request_cancel,
     read_live_event,
     acquire_turn_lease,
+    publish_live_event,
     refresh_turn_lease,
     release_turn_lease,
     subscribe_live_events,
@@ -1302,11 +1307,44 @@ async def stop_run(run_id: str, auth: DependencyDirectusSession) -> dict[str, An
     task = await _get_active_task(run_id, turn_seq)
     if task is not None and not task.done():
         task.cancel()
+        return {
+            "run_id": run_id,
+            "turn_seq": turn_seq,
+            "status": "stopping",
+        }
+
+    # No task in this replica to cancel: the turn is executing elsewhere, or
+    # its executor is gone (restart, lost lease). The cancel flag alone cannot
+    # recover a dead run, so the chat would show "Agent is working" forever
+    # with Stop doing nothing. Force the same terminal shape the worker's own
+    # cancel path produces; a turn that is in fact still alive sees the cancel
+    # flag at its next checkpoint and stops quietly.
+    if run.get("status") not in TERMINAL_RUN_STATUSES:
+        event = await run_in_thread_pool(
+            agentic_run_service.append_event,
+            run_id,
+            "run.failed",
+            {
+                "error_code": AGENT_CANCELLED_ERROR_CODE,
+                "message": AGENT_CANCELLED_MESSAGE,
+            },
+        )
+        try:
+            await publish_live_event(run_id, json.dumps(event, default=str))
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Failed to publish stop event for run %s: %s", run_id, exc)
+        await run_in_thread_pool(
+            agentic_run_service.set_status,
+            run_id,
+            "failed",
+            latest_error=AGENT_CANCELLED_MESSAGE,
+            latest_error_code=AGENT_CANCELLED_ERROR_CODE,
+        )
 
     return {
         "run_id": run_id,
         "turn_seq": turn_seq,
-        "status": "stopping",
+        "status": "stopped",
     }
 
 

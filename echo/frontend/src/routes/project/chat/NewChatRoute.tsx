@@ -1,22 +1,23 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
 	Alert,
 	Badge,
 	Box,
 	Center,
 	Group,
 	Loader,
-	LoadingOverlay,
 	Stack,
 	Text,
+	Textarea,
 	Title,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
-import { IconAlertCircle } from "@tabler/icons-react";
+import { IconAlertCircle, IconSend } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import posthog from "posthog-js";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useParams } from "react-router";
 import {
@@ -56,9 +57,11 @@ const ChatsSectionSkeleton = () => (
 );
 
 const ProjectChatsSection = ({
+	filter,
 	projectId,
 	workspaceId,
 }: {
+	filter?: string;
 	projectId: string;
 	workspaceId: string;
 }) => {
@@ -82,9 +85,6 @@ const ProjectChatsSection = ({
 		chatsQuery.fetchNextPage,
 	]);
 
-	const totalChats = chatsCountQuery.data ?? 0;
-	if (totalChats === 0) return null;
-
 	const allChats =
 		(
 			chatsQuery.data?.pages as Array<{
@@ -93,8 +93,22 @@ const ProjectChatsSection = ({
 			}>
 		)?.flatMap((page) => page.chats) ?? [];
 
+	// The bar above doubles as a filter over your chats: typing narrows the
+	// list in place (gently, no layout jumps) while Enter still starts a new
+	// chat with the typed question.
+	const normalizedFilter = filter?.trim().toLowerCase() ?? "";
+	const visibleChats = useMemo(() => {
+		if (!normalizedFilter) return allChats;
+		return allChats.filter((chat) =>
+			(chat.name ?? "").toLowerCase().includes(normalizedFilter),
+		);
+	}, [allChats, normalizedFilter]);
+
+	const totalChats = chatsCountQuery.data ?? 0;
+	if (totalChats === 0) return null;
+
 	return (
-		<Stack gap="lg">
+		<Stack gap="lg" className="transition-opacity">
 			<Group gap="sm" align="center">
 				<Title order={2} fw={500} style={{ color: "var(--app-text)" }}>
 					<Trans>Chats</Trans>
@@ -102,8 +116,14 @@ const ProjectChatsSection = ({
 				<Badge variant="light">{totalChats}</Badge>
 			</Group>
 
+			{normalizedFilter && visibleChats.length === 0 && (
+				<Text size="sm">
+					<Trans>No chats match. Press Enter to ask this as a new chat.</Trans>
+				</Text>
+			)}
+
 			<Stack gap="xs">
-				{allChats.map((item, index) => {
+				{visibleChats.map((item, index) => {
 					const chatMode = (item as ProjectChat & { chat_mode?: string })
 						.chat_mode as
 						| "overview"
@@ -121,7 +141,7 @@ const ProjectChatsSection = ({
 									<ChatAccordionItemMenu chat={item as ProjectChat} />
 								</Group>
 							}
-							ref={index === allChats.length - 1 ? loadMoreRef : undefined}
+							ref={index === visibleChats.length - 1 ? loadMoreRef : undefined}
 						>
 							<Stack gap={2}>
 								<Text size="sm" lineClamp={1}>
@@ -167,13 +187,17 @@ export const NewChatRoute = () => {
 	const initializeModeMutation = useInitializeChatModeMutation();
 	const prefetchSuggestions = usePrefetchSuggestions();
 	const [isInitializing, setIsInitializing] = useState(false);
+	const [draft, setDraft] = useState("");
 	const { freeTier } = useWorkspaceUsage(workspaceId);
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	const atChatLimit = Boolean(
 		freeTier?.active && freeTier.chats_used >= freeTier.chats_limit,
 	);
 
-	const handleModeSelected = async (mode: ChatMode) => {
+	const handleModeSelected = async (
+		mode: ChatMode,
+		initialMessage?: string,
+	) => {
 		if (!projectId) return;
 
 		// Free tier: one chat per workspace. Route to upgrade instead of creating.
@@ -214,8 +238,11 @@ export const NewChatRoute = () => {
 				await prefetchSuggestions(chat.id, language, 5000);
 			}
 
-			// Step 4: Navigate to the new chat
-			navigate(`/w/${workspaceId}/projects/${projectId}/chats/${chat.id}`);
+			// Step 4: Navigate to the new chat; the panel sends the typed
+			// question as the first message (router state, consumed once).
+			navigate(`/w/${workspaceId}/projects/${projectId}/chats/${chat.id}`, {
+				state: initialMessage ? { initialMessage } : undefined,
+			});
 		} catch (error) {
 			// Backend safety net: free-tier chat cap returns 402.
 			if (isFreeTierLimitError(error) === "chats") {
@@ -226,20 +253,6 @@ export const NewChatRoute = () => {
 			setIsInitializing(false);
 		}
 	};
-
-	// Agentic-only experience: hosts never pick a "mode". When agentic chat
-	// is enabled, creating a chat is one click/visit; the selector remains only
-	// for environments where agentic is off (production until launch).
-	const autoStartAgentic = ENABLE_AGENTIC_CHAT;
-	const autoStartedRef = useRef(false);
-	// biome-ignore lint/correctness/useExhaustiveDependencies: handleModeSelected is recreated per render; the ref guards a single run
-	useEffect(() => {
-		if (!autoStartAgentic || autoStartedRef.current) return;
-		if (!projectId || !workspaceId) return;
-		autoStartedRef.current = true;
-		// handleModeSelected routes the free-tier chat limit to the upgrade modal.
-		void handleModeSelected("agentic");
-	}, [autoStartAgentic, projectId, workspaceId]);
 
 	if (!projectId || !workspaceId) {
 		return (
@@ -277,28 +290,72 @@ export const NewChatRoute = () => {
 		createChatMutation.isPending ||
 		initializeModeMutation.isPending;
 
+	const startChat = () => {
+		if (isPending) return;
+		void handleModeSelected("agentic", draft.trim() || undefined);
+	};
+
 	return (
 		<PageContainer>
 			<Stack gap="xl">
 				{ENABLE_AGENTIC_CHAT ? (
-					<Box className="relative min-h-32">
-						<LoadingOverlay
-							visible={isPending}
-							overlayProps={{ backgroundOpacity: 0 }}
+					<Stack gap="sm" className="pt-6">
+						<Title order={2} fw={500}>
+							<Trans>Where would you like to start?</Trans>
+						</Title>
+						<Textarea
+							autosize
+							minRows={2}
+							maxRows={6}
+							radius="lg"
+							size="md"
+							autoFocus
+							value={draft}
+							onChange={(event) => setDraft(event.currentTarget.value)}
+							onKeyDown={(event) => {
+								if (event.key === "Enter" && !event.shiftKey) {
+									event.preventDefault();
+									startChat();
+								}
+							}}
+							placeholder={t`Ask about your conversations, or type to find an earlier chat`}
+							disabled={isPending}
+							styles={{ input: { backgroundColor: "transparent" } }}
+							className="rounded-lg bg-white shadow-sm"
+							rightSection={
+								isPending ? (
+									<Loader size="xs" />
+								) : (
+									<ActionIcon
+										variant="subtle"
+										aria-label={t`Start a chat`}
+										onClick={startChat}
+									>
+										<IconSend size={18} />
+									</ActionIcon>
+								)
+							}
+							{...{ "data-testid": "ask-home-input" }}
 						/>
-					</Box>
+						<Text size="xs" fs="italic">
+							<Trans>
+								Enter starts a new chat. Your earlier chats stay listed below.
+							</Trans>
+						</Text>
+					</Stack>
 				) : (
 					<ChatModeSelector
 						isNewChat
 						isCreating={isPending}
 						projectId={projectId}
-						onModeSelected={handleModeSelected}
+						onModeSelected={(mode) => void handleModeSelected(mode)}
 						atChatLimit={atChatLimit}
 					/>
 				)}
 
 				<Suspense fallback={<ChatsSectionSkeleton />}>
 					<ProjectChatsSection
+						filter={ENABLE_AGENTIC_CHAT ? draft : undefined}
 						projectId={projectId}
 						workspaceId={workspaceId}
 					/>
