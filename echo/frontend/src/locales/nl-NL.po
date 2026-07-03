@@ -150,7 +150,7 @@ msgstr "{0, plural, one {# gesprek} other {# gesprekken}}"
 #. placeholder {0}: summary.live
 #: src/components/conversation/LiveMonitorSection.tsx:125
 msgid "{0, plural, one {# live} other {# live}}"
-msgstr ""
+msgstr "{0, plural, one {# live} other {# live}}"
 
 #~ msgid "{0, plural, one {# member selected} other {# members selected}}"
 #~ msgstr ""
@@ -183,7 +183,7 @@ msgstr "{0, plural, one {# project} other {# projecten}}"
 #. placeholder {0}: conversation.chunk_count
 #: src/components/conversation/LiveMonitorSection.tsx:79
 msgid "{0, plural, one {# recording} other {# recordings}}"
-msgstr ""
+msgstr "{0, plural, one {# opname} other {# opnames}}"
 
 #~ msgid "{0, plural, one {# request} other {# requests}}"
 #~ msgstr ""
@@ -203,7 +203,7 @@ msgstr "{0, plural, one {# tag} other {# tags}}"
 #. placeholder {0}: summary.with_errors
 #: src/components/conversation/LiveMonitorSection.tsx:129
 msgid "{0, plural, one {# with errors} other {# with errors}}"
-msgstr ""
+msgstr "{0, plural, one {# met fouten} other {# met fouten}}"
 
 #~ msgid "{0, plural, one {# workspace used up its included hours} other {# workspaces used up their included hours}}"
 #~ msgstr ""
@@ -1524,7 +1524,7 @@ msgstr "Anoniem gesprek"
 
 #: src/components/conversation/LiveMonitorSection.tsx:35
 msgid "Anonymous participant"
-msgstr ""
+msgstr "Anonieme deelnemer"
 
 #~ msgid "Anonymous Participant"
 #~ msgstr "Anonieme deelnemer"
@@ -1738,7 +1738,7 @@ msgstr "Vraag een organisatie-admin om deze upgrade aan te vragen."
 
 #: src/components/chat/AgenticChatPanel.tsx:1204
 msgid "Ask a question about the conversations in this project, or get help setting it up. Any change is proposed for review first, and nothing is saved until it's approved."
-msgstr ""
+msgstr "Stel een vraag over de gesprekken in dit project, of vraag hulp bij het opzetten ervan. Elke wijziging wordt eerst ter beoordeling voorgesteld en er wordt niets opgeslagen totdat je het goedkeurt."
 
 #~ msgid "Ask a question..."
 #~ msgstr "Stel een vraag..."
@@ -1756,7 +1756,7 @@ msgstr "Vraag een admin van de werkruimte om een uitnodiging, of kies een andere
 
 #: src/components/chat/AgenticChatPanel.tsx:1337
 msgid "Ask about your conversations..."
-msgstr ""
+msgstr "Vraag iets over je gesprekken..."
 
 #~ msgid "Ask AI"
 #~ msgstr "Vraag AI"
@@ -4210,7 +4210,7 @@ msgstr "Voer de huidige zescijferige code uit je authenticator-app in."
 
 #: src/components/chat/AgenticChatPanel.tsx:1349
 msgid "Enter to send, Shift+Enter for a new line"
-msgstr ""
+msgstr "Enter om te versturen, Shift+Enter voor een nieuwe regel"
 
 #~ msgid "Enter your access code"
 #~ msgstr "Voer uw toegangscode in"
@@ -5352,7 +5352,7 @@ msgstr "Identificeer herhalende thema's, onderwerpen en argumenten die consisten
 
 #: src/components/conversation/LiveMonitorSection.tsx:58
 msgid "Idle"
-msgstr ""
+msgstr "Inactief"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:44
@@ -5909,7 +5909,7 @@ msgstr "Taal"
 #. placeholder {0}: lastActivityLabel(conversation)
 #: src/components/conversation/LiveMonitorSection.tsx:76
 msgid "Last activity {0}"
-msgstr ""
+msgstr "Laatste activiteit {0}"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:244
 #: src/components/workspace/PeriodSelect.tsx:17
@@ -6093,7 +6093,7 @@ msgstr "Live audio niveau:"
 
 #: src/components/conversation/LiveMonitorSection.tsx:120
 msgid "Live monitoring"
-msgstr ""
+msgstr "Live monitoring"
 
 #: src/components/project/ProjectPortalEditor.tsx:1690
 msgid "Live Preview"
@@ -6813,7 +6813,7 @@ msgstr "Geen acties gevonden"
 
 #: src/components/conversation/LiveMonitorSection.tsx:20
 msgid "No activity yet"
-msgstr ""
+msgstr "Nog geen activiteit"
 
 #~ msgid "No announcements available"
 #~ msgstr "Geen meldingen beschikbaar"
@@ -12933,7 +12933,7 @@ msgstr "Waar wil je naartoe?"
 
 #: src/components/chat/AgenticChatPanel.tsx:1201
 msgid "Where would you like to start?"
-msgstr ""
+msgstr "Waar wil je beginnen?"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:460
 msgid "Which organisation does this workspace belong to?"
