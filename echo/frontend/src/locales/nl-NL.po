@@ -148,7 +148,7 @@ msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# gesprek} other {# gesprekken}}"
 
 #. placeholder {0}: summary.live
-#: src/components/conversation/LiveMonitorSection.tsx:125
+#: src/components/conversation/LiveMonitorSection.tsx:156
 msgid "{0, plural, one {# live} other {# live}}"
 msgstr "{0, plural, one {# live} other {# live}}"
 
@@ -181,7 +181,7 @@ msgid "{0, plural, one {# project} other {# projects}}"
 msgstr "{0, plural, one {# project} other {# projecten}}"
 
 #. placeholder {0}: conversation.chunk_count
-#: src/components/conversation/LiveMonitorSection.tsx:79
+#: src/components/conversation/LiveMonitorSection.tsx:114
 msgid "{0, plural, one {# recording} other {# recordings}}"
 msgstr "{0, plural, one {# opname} other {# opnames}}"
 
@@ -200,8 +200,13 @@ msgstr "{0, plural, one {# geselecteerd} other {# geselecteerd}}"
 msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# tag} other {# tags}}"
 
+#. placeholder {0}: summary.transcribing
+#: src/components/conversation/LiveMonitorSection.tsx:160
+msgid "{0, plural, one {# transcribing} other {# transcribing}}"
+msgstr ""
+
 #. placeholder {0}: summary.with_errors
-#: src/components/conversation/LiveMonitorSection.tsx:129
+#: src/components/conversation/LiveMonitorSection.tsx:169
 msgid "{0, plural, one {# with errors} other {# with errors}}"
 msgstr "{0, plural, one {# met fouten} other {# met fouten}}"
 
@@ -229,6 +234,11 @@ msgstr "{0, plural, one {Verplaats # project naar een andere werkruimte.} other 
 #: src/components/conversation/SelectAllConfirmationModal.tsx:83
 msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
+
+#. placeholder {0}: conversation.pending_transcription
+#: src/components/conversation/LiveMonitorSection.tsx:41
+msgid "{0, plural, one {Transcribing # clip} other {Transcribing # clips}}"
+msgstr ""
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionDescription
@@ -1530,7 +1540,7 @@ msgstr "Anoniem gesprek"
 #~ msgid "Anonymous host"
 #~ msgstr "Anonieme host"
 
-#: src/components/conversation/LiveMonitorSection.tsx:35
+#: src/components/conversation/LiveMonitorSection.tsx:69
 msgid "Anonymous participant"
 msgstr "Anonieme deelnemer"
 
@@ -4241,7 +4251,7 @@ msgstr "Ingevoerd door de deelnemer op het portaal"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
-#: src/components/conversation/LiveMonitorSection.tsx:68
+#: src/components/conversation/LiveMonitorSection.tsx:103
 #: src/components/chat/AgenticChatPanel.tsx:272
 #: src/components/chat/AgenticChatPanel.tsx:403
 #: src/components/chat/AgenticChatPanel.tsx:1134
@@ -4809,7 +4819,7 @@ msgid "Finish setting up your plan"
 msgstr "Rond het instellen van je abonnement af"
 
 #: src/components/report/ConversationStatusTable.tsx:82
-#: src/components/conversation/LiveMonitorSection.tsx:54
+#: src/components/conversation/LiveMonitorSection.tsx:88
 msgid "Finished"
 msgstr "Voltooid"
 
@@ -5359,7 +5369,7 @@ msgstr "ID"
 msgid "Identify recurring themes, topics, and arguments that appear consistently across conversations. Analyze their frequency, intensity, and consistency. Expected output: 3-7 aspects for small datasets, 5-12 for medium datasets, 8-15 for large datasets. Processing guidance: Focus on distinct patterns that emerge across multiple conversations."
 msgstr "Identificeer herhalende thema's, onderwerpen en argumenten die consistent in gesprekken voorkomen. Analyseer hun frequentie, intensiteit en consistentie. Verwachte uitvoer: 3-7 aspecten voor kleine datasets, 5-12 voor middelgrote datasets, 8-15 voor grote datasets. Verwerkingsrichtlijn: Focus op verschillende patronen die in meerdere gesprekken voorkomen."
 
-#: src/components/conversation/LiveMonitorSection.tsx:58
+#: src/components/conversation/LiveMonitorSection.tsx:92
 msgid "Idle"
 msgstr "Inactief"
 
@@ -5916,7 +5926,7 @@ msgid "Language"
 msgstr "Taal"
 
 #. placeholder {0}: lastActivityLabel(conversation)
-#: src/components/conversation/LiveMonitorSection.tsx:76
+#: src/components/conversation/LiveMonitorSection.tsx:111
 msgid "Last activity {0}"
 msgstr "Laatste activiteit {0}"
 
@@ -6084,7 +6094,7 @@ msgstr ""
 msgid "Listing documentation pages"
 msgstr ""
 
-#: src/components/conversation/LiveMonitorSection.tsx:50
+#: src/components/conversation/LiveMonitorSection.tsx:84
 msgid "Live"
 msgstr "Live"
 
@@ -6100,7 +6110,7 @@ msgstr "Live audio niveau:"
 #~ msgid "Live audio level:"
 #~ msgstr "Live audio level:"
 
-#: src/components/conversation/LiveMonitorSection.tsx:120
+#: src/components/conversation/LiveMonitorSection.tsx:151
 msgid "Live monitoring"
 msgstr "Live monitoring"
 
@@ -11773,6 +11783,10 @@ msgstr "Training: {0}"
 #: src/components/training/StaffTrainingPanel.tsx:95
 msgid "Trainings"
 msgstr "Trainingen"
+
+#: src/components/conversation/LiveMonitorSection.tsx:56
+msgid "Transcribed"
+msgstr ""
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:80
 msgid "Transcribing..."
