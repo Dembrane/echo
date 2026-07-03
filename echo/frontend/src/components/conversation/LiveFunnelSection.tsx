@@ -365,11 +365,16 @@ export const LiveFunnelSection = ({
 			recordings,
 			count: visitors.length + recordings.length,
 		});
+		// Three lanes, like a gravity drop: Scanned -> Setting up -> Recording.
+		// "Setting up" merges terms, mic check, and name/tags; a blocked mic
+		// still surfaces as a warning dot inside it.
 		return [
 			make("scanned", t`Scanned`, byStage(["scanned"])),
-			make("terms", t`Terms`, byStage(["terms"])),
-			make("mic", t`Mic check`, byStage(["mic_ok", "mic_skipped", "mic_blocked"])),
-			make("profile", t`Profile`, byStage(["profile"])),
+			make(
+				"setup",
+				t`Setting up`,
+				byStage(["terms", "mic_ok", "mic_skipped", "mic_blocked", "profile"]),
+			),
 			make("recording", t`Recording`, [], recording),
 		];
 	}, [funnel.visitors, conversations]);

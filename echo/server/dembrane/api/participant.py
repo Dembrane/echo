@@ -21,6 +21,7 @@ from dembrane.service.project import ProjectNotFoundException
 from dembrane.visitor_session import (
     VALID_VISITOR_STAGES,
     mark_visitor_seen,
+    link_visitor_conversation,
 )
 from dembrane.service.conversation import (
     ConversationServiceException,
@@ -108,6 +109,8 @@ class InitiateConversationRequestBodySchema(BaseModel):
     user_agent: Optional[str] = None
     tag_id_list: Optional[List[str]] = []
     source: Optional[str] = None
+    # The pre-conversation funnel dot this conversation grew out of.
+    visitor_id: Optional[str] = None
 
 
 class GetUploadUrlRequest(BaseModel):
@@ -182,6 +185,11 @@ async def initiate_conversation(
             project_tag_id_list=body.tag_id_list,
             source=body.source,
         )
+
+        # Link the funnel dot to its new conversation so the monitor drops it
+        # from the pre-conversation lanes immediately (best-effort).
+        if body.visitor_id and isinstance(conversation, dict):
+            await link_visitor_conversation(body.visitor_id, conversation.get("id"))
 
         return conversation
     except ConversationNotOpenForParticipationException as e:

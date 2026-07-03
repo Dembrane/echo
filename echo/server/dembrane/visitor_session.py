@@ -27,6 +27,10 @@ VISITOR_TTL_SECONDS = 45
 _VISITOR_KEY_PREFIX = "visitor:"
 _VISITOR_INDEX_PREFIX = "monitor:visitors:"
 _VISITOR_INDEX_TTL_SECONDS = 2100
+# visitor_id -> conversation_id, written at initiate. Lets the funnel drop a
+# dot the instant it graduates into a conversation, before any recording ping.
+_LINK_KEY_PREFIX = "visitor_conversation:"
+_LINK_TTL_SECONDS = 2 * 60 * 60
 
 # Funnel stages the portal reports. Mic carries its outcome so the host can see
 # a skip or a block, not just "advanced".
@@ -117,6 +121,37 @@ async def get_active_visitor_ids(project_id: str, *, min_score: float) -> list[s
         m.decode("utf-8") if isinstance(m, (bytes, bytearray)) else str(m)
         for m in members
     ]
+
+
+async def link_visitor_conversation(
+    visitor_id: Optional[str], conversation_id: Optional[str]
+) -> None:
+    """Record that a visitor initiated a conversation (best-effort)."""
+    if not visitor_id or not conversation_id:
+        return
+    try:
+        client = await get_redis_client()
+        await client.set(
+            f"{_LINK_KEY_PREFIX}{visitor_id}", conversation_id, ex=_LINK_TTL_SECONDS
+        )
+    except Exception:  # noqa: BLE001
+        pass
+
+
+async def get_linked_visitor_ids(visitor_ids: list[str]) -> set[str]:
+    """Return the subset of visitor_ids that have graduated into a conversation."""
+    if not visitor_ids:
+        return set()
+    try:
+        client = await get_redis_client()
+        values = await client.mget([f"{_LINK_KEY_PREFIX}{vid}" for vid in visitor_ids])
+    except Exception:  # noqa: BLE001
+        return set()
+    return {
+        vid
+        for vid, value in zip(visitor_ids, values, strict=False)
+        if value is not None
+    }
 
 
 async def get_visitors_many(

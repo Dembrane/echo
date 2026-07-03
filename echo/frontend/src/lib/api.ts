@@ -184,6 +184,7 @@ export const initiateConversation = async (payload: {
 	pin: string;
 	source: string;
 	tagIdList: string[];
+	visitorId?: string;
 }) => {
 	return apiNoAuth.post<unknown, TConversation>(
 		`/participant/projects/${payload.projectId}/conversations/initiate`,
@@ -194,6 +195,7 @@ export const initiateConversation = async (payload: {
 			source: payload.source,
 			tag_id_list: payload.tagIdList,
 			user_agent: navigator.userAgent ?? undefined,
+			visitor_id: payload.visitorId ?? undefined,
 		},
 	);
 };

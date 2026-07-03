@@ -17,6 +17,7 @@ import { useSearchParams } from "react-router";
 import { z } from "zod";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
+import { getVisitorId } from "@/lib/visitorId";
 import { useInitiateConversationMutation } from "./hooks";
 
 const FormSchema = z.object({
@@ -78,6 +79,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 			projectId: project.id,
 			source: "PORTAL_AUDIO",
 			tagIdList: data.tagIdList,
+			visitorId: getVisitorId(project.id),
 		});
 	};
 
