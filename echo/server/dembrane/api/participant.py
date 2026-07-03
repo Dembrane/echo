@@ -13,7 +13,10 @@ from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
 from dembrane.async_helpers import run_in_thread_pool
-from dembrane.monitor_stream import publish_monitor_dirty
+from dembrane.monitor_stream import (
+    publish_monitor_dirty,
+    register_active_conversation,
+)
 from dembrane.service.project import ProjectNotFoundException
 from dembrane.service.conversation import (
     ConversationServiceException,
@@ -454,6 +457,12 @@ async def ping_conversation(
         logger.warning("Liveness ping failed for %s: %s", conversation_id, exc)
         return {"ok": False}
     if body is not None and body.project_id:
+        # Index the conversation as active so the monitor can show it the
+        # instant it is initiated, before any audio chunk exists, then nudge
+        # open streams to recompute.
+        await register_active_conversation(
+            body.project_id, conversation_id, score=time()
+        )
         await publish_monitor_dirty(body.project_id)
     return {"ok": True}
 

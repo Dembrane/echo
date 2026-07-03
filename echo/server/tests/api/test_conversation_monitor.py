@@ -307,6 +307,51 @@ def test_monitor_surfaces_metadata_and_telemetry() -> None:
     assert entry["battery"] == {"level": 0.2, "charging": False}
 
 
+def test_monitor_seeds_initiated_conversation_without_chunks() -> None:
+    # A just-initiated session pings but has no chunk yet. It must still appear,
+    # seeded from extra_conversations + its telemetry state.
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    extras = [
+        {
+            "id": "c-new",
+            "participant_name": "Ada",
+            "is_finished": False,
+            "created_at": _iso(now - timedelta(seconds=8)),
+            "duration": None,
+        }
+    ]
+    telemetry = {"c-new": {"seen": now - timedelta(seconds=2), "state": "waiting"}}
+    payload = _build_monitor_payload([], {}, {}, now, 45, telemetry, None, extras)
+    entry = payload["conversations"][0]
+    assert entry["id"] == "c-new"
+    assert entry["label"] == "Ada"
+    assert entry["state"] == "waiting"
+    assert entry["is_live"] is True  # a fresh ping keeps it live even with no chunk
+    assert entry["chunk_count"] == 0
+    assert payload["summary"]["live"] == 1
+
+
+def test_monitor_carries_created_at_and_duration() -> None:
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    created = _iso(now - timedelta(minutes=3))
+    recent_chunks = [
+        {
+            "conversation_id": {
+                "id": "c1",
+                "participant_name": "Ada",
+                "created_at": created,
+                "duration": 182,
+            },
+            "timestamp": _iso(now - timedelta(seconds=5)),
+            "error": None,
+        },
+    ]
+    payload = _build_monitor_payload(recent_chunks, {"c1": 2}, {"c1": 2}, now, 45)
+    entry = payload["conversations"][0]
+    assert entry["created_at"] == created
+    assert entry["duration"] == 182
+
+
 def test_monitor_transcript_snippet_truncated() -> None:
     from dembrane.api.v2.bff.conversations import MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN
 
@@ -380,6 +425,12 @@ async def _build_client(
         return {}
 
     monkeypatch.setattr(conv_bff, "get_telemetry_many", _fake_telemetry)
+
+    # Active-index read hits Redis; stub to empty so gather stays chunk-only.
+    async def _fake_active(project_id: str, *, min_score: float) -> list:  # noqa: ARG001
+        return []
+
+    monkeypatch.setattr(conv_bff, "get_active_conversation_ids", _fake_active)
 
     # The snapshot cache also uses Redis; stub a always-miss client so the
     # endpoint recomputes (and the Directus query assertions still hold).

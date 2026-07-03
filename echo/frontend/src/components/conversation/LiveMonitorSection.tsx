@@ -124,6 +124,30 @@ const isLowBattery = (conversation: MonitorConversation): boolean => {
 	return typeof battery.level === "number" && battery.level <= 0.15;
 };
 
+const formatClock = (totalSeconds: number): string => {
+	const s = Math.max(0, Math.floor(totalSeconds));
+	const hours = Math.floor(s / 3600);
+	const minutes = Math.floor((s % 3600) / 60);
+	const seconds = s % 60;
+	const pad = (n: number) => String(n).padStart(2, "0");
+	return hours > 0
+		? `${hours}:${pad(minutes)}:${pad(seconds)}`
+		: `${minutes}:${pad(seconds)}`;
+};
+
+// Recorded length when we have it (set on finish), otherwise elapsed since the
+// session started. It can be a little behind for a live session; that's fine.
+const durationLabel = (conversation: MonitorConversation): string | null => {
+	if (typeof conversation.duration === "number" && conversation.duration > 0) {
+		return formatClock(conversation.duration);
+	}
+	if (conversation.created_at) {
+		const start = new Date(conversation.created_at).getTime();
+		if (!Number.isNaN(start)) return formatClock((Date.now() - start) / 1000);
+	}
+	return null;
+};
+
 const lastActivityLabel = (conversation: MonitorConversation): string => {
 	const stamp = conversation.last_seen_at ?? conversation.last_chunk_at;
 	if (!stamp) return t`No activity yet`;
@@ -222,13 +246,11 @@ const MonitorRow = ({
 					<Text size="xs" c="dimmed">
 						<Trans>Last activity {lastActivityLabel(conversation)}</Trans>
 					</Text>
-					<Text size="xs" c="dimmed">
-						<Plural
-							value={conversation.chunk_count}
-							one="# recording"
-							other="# recordings"
-						/>
-					</Text>
+					{durationLabel(conversation) && (
+						<Text size="xs" c="dimmed">
+							{durationLabel(conversation)}
+						</Text>
+					)}
 				</Group>
 
 				{conversation.has_error && conversation.error_message && (
