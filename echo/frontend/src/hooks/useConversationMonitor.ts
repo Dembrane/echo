@@ -66,6 +66,8 @@ export type MonitorSummary = {
 	transcribing: number;
 	with_errors: number;
 	total: number;
+	pending_transcription: number;
+	catch_up_eta_seconds: number;
 };
 
 export type FunnelStage =
@@ -86,6 +88,8 @@ export type FunnelVisitor = {
 	device: string | null;
 	network: MonitorNetwork | null;
 	battery: MonitorBattery | null;
+	/** First-seen timestamp per stage, for the drilldown timeline. */
+	stages: Record<string, string>;
 	last_seen_at: string | null;
 };
 
@@ -104,8 +108,10 @@ export type MonitorResponse = {
 const EMPTY_FUNNEL: MonitorFunnel = { visitors: [], summary: { total: 0 } };
 
 const EMPTY_SUMMARY: MonitorSummary = {
+	catch_up_eta_seconds: 0,
 	finished: 0,
 	live: 0,
+	pending_transcription: 0,
 	total: 0,
 	transcribing: 0,
 	with_errors: 0,

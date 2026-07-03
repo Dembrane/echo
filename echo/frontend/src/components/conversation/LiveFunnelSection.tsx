@@ -109,7 +109,7 @@ const Dot = ({
 			onFocus={onHoverStart}
 			onBlur={onHoverEnd}
 			aria-label={label}
-			className="relative flex h-7 w-7 items-center justify-center rounded-full transition-transform hover:scale-110"
+			className="relative flex h-5 w-5 items-center justify-center rounded-full transition-transform hover:scale-125"
 			style={{ backgroundColor: color }}
 		>
 			{pulse && (
@@ -120,7 +120,7 @@ const Dot = ({
 			)}
 			{icon}
 			{warn && (
-				<span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-orange-400" />
+				<span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-orange-400" />
 			)}
 		</button>
 	</Tooltip>
@@ -186,9 +186,9 @@ const FunnelLane = ({
 								warn={weakNetwork(visitor.network) || lowBattery(visitor.battery)}
 								icon={
 									visitor.stage === "mic_ok" ? (
-										<CheckIcon size={12} color="white" weight="bold" />
+										<CheckIcon size={10} color="white" weight="bold" />
 									) : visitor.stage === "mic_blocked" ? (
-										<WarningCircleIcon size={13} color="white" weight="bold" />
+										<WarningCircleIcon size={11} color="white" weight="bold" />
 									) : undefined
 								}
 								onOpen={() => onOpenVisitor(visitor)}
@@ -209,6 +209,37 @@ const FunnelLane = ({
 					</Group>
 				)}
 			</Collapse>
+		</Stack>
+	);
+};
+
+const STAGE_TIMELINE_ORDER: { stage: FunnelStage; label: string }[] = [
+	{ stage: "scanned", label: t`Scanned the QR` },
+	{ stage: "terms", label: t`Accepted terms` },
+	{ stage: "mic_ok", label: t`Mic checked` },
+	{ stage: "mic_skipped", label: t`Skipped mic check` },
+	{ stage: "mic_blocked", label: t`Mic blocked` },
+	{ stage: "profile", label: t`Entered details` },
+];
+
+const StageTimeline = ({ stages }: { stages: Record<string, string> }) => {
+	const steps = STAGE_TIMELINE_ORDER.filter((step) => stages[step.stage]).map(
+		(step) => ({ ...step, at: stages[step.stage] }),
+	);
+	if (steps.length === 0) return null;
+	return (
+		<Stack gap={4}>
+			<Text size="xs" fw={600} tt="uppercase" c="dimmed">
+				<Trans>Timeline</Trans>
+			</Text>
+			{steps.map((step) => (
+				<Group key={step.stage} gap="xs" justify="space-between" wrap="nowrap">
+					<Text size="xs">{step.label}</Text>
+					<Text size="xs" c="dimmed">
+						{relativeTime(step.at)}
+					</Text>
+				</Group>
+			))}
 		</Stack>
 	);
 };
@@ -265,6 +296,7 @@ const VisitorDrilldown = ({ visitor }: { visitor: FunnelVisitor }) => (
 				</Group>
 			)}
 		</Group>
+		<StageTimeline stages={visitor.stages} />
 	</Stack>
 );
 

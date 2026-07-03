@@ -95,15 +95,45 @@ async def mark_visitor_seen(
     """Record a visitor funnel ping (best-effort). ``telemetry`` is caller-sanitised."""
     if not project_id or not visitor_id:
         return
-    payload: dict[str, Any] = {"seen": _now_iso(now), "id": visitor_id}
+    seen_iso = _now_iso(now)
+    payload: dict[str, Any] = {"seen": seen_iso, "id": visitor_id}
     if telemetry:
         for field in _TELEMETRY_FIELDS:
             value = telemetry.get(field)
             if value is not None:
                 payload[field] = value
     client = await get_redis_client()
+    key = _key(project_id, visitor_id)
+
+    # Accumulate a per-stage first-seen timestamp across pings, so the host can
+    # see a timeline of what the participant did and when (read-modify-write;
+    # cheap at a 10s ping cadence).
+    stages: dict[str, str] = {}
+    first_seen = seen_iso
+    try:
+        existing_raw = await client.get(key)
+        if existing_raw:
+            text = (
+                existing_raw.decode("utf-8")
+                if isinstance(existing_raw, (bytes, bytearray))
+                else str(existing_raw)
+            )
+            existing = json.loads(text)
+            if isinstance(existing, dict):
+                if isinstance(existing.get("stages"), dict):
+                    stages = existing["stages"]
+                if isinstance(existing.get("first_seen"), str):
+                    first_seen = existing["first_seen"]
+    except Exception:  # noqa: BLE001
+        pass
+    current_stage = payload.get("stage")
+    if isinstance(current_stage, str) and current_stage not in stages:
+        stages[current_stage] = seen_iso
+    payload["stages"] = stages
+    payload["first_seen"] = first_seen
+
     stamp = score if score is not None else (now or datetime.now(timezone.utc)).timestamp()
-    await client.set(_key(project_id, visitor_id), json.dumps(payload), ex=VISITOR_TTL_SECONDS)
+    await client.set(key, json.dumps(payload), ex=VISITOR_TTL_SECONDS)
     await client.zadd(_index_key(project_id), {visitor_id: stamp})
     await client.expire(_index_key(project_id), _VISITOR_INDEX_TTL_SECONDS)
 

@@ -174,6 +174,15 @@ const LiveDuration = ({
 	);
 };
 
+// A deliberately vague, conservative "time to finish the transcription
+// backlog", bucketed and rounded up so we never over-promise.
+const catchUpLabel = (seconds: number): string | null => {
+	if (!seconds || seconds <= 0) return null;
+	const minutes = Math.ceil(seconds / 60);
+	const bucket = [1, 2, 5, 10, 15, 20, 30].find((value) => value >= minutes);
+	return bucket ? `~${bucket} min` : "~30+ min";
+};
+
 const lastActivityLabel = (conversation: MonitorConversation): string => {
 	const stamp = conversation.last_seen_at ?? conversation.last_chunk_at;
 	if (!stamp) return t`No activity yet`;
@@ -486,6 +495,18 @@ export const LiveMonitorSection = ({
 								other="# with errors"
 							/>
 						</Badge>
+					)}
+					{catchUpLabel(summary.catch_up_eta_seconds) && (
+						<Tooltip
+							label={t`Rough estimate to finish transcribing the backlog`}
+							withArrow
+						>
+							<Badge size="sm" color="orange" variant="light">
+								<Trans>
+									catch up {catchUpLabel(summary.catch_up_eta_seconds)}
+								</Trans>
+							</Badge>
+						</Tooltip>
 					)}
 				</Group>
 			</Group>
