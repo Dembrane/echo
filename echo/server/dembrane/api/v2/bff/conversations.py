@@ -816,31 +816,14 @@ def _build_monitor_payload(
     }
 
 
-@router.get("/monitor")
-async def monitor_conversations(
-    auth: DependencyDirectusSession,
-    project_id: str = Query(..., description="Parent project id."),
-    window_seconds: int = Query(
-        MONITOR_LIVE_WINDOW_SECONDS,
-        ge=5,
-        le=600,
-        description="Conversation is 'live' if a chunk landed within this many seconds.",
-    ),
-) -> dict:
-    """Host-facing live monitor for a project's portal conversations.
+async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
+    """Assemble the live-monitor payload for a project (no access gate).
 
-    Returns one row per recently-active conversation (a chunk in the
-    last MONITOR_LOOKBACK_SECONDS), each with a live indicator, last
-    activity time, total chunk count, and an error state so hosts can
-    see a conversation that is failing to transcribe. Also a project
-    rollup (count live, count with errors).
-
-    Portal-initiated only (no DASHBOARD_UPLOAD / CLONE), matching the
-    /live endpoints. Two bounded Directus reads, aggregated in Python.
+    Callers MUST enforce access before invoking this. Shared by the
+    host-facing /monitor route and the agentic monitor endpoint so both
+    return exactly the same shape. Portal-initiated conversations only
+    (no DASHBOARD_UPLOAD / CLONE); a few bounded reads aggregated in Python.
     """
-    access = await resolve_project_access(project_id, auth)
-    access.require("conversation:read")
-
     now = datetime.now(timezone.utc)
     lookback_cutoff = (now - timedelta(seconds=MONITOR_LOOKBACK_SECONDS)).isoformat()
 
@@ -939,6 +922,28 @@ async def monitor_conversations(
     return _build_monitor_payload(
         recent_chunks, chunk_counts, transcribed_counts, now, window_seconds, last_seen
     )
+
+
+@router.get("/monitor")
+async def monitor_conversations(
+    auth: DependencyDirectusSession,
+    project_id: str = Query(..., description="Parent project id."),
+    window_seconds: int = Query(
+        MONITOR_LIVE_WINDOW_SECONDS,
+        ge=5,
+        le=600,
+        description="Conversation is 'live' if a chunk landed within this many seconds.",
+    ),
+) -> dict:
+    """Host-facing live monitor for a project's portal conversations.
+
+    Returns one row per recently-active conversation (a chunk or ping in the
+    last MONITOR_LOOKBACK_SECONDS), each with a live indicator, last activity
+    time, transcription progress, and an error state, plus a project rollup.
+    """
+    access = await resolve_project_access(project_id, auth)
+    access.require("conversation:read")
+    return await gather_project_monitor(project_id, window_seconds)
 
 
 @router.get("/remaining-count")

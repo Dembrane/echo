@@ -138,6 +138,19 @@ class EchoClient:
             raise ValueError("Unexpected list project conversations response shape")
         return cast(AgentProjectConversationsResponse, payload)
 
+    async def get_project_monitor(
+        self,
+        project_id: str,
+        window_seconds: int = 45,
+    ) -> dict[str, Any]:
+        response = await self._client.get(
+            f"/agentic/projects/{project_id}/monitor",
+            params={"window_seconds": window_seconds},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+
     async def list_project_chats(
         self,
         project_id: str,

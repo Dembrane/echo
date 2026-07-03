@@ -106,6 +106,8 @@ const buildHeadline = (toolName: string, context: ToolContext) => {
 			return t`Load project context`;
 		case "listProjectConversations":
 			return t`List project conversations`;
+		case "getLiveConversationStatus":
+			return t`Checking live conversations`;
 		case "findConvosByKeywords":
 			return context.query
 				? t`Search conversations for "${context.query}"`
