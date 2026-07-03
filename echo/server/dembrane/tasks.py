@@ -2654,17 +2654,25 @@ def task_capture_chat_insights() -> None:
     agentic chat it writes a single anonymized usage_insight describing what the
     host was trying to do or where they got stuck.
 
-    Idempotent / no-rework: for each candidate it looks up the most recent
-    usage_insight for that chat. If one exists whose created_at is at or after
-    the chat's date_updated, there has been no fresh activity since the last
-    insight, so it skips. A new insight therefore fires only after fresh
-    activity followed by idle time, i.e. roughly once per chat session. Safe to
-    run repeatedly. Per-chat work is isolated so one failure never aborts the
-    sweep.
+    Idleness is measured from the latest project_chat_message, NOT
+    project_chat.date_updated (that column only moves on rename/mode changes, not
+    on new messages, so it cannot signal message activity). The sweep reads
+    recent messages to find each chat's last-activity time, treats a chat as
+    ended once its last message is older than INSIGHT_IDLE_MINUTES, and skips
+    still-active chats.
+
+    Idempotent / no-rework: for each idle chat it looks up the most recent
+    usage_insight. If one exists whose created_at is at or after the chat's last
+    message, there has been no fresh activity since the last insight, so it
+    skips. A new insight therefore fires only after fresh activity followed by
+    idle time, i.e. roughly once per chat session. Per-chat work is isolated so
+    one failure never aborts the sweep.
     """
     from dembrane.insight_utils import (
         INSIGHT_SWEEP_BATCH,
         INSIGHT_IDLE_MINUTES,
+        INSIGHT_LOOKBACK_HOURS,
+        INSIGHT_MAX_RECENT_MESSAGES,
         generate_chat_insight,
     )
 
@@ -2673,47 +2681,77 @@ def task_capture_chat_insights() -> None:
     # Cap on how many messages we feed the model; longer chats are head+tail.
     MAX_MESSAGES = 50
 
-    idle_cutoff = (get_utc_timestamp() - timedelta(minutes=INSIGHT_IDLE_MINUTES)).isoformat()
+    now = get_utc_timestamp()
+    idle_cutoff = now - timedelta(minutes=INSIGHT_IDLE_MINUTES)
+    lookback_cutoff = (now - timedelta(hours=INSIGHT_LOOKBACK_HOURS)).isoformat()
 
+    # Find each recently-active chat's LAST message time. A chat is idle when its
+    # latest message is older than idle_cutoff; any message newer than that means
+    # it is still active and is skipped. Reading messages newest-first, the first
+    # row seen per chat is its latest.
     with directus_client_context() as client:
-        candidates = client.get_items(
+        recent_messages = client.get_items(
+            "project_chat_message",
+            {
+                "query": {
+                    "filter": {"date_created": {"_gte": lookback_cutoff}},
+                    "fields": ["project_chat_id", "date_created"],
+                    "sort": ["-date_created"],
+                    "limit": INSIGHT_MAX_RECENT_MESSAGES,
+                }
+            },
+        )
+    recent_messages = recent_messages if isinstance(recent_messages, list) else []
+
+    last_message_at: dict[str, datetime] = {}
+    for row in recent_messages:
+        raw_chat_id = row.get("project_chat_id")
+        cid = raw_chat_id.get("id") if isinstance(raw_chat_id, dict) else raw_chat_id
+        if not cid or cid in last_message_at:
+            continue  # first (newest) row per chat wins
+        parsed = _parse_iso(row.get("date_created"))
+        if parsed:
+            last_message_at[cid] = parsed
+
+    idle_chat_ids = [
+        cid for cid, ts in last_message_at.items() if ts < idle_cutoff
+    ][:INSIGHT_SWEEP_BATCH]
+
+    if not idle_chat_ids:
+        task_logger.debug("task_capture_chat_insights: no idle agentic chats")
+        return
+
+    # Resolve the idle ids to agentic, non-deleted chats (mode/project/creator).
+    with directus_client_context() as client:
+        chat_rows = client.get_items(
             "project_chat",
             {
                 "query": {
                     "filter": {
+                        "id": {"_in": [str(c) for c in idle_chat_ids]},
                         "chat_mode": {"_eq": "agentic"},
                         "deleted_at": {"_null": True},
-                        "date_updated": {"_nnull": True, "_lt": idle_cutoff},
                     },
-                    "fields": [
-                        "id",
-                        "project_id",
-                        "user_created",
-                        "date_updated",
-                    ],
-                    "sort": ["date_updated"],
+                    "fields": ["id", "project_id", "user_created"],
                     "limit": INSIGHT_SWEEP_BATCH,
                 }
             },
         )
+    chats = chat_rows if isinstance(chat_rows, list) else []
 
-    if not isinstance(candidates, list) or not candidates:
-        task_logger.debug("task_capture_chat_insights: no idle agentic chats")
-        return
-
-    scanned = len(candidates)
+    scanned = len(chats)
     written = 0
     skipped = 0
 
-    for chat in candidates:
+    for chat in chats:
         chat_id = chat.get("id")
         if not chat_id:
             skipped += 1
             continue
         try:
-            chat_updated = _parse_iso(chat.get("date_updated"))
+            chat_last_activity = last_message_at.get(chat_id)
 
-            # Idempotency: skip if the newest insight already covers this idle window.
+            # Idempotency: skip if the newest insight already covers this session.
             with directus_client_context() as client:
                 latest = client.get_items(
                     "usage_insight",
@@ -2728,7 +2766,7 @@ def task_capture_chat_insights() -> None:
                 )
             if isinstance(latest, list) and latest:
                 last_created = _parse_iso(latest[0].get("created_at"))
-                if last_created and chat_updated and last_created >= chat_updated:
+                if last_created and chat_last_activity and last_created >= chat_last_activity:
                     skipped += 1
                     continue
 

@@ -5,7 +5,7 @@ Covers:
   returns None on unparseable output, and skips chats with no host turn.
 - The prompt builder carries the anonymization + brand-voice guardrails.
 - task_capture_chat_insights idempotency: an existing insight newer than the
-  chat's date_updated skips; an older one proceeds and writes a new insight.
+  chat's last message skips; an older one proceeds and writes a new insight.
 - Scheduler registration: the */15 cron job exists.
 """
 
@@ -184,6 +184,10 @@ def _match(row: dict, flt: dict) -> bool:
                 return False
             if op == "_lt" and not (val is not None and val < expected):
                 return False
+            if op == "_gte" and not (val is not None and val >= expected):
+                return False
+            if op == "_in" and str(val) not in {str(e) for e in expected}:
+                return False
             if op == "_null":
                 if expected and val is not None:
                     return False
@@ -267,7 +271,7 @@ def _base_data(insight_created: datetime) -> tuple[FakeClient, datetime]:
 
 
 def test_capture_skips_when_recent_insight_covers_idle_window():
-    """Existing insight newer than chat.date_updated => no new insight."""
+    """Existing insight newer than the chat's last message => no new insight."""
     import dembrane.tasks as T
 
     now = datetime.now(timezone.utc)
@@ -285,7 +289,7 @@ def test_capture_skips_when_recent_insight_covers_idle_window():
 
 
 def test_capture_writes_insight_when_fresh_activity_since_last():
-    """Newest insight OLDER than chat.date_updated => proceed and write one."""
+    """Newest insight OLDER than the chat's last message => proceed and write one."""
     import dembrane.tasks as T
 
     now = datetime.now(timezone.utc)
