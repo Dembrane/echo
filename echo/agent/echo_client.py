@@ -92,6 +92,29 @@ class EchoClient:
             return payload["transcript"]
         return str(payload)
 
+    async def list_memory(self, project_id: str) -> dict[str, Any]:
+        payload = await self.get(f"/agentic/projects/{project_id}/memory")
+        return payload if isinstance(payload, dict) else {}
+
+    async def write_memory(
+        self,
+        project_id: str,
+        scope: str,
+        content: str,
+        memory_key: str | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {"scope": scope, "content": content}
+        if memory_key:
+            body["memory_key"] = memory_key
+
+        response = await self._client.post(
+            f"/agentic/projects/{project_id}/memory",
+            json=body,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+
     async def list_project_conversations(
         self,
         project_id: str,
@@ -114,3 +137,40 @@ class EchoClient:
         if not isinstance(payload, dict):
             raise ValueError("Unexpected list project conversations response shape")
         return cast(AgentProjectConversationsResponse, payload)
+
+    async def list_project_chats(
+        self,
+        project_id: str,
+        limit: int = 30,
+        workspace_wide: bool = False,
+    ) -> list[dict[str, Any]]:
+        response = await self._client.get(
+            f"/agentic/projects/{project_id}/chats",
+            params={"limit": limit, "workspace_wide": workspace_wide},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, list) else []
+
+    async def read_chat(self, chat_id: str, limit: int = 100) -> list[dict[str, Any]]:
+        response = await self._client.get(
+            f"/agentic/chats/{chat_id}/messages",
+            params={"limit": limit},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, list) else []
+
+    async def create_support_request(
+        self,
+        project_id: str,
+        message: str,
+        page_context: Optional[str] = None,
+    ) -> dict[str, Any]:
+        response = await self._client.post(
+            f"/agentic/projects/{project_id}/support-request",
+            json={"message": message, "page_context": page_context},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}

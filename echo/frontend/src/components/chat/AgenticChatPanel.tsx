@@ -14,6 +14,7 @@ import {
 	Stack,
 	Text,
 	Textarea,
+	TextInput,
 	Title,
 	Tooltip,
 } from "@mantine/core";
@@ -25,6 +26,7 @@ import {
 	IconChevronRight,
 	IconPlayerStop,
 	IconSend,
+	IconSparkles,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
@@ -36,6 +38,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { useUpdateChatMutation } from "@/components/chat/hooks";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -990,6 +993,9 @@ export const AgenticChatPanel = ({
 			}
 		} catch (submitError) {
 			setPendingUserMessage(null);
+			// Don't strand the host's message when the send fails: restore it to
+			// the composer so it isn't lost (unless they've already typed a new one).
+			setInput((current) => (current.length === 0 ? message : current));
 			// Backend safety net: free-tier turn cap returns 402.
 			if (isFreeTierLimitError(submitError) === "chat_turns") {
 				upgradeHandlers.open();
@@ -1022,6 +1028,19 @@ export const AgenticChatPanel = ({
 
 	const isRunInFlight = isInFlightStatus(runStatus);
 	const chatTitle = chatQuery.data?.name ?? t`Chat`;
+	const updateChatMutation = useUpdateChatMutation();
+	const [isEditingTitle, setIsEditingTitle] = useState(false);
+	const [titleDraft, setTitleDraft] = useState("");
+	const commitTitle = () => {
+		const next = titleDraft.trim();
+		setIsEditingTitle(false);
+		if (!chatId || !projectId || !next || next === chatTitle) return;
+		updateChatMutation.mutate({
+			chatId,
+			payload: { name: next },
+			projectId,
+		});
+	};
 	const liveToolActivity = useMemo(
 		() =>
 			[...timeline]
@@ -1053,14 +1072,46 @@ export const AgenticChatPanel = ({
 		>
 			<Stack className="top-0 w-full pt-6">
 				<Group justify="space-between">
-					<Group gap="sm">
-						<Title order={1} {...testId("chat-title")}>
-							{chatTitle}
-						</Title>
+					<Group gap="xs" className="min-w-0 flex-1">
+						{isEditingTitle ? (
+							<TextInput
+								autoFocus
+								variant="unstyled"
+								size="xl"
+								className="min-w-0 flex-1"
+								value={titleDraft}
+								onChange={(event) => setTitleDraft(event.currentTarget.value)}
+								onBlur={commitTitle}
+								onKeyDown={(event) => {
+									if (event.key === "Enter") {
+										event.preventDefault();
+										commitTitle();
+									} else if (event.key === "Escape") {
+										setIsEditingTitle(false);
+									}
+								}}
+								{...testId("chat-title-input")}
+							/>
+						) : (
+							<Tooltip label={t`Rename chat`} openDelay={400}>
+								<Title
+									order={1}
+									className="cursor-text truncate"
+									onClick={() => {
+										setTitleDraft(chatTitle);
+										setIsEditingTitle(true);
+									}}
+									{...testId("chat-title")}
+								>
+									{chatTitle}
+								</Title>
+							</Tooltip>
+						)}
 						<ChatModeIndicator mode="agentic" size="sm" />
 					</Group>
 					<Group>
 						<CopyRichTextIconButton
+							size="md"
 							markdown={`# ${chatTitle}\n\n${computedChatForCopy}`}
 						/>
 						<ErrorBoundary>
@@ -1133,11 +1184,31 @@ export const AgenticChatPanel = ({
 						</Stack>
 					)}
 
-					{!showExistingChatLoading && timeline.length === 0 && (
-						<Text c="dimmed" size="sm">
-							<Trans>Ask about your conversations to get started.</Trans>
-						</Text>
-					)}
+					{!showExistingChatLoading &&
+						timeline.length === 0 &&
+						!pendingUserMessage && (
+							<Stack
+								align="center"
+								gap="xs"
+								className="min-h-[40vh] max-w-md self-center px-4 pt-[12vh] text-center"
+								{...testId("agentic-empty-state")}
+							>
+								<IconSparkles
+									size={28}
+									className="text-[var(--mantine-color-primary-6)]"
+								/>
+								<Title order={3} fw={500}>
+									<Trans>Where would you like to start?</Trans>
+								</Title>
+								<Text size="sm" c="dimmed">
+									<Trans>
+										Ask a question about the conversations in this project, or
+										get help setting it up. Any change is proposed for review
+										first, and nothing is saved until it's approved.
+									</Trans>
+								</Text>
+							</Stack>
+						)}
 
 					{timelineNodes.map((node) => {
 						if (node.kind === "message") {
@@ -1255,11 +1326,11 @@ export const AgenticChatPanel = ({
 							void handleSubmit();
 						}}
 					>
-						<Group align="end" wrap="nowrap">
+						<Box className="rounded-lg border border-slate-300 bg-white px-3 pb-2 pt-2 transition-colors focus-within:border-[var(--mantine-color-primary-5)]">
 							<Textarea
-								className="flex-1"
+								variant="unstyled"
 								autosize
-								minRows={4}
+								minRows={2}
 								maxRows={10}
 								value={input}
 								onChange={(event) => setInput(event.currentTarget.value)}
@@ -1273,22 +1344,29 @@ export const AgenticChatPanel = ({
 								}}
 								{...testId("chat-input-textarea")}
 							/>
-							<Button
-								type="submit"
-								leftSection={
-									isSubmitting ? <Loader size={14} /> : <IconSend size={14} />
-								}
-								disabled={
-									isSubmitting ||
-									isRunInFlight ||
-									input.trim().length === 0 ||
-									atTurnLimit
-								}
-								{...testId("chat-send-button")}
-							>
-								<Trans>Send</Trans>
-							</Button>
-						</Group>
+							<Group justify="space-between" align="center" gap="xs">
+								<Text size="xs" c="dimmed" className="select-none">
+									<Trans>Enter to send, Shift+Enter for a new line</Trans>
+								</Text>
+								<Button
+									type="submit"
+									size="sm"
+									radius="md"
+									leftSection={
+										isSubmitting ? <Loader size={14} /> : <IconSend size={14} />
+									}
+									disabled={
+										isSubmitting ||
+										isRunInFlight ||
+										input.trim().length === 0 ||
+										atTurnLimit
+									}
+									{...testId("chat-send-button")}
+								>
+									<Trans>Send</Trans>
+								</Button>
+							</Group>
+						</Box>
 					</form>
 				</Stack>
 			</Box>
