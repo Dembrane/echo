@@ -753,11 +753,11 @@ msgstr ""
 msgid "{sentCount} invites sent."
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:271
+#: src/components/conversation/LiveFunnelSection.tsx:116
 msgid "{tag} (preselected)"
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:423
+#: src/components/conversation/LiveFunnelSection.tsx:268
 msgid "{totalActive, plural, one {# active} other {# active}}"
 msgstr ""
 
@@ -1090,7 +1090,7 @@ msgstr ""
 #~ msgid "accepted"
 #~ msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:218
+#: src/components/conversation/LiveFunnelSection.tsx:66
 msgid "Accepted terms"
 msgstr ""
 
@@ -1786,8 +1786,8 @@ msgstr "Conversación anónima"
 
 #: src/components/conversation/LiveFunnelSection.tsx:185
 #: src/components/conversation/LiveFunnelSection.tsx:202
-msgid "Anonymous"
-msgstr ""
+#~ msgid "Anonymous"
+#~ msgstr ""
 
 #: src/components/chat/PublishTemplateForm.tsx:157
 #: src/components/chat/CommunityTemplateCard.tsx:124
@@ -1798,7 +1798,7 @@ msgstr ""
 msgid "Anonymous participant"
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:251
+#: src/components/conversation/LiveFunnelSection.tsx:99
 msgid "Anonymous visitor"
 msgstr ""
 
@@ -3138,7 +3138,7 @@ msgid "conversation"
 msgstr "conversación"
 
 #: src/features/sidebar/hooks/useSearchHits.ts:224
-#: src/components/conversation/LiveFunnelSection.tsx:459
+#: src/components/conversation/LiveFunnelSection.tsx:311
 msgid "Conversation"
 msgstr ""
 
@@ -3361,7 +3361,7 @@ msgstr ""
 msgid "Could not load the rollup. Check auth and backend logs."
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:322
+#: src/components/conversation/LiveFunnelSection.tsx:167
 msgid "Could not save"
 msgstr ""
 
@@ -4583,7 +4583,7 @@ msgstr "Ingresa tu consulta"
 msgid "Entered by the participant on the portal"
 msgstr "Ingresado por el participante en el portal"
 
-#: src/components/conversation/LiveFunnelSection.tsx:222
+#: src/components/conversation/LiveFunnelSection.tsx:70
 msgid "Entered details"
 msgstr ""
 
@@ -6273,7 +6273,7 @@ msgstr ""
 msgid "Just a moment"
 msgstr "Un momento"
 
-#: src/components/conversation/LiveFunnelSection.tsx:56
+#: src/components/conversation/LiveFunnelSection.tsx:52
 msgid "just now"
 msgstr ""
 
@@ -6389,10 +6389,9 @@ msgstr ""
 msgid "Last saved {0}"
 msgstr "Última vez guardado el {0}"
 
-#. placeholder {0}: relativeTime(visitor.last_seen_at)
 #: src/components/conversation/LiveFunnelSection.tsx:260
-msgid "Last seen {0}"
-msgstr ""
+#~ msgid "Last seen {0}"
+#~ msgstr ""
 
 #: src/components/report/ConversationStatusTable.tsx:59
 msgid "Last Updated"
@@ -6568,7 +6567,7 @@ msgstr "Nivel de audio en vivo"
 msgid "Live monitoring"
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:420
+#: src/components/conversation/LiveFunnelSection.tsx:265
 msgid "Live participant flow"
 msgstr ""
 
@@ -6763,7 +6762,7 @@ msgid "Longest First"
 msgstr "Más largo primero"
 
 #: src/components/conversation/LiveMonitorSection.tsx:267
-#: src/components/conversation/LiveFunnelSection.tsx:294
+#: src/components/conversation/LiveFunnelSection.tsx:139
 msgid "Low battery"
 msgstr ""
 
@@ -6952,8 +6951,7 @@ msgstr ""
 msgid "Messages from {0} - {1}%"
 msgstr "Mensajes de {0} - {1}%"
 
-#: src/components/conversation/LiveFunnelSection.tsx:67
-#: src/components/conversation/LiveFunnelSection.tsx:221
+#: src/components/conversation/LiveFunnelSection.tsx:69
 msgid "Mic blocked"
 msgstr ""
 
@@ -6961,17 +6959,17 @@ msgstr ""
 #~ msgid "Mic check"
 #~ msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:219
+#: src/components/conversation/LiveFunnelSection.tsx:67
 msgid "Mic checked"
 msgstr ""
 
 #: src/components/conversation/LiveFunnelSection.tsx:65
-msgid "Mic OK"
-msgstr ""
+#~ msgid "Mic OK"
+#~ msgstr ""
 
 #: src/components/conversation/LiveFunnelSection.tsx:66
-msgid "Mic skipped"
-msgstr ""
+#~ msgid "Mic skipped"
+#~ msgstr ""
 
 #: src/components/participant/PermissionErrorModal.tsx:25
 msgid "Microphone access is still denied. Please check your settings and try again."
@@ -7769,8 +7767,8 @@ msgstr ""
 #~ msgstr ""
 
 #: src/components/conversation/LiveFunnelSection.tsx:177
-msgid "Nobody here yet"
-msgstr ""
+#~ msgid "Nobody here yet"
+#~ msgstr ""
 
 #: src/components/billing/BillingManager.tsx:1394
 msgid "None scheduled"
@@ -8089,7 +8087,7 @@ msgstr ""
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:378
 #: src/components/conversation/ProjectConversationsPanel.tsx:382
-#: src/components/conversation/LiveFunnelSection.tsx:362
+#: src/components/conversation/LiveFunnelSection.tsx:207
 msgid "Open conversation"
 msgstr ""
 
@@ -8473,7 +8471,7 @@ msgstr "Correos electrónicos del participante"
 msgid "Participant Features"
 msgstr "Funciones para participantes"
 
-#: src/components/conversation/LiveFunnelSection.tsx:330
+#: src/components/conversation/LiveFunnelSection.tsx:175
 msgid "Participant name"
 msgstr ""
 
@@ -9665,7 +9663,7 @@ msgid "Record another conversation"
 msgstr "Registrar otra conversación"
 
 #: src/components/conversation/LiveMonitorSection.tsx:45
-#: src/components/conversation/LiveFunnelSection.tsx:410
+#: src/components/conversation/LiveFunnelSection.tsx:286
 msgid "Recording"
 msgstr ""
 
@@ -10377,7 +10375,7 @@ msgstr ""
 #: src/components/settings/ChangePasswordCard.tsx:101
 #: src/components/settings/AccountSettingsCard.tsx:195
 #: src/components/project/CustomTopicModal.tsx:260
-#: src/components/conversation/LiveFunnelSection.tsx:339
+#: src/components/conversation/LiveFunnelSection.tsx:184
 #: src/components/common/InputModal.tsx:85
 #: src/components/chat/ChatAccordion.tsx:161
 msgid "Save"
@@ -10430,7 +10428,7 @@ msgstr "Guardar plantilla"
 #: src/routes/organisation/OrganisationRoute.tsx:1084
 #: src/routes/admin/AdminSettingsRoute.tsx:458
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:109
-#: src/components/conversation/LiveFunnelSection.tsx:321
+#: src/components/conversation/LiveFunnelSection.tsx:166
 msgid "Saved"
 msgstr ""
 
@@ -10450,16 +10448,16 @@ msgstr ""
 msgid "Scan the QR code or copy the secret into your app."
 msgstr "Escanea el código QR o copia el secreto en tu aplicación."
 
-#: src/components/conversation/LiveFunnelSection.tsx:404
+#: src/components/conversation/LiveFunnelSection.tsx:284
 msgid "Scanned"
 msgstr ""
 
 #. placeholder {0}: visitor.scan_count
-#: src/components/conversation/LiveFunnelSection.tsx:255
+#: src/components/conversation/LiveFunnelSection.tsx:103
 msgid "Scanned {0} times"
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:217
+#: src/components/conversation/LiveFunnelSection.tsx:65
 msgid "Scanned the QR"
 msgstr ""
 
@@ -10962,7 +10960,7 @@ msgstr ""
 msgid "Setting things up for you"
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:407
+#: src/components/conversation/LiveFunnelSection.tsx:285
 msgid "Setting up"
 msgstr ""
 
@@ -11243,7 +11241,7 @@ msgstr "Omitir"
 msgid "select.all.modal.context.limit.reached.description"
 msgstr "Omitidas porque la selección era demasiado grande."
 
-#: src/components/conversation/LiveFunnelSection.tsx:220
+#: src/components/conversation/LiveFunnelSection.tsx:68
 msgid "Skipped mic check"
 msgstr ""
 
@@ -12361,7 +12359,7 @@ msgstr "Hora"
 #~ msgid "Time Created"
 #~ msgstr "Fecha de Creación"
 
-#: src/components/conversation/LiveFunnelSection.tsx:233
+#: src/components/conversation/LiveFunnelSection.tsx:81
 msgid "Timeline"
 msgstr ""
 
@@ -13407,7 +13405,7 @@ msgstr ""
 #~ msgid "Visitor"
 #~ msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:460
+#: src/components/conversation/LiveFunnelSection.tsx:312
 msgid "Visitor details"
 msgstr ""
 
@@ -13606,7 +13604,7 @@ msgid "We've sent a verification link to <0>{0}</0>. Open the email and click th
 msgstr ""
 
 #: src/components/conversation/LiveMonitorSection.tsx:262
-#: src/components/conversation/LiveFunnelSection.tsx:286
+#: src/components/conversation/LiveFunnelSection.tsx:131
 msgid "Weak network"
 msgstr ""
 
@@ -13801,9 +13799,13 @@ msgstr "Cuando finalices la conversación, los participantes que no han verifica
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:430
-msgid "When participants scan the QR code, they'll appear here and move across the stages in real time."
+#: src/components/conversation/LiveFunnelSection.tsx:275
+msgid "When participants scan the QR code, they'll appear here and flow across the stages in real time."
 msgstr ""
+
+#: src/components/conversation/LiveFunnelSection.tsx:430
+#~ msgid "When participants scan the QR code, they'll appear here and move across the stages in real time."
+#~ msgstr ""
 
 #: src/components/report/UpdateReportModalButton.tsx:290
 #: src/components/report/CreateReportForm.tsx:279
