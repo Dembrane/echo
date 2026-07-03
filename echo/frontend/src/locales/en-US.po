@@ -2976,6 +2976,10 @@ msgstr "Check microphone access"
 msgid "Check your email"
 msgstr "Check your email"
 
+#: src/components/chat/agenticToolActivity.ts:110
+msgid "Checking live conversations"
+msgstr "Checking live conversations"
+
 #: src/routes/auth/VerifyEmail.tsx:93
 msgid "Checking your session."
 msgstr "Checking your session."
@@ -6770,11 +6774,11 @@ msgstr "Live Preview"
 msgid "Live stream interrupted. Falling back to polling."
 msgstr "Live stream interrupted. Falling back to polling."
 
-#: src/components/chat/agenticToolActivity.ts:114
+#: src/components/chat/agenticToolActivity.ts:116
 msgid "Load conversation summary"
 msgstr "Load conversation summary"
 
-#: src/components/chat/agenticToolActivity.ts:116
+#: src/components/chat/agenticToolActivity.ts:118
 msgid "Load full transcript"
 msgstr "Load full transcript"
 
@@ -10607,12 +10611,12 @@ msgid "Search by organisation"
 msgstr "Search by organisation"
 
 #: src/components/conversation/ConversationAccordion.tsx:1148
-#: src/components/chat/agenticToolActivity.ts:112
+#: src/components/chat/agenticToolActivity.ts:114
 msgid "Search conversations"
 msgstr "Search conversations"
 
 #. placeholder {0}: context.query
-#: src/components/chat/agenticToolActivity.ts:111
+#: src/components/chat/agenticToolActivity.ts:113
 msgid "Search conversations for \"{0}\""
 msgstr "Search conversations for \"{0}\""
 
@@ -10675,12 +10679,12 @@ msgstr "Search templates..."
 msgid "select.all.modal.search.text"
 msgstr "Search text:"
 
-#: src/components/chat/agenticToolActivity.ts:120
+#: src/components/chat/agenticToolActivity.ts:122
 msgid "Search transcript"
 msgstr "Search transcript"
 
 #. placeholder {0}: context.query
-#: src/components/chat/agenticToolActivity.ts:119
+#: src/components/chat/agenticToolActivity.ts:121
 msgid "Search transcript for \"{0}\""
 msgstr "Search transcript for \"{0}\""
 
