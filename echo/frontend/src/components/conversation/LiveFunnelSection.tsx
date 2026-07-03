@@ -37,19 +37,17 @@ import {
 	useConversationMonitor,
 } from "@/hooks/useConversationMonitor";
 
-const weakNetwork = (network: {
-	online?: boolean;
-	effective_type?: string;
-} | null): boolean => {
+const weakNetwork = (
+	network: { online?: boolean; effective_type?: string } | null,
+): boolean => {
 	if (!network) return false;
 	if (network.online === false) return true;
 	return network.effective_type === "2g" || network.effective_type === "slow-2g";
 };
 
-const lowBattery = (battery: {
-	level?: number;
-	charging?: boolean;
-} | null): boolean => {
+const lowBattery = (
+	battery: { level?: number; charging?: boolean } | null,
+): boolean => {
 	if (!battery || battery.charging) return false;
 	return typeof battery.level === "number" && battery.level <= 0.15;
 };
@@ -63,154 +61,76 @@ const relativeTime = (stamp: string | null): string => {
 	}
 };
 
-const micStageMeta = (
-	stage: FunnelStage,
-): { color: string; label: string } | null => {
-	if (stage === "mic_ok") return { color: "green", label: t`Mic OK` };
-	if (stage === "mic_skipped") return { color: "gray", label: t`Mic skipped` };
-	if (stage === "mic_blocked") return { color: "red", label: t`Mic blocked` };
+const micStageLabel = (stage: FunnelStage): string | null => {
+	if (stage === "mic_ok") return t`Mic OK`;
+	if (stage === "mic_skipped") return t`Mic skipped`;
+	if (stage === "mic_blocked") return t`Mic blocked`;
 	return null;
 };
 
-// ── selection for the same-screen drilldown ──────────────────────────
+const visitorDotColor = (stage: FunnelStage): string => {
+	if (stage === "mic_blocked") return "var(--mantine-color-red-6)";
+	if (stage === "mic_ok") return "var(--mantine-color-green-6)";
+	if (stage === "profile") return "var(--mantine-color-primary-6)";
+	return "var(--mantine-color-gray-5)";
+};
+
 type Selection =
 	| { kind: "visitor"; visitor: FunnelVisitor }
 	| { kind: "conversation"; conversation: MonitorConversation };
 
-const VisitorDot = ({
-	visitor,
+// A small clickable dot; the atom of every lane. Hovering a recording dot
+// highlights its detailed card in the list below.
+const Dot = ({
+	color,
+	label,
+	pulse,
+	warn,
+	icon,
 	onOpen,
+	onHoverStart,
+	onHoverEnd,
 }: {
-	visitor: FunnelVisitor;
+	color: string;
+	label: string;
+	pulse?: boolean;
+	warn?: boolean;
+	icon?: React.ReactNode;
 	onOpen: () => void;
-}) => {
-	const mic = micStageMeta(visitor.stage);
-	const warn = weakNetwork(visitor.network) || lowBattery(visitor.battery);
-	const color =
-		visitor.stage === "mic_blocked"
-			? "var(--mantine-color-red-6)"
-			: visitor.stage === "mic_ok"
-				? "var(--mantine-color-green-6)"
-				: "var(--mantine-color-gray-5)";
-	return (
-		<Tooltip
-			label={mic?.label ?? (visitor.name?.trim() || t`Anonymous`)}
-			openDelay={200}
-			withArrow
+	onHoverStart?: () => void;
+	onHoverEnd?: () => void;
+}) => (
+	<Tooltip label={label} openDelay={150} withArrow>
+		<button
+			type="button"
+			onClick={onOpen}
+			onMouseEnter={onHoverStart}
+			onMouseLeave={onHoverEnd}
+			onFocus={onHoverStart}
+			onBlur={onHoverEnd}
+			aria-label={label}
+			className="relative flex h-7 w-7 items-center justify-center rounded-full transition-transform hover:scale-110"
+			style={{ backgroundColor: color }}
 		>
-			<button
-				type="button"
-				onClick={onOpen}
-				aria-label={visitor.name?.trim() || t`Visitor`}
-				className="relative flex h-7 w-7 items-center justify-center rounded-full transition-transform hover:scale-110"
-				style={{ backgroundColor: color, opacity: 0.9 }}
-			>
-				{visitor.stage === "mic_ok" && (
-					<CheckIcon size={12} color="white" weight="bold" />
-				)}
-				{visitor.stage === "mic_blocked" && (
-					<WarningCircleIcon size={13} color="white" weight="bold" />
-				)}
-				{warn && (
-					<span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-orange-400" />
-				)}
-			</button>
-		</Tooltip>
-	);
-};
-
-const VisitorMiniCard = ({
-	visitor,
-	onOpen,
-}: {
-	visitor: FunnelVisitor;
-	onOpen: () => void;
-}) => (
-	<Card
-		withBorder
-		p="xs"
-		radius="md"
-		className="cursor-pointer transition-colors hover:!border-primary-400"
-		onClick={onOpen}
-	>
-		<Group gap={6} justify="space-between" wrap="nowrap">
-			<Text size="sm" fw={500} truncate>
-				{visitor.name?.trim() || t`Anonymous`}
-			</Text>
-			{visitor.scan_count > 1 && (
-				<Badge size="xs" color="gray" variant="light">
-					<Trans>×{visitor.scan_count}</Trans>
-				</Badge>
+			{pulse && (
+				<span
+					className="absolute inset-0 rounded-full animate-ping"
+					style={{ backgroundColor: color, opacity: 0.5 }}
+				/>
 			)}
-		</Group>
-		{visitor.tags.length > 0 && (
-			<Group gap={4} mt={4} wrap="wrap">
-				{visitor.tags.slice(0, 3).map((tag) => (
-					<Badge
-						key={tag}
-						size="xs"
-						variant="light"
-						color={visitor.tags_preselected ? "primary" : "gray"}
-					>
-						{tag}
-					</Badge>
-				))}
-			</Group>
-		)}
-	</Card>
-);
-
-const RecordingCard = ({
-	conversation,
-	onOpen,
-}: {
-	conversation: MonitorConversation;
-	onOpen: () => void;
-}) => (
-	<Card
-		withBorder
-		p="xs"
-		radius="md"
-		className="cursor-pointer transition-colors hover:!border-primary-400"
-		onClick={onOpen}
-	>
-		<Group gap={6} justify="space-between" wrap="nowrap">
-			<Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
-				<span className="inline-block h-2 w-2 shrink-0 rounded-full bg-red-500 animate-pulse" />
-				<Text size="sm" fw={500} truncate>
-					{conversation.label?.trim() || t`Anonymous`}
-				</Text>
-			</Group>
-			{conversation.has_error && (
-				<WarningCircleIcon size={15} className="shrink-0 text-red-500" />
+			{icon}
+			{warn && (
+				<span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-orange-400" />
 			)}
-		</Group>
-		<Group gap={4} mt={4} wrap="wrap">
-			{conversation.state === "paused" && (
-				<Badge size="xs" color="yellow" variant="light">
-					<Trans>Paused</Trans>
-				</Badge>
-			)}
-			{conversation.state === "verifying" && (
-				<Badge size="xs" color="blue" variant="light">
-					<Trans>Verifying</Trans>
-				</Badge>
-			)}
-			{conversation.transcription_status === "transcribing" && (
-				<Badge size="xs" color="blue" variant="light">
-					<Trans>Transcribing</Trans>
-				</Badge>
-			)}
-		</Group>
-	</Card>
+		</button>
+	</Tooltip>
 );
 
 type Lane = {
 	key: string;
 	label: string;
-	dots?: FunnelVisitor[];
-	cards?: FunnelVisitor[];
-	recordings?: MonitorConversation[];
+	visitors: FunnelVisitor[];
+	recordings: MonitorConversation[];
 	count: number;
 };
 
@@ -218,14 +138,16 @@ const FunnelLane = ({
 	lane,
 	onOpenVisitor,
 	onOpenConversation,
+	onHoverConversation,
 }: {
 	lane: Lane;
 	onOpenVisitor: (visitor: FunnelVisitor) => void;
 	onOpenConversation: (conversation: MonitorConversation) => void;
+	onHoverConversation: (id: string | null) => void;
 }) => {
 	const [opened, { toggle }] = useDisclosure(true);
 	return (
-		<Stack gap="xs" className="min-w-[190px] flex-1">
+		<Stack gap="xs" className="min-w-[150px] flex-1">
 			<Group
 				gap="xs"
 				align="center"
@@ -250,38 +172,42 @@ const FunnelLane = ({
 				</Badge>
 			</Group>
 			<Collapse in={opened}>
-				<Stack gap="xs">
-					{lane.dots && lane.dots.length > 0 && (
-						<Group gap={6} wrap="wrap">
-							{lane.dots.map((visitor) => (
-								<VisitorDot
-									key={visitor.id}
-									visitor={visitor}
-									onOpen={() => onOpenVisitor(visitor)}
-								/>
-							))}
-						</Group>
-					)}
-					{lane.cards?.map((visitor) => (
-						<VisitorMiniCard
-							key={visitor.id}
-							visitor={visitor}
-							onOpen={() => onOpenVisitor(visitor)}
-						/>
-					))}
-					{lane.recordings?.map((conversation) => (
-						<RecordingCard
-							key={conversation.id}
-							conversation={conversation}
-							onOpen={() => onOpenConversation(conversation)}
-						/>
-					))}
-					{lane.count === 0 && (
-						<Text size="xs" c="dimmed" className="pl-1">
-							<Trans>Nobody here yet</Trans>
-						</Text>
-					)}
-				</Stack>
+				{lane.count === 0 ? (
+					<Text size="xs" c="dimmed" className="pl-1">
+						<Trans>Nobody here yet</Trans>
+					</Text>
+				) : (
+					<Group gap={8} wrap="wrap">
+						{lane.visitors.map((visitor) => (
+							<Dot
+								key={visitor.id}
+								color={visitorDotColor(visitor.stage)}
+								label={micStageLabel(visitor.stage) ?? visitor.name?.trim() ?? t`Anonymous`}
+								warn={weakNetwork(visitor.network) || lowBattery(visitor.battery)}
+								icon={
+									visitor.stage === "mic_ok" ? (
+										<CheckIcon size={12} color="white" weight="bold" />
+									) : visitor.stage === "mic_blocked" ? (
+										<WarningCircleIcon size={13} color="white" weight="bold" />
+									) : undefined
+								}
+								onOpen={() => onOpenVisitor(visitor)}
+							/>
+						))}
+						{lane.recordings.map((conversation) => (
+							<Dot
+								key={conversation.id}
+								color="var(--mantine-color-red-6)"
+								pulse
+								label={conversation.label?.trim() || t`Anonymous`}
+								warn={weakNetwork(conversation.network) || lowBattery(conversation.battery)}
+								onOpen={() => onOpenConversation(conversation)}
+								onHoverStart={() => onHoverConversation(conversation.id)}
+								onHoverEnd={() => onHoverConversation(null)}
+							/>
+						))}
+					</Group>
+				)}
 			</Collapse>
 		</Stack>
 	);
@@ -408,39 +334,43 @@ const ConversationDrilldown = ({
 	);
 };
 
-export const LiveFunnelSection = ({ projectId }: { projectId: string }) => {
+export const LiveFunnelSection = ({
+	projectId,
+	onHoverConversation,
+}: {
+	projectId: string;
+	/** Notifies the parent which recording is hovered, so the detailed card
+	 * below can highlight. */
+	onHoverConversation?: (id: string | null) => void;
+}) => {
 	const { funnel, conversations } = useConversationMonitor(projectId);
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const base =
-		workspaceId && projectId
-			? `/w/${workspaceId}/projects/${projectId}`
-			: null;
+		workspaceId && projectId ? `/w/${workspaceId}/projects/${projectId}` : null;
 	const [selected, setSelected] = useState<Selection | null>(null);
 
 	const lanes = useMemo<Lane[]>(() => {
 		const byStage = (stages: FunnelStage[]) =>
 			funnel.visitors.filter((v) => stages.includes(v.stage));
 		const recording = conversations.filter((c) => c.is_live);
-		const scanned = byStage(["scanned"]);
-		const terms = byStage(["terms"]);
-		const mic = byStage(["mic_ok", "mic_skipped", "mic_blocked"]);
-		const profile = byStage(["profile"]);
+		const make = (
+			key: string,
+			label: string,
+			visitors: FunnelVisitor[],
+			recordings: MonitorConversation[] = [],
+		): Lane => ({
+			key,
+			label,
+			visitors,
+			recordings,
+			count: visitors.length + recordings.length,
+		});
 		return [
-			{ key: "scanned", label: t`Scanned`, dots: scanned, count: scanned.length },
-			{ key: "terms", label: t`Terms`, dots: terms, count: terms.length },
-			{ key: "mic", label: t`Mic check`, dots: mic, count: mic.length },
-			{
-				key: "profile",
-				label: t`Profile`,
-				cards: profile,
-				count: profile.length,
-			},
-			{
-				key: "recording",
-				label: t`Recording`,
-				recordings: recording,
-				count: recording.length,
-			},
+			make("scanned", t`Scanned`, byStage(["scanned"])),
+			make("terms", t`Terms`, byStage(["terms"])),
+			make("mic", t`Mic check`, byStage(["mic_ok", "mic_skipped", "mic_blocked"])),
+			make("profile", t`Profile`, byStage(["profile"])),
+			make("recording", t`Recording`, [], recording),
 		];
 	}, [funnel.visitors, conversations]);
 
@@ -467,7 +397,7 @@ export const LiveFunnelSection = ({ projectId }: { projectId: string }) => {
 					</Text>
 				</Card>
 			) : (
-				<Box className="flex gap-4 overflow-x-auto pb-2">
+				<Box className="flex flex-wrap gap-x-6 gap-y-4">
 					{lanes.map((lane) => (
 						<FunnelLane
 							key={lane.key}
@@ -478,6 +408,7 @@ export const LiveFunnelSection = ({ projectId }: { projectId: string }) => {
 							onOpenConversation={(conversation) =>
 								setSelected({ kind: "conversation", conversation })
 							}
+							onHoverConversation={(id) => onHoverConversation?.(id)}
 						/>
 					))}
 				</Box>

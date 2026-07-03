@@ -489,7 +489,7 @@ msgstr ""
 #. placeholder {0}: group.liveCount
 #. placeholder {0}: summary.live
 #: src/components/conversation/LiveMonitorSection.tsx:368
-#: src/components/conversation/LiveMonitorSection.tsx:446
+#: src/components/conversation/LiveMonitorSection.tsx:450
 msgid "{0, plural, one {# live} other {# live}}"
 msgstr ""
 
@@ -544,12 +544,12 @@ msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# tag} other {# tags}}"
 
 #. placeholder {0}: summary.transcribing
-#: src/components/conversation/LiveMonitorSection.tsx:450
+#: src/components/conversation/LiveMonitorSection.tsx:454
 msgid "{0, plural, one {# transcribing} other {# transcribing}}"
 msgstr ""
 
 #. placeholder {0}: summary.with_errors
-#: src/components/conversation/LiveMonitorSection.tsx:459
+#: src/components/conversation/LiveMonitorSection.tsx:463
 msgid "{0, plural, one {# with errors} other {# with errors}}"
 msgstr ""
 
@@ -939,11 +939,11 @@ msgstr ""
 msgid "{sentCount} invites sent."
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:314
+#: src/components/conversation/LiveFunnelSection.tsx:240
 msgid "{tag} (preselected)"
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:456
+#: src/components/conversation/LiveFunnelSection.tsx:386
 msgid "{totalActive, plural, one {# active} other {# active}}"
 msgstr ""
 
@@ -1023,10 +1023,9 @@ msgstr "+{hiddenCount} conversations"
 #~ msgid "+5s"
 #~ msgstr "+5s"
 
-#. placeholder {0}: visitor.scan_count
 #: src/components/conversation/LiveFunnelSection.tsx:142
-msgid "×{0}"
-msgstr ""
+#~ msgid "×{0}"
+#~ msgstr ""
 
 #: src/routes/participant/ParticipantConversation.tsx:574
 #: src/routes/participant/ParticipantConversation.tsx:649
@@ -1974,9 +1973,8 @@ msgstr "anonymized conversation"
 msgid "Anonymized conversation"
 msgstr "Anonymized conversation"
 
-#: src/components/conversation/LiveFunnelSection.tsx:97
-#: src/components/conversation/LiveFunnelSection.tsx:138
-#: src/components/conversation/LiveFunnelSection.tsx:181
+#: src/components/conversation/LiveFunnelSection.tsx:185
+#: src/components/conversation/LiveFunnelSection.tsx:202
 msgid "Anonymous"
 msgstr ""
 
@@ -1985,7 +1983,7 @@ msgstr ""
 #~ msgid "Anonymous host"
 #~ msgstr "Anonymous host"
 
-#: src/components/conversation/LiveMonitorSection.tsx:201
+#: src/components/conversation/LiveMonitorSection.tsx:203
 msgid "Anonymous participant"
 msgstr ""
 
@@ -1993,7 +1991,7 @@ msgstr ""
 #~ msgid "Anonymous Participant"
 #~ msgstr "Anonymous Participant"
 
-#: src/components/conversation/LiveFunnelSection.tsx:294
+#: src/components/conversation/LiveFunnelSection.tsx:220
 msgid "Anonymous visitor"
 msgstr ""
 
@@ -3351,7 +3349,7 @@ msgid "conversation"
 msgstr "conversation"
 
 #: src/features/sidebar/hooks/useSearchHits.ts:224
-#: src/components/conversation/LiveFunnelSection.tsx:491
+#: src/components/conversation/LiveFunnelSection.tsx:422
 msgid "Conversation"
 msgstr ""
 
@@ -3574,7 +3572,7 @@ msgstr ""
 msgid "Could not load the rollup. Check auth and backend logs."
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:364
+#: src/components/conversation/LiveFunnelSection.tsx:290
 msgid "Could not save"
 msgstr ""
 
@@ -4813,7 +4811,7 @@ msgstr "Entered by the participant on the portal"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
-#: src/components/conversation/LiveMonitorSection.tsx:248
+#: src/components/conversation/LiveMonitorSection.tsx:246
 #: src/components/chat/AgenticChatPanel.tsx:271
 #: src/components/chat/AgenticChatPanel.tsx:1042
 msgid "Error"
@@ -6539,7 +6537,7 @@ msgstr ""
 msgid "Just a moment"
 msgstr "Just a moment"
 
-#: src/components/conversation/LiveFunnelSection.tsx:58
+#: src/components/conversation/LiveFunnelSection.tsx:56
 msgid "just now"
 msgstr ""
 
@@ -6631,7 +6629,7 @@ msgid "Language"
 msgstr "Language"
 
 #. placeholder {0}: lastActivityLabel(conversation)
-#: src/components/conversation/LiveMonitorSection.tsx:260
+#: src/components/conversation/LiveMonitorSection.tsx:258
 msgid "Last activity {0}"
 msgstr ""
 
@@ -6657,7 +6655,7 @@ msgid "Last saved {0}"
 msgstr "Last saved {0}"
 
 #. placeholder {0}: relativeTime(visitor.last_seen_at)
-#: src/components/conversation/LiveFunnelSection.tsx:303
+#: src/components/conversation/LiveFunnelSection.tsx:229
 msgid "Last seen {0}"
 msgstr ""
 
@@ -6823,11 +6821,11 @@ msgstr "Live audio level:"
 #~ msgid "Live audio level:"
 #~ msgstr "Live audio level:"
 
-#: src/components/conversation/LiveMonitorSection.tsx:441
+#: src/components/conversation/LiveMonitorSection.tsx:445
 msgid "Live monitoring"
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:453
+#: src/components/conversation/LiveFunnelSection.tsx:383
 msgid "Live participant flow"
 msgstr ""
 
@@ -6835,7 +6833,7 @@ msgstr ""
 msgid "Live Preview"
 msgstr "Live Preview"
 
-#: src/components/conversation/LiveMonitorSection.tsx:425
+#: src/components/conversation/LiveMonitorSection.tsx:429
 msgid "Live recordings, transcription progress, and errors show up here as participants start recording in the portal."
 msgstr ""
 
@@ -7022,8 +7020,8 @@ msgstr ""
 msgid "Longest First"
 msgstr "Longest First"
 
-#: src/components/conversation/LiveMonitorSection.tsx:236
-#: src/components/conversation/LiveFunnelSection.tsx:337
+#: src/components/conversation/LiveMonitorSection.tsx:234
+#: src/components/conversation/LiveFunnelSection.tsx:263
 msgid "Low battery"
 msgstr ""
 
@@ -7212,19 +7210,19 @@ msgstr ""
 msgid "Messages from {0} - {1}%"
 msgstr "Messages from {0} - {1}%"
 
-#: src/components/conversation/LiveFunnelSection.tsx:71
+#: src/components/conversation/LiveFunnelSection.tsx:67
 msgid "Mic blocked"
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:431
+#: src/components/conversation/LiveFunnelSection.tsx:371
 msgid "Mic check"
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:69
+#: src/components/conversation/LiveFunnelSection.tsx:65
 msgid "Mic OK"
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:70
+#: src/components/conversation/LiveFunnelSection.tsx:66
 msgid "Mic skipped"
 msgstr ""
 
@@ -7256,7 +7254,7 @@ msgstr "Mode"
 msgid "Mollie is not configured in this environment, so no live transactions are shown. The dashboard link still points to the right Mollie environment."
 msgstr ""
 
-#: src/routes/project/ProjectMonitorRoute.tsx:16
+#: src/routes/project/ProjectMonitorRoute.tsx:21
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:89
 msgid "Monitor"
 msgstr ""
@@ -7885,7 +7883,7 @@ msgstr ""
 #~ msgid "No quotes available. Generate quotes for this conversation by visiting<0><1> the project library.</1></0>"
 #~ msgstr "No quotes available. Generate quotes for this conversation by visiting<0><1> the project library.</1></0>"
 
-#: src/components/conversation/LiveMonitorSection.tsx:422
+#: src/components/conversation/LiveMonitorSection.tsx:426
 msgid "No recent activity"
 msgstr ""
 
@@ -8035,7 +8033,7 @@ msgstr ""
 #~ msgid "No workspaces yet. Create your first one to get started."
 #~ msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:281
+#: src/components/conversation/LiveFunnelSection.tsx:177
 msgid "Nobody here yet"
 msgstr ""
 
@@ -8359,7 +8357,7 @@ msgstr ""
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:378
 #: src/components/conversation/ProjectConversationsPanel.tsx:382
-#: src/components/conversation/LiveFunnelSection.tsx:404
+#: src/components/conversation/LiveFunnelSection.tsx:330
 msgid "Open conversation"
 msgstr ""
 
@@ -8749,7 +8747,7 @@ msgstr "Participant Emails"
 msgid "Participant Features"
 msgstr "Participant Features"
 
-#: src/components/conversation/LiveFunnelSection.tsx:372
+#: src/components/conversation/LiveFunnelSection.tsx:298
 msgid "Participant name"
 msgstr ""
 
@@ -8840,7 +8838,6 @@ msgid "Pause reading"
 msgstr "Pause reading"
 
 #: src/components/conversation/LiveMonitorSection.tsx:47
-#: src/components/conversation/LiveFunnelSection.tsx:191
 msgid "Paused"
 msgstr ""
 
@@ -9491,7 +9488,7 @@ msgstr "Processing <0>{totalCount, plural, one {# conversation} other {# convers
 msgid "Processing your retranscription request..."
 msgstr "Processing your retranscription request..."
 
-#: src/components/conversation/LiveFunnelSection.tsx:434
+#: src/components/conversation/LiveFunnelSection.tsx:372
 msgid "Profile"
 msgstr ""
 
@@ -9868,7 +9865,7 @@ msgid "Record another conversation"
 msgstr "Record another conversation"
 
 #: src/components/conversation/LiveMonitorSection.tsx:45
-#: src/components/conversation/LiveFunnelSection.tsx:440
+#: src/components/conversation/LiveFunnelSection.tsx:373
 msgid "Recording"
 msgstr ""
 
@@ -10589,7 +10586,7 @@ msgstr ""
 #: src/components/settings/ChangePasswordCard.tsx:101
 #: src/components/settings/AccountSettingsCard.tsx:195
 #: src/components/project/CustomTopicModal.tsx:260
-#: src/components/conversation/LiveFunnelSection.tsx:381
+#: src/components/conversation/LiveFunnelSection.tsx:307
 #: src/components/common/InputModal.tsx:85
 #: src/components/chat/ChatAccordion.tsx:161
 msgid "Save"
@@ -10642,7 +10639,7 @@ msgstr "Save template"
 #: src/routes/organisation/OrganisationRoute.tsx:1084
 #: src/routes/admin/AdminSettingsRoute.tsx:458
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:109
-#: src/components/conversation/LiveFunnelSection.tsx:363
+#: src/components/conversation/LiveFunnelSection.tsx:289
 msgid "Saved"
 msgstr ""
 
@@ -10662,12 +10659,12 @@ msgstr ""
 msgid "Scan the QR code or copy the secret into your app."
 msgstr "Scan the QR code or copy the secret into your app."
 
-#: src/components/conversation/LiveFunnelSection.tsx:429
+#: src/components/conversation/LiveFunnelSection.tsx:369
 msgid "Scanned"
 msgstr ""
 
 #. placeholder {0}: visitor.scan_count
-#: src/components/conversation/LiveFunnelSection.tsx:298
+#: src/components/conversation/LiveFunnelSection.tsx:224
 msgid "Scanned {0} times"
 msgstr ""
 
@@ -11315,7 +11312,7 @@ msgstr "Show"
 msgid "Show {hidden} more"
 msgstr ""
 
-#: src/components/conversation/LiveMonitorSection.tsx:388
+#: src/components/conversation/LiveMonitorSection.tsx:389
 msgid "Show {overflow} more"
 msgstr ""
 
@@ -12008,7 +12005,7 @@ msgid "Templates"
 msgstr "Templates"
 
 #: src/components/layout/Footer.tsx:9
-#: src/components/conversation/LiveFunnelSection.tsx:430
+#: src/components/conversation/LiveFunnelSection.tsx:370
 msgid "Terms"
 msgstr ""
 
@@ -12779,8 +12776,8 @@ msgid "Transcribed"
 msgstr ""
 
 #: src/components/conversation/LiveFunnelSection.tsx:201
-msgid "Transcribing"
-msgstr ""
+#~ msgid "Transcribing"
+#~ msgstr ""
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:80
 msgid "Transcribing..."
@@ -13132,7 +13129,7 @@ msgstr "Unsaved changes"
 msgid "Unsubscribe"
 msgstr "Unsubscribe"
 
-#: src/components/conversation/LiveMonitorSection.tsx:309
+#: src/components/conversation/LiveMonitorSection.tsx:307
 msgid "Untagged"
 msgstr ""
 
@@ -13598,7 +13595,6 @@ msgid "Verify Topics"
 msgstr "Verify Topics"
 
 #: src/components/conversation/LiveMonitorSection.tsx:49
-#: src/components/conversation/LiveFunnelSection.tsx:196
 msgid "Verifying"
 msgstr ""
 
@@ -13674,10 +13670,10 @@ msgid "Visible to everyone in this workspace. Leave off to keep it personal."
 msgstr ""
 
 #: src/components/conversation/LiveFunnelSection.tsx:104
-msgid "Visitor"
-msgstr ""
+#~ msgid "Visitor"
+#~ msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:492
+#: src/components/conversation/LiveFunnelSection.tsx:423
 msgid "Visitor details"
 msgstr ""
 
@@ -13719,7 +13715,7 @@ msgstr "Waiting for conversations to finish before generating a report."
 #~ msgid "Warning: You have added {0} key terms. Only the first {ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine."
 #~ msgstr "Warning: You have added {0} key terms. Only the first {ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine."
 
-#: src/routes/project/ProjectMonitorRoute.tsx:19
+#: src/routes/project/ProjectMonitorRoute.tsx:24
 msgid "Watch live recordings, transcription progress, and errors across this project as they happen."
 msgstr ""
 
@@ -13884,8 +13880,8 @@ msgstr ""
 msgid "We've sent a verification link to <0>{0}</0>. Open the email and click the link to continue."
 msgstr ""
 
-#: src/components/conversation/LiveMonitorSection.tsx:231
-#: src/components/conversation/LiveFunnelSection.tsx:329
+#: src/components/conversation/LiveMonitorSection.tsx:229
+#: src/components/conversation/LiveFunnelSection.tsx:255
 msgid "Weak network"
 msgstr ""
 
@@ -14082,7 +14078,7 @@ msgstr "When finishing the conversation, participants who haven't verified yet w
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:463
+#: src/components/conversation/LiveFunnelSection.tsx:393
 msgid "When participants scan the QR code, they'll appear here and move across the stages in real time."
 msgstr ""
 

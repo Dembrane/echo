@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Divider, Stack, Text, Title } from "@mantine/core";
+import { useState } from "react";
 import { useParams } from "react-router";
 import { LiveFunnelSection } from "@/components/conversation/LiveFunnelSection";
 import { LiveMonitorSection } from "@/components/conversation/LiveMonitorSection";
@@ -7,6 +8,10 @@ import { PageContainer } from "@/components/layout/PageContainer";
 
 export const ProjectMonitorRoute = () => {
 	const { projectId } = useParams<{ projectId: string }>();
+	// Hovering a recording dot in the funnel highlights its detailed card below.
+	const [hoveredConversationId, setHoveredConversationId] = useState<
+		string | null
+	>(null);
 
 	return (
 		<PageContainer width="xl">
@@ -23,11 +28,22 @@ export const ProjectMonitorRoute = () => {
 					</Text>
 				</Stack>
 
-				{projectId && <LiveFunnelSection projectId={projectId} />}
+				{projectId && (
+					<LiveFunnelSection
+						projectId={projectId}
+						onHoverConversation={setHoveredConversationId}
+					/>
+				)}
 
 				<Divider />
 
-				{projectId && <LiveMonitorSection projectId={projectId} standalone />}
+				{projectId && (
+					<LiveMonitorSection
+						projectId={projectId}
+						standalone
+						highlightedConversationId={hoveredConversationId}
+					/>
+				)}
 			</Stack>
 		</PageContainer>
 	);
