@@ -414,17 +414,17 @@ msgstr " Unsubscribe from Notifications"
 #~ msgstr "\"{0}\" is at capacity on {1}. New invites to that workspace are not available."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:480
+#: src/components/participant/ParticipantConversationAudio.tsx:546
 msgid "participant.modal.echo.info.title.generic"
 msgstr "\"ECHO\" available soon"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:494
+#: src/components/participant/ParticipantConversationAudio.tsx:560
 msgid "participant.modal.echo.info.title.go.deeper"
 msgstr "\"Explore\" available soon"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:487
+#: src/components/participant/ParticipantConversationAudio.tsx:553
 msgid "participant.modal.echo.info.title.concrete"
 msgstr "\"Verify\" available soon"
 
@@ -486,8 +486,10 @@ msgstr "{0, plural, one {# conversation will be hidden along with it.} other {# 
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# conversation} other {# conversations}}"
 
+#. placeholder {0}: group.liveCount
 #. placeholder {0}: summary.live
-#: src/components/conversation/LiveMonitorSection.tsx:156
+#: src/components/conversation/LiveMonitorSection.tsx:320
+#: src/components/conversation/LiveMonitorSection.tsx:388
 msgid "{0, plural, one {# live} other {# live}}"
 msgstr "{0, plural, one {# live} other {# live}}"
 
@@ -522,7 +524,7 @@ msgid "{0, plural, one {# project} other {# projects}}"
 msgstr "{0, plural, one {# project} other {# projects}}"
 
 #. placeholder {0}: conversation.chunk_count
-#: src/components/conversation/LiveMonitorSection.tsx:114
+#: src/components/conversation/LiveMonitorSection.tsx:226
 msgid "{0, plural, one {# recording} other {# recordings}}"
 msgstr "{0, plural, one {# recording} other {# recordings}}"
 
@@ -543,12 +545,12 @@ msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# tag} other {# tags}}"
 
 #. placeholder {0}: summary.transcribing
-#: src/components/conversation/LiveMonitorSection.tsx:160
+#: src/components/conversation/LiveMonitorSection.tsx:392
 msgid "{0, plural, one {# transcribing} other {# transcribing}}"
 msgstr "{0, plural, one {# transcribing} other {# transcribing}}"
 
 #. placeholder {0}: summary.with_errors
-#: src/components/conversation/LiveMonitorSection.tsx:169
+#: src/components/conversation/LiveMonitorSection.tsx:401
 msgid "{0, plural, one {# with errors} other {# with errors}}"
 msgstr "{0, plural, one {# with errors} other {# with errors}}"
 
@@ -581,7 +583,7 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
 
 #. placeholder {0}: conversation.pending_transcription
-#: src/components/conversation/LiveMonitorSection.tsx:41
+#: src/components/conversation/LiveMonitorSection.tsx:147
 msgid "{0, plural, one {Transcribing # clip} other {Transcribing # clips}}"
 msgstr "{0, plural, one {Transcribing # clip} other {Transcribing # clips}}"
 
@@ -1271,7 +1273,7 @@ msgstr "Accept and join"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:702
 #: src/routes/project/CreateProjectRoute.tsx:208
 #: src/routes/project/CreateProjectRoute.tsx:297
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:112
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:110
 #: src/components/project/ProjectUsageAndSharing.tsx:190
 #: src/components/layout/ProjectOverviewLayout.tsx:52
 msgid "Access"
@@ -1965,7 +1967,7 @@ msgstr "Anonymized conversation"
 #~ msgid "Anonymous host"
 #~ msgstr "Anonymous host"
 
-#: src/components/conversation/LiveMonitorSection.tsx:69
+#: src/components/conversation/LiveMonitorSection.tsx:173
 msgid "Anonymous participant"
 msgstr "Anonymous participant"
 
@@ -2282,7 +2284,7 @@ msgid "Attach verified artifacts"
 msgstr "Attach verified artifacts"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:662
+#: src/components/participant/ParticipantConversationAudio.tsx:728
 msgid "participant.modal.interruption.issue.message"
 msgstr "Attention! We lost the last 60 seconds or so of your recording due to some interruption. Please press the button below to reconnect."
 
@@ -3253,7 +3255,7 @@ msgid "Connection healthy"
 msgstr "Connection healthy"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:548
+#: src/components/participant/ParticipantConversationAudio.tsx:614
 msgid "participant.modal.s3check.title"
 msgstr "Connection issue"
 
@@ -3385,7 +3387,7 @@ msgstr "Conversation tags"
 msgid "conversations"
 msgstr "conversations"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:106
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:104
 #: src/components/workspace/OrganisationProjectsTable.tsx:219
 #: src/components/project/ProjectUsageAndSharing.tsx:453
 #: src/components/conversation/ProjectConversationsPanel.tsx:725
@@ -4452,7 +4454,7 @@ msgstr "Each new member is billed per seat on your plan."
 #~ msgstr "Earlier"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:843
+#: src/components/participant/ParticipantConversationAudio.tsx:909
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -4784,7 +4786,7 @@ msgstr "Entered by the participant on the portal"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
-#: src/components/conversation/LiveMonitorSection.tsx:103
+#: src/components/conversation/LiveMonitorSection.tsx:211
 #: src/components/chat/AgenticChatPanel.tsx:272
 #: src/components/chat/AgenticChatPanel.tsx:403
 #: src/components/chat/AgenticChatPanel.tsx:1134
@@ -4969,6 +4971,10 @@ msgstr "Explore"
 msgid "Explore themes & patterns across all conversations"
 msgstr "Explore themes & patterns across all conversations"
 
+#: src/components/conversation/LiveMonitorSection.tsx:49
+msgid "Exploring"
+msgstr "Exploring"
+
 #: src/components/chat/ChatModeBanner.tsx:52
 msgid "Exploring {conversationCount} conversations"
 msgstr "Exploring {conversationCount} conversations"
@@ -5110,7 +5116,7 @@ msgstr "Failed to delete tag"
 #~ msgid "Failed to finish conversation. Please try again or start a new conversation."
 #~ msgstr "Failed to finish conversation. Please try again or start a new conversation."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:306
+#: src/components/participant/ParticipantConversationAudio.tsx:372
 msgid "Failed to finish conversation. Please try again."
 msgstr "Failed to finish conversation. Please try again."
 
@@ -5172,7 +5178,7 @@ msgstr "Failed to move project"
 msgid "Failed to move projects"
 msgstr "Failed to move projects"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:408
+#: src/components/participant/ParticipantConversationAudio.tsx:474
 msgid "Failed to reconnect. Please try reloading the page."
 msgstr "Failed to reconnect. Please try reloading the page."
 
@@ -5225,7 +5231,7 @@ msgstr "Failed to revise outcome. Please try again."
 #~ msgid "Failed to start new conversation. Please try again."
 #~ msgstr "Failed to start new conversation. Please try again."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:182
+#: src/components/participant/ParticipantConversationAudio.tsx:219
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Failed to stop recording on device change. Please try again."
 
@@ -5275,7 +5281,7 @@ msgid "Fair password"
 msgstr "Fair password"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:500
+#: src/components/participant/ParticipantConversationAudio.tsx:566
 msgid "participant.modal.echo.info.title"
 msgstr "Feature available soon"
 
@@ -5364,7 +5370,7 @@ msgid "participant.button.finish.text.mode"
 msgstr "Finish"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:811
+#: src/components/participant/ParticipantConversationAudio.tsx:877
 msgid "participant.button.finish"
 msgstr "Finish"
 
@@ -5387,9 +5393,13 @@ msgid "Finish setting up your plan"
 msgstr "Finish setting up your plan"
 
 #: src/components/report/ConversationStatusTable.tsx:82
-#: src/components/conversation/LiveMonitorSection.tsx:88
+#: src/components/conversation/LiveMonitorSection.tsx:55
 msgid "Finished"
 msgstr "Finished"
+
+#: src/components/conversation/LiveMonitorSection.tsx:53
+msgid "Finishing"
+msgstr "Finishing"
 
 #: src/routes/auth/Register.tsx:151
 msgid "First name"
@@ -5623,7 +5633,7 @@ msgstr "Generating your report..."
 msgid "German"
 msgstr "German"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:472
+#: src/components/participant/ParticipantConversationAudio.tsx:538
 msgid "Get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Get an immediate reply from dembrane to help you deepen the conversation."
 
@@ -5882,7 +5892,7 @@ msgid "Home"
 msgstr "Home"
 
 #: src/routes/project/ProjectHomeRoute.tsx:155
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:96
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:94
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:54
 msgid "Host guide"
 msgstr "Host guide"
@@ -5943,7 +5953,7 @@ msgid "I have read and accept the <0>terms</0>"
 msgstr "I have read and accept the <0>terms</0>"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:627
+#: src/components/participant/ParticipantConversationAudio.tsx:693
 msgid "participant.button.i.understand"
 msgstr "I understand"
 
@@ -5985,7 +5995,7 @@ msgstr "ID"
 msgid "Identify recurring themes, topics, and arguments that appear consistently across conversations. Analyze their frequency, intensity, and consistency. Expected output: 3-7 aspects for small datasets, 5-12 for medium datasets, 8-15 for large datasets. Processing guidance: Focus on distinct patterns that emerge across multiple conversations."
 msgstr "Identify recurring themes, topics, and arguments that appear consistently across conversations. Analyze their frequency, intensity, and consistency. Expected output: 3-7 aspects for small datasets, 5-12 for medium datasets, 8-15 for large datasets. Processing guidance: Focus on distinct patterns that emerge across multiple conversations."
 
-#: src/components/conversation/LiveMonitorSection.tsx:92
+#: src/components/conversation/LiveMonitorSection.tsx:61
 msgid "Idle"
 msgstr "Idle"
 
@@ -6503,6 +6513,10 @@ msgstr "Just a moment"
 #~ msgid "Just now"
 #~ msgstr "Just now"
 
+#: src/components/conversation/LiveMonitorSection.tsx:59
+msgid "Just started"
+msgstr "Just started"
+
 #: src/components/common/FeedbackPortalModal.tsx:64
 msgid "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 msgstr "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
@@ -6583,7 +6597,7 @@ msgid "Language"
 msgstr "Language"
 
 #. placeholder {0}: lastActivityLabel(conversation)
-#: src/components/conversation/LiveMonitorSection.tsx:111
+#: src/components/conversation/LiveMonitorSection.tsx:223
 msgid "Last activity {0}"
 msgstr "Last activity {0}"
 
@@ -6746,8 +6760,8 @@ msgid "Listing documentation pages"
 msgstr "Listing documentation pages"
 
 #: src/components/conversation/LiveMonitorSection.tsx:84
-msgid "Live"
-msgstr "Live"
+#~ msgid "Live"
+#~ msgstr "Live"
 
 #: src/components/chat/ChatModeBanner.tsx:54
 msgid "Live agent execution mode"
@@ -6762,13 +6776,17 @@ msgstr "Live audio level:"
 #~ msgid "Live audio level:"
 #~ msgstr "Live audio level:"
 
-#: src/components/conversation/LiveMonitorSection.tsx:151
+#: src/components/conversation/LiveMonitorSection.tsx:383
 msgid "Live monitoring"
 msgstr "Live monitoring"
 
 #: src/components/project/ProjectPortalEditor.tsx:1690
 msgid "Live Preview"
 msgstr "Live Preview"
+
+#: src/components/conversation/LiveMonitorSection.tsx:367
+msgid "Live recordings, transcription progress, and errors show up here as participants start recording in the portal."
+msgstr "Live recordings, transcription progress, and errors show up here as participants start recording in the portal."
 
 #: src/components/chat/AgenticChatPanel.tsx:784
 msgid "Live stream interrupted. Falling back to polling."
@@ -6952,6 +6970,10 @@ msgstr "Longest first"
 #: src/components/conversation/ConversationAccordion.tsx:673
 msgid "Longest First"
 msgstr "Longest First"
+
+#: src/components/conversation/LiveMonitorSection.tsx:199
+msgid "Low battery"
+msgstr "Low battery"
 
 #: src/components/project/ProjectSharingModal.tsx:131
 msgid "Make it private to share with specific people only. Private projects require the innovator plan or above."
@@ -7166,7 +7188,8 @@ msgstr "Mode"
 msgid "Mollie is not configured in this environment, so no live transactions are shown. The dashboard link still points to the right Mollie environment."
 msgstr "Mollie is not configured in this environment, so no live transactions are shown. The dashboard link still points to the right Mollie environment."
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:88
+#: src/routes/project/ProjectMonitorRoute.tsx:15
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:89
 msgid "Monitor"
 msgstr "Monitor"
 
@@ -7525,7 +7548,7 @@ msgstr "No accounts"
 msgid "No actions found"
 msgstr "No actions found"
 
-#: src/components/conversation/LiveMonitorSection.tsx:20
+#: src/components/conversation/LiveMonitorSection.tsx:129
 msgid "No activity yet"
 msgstr "No activity yet"
 
@@ -7793,6 +7816,10 @@ msgstr "No projects match."
 #: src/routes/project/conversation/ProjectConversationAnalysis.tsx:138
 #~ msgid "No quotes available. Generate quotes for this conversation by visiting<0><1> the project library.</1></0>"
 #~ msgstr "No quotes available. Generate quotes for this conversation by visiting<0><1> the project library.</1></0>"
+
+#: src/components/conversation/LiveMonitorSection.tsx:364
+msgid "No recent activity"
+msgstr "No recent activity"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2260
 msgid "No referral agreements yet."
@@ -8739,6 +8766,10 @@ msgstr "Passwords do not match"
 msgid "Pause reading"
 msgstr "Pause reading"
 
+#: src/components/conversation/LiveMonitorSection.tsx:45
+msgid "Paused"
+msgstr "Paused"
+
 #: src/components/billing/BillingManager.tsx:769
 msgid "Pay now"
 msgstr "Pay now"
@@ -8986,7 +9017,6 @@ msgstr "Plan ends"
 
 #: src/features/sidebar/views/HelpView.tsx:53
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:79
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:91
 #: src/features/sidebar/blocks/HelpBlock.tsx:38
 msgid "Planned"
 msgstr "Planned"
@@ -9737,17 +9767,17 @@ msgid "Recommended apps"
 msgstr "Recommended apps"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:576
+#: src/components/participant/ParticipantConversationAudio.tsx:642
 msgid "participant.button.s3check.reconnect"
 msgstr "Reconnect"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:689
+#: src/components/participant/ParticipantConversationAudio.tsx:755
 msgid "participant.button.interruption.reconnect"
 msgstr "Reconnect"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:786
+#: src/components/participant/ParticipantConversationAudio.tsx:852
 msgid "participant.button.record"
 msgstr "Record"
 
@@ -9759,8 +9789,12 @@ msgstr "Record"
 msgid "Record another conversation"
 msgstr "Record another conversation"
 
+#: src/components/conversation/LiveMonitorSection.tsx:43
+msgid "Recording"
+msgstr "Recording"
+
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:655
+#: src/components/participant/ParticipantConversationAudio.tsx:721
 msgid "participant.modal.interruption.title"
 msgstr "Recording interrupted"
 
@@ -10044,7 +10078,7 @@ msgstr "Reply Prompt"
 
 #: src/routes/project/ProjectHomeRoute.tsx:163
 #: src/routes/project/report/ProjectReportRoute.tsx:185
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:101
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:99
 #: src/components/report/ReportRenderer.tsx:75
 #: src/components/report/ReportModalNavigationButton.tsx:92
 msgid "Report"
@@ -11057,7 +11091,7 @@ msgstr "Setting things up for you"
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:80
 #: src/features/sidebar/views/user/UserSettingsView.tsx:33
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:18
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:124
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:122
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:26
 #: src/features/sidebar/views/org/OrgHomeView.tsx:130
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
@@ -11186,6 +11220,10 @@ msgstr "Show"
 #: src/components/workspace/OrganisationUsageRollup.tsx:1058
 msgid "Show {hidden} more"
 msgstr "Show {hidden} more"
+
+#: src/components/conversation/LiveMonitorSection.tsx:336
+msgid "Show {overflow} more"
+msgstr "Show {overflow} more"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1011
 #~ msgid "Show a link for participants to contribute"
@@ -11354,7 +11392,7 @@ msgid "Someone"
 msgstr "Someone"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:555
+#: src/components/participant/ParticipantConversationAudio.tsx:621
 msgid "participant.modal.s3check.message"
 msgstr "Something is blocking your connection. Your audio will not be saved unless this is resolved."
 
@@ -11560,7 +11598,7 @@ msgid "Stop"
 msgstr "Stop"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:863
+#: src/components/participant/ParticipantConversationAudio.tsx:929
 msgid "participant.button.stop"
 msgstr "Stop"
 
@@ -11755,11 +11793,11 @@ msgstr "Tags"
 msgid "Take me to {resolvedWorkspaceName}"
 msgstr "Take me to {resolvedWorkspaceName}"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:466
+#: src/components/participant/ParticipantConversationAudio.tsx:532
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:469
+#: src/components/participant/ParticipantConversationAudio.tsx:535
 msgid "Take some time to create an outcome that makes your contribution concrete."
 msgstr "Take some time to create an outcome that makes your contribution concrete."
 
@@ -12127,7 +12165,7 @@ msgid "This area is for dembrane staff. If you think you should have access, ema
 msgstr "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:561
+#: src/components/participant/ParticipantConversationAudio.tsx:627
 msgid "participant.modal.s3check.suggestions"
 msgstr "This can happen when a VPN or firewall is blocking the connection. Try disabling your VPN, switching to a different network (e.g. mobile hotspot), or contact your IT department for help."
 
@@ -12162,7 +12200,7 @@ msgstr "This email is already in the list."
 #~ msgstr "This email is already subscribed to notifications."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:616
+#: src/components/participant/ParticipantConversationAudio.tsx:682
 msgid "participant.modal.refine.info.available.in"
 msgstr "This feature will be available in {remainingTime} seconds."
 
@@ -12641,7 +12679,7 @@ msgstr "Training: {0}"
 msgid "Trainings"
 msgstr "Trainings"
 
-#: src/components/conversation/LiveMonitorSection.tsx:56
+#: src/components/conversation/LiveMonitorSection.tsx:161
 msgid "Transcribed"
 msgstr "Transcribed"
 
@@ -12871,6 +12909,10 @@ msgstr "Type a message or press / for templates..."
 msgid "Type your response here"
 msgstr "Type your response here"
 
+#: src/components/conversation/LiveMonitorSection.tsx:51
+msgid "Typing"
+msgstr "Typing"
+
 #: src/components/project/ProjectPortalEditor.tsx:646
 #~ msgid "Ukrainian"
 #~ msgstr "Ukrainian"
@@ -12990,6 +13032,10 @@ msgstr "Unsaved changes"
 #: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:77
 msgid "Unsubscribe"
 msgstr "Unsubscribe"
+
+#: src/components/conversation/LiveMonitorSection.tsx:267
+msgid "Untagged"
+msgstr "Untagged"
 
 #. placeholder {0}: format(new Date(lic.expires_at), "d MMM yyyy")
 #: src/components/training/TrainingRowActions.tsx:245
@@ -13237,7 +13283,7 @@ msgid "participant.modal.uploading"
 msgstr "Uploading audio..."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:673
+#: src/components/participant/ParticipantConversationAudio.tsx:739
 msgid "participant.modal.interruption.uploading"
 msgstr "Uploading audio..."
 
@@ -13249,7 +13295,7 @@ msgstr "URL is required"
 msgid "URL must start with http:// or https://"
 msgstr "URL must start with http:// or https://"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:117
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:115
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:37
 #: src/components/project/ProjectUsageAndSharing.tsx:415
 #: src/components/layout/ProjectOverviewLayout.tsx:53
@@ -13452,6 +13498,10 @@ msgstr "Verify email"
 msgid "Verify Topics"
 msgstr "Verify Topics"
 
+#: src/components/conversation/LiveMonitorSection.tsx:47
+msgid "Verifying"
+msgstr "Verifying"
+
 #: src/routes/auth/VerifyEmail.tsx:124
 msgid "Verifying your email address."
 msgstr "Verifying your email address."
@@ -13527,6 +13577,10 @@ msgstr "Visible to everyone in this workspace. Leave off to keep it personal."
 #~ msgid "Wait {0}:{1}"
 #~ msgstr "Wait {0}:{1}"
 
+#: src/components/conversation/LiveMonitorSection.tsx:57
+msgid "Waiting"
+msgstr "Waiting"
+
 #: src/components/report/CreateReportForm.tsx:224
 msgid "Waiting for conversations to finish before generating a report."
 msgstr "Waiting for conversations to finish before generating a report."
@@ -13556,6 +13610,10 @@ msgstr "Waiting for conversations to finish before generating a report."
 #: src/components/project/ProjectPortalEditor.tsx:150
 #~ msgid "Warning: You have added {0} key terms. Only the first {ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine."
 #~ msgstr "Warning: You have added {0} key terms. Only the first {ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine."
+
+#: src/routes/project/ProjectMonitorRoute.tsx:18
+msgid "Watch live recordings, transcription progress, and errors across this project as they happen."
+msgstr "Watch live recordings, transcription progress, and errors across this project as they happen."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:389
@@ -13651,7 +13709,7 @@ msgstr "We couldn't update your payment method. Your old one is still active. Pl
 #~ msgstr "We have sent you an email with next steps. If you don't see it, check your spam folder. If you still don't see it, please contact jules@dembrane.com"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:508
+#: src/components/participant/ParticipantConversationAudio.tsx:574
 msgid "participant.modal.echo.info.reason"
 msgstr "We need a bit more context to help you use ECHO effectively. Please continue recording so we can provide better suggestions."
 
@@ -13717,6 +13775,10 @@ msgstr "We've added organisations so you can organize projects and share them wi
 #: src/routes/auth/Register.tsx:262
 msgid "We've sent a verification link to <0>{0}</0>. Open the email and click the link to continue."
 msgstr "We've sent a verification link to <0>{0}</0>. Open the email and click the link to continue."
+
+#: src/components/conversation/LiveMonitorSection.tsx:194
+msgid "Weak network"
+msgstr "Weak network"
 
 #: src/components/auth/PasswordRequirements.tsx:48
 msgid "Weak password"

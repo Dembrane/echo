@@ -359,16 +359,38 @@ export const checkS3Connectivity = async (
 	}
 };
 
+export type ParticipantPingTelemetry = {
+	/** The portal knows its project from the URL; lets the server fan a
+	 * real-time nudge to open monitor streams without a DB lookup. */
+	project_id?: string;
+	state?: string;
+	mode?: "voice" | "text";
+	screen?: string;
+	network?: {
+		online?: boolean;
+		effective_type?: string;
+		downlink?: number;
+		rtt?: number;
+	};
+	battery?: { level?: number; charging?: boolean };
+};
+
 /**
- * Participant liveness beacon. Called every few seconds while recording so the
- * host monitor can tell the conversation is still live between audio chunks.
- * Best-effort: failures are swallowed so a blip never disrupts recording.
+ * Participant liveness + telemetry beacon. Called every few seconds while the
+ * participant is in a conversation so the host monitor can tell what they are
+ * doing (recording, paused, verifying, ...) between audio chunks. Telemetry is
+ * optional and best-effort: failures are swallowed so a blip never disrupts
+ * recording.
  */
 export const pingConversation = async (
 	conversationId: string,
+	telemetry?: ParticipantPingTelemetry,
 ): Promise<void> => {
 	try {
-		await apiNoAuth.post(`/participant/conversations/${conversationId}/ping`);
+		await apiNoAuth.post(
+			`/participant/conversations/${conversationId}/ping`,
+			telemetry ?? undefined,
+		);
 	} catch {
 		// Non-critical; the next ping (or a chunk upload) re-establishes liveness.
 	}
