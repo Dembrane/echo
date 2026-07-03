@@ -207,10 +207,10 @@ def test_monitor_ping_keeps_conversation_live_without_recent_chunk() -> None:
     recent_chunks = [
         {"conversation_id": {"id": "c-ping", "participant_name": "Ada"}, "timestamp": stale_chunk, "error": None},
     ]
-    last_seen = {"c-ping": now - timedelta(seconds=6)}  # pinged 6s ago
+    telemetry = {"c-ping": {"seen": now - timedelta(seconds=6)}}  # pinged 6s ago
 
     payload = _build_monitor_payload(
-        recent_chunks, {"c-ping": 3}, {"c-ping": 3}, now, 45, last_seen
+        recent_chunks, {"c-ping": 3}, {"c-ping": 3}, now, 45, telemetry
     )
     entry = payload["conversations"][0]
     assert entry["is_live"] is True
@@ -228,11 +228,100 @@ def test_monitor_finished_conversation_ignores_ping() -> None:
         },
     ]
     # Even a fresh ping cannot revive a finished conversation.
-    last_seen = {"c-fin": now - timedelta(seconds=2)}
+    telemetry = {"c-fin": {"seen": now - timedelta(seconds=2)}}
     payload = _build_monitor_payload(
-        recent_chunks, {"c-fin": 2}, {"c-fin": 2}, now, 45, last_seen
+        recent_chunks, {"c-fin": 2}, {"c-fin": 2}, now, 45, telemetry
     )
     assert payload["conversations"][0]["is_live"] is False
+
+
+def test_monitor_lifecycle_state_prefers_reported_then_observed() -> None:
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    fresh = _iso(now - timedelta(seconds=5))
+    recent_chunks = [
+        # reported paused (still pinging) -> paused, even with a fresh chunk
+        {"conversation_id": {"id": "c-paused", "participant_name": "Ada"}, "timestamp": fresh, "error": None},
+        # reported verifying -> verifying
+        {"conversation_id": {"id": "c-verify", "participant_name": "Bo"}, "timestamp": fresh, "error": None},
+        # no telemetry, fresh chunk -> observed recording
+        {"conversation_id": {"id": "c-rec", "participant_name": "Cy"}, "timestamp": fresh, "error": None},
+        # finished wins over any reported state
+        {
+            "conversation_id": {"id": "c-fin", "participant_name": "Di", "is_finished": True},
+            "timestamp": fresh,
+            "error": None,
+        },
+    ]
+    telemetry = {
+        "c-paused": {"seen": now - timedelta(seconds=3), "state": "paused"},
+        "c-verify": {"seen": now - timedelta(seconds=3), "state": "verifying"},
+        "c-fin": {"seen": now - timedelta(seconds=3), "state": "recording"},
+    }
+    counts = {"c-paused": 2, "c-verify": 1, "c-rec": 3, "c-fin": 4}
+    payload = _build_monitor_payload(recent_chunks, counts, counts, now, 45, telemetry)
+    by_id = {c["id"]: c for c in payload["conversations"]}
+    assert by_id["c-paused"]["state"] == "paused"
+    assert by_id["c-verify"]["state"] == "verifying"
+    assert by_id["c-rec"]["state"] == "recording"
+    assert by_id["c-fin"]["state"] == "finished"
+
+
+def test_monitor_surfaces_metadata_and_telemetry() -> None:
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    fresh = _iso(now - timedelta(seconds=5))
+    older = _iso(now - timedelta(seconds=40))
+    recent_chunks = [
+        # newest chunk carries the latest transcript + language
+        {
+            "conversation_id": {"id": "c1", "participant_name": "Ada"},
+            "timestamp": fresh,
+            "error": None,
+            "transcript": "the newest thing said",
+            "desired_language": "nl",
+        },
+        {
+            "conversation_id": {"id": "c1", "participant_name": "Ada"},
+            "timestamp": older,
+            "error": None,
+            "transcript": "older words",
+            "detected_language": "en",
+        },
+    ]
+    telemetry = {
+        "c1": {
+            "seen": now - timedelta(seconds=3),
+            "state": "recording",
+            "mode": "voice",
+            "network": {"effective_type": "3g"},
+            "battery": {"level": 0.2, "charging": False},
+        }
+    }
+    tag_map = {"c1": ["Morning session", "Team A"]}
+    payload = _build_monitor_payload(recent_chunks, {"c1": 2}, {"c1": 1}, now, 45, telemetry, tag_map)
+    entry = payload["conversations"][0]
+    assert entry["latest_transcript"] == "the newest thing said"
+    assert entry["language"] == "nl"
+    assert entry["mode"] == "voice"
+    assert entry["tags"] == ["Morning session", "Team A"]
+    assert entry["network"] == {"effective_type": "3g"}
+    assert entry["battery"] == {"level": 0.2, "charging": False}
+
+
+def test_monitor_transcript_snippet_truncated() -> None:
+    from dembrane.api.v2.bff.conversations import MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN
+
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    long_text = "y" * (MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN + 200)
+    recent_chunks = [
+        {
+            "conversation_id": {"id": "c1", "participant_name": "Q"},
+            "timestamp": _iso(now),
+            "error": None,
+            "transcript": long_text,
+        },
+    ]
+    payload = _build_monitor_payload(recent_chunks, {"c1": 1}, {"c1": 1}, now, 45)
+    assert len(payload["conversations"][0]["latest_transcript"]) == MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN
 
 
 # ── endpoint wiring: access gate + two-query aggregation ──────────────
@@ -257,6 +346,8 @@ class _AsyncFakeDirectus:
     async def get_items(self, collection: str, params: dict) -> list[dict]:
         query = (params or {}).get("query", {})
         self.queries.append({"collection": collection, "query": query})
+        if collection == "conversation_project_tag":
+            return []
         if "aggregate" in query:
             # The transcribed-count read carries a transcript filter.
             source = (
@@ -284,11 +375,25 @@ async def _build_client(
     fake_directus = _AsyncFakeDirectus(recent_chunks, counts, transcribed)
     monkeypatch.setattr(conv_bff, "async_directus", fake_directus)
 
-    # Liveness ping read hits Redis in production; stub it out here.
-    async def _fake_last_seen(conversation_ids: list[str]) -> dict:  # noqa: ARG001
+    # Liveness/telemetry read hits Redis in production; stub it out here.
+    async def _fake_telemetry(conversation_ids: list[str]) -> dict:  # noqa: ARG001
         return {}
 
-    monkeypatch.setattr(conv_bff, "get_last_seen_many", _fake_last_seen)
+    monkeypatch.setattr(conv_bff, "get_telemetry_many", _fake_telemetry)
+
+    # The snapshot cache also uses Redis; stub a always-miss client so the
+    # endpoint recomputes (and the Directus query assertions still hold).
+    class _NoCacheRedis:
+        async def get(self, key):  # noqa: ANN001, ARG002
+            return None
+
+        async def set(self, key, value, ex=None, nx=None):  # noqa: ANN001, ARG002
+            return True
+
+    async def _fake_redis():
+        return _NoCacheRedis()
+
+    monkeypatch.setattr(conv_bff, "get_redis_client", _fake_redis)
 
     async def _fake_resolve_project_access(project_id: str, auth: Any) -> Any:  # noqa: ARG001
         return SimpleNamespace(require=lambda _policy: None, role="owner", project={})
@@ -349,10 +454,12 @@ async def test_monitor_endpoint_returns_rollup(monkeypatch) -> None:
     assert err["chunk_count"] == 2
     assert err["transcription_status"] == "failing"
 
-    # Three Directus reads: recent-chunk read + total count + transcribed count.
-    assert len(fake_directus.queries) == 3
+    # Four Directus reads: recent-chunk read + total count + transcribed count
+    # + the tag read for grouping.
+    assert len(fake_directus.queries) == 4
     assert "aggregate" in fake_directus.queries[1]["query"]
     assert "aggregate" in fake_directus.queries[2]["query"]
+    assert fake_directus.queries[3]["collection"] == "conversation_project_tag"
 
 
 @pytest.mark.asyncio
