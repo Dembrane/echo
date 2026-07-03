@@ -40,6 +40,11 @@ Hosts run projects; participants contribute conversations through the portal or 
 - Reply in the language the host writes in.
 - Never use the word "AI". Refer to yourself as "I" and describe what you are
   doing ("searching the transcripts"), not the technology behind it.
+- Never expose internal machinery to the host. Words like "tool", "tool call",
+  "function", "my limit", or raw tool names have no place in your replies.
+  Describe the work in human terms ("I looked through the transcripts"). If you
+  have to stop before finishing, say so plainly ("I stopped short of digging
+  into X") and offer to go deeper if they want.
 - Write "dembrane" in lowercase, even at the start of a sentence.
 - Do not use em dashes. Use periods, commas, or colons.
 - Say "participants" and "hosts", never "users".
@@ -98,8 +103,12 @@ ask one focused question first.
   Conclude with plain text only when you are done.
 - Prefer listProjectConversations for an overview before keyword searches.
 - findConvosByKeywords works best with 2-4 focused keywords, not sentences.
-- You have at most 20 tool calls per turn. Spend them on distinct questions, not
-  retries. If a tool returns a guardrail warning, stop searching and answer from
+- Batch your lookups. readDoc and grepDocs each take a list, so read every page
+  you need (or search every pattern) in one step instead of one call at a time.
+  When several independent lookups would answer the question, request them
+  together rather than sequentially.
+- You have at most 20 steps per turn. Spend them on distinct questions, not
+  retries. If a step returns a guardrail warning, stop searching and answer from
   what you have.
 
 ## Citations
@@ -117,6 +126,11 @@ ask one focused question first.
 - The host sees a diff and applies or rejects it themselves. You never apply
   changes. Say "I've suggested these changes", never "I've updated your project".
   If the host says they applied it, re-read settings before advising next steps.
+- Verify prompts: when the host wants a custom check on each conversation (a
+  "verify prompt"), use proposeCustomVerificationTopic with a short label and the
+  instruction to run, in the project's language. Mention that verification has
+  to be enabled for it to run, and offer a proposeProjectUpdate to switch
+  is_verify_enabled on if getProjectSettings shows it off.
 
 ## Memory
 You can save durable notes with `remember` and recall them with `readMemory`.
@@ -617,14 +631,35 @@ def create_agent_graph(
         return {"docs": knowledge.list_docs()}
 
     @tool
-    def readDoc(path: str, offset: int = 1, limit: int = 200) -> str:
-        """Read a documentation page (line-numbered). Use offset/limit to page."""
-        return knowledge.read_doc(path, offset=offset, limit=limit)
+    def readDoc(paths: list[str], offset: int = 1, limit: int = 200) -> dict[str, Any]:
+        """Read one or more documentation pages (line-numbered). Pass several
+        paths at once to read them in a single step instead of one call each.
+        offset/limit page within each page: use a single path when you need to
+        deep-page one long page."""
+        normalized = [p for p in (paths or []) if isinstance(p, str) and p.strip()]
+        if not normalized:
+            raise ValueError("Provide at least one doc path in `paths`.")
+        return {
+            "docs": [
+                {"path": path, "content": knowledge.read_doc(path, offset=offset, limit=limit)}
+                for path in normalized
+            ]
+        }
 
     @tool
-    def grepDocs(pattern: str) -> dict[str, Any]:
-        """Search the documentation corpus for a regex or phrase."""
-        return {"matches": knowledge.grep_docs(pattern)}
+    def grepDocs(patterns: list[str]) -> dict[str, Any]:
+        """Search the documentation corpus for regexes or phrases. Pass several
+        patterns at once to search them all in a single step instead of one
+        call per pattern."""
+        normalized = [p for p in (patterns or []) if isinstance(p, str) and p.strip()]
+        if not normalized:
+            raise ValueError("Provide at least one pattern in `patterns`.")
+        return {
+            "results": [
+                {"pattern": pattern, "matches": knowledge.grep_docs(pattern)}
+                for pattern in normalized
+            ]
+        }
 
     @tool
     def readSkill(path: str) -> str:
@@ -687,6 +722,39 @@ def create_agent_graph(
             "summary": summary.strip(),
             "changes": normalized,
             "rejected_fields": rejected,
+            "visible_to_user": True,
+        }
+
+    @tool
+    async def proposeCustomVerificationTopic(
+        label: str,
+        prompt: str,
+        reason: str = "",
+    ) -> dict[str, Any]:
+        """Propose a custom verification topic (a "verify prompt") for the host
+        to apply in one click.
+
+        A verification topic checks each conversation against an instruction you
+        write. `label` is the short host-facing name; `prompt` is the instruction
+        the check runs (write it in the project's language). Use this when the
+        host wants a bespoke verification, not one of the built-in topics. This
+        never writes anything: the host reviews and applies it. Note in your
+        reply that verification must be enabled for the check to run, and offer a
+        proposeProjectUpdate to turn it on if it is off.
+        """
+        normalized_label = label.strip()
+        normalized_prompt = prompt.strip()
+        if not normalized_label:
+            raise ValueError("A short label for the verification topic is required.")
+        if not normalized_prompt:
+            raise ValueError("The verification prompt (the instruction to check) is required.")
+
+        return {
+            "kind": "custom_verification_topic_suggestion",
+            "project_id": project_id,
+            "label": normalized_label,
+            "prompt": normalized_prompt,
+            "reason": reason.strip(),
             "visible_to_user": True,
         }
 
@@ -807,6 +875,7 @@ def create_agent_graph(
         readSkill,
         getProjectSettings,
         proposeProjectUpdate,
+        proposeCustomVerificationTopic,
         sendProgressUpdate,
         listProjectChats,
         readChat,

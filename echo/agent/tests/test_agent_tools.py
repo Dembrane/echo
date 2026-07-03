@@ -223,6 +223,113 @@ def test_system_prompt_contains_conversational_and_research_directives():
     # Project context awareness
     assert "project context" in prompt
     assert "background about the project" in prompt
+    # Never leak internal machinery to the host
+    assert "internal machinery" in prompt
+    # Steer batched lookups over one-at-a-time calls
+    assert "batch your lookups" in prompt
+
+
+def _make_doc_tools():
+    llm = _CaptureLLM()
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=_FakeEchoClientFactory(
+            search_payload={"conversations": []},
+            project_conversations_payload_by_transcript_query={},
+            transcripts={},
+        ),
+    )
+    return _tool_map(llm.bound_tools)
+
+
+@pytest.mark.asyncio
+async def test_read_doc_reads_multiple_pages_in_one_call(monkeypatch):
+    import knowledge
+
+    calls: list[tuple[str, int, int]] = []
+
+    def _fake_read_doc(path: str, offset: int = 1, limit: int = 200) -> str:
+        calls.append((path, offset, limit))
+        return f"body of {path}"
+
+    monkeypatch.setattr(knowledge, "read_doc", _fake_read_doc)
+    tools = _make_doc_tools()
+
+    result = await tools["readDoc"].ainvoke(
+        {"paths": ["features/portal-editor.md", "index.md"]}
+    )
+
+    assert result == {
+        "docs": [
+            {"path": "features/portal-editor.md", "content": "body of features/portal-editor.md"},
+            {"path": "index.md", "content": "body of index.md"},
+        ]
+    }
+    assert [c[0] for c in calls] == ["features/portal-editor.md", "index.md"]
+
+
+@pytest.mark.asyncio
+async def test_read_doc_rejects_empty_paths():
+    tools = _make_doc_tools()
+    with pytest.raises(ValueError):
+        await tools["readDoc"].ainvoke({"paths": []})
+
+
+@pytest.mark.asyncio
+async def test_grep_docs_searches_multiple_patterns_in_one_call(monkeypatch):
+    import knowledge
+
+    def _fake_grep(pattern: str):
+        return [{"path": "index.md", "line": 1, "text": f"hit for {pattern}"}]
+
+    monkeypatch.setattr(knowledge, "grep_docs", _fake_grep)
+    tools = _make_doc_tools()
+
+    result = await tools["grepDocs"].ainvoke({"patterns": ["fizz", "aftertaste"]})
+
+    assert [r["pattern"] for r in result["results"]] == ["fizz", "aftertaste"]
+    assert result["results"][0]["matches"][0]["text"] == "hit for fizz"
+
+
+@pytest.mark.asyncio
+async def test_grep_docs_rejects_empty_patterns():
+    tools = _make_doc_tools()
+    with pytest.raises(ValueError):
+        await tools["grepDocs"].ainvoke({"patterns": []})
+
+
+@pytest.mark.asyncio
+async def test_propose_custom_verification_topic_returns_suggestion_payload():
+    tools = _make_doc_tools()
+
+    result = await tools["proposeCustomVerificationTopic"].ainvoke(
+        {
+            "label": "Sweetness feedback",
+            "prompt": "Did the participant comment on how sweet the drink was?",
+            "reason": "You asked for a bespoke check on taste feedback.",
+        }
+    )
+
+    assert result["kind"] == "custom_verification_topic_suggestion"
+    assert result["project_id"] == "project-1"
+    assert result["label"] == "Sweetness feedback"
+    assert result["prompt"] == "Did the participant comment on how sweet the drink was?"
+    assert result["visible_to_user"] is True
+
+
+@pytest.mark.asyncio
+async def test_propose_custom_verification_topic_rejects_empty_fields():
+    tools = _make_doc_tools()
+    with pytest.raises(ValueError):
+        await tools["proposeCustomVerificationTopic"].ainvoke(
+            {"label": "  ", "prompt": "something"}
+        )
+    with pytest.raises(ValueError):
+        await tools["proposeCustomVerificationTopic"].ainvoke(
+            {"label": "Name", "prompt": "   "}
+        )
 
 
 @pytest.mark.asyncio

@@ -66,11 +66,13 @@ import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
 import {
 	extractTopLevelToolActivity,
+	parseCustomVerificationTopicSuggestion,
 	parseProjectUpdateSuggestion,
 	type ToolActivity,
 } from "./agenticToolActivity";
 import { ChatAccordionItemMenu } from "./ChatAccordion";
 import { ChatHistoryMessage } from "./ChatHistoryMessage";
+import { CustomVerificationTopicSuggestionCard } from "./CustomVerificationTopicSuggestionCard";
 import { formatMessage } from "./chatUtils";
 import { ChatTurnLimitCard, ChatUpgradeModal } from "./FreeTierChatGate";
 import { useChat as useProjectChat } from "./hooks";
@@ -102,6 +104,10 @@ type HistoryLikeMessage = ChatHistory[number] & {
 };
 
 const storageKeyForChat = (chatId: string) => `agentic-run:${chatId}`;
+
+// Internal placeholders the agent/worker may have persisted before the
+// server-side guard landed. They are never meant to be shown to a host.
+const INTERNAL_ASSISTANT_PLACEHOLDERS = new Set(["(calling tools)"]);
 
 const isTerminalStatus = (status: AgenticRunStatus | null) =>
 	status === "completed" || status === "failed" || status === "timeout";
@@ -196,6 +202,12 @@ const toMessage = ({
 	}
 
 	if (event.event_type === "assistant.message" && content) {
+		// Existing chats may hold the internal "(calling tools)" placeholder
+		// (a Gemini crutch that leaked into persistence before the server-side
+		// guard). Never render it — it only fragments the thread.
+		if (INTERNAL_ASSISTANT_PLACEHOLDERS.has(content.trim())) {
+			return null;
+		}
 		return {
 			content: enrichAgenticContent({ content, language, projectId }),
 			id: `a-${event.seq}`,
@@ -576,6 +588,11 @@ export const AgenticChatPanel = ({
 					item: Extract<TimelineItem, { kind: "tool" }>;
 			  }
 			| {
+					kind: "verification_suggestion";
+					id: string;
+					item: Extract<TimelineItem, { kind: "tool" }>;
+			  }
+			| {
 					kind: "tool_group";
 					id: string;
 					items: Extract<TimelineItem, { kind: "tool" }>[];
@@ -588,6 +605,10 @@ export const AgenticChatPanel = ({
 			}
 			if (parseProjectUpdateSuggestion(item)) {
 				nodes.push({ id: item.id, item, kind: "suggestion" });
+				continue;
+			}
+			if (parseCustomVerificationTopicSuggestion(item)) {
+				nodes.push({ id: item.id, item, kind: "verification_suggestion" });
 				continue;
 			}
 			const last = nodes[nodes.length - 1];
@@ -1190,6 +1211,19 @@ export const AgenticChatPanel = ({
 							return suggestion ? (
 								<div key={node.id}>
 									<ProjectUpdateSuggestionCard suggestion={suggestion} />
+								</div>
+							) : null;
+						}
+
+						if (node.kind === "verification_suggestion") {
+							const suggestion = parseCustomVerificationTopicSuggestion(
+								node.item,
+							);
+							return suggestion ? (
+								<div key={node.id}>
+									<CustomVerificationTopicSuggestionCard
+										suggestion={suggestion}
+									/>
 								</div>
 							) : null;
 						}

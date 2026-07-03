@@ -90,6 +90,8 @@ const buildHeadline = (toolName: string, context: ToolContext) => {
 	switch (toolName) {
 		case "proposeProjectUpdate":
 			return t`Suggesting project changes`;
+		case "proposeCustomVerificationTopic":
+			return t`Suggesting a verification prompt`;
 		case "getProjectSettings":
 			return t`Reading project settings`;
 		case "grepDocs":
@@ -311,6 +313,37 @@ export const parseProjectUpdateSuggestion = (
 			})),
 			projectId: String(payload.project_id ?? ""),
 			summary: String(payload.summary ?? ""),
+		};
+	} catch {
+		return null;
+	}
+};
+
+export type ParsedCustomVerificationTopicSuggestion = {
+	projectId: string;
+	label: string;
+	prompt: string;
+	reason: string;
+};
+
+/** Returns the structured suggestion when a completed tool activity is a
+ * proposeCustomVerificationTopic result, else null. */
+export const parseCustomVerificationTopicSuggestion = (
+	activity: ToolActivity,
+): ParsedCustomVerificationTopicSuggestion | null => {
+	if (activity.toolName !== "proposeCustomVerificationTopic") return null;
+	if (activity.status !== "completed" || !activity.rawOutput) return null;
+	try {
+		const payload = JSON.parse(activity.rawOutput);
+		if (payload?.kind !== "custom_verification_topic_suggestion") return null;
+		const label = String(payload.label ?? "").trim();
+		const prompt = String(payload.prompt ?? "").trim();
+		if (!label || !prompt) return null;
+		return {
+			label,
+			projectId: String(payload.project_id ?? ""),
+			prompt,
+			reason: String(payload.reason ?? ""),
 		};
 	} catch {
 		return null;
