@@ -1,6 +1,7 @@
 import { Trans } from "@lingui/react/macro";
-import { Stack, Text, Title } from "@mantine/core";
+import { Divider, Stack, Text, Title } from "@mantine/core";
 import { useParams } from "react-router";
+import { LiveFunnelSection } from "@/components/conversation/LiveFunnelSection";
 import { LiveMonitorSection } from "@/components/conversation/LiveMonitorSection";
 import { PageContainer } from "@/components/layout/PageContainer";
 
@@ -21,6 +22,10 @@ export const ProjectMonitorRoute = () => {
 						</Trans>
 					</Text>
 				</Stack>
+
+				{projectId && <LiveFunnelSection projectId={projectId} />}
+
+				<Divider />
 
 				{projectId && <LiveMonitorSection projectId={projectId} standalone />}
 			</Stack>
