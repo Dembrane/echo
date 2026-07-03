@@ -21,7 +21,6 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import {
 	IconAlertCircle,
-	IconBraces,
 	IconChevronDown,
 	IconChevronRight,
 	IconPlayerStop,
@@ -313,135 +312,61 @@ const toHistoryMessage = (message: RenderMessage): HistoryLikeMessage =>
 
 type ToolActivityItem = Extract<TimelineItem, { kind: "tool" }>;
 
-/** A single tool activity row (humane label + status), with the raw
- * input/output tucked behind an expand for developers. */
-const ToolActivityRow = ({
-	item,
-	expanded,
-	onToggle,
-}: {
-	item: ToolActivityItem;
-	expanded: boolean;
-	onToggle: () => void;
-}) => {
+/** A single humane tool-activity line: status dot, plain-language headline,
+ * and a timestamp. Raw tool input/output is intentionally NOT shown here — it
+ * is internal machinery and lives on the /debug page, not in the host chat. */
+const ToolActivityRow = ({ item }: { item: ToolActivityItem }) => {
 	const statusMeta = TOOL_STATUS_META[item.status];
-	const hasRawData = Boolean(item.rawInput || item.rawOutput || item.rawError);
 	return (
-		<Stack gap={4} {...testId(`agentic-tool-row-${item.id}`)}>
-			<Group justify="space-between" gap="xs" wrap="nowrap">
-				<Group gap={8} wrap="nowrap" className="min-w-0 flex-1">
-					<Box
-						aria-hidden="true"
-						className={`mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full ${item.status === "running" ? "animate-pulse" : ""}`}
-						style={{ backgroundColor: statusMeta.dotColor }}
-					/>
-					<Text className="min-w-0 flex-1 truncate text-xs leading-4 text-slate-700">
-						{item.headline}
-					</Text>
-				</Group>
-				<Group gap={6} wrap="nowrap" className="shrink-0 self-start">
-					<Text className="pt-[1px] text-xs text-slate-500">
-						{formatDate(new Date(item.timestamp), "h:mm a")}
-					</Text>
-					{hasRawData && (
-						<Tooltip label={expanded ? t`Hide details` : t`Show details`}>
-							<ActionIcon
-								variant={expanded ? "light" : "subtle"}
-								color="gray"
-								size="xs"
-								radius="xl"
-								aria-label={expanded ? t`Hide details` : t`Show details`}
-								onClick={onToggle}
-								{...testId(`agentic-tool-raw-toggle-${item.id}`)}
-							>
-								<IconBraces size={10} />
-							</ActionIcon>
-						</Tooltip>
-					)}
-				</Group>
+		<Group
+			justify="space-between"
+			gap="xs"
+			wrap="nowrap"
+			{...testId(`agentic-tool-row-${item.id}`)}
+		>
+			<Group gap={8} wrap="nowrap" className="min-w-0 flex-1">
+				<Box
+					aria-hidden="true"
+					className={`h-1.5 w-1.5 shrink-0 rounded-full ${item.status === "running" ? "animate-pulse" : ""}`}
+					style={{ backgroundColor: statusMeta.dotColor }}
+				/>
+				<Text className="min-w-0 flex-1 truncate text-xs leading-4 text-slate-700">
+					{item.headline}
+				</Text>
 			</Group>
-			<Collapse in={expanded}>
-				<Stack
-					gap={6}
-					className="rounded border border-slate-200 bg-white p-2"
-					{...testId(`agentic-tool-raw-panel-${item.id}`)}
-				>
-					{item.rawInput && (
-						<Box>
-							<Text className="text-xs uppercase tracking-wide text-slate-500">
-								<Trans>Input</Trans>
-							</Text>
-							<Text
-								size="xs"
-								component="pre"
-								className="mt-1 whitespace-pre-wrap break-words rounded border border-slate-200 bg-slate-50 p-2 font-mono text-xs leading-4"
-							>
-								{item.rawInput}
-							</Text>
-						</Box>
-					)}
-					{item.rawOutput && (
-						<Box>
-							<Text className="text-xs uppercase tracking-wide text-slate-500">
-								<Trans>Output</Trans>
-							</Text>
-							<Text
-								size="xs"
-								component="pre"
-								className="mt-1 whitespace-pre-wrap break-words rounded border border-slate-200 bg-slate-50 p-2 font-mono text-xs leading-4"
-							>
-								{item.rawOutput}
-							</Text>
-						</Box>
-					)}
-					{item.rawError && (
-						<Box>
-							<Text
-								className="text-xs uppercase tracking-wide"
-								style={{ color: "var(--agentic-tool-status-error-text)" }}
-							>
-								<Trans>Error</Trans>
-							</Text>
-							<Text
-								size="xs"
-								component="pre"
-								className="mt-1 whitespace-pre-wrap break-words rounded border border-red-100 bg-red-50 p-2 font-mono text-xs leading-4"
-							>
-								{item.rawError}
-							</Text>
-						</Box>
-					)}
-				</Stack>
-			</Collapse>
-		</Stack>
+			<Text className="shrink-0 pt-[1px] text-xs text-slate-500">
+				{formatDate(new Date(item.timestamp), "h:mm a")}
+			</Text>
+		</Group>
 	);
 };
 
-/** Consecutive tool activities, folded into one quiet strip. While the agent
- * is working it shows the live step; once done it reads "Worked through N
- * steps" and expands to the individual steps. Keeps the thread conversational
- * for hosts while preserving the detail for developers. */
+/** Folds consecutive tool activity into one calm block. A single step renders
+ * as one line (no redundant expand); several steps collapse behind a summary
+ * that expands to the plain-language list. No raw tool I/O either way. */
 const ToolActivityGroup = ({
 	items,
 	expanded,
 	onToggle,
-	expandedToolIds,
-	onToggleTool,
 }: {
 	items: ToolActivityItem[];
 	expanded: boolean;
 	onToggle: () => void;
-	expandedToolIds: Record<string, boolean>;
-	onToggleTool: (toolId: string) => void;
 }) => {
 	const running = items.some((i) => i.status === "running");
 	const errored = items.some((i) => i.status === "error");
 	const runningItem = items.find((i) => i.status === "running");
+	const isSingle = items.length === 1;
 	const summary = running
 		? (runningItem?.headline ?? t`Working...`)
-		: items.length === 1
+		: isSingle
 			? items[0].headline
 			: t`Worked through ${items.length} steps`;
+	const dotColor = errored
+		? "var(--agentic-tool-status-error-dot)"
+		: running
+			? "var(--agentic-tool-status-running-dot)"
+			: "var(--agentic-tool-status-completed-dot)";
 
 	return (
 		<Box className="flex justify-start">
@@ -453,55 +378,48 @@ const ToolActivityGroup = ({
 					justify="space-between"
 					gap="xs"
 					wrap="nowrap"
-					className="cursor-pointer"
-					onClick={onToggle}
+					className={isSingle ? undefined : "cursor-pointer"}
+					onClick={isSingle ? undefined : onToggle}
 				>
 					<Group gap={8} wrap="nowrap" className="min-w-0 flex-1">
 						<Box
 							aria-hidden="true"
 							className={`h-1.5 w-1.5 shrink-0 rounded-full ${running ? "animate-pulse" : ""}`}
-							style={{
-								backgroundColor: errored
-									? "var(--agentic-tool-status-error-dot)"
-									: running
-										? "var(--agentic-tool-status-running-dot)"
-										: "var(--agentic-tool-status-completed-dot)",
-							}}
+							style={{ backgroundColor: dotColor }}
 						/>
 						<Text className="min-w-0 flex-1 truncate text-xs italic text-slate-600">
 							{summary}
 						</Text>
 					</Group>
-					<ActionIcon
-						variant="subtle"
-						color="gray"
-						size="xs"
-						radius="xl"
-						aria-label={expanded ? t`Hide steps` : t`Show steps`}
-						onClick={(event) => {
-							event.stopPropagation();
-							onToggle();
-						}}
-					>
-						{expanded ? (
-							<IconChevronDown size={12} />
-						) : (
-							<IconChevronRight size={12} />
-						)}
-					</ActionIcon>
+					{!isSingle && (
+						<ActionIcon
+							variant="subtle"
+							color="gray"
+							size="xs"
+							radius="xl"
+							aria-label={expanded ? t`Hide steps` : t`Show steps`}
+							onClick={(event) => {
+								event.stopPropagation();
+								onToggle();
+							}}
+						>
+							{expanded ? (
+								<IconChevronDown size={12} />
+							) : (
+								<IconChevronRight size={12} />
+							)}
+						</ActionIcon>
+					)}
 				</Group>
-				<Collapse in={expanded}>
-					<Stack gap={8} className="mt-2 pl-1">
-						{items.map((item) => (
-							<ToolActivityRow
-								key={item.id}
-								item={item}
-								expanded={Boolean(expandedToolIds[item.id])}
-								onToggle={() => onToggleTool(item.id)}
-							/>
-						))}
-					</Stack>
-				</Collapse>
+				{!isSingle && (
+					<Collapse in={expanded}>
+						<Stack gap={8} className="mt-2 pl-1">
+							{items.map((item) => (
+								<ToolActivityRow key={item.id} item={item} />
+							))}
+						</Stack>
+					</Collapse>
+				)}
 			</Paper>
 		</Box>
 	);
@@ -531,9 +449,6 @@ export const AgenticChatPanel = ({
 	const [isHydratingStoredRun, setIsHydratingStoredRun] = useState(false);
 	const [streamFailureCount, setStreamFailureCount] = useState(0);
 	const [error, setError] = useState<string | null>(null);
-	const [expandedToolIds, setExpandedToolIds] = useState<
-		Record<string, boolean>
-	>({});
 	const [expandedGroupIds, setExpandedGroupIds] = useState<
 		Record<string, boolean>
 	>({});
@@ -818,7 +733,6 @@ export const AgenticChatPanel = ({
 		setIsSubmitting(false);
 		setIsHydratingStoredRun(false);
 		setStreamFailureCount(0);
-		setExpandedToolIds({});
 	}, [chatId, stopStream]);
 
 	useEffect(() => {
@@ -925,8 +839,8 @@ export const AgenticChatPanel = ({
 		});
 	}, [chatId, projectId, queryClient]);
 
-	const handleSubmit = async () => {
-		const message = input.trim();
+	const handleSubmit = async (overrideMessage?: string) => {
+		const message = (overrideMessage ?? input).trim();
 		if (!message || !projectId || !chatId) return;
 		if (isInFlightStatus(runStatus)) return;
 
@@ -1038,12 +952,6 @@ export const AgenticChatPanel = ({
 	const liveRunStatusText =
 		liveToolActivity?.headline ?? t`Agent is working...`;
 	const showExistingChatLoading = isHydratingStoredRun && timeline.length === 0;
-	const toggleToolDetails = useCallback((toolId: string) => {
-		setExpandedToolIds((previous) => ({
-			...previous,
-			[toolId]: !previous[toolId],
-		}));
-	}, []);
 	const toggleGroupDetails = useCallback((groupId: string) => {
 		setExpandedGroupIds((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
 	}, []);
@@ -1173,8 +1081,8 @@ export const AgenticChatPanel = ({
 							<Stack
 								align="center"
 								justify="center"
-								gap="sm"
-								className="absolute inset-0 px-6 text-center"
+								gap="md"
+								className="grow px-6 py-12 text-center"
 								{...testId("agentic-empty-state")}
 							>
 								<IconSparkles
@@ -1191,6 +1099,39 @@ export const AgenticChatPanel = ({
 										first, and nothing is saved until it's approved.
 									</Trans>
 								</Text>
+								<Group
+									justify="center"
+									gap="xs"
+									className="max-w-lg flex-wrap pt-1"
+								>
+									{[
+										{
+											key: "list",
+											label: t`List my conversations`,
+											prompt: t`List the conversations in this project.`,
+										},
+										{
+											key: "themes",
+											label: t`What themes came up?`,
+											prompt: t`What themes came up across the conversations in this project?`,
+										},
+										{
+											key: "settings",
+											label: t`Improve my setup`,
+											prompt: t`Review my project settings and suggest improvements.`,
+										},
+									].map((starter) => (
+										<Button
+											key={starter.key}
+											variant="default"
+											size="xs"
+											radius="xl"
+											onClick={() => void handleSubmit(starter.prompt)}
+										>
+											{starter.label}
+										</Button>
+									))}
+								</Group>
 							</Stack>
 						)}
 
@@ -1234,8 +1175,6 @@ export const AgenticChatPanel = ({
 								items={node.items}
 								expanded={Boolean(expandedGroupIds[node.id])}
 								onToggle={() => toggleGroupDetails(node.id)}
-								expandedToolIds={expandedToolIds}
-								onToggleTool={toggleToolDetails}
 							/>
 						);
 					})}
@@ -1321,6 +1260,7 @@ export const AgenticChatPanel = ({
 						<Box className="rounded-xl border border-slate-200 bg-white px-3 pb-2 pt-2 shadow-sm transition-colors focus-within:border-slate-400">
 							<Textarea
 								variant="unstyled"
+								styles={{ input: { backgroundColor: "transparent" } }}
 								autosize
 								minRows={2}
 								maxRows={10}
