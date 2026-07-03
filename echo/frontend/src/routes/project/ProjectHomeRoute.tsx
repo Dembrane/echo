@@ -165,13 +165,13 @@ export const ProjectHomeRoute = () => {
 					</Group>
 				</Stack>
 
-				{projectId && <LiveMonitorSection projectId={projectId} />}
-
-				{(recentConversationsQuery.isLoading || recentConversations.length > 0) && (
+				{(projectId ||
+					recentConversationsQuery.isLoading ||
+					recentConversations.length > 0) && (
 				<Stack gap="sm">
-					<Group justify="flex-start" align="center" gap="sm">
+					<Group justify="space-between" align="center" gap="sm">
 						<Text size="xs" c="dimmed" tt="uppercase">
-							<Trans>Latest conversations</Trans>
+							<Trans>Live & recent</Trans>
 						</Text>
 						<Button
 							variant="subtle"
@@ -181,6 +181,10 @@ export const ProjectHomeRoute = () => {
 							<Trans>Open all</Trans>
 						</Button>
 					</Group>
+
+					{projectId && (
+						<LiveMonitorSection projectId={projectId} hideHeader />
+					)}
 
 					{recentConversationsQuery.isLoading ? (
 						<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
