@@ -64,15 +64,13 @@ import {
 import { testId } from "@/lib/testUtils";
 import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
-import { toast } from "../common/Toaster";
 import {
 	extractTopLevelToolActivity,
 	parseProjectUpdateSuggestion,
 	type ToolActivity,
 } from "./agenticToolActivity";
-import { ChatAccordionItemMenu, ChatModeIndicator } from "./ChatAccordion";
+import { ChatAccordionItemMenu } from "./ChatAccordion";
 import { ChatHistoryMessage } from "./ChatHistoryMessage";
-import { ChatTemplatesMenu } from "./ChatTemplatesMenu";
 import { formatMessage } from "./chatUtils";
 import { ChatTurnLimitCard, ChatUpgradeModal } from "./FreeTierChatGate";
 import { useChat as useProjectChat } from "./hooks";
@@ -515,7 +513,6 @@ export const AgenticChatPanel = ({
 		content: string;
 		timestamp: string;
 	} | null>(null);
-	const [templateKey, setTemplateKey] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isStopping, setIsStopping] = useState(false);
 	const [isStreaming, setIsStreaming] = useState(false);
@@ -796,7 +793,6 @@ export const AgenticChatPanel = ({
 		setAfterSeq(0);
 		setEvents([]);
 		setError(null);
-		setTemplateKey(null);
 		setIsStopping(false);
 		setIsSubmitting(false);
 		setIsHydratingStoredRun(false);
@@ -907,39 +903,6 @@ export const AgenticChatPanel = ({
 			queryKey: ["projects", projectId, "chats"],
 		});
 	}, [chatId, projectId, queryClient]);
-
-	const handleTemplateSelect = ({
-		content,
-		key,
-	}: {
-		content: string;
-		key: string;
-	}) => {
-		const previousInput = input.trim();
-		const previousTemplateKey = templateKey;
-
-		setInput(content);
-		setTemplateKey(key);
-
-		if (previousInput !== "") {
-			toast(t`Template applied`, {
-				action: {
-					label: t`Undo`,
-					onClick: () => {
-						setInput(previousInput);
-						setTemplateKey(previousTemplateKey);
-					},
-				},
-				duration: 5000,
-			});
-		}
-	};
-
-	useEffect(() => {
-		if (input.trim() === "" && templateKey) {
-			setTemplateKey(null);
-		}
-	}, [input, templateKey]);
 
 	const handleSubmit = async () => {
 		const message = input.trim();
@@ -1107,7 +1070,6 @@ export const AgenticChatPanel = ({
 								</Title>
 							</Tooltip>
 						)}
-						<ChatModeIndicator mode="agentic" size="sm" />
 					</Group>
 					<Group>
 						<CopyRichTextIconButton
@@ -1189,18 +1151,19 @@ export const AgenticChatPanel = ({
 						!pendingUserMessage && (
 							<Stack
 								align="center"
-								gap="xs"
-								className="min-h-[40vh] max-w-md self-center px-4 pt-[12vh] text-center"
+								justify="center"
+								gap="sm"
+								className="absolute inset-0 px-6 text-center"
 								{...testId("agentic-empty-state")}
 							>
 								<IconSparkles
-									size={28}
+									size={26}
 									className="text-[var(--mantine-color-primary-6)]"
 								/>
-								<Title order={3} fw={500}>
+								<Title order={3} fw={500} className="max-w-md">
 									<Trans>Where would you like to start?</Trans>
 								</Title>
-								<Text size="sm" c="dimmed">
+								<Text size="sm" c="dimmed" maw={420}>
 									<Trans>
 										Ask a question about the conversations in this project, or
 										get help setting it up. Any change is proposed for review
@@ -1314,11 +1277,6 @@ export const AgenticChatPanel = ({
 					{atTurnLimit && (
 						<ChatTurnLimitCard onUpgrade={upgradeHandlers.open} />
 					)}
-					<ChatTemplatesMenu
-						onTemplateSelect={handleTemplateSelect}
-						selectedTemplateKey={templateKey}
-						chatMode="agentic"
-					/>
 					<Divider />
 					<form
 						onSubmit={(event) => {
@@ -1326,7 +1284,7 @@ export const AgenticChatPanel = ({
 							void handleSubmit();
 						}}
 					>
-						<Box className="rounded-lg border border-slate-300 bg-white px-3 pb-2 pt-2 transition-colors focus-within:border-[var(--mantine-color-primary-5)]">
+						<Box className="rounded-xl border border-slate-200 bg-white px-3 pb-2 pt-2 shadow-sm transition-colors focus-within:border-slate-400">
 							<Textarea
 								variant="unstyled"
 								autosize
