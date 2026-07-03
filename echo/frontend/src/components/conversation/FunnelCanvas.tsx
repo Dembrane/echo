@@ -18,6 +18,7 @@ const COLORS = {
 	setup: "#4c6ef5",
 	blocked: "#fa5252",
 	recording: "#fa5252",
+	stalled: "#e8590c",
 };
 
 export type NodeDatum =
@@ -45,7 +46,11 @@ const columnOf = (node: NodeDatum): number => {
 };
 
 const colorOf = (node: NodeDatum): string => {
-	if (node.kind === "conversation") return COLORS.recording;
+	if (node.kind === "conversation") {
+		return node.data.recording_health === "stalled"
+			? COLORS.stalled
+			: COLORS.recording;
+	}
 	if (node.data.stage === "mic_blocked") return COLORS.blocked;
 	if (node.data.stage === "scanned") return COLORS.scanned;
 	return COLORS.setup;
@@ -152,7 +157,9 @@ export const FunnelCanvas = ({
 							dead: false,
 							id,
 							kind: node.kind,
-							pulse: node.kind === "conversation",
+							pulse:
+							node.kind === "conversation" &&
+							node.data.recording_health !== "stalled",
 							r: dotR,
 							tx,
 							ty,
@@ -163,7 +170,9 @@ export const FunnelCanvas = ({
 					}
 					p.col = col;
 					p.color = color;
-					p.pulse = node.kind === "conversation";
+					p.pulse =
+						node.kind === "conversation" &&
+						node.data.recording_health !== "stalled";
 					p.tx = tx;
 					p.ty = ty;
 					p.r = dotR;

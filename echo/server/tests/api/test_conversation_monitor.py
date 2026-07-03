@@ -147,6 +147,7 @@ def test_monitor_empty_project() -> None:
         "finished": 0,
         "transcribing": 0,
         "with_errors": 0,
+        "not_receiving": 0,
         "total": 0,
         "pending_transcription": 0,
         "catch_up_eta_seconds": 0,
@@ -307,6 +308,46 @@ def test_monitor_surfaces_metadata_and_telemetry() -> None:
     assert entry["tags"] == ["Morning session", "Team A"]
     assert entry["network"] == {"effective_type": "3g"}
     assert entry["battery"] == {"level": 0.2, "charging": False}
+
+
+def test_monitor_flags_stalled_recording() -> None:
+    # A live conversation that had audio but hasn't received a chunk in a while
+    # (dropped connection) must read as "stalled", not benign "waiting".
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    stale = _iso(now - timedelta(seconds=90))
+    recent_chunks = [
+        {"conversation_id": {"id": "c-stall", "participant_name": "Ada"}, "timestamp": stale, "error": None},
+    ]
+    telemetry = {"c-stall": {"seen": now - timedelta(seconds=3), "state": "recording"}}
+    payload = _build_monitor_payload(
+        recent_chunks, {"c-stall": 4}, {"c-stall": 4}, now, 45, telemetry
+    )
+    entry = payload["conversations"][0]
+    assert entry["is_live"] is True
+    assert entry["recording_health"] == "stalled"
+    assert payload["summary"]["not_receiving"] == 1
+
+
+def test_monitor_receiving_and_waiting_recording_health() -> None:
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    fresh = _iso(now - timedelta(seconds=5))
+    recent_chunks = [
+        {"conversation_id": {"id": "c-ok", "participant_name": "Ada"}, "timestamp": fresh, "error": None},
+    ]
+    telemetry = {
+        "c-ok": {"seen": now - timedelta(seconds=2), "state": "recording"},
+        "c-wait": {"seen": now - timedelta(seconds=2), "state": "waiting"},
+    }
+    extras = [
+        {"id": "c-wait", "participant_name": "Bo", "is_finished": False, "created_at": fresh, "duration": None},
+    ]
+    payload = _build_monitor_payload(
+        recent_chunks, {"c-ok": 3}, {"c-ok": 3}, now, 45, telemetry, None, extras
+    )
+    by_id = {c["id"]: c for c in payload["conversations"]}
+    assert by_id["c-ok"]["recording_health"] == "receiving"
+    assert by_id["c-wait"]["recording_health"] == "waiting"
+    assert payload["summary"]["not_receiving"] == 0
 
 
 def test_monitor_seeds_initiated_conversation_without_chunks() -> None:
@@ -576,6 +617,7 @@ async def test_monitor_endpoint_empty_skips_count_query(monkeypatch) -> None:
         "finished": 0,
         "transcribing": 0,
         "with_errors": 0,
+        "not_receiving": 0,
         "total": 0,
         "pending_transcription": 0,
         "catch_up_eta_seconds": 0,

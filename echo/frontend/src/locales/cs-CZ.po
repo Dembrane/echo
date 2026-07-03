@@ -488,8 +488,8 @@ msgstr "{0, plural, one {# conversation} other {# conversations}}"
 
 #. placeholder {0}: group.liveCount
 #. placeholder {0}: summary.live
-#: src/components/conversation/LiveMonitorSection.tsx:397
-#: src/components/conversation/LiveMonitorSection.tsx:484
+#: src/components/conversation/LiveMonitorSection.tsx:414
+#: src/components/conversation/LiveMonitorSection.tsx:501
 msgid "{0, plural, one {# live} other {# live}}"
 msgstr ""
 
@@ -504,6 +504,11 @@ msgstr ""
 #: src/components/workspace/DiscoverableWorkspaces.tsx:364
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# member} other {# members}}"
+
+#. placeholder {0}: summary.not_receiving
+#: src/components/conversation/LiveMonitorSection.tsx:510
+msgid "{0, plural, one {# not receiving} other {# not receiving}}"
+msgstr ""
 
 #. placeholder {0}: filteredRows.length
 #. placeholder {0}: group.rows.length
@@ -544,12 +549,12 @@ msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# tag} other {# tags}}"
 
 #. placeholder {0}: summary.transcribing
-#: src/components/conversation/LiveMonitorSection.tsx:488
+#: src/components/conversation/LiveMonitorSection.tsx:519
 msgid "{0, plural, one {# transcribing} other {# transcribing}}"
 msgstr ""
 
 #. placeholder {0}: summary.with_errors
-#: src/components/conversation/LiveMonitorSection.tsx:497
+#: src/components/conversation/LiveMonitorSection.tsx:528
 msgid "{0, plural, one {# with errors} other {# with errors}}"
 msgstr ""
 
@@ -943,7 +948,7 @@ msgstr "{sentCount} invites sent."
 msgid "{tag} (preselected)"
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:268
+#: src/components/conversation/LiveFunnelSection.tsx:285
 msgid "{totalActive, plural, one {# active} other {# active}}"
 msgstr ""
 
@@ -1977,7 +1982,7 @@ msgstr "anonymized conversation"
 msgid "Anonymized conversation"
 msgstr "Anonymized conversation"
 
-#: src/components/conversation/FunnelCanvas.tsx:231
+#: src/components/conversation/FunnelCanvas.tsx:255
 msgid "Anonymous"
 msgstr ""
 
@@ -2844,7 +2849,7 @@ msgid "Card"
 msgstr "Card"
 
 #. placeholder {0}: catchUpLabel(summary.catch_up_eta_seconds)
-#: src/components/conversation/LiveMonitorSection.tsx:510
+#: src/components/conversation/LiveMonitorSection.tsx:541
 msgid "catch up {0}"
 msgstr ""
 
@@ -3361,7 +3366,7 @@ msgid "conversation"
 msgstr "conversation"
 
 #: src/features/sidebar/hooks/useSearchHits.ts:224
-#: src/components/conversation/LiveFunnelSection.tsx:311
+#: src/components/conversation/LiveFunnelSection.tsx:341
 msgid "Conversation"
 msgstr "Conversation"
 
@@ -4832,7 +4837,7 @@ msgstr ""
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
-#: src/components/conversation/LiveMonitorSection.tsx:279
+#: src/components/conversation/LiveMonitorSection.tsx:296
 #: src/components/chat/AgenticChatPanel.tsx:292
 #: src/components/chat/AgenticChatPanel.tsx:1126
 msgid "Error"
@@ -5936,7 +5941,7 @@ msgstr "Highlight specific Concept"
 msgid "Home"
 msgstr "Home"
 
-#: src/routes/project/ProjectHomeRoute.tsx:155
+#: src/routes/project/ProjectHomeRoute.tsx:166
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:94
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:54
 msgid "Host guide"
@@ -6554,7 +6559,7 @@ msgstr "Joined {subjectName}"
 msgid "Joined as admin"
 msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:123
+#: src/routes/project/ProjectHomeRoute.tsx:134
 msgid "Jump to"
 msgstr "Jump to"
 
@@ -6654,7 +6659,7 @@ msgid "Language"
 msgstr "Language"
 
 #. placeholder {0}: lastActivityLabel(conversation)
-#: src/components/conversation/LiveMonitorSection.tsx:291
+#: src/components/conversation/LiveMonitorSection.tsx:308
 msgid "Last activity {0}"
 msgstr ""
 
@@ -6695,7 +6700,7 @@ msgstr "Latest"
 #~ msgid "Latest conversations"
 #~ msgstr "Latest conversations"
 
-#: src/routes/project/ProjectHomeRoute.tsx:290
+#: src/routes/project/ProjectHomeRoute.tsx:301
 msgid "Latest report"
 msgstr "Latest report"
 
@@ -6832,7 +6837,7 @@ msgstr ""
 #~ msgid "Live"
 #~ msgstr "Live"
 
-#: src/routes/project/ProjectHomeRoute.tsx:174
+#: src/routes/project/ProjectHomeRoute.tsx:185
 msgid "Live & recent"
 msgstr ""
 
@@ -6849,11 +6854,11 @@ msgstr "Live audio level:"
 #~ msgid "Live audio level:"
 #~ msgstr "Live audio level:"
 
-#: src/components/conversation/LiveMonitorSection.tsx:479
+#: src/components/conversation/LiveMonitorSection.tsx:496
 msgid "Live monitoring"
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:265
+#: src/components/conversation/LiveFunnelSection.tsx:282
 msgid "Live participant flow"
 msgstr ""
 
@@ -6861,7 +6866,7 @@ msgstr ""
 msgid "Live Preview"
 msgstr "Live Preview"
 
-#: src/components/conversation/LiveMonitorSection.tsx:462
+#: src/components/conversation/LiveMonitorSection.tsx:479
 msgid "Live recordings, transcription progress, and errors show up here as participants start recording in the portal."
 msgstr ""
 
@@ -7048,7 +7053,7 @@ msgstr "Longest first"
 msgid "Longest First"
 msgstr "Longest First"
 
-#: src/components/conversation/LiveMonitorSection.tsx:267
+#: src/components/conversation/LiveMonitorSection.tsx:284
 #: src/components/conversation/LiveFunnelSection.tsx:139
 msgid "Low battery"
 msgstr ""
@@ -7658,6 +7663,10 @@ msgstr ""
 #~ msgid "No approved requests."
 #~ msgstr "No approved requests."
 
+#: src/components/conversation/LiveMonitorSection.tsx:269
+msgid "No audio"
+msgstr ""
+
 #: src/components/settings/AuditLogsCard.tsx:630
 msgid "No audit logs match the current filters."
 msgstr "No audit logs match the current filters."
@@ -7919,7 +7928,7 @@ msgstr "No projects match."
 #~ msgid "No quotes available. Generate quotes for this conversation by visiting<0><1> the project library.</1></0>"
 #~ msgstr "No quotes available. Generate quotes for this conversation by visiting<0><1> the project library.</1></0>"
 
-#: src/components/conversation/LiveMonitorSection.tsx:459
+#: src/components/conversation/LiveMonitorSection.tsx:476
 msgid "No recent activity"
 msgstr ""
 
@@ -7956,7 +7965,7 @@ msgstr "No selectable conversations"
 msgid "No subscription"
 msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:240
+#: src/routes/project/ProjectHomeRoute.tsx:251
 #: src/components/conversation/ProjectConversationsPanel.tsx:407
 msgid "No summary yet"
 msgstr "No summary yet"
@@ -8256,7 +8265,7 @@ msgstr ""
 #~ msgid "one-time"
 #~ msgstr "one-time"
 
-#: src/routes/project/ProjectHomeRoute.tsx:229
+#: src/routes/project/ProjectHomeRoute.tsx:240
 #: src/components/conversation/ProjectConversationsPanel.tsx:326
 msgid "Ongoing"
 msgstr "Ongoing"
@@ -8387,7 +8396,7 @@ msgstr ""
 #~ msgid "Open actions"
 #~ msgstr "Open actions"
 
-#: src/routes/project/ProjectHomeRoute.tsx:181
+#: src/routes/project/ProjectHomeRoute.tsx:192
 msgid "Open all"
 msgstr "Open all"
 
@@ -8397,7 +8406,7 @@ msgstr ""
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:378
 #: src/components/conversation/ProjectConversationsPanel.tsx:382
-#: src/components/conversation/LiveFunnelSection.tsx:207
+#: src/components/conversation/LiveFunnelSection.tsx:206
 msgid "Open conversation"
 msgstr "Open conversation"
 
@@ -9312,7 +9321,7 @@ msgstr "Portal Content"
 msgid "Portal description"
 msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:147
+#: src/routes/project/ProjectHomeRoute.tsx:158
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:84
 msgid "Portal editor"
 msgstr "Portal editor"
@@ -9913,8 +9922,8 @@ msgid "Record another conversation"
 msgstr "Record another conversation"
 
 #: src/components/conversation/LiveMonitorSection.tsx:45
-#: src/components/conversation/LiveFunnelSection.tsx:286
-#: src/components/conversation/FunnelCanvas.tsx:229
+#: src/components/conversation/LiveFunnelSection.tsx:312
+#: src/components/conversation/FunnelCanvas.tsx:253
 msgid "Recording"
 msgstr ""
 
@@ -9935,6 +9944,10 @@ msgstr "Recording keeps working, so your participants are unaffected."
 #: src/components/participant/StopRecordingConfirmationModal.tsx:77
 msgid "participant.modal.pause.title"
 msgstr "Recording Paused"
+
+#: src/components/conversation/LiveMonitorSection.tsx:258
+msgid "Recording, but no audio has come in for a while — the participant may have lost connection."
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/view/View.tsx:82
@@ -10201,7 +10214,7 @@ msgstr ""
 msgid "Reply Prompt"
 msgstr "Reply Prompt"
 
-#: src/routes/project/ProjectHomeRoute.tsx:163
+#: src/routes/project/ProjectHomeRoute.tsx:174
 #: src/routes/project/report/ProjectReportRoute.tsx:185
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:99
 #: src/components/report/ReportRenderer.tsx:75
@@ -10609,7 +10622,7 @@ msgstr "Role changed"
 msgid "Role updated"
 msgstr "Role updated"
 
-#: src/components/conversation/LiveMonitorSection.tsx:506
+#: src/components/conversation/LiveMonitorSection.tsx:537
 msgid "Rough estimate to finish transcribing the backlog"
 msgstr ""
 
@@ -10712,7 +10725,7 @@ msgstr ""
 msgid "Scan the QR code or copy the secret into your app."
 msgstr "Scan the QR code or copy the secret into your app."
 
-#: src/components/conversation/LiveFunnelSection.tsx:284
+#: src/components/conversation/LiveFunnelSection.tsx:302
 msgid "Scanned"
 msgstr ""
 
@@ -11228,7 +11241,7 @@ msgstr "Set who can see and join."
 msgid "Setting things up for you"
 msgstr "Setting things up for you"
 
-#: src/components/conversation/LiveFunnelSection.tsx:285
+#: src/components/conversation/LiveFunnelSection.tsx:307
 msgid "Setting up"
 msgstr ""
 
@@ -11277,7 +11290,7 @@ msgstr "Setup"
 msgid "Share report"
 msgstr "Share report"
 
-#: src/routes/project/ProjectHomeRoute.tsx:112
+#: src/routes/project/ProjectHomeRoute.tsx:123
 msgid "Share the project, watch live activity, and jump into the main tools from one place."
 msgstr "Share the project, watch live activity, and jump into the main tools from one place."
 
@@ -11373,7 +11386,7 @@ msgstr "Show"
 msgid "Show {hidden} more"
 msgstr "Show {hidden} more"
 
-#: src/components/conversation/LiveMonitorSection.tsx:418
+#: src/components/conversation/LiveMonitorSection.tsx:435
 msgid "Show {overflow} more"
 msgstr ""
 
@@ -11696,7 +11709,7 @@ msgstr ""
 msgid "Standard access. Collaborates in the workspaces they're added to."
 msgstr "Standard access. Collaborates in the workspaces they're added to."
 
-#: src/routes/project/ProjectHomeRoute.tsx:131
+#: src/routes/project/ProjectHomeRoute.tsx:142
 #: src/routes/project/chat/NewChatRoute.tsx:331
 msgid "Start a chat"
 msgstr "Start a chat"
@@ -13202,7 +13215,7 @@ msgstr "Unsaved changes"
 msgid "Unsubscribe"
 msgstr "Unsubscribe"
 
-#: src/components/conversation/LiveMonitorSection.tsx:336
+#: src/components/conversation/LiveMonitorSection.tsx:353
 msgid "Untagged"
 msgstr ""
 
@@ -13217,7 +13230,7 @@ msgstr ""
 msgid "Untitled"
 msgstr "Untitled"
 
-#: src/routes/project/ProjectHomeRoute.tsx:51
+#: src/routes/project/ProjectHomeRoute.tsx:52
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:94
 #: src/components/project/ProjectUsageAndSharing.tsx:501
 #: src/components/project/ProjectUsageAndSharing.tsx:529
@@ -13375,7 +13388,7 @@ msgstr "Upgrade your workspace to view this conversation"
 msgid "Upgrade your workspace to view transcripts for new conversations."
 msgstr "Upgrade your workspace to view transcripts for new conversations."
 
-#: src/routes/project/ProjectHomeRoute.tsx:139
+#: src/routes/project/ProjectHomeRoute.tsx:150
 #: src/components/project/ProjectUploadSection.tsx:28
 #: src/components/dropzone/UploadConversationDropzone.tsx:540
 #: src/components/conversation/ProjectConversationsPanel.tsx:759
@@ -13746,7 +13759,7 @@ msgstr ""
 #~ msgid "Visitor"
 #~ msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:312
+#: src/components/conversation/LiveFunnelSection.tsx:342
 msgid "Visitor details"
 msgstr ""
 
@@ -13953,7 +13966,7 @@ msgstr "We've added organisations so you can organize projects and share them wi
 msgid "We've sent a verification link to <0>{0}</0>. Open the email and click the link to continue."
 msgstr "We've sent a verification link to <0>{0}</0>. Open the email and click the link to continue."
 
-#: src/components/conversation/LiveMonitorSection.tsx:262
+#: src/components/conversation/LiveMonitorSection.tsx:279
 #: src/components/conversation/LiveFunnelSection.tsx:131
 msgid "Weak network"
 msgstr ""
@@ -14151,7 +14164,7 @@ msgstr "When finishing the conversation, participants who haven't verified yet w
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 msgstr ""
 
-#: src/components/conversation/LiveFunnelSection.tsx:275
+#: src/components/conversation/LiveFunnelSection.tsx:292
 msgid "When participants scan the QR code, they'll appear here and flow across the stages in real time."
 msgstr ""
 
@@ -14769,7 +14782,7 @@ msgstr "Your email is verified. Taking you to the login page."
 #~ msgid "Your free plan includes one conversation. Upgrade to add more to the chat."
 #~ msgstr ""
 
-#: src/routes/project/ProjectHomeRoute.tsx:326
+#: src/routes/project/ProjectHomeRoute.tsx:337
 msgid "Your free plan includes one conversation. Upgrade to open the rest."
 msgstr ""
 

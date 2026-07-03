@@ -24,6 +24,16 @@ export type ParticipantState =
 	| "text"
 	| "idle";
 
+// The host's first question: is audio actually coming in? "stalled" is the
+// flag — should be recording but nothing has arrived for a while.
+export type RecordingHealth =
+	| "receiving"
+	| "stalled"
+	| "paused"
+	| "waiting"
+	| "idle"
+	| "finished";
+
 export type MonitorNetwork = {
 	online?: boolean;
 	effective_type?: string;
@@ -42,6 +52,7 @@ export type MonitorConversation = {
 	is_live: boolean;
 	is_finished: boolean;
 	state: ParticipantState;
+	recording_health: RecordingHealth;
 	mode: "voice" | "text" | null;
 	tags: string[];
 	language: string | null;
@@ -65,6 +76,7 @@ export type MonitorSummary = {
 	finished: number;
 	transcribing: number;
 	with_errors: number;
+	not_receiving: number;
 	total: number;
 	pending_transcription: number;
 	catch_up_eta_seconds: number;
@@ -111,6 +123,7 @@ const EMPTY_SUMMARY: MonitorSummary = {
 	catch_up_eta_seconds: 0,
 	finished: 0,
 	live: 0,
+	not_receiving: 0,
 	pending_transcription: 0,
 	total: 0,
 	transcribing: 0,
