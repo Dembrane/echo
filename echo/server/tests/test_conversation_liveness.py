@@ -42,13 +42,52 @@ def _run(coro):
 
 
 def test_mark_sets_key_with_ttl(fake_redis: _FakeRedis) -> None:
+    import json
+
     now = datetime(2026, 7, 3, 10, 0, 0, tzinfo=timezone.utc)
     _run(liveness.mark_conversation_seen("conv-1", now=now))
 
     key = "conversation_liveness:conv-1"
     assert key in fake_redis.store
     assert fake_redis.expires[key] == liveness.LIVENESS_TTL_SECONDS
-    assert fake_redis.store[key].decode() == now.isoformat()
+    stored = json.loads(fake_redis.store[key].decode())
+    assert stored["seen"] == now.isoformat()
+
+
+def test_mark_persists_telemetry(fake_redis: _FakeRedis) -> None:
+    now = datetime(2026, 7, 3, 10, 0, 0, tzinfo=timezone.utc)
+    _run(
+        liveness.mark_conversation_seen(
+            "conv-1",
+            now=now,
+            telemetry={
+                "state": "paused",
+                "mode": "voice",
+                "network": {"effective_type": "4g"},
+                "battery": {"level": 0.5},
+            },
+        )
+    )
+    result = _run(liveness.get_telemetry_many(["conv-1"]))
+    entry = result["conv-1"]
+    assert entry["seen"] == now
+    assert entry["state"] == "paused"
+    assert entry["mode"] == "voice"
+    assert entry["network"] == {"effective_type": "4g"}
+    assert entry["battery"] == {"level": 0.5}
+
+
+def test_get_telemetry_many_reads_legacy_bare_timestamp(fake_redis: _FakeRedis) -> None:
+    # A value written by the pre-telemetry code is a bare ISO string.
+    now = datetime(2026, 7, 3, 10, 0, 0, tzinfo=timezone.utc)
+    fake_redis.store["conversation_liveness:legacy"] = now.isoformat().encode("utf-8")
+
+    result = _run(liveness.get_telemetry_many(["legacy"]))
+    assert result["legacy"]["seen"] == now
+    assert "state" not in result["legacy"]
+
+    seen = _run(liveness.get_last_seen_many(["legacy"]))
+    assert seen["legacy"] == now
 
 
 def test_get_last_seen_many_parses_and_skips_missing(fake_redis: _FakeRedis) -> None:

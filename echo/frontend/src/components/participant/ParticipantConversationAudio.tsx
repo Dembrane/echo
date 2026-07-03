@@ -29,7 +29,11 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { finishConversation, pingConversation } from "@/lib/api";
+import {
+	finishConversation,
+	type ParticipantPingTelemetry,
+	pingConversation,
+} from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { I18nLink } from "../common/i18nLink";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
@@ -51,6 +55,39 @@ import { useConversationArtefacts } from "./verify/hooks";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
+
+// Best-effort device telemetry for the host monitor. The Network Information
+// and Battery Status APIs are not on every browser (Safari/Firefox lack
+// Battery entirely), so both degrade to `undefined` and are simply omitted.
+const readNetworkTelemetry = (): ParticipantPingTelemetry["network"] => {
+	const nav = navigator as Navigator & {
+		connection?: { effectiveType?: string; downlink?: number; rtt?: number };
+	};
+	const conn = nav.connection;
+	const online = typeof navigator.onLine === "boolean" ? navigator.onLine : undefined;
+	if (!conn && online === undefined) return undefined;
+	return {
+		online,
+		effective_type: conn?.effectiveType,
+		downlink: conn?.downlink,
+		rtt: conn?.rtt,
+	};
+};
+
+const readBatteryTelemetry = async (): Promise<
+	ParticipantPingTelemetry["battery"]
+> => {
+	const nav = navigator as Navigator & {
+		getBattery?: () => Promise<{ level: number; charging: boolean }>;
+	};
+	if (typeof nav.getBattery !== "function") return undefined;
+	try {
+		const battery = await nav.getBattery();
+		return { level: battery.level, charging: battery.charging };
+	} catch {
+		return undefined;
+	}
+};
 
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
@@ -187,17 +224,46 @@ export const ParticipantConversationAudio = () => {
 
 	useWindowEvent("microphoneDeviceChanged", handleMicrophoneDeviceChanged);
 
-	// Liveness beacon: while recording, ping the server every few seconds so
-	// the host monitor sees this conversation as live between audio chunks
-	// (chunks can be tens of seconds apart, or gap during a pause).
+	// What the participant is doing right now, for the host monitor. Reported
+	// with every beacon so the monitor can show recording / paused / verifying
+	// / just-waiting between audio chunks.
+	const participantState = isStopping
+		? "finishing"
+		: isOnVerifyRoute
+			? "verifying"
+			: isOnRefineRoute
+				? "refining"
+				: isRecording
+					? "recording"
+					: stoppedRecordingTime !== null
+						? "paused"
+						: "waiting";
+
+	// Liveness + telemetry beacon. Runs the whole time the participant is on the
+	// conversation screen (not just while recording) so the monitor sees a
+	// session the moment it is initiated, and reflects pauses / verify without
+	// waiting for the next chunk. Best-effort; failures never disrupt recording.
 	useEffect(() => {
-		if (!isRecording || !conversationId) return;
-		void pingConversation(conversationId);
-		const interval = setInterval(() => {
-			void pingConversation(conversationId);
-		}, 5000);
-		return () => clearInterval(interval);
-	}, [isRecording, conversationId]);
+		if (!conversationId) return;
+		let cancelled = false;
+		const sendPing = async () => {
+			const battery = await readBatteryTelemetry();
+			if (cancelled) return;
+			void pingConversation(conversationId, {
+				project_id: projectId,
+				state: participantState,
+				mode: "voice",
+				network: readNetworkTelemetry(),
+				battery,
+			});
+		};
+		void sendPing();
+		const interval = setInterval(() => void sendPing(), 5000);
+		return () => {
+			cancelled = true;
+			clearInterval(interval);
+		};
+	}, [conversationId, projectId, participantState]);
 
 	// Monitor conversation status during recording - handle deletion mid-recording
 	useEffect(() => {

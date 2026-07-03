@@ -27,15 +27,21 @@ Design notes:
 
 from __future__ import annotations
 
-from typing import Any, Literal, Optional
+import json
+import time
+import asyncio
+from typing import Any, Literal, Optional, AsyncGenerator
 from logging import getLogger
 from datetime import datetime, timezone, timedelta
 
-from fastapi import Query, APIRouter, HTTPException
+from fastapi import Query, Request, APIRouter, HTTPException
 from pydantic import BaseModel
+from fastapi.responses import StreamingResponse
 
+from dembrane.redis_async import get_redis_client
 from dembrane.tier_capacity import is_conversation_locked
 from dembrane.directus_async import async_directus
+from dembrane.monitor_stream import channel_for_project
 from dembrane.search_filters import merge_search_filter
 from dembrane.api.v2.bff._access import (
     filter_exclude_deleted,
@@ -44,7 +50,10 @@ from dembrane.api.v2.bff._access import (
     resolve_conversation_chunk_access,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
-from dembrane.conversation_liveness import get_last_seen_many
+from dembrane.conversation_liveness import (
+    VALID_PARTICIPANT_STATES,
+    get_telemetry_many,
+)
 
 router = APIRouter()
 logger = getLogger("api.v2.bff.conversations")
@@ -629,6 +638,28 @@ MONITOR_LOOKBACK_SECONDS = 1800
 MONITOR_MAX_CHUNKS = 500
 # Truncate the surfaced error so a stack-trace-ish message stays a badge.
 MONITOR_ERROR_MESSAGE_MAX_LEN = 240
+# Keep the surfaced live-transcript to a short, fading one-liner, not a wall.
+MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN = 280
+
+
+def _monitor_lifecycle_state(
+    *, is_finished: bool, reported_state: Any, is_live: bool, chunk_count: int
+) -> str:
+    """Fold participant-reported telemetry and observed activity into one state.
+
+    Precedence: an explicit finish wins; then whatever the portal last reported
+    (recording / paused / verifying / ...); then observed liveness (a recent
+    chunk implies recording); then whether any audio has landed at all.
+    """
+    if is_finished:
+        return "finished"
+    if isinstance(reported_state, str) and reported_state in VALID_PARTICIPANT_STATES:
+        return reported_state
+    if is_live:
+        return "recording"
+    if chunk_count > 0:
+        return "idle"
+    return "initiated"
 
 
 def _parse_directus_timestamp(value: Any) -> Optional[datetime]:
@@ -676,22 +707,26 @@ def _build_monitor_payload(
     transcribed_counts: dict[str, int],
     now: datetime,
     live_window_seconds: int,
-    last_seen: Optional[dict[str, datetime]] = None,
+    telemetry: Optional[dict[str, dict]] = None,
+    tag_map: Optional[dict[str, list[str]]] = None,
 ) -> dict:
     """Aggregate recent chunks into a per-conversation monitor view.
 
     `recent_chunks` MUST be newest-first (sorted by -timestamp). Each row
-    carries conversation_id (dict with id + participant_name, or a bare
-    id string), timestamp, and error. `chunk_counts` /
+    carries conversation_id (dict with id + participant_name, or a bare id
+    string), timestamp, error, transcript, and language. `chunk_counts` /
     `transcribed_counts` are per-conversation totals (all chunks vs. those
     with a non-empty transcript) so the payload can show transcription
-    progress. `last_seen` maps conversation_id -> the latest participant
-    liveness ping (Redis), the primary "still here" signal: a conversation
-    is live if it pinged OR uploaded a chunk within the window. Pure
-    function so liveness, error detection, and transcription state are
-    unit-testable without Directus or Redis.
+    progress. `telemetry` maps conversation_id -> the latest participant ping
+    (Redis): its `seen` datetime is the primary "still here" signal (live if
+    it pinged OR uploaded a chunk within the window), and it may carry the
+    reported lifecycle state plus best-effort network/battery. `tag_map` maps
+    conversation_id -> project-tag labels. Pure function so liveness, state,
+    error detection, and transcription progress are unit-testable without
+    Directus or Redis.
     """
-    last_seen = last_seen or {}
+    telemetry = telemetry or {}
+    tag_map = tag_map or {}
     live_cutoff = now - timedelta(seconds=live_window_seconds)
 
     order: list[str] = []
@@ -720,6 +755,8 @@ def _build_monitor_payload(
                 "last_chunk_dt": None,
                 "has_error": False,
                 "error_message": None,
+                "latest_transcript": None,
+                "language": None,
             }
             by_conv[conv_id] = entry
             order.append(conv_id)
@@ -731,11 +768,19 @@ def _build_monitor_payload(
             entry["last_chunk_dt"] = chunk_dt
             entry["last_chunk_at"] = chunk.get("timestamp")
 
+        # Rows are newest-first, so the first transcript / language we see for a
+        # conversation is its most recent one — keep that.
+        transcript = chunk.get("transcript")
+        if entry["latest_transcript"] is None and isinstance(transcript, str) and transcript.strip():
+            entry["latest_transcript"] = transcript.strip()[:MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN]
+        if entry["language"] is None:
+            language = chunk.get("desired_language") or chunk.get("detected_language")
+            if isinstance(language, str) and language.strip():
+                entry["language"] = language.strip()
+
         error = chunk.get("error")
         if isinstance(error, str) and error.strip():
             entry["has_error"] = True
-            # Rows are newest-first, so the first error we see for a
-            # conversation is its most recent failure — keep that one.
             if entry["error_message"] is None:
                 entry["error_message"] = error.strip()[:MONITOR_ERROR_MESSAGE_MAX_LEN]
 
@@ -746,10 +791,11 @@ def _build_monitor_payload(
     transcribing_count = 0
     for conv_id in order:
         entry = by_conv[conv_id]
+        tele = telemetry.get(conv_id) or {}
         # Liveness folds two signals: the participant ping (primary, arrives
         # every few seconds) and audio-chunk arrival (chunks can be tens of
         # seconds apart). Take the most recent of the two.
-        seen_dt = last_seen.get(conv_id)
+        seen_dt = tele.get("seen") if isinstance(tele.get("seen"), datetime) else None
         activity_dt = entry["last_chunk_dt"]
         if seen_dt is not None and (activity_dt is None or seen_dt > activity_dt):
             activity_dt = seen_dt
@@ -767,6 +813,12 @@ def _build_monitor_payload(
             chunk_count=chunk_count,
             transcribed_count=transcribed_count,
         )
+        state = _monitor_lifecycle_state(
+            is_finished=entry["is_finished"],
+            reported_state=tele.get("state"),
+            is_live=is_live,
+            chunk_count=chunk_count,
+        )
 
         if is_live:
             live_count += 1
@@ -782,6 +834,13 @@ def _build_monitor_payload(
                 "label": entry["label"],
                 "is_live": is_live,
                 "is_finished": entry["is_finished"],
+                "state": state,
+                "mode": tele.get("mode"),
+                "tags": tag_map.get(conv_id, []),
+                "language": entry["language"],
+                "latest_transcript": entry["latest_transcript"],
+                "network": tele.get("network"),
+                "battery": tele.get("battery"),
                 "last_chunk_at": entry["last_chunk_at"],
                 "last_seen_at": last_seen_at,
                 "chunk_count": chunk_count,
@@ -842,6 +901,9 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
                     "conversation_id.is_finished",
                     "timestamp",
                     "error",
+                    "transcript",
+                    "detected_language",
+                    "desired_language",
                 ],
                 "sort": ["-timestamp"],
                 "limit": MONITOR_MAX_CHUNKS,
@@ -909,19 +971,104 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
                 if cid:
                     transcribed_counts[cid] = cnt
 
-    # Participant liveness pings (Redis) — the primary "still here" signal,
-    # finer-grained than chunk arrival. Best-effort: a Redis blip degrades
-    # gracefully to chunk-only liveness rather than failing the monitor.
-    last_seen: dict[str, datetime] = {}
+    # Tag labels for the active set, so the monitor can group by tag. Bounded:
+    # the active set is already capped by the lookback + chunk cap above.
+    tag_map: dict[str, list[str]] = {}
     if conv_ids:
         try:
-            last_seen = await get_last_seen_many(conv_ids)
+            tag_rows = await async_directus.get_items(
+                "conversation_project_tag",
+                {
+                    "query": {
+                        "filter": {"conversation_id": {"_in": conv_ids}},
+                        "fields": ["conversation_id", "project_tag_id.text"],
+                        "limit": 2000,
+                    }
+                },
+            )
+            if isinstance(tag_rows, list):
+                for row in tag_rows:
+                    cid = row.get("conversation_id")
+                    project_tag = row.get("project_tag_id")
+                    text = project_tag.get("text") if isinstance(project_tag, dict) else None
+                    if cid and isinstance(text, str) and text.strip():
+                        tag_map.setdefault(cid, []).append(text.strip())
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Monitor tag read failed: %s", exc)
+
+    # Participant liveness + telemetry pings (Redis) — the primary "still here"
+    # signal, finer-grained than chunk arrival, and the source of the reported
+    # lifecycle state / network / battery. Best-effort: a Redis blip degrades
+    # gracefully to chunk-only liveness rather than failing the monitor.
+    telemetry: dict[str, dict] = {}
+    if conv_ids:
+        try:
+            telemetry = await get_telemetry_many(conv_ids)
         except Exception as exc:  # noqa: BLE001
             logger.warning("Monitor liveness ping read failed: %s", exc)
 
     return _build_monitor_payload(
-        recent_chunks, chunk_counts, transcribed_counts, now, window_seconds, last_seen
+        recent_chunks,
+        chunk_counts,
+        transcribed_counts,
+        now,
+        window_seconds,
+        telemetry,
+        tag_map,
     )
+
+
+# The monitor snapshot is cached in Redis so Directus is hit at most ~once per
+# this many seconds PER PROJECT, no matter how many hosts are watching or how
+# often participants ping. Every reader (the poll endpoint and each SSE
+# connection) shares one computed snapshot; a thundering herd on expiry is
+# avoided with a short compute lock.
+MONITOR_SNAPSHOT_CACHE_TTL_SECONDS = 3
+_MONITOR_SNAPSHOT_KEY_PREFIX = "monitor:snapshot:"
+
+
+async def get_project_monitor_snapshot(project_id: str, window_seconds: int) -> dict:
+    """Return the monitor payload, served from a short-lived shared Redis cache.
+
+    This is the Directus-load valve: the expensive `gather_project_monitor`
+    read runs at most once per TTL per project, and its result is reused by
+    every concurrent watcher. All Redis use is best-effort — if the cache is
+    unavailable we simply compute directly.
+    """
+    key = f"{_MONITOR_SNAPSHOT_KEY_PREFIX}{project_id}:{window_seconds}"
+    lock_key = f"{key}:lock"
+    client = None
+    try:
+        client = await get_redis_client()
+        cached = await client.get(key)
+        if cached is not None:
+            text = cached.decode("utf-8") if isinstance(cached, (bytes, bytearray)) else cached
+            return json.loads(text)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("monitor snapshot cache read failed for %s: %s", project_id, exc)
+        client = None
+
+    # Cache miss. Take a short lock so only one worker recomputes; if we can't
+    # get it, another worker is already computing, so recompute directly rather
+    # than block (correctness over a rare duplicate read).
+    if client is not None:
+        try:
+            await client.set(lock_key, b"1", nx=True, ex=5)
+        except Exception:  # noqa: BLE001
+            pass
+
+    payload = await gather_project_monitor(project_id, window_seconds)
+
+    if client is not None:
+        try:
+            await client.set(
+                key,
+                json.dumps(payload, default=str),
+                ex=MONITOR_SNAPSHOT_CACHE_TTL_SECONDS,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("monitor snapshot cache write failed for %s: %s", project_id, exc)
+    return payload
 
 
 @router.get("/monitor")
@@ -940,10 +1087,108 @@ async def monitor_conversations(
     Returns one row per recently-active conversation (a chunk or ping in the
     last MONITOR_LOOKBACK_SECONDS), each with a live indicator, last activity
     time, transcription progress, and an error state, plus a project rollup.
+    Served from the shared snapshot cache to keep Directus load flat.
     """
     access = await resolve_project_access(project_id, auth)
     access.require("conversation:read")
-    return await gather_project_monitor(project_id, window_seconds)
+    return await get_project_monitor_snapshot(project_id, window_seconds)
+
+
+# How long the stream waits on the pub/sub channel before recomputing anyway.
+# A nudge (participant ping / transcription / finish) wakes it sooner; this is
+# the safety net so it still refreshes if a publish is missed.
+MONITOR_STREAM_POLL_SECONDS = 2.0
+# Emit an SSE comment at least this often so proxies keep the connection open.
+MONITOR_STREAM_HEARTBEAT_SECONDS = 15.0
+
+
+@router.get("/monitor/stream")
+async def monitor_conversations_stream(
+    request: Request,
+    auth: DependencyDirectusSession,
+    project_id: str = Query(..., description="Parent project id."),
+    window_seconds: int = Query(
+        MONITOR_LIVE_WINDOW_SECONDS,
+        ge=5,
+        le=600,
+    ),
+) -> StreamingResponse:
+    """Server-sent-events stream of the live monitor for a project.
+
+    Sends a full `snapshot` event on connect and again whenever the payload
+    changes. A participant ping (with its project_id), a transcription result,
+    or a finish publishes a nudge to the project's Redis channel that wakes the
+    stream immediately; a short poll timeout is the safety net. Heartbeat
+    comments keep proxies from dropping an idle connection.
+    """
+    access = await resolve_project_access(project_id, auth)
+    access.require("conversation:read")
+
+    async def event_stream() -> AsyncGenerator[str, None]:
+        channel = channel_for_project(project_id)
+        pubsub = None
+        try:
+            client = await get_redis_client()
+            pubsub = client.pubsub()
+            await pubsub.subscribe(channel)
+        except Exception as exc:  # noqa: BLE001
+            # Degrade to timeout-only refresh if pub/sub is unavailable.
+            logger.warning("monitor stream subscribe failed for %s: %s", project_id, exc)
+            pubsub = None
+
+        last_serialized: Optional[str] = None
+        last_emit = time.monotonic()
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+
+                try:
+                    # Shared cache: many connections to the same project reuse
+                    # one computed snapshot instead of each hitting Directus.
+                    payload = await get_project_monitor_snapshot(project_id, window_seconds)
+                    serialized = json.dumps(payload, default=str, sort_keys=True)
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning("monitor stream snapshot failed for %s: %s", project_id, exc)
+                    serialized = None
+
+                now_mono = time.monotonic()
+                if serialized is not None and serialized != last_serialized:
+                    last_serialized = serialized
+                    last_emit = now_mono
+                    yield f"event: snapshot\ndata: {serialized}\n\n"
+                elif now_mono - last_emit >= MONITOR_STREAM_HEARTBEAT_SECONDS:
+                    last_emit = now_mono
+                    yield ": keep-alive\n\n"
+
+                # Wait for a nudge, capped by the poll timeout as a safety net.
+                if pubsub is not None:
+                    try:
+                        await pubsub.get_message(
+                            ignore_subscribe_messages=True,
+                            timeout=MONITOR_STREAM_POLL_SECONDS,
+                        )
+                    except Exception:  # noqa: BLE001
+                        await asyncio.sleep(MONITOR_STREAM_POLL_SECONDS)
+                else:
+                    await asyncio.sleep(MONITOR_STREAM_POLL_SECONDS)
+        finally:
+            if pubsub is not None:
+                try:
+                    await pubsub.unsubscribe(channel)
+                    await pubsub.aclose()
+                except Exception:  # noqa: BLE001
+                    pass
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.get("/remaining-count")

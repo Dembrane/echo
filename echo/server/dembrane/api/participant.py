@@ -13,13 +13,17 @@ from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.monitor_stream import publish_monitor_dirty
 from dembrane.service.project import ProjectNotFoundException
 from dembrane.service.conversation import (
     ConversationServiceException,
     ConversationNotFoundException,
     ConversationNotOpenForParticipationException,
 )
-from dembrane.conversation_liveness import mark_conversation_seen
+from dembrane.conversation_liveness import (
+    VALID_PARTICIPANT_STATES,
+    mark_conversation_seen,
+)
 
 logger = getLogger("api.participant")
 
@@ -375,19 +379,82 @@ async def upload_conversation_chunk(
         ) from e
 
 
-@ParticipantRouter.post("/conversations/{conversation_id}/ping", response_model=dict)
-async def ping_conversation(conversation_id: str) -> dict:
-    """Participant liveness beacon, called every few seconds while recording.
+class ConversationNetworkTelemetry(BaseModel):
+    online: Optional[bool] = None
+    # navigator.connection.effectiveType: "4g" | "3g" | "2g" | "slow-2g".
+    effective_type: Optional[str] = None
+    downlink: Optional[float] = None
+    rtt: Optional[int] = None
 
-    Deliberately cheap: it only stamps a short-lived Redis key so the host
-    monitor can tell a conversation is still live between audio chunks. No DB
-    read, and a Redis failure is swallowed so it never disrupts recording.
+
+class ConversationBatteryTelemetry(BaseModel):
+    level: Optional[float] = None  # 0..1
+    charging: Optional[bool] = None
+
+
+class ConversationPingRequest(BaseModel):
+    """Optional telemetry the portal attaches to a liveness beacon.
+
+    Everything is optional and best-effort. Older portals POST no body, and
+    browsers without the Network/Battery APIs simply omit those fields.
+    """
+
+    # The portal knows its project from the URL; it lets us fan a pub/sub
+    # nudge to open monitor streams without a DB lookup on the hot ping path.
+    project_id: Optional[str] = None
+    state: Optional[str] = None
+    mode: Optional[str] = None  # "voice" | "text"
+    screen: Optional[str] = None
+    network: Optional[ConversationNetworkTelemetry] = None
+    battery: Optional[ConversationBatteryTelemetry] = None
+
+
+def _build_ping_telemetry(body: Optional[ConversationPingRequest]) -> dict:
+    """Sanitise untrusted portal telemetry into a small, bounded dict."""
+    if body is None:
+        return {}
+    telemetry: dict = {}
+    if body.state and body.state in VALID_PARTICIPANT_STATES:
+        telemetry["state"] = body.state
+    if body.mode in ("voice", "text"):
+        telemetry["mode"] = body.mode
+    if body.screen:
+        telemetry["screen"] = body.screen.strip()[:40]
+    if body.network is not None:
+        network = body.network.model_dump(exclude_none=True)
+        if isinstance(network.get("effective_type"), str):
+            network["effective_type"] = network["effective_type"][:12]
+        if network:
+            telemetry["network"] = network
+    if body.battery is not None:
+        battery = body.battery.model_dump(exclude_none=True)
+        if battery:
+            telemetry["battery"] = battery
+    return telemetry
+
+
+@ParticipantRouter.post("/conversations/{conversation_id}/ping", response_model=dict)
+async def ping_conversation(
+    conversation_id: str, body: Optional[ConversationPingRequest] = None
+) -> dict:
+    """Participant liveness + telemetry beacon, called every few seconds.
+
+    Deliberately cheap: it stamps a short-lived Redis key with the latest
+    lifecycle state (and best-effort network/battery) so the host monitor can
+    tell what the participant is doing between audio chunks. No DB read, and a
+    Redis failure is swallowed so it never disrupts recording. When the portal
+    includes its project_id, we also nudge any open monitor streams so they
+    refresh in near-real-time instead of waiting for the next poll tick.
     """
     try:
-        await mark_conversation_seen(conversation_id)
+        await mark_conversation_seen(
+            conversation_id, telemetry=_build_ping_telemetry(body) or None
+        )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Liveness ping failed for %s: %s", conversation_id, exc)
         return {"ok": False}
+    if body is not None and body.project_id:
+        await publish_monitor_dirty(body.project_id)
     return {"ok": True}
 
 
