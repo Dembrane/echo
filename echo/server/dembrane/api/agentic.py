@@ -978,6 +978,22 @@ async def list_project_conversations(
     )
 
 
+@AgenticRouter.get("/projects/{project_id}/monitor")
+async def get_project_monitor_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+    window_seconds: int = Query(default=45, ge=5, le=600),
+) -> dict[str, Any]:
+    """Live-conversation status for the agent: which portal conversations are
+    recording right now, transcription progress, and any failures. Same
+    aggregation as the host-facing monitor."""
+    await _assert_project_access(project_id, auth)
+
+    from dembrane.api.v2.bff.conversations import gather_project_monitor
+
+    return await gather_project_monitor(project_id, window_seconds)
+
+
 @AgenticRouter.get("/projects/{project_id}/chats")
 async def list_project_chats_for_agent(
     project_id: str,

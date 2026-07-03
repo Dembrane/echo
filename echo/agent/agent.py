@@ -70,6 +70,9 @@ Use tools when the question needs project data or product knowledge:
 - "Help me set up my project" -> readSkill(project-onboarding.md), then
   getProjectSettings, then proposeProjectUpdate.
 - "What did we discuss before / continue that chat" -> listProjectChats, then readChat.
+- "Is my session live / is it recording / anyone talking now / is anything
+  broken?" -> getLiveConversationStatus, then report the live count, whether
+  transcription is keeping up, and flag any conversation that is failing.
 Do not use tools for greetings, small talk, or questions about this chat.
 When intent is unclear, ask one focused question instead of guessing.
 
@@ -788,6 +791,20 @@ def create_agent_graph(
         return {"chats": chats}
 
     @tool
+    async def getLiveConversationStatus() -> dict[str, Any]:
+        """Check which conversations are recording right now, how transcription
+        is keeping up, and whether any are failing. Use this when the host asks
+        if their session is live, if recording is working, how many people are
+        talking, or whether anything is broken. Returns a summary (counts of
+        live / transcribing / failing) plus per-conversation status."""
+        client = _create_echo_client()
+        try:
+            monitor = await client.get_project_monitor(project_id)
+        finally:
+            await client.close()
+        return monitor
+
+    @tool
     async def readChat(chat_id: str) -> dict[str, Any]:
         """Read the messages of a previous chat by its id (from listProjectChats). Returns the messages in order."""
         client = _create_echo_client()
@@ -879,6 +896,7 @@ def create_agent_graph(
         sendProgressUpdate,
         listProjectChats,
         readChat,
+        getLiveConversationStatus,
         reachOutToDembrane,
         readMemory,
         remember,

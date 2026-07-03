@@ -66,6 +66,13 @@ class _FakeEchoClient:
         self.transcript_calls.append(conversation_id)
         return self.transcripts[conversation_id]
 
+    # Class-level so a test can set the payload without threading it through
+    # the factory; every fake instance shares it.
+    monitor_payload: dict = {}
+
+    async def get_project_monitor(self, project_id: str, window_seconds: int = 45) -> dict:  # noqa: ARG002
+        return type(self).monitor_payload
+
     async def list_project_conversations(
         self,
         project_id: str,
@@ -242,6 +249,22 @@ def _make_doc_tools():
         ),
     )
     return _tool_map(llm.bound_tools)
+
+
+@pytest.mark.asyncio
+async def test_get_live_conversation_status_returns_monitor_payload(monkeypatch):
+    payload = {
+        "summary": {"live": 2, "transcribing": 1, "with_errors": 0, "total": 3},
+        "conversations": [{"id": "c1", "is_live": True}],
+        "live_window_seconds": 45,
+    }
+    monkeypatch.setattr(_FakeEchoClient, "monitor_payload", payload)
+    tools = _make_doc_tools()
+
+    result = await tools["getLiveConversationStatus"].ainvoke({})
+
+    assert result == payload
+    assert result["summary"]["live"] == 2
 
 
 @pytest.mark.asyncio
