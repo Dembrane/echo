@@ -57,10 +57,19 @@ async def copilotkit_endpoint(request: Request, project_id: str, path: Optional[
     request.scope.setdefault("path_params", {})
     request.scope["path_params"]["path"] = path or ""
 
+    # Where this environment publishes the docs corpus. The server resolves it
+    # in code from its own env and forwards it here; absent means unpublished
+    # and the agent cites bare doc paths.
+    docs_base_url = request.headers.get("x-dembrane-docs-base-url", "")
+
     agent = LangGraphAgent(
         name="default",
         description="Echo Agentic Chat default agent",
-        graph=create_agent_graph(project_id=project_id, bearer_token=bearer_token),
+        graph=create_agent_graph(
+            project_id=project_id,
+            bearer_token=bearer_token,
+            docs_base_url=docs_base_url,
+        ),
     )
     # CopilotKit currently rejects LangGraphAgent only for literal list inputs.
     # Supplying a callable preserves expected runtime behavior in this SDK version.

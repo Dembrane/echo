@@ -9,6 +9,7 @@ from dembrane.agentic_client import (
     AgenticTimeoutError,
     AgenticUpstreamError,
     stream_agent_events,
+    docs_base_url_for_env,
 )
 
 
@@ -308,3 +309,53 @@ async def test_stream_agent_events_converts_transport_errors_to_upstream_error(m
     assert exc.value.status_code == 502
     assert exc.value.error_code == "AGENT_UPSTREAM_TRANSPORT"
     assert "incomplete chunked read" in exc.value.message.lower()
+
+
+def test_docs_base_url_for_env_maps_admin_host(monkeypatch) -> None:
+    class _Urls:
+        admin_base_url = "https://dashboard.echo-next.dembrane.com"
+
+    class _Settings:
+        urls = _Urls()
+
+    monkeypatch.setattr("dembrane.agentic_client.get_settings", lambda: _Settings())
+    assert docs_base_url_for_env() == "https://docs.echo-next.dembrane.com"
+
+    # Unpublished environments cite bare paths: no base url.
+    _Urls.admin_base_url = "https://dashboard.dembrane.com"
+    assert docs_base_url_for_env() == ""
+    _Urls.admin_base_url = "https://dashboard.echo-testing.dembrane.com"
+    assert docs_base_url_for_env() == ""
+    _Urls.admin_base_url = "http://localhost:3000"
+    assert docs_base_url_for_env() == ""
+
+
+@pytest.mark.asyncio
+async def test_stream_agent_events_forwards_docs_base_url_header(monkeypatch) -> None:
+    capture: dict[str, Any] = {}
+    response = _FakeStreamResponse(status_code=200, chunks=[])
+
+    def _build_client(*, base_url: str, timeout: float) -> _FakeAsyncClient:
+        return _FakeAsyncClient(
+            base_url=base_url,
+            timeout=timeout,
+            capture=capture,
+            response=response,
+        )
+
+    monkeypatch.setattr("dembrane.agentic_client.httpx.AsyncClient", _build_client)
+    monkeypatch.setattr(
+        "dembrane.agentic_client.docs_base_url_for_env",
+        lambda: "https://docs.echo-next.dembrane.com",
+    )
+
+    async for _ in stream_agent_events(
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        agent_service_url="http://agent.test",
+        timeout_seconds=42,
+    ):
+        pass
+
+    assert capture["headers"]["X-Dembrane-Docs-Base-Url"] == "https://docs.echo-next.dembrane.com"

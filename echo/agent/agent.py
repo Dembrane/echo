@@ -204,6 +204,7 @@ def create_agent_graph(
     bearer_token: str,
     llm: Any | None = None,
     echo_client_factory: Callable[[str], EchoClient] | None = None,
+    docs_base_url: str = "",
 ):
     if not bearer_token:
         raise ValueError("bearer_token is required")
@@ -906,7 +907,7 @@ def create_agent_graph(
         readMemory,
         remember,
     ]
-    system_prompt = SYSTEM_PROMPT + knowledge.prompt_section()
+    system_prompt = SYSTEM_PROMPT + knowledge.prompt_section(docs_base_url=docs_base_url)
     configured_llm = llm or _build_llm()
     llm_with_tools = configured_llm.bind_tools(tools)
 

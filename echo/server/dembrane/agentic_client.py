@@ -28,6 +28,21 @@ class AgenticUpstreamError(AgenticClientError):
 MessageHistoryEntry = dict[str, str]
 
 
+def docs_base_url_for_env() -> str:
+    """The published docs site for this environment, derived in code from the
+    per-env ADMIN_BASE_URL that is already configured (same idea as the
+    frontend's byEnv(): no dedicated env var to wire through gitops).
+
+    Only echo-next publishes the docs/ corpus today (GitHub Pages, dembrane/echo
+    main). docs.dembrane.com still serves the old echo-user-docs site with
+    different paths, so prod, testing, and local resolve to empty and the agent
+    cites bare doc paths instead of links."""
+    admin_host = httpx.URL(get_settings().urls.admin_base_url).host
+    if admin_host.endswith(".echo-next.dembrane.com"):
+        return "https://docs.echo-next.dembrane.com"
+    return ""
+
+
 def _build_payload_messages(
     *,
     user_message: str,
@@ -106,6 +121,9 @@ async def stream_agent_events(
         "Authorization": f"Bearer {bearer_token}",
         "Accept": "application/x-ndjson",
     }
+    docs_base_url = docs_base_url_for_env()
+    if docs_base_url:
+        headers["X-Dembrane-Docs-Base-Url"] = docs_base_url
 
     payload: dict[str, Any] = {
         "threadId": thread_id,
