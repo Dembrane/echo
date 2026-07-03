@@ -27,6 +27,40 @@ const lastActivityLabel = (conversation: MonitorConversation): string => {
 	}
 };
 
+const TranscriptionBadge = ({
+	conversation,
+}: {
+	conversation: MonitorConversation;
+}) => {
+	// A failing conversation already shows a red Error badge; don't double up.
+	if (conversation.transcription_status === "failing") return null;
+
+	if (conversation.transcription_status === "transcribing") {
+		return (
+			<Badge size="xs" color="blue" variant="light">
+				<Plural
+					value={conversation.pending_transcription}
+					one="Transcribing # clip"
+					other="Transcribing # clips"
+				/>
+			</Badge>
+		);
+	}
+
+	if (
+		conversation.transcription_status === "up_to_date" &&
+		conversation.chunk_count > 0
+	) {
+		return (
+			<Badge size="xs" color="green" variant="light">
+				<Trans>Transcribed</Trans>
+			</Badge>
+		);
+	}
+
+	return null;
+};
+
 const MonitorRow = ({
 	conversation,
 }: {
@@ -58,6 +92,7 @@ const MonitorRow = ({
 								<Trans>Idle</Trans>
 							</Badge>
 						)}
+						<TranscriptionBadge conversation={conversation} />
 						{conversation.has_error && (
 							<Badge
 								size="xs"
@@ -101,11 +136,7 @@ const MonitorRow = ({
 	);
 };
 
-export const LiveMonitorSection = ({
-	projectId,
-}: {
-	projectId: string;
-}) => {
+export const LiveMonitorSection = ({ projectId }: { projectId: string }) => {
 	const { conversations, summary } = useConversationMonitor(projectId);
 
 	// Nothing recent to monitor — stay out of the way.
@@ -124,6 +155,15 @@ export const LiveMonitorSection = ({
 					<Badge size="sm" color="primary" variant="light">
 						<Plural value={summary.live} one="# live" other="# live" />
 					</Badge>
+					{summary.transcribing > 0 && (
+						<Badge size="sm" color="blue" variant="light">
+							<Plural
+								value={summary.transcribing}
+								one="# transcribing"
+								other="# transcribing"
+							/>
+						</Badge>
+					)}
 					{summary.with_errors > 0 && (
 						<Badge size="sm" color="red" variant="light">
 							<Plural

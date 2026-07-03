@@ -52,7 +52,9 @@ def test_monitor_liveness_threshold() -> None:
     ]
     chunk_counts = {"c-live": 3, "c-stale": 9}
 
-    payload = _build_monitor_payload(recent_chunks, chunk_counts, now, live_window_seconds=45)
+    payload = _build_monitor_payload(
+        recent_chunks, chunk_counts, chunk_counts, now, live_window_seconds=45
+    )
 
     by_id = {c["id"]: c for c in payload["conversations"]}
     assert by_id["c-live"]["is_live"] is True
@@ -89,7 +91,9 @@ def test_monitor_finished_conversation_is_not_live() -> None:
         },
     ]
 
-    payload = _build_monitor_payload(recent_chunks, {"c-fin": 5, "c-live": 2}, now, live_window_seconds=45)
+    payload = _build_monitor_payload(
+        recent_chunks, {"c-fin": 5, "c-live": 2}, {"c-fin": 5, "c-live": 2}, now, live_window_seconds=45
+    )
     by_id = {c["id"]: c for c in payload["conversations"]}
 
     assert by_id["c-fin"]["is_finished"] is True
@@ -111,7 +115,9 @@ def test_monitor_error_detection_takes_most_recent_error() -> None:
         {"conversation_id": {"id": "c-err", "participant_name": None}, "timestamp": older_ts, "error": "older boom"},
     ]
 
-    payload = _build_monitor_payload(recent_chunks, {"c-err": 2}, now, live_window_seconds=45)
+    payload = _build_monitor_payload(
+        recent_chunks, {"c-err": 2}, {"c-err": 0}, now, live_window_seconds=45
+    )
     entry = payload["conversations"][0]
 
     assert entry["has_error"] is True
@@ -126,15 +132,70 @@ def test_monitor_error_message_is_truncated() -> None:
     recent_chunks = [
         {"conversation_id": {"id": "c1", "participant_name": "Q"}, "timestamp": _iso(now), "error": long_error},
     ]
-    payload = _build_monitor_payload(recent_chunks, {"c1": 1}, now, live_window_seconds=45)
+    payload = _build_monitor_payload(
+        recent_chunks, {"c1": 1}, {"c1": 0}, now, live_window_seconds=45
+    )
     assert len(payload["conversations"][0]["error_message"]) == MONITOR_ERROR_MESSAGE_MAX_LEN
 
 
 def test_monitor_empty_project() -> None:
     now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
-    payload = _build_monitor_payload([], {}, now, live_window_seconds=45)
+    payload = _build_monitor_payload([], {}, {}, now, live_window_seconds=45)
     assert payload["conversations"] == []
-    assert payload["summary"] == {"live": 0, "finished": 0, "with_errors": 0, "total": 0}
+    assert payload["summary"] == {
+        "live": 0,
+        "finished": 0,
+        "transcribing": 0,
+        "with_errors": 0,
+        "total": 0,
+    }
+
+
+def test_monitor_transcription_progress_and_status() -> None:
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    fresh = _iso(now - timedelta(seconds=5))
+    recent_chunks = [
+        # live, mid-stream: 5 chunks in, 3 transcribed -> transcribing
+        {"conversation_id": {"id": "c-mid", "participant_name": "Ada"}, "timestamp": fresh, "error": None},
+        # done transcribing: 4/4 -> up_to_date
+        {"conversation_id": {"id": "c-done", "participant_name": "Bo"}, "timestamp": fresh, "error": None},
+        # failing: a chunk carries an error -> failing regardless of counts
+        {"conversation_id": {"id": "c-bad", "participant_name": "Cy"}, "timestamp": fresh, "error": "boom"},
+    ]
+    chunk_counts = {"c-mid": 5, "c-done": 4, "c-bad": 3}
+    transcribed_counts = {"c-mid": 3, "c-done": 4, "c-bad": 1}
+
+    payload = _build_monitor_payload(
+        recent_chunks, chunk_counts, transcribed_counts, now, live_window_seconds=45
+    )
+    by_id = {c["id"]: c for c in payload["conversations"]}
+
+    assert by_id["c-mid"]["transcription_status"] == "transcribing"
+    assert by_id["c-mid"]["transcribed_count"] == 3
+    assert by_id["c-mid"]["pending_transcription"] == 2
+
+    assert by_id["c-done"]["transcription_status"] == "up_to_date"
+    assert by_id["c-done"]["pending_transcription"] == 0
+
+    assert by_id["c-bad"]["transcription_status"] == "failing"
+
+    assert payload["summary"]["transcribing"] == 1
+
+
+def test_monitor_transcribed_count_clamped_to_total() -> None:
+    # A late total-count read could momentarily trail the transcribed read;
+    # transcribed must never exceed total, and pending never goes negative.
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    recent_chunks = [
+        {"conversation_id": {"id": "c1", "participant_name": "Q"}, "timestamp": _iso(now), "error": None},
+    ]
+    payload = _build_monitor_payload(
+        recent_chunks, {"c1": 2}, {"c1": 5}, now, live_window_seconds=45
+    )
+    entry = payload["conversations"][0]
+    assert entry["transcribed_count"] == 2
+    assert entry["pending_transcription"] == 0
+    assert entry["transcription_status"] == "up_to_date"
 
 
 # ── endpoint wiring: access gate + two-query aggregation ──────────────
@@ -142,30 +203,48 @@ def test_monitor_empty_project() -> None:
 
 class _AsyncFakeDirectus:
     """Async stand-in for async_directus. Returns canned rows for the
-    recent-chunk read and the grouped count read."""
+    recent-chunk read, the grouped total-count read, and the grouped
+    transcribed-count read (distinguished by the transcript filter)."""
 
-    def __init__(self, recent_chunks: list[dict], counts: dict[str, int]) -> None:
+    def __init__(
+        self,
+        recent_chunks: list[dict],
+        counts: dict[str, int],
+        transcribed: dict[str, int] | None = None,
+    ) -> None:
         self._recent_chunks = recent_chunks
         self._counts = counts
+        self._transcribed = transcribed if transcribed is not None else counts
         self.queries: list[dict] = []
 
     async def get_items(self, collection: str, params: dict) -> list[dict]:
         query = (params or {}).get("query", {})
         self.queries.append({"collection": collection, "query": query})
         if "aggregate" in query:
+            # The transcribed-count read carries a transcript filter.
+            source = (
+                self._transcribed
+                if "transcript" in (query.get("filter") or {})
+                else self._counts
+            )
             return [
                 {"conversation_id": cid, "count": {"id": cnt}}
-                for cid, cnt in self._counts.items()
+                for cid, cnt in source.items()
             ]
         return list(self._recent_chunks)
 
 
 @asynccontextmanager
-async def _build_client(monkeypatch, recent_chunks: list[dict], counts: dict[str, int]):
+async def _build_client(
+    monkeypatch,
+    recent_chunks: list[dict],
+    counts: dict[str, int],
+    transcribed: dict[str, int] | None = None,
+):
     app = FastAPI()
     app.include_router(conversations_router, prefix="/conversations")
 
-    fake_directus = _AsyncFakeDirectus(recent_chunks, counts)
+    fake_directus = _AsyncFakeDirectus(recent_chunks, counts, transcribed)
     monkeypatch.setattr(conv_bff, "async_directus", fake_directus)
 
     async def _fake_resolve_project_access(project_id: str, auth: Any) -> Any:  # noqa: ARG001
@@ -199,8 +278,12 @@ async def test_monitor_endpoint_returns_rollup(monkeypatch) -> None:
         },
     ]
     counts = {"c-live": 4, "c-err": 2}
+    transcribed = {"c-live": 1, "c-err": 0}
 
-    async with _build_client(monkeypatch, recent_chunks, counts) as (client, fake_directus):
+    async with _build_client(monkeypatch, recent_chunks, counts, transcribed) as (
+        client,
+        fake_directus,
+    ):
         res = await client.get("/conversations/monitor", params={"project_id": "p-1"})
 
     assert res.status_code == 200
@@ -208,16 +291,25 @@ async def test_monitor_endpoint_returns_rollup(monkeypatch) -> None:
     assert body["summary"]["total"] == 2
     assert body["summary"]["live"] == 2
     assert body["summary"]["with_errors"] == 1
+    # c-live has 4 chunks, 1 transcribed -> transcribing.
+    assert body["summary"]["transcribing"] == 1
     assert body["live_window_seconds"] == MONITOR_LIVE_WINDOW_SECONDS
+
+    live = next(c for c in body["conversations"] if c["id"] == "c-live")
+    assert live["transcribed_count"] == 1
+    assert live["pending_transcription"] == 3
+    assert live["transcription_status"] == "transcribing"
 
     err = next(c for c in body["conversations"] if c["id"] == "c-err")
     assert err["has_error"] is True
     assert err["error_message"] == "transcription failed"
     assert err["chunk_count"] == 2
+    assert err["transcription_status"] == "failing"
 
-    # Exactly two Directus reads: the recent-chunk read + the grouped count.
-    assert len(fake_directus.queries) == 2
+    # Three Directus reads: recent-chunk read + total count + transcribed count.
+    assert len(fake_directus.queries) == 3
     assert "aggregate" in fake_directus.queries[1]["query"]
+    assert "aggregate" in fake_directus.queries[2]["query"]
 
 
 @pytest.mark.asyncio
@@ -228,6 +320,12 @@ async def test_monitor_endpoint_empty_skips_count_query(monkeypatch) -> None:
     assert res.status_code == 200
     body = res.json()
     assert body["conversations"] == []
-    assert body["summary"] == {"live": 0, "finished": 0, "with_errors": 0, "total": 0}
-    # No conversation ids → no second (count) query.
+    assert body["summary"] == {
+        "live": 0,
+        "finished": 0,
+        "transcribing": 0,
+        "with_errors": 0,
+        "total": 0,
+    }
+    # No conversation ids → no count queries.
     assert len(fake_directus.queries) == 1

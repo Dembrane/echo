@@ -618,9 +618,31 @@ def _parse_directus_timestamp(value: Any) -> Optional[datetime]:
     return parsed.astimezone(timezone.utc)
 
 
+def _transcription_status(
+    *, has_error: bool, chunk_count: int, transcribed_count: int
+) -> str:
+    """Derive a host-facing transcription state for a conversation.
+
+    - "failing": at least one recent chunk carries a transcription error.
+    - "transcribing": chunks have arrived that aren't transcribed yet
+      (the pipeline is still catching up, or is live and mid-stream).
+    - "up_to_date": every chunk has a transcript.
+    - "idle": no chunks at all (shouldn't occur in the monitor set).
+    """
+    if chunk_count <= 0:
+        return "idle"
+    if has_error:
+        return "failing"
+    pending = chunk_count - transcribed_count
+    if pending > 0:
+        return "transcribing"
+    return "up_to_date"
+
+
 def _build_monitor_payload(
     recent_chunks: list[dict],
     chunk_counts: dict[str, int],
+    transcribed_counts: dict[str, int],
     now: datetime,
     live_window_seconds: int,
 ) -> dict:
@@ -628,8 +650,11 @@ def _build_monitor_payload(
 
     `recent_chunks` MUST be newest-first (sorted by -timestamp). Each row
     carries conversation_id (dict with id + participant_name, or a bare
-    id string), timestamp, and error. Pure function so the liveness
-    threshold and error detection are unit-testable without Directus.
+    id string), timestamp, and error. `chunk_counts` /
+    `transcribed_counts` are per-conversation totals (all chunks vs. those
+    with a non-empty transcript) so the payload can show transcription
+    progress. Pure function so the liveness threshold, error detection,
+    and transcription state are unit-testable without Directus.
     """
     live_cutoff = now - timedelta(seconds=live_window_seconds)
 
@@ -682,6 +707,7 @@ def _build_monitor_payload(
     live_count = 0
     error_count = 0
     finished_count = 0
+    transcribing_count = 0
     for conv_id in order:
         entry = by_conv[conv_id]
         last_dt = entry["last_chunk_dt"]
@@ -689,12 +715,24 @@ def _build_monitor_payload(
         # conversation is never live, even if a late chunk lands afterwards.
         recent = last_dt is not None and last_dt > live_cutoff
         is_live = recent and not entry["is_finished"]
+
+        chunk_count = int(chunk_counts.get(conv_id, 0) or 0)
+        transcribed_count = min(int(transcribed_counts.get(conv_id, 0) or 0), chunk_count)
+        pending_transcription = max(0, chunk_count - transcribed_count)
+        transcription_status = _transcription_status(
+            has_error=entry["has_error"],
+            chunk_count=chunk_count,
+            transcribed_count=transcribed_count,
+        )
+
         if is_live:
             live_count += 1
         if entry["is_finished"]:
             finished_count += 1
         if entry["has_error"]:
             error_count += 1
+        if transcription_status == "transcribing":
+            transcribing_count += 1
         conversations.append(
             {
                 "id": conv_id,
@@ -702,7 +740,10 @@ def _build_monitor_payload(
                 "is_live": is_live,
                 "is_finished": entry["is_finished"],
                 "last_chunk_at": entry["last_chunk_at"],
-                "chunk_count": int(chunk_counts.get(conv_id, 0) or 0),
+                "chunk_count": chunk_count,
+                "transcribed_count": transcribed_count,
+                "pending_transcription": pending_transcription,
+                "transcription_status": transcription_status,
                 "has_error": entry["has_error"],
                 "error_message": entry["error_message"],
             }
@@ -718,6 +759,7 @@ def _build_monitor_payload(
         "summary": {
             "live": live_count,
             "finished": finished_count,
+            "transcribing": transcribing_count,
             "with_errors": error_count,
             "total": len(conversations),
         },
@@ -787,6 +829,7 @@ async def monitor_conversations(
             conv_ids.append(conv_id)
 
     chunk_counts: dict[str, int] = {}
+    transcribed_counts: dict[str, int] = {}
     if conv_ids:
         agg = await async_directus.get_items(
             "conversation_chunk",
@@ -810,7 +853,33 @@ async def monitor_conversations(
                 if cid:
                     chunk_counts[cid] = cnt
 
-    return _build_monitor_payload(recent_chunks, chunk_counts, now, window_seconds)
+        # Same grouped count, restricted to chunks that carry a transcript, so
+        # we can show transcription progress (transcribed vs. total) without
+        # reading transcript text for every chunk.
+        transcribed_agg = await async_directus.get_items(
+            "conversation_chunk",
+            {
+                "query": {
+                    "aggregate": {"count": "id"},
+                    "groupBy": ["conversation_id"],
+                    "filter": {
+                        "conversation_id": {"_in": conv_ids},
+                        "source": {"_nin": ["DASHBOARD_UPLOAD", "CLONE"]},
+                        "transcript": {"_nempty": True},
+                    },
+                }
+            },
+        )
+        if isinstance(transcribed_agg, list):
+            for row in transcribed_agg:
+                cid = row.get("conversation_id")
+                cnt = int((row.get("count") or {}).get("id", 0) or 0)
+                if cid:
+                    transcribed_counts[cid] = cnt
+
+    return _build_monitor_payload(
+        recent_chunks, chunk_counts, transcribed_counts, now, window_seconds
+    )
 
 
 @router.get("/remaining-count")
