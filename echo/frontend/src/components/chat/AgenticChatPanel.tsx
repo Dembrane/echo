@@ -37,6 +37,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { useLocation } from "react-router";
 import { useUpdateChatMutation } from "@/components/chat/hooks";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
@@ -201,7 +202,12 @@ const toMessage = ({
 
 	if (event.event_type === "user.message" && content) {
 		return {
-			content: enrichAgenticContent({ content, language, projectId, workspaceId }),
+			content: enrichAgenticContent({
+				content,
+				language,
+				projectId,
+				workspaceId,
+			}),
 			id: `u-${event.seq}`,
 			role: "user",
 			sortSeq: event.seq,
@@ -217,7 +223,12 @@ const toMessage = ({
 			return null;
 		}
 		return {
-			content: enrichAgenticContent({ content, language, projectId, workspaceId }),
+			content: enrichAgenticContent({
+				content,
+				language,
+				projectId,
+				workspaceId,
+			}),
 			id: `a-${event.seq}`,
 			role: "assistant",
 			sortSeq: event.seq,
@@ -456,6 +467,14 @@ export const AgenticChatPanel = ({
 }: AgenticChatPanelProps) => {
 	const { iso639_1, language } = useLanguage();
 	const { workspace, workspaceId } = useWorkspace();
+	const location = useLocation();
+	// Seed question from the Ask home page (router state), consumed exactly once.
+	const initialMessageRef = useRef<string | null>(
+		typeof (location.state as { initialMessage?: unknown } | null)
+			?.initialMessage === "string"
+			? (location.state as { initialMessage: string }).initialMessage
+			: null,
+	);
 	const queryClient = useQueryClient();
 	const chatQuery = useProjectChat(chatId);
 	const [runId, setRunId] = useState<string | null>(null);
@@ -850,6 +869,7 @@ export const AgenticChatPanel = ({
 	// streaming event; the scroll-to-bottom button is their way back.
 	const hasScrolledInitiallyRef = useRef(false);
 	const forceNextScrollRef = useRef(false);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: chatId is the trigger, not a read — switching chats re-arms the initial jump
 	useEffect(() => {
 		hasScrolledInitiallyRef.current = false;
 	}, [chatId]);
@@ -953,6 +973,25 @@ export const AgenticChatPanel = ({
 			setIsSubmitting(false);
 		}
 	};
+
+	// A question typed on the Ask home page arrives as router state; send it as
+	// the first message once, then clear the state so a refresh can't resend.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: handleSubmit is recreated per render; the ref guards a single run
+	useEffect(() => {
+		if (!initialMessageRef.current) return;
+		if (runId || isHydratingStoredRun || isSubmitting) return;
+		if (timeline.length > 0 || pendingUserMessage) return;
+		const seed = initialMessageRef.current;
+		initialMessageRef.current = null;
+		window.history.replaceState({}, "");
+		void handleSubmit(seed);
+	}, [
+		runId,
+		isHydratingStoredRun,
+		isSubmitting,
+		timeline.length,
+		pendingUserMessage,
+	]);
 
 	const handleStop = async () => {
 		if (!runId || !isInFlightStatus(runStatus)) return;

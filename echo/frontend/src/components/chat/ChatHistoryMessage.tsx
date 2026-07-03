@@ -14,12 +14,12 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { BookmarkSimple } from "@phosphor-icons/react";
 import {
 	IconArrowUpRight,
 	IconFileText,
 	IconMessages,
 } from "@tabler/icons-react";
-import { BookmarkSimple } from "@phosphor-icons/react";
 import { formatDate } from "date-fns";
 import type React from "react";
 import { Children, useMemo } from "react";
@@ -186,7 +186,9 @@ export const ChatHistoryMessage = ({
 		return {
 			a({ children, className, href, ...props }) {
 				if (isDocsHref(href)) {
-					return <AgenticDocsLink href={href ?? ""}>{children}</AgenticDocsLink>;
+					return (
+						<AgenticDocsLink href={href ?? ""}>{children}</AgenticDocsLink>
+					);
 				}
 
 				if (isAgenticTranscriptHref(href)) {
