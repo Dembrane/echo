@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { t } from "@lingui/core/macro";
+import { useEffect, useRef, useState } from "react";
 
 import type {
 	FunnelVisitor,
@@ -114,17 +115,21 @@ export const FunnelCanvas = ({
 				);
 				const perRow = Math.max(1, Math.floor(innerW / spacing));
 				const x0 = col * colW + 12 + spacing / 2;
+				// Center the pile vertically instead of piling from the bottom.
+				const rows = Math.ceil(n / perRow);
+				const top = Math.max(spacing / 2, (h - rows * spacing) / 2);
+				const dotR = Math.max(2.5, Math.min(5, spacing * 0.4));
 				colNodes.forEach((node, i) => {
 					const id = node.data.id;
 					live.add(id);
 					const row = Math.floor(i / perRow);
 					const column = i % perRow;
 					const tx = x0 + column * spacing;
-					const ty = h - 8 - (row * spacing + spacing / 2);
+					const ty = top + row * spacing + spacing / 2;
 					const color = colorOf(node);
 					let p = particles.current.get(id);
 					if (!p) {
-						// Spawn from the left edge of the column and rise into place.
+						// Spawn from the left edge of the column and glide into place.
 						p = {
 							alpha: 0,
 							col,
@@ -133,11 +138,11 @@ export const FunnelCanvas = ({
 							id,
 							kind: node.kind,
 							pulse: node.kind === "conversation",
-							r: Math.max(1.5, Math.min(4, spacing * 0.34)),
+							r: dotR,
 							tx,
 							ty,
 							x: col * colW + 4,
-							y: h - 8,
+							y: h / 2,
 						};
 						particles.current.set(id, p);
 					}
@@ -146,7 +151,7 @@ export const FunnelCanvas = ({
 					p.pulse = node.kind === "conversation";
 					p.tx = tx;
 					p.ty = ty;
-					p.r = Math.max(1.5, Math.min(4, spacing * 0.34));
+					p.r = dotR;
 					p.dead = false;
 				});
 			});
@@ -203,39 +208,64 @@ export const FunnelCanvas = ({
 		};
 	}, [height]);
 
-	const nearest = (
-		event: React.MouseEvent<HTMLCanvasElement>,
-	): NodeDatum | null => {
-		const canvas = canvasRef.current;
-		if (!canvas) return null;
-		const rect = canvas.getBoundingClientRect();
-		const mx = event.clientX - rect.left;
-		const my = event.clientY - rect.top;
+	const [hover, setHover] = useState<{ label: string; x: number; y: number } | null>(
+		null,
+	);
+
+	const nearest = (mx: number, my: number): NodeDatum | null => {
 		let best: { id: string; d: number } | null = null;
 		for (const [id, p] of particles.current) {
 			if (p.dead) continue;
 			const d = (p.x - mx) ** 2 + (p.y - my) ** 2;
 			if (!best || d < best.d) best = { d, id };
 		}
-		if (!best || best.d > 14 * 14) return null;
+		// Generous radius so tiny dots are still easy to hit.
+		if (!best || best.d > 18 * 18) return null;
 		return nodesRef.current.find((n) => n.data.id === best?.id) ?? null;
 	};
 
+	const labelFor = (node: NodeDatum): string => {
+		if (node.kind === "conversation") {
+			return node.data.label?.trim() || t`Recording`;
+		}
+		return node.data.name?.trim() || t`Anonymous`;
+	};
+
+	const mouseXY = (event: React.MouseEvent<HTMLCanvasElement>) => {
+		const rect = event.currentTarget.getBoundingClientRect();
+		return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+	};
+
 	return (
-		<div ref={wrapRef} className="w-full">
+		<div ref={wrapRef} className="relative w-full">
 			<canvas
 				ref={canvasRef}
 				onClick={(event) => {
-					const node = nearest(event);
+					const { x, y } = mouseXY(event);
+					const node = nearest(x, y);
 					if (node) onSelect(node);
 				}}
-				onMouseMove={
-					onHover ? (event) => onHover(nearest(event)) : undefined
-				}
-				onMouseLeave={onHover ? () => onHover(null) : undefined}
-				className="w-full cursor-pointer"
-				style={{ height }}
+				onMouseMove={(event) => {
+					const { x, y } = mouseXY(event);
+					const node = nearest(x, y);
+					onHover?.(node);
+					setHover(node ? { label: labelFor(node), x, y } : null);
+				}}
+				onMouseLeave={() => {
+					onHover?.(null);
+					setHover(null);
+				}}
+				className="w-full"
+				style={{ cursor: hover ? "pointer" : "default", height }}
 			/>
+			{hover && (
+				<div
+					className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded bg-slate-800 px-2 py-1 text-xs text-white shadow"
+					style={{ left: hover.x, top: hover.y - 6 }}
+				>
+					{hover.label}
+				</div>
+			)}
 		</div>
 	);
 };

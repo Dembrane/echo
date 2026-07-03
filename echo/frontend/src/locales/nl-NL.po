@@ -1554,10 +1554,9 @@ msgstr "anoniem gesprek"
 msgid "Anonymized conversation"
 msgstr "Anoniem gesprek"
 
-#: src/components/conversation/LiveFunnelSection.tsx:185
-#: src/components/conversation/LiveFunnelSection.tsx:202
-#~ msgid "Anonymous"
-#~ msgstr ""
+#: src/components/conversation/FunnelCanvas.tsx:231
+msgid "Anonymous"
+msgstr ""
 
 #~ msgid "Anonymous host"
 #~ msgstr "Anonieme host"
@@ -9214,6 +9213,7 @@ msgstr "Neem nog een gesprek op"
 
 #: src/components/conversation/LiveMonitorSection.tsx:45
 #: src/components/conversation/LiveFunnelSection.tsx:286
+#: src/components/conversation/FunnelCanvas.tsx:229
 msgid "Recording"
 msgstr ""
 
