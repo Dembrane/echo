@@ -198,21 +198,34 @@ const ConversationDrilldown = ({
 				)}
 			</Group>
 			{base && (
-				<Button
-					component={I18nLink}
+				<I18nLink
 					to={`${base}/conversations/${conversation.id}`}
-					variant="light"
-					size="xs"
+					className="no-underline"
 				>
-					<Trans>Open conversation</Trans>
-				</Button>
+					<Button variant="light" size="xs">
+						<Trans>Open conversation</Trans>
+					</Button>
+				</I18nLink>
 			)}
 		</Stack>
 	);
 };
 
-const StageLabel = ({ label, count }: { label: string; count: number }) => (
-	<Group gap="xs" align="center" className="flex-1 justify-center">
+const StageLabel = ({
+	label,
+	count,
+	weight,
+}: {
+	label: string;
+	count: number;
+	weight: number;
+}) => (
+	<Group
+		gap="xs"
+		align="center"
+		className="justify-center"
+		style={{ flexBasis: 0, flexGrow: weight }}
+	>
 		<Text size="xs" fw={600} tt="uppercase" c="dimmed">
 			{label}
 		</Text>
@@ -235,7 +248,7 @@ export const LiveFunnelSection = ({
 		workspaceId && projectId ? `/w/${workspaceId}/projects/${projectId}` : null;
 	const [selected, setSelected] = useState<Selection | null>(null);
 
-	const { nodes, counts } = useMemo(() => {
+	const { nodes, counts, weights } = useMemo(() => {
 		const recording = conversations.filter((c) => c.is_live);
 		const visitorNodes: NodeDatum[] = funnel.visitors.map((data) => ({
 			data,
@@ -246,13 +259,17 @@ export const LiveFunnelSection = ({
 			kind: "conversation",
 		}));
 		const scanned = funnel.visitors.filter((v) => v.stage === "scanned").length;
+		const setup = funnel.visitors.length - scanned;
 		return {
-			counts: {
-				recording: recording.length,
-				scanned,
-				setup: funnel.visitors.length - scanned,
-			},
+			counts: { recording: recording.length, scanned, setup },
 			nodes: [...visitorNodes, ...recordingNodes],
+			// Empty stages shrink; recording carries extra weight so an
+			// all-recording view reads ~25/25/50.
+			weights: [
+				Math.max(1, scanned),
+				Math.max(1, setup),
+				Math.max(2, recording.length),
+			] as [number, number, number],
 		};
 	}, [funnel.visitors, conversations]);
 
@@ -281,12 +298,25 @@ export const LiveFunnelSection = ({
 			) : (
 				<Box>
 					<Group gap={0} justify="space-between" mb={4}>
-						<StageLabel label={t`Scanned`} count={counts.scanned} />
-						<StageLabel label={t`Setting up`} count={counts.setup} />
-						<StageLabel label={t`Recording`} count={counts.recording} />
+						<StageLabel
+							label={t`Scanned`}
+							count={counts.scanned}
+							weight={weights[0]}
+						/>
+						<StageLabel
+							label={t`Setting up`}
+							count={counts.setup}
+							weight={weights[1]}
+						/>
+						<StageLabel
+							label={t`Recording`}
+							count={counts.recording}
+							weight={weights[2]}
+						/>
 					</Group>
 					<FunnelCanvas
 						nodes={nodes}
+						weights={weights}
 						onSelect={(node) =>
 							setSelected(
 								node.kind === "visitor"
