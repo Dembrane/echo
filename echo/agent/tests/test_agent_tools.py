@@ -301,6 +301,38 @@ async def test_grep_docs_rejects_empty_patterns():
 
 
 @pytest.mark.asyncio
+async def test_propose_custom_verification_topic_returns_suggestion_payload():
+    tools = _make_doc_tools()
+
+    result = await tools["proposeCustomVerificationTopic"].ainvoke(
+        {
+            "label": "Sweetness feedback",
+            "prompt": "Did the participant comment on how sweet the drink was?",
+            "reason": "You asked for a bespoke check on taste feedback.",
+        }
+    )
+
+    assert result["kind"] == "custom_verification_topic_suggestion"
+    assert result["project_id"] == "project-1"
+    assert result["label"] == "Sweetness feedback"
+    assert result["prompt"] == "Did the participant comment on how sweet the drink was?"
+    assert result["visible_to_user"] is True
+
+
+@pytest.mark.asyncio
+async def test_propose_custom_verification_topic_rejects_empty_fields():
+    tools = _make_doc_tools()
+    with pytest.raises(ValueError):
+        await tools["proposeCustomVerificationTopic"].ainvoke(
+            {"label": "  ", "prompt": "something"}
+        )
+    with pytest.raises(ValueError):
+        await tools["proposeCustomVerificationTopic"].ainvoke(
+            {"label": "Name", "prompt": "   "}
+        )
+
+
+@pytest.mark.asyncio
 async def test_find_convos_by_keywords_filters_to_current_project():
     llm = _CaptureLLM()
     factory = _FakeEchoClientFactory(

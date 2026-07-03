@@ -126,6 +126,11 @@ ask one focused question first.
 - The host sees a diff and applies or rejects it themselves. You never apply
   changes. Say "I've suggested these changes", never "I've updated your project".
   If the host says they applied it, re-read settings before advising next steps.
+- Verify prompts: when the host wants a custom check on each conversation (a
+  "verify prompt"), use proposeCustomVerificationTopic with a short label and the
+  instruction to run, in the project's language. Mention that verification has
+  to be enabled for it to run, and offer a proposeProjectUpdate to switch
+  is_verify_enabled on if getProjectSettings shows it off.
 
 ## Memory
 You can save durable notes with `remember` and recall them with `readMemory`.
@@ -721,6 +726,39 @@ def create_agent_graph(
         }
 
     @tool
+    async def proposeCustomVerificationTopic(
+        label: str,
+        prompt: str,
+        reason: str = "",
+    ) -> dict[str, Any]:
+        """Propose a custom verification topic (a "verify prompt") for the host
+        to apply in one click.
+
+        A verification topic checks each conversation against an instruction you
+        write. `label` is the short host-facing name; `prompt` is the instruction
+        the check runs (write it in the project's language). Use this when the
+        host wants a bespoke verification, not one of the built-in topics. This
+        never writes anything: the host reviews and applies it. Note in your
+        reply that verification must be enabled for the check to run, and offer a
+        proposeProjectUpdate to turn it on if it is off.
+        """
+        normalized_label = label.strip()
+        normalized_prompt = prompt.strip()
+        if not normalized_label:
+            raise ValueError("A short label for the verification topic is required.")
+        if not normalized_prompt:
+            raise ValueError("The verification prompt (the instruction to check) is required.")
+
+        return {
+            "kind": "custom_verification_topic_suggestion",
+            "project_id": project_id,
+            "label": normalized_label,
+            "prompt": normalized_prompt,
+            "reason": reason.strip(),
+            "visible_to_user": True,
+        }
+
+    @tool
     async def sendProgressUpdate(update: str, next_steps: str = "") -> dict[str, Any]:
         """Emit a user-visible progress update without concluding the run."""
         normalized_update = update.strip()
@@ -837,6 +875,7 @@ def create_agent_graph(
         readSkill,
         getProjectSettings,
         proposeProjectUpdate,
+        proposeCustomVerificationTopic,
         sendProgressUpdate,
         listProjectChats,
         readChat,
