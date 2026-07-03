@@ -2,6 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 
 import { bff } from "@/lib/bff";
 
+export type TranscriptionStatus =
+	| "up_to_date"
+	| "transcribing"
+	| "failing"
+	| "idle";
+
 export type MonitorConversation = {
 	id: string;
 	label: string | null;
@@ -9,6 +15,9 @@ export type MonitorConversation = {
 	is_finished: boolean;
 	last_chunk_at: string | null;
 	chunk_count: number;
+	transcribed_count: number;
+	pending_transcription: number;
+	transcription_status: TranscriptionStatus;
 	has_error: boolean;
 	error_message: string | null;
 };
@@ -16,6 +25,7 @@ export type MonitorConversation = {
 export type MonitorSummary = {
 	live: number;
 	finished: number;
+	transcribing: number;
 	with_errors: number;
 	total: number;
 };
@@ -46,13 +56,14 @@ export const useConversationMonitor = (
 
 	return {
 		conversations: query.data?.conversations ?? [],
-		summary: query.data?.summary ?? {
-			live: 0,
-			finished: 0,
-			with_errors: 0,
-			total: 0,
-		},
-		isLoading: query.isLoading,
 		error: query.error ? query.error.message : null,
+		isLoading: query.isLoading,
+		summary: query.data?.summary ?? {
+			finished: 0,
+			live: 0,
+			total: 0,
+			transcribing: 0,
+			with_errors: 0,
+		},
 	};
 };
