@@ -1784,10 +1784,9 @@ msgstr "Anonymisierte Unterhaltung"
 msgid "Anonymized conversation"
 msgstr "Anonymisierte Unterhaltung"
 
-#: src/components/conversation/LiveFunnelSection.tsx:185
-#: src/components/conversation/LiveFunnelSection.tsx:202
-#~ msgid "Anonymous"
-#~ msgstr ""
+#: src/components/conversation/FunnelCanvas.tsx:231
+msgid "Anonymous"
+msgstr ""
 
 #: src/components/chat/PublishTemplateForm.tsx:157
 #: src/components/chat/CommunityTemplateCard.tsx:124
@@ -9662,6 +9661,7 @@ msgstr "Ein weiteres Gespräch aufnehmen"
 
 #: src/components/conversation/LiveMonitorSection.tsx:45
 #: src/components/conversation/LiveFunnelSection.tsx:286
+#: src/components/conversation/FunnelCanvas.tsx:229
 msgid "Recording"
 msgstr ""
 
