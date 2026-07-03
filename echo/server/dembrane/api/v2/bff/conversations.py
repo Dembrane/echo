@@ -649,6 +649,10 @@ MONITOR_MAX_CHUNKS = 500
 MONITOR_ERROR_MESSAGE_MAX_LEN = 240
 # Keep the surfaced live-transcript to a short, fading one-liner, not a wall.
 MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN = 280
+# Rough, conservative per-clip transcription time for the "catch up ~N min"
+# estimate. Tuned so a handful of pending clips reads ~2 min and a big backlog
+# ~15 min, erring long. Not a promise — surfaced as a vague "~N min".
+MONITOR_TRANSCRIBE_SECONDS_PER_CLIP = 20
 
 
 def _monitor_lifecycle_state(
@@ -830,6 +834,7 @@ def _build_monitor_payload(
     error_count = 0
     finished_count = 0
     transcribing_count = 0
+    pending_total = 0
     for conv_id in order:
         entry = by_conv[conv_id]
         tele = telemetry.get(conv_id) or {}
@@ -869,6 +874,7 @@ def _build_monitor_payload(
             error_count += 1
         if transcription_status == "transcribing":
             transcribing_count += 1
+        pending_total += pending_transcription
         conversations.append(
             {
                 "id": conv_id,
@@ -913,6 +919,10 @@ def _build_monitor_payload(
             "transcribing": transcribing_count,
             "with_errors": error_count,
             "total": len(conversations),
+            "pending_transcription": pending_total,
+            # Deliberately rough + conservative: clips-behind x a per-clip
+            # estimate. The frontend renders it as a vague "~N min".
+            "catch_up_eta_seconds": pending_total * MONITOR_TRANSCRIBE_SECONDS_PER_CLIP,
         },
         "live_window_seconds": live_window_seconds,
     }
@@ -950,6 +960,7 @@ def _build_funnel(
                 "device": tele.get("device"),
                 "network": tele.get("network"),
                 "battery": tele.get("battery"),
+                "stages": tele.get("stages") if isinstance(tele.get("stages"), dict) else {},
                 "last_seen_at": seen.isoformat() if isinstance(seen, datetime) else None,
                 "_sort": seen.isoformat() if isinstance(seen, datetime) else "",
             }

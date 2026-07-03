@@ -148,6 +148,8 @@ def test_monitor_empty_project() -> None:
         "transcribing": 0,
         "with_errors": 0,
         "total": 0,
+        "pending_transcription": 0,
+        "catch_up_eta_seconds": 0,
     }
 
 
@@ -575,6 +577,8 @@ async def test_monitor_endpoint_empty_skips_count_query(monkeypatch) -> None:
         "transcribing": 0,
         "with_errors": 0,
         "total": 0,
+        "pending_transcription": 0,
+        "catch_up_eta_seconds": 0,
     }
     # No conversation ids → no count queries.
     assert len(fake_directus.queries) == 1
