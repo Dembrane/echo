@@ -54,11 +54,15 @@ const colorOf = (node: NodeDatum): string => {
 export const FunnelCanvas = ({
 	nodes,
 	height = 150,
+	weights = [1, 1, 1],
 	onSelect,
 	onHover,
 }: {
 	nodes: NodeDatum[];
 	height?: number;
+	/** Relative widths of the three columns, so empty stages shrink and the
+	 * busy ones grow (e.g. only-recording -> ~25/25/50). */
+	weights?: [number, number, number];
 	onSelect: (node: NodeDatum) => void;
 	onHover?: (node: NodeDatum | null) => void;
 }) => {
@@ -66,8 +70,10 @@ export const FunnelCanvas = ({
 	const wrapRef = useRef<HTMLDivElement | null>(null);
 	const particles = useRef<Map<string, Particle>>(new Map());
 	const nodesRef = useRef<NodeDatum[]>(nodes);
+	const weightsRef = useRef<[number, number, number]>(weights);
 	const sizeRef = useRef<{ w: number; h: number }>({ w: 0, h: height });
 	nodesRef.current = nodes;
+	weightsRef.current = weights;
 
 	// Reconcile particles from the latest nodes, then run one animation loop
 	// for the component's lifetime.
@@ -97,8 +103,16 @@ export const FunnelCanvas = ({
 
 		const layout = () => {
 			const { w, h } = sizeRef.current;
-			const colW = w / 3;
-			// Group current nodes by column and assign a bottom-packed slot.
+			// Weighted columns: empty stages shrink, busy ones grow.
+			const wts = weightsRef.current;
+			const wtTotal = wts[0] + wts[1] + wts[2] || 1;
+			const colX = [
+				0,
+				(wts[0] / wtTotal) * w,
+				((wts[0] + wts[1]) / wtTotal) * w,
+			];
+			const colWArr = wts.map((weight) => (weight / wtTotal) * w);
+			// Group current nodes by column and assign a slot.
 			const byCol: NodeDatum[][] = [[], [], []];
 			for (const node of nodesRef.current) byCol[columnOf(node)].push(node);
 			const live = new Set<string>();
@@ -106,6 +120,7 @@ export const FunnelCanvas = ({
 			byCol.forEach((colNodes, col) => {
 				const n = colNodes.length;
 				if (n === 0) return;
+				const colW = colWArr[col];
 				const innerW = colW - 24;
 				// Spacing that fits the pile into the column; clamped small so
 				// thousands still fit, larger when there are only a few.
@@ -114,7 +129,7 @@ export const FunnelCanvas = ({
 					Math.min(16, Math.sqrt((innerW * (h - 20)) / n)),
 				);
 				const perRow = Math.max(1, Math.floor(innerW / spacing));
-				const x0 = col * colW + 12 + spacing / 2;
+				const x0 = colX[col] + 12 + spacing / 2;
 				// Center the pile vertically instead of piling from the bottom.
 				const rows = Math.ceil(n / perRow);
 				const top = Math.max(spacing / 2, (h - rows * spacing) / 2);
@@ -141,7 +156,7 @@ export const FunnelCanvas = ({
 							r: dotR,
 							tx,
 							ty,
-							x: col * colW + 4,
+							x: colX[col] + 4,
 							y: h / 2,
 						};
 						particles.current.set(id, p);
