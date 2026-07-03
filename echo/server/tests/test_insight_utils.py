@@ -16,9 +16,6 @@ from datetime import datetime, timezone, timedelta
 from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-
 # ── generate_chat_insight ────────────────────────────────────────────
 
 
