@@ -103,6 +103,10 @@ type HistoryLikeMessage = ChatHistory[number] & {
 
 const storageKeyForChat = (chatId: string) => `agentic-run:${chatId}`;
 
+// Internal placeholders the agent/worker may have persisted before the
+// server-side guard landed. They are never meant to be shown to a host.
+const INTERNAL_ASSISTANT_PLACEHOLDERS = new Set(["(calling tools)"]);
+
 const isTerminalStatus = (status: AgenticRunStatus | null) =>
 	status === "completed" || status === "failed" || status === "timeout";
 
@@ -196,6 +200,12 @@ const toMessage = ({
 	}
 
 	if (event.event_type === "assistant.message" && content) {
+		// Existing chats may hold the internal "(calling tools)" placeholder
+		// (a Gemini crutch that leaked into persistence before the server-side
+		// guard). Never render it — it only fragments the thread.
+		if (INTERNAL_ASSISTANT_PLACEHOLDERS.has(content.trim())) {
+			return null;
+		}
 		return {
 			content: enrichAgenticContent({ content, language, projectId }),
 			id: `a-${event.seq}`,

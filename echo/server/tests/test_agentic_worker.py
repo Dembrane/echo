@@ -2,7 +2,11 @@ import pytest
 
 from tests.agentic.fakes import InMemoryDirectus
 from dembrane.agentic_client import AgenticTimeoutError, AgenticUpstreamError
-from dembrane.agentic_worker import AGENT_CANCELLED_ERROR_CODE, process_agentic_run
+from dembrane.agentic_worker import (
+    TOOL_LIMIT_SAFETY_MESSAGE,
+    AGENT_CANCELLED_ERROR_CODE,
+    process_agentic_run,
+)
 from dembrane.service.agentic import AgenticRunService
 
 
@@ -251,7 +255,7 @@ async def test_process_agentic_run_handles_cancel_request(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_splits_planning_and_final_synthesis(monkeypatch) -> None:
+async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthesis(monkeypatch) -> None:
     service = _build_service()
     run = service.create_run(
         project_id="project-1",
@@ -336,19 +340,14 @@ async def test_process_agentic_run_splits_planning_and_final_synthesis(monkeypat
 
     assert stored_run["status"] == "completed"
     assert stored_run["latest_output"] == "Final synthesis message."
-    assert len(assistant_events) == 2
-    assert assistant_events[0]["payload"]["content"] == "I will investigate halftime discussions and gather evidence."
-    assert "Summary of Perspectives" not in assistant_events[0]["payload"]["content"]
-    assert assistant_events[1]["payload"]["content"] == "Final synthesis message."
+    # Pre-tool planning prose is no longer surfaced as its own bubble; only the
+    # final synthesis reaches the host. The aggregated tool activity carries the
+    # "what's happening" story instead.
+    assert len(assistant_events) == 1
+    assert assistant_events[0]["payload"]["content"] == "Final synthesis message."
     assert fake_chat_service.created_messages == [
         {
             "id": "msg-1",
-            "project_chat_id": "chat-1",
-            "message_from": "assistant",
-            "text": "I will investigate halftime discussions and gather evidence.",
-        },
-        {
-            "id": "msg-2",
             "project_chat_id": "chat-1",
             "message_from": "assistant",
             "text": "Final synthesis message.",
@@ -724,7 +723,7 @@ async def test_process_agentic_run_uses_progress_tool_output_from_toolmessage_sh
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_forwards_model_midpoint_planning_message(monkeypatch) -> None:
+async def test_process_agentic_run_suppresses_midpoint_planning_prose(monkeypatch) -> None:
     service = _build_service()
     run = service.create_run(
         project_id="project-1",
@@ -819,27 +818,14 @@ async def test_process_agentic_run_forwards_model_midpoint_planning_message(monk
     assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
     assistant_texts = [event["payload"]["content"] for event in assistant_events]
 
-    assert assistant_texts == [
-        "I will start by scanning project summaries.",
-        "Quick update: I have enough signal to focus on two transcripts.",
-        "Final answer only.",
-    ]
-    assert not any(text.startswith("I'll first gather evidence") for text in assistant_texts)
+    # Model prose that rides alongside a tool call (pre-tool "planning" or a
+    # mid-run "quick update" that is NOT an explicit sendProgressUpdate) is
+    # suppressed: it fragmented the aggregated activity strip. Only the final
+    # tool-free synthesis surfaces as a host-visible message.
+    assert assistant_texts == ["Final answer only."]
     assert fake_chat_service.created_messages == [
         {
             "id": "msg-1",
-            "project_chat_id": "chat-1",
-            "message_from": "assistant",
-            "text": "I will start by scanning project summaries.",
-        },
-        {
-            "id": "msg-2",
-            "project_chat_id": "chat-1",
-            "message_from": "assistant",
-            "text": "Quick update: I have enough signal to focus on two transcripts.",
-        },
-        {
-            "id": "msg-3",
             "project_chat_id": "chat-1",
             "message_from": "assistant",
             "text": "Final answer only.",
@@ -896,9 +882,11 @@ async def test_process_agentic_run_keeps_tool_call_limit_safety(monkeypatch) -> 
 
     assert stored_run["status"] == "completed"
     # One honest message at the limit; no verbatim repeat of earlier output.
-    assert stored_run["latest_output"] == "I've reached my tool-call limit for this turn, so I'll answer from what I've gathered so far. If you'd like me to keep digging, just ask."
-    assert assistant_texts.count("I've reached my tool-call limit for this turn, so I'll answer from what I've gathered so far. If you'd like me to keep digging, just ask.") == 1
-    assert assistant_events[-1]["payload"]["content"] == "I've reached my tool-call limit for this turn, so I'll answer from what I've gathered so far. If you'd like me to keep digging, just ask."
+    # The wording never exposes the internal "tool call" concept to the host.
+    assert "tool" not in TOOL_LIMIT_SAFETY_MESSAGE.lower()
+    assert stored_run["latest_output"] == TOOL_LIMIT_SAFETY_MESSAGE
+    assert assistant_texts.count(TOOL_LIMIT_SAFETY_MESSAGE) == 1
+    assert assistant_events[-1]["payload"]["content"] == TOOL_LIMIT_SAFETY_MESSAGE
 
 
 @pytest.mark.asyncio
@@ -952,7 +940,7 @@ async def test_process_agentic_run_allows_19_non_exempt_tool_calls(monkeypatch) 
     assert stored_run["status"] == "completed"
     assert stored_run["latest_output"] == "final answer"
     assert "final answer" in assistant_texts
-    assert not any("tool-call limit for this turn" in text for text in assistant_texts)
+    assert TOOL_LIMIT_SAFETY_MESSAGE not in assistant_texts
 
 
 @pytest.mark.asyncio
@@ -1009,7 +997,7 @@ async def test_process_agentic_run_excludes_send_progress_update_from_tool_limit
     assert stored_run["status"] == "completed"
     assert stored_run["latest_output"] == "final answer"
     assert "final answer" in assistant_texts
-    assert not any("tool-call limit for this turn" in text for text in assistant_texts)
+    assert TOOL_LIMIT_SAFETY_MESSAGE not in assistant_texts
 
 
 @pytest.mark.asyncio
@@ -1071,11 +1059,11 @@ async def test_process_agentic_run_tool_limit_does_not_repeat_last_update(monkey
     assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
     assistant_texts = [event["payload"]["content"] for event in assistant_events]
 
-    # The turn ends with the single limit message; the earlier substantive
-    # update ("Current synthesis draft.") is already in the thread and is not
-    # repeated verbatim.
-    assert assistant_texts[-1] == "I've reached my tool-call limit for this turn, so I'll answer from what I've gathered so far. If you'd like me to keep digging, just ask."
-    assert assistant_texts.count("Current synthesis draft.") == 1
+    # The turn ends with the single limit message. The model's pre-tool prose
+    # ("Current synthesis draft.") rode alongside a tool call, so it is
+    # suppressed rather than surfaced or repeated.
+    assert assistant_texts == [TOOL_LIMIT_SAFETY_MESSAGE]
+    assert assistant_texts.count("Current synthesis draft.") == 0
 
 
 @pytest.mark.asyncio
@@ -1375,3 +1363,114 @@ async def test_process_agentic_run_does_not_retry_after_stream_events(monkeypatc
     assert stored_run["status"] == "failed"
     assert stored_run["latest_error_code"] == "AGENT_UPSTREAM_400"
     assert [event["event_type"] for event in events] == ["user.message", "assistant.delta", "run.failed"]
+
+
+def test_is_host_visible_assistant_content_rejects_placeholder_and_empty() -> None:
+    from dembrane.agentic_worker import _is_host_visible_assistant_content
+
+    assert _is_host_visible_assistant_content("Here is the answer.") is True
+    assert _is_host_visible_assistant_content("(calling tools)") is False
+    assert _is_host_visible_assistant_content("  (calling tools)  ") is False
+    assert _is_host_visible_assistant_content("") is False
+    assert _is_host_visible_assistant_content("   ") is False
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_never_persists_calling_tools_placeholder(monkeypatch) -> None:
+    """The Gemini crutch text must never reach the thread, even if the model
+    stream echoes it back as an assistant turn."""
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    fake_chat_service = _FakeChatService()
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        # A leaked placeholder turn riding alongside a tool call...
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "(calling tools)"}],
+                        "additional_kwargs": {
+                            "function_call": {"name": "listProjectConversations", "arguments": "{}"}
+                        },
+                    }
+                }
+            },
+        }
+        yield {"type": "on_tool_start", "name": "listProjectConversations"}
+        yield {"type": "on_tool_end", "name": "listProjectConversations", "data": {"output": {}}}
+        # ...and a tool-free turn whose only content is the placeholder (would
+        # otherwise be persisted as a final answer via _append_assistant_message).
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "(calling tools)"}],
+                        "additional_kwargs": {},
+                    }
+                }
+            },
+        }
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "Here is the real answer."}],
+                        "additional_kwargs": {},
+                    }
+                }
+            },
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", fake_chat_service)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    events = service.list_events(run["id"])
+    assistant_texts = [
+        event["payload"]["content"]
+        for event in events
+        if event["event_type"] == "assistant.message"
+    ]
+    persisted_texts = [message["text"] for message in fake_chat_service.created_messages]
+
+    assert "(calling tools)" not in assistant_texts
+    assert "(calling tools)" not in persisted_texts
+    assert assistant_texts == ["Here is the real answer."]
+    assert persisted_texts == ["Here is the real answer."]

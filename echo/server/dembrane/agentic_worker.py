@@ -22,9 +22,12 @@ AGENT_CANCELLED_ERROR_CODE = "AGENT_CANCELLED"
 AGENT_CANCELLED_MESSAGE = "Run cancelled by user"
 MAX_TOOL_CALLS_PER_RUN = 20
 TOOL_LIMIT_EXEMPT_TOOL_NAMES = {"sendProgressUpdate"}
+# Host-facing, in the agent's own voice. "Tool calls" are an internal concept
+# and must never leak into what the host reads — frame it as a natural stopping
+# point with an invitation to go deeper.
 TOOL_LIMIT_SAFETY_MESSAGE = (
-    "I've reached my tool-call limit for this turn, so I'll answer from what I've "
-    "gathered so far. If you'd like me to keep digging, just ask."
+    "I've gone as far as I can in one pass, so I'll answer from what I've found "
+    "so far. If you'd like me to look deeper, just let me know."
 )
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 4
 AUTOMATIC_NUDGE_TEMPLATE = (
@@ -33,9 +36,20 @@ AUTOMATIC_NUDGE_TEMPLATE = (
     "another tool call if evidence is still missing. Only return plain text with no tool call if you "
     "are concluding."
 )
-PLANNING_MESSAGE_MAX_CHARS = 280
 HISTORY_PAGE_SIZE = 500
 OVERFLOW_RETRY_WINDOW_SIZE = 24
+
+# Internal placeholder the agent injects for Gemini's empty tool-call turns
+# (see echo/agent/agent.py `_with_placeholder_content`). It is model-input
+# only and must never surface as a host-visible assistant message.
+INTERNAL_PLACEHOLDER_CONTENTS = {"(calling tools)"}
+
+
+def _is_host_visible_assistant_content(content: str) -> bool:
+    """A turn is worth showing the host only if it carries real text — not an
+    empty string and not an internal placeholder token."""
+    normalized = content.strip()
+    return bool(normalized) and normalized not in INTERNAL_PLACEHOLDER_CONTENTS
 
 
 class AgenticRunCancelledError(Exception):
@@ -139,17 +153,6 @@ def _extract_model_text_and_tool_calls(event: dict[str, Any]) -> tuple[Optional[
                     tool_call_names.add(tool_name)
 
     return (content or None), tool_call_names
-
-
-def _condense_planning_message(content: str) -> str:
-    first_paragraph = content.split("\n\n", 1)[0].strip()
-    if len(first_paragraph) <= PLANNING_MESSAGE_MAX_CHARS:
-        return first_paragraph
-
-    shortened = first_paragraph[: PLANNING_MESSAGE_MAX_CHARS - 3].rstrip()
-    if " " in shortened:
-        shortened = shortened.rsplit(" ", 1)[0]
-    return f"{shortened}..."
 
 
 def _is_context_overflow_error(exc: AgenticUpstreamError) -> bool:
@@ -395,6 +398,10 @@ async def _append_assistant_message(
     content: str,
     project_chat_id: str,
 ) -> None:
+    # Never emit or persist internal placeholders / empty turns as host-facing
+    # messages — they only fragment the chat and leak the Gemini crutch text.
+    if not _is_host_visible_assistant_content(content):
+        return
     await _append_event_and_publish(
         svc,
         run_id,
@@ -493,20 +500,15 @@ async def process_agentic_run(
             model_has_progress_tool_call = "sendProgressUpdate" in model_tool_calls
             if model_text:
                 if model_has_tool_calls:
+                    # The model's pre-tool "planning" prose used to be persisted
+                    # as its own bubble, which fragmented the aggregated activity
+                    # strip (and, with the placeholder crutch, spammed the thread
+                    # with "(calling tools)"). Suppress it: the host sees the
+                    # aggregated tool activity plus the final summary. We do NOT
+                    # reset the nudge counter here, so visible-progress nudges
+                    # (sendProgressUpdate) still fire on long runs.
                     if model_has_progress_tool_call:
                         has_sent_progress_intro = True
-                    else:
-                        planning_message = _condense_planning_message(model_text)
-                        if planning_message:
-                            has_sent_progress_intro = True
-                            await _append_assistant_message(
-                                svc=svc,
-                                run_id=run_id,
-                                content=planning_message,
-                                project_chat_id=project_chat_id,
-                            )
-                            tool_calls_without_assistant_message = 0
-                            nudged_tool_call_milestones.clear()
                 else:
                     await _append_assistant_message(
                         svc=svc,
@@ -591,7 +593,11 @@ async def process_agentic_run(
                     nudged_tool_call_milestones.clear()
 
             content = event.get("content")
-            if isinstance(content, str) and event_type == "assistant.message":
+            if (
+                isinstance(content, str)
+                and event_type == "assistant.message"
+                and _is_host_visible_assistant_content(content)
+            ):
                 latest_output = content
                 tool_calls_without_assistant_message = 0
                 nudged_tool_call_milestones.clear()
