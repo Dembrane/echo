@@ -682,12 +682,26 @@ def create_agent_graph(
 
     @tool
     async def getProjectSettings() -> dict[str, Any]:
-        """Read the project's current editable settings (portal, language, context)."""
+        """Read the project's current editable settings (portal, language, context).
+
+        Fields reading "default" are unset: dembrane's built-in behavior applies
+        (users/host/portal-editor.md describes what each default does). Report
+        them as "default", never as empty or missing. To keep a default, do not
+        propose that field."""
         client = _create_echo_client()
         try:
-            return await client.get_project_settings(project_id)
+            current = await client.get_project_settings(project_id)
         finally:
             await client.close()
+        # Hosts think in defaults, not empty database fields.
+        return {
+            key: (
+                "default"
+                if value is None or (isinstance(value, str) and not value.strip())
+                else value
+            )
+            for key, value in current.items()
+        }
 
     @tool
     async def proposeProjectUpdate(
