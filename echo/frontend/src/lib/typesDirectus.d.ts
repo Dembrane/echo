@@ -134,6 +134,9 @@ interface Conversation {
 	has_transcript?: boolean;
 	last_chunk_at?: string | null;
 	has_only_text_chunks?: boolean;
+	// Derived by the conversations BFF: at least one chunk failed to
+	// transcribe (error set, no transcript). Surfaced as a list-row badge.
+	has_transcription_error?: boolean;
 	// Derived by the conversations BFF. lock_reason explains why `locked`;
 	// summary_locked marks a server-scrubbed summary (1-hour recording cap gate).
 	lock_reason?: "hours_cap" | null;
@@ -419,7 +422,13 @@ interface ProjectReport {
 	project_id: string | Project | null;
 	scheduled_at: string | null;
 	show_portal_link: boolean | null;
-	status: "draft" | "error" | "archived" | "published" | "cancelled" | "scheduled";
+	status:
+		| "draft"
+		| "error"
+		| "archived"
+		| "published"
+		| "cancelled"
+		| "scheduled";
 	user_instructions: string | null;
 }
 

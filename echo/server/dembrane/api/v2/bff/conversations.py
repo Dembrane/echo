@@ -347,6 +347,35 @@ async def list_conversations(
                 cid = row.get("conversation_id")
                 if cid:
                     has_transcript_ids.add(cid)
+
+        # Genuinely-failed chunks: an error set AND no transcript. This
+        # excludes transient errors that were later superseded by a successful
+        # transcript on the same chunk, so the list badge flags real problems
+        # only. Source-agnostic on purpose, so dashboard uploads surface too
+        # (the live monitor is portal-only, this list is not).
+        error_hits = (
+            await async_directus.get_items(
+                "conversation_chunk",
+                {
+                    "query": {
+                        "filter": {
+                            "conversation_id": {"_in": conv_ids},
+                            "error": {"_nempty": True},
+                            "transcript": {"_empty": True},
+                        },
+                        "fields": ["conversation_id"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        has_error_ids: set[str] = set()
+        if isinstance(error_hits, list):
+            for row in error_hits:
+                cid = row.get("conversation_id")
+                if cid:
+                    has_error_ids.add(cid)
         last_chunk_at: dict[str, str] = {}
         chunk_counts: dict[str, int] = {}
         non_text_ids: set[str] = set()
@@ -367,6 +396,7 @@ async def list_conversations(
             conv["has_transcript"] = cid in has_transcript_ids
             conv["last_chunk_at"] = last_chunk_at.get(cid)
             conv["has_only_text_chunks"] = chunk_counts.get(cid, 0) > 0 and cid not in non_text_ids
+            conv["has_transcription_error"] = cid in has_error_ids
 
         if include_chunks:
             chunks = (
