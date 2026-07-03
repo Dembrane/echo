@@ -20,15 +20,14 @@ item to Linear when the key is available.
 
 ## Backlog
 
-### Memory (agent-side + UI)
-Status: schema shipped (`agent_memory`); code not shipped (the implementation
-subagent died mid-run and its partial was reverted to avoid dead code).
+### Memory (agent-side shipped; UI still deferred)
+Status: schema shipped (`agent_memory`); **agent-side code now shipped** —
+`GET/POST /agentic/projects/{id}/memory`, `EchoClient.list_memory/write_memory`,
+and the `readMemory` / `remember(scope, content, memory_key)` tools. Read spans
+user + workspace + project scope; writes upsert on `memory_key`; content is
+generic/non-PII except at `user` scope; writes surface as ordinary tool calls.
 
-- **Agent-side read/write tools + endpoints.** `GET/POST /agentic/projects/{id}/memory`,
-  `EchoClient.list_memory/write_memory`, and `readMemory` / `remember(scope, content, memory_key)`
-  tools. Read spans user + workspace + project scope; writes upsert on
-  `memory_key`. Rule: content is generic/non-PII except at `user` scope. Writes
-  are surfaced as ordinary tool calls. Reason deferred: needs a clean rebuild.
+Still deferred:
 - **UI exposure of memories (multi-surface).** User preferences at user settings,
   workspace preferences at a workspace-context surface, project memory alongside
   the existing project context. Host-visible and host-editable. Reason deferred:
@@ -64,6 +63,21 @@ its own schedule?
 - **Project-authored schedules UI.** Let a host schedule a recurring report/action
   from inside a project. Reason deferred: needs the `scheduled_task` recurring
   abstraction above plus UI.
+
+### is_private enforcement on the human-facing chat endpoints
+The agent read paths enforce private-chat hiding, but the normal UI endpoints
+(`bff/chats.py` `list_chats`, and `resolve_chat_access` behind `get_chat` /
+`list_messages`) do NOT filter `is_private`. Nothing sets `is_private` yet, so
+nothing leaks today. But the moment a "make private" toggle ships, those
+endpoints must also exclude private chats owned by other members, or the UI will
+show a private chat the agent correctly hides. Enforce `is_private` there
+**together with** the private-toggle feature.
+
+### Monitoring: persist the 5s participant ping
+The finish button is now folded into liveness (finished => not live). The 5s
+participant ping is still not stored as a queryable per-conversation signal
+(only a server->client SSE keep-alive exists). Persisting a per-conversation
+`last_seen` on the ping would make liveness precise; deferred as its own change.
 
 ### Insights export (owner's side)
 The `usage_insight` and `support_request` rows are written; the **export job**
