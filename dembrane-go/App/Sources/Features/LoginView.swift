@@ -3,10 +3,11 @@ import DembraneCore
 
 struct LoginView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.openURL) private var openURL
     @State private var email = ""
     @State private var password = ""
     @State private var otp = ""
+    @State private var showRegister = false
+    @State private var safariURL: URL?
     @FocusState private var focused: Field?
     private enum Field { case email, password, otp }
 
@@ -74,11 +75,9 @@ struct LoginView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Button("Forgot your password?") {
-                    openURL(model.environment.dashboardBaseURL.appendingPathComponent("forgot-password").appendingUTMSource())
+                    safariURL = model.environment.dashboardBaseURL.appendingPathComponent("forgot-password").appendingUTMSource()
                 }
-                Button("Create an account") {
-                    openURL(model.environment.dashboardBaseURL.appendingPathComponent("register").appendingUTMSource())
-                }
+                Button("Create an account") { showRegister = true }
             }
             .font(.callout).tint(BrandColor.royalBlue)
 
@@ -98,11 +97,13 @@ struct LoginView: View {
         }
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .sheet(isPresented: $showRegister) { RegisterView() }
+        .safariSheet(url: $safariURL)
     }
 
     private func legalLink(_ title: String, _ path: String) -> some View {
         Button(title) {
-            openURL(URL(string: "https://www.dembrane.com/legal/\(path)")!.appendingUTMSource())
+            safariURL = URL(string: "https://www.dembrane.com/legal/\(path)")!.appendingUTMSource()
         }
         .tint(.secondary)
     }

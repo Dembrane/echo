@@ -11,6 +11,8 @@ public struct DembraneEndpoints: Sendable, Equatable {
     // Authenticated (BFF / v2)
     public func me() -> URL { api.appending(path: "v2/me") }
     public func register() -> URL { api.appending(path: "v2/auth/register") }
+    /// Suspends the account immediately; data is purged within 30 days.
+    public func deleteAccount() -> URL { api.appending(path: "user-settings/account") }
     public func workspaces() -> URL { api.appending(path: "v2/workspaces") }
     public func workspaceUsage(workspaceId: String) -> URL {
         api.appending(path: "v2/workspaces/\(workspaceId)/usage")

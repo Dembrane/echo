@@ -46,6 +46,8 @@ final class AppModel {
     var isRegistering = false
     var registerError: String?
     var registrationSentTo: String?
+    var isDeletingAccount = false
+    var deleteAccountError: String?
     var pendingAskConversationId: String?
     var pendingAskQuery: String?
     var showOnboarding = false
@@ -391,6 +393,22 @@ final class AppModel {
         selectedProject = nil
         conversations = []
         phase = .signedOut
+    }
+
+    /// Deletes the account on the server (suspended immediately, purged within
+    /// 30 days), then signs out locally. Returns false if the call failed.
+    func deleteAccount() async -> Bool {
+        isDeletingAccount = true
+        defer { isDeletingAccount = false }
+        do {
+            try await api.deleteAccount()
+        } catch {
+            NSLog("dembrane-go account deletion failed: \(error)")
+            deleteAccountError = "Couldn't delete your account. Check your connection and try again."
+            return false
+        }
+        await signOut()
+        return true
     }
 
     func toggleRecording() {

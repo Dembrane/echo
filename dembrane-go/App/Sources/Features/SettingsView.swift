@@ -3,7 +3,6 @@ import DembraneCore
 
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.openURL) private var openURL
     @State private var showProjectPicker = false
     @State private var confirmDelete = false
 
@@ -43,9 +42,18 @@ struct SettingsView: View {
 
                 // Separated from Sign out so it's hard to hit by mistake.
                 Section {
-                    Button("Delete account", role: .destructive) { confirmDelete = true }
+                    Button {
+                        confirmDelete = true
+                    } label: {
+                        if model.isDeletingAccount {
+                            ProgressView().frame(maxWidth: .infinity)
+                        } else {
+                            Text("Delete account").foregroundStyle(.red)
+                        }
+                    }
+                    .disabled(model.isDeletingAccount)
                 } footer: {
-                    Text("Permanently deletes your account and all its data. Handled on the dembrane website.")
+                    Text("Permanently deletes your account and all its data within 30 days. Your account stops working right away.")
                 }
             }
             .navigationTitle("Settings")
@@ -54,12 +62,19 @@ struct SettingsView: View {
             }
             .confirmationDialog("Delete your account?",
                                 isPresented: $confirmDelete, titleVisibility: .visible) {
-                Button("Continue in browser", role: .destructive) {
-                    openURL(model.environment.dashboardBaseURL.appendingUTMSource())
+                Button("Delete my account", role: .destructive) {
+                    Task { await model.deleteAccount() }
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Account deletion happens on the dembrane website. We'll open it so you can sign in and delete your account and all its data.")
+                Text("This can't be undone. Your account stops working immediately and your account and all its data are permanently deleted within 30 days.")
+            }
+            .alert("Couldn't delete account",
+                   isPresented: Binding(get: { model.deleteAccountError != nil },
+                                        set: { if !$0 { model.deleteAccountError = nil } })) {
+                Button("OK") { model.deleteAccountError = nil }
+            } message: {
+                Text(model.deleteAccountError ?? "")
             }
         }
     }

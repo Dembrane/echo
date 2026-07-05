@@ -4,7 +4,7 @@ import DembraneCore
 struct RegisterView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
+    @State private var safariURL: URL?
     @State private var step = 0
     @State private var firstName = ""
     @State private var lastName = ""
@@ -33,6 +33,7 @@ struct RegisterView: View {
                     Button("Cancel") { model.registrationSentTo = nil; dismiss() }
                 }
             }
+            .safariSheet(url: $safariURL)
         }
     }
 
@@ -50,7 +51,7 @@ struct RegisterView: View {
 
             Toggle(isOn: $acceptedTerms) {
                 Button("I have read and accept the terms") {
-                    openURL(URL(string: "https://www.dembrane.com/legal/terms")!.appendingUTMSource())
+                    safariURL = URL(string: "https://www.dembrane.com/legal/terms")!.appendingUTMSource()
                 }
                 .font(.callout).tint(BrandColor.royalBlue)
             }

@@ -9,6 +9,7 @@ public enum APIError: Error, Sendable, Equatable {
 /// `MockAPIClient` with no network.
 public protocol DembraneAPIClientProtocol: Sendable {
     func me() async throws -> Me
+    func deleteAccount() async throws
     func workspaces() async throws -> [Workspace]
     func workspaceUsage(workspaceId: String) async throws -> WorkspaceUsage
     func portalSettings(projectId: String) async throws -> PortalSettings
@@ -161,6 +162,10 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
         try await send(endpoints.deleteConversation(id: id), method: "DELETE")
     }
 
+    public func deleteAccount() async throws {
+        try await send(endpoints.deleteAccount(), method: "DELETE")
+    }
+
     public func createProject(workspaceId: String, name: String) async throws -> Project {
         try await post(endpoints.projects(workspaceId: workspaceId),
                        body: ["name": name, "language": "en"], as: Project.self)
@@ -240,6 +245,7 @@ public actor LiveAPIClient: DembraneAPIClientProtocol {
 public struct MockAPIClient: DembraneAPIClientProtocol {
     public init() {}
     public func me() async throws -> Me { .preview }
+    public func deleteAccount() async throws {}
     public func workspaces() async throws -> [Workspace] { [.preview] }
     public func workspaceUsage(workspaceId: String) async throws -> WorkspaceUsage {
         WorkspaceUsage(overCapActive: false, uploadsLocked: false, upgradeCtaTier: nil)
