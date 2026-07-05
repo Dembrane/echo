@@ -349,6 +349,7 @@ async def test_create_run_persists_user_message_without_dispatch(monkeypatch) ->
     assert events[0]["payload"]["content"] == "hello"
     assert events[0]["payload"]["agent_prompt_content"] == (
         "Project Name: Project project-1\n"
+        "Workspace Context: (none)\n"
         "Project Context: Context for project-1\n\n"
         "User Message: hello"
     )

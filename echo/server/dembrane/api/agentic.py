@@ -271,18 +271,37 @@ def _to_non_empty_string(value: Any) -> Optional[str]:
     return normalized
 
 
+async def _get_workspace_context_for_project(project: dict[str, Any]) -> Optional[str]:
+    """The parent workspace's host-written context, if any. Best-effort:
+    a workspace read failure must not block starting a chat."""
+    workspace_id = _to_related_id(project.get("workspace_id"))
+    if not workspace_id:
+        return None
+    try:
+        workspace = await async_directus.get_item("workspace", workspace_id)
+    except Exception:  # noqa: BLE001
+        logger.warning("Workspace %s read failed while building prompt", workspace_id)
+        return None
+    if not isinstance(workspace, dict):
+        return None
+    return _to_non_empty_string(workspace.get("context"))
+
+
 def _build_initial_agent_prompt_content(
     *,
     project_name: Optional[str],
     project_context: Optional[str],
     user_message: str,
+    workspace_context: Optional[str] = None,
 ) -> str:
     normalized_name = _to_non_empty_string(project_name) or "(none)"
     normalized_context = _to_non_empty_string(project_context) or "(none)"
+    normalized_workspace_context = _to_non_empty_string(workspace_context) or "(none)"
     normalized_message = user_message.strip()
 
     return (
         f"Project Name: {normalized_name}\n"
+        f"Workspace Context: {normalized_workspace_context}\n"
         f"Project Context: {normalized_context}\n\n"
         f"User Message: {normalized_message}"
     )
@@ -855,10 +874,12 @@ async def create_run(
     )
     project_name = _to_non_empty_string(project.get("name"))
     project_context = _to_non_empty_string(project.get("context"))
+    workspace_context = await _get_workspace_context_for_project(project)
     agent_prompt_content = _build_initial_agent_prompt_content(
         project_name=project_name,
         project_context=project_context,
         user_message=body.message,
+        workspace_context=workspace_context,
     )
 
     await run_in_thread_pool(

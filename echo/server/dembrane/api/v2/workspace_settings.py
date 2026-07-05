@@ -59,6 +59,9 @@ class WorkspaceDetailResponse(BaseModel):
     legal_basis: Optional[str] = None
     privacy_policy_url: Optional[str] = None
     description: Optional[str] = None
+    # Host-written guidance handed to the assistant in every project chat
+    # under this workspace (the workspace-level sibling of project.context).
+    context: Optional[str] = None
     members: list[WorkspaceMember] = []
     pending_invites: list[PendingInvite] = []
     # Current user's access
@@ -271,6 +274,7 @@ async def get_workspace_settings(
         legal_basis=ws.get("legal_basis"),
         privacy_policy_url=ws.get("privacy_policy_url"),
         description=ws.get("description"),
+        context=ws.get("context"),
         members=members,
         pending_invites=pending_invites,
         my_role=ctx.role,
@@ -307,6 +311,9 @@ def visibility_change_needs_paywall(current: str, target: str) -> bool:
 class UpdateWorkspaceRequest(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    # Assistant guidance for every project chat in this workspace. Empty
+    # string clears it.
+    context: Optional[str] = None
     logo_url: Optional[str] = None
     # Visibility enum (open_to_organisation | invite_only | private). Moving OUT
     # of open is gated at Innovator+ (workspace:set_private). inherit_organisation_members
@@ -362,6 +369,8 @@ async def update_workspace_settings(
         payload["name"] = body.name.replace("\r", " ").replace("\n", " ").strip()
     if body.description is not None:
         payload["description"] = body.description.strip()
+    if body.context is not None:
+        payload["context"] = body.context.strip() or None
     if body.logo_url is not None:
         # Whitelabel branding is tier-gated (changemaker+). Changing the
         # workspace logo is whitelabel — gate it here so the tier check
