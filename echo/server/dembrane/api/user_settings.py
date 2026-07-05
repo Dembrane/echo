@@ -1,5 +1,6 @@
 from typing import Literal, Optional
 from logging import getLogger
+from datetime import datetime, timezone
 
 import requests
 from fastapi import APIRouter, UploadFile, HTTPException
@@ -585,4 +586,33 @@ async def update_legal_basis(
         logger.error(f"Failed to update legal basis: {e}")
         raise HTTPException(status_code=500, detail="Failed to update legal basis") from None
 
+    return {"status": "ok"}
+
+
+# ── Account Deletion ──
+
+
+@UserSettingsRouter.delete("/account")
+async def delete_account(auth: DependencyDirectusSession) -> dict:
+    """Request account deletion (App Store guideline 5.1.1(v)).
+
+    Suspends the account immediately, which blocks login and token refresh,
+    and marks it for permanent removal. Purge of suspended-for-deletion
+    accounts and their data happens out of band within 30 days.
+    """
+    requested = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    try:
+        await run_in_thread_pool(
+            directus.update_user,
+            auth.user_id,
+            {
+                "status": "suspended",
+                "description": f"deletion requested in-app on {requested}, purge within 30 days",
+            },
+        )
+    except Exception as e:
+        logger.error(f"Failed to suspend account {auth.user_id} for deletion: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete account") from None
+
+    logger.info(f"account {auth.user_id} suspended pending deletion, requested {requested}")
     return {"status": "ok"}
