@@ -1,0 +1,172 @@
+name: DembraneGo
+options:
+  bundleIdPrefix: com.dembrane
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+packages:
+  DembraneCore:
+    path: Packages/DembraneCore
+
+settings:
+  base:
+    # XcodeGen's SettingPresets aren't on this machine, so set the defaults we
+    # rely on explicitly. $(TARGET_NAME) keeps bundle names space-free.
+    PRODUCT_NAME: "$(TARGET_NAME)"
+    # Modern headermap style (traditional is unsupported on this toolchain).
+    ALWAYS_SEARCH_USER_PATHS: "NO"
+    # Explicit module builds reject the local DembraneCore module on the
+    # versioned ios26.0-simulator triple; implicit modules resolve it cleanly.
+    SWIFT_ENABLE_EXPLICIT_MODULES: "NO"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "32"
+    DEVELOPMENT_TEAM: "JMCP69LCSU"
+    SWIFT_VERSION: "5.0"
+  configs:
+    Debug:
+      ONLY_ACTIVE_ARCH: "YES"
+      ENABLE_TESTABILITY: "YES"
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG"
+    Release:
+      ONLY_ACTIVE_ARCH: "NO"
+
+targets:
+  DembraneGo:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: App/Sources
+      - path: App/Resources
+    dependencies:
+      - package: DembraneCore
+      - target: DembraneGoWidgets
+      - target: DembraneGoShare
+      # - target: DembraneGoWatch   # re-enable to embed once a watchOS runtime / watch is available
+    entitlements:
+      path: App/DembraneGo.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.dembrane.go
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: "dembrane Go"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIBackgroundModes: [audio]            # keep recording alive when backgrounded / locked
+        NSSupportsLiveActivities: true        # Dynamic Island / Live Activity
+        NSMicrophoneUsageDescription: "dembrane Go records audio so you can transcribe and revisit your conversations."
+        NSLocationWhenInUseUsageDescription: "dembrane Go names each recording by where you made it — like Voice Memos. Your location is used only to label recordings. You can say no and we'll name them by date instead."
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "com.dembrane.go"
+        # Use our generated App/Info.plist (info: above), not an auto-generated one.
+        GENERATE_INFOPLIST_FILE: "NO"
+        CODE_SIGN_STYLE: "Automatic"
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon"
+
+  DembraneGoWidgets:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Widgets
+    dependencies:
+      - package: DembraneCore
+    entitlements:
+      path: Widgets/DembraneGoWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.dembrane.go
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: "dembrane Go"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"   # must match the parent app
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"        # must match the parent app
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "com.dembrane.go.Widgets"
+
+  # DembraneGoWatch (watchOS capture → WatchConnectivity transfer) is written and
+  # compiles standalone (xcodebuild -scheme DembraneGoWatch -sdk watchsimulator26.5
+  # BUILD SUCCEEDED), code in Watch/. It's kept OUT of the active project for now:
+  # this machine has the watchOS SDK but no watchOS *simulator runtime*, and adding
+  # the target leaves the iOS scheme with no resolvable simulator destination, which
+  # breaks the (shippable) iOS build. Re-add this target + the DembraneGoWatch
+  # dependency on DembraneGo, then verify the paired-sim/device archive, once a
+  # watchOS runtime or a real Apple Watch is available.
+  #
+  # DembraneGoWatch:
+  #   type: application
+  #   platform: watchOS
+  #   deploymentTarget: "26.0"
+  #   sources: [{ path: Watch }]
+  #   info: { path: Watch/Info.plist, properties: { WKApplication: true, WKCompanionAppBundleIdentifier: "com.dembrane.go", CFBundleDisplayName: "dembrane Go", CFBundleShortVersionString: "$(MARKETING_VERSION)", CFBundleVersion: "$(CURRENT_PROJECT_VERSION)", NSMicrophoneUsageDescription: "dembrane Go records audio so you can capture from your wrist." } }
+  #   settings: { base: { PRODUCT_BUNDLE_IDENTIFIER: "com.dembrane.go.watchkitapp", GENERATE_INFOPLIST_FILE: "NO", TARGETED_DEVICE_FAMILY: "4" } }
+
+  DembraneGoShare:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: ShareExtension
+    dependencies:
+      - package: DembraneCore
+    entitlements:
+      path: ShareExtension/DembraneGoShare.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.dembrane.go
+    info:
+      path: ShareExtension/Info.plist
+      properties:
+        CFBundleDisplayName: "dembrane Go"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule: "SUBQUERY(extensionItems, $item, SUBQUERY($item.attachments, $att, ANY $att.registeredTypeIdentifiers UTI-CONFORMS-TO \"public.audio\").@count >= 1).@count == 1"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "com.dembrane.go.Share"
+
+  DembraneGoTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: App/Tests
+    dependencies:
+      - target: DembraneGo
+      - package: DembraneCore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: "YES"
+        PRODUCT_BUNDLE_IDENTIFIER: "com.dembrane.go.tests"
+        # Resolve @testable host symbols against the app (preset normally sets this).
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
+schemes:
+  DembraneGo:
+    build:
+      targets:
+        DembraneGo: all
+        DembraneGoTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - DembraneGoTests
