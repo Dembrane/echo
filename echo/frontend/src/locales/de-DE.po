@@ -239,17 +239,17 @@ msgstr " Von Benachrichtigungen abmelden"
 #~ msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:568
+#: src/components/participant/ParticipantConversationAudio.tsx:579
 msgid "participant.modal.echo.info.title.generic"
 msgstr "\"ECHO\" bald verfügbar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:582
+#: src/components/participant/ParticipantConversationAudio.tsx:593
 msgid "participant.modal.echo.info.title.go.deeper"
 msgstr "\"Erkunden\" bald verfügbar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:575
+#: src/components/participant/ParticipantConversationAudio.tsx:586
 msgid "participant.modal.echo.info.title.concrete"
 msgstr "\"Überprüfen\" bald verfügbar"
 
@@ -301,7 +301,7 @@ msgid "{0, plural, one {# agreement} other {# agreements}}"
 msgstr ""
 
 #. placeholder {0}: summary.not_receiving
-#: src/components/conversation/LiveMonitorSection.tsx:522
+#: src/components/conversation/LiveMonitorSection.tsx:566
 msgid "{0, plural, one {# audio stopped} other {# audio stopped}}"
 msgstr ""
 
@@ -317,8 +317,8 @@ msgstr ""
 
 #. placeholder {0}: group.liveCount
 #. placeholder {0}: summary.live
-#: src/components/conversation/LiveMonitorSection.tsx:426
-#: src/components/conversation/LiveMonitorSection.tsx:513
+#: src/components/conversation/LiveMonitorSection.tsx:470
+#: src/components/conversation/LiveMonitorSection.tsx:557
 msgid "{0, plural, one {# live} other {# live}}"
 msgstr ""
 
@@ -377,12 +377,12 @@ msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# Tag} other {# Tags}}"
 
 #. placeholder {0}: summary.transcribing
-#: src/components/conversation/LiveMonitorSection.tsx:531
+#: src/components/conversation/LiveMonitorSection.tsx:575
 msgid "{0, plural, one {# transcribing} other {# transcribing}}"
 msgstr ""
 
 #. placeholder {0}: summary.with_errors
-#: src/components/conversation/LiveMonitorSection.tsx:540
+#: src/components/conversation/LiveMonitorSection.tsx:584
 msgid "{0, plural, one {# with errors} other {# with errors}}"
 msgstr ""
 
@@ -415,7 +415,7 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
 
 #. placeholder {0}: conversation.pending_transcription
-#: src/components/conversation/LiveMonitorSection.tsx:206
+#: src/components/conversation/LiveMonitorSection.tsx:246
 msgid "{0, plural, one {Transcribing # clip} other {Transcribing # clips}}"
 msgstr ""
 
@@ -1810,7 +1810,7 @@ msgstr ""
 #~ msgid "Anonymous host"
 #~ msgstr "Anonymer Host"
 
-#: src/components/conversation/LiveMonitorSection.tsx:236
+#: src/components/conversation/LiveMonitorSection.tsx:276
 msgid "Anonymous participant"
 msgstr ""
 
@@ -2136,7 +2136,7 @@ msgid "Attach verified artifacts"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:750
+#: src/components/participant/ParticipantConversationAudio.tsx:761
 msgid "participant.modal.interruption.issue.message"
 msgstr "Achtung! Wir haben die letzten 60 Sekunden Ihrer Aufnahme aufgrund einer Unterbrechung verloren. Bitte drücken Sie die Schaltfläche unten, um die Verbindung wiederherzustellen."
 
@@ -2153,6 +2153,10 @@ msgstr "Audio-Download nicht verfügbar für anonymisierte Unterhaltungen"
 #~ msgid "Audio hours"
 #~ msgstr ""
 
+#: src/components/conversation/LiveMonitorSection.tsx:103
+msgid "Audio is coming in"
+msgstr ""
+
 #: src/components/conversation/ConversationTranscriptSection.tsx:160
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio-Wiedergabe nicht verfügbar für anonymisierte Unterhaltungen"
@@ -2163,7 +2167,7 @@ msgstr "Audio-Wiedergabe nicht verfügbar für anonymisierte Unterhaltungen"
 #~ msgid "Audio recordings are scheduled to be deleted after 30 days from the recording date"
 #~ msgstr "Audioaufnahmen werden 30 Tage nach dem Aufnahmedatum gelöscht"
 
-#: src/components/conversation/LiveMonitorSection.tsx:269
+#: src/components/conversation/LiveMonitorSection.tsx:313
 msgid "Audio stopped?"
 msgstr ""
 
@@ -2173,7 +2177,7 @@ msgstr ""
 msgid "Audio Tip"
 msgstr "Audio-Tipp"
 
-#: src/components/conversation/LiveMonitorSection.tsx:258
+#: src/components/conversation/LiveMonitorSection.tsx:302
 msgid "Audio was coming in but stopped — they may have lost connection or locked their phone."
 msgstr ""
 
@@ -2666,7 +2670,7 @@ msgid "Card"
 msgstr "Karte"
 
 #. placeholder {0}: catchUpLabel(summary.catch_up_eta_seconds)
-#: src/components/conversation/LiveMonitorSection.tsx:553
+#: src/components/conversation/LiveMonitorSection.tsx:597
 msgid "catch up {0}"
 msgstr ""
 
@@ -3106,7 +3110,7 @@ msgid "Connection healthy"
 msgstr "Verbindung gesund"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:636
+#: src/components/participant/ParticipantConversationAudio.tsx:647
 msgid "participant.modal.s3check.title"
 msgstr "Verbindungsproblem"
 
@@ -4327,7 +4331,7 @@ msgstr ""
 #~ msgstr "Früher"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:931
+#: src/components/participant/ParticipantConversationAudio.tsx:942
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -4650,7 +4654,7 @@ msgstr ""
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
-#: src/components/conversation/LiveMonitorSection.tsx:308
+#: src/components/conversation/LiveMonitorSection.tsx:352
 #: src/components/chat/AgenticChatPanel.tsx:329
 #: src/components/chat/AgenticChatPanel.tsx:1193
 msgid "Error"
@@ -4827,7 +4831,7 @@ msgstr "Erkunden"
 msgid "Explore themes & patterns across all conversations"
 msgstr "Entdecke Themen und Muster über alle Gespräche hinweg"
 
-#: src/components/conversation/LiveMonitorSection.tsx:51
+#: src/components/conversation/LiveMonitorSection.tsx:52
 msgid "Exploring"
 msgstr ""
 
@@ -4972,7 +4976,7 @@ msgstr ""
 #~ msgid "Failed to finish conversation. Please try again or start a new conversation."
 #~ msgstr "Fehler beim Beenden des Gesprächs. Bitte versuchen Sie es erneut oder starten Sie ein neues Gespräch."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:394
+#: src/components/participant/ParticipantConversationAudio.tsx:405
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fehler beim Beenden des Gesprächs. Bitte versuchen Sie es erneut."
 
@@ -5026,7 +5030,7 @@ msgstr ""
 msgid "Failed to move projects"
 msgstr ""
 
-#: src/components/participant/ParticipantConversationAudio.tsx:496
+#: src/components/participant/ParticipantConversationAudio.tsx:507
 msgid "Failed to reconnect. Please try reloading the page."
 msgstr "Verbindung fehlgeschlagen. Bitte versuche, die Seite neu zu laden."
 
@@ -5079,7 +5083,7 @@ msgstr "Ergebnis konnte nicht überarbeitet werden. Bitte versuchen Sie es erneu
 #~ msgid "Failed to start new conversation. Please try again."
 #~ msgstr "Fehler beim Starten eines neuen Gesprächs. Bitte versuchen Sie es erneut."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:220
+#: src/components/participant/ParticipantConversationAudio.tsx:225
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fehler beim Beenden der Aufnahme bei Änderung des Mikrofons. Bitte versuchen Sie es erneut."
 
@@ -5127,7 +5131,7 @@ msgid "Fair password"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:588
+#: src/components/participant/ParticipantConversationAudio.tsx:599
 msgid "participant.modal.echo.info.title"
 msgstr "Funktion bald verfügbar"
 
@@ -5215,7 +5219,7 @@ msgid "participant.button.finish.text.mode"
 msgstr "Beenden"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:899
+#: src/components/participant/ParticipantConversationAudio.tsx:910
 msgid "participant.button.finish"
 msgstr "Beenden"
 
@@ -5236,11 +5240,11 @@ msgid "Finish setting up your plan"
 msgstr ""
 
 #: src/components/report/ConversationStatusTable.tsx:82
-#: src/components/conversation/LiveMonitorSection.tsx:57
+#: src/components/conversation/LiveMonitorSection.tsx:58
 msgid "Finished"
 msgstr "Beendet"
 
-#: src/components/conversation/LiveMonitorSection.tsx:55
+#: src/components/conversation/LiveMonitorSection.tsx:56
 msgid "Finishing"
 msgstr ""
 
@@ -5473,7 +5477,7 @@ msgstr "Dein Bericht wird erstellt..."
 msgid "German"
 msgstr "Deutsch"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:560
+#: src/components/participant/ParticipantConversationAudio.tsx:571
 msgid "Get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Erhalte eine sofortige Antwort von dembrane, um das Gespräch zu vertiefen."
 
@@ -5792,7 +5796,7 @@ msgid "I have read and accept the <0>terms</0>"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:715
+#: src/components/participant/ParticipantConversationAudio.tsx:726
 msgid "participant.button.i.understand"
 msgstr "Ich verstehe"
 
@@ -5824,7 +5828,7 @@ msgstr "ID"
 msgid "Identify recurring themes, topics, and arguments that appear consistently across conversations. Analyze their frequency, intensity, and consistency. Expected output: 3-7 aspects for small datasets, 5-12 for medium datasets, 8-15 for large datasets. Processing guidance: Focus on distinct patterns that emerge across multiple conversations."
 msgstr "Identifizieren Sie wiederkehrende Themen, Themen und Argumente, die in Gesprächen konsistent auftreten. Analysieren Sie ihre Häufigkeit, Intensität und Konsistenz. Erwartete Ausgabe: 3-7 Aspekte für kleine Datensätze, 5-12 für mittlere Datensätze, 8-15 für große Datensätze. Verarbeitungsanleitung: Konzentrieren Sie sich auf unterschiedliche Muster, die in mehreren Gesprächen auftreten."
 
-#: src/components/conversation/LiveMonitorSection.tsx:63
+#: src/components/conversation/LiveMonitorSection.tsx:64
 msgid "Idle"
 msgstr ""
 
@@ -6341,7 +6345,7 @@ msgstr ""
 #~ msgid "Just now"
 #~ msgstr "Gerade eben"
 
-#: src/components/conversation/LiveMonitorSection.tsx:61
+#: src/components/conversation/LiveMonitorSection.tsx:62
 msgid "Just started"
 msgstr ""
 
@@ -6425,7 +6429,7 @@ msgid "Language"
 msgstr "Sprache"
 
 #. placeholder {0}: lastActivityLabel(conversation)
-#: src/components/conversation/LiveMonitorSection.tsx:320
+#: src/components/conversation/LiveMonitorSection.tsx:364
 msgid "Last activity {0}"
 msgstr ""
 
@@ -6632,7 +6636,7 @@ msgstr "Live Audiopegel:"
 #~ msgid "Live audio level:"
 #~ msgstr "Live Audiopegel:"
 
-#: src/components/conversation/LiveMonitorSection.tsx:508
+#: src/components/conversation/LiveMonitorSection.tsx:552
 msgid "Live monitoring"
 msgstr ""
 
@@ -6644,7 +6648,7 @@ msgstr ""
 msgid "Live Preview"
 msgstr "Live Vorschau"
 
-#: src/components/conversation/LiveMonitorSection.tsx:491
+#: src/components/conversation/LiveMonitorSection.tsx:535
 msgid "Live recordings, transcription progress, and errors show up here as participants start recording in the portal."
 msgstr ""
 
@@ -6830,7 +6834,7 @@ msgstr ""
 msgid "Longest First"
 msgstr "Längste zuerst"
 
-#: src/components/conversation/LiveMonitorSection.tsx:296
+#: src/components/conversation/LiveMonitorSection.tsx:340
 #: src/components/conversation/LiveFunnelSection.tsx:139
 msgid "Low battery"
 msgstr ""
@@ -7434,7 +7438,7 @@ msgstr ""
 msgid "No actions found"
 msgstr "Keine Aktionen gefunden"
 
-#: src/components/conversation/LiveMonitorSection.tsx:188
+#: src/components/conversation/LiveMonitorSection.tsx:228
 msgid "No activity yet"
 msgstr ""
 
@@ -7705,7 +7709,7 @@ msgstr ""
 #~ msgid "No quotes available. Generate quotes for this conversation by visiting<0><1> the project library.</1></0>"
 #~ msgstr "Keine Zitate verfügbar. Generieren Sie Zitate für dieses Gespräch, indem Sie <0><1>die Projektbibliothek</1></0> besuchen."
 
-#: src/components/conversation/LiveMonitorSection.tsx:488
+#: src/components/conversation/LiveMonitorSection.tsx:532
 msgid "No recent activity"
 msgstr ""
 
@@ -8786,7 +8790,7 @@ msgstr "Passwörter stimmen nicht überein"
 msgid "Pause reading"
 msgstr "Vorlesen pausieren"
 
-#: src/components/conversation/LiveMonitorSection.tsx:47
+#: src/components/conversation/LiveMonitorSection.tsx:48
 msgid "Paused"
 msgstr ""
 
@@ -9787,17 +9791,17 @@ msgid "Recommended apps"
 msgstr "Empfohlene Apps"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:664
+#: src/components/participant/ParticipantConversationAudio.tsx:675
 msgid "participant.button.s3check.reconnect"
 msgstr "Erneut verbinden"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:777
+#: src/components/participant/ParticipantConversationAudio.tsx:788
 msgid "participant.button.interruption.reconnect"
 msgstr "Erneut verbinden"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:874
+#: src/components/participant/ParticipantConversationAudio.tsx:885
 msgid "participant.button.record"
 msgstr "Aufnehmen"
 
@@ -9808,14 +9812,14 @@ msgstr "Aufnehmen"
 msgid "Record another conversation"
 msgstr "Ein weiteres Gespräch aufnehmen"
 
-#: src/components/conversation/LiveMonitorSection.tsx:45
+#: src/components/conversation/LiveMonitorSection.tsx:46
 #: src/components/conversation/LiveFunnelSection.tsx:312
 #: src/components/conversation/FunnelCanvas.tsx:259
 msgid "Recording"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:743
+#: src/components/participant/ParticipantConversationAudio.tsx:754
 msgid "participant.modal.interruption.title"
 msgstr "Aufnahme unterbrochen"
 
@@ -10502,7 +10506,7 @@ msgstr ""
 msgid "Role updated"
 msgstr ""
 
-#: src/components/conversation/LiveMonitorSection.tsx:549
+#: src/components/conversation/LiveMonitorSection.tsx:593
 msgid "Rough estimate to finish transcribing the backlog"
 msgstr ""
 
@@ -10654,7 +10658,7 @@ msgstr ""
 #~ msgid "Scholarships are available for eligible organisations. Mention it in your message and we'll follow up."
 #~ msgstr ""
 
-#: src/components/conversation/LiveMonitorSection.tsx:281
+#: src/components/conversation/LiveMonitorSection.tsx:325
 msgid "Screen locked"
 msgstr ""
 
@@ -11285,7 +11289,7 @@ msgstr "Anzeigen"
 msgid "Show {hidden} more"
 msgstr ""
 
-#: src/components/conversation/LiveMonitorSection.tsx:447
+#: src/components/conversation/LiveMonitorSection.tsx:491
 msgid "Show {overflow} more"
 msgstr ""
 
@@ -11455,7 +11459,7 @@ msgid "Someone"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:643
+#: src/components/participant/ParticipantConversationAudio.tsx:654
 msgid "participant.modal.s3check.message"
 msgstr "Etwas blockiert Ihre Verbindung. Ihr Audio wird nicht gespeichert, solange dieses Problem nicht behoben ist."
 
@@ -11660,7 +11664,7 @@ msgid "Stop"
 msgstr "Stopp"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:951
+#: src/components/participant/ParticipantConversationAudio.tsx:962
 msgid "participant.button.stop"
 msgstr "Beenden"
 
@@ -11852,11 +11856,11 @@ msgstr "Tags"
 msgid "Take me to {resolvedWorkspaceName}"
 msgstr ""
 
-#: src/components/participant/ParticipantConversationAudio.tsx:554
+#: src/components/participant/ParticipantConversationAudio.tsx:565
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag festhält, oder erhalte eine sofortige Antwort von dembrane, um das Gespräch zu vertiefen."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:557
+#: src/components/participant/ParticipantConversationAudio.tsx:568
 msgid "Take some time to create an outcome that makes your contribution concrete."
 msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag festhält."
 
@@ -12131,7 +12135,7 @@ msgstr ""
 msgid "Their representative who owns this data. They are added as a free observer and emailed that they are the data owner, and become the handoff contact."
 msgstr ""
 
-#: src/components/conversation/LiveMonitorSection.tsx:275
+#: src/components/conversation/LiveMonitorSection.tsx:319
 msgid "Their screen is locked or the tab is hidden — recording pauses until they come back."
 msgstr ""
 
@@ -12224,7 +12228,7 @@ msgid "This area is for dembrane staff. If you think you should have access, ema
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:649
+#: src/components/participant/ParticipantConversationAudio.tsx:660
 msgid "participant.modal.s3check.suggestions"
 msgstr "Dies kann passieren, wenn ein VPN oder eine Firewall die Verbindung blockiert. Versuchen Sie, Ihr VPN zu deaktivieren, zu einem anderen Netzwerk zu wechseln (z. B. mobiler Hotspot) oder wenden Sie sich an Ihre IT-Abteilung."
 
@@ -12256,7 +12260,7 @@ msgstr "Diese E-Mail ist bereits in der Liste."
 #~ msgstr "Diese E-Mail ist bereits für Benachrichtigungen angemeldet."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:704
+#: src/components/participant/ParticipantConversationAudio.tsx:715
 msgid "participant.modal.refine.info.available.in"
 msgstr "Diese Funktion wird in {remainingTime} Sekunden verfügbar sein."
 
@@ -12728,7 +12732,7 @@ msgstr ""
 msgid "Trainings"
 msgstr ""
 
-#: src/components/conversation/LiveMonitorSection.tsx:220
+#: src/components/conversation/LiveMonitorSection.tsx:260
 msgid "Transcribed"
 msgstr ""
 
@@ -12953,7 +12957,7 @@ msgstr "Nachricht eingeben oder / für Vorlagen drücken..."
 msgid "Type your response here"
 msgstr "Geben Sie hier Ihre Antwort ein"
 
-#: src/components/conversation/LiveMonitorSection.tsx:53
+#: src/components/conversation/LiveMonitorSection.tsx:54
 msgid "Typing"
 msgstr ""
 
@@ -13077,7 +13081,7 @@ msgstr "Ungespeicherte Änderungen"
 msgid "Unsubscribe"
 msgstr "Abmelden"
 
-#: src/components/conversation/LiveMonitorSection.tsx:365
+#: src/components/conversation/LiveMonitorSection.tsx:409
 msgid "Untagged"
 msgstr ""
 
@@ -13323,7 +13327,7 @@ msgid "participant.modal.uploading"
 msgstr "Audio wird hochgeladen..."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:761
+#: src/components/participant/ParticipantConversationAudio.tsx:772
 msgid "participant.modal.interruption.uploading"
 msgstr "Audio wird hochgeladen..."
 
@@ -13533,12 +13537,16 @@ msgstr ""
 msgid "Verify Topics"
 msgstr "Verify Themen"
 
-#: src/components/conversation/LiveMonitorSection.tsx:49
+#: src/components/conversation/LiveMonitorSection.tsx:50
 msgid "Verifying"
 msgstr ""
 
 #: src/routes/auth/VerifyEmail.tsx:124
 msgid "Verifying your email address."
+msgstr ""
+
+#: src/components/conversation/LiveMonitorSection.tsx:104
+msgid "Very quiet right now — check the mic isn't muted"
 msgstr ""
 
 #: src/routes/project/library/ProjectLibraryView.tsx:36
@@ -13617,7 +13625,7 @@ msgstr ""
 #~ msgid "Wait {0}:{1}"
 #~ msgstr "Warten Sie {0}:{1}"
 
-#: src/components/conversation/LiveMonitorSection.tsx:59
+#: src/components/conversation/LiveMonitorSection.tsx:60
 msgid "Waiting"
 msgstr ""
 
@@ -13742,7 +13750,7 @@ msgstr ""
 #~ msgstr "Wir haben Ihnen eine E-Mail mit den nächsten Schritten gesendet. Wenn Sie sie nicht sehen, überprüfen Sie Ihren Spam-Ordner. Wenn Sie sie immer noch nicht sehen, kontaktieren Sie bitte jules@dembrane.com"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:596
+#: src/components/participant/ParticipantConversationAudio.tsx:607
 msgid "participant.modal.echo.info.reason"
 msgstr "Wir benötigen etwas mehr Kontext, um Ihnen zu helfen, ECHO effektiv zu nutzen. Bitte setzen Sie die Aufzeichnung fort, damit wir bessere Vorschläge machen können."
 
@@ -13808,7 +13816,7 @@ msgstr ""
 msgid "We've sent a verification link to <0>{0}</0>. Open the email and click the link to continue."
 msgstr ""
 
-#: src/components/conversation/LiveMonitorSection.tsx:291
+#: src/components/conversation/LiveMonitorSection.tsx:335
 #: src/components/conversation/LiveFunnelSection.tsx:131
 msgid "Weak network"
 msgstr ""

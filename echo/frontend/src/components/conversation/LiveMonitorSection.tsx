@@ -3,6 +3,7 @@ import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Badge,
+	Box,
 	Card,
 	Collapse,
 	Group,
@@ -82,6 +83,45 @@ const StatePill = ({ state }: { state: ParticipantState }) => {
 		>
 			{meta.label}
 		</Badge>
+	);
+};
+
+// Signal-meter bar heights (px). Keyed by value (not index) to keep biome
+// happy; the values are unique so that's stable.
+const METER_HEIGHTS = [5, 7, 9, 11, 13];
+
+/** A tiny 5-bar signal meter fed by the participant's live mic level (0..1).
+ * Lifts low levels with a sqrt so quiet-but-present audio still reads, and
+ * softly flags all-quiet ("is the mic muted?") without an alarm. */
+const AudioLevelMeter = ({ level }: { level: number }) => {
+	const scaled = Math.min(1, Math.sqrt(Math.max(0, level)));
+	const active = Math.round(scaled * METER_HEIGHTS.length);
+	return (
+		<Tooltip
+			label={
+				active > 0
+					? t`Audio is coming in`
+					: t`Very quiet right now — check the mic isn't muted`
+			}
+			withArrow
+		>
+			<Group gap={2} align="flex-end" wrap="nowrap" aria-hidden>
+				{METER_HEIGHTS.map((h, i) => (
+					<Box
+						key={h}
+						style={{
+							width: 3,
+							height: h,
+							borderRadius: 1,
+							backgroundColor:
+								i < active
+									? "var(--mantine-color-green-6)"
+									: "var(--mantine-color-gray-3)",
+						}}
+					/>
+				))}
+			</Group>
+		</Tooltip>
 	);
 };
 
@@ -253,6 +293,10 @@ const MonitorRow = ({
 						</Text>
 					</Group>
 					<Group gap={6} align="center" wrap="nowrap">
+						{conversation.recording_health === "receiving" &&
+							typeof conversation.audio_level === "number" && (
+								<AudioLevelMeter level={conversation.audio_level} />
+							)}
 						{conversation.recording_health === "stalled" && (
 							<Tooltip
 								label={t`Audio was coming in but stopped — they may have lost connection or locked their phone.`}

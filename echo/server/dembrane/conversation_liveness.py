@@ -46,7 +46,9 @@ VALID_PARTICIPANT_STATES = frozenset(
 )
 
 # Telemetry fields we persist beyond "seen". Everything is optional.
-_TELEMETRY_FIELDS = ("state", "mode", "screen", "network", "battery")
+# `audio_level` is the participant's live mic input level (0..1 RMS) — proof
+# that audio is actually flowing, and a way to spot a silent/muted mic.
+_TELEMETRY_FIELDS = ("state", "mode", "screen", "network", "battery", "audio_level")
 
 
 def _key(conversation_id: str) -> str:

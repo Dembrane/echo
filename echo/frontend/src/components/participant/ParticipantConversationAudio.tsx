@@ -206,6 +206,11 @@ export const ParticipantConversationAudio = () => {
 		permissionError,
 	} = audioRecorder;
 
+	// Keep the latest audio-level reader in a ref so the (state-scoped) beacon
+	// effect can sample it each tick without re-subscribing every render.
+	const getAudioLevelRef = useRef(audioRecorder.getAudioLevel);
+	getAudioLevelRef.current = audioRecorder.getAudioLevel;
+
 	// iOS low battery mode fallback: play silent 1-pixel video only when wakelock fails
 	useVideoWakeLockFallback({
 		isRecording,
@@ -268,11 +273,17 @@ export const ParticipantConversationAudio = () => {
 		const sendPing = async () => {
 			const battery = await readBatteryTelemetry();
 			if (cancelled) return;
+			const rawLevel = getAudioLevelRef.current?.();
+			const audio_level =
+				typeof rawLevel === "number" && Number.isFinite(rawLevel)
+					? Math.round(Math.min(1, Math.max(0, rawLevel)) * 100) / 100
+					: undefined;
 			void pingConversation(conversationId, {
 				project_id: projectId,
 				visitor_id: projectId ? getVisitorId(projectId) : undefined,
 				state: participantState,
 				mode: "voice",
+				audio_level,
 				network: readNetworkTelemetry(),
 				battery,
 			});
