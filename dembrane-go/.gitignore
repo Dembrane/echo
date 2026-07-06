@@ -1,0 +1,34 @@
+# Generated Xcode project + Info.plist (regenerate with: .tooling/xcodegen generate)
+*.xcodeproj
+*.xcworkspace
+App/Info.plist
+App/DembraneGo.entitlements
+ShareExtension/Info.plist
+ShareExtension/DembraneGoShare.entitlements
+Widgets/Info.plist
+Widgets/DembraneGoWidgets.entitlements
+
+# Local tooling (fetched xcodegen binary)
+.tooling/
+
+# Build output
+.build/
+.build-device/
+DerivedData/
+build/
+
+# macOS
+.DS_Store
+
+# fastlane secrets (added when we wire deployment)
+fastlane/api_key.json
+fastlane/AuthKey*.p8
+fastlane/*.p8
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/README.md
+
+# gym / build artifacts
+*.ipa
+*.dSYM.zip
+Watch/Info.plist

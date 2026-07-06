@@ -370,6 +370,8 @@ export type ParticipantPingTelemetry = {
 	screen?: string;
 	/** The pre-conversation funnel dot this recording grew out of. */
 	visitor_id?: string;
+	/** Live mic input level (0..1 RMS) so the host can see audio flowing. */
+	audio_level?: number;
 	network?: {
 		online?: boolean;
 		effective_type?: string;

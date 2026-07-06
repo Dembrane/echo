@@ -941,6 +941,9 @@ def _build_monitor_payload(
                 "is_finished": entry["is_finished"],
                 "state": state,
                 "recording_health": recording_health,
+                # Live mic level (0..1) from the participant's last beacon —
+                # shown as a small meter so the host can see audio flowing.
+                "audio_level": tele.get("audio_level"),
                 "mode": tele.get("mode"),
                 "tags": tag_map.get(conv_id, []),
                 "language": entry["language"],

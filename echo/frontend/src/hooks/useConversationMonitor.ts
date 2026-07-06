@@ -55,6 +55,9 @@ export type MonitorConversation = {
 	is_finished: boolean;
 	state: ParticipantState;
 	recording_health: RecordingHealth;
+	/** Live mic input level (0..1) from the participant's last beacon, or null
+	 * when not reported (older portal, text mode, or between beacons). */
+	audio_level: number | null;
 	mode: "voice" | "text" | null;
 	tags: string[];
 	language: string | null;

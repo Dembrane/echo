@@ -423,6 +423,9 @@ class ConversationPingRequest(BaseModel):
     # The pre-conversation funnel dot this recording grew out of. Lets the
     # monitor dedupe a visitor that has graduated into a live conversation.
     visitor_id: Optional[str] = None
+    # Live mic input level (0..1 RMS), sampled from the recorder. Lets the host
+    # see audio is really flowing and spot a silent/muted mic.
+    audio_level: Optional[float] = None
     network: Optional[ConversationNetworkTelemetry] = None
     battery: Optional[ConversationBatteryTelemetry] = None
 
@@ -440,6 +443,11 @@ def _build_ping_telemetry(body: Optional[ConversationPingRequest]) -> dict:
         telemetry["screen"] = body.screen.strip()[:40]
     if body.visitor_id:
         telemetry["visitor_id"] = body.visitor_id.strip()[:64]
+    if body.audio_level is not None:
+        # Clamp to [0, 1] and round; ignore NaN/inf from a misbehaving client.
+        level = body.audio_level
+        if isinstance(level, (int, float)) and level == level and abs(level) != float("inf"):
+            telemetry["audio_level"] = round(max(0.0, min(1.0, float(level))), 2)
     if body.network is not None:
         network = body.network.model_dump(exclude_none=True)
         if isinstance(network.get("effective_type"), str):

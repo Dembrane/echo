@@ -1,0 +1,71 @@
+import SwiftUI
+import DembraneCore
+
+struct RecordView: View {
+    @Environment(AppModel.self) private var model
+    @State private var showProjectPicker = false
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 28) {
+                Spacer()
+                recordButton
+                Text(model.isRecording ? "Recording…" : "Tap to record")
+                    .font(.title2)
+                    .foregroundStyle(.primary)
+
+                if model.isRecording, let start = model.recordingStartedAt {
+                    Text(timerInterval: start...Date.distantFuture, countsDown: false)
+                        .monospacedDigit()
+                        .font(.system(.title3, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+
+                VStack(spacing: 6) {
+                    Text("Saving to").font(.caption).foregroundStyle(.secondary)
+                    Button {
+                        showProjectPicker = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "folder.fill").font(.footnote)
+                            Text(model.selectedProject?.name ?? model.defaultProjectName)
+                                .fontWeight(.medium)
+                            Image(systemName: "chevron.up.chevron.down").font(.caption2)
+                        }
+                    }
+                    .buttonStyle(.glass)
+                    .tint(BrandColor.royalBlue)
+                    .disabled(model.isRecording)
+                }
+                if let status = model.statusMessage {
+                    Text(status)
+                        .font(.callout)
+                        .foregroundStyle(BrandColor.royalBlue)
+                }
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .navigationTitle("Record")
+            .sheet(isPresented: $showProjectPicker) {
+                ProjectPicker { model.selectProject($0) }
+            }
+        }
+    }
+
+    private var recordButton: some View {
+        Button {
+            model.toggleRecording()
+        } label: {
+            Image(systemName: model.isRecording ? "stop.fill" : "mic.fill")
+                .font(.system(size: 56))
+                .foregroundStyle(.white)
+                .frame(width: 144, height: 144)
+        }
+        .glassEffect(.regular.tint(BrandColor.royalBlue).interactive(), in: .circle)
+        .accessibilityLabel(model.isRecording ? "Stop recording" : "Start recording")
+    }
+}
+
+#Preview {
+    RecordView().environment(AppModel.makeMock())
+}

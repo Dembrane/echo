@@ -67,6 +67,35 @@ def test_ping_conversation_persists_and_publishes_telemetry(monkeypatch) -> None
     assert registered == [("proj-9", "conv-1")]
 
 
+def test_ping_conversation_clamps_audio_level(monkeypatch) -> None:
+    import dembrane.api.participant as participant
+
+    captured: list[object] = []
+
+    async def _fake_mark(conversation_id: str, *, telemetry=None) -> None:  # noqa: ARG001
+        captured.append(telemetry)
+
+    monkeypatch.setattr(participant, "mark_conversation_seen", _fake_mark)
+
+    def _ping(level: float) -> object:
+        _run(
+            participant.ping_conversation(
+                "c", participant.ConversationPingRequest(audio_level=level)
+            )
+        )
+        return captured[-1]
+
+    # In-range value is rounded to 2dp.
+    assert _ping(0.4567)["audio_level"] == 0.46
+    # Out-of-range is clamped into [0, 1].
+    assert _ping(5.0)["audio_level"] == 1.0
+    assert _ping(-2.0)["audio_level"] == 0.0
+    # NaN / inf from a misbehaving client are ignored, not stored as junk (and
+    # since it's the only field, the whole telemetry collapses to None).
+    assert (_ping(float("nan")) or {}).get("audio_level") is None
+    assert (_ping(float("inf")) or {}).get("audio_level") is None
+
+
 def test_ping_conversation_drops_unknown_state(monkeypatch) -> None:
     import dembrane.api.participant as participant
 
