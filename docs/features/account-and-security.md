@@ -68,6 +68,15 @@ consistent footing rather than a blank field, which matters when you're recordin
 The wider picture of who owns the data is in
 [data ownership & compliance](./data-ownership-and-compliance.md).
 
+## What the assistant remembers about you
+
+*[dembrane next only](./dembrane-next.md).* If you use [Ask's agentic mode](./chat-and-ask.md),
+the assistant can save notes about how you like to work - saved during your chats, read back at
+the start of the next one. *Settings → Assistant* shows every note it keeps about you; only you
+see these, and *Remove* makes it forget one for every future chat. The assistant writes the
+notes; you can't edit them, only remove them. (Project and workspace notes have their own
+surfaces - see [chat & Ask](./chat-and-ask.md#agentic-mode-in-more-detail).)
+
 ## Your access at a glance
 
 A *my access* view lists the organisations and workspaces you belong to and the

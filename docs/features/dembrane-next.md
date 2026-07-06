@@ -23,7 +23,9 @@ now, so you always know whether something you read about is actually available t
 
 | Feature | What it is | Where |
 |---|---|---|
-| *Agentic mode* (in Ask) | A chat mode that works in steps - searching across conversations, fetching transcripts, and chaining tool calls to answer harder questions. | [Chat & Ask → Agentic mode](./chat-and-ask.md#agentic-mode) |
+| *Agentic mode* (in Ask) | An assistant that works in steps - searching, reading transcripts, checking live status, answering from the docs, and proposing settings changes for your review. Ask opens as a home for your chats, with named citations and a Stop control. | [Chat & Ask → Agentic mode](./chat-and-ask.md#agentic-mode-in-more-detail) |
+| *Assistant memory & context* | The assistant saves notes (you view and remove them in user, project, and workspace settings) and takes standing guidance from a workspace-wide *assistant context*. | [Account & security](./account-and-security.md#what-the-assistant-remembers-about-you), [managing your workspace](../users/host/managing-your-workspace.md#give-the-assistant-standing-context) |
+| *The Monitor* | A live view of a session: the participant flow from QR scan to recording, live recordings with audio warnings, and transcription progress. | [Recording → Watch it live](./recording.md#watch-it-live-the-monitor) |
 
 If the table is short, that's a good sign: most of dembrane is the same on next and
 production. Only genuinely in-progress features live here.

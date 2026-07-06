@@ -69,6 +69,22 @@ bills on its own, allows free observers, supports white-labelling). External-cli
 [data ownership & compliance](../../features/data-ownership-and-compliance.md) if you run work
 for outside clients. For an ordinary team workspace, leave it internal.
 
+## Give the assistant standing context
+
+*[dembrane next only](../../features/dembrane-next.md).* If your team uses
+[Ask's agentic mode](./chat-and-ask.md#agentic-mode), the workspace *General* settings carry
+two things for it:
+
+- *Assistant context* - guidance you write once that reaches every project chat in the
+  workspace (*"We're a research agency; reports go to municipal clients, keep summaries formal
+  and in Dutch"*). Admins edit it; it saves as you leave the field.
+- *Assistant memory* - notes the assistant saved about the workspace from people's chats.
+  Anyone in the workspace shares them; *Remove* makes it forget one. The assistant writes
+  these; people can only view and remove them.
+
+Project-level guidance stays on the project: its *context* field and an *Assistant memory*
+section in project settings work the same way, one project at a time.
+
 ## Other settings
 
 The rest of *Settings* is everyday setup: *name & logo* (per-workspace white-labelling is

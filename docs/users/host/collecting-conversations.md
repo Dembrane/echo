@@ -43,6 +43,22 @@ about 30 seconds to a minute later (audio is sent in 30-second pieces, and the
 higher-quality transcription takes a little extra processing). The full participant-side
 flow is in [the participant portal](../../features/portal-and-participant-experience.md).
 
+### Watch the room: the Monitor page
+
+*[dembrane next only](../../features/dembrane-next.md).* During a live session, open
+*Monitor* in the project sidebar. It shows every participant from the moment they scan the QR,
+moving through *Scanned → Setting up → Recording* - so you spot the person stuck at the mic
+check while they're still in the room. Each live recording shows its state, duration, and a
+live transcript snippet; if someone's audio stops coming in you get an *Audio stopped?*
+warning, and a locked phone shows as *Screen locked*. Transcription progress and errors show
+per conversation, with a rough *catch up* estimate when a backlog builds. The project home
+shows the same thing in brief under *Live & recent*.
+
+> [!TIP]
+> Put the Monitor on your laptop while the room records. The two warnings worth acting on in
+> the moment: *Audio stopped?* (walk over, ask them to check their connection) and *Screen
+> locked* (ask them to wake their phone - recording pauses while it's locked).
+
 ### Ready Check Go (tell participants this before they record)
 
 A quick checklist that saves a lot of lost recordings:

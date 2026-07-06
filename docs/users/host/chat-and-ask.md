@@ -74,14 +74,35 @@ starting point, not a cage.
 
 > [!NOTE]
 > Agentic mode is *[dembrane next only](../../features/dembrane-next.md)* - it's a preview
-> feature, not in production yet. Most hosts won't see it as a third mode option.
+> feature, not in production yet. On production, Ask offers *Overview* and *Specific Details*.
 
-Where *Overview* and *Specific Details* answer from the conversations you chose, agentic mode
-works in steps - searching across conversations, pulling keyword matches, and fetching specific
-transcripts, then chaining those to answer a harder question (*"find every conversation where
-someone disagreed with the proposal and tell me why"*). It runs through a separate service, so
-it takes longer. For everyday "what did people say about X", Overview or Specific Details is
-faster and plenty.
+On dembrane next, *Ask* opens as a home for your chats. Type in the bar to filter earlier
+chats, or press Enter to ask your question as a new chat. Not sure where to start? Three
+starter chips get you going: *List my conversations*, *What themes came up?*, and *Improve my
+setup*. A *Templates* menu inserts a saved prompt, and one click starts a classic *Specific
+Details* chat instead if you'd rather pick the conversations yourself.
+
+Where *Overview* and *Specific Details* answer in one pass from the conversations you chose,
+agentic mode works in steps - searching, reading transcripts, and chaining what it finds to
+answer a harder question (*"find every conversation where someone disagreed with the proposal
+and tell me why"*). You watch its progress as it works, and *Stop* replaces *Send* so you can
+halt a run mid-way. Answers cite sources by name - *"Maria's conversation"* - and each link
+jumps to the exact spot in the transcript.
+
+It's also more than analysis:
+
+- Ask *"is anyone recording right now?"* and it checks the same live status as the
+  [Monitor page](./collecting-conversations.md#watch-the-room-the-monitor-page).
+- Ask *"how do I set up verification?"* and it answers from this documentation, linking the
+  page it used.
+- Ask it to improve your setup and it *proposes* settings changes - you review and apply each
+  one; it never changes your project by itself.
+- If you're stuck, it can [log a question with the dembrane team](./getting-help.md).
+
+It also *remembers*: it can save notes about how you like to work and what the project is
+about, so your next chat starts smarter. You stay in charge of that memory - see and remove
+your own notes under *Settings → Assistant*, project notes in project settings, and workspace
+notes in [workspace settings](./managing-your-workspace.md#give-the-assistant-standing-context).
 
 ## What your plan gives you
 

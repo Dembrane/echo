@@ -47,19 +47,37 @@ is handled in `echo/agent/auth.py`.
 
 ## The tools
 
-The agent's graph (`create_agent_graph` in `agent.py`) binds a focused tool set. The model is
+The agent's graph (`create_agent_graph` in `agent.py`) binds twenty tools. The model is
 nudged to get an overview first, then narrow:
 
-- `listProjectConversations(limit)` - the inventory of conversations in the project. Start here.
-- `findConvosByKeywords(keywords, limit)` - keyword search across the project; the prompt steers toward 2–4 focused keywords over sentence-style queries, with a guardrail that rejects low-signal queries and stops the agent repeating the same search.
-- `getConversationTranscript` / `listConvoFullTranscript(conversation_id)` - pull a full transcript on demand.
-- `listConvoSummary(conversation_id)` - the summary for one conversation.
-- `grepConvoSnippets(conversation_id, query, limit)` - grep snippets out of a transcript.
-- `get_project_scope()` - the project context the run is bound to.
-- `sendProgressUpdate(update, next_steps)` - emit a progress event so the UI can show what the agent is doing mid-run.
+- *Conversations*: `listProjectConversations` (the inventory - start here),
+  `findConvosByKeywords` (keyword search; the prompt steers toward 2-4 focused keywords, with
+  a guardrail against low-signal and repeated searches), `listConvoSummary`,
+  `listConvoFullTranscript`, `grepConvoSnippets`.
+- *Documentation*: `listDocs`, `readDoc(paths)`, `grepDocs(patterns)` (both take lists so
+  lookups batch into one step), `readSkill` - the agent answers "how do I" questions from the
+  published docs corpus and cites the page.
+- *Project settings*: `getProjectSettings`, `proposeProjectUpdate`,
+  `proposeCustomVerificationTopic` - the agent never writes settings; proposals render as
+  review cards the host applies or rejects.
+- *Chats*: `listProjectChats`, `readChat` - earlier chats in the project, excluding other
+  members' private ones.
+- *Live status*: `getLiveConversationStatus` - the same snapshot as the host Monitor page
+  (shared `gather_project_monitor`).
+- *Support*: `reachOutToDembrane` - writes a `support_request` outbox row; the prompt forbids
+  promising follow-up and requires honest failure reporting.
+- *Memory*: `readMemory`, `remember(scope, content, memory_key)` - one `agent_memory`
+  collection with `workspace | project | user` scopes (user scope is the only one that may
+  hold personal detail). Writes upsert on `memory_key`. Hosts view + delete (never edit)
+  via `/v2/bff/memory/*` and the settings surfaces.
+- *Progress*: `sendProgressUpdate` - emit a progress event so the UI can show what the agent
+  is doing mid-run.
 
-The graph guards against runaway loops (counting tool calls since the last assistant update,
-nudging the model to answer from gathered evidence rather than searching forever).
+The first user message carries `Project Name`, `Workspace Context` (the host-written
+`workspace.context` field), and `Project Context` as standing guidance. The graph guards
+against runaway loops (counting tool calls since the last assistant update, nudging the model
+to answer from gathered evidence rather than searching forever), and the prompt bans exposing
+internal machinery (tool names, JSON) to the host.
 
 ## The lease-based turn runtime
 

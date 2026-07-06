@@ -51,6 +51,14 @@ You can set *project defaults* such as the *legal basis* used for new projects -
 save repeating yourself and keep projects consistent for compliance. See
 [data ownership & compliance](../../features/data-ownership-and-compliance.md).
 
+## Assistant
+
+*[dembrane next only](../../features/dembrane-next.md).* If you use
+[Ask's agentic mode](./chat-and-ask.md#agentic-mode), the assistant can save notes about how
+you like to work. The *Assistant* section shows everything it remembers about you - only you
+see these notes - and *Remove* makes it forget one for good. It writes the notes during your
+chats; you can't edit them here, only remove them.
+
 ## Audit logs
 
 *Audit logs* record who did what, and when - useful for accountability on a sensitive
