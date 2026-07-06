@@ -19,6 +19,7 @@ const COLORS = {
 	blocked: "#fa5252",
 	recording: "#fa5252",
 	stalled: "#e8590c",
+	backgrounded: "#868e96",
 };
 
 export type NodeDatum =
@@ -47,9 +48,10 @@ const columnOf = (node: NodeDatum): number => {
 
 const colorOf = (node: NodeDatum): string => {
 	if (node.kind === "conversation") {
-		return node.data.recording_health === "stalled"
-			? COLORS.stalled
-			: COLORS.recording;
+		if (node.data.recording_health === "stalled") return COLORS.stalled;
+		if (node.data.recording_health === "backgrounded")
+			return COLORS.backgrounded;
+		return COLORS.recording;
 	}
 	if (node.data.stage === "mic_blocked") return COLORS.blocked;
 	if (node.data.stage === "scanned") return COLORS.scanned;
@@ -134,7 +136,11 @@ export const FunnelCanvas = ({
 					Math.min(16, Math.sqrt((innerW * (h - 20)) / n)),
 				);
 				const perRow = Math.max(1, Math.floor(innerW / spacing));
-				const x0 = colX[col] + 12 + spacing / 2;
+				// Center the packed grid horizontally within the column, so a
+				// single dot sits under its label instead of at the column's
+				// left edge (which read as "between columns").
+				const usedW = Math.min(n, perRow) * spacing;
+				const x0 = colX[col] + (colW - usedW) / 2 + spacing / 2;
 				// Center the pile vertically instead of piling from the bottom.
 				const rows = Math.ceil(n / perRow);
 				const top = Math.max(spacing / 2, (h - rows * spacing) / 2);
@@ -159,7 +165,7 @@ export const FunnelCanvas = ({
 							kind: node.kind,
 							pulse:
 							node.kind === "conversation" &&
-							node.data.recording_health !== "stalled",
+							node.data.recording_health === "receiving",
 							r: dotR,
 							tx,
 							ty,
@@ -172,7 +178,7 @@ export const FunnelCanvas = ({
 					p.color = color;
 					p.pulse =
 						node.kind === "conversation" &&
-						node.data.recording_health !== "stalled";
+						node.data.recording_health === "receiving";
 					p.tx = tx;
 					p.ty = ty;
 					p.r = dotR;

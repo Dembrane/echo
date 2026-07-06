@@ -41,6 +41,7 @@ VALID_PARTICIPANT_STATES = frozenset(
         "finishing",  # finish request in flight
         "finished",
         "text",  # text-mode capture
+        "backgrounded",  # tab hidden / phone locked (mic suspended)
     }
 )
 

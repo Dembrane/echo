@@ -22,6 +22,7 @@ export type ParticipantState =
 	| "finishing"
 	| "finished"
 	| "text"
+	| "backgrounded"
 	| "idle";
 
 // The host's first question: is audio actually coming in? "stalled" is the
@@ -30,6 +31,7 @@ export type RecordingHealth =
 	| "receiving"
 	| "stalled"
 	| "paused"
+	| "backgrounded"
 	| "waiting"
 	| "idle"
 	| "finished";

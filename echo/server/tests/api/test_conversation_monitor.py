@@ -350,6 +350,44 @@ def test_monitor_receiving_and_waiting_recording_health() -> None:
     assert payload["summary"]["not_receiving"] == 0
 
 
+def test_monitor_reported_recording_no_chunk_is_not_stalled() -> None:
+    # Recording reported, mic on, but no chunk has EVER landed (first chunk is
+    # p50 ~45s / p90 minutes after landing). This must NOT alarm — it's still
+    # "waiting" until audio actually flows. Guards the false "No audio" bug.
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    telemetry = {"c-new": {"seen": now - timedelta(seconds=2), "state": "recording"}}
+    extras = [
+        {
+            "id": "c-new",
+            "participant_name": "Ada",
+            "is_finished": False,
+            "created_at": _iso(now - timedelta(minutes=10)),
+            "duration": None,
+        }
+    ]
+    payload = _build_monitor_payload([], {}, {}, now, 45, telemetry, None, extras)
+    entry = payload["conversations"][0]
+    assert entry["recording_health"] == "waiting"
+    assert payload["summary"]["not_receiving"] == 0
+
+
+def test_monitor_backgrounded_is_gentle_not_stalled() -> None:
+    # Phone locked / tab hidden while recording -> reported "backgrounded".
+    # Even with a stale chunk, this reads as "backgrounded", not "stalled".
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    stale = _iso(now - timedelta(seconds=120))
+    recent_chunks = [
+        {"conversation_id": {"id": "c-bg", "participant_name": "Ada"}, "timestamp": stale, "error": None},
+    ]
+    telemetry = {"c-bg": {"seen": now - timedelta(seconds=3), "state": "backgrounded"}}
+    payload = _build_monitor_payload(
+        recent_chunks, {"c-bg": 4}, {"c-bg": 4}, now, 45, telemetry
+    )
+    entry = payload["conversations"][0]
+    assert entry["recording_health"] == "backgrounded"
+    assert payload["summary"]["not_receiving"] == 0
+
+
 def test_monitor_seeds_initiated_conversation_without_chunks() -> None:
     # A just-initiated session pings but has no chunk yet. It must still appear,
     # seeded from extra_conversations + its telemetry state.

@@ -652,7 +652,7 @@ MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN = 280
 # A live conversation with no audio chunk in this many seconds is "stalled"
 # (dropped connection / broken upload) rather than benignly "waiting". Chunks
 # normally land every ~15-30s.
-MONITOR_RECORDING_STALL_SECONDS = 40
+MONITOR_RECORDING_STALL_SECONDS = 55
 # Rough, conservative per-clip transcription time for the "catch up ~N min"
 # estimate. Tuned so a handful of pending clips reads ~2 min and a big backlog
 # ~15 min, erring long. Not a promise — surfaced as a vague "~N min".
@@ -686,23 +686,26 @@ def _recording_health(
     reported_state: Any,
     chunk_count: int,
     last_chunk_dt: Optional[datetime],
-    created_dt: Optional[datetime],
     now: datetime,
     stall_seconds: int,
 ) -> str:
     """The host's first question: is the audio actually coming in?
 
     - "finished" / "paused": expected, not a problem.
+    - "backgrounded": the portal reported the tab hidden / phone locked. Gentle,
+      not a scary alarm (iOS suspends the mic when backgrounded).
     - "receiving": live and a chunk landed within the stall window. Healthy.
-    - "stalled": should be recording (audio arrived before, or the mic is
-      reported on) but nothing has come in for a while. THIS is the flag: a
-      dropped connection or broken upload that would otherwise read as a benign
-      "waiting".
-    - "waiting": on the screen, no audio yet, freshly arrived. Benign.
+    - "stalled": audio WAS flowing (chunk_count > 0) and then stopped — a
+      dropped connection or broken upload. This is the real alarm.
+    - "waiting": on the screen but no audio has ever come in yet. Benign — a
+      participant can sit here a long time (first chunk is ~45s p50, minutes at
+      p90), so we never alarm before audio has actually flowed.
     - "idle": not live and not finished.
     """
     if is_finished:
         return "finished"
+    if reported_state == "backgrounded":
+        return "backgrounded"
     if reported_state == "paused":
         return "paused"
     if not is_live:
@@ -710,12 +713,10 @@ def _recording_health(
     stall_cutoff = now - timedelta(seconds=stall_seconds)
     if last_chunk_dt is not None and last_chunk_dt > stall_cutoff:
         return "receiving"
-    # Live but no recent chunk. If audio was already flowing, or the portal
-    # says the mic is on, treat a gap as a stall — unless it just started.
-    just_started = created_dt is not None and created_dt > stall_cutoff
+    # Live, no recent chunk. Only alarm if audio had actually started and then
+    # stopped; a session that has never produced a chunk is still "waiting"
+    # (recording often starts long after the participant lands).
     if chunk_count > 0:
-        return "stalled"
-    if reported_state == "recording" and not just_started:
         return "stalled"
     return "waiting"
 
@@ -917,7 +918,6 @@ def _build_monitor_payload(
             reported_state=tele.get("state"),
             chunk_count=chunk_count,
             last_chunk_dt=entry["last_chunk_dt"],
-            created_dt=_parse_directus_timestamp(entry["created_at"]),
             now=now,
             stall_seconds=MONITOR_RECORDING_STALL_SECONDS,
         )
