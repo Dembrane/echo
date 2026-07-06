@@ -110,3 +110,4 @@ it's for, and how it works.
 - [Background jobs & scheduler](./users/developer-internal/background-jobs-and-scheduler.md)
 - [Local development](./users/developer-internal/local-development.md)
 - [Deployment & releases](./users/developer-internal/deployment-and-releases.md)
+- [Developing & maintaining the docs](./users/developer-internal/maintaining-docs.md)

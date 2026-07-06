@@ -45,6 +45,26 @@ The conversation shows up in your dashboard as soon as it starts. The transcript
 pieces, and the higher-quality transcription takes a little extra processing time. After that
 it keeps growing as people speak.
 
+## Watch it live: the Monitor
+
+*[dembrane next only](./dembrane-next.md).* While people record, the project's *Monitor* page
+(in the project sidebar) shows the whole room in real time:
+
+- *Live participant flow* - from the moment someone scans the QR, they appear and move across
+  three stages: *Scanned → Setting up → Recording*. You see people stall at the mic check or
+  drop off before recording, while it's still fixable.
+- *Each live recording* - who's recording, paused, or finishing, with a live transcript
+  snippet and a running duration.
+- *Is the audio coming in?* - a recording that was sending audio and stopped gets an
+  *Audio stopped?* warning (they may have lost connection); a locked phone or hidden tab shows
+  *Screen locked*, because recording pauses until they come back.
+- *Transcription progress* - a *Transcribing* count per conversation, a rough *catch up*
+  estimate when a backlog builds, and an *Error* badge when something needs attention.
+
+The project home page shows the same view in brief as *Live & recent*. See
+[collecting conversations](../users/host/collecting-conversations.md#watch-the-room-the-monitor-page)
+for how to use it mid-session.
+
 ## Pause, resume, stop
 
 - *Pause / resume* - step away mid-session without ending the recording. What's recorded so

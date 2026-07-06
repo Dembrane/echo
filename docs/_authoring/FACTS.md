@@ -228,7 +228,9 @@ Auth: `/login /register /check-your-email /verify-email /password-reset /request
 2FA supported. `/onboarding` wizard (create workspace + project). `/invite/accept`, `/invites`.
 
 - *Workspaces* `/w/:workspaceId/home`, `/w/new`. Settings `/w/:id/settings/:section`:
-  name/logo, members (invite/roles/visibility/inherit-org), billing & usage, data ownership.
+  name/logo, *assistant context* (host guidance handed to the assistant in every project chat,
+  admins, autosaves) + *assistant memory* (workspace-scope notes, view + Remove),
+  members (invite/roles/visibility/inherit-org), billing & usage, data ownership.
   Members `/w/:id/members/*`. Org `/o/:orgId`, `/o/:orgId/settings/:section` (admin matrix:
   members × workspaces, access requests, pending invites, discoverable workspaces, org usage rollup).
 - *Projects* `/w/:id/projects` (home, pinned, search), create wizard `/new` (name & context →
@@ -241,6 +243,37 @@ Auth: `/login /register /check-your-email /verify-email /password-reset /request
 - *Chat / Ask* `/.../chats/new`, `/.../chats/:chatId` (+ `/debug`): RAG over selected
   conversations; auto-select vs manual context; sources; templates (built-in + user templates);
   standard mode + *agentic mode* (tool use, separate agent service). Free-tier chat gate.
+  `ENABLE_AGENTIC_CHAT = byEnv({production:false}, true)` - agentic OFF in production. Where
+  it's on, `/chats/new` is the *Ask home*: chat list + a question bar that filters chats and
+  creates one on Enter, a `Templates` insert menu, starter chips, and a
+  "Prefer the old chat? Start a Specific Details chat" escape hatch. Agentic runs show live
+  progress, a Send↔Stop morph, named citation links ("{name}'s conversation" →
+  `#chunk-` deep links), and documentation citations via a chooser modal
+  ("Open documentation" / "Open chat documentation"). Agent tools (echo/agent, 20): inventory/
+  search/transcripts (`listProjectConversations, findConvosByKeywords, listConvoSummary,
+  listConvoFullTranscript, grepConvoSnippets`), docs (`listDocs, readDoc, grepDocs, readSkill`),
+  settings (`getProjectSettings, proposeProjectUpdate, proposeCustomVerificationTopic` - all
+  changes are proposals the host applies via a review card), chats (`listProjectChats,
+  readChat` - respects others' private chats), live status (`getLiveConversationStatus`),
+  support (`reachOutToDembrane` → `support_request` outbox; never promises follow-up),
+  memory (`readMemory, remember` - see memory below), progress (`sendProgressUpdate`).
+  *Assistant memory*: one `agent_memory` collection, scope `workspace|project|user` (user scope
+  is the only one that may hold personal detail; owner-only). Hosts view + delete (never edit)
+  memories via `/v2/bff/memory/*`; surfaces = user settings *Assistant* section, project
+  settings *Assistant memory*, workspace settings general tab. The assistant is the only
+  writer. *Workspace context* (`workspace.context`): host-written standing guidance, edited on
+  the workspace settings general tab ("Assistant context", autosaves), injected into every
+  agentic run prompt alongside project context.
+- *Monitor* `/.../monitor` (sidebar entry *Monitor*, no role gate): live view of a project's
+  recording sessions. *Live participant flow* funnel (canvas, scales to thousands): lanes
+  `Scanned → Setting up → Recording`, fed by portal visitor beacons (per-stage outcomes:
+  mic ok/skipped/blocked, terms, details). Per-conversation rows: state pills (Recording,
+  Paused, Verifying, Exploring, Typing, Finishing, Finished, Waiting, Just started, Idle),
+  `Transcribing N clips` chip, `catch up ~N min` backlog estimate, red `Error` badge,
+  `Audio stopped?` (stalled) and `Screen locked` (backgrounded) warnings, weak-network and
+  low-battery hints, live transcript snippet. Real-time over SSE
+  (`GET /v2/bff/conversations/monitor/stream`, Redis-cached snapshot ≤1 Directus read/3s).
+  Project home shows a *Live & recent* section embedding the same monitor.
 - *Library / analysis* `/.../library`, `/.../library/views/:viewId`,
   `/.../views/:viewId/aspects/:aspectId`: AI-extracted topics/aspects/quotes; custom views;
   library generation (status, regenerate). Gated (Changemaker+ / "contact sales" if unavailable).
@@ -250,7 +283,11 @@ Auth: `/login /register /check-your-email /verify-email /password-reset /request
 - *Host guide* `/.../projects/:projectId/host-guide`: PDF + QR for participants.
 - *Portal editor* `/.../settings/portal-editor` (see §8).
 - *Settings (user)* `/settings/:section`: account & security (display name, password, 2FA, audit logs),
-  my access (orgs/workspaces & roles), appearance (font/size/language; 8 locales), project-defaults (legal basis).
+  my access (orgs/workspaces & roles), appearance (font/size/language; 8 locales), *assistant*
+  (Memory card: the caller's own user-scope assistant memories, view + Remove only),
+  project-defaults (legal basis). Account deletion: server endpoint only
+  (`DELETE /user-settings/account` suspends + marks for purge within 30 days) - NO in-app UI yet;
+  don't document a button.
 - Sidebar *Documentation* link → Notion Info Hub, locale-aware (see §11).
 
 i18n: 8 locales `en-US, nl-NL, de-DE, fr-FR, es-ES, it-IT, uk-UA, cs-CZ` (Lingui).

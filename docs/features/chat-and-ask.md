@@ -29,11 +29,43 @@ conversations:
   [tag](./conversations-and-transcripts.md#tags), and answers come back with exact quotes and
   citations. Best when you want precision: one session, one cohort, exact wording. If you're
   already viewing one conversation when you start, it's selected for you.
-- *Agentic* (*[dembrane next only](./dembrane-next.md)*) - multi-step analysis with live tool
-  execution: it can search across conversations, fetch transcripts, and chain steps to answer
-  harder questions. A preview feature, not in production yet.
+- *Agentic* (*[dembrane next only](./dembrane-next.md)*) - an assistant that works in steps:
+  it searches conversations, reads transcripts, and chains what it finds to answer harder
+  questions. A preview feature, not in production yet - see below for what it adds.
 
 Specific Details is the usual move once a project gets large and you want precision over breadth.
+
+## Agentic mode, in more detail
+
+*[dembrane next only](./dembrane-next.md).* On dembrane next, *Ask* opens as a home for all
+your chats: your chat list with a question bar on top. Typing filters your earlier chats;
+pressing Enter asks the question as a new chat. A *Templates* menu inserts a saved prompt, and
+if you'd rather pick conversations yourself there's a one-click way to start a classic
+*Specific Details* chat instead.
+
+While the assistant works you see its progress step by step, and a *Stop* control replaces
+*Send* so you can halt a run that's going the wrong way. Answers cite their sources by name -
+*"Maria's conversation"*, *"Maria's transcript excerpt"* - and each link jumps to the exact
+place in the [transcript](./conversations-and-transcripts.md).
+
+Beyond answering questions, it can:
+
+- *Check what's live* - ask *"is anyone recording right now?"* and it reads the same live
+  status as the [monitor](./recording.md#watch-it-live-the-monitor).
+- *Read earlier chats* in the project (your colleagues' private chats stay private).
+- *Answer "how do I" questions* from this documentation, citing the page it used.
+- *Suggest settings changes* - it never edits your project itself; every change arrives as a
+  proposal you review and apply (or reject).
+- *Log a question with the dembrane team* when you're stuck - see
+  [getting help](../users/host/getting-help.md).
+- *Remember* - it can save notes about your preferences and the project so the next chat
+  starts smarter. You can see and remove everything it remembers: your own notes under
+  *Settings → Assistant*, project notes in project settings, workspace notes in
+  [workspace settings](./organisations-and-workspaces.md). The assistant writes these notes;
+  you can't edit them, only remove them.
+
+Hosts steer it with standing guidance too: the project *context* field, and a workspace-wide
+*assistant context* in workspace settings that reaches every project chat in the workspace.
 
 ## Cited sources
 
