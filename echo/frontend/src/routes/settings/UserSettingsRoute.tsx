@@ -16,23 +16,30 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AccountSettingsCard } from "@/components/settings/AccountSettingsCard";
+import { AssistantMemoryCard } from "@/components/settings/AssistantMemoryCard";
 import { AuditLogsCard } from "@/components/settings/AuditLogsCard";
+import { BetaFeaturesCard } from "@/components/settings/BetaFeaturesCard";
 import { ChangePasswordCard } from "@/components/settings/ChangePasswordCard";
 import { FontSettingsCard } from "@/components/settings/FontSettingsCard";
 import { FontSizeSettingsCard } from "@/components/settings/FontSizeSettingsCard";
 import { LanguageSettingsCard } from "@/components/settings/LanguageSettingsCard";
-import { BetaFeaturesCard } from "@/components/settings/BetaFeaturesCard";
 import { LegalBasisSettingsCard } from "@/components/settings/LegalBasisSettingsCard";
 import { MyAccessCard } from "@/components/settings/MyAccessCard";
 import { TwoFactorSettingsCard } from "@/components/settings/TwoFactorSettingsCard";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
-type SectionId = "account" | "access" | "appearance" | "project-defaults";
+type SectionId =
+	| "account"
+	| "access"
+	| "appearance"
+	| "assistant"
+	| "project-defaults";
 
 const resolveSection = (section?: string): SectionId =>
 	section === "access" ||
 	section === "appearance" ||
+	section === "assistant" ||
 	section === "project-defaults"
 		? section
 		: "account";
@@ -116,25 +123,38 @@ export const UserSettingsRoute = () => {
 										<Trans>My access</Trans>
 									</Title>
 									<Text size="sm" c="dimmed">
-										<Trans>This is a map of every organisation and workspace you are a member of.</Trans>
+										<Trans>
+											This is a map of every organisation and workspace you are
+											a member of.
+										</Trans>
 									</Text>
 								</Stack>
 								<MyAccessCard />
 							</Stack>
 						)}
 
-								{activeSection === "appearance" && (
-									<Stack gap="lg">
-										<Title order={3}>
-											<Trans>Appearance</Trans>
-										</Title>
+						{activeSection === "appearance" && (
+							<Stack gap="lg">
+								<Title order={3}>
+									<Trans>Appearance</Trans>
+								</Title>
 
-										<FontSettingsCard />
-										<FontSizeSettingsCard />
-										<LanguageSettingsCard />
-										<BetaFeaturesCard />
-									</Stack>
-								)}
+								<FontSettingsCard />
+								<FontSizeSettingsCard />
+								<LanguageSettingsCard />
+								<BetaFeaturesCard />
+							</Stack>
+						)}
+
+						{activeSection === "assistant" && (
+							<Stack gap="lg">
+								<Title order={3}>
+									<Trans>Assistant</Trans>
+								</Title>
+
+								<AssistantMemoryCard />
+							</Stack>
+						)}
 
 						{activeSection === "project-defaults" && !isExternalOnly && (
 							<Stack gap="lg">

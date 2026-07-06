@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useParams } from "react-router";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { ProjectMemorySection } from "@/components/memory/ProjectMemorySection";
 import {
 	useProjectById,
 	useVerificationTopicsQuery,
@@ -14,7 +15,10 @@ import { ProjectExportSection } from "@/components/project/ProjectExportSection"
 import { ProjectMoveWorkspace } from "@/components/project/ProjectMoveWorkspace";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
 import { ProjectUploadSection } from "@/components/project/ProjectUploadSection";
-import { ProjectAccess, ProjectUsage } from "@/components/project/ProjectUsageAndSharing";
+import {
+	ProjectAccess,
+	ProjectUsage,
+} from "@/components/project/ProjectUsageAndSharing";
 import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
 import { FeatureGate } from "@/components/workspace/FeatureGate";
 import { ENABLE_WEBHOOKS } from "@/config";
@@ -91,6 +95,9 @@ export const ProjectSettingsRoute = () => {
               <ProjectConversationStatusSection projectId={projectId} />
             </>
           )} */}
+
+					<Divider />
+					{projectId && <ProjectMemorySection projectId={projectId} />}
 
 					<Divider />
 					<ProjectMoveWorkspace project={projectQuery.data} />
