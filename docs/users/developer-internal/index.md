@@ -66,6 +66,7 @@ Start with [architecture](./architecture.md), then dip into whichever area you'r
 - *[Background jobs & scheduler](./background-jobs-and-scheduler.md)* - Dramatiq queues, the no-asyncio-in-actors rule, and every scheduled job.
 - *[Local development](./local-development.md)* - the devcontainer, `mprocs`, env files, and running everything on your machine.
 - *[Deployment & releases](./deployment-and-releases.md)* - how `main` and tags ship, the GitOps repo, and database migrations.
+- *[Developing & maintaining the docs](./maintaining-docs.md)* - the two-way docs/code sync, the code-to-docs process, and the review gate.
 
 ## Two files you should read before you change anything
 
