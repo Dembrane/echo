@@ -310,6 +310,26 @@ def test_monitor_surfaces_metadata_and_telemetry() -> None:
     assert entry["battery"] == {"level": 0.2, "charging": False}
 
 
+def test_monitor_surfaces_audio_level_and_defaults_null() -> None:
+    # The participant's live mic level flows from the beacon into the payload so
+    # the host sees a signal meter; it's null when the portal doesn't report it.
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    fresh = _iso(now - timedelta(seconds=5))
+    recent_chunks = [
+        {"conversation_id": {"id": "c-loud", "participant_name": "Ada"}, "timestamp": fresh, "error": None},
+        {"conversation_id": {"id": "c-quiet", "participant_name": "Bo"}, "timestamp": fresh, "error": None},
+    ]
+    telemetry = {
+        "c-loud": {"seen": now - timedelta(seconds=2), "state": "recording", "audio_level": 0.42},
+        "c-quiet": {"seen": now - timedelta(seconds=2), "state": "recording"},
+    }
+    counts = {"c-loud": 3, "c-quiet": 3}
+    payload = _build_monitor_payload(recent_chunks, counts, counts, now, 45, telemetry)
+    by_id = {c["id"]: c for c in payload["conversations"]}
+    assert by_id["c-loud"]["audio_level"] == 0.42
+    assert by_id["c-quiet"]["audio_level"] is None
+
+
 def test_monitor_flags_stalled_recording() -> None:
     # A live conversation that had audio but hasn't received a chunk in a while
     # (dropped connection) must read as "stalled", not benign "waiting".
