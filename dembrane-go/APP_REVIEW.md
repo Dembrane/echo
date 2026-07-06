@@ -21,8 +21,10 @@ Status of each point and the draft reply to paste in App Store Connect.
 ## Before resubmitting (checklist)
 
 1. **Deploy the backend endpoint to production** — `DELETE /api/user-settings/account`
-   (commit 5dda1e07) must be live before review, or the reviewer's deletion
-   attempt fails. Backend prod deploys only on release tags.
+   must be live before review, or the reviewer's deletion attempt fails.
+   Merged to main via PR #799 (be64242c) and verified end-to-end on echo-next
+   2026-07-06 (register → verify → login → delete 200 → re-login and refresh
+   both rejected → re-delete idempotent). Prod still needs the next release tag.
 2. **Record the background-audio video** (guideline 2.5.4) on a physical device:
    start a recording in dembrane Go → go to Home Screen → show the Dynamic
    Island / red status indicator with recording continuing → return and stop.
