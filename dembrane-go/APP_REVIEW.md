@@ -12,6 +12,11 @@ Status of each point and the draft reply to paste in App Store Connect.
   deletes in-app: confirmation dialog → authed `DELETE /api/user-settings/account`
   → signed out. The account is suspended immediately (login blocked) and
   permanently purged within 30 days; the dialog says so.
+- **Hardening (steering risk, 3.1.1)** — the uploads-paused banner no longer
+  says "manage your plan on the dembrane web dashboard" (a call to action
+  toward external purchase counts as steering even without a link); it now
+  just states the limit. The Settings "Open project editor" and "Source code"
+  links open in the in-app Safari sheet instead of the external browser.
 
 ## Before resubmitting (checklist)
 

@@ -83,8 +83,9 @@ struct HomeView: View {
             .foregroundStyle(BrandColor.royalBlue)
     }
 
-    // Informational only — no in-app purchase button/link (App Store compliant
-    // on every storefront; plan changes happen on the web dashboard).
+    // Informational only — no in-app purchase button/link, and no copy pointing
+    // at where to pay (3.1.1 counts "calls to action" toward external purchase
+    // as steering, even without a link). Plan changes happen on the web dashboard.
     @ViewBuilder private var freeTierBanner: some View {
         if model.uploadsLocked {
             HStack(alignment: .top, spacing: 10) {
@@ -92,7 +93,7 @@ struct HomeView: View {
                     .foregroundStyle(.orange)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Uploads paused").font(.subheadline.weight(.semibold))
-                    Text("You've reached your plan's limit. New recordings stay on this device until you manage your plan on the dembrane web dashboard.")
+                    Text("You've reached your plan's limit. New recordings stay safely on this device for now.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }

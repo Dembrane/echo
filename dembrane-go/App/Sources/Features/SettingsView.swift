@@ -5,6 +5,7 @@ struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @State private var showProjectPicker = false
     @State private var confirmDelete = false
+    @State private var safariURL: URL?
 
     var body: some View {
         @Bindable var model = model
@@ -29,7 +30,9 @@ struct SettingsView: View {
                         }
                     }
                     if let url = model.portalEditorURL {
-                        Link(destination: url) {
+                        Button {
+                            safariURL = url
+                        } label: {
                             Label("Open project editor", systemImage: "slider.horizontal.3")
                         }
                     }
@@ -37,7 +40,9 @@ struct SettingsView: View {
 
                 Section("About") {
                     LabeledContent("Version", value: appVersion)
-                    Link("Source code", destination: URL(string: "https://github.com/dembrane")!)
+                    Button("Source code") {
+                        safariURL = URL(string: "https://github.com/dembrane")!
+                    }
                 }
 
                 // Separated from Sign out so it's hard to hit by mistake.
@@ -60,6 +65,7 @@ struct SettingsView: View {
             .sheet(isPresented: $showProjectPicker) {
                 ProjectPicker { model.selectProject($0) }
             }
+            .safariSheet(url: $safariURL)
             .confirmationDialog("Delete your account?",
                                 isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Delete my account", role: .destructive) {
