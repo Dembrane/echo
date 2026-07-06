@@ -7,7 +7,6 @@ from httpx import AsyncClient, ASGITransport
 from fastapi import FastAPI, HTTPException
 
 import dembrane.api.v2.bff.memory as memory_bff
-from dembrane.api.agentic import _build_initial_agent_prompt_content
 from dembrane.api.v2.bff.memory import router as memory_router
 from dembrane.api.dependency_auth import DirectusSession, require_directus_session
 
@@ -231,21 +230,16 @@ async def test_delete_malformed_row_is_404(monkeypatch) -> None:
         assert fake.deleted == []
 
 
-def test_initial_prompt_includes_workspace_context() -> None:
-    content = _build_initial_agent_prompt_content(
-        project_name="Street interviews",
-        project_context="Ask about the market",
-        user_message="hello",
-        workspace_context="Municipality of Utrecht listening programme",
-    )
-    assert "Workspace Context: Municipality of Utrecht listening programme" in content
-    assert content.index("Workspace Context:") < content.index("Project Context:")
+@pytest.mark.asyncio
+async def test_list_memory_surfaces_broken_reads_as_502(monkeypatch) -> None:
+    # The async client returns Directus's error envelope (a dict) on
+    # permission/schema failures. That must never render as an empty list —
+    # hosts read "no memories" as reassurance about what's stored.
+    class _BrokenDirectus(_FakeDirectus):
+        async def get_items(self, collection: str, query: dict) -> Any:  # noqa: ARG002
+            return {"error": "permission denied"}
 
+    monkeypatch.setattr(memory_bff, "async_directus", _BrokenDirectus())
 
-def test_initial_prompt_defaults_workspace_context_to_none_marker() -> None:
-    content = _build_initial_agent_prompt_content(
-        project_name="Street interviews",
-        project_context=None,
-        user_message="hello",
-    )
-    assert "Workspace Context: (none)" in content
+    res = await _get(_app(), "/api/v2/bff/memory/user")
+    assert res.status_code == 502

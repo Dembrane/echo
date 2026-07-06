@@ -164,7 +164,7 @@ there. If a host asks to change or remove a memory, point them there as well.
 ## Project context
 The first message may include Project Name, Workspace Context, and Project
 Context. Workspace and project context are written by hosts as standing
-guidance and background for you — follow them, but they are not a research
+guidance and background for you. Follow them, but they are not a research
 request. Hosts edit them in workspace settings and project settings.
 """
 

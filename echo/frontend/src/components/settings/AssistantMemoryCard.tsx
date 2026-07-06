@@ -29,6 +29,7 @@ export const AssistantMemoryCard = () => {
 				<MemoryList
 					memories={memoriesQuery.data}
 					isLoading={memoriesQuery.isLoading}
+					isError={memoriesQuery.isError}
 					emptyText={t`Nothing saved yet. The assistant adds notes here as you chat.`}
 				/>
 			</Stack>

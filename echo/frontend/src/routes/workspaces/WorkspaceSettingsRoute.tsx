@@ -1389,6 +1389,10 @@ function PrivacyAndDefaultsSection({
 
 	// Assistant context autosaves on blur, mirroring description.
 	const [context, setContext] = useState<string>(settings.context ?? "");
+	// Escape triggers blur synchronously, before React re-renders with the
+	// reset value — the blur handler would still see (and save) the
+	// discarded draft. The ref tells it to skip that save.
+	const contextEscapedRef = useRef(false);
 	const contextMutation = useMutation({
 		mutationFn: (value: string) =>
 			updateWorkspace(workspaceId, { context: value }),
@@ -1563,12 +1567,17 @@ function PrivacyAndDefaultsSection({
 						value={context}
 						onChange={(e) => setContext(e.currentTarget.value)}
 						onBlur={() => {
+							if (contextEscapedRef.current) {
+								contextEscapedRef.current = false;
+								return;
+							}
 							if (context !== (settings.context ?? "")) {
 								contextMutation.mutate(context);
 							}
 						}}
 						onKeyDown={(e) => {
 							if (e.key === "Escape") {
+								contextEscapedRef.current = true;
 								setContext(settings.context ?? "");
 								(e.currentTarget as HTMLTextAreaElement).blur();
 							}

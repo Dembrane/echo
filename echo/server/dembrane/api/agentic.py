@@ -278,7 +278,9 @@ async def _get_workspace_context_for_project(project: dict[str, Any]) -> Optiona
     if not workspace_id:
         return None
     try:
-        workspace = await async_directus.get_item("workspace", workspace_id)
+        workspace = await async_directus.get_item(
+            "workspace", workspace_id, params={"fields": "context"}
+        )
     except Exception:  # noqa: BLE001
         logger.warning("Workspace %s read failed while building prompt", workspace_id)
         return None

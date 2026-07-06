@@ -20,6 +20,7 @@ from logging import getLogger
 
 from fastapi import APIRouter, HTTPException
 
+from dembrane.api.agentic import MEMORY_READ_LIMIT, MEMORY_CARD_FIELDS
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.middleware import get_workspace_context
 from dembrane.api.v2.bff._access import resolve_project_access
@@ -28,16 +29,11 @@ from dembrane.api.dependency_auth import DependencyDirectusSession
 router = APIRouter()  # /v2/bff/memory
 logger = getLogger("api.v2.bff.memory")
 
-MEMORY_LIST_FIELDS = [
-    "id",
-    "scope",
-    "memory_key",
-    "content",
-    "source",
-    "created_at",
-    "updated_at",
-]
-MEMORY_LIST_LIMIT = 200
+# The agent's card shape plus created_at for the settings UI. One source
+# of truth (agentic.py) so the agent-facing and host-facing cards can't
+# drift apart.
+MEMORY_LIST_FIELDS = [*MEMORY_CARD_FIELDS, "created_at"]
+MEMORY_LIST_LIMIT = MEMORY_READ_LIMIT
 
 
 def _to_memory_card(row: dict[str, Any]) -> dict[str, Any]:
@@ -57,7 +53,12 @@ async def _list_memory(filter_: dict[str, Any]) -> list[dict[str, Any]]:
         },
     )
     if not isinstance(rows, list):
-        return []
+        # The async client returns Directus's error envelope (a dict) on
+        # permission/schema failures. On this surface "empty" must never
+        # mask "broken" — hosts read the empty state as "the assistant
+        # stores nothing about me".
+        logger.error("agent_memory read failed: %s", rows)
+        raise HTTPException(status_code=502, detail="Couldn't read memories")
     return [_to_memory_card(row) for row in rows if isinstance(row, dict)]
 
 

@@ -1296,7 +1296,7 @@ msgstr "Accept and join"
 msgid "Accepted terms"
 msgstr "Accepted terms"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1827
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1836
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:576
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:702
 #: src/routes/project/CreateProjectRoute.tsx:208
@@ -1838,7 +1838,7 @@ msgstr "All visible conversations selected"
 msgid "All workspaces"
 msgstr "All workspaces"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1912
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1921
 msgid "Allow dembrane staff to access this workspace for support"
 msgstr "Allow dembrane staff to access this workspace for support"
 
@@ -2019,7 +2019,7 @@ msgstr "Another admin or owner will need to restore you."
 msgid "Any tag"
 msgstr "Any tag"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1841
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1850
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 
@@ -2297,7 +2297,7 @@ msgstr "Assign"
 msgid "Assistant"
 msgstr "Assistant"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1560
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1564
 msgid "Assistant context"
 msgstr "Assistant context"
 
@@ -2451,7 +2451,7 @@ msgstr "Automatically send conversation data to your other tools and services wh
 msgid "Available on innovator and above."
 msgstr "Available on innovator and above."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1821
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1830
 msgid "Available on innovator and above. Upgrade to unlock."
 msgstr "Available on innovator and above. Upgrade to unlock."
 
@@ -2753,7 +2753,7 @@ msgstr "can read"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1099
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1133
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1307
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1894
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1903
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:735
 #: src/routes/project/ProjectsHome.tsx:441
 #: src/routes/project/CreateProjectRoute.tsx:327
@@ -3655,6 +3655,10 @@ msgstr "Couldn't copy the link."
 msgid "Couldn't join right now"
 msgstr "Couldn't join right now"
 
+#: src/components/memory/MemoryList.tsx:44
+msgid "Couldn't load memories. Refresh to try again."
+msgstr "Couldn't load memories. Refresh to try again."
+
 #. placeholder {0}: res.status
 #: src/routes/organisation/OrganisationRoute.tsx:150
 msgid "Couldn't load organisation ({0})"
@@ -3693,7 +3697,7 @@ msgstr "Couldn't load workspaces. Close and reopen to retry."
 msgid "Couldn't refresh usage. Try again."
 msgstr "Couldn't refresh usage. Try again."
 
-#: src/components/memory/MemoryList.tsx:45
+#: src/components/memory/MemoryList.tsx:62
 msgid "Couldn't remove this memory"
 msgstr "Couldn't remove this memory"
 
@@ -3858,7 +3862,7 @@ msgstr "Crop Avatar"
 msgid "Crop Image"
 msgstr "Crop Image"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1761
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1770
 msgid "Crop logo"
 msgstr "Crop logo"
 
@@ -3895,7 +3899,7 @@ msgstr "Custom"
 msgid "Custom Filename"
 msgstr "Custom Filename"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1736
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1745
 msgid "Custom logo"
 msgstr "Custom logo"
 
@@ -3907,7 +3911,7 @@ msgstr "Custom Logo"
 msgid "Custom title prompt"
 msgstr "Custom title prompt"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1595
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1604
 msgid "Custom workspace logo shown to participants."
 msgstr "Custom workspace logo shown to participants."
 
@@ -4206,7 +4210,7 @@ msgstr "dembrane events"
 msgid "Describe what the language model should extract or summarize from the conversation..."
 msgstr "Describe what the language model should extract or summarize from the conversation..."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1537
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1541
 #: src/routes/project/CreateProjectRoute.tsx:197
 #: src/routes/project/CreateProjectRoute.tsx:279
 #: src/routes/organisation/OrganisationRoute.tsx:1117
@@ -4486,7 +4490,7 @@ msgstr "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employ
 #~ msgid "e.g. 12-person research team starting in June."
 #~ msgstr "e.g. 12-person research team starting in June."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1512
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1516
 msgid "e.g. Client Alpha"
 msgstr "e.g. Client Alpha"
 
@@ -4494,7 +4498,7 @@ msgstr "e.g. Client Alpha"
 msgid "e.g. Client Alpha, Q1 Research"
 msgstr "e.g. Client Alpha, Q1 Research"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1539
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1543
 msgid "e.g. Client onboarding interviews, Q1 product research"
 msgstr "e.g. Client onboarding interviews, Q1 product research"
 
@@ -4507,7 +4511,7 @@ msgstr "e.g. Climate Listening, Q1 Research"
 #~ msgid "e.g. tomorrow at 9:00"
 #~ msgstr "e.g. tomorrow at 9:00"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1562
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1566
 msgid "e.g. We are a research agency. Reports go to municipal clients, so keep summaries formal and in Dutch."
 msgstr "e.g. We are a research agency. Reports go to municipal clients, so keep summaries formal and in Dutch."
 
@@ -4965,7 +4969,7 @@ msgstr "Everyone can find it. Admins join directly; members can ask."
 msgid "Everyone in {0} can find and open this project."
 msgstr "Everyone in {0} can find and open this project."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1838
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1847
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:371
 #: src/components/workspace/DiscoverableWorkspaces.tsx:302
 msgid "Everyone in your organisation"
@@ -5901,8 +5905,8 @@ msgstr "Hi {firstName}"
 msgid "Hidden"
 msgstr "Hidden"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1858
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1876
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1867
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1885
 msgid "Hidden from organisation members. Organisation admins can still find and join."
 msgstr "Hidden from organisation members. Organisation admins can still find and join."
 
@@ -6296,7 +6300,7 @@ msgstr "Invite declined"
 msgid "Invite members to collaborate on projects and conversations in this workspace."
 msgstr "Invite members to collaborate on projects and conversations in this workspace."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1855
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1864
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:377
 #: src/components/workspace/DiscoverableWorkspaces.tsx:304
 msgid "Invite only"
@@ -6827,7 +6831,7 @@ msgstr "Licenses granted"
 msgid "Lifetime cap"
 msgstr "Lifetime cap"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1815
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1824
 msgid "Limit who can find and join this workspace."
 msgstr "Limit who can find and join this workspace."
 
@@ -7052,17 +7056,17 @@ msgstr "Login | dembrane"
 #~ msgid "Login as an existing user"
 #~ msgstr "Login as an existing user"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1592
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1662
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1601
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1671
 msgid "Logo"
 msgstr "Logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1482
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1486
 #: src/components/settings/WhitelabelLogoCard.tsx:90
 msgid "Logo removed"
 msgstr "Logo removed"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1472
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1476
 #: src/components/settings/WhitelabelLogoCard.tsx:67
 msgid "Logo updated"
 msgstr "Logo updated"
@@ -7263,7 +7267,7 @@ msgstr "Members"
 msgid "Memory"
 msgstr "Memory"
 
-#: src/components/memory/MemoryList.tsx:47
+#: src/components/memory/MemoryList.tsx:64
 msgid "Memory removed"
 msgstr "Memory removed"
 
@@ -7469,7 +7473,7 @@ msgstr "My templates"
 #~ msgid "My Templates"
 #~ msgstr "My Templates"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1510
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1514
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:437
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:674
 #: src/routes/project/CreateProjectRoute.tsx:179
@@ -7838,8 +7842,8 @@ msgstr "No invites went out. Check the list below."
 #~ msgid "No logo set — dembrane default will be used."
 #~ msgstr "No logo set — dembrane default will be used."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1621
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1697
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1630
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1706
 msgid "No logo set. dembrane default will be used."
 msgstr "No logo set. dembrane default will be used."
 
@@ -8206,12 +8210,11 @@ msgstr "Nothing here for you yet."
 msgid "Nothing matches the filter."
 msgstr "Nothing matches the filter."
 
-#: src/components/memory/WorkspaceMemorySection.tsx:28
-#: src/components/memory/ProjectMemorySection.tsx:23
+#: src/components/memory/MemoryList.tsx:53
 msgid "Nothing saved yet. The assistant adds notes here as people chat."
 msgstr "Nothing saved yet. The assistant adds notes here as people chat."
 
-#: src/components/settings/AssistantMemoryCard.tsx:32
+#: src/components/settings/AssistantMemoryCard.tsx:33
 msgid "Nothing saved yet. The assistant adds notes here as you chat."
 msgstr "Nothing saved yet. The assistant adds notes here as you chat."
 
@@ -8615,7 +8618,7 @@ msgstr "Optional field on the thank you page"
 #~ msgid "Optional. Context for our team."
 #~ msgstr "Optional. Context for our team."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1538
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1542
 msgid "Optional. What this workspace is for."
 msgstr "Optional. What this workspace is for."
 
@@ -9519,7 +9522,7 @@ msgstr "Privacy"
 #~ msgid "Privacy Statements"
 #~ msgstr "Privacy Statements"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1873
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1882
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:383
 #: src/routes/project/CreateProjectRoute.tsx:242
 #: src/routes/project/CreateProjectRoute.tsx:303
@@ -9559,7 +9562,7 @@ msgstr "Private workspace"
 #~ msgid "Private workspace — ask the workspace owner for an invite"
 #~ msgstr "Private workspace — ask the workspace owner for an invite"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1816
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1825
 msgid "Private workspaces"
 msgstr "Private workspaces"
 
@@ -10167,17 +10170,17 @@ msgid "Remind users to verify before finishing"
 msgstr "Remind users to verify before finishing"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1134
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1616
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1684
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1777
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1625
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1693
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1786
 #: src/routes/organisation/OrganisationRoute.tsx:1823
 #: src/components/settings/WhitelabelLogoCard.tsx:149
 #: src/components/settings/WhitelabelLogoCard.tsx:184
 #: src/components/settings/AccountSettingsCard.tsx:167
 #: src/components/settings/AccountSettingsCard.tsx:208
 #: src/components/organisation/InviteEmailList.tsx:58
-#: src/components/memory/MemoryList.tsx:81
-#: src/components/memory/MemoryList.tsx:101
+#: src/components/memory/MemoryList.tsx:98
+#: src/components/memory/MemoryList.tsx:118
 msgid "Remove"
 msgstr "Remove"
 
@@ -10242,7 +10245,7 @@ msgstr "Remove from organisation?"
 msgid "Remove from this chat"
 msgstr "Remove from this chat"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1771
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1780
 #: src/components/settings/WhitelabelLogoCard.tsx:181
 msgid "Remove logo"
 msgstr "Remove logo"
@@ -10253,11 +10256,11 @@ msgstr "Remove logo"
 msgid "Remove member"
 msgstr "Remove member"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1773
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1782
 msgid "Remove the custom logo? The dembrane default will be used instead."
 msgstr "Remove the custom logo? The dembrane default will be used instead."
 
-#: src/components/memory/MemoryList.tsx:90
+#: src/components/memory/MemoryList.tsx:107
 msgid "Remove this memory?"
 msgstr "Remove this memory?"
 
@@ -10504,7 +10507,7 @@ msgstr "Required"
 msgid "Requires \"Ask for Email?\" to be enabled"
 msgstr "Requires \"Ask for Email?\" to be enabled"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1729
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1738
 msgid "Requires changemaker tier or above"
 msgstr "Requires changemaker tier or above"
 
@@ -10765,7 +10768,7 @@ msgstr "Save"
 msgid "participant.concrete.action.button.save"
 msgstr "Save"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1900
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1909
 msgid "Save access"
 msgstr "Save access"
 
@@ -10802,9 +10805,9 @@ msgstr "Save template"
 #~ msgstr "Save to my templates"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1386
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1401
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1433
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1452
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1405
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1437
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1456
 #: src/routes/organisation/OrganisationRoute.tsx:1084
 #: src/routes/admin/AdminSettingsRoute.tsx:458
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:109
@@ -11827,7 +11830,7 @@ msgstr "Staff-created"
 msgid "Standard access. Collaborates in the workspaces they're added to."
 msgstr "Standard access. Collaborates in the workspaces they're added to."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1561
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1565
 msgid "Standing guidance the assistant gets in every project chat in this workspace. Saves automatically."
 msgstr "Standing guidance the assistant gets in every project chat in this workspace. Saves automatically."
 
@@ -12246,7 +12249,7 @@ msgstr "That code didn't work. Try again with a fresh code from your authenticat
 msgid "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
 msgstr "The admin may have cancelled it, or the link was tampered with. Ask the inviter to send a new one."
 
-#: src/components/memory/MemoryList.tsx:97
+#: src/components/memory/MemoryList.tsx:114
 msgid "The assistant forgets it in every future chat."
 msgstr "The assistant forgets it in every future chat."
 
@@ -13474,7 +13477,7 @@ msgstr "Upgrade to generate a title for this conversation"
 msgid "Upgrade to generate summaries for this conversation"
 msgstr "Upgrade to generate summaries for this conversation"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1741
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1750
 msgid "Upgrade to unlock"
 msgstr "Upgrade to unlock"
 
@@ -13573,8 +13576,8 @@ msgstr "Upload limit reached. Upgrade your workspace."
 #~ msgid "Upload locked"
 #~ msgstr "Upload locked"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1641
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1708
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1650
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1717
 msgid "Upload logo"
 msgstr "Upload logo"
 
@@ -14295,7 +14298,7 @@ msgstr "When enabled, all new transcripts will have personal information (names,
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1917
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1926
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 msgstr "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 
@@ -14446,8 +14449,8 @@ msgstr "Workspace is full"
 msgid "Workspace limit reached"
 msgstr "Workspace limit reached"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1601
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1669
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1610
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1678
 msgid "Workspace logo"
 msgstr "Workspace logo"
 
@@ -14455,11 +14458,11 @@ msgstr "Workspace logo"
 msgid "Workspace name"
 msgstr "Workspace name"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1511
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1515
 msgid "Workspace name. Saves automatically."
 msgstr "Workspace name. Saves automatically."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1416
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1420
 msgid "Workspace renamed"
 msgstr "Workspace renamed"
 
@@ -14876,7 +14879,7 @@ msgstr "Your access to {0} ended on {1}."
 msgid "participant.verify.instructions.approval.helps"
 msgstr "Your approval helps us understand what you really think!"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1735
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1744
 msgid "Your brand on every participant screen."
 msgstr "Your brand on every participant screen."
 
@@ -14957,7 +14960,7 @@ msgstr "Your latest report generation was cancelled. Showing your most recent co
 #~ msgid "Your library is empty. Create a library to see your first insights."
 #~ msgstr "Your library is empty. Create a library to see your first insights."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1688
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1697
 msgid "Your logo is still active but can't be changed on this tier."
 msgstr "Your logo is still active but can't be changed on this tier."
 

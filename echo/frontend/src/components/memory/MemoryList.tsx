@@ -10,7 +10,8 @@ import { type AgentMemory, useDeleteMemoryMutation } from "./hooks";
 type MemoryListProps = {
 	memories: AgentMemory[] | undefined;
 	isLoading: boolean;
-	emptyText: string;
+	isError: boolean;
+	emptyText?: string;
 };
 
 /**
@@ -21,6 +22,7 @@ type MemoryListProps = {
 export const MemoryList = ({
 	memories,
 	isLoading,
+	isError,
 	emptyText,
 }: MemoryListProps) => {
 	const deleteMutation = useDeleteMemoryMutation();
@@ -34,8 +36,23 @@ export const MemoryList = ({
 		);
 	}
 
+	// A failed read must never look like "nothing stored": hosts read the
+	// empty state as reassurance about what the assistant keeps.
+	if (isError) {
+		return (
+			<Text size="sm">
+				<Trans>Couldn't load memories. Refresh to try again.</Trans>
+			</Text>
+		);
+	}
+
 	if (!memories || memories.length === 0) {
-		return <Text size="sm">{emptyText}</Text>;
+		return (
+			<Text size="sm">
+				{emptyText ??
+					t`Nothing saved yet. The assistant adds notes here as people chat.`}
+			</Text>
+		);
 	}
 
 	const handleConfirm = () => {
@@ -60,7 +77,7 @@ export const MemoryList = ({
 					className="border-b border-gray-200 last:border-b-0"
 				>
 					<Stack gap={2} className="min-w-0">
-						<Text size="sm" className="whitespace-pre-wrap break-words">
+						<Text className="whitespace-pre-wrap break-words">
 							{memory.content}
 						</Text>
 						{memory.updated_at && (

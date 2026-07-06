@@ -355,6 +355,30 @@ async def test_create_run_persists_user_message_without_dispatch(monkeypatch) ->
     )
 
 
+def test_initial_prompt_includes_workspace_context() -> None:
+    from dembrane.api.agentic import _build_initial_agent_prompt_content
+
+    content = _build_initial_agent_prompt_content(
+        project_name="Street interviews",
+        project_context="Ask about the market",
+        user_message="hello",
+        workspace_context="Municipality of Utrecht listening programme",
+    )
+    assert "Workspace Context: Municipality of Utrecht listening programme" in content
+    assert content.index("Workspace Context:") < content.index("Project Context:")
+
+
+def test_initial_prompt_defaults_workspace_context_to_none_marker() -> None:
+    from dembrane.api.agentic import _build_initial_agent_prompt_content
+
+    content = _build_initial_agent_prompt_content(
+        project_name="Street interviews",
+        project_context=None,
+        user_message="hello",
+    )
+    assert "Workspace Context: (none)" in content
+
+
 @pytest.mark.asyncio
 async def test_create_run_generates_title_for_untitled_linked_chat(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())

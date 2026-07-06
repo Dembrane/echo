@@ -1,4 +1,3 @@
-import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Stack, Text, Title } from "@mantine/core";
 import { useWorkspaceMemories } from "./hooks";
@@ -25,7 +24,7 @@ export const WorkspaceMemorySection = ({
 			<MemoryList
 				memories={memoriesQuery.data}
 				isLoading={memoriesQuery.isLoading}
-				emptyText={t`Nothing saved yet. The assistant adds notes here as people chat.`}
+				isError={memoriesQuery.isError}
 			/>
 		</Stack>
 	);
