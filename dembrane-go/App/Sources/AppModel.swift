@@ -860,20 +860,22 @@ final class AppModel {
         return nil
     }
 
-    /// The signed-in user's avatar (Directus asset) with an access token, since
-    /// asset reads are authed and AsyncImage can't attach a Bearer header.
-    /// Resolved after `me` loads.
-    var avatarURL: URL?
+    /// The signed-in user's avatar (Directus asset), fetched with the token in
+    /// an Authorization header — never as a URL query param, which would land
+    /// the session token in server access logs. Resolved after `me` loads.
+    var avatarImage: UIImage?
 
-    private func refreshAvatarURL() async {
-        guard let avatar = me?.avatar, !avatar.isEmpty else { avatarURL = nil; return }
-        var c = URLComponents(
-            url: environment.directusBaseURL.appending(path: "assets/\(avatar)"),
-            resolvingAgainstBaseURL: false)
+    private func refreshAvatar() async {
+        guard let avatar = me?.avatar, !avatar.isEmpty else { avatarImage = nil; return }
+        var req = URLRequest(url: environment.directusBaseURL.appending(path: "assets/\(avatar)"))
         if let token = await sessionManager.accessToken() {
-            c?.queryItems = [URLQueryItem(name: "access_token", value: token)]
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
-        avatarURL = c?.url
+        // On failure keep whatever avatar we last showed.
+        guard let (data, resp) = try? await URLSession.shared.data(for: req),
+              (resp as? HTTPURLResponse)?.statusCode == 200,
+              let image = UIImage(data: data) else { return }
+        avatarImage = image
     }
 
     /// Upload an audio file transferred from the Apple Watch.
@@ -1060,7 +1062,7 @@ final class AppModel {
             // Validate the session on launch: a dead session → show login.
             if await signOutIfUnauthorized(error) { return }
         }
-        await refreshAvatarURL()
+        await refreshAvatar()
         workspaces = (try? await api.workspaces()) ?? []
         await loadAllProjects()
 

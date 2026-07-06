@@ -60,17 +60,12 @@ struct HomeView: View {
     // 32pt circle that fills edge-to-edge (no internal padding), HIG nav-bar style.
     private static let avatarSize: CGFloat = 32
     @ViewBuilder private var avatarLabel: some View {
-        if let url = model.avatarURL {
-            AsyncImage(url: url) { phase in
-                if let image = phase.image {
-                    image.resizable().scaledToFill()
-                } else {
-                    placeholderAvatar
-                }
-            }
-            .frame(width: Self.avatarSize, height: Self.avatarSize)
-            .clipShape(.circle)
-            .overlay(Circle().strokeBorder(.quaternary, lineWidth: 0.5))
+        if let image = model.avatarImage {
+            Image(uiImage: image)
+                .resizable().scaledToFill()
+                .frame(width: Self.avatarSize, height: Self.avatarSize)
+                .clipShape(.circle)
+                .overlay(Circle().strokeBorder(.quaternary, lineWidth: 0.5))
         } else {
             placeholderAvatar
         }
