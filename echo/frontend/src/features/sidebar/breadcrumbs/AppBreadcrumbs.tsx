@@ -61,6 +61,7 @@ const USER_SETTINGS_LABELS: Record<string, string> = {
 	access: "My access",
 	account: "Account & security",
 	appearance: "Appearance",
+	assistant: "Assistant",
 	"project-defaults": "Project defaults",
 };
 
