@@ -255,18 +255,30 @@ const MonitorRow = ({
 					<Group gap={6} align="center" wrap="nowrap">
 						{conversation.recording_health === "stalled" && (
 							<Tooltip
-								label={t`Recording, but no audio has come in for a while — the participant may have lost connection.`}
+								label={t`Audio was coming in but stopped — they may have lost connection or locked their phone.`}
 								multiline
 								maw={280}
 								withArrow
 							>
 								<Badge
 									size="xs"
-									color="red"
+									color="orange"
 									variant="filled"
 									leftSection={<WarningCircleIcon size={12} />}
 								>
-									<Trans>No audio</Trans>
+									<Trans>Audio stopped?</Trans>
+								</Badge>
+							</Tooltip>
+						)}
+						{conversation.recording_health === "backgrounded" && (
+							<Tooltip
+								label={t`Their screen is locked or the tab is hidden — recording pauses until they come back.`}
+								multiline
+								maw={280}
+								withArrow
+							>
+								<Badge size="xs" color="gray" variant="light">
+									<Trans>Screen locked</Trans>
 								</Badge>
 							</Tooltip>
 						)}
@@ -503,14 +515,14 @@ export const LiveMonitorSection = ({
 					{summary.not_receiving > 0 && (
 						<Badge
 							size="sm"
-							color="red"
+							color="orange"
 							variant="filled"
 							leftSection={<WarningCircleIcon size={12} />}
 						>
 							<Plural
 								value={summary.not_receiving}
-								one="# not receiving"
-								other="# not receiving"
+								one="# audio stopped"
+								other="# audio stopped"
 							/>
 						</Badge>
 					)}

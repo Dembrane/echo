@@ -225,20 +225,38 @@ export const ParticipantConversationAudio = () => {
 
 	useWindowEvent("microphoneDeviceChanged", handleMicrophoneDeviceChanged);
 
+	// Tab hidden / phone locked — iOS suspends the mic, so recording effectively
+	// pauses. We report this as its own gentle state (not a scary "no audio"),
+	// and it fires an immediate beacon via the state-change effect below.
+	const [documentHidden, setDocumentHidden] = useState(
+		typeof document !== "undefined" ? document.hidden : false,
+	);
+	useEffect(() => {
+		const onVisibility = () => setDocumentHidden(document.hidden);
+		document.addEventListener("visibilitychange", onVisibility);
+		window.addEventListener("pagehide", onVisibility);
+		return () => {
+			document.removeEventListener("visibilitychange", onVisibility);
+			window.removeEventListener("pagehide", onVisibility);
+		};
+	}, []);
+
 	// What the participant is doing right now, for the host monitor. Reported
 	// with every beacon so the monitor can show recording / paused / verifying
-	// / just-waiting between audio chunks.
+	// / backgrounded / just-waiting between audio chunks.
 	const participantState = isStopping
 		? "finishing"
-		: isOnVerifyRoute
-			? "verifying"
-			: isOnRefineRoute
-				? "refining"
-				: isRecording
-					? "recording"
-					: stoppedRecordingTime !== null
-						? "paused"
-						: "waiting";
+		: documentHidden && isRecording
+			? "backgrounded"
+			: isOnVerifyRoute
+				? "verifying"
+				: isOnRefineRoute
+					? "refining"
+					: isRecording
+						? "recording"
+						: stoppedRecordingTime !== null
+							? "paused"
+							: "waiting";
 
 	// Liveness + telemetry beacon. Runs the whole time the participant is on the
 	// conversation screen (not just while recording) so the monitor sees a
@@ -260,7 +278,9 @@ export const ParticipantConversationAudio = () => {
 			});
 		};
 		void sendPing();
-		const interval = setInterval(() => void sendPing(), 5000);
+		// A snappier beacon while on the recording screen so the host sees state
+		// changes in a few seconds rather than tens of seconds.
+		const interval = setInterval(() => void sendPing(), 3000);
 		return () => {
 			cancelled = true;
 			clearInterval(interval);

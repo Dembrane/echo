@@ -9,7 +9,6 @@ import { Button, Checkbox, Stack, Text, Title } from "@mantine/core";
 import { Logo } from "@/components/common/Logo";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useVisitorBeacon } from "@/hooks/useVisitorBeacon";
 import { testId } from "@/lib/testUtils";
 import { cn } from "@/lib/utils";
 import { useOnboardingCards } from "./hooks/useOnboardingCards";
@@ -46,8 +45,16 @@ export interface LanguageCards {
 
 const ParticipantOnboardingCards = ({
 	project,
+	onFunnelStage,
 }: {
 	project: ParticipantProject;
+	/** Reports this participant's funnel stage up to the visitor beacon owned
+	 * by the landing route (so "scanned" can fire before this deck mounts). */
+	onFunnelStage?: (report: {
+		stage: string;
+		tags: string[];
+		tagsPreselected: boolean;
+	}) => void;
 }) => {
 	const [searchParams] = useSearchParams();
 	const skipOnboarding = searchParams.get("skipOnboarding");
@@ -274,11 +281,15 @@ const ParticipantOnboardingCards = ({
 						: currentSlideIndex > 0
 							? "terms"
 							: "scanned";
-	useVisitorBeacon(project.id, {
-		stage: funnelStage,
-		tags: preselectedTags,
-		tagsPreselected: preselectedTags.length > 0,
-	});
+	const tagsKey = preselectedTags.join("|");
+	// biome-ignore lint/correctness/useExhaustiveDependencies: preselectedTags folded into tagsKey; onFunnelStage identity is stable
+	useEffect(() => {
+		onFunnelStage?.({
+			stage: funnelStage,
+			tags: preselectedTags,
+			tagsPreselected: preselectedTags.length > 0,
+		});
+	}, [funnelStage, tagsKey]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be inspected
 	useEffect(() => {
