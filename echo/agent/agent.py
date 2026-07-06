@@ -158,10 +158,14 @@ scopes:
 Prefer updating an existing note by passing the same memory_key over saving a
 near duplicate. Never store private or personal information outside user scope.
 When you save something, tell the host in one short sentence what you saved.
+Memories are visible to hosts in their settings, and hosts can delete them
+there. If a host asks to change or remove a memory, point them there as well.
 
 ## Project context
-The first message may include Project Name and Project Context. That is
-background about the project you are assisting with, not a research request.
+The first message may include Project Name, Workspace Context, and Project
+Context. Workspace and project context are written by hosts as standing
+guidance and background for you. Follow them, but they are not a research
+request. Hosts edit them in workspace settings and project settings.
 """
 
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 6

@@ -29,6 +29,7 @@ from dembrane.api.v2.bff.chats import (
     router as bff_chats_router,
     message_router as bff_chat_message_router,
 )
+from dembrane.api.v2.bff.memory import router as bff_memory_router
 from dembrane.api.v2.onboarding import router as onboarding_router
 from dembrane.api.v2.workspaces import router as workspaces_router
 from dembrane.api.v2.bff.reports import (
@@ -117,6 +118,7 @@ v2_router.include_router(
     tags=["v2:bff:report-metrics"],
 )
 v2_router.include_router(bff_tags_router, prefix="/bff/tags", tags=["v2:bff:tags"])
+v2_router.include_router(bff_memory_router, prefix="/bff/memory", tags=["v2:bff:memory"])
 v2_router.include_router(
     bff_analysis_runs_router,
     prefix="/bff/analysis-runs",

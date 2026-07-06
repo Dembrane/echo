@@ -20,22 +20,29 @@ item to Linear when the key is available.
 
 ## Backlog
 
-### Memory (agent-side shipped; UI still deferred)
-Status: schema shipped (`agent_memory`); **agent-side code now shipped** —
+### Memory (agent-side AND UI shipped)
+Status: schema shipped (`agent_memory`); agent-side code shipped —
 `GET/POST /agentic/projects/{id}/memory`, `EchoClient.list_memory/write_memory`,
 and the `readMemory` / `remember(scope, content, memory_key)` tools. Read spans
 user + workspace + project scope; writes upsert on `memory_key`; content is
 generic/non-PII except at `user` scope; writes surface as ordinary tool calls.
 
+**UI exposure shipped (2026-07-06).** Owner decision: memories are
+view + delete only in the UI (the assistant stays the only writer); human-set
+guidance lives in context fields instead. Surfaces: user settings gets an
+Assistant section (own user-scope memories), project settings gets an
+Assistant memory section beside the context editor, workspace settings
+(general tab) gets the workspace memory list. Backed by `/v2/bff/memory`
+(list per scope + delete; user scope owner-only, project/workspace gate on
+chat:use — the same policy that creates memories through chat).
+
+**Workspace-context decision resolved (2026-07-06):** both, with a split by
+author. `workspace.context` (new schema field) is the human-set guidance,
+edited on the workspace settings general tab and handed to the assistant in
+every run prompt (Workspace Context line); `agent_memory` scope=workspace
+stays the assistant-written store, shown read-only below it.
+
 Still deferred:
-- **UI exposure of memories (multi-surface).** User preferences at user settings,
-  workspace preferences at a workspace-context surface, project memory alongside
-  the existing project context. Host-visible and host-editable. Reason deferred:
-  multi-surface frontend work that needs its own design pass; the agent-side
-  store is the prerequisite.
-- **Workspace-context surface.** Workspaces have no `context` field today. Decide:
-  add `workspace.context` (schema) vs. use `agent_memory` scope=workspace as the
-  store behind a workspace-context UI. Reason deferred: product/schema decision.
 - **Nano-model summarization of tool-call activity.** Summarize each tool call
   with a very small model for the chat's activity view ("read a memory", "updated
   the project context"). Reason deferred: needs a nano-model choice and a

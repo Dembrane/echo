@@ -227,9 +227,12 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "worked from summaries only" in prompt
     assert "read the full transcript" in prompt
     assert "never fabricate quotes" in prompt
-    # Project context awareness
+    # Project + workspace context awareness
     assert "project context" in prompt
-    assert "background about the project" in prompt
+    assert "workspace context" in prompt
+    assert "guidance and background" in prompt
+    # Memories are host-visible and host-deletable
+    assert "hosts can delete them" in prompt
     # Never leak internal machinery to the host
     assert "internal machinery" in prompt
     # Steer batched lookups over one-at-a-time calls
