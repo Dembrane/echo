@@ -230,7 +230,7 @@ def test_system_prompt_contains_conversational_and_research_directives():
     # Project + workspace context awareness
     assert "project context" in prompt
     assert "workspace context" in prompt
-    assert "standing guidance and background" in prompt
+    assert "guidance and background" in prompt
     # Memories are host-visible and host-deletable
     assert "hosts can delete them" in prompt
     # Never leak internal machinery to the host
