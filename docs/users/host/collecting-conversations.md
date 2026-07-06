@@ -48,9 +48,10 @@ flow is in [the participant portal](../../features/portal-and-participant-experi
 *[dembrane next only](../../features/dembrane-next.md).* During a live session, open
 *Monitor* in the project sidebar. It shows every participant from the moment they scan the QR,
 moving through *Scanned → Setting up → Recording* - so you spot the person stuck at the mic
-check while they're still in the room. Each live recording shows its state, duration, and a
-live transcript snippet; if someone's audio stops coming in you get an *Audio stopped?*
-warning, and a locked phone shows as *Screen locked*. Transcription progress and errors show
+check while they're still in the room. Each live recording shows its state, duration, a level
+meter so you can see audio is actually arriving, and a live transcript snippet; if someone's
+audio stops coming in you get an *Audio stopped?* warning, and a locked phone shows as
+*Screen locked*. Transcription progress and errors show
 per conversation, with a rough *catch up* estimate when a backlog builds. The project home
 shows the same thing in brief under *Live & recent*.
 

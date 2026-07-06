@@ -55,9 +55,11 @@ it keeps growing as people speak.
   drop off before recording, while it's still fixable.
 - *Each live recording* - who's recording, paused, or finishing, with a live transcript
   snippet and a running duration.
-- *Is the audio coming in?* - a recording that was sending audio and stopped gets an
-  *Audio stopped?* warning (they may have lost connection); a locked phone or hidden tab shows
-  *Screen locked*, because recording pauses until they come back.
+- *Is the audio coming in?* - each live recording shows a small level meter, so you can see
+  audio is actually flowing; when it goes silent it nudges you to *check the mic isn't muted*.
+  A recording that was sending audio and then stopped gets an *Audio stopped?* warning (they
+  may have lost connection); a locked phone or hidden tab shows *Screen locked*, because
+  recording pauses until they come back.
 - *Transcription progress* - a *Transcribing* count per conversation, a rough *catch up*
   estimate when a backlog builds, and an *Error* badge when something needs attention.
 

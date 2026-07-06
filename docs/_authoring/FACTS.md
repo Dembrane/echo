@@ -270,8 +270,10 @@ Auth: `/login /register /check-your-email /verify-email /password-reset /request
   mic ok/skipped/blocked, terms, details). Per-conversation rows: state pills (Recording,
   Paused, Verifying, Exploring, Typing, Finishing, Finished, Waiting, Just started, Idle),
   `Transcribing N clips` chip, `catch up ~N min` backlog estimate, red `Error` badge,
-  `Audio stopped?` (stalled) and `Screen locked` (backgrounded) warnings, weak-network and
-  low-battery hints, live transcript snippet. Real-time over SSE
+  `Audio stopped?` (stalled) and `Screen locked` (backgrounded) warnings, a live mic-level
+  meter (5-bar, from the beacon's `audio_level` 0..1 RMS, shown on `receiving` rows;
+  all-quiet hints *check the mic isn't muted*), weak-network and low-battery hints, live
+  transcript snippet. Real-time over SSE
   (`GET /v2/bff/conversations/monitor/stream`, Redis-cached snapshot ≤1 Directus read/3s).
   Project home shows a *Live & recent* section embedding the same monitor.
 - *Library / analysis* `/.../library`, `/.../library/views/:viewId`,
