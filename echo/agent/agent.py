@@ -1,6 +1,7 @@
 from logging import getLogger
 import re
 from typing import Any, Callable
+from datetime import datetime, timezone, timedelta
 
 from copilotkit.langgraph import CopilotKitState
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -146,6 +147,14 @@ ask one focused question first.
   instruction to run, in the project's language. Mention that verification has
   to be enabled for it to run, and offer a proposeProjectUpdate to switch
   is_verify_enabled on if getProjectSettings shows it off.
+
+## Canvases
+A canvas is a living page in the project Library. It regenerates on a loop until
+its expiry, usually about every 5 minutes. Propose one when the host asks for a
+recurring or live artifact, such as a wall, pulse, dashboard, or page that keeps
+itself fresh. Always say the expiry plainly. The host applies the proposal, and
+you can list canvases or pause, resume, and stop their loops by chat. Be honest
+that updates happen on the next rhythm, not instantly every second.
 
 ## Memory
 You can save durable notes with `remember` and recall them with `readMemory`.
@@ -796,6 +805,46 @@ def create_agent_graph(
         }
 
     @tool
+    async def proposeCanvas(
+        name: str,
+        brief: str,
+        gather_window_minutes: int = 60,
+        cadence_minutes: int = 5,
+        expires_in_hours: int = 8,
+    ) -> dict[str, Any]:
+        """Propose a living canvas for the host to apply.
+
+        Use this only when the host asked for a recurring or live artifact, such
+        as a screen, wall, dashboard, pulse, or page that keeps itself fresh.
+        Always state the expiry out loud in your message. The host applies it:
+        you never create it yourself.
+        """
+        normalized_name = name.strip()
+        normalized_brief = brief.strip()
+        if not normalized_name:
+            raise ValueError("A canvas name is required.")
+        if not normalized_brief:
+            raise ValueError("A canvas brief is required.")
+        if cadence_minutes < 2:
+            raise ValueError("cadence_minutes must be at least 2.")
+        if expires_in_hours > 168:
+            raise ValueError("expires_in_hours must be at most 168.")
+        if expires_in_hours <= 0:
+            raise ValueError("expires_in_hours must be positive.")
+
+        window_minutes = max(1, min(int(gather_window_minutes or 60), 60 * 24 * 14))
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=expires_in_hours)
+        return {
+            "type": "canvas_proposal",
+            "name": normalized_name,
+            "brief": normalized_brief,
+            "gather_spec": {"window_minutes": window_minutes},
+            "cadence_minutes": cadence_minutes,
+            "expires_at": expires_at.isoformat(),
+            "visible_to_user": True,
+        }
+
+    @tool
     async def sendProgressUpdate(update: str, next_steps: str = "") -> dict[str, Any]:
         """Emit a user-visible progress update without concluding the run."""
         normalized_update = update.strip()
@@ -891,6 +940,43 @@ def create_agent_graph(
         return {"memories": memories if isinstance(memories, list) else []}
 
     @tool
+    async def listCanvases() -> dict[str, Any]:
+        """List the project's canvases and their loop status."""
+        client = _create_echo_client()
+        try:
+            canvases = await client.list_canvases(project_id)
+        finally:
+            await client.close()
+        return {"canvases": canvases}
+
+    async def _canvas_loop_action(canvas_id: str, action: str) -> dict[str, Any]:
+        normalized_canvas_id = canvas_id.strip()
+        if not normalized_canvas_id:
+            raise ValueError("canvas_id is required.")
+        client = _create_echo_client()
+        try:
+            loop = await client.update_canvas_loop(project_id, normalized_canvas_id, action)
+        finally:
+            await client.close()
+        return {"canvas_id": normalized_canvas_id, "loop": loop}
+
+    @tool
+    async def pauseCanvasLoop(canvas_id: str) -> dict[str, Any]:
+        """Pause a canvas loop. Use this when the host asks to pause updates."""
+        return await _canvas_loop_action(canvas_id, "pause")
+
+    @tool
+    async def resumeCanvasLoop(canvas_id: str) -> dict[str, Any]:
+        """Resume a paused canvas loop if it has not ended."""
+        return await _canvas_loop_action(canvas_id, "resume")
+
+    @tool
+    async def stopCanvasLoop(canvas_id: str) -> dict[str, Any]:
+        """Stop a canvas loop permanently. Confirm with the host first because
+        stopping is terminal."""
+        return await _canvas_loop_action(canvas_id, "stop")
+
+    @tool
     async def remember(
         content: str,
         scope: str = "project",
@@ -941,12 +1027,17 @@ def create_agent_graph(
         getProjectSettings,
         proposeProjectUpdate,
         proposeCustomVerificationTopic,
+        proposeCanvas,
         sendProgressUpdate,
         listProjectChats,
         readChat,
         getLiveConversationStatus,
         reachOutToDembrane,
         readMemory,
+        listCanvases,
+        pauseCanvasLoop,
+        resumeCanvasLoop,
+        stopCanvasLoop,
         remember,
     ]
     system_prompt = SYSTEM_PROMPT + knowledge.prompt_section(docs_base_url=docs_base_url)

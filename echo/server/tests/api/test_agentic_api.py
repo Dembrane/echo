@@ -766,6 +766,89 @@ async def test_get_project_settings_returns_whitelisted_fields(monkeypatch) -> N
 
 
 @pytest.mark.asyncio
+async def test_agentic_list_canvases_requires_host_token_and_project_access(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    async def _list(project_id: str) -> list[dict[str, Any]]:
+        assert project_id == "project-1"
+        return [
+            {
+                "id": "canvas-1",
+                "name": "Pulse wall",
+                "kind": "canvas",
+                "created_at": "2026-07-07T10:00:00Z",
+                "latest_generation_at": None,
+                "loop": {"status": "active", "expires_at": "later", "cadence_minutes": 5},
+            }
+        ]
+
+    monkeypatch.setattr(agentic_api, "list_canvas_summaries", _list)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/canvases")
+
+    assert response.status_code == 200
+    assert response.json()[0]["id"] == "canvas-1"
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1", access_token=None),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/canvases")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_agentic_canvas_lifecycle_delegates_to_shared_service(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:  # noqa: ARG002
+            return {
+                "id": "canvas-1",
+                "kind": "canvas",
+                "project_id": {"id": "project-1"},
+                "deleted_at": None,
+            }
+
+    async def _loop(report_id: str) -> dict[str, Any]:
+        assert report_id == "canvas-1"
+        return {"id": "loop-1", "status": "active", "expires_at": "later", "cadence_minutes": 5}
+
+    async def _apply(loop: dict[str, Any], action: str) -> dict[str, Any]:
+        assert loop["id"] == "loop-1"
+        assert action == "pause"
+        return {"status": "paused", "expires_at": "later", "cadence_minutes": 5}
+
+    monkeypatch.setattr(agentic_api, "async_directus", _AsyncDirectus())
+    monkeypatch.setattr(agentic_api, "get_loop_for_report", _loop)
+    monkeypatch.setattr(agentic_api, "apply_loop_action", _apply)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.post(
+            "/api/agentic/projects/project-1/canvases/canvas-1/loop/pause"
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "paused", "expires_at": "later", "cadence_minutes": 5}
+
+
+@pytest.mark.asyncio
 async def test_list_project_conversations_hides_project_from_non_members(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     session = _make_session(user_id="user-2")

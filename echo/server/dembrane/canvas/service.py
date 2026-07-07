@@ -161,6 +161,49 @@ async def get_latest_generation(report_id: str) -> dict[str, Any] | None:
     return rows[0] if rows else None
 
 
+async def list_canvas_summaries(project_id: str) -> list[dict[str, Any]]:
+    reports = await async_directus.get_items(
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "canvas"},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id", "kind", "user_instructions", "date_created"],
+                "sort": ["-date_created"],
+                "limit": -1,
+            }
+        },
+    )
+    rows = reports if isinstance(reports, list) else []
+    out: list[dict[str, Any]] = []
+    for report in rows:
+        report_id = str(report["id"])
+        loop = await get_loop_for_report(report_id)
+        generation = await get_latest_generation(report_id)
+        out.append(
+            {
+                "id": report_id,
+                "name": (loop or {}).get("name") or report.get("user_instructions") or "Canvas",
+                "kind": "canvas",
+                "created_at": report.get("date_created"),
+                "latest_generation_at": (generation or {}).get("created_at"),
+                "loop": (
+                    {
+                        "status": loop.get("status"),
+                        "expires_at": loop.get("expires_at"),
+                        "cadence_minutes": loop.get("cadence_minutes"),
+                    }
+                    if loop
+                    else None
+                ),
+            }
+        )
+    return out
+
+
 async def list_generations(report_id: str, limit: int = 8) -> list[dict[str, Any]]:
     rows = await async_directus.get_items(
         "canvas_generation",
@@ -203,3 +246,33 @@ async def resume_loop(loop_id: str) -> dict[str, Any]:
 async def stop_loop(loop_id: str) -> dict[str, Any]:
     await cancel_pending_tasks(task_type=TASK_CANVAS_TICK, payload_match={"loop_id": loop_id})
     return _data(await async_directus.update_item("agent_loop", loop_id, {"status": "stopped"}))
+
+
+def _parse_dt(value: Any) -> datetime | None:
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+async def apply_loop_action(loop: dict[str, Any], action: str) -> dict[str, Any]:
+    loop_id = str(loop["id"])
+    if action == "pause":
+        if loop.get("status") == "stopped":
+            return loop
+        return await pause_loop(loop_id)
+    if action == "resume":
+        expires_at = _parse_dt(loop.get("expires_at"))
+        if loop.get("status") in {"expired", "stopped"} or (
+            expires_at is not None and expires_at <= _now()
+        ):
+            raise ValueError("This loop has ended")
+        return await resume_loop(loop_id)
+    if action == "stop":
+        return await stop_loop(loop_id)
+    raise ValueError(f"Unsupported loop action: {action}")

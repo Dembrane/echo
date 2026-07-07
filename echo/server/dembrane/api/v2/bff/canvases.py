@@ -9,20 +9,25 @@ from fastapi import Query, APIRouter, HTTPException, status
 from pydantic import Field, BaseModel
 
 from dembrane.redis_async import get_redis_client
-from dembrane.canvas.ticks import run_tick
+from dembrane.canvas.ticks import run_tick, _generate_html
+from dembrane.canvas.gather import execute_gather_spec
 from dembrane.canvas.service import (
     create_canvas,
     list_generations,
+    apply_loop_action,
     get_loop_for_report,
     get_latest_generation,
+    list_canvas_summaries,
 )
 from dembrane.directus_async import async_directus
+from dembrane.canvas.sanitize import sanitize_canvas_html
 from dembrane.api.v2.bff._access import resolve_report_access, resolve_project_access
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
 
 REFRESH_TTL_SECONDS = 30
+PREVIEW_TTL_SECONDS = 10
 
 
 class CreateCanvasBody(BaseModel):
@@ -32,6 +37,12 @@ class CreateCanvasBody(BaseModel):
     gather_spec: dict[str, Any] | None = None
     cadence_minutes: int = Field(default=5, ge=2, le=120)
     expires_at: datetime
+
+
+class PreviewCanvasBody(BaseModel):
+    project_id: str
+    brief: str = Field(min_length=1, max_length=8000)
+    gather_spec: dict[str, Any] | None = None
 
 
 def _as_id(value: Any) -> str | None:
@@ -75,6 +86,44 @@ async def _canvas_payload(report: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _loop_payload(loop: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "status": loop.get("status"),
+        "expires_at": loop.get("expires_at"),
+        "cadence_minutes": loop.get("cadence_minutes"),
+    }
+
+
+async def _apply_canvas_loop_action(
+    canvas_id: str,
+    action: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    report, access = await _require_canvas(canvas_id, auth)
+    access.require("project:update")
+    loop = await get_loop_for_report(_report_id(report))
+    if not loop:
+        raise HTTPException(status_code=404, detail="Canvas loop not found")
+    try:
+        updated = await apply_loop_action(loop, action)
+    except ValueError as exc:
+        detail = str(exc)
+        if detail == "This loop has ended":
+            raise HTTPException(status_code=409, detail=detail) from exc
+        raise HTTPException(status_code=400, detail=detail) from exc
+    return _loop_payload(updated)
+
+
+@router.get("")
+async def list_canvases(
+    auth: DependencyDirectusSession,
+    project_id: str = Query(..., min_length=1),
+) -> list[dict[str, Any]]:
+    access = await resolve_project_access(project_id, auth)
+    access.require("project:read")
+    return await list_canvas_summaries(project_id)
+
+
 @router.post("")
 async def create_canvas_endpoint(
     body: CreateCanvasBody,
@@ -103,6 +152,38 @@ async def create_canvas_endpoint(
     )
     report = await async_directus.get_item("project_report", str(created["report"]["id"]))
     return await _canvas_payload(report)
+
+
+@router.post("/preview")
+async def preview_canvas(
+    body: PreviewCanvasBody,
+    auth: DependencyDirectusSession,
+) -> dict[str, str]:
+    access = await resolve_project_access(body.project_id, auth)
+    access.require("project:update")
+
+    client = await get_redis_client()
+    hot = not await client.set(
+        f"canvas:preview:{body.project_id}",
+        "1",
+        ex=PREVIEW_TTL_SECONDS,
+        nx=True,
+    )
+    if hot:
+        raise HTTPException(status_code=429, detail="Just previewed")
+
+    gather_bundle = await execute_gather_spec(
+        project_id=body.project_id,
+        acting_directus_user_id=auth.user_id,
+        gather_spec=body.gather_spec or {},
+    )
+    raw_html = await _generate_html(
+        brief=body.brief,
+        previous_html=None,
+        gather_bundle=gather_bundle,
+    )
+    sanitized = sanitize_canvas_html(raw_html)
+    return {"content_html": sanitized.html}
 
 
 @router.get("/{canvas_id}")
@@ -140,3 +221,14 @@ async def refresh_canvas(canvas_id: str, auth: DependencyDirectusSession) -> dic
         raise HTTPException(status_code=429, detail="Just refreshed")
     await run_tick(str(loop["id"]), "manual")
     return {"generation": "pending"}
+
+
+@router.post("/{canvas_id}/loop/{action}")
+async def update_canvas_loop(
+    canvas_id: str,
+    action: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    if action not in {"pause", "resume", "stop"}:
+        raise HTTPException(status_code=404, detail="Canvas loop action not found")
+    return await _apply_canvas_loop_action(canvas_id, action, auth)

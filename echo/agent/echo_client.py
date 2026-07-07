@@ -96,6 +96,23 @@ class EchoClient:
         payload = await self.get(f"/agentic/projects/{project_id}/memory")
         return payload if isinstance(payload, dict) else {}
 
+    async def list_canvases(self, project_id: str) -> list[dict[str, Any]]:
+        payload = await self.get(f"/agentic/projects/{project_id}/canvases")
+        return payload if isinstance(payload, list) else []
+
+    async def update_canvas_loop(
+        self,
+        project_id: str,
+        canvas_id: str,
+        action: str,
+    ) -> dict[str, Any]:
+        response = await self._client.post(
+            f"/agentic/projects/{project_id}/canvases/{canvas_id}/loop/{action}"
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+
     async def write_memory(
         self,
         project_id: str,

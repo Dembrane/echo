@@ -59,8 +59,42 @@ class _FakeAsyncClient:
                     ],
                 },
             )
+        if path.startswith("/agentic/projects/") and path.endswith("/canvases"):
+            return httpx.Response(
+                status_code=200,
+                request=request,
+                json=[
+                    {
+                        "id": "canvas-1",
+                        "name": "Pulse wall",
+                        "kind": "canvas",
+                        "created_at": "2026-07-07T10:00:00Z",
+                        "latest_generation_at": None,
+                        "loop": {
+                            "status": "active",
+                            "expires_at": "2026-07-07T18:00:00Z",
+                            "cadence_minutes": 5,
+                        },
+                    }
+                ],
+            )
         if path.startswith("/conversations/") and path.endswith("/transcript"):
             return httpx.Response(status_code=200, request=request, json="transcript text")
+        return httpx.Response(status_code=200, request=request, json={"ok": True})
+
+    async def post(self, path: str, json=None):  # noqa: ANN001
+        self.calls.append({"path": path, "json": json})
+        request = httpx.Request("POST", f"{self.base_url}{path}")
+        if path.endswith("/loop/pause"):
+            return httpx.Response(
+                status_code=200,
+                request=request,
+                json={
+                    "status": "paused",
+                    "expires_at": "2026-07-07T18:00:00Z",
+                    "cadence_minutes": 5,
+                },
+            )
         return httpx.Response(status_code=200, request=request, json={"ok": True})
 
 
@@ -133,3 +167,28 @@ async def test_list_project_conversations_accepts_transcript_query_filter(monkey
     assert payload["project_id"] == "project-1"
     assert client._client.calls[0]["path"] == "/agentic/projects/project-1/conversations"
     assert client._client.calls[0]["params"] == {"limit": 5, "transcript_query": "Bad Bunny TPUSA"}
+
+
+@pytest.mark.asyncio
+async def test_list_canvases_uses_expected_path(monkeypatch):
+    monkeypatch.setattr("echo_client.httpx.AsyncClient", _FakeAsyncClient)
+
+    client = EchoClient(bearer_token="token-1")
+    payload = await client.list_canvases("project-1")
+
+    assert payload[0]["id"] == "canvas-1"
+    assert client._client.calls[0]["path"] == "/agentic/projects/project-1/canvases"
+
+
+@pytest.mark.asyncio
+async def test_update_canvas_loop_uses_expected_path(monkeypatch):
+    monkeypatch.setattr("echo_client.httpx.AsyncClient", _FakeAsyncClient)
+
+    client = EchoClient(bearer_token="token-1")
+    payload = await client.update_canvas_loop("project-1", "canvas-1", "pause")
+
+    assert payload["status"] == "paused"
+    assert (
+        client._client.calls[0]["path"]
+        == "/agentic/projects/project-1/canvases/canvas-1/loop/pause"
+    )

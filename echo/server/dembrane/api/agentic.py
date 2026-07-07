@@ -24,6 +24,7 @@ from dembrane.agentic_worker import (
     AGENT_CANCELLED_ERROR_CODE,
     process_agentic_run,
 )
+from dembrane.canvas.service import apply_loop_action, get_loop_for_report, list_canvas_summaries
 from dembrane.directus_async import async_directus
 from dembrane.agentic_runtime import (
     request_cancel,
@@ -1200,6 +1201,61 @@ async def list_project_memory(
         "count": len(memories),
         "memories": memories,
     }
+
+
+def _loop_payload(loop: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "status": loop.get("status"),
+        "expires_at": loop.get("expires_at"),
+        "cadence_minutes": loop.get("cadence_minutes"),
+    }
+
+
+async def _get_project_canvas_or_404(project_id: str, canvas_id: str) -> dict[str, Any]:
+    report = await async_directus.get_item("project_report", canvas_id)
+    if (
+        not isinstance(report, dict)
+        or report.get("kind") != "canvas"
+        or _to_related_id(report.get("project_id")) != project_id
+        or report.get("deleted_at") is not None
+    ):
+        raise HTTPException(status_code=404, detail="Canvas not found")
+    return report
+
+
+@AgenticRouter.get("/projects/{project_id}/canvases")
+async def list_project_canvases(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> list[dict[str, Any]]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    return await list_canvas_summaries(project_id)
+
+
+@AgenticRouter.post("/projects/{project_id}/canvases/{canvas_id}/loop/{action}")
+async def update_project_canvas_loop(
+    project_id: str,
+    canvas_id: str,
+    action: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    if action not in {"pause", "resume", "stop"}:
+        raise HTTPException(status_code=404, detail="Canvas loop action not found")
+    await _get_project_canvas_or_404(project_id, canvas_id)
+    loop = await get_loop_for_report(canvas_id)
+    if not loop:
+        raise HTTPException(status_code=404, detail="Canvas loop not found")
+    try:
+        updated = await apply_loop_action(loop, action)
+    except ValueError as exc:
+        detail = str(exc)
+        if detail == "This loop has ended":
+            raise HTTPException(status_code=409, detail=detail) from exc
+        raise HTTPException(status_code=400, detail=detail) from exc
+    return _loop_payload(updated)
 
 
 @AgenticRouter.post("/projects/{project_id}/memory")
