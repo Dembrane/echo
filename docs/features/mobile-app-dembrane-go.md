@@ -1,6 +1,6 @@
 ---
 title: dembrane Go (the mobile app)
-description: The native iOS recorder for facilitators - local-first chunked recording, background capture, conversations, chat, and portal settings on the go.
+description: The native iOS recorder for facilitators - local-first chunked recording, background capture, conversations, chat, and portal settings on the go. Currently in beta, not yet on the App Store.
 audience: host
 ---
 
@@ -10,6 +10,11 @@ dembrane Go is the native iOS app for the person in the room - walking a venue, 
 tables, recording conversation after conversation on a phone. It records *locally first*, keeps
 going in the background, and uploads to the same project you'd see on the
 [dashboard](./projects.md). On background-recording resilience it's actually *ahead* of the web.
+
+> [!IMPORTANT]
+> dembrane Go is in *beta* - it isn't on the App Store yet. We're inviting a small group of
+> testers through TestFlight while we finish it. Want to be one of them? Email
+> [sameer@dembrane.com](mailto:sameer@dembrane.com) and we'll get you set up.
 
 You sign in with your email and password (two-factor supported), into the same workspaces and
 projects as the web. What you can do still follows your

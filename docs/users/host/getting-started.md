@@ -68,7 +68,7 @@ ready-to-print sheet with instructions and the code on it.
 People open the portal, do a quick mic test, and talk - the portal handles pausing,
 resuming, and uploading in the background. You can mix in other ways too: record yourself in
 the browser if you're holding the conversation, upload transcripts you already have, or
-record on your phone with [dembrane Go](./using-dembrane-go-mobile.md). See
+record on your phone with [dembrane Go](./using-dembrane-go-mobile.md) (currently in beta). See
 [collecting conversations](./collecting-conversations.md) for which to use when.
 
 ## 6. Read what comes back

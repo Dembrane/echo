@@ -39,7 +39,7 @@ Getting spoken (or written) input into dembrane.
 - *[The participant portal](./portal-and-participant-experience.md)* - the no-account
   experience people use to record for you.
 - *[The portal editor](./portal-editor.md)* - how you shape that experience.
-- *[dembrane Go (mobile)](./mobile-app-dembrane-go.md)* - the native iOS recorder.
+- *[dembrane Go (mobile)](./mobile-app-dembrane-go.md)* - the native iOS recorder, currently in beta.
 
 ## Making sense of it
 
