@@ -109,10 +109,11 @@ reach her back. Meanwhile the wall gets bold colour-coded tiles: the best versio
 
 ### The loop feeds the room
 
-At 11:40 the wall surfaces a theme she didn't expect - *bus route 12*. She walks over to two
-tables and asks them to dig into it. The next refresh shows the theme growing. That moment -
-the artifact changing what happens in the session - is the whole point of the loop. Over
-lunch, runs report "nothing new" and skip the rebuild.
+At 11:40 the wall surfaces a theme she didn't expect - *bus route 12*. Before walking
+over, she taps *refresh now* on the wall to catch the very latest, then asks two tables to
+dig into it. The next refresh shows the theme growing. That moment - the artifact changing
+what happens in the session - is the whole point of the loop. Over lunch, runs report
+"nothing new" and skip the rebuild.
 
 ### It ends cleanly
 
@@ -140,6 +141,10 @@ A message lands in the same chat: *"Theme images shipped - your wall can use the
 session."* The request she made in the hall came back as a feature, to her, in the place she
 asked for it.
 
+And quietly, the canvas-maker itself got better. What Marieke asked for - and what hundreds
+of other hosts asked their canvases for - taught the assistant's canvas-building craft new
+moves. Her next wall starts from everything everyone learned.
+
 ## What this needs (in plain terms)
 
 - *Project creation as a conversation*: a new project opens straight into its setup chat,
@@ -161,10 +166,14 @@ asked for it.
   with your real data when you have some, with clearly-marked sample data when you don't -
   and nothing goes live until you apply it. For a full rehearsal, the assistant will walk
   you through a two-minute test recording you can delete afterwards.
-- *The dynamic canvas*: a page you compose by asking - generated frames (charts, tiles,
-  anything HTML), plain text answers, and the live monitor, side by side. Generated parts
-  run in a locked frame with no access to anything; the generation itself acts with your
-  access and nothing more.
+- *The dynamic canvas*: a living page the assistant generates for you and keeps fresh -
+  charts, tiles, anything a page can show, in dembrane's look - with a *refresh now*
+  button for the impatient moment. (Later: compose several frames, plain answers, and the
+  live monitor side by side.) The page runs in a locked frame with no access to anything;
+  the generation itself acts with your reading access and nothing more.
+- *A craft that compounds*: the assistant's canvas-building know-how is one shared,
+  versioned skill - improved over time by what hosts everywhere ask for. Requests that
+  can't be met yet become the interviews and insights that teach it.
 - *Artifacts*: report-shaped things that aren't reports - versioned forever, regenerated in
   place.
 - *Feedback by chat*: an artifact is something you talk to; every change is a new version.
