@@ -50,3 +50,12 @@ def test_sanitize_unwraps_full_documents_to_body_fragments() -> None:
 def test_sanitize_accepts_plain_fragments() -> None:
     result = sanitize_canvas_html('<div class="canvas-shell">ok</div>', max_bytes=2000)
     assert result.html == '<div class="canvas-shell">ok</div>' 
+
+
+def test_sanitize_strips_html_comments() -> None:
+    result = sanitize_canvas_html(
+        '<div class="canvas-shell"><!-- Style overrides -->ok<!-- footer --></div>',
+        max_bytes=2000,
+    )
+    assert "<!--" not in result.html
+    assert "ok" in result.html

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from fastapi import Query, APIRouter, HTTPException
 from pydantic import Field, BaseModel
@@ -27,6 +27,9 @@ methodologies_router = APIRouter()  # /v2/bff/methodologies
 class GoalCreate(BaseModel):
     content: str = Field(..., min_length=1)
     chat_id: Optional[str] = None
+    # Provenance: 'interview' when the host applies a goal the assistant
+    # proposed after interviewing; 'loop' is reserved for the system.
+    set_by: Literal["host-edit", "interview"] = "host-edit"
 
 
 class MethodologyCreate(BaseModel):
@@ -142,7 +145,7 @@ async def create_project_goal_revision(
             "id": generate_uuid(),
             "project_id": project_id,
             "content": content,
-            "set_by": "host-edit",
+            "set_by": body.set_by,
             "chat_id": body.chat_id,
             "created_by": auth.user_id,
         },

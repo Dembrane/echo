@@ -1365,6 +1365,7 @@ export const AgenticChatPanel = ({
 											...suggestion,
 											projectId: suggestion.projectId || projectId,
 										}}
+										chatId={chatId}
 									/>
 								</div>
 							) : null;

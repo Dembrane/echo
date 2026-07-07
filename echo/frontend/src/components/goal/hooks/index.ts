@@ -62,8 +62,19 @@ export function useProjectGoal(projectId: string) {
 export function useSaveProjectGoalMutation(projectId: string) {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (content: string) =>
-			bff.post<ProjectGoalRevision>(`/projects/${projectId}/goal`, { content }),
+		mutationFn: (
+			input:
+				| string
+				| {
+						content: string;
+						set_by?: "host-edit" | "interview";
+						chat_id?: string;
+				  },
+		) =>
+			bff.post<ProjectGoalRevision>(
+				`/projects/${projectId}/goal`,
+				typeof input === "string" ? { content: input } : input,
+			),
 		onError: (error: BffError) => {
 			toast.error(error.message || t`Could not save this project goal`);
 		},
