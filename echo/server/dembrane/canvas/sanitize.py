@@ -38,6 +38,27 @@ def strip_markdown_fences(text: str) -> str:
     return _FENCE_RE.sub("", text.strip()).strip()
 
 
+_BODY_RE = re.compile(r"<body\b[^>]*>(?P<body>.*?)</body\s*>", re.IGNORECASE | re.DOTALL)
+_HEAD_RE = re.compile(r"<head\b[^>]*>.*?</head\s*>", re.IGNORECASE | re.DOTALL)
+_DOC_CHROME_RE = re.compile(r"<!DOCTYPE[^>]*>|</?(?:html|head|body)\b[^>]*>", re.IGNORECASE)
+
+
+def extract_body_fragment(html: str) -> str:
+    """Reduce model output to a body fragment.
+
+    The client assembler owns the document (kit CSS, CSP, d3); the stored
+    generation is only the content. The skill asks for a fragment, but a
+    model that emits a full document anyway is unwrapped rather than
+    rejected - its <head> (own styles/meta) is dropped entirely so it
+    cannot fight the kit.
+    """
+    match = _BODY_RE.search(html)
+    if match:
+        return match.group("body").strip()
+    without_head = _HEAD_RE.sub("", html)
+    return _DOC_CHROME_RE.sub("", without_head).strip()
+
+
 def sanitize_canvas_html(
     html: str,
     *,
@@ -48,7 +69,7 @@ def sanitize_canvas_html(
         raise CanvasSanitizationError("Empty canvas HTML")
 
     max_size = max_bytes or get_settings().canvas.max_html_bytes
-    cleaned = strip_markdown_fences(html)
+    cleaned = extract_body_fragment(strip_markdown_fences(html))
     stripped = 0
 
     def _strip_attr(match: re.Match[str]) -> str:
@@ -64,8 +85,8 @@ def sanitize_canvas_html(
     cleaned = _ATTR_URL_RE.sub(_strip_attr, cleaned)
     cleaned = _CSS_URL_RE.sub(_strip_css, cleaned)
 
-    if not re.search(r"<\s*html\b", cleaned, re.IGNORECASE):
-        raise CanvasSanitizationError("Canvas output is not a complete HTML document")
+    if not cleaned or "<" not in cleaned:
+        raise CanvasSanitizationError("Canvas output has no renderable content")
 
     size = len(cleaned.encode("utf-8"))
     if size > max_size:
