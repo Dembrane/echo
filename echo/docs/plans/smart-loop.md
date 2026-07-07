@@ -1,337 +1,323 @@
 # SMART loop - architecture plan and decision record
 
 Anchor user story: `docs/building/smart-loop.md` (the "live panel wall"). The story is the
-acceptance test; this doc records the architecture choices behind it, the risks, and the
-build sequence. Decisions marked **[OWNER]** need Sameer's sign-off before build; the rest
-are recommendations that can be overturned in review.
+acceptance test; this doc records the architecture choices, risks, and build sequence.
+Decisions marked **[OWNER]** need Sameer's sign-off; the rest are recommendations that can
+be overturned in review. Rewritten 2026-07-07 (evening) after the dynamic-canvas pivot -
+see "Consistency pass" at the end for what changed and what's re-opened.
 
-Status legend: PROPOSED -> AGREED -> BUILT.
+Status legend: PROPOSED -> AGREED -> BUILT. Superseded material is folded into the
+decision that replaced it, not preserved as archaeology.
 
-## D1. Headless run executor - PROPOSED
+## D15. The dynamic canvas - what v1 IS - PROPOSED [OWNER-STATED]
 
-The agentic runtime is reconnect-driven: a turn executes only while a client is attached to
-`POST /api/agentic/runs/{id}/stream`. Loops need turns with no browser.
+Owner directive (2026-07-07): the surface is called the **dynamic canvas**. On a canvas
+you PLACE elements: the monitor widget, text items, and - the star - **generated HTML
+frames**. v1 is: *the LLM generates HTML every N minutes, server-side, and it renders on
+the canvas in an iframe.* Skeletons, declarative fetchers, and reusable primitives are
+secondary and come later. People will ask for exactly this - "every five minutes I want
+this answer on the screen" - and the generation shorthand (our theme, Tailwind, chart
+libraries) makes the output good.
 
-- Option a: drive turns from a Dramatiq actor. Conflicts with the no-asyncio-in-actors rule;
-  the runtime is deeply async.
-- Option b (RECOMMENDED): an internal, agent-token-gated endpoint
-  `POST /api/agentic/runs/{id}/drive` that starts the same asyncio `_runner` used by the
-  stream path, in the API process, without a client attached. Events persist to
-  `project_agentic_run_event` as today; a host opening the chat later replays history
-  exactly like a reconnect. The existing turn lease already makes double-driving safe
-  across replicas; a dead replica's lease expires and the loop's next tick retries.
-- Risk: long runs occupy the API replica's event loop budget. Mitigate with per-run step
-  caps (exists) and loop-level budget caps (D4). If loop volume grows, the same endpoint
-  can move to a dedicated deployment of the API image without design change.
+Canvas element types (v1):
 
-## D2. Sandbox runtime - PROPOSED [OWNER]
+- `html_frame` - gather spec + brief -> LLM generates a full HTML document each tick ->
+  rendered in a sandboxed iframe. Charts (d3), layout, styling: the generator uses a
+  bundled kit (theme tokens, Tailwind, d3) - see D6.
+- `text_item` - gather spec + question -> plain text answer each tick (the D14a item
+  model, unchanged; the trivial sibling of html_frame).
+- `monitor_embed` - the existing live monitor in a frame (SSE, truly live, no AI step,
+  not tick-driven). The one raw-data display, deliberately outside the generation model.
 
-The agent writes Python that builds artifact HTML. Where does it run?
+Future (explicitly later, owner-stated): generated elements generalize into reusable
+primitives; methodologies bundle their own element sets (some dembrane-made); mix and
+match. The generator gains tools/primitives to CONNECT things (pulse products etc.) -
+"first the HTML".
 
-- Option a: subprocess inside the agent container. Cheapest; weakest isolation (shares the
-  agent's filesystem, env, and network identity - the agent token lives there).
-- Option b (RECOMMENDED): a small dedicated sandbox service in-cluster (own image, own
-  deployment). Executes one script per request in a fresh workdir subprocess with rlimits
-  (CPU seconds, memory, wall clock, output size), non-root, no persistent disk.
-  Kubernetes NetworkPolicy: egress ONLY to the API service. No other network. The agent
-  calls it over HTTP with {script, artifact context, scoped token}.
-- Option c: microVM isolation (gVisor/Firecracker or a hosted sandbox). Strongest; heavy
-  operationally; revisit if/when we execute user-supplied (not agent-supplied) code.
-- Risk posture for (b): a sandbox escape lands in a pod whose only egress is the API called
-  with a token no stronger than the user's browser session (D3). Container escape to the
-  node is out of scope at this tier - accepted until we host third-party code.
+## D16. The tick pipeline - bounded generation, not an agent loop - PROPOSED [OWNER Q1]
 
-## D3. Sandbox credentials: scoped, short-lived, read-mostly - PROPOSED [OWNER]
+"The LLM generates HTML every five minutes" needs one precision: WHAT runs at the tick?
 
-"The user's access" must not mean "the user's session token".
+- RECOMMENDED: a bounded pipeline per due element - (1) execute the element's gather spec
+  (declarative, deterministic: window / tags / filters, project-scoped, via the D3 token),
+  (2) ONE constrained LLM call: data + the element's brief + the previous frame (for
+  visual continuity - "keep the layout stable, update the content") + the kit's shorthand
+  guide, (3) sanitize (D6), (4) store the generation (D5). No tool loop, no agent
+  personality, bounded tokens, predictable cost and latency.
+- The FULL agent participates at AUTHORING time only: in chat it drafts/edits the element
+  (gather spec + brief) with Try-it previews (D12). Ticks then run that config
+  mechanically.
+- Rejected for v1: a full agentic run per tick (tool loop deciding what to fetch each
+  time) - unpredictable cost, slower, and unnecessary when the gather spec is explicit.
+  Revisit for elements that genuinely need per-tick judgement.
+- Frame-to-frame continuity matters on a big screen: passing the previous frame plus a
+  stability instruction prevents a redesign every 5 minutes. [OWNER Q4: confirm the
+  generator should see the previous frame; skip it and every tick is a fresh design.]
+- Model tier: fast-class (Flash) for generation ticks, not Pro - this is not chat; the
+  AGENTS.md "don't downgrade chat" rule doesn't apply. Escalate per-element only if
+  quality demands. [OWNER Q3]
 
-- Mint a short-TTL (minutes) token server-side per run, carrying
-  {directus_user_id, project_id, scopes, exp}, validated in `dependency_auth` alongside the
-  existing JWT path.
-- Scopes: READ endpoints the user could read anyway, plus artifact-version WRITE for the one
-  artifact the run is building. Explicitly NO destructive routes (delete conversation,
-  settings writes, member management) regardless of the user's real role.
-- Why: transcripts are untrusted input; they influence the code the agent writes (prompt
-  injection). With a read+artifact-write token, the worst injected script can do is read
-  what the host can read and write a bad artifact version - visible, versioned, revertible.
-- Risk: a second auth path to maintain. Keep issuance + validation in one module; log every
-  mint with run id.
+## D1. Headless agentic executor - RE-SCOPED, not v1-critical
 
-## D4a. Two-layer artifact refresh: skeleton vs data - PROPOSED
+Original problem: the agentic runtime is reconnect-driven (turns execute only while a
+client is attached to the stream). With D16, v1 ticks are bounded jobs, NOT agentic runs -
+they don't need the agentic runtime at all. Authoring happens in chat where a client IS
+attached.
 
-Owner review insight (2026-07-07): a "live" artifact has two kinds of update, and only one
-needs a language model.
+- v1: the tick executor is a plain async job path (scheduled_task -> gather -> generate ->
+  store -> narrate into the loop's chat thread via the service layer). Respect the
+  no-asyncio-in-Dramatiq rule: run ticks in the API process via an internal endpoint (the
+  lease pattern still prevents double-processing) or via `run_async_in_new_loop`.
+- LATER (when loops run full agent turns - skeleton revisions by loop, autonomous goal
+  refinement): the internal `POST /api/agentic/runs/{id}/drive` endpoint that starts the
+  same asyncio `_runner` the stream path uses, without a client. Events persist as today;
+  a host opening the chat replays history like a reconnect; the existing turn lease makes
+  double-driving safe.
 
-- SKELETON: the artifact's program - what data it fetches, how it aggregates and renders.
-  Built and revised ONLY by agentic runs (initial build, host feedback, agent-noticed
-  structural change like a new theme layout). Each revision = a skeleton VERSION
-  (append-only, host-visible, few and meaningful).
-- DATA TICK: the loop's routine beat. The sandbox re-executes the SAVED skeleton script
-  against fresh data via the scoped token and renders a new snapshot. NO agent turn, no LLM
-  call - cheap, deterministic, frequent. Snapshots are kept (scrub through the day) but are
-  not "versions" in the host-facing sense.
-- Consequence for D1: the headless executor has two entry points - a data tick (sandbox
-  exec only) and a skeleton revision (full agentic run). Ticks that detect a structural
-  trigger (e.g. "nothing renders sensibly anymore") may ENQUEUE a skeleton revision, never
-  perform one inline.
-- User language: hosts are never shown "polling" or intervals up front. The proposal card
-  says "stays up to date until <expiry>"; refresh cadence and skeleton-revision policy live
-  in an advanced setting. Default data tick: every few minutes while the loop is active.
-- Freshness classes, not one interval: a skeleton declares each data source's class and the
-  system picks the mechanism - `live` (rides the existing monitor SSE / Redis snapshot
-  stream, no polling at all - already built), `fast` (~2 min tick), `normal` (~5-10 min
-  tick), `on-demand` (only on view/preview). One artifact can mix classes (a wall's
-  presence counter is live; its theme tiles are normal). Tick type is also declared:
-  `data-only` (pure fetch+render, no LLM) or `data+summarize` (a bounded, cheap LLM step
-  inside the tick - e.g. pulse needs one; a monitor widget doesn't).
+## D2. Python sandbox service - DEFERRED past v1
 
-## D14. Client-side artifact runtime: common skeleton + generated fetchers - PROPOSED
+v1 generation is prompt -> HTML: no server-side code execution needed. Interactive charts
+run as JS inside the client-side sandboxed iframe (D6), credential-less. The Python
+sandbox returns to the path when server-side COMPUTATION enters (heavy aggregation,
+skeleton execution per D4a-v2). Decision parked with its shape intact: dedicated
+in-cluster service, fresh-workdir subprocess with rlimits, non-root, no persistent disk,
+NetworkPolicy egress ONLY to the API, called with the D3 token. MicroVM isolation only
+if/when we execute user-supplied code.
 
-Owner refinement (2026-07-07): refresh lives CLIENT-SIDE. A common, dembrane-shipped
-skeleton runtime renders artifacts in the dashboard (layout, full-screen view, refresh
-scheduling in JS); the artifact itself is essentially A BUNCH OF FETCHERS. Fetchers use the
-SSE event stream or the data APIs, scoped to the user - i.e. the VIEWER'S OWN session
-cookie, which is literally "the user's access to the same API the client uses". Agent-
-generated fetchers are the core generated unit.
+## D3. Scoped run credentials - PROPOSED [OWNER]
 
-Three-layer security model (non-negotiable):
+"The user's access" must not mean "the user's session token". Ticks run headless and need
+to read project data (gather specs) and write generations.
 
-1. TRUSTED SHELL (ours): the skeleton runtime. With D14a, its client-side fetching is
-   modest: it reads item ANSWERS (data products) with the viewer's credentials and
-   refreshes them, and hosts the embedded monitor widget's SSE. Raw project data is never
-   fetched for display by artifact code - answers are computed server-side.
-2. UNTRUSTED RENDER (generated, when descriptors + our block library aren't enough): runs
-   credential-less in a sandboxed iframe; the trusted shell fetches and POSTS DATA IN.
-   Generated code sees data, never cookies, never the API.
-3. SERVER LOOP (D4a, retained for what the client cannot do):
-   - data PRODUCTS that need compute or a model - e.g. the pulse summary. A server tick
-     (data+summarize) produces the product; a client fetcher merely reads it. Loops become
-     producers of data products, not re-renderers of HTML.
-   - PUBLISHED artifacts - the venue screen has NO session. Anonymous viewers get
-     server-rendered snapshots refreshed by ticks at the loop's cadence (reusing D4a
-     machinery), NOT a capability URL with live data access. This is the one place the
-     server tick still renders.
-
-Consequences: D3's minted token shrinks to server-side contexts (ticks, sandbox, published
-snapshot renders) - in-dashboard viewing needs no new auth at all. D6's "structured blocks"
-becomes the fetcher/block descriptor schema, and the widget endgame (pinnable/embeddable)
-is this same runtime rendering one fetcher-set in a small frame - the monitor widget (D13)
-is the first proof. In-chat "Try it" previews (D12) run in this runtime too, with the
-sample dataset injected at the shell.
-
-Open risk to watch: descriptor expressiveness. If real recipes keep needing generated
-render code (layer 2), the sandboxed-iframe path must be as ergonomic as the descriptor
-path or the agent will fight the abstraction. Decide after building pulse + wall.
-
-## D13. First-class loop recipes: curated before generated - PROPOSED
-
-Ship a small set of dembrane-maintained recipes as seeded skeletons with known-good
-fetchers - no LLM-written code in their tick path:
-
-- *Monitor widget* - a compact embed of the EXISTING live monitor (SSE-backed, reuses
-  gather_project_monitor). Deliberately NOT an artifact item (D14a): it's the one
-  raw-live display, its own first-class widget, embeddable inside artifact layouts.
-- *Pulse board* - a curated composition that is nothing but pulse fetchers (see D14a):
-  "set up a pulse" gives you one artifact tracking the questions you care about.
-
-Recipes are curated COMPOSITIONS of fetchers, not special types - the same primitives
-agent-generated artifacts (v1.5) compose freely.
-
-## D14a. Artifact items are fetch->AI workflows - PROPOSED (owner-final 2026-07-07)
-
-Owner correction, third and final shape: a plain data fetcher displayed raw "has no
-meaning". Every item in an artifact is a small server-side WORKFLOW, and the AI step is
-MANDATORY - gather data, ask a question, display the answer. Purely-live raw data display
-is the MONITOR's job, a separate first-class widget (SSE-backed, already built) - keeping
-it out of this model is what removes the earlier confusion.
-
-- ITEM = {gather spec (declarative: which conversations - window like "last 5 minutes",
-  tags, filters, scope is always the project), question (the AI step - required, free
-  text: "What are the themes right now?", "What are people discussing?"), answer shape
-  (TEXT for v1; other shapes later), cadence (PER ITEM, e.g. every 5 min,
-  advanced-tunable), window semantics (delta | current-state)}.
-- ARTIFACT = a set of items + layout. Schema: `artifact_item` rows (artifact_id, gather
-  spec, question, answer_shape, cadence_minutes, window, question_revision, sort) +
-  `artifact_item_answer` rows (item_id, question_revision, content, created_at) -
-  append-only, keyed to the question revision that produced them so history stays honest
-  when questions evolve mid-session.
-- LOOP: creating an artifact with items adds ONE loop by default - the artifact's loop.
-  Its scheduler answers whichever items are due on their own cadence (batching items that
-  share a tick into one structured LLM call). Loop ACTIVE simply means it's running;
-  paused/expired means items stop computing and histories freeze. Publish is decoupled
-  from the loop lifecycle entirely and deferred past v1 (the venue-screen beat in the
-  story is the north star, not a v1 requirement).
-- Quiet tick on a delta item -> no answer row; resume after pause -> one catch-up answer;
-  never a cumulative re-summary where the window says delta.
-- Editing is the standard skeleton flow: add/remove/rephrase an item goes through agent
-  proposal -> D12 "Try it" preview (the new question answered against current/sample
-  data) -> apply -> new artifact version.
-- Marieke's wall, recomposed: theme tiles (item: current-state themes question) + a
-  "what's happening" line (item: delta question) + an embedded monitor element for live
-  presence (the separate SSE widget, not an item).
-- Anonymization and ownership as before: answers paraphrase participant voice and follow
-  the project's anonymization stance; artifact rows are project-owned, creator recorded,
-  view = report:view, configure/pause = chat lifecycle. Post-expiry, frozen answer
-  histories are the session record and closing-report seed.
-
-"Set up a pulse for this project" is then a one-tap proposal in chat - configurable
-(scope, tone, cadence class within bounds) and editable by chat like any artifact, but its
-skeleton is ours, versioned by us. Hosts who know nothing about software get something
-that always works and is always previewable.
-
-Sequencing consequence (deliberate): v1 ships the ENTIRE loop machinery (D1, D4, D4a,
-D12 preview) on curated recipes only; agent-GENERATED skeletons (the sandbox writing
-custom walls) become v1.5. This de-risks the sandbox path - the riskiest component
-(LLM-written code) is the last one in, on top of infrastructure proven by curated code.
-
-## D12. Draft, preview, and the artifact test contract - PROPOSED
-
-How a host tests changes before applying, with zero software knowledge:
-
-- Every skeleton change (initial build, chat feedback, agent proposal) lands as a DRAFT
-  version with a preview snapshot rendered INSIDE the chat thread - the proposal card gains
-  a live "Try it" render. Apply promotes it; nothing goes live unseen.
-- Preview data source, picked automatically: real project data when any exists (a tick
-  against the draft); otherwise a BUNDLED sample dataset switched in at the fetch layer -
-  unmissably watermarked "sample data", never persisted, never model-invented (fabricated
-  participant quotes are an honesty hazard in this product).
-- The sample dataset doubles as the test fixture: a skeleton version must render cleanly
-  against the sample set AND an empty set before it can be applied. That is the artifact
-  CI.
-- Full-journey rehearsal: the assistant coaches a real 2-minute test recording
-  (record-then-delete). NO seed-data inserter - fake rows in the DB leak into monitor
-  counts, reports, library, and insights unless every consumer filters a test flag;
-  codebase-wide tax rejected for v1 ("mark as test" is the upgrade path if record-then-
-  delete proves clunky).
+- Mint a short-TTL (minutes) token server-side per tick/run:
+  {directus_user_id, project_id, scopes, exp}, validated in `dependency_auth` alongside
+  the existing JWT path. Log every mint with loop/element id.
+- Scopes: READ endpoints the user could read anyway, plus generation-WRITE for the one
+  element being computed. Explicitly NO destructive routes (delete conversation, settings
+  writes, member management) regardless of the user's real role.
+- Why: transcripts are untrusted input feeding a generator (prompt injection). With a
+  read+element-write token, the worst injected output is a bad frame - visible,
+  versioned, revertible. In-dashboard VIEWING needs no new auth: the canvas fetches
+  generations with the viewer's own session (D14).
 
 ## D4. Loop object model - PROPOSED
 
-New collection `agent_loop`: project_id, name, recipe (instruction text), interval_minutes,
-expires_at (REQUIRED - the agent always sets one and states it), status
-(active|paused|expired|stopped), created_from_chat_id, chat_id (the loop's dedicated
-thread), artifact_id, caps (max steps/run), failure_count. Plus `agent_loop_run` linking to
-`project_agentic_run` for history.
+One loop per canvas by default. New collection `agent_loop`: project_id, canvas
+(artifact) id, name, expires_at (REQUIRED - the agent always sets one and states it),
+status (active | paused | expired | stopped), created_from_chat_id, chat_id (the loop's
+dedicated thread), caps, failure_count. Plus `agent_loop_run` rows for tick history.
 
+- ACTIVE means exactly "it is running" (owner-stated). Paused/expired/stopped: elements
+  stop computing, histories freeze. Publish is fully decoupled and deferred (D5).
+- Cadence is PER ELEMENT (element config carries cadence_minutes); the loop's scheduler
+  computes whichever elements are due each tick. Default 5 minutes; floor 2 minutes
+  [OWNER Q3]; "continuous" exists only as the monitor embed (SSE), never as a generation
+  cadence.
 - Scheduling: reuse the durable `scheduled_task` queue (processor ticks every minute); a
-  completed run enqueues the next occurrence; expiry check on every tick. NO new APScheduler
-  jobs (backlog decision stands).
-- Guardrails: mandatory expiry; auto-pause after 3 consecutive failures; honest no-op runs
-  ("nothing new" skips the rebuild but records the run); all lifecycle changes narrated in
-  the loop's chat thread.
-- Chat lifecycle tools: proposeLoop (renders a proposal card - hosts apply, the agent never
-  self-starts a loop), listLoops, pauseLoop, resumeLoop, stopLoop, updateLoop (cadence
-  changes also via proposal).
+  completed tick enqueues the next occurrence; expiry checked every tick. NO new
+  APScheduler jobs (backlog decision stands).
+- Guardrails: mandatory expiry; auto-pause after 3 consecutive failures; honest no-op
+  ticks (quiet delta -> no generation, tick recorded); lifecycle changes narrated in the
+  loop's chat thread.
+- Chat lifecycle tools: proposeLoop (proposal card - hosts apply; the agent never
+  self-starts a loop), listLoops, pauseLoop, resumeLoop, stopLoop, updateLoop (cadence and
+  expiry changes also via proposal).
+- User language: hosts are never shown "polling" or intervals up front. The card says
+  "stays up to date until <expiry>"; cadence lives in an advanced setting.
 
-## D5. Artifacts on the report primitives, versions first-class - PROPOSED [OWNER]
+## D4a. Skeleton/data split - RETAINED AS THE v2 OPTIMIZATION
 
-- Reuse `project_report` machinery (sidebar, publish, PDF where applicable) rather than a
-  parallel system: add kind ('report' | 'artifact'), source ('host' | 'loop' | 'chat'), and
-  optional source_conversation_id.
-- Versions, two levels (per D4a): `artifact_version` = skeleton revisions (append-only,
-  host-facing, from chat feedback or agent proposals) and `artifact_snapshot` = rendered
-  data ticks (append-only, lightweight, the "scrub through the day" timeline; prunable
-  after loop expiry if volume demands). The report body points at the latest snapshot of
-  the current version. Nothing is overwritten at either level.
-- Feedback-by-chat: an artifact links to a chat scoped to it; agent tools
-  readArtifact/proposeArtifactChange write new versions. First-use coaching line in the
-  artifact chat. This flow gets its own docs page (the assistant cites it when teaching).
-- Naming [OWNER]: the sidebar surface collides with the existing Library (views/aspects).
-  Options: absorb, rename new surface ("Artifacts"), or rename old. Not blocking phase 1
-  (artifacts can sit in the Reports sidebar initially, which the story already leans on).
+The earlier design (ticks re-execute a saved skeleton with NO LLM; only skeleton
+revisions use a model) is inverted for v1 by owner directive: v1 ticks ARE generations.
+The split returns as the cost/stability optimization once real usage shows which frames
+stabilize: a settled html_frame can graduate to a saved skeleton + cheap data refresh.
+Cost control in v1 comes from D16 (bounded single call, fast model), D4 (expiry, cadence
+floor, per-element cadence), and caps. Freshness classes survive in miniature: monitor
+embed = live; generated elements = their cadence; previews = on-demand.
 
-## D6. Generated HTML safety - PROPOSED
+## D5. Canvas on the report primitives; generations + config revisions - PROPOSED [OWNER]
 
-Artifact HTML is model-generated from untrusted transcripts and may be published to a
-public URL.
+- The CANVAS is the artifact: reuse `project_report` machinery (sidebar list per project,
+  open/regenerate, creator recorded) with kind ('report' | 'canvas'), source ('host' |
+  'loop' | 'chat'). PDF/publish machinery exists there but publish is DEFERRED (owner:
+  "forget the publish part") - the venue-screen story beat is the north star, not v1.
+  When publish returns, published canvases are server-rendered snapshots (no session, no
+  capability URLs with live data access).
+- Two append-only levels, nothing overwritten:
+  - element CONFIG REVISIONS (gather spec, brief/question, cadence) - the host-facing
+    version history, created via chat proposals;
+  - GENERATIONS (`element_generation`: element_id, config_revision, content html|text,
+    created_at) - the per-tick outputs, the scrub-through-the-day timeline, keyed to the
+    revision that produced them so history stays honest when a brief changes mid-session;
+    prunable after loop expiry if volume demands.
+- Schema: `canvas_element` rows (canvas_id, type html_frame|text_item|monitor_embed,
+  gather_spec, brief/question, cadence_minutes, window delta|current-state,
+  config_revision, layout/sort) + `element_generation` as above.
+- Feedback-by-chat: the canvas links to a chat scoped to it; agent tools readCanvas /
+  proposeElementChange write config revisions. First-use coaching line. This flow gets its
+  own docs page.
+- Naming [OWNER]: sidebar surface name ("Canvas"?) and the old Library
+  (views/aspects) collision - decide before the sidebar item ships; canvases can sit
+  alongside Reports initially.
 
-- Sanitize server-side on version write (allowlist tags/attrs, strip scripts/handlers/
-  external loads), serve published artifacts with a strict CSP, render in-dashboard inside a
-  sandboxed iframe. Publishing stays an explicit host action (reused from reports).
-- Store artifacts as structured blocks + rendered HTML from day one, so the later widget UI
-  (draggable/pinnable primitives) is a renderer swap, not content regeneration.
+## D6. Generated HTML: the iframe posture - REDEFINED [OWNER Q2]
 
-## D7. Insight enrichment + reach-back - PROPOSED
+Charts (d3) and layout require SCRIPTS, so "sanitize by stripping scripts" (the earlier
+stance) is dead. The boundary moves from "no scripts" to "scripts in a locked room":
 
-- Thread chat identity server->agent: pass chat_id + triggering message_id + app_user_id in
+- Each html_frame renders in a SANDBOXED, NULL-ORIGIN iframe: no credentials, no storage,
+  no top-navigation, postMessage-only channel to the shell.
+- Strict CSP: scripts and styles ONLY from our bundled kit (theme tokens, Tailwind build,
+  d3, chart helpers - served from our origin, versioned) plus the frame's own inline
+  code; NO external network at all (no CDN, no fetch/XHR targets). Data is embedded in
+  the generated document at generation time - a frame is self-contained and static
+  between ticks.
+- Server-side sanitation still runs at store time for non-script vectors and size caps;
+  the iframe + CSP are the real boundary.
+- Generated content paraphrases participant voice: the project's anonymization stance
+  applies at generation, same as reports.
+
+## D7. Insight enrichment + reach-back - PROPOSED (unchanged)
+
+- Thread chat identity server->agent: chat_id + triggering message_id + app_user_id in
   the run context (closes the deferred reach-out linkage). `usage_insight` and
   `support_request` gain those columns.
 - Consent-first, always: the agent ASKS before informing the team ("Would you like to let
-  the dembrane team know...?") - for feature gaps AND for the pre-event heads-up from the
-  setup interview. Never silent. Phrasing lives in the interview skill.
-- Reach-back channel: a staff/system-authored message type appended into the original chat
-  ("Theme images shipped"). Small new primitive; needs its own visual treatment so it's
-  clearly from the team, not the assistant.
+  the dembrane team know...?") - feature gaps AND the pre-event heads-up. Never silent.
+- Reach-back channel: a staff/system-authored message type appended into the original
+  chat, visually distinct from the assistant.
 
-## D8. Interview skill (one muscle, two uses) - PROPOSED
+## D8. Interview skill (one muscle, two uses) - PROPOSED (unchanged)
 
-An agent skill (existing echo/agent/skills + readSkill mechanism) used for (a) goal-setting
-at project creation ("Help me figure it out" template) and (b) feature-gap capture.
-Convergent options (2-4 concrete choices per question), <=5 questions, confirm-understanding
-close, always escapable. Output: goal revision proposal (a) or detailed insight (b) with
-requirement, job-to-be-done, accepted workaround, verbatim quotes, reach-back ids.
+Agent skill used for (a) goal-setting at project creation ("Help me figure it out") and
+(b) feature-gap capture. Convergent options (2-4 concrete choices), <=5 questions,
+confirm-understanding close, always escapable. Output: goal revision proposal (a) or
+detailed insight (b) with requirement, job-to-be-done, accepted workaround, verbatim
+quotes, reach-back ids.
 
-## D9. Goal = versioned context, an instance of the methodology - PROPOSED
+## D9. Goal = versioned context, an instance of the methodology - PROPOSED (unchanged)
 
-`project_goal_revision` (or generalise to context revisions): content, set_by (host-edit |
-interview | loop), created_at, chat_id. Current goal = latest revision; empty -> default
-report prompt unchanged. Goal feeds report/artifact prompts. Meta-goal behavior in the
-system prompt: when no goal exists, gently offer the interview.
+`project_goal_revision`: content, set_by (host-edit | interview | loop), created_at,
+chat_id. Current goal = latest revision; empty -> default report prompt unchanged. Goal
+feeds report/canvas briefs. Meta-goal behavior: when no goal exists, gently offer the
+interview. The METHODOLOGY is the template; the GOAL is this project's instance.
 
-Relationship to D11: the METHODOLOGY is the template (how projects like this are run); the
-GOAL is this project's instance of it. The default dembrane methodology's opening move IS
-the meta-goal interview.
+## D10. Docs lead the build - AGREED (process, unchanged)
+
+Every feature here gets a story page under `docs/building/` BEFORE build; graduates into
+`features/` + the dembrane-next table on ship, via the code-to-docs process.
 
 ## D11. Methodology - the reusable way-of-working - PROPOSED [OWNER]
 
-The transferable layer above goal: a named, versioned playbook for how a kind of project is
-run (setup interview shape, goal template, loop recipes, artifact/report structures,
-rationale). Long-term this is the platform's compounding asset: hosts refine their own,
-partners publish theirs, evidence (projects/artifacts) attaches to versions.
+As agreed earlier today, plus one canvas addition. `methodology` (name, description,
+user-facing framing, owner, visibility private|workspace|public) + `methodology_version`
+(content blocks, created_by, note; evidence links later). `project.methodology_version_id`
+selects one; DEFAULT = seeded "dembrane" methodology v1 (= the meta-goal interview).
+Project creation opens directly into the setup chat with escape hatches (skip / come back
+/ read the docs); existing user/workspace methodologies are OFFERED in the conversation.
+Extraction skill proposes methodologies from real projects (nudge on repetition, never
+automatic, everything host-editable). NEW (owner, 2026-07-07): methodology versions will
+BUNDLE canvas element sets - "each methodology comes with its own set of things, some
+dembrane-made; mix and match" - future phase, recorded so the content-block schema leaves
+room. Explorer, publishing, evidence: later phases. MVP: schema + seeded default +
+creation-as-chat + selection-in-conversation + extraction suggestion.
 
-- Object model: `methodology` (name, description, user-facing framing "what this does for
-  your project", owner, visibility private|workspace|public) + `methodology_version`
-  (content blocks, created_by, note, evidence links later). `project.methodology_version_id`
-  selects one; DEFAULT = seeded "dembrane" methodology v1 (= the meta-goal interview).
-- Project creation opens directly into the setup chat (the selected methodology's opening
-  move), with explicit escape hatches: skip, come back in any chat, or read the docs. The
-  creation flow itself routes to the chat - this is a frontend flow change, not just prompt.
-  When the user or workspace already has methodologies, the setup chat OFFERS them first
-  ("start from Panel day v3, or figure this one out from scratch?") - selection happens in
-  the conversation, not a separate picker (the explorer comes later).
-- Extraction skill ("extract methodology"): after an artifact/report lands, the agent
-  reviews the decisions + rationale in the chats and proposes a methodology (or a new
-  version of the one in use) via the proposal-card pattern. Everything host-editable. The
-  agent SUGGESTS extraction when it notices repetition ("you're doing this again - want to
-  extract it?") - a nudge, never automatic.
-- Methodology explorer (browse/select, user-facing framing, versions) and
-  publishing/evidence: LATER phases - explicitly out of MVP.
-- MVP scope (v1): schema + seeded default + project-creation-as-chat + selection at
-  creation + the extraction suggestion writing a draft methodology. No explorer UI, no
-  publishing, no partner surface yet.
-- Docs: a methodology page under docs/building (what one is, why use one) so the assistant
-  can explain and suggest it.
+## D12. Draft, preview, and the test contract - PROPOSED (re-anchored)
 
-## D10. Docs lead the build - AGREED (process)
+- Every element config change (new element, edited brief/gather spec) lands as a DRAFT
+  revision with a "Try it" preview IN the chat: one generation run now, against real
+  project data when any exists, else the BUNDLED sample dataset - unmissably watermarked,
+  never persisted, never model-invented (fabricated participant quotes are an honesty
+  hazard). Apply promotes; nothing computes on a live canvas unseen.
+- Test contract per generation: the element's brief must produce a sane frame against the
+  sample set AND the empty set (graceful "no data yet" state) before Apply. That is the
+  canvas CI.
+- Full-journey rehearsal: coached 2-minute real test recording (record-then-delete). NO
+  seed-data inserter (DB pollution across monitor/reports/library/insights; "mark as
+  test" is the upgrade path if needed).
 
-Each feature in this plan gets a human-readable story page under `docs/building/` BEFORE
-build (the assistant grounds "that's being built" answers in them), and graduates into
-`features/` + dembrane-next table on ship, via the code-to-docs process.
+## D13. First-class canvas elements & future primitives - REWRITTEN
 
-## Build phases (parallelizable tracks after phase 0)
+- v1 ships with the three element types (D15) and ONE curated flow: "set up a pulse"
+  composes a canvas of text_items tracking the questions you care about (the tracked-
+  question model from D14a) - one tap from chat, no setup knowledge.
+- The earlier "curated recipes BEFORE generated code" sequencing is superseded by owner
+  directive: generated html_frames ARE v1. What survives of the intent: generation is
+  BOUNDED (D16), previewed (D12), versioned (D5), and sandboxed (D6) - the de-risking
+  moved from "avoid generation" to "constrain generation".
+- Later: generated elements generalize into reusable primitives the generator can
+  reference ("connect a pulse product into this frame"), and methodologies bundle element
+  sets (D11).
 
-- Phase 0 (serial, small): D3 token mint/validate + D7 chat-identity threading (both touch
-  auth/run-context plumbing).
-- Track A: D1 headless executor + D4/D4a loop object, ticks (data products + published
-  snapshots), scheduling, chat tools.
-- Track B: D14 client runtime - trusted shell, declarative fetchers, sandboxed render
-  iframe; D2 sandbox service shrinks to server-side ticks + snapshot renders (curated
-  first; generated code lands v1.5).
-- Track C: D5 artifacts + versions/snapshots + D12 draft/preview/test contract + feedback-
-  by-chat surface (+ D6 sanitization, now the descriptor/block schema).
-- Track D: D8 interview skill + D9 goal revisions + D11 methodology MVP (schema, seeded
-  default, project-creation-as-chat, extraction suggestion).
-- v1 = the whole machinery on D13's CURATED recipes (monitor widget, pulse). v1.5 = agent-
-  GENERATED skeletons (the full live-panel-wall story).
-- Integration: the story, end to end, as the acceptance test; then docs graduation (D10).
-- Later phases (post-story): methodology explorer + publishing + evidence; library uploads
-  (documents); widget UI primitives.
+## D14. The canvas runtime (client) - REWRITTEN
+
+- The dynamic canvas is the dembrane-shipped shell: layout, full-screen view, element
+  frames, and client-side refresh in JS - it polls for NEW GENERATIONS on each element's
+  cadence with the VIEWER'S OWN session (reading computed products only; raw project data
+  is never fetched by canvas code), and hosts the monitor embed's SSE.
+- html_frame content renders in the D6 sandboxed iframe; text_items render as native
+  typed components; monitor_embed is the existing monitor component.
+- Widget endgame (draggable / pinnable / embeddable, clean primitives): this same shell
+  rendering one element in a small frame - a renderer evolution, not a content migration,
+  because generations are stored per element.
+- In-chat "Try it" previews render through this same shell.
+
+## D14a. text_item: the tracked-question element - PROPOSED (narrowed)
+
+The gather->AI->answer workflow model, now scoped to the text_item element type (the AI
+step stays mandatory across ALL generated elements - html_frames have it by
+construction). ITEM = {gather spec (window like "last 5 minutes", tags, filters,
+project-scoped), question (required, free text), answer shape TEXT, per-element cadence,
+window semantics delta | current-state}. Quiet delta tick -> no answer; resume -> one
+catch-up; never a cumulative re-summary where the window says delta. Answers are
+generations (D5), keyed to config revision. Marieke's wall recomposed as a canvas:
+html_frame (theme tiles + what's-happening, one frame) or html_frame + text_items, plus a
+monitor_embed for live presence - author's choice per layout.
+
+## Build phases (rewritten for the canvas pivot)
+
+- Phase 0 (serial, small): D3 token mint/validate + D7 chat-identity threading.
+- Track A: D4 loop object + scheduled_task recurrence + chat lifecycle tools + D16 tick
+  pipeline (gather -> generate -> sanitize -> store -> narrate).
+- Track B: D5 canvas schema on report primitives + D14 canvas shell + D6 iframe/kit
+  (theme, Tailwind, d3 bundle) + D12 Try-it previews.
+- Track C: D8 interview skill + D9 goal revisions + D11 methodology MVP
+  (creation-as-chat included).
+- v1 acceptance: a host asks in chat for "X on the screen, updated every few minutes" ->
+  proposal -> Try it -> apply -> canvas in the sidebar, generations flowing, pause/stop
+  by chat, expiry honoured. The full live-panel-wall story (minus publish) is the test.
+- v2+: D4a skeleton graduation for stabilized frames; D2 Python sandbox when server-side
+  compute enters; publish/venue screens; primitives + methodology element bundles;
+  library uploads (documents); D1 full headless agentic runs for self-revising loops.
+
+## Consistency pass (2026-07-07, after the dynamic-canvas directive)
+
+Contradictions found and resolved in this rewrite:
+
+1. D13 "curated before generated" vs owner's "generated HTML IS v1" -> superseded;
+   de-risking reframed as constrain-generation (D16/D6/D12) instead of avoid-generation.
+2. D4a "ticks never call an LLM" vs v1 ticks = generations -> D4a demoted to the v2
+   optimization path.
+3. D14 "loops produce data products, not re-rendered HTML" -> wrong for v1; runtime
+   rewritten around generations.
+4. D6 "strip scripts" vs d3/interactive charts -> replaced with the locked-iframe
+   posture (null-origin, bundled kit, zero network).
+5. D2 Python sandbox was v1-critical -> v1 needs no code execution; deferred with shape
+   intact.
+6. D1 headless AGENTIC executor was the "core new piece" -> v1 ticks are bounded jobs;
+   the agentic drive endpoint moves to v2 (self-revising loops). v1 got cheaper.
+
+Open questions needing owner answers (numbered for reply):
+
+- Q1 (D16): confirm ticks are bounded single-call generations (agent only at authoring),
+  not full agent runs per tick.
+- Q2 (D6): confirm the iframe posture - scripts ALLOWED inside null-origin sandboxed
+  iframes with our bundled kit and zero network (this replaces "strip scripts").
+- Q3 (D16/D4): generation model tier (fast-class recommended) and the cadence floor
+  (2 minutes recommended; "continuous" reserved for the monitor embed).
+- Q4 (D16): should the generator see the PREVIOUS frame for visual continuity
+  (recommended), or regenerate from scratch each tick?
+- Q5 (D5): canvas surface naming in the sidebar + the old Library collision.
+- Q6 (D3): the read+element-write token scope - unchanged from this morning but now the
+  only [OWNER] security decision left in v1 (D2 deferred took the sandbox-tier question
+  with it).

@@ -21,8 +21,8 @@ Why publish them? Three reasons:
 
 ## In progress
 
-- [The SMART loop](./smart-loop.md) - recurring assistant runs that keep a live artifact up
-  to date during a session, with sandboxed code, versions, and feedback by chat.
+- [The SMART loop](./smart-loop.md) - a dynamic canvas the assistant regenerates through
+  your session: live frames and answers on a rhythm, versions kept, improved by chat.
 
 ## Related
 
