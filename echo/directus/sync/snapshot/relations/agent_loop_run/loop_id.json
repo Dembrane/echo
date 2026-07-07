@@ -1,0 +1,25 @@
+{
+  "collection": "agent_loop_run",
+  "field": "loop_id",
+  "related_collection": "agent_loop",
+  "meta": {
+    "junction_field": null,
+    "many_collection": "agent_loop_run",
+    "many_field": "loop_id",
+    "one_allowed_collections": null,
+    "one_collection": "agent_loop",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": null,
+    "sort_field": null
+  },
+  "schema": {
+    "table": "agent_loop_run",
+    "column": "loop_id",
+    "foreign_key_table": "agent_loop",
+    "foreign_key_column": "id",
+    "constraint_name": "agent_loop_run_loop_id_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "SET NULL"
+  }
+}

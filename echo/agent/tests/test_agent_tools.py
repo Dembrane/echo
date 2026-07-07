@@ -121,12 +121,18 @@ class _FakeEchoClient:
         project_id: str,
         message: str,
         page_context: str | None = None,
+        chat_id: str | None = None,
+        app_user_id: str | None = None,
+        message_id: str | None = None,
     ) -> dict:
         self.support_request_calls.append(
             {
                 "project_id": project_id,
                 "message": message,
                 "page_context": page_context,
+                "chat_id": chat_id,
+                "app_user_id": app_user_id,
+                "message_id": message_id,
             }
         )
         return {"id": "sr-1", "status": "new"}
@@ -969,6 +975,9 @@ async def test_reach_out_to_dembrane_sends_support_request_for_current_project()
         bearer_token="token-1",
         llm=llm,
         echo_client_factory=factory,
+        chat_id="chat-1",
+        app_user_id="app-user-1",
+        message_id="run-event-1",
     )
     tools = _tool_map(llm.bound_tools)
 
@@ -983,6 +992,9 @@ async def test_reach_out_to_dembrane_sends_support_request_for_current_project()
             "project_id": "project-1",
             "message": "My exports are failing",
             "page_context": "on the reports page",
+            "chat_id": "chat-1",
+            "app_user_id": "app-user-1",
+            "message_id": "run-event-1",
         }
     ]
     assert factory.instances[0].closed is True

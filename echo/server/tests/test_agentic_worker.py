@@ -47,6 +47,7 @@ async def test_process_agentic_run_completes_persists_and_publishes(monkeypatch)
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, message_history)
         assert thread_id == run["id"]
@@ -108,6 +109,7 @@ async def test_process_agentic_run_handles_timeout(monkeypatch) -> None:
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         raise AgenticTimeoutError("timed out")
@@ -159,6 +161,7 @@ async def test_process_agentic_run_persists_partial_stream_before_upstream_failu
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {"type": "assistant.delta", "content": "hel"}
@@ -213,6 +216,7 @@ async def test_process_agentic_run_handles_cancel_request(monkeypatch) -> None:
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {"type": "assistant.delta", "content": "hel"}
@@ -276,6 +280,7 @@ async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthes
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, message_history)
         assert thread_id == run["id"]
@@ -369,6 +374,7 @@ async def test_process_agentic_run_posts_no_synthetic_intro_when_model_has_no_pl
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {"type": "on_tool_start", "name": "listProjectConversations"}
@@ -435,6 +441,7 @@ async def test_process_agentic_run_logs_hidden_nudge_without_midpoint_fallback(m
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         for index in range(5):
@@ -528,6 +535,7 @@ async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_upd
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {
@@ -641,6 +649,7 @@ async def test_process_agentic_run_uses_progress_tool_output_from_toolmessage_sh
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {"type": "on_tool_start", "name": "sendProgressUpdate"}
@@ -739,6 +748,7 @@ async def test_process_agentic_run_suppresses_midpoint_planning_prose(monkeypatc
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {
@@ -845,6 +855,7 @@ async def test_process_agentic_run_keeps_tool_call_limit_safety(monkeypatch) -> 
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         for index in range(20):
@@ -901,6 +912,7 @@ async def test_process_agentic_run_allows_19_non_exempt_tool_calls(monkeypatch) 
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         for index in range(19):
@@ -955,6 +967,7 @@ async def test_process_agentic_run_excludes_send_progress_update_from_tool_limit
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         for _ in range(30):
@@ -1012,6 +1025,7 @@ async def test_process_agentic_run_tool_limit_does_not_repeat_last_update(monkey
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {
@@ -1092,6 +1106,7 @@ async def test_process_agentic_run_passes_persisted_message_history(monkeypatch)
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token)
         assert thread_id == run["id"]
@@ -1150,6 +1165,7 @@ async def test_process_agentic_run_retries_once_on_context_overflow(monkeypatch)
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id)
         assert message_history is not None
@@ -1211,6 +1227,7 @@ async def test_process_agentic_run_retries_once_on_transient_upstream_error(monk
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         state["calls"] += 1
@@ -1268,6 +1285,7 @@ async def test_process_agentic_run_does_not_retry_non_overflow_upstream_errors(m
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         state["calls"] += 1
@@ -1323,6 +1341,7 @@ async def test_process_agentic_run_does_not_retry_after_stream_events(monkeypatc
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         state["calls"] += 1
@@ -1394,6 +1413,7 @@ async def test_process_agentic_run_never_persists_calling_tools_placeholder(monk
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         # A leaked placeholder turn riding alongside a tool call...

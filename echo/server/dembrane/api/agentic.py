@@ -68,6 +68,9 @@ class AgenticSupportRequestSchema(BaseModel):
     message: str = Field(..., min_length=1)
     # A short note from the assistant about what the host was doing / needs.
     page_context: Optional[str] = None
+    chat_id: Optional[str] = None
+    app_user_id: Optional[str] = None
+    message_id: Optional[str] = None
 
 
 # Agent memory: three scopes the agent both reads and writes. Private or
@@ -1139,6 +1142,9 @@ async def create_support_request(
             "workspace_id": workspace_id,
             "project_id": project_id,
             "directus_user_id": auth.user_id,
+            "chat_id": body.chat_id,
+            "app_user_id": body.app_user_id,
+            "message_id": body.message_id,
             "message": body.message,
             "page_context": body.page_context,
             "status": "new",

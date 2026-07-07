@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import asyncio
+from uuid import UUID
 from typing import Any, Optional, AsyncGenerator
 from logging import getLogger
 
@@ -319,6 +320,9 @@ async def _stream_with_overflow_retry(
     bearer_token: str,
     thread_id: str,
     message_history: list[dict[str, str]],
+    chat_id: str | None = None,
+    app_user_id: str | None = None,
+    message_id: str | None = None,
 ) -> AsyncGenerator[dict[str, Any], None]:
     attempts: list[list[dict[str, str]]] = [message_history]
     if len(message_history) > OVERFLOW_RETRY_WINDOW_SIZE:
@@ -336,6 +340,9 @@ async def _stream_with_overflow_retry(
                     bearer_token=bearer_token,
                     thread_id=thread_id,
                     message_history=attempt_history,
+                    chat_id=chat_id,
+                    app_user_id=app_user_id,
+                    message_id=message_id,
                 ):
                     emitted_events = True
                     yield event
@@ -441,6 +448,46 @@ async def _chat_distinct_id(run: dict, run_id: str) -> str:
         return directus_user_id
 
 
+async def _resolve_run_app_user_id(run: dict) -> str | None:
+    directus_user_id = str(run.get("directus_user_id") or "")
+    if not directus_user_id:
+        return None
+    try:
+        UUID(directus_user_id)
+    except ValueError:
+        return None
+    try:
+        from dembrane.app_user import get_app_user_or_raise
+
+        app_user = await get_app_user_or_raise(directus_user_id)
+        return str(app_user.get("id") or "") or None
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Failed to resolve app_user for run user %s: %s", directus_user_id, exc)
+        return None
+
+
+async def _triggering_message_id(
+    *,
+    svc: AgenticRunService,
+    run_id: str,
+    turn_seq: int,
+) -> str | None:
+    if turn_seq <= 0:
+        return None
+    events = await run_in_thread_pool(
+        svc.list_events,
+        run_id,
+        after_seq=turn_seq - 1,
+        limit=1,
+    )
+    if not events:
+        return None
+    event = events[0]
+    if event.get("event_type") != "user.message":
+        return None
+    return str(event.get("id") or "") or None
+
+
 async def process_agentic_run(
     *,
     run_id: str,
@@ -455,6 +502,12 @@ async def process_agentic_run(
     run = await run_in_thread_pool(svc.get_by_id_or_raise, run_id)
     project_chat_id = str(run.get("project_chat_id") or "")
     chat_distinct_id = await _chat_distinct_id(run, run_id)
+    app_user_id = await _resolve_run_app_user_id(run)
+    message_id = await _triggering_message_id(
+        svc=svc,
+        run_id=run_id,
+        turn_seq=turn_seq,
+    )
 
     async def _emit_chat_error(error_code: str, message: str) -> None:
         await capture_event(
@@ -491,6 +544,9 @@ async def process_agentic_run(
             bearer_token=bearer_token,
             thread_id=run_id,
             message_history=message_history,
+            chat_id=project_chat_id or None,
+            app_user_id=app_user_id,
+            message_id=message_id,
         ):
             await _raise_if_cancelled(run_id, turn_seq)
             event_type = str(event.get("type") or event.get("event") or "agent.event")

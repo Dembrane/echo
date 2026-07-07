@@ -216,6 +216,9 @@ def create_agent_graph(
     llm: Any | None = None,
     echo_client_factory: Callable[[str], EchoClient] | None = None,
     docs_base_url: str = "",
+    chat_id: str = "",
+    app_user_id: str = "",
+    message_id: str = "",
 ):
     if not bearer_token:
         raise ValueError("bearer_token is required")
@@ -854,6 +857,9 @@ def create_agent_graph(
                 project_id,
                 message=message,
                 page_context=context or None,
+                chat_id=chat_id or None,
+                app_user_id=app_user_id or None,
+                message_id=message_id or None,
             )
         except Exception:
             # Honesty over reassurance: never pretend a failed send worked.

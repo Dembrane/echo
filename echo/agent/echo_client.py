@@ -179,10 +179,20 @@ class EchoClient:
         project_id: str,
         message: str,
         page_context: Optional[str] = None,
+        chat_id: Optional[str] = None,
+        app_user_id: Optional[str] = None,
+        message_id: Optional[str] = None,
     ) -> dict[str, Any]:
+        body: dict[str, Any] = {
+            "message": message,
+            "page_context": page_context,
+            "chat_id": chat_id,
+            "app_user_id": app_user_id,
+            "message_id": message_id,
+        }
         response = await self._client.post(
             f"/agentic/projects/{project_id}/support-request",
-            json={"message": message, "page_context": page_context},
+            json=body,
         )
         response.raise_for_status()
         payload = response.json()

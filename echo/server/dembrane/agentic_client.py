@@ -110,6 +110,9 @@ async def stream_agent_events(
     bearer_token: str,
     thread_id: Optional[str] = None,
     message_history: Optional[list[MessageHistoryEntry]] = None,
+    chat_id: Optional[str] = None,
+    app_user_id: Optional[str] = None,
+    message_id: Optional[str] = None,
     agent_service_url: Optional[str] = None,
     timeout_seconds: Optional[float] = None,
 ) -> AsyncGenerator[dict[str, Any], None]:
@@ -124,6 +127,12 @@ async def stream_agent_events(
     docs_base_url = docs_base_url_for_env()
     if docs_base_url:
         headers["X-Dembrane-Docs-Base-Url"] = docs_base_url
+    if chat_id:
+        headers["X-Dembrane-Chat-Id"] = chat_id
+    if app_user_id:
+        headers["X-Dembrane-App-User-Id"] = app_user_id
+    if message_id:
+        headers["X-Dembrane-Message-Id"] = message_id
 
     payload: dict[str, Any] = {
         "threadId": thread_id,
