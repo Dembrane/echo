@@ -57,11 +57,9 @@ The assistant proposes a *loop* - a card she reviews before anything runs:
 > **Live panel wall** - stays up to date through the day, until *today 17:00* · pauses
 > itself when nothing new arrives.
 
-She applies it. Notice what she is *not* asked: anything about polling or intervals. "Live"
-is the promise; the machinery behind it (the wall refreshes its data every few minutes; the
-wall's *design* only changes when she asks) stays behind an advanced setting for the rare
-host who wants to tune it. Every loop has an end - the assistant always sets an expiry and
-says it out loud. Later she can say *"pause the wall"* in the same chat.
+She applies it. The wall keeps itself fresh - every few minutes, quietly - and its design
+only changes when she asks. Every loop has an end: the assistant always sets one and says
+it out loud. Later she can say *"pause the wall"* in the same chat.
 
 ### The wall appears
 

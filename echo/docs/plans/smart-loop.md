@@ -40,6 +40,13 @@ pattern as methodologies (D11), applied to the generator itself.
   pipeline (D16) reads it at generation time.
 - Later: skill updates traceable to the insights that motivated them (closes the loop
   with reach-back, D7).
+- DESIGN PRINCIPLES the skill enforces (owner, 2026-07-07): visuals are MEANINGFUL, never
+  visualization for visualization's sake; nothing generic; approachable, human,
+  empathetic FIRST. Follow Apple Human Interface Guidelines sensibilities (clarity,
+  deference to content, purposeful depth) adapted to dembrane's brand (lowercase
+  dembrane, the type ramp, the palette, no decorative noise). A chart earns its place by
+  answering a question the host actually has; when a number or a sentence says it
+  better, use the number or the sentence.
 
 ## D16. The tick pipeline - bounded generation, not an agent loop - AGREED (Q1)
 
@@ -190,7 +197,10 @@ stance) is dead. The boundary moves from "no scripts" to "scripts in a locked ro
   the run context (closes the deferred reach-out linkage). `usage_insight` and
   `support_request` gain those columns.
 - Consent-first, always: the agent ASKS before informing the team ("Would you like to let
-  the dembrane team know...?") - feature gaps AND the pre-event heads-up. Never silent.
+  the dembrane team know...?") - never silent.
+- Pre-event heads-up (the setup-chat "your panel runs tomorrow, want to let the team
+  know?" beat): TRACKED BUT DEFERRED out of this release (owner, 2026-07-07). The story
+  keeps it as north star; no build.
 - Reach-back channel: a staff/system-authored message type appended into the original
   chat, visually distinct from the assistant.
 
@@ -295,7 +305,8 @@ monitor_embed for live presence - author's choice per layout.
   (creation-as-chat included).
 - v1 acceptance: a host asks in chat for "X on the screen, updated every few minutes" ->
   proposal -> Try it -> apply -> canvas in the sidebar, generations flowing, pause/stop
-  by chat, expiry honoured. The full live-panel-wall story (minus publish) is the test.
+  by chat, expiry honoured. The full live-panel-wall story (minus publish and the
+  pre-event heads-up, both deferred) is the test.
 - v2+: D4a skeleton graduation for stabilized frames; D2 Python sandbox when server-side
   compute enters; publish/venue screens; primitives + methodology element bundles;
   library uploads (documents); D1 full headless agentic runs for self-revising loops.
