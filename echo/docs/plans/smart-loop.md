@@ -130,24 +130,35 @@ fetchers - no LLM-written code in their tick path:
 
 - *Monitor widget* - a compact live view of the project's sessions (data-only, `live`
   class; reuses gather_project_monitor).
-- *Pulse* - the reference recipe, spec'd 2026-07-07. One data+summarize tick every 5 min
-  (default; advanced-tunable; mandatory expiry) reads the project's NEW chunks since the
-  last tick and produces TWO data products from one structured LLM call:
-  - an ENTRY: 30-40 words on what's happening right now (delta, never a cumulative
-    re-summary; quiet tick -> no entry; resume after pause -> one catch-up entry). The
-    append-only feed IS the artifact's content - live it's a ticker, afterwards it's the
-    minute-by-minute record of the session, and prime seed material for the closing report.
-  - a THEMES BOARD state: "what are the themes right now", regenerated each tick, history
-    kept as snapshots (scrub through the day).
-  Two widget presets over the same products - feed view and board view - host enables
-  either or both; both full-screen-able. Logged-in screens render via the D14 client
-  runtime; a PUBLISHED big screen gets server-rendered snapshots refreshed each tick (no
-  session, no live data access). Configuration (tone, emphasis, language) is the skeleton
-  and versions via chat; entries/board states are data products, never versions. Entry
-  generation follows the project's anonymization stance - publishing a pulse is publishing
-  paraphrased participant voice, same responsibility as publishing a report. Ownership:
-  project-owned artifact rows (kind=artifact, recipe=pulse), creator recorded; view =
-  report:view, configure/pause = chat lifecycle, publish = explicit host action.
+- *Pulse* - the reference recipe, spec'd 2026-07-07 (owner-corrected: GENERIC, not
+  hardcoded flavors). A pulse is a TRACKED QUESTION; a pulse artifact holds one or more of
+  them.
+  - Pulse = {question (free text: "What are the themes right now?", "What are people
+    talking about?", "How is sentiment on the garage plan shifting?"), answer-shape hints
+    (target length, format: prose | list | labelled themes), window (new-since-last-tick
+    delta | current-state), cadence class}. The question is the configurable heart - it can
+    change over time, or never.
+  - The tick (data+summarize, default 5 min, advanced-tunable, mandatory expiry) answers
+    ALL of the artifact's active pulses in one structured LLM call against the project's
+    fresh/current chunks, appending one timestamped ANSWER per pulse. A pulse's answer
+    history is its feed; a state-shaped answer's latest entry renders as a board. Quiet
+    tick on a delta pulse -> no entry; resume after pause -> one catch-up entry; never a
+    cumulative re-summary where the window says delta.
+  - Editing is first-class and generic: adding, removing, or REPHRASING a pulse question
+    goes through the standard skeleton flow - agent proposes, D12 preview ("Try it"
+    renders the new question answered against current/sample data), host applies, new
+    artifact VERSION. Answers are keyed to the question revision that produced them, so
+    history stays honest when a question evolves mid-session.
+  - Answers are data products, never versions. Rendering: the D14 runtime lays out the
+    artifact's pulses (each = latest answer + expandable history; full-screen mode);
+    logged-in = client runtime, PUBLISHED big screen = server-rendered snapshots per tick
+    (no session, no live data access). Answer generation follows the project's
+    anonymization stance - publishing a pulse is publishing paraphrased participant voice,
+    same responsibility as publishing a report.
+  - Ownership: project-owned artifact rows (kind=artifact, recipe=pulse), creator
+    recorded; view = report:view, configure/pause = chat lifecycle, publish = explicit
+    host action. After expiry the answer histories freeze into the session record - prime
+    seed material for the closing report.
 
 "Set up a pulse for this project" is then a one-tap proposal in chat - configurable
 (scope, tone, cadence class within bounds) and editable by chat like any artifact, but its
