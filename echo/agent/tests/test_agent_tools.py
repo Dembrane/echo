@@ -289,7 +289,8 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "hosts can delete them" in prompt
     # Canvas guidance explains the living Library page and loop expiry.
     assert "a canvas is a living page" in prompt
-    assert "always say the expiry plainly" in prompt
+    assert "expiry plainly" in prompt
+    assert "do not volunteer exact cadence" in prompt
     # Setup guidance is convergent, escapable, and proposal-only.
     assert "read interviewing.md first" in prompt
     assert "proposeGoal" in SYSTEM_PROMPT
