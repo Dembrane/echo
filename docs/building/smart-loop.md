@@ -149,14 +149,14 @@ asked for it.
   when the assistant notices something worked, edited by you, and one day shared and
   published with evidence attached.
 - *Loops*: recurring assistant runs with a cadence, a hard expiry, and a lifecycle you
-  manage by chatting - propose, apply, pause, resume, stop. Some come ready-made: a
-  *pulse* tracks any question you give it over time - *"what are people talking about
-  right now?"*, *"what are the themes?"*, *"how is the mood shifting?"* - one answer every
-  few minutes, with the full history kept. Any artifact can carry several pulses at once
-  (Marieke's wall tracks themes AND a what's-happening line, next to its live counter),
-  and you add or rephrase the questions by chatting. A small live monitor widget is one
-  tap away too. Some parts update continuously, others every few minutes - you never have
-  to think about which.
+  manage by chatting - propose, apply, pause, resume, stop. Every part of an artifact is
+  a question being answered on a rhythm: *"what are people talking about right now?"*,
+  *"what are the themes?"*, *"how is the mood shifting?"* - one answer every few minutes,
+  each with its own pace, full history kept. Marieke's wall tracks themes and a
+  what's-happening line side by side, and she adds or rephrases the questions by
+  chatting. The one truly-live element is the monitor - dembrane's existing real-time
+  view - which can sit inside an artifact as a widget. You never have to think about any
+  of this machinery.
 - *Try before apply*: every change to an artifact shows you a preview right in the chat -
   with your real data when you have some, with clearly-marked sample data when you don't -
   and nothing goes live until you apply it. For a full rehearsal, the assistant will walk

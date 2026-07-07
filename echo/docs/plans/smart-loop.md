@@ -96,10 +96,10 @@ generated fetchers are the core generated unit.
 
 Three-layer security model (non-negotiable):
 
-1. TRUSTED SHELL (ours): the skeleton runtime. Executes fetchers with the viewer's
-   credentials. Fetchers are DECLARATIVE descriptors (which endpoint/SSE channel, params,
-   field mapping, freshness class) - data, not code - so nothing generated ever runs with
-   ambient credentials.
+1. TRUSTED SHELL (ours): the skeleton runtime. With D14a, its client-side fetching is
+   modest: it reads item ANSWERS (data products) with the viewer's credentials and
+   refreshes them, and hosts the embedded monitor widget's SSE. Raw project data is never
+   fetched for display by artifact code - answers are computed server-side.
 2. UNTRUSTED RENDER (generated, when descriptors + our block library aren't enough): runs
    credential-less in a sandboxed iframe; the trusted shell fetches and POSTS DATA IN.
    Generated code sees data, never cookies, never the API.
@@ -128,47 +128,51 @@ path or the agent will fight the abstraction. Decide after building pulse + wall
 Ship a small set of dembrane-maintained recipes as seeded skeletons with known-good
 fetchers - no LLM-written code in their tick path:
 
-- *Monitor widget* - a compact live view of the project's sessions (data-only, `live`
-  class; reuses gather_project_monitor).
+- *Monitor widget* - a compact embed of the EXISTING live monitor (SSE-backed, reuses
+  gather_project_monitor). Deliberately NOT an artifact item (D14a): it's the one
+  raw-live display, its own first-class widget, embeddable inside artifact layouts.
 - *Pulse board* - a curated composition that is nothing but pulse fetchers (see D14a):
   "set up a pulse" gives you one artifact tracking the questions you care about.
 
 Recipes are curated COMPOSITIONS of fetchers, not special types - the same primitives
 agent-generated artifacts (v1.5) compose freely.
 
-## D14a. The pulse fetcher - a fetcher kind, not an artifact type - PROPOSED
+## D14a. Artifact items are fetch->AI workflows - PROPOSED (owner-final 2026-07-07)
 
-Owner correction (2026-07-07): pulses are not their own artifact. Any artifact's skeleton -
-a wall, a board, whatever the fetcher set is - can have MULTIPLE pulse fetchers built in,
-next to plain data fetchers.
+Owner correction, third and final shape: a plain data fetcher displayed raw "has no
+meaning". Every item in an artifact is a small server-side WORKFLOW, and the AI step is
+MANDATORY - gather data, ask a question, display the answer. Purely-live raw data display
+is the MONITOR's job, a separate first-class widget (SSE-backed, already built) - keeping
+it out of this model is what removes the earlier confusion.
 
-- Fetcher kinds in a skeleton: DATA fetcher (declarative descriptor over SSE/REST, D14) and
-  PULSE fetcher (a TRACKED QUESTION whose answers are produced server-side and consumed
-  like any other data source).
-- Pulse fetcher = {question (free text: "What are the themes right now?", "What are people
-  talking about?", "How is sentiment on the garage plan shifting?"), answer-shape hints
-  (target length, format: prose | list | labelled themes), window (delta-since-last-tick |
-  current-state), cadence class}. The question is the configurable heart; it can evolve or
-  stay fixed.
-- The loop tick (data+summarize, default 5 min, advanced-tunable, mandatory expiry) answers
-  ALL active pulse fetchers across the artifact in one structured LLM call against the
-  project's fresh/current chunks, appending one timestamped ANSWER per pulse. Answer
-  history = that pulse's feed; a current-state answer's latest entry renders as a board.
-  Quiet tick on a delta pulse -> no entry; resume after pause -> one catch-up entry; never
-  a cumulative re-summary where the window says delta.
-- Editing is the standard skeleton flow: adding, removing, or REPHRASING a pulse question
-  is an artifact version (agent proposes -> D12 "Try it" preview answers the new question
-  against current/sample data -> host applies). Answers are keyed to the question revision
-  that produced them, so history stays honest when questions evolve mid-session.
-- Answers are data products, never versions. Marieke's wall is the composed example: a live
-  participant counter (data fetcher, live class) + theme tiles (pulse fetcher,
-  current-state) + a rotating "what's happening" line (pulse fetcher, delta).
-- Rendering, publishing, anonymization, ownership: as D14/D13 - logged-in via the client
-  runtime, published screens get server-rendered snapshots per tick; publishing pulse
-  answers is publishing paraphrased participant voice (report rules + the project's
-  anonymization stance); artifact rows are project-owned, creator recorded, view =
-  report:view, configure/pause = chat lifecycle, publish = explicit. Post-expiry, frozen
-  answer histories are the session record and closing-report seed.
+- ITEM = {gather spec (declarative: which conversations - window like "last 5 minutes",
+  tags, filters, scope is always the project), question (the AI step - required, free
+  text: "What are the themes right now?", "What are people discussing?"), answer shape
+  (TEXT for v1; other shapes later), cadence (PER ITEM, e.g. every 5 min,
+  advanced-tunable), window semantics (delta | current-state)}.
+- ARTIFACT = a set of items + layout. Schema: `artifact_item` rows (artifact_id, gather
+  spec, question, answer_shape, cadence_minutes, window, question_revision, sort) +
+  `artifact_item_answer` rows (item_id, question_revision, content, created_at) -
+  append-only, keyed to the question revision that produced them so history stays honest
+  when questions evolve mid-session.
+- LOOP: creating an artifact with items adds ONE loop by default - the artifact's loop.
+  Its scheduler answers whichever items are due on their own cadence (batching items that
+  share a tick into one structured LLM call). Loop ACTIVE simply means it's running;
+  paused/expired means items stop computing and histories freeze. Publish is decoupled
+  from the loop lifecycle entirely and deferred past v1 (the venue-screen beat in the
+  story is the north star, not a v1 requirement).
+- Quiet tick on a delta item -> no answer row; resume after pause -> one catch-up answer;
+  never a cumulative re-summary where the window says delta.
+- Editing is the standard skeleton flow: add/remove/rephrase an item goes through agent
+  proposal -> D12 "Try it" preview (the new question answered against current/sample
+  data) -> apply -> new artifact version.
+- Marieke's wall, recomposed: theme tiles (item: current-state themes question) + a
+  "what's happening" line (item: delta question) + an embedded monitor element for live
+  presence (the separate SSE widget, not an item).
+- Anonymization and ownership as before: answers paraphrase participant voice and follow
+  the project's anonymization stance; artifact rows are project-owned, creator recorded,
+  view = report:view, configure/pause = chat lifecycle. Post-expiry, frozen answer
+  histories are the session record and closing-report seed.
 
 "Set up a pulse for this project" is then a one-tap proposal in chat - configurable
 (scope, tone, cadence class within bounds) and editable by chat like any artifact, but its
