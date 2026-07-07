@@ -47,6 +47,12 @@ class AgentProjectConversationsResponse(TypedDict, total=False):
     conversations: list[AgentProjectConversation]
 
 
+class ProjectGoalResponse(TypedDict, total=False):
+    project_id: str
+    current: Optional[dict[str, Any]]
+    revisions: list[dict[str, Any]]
+
+
 class EchoClient:
     def __init__(self, bearer_token: Optional[str] = None) -> None:
         settings = get_settings()
@@ -94,6 +100,33 @@ class EchoClient:
 
     async def list_memory(self, project_id: str) -> dict[str, Any]:
         payload = await self.get(f"/agentic/projects/{project_id}/memory")
+        return payload if isinstance(payload, dict) else {}
+
+    async def get_project_goal(self, project_id: str) -> ProjectGoalResponse:
+        payload = await self.get(f"/agentic/projects/{project_id}/goal")
+        if not isinstance(payload, dict):
+            raise ValueError("Unexpected project goal response shape")
+        return cast(ProjectGoalResponse, payload)
+
+    async def list_methodologies(self, project_id: str) -> dict[str, Any]:
+        payload = await self.get(f"/agentic/projects/{project_id}/methodologies")
+        return payload if isinstance(payload, dict) else {}
+
+    async def list_canvases(self, project_id: str) -> list[dict[str, Any]]:
+        payload = await self.get(f"/agentic/projects/{project_id}/canvases")
+        return payload if isinstance(payload, list) else []
+
+    async def update_canvas_loop(
+        self,
+        project_id: str,
+        canvas_id: str,
+        action: str,
+    ) -> dict[str, Any]:
+        response = await self._client.post(
+            f"/agentic/projects/{project_id}/canvases/{canvas_id}/loop/{action}"
+        )
+        response.raise_for_status()
+        payload = response.json()
         return payload if isinstance(payload, dict) else {}
 
     async def write_memory(
@@ -179,10 +212,20 @@ class EchoClient:
         project_id: str,
         message: str,
         page_context: Optional[str] = None,
+        chat_id: Optional[str] = None,
+        app_user_id: Optional[str] = None,
+        message_id: Optional[str] = None,
     ) -> dict[str, Any]:
+        body: dict[str, Any] = {
+            "message": message,
+            "page_context": page_context,
+            "chat_id": chat_id,
+            "app_user_id": app_user_id,
+            "message_id": message_id,
+        }
         response = await self._client.post(
             f"/agentic/projects/{project_id}/support-request",
-            json={"message": message, "page_context": page_context},
+            json=body,
         )
         response.raise_for_status()
         payload = response.json()

@@ -3,6 +3,7 @@ import { Alert, Divider, LoadingOverlay, Stack } from "@mantine/core";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
+import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProjectMemorySection } from "@/components/memory/ProjectMemorySection";
 import {
@@ -95,6 +96,13 @@ export const ProjectSettingsRoute = () => {
               <ProjectConversationStatusSection projectId={projectId} />
             </>
           )} */}
+
+					{projectId && (
+						<>
+							<Divider />
+							<ProjectGoalSection projectId={projectId} />
+						</>
+					)}
 
 					<Divider />
 					{projectId && <ProjectMemorySection projectId={projectId} />}

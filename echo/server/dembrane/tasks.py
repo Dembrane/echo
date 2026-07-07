@@ -1819,6 +1819,7 @@ def task_process_scheduled_tasks() -> None:
 
 def _dispatch_scheduled_task(row: dict) -> None:
     from dembrane.scheduled_tasks import (
+        TASK_CANVAS_TICK,
         TASK_GENERATE_REPORT,
         TASK_REVOKE_STAFF_SUPPORT,
     )
@@ -1829,8 +1830,20 @@ def _dispatch_scheduled_task(row: dict) -> None:
         _run_revoke_staff_support(payload)
     elif task_type == TASK_GENERATE_REPORT:
         _run_generate_report(payload)
+    elif task_type == TASK_CANVAS_TICK:
+        _run_canvas_tick(payload)
     else:
         raise ValueError(f"unknown scheduled_task type: {task_type!r}")
+
+
+def _run_canvas_tick(payload: dict) -> None:
+    loop_id = payload.get("loop_id")
+    if not loop_id:
+        raise ValueError("canvas_tick payload missing loop_id")
+    tick_kind = payload.get("tick_kind") or "scheduled"
+    from dembrane.canvas.ticks import run_tick
+
+    run_async_in_new_loop(run_tick(str(loop_id), str(tick_kind)))
 
 
 async def _revoke_staff_support_async(
@@ -2645,6 +2658,26 @@ def _parse_iso(value: Optional[str]) -> Optional[datetime]:
     return dt
 
 
+def _resolve_app_user_id_for_directus_user_id(directus_user_id: object) -> Optional[str]:
+    if not directus_user_id:
+        return None
+    with directus_client_context() as client:
+        rows = client.get_items(
+            "app_user",
+            {
+                "query": {
+                    "filter": {"directus_user_id": {"_eq": str(directus_user_id)}},
+                    "fields": ["id"],
+                    "limit": 1,
+                }
+            },
+        )
+    if not isinstance(rows, list) or not rows:
+        return None
+    app_user_id = rows[0].get("id")
+    return str(app_user_id) if app_user_id else None
+
+
 @dramatiq.actor(queue_name="network", priority=100)
 def task_capture_chat_insights() -> None:
     """Summarize idle agentic chats into anonymized usage insights.
@@ -2777,7 +2810,7 @@ def task_capture_chat_insights() -> None:
                     {
                         "query": {
                             "filter": {"project_chat_id": {"_eq": str(chat_id)}},
-                            "fields": ["message_from", "text", "date_created"],
+                            "fields": ["id", "message_from", "text", "date_created"],
                             "sort": ["date_created"],
                             "limit": -1,
                         }
@@ -2794,6 +2827,15 @@ def task_capture_chat_insights() -> None:
                 head = MAX_MESSAGES // 2
                 tail = MAX_MESSAGES - head
                 messages = messages[:head] + messages[-tail:]
+
+            triggering_message_id = next(
+                (
+                    str(message.get("id"))
+                    for message in reversed(messages)
+                    if message.get("message_from") == "user" and message.get("id")
+                ),
+                None,
+            )
 
             insight = run_async_in_new_loop(generate_chat_insight(messages))
             if not insight:
@@ -2816,6 +2858,11 @@ def task_capture_chat_insights() -> None:
                         "project_id": project_id,
                         "directus_user_id": chat.get("user_created"),
                         "project_chat_id": str(chat_id),
+                        "chat_id": str(chat_id),
+                        "app_user_id": _resolve_app_user_id_for_directus_user_id(
+                            chat.get("user_created")
+                        ),
+                        "message_id": triggering_message_id,
                         "insight_type": insight["insight_type"],
                         "summary": insight["summary"],
                         "status": "new",

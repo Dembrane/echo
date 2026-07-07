@@ -31,6 +31,10 @@ class _FakeEchoClient:
         chat_messages_payload: list[dict] | None = None,
         memory_payload: dict | None = None,
         write_memory_response: dict | None = None,
+        goal_payload: dict | None = None,
+        methodologies_payload: dict | None = None,
+        canvases_payload: list[dict] | None = None,
+        canvas_loop_response: dict | None = None,
     ):
         self.bearer_token = bearer_token
         self.search_payload = search_payload or {}
@@ -51,11 +55,19 @@ class _FakeEchoClient:
         self.support_request_calls: list[dict[str, object]] = []
         self.memory_payload = memory_payload or {}
         self.write_memory_response = write_memory_response or {}
+        self.goal_payload = goal_payload or {}
+        self.methodologies_payload = methodologies_payload or {}
+        self.canvases_payload = canvases_payload or []
+        self.canvas_loop_response = canvas_loop_response or {}
         self.search_calls: list[dict[str, object]] = []
         self.transcript_calls: list[str] = []
         self.project_conversations_calls: list[dict[str, object]] = []
         self.list_memory_calls: list[str] = []
         self.write_memory_calls: list[dict[str, object]] = []
+        self.read_goal_calls: list[str] = []
+        self.list_methodologies_calls: list[str] = []
+        self.list_canvases_calls: list[str] = []
+        self.canvas_loop_calls: list[dict[str, str]] = []
         self.closed = False
 
     async def search_home(self, query: str, limit: int = 5) -> dict:
@@ -121,18 +133,47 @@ class _FakeEchoClient:
         project_id: str,
         message: str,
         page_context: str | None = None,
+        chat_id: str | None = None,
+        app_user_id: str | None = None,
+        message_id: str | None = None,
     ) -> dict:
         self.support_request_calls.append(
             {
                 "project_id": project_id,
                 "message": message,
                 "page_context": page_context,
+                "chat_id": chat_id,
+                "app_user_id": app_user_id,
+                "message_id": message_id,
             }
         )
         return {"id": "sr-1", "status": "new"}
     async def list_memory(self, project_id: str) -> dict:
         self.list_memory_calls.append(project_id)
         return self.memory_payload
+
+    async def get_project_goal(self, project_id: str) -> dict:
+        self.read_goal_calls.append(project_id)
+        return self.goal_payload
+
+    async def list_methodologies(self, project_id: str) -> dict:
+        self.list_methodologies_calls.append(project_id)
+        return self.methodologies_payload
+
+    async def list_canvases(self, project_id: str) -> list[dict]:
+        self.list_canvases_calls.append(project_id)
+        return self.canvases_payload
+
+    async def update_canvas_loop(
+        self,
+        project_id: str,
+        canvas_id: str,
+        action: str,
+    ) -> dict:
+        self.canvas_loop_calls.append(
+            {"project_id": project_id, "canvas_id": canvas_id, "action": action}
+        )
+        return self.canvas_loop_response
 
     async def write_memory(
         self,
@@ -169,6 +210,10 @@ class _FakeEchoClientFactory:
         chat_messages_payload: list[dict] | None = None,
         memory_payload: dict | None = None,
         write_memory_response: dict | None = None,
+        goal_payload: dict | None = None,
+        methodologies_payload: dict | None = None,
+        canvases_payload: list[dict] | None = None,
+        canvas_loop_response: dict | None = None,
     ):
         self.search_payload = search_payload
         self.search_payload_by_query = search_payload_by_query
@@ -182,6 +227,10 @@ class _FakeEchoClientFactory:
         self.chat_messages_payload = chat_messages_payload
         self.memory_payload = memory_payload
         self.write_memory_response = write_memory_response
+        self.goal_payload = goal_payload
+        self.methodologies_payload = methodologies_payload
+        self.canvases_payload = canvases_payload
+        self.canvas_loop_response = canvas_loop_response
         self.instances: list[_FakeEchoClient] = []
 
     def __call__(self, bearer_token: str) -> _FakeEchoClient:
@@ -197,6 +246,10 @@ class _FakeEchoClientFactory:
             chat_messages_payload=self.chat_messages_payload,
             memory_payload=self.memory_payload,
             write_memory_response=self.write_memory_response,
+            goal_payload=self.goal_payload,
+            methodologies_payload=self.methodologies_payload,
+            canvases_payload=self.canvases_payload,
+            canvas_loop_response=self.canvas_loop_response,
         )
         self.instances.append(client)
         return client
@@ -230,9 +283,17 @@ def test_system_prompt_contains_conversational_and_research_directives():
     # Project + workspace context awareness
     assert "project context" in prompt
     assert "workspace context" in prompt
+    assert "project goal" in prompt
     assert "guidance and background" in prompt
     # Memories are host-visible and host-deletable
     assert "hosts can delete them" in prompt
+    # Canvas guidance explains the living Library page and loop expiry.
+    assert "a canvas is a living page" in prompt
+    assert "always say the expiry plainly" in prompt
+    # Setup guidance is convergent, escapable, and proposal-only.
+    assert "read interviewing.md first" in prompt
+    assert "proposeGoal" in SYSTEM_PROMPT
+    assert "you can skip this and come back any time" in prompt
     # Never leak internal machinery to the host
     assert "internal machinery" in prompt
     # Steer batched lookups over one-at-a-time calls
@@ -356,6 +417,86 @@ async def test_propose_custom_verification_topic_rejects_empty_fields():
         await tools["proposeCustomVerificationTopic"].ainvoke(
             {"label": "Name", "prompt": "   "}
         )
+
+
+@pytest.mark.asyncio
+async def test_propose_canvas_returns_structured_proposal():
+    tools = _make_doc_tools()
+
+    result = await tools["proposeCanvas"].ainvoke(
+        {
+            "name": "Live pulse",
+            "brief": "Show the three most important emerging themes.",
+            "gather_window_minutes": 45,
+            "cadence_minutes": 5,
+            "expires_in_hours": 4,
+        }
+    )
+
+    assert result["type"] == "canvas_proposal"
+    assert result["name"] == "Live pulse"
+    assert result["brief"] == "Show the three most important emerging themes."
+    assert result["gather_spec"] == {"window_minutes": 45}
+    assert result["cadence_minutes"] == 5
+    assert result["expires_at"].endswith("+00:00")
+    assert result["visible_to_user"] is True
+
+
+@pytest.mark.asyncio
+async def test_propose_canvas_rejects_invalid_inputs():
+    tools = _make_doc_tools()
+    with pytest.raises(ValueError):
+        await tools["proposeCanvas"].ainvoke({"name": "n", "brief": "  "})
+    with pytest.raises(ValueError):
+        await tools["proposeCanvas"].ainvoke(
+            {"name": "n", "brief": "brief", "cadence_minutes": 1}
+        )
+    with pytest.raises(ValueError):
+        await tools["proposeCanvas"].ainvoke(
+            {"name": "n", "brief": "brief", "expires_in_hours": 169}
+        )
+
+
+@pytest.mark.asyncio
+async def test_goal_tools_read_and_return_pure_proposal():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        goal_payload={
+            "project_id": "project-1",
+            "current": {"id": "g1", "content": "Find neighbourhood concerns."},
+            "revisions": [{"id": "g1", "content": "Find neighbourhood concerns."}],
+        },
+        methodologies_payload={
+            "project_id": "project-1",
+            "methodologies": [{"id": "m1", "name": "dembrane"}],
+        },
+    )
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    goal = await tools["readGoal"].ainvoke({})
+    methodologies = await tools["listMethodologies"].ainvoke({})
+    proposal = await tools["proposeGoal"].ainvoke(
+        {"content": "Surface concerns and suggestions per neighbourhood."}
+    )
+
+    assert goal["current"]["id"] == "g1"
+    assert methodologies["methodologies"][0]["name"] == "dembrane"
+    assert proposal == {
+        "type": "goal_proposal",
+        "content": "Surface concerns and suggestions per neighbourhood.",
+        "project_id": "project-1",
+        "visible_to_user": True,
+    }
+    assert factory.instances[0].read_goal_calls == ["project-1"]
+    assert factory.instances[1].list_methodologies_calls == ["project-1"]
 
 
 @pytest.mark.asyncio
@@ -969,6 +1110,9 @@ async def test_reach_out_to_dembrane_sends_support_request_for_current_project()
         bearer_token="token-1",
         llm=llm,
         echo_client_factory=factory,
+        chat_id="chat-1",
+        app_user_id="app-user-1",
+        message_id="run-event-1",
     )
     tools = _tool_map(llm.bound_tools)
 
@@ -983,6 +1127,9 @@ async def test_reach_out_to_dembrane_sends_support_request_for_current_project()
             "project_id": "project-1",
             "message": "My exports are failing",
             "page_context": "on the reports page",
+            "chat_id": "chat-1",
+            "app_user_id": "app-user-1",
+            "message_id": "run-event-1",
         }
     ]
     assert factory.instances[0].closed is True
@@ -1024,6 +1171,75 @@ async def test_read_memory_returns_memories():
     assert result["memories"][0]["content"] == "Focus on housing themes."
     assert factory.instances[0].list_memory_calls == ["project-1"]
     assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_list_canvases_returns_project_canvases():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        canvases_payload=[
+            {
+                "id": "canvas-1",
+                "name": "Pulse wall",
+                "kind": "canvas",
+                "created_at": "2026-07-07T10:00:00Z",
+                "latest_generation_at": None,
+                "loop": {"status": "active", "expires_at": "later", "cadence_minutes": 5},
+            }
+        ],
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["listCanvases"].ainvoke({})
+
+    assert result["canvases"][0]["id"] == "canvas-1"
+    assert factory.instances[0].list_canvases_calls == ["project-1"]
+    assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_canvas_loop_tools_call_expected_actions():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        canvas_loop_response={
+            "status": "paused",
+            "expires_at": "later",
+            "cadence_minutes": 5,
+        },
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    pause = await tools["pauseCanvasLoop"].ainvoke({"canvas_id": " canvas-1 "})
+    resume = await tools["resumeCanvasLoop"].ainvoke({"canvas_id": "canvas-1"})
+    stop = await tools["stopCanvasLoop"].ainvoke({"canvas_id": "canvas-1"})
+
+    assert pause["canvas_id"] == "canvas-1"
+    assert resume["loop"]["status"] == "paused"
+    assert stop["loop"]["status"] == "paused"
+    assert [instance.canvas_loop_calls[0]["action"] for instance in factory.instances] == [
+        "pause",
+        "resume",
+        "stop",
+    ]
+    assert all(instance.closed for instance in factory.instances)
 
 
 @pytest.mark.asyncio

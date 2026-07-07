@@ -48,9 +48,9 @@ const ProjectsHomeRoute = createLazyNamedRoute(
 	"ProjectsHomeRoute",
 );
 
-const ProjectLibraryRoute = createLazyNamedRoute(
-	() => import("./routes/project/library/ProjectLibrary"),
-	"ProjectLibraryRoute",
+const LibraryRoute = createLazyNamedRoute(
+	() => import("./routes/project/library/LibraryRoute"),
+	"LibraryRoute",
 );
 
 const ProjectLibraryView = createLazyNamedRoute(
@@ -98,6 +98,10 @@ const NewChatRoute = createLazyNamedRoute(
 const ProjectReportRoute = createLazyNamedRoute(
 	() => import("./routes/project/report/ProjectReportRoute"),
 	"ProjectReportRoute",
+);
+const CanvasRoute = createLazyNamedRoute(
+	() => import("./routes/project/canvas/CanvasRoute"),
+	"CanvasRoute",
 );
 const ParticipantReport = createLazyNamedRoute(
 	() => import("./routes/participant/ParticipantReport"),
@@ -257,7 +261,7 @@ const projectRouteChildren = [
 								path: "views/:viewId",
 							},
 							{
-								element: <ProjectLibraryRoute />,
+								element: <LibraryRoute />,
 								index: true,
 							},
 						],
@@ -267,6 +271,10 @@ const projectRouteChildren = [
 					{
 						element: <ProjectReportRoute />,
 						path: "report",
+					},
+					{
+						element: <CanvasRoute />,
+						path: "canvases/:canvasId",
 					},
 					{
 						element: <ProjectConversationsRoute />,

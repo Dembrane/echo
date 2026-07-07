@@ -19,11 +19,14 @@ from dembrane.directus import directus
 from dembrane.settings import get_settings
 from dembrane.chat_utils import generate_title
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.methodologies import list_visible_methodologies
+from dembrane.project_goals import list_project_goal_revisions, get_current_project_goal_content
 from dembrane.agentic_worker import (
     AGENT_CANCELLED_MESSAGE,
     AGENT_CANCELLED_ERROR_CODE,
     process_agentic_run,
 )
+from dembrane.canvas.service import apply_loop_action, get_loop_for_report, list_canvas_summaries
 from dembrane.directus_async import async_directus
 from dembrane.agentic_runtime import (
     request_cancel,
@@ -68,6 +71,9 @@ class AgenticSupportRequestSchema(BaseModel):
     message: str = Field(..., min_length=1)
     # A short note from the assistant about what the host was doing / needs.
     page_context: Optional[str] = None
+    chat_id: Optional[str] = None
+    app_user_id: Optional[str] = None
+    message_id: Optional[str] = None
 
 
 # Agent memory: three scopes the agent both reads and writes. Private or
@@ -293,18 +299,21 @@ def _build_initial_agent_prompt_content(
     *,
     project_name: Optional[str],
     project_context: Optional[str],
+    project_goal: Optional[str] = None,
     user_message: str,
     workspace_context: Optional[str] = None,
 ) -> str:
     normalized_name = _to_non_empty_string(project_name) or "(none)"
     normalized_context = _to_non_empty_string(project_context) or "(none)"
+    normalized_goal = _to_non_empty_string(project_goal) or "(none)"
     normalized_workspace_context = _to_non_empty_string(workspace_context) or "(none)"
     normalized_message = user_message.strip()
 
     return (
         f"Project Name: {normalized_name}\n"
         f"Workspace Context: {normalized_workspace_context}\n"
-        f"Project Context: {normalized_context}\n\n"
+        f"Project Context: {normalized_context}\n"
+        f"Project Goal: {normalized_goal}\n\n"
         f"User Message: {normalized_message}"
     )
 
@@ -877,9 +886,11 @@ async def create_run(
     project_name = _to_non_empty_string(project.get("name"))
     project_context = _to_non_empty_string(project.get("context"))
     workspace_context = await _get_workspace_context_for_project(project)
+    project_goal = await get_current_project_goal_content(body.project_id)
     agent_prompt_content = _build_initial_agent_prompt_content(
         project_name=project_name,
         project_context=project_context,
+        project_goal=project_goal,
         user_message=body.message,
         workspace_context=workspace_context,
     )
@@ -1139,6 +1150,9 @@ async def create_support_request(
             "workspace_id": workspace_id,
             "project_id": project_id,
             "directus_user_id": auth.user_id,
+            "chat_id": body.chat_id,
+            "app_user_id": body.app_user_id,
+            "message_id": body.message_id,
             "message": body.message,
             "page_context": body.page_context,
             "status": "new",
@@ -1194,6 +1208,93 @@ async def list_project_memory(
         "count": len(memories),
         "memories": memories,
     }
+
+
+@AgenticRouter.get("/projects/{project_id}/goal")
+async def get_project_goal_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    revisions = await list_project_goal_revisions(project_id)
+    return {
+        "project_id": project_id,
+        "current": revisions[0] if revisions else None,
+        "revisions": revisions,
+    }
+
+
+@AgenticRouter.get("/projects/{project_id}/methodologies")
+async def list_methodologies_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    workspace_id = await _resolve_workspace_id_for_project(project_id)
+    if workspace_id is None:
+        return {"project_id": project_id, "methodologies": []}
+    methodologies = await list_visible_methodologies(
+        workspace_id=workspace_id,
+        directus_user_id=auth.user_id,
+    )
+    return {"project_id": project_id, "methodologies": methodologies}
+
+
+def _loop_payload(loop: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "status": loop.get("status"),
+        "expires_at": loop.get("expires_at"),
+        "cadence_minutes": loop.get("cadence_minutes"),
+    }
+
+
+async def _get_project_canvas_or_404(project_id: str, canvas_id: str) -> dict[str, Any]:
+    report = await async_directus.get_item("project_report", canvas_id)
+    if (
+        not isinstance(report, dict)
+        or report.get("kind") != "canvas"
+        or _to_related_id(report.get("project_id")) != project_id
+        or report.get("deleted_at") is not None
+    ):
+        raise HTTPException(status_code=404, detail="Canvas not found")
+    return report
+
+
+@AgenticRouter.get("/projects/{project_id}/canvases")
+async def list_project_canvases(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> list[dict[str, Any]]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    return await list_canvas_summaries(project_id)
+
+
+@AgenticRouter.post("/projects/{project_id}/canvases/{canvas_id}/loop/{action}")
+async def update_project_canvas_loop(
+    project_id: str,
+    canvas_id: str,
+    action: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    if action not in {"pause", "resume", "stop"}:
+        raise HTTPException(status_code=404, detail="Canvas loop action not found")
+    await _get_project_canvas_or_404(project_id, canvas_id)
+    loop = await get_loop_for_report(canvas_id)
+    if not loop:
+        raise HTTPException(status_code=404, detail="Canvas loop not found")
+    try:
+        updated = await apply_loop_action(loop, action)
+    except ValueError as exc:
+        detail = str(exc)
+        if detail == "This loop has ended":
+            raise HTTPException(status_code=409, detail=detail) from exc
+        raise HTTPException(status_code=400, detail=detail) from exc
+    return _loop_payload(updated)
 
 
 @AgenticRouter.post("/projects/{project_id}/memory")

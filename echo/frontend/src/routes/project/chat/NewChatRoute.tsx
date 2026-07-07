@@ -266,6 +266,12 @@ export const NewChatRoute = () => {
 			? ((location.state as { preferMode: ChatMode }).preferMode as ChatMode)
 			: null;
 	const preferredModeStartedRef = useRef(false);
+	const initialMessage =
+		typeof (location.state as { initialMessage?: unknown } | null)
+			?.initialMessage === "string"
+			? (location.state as { initialMessage: string }).initialMessage
+			: null;
+	const initialMessageStartedRef = useRef(false);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: handleModeSelected is recreated per render; the ref guards a single run
 	useEffect(() => {
 		if (!preferredMode || preferredModeStartedRef.current) return;
@@ -273,6 +279,18 @@ export const NewChatRoute = () => {
 		window.history.replaceState({}, "");
 		void handleModeSelected(preferredMode);
 	}, [preferredMode]);
+
+	// Project creation lands on Ask home with a setup seed. Start the agentic
+	// chat immediately and pass the seed through to the chat panel, which sends
+	// it as the first user message.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: handleModeSelected is recreated per render; the ref guards a single run
+	useEffect(() => {
+		if (!ENABLE_AGENTIC_CHAT) return;
+		if (!initialMessage || initialMessageStartedRef.current) return;
+		initialMessageStartedRef.current = true;
+		window.history.replaceState({}, "");
+		void handleModeSelected("agentic", initialMessage);
+	}, [initialMessage]);
 
 	if (!projectId || !workspaceId) {
 		return (

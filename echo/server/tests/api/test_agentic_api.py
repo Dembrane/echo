@@ -237,6 +237,10 @@ async def _build_api_client(
     )
     monkeypatch.setattr(free_tier_module, "resolve_project_tier", _fake_resolve_project_tier)
     monkeypatch.setattr(agentic_api, "agentic_run_service", run_service)
+    async def _fake_current_goal(_project_id: str) -> None:
+        return None
+
+    monkeypatch.setattr(agentic_api, "get_current_project_goal_content", _fake_current_goal)
     if chat_service is not None:
         monkeypatch.setattr(agentic_api, "chat_service", chat_service)
 
@@ -350,7 +354,8 @@ async def test_create_run_persists_user_message_without_dispatch(monkeypatch) ->
     assert events[0]["payload"]["agent_prompt_content"] == (
         "Project Name: Project project-1\n"
         "Workspace Context: (none)\n"
-        "Project Context: Context for project-1\n\n"
+        "Project Context: Context for project-1\n"
+        "Project Goal: (none)\n\n"
         "User Message: hello"
     )
 
@@ -366,6 +371,20 @@ def test_initial_prompt_includes_workspace_context() -> None:
     )
     assert "Workspace Context: Municipality of Utrecht listening programme" in content
     assert content.index("Workspace Context:") < content.index("Project Context:")
+    assert "Project Goal: (none)" in content
+
+
+def test_initial_prompt_includes_project_goal_after_project_context() -> None:
+    from dembrane.api.agentic import _build_initial_agent_prompt_content
+
+    content = _build_initial_agent_prompt_content(
+        project_name="Street interviews",
+        project_context="Ask about the market",
+        project_goal="Surface practical concerns by neighbourhood.",
+        user_message="hello",
+    )
+    assert "Project Goal: Surface practical concerns by neighbourhood." in content
+    assert content.index("Project Context:") < content.index("Project Goal:")
 
 
 def test_initial_prompt_defaults_workspace_context_to_none_marker() -> None:
@@ -377,6 +396,7 @@ def test_initial_prompt_defaults_workspace_context_to_none_marker() -> None:
         user_message="hello",
     )
     assert "Workspace Context: (none)" in content
+    assert "Project Goal: (none)" in content
 
 
 @pytest.mark.asyncio
@@ -763,6 +783,155 @@ async def test_get_project_settings_returns_whitelisted_fields(monkeypatch) -> N
 
     assert set(payload.keys()) == set(ProjectUpdate.model_fields)
     assert payload["name"] == "Project project-1"
+    assert "methodology_version_id" in payload
+
+
+@pytest.mark.asyncio
+async def test_agentic_goal_endpoint_requires_token_and_project_access(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    async def _revisions(project_id: str) -> list[dict[str, Any]]:
+        assert project_id == "project-1"
+        return [{"id": "goal-1", "content": "Find concerns.", "set_by": "host-edit"}]
+
+    monkeypatch.setattr(agentic_api, "list_project_goal_revisions", _revisions)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/goal")
+
+    assert response.status_code == 200
+    assert response.json()["current"]["id"] == "goal-1"
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1", access_token=None),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/goal")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_agentic_methodologies_endpoint_uses_project_workspace(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    async def _workspace(project_id: str) -> str:
+        assert project_id == "project-1"
+        return "ws-1"
+
+    async def _methodologies(*, workspace_id: str, directus_user_id: str) -> list[dict[str, Any]]:
+        assert workspace_id == "ws-1"
+        assert directus_user_id == "user-1"
+        return [{"id": "m1", "name": "dembrane", "latest_version": {"id": "v1"}}]
+
+    monkeypatch.setattr(agentic_api, "_resolve_workspace_id_for_project", _workspace)
+    monkeypatch.setattr(agentic_api, "list_visible_methodologies", _methodologies)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/methodologies")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "project_id": "project-1",
+        "methodologies": [{"id": "m1", "name": "dembrane", "latest_version": {"id": "v1"}}],
+    }
+
+
+@pytest.mark.asyncio
+async def test_agentic_list_canvases_requires_host_token_and_project_access(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    async def _list(project_id: str) -> list[dict[str, Any]]:
+        assert project_id == "project-1"
+        return [
+            {
+                "id": "canvas-1",
+                "name": "Pulse wall",
+                "kind": "canvas",
+                "created_at": "2026-07-07T10:00:00Z",
+                "latest_generation_at": None,
+                "loop": {"status": "active", "expires_at": "later", "cadence_minutes": 5},
+            }
+        ]
+
+    monkeypatch.setattr(agentic_api, "list_canvas_summaries", _list)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/canvases")
+
+    assert response.status_code == 200
+    assert response.json()[0]["id"] == "canvas-1"
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1", access_token=None),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/canvases")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_agentic_canvas_lifecycle_delegates_to_shared_service(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:  # noqa: ARG002
+            return {
+                "id": "canvas-1",
+                "kind": "canvas",
+                "project_id": {"id": "project-1"},
+                "deleted_at": None,
+            }
+
+    async def _loop(report_id: str) -> dict[str, Any]:
+        assert report_id == "canvas-1"
+        return {"id": "loop-1", "status": "active", "expires_at": "later", "cadence_minutes": 5}
+
+    async def _apply(loop: dict[str, Any], action: str) -> dict[str, Any]:
+        assert loop["id"] == "loop-1"
+        assert action == "pause"
+        return {"status": "paused", "expires_at": "later", "cadence_minutes": 5}
+
+    monkeypatch.setattr(agentic_api, "async_directus", _AsyncDirectus())
+    monkeypatch.setattr(agentic_api, "get_loop_for_report", _loop)
+    monkeypatch.setattr(agentic_api, "apply_loop_action", _apply)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.post(
+            "/api/agentic/projects/project-1/canvases/canvas-1/loop/pause"
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "paused", "expires_at": "later", "cadence_minutes": 5}
 
 
 @pytest.mark.asyncio

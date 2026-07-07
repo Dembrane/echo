@@ -1,0 +1,281 @@
+/*
+Canvas render kit classes available to generated documents.
+
+Layout:
+- canvas-shell: outer full-page surface with dembrane parchment background.
+- canvas-section: vertical content group with generous rhythm.
+- canvas-grid: responsive card grid.
+- canvas-grid-2: two-column grid on larger screens.
+- canvas-stack: compact vertical stack.
+- canvas-row: wrapping horizontal row.
+
+Cards and emphasis:
+- canvas-card: soft white panel for one meaningful unit.
+- canvas-card-accent: royal-blue left edge for the current focus.
+- canvas-pill: small rounded label.
+- canvas-pill-blue, canvas-pill-green, canvas-pill-amber: semantic pill accents.
+- canvas-divider: quiet horizontal divider.
+
+Typography:
+- canvas-eyebrow: uppercase micro label.
+- canvas-title: page title.
+- canvas-heading: section heading.
+- canvas-subheading: card heading.
+- canvas-body: normal paragraph copy.
+- canvas-caption: low-emphasis supporting copy.
+- canvas-metric: large numeric value.
+- canvas-quote: participant paraphrase or host-facing quote.
+
+Utilities:
+- canvas-muted: softened text.
+- canvas-blue: royal-blue text.
+- canvas-green: spring-green accent text.
+- canvas-amber: warm attention text.
+- canvas-tight: reduce vertical gap.
+- canvas-center: center content.
+- canvas-right: right-align text.
+- canvas-chart: chart container with stable dimensions.
+*/
+
+:root {
+	color-scheme: light;
+	--canvas-parchment: #f6f4f1;
+	--canvas-graphite: #2d2d2c;
+	--canvas-graphite-soft: rgba(45, 45, 44, 0.68);
+	--canvas-graphite-faint: rgba(45, 45, 44, 0.12);
+	--canvas-white: rgba(255, 255, 255, 0.72);
+	--canvas-blue: #4169e1;
+	--canvas-green: #1effa1;
+	--canvas-amber: #d28a1f;
+	--canvas-red: #c94d3f;
+	--canvas-radius: 8px;
+	--canvas-shadow: 0 18px 50px rgba(45, 45, 44, 0.08);
+	--canvas-font: "DM Sans", Inter, ui-sans-serif, system-ui, -apple-system,
+		BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	background: var(--canvas-parchment);
+	color: var(--canvas-graphite);
+	font-family: var(--canvas-font);
+}
+
+body {
+	margin: 0;
+	min-width: 320px;
+	background: var(--canvas-parchment);
+	color: var(--canvas-graphite);
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+}
+
+svg {
+	display: block;
+	max-width: 100%;
+}
+
+.dembrane-canvas-root,
+.canvas-shell {
+	min-height: 100vh;
+	padding: clamp(24px, 4vw, 56px);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0)),
+		var(--canvas-parchment);
+	color: var(--canvas-graphite);
+}
+
+.canvas-section,
+.canvas-stack {
+	display: flex;
+	flex-direction: column;
+}
+
+.canvas-section {
+	gap: 24px;
+}
+
+.canvas-stack {
+	gap: 12px;
+}
+
+.canvas-tight {
+	gap: 6px;
+}
+
+.canvas-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+	gap: 16px;
+}
+
+.canvas-grid-2 {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 16px;
+}
+
+@media (min-width: 760px) {
+	.canvas-grid-2 {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.canvas-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}
+
+.canvas-card {
+	border: 1px solid rgba(45, 45, 44, 0.08);
+	border-radius: var(--canvas-radius);
+	background: var(--canvas-white);
+	box-shadow: var(--canvas-shadow);
+	padding: clamp(16px, 2.4vw, 28px);
+}
+
+.canvas-card-accent {
+	border-left: 5px solid var(--canvas-blue);
+}
+
+.canvas-pill {
+	display: inline-flex;
+	align-items: center;
+	width: fit-content;
+	border: 1px solid rgba(45, 45, 44, 0.1);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.55);
+	color: var(--canvas-graphite);
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1;
+	padding: 7px 10px;
+}
+
+.canvas-pill-blue {
+	border-color: rgba(65, 105, 225, 0.2);
+	background: rgba(65, 105, 225, 0.1);
+	color: var(--canvas-blue);
+}
+
+.canvas-pill-green {
+	border-color: rgba(30, 255, 161, 0.28);
+	background: rgba(30, 255, 161, 0.16);
+}
+
+.canvas-pill-amber {
+	border-color: rgba(210, 138, 31, 0.26);
+	background: rgba(210, 138, 31, 0.12);
+	color: var(--canvas-amber);
+}
+
+.canvas-divider {
+	height: 1px;
+	background: var(--canvas-graphite-faint);
+}
+
+.canvas-eyebrow {
+	color: var(--canvas-blue);
+	font-size: 12px;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.canvas-title,
+.canvas-heading,
+.canvas-subheading,
+.canvas-metric,
+.canvas-body,
+.canvas-caption,
+.canvas-quote {
+	margin: 0;
+}
+
+.canvas-title {
+	max-width: 980px;
+	font-size: clamp(32px, 5vw, 58px);
+	font-weight: 700;
+	line-height: 0.98;
+}
+
+.canvas-heading {
+	font-size: clamp(24px, 3vw, 34px);
+	font-weight: 650;
+	line-height: 1.1;
+}
+
+.canvas-subheading {
+	font-size: clamp(20px, 2.2vw, 26px);
+	font-weight: 650;
+	line-height: 1.18;
+}
+
+.canvas-body {
+	color: var(--canvas-graphite);
+	font-size: clamp(17px, 1.8vw, 22px);
+	line-height: 1.45;
+}
+
+.canvas-caption {
+	color: var(--canvas-graphite-soft);
+	font-size: 15px;
+	line-height: 1.4;
+}
+
+.canvas-metric {
+	color: var(--canvas-graphite);
+	font-size: clamp(42px, 6vw, 76px);
+	font-weight: 750;
+	letter-spacing: 0;
+	line-height: 0.95;
+}
+
+.canvas-quote {
+	border-left: 5px solid var(--canvas-green);
+	color: var(--canvas-graphite);
+	font-size: clamp(22px, 3vw, 36px);
+	font-weight: 550;
+	line-height: 1.18;
+	padding-left: 18px;
+}
+
+.canvas-muted {
+	color: var(--canvas-graphite-soft);
+}
+
+.canvas-blue {
+	color: var(--canvas-blue);
+}
+
+.canvas-green {
+	color: #0b8f62;
+}
+
+.canvas-amber {
+	color: var(--canvas-amber);
+}
+
+.canvas-center {
+	text-align: center;
+}
+
+.canvas-right {
+	text-align: right;
+}
+
+.canvas-chart {
+	min-height: 220px;
+	width: 100%;
+	overflow: hidden;
+}

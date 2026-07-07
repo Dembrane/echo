@@ -212,6 +212,7 @@ def test_dispatch_routes_by_task_type():
     with (
         patch.object(T, "_run_revoke_staff_support") as revoke,
         patch.object(T, "_run_generate_report") as report,
+        patch.object(T, "_run_canvas_tick") as canvas,
     ):
         T._dispatch_scheduled_task(
             {"task_type": st.TASK_REVOKE_STAFF_SUPPORT, "payload": {"a": 1}}
@@ -223,6 +224,11 @@ def test_dispatch_routes_by_task_type():
             {"task_type": st.TASK_GENERATE_REPORT, "payload": {"b": 2}}
         )
         report.assert_called_once_with({"b": 2})
+
+        T._dispatch_scheduled_task(
+            {"task_type": st.TASK_CANVAS_TICK, "payload": {"loop_id": "l1"}}
+        )
+        canvas.assert_called_once_with({"loop_id": "l1"})
 
 
 def test_dispatch_unknown_type_raises():

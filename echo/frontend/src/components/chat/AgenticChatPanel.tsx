@@ -43,6 +43,7 @@ import { useUpdateChatMutation } from "@/components/chat/hooks";
 import { InsertTemplateMenu } from "@/components/chat/InsertTemplateMenu";
 import { useConversationsByProjectId } from "@/components/conversation/hooks";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { GoalSuggestionCard } from "@/components/goal/GoalSuggestionCard";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -70,10 +71,13 @@ import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
 import {
 	extractTopLevelToolActivity,
+	parseCanvasSuggestion,
 	parseCustomVerificationTopicSuggestion,
+	parseGoalSuggestion,
 	parseProjectUpdateSuggestion,
 	type ToolActivity,
 } from "./agenticToolActivity";
+import { CanvasSuggestionCard } from "./CanvasSuggestionCard";
 import { ChatAccordionItemMenu } from "./ChatAccordion";
 import { ChatHistoryMessage } from "./ChatHistoryMessage";
 import { CustomVerificationTopicSuggestionCard } from "./CustomVerificationTopicSuggestionCard";
@@ -608,6 +612,16 @@ export const AgenticChatPanel = ({
 					item: Extract<TimelineItem, { kind: "tool" }>;
 			  }
 			| {
+					kind: "canvas_suggestion";
+					id: string;
+					item: Extract<TimelineItem, { kind: "tool" }>;
+			  }
+			| {
+					kind: "goal_suggestion";
+					id: string;
+					item: Extract<TimelineItem, { kind: "tool" }>;
+			  }
+			| {
 					kind: "tool_group";
 					id: string;
 					items: Extract<TimelineItem, { kind: "tool" }>[];
@@ -624,6 +638,14 @@ export const AgenticChatPanel = ({
 			}
 			if (parseCustomVerificationTopicSuggestion(item)) {
 				nodes.push({ id: item.id, item, kind: "verification_suggestion" });
+				continue;
+			}
+			if (parseCanvasSuggestion(item)) {
+				nodes.push({ id: item.id, item, kind: "canvas_suggestion" });
+				continue;
+			}
+			if (parseGoalSuggestion(item)) {
+				nodes.push({ id: item.id, item, kind: "goal_suggestion" });
 				continue;
 			}
 			const last = nodes[nodes.length - 1];
@@ -1315,6 +1337,34 @@ export const AgenticChatPanel = ({
 								<div key={node.id}>
 									<CustomVerificationTopicSuggestionCard
 										suggestion={suggestion}
+									/>
+								</div>
+							) : null;
+						}
+
+						if (node.kind === "canvas_suggestion") {
+							const suggestion = parseCanvasSuggestion(node.item);
+							return suggestion ? (
+								<div key={node.id}>
+									<CanvasSuggestionCard
+										suggestion={{
+											...suggestion,
+											projectId: suggestion.projectId || projectId,
+										}}
+									/>
+								</div>
+							) : null;
+						}
+
+						if (node.kind === "goal_suggestion") {
+							const suggestion = parseGoalSuggestion(node.item);
+							return suggestion ? (
+								<div key={node.id}>
+									<GoalSuggestionCard
+										suggestion={{
+											...suggestion,
+											projectId: suggestion.projectId || projectId,
+										}}
 									/>
 								</div>
 							) : null;

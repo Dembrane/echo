@@ -1,0 +1,48 @@
+{
+  "collection": "methodology_version",
+  "field": "content",
+  "type": "json",
+  "meta": {
+    "collection": "methodology_version",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "content",
+    "group": null,
+    "hidden": false,
+    "interface": "input-code",
+    "note": null,
+    "options": {
+      "language": "json"
+    },
+    "readonly": false,
+    "required": true,
+    "searchable": true,
+    "sort": 3,
+    "special": [
+      "cast-json"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "content",
+    "table": "methodology_version",
+    "data_type": "json",
+    "default_value": null,
+    "max_length": null,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": false,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

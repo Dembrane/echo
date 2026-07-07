@@ -101,6 +101,9 @@ async def test_stream_agent_events_forwards_headers_body_and_path(monkeypatch) -
             user_message="hello",
             bearer_token="token-1",
             thread_id="run-1",
+            chat_id="chat-1",
+            app_user_id="app-user-1",
+            message_id="run-event-1",
             agent_service_url="http://agent.test",
             timeout_seconds=42,
         )
@@ -119,6 +122,9 @@ async def test_stream_agent_events_forwards_headers_body_and_path(monkeypatch) -
     assert capture["json"]["messages"][0]["content"] == "hello"
     assert capture["json"]["messages"][0]["id"]
     assert capture["headers"]["Authorization"] == "Bearer token-1"
+    assert capture["headers"]["X-Dembrane-Chat-Id"] == "chat-1"
+    assert capture["headers"]["X-Dembrane-App-User-Id"] == "app-user-1"
+    assert capture["headers"]["X-Dembrane-Message-Id"] == "run-event-1"
     assert events == [
         {"type": "assistant.delta", "content": "hel"},
         {"type": "assistant.message", "content": "hello"},

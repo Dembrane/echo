@@ -1,6 +1,7 @@
 from logging import getLogger
 import re
 from typing import Any, Callable
+from datetime import datetime, timezone, timedelta
 
 from copilotkit.langgraph import CopilotKitState
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -74,6 +75,8 @@ Use tools when the question needs project data or product knowledge:
 - "How does the portal work?" -> grepDocs and readDoc; cite the doc path.
 - "Help me set up my project" -> readSkill(project-onboarding.md), then
   getProjectSettings, then proposeProjectUpdate.
+- "Help me set the goal / figure out this project" -> readSkill(interviewing.md),
+  then readGoal and listMethodologies, then proposeGoal.
 - "What did we discuss before / continue that chat" -> listProjectChats, then readChat.
 - "Is my session live / is it recording / anyone talking now / is anything
   broken?" -> getLiveConversationStatus, then report the live count, whether
@@ -147,6 +150,24 @@ ask one focused question first.
   to be enabled for it to run, and offer a proposeProjectUpdate to switch
   is_verify_enabled on if getProjectSettings shows it off.
 
+## Canvases
+A canvas is a living page in the project Library. It regenerates on a loop until
+its expiry, usually about every 5 minutes. Propose one when the host asks for a
+recurring or live artifact, such as a wall, pulse, dashboard, or page that keeps
+itself fresh. Always say the expiry plainly. The host applies the proposal, and
+you can list canvases or pause, resume, and stop their loops by chat. Be honest
+that updates happen on the next rhythm, not instantly every second.
+
+## Project setup
+When the first message signals setup, or when readGoal shows this project has no
+goal, offer a short interview. Read interviewing.md first and use that shape:
+convergent options, at most five questions, and a confirm-understanding close.
+Offer existing methodologies from listMethodologies when any exist. Keep it
+escapable: "you can skip this and come back any time, or read the docs". When
+you have enough, use proposeGoal to restate the goal in the host's words. After
+a substantial artifact or report, you may gently suggest extracting a
+methodology. Never do it automatically.
+
 ## Memory
 You can save durable notes with `remember` and recall them with `readMemory`.
 Read memory early in a task when earlier context would help. There are three
@@ -162,10 +183,12 @@ Memories are visible to hosts in their settings, and hosts can delete them
 there. If a host asks to change or remove a memory, point them there as well.
 
 ## Project context
-The first message may include Project Name, Workspace Context, and Project
-Context. Workspace and project context are written by hosts as standing
-guidance and background for you. Follow them, but they are not a research
-request. Hosts edit them in workspace settings and project settings.
+The first message may include Project Name, Workspace Context, Project Context,
+and Project Goal. Workspace and project context are written by hosts as standing
+guidance and background for you. The project goal is the current versioned
+intent for reports and artifacts. Follow them, but they are not a research
+request. Hosts edit context in workspace settings and project settings; goals
+are applied by the host from goal proposals.
 """
 
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 6
@@ -216,6 +239,9 @@ def create_agent_graph(
     llm: Any | None = None,
     echo_client_factory: Callable[[str], EchoClient] | None = None,
     docs_base_url: str = "",
+    chat_id: str = "",
+    app_user_id: str = "",
+    message_id: str = "",
 ):
     if not bearer_token:
         raise ValueError("bearer_token is required")
@@ -793,6 +819,46 @@ def create_agent_graph(
         }
 
     @tool
+    async def proposeCanvas(
+        name: str,
+        brief: str,
+        gather_window_minutes: int = 60,
+        cadence_minutes: int = 5,
+        expires_in_hours: int = 8,
+    ) -> dict[str, Any]:
+        """Propose a living canvas for the host to apply.
+
+        Use this only when the host asked for a recurring or live artifact, such
+        as a screen, wall, dashboard, pulse, or page that keeps itself fresh.
+        Always state the expiry out loud in your message. The host applies it:
+        you never create it yourself.
+        """
+        normalized_name = name.strip()
+        normalized_brief = brief.strip()
+        if not normalized_name:
+            raise ValueError("A canvas name is required.")
+        if not normalized_brief:
+            raise ValueError("A canvas brief is required.")
+        if cadence_minutes < 2:
+            raise ValueError("cadence_minutes must be at least 2.")
+        if expires_in_hours > 168:
+            raise ValueError("expires_in_hours must be at most 168.")
+        if expires_in_hours <= 0:
+            raise ValueError("expires_in_hours must be positive.")
+
+        window_minutes = max(1, min(int(gather_window_minutes or 60), 60 * 24 * 14))
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=expires_in_hours)
+        return {
+            "type": "canvas_proposal",
+            "name": normalized_name,
+            "brief": normalized_brief,
+            "gather_spec": {"window_minutes": window_minutes},
+            "cadence_minutes": cadence_minutes,
+            "expires_at": expires_at.isoformat(),
+            "visible_to_user": True,
+        }
+
+    @tool
     async def sendProgressUpdate(update: str, next_steps: str = "") -> dict[str, Any]:
         """Emit a user-visible progress update without concluding the run."""
         normalized_update = update.strip()
@@ -854,6 +920,9 @@ def create_agent_graph(
                 project_id,
                 message=message,
                 page_context=context or None,
+                chat_id=chat_id or None,
+                app_user_id=app_user_id or None,
+                message_id=message_id or None,
             )
         except Exception:
             # Honesty over reassurance: never pretend a failed send worked.
@@ -883,6 +952,78 @@ def create_agent_graph(
 
         memories = payload.get("memories") if isinstance(payload, dict) else None
         return {"memories": memories if isinstance(memories, list) else []}
+
+    @tool
+    async def readGoal() -> dict[str, Any]:
+        """Read the current project goal and recent goal revision history."""
+        client = _create_echo_client()
+        try:
+            payload = await client.get_project_goal(project_id)
+        finally:
+            await client.close()
+        return dict(payload)
+
+    @tool
+    async def proposeGoal(content: str) -> dict[str, Any]:
+        """Propose a project goal after interviewing the host. Restate the goal
+        in the host's words. This never writes anything: the host applies it."""
+        normalized_content = content.strip()
+        if not normalized_content:
+            raise ValueError("content is required")
+        return {
+            "type": "goal_proposal",
+            "content": normalized_content,
+            "project_id": project_id,
+            "visible_to_user": True,
+        }
+
+    @tool
+    async def listMethodologies() -> dict[str, Any]:
+        """List methodologies the host can choose from for this project setup."""
+        client = _create_echo_client()
+        try:
+            payload = await client.list_methodologies(project_id)
+        finally:
+            await client.close()
+        methodologies = payload.get("methodologies") if isinstance(payload, dict) else None
+        return {"methodologies": methodologies if isinstance(methodologies, list) else []}
+
+    @tool
+    async def listCanvases() -> dict[str, Any]:
+        """List the project's canvases and their loop status."""
+        client = _create_echo_client()
+        try:
+            canvases = await client.list_canvases(project_id)
+        finally:
+            await client.close()
+        return {"canvases": canvases}
+
+    async def _canvas_loop_action(canvas_id: str, action: str) -> dict[str, Any]:
+        normalized_canvas_id = canvas_id.strip()
+        if not normalized_canvas_id:
+            raise ValueError("canvas_id is required.")
+        client = _create_echo_client()
+        try:
+            loop = await client.update_canvas_loop(project_id, normalized_canvas_id, action)
+        finally:
+            await client.close()
+        return {"canvas_id": normalized_canvas_id, "loop": loop}
+
+    @tool
+    async def pauseCanvasLoop(canvas_id: str) -> dict[str, Any]:
+        """Pause a canvas loop. Use this when the host asks to pause updates."""
+        return await _canvas_loop_action(canvas_id, "pause")
+
+    @tool
+    async def resumeCanvasLoop(canvas_id: str) -> dict[str, Any]:
+        """Resume a paused canvas loop if it has not ended."""
+        return await _canvas_loop_action(canvas_id, "resume")
+
+    @tool
+    async def stopCanvasLoop(canvas_id: str) -> dict[str, Any]:
+        """Stop a canvas loop permanently. Confirm with the host first because
+        stopping is terminal."""
+        return await _canvas_loop_action(canvas_id, "stop")
 
     @tool
     async def remember(
@@ -935,12 +1076,20 @@ def create_agent_graph(
         getProjectSettings,
         proposeProjectUpdate,
         proposeCustomVerificationTopic,
+        proposeCanvas,
         sendProgressUpdate,
         listProjectChats,
         readChat,
         getLiveConversationStatus,
         reachOutToDembrane,
         readMemory,
+        readGoal,
+        proposeGoal,
+        listMethodologies,
+        listCanvases,
+        pauseCanvasLoop,
+        resumeCanvasLoop,
+        stopCanvasLoop,
         remember,
     ]
     system_prompt = SYSTEM_PROMPT + knowledge.prompt_section(docs_base_url=docs_base_url)
