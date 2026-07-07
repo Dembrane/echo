@@ -122,12 +122,43 @@ Convergent options (2-4 concrete choices per question), <=5 questions, confirm-u
 close, always escapable. Output: goal revision proposal (a) or detailed insight (b) with
 requirement, job-to-be-done, accepted workaround, verbatim quotes, reach-back ids.
 
-## D9. Goal = versioned context - PROPOSED
+## D9. Goal = versioned context, an instance of the methodology - PROPOSED
 
 `project_goal_revision` (or generalise to context revisions): content, set_by (host-edit |
 interview | loop), created_at, chat_id. Current goal = latest revision; empty -> default
 report prompt unchanged. Goal feeds report/artifact prompts. Meta-goal behavior in the
 system prompt: when no goal exists, gently offer the interview.
+
+Relationship to D11: the METHODOLOGY is the template (how projects like this are run); the
+GOAL is this project's instance of it. The default dembrane methodology's opening move IS
+the meta-goal interview.
+
+## D11. Methodology - the reusable way-of-working - PROPOSED [OWNER]
+
+The transferable layer above goal: a named, versioned playbook for how a kind of project is
+run (setup interview shape, goal template, loop recipes, artifact/report structures,
+rationale). Long-term this is the platform's compounding asset: hosts refine their own,
+partners publish theirs, evidence (projects/artifacts) attaches to versions.
+
+- Object model: `methodology` (name, description, user-facing framing "what this does for
+  your project", owner, visibility private|workspace|public) + `methodology_version`
+  (content blocks, created_by, note, evidence links later). `project.methodology_version_id`
+  selects one; DEFAULT = seeded "dembrane" methodology v1 (= the meta-goal interview).
+- Project creation opens directly into the setup chat (the selected methodology's opening
+  move), with explicit escape hatches: skip, come back in any chat, or read the docs. The
+  creation flow itself routes to the chat - this is a frontend flow change, not just prompt.
+- Extraction skill ("extract methodology"): after an artifact/report lands, the agent
+  reviews the decisions + rationale in the chats and proposes a methodology (or a new
+  version of the one in use) via the proposal-card pattern. Everything host-editable. The
+  agent SUGGESTS extraction when it notices repetition ("you're doing this again - want to
+  extract it?") - a nudge, never automatic.
+- Methodology explorer (browse/select, user-facing framing, versions) and
+  publishing/evidence: LATER phases - explicitly out of MVP.
+- MVP scope (v1): schema + seeded default + project-creation-as-chat + selection at
+  creation + the extraction suggestion writing a draft methodology. No explorer UI, no
+  publishing, no partner surface yet.
+- Docs: a methodology page under docs/building (what one is, why use one) so the assistant
+  can explain and suggest it.
 
 ## D10. Docs lead the build - AGREED (process)
 
@@ -142,5 +173,8 @@ build (the assistant grounds "that's being built" answers in them), and graduate
 - Track A: D1 headless executor + D4 loop object/scheduling/chat tools.
 - Track B: D2 sandbox service.
 - Track C: D5 artifacts + versions + feedback-by-chat surface (+ D6 sanitization).
-- Track D: D8 interview skill + D9 goal revisions + setup templates.
+- Track D: D8 interview skill + D9 goal revisions + D11 methodology MVP (schema, seeded
+  default, project-creation-as-chat, extraction suggestion).
 - Integration: the story, end to end, as the acceptance test; then docs graduation (D10).
+- Later phases (post-story): methodology explorer + publishing + evidence; library uploads
+  (documents); widget UI primitives.

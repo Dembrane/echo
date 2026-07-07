@@ -20,9 +20,16 @@ feature is done when this works end to end.
 Marieke runs public participation for a municipality. Tomorrow: a day-long citizen panel on
 the new mobility plan - 8 tables, each recording via the portal QR, 10:00 to 17:00.
 
-### The evening before: setting up
+### The evening before: creating the project is a conversation
 
-Marieke creates the project and picks the *Help me figure it out* starting point. The
+Marieke creates the project - and lands directly in a chat:
+
+> *"Welcome to your project. I'll help you set it up - start by describing what you're
+> planning, in your own words. (You can also skip this and come back any time, or read the
+> [docs](../users/host/creating-a-project.md) and set things up yourself.)"*
+
+This is the project's *methodology* at work. Every project starts on the default *dembrane
+methodology*: figure out what this project is for, and shape everything around that. The
 assistant interviews her - a few short questions, each with concrete options to pick from -
 and together they land on the project's *goal*: surface concerns and suggestions per
 neighbourhood; final report structured by theme, formal Dutch. The goal is saved, versioned,
@@ -107,6 +114,20 @@ At 17:00 the loop expires: one final version, marked final, the chat thread hold
 day's run history. *"Turn today's wall into the closing report"* - and the report builder
 takes over, seeded by the goal and the artifact.
 
+### The day after: the way of working becomes reusable
+
+Reading the closing report, the assistant notices the shape of what Marieke did - setup
+interview, live wall during the session, themes probed in the room, closing report by
+neighbourhood - and suggests:
+
+> *"This worked. Want me to extract it as a methodology? Next panel, you'd start from this
+> instead of from scratch."*
+
+She says yes. The assistant writes up *Panel day* - the reasoning behind the decisions, the
+goal template, the wall recipe, the report structure - as a methodology: versioned, hers to
+edit, selectable when she creates her next project. Over time her team refines it; version
+by version, it becomes how her municipality runs panels.
+
 ### Weeks later
 
 A message lands in the same chat: *"Theme images shipped - your wall can use them next
@@ -115,6 +136,12 @@ asked for it.
 
 ## What this needs (in plain terms)
 
+- *Project creation as a conversation*: a new project opens straight into its setup chat,
+  with honest escape hatches (skip, come back later, read the docs).
+- *Methodologies*: the way a project is run, as a thing you can name, version, select, and
+  improve - starting with the default *dembrane* methodology, extracted from real projects
+  when the assistant notices something worked, edited by you, and one day shared and
+  published with evidence attached.
 - *Loops*: recurring assistant runs with a cadence, a hard expiry, and a lifecycle you
   manage by chatting - propose, apply, pause, resume, stop.
 - *A sandbox*: the assistant writes and runs small programs to build artifacts, in a locked
