@@ -47,6 +47,72 @@ class _Directus:
         }
 
 
+class _MethodologyDirectus:
+    def __init__(self, methodology: dict[str, Any] | None = None) -> None:
+        self.methodology = methodology or {
+            "id": "m1",
+            "name": "Panel day",
+            "description": "Panel setup",
+            "framing": "Run the panel around neighbourhood concerns.",
+            "owner_directus_user_id": "du-1",
+            "workspace_id": "ws1",
+            "visibility": "workspace",
+            "is_seeded": False,
+        }
+        self.versions: list[dict[str, Any]] = [
+            {
+                "id": "v1",
+                "methodology_id": self.methodology["id"],
+                "note": "Initial history",
+                "created_by": "du-1",
+                "created_at": "2026-07-08T10:00:00Z",
+                "content": {"blocks": []},
+            }
+        ]
+        self.created: list[tuple[str, dict[str, Any]]] = []
+        self.updated: list[tuple[str, str, dict[str, Any]]] = []
+
+    async def get_item(self, collection: str, item_id: str) -> dict[str, Any] | None:
+        if collection == "methodology" and item_id == self.methodology.get("id"):
+            return dict(self.methodology)
+        return None
+
+    async def get_items(self, collection: str, payload: dict[str, Any]) -> list[dict[str, Any]]:  # noqa: ARG002
+        if collection == "methodology_version":
+            return list(self.versions)
+        return []
+
+    async def create_item(self, collection: str, payload: dict[str, Any]) -> dict[str, Any]:
+        self.created.append((collection, payload))
+        row = dict(payload)
+        row.setdefault("created_at", "2026-07-08T11:00:00Z")
+        if collection == "methodology":
+            self.methodology = row
+        if collection == "methodology_version":
+            self.versions.insert(0, row)
+        return {"data": row}
+
+    async def update_item(
+        self,
+        collection: str,
+        item_id: str,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        self.updated.append((collection, item_id, payload))
+        if collection == "methodology" and item_id == self.methodology.get("id"):
+            self.methodology = {**self.methodology, **payload}
+            return {"data": dict(self.methodology)}
+        return {"data": dict(payload)}
+
+
+class _WorkspaceContext:
+    def __init__(self, policies: set[str] | None = None) -> None:
+        self.policies = policies or {"project:create", "settings:manage"}
+
+    def has_policy(self, required: str) -> bool:
+        return required in self.policies
+
+
 async def _get(app: FastAPI, path: str) -> Any:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -57,6 +123,11 @@ async def _post(app: FastAPI, path: str, body: dict[str, Any]) -> Any:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         return await client.post(path, json=body)
+
+
+async def _ctx(workspace_id: str, auth) -> _WorkspaceContext:  # noqa: ARG001
+    assert workspace_id == "ws1"
+    return _WorkspaceContext()
 
 
 @pytest.mark.asyncio
@@ -155,3 +226,166 @@ async def test_list_methodologies_resolves_workspace_and_returns_visible(monkeyp
     assert res.status_code == 200
     assert res.json()[0]["name"] == "dembrane"
     assert calls == [("ctx", "ws1"), ("ws1", "du-9")]
+
+
+@pytest.mark.asyncio
+async def test_create_methodology_requires_workspace_member_and_creates_first_version(monkeypatch) -> None:
+    directus = _MethodologyDirectus()
+    ids = iter(["m-new", "v-new"])
+
+    monkeypatch.setattr(goals_bff, "get_workspace_context", _ctx)
+    monkeypatch.setattr(goals_bff, "async_directus", directus)
+    monkeypatch.setattr(goals_bff, "generate_uuid", lambda: next(ids))
+
+    res = await _post(
+        _app(user_id="du-7"),
+        "/api/v2/bff/methodologies",
+        {
+            "workspace_id": "ws1",
+            "name": "  Panel day  ",
+            "description": "  Day-long panel  ",
+            "framing": "  Keep tables aligned.  ",
+            "content": {"blocks": [{"type": "goal"}]},
+        },
+    )
+
+    assert res.status_code == 200
+    assert res.json()["id"] == "m-new"
+    assert res.json()["latest_version"]["id"] == "v-new"
+    assert res.json()["versions_count"] == 1
+    assert directus.created == [
+        (
+            "methodology",
+            {
+                "id": "m-new",
+                "workspace_id": "ws1",
+                "owner_directus_user_id": "du-7",
+                "visibility": "workspace",
+                "is_seeded": False,
+                "name": "Panel day",
+                "description": "Day-long panel",
+                "framing": "Keep tables aligned.",
+            },
+        ),
+        (
+            "methodology_version",
+            {
+                "id": "v-new",
+                "methodology_id": "m-new",
+                "content": {"blocks": [{"type": "goal"}]},
+                "note": "Initial history",
+                "created_by": "du-7",
+            },
+        ),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_get_methodology_returns_detail_with_history(monkeypatch) -> None:
+    directus = _MethodologyDirectus()
+
+    monkeypatch.setattr(goals_bff, "get_workspace_context", _ctx)
+    monkeypatch.setattr(goals_bff, "async_directus", directus)
+
+    res = await _get(_app(user_id="du-2"), "/api/v2/bff/methodologies/m1")
+
+    assert res.status_code == 200
+    assert res.json()["name"] == "Panel day"
+    assert res.json()["versions"][0] == {
+        "id": "v1",
+        "note": "Initial history",
+        "created_by": "du-1",
+        "created_at": "2026-07-08T10:00:00Z",
+        "content": {"blocks": []},
+    }
+
+
+@pytest.mark.asyncio
+async def test_owner_edit_updates_metadata_and_appends_content_version(monkeypatch) -> None:
+    directus = _MethodologyDirectus()
+    monkeypatch.setattr(goals_bff, "get_workspace_context", _ctx)
+    monkeypatch.setattr(goals_bff, "async_directus", directus)
+    monkeypatch.setattr(goals_bff, "generate_uuid", lambda: "v2")
+
+    res = await _post(
+        _app(user_id="du-1"),
+        "/api/v2/bff/methodologies/m1/versions",
+        {
+            "name": "Panel day refined",
+            "description": "Panel setup",
+            "framing": "Ask by neighbourhood.",
+            "content": "plain notes",
+            "note": "Tightened the framing",
+        },
+    )
+
+    assert res.status_code == 200
+    assert res.json()["name"] == "Panel day refined"
+    assert res.json()["latest_version"]["id"] == "v2"
+    assert directus.updated == [
+        (
+            "methodology",
+            "m1",
+            {
+                "name": "Panel day refined",
+                "description": "Panel setup",
+                "framing": "Ask by neighbourhood.",
+            },
+        )
+    ]
+    assert directus.created[-1] == (
+        "methodology_version",
+        {
+            "id": "v2",
+            "methodology_id": "m1",
+            "content": "plain notes",
+            "note": "Tightened the framing",
+            "created_by": "du-1",
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_workspace_admin_can_edit_workspace_methodology(monkeypatch) -> None:
+    directus = _MethodologyDirectus()
+    monkeypatch.setattr(goals_bff, "get_workspace_context", _ctx)
+    monkeypatch.setattr(goals_bff, "async_directus", directus)
+
+    res = await _post(
+        _app(user_id="du-admin"),
+        "/api/v2/bff/methodologies/m1/versions",
+        {"framing": "Admin edit."},
+    )
+
+    assert res.status_code == 200
+    assert directus.updated == [("methodology", "m1", {"framing": "Admin edit."})]
+    assert directus.created == []
+
+
+@pytest.mark.asyncio
+async def test_seeded_methodology_is_read_only(monkeypatch) -> None:
+    directus = _MethodologyDirectus(
+        {
+            "id": "dembrane",
+            "name": "dembrane",
+            "description": "Default",
+            "framing": "Figure out what this project is for.",
+            "owner_directus_user_id": None,
+            "workspace_id": None,
+            "visibility": "public",
+            "is_seeded": True,
+        }
+    )
+    monkeypatch.setattr(goals_bff, "get_workspace_context", _ctx)
+    monkeypatch.setattr(goals_bff, "async_directus", directus)
+
+    res = await _post(
+        _app(user_id="du-admin"),
+        "/api/v2/bff/methodologies/dembrane/versions",
+        {"framing": "Change it."},
+    )
+
+    assert res.status_code == 403
+    assert res.json() == {"detail": "The dembrane methodology is read-only"}
+    assert directus.updated == []
+    assert directus.created == []

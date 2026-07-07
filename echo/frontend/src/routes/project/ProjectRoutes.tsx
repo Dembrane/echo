@@ -6,6 +6,7 @@ import { ProjectConversationsPanel } from "@/components/conversation/ProjectConv
 import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProjectMemorySection } from "@/components/memory/ProjectMemorySection";
+import { ProjectMethodologySection } from "@/components/methodology/ProjectMethodologySection";
 import {
 	useProjectById,
 	useVerificationTopicsQuery,
@@ -53,6 +54,7 @@ export const ProjectSettingsRoute = () => {
 				"context",
 				"visibility",
 				"workspace_id",
+				"methodology_version_id",
 				"updated_at",
 				"language",
 				"is_conversation_allowed",
@@ -103,6 +105,9 @@ export const ProjectSettingsRoute = () => {
 							<ProjectGoalSection projectId={projectId} />
 						</>
 					)}
+
+					<Divider />
+					<ProjectMethodologySection project={projectQuery.data} />
 
 					<Divider />
 					{projectId && <ProjectMemorySection projectId={projectId} />}

@@ -49,6 +49,7 @@ import {
 } from "@/components/members";
 import { usePendingInvites } from "@/components/members/hooks";
 import { WorkspaceMemorySection } from "@/components/memory/WorkspaceMemorySection";
+import { WorkspaceMethodologiesSection } from "@/components/methodology/WorkspaceMethodologiesSection";
 import { WorkspaceTrainingPanel } from "@/components/training";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
@@ -772,6 +773,7 @@ export const WorkspaceSettingsRoute = () => {
 									)}
 									<Divider />
 									<WorkspaceMemorySection workspaceId={workspaceId} />
+									<WorkspaceMethodologiesSection workspaceId={workspaceId} />
 								</Stack>
 							</Tabs.Panel>
 
