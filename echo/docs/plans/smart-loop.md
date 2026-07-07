@@ -57,6 +57,27 @@ The agent writes Python that builds artifact HTML. Where does it run?
 - Risk: a second auth path to maintain. Keep issuance + validation in one module; log every
   mint with run id.
 
+## D4a. Two-layer artifact refresh: skeleton vs data - PROPOSED
+
+Owner review insight (2026-07-07): a "live" artifact has two kinds of update, and only one
+needs a language model.
+
+- SKELETON: the artifact's program - what data it fetches, how it aggregates and renders.
+  Built and revised ONLY by agentic runs (initial build, host feedback, agent-noticed
+  structural change like a new theme layout). Each revision = a skeleton VERSION
+  (append-only, host-visible, few and meaningful).
+- DATA TICK: the loop's routine beat. The sandbox re-executes the SAVED skeleton script
+  against fresh data via the scoped token and renders a new snapshot. NO agent turn, no LLM
+  call - cheap, deterministic, frequent. Snapshots are kept (scrub through the day) but are
+  not "versions" in the host-facing sense.
+- Consequence for D1: the headless executor has two entry points - a data tick (sandbox
+  exec only) and a skeleton revision (full agentic run). Ticks that detect a structural
+  trigger (e.g. "nothing renders sensibly anymore") may ENQUEUE a skeleton revision, never
+  perform one inline.
+- User language: hosts are never shown "polling" or intervals up front. The proposal card
+  says "stays up to date until <expiry>"; refresh cadence and skeleton-revision policy live
+  in an advanced setting. Default data tick: every few minutes while the loop is active.
+
 ## D4. Loop object model - PROPOSED
 
 New collection `agent_loop`: project_id, name, recipe (instruction text), interval_minutes,
@@ -80,10 +101,11 @@ thread), artifact_id, caps (max steps/run), failure_count. Plus `agent_loop_run`
 - Reuse `project_report` machinery (sidebar, publish, PDF where applicable) rather than a
   parallel system: add kind ('report' | 'artifact'), source ('host' | 'loop' | 'chat'), and
   optional source_conversation_id.
-- Versions: append-only `artifact_version` rows (content, created_by_run_id, note). Every
-  regeneration and every chat edit is a new version; nothing is overwritten; the UI gets a
-  version timeline ("scrub through the day"). The report body points at the current
-  version.
+- Versions, two levels (per D4a): `artifact_version` = skeleton revisions (append-only,
+  host-facing, from chat feedback or agent proposals) and `artifact_snapshot` = rendered
+  data ticks (append-only, lightweight, the "scrub through the day" timeline; prunable
+  after loop expiry if volume demands). The report body points at the latest snapshot of
+  the current version. Nothing is overwritten at either level.
 - Feedback-by-chat: an artifact links to a chat scoped to it; agent tools
   readArtifact/proposeArtifactChange write new versions. First-use coaching line in the
   artifact chat. This flow gets its own docs page (the assistant cites it when teaching).
@@ -147,6 +169,9 @@ partners publish theirs, evidence (projects/artifacts) attaches to versions.
 - Project creation opens directly into the setup chat (the selected methodology's opening
   move), with explicit escape hatches: skip, come back in any chat, or read the docs. The
   creation flow itself routes to the chat - this is a frontend flow change, not just prompt.
+  When the user or workspace already has methodologies, the setup chat OFFERS them first
+  ("start from Panel day v3, or figure this one out from scratch?") - selection happens in
+  the conversation, not a separate picker (the explorer comes later).
 - Extraction skill ("extract methodology"): after an artifact/report lands, the agent
   reviews the decisions + rationale in the chats and proposes a methodology (or a new
   version of the one in use) via the proposal-card pattern. Everything host-editable. The

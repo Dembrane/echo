@@ -29,7 +29,10 @@ Marieke creates the project - and lands directly in a chat:
 > [docs](../users/host/creating-a-project.md) and set things up yourself.)"*
 
 This is the project's *methodology* at work. Every project starts on the default *dembrane
-methodology*: figure out what this project is for, and shape everything around that. The
+methodology*: figure out what this project is for, and shape everything around that. If
+Marieke (or her workspace) already has methodologies of her own, they're offered right here -
+*"Start from Panel day v3, or shall we figure this one out from scratch?"* - so a way of
+working she's refined before is one tap away. The
 assistant interviews her - a few short questions, each with concrete options to pick from -
 and together they land on the project's *goal*: surface concerns and suggestions per
 neighbourhood; final report structured by theme, formal Dutch. The goal is saved, versioned,
@@ -51,12 +54,14 @@ sent without asking her first.
 
 The assistant proposes a *loop* - a card she reviews before anything runs:
 
-> **Live panel wall** - every *10 minutes* until *today 17:00* · reads new transcripts since
-> the last run · rebuilds the "Live panel wall" artifact · pauses itself if nothing new
-> arrives.
+> **Live panel wall** - stays up to date through the day, until *today 17:00* · pauses
+> itself when nothing new arrives.
 
-She applies it. Every loop has an end - the assistant always sets an expiry and says it out
-loud. Later she can say *"pause the wall"* or *"make it every 5 minutes"* in the same chat.
+She applies it. Notice what she is *not* asked: anything about polling or intervals. "Live"
+is the promise; the machinery behind it (the wall refreshes its data every few minutes; the
+wall's *design* only changes when she asks) stays behind an advanced setting for the rare
+host who wants to tune it. Every loop has an end - the assistant always sets an expiry and
+says it out loud. Later she can say *"pause the wall"* in the same chat.
 
 ### The wall appears
 
@@ -68,12 +73,13 @@ through Marieke's own access: exactly the 8 tables she can see, nothing more.
 shape: open it, watch it regenerate, *publish* it if you want a shareable link. She
 publishes; the link goes on the venue screen.
 
-### Every run is a version
+### Every change is kept
 
-Each refresh is a new *version* of the same artifact, kept forever. At any point Marieke can
-step back through the day - the wall at 10:20 with two shy themes, the wall at 14:00 with
-six - and see how the conversation evolved. Versions are the artifact's memory, and they
-make regeneration safe: nothing is ever overwritten.
+The wall has two kinds of change, and both are kept. Fresh *data* flows in every few minutes
+without anyone doing anything - those snapshots let Marieke step back through the day (the
+wall at 10:20 with two shy themes, the wall at 14:00 with six) and see how the conversation
+evolved. Changes to the wall *itself* - its design, what it shows - only happen when she
+asks, and each one is a new *version*, kept forever. Nothing is ever overwritten.
 
 ### Feedback is just chat
 
