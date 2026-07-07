@@ -36,6 +36,7 @@ from dembrane.api.v2.bff.reports import (
     router as bff_reports_router,
     metric_router as bff_report_metric_router,
 )
+from dembrane.api.v2.bff.canvases import router as bff_canvases_router
 from dembrane.api.v2.admin_managed import router as admin_managed_router
 from dembrane.api.v2.notifications import router as notifications_router
 from dembrane.api.v2.admin_training import router as admin_training_router
@@ -119,6 +120,9 @@ v2_router.include_router(
 )
 v2_router.include_router(bff_tags_router, prefix="/bff/tags", tags=["v2:bff:tags"])
 v2_router.include_router(bff_memory_router, prefix="/bff/memory", tags=["v2:bff:memory"])
+v2_router.include_router(
+    bff_canvases_router, prefix="/bff/canvases", tags=["v2:bff:canvases"]
+)
 v2_router.include_router(
     bff_analysis_runs_router,
     prefix="/bff/analysis-runs",

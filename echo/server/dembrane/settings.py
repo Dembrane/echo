@@ -379,6 +379,32 @@ class CacheSettings(BaseSettings):
     )
 
 
+class CanvasSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
+
+    max_html_bytes: int = Field(
+        default=240_000,
+        alias="CANVAS_MAX_HTML_BYTES",
+        validation_alias=AliasChoices("CANVAS_MAX_HTML_BYTES", "CANVAS__MAX_HTML_BYTES"),
+    )
+    max_transcript_chars_per_conversation: int = Field(
+        default=6_000,
+        alias="CANVAS_MAX_TRANSCRIPT_CHARS_PER_CONVERSATION",
+        validation_alias=AliasChoices(
+            "CANVAS_MAX_TRANSCRIPT_CHARS_PER_CONVERSATION",
+            "CANVAS__MAX_TRANSCRIPT_CHARS_PER_CONVERSATION",
+        ),
+    )
+    max_total_transcript_chars: int = Field(
+        default=28_000,
+        alias="CANVAS_MAX_TOTAL_TRANSCRIPT_CHARS",
+        validation_alias=AliasChoices(
+            "CANVAS_MAX_TOTAL_TRANSCRIPT_CHARS",
+            "CANVAS__MAX_TOTAL_TRANSCRIPT_CHARS",
+        ),
+    )
+
+
 class StorageSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
 
@@ -645,6 +671,7 @@ class AppSettings:
         self.email = EmailSettings()
         self.database = DatabaseSettings()
         self.cache = CacheSettings()
+        self.canvas = CanvasSettings()
         self.storage = StorageSettings()
         self.transcription = TranscriptionSettings()
         self.llms = LLMSettings()

@@ -38,6 +38,7 @@ logger = getLogger("dembrane.scheduled_tasks")
 # ── task_type registry (string values stored in the row) ────────────────────
 TASK_REVOKE_STAFF_SUPPORT = "revoke_staff_support"
 TASK_GENERATE_REPORT = "generate_report"
+TASK_CANVAS_TICK = "canvas_tick"
 
 # ── status values ───────────────────────────────────────────────────────────
 STATUS_SCHEDULED = "scheduled"

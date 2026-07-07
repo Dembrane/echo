@@ -1819,6 +1819,7 @@ def task_process_scheduled_tasks() -> None:
 
 def _dispatch_scheduled_task(row: dict) -> None:
     from dembrane.scheduled_tasks import (
+        TASK_CANVAS_TICK,
         TASK_GENERATE_REPORT,
         TASK_REVOKE_STAFF_SUPPORT,
     )
@@ -1829,8 +1830,20 @@ def _dispatch_scheduled_task(row: dict) -> None:
         _run_revoke_staff_support(payload)
     elif task_type == TASK_GENERATE_REPORT:
         _run_generate_report(payload)
+    elif task_type == TASK_CANVAS_TICK:
+        _run_canvas_tick(payload)
     else:
         raise ValueError(f"unknown scheduled_task type: {task_type!r}")
+
+
+def _run_canvas_tick(payload: dict) -> None:
+    loop_id = payload.get("loop_id")
+    if not loop_id:
+        raise ValueError("canvas_tick payload missing loop_id")
+    tick_kind = payload.get("tick_kind") or "scheduled"
+    from dembrane.canvas.ticks import run_tick
+
+    run_async_in_new_loop(run_tick(str(loop_id), str(tick_kind)))
 
 
 async def _revoke_staff_support_async(
