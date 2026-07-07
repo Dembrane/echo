@@ -130,8 +130,24 @@ fetchers - no LLM-written code in their tick path:
 
 - *Monitor widget* - a compact live view of the project's sessions (data-only, `live`
   class; reuses gather_project_monitor).
-- *Pulse* - "what are people talking about right now?" (recent chunks -> short themed
-  summary; `normal` class, data+summarize tick).
+- *Pulse* - the reference recipe, spec'd 2026-07-07. One data+summarize tick every 5 min
+  (default; advanced-tunable; mandatory expiry) reads the project's NEW chunks since the
+  last tick and produces TWO data products from one structured LLM call:
+  - an ENTRY: 30-40 words on what's happening right now (delta, never a cumulative
+    re-summary; quiet tick -> no entry; resume after pause -> one catch-up entry). The
+    append-only feed IS the artifact's content - live it's a ticker, afterwards it's the
+    minute-by-minute record of the session, and prime seed material for the closing report.
+  - a THEMES BOARD state: "what are the themes right now", regenerated each tick, history
+    kept as snapshots (scrub through the day).
+  Two widget presets over the same products - feed view and board view - host enables
+  either or both; both full-screen-able. Logged-in screens render via the D14 client
+  runtime; a PUBLISHED big screen gets server-rendered snapshots refreshed each tick (no
+  session, no live data access). Configuration (tone, emphasis, language) is the skeleton
+  and versions via chat; entries/board states are data products, never versions. Entry
+  generation follows the project's anonymization stance - publishing a pulse is publishing
+  paraphrased participant voice, same responsibility as publishing a report. Ownership:
+  project-owned artifact rows (kind=artifact, recipe=pulse), creator recorded; view =
+  report:view, configure/pause = chat lifecycle, publish = explicit host action.
 
 "Set up a pulse for this project" is then a one-tap proposal in chat - configurable
 (scope, tone, cadence class within bounds) and editable by chat like any artifact, but its
