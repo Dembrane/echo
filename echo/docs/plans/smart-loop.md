@@ -130,35 +130,45 @@ fetchers - no LLM-written code in their tick path:
 
 - *Monitor widget* - a compact live view of the project's sessions (data-only, `live`
   class; reuses gather_project_monitor).
-- *Pulse* - the reference recipe, spec'd 2026-07-07 (owner-corrected: GENERIC, not
-  hardcoded flavors). A pulse is a TRACKED QUESTION; a pulse artifact holds one or more of
-  them.
-  - Pulse = {question (free text: "What are the themes right now?", "What are people
-    talking about?", "How is sentiment on the garage plan shifting?"), answer-shape hints
-    (target length, format: prose | list | labelled themes), window (new-since-last-tick
-    delta | current-state), cadence class}. The question is the configurable heart - it can
-    change over time, or never.
-  - The tick (data+summarize, default 5 min, advanced-tunable, mandatory expiry) answers
-    ALL of the artifact's active pulses in one structured LLM call against the project's
-    fresh/current chunks, appending one timestamped ANSWER per pulse. A pulse's answer
-    history is its feed; a state-shaped answer's latest entry renders as a board. Quiet
-    tick on a delta pulse -> no entry; resume after pause -> one catch-up entry; never a
-    cumulative re-summary where the window says delta.
-  - Editing is first-class and generic: adding, removing, or REPHRASING a pulse question
-    goes through the standard skeleton flow - agent proposes, D12 preview ("Try it"
-    renders the new question answered against current/sample data), host applies, new
-    artifact VERSION. Answers are keyed to the question revision that produced them, so
-    history stays honest when a question evolves mid-session.
-  - Answers are data products, never versions. Rendering: the D14 runtime lays out the
-    artifact's pulses (each = latest answer + expandable history; full-screen mode);
-    logged-in = client runtime, PUBLISHED big screen = server-rendered snapshots per tick
-    (no session, no live data access). Answer generation follows the project's
-    anonymization stance - publishing a pulse is publishing paraphrased participant voice,
-    same responsibility as publishing a report.
-  - Ownership: project-owned artifact rows (kind=artifact, recipe=pulse), creator
-    recorded; view = report:view, configure/pause = chat lifecycle, publish = explicit
-    host action. After expiry the answer histories freeze into the session record - prime
-    seed material for the closing report.
+- *Pulse board* - a curated composition that is nothing but pulse fetchers (see D14a):
+  "set up a pulse" gives you one artifact tracking the questions you care about.
+
+Recipes are curated COMPOSITIONS of fetchers, not special types - the same primitives
+agent-generated artifacts (v1.5) compose freely.
+
+## D14a. The pulse fetcher - a fetcher kind, not an artifact type - PROPOSED
+
+Owner correction (2026-07-07): pulses are not their own artifact. Any artifact's skeleton -
+a wall, a board, whatever the fetcher set is - can have MULTIPLE pulse fetchers built in,
+next to plain data fetchers.
+
+- Fetcher kinds in a skeleton: DATA fetcher (declarative descriptor over SSE/REST, D14) and
+  PULSE fetcher (a TRACKED QUESTION whose answers are produced server-side and consumed
+  like any other data source).
+- Pulse fetcher = {question (free text: "What are the themes right now?", "What are people
+  talking about?", "How is sentiment on the garage plan shifting?"), answer-shape hints
+  (target length, format: prose | list | labelled themes), window (delta-since-last-tick |
+  current-state), cadence class}. The question is the configurable heart; it can evolve or
+  stay fixed.
+- The loop tick (data+summarize, default 5 min, advanced-tunable, mandatory expiry) answers
+  ALL active pulse fetchers across the artifact in one structured LLM call against the
+  project's fresh/current chunks, appending one timestamped ANSWER per pulse. Answer
+  history = that pulse's feed; a current-state answer's latest entry renders as a board.
+  Quiet tick on a delta pulse -> no entry; resume after pause -> one catch-up entry; never
+  a cumulative re-summary where the window says delta.
+- Editing is the standard skeleton flow: adding, removing, or REPHRASING a pulse question
+  is an artifact version (agent proposes -> D12 "Try it" preview answers the new question
+  against current/sample data -> host applies). Answers are keyed to the question revision
+  that produced them, so history stays honest when questions evolve mid-session.
+- Answers are data products, never versions. Marieke's wall is the composed example: a live
+  participant counter (data fetcher, live class) + theme tiles (pulse fetcher,
+  current-state) + a rotating "what's happening" line (pulse fetcher, delta).
+- Rendering, publishing, anonymization, ownership: as D14/D13 - logged-in via the client
+  runtime, published screens get server-rendered snapshots per tick; publishing pulse
+  answers is publishing paraphrased participant voice (report rules + the project's
+  anonymization stance); artifact rows are project-owned, creator recorded, view =
+  report:view, configure/pause = chat lifecycle, publish = explicit. Post-expiry, frozen
+  answer histories are the session record and closing-report seed.
 
 "Set up a pulse for this project" is then a one-tap proposal in chat - configurable
 (scope, tone, cadence class within bounds) and editable by chat like any artifact, but its

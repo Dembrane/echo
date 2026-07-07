@@ -152,8 +152,9 @@ asked for it.
   manage by chatting - propose, apply, pause, resume, stop. Some come ready-made: a
   *pulse* tracks any question you give it over time - *"what are people talking about
   right now?"*, *"what are the themes?"*, *"how is the mood shifting?"* - one answer every
-  few minutes, with the full history kept. One pulse artifact can track several questions
-  at once, and you add or rephrase them by chatting. A small live monitor widget is one
+  few minutes, with the full history kept. Any artifact can carry several pulses at once
+  (Marieke's wall tracks themes AND a what's-happening line, next to its live counter),
+  and you add or rephrase the questions by chatting. A small live monitor widget is one
   tap away too. Some parts update continuously, others every few minutes - you never have
   to think about which.
 - *Try before apply*: every change to an artifact shows you a preview right in the chat -
