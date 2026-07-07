@@ -43,6 +43,7 @@ import { useUpdateChatMutation } from "@/components/chat/hooks";
 import { InsertTemplateMenu } from "@/components/chat/InsertTemplateMenu";
 import { useConversationsByProjectId } from "@/components/conversation/hooks";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { GoalSuggestionCard } from "@/components/goal/GoalSuggestionCard";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -72,6 +73,7 @@ import {
 	extractTopLevelToolActivity,
 	parseCanvasSuggestion,
 	parseCustomVerificationTopicSuggestion,
+	parseGoalSuggestion,
 	parseProjectUpdateSuggestion,
 	type ToolActivity,
 } from "./agenticToolActivity";
@@ -615,6 +617,11 @@ export const AgenticChatPanel = ({
 					item: Extract<TimelineItem, { kind: "tool" }>;
 			  }
 			| {
+					kind: "goal_suggestion";
+					id: string;
+					item: Extract<TimelineItem, { kind: "tool" }>;
+			  }
+			| {
 					kind: "tool_group";
 					id: string;
 					items: Extract<TimelineItem, { kind: "tool" }>[];
@@ -635,6 +642,10 @@ export const AgenticChatPanel = ({
 			}
 			if (parseCanvasSuggestion(item)) {
 				nodes.push({ id: item.id, item, kind: "canvas_suggestion" });
+				continue;
+			}
+			if (parseGoalSuggestion(item)) {
+				nodes.push({ id: item.id, item, kind: "goal_suggestion" });
 				continue;
 			}
 			const last = nodes[nodes.length - 1];
@@ -1336,6 +1347,20 @@ export const AgenticChatPanel = ({
 							return suggestion ? (
 								<div key={node.id}>
 									<CanvasSuggestionCard
+										suggestion={{
+											...suggestion,
+											projectId: suggestion.projectId || projectId,
+										}}
+									/>
+								</div>
+							) : null;
+						}
+
+						if (node.kind === "goal_suggestion") {
+							const suggestion = parseGoalSuggestion(node.item);
+							return suggestion ? (
+								<div key={node.id}>
+									<GoalSuggestionCard
 										suggestion={{
 											...suggestion,
 											projectId: suggestion.projectId || projectId,

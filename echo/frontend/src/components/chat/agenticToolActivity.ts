@@ -101,6 +101,8 @@ const buildHeadline = (toolName: string, context: ToolContext) => {
 			return t`Suggesting a verification prompt`;
 		case "proposeCanvas":
 			return t`Suggesting a canvas`;
+		case "proposeGoal":
+			return t`Suggesting a project goal`;
 		case "getProjectSettings":
 			return t`Reading project settings`;
 		case "grepDocs":
@@ -413,6 +415,32 @@ export const parseCanvasSuggestion = (
 					? (payload.gather_spec as Record<string, unknown>)
 					: null,
 			name,
+			projectId: String(payload.project_id ?? ""),
+		};
+	} catch {
+		return null;
+	}
+};
+
+export type ParsedGoalSuggestion = {
+	projectId: string;
+	content: string;
+};
+
+/** Returns the structured suggestion when a completed tool activity is a
+ * proposeGoal result, else null. */
+export const parseGoalSuggestion = (
+	activity: ToolActivity,
+): ParsedGoalSuggestion | null => {
+	if (activity.toolName !== "proposeGoal") return null;
+	if (activity.status !== "completed" || !activity.rawOutput) return null;
+	try {
+		const payload = JSON.parse(activity.rawOutput);
+		if (payload?.type !== "goal_proposal") return null;
+		const content = String(payload.content ?? "").trim();
+		if (!content) return null;
+		return {
+			content,
 			projectId: String(payload.project_id ?? ""),
 		};
 	} catch {
