@@ -149,7 +149,14 @@ asked for it.
   when the assistant notices something worked, edited by you, and one day shared and
   published with evidence attached.
 - *Loops*: recurring assistant runs with a cadence, a hard expiry, and a lifecycle you
-  manage by chatting - propose, apply, pause, resume, stop.
+  manage by chatting - propose, apply, pause, resume, stop. Some come ready-made: *"set up
+  a pulse"* (what are people talking about right now?) or a small live monitor widget, one
+  tap from chat, no setup knowledge needed. Some parts update continuously, others every
+  few minutes - you never have to think about which.
+- *Try before apply*: every change to an artifact shows you a preview right in the chat -
+  with your real data when you have some, with clearly-marked sample data when you don't -
+  and nothing goes live until you apply it. For a full rehearsal, the assistant will walk
+  you through a two-minute test recording you can delete afterwards.
 - *A sandbox*: the assistant writes and runs small programs to build artifacts, in a locked
   room whose only window is the dembrane API, acting with your access and nothing more.
 - *Artifacts*: report-shaped things that aren't reports - versioned forever, regenerated in

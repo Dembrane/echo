@@ -77,6 +77,53 @@ needs a language model.
 - User language: hosts are never shown "polling" or intervals up front. The proposal card
   says "stays up to date until <expiry>"; refresh cadence and skeleton-revision policy live
   in an advanced setting. Default data tick: every few minutes while the loop is active.
+- Freshness classes, not one interval: a skeleton declares each data source's class and the
+  system picks the mechanism - `live` (rides the existing monitor SSE / Redis snapshot
+  stream, no polling at all - already built), `fast` (~2 min tick), `normal` (~5-10 min
+  tick), `on-demand` (only on view/preview). One artifact can mix classes (a wall's
+  presence counter is live; its theme tiles are normal). Tick type is also declared:
+  `data-only` (pure fetch+render, no LLM) or `data+summarize` (a bounded, cheap LLM step
+  inside the tick - e.g. pulse needs one; a monitor widget doesn't).
+
+## D13. First-class loop recipes: curated before generated - PROPOSED
+
+Ship a small set of dembrane-maintained recipes as seeded skeletons with known-good
+fetchers - no LLM-written code in their tick path:
+
+- *Monitor widget* - a compact live view of the project's sessions (data-only, `live`
+  class; reuses gather_project_monitor).
+- *Pulse* - "what are people talking about right now?" (recent chunks -> short themed
+  summary; `normal` class, data+summarize tick).
+
+"Set up a pulse for this project" is then a one-tap proposal in chat - configurable
+(scope, tone, cadence class within bounds) and editable by chat like any artifact, but its
+skeleton is ours, versioned by us. Hosts who know nothing about software get something
+that always works and is always previewable.
+
+Sequencing consequence (deliberate): v1 ships the ENTIRE loop machinery (D1, D4, D4a,
+D12 preview) on curated recipes only; agent-GENERATED skeletons (the sandbox writing
+custom walls) become v1.5. This de-risks the sandbox path - the riskiest component
+(LLM-written code) is the last one in, on top of infrastructure proven by curated code.
+
+## D12. Draft, preview, and the artifact test contract - PROPOSED
+
+How a host tests changes before applying, with zero software knowledge:
+
+- Every skeleton change (initial build, chat feedback, agent proposal) lands as a DRAFT
+  version with a preview snapshot rendered INSIDE the chat thread - the proposal card gains
+  a live "Try it" render. Apply promotes it; nothing goes live unseen.
+- Preview data source, picked automatically: real project data when any exists (a tick
+  against the draft); otherwise a BUNDLED sample dataset switched in at the fetch layer -
+  unmissably watermarked "sample data", never persisted, never model-invented (fabricated
+  participant quotes are an honesty hazard in this product).
+- The sample dataset doubles as the test fixture: a skeleton version must render cleanly
+  against the sample set AND an empty set before it can be applied. That is the artifact
+  CI.
+- Full-journey rehearsal: the assistant coaches a real 2-minute test recording
+  (record-then-delete). NO seed-data inserter - fake rows in the DB leak into monitor
+  counts, reports, library, and insights unless every consumer filters a test flag;
+  codebase-wide tax rejected for v1 ("mark as test" is the upgrade path if record-then-
+  delete proves clunky).
 
 ## D4. Loop object model - PROPOSED
 
@@ -195,11 +242,14 @@ build (the assistant grounds "that's being built" answers in them), and graduate
 
 - Phase 0 (serial, small): D3 token mint/validate + D7 chat-identity threading (both touch
   auth/run-context plumbing).
-- Track A: D1 headless executor + D4 loop object/scheduling/chat tools.
-- Track B: D2 sandbox service.
-- Track C: D5 artifacts + versions + feedback-by-chat surface (+ D6 sanitization).
+- Track A: D1 headless executor + D4/D4a loop object, ticks, scheduling, chat tools.
+- Track B: D2 sandbox service (runs curated skeletons first; generated code lands v1.5).
+- Track C: D5 artifacts + versions/snapshots + D12 draft/preview/test contract + feedback-
+  by-chat surface (+ D6 sanitization).
 - Track D: D8 interview skill + D9 goal revisions + D11 methodology MVP (schema, seeded
   default, project-creation-as-chat, extraction suggestion).
+- v1 = the whole machinery on D13's CURATED recipes (monitor widget, pulse). v1.5 = agent-
+  GENERATED skeletons (the full live-panel-wall story).
 - Integration: the story, end to end, as the acceptance test; then docs graduation (D10).
 - Later phases (post-story): methodology explorer + publishing + evidence; library uploads
   (documents); widget UI primitives.
