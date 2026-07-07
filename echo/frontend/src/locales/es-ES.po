@@ -1016,6 +1016,10 @@ msgstr ""
 #~ msgid "A few quick questions"
 #~ msgstr ""
 
+#: src/components/canvas/CanvasFrame.tsx:79
+msgid "A first version will appear here when it is ready."
+msgstr ""
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:385
 msgid "A friendly name to identify this webhook"
 msgstr "Un nombre amigable para identificar este webhook"
@@ -2061,6 +2065,10 @@ msgstr "¿Preguntar por el email?"
 msgid "Ask for Name?"
 msgstr "¿Preguntar por el nombre?"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:155
+msgid "Ask for the latest version"
+msgstr ""
+
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:43
 msgid "Ask participants for their email"
 msgstr ""
@@ -2667,6 +2675,15 @@ msgstr "No se puede añadir una conversación vacía"
 #: src/routes/project/report/ProjectReportRoute.tsx:619
 msgid "Cannot reschedule within 10 minutes of the scheduled time"
 msgstr "No se puede reprogramar dentro de los 10 minutos previos a la hora programada"
+
+#: src/routes/project/canvas/CanvasRoute.tsx:112
+#: src/routes/project/canvas/CanvasRoute.tsx:143
+msgid "Canvas"
+msgstr ""
+
+#: src/components/canvas/CanvasFrame.tsx:114
+msgid "Canvas preview"
+msgstr ""
 
 #: src/components/common/RedactedText.tsx:37
 msgid "Card"
@@ -3406,6 +3423,10 @@ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1769
 msgid "Could not load the rollup. Check auth and backend logs."
+msgstr ""
+
+#: src/components/canvas/hooks/index.ts:138
+msgid "Could not refresh this canvas"
 msgstr ""
 
 #: src/components/conversation/LiveFunnelSection.tsx:167
@@ -4562,6 +4583,10 @@ msgstr "Habilitado"
 #~ msgid "End of list • All {0} conversations loaded"
 #~ msgstr "Fin de la lista • Todas las {0} conversaciones cargadas"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:35
+msgid "Ended"
+msgstr ""
+
 #: src/components/billing/BillingManager.tsx:1223
 msgid "Ends {endDate}"
 msgstr ""
@@ -4655,6 +4680,7 @@ msgstr ""
 #~ msgid "enterprise scale."
 #~ msgstr ""
 
+#: src/routes/project/canvas/CanvasRoute.tsx:89
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
 #: src/components/conversation/LiveMonitorSection.tsx:352
@@ -4795,6 +4821,8 @@ msgid "Exceeds seat cap. Overage billing applies."
 msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1335
+#: src/routes/project/canvas/CanvasRoute.tsx:171
+#: src/routes/project/canvas/CanvasRoute.tsx:178
 msgid "Exit fullscreen"
 msgstr "Salir de pantalla completa"
 
@@ -5399,6 +5427,8 @@ msgid "Full transcript (when available)"
 msgstr "Transcripción completa (cuando esté disponible)"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1335
+#: src/routes/project/canvas/CanvasRoute.tsx:171
+#: src/routes/project/canvas/CanvasRoute.tsx:178
 msgid "Fullscreen"
 msgstr "Pantalla completa"
 
@@ -6348,6 +6378,10 @@ msgstr ""
 #~ msgid "Just now"
 #~ msgstr "Justo ahora"
 
+#: src/components/canvas/hooks/index.ts:131
+msgid "Just refreshed. Give it a moment."
+msgstr ""
+
 #: src/components/conversation/LiveMonitorSection.tsx:62
 msgid "Just started"
 msgstr ""
@@ -6464,6 +6498,11 @@ msgstr "Última vez guardado el {0}"
 #: src/components/report/ConversationStatusTable.tsx:59
 msgid "Last Updated"
 msgstr "Última actualización"
+
+#. placeholder {0}: formatDistanceToNow(createdAt, { addSuffix: true })
+#: src/components/canvas/CanvasFrame.tsx:36
+msgid "Last updated {0}"
+msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:336
 msgid "Latest"
@@ -6619,9 +6658,9 @@ msgstr ""
 msgid "Listing documentation pages"
 msgstr ""
 
-#: src/components/conversation/LiveMonitorSection.tsx:84
-#~ msgid "Live"
-#~ msgstr "Vivo"
+#: src/routes/project/canvas/CanvasRoute.tsx:74
+msgid "Live"
+msgstr "Vivo"
 
 #: src/routes/project/ProjectHomeRoute.tsx:185
 msgid "Live & recent"
@@ -7467,6 +7506,10 @@ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1423
 msgid "No billing accounts match the current filters."
+msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:88
+msgid "No change"
 msgstr ""
 
 #. js-lingui-explicit-id
@@ -8793,6 +8836,7 @@ msgstr "Las contraseñas no coinciden"
 msgid "Pause reading"
 msgstr "Pausar lectura"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:33
 #: src/components/conversation/LiveMonitorSection.tsx:48
 msgid "Paused"
 msgstr ""
@@ -9878,8 +9922,16 @@ msgstr "Actualizar"
 msgid "Refresh audit logs"
 msgstr "Actualizar registros de auditoría"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:167
+msgid "Refresh now"
+msgstr ""
+
 #: src/components/conversation/OngoingConversationsSummaryCard.tsx:57
 msgid "Refresh ongoing conversations"
+msgstr ""
+
+#: src/components/canvas/hooks/index.ts:141
+msgid "Refresh started"
 msgstr ""
 
 #: src/components/workspace/TeamUsageRollup.tsx:162
@@ -9890,6 +9942,14 @@ msgstr ""
 #: src/components/workspace/WorkspaceHomeSummary.tsx:115
 #~ msgid "Refresh usage"
 #~ msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:154
+msgid "Refresh will work when the canvas service is ready"
+msgstr ""
+
+#: src/components/canvas/hooks/index.ts:135
+msgid "Refresh will work when the canvas service is ready."
+msgstr ""
 
 #: src/components/common/UsageFreshness.tsx:32
 msgid "Refreshing…"
@@ -11660,6 +11720,16 @@ msgstr ""
 msgid "Status"
 msgstr "Estado"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:37
+#: src/routes/project/canvas/CanvasRoute.tsx:39
+msgid "Stays up to date"
+msgstr ""
+
+#. placeholder {0}: format(expiry, "HH:mm 'today'")
+#: src/routes/project/canvas/CanvasRoute.tsx:40
+msgid "Stays up to date until {0}"
+msgstr ""
+
 #: src/routes/auth/CheckYourEmail.tsx:51
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr ""
@@ -12023,6 +12093,10 @@ msgstr ""
 msgid "The assistant forgets it in every future chat."
 msgstr ""
 
+#: src/components/canvas/CanvasFrame.tsx:76
+msgid "The assistant is preparing this canvas."
+msgstr ""
+
 #: src/components/layout/Header.tsx:90
 #~ msgid "The built-in issue reporter could not be loaded. You can still let us know what went wrong through our feedback portal — it helps us fix things faster."
 #~ msgstr "No se pudo cargar el reportador de problemas integrado. Aún puede informarnos de lo que salió mal a través de nuestro portal de comentarios. Nos ayuda a solucionar las cosas más rápido que no enviar un informe."
@@ -12098,6 +12172,10 @@ msgstr ""
 
 #~ msgid "The Portal is the website that loads when participants scan the QR code."
 #~ msgstr "El Portal es el sitio web que se carga cuando los participantes escanean el código QR."
+
+#: src/components/canvas/CanvasFrame.tsx:98
+msgid "The previous versions are still available below."
+msgstr ""
 
 #~ msgid "the project library."
 #~ msgstr "la biblioteca del proyecto."
@@ -12237,6 +12315,10 @@ msgstr ""
 #: src/components/participant/ParticipantConversationAudio.tsx:660
 msgid "participant.modal.s3check.suggestions"
 msgstr "Esto puede ocurrir cuando una VPN o un firewall está bloqueando la conexión. Intenta desactivar tu VPN, cambiar a otra red (p. ej., punto de acceso móvil) o contacta con tu departamento de TI para obtener ayuda."
+
+#: src/components/canvas/CanvasFrame.tsx:95
+msgid "This canvas could not update."
+msgstr ""
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:172
 #~ msgid "This conversation has no transcript yet"
@@ -13100,6 +13182,10 @@ msgstr ""
 msgid "Untitled"
 msgstr ""
 
+#: src/components/canvas/hooks/index.ts:66
+msgid "Untitled canvas"
+msgstr ""
+
 #: src/routes/project/ProjectHomeRoute.tsx:52
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:94
 #: src/components/project/ProjectUsageAndSharing.tsx:501
@@ -13440,6 +13526,10 @@ msgstr "Usando el logo de dembrane por defecto"
 msgid "Using dembrane in health, education, recruitment, critical infrastructure, law enforcement, or justice? Those are high-risk contexts and need a mandatory training before live use."
 msgstr ""
 
+#: src/routes/project/canvas/CanvasRoute.tsx:147
+msgid "Using fixture data."
+msgstr ""
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1057
 msgid "Using webhooks? We'd love to hear from you"
 msgstr "¿Usando webhooks? Nos encantaría escuchar de ti"
@@ -13549,6 +13639,14 @@ msgstr ""
 msgid "Verifying your email address."
 msgstr ""
 
+#: src/routes/project/canvas/CanvasRoute.tsx:45
+msgid "Version"
+msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:66
+msgid "Versions"
+msgstr ""
+
 #: src/components/conversation/LiveMonitorSection.tsx:104
 msgid "Very quiet right now — check the mic isn't muted"
 msgstr ""
@@ -13593,6 +13691,11 @@ msgstr ""
 #: src/components/participant/ParticipantBody.tsx:257
 msgid "View your responses"
 msgstr "Ver tus respuestas"
+
+#. placeholder {0}: generationLabel(selected)
+#: src/routes/project/canvas/CanvasRoute.tsx:70
+msgid "Viewing {0}. Back to live"
+msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1182
 #~ msgid "views"

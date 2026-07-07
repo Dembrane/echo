@@ -811,6 +811,10 @@ msgstr ""
 #~ msgid "A few quick questions"
 #~ msgstr ""
 
+#: src/components/canvas/CanvasFrame.tsx:79
+msgid "A first version will appear here when it is ready."
+msgstr ""
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:385
 msgid "A friendly name to identify this webhook"
 msgstr "Een vriendelijke naam om dit webhook te identificeren"
@@ -1835,6 +1839,10 @@ msgstr "Vraag om e-mail?"
 msgid "Ask for Name?"
 msgstr "Vraag om naam?"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:155
+msgid "Ask for the latest version"
+msgstr ""
+
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:43
 msgid "Ask participants for their email"
 msgstr ""
@@ -2421,6 +2429,15 @@ msgstr "Kan geen leeg gesprek toevoegen"
 #: src/routes/project/report/ProjectReportRoute.tsx:619
 msgid "Cannot reschedule within 10 minutes of the scheduled time"
 msgstr "Kan niet opnieuw plannen binnen 10 minuten voor het geplande tijdstip"
+
+#: src/routes/project/canvas/CanvasRoute.tsx:112
+#: src/routes/project/canvas/CanvasRoute.tsx:143
+msgid "Canvas"
+msgstr ""
+
+#: src/components/canvas/CanvasFrame.tsx:114
+msgid "Canvas preview"
+msgstr ""
 
 #: src/components/common/RedactedText.tsx:37
 msgid "Card"
@@ -3140,6 +3157,10 @@ msgstr "Betalingen konden niet worden geladen. Controleer de authenticatie en de
 #: src/routes/admin/AdminSettingsRoute.tsx:1769
 msgid "Could not load the rollup. Check auth and backend logs."
 msgstr "De rollup kon niet worden geladen. Controleer de authenticatie en de backend-logs."
+
+#: src/components/canvas/hooks/index.ts:138
+msgid "Could not refresh this canvas"
+msgstr ""
 
 #: src/components/conversation/LiveFunnelSection.tsx:167
 msgid "Could not save"
@@ -4264,6 +4285,10 @@ msgstr "Ingeschakeld"
 #~ msgid "End of list • All {0} conversations loaded"
 #~ msgstr "Einde van de lijst • Alle {0} gesprekken geladen"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:35
+msgid "Ended"
+msgstr ""
+
 #: src/components/billing/BillingManager.tsx:1223
 msgid "Ends {endDate}"
 msgstr ""
@@ -4357,6 +4382,7 @@ msgstr ""
 #~ msgid "enterprise scale."
 #~ msgstr ""
 
+#: src/routes/project/canvas/CanvasRoute.tsx:89
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
 #: src/components/conversation/LiveMonitorSection.tsx:352
@@ -4490,6 +4516,8 @@ msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Overschrijdt het maximum aantal stoelen. Er gelden extra kosten."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1335
+#: src/routes/project/canvas/CanvasRoute.tsx:171
+#: src/routes/project/canvas/CanvasRoute.tsx:178
 msgid "Exit fullscreen"
 msgstr "Volledig scherm sluiten"
 
@@ -5074,6 +5102,8 @@ msgid "Full transcript (when available)"
 msgstr "Volledig transcript (wanneer beschikbaar)"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1335
+#: src/routes/project/canvas/CanvasRoute.tsx:171
+#: src/routes/project/canvas/CanvasRoute.tsx:178
 msgid "Fullscreen"
 msgstr "Volledig scherm"
 
@@ -5975,6 +6005,10 @@ msgstr ""
 #~ msgid "Just now"
 #~ msgstr "Net zojuist"
 
+#: src/components/canvas/hooks/index.ts:131
+msgid "Just refreshed. Give it a moment."
+msgstr ""
+
 #: src/components/conversation/LiveMonitorSection.tsx:62
 msgid "Just started"
 msgstr ""
@@ -6087,6 +6121,11 @@ msgstr "Laatst opgeslagen {0}"
 #: src/components/report/ConversationStatusTable.tsx:59
 msgid "Last Updated"
 msgstr "Laatst bijgewerkt"
+
+#. placeholder {0}: formatDistanceToNow(createdAt, { addSuffix: true })
+#: src/components/canvas/CanvasFrame.tsx:36
+msgid "Last updated {0}"
+msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:336
 msgid "Latest"
@@ -6241,9 +6280,9 @@ msgstr "Gesprekken op een rij zetten"
 msgid "Listing documentation pages"
 msgstr ""
 
-#: src/components/conversation/LiveMonitorSection.tsx:84
-#~ msgid "Live"
-#~ msgstr "Live"
+#: src/routes/project/canvas/CanvasRoute.tsx:74
+msgid "Live"
+msgstr "Live"
 
 #: src/routes/project/ProjectHomeRoute.tsx:185
 msgid "Live & recent"
@@ -7049,6 +7088,10 @@ msgstr "Nog geen factureringsaccount. Mail naar <0>support@dembrane.com</0> en w
 #: src/routes/admin/AdminSettingsRoute.tsx:1423
 msgid "No billing accounts match the current filters."
 msgstr "Geen factureringsaccounts voldoen aan de huidige filters."
+
+#: src/routes/project/canvas/CanvasRoute.tsx:88
+msgid "No change"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/chat/ChatAccordion.tsx:300
@@ -8395,6 +8438,7 @@ msgstr "Wachtwoorden komen niet overeen"
 msgid "Pause reading"
 msgstr "Pauzeer het voorlezen"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:33
 #: src/components/conversation/LiveMonitorSection.tsx:48
 msgid "Paused"
 msgstr ""
@@ -9422,15 +9466,31 @@ msgstr "Vernieuwen"
 msgid "Refresh audit logs"
 msgstr "Auditlogboeken vernieuwen"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:167
+msgid "Refresh now"
+msgstr ""
+
 #: src/components/conversation/OngoingConversationsSummaryCard.tsx:57
 msgid "Refresh ongoing conversations"
 msgstr "Lopende gesprekken vernieuwen"
+
+#: src/components/canvas/hooks/index.ts:141
+msgid "Refresh started"
+msgstr ""
 
 #~ msgid "Refresh team usage"
 #~ msgstr ""
 
 #~ msgid "Refresh usage"
 #~ msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:154
+msgid "Refresh will work when the canvas service is ready"
+msgstr ""
+
+#: src/components/canvas/hooks/index.ts:135
+msgid "Refresh will work when the canvas service is ready."
+msgstr ""
 
 #: src/components/common/UsageFreshness.tsx:32
 msgid "Refreshing…"
@@ -11127,6 +11187,16 @@ msgstr "Begint"
 msgid "Status"
 msgstr "Status"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:37
+#: src/routes/project/canvas/CanvasRoute.tsx:39
+msgid "Stays up to date"
+msgstr ""
+
+#. placeholder {0}: format(expiry, "HH:mm 'today'")
+#: src/routes/project/canvas/CanvasRoute.tsx:40
+msgid "Stays up to date until {0}"
+msgstr ""
+
 #: src/routes/auth/CheckYourEmail.tsx:51
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Kom je er nog niet uit? Mail <0>support@dembrane.com</0>."
@@ -11465,6 +11535,10 @@ msgstr "Misschien heeft de beheerder hem geannuleerd, of is er met de link gekno
 msgid "The assistant forgets it in every future chat."
 msgstr "De assistent vergeet dit in elke toekomstige chat."
 
+#: src/components/canvas/CanvasFrame.tsx:76
+msgid "The assistant is preparing this canvas."
+msgstr ""
+
 #~ msgid "The built-in issue reporter could not be loaded. You can still let us know what went wrong through our feedback portal — it helps us fix things faster."
 #~ msgstr "De ingebouwde probleemmelder kon niet worden geladen. U kunt ons nog steeds laten weten wat er mis is gegaan via ons feedbackportaal. Het helpt ons problemen sneller op te lossen dan wanneer er geen rapport wordt ingediend."
 
@@ -11537,6 +11611,10 @@ msgstr "De pagina waar dit antwoord naar verwijst."
 
 #~ msgid "The Portal is the website that loads when participants scan the QR code."
 #~ msgstr "De Portal is de website die wordt geladen wanneer deelnemers het QR-code scannen."
+
+#: src/components/canvas/CanvasFrame.tsx:98
+msgid "The previous versions are still available below."
+msgstr ""
 
 #~ msgid "the project library."
 #~ msgstr "de projectbibliotheek."
@@ -11673,6 +11751,10 @@ msgstr "Dit gedeelte is voor dembrane-personeel. Denk je dat je toegang zou moet
 #: src/components/participant/ParticipantConversationAudio.tsx:660
 msgid "participant.modal.s3check.suggestions"
 msgstr "Dit kan gebeuren wanneer een VPN of firewall de verbinding blokkeert. Probeer je VPN uit te schakelen, over te schakelen naar een ander netwerk (bijv. mobiele hotspot) of neem contact op met je IT-afdeling voor hulp."
+
+#: src/components/canvas/CanvasFrame.tsx:95
+msgid "This canvas could not update."
+msgstr ""
 
 #~ msgid "This conversation has no transcript yet"
 #~ msgstr ""
@@ -12533,6 +12615,10 @@ msgstr ""
 msgid "Untitled"
 msgstr "Naamloos"
 
+#: src/components/canvas/hooks/index.ts:66
+msgid "Untitled canvas"
+msgstr ""
+
 #: src/routes/project/ProjectHomeRoute.tsx:52
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:94
 #: src/components/project/ProjectUsageAndSharing.tsx:501
@@ -12853,6 +12939,10 @@ msgstr "Gebruik standaard dembrane-logo"
 msgid "Using dembrane in health, education, recruitment, critical infrastructure, law enforcement, or justice? Those are high-risk contexts and need a mandatory training before live use."
 msgstr "Gebruik je dembrane in de zorg, het onderwijs, werving, kritieke infrastructuur, rechtshandhaving of justitie? Dat zijn risicovolle contexten en vereisen een verplichte training voordat je live gaat."
 
+#: src/routes/project/canvas/CanvasRoute.tsx:147
+msgid "Using fixture data."
+msgstr ""
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1057
 msgid "Using webhooks? We'd love to hear from you"
 msgstr "Gebruik webhooks? We zouden graag van je horen"
@@ -12962,6 +13052,14 @@ msgstr ""
 msgid "Verifying your email address."
 msgstr "Je e-mailadres wordt geverifieerd."
 
+#: src/routes/project/canvas/CanvasRoute.tsx:45
+msgid "Version"
+msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:66
+msgid "Versions"
+msgstr ""
+
 #: src/components/conversation/LiveMonitorSection.tsx:104
 msgid "Very quiet right now — check the mic isn't muted"
 msgstr ""
@@ -13003,6 +13101,11 @@ msgstr "Uitnodiging bekijken"
 #: src/components/participant/ParticipantBody.tsx:257
 msgid "View your responses"
 msgstr "Bekijk je reacties"
+
+#. placeholder {0}: generationLabel(selected)
+#: src/routes/project/canvas/CanvasRoute.tsx:70
+msgid "Viewing {0}. Back to live"
+msgstr ""
 
 #~ msgid "views"
 #~ msgstr "weergaven"

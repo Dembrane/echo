@@ -99,6 +99,10 @@ const ProjectReportRoute = createLazyNamedRoute(
 	() => import("./routes/project/report/ProjectReportRoute"),
 	"ProjectReportRoute",
 );
+const CanvasRoute = createLazyNamedRoute(
+	() => import("./routes/project/canvas/CanvasRoute"),
+	"CanvasRoute",
+);
 const ParticipantReport = createLazyNamedRoute(
 	() => import("./routes/participant/ParticipantReport"),
 	"ParticipantReport",
@@ -267,6 +271,10 @@ const projectRouteChildren = [
 					{
 						element: <ProjectReportRoute />,
 						path: "report",
+					},
+					{
+						element: <CanvasRoute />,
+						path: "canvases/:canvasId",
 					},
 					{
 						element: <ProjectConversationsRoute />,

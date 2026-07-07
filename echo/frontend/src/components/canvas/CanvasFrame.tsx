@@ -1,0 +1,123 @@
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
+import { Box, Stack, Text } from "@mantine/core";
+import { formatDistanceToNow } from "date-fns";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { testId } from "@/lib/testUtils";
+import type { CanvasGeneration } from "./hooks";
+import { assembleCanvasDocument } from "./kit";
+
+type CanvasFrameProps = {
+	generation?: CanvasGeneration | null;
+	cadenceMinutes?: number | null;
+};
+
+function isHeightMessage(data: unknown): data is {
+	type: "dembrane:canvas:height";
+	height: number;
+} {
+	return (
+		typeof data === "object" &&
+		data !== null &&
+		"type" in data &&
+		(data as { type?: unknown }).type === "dembrane:canvas:height" &&
+		"height" in data &&
+		typeof (data as { height?: unknown }).height === "number" &&
+		Number.isFinite((data as { height: number }).height)
+	);
+}
+
+function generationAgeLine(generation: CanvasGeneration, cadenceMinutes?: number | null) {
+	if (!cadenceMinutes || cadenceMinutes <= 0) return null;
+	const createdAt = new Date(generation.created_at);
+	if (Number.isNaN(createdAt.getTime())) return null;
+	const staleAfterMs = cadenceMinutes * 2 * 60 * 1000;
+	if (Date.now() - createdAt.getTime() <= staleAfterMs) return null;
+	return t`Last updated ${formatDistanceToNow(createdAt, { addSuffix: true })}`;
+}
+
+export const CanvasFrame = ({ generation, cadenceMinutes }: CanvasFrameProps) => {
+	const iframeRef = useRef<HTMLIFrameElement | null>(null);
+	const [height, setHeight] = useState(520);
+	const generationId = generation?.id;
+
+	useEffect(() => {
+		if (!generationId) return;
+		setHeight(520);
+	}, [generationId]);
+
+	useEffect(() => {
+		const onMessage = (event: MessageEvent) => {
+			if (event.source !== iframeRef.current?.contentWindow) return;
+			if (!isHeightMessage(event.data)) return;
+			setHeight(Math.max(360, Math.min(6000, Math.ceil(event.data.height))));
+		};
+		window.addEventListener("message", onMessage);
+		return () => window.removeEventListener("message", onMessage);
+	}, []);
+
+	const srcDoc = useMemo(() => {
+		if (!generation || generation.status === "error") return null;
+		return assembleCanvasDocument(generation.content_html);
+	}, [generation]);
+
+	const staleLine = generation ? generationAgeLine(generation, cadenceMinutes) : null;
+
+	if (!generation) {
+		return (
+			<Box
+				className="rounded-md border border-graphite/10"
+				p="xl"
+				bg="parchment.0"
+				{...testId("canvas-frame-empty")}
+			>
+				<Stack gap="xs" align="center">
+					<Text fw={600}>
+						<Trans>The assistant is preparing this canvas.</Trans>
+					</Text>
+					<Text size="sm" ta="center">
+						<Trans>A first version will appear here when it is ready.</Trans>
+					</Text>
+				</Stack>
+			</Box>
+		);
+	}
+
+	if (generation.status === "error") {
+		return (
+			<Box
+				className="rounded-md border border-red-200 bg-red-50"
+				p="xl"
+				{...testId("canvas-frame-error")}
+			>
+				<Stack gap="xs" align="center">
+					<Text fw={600}>
+						<Trans>This canvas could not update.</Trans>
+					</Text>
+					<Text size="sm" ta="center">
+						<Trans>The previous versions are still available below.</Trans>
+					</Text>
+				</Stack>
+			</Box>
+		);
+	}
+
+	return (
+		<Stack gap="xs">
+			{staleLine ? (
+				<Text size="sm" {...testId("canvas-frame-stale-line")}>
+					{staleLine}
+				</Text>
+			) : null}
+			<iframe
+				ref={iframeRef}
+				title={t`Canvas preview`}
+				sandbox="allow-scripts"
+				srcDoc={srcDoc ?? ""}
+				className="block w-full rounded-md border border-graphite/10 bg-parchment"
+				style={{ height }}
+				{...testId("canvas-frame-iframe")}
+			/>
+		</Stack>
+	);
+};
