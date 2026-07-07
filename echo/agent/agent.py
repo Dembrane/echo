@@ -75,6 +75,8 @@ Use tools when the question needs project data or product knowledge:
 - "How does the portal work?" -> grepDocs and readDoc; cite the doc path.
 - "Help me set up my project" -> readSkill(project-onboarding.md), then
   getProjectSettings, then proposeProjectUpdate.
+- "Help me set the goal / figure out this project" -> readSkill(interviewing.md),
+  then readGoal and listMethodologies, then proposeGoal.
 - "What did we discuss before / continue that chat" -> listProjectChats, then readChat.
 - "Is my session live / is it recording / anyone talking now / is anything
   broken?" -> getLiveConversationStatus, then report the live count, whether
@@ -156,6 +158,16 @@ itself fresh. Always say the expiry plainly. The host applies the proposal, and
 you can list canvases or pause, resume, and stop their loops by chat. Be honest
 that updates happen on the next rhythm, not instantly every second.
 
+## Project setup
+When the first message signals setup, or when readGoal shows this project has no
+goal, offer a short interview. Read interviewing.md first and use that shape:
+convergent options, at most five questions, and a confirm-understanding close.
+Offer existing methodologies from listMethodologies when any exist. Keep it
+escapable: "you can skip this and come back any time, or read the docs". When
+you have enough, use proposeGoal to restate the goal in the host's words. After
+a substantial artifact or report, you may gently suggest extracting a
+methodology. Never do it automatically.
+
 ## Memory
 You can save durable notes with `remember` and recall them with `readMemory`.
 Read memory early in a task when earlier context would help. There are three
@@ -171,10 +183,12 @@ Memories are visible to hosts in their settings, and hosts can delete them
 there. If a host asks to change or remove a memory, point them there as well.
 
 ## Project context
-The first message may include Project Name, Workspace Context, and Project
-Context. Workspace and project context are written by hosts as standing
-guidance and background for you. Follow them, but they are not a research
-request. Hosts edit them in workspace settings and project settings.
+The first message may include Project Name, Workspace Context, Project Context,
+and Project Goal. Workspace and project context are written by hosts as standing
+guidance and background for you. The project goal is the current versioned
+intent for reports and artifacts. Follow them, but they are not a research
+request. Hosts edit context in workspace settings and project settings; goals
+are applied by the host from goal proposals.
 """
 
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 6
@@ -940,6 +954,41 @@ def create_agent_graph(
         return {"memories": memories if isinstance(memories, list) else []}
 
     @tool
+    async def readGoal() -> dict[str, Any]:
+        """Read the current project goal and recent goal revision history."""
+        client = _create_echo_client()
+        try:
+            payload = await client.get_project_goal(project_id)
+        finally:
+            await client.close()
+        return dict(payload)
+
+    @tool
+    async def proposeGoal(content: str) -> dict[str, Any]:
+        """Propose a project goal after interviewing the host. Restate the goal
+        in the host's words. This never writes anything: the host applies it."""
+        normalized_content = content.strip()
+        if not normalized_content:
+            raise ValueError("content is required")
+        return {
+            "type": "goal_proposal",
+            "content": normalized_content,
+            "project_id": project_id,
+            "visible_to_user": True,
+        }
+
+    @tool
+    async def listMethodologies() -> dict[str, Any]:
+        """List methodologies the host can choose from for this project setup."""
+        client = _create_echo_client()
+        try:
+            payload = await client.list_methodologies(project_id)
+        finally:
+            await client.close()
+        methodologies = payload.get("methodologies") if isinstance(payload, dict) else None
+        return {"methodologies": methodologies if isinstance(methodologies, list) else []}
+
+    @tool
     async def listCanvases() -> dict[str, Any]:
         """List the project's canvases and their loop status."""
         client = _create_echo_client()
@@ -1034,6 +1083,9 @@ def create_agent_graph(
         getLiveConversationStatus,
         reachOutToDembrane,
         readMemory,
+        readGoal,
+        proposeGoal,
+        listMethodologies,
         listCanvases,
         pauseCanvasLoop,
         resumeCanvasLoop,

@@ -29,6 +29,10 @@ from dembrane.api.v2.bff.chats import (
     router as bff_chats_router,
     message_router as bff_chat_message_router,
 )
+from dembrane.api.v2.bff.goals import (
+    router as bff_goals_router,
+    methodologies_router as bff_methodologies_router,
+)
 from dembrane.api.v2.bff.memory import router as bff_memory_router
 from dembrane.api.v2.onboarding import router as onboarding_router
 from dembrane.api.v2.workspaces import router as workspaces_router
@@ -120,6 +124,14 @@ v2_router.include_router(
 )
 v2_router.include_router(bff_tags_router, prefix="/bff/tags", tags=["v2:bff:tags"])
 v2_router.include_router(bff_memory_router, prefix="/bff/memory", tags=["v2:bff:memory"])
+v2_router.include_router(
+    bff_goals_router, prefix="/bff/projects", tags=["v2:bff:goals"]
+)
+v2_router.include_router(
+    bff_methodologies_router,
+    prefix="/bff/methodologies",
+    tags=["v2:bff:methodologies"],
+)
 v2_router.include_router(
     bff_canvases_router, prefix="/bff/canvases", tags=["v2:bff:canvases"]
 )

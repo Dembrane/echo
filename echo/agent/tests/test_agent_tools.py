@@ -31,6 +31,8 @@ class _FakeEchoClient:
         chat_messages_payload: list[dict] | None = None,
         memory_payload: dict | None = None,
         write_memory_response: dict | None = None,
+        goal_payload: dict | None = None,
+        methodologies_payload: dict | None = None,
         canvases_payload: list[dict] | None = None,
         canvas_loop_response: dict | None = None,
     ):
@@ -53,6 +55,8 @@ class _FakeEchoClient:
         self.support_request_calls: list[dict[str, object]] = []
         self.memory_payload = memory_payload or {}
         self.write_memory_response = write_memory_response or {}
+        self.goal_payload = goal_payload or {}
+        self.methodologies_payload = methodologies_payload or {}
         self.canvases_payload = canvases_payload or []
         self.canvas_loop_response = canvas_loop_response or {}
         self.search_calls: list[dict[str, object]] = []
@@ -60,6 +64,8 @@ class _FakeEchoClient:
         self.project_conversations_calls: list[dict[str, object]] = []
         self.list_memory_calls: list[str] = []
         self.write_memory_calls: list[dict[str, object]] = []
+        self.read_goal_calls: list[str] = []
+        self.list_methodologies_calls: list[str] = []
         self.list_canvases_calls: list[str] = []
         self.canvas_loop_calls: list[dict[str, str]] = []
         self.closed = False
@@ -146,6 +152,14 @@ class _FakeEchoClient:
         self.list_memory_calls.append(project_id)
         return self.memory_payload
 
+    async def get_project_goal(self, project_id: str) -> dict:
+        self.read_goal_calls.append(project_id)
+        return self.goal_payload
+
+    async def list_methodologies(self, project_id: str) -> dict:
+        self.list_methodologies_calls.append(project_id)
+        return self.methodologies_payload
+
     async def list_canvases(self, project_id: str) -> list[dict]:
         self.list_canvases_calls.append(project_id)
         return self.canvases_payload
@@ -196,6 +210,8 @@ class _FakeEchoClientFactory:
         chat_messages_payload: list[dict] | None = None,
         memory_payload: dict | None = None,
         write_memory_response: dict | None = None,
+        goal_payload: dict | None = None,
+        methodologies_payload: dict | None = None,
         canvases_payload: list[dict] | None = None,
         canvas_loop_response: dict | None = None,
     ):
@@ -211,6 +227,8 @@ class _FakeEchoClientFactory:
         self.chat_messages_payload = chat_messages_payload
         self.memory_payload = memory_payload
         self.write_memory_response = write_memory_response
+        self.goal_payload = goal_payload
+        self.methodologies_payload = methodologies_payload
         self.canvases_payload = canvases_payload
         self.canvas_loop_response = canvas_loop_response
         self.instances: list[_FakeEchoClient] = []
@@ -228,6 +246,8 @@ class _FakeEchoClientFactory:
             chat_messages_payload=self.chat_messages_payload,
             memory_payload=self.memory_payload,
             write_memory_response=self.write_memory_response,
+            goal_payload=self.goal_payload,
+            methodologies_payload=self.methodologies_payload,
             canvases_payload=self.canvases_payload,
             canvas_loop_response=self.canvas_loop_response,
         )
@@ -263,12 +283,17 @@ def test_system_prompt_contains_conversational_and_research_directives():
     # Project + workspace context awareness
     assert "project context" in prompt
     assert "workspace context" in prompt
+    assert "project goal" in prompt
     assert "guidance and background" in prompt
     # Memories are host-visible and host-deletable
     assert "hosts can delete them" in prompt
     # Canvas guidance explains the living Library page and loop expiry.
     assert "a canvas is a living page" in prompt
     assert "always say the expiry plainly" in prompt
+    # Setup guidance is convergent, escapable, and proposal-only.
+    assert "read interviewing.md first" in prompt
+    assert "proposeGoal" in SYSTEM_PROMPT
+    assert "you can skip this and come back any time" in prompt
     # Never leak internal machinery to the host
     assert "internal machinery" in prompt
     # Steer batched lookups over one-at-a-time calls
@@ -430,6 +455,48 @@ async def test_propose_canvas_rejects_invalid_inputs():
         await tools["proposeCanvas"].ainvoke(
             {"name": "n", "brief": "brief", "expires_in_hours": 169}
         )
+
+
+@pytest.mark.asyncio
+async def test_goal_tools_read_and_return_pure_proposal():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        goal_payload={
+            "project_id": "project-1",
+            "current": {"id": "g1", "content": "Find neighbourhood concerns."},
+            "revisions": [{"id": "g1", "content": "Find neighbourhood concerns."}],
+        },
+        methodologies_payload={
+            "project_id": "project-1",
+            "methodologies": [{"id": "m1", "name": "dembrane"}],
+        },
+    )
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    goal = await tools["readGoal"].ainvoke({})
+    methodologies = await tools["listMethodologies"].ainvoke({})
+    proposal = await tools["proposeGoal"].ainvoke(
+        {"content": "Surface concerns and suggestions per neighbourhood."}
+    )
+
+    assert goal["current"]["id"] == "g1"
+    assert methodologies["methodologies"][0]["name"] == "dembrane"
+    assert proposal == {
+        "type": "goal_proposal",
+        "content": "Surface concerns and suggestions per neighbourhood.",
+        "project_id": "project-1",
+        "visible_to_user": True,
+    }
+    assert factory.instances[0].read_goal_calls == ["project-1"]
+    assert factory.instances[1].list_methodologies_calls == ["project-1"]
 
 
 @pytest.mark.asyncio

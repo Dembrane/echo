@@ -45,7 +45,12 @@ async def test_gather_verifies_reader_and_caps_transcript(monkeypatch) -> None:
     async def _resolve(**kwargs):
         calls.append(kwargs)
 
+    async def _goal(project_id: str) -> str:
+        assert project_id == "p1"
+        return "Surface practical concerns."
+
     monkeypatch.setattr(gather, "resolve_canvas_reader_context", _resolve)
+    monkeypatch.setattr(gather, "get_current_project_goal_content", _goal)
     monkeypatch.setattr(gather, "async_directus", _FakeDirectus())
     monkeypatch.setattr(gather.get_settings(), "canvas", _Settings())
 
@@ -57,5 +62,6 @@ async def test_gather_verifies_reader_and_caps_transcript(monkeypatch) -> None:
 
     assert calls == [{"acting_directus_user_id": "du1", "project_id": "p1"}]
     assert bundle["project"]["name"] == "Panel day"
+    assert bundle["project"]["goal"] == "Surface practical concerns."
     assert bundle["conversations"][0]["latest_transcript"] == "aaaaaaaaaa\n[truncated]"
     assert bundle["counts"]["truncated_conversations"] == 1

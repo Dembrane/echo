@@ -1090,7 +1090,8 @@ async def test_process_agentic_run_passes_persisted_message_history(monkeypatch)
         {
             "content": "hello raw",
             "agent_prompt_content": (
-                "Project Name: Helix\nProject Context: politics\n\nUser Message: hello"
+                "Project Name: Helix\nProject Context: politics\nProject Goal: (none)\n\n"
+                "User Message: hello"
             ),
         },
     )
@@ -1138,7 +1139,13 @@ async def test_process_agentic_run_passes_persisted_message_history(monkeypatch)
     )
 
     assert captured["message_history"] == [
-        {"role": "user", "content": "Project Name: Helix\nProject Context: politics\n\nUser Message: hello"},
+        {
+            "role": "user",
+            "content": (
+                "Project Name: Helix\nProject Context: politics\nProject Goal: (none)\n\n"
+                "User Message: hello"
+            ),
+        },
         {"role": "assistant", "content": "hello back"},
         {"role": "user", "content": "follow up"},
     ]

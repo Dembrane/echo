@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 
 from dembrane.settings import get_settings
 from dembrane.canvas.access import resolve_canvas_reader_context
+from dembrane.project_goals import get_current_project_goal_content
 from dembrane.directus_async import async_directus
 
 
@@ -54,6 +55,7 @@ async def execute_gather_spec(
         "id": project_id,
         "name": (project or {}).get("name"),
         "context": (project or {}).get("context"),
+        "goal": await get_current_project_goal_content(project_id),
         "language": (project or {}).get("language") or "en",
         "anonymize_transcripts": bool((project or {}).get("anonymize_transcripts", False)),
     }

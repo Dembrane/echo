@@ -19,6 +19,8 @@ from dembrane.directus import directus
 from dembrane.settings import get_settings
 from dembrane.chat_utils import generate_title
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.methodologies import list_visible_methodologies
+from dembrane.project_goals import list_project_goal_revisions, get_current_project_goal_content
 from dembrane.agentic_worker import (
     AGENT_CANCELLED_MESSAGE,
     AGENT_CANCELLED_ERROR_CODE,
@@ -297,18 +299,21 @@ def _build_initial_agent_prompt_content(
     *,
     project_name: Optional[str],
     project_context: Optional[str],
+    project_goal: Optional[str] = None,
     user_message: str,
     workspace_context: Optional[str] = None,
 ) -> str:
     normalized_name = _to_non_empty_string(project_name) or "(none)"
     normalized_context = _to_non_empty_string(project_context) or "(none)"
+    normalized_goal = _to_non_empty_string(project_goal) or "(none)"
     normalized_workspace_context = _to_non_empty_string(workspace_context) or "(none)"
     normalized_message = user_message.strip()
 
     return (
         f"Project Name: {normalized_name}\n"
         f"Workspace Context: {normalized_workspace_context}\n"
-        f"Project Context: {normalized_context}\n\n"
+        f"Project Context: {normalized_context}\n"
+        f"Project Goal: {normalized_goal}\n\n"
         f"User Message: {normalized_message}"
     )
 
@@ -881,9 +886,11 @@ async def create_run(
     project_name = _to_non_empty_string(project.get("name"))
     project_context = _to_non_empty_string(project.get("context"))
     workspace_context = await _get_workspace_context_for_project(project)
+    project_goal = await get_current_project_goal_content(body.project_id)
     agent_prompt_content = _build_initial_agent_prompt_content(
         project_name=project_name,
         project_context=project_context,
+        project_goal=project_goal,
         user_message=body.message,
         workspace_context=workspace_context,
     )
@@ -1201,6 +1208,38 @@ async def list_project_memory(
         "count": len(memories),
         "memories": memories,
     }
+
+
+@AgenticRouter.get("/projects/{project_id}/goal")
+async def get_project_goal_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    revisions = await list_project_goal_revisions(project_id)
+    return {
+        "project_id": project_id,
+        "current": revisions[0] if revisions else None,
+        "revisions": revisions,
+    }
+
+
+@AgenticRouter.get("/projects/{project_id}/methodologies")
+async def list_methodologies_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    workspace_id = await _resolve_workspace_id_for_project(project_id)
+    if workspace_id is None:
+        return {"project_id": project_id, "methodologies": []}
+    methodologies = await list_visible_methodologies(
+        workspace_id=workspace_id,
+        directus_user_id=auth.user_id,
+    )
+    return {"project_id": project_id, "methodologies": methodologies}
 
 
 def _loop_payload(loop: dict[str, Any]) -> dict[str, Any]:

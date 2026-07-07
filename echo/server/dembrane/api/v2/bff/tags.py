@@ -257,6 +257,7 @@ class ProjectUpdate(BaseModel):
     image_generation_model: Optional[str] = None
     tutorial_slug: Optional[str] = None
     host_guide: Optional[dict[str, Any]] = None
+    methodology_version_id: Optional[str] = None
 
 
 @project_router.get("")
