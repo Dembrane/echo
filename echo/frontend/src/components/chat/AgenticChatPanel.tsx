@@ -70,10 +70,12 @@ import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
 import {
 	extractTopLevelToolActivity,
+	parseCanvasSuggestion,
 	parseCustomVerificationTopicSuggestion,
 	parseProjectUpdateSuggestion,
 	type ToolActivity,
 } from "./agenticToolActivity";
+import { CanvasSuggestionCard } from "./CanvasSuggestionCard";
 import { ChatAccordionItemMenu } from "./ChatAccordion";
 import { ChatHistoryMessage } from "./ChatHistoryMessage";
 import { CustomVerificationTopicSuggestionCard } from "./CustomVerificationTopicSuggestionCard";
@@ -608,6 +610,11 @@ export const AgenticChatPanel = ({
 					item: Extract<TimelineItem, { kind: "tool" }>;
 			  }
 			| {
+					kind: "canvas_suggestion";
+					id: string;
+					item: Extract<TimelineItem, { kind: "tool" }>;
+			  }
+			| {
 					kind: "tool_group";
 					id: string;
 					items: Extract<TimelineItem, { kind: "tool" }>[];
@@ -624,6 +631,10 @@ export const AgenticChatPanel = ({
 			}
 			if (parseCustomVerificationTopicSuggestion(item)) {
 				nodes.push({ id: item.id, item, kind: "verification_suggestion" });
+				continue;
+			}
+			if (parseCanvasSuggestion(item)) {
+				nodes.push({ id: item.id, item, kind: "canvas_suggestion" });
 				continue;
 			}
 			const last = nodes[nodes.length - 1];
@@ -1315,6 +1326,20 @@ export const AgenticChatPanel = ({
 								<div key={node.id}>
 									<CustomVerificationTopicSuggestionCard
 										suggestion={suggestion}
+									/>
+								</div>
+							) : null;
+						}
+
+						if (node.kind === "canvas_suggestion") {
+							const suggestion = parseCanvasSuggestion(node.item);
+							return suggestion ? (
+								<div key={node.id}>
+									<CanvasSuggestionCard
+										suggestion={{
+											...suggestion,
+											projectId: suggestion.projectId || projectId,
+										}}
 									/>
 								</div>
 							) : null;

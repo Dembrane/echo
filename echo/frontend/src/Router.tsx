@@ -48,9 +48,9 @@ const ProjectsHomeRoute = createLazyNamedRoute(
 	"ProjectsHomeRoute",
 );
 
-const ProjectLibraryRoute = createLazyNamedRoute(
-	() => import("./routes/project/library/ProjectLibrary"),
-	"ProjectLibraryRoute",
+const LibraryRoute = createLazyNamedRoute(
+	() => import("./routes/project/library/LibraryRoute"),
+	"LibraryRoute",
 );
 
 const ProjectLibraryView = createLazyNamedRoute(
@@ -261,7 +261,7 @@ const projectRouteChildren = [
 								path: "views/:viewId",
 							},
 							{
-								element: <ProjectLibraryRoute />,
+								element: <LibraryRoute />,
 								index: true,
 							},
 						],

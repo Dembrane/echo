@@ -21,6 +21,7 @@ import {
 	type CanvasGeneration,
 	useCanvas,
 	useCanvasGenerations,
+	useCanvasLifecycleMutation,
 	useRefreshCanvasMutation,
 } from "@/components/canvas/hooks";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -99,6 +100,7 @@ export const CanvasRoute = () => {
 	const canvasQuery = useCanvas(canvasId ?? "");
 	const generationsQuery = useCanvasGenerations(canvasId ?? "");
 	const refreshMutation = useRefreshCanvasMutation(canvasId ?? "");
+	const lifecycleMutation = useCanvasLifecycleMutation(canvasId ?? "");
 	const [selectedGenerationId, setSelectedGenerationId] = useState<string | null>(
 		null,
 	);
@@ -123,6 +125,10 @@ export const CanvasRoute = () => {
 		selectedGeneration ?? canvas?.latest_generation ?? generations[0] ?? null;
 	const refreshDisabled =
 		refreshMutation.isPending || canvas?.isDevFixture || !canvasId;
+	const loopStatus = canvas?.loop?.status;
+	const isLoopActive = loopStatus === "active";
+	const lifecycleDisabled =
+		lifecycleMutation.isPending || canvas?.isDevFixture || !canvasId;
 
 	if (canvasQuery.isLoading) {
 		return (
@@ -148,6 +154,30 @@ export const CanvasRoute = () => {
 						</Text>
 					</Stack>
 					<Group gap="xs">
+						{canvas?.loop ? (
+							<Tooltip
+								label={
+									canvas?.isDevFixture
+										? t`Loop controls will work when the canvas service is ready`
+										: isLoopActive
+											? t`Pause updates`
+											: t`Resume updates`
+								}
+								withArrow
+							>
+								<Button
+									variant="subtle"
+									disabled={lifecycleDisabled}
+									loading={lifecycleMutation.isPending}
+									onClick={() =>
+										lifecycleMutation.mutate(isLoopActive ? "pause" : "resume")
+									}
+									{...testId("canvas-lifecycle-button")}
+								>
+									{isLoopActive ? <Trans>Pause</Trans> : <Trans>Resume</Trans>}
+								</Button>
+							</Tooltip>
+						) : null}
 						<Tooltip
 							label={
 								canvas?.isDevFixture

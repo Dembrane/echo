@@ -99,6 +99,8 @@ const buildHeadline = (toolName: string, context: ToolContext) => {
 			return t`Suggesting project changes`;
 		case "proposeCustomVerificationTopic":
 			return t`Suggesting a verification prompt`;
+		case "proposeCanvas":
+			return t`Suggesting a canvas`;
 		case "getProjectSettings":
 			return t`Reading project settings`;
 		case "grepDocs":
@@ -370,6 +372,48 @@ export const parseCustomVerificationTopicSuggestion = (
 			projectId: String(payload.project_id ?? ""),
 			prompt,
 			reason: String(payload.reason ?? ""),
+		};
+	} catch {
+		return null;
+	}
+};
+
+export type ParsedCanvasSuggestion = {
+	projectId: string;
+	name: string;
+	brief: string;
+	gather_spec?: Record<string, unknown> | null;
+	cadence_minutes?: number | null;
+	expires_at?: string | null;
+};
+
+/** Returns the structured suggestion when a completed tool activity is a
+ * proposeCanvas result, else null. */
+export const parseCanvasSuggestion = (
+	activity: ToolActivity,
+): ParsedCanvasSuggestion | null => {
+	if (activity.toolName !== "proposeCanvas") return null;
+	if (activity.status !== "completed" || !activity.rawOutput) return null;
+	try {
+		const payload = JSON.parse(activity.rawOutput);
+		if (payload?.type !== "canvas_proposal") return null;
+		const name = String(payload.name ?? "").trim();
+		const brief = String(payload.brief ?? "").trim();
+		if (!name || !brief) return null;
+		return {
+			brief,
+			cadence_minutes:
+				typeof payload.cadence_minutes === "number"
+					? payload.cadence_minutes
+					: null,
+			expires_at:
+				typeof payload.expires_at === "string" ? payload.expires_at : null,
+			gather_spec:
+				payload.gather_spec && typeof payload.gather_spec === "object"
+					? (payload.gather_spec as Record<string, unknown>)
+					: null,
+			name,
+			projectId: String(payload.project_id ?? ""),
 		};
 	} catch {
 		return null;

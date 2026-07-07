@@ -2,6 +2,7 @@ import type {
 	CanvasDetail,
 	CanvasGeneration,
 	CanvasGenerationStatus,
+	CanvasListItem,
 } from "./hooks";
 
 const minutesAgo = (minutes: number) =>
@@ -135,3 +136,34 @@ export const createFixtureCanvas = (canvasId: string): CanvasDetail => ({
 	name: "Live panel wall",
 	project_id: "fixture-project",
 });
+
+export const createFixtureProjectCanvases = (
+	projectId: string,
+): CanvasListItem[] => [
+	{
+		created_at: minutesAgo(72),
+		id: "33333333-3333-3333-3333-333333333333",
+		kind: "canvas",
+		latest_generation_at: fixtureCanvasGenerations[0].created_at,
+		loop: {
+			cadence_minutes: 5,
+			expires_at: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
+			status: "active",
+		},
+		name: "Live panel wall",
+		project_id: projectId,
+	},
+	{
+		created_at: minutesAgo(180),
+		id: "44444444-4444-4444-4444-444444444444",
+		kind: "canvas",
+		latest_generation_at: minutesAgo(35),
+		loop: {
+			cadence_minutes: 10,
+			expires_at: new Date(Date.now() + 90 * 60 * 1000).toISOString(),
+			status: "paused",
+		},
+		name: "Questions to revisit",
+		project_id: projectId,
+	},
+];

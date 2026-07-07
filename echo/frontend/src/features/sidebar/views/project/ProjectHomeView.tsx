@@ -2,13 +2,13 @@ import { Trans } from "@lingui/react/macro";
 import {
 	AppWindowIcon,
 	BookOpenIcon,
+	BooksIcon,
 	BroadcastIcon,
 	ChartLineIcon,
 	ChatCircleDotsIcon,
 	ChatCircleTextIcon,
 	FileTextIcon,
 	GearIcon,
-	GraphIcon,
 	PaintBrushIcon,
 	UsersThreeIcon,
 } from "@phosphor-icons/react";
@@ -19,7 +19,6 @@ import { useProjectById } from "@/components/project/hooks";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
-import { NavButton } from "../../primitives/NavButton";
 import { NavItem } from "../../primitives/NavItem";
 
 export const ProjectHomeView = () => {
@@ -72,13 +71,6 @@ export const ProjectHomeView = () => {
 					badge={chatsCountQuery.data || undefined}
 				/>
 			)}
-			<NavButton
-				label={<Trans>Explore</Trans>}
-				icon={GraphIcon}
-				onClick={() => undefined}
-				badge={<Trans>Planned</Trans>}
-				disabled
-			/>
 			<NavItem
 				to={`${base}/portal-editor`}
 				label={<Trans>Portal editor</Trans>}
@@ -98,6 +90,11 @@ export const ProjectHomeView = () => {
 				to={`${base}/report`}
 				label={<Trans>Report</Trans>}
 				icon={FileTextIcon}
+			/>
+			<NavItem
+				to={`${base}/library`}
+				label={<Trans>Library</Trans>}
+				icon={BooksIcon}
 			/>
 			<NavItem
 				to={`${base}/conversations`}
