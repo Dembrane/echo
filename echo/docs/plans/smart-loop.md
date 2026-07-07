@@ -85,6 +85,44 @@ needs a language model.
   `data-only` (pure fetch+render, no LLM) or `data+summarize` (a bounded, cheap LLM step
   inside the tick - e.g. pulse needs one; a monitor widget doesn't).
 
+## D14. Client-side artifact runtime: common skeleton + generated fetchers - PROPOSED
+
+Owner refinement (2026-07-07): refresh lives CLIENT-SIDE. A common, dembrane-shipped
+skeleton runtime renders artifacts in the dashboard (layout, full-screen view, refresh
+scheduling in JS); the artifact itself is essentially A BUNCH OF FETCHERS. Fetchers use the
+SSE event stream or the data APIs, scoped to the user - i.e. the VIEWER'S OWN session
+cookie, which is literally "the user's access to the same API the client uses". Agent-
+generated fetchers are the core generated unit.
+
+Three-layer security model (non-negotiable):
+
+1. TRUSTED SHELL (ours): the skeleton runtime. Executes fetchers with the viewer's
+   credentials. Fetchers are DECLARATIVE descriptors (which endpoint/SSE channel, params,
+   field mapping, freshness class) - data, not code - so nothing generated ever runs with
+   ambient credentials.
+2. UNTRUSTED RENDER (generated, when descriptors + our block library aren't enough): runs
+   credential-less in a sandboxed iframe; the trusted shell fetches and POSTS DATA IN.
+   Generated code sees data, never cookies, never the API.
+3. SERVER LOOP (D4a, retained for what the client cannot do):
+   - data PRODUCTS that need compute or a model - e.g. the pulse summary. A server tick
+     (data+summarize) produces the product; a client fetcher merely reads it. Loops become
+     producers of data products, not re-renderers of HTML.
+   - PUBLISHED artifacts - the venue screen has NO session. Anonymous viewers get
+     server-rendered snapshots refreshed by ticks at the loop's cadence (reusing D4a
+     machinery), NOT a capability URL with live data access. This is the one place the
+     server tick still renders.
+
+Consequences: D3's minted token shrinks to server-side contexts (ticks, sandbox, published
+snapshot renders) - in-dashboard viewing needs no new auth at all. D6's "structured blocks"
+becomes the fetcher/block descriptor schema, and the widget endgame (pinnable/embeddable)
+is this same runtime rendering one fetcher-set in a small frame - the monitor widget (D13)
+is the first proof. In-chat "Try it" previews (D12) run in this runtime too, with the
+sample dataset injected at the shell.
+
+Open risk to watch: descriptor expressiveness. If real recipes keep needing generated
+render code (layer 2), the sandboxed-iframe path must be as ergonomic as the descriptor
+path or the agent will fight the abstraction. Decide after building pulse + wall.
+
 ## D13. First-class loop recipes: curated before generated - PROPOSED
 
 Ship a small set of dembrane-maintained recipes as seeded skeletons with known-good
@@ -242,10 +280,13 @@ build (the assistant grounds "that's being built" answers in them), and graduate
 
 - Phase 0 (serial, small): D3 token mint/validate + D7 chat-identity threading (both touch
   auth/run-context plumbing).
-- Track A: D1 headless executor + D4/D4a loop object, ticks, scheduling, chat tools.
-- Track B: D2 sandbox service (runs curated skeletons first; generated code lands v1.5).
+- Track A: D1 headless executor + D4/D4a loop object, ticks (data products + published
+  snapshots), scheduling, chat tools.
+- Track B: D14 client runtime - trusted shell, declarative fetchers, sandboxed render
+  iframe; D2 sandbox service shrinks to server-side ticks + snapshot renders (curated
+  first; generated code lands v1.5).
 - Track C: D5 artifacts + versions/snapshots + D12 draft/preview/test contract + feedback-
-  by-chat surface (+ D6 sanitization).
+  by-chat surface (+ D6 sanitization, now the descriptor/block schema).
 - Track D: D8 interview skill + D9 goal revisions + D11 methodology MVP (schema, seeded
   default, project-creation-as-chat, extraction suggestion).
 - v1 = the whole machinery on D13's CURATED recipes (monitor widget, pulse). v1.5 = agent-
