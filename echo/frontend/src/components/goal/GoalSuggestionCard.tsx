@@ -14,8 +14,10 @@ export type GoalSuggestion = {
 
 export const GoalSuggestionCard = ({
 	suggestion,
+	chatId,
 }: {
 	suggestion: GoalSuggestion;
+	chatId?: string;
 }) => {
 	const saveGoalMutation = useSaveProjectGoalMutation(suggestion.projectId);
 	const [dismissed, setDismissed] = useState(false);
@@ -28,7 +30,13 @@ export const GoalSuggestionCard = ({
 			return;
 		}
 		try {
-			await saveGoalMutation.mutateAsync(content);
+			// A goal applied from the assistant's proposal keeps its
+			// interview provenance (and the chat it came from).
+			await saveGoalMutation.mutateAsync({
+				chat_id: chatId,
+				content,
+				set_by: "interview",
+			});
 			setApplied(true);
 		} catch {
 			// The mutation surfaces its own error toast.

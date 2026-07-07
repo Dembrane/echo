@@ -15,6 +15,7 @@ METHODOLOGY_FIELDS = [
     "is_seeded",
 ]
 METHODOLOGY_VERSION_FIELDS = ["id", "note", "created_at"]
+METHODOLOGY_VERSION_DETAIL_FIELDS = ["id", "note", "created_by", "created_at", "content"]
 
 
 def _to_related_id(value: Any) -> str | None:
@@ -26,7 +27,11 @@ def _to_related_id(value: Any) -> str | None:
     return normalized or None
 
 
-def _methodology_card(row: dict[str, Any], latest_version: dict[str, Any] | None) -> dict[str, Any]:
+def _methodology_card(
+    row: dict[str, Any],
+    latest_version: dict[str, Any] | None,
+    versions_count: int = 0,
+) -> dict[str, Any]:
     return {
         "id": row.get("id"),
         "name": row.get("name"),
@@ -34,7 +39,26 @@ def _methodology_card(row: dict[str, Any], latest_version: dict[str, Any] | None
         "framing": row.get("framing"),
         "is_seeded": bool(row.get("is_seeded")),
         "latest_version": latest_version,
+        "versions_count": versions_count,
     }
+
+
+def methodology_card(row: dict[str, Any], versions: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    version_rows = versions or []
+    latest_version = None
+    if version_rows:
+        latest_version = {field: version_rows[0].get(field) for field in METHODOLOGY_VERSION_FIELDS}
+    return _methodology_card(row, latest_version, len(version_rows))
+
+
+def methodology_detail(row: dict[str, Any], versions: list[dict[str, Any]]) -> dict[str, Any]:
+    detail = methodology_card(row, versions)
+    detail["versions"] = [
+        {field: version.get(field) for field in METHODOLOGY_VERSION_DETAIL_FIELDS}
+        for version in versions
+        if isinstance(version, dict)
+    ]
+    return detail
 
 
 async def list_visible_methodologies(
@@ -80,14 +104,10 @@ async def list_visible_methodologies(
                     "filter": {"methodology_id": {"_eq": methodology_id}},
                     "fields": METHODOLOGY_VERSION_FIELDS,
                     "sort": ["-created_at"],
-                    "limit": 1,
+                    "limit": -1,
                 }
             },
         )
-        latest_version = None
-        if isinstance(versions, list) and versions and isinstance(versions[0], dict):
-            latest_version = {
-                field: versions[0].get(field) for field in METHODOLOGY_VERSION_FIELDS
-            }
-        out.append(_methodology_card(row, latest_version))
+        version_rows = [version for version in versions if isinstance(version, dict)] if isinstance(versions, list) else []
+        out.append(methodology_card(row, version_rows))
     return out

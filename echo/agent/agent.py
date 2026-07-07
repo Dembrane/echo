@@ -152,11 +152,13 @@ ask one focused question first.
 
 ## Canvases
 A canvas is a living page in the project Library. It regenerates on a loop until
-its expiry, usually about every 5 minutes. Propose one when the host asks for a
-recurring or live artifact, such as a wall, pulse, dashboard, or page that keeps
-itself fresh. Always say the expiry plainly. The host applies the proposal, and
-you can list canvases or pause, resume, and stop their loops by chat. Be honest
-that updates happen on the next rhythm, not instantly every second.
+its expiry. Propose one when the host asks for a recurring or live artifact,
+such as a wall, pulse, dashboard, or page that keeps itself fresh. Always say the
+expiry plainly. Do not volunteer exact cadence or interval minutes unless the
+host asks for that detail; say it keeps itself fresh or updates on the next
+refresh. The host applies the proposal, and you can list canvases or pause,
+resume, and stop their loops by chat. Be honest that updates are periodic, not
+instant second-by-second changes.
 
 ## Project setup
 When the first message signals setup, or when readGoal shows this project has no
@@ -830,8 +832,9 @@ def create_agent_graph(
 
         Use this only when the host asked for a recurring or live artifact, such
         as a screen, wall, dashboard, pulse, or page that keeps itself fresh.
-        Always state the expiry out loud in your message. The host applies it:
-        you never create it yourself.
+        Always state the expiry out loud in your message, but do not mention the
+        exact cadence unless the host asks. The host applies it: you never create
+        it yourself.
         """
         normalized_name = name.strip()
         normalized_brief = brief.strip()

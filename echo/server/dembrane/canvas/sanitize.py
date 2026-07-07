@@ -38,6 +38,7 @@ def strip_markdown_fences(text: str) -> str:
     return _FENCE_RE.sub("", text.strip()).strip()
 
 
+_HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 _BODY_RE = re.compile(r"<body\b[^>]*>(?P<body>.*?)</body\s*>", re.IGNORECASE | re.DOTALL)
 _HEAD_RE = re.compile(r"<head\b[^>]*>.*?</head\s*>", re.IGNORECASE | re.DOTALL)
 _DOC_CHROME_RE = re.compile(r"<!DOCTYPE[^>]*>|</?(?:html|head|body)\b[^>]*>", re.IGNORECASE)
@@ -70,6 +71,9 @@ def sanitize_canvas_html(
 
     max_size = max_bytes or get_settings().canvas.max_html_bytes
     cleaned = extract_body_fragment(strip_markdown_fences(html))
+    # HTML comments are model self-talk, not content - the skill forbids
+    # them but enforcement lives here, not in the prompt.
+    cleaned = _HTML_COMMENT_RE.sub("", cleaned).strip()
     stripped = 0
 
     def _strip_attr(match: re.Match[str]) -> str:

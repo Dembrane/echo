@@ -541,11 +541,18 @@ export const AgenticChatPanel = ({
 		Record<string, boolean>
 	>({});
 	const streamAbortRef = useRef<AbortController | null>(null);
+	const streamRunIdRef = useRef<string | null>(null);
+	const requestedStreamKeyRef = useRef<string | null>(null);
+	const currentRunIdRef = useRef<string | null>(null);
 	const [scrollTargetRef, isVisible] = useElementOnScreen({
 		root: null,
 		rootMargin: "-83px",
 		threshold: 0.1,
 	});
+
+	useEffect(() => {
+		currentRunIdRef.current = runId;
+	}, [runId]);
 
 	// Citation links carry the participant's name when it resolves; generic
 	// "transcript" is the fallback, never a raw id.
@@ -782,21 +789,35 @@ export const AgenticChatPanel = ({
 			streamAbortRef.current.abort();
 			streamAbortRef.current = null;
 		}
+		streamRunIdRef.current = null;
+		requestedStreamKeyRef.current = null;
 		setIsStreaming(false);
 	}, []);
 
 	const startStream = useCallback(
 		async (targetRunId: string, fromSeq: number) => {
+			const streamKey = `${targetRunId}:${fromSeq}`;
+			if (
+				requestedStreamKeyRef.current === streamKey &&
+				streamAbortRef.current &&
+				!streamAbortRef.current.signal.aborted
+			) {
+				return;
+			}
+
 			stopStream();
 
 			const abortController = new AbortController();
 			streamAbortRef.current = abortController;
+			streamRunIdRef.current = targetRunId;
+			requestedStreamKeyRef.current = streamKey;
 			setIsStreaming(true);
 
 			try {
 				await streamAgenticRun(targetRunId, {
 					afterSeq: fromSeq,
 					onEvent: (event) => {
+						if (currentRunIdRef.current !== targetRunId) return;
 						mergeEvents([event]);
 						setAfterSeq((previous) => Math.max(previous, event.seq));
 						setStreamFailureCount(0);
@@ -828,11 +849,15 @@ export const AgenticChatPanel = ({
 			} finally {
 				if (streamAbortRef.current === abortController) {
 					streamAbortRef.current = null;
+					streamRunIdRef.current = null;
+					requestedStreamKeyRef.current = null;
 					setIsStreaming(false);
 				}
 				try {
 					const run = await getAgenticRun(targetRunId);
-					setRunStatus(run.status);
+					if (currentRunIdRef.current === targetRunId) {
+						setRunStatus(run.status);
+					}
 				} catch {
 					// Ignore status refresh failures; polling fallback will retry.
 				}
@@ -920,6 +945,19 @@ export const AgenticChatPanel = ({
 		isStreaming,
 		streamFailureCount,
 		refreshEvents,
+	]);
+
+	useEffect(() => {
+		if (!runId || !isInFlightStatus(runStatus)) return;
+		if (isStreaming || streamFailureCount >= 2) return;
+		void startStream(runId, afterSeq);
+	}, [
+		runId,
+		runStatus,
+		afterSeq,
+		isStreaming,
+		streamFailureCount,
+		startStream,
 	]);
 
 	useEffect(() => {
@@ -1365,6 +1403,7 @@ export const AgenticChatPanel = ({
 											...suggestion,
 											projectId: suggestion.projectId || projectId,
 										}}
+										chatId={chatId}
 									/>
 								</div>
 							) : null;
@@ -1491,6 +1530,7 @@ export const AgenticChatPanel = ({
 								    as broken. */}
 								{isRunInFlight ? (
 									<Button
+										type="button"
 										size="sm"
 										radius="md"
 										variant="outline"
