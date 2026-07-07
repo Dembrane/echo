@@ -38,6 +38,7 @@ it's for, and how it works.
 - [Export & data portability](./features/export-and-data-portability.md)
 - [MCP & bring-your-own-LLM](./features/mcp-and-bring-your-own-llm.md)
 - [dembrane next (preview features)](./features/dembrane-next.md)
+- [Building now (user stories for upcoming features)](./building/index.md)
 - [Account & security](./features/account-and-security.md)
 - [Notifications](./features/notifications.md)
 - [dembrane Go (the mobile app)](./features/mobile-app-dembrane-go.md)
