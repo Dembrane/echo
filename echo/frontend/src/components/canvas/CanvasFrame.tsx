@@ -135,18 +135,23 @@ export const CanvasFrame = ({
 	}
 
 	return (
-		<Stack gap="xs" h={fullscreen ? "100%" : undefined}>
+		<Stack gap={fullscreen ? 0 : "xs"} h={fullscreen ? "100%" : undefined}>
 			<iframe
 				ref={iframeRef}
 				aria-label={t`Canvas preview`}
 				sandbox="allow-scripts"
 				srcDoc={srcDoc ?? ""}
-				className="block w-full rounded-md border"
+				className={
+					fullscreen
+						? "block w-full border-0"
+						: "block w-full rounded-md border"
+				}
 				style={{
 					backgroundColor: "var(--app-background)",
 					borderColor: "var(--mantine-color-primary-light)",
 					height: fullscreen ? "100%" : height,
-					minHeight: fullscreen ? "calc(100dvh - 48px)" : undefined,
+					minHeight: fullscreen ? "100dvh" : undefined,
+					width: fullscreen ? "100dvw" : undefined,
 				}}
 				{...testId("canvas-frame-iframe")}
 			/>

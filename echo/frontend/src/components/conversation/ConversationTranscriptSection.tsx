@@ -11,10 +11,10 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router";
+import { useCallback, useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import useSessionStorageState from "use-session-storage-state";
+import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { testId } from "@/lib/testUtils";
 import { ConversationChunkAudioTranscript } from "./ConversationChunkAudioTranscript";
 import { CopyConversationTranscriptActionIcon } from "./CopyConversationTranscript";
@@ -22,6 +22,7 @@ import { DownloadConversationTranscriptModalActionIcon } from "./DownloadConvers
 import { useInfiniteConversationChunks } from "./hooks";
 import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
 import { RetranscribeConversationModalActionIcon } from "./RetranscribeConversation";
+import { useChunkAnchorScroll } from "./useChunkAnchorScroll";
 
 type ConversationTranscriptSectionProps = {
 	conversationId: string;
@@ -39,6 +40,17 @@ export const ConversationTranscriptSection = ({
 	participantName,
 }: ConversationTranscriptSectionProps) => {
 	const { ref: loadMoreRef, inView } = useInView();
+	const { ref: bottomInViewRef, inView: isBottomVisible } = useInView({
+		threshold: 0.2,
+	});
+	const bottomTargetRef = useRef<HTMLDivElement | null>(null);
+	const setBottomTargetRef = useCallback(
+		(node: HTMLDivElement | null) => {
+			bottomTargetRef.current = node;
+			bottomInViewRef(node);
+		},
+		[bottomInViewRef],
+	);
 
 	const {
 		data: chunksData,
@@ -62,51 +74,18 @@ export const ConversationTranscriptSection = ({
 	);
 
 	const allChunks = (chunksData?.pages ?? []).flatMap((page) => page.chunks);
-	const location = useLocation();
-	const targetChunkId = location.hash.startsWith("#chunk-")
-		? decodeURIComponent(location.hash.slice("#chunk-".length))
-		: null;
-	const [highlightedChunkId, setHighlightedChunkId] = useState<string | null>(
-		null,
-	);
+	const highlightedChunkId = useChunkAnchorScroll({
+		chunks: allChunks,
+		fetchNextPage,
+		hasNextPage,
+		isFetchingNextPage,
+	});
 
 	const hasValidTranscripts = allChunks.some(
 		(chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
 	);
 
 	const isEmptyConversation = !hasValidTranscripts && isFinished;
-
-	// Deep link: #chunk-<id> from agentic citations. Page in until the
-	// target chunk is loaded, then scroll to it and flash a highlight.
-	useEffect(() => {
-		if (!targetChunkId) return;
-		const hasTargetChunk = allChunks.some((chunk) => chunk.id === targetChunkId);
-		if (hasTargetChunk || !hasNextPage || isFetchingNextPage) return;
-		void fetchNextPage();
-	}, [allChunks, fetchNextPage, hasNextPage, isFetchingNextPage, targetChunkId]);
-
-	useEffect(() => {
-		if (!targetChunkId) return;
-		const targetChunk = allChunks.find((chunk) => chunk.id === targetChunkId);
-		if (!targetChunk) return;
-		const targetElement = document.getElementById(`chunk-${targetChunk.id}`);
-		if (!targetElement) return;
-		targetElement.scrollIntoView({
-			behavior: "smooth",
-			block: "center",
-		});
-		setHighlightedChunkId(targetChunkId);
-	}, [allChunks, targetChunkId]);
-
-	useEffect(() => {
-		if (!highlightedChunkId) return;
-		const timeoutId = window.setTimeout(() => {
-			setHighlightedChunkId(null);
-		}, 5000);
-		return () => {
-			window.clearTimeout(timeoutId);
-		};
-	}, [highlightedChunkId]);
 
 	if (status === "pending") {
 		return (
@@ -177,7 +156,7 @@ export const ConversationTranscriptSection = ({
 			{isLocked ? (
 				<LockedTranscriptOverlay />
 			) : (
-				<Stack>
+				<Stack className="relative">
 					{allChunks.length === 0 ? (
 						<Alert
 							icon={<IconAlertCircle size={16} />}
@@ -224,6 +203,19 @@ export const ConversationTranscriptSection = ({
 							))}
 						</Stack>
 					)}
+					<div ref={setBottomTargetRef} aria-hidden="true" />
+					{allChunks.length > 0 ? (
+						<Group
+							justify="center"
+							className="fixed bottom-6 right-6 z-50"
+							{...testId("transcript-scroll-to-bottom")}
+						>
+							<ScrollToBottomButton
+								elementRef={bottomTargetRef}
+								isVisible={isBottomVisible}
+							/>
+						</Group>
+					) : null}
 				</Stack>
 			)}
 		</Stack>

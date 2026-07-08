@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
+import { ArrowDown } from "@phosphor-icons/react";
 import { ActionIcon, Tooltip } from "@mantine/core";
-import { IconArrowDown } from "@tabler/icons-react";
 
 interface ScrollToBottomButtonProps {
 	elementRef: React.RefObject<HTMLDivElement | null>;
@@ -28,7 +28,7 @@ export const ScrollToBottomButton = ({
 				style={{ backgroundColor: "var(--app-background)" }}
 				onClick={scrollToBottom}
 			>
-				<IconArrowDown style={{ height: "70%", width: "70%" }} stroke={2} />
+				<ArrowDown size="70%" weight="bold" />
 			</ActionIcon>
 		</Tooltip>
 	);
