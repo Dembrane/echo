@@ -1191,6 +1191,10 @@ export const getAgenticRun = async (runId: string) => {
 	return api.get<unknown, AgenticRun>(`/agentic/runs/${runId}`);
 };
 
+export const getLatestAgenticRunForChat = async (chatId: string) => {
+	return api.get<unknown, AgenticRun>(`/agentic/chats/${chatId}/latest-run`);
+};
+
 export const getAgenticRunEvents = async (runId: string, afterSeq = 0) => {
 	return api.get<unknown, AgenticRunEventsResponse>(
 		`/agentic/runs/${runId}/events`,

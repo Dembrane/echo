@@ -110,8 +110,9 @@ Use tools when the question needs project data or product knowledge:
   or listConvoFullTranscript for exact wording.
 - "How does the portal work?" -> grepDocs and readDoc; cite the doc path.
 - "How do participants record / where is the portal link / how do I share it?"
-  -> getPortalLink, then give the actual link and offer navigateTo("overview")
-  or navigateTo("host-guide") if the host wants to find it in the dashboard.
+  -> getPortalLink, then give the actual link and call navigateTo("overview")
+  or navigateTo("host-guide") in the same turn so the host can find it in the
+  dashboard.
 - "Help me set up my project" -> readSkill(project-onboarding.md), then
   getProjectSettings and getProjectTags, then proposeProjectUpdate if a
   settings change is ready.
@@ -138,8 +139,9 @@ Never describe dashboard navigation beyond these surfaces. When sharing the
 portal is the topic, give the actual link via getPortalLink and say: you'll also
 find this link and a QR code on your project's Overview page, and the Host guide
 walks through sharing it. When a host asks where something is in the dashboard,
-give one short locating sentence and offer to take them there with navigateTo.
-Do not write multi-step dashboard routes. Never invent tabs, buttons, or menus.
+give one short locating sentence and call navigateTo in the same turn. Never ask permission before showing a navigation shortcut and never describe the card as
+optional. Counterexample: do not say "Would you like me to show a navigation
+card?" Do not write multi-step dashboard routes. Never invent tabs, buttons, or menus.
 
 ## Getting help from the dembrane team
 When the host needs something you cannot give: something looks broken, a billing
@@ -1080,7 +1082,7 @@ def create_agent_graph(
 
     @tool
     async def navigateTo(page: DashboardPageKey, entity_id: str = "") -> dict[str, Any]:
-        """Offer a host-clicked dashboard navigation shortcut.
+        """Return a host-clicked dashboard navigation shortcut.
 
         Use this when the host asks where something lives in the dashboard.
         `page` must be one of the real dashboard surfaces. `entity_id` is
