@@ -1004,6 +1004,63 @@ async def test_agentic_canvas_lifecycle_delegates_to_shared_service(monkeypatch)
 
 
 @pytest.mark.asyncio
+async def test_agentic_insight_endpoint_persists_reach_back_context(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        def __init__(self) -> None:
+            self.created: list[tuple[str, dict[str, Any]]] = []
+
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:
+            assert collection == "project"
+            assert item_id == "project-1"
+            return {"id": "project-1", "workspace_id": "workspace-1"}
+
+        async def create_item(self, collection: str, payload: dict[str, Any]) -> dict[str, Any]:
+            self.created.append((collection, payload))
+            return {"data": {"id": "insight-1", **payload}}
+
+    fake_directus = _AsyncDirectus()
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.post(
+            "/api/agentic/projects/project-1/insight",
+            json={
+                "kind": "capability_gap",
+                "content": " The host needs canvas styling to be adjustable from chat. ",
+                "suggested_capability": "Canvas style controls",
+                "chat_id": "chat-1",
+                "message_id": "event-1",
+            },
+        )
+
+    assert response.status_code == 201
+    assert response.json() == {"id": "insight-1", "status": "new"}
+    assert fake_directus.created == [
+        (
+            "agent_insight",
+            {
+                "workspace_id": "workspace-1",
+                "project_id": "project-1",
+                "chat_id": "chat-1",
+                "message_id": "event-1",
+                "kind": "capability_gap",
+                "content": "The host needs canvas styling to be adjustable from chat.",
+                "suggested_capability": "Canvas style controls",
+                "status": "new",
+            },
+        )
+    ]
+
+
+@pytest.mark.asyncio
 async def test_list_project_conversations_hides_project_from_non_members(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     session = _make_session(user_id="user-2")
