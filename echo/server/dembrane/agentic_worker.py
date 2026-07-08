@@ -50,6 +50,32 @@ PARENTHETICAL_PLANNING_RE = re.compile(
     r"^\(\s*(?:i(?:'m| am| will|'ll)|we(?:'re| are| will|'ll)|checking|reading|searching|looking)\b.*\)\s*$",
     re.IGNORECASE | re.DOTALL,
 )
+STATUS_NARRATION_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\n+")
+STATUS_NARRATION_SENTENCE_RE = re.compile(
+    r"^\s*(?:"
+    r"i\s*(?:am|'m)\s+(?:looking|checking|reviewing|reading|searching)\b.*"
+    r"|let\s+me\s+(?:look|check|review|read|search)\b.*"
+    # Bare gerund openers count as narration only without a comma clause:
+    # "Reviewing the project context." is narration, but "Looking at your
+    # transcripts, three themes stand out." is an answer and must survive.
+    r"|(?:checking|reviewing|reading|searching|looking)\b[^,]*"
+    r"|to\s+help\s+you\b.*\bi\s*(?:will|'ll)\s+"
+    r"(?:start|begin|first|now|help|guide|look|check|review|read|search)\b.*"
+    r")\s*$",
+    re.IGNORECASE | re.DOTALL,
+)
+OPTION_LINE_RE = re.compile(r"^\s*(?:[-*]|\d+[.)])\s+\S+", re.MULTILINE)
+
+
+def _is_pure_status_narration(content: str) -> bool:
+    if "?" in content or OPTION_LINE_RE.search(content):
+        return False
+    sentences = [
+        chunk.strip() for chunk in STATUS_NARRATION_SPLIT_RE.split(content) if chunk.strip()
+    ]
+    if not sentences:
+        return False
+    return all(STATUS_NARRATION_SENTENCE_RE.match(sentence) for sentence in sentences)
 
 
 def _sanitize_host_visible_assistant_content(content: str) -> Optional[str]:
@@ -58,6 +84,8 @@ def _sanitize_host_visible_assistant_content(content: str) -> Optional[str]:
     if not normalized or normalized in INTERNAL_PLACEHOLDER_CONTENTS:
         return None
     if PARENTHETICAL_PLANNING_RE.match(normalized):
+        return None
+    if _is_pure_status_narration(normalized):
         return None
     previous = None
     while previous != normalized:

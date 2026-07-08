@@ -72,6 +72,7 @@ import {
 	parseCanvasSuggestion,
 	parseCustomVerificationTopicSuggestion,
 	parseGoalSuggestion,
+	parseNavigationSuggestion,
 	parseProjectUpdateSuggestion,
 	type ToolActivity,
 } from "./agenticToolActivity";
@@ -82,6 +83,7 @@ import { CustomVerificationTopicSuggestionCard } from "./CustomVerificationTopic
 import { formatMessage } from "./chatUtils";
 import { ChatTurnLimitCard, ChatUpgradeModal } from "./FreeTierChatGate";
 import { useChat as useProjectChat } from "./hooks";
+import { NavigationSuggestionCard } from "./NavigationSuggestionCard";
 import { ProjectUpdateSuggestionCard } from "./ProjectUpdateSuggestionCard";
 
 type AgenticChatPanelProps = {
@@ -635,6 +637,11 @@ export const AgenticChatPanel = ({
 					item: Extract<TimelineItem, { kind: "tool" }>;
 			  }
 			| {
+					kind: "navigation_suggestion";
+					id: string;
+					item: Extract<TimelineItem, { kind: "tool" }>;
+			  }
+			| {
 					kind: "tool_group";
 					id: string;
 					items: Extract<TimelineItem, { kind: "tool" }>[];
@@ -659,6 +666,10 @@ export const AgenticChatPanel = ({
 			}
 			if (parseGoalSuggestion(item)) {
 				nodes.push({ id: item.id, item, kind: "goal_suggestion" });
+				continue;
+			}
+			if (parseNavigationSuggestion(item)) {
+				nodes.push({ id: item.id, item, kind: "navigation_suggestion" });
 				continue;
 			}
 			const last = nodes[nodes.length - 1];
@@ -1417,6 +1428,20 @@ export const AgenticChatPanel = ({
 										}}
 										chatId={chatId}
 										onApplied={() => handleSubmit(t`I applied the goal.`)}
+									/>
+								</div>
+							) : null;
+						}
+
+						if (node.kind === "navigation_suggestion") {
+							const suggestion = parseNavigationSuggestion(node.item);
+							return suggestion ? (
+								<div key={node.id}>
+									<NavigationSuggestionCard
+										suggestion={{
+											...suggestion,
+											projectId: suggestion.projectId || projectId,
+										}}
 									/>
 								</div>
 							) : null;

@@ -1482,6 +1482,54 @@ def test_is_host_visible_assistant_content_rejects_placeholder_and_empty() -> No
     assert _sanitize_host_visible_assistant_content('Done."_') == 'Done."'
 
 
+def test_sanitize_host_visible_assistant_content_rejects_pure_status_narration() -> None:
+    from dembrane.agentic_worker import _sanitize_host_visible_assistant_content
+
+    leaked_first_turn = (
+        "I am looking at your current settings and project context. To help you set "
+        "up this project, I will start by guiding us to establish a clear project "
+        "goal.\n\nReviewing the onboarding playbook project context to draft a "
+        "tailored project goal."
+    )
+
+    assert _sanitize_host_visible_assistant_content(leaked_first_turn) is None
+    assert (
+        _sanitize_host_visible_assistant_content(
+            "Reviewing the onboarding playbook project context."
+        )
+        is None
+    )
+    assert _sanitize_host_visible_assistant_content("Checking your project settings.") is None
+    assert (
+        _sanitize_host_visible_assistant_content("Let me look at your current project context.")
+        is None
+    )
+    assert (
+        _sanitize_host_visible_assistant_content(
+            "I looked at your settings, and your portal is open to anyone with the link."
+        )
+        == "I looked at your settings, and your portal is open to anyone with the link."
+    )
+    assert (
+        _sanitize_host_visible_assistant_content(
+            "I am looking at your current settings. What are you hoping to learn?"
+        )
+        == "I am looking at your current settings. What are you hoping to learn?"
+    )
+    assert (
+        _sanitize_host_visible_assistant_content(
+            "Reviewing your setup.\n- Start with participant needs\n- Focus on policy ideas"
+        )
+        == "Reviewing your setup.\n- Start with participant needs\n- Focus on policy ideas"
+    )
+    assert (
+        _sanitize_host_visible_assistant_content(
+            "Looking at your transcripts, participants mostly praise the new flavor."
+        )
+        == "Looking at your transcripts, participants mostly praise the new flavor."
+    )
+
+
 @pytest.mark.asyncio
 async def test_process_agentic_run_never_persists_calling_tools_placeholder(monkeypatch) -> None:
     """The Gemini crutch text must never reach the thread, even if the model

@@ -365,6 +365,7 @@ def test_project_setup_tools_include_project_tags_reader():
     assert "getProjectSettings" in tools
     assert "getProjectTags" in tools
     assert "getPortalLink" in tools
+    assert "navigateTo" in tools
 
 
 @pytest.mark.asyncio
@@ -414,6 +415,44 @@ async def test_get_portal_link_falls_back_to_en_for_default_language():
 
     assert result["language"] == "en"
     assert result["portal_link"] == "http://localhost:5174/en/project-1/start"
+
+
+@pytest.mark.asyncio
+async def test_navigate_to_returns_visible_dashboard_suggestion_without_api_calls():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+    )
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["navigateTo"].ainvoke(
+        {"page": "overview", "entity_id": ""}
+    )
+
+    assert result == {
+        "type": "navigation_suggestion",
+        "project_id": "project-1",
+        "page": "overview",
+        "entity_id": None,
+        "label": "overview",
+        "visible_to_user": True,
+    }
+    assert factory.instances == []
+
+
+@pytest.mark.asyncio
+async def test_navigate_to_rejects_unknown_dashboard_pages():
+    tools = _make_doc_tools()
+
+    with pytest.raises(Exception, match="Input should be"):
+        await tools["navigateTo"].ainvoke({"page": "billing", "entity_id": ""})
 
 
 @pytest.mark.asyncio

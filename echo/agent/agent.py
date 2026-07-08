@@ -1,6 +1,6 @@
 from logging import getLogger
 import re
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 from datetime import datetime, timezone, timedelta
 
 from copilotkit.langgraph import CopilotKitState
@@ -18,6 +18,30 @@ from settings import get_settings
 
 logger = getLogger("agent")
 VERTEX_AUTH_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
+
+DashboardPageKey = Literal[
+    "overview",
+    "chats",
+    "monitor",
+    "library",
+    "host-guide",
+    "report",
+    "conversations",
+    "settings",
+    "portal-editor",
+]
+
+NAVIGATION_LABELS: dict[str, str] = {
+    "overview": "overview",
+    "chats": "chats",
+    "monitor": "monitor",
+    "library": "library",
+    "host-guide": "host guide",
+    "report": "report",
+    "conversations": "conversations",
+    "settings": "settings",
+    "portal-editor": "portal editor",
+}
 
 # Note: the citation tag format below ([conversation_id:<id>;chunk_id:<id>]) is
 # parsed by the frontend (AgenticChatPanel.tsx). Do not change it without
@@ -74,7 +98,8 @@ Use tools when the question needs project data or product knowledge:
   or listConvoFullTranscript for exact wording.
 - "How does the portal work?" -> grepDocs and readDoc; cite the doc path.
 - "How do participants record / where is the portal link / how do I share it?"
-  -> getPortalLink, then give the actual link.
+  -> getPortalLink, then give the actual link and offer navigateTo("overview")
+  or navigateTo("host-guide") if the host wants to find it in the dashboard.
 - "Help me set up my project" -> readSkill(project-onboarding.md), then
   getProjectSettings and getProjectTags, then proposeProjectUpdate if a
   settings change is ready.
@@ -100,7 +125,9 @@ When intent is unclear, ask one focused question instead of guessing.
 Never describe dashboard navigation beyond these surfaces. When sharing the
 portal is the topic, give the actual link via getPortalLink and say: you'll also
 find this link and a QR code on your project's Overview page, and the Host guide
-walks through sharing it. Never invent tabs, buttons, or menus.
+walks through sharing it. When a host asks where something is in the dashboard,
+give one short locating sentence and offer to take them there with navigateTo.
+Do not write multi-step dashboard routes. Never invent tabs, buttons, or menus.
 
 ## Getting help from the dembrane team
 When the host needs something you cannot give: something looks broken, a billing
@@ -215,6 +242,9 @@ closing move and must come before proposeProjectUpdate or any settings/context
 suggestion. Suggest context/settings updates only after a goal exists. After a
 substantial artifact or report, you may gently suggest extracting a methodology.
 Never do it automatically.
+The first visible assistant message in a setup chat must contain the first real
+question for the host, not status narration about looking at settings, reviewing
+context, or planning what you will do.
 
 ## Memory
 You can save durable notes with `remember` and recall them with `readMemory`.
@@ -826,6 +856,33 @@ def create_agent_graph(
         }
 
     @tool
+    async def navigateTo(page: DashboardPageKey, entity_id: str = "") -> dict[str, Any]:
+        """Offer a host-clicked dashboard navigation shortcut.
+
+        Use this when the host asks where something lives in the dashboard.
+        `page` must be one of the real dashboard surfaces. `entity_id` is
+        optional and only useful for a specific canvas in Library or a specific
+        conversation in Conversations. This never navigates automatically and
+        never calls an API; it only returns a visible suggestion card.
+        """
+        normalized_page = str(page).strip()
+        if normalized_page not in NAVIGATION_LABELS:
+            raise ValueError(
+                f"Unknown dashboard page: {normalized_page}. "
+                f"Allowed pages: {sorted(NAVIGATION_LABELS)}"
+            )
+        normalized_entity_id = entity_id.strip()
+
+        return {
+            "type": "navigation_suggestion",
+            "project_id": project_id,
+            "page": normalized_page,
+            "entity_id": normalized_entity_id or None,
+            "label": NAVIGATION_LABELS[normalized_page],
+            "visible_to_user": True,
+        }
+
+    @tool
     async def proposeProjectUpdate(
         changes: list[dict[str, Any]],
         summary: str,
@@ -1203,6 +1260,7 @@ def create_agent_graph(
         getProjectSettings,
         getProjectTags,
         getPortalLink,
+        navigateTo,
         proposeProjectUpdate,
         proposeCustomVerificationTopic,
         proposeCanvas,
