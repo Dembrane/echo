@@ -27,12 +27,14 @@ class _FakeEchoClient:
         project_conversations_payload: dict | None,
         project_conversations_payload_by_id: dict[str, dict] | None,
         project_conversations_payload_by_transcript_query: dict[str, dict] | None,
+        project_settings_payload: dict | None = None,
         project_chats_payload: list[dict] | None = None,
         chat_messages_payload: list[dict] | None = None,
         memory_payload: dict | None = None,
         write_memory_response: dict | None = None,
         goal_payload: dict | None = None,
         methodologies_payload: dict | None = None,
+        project_tags_payload: list[dict] | None = None,
         canvases_payload: list[dict] | None = None,
         canvas_loop_response: dict | None = None,
     ):
@@ -45,6 +47,7 @@ class _FakeEchoClient:
         self.project_conversations_payload_by_transcript_query = (
             project_conversations_payload_by_transcript_query or {}
         )
+        self.project_settings_payload = project_settings_payload or {}
         self.project_chats_payload = project_chats_payload or []
         self.chat_messages_payload = chat_messages_payload or []
         self.search_calls: list[dict[str, object]] = []
@@ -57,6 +60,7 @@ class _FakeEchoClient:
         self.write_memory_response = write_memory_response or {}
         self.goal_payload = goal_payload or {}
         self.methodologies_payload = methodologies_payload or {}
+        self.project_tags_payload = project_tags_payload or []
         self.canvases_payload = canvases_payload or []
         self.canvas_loop_response = canvas_loop_response or {}
         self.search_calls: list[dict[str, object]] = []
@@ -66,6 +70,7 @@ class _FakeEchoClient:
         self.write_memory_calls: list[dict[str, object]] = []
         self.read_goal_calls: list[str] = []
         self.list_methodologies_calls: list[str] = []
+        self.list_project_tags_calls: list[str] = []
         self.list_canvases_calls: list[str] = []
         self.canvas_loop_calls: list[dict[str, str]] = []
         self.closed = False
@@ -73,6 +78,9 @@ class _FakeEchoClient:
     async def search_home(self, query: str, limit: int = 5) -> dict:
         self.search_calls.append({"query": query, "limit": limit})
         return self.search_payload_by_query.get(query, self.search_payload)
+
+    async def get_project_settings(self, project_id: str) -> dict:
+        return {"id": project_id, **self.project_settings_payload}
 
     async def get_conversation_transcript(self, conversation_id: str) -> str:
         self.transcript_calls.append(conversation_id)
@@ -160,6 +168,10 @@ class _FakeEchoClient:
         self.list_methodologies_calls.append(project_id)
         return self.methodologies_payload
 
+    async def list_project_tags(self, project_id: str) -> list[dict]:
+        self.list_project_tags_calls.append(project_id)
+        return self.project_tags_payload
+
     async def list_canvases(self, project_id: str) -> list[dict]:
         self.list_canvases_calls.append(project_id)
         return self.canvases_payload
@@ -206,12 +218,14 @@ class _FakeEchoClientFactory:
         project_conversations_payload: dict | None = None,
         project_conversations_payload_by_id: dict[str, dict] | None = None,
         project_conversations_payload_by_transcript_query: dict[str, dict] | None = None,
+        project_settings_payload: dict | None = None,
         project_chats_payload: list[dict] | None = None,
         chat_messages_payload: list[dict] | None = None,
         memory_payload: dict | None = None,
         write_memory_response: dict | None = None,
         goal_payload: dict | None = None,
         methodologies_payload: dict | None = None,
+        project_tags_payload: list[dict] | None = None,
         canvases_payload: list[dict] | None = None,
         canvas_loop_response: dict | None = None,
     ):
@@ -223,12 +237,14 @@ class _FakeEchoClientFactory:
         self.project_conversations_payload_by_transcript_query = (
             project_conversations_payload_by_transcript_query
         )
+        self.project_settings_payload = project_settings_payload
         self.project_chats_payload = project_chats_payload
         self.chat_messages_payload = chat_messages_payload
         self.memory_payload = memory_payload
         self.write_memory_response = write_memory_response
         self.goal_payload = goal_payload
         self.methodologies_payload = methodologies_payload
+        self.project_tags_payload = project_tags_payload
         self.canvases_payload = canvases_payload
         self.canvas_loop_response = canvas_loop_response
         self.instances: list[_FakeEchoClient] = []
@@ -242,12 +258,14 @@ class _FakeEchoClientFactory:
             project_conversations_payload=self.project_conversations_payload,
             project_conversations_payload_by_id=self.project_conversations_payload_by_id,
             project_conversations_payload_by_transcript_query=self.project_conversations_payload_by_transcript_query,
+            project_settings_payload=self.project_settings_payload,
             project_chats_payload=self.project_chats_payload,
             chat_messages_payload=self.chat_messages_payload,
             memory_payload=self.memory_payload,
             write_memory_response=self.write_memory_response,
             goal_payload=self.goal_payload,
             methodologies_payload=self.methodologies_payload,
+            project_tags_payload=self.project_tags_payload,
             canvases_payload=self.canvases_payload,
             canvas_loop_response=self.canvas_loop_response,
         )
@@ -270,6 +288,13 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "honesty" in prompt
     assert "conversation scope" in prompt
     assert "turn instructions" in prompt
+    # Dashboard guidance prevents invented navigation.
+    assert "the dashboard" in prompt
+    assert "overview: portal link and qr code" in prompt
+    assert "host guide: guidance for sharing the portal" in prompt
+    assert "never describe dashboard navigation beyond these surfaces" in prompt
+    assert "give the actual link via getportallink" in prompt
+    assert "never invent tabs, buttons, or menus" in prompt
     # The agent never applies changes itself
     assert "you never apply" in prompt
     # Citation policy still anchors output quality (format is load-bearing:
@@ -295,14 +320,24 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "read interviewing.md first" in prompt
     assert "no announced question count" in prompt
     assert "ask exactly one question" in prompt
+    assert "how many people are part of defining" in prompt
+    assert "recording it with a phone or dembrane go" in prompt
+    assert "everyone's consent" in prompt
+    assert "read current tags with getprojecttags" in prompt
+    assert "small host-defined tag vocabulary" in prompt
+    assert "draft organization for the host to review" in prompt
+    assert "getProjectTags" in SYSTEM_PROMPT
     assert "proposeGoal" in SYSTEM_PROMPT
-    assert "proposegoal is the closing move" in prompt
+    assert "proposegoal is the" in prompt
+    assert "closing move" in prompt
     assert "must come before" in prompt
     assert "proposeProjectUpdate" in SYSTEM_PROMPT
     assert "suggest context/settings" in prompt
     assert "updates only after a goal exists" in prompt
-    assert "docs mention\nmust not be the final sentence" in SYSTEM_PROMPT
-    assert "do not ask the host to report back after applying it" in prompt
+    assert "docs mention" in prompt
+    assert "must not be the final sentence" in prompt
+    assert "do not ask the host" in prompt
+    assert "to report back after applying it" in prompt
     # Never leak internal machinery to the host
     assert "internal machinery" in prompt
     # Steer batched lookups over one-at-a-time calls
@@ -322,6 +357,63 @@ def _make_doc_tools():
         ),
     )
     return _tool_map(llm.bound_tools)
+
+
+def test_project_setup_tools_include_project_tags_reader():
+    tools = _make_doc_tools()
+
+    assert "getProjectSettings" in tools
+    assert "getProjectTags" in tools
+    assert "getPortalLink" in tools
+
+
+@pytest.mark.asyncio
+async def test_get_portal_link_returns_project_link_from_settings_language():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        project_settings_payload={"language": "nl"},
+    )
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["getPortalLink"].ainvoke({})
+
+    assert result == {
+        "project_id": "project-1",
+        "language": "nl",
+        "portal_link": "http://localhost:5174/nl/project-1/start",
+        "dashboard_locations": ["Overview", "Host guide"],
+    }
+    assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_get_portal_link_falls_back_to_en_for_default_language():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        project_settings_payload={"language": "default"},
+    )
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["getPortalLink"].ainvoke({})
+
+    assert result["language"] == "en"
+    assert result["portal_link"] == "http://localhost:5174/en/project-1/start"
 
 
 @pytest.mark.asyncio

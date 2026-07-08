@@ -726,11 +726,11 @@ msgstr ""
 msgid "{MONTHLY_BILLING_PREMIUM_PCT}% off"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:186
+#: src/components/chat/AgenticChatPanel.tsx:184
 msgid "{name}'s conversation"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:185
+#: src/components/chat/AgenticChatPanel.tsx:183
 msgid "{name}'s transcript excerpt"
 msgstr ""
 
@@ -1585,8 +1585,8 @@ msgstr "Erweiterte Einstellungen"
 #~ msgid "Agent is working..."
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:282
-#: src/components/chat/AgenticChatPanel.tsx:309
+#: src/components/chat/AgenticChatPanel.tsx:280
+#: src/components/chat/AgenticChatPanel.tsx:307
 msgid "Agent run failed"
 msgstr ""
 
@@ -2055,7 +2055,7 @@ msgstr ""
 msgid "Ask a organisation admin to request this upgrade."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1320
+#: src/components/chat/AgenticChatPanel.tsx:1318
 msgid "Ask a question about the conversations in this project, or get help setting it up. Any change is proposed for review first, and nothing is saved until it's approved."
 msgstr ""
 
@@ -2075,7 +2075,7 @@ msgstr ""
 msgid "Ask about your conversations, or type to find an earlier chat"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1534
+#: src/components/chat/AgenticChatPanel.tsx:1552
 msgid "Ask about your conversations..."
 msgstr ""
 
@@ -2266,8 +2266,12 @@ msgstr "Automatisch generiert oder manuell eingeben"
 #~ msgstr "Quellen automatisch auswählen, um dem Chat hinzuzufügen"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:50
-msgid "Automatic titles and tags"
+msgid "Automatic titles and draft tags"
 msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:50
+#~ msgid "Automatic titles and tags"
+#~ msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:1568
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
@@ -2635,6 +2639,7 @@ msgstr ""
 #: src/components/common/ImageCropModal.tsx:145
 #: src/components/common/FeedbackPortalModal.tsx:124
 #: src/components/common/ConfirmModal.tsx:44
+#: src/components/chat/AgenticChatPanel.tsx:1521
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -2665,6 +2670,10 @@ msgstr "Abbrechen"
 
 #: src/components/billing/BillingManager.tsx:1499
 msgid "Cancel anytime. You keep access until the period ends."
+msgstr ""
+
+#: src/components/chat/AgenticChatPanel.tsx:1509
+msgid "Cancel current run"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1186
@@ -2848,7 +2857,7 @@ msgstr "Das Ändern der Sprache während eines aktiven Chats kann unerwartete Er
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:262
-#: src/components/chat/AgenticChatPanel.tsx:1146
+#: src/components/chat/AgenticChatPanel.tsx:1144
 msgid "Chat"
 msgstr "Chat"
 
@@ -4323,7 +4332,7 @@ msgstr ""
 #: src/routes/onboarding/OnboardingRoute.tsx:525
 #: src/components/project/ProjectSharingModal.tsx:268
 #: src/components/invite/InviteModal.tsx:811
-#: src/components/chat/AgenticChatPanel.tsx:328
+#: src/components/chat/AgenticChatPanel.tsx:326
 msgid "Done"
 msgstr ""
 
@@ -4781,7 +4790,7 @@ msgstr "Geben Sie den 6-stelligen Code aus Ihrer Authentifizierungs-App ein."
 msgid "Enter the current six-digit code from your authenticator app."
 msgstr "Geben Sie den aktuellen 6-stelligen Code aus Ihrer Authentifizierungs-App ein."
 
-#: src/components/chat/AgenticChatPanel.tsx:1551
+#: src/components/chat/AgenticChatPanel.tsx:1569
 msgid "Enter to send, Shift+Enter for a new line"
 msgstr ""
 
@@ -4809,8 +4818,8 @@ msgstr ""
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
 #: src/components/conversation/LiveMonitorSection.tsx:352
-#: src/components/chat/AgenticChatPanel.tsx:333
-#: src/components/chat/AgenticChatPanel.tsx:1266
+#: src/components/chat/AgenticChatPanel.tsx:331
+#: src/components/chat/AgenticChatPanel.tsx:1264
 msgid "Error"
 msgstr "Fehler"
 
@@ -5242,11 +5251,11 @@ msgstr "Ergebnis konnte nicht überarbeitet werden. Bitte versuchen Sie es erneu
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fehler beim Beenden der Aufnahme bei Änderung des Mikrofons. Bitte versuchen Sie es erneut."
 
-#: src/components/chat/AgenticChatPanel.tsx:1138
+#: src/components/chat/AgenticChatPanel.tsx:1136
 msgid "Failed to stop run"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1097
+#: src/components/chat/AgenticChatPanel.tsx:1095
 msgid "Failed to submit agentic message"
 msgstr ""
 
@@ -5898,7 +5907,7 @@ msgstr ""
 msgid "Hide revision data"
 msgstr "Revisionsdaten verbergen"
 
-#: src/components/chat/AgenticChatPanel.tsx:464
+#: src/components/chat/AgenticChatPanel.tsx:462
 msgid "Hide steps"
 msgstr ""
 
@@ -5979,11 +5988,11 @@ msgstr ""
 #~ msgid "I accept the <0>terms</0>"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1405
+#: src/components/chat/AgenticChatPanel.tsx:1403
 msgid "I applied the canvas."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1421
+#: src/components/chat/AgenticChatPanel.tsx:1419
 msgid "I applied the goal."
 msgstr ""
 
@@ -6061,7 +6070,7 @@ msgstr ""
 msgid "Image style"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1344
+#: src/components/chat/AgenticChatPanel.tsx:1342
 msgid "Improve my setup"
 msgstr ""
 
@@ -6813,7 +6822,7 @@ msgstr "Link zur Datenschutzerklärung Ihrer Organisation, die angezeigt wird"
 #~ msgid "LinkedIn Post (Experimental)"
 #~ msgstr "LinkedIn-Beitrag (Experimentell)"
 
-#: src/components/chat/AgenticChatPanel.tsx:1334
+#: src/components/chat/AgenticChatPanel.tsx:1332
 msgid "List my conversations"
 msgstr ""
 
@@ -6821,7 +6830,7 @@ msgstr ""
 #~ msgid "List project conversations"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1335
+#: src/components/chat/AgenticChatPanel.tsx:1333
 msgid "List the conversations in this project."
 msgstr ""
 
@@ -6869,7 +6878,7 @@ msgstr "Live Vorschau"
 msgid "Live recordings, transcription progress, and errors show up here as participants start recording in the portal."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:849
+#: src/components/chat/AgenticChatPanel.tsx:847
 msgid "Live stream interrupted. Falling back to polling."
 msgstr ""
 
@@ -6948,7 +6957,7 @@ msgstr ""
 #~ msgid "Loading projects…"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1277
+#: src/components/chat/AgenticChatPanel.tsx:1275
 msgid "Loading this chat..."
 msgstr ""
 
@@ -8557,7 +8566,7 @@ msgstr ""
 #~ msgid "Open team"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1253
+#: src/components/chat/AgenticChatPanel.tsx:1251
 msgid "Open the old chat experience"
 msgstr ""
 
@@ -10000,7 +10009,7 @@ msgstr ""
 #~ msgstr "Zitate"
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:435
+#: src/components/chat/AgenticChatPanel.tsx:433
 msgid "Ran {0} steps at once"
 msgstr ""
 
@@ -10411,7 +10420,7 @@ msgstr "Umbenennen"
 #~ msgstr "Umbenennen"
 
 #: src/components/chat/ChatAccordion.tsx:158
-#: src/components/chat/AgenticChatPanel.tsx:1209
+#: src/components/chat/AgenticChatPanel.tsx:1207
 msgid "Rename chat"
 msgstr "Chat umbenennen"
 
@@ -10795,7 +10804,7 @@ msgstr ""
 msgid "Review files before uploading"
 msgstr "Dateien vor dem Hochladen überprüfen"
 
-#: src/components/chat/AgenticChatPanel.tsx:1345
+#: src/components/chat/AgenticChatPanel.tsx:1343
 msgid "Review my project settings and suggest improvements."
 msgstr ""
 
@@ -10875,7 +10884,7 @@ msgstr "Zeilen pro Seite"
 #~ msgid "Run status:"
 #~ msgstr "Ausführungsstatus:"
 
-#: src/components/chat/AgenticChatPanel.tsx:338
+#: src/components/chat/AgenticChatPanel.tsx:336
 msgid "Running"
 msgstr ""
 
@@ -11392,7 +11401,7 @@ msgid "Self-serve"
 msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:1002
-#: src/components/chat/AgenticChatPanel.tsx:1598
+#: src/components/chat/AgenticChatPanel.tsx:1589
 msgid "Send"
 msgstr "Senden"
 
@@ -11731,7 +11740,7 @@ msgstr "Referenzen anzeigen"
 msgid "Show revision data"
 msgstr "Revisionsdaten anzeigen"
 
-#: src/components/chat/AgenticChatPanel.tsx:464
+#: src/components/chat/AgenticChatPanel.tsx:462
 msgid "Show steps"
 msgstr ""
 
@@ -12061,8 +12070,8 @@ msgstr "Beenden"
 
 #: src/components/chat/AgenticChatPanel.tsx:1556
 #: src/components/chat/AgenticChatPanel.tsx:1563
-msgid "Stop this run"
-msgstr ""
+#~ msgid "Stop this run"
+#~ msgstr ""
 
 #: src/components/chat/templates.ts:74
 msgid "Strategic Planning"
@@ -12755,7 +12764,7 @@ msgstr "Dies ist ein Beispiel für die JSON-Daten, die an Ihre Webhook-URL gesen
 msgid "This is not saved yet."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1241
+#: src/components/chat/AgenticChatPanel.tsx:1239
 msgid "This is the new chat experience"
 msgstr ""
 
@@ -13188,7 +13197,7 @@ msgstr ""
 msgid "Transcribing..."
 msgstr "Transcribieren..."
 
-#: src/components/chat/AgenticChatPanel.tsx:189
+#: src/components/chat/AgenticChatPanel.tsx:187
 msgid "transcript"
 msgstr ""
 
@@ -13204,7 +13213,7 @@ msgstr "Transkript"
 msgid "Transcript copied to clipboard"
 msgstr "Transkript in die Zwischenablage kopiert"
 
-#: src/components/chat/AgenticChatPanel.tsx:188
+#: src/components/chat/AgenticChatPanel.tsx:186
 msgid "transcript excerpt"
 msgstr ""
 
@@ -14440,11 +14449,11 @@ msgstr "Was soll ECHO aus den Gesprächen analysieren oder generieren?"
 #~ msgid "What should this report focus on?"
 #~ msgstr "Worauf soll sich dieser Bericht konzentrieren?"
 
-#: src/components/chat/AgenticChatPanel.tsx:1340
+#: src/components/chat/AgenticChatPanel.tsx:1338
 msgid "What themes came up across the conversations in this project?"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1339
+#: src/components/chat/AgenticChatPanel.tsx:1337
 msgid "What themes came up?"
 msgstr ""
 
@@ -14530,7 +14539,7 @@ msgid "Where would you like to go?"
 msgstr ""
 
 #: src/routes/project/chat/NewChatRoute.tsx:343
-#: src/components/chat/AgenticChatPanel.tsx:1317
+#: src/components/chat/AgenticChatPanel.tsx:1315
 msgid "Where would you like to start?"
 msgstr ""
 
@@ -14593,15 +14602,15 @@ msgid "Within my organisation"
 msgstr ""
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:436
+#: src/components/chat/AgenticChatPanel.tsx:434
 msgid "Worked through {0} steps"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1171
+#: src/components/chat/AgenticChatPanel.tsx:1169
 msgid "Working on your answer..."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:431
+#: src/components/chat/AgenticChatPanel.tsx:429
 msgid "Working..."
 msgstr ""
 

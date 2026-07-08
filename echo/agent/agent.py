@@ -13,7 +13,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
 
 import knowledge
-from echo_client import EchoClient
+from echo_client import EchoClient, build_project_portal_link, normalize_portal_language
 from settings import get_settings
 
 logger = getLogger("agent")
@@ -73,8 +73,11 @@ Use tools when the question needs project data or product knowledge:
 - "What did people say about X?" -> findConvosByKeywords, then grepConvoSnippets
   or listConvoFullTranscript for exact wording.
 - "How does the portal work?" -> grepDocs and readDoc; cite the doc path.
+- "How do participants record / where is the portal link / how do I share it?"
+  -> getPortalLink, then give the actual link.
 - "Help me set up my project" -> readSkill(project-onboarding.md), then
-  getProjectSettings, then proposeProjectUpdate.
+  getProjectSettings and getProjectTags, then proposeProjectUpdate if a
+  settings change is ready.
 - "Help me set the goal / figure out this project" -> readSkill(interviewing.md),
   then readGoal and listMethodologies, then proposeGoal.
 - "What did we discuss before / continue that chat" -> listProjectChats, then readChat.
@@ -83,6 +86,21 @@ Use tools when the question needs project data or product knowledge:
   transcription is keeping up, and flag any conversation that is failing.
 Do not use tools for greetings, small talk, or questions about this chat.
 When intent is unclear, ask one focused question instead of guessing.
+
+## The dashboard
+- Overview: portal link and QR code, portal settings summary, and the Portal
+  editor button.
+- Chats: project chats with this assistant.
+- Monitor: live participant recording and transcription health.
+- Library: conversations, canvases, reports, and analysis materials.
+- Host guide: guidance for sharing the portal and running collection.
+- Report: report creation, editing, and sharing.
+- Conversations: the conversation list, transcripts, tags, and status.
+- Settings: project configuration and access controls.
+Never describe dashboard navigation beyond these surfaces. When sharing the
+portal is the topic, give the actual link via getPortalLink and say: you'll also
+find this link and a QR code on your project's Overview page, and the Host guide
+walks through sharing it. Never invent tabs, buttons, or menus.
 
 ## Getting help from the dembrane team
 When the host needs something you cannot give: something looks broken, a billing
@@ -139,6 +157,11 @@ ask one focused question first.
 
 ## Proposing project changes
 - Read current values with getProjectSettings before proposing.
+- Read current tags with getProjectTags before recommending automatic titles
+  and draft tags. If no project tags exist, do not claim tag automation will
+  organize conversations. First suggest a small host-defined tag vocabulary.
+  The setting can draft short titles and attach existing project tags after
+  summarization, but tags remain draft organization for the host to review.
 - Use proposeProjectUpdate: group related fields, one short reason per field,
   proposed copy in the project's language, a one-sentence summary.
 - The host sees a diff and applies or rejects it themselves. You never apply
@@ -170,18 +193,28 @@ goal, help with one lightweight question at a time. Read interviewing.md first
 and use that shape: no "interview" wording, no announced question count,
 convergent options, and a confirm-understanding close. Ask exactly one question
 per turn, with 2-4 concrete options and an easy skip or free-text escape. Use
-plain conversational openers such as "What are you hoping to learn?" Offer
-existing methodologies from listMethodologies when any exist, calling them
-methodologies or ways of working, never frameworks or tools. Documentation is a
-light aside only: link text should be short ("the docs"), and a docs mention
-must not be the final sentence or visual call to action of a message. When you
-have enough, use proposeGoal to restate the goal in the host's words. After
-proposing a goal, do not ask the host to report back after applying it. The chat
-records that automatically. If the project has no goal and this is the setup
-conversation, proposeGoal is the closing move and must come before
-proposeProjectUpdate or any settings/context suggestion. Suggest context/settings
-updates only after a goal exists. After a substantial artifact or report, you may
-gently suggest extracting a methodology. Never do it automatically.
+plain conversational openers such as "What are you hoping to learn?" Early in
+setup, ask how many people are part of defining what this project is, and whether
+the project definition is already clear or the project should collect input
+about what it should become. If several people need to shape it together, suggest
+opening that discussion and recording it with a phone or dembrane Go, with
+everyone's consent, then using that conversation as project material so you can
+continue setup from what the group said. Early in setup, mention once, in one
+warm sentence, that the project starts on the dembrane way of working: first we
+shape the project together, then you collect conversations, then we make sense
+of them. Offer existing methodologies from
+listMethodologies when any exist, calling them methodologies or ways of working,
+never frameworks or tools. If only the seeded dembrane methodology exists, that
+mention is enough; do not force a choice. Documentation is a light aside only: link text should
+be short ("the docs"), and a docs mention must not be the final sentence or
+visual call to action of a message. When you have enough, use proposeGoal to
+restate the goal in the host's words. After proposing a goal, do not ask the host
+to report back after applying it. The chat records that automatically. If the
+project has no goal and this is the setup conversation, proposeGoal is the
+closing move and must come before proposeProjectUpdate or any settings/context
+suggestion. Suggest context/settings updates only after a goal exists. After a
+substantial artifact or report, you may gently suggest extracting a methodology.
+Never do it automatically.
 
 ## Memory
 You can save durable notes with `remember` and recall them with `readMemory`.
@@ -751,6 +784,48 @@ def create_agent_graph(
         }
 
     @tool
+    async def getProjectTags() -> dict[str, Any]:
+        """Read the project's current tag vocabulary.
+
+        Tags are defined by hosts and can be selected by participants. Automatic
+        draft tagging can only choose from these existing tags; if this list is
+        empty, suggest defining tags before recommending tag automation.
+        """
+        client = _create_echo_client()
+        try:
+            tags = await client.list_project_tags(project_id)
+        finally:
+            await client.close()
+        return {
+            "project_id": project_id,
+            "count": len(tags),
+            "tags": tags,
+        }
+
+    @tool
+    async def getPortalLink() -> dict[str, Any]:
+        """Return the actual participant portal link for this project.
+
+        Use this when the host asks how participants record, how to invite
+        participants, or where to find/share the portal link. Mention that the
+        dashboard also shows the link and QR code on Overview, and the Host guide
+        walks through sharing it.
+        """
+        client = _create_echo_client()
+        try:
+            current = await client.get_project_settings(project_id)
+        finally:
+            await client.close()
+
+        language = normalize_portal_language(current.get("language"))
+        return {
+            "project_id": project_id,
+            "language": language,
+            "portal_link": build_project_portal_link(project_id, language),
+            "dashboard_locations": ["Overview", "Host guide"],
+        }
+
+    @tool
     async def proposeProjectUpdate(
         changes: list[dict[str, Any]],
         summary: str,
@@ -981,8 +1056,9 @@ def create_agent_graph(
 
     @tool
     async def proposeGoal(content: str) -> dict[str, Any]:
-        """Propose a project goal after interviewing the host. Restate the goal
-        in the host's words. This never writes anything: the host applies it."""
+        """Propose a project goal after helping the host define the setup.
+        Restate the goal in the host's words. This never writes anything: the
+        host applies it."""
         normalized_content = content.strip()
         if not normalized_content:
             raise ValueError("content is required")
@@ -1125,6 +1201,8 @@ def create_agent_graph(
         grepDocs,
         readSkill,
         getProjectSettings,
+        getProjectTags,
+        getPortalLink,
         proposeProjectUpdate,
         proposeCustomVerificationTopic,
         proposeCanvas,

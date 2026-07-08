@@ -1,3 +1,5 @@
+import json
+from typing import Any
 from logging import getLogger
 
 import nest_asyncio
@@ -134,6 +136,101 @@ def generate_conversation_title(
     except (IndexError, AttributeError, KeyError) as e:
         logger.error(f"Error getting response content for title: {e}")
         return ""
+
+
+def _extract_json_payload(content: str) -> Any:
+    stripped = content.strip()
+    if stripped.startswith("```"):
+        stripped = stripped.removeprefix("```json").removeprefix("```").strip()
+        stripped = stripped.removesuffix("```").strip()
+    return json.loads(stripped)
+
+
+def _select_valid_tag_ids_from_response(
+    response_content: str,
+    allowed_tag_ids: set[str],
+    max_tags: int = 3,
+) -> list[str]:
+    try:
+        parsed = _extract_json_payload(response_content)
+    except json.JSONDecodeError:
+        logger.warning("LLM returned invalid JSON for conversation tag assignment")
+        return []
+
+    raw_ids: list[Any]
+    if isinstance(parsed, dict):
+        raw_ids = parsed.get("tag_ids") or parsed.get("tags") or []
+    elif isinstance(parsed, list):
+        raw_ids = parsed
+    else:
+        return []
+
+    selected: list[str] = []
+    for raw_id in raw_ids:
+        tag_id = raw_id.get("id") if isinstance(raw_id, dict) else raw_id
+        if not isinstance(tag_id, str):
+            continue
+        tag_id = tag_id.strip()
+        if tag_id in allowed_tag_ids and tag_id not in selected:
+            selected.append(tag_id)
+        if len(selected) >= max_tags:
+            break
+    return selected
+
+
+def generate_conversation_tag_ids(
+    summary: str,
+    language: str | None,
+    project_tags: list[dict[str, str]],
+) -> list[str]:
+    """Choose existing project tags that fit a conversation summary.
+
+    This never creates tags. It only assigns from the host-defined project tag
+    vocabulary so the result remains a draft for human review.
+    """
+    allowed_tag_ids = {
+        tag["id"]
+        for tag in project_tags
+        if isinstance(tag.get("id"), str) and isinstance(tag.get("text"), str)
+    }
+    if not summary.strip() or not allowed_tag_ids:
+        return []
+
+    language_name = LANGUAGE_NAMES.get(language if language else "en", "English")
+    prompt = render_prompt(
+        "generate_conversation_tag_ids",
+        "en",
+        {
+            "summary": summary,
+            "language_name": language_name,
+            "project_tags": project_tags,
+            "max_tags": 3,
+        },
+    )
+
+    try:
+        response = router_completion(
+            MODELS.MULTI_MODAL_FAST,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+        )
+    except Exception as e:
+        logger.error(f"LiteLLM completion error for tag assignment: {e}")
+        raise
+
+    try:
+        response_content = response.choices[0].message.content
+        if response_content is None:
+            logger.warning("LLM returned None content for tag assignment")
+            return []
+        return _select_valid_tag_ids_from_response(response_content, allowed_tag_ids)
+    except (IndexError, AttributeError, KeyError) as e:
+        logger.error(f"Error getting response content for tag assignment: {e}")
+        return []
 
 
 def validate_segment_id(echo_segment_ids: list[str] | None) -> bool:

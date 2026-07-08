@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	ActionIcon,
 	Alert,
 	Box,
 	Button,
@@ -24,7 +23,6 @@ import {
 	IconAlertCircle,
 	IconChevronDown,
 	IconChevronRight,
-	IconCircleX,
 	IconSend,
 	IconSparkles,
 } from "@tabler/icons-react";
@@ -1502,6 +1500,26 @@ export const AgenticChatPanel = ({
 								>
 									{liveRunStatusText}
 								</Text>
+								<Button
+									type="button"
+									size="compact-xs"
+									radius="xl"
+									variant="subtle"
+									color="red"
+									aria-label={t`Cancel current run`}
+									onPointerDown={armStopControl}
+									onKeyDown={(event) => {
+										if (event.key === "Enter" || event.key === " ") {
+											armStopControl();
+										}
+									}}
+									onClick={() => void handleStop()}
+									disabled={isStopping}
+									leftSection={isStopping ? <Loader size={12} /> : undefined}
+									{...testId("chat-stop-button")}
+								>
+									<Trans>Cancel</Trans>
+								</Button>
 							</Group>
 						</Paper>
 					)}
@@ -1552,33 +1570,6 @@ export const AgenticChatPanel = ({
 									</Text>
 								</Group>
 								<Group gap="xs" wrap="nowrap">
-									{isRunInFlight ? (
-										<Tooltip label={t`Stop this run`} openDelay={400}>
-											<ActionIcon
-												type="button"
-												size="lg"
-												radius="md"
-												variant="subtle"
-												color="red"
-												aria-label={t`Stop this run`}
-												onPointerDown={armStopControl}
-												onKeyDown={(event) => {
-													if (event.key === "Enter" || event.key === " ") {
-														armStopControl();
-													}
-												}}
-												onClick={() => void handleStop()}
-												disabled={isStopping}
-												{...testId("chat-stop-button")}
-											>
-												{isStopping ? (
-													<Loader size={14} />
-												) : (
-													<IconCircleX size={18} />
-												)}
-											</ActionIcon>
-										</Tooltip>
-									) : null}
 									<Button
 										type="submit"
 										size="sm"

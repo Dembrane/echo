@@ -1,4 +1,5 @@
 from typing import Any, Optional, TypedDict, cast
+from urllib.parse import urlparse
 
 import httpx
 
@@ -53,6 +54,45 @@ class ProjectGoalResponse(TypedDict, total=False):
     revisions: list[dict[str, Any]]
 
 
+def portal_base_url_for_api_url(echo_api_url: str) -> str:
+    parsed = urlparse(echo_api_url)
+    hostname = parsed.hostname or ""
+    scheme = parsed.scheme or "https"
+
+    if hostname in {"localhost", "127.0.0.1", "0.0.0.0"}:
+        return "http://localhost:5174"
+
+    explicit_hosts = {
+        "api.echo-next.dembrane.com": "https://portal.echo-next.dembrane.com",
+        "api.echo-testing.dembrane.com": "https://portal.echo-testing.dembrane.com",
+        "api.dembrane.com": "https://portal.dembrane.com",
+    }
+    if hostname in explicit_hosts:
+        return explicit_hosts[hostname]
+
+    if hostname.startswith("api."):
+        return f"{scheme}://portal.{hostname.removeprefix('api.')}"
+    return "https://portal.dembrane.com"
+
+
+def normalize_portal_language(language: Any) -> str:
+    value = str(language or "").strip()
+    if not value or value == "default":
+        return "en"
+    return value
+
+
+def build_project_portal_link(
+    project_id: str,
+    language: Any,
+    echo_api_url: str | None = None,
+) -> str:
+    settings = get_settings()
+    base_url = portal_base_url_for_api_url(echo_api_url or settings.echo_api_url)
+    normalized_language = normalize_portal_language(language)
+    return f"{base_url}/{normalized_language}/{project_id}/start"
+
+
 class EchoClient:
     def __init__(self, bearer_token: Optional[str] = None) -> None:
         settings = get_settings()
@@ -87,6 +127,10 @@ class EchoClient:
     async def get_project_settings(self, project_id: str) -> dict[str, Any]:
         payload = await self.get(f"/agentic/projects/{project_id}/settings")
         return payload if isinstance(payload, dict) else {}
+
+    async def list_project_tags(self, project_id: str) -> list[dict[str, Any]]:
+        payload = await self.get(f"/v2/bff/tags?project_id={project_id}")
+        return payload if isinstance(payload, list) else []
 
     async def get_conversation_transcript(self, conversation_id: str) -> str:
         response = await self._client.get(f"/conversations/{conversation_id}/transcript")
