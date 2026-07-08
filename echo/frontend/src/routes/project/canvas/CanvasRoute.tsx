@@ -5,21 +5,35 @@ import {
 	Badge,
 	Box,
 	Button,
+	Divider,
 	Group,
+	Menu,
 	NumberInput,
 	Paper,
-	Popover,
 	Select,
 	Skeleton,
 	Stack,
 	Text,
 	TextInput,
 	Title,
-	Tooltip,
 } from "@mantine/core";
 import { useDocumentTitle, useFullscreen } from "@mantine/hooks";
-import { addDays, addHours, format, isSameDay } from "date-fns";
-import { Maximize2, MessageCircle, Minimize2, RefreshCw } from "lucide-react";
+import {
+	addDays,
+	addHours,
+	format,
+	formatDistanceToNow,
+	isSameDay,
+} from "date-fns";
+import {
+	Maximize2,
+	MessageCircle,
+	Minimize2,
+	MoreHorizontal,
+	Pause,
+	Play,
+	RefreshCw,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { CanvasFrame } from "@/components/canvas/CanvasFrame";
@@ -32,7 +46,6 @@ import {
 	useCanvasLoopSettingsMutation,
 	useRefreshCanvasMutation,
 } from "@/components/canvas/hooks";
-import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
@@ -63,6 +76,50 @@ function cadenceLine(cadenceMinutes?: number | null): string | null {
 	return t`Updates every ${cadenceMinutes} minutes`;
 }
 
+function relativeTime(value?: string | null): string | null {
+	if (!value) return null;
+	const date = new Date(value);
+	if (Number.isNaN(date.getTime())) return null;
+	return formatDistanceToNow(date, { addSuffix: true });
+}
+
+function freshnessLine({
+	generation,
+	loop,
+}: {
+	generation?: CanvasGeneration | null;
+	loop?: CanvasLoop | null;
+}): string {
+	const updatedAgo = relativeTime(generation?.created_at);
+	const checkedAgo = relativeTime(loop?.last_run_started_at);
+	const status = loop?.status;
+	if (status === "paused") {
+		return updatedAgo ? t`Paused. Updated ${updatedAgo}.` : t`Paused.`;
+	}
+	if (status === "expired" || status === "ended" || status === "stopped") {
+		const expiry = loop?.expires_at ? new Date(loop.expires_at) : null;
+		const stoppedAt =
+			expiry && !Number.isNaN(expiry.getTime())
+				? format(expiry, "EEE MMM d, HH:mm")
+				: null;
+		if (updatedAgo && stoppedAt) {
+			return t`Stopped on ${stoppedAt}. Updated ${updatedAgo}.`;
+		}
+		if (stoppedAt) return t`Stopped on ${stoppedAt}.`;
+		return updatedAgo ? t`Stopped. Updated ${updatedAgo}.` : t`Stopped.`;
+	}
+	if (!generation) {
+		return checkedAgo
+			? t`Checked ${checkedAgo}. A first update will appear when there is enough to show.`
+			: t`Preparing the first update.`;
+	}
+	if (loop?.last_run_status === "no_op" && checkedAgo && updatedAgo) {
+		return t`Checked ${checkedAgo}. Nothing new since your last conversation. Updated ${updatedAgo}.`;
+	}
+	if (updatedAgo) return t`Updated ${updatedAgo}.`;
+	return t`Updated.`;
+}
+
 function toDatetimeLocalValue(date: Date): string {
 	return format(date, "yyyy-MM-dd'T'HH:mm");
 }
@@ -78,16 +135,17 @@ function generationLabel(generation: CanvasGeneration): string {
 	return format(createdAt, "HH:mm");
 }
 
-function FreshnessControl({
+function CanvasLoopSettings({
 	canvasId,
 	disabled,
 	loop,
+	onSaved,
 }: {
 	canvasId: string;
 	disabled?: boolean;
 	loop?: CanvasLoop | null;
+	onSaved?: () => void;
 }) {
-	const [opened, setOpened] = useState(false);
 	const [duration, setDuration] = useState("24h");
 	const [customHours, setCustomHours] = useState(24);
 	const [customExpiry, setCustomExpiry] = useState(
@@ -105,7 +163,6 @@ function FreshnessControl({
 		}
 	}, [loop?.cadence_minutes, loop?.expires_at]);
 
-	const status = loopStatusLine(loop?.status, loop?.expires_at);
 	const cadenceText = cadenceLine(loop?.cadence_minutes);
 	const canEdit =
 		!!loop &&
@@ -126,85 +183,69 @@ function FreshnessControl({
 				cadence_minutes: Number(cadence),
 				expires_at: nextExpiry().toISOString(),
 			},
-			{ onSuccess: () => setOpened(false) },
+			{ onSuccess: onSaved },
 		);
 	};
 
 	return (
-		<Popover
-			opened={opened}
-			onChange={setOpened}
-			position="bottom-start"
-			withArrow
-			shadow="md"
-		>
-			<Popover.Target>
-				<Button
-					size="xs"
-					variant="outline"
-					disabled={!canEdit}
-					onClick={() => setOpened((value) => !value)}
-					{...testId("canvas-freshness-chip")}
-				>
-					{status}
-				</Button>
-			</Popover.Target>
-			<Popover.Dropdown>
-				<Stack gap="sm" w={280}>
-					<Stack gap={2}>
-						<Text size="sm" fw={600}>
-							<Trans>Keep this canvas fresh</Trans>
-						</Text>
-						{cadenceText ? <Text size="xs">{cadenceText}</Text> : null}
-					</Stack>
-					<Select
-						label={t`Stay live for`}
-						value={duration}
-						onChange={(value) => setDuration(value ?? "24h")}
-						data={[
-							{ label: t`8 hours`, value: "8h" },
-							{ label: t`24 hours`, value: "24h" },
-							{ label: t`3 days`, value: "3d" },
-							{ label: t`Custom`, value: "custom" },
-						]}
+		<Stack gap="sm" w={300} p="xs">
+			<Stack gap={2}>
+				<Text size="sm" fw={600}>
+					<Trans>Keep this canvas fresh</Trans>
+				</Text>
+				{cadenceText ? <Text size="xs">{cadenceText}</Text> : null}
+			</Stack>
+			<Select
+				label={t`Stay live for`}
+				value={duration}
+				disabled={!canEdit}
+				onChange={(value) => setDuration(value ?? "24h")}
+				data={[
+					{ label: t`8 hours`, value: "8h" },
+					{ label: t`24 hours`, value: "24h" },
+					{ label: t`3 days`, value: "3d" },
+					{ label: t`Custom`, value: "custom" },
+				]}
+			/>
+			{duration === "custom" ? (
+				<>
+					<NumberInput
+						label={t`Hours from now`}
+						min={1}
+						max={168}
+						value={customHours}
+						disabled={!canEdit}
+						onChange={(value) => setCustomHours(Number(value) || 24)}
 					/>
-					{duration === "custom" ? (
-						<>
-							<NumberInput
-								label={t`Hours from now`}
-								min={1}
-								max={168}
-								value={customHours}
-								onChange={(value) => setCustomHours(Number(value) || 24)}
-							/>
-							<TextInput
-								label={t`Or choose a time`}
-								type="datetime-local"
-								value={customExpiry}
-								onChange={(event) => setCustomExpiry(event.currentTarget.value)}
-							/>
-						</>
-					) : null}
-					<Select
-						label={t`Update rhythm`}
-						value={cadence}
-						onChange={(value) => setCadence(value ?? "5")}
-						data={[
-							{ label: t`Every 5 minutes`, value: "5" },
-							{ label: t`Every 15 minutes`, value: "15" },
-							{ label: t`Every 60 minutes`, value: "60" },
-						]}
+					<TextInput
+						label={t`Or choose a time`}
+						type="datetime-local"
+						value={customExpiry}
+						disabled={!canEdit}
+						onChange={(event) => setCustomExpiry(event.currentTarget.value)}
 					/>
-					<Button
-						onClick={save}
-						loading={mutation.isPending}
-						{...testId("canvas-freshness-save-button")}
-					>
-						<Trans>Save</Trans>
-					</Button>
-				</Stack>
-			</Popover.Dropdown>
-		</Popover>
+				</>
+			) : null}
+			<Select
+				label={t`Update rhythm`}
+				value={cadence}
+				disabled={!canEdit}
+				onChange={(value) => setCadence(value ?? "5")}
+				data={[
+					{ label: t`Every 5 minutes`, value: "5" },
+					{ label: t`Every 15 minutes`, value: "15" },
+					{ label: t`Every 60 minutes`, value: "60" },
+				]}
+			/>
+			<Button
+				onClick={save}
+				loading={mutation.isPending}
+				disabled={!canEdit}
+				{...testId("canvas-freshness-save-button")}
+			>
+				<Trans>Save</Trans>
+			</Button>
+		</Stack>
 	);
 }
 
@@ -328,6 +369,7 @@ export const CanvasRoute = () => {
 	);
 	const displayedGeneration =
 		selectedGeneration ?? canvas?.latest_generation ?? generations[0] ?? null;
+	const [menuOpened, setMenuOpened] = useState(false);
 	const refreshDisabled =
 		refreshMutation.isPending || canvas?.isDevFixture || !canvasId;
 	const loopStatus = canvas?.loop?.status;
@@ -346,6 +388,16 @@ export const CanvasRoute = () => {
 	const newChatMessage = canvas?.name
 		? t`Let's talk about the canvas "${canvas.name}".`
 		: t`Let's talk about this canvas.`;
+	const primaryChatPath =
+		openChatPath ?? (chatBasePath ? `${chatBasePath}/new` : null);
+	const openPrimaryChat = () => {
+		if (!primaryChatPath) return;
+		if (openChatPath) {
+			navigate(openChatPath);
+			return;
+		}
+		navigate(primaryChatPath, { state: { initialMessage: newChatMessage } });
+	};
 
 	if (canvasQuery.isLoading) {
 		return <CanvasLoadingState />;
@@ -359,30 +411,18 @@ export const CanvasRoute = () => {
 						<Title order={2} fw={500}>
 							{canvas?.name ?? t`Canvas`}
 						</Title>
-						{workspaceId && projectId ? (
-							<Breadcrumbs
-								items={[
-									{
-										label: <Trans>Library</Trans>,
-										link: `/w/${workspaceId}/projects/${projectId}/library`,
-									},
-									{ label: canvas?.name ?? t`Canvas` },
-								]}
-							/>
-						) : null}
-						<Group gap="xs" wrap="wrap">
-							{canvasId ? (
-								<FreshnessControl
-									canvasId={canvasId}
-									disabled={canvas?.isDevFixture}
-									loop={canvas?.loop}
-								/>
-							) : null}
-							{cadenceLine(canvas?.loop?.cadence_minutes) ? (
-								<Badge size="sm" variant="light">
-									{cadenceLine(canvas?.loop?.cadence_minutes)}
+						<Group gap="xs" wrap="wrap" {...testId("canvas-freshness-cluster")}>
+							{canvas?.loop ? (
+								<Badge size="sm" variant="outline" tt="none">
+									{loopStatusLine(canvas.loop.status, canvas.loop.expires_at)}
 								</Badge>
 							) : null}
+							<Text size="sm">
+								{freshnessLine({
+									generation: displayedGeneration,
+									loop: canvas?.loop,
+								})}
+							</Text>
 							{canvas?.isDevFixture ? (
 								<Text size="xs">
 									<Trans>Using fixture data.</Trans>
@@ -391,88 +431,119 @@ export const CanvasRoute = () => {
 						</Group>
 					</Stack>
 					<Group gap="xs" justify="flex-end">
-						{openChatPath ? (
+						{primaryChatPath ? (
 							<Button
-								variant="subtle"
 								leftSection={<MessageCircle size={16} />}
-								onClick={() => navigate(openChatPath)}
-								{...testId("canvas-open-chat-button")}
+								onClick={openPrimaryChat}
+								{...testId(
+									openChatPath
+										? "canvas-open-chat-button"
+										: "canvas-new-chat-button",
+								)}
 							>
-								<Trans>Open the chat</Trans>
+								{openChatPath ? (
+									<Trans>Open the chat</Trans>
+								) : (
+									<Trans>New chat about this canvas</Trans>
+								)}
 							</Button>
 						) : null}
-						{chatBasePath ? (
-							<Button
-								variant="subtle"
-								leftSection={<MessageCircle size={16} />}
-								onClick={() =>
-									navigate(`${chatBasePath}/new`, {
-										state: { initialMessage: newChatMessage },
-									})
-								}
-								{...testId("canvas-new-chat-button")}
-							>
-								<Trans>New chat about this canvas</Trans>
-							</Button>
-						) : null}
-						{canvas?.loop ? (
-							<Tooltip
-								label={
-									canvas?.isDevFixture
-										? t`Loop controls will work when the canvas service is ready`
-										: isLoopActive
-											? t`Pause updates`
-											: t`Resume updates`
-								}
-								withArrow
-							>
-								<Button
+						<Menu
+							opened={menuOpened}
+							onChange={setMenuOpened}
+							position="bottom-end"
+							shadow="md"
+							width={340}
+							closeOnItemClick={false}
+						>
+							<Menu.Target>
+								<ActionIcon
 									variant="subtle"
-									disabled={lifecycleDisabled}
-									loading={lifecycleMutation.isPending}
-									onClick={() =>
-										lifecycleMutation.mutate(isLoopActive ? "pause" : "resume")
-									}
-									{...testId("canvas-lifecycle-button")}
+									size="lg"
+									radius="md"
+									aria-label={t`Canvas settings`}
+									{...testId("canvas-actions-menu-button")}
 								>
-									{isLoopActive ? <Trans>Pause</Trans> : <Trans>Resume</Trans>}
-								</Button>
-							</Tooltip>
-						) : null}
-						<Tooltip
-							label={
-								canvas?.isDevFixture
-									? t`Refresh will work when the canvas service is ready`
-									: t`Ask for the latest version`
-							}
-							withArrow
-						>
-							<Button
-								variant="subtle"
-								leftSection={<RefreshCw size={16} />}
-								disabled={refreshDisabled}
-								loading={refreshMutation.isPending}
-								onClick={() => refreshMutation.mutate()}
-								{...testId("canvas-refresh-button")}
-							>
-								<Trans>Refresh now</Trans>
-							</Button>
-						</Tooltip>
-						<Tooltip
-							label={fullscreen ? t`Exit fullscreen` : t`Fullscreen`}
-							withArrow
-						>
-							<ActionIcon
-								variant="subtle"
-								size="lg"
-								radius="md"
-								onClick={toggleFullscreen}
-								aria-label={fullscreen ? t`Exit fullscreen` : t`Fullscreen`}
-								{...testId("canvas-fullscreen-button")}
-							>
-								{fullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-							</ActionIcon>
-						</Tooltip>
+									<MoreHorizontal size={18} />
+								</ActionIcon>
+							</Menu.Target>
+							<Menu.Dropdown>
+								{openChatPath && chatBasePath ? (
+									<Menu.Item
+										leftSection={<MessageCircle size={16} />}
+										onClick={() => {
+											setMenuOpened(false);
+											navigate(`${chatBasePath}/new`, {
+												state: { initialMessage: newChatMessage },
+											});
+										}}
+									>
+										<Trans>New chat about this canvas</Trans>
+									</Menu.Item>
+								) : null}
+								{canvas?.loop ? (
+									<Menu.Item
+										leftSection={
+											isLoopActive ? <Pause size={16} /> : <Play size={16} />
+										}
+										disabled={lifecycleDisabled}
+										onClick={() => {
+											lifecycleMutation.mutate(
+												isLoopActive ? "pause" : "resume",
+											);
+											setMenuOpened(false);
+										}}
+										{...testId("canvas-lifecycle-button")}
+									>
+										{isLoopActive ? (
+											<Trans>Pause updates</Trans>
+										) : (
+											<Trans>Resume updates</Trans>
+										)}
+									</Menu.Item>
+								) : null}
+								<Menu.Item
+									leftSection={<RefreshCw size={16} />}
+									disabled={refreshDisabled}
+									onClick={() => {
+										refreshMutation.mutate();
+										setMenuOpened(false);
+									}}
+									{...testId("canvas-refresh-button")}
+								>
+									<Trans>Refresh now</Trans>
+								</Menu.Item>
+								<Menu.Item
+									leftSection={
+										fullscreen ? (
+											<Minimize2 size={16} />
+										) : (
+											<Maximize2 size={16} />
+										)
+									}
+									onClick={() => {
+										toggleFullscreen();
+										setMenuOpened(false);
+									}}
+									{...testId("canvas-fullscreen-button")}
+								>
+									{fullscreen ? (
+										<Trans>Exit fullscreen</Trans>
+									) : (
+										<Trans>Full screen</Trans>
+									)}
+								</Menu.Item>
+								<Divider my="xs" />
+								{canvasId ? (
+									<CanvasLoopSettings
+										canvasId={canvasId}
+										disabled={canvas?.isDevFixture}
+										loop={canvas?.loop}
+										onSaved={() => setMenuOpened(false)}
+									/>
+								) : null}
+							</Menu.Dropdown>
+						</Menu>
 					</Group>
 				</Group>
 
@@ -487,11 +558,7 @@ export const CanvasRoute = () => {
 					}}
 					{...testId("canvas-frame-container")}
 				>
-					<CanvasFrame
-						generation={displayedGeneration}
-						cadenceMinutes={canvas?.loop?.cadence_minutes}
-						projectId={projectId}
-					/>
+					<CanvasFrame generation={displayedGeneration} projectId={projectId} />
 				</Box>
 
 				<VersionStrip

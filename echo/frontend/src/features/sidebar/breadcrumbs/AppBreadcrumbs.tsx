@@ -1,6 +1,7 @@
 import { CaretRightIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
+import { useCanvas } from "@/components/canvas/hooks";
 import { useChat } from "@/components/chat/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useConversationById } from "@/components/conversation/hooks";
@@ -40,7 +41,7 @@ const WORKSPACE_SETTINGS_LABELS: Record<string, string> = {
 
 const PROJECT_SECTION_LABELS: Record<string, string> = {
 	access: "Access",
-	canvases: "Canvas",
+	canvases: "Library",
 	chats: "Ask",
 	conversation: "Conversation",
 	conversations: "Conversations",
@@ -103,6 +104,7 @@ export const AppBreadcrumbs = () => {
 		useQueryOpts: { enabled: !!params.conversationId },
 	});
 	const chatQuery = useChat(params.chatId ?? "");
+	const canvasQuery = useCanvas(params.canvasId ?? "");
 
 	const workspace = useMemo(
 		() => workspaces.find((w) => w.id === params.workspaceId),
@@ -233,6 +235,12 @@ export const AppBreadcrumbs = () => {
 					if (chatName) {
 						out.push({ label: chatName });
 					}
+				} else if (section === "canvases" && params.canvasId) {
+					out.push({
+						href: `/w/${params.workspaceId}/projects/${params.projectId}/library`,
+						label: PROJECT_SECTION_LABELS.library,
+					});
+					out.push({ label: canvasQuery.data?.name?.trim() || "Canvas" });
 				} else if (
 					section &&
 					section !== "home" &&
@@ -271,6 +279,7 @@ export const AppBreadcrumbs = () => {
 		projectQuery.data?.name,
 		conversationQuery.data,
 		chatQuery.data,
+		canvasQuery.data?.name,
 	]);
 
 	if (crumbs.length === 0) return null;

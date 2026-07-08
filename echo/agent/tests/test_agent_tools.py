@@ -316,6 +316,8 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "a canvas is a living page" in prompt
     assert "expiry plainly" in prompt
     assert "do not volunteer exact cadence" in prompt
+    assert "hard to read" in prompt
+    assert "target_canvas_id" in prompt
     # Setup guidance is convergent, escapable, and proposal-only.
     assert "read interviewing.md first" in prompt
     assert "no announced question count" in prompt

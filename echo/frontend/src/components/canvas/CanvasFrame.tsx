@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Box, Paper, Stack, Text } from "@mantine/core";
-import { formatDistanceToNow } from "date-fns";
+import { Paper, Stack, Text } from "@mantine/core";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
@@ -11,7 +10,6 @@ import { assembleCanvasDocument } from "./kit";
 
 type CanvasFrameProps = {
 	generation?: CanvasGeneration | null;
-	cadenceMinutes?: number | null;
 	projectId?: string | null;
 };
 
@@ -30,23 +28,7 @@ function isHeightMessage(data: unknown): data is {
 	);
 }
 
-function generationAgeLine(
-	generation: CanvasGeneration,
-	cadenceMinutes?: number | null,
-) {
-	if (!cadenceMinutes || cadenceMinutes <= 0) return null;
-	const createdAt = new Date(generation.created_at);
-	if (Number.isNaN(createdAt.getTime())) return null;
-	const staleAfterMs = cadenceMinutes * 2 * 60 * 1000;
-	if (Date.now() - createdAt.getTime() <= staleAfterMs) return null;
-	return t`Last updated ${formatDistanceToNow(createdAt, { addSuffix: true })}`;
-}
-
-export const CanvasFrame = ({
-	generation,
-	cadenceMinutes,
-	projectId,
-}: CanvasFrameProps) => {
+export const CanvasFrame = ({ generation, projectId }: CanvasFrameProps) => {
 	const iframeRef = useRef<HTMLIFrameElement | null>(null);
 	const [height, setHeight] = useState(520);
 	const [brandLogoDataUrl, setBrandLogoDataUrl] = useState<string | null>(null);
@@ -106,10 +88,6 @@ export const CanvasFrame = ({
 		});
 	}, [generation, brandLogoDataUrl, projectId]);
 
-	const staleLine = generation
-		? generationAgeLine(generation, cadenceMinutes)
-		: null;
-
 	if (!generation) {
 		return (
 			<Paper
@@ -153,11 +131,6 @@ export const CanvasFrame = ({
 
 	return (
 		<Stack gap="xs">
-			{staleLine ? (
-				<Text size="sm" fs="italic" {...testId("canvas-frame-stale-line")}>
-					{staleLine}
-				</Text>
-			) : null}
 			<iframe
 				ref={iframeRef}
 				title={t`Canvas preview`}

@@ -795,11 +795,11 @@ msgstr "2. Wanneer een gesprek of rapport plaatsvindt, sturen we de data automat
 #~ msgid "20 seats · 100 h/mo · €1500/mo"
 #~ msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:166
+#: src/routes/project/canvas/CanvasRoute.tsx:205
 msgid "24 hours"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:167
+#: src/routes/project/canvas/CanvasRoute.tsx:206
 msgid "3 days"
 msgstr ""
 
@@ -814,7 +814,7 @@ msgstr "3 maanden geleden"
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 msgstr "3. Uw systeem ontvangt de gegevens en kan erop reageren (bijvoorbeeld opslaan in een database, e-mail verzenden, spreadsheet bijwerken)"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:165
+#: src/routes/project/canvas/CanvasRoute.tsx:204
 msgid "8 hours"
 msgstr ""
 
@@ -844,7 +844,7 @@ msgstr ""
 #~ msgid "A few quick questions"
 #~ msgstr ""
 
-#: src/components/canvas/CanvasFrame.tsx:126
+#: src/components/canvas/CanvasFrame.tsx:107
 msgid "A first version will appear here when it is ready."
 msgstr ""
 
@@ -1891,8 +1891,8 @@ msgid "Ask for Name?"
 msgstr "Vraag om naam?"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:446
-msgid "Ask for the latest version"
-msgstr ""
+#~ msgid "Ask for the latest version"
+#~ msgstr ""
 
 #: src/routes/project/library/LibraryRoute.tsx:169
 msgid "Ask in chat when you want a live view of the conversations. The first canvas will stay here."
@@ -2139,7 +2139,7 @@ msgstr "Terug"
 #~ msgid "Back out this cycle's hour count after a support incident."
 #~ msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:250
+#: src/routes/project/canvas/CanvasRoute.tsx:291
 msgid "Back to live"
 msgstr ""
 
@@ -2509,18 +2509,21 @@ msgstr "Kan geen leeg gesprek toevoegen"
 msgid "Cannot reschedule within 10 minutes of the scheduled time"
 msgstr "Kan niet opnieuw plannen binnen 10 minuten voor het geplande tijdstip"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:317
-#: src/routes/project/canvas/CanvasRoute.tsx:360
-#: src/routes/project/canvas/CanvasRoute.tsx:369
+#: src/routes/project/canvas/CanvasRoute.tsx:358
+#: src/routes/project/canvas/CanvasRoute.tsx:411
 msgid "Canvas"
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:353
+#: src/components/canvas/hooks/index.ts:356
 msgid "Canvas freshness updated"
 msgstr ""
 
-#: src/components/canvas/CanvasFrame.tsx:163
+#: src/components/canvas/CanvasFrame.tsx:139
 msgid "Canvas preview"
+msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:463
+msgid "Canvas settings"
 msgstr ""
 
 #: src/routes/project/library/LibraryRoute.tsx:135
@@ -2700,6 +2703,14 @@ msgstr "Controleer microfoontoegang"
 #: src/routes/auth/CheckYourEmail.tsx:19
 msgid "Check your email"
 msgstr "Controleer je email"
+
+#: src/routes/project/canvas/CanvasRoute.tsx:113
+msgid "Checked {checkedAgo}. A first update will appear when there is enough to show."
+msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:117
+msgid "Checked {checkedAgo}. Nothing new since your last conversation. Updated {updatedAgo}."
+msgstr ""
 
 #: src/components/chat/agenticToolActivity.ts:123
 msgid "Checking live conversations"
@@ -3244,7 +3255,7 @@ msgstr "Sjabloon kon niet worden aangemaakt"
 msgid "Could not create the organisation"
 msgstr "De organisatie kon niet worden aangemaakt"
 
-#: src/components/canvas/hooks/index.ts:282
+#: src/components/canvas/hooks/index.ts:285
 msgid "Could not create this canvas"
 msgstr ""
 
@@ -3289,7 +3300,7 @@ msgstr ""
 msgid "Could not preview this canvas right now."
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:240
+#: src/components/canvas/hooks/index.ts:243
 msgid "Could not refresh this canvas"
 msgstr ""
 
@@ -3317,9 +3328,9 @@ msgstr "De uitnodigings-e-mail kon niet worden verstuurd. Controleer de e-mailco
 msgid "Could not update template"
 msgstr "Sjabloon kon niet worden bijgewerkt"
 
-#: src/components/canvas/hooks/index.ts:304
-#: src/components/canvas/hooks/index.ts:325
-#: src/components/canvas/hooks/index.ts:344
+#: src/components/canvas/hooks/index.ts:307
+#: src/components/canvas/hooks/index.ts:328
+#: src/components/canvas/hooks/index.ts:347
 msgid "Could not update this canvas"
 msgstr ""
 
@@ -3584,7 +3595,7 @@ msgstr "Huidig tarief"
 #~ msgid "custom"
 #~ msgstr "aangepast"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:168
+#: src/routes/project/canvas/CanvasRoute.tsx:207
 #: src/components/project/ProjectPortalEditor.tsx:958
 msgid "Custom"
 msgstr "Aangepast"
@@ -4462,7 +4473,7 @@ msgstr "Ingeschakeld"
 #~ msgstr "Einde van de lijst • Alle {0} gesprekken geladen"
 
 #: src/routes/project/library/LibraryRoute.tsx:25
-#: src/routes/project/canvas/CanvasRoute.tsx:46
+#: src/routes/project/canvas/CanvasRoute.tsx:59
 msgid "Ended"
 msgstr ""
 
@@ -4559,7 +4570,7 @@ msgstr ""
 #~ msgid "enterprise scale."
 #~ msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:267
+#: src/routes/project/canvas/CanvasRoute.tsx:308
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
 #: src/components/conversation/LiveMonitorSection.tsx:352
@@ -4630,15 +4641,15 @@ msgstr "Gebeurtenissen"
 msgid "Events to Listen For"
 msgstr "Gebeurtenissen om te luisteren naar"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:194
+#: src/routes/project/canvas/CanvasRoute.tsx:236
 msgid "Every 15 minutes"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:193
+#: src/routes/project/canvas/CanvasRoute.tsx:235
 msgid "Every 5 minutes"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:195
+#: src/routes/project/canvas/CanvasRoute.tsx:237
 msgid "Every 60 minutes"
 msgstr ""
 
@@ -4705,8 +4716,7 @@ msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Overschrijdt het maximum aantal stoelen. Er gelden extra kosten."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1335
-#: src/routes/project/canvas/CanvasRoute.tsx:462
-#: src/routes/project/canvas/CanvasRoute.tsx:470
+#: src/routes/project/canvas/CanvasRoute.tsx:530
 msgid "Exit fullscreen"
 msgstr "Volledig scherm sluiten"
 
@@ -5296,13 +5306,15 @@ msgstr "vanaf"
 #~ msgid "from {0}"
 #~ msgstr "van {0}"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:532
+msgid "Full screen"
+msgstr ""
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:820
 msgid "Full transcript (when available)"
 msgstr "Volledig transcript (wanneer beschikbaar)"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1335
-#: src/routes/project/canvas/CanvasRoute.tsx:462
-#: src/routes/project/canvas/CanvasRoute.tsx:470
 msgid "Fullscreen"
 msgstr "Volledig scherm"
 
@@ -5707,7 +5719,7 @@ msgstr "Uren"
 #~ msgid "Hours (included)"
 #~ msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:174
+#: src/routes/project/canvas/CanvasRoute.tsx:213
 msgid "Hours from now"
 msgstr ""
 
@@ -6284,7 +6296,7 @@ msgstr ""
 msgid "Just previewed. Give it a moment."
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:233
+#: src/components/canvas/hooks/index.ts:236
 msgid "Just refreshed. Give it a moment."
 msgstr ""
 
@@ -6339,7 +6351,7 @@ msgstr "Mijn abonnement behouden"
 msgid "Keep pending"
 msgstr "In behandeling houden"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:156
+#: src/routes/project/canvas/CanvasRoute.tsx:194
 msgid "Keep this canvas fresh"
 msgstr ""
 
@@ -6406,9 +6418,7 @@ msgid "Last Updated"
 msgstr "Laatst bijgewerkt"
 
 #. placeholder {0}: formatDistanceToNow(updatedAt, { addSuffix: true })
-#. placeholder {0}: formatDistanceToNow(createdAt, { addSuffix: true })
 #: src/routes/project/library/LibraryRoute.tsx:37
-#: src/components/canvas/CanvasFrame.tsx:42
 msgid "Last updated {0}"
 msgstr ""
 
@@ -6476,11 +6486,11 @@ msgstr "Laten we je eerste gesprek horen."
 #~ msgstr "Laten we controleren of we je kunnen horen"
 
 #. placeholder {0}: canvas.name
-#: src/routes/project/canvas/CanvasRoute.tsx:347
+#: src/routes/project/canvas/CanvasRoute.tsx:389
 msgid "Let's talk about the canvas \"{0}\"."
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:348
+#: src/routes/project/canvas/CanvasRoute.tsx:390
 msgid "Let's talk about this canvas."
 msgstr ""
 
@@ -6491,7 +6501,6 @@ msgstr ""
 #: src/routes/project/library/ProjectLibraryView.tsx:32
 #: src/routes/project/library/ProjectLibraryAspect.tsx:43
 #: src/routes/project/library/LibraryRoute.tsx:132
-#: src/routes/project/canvas/CanvasRoute.tsx:366
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:90
 msgid "Library"
 msgstr "Bibliotheek"
@@ -6581,7 +6590,7 @@ msgstr "Gesprekken op een rij zetten"
 msgid "Listing documentation pages"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:244
+#: src/routes/project/canvas/CanvasRoute.tsx:285
 msgid "Live"
 msgstr "Live"
 
@@ -6813,8 +6822,8 @@ msgid "loop"
 msgstr ""
 
 #: src/routes/project/canvas/CanvasRoute.tsx:422
-msgid "Loop controls will work when the canvas service is ready"
-msgstr ""
+#~ msgid "Loop controls will work when the canvas service is ready"
+#~ msgstr ""
 
 #: src/components/conversation/LiveMonitorSection.tsx:340
 #: src/components/conversation/LiveFunnelSection.tsx:139
@@ -7279,7 +7288,8 @@ msgstr "Vereist aandacht"
 msgid "New"
 msgstr "Nieuw"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:415
+#: src/routes/project/canvas/CanvasRoute.tsx:446
+#: src/routes/project/canvas/CanvasRoute.tsx:480
 msgid "New chat about this canvas"
 msgstr ""
 
@@ -7460,7 +7470,7 @@ msgstr "Geen factureringsaccounts voldoen aan de huidige filters."
 msgid "No canvases yet"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:266
+#: src/routes/project/canvas/CanvasRoute.tsx:307
 msgid "No change"
 msgstr ""
 
@@ -8238,7 +8248,7 @@ msgstr "Organisatie openen"
 msgid "Open the {0} from here."
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:401
+#: src/routes/project/canvas/CanvasRoute.tsx:444
 msgid "Open the chat"
 msgstr ""
 
@@ -8338,7 +8348,7 @@ msgstr "Opties"
 msgid "or"
 msgstr "of"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:181
+#: src/routes/project/canvas/CanvasRoute.tsx:221
 msgid "Or choose a time"
 msgstr ""
 
@@ -8837,21 +8847,29 @@ msgstr "Wachtwoorden komen niet overeen"
 #~ msgstr "Plak een organisatie-id om de lijst te beperken"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:438
-msgid "Pause"
-msgstr "Pauze"
+#~ msgid "Pause"
+#~ msgstr "Pauze"
 
 #: src/components/participant/verify/VerifyArtefact.tsx:339
 msgid "Pause reading"
 msgstr "Pauzeer het voorlezen"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:424
+#: src/routes/project/canvas/CanvasRoute.tsx:498
 msgid "Pause updates"
 msgstr ""
 
 #: src/routes/project/library/LibraryRoute.tsx:23
-#: src/routes/project/canvas/CanvasRoute.tsx:44
+#: src/routes/project/canvas/CanvasRoute.tsx:57
 #: src/components/conversation/LiveMonitorSection.tsx:48
 msgid "Paused"
+msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:97
+msgid "Paused."
+msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:97
+msgid "Paused. Updated {updatedAgo}."
 msgstr ""
 
 #: src/components/billing/BillingManager.tsx:769
@@ -9310,7 +9328,11 @@ msgstr "Liever de oude chat? Start een Specifieke details-chat"
 msgid "Preparing a navigation shortcut"
 msgstr ""
 
-#: src/components/canvas/CanvasFrame.tsx:123
+#: src/routes/project/canvas/CanvasRoute.tsx:114
+msgid "Preparing the first update."
+msgstr ""
+
+#: src/components/canvas/CanvasFrame.tsx:104
 msgid "Preparing this canvas"
 msgstr ""
 
@@ -9918,7 +9940,7 @@ msgstr "Vernieuwen"
 msgid "Refresh audit logs"
 msgstr "Auditlogboeken vernieuwen"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:458
+#: src/routes/project/canvas/CanvasRoute.tsx:513
 msgid "Refresh now"
 msgstr ""
 
@@ -9926,7 +9948,7 @@ msgstr ""
 msgid "Refresh ongoing conversations"
 msgstr "Lopende gesprekken vernieuwen"
 
-#: src/components/canvas/hooks/index.ts:243
+#: src/components/canvas/hooks/index.ts:246
 msgid "Refresh started"
 msgstr ""
 
@@ -9937,10 +9959,10 @@ msgstr ""
 #~ msgstr ""
 
 #: src/routes/project/canvas/CanvasRoute.tsx:445
-msgid "Refresh will work when the canvas service is ready"
-msgstr ""
+#~ msgid "Refresh will work when the canvas service is ready"
+#~ msgstr ""
 
-#: src/components/canvas/hooks/index.ts:237
+#: src/components/canvas/hooks/index.ts:240
 msgid "Refresh will work when the canvas service is ready."
 msgstr ""
 
@@ -10394,20 +10416,20 @@ msgstr "Resetten naar standaardinstellingen"
 #~ msgid "Resulting workspace"
 #~ msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:438
-msgid "Resume"
-msgstr "Hervatten"
-
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:145
 msgid "participant.button.stop.resume"
 msgstr "Hervatten"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:438
+#~ msgid "Resume"
+#~ msgstr "Hervatten"
+
 #: src/components/billing/BillingManager.tsx:1510
 msgid "Resume plan"
 msgstr "Abonnement hervatten"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:425
+#: src/routes/project/canvas/CanvasRoute.tsx:500
 msgid "Resume updates"
 msgstr ""
 
@@ -10573,7 +10595,7 @@ msgstr ""
 msgid "Sales invoice issued."
 msgstr "Verkoopfactuur uitgegeven."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:203
+#: src/routes/project/canvas/CanvasRoute.tsx:246
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:204
 #: src/components/training/TrainingRowActions.tsx:197
 #: src/components/settings/LegalBasisSettingsCard.tsx:164
@@ -11681,27 +11703,27 @@ msgstr "Begint"
 msgid "Status"
 msgstr "Status"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:161
+#: src/routes/project/canvas/CanvasRoute.tsx:199
 msgid "Stay live for"
 msgstr ""
 
 #: src/routes/project/library/LibraryRoute.tsx:27
 #: src/routes/project/library/LibraryRoute.tsx:29
-#: src/routes/project/canvas/CanvasRoute.tsx:48
-#: src/routes/project/canvas/CanvasRoute.tsx:50
+#: src/routes/project/canvas/CanvasRoute.tsx:61
+#: src/routes/project/canvas/CanvasRoute.tsx:63
 msgid "Stays up to date"
 msgstr ""
 
 #. placeholder {0}: format(expiry, "HH:mm")
 #. placeholder {0}: format(expiry, "EEE MMM d, HH:mm")
 #: src/routes/project/library/LibraryRoute.tsx:30
-#: src/routes/project/canvas/CanvasRoute.tsx:53
-#: src/routes/project/canvas/CanvasRoute.tsx:58
+#: src/routes/project/canvas/CanvasRoute.tsx:66
+#: src/routes/project/canvas/CanvasRoute.tsx:71
 msgid "Stays up to date until {0}"
 msgstr ""
 
 #. placeholder {0}: format(expiry, "HH:mm")
-#: src/routes/project/canvas/CanvasRoute.tsx:56
+#: src/routes/project/canvas/CanvasRoute.tsx:69
 msgid "Stays up to date until tomorrow {0}"
 msgstr ""
 
@@ -11722,6 +11744,22 @@ msgstr "Stop"
 #: src/components/chat/AgenticChatPanel.tsx:1563
 #~ msgid "Stop this run"
 #~ msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:108
+msgid "Stopped on {stoppedAt}."
+msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:106
+msgid "Stopped on {stoppedAt}. Updated {updatedAgo}."
+msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:109
+msgid "Stopped."
+msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:109
+msgid "Stopped. Updated {updatedAgo}."
+msgstr ""
 
 #: src/components/chat/templates.ts:74
 msgid "Strategic Planning"
@@ -12144,7 +12182,7 @@ msgstr "De pagina waar dit antwoord naar verwijst."
 #~ msgid "The Portal is the website that loads when participants scan the QR code."
 #~ msgstr "De Portal is de website die wordt geladen wanneer deelnemers het QR-code scannen."
 
-#: src/components/canvas/CanvasFrame.tsx:147
+#: src/components/canvas/CanvasFrame.tsx:128
 msgid "The previous versions are still available below."
 msgstr ""
 
@@ -12284,7 +12322,7 @@ msgstr "Dit gedeelte is voor dembrane-personeel. Denk je dat je toegang zou moet
 msgid "participant.modal.s3check.suggestions"
 msgstr "Dit kan gebeuren wanneer een VPN of firewall de verbinding blokkeert. Probeer je VPN uit te schakelen, over te schakelen naar een ander netwerk (bijv. mobiele hotspot) of neem contact op met je IT-afdeling voor hulp."
 
-#: src/components/canvas/CanvasFrame.tsx:144
+#: src/components/canvas/CanvasFrame.tsx:125
 msgid "This canvas could not update."
 msgstr ""
 
@@ -13179,8 +13217,8 @@ msgstr ""
 msgid "Untitled"
 msgstr "Naamloos"
 
-#: src/components/canvas/hooks/index.ts:115
-#: src/components/canvas/hooks/index.ts:141
+#: src/components/canvas/hooks/index.ts:118
+#: src/components/canvas/hooks/index.ts:144
 msgid "Untitled canvas"
 msgstr ""
 
@@ -13224,7 +13262,7 @@ msgstr "Bijwerken"
 #~ msgid "Update Report"
 #~ msgstr "Bijwerken rapport"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:189
+#: src/routes/project/canvas/CanvasRoute.tsx:230
 msgid "Update rhythm"
 msgstr ""
 
@@ -13251,11 +13289,19 @@ msgstr ""
 msgid "Updated {0} · "
 msgstr "Bijgewerkt {0} · "
 
+#: src/routes/project/canvas/CanvasRoute.tsx:119
+msgid "Updated {updatedAgo}."
+msgstr ""
+
+#: src/routes/project/canvas/CanvasRoute.tsx:120
+msgid "Updated."
+msgstr ""
+
 #: src/features/sidebar/views/InboxView.tsx:128
 msgid "Updates"
 msgstr "Updates"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:63
+#: src/routes/project/canvas/CanvasRoute.tsx:76
 msgid "Updates every {cadenceMinutes} minutes"
 msgstr ""
 
@@ -13527,7 +13573,7 @@ msgstr "Gebruik standaard dembrane-logo"
 msgid "Using dembrane in health, education, recruitment, critical infrastructure, law enforcement, or justice? Those are high-risk contexts and need a mandatory training before live use."
 msgstr "Gebruik je dembrane in de zorg, het onderwijs, werving, kritieke infrastructuur, rechtshandhaving of justitie? Dat zijn risicovolle contexten en vereisen een verplichte training voordat je live gaat."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:388
+#: src/routes/project/canvas/CanvasRoute.tsx:427
 msgid "Using fixture data."
 msgstr ""
 
@@ -13640,11 +13686,11 @@ msgstr ""
 msgid "Verifying your email address."
 msgstr "Je e-mailadres wordt geverifieerd."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:77
+#: src/routes/project/canvas/CanvasRoute.tsx:134
 msgid "Version"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:236
+#: src/routes/project/canvas/CanvasRoute.tsx:277
 msgid "Versions"
 msgstr ""
 
@@ -13691,7 +13737,7 @@ msgid "View your responses"
 msgstr "Bekijk je reacties"
 
 #. placeholder {0}: generationLabel(selected)
-#: src/routes/project/canvas/CanvasRoute.tsx:240
+#: src/routes/project/canvas/CanvasRoute.tsx:281
 msgid "Viewing {0}"
 msgstr ""
 

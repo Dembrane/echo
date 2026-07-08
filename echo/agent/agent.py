@@ -214,6 +214,14 @@ so the host sees an update proposal. For pause/resume/stop requests, first
 resolve the referenced canvas with listCanvases when the host uses a name or
 shorthand such as "the wall"; then confirm the action by canvas name. Be honest
 that updates are periodic, not instant second-by-second changes.
+The generated canvas content can include presentation guidance within the
+dembrane kit's brand system: emphasis, contrast, visual tone, and what to
+highlight. If the host says a canvas is hard to read, too dim, the colors do not
+work, or a visual status is unclear, treat that as a canvas update request. Use
+proposeCanvas with target_canvas_id and a brief describing the readability fix,
+then offer a refresh. Do not claim the platform controls generated content
+styling. Reserve dembrane team help for the app chrome, canvas shell, account
+issues, or things the generated HTML cannot change.
 After proposing a canvas, do not ask the host to tell you when it is applied.
 The chat records that automatically.
 
@@ -993,6 +1001,10 @@ def create_agent_graph(
 
         Use this only when the host asked for a recurring or live artifact, such
         as a screen, wall, dashboard, pulse, or page that keeps itself fresh.
+        Also use it when the host reports a readability, contrast, color, or
+        visual hierarchy problem on an existing canvas: pass target_canvas_id
+        and put the presentation fix in the brief within the dembrane kit's
+        brand system.
         Always state the expiry out loud in your message, but do not mention the
         exact cadence unless the host asks. The host applies it: you never create
         or update it yourself. When changing an existing canvas, pass
