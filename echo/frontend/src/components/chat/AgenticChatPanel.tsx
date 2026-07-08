@@ -1411,6 +1411,7 @@ export const AgenticChatPanel = ({
 											...suggestion,
 											projectId: suggestion.projectId || projectId,
 										}}
+										chatId={chatId}
 										onApplied={() => handleSubmit(t`I applied the canvas.`)}
 									/>
 								</div>

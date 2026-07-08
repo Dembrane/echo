@@ -583,6 +583,43 @@ async def test_propose_canvas_returns_structured_proposal():
 
 
 @pytest.mark.asyncio
+async def test_propose_canvas_update_resolves_target_canvas():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        project_conversations_payload_by_transcript_query={},
+        transcripts={},
+        canvases_payload=[
+            {
+                "id": "canvas-1",
+                "name": "Street Feedback Dashboard",
+                "kind": "canvas",
+            }
+        ],
+    )
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["proposeCanvas"].ainvoke(
+        {
+            "target_canvas_id": "street feedback",
+            "name": "Street Feedback Dashboard",
+            "brief": "Use calmer wording and a softer visual hierarchy.",
+        }
+    )
+
+    assert result["type"] == "canvas_proposal"
+    assert result["target_canvas_id"] == "canvas-1"
+    assert result["target_canvas_name"] == "Street Feedback Dashboard"
+    assert factory.instances[0].list_canvases_calls == ["project-1"]
+
+
+@pytest.mark.asyncio
 async def test_propose_canvas_rejects_invalid_inputs():
     tools = _make_doc_tools()
     with pytest.raises(ValueError):

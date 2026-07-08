@@ -32,10 +32,18 @@ export type CanvasListItem = {
 	name: string;
 	kind: "canvas";
 	created_at: string;
+	updated_at?: string | null;
 	latest_generation_at?: string | null;
 	project_id?: string | null;
 	loop?: CanvasLoop | null;
 	isDevFixture?: boolean;
+};
+
+export type CanvasConfig = {
+	brief?: string | null;
+	gather_spec?: Record<string, unknown> | null;
+	cadence_minutes?: number | null;
+	created_at?: string | null;
 };
 
 export type CanvasDetail = {
@@ -43,6 +51,9 @@ export type CanvasDetail = {
 	name: string;
 	kind: "canvas";
 	project_id?: string | null;
+	created_from_chat_id?: string | null;
+	updated_at?: string | null;
+	config?: CanvasConfig | null;
 	latest_generation?: CanvasGeneration | null;
 	loop?: CanvasLoop | null;
 	isDevFixture?: boolean;
@@ -55,6 +66,10 @@ export type CanvasProposal = {
 	gather_spec?: Record<string, unknown> | null;
 	cadence_minutes?: number | null;
 	expires_at?: string | null;
+	target_canvas_id?: string | null;
+	target_canvas_name?: string | null;
+	proposed_at?: string | null;
+	created_from_chat_id?: string | null;
 };
 
 type CanvasDetailResponse =
@@ -100,6 +115,16 @@ function normalizeCanvasResponse(
 		name: String(report.name ?? report.title ?? t`Untitled canvas`),
 		project_id:
 			typeof report.project_id === "string" ? report.project_id : undefined,
+		created_from_chat_id:
+			typeof report.created_from_chat_id === "string"
+				? report.created_from_chat_id
+				: null,
+		updated_at:
+			typeof report.updated_at === "string" ? report.updated_at : null,
+		config:
+			report.config && typeof report.config === "object"
+				? (report.config as CanvasConfig)
+				: null,
 	};
 }
 
@@ -116,6 +141,7 @@ function normalizeCanvasListItem(item: Record<string, unknown>): CanvasListItem 
 		name: String(item.name ?? t`Untitled canvas`),
 		project_id:
 			typeof item.project_id === "string" ? item.project_id : undefined,
+		updated_at: typeof item.updated_at === "string" ? item.updated_at : null,
 	};
 }
 
@@ -247,6 +273,7 @@ export function useCreateCanvasMutation() {
 				brief: proposal.brief,
 				cadence_minutes: proposal.cadence_minutes ?? undefined,
 				expires_at: proposal.expires_at,
+				created_from_chat_id: proposal.created_from_chat_id ?? undefined,
 				gather_spec: proposal.gather_spec ?? undefined,
 				name: proposal.name,
 				project_id: proposal.projectId,
@@ -259,6 +286,32 @@ export function useCreateCanvasMutation() {
 				queryKey: ["project", proposal.projectId, "canvases"],
 			});
 			queryClient.setQueryData(["canvas", canvas.id], canvas);
+		},
+	});
+}
+
+export function useUpdateCanvasMutation() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (proposal: CanvasProposal & { target_canvas_id: string }) =>
+			bff.patch<CanvasDetail>(`/canvases/${proposal.target_canvas_id}`, {
+				brief: proposal.brief,
+				cadence_minutes: proposal.cadence_minutes ?? undefined,
+				gather_spec: proposal.gather_spec ?? undefined,
+				name: proposal.name,
+			}),
+		onError: (error: BffError) => {
+			toast.error(error.message || t`Could not update this canvas`);
+		},
+		onSuccess: (canvas, proposal) => {
+			queryClient.invalidateQueries({
+				queryKey: ["project", proposal.projectId, "canvases"],
+			});
+			queryClient.setQueryData(["canvas", canvas.id], canvas);
+			queryClient.invalidateQueries({ queryKey: ["canvas", canvas.id] });
+			queryClient.invalidateQueries({
+				queryKey: ["canvas", canvas.id, "generations"],
+			});
 		},
 	});
 }

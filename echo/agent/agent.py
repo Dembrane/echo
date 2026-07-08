@@ -207,7 +207,10 @@ such as a wall, pulse, dashboard, or page that keeps itself fresh. Always say th
 expiry plainly. Do not volunteer exact cadence or interval minutes unless the
 host asks for that detail; say it keeps itself fresh or updates on the next
 refresh. The host applies the proposal, and you can list canvases or pause,
-resume, and stop their loops by chat. For pause/resume/stop requests, first
+resume, stop, and propose updates to their loops by chat. When the host asks to
+change an existing canvas, first resolve the referenced canvas with listCanvases
+or proposeCanvas target_canvas_id, then call proposeCanvas with target_canvas_id
+so the host sees an update proposal. For pause/resume/stop requests, first
 resolve the referenced canvas with listCanvases when the host uses a name or
 shorthand such as "the wall"; then confirm the action by canvas name. Be honest
 that updates are periodic, not instant second-by-second changes.
@@ -972,14 +975,17 @@ def create_agent_graph(
         gather_window_minutes: int = 60,
         cadence_minutes: int = 5,
         expires_in_hours: int = 8,
+        target_canvas_id: str = "",
     ) -> dict[str, Any]:
-        """Propose a living canvas for the host to apply.
+        """Propose a living canvas for the host to apply or apply as an update.
 
         Use this only when the host asked for a recurring or live artifact, such
         as a screen, wall, dashboard, pulse, or page that keeps itself fresh.
         Always state the expiry out loud in your message, but do not mention the
         exact cadence unless the host asks. The host applies it: you never create
-        it yourself.
+        or update it yourself. When changing an existing canvas, pass
+        target_canvas_id as the id or unique canvas name/reference; the tool
+        resolves it and returns an update proposal payload.
         """
         normalized_name = name.strip()
         normalized_brief = brief.strip()
@@ -996,7 +1002,7 @@ def create_agent_graph(
 
         window_minutes = max(1, min(int(gather_window_minutes or 60), 60 * 24 * 14))
         expires_at = datetime.now(timezone.utc) + timedelta(hours=expires_in_hours)
-        return {
+        payload = {
             "type": "canvas_proposal",
             "name": normalized_name,
             "brief": normalized_brief,
@@ -1005,6 +1011,11 @@ def create_agent_graph(
             "expires_at": expires_at.isoformat(),
             "visible_to_user": True,
         }
+        if target_canvas_id.strip():
+            resolved_canvas_id, resolved_name = await _resolve_canvas_id(target_canvas_id)
+            payload["target_canvas_id"] = resolved_canvas_id
+            payload["target_canvas_name"] = resolved_name
+        return payload
 
     @tool
     async def sendProgressUpdate(update: str, next_steps: str = "") -> dict[str, Any]:

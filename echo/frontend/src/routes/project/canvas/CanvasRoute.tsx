@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle, useFullscreen } from "@mantine/hooks";
 import { format } from "date-fns";
-import { Maximize2, Minimize2, RefreshCw } from "lucide-react";
+import { Maximize2, MessageCircle, Minimize2, RefreshCw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { CanvasFrame } from "@/components/canvas/CanvasFrame";
@@ -27,6 +27,7 @@ import {
 	useRefreshCanvasMutation,
 } from "@/components/canvas/hooks";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 
 function loopStatusLine(
@@ -136,7 +137,11 @@ function CanvasLoadingState() {
 }
 
 export const CanvasRoute = () => {
-	const { canvasId } = useParams<{ canvasId: string }>();
+	const { canvasId, workspaceId } = useParams<{
+		canvasId: string;
+		workspaceId: string;
+	}>();
+	const navigate = useI18nNavigate();
 	const canvasQuery = useCanvas(canvasId ?? "");
 	const generationsQuery = useCanvasGenerations(canvasId ?? "");
 	const refreshMutation = useRefreshCanvasMutation(canvasId ?? "");
@@ -171,6 +176,18 @@ export const CanvasRoute = () => {
 	const isLoopActive = loopStatus === "active";
 	const lifecycleDisabled =
 		lifecycleMutation.isPending || canvas?.isDevFixture || !canvasId;
+	const projectId = canvas?.project_id;
+	const chatBasePath =
+		workspaceId && projectId
+			? `/w/${workspaceId}/projects/${projectId}/chats`
+			: null;
+	const openChatPath =
+		chatBasePath && canvas?.created_from_chat_id
+			? `${chatBasePath}/${canvas.created_from_chat_id}`
+			: null;
+	const newChatMessage = canvas?.name
+		? t`Let's talk about the canvas "${canvas.name}".`
+		: t`Let's talk about this canvas.`;
 
 	if (canvasQuery.isLoading) {
 		return <CanvasLoadingState />;
@@ -196,6 +213,30 @@ export const CanvasRoute = () => {
 						</Group>
 					</Stack>
 					<Group gap="xs" justify="flex-end">
+						{openChatPath ? (
+							<Button
+								variant="subtle"
+								leftSection={<MessageCircle size={16} />}
+								onClick={() => navigate(openChatPath)}
+								{...testId("canvas-open-chat-button")}
+							>
+								<Trans>Open the chat</Trans>
+							</Button>
+						) : null}
+						{chatBasePath ? (
+							<Button
+								variant="subtle"
+								leftSection={<MessageCircle size={16} />}
+								onClick={() =>
+									navigate(`${chatBasePath}/new`, {
+										state: { initialMessage: newChatMessage },
+									})
+								}
+								{...testId("canvas-new-chat-button")}
+							>
+								<Trans>New chat about this canvas</Trans>
+							</Button>
+						) : null}
 						{canvas?.loop ? (
 							<Tooltip
 								label={

@@ -212,8 +212,15 @@ async def _generate_html(
     *, brief: str, previous_html: str | None, gather_bundle: dict[str, Any]
 ) -> str:
     project = gather_bundle.get("project") or {}
+    sample_instruction = (
+        "SAMPLE MODE\nThe DATA uses sample conversations for this preview. The generated "
+        "HTML must visibly say: Sample conversations, your real conversations replace these."
+        if gather_bundle.get("sample_mode")
+        else ""
+    )
     user = "\n\n".join(
-        [
+        part
+        for part in [
             "PROJECT CONTEXT\n"
             f"name: {project.get('name') or 'untitled'}\n"
             f"language: {project.get('language') or 'en'}\n"
@@ -227,8 +234,10 @@ async def _generate_html(
                 else "None yet. Create a stable layout that can be updated on later ticks."
             )
             + "\nIf a previous document exists, keep layout and section order stable.",
+            sample_instruction,
             "DATA\n" + json.dumps(gather_bundle, ensure_ascii=False, indent=2),
         ]
+        if part
     )
     response = await arouter_completion(
         MODELS.MULTI_MODAL_FAST,

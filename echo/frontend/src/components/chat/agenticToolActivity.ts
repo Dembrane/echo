@@ -389,6 +389,9 @@ export type ParsedCanvasSuggestion = {
 	gather_spec?: Record<string, unknown> | null;
 	cadence_minutes?: number | null;
 	expires_at?: string | null;
+	target_canvas_id?: string | null;
+	target_canvas_name?: string | null;
+	proposed_at?: string | null;
 };
 
 /** Returns the structured suggestion when a completed tool activity is a
@@ -417,7 +420,16 @@ export const parseCanvasSuggestion = (
 					? (payload.gather_spec as Record<string, unknown>)
 					: null,
 			name,
+			proposed_at: activity.timestamp,
 			projectId: String(payload.project_id ?? ""),
+			target_canvas_id:
+				typeof payload.target_canvas_id === "string"
+					? payload.target_canvas_id
+					: null,
+			target_canvas_name:
+				typeof payload.target_canvas_name === "string"
+					? payload.target_canvas_name
+					: null,
 		};
 	} catch {
 		return null;
