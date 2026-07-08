@@ -59,7 +59,11 @@ async def test_tick_no_op_when_no_new_content(monkeypatch) -> None:
         return {"id": "cfg1", "brief": "brief", "gather_spec": {}, "cadence_minutes": 5}
 
     async def _gather(**kwargs) -> dict[str, Any]:  # noqa: ARG001
-        return {"latest_content_at": "2026-07-07T10:00:00+00:00", "project": {}, "conversations": []}
+        return {
+            "latest_content_at": "2026-07-07T10:00:00+00:00",
+            "project": {},
+            "conversations": [],
+        }
 
     async def _enqueue(loop: dict[str, Any]) -> None:  # noqa: ARG001
         return None
@@ -85,7 +89,11 @@ async def test_tick_error_stores_error_generation_and_pauses_after_three(monkeyp
         return {"id": "cfg1", "brief": "brief", "gather_spec": {}, "cadence_minutes": 5}
 
     async def _gather(**kwargs) -> dict[str, Any]:  # noqa: ARG001
-        return {"latest_content_at": "2026-07-07T10:20:00+00:00", "project": {}, "conversations": []}
+        return {
+            "latest_content_at": "2026-07-07T10:20:00+00:00",
+            "project": {},
+            "conversations": [],
+        }
 
     async def _generate(**kwargs) -> str:  # noqa: ARG001
         return "garbage"
@@ -105,6 +113,26 @@ async def test_tick_error_stores_error_generation_and_pauses_after_three(monkeyp
     assert fake.created["canvas_generation"][0]["status"] == "error"
     assert fake.created["agent_loop_run"][0]["status"] == "error"
     assert ("agent_loop", "loop1", {"failure_count": 3, "status": "paused"}) in fake.updated
+
+
+@pytest.mark.asyncio
+async def test_tick_missing_ids_records_error_run_without_generation(monkeypatch) -> None:
+    fake = _FakeDirectus()
+    fake.items["agent_loop"]["loop1"]["report_id"] = None
+
+    async def _enqueue(loop: dict[str, Any]) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+
+    result = await ticks.run_tick("loop1", "scheduled")
+
+    assert result["status"] == "error"
+    assert "canvas_generation" not in fake.created
+    assert fake.created["agent_loop_run"][0]["status"] == "error"
+    assert fake.created["agent_loop_run"][0]["generation_id"] is None
+    assert "missing required ids" in fake.created["agent_loop_run"][0]["detail"]
 
 
 @pytest.mark.asyncio

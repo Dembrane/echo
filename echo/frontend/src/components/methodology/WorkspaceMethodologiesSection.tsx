@@ -223,143 +223,166 @@ export const WorkspaceMethodologiesSection = ({
 				)}
 			</Stack>
 
-			<Modal
-				opened={newOpen}
-				onClose={reset}
-				title={t`New methodology`}
-				{...testId("methodology-new-modal")}
-			>
-				<Stack gap="sm">
-					<TextInput
-						label={t`Name`}
-						value={form.name}
-						onChange={(event) =>
-							setForm((current) => ({ ...current, name: event.currentTarget.value }))
-						}
-						{...testId("methodology-new-name")}
-					/>
-					<TextInput
-						label={t`Description`}
-						value={form.description}
-						onChange={(event) =>
-							setForm((current) => ({
-								...current,
-								description: event.currentTarget.value,
-							}))
-						}
-						{...testId("methodology-new-description")}
-					/>
-					<Textarea
-						label={t`Framing`}
-						value={form.framing}
-						autosize
-						minRows={3}
-						onChange={(event) =>
-							setForm((current) => ({
-								...current,
-								framing: event.currentTarget.value,
-							}))
-						}
-						{...testId("methodology-new-framing")}
-					/>
-					<Group justify="flex-end" gap="xs">
-						<Button variant="subtle" onClick={reset}>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button
-							loading={createMutation.isPending}
-							onClick={() => void createMethodology()}
-							{...testId("methodology-new-save")}
-						>
-							<Trans>Create</Trans>
-						</Button>
-					</Group>
-				</Stack>
-			</Modal>
-
-			<Modal
-				opened={!!editing}
-				onClose={reset}
-				title={t`Edit methodology`}
-				size="lg"
-				{...testId("methodology-edit-modal")}
-			>
-				<Stack gap="sm">
-					{detailQuery.isLoading ? (
-						<Group gap="sm">
-							<Loader size="xs" />
-							<Text size="sm">
-								<Trans>Loading methodology</Trans>
-							</Text>
+			{newOpen ? (
+				<Modal
+					opened
+					onClose={reset}
+					title={t`New methodology`}
+					trapFocus={false}
+					{...testId("methodology-new-modal")}
+				>
+					<Stack gap="sm" {...testId("methodology-new-form")}>
+						<TextInput
+							label={t`Name`}
+							value={form.name}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									name: event.currentTarget.value,
+								}))
+							}
+							{...testId("methodology-new-name")}
+						/>
+						<TextInput
+							label={t`Description`}
+							value={form.description}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									description: event.currentTarget.value,
+								}))
+							}
+							{...testId("methodology-new-description")}
+						/>
+						<Textarea
+							label={t`Framing`}
+							value={form.framing}
+							autosize
+							minRows={3}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									framing: event.currentTarget.value,
+								}))
+							}
+							{...testId("methodology-new-framing")}
+						/>
+						<Group justify="flex-end" gap="xs">
+							<Button
+								variant="subtle"
+								onClick={reset}
+								{...testId("methodology-new-cancel")}
+							>
+								<Trans>Cancel</Trans>
+							</Button>
+							<Button
+								loading={createMutation.isPending}
+								onClick={() => void createMethodology()}
+								{...testId("methodology-new-save")}
+							>
+								<Trans>Create</Trans>
+							</Button>
 						</Group>
-					) : null}
-					<TextInput
-						label={t`Name`}
-						value={form.name}
-						onChange={(event) =>
-							setForm((current) => ({ ...current, name: event.currentTarget.value }))
-						}
-						{...testId("methodology-edit-name")}
-					/>
-					<TextInput
-						label={t`Description`}
-						value={form.description}
-						onChange={(event) =>
-							setForm((current) => ({
-								...current,
-								description: event.currentTarget.value,
-							}))
-						}
-						{...testId("methodology-edit-description")}
-					/>
-					<Textarea
-						label={t`Framing`}
-						value={form.framing}
-						autosize
-						minRows={3}
-						onChange={(event) =>
-							setForm((current) => ({
-								...current,
-								framing: event.currentTarget.value,
-							}))
-						}
-						{...testId("methodology-edit-framing")}
-					/>
-					<Textarea
-						label={t`Content`}
-						value={form.content}
-						autosize
-						minRows={5}
-						onChange={(event) =>
-							setForm((current) => ({
-								...current,
-								content: event.currentTarget.value,
-							}))
-						}
-						{...testId("methodology-edit-content")}
-					/>
-					<TextInput
-						label={t`History note`}
-						value={form.note}
-						onChange={(event) =>
-							setForm((current) => ({ ...current, note: event.currentTarget.value }))
-						}
-						{...testId("methodology-edit-note")}
-					/>
-					<Group justify="flex-end" gap="xs">
-						<Button variant="subtle" onClick={reset}>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button
-							loading={editMutation.isPending}
-							onClick={() => void saveMethodology()}
-							{...testId("methodology-edit-save")}
-						>
-							<Trans>Save</Trans>
-						</Button>
-					</Group>
-				</Stack>
-			</Modal>
+					</Stack>
+				</Modal>
+			) : null}
+
+			{editing ? (
+				<Modal
+					opened
+					onClose={reset}
+					title={t`Edit methodology`}
+					size="lg"
+					trapFocus={false}
+					{...testId("methodology-edit-modal")}
+				>
+					<Stack gap="sm" {...testId("methodology-edit-form")}>
+						{detailQuery.isLoading ? (
+							<Group gap="sm">
+								<Loader size="xs" />
+								<Text size="sm">
+									<Trans>Loading methodology</Trans>
+								</Text>
+							</Group>
+						) : null}
+						<TextInput
+							label={t`Name`}
+							value={form.name}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									name: event.currentTarget.value,
+								}))
+							}
+							{...testId("methodology-edit-name")}
+						/>
+						<TextInput
+							label={t`Description`}
+							value={form.description}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									description: event.currentTarget.value,
+								}))
+							}
+							{...testId("methodology-edit-description")}
+						/>
+						<Textarea
+							label={t`Framing`}
+							value={form.framing}
+							autosize
+							minRows={3}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									framing: event.currentTarget.value,
+								}))
+							}
+							{...testId("methodology-edit-framing")}
+						/>
+						<Textarea
+							label={t`Content`}
+							value={form.content}
+							autosize
+							minRows={5}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									content: event.currentTarget.value,
+								}))
+							}
+							{...testId("methodology-edit-content")}
+						/>
+						<TextInput
+							label={t`History note`}
+							value={form.note}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									note: event.currentTarget.value,
+								}))
+							}
+							{...testId("methodology-edit-note")}
+						/>
+						<Group justify="flex-end" gap="xs">
+							<Button
+								variant="subtle"
+								onClick={reset}
+								{...testId("methodology-edit-cancel")}
+							>
+								<Trans>Cancel</Trans>
+							</Button>
+							<Button
+								loading={editMutation.isPending}
+								onClick={() => void saveMethodology()}
+								{...testId("methodology-edit-save")}
+							>
+								<Trans>Save</Trans>
+							</Button>
+						</Group>
+					</Stack>
+				</Modal>
+			) : null}
 		</Paper>
 	);
 };
