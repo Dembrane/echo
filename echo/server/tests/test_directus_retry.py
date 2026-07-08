@@ -12,6 +12,7 @@ sleep, and a 4th request. Desired contract:
 - transport errors raise after exhausting retries
 """
 
+import threading
 from unittest.mock import patch
 
 import httpx
@@ -227,3 +228,24 @@ async def test_get_item_raises_on_non_forbidden_403():
     with patch("dembrane.directus_async.asyncio.sleep"):
         with pytest.raises(DirectusBadRequest):
             await client.get_item("conversation", "abc")
+
+
+def test_async_client_uses_separate_httpx_clients_per_event_loop():
+    client = AsyncDirectusClient(url="http://directus.test", token="t")
+    seen: list[int] = []
+
+    async def _capture() -> None:
+        seen.append(id(client._get_client()))  # noqa: SLF001
+
+    def _run_in_thread() -> None:
+        import asyncio
+
+        asyncio.run(_capture())
+
+    _run_in_thread()
+    thread = threading.Thread(target=_run_in_thread)
+    thread.start()
+    thread.join()
+
+    assert len(seen) == 2
+    assert seen[0] != seen[1]

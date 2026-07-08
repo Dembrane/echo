@@ -51,10 +51,7 @@ def _choice_text(response: Any) -> str:
     if isinstance(content, str):
         return content
     if isinstance(response, dict):
-        return (
-            ((response.get("choices") or [{}])[0].get("message") or {}).get("content")
-            or ""
-        )
+        return ((response.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
     return ""
 
 
@@ -150,7 +147,9 @@ async def _latest_config(report_id: str) -> dict[str, Any]:
     return config
 
 
-async def _generate_html(*, brief: str, previous_html: str | None, gather_bundle: dict[str, Any]) -> str:
+async def _generate_html(
+    *, brief: str, previous_html: str | None, gather_bundle: dict[str, Any]
+) -> str:
     project = gather_bundle.get("project") or {}
     user = "\n\n".join(
         [
@@ -208,13 +207,16 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
         )
         return {"status": "no_op", "run": run}
 
-    report_id = _as_id(loop.get("report_id"))
-    project_id = _as_id(loop.get("project_id"))
-    acting_user_id = str(loop.get("acting_directus_user_id") or "")
-    if not report_id or not project_id or not acting_user_id:
-        raise RuntimeError("Canvas loop is missing required ids")
-
+    report_id: str | None = None
+    project_id: str | None = None
+    acting_user_id = ""
     try:
+        report_id = _as_id(loop.get("report_id"))
+        project_id = _as_id(loop.get("project_id"))
+        acting_user_id = str(loop.get("acting_directus_user_id") or "")
+        if not report_id or not project_id or not acting_user_id:
+            raise RuntimeError("Canvas loop is missing required ids")
+
         config = await _latest_config(report_id)
         latest_ok = await _latest_ok_generation(report_id)
         gather_bundle = await execute_gather_spec(
@@ -227,7 +229,10 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
         if (
             tick_kind != "manual"
             and latest_ok
-            and (not latest_content_at or (latest_generation_at and latest_content_at <= latest_generation_at))
+            and (
+                not latest_content_at
+                or (latest_generation_at and latest_content_at <= latest_generation_at)
+            )
         ):
             run = await _create_run(
                 loop_id=loop_id,
@@ -274,25 +279,27 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
         return {"status": "ok", "generation": generation, "run": run}
     except (CanvasReaderAccessDenied, CanvasSanitizationError, Exception) as exc:
         detail = str(exc)
-        generation = (
-            await async_directus.create_item(
-                "canvas_generation",
-                {
-                    "id": generate_uuid(),
-                    "report_id": report_id,
-                    "config_revision_id": _as_id((locals().get("config") or {}).get("id")),
-                    "content_html": "",
-                    "status": "error",
-                    "tick_kind": tick_kind,
-                    "detail": detail[:5000],
-                },
-            )
-        )["data"]
+        generation = None
+        if report_id:
+            generation = (
+                await async_directus.create_item(
+                    "canvas_generation",
+                    {
+                        "id": generate_uuid(),
+                        "report_id": report_id,
+                        "config_revision_id": _as_id((locals().get("config") or {}).get("id")),
+                        "content_html": "",
+                        "status": "error",
+                        "tick_kind": tick_kind,
+                        "detail": detail[:5000],
+                    },
+                )
+            )["data"]
         run = await _create_run(
             loop_id=loop_id,
             status="error",
             detail=detail[:5000],
-            generation_id=str(generation["id"]),
+            generation_id=str(generation["id"]) if generation else None,
             started_at=started_at,
         )
         await _update_loop_after_tick(loop, status="error")

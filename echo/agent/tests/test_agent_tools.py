@@ -1235,10 +1235,54 @@ async def test_canvas_loop_tools_call_expected_actions():
     assert pause["canvas_id"] == "canvas-1"
     assert resume["loop"]["status"] == "paused"
     assert stop["loop"]["status"] == "paused"
-    assert [instance.canvas_loop_calls[0]["action"] for instance in factory.instances] == [
+    update_calls = [
+        instance.canvas_loop_calls[0]["action"]
+        for instance in factory.instances
+        if instance.canvas_loop_calls
+    ]
+    assert update_calls == [
         "pause",
         "resume",
         "stop",
+    ]
+    assert all(instance.closed for instance in factory.instances)
+
+
+@pytest.mark.asyncio
+async def test_canvas_loop_tool_resolves_unique_name_reference():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        canvases_payload=[
+            {
+                "id": "canvas-1",
+                "name": "Live Emerging Themes Wall",
+                "loop": {"status": "active"},
+            },
+        ],
+        canvas_loop_response={
+            "status": "paused",
+            "expires_at": "later",
+            "cadence_minutes": 5,
+        },
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    pause = await tools["pauseCanvasLoop"].ainvoke({"canvas_id": "wall"})
+
+    assert pause["canvas_id"] == "canvas-1"
+    assert pause["canvas_name"] == "Live Emerging Themes Wall"
+    assert factory.instances[0].list_canvases_calls == ["project-1"]
+    assert factory.instances[1].canvas_loop_calls == [
+        {"project_id": "project-1", "canvas_id": "canvas-1", "action": "pause"}
     ]
     assert all(instance.closed for instance in factory.instances)
 
