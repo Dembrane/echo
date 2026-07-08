@@ -316,6 +316,9 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "overview: portal link and qr code" in prompt
     assert "host guide: guidance for sharing the portal" in prompt
     assert "never describe dashboard navigation beyond these surfaces" in prompt
+    # Proposal cards live in the chat, never "in your Library".
+    assert "the proposal card appears right here in" in prompt
+    assert "never tell the host the proposal is in their library" in prompt
     assert "give the actual link via getportallink" in prompt
     assert "never invent tabs, buttons, or menus" in prompt
     # The agent never applies changes itself
