@@ -858,7 +858,7 @@ msgstr "{conversationCount} selected"
 msgid "{count} history entries"
 msgstr ""
 
-#: src/components/chat/CanvasSuggestionCard.tsx:103
+#: src/components/chat/CanvasSuggestionCard.tsx:108
 msgid "{currentCadence} min"
 msgstr ""
 
@@ -923,7 +923,7 @@ msgstr ""
 msgid "{name}'s transcript excerpt"
 msgstr ""
 
-#: src/components/chat/CanvasSuggestionCard.tsx:104
+#: src/components/chat/CanvasSuggestionCard.tsx:109
 msgid "{nextCadence} min"
 msgstr ""
 
@@ -1186,11 +1186,11 @@ msgstr "2. When a conversation or report event happens, we automatically send th
 #~ msgid "20 seats · 100 h/mo · €1500/mo"
 #~ msgstr "20 seats · 100 h/mo · €1500/mo"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:205
+#: src/routes/project/canvas/CanvasRoute.tsx:207
 msgid "24 hours"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:206
+#: src/routes/project/canvas/CanvasRoute.tsx:208
 msgid "3 days"
 msgstr ""
 
@@ -1206,7 +1206,7 @@ msgstr "3 months ago"
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 msgstr "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:204
+#: src/routes/project/canvas/CanvasRoute.tsx:206
 msgid "8 hours"
 msgstr ""
 
@@ -1238,7 +1238,7 @@ msgstr ""
 #~ msgid "A few quick questions"
 #~ msgstr ""
 
-#: src/components/canvas/CanvasFrame.tsx:107
+#: src/components/canvas/CanvasFrame.tsx:109
 msgid "A first version will appear here when it is ready."
 msgstr ""
 
@@ -2106,7 +2106,7 @@ msgstr "Appearance"
 #~ msgid "Applied"
 #~ msgstr ""
 
-#: src/components/chat/CanvasSuggestionCard.tsx:274
+#: src/components/chat/CanvasSuggestionCard.tsx:279
 msgid "Applies this wording and refresh behavior to the existing canvas."
 msgstr ""
 
@@ -2118,7 +2118,7 @@ msgstr ""
 #: src/components/view/CreateViewForm.tsx:153
 #: src/components/goal/GoalSuggestionCard.tsx:122
 #: src/components/common/ImageCropModal.tsx:148
-#: src/components/chat/CanvasSuggestionCard.tsx:355
+#: src/components/chat/CanvasSuggestionCard.tsx:362
 msgid "Apply"
 msgstr "Apply"
 
@@ -2574,7 +2574,7 @@ msgstr "Back"
 #~ msgid "Back out this cycle's hour count after a support incident."
 #~ msgstr "Back out this cycle's hour count after a support incident."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:291
+#: src/routes/project/canvas/CanvasRoute.tsx:293
 msgid "Back to live"
 msgstr ""
 
@@ -2778,7 +2778,7 @@ msgstr "Breakdown · {0} active"
 msgid "Breakdown by tier"
 msgstr "Breakdown by tier"
 
-#: src/components/chat/CanvasSuggestionCard.tsx:93
+#: src/components/chat/CanvasSuggestionCard.tsx:98
 msgid "Brief"
 msgstr ""
 
@@ -2969,20 +2969,20 @@ msgstr "Cannot add empty conversation"
 msgid "Cannot reschedule within 10 minutes of the scheduled time"
 msgstr "Cannot reschedule within 10 minutes of the scheduled time"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:358
-#: src/routes/project/canvas/CanvasRoute.tsx:411
+#: src/routes/project/canvas/CanvasRoute.tsx:360
+#: src/routes/project/canvas/CanvasRoute.tsx:422
 msgid "Canvas"
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:356
+#: src/components/canvas/hooks/index.ts:364
 msgid "Canvas freshness updated"
 msgstr ""
 
-#: src/components/canvas/CanvasFrame.tsx:139
+#: src/components/canvas/CanvasFrame.tsx:141
 msgid "Canvas preview"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:463
+#: src/routes/project/canvas/CanvasRoute.tsx:517
 msgid "Canvas settings"
 msgstr ""
 
@@ -3169,11 +3169,11 @@ msgstr "Check microphone access"
 msgid "Check your email"
 msgstr "Check your email"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:113
+#: src/routes/project/canvas/CanvasRoute.tsx:115
 msgid "Checked {checkedAgo}. A first update will appear when there is enough to show."
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:117
+#: src/routes/project/canvas/CanvasRoute.tsx:119
 msgid "Checked {checkedAgo}. Nothing new since your last conversation. Updated {updatedAgo}."
 msgstr ""
 
@@ -3740,7 +3740,7 @@ msgstr ""
 msgid "Could not create the organisation"
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:285
+#: src/components/canvas/hooks/index.ts:293
 msgid "Could not create this canvas"
 msgstr ""
 
@@ -3781,11 +3781,11 @@ msgstr "Could not load the rollup. Check auth and backend logs."
 msgid "Could not load this project's goal."
 msgstr ""
 
-#: src/components/chat/CanvasSuggestionCard.tsx:181
+#: src/components/chat/CanvasSuggestionCard.tsx:187
 msgid "Could not preview this canvas right now."
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:243
+#: src/components/canvas/hooks/index.ts:251
 msgid "Could not refresh this canvas"
 msgstr ""
 
@@ -3813,9 +3813,9 @@ msgstr "Could not send the invite email. Check email configuration."
 msgid "Could not update template"
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:307
-#: src/components/canvas/hooks/index.ts:328
-#: src/components/canvas/hooks/index.ts:347
+#: src/components/canvas/hooks/index.ts:315
+#: src/components/canvas/hooks/index.ts:336
+#: src/components/canvas/hooks/index.ts:355
 msgid "Could not update this canvas"
 msgstr ""
 
@@ -4087,7 +4087,7 @@ msgstr ""
 #~ msgid "custom"
 #~ msgstr "custom"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:207
+#: src/routes/project/canvas/CanvasRoute.tsx:209
 #: src/components/project/ProjectPortalEditor.tsx:958
 msgid "Custom"
 msgstr "Custom"
@@ -4210,7 +4210,7 @@ msgstr "Dedicated support"
 #: src/routes/admin/AdminSettingsRoute.tsx:3018
 #: src/routes/admin/AdminSettingsRoute.tsx:3038
 #: src/components/project/ProjectPortalEditor.tsx:894
-#: src/components/chat/CanvasSuggestionCard.tsx:104
+#: src/components/chat/CanvasSuggestionCard.tsx:109
 msgid "Default"
 msgstr "Default"
 
@@ -4542,14 +4542,14 @@ msgstr "Discoverable in this organisation"
 
 #: src/components/goal/GoalSuggestionCard.tsx:104
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:155
-#: src/components/chat/CanvasSuggestionCard.tsx:322
+#: src/components/chat/CanvasSuggestionCard.tsx:329
 msgid "Dismiss"
 msgstr ""
 
 #: src/components/goal/GoalSuggestionCard.tsx:86
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:249
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:113
-#: src/components/chat/CanvasSuggestionCard.tsx:251
+#: src/components/chat/CanvasSuggestionCard.tsx:257
 msgid "Dismissed"
 msgstr ""
 
@@ -4804,6 +4804,11 @@ msgstr "Edit Custom Topic"
 msgid "Edit file name"
 msgstr "Edit file name"
 
+#: src/routes/project/canvas/CanvasRoute.tsx:441
+#: src/routes/project/canvas/CanvasRoute.tsx:446
+msgid "Edit freshness settings"
+msgstr ""
+
 #: src/components/goal/ProjectGoalSection.tsx:164
 msgid "Edit goal"
 msgstr ""
@@ -4996,7 +5001,7 @@ msgstr "Enabled"
 #~ msgstr "End of list • All {0} conversations loaded"
 
 #: src/routes/project/library/LibraryRoute.tsx:25
-#: src/routes/project/canvas/CanvasRoute.tsx:59
+#: src/routes/project/canvas/CanvasRoute.tsx:61
 msgid "Ended"
 msgstr ""
 
@@ -5097,7 +5102,7 @@ msgstr ""
 #~ msgid "enterprise scale."
 #~ msgstr "enterprise scale."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:308
+#: src/routes/project/canvas/CanvasRoute.tsx:310
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
 #: src/components/conversation/LiveMonitorSection.tsx:352
@@ -5172,15 +5177,15 @@ msgstr "Events"
 msgid "Events to Listen For"
 msgstr "Events to Listen For"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:236
+#: src/routes/project/canvas/CanvasRoute.tsx:238
 msgid "Every 15 minutes"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:235
+#: src/routes/project/canvas/CanvasRoute.tsx:237
 msgid "Every 5 minutes"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:237
+#: src/routes/project/canvas/CanvasRoute.tsx:239
 msgid "Every 60 minutes"
 msgstr ""
 
@@ -5257,7 +5262,8 @@ msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Exceeds seat cap. Overage billing applies."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1335
-#: src/routes/project/canvas/CanvasRoute.tsx:530
+#: src/routes/project/canvas/CanvasRoute.tsx:491
+#: src/routes/project/canvas/CanvasRoute.tsx:498
 msgid "Exit fullscreen"
 msgstr "Exit fullscreen"
 
@@ -5882,7 +5888,8 @@ msgstr "from"
 #~ msgid "from {0}"
 #~ msgstr "from {0}"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:532
+#: src/routes/project/canvas/CanvasRoute.tsx:491
+#: src/routes/project/canvas/CanvasRoute.tsx:498
 msgid "Full screen"
 msgstr ""
 
@@ -6313,7 +6320,7 @@ msgstr "Hours"
 #~ msgid "Hours (included)"
 #~ msgstr "Hours (included)"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:213
+#: src/routes/project/canvas/CanvasRoute.tsx:215
 msgid "Hours from now"
 msgstr ""
 
@@ -6941,11 +6948,11 @@ msgstr ""
 #~ msgid "Just now"
 #~ msgstr "Just now"
 
-#: src/components/chat/CanvasSuggestionCard.tsx:177
+#: src/components/chat/CanvasSuggestionCard.tsx:183
 msgid "Just previewed. Give it a moment."
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:236
+#: src/components/canvas/hooks/index.ts:244
 msgid "Just refreshed. Give it a moment."
 msgstr ""
 
@@ -7000,7 +7007,7 @@ msgstr ""
 msgid "Keep pending"
 msgstr "Keep pending"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:194
+#: src/routes/project/canvas/CanvasRoute.tsx:196
 msgid "Keep this canvas fresh"
 msgstr ""
 
@@ -7141,11 +7148,11 @@ msgstr "Let's hear your first conversation."
 #~ msgstr "Let's Make Sure We Can Hear You"
 
 #. placeholder {0}: canvas.name
-#: src/routes/project/canvas/CanvasRoute.tsx:389
+#: src/routes/project/canvas/CanvasRoute.tsx:391
 msgid "Let's talk about the canvas \"{0}\"."
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:390
+#: src/routes/project/canvas/CanvasRoute.tsx:392
 msgid "Let's talk about this canvas."
 msgstr ""
 
@@ -7235,7 +7242,7 @@ msgstr ""
 msgid "Listing documentation pages"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:285
+#: src/routes/project/canvas/CanvasRoute.tsx:287
 msgid "Live"
 msgstr "Live"
 
@@ -7894,7 +7901,7 @@ msgstr "My templates"
 #: src/components/conversation/ConversationEdit.tsx:354
 #: src/components/common/RedactedText.tsx:42
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:131
-#: src/components/chat/CanvasSuggestionCard.tsx:88
+#: src/components/chat/CanvasSuggestionCard.tsx:93
 msgid "Name"
 msgstr "Name"
 
@@ -7965,8 +7972,8 @@ msgstr "Needs attention"
 msgid "New"
 msgstr "New"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:446
-#: src/routes/project/canvas/CanvasRoute.tsx:480
+#: src/routes/project/canvas/CanvasRoute.tsx:486
+#: src/routes/project/canvas/CanvasRoute.tsx:534
 msgid "New chat about this canvas"
 msgstr ""
 
@@ -8160,7 +8167,7 @@ msgstr ""
 msgid "No canvases yet"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:307
+#: src/routes/project/canvas/CanvasRoute.tsx:309
 msgid "No change"
 msgstr ""
 
@@ -8967,7 +8974,7 @@ msgstr "Open host guide"
 #~ msgid "Open Host Guide"
 #~ msgstr "Open Host Guide"
 
-#: src/components/chat/CanvasSuggestionCard.tsx:225
+#: src/components/chat/CanvasSuggestionCard.tsx:231
 msgid "Open in library"
 msgstr ""
 
@@ -8992,7 +8999,7 @@ msgstr "Open organisation"
 msgid "Open the {0} from here."
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:444
+#: src/routes/project/canvas/CanvasRoute.tsx:484
 msgid "Open the chat"
 msgstr ""
 
@@ -9100,7 +9107,7 @@ msgstr "Options"
 msgid "or"
 msgstr "or"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:221
+#: src/routes/project/canvas/CanvasRoute.tsx:223
 msgid "Or choose a time"
 msgstr ""
 
@@ -9434,21 +9441,21 @@ msgstr "Passwords do not match"
 msgid "Pause reading"
 msgstr "Pause reading"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:498
+#: src/routes/project/canvas/CanvasRoute.tsx:552
 msgid "Pause updates"
 msgstr ""
 
 #: src/routes/project/library/LibraryRoute.tsx:23
-#: src/routes/project/canvas/CanvasRoute.tsx:57
+#: src/routes/project/canvas/CanvasRoute.tsx:59
 #: src/components/conversation/LiveMonitorSection.tsx:48
 msgid "Paused"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:97
+#: src/routes/project/canvas/CanvasRoute.tsx:99
 msgid "Paused."
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:97
+#: src/routes/project/canvas/CanvasRoute.tsx:99
 msgid "Paused. Updated {updatedAgo}."
 msgstr ""
 
@@ -9950,11 +9957,11 @@ msgstr ""
 msgid "Preparing a navigation shortcut"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:114
+#: src/routes/project/canvas/CanvasRoute.tsx:116
 msgid "Preparing the first update."
 msgstr ""
 
-#: src/components/canvas/CanvasFrame.tsx:104
+#: src/components/canvas/CanvasFrame.tsx:106
 msgid "Preparing this canvas"
 msgstr ""
 
@@ -9966,7 +9973,7 @@ msgstr "Preparing your conversations... This may take a moment."
 msgid "Preparing your experience"
 msgstr "Preparing your experience"
 
-#: src/components/chat/CanvasSuggestionCard.tsx:296
+#: src/components/chat/CanvasSuggestionCard.tsx:304
 msgid "Preview"
 msgstr ""
 
@@ -10330,7 +10337,7 @@ msgstr "Prompt"
 #~ msgid "Proposed billing"
 #~ msgstr "Proposed billing"
 
-#: src/components/chat/CanvasSuggestionCard.tsx:262
+#: src/components/chat/CanvasSuggestionCard.tsx:268
 msgid "Proposed changes"
 msgstr ""
 
@@ -10603,7 +10610,7 @@ msgstr "References"
 
 #: src/components/project/ProjectPortalEditor.tsx:1698
 #: src/components/common/UsageFreshness.tsx:32
-#: src/components/chat/CanvasSuggestionCard.tsx:102
+#: src/components/chat/CanvasSuggestionCard.tsx:107
 msgid "Refresh"
 msgstr "Refresh"
 
@@ -10611,7 +10618,7 @@ msgstr "Refresh"
 msgid "Refresh audit logs"
 msgstr "Refresh audit logs"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:513
+#: src/routes/project/canvas/CanvasRoute.tsx:567
 msgid "Refresh now"
 msgstr ""
 
@@ -10619,7 +10626,7 @@ msgstr ""
 msgid "Refresh ongoing conversations"
 msgstr "Refresh ongoing conversations"
 
-#: src/components/canvas/hooks/index.ts:246
+#: src/components/canvas/hooks/index.ts:254
 msgid "Refresh started"
 msgstr ""
 
@@ -10636,7 +10643,7 @@ msgstr ""
 #~ msgid "Refresh will work when the canvas service is ready"
 #~ msgstr ""
 
-#: src/components/canvas/hooks/index.ts:240
+#: src/components/canvas/hooks/index.ts:248
 msgid "Refresh will work when the canvas service is ready."
 msgstr ""
 
@@ -11145,7 +11152,7 @@ msgstr "Resume"
 msgid "Resume plan"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:500
+#: src/routes/project/canvas/CanvasRoute.tsx:554
 msgid "Resume updates"
 msgstr ""
 
@@ -11200,7 +11207,7 @@ msgstr "Review activity for your workspace. Filter by collection or action, and 
 
 #: src/components/goal/GoalSuggestionCard.tsx:112
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:164
-#: src/components/chat/CanvasSuggestionCard.tsx:330
+#: src/components/chat/CanvasSuggestionCard.tsx:337
 msgid "Review again"
 msgstr ""
 
@@ -11312,7 +11319,7 @@ msgstr ""
 msgid "Sales invoice issued."
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:246
+#: src/routes/project/canvas/CanvasRoute.tsx:248
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:204
 #: src/components/training/TrainingRowActions.tsx:197
 #: src/components/settings/LegalBasisSettingsCard.tsx:164
@@ -12139,13 +12146,13 @@ msgid "Show IP addresses"
 msgstr "Show IP addresses"
 
 #: src/features/sidebar/views/InboxView.tsx:618
-#: src/components/chat/CanvasSuggestionCard.tsx:286
+#: src/components/chat/CanvasSuggestionCard.tsx:294
 #: src/components/announcement/AnnouncementItem.tsx:127
 msgid "Show less"
 msgstr "Show less"
 
 #: src/features/sidebar/views/InboxView.tsx:618
-#: src/components/chat/CanvasSuggestionCard.tsx:286
+#: src/components/chat/CanvasSuggestionCard.tsx:294
 #: src/components/announcement/AnnouncementItem.tsx:132
 msgid "Show more"
 msgstr "Show more"
@@ -12479,27 +12486,27 @@ msgstr "Starts"
 msgid "Status"
 msgstr "Status"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:199
+#: src/routes/project/canvas/CanvasRoute.tsx:201
 msgid "Stay live for"
 msgstr ""
 
 #: src/routes/project/library/LibraryRoute.tsx:27
 #: src/routes/project/library/LibraryRoute.tsx:29
-#: src/routes/project/canvas/CanvasRoute.tsx:61
 #: src/routes/project/canvas/CanvasRoute.tsx:63
+#: src/routes/project/canvas/CanvasRoute.tsx:65
 msgid "Stays up to date"
 msgstr ""
 
 #. placeholder {0}: format(expiry, "HH:mm")
 #. placeholder {0}: format(expiry, "EEE MMM d, HH:mm")
 #: src/routes/project/library/LibraryRoute.tsx:30
-#: src/routes/project/canvas/CanvasRoute.tsx:66
-#: src/routes/project/canvas/CanvasRoute.tsx:71
+#: src/routes/project/canvas/CanvasRoute.tsx:68
+#: src/routes/project/canvas/CanvasRoute.tsx:73
 msgid "Stays up to date until {0}"
 msgstr ""
 
 #. placeholder {0}: format(expiry, "HH:mm")
-#: src/routes/project/canvas/CanvasRoute.tsx:69
+#: src/routes/project/canvas/CanvasRoute.tsx:71
 msgid "Stays up to date until tomorrow {0}"
 msgstr ""
 
@@ -12521,19 +12528,19 @@ msgstr "Stop"
 #~ msgid "Stop this run"
 #~ msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:108
+#: src/routes/project/canvas/CanvasRoute.tsx:110
 msgid "Stopped on {stoppedAt}."
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:106
+#: src/routes/project/canvas/CanvasRoute.tsx:108
 msgid "Stopped on {stoppedAt}. Updated {updatedAgo}."
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:109
+#: src/routes/project/canvas/CanvasRoute.tsx:111
 msgid "Stopped."
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:109
+#: src/routes/project/canvas/CanvasRoute.tsx:111
 msgid "Stopped. Updated {updatedAgo}."
 msgstr ""
 
@@ -12996,7 +13003,7 @@ msgstr ""
 #~ msgid "The Portal is the website that loads when participants scan the QR code."
 #~ msgstr "The Portal is the website that loads when participants scan the QR code."
 
-#: src/components/canvas/CanvasFrame.tsx:128
+#: src/components/canvas/CanvasFrame.tsx:130
 msgid "The previous versions are still available below."
 msgstr ""
 
@@ -13145,11 +13152,11 @@ msgstr "This area is for dembrane staff. If you think you should have access, em
 msgid "participant.modal.s3check.suggestions"
 msgstr "This can happen when a VPN or firewall is blocking the connection. Try disabling your VPN, switching to a different network (e.g. mobile hotspot), or contact your IT department for help."
 
-#: src/components/canvas/CanvasFrame.tsx:125
+#: src/components/canvas/CanvasFrame.tsx:127
 msgid "This canvas could not update."
 msgstr ""
 
-#: src/components/chat/CanvasSuggestionCard.tsx:221
+#: src/components/chat/CanvasSuggestionCard.tsx:227
 msgid "This canvas is in your library."
 msgstr ""
 
@@ -13157,7 +13164,7 @@ msgstr ""
 #~ msgid "This canvas is in your Library."
 #~ msgstr ""
 
-#: src/components/chat/CanvasSuggestionCard.tsx:219
+#: src/components/chat/CanvasSuggestionCard.tsx:225
 msgid "This canvas update is applied."
 msgstr ""
 
@@ -13247,7 +13254,7 @@ msgstr "This is a map of every organisation and workspace you are a member of."
 msgid "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 msgstr "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 
-#: src/components/chat/CanvasSuggestionCard.tsx:299
+#: src/components/chat/CanvasSuggestionCard.tsx:307
 msgid "This is not saved yet."
 msgstr ""
 
@@ -13568,7 +13575,7 @@ msgstr ""
 msgid "Title or participant"
 msgstr "Title or participant"
 
-#: src/components/chat/CanvasSuggestionCard.tsx:268
+#: src/components/chat/CanvasSuggestionCard.tsx:274
 msgid "to"
 msgstr ""
 
@@ -13867,7 +13874,7 @@ msgstr ""
 msgid "Try asking"
 msgstr "Try asking"
 
-#: src/components/chat/CanvasSuggestionCard.tsx:342
+#: src/components/chat/CanvasSuggestionCard.tsx:349
 msgid "Try it"
 msgstr ""
 
@@ -14072,8 +14079,8 @@ msgstr ""
 msgid "Untitled"
 msgstr "Untitled"
 
-#: src/components/canvas/hooks/index.ts:118
-#: src/components/canvas/hooks/index.ts:144
+#: src/components/canvas/hooks/index.ts:119
+#: src/components/canvas/hooks/index.ts:147
 msgid "Untitled canvas"
 msgstr ""
 
@@ -14107,7 +14114,7 @@ msgstr ""
 msgid "Up to {0} participants are included."
 msgstr ""
 
-#: src/components/chat/CanvasSuggestionCard.tsx:246
+#: src/components/chat/CanvasSuggestionCard.tsx:252
 msgid "Update"
 msgstr "Update"
 
@@ -14120,7 +14127,7 @@ msgstr "Update"
 #~ msgid "Update Report"
 #~ msgstr "Update Report"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:230
+#: src/routes/project/canvas/CanvasRoute.tsx:232
 msgid "Update rhythm"
 msgstr ""
 
@@ -14153,11 +14160,11 @@ msgstr ""
 msgid "Updated {0} · "
 msgstr "Updated {0} · "
 
-#: src/routes/project/canvas/CanvasRoute.tsx:119
+#: src/routes/project/canvas/CanvasRoute.tsx:121
 msgid "Updated {updatedAgo}."
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:120
+#: src/routes/project/canvas/CanvasRoute.tsx:122
 msgid "Updated."
 msgstr ""
 
@@ -14165,7 +14172,7 @@ msgstr ""
 msgid "Updates"
 msgstr "Updates"
 
-#: src/routes/project/canvas/CanvasRoute.tsx:76
+#: src/routes/project/canvas/CanvasRoute.tsx:78
 msgid "Updates every {cadenceMinutes} minutes"
 msgstr ""
 
@@ -14452,7 +14459,7 @@ msgstr "Using default dembrane logo"
 msgid "Using dembrane in health, education, recruitment, critical infrastructure, law enforcement, or justice? Those are high-risk contexts and need a mandatory training before live use."
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:427
+#: src/routes/project/canvas/CanvasRoute.tsx:467
 msgid "Using fixture data."
 msgstr ""
 
@@ -14569,11 +14576,11 @@ msgstr ""
 msgid "Verifying your email address."
 msgstr "Verifying your email address."
 
-#: src/routes/project/canvas/CanvasRoute.tsx:134
+#: src/routes/project/canvas/CanvasRoute.tsx:136
 msgid "Version"
 msgstr ""
 
-#: src/routes/project/canvas/CanvasRoute.tsx:277
+#: src/routes/project/canvas/CanvasRoute.tsx:279
 msgid "Versions"
 msgstr ""
 
@@ -14625,7 +14632,7 @@ msgid "View your responses"
 msgstr "View your responses"
 
 #. placeholder {0}: generationLabel(selected)
-#: src/routes/project/canvas/CanvasRoute.tsx:281
+#: src/routes/project/canvas/CanvasRoute.tsx:283
 msgid "Viewing {0}"
 msgstr ""
 
