@@ -270,11 +270,13 @@ participant reflections, quotes, or the synthesis text the loop should generate
 fresh from transcripts each tick. The Wednesday Check in failure is the
 counterexample: a brief bloated with person-by-person summaries, open issues,
 and discussion questions freezes content that belongs in generated canvas
-output. When a host asks to "add X's reflection", first confirm the canvas
-instructions already call for person-by-person reflections; if needed, offer a
-refresh or propose a concise standing instruction. Do not paste X's reflection
-into the brief. When revising a brief, rewrite it cleanly and consolidate
-standing edits. Do not append forever just because revision history exists.
+output. When a host says "put X on the wall", "add <person>'s reflection",
+"pin that", or otherwise asks you to place exact host-provided text onto an
+existing canvas, resolve the canvas and call addToCanvas in the same turn. Do
+not paste the item into the brief and do not create a proposal card. Use
+removeFromCanvas when the host asks to unpin or remove one of those host-added
+items. When revising a brief, rewrite it cleanly and consolidate standing edits.
+Do not append forever just because revision history exists.
 The generated canvas content can include presentation guidance within the
 dembrane kit's brand system: emphasis, contrast, visual tone, and what to
 highlight. If the host says a canvas is hard to read, too dim, the colors do not
@@ -1510,6 +1512,74 @@ def create_agent_graph(
             else None,
         }
 
+    @tool
+    async def addToCanvas(
+        canvas: str,
+        text: str,
+        target_tab: str = "story",
+        person: str = "",
+    ) -> dict[str, Any]:
+        """Add exact host-provided text to an existing canvas immediately.
+
+        Use this when the host says to put something on the wall, pin that,
+        or add a named person's reflection. `canvas` may be an id or unique
+        canvas name/reference. `target_tab` is one of crux, concept_cloud, or
+        story. Do not paraphrase `text`.
+        """
+        resolved_canvas_id, resolved_name = await _resolve_canvas_id(canvas)
+        normalized_text = text.strip()
+        if not normalized_text:
+            raise ValueError("text is required.")
+        client = _create_echo_client()
+        try:
+            result = await client.add_canvas_host_item(
+                project_id,
+                resolved_canvas_id,
+                normalized_text,
+                target_tab,
+                person=person.strip() or None,
+                chat_id=chat_id or None,
+                message_id=message_id or None,
+            )
+        finally:
+            await client.close()
+        return {
+            "canvas_id": resolved_canvas_id,
+            "canvas_name": resolved_name,
+            "status": result.get("status"),
+            "host_item": result.get("host_item"),
+        }
+
+    @tool
+    async def removeFromCanvas(canvas: str, item: str) -> dict[str, Any]:
+        """Remove a host-added canvas item by id or matching text.
+
+        Use this when the host asks to unpin or remove something they
+        previously added with addToCanvas. `canvas` may be an id or unique
+        canvas name/reference.
+        """
+        resolved_canvas_id, resolved_name = await _resolve_canvas_id(canvas)
+        normalized_item = item.strip()
+        if not normalized_item:
+            raise ValueError("item is required.")
+        client = _create_echo_client()
+        try:
+            result = await client.remove_canvas_host_item(
+                project_id,
+                resolved_canvas_id,
+                normalized_item,
+                chat_id=chat_id or None,
+                message_id=message_id or None,
+            )
+        finally:
+            await client.close()
+        return {
+            "canvas_id": resolved_canvas_id,
+            "canvas_name": resolved_name,
+            "status": result.get("status"),
+            "item": result.get("item"),
+        }
+
     async def _resolve_canvas_id(reference: str) -> tuple[str, str | None]:
         normalized_reference = reference.strip()
         if not normalized_reference:
@@ -1639,6 +1709,8 @@ def create_agent_graph(
         listMethodologies,
         listCanvases,
         editCanvas,
+        addToCanvas,
+        removeFromCanvas,
         pauseCanvasLoop,
         resumeCanvasLoop,
         stopCanvasLoop,

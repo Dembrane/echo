@@ -152,12 +152,21 @@ async def execute_gather_spec(
         )
         chunks = chunks_raw if isinstance(chunks_raw, list) else []
         text_parts: list[str] = []
+        chunk_rows: list[dict[str, Any]] = []
         for chunk in chunks:
             transcript = str(chunk.get("transcript") or "").strip()
             if not transcript:
                 continue
             chunks_seen += 1
             text_parts.append(transcript)
+            chunk_rows.append(
+                {
+                    "id": _as_id(chunk.get("id")),
+                    "transcript": transcript,
+                    "created_at": chunk.get("created_at"),
+                    "timestamp": chunk.get("timestamp"),
+                }
+            )
             chunk_time = chunk.get("created_at") or chunk.get("timestamp")
             if chunk_time and (latest_content_at is None or str(chunk_time) > latest_content_at):
                 latest_content_at = str(chunk_time)
@@ -175,6 +184,7 @@ async def execute_gather_spec(
                 "label": conv.get("participant_name") or "participant",
                 "created_at": conv.get("created_at"),
                 "latest_transcript": clipped,
+                "chunks": chunk_rows,
             }
         )
 
@@ -202,9 +212,7 @@ async def execute_gather_spec(
         "latest_content_at": latest_content_at,
         "sample_mode": sample_mode,
         "sample_notice": (
-            "Sample conversations, your real conversations replace these."
-            if sample_mode
-            else None
+            "Sample conversations, your real conversations replace these." if sample_mode else None
         ),
         "conversations": conversations_out,
     }

@@ -164,6 +164,138 @@ async def test_tick_error_stores_error_generation_and_pauses_after_three(monkeyp
 
 
 @pytest.mark.asyncio
+async def test_tick_model_failure_noops_without_touching_loop_state(monkeypatch) -> None:
+    fake = _FakeDirectus()
+    fake.items["agent_loop"]["loop1"]["canvas_quotes_ledger"] = [
+        {"id": "q-old", "quote": "Keep this.", "source": {}}
+    ]
+
+    async def _config(report_id: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"id": "cfg1", "brief": "brief", "gather_spec": {}, "cadence_minutes": 5}
+
+    async def _gather(**kwargs) -> dict[str, Any]:  # noqa: ARG001
+        return {
+            "latest_content_at": "2026-07-07T10:20:00+00:00",
+            "project": {},
+            "conversations": [
+                {
+                    "id": "conv-1",
+                    "label": "Maya",
+                    "latest_transcript": "Keep the doorway open.",
+                }
+            ],
+        }
+
+    async def _extract(**kwargs) -> dict[str, Any]:  # noqa: ARG001
+        raise RuntimeError("model unavailable")
+
+    async def _enqueue(loop: dict[str, Any]) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_latest_config", _config)
+    monkeypatch.setattr(ticks, "execute_gather_spec", _gather)
+    monkeypatch.setattr(ticks, "_extract_living_canvas_update", _extract)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+
+    result = await ticks.run_tick("loop1", "scheduled")
+
+    assert result["status"] == "no_op"
+    assert fake.created["agent_loop_run"][0]["status"] == "no_op"
+    assert (
+        "Model extraction failed: model unavailable" in fake.created["agent_loop_run"][0]["detail"]
+    )
+    assert "canvas_generation" not in fake.created
+    assert fake.updated == []
+    assert fake.items["agent_loop"]["loop1"]["canvas_quotes_ledger"] == [
+        {"id": "q-old", "quote": "Keep this.", "source": {}}
+    ]
+
+
+@pytest.mark.asyncio
+async def test_tick_uses_model_extraction_and_records_receipt_rejections(monkeypatch) -> None:
+    fake = _FakeDirectus()
+
+    async def _config(report_id: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"id": "cfg1", "brief": "brief", "gather_spec": {}, "cadence_minutes": 5}
+
+    async def _gather(**kwargs) -> dict[str, Any]:  # noqa: ARG001
+        return {
+            "latest_content_at": "2026-07-07T10:20:00+00:00",
+            "project": {"name": "Room"},
+            "conversations": [
+                {
+                    "id": "conv-1",
+                    "label": "Maya",
+                    "chunks": [
+                        {
+                            "id": "chunk-1",
+                            "transcript": "Keep the doorway open.",
+                            "created_at": "2026-07-07T10:20:00+00:00",
+                        }
+                    ],
+                }
+            ],
+        }
+
+    async def _extract(**kwargs) -> dict[str, Any]:
+        assert kwargs["current_state"]["quotes_ledger"] == []
+        return {
+            "quotes": [
+                {
+                    "who": "Maya",
+                    "quote": "Keep the doorway open.",
+                    "conversation_id": "conv-1",
+                    "chunk_id": "chunk-1",
+                },
+                {
+                    "who": "Maya",
+                    "quote": "Invented receipt.",
+                    "conversation_id": "conv-1",
+                    "chunk_id": "chunk-1",
+                },
+            ],
+            "concepts": [
+                {"phrase": "doorway open", "supporting_quote_indices": [0]},
+                {"phrase": "invented", "supporting_quote_indices": [1]},
+            ],
+            "crux": {"question": "What first move keeps the doorway open?"},
+            "story_slides": [
+                {
+                    "eyebrow": "Signal",
+                    "heading": "Doorway",
+                    "lede": "People want the doorway open.",
+                    "quote_indices": [0, 1],
+                }
+            ],
+        }
+
+    async def _enqueue(loop: dict[str, Any]) -> None:  # noqa: ARG001
+        return None
+
+    async def _publish(report_id: str) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_latest_config", _config)
+    monkeypatch.setattr(ticks, "execute_gather_spec", _gather)
+    monkeypatch.setattr(ticks, "_extract_living_canvas_update", _extract)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+    monkeypatch.setattr(ticks, "publish_generation_nudge", _publish)
+
+    result = await ticks.run_tick("loop1", "scheduled")
+
+    assert result["status"] == "ok"
+    assert fake.items["agent_loop"]["loop1"]["canvas_quotes_ledger"][0]["quote"] == (
+        "Keep the doorway open."
+    )
+    generation = result["generation"]
+    assert "Keep the doorway open." in generation["content_html"]
+    assert "not found verbatim" in generation["detail"]
+    assert "no accepted supporting quote" in generation["detail"]
+
+
+@pytest.mark.asyncio
 async def test_tick_missing_ids_records_error_run_without_generation(monkeypatch) -> None:
     fake = _FakeDirectus()
     fake.items["agent_loop"]["loop1"]["report_id"] = None
@@ -239,7 +371,10 @@ async def test_tick_ok_records_banned_visible_copy_without_rewriting(monkeypatch
     generation = result["generation"]
     assert generation["status"] == "ok"
     assert "Real-time reflections" in generation["content_html"]
-    assert generation["detail"] == "banned visible copy: real-time, AI, successfully, em dash"
+    assert generation["detail"].startswith(
+        "banned visible copy: real-time, AI, successfully, em dash"
+    )
+    assert "ledger update:" in generation["detail"]
 
 
 @pytest.mark.asyncio

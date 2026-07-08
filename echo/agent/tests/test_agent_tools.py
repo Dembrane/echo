@@ -37,6 +37,8 @@ class _FakeEchoClient:
         project_tags_payload: list[dict] | None = None,
         canvases_payload: list[dict] | None = None,
         canvas_loop_response: dict | None = None,
+        canvas_host_item_response: dict | None = None,
+        canvas_remove_item_response: dict | None = None,
     ):
         self.bearer_token = bearer_token
         self.search_payload = search_payload or {}
@@ -64,6 +66,8 @@ class _FakeEchoClient:
         self.project_tags_payload = project_tags_payload or []
         self.canvases_payload = canvases_payload or []
         self.canvas_loop_response = canvas_loop_response or {}
+        self.canvas_host_item_response = canvas_host_item_response or {"status": "added"}
+        self.canvas_remove_item_response = canvas_remove_item_response or {"status": "removed"}
         self.search_calls: list[dict[str, object]] = []
         self.transcript_calls: list[str] = []
         self.project_conversations_calls: list[dict[str, object]] = []
@@ -74,6 +78,8 @@ class _FakeEchoClient:
         self.list_project_tags_calls: list[str] = []
         self.list_canvases_calls: list[str] = []
         self.canvas_loop_calls: list[dict[str, str]] = []
+        self.canvas_host_item_calls: list[dict[str, object]] = []
+        self.canvas_remove_item_calls: list[dict[str, object]] = []
         self.closed = False
 
     async def search_home(self, query: str, limit: int = 5) -> dict:
@@ -210,6 +216,48 @@ class _FakeEchoClient:
         )
         return self.canvas_loop_response
 
+    async def add_canvas_host_item(
+        self,
+        project_id: str,
+        canvas_id: str,
+        text: str,
+        target_tab: str,
+        person: str | None = None,
+        chat_id: str | None = None,
+        message_id: str | None = None,
+    ) -> dict:
+        self.canvas_host_item_calls.append(
+            {
+                "project_id": project_id,
+                "canvas_id": canvas_id,
+                "text": text,
+                "target_tab": target_tab,
+                "person": person,
+                "chat_id": chat_id,
+                "message_id": message_id,
+            }
+        )
+        return self.canvas_host_item_response
+
+    async def remove_canvas_host_item(
+        self,
+        project_id: str,
+        canvas_id: str,
+        item: str,
+        chat_id: str | None = None,
+        message_id: str | None = None,
+    ) -> dict:
+        self.canvas_remove_item_calls.append(
+            {
+                "project_id": project_id,
+                "canvas_id": canvas_id,
+                "item": item,
+                "chat_id": chat_id,
+                "message_id": message_id,
+            }
+        )
+        return self.canvas_remove_item_response
+
     async def write_memory(
         self,
         project_id: str,
@@ -251,6 +299,8 @@ class _FakeEchoClientFactory:
         project_tags_payload: list[dict] | None = None,
         canvases_payload: list[dict] | None = None,
         canvas_loop_response: dict | None = None,
+        canvas_host_item_response: dict | None = None,
+        canvas_remove_item_response: dict | None = None,
     ):
         self.search_payload = search_payload
         self.search_payload_by_query = search_payload_by_query
@@ -270,6 +320,8 @@ class _FakeEchoClientFactory:
         self.project_tags_payload = project_tags_payload
         self.canvases_payload = canvases_payload
         self.canvas_loop_response = canvas_loop_response
+        self.canvas_host_item_response = canvas_host_item_response
+        self.canvas_remove_item_response = canvas_remove_item_response
         self.instances: list[_FakeEchoClient] = []
 
     def __call__(self, bearer_token: str) -> _FakeEchoClient:
@@ -291,6 +343,8 @@ class _FakeEchoClientFactory:
             project_tags_payload=self.project_tags_payload,
             canvases_payload=self.canvases_payload,
             canvas_loop_response=self.canvas_loop_response,
+            canvas_host_item_response=self.canvas_host_item_response,
+            canvas_remove_item_response=self.canvas_remove_item_response,
         )
         self.instances.append(client)
         return client
@@ -352,7 +406,8 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "target_canvas_id" in prompt
     assert "briefs are durable instructions only" in prompt
     assert "wednesday check in" in prompt
-    assert "do not paste x's reflection" in prompt
+    assert "call addtocanvas in the same turn" in prompt
+    assert "paste the item into the brief" in prompt
     assert "do not append forever" in prompt
     assert "gathered content" in prompt
     # Product-learning insights are quiet and distinct from support requests.
@@ -1589,6 +1644,95 @@ async def test_canvas_loop_tool_resolves_unique_name_reference():
         {"project_id": "project-1", "canvas_id": "canvas-1", "action": "pause"}
     ]
     assert all(instance.closed for instance in factory.instances)
+
+
+@pytest.mark.asyncio
+async def test_add_to_canvas_resolves_canvas_and_posts_exact_host_item():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        canvases_payload=[
+            {
+                "id": "canvas-1",
+                "name": "Live wall",
+                "loop": {"status": "active"},
+            },
+        ],
+        canvas_host_item_response={
+            "status": "added",
+            "host_item": {"id": "item-1", "text": "Maya said keep the doorway open."},
+        },
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+        chat_id="chat-1",
+        message_id="msg-1",
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["addToCanvas"].ainvoke(
+        {
+            "canvas": "wall",
+            "text": "Maya said keep the doorway open.",
+            "target_tab": "story",
+            "person": "Maya",
+        }
+    )
+
+    assert result["status"] == "added"
+    assert result["canvas_id"] == "canvas-1"
+    assert factory.instances[1].canvas_host_item_calls == [
+        {
+            "project_id": "project-1",
+            "canvas_id": "canvas-1",
+            "text": "Maya said keep the doorway open.",
+            "target_tab": "story",
+            "person": "Maya",
+            "chat_id": "chat-1",
+            "message_id": "msg-1",
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_remove_from_canvas_resolves_canvas_and_posts_item_match():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        canvases_payload=[{"id": "canvas-1", "name": "Live wall"}],
+        canvas_remove_item_response={"status": "removed", "item": "doorway open"},
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+        chat_id="chat-1",
+        message_id="msg-1",
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["removeFromCanvas"].ainvoke(
+        {"canvas": "wall", "item": "doorway open"}
+    )
+
+    assert result["status"] == "removed"
+    assert factory.instances[1].canvas_remove_item_calls == [
+        {
+            "project_id": "project-1",
+            "canvas_id": "canvas-1",
+            "item": "doorway open",
+            "chat_id": "chat-1",
+            "message_id": "msg-1",
+        }
+    ]
 
 
 @pytest.mark.asyncio

@@ -30,8 +30,10 @@ from dembrane.canvas.service import (
     apply_loop_action,
     get_latest_config,
     get_loop_for_report,
+    add_canvas_host_item,
     get_latest_generation,
     list_canvas_summaries,
+    remove_canvas_host_item,
     apply_direct_canvas_edit,
 )
 from dembrane.directus_async import async_directus
@@ -95,6 +97,20 @@ class AgenticCanvasEditSchema(BaseModel):
     instruction: str = Field(..., min_length=1)
     content_html: str = Field(..., min_length=1)
     chat_id: Optional[str] = None
+
+
+class AgenticCanvasHostItemSchema(BaseModel):
+    text: str = Field(..., min_length=1, max_length=2000)
+    target_tab: str = Field(default="story", min_length=1, max_length=80)
+    person: Optional[str] = Field(default=None, max_length=160)
+    chat_id: Optional[str] = None
+    message_id: Optional[str] = None
+
+
+class AgenticCanvasRemoveHostItemSchema(BaseModel):
+    item: str = Field(..., min_length=1, max_length=2000)
+    chat_id: Optional[str] = None
+    message_id: Optional[str] = None
 
 
 # Agent memory: three scopes the agent both reads and writes. Private or
@@ -164,7 +180,9 @@ async def _assert_project_access(project_id: str, auth: DirectusSession) -> None
     access.require("chat:use")
 
 
-def _exclude_others_private_chats(base_filter: dict[str, Any], auth: DirectusSession) -> dict[str, Any]:
+def _exclude_others_private_chats(
+    base_filter: dict[str, Any], auth: DirectusSession
+) -> dict[str, Any]:
     """Hide chats that are private and owned by someone else.
 
     A chat is hidden when `is_private == true` AND `user_created != caller`.
@@ -597,7 +615,9 @@ def _list_project_conversations_for_agent(
                 is_new_conversation = conversation_identifier not in conversations_by_id
                 if is_new_conversation and len(conversations_by_id) >= normalized_limit:
                     continue
-                existing_matches = conversations_by_id.get(conversation_identifier, {}).get("matches")
+                existing_matches = conversations_by_id.get(conversation_identifier, {}).get(
+                    "matches"
+                )
                 normalized_existing_matches = (
                     existing_matches if isinstance(existing_matches, list) else []
                 )
@@ -1377,6 +1397,47 @@ async def edit_project_canvas(
         "generation": edited["generation"],
         "config_revision": edited["config_revision"],
     }
+
+
+@AgenticRouter.post("/projects/{project_id}/canvases/{canvas_id}/host-items")
+async def add_project_canvas_host_item(
+    project_id: str,
+    canvas_id: str,
+    body: AgenticCanvasHostItemSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    await _get_project_canvas_or_404(project_id, canvas_id)
+    try:
+        return await add_canvas_host_item(
+            report_id=canvas_id,
+            text=body.text,
+            target_tab=body.target_tab,
+            person=body.person,
+            chat_id=body.chat_id,
+            message_id=body.message_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@AgenticRouter.post("/projects/{project_id}/canvases/{canvas_id}/host-items/remove")
+async def remove_project_canvas_host_item(
+    project_id: str,
+    canvas_id: str,
+    body: AgenticCanvasRemoveHostItemSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    await _get_project_canvas_or_404(project_id, canvas_id)
+    return await remove_canvas_host_item(
+        report_id=canvas_id,
+        item=body.item,
+        chat_id=body.chat_id,
+        message_id=body.message_id,
+    )
 
 
 @AgenticRouter.post("/projects/{project_id}/canvases/{canvas_id}/loop/{action}")

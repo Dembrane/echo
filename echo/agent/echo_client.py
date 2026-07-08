@@ -204,6 +204,52 @@ class EchoClient:
         payload = response.json()
         return payload if isinstance(payload, dict) else {}
 
+    async def add_canvas_host_item(
+        self,
+        project_id: str,
+        canvas_id: str,
+        text: str,
+        target_tab: str,
+        person: str | None = None,
+        chat_id: str | None = None,
+        message_id: str | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {"text": text, "target_tab": target_tab}
+        if person:
+            body["person"] = person
+        if chat_id:
+            body["chat_id"] = chat_id
+        if message_id:
+            body["message_id"] = message_id
+        response = await self._client.post(
+            f"/agentic/projects/{project_id}/canvases/{canvas_id}/host-items",
+            json=body,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+
+    async def remove_canvas_host_item(
+        self,
+        project_id: str,
+        canvas_id: str,
+        item: str,
+        chat_id: str | None = None,
+        message_id: str | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {"item": item}
+        if chat_id:
+            body["chat_id"] = chat_id
+        if message_id:
+            body["message_id"] = message_id
+        response = await self._client.post(
+            f"/agentic/projects/{project_id}/canvases/{canvas_id}/host-items/remove",
+            json=body,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+
     async def update_canvas_loop(
         self,
         project_id: str,

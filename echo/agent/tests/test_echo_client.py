@@ -270,3 +270,55 @@ async def test_update_canvas_loop_uses_expected_path(monkeypatch):
         client._client.calls[0]["path"]
         == "/agentic/projects/project-1/canvases/canvas-1/loop/pause"
     )
+
+
+@pytest.mark.asyncio
+async def test_add_canvas_host_item_uses_expected_path_and_body(monkeypatch):
+    monkeypatch.setattr("echo_client.httpx.AsyncClient", _FakeAsyncClient)
+
+    client = EchoClient(bearer_token="token-1")
+    await client.add_canvas_host_item(
+        "project-1",
+        "canvas-1",
+        "Pin this exact line.",
+        "story",
+        person="Maya",
+        chat_id="chat-1",
+        message_id="msg-1",
+    )
+
+    assert (
+        client._client.calls[0]["path"]
+        == "/agentic/projects/project-1/canvases/canvas-1/host-items"
+    )
+    assert client._client.calls[0]["json"] == {
+        "text": "Pin this exact line.",
+        "target_tab": "story",
+        "person": "Maya",
+        "chat_id": "chat-1",
+        "message_id": "msg-1",
+    }
+
+
+@pytest.mark.asyncio
+async def test_remove_canvas_host_item_uses_expected_path_and_body(monkeypatch):
+    monkeypatch.setattr("echo_client.httpx.AsyncClient", _FakeAsyncClient)
+
+    client = EchoClient(bearer_token="token-1")
+    await client.remove_canvas_host_item(
+        "project-1",
+        "canvas-1",
+        "Pin this exact line.",
+        chat_id="chat-1",
+        message_id="msg-1",
+    )
+
+    assert (
+        client._client.calls[0]["path"]
+        == "/agentic/projects/project-1/canvases/canvas-1/host-items/remove"
+    )
+    assert client._client.calls[0]["json"] == {
+        "item": "Pin this exact line.",
+        "chat_id": "chat-1",
+        "message_id": "msg-1",
+    }
