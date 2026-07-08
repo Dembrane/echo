@@ -375,6 +375,11 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "to report back after applying it" in prompt
     # Never leak internal machinery to the host
     assert "internal machinery" in prompt
+    # Dashboard location questions should emit the navigation card directly,
+    # not ask whether the host wants one.
+    assert "call navigateto in the same turn" in prompt
+    assert "never ask permission before showing a navigation shortcut" in prompt
+    assert "would you like me to show a navigation" in prompt
     # Steer batched lookups over one-at-a-time calls
     assert "batch your lookups" in prompt
 

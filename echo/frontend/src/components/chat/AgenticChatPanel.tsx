@@ -51,6 +51,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import type {
+	AgenticRun,
 	AgenticRunEvent,
 	AgenticRunEventsResponse,
 	AgenticRunStatus,
@@ -60,6 +61,7 @@ import {
 	createAgenticRun,
 	getAgenticRun,
 	getAgenticRunEvents,
+	getLatestAgenticRunForChat,
 	stopAgenticRun,
 	streamAgenticRun,
 } from "@/lib/api";
@@ -1001,28 +1003,52 @@ export const AgenticChatPanel = ({
 		if (!chatId) return;
 		const key = storageKeyForChat(chatId);
 		const storedRunId = window.localStorage.getItem(key);
-		if (!storedRunId) return;
 
 		let active = true;
 		setIsHydratingStoredRun(true);
 		(async () => {
 			try {
-				const run = await getAgenticRun(storedRunId);
+				let hydratedRunId = storedRunId;
+				let run: AgenticRun | null = null;
+
+				if (hydratedRunId) {
+					try {
+						run = await getAgenticRun(hydratedRunId);
+					} catch (hydrateError) {
+						if (hasResponseStatus(hydrateError, 404)) {
+							window.localStorage.removeItem(key);
+							hydratedRunId = null;
+						} else {
+							throw hydrateError;
+						}
+					}
+				}
+
+				if (!run) {
+					try {
+						run = await getLatestAgenticRunForChat(chatId);
+						hydratedRunId = run.id;
+						window.localStorage.setItem(key, run.id);
+					} catch (hydrateError) {
+						if (hasResponseStatus(hydrateError, 404)) {
+							return;
+						}
+						throw hydrateError;
+					}
+				}
+
+				if (!hydratedRunId) return;
 				if (!active) return;
-				setRunId(storedRunId);
+				setRunId(hydratedRunId);
 				setRunStatus(run.status);
-				const payload = await loadAllEvents(storedRunId, 0);
+				const payload = await loadAllEvents(hydratedRunId, 0);
 				if (!active) return;
 				if (!isTerminalStatus(payload.status)) {
-					void startStream(storedRunId, payload.next_seq);
+					void startStream(hydratedRunId, payload.next_seq);
 				}
 			} catch (hydrateError) {
-				if (hasResponseStatus(hydrateError, 404)) {
-					window.localStorage.removeItem(key);
-					return;
-				}
 				if (hydrateError instanceof Error) {
-					console.warn("Failed to hydrate stored agentic run", hydrateError);
+					console.warn("Failed to hydrate agentic run", hydrateError);
 				}
 			} finally {
 				if (active) {
