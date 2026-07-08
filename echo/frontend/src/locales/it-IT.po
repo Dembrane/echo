@@ -2106,7 +2106,11 @@ msgstr "Appearance"
 #~ msgid "Applied"
 #~ msgstr ""
 
-#: src/components/chat/CanvasSuggestionCard.tsx:279
+#: src/components/chat/CanvasSuggestionCard.tsx:230
+msgid "Applied. The canvas now shows this design and keeps it fresh."
+msgstr ""
+
+#: src/components/chat/CanvasSuggestionCard.tsx:283
 msgid "Applies this wording and refresh behavior to the existing canvas."
 msgstr ""
 
@@ -2118,7 +2122,7 @@ msgstr ""
 #: src/components/view/CreateViewForm.tsx:153
 #: src/components/goal/GoalSuggestionCard.tsx:122
 #: src/components/common/ImageCropModal.tsx:148
-#: src/components/chat/CanvasSuggestionCard.tsx:362
+#: src/components/chat/CanvasSuggestionCard.tsx:366
 msgid "Apply"
 msgstr "Apply"
 
@@ -2974,7 +2978,7 @@ msgstr "Cannot reschedule within 10 minutes of the scheduled time"
 msgid "Canvas"
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:364
+#: src/components/canvas/hooks/index.ts:368
 msgid "Canvas freshness updated"
 msgstr ""
 
@@ -3740,7 +3744,7 @@ msgstr ""
 msgid "Could not create the organisation"
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:293
+#: src/components/canvas/hooks/index.ts:295
 msgid "Could not create this canvas"
 msgstr ""
 
@@ -3785,7 +3789,7 @@ msgstr ""
 msgid "Could not preview this canvas right now."
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:251
+#: src/components/canvas/hooks/index.ts:252
 msgid "Could not refresh this canvas"
 msgstr ""
 
@@ -3813,9 +3817,9 @@ msgstr ""
 msgid "Could not update template"
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:315
-#: src/components/canvas/hooks/index.ts:336
-#: src/components/canvas/hooks/index.ts:355
+#: src/components/canvas/hooks/index.ts:319
+#: src/components/canvas/hooks/index.ts:340
+#: src/components/canvas/hooks/index.ts:359
 msgid "Could not update this canvas"
 msgstr ""
 
@@ -4542,14 +4546,14 @@ msgstr ""
 
 #: src/components/goal/GoalSuggestionCard.tsx:104
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:155
-#: src/components/chat/CanvasSuggestionCard.tsx:329
+#: src/components/chat/CanvasSuggestionCard.tsx:333
 msgid "Dismiss"
 msgstr ""
 
 #: src/components/goal/GoalSuggestionCard.tsx:86
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:249
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:113
-#: src/components/chat/CanvasSuggestionCard.tsx:257
+#: src/components/chat/CanvasSuggestionCard.tsx:261
 msgid "Dismissed"
 msgstr ""
 
@@ -6952,7 +6956,7 @@ msgstr ""
 msgid "Just previewed. Give it a moment."
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:244
+#: src/components/canvas/hooks/index.ts:245
 msgid "Just refreshed. Give it a moment."
 msgstr ""
 
@@ -8974,7 +8978,7 @@ msgstr ""
 #~ msgid "Open Host Guide"
 #~ msgstr "Open Host Guide"
 
-#: src/components/chat/CanvasSuggestionCard.tsx:231
+#: src/components/chat/CanvasSuggestionCard.tsx:235
 msgid "Open in library"
 msgstr ""
 
@@ -9973,7 +9977,7 @@ msgstr "Preparing your conversations... This may take a moment."
 msgid "Preparing your experience"
 msgstr "Preparing your experience"
 
-#: src/components/chat/CanvasSuggestionCard.tsx:304
+#: src/components/chat/CanvasSuggestionCard.tsx:308
 msgid "Preview"
 msgstr ""
 
@@ -10337,7 +10341,7 @@ msgstr "Prompt"
 #~ msgid "Proposed billing"
 #~ msgstr ""
 
-#: src/components/chat/CanvasSuggestionCard.tsx:268
+#: src/components/chat/CanvasSuggestionCard.tsx:272
 msgid "Proposed changes"
 msgstr ""
 
@@ -10626,7 +10630,7 @@ msgstr ""
 msgid "Refresh ongoing conversations"
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:254
+#: src/components/canvas/hooks/index.ts:255
 msgid "Refresh started"
 msgstr ""
 
@@ -10643,7 +10647,7 @@ msgstr ""
 #~ msgid "Refresh will work when the canvas service is ready"
 #~ msgstr ""
 
-#: src/components/canvas/hooks/index.ts:248
+#: src/components/canvas/hooks/index.ts:249
 msgid "Refresh will work when the canvas service is ready."
 msgstr ""
 
@@ -11207,7 +11211,7 @@ msgstr "Review activity for your workspace. Filter by collection or action, and 
 
 #: src/components/goal/GoalSuggestionCard.tsx:112
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:164
-#: src/components/chat/CanvasSuggestionCard.tsx:337
+#: src/components/chat/CanvasSuggestionCard.tsx:341
 msgid "Review again"
 msgstr ""
 
@@ -12146,13 +12150,13 @@ msgid "Show IP addresses"
 msgstr "Show IP addresses"
 
 #: src/features/sidebar/views/InboxView.tsx:618
-#: src/components/chat/CanvasSuggestionCard.tsx:294
+#: src/components/chat/CanvasSuggestionCard.tsx:298
 #: src/components/announcement/AnnouncementItem.tsx:127
 msgid "Show less"
 msgstr "Show less"
 
 #: src/features/sidebar/views/InboxView.tsx:618
-#: src/components/chat/CanvasSuggestionCard.tsx:294
+#: src/components/chat/CanvasSuggestionCard.tsx:298
 #: src/components/announcement/AnnouncementItem.tsx:132
 msgid "Show more"
 msgstr "Show more"
@@ -13157,16 +13161,16 @@ msgid "This canvas could not update."
 msgstr ""
 
 #: src/components/chat/CanvasSuggestionCard.tsx:227
-msgid "This canvas is in your library."
-msgstr ""
+#~ msgid "This canvas is in your library."
+#~ msgstr ""
 
 #: src/components/chat/CanvasSuggestionCard.tsx:103
 #~ msgid "This canvas is in your Library."
 #~ msgstr ""
 
 #: src/components/chat/CanvasSuggestionCard.tsx:225
-msgid "This canvas update is applied."
-msgstr ""
+#~ msgid "This canvas update is applied."
+#~ msgstr ""
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:172
 #~ msgid "This conversation has no transcript yet"
@@ -13254,7 +13258,7 @@ msgstr ""
 msgid "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 msgstr "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 
-#: src/components/chat/CanvasSuggestionCard.tsx:307
+#: src/components/chat/CanvasSuggestionCard.tsx:311
 msgid "This is not saved yet."
 msgstr ""
 
@@ -13575,7 +13579,7 @@ msgstr ""
 msgid "Title or participant"
 msgstr ""
 
-#: src/components/chat/CanvasSuggestionCard.tsx:274
+#: src/components/chat/CanvasSuggestionCard.tsx:278
 msgid "to"
 msgstr ""
 
@@ -13874,7 +13878,7 @@ msgstr ""
 msgid "Try asking"
 msgstr "Try asking"
 
-#: src/components/chat/CanvasSuggestionCard.tsx:349
+#: src/components/chat/CanvasSuggestionCard.tsx:353
 msgid "Try it"
 msgstr ""
 
@@ -14079,8 +14083,8 @@ msgstr ""
 msgid "Untitled"
 msgstr ""
 
-#: src/components/canvas/hooks/index.ts:119
-#: src/components/canvas/hooks/index.ts:147
+#: src/components/canvas/hooks/index.ts:120
+#: src/components/canvas/hooks/index.ts:148
 msgid "Untitled canvas"
 msgstr ""
 
@@ -14114,7 +14118,7 @@ msgstr ""
 msgid "Up to {0} participants are included."
 msgstr ""
 
-#: src/components/chat/CanvasSuggestionCard.tsx:252
+#: src/components/chat/CanvasSuggestionCard.tsx:256
 msgid "Update"
 msgstr "Update"
 

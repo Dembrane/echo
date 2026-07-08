@@ -243,6 +243,50 @@ async def test_tick_ok_records_banned_visible_copy_without_rewriting(monkeypatch
 
 
 @pytest.mark.asyncio
+async def test_tick_uses_applied_generation_as_previous_frame(monkeypatch) -> None:
+    fake = _FakeDirectus()
+    fake.latest_generation = {
+        "id": "g-applied",
+        "content_html": "<main>approved preview</main>",
+        "created_at": "2026-07-07T10:10:00+00:00",
+        "tick_kind": "applied",
+    }
+    previous_frames: list[str | None] = []
+
+    async def _config(report_id: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"id": "cfg1", "brief": "brief", "gather_spec": {}, "cadence_minutes": 5}
+
+    async def _gather(**kwargs) -> dict[str, Any]:  # noqa: ARG001
+        return {
+            "latest_content_at": "2026-07-07T10:20:00+00:00",
+            "project": {},
+            "conversations": [],
+        }
+
+    async def _generate(**kwargs) -> str:
+        previous_frames.append(kwargs["previous_html"])
+        return '<div class="canvas-shell"><p>next</p></div>'
+
+    async def _enqueue(loop: dict[str, Any]) -> None:  # noqa: ARG001
+        return None
+
+    async def _publish(report_id: str) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_latest_config", _config)
+    monkeypatch.setattr(ticks, "execute_gather_spec", _gather)
+    monkeypatch.setattr(ticks, "_generate_html", _generate)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+    monkeypatch.setattr(ticks, "publish_generation_nudge", _publish)
+
+    result = await ticks.run_tick("loop1", "scheduled")
+
+    assert result["status"] == "ok"
+    assert previous_frames == ["<main>approved preview</main>"]
+
+
+@pytest.mark.asyncio
 async def test_reconcile_missing_canvas_tick_tasks_enqueues_orphaned_active_loop(
     monkeypatch,
 ) -> None:

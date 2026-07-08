@@ -191,9 +191,14 @@ export const CanvasSuggestionCard = ({
 
 	const handleApply = async () => {
 		try {
+			const appliedPreview = previewHtml
+				? { applied_preview_html: previewHtml }
+				: {};
 			if (isUpdateChoice && targetCanvasId) {
 				const canvas = await updateMutation.mutateAsync({
 					...suggestion,
+					...appliedPreview,
+					created_from_chat_id: chatId ?? null,
 					target_canvas_id: targetCanvasId,
 				});
 				setAppliedCanvasId(canvas.id);
@@ -202,6 +207,7 @@ export const CanvasSuggestionCard = ({
 			}
 			const canvas = await createMutation.mutateAsync({
 				...suggestion,
+				...appliedPreview,
 				created_from_chat_id: chatId ?? null,
 			});
 			setAppliedCanvasId(canvas.id);
@@ -221,11 +227,9 @@ export const CanvasSuggestionCard = ({
 						style={{ color: "var(--mantine-color-primary-7)" }}
 					/>
 					<Text size="sm">
-						{isUpdateProposal ? (
-							<Trans>This canvas update is applied.</Trans>
-						) : (
-							<Trans>This canvas is in your library.</Trans>
-						)}{" "}
+						<Trans>
+							Applied. The canvas now shows this design and keeps it fresh.
+						</Trans>{" "}
 						{openPath ? (
 							<I18nLink to={openPath}>
 								<Trans>Open in library</Trans>
