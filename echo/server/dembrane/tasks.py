@@ -31,7 +31,7 @@ from dembrane.directus import (
 )
 from dembrane.settings import get_settings
 from dembrane.transcribe import transcribe_conversation_chunk
-from dembrane.async_helpers import reset_background_loop, run_async_in_new_loop
+from dembrane.async_helpers import run_async_in_new_loop
 from dembrane.conversation_utils import (
     collect_unfinished_conversations,
     collect_unsummarized_conversations,
@@ -48,33 +48,6 @@ REDIS_URL = settings.cache.redis_url
 init_sentry()
 
 logger = getLogger("dembrane.tasks")
-
-
-def _is_async_library_not_found(exc: BaseException) -> bool:
-    """Return True if exc or its causal chain is sniffio's async-library failure."""
-    from sniffio import AsyncLibraryNotFoundError
-
-    seen: set[int] = set()
-    current: BaseException | None = exc
-    while current is not None and id(current) not in seen:
-        if isinstance(current, AsyncLibraryNotFoundError):
-            return True
-        seen.add(id(current))
-        current = current.__cause__ or current.__context__
-    return False
-
-
-def _reset_summarize_async_runtime(reason: str) -> None:
-    """Discard async clients and force the shared loop to be recreated."""
-    try:
-        from dembrane.directus_async import async_directus
-
-        discarded = async_directus.reset_clients()
-        logger.warning("Discarded %s async Directus client(s) during recovery", discarded)
-    except Exception:
-        logger.exception("Failed to discard async Directus clients during recovery")
-
-    reset_background_loop(reason)
 
 
 class DramatiqLz4JSONEncoder(JSONEncoder):
@@ -642,27 +615,13 @@ def task_summarize_conversation(conversation_id: str) -> None:
                 event_prefix="task_summarize_conversation",
             ):
                 run_async_in_new_loop(
-                    summarize_conversation(
+                    lambda: summarize_conversation(
                         conversation_id=conversation_id,
                         auth=DependencyDirectusSession(user_id="none", is_admin=True),
                     )
                 )
 
-        try:
-            _run_summary()
-        except Exception as e:
-            if not _is_async_library_not_found(e):
-                raise
-            logger.exception(
-                "Async runtime poisoned while summarizing conversation %s; "
-                "resetting async clients/background loop and retrying once",
-                conversation_id,
-            )
-            _reset_summarize_async_runtime(
-                f"sniffio AsyncLibraryNotFoundError in task_summarize_conversation "
-                f"for conversation {conversation_id}"
-            )
-            _run_summary()
+        _run_summary()
 
         # Dispatch webhook for conversation.summarized event
         try:
@@ -745,7 +704,7 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
             try:
                 # Run async function in new event loop (CPU worker context)
                 run_async_in_new_loop(
-                    get_conversation_content(
+                    lambda: get_conversation_content(
                         conversation_id,
                         auth=DependencyDirectusSession(user_id="none", is_admin=True),
                         force_merge=True,
@@ -1319,7 +1278,7 @@ def _report_event_distinct_id(report_id_str: str, project_id: str) -> str:
         report_data = (report_row or {}).get("data") or report_row or {}
         creator_directus_id = report_data.get("user_created")
         if creator_directus_id:
-            creator = run_async_in_new_loop(resolve_app_user(creator_directus_id))
+            creator = run_async_in_new_loop(lambda: resolve_app_user(creator_directus_id))
             email = ((creator or {}).get("email") or "").lower()
             return email or str(creator_directus_id)
     except Exception:  # noqa: BLE001 — analytics is best-effort
@@ -1582,7 +1541,7 @@ def task_create_report_continue(
                 report_data = (report_row or {}).get("data") or report_row or {}
                 creator_directus_id = report_data.get("user_created")
                 if creator_directus_id:
-                    creator = run_async_in_new_loop(resolve_app_user(creator_directus_id))
+                    creator = run_async_in_new_loop(lambda: resolve_app_user(creator_directus_id))
                     if creator:
                         project_name = (project_row or {}).get("name") or "your project"
                         emit_sync(
@@ -1633,7 +1592,7 @@ def task_create_report_continue(
                 report_data = (report_row or {}).get("data") or report_row or {}
                 creator_directus_id = report_data.get("user_created")
                 if creator_directus_id:
-                    creator = run_async_in_new_loop(resolve_app_user(creator_directus_id))
+                    creator = run_async_in_new_loop(lambda: resolve_app_user(creator_directus_id))
                     if creator:
                         emit_sync(
                             audience_user_id=creator["id"],
@@ -1870,7 +1829,7 @@ def task_reconcile_canvas_tick_tasks() -> None:
 
     logger = getLogger("dembrane.tasks.task_reconcile_canvas_tick_tasks")
     try:
-        enqueued = run_async_in_new_loop(reconcile_missing_canvas_tick_tasks())
+        enqueued = run_async_in_new_loop(lambda: reconcile_missing_canvas_tick_tasks())
     except Exception as e:
         logger.error("Error reconciling canvas tick tasks: %s", e)
         raise
@@ -1950,7 +1909,7 @@ def _run_canvas_tick(payload: dict) -> None:
     tick_kind = payload.get("tick_kind") or "scheduled"
     from dembrane.canvas.ticks import run_tick
 
-    run_async_in_new_loop(run_tick(str(loop_id), str(tick_kind)))
+    run_async_in_new_loop(lambda: run_tick(str(loop_id), str(tick_kind)))
 
 
 async def _revoke_staff_support_async(
@@ -1992,7 +1951,7 @@ def _run_revoke_staff_support(payload: dict) -> None:
         raise ValueError("revoke_staff_support payload missing workspace_id/membership_id")
 
     revoked = run_async_in_new_loop(
-        _revoke_staff_support_async(workspace_id, membership_id, org_id)
+        lambda: _revoke_staff_support_async(workspace_id, membership_id, org_id)
     )
     if revoked:
         task_logger.info(
@@ -2086,7 +2045,11 @@ def task_expire_staff_support_memberships() -> None:
                 ws = client.get_item("workspace", str(ws_id))
             org_id = ws.get("org_id") if ws else None
         try:
-            run_async_in_new_loop(_revoke_staff_support_async(str(ws_id), str(row["id"]), org_id))
+            run_async_in_new_loop(
+                lambda ws_id=ws_id, membership_id=row["id"], org_id=org_id: (
+                    _revoke_staff_support_async(str(ws_id), str(membership_id), org_id)
+                )
+            )
         except Exception:
             task_logger.exception("failed to expire staff support membership %s", row.get("id"))
 
@@ -2334,7 +2297,11 @@ def task_expire_workspace_tiers() -> None:
                 continue
             ws_name = ws.get("name") or "Untitled"
             try:
-                effects = run_async_in_new_loop(_apply_tier_expiry(target_ws_id, from_tier))
+                effects = run_async_in_new_loop(
+                    lambda target_ws_id=target_ws_id, from_tier=from_tier: _apply_tier_expiry(
+                        target_ws_id, from_tier
+                    )
+                )
                 task_logger.info(
                     "Expired workspace %s (%s): %s -> free, %d effects applied",
                     target_ws_id,
@@ -2399,13 +2366,13 @@ def _send_tier_expired_notifications(
 
     task_logger = getLogger("dembrane.tasks._send_tier_expired_notifications")
 
-    audience = run_async_in_new_loop(audience_workspace_admins_and_billing(workspace_id))
+    audience = run_async_in_new_loop(lambda: audience_workspace_admins_and_billing(workspace_id))
     if not audience:
         task_logger.info("No audience for TIER_EXPIRED on workspace %s", workspace_id)
         return
 
     run_async_in_new_loop(
-        emit_to_audience(
+        lambda: emit_to_audience(
             audience_user_ids=audience,
             event_code="TIER_EXPIRED",
             title=f"{workspace_name} tier expired",
@@ -2590,7 +2557,7 @@ def _send_tier_expiring_soon(
 
     task_logger = getLogger("dembrane.tasks._send_tier_expiring_soon")
 
-    audience = run_async_in_new_loop(audience_workspace_admins_and_billing(workspace_id))
+    audience = run_async_in_new_loop(lambda: audience_workspace_admins_and_billing(workspace_id))
     if not audience:
         task_logger.info("No audience for TIER_EXPIRING_SOON on workspace %s", workspace_id)
         return
@@ -2598,7 +2565,7 @@ def _send_tier_expiring_soon(
     expires_date = _format_expiry_date(expires_at_raw)
 
     run_async_in_new_loop(
-        emit_to_audience(
+        lambda: emit_to_audience(
             audience_user_ids=audience,
             event_code="TIER_EXPIRING_SOON",
             title=f"{workspace_name} tier expires {expires_date}",
@@ -2704,7 +2671,9 @@ def task_reconcile_pending_billing() -> None:
     task_logger.info("Reconciling %d pending billing account(s)", len(pending))
     for acc in pending:
         try:
-            status = run_async_in_new_loop(sync_account_from_mollie(acc["id"]))
+            status = run_async_in_new_loop(
+                lambda account_id=acc["id"]: sync_account_from_mollie(account_id)
+            )
             if status == "active":
                 task_logger.info("Activated billing account %s via catch-up", acc["id"])
         except Exception:
@@ -2742,7 +2711,7 @@ def task_reconcile_subscription_seats() -> None:
         return
     for acc in active:
         try:
-            run_async_in_new_loop(reconcile_account_seats(acc["id"]))
+            run_async_in_new_loop(lambda account_id=acc["id"]: reconcile_account_seats(account_id))
         except Exception:
             task_logger.exception("Failed seat-sync for billing account %s", acc.get("id"))
 
@@ -3000,7 +2969,9 @@ def task_capture_chat_insights() -> None:
                 None,
             )
 
-            insight = run_async_in_new_loop(generate_chat_insight(messages))
+            insight = run_async_in_new_loop(
+                lambda messages=messages: generate_chat_insight(messages)
+            )
             if not insight:
                 skipped += 1
                 continue

@@ -336,6 +336,8 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "guidance and background" in prompt
     # Memories are host-visible and host-deletable
     assert "hosts can delete them" in prompt
+    assert "remembered corrections, names" in prompt
+    assert "remembered version" in prompt
     # Canvas guidance explains the living Library page and loop expiry.
     assert "a canvas is a living page" in prompt
     assert "expiry plainly" in prompt

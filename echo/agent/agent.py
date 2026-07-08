@@ -311,6 +311,10 @@ need to explicitly re-read or verify current memory. There are three scopes:
   private or personal details.
 - workspace: shared preferences for the whole workspace. Keep these generic.
 - project: notes about this project. Keep these generic.
+When a memory bears on the answer, apply it. Remembered corrections, names,
+spellings, and preferences are not decoration. If remembered context names or
+corrects something the current data leaves unnamed or misspelled, use the
+remembered version and cite it naturally.
 Prefer updating an existing note by passing the same memory_key over saving a
 near duplicate. Never store private or personal information outside user scope.
 When you save something, tell the host in one short sentence what you saved.

@@ -10,7 +10,6 @@ from __future__ import annotations
 from contextlib import nullcontext
 
 import pytest
-from sniffio import AsyncLibraryNotFoundError
 
 import dembrane.tasks as tasks
 import dembrane.coordination as coordination
@@ -42,9 +41,10 @@ def _common_monkeypatch(monkeypatch, cleared):
 
 
 def _raise_in_loop(exc):
-    def _run(coro):
-        # the actor passes summarize_conversation(...) coro here; close it to
-        # avoid an "un-awaited coroutine" warning, then raise as if it failed.
+    def _run(coro_or_factory):
+        # the actor passes a summarize_conversation factory here; close the
+        # created coroutine to avoid an "un-awaited coroutine" warning.
+        coro = coro_or_factory() if callable(coro_or_factory) else coro_or_factory
         try:
             coro.close()
         except Exception:
@@ -83,31 +83,28 @@ def test_summarize_genuine_error_still_retries(monkeypatch):
     assert cleared == []
 
 
-def test_summarize_sniffio_error_resets_runtime_and_retries_once(monkeypatch):
+def test_summarize_delegates_retry_boundary_to_async_helper(monkeypatch):
     cleared: list[str] = []
-    attempts: list[str] = []
-    resets: list[str] = []
+    calls: list[str] = []
     _common_monkeypatch(monkeypatch, cleared)
     monkeypatch.setattr(
         conversation_service,
         "get_by_id_or_raise",
         lambda cid: {"id": cid, "is_finished": False, "summary": None, "project_id": None},
     )
-    monkeypatch.setattr(tasks, "_reset_summarize_async_runtime", lambda reason: resets.append(reason))
 
-    def _run(coro):
+    def _run(coro_or_factory):
+        calls.append("run")
+        assert callable(coro_or_factory)
+        coro = coro_or_factory()
         try:
             coro.close()
         except Exception:
             pass
-        attempts.append("run")
-        if len(attempts) == 1:
-            raise AsyncLibraryNotFoundError("unknown async library, or not in async context")
         return None
 
     monkeypatch.setattr(tasks, "run_async_in_new_loop", _run)
 
-    assert tasks.task_summarize_conversation("conv-sniffio") is None
-    assert attempts == ["run", "run"]
-    assert len(resets) == 1
-    assert cleared == ["conv-sniffio"]
+    assert tasks.task_summarize_conversation("conv-shared-retry") is None
+    assert calls == ["run"]
+    assert cleared == ["conv-shared-retry"]
