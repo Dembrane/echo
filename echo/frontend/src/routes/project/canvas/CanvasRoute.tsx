@@ -415,7 +415,7 @@ export const CanvasRoute = () => {
 	useEffect(() => {
 		if (!canvasId || canvas?.isDevFixture) return;
 		let source: EventSource | null = null;
-		let reconnectTimer: ReturnType<typeof window.setTimeout> | null = null;
+		let reconnectTimer: number | null = null;
 		let retryMs = 1000;
 		let closed = false;
 

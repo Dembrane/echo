@@ -338,12 +338,20 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "hosts can delete them" in prompt
     assert "remembered corrections, names" in prompt
     assert "remembered version" in prompt
+    assert "default_conversation_transcript_prompt" in prompt
+    assert "akshita" in prompt
+    assert "ai4deliberation" in prompt
     # Canvas guidance explains the living Library page and loop expiry.
     assert "a canvas is a living page" in prompt
     assert "expiry plainly" in prompt
     assert "do not volunteer exact cadence" in prompt
     assert "hard to read" in prompt
     assert "target_canvas_id" in prompt
+    assert "briefs are durable instructions only" in prompt
+    assert "wednesday check in" in prompt
+    assert "do not paste x's reflection" in prompt
+    assert "do not append forever" in prompt
+    assert "gathered content" in prompt
     # Product-learning insights are quiet and distinct from support requests.
     assert "noticing what dembrane cannot do yet" in prompt
     assert "quietly call recordinsight once" in prompt
