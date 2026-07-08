@@ -1,7 +1,7 @@
 import httpx
 import pytest
 
-from echo_client import EchoClient
+from echo_client import EchoClient, build_project_portal_link, portal_base_url_for_api_url
 
 
 def test_echo_client_sets_authorization_header():
@@ -19,6 +19,37 @@ def test_echo_client_without_token_has_no_authorization_header():
         assert client._client.headers.get("Authorization") is None
     finally:
         pass
+
+
+@pytest.mark.parametrize(
+    ("api_url", "expected_base"),
+    [
+        ("https://api.echo-next.dembrane.com/api", "https://portal.echo-next.dembrane.com"),
+        (
+            "https://api.echo-testing.dembrane.com/api",
+            "https://portal.echo-testing.dembrane.com",
+        ),
+        ("https://api.dembrane.com/api", "https://portal.dembrane.com"),
+        ("http://localhost:8000/api", "http://localhost:5174"),
+    ],
+)
+def test_portal_base_url_for_api_url_maps_known_environments(api_url, expected_base):
+    assert portal_base_url_for_api_url(api_url) == expected_base
+
+
+@pytest.mark.parametrize(
+    ("language", "expected_language"),
+    [("nl", "nl"), ("default", "en"), ("", "en"), (None, "en")],
+)
+def test_build_project_portal_link_normalizes_language(language, expected_language):
+    assert (
+        build_project_portal_link(
+            "project-1",
+            language,
+            echo_api_url="https://api.echo-next.dembrane.com/api",
+        )
+        == f"https://portal.echo-next.dembrane.com/{expected_language}/project-1/start"
+    )
 
 
 class _FakeAsyncClient:

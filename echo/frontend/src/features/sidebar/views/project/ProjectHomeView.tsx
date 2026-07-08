@@ -12,7 +12,7 @@ import {
 	PaintBrushIcon,
 	UsersThreeIcon,
 } from "@phosphor-icons/react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { useProjectChatsCountQuery } from "@/components/chat/hooks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
@@ -26,6 +26,7 @@ export const ProjectHomeView = () => {
 		workspaceId: string;
 		projectId: string;
 	}>();
+	const { pathname } = useLocation();
 	const { workspace } = useWorkspace();
 	// Observers are read-only and have no chat access. Hide the Ask tab and skip
 	// its count query (it 403s for them); passing "" disables the query.
@@ -47,6 +48,9 @@ export const ProjectHomeView = () => {
 
 	if (!workspaceId || !projectId) return null;
 	const base = `/w/${workspaceId}/projects/${projectId}`;
+	const libraryActive =
+		pathname.includes(`/projects/${projectId}/library`) ||
+		pathname.includes(`/projects/${projectId}/canvases/`);
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
@@ -85,6 +89,7 @@ export const ProjectHomeView = () => {
 				to={`${base}/library`}
 				label={<Trans>Library</Trans>}
 				icon={BooksIcon}
+				active={libraryActive}
 			/>
 			<NavItem
 				to={`${base}/host-guide`}

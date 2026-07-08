@@ -146,7 +146,10 @@ async def get_loop_for_report(report_id: str) -> dict[str, Any] | None:
                     "expires_at",
                     "cadence_minutes",
                     "acting_directus_user_id",
+                    "created_from_chat_id",
                     "failure_count",
+                    "created_at",
+                    "updated_at",
                 ],
                 "sort": ["-created_at"],
                 "limit": 1,
@@ -154,6 +157,45 @@ async def get_loop_for_report(report_id: str) -> dict[str, Any] | None:
         },
     )
     return rows[0] if isinstance(rows, list) and rows else None
+
+
+async def update_canvas_config(
+    *,
+    report_id: str,
+    name: str,
+    brief: str,
+    gather_spec: dict[str, Any] | None,
+    cadence_minutes: int,
+    created_by: str,
+) -> dict[str, Any]:
+    """Append a config revision, update loop/report display fields, and tick soon."""
+    config = await revise_config(
+        report_id=report_id,
+        brief=brief,
+        gather_spec=gather_spec,
+        cadence_minutes=cadence_minutes,
+        created_by=created_by,
+        note="chat update",
+    )
+    await async_directus.update_item(
+        "project_report",
+        report_id,
+        {"user_instructions": name},
+    )
+    loop = await get_loop_for_report(report_id)
+    if loop:
+        await async_directus.update_item(
+            "agent_loop",
+            str(loop["id"]),
+            {
+                "name": name,
+                "cadence_minutes": cadence_minutes,
+                "failure_count": 0,
+            },
+        )
+        await enqueue_canvas_tick(str(loop["id"]))
+    report = await async_directus.get_item("project_report", report_id)
+    return {"report": report, "config_revision": config, "loop": loop}
 
 
 async def get_latest_generation(report_id: str) -> dict[str, Any] | None:
@@ -190,6 +232,7 @@ async def list_canvas_summaries(project_id: str) -> list[dict[str, Any]]:
                 "kind": "canvas",
                 "created_at": report.get("date_created"),
                 "latest_generation_at": (generation or {}).get("created_at"),
+                "updated_at": (loop or {}).get("updated_at"),
                 "loop": (
                     {
                         "status": loop.get("status"),
@@ -246,6 +289,32 @@ async def resume_loop(loop_id: str) -> dict[str, Any]:
 async def stop_loop(loop_id: str) -> dict[str, Any]:
     await cancel_pending_tasks(task_type=TASK_CANVAS_TICK, payload_match={"loop_id": loop_id})
     return _data(await async_directus.update_item("agent_loop", loop_id, {"status": "stopped"}))
+
+
+async def update_loop_settings(
+    loop: dict[str, Any],
+    *,
+    cadence_minutes: int,
+    expires_at: str,
+) -> dict[str, Any]:
+    loop_id = str(loop["id"])
+    if loop.get("status") in {"expired", "stopped", "ended"}:
+        raise ValueError("This loop has ended")
+    updated = _data(
+        await async_directus.update_item(
+            "agent_loop",
+            loop_id,
+            {
+                "cadence_minutes": cadence_minutes,
+                "expires_at": expires_at,
+                "failure_count": 0,
+            },
+        )
+    )
+    await cancel_pending_tasks(task_type=TASK_CANVAS_TICK, payload_match={"loop_id": loop_id})
+    if updated.get("status") == "active":
+        await enqueue_canvas_tick(loop_id)
+    return updated
 
 
 def _parse_dt(value: Any) -> datetime | None:

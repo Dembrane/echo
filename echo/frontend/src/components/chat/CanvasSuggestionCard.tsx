@@ -9,9 +9,11 @@ import { CanvasFrame } from "@/components/canvas/CanvasFrame";
 import {
 	type CanvasGeneration,
 	type CanvasProposal,
+	useCanvas,
 	useCreateCanvasMutation,
 	usePreviewCanvasMutation,
 	useProjectCanvases,
+	useUpdateCanvasMutation,
 } from "@/components/canvas/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
@@ -34,16 +36,90 @@ function truncatedBrief(brief: string, expanded: boolean): string {
 	return `${normalized.slice(0, 220).trim()}...`;
 }
 
+function normalizedJson(value: unknown): string {
+	return JSON.stringify(value ?? null);
+}
+
+function isSameProposalConfig(
+	suggestion: CanvasSuggestion,
+	config: {
+		brief?: string | null;
+		gather_spec?: Record<string, unknown> | null;
+		cadence_minutes?: number | null;
+		created_at?: string | null;
+	} | null | undefined,
+): boolean {
+	if (!config) return false;
+	return (
+		String(config.brief ?? "").trim() === suggestion.brief.trim() &&
+		(config.cadence_minutes ?? null) === (suggestion.cadence_minutes ?? null) &&
+		normalizedJson(config.gather_spec) ===
+			normalizedJson(suggestion.gather_spec ?? null)
+	);
+}
+
+function isAfterProposal(
+	configCreatedAt: string | null | undefined,
+	proposedAt: string | null | undefined,
+): boolean {
+	if (!configCreatedAt || !proposedAt) return false;
+	const configTime = new Date(configCreatedAt).getTime();
+	const proposalTime = new Date(proposedAt).getTime();
+	if (Number.isNaN(configTime) || Number.isNaN(proposalTime)) return false;
+	return configTime >= proposalTime;
+}
+
+function changeRows(
+	suggestion: CanvasSuggestion,
+	current:
+		| {
+				name?: string | null;
+				config?: {
+					brief?: string | null;
+					cadence_minutes?: number | null;
+				} | null;
+		  }
+		| null
+		| undefined,
+) {
+	const rows: { label: string; before: string; after: string }[] = [];
+	const currentName = String(current?.name ?? suggestion.target_canvas_name ?? "");
+	if (currentName && currentName !== suggestion.name) {
+		rows.push({ label: t`Name`, before: currentName, after: suggestion.name });
+	}
+	const currentBrief = String(current?.config?.brief ?? "");
+	if (currentBrief && currentBrief.trim() !== suggestion.brief.trim()) {
+		rows.push({
+			label: t`Brief`,
+			before: currentBrief.trim(),
+			after: suggestion.brief.trim(),
+		});
+	}
+	const currentCadence = current?.config?.cadence_minutes ?? null;
+	const nextCadence = suggestion.cadence_minutes ?? null;
+	if (currentCadence !== null && currentCadence !== nextCadence) {
+		rows.push({
+			label: t`Refresh`,
+			before: t`${currentCadence} min`,
+			after: nextCadence ? t`${nextCadence} min` : t`Default`,
+		});
+	}
+	return rows;
+}
+
 export const CanvasSuggestionCard = ({
 	suggestion,
+	chatId,
 	onApplied,
 }: {
 	suggestion: CanvasSuggestion;
+	chatId?: string | null;
 	onApplied?: () => void | Promise<void>;
 }) => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const previewMutation = usePreviewCanvasMutation();
 	const createMutation = useCreateCanvasMutation();
+	const updateMutation = useUpdateCanvasMutation();
 	const canvasesQuery = useProjectCanvases(suggestion.projectId);
 	const [dismissed, setDismissed] = useState(false);
 	const [expanded, setExpanded] = useState(false);
@@ -58,8 +134,19 @@ export const CanvasSuggestionCard = ({
 			) ?? null,
 		[canvasesQuery.data, normalizedName],
 	);
+	const targetCanvasId = suggestion.target_canvas_id ?? matchingCanvas?.id ?? null;
+	const isUpdateProposal = Boolean(suggestion.target_canvas_id);
+	const isUpdateChoice = Boolean(targetCanvasId);
+	const targetCanvasQuery = useCanvas(targetCanvasId ?? "");
+	const targetCanvas = targetCanvasQuery.data ?? null;
+	const updateAppliedByConfig =
+		isUpdateProposal &&
+		targetCanvas?.id === targetCanvasId &&
+		isSameProposalConfig(suggestion, targetCanvas.config) &&
+		isAfterProposal(targetCanvas.config?.created_at, suggestion.proposed_at);
 	const effectiveAppliedCanvasId =
-		appliedCanvasId ?? matchingCanvas?.id ?? null;
+		appliedCanvasId ?? (updateAppliedByConfig ? targetCanvasId : null);
+	const rows = changeRows(suggestion, targetCanvas);
 
 	const previewGeneration = useMemo<CanvasGeneration | null>(() => {
 		if (!previewHtml) return null;
@@ -98,15 +185,19 @@ export const CanvasSuggestionCard = ({
 
 	const handleApply = async () => {
 		try {
-			const freshCanvases = await canvasesQuery.refetch();
-			const existingCanvas = (freshCanvases.data ?? []).find(
-				(canvas) => canvas.name.trim().toLocaleLowerCase() === normalizedName,
-			);
-			if (existingCanvas) {
-				setAppliedCanvasId(existingCanvas.id);
+			if (isUpdateChoice && targetCanvasId) {
+				const canvas = await updateMutation.mutateAsync({
+					...suggestion,
+					target_canvas_id: targetCanvasId,
+				});
+				setAppliedCanvasId(canvas.id);
+				await onApplied?.();
 				return;
 			}
-			const canvas = await createMutation.mutateAsync(suggestion);
+			const canvas = await createMutation.mutateAsync({
+				...suggestion,
+				created_from_chat_id: chatId ?? null,
+			});
 			setAppliedCanvasId(canvas.id);
 			await onApplied?.();
 		} catch {
@@ -124,7 +215,11 @@ export const CanvasSuggestionCard = ({
 						style={{ color: "var(--mantine-color-primary-7)" }}
 					/>
 					<Text size="sm">
-						<Trans>This canvas is in your library.</Trans>{" "}
+						{isUpdateProposal ? (
+							<Trans>This canvas update is applied.</Trans>
+						) : (
+							<Trans>This canvas is in your library.</Trans>
+						)}{" "}
 						{openPath ? (
 							<I18nLink to={openPath}>
 								<Trans>Open in library</Trans>
@@ -146,6 +241,11 @@ export const CanvasSuggestionCard = ({
 						</Text>
 						<Text size="xs">{rhythmLine(suggestion)}</Text>
 					</Stack>
+					{isUpdateChoice ? (
+						<Badge size="xs" variant="light">
+							<Trans>Update</Trans>
+						</Badge>
+					) : null}
 					{dismissed ? (
 						<Badge size="xs" variant="outline">
 							<Trans>Dismissed</Trans>
@@ -156,6 +256,26 @@ export const CanvasSuggestionCard = ({
 				<Text size="sm" fs="italic">
 					"{truncatedBrief(suggestion.brief, expanded)}"
 				</Text>
+				{isUpdateChoice ? (
+					<Stack gap={4}>
+						<Text size="xs" fw={600}>
+							<Trans>Proposed changes</Trans>
+						</Text>
+						{rows.length ? (
+							rows.map((row) => (
+								<Text key={row.label} size="xs">
+									{row.label}: {truncatedBrief(row.before, false)}{" "}
+									<Trans>to</Trans>{" "}
+									{truncatedBrief(row.after, false)}
+								</Text>
+							))
+						) : (
+							<Text size="xs">
+								<Trans>Applies this wording and refresh behavior to the existing canvas.</Trans>
+							</Text>
+						)}
+					</Stack>
+				) : null}
 				{suggestion.brief.trim().length > 220 ? (
 					<Button
 						variant="subtle"
@@ -186,6 +306,7 @@ export const CanvasSuggestionCard = ({
 							<CanvasFrame
 								generation={previewGeneration}
 								cadenceMinutes={suggestion.cadence_minutes}
+								projectId={suggestion.projectId}
 							/>
 						</Box>
 					</Stack>
@@ -222,7 +343,12 @@ export const CanvasSuggestionCard = ({
 							</Button>
 							<Button
 								size="xs"
-								loading={createMutation.isPending || canvasesQuery.isFetching}
+								loading={
+									createMutation.isPending ||
+									updateMutation.isPending ||
+									canvasesQuery.isFetching ||
+									targetCanvasQuery.isFetching
+								}
 								onClick={() => void handleApply()}
 								{...testId("canvas-proposal-apply-button")}
 							>

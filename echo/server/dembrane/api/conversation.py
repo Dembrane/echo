@@ -20,7 +20,11 @@ from dembrane.audio_utils import (
     merge_multiple_audio_files_and_save_to_s3,
 )
 from dembrane.reply_utils import generate_reply_for_conversation
-from dembrane.api.stateless import generate_summary, generate_conversation_title
+from dembrane.api.stateless import (
+    generate_summary,
+    generate_conversation_title,
+    generate_conversation_tag_ids,
+)
 from dembrane.async_helpers import safe_gather, run_in_thread_pool
 from dembrane.stream_status import stream_with_status
 from dembrane.api.exceptions import (
@@ -32,6 +36,79 @@ from dembrane.service.conversation import ConversationService
 
 logger = getLogger("api.conversation")
 ConversationRouter = APIRouter(tags=["conversation"])
+
+
+def _list_project_tags_for_assignment(project_id: str) -> list[dict[str, str]]:
+    rows = directus.get_items(
+        "project_tag",
+        {
+            "query": {
+                "filter": {"project_id": {"_eq": project_id}},
+                "fields": ["id", "text", "sort"],
+                "sort": ["sort"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return []
+
+    tags: list[dict[str, str]] = []
+    for row in rows:
+        tag_id = row.get("id")
+        text = row.get("text")
+        if isinstance(tag_id, str) and isinstance(text, str) and text.strip():
+            tags.append({"id": tag_id, "text": text.strip()})
+    return tags
+
+
+def _get_current_conversation_tag_ids(conversation_id: str) -> set[str]:
+    rows = directus.get_items(
+        "conversation_project_tag",
+        {
+            "query": {
+                "filter": {"conversation_id": {"_eq": conversation_id}},
+                "fields": ["id", "project_tag_id.id"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return set()
+
+    tag_ids: set[str] = set()
+    for row in rows:
+        tag_id = row.get("project_tag_id")
+        if isinstance(tag_id, dict):
+            tag_id = tag_id.get("id")
+        if isinstance(tag_id, str):
+            tag_ids.add(tag_id)
+    return tag_ids
+
+
+def _add_conversation_tags(conversation_id: str, tag_ids: list[str]) -> list[str]:
+    current_tag_ids = _get_current_conversation_tag_ids(conversation_id)
+    added: list[str] = []
+    for tag_id in tag_ids:
+        if tag_id in current_tag_ids:
+            continue
+        try:
+            directus.create_item(
+                "conversation_project_tag",
+                {
+                    "conversation_id": conversation_id,
+                    "project_tag_id": tag_id,
+                },
+            )
+            added.append(tag_id)
+            current_tag_ids.add(tag_id)
+        except Exception:  # noqa: BLE001
+            logger.exception(
+                "conversation_project_tag create failed conv=%s tag=%s",
+                conversation_id,
+                tag_id,
+            )
+    return added
 
 
 async def _invalidate_usage_cache_for_conversation(conversation_id: str) -> None:
@@ -613,12 +690,13 @@ async def summarize_conversation(
         # Prepare update data with summary
         update_data: dict = {"summary": summary}
         title = None
+        assigned_tag_ids: list[str] = []
 
         # Generate title if AI title generation is enabled for this project
         project_data = conversation_data["project_id"]
-        enable_ai_title = project_data.get("enable_ai_title_and_tags", False)
+        enable_ai_title_and_tags = project_data.get("enable_ai_title_and_tags", False)
 
-        if enable_ai_title and summary:
+        if enable_ai_title_and_tags and summary:
             try:
                 # Fetch recent titles for style matching
                 existing_titles = await run_in_thread_pool(
@@ -644,6 +722,39 @@ async def summarize_conversation(
                 logger.error(f"Error generating title for conversation {conversation_id}: {e}")
                 # Continue without title if generation fails
 
+            try:
+                project_tags = await run_in_thread_pool(
+                    _list_project_tags_for_assignment,
+                    project_data["id"],
+                )
+                if project_tags:
+                    tag_ids = await run_in_thread_pool(
+                        generate_conversation_tag_ids,
+                        summary,
+                        language if language else "en",
+                        project_tags,
+                    )
+                    if tag_ids:
+                        assigned_tag_ids = await run_in_thread_pool(
+                            _add_conversation_tags,
+                            conversation_id,
+                            tag_ids,
+                        )
+                        if assigned_tag_ids:
+                            logger.info(
+                                "Assigned draft tags for conversation %s: %s",
+                                conversation_id,
+                                assigned_tag_ids,
+                            )
+                else:
+                    logger.info(
+                        "Skipping draft tag assignment for conversation %s: project has no tags",
+                        conversation_id,
+                    )
+            except Exception as e:
+                logger.error(f"Error assigning draft tags for conversation {conversation_id}: {e}")
+                # Continue without tags if assignment fails
+
         await run_in_thread_pool(
             directus.update_item,
             "conversation",
@@ -658,6 +769,8 @@ async def summarize_conversation(
         }
         if title:
             response["title"] = title
+        if assigned_tag_ids:
+            response["tag_ids"] = assigned_tag_ids
         return response
 
 

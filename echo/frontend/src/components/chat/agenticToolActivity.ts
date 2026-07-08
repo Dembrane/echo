@@ -103,6 +103,8 @@ const buildHeadline = (toolName: string, context: ToolContext) => {
 			return t`Suggesting a canvas`;
 		case "proposeGoal":
 			return t`Suggesting a project goal`;
+		case "navigateTo":
+			return t`Preparing a navigation shortcut`;
 		case "getProjectSettings":
 			return t`Reading project settings`;
 		case "grepDocs":
@@ -387,6 +389,9 @@ export type ParsedCanvasSuggestion = {
 	gather_spec?: Record<string, unknown> | null;
 	cadence_minutes?: number | null;
 	expires_at?: string | null;
+	target_canvas_id?: string | null;
+	target_canvas_name?: string | null;
+	proposed_at?: string | null;
 };
 
 /** Returns the structured suggestion when a completed tool activity is a
@@ -415,7 +420,16 @@ export const parseCanvasSuggestion = (
 					? (payload.gather_spec as Record<string, unknown>)
 					: null,
 			name,
+			proposed_at: activity.timestamp,
 			projectId: String(payload.project_id ?? ""),
+			target_canvas_id:
+				typeof payload.target_canvas_id === "string"
+					? payload.target_canvas_id
+					: null,
+			target_canvas_name:
+				typeof payload.target_canvas_name === "string"
+					? payload.target_canvas_name
+					: null,
 		};
 	} catch {
 		return null;
@@ -441,6 +455,60 @@ export const parseGoalSuggestion = (
 		if (!content) return null;
 		return {
 			content,
+			projectId: String(payload.project_id ?? ""),
+		};
+	} catch {
+		return null;
+	}
+};
+
+export type ParsedNavigationSuggestion = {
+	projectId: string;
+	page:
+		| "overview"
+		| "chats"
+		| "monitor"
+		| "library"
+		| "host-guide"
+		| "report"
+		| "conversations"
+		| "settings"
+		| "portal-editor";
+	entityId: string | null;
+};
+
+const NAVIGATION_PAGE_KEYS = new Set<ParsedNavigationSuggestion["page"]>([
+	"overview",
+	"chats",
+	"monitor",
+	"library",
+	"host-guide",
+	"report",
+	"conversations",
+	"settings",
+	"portal-editor",
+]);
+
+/** Returns the structured suggestion when a completed tool activity is a
+ * navigateTo result, else null. */
+export const parseNavigationSuggestion = (
+	activity: ToolActivity,
+): ParsedNavigationSuggestion | null => {
+	if (activity.toolName !== "navigateTo") return null;
+	if (activity.status !== "completed" || !activity.rawOutput) return null;
+	try {
+		const payload = JSON.parse(activity.rawOutput);
+		if (payload?.type !== "navigation_suggestion") return null;
+		const page = String(payload.page ?? "").trim();
+		if (!NAVIGATION_PAGE_KEYS.has(page as ParsedNavigationSuggestion["page"]))
+			return null;
+		const entityId =
+			typeof payload.entity_id === "string" && payload.entity_id.trim()
+				? payload.entity_id.trim()
+				: null;
+		return {
+			entityId,
+			page: page as ParsedNavigationSuggestion["page"],
 			projectId: String(payload.project_id ?? ""),
 		};
 	} catch {

@@ -4,29 +4,31 @@ export const createFixtureMethodologies = (
 	workspaceId: string,
 ): MethodologyListItem[] => [
 	{
+		description: "The default dembrane setup methodology.",
+		framing:
+			"Help the host decide what this project is for, who should help define it, and whether the project should collect that input before reports or canvases are shaped.",
 		id: `${workspaceId}-dembrane`,
-		name: "dembrane",
-		description: "Default setup conversation",
-		framing: "Figure out what this project is for, then shape the work around it.",
 		is_seeded: true,
 		latest_version: {
-			id: `${workspaceId}-dembrane-v1`,
-			note: "Initial history",
 			created_at: new Date().toISOString(),
+			id: `${workspaceId}-dembrane-v2`,
+			note: "Official dembrane methodology v2",
 		},
+		name: "dembrane",
 		versions_count: 1,
 	},
 	{
-		id: `${workspaceId}-panel-day`,
-		name: "Panel day",
 		description: "A reusable setup for day-long panel sessions",
-		framing: "Keep tables aligned around neighbourhood concerns and suggestions.",
+		framing:
+			"Keep tables aligned around neighbourhood concerns and suggestions.",
+		id: `${workspaceId}-panel-day`,
 		is_seeded: false,
 		latest_version: {
+			created_at: new Date().toISOString(),
 			id: `${workspaceId}-panel-day-v2`,
 			note: "Tightened framing",
-			created_at: new Date().toISOString(),
 		},
+		name: "Panel day",
 		versions_count: 2,
 	},
 ];

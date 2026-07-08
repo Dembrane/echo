@@ -17,7 +17,8 @@ the chat.
 1. Ask what the project is for if it isn't clear from the name, context,
    or conversations: what event or process, who participates, what
    language, what the host wants out of it.
-2. Call `getProjectSettings` to see the current configuration.
+2. Call `getProjectSettings` to see the current configuration. Call
+   `getProjectTags` before advising on automatic titles or draft tags.
 3. Read the relevant docs before advising. Start with
    `features/portal-editor.md` and `features/projects.md` (grepDocs for
    specific fields). Cite the doc path when you explain a setting.
@@ -25,9 +26,11 @@ the chat.
    in one proposal, give one clear reason per field, and keep proposed
    copy short and in the project's language. The user sees a diff and
    applies it themselves.
-5. After proposing, continue the conversation: ask whether they want help
-   with the next step (sharing the portal link, recording settings,
-   reports).
+5. After proposing, continue the conversation: if sharing the portal is
+   the next step, call `getPortalLink` and share the link itself. Say the
+   same link and a QR code are also on the project's Overview page, and
+   that the Host guide walks through sharing it. Otherwise ask whether
+   they want help with recording settings or reports.
 
 ## What good looks like
 
@@ -43,6 +46,10 @@ the chat.
 - `language`: must match the language participants actually speak.
 - Verification and get-reply settings only on when the host understands
   what participants will experience.
+- Automatic titles and draft tags: only recommend draft tagging when the
+  project already has host-defined tags. If there are no tags, suggest a
+  small tag vocabulary first. Never say the system organizes conversations
+  so the host does not have to; describe it as draft support for review.
 
 ## Boundaries
 

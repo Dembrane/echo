@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	ActionIcon,
 	Alert,
 	Box,
 	Button,
@@ -24,7 +23,6 @@ import {
 	IconAlertCircle,
 	IconChevronDown,
 	IconChevronRight,
-	IconCircleX,
 	IconSend,
 	IconSparkles,
 } from "@tabler/icons-react";
@@ -74,6 +72,7 @@ import {
 	parseCanvasSuggestion,
 	parseCustomVerificationTopicSuggestion,
 	parseGoalSuggestion,
+	parseNavigationSuggestion,
 	parseProjectUpdateSuggestion,
 	type ToolActivity,
 } from "./agenticToolActivity";
@@ -84,6 +83,7 @@ import { CustomVerificationTopicSuggestionCard } from "./CustomVerificationTopic
 import { formatMessage } from "./chatUtils";
 import { ChatTurnLimitCard, ChatUpgradeModal } from "./FreeTierChatGate";
 import { useChat as useProjectChat } from "./hooks";
+import { NavigationSuggestionCard } from "./NavigationSuggestionCard";
 import { ProjectUpdateSuggestionCard } from "./ProjectUpdateSuggestionCard";
 
 type AgenticChatPanelProps = {
@@ -637,6 +637,11 @@ export const AgenticChatPanel = ({
 					item: Extract<TimelineItem, { kind: "tool" }>;
 			  }
 			| {
+					kind: "navigation_suggestion";
+					id: string;
+					item: Extract<TimelineItem, { kind: "tool" }>;
+			  }
+			| {
 					kind: "tool_group";
 					id: string;
 					items: Extract<TimelineItem, { kind: "tool" }>[];
@@ -661,6 +666,10 @@ export const AgenticChatPanel = ({
 			}
 			if (parseGoalSuggestion(item)) {
 				nodes.push({ id: item.id, item, kind: "goal_suggestion" });
+				continue;
+			}
+			if (parseNavigationSuggestion(item)) {
+				nodes.push({ id: item.id, item, kind: "navigation_suggestion" });
 				continue;
 			}
 			const last = nodes[nodes.length - 1];
@@ -1402,6 +1411,7 @@ export const AgenticChatPanel = ({
 											...suggestion,
 											projectId: suggestion.projectId || projectId,
 										}}
+										chatId={chatId}
 										onApplied={() => handleSubmit(t`I applied the canvas.`)}
 									/>
 								</div>
@@ -1419,6 +1429,20 @@ export const AgenticChatPanel = ({
 										}}
 										chatId={chatId}
 										onApplied={() => handleSubmit(t`I applied the goal.`)}
+									/>
+								</div>
+							) : null;
+						}
+
+						if (node.kind === "navigation_suggestion") {
+							const suggestion = parseNavigationSuggestion(node.item);
+							return suggestion ? (
+								<div key={node.id}>
+									<NavigationSuggestionCard
+										suggestion={{
+											...suggestion,
+											projectId: suggestion.projectId || projectId,
+										}}
 									/>
 								</div>
 							) : null;
@@ -1502,6 +1526,26 @@ export const AgenticChatPanel = ({
 								>
 									{liveRunStatusText}
 								</Text>
+								<Button
+									type="button"
+									size="compact-xs"
+									radius="xl"
+									variant="subtle"
+									color="red"
+									aria-label={t`Cancel current run`}
+									onPointerDown={armStopControl}
+									onKeyDown={(event) => {
+										if (event.key === "Enter" || event.key === " ") {
+											armStopControl();
+										}
+									}}
+									onClick={() => void handleStop()}
+									disabled={isStopping}
+									leftSection={isStopping ? <Loader size={12} /> : undefined}
+									{...testId("chat-stop-button")}
+								>
+									<Trans>Cancel</Trans>
+								</Button>
 							</Group>
 						</Paper>
 					)}
@@ -1552,33 +1596,6 @@ export const AgenticChatPanel = ({
 									</Text>
 								</Group>
 								<Group gap="xs" wrap="nowrap">
-									{isRunInFlight ? (
-										<Tooltip label={t`Stop this run`} openDelay={400}>
-											<ActionIcon
-												type="button"
-												size="lg"
-												radius="md"
-												variant="subtle"
-												color="red"
-												aria-label={t`Stop this run`}
-												onPointerDown={armStopControl}
-												onKeyDown={(event) => {
-													if (event.key === "Enter" || event.key === " ") {
-														armStopControl();
-													}
-												}}
-												onClick={() => void handleStop()}
-												disabled={isStopping}
-												{...testId("chat-stop-button")}
-											>
-												{isStopping ? (
-													<Loader size={14} />
-												) : (
-													<IconCircleX size={18} />
-												)}
-											</ActionIcon>
-										</Tooltip>
-									) : null}
 									<Button
 										type="submit"
 										size="sm"

@@ -46,6 +46,11 @@ async def _post(path: str, json: dict[str, Any] | None = None) -> Any:
         return await client.post(path, json=json)
 
 
+async def _patch(path: str, json: dict[str, Any] | None = None) -> Any:
+    async with AsyncClient(transport=ASGITransport(app=_app()), base_url="http://test") as client:
+        return await client.patch(path, json=json)
+
+
 @pytest.mark.asyncio
 async def test_get_canvas_matches_track_b_shape(monkeypatch) -> None:
     access = _Access()
@@ -59,9 +64,18 @@ async def test_get_canvas_matches_track_b_shape(monkeypatch) -> None:
     async def _generation(report_id: str) -> dict:  # noqa: ARG001
         return {"id": "g1", "report_id": "r1", "content_html": "<html></html>", "status": "ok"}
 
+    async def _config(report_id: str) -> dict:  # noqa: ARG001
+        return {
+            "brief": "Show themes",
+            "gather_spec": {"window_minutes": 60},
+            "cadence_minutes": 5,
+            "created_at": "2026-07-07T10:00:00Z",
+        }
+
     monkeypatch.setattr(canvases_bff, "resolve_report_access", _report)
     monkeypatch.setattr(canvases_bff, "get_loop_for_report", _loop)
     monkeypatch.setattr(canvases_bff, "get_latest_generation", _generation)
+    monkeypatch.setattr(canvases_bff, "get_latest_config", _config)
 
     res = await _get("/api/v2/bff/canvases/r1")
 
@@ -71,6 +85,14 @@ async def test_get_canvas_matches_track_b_shape(monkeypatch) -> None:
         "name": "Panel wall",
         "kind": "canvas",
         "project_id": "p1",
+        "created_from_chat_id": None,
+        "updated_at": None,
+        "config": {
+            "brief": "Show themes",
+            "gather_spec": {"window_minutes": 60},
+            "cadence_minutes": 5,
+            "created_at": "2026-07-07T10:00:00Z",
+        },
         "latest_generation": {
             "id": "g1",
             "report_id": "r1",
@@ -125,15 +147,27 @@ async def test_create_requires_project_update_and_valid_expiry(monkeypatch) -> N
 
     class _Directus:
         async def get_item(self, collection: str, item_id: str) -> dict:  # noqa: ARG002
+            if collection == "project_chat":
+                return {"id": item_id, "project_id": "p1", "deleted_at": None}
             return {"id": "r1", "kind": "canvas", "project_id": "p1"}
 
     async def _loop(report_id: str) -> dict:  # noqa: ARG001
-        return {"name": "n", "status": "active", "expires_at": "later", "cadence_minutes": 5}
+        return {
+            "name": "n",
+            "status": "active",
+            "expires_at": "later",
+            "cadence_minutes": 5,
+            "created_from_chat_id": "chat-1",
+        }
+
+    async def _config(report_id: str) -> dict:  # noqa: ARG001
+        return {"brief": "brief", "gather_spec": None, "cadence_minutes": 5, "created_at": "now"}
 
     monkeypatch.setattr(canvases_bff, "resolve_project_access", _project)
     monkeypatch.setattr(canvases_bff, "create_canvas", _create)
     monkeypatch.setattr(canvases_bff, "async_directus", _Directus())
     monkeypatch.setattr(canvases_bff, "get_loop_for_report", _loop)
+    monkeypatch.setattr(canvases_bff, "get_latest_config", _config)
     async def _no_generation(_report_id: str) -> None:
         return None
 
@@ -148,10 +182,12 @@ async def test_create_requires_project_update_and_valid_expiry(monkeypatch) -> N
             "brief": "brief",
             "cadence_minutes": 5,
             "expires_at": expiry,
+            "created_from_chat_id": "chat-1",
         },
     )
 
     assert res.status_code == 200
+    assert res.json()["created_from_chat_id"] == "chat-1"
     assert access.required == ["project:update"]
 
 
@@ -202,6 +238,7 @@ async def test_preview_runs_gather_generate_sanitize_without_persisting_and_rate
             "project_id": "p1",
             "acting_directus_user_id": "du1",
             "gather_spec": {"window_minutes": 15},
+            "preview_sample": True,
         }
     ]
     assert access.required == ["project:update"]
@@ -212,6 +249,70 @@ async def test_preview_runs_gather_generate_sanitize_without_persisting_and_rate
     )
     assert res.status_code == 429
     assert res.json() == {"detail": "Just previewed"}
+
+
+@pytest.mark.asyncio
+async def test_update_canvas_appends_revision_and_returns_canvas(monkeypatch) -> None:
+    access = _Access()
+    updated_calls: list[dict[str, Any]] = []
+
+    async def _report(report_id: str, auth) -> tuple[_Access, dict]:  # noqa: ARG001
+        return access, {"id": report_id, "kind": "canvas", "project_id": "p1"}
+
+    async def _update(**kwargs) -> dict[str, Any]:
+        updated_calls.append(kwargs)
+        return {"report": {"id": "r1", "kind": "canvas", "project_id": "p1"}}
+
+    async def _loop(report_id: str) -> dict:  # noqa: ARG001
+        return {
+            "name": "Updated wall",
+            "status": "active",
+            "expires_at": "later",
+            "cadence_minutes": 10,
+            "updated_at": "2026-07-07T10:15:00Z",
+        }
+
+    async def _config(report_id: str) -> dict:  # noqa: ARG001
+        return {
+            "brief": "Updated brief",
+            "gather_spec": {"window_minutes": 30},
+            "cadence_minutes": 10,
+            "created_at": "2026-07-07T10:15:00Z",
+        }
+
+    async def _no_generation(_report_id: str) -> None:
+        return None
+
+    monkeypatch.setattr(canvases_bff, "resolve_report_access", _report)
+    monkeypatch.setattr(canvases_bff, "update_canvas_config", _update)
+    monkeypatch.setattr(canvases_bff, "get_loop_for_report", _loop)
+    monkeypatch.setattr(canvases_bff, "get_latest_config", _config)
+    monkeypatch.setattr(canvases_bff, "get_latest_generation", _no_generation)
+
+    async with AsyncClient(transport=ASGITransport(app=_app()), base_url="http://test") as client:
+        res = await client.patch(
+            "/api/v2/bff/canvases/r1",
+            json={
+                "name": "Updated wall",
+                "brief": "Updated brief",
+                "gather_spec": {"window_minutes": 30},
+                "cadence_minutes": 10,
+            },
+        )
+
+    assert res.status_code == 200
+    assert updated_calls == [
+        {
+            "report_id": "r1",
+            "name": "Updated wall",
+            "brief": "Updated brief",
+            "gather_spec": {"window_minutes": 30},
+            "cadence_minutes": 10,
+            "created_by": "du1",
+        }
+    ]
+    assert res.json()["config"]["brief"] == "Updated brief"
+    assert access.required == ["project:read", "project:update"]
 
 
 @pytest.mark.asyncio
@@ -295,3 +396,48 @@ async def test_loop_lifecycle_delegates_and_maps_ended_resume(monkeypatch) -> No
 
     assert res.status_code == 409
     assert res.json() == {"detail": "This loop has ended"}
+
+
+@pytest.mark.asyncio
+async def test_patch_loop_updates_expiry_and_cadence(monkeypatch) -> None:
+    access = _Access()
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=8)
+    seen: dict[str, Any] = {}
+
+    async def _report(report_id: str, auth) -> tuple[_Access, dict]:  # noqa: ARG001
+        return access, {"id": report_id, "kind": "canvas", "project_id": "p1"}
+
+    async def _loop(report_id: str) -> dict:  # noqa: ARG001
+        return {"id": "loop1", "status": "active", "expires_at": "old", "cadence_minutes": 5}
+
+    async def _update_loop_settings(
+        loop: dict[str, Any],
+        *,
+        cadence_minutes: int,
+        expires_at: str,
+    ) -> dict[str, Any]:
+        seen["loop"] = loop
+        seen["cadence_minutes"] = cadence_minutes
+        seen["expires_at"] = expires_at
+        return {
+            "status": "active",
+            "expires_at": expires_at,
+            "cadence_minutes": cadence_minutes,
+        }
+
+    monkeypatch.setattr(canvases_bff, "resolve_report_access", _report)
+    monkeypatch.setattr(canvases_bff, "get_loop_for_report", _loop)
+    monkeypatch.setattr(canvases_bff, "update_loop_settings", _update_loop_settings)
+
+    res = await _patch(
+        "/api/v2/bff/canvases/r1/loop",
+        {"cadence_minutes": 15, "expires_at": expires_at.isoformat()},
+    )
+
+    assert res.status_code == 200
+    assert res.json()["status"] == "active"
+    assert res.json()["cadence_minutes"] == 15
+    assert seen["loop"]["id"] == "loop1"
+    assert seen["cadence_minutes"] == 15
+    assert seen["expires_at"].startswith(expires_at.isoformat()[:19])
+    assert access.required == ["project:read", "project:update"]

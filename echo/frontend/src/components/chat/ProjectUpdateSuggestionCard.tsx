@@ -47,7 +47,7 @@ const FIELD_LABELS: Record<string, () => string> = {
 	default_conversation_title: () => t`Portal title`,
 	default_conversation_transcript_prompt: () => t`Key terms`,
 	default_conversation_tutorial_slug: () => t`Portal tutorial`,
-	enable_ai_title_and_tags: () => t`Automatic titles and tags`,
+	enable_ai_title_and_tags: () => t`Automatic titles and draft tags`,
 	get_reply_mode: () => t`Reply mode`,
 	get_reply_prompt: () => t`Reply guidance`,
 	host_guide: () => t`Host guide`,

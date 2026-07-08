@@ -15,32 +15,34 @@ import sys
 import uuid
 import argparse
 from typing import Any
+from pathlib import Path
+from urllib.parse import quote
 
-from add_smart_loop_phase0_schema import (
+SERVER_PATH = Path(__file__).resolve().parents[2] / "server"
+if str(SERVER_PATH) not in sys.path:
+    sys.path.insert(0, str(SERVER_PATH))
+
+from add_smart_loop_phase0_schema import (  # noqa: E402
     Directus,
     login,
-    relation,
     uuid_pk,
-    json_field,
+    relation,
     m2o_field,
+    json_field,
     text_field,
+    _field_base,
     ensure_field,
     string_field,
-    _field_base,
     ensure_schema,
     ensure_relation,
-    ensure_collection,
     timestamp_field,
+    ensure_collection,
 )
 
-DEMBRANE_METHODOLOGY_CONTENT = {
-    "opening_move": "interview the host toward a goal",
-    "description": (
-        "Figure out what this project is for before shaping reports or canvases. "
-        "Use a short interview to turn the host's intent into a project goal, then "
-        "let that goal steer the artifacts the project produces."
-    ),
-}
+from dembrane.official_methodologies import (  # noqa: E402
+    OFFICIAL_METHODOLOGIES,
+    OfficialMethodology,
+)
 
 
 def bool_field(
@@ -81,6 +83,86 @@ def _create_item(dx: Directus, collection: str, payload: dict[str, Any]) -> dict
     return row if isinstance(row, dict) else {}
 
 
+def _update_item(
+    dx: Directus,
+    collection: str,
+    item_id: str,
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    if dx.dry_run:
+        print(f"    [dry-run] PATCH /items/{collection}/{item_id}")
+        return {}
+    response = dx._request("PATCH", f"/items/{collection}/{item_id}", payload)
+    row = response.get("data")
+    return row if isinstance(row, dict) else {}
+
+
+def _seed_official_methodology(dx: Directus, methodology: OfficialMethodology) -> None:
+    seed = _first_item(
+        dx,
+        _items_query(
+            (
+                "methodology"
+                f"?filter[name][_eq]={quote(methodology.name, safe='')}"
+                "&filter[is_seeded][_eq]=true"
+            ),
+            "id,description,framing,visibility,is_seeded",
+        ),
+    )
+    methodology_payload = {
+        "name": methodology.name,
+        "description": methodology.description,
+        "framing": methodology.framing,
+        "visibility": methodology.visibility,
+        "is_seeded": True,
+    }
+
+    if seed:
+        methodology_id = str(seed["id"])
+        metadata_updates = {
+            key: value for key, value in methodology_payload.items() if seed.get(key) != value
+        }
+        if metadata_updates:
+            print(f"  official methodology {methodology.name}: updating metadata")
+            _update_item(dx, "methodology", methodology_id, metadata_updates)
+        else:
+            print(f"  official methodology {methodology.name}: metadata current")
+    else:
+        methodology_id = str(uuid.uuid4())
+        print(f"  official methodology {methodology.name}: creating")
+        _create_item(
+            dx,
+            "methodology",
+            {
+                "id": methodology_id,
+                **methodology_payload,
+            },
+        )
+
+    latest_version = _first_item(
+        dx,
+        _items_query(
+            (f"methodology_version?filter[methodology_id][_eq]={methodology_id}&sort=-created_at"),
+            "id,note,content",
+        ),
+    )
+    if latest_version and latest_version.get("content") == methodology.content:
+        print(f"  official methodology {methodology.name}: version current")
+        return
+
+    print(f"  official methodology {methodology.name}: creating version")
+    _create_item(
+        dx,
+        "methodology_version",
+        {
+            "id": str(uuid.uuid4()),
+            "methodology_id": methodology_id,
+            "content": methodology.content,
+            "note": methodology.version_note,
+        },
+    )
+
+
 def ensure_wave5_schema(dx: Directus) -> None:
     print("Step 0/4: phase 0 dependencies")
     ensure_schema(dx)
@@ -109,7 +191,9 @@ def ensure_wave5_schema(dx: Directus) -> None:
             ),
             string_field("project_goal_revision", "chat_id", sort=5),
             string_field("project_goal_revision", "created_by", sort=6),
-            timestamp_field("project_goal_revision", "created_at", sort=7, special=["date-created"]),
+            timestamp_field(
+                "project_goal_revision", "created_at", sort=7, special=["date-created"]
+            ),
         ],
         "methodology": [
             string_field("methodology", "name", sort=2, required=True),
@@ -142,7 +226,9 @@ def ensure_wave5_schema(dx: Directus) -> None:
             timestamp_field("methodology_version", "created_at", sort=6, special=["date-created"]),
         ],
         "project": [
-            m2o_field("project", "methodology_version_id", "methodology_version", sort=80, **uuid_ref)
+            m2o_field(
+                "project", "methodology_version_id", "methodology_version", sort=80, **uuid_ref
+            )
         ],
     }
     for collection, fields in fields_by_collection.items():
@@ -159,57 +245,9 @@ def ensure_wave5_schema(dx: Directus) -> None:
     for collection, field, related_collection in relation_specs:
         ensure_relation(dx, collection, field, relation(collection, field, related_collection))
 
-    print("Step 4/4: seeded dembrane methodology")
-    seed = _first_item(
-        dx,
-        _items_query(
-            "methodology?filter[name][_eq]=dembrane&filter[is_seeded][_eq]=true",
-            "id",
-        ),
-    )
-    if seed:
-        methodology_id = seed["id"]
-        print("  seed methodology dembrane: exists, skipping")
-    else:
-        methodology_id = str(uuid.uuid4())
-        print("  seed methodology dembrane: creating")
-        _create_item(
-            dx,
-            "methodology",
-            {
-                "id": methodology_id,
-                "name": "dembrane",
-                "description": "The default dembrane setup methodology.",
-                "framing": (
-                    "Figure out what this project is for, then shape reports and "
-                    "canvases around that goal."
-                ),
-                "visibility": "public",
-                "is_seeded": True,
-            },
-        )
-
-    version = _first_item(
-        dx,
-        _items_query(
-            f"methodology_version?filter[methodology_id][_eq]={methodology_id}",
-            "id",
-        ),
-    )
-    if version:
-        print("  seed methodology version: exists, skipping")
-    else:
-        print("  seed methodology version: creating")
-        _create_item(
-            dx,
-            "methodology_version",
-            {
-                "id": str(uuid.uuid4()),
-                "methodology_id": methodology_id,
-                "content": DEMBRANE_METHODOLOGY_CONTENT,
-                "note": "Seeded dembrane methodology v1",
-            },
-        )
+    print("Step 4/4: official methodologies")
+    for methodology in OFFICIAL_METHODOLOGIES:
+        _seed_official_methodology(dx, methodology)
 
 
 def main() -> int:

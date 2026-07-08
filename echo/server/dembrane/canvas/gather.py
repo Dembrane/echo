@@ -10,6 +10,45 @@ from dembrane.canvas.access import resolve_canvas_reader_context
 from dembrane.project_goals import get_current_project_goal_content
 from dembrane.directus_async import async_directus
 
+SAMPLE_CONVERSATIONS: tuple[dict[str, Any], ...] = (
+    {
+        "id": "sample-conversation-1",
+        "label": "Sample participant 1",
+        "created_at": "sample",
+        "latest_transcript": (
+            "The welcome flow was clear, but I was not sure where to find the next step "
+            "after leaving the session."
+        ),
+    },
+    {
+        "id": "sample-conversation-2",
+        "label": "Sample participant 2",
+        "created_at": "sample",
+        "latest_transcript": (
+            "I liked seeing the main themes quickly. I would trust it more if the page "
+            "made it obvious which notes came from recent conversations."
+        ),
+    },
+    {
+        "id": "sample-conversation-3",
+        "label": "Sample participant 3",
+        "created_at": "sample",
+        "latest_transcript": (
+            "The most useful parts were concrete examples and a short list of things "
+            "the team can act on this week."
+        ),
+    },
+    {
+        "id": "sample-conversation-4",
+        "label": "Sample participant 4",
+        "created_at": "sample",
+        "latest_transcript": (
+            "Some people are excited, but others need reassurance about privacy and "
+            "what will happen with their feedback."
+        ),
+    },
+)
+
 
 def _as_id(value: Any) -> str | None:
     if isinstance(value, dict):
@@ -37,6 +76,7 @@ async def execute_gather_spec(
     project_id: str,
     acting_directus_user_id: str,
     gather_spec: dict[str, Any] | None,
+    preview_sample: bool = False,
 ) -> dict[str, Any]:
     """Gather recent transcript data after verifying reader access."""
     await resolve_canvas_reader_context(
@@ -138,22 +178,33 @@ async def execute_gather_spec(
             }
         )
 
+    sample_mode = bool(preview_sample and len(out) < 2)
+    conversations_out = list(SAMPLE_CONVERSATIONS) if sample_mode else out
+
     return {
         "spec": {
             "version": 1,
             "window_minutes": window_minutes,
             "tag_ids": tag_ids,
             "conversation_ids": conversation_ids,
+            "preview_sample": sample_mode,
         },
         "project": project_context,
         "counts": {
             "conversations_considered": len(conversations),
             "conversations_with_recent_content": len(out),
+            "sample_conversations_used": len(conversations_out) if sample_mode else 0,
             "chunks_seen": chunks_seen,
             "truncated_conversations": truncated_conversations,
             "max_transcript_chars_per_conversation": settings.max_transcript_chars_per_conversation,
             "max_total_transcript_chars": settings.max_total_transcript_chars,
         },
         "latest_content_at": latest_content_at,
-        "conversations": out,
+        "sample_mode": sample_mode,
+        "sample_notice": (
+            "Sample conversations, your real conversations replace these."
+            if sample_mode
+            else None
+        ),
+        "conversations": conversations_out,
     }

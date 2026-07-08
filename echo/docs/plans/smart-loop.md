@@ -310,6 +310,8 @@ monitor_embed for live presence - author's choice per layout.
 - v2+: D4a skeleton graduation for stabilized frames; D2 Python sandbox when server-side
   compute enters; publish/venue screens; primitives + methodology element bundles;
   library uploads (documents); D1 full headless agentic runs for self-revising loops.
+- v1.5 tracked: embed live monitor as a canvas element.
+- v1.5 tracked: live latest-conversations canvas element via SSE, no polling.
 
 ## Consistency pass (2026-07-07, after the dynamic-canvas directive)
 

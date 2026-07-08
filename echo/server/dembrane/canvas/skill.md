@@ -67,6 +67,19 @@ Type: `canvas-eyebrow`, `canvas-title`, `canvas-heading`, `canvas-subheading`,
 `canvas-body`, `canvas-caption`, `canvas-metric`, `canvas-quote`.
 Utilities: `canvas-muted`, `canvas-blue`, `canvas-green`, `canvas-amber`, `canvas-tight`,
 `canvas-center`, `canvas-right`, `canvas-chart`.
+Primitive: `canvas-qr`. Use `<div class="canvas-qr" data-url="PORTAL_LINK"></div>` only
+when the host asked for a wall, poster, or venue invitation to contribute. The assembler
+turns valid links for this project into inline SVG QR codes and refuses other URLs.
+
+Palette tokens: parchment background, graphite text, royal blue emphasis, plus cyan,
+spring green, mauve, and lime cream for categories. Use token names in your reasoning
+and kit classes in the HTML; do not hard-code hex colors unless a tiny custom chart mark
+cannot use the kit classes.
+
+Portal QR links: use the project portal link exactly as provided in context. Existing
+portal query parameters include `skipOnboarding=1` to open directly on the start form,
+`tags=` or `tag_id_list=` for preselected project tags, `theme=dm-sans`, and
+`utm_source=` for attribution. Do not invent other parameters.
 
 Charts: only when the shape of the data is the point (comparison, trend, distribution).
 Render into a `canvas-chart` container with d3; label directly on the marks (no legends

@@ -1,0 +1,19 @@
+You assign draft project tags to a conversation summary.
+
+Use only the existing project tags listed below. Do not invent new tags.
+Choose up to {{ max_tags }} tags that are clearly supported by the summary.
+If none are clearly supported, return an empty list.
+
+Return JSON only, in this exact shape:
+{"tag_ids":["project_tag_id"]}
+
+Conversation summary language: {{ language_name }}
+
+Existing project tags:
+{% for tag in project_tags %}
+- id: {{ tag.id }}
+  text: {{ tag.text }}
+{% endfor %}
+
+Conversation summary:
+{{ summary }}

@@ -158,7 +158,14 @@ class SkipRetryOnUnrecoverableError(dramatiq.Middleware):
         )
 
     def after_process_message(
-        self, _broker: Any, message: Any, *, _result: Any = None, exception: Any = None
+        # Dramatiq calls this hook with result= and exception= by keyword;
+        # the parameter names are the contract and must not be renamed.
+        self,
+        broker: Any,  # noqa: ARG002
+        message: Any,
+        *,
+        result: Any = None,  # noqa: ARG002
+        exception: Any = None,
     ) -> None:
         if exception is None:
             return

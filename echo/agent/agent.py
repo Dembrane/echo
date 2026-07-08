@@ -1,6 +1,6 @@
 from logging import getLogger
 import re
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 from datetime import datetime, timezone, timedelta
 
 from copilotkit.langgraph import CopilotKitState
@@ -13,11 +13,35 @@ from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
 
 import knowledge
-from echo_client import EchoClient
+from echo_client import EchoClient, build_project_portal_link, normalize_portal_language
 from settings import get_settings
 
 logger = getLogger("agent")
 VERTEX_AUTH_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
+
+DashboardPageKey = Literal[
+    "overview",
+    "chats",
+    "monitor",
+    "library",
+    "host-guide",
+    "report",
+    "conversations",
+    "settings",
+    "portal-editor",
+]
+
+NAVIGATION_LABELS: dict[str, str] = {
+    "overview": "overview",
+    "chats": "chats",
+    "monitor": "monitor",
+    "library": "library",
+    "host-guide": "host guide",
+    "report": "report",
+    "conversations": "conversations",
+    "settings": "settings",
+    "portal-editor": "portal editor",
+}
 
 # Note: the citation tag format below ([conversation_id:<id>;chunk_id:<id>]) is
 # parsed by the frontend (AgenticChatPanel.tsx). Do not change it without
@@ -73,8 +97,12 @@ Use tools when the question needs project data or product knowledge:
 - "What did people say about X?" -> findConvosByKeywords, then grepConvoSnippets
   or listConvoFullTranscript for exact wording.
 - "How does the portal work?" -> grepDocs and readDoc; cite the doc path.
+- "How do participants record / where is the portal link / how do I share it?"
+  -> getPortalLink, then give the actual link and offer navigateTo("overview")
+  or navigateTo("host-guide") if the host wants to find it in the dashboard.
 - "Help me set up my project" -> readSkill(project-onboarding.md), then
-  getProjectSettings, then proposeProjectUpdate.
+  getProjectSettings and getProjectTags, then proposeProjectUpdate if a
+  settings change is ready.
 - "Help me set the goal / figure out this project" -> readSkill(interviewing.md),
   then readGoal and listMethodologies, then proposeGoal.
 - "What did we discuss before / continue that chat" -> listProjectChats, then readChat.
@@ -83,6 +111,23 @@ Use tools when the question needs project data or product knowledge:
   transcription is keeping up, and flag any conversation that is failing.
 Do not use tools for greetings, small talk, or questions about this chat.
 When intent is unclear, ask one focused question instead of guessing.
+
+## The dashboard
+- Overview: portal link and QR code, portal settings summary, and the Portal
+  editor button.
+- Chats: project chats with this assistant.
+- Monitor: live participant recording and transcription health.
+- Library: conversations, canvases, reports, and analysis materials.
+- Host guide: guidance for sharing the portal and running collection.
+- Report: report creation, editing, and sharing.
+- Conversations: the conversation list, transcripts, tags, and status.
+- Settings: project configuration and access controls.
+Never describe dashboard navigation beyond these surfaces. When sharing the
+portal is the topic, give the actual link via getPortalLink and say: you'll also
+find this link and a QR code on your project's Overview page, and the Host guide
+walks through sharing it. When a host asks where something is in the dashboard,
+give one short locating sentence and offer to take them there with navigateTo.
+Do not write multi-step dashboard routes. Never invent tabs, buttons, or menus.
 
 ## Getting help from the dembrane team
 When the host needs something you cannot give: something looks broken, a billing
@@ -139,6 +184,11 @@ ask one focused question first.
 
 ## Proposing project changes
 - Read current values with getProjectSettings before proposing.
+- Read current tags with getProjectTags before recommending automatic titles
+  and draft tags. If no project tags exist, do not claim tag automation will
+  organize conversations. First suggest a small host-defined tag vocabulary.
+  The setting can draft short titles and attach existing project tags after
+  summarization, but tags remain draft organization for the host to review.
 - Use proposeProjectUpdate: group related fields, one short reason per field,
   proposed copy in the project's language, a one-sentence summary.
 - The host sees a diff and applies or rejects it themselves. You never apply
@@ -157,7 +207,10 @@ such as a wall, pulse, dashboard, or page that keeps itself fresh. Always say th
 expiry plainly. Do not volunteer exact cadence or interval minutes unless the
 host asks for that detail; say it keeps itself fresh or updates on the next
 refresh. The host applies the proposal, and you can list canvases or pause,
-resume, and stop their loops by chat. For pause/resume/stop requests, first
+resume, stop, and propose updates to their loops by chat. When the host asks to
+change an existing canvas, first resolve the referenced canvas with listCanvases
+or proposeCanvas target_canvas_id, then call proposeCanvas with target_canvas_id
+so the host sees an update proposal. For pause/resume/stop requests, first
 resolve the referenced canvas with listCanvases when the host uses a name or
 shorthand such as "the wall"; then confirm the action by canvas name. Be honest
 that updates are periodic, not instant second-by-second changes.
@@ -170,18 +223,31 @@ goal, help with one lightweight question at a time. Read interviewing.md first
 and use that shape: no "interview" wording, no announced question count,
 convergent options, and a confirm-understanding close. Ask exactly one question
 per turn, with 2-4 concrete options and an easy skip or free-text escape. Use
-plain conversational openers such as "What are you hoping to learn?" Offer
-existing methodologies from listMethodologies when any exist, calling them
-methodologies or ways of working, never frameworks or tools. Documentation is a
-light aside only: link text should be short ("the docs"), and a docs mention
-must not be the final sentence or visual call to action of a message. When you
-have enough, use proposeGoal to restate the goal in the host's words. After
-proposing a goal, do not ask the host to report back after applying it. The chat
-records that automatically. If the project has no goal and this is the setup
-conversation, proposeGoal is the closing move and must come before
-proposeProjectUpdate or any settings/context suggestion. Suggest context/settings
-updates only after a goal exists. After a substantial artifact or report, you may
-gently suggest extracting a methodology. Never do it automatically.
+plain conversational openers such as "What are you hoping to learn?" Early in
+setup, ask how many people are part of defining what this project is, and whether
+the project definition is already clear or the project should collect input
+about what it should become. If several people need to shape it together, suggest
+opening that discussion and recording it with a phone or dembrane Go, with
+everyone's consent, then using that conversation as project material so you can
+continue setup from what the group said. Early in setup, mention once, in one
+warm sentence, that the project starts on the dembrane way of working: first we
+shape the project together, then you collect conversations, then we make sense
+of them. Offer existing methodologies from
+listMethodologies when any exist, calling them methodologies or ways of working,
+never frameworks or tools. If only the seeded dembrane methodology exists, that
+mention is enough; do not force a choice. Documentation is a light aside only: link text should
+be short ("the docs"), and a docs mention must not be the final sentence or
+visual call to action of a message. When you have enough, use proposeGoal to
+restate the goal in the host's words. After proposing a goal, do not ask the host
+to report back after applying it. The chat records that automatically. If the
+project has no goal and this is the setup conversation, proposeGoal is the
+closing move and must come before proposeProjectUpdate or any settings/context
+suggestion. Suggest context/settings updates only after a goal exists. After a
+substantial artifact or report, you may gently suggest extracting a methodology.
+Never do it automatically.
+The first visible assistant message in a setup chat must contain the first real
+question for the host, not status narration about looking at settings, reviewing
+context, or planning what you will do.
 
 ## Memory
 You can save durable notes with `remember` and recall them with `readMemory`.
@@ -751,6 +817,75 @@ def create_agent_graph(
         }
 
     @tool
+    async def getProjectTags() -> dict[str, Any]:
+        """Read the project's current tag vocabulary.
+
+        Tags are defined by hosts and can be selected by participants. Automatic
+        draft tagging can only choose from these existing tags; if this list is
+        empty, suggest defining tags before recommending tag automation.
+        """
+        client = _create_echo_client()
+        try:
+            tags = await client.list_project_tags(project_id)
+        finally:
+            await client.close()
+        return {
+            "project_id": project_id,
+            "count": len(tags),
+            "tags": tags,
+        }
+
+    @tool
+    async def getPortalLink() -> dict[str, Any]:
+        """Return the actual participant portal link for this project.
+
+        Use this when the host asks how participants record, how to invite
+        participants, or where to find/share the portal link. Mention that the
+        dashboard also shows the link and QR code on Overview, and the Host guide
+        walks through sharing it.
+        """
+        client = _create_echo_client()
+        try:
+            current = await client.get_project_settings(project_id)
+        finally:
+            await client.close()
+
+        language = normalize_portal_language(current.get("language"))
+        return {
+            "project_id": project_id,
+            "language": language,
+            "portal_link": build_project_portal_link(project_id, language),
+            "dashboard_locations": ["Overview", "Host guide"],
+        }
+
+    @tool
+    async def navigateTo(page: DashboardPageKey, entity_id: str = "") -> dict[str, Any]:
+        """Offer a host-clicked dashboard navigation shortcut.
+
+        Use this when the host asks where something lives in the dashboard.
+        `page` must be one of the real dashboard surfaces. `entity_id` is
+        optional and only useful for a specific canvas in Library or a specific
+        conversation in Conversations. This never navigates automatically and
+        never calls an API; it only returns a visible suggestion card.
+        """
+        normalized_page = str(page).strip()
+        if normalized_page not in NAVIGATION_LABELS:
+            raise ValueError(
+                f"Unknown dashboard page: {normalized_page}. "
+                f"Allowed pages: {sorted(NAVIGATION_LABELS)}"
+            )
+        normalized_entity_id = entity_id.strip()
+
+        return {
+            "type": "navigation_suggestion",
+            "project_id": project_id,
+            "page": normalized_page,
+            "entity_id": normalized_entity_id or None,
+            "label": NAVIGATION_LABELS[normalized_page],
+            "visible_to_user": True,
+        }
+
+    @tool
     async def proposeProjectUpdate(
         changes: list[dict[str, Any]],
         summary: str,
@@ -840,14 +975,17 @@ def create_agent_graph(
         gather_window_minutes: int = 60,
         cadence_minutes: int = 5,
         expires_in_hours: int = 8,
+        target_canvas_id: str = "",
     ) -> dict[str, Any]:
-        """Propose a living canvas for the host to apply.
+        """Propose a living canvas for the host to apply or apply as an update.
 
         Use this only when the host asked for a recurring or live artifact, such
         as a screen, wall, dashboard, pulse, or page that keeps itself fresh.
         Always state the expiry out loud in your message, but do not mention the
         exact cadence unless the host asks. The host applies it: you never create
-        it yourself.
+        or update it yourself. When changing an existing canvas, pass
+        target_canvas_id as the id or unique canvas name/reference; the tool
+        resolves it and returns an update proposal payload.
         """
         normalized_name = name.strip()
         normalized_brief = brief.strip()
@@ -864,7 +1002,7 @@ def create_agent_graph(
 
         window_minutes = max(1, min(int(gather_window_minutes or 60), 60 * 24 * 14))
         expires_at = datetime.now(timezone.utc) + timedelta(hours=expires_in_hours)
-        return {
+        payload = {
             "type": "canvas_proposal",
             "name": normalized_name,
             "brief": normalized_brief,
@@ -873,6 +1011,11 @@ def create_agent_graph(
             "expires_at": expires_at.isoformat(),
             "visible_to_user": True,
         }
+        if target_canvas_id.strip():
+            resolved_canvas_id, resolved_name = await _resolve_canvas_id(target_canvas_id)
+            payload["target_canvas_id"] = resolved_canvas_id
+            payload["target_canvas_name"] = resolved_name
+        return payload
 
     @tool
     async def sendProgressUpdate(update: str, next_steps: str = "") -> dict[str, Any]:
@@ -981,8 +1124,9 @@ def create_agent_graph(
 
     @tool
     async def proposeGoal(content: str) -> dict[str, Any]:
-        """Propose a project goal after interviewing the host. Restate the goal
-        in the host's words. This never writes anything: the host applies it."""
+        """Propose a project goal after helping the host define the setup.
+        Restate the goal in the host's words. This never writes anything: the
+        host applies it."""
         normalized_content = content.strip()
         if not normalized_content:
             raise ValueError("content is required")
@@ -1125,6 +1269,9 @@ def create_agent_graph(
         grepDocs,
         readSkill,
         getProjectSettings,
+        getProjectTags,
+        getPortalLink,
+        navigateTo,
         proposeProjectUpdate,
         proposeCustomVerificationTopic,
         proposeCanvas,

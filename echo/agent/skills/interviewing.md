@@ -27,12 +27,18 @@ Use one guided-question muscle for two jobs:
 Find:
 
 - What the project is for.
+- How many people are part of defining what this project is.
+- Whether the project definition is already clear, or whether the project should collect input about what it should become.
 - Who needs to use the output.
 - What the host wants surfaced or protected.
 - What a useful report or canvas should be shaped around.
 - Tone, language, or format constraints that matter.
 
 Then propose one goal that is specific enough to steer reports and artifacts.
+If a group needs to define the project together, suggest opening that discussion
+and recording it with a phone or dembrane Go, with everyone's consent. Explain
+that the recorded discussion can become project material and you can continue
+setup from what the group said.
 
 ## Feature-Gap Capture
 

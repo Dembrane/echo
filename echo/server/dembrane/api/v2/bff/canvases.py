@@ -15,7 +15,10 @@ from dembrane.canvas.service import (
     create_canvas,
     list_generations,
     apply_loop_action,
+    get_latest_config,
     get_loop_for_report,
+    update_canvas_config,
+    update_loop_settings,
     get_latest_generation,
     list_canvas_summaries,
 )
@@ -36,6 +39,19 @@ class CreateCanvasBody(BaseModel):
     brief: str = Field(min_length=1, max_length=8000)
     gather_spec: dict[str, Any] | None = None
     cadence_minutes: int = Field(default=5, ge=2, le=120)
+    expires_at: datetime
+    created_from_chat_id: str | None = None
+
+
+class UpdateCanvasBody(BaseModel):
+    name: str = Field(min_length=1, max_length=160)
+    brief: str = Field(min_length=1, max_length=8000)
+    gather_spec: dict[str, Any] | None = None
+    cadence_minutes: int = Field(default=5, ge=2, le=120)
+
+
+class UpdateCanvasLoopSettingsBody(BaseModel):
+    cadence_minutes: int = Field(ge=2, le=120)
     expires_at: datetime
 
 
@@ -66,14 +82,28 @@ async def _require_canvas(report_id: str, auth: DependencyDirectusSession) -> tu
 async def _canvas_payload(report: dict[str, Any]) -> dict[str, Any]:
     report_id = _report_id(report)
     loop = await get_loop_for_report(report_id)
+    config = await get_latest_config(report_id)
     generation = await get_latest_generation(report_id)
     project_id = _as_id(report.get("project_id"))
+    created_from_chat_id = await _live_created_from_chat_id(loop, project_id)
     return {
         "id": report_id,
         "name": (loop or {}).get("name") or report.get("user_instructions") or "Canvas",
         "kind": "canvas",
         "project_id": project_id,
         "latest_generation": generation,
+        "created_from_chat_id": created_from_chat_id,
+        "updated_at": (loop or {}).get("updated_at"),
+        "config": (
+            {
+                "brief": config.get("brief"),
+                "gather_spec": config.get("gather_spec"),
+                "cadence_minutes": config.get("cadence_minutes"),
+                "created_at": config.get("created_at"),
+            }
+            if config
+            else None
+        ),
         "loop": (
             {
                 "status": loop.get("status"),
@@ -84,6 +114,21 @@ async def _canvas_payload(report: dict[str, Any]) -> dict[str, Any]:
             else None
         ),
     }
+
+
+async def _live_created_from_chat_id(
+    loop: dict[str, Any] | None,
+    project_id: str | None,
+) -> str | None:
+    chat_id = _as_id((loop or {}).get("created_from_chat_id"))
+    if not chat_id or not project_id:
+        return None
+    chat = await async_directus.get_item("project_chat", chat_id)
+    if not chat or chat.get("deleted_at"):
+        return None
+    if _as_id(chat.get("project_id")) != project_id:
+        return None
+    return chat_id
 
 
 def _loop_payload(loop: dict[str, Any]) -> dict[str, Any]:
@@ -140,6 +185,15 @@ async def create_canvas_endpoint(
         raise HTTPException(status_code=422, detail="expires_at must be in the future")
     if expires_at > now + timedelta(days=7):
         raise HTTPException(status_code=422, detail="expires_at must be within 7 days")
+    created_from_chat_id = body.created_from_chat_id
+    if created_from_chat_id:
+        chat = await async_directus.get_item("project_chat", created_from_chat_id)
+        if (
+            not chat
+            or chat.get("deleted_at")
+            or _as_id(chat.get("project_id")) != body.project_id
+        ):
+            created_from_chat_id = None
 
     created = await create_canvas(
         project_id=body.project_id,
@@ -149,6 +203,7 @@ async def create_canvas_endpoint(
         cadence_minutes=body.cadence_minutes,
         expires_at=expires_at.isoformat(),
         acting_directus_user_id=auth.user_id,
+        created_from_chat_id=created_from_chat_id,
     )
     report = await async_directus.get_item("project_report", str(created["report"]["id"]))
     return await _canvas_payload(report)
@@ -176,6 +231,7 @@ async def preview_canvas(
         project_id=body.project_id,
         acting_directus_user_id=auth.user_id,
         gather_spec=body.gather_spec or {},
+        preview_sample=True,
     )
     raw_html = await _generate_html(
         brief=body.brief,
@@ -190,6 +246,25 @@ async def preview_canvas(
 async def get_canvas(canvas_id: str, auth: DependencyDirectusSession) -> dict:
     report, _access = await _require_canvas(canvas_id, auth)
     return await _canvas_payload(report)
+
+
+@router.patch("/{canvas_id}")
+async def update_canvas(
+    canvas_id: str,
+    body: UpdateCanvasBody,
+    auth: DependencyDirectusSession,
+) -> dict:
+    report, access = await _require_canvas(canvas_id, auth)
+    access.require("project:update")
+    updated = await update_canvas_config(
+        report_id=_report_id(report),
+        name=body.name,
+        brief=body.brief,
+        gather_spec=body.gather_spec,
+        cadence_minutes=body.cadence_minutes,
+        created_by=auth.user_id,
+    )
+    return await _canvas_payload(updated["report"])
 
 
 @router.get("/{canvas_id}/generations")
@@ -232,3 +307,35 @@ async def update_canvas_loop(
     if action not in {"pause", "resume", "stop"}:
         raise HTTPException(status_code=404, detail="Canvas loop action not found")
     return await _apply_canvas_loop_action(canvas_id, action, auth)
+
+
+@router.patch("/{canvas_id}/loop")
+async def patch_canvas_loop(
+    canvas_id: str,
+    body: UpdateCanvasLoopSettingsBody,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    report, access = await _require_canvas(canvas_id, auth)
+    access.require("project:update")
+    loop = await get_loop_for_report(_report_id(report))
+    if not loop:
+        raise HTTPException(status_code=404, detail="Canvas loop not found")
+
+    now = datetime.now(timezone.utc)
+    expires_at = body.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at <= now:
+        raise HTTPException(status_code=422, detail="expires_at must be in the future")
+    if expires_at > now + timedelta(days=7):
+        raise HTTPException(status_code=422, detail="expires_at must be within 7 days")
+
+    try:
+        updated = await update_loop_settings(
+            loop,
+            cadence_minutes=body.cadence_minutes,
+            expires_at=expires_at.isoformat(),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return _loop_payload(updated)
