@@ -13,6 +13,7 @@ from html.parser import HTMLParser
 from dembrane.llms import MODELS, arouter_completion
 from dembrane.utils import generate_uuid
 from dembrane.settings import get_settings
+from dembrane.redis_async import get_redis_client
 from dembrane.canvas.access import CanvasReaderAccessDenied
 from dembrane.canvas.events import publish_generation_nudge
 from dembrane.canvas.gather import execute_gather_spec
@@ -141,6 +142,32 @@ async def _create_run(
         },
     )
     return result["data"]
+
+
+def _tick_window_key(loop_id: str, started_at: datetime, cadence_minutes: int) -> str:
+    cadence_seconds = max(2, cadence_minutes) * 60
+    window = int(started_at.timestamp()) // cadence_seconds
+    return f"canvas:tick:{loop_id}:{window}"
+
+
+async def _claim_scheduled_tick_window(loop: dict[str, Any], started_at: datetime) -> bool:
+    """Return False when another scheduled tick already owns this cadence window."""
+    loop_id = str(loop["id"])
+    cadence = max(2, int(loop.get("cadence_minutes") or 5))
+    ttl_seconds = max(30, cadence * 60 - 5)
+    try:
+        client = await get_redis_client()
+        return bool(
+            await client.set(
+                _tick_window_key(loop_id, started_at, cadence),
+                "1",
+                ex=ttl_seconds,
+                nx=True,
+            )
+        )
+    except Exception:
+        logger.warning("Redis unavailable for canvas tick idempotency", exc_info=True)
+        return True
 
 
 async def _update_loop_after_tick(loop: dict[str, Any], *, status: str) -> None:
@@ -276,6 +303,15 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
             started_at=started_at,
         )
         return {"status": "no_op", "run": run}
+
+    if tick_kind == "scheduled" and not await _claim_scheduled_tick_window(loop, started_at):
+        run = await _create_run(
+            loop_id=loop_id,
+            status="no_op",
+            detail="Duplicate tick for cadence window",
+            started_at=started_at,
+        )
+        return {"status": "duplicate", "run": run}
 
     report_id: str | None = None
     project_id: str | None = None

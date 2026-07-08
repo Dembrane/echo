@@ -36,6 +36,14 @@ class _DeniedAccess:
         raise HTTPException(status_code=403, detail="Not allowed")
 
 
+@pytest.fixture(autouse=True)
+def _latest_loop_run(monkeypatch) -> None:
+    async def _run(loop_id: str) -> dict[str, Any] | None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(canvases_bff, "get_latest_loop_run", _run)
+
+
 async def _get(path: str) -> Any:
     async with AsyncClient(transport=ASGITransport(app=_app()), base_url="http://test") as client:
         return await client.get(path)
@@ -59,7 +67,13 @@ async def test_get_canvas_matches_track_b_shape(monkeypatch) -> None:
         return access, {"id": report_id, "kind": "canvas", "project_id": "p1"}
 
     async def _loop(report_id: str) -> dict:  # noqa: ARG001
-        return {"name": "Panel wall", "status": "active", "expires_at": "later", "cadence_minutes": 5}
+        return {
+            "id": "loop1",
+            "name": "Panel wall",
+            "status": "active",
+            "expires_at": "later",
+            "cadence_minutes": 5,
+        }
 
     async def _generation(report_id: str) -> dict:  # noqa: ARG001
         return {"id": "g1", "report_id": "r1", "content_html": "<html></html>", "status": "ok"}
@@ -99,7 +113,14 @@ async def test_get_canvas_matches_track_b_shape(monkeypatch) -> None:
             "content_html": "<html></html>",
             "status": "ok",
         },
-        "loop": {"status": "active", "expires_at": "later", "cadence_minutes": 5},
+        "loop": {
+            "status": "active",
+            "expires_at": "later",
+            "cadence_minutes": 5,
+            "last_run_started_at": None,
+            "last_run_status": None,
+            "last_run_detail": None,
+        },
     }
     assert access.required == ["project:read"]
 
@@ -153,6 +174,7 @@ async def test_create_requires_project_update_and_valid_expiry(monkeypatch) -> N
 
     async def _loop(report_id: str) -> dict:  # noqa: ARG001
         return {
+            "id": "loop1",
             "name": "n",
             "status": "active",
             "expires_at": "later",
@@ -265,6 +287,7 @@ async def test_update_canvas_appends_revision_and_returns_canvas(monkeypatch) ->
 
     async def _loop(report_id: str) -> dict:  # noqa: ARG001
         return {
+            "id": "loop1",
             "name": "Updated wall",
             "status": "active",
             "expires_at": "later",
@@ -385,7 +408,14 @@ async def test_loop_lifecycle_delegates_and_maps_ended_resume(monkeypatch) -> No
     res = await _post("/api/v2/bff/canvases/r1/loop/resume")
 
     assert res.status_code == 200
-    assert res.json() == {"status": "active", "expires_at": "later", "cadence_minutes": 5}
+    assert res.json() == {
+        "status": "active",
+        "expires_at": "later",
+        "cadence_minutes": 5,
+        "last_run_started_at": None,
+        "last_run_status": None,
+        "last_run_detail": None,
+    }
     assert access.required == ["project:read", "project:update"]
 
     async def _ended(loop: dict[str, Any], action: str) -> dict[str, Any]:  # noqa: ARG001

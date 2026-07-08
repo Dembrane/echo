@@ -26,6 +26,11 @@ busy one. Fabricated participant voices are the worst failure this product can h
    clear hierarchy, restrained color, no ornament that competes with content.
 5. Stable between refreshes. You receive the PREVIOUS document; keep its layout and
    section order, update the content. Redesign ONLY when the brief changed.
+6. Readability is non-negotiable. Body text, numbers, and status labels must have obvious
+   contrast. Never put light text on a light tint, same-hue text on its own tinted
+   background, or yellow text on yellow/amber backgrounds. The production violation to
+   avoid is a "Carbonation Level" chip that used dim yellow text over a yellow highlight.
+   Prefer graphite or other dark text on soft tint chips.
 
 ## Hard technical rules
 

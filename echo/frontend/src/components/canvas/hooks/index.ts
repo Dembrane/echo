@@ -25,6 +25,9 @@ export type CanvasLoop = {
 	status: "active" | "paused" | "expired" | "stopped" | "ended" | string;
 	expires_at?: string | null;
 	cadence_minutes?: number | null;
+	last_run_started_at?: string | null;
+	last_run_status?: CanvasGenerationStatus | string | null;
+	last_run_detail?: string | null;
 };
 
 export type CanvasListItem = {
@@ -88,7 +91,7 @@ function isFixtureEligibleMiss(error: unknown): boolean {
 	if (APP_ENVIRONMENT !== "local") return false;
 	const isLocalNetworkMiss =
 		error instanceof TypeError ||
-			bffError?.message === "Failed to fetch" ||
+		bffError?.message === "Failed to fetch" ||
 		bffError?.message.includes("fetch failed");
 	return (
 		bffError?.status === 404 ||
@@ -110,7 +113,8 @@ function normalizeCanvasResponse(
 		id: String(report.id ?? canvasId),
 		kind: "canvas",
 		latest_generation:
-			(response.latest_generation as CanvasGeneration | null | undefined) ?? null,
+			(response.latest_generation as CanvasGeneration | null | undefined) ??
+			null,
 		loop: (response.loop as CanvasLoop | null | undefined) ?? null,
 		name: String(report.name ?? report.title ?? t`Untitled canvas`),
 		project_id:
@@ -128,7 +132,9 @@ function normalizeCanvasResponse(
 	};
 }
 
-function normalizeCanvasListItem(item: Record<string, unknown>): CanvasListItem {
+function normalizeCanvasListItem(
+	item: Record<string, unknown>,
+): CanvasListItem {
 	return {
 		created_at: String(item.created_at ?? new Date().toISOString()),
 		id: String(item.id ?? ""),
@@ -145,11 +151,16 @@ function normalizeCanvasListItem(item: Record<string, unknown>): CanvasListItem 
 	};
 }
 
-async function getProjectCanvases(projectId: string): Promise<CanvasListItem[]> {
+async function getProjectCanvases(
+	projectId: string,
+): Promise<CanvasListItem[]> {
 	try {
-		const response = await bff.get<Array<Record<string, unknown>>>("/canvases", {
-			project_id: projectId,
-		});
+		const response = await bff.get<Array<Record<string, unknown>>>(
+			"/canvases",
+			{
+				project_id: projectId,
+			},
+		);
 		return response.map(normalizeCanvasListItem).filter((canvas) => canvas.id);
 	} catch (error) {
 		if (isFixtureEligibleMiss(error)) {
