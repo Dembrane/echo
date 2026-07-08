@@ -1173,6 +1173,65 @@ async def test_process_agentic_run_passes_persisted_message_history(monkeypatch)
 
 
 @pytest.mark.asyncio
+async def test_process_agentic_run_skips_suppressed_assistant_turns_in_history(
+    monkeypatch,
+) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    service.append_event(run["id"], "user.message", {"content": "set up this project"})
+    service.append_event(
+        run["id"],
+        "assistant.message",
+        {"content": "Checking your project settings."},
+    )
+    service.append_event(run["id"], "user.message", {"content": "what next?"})
+
+    captured: dict[str, list[dict[str, str]] | None] = {"message_history": None}
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+        **_context: object,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id)
+        captured["message_history"] = message_history
+        yield {"type": "assistant.message", "content": "Use the Overview page."}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="what next?",
+        bearer_token="token-1",
+        turn_seq=3,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    assert captured["message_history"] == [
+        {"role": "user", "content": "set up this project"},
+        {"role": "user", "content": "what next?"},
+    ]
+
+
+@pytest.mark.asyncio
 async def test_process_agentic_run_leaves_run_queued_when_newer_user_turn_arrives(
     monkeypatch,
 ) -> None:

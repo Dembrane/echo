@@ -37,7 +37,10 @@ import {
 	useState,
 } from "react";
 import { useLocation } from "react-router";
-import { useUpdateChatMutation } from "@/components/chat/hooks";
+import {
+	useChatHistory,
+	useUpdateChatMutation,
+} from "@/components/chat/hooks";
 import { InsertTemplateMenu } from "@/components/chat/InsertTemplateMenu";
 import { useConversationsByProjectId } from "@/components/conversation/hooks";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -372,6 +375,72 @@ const toHistoryMessage = (message: RenderMessage): HistoryLikeMessage =>
 		role: message.role,
 	}) as HistoryLikeMessage;
 
+const normalizeHistoryRole = (role: unknown): RenderMessage["role"] | null => {
+	const normalized = String(role ?? "").trim().toLowerCase();
+	if (normalized === "user") return "user";
+	if (normalized === "assistant") return "assistant";
+	return null;
+};
+
+const historyToRenderMessage = ({
+	conversationNames,
+	language,
+	message,
+	projectId,
+	sortSeq,
+	workspaceId,
+}: {
+	conversationNames?: Map<string, string>;
+	language: string;
+	message: ChatHistory[number];
+	projectId: string;
+	sortSeq: number;
+	workspaceId: string;
+}): RenderMessage | null => {
+	const role = normalizeHistoryRole(message.role);
+	const content = String(message.content ?? "").trim();
+	if (!role || !content) return null;
+	if (role === "assistant" && INTERNAL_ASSISTANT_PLACEHOLDERS.has(content)) {
+		return null;
+	}
+	return {
+		content: enrichAgenticContent({
+			content,
+			conversationNames,
+			language,
+			projectId,
+			workspaceId,
+		}),
+		id: message.id,
+		role,
+		sortSeq,
+		timestamp: message._original.date_created ?? new Date().toISOString(),
+	};
+};
+
+const tryParseTimelineSuggestion = (
+	item: Extract<TimelineItem, { kind: "tool" }>,
+) => {
+	try {
+		return {
+			canvas: parseCanvasSuggestion(item),
+			customVerificationTopic: parseCustomVerificationTopicSuggestion(item),
+			goal: parseGoalSuggestion(item),
+			navigation: parseNavigationSuggestion(item),
+			projectUpdate: parseProjectUpdateSuggestion(item),
+		};
+	} catch (error) {
+		console.warn("Failed to parse agentic timeline suggestion", error);
+		return {
+			canvas: null,
+			customVerificationTopic: null,
+			goal: null,
+			navigation: null,
+			projectUpdate: null,
+		};
+	}
+};
+
 type ToolActivityItem = Extract<TimelineItem, { kind: "tool" }>;
 
 /** A single humane tool-activity line: status dot, plain-language headline,
@@ -527,6 +596,7 @@ export const AgenticChatPanel = ({
 	);
 	const queryClient = useQueryClient();
 	const chatQuery = useProjectChat(chatId);
+	const persistedHistoryQuery = useChatHistory(chatId);
 	const [runId, setRunId] = useState<string | null>(null);
 	const [runStatus, setRunStatus] = useState<AgenticRunStatus | null>(null);
 	const [afterSeq, setAfterSeq] = useState(0);
@@ -596,6 +666,27 @@ export const AgenticChatPanel = ({
 			}
 		}
 
+		if (!items.some((item) => item.kind === "message")) {
+			for (const [index, message] of (
+				persistedHistoryQuery.data ?? []
+			).entries()) {
+				const rendered = historyToRenderMessage({
+					conversationNames,
+					language,
+					message,
+					projectId,
+					sortSeq: index + 1,
+					workspaceId: workspaceId ?? "",
+				});
+				if (rendered) {
+					items.push({
+						...rendered,
+						kind: "message",
+					});
+				}
+			}
+		}
+
 		for (const activity of extractTopLevelToolActivity(sorted)) {
 			items.push({
 				...activity,
@@ -604,7 +695,14 @@ export const AgenticChatPanel = ({
 		}
 
 		return items.sort((left, right) => left.sortSeq - right.sortSeq);
-	}, [events, language, projectId, workspaceId, conversationNames]);
+	}, [
+		events,
+		language,
+		projectId,
+		workspaceId,
+		conversationNames,
+		persistedHistoryQuery.data,
+	]);
 
 	// Fold consecutive tool activities into one collapsible "working" group so
 	// the thread reads as a conversation, not a debug log. Messages and
@@ -652,23 +750,24 @@ export const AgenticChatPanel = ({
 				nodes.push({ id: item.id, item, kind: "message" });
 				continue;
 			}
-			if (parseProjectUpdateSuggestion(item)) {
+			const suggestions = tryParseTimelineSuggestion(item);
+			if (suggestions.projectUpdate) {
 				nodes.push({ id: item.id, item, kind: "suggestion" });
 				continue;
 			}
-			if (parseCustomVerificationTopicSuggestion(item)) {
+			if (suggestions.customVerificationTopic) {
 				nodes.push({ id: item.id, item, kind: "verification_suggestion" });
 				continue;
 			}
-			if (parseCanvasSuggestion(item)) {
+			if (suggestions.canvas) {
 				nodes.push({ id: item.id, item, kind: "canvas_suggestion" });
 				continue;
 			}
-			if (parseGoalSuggestion(item)) {
+			if (suggestions.goal) {
 				nodes.push({ id: item.id, item, kind: "goal_suggestion" });
 				continue;
 			}
-			if (parseNavigationSuggestion(item)) {
+			if (suggestions.navigation) {
 				nodes.push({ id: item.id, item, kind: "navigation_suggestion" });
 				continue;
 			}

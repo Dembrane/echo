@@ -1,7 +1,12 @@
 import httpx
 import pytest
 
-from echo_client import EchoClient, build_project_portal_link, portal_base_url_for_api_url
+from echo_client import (
+    EchoClient,
+    build_project_portal_link,
+    portal_base_url_for_api_url,
+    portal_base_url_for_cors_origins,
+)
 
 
 def test_echo_client_sets_authorization_header():
@@ -37,6 +42,21 @@ def test_portal_base_url_for_api_url_maps_known_environments(api_url, expected_b
     assert portal_base_url_for_api_url(api_url) == expected_base
 
 
+def test_portal_base_url_for_api_url_does_not_fall_back_to_production():
+    assert portal_base_url_for_api_url("http://echo-api:8000/api") is None
+
+
+def test_portal_base_url_for_cors_origins_prefers_portal_host():
+    assert (
+        portal_base_url_for_cors_origins(
+            "https://dashboard.echo-next.dembrane.com,"
+            "https://portal.echo-next.dembrane.com,"
+            "http://localhost:5173,http://localhost:5174"
+        )
+        == "https://portal.echo-next.dembrane.com"
+    )
+
+
 @pytest.mark.parametrize(
     ("language", "expected_language"),
     [("nl", "nl"), ("default", "en"), ("", "en"), (None, "en")],
@@ -49,6 +69,33 @@ def test_build_project_portal_link_normalizes_language(language, expected_langua
             echo_api_url="https://api.echo-next.dembrane.com/api",
         )
         == f"https://portal.echo-next.dembrane.com/{expected_language}/project-1/start"
+    )
+
+
+def test_build_project_portal_link_uses_cors_origin_for_internal_api_url():
+    assert (
+        build_project_portal_link(
+            "project-1",
+            "en",
+            echo_api_url="http://echo-api:8000/api",
+            agent_cors_origins=(
+                "https://dashboard.echo-next.dembrane.com,"
+                "https://portal.echo-next.dembrane.com"
+            ),
+        )
+        == "https://portal.echo-next.dembrane.com/en/project-1/start"
+    )
+
+
+def test_build_project_portal_link_returns_none_without_environment_signal():
+    assert (
+        build_project_portal_link(
+            "project-1",
+            "en",
+            echo_api_url="http://echo-api:8000/api",
+            agent_cors_origins="https://dashboard.internal.example",
+        )
+        is None
     )
 
 
