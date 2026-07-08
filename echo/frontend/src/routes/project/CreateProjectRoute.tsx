@@ -236,6 +236,20 @@ export const CreateProjectRoute = () => {
 									<Trans>Help me figure it out</Trans>
 								</Button>
 							) : null}
+
+							{ENABLE_AGENTIC_CHAT ? (
+								<Switch
+									checked={setupWithAssistant}
+									onChange={(event) => {
+										setSetupWithAssistant(event.currentTarget.checked);
+										if (event.currentTarget.checked) {
+											setSetupInitialMessage(SETUP_INITIAL_MESSAGE);
+										}
+									}}
+									label={t`Set up with the assistant after creating`}
+									description={t`You'll land in a chat where dembrane helps shape the project before you collect conversations.`}
+								/>
+							) : null}
 						</Stack>
 					</Stepper.Step>
 
@@ -293,19 +307,6 @@ export const CreateProjectRoute = () => {
 								</Stack>
 							</Radio.Group>
 
-							{ENABLE_AGENTIC_CHAT ? (
-								<Switch
-									checked={setupWithAssistant}
-									onChange={(event) => {
-										setSetupWithAssistant(event.currentTarget.checked);
-										if (event.currentTarget.checked) {
-											setSetupInitialMessage(SETUP_INITIAL_MESSAGE);
-										}
-									}}
-									label={t`Set up with the assistant after creating`}
-									description={t`You'll land in a chat where dembrane helps shape the project before you collect conversations.`}
-								/>
-							) : null}
 						</Stack>
 					</Stepper.Step>
 
