@@ -488,6 +488,21 @@ async def _triggering_message_id(
     return str(event.get("id") or "") or None
 
 
+async def _latest_user_turn_seq(*, svc: AgenticRunService, run_id: str) -> int | None:
+    event = await run_in_thread_pool(
+        svc.get_latest_event,
+        run_id,
+        event_type="user.message",
+    )
+    if event is None:
+        return None
+    try:
+        seq = int(event.get("seq") or 0)
+    except (TypeError, ValueError):
+        return None
+    return seq if seq > 0 else None
+
+
 async def process_agentic_run(
     *,
     run_id: str,
@@ -673,12 +688,21 @@ async def process_agentic_run(
                         )
 
         await _raise_if_cancelled(run_id, turn_seq)
-        await run_in_thread_pool(
-            svc.set_status,
-            run_id,
-            "completed",
-            latest_output=latest_output,
-        )
+        latest_user_seq = await _latest_user_turn_seq(svc=svc, run_id=run_id)
+        if latest_user_seq and latest_user_seq > turn_seq:
+            await run_in_thread_pool(
+                svc.set_status,
+                run_id,
+                "queued",
+                latest_output=latest_output,
+            )
+        else:
+            await run_in_thread_pool(
+                svc.set_status,
+                run_id,
+                "completed",
+                latest_output=latest_output,
+            )
         await capture_event(
             chat_distinct_id,
             "server_chat_response_received",

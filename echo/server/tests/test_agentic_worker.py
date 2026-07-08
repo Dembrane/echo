@@ -259,7 +259,9 @@ async def test_process_agentic_run_handles_cancel_request(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthesis(monkeypatch) -> None:
+async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthesis(
+    monkeypatch,
+) -> None:
     service = _build_service()
     run = service.create_run(
         project_id="project-1",
@@ -293,7 +295,7 @@ async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthes
                         "additional_kwargs": {
                             "function_call": {
                                 "name": "findConvosByKeywords",
-                                "arguments": "{\"keywords\":\"half time show\"}",
+                                "arguments": '{"keywords":"half time show"}',
                             }
                         },
                     }
@@ -519,7 +521,9 @@ async def test_process_agentic_run_logs_hidden_nudge_without_midpoint_fallback(m
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_update(monkeypatch) -> None:
+async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_update(
+    monkeypatch,
+) -> None:
     service = _build_service()
     run = service.create_run(
         project_id="project-1",
@@ -633,7 +637,9 @@ async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_upd
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_uses_progress_tool_output_from_toolmessage_shape(monkeypatch) -> None:
+async def test_process_agentic_run_uses_progress_tool_output_from_toolmessage_shape(
+    monkeypatch,
+) -> None:
     service = _build_service()
     run = service.create_run(
         project_id="project-1",
@@ -756,7 +762,9 @@ async def test_process_agentic_run_suppresses_midpoint_planning_prose(monkeypatc
             "data": {
                 "output": {
                     "kwargs": {
-                        "content": [{"type": "text", "text": "I will start by scanning project summaries."}],
+                        "content": [
+                            {"type": "text", "text": "I will start by scanning project summaries."}
+                        ],
                         "additional_kwargs": {
                             "function_call": {
                                 "name": "listProjectConversations",
@@ -774,11 +782,16 @@ async def test_process_agentic_run_suppresses_midpoint_planning_prose(monkeypatc
             "data": {
                 "output": {
                     "kwargs": {
-                        "content": [{"type": "text", "text": "Quick update: I have enough signal to focus on two transcripts."}],
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "Quick update: I have enough signal to focus on two transcripts.",
+                            }
+                        ],
                         "additional_kwargs": {
                             "function_call": {
                                 "name": "grepConvoSnippets",
-                                "arguments": "{\"query\":\"policy\"}",
+                                "arguments": '{"query":"policy"}',
                             }
                         },
                     }
@@ -956,7 +969,9 @@ async def test_process_agentic_run_allows_19_non_exempt_tool_calls(monkeypatch) 
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_excludes_send_progress_update_from_tool_limit(monkeypatch) -> None:
+async def test_process_agentic_run_excludes_send_progress_update_from_tool_limit(
+    monkeypatch,
+) -> None:
     service = _build_service()
     run = service.create_run(project_id="project-1", directus_user_id="user-1")
 
@@ -1035,7 +1050,10 @@ async def test_process_agentic_run_tool_limit_does_not_repeat_last_update(monkey
                     "kwargs": {
                         "content": [{"type": "text", "text": "Current synthesis draft."}],
                         "additional_kwargs": {
-                            "function_call": {"name": "findConvosByKeywords", "arguments": "{\"keywords\":\"show\"}"}
+                            "function_call": {
+                                "name": "findConvosByKeywords",
+                                "arguments": '{"keywords":"show"}',
+                            }
                         },
                     }
                 }
@@ -1152,6 +1170,56 @@ async def test_process_agentic_run_passes_persisted_message_history(monkeypatch)
     stored_run = service.get_by_id_or_raise(run["id"])
     assert stored_run["status"] == "completed"
     assert stored_run["latest_output"] == "final answer"
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_leaves_run_queued_when_newer_user_turn_arrives(
+    monkeypatch,
+) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    service.append_event(run["id"], "user.message", {"content": "current"})
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+        **_context: object,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        service.append_event(run["id"], "user.message", {"content": "queued-follow-up"})
+        yield {"type": "assistant.message", "content": "first answer"}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="current",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    stored_run = service.get_by_id_or_raise(run["id"])
+    assert stored_run["status"] == "queued"
+    assert stored_run["latest_output"] == "first answer"
 
 
 @pytest.mark.asyncio
@@ -1388,7 +1456,11 @@ async def test_process_agentic_run_does_not_retry_after_stream_events(monkeypatc
     events = service.list_events(run["id"])
     assert stored_run["status"] == "failed"
     assert stored_run["latest_error_code"] == "AGENT_UPSTREAM_400"
-    assert [event["event_type"] for event in events] == ["user.message", "assistant.delta", "run.failed"]
+    assert [event["event_type"] for event in events] == [
+        "user.message",
+        "assistant.delta",
+        "run.failed",
+    ]
 
 
 def test_is_host_visible_assistant_content_rejects_placeholder_and_empty() -> None:

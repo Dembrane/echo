@@ -56,7 +56,9 @@ class _FakeChatService:
         self.created_messages.append(message)
         return message
 
-    def get_by_id_or_raise(self, chat_id: str, with_used_conversations: bool = False) -> dict[str, Any]:  # noqa: ARG002
+    def get_by_id_or_raise(
+        self, chat_id: str, with_used_conversations: bool = False
+    ) -> dict[str, Any]:  # noqa: ARG002
         chat = self.chats.get(chat_id)
         if chat is None:
             raise ValueError("chat not found")
@@ -237,6 +239,7 @@ async def _build_api_client(
     )
     monkeypatch.setattr(free_tier_module, "resolve_project_tier", _fake_resolve_project_tier)
     monkeypatch.setattr(agentic_api, "agentic_run_service", run_service)
+
     async def _fake_current_goal(_project_id: str) -> None:
         return None
 
@@ -299,7 +302,6 @@ async def _build_api_client(
 
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         yield client
-
 
 
 def _make_session(
@@ -463,9 +465,15 @@ async def test_create_run_rejects_missing_passthrough_token(monkeypatch) -> None
 
 
 @pytest.mark.asyncio
-async def test_append_message_rejects_inflight_run(monkeypatch) -> None:
+async def test_append_message_persists_during_running_run_without_requeue(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
-    run = run_service.create_run(project_id="project-1", directus_user_id="user-1", status="running")
+    run = run_service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+        status="running",
+    )
+    fake_chat_service = _FakeChatService()
     session = _make_session(user_id="user-1")
 
     async with _build_api_client(
@@ -473,13 +481,26 @@ async def test_append_message_rejects_inflight_run(monkeypatch) -> None:
         session=session,
         run_service=run_service,
         owner_by_project_id={"project-1": "user-1"},
+        chat_service=fake_chat_service,
     ) as client:
         response = await client.post(
             f"/api/agentic/runs/{run['id']}/messages",
             json={"message": "hello-again"},
         )
 
-    assert response.status_code == 409
+    assert response.status_code == 200
+    assert response.json()["status"] == "running"
+    assert fake_chat_service.created_messages == [
+        {
+            "id": "msg-1",
+            "project_chat_id": "chat-1",
+            "message_from": "user",
+            "text": "hello-again",
+        }
+    ]
+    events = run_service.list_events(run["id"])
+    assert events[-1]["event_type"] == "user.message"
+    assert events[-1]["payload"]["content"] == "hello-again"
 
 
 @pytest.mark.asyncio
@@ -678,13 +699,20 @@ async def test_post_stream_uses_hidden_agent_prompt_content_when_available(monke
 @pytest.mark.asyncio
 async def test_post_stream_does_not_claim_when_lease_not_acquired(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
-    run = run_service.create_run(project_id="project-1", directus_user_id="user-1", status="running")
+    run = run_service.create_run(
+        project_id="project-1", directus_user_id="user-1", status="running"
+    )
     run_service.append_event(run["id"], "user.message", {"content": "hello"})
     run_service.set_status(run["id"], "completed", latest_output="hello")
 
     lease_calls: list[dict[str, Any]] = []
     start_calls: list[dict[str, Any]] = []
     session = _make_session(user_id="user-1")
+
+    async def _finite_stream(run_id: str, after_seq: int = 0):  # noqa: ARG001
+        yield "event: heartbeat\ndata: {}\n\n"
+
+    monkeypatch.setattr(agentic_api, "_stream_live_events", _finite_stream)
 
     async with _build_api_client(
         monkeypatch=monkeypatch,
@@ -699,6 +727,49 @@ async def test_post_stream_does_not_claim_when_lease_not_acquired(monkeypatch) -
 
     assert response.status_code == 200
     assert len(start_calls) == 0
+
+
+@pytest.mark.asyncio
+async def test_post_stream_does_not_claim_new_turn_while_run_is_running(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    run = run_service.create_run(
+        project_id="project-1", directus_user_id="user-1", status="running"
+    )
+    run_service.append_event(run["id"], "user.message", {"content": "current"})
+    run_service.append_event(run["id"], "user.message", {"content": "queued-follow-up"})
+
+    lease_calls: list[dict[str, Any]] = []
+    start_calls: list[dict[str, Any]] = []
+    session = _make_session(user_id="user-1")
+
+    async def _fake_acquire_turn_lease(
+        run_id: str,
+        turn_seq: int,
+        owner: str,
+        ttl_seconds: int,
+    ) -> bool:
+        lease_calls.append(
+            {
+                "run_id": run_id,
+                "turn_seq": turn_seq,
+                "owner": owner,
+                "ttl_seconds": ttl_seconds,
+            }
+        )
+        return True
+
+    async def _fake_start_claimed_turn(**kwargs: Any) -> None:
+        start_calls.append(kwargs)
+
+    monkeypatch.setattr(agentic_api, "agentic_run_service", run_service)
+    monkeypatch.setattr(agentic_api, "acquire_turn_lease", _fake_acquire_turn_lease)
+    monkeypatch.setattr(agentic_api, "_start_claimed_turn", _fake_start_claimed_turn)
+
+    response = await agentic_api.stream_run(run["id"], session)
+
+    assert response.status_code == 200
+    assert lease_calls == []
+    assert start_calls == []
 
 
 @pytest.mark.asyncio
@@ -926,9 +997,7 @@ async def test_agentic_canvas_lifecycle_delegates_to_shared_service(monkeypatch)
         run_service=run_service,
         owner_by_project_id={"project-1": "user-1"},
     ) as client:
-        response = await client.post(
-            "/api/agentic/projects/project-1/canvases/canvas-1/loop/pause"
-        )
+        response = await client.post("/api/agentic/projects/project-1/canvases/canvas-1/loop/pause")
 
     assert response.status_code == 200
     assert response.json() == {"status": "paused", "expires_at": "later", "cadence_minutes": 5}
@@ -1104,7 +1173,9 @@ async def test_list_project_conversations_transcript_query_scopes_to_project_and
 
 
 @pytest.mark.asyncio
-async def test_list_project_conversations_transcript_query_token_or_limit_and_order(monkeypatch) -> None:
+async def test_list_project_conversations_transcript_query_token_or_limit_and_order(
+    monkeypatch,
+) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     directus_client = _FakeDirectusClient(
         rows_by_collection={
@@ -1207,10 +1278,13 @@ async def test_list_project_conversations_transcript_query_token_or_limit_and_or
     assert payload["conversations"][0]["matches"][0]["chunk_id"] == "chunk-1"
     assert payload["conversations"][1]["matches"][0]["chunk_id"] == "chunk-2"
 
+
 @pytest.mark.asyncio
 async def test_stop_run_sets_cancel_request(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
-    run = run_service.create_run(project_id="project-1", directus_user_id="user-1", status="running")
+    run = run_service.create_run(
+        project_id="project-1", directus_user_id="user-1", status="running"
+    )
     event = run_service.append_event(run["id"], "user.message", {"content": "hello"})
 
     cancel_calls: list[tuple[str, int]] = []
@@ -1243,7 +1317,9 @@ async def test_polling_events_respects_after_seq(monkeypatch) -> None:
         run_service=run_service,
         owner_by_project_id={"project-1": "user-1"},
     ) as client:
-        response = await client.get(f"/api/agentic/runs/{run['id']}/events", params={"after_seq": 1})
+        response = await client.get(
+            f"/api/agentic/runs/{run['id']}/events", params={"after_seq": 1}
+        )
 
     assert response.status_code == 200
     payload = response.json()

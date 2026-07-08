@@ -921,9 +921,6 @@ async def append_message(
     run = await run_in_thread_pool(_get_run_or_404, run_id)
     _assert_run_authorized(run, auth)
 
-    if run.get("status") in {"queued", "running"}:
-        raise HTTPException(status_code=409, detail="Run already in progress")
-
     # Matrix §8: continuing an agentic analysis is a host-side operation.
     project_id = run.get("project_id")
     if project_id:
@@ -963,6 +960,8 @@ async def append_message(
         body.message,
         body.language,
     )
+    if run.get("status") == "running":
+        return await run_in_thread_pool(_get_run_or_404, run_id)
     return await run_in_thread_pool(agentic_run_service.set_status, run_id, "queued")
 
 
@@ -1379,7 +1378,7 @@ async def stream_run(
     run = await run_in_thread_pool(_get_run_or_404, run_id)
     _assert_run_authorized(run, auth)
 
-    if run.get("status") not in TERMINAL_RUN_STATUSES:
+    if run.get("status") == "queued":
         latest_turn = await _latest_user_turn(run_id)
         if latest_turn is not None:
             turn_seq, user_message = latest_turn

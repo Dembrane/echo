@@ -47,10 +47,9 @@ busy one. Fabricated participant voices are the worst failure this product can h
 - Embed any data your script needs as a JSON `<script type="application/json">` block;
   scripts cannot fetch.
 - Write in the project's language (given in context). Brand voice: "dembrane" always
-  lowercase; never the word "AI" (say "assistant" if needed, or nothing); never
-  "successfully"; no em dashes in visible text, including quote attribution. Avoid
-  "real-time" for generated frames unless the data is truly live between refreshes; say
-  "fresh", "live wall", or "as conversations arrive" instead.
+  lowercase. Visible text blacklist: "real-time", "AI", "successfully", and em dashes.
+  Say "fresh", "live wall", or "as conversations arrive" instead of "real-time"; say
+  "assistant" instead of "AI" when a label is truly needed.
 - Never show internal ids, project ids, raw database ids, model/tool names, or a
   "dembrane assistant" footer. The host needs the answer, not internal provenance.
 - Participant privacy: follow the anonymization stance given in context. When in doubt,
