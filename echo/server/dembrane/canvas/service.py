@@ -159,6 +159,21 @@ async def get_loop_for_report(report_id: str) -> dict[str, Any] | None:
     return rows[0] if isinstance(rows, list) and rows else None
 
 
+async def get_latest_loop_run(loop_id: str) -> dict[str, Any] | None:
+    rows = await async_directus.get_items(
+        "agent_loop_run",
+        {
+            "query": {
+                "filter": {"loop_id": {"_eq": loop_id}},
+                "fields": ["id", "status", "detail", "started_at", "finished_at"],
+                "sort": ["-started_at"],
+                "limit": 1,
+            }
+        },
+    )
+    return rows[0] if isinstance(rows, list) and rows else None
+
+
 async def update_canvas_config(
     *,
     report_id: str,
@@ -224,6 +239,7 @@ async def list_canvas_summaries(project_id: str) -> list[dict[str, Any]]:
     for report in rows:
         report_id = str(report["id"])
         loop = await get_loop_for_report(report_id)
+        run = await get_latest_loop_run(str(loop["id"])) if loop else None
         generation = await get_latest_generation(report_id)
         out.append(
             {
@@ -238,6 +254,9 @@ async def list_canvas_summaries(project_id: str) -> list[dict[str, Any]]:
                         "status": loop.get("status"),
                         "expires_at": loop.get("expires_at"),
                         "cadence_minutes": loop.get("cadence_minutes"),
+                        "last_run_started_at": (run or {}).get("started_at"),
+                        "last_run_status": (run or {}).get("status"),
+                        "last_run_detail": (run or {}).get("detail"),
                     }
                     if loop
                     else None

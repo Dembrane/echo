@@ -53,7 +53,8 @@ Utilities:
 	--canvas-red: #ff9aa2;
 	--canvas-radius: 8px;
 	--canvas-shadow: 0 18px 50px rgba(45, 45, 44, 0.08);
-	--canvas-font: "DM Sans Variable", "DM Sans", ui-sans-serif, system-ui, -apple-system,
+	--canvas-font:
+		"DM Sans Variable", "DM Sans", ui-sans-serif, system-ui, -apple-system,
 		BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -81,6 +82,8 @@ body {
 	min-width: 320px;
 	background: var(--canvas-parchment);
 	color: var(--canvas-graphite);
+	scrollbar-color: rgba(45, 45, 44, 0.24) transparent;
+	scrollbar-width: thin;
 }
 
 button,
@@ -98,11 +101,32 @@ svg {
 .dembrane-canvas-root,
 .canvas-shell {
 	min-height: 100vh;
-	padding: clamp(24px, 4vw, 56px);
+	padding: clamp(16px, 3vw, 40px) clamp(20px, 4vw, 56px) clamp(24px, 4vw, 56px);
 	background:
 		linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0)),
 		var(--canvas-parchment);
 	color: var(--canvas-graphite);
+}
+
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	border: 3px solid transparent;
+	border-radius: 999px;
+	background: rgba(45, 45, 44, 0.24);
+	background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(45, 45, 44, 0.34);
+	background-clip: content-box;
 }
 
 .dembrane-canvas-brand {
@@ -202,7 +226,7 @@ svg {
 .canvas-pill-amber {
 	border-color: rgba(210, 138, 31, 0.26);
 	background: rgba(210, 138, 31, 0.12);
-	color: var(--canvas-amber);
+	color: #7a4a00;
 }
 
 .canvas-divider {
@@ -289,7 +313,7 @@ svg {
 }
 
 .canvas-amber {
-	color: var(--canvas-amber);
+	color: #7a4a00;
 }
 
 .canvas-center {

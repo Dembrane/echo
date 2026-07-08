@@ -67,6 +67,14 @@ class _FakeDirectus:
         return {"data": self.items[collection][item_id]}
 
 
+@pytest.fixture(autouse=True)
+def _claim_tick_window(monkeypatch) -> None:
+    async def _claim(loop: dict[str, Any], started_at: datetime) -> bool:  # noqa: ARG001
+        return True
+
+    monkeypatch.setattr(ticks, "_claim_scheduled_tick_window", _claim)
+
+
 @pytest.mark.asyncio
 async def test_tick_no_op_when_no_new_content(monkeypatch) -> None:
     fake = _FakeDirectus()
@@ -94,6 +102,30 @@ async def test_tick_no_op_when_no_new_content(monkeypatch) -> None:
     assert result["status"] == "no_op"
     assert fake.created["agent_loop_run"][0]["status"] == "no_op"
     assert "canvas_generation" not in fake.created
+
+
+@pytest.mark.asyncio
+async def test_tick_duplicate_window_exits_without_enqueuing(monkeypatch) -> None:
+    fake = _FakeDirectus()
+    enqueued: list[str] = []
+
+    async def _claim(loop: dict[str, Any], started_at: datetime) -> bool:  # noqa: ARG001
+        return False
+
+    async def _enqueue(loop: dict[str, Any]) -> None:
+        enqueued.append(str(loop["id"]))
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_claim_scheduled_tick_window", _claim)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+
+    result = await ticks.run_tick("loop1", "scheduled")
+
+    assert result["status"] == "duplicate"
+    assert fake.created["agent_loop_run"][0]["status"] == "no_op"
+    assert fake.created["agent_loop_run"][0]["detail"] == "Duplicate tick for cadence window"
+    assert "canvas_generation" not in fake.created
+    assert enqueued == []
 
 
 @pytest.mark.asyncio

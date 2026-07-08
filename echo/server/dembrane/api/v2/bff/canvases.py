@@ -16,6 +16,7 @@ from dembrane.canvas.service import (
     list_generations,
     apply_loop_action,
     get_latest_config,
+    get_latest_loop_run,
     get_loop_for_report,
     update_canvas_config,
     update_loop_settings,
@@ -82,6 +83,7 @@ async def _require_canvas(report_id: str, auth: DependencyDirectusSession) -> tu
 async def _canvas_payload(report: dict[str, Any]) -> dict[str, Any]:
     report_id = _report_id(report)
     loop = await get_loop_for_report(report_id)
+    run = await get_latest_loop_run(str(loop["id"])) if loop else None
     config = await get_latest_config(report_id)
     generation = await get_latest_generation(report_id)
     project_id = _as_id(report.get("project_id"))
@@ -109,6 +111,9 @@ async def _canvas_payload(report: dict[str, Any]) -> dict[str, Any]:
                 "status": loop.get("status"),
                 "expires_at": loop.get("expires_at"),
                 "cadence_minutes": loop.get("cadence_minutes"),
+                "last_run_started_at": (run or {}).get("started_at"),
+                "last_run_status": (run or {}).get("status"),
+                "last_run_detail": (run or {}).get("detail"),
             }
             if loop
             else None
@@ -136,6 +141,9 @@ def _loop_payload(loop: dict[str, Any]) -> dict[str, Any]:
         "status": loop.get("status"),
         "expires_at": loop.get("expires_at"),
         "cadence_minutes": loop.get("cadence_minutes"),
+        "last_run_started_at": loop.get("last_run_started_at"),
+        "last_run_status": loop.get("last_run_status"),
+        "last_run_detail": loop.get("last_run_detail"),
     }
 
 

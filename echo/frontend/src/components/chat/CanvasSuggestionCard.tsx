@@ -42,12 +42,15 @@ function normalizedJson(value: unknown): string {
 
 function isSameProposalConfig(
 	suggestion: CanvasSuggestion,
-	config: {
-		brief?: string | null;
-		gather_spec?: Record<string, unknown> | null;
-		cadence_minutes?: number | null;
-		created_at?: string | null;
-	} | null | undefined,
+	config:
+		| {
+				brief?: string | null;
+				gather_spec?: Record<string, unknown> | null;
+				cadence_minutes?: number | null;
+				created_at?: string | null;
+		  }
+		| null
+		| undefined,
 ): boolean {
 	if (!config) return false;
 	return (
@@ -83,7 +86,9 @@ function changeRows(
 		| undefined,
 ) {
 	const rows: { label: string; before: string; after: string }[] = [];
-	const currentName = String(current?.name ?? suggestion.target_canvas_name ?? "");
+	const currentName = String(
+		current?.name ?? suggestion.target_canvas_name ?? "",
+	);
 	if (currentName && currentName !== suggestion.name) {
 		rows.push({ label: t`Name`, before: currentName, after: suggestion.name });
 	}
@@ -134,7 +139,8 @@ export const CanvasSuggestionCard = ({
 			) ?? null,
 		[canvasesQuery.data, normalizedName],
 	);
-	const targetCanvasId = suggestion.target_canvas_id ?? matchingCanvas?.id ?? null;
+	const targetCanvasId =
+		suggestion.target_canvas_id ?? matchingCanvas?.id ?? null;
 	const isUpdateProposal = Boolean(suggestion.target_canvas_id);
 	const isUpdateChoice = Boolean(targetCanvasId);
 	const targetCanvasQuery = useCanvas(targetCanvasId ?? "");
@@ -265,13 +271,15 @@ export const CanvasSuggestionCard = ({
 							rows.map((row) => (
 								<Text key={row.label} size="xs">
 									{row.label}: {truncatedBrief(row.before, false)}{" "}
-									<Trans>to</Trans>{" "}
-									{truncatedBrief(row.after, false)}
+									<Trans>to</Trans> {truncatedBrief(row.after, false)}
 								</Text>
 							))
 						) : (
 							<Text size="xs">
-								<Trans>Applies this wording and refresh behavior to the existing canvas.</Trans>
+								<Trans>
+									Applies this wording and refresh behavior to the existing
+									canvas.
+								</Trans>
 							</Text>
 						)}
 					</Stack>
@@ -305,7 +313,6 @@ export const CanvasSuggestionCard = ({
 						>
 							<CanvasFrame
 								generation={previewGeneration}
-								cadenceMinutes={suggestion.cadence_minutes}
 								projectId={suggestion.projectId}
 							/>
 						</Box>
