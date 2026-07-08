@@ -100,8 +100,7 @@ svg {
 
 .dembrane-canvas-root,
 .canvas-shell {
-	min-height: 100vh;
-	padding: clamp(16px, 3vw, 40px) clamp(20px, 4vw, 56px) clamp(24px, 4vw, 56px);
+	padding: clamp(12px, 2vw, 24px) clamp(20px, 4vw, 56px) clamp(24px, 4vw, 56px);
 	background:
 		linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0)),
 		var(--canvas-parchment);
@@ -131,16 +130,16 @@ svg {
 
 .dembrane-canvas-brand {
 	display: flex;
-	justify-content: flex-end;
-	padding: 0 clamp(24px, 4vw, 56px) clamp(18px, 3vw, 34px);
+	justify-content: flex-start;
+	padding: clamp(18px, 3vw, 34px) clamp(20px, 4vw, 56px) 0;
 }
 
 .dembrane-canvas-brand img {
 	display: block;
-	max-height: 28px;
-	max-width: min(180px, 42vw);
+	max-height: 32px;
+	max-width: min(190px, 48vw);
 	object-fit: contain;
-	opacity: 0.72;
+	opacity: 0.82;
 }
 
 .canvas-section,

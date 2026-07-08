@@ -164,6 +164,7 @@ async def test_create_requires_project_update_and_valid_expiry(monkeypatch) -> N
         return access
 
     async def _create(**kwargs) -> dict:  # noqa: ARG001
+        assert kwargs["applied_preview_html"] is None
         return {"report": {"id": "r1"}}
 
     class _Directus:
@@ -211,6 +212,65 @@ async def test_create_requires_project_update_and_valid_expiry(monkeypatch) -> N
     assert res.status_code == 200
     assert res.json()["created_from_chat_id"] == "chat-1"
     assert access.required == ["project:update"]
+
+
+@pytest.mark.asyncio
+async def test_create_canvas_forwards_applied_preview(monkeypatch) -> None:
+    access = _Access()
+    create_calls: list[dict[str, Any]] = []
+
+    async def _project(project_id: str, auth) -> _Access:  # noqa: ARG001
+        return access
+
+    async def _create(**kwargs) -> dict:
+        create_calls.append(kwargs)
+        return {"report": {"id": "r1"}}
+
+    class _Directus:
+        async def get_item(self, collection: str, item_id: str) -> dict:  # noqa: ARG002
+            if collection == "project_chat":
+                return {"id": item_id, "project_id": "p1", "deleted_at": None}
+            return {"id": "r1", "kind": "canvas", "project_id": "p1"}
+
+    async def _loop(report_id: str) -> dict:  # noqa: ARG001
+        return {"id": "loop1", "name": "n", "status": "active", "created_from_chat_id": "chat-1"}
+
+    async def _config(report_id: str) -> dict:  # noqa: ARG001
+        return {"brief": "brief", "gather_spec": None, "cadence_minutes": 5}
+
+    async def _generation(report_id: str) -> dict:  # noqa: ARG001
+        return {
+            "id": "g-applied",
+            "content_html": "<main>preview</main>",
+            "status": "ok",
+            "tick_kind": "applied",
+        }
+
+    monkeypatch.setattr(canvases_bff, "resolve_project_access", _project)
+    monkeypatch.setattr(canvases_bff, "create_canvas", _create)
+    monkeypatch.setattr(canvases_bff, "async_directus", _Directus())
+    monkeypatch.setattr(canvases_bff, "get_loop_for_report", _loop)
+    monkeypatch.setattr(canvases_bff, "get_latest_config", _config)
+    monkeypatch.setattr(canvases_bff, "get_latest_generation", _generation)
+
+    expiry = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+    res = await _post(
+        "/api/v2/bff/canvases",
+        {
+            "project_id": "p1",
+            "name": "n",
+            "brief": "brief",
+            "cadence_minutes": 5,
+            "expires_at": expiry,
+            "created_from_chat_id": "chat-1",
+            "applied_preview_html": "<main>preview</main>",
+        },
+    )
+
+    assert res.status_code == 200
+    assert create_calls[0]["applied_preview_html"] == "<main>preview</main>"
+    assert create_calls[0]["created_from_chat_id"] == "chat-1"
+    assert res.json()["latest_generation"]["tick_kind"] == "applied"
 
 
 @pytest.mark.asyncio
@@ -332,10 +392,68 @@ async def test_update_canvas_appends_revision_and_returns_canvas(monkeypatch) ->
             "gather_spec": {"window_minutes": 30},
             "cadence_minutes": 10,
             "created_by": "du1",
+            "applied_preview_html": None,
+            "applied_from_chat_id": None,
         }
     ]
     assert res.json()["config"]["brief"] == "Updated brief"
     assert access.required == ["project:read", "project:update"]
+
+
+@pytest.mark.asyncio
+async def test_update_canvas_forwards_applied_preview_and_valid_chat(monkeypatch) -> None:
+    access = _Access()
+    updated_calls: list[dict[str, Any]] = []
+
+    async def _report(report_id: str, auth) -> tuple[_Access, dict]:  # noqa: ARG001
+        return access, {"id": report_id, "kind": "canvas", "project_id": "p1"}
+
+    async def _update(**kwargs) -> dict[str, Any]:
+        updated_calls.append(kwargs)
+        return {"report": {"id": "r1", "kind": "canvas", "project_id": "p1"}}
+
+    class _Directus:
+        async def get_item(self, collection: str, item_id: str) -> dict:  # noqa: ARG002
+            if collection == "project_chat":
+                return {"id": item_id, "project_id": "p1", "deleted_at": None}
+            return {"id": "r1", "kind": "canvas", "project_id": "p1"}
+
+    async def _loop(report_id: str) -> dict:  # noqa: ARG001
+        return {"id": "loop1", "name": "Updated wall", "status": "active"}
+
+    async def _config(report_id: str) -> dict:  # noqa: ARG001
+        return {"brief": "Updated brief", "gather_spec": None, "cadence_minutes": 5}
+
+    async def _generation(report_id: str) -> dict:  # noqa: ARG001
+        return {
+            "id": "g-applied",
+            "content_html": "<main>preview</main>",
+            "status": "ok",
+            "tick_kind": "applied",
+        }
+
+    monkeypatch.setattr(canvases_bff, "resolve_report_access", _report)
+    monkeypatch.setattr(canvases_bff, "update_canvas_config", _update)
+    monkeypatch.setattr(canvases_bff, "async_directus", _Directus())
+    monkeypatch.setattr(canvases_bff, "get_loop_for_report", _loop)
+    monkeypatch.setattr(canvases_bff, "get_latest_config", _config)
+    monkeypatch.setattr(canvases_bff, "get_latest_generation", _generation)
+
+    res = await _patch(
+        "/api/v2/bff/canvases/r1",
+        {
+            "name": "Updated wall",
+            "brief": "Updated brief",
+            "cadence_minutes": 5,
+            "created_from_chat_id": "chat-1",
+            "applied_preview_html": "<main>preview</main>",
+        },
+    )
+
+    assert res.status_code == 200
+    assert updated_calls[0]["applied_preview_html"] == "<main>preview</main>"
+    assert updated_calls[0]["applied_from_chat_id"] == "chat-1"
+    assert res.json()["latest_generation"]["tick_kind"] == "applied"
 
 
 @pytest.mark.asyncio

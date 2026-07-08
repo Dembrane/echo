@@ -5,17 +5,18 @@ import {
 	Badge,
 	Box,
 	Button,
-	Divider,
 	Group,
 	Menu,
 	NumberInput,
 	Paper,
+	Popover,
 	Select,
 	Skeleton,
 	Stack,
 	Text,
 	TextInput,
 	Title,
+	Tooltip,
 } from "@mantine/core";
 import { useDocumentTitle, useFullscreen } from "@mantine/hooks";
 import {
@@ -31,6 +32,7 @@ import {
 	Minimize2,
 	MoreHorizontal,
 	Pause,
+	Pencil,
 	Play,
 	RefreshCw,
 } from "lucide-react";
@@ -398,6 +400,14 @@ export const CanvasRoute = () => {
 		}
 		navigate(primaryChatPath, { state: { initialMessage: newChatMessage } });
 	};
+	const [settingsOpened, setSettingsOpened] = useState(false);
+	const freshnessText =
+		generationsQuery.isLoading && !displayedGeneration
+			? null
+			: freshnessLine({
+					generation: displayedGeneration,
+					loop: canvas?.loop,
+				});
 
 	if (canvasQuery.isLoading) {
 		return <CanvasLoadingState />;
@@ -417,14 +427,43 @@ export const CanvasRoute = () => {
 									{loopStatusLine(canvas.loop.status, canvas.loop.expires_at)}
 								</Badge>
 							) : null}
-							<Text size="sm">
-								{freshnessLine({
-									generation: displayedGeneration,
-									loop: canvas?.loop,
-								})}
-							</Text>
+							{freshnessText ? <Text size="sm">{freshnessText}</Text> : null}
+							{canvasId && canvas?.loop ? (
+								<Popover
+									opened={settingsOpened}
+									onChange={setSettingsOpened}
+									position="bottom-start"
+									shadow="md"
+									width={340}
+									withinPortal
+								>
+									<Popover.Target>
+										<Tooltip label={t`Edit freshness settings`} withArrow>
+											<ActionIcon
+												variant="subtle"
+												size="sm"
+												radius="md"
+												aria-label={t`Edit freshness settings`}
+												disabled={canvas?.isDevFixture}
+												onClick={() => setSettingsOpened((opened) => !opened)}
+												{...testId("canvas-freshness-settings-button")}
+											>
+												<Pencil size={14} />
+											</ActionIcon>
+										</Tooltip>
+									</Popover.Target>
+									<Popover.Dropdown>
+										<CanvasLoopSettings
+											canvasId={canvasId}
+											disabled={canvas?.isDevFixture}
+											loop={canvas.loop}
+											onSaved={() => setSettingsOpened(false)}
+										/>
+									</Popover.Dropdown>
+								</Popover>
+							) : null}
 							{canvas?.isDevFixture ? (
-								<Text size="xs">
+								<Text size="sm">
 									<Trans>Using fixture data.</Trans>
 								</Text>
 							) : null}
@@ -448,13 +487,27 @@ export const CanvasRoute = () => {
 								)}
 							</Button>
 						) : null}
+						<Tooltip
+							label={fullscreen ? t`Exit fullscreen` : t`Full screen`}
+							withArrow
+						>
+							<ActionIcon
+								variant="subtle"
+								size="lg"
+								radius="md"
+								aria-label={fullscreen ? t`Exit fullscreen` : t`Full screen`}
+								onClick={toggleFullscreen}
+								{...testId("canvas-fullscreen-button")}
+							>
+								{fullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+							</ActionIcon>
+						</Tooltip>
 						<Menu
 							opened={menuOpened}
 							onChange={setMenuOpened}
 							position="bottom-end"
 							shadow="md"
-							width={340}
-							closeOnItemClick={false}
+							width={260}
 						>
 							<Menu.Target>
 								<ActionIcon
@@ -513,35 +566,6 @@ export const CanvasRoute = () => {
 								>
 									<Trans>Refresh now</Trans>
 								</Menu.Item>
-								<Menu.Item
-									leftSection={
-										fullscreen ? (
-											<Minimize2 size={16} />
-										) : (
-											<Maximize2 size={16} />
-										)
-									}
-									onClick={() => {
-										toggleFullscreen();
-										setMenuOpened(false);
-									}}
-									{...testId("canvas-fullscreen-button")}
-								>
-									{fullscreen ? (
-										<Trans>Exit fullscreen</Trans>
-									) : (
-										<Trans>Full screen</Trans>
-									)}
-								</Menu.Item>
-								<Divider my="xs" />
-								{canvasId ? (
-									<CanvasLoopSettings
-										canvasId={canvasId}
-										disabled={canvas?.isDevFixture}
-										loop={canvas?.loop}
-										onSaved={() => setMenuOpened(false)}
-									/>
-								) : null}
 							</Menu.Dropdown>
 						</Menu>
 					</Group>
@@ -558,7 +582,11 @@ export const CanvasRoute = () => {
 					}}
 					{...testId("canvas-frame-container")}
 				>
-					<CanvasFrame generation={displayedGeneration} projectId={projectId} />
+					<CanvasFrame
+						generation={displayedGeneration}
+						projectId={projectId}
+						fullscreen={fullscreen}
+					/>
 				</Box>
 
 				<VersionStrip
