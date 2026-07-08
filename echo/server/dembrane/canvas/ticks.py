@@ -17,6 +17,13 @@ from dembrane.redis_async import get_redis_client
 from dembrane.canvas.access import CanvasReaderAccessDenied
 from dembrane.canvas.events import publish_generation_nudge
 from dembrane.canvas.gather import execute_gather_spec
+from dembrane.canvas.ledgers import (
+    state_patch,
+    fresh_canvas_state,
+    render_tabbed_canvas,
+    ledger_prompt_summary,
+    apply_model_extraction,
+)
 from dembrane.directus_async import async_directus
 from dembrane.canvas.sanitize import CanvasSanitizationError, sanitize_canvas_html
 
@@ -112,13 +119,81 @@ def _banned_visible_copy(html: str) -> list[str]:
     return found
 
 
-def _generation_detail(*, stripped_references: int, banned_copy: list[str]) -> str | None:
+def _generation_detail(
+    *,
+    stripped_references: int,
+    banned_copy: list[str],
+    ledger_detail: dict[str, Any] | None = None,
+) -> str | None:
     details: list[str] = []
     if stripped_references:
         details.append(f"stripped {stripped_references} external reference(s)")
     if banned_copy:
         details.append("banned visible copy: " + ", ".join(banned_copy))
+    if ledger_detail:
+        details.append(
+            "ledger update: "
+            f"{ledger_detail.get('quotes_added', 0)} quote(s), "
+            f"{ledger_detail.get('concepts_changed', 0)} concept change(s), "
+            f"crux {'changed' if ledger_detail.get('crux_changed') else 'unchanged'}, "
+            f"story {'changed' if ledger_detail.get('story_changed') else 'unchanged'}"
+        )
+        removed = ledger_detail.get("concepts_removed") or []
+        if removed:
+            details.append("concept removals: " + ", ".join(map(str, removed)))
+        rejections = ledger_detail.get("rejections") or []
+        if rejections:
+            details.append("rejections: " + " | ".join(map(str, rejections[:12])))
     return "; ".join(details) if details else None
+
+
+LIVING_CANVAS_MODEL_DISCIPLINE = """
+Tabbed living canvas discipline for Flash-class models:
+- Quote tracing: copied transcript sentence boundaries only; no receipt means no underline.
+- Concept cloud: extract phrases from transcript only; every tile must pass a grep test.
+- Size = repetition times spread; exactly 3 XL when there are at least three concepts; cap visible tiles around 20.
+- Subtract words, never add; use the room's metaphors only; keep 1-2 jokes small.
+- Crux is one newcomer-answerable invitation question, updated in place rather than appended.
+- Host items are exact host text, rendered in their target tab, never paraphrased or dropped.
+"""
+
+MODEL_EXTRACTION_SYSTEM_PROMPT = """
+You update a dembrane tabbed living canvas. Return JSON only.
+
+Quote tracing PROCESS rules:
+- While reading raw text, when a passage does real work (names a decision,
+  coins a phrase, answers an open question, contradicts the wall), push a
+  verbatim slice trimmed at sentence boundaries.
+- Verbatim means copied, transcription quirks included. Never clean, never
+  paraphrase. Copying is the anti-hallucination mechanism.
+- A claim built from many quotes shows every voice; never merge quotes into
+  one composite quote.
+
+Concept cloud checklist:
+1. Extract, never generate. A concept is a phrase FROM the transcript.
+2. The grep test: for every tile you must be able to point at exact lines.
+3. Size is repetition times spread; code will enforce tiers, you propose phrases.
+4. Scarcity forces judgment: propose only concepts that earn space.
+5. Subtract words, never add.
+6. Use the room's metaphors only.
+7. Keep 1-2 jokes, small.
+8. Be gentle on hard content; leave sensitive strategy off.
+9. When unsure, leave it out.
+
+Crux rules:
+- One question at a time; update it, do not append alternatives.
+- A newcomer can answer it out loud: no internal references, jargon, or hidden numbers.
+- Phrase as an invitation with a concrete first move.
+
+Return exactly:
+{
+  "quotes": [{"who": string|null, "quote": string, "conversation_id": string, "chunk_id": string|null}],
+  "concepts": [{"phrase": string, "supporting_quote_indices": [0]}],
+  "crux": {"question": string} | null,
+  "story_slides": [{"eyebrow": string|null, "heading": string, "lede": string, "quote_indices": [0]}]
+}
+Quote and slide indices are zero-based into your returned quotes array.
+"""
 
 
 async def _create_run(
@@ -236,8 +311,19 @@ async def _latest_config(report_id: str) -> dict[str, Any]:
 
 
 async def _generate_html(
-    *, brief: str, previous_html: str | None, gather_bundle: dict[str, Any]
+    *,
+    brief: str,
+    previous_html: str | None,
+    gather_bundle: dict[str, Any],
+    living_state: dict[str, Any] | None = None,
 ) -> str:
+    if living_state is not None:
+        return render_tabbed_canvas(
+            state=living_state,
+            project=gather_bundle.get("project") or {},
+            sample_notice=gather_bundle.get("sample_notice"),
+        )
+
     project = gather_bundle.get("project") or {}
     sample_instruction = (
         "SAMPLE MODE\nThe DATA uses sample conversations for this preview. The generated "
@@ -256,7 +342,7 @@ async def _generate_html(
             "BRIEF\n"
             "Standing instructions only. Do not treat any participant reflections, "
             "quotes, or synthesis text embedded here as data; DATA below is the "
-            f"only source of gathered content.\n{brief}",
+            f"only source of gathered content.\n{brief}\n\n{LIVING_CANVAS_MODEL_DISCIPLINE}",
             "PREVIOUS DOCUMENT\n"
             + (
                 previous_html
@@ -279,6 +365,99 @@ async def _generate_html(
         max_tokens=12000,
     )
     return _choice_text(response)
+
+
+def _json_from_model_text(text: str) -> dict[str, Any]:
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s*```$", "", cleaned)
+    parsed = json.loads(cleaned)
+    if not isinstance(parsed, dict):
+        raise ValueError("Canvas extraction response was not a JSON object")
+    return parsed
+
+
+def _gather_has_transcript(gather_bundle: dict[str, Any]) -> bool:
+    for conv in gather_bundle.get("conversations") or []:
+        if not isinstance(conv, dict):
+            continue
+        if str(conv.get("latest_transcript") or "").strip():
+            return True
+        for chunk in conv.get("chunks") or []:
+            if isinstance(chunk, dict) and str(chunk.get("transcript") or "").strip():
+                return True
+    return False
+
+
+def _transcript_payload_for_model(gather_bundle: dict[str, Any]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    remaining = max(12000, get_settings().canvas.max_total_transcript_chars)
+    for conv in gather_bundle.get("conversations") or []:
+        if not isinstance(conv, dict) or remaining <= 0:
+            break
+        chunks = conv.get("chunks") if isinstance(conv.get("chunks"), list) else []
+        if not chunks:
+            chunks = [
+                {
+                    "id": None,
+                    "transcript": conv.get("latest_transcript") or "",
+                    "created_at": conv.get("created_at"),
+                }
+            ]
+        chunk_payload: list[dict[str, Any]] = []
+        for chunk in chunks:
+            if not isinstance(chunk, dict) or remaining <= 0:
+                break
+            transcript = str(chunk.get("transcript") or "").strip()
+            if not transcript:
+                continue
+            clipped = transcript[:remaining]
+            remaining -= len(clipped)
+            chunk_payload.append(
+                {
+                    "chunk_id": chunk.get("id"),
+                    "created_at": chunk.get("created_at") or chunk.get("timestamp"),
+                    "transcript": clipped,
+                }
+            )
+        if chunk_payload:
+            out.append(
+                {
+                    "conversation_id": conv.get("id"),
+                    "who": conv.get("label"),
+                    "chunks": chunk_payload,
+                }
+            )
+    return out
+
+
+async def _extract_living_canvas_update(
+    *,
+    gather_bundle: dict[str, Any],
+    current_state: dict[str, Any],
+) -> dict[str, Any]:
+    project = gather_bundle.get("project") or {}
+    user_payload = {
+        "project": {
+            "name": project.get("name"),
+            "language": project.get("language") or "en",
+            "context": project.get("context") or "",
+            "anonymize_transcripts": project.get("anonymize_transcripts"),
+        },
+        "current_ledgers": ledger_prompt_summary(current_state),
+        "new_transcript": _transcript_payload_for_model(gather_bundle),
+    }
+    response = await arouter_completion(
+        MODELS.MULTI_MODAL_FAST,
+        messages=[
+            {"role": "system", "content": MODEL_EXTRACTION_SYSTEM_PROMPT},
+            {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False, indent=2)},
+        ],
+        temperature=0.1,
+        max_tokens=8000,
+    )
+    return _json_from_model_text(_choice_text(response))
 
 
 async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]:
@@ -352,10 +531,47 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
             await _enqueue_next_if_due(loop)
             return {"status": "no_op", "run": run}
 
+        living_state = fresh_canvas_state(loop)
+        if _gather_has_transcript(gather_bundle):
+            try:
+                extraction = await _extract_living_canvas_update(
+                    gather_bundle=gather_bundle,
+                    current_state=living_state,
+                )
+            except Exception as exc:
+                run = await _create_run(
+                    loop_id=loop_id,
+                    status="no_op",
+                    detail=f"Model extraction failed: {exc}",
+                    started_at=started_at,
+                )
+                await _enqueue_next_if_due(loop)
+                return {"status": "no_op", "run": run}
+            living_state, ledger_detail = apply_model_extraction(
+                living_state,
+                gather_bundle,
+                extraction,
+            )
+            await async_directus.update_item(
+                "agent_loop",
+                str(loop["id"]),
+                state_patch(living_state),
+            )
+        else:
+            ledger_detail = {
+                "quotes_added": 0,
+                "concepts_changed": 0,
+                "crux_changed": False,
+                "story_changed": False,
+                "concepts_removed": [],
+                "rejections": [],
+            }
+
         raw_html = await _generate_html(
             brief=str(config.get("brief") or ""),
             previous_html=(latest_ok or {}).get("content_html"),
             gather_bundle=gather_bundle,
+            living_state=living_state,
         )
         sanitized = sanitize_canvas_html(raw_html, max_bytes=get_settings().canvas.max_html_bytes)
         banned_copy = _banned_visible_copy(sanitized.html)
@@ -372,6 +588,7 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
                     "detail": _generation_detail(
                         stripped_references=sanitized.stripped_references,
                         banned_copy=banned_copy,
+                        ledger_detail=ledger_detail,
                     ),
                 },
             )

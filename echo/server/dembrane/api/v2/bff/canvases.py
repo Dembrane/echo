@@ -12,9 +12,15 @@ from pydantic import Field, BaseModel
 from fastapi.responses import StreamingResponse
 
 from dembrane.redis_async import get_redis_client
-from dembrane.canvas.ticks import run_tick, _generate_html
+from dembrane.canvas.ticks import (
+    run_tick,
+    _generate_html,
+    _gather_has_transcript,
+    _extract_living_canvas_update,
+)
 from dembrane.canvas.events import read_generation_nudge, subscribe_generation_nudges
 from dembrane.canvas.gather import execute_gather_spec
+from dembrane.canvas.ledgers import fresh_canvas_state, apply_model_extraction
 from dembrane.canvas.service import (
     create_canvas,
     list_generations,
@@ -22,10 +28,12 @@ from dembrane.canvas.service import (
     get_latest_config,
     get_latest_loop_run,
     get_loop_for_report,
+    add_canvas_host_item,
     update_canvas_config,
     update_loop_settings,
     get_latest_generation,
     list_canvas_summaries,
+    remove_canvas_host_item,
 )
 from dembrane.directus_async import async_directus
 from dembrane.canvas.sanitize import sanitize_canvas_html
@@ -68,6 +76,20 @@ class PreviewCanvasBody(BaseModel):
     project_id: str
     brief: str = Field(min_length=1, max_length=8000)
     gather_spec: dict[str, Any] | None = None
+
+
+class CanvasHostItemBody(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)
+    target_tab: str = Field(default="story", min_length=1, max_length=80)
+    person: str | None = Field(default=None, max_length=160)
+    chat_id: str | None = None
+    message_id: str | None = None
+
+
+class CanvasRemoveHostItemBody(BaseModel):
+    item: str = Field(min_length=1, max_length=2000)
+    chat_id: str | None = None
+    message_id: str | None = None
 
 
 def _as_id(value: Any) -> str | None:
@@ -254,10 +276,22 @@ async def preview_canvas(
         gather_spec=body.gather_spec or {},
         preview_sample=True,
     )
+    living_state = fresh_canvas_state()
+    if _gather_has_transcript(gather_bundle):
+        try:
+            extraction = await _extract_living_canvas_update(
+                gather_bundle=gather_bundle,
+                current_state=living_state,
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail=f"Canvas extraction failed: {exc}") from exc
+        living_state, _detail = apply_model_extraction(living_state, gather_bundle, extraction)
+
     raw_html = await _generate_html(
         brief=body.brief,
         previous_html=None,
         gather_bundle=gather_bundle,
+        living_state=living_state,
     )
     sanitized = sanitize_canvas_html(raw_html)
     return {"content_html": sanitized.html}
@@ -367,6 +401,40 @@ async def refresh_canvas(canvas_id: str, auth: DependencyDirectusSession) -> dic
         raise HTTPException(status_code=429, detail="Just refreshed")
     await run_tick(str(loop["id"]), "manual")
     return {"generation": "pending"}
+
+
+@router.post("/{canvas_id}/host-items")
+async def add_host_item_endpoint(
+    canvas_id: str,
+    body: CanvasHostItemBody,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    report, access = await _require_canvas(canvas_id, auth)
+    access.require("project:update")
+    return await add_canvas_host_item(
+        report_id=_report_id(report),
+        text=body.text,
+        target_tab=body.target_tab,
+        person=body.person,
+        chat_id=await _validated_chat_id(body.chat_id, _as_id(report.get("project_id"))),
+        message_id=body.message_id,
+    )
+
+
+@router.post("/{canvas_id}/host-items/remove")
+async def remove_host_item_endpoint(
+    canvas_id: str,
+    body: CanvasRemoveHostItemBody,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    report, access = await _require_canvas(canvas_id, auth)
+    access.require("project:update")
+    return await remove_canvas_host_item(
+        report_id=_report_id(report),
+        item=body.item,
+        chat_id=await _validated_chat_id(body.chat_id, _as_id(report.get("project_id"))),
+        message_id=body.message_id,
+    )
 
 
 @router.post("/{canvas_id}/loop/{action}")

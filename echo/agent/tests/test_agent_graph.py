@@ -222,6 +222,8 @@ def test_create_agent_graph_binds_edit_canvas_tool():
     tool_map = {tool.name: tool for tool in llm.bound_tools}
 
     assert "editCanvas" in tool_map
+    assert "addToCanvas" in tool_map
+    assert "removeFromCanvas" in tool_map
 
 
 @pytest.mark.asyncio

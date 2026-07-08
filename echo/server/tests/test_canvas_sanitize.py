@@ -49,7 +49,7 @@ def test_sanitize_unwraps_full_documents_to_body_fragments() -> None:
 
 def test_sanitize_accepts_plain_fragments() -> None:
     result = sanitize_canvas_html('<div class="canvas-shell">ok</div>', max_bytes=2000)
-    assert result.html == '<div class="canvas-shell">ok</div>' 
+    assert result.html == '<div class="canvas-shell">ok</div>'
 
 
 def test_sanitize_strips_html_comments() -> None:
@@ -59,3 +59,29 @@ def test_sanitize_strips_html_comments() -> None:
     )
     assert "<!--" not in result.html
     assert "ok" in result.html
+
+
+def test_sanitize_preserves_css_only_tabs_and_trace_expansion() -> None:
+    result = sanitize_canvas_html(
+        """
+        <div class="canvas-shell tabbed-canvas">
+          <input class="tabbed-canvas-radio" type="radio" name="canvas-tab" id="canvas-tab-crux" checked>
+          <nav class="tabbed-canvas-tabbar">
+            <label for="canvas-tab-crux">Crux</label>
+          </nav>
+          <section data-tab-panel="crux">
+            <details class="tabbed-concept">
+              <summary><span class="tabbed-traceable">doorway open</span></summary>
+              <blockquote class="tabbed-quote">Keep the doorway open.</blockquote>
+            </details>
+          </section>
+        </div>
+        """,
+        max_bytes=4000,
+    )
+
+    assert 'type="radio"' in result.html
+    assert 'for="canvas-tab-crux"' in result.html
+    assert "<details" in result.html
+    assert "<summary>" in result.html
+    assert "tabbed-traceable" in result.html

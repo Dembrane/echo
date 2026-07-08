@@ -8,6 +8,13 @@ from datetime import datetime, timezone
 from dembrane.utils import generate_uuid
 from dembrane.settings import get_settings
 from dembrane.canvas.events import publish_generation_nudge
+from dembrane.canvas.ledgers import (
+    host_item,
+    state_patch,
+    append_host_item,
+    remove_host_item,
+    fresh_canvas_state,
+)
 from dembrane.directus_async import async_directus
 from dembrane.canvas.sanitize import sanitize_canvas_html
 from dembrane.scheduled_tasks import TASK_CANVAS_TICK, schedule_task, cancel_pending_tasks
@@ -299,6 +306,12 @@ async def get_loop_for_report(report_id: str) -> dict[str, Any] | None:
                     "acting_directus_user_id",
                     "created_from_chat_id",
                     "failure_count",
+                    "canvas_tabs",
+                    "canvas_quotes_ledger",
+                    "canvas_concepts_ledger",
+                    "canvas_crux",
+                    "canvas_host_items",
+                    "canvas_story_slides",
                     "created_at",
                     "updated_at",
                 ],
@@ -409,7 +422,9 @@ async def apply_direct_canvas_edit(
     standing_config = await revise_config(
         report_id=report_id,
         brief=_brief_with_standing_edit(str(config.get("brief") or ""), normalized_instruction),
-        gather_spec=config.get("gather_spec") if isinstance(config.get("gather_spec"), dict) else None,
+        gather_spec=config.get("gather_spec")
+        if isinstance(config.get("gather_spec"), dict)
+        else None,
         cadence_minutes=int(config.get("cadence_minutes") or DEFAULT_CADENCE_MINUTES),
         created_by=created_by,
         note="direct edit",
@@ -427,6 +442,64 @@ async def apply_direct_canvas_edit(
         "config_revision": standing_config,
         "generation": generation,
         "loop": loop,
+    }
+
+
+async def add_canvas_host_item(
+    *,
+    report_id: str,
+    text: str,
+    target_tab: str,
+    person: str | None,
+    chat_id: str | None,
+    message_id: str | None,
+) -> dict[str, Any]:
+    normalized_text = text.strip()
+    if not normalized_text:
+        raise ValueError("text is required")
+    loop = await get_loop_for_report(report_id)
+    if not loop:
+        raise ValueError("Canvas loop not found")
+    item = host_item(
+        text=normalized_text,
+        target_tab=target_tab,
+        person=person,
+        chat_id=chat_id,
+        message_id=message_id,
+    )
+    state = append_host_item(fresh_canvas_state(loop), item)
+    updated = _data(
+        await async_directus.update_item("agent_loop", str(loop["id"]), state_patch(state))
+    )
+    await enqueue_canvas_tick(str(loop["id"]), tick_kind="manual")
+    return {"status": "added", "host_item": item, "loop": updated}
+
+
+async def remove_canvas_host_item(
+    *,
+    report_id: str,
+    item: str,
+    chat_id: str | None,
+    message_id: str | None,
+) -> dict[str, Any]:
+    normalized_item = item.strip()
+    if not normalized_item:
+        raise ValueError("item is required")
+    loop = await get_loop_for_report(report_id)
+    if not loop:
+        raise ValueError("Canvas loop not found")
+    state, removed = remove_host_item(fresh_canvas_state(loop), normalized_item)
+    updated = _data(
+        await async_directus.update_item("agent_loop", str(loop["id"]), state_patch(state))
+    )
+    if removed:
+        await enqueue_canvas_tick(str(loop["id"]), tick_kind="manual")
+    return {
+        "status": "removed" if removed else "not_found",
+        "item": normalized_item,
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "loop": updated,
     }
 
 
