@@ -851,10 +851,22 @@ def create_agent_graph(
             await client.close()
 
         language = normalize_portal_language(current.get("language"))
+        portal_link = build_project_portal_link(project_id, language)
+        if portal_link is None:
+            return {
+                "project_id": project_id,
+                "language": language,
+                "portal_link": None,
+                "reason": (
+                    "Could not determine this environment's participant portal origin. "
+                    "Point the host to the Overview page for the portal link and QR code instead."
+                ),
+                "dashboard_locations": ["Overview", "Host guide"],
+            }
         return {
             "project_id": project_id,
             "language": language,
-            "portal_link": build_project_portal_link(project_id, language),
+            "portal_link": portal_link,
             "dashboard_locations": ["Overview", "Host guide"],
         }
 

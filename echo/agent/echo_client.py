@@ -54,7 +54,18 @@ class ProjectGoalResponse(TypedDict, total=False):
     revisions: list[dict[str, Any]]
 
 
-def portal_base_url_for_api_url(echo_api_url: str) -> str:
+def portal_base_url_for_cors_origins(agent_cors_origins: str) -> str | None:
+    for origin in agent_cors_origins.split(","):
+        candidate = origin.strip()
+        if not candidate:
+            continue
+        parsed = urlparse(candidate)
+        if (parsed.hostname or "").startswith("portal."):
+            return f"{parsed.scheme}://{parsed.netloc}"
+    return None
+
+
+def portal_base_url_for_api_url(echo_api_url: str) -> str | None:
     parsed = urlparse(echo_api_url)
     hostname = parsed.hostname or ""
     scheme = parsed.scheme or "https"
@@ -72,7 +83,7 @@ def portal_base_url_for_api_url(echo_api_url: str) -> str:
 
     if hostname.startswith("api."):
         return f"{scheme}://portal.{hostname.removeprefix('api.')}"
-    return "https://portal.dembrane.com"
+    return None
 
 
 def normalize_portal_language(language: Any) -> str:
@@ -86,9 +97,16 @@ def build_project_portal_link(
     project_id: str,
     language: Any,
     echo_api_url: str | None = None,
-) -> str:
+    agent_cors_origins: str | None = None,
+) -> str | None:
     settings = get_settings()
-    base_url = portal_base_url_for_api_url(echo_api_url or settings.echo_api_url)
+    base_url = portal_base_url_for_cors_origins(
+        agent_cors_origins
+        if agent_cors_origins is not None
+        else settings.agent_cors_origins
+    ) or portal_base_url_for_api_url(echo_api_url or settings.echo_api_url)
+    if base_url is None:
+        return None
     normalized_language = normalize_portal_language(language)
     return f"{base_url}/{normalized_language}/{project_id}/start"
 

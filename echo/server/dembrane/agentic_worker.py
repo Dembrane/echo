@@ -339,6 +339,8 @@ async def _build_message_history(
                     content = _coerce_non_empty_text(payload.get("content"))
             else:
                 content = _coerce_non_empty_text(payload.get("content"))
+                if content is not None:
+                    content = _sanitize_host_visible_assistant_content(content)
 
             if content is None:
                 continue

@@ -418,6 +418,38 @@ async def test_get_portal_link_falls_back_to_en_for_default_language():
 
 
 @pytest.mark.asyncio
+async def test_get_portal_link_returns_null_without_environment_signal(monkeypatch):
+    import settings
+
+    settings.get_settings.cache_clear()
+    monkeypatch.setenv("ECHO_API_URL", "http://echo-api:8000/api")
+    monkeypatch.setenv("AGENT_CORS_ORIGINS", "https://dashboard.internal.example")
+
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        project_settings_payload={"language": "default"},
+    )
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["getPortalLink"].ainvoke({})
+
+    assert result["language"] == "en"
+    assert result["portal_link"] is None
+    assert "Overview" in result["dashboard_locations"]
+    assert "Could not determine" in result["reason"]
+
+    settings.get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
 async def test_navigate_to_returns_visible_dashboard_suggestion_without_api_calls():
     llm = _CaptureLLM()
     factory = _FakeEchoClientFactory(
