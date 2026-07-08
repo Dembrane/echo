@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import json
 import asyncio
 from uuid import UUID
@@ -44,13 +45,31 @@ OVERFLOW_RETRY_WINDOW_SIZE = 24
 # (see echo/agent/agent.py `_with_placeholder_content`). It is model-input
 # only and must never surface as a host-visible assistant message.
 INTERNAL_PLACEHOLDER_CONTENTS = {"(calling tools)"}
+TRAILING_CURSOR_ARTIFACT_RE = re.compile(r"([.!?…。！？][\"')\]}»”’]*)(?:[_▁▂▃▔|¦]+)$")
+PARENTHETICAL_PLANNING_RE = re.compile(
+    r"^\(\s*(?:i(?:'m| am| will|'ll)|we(?:'re| are| will|'ll)|checking|reading|searching|looking)\b.*\)\s*$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _sanitize_host_visible_assistant_content(content: str) -> Optional[str]:
+    """Normalize assistant text before it becomes visible to a host."""
+    normalized = content.strip()
+    if not normalized or normalized in INTERNAL_PLACEHOLDER_CONTENTS:
+        return None
+    if PARENTHETICAL_PLANNING_RE.match(normalized):
+        return None
+    previous = None
+    while previous != normalized:
+        previous = normalized
+        normalized = TRAILING_CURSOR_ARTIFACT_RE.sub(r"\1", normalized).strip()
+    return normalized or None
 
 
 def _is_host_visible_assistant_content(content: str) -> bool:
     """A turn is worth showing the host only if it carries real text — not an
     empty string and not an internal placeholder token."""
-    normalized = content.strip()
-    return bool(normalized) and normalized not in INTERNAL_PLACEHOLDER_CONTENTS
+    return _sanitize_host_visible_assistant_content(content) is not None
 
 
 class AgenticRunCancelledError(Exception):
@@ -300,7 +319,9 @@ async def _build_message_history(
         try:
             last_seq = int(events[-1].get("seq") or 0)
         except (TypeError, ValueError):
-            logger.warning("Failed to parse event sequence while building history for run %s", run_id)
+            logger.warning(
+                "Failed to parse event sequence while building history for run %s", run_id
+            )
             break
 
         if last_seq <= after_seq:
@@ -404,25 +425,26 @@ async def _append_assistant_message(
     run_id: str,
     content: str,
     project_chat_id: str,
-) -> None:
+) -> Optional[str]:
     # Never emit or persist internal placeholders / empty turns as host-facing
     # messages — they only fragment the chat and leak the Gemini crutch text.
-    if not _is_host_visible_assistant_content(content):
-        return
+    sanitized_content = _sanitize_host_visible_assistant_content(content)
+    if sanitized_content is None:
+        return None
     await _append_event_and_publish(
         svc,
         run_id,
         "assistant.message",
-        {"content": content},
+        {"content": sanitized_content},
     )
     if not project_chat_id:
-        return
+        return sanitized_content
     try:
         await run_in_thread_pool(
             chat_service.create_message,
             project_chat_id,
             "assistant",
-            content,
+            sanitized_content,
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning(
@@ -430,6 +452,7 @@ async def _append_assistant_message(
             project_chat_id,
             exc,
         )
+    return sanitized_content
 
 
 async def _chat_distinct_id(run: dict, run_id: str) -> str:
@@ -536,6 +559,7 @@ async def process_agentic_run(
                 "mode": "agentic",
             },
         )
+
     latest_output: str | None = None
     total_tool_start_count = 0
     counted_tool_start_count = 0
@@ -581,15 +605,16 @@ async def process_agentic_run(
                     if model_has_progress_tool_call:
                         has_sent_progress_intro = True
                 else:
-                    await _append_assistant_message(
+                    persisted_content = await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
                         content=model_text,
                         project_chat_id=project_chat_id,
                     )
-                    latest_output = model_text
-                    tool_calls_without_assistant_message = 0
-                    nudged_tool_call_milestones.clear()
+                    if persisted_content is not None:
+                        latest_output = persisted_content
+                        tool_calls_without_assistant_message = 0
+                        nudged_tool_call_milestones.clear()
 
             if event_type == "on_tool_start":
                 tool_name = str(event.get("name") or "tool")
@@ -608,8 +633,7 @@ async def process_agentic_run(
                     nudged_tool_call_milestones.clear()
                 else:
                     nudge_milestone = (
-                        tool_calls_without_assistant_message
-                        // AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
+                        tool_calls_without_assistant_message // AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
                     ) * AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
                     should_emit_nudge = (
                         tool_calls_without_assistant_message >= AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
@@ -635,7 +659,7 @@ async def process_agentic_run(
                         )
 
                 if counted_tool_start_count >= MAX_TOOL_CALLS_PER_RUN:
-                    await _append_assistant_message(
+                    persisted_content = await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
                         content=TOOL_LIMIT_SAFETY_MESSAGE,
@@ -643,10 +667,18 @@ async def process_agentic_run(
                     )
                     # One honest message only. The last substantive assistant
                     # message is already in the chat; don't repeat it verbatim.
-                    latest_output = TOOL_LIMIT_SAFETY_MESSAGE
+                    latest_output = persisted_content
                     tool_calls_without_assistant_message = 0
                     nudged_tool_call_milestones.clear()
                     break
+
+            content = event.get("content")
+            if event_type == "assistant.message" and isinstance(content, str):
+                sanitized_content = _sanitize_host_visible_assistant_content(content)
+                if sanitized_content is None:
+                    continue
+                event = {**event, "content": sanitized_content}
+                content = sanitized_content
 
             await _append_event_and_publish(svc, run_id, event_type, event)
 
@@ -654,21 +686,17 @@ async def process_agentic_run(
                 progress_message = _extract_progress_message_from_tool_end(event)
                 if progress_message:
                     has_sent_progress_intro = True
-                    await _append_assistant_message(
+                    persisted_content = await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
                         content=progress_message,
                         project_chat_id=project_chat_id,
                     )
-                    tool_calls_without_assistant_message = 0
-                    nudged_tool_call_milestones.clear()
+                    if persisted_content is not None:
+                        tool_calls_without_assistant_message = 0
+                        nudged_tool_call_milestones.clear()
 
-            content = event.get("content")
-            if (
-                isinstance(content, str)
-                and event_type == "assistant.message"
-                and _is_host_visible_assistant_content(content)
-            ):
+            if isinstance(content, str) and event_type == "assistant.message":
                 latest_output = content
                 tool_calls_without_assistant_message = 0
                 nudged_tool_call_milestones.clear()

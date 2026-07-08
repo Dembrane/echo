@@ -1464,13 +1464,22 @@ async def test_process_agentic_run_does_not_retry_after_stream_events(monkeypatc
 
 
 def test_is_host_visible_assistant_content_rejects_placeholder_and_empty() -> None:
-    from dembrane.agentic_worker import _is_host_visible_assistant_content
+    from dembrane.agentic_worker import (
+        _is_host_visible_assistant_content,
+        _sanitize_host_visible_assistant_content,
+    )
 
     assert _is_host_visible_assistant_content("Here is the answer.") is True
     assert _is_host_visible_assistant_content("(calling tools)") is False
     assert _is_host_visible_assistant_content("  (calling tools)  ") is False
+    assert (
+        _is_host_visible_assistant_content("(I am checking the available project frameworks.)")
+        is False
+    )
     assert _is_host_visible_assistant_content("") is False
     assert _is_host_visible_assistant_content("   ") is False
+    assert _sanitize_host_visible_assistant_content("Let's start here!_") == "Let's start here!"
+    assert _sanitize_host_visible_assistant_content('Done."_') == 'Done."'
 
 
 @pytest.mark.asyncio
@@ -1573,3 +1582,69 @@ async def test_process_agentic_run_never_persists_calling_tools_placeholder(monk
     assert "(calling tools)" not in persisted_texts
     assert assistant_texts == ["Here is the real answer."]
     assert persisted_texts == ["Here is the real answer."]
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_sanitizes_host_visible_assistant_artifacts(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    fake_chat_service = _FakeChatService()
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+        **_context: object,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        yield {
+            "type": "assistant.message",
+            "content": "(I am checking the available project frameworks.)",
+        }
+        yield {
+            "type": "assistant.message",
+            "content": "Let's start here!_",
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", fake_chat_service)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    events = service.list_events(run["id"])
+    assistant_texts = [
+        event["payload"]["content"]
+        for event in events
+        if event["event_type"] == "assistant.message"
+    ]
+    persisted_texts = [message["text"] for message in fake_chat_service.created_messages]
+
+    assert assistant_texts == ["Let's start here!"]
+    assert persisted_texts == ["Let's start here!"]
