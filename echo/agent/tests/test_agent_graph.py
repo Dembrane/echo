@@ -212,6 +212,18 @@ async def test_create_agent_graph_binds_progress_tool_and_tool_is_callable():
     }
 
 
+def test_create_agent_graph_binds_edit_canvas_tool():
+    llm = SequenceLLM(responses=[AIMessage(content="done")])
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+    )
+    tool_map = {tool.name: tool for tool in llm.bound_tools}
+
+    assert "editCanvas" in tool_map
+
+
 @pytest.mark.asyncio
 async def test_create_agent_graph_nudge_flow_can_continue_via_progress_tool_call():
     llm = SequenceLLM(

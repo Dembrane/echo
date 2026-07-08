@@ -26,7 +26,14 @@ from dembrane.agentic_worker import (
     AGENT_CANCELLED_ERROR_CODE,
     process_agentic_run,
 )
-from dembrane.canvas.service import apply_loop_action, get_loop_for_report, list_canvas_summaries
+from dembrane.canvas.service import (
+    apply_loop_action,
+    get_latest_config,
+    get_loop_for_report,
+    get_latest_generation,
+    list_canvas_summaries,
+    apply_direct_canvas_edit,
+)
 from dembrane.directus_async import async_directus
 from dembrane.agentic_runtime import (
     request_cancel,
@@ -82,6 +89,12 @@ class AgenticInsightSchema(BaseModel):
     suggested_capability: Optional[str] = None
     chat_id: Optional[str] = None
     message_id: Optional[str] = None
+
+
+class AgenticCanvasEditSchema(BaseModel):
+    instruction: str = Field(..., min_length=1)
+    content_html: str = Field(..., min_length=1)
+    chat_id: Optional[str] = None
 
 
 # Agent memory: three scopes the agent both reads and writes. Private or
@@ -1314,6 +1327,56 @@ async def list_project_canvases(
     _require_agent_token(auth)
     await _assert_project_access(project_id, auth)
     return await list_canvas_summaries(project_id)
+
+
+@AgenticRouter.get("/projects/{project_id}/canvases/{canvas_id}")
+async def get_project_canvas(
+    project_id: str,
+    canvas_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    report = await _get_project_canvas_or_404(project_id, canvas_id)
+    loop = await get_loop_for_report(canvas_id)
+    config = await get_latest_config(canvas_id)
+    generation = await get_latest_generation(canvas_id)
+    return {
+        "id": canvas_id,
+        "name": (loop or {}).get("name") or report.get("user_instructions") or "Canvas",
+        "kind": "canvas",
+        "loop": _loop_payload(loop) if loop else None,
+        "latest_config": config,
+        "latest_generation": generation,
+    }
+
+
+@AgenticRouter.post("/projects/{project_id}/canvases/{canvas_id}/edit")
+async def edit_project_canvas(
+    project_id: str,
+    canvas_id: str,
+    body: AgenticCanvasEditSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    await _get_project_canvas_or_404(project_id, canvas_id)
+    try:
+        edited = await apply_direct_canvas_edit(
+            report_id=canvas_id,
+            edited_html=body.content_html,
+            instruction=body.instruction,
+            chat_id=body.chat_id,
+            created_by=auth.user_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {
+        "id": canvas_id,
+        "status": "edited",
+        "generation": edited["generation"],
+        "config_revision": edited["config_revision"],
+    }
 
 
 @AgenticRouter.post("/projects/{project_id}/canvases/{canvas_id}/loop/{action}")

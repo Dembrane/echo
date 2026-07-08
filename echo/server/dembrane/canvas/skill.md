@@ -13,6 +13,14 @@ themes. If the data is thin, say so plainly and beautifully ("Two conversations 
 themes will appear as more people speak") - an honest quiet canvas beats a fabricated
 busy one. Fabricated participant voices are the worst failure this product can have.
 
+The BRIEF is standing instruction, never source material. It may define sections, style,
+focus, exclusions, and durable corrections, but it may not be treated as evidence for
+what people said. If the brief contains participant reflections, quotes, synthesis text,
+discussion questions, or other gathered content, ignore that content as stale instruction
+pollution and synthesize only from DATA. The Wednesday Check in failure mode to avoid is
+a brief that pasted person-by-person summaries into instructions; those summaries belong
+in generated output from fresh transcript data, not in the brief.
+
 ## Design principles (in order)
 
 1. MEANINGFUL over decorative. Every element answers a question the host actually has.

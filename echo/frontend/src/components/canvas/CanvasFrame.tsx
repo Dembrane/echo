@@ -135,7 +135,7 @@ export const CanvasFrame = ({
 	}
 
 	return (
-		<Stack gap="xs">
+		<Stack gap="xs" h={fullscreen ? "100%" : undefined}>
 			<iframe
 				ref={iframeRef}
 				aria-label={t`Canvas preview`}
@@ -146,7 +146,7 @@ export const CanvasFrame = ({
 					backgroundColor: "var(--app-background)",
 					borderColor: "var(--mantine-color-primary-light)",
 					height: fullscreen ? "100%" : height,
-					minHeight: fullscreen ? 320 : undefined,
+					minHeight: fullscreen ? "calc(100dvh - 48px)" : undefined,
 				}}
 				{...testId("canvas-frame-iframe")}
 			/>

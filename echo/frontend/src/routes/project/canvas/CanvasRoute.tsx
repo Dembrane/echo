@@ -44,10 +44,12 @@ import {
 	type CanvasLoop,
 	useCanvas,
 	useCanvasGenerations,
+	useInvalidateCanvasQueries,
 	useCanvasLifecycleMutation,
 	useCanvasLoopSettingsMutation,
 	useRefreshCanvasMutation,
 } from "@/components/canvas/hooks";
+import { API_BASE_URL } from "@/config";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
@@ -345,6 +347,7 @@ export const CanvasRoute = () => {
 	const navigate = useI18nNavigate();
 	const canvasQuery = useCanvas(canvasId ?? "");
 	const generationsQuery = useCanvasGenerations(canvasId ?? "");
+	const invalidateCanvasQueries = useInvalidateCanvasQueries(canvasId ?? "");
 	const refreshMutation = useRefreshCanvasMutation(canvasId ?? "");
 	const lifecycleMutation = useCanvasLifecycleMutation(canvasId ?? "");
 	const [selectedGenerationId, setSelectedGenerationId] = useState<
@@ -408,6 +411,43 @@ export const CanvasRoute = () => {
 					generation: displayedGeneration,
 					loop: canvas?.loop,
 				});
+
+	useEffect(() => {
+		if (!canvasId || canvas?.isDevFixture) return;
+		let source: EventSource | null = null;
+		let reconnectTimer: ReturnType<typeof window.setTimeout> | null = null;
+		let retryMs = 1000;
+		let closed = false;
+
+		const connect = () => {
+			if (closed) return;
+			const url = `${API_BASE_URL}/v2/bff/canvases/${encodeURIComponent(
+				canvasId,
+			)}/events`;
+			source = new EventSource(url, { withCredentials: true });
+			source.addEventListener("connected", () => {
+				retryMs = 1000;
+			});
+			source.addEventListener("generation", () => {
+				retryMs = 1000;
+				invalidateCanvasQueries();
+			});
+			source.onerror = () => {
+				source?.close();
+				source = null;
+				if (closed) return;
+				reconnectTimer = window.setTimeout(connect, retryMs);
+				retryMs = Math.min(retryMs * 2, 30000);
+			};
+		};
+
+		connect();
+		return () => {
+			closed = true;
+			source?.close();
+			if (reconnectTimer !== null) window.clearTimeout(reconnectTimer);
+		};
+	}, [canvas?.isDevFixture, canvasId, invalidateCanvasQueries]);
 
 	if (canvasQuery.isLoading) {
 		return <CanvasLoadingState />;
@@ -576,8 +616,9 @@ export const CanvasRoute = () => {
 					className="rounded-md"
 					style={{
 						backgroundColor: "var(--app-background)",
-						height: fullscreen ? "100vh" : undefined,
-						overflow: fullscreen ? "auto" : undefined,
+						height: fullscreen ? "100dvh" : undefined,
+						minHeight: fullscreen ? "100dvh" : undefined,
+						overflow: fullscreen ? "hidden" : undefined,
 						padding: fullscreen ? "24px" : undefined,
 					}}
 					{...testId("canvas-frame-container")}

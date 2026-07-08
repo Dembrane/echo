@@ -312,6 +312,8 @@ monitor_embed for live presence - author's choice per layout.
   library uploads (documents); D1 full headless agentic runs for self-revising loops.
 - v1.5 tracked: embed live monitor as a canvas element.
 - v1.5 tracked: live latest-conversations canvas element via SSE, no polling.
+- v1.5 tracked: weekly email summaries generated from canvases.
+- v1.5 tracked: webhook-driven chat notification when a conversation finishes recording.
 
 ## Consistency pass (2026-07-07, after the dynamic-canvas directive)
 

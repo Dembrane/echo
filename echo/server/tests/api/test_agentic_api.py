@@ -1071,6 +1071,59 @@ async def test_agentic_canvas_lifecycle_delegates_to_shared_service(monkeypatch)
 
 
 @pytest.mark.asyncio
+async def test_agentic_canvas_edit_delegates_to_direct_edit_service(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:  # noqa: ARG002
+            return {
+                "id": "canvas-1",
+                "kind": "canvas",
+                "project_id": {"id": "project-1"},
+                "deleted_at": None,
+            }
+
+    captured: dict[str, Any] = {}
+
+    async def _edit(**kwargs: Any) -> dict[str, Any]:
+        captured.update(kwargs)
+        return {
+            "generation": {"id": "gen-1", "tick_kind": "edited"},
+            "config_revision": {"id": "cfg-2", "brief": "Standing edits:\n- remove dividers"},
+        }
+
+    monkeypatch.setattr(agentic_api, "async_directus", _AsyncDirectus())
+    monkeypatch.setattr(agentic_api, "apply_direct_canvas_edit", _edit)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.post(
+            "/api/agentic/projects/project-1/canvases/canvas-1/edit",
+            json={
+                "instruction": "remove dividers",
+                "content_html": '<div class="canvas-shell"></div>',
+                "chat_id": "chat-1",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "edited"
+    assert response.json()["generation"]["tick_kind"] == "edited"
+    assert captured == {
+        "report_id": "canvas-1",
+        "edited_html": '<div class="canvas-shell"></div>',
+        "instruction": "remove dividers",
+        "chat_id": "chat-1",
+        "created_by": "user-1",
+    }
+
+
+@pytest.mark.asyncio
 async def test_agentic_insight_endpoint_persists_reach_back_context(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     session = _make_session(user_id="user-1")

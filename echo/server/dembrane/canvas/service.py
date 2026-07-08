@@ -36,6 +36,24 @@ def _applied_preview_detail(
     return "; ".join(details)
 
 
+def _edited_generation_detail(*, instruction: str, chat_id: str | None) -> str:
+    details = [f"direct edit: {instruction.strip()}"]
+    if chat_id:
+        details.append(f"chat_id={chat_id}")
+    return "; ".join(details)
+
+
+def _brief_with_standing_edit(brief: str, instruction: str) -> str:
+    normalized_brief = brief.strip()
+    normalized_instruction = instruction.strip()
+    standing_line = f"- {normalized_instruction}"
+    if "Standing edits:" in normalized_brief and standing_line in normalized_brief:
+        return normalized_brief
+    if "Standing edits:" in normalized_brief:
+        return f"{normalized_brief}\n{standing_line}"
+    return f"{normalized_brief}\n\nStanding edits:\n{standing_line}".strip()
+
+
 async def enqueue_canvas_tick(
     loop_id: str, when: datetime | None = None, tick_kind: str = "scheduled"
 ) -> str:
@@ -72,6 +90,51 @@ async def store_applied_preview_generation(
                 "content_html": sanitized.html,
                 "status": "ok",
                 "tick_kind": "applied",
+                "detail": detail,
+            },
+        )
+    )
+    recorded_at = _now().isoformat()
+    await async_directus.create_item(
+        "agent_loop_run",
+        {
+            "id": generate_uuid(),
+            "loop_id": loop_id,
+            "status": "ok",
+            "detail": detail,
+            "generation_id": str(generation["id"]),
+            "started_at": recorded_at,
+            "finished_at": recorded_at,
+        },
+    )
+    await publish_generation_nudge(report_id)
+    return generation
+
+
+async def store_edited_generation(
+    *,
+    report_id: str,
+    config_revision_id: str,
+    loop_id: str,
+    edited_html: str,
+    instruction: str,
+    chat_id: str | None,
+) -> dict[str, Any]:
+    sanitized = sanitize_canvas_html(
+        edited_html,
+        max_bytes=get_settings().canvas.max_html_bytes,
+    )
+    detail = _edited_generation_detail(instruction=instruction, chat_id=chat_id)
+    generation = _data(
+        await async_directus.create_item(
+            "canvas_generation",
+            {
+                "id": generate_uuid(),
+                "report_id": report_id,
+                "config_revision_id": config_revision_id,
+                "content_html": sanitized.html,
+                "status": "ok",
+                "tick_kind": "edited",
                 "detail": detail,
             },
         )
@@ -202,7 +265,15 @@ async def get_latest_config(report_id: str) -> dict[str, Any] | None:
         {
             "query": {
                 "filter": {"report_id": {"_eq": report_id}},
-                "fields": ["id", "report_id", "brief", "gather_spec", "cadence_minutes", "created_at"],
+                "fields": [
+                    "id",
+                    "report_id",
+                    "brief",
+                    "gather_spec",
+                    "cadence_minutes",
+                    "created_by",
+                    "created_at",
+                ],
                 "sort": ["-created_at"],
                 "limit": 1,
             }
@@ -314,6 +385,48 @@ async def update_canvas_config(
         "config_revision": config,
         "loop": loop,
         "applied_generation": applied_generation,
+    }
+
+
+async def apply_direct_canvas_edit(
+    *,
+    report_id: str,
+    edited_html: str,
+    instruction: str,
+    chat_id: str | None,
+    created_by: str,
+) -> dict[str, Any]:
+    normalized_instruction = instruction.strip()
+    if not normalized_instruction:
+        raise ValueError("instruction is required")
+    config = await get_latest_config(report_id)
+    if not config:
+        raise ValueError("Canvas config not found")
+    loop = await get_loop_for_report(report_id)
+    if not loop:
+        raise ValueError("Canvas loop not found")
+
+    standing_config = await revise_config(
+        report_id=report_id,
+        brief=_brief_with_standing_edit(str(config.get("brief") or ""), normalized_instruction),
+        gather_spec=config.get("gather_spec") if isinstance(config.get("gather_spec"), dict) else None,
+        cadence_minutes=int(config.get("cadence_minutes") or DEFAULT_CADENCE_MINUTES),
+        created_by=created_by,
+        note="direct edit",
+    )
+    generation = await store_edited_generation(
+        report_id=report_id,
+        config_revision_id=str(standing_config["id"]),
+        loop_id=str(loop["id"]),
+        edited_html=edited_html,
+        instruction=normalized_instruction,
+        chat_id=chat_id,
+    )
+    await async_directus.update_item("agent_loop", str(loop["id"]), {"failure_count": 0})
+    return {
+        "config_revision": standing_config,
+        "generation": generation,
+        "loop": loop,
     }
 
 

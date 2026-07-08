@@ -5,13 +5,26 @@ from dembrane.agentic_client import AgenticTimeoutError, AgenticUpstreamError
 from dembrane.agentic_worker import (
     TOOL_LIMIT_SAFETY_MESSAGE,
     AGENT_CANCELLED_ERROR_CODE,
+    RUN_TOOL_LIMIT_SAFETY_MESSAGE,
     process_agentic_run,
+    _sanitize_host_visible_assistant_content,
 )
 from dembrane.service.agentic import AgenticRunService
 
 
 def _build_service() -> AgenticRunService:
     return AgenticRunService(directus_client=InMemoryDirectus())
+
+
+def test_sanitize_host_visible_content_strips_stray_token_and_successfully() -> None:
+    assert (
+        _sanitize_host_visible_assistant_content("确定 (fetching transcript...)")
+        == "(fetching transcript...)"
+    )
+    assert (
+        _sanitize_host_visible_assistant_content("Successfully extracted Cesare's timeline")
+        == "Extracted Cesare's timeline"
+    )
 
 
 class _FakeChatService:
@@ -908,9 +921,125 @@ async def test_process_agentic_run_keeps_tool_call_limit_safety(monkeypatch) -> 
     # One honest message at the limit; no verbatim repeat of earlier output.
     # The wording never exposes the internal "tool call" concept to the host.
     assert "tool" not in TOOL_LIMIT_SAFETY_MESSAGE.lower()
-    assert stored_run["latest_output"] == TOOL_LIMIT_SAFETY_MESSAGE
-    assert assistant_texts.count(TOOL_LIMIT_SAFETY_MESSAGE) == 1
-    assert assistant_events[-1]["payload"]["content"] == TOOL_LIMIT_SAFETY_MESSAGE
+    assert "tool" not in stored_run["latest_output"].lower()
+    assert 'request: "hello"' in stored_run["latest_output"]
+    assert "fresh pass" in stored_run["latest_output"]
+    assert assistant_texts.count(stored_run["latest_output"]) == 1
+    assert assistant_events[-1]["payload"]["content"] == stored_run["latest_output"]
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_resets_tool_budget_for_appended_turn(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    service.append_event(run["id"], "user.message", {"content": "first request"})
+
+    streams: list[str] = []
+
+    async def _fake_stream(
+        *,
+        user_message: str,
+        **_context: object,
+    ):
+        streams.append(user_message)
+        if user_message == "first request":
+            for index in range(19):
+                yield {"type": "on_tool_start", "name": f"first-{index + 1}"}
+                yield {"type": "on_tool_end", "name": f"first-{index + 1}", "data": {"output": {}}}
+            service.append_event(run["id"], "user.message", {"content": "second request"})
+            yield {"type": "assistant.message", "content": "first answer"}
+            return
+        for index in range(2):
+            yield {"type": "on_tool_start", "name": f"second-{index + 1}"}
+            yield {"type": "on_tool_end", "name": f"second-{index + 1}", "data": {"output": {}}}
+        yield {"type": "assistant.message", "content": "second answer"}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="first request",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+    second_turn_seq = int(service.get_latest_event(run["id"], event_type="user.message")["seq"])
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="second request",
+        bearer_token="token-1",
+        turn_seq=second_turn_seq,
+        owner_token="owner-2",
+        run_service=service,
+    )
+
+    stored_run = service.get_by_id_or_raise(run["id"])
+    assistant_texts = [
+        event["payload"]["content"]
+        for event in service.list_events(run["id"])
+        if event["event_type"] == "assistant.message"
+    ]
+
+    assert streams == ["first request", "second request"]
+    assert stored_run["status"] == "completed"
+    assert stored_run["latest_output"] == "second answer"
+    assert not any("fresh pass" in text for text in assistant_texts)
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_has_run_lifetime_backstop(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    for index in range(199):
+        service.append_event(run["id"], "on_tool_start", {"name": f"old-{index + 1}"})
+
+    async def _fake_stream(**_context: object):
+        yield {"type": "on_tool_start", "name": "new-tool"}
+        yield {"type": "on_tool_end", "name": "new-tool", "data": {"output": {}}}
+        yield {"type": "assistant.message", "content": "should not appear"}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="continue",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    stored_run = service.get_by_id_or_raise(run["id"])
+    assert stored_run["latest_output"] == RUN_TOOL_LIMIT_SAFETY_MESSAGE
+    assert "new chat" in stored_run["latest_output"]
 
 
 @pytest.mark.asyncio
@@ -1094,7 +1223,10 @@ async def test_process_agentic_run_tool_limit_does_not_repeat_last_update(monkey
     # The turn ends with the single limit message. The model's pre-tool prose
     # ("Current synthesis draft.") rode alongside a tool call, so it is
     # suppressed rather than surfaced or repeated.
-    assert assistant_texts == [TOOL_LIMIT_SAFETY_MESSAGE]
+    assert len(assistant_texts) == 1
+    assert assistant_texts[0] != "Current synthesis draft."
+    assert 'request: "hello"' in assistant_texts[0]
+    assert "fresh pass" in assistant_texts[0]
     assert assistant_texts.count("Current synthesis draft.") == 0
 
 
