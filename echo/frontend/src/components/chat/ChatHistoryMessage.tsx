@@ -338,7 +338,7 @@ export const ChatHistoryMessage = ({
 							<Box
 								mt="sm"
 								className="w-fit rounded-md bg-white p-2"
-								{...{ "data-testid": "assistant-portal-link-qr" }}
+								data-testid="assistant-portal-link-qr"
 							>
 								<QRCode
 									value={portalStartLink}

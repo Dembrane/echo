@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 from datetime import datetime, timezone, timedelta
+from contextlib import asynccontextmanager
 
 import pytest
 from httpx import AsyncClient, ASGITransport
@@ -122,6 +123,64 @@ async def test_get_canvas_matches_track_b_shape(monkeypatch) -> None:
             "last_run_detail": None,
         },
     }
+    assert access.required == ["project:read"]
+
+
+@pytest.mark.asyncio
+async def test_canvas_events_authorizes_and_emits_generation_nudge(monkeypatch) -> None:
+    access = _Access()
+    cleanup: list[str] = []
+
+    async def _report(report_id: str, auth) -> tuple[_Access, dict]:  # noqa: ARG001
+        return access, {"id": report_id, "kind": "canvas", "project_id": "p1"}
+
+    @asynccontextmanager
+    async def _subscribe(report_id: str):
+        assert report_id == "r1"
+        try:
+            yield object()
+        finally:
+            cleanup.append(report_id)
+
+    read_calls = 0
+
+    async def _read(pubsub, timeout_seconds: float = 1.0) -> str | None:  # noqa: ARG001
+        nonlocal read_calls
+        read_calls += 1
+        return "1"
+
+    async def _generation(report_id: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"id": "g2", "report_id": "r1"}
+
+    class _Request:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def is_disconnected(self) -> bool:
+            self.calls += 1
+            return self.calls > 1
+
+    monkeypatch.setattr(canvases_bff, "resolve_report_access", _report)
+    monkeypatch.setattr(canvases_bff, "subscribe_generation_nudges", _subscribe)
+    monkeypatch.setattr(canvases_bff, "read_generation_nudge", _read)
+    monkeypatch.setattr(canvases_bff, "get_latest_generation", _generation)
+
+    response = await canvases_bff.canvas_events(
+        "r1",
+        _Request(),
+        DirectusSession(user_id="du1", is_admin=False, access_token="t", client=None),
+    )
+
+    events = []
+    async for chunk in response.body_iterator:
+        events.append(chunk)
+
+    assert response.media_type == "text/event-stream"
+    assert events[0].startswith("event: connected")
+    assert "event: generation" in events[1]
+    assert '"generation_id": "g2"' in events[1]
+    assert cleanup == ["r1"]
+    assert read_calls == 1
     assert access.required == ["project:read"]
 
 
