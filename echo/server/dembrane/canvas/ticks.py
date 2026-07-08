@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import re
 import json
 import logging
 from typing import Any
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
+from html.parser import HTMLParser
 
 from dembrane.llms import MODELS, arouter_completion
 from dembrane.utils import generate_uuid
@@ -18,6 +20,32 @@ from dembrane.directus_async import async_directus
 from dembrane.canvas.sanitize import CanvasSanitizationError, sanitize_canvas_html
 
 logger = logging.getLogger("dembrane.canvas.ticks")
+
+_BANNED_VISIBLE_COPY: tuple[tuple[str, str], ...] = (
+    ("real-time", "real-time"),
+    ("AI", "AI"),
+    ("successfully", "successfully"),
+    ("\u2014", "em dash"),
+)
+
+
+class _VisibleTextParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self._hidden_depth = 0
+        self.parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:  # noqa: ARG002
+        if tag.lower() in {"script", "style"}:
+            self._hidden_depth += 1
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.lower() in {"script", "style"} and self._hidden_depth > 0:
+            self._hidden_depth -= 1
+
+    def handle_data(self, data: str) -> None:
+        if self._hidden_depth == 0:
+            self.parts.append(data)
 
 
 def _now() -> datetime:
@@ -57,6 +85,39 @@ def _choice_text(response: Any) -> str:
 
 def _skill_text() -> str:
     return (Path(__file__).with_name("skill.md")).read_text(encoding="utf-8")
+
+
+def _visible_text(html: str) -> str:
+    parser = _VisibleTextParser()
+    parser.feed(html)
+    return " ".join(part.strip() for part in parser.parts if part.strip())
+
+
+def _banned_visible_copy(html: str) -> list[str]:
+    text = _visible_text(html)
+    lowered = text.lower()
+    found: list[str] = []
+    for lexeme, label in _BANNED_VISIBLE_COPY:
+        if lexeme == "AI":
+            if re.search(r"\bAI\b", text):
+                found.append(label)
+            continue
+        if lexeme == "\u2014":
+            if lexeme in text:
+                found.append(label)
+            continue
+        if lexeme.lower() in lowered:
+            found.append(label)
+    return found
+
+
+def _generation_detail(*, stripped_references: int, banned_copy: list[str]) -> str | None:
+    details: list[str] = []
+    if stripped_references:
+        details.append(f"stripped {stripped_references} external reference(s)")
+    if banned_copy:
+        details.append("banned visible copy: " + ", ".join(banned_copy))
+    return "; ".join(details) if details else None
 
 
 async def _create_run(
@@ -249,6 +310,7 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
             gather_bundle=gather_bundle,
         )
         sanitized = sanitize_canvas_html(raw_html, max_bytes=get_settings().canvas.max_html_bytes)
+        banned_copy = _banned_visible_copy(sanitized.html)
         generation = (
             await async_directus.create_item(
                 "canvas_generation",
@@ -259,10 +321,9 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
                     "content_html": sanitized.html,
                     "status": "ok",
                     "tick_kind": tick_kind,
-                    "detail": (
-                        f"stripped {sanitized.stripped_references} external reference(s)"
-                        if sanitized.stripped_references
-                        else None
+                    "detail": _generation_detail(
+                        stripped_references=sanitized.stripped_references,
+                        banned_copy=banned_copy,
                     ),
                 },
             )
@@ -306,3 +367,57 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
         await _enqueue_next_if_due(loop)
         logger.warning("canvas tick failed for loop %s: %s", loop_id, detail)
         return {"status": "error", "generation": generation, "run": run}
+
+
+async def reconcile_missing_canvas_tick_tasks() -> int:
+    """Backfill one pending scheduled canvas tick for each active loop missing one."""
+    now = _now()
+    loops = await async_directus.get_items(
+        "agent_loop",
+        {
+            "query": {
+                "filter": {
+                    "status": {"_eq": "active"},
+                    "expires_at": {"_gt": now.isoformat()},
+                },
+                "fields": ["id", "expires_at"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(loops, list) or not loops:
+        return 0
+
+    from dembrane.scheduled_tasks import STATUS_SCHEDULED, TASK_CANVAS_TICK, STATUS_PROCESSING
+
+    existing = await async_directus.get_items(
+        "scheduled_task",
+        {
+            "query": {
+                "filter": {
+                    "task_type": {"_eq": TASK_CANVAS_TICK},
+                    "status": {"_in": [STATUS_SCHEDULED, STATUS_PROCESSING]},
+                },
+                "fields": ["payload"],
+                "limit": -1,
+            }
+        },
+    )
+    covered: set[str] = set()
+    if isinstance(existing, list):
+        for task in existing:
+            loop_id = (task.get("payload") or {}).get("loop_id")
+            if loop_id:
+                covered.add(str(loop_id))
+
+    enqueued = 0
+    for loop in loops:
+        loop_id = str(loop.get("id") or "")
+        if not loop_id or loop_id in covered:
+            continue
+        await _enqueue_next_if_due(loop)
+        enqueued += 1
+
+    if enqueued:
+        logger.info("Backfilled %d missing canvas tick scheduled_task row(s)", enqueued)
+    return enqueued

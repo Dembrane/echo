@@ -5,7 +5,7 @@ const workspaceId = process.env.E2E_WORKSPACE_ID ?? "";
 const projectId = process.env.E2E_PROJECT_ID ?? "";
 const hasScope = Boolean(workspaceId && projectId);
 
-const methodologies = [
+const baseMethodologies = [
 	{
 		id: "dembrane",
 		name: "dembrane",
@@ -38,6 +38,7 @@ test.describe("methodology settings", () => {
 	test.skip(!hasCreds || !hasScope, "Set E2E_EMAIL, E2E_PASSWORD, E2E_WORKSPACE_ID, and E2E_PROJECT_ID");
 
 	test.beforeEach(async ({ page }) => {
+		const methodologies = structuredClone(baseMethodologies);
 		await page.route("**/v2/bff/methodologies?**", async (route) => {
 			await route.fulfill({ json: methodologies });
 		});
@@ -59,14 +60,19 @@ test.describe("methodology settings", () => {
 		});
 		await page.route("**/v2/bff/methodologies", async (route) => {
 			if (route.request().method() !== "POST") return route.fallback();
+			const body = route.request().postDataJSON();
+			const created = {
+				id: "new-methodology",
+				name: body.name,
+				description: body.description,
+				framing: body.framing,
+				is_seeded: false,
+				latest_version: { id: "new-methodology-v1", note: "Initial history", created_at: "2026-07-08T12:00:00Z" },
+				versions_count: 1,
+			};
+			methodologies.push(created);
 			await route.fulfill({
-				json: {
-					...methodologies[1],
-					id: "new-methodology",
-					name: "New panel",
-					latest_version: { id: "new-methodology-v1", note: "Initial history", created_at: "2026-07-08T12:00:00Z" },
-					versions_count: 1,
-				},
+				json: created,
 			});
 		});
 		await login(page);
@@ -93,19 +99,17 @@ test.describe("methodology settings", () => {
 		await page.route("**/v2/bff/methodologies", async (route) => {
 			if (route.request().method() !== "POST") return route.fallback();
 			createdName = route.request().postDataJSON().name;
-			await route.fulfill({
-				json: {
-					...methodologies[1],
-					id: "new-methodology",
-					name: createdName,
-					latest_version: { id: "new-methodology-v1", note: "Initial history", created_at: "2026-07-08T12:00:00Z" },
-					versions_count: 1,
-				},
-			});
+			return route.fallback();
 		});
 		await page.route("**/v2/bff/methodologies/panel-day/versions", async (route) => {
 			editedFraming = route.request().postDataJSON().framing;
-			await route.fulfill({ json: { ...methodologies[1], framing: editedFraming } });
+			await route.fulfill({
+				json: {
+					...baseMethodologies[1],
+					framing: editedFraming,
+					versions_count: 3,
+				},
+			});
 		});
 
 		await page.goto(`/w/${workspaceId}/settings/general`);
@@ -119,10 +123,12 @@ test.describe("methodology settings", () => {
 		await page.getByTestId("methodology-new-framing").fill("Ask for concerns by table.");
 		await page.getByTestId("methodology-new-save").click();
 		await expect.poll(() => createdName).toBe("New panel");
+		await expect(page.getByTestId("methodology-row-new-methodology")).toContainText("1 history entry");
 
 		await page.getByTestId("methodology-edit-panel-day").click();
 		await page.getByTestId("methodology-edit-framing").fill("Ask for concerns by neighbourhood.");
 		await page.getByTestId("methodology-edit-save").click();
 		await expect.poll(() => editedFraming).toBe("Ask for concerns by neighbourhood.");
+		await expect(page.getByTestId("methodology-row-panel-day")).toContainText("3 history entries");
 	});
 });

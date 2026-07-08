@@ -32,6 +32,7 @@ class _FakeDirectus:
             "content_html": "<html><body>old</body></html>",
             "created_at": "2026-07-07T10:10:00+00:00",
         }
+        self.scheduled_tasks: list[dict[str, Any]] = []
 
     async def get_item(self, collection: str, item_id: str) -> dict[str, Any] | None:
         return self.items.get(collection, {}).get(item_id)
@@ -39,6 +40,21 @@ class _FakeDirectus:
     async def get_items(self, collection: str, params: dict) -> list[dict[str, Any]]:
         if collection == "canvas_generation":
             return [self.latest_generation]
+        if collection == "agent_loop":
+            rows = list(self.items.get("agent_loop", {}).values())
+            status = ((params.get("query") or {}).get("filter") or {}).get("status") or {}
+            expires_at = ((params.get("query") or {}).get("filter") or {}).get("expires_at") or {}
+            if status.get("_eq"):
+                rows = [row for row in rows if row.get("status") == status["_eq"]]
+            if expires_at.get("_gt"):
+                rows = [
+                    row
+                    for row in rows
+                    if row.get("expires_at") and row["expires_at"] > expires_at["_gt"]
+                ]
+            return rows
+        if collection == "scheduled_task":
+            return self.scheduled_tasks
         return []
 
     async def create_item(self, collection: str, data: dict[str, Any]) -> dict[str, Any]:
@@ -154,3 +170,73 @@ async def test_enqueue_next_tick_uses_final_slot_before_expiry(monkeypatch) -> N
 
     assert enqueued[0]["task_type"] == scheduled_tasks.TASK_CANVAS_TICK
     assert enqueued[0]["scheduled_at"] == now + timedelta(minutes=3, seconds=-5)
+
+
+@pytest.mark.asyncio
+async def test_tick_ok_records_banned_visible_copy_without_rewriting(monkeypatch) -> None:
+    fake = _FakeDirectus()
+
+    async def _config(report_id: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"id": "cfg1", "brief": "brief", "gather_spec": {}, "cadence_minutes": 5}
+
+    async def _gather(**kwargs) -> dict[str, Any]:  # noqa: ARG001
+        return {
+            "latest_content_at": "2026-07-07T10:20:00+00:00",
+            "project": {},
+            "conversations": [],
+        }
+
+    async def _generate(**kwargs) -> str:  # noqa: ARG001
+        return '<div class="canvas-shell"><p>Real-time reflections — created successfully by AI.</p></div>'
+
+    async def _enqueue(loop: dict[str, Any]) -> None:  # noqa: ARG001
+        return None
+
+    async def _publish(report_id: str) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_latest_config", _config)
+    monkeypatch.setattr(ticks, "execute_gather_spec", _gather)
+    monkeypatch.setattr(ticks, "_generate_html", _generate)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+    monkeypatch.setattr(ticks, "publish_generation_nudge", _publish)
+
+    result = await ticks.run_tick("loop1", "scheduled")
+
+    generation = result["generation"]
+    assert generation["status"] == "ok"
+    assert "Real-time reflections" in generation["content_html"]
+    assert generation["detail"] == "banned visible copy: real-time, AI, successfully, em dash"
+
+
+@pytest.mark.asyncio
+async def test_reconcile_missing_canvas_tick_tasks_enqueues_orphaned_active_loop(
+    monkeypatch,
+) -> None:
+    fake = _FakeDirectus()
+    now = datetime(2026, 7, 7, 10, 0, 0, tzinfo=timezone.utc)
+    fake.items["agent_loop"]["covered"] = {
+        **fake.items["agent_loop"]["loop1"],
+        "id": "covered",
+    }
+    fake.scheduled_tasks = [
+        {
+            "payload": {"loop_id": "covered"},
+            "status": scheduled_tasks.STATUS_SCHEDULED,
+            "task_type": scheduled_tasks.TASK_CANVAS_TICK,
+        }
+    ]
+    enqueued: list[str] = []
+
+    async def _enqueue(loop: dict[str, Any]) -> None:
+        enqueued.append(str(loop["id"]))
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_now", lambda: now)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+
+    count = await ticks.reconcile_missing_canvas_tick_tasks()
+
+    assert count == 1
+    assert enqueued == ["loop1"]

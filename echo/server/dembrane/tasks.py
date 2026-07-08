@@ -157,7 +157,9 @@ class SkipRetryOnUnrecoverableError(dramatiq.Middleware):
             ProjectNotFoundException,
         )
 
-    def after_process_message(self, broker: Any, message: Any, *, result: Any = None, exception: Any = None) -> None:  # noqa: ARG002
+    def after_process_message(
+        self, _broker: Any, message: Any, *, _result: Any = None, exception: Any = None
+    ) -> None:
         if exception is None:
             return
         if isinstance(exception, self.UNRECOVERABLE):
@@ -746,25 +748,31 @@ def _stamp_over_cap(conversation_id: str, logger: Any) -> None:
     # Sum all conversation durations in this workspace (includes deleted rows
     # because deletions preserve billable duration).
     with directus_client_context(directus) as client:
-        projects = client.get_items("project", {
-            "query": {
-                "filter": {"workspace_id": {"_eq": workspace_id}},
-                "fields": ["id"],
-                "limit": -1,
-            }
-        })
+        projects = client.get_items(
+            "project",
+            {
+                "query": {
+                    "filter": {"workspace_id": {"_eq": workspace_id}},
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        )
     if not isinstance(projects, list) or not projects:
         return
     project_ids = [p["id"] for p in projects]
 
     with directus_client_context(directus) as client:
-        conversations = client.get_items("conversation", {
-            "query": {
-                "filter": {"project_id": {"_in": project_ids}},
-                "fields": ["duration"],
-                "limit": -1,
-            }
-        })
+        conversations = client.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {"project_id": {"_in": project_ids}},
+                    "fields": ["duration"],
+                    "limit": -1,
+                }
+            },
+        )
     if not isinstance(conversations, list):
         conversations = []
     total_seconds = sum(c.get("duration") or 0 for c in conversations)
@@ -1269,7 +1277,9 @@ def _report_event_distinct_id(report_id_str: str, project_id: str) -> str:
 
 
 @dramatiq.actor(queue_name="network", priority=50)
-def task_create_report(project_id: str, report_id: int, language: str, user_instructions: str = "") -> None:
+def task_create_report(
+    project_id: str, report_id: int, language: str, user_instructions: str = ""
+) -> None:
     """
     Phase 1 of report generation: validate, dispatch summarization fan-out.
 
@@ -1284,7 +1294,9 @@ def task_create_report(project_id: str, report_id: int, language: str, user_inst
     greenlet slots.
     """
     logger = getLogger("dembrane.tasks.task_create_report")
-    logger.info(f"Starting report generation (phase 1) for project {project_id}, report {report_id}")
+    logger.info(
+        f"Starting report generation (phase 1) for project {project_id}, report {report_id}"
+    )
 
     from dembrane.report_utils import ReportGenerationError
     from dembrane.report_events import publish_report_progress
@@ -1338,25 +1350,34 @@ def task_create_report(project_id: str, report_id: int, language: str, user_inst
             try:
                 redis_client.set(
                     f"report:{report_id}:params",
-                    json.dumps({
-                        "project_id": project_id,
-                        "language": language,
-                        "user_instructions": user_instructions,
-                    }),
+                    json.dumps(
+                        {
+                            "project_id": project_id,
+                            "language": language,
+                            "user_instructions": user_instructions,
+                        }
+                    ),
                     ex=3600,  # 1 hour TTL
                 )
             finally:
                 redis_client.close()
 
             summaries_dispatched = dispatch_summarization_if_needed(
-                project_id, report_id, progress_callback,
+                project_id,
+                report_id,
+                progress_callback,
             )
 
             if not summaries_dispatched:
                 # All summaries already exist -- proceed to phase 2 immediately
-                logger.info(f"No summarization needed for report {report_id}, proceeding to phase 2")
+                logger.info(
+                    f"No summarization needed for report {report_id}, proceeding to phase 2"
+                )
                 task_create_report_continue.send(
-                    project_id, report_id, language, user_instructions,
+                    project_id,
+                    report_id,
+                    language,
+                    user_instructions,
                 )
             else:
                 # Summaries were dispatched. The completion callback
@@ -1370,11 +1391,15 @@ def task_create_report(project_id: str, report_id: int, language: str, user_inst
             logger.error(f"Report generation failed for report {report_id}: {e}")
             try:
                 with directus_client_context() as client:
-                    client.update_item("project_report", report_id_str, {
-                        "status": "error",
-                        "error_code": "GENERATION_FAILED",
-                        "error_message": str(e),
-                    })
+                    client.update_item(
+                        "project_report",
+                        report_id_str,
+                        {
+                            "status": "error",
+                            "error_code": "GENERATION_FAILED",
+                            "error_message": str(e),
+                        },
+                    )
             except Exception as update_err:
                 logger.error(f"Failed to update report status to error: {update_err}")
             publish_report_progress(report_id, "failed", str(e))
@@ -1384,11 +1409,15 @@ def task_create_report(project_id: str, report_id: int, language: str, user_inst
             logger.error(f"Unexpected error in report phase 1 for report {report_id}: {e}")
             try:
                 with directus_client_context() as client:
-                    client.update_item("project_report", report_id_str, {
-                        "status": "error",
-                        "error_code": "UNEXPECTED_ERROR",
-                        "error_message": str(e),
-                    })
+                    client.update_item(
+                        "project_report",
+                        report_id_str,
+                        {
+                            "status": "error",
+                            "error_code": "UNEXPECTED_ERROR",
+                            "error_message": str(e),
+                        },
+                    )
             except Exception as update_err:
                 logger.error(f"Failed to update report status to error: {update_err}")
             publish_report_progress(report_id, "failed", str(e))
@@ -1396,7 +1425,9 @@ def task_create_report(project_id: str, report_id: int, language: str, user_inst
 
 
 @dramatiq.actor(queue_name="network", priority=50)
-def task_create_report_continue(project_id: str, report_id: int, language: str, user_instructions: str = "") -> None:
+def task_create_report_continue(
+    project_id: str, report_id: int, language: str, user_instructions: str = ""
+) -> None:
     """
     Phase 2 of report generation: fetch transcripts, build prompt, call LLM, save.
 
@@ -1407,7 +1438,9 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
     fetching and gevent.sleep-compatible I/O.
     """
     logger = getLogger("dembrane.tasks.task_create_report_continue")
-    logger.info(f"Starting report generation (phase 2) for project {project_id}, report {report_id}")
+    logger.info(
+        f"Starting report generation (phase 2) for project {project_id}, report {report_id}"
+    )
 
     from dembrane.report_utils import ReportGenerationError
     from dembrane.report_events import publish_report_progress
@@ -1460,11 +1493,15 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
 
             # Success: update report to archived
             with directus_client_context() as client:
-                client.update_item("project_report", report_id_str, {
-                    "content": content,
-                    "status": "archived",
-                    "date_created": get_utc_timestamp().isoformat(),
-                })
+                client.update_item(
+                    "project_report",
+                    report_id_str,
+                    {
+                        "content": content,
+                        "status": "archived",
+                        "date_created": get_utc_timestamp().isoformat(),
+                    },
+                )
 
             publish_report_progress(report_id, "completed", "Report ready")
             logger.info(f"Report {report_id} generated for project {project_id}")
@@ -1487,15 +1524,14 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
             try:
                 from dembrane.app_user import resolve_app_user
                 from dembrane.notifications import emit_sync
+
                 with directus_client_context() as client:
                     report_row = client.get_item("project_report", report_id_str)
                     project_row = client.get_item("project", project_id) if project_id else None
                 report_data = (report_row or {}).get("data") or report_row or {}
                 creator_directus_id = report_data.get("user_created")
                 if creator_directus_id:
-                    creator = run_async_in_new_loop(
-                        resolve_app_user(creator_directus_id)
-                    )
+                    creator = run_async_in_new_loop(resolve_app_user(creator_directus_id))
                     if creator:
                         project_name = (project_row or {}).get("name") or "your project"
                         emit_sync(
@@ -1523,11 +1559,15 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
             logger.error(f"Report generation failed for report {report_id}: {e}")
             try:
                 with directus_client_context() as client:
-                    client.update_item("project_report", report_id_str, {
-                        "status": "error",
-                        "error_code": "GENERATION_FAILED",
-                        "error_message": str(e),
-                    })
+                    client.update_item(
+                        "project_report",
+                        report_id_str,
+                        {
+                            "status": "error",
+                            "error_code": "GENERATION_FAILED",
+                            "error_message": str(e),
+                        },
+                    )
             except Exception as update_err:
                 logger.error(f"Failed to update report status to error: {update_err}")
             publish_report_progress(report_id, "failed", str(e))
@@ -1535,6 +1575,7 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
             try:
                 from dembrane.app_user import resolve_app_user
                 from dembrane.notifications import emit_sync
+
                 with directus_client_context() as client:
                     report_row = client.get_item("project_report", report_id_str)
                     project_row = client.get_item("project", project_id) if project_id else None
@@ -1583,11 +1624,15 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
             )
             try:
                 with directus_client_context() as client:
-                    client.update_item("project_report", report_id_str, {
-                        "status": "error",
-                        "error_code": "UNEXPECTED_ERROR",
-                        "error_message": str(e),
-                    })
+                    client.update_item(
+                        "project_report",
+                        report_id_str,
+                        {
+                            "status": "error",
+                            "error_code": "UNEXPECTED_ERROR",
+                            "error_message": str(e),
+                        },
+                    )
             except Exception as update_err:
                 logger.error(f"Failed to update report status to error: {update_err}")
             publish_report_progress(report_id, "failed", str(e))
@@ -1757,9 +1802,7 @@ def task_check_scheduled_reports() -> None:
                     )
                 enqueued += 1
             except Exception as e:
-                logger.error(
-                    "Failed to backfill scheduled_task for report %s: %s", report_id, e
-                )
+                logger.error("Failed to backfill scheduled_task for report %s: %s", report_id, e)
 
         if enqueued:
             logger.info("Backfilled %d scheduled report task(s)", enqueued)
@@ -1767,6 +1810,21 @@ def task_check_scheduled_reports() -> None:
     except Exception as e:
         logger.error(f"Error reconciling scheduled reports: {e}")
         raise
+
+
+@dramatiq.actor(queue_name="network", priority=50)
+def task_reconcile_canvas_tick_tasks() -> None:
+    """Reconciler: ensure active canvas loops have a pending canvas_tick row."""
+    from dembrane.canvas.ticks import reconcile_missing_canvas_tick_tasks
+
+    logger = getLogger("dembrane.tasks.task_reconcile_canvas_tick_tasks")
+    try:
+        enqueued = run_async_in_new_loop(reconcile_missing_canvas_tick_tasks())
+    except Exception as e:
+        logger.error("Error reconciling canvas tick tasks: %s", e)
+        raise
+    if enqueued:
+        logger.info("Backfilled %d canvas tick task(s)", enqueued)
 
 
 # ── Generic durable scheduled-task runner (ECHO-863) ─────────────────────────
@@ -1807,9 +1865,7 @@ def task_process_scheduled_tasks() -> None:
         try:
             _dispatch_scheduled_task(row)
         except Exception as exc:
-            task_logger.exception(
-                "scheduled_task %s (%s) failed", task_id, row.get("task_type")
-            )
+            task_logger.exception("scheduled_task %s (%s) failed", task_id, row.get("task_type"))
             with directus_client_context() as client:
                 mark_task_failed(client, task_id, str(exc))
             continue
@@ -1979,13 +2035,9 @@ def task_expire_staff_support_memberships() -> None:
                 ws = client.get_item("workspace", str(ws_id))
             org_id = ws.get("org_id") if ws else None
         try:
-            run_async_in_new_loop(
-                _revoke_staff_support_async(str(ws_id), str(row["id"]), org_id)
-            )
+            run_async_in_new_loop(_revoke_staff_support_async(str(ws_id), str(row["id"]), org_id))
         except Exception:
-            task_logger.exception(
-                "failed to expire staff support membership %s", row.get("id")
-            )
+            task_logger.exception("failed to expire staff support membership %s", row.get("id"))
 
 
 @dramatiq.actor(queue_name="network", priority=30)
@@ -2016,22 +2068,23 @@ def task_send_downgrade_email(
     settings = _get_settings()
 
     with directus_client_context() as client:
-        rows = client.get_items(
-            "app_user",
-            {
-                "query": {
-                    "filter": {"id": {"_in": audience_app_user_ids}},
-                    "fields": ["email"],
-                    "limit": -1,
-                }
-            },
-        ) or []
+        rows = (
+            client.get_items(
+                "app_user",
+                {
+                    "query": {
+                        "filter": {"id": {"_in": audience_app_user_ids}},
+                        "fields": ["email"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
 
-    emails = sorted({
-        (r.get("email") or "").strip()
-        for r in rows
-        if isinstance(r, dict) and r.get("email")
-    })
+    emails = sorted(
+        {(r.get("email") or "").strip() for r in rows if isinstance(r, dict) and r.get("email")}
+    )
     if not emails:
         logger.info(
             "downgrade_email_skipped workspace=%s — no recipient addresses",
@@ -2040,11 +2093,13 @@ def task_send_downgrade_email(
         return
 
     freeze_items = [
-        e["human"] for e in effects
+        e["human"]
+        for e in effects
         if isinstance(e, dict) and e.get("effect") == "freeze" and e.get("human")
     ]
     revert_items = [
-        e["human"] for e in effects
+        e["human"]
+        for e in effects
         if isinstance(e, dict) and e.get("effect") == "revert" and e.get("human")
     ]
 
@@ -2080,7 +2135,9 @@ def task_send_downgrade_email(
 
     logger.info(
         "downgrade_email workspace=%s recipients=%d sent=%s",
-        workspace_id, len(emails), ok,
+        workspace_id,
+        len(emails),
+        ok,
     )
 
 
@@ -2114,10 +2171,12 @@ def task_send_invite_email(
     if not ok:
         task_logger.error(
             "invite_email_failed to=%s context=%s — will retry",
-            to, failure_context,
+            to,
+            failure_context,
         )
         try:
             import sentry_sdk
+
             sentry_sdk.capture_message(
                 f"Invite email failed: {to} / {failure_context}",
                 level="error",
@@ -2154,20 +2213,23 @@ def task_expire_workspace_tiers() -> None:
     # workspace(s) each one covers (Phase 1: one workspace-scoped account each;
     # org-scoped accounts would fan out to all covered workspaces).
     with directus_client_context(directus) as client:
-        expired_accounts = client.get_items("billing_account", {
-            "query": {
-                "filter": {
-                    "tier_expires_at": {"_nnull": True, "_lt": now_iso},
-                    "tier": {"_neq": "free"},
-                    # Managed (offline) accounts never auto-downgrade: entitlements
-                    # are decoupled from payment (ISSUE-021). Staff manages expiry.
-                    "payment_mode": {"_neq": "offline"},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["id", "tier", "workspace_id"],
-                "limit": -1,
-            }
-        })
+        expired_accounts = client.get_items(
+            "billing_account",
+            {
+                "query": {
+                    "filter": {
+                        "tier_expires_at": {"_nnull": True, "_lt": now_iso},
+                        "tier": {"_neq": "free"},
+                        # Managed (offline) accounts never auto-downgrade: entitlements
+                        # are decoupled from payment (ISSUE-021). Staff manages expiry.
+                        "payment_mode": {"_neq": "offline"},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id", "tier", "workspace_id"],
+                    "limit": -1,
+                }
+            },
+        )
 
     if not isinstance(expired_accounts, list) or not expired_accounts:
         task_logger.debug("No expired billing-account tiers found")
@@ -2184,26 +2246,33 @@ def task_expire_workspace_tiers() -> None:
             covered_ws_ids = [ws_id]
         else:
             with directus_client_context(directus) as client:
-                covered = client.get_items("workspace", {
-                    "query": {
-                        "filter": {
-                            "billing_account_id": {"_eq": acc.get("id")},
-                            "deleted_at": {"_null": True},
-                        },
-                        "fields": ["id"],
-                        "limit": -1,
-                    }
-                })
+                covered = client.get_items(
+                    "workspace",
+                    {
+                        "query": {
+                            "filter": {
+                                "billing_account_id": {"_eq": acc.get("id")},
+                                "deleted_at": {"_null": True},
+                            },
+                            "fields": ["id"],
+                            "limit": -1,
+                        }
+                    },
+                )
             covered_ws_ids = [w["id"] for w in covered] if isinstance(covered, list) else []
             if not covered_ws_ids:
                 # Org account with no workspaces yet: just clear expiry on the
                 # account so it doesn't re-trigger every run.
                 with directus_client_context(directus) as client:
-                    client.update_item("billing_account", acc.get("id"), {
-                        "tier": "free",
-                        "tier_expires_at": None,
-                        "pre_warning_sent": False,
-                    })
+                    client.update_item(
+                        "billing_account",
+                        acc.get("id"),
+                        {
+                            "tier": "free",
+                            "tier_expires_at": None,
+                            "pre_warning_sent": False,
+                        },
+                    )
                 task_logger.info("Expired org account %s -> free (no workspaces)", acc.get("id"))
                 continue
 
@@ -2214,17 +2283,20 @@ def task_expire_workspace_tiers() -> None:
                 continue
             ws_name = ws.get("name") or "Untitled"
             try:
-                effects = run_async_in_new_loop(
-                    _apply_tier_expiry(target_ws_id, from_tier)
-                )
+                effects = run_async_in_new_loop(_apply_tier_expiry(target_ws_id, from_tier))
                 task_logger.info(
                     "Expired workspace %s (%s): %s -> free, %d effects applied",
-                    target_ws_id, ws_name, from_tier, len(effects),
+                    target_ws_id,
+                    ws_name,
+                    from_tier,
+                    len(effects),
                 )
                 _send_tier_expired_notifications(target_ws_id, ws_name, from_tier, effects)
             except Exception:
                 task_logger.exception(
-                    "Failed to expire workspace %s (%s)", target_ws_id, ws_name,
+                    "Failed to expire workspace %s (%s)",
+                    target_ws_id,
+                    ws_name,
                 )
 
 
@@ -2276,21 +2348,21 @@ def _send_tier_expired_notifications(
 
     task_logger = getLogger("dembrane.tasks._send_tier_expired_notifications")
 
-    audience = run_async_in_new_loop(
-        audience_workspace_admins_and_billing(workspace_id)
-    )
+    audience = run_async_in_new_loop(audience_workspace_admins_and_billing(workspace_id))
     if not audience:
         task_logger.info("No audience for TIER_EXPIRED on workspace %s", workspace_id)
         return
 
-    run_async_in_new_loop(emit_to_audience(
-        audience_user_ids=audience,
-        event_code="TIER_EXPIRED",
-        title=f"{workspace_name} tier expired",
-        message=f"Moved from {from_tier} to free. Request an upgrade to restore features.",
-        action="NAVIGATE_WORKSPACE_SETTINGS",
-        ref_workspace_id=workspace_id,
-    ))
+    run_async_in_new_loop(
+        emit_to_audience(
+            audience_user_ids=audience,
+            event_code="TIER_EXPIRED",
+            title=f"{workspace_name} tier expired",
+            message=f"Moved from {from_tier} to free. Request an upgrade to restore features.",
+            action="NAVIGATE_WORKSPACE_SETTINGS",
+            ref_workspace_id=workspace_id,
+        )
+    )
 
     settings = get_settings()
     base = (settings.urls.admin_base_url or "").rstrip("/")
@@ -2301,28 +2373,36 @@ def _send_tier_expired_notifications(
     )
 
     freeze_items = [
-        e["human"] for e in effects
+        e["human"]
+        for e in effects
         if isinstance(e, dict) and e.get("effect") == "freeze" and e.get("human")
     ]
     revert_items = [
-        e["human"] for e in effects
+        e["human"]
+        for e in effects
         if isinstance(e, dict) and e.get("effect") == "revert" and e.get("human")
     ]
 
     from dembrane.directus import directus
+
     with directus_client_context(directus) as client:
-        rows = client.get_items("app_user", {
-            "query": {
-                "filter": {"id": {"_in": audience}},
-                "fields": ["email"],
-                "limit": -1,
-            }
-        })
-    emails = sorted({
-        (r.get("email") or "").strip()
-        for r in (rows if isinstance(rows, list) else [])
-        if isinstance(r, dict) and r.get("email")
-    })
+        rows = client.get_items(
+            "app_user",
+            {
+                "query": {
+                    "filter": {"id": {"_in": audience}},
+                    "fields": ["email"],
+                    "limit": -1,
+                }
+            },
+        )
+    emails = sorted(
+        {
+            (r.get("email") or "").strip()
+            for r in (rows if isinstance(rows, list) else [])
+            if isinstance(r, dict) and r.get("email")
+        }
+    )
 
     if not emails:
         return
@@ -2343,7 +2423,8 @@ def _send_tier_expired_notifications(
         if not ok:
             task_logger.warning(
                 "tier_expired email failed for workspace %s to %s",
-                workspace_id, email_addr,
+                workspace_id,
+                email_addr,
             )
 
 
@@ -2358,7 +2439,9 @@ def task_send_tier_expiry_prewarning() -> None:
     Idempotent: pre_warning_sent prevents duplicate warnings.
     """
     task_logger = getLogger("dembrane.tasks.task_send_tier_expiry_prewarning")
-    task_logger.info("Checking for workspaces needing tier expiry pre-warning @ %s", get_utc_timestamp())
+    task_logger.info(
+        "Checking for workspaces needing tier expiry pre-warning @ %s", get_utc_timestamp()
+    )
 
     from datetime import datetime as dt_cls, timezone, timedelta
 
@@ -2372,21 +2455,28 @@ def task_send_tier_expiry_prewarning() -> None:
     # Tier + expiry live on the billing account. Scan accounts, warn the
     # workspace(s) each covers (Phase 1: one workspace-scoped account each).
     with directus_client_context(directus) as client:
-        candidates = client.get_items("billing_account", {
-            "query": {
-                "filter": {
-                    "tier_expires_at": {"_nnull": True, "_gte": now_iso, "_lte": three_days_iso},
-                    "tier": {"_neq": "free"},
-                    "pre_warning_sent": {"_eq": False},
-                    # Managed (offline) accounts never get an auto-expiry warning;
-                    # they don't auto-downgrade (ISSUE-021).
-                    "payment_mode": {"_neq": "offline"},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["id", "tier", "tier_expires_at", "workspace_id"],
-                "limit": -1,
-            }
-        })
+        candidates = client.get_items(
+            "billing_account",
+            {
+                "query": {
+                    "filter": {
+                        "tier_expires_at": {
+                            "_nnull": True,
+                            "_gte": now_iso,
+                            "_lte": three_days_iso,
+                        },
+                        "tier": {"_neq": "free"},
+                        "pre_warning_sent": {"_eq": False},
+                        # Managed (offline) accounts never get an auto-expiry warning;
+                        # they don't auto-downgrade (ISSUE-021).
+                        "payment_mode": {"_neq": "offline"},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id", "tier", "tier_expires_at", "workspace_id"],
+                    "limit": -1,
+                }
+            },
+        )
 
     if not isinstance(candidates, list) or not candidates:
         task_logger.debug("No billing accounts need tier expiry pre-warning")
@@ -2415,16 +2505,22 @@ def task_send_tier_expiry_prewarning() -> None:
             _send_tier_expiring_soon(ws_id, ws_name, current_tier, expires_at_raw)
 
             from dembrane.directus import directus
+
             with directus_client_context(directus) as client:
                 client.update_item("billing_account", account_id, {"pre_warning_sent": True})
 
             task_logger.info(
                 "Pre-warning sent for workspace %s (%s), tier=%s, expires=%s",
-                ws_id, ws_name, current_tier, expires_at_raw,
+                ws_id,
+                ws_name,
+                current_tier,
+                expires_at_raw,
             )
         except Exception:
             task_logger.exception(
-                "Failed to send pre-warning for workspace %s (%s)", ws_id, ws_name,
+                "Failed to send pre-warning for workspace %s (%s)",
+                ws_id,
+                ws_name,
             )
 
 
@@ -2443,23 +2539,23 @@ def _send_tier_expiring_soon(
 
     task_logger = getLogger("dembrane.tasks._send_tier_expiring_soon")
 
-    audience = run_async_in_new_loop(
-        audience_workspace_admins_and_billing(workspace_id)
-    )
+    audience = run_async_in_new_loop(audience_workspace_admins_and_billing(workspace_id))
     if not audience:
         task_logger.info("No audience for TIER_EXPIRING_SOON on workspace %s", workspace_id)
         return
 
     expires_date = _format_expiry_date(expires_at_raw)
 
-    run_async_in_new_loop(emit_to_audience(
-        audience_user_ids=audience,
-        event_code="TIER_EXPIRING_SOON",
-        title=f"{workspace_name} tier expires {expires_date}",
-        message=f"Your {current_tier} tier expires on {expires_date}. Request an upgrade to keep full features.",
-        action="NAVIGATE_WORKSPACE_SETTINGS",
-        ref_workspace_id=workspace_id,
-    ))
+    run_async_in_new_loop(
+        emit_to_audience(
+            audience_user_ids=audience,
+            event_code="TIER_EXPIRING_SOON",
+            title=f"{workspace_name} tier expires {expires_date}",
+            message=f"Your {current_tier} tier expires on {expires_date}. Request an upgrade to keep full features.",
+            action="NAVIGATE_WORKSPACE_SETTINGS",
+            ref_workspace_id=workspace_id,
+        )
+    )
 
     settings = get_settings()
     base = (settings.urls.admin_base_url or "").rstrip("/")
@@ -2470,19 +2566,25 @@ def _send_tier_expiring_soon(
     )
 
     from dembrane.directus import directus
+
     with directus_client_context(directus) as client:
-        rows = client.get_items("app_user", {
-            "query": {
-                "filter": {"id": {"_in": audience}},
-                "fields": ["email"],
-                "limit": -1,
-            }
-        })
-    emails = sorted({
-        (r.get("email") or "").strip()
-        for r in (rows if isinstance(rows, list) else [])
-        if isinstance(r, dict) and r.get("email")
-    })
+        rows = client.get_items(
+            "app_user",
+            {
+                "query": {
+                    "filter": {"id": {"_in": audience}},
+                    "fields": ["email"],
+                    "limit": -1,
+                }
+            },
+        )
+    emails = sorted(
+        {
+            (r.get("email") or "").strip()
+            for r in (rows if isinstance(rows, list) else [])
+            if isinstance(r, dict) and r.get("email")
+        }
+    )
 
     if not emails:
         return
@@ -2502,7 +2604,8 @@ def _send_tier_expiring_soon(
         if not ok:
             task_logger.warning(
                 "tier_expiring_soon email failed for workspace %s to %s",
-                workspace_id, email_addr,
+                workspace_id,
+                email_addr,
             )
 
 
@@ -2531,17 +2634,20 @@ def task_reconcile_pending_billing() -> None:
     from dembrane.billing_service import sync_account_from_mollie
 
     with directus_client_context(directus) as client:
-        pending = client.get_items("billing_account", {
-            "query": {
-                "filter": {
-                    "status": {"_eq": "pending"},
-                    "mollie_customer_id": {"_nnull": True},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["id"],
-                "limit": -1,
-            }
-        })
+        pending = client.get_items(
+            "billing_account",
+            {
+                "query": {
+                    "filter": {
+                        "status": {"_eq": "pending"},
+                        "mollie_customer_id": {"_nnull": True},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        )
     if not isinstance(pending, list) or not pending:
         return
     task_logger.info("Reconciling %d pending billing account(s)", len(pending))
@@ -2567,17 +2673,20 @@ def task_reconcile_subscription_seats() -> None:
     from dembrane.billing_service import reconcile_account_seats
 
     with directus_client_context(directus) as client:
-        active = client.get_items("billing_account", {
-            "query": {
-                "filter": {
-                    "status": {"_eq": "active"},
-                    "mollie_subscription_id": {"_nnull": True},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["id"],
-                "limit": -1,
-            }
-        })
+        active = client.get_items(
+            "billing_account",
+            {
+                "query": {
+                    "filter": {
+                        "status": {"_eq": "active"},
+                        "mollie_subscription_id": {"_nnull": True},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        )
     if not isinstance(active, list) or not active:
         return
     for acc in active:
@@ -2612,11 +2721,14 @@ def task_flush_email_digests() -> None:
     for recipient_id, items in batches.items():
         task_logger.info(
             "digest_flush: sending %d items to recipient %s",
-            len(items), recipient_id,
+            len(items),
+            recipient_id,
         )
         email_addr = _resolve_recipient_email_sync(recipient_id)
         if not email_addr:
-            task_logger.warning("digest_flush: no email found for recipient %s, skipping", recipient_id)
+            task_logger.warning(
+                "digest_flush: no email found for recipient %s, skipping", recipient_id
+            )
             continue
         ok = send_email_sync(
             to=email_addr,
@@ -2746,9 +2858,9 @@ def task_capture_chat_insights() -> None:
         if parsed:
             last_message_at[cid] = parsed
 
-    idle_chat_ids = [
-        cid for cid, ts in last_message_at.items() if ts < idle_cutoff
-    ][:INSIGHT_SWEEP_BATCH]
+    idle_chat_ids = [cid for cid, ts in last_message_at.items() if ts < idle_cutoff][
+        :INSIGHT_SWEEP_BATCH
+    ]
 
     if not idle_chat_ids:
         task_logger.debug("task_capture_chat_insights: no idle agentic chats")
@@ -2870,9 +2982,7 @@ def task_capture_chat_insights() -> None:
                 )
             written += 1
         except Exception:
-            task_logger.exception(
-                "task_capture_chat_insights: failed for chat %s", chat_id
-            )
+            task_logger.exception("task_capture_chat_insights: failed for chat %s", chat_id)
             skipped += 1
 
     task_logger.info(

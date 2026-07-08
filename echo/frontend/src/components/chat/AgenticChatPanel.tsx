@@ -24,7 +24,7 @@ import {
 	IconAlertCircle,
 	IconChevronDown,
 	IconChevronRight,
-	IconPlayerStop,
+	IconCircleX,
 	IconSend,
 	IconSparkles,
 } from "@tabler/icons-react";
@@ -1026,7 +1026,6 @@ export const AgenticChatPanel = ({
 	const handleSubmit = async (overrideMessage?: string) => {
 		const message = (overrideMessage ?? input).trim();
 		if (!message || !projectId || !chatId) return;
-		if (isInFlightStatus(runStatus)) return;
 
 		if (atTurnLimit) {
 			upgradeHandlers.open();
@@ -1532,35 +1531,34 @@ export const AgenticChatPanel = ({
 										<Trans>Enter to send, Shift+Enter for a new line</Trans>
 									</Text>
 								</Group>
-								{/* One action slot: Send morphs into Stop while a run is in
-								    flight. A disabled Send next to a header-only Stop read
-								    as broken. */}
-								{isRunInFlight ? (
-									<Button
-										type="button"
-										size="sm"
-										radius="md"
-										variant="outline"
-										leftSection={
-											isStopping ? (
-												<Loader size={14} />
-											) : (
-												<IconPlayerStop size={14} />
-											)
-										}
-										onPointerDown={armStopControl}
-										onKeyDown={(event) => {
-											if (event.key === "Enter" || event.key === " ") {
-												armStopControl();
-											}
-										}}
-										onClick={() => void handleStop()}
-										disabled={isStopping}
-										{...testId("chat-stop-button")}
-									>
-										<Trans>Stop</Trans>
-									</Button>
-								) : (
+								<Group gap="xs" wrap="nowrap">
+									{isRunInFlight ? (
+										<Tooltip label={t`Stop this run`} openDelay={400}>
+											<ActionIcon
+												type="button"
+												size="lg"
+												radius="md"
+												variant="subtle"
+												color="red"
+												aria-label={t`Stop this run`}
+												onPointerDown={armStopControl}
+												onKeyDown={(event) => {
+													if (event.key === "Enter" || event.key === " ") {
+														armStopControl();
+													}
+												}}
+												onClick={() => void handleStop()}
+												disabled={isStopping}
+												{...testId("chat-stop-button")}
+											>
+												{isStopping ? (
+													<Loader size={14} />
+												) : (
+													<IconCircleX size={18} />
+												)}
+											</ActionIcon>
+										</Tooltip>
+									) : null}
 									<Button
 										type="submit"
 										size="sm"
@@ -1579,7 +1577,7 @@ export const AgenticChatPanel = ({
 									>
 										<Trans>Send</Trans>
 									</Button>
-								)}
+								</Group>
 							</Group>
 						</Box>
 					</form>

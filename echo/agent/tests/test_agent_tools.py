@@ -294,6 +294,9 @@ def test_system_prompt_contains_conversational_and_research_directives():
     # Setup guidance is convergent, escapable, and proposal-only.
     assert "read interviewing.md first" in prompt
     assert "proposeGoal" in SYSTEM_PROMPT
+    assert "proposegoal is the\nclosing move" in prompt
+    assert "must come before proposeProjectUpdate" in SYSTEM_PROMPT
+    assert "Suggest context/settings updates only after a goal exists" in SYSTEM_PROMPT
     assert "you can skip this and come back any time" in prompt
     # Never leak internal machinery to the host
     assert "internal machinery" in prompt

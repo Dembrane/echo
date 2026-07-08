@@ -43,6 +43,12 @@ const emptyForm: MethodologyForm = {
 const historyLabel = (count: number) =>
 	count === 1 ? t`1 history entry` : t`${count} history entries`;
 
+const safeText = (value: unknown): string =>
+	typeof value === "string" ? value : "";
+
+const safeCount = (value: unknown): number =>
+	typeof value === "number" && Number.isFinite(value) ? value : 0;
+
 const contentToText = (content: unknown): string => {
 	if (content === null || content === undefined) return "";
 	if (typeof content === "string") return content;
@@ -101,6 +107,13 @@ export const WorkspaceMethodologiesSection = ({
 		return true;
 	};
 
+	const updateFormField = (field: keyof MethodologyForm, value: string) => {
+		setForm((current) => ({
+			...current,
+			[field]: value,
+		}));
+	};
+
 	const createMethodology = async () => {
 		if (!validateMetadata()) return;
 		try {
@@ -132,7 +145,10 @@ export const WorkspaceMethodologiesSection = ({
 		}
 	};
 
-	const methodologies = methodologiesQuery.data ?? [];
+	const methodologies = (methodologiesQuery.data ?? []).filter(
+		(methodology): methodology is MethodologyListItem =>
+			Boolean(methodology) && typeof methodology.id === "string",
+	);
 
 	return (
 		<Paper withBorder radius="sm" p="md" {...testId("workspace-methodologies")}>
@@ -188,7 +204,7 @@ export const WorkspaceMethodologiesSection = ({
 								<Stack gap={4} style={{ minWidth: 0 }}>
 									<Group gap="xs" wrap="wrap">
 										<Text size="sm" fw={500}>
-											{methodology.name}
+											{safeText(methodology.name) || t`Untitled methodology`}
 										</Text>
 										{methodology.is_seeded ? (
 											<Badge size="xs" variant="outline">
@@ -197,10 +213,10 @@ export const WorkspaceMethodologiesSection = ({
 										) : null}
 									</Group>
 									<Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-										{methodology.framing}
+										{safeText(methodology.framing)}
 									</Text>
 									<Text size="xs">
-										{historyLabel(methodology.versions_count ?? 0)}
+										{historyLabel(safeCount(methodology.versions_count))}
 									</Text>
 								</Stack>
 								{methodology.is_seeded ? (
@@ -236,10 +252,7 @@ export const WorkspaceMethodologiesSection = ({
 							label={t`Name`}
 							value={form.name}
 							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									name: event.currentTarget.value,
-								}))
+								updateFormField("name", event.currentTarget.value)
 							}
 							{...testId("methodology-new-name")}
 						/>
@@ -247,10 +260,7 @@ export const WorkspaceMethodologiesSection = ({
 							label={t`Description`}
 							value={form.description}
 							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									description: event.currentTarget.value,
-								}))
+								updateFormField("description", event.currentTarget.value)
 							}
 							{...testId("methodology-new-description")}
 						/>
@@ -260,10 +270,7 @@ export const WorkspaceMethodologiesSection = ({
 							autosize
 							minRows={3}
 							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									framing: event.currentTarget.value,
-								}))
+								updateFormField("framing", event.currentTarget.value)
 							}
 							{...testId("methodology-new-framing")}
 						/>
@@ -309,10 +316,7 @@ export const WorkspaceMethodologiesSection = ({
 							label={t`Name`}
 							value={form.name}
 							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									name: event.currentTarget.value,
-								}))
+								updateFormField("name", event.currentTarget.value)
 							}
 							{...testId("methodology-edit-name")}
 						/>
@@ -320,10 +324,7 @@ export const WorkspaceMethodologiesSection = ({
 							label={t`Description`}
 							value={form.description}
 							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									description: event.currentTarget.value,
-								}))
+								updateFormField("description", event.currentTarget.value)
 							}
 							{...testId("methodology-edit-description")}
 						/>
@@ -333,10 +334,7 @@ export const WorkspaceMethodologiesSection = ({
 							autosize
 							minRows={3}
 							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									framing: event.currentTarget.value,
-								}))
+								updateFormField("framing", event.currentTarget.value)
 							}
 							{...testId("methodology-edit-framing")}
 						/>
@@ -346,10 +344,7 @@ export const WorkspaceMethodologiesSection = ({
 							autosize
 							minRows={5}
 							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									content: event.currentTarget.value,
-								}))
+								updateFormField("content", event.currentTarget.value)
 							}
 							{...testId("methodology-edit-content")}
 						/>
@@ -357,10 +352,7 @@ export const WorkspaceMethodologiesSection = ({
 							label={t`History note`}
 							value={form.note}
 							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									note: event.currentTarget.value,
-								}))
+								updateFormField("note", event.currentTarget.value)
 							}
 							{...testId("methodology-edit-note")}
 						/>
