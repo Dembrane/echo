@@ -2,10 +2,8 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Badge,
-	Box,
 	Button,
 	Group,
-	Paper,
 	Stack,
 	Text,
 	Textarea,
@@ -13,6 +11,7 @@ import {
 } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
+import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { toast } from "@/components/common/Toaster";
 import {
 	useCreateCustomTopicMutation,
@@ -84,102 +83,98 @@ export const CustomVerificationTopicSuggestionCard = ({
 
 	if (applied) {
 		return (
-			<Box className="flex justify-start">
-				<Paper
-					className="w-full max-w-full rounded-md border border-slate-200/80 px-3 py-2 shadow-none md:max-w-[80%]"
-					{...testId("agentic-verification-topic-suggestion")}
-				>
-					<Group gap="xs" wrap="nowrap">
-						<IconCheck size={16} className="shrink-0 text-green-800" />
-						<Text size="sm">
-							<Trans>This verification prompt is added to your project.</Trans>
-						</Text>
-					</Group>
-				</Paper>
-			</Box>
+			<SuggestionCardFrame
+				compact
+				testId="agentic-verification-topic-suggestion"
+			>
+				<Group gap="xs" wrap="nowrap">
+					<IconCheck
+						size={16}
+						className="shrink-0"
+						style={{ color: "var(--mantine-color-primary-7)" }}
+					/>
+					<Text size="sm">
+						<Trans>This verification prompt is added to your project.</Trans>
+					</Text>
+				</Group>
+			</SuggestionCardFrame>
 		);
 	}
 
 	return (
-		<Box className="flex justify-start">
-			<Paper
-				className="w-full max-w-full rounded-md border border-slate-200/80 px-3 py-3 shadow-none md:max-w-[80%]"
-				{...testId("agentic-verification-topic-suggestion")}
-			>
-				<Stack gap="sm">
-					<Group justify="space-between" wrap="nowrap">
-						<Text size="sm" fw={500}>
-							<Trans>Suggested verification prompt</Trans>
-						</Text>
-						{dismissed && (
-							<Badge color="gray" variant="light">
-								<Trans>Dismissed</Trans>
-							</Badge>
-						)}
-					</Group>
-					{suggestion.reason && <Text size="xs">{suggestion.reason}</Text>}
-					{!dismissed && (
-						<Text size="xs" fs="italic" c="graphite.6">
-							<Trans>
-								Review and edit below. This adds a check that runs against each
-								conversation. Verification must be enabled for it to run.
-								Nothing changes until you add it.
-							</Trans>
-						</Text>
+		<SuggestionCardFrame testId="agentic-verification-topic-suggestion">
+			<Stack gap="sm">
+				<Group justify="space-between" wrap="nowrap">
+					<Text size="sm" fw={600}>
+						<Trans>Suggested verification prompt</Trans>
+					</Text>
+					{dismissed && (
+						<Badge size="xs" variant="outline">
+							<Trans>Dismissed</Trans>
+						</Badge>
 					)}
+				</Group>
+				{suggestion.reason && <Text size="xs">{suggestion.reason}</Text>}
+				{!dismissed && (
+					<Text size="xs" fs="italic" c="graphite.6">
+						<Trans>
+							Review and edit below. This adds a check that runs against each
+							conversation. Verification must be enabled for it to run. Nothing
+							changes until you add it.
+						</Trans>
+					</Text>
+				)}
 
+				{!dismissed && (
+					<Stack gap="sm">
+						<TextInput
+							label={t`Name`}
+							value={label}
+							onChange={(event) => setLabel(event.currentTarget.value)}
+							{...testId("verification-topic-label-input")}
+						/>
+						<Textarea
+							label={t`Prompt`}
+							autosize
+							minRows={2}
+							maxRows={8}
+							value={prompt}
+							onChange={(event) => setPrompt(event.currentTarget.value)}
+							{...testId("verification-topic-prompt-input")}
+						/>
+					</Stack>
+				)}
+
+				<Group justify="flex-end" gap="xs">
 					{!dismissed && (
-						<Stack gap="sm">
-							<TextInput
-								label={t`Name`}
-								value={label}
-								onChange={(event) => setLabel(event.currentTarget.value)}
-								{...testId("verification-topic-label-input")}
-							/>
-							<Textarea
-								label={t`Prompt`}
-								autosize
-								minRows={2}
-								maxRows={8}
-								value={prompt}
-								onChange={(event) => setPrompt(event.currentTarget.value)}
-								{...testId("verification-topic-prompt-input")}
-							/>
-						</Stack>
+						<Button
+							variant="subtle"
+							size="xs"
+							onClick={() => setDismissed(true)}
+						>
+							<Trans>Dismiss</Trans>
+						</Button>
 					)}
-
-					<Group justify="flex-end" gap="xs">
-						{!dismissed && (
-							<Button
-								variant="subtle"
-								color="gray"
-								size="xs"
-								onClick={() => setDismissed(true)}
-							>
-								<Trans>Dismiss</Trans>
-							</Button>
-						)}
-						{dismissed ? (
-							<Button
-								variant="subtle"
-								size="xs"
-								onClick={() => setDismissed(false)}
-							>
-								<Trans>Review again</Trans>
-							</Button>
-						) : (
-							<Button
-								size="xs"
-								loading={createTopicMutation.isPending}
-								onClick={() => void handleApply()}
-								{...testId("verification-topic-apply-button")}
-							>
-								<Trans>Add verification prompt</Trans>
-							</Button>
-						)}
-					</Group>
-				</Stack>
-			</Paper>
-		</Box>
+					{dismissed ? (
+						<Button
+							variant="subtle"
+							size="xs"
+							onClick={() => setDismissed(false)}
+						>
+							<Trans>Review again</Trans>
+						</Button>
+					) : (
+						<Button
+							size="xs"
+							loading={createTopicMutation.isPending}
+							onClick={() => void handleApply()}
+							{...testId("verification-topic-apply-button")}
+						>
+							<Trans>Add verification prompt</Trans>
+						</Button>
+					)}
+				</Group>
+			</Stack>
+		</SuggestionCardFrame>
 	);
 };

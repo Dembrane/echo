@@ -3,13 +3,14 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Badge,
 	Group,
-	Loader,
 	Paper,
+	Skeleton,
 	Stack,
 	Text,
 	Title,
 } from "@mantine/core";
 import { format, formatDistanceToNow } from "date-fns";
+import { ChevronRight } from "lucide-react";
 import { useParams } from "react-router";
 import { useProjectCanvases } from "@/components/canvas/hooks";
 import type { CanvasListItem, CanvasLoop } from "@/components/canvas/hooks";
@@ -51,22 +52,66 @@ function CanvasListRow({
 		>
 			<Paper
 				withBorder
-				className="rounded-md px-4 py-3 transition hover:border-primary"
+				className="rounded-md px-4 py-4 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-sm"
 			>
-				<Group justify="space-between" align="flex-start" gap="md" wrap="nowrap">
-					<Stack gap={4}>
-						<Text fw={600}>{canvas.name}</Text>
-						<Text size="sm">{loopStatusLine(canvas.loop)}</Text>
-						<Text size="xs">{lastUpdatedLine(canvas.latest_generation_at)}</Text>
+				<Group
+					justify="space-between"
+					align="flex-start"
+					gap="md"
+					wrap="nowrap"
+				>
+					<Stack gap="xs" className="min-w-0">
+						<Group gap="xs" wrap="nowrap">
+							<Text size="lg" fw={500} truncate>
+								{canvas.name}
+							</Text>
+							{canvas.isDevFixture ? (
+								<Badge size="xs" variant="outline">
+									<Trans>Fixture</Trans>
+								</Badge>
+							) : null}
+						</Group>
+						<Group gap="xs" wrap="wrap">
+							<Badge size="sm" variant="outline">
+								{loopStatusLine(canvas.loop)}
+							</Badge>
+							<Text size="xs">
+								{lastUpdatedLine(canvas.latest_generation_at)}
+							</Text>
+						</Group>
 					</Stack>
-					{canvas.isDevFixture ? (
-						<Badge size="xs" variant="outline">
-							<Trans>Fixture</Trans>
-						</Badge>
-					) : null}
+					<ChevronRight
+						size={18}
+						className="mt-1 shrink-0"
+						style={{ color: "var(--mantine-color-primary-6)" }}
+						aria-hidden
+					/>
 				</Group>
 			</Paper>
 		</I18nLink>
+	);
+}
+
+function CanvasListSkeleton() {
+	const rows = [
+		{ id: "first", width: "42%" },
+		{ id: "second", width: "56%" },
+		{ id: "third", width: "42%" },
+	];
+	return (
+		<Stack gap="xs" {...testId("library-canvas-list-loading")}>
+			{rows.map((row) => (
+				<Paper key={row.id} withBorder className="rounded-md px-4 py-4">
+					<Stack gap="sm">
+						<Skeleton height={24} width={row.width} />
+						<Group gap="xs">
+							<Skeleton height={24} width={150} radius="xl" />
+							<Skeleton height={12} width={120} />
+						</Group>
+					</Stack>
+				</Paper>
+			))}
+		</Stack>
 	);
 }
 
@@ -86,19 +131,17 @@ export const LibraryRoute = () => {
 					<Title order={1}>
 						<Trans>Library</Trans>
 					</Title>
-					<Text size="sm">
-						<Trans>Canvases the assistant builds for this project live here.</Trans>
+					<Text size="sm" maw={640}>
+						<Trans>Canvases built for this project live here.</Trans>
 					</Text>
 				</Stack>
 
 				{canvasesQuery.isLoading ? (
-					<Group justify="center" py="xl">
-						<Loader />
-					</Group>
+					<CanvasListSkeleton />
 				) : canvasesQuery.isError ? (
 					<Paper withBorder className="rounded-md px-4 py-6">
 						<Text fw={600}>
-							<Trans>Could not load the Library.</Trans>
+							<Trans>Could not load the library.</Trans>
 						</Text>
 						<Text size="sm">
 							{canvasesQuery.error instanceof Error
@@ -118,14 +161,14 @@ export const LibraryRoute = () => {
 						className="rounded-md px-4 py-8"
 						{...testId("library-empty-state")}
 					>
-						<Stack gap="xs" align="center">
-							<Text fw={600}>
+						<Stack gap="sm" align="center">
+							<Text size="lg" fw={500}>
 								<Trans>No canvases yet</Trans>
 							</Text>
-							<Text size="sm" ta="center">
+							<Text size="sm" ta="center" maw={520}>
 								<Trans>
-									Canvases the assistant builds for this project live here. Ask
-									for one in chat.
+									Ask in chat when you want a live view of the conversations.
+									The first canvas will stay here.
 								</Trans>
 							</Text>
 						</Stack>

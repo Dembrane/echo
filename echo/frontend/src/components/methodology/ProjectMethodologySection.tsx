@@ -1,6 +1,14 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Badge, Group, Loader, Select, Stack, Text } from "@mantine/core";
+import {
+	Badge,
+	Group,
+	Paper,
+	Select,
+	Skeleton,
+	Stack,
+	Text,
+} from "@mantine/core";
 import { ProjectSettingsSection } from "@/components/project/ProjectSettingsSection";
 import { testId } from "@/lib/testUtils";
 import {
@@ -20,9 +28,7 @@ const relatedId = (value: RelatedId): string | null => {
 };
 
 const optionLabel = (methodology: MethodologyListItem) =>
-	methodology.is_seeded
-		? t`${methodology.name} (default)`
-		: methodology.name;
+	methodology.is_seeded ? t`${methodology.name} (default)` : methodology.name;
 
 type ProjectMethodologySectionProps = {
 	project: {
@@ -73,7 +79,9 @@ export const ProjectMethodologySection = ({
 				</Trans>
 			}
 			headerRight={
-				methodologiesQuery.data?.some((methodology) => methodology.isDevFixture) ? (
+				methodologiesQuery.data?.some(
+					(methodology) => methodology.isDevFixture,
+				) ? (
 					<Badge variant="outline">
 						<Trans>Fixture</Trans>
 					</Badge>
@@ -85,21 +93,17 @@ export const ProjectMethodologySection = ({
 					<Trans>This project is not attached to a workspace.</Trans>
 				</Text>
 			) : methodologiesQuery.isLoading ? (
-				<Group gap="sm">
-					<Loader size="xs" />
-					<Text size="sm">
-						<Trans>Loading methodologies</Trans>
-					</Text>
-				</Group>
+				<Stack gap="sm">
+					<Skeleton height={18} width="38%" />
+					<Skeleton height={40} width="100%" />
+					<Skeleton height={16} width="74%" />
+				</Stack>
 			) : methodologiesQuery.isError ? (
 				<Text size="sm">
 					<Trans>Could not load methodologies.</Trans>
 				</Text>
 			) : (
 				<Stack gap="sm">
-					<Text size="sm" fw={500} {...testId("project-methodology-current")}>
-						{selected ? optionLabel(selected) : t`dembrane - the default`}
-					</Text>
 					<Select
 						label={t`Methodology`}
 						data={selectData}
@@ -109,15 +113,33 @@ export const ProjectMethodologySection = ({
 						placeholder={t`Choose a methodology`}
 						{...testId("project-methodology-select")}
 					/>
-					{selected?.framing ? (
-						<Text
-							size="sm"
-							style={{ whiteSpace: "pre-wrap" }}
-							{...testId("project-methodology-framing")}
-						>
-							{selected.framing}
-						</Text>
-					) : null}
+					<Paper withBorder className="rounded-md px-4 py-3">
+						<Stack gap="xs">
+							<Group gap="xs" wrap="wrap">
+								<Text
+									size="sm"
+									fw={600}
+									{...testId("project-methodology-current")}
+								>
+									{selected ? optionLabel(selected) : t`dembrane - the default`}
+								</Text>
+								{selected?.is_seeded ? (
+									<Badge size="xs" variant="outline">
+										<Trans>dembrane</Trans>
+									</Badge>
+								) : null}
+							</Group>
+							{selected?.framing ? (
+								<Text
+									size="sm"
+									style={{ whiteSpace: "pre-wrap" }}
+									{...testId("project-methodology-framing")}
+								>
+									{selected.framing}
+								</Text>
+							) : null}
+						</Stack>
+					</Paper>
 				</Stack>
 			)}
 		</ProjectSettingsSection>

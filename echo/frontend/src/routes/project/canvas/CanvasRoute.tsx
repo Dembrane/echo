@@ -2,10 +2,12 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
+	Badge,
 	Box,
 	Button,
 	Group,
-	Loader,
+	Paper,
+	Skeleton,
 	Stack,
 	Text,
 	Title,
@@ -38,7 +40,7 @@ function loopStatusLine(
 	if (!expiresAt) return t`Stays up to date`;
 	const expiry = new Date(expiresAt);
 	if (Number.isNaN(expiry.getTime())) return t`Stays up to date`;
-	return t`Stays up to date until ${format(expiry, "HH:mm 'today'")}`;
+	return t`Stays up to date until ${format(expiry, "HH:mm")}`;
 }
 
 function generationLabel(generation: CanvasGeneration): string {
@@ -59,39 +61,77 @@ function VersionStrip({
 	onBackToLive: () => void;
 }) {
 	if (generations.length === 0) return null;
-	const selected = generations.find((generation) => generation.id === selectedGenerationId);
+	const selected = generations.find(
+		(generation) => generation.id === selectedGenerationId,
+	);
 	return (
-		<Stack gap="xs" {...testId("canvas-version-strip")}>
-			<Group gap="xs" align="center">
-				<Text size="sm" fw={600}>
-					<Trans>Versions</Trans>
-				</Text>
-				{selected ? (
-					<Button size="xs" variant="subtle" onClick={onBackToLive}>
-						<Trans>Viewing {generationLabel(selected)}. Back to live</Trans>
-					</Button>
-				) : (
-					<Text size="sm">
-						<Trans>Live</Trans>
-					</Text>
-				)}
-			</Group>
-			<Group gap="xs">
-				{generations.map((generation) => (
-					<Button
-						key={generation.id}
-						size="xs"
-						variant={selectedGenerationId === generation.id ? "outline" : "subtle"}
-						onClick={() => onSelect(generation.id)}
-						{...testId(`canvas-version-${generation.id}`)}
-					>
-						{generationLabel(generation)}
-						{generation.status === "no_op" ? ` ${t`No change`}` : ""}
-						{generation.status === "error" ? ` ${t`Error`}` : ""}
-					</Button>
-				))}
-			</Group>
-		</Stack>
+		<Paper
+			withBorder
+			className="rounded-md px-3 py-3"
+			{...testId("canvas-version-strip")}
+		>
+			<Stack gap="xs">
+				<Group gap="xs" align="center" justify="space-between">
+					<Group gap="xs" align="center">
+						<Text size="sm" fw={600}>
+							<Trans>Versions</Trans>
+						</Text>
+						{selected ? (
+							<Badge size="sm" variant="outline">
+								<Trans>Viewing {generationLabel(selected)}</Trans>
+							</Badge>
+						) : (
+							<Badge size="sm" variant="outline">
+								<Trans>Live</Trans>
+							</Badge>
+						)}
+					</Group>
+					{selected ? (
+						<Button size="xs" variant="subtle" onClick={onBackToLive}>
+							<Trans>Back to live</Trans>
+						</Button>
+					) : null}
+				</Group>
+				<Group gap="xs" wrap="wrap">
+					{generations.map((generation) => (
+						<Button
+							key={generation.id}
+							size="xs"
+							variant={
+								selectedGenerationId === generation.id ? "outline" : "subtle"
+							}
+							onClick={() => onSelect(generation.id)}
+							{...testId(`canvas-version-${generation.id}`)}
+						>
+							{generationLabel(generation)}
+							{generation.status === "no_op" ? ` ${t`No change`}` : ""}
+							{generation.status === "error" ? ` ${t`Error`}` : ""}
+						</Button>
+					))}
+				</Group>
+			</Stack>
+		</Paper>
+	);
+}
+
+function CanvasLoadingState() {
+	return (
+		<PageContainer width="full" density="tight">
+			<Stack gap="md" maw={1440}>
+				<Group justify="space-between" align="flex-start" gap="md">
+					<Stack gap="xs">
+						<Skeleton height={32} width={280} />
+						<Skeleton height={16} width={220} />
+					</Stack>
+					<Group gap="xs">
+						<Skeleton height={36} width={96} radius="md" />
+						<Skeleton height={36} width={128} radius="md" />
+						<Skeleton height={36} width={36} radius="md" />
+					</Group>
+				</Group>
+				<Skeleton height={520} radius="md" />
+			</Stack>
+		</PageContainer>
 	);
 }
 
@@ -101,9 +141,9 @@ export const CanvasRoute = () => {
 	const generationsQuery = useCanvasGenerations(canvasId ?? "");
 	const refreshMutation = useRefreshCanvasMutation(canvasId ?? "");
 	const lifecycleMutation = useCanvasLifecycleMutation(canvasId ?? "");
-	const [selectedGenerationId, setSelectedGenerationId] = useState<string | null>(
-		null,
-	);
+	const [selectedGenerationId, setSelectedGenerationId] = useState<
+		string | null
+	>(null);
 	const {
 		ref: fullscreenRef,
 		toggle: toggleFullscreen,
@@ -117,7 +157,9 @@ export const CanvasRoute = () => {
 	const selectedGeneration = useMemo(
 		() =>
 			selectedGenerationId
-				? generations.find((generation) => generation.id === selectedGenerationId)
+				? generations.find(
+						(generation) => generation.id === selectedGenerationId,
+					)
 				: null,
 		[generations, selectedGenerationId],
 	);
@@ -131,29 +173,29 @@ export const CanvasRoute = () => {
 		lifecycleMutation.isPending || canvas?.isDevFixture || !canvasId;
 
 	if (canvasQuery.isLoading) {
-		return (
-			<PageContainer width="xl">
-				<Group justify="center" py="xl">
-					<Loader />
-				</Group>
-			</PageContainer>
-		);
+		return <CanvasLoadingState />;
 	}
 
 	return (
 		<PageContainer width="full" density="tight">
 			<Stack gap="md" maw={1440}>
-				<Group justify="space-between" align="flex-start" gap="md">
-					<Stack gap={4}>
+				<Group justify="space-between" align="flex-start" gap="lg">
+					<Stack gap="xs" className="min-w-0">
 						<Title order={2} fw={500}>
 							{canvas?.name ?? t`Canvas`}
 						</Title>
-						<Text size="sm">
-							{loopStatusLine(canvas?.loop?.status, canvas?.loop?.expires_at)}
-							{canvas?.isDevFixture ? ` ${t`Using fixture data.`}` : ""}
-						</Text>
+						<Group gap="xs" wrap="wrap">
+							<Badge size="sm" variant="outline">
+								{loopStatusLine(canvas?.loop?.status, canvas?.loop?.expires_at)}
+							</Badge>
+							{canvas?.isDevFixture ? (
+								<Text size="xs">
+									<Trans>Using fixture data.</Trans>
+								</Text>
+							) : null}
+						</Group>
 					</Stack>
-					<Group gap="xs">
+					<Group gap="xs" justify="flex-end">
 						{canvas?.loop ? (
 							<Tooltip
 								label={
@@ -204,6 +246,7 @@ export const CanvasRoute = () => {
 							<ActionIcon
 								variant="subtle"
 								size="lg"
+								radius="md"
 								onClick={toggleFullscreen}
 								aria-label={fullscreen ? t`Exit fullscreen` : t`Fullscreen`}
 								{...testId("canvas-fullscreen-button")}
@@ -216,8 +259,9 @@ export const CanvasRoute = () => {
 
 				<Box
 					ref={fullscreenRef}
-					className="rounded-md bg-parchment"
+					className="rounded-md"
 					style={{
+						backgroundColor: "var(--app-background)",
 						height: fullscreen ? "100vh" : undefined,
 						overflow: fullscreen ? "auto" : undefined,
 						padding: fullscreen ? "24px" : undefined,

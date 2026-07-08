@@ -295,7 +295,7 @@ export const NewChatRoute = () => {
 	if (!projectId || !workspaceId) {
 		return (
 			<Box className="flex h-full items-center justify-center">
-				<Text c="dimmed">
+				<Text>
 					<Trans>Project not found</Trans>
 				</Text>
 			</Box>
@@ -375,7 +375,11 @@ export const NewChatRoute = () => {
 							styles={{
 								input: { backgroundColor: "transparent", resize: "none" },
 							}}
-							className="rounded-lg bg-white shadow-sm"
+							className="rounded-lg border shadow-sm"
+							style={{
+								backgroundColor: "var(--app-background)",
+								borderColor: "var(--mantine-color-primary-light)",
+							}}
 							rightSectionWidth={52}
 							rightSection={
 								isPending ? (

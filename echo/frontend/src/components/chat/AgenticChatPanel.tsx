@@ -392,7 +392,7 @@ const ToolActivityRow = ({ item }: { item: ToolActivityItem }) => {
 					className={`h-1.5 w-1.5 shrink-0 rounded-full ${item.status === "running" ? "animate-pulse" : ""}`}
 					style={{ backgroundColor: statusMeta.dotColor }}
 				/>
-				<Text className="min-w-0 flex-1 truncate text-xs leading-4 text-slate-700">
+				<Text size="xs" className="min-w-0 flex-1 truncate">
 					{item.headline}
 				</Text>
 			</Group>
@@ -447,7 +447,11 @@ const ToolActivityGroup = ({
 				// The theme defaults Paper to withBorder; tool activity is ambient,
 				// not a card, so it stays borderless.
 				withBorder={false}
-				className="w-full max-w-full rounded-md bg-slate-50/70 px-2.5 py-1.5 shadow-none md:max-w-[80%]"
+				className="w-full max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
+				style={{
+					backgroundColor:
+						"color-mix(in srgb, var(--app-background) 88%, var(--mantine-color-primary-1))",
+				}}
 				{...testId("agentic-tool-group")}
 			>
 				{/* The whole summary row is the toggle (keyboard included); the
@@ -468,13 +472,16 @@ const ToolActivityGroup = ({
 								className={`h-1.5 w-1.5 shrink-0 rounded-full ${running ? "animate-pulse" : ""}`}
 								style={{ backgroundColor: dotColor }}
 							/>
-							<Text className="min-w-0 flex-1 truncate text-xs italic text-slate-600">
+							<Text size="xs" fs="italic" className="min-w-0 flex-1 truncate">
 								{summary}
 							</Text>
 						</Group>
 						<Group gap={6} wrap="nowrap" className="shrink-0">
 							{lastTimestamp && (
-								<Text className="text-slate-500 text-xs">
+								<Text
+									size="xs"
+									style={{ color: "var(--mantine-color-primary-6)" }}
+								>
 									{formatDate(new Date(lastTimestamp), "h:mm a")}
 								</Text>
 							)}
@@ -1265,13 +1272,13 @@ export const AgenticChatPanel = ({
 					{showExistingChatLoading && (
 						<Stack gap="md" {...testId("agentic-chat-loading")}>
 							<Group gap="xs">
-								<Loader size={14} color="gray" />
-								<Text c="dimmed" size="sm">
+								<Loader size={14} color="primary" />
+								<Text size="sm">
 									<Trans>Loading this chat...</Trans>
 								</Text>
 							</Group>
 							<Box className="flex justify-start">
-								<Paper className="w-full rounded-t-md rounded-br-md border border-slate-200 px-4 py-4 shadow-sm md:max-w-[72%]">
+								<Paper className="w-full rounded-t-md rounded-br-md px-4 py-4 shadow-sm md:max-w-[72%]">
 									<Stack gap="sm">
 										<Skeleton height={12} width="52%" radius="xl" />
 										<Skeleton height={12} width="84%" radius="xl" />
@@ -1281,7 +1288,7 @@ export const AgenticChatPanel = ({
 								</Paper>
 							</Box>
 							<Box className="flex justify-end">
-								<Paper className="w-full rounded-t-md rounded-bl-md border border-slate-200 px-4 py-4 shadow-sm md:max-w-[60%]">
+								<Paper className="w-full rounded-t-md rounded-bl-md px-4 py-4 shadow-sm md:max-w-[60%]">
 									<Stack gap="sm">
 										<Skeleton height={12} width="62%" radius="xl" />
 										<Skeleton height={12} width="90%" radius="xl" />
@@ -1309,7 +1316,7 @@ export const AgenticChatPanel = ({
 								<Title order={3} fw={500} className="max-w-md">
 									<Trans>Where would you like to start?</Trans>
 								</Title>
-								<Text size="sm" c="dimmed" maw={420}>
+								<Text size="sm" maw={420}>
 									<Trans>
 										Ask a question about the conversations in this project, or
 										get help setting it up. Any change is proposed for review
@@ -1466,7 +1473,8 @@ export const AgenticChatPanel = ({
 
 					{isRunInFlight && (
 						<Paper
-							className="self-start rounded-full border border-slate-200/80 bg-slate-50/90 px-3 py-1.5 shadow-none"
+							className="self-start rounded-full px-3 py-1.5 shadow-none"
+							style={{ borderColor: "var(--mantine-color-primary-light)" }}
 							{...testId("agentic-run-indicator")}
 						>
 							<Group gap={8} wrap="nowrap">
@@ -1485,12 +1493,22 @@ export const AgenticChatPanel = ({
 										}}
 									/>
 								</Box>
-								<Text className="max-w-[min(70vw,32rem)] truncate text-xs font-medium text-slate-600">
+								<Text
+									size="xs"
+									fw={500}
+									className="max-w-[min(70vw,32rem)] truncate"
+								>
 									{liveRunStatusText}
 								</Text>
 							</Group>
 						</Paper>
 					)}
+
+					{isRunInFlight ? (
+						<Text size="xs" fs="italic" {...testId("agentic-append-feedback")}>
+							<Trans>New messages will be answered next.</Trans>
+						</Text>
+					) : null}
 
 					{atTurnLimit && (
 						<ChatTurnLimitCard onUpgrade={upgradeHandlers.open} />
@@ -1502,7 +1520,13 @@ export const AgenticChatPanel = ({
 							void handleSubmit();
 						}}
 					>
-						<Box className="rounded-xl border border-slate-200 bg-white px-3 pb-2 pt-2 shadow-sm transition-colors focus-within:border-slate-400">
+						<Box
+							className="rounded-xl border px-3 pb-2 pt-2 shadow-sm transition-colors"
+							style={{
+								backgroundColor: "var(--app-background)",
+								borderColor: "var(--mantine-color-primary-light)",
+							}}
+						>
 							<Textarea
 								variant="unstyled"
 								styles={{ input: { backgroundColor: "transparent" } }}
@@ -1527,7 +1551,7 @@ export const AgenticChatPanel = ({
 										workspaceId={workspaceId}
 										onInsert={(content) => setInput(content)}
 									/>
-									<Text size="xs" c="dimmed" className="select-none">
+									<Text size="xs" className="select-none">
 										<Trans>Enter to send, Shift+Enter for a new line</Trans>
 									</Text>
 								</Group>
