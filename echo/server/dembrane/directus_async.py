@@ -113,6 +113,17 @@ class AsyncDirectusClient:
             if not client.is_closed:
                 await client.aclose()
 
+    def reset_clients(self) -> int:
+        """
+        Drop all cached httpx clients without awaiting close.
+
+        This is a recovery hook for loop/library corruption in long-lived
+        workers. The next request creates a fresh client on the current loop.
+        """
+        clients = list(self._clients_by_loop.values())
+        self._clients_by_loop.clear()
+        return len(clients)
+
     # ------------------------------------------------------------------
     # Low-level request with retry
     # ------------------------------------------------------------------

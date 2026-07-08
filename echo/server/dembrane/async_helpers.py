@@ -246,6 +246,7 @@ def _get_thread_event_loop() -> asyncio.AbstractEventLoop:
 # while a greenlet waits on the cross-thread Future.
 # ---------------------------------------------------------------------------
 _bg_loop: Optional[asyncio.AbstractEventLoop] = None
+_bg_loop_thread: Optional[threading.Thread] = None
 _bg_loop_lock = threading.Lock()
 
 
@@ -271,12 +272,25 @@ def _is_gevent_patched() -> bool:
 
 def _ensure_background_loop() -> asyncio.AbstractEventLoop:
     """Get (or lazily start) the shared background event loop."""
-    global _bg_loop
-    if _bg_loop is not None and not _bg_loop.is_closed():
+    global _bg_loop, _bg_loop_thread
+    if (
+        _bg_loop is not None
+        and not _bg_loop.is_closed()
+        and _bg_loop.is_running()
+        and (_bg_loop_thread is None or _bg_loop_thread.is_alive())
+    ):
         return _bg_loop
     with _bg_loop_lock:
-        if _bg_loop is not None and not _bg_loop.is_closed():
+        if (
+            _bg_loop is not None
+            and not _bg_loop.is_closed()
+            and _bg_loop.is_running()
+            and (_bg_loop_thread is None or _bg_loop_thread.is_alive())
+        ):
             return _bg_loop
+
+        _stop_background_loop_locked("background loop was not healthy")
+
         loop = asyncio.new_event_loop()
         ready = threading.Event()
 
@@ -289,8 +303,37 @@ def _ensure_background_loop() -> asyncio.AbstractEventLoop:
         thread.start()
         ready.wait()
         _bg_loop = loop
+        _bg_loop_thread = thread
         logger.info("Started shared background event loop on thread %s", thread.name)
         return loop
+
+
+def _stop_background_loop_locked(reason: str) -> None:
+    """Stop and forget the shared background loop. Caller must hold _bg_loop_lock."""
+    global _bg_loop, _bg_loop_thread
+
+    loop = _bg_loop
+    thread = _bg_loop_thread
+    _bg_loop = None
+    _bg_loop_thread = None
+
+    if loop is None:
+        return
+
+    logger.warning("Resetting shared background event loop: %s", reason)
+    if not loop.is_closed():
+        if loop.is_running():
+            loop.call_soon_threadsafe(loop.stop)
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=5)
+        if not loop.is_running():
+            loop.close()
+
+
+def reset_background_loop(reason: str) -> None:
+    """Force the shared background loop to be recreated on the next async call."""
+    with _bg_loop_lock:
+        _stop_background_loop_locked(reason)
 
 
 def run_async_in_new_loop(coro: Coroutine[Any, Any, T]) -> T:

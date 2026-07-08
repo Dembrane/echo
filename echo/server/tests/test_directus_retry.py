@@ -249,3 +249,16 @@ def test_async_client_uses_separate_httpx_clients_per_event_loop():
 
     assert len(seen) == 2
     assert seen[0] != seen[1]
+
+
+@pytest.mark.asyncio
+async def test_async_client_reset_discards_cached_clients():
+    client = AsyncDirectusClient(url="http://directus.test", token="t")
+
+    first = client._get_client()  # noqa: SLF001
+    assert client.reset_clients() == 1
+    second = client._get_client()  # noqa: SLF001
+
+    assert second is not first
+    await first.aclose()
+    await second.aclose()
