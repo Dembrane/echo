@@ -1586,6 +1586,18 @@ async def get_run(run_id: str, auth: DependencyDirectusSession) -> dict[str, Any
     return run
 
 
+@AgenticRouter.get("/chats/{project_chat_id}/latest-run")
+async def get_latest_chat_run(
+    project_chat_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    run = await run_in_thread_pool(agentic_run_service.get_latest_for_chat, project_chat_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="Agentic run not found")
+    _assert_run_authorized(run, auth)
+    return run
+
+
 @AgenticRouter.get("/runs/{run_id}/events")
 async def get_run_events(
     run_id: str,

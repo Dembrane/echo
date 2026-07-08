@@ -627,6 +627,73 @@ async def test_append_message_skips_title_generation_for_named_chat(monkeypatch)
 
 
 @pytest.mark.asyncio
+async def test_get_latest_chat_run_returns_newest_authorized_run(monkeypatch) -> None:
+    directus = InMemoryDirectus()
+    run_service = AgenticRunService(directus_client=directus)
+    older = run_service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+        status="completed",
+    )
+    newer = run_service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+        status="completed",
+    )
+    other_chat = run_service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-2",
+        directus_user_id="user-1",
+        status="completed",
+    )
+    directus.update_item(
+        "project_agentic_run",
+        older["id"],
+        {"created_at": "2026-07-08T09:00:00Z"},
+    )
+    directus.update_item(
+        "project_agentic_run",
+        newer["id"],
+        {"created_at": "2026-07-08T10:00:00Z"},
+    )
+    directus.update_item(
+        "project_agentic_run",
+        other_chat["id"],
+        {"created_at": "2026-07-08T11:00:00Z"},
+    )
+    session = _make_session(user_id="user-1")
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/chats/chat-1/latest-run")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == newer["id"]
+
+
+@pytest.mark.asyncio
+async def test_get_latest_chat_run_returns_404_when_none_exists(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/chats/chat-1/latest-run")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
 async def test_post_stream_claims_when_lease_acquired(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     run = run_service.create_run(project_id="project-1", directus_user_id="user-1", status="queued")

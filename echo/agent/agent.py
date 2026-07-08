@@ -1,7 +1,9 @@
 from logging import getLogger
+import json
 import re
 from typing import Any, Callable, Literal
 from datetime import datetime, timezone, timedelta
+from uuid import uuid4
 
 from copilotkit.langgraph import CopilotKitState
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -18,6 +20,8 @@ from settings import get_settings
 
 logger = getLogger("agent")
 VERTEX_AUTH_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
+MAX_AMBIENT_MEMORY_ITEMS = 12
+MAX_AMBIENT_MEMORY_CHARS = 3000
 
 DashboardPageKey = Literal[
     "overview",
@@ -92,6 +96,12 @@ Hosts run projects; participants contribute conversations through the portal or 
   as a finding.
 - Never fabricate quotes, participants, conversation IDs, or settings.
 - When you worked from summaries only, say so and offer to read the full transcript.
+- Only say you saved, logged, proposed, updated, paused, resumed, stopped, or
+  sent something after the corresponding action returned success in this turn.
+  If the action failed or you did not take it, say plainly what did not happen.
+  Counterexample: do not tell the host "I have saved a note to project memory:
+  The owner's name is spelled Akshita..." unless `remember` returned success in
+  this turn.
 
 ## When to use tools
 Use tools when the question needs project data or product knowledge:
@@ -100,8 +110,9 @@ Use tools when the question needs project data or product knowledge:
   or listConvoFullTranscript for exact wording.
 - "How does the portal work?" -> grepDocs and readDoc; cite the doc path.
 - "How do participants record / where is the portal link / how do I share it?"
-  -> getPortalLink, then give the actual link and offer navigateTo("overview")
-  or navigateTo("host-guide") if the host wants to find it in the dashboard.
+  -> getPortalLink, then give the actual link and call navigateTo("overview")
+  or navigateTo("host-guide") in the same turn so the host can find it in the
+  dashboard.
 - "Help me set up my project" -> readSkill(project-onboarding.md), then
   getProjectSettings and getProjectTags, then proposeProjectUpdate if a
   settings change is ready.
@@ -128,8 +139,9 @@ Never describe dashboard navigation beyond these surfaces. When sharing the
 portal is the topic, give the actual link via getPortalLink and say: you'll also
 find this link and a QR code on your project's Overview page, and the Host guide
 walks through sharing it. When a host asks where something is in the dashboard,
-give one short locating sentence and offer to take them there with navigateTo.
-Do not write multi-step dashboard routes. Never invent tabs, buttons, or menus.
+give one short locating sentence and call navigateTo in the same turn. Never ask permission before showing a navigation shortcut and never describe the card as
+optional. Counterexample: do not say "Would you like me to show a navigation
+card?" Do not write multi-step dashboard routes. Never invent tabs, buttons, or menus.
 
 ## Getting help from the dembrane team
 When the host needs something you cannot give: something looks broken, a billing
@@ -297,8 +309,9 @@ context, or planning what you will do.
 
 ## Memory
 You can save durable notes with `remember` and recall them with `readMemory`.
-Read memory early in a task when earlier context would help. There are three
-scopes:
+Relevant saved memories may already appear in a "What you remember" system
+section, so use them without waiting to call a tool. Call `readMemory` when you
+need to explicitly re-read or verify current memory. There are three scopes:
 - user: this host's own preferences. This is the only scope that may hold
   private or personal details.
 - workspace: shared preferences for the whole workspace. Keep these generic.
@@ -321,6 +334,161 @@ intent for reports and artifacts. Follow them, but they are not a research
 request. Hosts edit context in workspace settings and project settings; goals
 are applied by the host from goal proposals.
 """
+
+
+def _memory_sort_key(memory: dict[str, Any]) -> str:
+    return str(memory.get("updated_at") or "")
+
+
+def _format_memory_section(memories: list[Any]) -> str:
+    rows = [memory for memory in memories if isinstance(memory, dict)]
+    if not rows:
+        return ""
+
+    rows = sorted(rows, key=_memory_sort_key, reverse=True)
+    lines: list[str] = ["## What you remember"]
+    used_chars = len(lines[0])
+    for memory in rows[:MAX_AMBIENT_MEMORY_ITEMS]:
+        content = str(memory.get("content") or "").strip()
+        if not content:
+            continue
+        scope = str(memory.get("scope") or "memory").strip() or "memory"
+        memory_key = str(memory.get("memory_key") or "").strip()
+        label = scope if not memory_key else f"{scope}/{memory_key}"
+        line = f"- {label}: {content}"
+        remaining = MAX_AMBIENT_MEMORY_CHARS - used_chars
+        if remaining <= 0:
+            break
+        if len(line) > remaining:
+            line = line[: max(0, remaining - 1)].rstrip() + "..."
+        lines.append(line)
+        used_chars += len(line) + 1
+        if used_chars >= MAX_AMBIENT_MEMORY_CHARS:
+            break
+
+    return "\n".join(lines) if len(lines) > 1 else ""
+
+
+def _split_concatenated_json_objects(raw: str, expected_count: int) -> list[Any] | None:
+    decoder = json.JSONDecoder()
+    values: list[Any] = []
+    index = 0
+    while index < len(raw):
+        while index < len(raw) and raw[index].isspace():
+            index += 1
+        if index >= len(raw):
+            break
+        try:
+            value, end = decoder.raw_decode(raw, index)
+        except json.JSONDecodeError:
+            return None
+        values.append(value)
+        index = end
+
+    if len(values) != expected_count:
+        return None
+    return values
+
+
+def _split_fused_tool_name(name: str, tool_names: set[str]) -> list[str] | None:
+    if name in tool_names:
+        return None
+
+    candidates = sorted(tool_names, key=len, reverse=True)
+    memo: dict[int, list[str] | None] = {}
+
+    def _match(index: int) -> list[str] | None:
+        if index == len(name):
+            return []
+        if index in memo:
+            return memo[index]
+        for candidate in candidates:
+            if not name.startswith(candidate, index):
+                continue
+            suffix = _match(index + len(candidate))
+            if suffix is not None:
+                memo[index] = [candidate] + suffix
+                return memo[index]
+        memo[index] = None
+        return None
+
+    parts = _match(0)
+    return parts if parts and len(parts) > 1 else None
+
+
+def _normalize_fused_tool_calls(message: Any, tool_names: set[str]) -> Any:
+    tool_calls = getattr(message, "tool_calls", None)
+    invalid_tool_calls = getattr(message, "invalid_tool_calls", None)
+    if not isinstance(tool_calls, list):
+        tool_calls = []
+    if not isinstance(invalid_tool_calls, list):
+        invalid_tool_calls = []
+    if not tool_calls and not invalid_tool_calls:
+        return message
+
+    normalized_calls: list[dict[str, Any]] = []
+    changed = False
+    remaining_invalid_calls: list[Any] = []
+
+    def _append_normalized_or_original(call: Any, *, keep_unsplit_invalid: bool) -> None:
+        nonlocal changed
+        if not isinstance(call, dict):
+            if keep_unsplit_invalid:
+                remaining_invalid_calls.append(call)
+            else:
+                normalized_calls.append(call)
+            return
+
+        name = str(call.get("name") or "")
+        split_names = _split_fused_tool_name(name, tool_names)
+        if not split_names:
+            if keep_unsplit_invalid:
+                remaining_invalid_calls.append(call)
+            else:
+                normalized_calls.append(call)
+            return
+
+        args = call.get("args")
+        split_args: list[Any] | None = None
+        if isinstance(args, str):
+            split_args = _split_concatenated_json_objects(args, len(split_names))
+        elif isinstance(args, list) and len(args) == len(split_names):
+            split_args = args
+        if split_args is None:
+            logger.warning("Dropping fused tool call with unsplittable args: %s", name)
+            if keep_unsplit_invalid:
+                remaining_invalid_calls.append(call)
+            changed = True
+            return
+
+        changed = True
+        base_id = str(call.get("id") or uuid4())
+        for index, split_name in enumerate(split_names):
+            split_arg = split_args[index]
+            normalized_calls.append(
+                {
+                    **call,
+                    "id": f"{base_id}-{index}",
+                    "name": split_name,
+                    "args": split_arg if isinstance(split_arg, dict) else {},
+                }
+            )
+
+    for call in tool_calls:
+        _append_normalized_or_original(call, keep_unsplit_invalid=False)
+    for call in invalid_tool_calls:
+        _append_normalized_or_original(call, keep_unsplit_invalid=True)
+
+    if not changed:
+        return message
+    if hasattr(message, "model_copy"):
+        return message.model_copy(
+            update={
+                "tool_calls": normalized_calls,
+                "invalid_tool_calls": remaining_invalid_calls,
+            }
+        )
+    return message
 
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 6
 AUTOMATIC_NUDGE_TEMPLATE = (
@@ -383,6 +551,7 @@ def create_agent_graph(
     automatic_nudge_milestones: set[int] = set()
     nudge_retry_milestones: set[int] = set()
     last_tool_calls_without_assistant_update = 0
+    ambient_memory_section: str | None = None
 
     def _coerce_message_text(value: Any) -> str:
         if isinstance(value, str):
@@ -922,7 +1091,7 @@ def create_agent_graph(
 
     @tool
     async def navigateTo(page: DashboardPageKey, entity_id: str = "") -> dict[str, Any]:
-        """Offer a host-clicked dashboard navigation shortcut.
+        """Return a host-clicked dashboard navigation shortcut.
 
         Use this when the host asks where something lives in the dashboard.
         `page` must be one of the real dashboard surfaces. `entity_id` is
@@ -1451,6 +1620,28 @@ def create_agent_graph(
     system_prompt = SYSTEM_PROMPT + knowledge.prompt_section(docs_base_url=docs_base_url)
     configured_llm = llm or _build_llm()
     llm_with_tools = configured_llm.bind_tools(tools)
+    tool_names = {tool.name for tool in tools}
+
+    async def _load_ambient_memory_section() -> str:
+        nonlocal ambient_memory_section
+        if ambient_memory_section is not None:
+            return ambient_memory_section
+
+        client = _create_echo_client()
+        try:
+            payload = await client.list_memory(project_id)
+        except Exception:
+            logger.exception("Failed to load ambient agent memory")
+            ambient_memory_section = ""
+        else:
+            memories = payload.get("memories") if isinstance(payload, dict) else None
+            ambient_memory_section = _format_memory_section(
+                memories if isinstance(memories, list) else []
+            )
+        finally:
+            await client.close()
+
+        return ambient_memory_section
 
     def should_continue(state: dict) -> str:
         messages = state.get("messages", [])
@@ -1476,9 +1667,13 @@ def create_agent_graph(
     async def call_model(state: dict) -> dict:
         raw_messages = state.get("messages", [])
         messages = [_with_placeholder_content(message) for message in raw_messages]
+        memory_section = await _load_ambient_memory_section()
+        effective_system_prompt = (
+            f"{system_prompt}\n\n{memory_section}" if memory_section else system_prompt
+        )
         # Build invocation list with system prompt, but don't persist duplicates
         if not messages or not isinstance(messages[0], SystemMessage):
-            invocation_messages = [SystemMessage(content=system_prompt)] + messages
+            invocation_messages = [SystemMessage(content=effective_system_prompt)] + messages
         else:
             invocation_messages = list(messages)
 
@@ -1490,7 +1685,10 @@ def create_agent_graph(
             nudge_content, nudge_milestone = automatic_nudge
             invocation_messages.append(HumanMessage(content=nudge_content))
 
-        response = await llm_with_tools.ainvoke(invocation_messages)
+        response = _normalize_fused_tool_calls(
+            await llm_with_tools.ainvoke(invocation_messages),
+            tool_names,
+        )
 
         should_retry_after_nudge = (
             nudge_milestone is not None
@@ -1502,7 +1700,10 @@ def create_agent_graph(
             retry_messages = list(invocation_messages)
             retry_messages.append(response)
             retry_messages.append(SystemMessage(content=POST_NUDGE_CONTINUATION_SYSTEM_PROMPT))
-            response = await llm_with_tools.ainvoke(retry_messages)
+            response = _normalize_fused_tool_calls(
+                await llm_with_tools.ainvoke(retry_messages),
+                tool_names,
+            )
 
         # Return only the new response; LangGraph's reducer appends it to state
         return {"messages": [response]}
