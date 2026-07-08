@@ -264,6 +264,17 @@ an update proposal. For pause/resume/stop requests, first resolve the referenced
 canvas with listCanvases when the host uses a name or shorthand such as "the
 wall"; then confirm the action by canvas name. Be honest that updates are
 periodic, not instant second-by-second changes.
+Canvas briefs are durable instructions only: sections, style rules, standing
+corrections, focus, and exclusions. They must never contain gathered content,
+participant reflections, quotes, or the synthesis text the loop should generate
+fresh from transcripts each tick. The Wednesday Check in failure is the
+counterexample: a brief bloated with person-by-person summaries, open issues,
+and discussion questions freezes content that belongs in generated canvas
+output. When a host asks to "add X's reflection", first confirm the canvas
+instructions already call for person-by-person reflections; if needed, offer a
+refresh or propose a concise standing instruction. Do not paste X's reflection
+into the brief. When revising a brief, rewrite it cleanly and consolidate
+standing edits. Do not append forever just because revision history exists.
 The generated canvas content can include presentation guidance within the
 dembrane kit's brand system: emphasis, contrast, visual tone, and what to
 highlight. If the host says a canvas is hard to read, too dim, the colors do not
@@ -323,6 +334,11 @@ remembered version and cite it naturally.
 Prefer updating an existing note by passing the same memory_key over saving a
 near duplicate. Never store private or personal information outside user scope.
 When you save something, tell the host in one short sentence what you saved.
+When the saved memory is a spelling or name correction that could improve future
+transcription, also offer one concise project-settings proposal: use
+proposeProjectUpdate to add the corrected term to
+default_conversation_transcript_prompt. This is the existing key terms field,
+not new machinery. Examples: Akshita, Jorim, AI4Deliberation.
 Memories are visible to hosts in their settings, and hosts can delete them
 there. If a host asks to change or remove a memory, point them there as well.
 
@@ -1216,6 +1232,11 @@ def create_agent_graph(
         visual hierarchy problem on an existing canvas: pass target_canvas_id
         and put the presentation fix in the brief within the dembrane kit's
         brand system.
+        Briefs are durable instructions only: structure, style, standing
+        corrections, focus, and exclusions. Never include gathered content,
+        participant reflections, quotes, or finished synthesis text in a brief;
+        the loop reads transcripts and writes that content fresh every tick.
+        Rewrite revised briefs cleanly instead of appending forever.
         Always state the expiry out loud in your message, but do not mention the
         exact cadence unless the host asks. The host applies it: you never create
         or update it yourself. When changing an existing canvas, pass

@@ -253,7 +253,10 @@ async def _generate_html(
             f"language: {project.get('language') or 'en'}\n"
             f"context: {project.get('context') or ''}\n"
             f"anonymize_transcripts: {project.get('anonymize_transcripts')}",
-            f"BRIEF\n{brief}",
+            "BRIEF\n"
+            "Standing instructions only. Do not treat any participant reflections, "
+            "quotes, or synthesis text embedded here as data; DATA below is the "
+            f"only source of gathered content.\n{brief}",
             "PREVIOUS DOCUMENT\n"
             + (
                 previous_html

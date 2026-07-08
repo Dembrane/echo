@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import json
+import time
 from typing import Any
 from datetime import datetime, timezone, timedelta
 
-from fastapi import Query, APIRouter, HTTPException, status
+from fastapi import Query, Request, APIRouter, HTTPException, status
 from pydantic import Field, BaseModel
+from fastapi.responses import StreamingResponse
 
 from dembrane.redis_async import get_redis_client
 from dembrane.canvas.ticks import run_tick, _generate_html
+from dembrane.canvas.events import read_generation_nudge, subscribe_generation_nudges
 from dembrane.canvas.gather import execute_gather_spec
 from dembrane.canvas.service import (
     create_canvas,
@@ -32,6 +36,7 @@ router = APIRouter()
 
 REFRESH_TTL_SECONDS = 30
 PREVIEW_TTL_SECONDS = 10
+CANVAS_EVENT_HEARTBEAT_SECONDS = 15.0
 
 
 class CreateCanvasBody(BaseModel):
@@ -262,6 +267,50 @@ async def preview_canvas(
 async def get_canvas(canvas_id: str, auth: DependencyDirectusSession) -> dict:
     report, _access = await _require_canvas(canvas_id, auth)
     return await _canvas_payload(report)
+
+
+@router.get("/{canvas_id}/events")
+async def canvas_events(
+    canvas_id: str,
+    request: Request,
+    auth: DependencyDirectusSession,
+) -> StreamingResponse:
+    """SSE stream of canvas generation nudges for authorized canvas readers."""
+    report, _access = await _require_canvas(canvas_id, auth)
+    report_id = _report_id(report)
+
+    async def event_stream():
+        last_heartbeat = time.monotonic()
+        yield f"event: connected\ndata: {json.dumps({'type': 'connected'})}\n\n"
+        async with subscribe_generation_nudges(report_id) as pubsub:
+            while True:
+                if await request.is_disconnected():
+                    break
+
+                payload = await read_generation_nudge(pubsub, timeout_seconds=1.0)
+                if payload is not None:
+                    latest = await get_latest_generation(report_id)
+                    data = {
+                        "type": "generation",
+                        "generation_id": (latest or {}).get("id"),
+                    }
+                    yield f"event: generation\ndata: {json.dumps(data, default=str)}\n\n"
+                    continue
+
+                now = time.monotonic()
+                if now - last_heartbeat >= CANVAS_EVENT_HEARTBEAT_SECONDS:
+                    yield ": keep-alive\n\n"
+                    last_heartbeat = now
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.patch("/{canvas_id}")

@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { toast } from "@/components/common/Toaster";
 import { APP_ENVIRONMENT } from "@/config";
 import { bff } from "@/lib/bff";
@@ -214,6 +215,7 @@ export function useProjectCanvases(projectId: string) {
 		queryFn: () => getProjectCanvases(projectId),
 		queryKey: ["project", projectId, "canvases"],
 		refetchInterval: CANVAS_LATEST_POLL_MS,
+		refetchIntervalInBackground: true,
 	});
 }
 
@@ -223,6 +225,7 @@ export function useCanvas(canvasId: string) {
 		queryFn: () => getCanvas(canvasId),
 		queryKey: ["canvas", canvasId],
 		refetchInterval: CANVAS_LATEST_POLL_MS,
+		refetchIntervalInBackground: true,
 	});
 }
 
@@ -232,7 +235,20 @@ export function useCanvasGenerations(canvasId: string, limit = 8) {
 		queryFn: () => getCanvasGenerations(canvasId, limit),
 		queryKey: ["canvas", canvasId, "generations", limit],
 		refetchInterval: CANVAS_LATEST_POLL_MS,
+		refetchIntervalInBackground: true,
 	});
+}
+
+export function useInvalidateCanvasQueries(canvasId: string) {
+	const queryClient = useQueryClient();
+	return useCallback(() => {
+		if (!canvasId) return;
+		queryClient.invalidateQueries({ queryKey: ["canvas", canvasId] });
+		queryClient.invalidateQueries({
+			queryKey: ["canvas", canvasId, "generations"],
+		});
+		queryClient.invalidateQueries({ queryKey: ["project"] });
+	}, [canvasId, queryClient]);
 }
 
 export function useRefreshCanvasMutation(canvasId: string) {

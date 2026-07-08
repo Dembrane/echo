@@ -29,7 +29,9 @@ import { ChatMessage } from "@/components/chat/ChatMessage";
 import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { Markdown } from "@/components/common/Markdown";
+import { QRCode } from "@/components/common/QRCode";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
+import { PARTICIPANT_BASE_URL } from "@/config";
 import { cn } from "@/lib/utils";
 import { ReferencesIconButton } from "../common/ReferencesIconButton";
 import { References } from "./References";
@@ -73,6 +75,31 @@ const getLinkLabel = (children: React.ReactNode) => {
 // with a small external-arrow, never a pill.
 const AGENTIC_LINK_CLASSES =
 	"not-prose inline-flex items-baseline gap-0.5 text-[var(--mantine-color-anchor)] underline underline-offset-2 transition-colors hover:text-[var(--mantine-color-blue-7)]";
+
+const URL_PATTERN = /https?:\/\/[^\s<>)\]]+/g;
+
+function ownPortalStartLink(content: string, projectId?: string): string | null {
+	if (!projectId) return null;
+	const portal = new URL(PARTICIPANT_BASE_URL);
+	const matches = content.match(URL_PATTERN) ?? [];
+	for (const match of matches) {
+		try {
+			const candidate = new URL(match.replace(/[.,;:!?]+$/, ""));
+			if (candidate.origin !== portal.origin) continue;
+			const segments = candidate.pathname.split("/").filter(Boolean);
+			if (
+				segments.length >= 3 &&
+				segments[1] === projectId &&
+				segments[2] === "start"
+			) {
+				return candidate.toString();
+			}
+		} catch {
+			continue;
+		}
+	}
+	return null;
+}
 
 const DocsChoiceCard = ({
 	description,
@@ -179,6 +206,10 @@ export const ChatHistoryMessage = ({
 	onSaveAsTemplate?: (content: string) => void;
 }) => {
 	const { projectId } = useParams();
+	const portalStartLink =
+		message.role === "assistant"
+			? ownPortalStartLink(message.content, projectId)
+			: null;
 
 	const markdownComponents = useMemo<Components | undefined>(() => {
 		if (chatMode !== "agentic") return undefined;
@@ -303,6 +334,19 @@ export const ChatHistoryMessage = ({
 							content={message.content}
 							components={markdownComponents}
 						/>
+						{portalStartLink ? (
+							<Box
+								mt="sm"
+								className="w-fit rounded-md bg-white p-2"
+								{...{ "data-testid": "assistant-portal-link-qr" }}
+							>
+								<QRCode
+									value={portalStartLink}
+									href={portalStartLink}
+									className="h-24 w-24"
+								/>
+							</Box>
+						) : null}
 
 						{/* Show citations inside the chat bubble when toggled */}
 						<Collapse in={isSelected} transitionDuration={200}>
