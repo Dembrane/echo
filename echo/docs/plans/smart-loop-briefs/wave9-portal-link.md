@@ -54,6 +54,23 @@ tabs.
    the URL builder with mocked settings), prompt assertions for the new
    section. Update any assertions broken by wording changes.
 
+5. SETUP MENTIONS THE DEFAULT METHODOLOGY (owner addition). In the setup
+   conversation, the host should hear early that their project starts on the
+   seeded "dembrane" methodology, framed as an experience, something like:
+   "By default your project follows the dembrane way of working: we start by
+   shaping the project together, then you collect conversations, then we make
+   sense of them." Rules: mention it once, early (natural fit: alongside or
+   just before the first setup question), in one warm sentence, not a lecture;
+   if other methodologies exist via listMethodologies, offer switching in the
+   same breath; if only the seeded one exists, no choice prompt, just the
+   mention. Wire this in the "## Project setup" prompt section +
+   interviewing.md. Keep the wave-8 rules intact: no "interview" wording, no
+   question counts, one question per turn. Also eyeball the wizard toggle
+   description in CreateProjectRoute.tsx: if a short clause fits naturally
+   ("dembrane helps shape the project" already implies it), leave it; only
+   change frontend copy if it genuinely improves clarity, and then run lingui
+   extract+compile.
+
 ## Gotchas
 
 - The agent service knows which env it's in via its existing settings/base
