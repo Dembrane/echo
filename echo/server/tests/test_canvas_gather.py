@@ -19,9 +19,7 @@ class _FakeDirectus:
 
     async def get_items(self, collection: str, params: dict) -> list[dict[str, Any]]:
         if collection == "conversation":
-            return [
-                {"id": "c1", "participant_name": "Alex", "created_at": "2026-07-07T10:00:00Z"}
-            ]
+            return [{"id": "c1", "participant_name": "Alex", "created_at": "2026-07-07T10:00:00Z"}]
         assert collection == "conversation_chunk"
         return [
             {
@@ -52,6 +50,16 @@ class _EmptyDirectus:
         return []
 
 
+class _CaptureChunkFilterDirectus(_FakeDirectus):
+    def __init__(self) -> None:
+        self.chunk_filters: list[dict[str, Any]] = []
+
+    async def get_items(self, collection: str, params: dict) -> list[dict[str, Any]]:
+        if collection == "conversation_chunk":
+            self.chunk_filters.append(params["query"]["filter"])
+        return await super().get_items(collection, params)
+
+
 @pytest.mark.asyncio
 async def test_gather_verifies_reader_and_caps_transcript(monkeypatch) -> None:
     calls: list[dict[str, str]] = []
@@ -79,6 +87,36 @@ async def test_gather_verifies_reader_and_caps_transcript(monkeypatch) -> None:
     assert bundle["project"]["goal"] == "Surface practical concerns."
     assert bundle["conversations"][0]["latest_transcript"] == "aaaaaaaaaa\n[truncated]"
     assert bundle["counts"]["truncated_conversations"] == 1
+
+
+@pytest.mark.asyncio
+async def test_full_history_gather_removes_chunk_since_filter(monkeypatch) -> None:
+    async def _resolve(**kwargs):  # noqa: ARG001
+        return None
+
+    async def _goal(project_id: str) -> str:  # noqa: ARG001
+        return ""
+
+    fake = _CaptureChunkFilterDirectus()
+    monkeypatch.setattr(gather, "resolve_canvas_reader_context", _resolve)
+    monkeypatch.setattr(gather, "get_current_project_goal_content", _goal)
+    monkeypatch.setattr(gather, "async_directus", fake)
+    monkeypatch.setattr(gather.get_settings(), "canvas", _Settings())
+
+    await gather.execute_gather_spec(
+        project_id="p1",
+        acting_directus_user_id="du1",
+        gather_spec={},
+    )
+    await gather.execute_gather_spec(
+        project_id="p1",
+        acting_directus_user_id="du1",
+        gather_spec={},
+        full_history=True,
+    )
+
+    assert "created_at" in fake.chunk_filters[0]
+    assert "created_at" not in fake.chunk_filters[1]
 
 
 @pytest.mark.asyncio

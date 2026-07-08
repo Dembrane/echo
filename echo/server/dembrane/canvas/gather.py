@@ -77,6 +77,7 @@ async def execute_gather_spec(
     acting_directus_user_id: str,
     gather_spec: dict[str, Any] | None,
     preview_sample: bool = False,
+    full_history: bool = False,
 ) -> dict[str, Any]:
     """Gather recent transcript data after verifying reader access."""
     await resolve_canvas_reader_context(
@@ -142,7 +143,7 @@ async def execute_gather_spec(
                     "filter": {
                         "conversation_id": {"_eq": conv_id},
                         "transcript": {"_nnull": True},
-                        "created_at": {"_gte": since_iso},
+                        **({} if full_history else {"created_at": {"_gte": since_iso}}),
                     },
                     "fields": ["id", "transcript", "created_at", "timestamp"],
                     "sort": ["timestamp", "created_at"],
@@ -198,6 +199,7 @@ async def execute_gather_spec(
             "tag_ids": tag_ids,
             "conversation_ids": conversation_ids,
             "preview_sample": sample_mode,
+            "full_history": full_history,
         },
         "project": project_context,
         "counts": {
