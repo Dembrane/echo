@@ -7,6 +7,7 @@ import {
 	Loader,
 	Modal,
 	Paper,
+	Skeleton,
 	Stack,
 	Text,
 	TextInput,
@@ -175,12 +176,11 @@ export const WorkspaceMethodologiesSection = ({
 				</Group>
 
 				{methodologiesQuery.isLoading ? (
-					<Group gap="sm">
-						<Loader size="xs" />
-						<Text size="sm">
-							<Trans>Loading methodologies</Trans>
-						</Text>
-					</Group>
+					<Stack gap="xs">
+						<Skeleton height={20} width="44%" />
+						<Skeleton height={16} width="82%" />
+						<Skeleton height={16} width="28%" />
+					</Stack>
 				) : methodologiesQuery.isError ? (
 					<Text size="sm">
 						<Trans>Could not load methodologies.</Trans>
@@ -190,7 +190,7 @@ export const WorkspaceMethodologiesSection = ({
 						<Trans>No methodologies yet.</Trans>
 					</Text>
 				) : (
-					<Stack gap="xs">
+					<Stack gap={0}>
 						{methodologies.map((methodology) => (
 							<Group
 								key={methodology.id}
@@ -198,17 +198,18 @@ export const WorkspaceMethodologiesSection = ({
 								align="flex-start"
 								wrap="nowrap"
 								p="sm"
-								className="border-slate-200 border-t"
+								className="border-t"
+								style={{ borderColor: "var(--mantine-color-primary-light)" }}
 								{...testId(`methodology-row-${methodology.id}`)}
 							>
 								<Stack gap={4} style={{ minWidth: 0 }}>
 									<Group gap="xs" wrap="wrap">
-										<Text size="sm" fw={500}>
+										<Text size="sm" fw={600}>
 											{safeText(methodology.name) || t`Untitled methodology`}
 										</Text>
 										{methodology.is_seeded ? (
 											<Badge size="xs" variant="outline">
-												<Trans>Built in</Trans>
+												<Trans>dembrane</Trans>
 											</Badge>
 										) : null}
 									</Group>
@@ -247,7 +248,7 @@ export const WorkspaceMethodologiesSection = ({
 					trapFocus={false}
 					{...testId("methodology-new-modal")}
 				>
-					<Stack gap="sm" {...testId("methodology-new-form")}>
+					<Stack gap="md" {...testId("methodology-new-form")}>
 						<TextInput
 							label={t`Name`}
 							value={form.name}
@@ -274,7 +275,7 @@ export const WorkspaceMethodologiesSection = ({
 							}
 							{...testId("methodology-new-framing")}
 						/>
-						<Group justify="flex-end" gap="xs">
+						<Group justify="flex-end" gap="xs" pt="xs">
 							<Button
 								variant="subtle"
 								onClick={reset}
@@ -303,7 +304,7 @@ export const WorkspaceMethodologiesSection = ({
 					trapFocus={false}
 					{...testId("methodology-edit-modal")}
 				>
-					<Stack gap="sm" {...testId("methodology-edit-form")}>
+					<Stack gap="md" {...testId("methodology-edit-form")}>
 						{detailQuery.isLoading ? (
 							<Group gap="sm">
 								<Loader size="xs" />
@@ -356,7 +357,7 @@ export const WorkspaceMethodologiesSection = ({
 							}
 							{...testId("methodology-edit-note")}
 						/>
-						<Group justify="flex-end" gap="xs">
+						<Group justify="flex-end" gap="xs" pt="xs">
 							<Button
 								variant="subtle"
 								onClick={reset}

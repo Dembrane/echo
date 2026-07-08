@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Box, Stack, Text } from "@mantine/core";
+import { Box, Paper, Stack, Text } from "@mantine/core";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { testId } from "@/lib/testUtils";
@@ -27,7 +27,10 @@ function isHeightMessage(data: unknown): data is {
 	);
 }
 
-function generationAgeLine(generation: CanvasGeneration, cadenceMinutes?: number | null) {
+function generationAgeLine(
+	generation: CanvasGeneration,
+	cadenceMinutes?: number | null,
+) {
 	if (!cadenceMinutes || cadenceMinutes <= 0) return null;
 	const createdAt = new Date(generation.created_at);
 	if (Number.isNaN(createdAt.getTime())) return null;
@@ -36,7 +39,10 @@ function generationAgeLine(generation: CanvasGeneration, cadenceMinutes?: number
 	return t`Last updated ${formatDistanceToNow(createdAt, { addSuffix: true })}`;
 }
 
-export const CanvasFrame = ({ generation, cadenceMinutes }: CanvasFrameProps) => {
+export const CanvasFrame = ({
+	generation,
+	cadenceMinutes,
+}: CanvasFrameProps) => {
 	const iframeRef = useRef<HTMLIFrameElement | null>(null);
 	const [height, setHeight] = useState(520);
 	const generationId = generation?.id;
@@ -61,51 +67,55 @@ export const CanvasFrame = ({ generation, cadenceMinutes }: CanvasFrameProps) =>
 		return assembleCanvasDocument(generation.content_html);
 	}, [generation]);
 
-	const staleLine = generation ? generationAgeLine(generation, cadenceMinutes) : null;
+	const staleLine = generation
+		? generationAgeLine(generation, cadenceMinutes)
+		: null;
 
 	if (!generation) {
 		return (
-			<Box
-				className="rounded-md border border-graphite/10"
+			<Paper
+				withBorder
+				className="rounded-md"
 				p="xl"
-				bg="parchment.0"
 				{...testId("canvas-frame-empty")}
 			>
-				<Stack gap="xs" align="center">
-					<Text fw={600}>
-						<Trans>The assistant is preparing this canvas.</Trans>
+				<Stack gap="xs" align="center" py="xl">
+					<Text size="lg" fw={500}>
+						<Trans>Preparing this canvas</Trans>
 					</Text>
 					<Text size="sm" ta="center">
 						<Trans>A first version will appear here when it is ready.</Trans>
 					</Text>
 				</Stack>
-			</Box>
+			</Paper>
 		);
 	}
 
 	if (generation.status === "error") {
 		return (
-			<Box
-				className="rounded-md border border-red-200 bg-red-50"
+			<Paper
+				withBorder
+				className="rounded-md"
 				p="xl"
+				style={{ borderColor: "var(--mantine-color-red-3)" }}
 				{...testId("canvas-frame-error")}
 			>
-				<Stack gap="xs" align="center">
-					<Text fw={600}>
+				<Stack gap="xs" align="center" py="xl">
+					<Text size="lg" fw={500}>
 						<Trans>This canvas could not update.</Trans>
 					</Text>
 					<Text size="sm" ta="center">
 						<Trans>The previous versions are still available below.</Trans>
 					</Text>
 				</Stack>
-			</Box>
+			</Paper>
 		);
 	}
 
 	return (
 		<Stack gap="xs">
 			{staleLine ? (
-				<Text size="sm" {...testId("canvas-frame-stale-line")}>
+				<Text size="sm" fs="italic" {...testId("canvas-frame-stale-line")}>
 					{staleLine}
 				</Text>
 			) : null}
@@ -114,8 +124,12 @@ export const CanvasFrame = ({ generation, cadenceMinutes }: CanvasFrameProps) =>
 				title={t`Canvas preview`}
 				sandbox="allow-scripts"
 				srcDoc={srcDoc ?? ""}
-				className="block w-full rounded-md border border-graphite/10 bg-parchment"
-				style={{ height }}
+				className="block w-full rounded-md border"
+				style={{
+					backgroundColor: "var(--app-background)",
+					borderColor: "var(--mantine-color-primary-light)",
+					height,
+				}}
 				{...testId("canvas-frame-iframe")}
 			/>
 		</Stack>

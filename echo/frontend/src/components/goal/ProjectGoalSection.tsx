@@ -5,7 +5,8 @@ import {
 	Button,
 	Collapse,
 	Group,
-	Loader,
+	Paper,
+	Skeleton,
 	Stack,
 	Text,
 	Textarea,
@@ -90,12 +91,10 @@ export const ProjectGoalSection = ({ projectId }: { projectId: string }) => {
 			}
 		>
 			{goalQuery.isLoading ? (
-				<Group gap="sm">
-					<Loader size="xs" />
-					<Text size="sm">
-						<Trans>Loading goal</Trans>
-					</Text>
-				</Group>
+				<Stack gap="sm">
+					<Skeleton height={24} width="72%" />
+					<Skeleton height={14} width="34%" />
+				</Stack>
 			) : goalQuery.isError ? (
 				<Text size="sm">
 					<Trans>Could not load this project's goal.</Trans>
@@ -103,12 +102,16 @@ export const ProjectGoalSection = ({ projectId }: { projectId: string }) => {
 			) : (
 				<Stack gap="md">
 					{current ? (
-						<Stack gap="xs">
-							<Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-								{current.content}
-							</Text>
-							<Text size="xs">{relativeSetLine(current)}</Text>
-						</Stack>
+						<Paper withBorder className="rounded-md px-4 py-4">
+							<Stack gap="sm">
+								<Text size="lg" style={{ whiteSpace: "pre-wrap" }}>
+									{current.content}
+								</Text>
+								<Text size="xs" fs="italic">
+									{relativeSetLine(current)}
+								</Text>
+							</Stack>
+						</Paper>
 					) : (
 						<Text size="sm">
 							<Trans>
@@ -158,7 +161,7 @@ export const ProjectGoalSection = ({ projectId }: { projectId: string }) => {
 								setEditing(true);
 							}}
 						>
-							{current ? <Trans>Edit</Trans> : <Trans>Set goal</Trans>}
+							{current ? <Trans>Edit goal</Trans> : <Trans>Set goal</Trans>}
 						</Button>
 					)}
 
@@ -180,7 +183,11 @@ export const ProjectGoalSection = ({ projectId }: { projectId: string }) => {
 								<Trans>Revision history</Trans>
 							</Button>
 							<Collapse in={historyOpen}>
-								<Stack gap="sm" className="border-slate-200 border-l-2 pl-3">
+								<Stack
+									gap="sm"
+									className="border-l-2 pl-3"
+									style={{ borderColor: "var(--mantine-color-primary-light)" }}
+								>
 									{revisions.map((revision) => (
 										<Stack key={revision.id} gap={2}>
 											<Text size="sm" style={{ whiteSpace: "pre-wrap" }}>

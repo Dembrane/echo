@@ -2,11 +2,9 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Badge,
-	Box,
 	Button,
 	Checkbox,
 	Group,
-	Paper,
 	Stack,
 	Switch,
 	Text,
@@ -14,6 +12,7 @@ import {
 } from "@mantine/core";
 import { IconArrowRight, IconCheck } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
+import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { toast } from "@/components/common/Toaster";
 import {
 	useProjectById,
@@ -186,186 +185,185 @@ export const ProjectUpdateSuggestionCard = ({
 
 	if (applied) {
 		return (
-			<Box className="flex justify-start">
-				<Paper
-					className="w-full max-w-full rounded-md border border-slate-200/80 px-3 py-2 shadow-none md:max-w-[80%]"
-					{...testId("agentic-project-update-suggestion")}
-				>
-					<Stack gap="xs">
-						<Group gap="xs" wrap="nowrap">
-							<IconCheck size={16} className="shrink-0 text-green-800" />
-							<Text size="sm">
-								<Trans>These changes are applied to your project.</Trans>
-							</Text>
-						</Group>
-						{/* Keep the record of what changed; a bare confirmation tells
+			<SuggestionCardFrame compact testId="agentic-project-update-suggestion">
+				<Stack gap="xs">
+					<Group gap="xs" wrap="nowrap">
+						<IconCheck
+							size={16}
+							className="shrink-0"
+							style={{ color: "var(--mantine-color-primary-7)" }}
+						/>
+						<Text size="sm">
+							<Trans>These changes are applied to your project.</Trans>
+						</Text>
+					</Group>
+					{/* Keep the record of what changed; a bare confirmation tells
 						    the host nothing when they come back to the chat later.
 						    Label-over-value rows in plain text: the green
 						    key-value soup was unreadable. */}
-						<Stack gap="sm" className="ml-6 border-slate-200 border-l-2 pl-3">
-							{suggestion.changes.map((change) => {
-								const value = effectiveValue(change);
-								return (
-									<Stack key={change.field} gap={2}>
-										<Text size="xs" fw={600}>
-											{fieldLabel(change.field)}
-										</Text>
-										<Text size="sm" lineClamp={3}>
-											{typeof value === "boolean" ? (
-												value ? (
-													<Trans>on</Trans>
-												) : (
-													<Trans>off</Trans>
-												)
-											) : isEmptyValue(value) ? (
-												<Text component="span" size="sm" fs="italic">
-													<Trans>cleared</Trans>
-												</Text>
+					<Stack
+						gap="sm"
+						className="ml-6 border-l-2 pl-3"
+						style={{ borderColor: "var(--mantine-color-primary-light)" }}
+					>
+						{suggestion.changes.map((change) => {
+							const value = effectiveValue(change);
+							return (
+								<Stack key={change.field} gap={2}>
+									<Text size="xs" fw={600}>
+										{fieldLabel(change.field)}
+									</Text>
+									<Text size="sm" lineClamp={3}>
+										{typeof value === "boolean" ? (
+											value ? (
+												<Trans>on</Trans>
 											) : (
-												String(value)
-											)}
-										</Text>
-									</Stack>
-								);
-							})}
-						</Stack>
+												<Trans>off</Trans>
+											)
+										) : isEmptyValue(value) ? (
+											<Text component="span" size="sm" fs="italic">
+												<Trans>cleared</Trans>
+											</Text>
+										) : (
+											String(value)
+										)}
+									</Text>
+								</Stack>
+							);
+						})}
 					</Stack>
-				</Paper>
-			</Box>
+				</Stack>
+			</SuggestionCardFrame>
 		);
 	}
 
 	return (
-		<Box className="flex justify-start">
-			<Paper
-				className="w-full max-w-full rounded-md border border-slate-200/80 px-3 py-3 shadow-none md:max-w-[80%]"
-				{...testId("agentic-project-update-suggestion")}
-			>
-				<Stack gap="sm">
-					<Group justify="space-between" wrap="nowrap">
-						<Text size="sm" fw={500}>
-							<Trans>Suggested changes for your project</Trans>
-						</Text>
-						{dismissed && (
-							<Badge color="gray" variant="light">
-								<Trans>Dismissed</Trans>
-							</Badge>
-						)}
-					</Group>
-					{suggestion.summary && <Text size="xs">{suggestion.summary}</Text>}
-					{!dismissed && (
-						<Text size="xs" fs="italic" c="graphite.6">
-							<Trans>
-								Review each change below. You can edit the new text first.
-								Nothing changes until you apply.
-							</Trans>
-						</Text>
+		<SuggestionCardFrame testId="agentic-project-update-suggestion">
+			<Stack gap="sm">
+				<Group justify="space-between" wrap="nowrap">
+					<Text size="sm" fw={600}>
+						<Trans>Suggested changes for your project</Trans>
+					</Text>
+					{dismissed && (
+						<Badge size="xs" variant="outline">
+							<Trans>Dismissed</Trans>
+						</Badge>
 					)}
+				</Group>
+				{suggestion.summary && <Text size="xs">{suggestion.summary}</Text>}
+				{!dismissed && (
+					<Text size="xs" fs="italic" c="graphite.6">
+						<Trans>
+							Review each change below. You can edit the new text first. Nothing
+							changes until you apply.
+						</Trans>
+					</Text>
+				)}
 
-					<Stack gap="md">
-						{suggestion.changes.map((change) => {
-							const value = effectiveValue(change);
-							const isBoolean = typeof change.proposed === "boolean";
-							const isEditable =
-								!isBoolean && typeof change.proposed !== "object";
-							return (
-								<Group
-									key={change.field}
-									align="flex-start"
-									gap="sm"
-									wrap="nowrap"
-								>
-									{!dismissed && (
-										<Checkbox
-											size="sm"
-											mt={2}
-											checked={Boolean(selected[change.field])}
-											onChange={(event) =>
-												setSelected((prev) => ({
-													...prev,
-													[change.field]: event.currentTarget.checked,
-												}))
-											}
-											{...testId(`suggestion-field-checkbox-${change.field}`)}
+				<Stack gap="md">
+					{suggestion.changes.map((change) => {
+						const value = effectiveValue(change);
+						const isBoolean = typeof change.proposed === "boolean";
+						const isEditable =
+							!isBoolean && typeof change.proposed !== "object";
+						return (
+							<Group
+								key={change.field}
+								align="flex-start"
+								gap="sm"
+								wrap="nowrap"
+							>
+								{!dismissed && (
+									<Checkbox
+										size="sm"
+										mt={2}
+										checked={Boolean(selected[change.field])}
+										onChange={(event) =>
+											setSelected((prev) => ({
+												...prev,
+												[change.field]: event.currentTarget.checked,
+											}))
+										}
+										{...testId(`suggestion-field-checkbox-${change.field}`)}
+									/>
+								)}
+								<Stack gap={4} className="min-w-0 flex-1">
+									<Text size="sm" fw={500}>
+										{fieldLabel(change.field)}
+									</Text>
+									<Group gap={6} wrap="wrap" align="center">
+										<ValueText value={change.current} kind="old" />
+										<IconArrowRight
+											size={12}
+											className="shrink-0"
+											style={{ color: "var(--mantine-color-primary-5)" }}
+											aria-hidden
 										/>
-									)}
-									<Stack gap={4} className="min-w-0 flex-1">
-										<Text size="sm" fw={500}>
-											{fieldLabel(change.field)}
-										</Text>
-										<Group gap={6} wrap="wrap" align="center">
-											<ValueText value={change.current} kind="old" />
-											<IconArrowRight
-												size={12}
-												className="shrink-0 text-slate-400"
-												aria-hidden
-											/>
-											{isBoolean ? (
-												<Switch
-													size="xs"
-													checked={Boolean(value)}
-													disabled={dismissed}
-													onChange={(event) =>
-														setEdited((prev) => ({
-															...prev,
-															[change.field]: event.currentTarget.checked,
-														}))
-													}
-												/>
-											) : !isEditable || dismissed ? (
-												<ValueText value={value} kind="new" />
-											) : null}
-										</Group>
-										{isEditable && !dismissed && (
-											<Textarea
+										{isBoolean ? (
+											<Switch
 												size="xs"
-												autosize
-												minRows={1}
-												maxRows={6}
-												value={String(value ?? "")}
+												checked={Boolean(value)}
+												disabled={dismissed}
 												onChange={(event) =>
 													setEdited((prev) => ({
 														...prev,
-														[change.field]: event.currentTarget.value,
+														[change.field]: event.currentTarget.checked,
 													}))
 												}
-												{...testId(`suggestion-field-input-${change.field}`)}
 											/>
-										)}
-										{change.reason && (
-											<Text size="xs" fs="italic" c="graphite.6">
-												{change.reason}
-											</Text>
-										)}
-									</Stack>
-								</Group>
-							);
-						})}
-					</Stack>
-
-					{!dismissed && (
-						<Group justify="flex-end" gap="sm">
-							<Button
-								variant="subtle"
-								size="xs"
-								onClick={() => setDismissed(true)}
-								{...testId("suggestion-dismiss-button")}
-							>
-								<Trans>Not now</Trans>
-							</Button>
-							<Button
-								size="xs"
-								loading={updateProjectMutation.isPending}
-								disabled={selectedChanges.length === 0}
-								onClick={() => void handleApply()}
-								{...testId("suggestion-apply-button")}
-							>
-								<Trans>Apply selected</Trans>
-							</Button>
-						</Group>
-					)}
+										) : !isEditable || dismissed ? (
+											<ValueText value={value} kind="new" />
+										) : null}
+									</Group>
+									{isEditable && !dismissed && (
+										<Textarea
+											size="xs"
+											autosize
+											minRows={1}
+											maxRows={6}
+											value={String(value ?? "")}
+											onChange={(event) =>
+												setEdited((prev) => ({
+													...prev,
+													[change.field]: event.currentTarget.value,
+												}))
+											}
+											{...testId(`suggestion-field-input-${change.field}`)}
+										/>
+									)}
+									{change.reason && (
+										<Text size="xs" fs="italic" c="graphite.6">
+											{change.reason}
+										</Text>
+									)}
+								</Stack>
+							</Group>
+						);
+					})}
 				</Stack>
-			</Paper>
-		</Box>
+
+				{!dismissed && (
+					<Group justify="flex-end" gap="sm">
+						<Button
+							variant="subtle"
+							size="xs"
+							onClick={() => setDismissed(true)}
+							{...testId("suggestion-dismiss-button")}
+						>
+							<Trans>Not now</Trans>
+						</Button>
+						<Button
+							size="xs"
+							loading={updateProjectMutation.isPending}
+							disabled={selectedChanges.length === 0}
+							onClick={() => void handleApply()}
+							{...testId("suggestion-apply-button")}
+						>
+							<Trans>Apply selected</Trans>
+						</Button>
+					</Group>
+				)}
+			</Stack>
+		</SuggestionCardFrame>
 	);
 };
