@@ -7,11 +7,13 @@ import {
 	Button,
 	MultiSelect,
 	Stack,
+	Text,
 	TextInput,
+	Title,
 } from "@mantine/core";
 import { AxiosError } from "axios";
 import posthog from "posthog-js";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { z } from "zod";
@@ -31,14 +33,20 @@ type FormValues = z.infer<typeof FormSchema>;
 export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 	const navigate = useI18nNavigate();
 	const [searchParams] = useSearchParams();
+	const [readyValues, setReadyValues] = useState<FormValues | null>(null);
 
-	const defaultName = searchParams.get("participant_name") || searchParams.get("name") || "";
-	const defaultEmail = searchParams.get("participant_email") || searchParams.get("email") || "";
-	const defaultTagsParam = searchParams.get("tags") || searchParams.get("tag_id_list") || "";
+	const defaultName =
+		searchParams.get("participant_name") || searchParams.get("name") || "";
+	const defaultEmail =
+		searchParams.get("participant_email") || searchParams.get("email") || "";
+	const defaultTagsParam =
+		searchParams.get("tags") || searchParams.get("tag_id_list") || "";
 
 	const defaultTagIdList = useMemo(() => {
 		if (!defaultTagsParam) return [];
-		const splitTags = defaultTagsParam.split(",").map((t) => t.trim().toLowerCase());
+		const splitTags = defaultTagsParam
+			.split(",")
+			.map((t) => t.trim().toLowerCase());
 		return (project.tags as unknown as ProjectTag[])
 			.filter((tag) => tag && tag.id && tag.text)
 			.filter(
@@ -57,17 +65,20 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		formState: { errors },
 	} = useForm<FormValues>({
 		resolver: zodResolver(FormSchema),
-		defaultValues: useMemo(() => ({
-			name: defaultName,
-			email: defaultEmail,
-			tagIdList: defaultTagIdList,
-		}), [defaultName, defaultEmail, defaultTagIdList]),
+		defaultValues: useMemo(
+			() => ({
+				name: defaultName,
+				email: defaultEmail,
+				tagIdList: defaultTagIdList,
+			}),
+			[defaultName, defaultEmail, defaultTagIdList],
+		),
 	});
 
 	const { isSuccess, isError, ...initiateConversationMutation } =
 		useInitiateConversationMutation();
 
-	const onSubmit = (data: FormValues) => {
+	const startConversation = (data: FormValues) => {
 		posthog.capture("conversation_started", {
 			project_id: project.id,
 			source: "PORTAL_AUDIO",
@@ -83,12 +94,23 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		});
 	};
 
+	const onSubmit = (data: FormValues) => {
+		setReadyValues(data);
+	};
+
 	// Auto-submit if skipOnboarding is requested and we have required fields prefilled
 	useEffect(() => {
 		const skipOnboarding = searchParams.get("skipOnboarding") === "1";
-		const hasRequiredName = !project.default_conversation_ask_for_participant_name || defaultName;
+		const hasRequiredName =
+			!project.default_conversation_ask_for_participant_name || defaultName;
 
-		if (skipOnboarding && hasRequiredName && !initiateConversationMutation.isPending && !isSuccess && !isError) {
+		if (
+			skipOnboarding &&
+			hasRequiredName &&
+			!initiateConversationMutation.isPending &&
+			!isSuccess &&
+			!isError
+		) {
 			initiateConversationMutation.mutate({
 				name: defaultName || t`Participant`,
 				email: defaultEmail || undefined,
@@ -96,25 +118,30 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 				projectId: project.id,
 				source: "PORTAL_AUDIO",
 				tagIdList: defaultTagIdList,
+				visitorId: getVisitorId(project.id),
 			});
 		}
-		}, [
-			project.id,
-			project.default_conversation_ask_for_participant_name,
-			defaultName,
-			defaultEmail,
-			defaultTagIdList,
-			isSuccess,
-			isError,
-			searchParams,
-			initiateConversationMutation.isPending,
-			initiateConversationMutation.mutate,
-		]);
+	}, [
+		project.id,
+		project.default_conversation_ask_for_participant_name,
+		defaultName,
+		defaultEmail,
+		defaultTagIdList,
+		isSuccess,
+		isError,
+		searchParams,
+		initiateConversationMutation.isPending,
+		initiateConversationMutation.mutate,
+	]);
 
 	useEffect(() => {
 		if (isSuccess) {
 			if (initiateConversationMutation.data?.id) {
-				const mode = searchParams.get("mode") || (searchParams.get("general_feedback") || searchParams.get("feedback") ? "text" : "audio");
+				const mode =
+					searchParams.get("mode") ||
+					(searchParams.get("general_feedback") || searchParams.get("feedback")
+						? "text"
+						: "audio");
 				const pathSuffix = mode === "text" ? "/text" : "";
 
 				const searchStr = searchParams.toString();
@@ -138,9 +165,32 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 
 	useEffect(() => {
 		if (isError) {
+			setReadyValues(null);
 			reset();
 		}
 	}, [isError, reset]);
+
+	if (readyValues) {
+		return (
+			<Stack className="w-full" {...testId("portal-ready-to-record")}>
+				<Title order={2}>
+					<Trans>Ready to record</Trans>
+				</Title>
+				<Text size="lg">
+					<Trans>Start when you are ready.</Trans>
+				</Text>
+				<Button
+					size="lg"
+					loading={initiateConversationMutation.isPending}
+					fullWidth
+					onClick={() => startConversation(readyValues)}
+					{...testId("portal-ready-start-button")}
+				>
+					<Trans>Start recording</Trans>
+				</Button>
+			</Stack>
+		);
+	}
 
 	return (
 		<form

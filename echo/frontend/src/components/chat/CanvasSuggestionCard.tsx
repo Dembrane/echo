@@ -2,10 +2,10 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Button, Group, Stack, Text } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
-import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { CanvasFrame } from "@/components/canvas/CanvasFrame";
+import { canvasCadenceLabel } from "@/components/canvas/cadenceLabel";
 import {
 	type CanvasGeneration,
 	type CanvasProposal,
@@ -22,13 +22,6 @@ import { testId } from "@/lib/testUtils";
 export type CanvasSuggestion = CanvasProposal;
 
 type BffError = Error & { status?: number };
-
-function rhythmLine(proposal: CanvasSuggestion): string {
-	if (!proposal.expires_at) return t`Updates every few minutes.`;
-	const expiry = new Date(proposal.expires_at);
-	if (Number.isNaN(expiry.getTime())) return t`Updates every few minutes.`;
-	return t`Updates every few minutes until ${format(expiry, "PPp")}.`;
-}
 
 function truncatedBrief(brief: string, expanded: boolean): string {
 	const normalized = brief.trim();
@@ -249,7 +242,7 @@ export const CanvasSuggestionCard = ({
 						<Text size="sm" fw={600}>
 							{suggestion.name}
 						</Text>
-						<Text size="xs">{rhythmLine(suggestion)}</Text>
+						<Text size="xs">{canvasCadenceLabel(suggestion)}</Text>
 					</Stack>
 					{isUpdateChoice ? (
 						<Badge size="xs" variant="light">

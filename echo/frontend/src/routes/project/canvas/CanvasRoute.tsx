@@ -39,6 +39,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { CanvasFrame } from "@/components/canvas/CanvasFrame";
+import { canvasCadenceLabel } from "@/components/canvas/cadenceLabel";
 import {
 	type CanvasGeneration,
 	type CanvasLoop,
@@ -75,11 +76,6 @@ function loopStatusLine(
 	return t`Stays up to date until ${format(expiry, "EEE MMM d, HH:mm")}`;
 }
 
-function cadenceLine(cadenceMinutes?: number | null): string | null {
-	if (!cadenceMinutes || cadenceMinutes <= 0) return null;
-	return t`Updates every ${cadenceMinutes} minutes`;
-}
-
 function relativeTime(value?: string | null): string | null {
 	if (!value) return null;
 	const date = new Date(value);
@@ -97,6 +93,11 @@ function freshnessLine({
 	const updatedAgo = relativeTime(generation?.created_at);
 	const checkedAgo = relativeTime(loop?.last_run_started_at);
 	const status = loop?.status;
+	if (!loop) {
+		return updatedAgo
+			? t`Does not update on its own. Updated ${updatedAgo}.`
+			: t`Does not update on its own.`;
+	}
 	if (status === "paused") {
 		return updatedAgo ? t`Paused. Updated ${updatedAgo}.` : t`Paused.`;
 	}
@@ -167,7 +168,7 @@ function CanvasLoopSettings({
 		}
 	}, [loop?.cadence_minutes, loop?.expires_at]);
 
-	const cadenceText = cadenceLine(loop?.cadence_minutes);
+	const cadenceText = loop ? canvasCadenceLabel(loop) : null;
 	const canEdit =
 		!!loop &&
 		!disabled &&
@@ -618,8 +619,9 @@ export const CanvasRoute = () => {
 						backgroundColor: "var(--app-background)",
 						height: fullscreen ? "100dvh" : undefined,
 						minHeight: fullscreen ? "100dvh" : undefined,
+						width: fullscreen ? "100dvw" : undefined,
 						overflow: fullscreen ? "hidden" : undefined,
-						padding: fullscreen ? "24px" : undefined,
+						padding: fullscreen ? 0 : undefined,
 					}}
 					{...testId("canvas-frame-container")}
 				>
