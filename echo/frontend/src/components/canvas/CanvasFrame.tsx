@@ -3,6 +3,8 @@ import { Trans } from "@lingui/react/macro";
 import { Box, Paper, Stack, Text } from "@mantine/core";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { PARTICIPANT_BASE_URL } from "@/config";
+import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { testId } from "@/lib/testUtils";
 import type { CanvasGeneration } from "./hooks";
 import { assembleCanvasDocument } from "./kit";
@@ -10,6 +12,7 @@ import { assembleCanvasDocument } from "./kit";
 type CanvasFrameProps = {
 	generation?: CanvasGeneration | null;
 	cadenceMinutes?: number | null;
+	projectId?: string | null;
 };
 
 function isHeightMessage(data: unknown): data is {
@@ -42,9 +45,12 @@ function generationAgeLine(
 export const CanvasFrame = ({
 	generation,
 	cadenceMinutes,
+	projectId,
 }: CanvasFrameProps) => {
 	const iframeRef = useRef<HTMLIFrameElement | null>(null);
 	const [height, setHeight] = useState(520);
+	const [brandLogoDataUrl, setBrandLogoDataUrl] = useState<string | null>(null);
+	const { logoUrl } = useWhitelabelLogo();
 	const generationId = generation?.id;
 
 	useEffect(() => {
@@ -62,10 +68,43 @@ export const CanvasFrame = ({
 		return () => window.removeEventListener("message", onMessage);
 	}, []);
 
+	useEffect(() => {
+		let cancelled = false;
+		setBrandLogoDataUrl(null);
+		if (!logoUrl) return;
+		fetch(logoUrl, { credentials: "include" })
+			.then((response) => {
+				if (!response.ok) throw new Error("Failed to load logo");
+				return response.blob();
+			})
+			.then(
+				(blob) =>
+					new Promise<string>((resolve, reject) => {
+						const reader = new FileReader();
+						reader.onload = () => resolve(String(reader.result));
+						reader.onerror = () => reject(reader.error);
+						reader.readAsDataURL(blob);
+					}),
+			)
+			.then((dataUrl) => {
+				if (!cancelled) setBrandLogoDataUrl(dataUrl);
+			})
+			.catch(() => {
+				if (!cancelled) setBrandLogoDataUrl(null);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [logoUrl]);
+
 	const srcDoc = useMemo(() => {
 		if (!generation || generation.status === "error") return null;
-		return assembleCanvasDocument(generation.content_html);
-	}, [generation]);
+		return assembleCanvasDocument(generation.content_html, {
+			brandLogoDataUrl,
+			portalBaseUrl: PARTICIPANT_BASE_URL,
+			portalProjectId: projectId,
+		});
+	}, [generation, brandLogoDataUrl, projectId]);
 
 	const staleLine = generation
 		? generationAgeLine(generation, cadenceMinutes)

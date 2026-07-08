@@ -46,6 +46,11 @@ async def _post(path: str, json: dict[str, Any] | None = None) -> Any:
         return await client.post(path, json=json)
 
 
+async def _patch(path: str, json: dict[str, Any] | None = None) -> Any:
+    async with AsyncClient(transport=ASGITransport(app=_app()), base_url="http://test") as client:
+        return await client.patch(path, json=json)
+
+
 @pytest.mark.asyncio
 async def test_get_canvas_matches_track_b_shape(monkeypatch) -> None:
     access = _Access()
@@ -391,3 +396,48 @@ async def test_loop_lifecycle_delegates_and_maps_ended_resume(monkeypatch) -> No
 
     assert res.status_code == 409
     assert res.json() == {"detail": "This loop has ended"}
+
+
+@pytest.mark.asyncio
+async def test_patch_loop_updates_expiry_and_cadence(monkeypatch) -> None:
+    access = _Access()
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=8)
+    seen: dict[str, Any] = {}
+
+    async def _report(report_id: str, auth) -> tuple[_Access, dict]:  # noqa: ARG001
+        return access, {"id": report_id, "kind": "canvas", "project_id": "p1"}
+
+    async def _loop(report_id: str) -> dict:  # noqa: ARG001
+        return {"id": "loop1", "status": "active", "expires_at": "old", "cadence_minutes": 5}
+
+    async def _update_loop_settings(
+        loop: dict[str, Any],
+        *,
+        cadence_minutes: int,
+        expires_at: str,
+    ) -> dict[str, Any]:
+        seen["loop"] = loop
+        seen["cadence_minutes"] = cadence_minutes
+        seen["expires_at"] = expires_at
+        return {
+            "status": "active",
+            "expires_at": expires_at,
+            "cadence_minutes": cadence_minutes,
+        }
+
+    monkeypatch.setattr(canvases_bff, "resolve_report_access", _report)
+    monkeypatch.setattr(canvases_bff, "get_loop_for_report", _loop)
+    monkeypatch.setattr(canvases_bff, "update_loop_settings", _update_loop_settings)
+
+    res = await _patch(
+        "/api/v2/bff/canvases/r1/loop",
+        {"cadence_minutes": 15, "expires_at": expires_at.isoformat()},
+    )
+
+    assert res.status_code == 200
+    assert res.json()["status"] == "active"
+    assert res.json()["cadence_minutes"] == 15
+    assert seen["loop"]["id"] == "loop1"
+    assert seen["cadence_minutes"] == 15
+    assert seen["expires_at"].startswith(expires_at.isoformat()[:19])
+    assert access.required == ["project:read", "project:update"]

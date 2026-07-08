@@ -18,6 +18,7 @@ from dembrane.canvas.service import (
     get_latest_config,
     get_loop_for_report,
     update_canvas_config,
+    update_loop_settings,
     get_latest_generation,
     list_canvas_summaries,
 )
@@ -47,6 +48,11 @@ class UpdateCanvasBody(BaseModel):
     brief: str = Field(min_length=1, max_length=8000)
     gather_spec: dict[str, Any] | None = None
     cadence_minutes: int = Field(default=5, ge=2, le=120)
+
+
+class UpdateCanvasLoopSettingsBody(BaseModel):
+    cadence_minutes: int = Field(ge=2, le=120)
+    expires_at: datetime
 
 
 class PreviewCanvasBody(BaseModel):
@@ -301,3 +307,35 @@ async def update_canvas_loop(
     if action not in {"pause", "resume", "stop"}:
         raise HTTPException(status_code=404, detail="Canvas loop action not found")
     return await _apply_canvas_loop_action(canvas_id, action, auth)
+
+
+@router.patch("/{canvas_id}/loop")
+async def patch_canvas_loop(
+    canvas_id: str,
+    body: UpdateCanvasLoopSettingsBody,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    report, access = await _require_canvas(canvas_id, auth)
+    access.require("project:update")
+    loop = await get_loop_for_report(_report_id(report))
+    if not loop:
+        raise HTTPException(status_code=404, detail="Canvas loop not found")
+
+    now = datetime.now(timezone.utc)
+    expires_at = body.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at <= now:
+        raise HTTPException(status_code=422, detail="expires_at must be in the future")
+    if expires_at > now + timedelta(days=7):
+        raise HTTPException(status_code=422, detail="expires_at must be within 7 days")
+
+    try:
+        updated = await update_loop_settings(
+            loop,
+            cadence_minutes=body.cadence_minutes,
+            expires_at=expires_at.isoformat(),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return _loop_payload(updated)

@@ -334,3 +334,23 @@ export function useCanvasLifecycleMutation(canvasId: string) {
 		},
 	});
 }
+
+export function useCanvasLoopSettingsMutation(canvasId: string) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (payload: { cadence_minutes: number; expires_at: string }) =>
+			bff.patch<CanvasLoop>(`/canvases/${canvasId}/loop`, payload),
+		onError: (error: BffError) => {
+			toast.error(error.message || t`Could not update this canvas`);
+		},
+		onSuccess: (loop) => {
+			queryClient.setQueryData<CanvasDetail | undefined>(
+				["canvas", canvasId],
+				(previous) => (previous ? { ...previous, loop } : previous),
+			);
+			queryClient.invalidateQueries({ queryKey: ["canvas", canvasId] });
+			queryClient.invalidateQueries({ queryKey: ["project"] });
+			toast.success(t`Canvas freshness updated`);
+		},
+	});
+}

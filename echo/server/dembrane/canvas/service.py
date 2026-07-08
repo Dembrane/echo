@@ -291,6 +291,32 @@ async def stop_loop(loop_id: str) -> dict[str, Any]:
     return _data(await async_directus.update_item("agent_loop", loop_id, {"status": "stopped"}))
 
 
+async def update_loop_settings(
+    loop: dict[str, Any],
+    *,
+    cadence_minutes: int,
+    expires_at: str,
+) -> dict[str, Any]:
+    loop_id = str(loop["id"])
+    if loop.get("status") in {"expired", "stopped", "ended"}:
+        raise ValueError("This loop has ended")
+    updated = _data(
+        await async_directus.update_item(
+            "agent_loop",
+            loop_id,
+            {
+                "cadence_minutes": cadence_minutes,
+                "expires_at": expires_at,
+                "failure_count": 0,
+            },
+        )
+    )
+    await cancel_pending_tasks(task_type=TASK_CANVAS_TICK, payload_match={"loop_id": loop_id})
+    if updated.get("status") == "active":
+        await enqueue_canvas_tick(loop_id)
+    return updated
+
+
 def _parse_dt(value: Any) -> datetime | None:
     if not value:
         return None

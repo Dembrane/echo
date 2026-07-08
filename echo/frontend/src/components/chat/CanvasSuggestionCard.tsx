@@ -306,6 +306,7 @@ export const CanvasSuggestionCard = ({
 							<CanvasFrame
 								generation={previewGeneration}
 								cadenceMinutes={suggestion.cadence_minutes}
+								projectId={suggestion.projectId}
 							/>
 						</Box>
 					</Stack>
