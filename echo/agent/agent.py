@@ -240,13 +240,18 @@ such as a wall, pulse, dashboard, or page that keeps itself fresh. Always say th
 expiry plainly. Do not volunteer exact cadence or interval minutes unless the
 host asks for that detail; say it keeps itself fresh or updates on the next
 refresh. The host applies the proposal, and you can list canvases or pause,
-resume, stop, and propose updates to their loops by chat. When the host asks to
-change an existing canvas, first resolve the referenced canvas with listCanvases
-or proposeCanvas target_canvas_id, then call proposeCanvas with target_canvas_id
-so the host sees an update proposal. For pause/resume/stop requests, first
-resolve the referenced canvas with listCanvases when the host uses a name or
-shorthand such as "the wall"; then confirm the action by canvas name. Be honest
-that updates are periodic, not instant second-by-second changes.
+resume, stop, edit small presentation/wording details directly, and propose
+substantive updates to their loops by chat. When the host asks for a small
+presentation or wording edit to an existing canvas, such as removing section
+dividers or a "freshly compiled" footer line, resolve the referenced canvas,
+read its latest generation, rewrite only the requested HTML fragment, call
+editCanvas, and say what changed. Do not make a proposal card for these surgical
+edits. For substantive changes to what the canvas gathers, shows, is named, or
+how often it refreshes, use proposeCanvas with target_canvas_id so the host sees
+an update proposal. For pause/resume/stop requests, first resolve the referenced
+canvas with listCanvases when the host uses a name or shorthand such as "the
+wall"; then confirm the action by canvas name. Be honest that updates are
+periodic, not instant second-by-second changes.
 The generated canvas content can include presentation guidance within the
 dembrane kit's brand system: emphasis, contrast, visual tone, and what to
 highlight. If the host says a canvas is hard to read, too dim, the colors do not
@@ -1256,6 +1261,59 @@ def create_agent_graph(
             await client.close()
         return {"canvases": canvases}
 
+    @tool
+    async def editCanvas(canvas: str, instruction: str, edited_html: str = "") -> dict[str, Any]:
+        """Directly edit the latest generated HTML for a small canvas presentation
+        or wording change. `canvas` may be an id or unique canvas name/reference.
+        First call this with canvas and instruction only to read the latest HTML.
+        Then rewrite the HTML yourself, applying only that instruction, and call
+        again with edited_html set to the full edited body fragment. Do not use
+        this for substantive changes to what the canvas gathers, shows, cadence,
+        or name; use proposeCanvas instead.
+        """
+        resolved_canvas_id, resolved_name = await _resolve_canvas_id(canvas)
+        normalized_instruction = instruction.strip()
+        if not normalized_instruction:
+            raise ValueError("instruction is required.")
+
+        client = _create_echo_client()
+        try:
+            canvas_payload = await client.get_canvas(project_id, resolved_canvas_id)
+            generation = canvas_payload.get("latest_generation")
+            latest_html = (
+                generation.get("content_html")
+                if isinstance(generation, dict)
+                else None
+            )
+            if not isinstance(latest_html, str) or not latest_html.strip():
+                raise ValueError("This canvas has no generated HTML to edit yet.")
+            if not edited_html.strip():
+                return {
+                    "canvas_id": resolved_canvas_id,
+                    "canvas_name": resolved_name,
+                    "instruction": normalized_instruction,
+                    "latest_html": latest_html,
+                    "requires_edited_html": True,
+                }
+            result = await client.edit_canvas(
+                project_id,
+                resolved_canvas_id,
+                normalized_instruction,
+                edited_html.strip(),
+                chat_id=chat_id or None,
+            )
+        finally:
+            await client.close()
+        generation_result = result.get("generation")
+        return {
+            "canvas_id": resolved_canvas_id,
+            "canvas_name": resolved_name,
+            "status": result.get("status"),
+            "generation_id": generation_result.get("id")
+            if isinstance(generation_result, dict)
+            else None,
+        }
+
     async def _resolve_canvas_id(reference: str) -> tuple[str, str | None]:
         normalized_reference = reference.strip()
         if not normalized_reference:
@@ -1384,6 +1442,7 @@ def create_agent_graph(
         proposeGoal,
         listMethodologies,
         listCanvases,
+        editCanvas,
         pauseCanvasLoop,
         resumeCanvasLoop,
         stopCanvasLoop,

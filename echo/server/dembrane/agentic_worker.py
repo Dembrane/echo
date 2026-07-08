@@ -22,14 +22,17 @@ logger = getLogger("dembrane.agentic_worker")
 
 AGENT_CANCELLED_ERROR_CODE = "AGENT_CANCELLED"
 AGENT_CANCELLED_MESSAGE = "Run cancelled by user"
-MAX_TOOL_CALLS_PER_RUN = 20
+MAX_TOOL_CALLS_PER_TURN = 20
+MAX_TOOL_CALLS_PER_RUN = MAX_TOOL_CALLS_PER_TURN * 10
 TOOL_LIMIT_EXEMPT_TOOL_NAMES = {"sendProgressUpdate"}
 # Host-facing, in the agent's own voice. "Tool calls" are an internal concept
-# and must never leak into what the host reads — frame it as a natural stopping
-# point with an invitation to go deeper.
+# and must never leak into what the host reads.
 TOOL_LIMIT_SAFETY_MESSAGE = (
-    "I've gone as far as I can in one pass, so I'll answer from what I've found "
-    "so far. If you'd like me to look deeper, just let me know."
+    "I need to pause this pass on your request. Send it again and I'll retry with a fresh pass."
+)
+RUN_TOOL_LIMIT_SAFETY_MESSAGE = (
+    "This chat has accumulated too much work in one live session. Please start a new chat "
+    "for the next request."
 )
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 4
 AUTOMATIC_NUDGE_TEMPLATE = (
@@ -46,6 +49,10 @@ OVERFLOW_RETRY_WINDOW_SIZE = 24
 # only and must never surface as a host-visible assistant message.
 INTERNAL_PLACEHOLDER_CONTENTS = {"(calling tools)"}
 TRAILING_CURSOR_ARTIFACT_RE = re.compile(r"([.!?…。！？][\"')\]}»”’]*)(?:[_▁▂▃▔|¦]+)$")
+LEADING_STRAY_TOKEN_CLUSTER_RE = re.compile(
+    r"^[\s\ufeff\x00-\x1f\u4e00-\u9fff\u3400-\u4dbf]+(?=\s*[\(\[]?[A-Za-z])"
+)
+SUCCESSFULLY_RE = re.compile(r"\bsuccessfully\s+", re.IGNORECASE)
 PARENTHETICAL_PLANNING_RE = re.compile(
     r"^\(\s*(?:i(?:'m| am| will|'ll)|we(?:'re| are| will|'ll)|checking|reading|searching|looking)\b.*\)\s*$",
     re.IGNORECASE | re.DOTALL,
@@ -83,6 +90,11 @@ def _sanitize_host_visible_assistant_content(content: str) -> Optional[str]:
     normalized = content.strip()
     if not normalized or normalized in INTERNAL_PLACEHOLDER_CONTENTS:
         return None
+    normalized = LEADING_STRAY_TOKEN_CLUSTER_RE.sub("", normalized).strip()
+    removed_successfully = bool(SUCCESSFULLY_RE.match(normalized))
+    normalized = SUCCESSFULLY_RE.sub("", normalized).strip()
+    if removed_successfully and normalized:
+        normalized = normalized[0].upper() + normalized[1:]
     if PARENTHETICAL_PLANNING_RE.match(normalized):
         return None
     if _is_pure_status_narration(normalized):
@@ -92,6 +104,23 @@ def _sanitize_host_visible_assistant_content(content: str) -> Optional[str]:
         previous = normalized
         normalized = TRAILING_CURSOR_ARTIFACT_RE.sub(r"\1", normalized).strip()
     return normalized or None
+
+
+def _summarize_request_for_safety_message(user_message: str) -> str:
+    normalized = " ".join(user_message.split())
+    if len(normalized) > 140:
+        return f"{normalized[:137].rstrip()}..."
+    return normalized
+
+
+def _build_turn_tool_limit_message(user_message: str) -> str:
+    request_summary = _summarize_request_for_safety_message(user_message)
+    if not request_summary:
+        return TOOL_LIMIT_SAFETY_MESSAGE
+    return (
+        f"I need to pause this pass on your request: \"{request_summary}\". "
+        "Send it again and I'll retry with a fresh pass."
+    )
 
 
 def _is_host_visible_assistant_content(content: str) -> bool:
@@ -556,6 +585,32 @@ async def _latest_user_turn_seq(*, svc: AgenticRunService, run_id: str) -> int |
     return seq if seq > 0 else None
 
 
+async def _count_persisted_non_exempt_tool_starts(
+    *, svc: AgenticRunService, run_id: str
+) -> int:
+    total = 0
+    after_seq = 0
+    while True:
+        events = await run_in_thread_pool(
+            svc.list_events,
+            run_id,
+            after_seq=after_seq,
+            limit=HISTORY_PAGE_SIZE,
+        )
+        if not events:
+            return total
+        for event in events:
+            after_seq = max(after_seq, int(event.get("seq") or 0))
+            if event.get("event_type") != "on_tool_start":
+                continue
+            payload = _payload_to_dict(event.get("payload"))
+            tool_name = str(payload.get("name") or "tool")
+            if tool_name not in TOOL_LIMIT_EXEMPT_TOOL_NAMES:
+                total += 1
+        if len(events) < HISTORY_PAGE_SIZE:
+            return total
+
+
 async def process_agentic_run(
     *,
     run_id: str,
@@ -593,6 +648,10 @@ async def process_agentic_run(
     latest_output: str | None = None
     total_tool_start_count = 0
     counted_tool_start_count = 0
+    persisted_non_exempt_tool_starts = await _count_persisted_non_exempt_tool_starts(
+        svc=svc,
+        run_id=run_id,
+    )
     tool_calls_without_assistant_message = 0
     nudged_tool_call_milestones: set[int] = set()
     has_sent_progress_intro = False
@@ -688,11 +747,23 @@ async def process_agentic_run(
                             },
                         )
 
-                if counted_tool_start_count >= MAX_TOOL_CALLS_PER_RUN:
+                if persisted_non_exempt_tool_starts + counted_tool_start_count >= MAX_TOOL_CALLS_PER_RUN:
                     persisted_content = await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
-                        content=TOOL_LIMIT_SAFETY_MESSAGE,
+                        content=RUN_TOOL_LIMIT_SAFETY_MESSAGE,
+                        project_chat_id=project_chat_id,
+                    )
+                    latest_output = persisted_content
+                    tool_calls_without_assistant_message = 0
+                    nudged_tool_call_milestones.clear()
+                    break
+
+                if counted_tool_start_count >= MAX_TOOL_CALLS_PER_TURN:
+                    persisted_content = await _append_assistant_message(
+                        svc=svc,
+                        run_id=run_id,
+                        content=_build_turn_tool_limit_message(user_message),
                         project_chat_id=project_chat_id,
                     )
                     # One honest message only. The last substantive assistant
