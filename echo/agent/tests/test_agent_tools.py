@@ -56,6 +56,7 @@ class _FakeEchoClient:
         self.project_chats_calls: list[dict[str, object]] = []
         self.read_chat_calls: list[dict[str, object]] = []
         self.support_request_calls: list[dict[str, object]] = []
+        self.agent_insight_calls: list[dict[str, object]] = []
         self.memory_payload = memory_payload or {}
         self.write_memory_response = write_memory_response or {}
         self.goal_payload = goal_payload or {}
@@ -156,6 +157,28 @@ class _FakeEchoClient:
             }
         )
         return {"id": "sr-1", "status": "new"}
+
+    async def create_agent_insight(
+        self,
+        project_id: str,
+        kind: str,
+        content: str,
+        suggested_capability: str | None = None,
+        chat_id: str | None = None,
+        message_id: str | None = None,
+    ) -> dict:
+        self.agent_insight_calls.append(
+            {
+                "project_id": project_id,
+                "kind": kind,
+                "content": content,
+                "suggested_capability": suggested_capability,
+                "chat_id": chat_id,
+                "message_id": message_id,
+            }
+        )
+        return {"id": "insight-1", "status": "new"}
+
     async def list_memory(self, project_id: str) -> dict:
         self.list_memory_calls.append(project_id)
         return self.memory_payload
@@ -297,6 +320,7 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "never invent tabs, buttons, or menus" in prompt
     # The agent never applies changes itself
     assert "you never apply" in prompt
+    assert "the host guide is editable through host_guide" in prompt
     # Citation policy still anchors output quality (format is load-bearing:
     # parsed by AgenticChatPanel.tsx)
     assert '"[participant name]: quoted text"' in prompt
@@ -318,6 +342,15 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "do not volunteer exact cadence" in prompt
     assert "hard to read" in prompt
     assert "target_canvas_id" in prompt
+    # Product-learning insights are quiet and distinct from support requests.
+    assert "noticing what dembrane cannot do yet" in prompt
+    assert "quietly call recordinsight once" in prompt
+    assert "capability_gap" in prompt
+    assert "distinct need per chat" in prompt
+    assert "i've noted this" in prompt
+    assert "dembrane team" in prompt
+    assert "canvas styling" in prompt
+    assert "deep-link to internal tabs" in prompt
     # Setup guidance is convergent, escapable, and proposal-only.
     assert "read interviewing.md first" in prompt
     assert "no announced question count" in prompt
@@ -1340,6 +1373,49 @@ async def test_reach_out_to_dembrane_sends_support_request_for_current_project()
             "page_context": "on the reports page",
             "chat_id": "chat-1",
             "app_user_id": "app-user-1",
+            "message_id": "run-event-1",
+        }
+    ]
+    assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_record_insight_sends_contextual_agent_insight_for_current_chat():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+        chat_id="chat-1",
+        message_id="run-event-1",
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["recordInsight"].ainvoke(
+        {
+            "kind": "wish",
+            "content": "The host wants chat to open a specific dashboard tab.",
+            "suggested_capability": "Dashboard navigation suggestions with internal tab links.",
+        }
+    )
+
+    assert result["recorded"] is True
+    assert result["agent_insight_id"] == "insight-1"
+    assert factory.instances[0].agent_insight_calls == [
+        {
+            "project_id": "project-1",
+            "kind": "wish",
+            "content": "The host wants chat to open a specific dashboard tab.",
+            "suggested_capability": (
+                "Dashboard navigation suggestions with internal tab links."
+            ),
+            "chat_id": "chat-1",
             "message_id": "run-event-1",
         }
     ]

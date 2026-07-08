@@ -5,7 +5,7 @@ import json
 import time
 import asyncio
 from uuid import uuid4
-from typing import Any, Optional, AsyncIterator
+from typing import Any, Literal, Optional, AsyncIterator
 from logging import getLogger
 from datetime import datetime, timezone
 from contextlib import suppress
@@ -73,6 +73,14 @@ class AgenticSupportRequestSchema(BaseModel):
     page_context: Optional[str] = None
     chat_id: Optional[str] = None
     app_user_id: Optional[str] = None
+    message_id: Optional[str] = None
+
+
+class AgenticInsightSchema(BaseModel):
+    kind: Literal["capability_gap", "friction", "wish", "praise"]
+    content: str = Field(..., min_length=1)
+    suggested_capability: Optional[str] = None
+    chat_id: Optional[str] = None
     message_id: Optional[str] = None
 
 
@@ -1161,6 +1169,43 @@ async def create_support_request(
     return JSONResponse(
         status_code=201,
         content={"id": support_request_id, "status": "new"},
+    )
+
+
+@AgenticRouter.post("/projects/{project_id}/insight")
+async def create_agent_insight(
+    project_id: str,
+    body: AgenticInsightSchema,
+    auth: DependencyDirectusSession,
+) -> JSONResponse:
+    """Record a quiet product-learning insight from an assistant turn."""
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+
+    content = body.content.strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="content is required")
+
+    suggested_capability = _to_non_empty_string(body.suggested_capability)
+    workspace_id = await _resolve_workspace_id_for_project(project_id)
+    created = await async_directus.create_item(
+        "agent_insight",
+        {
+            "workspace_id": workspace_id,
+            "project_id": project_id,
+            "chat_id": body.chat_id,
+            "message_id": body.message_id,
+            "kind": body.kind,
+            "content": content,
+            "suggested_capability": suggested_capability,
+            "status": "new",
+        },
+    )
+    created_row = created.get("data") if isinstance(created, dict) else {}
+    insight_id = _to_non_empty_string((created_row or {}).get("id"))
+    return JSONResponse(
+        status_code=201,
+        content={"id": insight_id, "status": "new"},
     )
 
 
