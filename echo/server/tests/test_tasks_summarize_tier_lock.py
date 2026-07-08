@@ -10,6 +10,7 @@ from __future__ import annotations
 from contextlib import nullcontext
 
 import pytest
+from sniffio import AsyncLibraryNotFoundError
 
 import dembrane.tasks as tasks
 import dembrane.coordination as coordination
@@ -80,3 +81,33 @@ def test_summarize_genuine_error_still_retries(monkeypatch):
         tasks.task_summarize_conversation("conv-error")
     # ...and the lock must be retained (let TTL handle it during the retry window).
     assert cleared == []
+
+
+def test_summarize_sniffio_error_resets_runtime_and_retries_once(monkeypatch):
+    cleared: list[str] = []
+    attempts: list[str] = []
+    resets: list[str] = []
+    _common_monkeypatch(monkeypatch, cleared)
+    monkeypatch.setattr(
+        conversation_service,
+        "get_by_id_or_raise",
+        lambda cid: {"id": cid, "is_finished": False, "summary": None, "project_id": None},
+    )
+    monkeypatch.setattr(tasks, "_reset_summarize_async_runtime", lambda reason: resets.append(reason))
+
+    def _run(coro):
+        try:
+            coro.close()
+        except Exception:
+            pass
+        attempts.append("run")
+        if len(attempts) == 1:
+            raise AsyncLibraryNotFoundError("unknown async library, or not in async context")
+        return None
+
+    monkeypatch.setattr(tasks, "run_async_in_new_loop", _run)
+
+    assert tasks.task_summarize_conversation("conv-sniffio") is None
+    assert attempts == ["run", "run"]
+    assert len(resets) == 1
+    assert cleared == ["conv-sniffio"]

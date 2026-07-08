@@ -31,7 +31,7 @@ from dembrane.directus import (
 )
 from dembrane.settings import get_settings
 from dembrane.transcribe import transcribe_conversation_chunk
-from dembrane.async_helpers import run_async_in_new_loop
+from dembrane.async_helpers import reset_background_loop, run_async_in_new_loop
 from dembrane.conversation_utils import (
     collect_unfinished_conversations,
     collect_unsummarized_conversations,
@@ -48,6 +48,33 @@ REDIS_URL = settings.cache.redis_url
 init_sentry()
 
 logger = getLogger("dembrane.tasks")
+
+
+def _is_async_library_not_found(exc: BaseException) -> bool:
+    """Return True if exc or its causal chain is sniffio's async-library failure."""
+    from sniffio import AsyncLibraryNotFoundError
+
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        if isinstance(current, AsyncLibraryNotFoundError):
+            return True
+        seen.add(id(current))
+        current = current.__cause__ or current.__context__
+    return False
+
+
+def _reset_summarize_async_runtime(reason: str) -> None:
+    """Discard async clients and force the shared loop to be recreated."""
+    try:
+        from dembrane.directus_async import async_directus
+
+        discarded = async_directus.reset_clients()
+        logger.warning("Discarded %s async Directus client(s) during recovery", discarded)
+    except Exception:
+        logger.exception("Failed to discard async Directus clients during recovery")
+
+    reset_background_loop(reason)
 
 
 class DramatiqLz4JSONEncoder(JSONEncoder):
@@ -609,16 +636,33 @@ def task_summarize_conversation(conversation_id: str) -> None:
 
         from dembrane.api.conversation import summarize_conversation
 
-        with ProcessingStatusContext(
-            conversation_id=conversation_id,
-            event_prefix="task_summarize_conversation",
-        ):
-            run_async_in_new_loop(
-                summarize_conversation(
-                    conversation_id=conversation_id,
-                    auth=DependencyDirectusSession(user_id="none", is_admin=True),
+        def _run_summary() -> None:
+            with ProcessingStatusContext(
+                conversation_id=conversation_id,
+                event_prefix="task_summarize_conversation",
+            ):
+                run_async_in_new_loop(
+                    summarize_conversation(
+                        conversation_id=conversation_id,
+                        auth=DependencyDirectusSession(user_id="none", is_admin=True),
+                    )
                 )
+
+        try:
+            _run_summary()
+        except Exception as e:
+            if not _is_async_library_not_found(e):
+                raise
+            logger.exception(
+                "Async runtime poisoned while summarizing conversation %s; "
+                "resetting async clients/background loop and retrying once",
+                conversation_id,
             )
+            _reset_summarize_async_runtime(
+                f"sniffio AsyncLibraryNotFoundError in task_summarize_conversation "
+                f"for conversation {conversation_id}"
+            )
+            _run_summary()
 
         # Dispatch webhook for conversation.summarized event
         try:

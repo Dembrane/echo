@@ -21,7 +21,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pytest
 
-from dembrane.async_helpers import run_async_in_new_loop, _ensure_background_loop
+from dembrane.async_helpers import (
+    reset_background_loop,
+    run_async_in_new_loop,
+    _ensure_background_loop,
+)
 
 
 async def _simple_coro(value: int) -> int:
@@ -141,6 +145,17 @@ def test_background_loop_is_reused():
     loop_b = _ensure_background_loop()
     assert loop_a is loop_b
     assert not loop_a.is_closed()
+
+
+def test_background_loop_can_be_reset():
+    """A poisoned/stopped background loop is discarded and recreated on demand."""
+    loop_a = _ensure_background_loop()
+    reset_background_loop("unit test reset")
+    loop_b = _ensure_background_loop()
+
+    assert loop_b is not loop_a
+    assert loop_a.is_closed()
+    assert loop_b.is_running()
 
 
 def test_reused_async_client_across_calls():
