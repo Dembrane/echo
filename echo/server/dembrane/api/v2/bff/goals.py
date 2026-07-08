@@ -196,7 +196,9 @@ async def create_methodology(
     version_payload = {
         "id": version_id,
         "methodology_id": methodology_id,
-        "content": body.content,
+        # methodology_version.content is NOT NULL in the schema; an omitted
+        # content must land as an empty object, not null (echo-next 500).
+        "content": body.content if body.content is not None else {},
         "note": "Initial history",
         "created_by": auth.user_id,
     }
@@ -249,7 +251,7 @@ async def update_methodology(
         version_payload = {
             "id": generate_uuid(),
             "methodology_id": methodology_id,
-            "content": body.content,
+            "content": body.content if body.content is not None else {},
             "note": _trim_optional(body.note, "note") if "note" in body.model_fields_set else None,
             "created_by": auth.user_id,
         }

@@ -389,3 +389,57 @@ async def test_seeded_methodology_is_read_only(monkeypatch) -> None:
     assert res.json() == {"detail": "The dembrane methodology is read-only"}
     assert directus.updated == []
     assert directus.created == []
+
+
+@pytest.mark.asyncio
+async def test_create_methodology_without_content_sends_empty_object(monkeypatch) -> None:
+    # methodology_version.content is NOT NULL in Directus; omitting content in
+    # the create form must persist {} - null crashed echo-next (wave 6h).
+    captured: list[dict] = []
+
+    class _Fake:
+        async def create_item(self, collection, payload):
+            captured.append({"collection": collection, "payload": payload})
+            return {"data": {**payload}}
+
+        async def get_items(self, collection, query):  # noqa: ARG002
+            return []
+
+    import dembrane.api.v2.bff.goals as goals_bff
+
+    monkeypatch.setattr(goals_bff, "async_directus", _Fake())
+
+    class _Ctx:
+        workspace_id = "ws-1"
+        app_user_id = "au-1"
+
+        def has_policy(self, _p):
+            return True
+
+    async def _ctx(workspace_id, auth):  # noqa: ARG001
+        return _Ctx()
+
+    monkeypatch.setattr(goals_bff, "get_workspace_context", _ctx)
+
+    from httpx import AsyncClient, ASGITransport
+    from fastapi import FastAPI
+
+    from dembrane.api.dependency_auth import DirectusSession, require_directus_session
+
+    app = FastAPI()
+    app.include_router(goals_bff.methodologies_router, prefix="/api/v2/bff/methodologies")
+
+    async def _override():
+        return DirectusSession(user_id="du-1", is_admin=False, access_token="t", client=None)
+
+    app.dependency_overrides[require_directus_session] = _override
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        res = await client.post(
+            "/api/v2/bff/methodologies",
+            json={"workspace_id": "ws-1", "name": "n", "description": "d", "framing": "f"},
+        )
+
+    assert res.status_code == 200
+    version_creates = [c for c in captured if c["collection"] == "methodology_version"]
+    assert version_creates and version_creates[0]["payload"]["content"] == {}
