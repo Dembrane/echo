@@ -157,8 +157,10 @@ such as a wall, pulse, dashboard, or page that keeps itself fresh. Always say th
 expiry plainly. Do not volunteer exact cadence or interval minutes unless the
 host asks for that detail; say it keeps itself fresh or updates on the next
 refresh. The host applies the proposal, and you can list canvases or pause,
-resume, and stop their loops by chat. Be honest that updates are periodic, not
-instant second-by-second changes.
+resume, and stop their loops by chat. For pause/resume/stop requests, first
+resolve the referenced canvas with listCanvases when the host uses a name or
+shorthand such as "the wall"; then confirm the action by canvas name. Be honest
+that updates are periodic, not instant second-by-second changes.
 
 ## Project setup
 When the first message signals setup, or when readGoal shows this project has no
@@ -1001,31 +1003,66 @@ def create_agent_graph(
             await client.close()
         return {"canvases": canvases}
 
-    async def _canvas_loop_action(canvas_id: str, action: str) -> dict[str, Any]:
-        normalized_canvas_id = canvas_id.strip()
-        if not normalized_canvas_id:
+    async def _resolve_canvas_id(reference: str) -> tuple[str, str | None]:
+        normalized_reference = reference.strip()
+        if not normalized_reference:
             raise ValueError("canvas_id is required.")
         client = _create_echo_client()
         try:
-            loop = await client.update_canvas_loop(project_id, normalized_canvas_id, action)
+            canvases = await client.list_canvases(project_id)
         finally:
             await client.close()
-        return {"canvas_id": normalized_canvas_id, "loop": loop}
+        if not canvases:
+            return normalized_reference, None
+
+        for canvas in canvases:
+            canvas_id = str(canvas.get("id") or "")
+            if canvas_id == normalized_reference:
+                return canvas_id, canvas.get("name")
+
+        reference_lower = normalized_reference.lower()
+        named = [
+            canvas
+            for canvas in canvases
+            if str(canvas.get("name") or "").strip().lower() == reference_lower
+        ]
+        if not named:
+            named = [
+                canvas
+                for canvas in canvases
+                if reference_lower in str(canvas.get("name") or "").strip().lower()
+            ]
+        if len(named) == 1:
+            canvas = named[0]
+            return str(canvas["id"]), canvas.get("name")
+        if len(named) > 1:
+            names = ", ".join(str(canvas.get("name") or canvas.get("id")) for canvas in named)
+            raise ValueError(f"Multiple canvases match {normalized_reference!r}: {names}.")
+        raise ValueError(f"No canvas matches {normalized_reference!r}. Use listCanvases first.")
+
+    async def _canvas_loop_action(canvas_id: str, action: str) -> dict[str, Any]:
+        resolved_canvas_id, resolved_name = await _resolve_canvas_id(canvas_id)
+        client = _create_echo_client()
+        try:
+            loop = await client.update_canvas_loop(project_id, resolved_canvas_id, action)
+        finally:
+            await client.close()
+        return {"canvas_id": resolved_canvas_id, "canvas_name": resolved_name, "loop": loop}
 
     @tool
     async def pauseCanvasLoop(canvas_id: str) -> dict[str, Any]:
-        """Pause a canvas loop. Use this when the host asks to pause updates."""
+        """Pause a canvas loop. canvas_id may be an id or unique canvas name/reference."""
         return await _canvas_loop_action(canvas_id, "pause")
 
     @tool
     async def resumeCanvasLoop(canvas_id: str) -> dict[str, Any]:
-        """Resume a paused canvas loop if it has not ended."""
+        """Resume a paused canvas loop if it has not ended. canvas_id may be an id or unique canvas name/reference."""
         return await _canvas_loop_action(canvas_id, "resume")
 
     @tool
     async def stopCanvasLoop(canvas_id: str) -> dict[str, Any]:
         """Stop a canvas loop permanently. Confirm with the host first because
-        stopping is terminal."""
+        stopping is terminal. canvas_id may be an id or unique canvas name/reference."""
         return await _canvas_loop_action(canvas_id, "stop")
 
     @tool

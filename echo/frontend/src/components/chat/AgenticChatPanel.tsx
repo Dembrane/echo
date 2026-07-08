@@ -542,6 +542,7 @@ export const AgenticChatPanel = ({
 	>({});
 	const streamAbortRef = useRef<AbortController | null>(null);
 	const streamRunIdRef = useRef<string | null>(null);
+	const stopArmedRunIdRef = useRef<string | null>(null);
 	const requestedStreamKeyRef = useRef<string | null>(null);
 	const currentRunIdRef = useRef<string | null>(null);
 	const [scrollTargetRef, isVisible] = useElementOnScreen({
@@ -1114,8 +1115,14 @@ export const AgenticChatPanel = ({
 		pendingUserMessage,
 	]);
 
+	const armStopControl = () => {
+		stopArmedRunIdRef.current = runId;
+	};
+
 	const handleStop = async () => {
 		if (!runId || !isInFlightStatus(runStatus)) return;
+		if (stopArmedRunIdRef.current !== runId) return;
+		stopArmedRunIdRef.current = null;
 		setIsStopping(true);
 		setError(null);
 		try {
@@ -1541,6 +1548,12 @@ export const AgenticChatPanel = ({
 												<IconPlayerStop size={14} />
 											)
 										}
+										onPointerDown={armStopControl}
+										onKeyDown={(event) => {
+											if (event.key === "Enter" || event.key === " ") {
+												armStopControl();
+											}
+										}}
 										onClick={() => void handleStop()}
 										disabled={isStopping}
 										{...testId("chat-stop-button")}

@@ -74,25 +74,44 @@ class AsyncDirectusClient:
     ):
         self.url = url.rstrip("/")
         self.token = token or ""
-        self._client: httpx.AsyncClient | None = None
+        self._clients_by_loop: dict[int, httpx.AsyncClient] = {}
         self._verify = verify
 
+    @property
+    def _client(self) -> httpx.AsyncClient | None:
+        """Compatibility hook for tests that inject the current loop's client."""
+        loop_id = id(asyncio.get_running_loop())
+        return self._clients_by_loop.get(loop_id)
+
+    @_client.setter
+    def _client(self, client: httpx.AsyncClient | None) -> None:
+        loop_id = id(asyncio.get_running_loop())
+        if client is None:
+            self._clients_by_loop.pop(loop_id, None)
+        else:
+            self._clients_by_loop[loop_id] = client
+
     def _get_client(self) -> httpx.AsyncClient:
-        """Lazy-init the httpx.AsyncClient. Reuses connection pool."""
-        if self._client is None or self._client.is_closed:
-            self._client = httpx.AsyncClient(
+        """Lazy-init one httpx.AsyncClient per event loop."""
+        loop_id = id(asyncio.get_running_loop())
+        client = self._clients_by_loop.get(loop_id)
+        if client is None or client.is_closed:
+            client = httpx.AsyncClient(
                 base_url=self.url,
                 headers={"Authorization": f"Bearer {self.token}"},
                 verify=self._verify,
                 timeout=DEFAULT_TIMEOUT,
             )
-        return self._client
+            self._clients_by_loop[loop_id] = client
+        return client
 
     async def close(self) -> None:
-        """Close the underlying httpx client. Call on shutdown."""
-        if self._client and not self._client.is_closed:
-            await self._client.aclose()
-            self._client = None
+        """Close all underlying httpx clients. Call on shutdown."""
+        clients = list(self._clients_by_loop.values())
+        self._clients_by_loop.clear()
+        for client in clients:
+            if not client.is_closed:
+                await client.aclose()
 
     # ------------------------------------------------------------------
     # Low-level request with retry
@@ -202,7 +221,8 @@ class AsyncDirectusClient:
             except Exception:
                 logger.warning(
                     "SEARCH %s returned non-JSON body (status=%s)",
-                    path, response.status_code,
+                    path,
+                    response.status_code,
                 )
                 return {"error": "non-json response"}
             if isinstance(body, dict) and "data" in body:
@@ -215,12 +235,15 @@ class AsyncDirectusClient:
                 msg = first.get("message") or "unknown error"
                 logger.warning(
                     "SEARCH %s (status=%s) errored: %s",
-                    path, response.status_code, msg,
+                    path,
+                    response.status_code,
+                    msg,
                 )
                 return {"error": msg}
             logger.warning(
                 "SEARCH %s returned unexpected shape (status=%s)",
-                path, response.status_code,
+                path,
+                response.status_code,
             )
             return {"error": "unexpected response shape"}
         except httpx.ConnectError as exc:
@@ -267,9 +290,7 @@ class AsyncDirectusClient:
     async def get_item(self, collection: str, item_id: str, **kwargs: Any) -> Any:
         """Get a single item, or None when it doesn't exist / isn't accessible
         (Directus answers 403 FORBIDDEN for both)."""
-        return await self.get(
-            f"/items/{collection}/{item_id}", none_on_forbidden=True, **kwargs
-        )
+        return await self.get(f"/items/{collection}/{item_id}", none_on_forbidden=True, **kwargs)
 
     async def create_item(
         self, collection: str, data: dict[str, Any] | list[dict[str, Any]], **kwargs: Any
@@ -323,14 +344,17 @@ class AsyncDirectusClient:
         Requires admin token. Uses Directus's configured email transport
         (SendGrid SMTP) and Liquid templates from directus/templates/.
         """
-        return await self.post("/utils/mail/send", json={
-            "to": to if isinstance(to, list) else [to],
-            "subject": subject,
-            "template": {
-                "name": template_name,
-                "data": template_data,
+        return await self.post(
+            "/utils/mail/send",
+            json={
+                "to": to if isinstance(to, list) else [to],
+                "subject": subject,
+                "template": {
+                    "name": template_name,
+                    "data": template_data,
+                },
             },
-        })
+        )
 
 
 # ---------------------------------------------------------------------------
