@@ -82,6 +82,11 @@ export const ProjectHomeView = () => {
 				icon={BroadcastIcon}
 			/>
 			<NavItem
+				to={`${base}/library`}
+				label={<Trans>Library</Trans>}
+				icon={BooksIcon}
+			/>
+			<NavItem
 				to={`${base}/host-guide`}
 				label={<Trans>Host guide</Trans>}
 				icon={BookOpenIcon}
@@ -90,11 +95,6 @@ export const ProjectHomeView = () => {
 				to={`${base}/report`}
 				label={<Trans>Report</Trans>}
 				icon={FileTextIcon}
-			/>
-			<NavItem
-				to={`${base}/library`}
-				label={<Trans>Library</Trans>}
-				icon={BooksIcon}
 			/>
 			<NavItem
 				to={`${base}/conversations`}

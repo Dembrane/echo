@@ -293,11 +293,16 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "do not volunteer exact cadence" in prompt
     # Setup guidance is convergent, escapable, and proposal-only.
     assert "read interviewing.md first" in prompt
+    assert "no announced question count" in prompt
+    assert "ask exactly one question" in prompt
     assert "proposeGoal" in SYSTEM_PROMPT
-    assert "proposegoal is the\nclosing move" in prompt
-    assert "must come before proposeProjectUpdate" in SYSTEM_PROMPT
-    assert "Suggest context/settings updates only after a goal exists" in SYSTEM_PROMPT
-    assert "you can skip this and come back any time" in prompt
+    assert "proposegoal is the closing move" in prompt
+    assert "must come before" in prompt
+    assert "proposeProjectUpdate" in SYSTEM_PROMPT
+    assert "suggest context/settings" in prompt
+    assert "updates only after a goal exists" in prompt
+    assert "docs mention\nmust not be the final sentence" in SYSTEM_PROMPT
+    assert "do not ask the host to report back after applying it" in prompt
     # Never leak internal machinery to the host
     assert "internal machinery" in prompt
     # Steer batched lookups over one-at-a-time calls

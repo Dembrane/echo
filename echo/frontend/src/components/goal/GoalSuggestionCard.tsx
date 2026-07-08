@@ -2,10 +2,13 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Button, Group, Stack, Text } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { toast } from "@/components/common/Toaster";
-import { useSaveProjectGoalMutation } from "@/components/goal/hooks";
+import {
+	useProjectGoal,
+	useSaveProjectGoalMutation,
+} from "@/components/goal/hooks";
 import { testId } from "@/lib/testUtils";
 
 export type GoalSuggestion = {
@@ -16,17 +19,26 @@ export type GoalSuggestion = {
 export const GoalSuggestionCard = ({
 	suggestion,
 	chatId,
+	onApplied,
 }: {
 	suggestion: GoalSuggestion;
 	chatId?: string;
+	onApplied?: () => void | Promise<void>;
 }) => {
+	const goalQuery = useProjectGoal(suggestion.projectId);
 	const saveGoalMutation = useSaveProjectGoalMutation(suggestion.projectId);
 	const [dismissed, setDismissed] = useState(false);
-	const [applied, setApplied] = useState(false);
+	const [appliedLocally, setAppliedLocally] = useState(false);
+	const normalizedSuggestion = suggestion.content.trim();
+	const applied = useMemo(
+		() =>
+			appliedLocally ||
+			(goalQuery.data?.current?.content ?? "").trim() === normalizedSuggestion,
+		[appliedLocally, goalQuery.data?.current?.content, normalizedSuggestion],
+	);
 
 	const handleApply = async () => {
-		const content = suggestion.content.trim();
-		if (!content) {
+		if (!normalizedSuggestion) {
 			toast.error(t`Add goal text before applying.`);
 			return;
 		}
@@ -35,10 +47,11 @@ export const GoalSuggestionCard = ({
 			// interview provenance (and the chat it came from).
 			await saveGoalMutation.mutateAsync({
 				chat_id: chatId,
-				content,
+				content: normalizedSuggestion,
 				set_by: "interview",
 			});
-			setApplied(true);
+			setAppliedLocally(true);
+			await onApplied?.();
 		} catch {
 			// The mutation surfaces its own error toast.
 		}
@@ -77,7 +90,7 @@ export const GoalSuggestionCard = ({
 
 				{!dismissed ? (
 					<Text size="sm" fs="italic" style={{ whiteSpace: "pre-wrap" }}>
-						"{suggestion.content.trim()}"
+						"{normalizedSuggestion}"
 					</Text>
 				) : null}
 

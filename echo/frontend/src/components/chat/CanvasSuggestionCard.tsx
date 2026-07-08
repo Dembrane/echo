@@ -11,9 +11,10 @@ import {
 	type CanvasProposal,
 	useCreateCanvasMutation,
 	usePreviewCanvasMutation,
+	useProjectCanvases,
 } from "@/components/canvas/hooks";
-import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { I18nLink } from "@/components/common/i18nLink";
+import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { testId } from "@/lib/testUtils";
 
 export type CanvasSuggestion = CanvasProposal;
@@ -35,17 +36,30 @@ function truncatedBrief(brief: string, expanded: boolean): string {
 
 export const CanvasSuggestionCard = ({
 	suggestion,
+	onApplied,
 }: {
 	suggestion: CanvasSuggestion;
+	onApplied?: () => void | Promise<void>;
 }) => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const previewMutation = usePreviewCanvasMutation();
 	const createMutation = useCreateCanvasMutation();
+	const canvasesQuery = useProjectCanvases(suggestion.projectId);
 	const [dismissed, setDismissed] = useState(false);
 	const [expanded, setExpanded] = useState(false);
 	const [previewHtml, setPreviewHtml] = useState<string | null>(null);
 	const [previewNotice, setPreviewNotice] = useState<string | null>(null);
 	const [appliedCanvasId, setAppliedCanvasId] = useState<string | null>(null);
+	const normalizedName = suggestion.name.trim().toLocaleLowerCase();
+	const matchingCanvas = useMemo(
+		() =>
+			(canvasesQuery.data ?? []).find(
+				(canvas) => canvas.name.trim().toLocaleLowerCase() === normalizedName,
+			) ?? null,
+		[canvasesQuery.data, normalizedName],
+	);
+	const effectiveAppliedCanvasId =
+		appliedCanvasId ?? matchingCanvas?.id ?? null;
 
 	const previewGeneration = useMemo<CanvasGeneration | null>(() => {
 		if (!previewHtml) return null;
@@ -61,8 +75,8 @@ export const CanvasSuggestionCard = ({
 	}, [previewHtml]);
 
 	const openPath =
-		workspaceId && appliedCanvasId
-			? `/w/${workspaceId}/projects/${suggestion.projectId}/canvases/${appliedCanvasId}`
+		workspaceId && effectiveAppliedCanvasId
+			? `/w/${workspaceId}/projects/${suggestion.projectId}/canvases/${effectiveAppliedCanvasId}`
 			: null;
 
 	const handlePreview = async () => {
@@ -84,14 +98,23 @@ export const CanvasSuggestionCard = ({
 
 	const handleApply = async () => {
 		try {
+			const freshCanvases = await canvasesQuery.refetch();
+			const existingCanvas = (freshCanvases.data ?? []).find(
+				(canvas) => canvas.name.trim().toLocaleLowerCase() === normalizedName,
+			);
+			if (existingCanvas) {
+				setAppliedCanvasId(existingCanvas.id);
+				return;
+			}
 			const canvas = await createMutation.mutateAsync(suggestion);
 			setAppliedCanvasId(canvas.id);
+			await onApplied?.();
 		} catch {
 			// The mutation surfaces its own error toast.
 		}
 	};
 
-	if (appliedCanvasId) {
+	if (effectiveAppliedCanvasId) {
 		return (
 			<SuggestionCardFrame compact testId="agentic-canvas-suggestion-applied">
 				<Group gap="xs" wrap="nowrap">
@@ -199,7 +222,7 @@ export const CanvasSuggestionCard = ({
 							</Button>
 							<Button
 								size="xs"
-								loading={createMutation.isPending}
+								loading={createMutation.isPending || canvasesQuery.isFetching}
 								onClick={() => void handleApply()}
 								{...testId("canvas-proposal-apply-button")}
 							>

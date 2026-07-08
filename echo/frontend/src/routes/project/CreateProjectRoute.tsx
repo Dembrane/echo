@@ -10,6 +10,7 @@ import {
 	Radio,
 	Stack,
 	Stepper,
+	Switch,
 	Text,
 	Textarea,
 	TextInput,
@@ -73,6 +74,8 @@ export const CreateProjectRoute = () => {
 	const [name, setName] = useState("");
 	const [context, setContext] = useState("");
 	const [access, setAccess] = useState<Access>("workspace");
+	const [setupWithAssistant, setSetupWithAssistant] =
+		useState(ENABLE_AGENTIC_CHAT);
 	const [setupInitialMessage, setSetupInitialMessage] = useState(
 		SETUP_INITIAL_MESSAGE,
 	);
@@ -120,7 +123,7 @@ export const CreateProjectRoute = () => {
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
 			posthog?.capture("project_created", { project_id: project.id });
 			toast.success(t`Project created`);
-			if (ENABLE_AGENTIC_CHAT) {
+			if (ENABLE_AGENTIC_CHAT && setupWithAssistant) {
 				navigate(`/w/${workspaceId}/projects/${project.id}/chats/new`, {
 					state: { initialMessage: setupInitialMessage },
 				});
@@ -225,6 +228,7 @@ export const CreateProjectRoute = () => {
 									className="self-start"
 									onClick={() => {
 										setContext("");
+										setSetupWithAssistant(true);
 										setSetupInitialMessage(ZERO_CONTEXT_INITIAL_MESSAGE);
 										setStep(1);
 									}}
@@ -289,6 +293,19 @@ export const CreateProjectRoute = () => {
 								</Stack>
 							</Radio.Group>
 
+							{ENABLE_AGENTIC_CHAT ? (
+								<Switch
+									checked={setupWithAssistant}
+									onChange={(event) => {
+										setSetupWithAssistant(event.currentTarget.checked);
+										if (event.currentTarget.checked) {
+											setSetupInitialMessage(SETUP_INITIAL_MESSAGE);
+										}
+									}}
+									label={t`Set up with the assistant after creating`}
+									description={t`You'll land in a chat where dembrane helps shape the project before you collect conversations.`}
+								/>
+							) : null}
 						</Stack>
 					</Stepper.Step>
 
@@ -334,6 +351,20 @@ export const CreateProjectRoute = () => {
 											)}
 										</Text>
 									</Group>
+									{ENABLE_AGENTIC_CHAT ? (
+										<Group gap={12} align="baseline">
+											<Text size="xs" c="dimmed" w={100}>
+												<Trans>Setup</Trans>
+											</Text>
+											<Text size="sm">
+												{setupWithAssistant ? (
+													<Trans>Start in assistant chat</Trans>
+												) : (
+													<Trans>Go to project home</Trans>
+												)}
+											</Text>
+										</Group>
+									) : null}
 									<Group gap={12} align="baseline">
 										<Text size="xs" c="dimmed" w={100}>
 											<Trans>Tier</Trans>

@@ -1,24 +1,26 @@
 ---
 name: interviewing
-description: Short host interviews for project goals and feature-gap capture.
+description: Short host setup conversations for project goals and feature-gap capture.
 when_to_use: Use when a host wants help setting a project goal or when they ask for something dembrane cannot do yet.
 ---
 
-# Interviewing
+# Guided Questions
 
-Use one interviewing muscle for two jobs:
+Use one guided-question muscle for two jobs:
 
 1. Help a host turn an unclear project into a concrete goal.
 2. Capture a feature gap clearly enough that the dembrane team can understand what is needed.
 
 ## Shape
 
-- Ask for consent before starting: "I can ask a few quick questions, or you can skip this and come back any time."
-- Ask no more than five questions.
+- Never use the word "interview" with the host.
+- Do not announce a question count or make the exchange feel like a commitment.
+- Ask one question per turn.
 - Each question should offer 2-4 concrete choices. Include a short free-text escape like "something else" when the choices may not fit.
+- Use plain conversational openers, such as "What are you hoping to learn?"
 - Move toward a decision. Do not keep opening new branches.
 - Close by confirming your understanding in the host's words.
-- Keep every step escapable: the host can skip, answer in their own words, or read the docs.
+- Keep every step independently skippable: the host can skip, answer in their own words, or ask for the docs.
 
 ## Goal Setting
 
@@ -49,5 +51,6 @@ Never send anything to the team without consent. If the host consents, restate w
 - Use dembrane's voice: warm, direct, and concise.
 - Write "dembrane" in lowercase.
 - Never use the word "AI".
+- Use "methodologies" or "ways of working", never "frameworks" or "tools", for dembrane's project setup patterns.
 - Do not use em dashes.
 - Do not over-explain the process.

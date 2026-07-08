@@ -1402,6 +1402,7 @@ export const AgenticChatPanel = ({
 											...suggestion,
 											projectId: suggestion.projectId || projectId,
 										}}
+										onApplied={() => handleSubmit(t`I applied the canvas.`)}
 									/>
 								</div>
 							) : null;
@@ -1417,6 +1418,7 @@ export const AgenticChatPanel = ({
 											projectId: suggestion.projectId || projectId,
 										}}
 										chatId={chatId}
+										onApplied={() => handleSubmit(t`I applied the goal.`)}
 									/>
 								</div>
 							) : null;
@@ -1503,12 +1505,6 @@ export const AgenticChatPanel = ({
 							</Group>
 						</Paper>
 					)}
-
-					{isRunInFlight ? (
-						<Text size="xs" fs="italic" {...testId("agentic-append-feedback")}>
-							<Trans>New messages will be answered next.</Trans>
-						</Text>
-					) : null}
 
 					{atTurnLimit && (
 						<ChatTurnLimitCard onUpgrade={upgradeHandlers.open} />
