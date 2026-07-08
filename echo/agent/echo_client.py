@@ -292,3 +292,27 @@ class EchoClient:
         response.raise_for_status()
         payload = response.json()
         return payload if isinstance(payload, dict) else {}
+
+    async def create_agent_insight(
+        self,
+        project_id: str,
+        kind: str,
+        content: str,
+        suggested_capability: Optional[str] = None,
+        chat_id: Optional[str] = None,
+        message_id: Optional[str] = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {
+            "kind": kind,
+            "content": content,
+            "suggested_capability": suggested_capability,
+            "chat_id": chat_id,
+            "message_id": message_id,
+        }
+        response = await self._client.post(
+            f"/agentic/projects/{project_id}/insight",
+            json=body,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}

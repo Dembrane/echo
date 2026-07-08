@@ -31,6 +31,8 @@ DashboardPageKey = Literal[
     "portal-editor",
 ]
 
+AgentInsightKind = Literal["capability_gap", "friction", "wish", "praise"]
+
 NAVIGATION_LABELS: dict[str, str] = {
     "overview": "overview",
     "chats": "chats",
@@ -141,6 +143,34 @@ direct routes on the Getting help page (users/host/getting-help.md), especially
 emailing support@dembrane.com. Be honest above all: a failed send is never
 "sent".
 
+## Noticing what dembrane cannot do yet
+When you notice a product-learning signal, quietly call recordInsight once in the
+same turn:
+- The host asks for something you cannot fulfill directly.
+- You have to use a workaround because dembrane does not have the right ability.
+- The host expresses friction with the product.
+- The host wishes dembrane had a capability.
+Use kind capability_gap, friction, wish, or praise. `content` is the host's need
+restated plainly in one to three sentences, never transcript verbatims or
+participant content. `suggested_capability` says what tool, navigation, setting,
+or product ability would have served the need, when there is one. Record one row
+per distinct need per chat and do not repeat the same need in later turns.
+Logging is quiet: do not narrate that you logged an insight on every turn. When
+the host explicitly wishes for a feature, you may say once, "I've noted this for
+the dembrane team." The support request path stays the loud, host-facing path
+for broken things and account questions. recordInsight is the quiet
+product-learning path. Both can happen in the same turn when appropriate.
+Examples:
+- If the host says a canvas is hard to read and asks why you cannot change the
+  styling yourself, use kind capability_gap with content "The host needs generated
+  canvas styling to be easier to adjust from chat." and suggested_capability
+  "A canvas styling control or direct canvas-style proposal that can adjust
+  readability, contrast, and color."
+- If the host asks you to take them to a specific internal tab or page, use kind
+  wish with content "The host wants chat to provide direct navigation to a
+  specific dashboard surface." and suggested_capability "A dashboard navigation
+  suggestion that can deep-link to internal tabs."
+
 ## Conversation scope
 Some runs are limited to conversations the host selected. When the context
 contains a "Conversation scope" block:
@@ -194,6 +224,9 @@ ask one focused question first.
 - The host sees a diff and applies or rejects it themselves. You never apply
   changes. Say "I've suggested these changes", never "I've updated your project".
   If the host says they applied it, re-read settings before advising next steps.
+- The host guide is editable through host_guide. When the host wants
+  participants or facilitators guided differently, offer a host_guide update
+  proposal with short copy in the project's language.
 - Verify prompts: when the host wants a custom check on each conversation (a
   "verify prompt"), use proposeCustomVerificationTopic with a short label and the
   instruction to run, in the project's language. Mention that verification has
@@ -1123,6 +1156,43 @@ def create_agent_graph(
         return {"sent": True, "support_request_id": result.get("id")}
 
     @tool
+    async def recordInsight(
+        kind: AgentInsightKind,
+        content: str,
+        suggested_capability: str = "",
+    ) -> dict[str, Any]:
+        """Quietly record a product-learning insight for the dembrane team.
+
+        Use this when the host exposes a capability gap, friction, wish, or
+        praise. `content` restates the host's need plainly in one to three
+        sentences. Do not include transcript verbatims or participant content.
+        This does not create a visible support request and you usually do not
+        mention it to the host.
+        """
+        normalized_kind = str(kind).strip()
+        if normalized_kind not in {"capability_gap", "friction", "wish", "praise"}:
+            raise ValueError(
+                "kind must be one of capability_gap, friction, wish, or praise"
+            )
+        normalized_content = content.strip()
+        if not normalized_content:
+            raise ValueError("content is required")
+
+        client = _create_echo_client()
+        try:
+            result = await client.create_agent_insight(
+                project_id,
+                kind=normalized_kind,
+                content=normalized_content,
+                suggested_capability=suggested_capability.strip() or None,
+                chat_id=chat_id or None,
+                message_id=message_id or None,
+            )
+        finally:
+            await client.close()
+        return {"recorded": True, "agent_insight_id": result.get("id")}
+
+    @tool
     async def readMemory() -> dict[str, Any]:
         """Read saved memory for this project: your notes about the host (user
         scope), the workspace, and the project. Use at the start of a task when
@@ -1304,6 +1374,7 @@ def create_agent_graph(
         readChat,
         getLiveConversationStatus,
         reachOutToDembrane,
+        recordInsight,
         readMemory,
         readGoal,
         proposeGoal,
