@@ -11,6 +11,7 @@ import { assembleCanvasDocument } from "./kit";
 type CanvasFrameProps = {
 	generation?: CanvasGeneration | null;
 	projectId?: string | null;
+	fullscreen?: boolean;
 };
 
 function isHeightMessage(data: unknown): data is {
@@ -28,7 +29,11 @@ function isHeightMessage(data: unknown): data is {
 	);
 }
 
-export const CanvasFrame = ({ generation, projectId }: CanvasFrameProps) => {
+export const CanvasFrame = ({
+	generation,
+	projectId,
+	fullscreen,
+}: CanvasFrameProps) => {
 	const iframeRef = useRef<HTMLIFrameElement | null>(null);
 	const [height, setHeight] = useState(520);
 	const [brandLogoDataUrl, setBrandLogoDataUrl] = useState<string | null>(null);
@@ -44,7 +49,7 @@ export const CanvasFrame = ({ generation, projectId }: CanvasFrameProps) => {
 		const onMessage = (event: MessageEvent) => {
 			if (event.source !== iframeRef.current?.contentWindow) return;
 			if (!isHeightMessage(event.data)) return;
-			setHeight(Math.max(360, Math.min(6000, Math.ceil(event.data.height))));
+			setHeight(Math.max(320, Math.ceil(event.data.height)));
 		};
 		window.addEventListener("message", onMessage);
 		return () => window.removeEventListener("message", onMessage);
@@ -133,14 +138,15 @@ export const CanvasFrame = ({ generation, projectId }: CanvasFrameProps) => {
 		<Stack gap="xs">
 			<iframe
 				ref={iframeRef}
-				title={t`Canvas preview`}
+				aria-label={t`Canvas preview`}
 				sandbox="allow-scripts"
 				srcDoc={srcDoc ?? ""}
 				className="block w-full rounded-md border"
 				style={{
 					backgroundColor: "var(--app-background)",
 					borderColor: "var(--mantine-color-primary-light)",
-					height,
+					height: fullscreen ? "100%" : height,
+					minHeight: fullscreen ? 320 : undefined,
 				}}
 				{...testId("canvas-frame-iframe")}
 			/>

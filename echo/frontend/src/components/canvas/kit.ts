@@ -1,5 +1,5 @@
 import d3Bundle from "../../../node_modules/d3/dist/d3.min.js?raw";
-import dembraneWordmarkRaw from "../../assets/wordmark-no-padding.svg?raw";
+import dembraneLogoRaw from "../../assets/dembrane-logo-new.svg?raw";
 import dmSansFontDataUrl from "../../fonts/DMSans-Light.woff2?inline";
 import kitCss from "./kit.css?raw";
 import qrcode from "qrcode-generator";
@@ -9,13 +9,24 @@ export const CANVAS_FRAME_CSP =
 
 const HEIGHT_REPORTER_SCRIPT = `
 (() => {
-	const report = () => {
+	let frame = 0;
+	const measure = () => {
+		const body = document.body;
+		if (!body) return 320;
+		const rectHeight = Math.ceil(body.getBoundingClientRect().height);
+		return Math.max(body.scrollHeight, body.offsetHeight, rectHeight, 320);
+	};
+	const reportNow = () => {
+		frame = 0;
 		const height = Math.max(
-			document.documentElement.scrollHeight,
-			document.body ? document.body.scrollHeight : 0,
+			measure(),
 			320
 		);
 		window.parent.postMessage({ type: "dembrane:canvas:height", height }, "*");
+	};
+	const report = () => {
+		if (frame) return;
+		frame = requestAnimationFrame(reportNow);
 	};
 	window.addEventListener("load", report);
 	window.addEventListener("resize", report);
@@ -52,7 +63,7 @@ function svgToDataUrl(svg: string): string {
 	return `data:image/svg+xml,${encodeURIComponent(svg.replace(/\s+/g, " ").trim())}`;
 }
 
-const DEMBRANE_WORDMARK_DATA_URL = svgToDataUrl(dembraneWordmarkRaw);
+const DEMBRANE_LOGO_DATA_URL = svgToDataUrl(dembraneLogoRaw);
 
 function kitCssWithAssets(): string {
 	return kitCss.replace("__DM_SANS_DATA_URL__", dmSansFontDataUrl);
@@ -121,7 +132,7 @@ export function assembleCanvasDocument(
 	options: CanvasAssemblyOptions = {},
 ): string {
 	const assembledContent = assembleContentHtml(contentHtml, options);
-	const logoDataUrl = options.brandLogoDataUrl || DEMBRANE_WORDMARK_DATA_URL;
+	const logoDataUrl = options.brandLogoDataUrl || DEMBRANE_LOGO_DATA_URL;
 	return `<!doctype html>
 <html lang="en">
 <head>
@@ -132,12 +143,12 @@ export function assembleCanvasDocument(
 	<script>${escapeScriptContent(d3Bundle)}</script>
 </head>
 <body>
+	<header class="dembrane-canvas-brand" aria-hidden="true">
+		<img src="${escapeHtmlAttribute(logoDataUrl)}" alt="">
+	</header>
 	<main class="dembrane-canvas-root">
 		${assembledContent}
 	</main>
-	<div class="dembrane-canvas-brand" aria-hidden="true">
-		<img src="${escapeHtmlAttribute(logoDataUrl)}" alt="">
-	</div>
 	<script>${HEIGHT_REPORTER_SCRIPT}</script>
 </body>
 </html>`;
