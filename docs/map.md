@@ -17,6 +17,7 @@ The canonical reference. Each page explains what a capability is, when you'd use
 it's for, and how it works.
 
 - [Feature catalogue](./features/index.md)
+- [5 ways to use dembrane](./features/five-ways-to-use-dembrane.md)
 - [Roles & permissions](./features/roles-and-permissions.md)
 - [Tiers & billing](./features/tiers-and-billing.md)
 - [Organisations & workspaces](./features/organisations-and-workspaces.md)
