@@ -74,9 +74,11 @@ def get_thread_pool_executor() -> ThreadPoolExecutor:
                 logger.info(f"Initialized ThreadPoolExecutor with {THREAD_POOL_SIZE} threads")
                 # Ensure clean shutdown on process exit
                 atexit.register(
-                    lambda: _thread_pool_executor.shutdown(wait=True)
-                    if _thread_pool_executor is not None
-                    else None
+                    lambda: (
+                        _thread_pool_executor.shutdown(wait=True)
+                        if _thread_pool_executor is not None
+                        else None
+                    )
                 )
     return _thread_pool_executor
 
@@ -336,7 +338,67 @@ def reset_background_loop(reason: str) -> None:
         _stop_background_loop_locked(reason)
 
 
-def run_async_in_new_loop(coro: Coroutine[Any, Any, T]) -> T:
+def _is_async_library_not_found(exc: BaseException) -> bool:
+    """Return True if exc or its causal chain is sniffio's async-library failure."""
+    from sniffio import AsyncLibraryNotFoundError
+
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        if isinstance(current, AsyncLibraryNotFoundError):
+            return True
+        seen.add(id(current))
+        current = current.__cause__ or current.__context__
+    return False
+
+
+def _reset_async_runtime_for_retry(reason: str) -> None:
+    """Discard async clients and force the shared loop to be recreated."""
+    try:
+        from dembrane.directus_async import async_directus
+
+        discarded = async_directus.reset_clients()
+        logger.warning("Discarded %s async Directus client(s) during recovery", discarded)
+    except Exception:
+        logger.exception("Failed to discard async Directus clients during recovery")
+
+    reset_background_loop(reason)
+
+
+def _run_async_once(awaitable: Coroutine[Any, Any, T] | asyncio.Future[T]) -> T:
+    if not asyncio.iscoroutine(awaitable) and not asyncio.isfuture(awaitable):
+        raise TypeError("run_async_in_new_loop expects a coroutine, Future, or zero-arg factory.")
+
+    if not _is_gevent_patched():
+        try:
+            running_loop: Optional[asyncio.AbstractEventLoop] = asyncio.get_running_loop()
+        except RuntimeError:
+            running_loop = None
+
+        if running_loop is not None:
+            # Inside a real running loop (FastAPI): run nested to avoid deadlocking it.
+            import nest_asyncio
+
+            nest_asyncio.apply(running_loop)
+            return running_loop.run_until_complete(awaitable)
+
+    loop = _ensure_background_loop()
+    if asyncio.iscoroutine(awaitable):
+        future = asyncio.run_coroutine_threadsafe(awaitable, loop)
+    else:
+        # A bare Future/awaitable: adapt it onto the background loop.
+        async def _await_it() -> T:
+            return await awaitable
+
+        future = asyncio.run_coroutine_threadsafe(_await_it(), loop)
+    return future.result()
+
+
+def run_async_in_new_loop(
+    coro: Coroutine[Any, Any, T]
+    | asyncio.Future[T]
+    | Callable[[], Coroutine[Any, Any, T] | asyncio.Future[T]],
+) -> T:
     """
     Run an async coroutine to completion from a synchronous context.
 
@@ -356,30 +418,37 @@ def run_async_in_new_loop(coro: Coroutine[Any, Any, T]) -> T:
     drives a foreign/contended loop and the actor hangs until TimeLimitExceeded.
     In the gevent worker we always use the dedicated background loop (its own OS
     thread), which is immune to greenlet interleaving.
+
+    Pass a zero-arg coroutine factory when the work may be retried. Coroutine
+    objects are consumed after their first await, so only factory inputs can be
+    retried on sniffio.AsyncLibraryNotFoundError.
     """
-    if not asyncio.iscoroutine(coro) and not asyncio.isfuture(coro):
-        raise TypeError("run_async_in_new_loop expects a coroutine or Future.")
+    is_factory = callable(coro) and not asyncio.iscoroutine(coro) and not asyncio.isfuture(coro)
+    attempts = 2 if is_factory else 1
 
-    if not _is_gevent_patched():
+    for attempt in range(attempts):
+        awaitable = coro() if is_factory else coro
         try:
-            running_loop: Optional[asyncio.AbstractEventLoop] = asyncio.get_running_loop()
-        except RuntimeError:
-            running_loop = None
+            return _run_async_once(awaitable)
+        except Exception as exc:
+            if not _is_async_library_not_found(exc):
+                raise
+            if attempt + 1 >= attempts:
+                logger.exception(
+                    "sniffio AsyncLibraryNotFoundError crossed run_async_in_new_loop; "
+                    "resetting async runtime without retry because no fresh coroutine "
+                    "factory is available"
+                )
+                _reset_async_runtime_for_retry(
+                    "sniffio AsyncLibraryNotFoundError in run_async_in_new_loop"
+                )
+                raise
+            logger.exception(
+                "sniffio AsyncLibraryNotFoundError crossed run_async_in_new_loop; "
+                "resetting async clients/background loop and retrying once"
+            )
+            _reset_async_runtime_for_retry(
+                "sniffio AsyncLibraryNotFoundError in run_async_in_new_loop"
+            )
 
-        if running_loop is not None:
-            # Inside a real running loop (FastAPI): run nested to avoid deadlocking it.
-            import nest_asyncio
-
-            nest_asyncio.apply(running_loop)
-            return running_loop.run_until_complete(coro)
-
-    loop = _ensure_background_loop()
-    if asyncio.iscoroutine(coro):
-        future = asyncio.run_coroutine_threadsafe(coro, loop)
-    else:
-        # A bare Future/awaitable: adapt it onto the background loop.
-        async def _await_it() -> T:
-            return await coro
-
-        future = asyncio.run_coroutine_threadsafe(_await_it(), loop)
-    return future.result()
+    raise RuntimeError("unreachable run_async_in_new_loop retry state")

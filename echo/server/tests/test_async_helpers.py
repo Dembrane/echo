@@ -20,7 +20,9 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pytest
+from sniffio import AsyncLibraryNotFoundError
 
+import dembrane.async_helpers as async_helpers
 from dembrane.async_helpers import (
     reset_background_loop,
     run_async_in_new_loop,
@@ -133,8 +135,44 @@ def test_run_async_in_new_loop_same_thread_id_concurrent():
 
 def test_run_async_in_new_loop_rejects_non_coroutine():
     """Type guard still works."""
-    with pytest.raises(TypeError, match="expects a coroutine or Future"):
+    with pytest.raises(TypeError, match="expects a coroutine, Future, or zero-arg factory"):
         run_async_in_new_loop(42)  # type: ignore
+
+
+def test_run_async_in_new_loop_retries_factory_once_on_sniffio(monkeypatch):
+    """A factory input can be retried with a fresh coroutine after sniffio failure."""
+    attempts: list[int] = []
+    resets: list[str] = []
+    monkeypatch.setattr(
+        async_helpers, "_reset_async_runtime_for_retry", lambda reason: resets.append(reason)
+    )
+
+    async def _work() -> str:
+        attempts.append(len(attempts) + 1)
+        if len(attempts) == 1:
+            raise AsyncLibraryNotFoundError("unknown async library, or not in async context")
+        return "ok"
+
+    assert run_async_in_new_loop(_work) == "ok"
+    assert attempts == [1, 2]
+    assert len(resets) == 1
+
+
+def test_run_async_in_new_loop_does_not_retry_non_sniffio(monkeypatch):
+    attempts: list[int] = []
+    resets: list[str] = []
+    monkeypatch.setattr(
+        async_helpers, "_reset_async_runtime_for_retry", lambda reason: resets.append(reason)
+    )
+
+    async def _work() -> None:
+        attempts.append(len(attempts) + 1)
+        raise RuntimeError("ordinary failure")
+
+    with pytest.raises(RuntimeError, match="ordinary failure"):
+        run_async_in_new_loop(_work)
+    assert attempts == [1]
+    assert resets == []
 
 
 def test_background_loop_is_reused():
