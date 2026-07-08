@@ -77,6 +77,35 @@ existing refresh rate-limit pattern in bff/canvases.py). Duplicates must
 exit without enqueuing their own next tick (chains must collapse, not
 multiply). Unit-test the guard.
 
+## Item 6: the agent CAN restyle the canvas (it just refused to)
+
+Live evidence (chat 7f833427-d8b5-4003-a92d-d6911ff80b0d, echo-next): host
+said "i can't read the carbonation level because its too dim (yellow over
+yellow)". The agent replied "I cannot change the visual styling, colors, or
+contrast of the dashboard myself... controlled by the dembrane platform" and
+logged a support ticket. That is FALSE: generations are model-written HTML
+regenerated every tick from the brief; a readability complaint is exactly a
+canvas update proposal.
+
+Fix in two places:
+- AGENT (agent.py prompt + proposeCanvas tool docs): the canvas brief may
+  carry presentation guidance (emphasis, contrast, what to highlight, tone of
+  visuals) within the kit's brand system. When the host reports a readability
+  or visual problem with a canvas, the agent proposes a canvas UPDATE (wave-11
+  target_canvas_id flavor) with a brief noting the fix (e.g. "the carbonation
+  status must be high-contrast, readable text, not a dim tinted highlight"),
+  and offers a refresh so the next generation shows it. Reserve
+  requestHelp/logging for things generations truly cannot change (the kit
+  shell, the app chrome). Never claim the platform owns generated content
+  styling.
+- SKILL (echo/server/dembrane/canvas/skill.md): add a hard readability rule:
+  body text and status labels must meet obvious contrast (never light-on-light
+  or same-hue text over tinted background; the yellow-on-yellow "Carbonation
+  Level" chip in production is the named violation). Prefer dark text on the
+  soft tint chips. Add a test/assertion if the sanitize layer can cheaply
+  catch same-color-family text-over-background inline styles; otherwise the
+  skill rule + a line in the generation prompt is enough for this wave.
+
 ## QA
 
 - Gates: server whole-tree ruff + focused pytest (ticks); frontend tsc,
