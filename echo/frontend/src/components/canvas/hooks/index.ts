@@ -73,6 +73,7 @@ export type CanvasProposal = {
 	target_canvas_name?: string | null;
 	proposed_at?: string | null;
 	created_from_chat_id?: string | null;
+	applied_preview_html?: string | null;
 };
 
 type CanvasDetailResponse =
@@ -285,6 +286,7 @@ export function useCreateCanvasMutation() {
 				cadence_minutes: proposal.cadence_minutes ?? undefined,
 				expires_at: proposal.expires_at,
 				created_from_chat_id: proposal.created_from_chat_id ?? undefined,
+				applied_preview_html: proposal.applied_preview_html ?? undefined,
 				gather_spec: proposal.gather_spec ?? undefined,
 				name: proposal.name,
 				project_id: proposal.projectId,
@@ -308,6 +310,8 @@ export function useUpdateCanvasMutation() {
 			bff.patch<CanvasDetail>(`/canvases/${proposal.target_canvas_id}`, {
 				brief: proposal.brief,
 				cadence_minutes: proposal.cadence_minutes ?? undefined,
+				created_from_chat_id: proposal.created_from_chat_id ?? undefined,
+				applied_preview_html: proposal.applied_preview_html ?? undefined,
 				gather_spec: proposal.gather_spec ?? undefined,
 				name: proposal.name,
 			}),

@@ -42,6 +42,7 @@ class CreateCanvasBody(BaseModel):
     cadence_minutes: int = Field(default=5, ge=2, le=120)
     expires_at: datetime
     created_from_chat_id: str | None = None
+    applied_preview_html: str | None = Field(default=None, min_length=1)
 
 
 class UpdateCanvasBody(BaseModel):
@@ -49,6 +50,8 @@ class UpdateCanvasBody(BaseModel):
     brief: str = Field(min_length=1, max_length=8000)
     gather_spec: dict[str, Any] | None = None
     cadence_minutes: int = Field(default=5, ge=2, le=120)
+    created_from_chat_id: str | None = None
+    applied_preview_html: str | None = Field(default=None, min_length=1)
 
 
 class UpdateCanvasLoopSettingsBody(BaseModel):
@@ -136,6 +139,15 @@ async def _live_created_from_chat_id(
     return chat_id
 
 
+async def _validated_chat_id(chat_id: str | None, project_id: str | None) -> str | None:
+    if not chat_id or not project_id:
+        return None
+    chat = await async_directus.get_item("project_chat", chat_id)
+    if not chat or chat.get("deleted_at") or _as_id(chat.get("project_id")) != project_id:
+        return None
+    return chat_id
+
+
 def _loop_payload(loop: dict[str, Any]) -> dict[str, Any]:
     return {
         "status": loop.get("status"),
@@ -193,15 +205,10 @@ async def create_canvas_endpoint(
         raise HTTPException(status_code=422, detail="expires_at must be in the future")
     if expires_at > now + timedelta(days=7):
         raise HTTPException(status_code=422, detail="expires_at must be within 7 days")
-    created_from_chat_id = body.created_from_chat_id
-    if created_from_chat_id:
-        chat = await async_directus.get_item("project_chat", created_from_chat_id)
-        if (
-            not chat
-            or chat.get("deleted_at")
-            or _as_id(chat.get("project_id")) != body.project_id
-        ):
-            created_from_chat_id = None
+    created_from_chat_id = await _validated_chat_id(
+        body.created_from_chat_id,
+        body.project_id,
+    )
 
     created = await create_canvas(
         project_id=body.project_id,
@@ -212,6 +219,7 @@ async def create_canvas_endpoint(
         expires_at=expires_at.isoformat(),
         acting_directus_user_id=auth.user_id,
         created_from_chat_id=created_from_chat_id,
+        applied_preview_html=body.applied_preview_html,
     )
     report = await async_directus.get_item("project_report", str(created["report"]["id"]))
     return await _canvas_payload(report)
@@ -264,6 +272,10 @@ async def update_canvas(
 ) -> dict:
     report, access = await _require_canvas(canvas_id, auth)
     access.require("project:update")
+    applied_from_chat_id = await _validated_chat_id(
+        body.created_from_chat_id,
+        _as_id(report.get("project_id")),
+    )
     updated = await update_canvas_config(
         report_id=_report_id(report),
         name=body.name,
@@ -271,6 +283,8 @@ async def update_canvas(
         gather_spec=body.gather_spec,
         cadence_minutes=body.cadence_minutes,
         created_by=auth.user_id,
+        applied_preview_html=body.applied_preview_html,
+        applied_from_chat_id=applied_from_chat_id,
     )
     return await _canvas_payload(updated["report"])
 

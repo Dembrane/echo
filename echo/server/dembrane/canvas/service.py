@@ -6,7 +6,10 @@ from typing import Any
 from datetime import datetime, timezone
 
 from dembrane.utils import generate_uuid
+from dembrane.settings import get_settings
+from dembrane.canvas.events import publish_generation_nudge
 from dembrane.directus_async import async_directus
+from dembrane.canvas.sanitize import sanitize_canvas_html
 from dembrane.scheduled_tasks import TASK_CANVAS_TICK, schedule_task, cancel_pending_tasks
 
 DEFAULT_CADENCE_MINUTES = 5
@@ -20,12 +23,74 @@ def _data(result: dict[str, Any]) -> dict[str, Any]:
     return result["data"]
 
 
-async def enqueue_canvas_tick(loop_id: str, when: datetime | None = None) -> str:
+def _applied_preview_detail(
+    *,
+    stripped_references: int,
+    applied_from_chat_id: str | None,
+) -> str:
+    details = ["applied from chat preview"]
+    if applied_from_chat_id:
+        details.append(f"chat_id={applied_from_chat_id}")
+    if stripped_references:
+        details.append(f"stripped {stripped_references} external reference(s)")
+    return "; ".join(details)
+
+
+async def enqueue_canvas_tick(
+    loop_id: str, when: datetime | None = None, tick_kind: str = "scheduled"
+) -> str:
     return await schedule_task(
         task_type=TASK_CANVAS_TICK,
         scheduled_at=when or _now(),
-        payload={"loop_id": loop_id, "tick_kind": "scheduled"},
+        payload={"loop_id": loop_id, "tick_kind": tick_kind},
     )
+
+
+async def store_applied_preview_generation(
+    *,
+    report_id: str,
+    config_revision_id: str,
+    loop_id: str,
+    applied_preview_html: str,
+    applied_from_chat_id: str | None,
+) -> dict[str, Any]:
+    sanitized = sanitize_canvas_html(
+        applied_preview_html,
+        max_bytes=get_settings().canvas.max_html_bytes,
+    )
+    detail = _applied_preview_detail(
+        stripped_references=sanitized.stripped_references,
+        applied_from_chat_id=applied_from_chat_id,
+    )
+    generation = _data(
+        await async_directus.create_item(
+            "canvas_generation",
+            {
+                "id": generate_uuid(),
+                "report_id": report_id,
+                "config_revision_id": config_revision_id,
+                "content_html": sanitized.html,
+                "status": "ok",
+                "tick_kind": "applied",
+                "detail": detail,
+            },
+        )
+    )
+    recorded_at = _now().isoformat()
+    await async_directus.create_item(
+        "agent_loop_run",
+        {
+            "id": generate_uuid(),
+            "loop_id": loop_id,
+            "status": "ok",
+            "detail": detail,
+            "generation_id": str(generation["id"]),
+            "started_at": recorded_at,
+            "finished_at": recorded_at,
+        },
+    )
+    await publish_generation_nudge(report_id)
+    return generation
 
 
 async def create_canvas(
@@ -38,6 +103,7 @@ async def create_canvas(
     expires_at: str,
     acting_directus_user_id: str,
     created_from_chat_id: str | None = None,
+    applied_preview_html: str | None = None,
 ) -> dict[str, Any]:
     """Create the report row, first config revision, active loop, and first tick."""
     cadence = cadence_minutes or DEFAULT_CADENCE_MINUTES
@@ -87,8 +153,22 @@ async def create_canvas(
             },
         )
     )
+    applied_generation = None
+    if applied_preview_html:
+        applied_generation = await store_applied_preview_generation(
+            report_id=report_id,
+            config_revision_id=str(config["id"]),
+            loop_id=str(loop["id"]),
+            applied_preview_html=applied_preview_html,
+            applied_from_chat_id=created_from_chat_id,
+        )
     await enqueue_canvas_tick(str(loop["id"]))
-    return {"report": report, "config_revision": config, "loop": loop}
+    return {
+        "report": report,
+        "config_revision": config,
+        "loop": loop,
+        "applied_generation": applied_generation,
+    }
 
 
 async def revise_config(
@@ -182,6 +262,8 @@ async def update_canvas_config(
     gather_spec: dict[str, Any] | None,
     cadence_minutes: int,
     created_by: str,
+    applied_preview_html: str | None = None,
+    applied_from_chat_id: str | None = None,
 ) -> dict[str, Any]:
     """Append a config revision, update loop/report display fields, and tick soon."""
     config = await revise_config(
@@ -198,6 +280,7 @@ async def update_canvas_config(
         {"user_instructions": name},
     )
     loop = await get_loop_for_report(report_id)
+    applied_generation = None
     if loop:
         await async_directus.update_item(
             "agent_loop",
@@ -208,9 +291,30 @@ async def update_canvas_config(
                 "failure_count": 0,
             },
         )
-        await enqueue_canvas_tick(str(loop["id"]))
+        if applied_preview_html:
+            applied_generation = await store_applied_preview_generation(
+                report_id=report_id,
+                config_revision_id=str(config["id"]),
+                loop_id=str(loop["id"]),
+                applied_preview_html=applied_preview_html,
+                applied_from_chat_id=applied_from_chat_id,
+            )
+        # Without an applied preview the changed brief must force a redraw:
+        # a "scheduled" tick would be eaten by the cadence-window guard or
+        # no_op on "no new gathered content" (the content didn't change, the
+        # brief did). "manual" bypasses both. With a preview applied, the new
+        # design is already the latest frame and the normal cadence resumes.
+        await enqueue_canvas_tick(
+            str(loop["id"]),
+            tick_kind="scheduled" if applied_generation else "manual",
+        )
     report = await async_directus.get_item("project_report", report_id)
-    return {"report": report, "config_revision": config, "loop": loop}
+    return {
+        "report": report,
+        "config_revision": config,
+        "loop": loop,
+        "applied_generation": applied_generation,
+    }
 
 
 async def get_latest_generation(report_id: str) -> dict[str, Any] | None:
