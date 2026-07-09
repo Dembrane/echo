@@ -9,13 +9,15 @@ from datetime import datetime, timezone
 from dembrane.utils import generate_uuid
 
 CANVAS_TAB_SET_V1 = ("crux", "concept_cloud", "story", "host_guide")
+CANVAS_SUPPORTED_TAB_KINDS = ("crux", "concept_cloud", "story", "host_guide", "board")
 CANVAS_TAB_LABELS = {
     "crux": "Crux",
     "concept_cloud": "Concept cloud",
     "story": "Story",
     "host_guide": "Host guide",
+    "board": "Board",
 }
-HOST_TARGET_TABS = set(CANVAS_TAB_SET_V1) - {"host_guide"}
+HOST_TARGET_TABS = {"crux", "concept_cloud", "story"}
 
 
 def utc_now_iso() -> str:
@@ -26,7 +28,7 @@ def fresh_canvas_state(loop: dict[str, Any] | None = None) -> dict[str, Any]:
     loop = loop or {}
     return {
         "schema_version": 1,
-        "tabs": list(loop.get("tabs") or loop.get("canvas_tabs") or CANVAS_TAB_SET_V1),
+        "tabs": normalize_canvas_tabs(loop.get("tabs") or loop.get("canvas_tabs")),
         "quotes_ledger": _list(loop.get("quotes_ledger") or loop.get("canvas_quotes_ledger")),
         "concepts_ledger": _list(loop.get("concepts_ledger") or loop.get("canvas_concepts_ledger")),
         "crux": _dict(loop.get("crux") or loop.get("canvas_crux"))
@@ -34,19 +36,89 @@ def fresh_canvas_state(loop: dict[str, Any] | None = None) -> dict[str, Any]:
         "host_items": _list(loop.get("host_items") or loop.get("canvas_host_items")),
         "story_slides": _list(loop.get("story_slides") or loop.get("canvas_story_slides")),
         "host_guide": _dict(loop.get("host_guide") or loop.get("canvas_host_guide")),
+        "board_cards": _list(loop.get("board_cards") or loop.get("canvas_board_cards")),
     }
 
 
 def state_patch(state: dict[str, Any]) -> dict[str, Any]:
     return {
-        "canvas_tabs": state.get("tabs") or list(CANVAS_TAB_SET_V1),
+        "canvas_tabs": normalize_canvas_tabs(state.get("tabs")),
         "canvas_quotes_ledger": state.get("quotes_ledger") or [],
         "canvas_concepts_ledger": state.get("concepts_ledger") or [],
         "canvas_crux": state.get("crux") or {"question": "", "history": []},
         "canvas_host_items": state.get("host_items") or [],
         "canvas_story_slides": state.get("story_slides") or [],
         "canvas_host_guide": state.get("host_guide") or {},
+        "canvas_board_cards": state.get("board_cards") or [],
     }
+
+
+def normalize_canvas_tabs(tabs: Any) -> list[dict[str, Any]]:
+    source = tabs if isinstance(tabs, list) and tabs else list(CANVAS_TAB_SET_V1)
+    normalized: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for raw in source:
+        tab = _normalize_tab_config(raw)
+        if not tab:
+            continue
+        key = _tab_key(tab)
+        if key in seen:
+            continue
+        seen.add(key)
+        normalized.append(tab)
+    if not normalized:
+        return [{"kind": kind} for kind in CANVAS_TAB_SET_V1]
+    return normalized
+
+
+def _normalize_tab_config(raw: Any) -> dict[str, Any] | None:
+    if isinstance(raw, str):
+        kind = _normalize_tab_kind(raw)
+        return {"kind": kind} if kind else None
+    if not isinstance(raw, dict):
+        return None
+    kind = _normalize_tab_kind(raw.get("kind") or raw.get("tab") or raw.get("type"))
+    if not kind:
+        return None
+    tab: dict[str, Any] = {"kind": kind}
+    if kind == "board":
+        grouping = str(raw.get("grouping") or "person").strip().lower()
+        tab["grouping"] = "person" if grouping in {"", "voice", "speaker"} else grouping
+    return tab
+
+
+def _normalize_tab_kind(value: Any) -> str | None:
+    normalized = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    aliases = {
+        "cloud": "concept_cloud",
+        "concept": "concept_cloud",
+        "concepts": "concept_cloud",
+        "concepts_cloud": "concept_cloud",
+        "host": "host_guide",
+        "guide": "host_guide",
+        "person_board": "board",
+        "people": "board",
+        "per_person": "board",
+    }
+    normalized = aliases.get(normalized, normalized)
+    return normalized if normalized in CANVAS_SUPPORTED_TAB_KINDS else None
+
+
+def _tab_kind(tab: Any) -> str:
+    if isinstance(tab, dict):
+        return str(tab.get("kind") or "")
+    return str(tab or "")
+
+
+def _tab_key(tab: dict[str, Any]) -> str:
+    if tab.get("kind") == "board":
+        return f"board:{tab.get('grouping') or 'person'}"
+    return str(tab.get("kind") or "")
+
+
+def has_board_tab(state_or_tabs: Any) -> bool:
+    tabs = state_or_tabs.get("tabs") if isinstance(state_or_tabs, dict) else state_or_tabs
+    return any(_tab_kind(tab) == "board" for tab in normalize_canvas_tabs(tabs))
 
 
 def host_item(
@@ -125,13 +197,19 @@ def apply_model_extraction(
     )
     crux_changed, crux_rejections = _update_model_crux(state, extraction, now)
     story_changed, story_rejections = _merge_story_slides(state, extraction, quote_index_to_id, now)
+    board_changed, board_rejections = _merge_board_cards(state, extraction, quote_index_to_id, now)
     return state, {
         "quotes_added": accepted_quotes,
         "concepts_changed": concept_changes,
         "crux_changed": crux_changed,
         "story_changed": story_changed,
+        "board_changed": board_changed,
         "concepts_removed": [],
-        "rejections": quote_rejections + concept_rejections + crux_rejections + story_rejections,
+        "rejections": quote_rejections
+        + concept_rejections
+        + crux_rejections
+        + story_rejections
+        + board_rejections,
     }
 
 
@@ -154,6 +232,11 @@ def ledger_prompt_summary(state: dict[str, Any]) -> dict[str, Any]:
             for slide in state.get("story_slides") or []
             if isinstance(slide, dict) and slide.get("heading")
         ][:8],
+        "board_groups": [
+            card.get("group")
+            for card in state.get("board_cards") or []
+            if isinstance(card, dict) and card.get("group")
+        ][:12],
     }
 
 
@@ -375,6 +458,77 @@ def _merge_story_slides(
     return True, rejections
 
 
+def _merge_board_cards(
+    state: dict[str, Any],
+    extraction: dict[str, Any],
+    quote_index_to_id: dict[int, str],
+    now: str,
+) -> tuple[bool, list[str]]:
+    if not has_board_tab(state):
+        return False, []
+    cards = _list(extraction.get("board_cards"))
+    if not cards:
+        return False, []
+
+    quotes_by_id = {str(quote.get("id")): quote for quote in state["quotes_ledger"]}
+    existing_by_group = {
+        str(card.get("group") or "").strip().lower(): card
+        for card in state["board_cards"]
+        if card.get("group")
+    }
+    changed = False
+    rejections: list[str] = []
+    for index, card_input in enumerate(cards[:24]):
+        quote_ids = _supported_quote_ids(card_input.get("quote_indices"), quote_index_to_id)
+        evidence = [quotes_by_id[qid] for qid in quote_ids if qid in quotes_by_id]
+        if not evidence:
+            rejections.append(f"board_cards[{index}] has no accepted receipt quote")
+            continue
+        group = _board_group_for_quotes(evidence)
+        synthesis = str(card_input.get("synthesis") or "").strip()
+        if not synthesis:
+            rejections.append(f"board_cards[{index}] empty synthesis for {group}")
+            continue
+        key = group.lower()
+        card = existing_by_group.get(key)
+        if not card:
+            card = {
+                "id": generate_uuid(),
+                "group": group,
+                "grouping": "person",
+                "synthesis": "",
+                "quote_ids": [],
+                "first_seen": now,
+                "updated_at": now,
+            }
+            state["board_cards"].append(card)
+            existing_by_group[key] = card
+            changed = True
+        if card.get("synthesis") != synthesis[:700]:
+            card["synthesis"] = synthesis[:700]
+            card["updated_at"] = now
+            changed = True
+        current_quote_ids = [str(qid) for qid in card.get("quote_ids") or []]
+        for quote_id in quote_ids:
+            if quote_id not in current_quote_ids:
+                current_quote_ids.append(quote_id)
+                changed = True
+        card["quote_ids"] = current_quote_ids[-8:]
+    return changed, rejections
+
+
+def _board_group_for_quotes(quotes: list[dict[str, Any]]) -> str:
+    voices = {
+        str(quote.get("who") or "").strip()
+        for quote in quotes
+        if str(quote.get("who") or "").strip()
+        and str(quote.get("who") or "").strip().lower() != "participant"
+    }
+    if len(voices) == 1:
+        return next(iter(voices))
+    return "the room"
+
+
 def render_tabbed_canvas(
     *,
     state: dict[str, Any],
@@ -382,19 +536,19 @@ def render_tabbed_canvas(
     sample_notice: str | None = None,
 ) -> str:
     state = fresh_canvas_state(state)
-    tabs = [tab for tab in CANVAS_TAB_SET_V1 if tab in state["tabs"]]
+    tabs = normalize_canvas_tabs(state["tabs"])
     if not tabs:
-        tabs = list(CANVAS_TAB_SET_V1)
+        tabs = normalize_canvas_tabs(CANVAS_TAB_SET_V1)
     project_name = html.escape(str(project.get("name") or "Canvas"))
     sample = (
         f'<p class="tabbed-canvas-notice">{html.escape(sample_notice)}</p>' if sample_notice else ""
     )
     controls = "\n".join(
-        f'<input class="tabbed-canvas-radio" type="radio" name="canvas-tab" id="canvas-tab-{tab}" {"checked" if index == 0 else ""}>'
+        f'<input class="tabbed-canvas-radio" type="radio" name="canvas-tab" id="canvas-tab-{_tab_dom_id(tab)}" {"checked" if index == 0 else ""}>'
         for index, tab in enumerate(tabs)
     )
     labels = "\n".join(
-        f'<label class="tabbed-canvas-tab" for="canvas-tab-{tab}">{html.escape(CANVAS_TAB_LABELS[tab])}</label>'
+        f'<label class="tabbed-canvas-tab" for="canvas-tab-{_tab_dom_id(tab)}">{html.escape(CANVAS_TAB_LABELS[_tab_kind(tab)])}</label>'
         for tab in tabs
     )
     panels = "\n".join(_panel(tab, state) for tab in tabs)
@@ -415,17 +569,24 @@ def render_tabbed_canvas(
 """.strip()
 
 
-def _panel(tab: str, state: dict[str, Any]) -> str:
-    label = html.escape(CANVAS_TAB_LABELS[tab])
-    if tab == "crux":
+def _panel(tab: Any, state: dict[str, Any]) -> str:
+    tab_config = _normalize_tab_config(tab)
+    if not tab_config:
+        tab_config = {"kind": str(tab)}
+    kind = _tab_kind(tab_config)
+    label = html.escape(CANVAS_TAB_LABELS[kind])
+    if kind == "crux":
         body = _render_crux(state)
-    elif tab == "concept_cloud":
+    elif kind == "concept_cloud":
         body = _render_cloud(state)
-    elif tab == "host_guide":
+    elif kind == "host_guide":
         body = _render_host_guide(state)
+    elif kind == "board":
+        body = _render_board(state)
     else:
         body = _render_story(state)
-    return f'<section class="tabbed-canvas-panel tabbed-canvas-panel-{tab}" data-tab-panel="{tab}" aria-label="{label}">{body}</section>'
+    dom_id = _tab_dom_id(tab_config)
+    return f'<section class="tabbed-canvas-panel tabbed-canvas-panel-{dom_id}" data-tab-panel="{dom_id}" aria-label="{label}">{body}</section>'
 
 
 def _render_crux(state: dict[str, Any]) -> str:
@@ -523,6 +684,19 @@ def _render_host_guide(state: dict[str, Any]) -> str:
 """.strip()
 
 
+def _render_board(state: dict[str, Any]) -> str:
+    cards = state.get("board_cards") or []
+    if not cards:
+        body = '<p class="tabbed-canvas-empty">The board is waiting for attributed receipt quotes.</p>'
+    else:
+        body = "\n".join(_board_card(card, state["quotes_ledger"]) for card in cards[:30])
+    return f"""
+<div class="tabbed-board">
+  {body}
+</div>
+""".strip()
+
+
 def _story_slide(slide: dict[str, Any], quotes: list[dict[str, Any]]) -> str:
     eyebrow = str(slide.get("eyebrow") or "").strip()
     eyebrow_html = f'<p class="tabbed-canvas-kicker">{html.escape(eyebrow)}</p>' if eyebrow else ""
@@ -571,6 +745,28 @@ def _concept_tile(concept: dict[str, Any], quotes: list[dict[str, Any]], index: 
     return f'<div class="tabbed-concept tabbed-concept-{tier} tabbed-tilt-{rotation}"><span>{phrase}</span></div>'
 
 
+def _board_card(card: dict[str, Any], quotes: list[dict[str, Any]]) -> str:
+    group = html.escape(str(card.get("group") or "the room"))
+    synthesis = html.escape(str(card.get("synthesis") or ""))
+    quote_ids = {str(qid) for qid in card.get("quote_ids") or []}
+    evidence = [quote for quote in quotes if str(quote.get("id")) in quote_ids]
+    trace = "\n".join(_quote_block(q) for q in evidence[:2])
+    receipt_html = ""
+    if trace:
+        receipt_html = (
+            '<details class="tabbed-board-trace">'
+            '<summary><span class="tabbed-traceable">Receipts</span></summary>'
+            f'<div class="tabbed-trace">{trace}</div></details>'
+        )
+    return f"""
+<article class="tabbed-board-card">
+  <h3>{group}</h3>
+  <p>{synthesis}</p>
+  {receipt_html}
+</article>
+""".strip()
+
+
 def _quote_block(quote: dict[str, Any]) -> str:
     text = html.escape(str(quote.get("quote") or ""))
     who = html.escape(str(quote.get("who") or "participant"))
@@ -591,6 +787,13 @@ def _render_host_items(state: dict[str, Any], tab: str) -> str:
         for item in items
     )
     return f'<div class="tabbed-host-items">{rows}</div>'
+
+
+def _tab_dom_id(tab: Any) -> str:
+    kind = _tab_kind(tab)
+    if kind == "board" and isinstance(tab, dict):
+        return f"board_{str(tab.get('grouping') or 'person')}"
+    return kind
 
 
 def _normalize_ws(value: str) -> str:
@@ -663,11 +866,13 @@ _CSS = """
 #canvas-tab-crux:checked~.tabbed-canvas-tabbar label[for=canvas-tab-crux],
 #canvas-tab-concept_cloud:checked~.tabbed-canvas-tabbar label[for=canvas-tab-concept_cloud],
 #canvas-tab-story:checked~.tabbed-canvas-tabbar label[for=canvas-tab-story],
-#canvas-tab-host_guide:checked~.tabbed-canvas-tabbar label[for=canvas-tab-host_guide]{color:var(--ink);border-bottom-color:var(--royal)}
+#canvas-tab-host_guide:checked~.tabbed-canvas-tabbar label[for=canvas-tab-host_guide],
+#canvas-tab-board_person:checked~.tabbed-canvas-tabbar label[for=canvas-tab-board_person]{color:var(--ink);border-bottom-color:var(--royal)}
 #canvas-tab-crux:checked~[data-tab-panel=crux],
 #canvas-tab-concept_cloud:checked~[data-tab-panel=concept_cloud],
 #canvas-tab-story:checked~[data-tab-panel=story],
-#canvas-tab-host_guide:checked~[data-tab-panel=host_guide]{display:block}
+#canvas-tab-host_guide:checked~[data-tab-panel=host_guide],
+#canvas-tab-board_person:checked~[data-tab-panel=board_person]{display:block}
 .tabbed-crux,.tabbed-story{max-width:1000px;min-height:70vh;margin:0 auto;display:flex;flex-direction:column;justify-content:center}
 .tabbed-host-guide{max-width:840px;min-height:70vh;margin:0 auto;display:flex;flex-direction:column;justify-content:center;gap:16px}
 .tabbed-crux h1,.tabbed-story h2{max-width:900px;margin:0;font-weight:500;line-height:1.14;text-wrap:balance}
@@ -697,8 +902,16 @@ _CSS = """
 .tabbed-guide-block p{margin:0;color:var(--ink-soft);line-height:1.45}
 .tabbed-guide-block ol,.tabbed-guide-block ul{margin:0;padding-left:20px;color:var(--ink-soft);line-height:1.45}
 .tabbed-guide-block li+li{margin-top:8px}
+.tabbed-board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;align-items:stretch}
+.tabbed-board-card{background:var(--card);border:1px solid var(--hairline);padding:12px 13px;min-height:150px;display:flex;flex-direction:column;gap:8px}
+.tabbed-board-card h3{margin:0;font-size:14px;font-weight:700;line-height:1.2;color:var(--ink)}
+.tabbed-board-card p{margin:0;font-size:13px;line-height:1.35;color:var(--ink-soft)}
+.tabbed-board-trace{margin-top:auto}
+.tabbed-board-trace summary{list-style:none;cursor:pointer;font-size:12px}
+.tabbed-board-trace summary::-webkit-details-marker{display:none}
 .tabbed-canvas-empty{color:var(--ink-soft)}
 @keyframes tabbedFloat{0%,100%{translate:0 0}50%{translate:0 -5px}}
 @media (prefers-reduced-motion:reduce){.tabbed-concept{animation:none}}
-@media (max-width:720px){.tabbed-canvas-frame{padding:14px 14px 60px}.tabbed-canvas-tabbar{gap:16px}.tabbed-crux,.tabbed-story,.tabbed-host-guide{min-height:58vh}}
+@media (max-width:1100px){.tabbed-board{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:720px){.tabbed-canvas-frame{padding:14px 14px 60px}.tabbed-canvas-tabbar{gap:16px}.tabbed-crux,.tabbed-story,.tabbed-host-guide{min-height:58vh}.tabbed-board{grid-template-columns:1fr}}
 """

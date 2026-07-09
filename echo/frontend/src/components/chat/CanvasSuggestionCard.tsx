@@ -39,6 +39,7 @@ function isSameProposalConfig(
 		| {
 				brief?: string | null;
 				gather_spec?: Record<string, unknown> | null;
+				tabs?: Array<Record<string, unknown>> | null;
 				cadence_minutes?: number | null;
 				created_at?: string | null;
 		  }
@@ -50,7 +51,8 @@ function isSameProposalConfig(
 		String(config.brief ?? "").trim() === suggestion.brief.trim() &&
 		(config.cadence_minutes ?? null) === (suggestion.cadence_minutes ?? null) &&
 		normalizedJson(config.gather_spec) ===
-			normalizedJson(suggestion.gather_spec ?? null)
+			normalizedJson(suggestion.gather_spec ?? null) &&
+		normalizedJson(config.tabs) === normalizedJson(suggestion.tabs ?? null)
 	);
 }
 

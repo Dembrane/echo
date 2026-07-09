@@ -61,7 +61,12 @@ def test_apply_model_extraction_accepts_verbatim_receipts_and_updates_crux() -> 
     assert state["concepts_ledger"][0]["phrase"] == "doorway open"
     assert state["crux"]["question"] == "What first move keeps the doorway open?"
     assert state["story_slides"][0]["quote_ids"] == [state["quotes_ledger"][0]["id"]]
-    assert state_patch(state)["canvas_tabs"] == ["crux", "concept_cloud", "story", "host_guide"]
+    assert state_patch(state)["canvas_tabs"] == [
+        {"kind": "crux"},
+        {"kind": "concept_cloud"},
+        {"kind": "story"},
+        {"kind": "host_guide"},
+    ]
     assert state_patch(state)["canvas_story_slides"]
 
 
@@ -204,3 +209,81 @@ def test_render_tabbed_canvas_includes_persisted_host_guide() -> None:
     assert "What would make this safe to try tomorrow?" in html
     assert "No receipts yet from operations." in html
     assert state_patch(state)["canvas_host_guide"]["where_the_room_is"].startswith("The room")
+
+
+def test_board_renders_from_attributed_quotes() -> None:
+    state = fresh_canvas_state({"canvas_tabs": [{"kind": "board", "grouping": "person"}]})
+    state, detail = apply_model_extraction(
+        state,
+        _bundle(),
+        {
+            "quotes": [
+                {
+                    "who": "Maya",
+                    "quote": "Keep the doorway open.",
+                    "conversation_id": "conv-1",
+                    "chunk_id": "chunk-1",
+                }
+            ],
+            "concepts": [],
+            "crux": None,
+            "story_slides": [],
+            "board_cards": [
+                {
+                    "group": "Maya",
+                    "synthesis": "Maya wants the next step to stay easy to enter.",
+                    "quote_indices": [0],
+                }
+            ],
+        },
+    )
+
+    html = render_tabbed_canvas(state=state, project={"name": "Room"})
+
+    assert detail["board_changed"] is True
+    assert state["board_cards"][0]["group"] == "Maya"
+    assert "Maya wants the next step" in html
+    assert "Keep the doorway open." in html
+
+
+def test_board_folds_unattributed_receipts_into_room_card() -> None:
+    state = fresh_canvas_state({"canvas_tabs": [{"kind": "board", "grouping": "person"}]})
+    bundle = {
+        "conversations": [
+            {
+                "id": "conv-1",
+                "label": "participant",
+                "latest_transcript": "This should remain easy to explain.",
+            }
+        ]
+    }
+    state, _detail = apply_model_extraction(
+        state,
+        bundle,
+        {
+            "quotes": [
+                {
+                    "who": None,
+                    "quote": "This should remain easy to explain.",
+                    "conversation_id": "conv-1",
+                    "chunk_id": None,
+                }
+            ],
+            "concepts": [],
+            "crux": None,
+            "story_slides": [],
+            "board_cards": [
+                {
+                    "group": "Maya",
+                    "synthesis": "The room wants the next step to stay explainable.",
+                    "quote_indices": [0],
+                }
+            ],
+        },
+    )
+
+    html = render_tabbed_canvas(state=state, project={"name": "Room"})
+
+    assert state["board_cards"][0]["group"] == "the room"
+    assert "the room" in html
+    assert "Maya" not in html

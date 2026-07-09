@@ -83,6 +83,7 @@ async def test_get_canvas_matches_track_b_shape(monkeypatch) -> None:
         return {
             "brief": "Show themes",
             "gather_spec": {"window_minutes": 60},
+            "tabs": [{"kind": "board", "grouping": "person"}],
             "cadence_minutes": 5,
             "created_at": "2026-07-07T10:00:00Z",
         }
@@ -105,6 +106,7 @@ async def test_get_canvas_matches_track_b_shape(monkeypatch) -> None:
         "config": {
             "brief": "Show themes",
             "gather_spec": {"window_minutes": 60},
+            "tabs": [{"kind": "board", "grouping": "person"}],
             "cadence_minutes": 5,
             "created_at": "2026-07-07T10:00:00Z",
         },
@@ -224,6 +226,7 @@ async def test_create_requires_project_update_and_valid_expiry(monkeypatch) -> N
 
     async def _create(**kwargs) -> dict:  # noqa: ARG001
         assert kwargs["applied_preview_html"] is None
+        assert kwargs["tabs"] == [{"kind": "board", "grouping": "person"}]
         return {"report": {"id": "r1"}}
 
     class _Directus:
@@ -265,6 +268,7 @@ async def test_create_requires_project_update_and_valid_expiry(monkeypatch) -> N
             "cadence_minutes": 5,
             "expires_at": expiry,
             "created_from_chat_id": "chat-1",
+            "tabs": [{"kind": "board", "grouping": "person"}],
         },
     )
 
@@ -418,6 +422,7 @@ async def test_update_canvas_appends_revision_and_returns_canvas(monkeypatch) ->
         return {
             "brief": "Updated brief",
             "gather_spec": {"window_minutes": 30},
+            "tabs": [{"kind": "crux"}, {"kind": "board", "grouping": "person"}],
             "cadence_minutes": 10,
             "created_at": "2026-07-07T10:15:00Z",
         }
@@ -439,6 +444,7 @@ async def test_update_canvas_appends_revision_and_returns_canvas(monkeypatch) ->
                 "brief": "Updated brief",
                 "gather_spec": {"window_minutes": 30},
                 "cadence_minutes": 10,
+                "tabs": [{"kind": "crux"}, {"kind": "board", "grouping": "person"}],
             },
         )
 
@@ -449,6 +455,7 @@ async def test_update_canvas_appends_revision_and_returns_canvas(monkeypatch) ->
             "name": "Updated wall",
             "brief": "Updated brief",
             "gather_spec": {"window_minutes": 30},
+            "tabs": [{"kind": "crux"}, {"kind": "board", "grouping": "person"}],
             "cadence_minutes": 10,
             "created_by": "du1",
             "applied_preview_html": None,

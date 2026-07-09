@@ -418,6 +418,8 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "i've noted this" in prompt
     assert "dembrane team" in prompt
     assert "canvas styling" in prompt
+    assert "board tab with grouping person" in prompt
+    assert "no primitive supports" in prompt
     assert "deep-link to internal tabs" in prompt
     # Setup guidance is convergent, escapable, and proposal-only.
     assert "read interviewing.md first" in prompt
@@ -720,6 +722,30 @@ async def test_propose_canvas_returns_structured_proposal():
     assert result["cadence_minutes"] == 5
     assert result["expires_at"].endswith("+00:00")
     assert result["visible_to_user"] is True
+
+
+@pytest.mark.asyncio
+async def test_propose_canvas_passes_tabs_field_through():
+    tools = _make_doc_tools()
+
+    result = await tools["proposeCanvas"].ainvoke(
+        {
+            "name": "Person summaries",
+            "brief": "Show a clear person-by-person board grounded in quotes.",
+            "tabs": [
+                {"kind": "crux"},
+                {"kind": "concept_cloud"},
+                {"kind": "board", "grouping": "person"},
+            ],
+        }
+    )
+
+    assert result["type"] == "canvas_proposal"
+    assert result["tabs"] == [
+        {"kind": "crux"},
+        {"kind": "concept_cloud"},
+        {"kind": "board", "grouping": "person"},
+    ]
 
 
 @pytest.mark.asyncio

@@ -554,15 +554,86 @@ async def test_backfill_conversation_model_error_is_recorded_and_nonfatal(monkey
     result = await ticks.run_tick("loop1", "manual")
 
     assert result["status"] == "ok"
-    assert "backfill conv conv-fai: model error: context length" in result[
-        "generation"
-    ]["detail"]
-    assert "backfill conv conv-ok: 1 accepted / 0 rejected" in result["generation"][
-        "detail"
-    ]
+    assert "backfill conv conv-fai: model error: context length" in result["generation"]["detail"]
+    assert "backfill conv conv-ok: 1 accepted / 0 rejected" in result["generation"]["detail"]
     assert fake.items["agent_loop"]["loop1"]["canvas_quotes_ledger"][0]["quote"] == (
         "Keep this receipt."
     )
+
+
+@pytest.mark.asyncio
+async def test_tab_set_change_rerenders_despite_no_new_content(monkeypatch) -> None:
+    fake = _FakeDirectus()
+    fake.items["agent_loop"]["loop1"]["canvas_tabs"] = [{"kind": "crux"}]
+    fake.items["agent_loop"]["loop1"]["canvas_quotes_ledger"] = [
+        {"id": "q-old", "quote": "Keep this.", "who": "Maya", "source": {}}
+    ]
+
+    async def _config(report_id: str) -> dict[str, Any]:  # noqa: ARG001
+        return {
+            "id": "cfg1",
+            "brief": "Show a person-by-person board.",
+            "tabs": [{"kind": "board", "grouping": "person"}],
+            "gather_spec": {},
+            "cadence_minutes": 5,
+        }
+
+    async def _gather(**kwargs) -> dict[str, Any]:  # noqa: ARG001
+        return {"latest_content_at": None, "project": {}, "conversations": []}
+
+    async def _enqueue(loop: dict[str, Any]) -> None:  # noqa: ARG001
+        return None
+
+    async def _publish(report_id: str) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_latest_config", _config)
+    monkeypatch.setattr(ticks, "execute_gather_spec", _gather)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+    monkeypatch.setattr(ticks, "publish_generation_nudge", _publish)
+
+    result = await ticks.run_tick("loop1", "manual")
+
+    assert result["status"] == "ok"
+    assert 'for="canvas-tab-board_person"' in result["generation"]["content_html"]
+    assert fake.items["agent_loop"]["loop1"]["canvas_tabs"] == [
+        {"kind": "board", "grouping": "person"}
+    ]
+
+
+@pytest.mark.asyncio
+async def test_unsupported_shape_detail_recorded(monkeypatch) -> None:
+    fake = _FakeDirectus()
+
+    async def _config(report_id: str) -> dict[str, Any]:  # noqa: ARG001
+        return {
+            "id": "cfg1",
+            "brief": "Rebuild this as a timeline of the discussion.",
+            "tabs": [{"kind": "crux"}],
+            "gather_spec": {},
+            "cadence_minutes": 5,
+        }
+
+    async def _gather(**kwargs) -> dict[str, Any]:  # noqa: ARG001
+        return {"latest_content_at": None, "project": {}, "conversations": []}
+
+    async def _enqueue(loop: dict[str, Any]) -> None:  # noqa: ARG001
+        return None
+
+    async def _publish(report_id: str) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_latest_config", _config)
+    monkeypatch.setattr(ticks, "execute_gather_spec", _gather)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+    monkeypatch.setattr(ticks, "publish_generation_nudge", _publish)
+
+    result = await ticks.run_tick("loop1", "manual")
+
+    assert result["status"] == "ok"
+    assert "brief asks for timeline; no tab primitive supports it" in result["generation"]["detail"]
 
 
 @pytest.mark.asyncio

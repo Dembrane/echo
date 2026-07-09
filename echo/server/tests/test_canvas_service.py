@@ -76,6 +76,9 @@ class _FakeDirectus:
         row.update(data)
         return {"data": row}
 
+    async def get_item(self, collection: str, item_id: str) -> dict[str, Any] | None:
+        return self.items.get(collection, {}).get(item_id) or {"id": item_id}
+
 
 @pytest.mark.asyncio
 async def test_store_applied_preview_sanitizes_and_returns_as_latest(monkeypatch) -> None:
@@ -153,3 +156,33 @@ async def test_apply_direct_canvas_edit_stores_edited_generation_and_standing_co
     assert fake.created["agent_loop_run"][-1]["generation_id"] == generation["id"]
     assert ("agent_loop", "loop1", {"failure_count": 0}) in fake.updated
     assert nudges == ["r1"]
+
+
+@pytest.mark.asyncio
+async def test_update_canvas_config_preserves_tabs_when_unspecified(monkeypatch) -> None:
+    fake = _FakeDirectus()
+    fake.items["canvas_config_revision"]["cfg1"]["tabs"] = [
+        {"kind": "board", "grouping": "person"}
+    ]
+    fake.items["agent_loop"]["loop1"]["canvas_tabs"] = [{"kind": "board", "grouping": "person"}]
+    enqueued: list[dict[str, Any]] = []
+
+    async def _enqueue(loop_id: str, when=None, tick_kind: str = "scheduled") -> str:  # noqa: ANN001
+        enqueued.append({"loop_id": loop_id, "tick_kind": tick_kind})
+        return "task-1"
+
+    monkeypatch.setattr(canvas_service, "async_directus", fake)
+    monkeypatch.setattr(canvas_service, "enqueue_canvas_tick", _enqueue)
+
+    result = await canvas_service.update_canvas_config(
+        report_id="r1",
+        name="Pulse wall",
+        brief="Keep showing the person board.",
+        gather_spec={"window_minutes": 30},
+        cadence_minutes=5,
+        created_by="user-1",
+        tabs=None,
+    )
+
+    assert result["config_revision"]["tabs"] == [{"kind": "board", "grouping": "person"}]
+    assert enqueued == [{"loop_id": "loop1", "tick_kind": "manual"}]
