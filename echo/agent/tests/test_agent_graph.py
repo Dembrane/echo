@@ -503,7 +503,7 @@ def test_fused_parallel_tool_call_name_is_split_with_concatenated_json_args():
         tool_calls=[
             {
                 "id": "call-fused",
-                "name": "recordInsightproposeCanvas",
+                "name": "noteInsightproposeCanvas",
                 "args": (
                     '{"kind":"wish","content":"The host wants a wall."}'
                     '{"brief":"Create a wall.","expires_at":"2026-07-10T00:00:00Z"}'
@@ -514,11 +514,11 @@ def test_fused_parallel_tool_call_name_is_split_with_concatenated_json_args():
 
     normalized = _normalize_fused_tool_calls(
         message,
-        {"recordInsight", "proposeCanvas", "remember"},
+        {"noteInsight", "proposeCanvas", "remember"},
     )
 
     assert [call["name"] for call in normalized.tool_calls] == [
-        "recordInsight",
+        "noteInsight",
         "proposeCanvas",
     ]
     assert normalized.tool_calls[0]["args"] == {
@@ -537,7 +537,7 @@ def test_fused_invalid_tool_call_is_recovered_when_args_are_concatenated_json():
         invalid_tool_calls=[
             {
                 "id": "call-fused",
-                "name": "recordInsightproposeCanvas",
+                "name": "noteInsightproposeCanvas",
                 "args": '{"kind":"wish","content":"Need a wall."}{"brief":"Create a wall."}',
                 "error": "Could not parse tool args",
             }
@@ -546,11 +546,70 @@ def test_fused_invalid_tool_call_is_recovered_when_args_are_concatenated_json():
 
     normalized = _normalize_fused_tool_calls(
         message,
-        {"recordInsight", "proposeCanvas", "remember"},
+        {"noteInsight", "proposeCanvas", "remember"},
     )
 
     assert normalized.invalid_tool_calls == []
     assert [call["name"] for call in normalized.tool_calls] == [
-        "recordInsight",
+        "noteInsight",
         "proposeCanvas",
     ]
+
+
+def test_fused_old_tool_name_in_replay_is_split_and_renamed_to_new_names():
+    # A replayed history may still carry the pre-wave-32 fused name; splitting
+    # against the recognized set (new + old) must land on the new names.
+    recognized = {
+        "noteInsight",
+        "proposeCanvas",
+        "remember",
+    } | set(agent.TOOL_NAME_RENAMES.keys())
+    message = AIMessage.model_construct(
+        content="",
+        tool_calls=[
+            {
+                "id": "call-fused",
+                "name": "recordInsightproposeCanvas",
+                "args": (
+                    '{"kind":"wish","content":"The host wants a wall."}'
+                    '{"brief":"Create a wall."}'
+                ),
+            }
+        ],
+    )
+
+    normalized = _normalize_fused_tool_calls(message, recognized)
+
+    assert [call["name"] for call in normalized.tool_calls] == [
+        "noteInsight",
+        "proposeCanvas",
+    ]
+
+
+def test_replayed_history_old_tool_names_are_normalized_to_new_names():
+    from langchain_core.messages import ToolMessage
+
+    from agent import _normalize_message_tool_names
+
+    recognized = {"noteInsight", "findConversationsByKeywords"} | set(
+        agent.TOOL_NAME_RENAMES.keys()
+    )
+
+    ai_message = AIMessage.model_construct(
+        content="(calling tools)",
+        tool_calls=[
+            {"id": "call-1", "name": "findConvosByKeywords", "args": {"keywords": "x"}},
+            {"id": "call-2", "name": "recordInsight", "args": {"kind": "wish", "content": "y"}},
+        ],
+    )
+    normalized_ai = _normalize_message_tool_names(ai_message, recognized)
+    assert [call["name"] for call in normalized_ai.tool_calls] == [
+        "findConversationsByKeywords",
+        "noteInsight",
+    ]
+
+    tool_message = ToolMessage(
+        content="{}", name="reachOutToDembrane", tool_call_id="call-3"
+    )
+    normalized_tool = _normalize_message_tool_names(tool_message, recognized)
+    assert normalized_tool.name == "reachOutToDembraneSupport"

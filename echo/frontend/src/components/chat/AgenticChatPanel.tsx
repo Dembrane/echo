@@ -75,6 +75,7 @@ import {
 	parseCanvasSuggestion,
 	parseCustomVerificationTopicSuggestion,
 	parseGoalSuggestion,
+	parseInsightNote,
 	parseNavigationSuggestion,
 	parseProjectUpdateSuggestion,
 	type ToolActivity,
@@ -86,6 +87,7 @@ import { CustomVerificationTopicSuggestionCard } from "./CustomVerificationTopic
 import { formatMessage } from "./chatUtils";
 import { ChatTurnLimitCard, ChatUpgradeModal } from "./FreeTierChatGate";
 import { useChat as useProjectChat } from "./hooks";
+import { InsightNoteCard } from "./InsightNoteCard";
 import { NavigationSuggestionCard } from "./NavigationSuggestionCard";
 import { ProjectUpdateSuggestionCard } from "./ProjectUpdateSuggestionCard";
 
@@ -428,6 +430,7 @@ const tryParseTimelineSuggestion = (
 			canvas: parseCanvasSuggestion(item),
 			customVerificationTopic: parseCustomVerificationTopicSuggestion(item),
 			goal: parseGoalSuggestion(item),
+			insight: parseInsightNote(item),
 			navigation: parseNavigationSuggestion(item),
 			projectUpdate: parseProjectUpdateSuggestion(item),
 		};
@@ -437,6 +440,7 @@ const tryParseTimelineSuggestion = (
 			canvas: null,
 			customVerificationTopic: null,
 			goal: null,
+			insight: null,
 			navigation: null,
 			projectUpdate: null,
 		};
@@ -756,6 +760,11 @@ export const AgenticChatPanel = ({
 					item: Extract<TimelineItem, { kind: "tool" }>;
 			  }
 			| {
+					kind: "insight_note";
+					id: string;
+					item: Extract<TimelineItem, { kind: "tool" }>;
+			  }
+			| {
 					kind: "tool_group";
 					id: string;
 					items: Extract<TimelineItem, { kind: "tool" }>[];
@@ -785,6 +794,10 @@ export const AgenticChatPanel = ({
 			}
 			if (suggestions.navigation) {
 				nodes.push({ id: item.id, item, kind: "navigation_suggestion" });
+				continue;
+			}
+			if (suggestions.insight) {
+				nodes.push({ id: item.id, item, kind: "insight_note" });
 				continue;
 			}
 			const last = nodes[nodes.length - 1];
@@ -1583,6 +1596,15 @@ export const AgenticChatPanel = ({
 											projectId: suggestion.projectId || projectId,
 										}}
 									/>
+								</div>
+							) : null;
+						}
+
+						if (node.kind === "insight_note") {
+							const note = parseInsightNote(node.item);
+							return note ? (
+								<div key={node.id}>
+									<InsightNoteCard note={note} />
 								</div>
 							) : null;
 						}

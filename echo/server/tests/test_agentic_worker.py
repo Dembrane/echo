@@ -307,7 +307,7 @@ async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthes
                         "content": [{"type": "text", "text": planning_content}],
                         "additional_kwargs": {
                             "function_call": {
-                                "name": "findConvosByKeywords",
+                                "name": "findConversationsByKeywords",
                                 "arguments": '{"keywords":"half time show"}',
                             }
                         },
@@ -315,8 +315,8 @@ async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthes
                 }
             },
         }
-        yield {"type": "on_tool_start", "name": "findConvosByKeywords"}
-        yield {"type": "on_tool_end", "name": "findConvosByKeywords", "data": {"output": {}}}
+        yield {"type": "on_tool_start", "name": "findConversationsByKeywords"}
+        yield {"type": "on_tool_end", "name": "findConversationsByKeywords", "data": {"output": {}}}
         yield {
             "type": "on_chat_model_end",
             "data": {
@@ -803,7 +803,7 @@ async def test_process_agentic_run_suppresses_midpoint_planning_prose(monkeypatc
                         ],
                         "additional_kwargs": {
                             "function_call": {
-                                "name": "grepConvoSnippets",
+                                "name": "grepConversationSnippets",
                                 "arguments": '{"query":"policy"}',
                             }
                         },
@@ -811,8 +811,8 @@ async def test_process_agentic_run_suppresses_midpoint_planning_prose(monkeypatc
                 }
             },
         }
-        yield {"type": "on_tool_start", "name": "grepConvoSnippets"}
-        yield {"type": "on_tool_end", "name": "grepConvoSnippets", "data": {"output": {}}}
+        yield {"type": "on_tool_start", "name": "grepConversationSnippets"}
+        yield {"type": "on_tool_end", "name": "grepConversationSnippets", "data": {"output": {}}}
         yield {
             "type": "on_chat_model_end",
             "data": {
@@ -1180,7 +1180,7 @@ async def test_process_agentic_run_tool_limit_does_not_repeat_last_update(monkey
                         "content": [{"type": "text", "text": "Current synthesis draft."}],
                         "additional_kwargs": {
                             "function_call": {
-                                "name": "findConvosByKeywords",
+                                "name": "findConversationsByKeywords",
                                 "arguments": '{"keywords":"show"}',
                             }
                         },
