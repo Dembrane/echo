@@ -597,6 +597,8 @@ async def test_tab_set_change_rerenders_despite_no_new_content(monkeypatch) -> N
 
     assert result["status"] == "ok"
     assert 'for="canvas-tab-board_person"' in result["generation"]["content_html"]
+    assert "Keep this." in result["generation"]["content_html"]
+    assert fake.items["agent_loop"]["loop1"]["canvas_board_cards"][0]["group"] == "Maya"
     assert fake.items["agent_loop"]["loop1"]["canvas_tabs"] == [
         {"kind": "board", "grouping": "person"}
     ]

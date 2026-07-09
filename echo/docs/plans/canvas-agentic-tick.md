@@ -53,6 +53,15 @@ calls, reasoning, receipts, everything.
 - "Questionable in chat": the visible project chat agent can read these
   hidden runs (readChat / readCanvasHistory) and answer "why did this
   change" from the actual run, then noteInsight on the owner's verdict.
+- Discoverability requirement (owner, 2026-07-09): hidden tick-run chats
+  must be REACHABLE through the same two tools the host already knows:
+  listProjectChats gains include_hidden/kind filtering (default stays
+  visible-only so Ask history is not flooded; the agent passes
+  kind="canvas_tick" when the host asks about the loop's work), and
+  readChat opens tick-run chats like any other. Every audit entry's
+  run_chat_id is a readChat-able id — "chat about run 3's delta" is:
+  readCanvasHistory -> run_chat_id -> readChat -> discuss. The agent
+  prompt names this path explicitly.
 
 ## Why this is safe now
 

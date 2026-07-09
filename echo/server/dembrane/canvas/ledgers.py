@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import html
 import hashlib
 from typing import Any
@@ -137,6 +138,39 @@ def _tab_key(tab: dict[str, Any]) -> str:
 def has_board_tab(state_or_tabs: Any) -> bool:
     tabs = state_or_tabs.get("tabs") if isinstance(state_or_tabs, dict) else state_or_tabs
     return any(_tab_kind(tab) == "board" for tab in normalize_canvas_tabs(tabs))
+
+
+def seed_board_cards_from_quotes(state: dict[str, Any], now: str | None = None) -> bool:
+    if not has_board_tab(state) or state.get("board_cards"):
+        return False
+    now = now or utc_now_iso()
+    quotes_by_voice: dict[str, list[dict[str, Any]]] = {}
+    for quote in state["quotes_ledger"]:
+        voice = str(quote.get("who") or "").strip()
+        if not voice or voice.lower() == "participant":
+            continue
+        quotes_by_voice.setdefault(voice, []).append(quote)
+    if not quotes_by_voice:
+        return False
+
+    for voice in sorted(quotes_by_voice):
+        quotes = quotes_by_voice[voice]
+        quote_ids = [str(quote.get("id")) for quote in quotes if str(quote.get("id") or "")]
+        latest_quote = str((quotes[-1] if quotes else {}).get("quote") or "").strip()
+        if not quote_ids or not latest_quote:
+            continue
+        state["board_cards"].append(
+            {
+                "id": generate_uuid(),
+                "group": voice,
+                "grouping": "person",
+                "synthesis": latest_quote[:700],
+                "quote_ids": quote_ids[-8:],
+                "first_seen": now,
+                "updated_at": now,
+            }
+        )
+    return bool(state["board_cards"])
 
 
 def host_item(
@@ -348,12 +382,8 @@ def _merge_model_concepts(
     quote_index_to_id: dict[int, str],
     now: str,
 ) -> tuple[int, list[str]]:
-    by_phrase = {
-        str(concept.get("phrase") or "").lower(): concept
-        for concept in state["concepts_ledger"]
-        if concept.get("phrase")
-    }
-    changed = 0
+    changed = _collapse_near_duplicate_concepts(state, now)
+    by_phrase = _concept_lookup(state)
     rejections: list[str] = []
     quotes_by_id = {str(quote.get("id")): quote for quote in state["quotes_ledger"]}
     for model_index, concept_input in enumerate(_list(extraction.get("concepts"))):
@@ -378,8 +408,8 @@ def _merge_model_concepts(
                 f"concept[{model_index}] phrase not found in supporting quote: {phrase[:80]}"
             )
             continue
-        key = phrase.lower()
-        concept = by_phrase.get(key)
+        key = _concept_phrase_key(phrase)
+        concept = _find_near_duplicate_concept(by_phrase, key)
         if not concept:
             concept = {
                 "id": generate_uuid(),
@@ -392,6 +422,10 @@ def _merge_model_concepts(
             state["concepts_ledger"].append(concept)
             by_phrase[key] = concept
             changed += 1
+        elif _prefer_concept_phrase(phrase, str(concept.get("phrase") or "")):
+            concept["phrase"] = phrase
+            concept["last_reinforced"] = now
+            changed += 1
         for quote_id in quote_ids:
             if quote_id in concept["quote_ids"]:
                 continue
@@ -399,6 +433,7 @@ def _merge_model_concepts(
             concept["last_reinforced"] = now
             changed += 1
 
+    changed += _collapse_near_duplicate_concepts(state, now)
     ranked = sorted(
         state["concepts_ledger"],
         key=lambda c: (_concept_score(c, state["quotes_ledger"]), c.get("first_seen") or ""),
@@ -418,6 +453,97 @@ def _merge_model_concepts(
             concept["size_tier"] = tier
             changed += 1
     return changed, rejections
+
+
+def _concept_lookup(state: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    return {
+        _concept_phrase_key(str(concept.get("phrase") or "")): concept
+        for concept in state["concepts_ledger"]
+        if concept.get("phrase")
+    }
+
+
+_CONCEPT_FILLER_WORDS = {
+    "a",
+    "again",
+    "an",
+    "and",
+    "of",
+    "the",
+    "to",
+    "with",
+}
+
+
+def _concept_phrase_key(phrase: str) -> str:
+    words = re.sub(r"[^\w\s]", " ", phrase.lower()).split()
+    compact = [word for word in words if word not in _CONCEPT_FILLER_WORDS]
+    return " ".join(compact)
+
+
+def _find_near_duplicate_concept(
+    by_phrase: dict[str, dict[str, Any]],
+    key: str,
+) -> dict[str, Any] | None:
+    if not key:
+        return None
+    if key in by_phrase:
+        return by_phrase[key]
+    for existing_key, concept in by_phrase.items():
+        if not existing_key:
+            continue
+        if _concept_key_contains(existing_key, key) or _concept_key_contains(key, existing_key):
+            return concept
+    return None
+
+
+def _concept_key_contains(haystack: str, needle: str) -> bool:
+    haystack_words = haystack.split()
+    needle_words = needle.split()
+    if not haystack_words or not needle_words or len(needle_words) > len(haystack_words):
+        return False
+    return any(
+        haystack_words[index : index + len(needle_words)] == needle_words
+        for index in range(len(haystack_words) - len(needle_words) + 1)
+    )
+
+
+def _prefer_concept_phrase(candidate: str, current: str) -> bool:
+    candidate = candidate.strip()
+    current = current.strip()
+    if not candidate:
+        return False
+    if not current:
+        return True
+    return (len(candidate.split()), len(candidate)) > (len(current.split()), len(current))
+
+
+def _collapse_near_duplicate_concepts(state: dict[str, Any], now: str) -> int:
+    concepts = [concept for concept in state["concepts_ledger"] if isinstance(concept, dict)]
+    merged: list[dict[str, Any]] = []
+    changed = 0
+    for concept in concepts:
+        phrase = str(concept.get("phrase") or "").strip()
+        key = _concept_phrase_key(phrase)
+        existing = _find_near_duplicate_concept(
+            {_concept_phrase_key(str(item.get("phrase") or "")): item for item in merged},
+            key,
+        )
+        if not existing:
+            merged.append(concept)
+            continue
+        if _prefer_concept_phrase(phrase, str(existing.get("phrase") or "")):
+            existing["phrase"] = phrase
+        pooled = [str(qid) for qid in existing.get("quote_ids") or []]
+        for quote_id in [str(qid) for qid in concept.get("quote_ids") or []]:
+            if quote_id not in pooled:
+                pooled.append(quote_id)
+        existing["quote_ids"] = pooled
+        existing["last_reinforced"] = now
+        changed += 1
+    if len(merged) != len(state["concepts_ledger"]):
+        state["concepts_ledger"] = merged
+    return changed
 
 
 def _update_model_crux(
@@ -486,7 +612,7 @@ def _merge_board_cards(
         return False, []
     cards = _list(extraction.get("board_cards"))
     if not cards:
-        return False, []
+        return seed_board_cards_from_quotes(state, now), []
 
     quotes_by_id = {str(quote.get("id")): quote for quote in state["quotes_ledger"]}
     existing_by_group = {
@@ -630,14 +756,7 @@ def _render_crux(state: dict[str, Any]) -> str:
 
 
 def _render_cloud(state: dict[str, Any]) -> str:
-    concepts = sorted(
-        state["concepts_ledger"],
-        key=lambda c: (
-            {"xl": 4, "l": 3, "m": 2, "s": 1}.get(str(c.get("size_tier")), 1),
-            c.get("last_reinforced") or "",
-        ),
-        reverse=True,
-    )[:20]
+    concepts = _ordered_cloud_concepts(state["concepts_ledger"])[:20]
     if not concepts:
         tiles = (
             '<p class="tabbed-canvas-empty">Concepts will appear as transcript receipts arrive.</p>'
@@ -648,6 +767,39 @@ def _render_cloud(state: dict[str, Any]) -> str:
             for index, concept in enumerate(concepts)
         )
     return f'<div class="tabbed-cloud">{tiles}{_render_host_items(state, "concept_cloud")}</div>'
+
+
+def _ordered_cloud_concepts(concepts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    ranked = sorted(
+        concepts,
+        key=lambda c: (
+            {"xl": 4, "l": 3, "m": 2, "s": 1}.get(str(c.get("size_tier")), 1),
+            c.get("last_reinforced") or "",
+        ),
+        reverse=True,
+    )[:20]
+    if not ranked:
+        return []
+    xl = _hash_sorted([concept for concept in ranked if str(concept.get("size_tier")) == "xl"])
+    others = _hash_sorted([concept for concept in ranked if str(concept.get("size_tier")) != "xl"])
+    ordered: list[dict[str, Any] | None] = [None] * len(ranked)
+    if xl and others:
+        for index, concept in enumerate(xl):
+            slot = round(index * (len(ranked) - 1) / max(1, len(xl) - 1))
+            while slot < len(ordered) and ordered[slot] is not None:
+                slot += 1
+            if slot >= len(ordered):
+                slot = next(i for i, item in enumerate(ordered) if item is None)
+            ordered[slot] = concept
+    else:
+        for index, concept in enumerate(xl):
+            ordered[index] = concept
+    other_iter = iter(others)
+    return [item if item is not None else next(other_iter) for item in ordered]
+
+
+def _hash_sorted(concepts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return sorted(concepts, key=lambda concept: _stable_hash(str(concept.get("id") or concept.get("phrase") or "")))
 
 
 def _render_story(state: dict[str, Any]) -> str:
@@ -717,7 +869,7 @@ def _render_host_guide(state: dict[str, Any]) -> str:
 def _render_board(state: dict[str, Any]) -> str:
     cards = state.get("board_cards") or []
     if not cards:
-        body = '<p class="tabbed-canvas-empty">The board is waiting for attributed receipt quotes.</p>'
+        body = '<p class="tabbed-canvas-empty">No attributed voices yet.</p>'
     else:
         body = "\n".join(_board_card(card, state["quotes_ledger"]) for card in cards[:30])
     return f"""
@@ -927,16 +1079,45 @@ def _concept_tile(concept: dict[str, Any], quotes: list[dict[str, Any]], index: 
     quote_ids = [str(qid) for qid in concept.get("quote_ids") or []]
     evidence = [q for q in quotes if str(q.get("id")) in quote_ids]
     trace = "\n".join(_quote_block(q) for q in evidence[:4])
-    rotation = "pos" if index % 2 else "neg"
+    style = html.escape(_concept_tile_style(concept, index), quote=True)
     if trace:
         trace_href = f"#{_trace_id(str(concept.get('phrase') or ''), quote_ids)}"
         return f"""
-<details class="tabbed-concept tabbed-concept-{tier} tabbed-tilt-{rotation}">
+<details class="tabbed-concept tabbed-concept-{tier}" style="{style}">
   <summary><a class="tabbed-traceable" href="{trace_href}">{phrase}</a></summary>
   <div class="tabbed-trace">{trace}</div>
 </details>
 """.strip()
-    return f'<div class="tabbed-concept tabbed-concept-{tier} tabbed-tilt-{rotation}"><span>{phrase}</span></div>'
+    return f'<div class="tabbed-concept tabbed-concept-{tier}" style="{style}"><span>{phrase}</span></div>'
+
+
+def _stable_hash(seed: str) -> int:
+    return int(hashlib.sha1(seed.encode("utf-8")).hexdigest()[:12], 16)
+
+
+def _hash_unit(seed: str, salt: str) -> float:
+    return _stable_hash(f"{seed}:{salt}") / float(0xFFFFFFFFFFFF)
+
+
+def _concept_tile_style(concept: dict[str, Any], index: int) -> str:
+    seed = str(concept.get("id") or concept.get("phrase") or index)
+    rotation = _scale(_hash_unit(seed, "rotation"), -1.2, 1.2)
+    delay = _scale(_hash_unit(seed, "delay"), 0.0, 6.95)
+    duration = _scale(_hash_unit(seed, "duration"), 6.0, 9.0)
+    offset_x = _scale(_hash_unit(seed, "offset-x"), -5.0, 5.0)
+    offset_y = _scale(_hash_unit(seed, "offset-y"), -4.0, 4.0)
+    margin_top = _scale(_hash_unit(seed, "margin-top"), -3.0, 5.0)
+    margin_side = _scale(_hash_unit(seed, "margin-side"), -4.0, 4.0)
+    return (
+        f"transform:translate({offset_x:.1f}px,{offset_y:.1f}px) rotate({rotation:.2f}deg);"
+        f"animation-delay:{delay:.2f}s;"
+        f"animation-duration:{duration:.2f}s;"
+        f"margin:{margin_top:.1f}px {margin_side:.1f}px 0;"
+    )
+
+
+def _scale(value: float, low: float, high: float) -> float:
+    return low + (high - low) * value
 
 
 def _board_card(card: dict[str, Any], quotes: list[dict[str, Any]]) -> str:
