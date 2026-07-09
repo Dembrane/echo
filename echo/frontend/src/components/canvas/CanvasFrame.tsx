@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Paper, Stack, Text } from "@mantine/core";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { baseColors } from "@/colors";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { testId } from "@/lib/testUtils";
@@ -99,6 +100,7 @@ export const CanvasFrame = ({
 				withBorder
 				className="rounded-md"
 				p="xl"
+				style={{ backgroundColor: baseColors.parchment }}
 				{...testId("canvas-frame-empty")}
 			>
 				<Stack gap="xs" align="center" py="xl">
@@ -119,7 +121,10 @@ export const CanvasFrame = ({
 				withBorder
 				className="rounded-md"
 				p="xl"
-				style={{ borderColor: "var(--mantine-color-red-3)" }}
+				style={{
+					backgroundColor: baseColors.parchment,
+					borderColor: "var(--mantine-color-red-3)",
+				}}
 				{...testId("canvas-frame-error")}
 			>
 				<Stack gap="xs" align="center" py="xl">
@@ -147,7 +152,7 @@ export const CanvasFrame = ({
 						: "block w-full rounded-md border"
 				}
 				style={{
-					backgroundColor: "var(--app-background)",
+					backgroundColor: baseColors.parchment,
 					borderColor: "var(--mantine-color-primary-light)",
 					height: fullscreen ? "100%" : height,
 					minHeight: fullscreen ? "100dvh" : undefined,

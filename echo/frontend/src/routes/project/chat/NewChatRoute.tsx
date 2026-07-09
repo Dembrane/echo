@@ -35,6 +35,7 @@ import {
 	useProjectChatsCount,
 } from "@/components/chat/hooks";
 import { InsertTemplateMenu } from "@/components/chat/InsertTemplateMenu";
+import { consumeChatPrefill } from "@/components/chat/prefill";
 import { BaseSkeleton } from "@/components/common/BaseSkeleton";
 import { NavigationButton } from "@/components/common/NavigationButton";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -266,6 +267,7 @@ export const NewChatRoute = () => {
 			? ((location.state as { preferMode: ChatMode }).preferMode as ChatMode)
 			: null;
 	const preferredModeStartedRef = useRef(false);
+	const queryPrefillStartedRef = useRef(false);
 	const initialMessage =
 		typeof (location.state as { initialMessage?: unknown } | null)
 			?.initialMessage === "string"
@@ -279,6 +281,19 @@ export const NewChatRoute = () => {
 		window.history.replaceState({}, "");
 		void handleModeSelected(preferredMode);
 	}, [preferredMode]);
+
+	useEffect(() => {
+		if (queryPrefillStartedRef.current) return;
+		const { prefill, search } = consumeChatPrefill(location.search);
+		if (!prefill && search === location.search) return;
+		queryPrefillStartedRef.current = true;
+		window.history.replaceState(
+			window.history.state,
+			"",
+			`${location.pathname}${search}${location.hash}`,
+		);
+		if (prefill) setDraft(prefill);
+	}, [location.hash, location.pathname, location.search]);
 
 	// Project creation lands on Ask home with a setup seed. Start the agentic
 	// chat immediately and pass the seed through to the chat panel, which sends

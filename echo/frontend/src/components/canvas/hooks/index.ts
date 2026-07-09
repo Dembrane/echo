@@ -112,6 +112,14 @@ function normalizeCanvasResponse(
 			: response
 	) as Record<string, unknown>;
 	return {
+		config:
+			report.config && typeof report.config === "object"
+				? (report.config as CanvasConfig)
+				: null,
+		created_from_chat_id:
+			typeof report.created_from_chat_id === "string"
+				? report.created_from_chat_id
+				: null,
 		id: String(report.id ?? canvasId),
 		kind: "canvas",
 		latest_generation:
@@ -121,16 +129,8 @@ function normalizeCanvasResponse(
 		name: String(report.name ?? report.title ?? t`Untitled canvas`),
 		project_id:
 			typeof report.project_id === "string" ? report.project_id : undefined,
-		created_from_chat_id:
-			typeof report.created_from_chat_id === "string"
-				? report.created_from_chat_id
-				: null,
 		updated_at:
 			typeof report.updated_at === "string" ? report.updated_at : null,
-		config:
-			report.config && typeof report.config === "object"
-				? (report.config as CanvasConfig)
-				: null,
 	};
 }
 
@@ -229,7 +229,7 @@ export function useCanvas(canvasId: string) {
 	});
 }
 
-export function useCanvasGenerations(canvasId: string, limit = 8) {
+export function useCanvasGenerations(canvasId: string, limit = 10) {
 	return useQuery({
 		enabled: !!canvasId,
 		queryFn: () => getCanvasGenerations(canvasId, limit),
@@ -298,11 +298,11 @@ export function useCreateCanvasMutation() {
 	return useMutation({
 		mutationFn: (proposal: CanvasProposal) =>
 			bff.post<CanvasDetail>("/canvases", {
+				applied_preview_html: proposal.applied_preview_html ?? undefined,
 				brief: proposal.brief,
 				cadence_minutes: proposal.cadence_minutes ?? undefined,
-				expires_at: proposal.expires_at,
 				created_from_chat_id: proposal.created_from_chat_id ?? undefined,
-				applied_preview_html: proposal.applied_preview_html ?? undefined,
+				expires_at: proposal.expires_at,
 				gather_spec: proposal.gather_spec ?? undefined,
 				name: proposal.name,
 				project_id: proposal.projectId,
@@ -324,10 +324,10 @@ export function useUpdateCanvasMutation() {
 	return useMutation({
 		mutationFn: (proposal: CanvasProposal & { target_canvas_id: string }) =>
 			bff.patch<CanvasDetail>(`/canvases/${proposal.target_canvas_id}`, {
+				applied_preview_html: proposal.applied_preview_html ?? undefined,
 				brief: proposal.brief,
 				cadence_minutes: proposal.cadence_minutes ?? undefined,
 				created_from_chat_id: proposal.created_from_chat_id ?? undefined,
-				applied_preview_html: proposal.applied_preview_html ?? undefined,
 				gather_spec: proposal.gather_spec ?? undefined,
 				name: proposal.name,
 			}),
