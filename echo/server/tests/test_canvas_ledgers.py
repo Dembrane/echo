@@ -61,7 +61,7 @@ def test_apply_model_extraction_accepts_verbatim_receipts_and_updates_crux() -> 
     assert state["concepts_ledger"][0]["phrase"] == "doorway open"
     assert state["crux"]["question"] == "What first move keeps the doorway open?"
     assert state["story_slides"][0]["quote_ids"] == [state["quotes_ledger"][0]["id"]]
-    assert state_patch(state)["canvas_tabs"] == ["crux", "concept_cloud", "story"]
+    assert state_patch(state)["canvas_tabs"] == ["crux", "concept_cloud", "story", "host_guide"]
     assert state_patch(state)["canvas_story_slides"]
 
 
@@ -181,5 +181,26 @@ def test_render_tabbed_canvas_includes_tabs_traceable_quotes_and_host_items() ->
 
     assert 'type="radio"' in html
     assert 'for="canvas-tab-crux"' in html
+    assert 'for="canvas-tab-host_guide"' in html
     assert "tabbed-traceable" in html
     assert "Host says: hold this exact reflection." in html
+
+
+def test_render_tabbed_canvas_includes_persisted_host_guide() -> None:
+    state = fresh_canvas_state(
+        {
+            "canvas_host_guide": {
+                "where_the_room_is": "The room is circling one concrete next step.",
+                "what_to_ask_next": ["What would make this safe to try tomorrow?"],
+                "under_heard": ["No receipts yet from operations."],
+            }
+        }
+    )
+
+    html = render_tabbed_canvas(state=state, project={"name": "Room"})
+
+    assert "Host guide" in html
+    assert "Where the room is" in html
+    assert "What would make this safe to try tomorrow?" in html
+    assert "No receipts yet from operations." in html
+    assert state_patch(state)["canvas_host_guide"]["where_the_room_is"].startswith("The room")

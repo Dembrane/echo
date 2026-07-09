@@ -41,6 +41,7 @@ def ensure_wave28_schema(dx: Directus) -> None:
             "canvas_crux",
             "canvas_host_items",
             "canvas_story_slides",
+            "canvas_host_guide",
         ),
         start=30,
     ):

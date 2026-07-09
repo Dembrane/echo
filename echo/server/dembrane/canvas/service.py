@@ -312,6 +312,7 @@ async def get_loop_for_report(report_id: str) -> dict[str, Any] | None:
                     "canvas_crux",
                     "canvas_host_items",
                     "canvas_story_slides",
+                    "canvas_host_guide",
                     "created_at",
                     "updated_at",
                 ],
