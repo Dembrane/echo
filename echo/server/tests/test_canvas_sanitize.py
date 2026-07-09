@@ -85,3 +85,20 @@ def test_sanitize_preserves_css_only_tabs_and_trace_expansion() -> None:
     assert "<details" in result.html
     assert "<summary>" in result.html
     assert "tabbed-traceable" in result.html
+
+
+def test_sanitize_preserves_relative_chat_prefill_anchor_target() -> None:
+    result = sanitize_canvas_html(
+        """
+        <div class="canvas-shell tabbed-canvas">
+          <a class="tabbed-canvas-add"
+             href="/en-US/w/workspace-1/projects/project-1/chats/new?prefill=I%20need%20a%20new%20tab%3A%20"
+             target="_top">+</a>
+        </div>
+        """,
+        max_bytes=2000,
+    )
+
+    assert "/en-US/w/workspace-1/projects/project-1/chats/new?prefill=" in result.html
+    assert 'target="_top"' in result.html
+    assert result.stripped_references == 0

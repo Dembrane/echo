@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 from typing import Any
 from datetime import datetime, timezone
+from urllib.parse import quote as url_quote
 
 from dembrane.utils import generate_uuid
 
@@ -14,7 +15,9 @@ CANVAS_TAB_LABELS = {
     "crux": "Crux",
     "concept_cloud": "Concept cloud",
     "story": "Story",
-    "host_guide": "Host guide",
+    # Internal state remains canvas_host_guide for migration stability; only
+    # the host-visible tab label is renamed.
+    "host_guide": "Open questions",
     "board": "Board",
 }
 HOST_TARGET_TABS = {"crux", "concept_cloud", "story"}
@@ -534,6 +537,7 @@ def render_tabbed_canvas(
     state: dict[str, Any],
     project: dict[str, Any],
     sample_notice: str | None = None,
+    report_name: str | None = None,
 ) -> str:
     state = fresh_canvas_state(state)
     tabs = normalize_canvas_tabs(state["tabs"])
@@ -552,6 +556,7 @@ def render_tabbed_canvas(
         for tab in tabs
     )
     panels = "\n".join(_panel(tab, state) for tab in tabs)
+    new_tab_href = _new_tab_chat_href(project, report_name=report_name)
     return f"""
 <div class="canvas-shell tabbed-canvas" data-canvas-schema="tabbed-v1">
   <style>{_CSS}</style>
@@ -561,7 +566,7 @@ def render_tabbed_canvas(
     {controls}
     <nav class="tabbed-canvas-tabbar" aria-label="Canvas tabs">
       {labels}
-      <span class="tabbed-canvas-add" aria-hidden="true">+</span>
+      <a class="tabbed-canvas-add" href="{new_tab_href}" target="_top" aria-label="Open a chat to request a new tab">+</a>
     </nav>
     {panels}
   </div>
@@ -635,12 +640,17 @@ def _render_story(state: dict[str, Any]) -> str:
             slide_html = "\n".join(_quote_block(q) for q in quotes)
         else:
             slide_html = '<p class="tabbed-canvas-empty">The story is waiting for the first usable room quotes.</p>'
-    heading = html.escape(str((state.get("crux") or {}).get("question") or "What is emerging?"))
+        heading = html.escape(str((state.get("crux") or {}).get("question") or "What is emerging?"))
+        slide_html = f"""
+<article class="tabbed-story-slide">
+  <p class="tabbed-canvas-kicker">Story</p>
+  <h3>{heading}</h3>
+  <div class="tabbed-story-evidence">{slide_html}</div>
+</article>
+""".strip()
     return f"""
 <div class="tabbed-story">
-  <p class="tabbed-canvas-kicker">Story</p>
-  <h2>{heading}</h2>
-  <div class="tabbed-story-quotes">{slide_html}</div>
+  <div class="tabbed-story-stack">{slide_html}</div>
   {_render_host_items(state, "story")}
 </div>
 """.strip()
@@ -656,10 +666,10 @@ def _render_host_guide(state: dict[str, Any]) -> str:
         str(item).strip() for item in guide.get("under_heard") or [] if str(item).strip()
     ][:5]
     if not where and not questions and not under_heard:
-        body = '<p class="tabbed-canvas-empty">The host guide is waiting for usable room receipts.</p>'
+        body = '<p class="tabbed-canvas-empty">Open questions are waiting for usable room receipts.</p>'
     else:
         where_html = (
-            f'<section class="tabbed-guide-block"><h3>Where the room is</h3><p>{html.escape(where)}</p></section>'
+            f'<p class="tabbed-open-orient">{html.escape(where)}</p>'
             if where
             else ""
         )
@@ -678,7 +688,7 @@ def _render_host_guide(state: dict[str, Any]) -> str:
         body = where_html + questions_html + under_heard_html
     return f"""
 <div class="tabbed-host-guide">
-  <p class="tabbed-canvas-kicker">Host guide</p>
+  <p class="tabbed-canvas-kicker">Open questions</p>
   {body}
 </div>
 """.strip()
@@ -796,6 +806,41 @@ def _tab_dom_id(tab: Any) -> str:
     return kind
 
 
+def _language_segment(language: Any) -> str:
+    mapping = {
+        "cs": "cs-CZ",
+        "cs-CZ": "cs-CZ",
+        "de": "de-DE",
+        "de-DE": "de-DE",
+        "en": "en-US",
+        "en-US": "en-US",
+        "es": "es-ES",
+        "es-ES": "es-ES",
+        "fr": "fr-FR",
+        "fr-FR": "fr-FR",
+        "it": "it-IT",
+        "it-IT": "it-IT",
+        "nl": "nl-NL",
+        "nl-NL": "nl-NL",
+        "uk": "uk-UA",
+        "uk-UA": "uk-UA",
+    }
+    return mapping.get(str(language or "").strip(), "en-US")
+
+
+def _new_tab_chat_href(project: dict[str, Any], *, report_name: str | None = None) -> str:
+    workspace_id = str(project.get("workspace_id") or "").strip()
+    project_id = str(project.get("id") or "").strip()
+    if not workspace_id or not project_id:
+        return "#"
+    canvas_name = str(report_name or project.get("report_name") or project.get("name") or "this").strip()
+    prefill = url_quote(f"I need a new tab in the {canvas_name} canvas: ", safe="")
+    lang = url_quote(_language_segment(project.get("language")), safe="")
+    workspace = url_quote(workspace_id, safe="")
+    project_path_id = url_quote(project_id, safe="")
+    return f"/{lang}/w/{workspace}/projects/{project_path_id}/chats/new?prefill={prefill}"
+
+
 def _normalize_ws(value: str) -> str:
     return " ".join(value.split())
 
@@ -861,7 +906,7 @@ _CSS = """
 .tabbed-canvas-radio{position:absolute;opacity:0;pointer-events:none}
 .tabbed-canvas-tabbar{display:flex;align-items:end;border-bottom:1px solid var(--hairline);gap:26px;margin:0 0 26px}
 .tabbed-canvas-tab{font-size:14.5px;font-weight:500;color:var(--ink-soft);border-bottom:2px solid transparent;padding:10px 2px;cursor:pointer}
-.tabbed-canvas-add{margin-left:auto;color:var(--royal);font-size:22px;line-height:1.6}
+.tabbed-canvas-add{margin-left:auto;color:var(--royal);font-size:22px;line-height:1.6;text-decoration:none}
 .tabbed-canvas-panel{display:none}
 #canvas-tab-crux:checked~.tabbed-canvas-tabbar label[for=canvas-tab-crux],
 #canvas-tab-concept_cloud:checked~.tabbed-canvas-tabbar label[for=canvas-tab-concept_cloud],
@@ -873,12 +918,18 @@ _CSS = """
 #canvas-tab-story:checked~[data-tab-panel=story],
 #canvas-tab-host_guide:checked~[data-tab-panel=host_guide],
 #canvas-tab-board_person:checked~[data-tab-panel=board_person]{display:block}
-.tabbed-crux,.tabbed-story{max-width:1000px;min-height:70vh;margin:0 auto;display:flex;flex-direction:column;justify-content:center}
+.tabbed-crux{max-width:1000px;min-height:70vh;margin:0 auto;display:flex;flex-direction:column;justify-content:center}
+.tabbed-story{max-width:1000px;margin:0 auto}
+.tabbed-story-stack{display:grid;gap:30px}
+.tabbed-story-slide{min-height:80vh;display:flex;flex-direction:column;justify-content:center;gap:24px}
+.tabbed-story-slide h3{max-width:900px;margin:0;font-size:clamp(32px,4.6vw,48px);font-weight:500;letter-spacing:-.015em;line-height:1.12;text-wrap:balance}
+.tabbed-story-evidence,.tabbed-story-slide .tabbed-slide-trace{max-width:620px}
 .tabbed-host-guide{max-width:840px;min-height:70vh;margin:0 auto;display:flex;flex-direction:column;justify-content:center;gap:16px}
 .tabbed-crux h1,.tabbed-story h2{max-width:900px;margin:0;font-weight:500;line-height:1.14;text-wrap:balance}
 .tabbed-crux h1{font-size:clamp(32px,4.6vw,48px)}
-.tabbed-story h2{font-size:clamp(24px,3.4vw,36px)}
+.tabbed-story h2{font-size:clamp(24px,3.4vw,36px);letter-spacing:-.01em}
 .tabbed-canvas-lede{max-width:620px;font-size:16px;line-height:1.45;color:var(--ink-soft)}
+.tabbed-canvas-lede b{color:var(--ink);font-weight:500}
 .tabbed-cloud{max-width:1060px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;padding:30px 0}
 .tabbed-concept{background:var(--card);border:1px solid var(--hairline);padding:12px 13px;animation:tabbedFloat 7s ease-in-out infinite}
 .tabbed-concept summary{list-style:none;cursor:pointer}
@@ -902,6 +953,7 @@ _CSS = """
 .tabbed-guide-block p{margin:0;color:var(--ink-soft);line-height:1.45}
 .tabbed-guide-block ol,.tabbed-guide-block ul{margin:0;padding-left:20px;color:var(--ink-soft);line-height:1.45}
 .tabbed-guide-block li+li{margin-top:8px}
+.tabbed-open-orient{margin:0;color:var(--ink-soft);font-size:16px;line-height:1.45;max-width:620px}
 .tabbed-board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;align-items:stretch}
 .tabbed-board-card{background:var(--card);border:1px solid var(--hairline);padding:12px 13px;min-height:150px;display:flex;flex-direction:column;gap:8px}
 .tabbed-board-card h3{margin:0;font-size:14px;font-weight:700;line-height:1.2;color:var(--ink)}
@@ -913,5 +965,5 @@ _CSS = """
 @keyframes tabbedFloat{0%,100%{translate:0 0}50%{translate:0 -5px}}
 @media (prefers-reduced-motion:reduce){.tabbed-concept{animation:none}}
 @media (max-width:1100px){.tabbed-board{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width:720px){.tabbed-canvas-frame{padding:14px 14px 60px}.tabbed-canvas-tabbar{gap:16px}.tabbed-crux,.tabbed-story,.tabbed-host-guide{min-height:58vh}.tabbed-board{grid-template-columns:1fr}}
+@media (max-width:720px){.tabbed-canvas-frame{padding:14px 14px 60px}.tabbed-canvas-tabbar{gap:16px}.tabbed-crux,.tabbed-story-slide,.tabbed-host-guide{min-height:58vh}.tabbed-board{grid-template-columns:1fr}}
 """

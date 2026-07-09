@@ -311,6 +311,7 @@ async def preview_canvas(
         previous_html=None,
         gather_bundle=gather_bundle,
         living_state=living_state,
+        report_name=str((gather_bundle.get("project") or {}).get("name") or "Canvas"),
     )
     sanitized = sanitize_canvas_html(raw_html)
     return {"content_html": sanitized.html}

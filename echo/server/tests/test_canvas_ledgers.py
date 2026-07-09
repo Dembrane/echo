@@ -182,11 +182,21 @@ def test_render_tabbed_canvas_includes_tabs_traceable_quotes_and_host_items() ->
     )
     state = append_host_item(state, item)
 
-    html = render_tabbed_canvas(state=state, project={"name": "Room"})
+    html = render_tabbed_canvas(
+        state=state,
+        project={"id": "project-1", "workspace_id": "workspace-1", "name": "Room", "language": "en"},
+        report_name="13th Week Retrospective Wall",
+    )
 
     assert 'type="radio"' in html
     assert 'for="canvas-tab-crux"' in html
     assert 'for="canvas-tab-host_guide"' in html
+    assert ">Open questions</label>" in html
+    assert (
+        'href="/en-US/w/workspace-1/projects/project-1/chats/new?prefill='
+        "I%20need%20a%20new%20tab%20in%20the%2013th%20Week%20Retrospective%20Wall%20canvas%3A%20"
+        '" target="_top"'
+    ) in html
     assert "tabbed-traceable" in html
     assert "Host says: hold this exact reflection." in html
 
@@ -204,11 +214,34 @@ def test_render_tabbed_canvas_includes_persisted_host_guide() -> None:
 
     html = render_tabbed_canvas(state=state, project={"name": "Room"})
 
-    assert "Host guide" in html
-    assert "Where the room is" in html
+    assert "Open questions" in html
+    assert "Host guide" not in html
+    assert "Where the room is" not in html
     assert "What would make this safe to try tomorrow?" in html
     assert "No receipts yet from operations." in html
     assert state_patch(state)["canvas_host_guide"]["where_the_room_is"].startswith("The room")
+
+
+def test_story_slides_use_full_screen_spacing_hooks() -> None:
+    state = fresh_canvas_state(
+        {
+            "canvas_story_slides": [
+                {
+                    "eyebrow": "Signal",
+                    "heading": "The doorway matters",
+                    "lede": "People want the doorway open.",
+                    "quote_ids": [],
+                }
+            ]
+        }
+    )
+
+    html = render_tabbed_canvas(state=state, project={"name": "Room"})
+
+    assert 'class="tabbed-story-stack"' in html
+    assert 'class="tabbed-story-slide"' in html
+    assert "min-height:80vh" in html
+    assert "font-size:clamp(32px,4.6vw,48px)" in html
 
 
 def test_board_renders_from_attributed_quotes() -> None:

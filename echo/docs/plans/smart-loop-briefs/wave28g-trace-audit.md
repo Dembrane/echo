@@ -39,6 +39,27 @@ details + config revisions + host items:
   the wall on judgment" belongs here)
 - cap the rendered tail (~30 entries) with a link to the dashboard
   version history (wave 31 ships see-all versions) for the rest.
+- entry format (owner-approved): collapsed line grammar is
+  `HH:MM · outcome — cause · links`, newest first, tabular-nums times:
+    09:42 · v14 minted — 2 quotes added, crux updated          run ↗
+    09:37 · no change — nothing new heard (12 min quiet)       run ↗
+    09:31 · v13 minted — Board tab added by you in chat ↗ — all tabs redrawn
+    09:24 · pinned to Board — "Cesare's reflection" by you in chat ↗
+    09:20 · v12 minted — 9 quotes in, 2 kept out ⚠             run ↗
+  Rules: a mint and its run are ONE entry (run link as suffix, never a
+  separate line); mint lines always carry a one-phrase diff; no_op
+  entries render as honest "no change — nothing new heard"; `kept out`
+  (rejections + judgment omissions) is promoted into the collapsed line
+  whenever nonzero; human causes are named and link the exact chat
+  message; cadence causes get no link. Expanded accordion sections:
+  heard / added / updated / kept out / cause, plus `view version`.
+  Versions display as small per-canvas ordinals (v12), not uuids.
+- entries are backed by a JSON object {at, kind, version, cause{type,
+  chat_id, message_id, run_chat_id}, heard, changes, kept_out} — the
+  same object the agent reads via readCanvasHistory, so the tab and the
+  chat answer from one source. Runs will later carry run_chat_id
+  (headless tick runs, echo/docs/plans/canvas-agentic-tick.md) — include
+  the field NOW, render the run ↗ link when present.
 
 ## 3. The history is readable and questionable in chat
 

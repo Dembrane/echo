@@ -145,7 +145,7 @@ def _generation_detail(
             f"{ledger_detail.get('concepts_changed', 0)} concept change(s), "
             f"crux {'changed' if ledger_detail.get('crux_changed') else 'unchanged'}, "
             f"story {'changed' if ledger_detail.get('story_changed') else 'unchanged'}, "
-            f"host guide {'changed' if ledger_detail.get('host_guide_changed') else 'unchanged'}, "
+            f"open questions {'changed' if ledger_detail.get('host_guide_changed') else 'unchanged'}, "
             f"board {'changed' if ledger_detail.get('board_changed') else 'unchanged'}"
         )
         removed = ledger_detail.get("concepts_removed") or []
@@ -220,13 +220,13 @@ If enabled_tabs does not include a board tab, omit board_cards.
 """
 
 HOST_GUIDE_SYSTEM_PROMPT = """
-You write the Host guide tab for a dembrane living canvas. Return JSON only.
+You write the Open questions tab for a dembrane living canvas. Return JSON only.
 
 Grounding rules:
 - Use ONLY the brief, current ledgers, and recent run activity provided by the user.
 - Do not invent facts, names, conflict, consensus, or absent voices.
-- Keep "where_the_room_is" to 2-3 sentences.
-- Give 2-3 concrete questions the host can say out loud.
+- Keep "where_the_room_is" to one short orienting line.
+- Give 2-3 concrete parked questions or next questions the host can say out loud.
 - Use "under_heard" only for voices or threads with few or no receipts in the
   ledger attribution. If there is not enough evidence, return an empty array.
 
@@ -359,12 +359,14 @@ async def _generate_html(
     previous_html: str | None,
     gather_bundle: dict[str, Any],
     living_state: dict[str, Any] | None = None,
+    report_name: str | None = None,
 ) -> str:
     if living_state is not None:
         return render_tabbed_canvas(
             state=living_state,
             project=gather_bundle.get("project") or {},
             sample_notice=gather_bundle.get("sample_notice"),
+            report_name=report_name,
         )
 
     project = gather_bundle.get("project") or {}
@@ -799,7 +801,7 @@ async def _merge_extraction_for_tick(
             living_state["host_guide"] = host_guide
             combined_detail["host_guide_changed"] = True
     except Exception as exc:
-        combined_detail["rejections"].append(f"host guide model error: {exc}")
+        combined_detail["rejections"].append(f"open questions model error: {exc}")
     return living_state, combined_detail
 
 
@@ -925,7 +927,7 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
                     living_state["host_guide"] = host_guide
                     ledger_detail["host_guide_changed"] = True
             except Exception as exc:
-                ledger_detail["rejections"].append(f"host guide model error: {exc}")
+                ledger_detail["rejections"].append(f"open questions model error: {exc}")
         ledger_detail["rejections"].extend(
             _shape_warnings(str(config.get("brief") or ""), living_state["tabs"])
         )
@@ -958,6 +960,7 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
             previous_html=(latest_ok or {}).get("content_html"),
             gather_bundle=gather_bundle,
             living_state=living_state,
+            report_name=str(loop.get("name") or config.get("name") or "Canvas"),
         )
         sanitized = sanitize_canvas_html(raw_html, max_bytes=get_settings().canvas.max_html_bytes)
         banned_copy = _banned_visible_copy(sanitized.html)

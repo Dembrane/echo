@@ -303,7 +303,7 @@ async def test_tick_uses_model_extraction_and_records_receipt_rejections(monkeyp
     assert "Keep the doorway open." in generation["content_html"]
     assert "not found verbatim" in generation["detail"]
     assert "no accepted supporting quote" in generation["detail"]
-    assert "Host guide" in generation["content_html"]
+    assert "Open questions" in generation["content_html"]
     assert fake.items["agent_loop"]["loop1"]["canvas_host_guide"]["where_the_room_is"]
 
 
