@@ -178,6 +178,20 @@ class EchoClient:
         payload = await self.get(f"/agentic/projects/{project_id}/canvases")
         return payload if isinstance(payload, list) else []
 
+    async def list_chat_canvas_activity(
+        self,
+        project_id: str,
+        chat_id: str,
+        limit: int = 5,
+    ) -> dict[str, Any]:
+        response = await self._client.get(
+            f"/agentic/projects/{project_id}/chats/{chat_id}/canvas-activity",
+            params={"limit": limit},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+
     async def get_canvas(self, project_id: str, canvas_id: str) -> dict[str, Any]:
         payload = await self.get(f"/agentic/projects/{project_id}/canvases/{canvas_id}")
         return payload if isinstance(payload, dict) else {}

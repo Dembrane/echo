@@ -1339,6 +1339,31 @@ async def _get_project_canvas_or_404(project_id: str, canvas_id: str) -> dict[st
     return report
 
 
+async def _get_project_chat_or_404(
+    project_id: str,
+    chat_id: str,
+    auth: DirectusSession,
+) -> dict[str, Any]:
+    try:
+        chat = await async_directus.get_item("project_chat", chat_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Chat %s not found while reading canvas activity: %s", chat_id, exc)
+        raise HTTPException(status_code=404, detail="Chat not found") from exc
+    if (
+        not isinstance(chat, dict)
+        or _to_related_id(chat.get("project_id")) != project_id
+        or chat.get("deleted_at") is not None
+    ):
+        raise HTTPException(status_code=404, detail="Chat not found")
+    if (
+        not auth.is_admin
+        and bool(chat.get("is_private"))
+        and chat.get("user_created") != auth.user_id
+    ):
+        raise HTTPException(status_code=404, detail="Chat not found")
+    return chat
+
+
 @AgenticRouter.get("/projects/{project_id}/canvases")
 async def list_project_canvases(
     project_id: str,
@@ -1347,6 +1372,120 @@ async def list_project_canvases(
     _require_agent_token(auth)
     await _assert_project_access(project_id, auth)
     return await list_canvas_summaries(project_id)
+
+
+async def _project_report_names_by_id(report_ids: list[str]) -> dict[str, str]:
+    if not report_ids:
+        return {}
+    try:
+        rows = await async_directus.get_items(
+            "project_report",
+            {
+                "query": {
+                    "filter": {"id": {"_in": report_ids}},
+                    "fields": ["id", "user_instructions", "name"],
+                    "limit": -1,
+                }
+            },
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Failed to load canvas report names for agent activity: %s", exc)
+        return {}
+
+    names: dict[str, str] = {}
+    for row in rows if isinstance(rows, list) else []:
+        if not isinstance(row, dict):
+            continue
+        report_id = _to_non_empty_string(row.get("id"))
+        name = _to_non_empty_string(row.get("user_instructions")) or _to_non_empty_string(
+            row.get("name")
+        )
+        if report_id and name:
+            names[report_id] = name
+    return names
+
+
+async def _recent_loop_runs(loop_id: str, limit: int) -> list[dict[str, Any]]:
+    try:
+        rows = await async_directus.get_items(
+            "agent_loop_run",
+            {
+                "query": {
+                    "filter": {"loop_id": {"_eq": loop_id}},
+                    "fields": ["status", "detail", "started_at"],
+                    "sort": ["-started_at"],
+                    "limit": limit,
+                }
+            },
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Failed to load canvas activity for loop %s: %s", loop_id, exc)
+        return []
+
+    return [
+        {
+            "status": row.get("status"),
+            "detail": row.get("detail"),
+            "started_at": row.get("started_at"),
+        }
+        for row in (rows if isinstance(rows, list) else [])
+        if isinstance(row, dict)
+    ]
+
+
+@AgenticRouter.get("/projects/{project_id}/chats/{chat_id}/canvas-activity")
+async def list_chat_canvas_activity(
+    project_id: str,
+    chat_id: str,
+    auth: DependencyDirectusSession,
+    limit: int = Query(default=5, ge=1),
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    await _get_project_chat_or_404(project_id, chat_id, auth)
+
+    run_limit = min(limit, 10)
+    try:
+        loops = await async_directus.get_items(
+            "agent_loop",
+            {
+                "query": {
+                    "filter": {"project_id": {"_eq": project_id}},
+                    "fields": ["id", "project_id", "report_id", "name"],
+                    "limit": -1,
+                }
+            },
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Failed to load canvas loops for project %s: %s", project_id, exc)
+        return {"canvases": []}
+
+    loop_rows = [row for row in (loops if isinstance(loops, list) else []) if isinstance(row, dict)]
+    report_ids = [
+        report_id
+        for report_id in (_to_related_id(row.get("report_id")) for row in loop_rows)
+        if report_id is not None
+    ]
+    report_names = await _project_report_names_by_id(report_ids)
+
+    canvases: list[dict[str, Any]] = []
+    for loop in loop_rows:
+        loop_id = _to_non_empty_string(loop.get("id"))
+        if loop_id is None:
+            continue
+        report_id = _to_related_id(loop.get("report_id"))
+        canvas_id = report_id or loop_id
+        canvases.append(
+            {
+                "id": canvas_id,
+                "name": _to_non_empty_string(loop.get("name"))
+                or (report_names.get(report_id) if report_id else None)
+                or "Canvas",
+                "recent_runs": await _recent_loop_runs(loop_id, run_limit),
+            }
+        )
+
+    return {"canvases": canvases}
 
 
 @AgenticRouter.get("/projects/{project_id}/canvases/{canvas_id}")

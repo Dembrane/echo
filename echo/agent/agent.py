@@ -22,6 +22,8 @@ logger = getLogger("agent")
 VERTEX_AUTH_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 MAX_AMBIENT_MEMORY_ITEMS = 12
 MAX_AMBIENT_MEMORY_CHARS = 3000
+MAX_CANVAS_ACTIVITY_RUNS = 5
+MAX_CANVAS_ACTIVITY_DETAIL_CHARS = 220
 
 DashboardPageKey = Literal[
     "overview",
@@ -293,6 +295,19 @@ similar. Never tell the host the proposal is in their Library or dashboard: the
 Library holds live canvases, not proposals, and sending the host there to find
 a proposal is a dead end ("The update proposal is ready in your Library" is the
 named counterexample).
+Canvas activity may appear in a "Canvas activity since last turn" system block.
+Use it only as evidence that a linked canvas loop did something after your last
+reply. If that activity shows a genuine fork, you may ask AT MOST ONE pointed
+question in the same turn as the rest of your reply. A real fork means the host
+must choose a direction, for example: receipts were rejected ("I dropped two
+quotes I could not verify verbatim. Want me to relisten to that stretch of
+Cesare's conversation?"); a tab is starving ("nothing has earned XL in the cloud
+yet. Loosen the two-people rule, or wait?"); repeated no_ops while the host keeps
+asking for updates ("the loop has heard nothing new for 40 minutes. Is the
+recorder still on?"). Counterexamples: never ask permission to do something you
+can already do; never ask more than one question; never ask when there is no
+fork, silence is correct then. Ground any question in the injected run details
+only. Never invent canvas activity.
 
 ## Project setup
 When the first message signals setup, or when readGoal shows this project has no
@@ -391,6 +406,72 @@ def _format_memory_section(memories: list[Any]) -> str:
             break
 
     return "\n".join(lines) if len(lines) > 1 else ""
+
+
+def _truncate_canvas_activity_detail(detail: Any) -> str:
+    normalized = str(detail or "").strip()
+    if len(normalized) <= MAX_CANVAS_ACTIVITY_DETAIL_CHARS:
+        return normalized
+    return normalized[: MAX_CANVAS_ACTIVITY_DETAIL_CHARS - 3].rstrip() + "..."
+
+
+def _canvas_activity_runs_for_canvas(canvas: dict[str, Any]) -> list[dict[str, Any]]:
+    raw_runs = canvas.get("recent_runs")
+    if not isinstance(raw_runs, list):
+        raw_runs = canvas.get("runs")
+    if isinstance(raw_runs, list):
+        return [run for run in raw_runs if isinstance(run, dict)]
+
+    loop = canvas.get("loop")
+    if not isinstance(loop, dict):
+        return []
+
+    status = loop.get("last_run_status")
+    detail = loop.get("last_run_detail")
+    if not status and not detail:
+        return []
+    return [
+        {
+            "status": status,
+            "detail": detail,
+            "started_at": loop.get("last_run_started_at"),
+        }
+    ]
+
+
+def _format_canvas_activity_section(payload: Any) -> str:
+    if not isinstance(payload, dict):
+        return ""
+
+    canvases = payload.get("canvases")
+    if not isinstance(canvases, list) or not canvases:
+        return ""
+
+    lines: list[str] = ["## Canvas activity since last turn"]
+    rendered_runs = 0
+    for canvas in canvases:
+        if not isinstance(canvas, dict):
+            continue
+        canvas_name = str(canvas.get("name") or canvas.get("id") or "Canvas").strip()
+        canvas_id = str(canvas.get("id") or "").strip()
+        canvas_label = canvas_name if not canvas_id else f"{canvas_name} ({canvas_id})"
+        runs = _canvas_activity_runs_for_canvas(canvas)
+        if not runs:
+            continue
+        lines.append(f"- {canvas_label}")
+        for run in runs:
+            status = str(run.get("status") or "unknown").strip() or "unknown"
+            detail = _truncate_canvas_activity_detail(run.get("detail"))
+            started_at = str(run.get("started_at") or "").strip()
+            prefix = f"  - {status}"
+            if started_at:
+                prefix = f"{prefix} at {started_at}"
+            lines.append(f"{prefix}: {detail}" if detail else prefix)
+            rendered_runs += 1
+            if rendered_runs >= MAX_CANVAS_ACTIVITY_RUNS:
+                return "\n".join(lines)
+
+    return "\n".join(lines) if rendered_runs else ""
 
 
 def _split_concatenated_json_objects(raw: str, expected_count: int) -> list[Any] | None:
@@ -1742,6 +1823,25 @@ def create_agent_graph(
 
         return ambient_memory_section
 
+    async def _load_canvas_activity_section() -> str:
+        if not chat_id:
+            return ""
+
+        client = _create_echo_client()
+        try:
+            payload = await client.list_chat_canvas_activity(
+                project_id=project_id,
+                chat_id=chat_id,
+                limit=MAX_CANVAS_ACTIVITY_RUNS,
+            )
+        except Exception:
+            logger.exception("Failed to load canvas activity for chat %s", chat_id)
+            return ""
+        finally:
+            await client.close()
+
+        return _format_canvas_activity_section(payload)
+
     def should_continue(state: dict) -> str:
         messages = state.get("messages", [])
         if not messages:
@@ -1767,9 +1867,11 @@ def create_agent_graph(
         raw_messages = state.get("messages", [])
         messages = [_with_placeholder_content(message) for message in raw_messages]
         memory_section = await _load_ambient_memory_section()
-        effective_system_prompt = (
-            f"{system_prompt}\n\n{memory_section}" if memory_section else system_prompt
-        )
+        canvas_activity_section = await _load_canvas_activity_section()
+        system_sections = [
+            section for section in [system_prompt, memory_section, canvas_activity_section] if section
+        ]
+        effective_system_prompt = "\n\n".join(system_sections)
         # Build invocation list with system prompt, but don't persist duplicates
         if not messages or not isinstance(messages[0], SystemMessage):
             invocation_messages = [SystemMessage(content=effective_system_prompt)] + messages
