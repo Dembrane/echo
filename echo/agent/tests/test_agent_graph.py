@@ -6,6 +6,7 @@ from agent import (
     POST_NUDGE_CONTINUATION_SYSTEM_PROMPT,
     SYSTEM_PROMPT,
     _build_llm,
+    _format_canvas_activity_section,
     _normalize_fused_tool_calls,
     create_agent_graph,
 )
@@ -58,6 +59,35 @@ class MemoryClientFactory:
 
     def __call__(self, _bearer_token: str) -> MemoryClient:
         client = MemoryClient(self.payload)
+        self.instances.append(client)
+        return client
+
+
+class CanvasActivityClient(MemoryClient):
+    def __init__(self, payload: dict | None = None) -> None:
+        super().__init__({"memories": []})
+        self.canvas_activity_payload = payload or {"canvases": []}
+        self.canvas_activity_calls: list[dict[str, object]] = []
+
+    async def list_chat_canvas_activity(
+        self,
+        project_id: str,
+        chat_id: str,
+        limit: int = 5,
+    ) -> dict:
+        self.canvas_activity_calls.append(
+            {"project_id": project_id, "chat_id": chat_id, "limit": limit}
+        )
+        return self.canvas_activity_payload
+
+
+class CanvasActivityClientFactory:
+    def __init__(self, payload: dict | None = None) -> None:
+        self.payload = payload or {"canvases": []}
+        self.instances: list[CanvasActivityClient] = []
+
+    def __call__(self, _bearer_token: str) -> CanvasActivityClient:
+        client = CanvasActivityClient(self.payload)
         self.instances.append(client)
         return client
 
@@ -368,11 +398,103 @@ async def test_ambient_memory_is_injected_into_first_model_invocation():
     assert factory.instances[0].closed is True
 
 
+@pytest.mark.asyncio
+async def test_canvas_activity_is_injected_into_first_model_invocation():
+    llm = SequenceLLM(responses=[AIMessage(content="done")])
+    factory = CanvasActivityClientFactory(
+        {
+            "canvases": [
+                {
+                    "id": "canvas-1",
+                    "name": "Pulse wall",
+                    "recent_runs": [
+                        {
+                            "status": "ok",
+                            "detail": "rejections: quote[3] not found verbatim",
+                            "started_at": "2026-07-08T10:00:00Z",
+                        }
+                    ],
+                }
+            ]
+        }
+    )
+    graph = create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+        chat_id="chat-1",
+    )
+
+    await graph.ainvoke(
+        {"messages": [HumanMessage(content="hello")]},
+        config={"configurable": {"thread_id": "thread-canvas-activity"}},
+    )
+
+    first_system = next(
+        message for message in llm.invocations[0] if isinstance(message, SystemMessage)
+    )
+    assert "## Canvas activity since last turn" in first_system.content
+    assert "Pulse wall (canvas-1)" in first_system.content
+    assert "rejections: quote[3] not found verbatim" in first_system.content
+    assert factory.instances[1].canvas_activity_calls == [
+        {"project_id": "project-1", "chat_id": "chat-1", "limit": 5}
+    ]
+    assert factory.instances[1].closed is True
+
+
 def test_system_prompt_forbids_claiming_actions_without_successful_tool_result():
     prompt = SYSTEM_PROMPT.lower()
     assert "only say you saved, logged, proposed, updated" in prompt
     assert "corresponding action returned success in this turn" in prompt
     assert "akshita" in prompt
+
+
+def test_system_prompt_contains_canvas_one_question_rule_and_counterexamples():
+    prompt = " ".join(SYSTEM_PROMPT.lower().split())
+    assert "canvas activity since last turn" in prompt
+    assert "at most one pointed" in prompt
+    assert "question in the same turn" in prompt
+    assert "real fork" in prompt
+    assert "never ask permission to do something you can already do" in prompt
+    assert "never ask more than one question" in prompt
+    assert "never ask when there is no fork" in prompt
+    assert "never invent canvas activity" in prompt
+
+
+def test_canvas_activity_section_renders_run_details_and_truncates_detail():
+    section = _format_canvas_activity_section(
+        {
+            "canvases": [
+                {
+                    "id": "canvas-1",
+                    "name": "Pulse wall",
+                    "recent_runs": [
+                        {
+                            "status": "ok",
+                            "detail": "rejections: quote[3] not found verbatim",
+                            "started_at": "2026-07-08T10:00:00Z",
+                        },
+                        {
+                            "status": "no_op",
+                            "detail": "0 quote(s), 0 concept change(s)",
+                            "started_at": "2026-07-08T10:05:00Z",
+                        },
+                    ],
+                }
+            ]
+        }
+    )
+
+    assert "## Canvas activity since last turn" in section
+    assert "Pulse wall (canvas-1)" in section
+    assert "ok at 2026-07-08T10:00:00Z: rejections: quote[3] not found verbatim" in section
+    assert "no_op at 2026-07-08T10:05:00Z: 0 quote(s), 0 concept change(s)" in section
+
+
+def test_canvas_activity_section_returns_empty_without_canvas_runs():
+    assert _format_canvas_activity_section({"canvases": []}) == ""
+    assert _format_canvas_activity_section({"canvases": [{"id": "canvas-1"}]}) == ""
 
 
 def test_fused_parallel_tool_call_name_is_split_with_concatenated_json_args():

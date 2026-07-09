@@ -156,6 +156,28 @@ class _FakeAsyncClient:
                     }
                 ],
             )
+        if path == "/agentic/projects/project-1/chats/chat-1/canvas-activity":
+            return httpx.Response(
+                status_code=200,
+                request=request,
+                json={
+                    "project_id": "project-1",
+                    "chat_id": "chat-1",
+                    "canvases": [
+                        {
+                            "id": "canvas-1",
+                            "name": "Pulse wall",
+                            "recent_runs": [
+                                {
+                                    "status": "ok",
+                                    "detail": "backfill: 5 conversations",
+                                    "started_at": "2026-07-08T10:00:00Z",
+                                }
+                            ],
+                        }
+                    ],
+                },
+            )
         if path.startswith("/conversations/") and path.endswith("/transcript"):
             return httpx.Response(status_code=200, request=request, json="transcript text")
         return httpx.Response(status_code=200, request=request, json={"ok": True})
@@ -256,6 +278,22 @@ async def test_list_canvases_uses_expected_path(monkeypatch):
 
     assert payload[0]["id"] == "canvas-1"
     assert client._client.calls[0]["path"] == "/agentic/projects/project-1/canvases"
+
+
+@pytest.mark.asyncio
+async def test_list_chat_canvas_activity_uses_expected_path_and_limit(monkeypatch):
+    monkeypatch.setattr("echo_client.httpx.AsyncClient", _FakeAsyncClient)
+
+    client = EchoClient(bearer_token="token-1")
+    payload = await client.list_chat_canvas_activity("project-1", "chat-1", limit=5)
+
+    assert payload["chat_id"] == "chat-1"
+    assert payload["canvases"][0]["recent_runs"][0]["detail"] == "backfill: 5 conversations"
+    assert (
+        client._client.calls[0]["path"]
+        == "/agentic/projects/project-1/chats/chat-1/canvas-activity"
+    )
+    assert client._client.calls[0]["params"] == {"limit": 5}
 
 
 @pytest.mark.asyncio

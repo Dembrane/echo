@@ -1032,6 +1032,147 @@ async def test_agentic_list_canvases_requires_host_token_and_project_access(monk
 
 
 @pytest.mark.asyncio
+async def test_agentic_canvas_activity_returns_recent_loop_runs_and_caps_limit(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        def __init__(self) -> None:
+            self.run_limits: list[int] = []
+
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:
+            assert collection == "project_chat"
+            assert item_id == "chat-1"
+            return {"id": "chat-1", "project_id": {"id": "project-1"}, "user_created": "user-1"}
+
+        async def get_items(self, collection: str, params: dict[str, Any]) -> list[dict[str, Any]]:
+            query = params["query"]
+            if collection == "agent_loop":
+                assert query["filter"] == {"project_id": {"_eq": "project-1"}}
+                return [
+                    {"id": "loop-1", "report_id": "canvas-1", "name": None},
+                    {"id": "loop-2", "report_id": None, "name": "Loose loop"},
+                ]
+            if collection == "project_report":
+                assert query["filter"] == {"id": {"_in": ["canvas-1"]}}
+                return [{"id": "canvas-1", "user_instructions": "Pulse wall"}]
+            if collection == "agent_loop_run":
+                self.run_limits.append(query["limit"])
+                assert query["sort"] == ["-started_at"]
+                loop_id = query["filter"]["loop_id"]["_eq"]
+                if loop_id == "loop-1":
+                    return [
+                        {
+                            "status": "ok",
+                            "detail": "backfill: 5 conversations",
+                            "started_at": "2026-07-09T12:00:00Z",
+                            "ignored": "field",
+                        },
+                        {
+                            "status": "no_op",
+                            "detail": "No fresh quotes",
+                            "started_at": "2026-07-09T11:55:00Z",
+                        },
+                    ]
+                return []
+            raise AssertionError(f"unexpected collection {collection}")
+
+    fake_directus = _AsyncDirectus()
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get(
+            "/api/agentic/projects/project-1/chats/chat-1/canvas-activity?limit=999"
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "canvases": [
+            {
+                "id": "canvas-1",
+                "name": "Pulse wall",
+                "recent_runs": [
+                    {
+                        "status": "ok",
+                        "detail": "backfill: 5 conversations",
+                        "started_at": "2026-07-09T12:00:00Z",
+                    },
+                    {
+                        "status": "no_op",
+                        "detail": "No fresh quotes",
+                        "started_at": "2026-07-09T11:55:00Z",
+                    },
+                ],
+            },
+            {"id": "loop-2", "name": "Loose loop", "recent_runs": []},
+        ]
+    }
+    assert fake_directus.run_limits == [10, 10]
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1", access_token=None),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/chats/chat-1/canvas-activity")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_agentic_canvas_activity_requires_chat_in_project(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+
+    class _AsyncDirectus:
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:  # noqa: ARG002
+            return {"id": "chat-1", "project_id": "other-project", "user_created": "user-1"}
+
+    monkeypatch.setattr(agentic_api, "async_directus", _AsyncDirectus())
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/chats/chat-1/canvas-activity")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_agentic_canvas_activity_returns_empty_when_project_has_no_loops(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+
+    class _AsyncDirectus:
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:  # noqa: ARG002
+            return {"id": "chat-1", "project_id": "project-1", "user_created": "user-1"}
+
+        async def get_items(self, collection: str, params: dict[str, Any]) -> list[dict[str, Any]]:  # noqa: ARG002
+            assert collection == "agent_loop"
+            return []
+
+    monkeypatch.setattr(agentic_api, "async_directus", _AsyncDirectus())
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/chats/chat-1/canvas-activity")
+
+    assert response.status_code == 200
+    assert response.json() == {"canvases": []}
+
+
+@pytest.mark.asyncio
 async def test_agentic_canvas_lifecycle_delegates_to_shared_service(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     session = _make_session(user_id="user-1")
