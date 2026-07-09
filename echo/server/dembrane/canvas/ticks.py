@@ -131,6 +131,8 @@ def _generation_detail(
     if banned_copy:
         details.append("banned visible copy: " + ", ".join(banned_copy))
     if ledger_detail:
+        if ledger_detail.get("backfill_conversations") is not None:
+            details.append(f"backfill: {ledger_detail.get('backfill_conversations')} conversations")
         details.append(
             "ledger update: "
             f"{ledger_detail.get('quotes_added', 0)} quote(s), "
@@ -390,6 +392,32 @@ def _gather_has_transcript(gather_bundle: dict[str, Any]) -> bool:
     return False
 
 
+def _contentful_generation(generation: dict[str, Any] | None) -> bool:
+    return bool(str((generation or {}).get("content_html") or "").strip())
+
+
+def _state_is_empty_wall(state: dict[str, Any]) -> bool:
+    normalized = fresh_canvas_state(state)
+    has_host_items = any(not item.get("removed_at") for item in normalized["host_items"])
+    return (
+        not normalized["quotes_ledger"] and not normalized["concepts_ledger"] and not has_host_items
+    )
+
+
+def _single_conversation_bundle(
+    gather_bundle: dict[str, Any],
+    conversation: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        **gather_bundle,
+        "conversations": [conversation],
+        "counts": {
+            **(gather_bundle.get("counts") or {}),
+            "conversations_with_recent_content": 1,
+        },
+    }
+
+
 def _transcript_payload_for_model(gather_bundle: dict[str, Any]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     remaining = max(12000, get_settings().canvas.max_total_transcript_chars)
@@ -460,6 +488,59 @@ async def _extract_living_canvas_update(
     return _json_from_model_text(_choice_text(response))
 
 
+async def _merge_extraction_for_tick(
+    *,
+    gather_bundle: dict[str, Any],
+    current_state: dict[str, Any],
+    backfill: bool,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    living_state = fresh_canvas_state(current_state)
+    combined_detail: dict[str, Any] = {
+        "quotes_added": 0,
+        "concepts_changed": 0,
+        "crux_changed": False,
+        "story_changed": False,
+        "concepts_removed": [],
+        "rejections": [],
+    }
+    conversations = [
+        conv
+        for conv in gather_bundle.get("conversations") or []
+        if isinstance(conv, dict) and _gather_has_transcript({"conversations": [conv]})
+    ]
+    if backfill:
+        combined_detail["backfill_conversations"] = len(conversations)
+    if not conversations:
+        return living_state, combined_detail
+
+    bundles = (
+        [_single_conversation_bundle(gather_bundle, conv) for conv in conversations]
+        if backfill
+        else [gather_bundle]
+    )
+    for bundle in bundles:
+        extraction = await _extract_living_canvas_update(
+            gather_bundle=bundle,
+            current_state=living_state,
+        )
+        living_state, detail = apply_model_extraction(
+            living_state,
+            bundle,
+            extraction,
+        )
+        combined_detail["quotes_added"] += int(detail.get("quotes_added") or 0)
+        combined_detail["concepts_changed"] += int(detail.get("concepts_changed") or 0)
+        combined_detail["crux_changed"] = bool(
+            combined_detail["crux_changed"] or detail.get("crux_changed")
+        )
+        combined_detail["story_changed"] = bool(
+            combined_detail["story_changed"] or detail.get("story_changed")
+        )
+        combined_detail["concepts_removed"].extend(detail.get("concepts_removed") or [])
+        combined_detail["rejections"].extend(detail.get("rejections") or [])
+    return living_state, combined_detail
+
+
 async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]:
     """Run one bounded gather -> generate -> sanitize -> store tick."""
     started_at = _now()
@@ -507,15 +588,19 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
 
         config = await _latest_config(report_id)
         latest_ok = await _latest_ok_generation(report_id)
+        living_state = fresh_canvas_state(loop)
+        cold_start_backfill = not living_state["quotes_ledger"]
         gather_bundle = await execute_gather_spec(
             project_id=project_id,
             acting_directus_user_id=acting_user_id,
             gather_spec=config.get("gather_spec") or {},
+            full_history=cold_start_backfill,
         )
         latest_content_at = _parse_dt(gather_bundle.get("latest_content_at"))
         latest_generation_at = _parse_dt((latest_ok or {}).get("created_at"))
         if (
-            tick_kind != "manual"
+            not cold_start_backfill
+            and tick_kind != "manual"
             and latest_ok
             and (
                 not latest_content_at
@@ -531,12 +616,12 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
             await _enqueue_next_if_due(loop)
             return {"status": "no_op", "run": run}
 
-        living_state = fresh_canvas_state(loop)
         if _gather_has_transcript(gather_bundle):
             try:
-                extraction = await _extract_living_canvas_update(
+                living_state, ledger_detail = await _merge_extraction_for_tick(
                     gather_bundle=gather_bundle,
                     current_state=living_state,
+                    backfill=cold_start_backfill,
                 )
             except Exception as exc:
                 run = await _create_run(
@@ -547,16 +632,6 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
                 )
                 await _enqueue_next_if_due(loop)
                 return {"status": "no_op", "run": run}
-            living_state, ledger_detail = apply_model_extraction(
-                living_state,
-                gather_bundle,
-                extraction,
-            )
-            await async_directus.update_item(
-                "agent_loop",
-                str(loop["id"]),
-                state_patch(living_state),
-            )
         else:
             ledger_detail = {
                 "quotes_added": 0,
@@ -566,6 +641,27 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
                 "concepts_removed": [],
                 "rejections": [],
             }
+            if cold_start_backfill:
+                ledger_detail["backfill_conversations"] = 0
+
+        if _state_is_empty_wall(living_state) and _contentful_generation(latest_ok):
+            run = await _create_run(
+                loop_id=loop_id,
+                status="no_op",
+                detail=(
+                    "Empty extraction would replace a contentful previous generation; "
+                    f"{_generation_detail(stripped_references=0, banned_copy=[], ledger_detail=ledger_detail)}"
+                ),
+                started_at=started_at,
+            )
+            await _enqueue_next_if_due(loop)
+            return {"status": "no_op", "run": run}
+
+        await async_directus.update_item(
+            "agent_loop",
+            str(loop["id"]),
+            state_patch(living_state),
+        )
 
         raw_html = await _generate_html(
             brief=str(config.get("brief") or ""),
@@ -575,6 +671,11 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
         )
         sanitized = sanitize_canvas_html(raw_html, max_bytes=get_settings().canvas.max_html_bytes)
         banned_copy = _banned_visible_copy(sanitized.html)
+        detail = _generation_detail(
+            stripped_references=sanitized.stripped_references,
+            banned_copy=banned_copy,
+            ledger_detail=ledger_detail,
+        )
         generation = (
             await async_directus.create_item(
                 "canvas_generation",
@@ -585,11 +686,7 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
                     "content_html": sanitized.html,
                     "status": "ok",
                     "tick_kind": tick_kind,
-                    "detail": _generation_detail(
-                        stripped_references=sanitized.stripped_references,
-                        banned_copy=banned_copy,
-                        ledger_detail=ledger_detail,
-                    ),
+                    "detail": detail,
                 },
             )
         )["data"]
@@ -597,6 +694,7 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
             loop_id=loop_id,
             status="ok",
             generation_id=str(generation["id"]),
+            detail=detail,
             started_at=started_at,
         )
         await _update_loop_after_tick(loop, status="ok")

@@ -132,6 +132,9 @@ async def test_tick_duplicate_window_exits_without_enqueuing(monkeypatch) -> Non
 async def test_tick_error_stores_error_generation_and_pauses_after_three(monkeypatch) -> None:
     fake = _FakeDirectus()
     fake.items["agent_loop"]["loop1"]["failure_count"] = 2
+    fake.items["agent_loop"]["loop1"]["canvas_quotes_ledger"] = [
+        {"id": "q-old", "quote": "Keep this.", "source": {}}
+    ]
 
     async def _config(report_id: str) -> dict[str, Any]:  # noqa: ARG001
         return {"id": "cfg1", "brief": "brief", "gather_spec": {}, "cadence_minutes": 5}
@@ -296,6 +299,141 @@ async def test_tick_uses_model_extraction_and_records_receipt_rejections(monkeyp
 
 
 @pytest.mark.asyncio
+async def test_cold_start_backfill_uses_full_history_then_delta(monkeypatch) -> None:
+    fake = _FakeDirectus()
+    gather_calls: list[dict[str, Any]] = []
+    extraction_calls: list[list[str]] = []
+
+    async def _config(report_id: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"id": "cfg1", "brief": "brief", "gather_spec": {}, "cadence_minutes": 5}
+
+    async def _gather(**kwargs) -> dict[str, Any]:
+        gather_calls.append(kwargs)
+        return {
+            "latest_content_at": "2026-07-07T10:20:00+00:00",
+            "project": {"name": "Room"},
+            "conversations": [
+                {"id": "conv-1", "label": "Maya", "latest_transcript": "Keep the doorway open."},
+                {
+                    "id": "conv-2",
+                    "label": "Noor",
+                    "latest_transcript": "Make the next step visible.",
+                },
+            ],
+        }
+
+    async def _extract(**kwargs) -> dict[str, Any]:
+        conversation_ids = [conv["id"] for conv in kwargs["gather_bundle"]["conversations"]]
+        extraction_calls.append(conversation_ids)
+        quote = kwargs["gather_bundle"]["conversations"][0]["latest_transcript"]
+        conv_id = kwargs["gather_bundle"]["conversations"][0]["id"]
+        return {
+            "quotes": [{"who": None, "quote": quote, "conversation_id": conv_id, "chunk_id": None}],
+            "concepts": [{"phrase": quote.split(".")[0], "supporting_quote_indices": [0]}],
+            "crux": {"question": "What first move should we make visible?"},
+            "story_slides": [],
+        }
+
+    async def _enqueue(loop: dict[str, Any]) -> None:  # noqa: ARG001
+        return None
+
+    async def _publish(report_id: str) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_latest_config", _config)
+    monkeypatch.setattr(ticks, "execute_gather_spec", _gather)
+    monkeypatch.setattr(ticks, "_extract_living_canvas_update", _extract)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+    monkeypatch.setattr(ticks, "publish_generation_nudge", _publish)
+
+    first = await ticks.run_tick("loop1", "manual")
+    second = await ticks.run_tick("loop1", "manual")
+
+    assert first["status"] == "ok"
+    assert second["status"] == "ok"
+    assert gather_calls[0]["full_history"] is True
+    assert gather_calls[1]["full_history"] is False
+    assert extraction_calls[:2] == [["conv-1"], ["conv-2"]]
+    assert extraction_calls[2] == ["conv-1", "conv-2"]
+    assert "backfill: 2 conversations" in first["generation"]["detail"]
+    assert "backfill: 2 conversations" in first["run"]["detail"]
+
+
+@pytest.mark.asyncio
+async def test_empty_extraction_with_prior_generation_noops_without_storing_skeleton(
+    monkeypatch,
+) -> None:
+    fake = _FakeDirectus()
+
+    async def _config(report_id: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"id": "cfg1", "brief": "brief", "gather_spec": {}, "cadence_minutes": 5}
+
+    async def _gather(**kwargs) -> dict[str, Any]:  # noqa: ARG001
+        return {
+            "latest_content_at": "2026-07-07T10:20:00+00:00",
+            "project": {},
+            "conversations": [
+                {"id": "conv-1", "label": "Maya", "latest_transcript": "Thin transcript."}
+            ],
+        }
+
+    async def _extract(**kwargs) -> dict[str, Any]:  # noqa: ARG001
+        return {"quotes": [], "concepts": [], "crux": None, "story_slides": []}
+
+    async def _enqueue(loop: dict[str, Any]) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_latest_config", _config)
+    monkeypatch.setattr(ticks, "execute_gather_spec", _gather)
+    monkeypatch.setattr(ticks, "_extract_living_canvas_update", _extract)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+
+    result = await ticks.run_tick("loop1", "manual")
+
+    assert result["status"] == "no_op"
+    assert (
+        "Empty extraction would replace a contentful previous generation" in result["run"]["detail"]
+    )
+    assert "canvas_generation" not in fake.created
+    assert fake.updated == []
+    assert fake.latest_generation["id"] == "g-old"
+
+
+@pytest.mark.asyncio
+async def test_new_canvas_can_store_empty_skeleton(monkeypatch) -> None:
+    fake = _FakeDirectus()
+    fake.latest_generation = None
+
+    async def _config(report_id: str) -> dict[str, Any]:  # noqa: ARG001
+        return {"id": "cfg1", "brief": "brief", "gather_spec": {}, "cadence_minutes": 5}
+
+    async def _gather(**kwargs) -> dict[str, Any]:  # noqa: ARG001
+        return {"latest_content_at": None, "project": {}, "conversations": []}
+
+    async def _enqueue(loop: dict[str, Any]) -> None:  # noqa: ARG001
+        return None
+
+    async def _publish(report_id: str) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+    monkeypatch.setattr(ticks, "_latest_config", _config)
+    monkeypatch.setattr(ticks, "execute_gather_spec", _gather)
+    monkeypatch.setattr(ticks, "_enqueue_next_if_due", _enqueue)
+    monkeypatch.setattr(ticks, "publish_generation_nudge", _publish)
+
+    result = await ticks.run_tick("loop1", "manual")
+
+    assert result["status"] == "ok"
+    assert (
+        "Concepts will appear as transcript receipts arrive" in result["generation"]["content_html"]
+    )
+    assert fake.created["canvas_generation"][0]["status"] == "ok"
+
+
+@pytest.mark.asyncio
 async def test_tick_missing_ids_records_error_run_without_generation(monkeypatch) -> None:
     fake = _FakeDirectus()
     fake.items["agent_loop"]["loop1"]["report_id"] = None
@@ -339,6 +477,9 @@ async def test_enqueue_next_tick_uses_final_slot_before_expiry(monkeypatch) -> N
 @pytest.mark.asyncio
 async def test_tick_ok_records_banned_visible_copy_without_rewriting(monkeypatch) -> None:
     fake = _FakeDirectus()
+    fake.items["agent_loop"]["loop1"]["canvas_quotes_ledger"] = [
+        {"id": "q-old", "quote": "Keep this.", "source": {}}
+    ]
 
     async def _config(report_id: str) -> dict[str, Any]:  # noqa: ARG001
         return {"id": "cfg1", "brief": "brief", "gather_spec": {}, "cadence_minutes": 5}
@@ -380,6 +521,9 @@ async def test_tick_ok_records_banned_visible_copy_without_rewriting(monkeypatch
 @pytest.mark.asyncio
 async def test_tick_uses_applied_generation_as_previous_frame(monkeypatch) -> None:
     fake = _FakeDirectus()
+    fake.items["agent_loop"]["loop1"]["canvas_quotes_ledger"] = [
+        {"id": "q-old", "quote": "Keep this.", "source": {}}
+    ]
     fake.latest_generation = {
         "id": "g-applied",
         "content_html": "<main>approved preview</main>",
