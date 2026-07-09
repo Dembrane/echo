@@ -147,6 +147,14 @@ const buildHeadline = (toolName: string, context: ToolContext) => {
 		case "noteInsight":
 		case "recordInsight":
 			return t`Noting this for the dembrane team`;
+		case "editInsight":
+			return t`Updating a note for the dembrane team`;
+		case "retractInsight":
+			return t`Retracting a note for the dembrane team`;
+		case "amendMemory":
+			return t`Updating a saved memory`;
+		case "forgetMemory":
+			return t`Forgetting a saved memory`;
 		case "reachOutToDembraneSupport":
 		case "reachOutToDembrane":
 			return t`Logging this with the dembrane team`;
@@ -514,10 +522,17 @@ export type AgentInsightKind =
 	| "wish"
 	| "praise";
 
+/** How the host last touched this insight: freshly noted, amended by id, or
+ * withdrawn. The card mutes for "retracted". */
+export type InsightNoteMode = "noted" | "edited" | "retracted";
+
 export type ParsedInsightNote = {
 	kind: AgentInsightKind;
 	content: string;
 	suggestedCapability: string | null;
+	insightId: string | null;
+	mode: InsightNoteMode;
+	reason: string | null;
 };
 
 const INSIGHT_KINDS = new Set<AgentInsightKind>([
@@ -527,12 +542,26 @@ const INSIGHT_KINDS = new Set<AgentInsightKind>([
 	"praise",
 ]);
 
-// noteInsight (and its legacy name recordInsight) both write the same payload;
-// old chats must still render their card, so we accept either tool name.
-const INSIGHT_TOOL_NAMES = new Set<string>(["noteInsight", "recordInsight"]);
+const INSIGHT_MODES = new Set<InsightNoteMode>([
+	"noted",
+	"edited",
+	"retracted",
+]);
 
-/** Returns the structured note when a completed tool activity is a noteInsight
- * (or legacy recordInsight) result, else null. */
+// noteInsight (and its legacy name recordInsight) note a fresh insight;
+// editInsight and retractInsight amend one BY ID. All four write the same
+// agent_insight_note payload shape, and old chats must still render their card,
+// so we accept every one of these tool names.
+const INSIGHT_TOOL_NAMES = new Set<string>([
+	"noteInsight",
+	"recordInsight",
+	"editInsight",
+	"retractInsight",
+]);
+
+/** Returns the structured note when a completed tool activity is a noteInsight,
+ * editInsight, retractInsight (or legacy recordInsight) result, else null.
+ * Legacy payloads without a `mode` fall back to "noted". */
 export const parseInsightNote = (
 	activity: ToolActivity,
 ): ParsedInsightNote | null => {
@@ -550,9 +579,25 @@ export const parseInsightNote = (
 			payload.suggested_capability.trim()
 				? payload.suggested_capability.trim()
 				: null;
+		const rawMode = String(payload.mode ?? "noted").trim();
+		const mode: InsightNoteMode = INSIGHT_MODES.has(rawMode as InsightNoteMode)
+			? (rawMode as InsightNoteMode)
+			: "noted";
+		const insightId =
+			typeof payload.agent_insight_id === "string" &&
+			payload.agent_insight_id.trim()
+				? payload.agent_insight_id.trim()
+				: null;
+		const reason =
+			typeof payload.reason === "string" && payload.reason.trim()
+				? payload.reason.trim()
+				: null;
 		return {
 			content,
+			insightId,
 			kind: kind as AgentInsightKind,
+			mode,
+			reason,
 			suggestedCapability,
 		};
 	} catch {

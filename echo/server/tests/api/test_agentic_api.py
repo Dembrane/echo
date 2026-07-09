@@ -1367,6 +1367,301 @@ async def test_agentic_insight_endpoint_persists_reach_back_context(monkeypatch)
     ]
 
 
+class _StatefulRowDirectus:
+    """A tiny stateful directus fake: get_item returns the current row, and
+    update_item / delete_item mutate the stored copy. Used to exercise the
+    edit / retract / amend / forget by-id endpoints end to end."""
+
+    def __init__(self, rows: dict[str, dict[str, Any]]) -> None:
+        self.rows = {row_id: dict(row) for row_id, row in rows.items()}
+        self.updates: list[tuple[str, str, dict[str, Any]]] = []
+        self.deletes: list[tuple[str, str]] = []
+
+    async def get_item(self, collection: str, item_id: str, params: Any = None) -> dict[str, Any]:  # noqa: ARG002
+        row = self.rows.get(item_id)
+        if row is None:
+            return {}
+        return dict(row)
+
+    async def update_item(
+        self, collection: str, item_id: str, payload: dict[str, Any]
+    ) -> dict[str, Any]:
+        self.updates.append((collection, item_id, dict(payload)))
+        self.rows.setdefault(item_id, {})["id"] = item_id
+        self.rows[item_id].update(payload)
+        return {"data": dict(self.rows[item_id])}
+
+    async def delete_item(self, collection: str, item_id: str) -> dict[str, Any]:
+        self.deletes.append((collection, item_id))
+        self.rows.pop(item_id, None)
+        return {"status": "deleted"}
+
+
+@pytest.mark.asyncio
+async def test_edit_insight_partial_update_scopes_to_owning_project(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {
+            "insight-1": {
+                "id": "insight-1",
+                "project_id": "project-1",
+                "kind": "wish",
+                "content": "old content",
+                "suggested_capability": None,
+                "status": "new",
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.patch(
+            "/api/agentic/insights/insight-1",
+            json={"content": "The host needs bulk tag editing."},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == "insight-1"
+    assert body["content"] == "The host needs bulk tag editing."
+    assert body["kind"] == "wish"  # untouched by a partial update
+    # Only the content field was written.
+    assert fake_directus.updates == [
+        ("agent_insight", "insight-1", {"content": "The host needs bulk tag editing."})
+    ]
+
+
+@pytest.mark.asyncio
+async def test_edit_insight_requires_at_least_one_field(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {"insight-1": {"id": "insight-1", "project_id": "project-1", "status": "new"}}
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.patch("/api/agentic/insights/insight-1", json={})
+
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_edit_insight_requires_token(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {"insight-1": {"id": "insight-1", "project_id": "project-1", "status": "new"}}
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1", access_token=None),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.patch(
+            "/api/agentic/insights/insight-1", json={"content": "x"}
+        )
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_edit_insight_hides_other_projects_insight(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {"insight-1": {"id": "insight-1", "project_id": "project-1", "status": "new"}}
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-2"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.patch(
+            "/api/agentic/insights/insight-1", json={"content": "x"}
+        )
+
+    # Non-member of the owning project gets 404 (existence-hiding), no write.
+    assert response.status_code == 404
+    assert fake_directus.updates == []
+
+
+@pytest.mark.asyncio
+async def test_retract_insight_keeps_row_with_status_and_reason(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {
+            "insight-1": {
+                "id": "insight-1",
+                "project_id": "project-1",
+                "kind": "friction",
+                "content": "The host wanted bulk tag edit.",
+                "status": "new",
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.post(
+            "/api/agentic/insights/insight-1/retract",
+            json={"reason": "The host said it is not a real gap."},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "retracted"
+    assert body["retracted_reason"] == "The host said it is not a real gap."
+    assert body["content"] == "The host wanted bulk tag edit."  # row is preserved
+    # The row was updated, never deleted.
+    assert fake_directus.deletes == []
+    assert fake_directus.updates == [
+        (
+            "agent_insight",
+            "insight-1",
+            {"status": "retracted", "retracted_reason": "The host said it is not a real gap."},
+        )
+    ]
+
+
+@pytest.mark.asyncio
+async def test_amend_memory_updates_project_scoped_row(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {
+            "mem-1": {
+                "id": "mem-1",
+                "scope": "project",
+                "project_id": "project-1",
+                "workspace_id": "workspace-1",
+                "content": "old note",
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.patch(
+            "/api/agentic/memories/mem-1",
+            json={"content": "The owner's name is spelled Akshita."},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"id": "mem-1", "scope": "project", "action": "amended"}
+    assert len(fake_directus.updates) == 1
+    collection, item_id, payload = fake_directus.updates[0]
+    assert (collection, item_id) == ("agent_memory", "mem-1")
+    assert payload["content"] == "The owner's name is spelled Akshita."
+    assert "updated_at" in payload
+
+
+@pytest.mark.asyncio
+async def test_amend_memory_hides_row_from_non_member(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {
+            "mem-1": {
+                "id": "mem-1",
+                "scope": "project",
+                "project_id": "project-1",
+                "content": "old note",
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-2"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.patch(
+            "/api/agentic/memories/mem-1", json={"content": "x"}
+        )
+
+    assert response.status_code == 404
+    assert fake_directus.updates == []
+
+
+@pytest.mark.asyncio
+async def test_forget_memory_hard_deletes_by_id(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {
+            "mem-1": {
+                "id": "mem-1",
+                "scope": "project",
+                "project_id": "project-1",
+                "content": "old note",
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.request("DELETE", "/api/agentic/memories/mem-1")
+
+    assert response.status_code == 200
+    assert response.json() == {"id": "mem-1", "deleted": True}
+    assert fake_directus.deletes == [("agent_memory", "mem-1")]
+
+
+@pytest.mark.asyncio
+async def test_forget_memory_user_scope_requires_owner(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {
+            "mem-1": {
+                "id": "mem-1",
+                "scope": "user",
+                "directus_user_id": "user-1",
+                "content": "private note",
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-2"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.request("DELETE", "/api/agentic/memories/mem-1")
+
+    assert response.status_code == 404
+    assert fake_directus.deletes == []
+
+
 @pytest.mark.asyncio
 async def test_edit_project_tags_adds_new_and_removes_by_case_insensitive_text(
     monkeypatch,

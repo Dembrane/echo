@@ -50,6 +50,12 @@ class Directus:
             return {}
         return self._request("POST", path, body)
 
+    def patch(self, path: str, body: dict[str, Any]) -> dict:
+        if self.dry_run:
+            print(f"    [dry-run] PATCH {path}")
+            return {}
+        return self._request("PATCH", path, body)
+
     def collection_exists(self, collection: str) -> bool:
         try:
             self.get(f"/collections/{urllib.parse.quote(collection)}")
@@ -256,6 +262,28 @@ def ensure_field(dx: Directus, collection: str, field: dict[str, Any]) -> None:
     dx.post(f"/fields/{collection}", field)
 
 
+def ensure_field_choices(
+    dx: Directus, collection: str, field: str, choices: list[str]
+) -> None:
+    """Idempotently sync a select-dropdown field's choices on installs where the
+    field already exists. The column stays a free-text varchar, so this only
+    keeps the admin dropdown offering every current value (e.g. a newly added
+    "retracted" status); it is never a schema change."""
+    if not dx.field_exists(collection, field):
+        return
+    print(f"  field {collection}.{field}: syncing choices")
+    dx.patch(
+        f"/fields/{collection}/{field}",
+        {
+            "meta": {
+                "options": {
+                    "choices": [{"text": value, "value": value} for value in choices]
+                }
+            }
+        },
+    )
+
+
 def ensure_schema(dx: Directus) -> None:
     collection = "agent_insight"
     ensure_collection(dx, collection, sort=13)
@@ -279,11 +307,22 @@ def ensure_schema(dx: Directus) -> None:
             "status",
             sort=10,
             default_value="new",
-            choices=["new", "reviewed", "archived"],
+            # "retracted" is a host-driven withdrawal: the assistant sets it via
+            # retractInsight when a host scraps a note. The row is kept (the
+            # dembrane team may already have read it), with the reason below.
+            choices=["new", "reviewed", "archived", "retracted"],
         ),
+        text_field(collection, "retracted_reason", sort=11),
     ]
     for field in fields:
         ensure_field(dx, collection, field)
+
+    # Existing installs already have the status field, so ensure_field skips it;
+    # sync its choices so the admin dropdown also offers the new "retracted"
+    # value. The underlying column is free text, so writes work regardless.
+    ensure_field_choices(
+        dx, collection, "status", ["new", "reviewed", "archived", "retracted"]
+    )
 
 
 def main() -> int:

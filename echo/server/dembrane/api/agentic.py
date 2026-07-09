@@ -94,6 +94,17 @@ class AgenticInsightSchema(BaseModel):
     message_id: Optional[str] = None
 
 
+class AgenticInsightEditSchema(BaseModel):
+    # Partial update: every field optional, but at least one must be present.
+    content: Optional[str] = None
+    kind: Optional[Literal["capability_gap", "friction", "wish", "praise"]] = None
+    suggested_capability: Optional[str] = None
+
+
+class AgenticInsightRetractSchema(BaseModel):
+    reason: str = Field(..., min_length=1)
+
+
 class AgenticTagsEditSchema(BaseModel):
     add: list[str] = Field(default_factory=list)
     remove: list[str] = Field(default_factory=list)
@@ -131,6 +142,10 @@ class AgenticMemoryWriteSchema(BaseModel):
     scope: str = Field(..., min_length=1)
     content: str = Field(..., min_length=1)
     memory_key: Optional[str] = None
+
+
+class AgenticMemoryAmendSchema(BaseModel):
+    content: str = Field(..., min_length=1)
 
 
 def _run_task_key(run_id: str, turn_seq: int) -> tuple[str, int]:
@@ -1358,6 +1373,96 @@ async def create_agent_insight(
     )
 
 
+async def _get_agent_insight_or_404(insight_id: str) -> dict[str, Any]:
+    """Load an agent_insight row or 404. The project it belongs to is the data
+    boundary, so the caller must still pass an ownership check on that project."""
+    try:
+        insight = await async_directus.get_item("agent_insight", insight_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Insight %s not found: %s", insight_id, exc)
+        raise HTTPException(status_code=404, detail="Insight not found") from exc
+    if not isinstance(insight, dict) or not insight.get("id"):
+        raise HTTPException(status_code=404, detail="Insight not found")
+    return insight
+
+
+def _agent_insight_payload(insight: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": _to_related_id(insight.get("id")),
+        "kind": insight.get("kind"),
+        "content": insight.get("content"),
+        "suggested_capability": insight.get("suggested_capability"),
+        "status": insight.get("status"),
+        "retracted_reason": insight.get("retracted_reason"),
+    }
+
+
+@AgenticRouter.patch("/insights/{insight_id}")
+async def edit_agent_insight(
+    insight_id: str,
+    body: AgenticInsightEditSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Amend a noted insight by id (partial update). Ownership follows the same
+    rule as every agentic write: the insight's project must be one the caller can
+    reach, so no host can edit another project's insights."""
+    _require_agent_token(auth)
+    insight = await _get_agent_insight_or_404(insight_id)
+    project_id = _to_related_id(insight.get("project_id"))
+    if not project_id:
+        raise HTTPException(status_code=404, detail="Insight not found")
+    await _assert_project_access(project_id, auth)
+
+    updates: dict[str, Any] = {}
+    if body.content is not None:
+        content = body.content.strip()
+        if not content:
+            raise HTTPException(status_code=400, detail="content cannot be blank")
+        updates["content"] = content
+    if body.kind is not None:
+        updates["kind"] = body.kind
+    if body.suggested_capability is not None:
+        updates["suggested_capability"] = _to_non_empty_string(body.suggested_capability)
+    if not updates:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide at least one of content, kind, or suggested_capability.",
+        )
+
+    await async_directus.update_item("agent_insight", insight_id, updates)
+    updated = await _get_agent_insight_or_404(insight_id)
+    return _agent_insight_payload(updated)
+
+
+@AgenticRouter.post("/insights/{insight_id}/retract")
+async def retract_agent_insight(
+    insight_id: str,
+    body: AgenticInsightRetractSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Retract a noted insight by id. The row is never deleted: retraction sets
+    status=retracted and stores the reason, because the dembrane team may already
+    have read it, so a withdrawal is itself signal."""
+    _require_agent_token(auth)
+    insight = await _get_agent_insight_or_404(insight_id)
+    project_id = _to_related_id(insight.get("project_id"))
+    if not project_id:
+        raise HTTPException(status_code=404, detail="Insight not found")
+    await _assert_project_access(project_id, auth)
+
+    reason = body.reason.strip()
+    if not reason:
+        raise HTTPException(status_code=400, detail="reason is required")
+
+    await async_directus.update_item(
+        "agent_insight",
+        insight_id,
+        {"status": "retracted", "retracted_reason": reason},
+    )
+    updated = await _get_agent_insight_or_404(insight_id)
+    return _agent_insight_payload(updated)
+
+
 async def _resolve_workspace_id_for_project(project_id: str) -> Optional[str]:
     """Resolve the workspace a project belongs to. Workspace is the data
     boundary, so it is never taken from the agent; the server derives it."""
@@ -1809,6 +1914,97 @@ async def write_project_memory(
     created_row = created.get("data") if isinstance(created, dict) else {}
     created_id = _to_non_empty_string((created_row or {}).get("id"))
     return {"id": created_id, "scope": scope, "action": "created"}
+
+
+async def _get_agent_memory_or_404(memory_id: str) -> dict[str, Any]:
+    try:
+        memory = await async_directus.get_item("agent_memory", memory_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Memory %s not found: %s", memory_id, exc)
+        raise HTTPException(status_code=404, detail="Memory not found") from exc
+    if not isinstance(memory, dict) or not memory.get("id"):
+        raise HTTPException(status_code=404, detail="Memory not found")
+    return memory
+
+
+async def _caller_in_workspace(workspace_id: str, auth: DirectusSession) -> bool:
+    """Whether the caller is a member of workspace_id. Mirrors the inheritance
+    resolution used by _visible_workspace_project_ids."""
+    if auth.is_admin:
+        return True
+    try:
+        from dembrane.app_user import get_app_user_or_raise
+        from dembrane.inheritance import user_can_access
+
+        app_user = await get_app_user_or_raise(auth.user_id)
+        resolved = await user_can_access(workspace_id, app_user["id"])
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Workspace membership check failed for %s: %s", workspace_id, exc)
+        return False
+    return resolved is not None
+
+
+async def _assert_memory_access(memory: dict[str, Any], auth: DirectusSession) -> None:
+    """A caller may mutate a memory only within a scope they can reach: their own
+    user memory, a project they can access, or a workspace they belong to.
+    Non-reachable memories 404, matching the existence-hiding ladder."""
+    if auth.is_admin:
+        return
+    scope = str(memory.get("scope") or "")
+    if scope == "user":
+        if _to_related_id(memory.get("directus_user_id")) != auth.user_id:
+            raise HTTPException(status_code=404, detail="Memory not found")
+        return
+    project_id = _to_related_id(memory.get("project_id"))
+    if project_id:
+        await _assert_project_access(project_id, auth)
+        return
+    workspace_id = _to_related_id(memory.get("workspace_id"))
+    if workspace_id and await _caller_in_workspace(workspace_id, auth):
+        return
+    raise HTTPException(status_code=404, detail="Memory not found")
+
+
+@AgenticRouter.patch("/memories/{memory_id}")
+async def amend_project_memory(
+    memory_id: str,
+    body: AgenticMemoryAmendSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Amend an existing memory's content by id. The host corrects a remembered
+    fact by editing the same row, not by layering a contradicting one."""
+    _require_agent_token(auth)
+    memory = await _get_agent_memory_or_404(memory_id)
+    await _assert_memory_access(memory, auth)
+
+    content = body.content.strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="content is required")
+
+    await async_directus.update_item(
+        "agent_memory",
+        memory_id,
+        {
+            "content": content,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+    return {"id": memory_id, "scope": memory.get("scope"), "action": "amended"}
+
+
+@AgenticRouter.delete("/memories/{memory_id}")
+async def forget_project_memory(
+    memory_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Forget a memory by id. Hard delete is acceptable here: memory is
+    project-scoped working state, unlike insights (which retract, never delete)."""
+    _require_agent_token(auth)
+    memory = await _get_agent_memory_or_404(memory_id)
+    await _assert_memory_access(memory, auth)
+
+    await async_directus.delete_item("agent_memory", memory_id)
+    return {"id": memory_id, "deleted": True}
 
 
 @AgenticRouter.post("/runs/{run_id}/stream")

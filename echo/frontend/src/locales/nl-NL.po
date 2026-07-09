@@ -5287,6 +5287,10 @@ msgstr "Prognose"
 #~ msgid "Forecast: ~{0}"
 #~ msgstr ""
 
+#: src/components/chat/agenticToolActivity.ts:157
+msgid "Forgetting a saved memory"
+msgstr ""
+
 #: src/routes/auth/Login.tsx:375
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
@@ -5935,6 +5939,11 @@ msgstr "Innovator of hoger"
 
 #~ msgid "Input global context"
 #~ msgstr "Voer algemene context in"
+
+#. placeholder {0}: shortInsightId(note.insightId)
+#: src/components/chat/InsightNoteCard.tsx:64
+msgid "insight {0}"
+msgstr ""
 
 #~ msgid "Insight Library"
 #~ msgstr "Inzichtenbibliotheek"
@@ -6801,7 +6810,7 @@ msgstr "Log in bij {resolvedWorkspaceName} om verder te gaan."
 msgid "Log out and use the invited email"
 msgstr "Uitloggen en het uitgenodigde e-mailadres gebruiken"
 
-#: src/components/chat/agenticToolActivity.ts:152
+#: src/components/chat/agenticToolActivity.ts:160
 msgid "Logging this with the dembrane team"
 msgstr ""
 
@@ -7948,7 +7957,7 @@ msgstr "Niet getraind"
 msgid "note"
 msgstr ""
 
-#: src/components/chat/InsightNoteCard.tsx:43
+#: src/components/chat/InsightNoteCard.tsx:84
 msgid "noted for the dembrane team"
 msgstr ""
 
@@ -9896,6 +9905,11 @@ msgstr ""
 #~ msgid "Reason"
 #~ msgstr "Reden"
 
+#. placeholder {0}: note.reason
+#: src/components/chat/InsightNoteCard.tsx:78
+msgid "reason: {0}"
+msgstr ""
+
 #: src/routes/admin/AdminSettingsRoute.tsx:2634
 msgid "Recent payments across all accounts"
 msgstr "Recente betalingen over alle accounts"
@@ -10483,6 +10497,18 @@ msgstr "Abonnement hervatten"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:636
 msgid "Resume updates"
+msgstr ""
+
+#: src/components/chat/InsightNoteCard.tsx:59
+msgid "retracted"
+msgstr ""
+
+#: src/components/chat/InsightNoteCard.tsx:83
+msgid "retracted for the dembrane team"
+msgstr ""
+
+#: src/components/chat/agenticToolActivity.ts:153
+msgid "Retracting a note for the dembrane team"
 msgstr ""
 
 #: src/components/conversation/RetranscribeConversation.tsx:210
@@ -13342,6 +13368,10 @@ msgstr ""
 #~ msgid "Update your team's name and branding. Workspace-level settings live on each workspace's own settings page."
 #~ msgstr ""
 
+#: src/components/chat/InsightNoteCard.tsx:54
+msgid "updated"
+msgstr ""
+
 #~ msgid "Updated"
 #~ msgstr "Bijgewerkt"
 
@@ -13387,6 +13417,14 @@ msgstr ""
 #: src/components/chat/CanvasSuggestionCard.tsx:29
 #~ msgid "Updates every few minutes."
 #~ msgstr ""
+
+#: src/components/chat/agenticToolActivity.ts:151
+msgid "Updating a note for the dembrane team"
+msgstr ""
+
+#: src/components/chat/agenticToolActivity.ts:155
+msgid "Updating a saved memory"
+msgstr ""
 
 #: src/components/chat/agenticToolActivity.ts:146
 msgid "Updating project tags"

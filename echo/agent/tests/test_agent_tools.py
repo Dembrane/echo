@@ -84,6 +84,10 @@ class _FakeEchoClient:
         self.canvas_loop_calls: list[dict[str, str]] = []
         self.canvas_host_item_calls: list[dict[str, object]] = []
         self.canvas_remove_item_calls: list[dict[str, object]] = []
+        self.edit_agent_insight_calls: list[dict[str, object]] = []
+        self.retract_agent_insight_calls: list[dict[str, object]] = []
+        self.amend_memory_calls: list[dict[str, object]] = []
+        self.forget_memory_calls: list[str] = []
         self.closed = False
 
     async def search_home(self, query: str, limit: int = 5) -> dict:
@@ -188,6 +192,50 @@ class _FakeEchoClient:
             }
         )
         return {"id": "insight-1", "status": "new"}
+
+    async def edit_agent_insight(
+        self,
+        insight_id: str,
+        content: str | None = None,
+        kind: str | None = None,
+        suggested_capability: str | None = None,
+    ) -> dict:
+        self.edit_agent_insight_calls.append(
+            {
+                "insight_id": insight_id,
+                "content": content,
+                "kind": kind,
+                "suggested_capability": suggested_capability,
+            }
+        )
+        return {
+            "id": insight_id,
+            "kind": kind or "capability_gap",
+            "content": content or "existing content",
+            "suggested_capability": suggested_capability,
+            "status": "new",
+        }
+
+    async def retract_agent_insight(self, insight_id: str, reason: str) -> dict:
+        self.retract_agent_insight_calls.append(
+            {"insight_id": insight_id, "reason": reason}
+        )
+        return {
+            "id": insight_id,
+            "kind": "friction",
+            "content": "The host wanted tag bulk edit.",
+            "suggested_capability": None,
+            "status": "retracted",
+            "retracted_reason": reason,
+        }
+
+    async def amend_memory(self, memory_id: str, content: str) -> dict:
+        self.amend_memory_calls.append({"memory_id": memory_id, "content": content})
+        return {"id": memory_id, "scope": "project", "action": "amended"}
+
+    async def forget_memory(self, memory_id: str) -> dict:
+        self.forget_memory_calls.append(memory_id)
+        return {"id": memory_id, "deleted": True}
 
     async def list_memory(self, project_id: str) -> dict:
         self.list_memory_calls.append(project_id)
@@ -1557,6 +1605,164 @@ async def test_record_insight_sends_contextual_agent_insight_for_current_chat():
         }
     ]
     assert factory.instances[0].closed is True
+
+
+def _insight_memory_tools():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+    )
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+        chat_id="chat-1",
+        message_id="run-event-1",
+    )
+    return _tool_map(llm.bound_tools), factory
+
+
+@pytest.mark.asyncio
+async def test_edit_insight_amends_note_by_id_and_renders_updated_card():
+    tools, factory = _insight_memory_tools()
+
+    result = await tools["editInsight"].ainvoke(
+        {
+            "insight_id": "insight-1",
+            "content": "The host needs bulk tag editing from chat.",
+            "kind": "capability_gap",
+        }
+    )
+
+    # The card reuses the insight marker, with mode "edited" so it re-renders.
+    assert result["type"] == "agent_insight_note"
+    assert result["mode"] == "edited"
+    assert result["agent_insight_id"] == "insight-1"
+    assert result["insight_kind"] == "capability_gap"
+    assert result["content"] == "The host needs bulk tag editing from chat."
+    assert result["visible_to_user"] is True
+    assert factory.instances[0].edit_agent_insight_calls == [
+        {
+            "insight_id": "insight-1",
+            "content": "The host needs bulk tag editing from chat.",
+            "kind": "capability_gap",
+            "suggested_capability": None,
+        }
+    ]
+    assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_edit_insight_requires_at_least_one_field():
+    tools, _ = _insight_memory_tools()
+
+    with pytest.raises(ValueError):
+        await tools["editInsight"].ainvoke({"insight_id": "insight-1"})
+
+
+@pytest.mark.asyncio
+async def test_edit_insight_rejects_unknown_kind():
+    tools, _ = _insight_memory_tools()
+
+    with pytest.raises(ValueError):
+        await tools["editInsight"].ainvoke(
+            {"insight_id": "insight-1", "kind": "nonsense"}
+        )
+
+
+@pytest.mark.asyncio
+async def test_retract_insight_sets_status_and_stores_reason():
+    tools, factory = _insight_memory_tools()
+
+    result = await tools["retractInsight"].ainvoke(
+        {"insight_id": "insight-9", "reason": "The host said this is not a real gap."}
+    )
+
+    assert result["type"] == "agent_insight_note"
+    assert result["mode"] == "retracted"
+    assert result["agent_insight_id"] == "insight-9"
+    assert result["status"] == "retracted"
+    assert result["reason"] == "The host said this is not a real gap."
+    assert result["visible_to_user"] is True
+    assert factory.instances[0].retract_agent_insight_calls == [
+        {"insight_id": "insight-9", "reason": "The host said this is not a real gap."}
+    ]
+    assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_retract_insight_requires_reason():
+    tools, _ = _insight_memory_tools()
+
+    with pytest.raises(ValueError):
+        await tools["retractInsight"].ainvoke({"insight_id": "insight-1", "reason": "  "})
+
+
+@pytest.mark.asyncio
+async def test_amend_memory_updates_existing_note_by_id():
+    tools, factory = _insight_memory_tools()
+
+    result = await tools["amendMemory"].ainvoke(
+        {"memory_id": "mem-1", "content": "The owner's name is spelled Akshita."}
+    )
+
+    assert result["kind"] == "memory_amended"
+    assert result["id"] == "mem-1"
+    assert result["action"] == "amended"
+    assert factory.instances[0].amend_memory_calls == [
+        {"memory_id": "mem-1", "content": "The owner's name is spelled Akshita."}
+    ]
+    assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_amend_memory_requires_content():
+    tools, _ = _insight_memory_tools()
+
+    with pytest.raises(ValueError):
+        await tools["amendMemory"].ainvoke({"memory_id": "mem-1", "content": "  "})
+
+
+@pytest.mark.asyncio
+async def test_forget_memory_deletes_by_id_and_confirms_reason():
+    tools, factory = _insight_memory_tools()
+
+    result = await tools["forgetMemory"].ainvoke(
+        {"memory_id": "mem-2", "reason": "The host asked to drop the old focus note."}
+    )
+
+    assert result["kind"] == "memory_forgotten"
+    assert result["id"] == "mem-2"
+    assert result["forgotten"] is True
+    assert result["reason"] == "The host asked to drop the old focus note."
+    assert factory.instances[0].forget_memory_calls == ["mem-2"]
+    assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_forget_memory_requires_reason():
+    tools, _ = _insight_memory_tools()
+
+    with pytest.raises(ValueError):
+        await tools["forgetMemory"].ainvoke({"memory_id": "mem-2", "reason": ""})
+
+
+def test_edit_and_retract_by_id_prompt_rules_present():
+    # Normalize wrapped whitespace so multi-word rules match regardless of line
+    # breaks in the prompt source.
+    prompt = " ".join(SYSTEM_PROMPT.lower().split())
+    # Insights: amend by id, never re-note, confirm what changed, keep the row.
+    assert "amend it by id in the same turn" in prompt
+    assert "editinsight" in prompt
+    assert "retractinsight" in prompt
+    assert "never re-note a corrected insight" in prompt
+    assert "confirm in one sentence what changed" in prompt
+    # Memory: amend the existing note, forget by id.
+    assert "amend the existing memory" in prompt
+    assert "amendmemory" in prompt
+    assert "forgetmemory" in prompt
 
 
 @pytest.mark.asyncio
