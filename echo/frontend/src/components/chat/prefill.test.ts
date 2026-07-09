@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+// @vitest-environment jsdom
+import { describe, expect, it, vi } from "vitest";
 import { consumeChatPrefill, sanitizeChatPrefill } from "./prefill";
 
 describe("chat prefill", () => {
@@ -25,5 +26,17 @@ describe("chat prefill", () => {
 	it("still consumes empty or markup-only prefill values", () => {
 		const result = consumeChatPrefill("?prefill=%3Cbr%3E");
 		expect(result).toEqual({ prefill: null, search: "" });
+	});
+
+	it("drops angle brackets entirely when no DOM is available", () => {
+		const original = globalThis.DOMParser;
+		vi.stubGlobal("DOMParser", undefined);
+		try {
+			expect(sanitizeChatPrefill("a <scr<script>ipt> b")).toBe(
+				"a scrscriptipt b",
+			);
+		} finally {
+			vi.stubGlobal("DOMParser", original);
+		}
 	});
 });
