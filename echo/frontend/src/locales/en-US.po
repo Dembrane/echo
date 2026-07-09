@@ -5861,6 +5861,10 @@ msgstr "Forecast"
 #~ msgid "Forecast: ~{0}"
 #~ msgstr "Forecast: ~{0}"
 
+#: src/components/chat/agenticToolActivity.ts:157
+msgid "Forgetting a saved memory"
+msgstr "Forgetting a saved memory"
+
 #: src/routes/auth/Login.tsx:375
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
@@ -6552,6 +6556,11 @@ msgstr "Innovator or higher"
 #: src/components/chat/AgenticChatPanel.tsx:372
 #~ msgid "Input"
 #~ msgstr "Input"
+
+#. placeholder {0}: shortInsightId(note.insightId)
+#: src/components/chat/InsightNoteCard.tsx:64
+msgid "insight {0}"
+msgstr "insight {0}"
 
 #: src/routes/project/library/ProjectLibraryInsight.tsx:38
 #~ msgid "Insight Library"
@@ -7452,7 +7461,7 @@ msgstr "Log in to {resolvedWorkspaceName} to continue."
 msgid "Log out and use the invited email"
 msgstr "Log out and use the invited email"
 
-#: src/components/chat/agenticToolActivity.ts:152
+#: src/components/chat/agenticToolActivity.ts:160
 msgid "Logging this with the dembrane team"
 msgstr "Logging this with the dembrane team"
 
@@ -8663,7 +8672,7 @@ msgstr "Not trained"
 msgid "note"
 msgstr "note"
 
-#: src/components/chat/InsightNoteCard.tsx:43
+#: src/components/chat/InsightNoteCard.tsx:84
 msgid "noted for the dembrane team"
 msgstr "noted for the dembrane team"
 
@@ -10563,6 +10572,11 @@ msgstr "Ready to record"
 #~ msgid "Reason"
 #~ msgstr "Reason"
 
+#. placeholder {0}: note.reason
+#: src/components/chat/InsightNoteCard.tsx:78
+msgid "reason: {0}"
+msgstr "reason: {0}"
+
 #: src/routes/admin/AdminSettingsRoute.tsx:2634
 msgid "Recent payments across all accounts"
 msgstr "Recent payments across all accounts"
@@ -11200,6 +11214,18 @@ msgstr "Resume plan"
 #: src/routes/project/canvas/CanvasRoute.tsx:636
 msgid "Resume updates"
 msgstr "Resume updates"
+
+#: src/components/chat/InsightNoteCard.tsx:59
+msgid "retracted"
+msgstr "retracted"
+
+#: src/components/chat/InsightNoteCard.tsx:83
+msgid "retracted for the dembrane team"
+msgstr "retracted for the dembrane team"
+
+#: src/components/chat/agenticToolActivity.ts:153
+msgid "Retracting a note for the dembrane team"
+msgstr "Retracting a note for the dembrane team"
 
 #: src/components/conversation/RetranscribeConversation.tsx:210
 msgid "Retranscribe"
@@ -14204,6 +14230,10 @@ msgstr "Update rhythm"
 #~ msgid "Update your team's name and branding. Workspace-level settings live on each workspace's own settings page."
 #~ msgstr "Update your team's name and branding. Workspace-level settings live on each workspace's own settings page."
 
+#: src/components/chat/InsightNoteCard.tsx:54
+msgid "updated"
+msgstr "updated"
+
 #: src/components/chat/ChatTemplatesMenu.tsx:287
 #~ msgid "Updated"
 #~ msgstr "Updated"
@@ -14251,6 +14281,14 @@ msgstr "Updates every {cadenceMinutes} minutes."
 #: src/components/chat/CanvasSuggestionCard.tsx:29
 #~ msgid "Updates every few minutes."
 #~ msgstr "Updates every few minutes."
+
+#: src/components/chat/agenticToolActivity.ts:151
+msgid "Updating a note for the dembrane team"
+msgstr "Updating a note for the dembrane team"
+
+#: src/components/chat/agenticToolActivity.ts:155
+msgid "Updating a saved memory"
+msgstr "Updating a saved memory"
 
 #: src/components/chat/agenticToolActivity.ts:146
 msgid "Updating project tags"

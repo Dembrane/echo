@@ -50,8 +50,12 @@ AgentInsightKind = Literal["capability_gap", "friction", "wish", "praise"]
 #   listCanvases, get_project_scope).
 # - Write tools change durable state (editProjectTags, editCanvas, addToCanvas,
 #   removeFromCanvas, pauseCanvasLoop, resumeCanvasLoop, stopCanvasLoop,
-#   remember, reachOutToDembraneSupport, noteInsight). noteInsight also renders a
-#   card, so it appears in UI_TOOLS too.
+#   remember, amendMemory, forgetMemory, reachOutToDembraneSupport, noteInsight,
+#   editInsight, retractInsight). noteInsight, editInsight, and retractInsight
+#   also render a card, so they appear in UI_TOOLS too.
+# What the agent mints, the host can amend BY ID in the same chat, and the card
+# reflects the change: editInsight/retractInsight re-render the insight card,
+# amendMemory/forgetMemory update the durable memory record.
 # The README carries the same table for humans.
 UI_TOOLS = frozenset(
     {
@@ -60,6 +64,8 @@ UI_TOOLS = frozenset(
         "proposeGoal",
         "proposeProjectUpdate",
         "noteInsight",
+        "editInsight",
+        "retractInsight",
         "sendProgressUpdate",
     }
 )
@@ -230,6 +236,16 @@ Examples:
   wish with content "The host wants chat to provide direct navigation to a
   specific dashboard surface." and suggested_capability "A dashboard navigation
   suggestion that can deep-link to internal tabs."
+When the host corrects or withdraws a note you already made in this chat, amend
+it BY ID in the same turn. Each noteInsight card shows a short id suffix (for
+example "insight a1b2") the host can point at. Use editInsight(insight_id, ...)
+to fix the content, kind, or suggested capability when the host refines what you
+noted, and retractInsight(insight_id, reason) when they say the note is wrong or
+to scrap it ("that's not right", "actually scrap that note"). Never re-note a
+corrected insight as a new row when an edit will do: id continuity preserves the
+dembrane team's thread. Confirm in one sentence WHAT changed. A retracted note is
+never hard-deleted; the team may already have read it, so the retraction and its
+reason are themselves signal, and the card mutes to show it was withdrawn.
 
 ## Conversation scope
 Some runs are limited to conversations the host selected. When the context
@@ -419,6 +435,12 @@ remembered version and cite it naturally.
 Prefer updating an existing note by passing the same memory_key over saving a
 near duplicate. Never store private or personal information outside user scope.
 When you save something, tell the host in one short sentence what you saved.
+Every saved memory has an id (readMemory returns it). When the host corrects a
+fact you remembered, amend the EXISTING memory with amendMemory(memory_id, ...)
+rather than layering a second, contradicting note. When the host asks you to
+forget something, use forgetMemory(memory_id, reason) and confirm plainly that
+you forgot it. Forgetting a memory removes it for good; that is fine, since
+memories are project-scoped working state.
 When the saved memory is a spelling or name correction that could improve future
 transcription, also offer one concise project-settings proposal: use
 proposeProjectUpdate to add the corrected term to
@@ -1608,11 +1630,108 @@ def create_agent_graph(
         # The card in the chat reads these fields; keep the marker stable.
         return {
             "type": "agent_insight_note",
+            "mode": "noted",
             "recorded": True,
             "agent_insight_id": result.get("id"),
             "insight_kind": normalized_kind,
             "content": normalized_content,
             "suggested_capability": normalized_capability or None,
+            "visible_to_user": True,
+        }
+
+    @tool
+    async def editInsight(
+        insight_id: str,
+        content: str = "",
+        kind: str = "",
+        suggested_capability: str = "",
+    ) -> dict[str, Any]:
+        """Amend a noted insight by id. Renders an updated card in the chat UI.
+
+        Use this when the host corrects a note you already made this chat ("that
+        kind is wrong", "the need is really about X"). Pass insight_id (from the
+        noteInsight result, or the short id suffix on its card) and only the
+        fields that change. At least one of content, kind, or
+        suggested_capability is required. Prefer this over noting a new insight
+        when an edit will do: the id stays stable, so the dembrane team's thread
+        is preserved. Confirm in one sentence what changed.
+        """
+        normalized_id = insight_id.strip()
+        if not normalized_id:
+            raise ValueError("insight_id is required")
+        normalized_content = content.strip()
+        normalized_kind = kind.strip()
+        normalized_capability = suggested_capability.strip()
+        if normalized_kind and normalized_kind not in {
+            "capability_gap",
+            "friction",
+            "wish",
+            "praise",
+        }:
+            raise ValueError(
+                "kind must be one of capability_gap, friction, wish, or praise"
+            )
+        if not normalized_content and not normalized_kind and not normalized_capability:
+            raise ValueError(
+                "Provide at least one of content, kind, or suggested_capability to edit."
+            )
+
+        client = _create_echo_client()
+        try:
+            result = await client.edit_agent_insight(
+                normalized_id,
+                content=normalized_content or None,
+                kind=normalized_kind or None,
+                suggested_capability=normalized_capability or None,
+            )
+        finally:
+            await client.close()
+        return {
+            "type": "agent_insight_note",
+            "mode": "edited",
+            "recorded": True,
+            "agent_insight_id": result.get("id") or normalized_id,
+            "insight_kind": result.get("kind") or normalized_kind or None,
+            "content": result.get("content") or normalized_content,
+            "suggested_capability": result.get("suggested_capability") or None,
+            "visible_to_user": True,
+        }
+
+    @tool
+    async def retractInsight(insight_id: str, reason: str) -> dict[str, Any]:
+        """Retract a noted insight by id. Renders a muted "retracted" card in the
+        chat UI, with the reason.
+
+        Use this when the host withdraws a note you made ("scrap that note",
+        "that's not a real gap"). The row is never hard-deleted: the dembrane
+        team may already have read it, so the retraction (status plus reason) is
+        itself signal. Confirm plainly, in one sentence, what you withdrew.
+        """
+        normalized_id = insight_id.strip()
+        if not normalized_id:
+            raise ValueError("insight_id is required")
+        normalized_reason = reason.strip()
+        if not normalized_reason:
+            raise ValueError("reason is required")
+
+        client = _create_echo_client()
+        try:
+            result = await client.retract_agent_insight(
+                normalized_id,
+                reason=normalized_reason,
+            )
+        finally:
+            await client.close()
+        return {
+            "type": "agent_insight_note",
+            "mode": "retracted",
+            "recorded": True,
+            "agent_insight_id": result.get("id") or normalized_id,
+            "insight_kind": result.get("kind") or None,
+            "content": result.get("content") or None,
+            "suggested_capability": result.get("suggested_capability") or None,
+            "reason": normalized_reason,
+            "status": result.get("status") or "retracted",
             "visible_to_user": True,
         }
 
@@ -1920,6 +2039,63 @@ def create_agent_graph(
             "visible_to_user": True,
         }
 
+    @tool
+    async def amendMemory(memory_id: str, content: str) -> dict[str, Any]:
+        """Amend an existing memory by id with new content.
+
+        Use this when the host corrects a fact you remembered: update the
+        EXISTING note rather than saving a second, contradicting one. memory_id
+        comes from readMemory. Confirm what you changed in one short sentence.
+        """
+        normalized_id = memory_id.strip()
+        if not normalized_id:
+            raise ValueError("memory_id is required")
+        normalized_content = content.strip()
+        if not normalized_content:
+            raise ValueError("content is required")
+
+        client = _create_echo_client()
+        try:
+            result = await client.amend_memory(normalized_id, content=normalized_content)
+        finally:
+            await client.close()
+        return {
+            "kind": "memory_amended",
+            "id": result.get("id") if isinstance(result, dict) else normalized_id,
+            "scope": result.get("scope") if isinstance(result, dict) else None,
+            "action": "amended",
+            "visible_to_user": True,
+        }
+
+    @tool
+    async def forgetMemory(memory_id: str, reason: str) -> dict[str, Any]:
+        """Forget a memory by id. Deletes the note for good.
+
+        Use this when the host asks you to forget something. Memories are
+        project-scoped working state, so removal is permanent. memory_id comes
+        from readMemory. Confirm plainly that you forgot it.
+        """
+        normalized_id = memory_id.strip()
+        if not normalized_id:
+            raise ValueError("memory_id is required")
+        normalized_reason = reason.strip()
+        if not normalized_reason:
+            raise ValueError("reason is required")
+
+        client = _create_echo_client()
+        try:
+            result = await client.forget_memory(normalized_id)
+        finally:
+            await client.close()
+        forgotten = result.get("deleted") if isinstance(result, dict) else None
+        return {
+            "kind": "memory_forgotten",
+            "id": normalized_id,
+            "reason": normalized_reason,
+            "forgotten": True if forgotten is None else bool(forgotten),
+            "visible_to_user": True,
+        }
+
     tools = [
         get_project_scope,
         findConversationsByKeywords,
@@ -1945,6 +2121,8 @@ def create_agent_graph(
         getLiveConversationStatus,
         reachOutToDembraneSupport,
         noteInsight,
+        editInsight,
+        retractInsight,
         readMemory,
         readGoal,
         proposeGoal,
@@ -1958,6 +2136,8 @@ def create_agent_graph(
         resumeCanvasLoop,
         stopCanvasLoop,
         remember,
+        amendMemory,
+        forgetMemory,
     ]
     system_prompt = SYSTEM_PROMPT + knowledge.prompt_section(docs_base_url=docs_base_url)
     configured_llm = llm or _build_llm()

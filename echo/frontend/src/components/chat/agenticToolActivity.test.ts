@@ -36,7 +36,10 @@ describe("parseInsightNote", () => {
 		);
 		expect(note).toEqual({
 			content: "The host wants chat to open a specific dashboard tab.",
+			insightId: "insight-1",
 			kind: "wish",
+			mode: "noted",
+			reason: null,
 			suggestedCapability: "Dashboard navigation with internal tab links.",
 		});
 	});
@@ -52,6 +55,56 @@ describe("parseInsightNote", () => {
 		expect(note?.content).toBe(
 			"The host wants chat to open a specific dashboard tab.",
 		);
+	});
+
+	it("defaults a legacy payload without a mode to 'noted'", () => {
+		const rawOutput = JSON.stringify({
+			agent_insight_id: "insight-7",
+			content: "The host wished tags were editable from chat.",
+			insight_kind: "wish",
+			type: "agent_insight_note",
+		});
+		const note = parseInsightNote(baseActivity({ rawOutput }));
+		expect(note?.mode).toBe("noted");
+		expect(note?.insightId).toBe("insight-7");
+		expect(note?.reason).toBeNull();
+	});
+
+	it("parses an editInsight output as an amended note with mode 'edited'", () => {
+		const rawOutput = JSON.stringify({
+			agent_insight_id: "insight-1",
+			content: "The host needs bulk tag editing from chat.",
+			insight_kind: "capability_gap",
+			mode: "edited",
+			recorded: true,
+			type: "agent_insight_note",
+			visible_to_user: true,
+		});
+		const note = parseInsightNote(
+			baseActivity({ rawOutput, toolName: "editInsight" }),
+		);
+		expect(note?.mode).toBe("edited");
+		expect(note?.insightId).toBe("insight-1");
+		expect(note?.content).toBe("The host needs bulk tag editing from chat.");
+	});
+
+	it("parses a retractInsight output as a muted note with reason", () => {
+		const rawOutput = JSON.stringify({
+			agent_insight_id: "insight-9",
+			content: "The host wanted bulk tag edit.",
+			insight_kind: "friction",
+			mode: "retracted",
+			reason: "The host said this is not a real gap.",
+			status: "retracted",
+			type: "agent_insight_note",
+			visible_to_user: true,
+		});
+		const note = parseInsightNote(
+			baseActivity({ rawOutput, toolName: "retractInsight" }),
+		);
+		expect(note?.mode).toBe("retracted");
+		expect(note?.reason).toBe("The host said this is not a real gap.");
+		expect(note?.insightId).toBe("insight-9");
 	});
 
 	it("returns null for an unrelated tool", () => {

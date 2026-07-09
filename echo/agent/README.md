@@ -37,8 +37,11 @@ Tools defined in `agent.py` fall into three buckets:
 
 - **UI tools** render a card in the chat timeline. The `UI_TOOLS` frozenset in
   `agent.py` is the source of truth: `navigateTo`, `proposeCanvas`,
-  `proposeGoal`, `proposeProjectUpdate`, `noteInsight`, `sendProgressUpdate`.
-  Each of these also carries a "renders a card in the chat UI" docstring line.
+  `proposeGoal`, `proposeProjectUpdate`, `noteInsight`, `editInsight`,
+  `retractInsight`, `sendProgressUpdate`. Each of these also carries a "renders a
+  card in the chat UI" docstring line. `editInsight` and `retractInsight`
+  re-render the insight card by id: an amended note gains an "updated" chip, a
+  retracted one mutes with a "retracted" chip and the reason.
 - **Read tools** fetch project data or product knowledge for the model only:
   `findConversationsByKeywords`, `listConversationSummary`,
   `listConversationFullTranscript`, `grepConversationSnippets`,
@@ -48,8 +51,12 @@ Tools defined in `agent.py` fall into three buckets:
   `readGoal`, `listMethodologies`, `listCanvases`, `get_project_scope`.
 - **Write tools** change durable state: `editProjectTags`, `editCanvas`,
   `addToCanvas`, `removeFromCanvas`, `pauseCanvasLoop`, `resumeCanvasLoop`,
-  `stopCanvasLoop`, `remember`, `reachOutToDembraneSupport`, `noteInsight`
-  (which is also a UI tool).
+  `stopCanvasLoop`, `remember`, `amendMemory`, `forgetMemory`,
+  `reachOutToDembraneSupport`, `noteInsight`, `editInsight`, `retractInsight`
+  (these last three are also UI tools). Everything the agent mints is amendable
+  BY ID in the same chat: insights edit/retract (never hard-delete, since the
+  dembrane team may have read them), memories amend/forget (hard delete is fine,
+  they are project-scoped working state).
 
 ### Renamed tools (wave 32)
 

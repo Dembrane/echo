@@ -430,3 +430,60 @@ class EchoClient:
         response.raise_for_status()
         payload = response.json()
         return payload if isinstance(payload, dict) else {}
+
+    async def edit_agent_insight(
+        self,
+        insight_id: str,
+        content: Optional[str] = None,
+        kind: Optional[str] = None,
+        suggested_capability: Optional[str] = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {}
+        if content is not None:
+            body["content"] = content
+        if kind is not None:
+            body["kind"] = kind
+        if suggested_capability is not None:
+            body["suggested_capability"] = suggested_capability
+        response = await self._client.patch(
+            f"/agentic/insights/{insight_id}",
+            json=body,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+
+    async def retract_agent_insight(
+        self,
+        insight_id: str,
+        reason: str,
+    ) -> dict[str, Any]:
+        response = await self._client.post(
+            f"/agentic/insights/{insight_id}/retract",
+            json={"reason": reason},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+
+    async def amend_memory(
+        self,
+        memory_id: str,
+        content: str,
+    ) -> dict[str, Any]:
+        response = await self._client.patch(
+            f"/agentic/memories/{memory_id}",
+            json={"content": content},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+
+    async def forget_memory(self, memory_id: str) -> dict[str, Any]:
+        response = await self._client.request(
+            "DELETE",
+            f"/agentic/memories/{memory_id}",
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
