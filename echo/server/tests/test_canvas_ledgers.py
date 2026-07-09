@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from dembrane.canvas.ledgers import (
     host_item,
     state_patch,
@@ -360,3 +362,123 @@ def test_board_folds_unattributed_receipts_into_room_card() -> None:
     assert state["board_cards"][0]["group"] == "the room"
     assert "the room" in html
     assert "Maya" not in html
+
+
+def test_board_seeds_from_existing_attributed_ledger_quotes() -> None:
+    state = fresh_canvas_state({"canvas_tabs": [{"kind": "board", "grouping": "person"}]})
+    state["quotes_ledger"] = [
+        {
+            "id": "q-maya",
+            "who": "Maya",
+            "quote": "Keep the doorway open.",
+            "source": {"conversation_id": "conv-1", "chunk_id": "chunk-1"},
+            "when": "2026-07-09T10:00:00Z",
+        }
+    ]
+
+    state, detail = apply_model_extraction(
+        state,
+        _bundle(),
+        {"quotes": [], "concepts": [], "crux": None, "story_slides": [], "board_cards": []},
+    )
+    html = render_tabbed_canvas(state=state, project={"name": "Room"})
+
+    assert detail["board_changed"] is True
+    assert state["board_cards"][0]["group"] == "Maya"
+    assert state["board_cards"][0]["synthesis"] == "Keep the doorway open."
+    assert "Keep the doorway open." in html
+
+
+def test_empty_board_tab_renders_honest_empty_state() -> None:
+    state = fresh_canvas_state({"canvas_tabs": [{"kind": "board", "grouping": "person"}]})
+
+    html = render_tabbed_canvas(state=state, project={"name": "Room"})
+
+    assert 'href="#tab-board_person"' in html
+    assert "No attributed voices yet." in html
+
+
+def test_near_duplicate_concepts_merge_and_keep_longer_phrase() -> None:
+    state = fresh_canvas_state()
+    bundle = {
+        "conversations": [
+            {
+                "id": "conv-1",
+                "label": "Maya",
+                "chunks": [
+                    {
+                        "id": "chunk-1",
+                        "transcript": (
+                            "falling in love with the game. "
+                            "falling in love with the game again."
+                        ),
+                        "created_at": "2026-07-09T10:00:00Z",
+                    }
+                ],
+            }
+        ]
+    }
+
+    state, _detail = apply_model_extraction(
+        state,
+        bundle,
+        {
+            "quotes": [
+                {
+                    "who": "Maya",
+                    "quote": "falling in love with the game.",
+                    "conversation_id": "conv-1",
+                    "chunk_id": "chunk-1",
+                },
+                {
+                    "who": "Maya",
+                    "quote": "falling in love with the game again.",
+                    "conversation_id": "conv-1",
+                    "chunk_id": "chunk-1",
+                },
+            ],
+            "concepts": [
+                {"phrase": "falling in love with the game", "supporting_quote_indices": [0]},
+                {
+                    "phrase": "falling in love with the game again",
+                    "supporting_quote_indices": [1],
+                },
+            ],
+            "crux": None,
+            "story_slides": [],
+        },
+    )
+
+    assert len(state["concepts_ledger"]) == 1
+    assert state["concepts_ledger"][0]["phrase"] == "falling in love with the game again"
+    assert len(state["concepts_ledger"][0]["quote_ids"]) == 2
+
+
+def test_cloud_scatter_is_deterministic_spread_and_sanitized() -> None:
+    concepts = [
+        {
+            "id": f"concept-{index}",
+            "phrase": f"phrase {index}",
+            "quote_ids": [],
+            "size_tier": "xl" if index < 3 else "m",
+            "last_reinforced": f"2026-07-09T10:{index:02d}:00Z",
+        }
+        for index in range(10)
+    ]
+    state = fresh_canvas_state({"canvas_concepts_ledger": concepts})
+
+    first = render_tabbed_canvas(state=state, project={"name": "Room"})
+    second = render_tabbed_canvas(state=state, project={"name": "Room"})
+
+    assert first == second
+    styles = re.findall(r'class="tabbed-concept tabbed-concept-[^"]+" style="([^"]+)"', first)
+    assert len(styles) == 10
+    assert len(set(styles[:3])) == 3
+    assert "animation-delay:" in styles[0]
+    assert "animation-duration:" in styles[0]
+    tiers = re.findall(r'class="tabbed-concept tabbed-concept-([a-z]+)" style=', first)
+    xl_positions = [index for index, tier in enumerate(tiers) if tier == "xl"]
+    assert all((right - left) > 1 for left, right in zip(xl_positions, xl_positions[1:], strict=False))
+    sanitized = sanitize_canvas_html(first)
+    assert 'style="transform:translate(' in sanitized.html
+    assert "animation-delay:" in sanitized.html

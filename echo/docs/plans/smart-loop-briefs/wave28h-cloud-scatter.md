@@ -1,8 +1,34 @@
-# Brief: Wave 28h — the cloud scatters like a room, not a spreadsheet
+# Brief: Wave 28h — cloud scatter, board seeding, near-duplicate concepts
 
-Start AFTER the 28g fix-back is merged: `git fetch origin && git checkout
--b sameer/cloud-scatter origin/main` (verify the 28g/trace-audit work is
-in main; if not, report and stop).
+Start AFTER 28g (#838) is merged: `git fetch origin && git checkout
+-b sameer/cloud-scatter origin/main` (verify the trace/audit work is in
+main; if not, report and stop).
+
+THREE items: the scatter (below), plus two carried-over live-repro fixes:
+
+## A. Board seeding from existing ledgers (live repro, echo-next loop 37ef418f)
+
+Enabling {kind: board} on a loop whose quotes ledger ALREADY holds
+attributed quotes produced 'board unchanged' and NO Board tab in the
+rendered HTML. Fix both halves:
+1. When a board tab is enabled and board cards are empty but attributed
+   quotes exist in the ledger, seed cards from those accepted quotes on
+   the next tick (no new extraction required).
+2. An enabled-but-empty board tab must still render in the tab bar with
+   an honest empty state ('no attributed voices yet'), never disappear.
+Tests for both.
+
+## B. Near-duplicate concept merge (live repro, echo-next canvas 14)
+
+'falling in love with the game' and 'falling in love with the game
+again' rendered as separate tiles with split receipts. In
+_merge_model_concepts, add code-level near-duplicate merging: normalize
+(lowercase, strip punctuation + filler words), merge when normalized
+phrases are equal OR one contains the other; pool quote_ids; the longer
+/ more room-flavored phrase survives; size tier recomputed after merge.
+Test with the live pair above.
+
+## C. The scatter (original brief)
 
 Owner evidence: side-by-side with the reference wall (Oren's), our
 concept cloud reads mechanical. Three concrete causes in

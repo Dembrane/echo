@@ -26,6 +26,7 @@ from dembrane.canvas.ledgers import (
     ledger_prompt_summary,
     normalize_canvas_tabs,
     apply_model_extraction,
+    seed_board_cards_from_quotes,
 )
 from dembrane.directus_async import async_directus
 from dembrane.canvas.sanitize import CanvasSanitizationError, sanitize_canvas_html
@@ -939,6 +940,8 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
                     ledger_detail["host_guide_changed"] = True
             except Exception as exc:
                 ledger_detail["rejections"].append(f"open questions model error: {exc}")
+        if seed_board_cards_from_quotes(living_state, started_at.isoformat()):
+            ledger_detail["board_changed"] = True
         ledger_detail["rejections"].extend(
             _shape_warnings(str(config.get("brief") or ""), living_state["tabs"])
         )
