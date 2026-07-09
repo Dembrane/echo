@@ -93,6 +93,11 @@ class AgenticInsightSchema(BaseModel):
     message_id: Optional[str] = None
 
 
+class AgenticTagsEditSchema(BaseModel):
+    add: list[str] = Field(default_factory=list)
+    remove: list[str] = Field(default_factory=list)
+
+
 class AgenticCanvasEditSchema(BaseModel):
     instruction: str = Field(..., min_length=1)
     content_html: str = Field(..., min_length=1)
@@ -1028,6 +1033,116 @@ async def get_project_settings_for_agent(
     from dembrane.api.v2.bff.tags import ProjectUpdate
 
     return {field: project.get(field) for field in ProjectUpdate.model_fields}
+
+
+async def _list_project_tag_rows(project_id: str) -> list[dict[str, Any]]:
+    rows = await async_directus.get_items(
+        "project_tag",
+        {
+            "query": {
+                "filter": {"project_id": {"_eq": project_id}},
+                "fields": ["id", "created_at", "text", "sort"],
+                "sort": ["sort"],
+                "limit": -1,
+            }
+        },
+    )
+    return rows if isinstance(rows, list) else []
+
+
+@AgenticRouter.post("/projects/{project_id}/tags")
+async def edit_project_tags_for_agent(
+    project_id: str,
+    body: AgenticTagsEditSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Add and remove project tags on the host's behalf, then return the updated
+    vocabulary. Tags are the host-visible portal vocabulary participants can
+    select, so removals delete by exact text (case-insensitive) and only touch
+    tags the agent named; the conversation_project_tag junction is cleaned up
+    for any deleted tag so no orphaned references linger."""
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+
+    existing = await _list_project_tag_rows(project_id)
+    existing_by_lower: dict[str, dict[str, Any]] = {}
+    for row in existing:
+        text = str(row.get("text") or "").strip()
+        if text:
+            existing_by_lower.setdefault(text.lower(), row)
+
+    added: list[str] = []
+    seen_add_lower: set[str] = set()
+    max_sort = 0
+    for row in existing:
+        try:
+            max_sort = max(max_sort, int(row.get("sort") or 0))
+        except (TypeError, ValueError):
+            continue
+
+    for raw_tag in body.add:
+        text = str(raw_tag or "").strip()
+        if not text:
+            continue
+        lower = text.lower()
+        if lower in existing_by_lower or lower in seen_add_lower:
+            continue
+        seen_add_lower.add(lower)
+        max_sort += 1
+        created = await async_directus.create_item(
+            "project_tag",
+            {
+                "id": str(uuid4()),
+                "project_id": project_id,
+                "text": text,
+                "sort": max_sort,
+            },
+        )
+        if created:
+            added.append(text)
+
+    removed: list[str] = []
+    for raw_tag in body.remove:
+        text = str(raw_tag or "").strip()
+        if not text:
+            continue
+        row = existing_by_lower.get(text.lower())
+        if not row:
+            continue
+        tag_id = row.get("id")
+        if not tag_id:
+            continue
+        junctions = await async_directus.get_items(
+            "conversation_project_tag",
+            {
+                "query": {
+                    "filter": {"project_tag_id": {"_eq": tag_id}},
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(junctions, list):
+            for junction in junctions:
+                jid = junction.get("id") if isinstance(junction, dict) else None
+                if jid:
+                    try:
+                        await async_directus.delete_item("conversation_project_tag", jid)
+                    except Exception:  # noqa: BLE001
+                        logger.exception(
+                            "conversation_project_tag cleanup failed id=%s", jid
+                        )
+        await async_directus.delete_item("project_tag", tag_id)
+        removed.append(str(row.get("text") or text))
+
+    tags = await _list_project_tag_rows(project_id)
+    return {
+        "project_id": project_id,
+        "added": added,
+        "removed": removed,
+        "count": len(tags),
+        "tags": tags,
+    }
 
 
 @AgenticRouter.get("/projects/{project_id}/conversations")

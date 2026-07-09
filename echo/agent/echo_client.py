@@ -150,6 +150,20 @@ class EchoClient:
         payload = await self.get(f"/v2/bff/tags?project_id={project_id}")
         return payload if isinstance(payload, list) else []
 
+    async def edit_project_tags(
+        self,
+        project_id: str,
+        add: list[str],
+        remove: list[str],
+    ) -> dict[str, Any]:
+        response = await self._client.post(
+            f"/agentic/projects/{project_id}/tags",
+            json={"add": add, "remove": remove},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+
     async def get_conversation_transcript(self, conversation_id: str) -> str:
         response = await self._client.get(f"/conversations/{conversation_id}/transcript")
         response.raise_for_status()

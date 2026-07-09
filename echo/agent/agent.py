@@ -39,6 +39,50 @@ DashboardPageKey = Literal[
 
 AgentInsightKind = Literal["capability_gap", "friction", "wish", "praise"]
 
+# Tool taxonomy. Every registered tool falls into one of three buckets:
+# - UI tools render a card in the chat timeline (see UI_TOOLS below).
+# - Read tools fetch project data or product knowledge and return it to the
+#   model only (findConversationsByKeywords, listConversationSummary,
+#   listConversationFullTranscript, grepConversationSnippets,
+#   listProjectConversations, getProjectSettings, getProjectTags, getPortalLink,
+#   listDocs, readDoc, grepDocs, readSkill, listProjectChats, readChat,
+#   getLiveConversationStatus, readMemory, readGoal, listMethodologies,
+#   listCanvases, get_project_scope).
+# - Write tools change durable state (editProjectTags, editCanvas, addToCanvas,
+#   removeFromCanvas, pauseCanvasLoop, resumeCanvasLoop, stopCanvasLoop,
+#   remember, reachOutToDembraneSupport, noteInsight). noteInsight also renders a
+#   card, so it appears in UI_TOOLS too.
+# The README carries the same table for humans.
+UI_TOOLS = frozenset(
+    {
+        "navigateTo",
+        "proposeCanvas",
+        "proposeGoal",
+        "proposeProjectUpdate",
+        "noteInsight",
+        "sendProgressUpdate",
+    }
+)
+
+# Tools were renamed in wave 32 for host-visible clarity. Persisted run
+# histories still carry the OLD names, and Vertex 400s if a replayed tool call
+# or tool result names a function that is no longer registered. This map
+# normalizes old -> new wherever a history is rebuilt, so old runs replay
+# cleanly. We never register the old names as visible tools.
+TOOL_NAME_RENAMES: dict[str, str] = {
+    "findConvosByKeywords": "findConversationsByKeywords",
+    "listConvoSummary": "listConversationSummary",
+    "listConvoFullTranscript": "listConversationFullTranscript",
+    "grepConvoSnippets": "grepConversationSnippets",
+    "reachOutToDembrane": "reachOutToDembraneSupport",
+    "recordInsight": "noteInsight",
+}
+
+
+def _rename_tool_name(name: str) -> str:
+    return TOOL_NAME_RENAMES.get(name, name)
+
+
 NAVIGATION_LABELS: dict[str, str] = {
     "overview": "overview",
     "chats": "chats",
@@ -108,8 +152,8 @@ Hosts run projects; participants contribute conversations through the portal or 
 ## When to use tools
 Use tools when the question needs project data or product knowledge:
 - "What topics came up?" -> listProjectConversations, then read summaries.
-- "What did people say about X?" -> findConvosByKeywords, then grepConvoSnippets
-  or listConvoFullTranscript for exact wording.
+- "What did people say about X?" -> findConversationsByKeywords, then
+  grepConversationSnippets or listConversationFullTranscript for exact wording.
 - "How does the portal work?" -> grepDocs and readDoc; cite the doc path.
 - "How do participants record / where is the portal link / how do I share it?"
   -> getPortalLink, then give the actual link and call navigateTo("overview")
@@ -158,7 +202,7 @@ emailing support@dembrane.com. Be honest above all: a failed send is never
 "sent".
 
 ## Noticing what dembrane cannot do yet
-When you notice a product-learning signal, quietly call recordInsight once in the
+When you notice a product-learning signal, quietly call noteInsight once in the
 same turn:
 - The host asks for something you cannot fulfill directly.
 - You have to use a workaround because dembrane does not have the right ability.
@@ -172,8 +216,10 @@ per distinct need per chat and do not repeat the same need in later turns.
 Logging is quiet: do not narrate that you logged an insight on every turn. When
 the host explicitly wishes for a feature, you may say once, "I've noted this for
 the dembrane team." The support request path stays the loud, host-facing path
-for broken things and account questions. recordInsight is the quiet
-product-learning path. Both can happen in the same turn when appropriate.
+for broken things and account questions. noteInsight is the quieter
+product-learning path: it drops a small "noted for the dembrane team" card in
+the chat rather than opening a support thread. Both can happen in the same turn
+when appropriate.
 Examples:
 - If the host says a canvas is hard to read and asks why you cannot change the
   styling yourself, use kind capability_gap with content "The host needs generated
@@ -207,7 +253,7 @@ ask one focused question first.
 - Say briefly what you will look at, then use sendProgressUpdate while you work.
   Conclude with plain text only when you are done.
 - Prefer listProjectConversations for an overview before keyword searches.
-- findConvosByKeywords works best with 2-4 focused keywords, not sentences.
+- findConversationsByKeywords works best with 2-4 focused keywords, not sentences.
 - Batch your lookups. readDoc and grepDocs each take a list, so read every page
   you need (or search every pattern) in one step instead of one call at a time.
   When several independent lookups would answer the question, request them
@@ -233,6 +279,10 @@ ask one focused question first.
   organize conversations. First suggest a small host-defined tag vocabulary.
   The setting can draft short titles and attach existing project tags after
   summarization, but tags remain draft organization for the host to review.
+- Tags are the host-visible portal vocabulary. When the host asks to add or
+  remove tags, read getProjectTags first, then use editProjectTags(add, remove)
+  and confirm in one sentence what changed. Only remove a tag the host names
+  explicitly; never clear tags participants may already be using on their own.
 - Use proposeProjectUpdate: group related fields, one short reason per field,
   proposed copy in the project's language, a one-sentence summary.
 - The host sees a diff and applies or rejects it themselves. You never apply
@@ -293,7 +343,7 @@ and board. For person-by-person, per-person, speaker-by-speaker, or per-table
 summaries, propose a board tab with grouping person, for example
 tabs=[{"kind":"crux"},{"kind":"concept_cloud"},{"kind":"board","grouping":"person"}].
 If the host asks for a structural view no primitive supports, say that plainly,
-quietly call recordInsight with category capability_gap, and do not promise the
+quietly call noteInsight with category capability_gap, and do not promise the
 loop will rebuild into that shape.
 After proposing a canvas, do not ask the host to tell you when it is applied.
 The chat records that automatically.
@@ -555,6 +605,12 @@ def _normalize_fused_tool_calls(message: Any, tool_names: set[str]) -> Any:
         name = str(call.get("name") or "")
         split_names = _split_fused_tool_name(name, tool_names)
         if not split_names:
+            # Not a fused name, but it may still be an OLD name from a replayed
+            # history: normalize it to the registered name before we hand it back.
+            renamed = _rename_tool_name(name)
+            if renamed != name and isinstance(call, dict):
+                changed = True
+                call = {**call, "name": renamed}
             if keep_unsplit_invalid:
                 remaining_invalid_calls.append(call)
             else:
@@ -582,7 +638,9 @@ def _normalize_fused_tool_calls(message: Any, tool_names: set[str]) -> Any:
                 {
                     **call,
                     "id": f"{base_id}-{index}",
-                    "name": split_name,
+                    # A fused name may itself concatenate OLD names in a replayed
+                    # history; rename each part to the registered tool name.
+                    "name": _rename_tool_name(split_name),
                     "args": split_arg if isinstance(split_arg, dict) else {},
                 }
             )
@@ -602,6 +660,23 @@ def _normalize_fused_tool_calls(message: Any, tool_names: set[str]) -> Any:
             }
         )
     return message
+
+
+def _normalize_message_tool_names(message: Any, tool_names: set[str]) -> Any:
+    """Normalize renamed tool names on one message so old runs replay cleanly.
+
+    AI messages carry tool_calls (possibly fused); tool messages carry a `name`
+    that must match a registered function or Vertex 400s. Both are mapped
+    old -> new here at the history-replay boundary."""
+    if getattr(message, "type", None) == "tool":
+        name = getattr(message, "name", None)
+        if isinstance(name, str):
+            renamed = _rename_tool_name(name)
+            if renamed != name and hasattr(message, "model_copy"):
+                return message.model_copy(update={"name": renamed})
+        return message
+    return _normalize_fused_tool_calls(message, tool_names)
+
 
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 6
 AUTOMATIC_NUDGE_TEMPLATE = (
@@ -923,7 +998,7 @@ def create_agent_graph(
         return {"project_id": project_id}
 
     @tool
-    async def findConvosByKeywords(keywords: str, limit: int = 5) -> dict[str, Any]:
+    async def findConversationsByKeywords(keywords: str, limit: int = 5) -> dict[str, Any]:
         """Search project conversations by keywords and return summaries + metadata."""
         nonlocal consecutive_empty_keyword_searches
 
@@ -979,7 +1054,7 @@ def create_agent_graph(
                     code="NO_MATCHES_AFTER_RETRIES",
                     message=(
                         "No matches after multiple keyword searches. "
-                        "Stop repeating findConvosByKeywords and answer from available context/evidence."
+                        "Stop repeating findConversationsByKeywords and answer from available context/evidence."
                     ),
                     attempts=consecutive_empty_keyword_searches,
                     stop_search=True,
@@ -990,7 +1065,7 @@ def create_agent_graph(
         return result
 
     @tool
-    async def listConvoSummary(conversation_id: str) -> dict[str, Any]:
+    async def listConversationSummary(conversation_id: str) -> dict[str, Any]:
         """Return metadata + summary (nullable) for a single project conversation."""
         conversation = await _resolve_project_conversation(conversation_id)
         return {
@@ -1021,7 +1096,7 @@ def create_agent_graph(
         }
 
     @tool
-    async def listConvoFullTranscript(conversation_id: str) -> dict[str, Any]:
+    async def listConversationFullTranscript(conversation_id: str) -> dict[str, Any]:
         """Return full transcript text for a single project conversation."""
         conversation = await _resolve_project_conversation(conversation_id)
 
@@ -1039,7 +1114,7 @@ def create_agent_graph(
         }
 
     @tool
-    async def grepConvoSnippets(conversation_id: str, query: str, limit: int = 8) -> dict[str, Any]:
+    async def grepConversationSnippets(conversation_id: str, query: str, limit: int = 8) -> dict[str, Any]:
         """Find matching transcript snippets for one project-scoped conversation."""
         normalized_query = query.strip()
         if not normalized_query:
@@ -1168,6 +1243,33 @@ def create_agent_graph(
         }
 
     @tool
+    async def editProjectTags(
+        add: list[str] | None = None,
+        remove: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Edit the project's host-visible tag vocabulary and return the updated
+        list. `add` creates tags that do not already exist; `remove` deletes
+        tags by exact text (case-insensitive). Read getProjectTags first, then
+        confirm in one sentence what changed. Tags are the portal vocabulary
+        hosts and participants see, so only remove a tag when the host asks for
+        that tag by name."""
+        add_list = [t.strip() for t in (add or []) if isinstance(t, str) and t.strip()]
+        remove_list = [t.strip() for t in (remove or []) if isinstance(t, str) and t.strip()]
+        if not add_list and not remove_list:
+            raise ValueError("Provide at least one tag to add or remove.")
+
+        client = _create_echo_client()
+        try:
+            result = await client.edit_project_tags(
+                project_id,
+                add=add_list,
+                remove=remove_list,
+            )
+        finally:
+            await client.close()
+        return result
+
+    @tool
     async def getPortalLink() -> dict[str, Any]:
         """Return the actual participant portal link for this project.
 
@@ -1204,7 +1306,8 @@ def create_agent_graph(
 
     @tool
     async def navigateTo(page: DashboardPageKey, entity_id: str = "") -> dict[str, Any]:
-        """Return a host-clicked dashboard navigation shortcut.
+        """Return a host-clicked dashboard navigation shortcut. Renders a card in
+        the chat UI.
 
         Use this when the host asks where something lives in the dashboard.
         `page` must be one of the real dashboard surfaces. `entity_id` is
@@ -1234,7 +1337,8 @@ def create_agent_graph(
         changes: list[dict[str, Any]],
         summary: str,
     ) -> dict[str, Any]:
-        """Propose project settings changes for the user to approve.
+        """Propose project settings changes for the user to approve. Renders a
+        card in the chat UI.
 
         Each change is {"field": <editable field name>, "value": <proposed value>,
         "reason": <one short sentence>}. The user sees a diff in the chat and
@@ -1323,6 +1427,7 @@ def create_agent_graph(
         tabs: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Propose a living canvas for the host to apply or apply as an update.
+        Renders a card in the chat UI.
 
         Use this only when the host asked for a recurring or live artifact, such
         as a screen, wall, dashboard, pulse, or page that keeps itself fresh.
@@ -1379,7 +1484,8 @@ def create_agent_graph(
 
     @tool
     async def sendProgressUpdate(update: str, next_steps: str = "") -> dict[str, Any]:
-        """Emit a user-visible progress update without concluding the run."""
+        """Emit a user-visible progress update without concluding the run.
+        Renders a card in the chat UI."""
         normalized_update = update.strip()
         if not normalized_update:
             raise ValueError("update is required")
@@ -1431,7 +1537,7 @@ def create_agent_graph(
         return {"messages": messages}
 
     @tool
-    async def reachOutToDembrane(message: str, context: str = "") -> dict[str, Any]:
+    async def reachOutToDembraneSupport(message: str, context: str = "") -> dict[str, Any]:
         """Log a question or problem with the dembrane team on the host's behalf. Use this when the host needs help you cannot give: something looks broken, a billing or account question, or a question about dembrane the documentation does not answer. `message` is what the host wants to ask, in their own words where you can. `context` is a short note about what they were doing. Tell the host what you are sending before you send it. Afterwards say it is logged for the team to review; never promise a direct follow-up or a timeline."""
         client = _create_echo_client()
         try:
@@ -1459,18 +1565,19 @@ def create_agent_graph(
         return {"sent": True, "support_request_id": result.get("id")}
 
     @tool
-    async def recordInsight(
+    async def noteInsight(
         kind: AgentInsightKind,
         content: str,
         suggested_capability: str = "",
     ) -> dict[str, Any]:
-        """Quietly record a product-learning insight for the dembrane team.
+        """Note a product-learning insight for the dembrane team. Renders a card
+        in the chat UI so the host can see what was noted.
 
         Use this when the host exposes a capability gap, friction, wish, or
         praise. `content` restates the host's need plainly in one to three
         sentences. Do not include transcript verbatims or participant content.
-        This does not create a visible support request and you usually do not
-        mention it to the host.
+        This does not create a visible support request. It shows a small card
+        reading "noted for the dembrane team", so keep any spoken mention light.
         """
         normalized_kind = str(kind).strip()
         if normalized_kind not in {"capability_gap", "friction", "wish", "praise"}:
@@ -1493,7 +1600,17 @@ def create_agent_graph(
             )
         finally:
             await client.close()
-        return {"recorded": True, "agent_insight_id": result.get("id")}
+        normalized_capability = suggested_capability.strip()
+        # The card in the chat reads these fields; keep the marker stable.
+        return {
+            "type": "agent_insight_note",
+            "recorded": True,
+            "agent_insight_id": result.get("id"),
+            "insight_kind": normalized_kind,
+            "content": normalized_content,
+            "suggested_capability": normalized_capability or None,
+            "visible_to_user": True,
+        }
 
     @tool
     async def readMemory() -> dict[str, Any]:
@@ -1522,8 +1639,8 @@ def create_agent_graph(
     @tool
     async def proposeGoal(content: str) -> dict[str, Any]:
         """Propose a project goal after helping the host define the setup.
-        Restate the goal in the host's words. This never writes anything: the
-        host applies it."""
+        Renders a card in the chat UI. Restate the goal in the host's words.
+        This never writes anything: the host applies it."""
         normalized_content = content.strip()
         if not normalized_content:
             raise ValueError("content is required")
@@ -1777,17 +1894,18 @@ def create_agent_graph(
 
     tools = [
         get_project_scope,
-        findConvosByKeywords,
+        findConversationsByKeywords,
         listProjectConversations,
-        listConvoSummary,
-        listConvoFullTranscript,
-        grepConvoSnippets,
+        listConversationSummary,
+        listConversationFullTranscript,
+        grepConversationSnippets,
         listDocs,
         readDoc,
         grepDocs,
         readSkill,
         getProjectSettings,
         getProjectTags,
+        editProjectTags,
         getPortalLink,
         navigateTo,
         proposeProjectUpdate,
@@ -1797,8 +1915,8 @@ def create_agent_graph(
         listProjectChats,
         readChat,
         getLiveConversationStatus,
-        reachOutToDembrane,
-        recordInsight,
+        reachOutToDembraneSupport,
+        noteInsight,
         readMemory,
         readGoal,
         proposeGoal,
@@ -1816,6 +1934,10 @@ def create_agent_graph(
     configured_llm = llm or _build_llm()
     llm_with_tools = configured_llm.bind_tools(tools)
     tool_names = {tool.name for tool in tools}
+    # The fused-call splitter and history normalization also recognize the OLD
+    # tool names, so a replayed history that concatenated or named an old tool
+    # still splits and renames to the registered name.
+    recognized_tool_names = tool_names | set(TOOL_NAME_RENAMES.keys())
 
     async def _load_ambient_memory_section() -> str:
         nonlocal ambient_memory_section
@@ -1880,7 +2002,15 @@ def create_agent_graph(
 
     async def call_model(state: dict) -> dict:
         raw_messages = state.get("messages", [])
-        messages = [_with_placeholder_content(message) for message in raw_messages]
+        # Normalize OLD tool names in replayed history (both AI tool_calls and
+        # tool-result messages) before invoking Vertex, or it 400s on a function
+        # name it no longer knows.
+        messages = [
+            _normalize_message_tool_names(
+                _with_placeholder_content(message), recognized_tool_names
+            )
+            for message in raw_messages
+        ]
         memory_section = await _load_ambient_memory_section()
         canvas_activity_section = await _load_canvas_activity_section()
         system_sections = [
@@ -1903,7 +2033,7 @@ def create_agent_graph(
 
         response = _normalize_fused_tool_calls(
             await llm_with_tools.ainvoke(invocation_messages),
-            tool_names,
+            recognized_tool_names,
         )
 
         should_retry_after_nudge = (
@@ -1918,7 +2048,7 @@ def create_agent_graph(
             retry_messages.append(SystemMessage(content=POST_NUDGE_CONTINUATION_SYSTEM_PROMPT))
             response = _normalize_fused_tool_calls(
                 await llm_with_tools.ainvoke(retry_messages),
-                tool_names,
+                recognized_tool_names,
             )
 
         # Return only the new response; LangGraph's reducer appends it to state

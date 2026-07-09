@@ -76,6 +76,7 @@ class _FakeEchoClient:
         self.read_goal_calls: list[str] = []
         self.list_methodologies_calls: list[str] = []
         self.list_project_tags_calls: list[str] = []
+        self.edit_project_tags_calls: list[dict[str, object]] = []
         self.list_canvases_calls: list[str] = []
         self.canvas_loop_calls: list[dict[str, str]] = []
         self.canvas_host_item_calls: list[dict[str, object]] = []
@@ -200,6 +201,23 @@ class _FakeEchoClient:
     async def list_project_tags(self, project_id: str) -> list[dict]:
         self.list_project_tags_calls.append(project_id)
         return self.project_tags_payload
+
+    async def edit_project_tags(
+        self,
+        project_id: str,
+        add: list[str],
+        remove: list[str],
+    ) -> dict:
+        self.edit_project_tags_calls.append(
+            {"project_id": project_id, "add": add, "remove": remove}
+        )
+        return {
+            "project_id": project_id,
+            "added": add,
+            "removed": remove,
+            "count": 1,
+            "tags": [{"id": "tag-1", "text": "climate"}],
+        }
 
     async def list_canvases(self, project_id: str) -> list[dict]:
         self.list_canvases_calls.append(project_id)
@@ -412,7 +430,7 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "gathered content" in prompt
     # Product-learning insights are quiet and distinct from support requests.
     assert "noticing what dembrane cannot do yet" in prompt
-    assert "quietly call recordinsight once" in prompt
+    assert "quietly call noteinsight once" in prompt
     assert "capability_gap" in prompt
     assert "distinct need per chat" in prompt
     assert "i've noted this" in prompt
@@ -874,7 +892,7 @@ async def test_find_convos_by_keywords_filters_to_current_project():
     )
     tools = _tool_map(llm.bound_tools)
 
-    result = await tools["findConvosByKeywords"].ainvoke({"keywords": "policy", "limit": 7})
+    result = await tools["findConversationsByKeywords"].ainvoke({"keywords": "policy", "limit": 7})
 
     assert result["project_id"] == "project-1"
     assert result["count"] == 1
@@ -932,7 +950,7 @@ async def test_find_convos_by_keywords_uses_single_transcript_query_call_for_lon
     )
     tools = _tool_map(llm.bound_tools)
 
-    result = await tools["findConvosByKeywords"].ainvoke({"keywords": long_query, "limit": 5})
+    result = await tools["findConversationsByKeywords"].ainvoke({"keywords": long_query, "limit": 5})
 
     assert result["project_id"] == "project-1"
     assert result["count"] == 2
@@ -968,7 +986,7 @@ async def test_find_convos_by_keywords_rejects_low_signal_query():
     )
     tools = _tool_map(llm.bound_tools)
 
-    result = await tools["findConvosByKeywords"].ainvoke({"keywords": "ok", "limit": 5})
+    result = await tools["findConversationsByKeywords"].ainvoke({"keywords": "ok", "limit": 5})
 
     assert result["count"] == 0
     assert result["conversations"] == []
@@ -992,10 +1010,10 @@ async def test_find_convos_by_keywords_stops_after_repeated_empty_results():
     )
     tools = _tool_map(llm.bound_tools)
 
-    await tools["findConvosByKeywords"].ainvoke({"keywords": "representation", "limit": 5})
-    await tools["findConvosByKeywords"].ainvoke({"keywords": "minority", "limit": 5})
+    await tools["findConversationsByKeywords"].ainvoke({"keywords": "representation", "limit": 5})
+    await tools["findConversationsByKeywords"].ainvoke({"keywords": "minority", "limit": 5})
 
-    result = await tools["findConvosByKeywords"].ainvoke({"keywords": "media", "limit": 5})
+    result = await tools["findConversationsByKeywords"].ainvoke({"keywords": "media", "limit": 5})
 
     assert result["count"] == 0
     assert result["guardrail"]["code"] == "NO_MATCHES_AFTER_RETRIES"
@@ -1032,17 +1050,17 @@ async def test_find_convos_by_keywords_resets_empty_counter_after_success():
     )
     tools = _tool_map(llm.bound_tools)
 
-    await tools["findConvosByKeywords"].ainvoke({"keywords": "representation", "limit": 5})
-    success_result = await tools["findConvosByKeywords"].ainvoke(
+    await tools["findConversationsByKeywords"].ainvoke({"keywords": "representation", "limit": 5})
+    success_result = await tools["findConversationsByKeywords"].ainvoke(
         {"keywords": "success-topic", "limit": 5}
     )
-    first_empty_after_success = await tools["findConvosByKeywords"].ainvoke(
+    first_empty_after_success = await tools["findConversationsByKeywords"].ainvoke(
         {"keywords": "minority", "limit": 5}
     )
-    second_empty_after_success = await tools["findConvosByKeywords"].ainvoke(
+    second_empty_after_success = await tools["findConversationsByKeywords"].ainvoke(
         {"keywords": "media", "limit": 5}
     )
-    third_empty_after_success = await tools["findConvosByKeywords"].ainvoke(
+    third_empty_after_success = await tools["findConversationsByKeywords"].ainvoke(
         {"keywords": "narratives", "limit": 5}
     )
 
@@ -1088,7 +1106,7 @@ async def test_list_convo_summary_returns_nullable_summary_and_exact_match():
     )
     tools = _tool_map(llm.bound_tools)
 
-    result = await tools["listConvoSummary"].ainvoke({"conversation_id": "conv-1"})
+    result = await tools["listConversationSummary"].ainvoke({"conversation_id": "conv-1"})
 
     assert result["conversation"]["conversation_id"] == "conv-1"
     assert result["conversation"]["summary"] is None
@@ -1121,7 +1139,7 @@ async def test_list_convo_full_transcript_returns_text_for_project_conversation(
     )
     tools = _tool_map(llm.bound_tools)
 
-    result = await tools["listConvoFullTranscript"].ainvoke({"conversation_id": "conv-1"})
+    result = await tools["listConversationFullTranscript"].ainvoke({"conversation_id": "conv-1"})
 
     assert result["project_id"] == "project-1"
     assert result["conversation_id"] == "conv-1"
@@ -1198,7 +1216,7 @@ async def test_list_convo_full_transcript_uses_scoped_lookup_for_exact_id():
     )
     tools = _tool_map(llm.bound_tools)
 
-    result = await tools["listConvoFullTranscript"].ainvoke({"conversation_id": "conv-1"})
+    result = await tools["listConversationFullTranscript"].ainvoke({"conversation_id": "conv-1"})
 
     assert result["conversation_id"] == "conv-1"
     assert result["transcript"] == "line one"
@@ -1266,7 +1284,7 @@ async def test_grep_convo_snippets_returns_matches_for_in_scope_conversation():
     )
     tools = _tool_map(llm.bound_tools)
 
-    result = await tools["grepConvoSnippets"].ainvoke(
+    result = await tools["grepConversationSnippets"].ainvoke(
         {"conversation_id": "conv-1", "query": "representation", "limit": 5}
     )
 
@@ -1323,7 +1341,7 @@ async def test_grep_convo_snippets_returns_empty_matches_when_no_hits():
     )
     tools = _tool_map(llm.bound_tools)
 
-    result = await tools["grepConvoSnippets"].ainvoke(
+    result = await tools["grepConversationSnippets"].ainvoke(
         {"conversation_id": "conv-1", "query": "representation", "limit": 5}
     )
 
@@ -1358,13 +1376,13 @@ async def test_list_convo_summary_raises_for_out_of_scope_or_missing_conversatio
     tools = _tool_map(llm.bound_tools)
 
     with pytest.raises(ValueError, match="Conversation not found in current project scope"):
-        await tools["listConvoSummary"].ainvoke({"conversation_id": "conv-9"})
+        await tools["listConversationSummary"].ainvoke({"conversation_id": "conv-9"})
 
     with pytest.raises(ValueError, match="Conversation not found in current project scope"):
-        await tools["listConvoFullTranscript"].ainvoke({"conversation_id": "conv-9"})
+        await tools["listConversationFullTranscript"].ainvoke({"conversation_id": "conv-9"})
 
     with pytest.raises(ValueError, match="Conversation not found in current project scope"):
-        await tools["grepConvoSnippets"].ainvoke(
+        await tools["grepConversationSnippets"].ainvoke(
             {"conversation_id": "conv-9", "query": "representation", "limit": 3}
         )
 
@@ -1459,7 +1477,7 @@ async def test_reach_out_to_dembrane_sends_support_request_for_current_project()
     )
     tools = _tool_map(llm.bound_tools)
 
-    result = await tools["reachOutToDembrane"].ainvoke(
+    result = await tools["reachOutToDembraneSupport"].ainvoke(
         {"message": "My exports are failing", "context": "on the reports page"}
     )
 
@@ -1496,7 +1514,7 @@ async def test_record_insight_sends_contextual_agent_insight_for_current_chat():
     )
     tools = _tool_map(llm.bound_tools)
 
-    result = await tools["recordInsight"].ainvoke(
+    result = await tools["noteInsight"].ainvoke(
         {
             "kind": "wish",
             "content": "The host wants chat to open a specific dashboard tab.",
@@ -1506,6 +1524,14 @@ async def test_record_insight_sends_contextual_agent_insight_for_current_chat():
 
     assert result["recorded"] is True
     assert result["agent_insight_id"] == "insight-1"
+    # The card in the chat reads these fields off the tool output.
+    assert result["type"] == "agent_insight_note"
+    assert result["insight_kind"] == "wish"
+    assert result["content"] == "The host wants chat to open a specific dashboard tab."
+    assert result["suggested_capability"] == (
+        "Dashboard navigation suggestions with internal tab links."
+    )
+    assert result["visible_to_user"] is True
     assert factory.instances[0].agent_insight_calls == [
         {
             "project_id": "project-1",
@@ -1519,6 +1545,55 @@ async def test_record_insight_sends_contextual_agent_insight_for_current_chat():
         }
     ]
     assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_edit_project_tags_adds_and_removes_then_returns_updated_list():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["editProjectTags"].ainvoke(
+        {"add": ["climate", "  "], "remove": ["old-tag"]}
+    )
+
+    assert result["count"] == 1
+    assert result["tags"] == [{"id": "tag-1", "text": "climate"}]
+    # Blank entries are dropped before the call reaches the server.
+    assert factory.instances[0].edit_project_tags_calls == [
+        {"project_id": "project-1", "add": ["climate"], "remove": ["old-tag"]}
+    ]
+    assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_edit_project_tags_requires_at_least_one_change():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    with pytest.raises(ValueError):
+        await tools["editProjectTags"].ainvoke({"add": [], "remove": []})
 
 
 @pytest.mark.asyncio

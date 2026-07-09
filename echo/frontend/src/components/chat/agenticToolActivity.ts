@@ -121,22 +121,35 @@ const buildHeadline = (toolName: string, context: ToolContext) => {
 			return t`Listing conversations`;
 		case "getLiveConversationStatus":
 			return t`Checking live conversations`;
+		// Old and new names both map here so replayed history keeps its headline.
+		case "findConversationsByKeywords":
 		case "findConvosByKeywords":
 			return context.query
 				? t`Searching conversations for "${context.query}"`
 				: t`Searching conversations`;
+		case "listConversationSummary":
 		case "listConvoSummary":
 			return context.participantName
 				? t`Reading ${context.participantName}'s summary`
 				: t`Reading a conversation summary`;
+		case "listConversationFullTranscript":
 		case "listConvoFullTranscript":
 			return context.participantName
 				? t`Reading ${context.participantName}'s transcript`
 				: t`Reading a transcript`;
+		case "grepConversationSnippets":
 		case "grepConvoSnippets":
 			return context.query
 				? t`Searching transcripts for "${context.query}"`
 				: t`Searching transcripts`;
+		case "editProjectTags":
+			return t`Updating project tags`;
+		case "noteInsight":
+		case "recordInsight":
+			return t`Noting this for the dembrane team`;
+		case "reachOutToDembraneSupport":
+		case "reachOutToDembrane":
+			return t`Logging this with the dembrane team`;
 		default: {
 			return humanizeToolName(toolName);
 		}
@@ -494,6 +507,58 @@ const NAVIGATION_PAGE_KEYS = new Set<ParsedNavigationSuggestion["page"]>([
 	"settings",
 	"portal-editor",
 ]);
+
+export type AgentInsightKind =
+	| "capability_gap"
+	| "friction"
+	| "wish"
+	| "praise";
+
+export type ParsedInsightNote = {
+	kind: AgentInsightKind;
+	content: string;
+	suggestedCapability: string | null;
+};
+
+const INSIGHT_KINDS = new Set<AgentInsightKind>([
+	"capability_gap",
+	"friction",
+	"wish",
+	"praise",
+]);
+
+// noteInsight (and its legacy name recordInsight) both write the same payload;
+// old chats must still render their card, so we accept either tool name.
+const INSIGHT_TOOL_NAMES = new Set<string>(["noteInsight", "recordInsight"]);
+
+/** Returns the structured note when a completed tool activity is a noteInsight
+ * (or legacy recordInsight) result, else null. */
+export const parseInsightNote = (
+	activity: ToolActivity,
+): ParsedInsightNote | null => {
+	if (!INSIGHT_TOOL_NAMES.has(activity.toolName)) return null;
+	if (activity.status !== "completed" || !activity.rawOutput) return null;
+	try {
+		const payload = JSON.parse(activity.rawOutput);
+		if (payload?.type !== "agent_insight_note") return null;
+		const kind = String(payload.insight_kind ?? "").trim();
+		if (!INSIGHT_KINDS.has(kind as AgentInsightKind)) return null;
+		const content = String(payload.content ?? "").trim();
+		if (!content) return null;
+		const suggestedCapability =
+			typeof payload.suggested_capability === "string" &&
+			payload.suggested_capability.trim()
+				? payload.suggested_capability.trim()
+				: null;
+		return {
+			content,
+			kind: kind as AgentInsightKind,
+			suggestedCapability,
+		};
+	} catch {
+		return null;
+	}
+};
 
 /** Returns the structured suggestion when a completed tool activity is a
  * navigateTo result, else null. */

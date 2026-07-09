@@ -1322,6 +1322,74 @@ async def test_agentic_insight_endpoint_persists_reach_back_context(monkeypatch)
 
 
 @pytest.mark.asyncio
+async def test_edit_project_tags_adds_new_and_removes_by_case_insensitive_text(
+    monkeypatch,
+) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        def __init__(self) -> None:
+            self.tags: list[dict[str, Any]] = [
+                {"id": "tag-old", "project_id": "project-1", "text": "Old Tag", "sort": 1},
+                {"id": "tag-keep", "project_id": "project-1", "text": "keep", "sort": 2},
+            ]
+            self.junctions: list[dict[str, Any]] = [
+                {"id": "junction-1", "project_tag_id": "tag-old"},
+            ]
+            self.deleted: list[tuple[str, str]] = []
+
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:
+            return {"id": item_id, "workspace_id": "workspace-1"}
+
+        async def get_items(self, collection: str, params: dict[str, Any]) -> list[dict[str, Any]]:
+            if collection == "project_tag":
+                return [dict(row) for row in self.tags]
+            if collection == "conversation_project_tag":
+                tag_id = params["query"]["filter"]["project_tag_id"]["_eq"]
+                return [dict(j) for j in self.junctions if j["project_tag_id"] == tag_id]
+            return []
+
+        async def create_item(self, collection: str, payload: dict[str, Any]) -> dict[str, Any]:
+            assert collection == "project_tag"
+            self.tags.append(dict(payload))
+            return {"data": dict(payload)}
+
+        async def delete_item(self, collection: str, item_id: str) -> dict[str, Any]:
+            self.deleted.append((collection, item_id))
+            if collection == "project_tag":
+                self.tags = [row for row in self.tags if row["id"] != item_id]
+            if collection == "conversation_project_tag":
+                self.junctions = [j for j in self.junctions if j["id"] != item_id]
+            return {"status": "deleted"}
+
+    fake_directus = _AsyncDirectus()
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.post(
+            "/api/agentic/projects/project-1/tags",
+            json={"add": ["climate", "keep"], "remove": ["OLD TAG"]},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    # "keep" already exists (skipped); "climate" is created; "OLD TAG" removed
+    # by case-insensitive text match, cleaning up its junction row too.
+    assert body["added"] == ["climate"]
+    assert body["removed"] == ["Old Tag"]
+    tag_texts = sorted(row["text"] for row in body["tags"])
+    assert tag_texts == ["climate", "keep"]
+    assert ("project_tag", "tag-old") in fake_directus.deleted
+    assert ("conversation_project_tag", "junction-1") in fake_directus.deleted
+
+
+@pytest.mark.asyncio
 async def test_list_project_conversations_hides_project_from_non_members(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     session = _make_session(user_id="user-2")
