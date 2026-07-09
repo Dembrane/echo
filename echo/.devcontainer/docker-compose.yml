@@ -66,8 +66,8 @@ services:
 
   agent:
     build:
-      context: ../agent
-      dockerfile: Dockerfile
+      context: ../../
+      dockerfile: echo/agent/Dockerfile
     ports:
       - 8001:8001
     environment:
