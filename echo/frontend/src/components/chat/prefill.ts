@@ -3,14 +3,8 @@ const MAX_PREFILL_LENGTH = 500;
 
 function stripMarkup(value: string): string {
 	if (typeof DOMParser === "undefined") {
-		// strip to a fixpoint so nested fragments cannot reassemble into tags
-		let previous = value;
-		let stripped = previous.replace(/<[^>]*>/g, "");
-		while (stripped !== previous) {
-			previous = stripped;
-			stripped = stripped.replace(/<[^>]*>/g, "");
-		}
-		return stripped;
+		// non-DOM environments only: no angle brackets means no tags at all
+		return value.replace(/[<>]/g, "");
 	}
 	const parsed = new DOMParser().parseFromString(value, "text/html");
 	return parsed.body.textContent ?? "";
