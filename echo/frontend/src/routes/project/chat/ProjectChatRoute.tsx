@@ -25,7 +25,7 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AgenticChatPanel } from "@/components/chat/AgenticChatPanel";
 import {
@@ -40,10 +40,7 @@ import {
 	MODE_COLORS,
 } from "@/components/chat/ChatModeSelector";
 import { ChatTemplatesMenu } from "@/components/chat/ChatTemplatesMenu";
-import {
-	extractMessageMetadata,
-	formatMessage,
-} from "@/components/chat/chatUtils";
+import { formatMessage } from "@/components/chat/chatUtils";
 import {
 	ChatTurnLimitCard,
 	ChatUpgradeModal,
@@ -67,6 +64,7 @@ import {
 	useUpdateUserTemplate,
 	useUserTemplates,
 } from "@/components/chat/hooks/useUserTemplates";
+import { consumeChatPrefill } from "@/components/chat/prefill";
 import type { QuickAccessItem } from "@/components/chat/templateKey";
 import { Templates } from "@/components/chat/templates";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
@@ -322,6 +320,7 @@ export const ProjectChatRoute = () => {
 	useDocumentTitle(t`Chat | dembrane`);
 
 	const { chatId, projectId, workspaceId: routeWorkspaceId } = useParams();
+	const location = useLocation();
 	const { workspace } = useWorkspace();
 	// Observers are free, read-only: chat is the upgrade wall. Server denies
 	// chat:use (403); the UI blocks here with a clear path to upgrade.
@@ -335,6 +334,7 @@ export const ProjectChatRoute = () => {
 		string | null
 	>(null);
 	const [conversationPickerOpen, setConversationPickerOpen] = useState(false);
+	const queryPrefillStartedRef = useRef(false);
 
 	const handleSaveAsTemplate = (content: string) => {
 		setSaveAsTemplateContent(content);
@@ -498,6 +498,28 @@ export const ProjectChatRoute = () => {
 		statusMessage,
 	} = useDembraneChat({ chatId: chatId ?? "" });
 	const normalizedInput = typeof input === "string" ? input : "";
+
+	useEffect(() => {
+		if (chatContextQuery.isLoading) return;
+		if (isAgenticMode) return;
+		if (queryPrefillStartedRef.current) return;
+		const { prefill, search } = consumeChatPrefill(location.search);
+		if (!prefill && search === location.search) return;
+		queryPrefillStartedRef.current = true;
+		window.history.replaceState(
+			window.history.state,
+			"",
+			`${location.pathname}${search}${location.hash}`,
+		);
+		if (prefill) setInput(prefill);
+	}, [
+		chatContextQuery.isLoading,
+		isAgenticMode,
+		location.hash,
+		location.pathname,
+		location.search,
+		setInput,
+	]);
 
 	// Free tier: max 3 user turns per chat. The 4th routes to upgrade.
 	const { freeTier } = useWorkspaceUsage(routeWorkspaceId);

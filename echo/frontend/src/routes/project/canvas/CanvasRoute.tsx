@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
+import { baseColors } from "@/colors";
 import { CanvasFrame } from "@/components/canvas/CanvasFrame";
 import { canvasCadenceLabel } from "@/components/canvas/cadenceLabel";
 import {
@@ -45,15 +46,18 @@ import {
 	type CanvasLoop,
 	useCanvas,
 	useCanvasGenerations,
-	useInvalidateCanvasQueries,
 	useCanvasLifecycleMutation,
 	useCanvasLoopSettingsMutation,
+	useInvalidateCanvasQueries,
 	useRefreshCanvasMutation,
 } from "@/components/canvas/hooks";
-import { API_BASE_URL } from "@/config";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
+
+const INITIAL_GENERATION_LIMIT = 10;
+const GENERATION_PAGE_SIZE = 25;
 
 function loopStatusLine(
 	status?: string | null,
@@ -137,7 +141,7 @@ function fromDatetimeLocalValue(value: string): Date | null {
 function generationLabel(generation: CanvasGeneration): string {
 	const createdAt = new Date(generation.created_at);
 	if (Number.isNaN(createdAt.getTime())) return t`Version`;
-	return format(createdAt, "HH:mm");
+	return format(createdAt, "MMM d, HH:mm");
 }
 
 function CanvasLoopSettings({
@@ -259,11 +263,17 @@ function VersionStrip({
 	selectedGenerationId,
 	onSelect,
 	onBackToLive,
+	onShowMore,
+	canShowMore,
+	isShowingMore,
 }: {
 	generations: CanvasGeneration[];
 	selectedGenerationId: string | null;
 	onSelect: (id: string) => void;
 	onBackToLive: () => void;
+	onShowMore: () => void;
+	canShowMore: boolean;
+	isShowingMore: boolean;
 }) {
 	if (generations.length === 0) return null;
 	const selected = generations.find(
@@ -273,6 +283,7 @@ function VersionStrip({
 		<Paper
 			withBorder
 			className="rounded-md px-3 py-3"
+			style={{ backgroundColor: baseColors.parchment }}
 			{...testId("canvas-version-strip")}
 		>
 			<Stack gap="xs">
@@ -314,6 +325,19 @@ function VersionStrip({
 						</Button>
 					))}
 				</Group>
+				{canShowMore ? (
+					<Group justify="center">
+						<Button
+							variant="subtle"
+							size="xs"
+							onClick={onShowMore}
+							loading={isShowingMore}
+							{...testId("canvas-versions-show-more")}
+						>
+							<Trans>Show more versions</Trans>
+						</Button>
+					</Group>
+				) : null}
 			</Stack>
 		</Paper>
 	);
@@ -347,7 +371,13 @@ export const CanvasRoute = () => {
 	}>();
 	const navigate = useI18nNavigate();
 	const canvasQuery = useCanvas(canvasId ?? "");
-	const generationsQuery = useCanvasGenerations(canvasId ?? "");
+	const [generationLimit, setGenerationLimit] = useState(
+		INITIAL_GENERATION_LIMIT,
+	);
+	const generationsQuery = useCanvasGenerations(
+		canvasId ?? "",
+		generationLimit,
+	);
 	const invalidateCanvasQueries = useInvalidateCanvasQueries(canvasId ?? "");
 	const refreshMutation = useRefreshCanvasMutation(canvasId ?? "");
 	const lifecycleMutation = useCanvasLifecycleMutation(canvasId ?? "");
@@ -363,7 +393,14 @@ export const CanvasRoute = () => {
 	const canvas = canvasQuery.data;
 	useDocumentTitle(canvas?.name ? `${canvas.name} | dembrane` : t`Canvas`);
 
-	const generations = generationsQuery.data ?? [];
+	const generations = useMemo(
+		() =>
+			[...(generationsQuery.data ?? [])].sort(
+				(a, b) =>
+					new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+			),
+		[generationsQuery.data],
+	);
 	const selectedGeneration = useMemo(
 		() =>
 			selectedGenerationId
@@ -402,7 +439,9 @@ export const CanvasRoute = () => {
 			navigate(openChatPath);
 			return;
 		}
-		navigate(primaryChatPath, { state: { initialMessage: newChatMessage } });
+		navigate(
+			`${primaryChatPath}?prefill=${encodeURIComponent(newChatMessage)}`,
+		);
 	};
 	const [settingsOpened, setSettingsOpened] = useState(false);
 	const freshnessText =
@@ -567,9 +606,11 @@ export const CanvasRoute = () => {
 										leftSection={<MessageCircle size={16} />}
 										onClick={() => {
 											setMenuOpened(false);
-											navigate(`${chatBasePath}/new`, {
-												state: { initialMessage: newChatMessage },
-											});
+											navigate(
+												`${chatBasePath}/new?prefill=${encodeURIComponent(
+													newChatMessage,
+												)}`,
+											);
 										}}
 									>
 										<Trans>New chat about this canvas</Trans>
@@ -616,12 +657,12 @@ export const CanvasRoute = () => {
 					ref={fullscreenRef}
 					className="rounded-md"
 					style={{
-						backgroundColor: "var(--app-background)",
+						backgroundColor: baseColors.parchment,
 						height: fullscreen ? "100dvh" : undefined,
 						minHeight: fullscreen ? "100dvh" : undefined,
-						width: fullscreen ? "100dvw" : undefined,
 						overflow: fullscreen ? "hidden" : undefined,
 						padding: fullscreen ? 0 : undefined,
+						width: fullscreen ? "100dvw" : undefined,
 					}}
 					{...testId("canvas-frame-container")}
 				>
@@ -637,6 +678,11 @@ export const CanvasRoute = () => {
 					selectedGenerationId={selectedGenerationId}
 					onSelect={setSelectedGenerationId}
 					onBackToLive={() => setSelectedGenerationId(null)}
+					onShowMore={() =>
+						setGenerationLimit((limit) => limit + GENERATION_PAGE_SIZE)
+					}
+					canShowMore={generations.length >= generationLimit}
+					isShowingMore={generationsQuery.isFetching}
 				/>
 			</Stack>
 		</PageContainer>

@@ -101,9 +101,7 @@ svg {
 .dembrane-canvas-root,
 .canvas-shell {
 	padding: clamp(12px, 2vw, 24px) clamp(20px, 4vw, 56px) clamp(24px, 4vw, 56px);
-	background:
-		linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0)),
-		var(--canvas-parchment);
+	background: var(--canvas-parchment);
 	color: var(--canvas-graphite);
 }
 
@@ -131,6 +129,7 @@ svg {
 .dembrane-canvas-brand {
 	display: flex;
 	justify-content: flex-start;
+	background: var(--canvas-parchment);
 	padding: clamp(18px, 3vw, 34px) clamp(20px, 4vw, 56px) 0;
 }
 

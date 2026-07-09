@@ -37,11 +37,9 @@ import {
 	useState,
 } from "react";
 import { useLocation } from "react-router";
-import {
-	useChatHistory,
-	useUpdateChatMutation,
-} from "@/components/chat/hooks";
+import { useChatHistory, useUpdateChatMutation } from "@/components/chat/hooks";
 import { InsertTemplateMenu } from "@/components/chat/InsertTemplateMenu";
+import { consumeChatPrefill } from "@/components/chat/prefill";
 import { useConversationsByProjectId } from "@/components/conversation/hooks";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { GoalSuggestionCard } from "@/components/goal/GoalSuggestionCard";
@@ -378,7 +376,9 @@ const toHistoryMessage = (message: RenderMessage): HistoryLikeMessage =>
 	}) as HistoryLikeMessage;
 
 const normalizeHistoryRole = (role: unknown): RenderMessage["role"] | null => {
-	const normalized = String(role ?? "").trim().toLowerCase();
+	const normalized = String(role ?? "")
+		.trim()
+		.toLowerCase();
 	if (normalized === "user") return "user";
 	if (normalized === "assistant") return "assistant";
 	return null;
@@ -604,6 +604,7 @@ export const AgenticChatPanel = ({
 	const [afterSeq, setAfterSeq] = useState(0);
 	const [events, setEvents] = useState<AgenticRunEvent[]>([]);
 	const [input, setInput] = useState("");
+	const queryPrefillStartedRef = useRef(false);
 	// Optimistic echo of the host's message so it appears the instant they
 	// hit send, before the run persists and streams it back.
 	const [pendingUserMessage, setPendingUserMessage] = useState<{
@@ -633,6 +634,19 @@ export const AgenticChatPanel = ({
 	useEffect(() => {
 		currentRunIdRef.current = runId;
 	}, [runId]);
+
+	useEffect(() => {
+		if (queryPrefillStartedRef.current) return;
+		const { prefill, search } = consumeChatPrefill(location.search);
+		if (!prefill && search === location.search) return;
+		queryPrefillStartedRef.current = true;
+		window.history.replaceState(
+			window.history.state,
+			"",
+			`${location.pathname}${search}${location.hash}`,
+		);
+		if (prefill) setInput(prefill);
+	}, [location.hash, location.pathname, location.search]);
 
 	// Citation links carry the participant's name when it resolves; generic
 	// "transcript" is the fallback, never a raw id.
