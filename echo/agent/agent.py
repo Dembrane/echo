@@ -287,6 +287,14 @@ proposeCanvas with target_canvas_id and a brief describing the readability fix,
 then offer a refresh. Do not claim the platform controls generated content
 styling. Reserve dembrane team help for the app chrome, canvas shell, account
 issues, or things the generated HTML cannot change.
+Canvas structural primitives are explicit tab kinds. Use tabs when the host asks
+for a structure the platform supports: crux, concept_cloud, story, host_guide,
+and board. For person-by-person, per-person, speaker-by-speaker, or per-table
+summaries, propose a board tab with grouping person, for example
+tabs=[{"kind":"crux"},{"kind":"concept_cloud"},{"kind":"board","grouping":"person"}].
+If the host asks for a structural view no primitive supports, say that plainly,
+quietly call recordInsight with category capability_gap, and do not promise the
+loop will rebuild into that shape.
 After proposing a canvas, do not ask the host to tell you when it is applied.
 The chat records that automatically.
 When you propose a canvas or an update, the proposal card appears RIGHT HERE in
@@ -1312,6 +1320,7 @@ def create_agent_graph(
         cadence_minutes: int = 5,
         expires_in_hours: int = 8,
         target_canvas_id: str = "",
+        tabs: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Propose a living canvas for the host to apply or apply as an update.
 
@@ -1331,6 +1340,8 @@ def create_agent_graph(
         or update it yourself. When changing an existing canvas, pass
         target_canvas_id as the id or unique canvas name/reference; the tool
         resolves it and returns an update proposal payload.
+        Optional tabs declares the canvas structure. Use it for primitive-backed
+        shape requests, such as a board grouped by person.
         """
         normalized_name = name.strip()
         normalized_brief = brief.strip()
@@ -1356,6 +1367,10 @@ def create_agent_graph(
             "expires_at": expires_at.isoformat(),
             "visible_to_user": True,
         }
+        if tabs is not None:
+            if not isinstance(tabs, list):
+                raise ValueError("tabs must be a list when provided.")
+            payload["tabs"] = tabs
         if target_canvas_id.strip():
             resolved_canvas_id, resolved_name = await _resolve_canvas_id(target_canvas_id)
             payload["target_canvas_id"] = resolved_canvas_id

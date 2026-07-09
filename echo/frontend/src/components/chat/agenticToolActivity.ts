@@ -387,6 +387,7 @@ export type ParsedCanvasSuggestion = {
 	name: string;
 	brief: string;
 	gather_spec?: Record<string, unknown> | null;
+	tabs?: Array<Record<string, unknown>> | null;
 	cadence_minutes?: number | null;
 	expires_at?: string | null;
 	target_canvas_id?: string | null;
@@ -419,6 +420,11 @@ export const parseCanvasSuggestion = (
 				payload.gather_spec && typeof payload.gather_spec === "object"
 					? (payload.gather_spec as Record<string, unknown>)
 					: null,
+			tabs: Array.isArray(payload.tabs)
+				? (payload.tabs.filter(
+						(tab: unknown) => tab && typeof tab === "object",
+					) as Array<Record<string, unknown>>)
+				: null,
 			name,
 			proposed_at: activity.timestamp,
 			projectId: String(payload.project_id ?? ""),

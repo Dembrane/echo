@@ -32,7 +32,10 @@ def ensure_wave28_schema(dx: Directus) -> None:
     print("Step 0/1: phase 0 dependencies")
     ensure_schema(dx)
 
-    print("Step 1/1: agent_loop canvas ledger fields")
+    print("Step 1/2: canvas_config_revision tab fields")
+    ensure_field(dx, "canvas_config_revision", json_field("canvas_config_revision", "tabs", sort=9))
+
+    print("Step 2/2: agent_loop canvas ledger fields")
     for sort, field in enumerate(
         (
             "canvas_tabs",
@@ -42,6 +45,7 @@ def ensure_wave28_schema(dx: Directus) -> None:
             "canvas_host_items",
             "canvas_story_slides",
             "canvas_host_guide",
+            "canvas_board_cards",
         ),
         start=30,
     ):

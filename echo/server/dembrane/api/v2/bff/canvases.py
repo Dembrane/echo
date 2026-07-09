@@ -57,6 +57,7 @@ class CreateCanvasBody(BaseModel):
     expires_at: datetime
     created_from_chat_id: str | None = None
     applied_preview_html: str | None = Field(default=None, min_length=1)
+    tabs: list[dict[str, Any]] | None = None
 
 
 class UpdateCanvasBody(BaseModel):
@@ -66,6 +67,7 @@ class UpdateCanvasBody(BaseModel):
     cadence_minutes: int = Field(default=5, ge=2, le=120)
     created_from_chat_id: str | None = None
     applied_preview_html: str | None = Field(default=None, min_length=1)
+    tabs: list[dict[str, Any]] | None = None
 
 
 class UpdateCanvasLoopSettingsBody(BaseModel):
@@ -77,6 +79,7 @@ class PreviewCanvasBody(BaseModel):
     project_id: str
     brief: str = Field(min_length=1, max_length=8000)
     gather_spec: dict[str, Any] | None = None
+    tabs: list[dict[str, Any]] | None = None
 
 
 class CanvasHostItemBody(BaseModel):
@@ -131,6 +134,7 @@ async def _canvas_payload(report: dict[str, Any]) -> dict[str, Any]:
             {
                 "brief": config.get("brief"),
                 "gather_spec": config.get("gather_spec"),
+                "tabs": config.get("tabs"),
                 "cadence_minutes": config.get("cadence_minutes"),
                 "created_at": config.get("created_at"),
             }
@@ -248,6 +252,7 @@ async def create_canvas_endpoint(
         acting_directus_user_id=auth.user_id,
         created_from_chat_id=created_from_chat_id,
         applied_preview_html=body.applied_preview_html,
+        tabs=body.tabs,
     )
     report = await async_directus.get_item("project_report", str(created["report"]["id"]))
     return await _canvas_payload(report)
@@ -278,6 +283,8 @@ async def preview_canvas(
         preview_sample=True,
     )
     living_state = fresh_canvas_state()
+    if body.tabs:
+        living_state["tabs"] = body.tabs
     if _gather_has_transcript(gather_bundle):
         try:
             extraction = await _extract_living_canvas_update(
@@ -380,6 +387,7 @@ async def update_canvas(
         created_by=auth.user_id,
         applied_preview_html=body.applied_preview_html,
         applied_from_chat_id=applied_from_chat_id,
+        tabs=body.tabs,
     )
     return await _canvas_payload(updated["report"])
 

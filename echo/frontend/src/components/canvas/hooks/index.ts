@@ -46,6 +46,7 @@ export type CanvasListItem = {
 export type CanvasConfig = {
 	brief?: string | null;
 	gather_spec?: Record<string, unknown> | null;
+	tabs?: Array<Record<string, unknown>> | null;
 	cadence_minutes?: number | null;
 	created_at?: string | null;
 };
@@ -68,6 +69,7 @@ export type CanvasProposal = {
 	name: string;
 	brief: string;
 	gather_spec?: Record<string, unknown> | null;
+	tabs?: Array<Record<string, unknown>> | null;
 	cadence_minutes?: number | null;
 	expires_at?: string | null;
 	target_canvas_id?: string | null;
@@ -281,6 +283,7 @@ export function usePreviewCanvasMutation() {
 				return await bff.post<{ content_html: string }>("/canvases/preview", {
 					brief: proposal.brief,
 					gather_spec: proposal.gather_spec ?? undefined,
+					tabs: proposal.tabs ?? undefined,
 					project_id: proposal.projectId,
 				});
 			} catch (error) {
@@ -304,6 +307,7 @@ export function useCreateCanvasMutation() {
 				created_from_chat_id: proposal.created_from_chat_id ?? undefined,
 				applied_preview_html: proposal.applied_preview_html ?? undefined,
 				gather_spec: proposal.gather_spec ?? undefined,
+				tabs: proposal.tabs ?? undefined,
 				name: proposal.name,
 				project_id: proposal.projectId,
 			}),
@@ -329,6 +333,7 @@ export function useUpdateCanvasMutation() {
 				created_from_chat_id: proposal.created_from_chat_id ?? undefined,
 				applied_preview_html: proposal.applied_preview_html ?? undefined,
 				gather_spec: proposal.gather_spec ?? undefined,
+				tabs: proposal.tabs ?? undefined,
 				name: proposal.name,
 			}),
 		onError: (error: BffError) => {

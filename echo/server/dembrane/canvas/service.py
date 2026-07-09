@@ -14,6 +14,7 @@ from dembrane.canvas.ledgers import (
     append_host_item,
     remove_host_item,
     fresh_canvas_state,
+    normalize_canvas_tabs,
 )
 from dembrane.directus_async import async_directus
 from dembrane.canvas.sanitize import sanitize_canvas_html
@@ -174,6 +175,7 @@ async def create_canvas(
     acting_directus_user_id: str,
     created_from_chat_id: str | None = None,
     applied_preview_html: str | None = None,
+    tabs: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Create the report row, first config revision, active loop, and first tick."""
     cadence = cadence_minutes or DEFAULT_CADENCE_MINUTES
@@ -199,6 +201,7 @@ async def create_canvas(
                 "report_id": report_id,
                 "brief": brief,
                 "gather_spec": gather_spec or {"window_minutes": 60},
+                "tabs": normalize_canvas_tabs(tabs),
                 "cadence_minutes": cadence,
                 "created_by": acting_directus_user_id,
                 "note": "initial",
@@ -248,6 +251,7 @@ async def revise_config(
     gather_spec: dict[str, Any] | None,
     cadence_minutes: int,
     created_by: str,
+    tabs: list[dict[str, Any]] | None = None,
     note: str | None = None,
 ) -> dict[str, Any]:
     return _data(
@@ -258,6 +262,7 @@ async def revise_config(
                 "report_id": report_id,
                 "brief": brief,
                 "gather_spec": gather_spec or {"window_minutes": 60},
+                "tabs": normalize_canvas_tabs(tabs),
                 "cadence_minutes": cadence_minutes,
                 "created_by": created_by,
                 "note": note,
@@ -277,6 +282,7 @@ async def get_latest_config(report_id: str) -> dict[str, Any] | None:
                     "report_id",
                     "brief",
                     "gather_spec",
+                    "tabs",
                     "cadence_minutes",
                     "created_by",
                     "created_at",
@@ -313,6 +319,7 @@ async def get_loop_for_report(report_id: str) -> dict[str, Any] | None:
                     "canvas_host_items",
                     "canvas_story_slides",
                     "canvas_host_guide",
+                    "canvas_board_cards",
                     "created_at",
                     "updated_at",
                 ],
@@ -349,14 +356,26 @@ async def update_canvas_config(
     created_by: str,
     applied_preview_html: str | None = None,
     applied_from_chat_id: str | None = None,
+    tabs: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Append a config revision, update loop/report display fields, and tick soon."""
+    previous_config = await get_latest_config(report_id)
+    loop = await get_loop_for_report(report_id)
+    previous_tabs = (
+        previous_config.get("tabs")
+        if isinstance(previous_config, dict) and isinstance(previous_config.get("tabs"), list)
+        else loop.get("canvas_tabs")
+        if isinstance(loop, dict) and isinstance(loop.get("canvas_tabs"), list)
+        else None
+    )
+    effective_tabs = normalize_canvas_tabs(tabs if tabs is not None else previous_tabs)
     config = await revise_config(
         report_id=report_id,
         brief=brief,
         gather_spec=gather_spec,
         cadence_minutes=cadence_minutes,
         created_by=created_by,
+        tabs=effective_tabs,
         note="chat update",
     )
     await async_directus.update_item(
@@ -364,9 +383,11 @@ async def update_canvas_config(
         report_id,
         {"user_instructions": name},
     )
-    loop = await get_loop_for_report(report_id)
     applied_generation = None
     if loop:
+        next_tabs = effective_tabs
+        current_tabs = normalize_canvas_tabs(loop.get("canvas_tabs"))
+        tabs_changed = next_tabs != current_tabs
         await async_directus.update_item(
             "agent_loop",
             str(loop["id"]),
@@ -391,7 +412,7 @@ async def update_canvas_config(
         # design is already the latest frame and the normal cadence resumes.
         await enqueue_canvas_tick(
             str(loop["id"]),
-            tick_kind="scheduled" if applied_generation else "manual",
+            tick_kind="manual" if tabs_changed or not applied_generation else "scheduled",
         )
     report = await async_directus.get_item("project_report", report_id)
     return {
@@ -428,6 +449,7 @@ async def apply_direct_canvas_edit(
         else None,
         cadence_minutes=int(config.get("cadence_minutes") or DEFAULT_CADENCE_MINUTES),
         created_by=created_by,
+        tabs=config.get("tabs") if isinstance(config.get("tabs"), list) else None,
         note="direct edit",
     )
     generation = await store_edited_generation(

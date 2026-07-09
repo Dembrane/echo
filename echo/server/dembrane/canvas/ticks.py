@@ -19,9 +19,11 @@ from dembrane.canvas.events import publish_generation_nudge
 from dembrane.canvas.gather import execute_gather_spec
 from dembrane.canvas.ledgers import (
     state_patch,
+    has_board_tab,
     fresh_canvas_state,
     render_tabbed_canvas,
     ledger_prompt_summary,
+    normalize_canvas_tabs,
     apply_model_extraction,
 )
 from dembrane.directus_async import async_directus
@@ -143,7 +145,8 @@ def _generation_detail(
             f"{ledger_detail.get('concepts_changed', 0)} concept change(s), "
             f"crux {'changed' if ledger_detail.get('crux_changed') else 'unchanged'}, "
             f"story {'changed' if ledger_detail.get('story_changed') else 'unchanged'}, "
-            f"host guide {'changed' if ledger_detail.get('host_guide_changed') else 'unchanged'}"
+            f"host guide {'changed' if ledger_detail.get('host_guide_changed') else 'unchanged'}, "
+            f"board {'changed' if ledger_detail.get('board_changed') else 'unchanged'}"
         )
         removed = ledger_detail.get("concepts_removed") or []
         if removed:
@@ -209,6 +212,11 @@ Return exactly:
   "story_slides": [{"eyebrow": string|null, "heading": string, "lede": string, "quote_indices": [0]}]
 }
 Quote and slide indices are zero-based into your returned quotes array.
+If enabled_tabs includes a board tab, also return "board_cards":
+[{"group": string, "synthesis": string, "quote_indices": [0]}].
+For board cards, group by person only when the accepted receipt quotes are
+attributed to that exact voice. Use "the room" for unattributed or mixed quotes.
+If enabled_tabs does not include a board tab, omit board_cards.
 """
 
 HOST_GUIDE_SYSTEM_PROMPT = """
@@ -433,8 +441,36 @@ def _state_is_empty_wall(state: dict[str, Any]) -> bool:
     normalized = fresh_canvas_state(state)
     has_host_items = any(not item.get("removed_at") for item in normalized["host_items"])
     return (
-        not normalized["quotes_ledger"] and not normalized["concepts_ledger"] and not has_host_items
+        not normalized["quotes_ledger"]
+        and not normalized["concepts_ledger"]
+        and not normalized["board_cards"]
+        and not has_host_items
     )
+
+
+def _shape_warnings(brief: str, tabs: list[dict[str, Any]]) -> list[str]:
+    normalized = brief.lower()
+    warnings: list[str] = []
+    asks_person_board = any(
+        phrase in normalized
+        for phrase in (
+            "person-by-person",
+            "person by person",
+            "per-person",
+            "per person",
+            "summary person",
+            "each person",
+        )
+    )
+    if asks_person_board and not has_board_tab(tabs):
+        warnings.append(
+            "brief asks for person-by-person; no tab primitive supports it in the current tab set"
+        )
+    for phrase in ("timeline", "calendar"):
+        if phrase in normalized:
+            warnings.append(f"brief asks for {phrase}; no tab primitive supports it")
+            break
+    return warnings
 
 
 def _single_conversation_bundle(
@@ -592,6 +628,7 @@ async def _extract_living_canvas_update(
             "context": project.get("context") or "",
             "anonymize_transcripts": project.get("anonymize_transcripts"),
         },
+        "enabled_tabs": normalize_canvas_tabs(current_state.get("tabs")),
         "current_ledgers": ledger_prompt_summary(current_state),
         "new_transcript": _transcript_payload_for_model(gather_bundle),
     }
@@ -675,6 +712,7 @@ async def _merge_extraction_for_tick(
         "crux_changed": False,
         "story_changed": False,
         "host_guide_changed": False,
+        "board_changed": False,
         "concepts_removed": [],
         "rejections": [],
         "conversation_outcomes": [],
@@ -745,6 +783,9 @@ async def _merge_extraction_for_tick(
         combined_detail["story_changed"] = bool(
             combined_detail["story_changed"] or detail.get("story_changed")
         )
+        combined_detail["board_changed"] = bool(
+            combined_detail["board_changed"] or detail.get("board_changed")
+        )
         combined_detail["concepts_removed"].extend(detail.get("concepts_removed") or [])
         combined_detail["rejections"].extend(detail.get("rejections") or [])
     try:
@@ -810,6 +851,9 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
         config = await _latest_config(report_id)
         latest_ok = await _latest_ok_generation(report_id)
         living_state = fresh_canvas_state(loop)
+        configured_tabs = normalize_canvas_tabs(config.get("tabs"))
+        structure_changed = configured_tabs != normalize_canvas_tabs(living_state.get("tabs"))
+        living_state["tabs"] = configured_tabs
         cold_start_backfill = not living_state["quotes_ledger"]
         gather_bundle = await execute_gather_spec(
             project_id=project_id,
@@ -821,6 +865,7 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
         latest_generation_at = _parse_dt((latest_ok or {}).get("created_at"))
         if (
             not cold_start_backfill
+            and not structure_changed
             and tick_kind != "manual"
             and latest_ok
             and (
@@ -862,6 +907,7 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
                 "crux_changed": False,
                 "story_changed": False,
                 "host_guide_changed": False,
+                "board_changed": False,
                 "concepts_removed": [],
                 "rejections": [],
                 "conversation_outcomes": [],
@@ -880,8 +926,15 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
                     ledger_detail["host_guide_changed"] = True
             except Exception as exc:
                 ledger_detail["rejections"].append(f"host guide model error: {exc}")
+        ledger_detail["rejections"].extend(
+            _shape_warnings(str(config.get("brief") or ""), living_state["tabs"])
+        )
 
-        if _state_is_empty_wall(living_state) and _contentful_generation(latest_ok):
+        if (
+            _state_is_empty_wall(living_state)
+            and _contentful_generation(latest_ok)
+            and not structure_changed
+        ):
             run = await _create_run(
                 loop_id=loop_id,
                 status="no_op",
