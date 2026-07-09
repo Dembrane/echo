@@ -196,6 +196,20 @@ class EchoClient:
         payload = await self.get(f"/agentic/projects/{project_id}/canvases/{canvas_id}")
         return payload if isinstance(payload, dict) else {}
 
+    async def get_canvas_history(
+        self,
+        project_id: str,
+        canvas_id: str,
+        limit: int = 30,
+    ) -> dict[str, Any]:
+        response = await self._client.get(
+            f"/agentic/projects/{project_id}/canvases/{canvas_id}/history",
+            params={"limit": max(1, min(limit, 100))},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+
     async def edit_canvas(
         self,
         project_id: str,

@@ -137,6 +137,16 @@ class _FakeAsyncClient:
                     ],
                 },
             )
+        if path == "/agentic/projects/project-1/canvases/canvas-1/history":
+            return httpx.Response(
+                status_code=200,
+                request=request,
+                json={
+                    "id": "canvas-1",
+                    "name": "Pulse wall",
+                    "history": [{"kind": "run", "changes": ["added doorway open"]}],
+                },
+            )
         if path.startswith("/agentic/projects/") and path.endswith("/canvases"):
             return httpx.Response(
                 status_code=200,
@@ -294,6 +304,21 @@ async def test_list_chat_canvas_activity_uses_expected_path_and_limit(monkeypatc
         == "/agentic/projects/project-1/chats/chat-1/canvas-activity"
     )
     assert client._client.calls[0]["params"] == {"limit": 5}
+
+
+@pytest.mark.asyncio
+async def test_get_canvas_history_uses_expected_path_and_limit(monkeypatch):
+    monkeypatch.setattr("echo_client.httpx.AsyncClient", _FakeAsyncClient)
+
+    client = EchoClient(bearer_token="token-1")
+    payload = await client.get_canvas_history("project-1", "canvas-1", limit=9)
+
+    assert payload["history"][0]["changes"] == ["added doorway open"]
+    assert (
+        client._client.calls[0]["path"]
+        == "/agentic/projects/project-1/canvases/canvas-1/history"
+    )
+    assert client._client.calls[0]["params"] == {"limit": 9}
 
 
 @pytest.mark.asyncio

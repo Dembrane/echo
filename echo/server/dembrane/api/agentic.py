@@ -26,6 +26,7 @@ from dembrane.agentic_worker import (
     AGENT_CANCELLED_ERROR_CODE,
     process_agentic_run,
 )
+from dembrane.canvas.history import build_canvas_history
 from dembrane.canvas.service import (
     apply_loop_action,
     get_latest_config,
@@ -1507,6 +1508,25 @@ async def get_project_canvas(
         "loop": _loop_payload(loop) if loop else None,
         "latest_config": config,
         "latest_generation": generation,
+    }
+
+
+@AgenticRouter.get("/projects/{project_id}/canvases/{canvas_id}/history")
+async def get_project_canvas_history(
+    project_id: str,
+    canvas_id: str,
+    auth: DependencyDirectusSession,
+    limit: int = Query(default=30, ge=1),
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    report = await _get_project_canvas_or_404(project_id, canvas_id)
+    entries = await build_canvas_history(canvas_id, limit=min(limit, 100))
+    loop = await get_loop_for_report(canvas_id)
+    return {
+        "id": canvas_id,
+        "name": (loop or {}).get("name") or report.get("user_instructions") or "Canvas",
+        "history": entries,
     }
 
 

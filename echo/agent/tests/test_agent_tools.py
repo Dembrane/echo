@@ -36,6 +36,7 @@ class _FakeEchoClient:
         methodologies_payload: dict | None = None,
         project_tags_payload: list[dict] | None = None,
         canvases_payload: list[dict] | None = None,
+        canvas_history_response: dict | None = None,
         canvas_loop_response: dict | None = None,
         canvas_host_item_response: dict | None = None,
         canvas_remove_item_response: dict | None = None,
@@ -65,6 +66,7 @@ class _FakeEchoClient:
         self.methodologies_payload = methodologies_payload or {}
         self.project_tags_payload = project_tags_payload or []
         self.canvases_payload = canvases_payload or []
+        self.canvas_history_response = canvas_history_response or {"history": []}
         self.canvas_loop_response = canvas_loop_response or {}
         self.canvas_host_item_response = canvas_host_item_response or {"status": "added"}
         self.canvas_remove_item_response = canvas_remove_item_response or {"status": "removed"}
@@ -77,6 +79,7 @@ class _FakeEchoClient:
         self.list_methodologies_calls: list[str] = []
         self.list_project_tags_calls: list[str] = []
         self.list_canvases_calls: list[str] = []
+        self.canvas_history_calls: list[dict[str, object]] = []
         self.canvas_loop_calls: list[dict[str, str]] = []
         self.canvas_host_item_calls: list[dict[str, object]] = []
         self.canvas_remove_item_calls: list[dict[str, object]] = []
@@ -205,6 +208,12 @@ class _FakeEchoClient:
         self.list_canvases_calls.append(project_id)
         return self.canvases_payload
 
+    async def get_canvas_history(self, project_id: str, canvas_id: str, limit: int = 30) -> dict:
+        self.canvas_history_calls.append(
+            {"project_id": project_id, "canvas_id": canvas_id, "limit": limit}
+        )
+        return self.canvas_history_response
+
     async def update_canvas_loop(
         self,
         project_id: str,
@@ -298,6 +307,7 @@ class _FakeEchoClientFactory:
         methodologies_payload: dict | None = None,
         project_tags_payload: list[dict] | None = None,
         canvases_payload: list[dict] | None = None,
+        canvas_history_response: dict | None = None,
         canvas_loop_response: dict | None = None,
         canvas_host_item_response: dict | None = None,
         canvas_remove_item_response: dict | None = None,
@@ -319,6 +329,7 @@ class _FakeEchoClientFactory:
         self.methodologies_payload = methodologies_payload
         self.project_tags_payload = project_tags_payload
         self.canvases_payload = canvases_payload
+        self.canvas_history_response = canvas_history_response
         self.canvas_loop_response = canvas_loop_response
         self.canvas_host_item_response = canvas_host_item_response
         self.canvas_remove_item_response = canvas_remove_item_response
@@ -342,6 +353,7 @@ class _FakeEchoClientFactory:
             methodologies_payload=self.methodologies_payload,
             project_tags_payload=self.project_tags_payload,
             canvases_payload=self.canvases_payload,
+            canvas_history_response=self.canvas_history_response,
             canvas_loop_response=self.canvas_loop_response,
             canvas_host_item_response=self.canvas_host_item_response,
             canvas_remove_item_response=self.canvas_remove_item_response,
@@ -1590,6 +1602,45 @@ async def test_list_canvases_returns_project_canvases():
     assert result["canvases"][0]["id"] == "canvas-1"
     assert factory.instances[0].list_canvases_calls == ["project-1"]
     assert factory.instances[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_read_canvas_history_resolves_canvas_and_returns_entries():
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        canvases_payload=[{"id": "canvas-1", "name": "Pulse wall", "kind": "canvas"}],
+        canvas_history_response={
+            "id": "canvas-1",
+            "name": "Pulse wall",
+            "history": [
+                {
+                    "at": "2026-07-09T12:00:00Z",
+                    "kind": "run",
+                    "changes": ["added doorway open"],
+                }
+            ],
+        },
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["readCanvasHistory"].ainvoke({"canvas": "pulse", "limit": 7})
+
+    assert result["canvas_id"] == "canvas-1"
+    assert result["canvas_name"] == "Pulse wall"
+    assert result["history"][0]["changes"] == ["added doorway open"]
+    assert factory.instances[0].list_canvases_calls == ["project-1"]
+    assert factory.instances[1].canvas_history_calls == [
+        {"project_id": "project-1", "canvas_id": "canvas-1", "limit": 7}
+    ]
 
 
 @pytest.mark.asyncio

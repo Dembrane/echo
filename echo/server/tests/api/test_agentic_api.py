@@ -1212,6 +1212,52 @@ async def test_agentic_canvas_lifecycle_delegates_to_shared_service(monkeypatch)
 
 
 @pytest.mark.asyncio
+async def test_agentic_canvas_history_returns_shared_history(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:  # noqa: ARG002
+            return {
+                "id": "canvas-1",
+                "kind": "canvas",
+                "project_id": {"id": "project-1"},
+                "deleted_at": None,
+                "user_instructions": "Pulse wall",
+            }
+
+    async def _loop(report_id: str) -> dict[str, Any]:
+        assert report_id == "canvas-1"
+        return {"id": "loop-1", "name": "Pulse wall"}
+
+    async def _history(report_id: str, *, limit: int) -> list[dict[str, Any]]:
+        assert report_id == "canvas-1"
+        assert limit == 9
+        return [{"at": "2026-07-09T12:00:00Z", "kind": "run", "changes": ["added"]}]
+
+    monkeypatch.setattr(agentic_api, "async_directus", _AsyncDirectus())
+    monkeypatch.setattr(agentic_api, "get_loop_for_report", _loop)
+    monkeypatch.setattr(agentic_api, "build_canvas_history", _history)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get(
+            "/api/agentic/projects/project-1/canvases/canvas-1/history?limit=9"
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": "canvas-1",
+        "name": "Pulse wall",
+        "history": [{"at": "2026-07-09T12:00:00Z", "kind": "run", "changes": ["added"]}],
+    }
+
+
+@pytest.mark.asyncio
 async def test_agentic_canvas_edit_delegates_to_direct_edit_service(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     session = _make_session(user_id="user-1")

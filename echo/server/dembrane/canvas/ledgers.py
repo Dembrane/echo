@@ -3,14 +3,23 @@
 from __future__ import annotations
 
 import html
+import hashlib
 from typing import Any
 from datetime import datetime, timezone
 from urllib.parse import quote as url_quote
 
 from dembrane.utils import generate_uuid
 
-CANVAS_TAB_SET_V1 = ("crux", "concept_cloud", "story", "host_guide")
-CANVAS_SUPPORTED_TAB_KINDS = ("crux", "concept_cloud", "story", "host_guide", "board")
+CANVAS_TAB_SET_V1 = ("crux", "concept_cloud", "story", "host_guide", "trace", "audit")
+CANVAS_SUPPORTED_TAB_KINDS = (
+    "crux",
+    "concept_cloud",
+    "story",
+    "host_guide",
+    "board",
+    "trace",
+    "audit",
+)
 CANVAS_TAB_LABELS = {
     "crux": "Crux",
     "concept_cloud": "Concept cloud",
@@ -19,6 +28,8 @@ CANVAS_TAB_LABELS = {
     # the host-visible tab label is renamed.
     "host_guide": "Open questions",
     "board": "Board",
+    "trace": "Trace",
+    "audit": "Audit log",
 }
 HOST_TARGET_TABS = {"crux", "concept_cloud", "story"}
 
@@ -40,6 +51,7 @@ def fresh_canvas_state(loop: dict[str, Any] | None = None) -> dict[str, Any]:
         "story_slides": _list(loop.get("story_slides") or loop.get("canvas_story_slides")),
         "host_guide": _dict(loop.get("host_guide") or loop.get("canvas_host_guide")),
         "board_cards": _list(loop.get("board_cards") or loop.get("canvas_board_cards")),
+        "audit_entries": _list(loop.get("audit_entries") or loop.get("canvas_audit_entries")),
     }
 
 
@@ -99,6 +111,9 @@ def _normalize_tab_kind(value: Any) -> str | None:
         "concepts_cloud": "concept_cloud",
         "host": "host_guide",
         "guide": "host_guide",
+        "history": "audit",
+        "audit_log": "audit",
+        "log": "audit",
         "person_board": "board",
         "people": "board",
         "per_person": "board",
@@ -552,7 +567,8 @@ def render_tabbed_canvas(
         for index, tab in enumerate(tabs)
     )
     labels = "\n".join(
-        f'<label class="tabbed-canvas-tab" for="canvas-tab-{_tab_dom_id(tab)}">{html.escape(CANVAS_TAB_LABELS[_tab_kind(tab)])}</label>'
+        f'<label class="tabbed-canvas-tab tabbed-canvas-tab-fallback" for="canvas-tab-{_tab_dom_id(tab)}">{html.escape(CANVAS_TAB_LABELS[_tab_kind(tab)])}</label>'
+        f'<a class="tabbed-canvas-tab tabbed-canvas-tab-link" href="#tab-{_tab_dom_id(tab)}">{html.escape(CANVAS_TAB_LABELS[_tab_kind(tab)])}</a>'
         for tab in tabs
     )
     panels = "\n".join(_panel(tab, state) for tab in tabs)
@@ -588,10 +604,14 @@ def _panel(tab: Any, state: dict[str, Any]) -> str:
         body = _render_host_guide(state)
     elif kind == "board":
         body = _render_board(state)
+    elif kind == "trace":
+        body = _render_trace(state)
+    elif kind == "audit":
+        body = _render_audit(state)
     else:
         body = _render_story(state)
     dom_id = _tab_dom_id(tab_config)
-    return f'<section class="tabbed-canvas-panel tabbed-canvas-panel-{dom_id}" data-tab-panel="{dom_id}" aria-label="{label}">{body}</section>'
+    return f'<section class="tabbed-canvas-panel tabbed-canvas-panel-{dom_id}" id="tab-{dom_id}" data-tab-panel="{dom_id}" aria-label="{label}">{body}</section>'
 
 
 def _render_crux(state: dict[str, Any]) -> str:
@@ -707,15 +727,178 @@ def _render_board(state: dict[str, Any]) -> str:
 """.strip()
 
 
+def _render_trace(state: dict[str, Any]) -> str:
+    entries = _trace_entries(state)
+    quotes_by_id = {str(quote.get("id")): quote for quote in state["quotes_ledger"]}
+    if not entries:
+        body = '<p class="tabbed-canvas-empty">Trace cards appear when a visible claim has receipt quotes.</p>'
+    else:
+        body = "\n".join(_trace_entry(entry, quotes_by_id) for entry in entries)
+    return f"""
+<div class="tabbed-trace-room">
+  {body}
+</div>
+""".strip()
+
+
+def _render_audit(state: dict[str, Any]) -> str:
+    entries = sorted(
+        [entry for entry in state.get("audit_entries") or [] if isinstance(entry, dict)],
+        key=lambda entry: str(entry.get("at") or ""),
+        reverse=True,
+    )
+    if not entries:
+        body = '<p class="tabbed-canvas-empty">Audit log entries appear after the canvas runs or the host changes it.</p>'
+    else:
+        body = "\n".join(_audit_entry(entry) for entry in entries[:30])
+    return f"""
+<div class="tabbed-audit">
+  {body}
+</div>
+""".strip()
+
+
+def _trace_entries(state: dict[str, Any]) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for concept in sorted(
+        state["concepts_ledger"],
+        key=lambda item: str(item.get("last_reinforced") or ""),
+        reverse=True,
+    ):
+        claim = str(concept.get("phrase") or "").strip()
+        quote_ids = [str(qid) for qid in concept.get("quote_ids") or [] if str(qid).strip()]
+        _append_trace_entry(entries, seen, "Concept", claim, quote_ids)
+    for slide in state.get("story_slides") or []:
+        claim = str(slide.get("lede") or slide.get("heading") or "").strip()
+        quote_ids = [str(qid) for qid in slide.get("quote_ids") or [] if str(qid).strip()]
+        _append_trace_entry(entries, seen, "Story", claim, quote_ids)
+    for card in state.get("board_cards") or []:
+        claim = str(card.get("synthesis") or card.get("group") or "").strip()
+        quote_ids = [str(qid) for qid in card.get("quote_ids") or [] if str(qid).strip()]
+        _append_trace_entry(entries, seen, "Board", claim, quote_ids)
+    return entries
+
+
+def _append_trace_entry(
+    entries: list[dict[str, Any]],
+    seen: set[str],
+    label: str,
+    claim: str,
+    quote_ids: list[str],
+) -> None:
+    quote_ids = [qid for index, qid in enumerate(quote_ids) if qid and qid not in quote_ids[:index]]
+    if not claim or not quote_ids:
+        return
+    entry_id = _trace_id(claim, quote_ids)
+    if entry_id in seen:
+        return
+    seen.add(entry_id)
+    entries.append({"id": entry_id, "label": label, "claim": claim, "quote_ids": quote_ids})
+
+
+def _trace_id(claim: str, quote_ids: list[str]) -> str:
+    payload = "|".join([_normalize_ws(claim), *quote_ids])
+    return f"trace-{hashlib.sha1(payload.encode('utf-8')).hexdigest()[:10]}"
+
+
+def _trace_entry(entry: dict[str, Any], quotes_by_id: dict[str, dict[str, Any]]) -> str:
+    quote_rows = [
+        _quote_block(quotes_by_id[qid])
+        for qid in entry.get("quote_ids") or []
+        if qid in quotes_by_id
+    ]
+    quotes_html = "\n".join(quote_rows) or (
+        '<p class="tabbed-canvas-empty">The receipt quotes for this claim are no longer available.</p>'
+    )
+    return f"""
+<article class="tabbed-trace-entry" id="{html.escape(str(entry.get("id") or ""))}">
+  <p class="tabbed-canvas-kicker">{html.escape(str(entry.get("label") or "Trace"))}</p>
+  <h2>{html.escape(str(entry.get("claim") or ""))}</h2>
+  <div class="tabbed-trace-cards">{quotes_html}</div>
+</article>
+""".strip()
+
+
+def _audit_entry(entry: dict[str, Any]) -> str:
+    at = html.escape(_format_audit_time(entry.get("at")))
+    outcome = html.escape(str(entry.get("kind") or "run").replace("_", " "))
+    cause = _format_audit_cause(entry.get("cause"))
+    links = _format_audit_links(entry)
+    summary = f"{at} · {outcome} — {html.escape(cause)}"
+    if links:
+        summary = f"{summary} · {links}"
+    heard = _audit_list("Heard", entry.get("heard"))
+    changes = _audit_list("Added / updated", entry.get("changes"))
+    kept_out = _audit_list("Kept out", entry.get("kept_out"))
+    version = html.escape(str(entry.get("version") or "unversioned"))
+    return f"""
+<details class="tabbed-audit-entry">
+  <summary>{summary}</summary>
+  <div class="tabbed-audit-body">
+    {heard}
+    {changes}
+    {kept_out}
+    <p><b>Cause</b> {html.escape(cause)}</p>
+    <p><b>View version</b> {version}</p>
+  </div>
+</details>
+""".strip()
+
+
+def _audit_list(label: str, value: Any) -> str:
+    items = [str(item).strip() for item in value if str(item).strip()] if isinstance(value, list) else []
+    if not items:
+        return f"<p><b>{html.escape(label)}</b> none</p>"
+    rows = "".join(f"<li>{html.escape(item)}</li>" for item in items[:8])
+    return f"<section><b>{html.escape(label)}</b><ul>{rows}</ul></section>"
+
+
+def _format_audit_time(value: Any) -> str:
+    raw = str(value or "").strip()
+    if "T" in raw:
+        return raw.split("T", 1)[1][:5]
+    if len(raw) >= 5 and raw[2] == ":":
+        return raw[:5]
+    return raw or "--:--"
+
+
+def _format_audit_cause(value: Any) -> str:
+    if not isinstance(value, dict):
+        return "canvas loop"
+    cause_type = str(value.get("type") or "canvas loop").replace("_", " ")
+    chat_id = str(value.get("chat_id") or value.get("run_chat_id") or "").strip()
+    message_id = str(value.get("message_id") or "").strip()
+    if chat_id and message_id:
+        return f"{cause_type} from chat {chat_id} message {message_id}"
+    if chat_id:
+        return f"{cause_type} from chat {chat_id}"
+    return cause_type
+
+
+def _format_audit_links(entry: dict[str, Any]) -> str:
+    cause = entry.get("cause") if isinstance(entry.get("cause"), dict) else {}
+    links: list[str] = []
+    chat_id = str(cause.get("chat_id") or "").strip()
+    run_chat_id = str(cause.get("run_chat_id") or "").strip()
+    if chat_id:
+        links.append(f'<span class="tabbed-audit-link">chat {html.escape(chat_id)}</span>')
+    if run_chat_id and run_chat_id != chat_id:
+        links.append(f'<span class="tabbed-audit-link">run chat {html.escape(run_chat_id)}</span>')
+    return " ".join(links)
+
+
 def _story_slide(slide: dict[str, Any], quotes: list[dict[str, Any]]) -> str:
     eyebrow = str(slide.get("eyebrow") or "").strip()
     eyebrow_html = f'<p class="tabbed-canvas-kicker">{html.escape(eyebrow)}</p>' if eyebrow else ""
-    quote_ids = {str(qid) for qid in slide.get("quote_ids") or []}
-    evidence = [quote for quote in quotes if str(quote.get("id")) in quote_ids]
+    quote_ids = [str(qid) for qid in slide.get("quote_ids") or []]
+    quote_id_set = set(quote_ids)
+    evidence = [quote for quote in quotes if str(quote.get("id")) in quote_id_set]
     trace = "\n".join(_quote_block(q) for q in evidence[:3])
     lede = html.escape(str(slide.get("lede") or ""))
     if lede and evidence:
-        lede_html = f'<details class="tabbed-slide-trace"><summary><span class="tabbed-traceable">{lede}</span></summary><div class="tabbed-trace">{trace}</div></details>'
+        trace_href = f"#{_trace_id(str(slide.get('lede') or slide.get('heading') or ''), quote_ids)}"
+        lede_html = f'<details class="tabbed-slide-trace"><summary><a class="tabbed-traceable" href="{trace_href}">{lede}</a></summary><div class="tabbed-trace">{trace}</div></details>'
     elif lede:
         lede_html = f'<p class="tabbed-canvas-lede">{lede}</p>'
     else:
@@ -746,9 +929,10 @@ def _concept_tile(concept: dict[str, Any], quotes: list[dict[str, Any]], index: 
     trace = "\n".join(_quote_block(q) for q in evidence[:4])
     rotation = "pos" if index % 2 else "neg"
     if trace:
+        trace_href = f"#{_trace_id(str(concept.get('phrase') or ''), quote_ids)}"
         return f"""
 <details class="tabbed-concept tabbed-concept-{tier} tabbed-tilt-{rotation}">
-  <summary><span class="tabbed-traceable">{phrase}</span></summary>
+  <summary><a class="tabbed-traceable" href="{trace_href}">{phrase}</a></summary>
   <div class="tabbed-trace">{trace}</div>
 </details>
 """.strip()
@@ -758,14 +942,16 @@ def _concept_tile(concept: dict[str, Any], quotes: list[dict[str, Any]], index: 
 def _board_card(card: dict[str, Any], quotes: list[dict[str, Any]]) -> str:
     group = html.escape(str(card.get("group") or "the room"))
     synthesis = html.escape(str(card.get("synthesis") or ""))
-    quote_ids = {str(qid) for qid in card.get("quote_ids") or []}
-    evidence = [quote for quote in quotes if str(quote.get("id")) in quote_ids]
+    quote_ids = [str(qid) for qid in card.get("quote_ids") or []]
+    quote_id_set = set(quote_ids)
+    evidence = [quote for quote in quotes if str(quote.get("id")) in quote_id_set]
     trace = "\n".join(_quote_block(q) for q in evidence[:2])
     receipt_html = ""
     if trace:
+        trace_href = f"#{_trace_id(str(card.get('synthesis') or card.get('group') or ''), quote_ids)}"
         receipt_html = (
             '<details class="tabbed-board-trace">'
-            '<summary><span class="tabbed-traceable">Receipts</span></summary>'
+            f'<summary><a class="tabbed-traceable" href="{trace_href}">Receipts</a></summary>'
             f'<div class="tabbed-trace">{trace}</div></details>'
         )
     return f"""
@@ -905,19 +1091,40 @@ _CSS = """
 .tabbed-canvas-notice{border:1px solid var(--amber);background:rgba(255,209,102,.35);padding:12px 13px;margin:0 0 14px}
 .tabbed-canvas-radio{position:absolute;opacity:0;pointer-events:none}
 .tabbed-canvas-tabbar{display:flex;align-items:end;border-bottom:1px solid var(--hairline);gap:26px;margin:0 0 26px}
-.tabbed-canvas-tab{font-size:14.5px;font-weight:500;color:var(--ink-soft);border-bottom:2px solid transparent;padding:10px 2px;cursor:pointer}
+.tabbed-canvas-tab{font-size:14.5px;font-weight:500;color:var(--ink-soft);border-bottom:2px solid transparent;padding:10px 2px;cursor:pointer;text-decoration:none}
+.tabbed-canvas-tab-link{display:none}
 .tabbed-canvas-add{margin-left:auto;color:var(--royal);font-size:22px;line-height:1.6;text-decoration:none}
 .tabbed-canvas-panel{display:none}
 #canvas-tab-crux:checked~.tabbed-canvas-tabbar label[for=canvas-tab-crux],
 #canvas-tab-concept_cloud:checked~.tabbed-canvas-tabbar label[for=canvas-tab-concept_cloud],
 #canvas-tab-story:checked~.tabbed-canvas-tabbar label[for=canvas-tab-story],
 #canvas-tab-host_guide:checked~.tabbed-canvas-tabbar label[for=canvas-tab-host_guide],
+#canvas-tab-trace:checked~.tabbed-canvas-tabbar label[for=canvas-tab-trace],
+#canvas-tab-audit:checked~.tabbed-canvas-tabbar label[for=canvas-tab-audit],
 #canvas-tab-board_person:checked~.tabbed-canvas-tabbar label[for=canvas-tab-board_person]{color:var(--ink);border-bottom-color:var(--royal)}
 #canvas-tab-crux:checked~[data-tab-panel=crux],
 #canvas-tab-concept_cloud:checked~[data-tab-panel=concept_cloud],
 #canvas-tab-story:checked~[data-tab-panel=story],
 #canvas-tab-host_guide:checked~[data-tab-panel=host_guide],
+#canvas-tab-trace:checked~[data-tab-panel=trace],
+#canvas-tab-audit:checked~[data-tab-panel=audit],
 #canvas-tab-board_person:checked~[data-tab-panel=board_person]{display:block}
+@supports selector(:has(*)){
+.tabbed-canvas-tab-fallback{display:none}
+.tabbed-canvas-tab-link{display:inline-block}
+.tabbed-canvas:has(.tabbed-canvas-panel:target) .tabbed-canvas-panel{display:none}
+.tabbed-canvas:has(.tabbed-trace-entry:target) .tabbed-canvas-panel{display:none}
+.tabbed-canvas .tabbed-canvas-panel:target{display:block}
+.tabbed-canvas:has(.tabbed-trace-entry:target) [data-tab-panel=trace]{display:block}
+.tabbed-canvas:has(#tab-crux:target) .tabbed-canvas-tab-link[href="#tab-crux"],
+.tabbed-canvas:has(#tab-concept_cloud:target) .tabbed-canvas-tab-link[href="#tab-concept_cloud"],
+.tabbed-canvas:has(#tab-story:target) .tabbed-canvas-tab-link[href="#tab-story"],
+.tabbed-canvas:has(#tab-host_guide:target) .tabbed-canvas-tab-link[href="#tab-host_guide"],
+.tabbed-canvas:has(#tab-trace:target) .tabbed-canvas-tab-link[href="#tab-trace"],
+.tabbed-canvas:has(.tabbed-trace-entry:target) .tabbed-canvas-tab-link[href="#tab-trace"],
+.tabbed-canvas:has(#tab-audit:target) .tabbed-canvas-tab-link[href="#tab-audit"],
+.tabbed-canvas:has(#tab-board_person:target) .tabbed-canvas-tab-link[href="#tab-board_person"]{color:var(--ink);border-bottom-color:var(--royal)}
+}
 .tabbed-crux{max-width:1000px;min-height:70vh;margin:0 auto;display:flex;flex-direction:column;justify-content:center}
 .tabbed-story{max-width:1000px;margin:0 auto}
 .tabbed-story-stack{display:grid;gap:30px}
@@ -961,6 +1168,19 @@ _CSS = """
 .tabbed-board-trace{margin-top:auto}
 .tabbed-board-trace summary{list-style:none;cursor:pointer;font-size:12px}
 .tabbed-board-trace summary::-webkit-details-marker{display:none}
+.tabbed-trace-room{max-width:780px;margin:0 auto;display:grid;gap:24px}
+.tabbed-trace-entry{scroll-margin-top:24px}
+.tabbed-trace-entry:target{outline:2px solid var(--royal);outline-offset:12px}
+.tabbed-trace-entry h2{margin:0;font-size:clamp(28px,4vw,44px);font-weight:500;line-height:1.12;text-wrap:balance}
+.tabbed-trace-cards{margin-top:18px}
+.tabbed-audit{max-width:900px;margin:0 auto;display:grid;gap:12px}
+.tabbed-audit-entry{background:var(--card);border:1px solid var(--hairline);padding:13px 15px}
+.tabbed-audit-entry[open]{border-color:var(--royal)}
+.tabbed-audit-entry summary{cursor:pointer;font-variant-numeric:tabular-nums;color:var(--ink)}
+.tabbed-audit-body{margin-top:12px;color:var(--ink-soft);line-height:1.45}
+.tabbed-audit-body p{margin:8px 0}
+.tabbed-audit-body ul{margin:6px 0 0;padding-left:20px}
+.tabbed-audit-link{color:var(--royal)}
 .tabbed-canvas-empty{color:var(--ink-soft)}
 @keyframes tabbedFloat{0%,100%{translate:0 0}50%{translate:0 -5px}}
 @media (prefers-reduced-motion:reduce){.tabbed-concept{animation:none}}
