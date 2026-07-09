@@ -17,6 +17,7 @@ from dembrane.redis_async import get_redis_client
 from dembrane.canvas.access import CanvasReaderAccessDenied
 from dembrane.canvas.events import publish_generation_nudge
 from dembrane.canvas.gather import execute_gather_spec
+from dembrane.canvas.history import build_canvas_history
 from dembrane.canvas.ledgers import (
     state_patch,
     has_board_tab,
@@ -360,8 +361,18 @@ async def _generate_html(
     gather_bundle: dict[str, Any],
     living_state: dict[str, Any] | None = None,
     report_name: str | None = None,
+    report_id: str | None = None,
 ) -> str:
     if living_state is not None:
+        if report_id:
+            living_state = {
+                **living_state,
+                "audit_entries": await build_canvas_history(
+                    report_id,
+                    limit=30,
+                    directus_client=async_directus,
+                ),
+            }
         return render_tabbed_canvas(
             state=living_state,
             project=gather_bundle.get("project") or {},
@@ -961,6 +972,7 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
             gather_bundle=gather_bundle,
             living_state=living_state,
             report_name=str(loop.get("name") or config.get("name") or "Canvas"),
+            report_id=report_id,
         )
         sanitized = sanitize_canvas_html(raw_html, max_bytes=get_settings().canvas.max_html_bytes)
         banned_copy = _banned_visible_copy(sanitized.html)

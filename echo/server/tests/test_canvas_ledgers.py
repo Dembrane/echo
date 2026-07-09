@@ -8,6 +8,7 @@ from dembrane.canvas.ledgers import (
     render_tabbed_canvas,
     apply_model_extraction,
 )
+from dembrane.canvas.sanitize import sanitize_canvas_html
 
 
 def _bundle() -> dict:
@@ -66,6 +67,8 @@ def test_apply_model_extraction_accepts_verbatim_receipts_and_updates_crux() -> 
         {"kind": "concept_cloud"},
         {"kind": "story"},
         {"kind": "host_guide"},
+        {"kind": "trace"},
+        {"kind": "audit"},
     ]
     assert state_patch(state)["canvas_story_slides"]
 
@@ -191,6 +194,8 @@ def test_render_tabbed_canvas_includes_tabs_traceable_quotes_and_host_items() ->
     assert 'type="radio"' in html
     assert 'for="canvas-tab-crux"' in html
     assert 'for="canvas-tab-host_guide"' in html
+    assert 'href="#tab-trace"' in html
+    assert 'href="#tab-audit"' in html
     assert ">Open questions</label>" in html
     assert (
         'href="/en-US/w/workspace-1/projects/project-1/chats/new?prefill='
@@ -198,7 +203,42 @@ def test_render_tabbed_canvas_includes_tabs_traceable_quotes_and_host_items() ->
         '" target="_top"'
     ) in html
     assert "tabbed-traceable" in html
+    assert 'href="#trace-' in html
+    assert 'class="tabbed-trace-entry" id="trace-' in html
     assert "Host says: hold this exact reflection." in html
+    sanitized = sanitize_canvas_html(html)
+    assert 'href="#trace-' in sanitized.html
+
+
+def test_render_tabbed_canvas_includes_audit_log_entries() -> None:
+    state = fresh_canvas_state(
+        {
+            "audit_entries": [
+                {
+                    "at": "2026-07-09T12:34:00Z",
+                    "kind": "run",
+                    "version": 2,
+                    "cause": {
+                        "type": "scheduled",
+                        "chat_id": "chat-1",
+                        "message_id": "msg-1",
+                        "run_chat_id": "chat-run",
+                    },
+                    "heard": ["doorway open"],
+                    "changes": ["added doorway open"],
+                    "kept_out": ["quote was not exact"],
+                }
+            ]
+        }
+    )
+
+    html = render_tabbed_canvas(state=state, project={"name": "Room"})
+
+    assert "Audit log" in html
+    assert "12:34 · run — scheduled from chat chat-1 message msg-1" in html
+    assert "run chat chat-run" in html
+    assert "added doorway open" in html
+    assert "quote was not exact" in html
 
 
 def test_render_tabbed_canvas_includes_persisted_host_guide() -> None:

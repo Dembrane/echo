@@ -345,6 +345,10 @@ tabs=[{"kind":"crux"},{"kind":"concept_cloud"},{"kind":"board","grouping":"perso
 If the host asks for a structural view no primitive supports, say that plainly,
 quietly call noteInsight with category capability_gap, and do not promise the
 loop will rebuild into that shape.
+When the host asks why a canvas changed, what it heard, what it left out, or
+who/what caused a canvas update, call readCanvasHistory and answer only from
+that history. If you make a review judgment about confusing history, missing
+receipts, or a weak canvas audit trail, quietly call recordInsight.
 After proposing a canvas, do not ask the host to tell you when it is applied.
 The chat records that automatically.
 When you propose a canvas or an update, the proposal card appears RIGHT HERE in
@@ -1673,6 +1677,30 @@ def create_agent_graph(
         return {"canvases": canvases}
 
     @tool
+    async def readCanvasHistory(canvas: str, limit: int = 30) -> dict[str, Any]:
+        """Read a canvas audit history by id or unique canvas name/reference.
+
+        Use this before answering why a canvas changed, what it heard, what it
+        kept out, or which chat/run caused a canvas update. Answer from the
+        returned history only.
+        """
+        resolved_canvas_id, resolved_name = await _resolve_canvas_id(canvas)
+        client = _create_echo_client()
+        try:
+            payload = await client.get_canvas_history(
+                project_id,
+                resolved_canvas_id,
+                limit=max(1, min(limit, 100)),
+            )
+        finally:
+            await client.close()
+        return {
+            "canvas_id": resolved_canvas_id,
+            "canvas_name": resolved_name or payload.get("name"),
+            "history": payload.get("history") if isinstance(payload.get("history"), list) else [],
+        }
+
+    @tool
     async def editCanvas(canvas: str, instruction: str, edited_html: str = "") -> dict[str, Any]:
         """Directly edit the latest generated HTML for a small canvas presentation
         or wording change. `canvas` may be an id or unique canvas name/reference.
@@ -1922,6 +1950,7 @@ def create_agent_graph(
         proposeGoal,
         listMethodologies,
         listCanvases,
+        readCanvasHistory,
         editCanvas,
         addToCanvas,
         removeFromCanvas,
