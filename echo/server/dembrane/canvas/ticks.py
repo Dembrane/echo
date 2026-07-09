@@ -35,6 +35,7 @@ _BANNED_VISIBLE_COPY: tuple[tuple[str, str], ...] = (
     ("successfully", "successfully"),
     ("\u2014", "em dash"),
 )
+CANVAS_TRANSCRIPT_WINDOW_CHARS = 20_000
 
 
 class _VisibleTextParser(HTMLParser):
@@ -133,12 +134,16 @@ def _generation_detail(
     if ledger_detail:
         if ledger_detail.get("backfill_conversations") is not None:
             details.append(f"backfill: {ledger_detail.get('backfill_conversations')} conversations")
+        outcomes = ledger_detail.get("conversation_outcomes") or []
+        if outcomes:
+            details.extend(str(outcome) for outcome in outcomes[:40])
         details.append(
             "ledger update: "
             f"{ledger_detail.get('quotes_added', 0)} quote(s), "
             f"{ledger_detail.get('concepts_changed', 0)} concept change(s), "
             f"crux {'changed' if ledger_detail.get('crux_changed') else 'unchanged'}, "
-            f"story {'changed' if ledger_detail.get('story_changed') else 'unchanged'}"
+            f"story {'changed' if ledger_detail.get('story_changed') else 'unchanged'}, "
+            f"host guide {'changed' if ledger_detail.get('host_guide_changed') else 'unchanged'}"
         )
         removed = ledger_detail.get("concepts_removed") or []
         if removed:
@@ -187,6 +192,15 @@ Crux rules:
 - A newcomer can answer it out loud: no internal references, jargon, or hidden numbers.
 - Phrase as an invitation with a concrete first move.
 
+Purpose rules:
+- This wall exists for the purpose described in the brief.
+- Extract ONLY material that serves it.
+- Conversations unrelated to this purpose may legitimately yield zero quotes;
+  returning nothing for them is correct, not a failure.
+- At most one small tile of off-topic room flavor is allowed.
+- Honor the brief's guardrails, including instructions not to pre-populate
+  static transcript snippets into structure.
+
 Return exactly:
 {
   "quotes": [{"who": string|null, "quote": string, "conversation_id": string, "chunk_id": string|null}],
@@ -195,6 +209,25 @@ Return exactly:
   "story_slides": [{"eyebrow": string|null, "heading": string, "lede": string, "quote_indices": [0]}]
 }
 Quote and slide indices are zero-based into your returned quotes array.
+"""
+
+HOST_GUIDE_SYSTEM_PROMPT = """
+You write the Host guide tab for a dembrane living canvas. Return JSON only.
+
+Grounding rules:
+- Use ONLY the brief, current ledgers, and recent run activity provided by the user.
+- Do not invent facts, names, conflict, consensus, or absent voices.
+- Keep "where_the_room_is" to 2-3 sentences.
+- Give 2-3 concrete questions the host can say out loud.
+- Use "under_heard" only for voices or threads with few or no receipts in the
+  ledger attribution. If there is not enough evidence, return an empty array.
+
+Return exactly:
+{
+  "where_the_room_is": string,
+  "what_to_ask_next": [string],
+  "under_heard": [string]
+}
 """
 
 
@@ -418,6 +451,82 @@ def _single_conversation_bundle(
     }
 
 
+def _short_id(value: Any) -> str:
+    text = str(value or "unknown")
+    return text[:8] if len(text) > 8 else text
+
+
+def _copy_conversation_with_chunks(
+    conversation: dict[str, Any],
+    chunks: list[dict[str, Any]],
+) -> dict[str, Any]:
+    transcript = "\n".join(str(chunk.get("transcript") or "") for chunk in chunks if chunk)
+    return {
+        **conversation,
+        "chunks": chunks,
+        "latest_transcript": transcript,
+    }
+
+
+def _conversation_chunks(conversation: dict[str, Any]) -> list[dict[str, Any]]:
+    chunks = conversation.get("chunks") if isinstance(conversation.get("chunks"), list) else []
+    if chunks:
+        return [chunk for chunk in chunks if isinstance(chunk, dict)]
+    return [
+        {
+            "id": None,
+            "transcript": conversation.get("latest_transcript") or "",
+            "created_at": conversation.get("created_at"),
+        }
+    ]
+
+
+def _windowed_conversation_bundles(
+    gather_bundle: dict[str, Any],
+    conversation: dict[str, Any],
+    *,
+    window_chars: int = CANVAS_TRANSCRIPT_WINDOW_CHARS,
+) -> list[dict[str, Any]]:
+    window_chars = max(1000, window_chars)
+    bundles: list[dict[str, Any]] = []
+    current: list[dict[str, Any]] = []
+    current_size = 0
+
+    def flush() -> None:
+        nonlocal current, current_size
+        if not current:
+            return
+        bundles.append(
+            _single_conversation_bundle(
+                gather_bundle,
+                _copy_conversation_with_chunks(conversation, current),
+            )
+        )
+        current = []
+        current_size = 0
+
+    for chunk in _conversation_chunks(conversation):
+        transcript = str(chunk.get("transcript") or "")
+        if not transcript.strip():
+            continue
+        start = 0
+        while start < len(transcript):
+            remaining = window_chars - current_size
+            if remaining <= 0:
+                flush()
+                remaining = window_chars
+            piece = transcript[start : start + remaining]
+            start += len(piece)
+            if not piece:
+                break
+            current.append({**chunk, "transcript": piece})
+            current_size += len(piece)
+            if current_size >= window_chars:
+                flush()
+    flush()
+    return bundles
+
+
 def _transcript_payload_for_model(gather_bundle: dict[str, Any]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     remaining = max(12000, get_settings().canvas.max_total_transcript_chars)
@@ -464,9 +573,19 @@ async def _extract_living_canvas_update(
     *,
     gather_bundle: dict[str, Any],
     current_state: dict[str, Any],
+    report_name: str,
+    brief: str,
 ) -> dict[str, Any]:
     project = gather_bundle.get("project") or {}
     user_payload = {
+        "report": {"name": report_name},
+        "brief": brief,
+        "purpose_instruction": (
+            "This wall exists for the purpose described in the brief. Extract ONLY material "
+            "that serves it. Conversations unrelated to this purpose may legitimately yield "
+            "zero quotes -- returning nothing for them is correct, not a failure. At most one "
+            "small tile of off-topic room flavor is allowed."
+        ),
         "project": {
             "name": project.get("name"),
             "language": project.get("language") or "en",
@@ -488,11 +607,66 @@ async def _extract_living_canvas_update(
     return _json_from_model_text(_choice_text(response))
 
 
+def _ledger_attribution(state: dict[str, Any]) -> dict[str, Any]:
+    normalized = fresh_canvas_state(state)
+    by_conversation: dict[str, int] = {}
+    by_voice: dict[str, int] = {}
+    for quote in normalized["quotes_ledger"]:
+        source = quote.get("source") if isinstance(quote.get("source"), dict) else {}
+        conv_id = str(source.get("conversation_id") or "unknown")
+        by_conversation[conv_id] = by_conversation.get(conv_id, 0) + 1
+        voice = str(quote.get("who") or "participant")
+        by_voice[voice] = by_voice.get(voice, 0) + 1
+    return {"by_conversation": by_conversation, "by_voice": by_voice}
+
+
+async def _generate_host_guide(
+    *,
+    report_name: str,
+    brief: str,
+    current_state: dict[str, Any],
+    recent_activity: dict[str, Any],
+) -> dict[str, Any]:
+    user_payload = {
+        "report": {"name": report_name},
+        "brief": brief,
+        "current_ledgers": ledger_prompt_summary(current_state),
+        "ledger_attribution": _ledger_attribution(current_state),
+        "recent_run_activity": recent_activity,
+    }
+    response = await arouter_completion(
+        MODELS.MULTI_MODAL_FAST,
+        messages=[
+            {"role": "system", "content": HOST_GUIDE_SYSTEM_PROMPT},
+            {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False, indent=2)},
+        ],
+        temperature=0.2,
+        max_tokens=1400,
+    )
+    parsed = _json_from_model_text(_choice_text(response))
+    questions = [
+        str(item).strip()[:220]
+        for item in parsed.get("what_to_ask_next") or []
+        if str(item).strip()
+    ][:3]
+    under_heard = [
+        str(item).strip()[:220] for item in parsed.get("under_heard") or [] if str(item).strip()
+    ][:5]
+    return {
+        "where_the_room_is": str(parsed.get("where_the_room_is") or "").strip()[:900],
+        "what_to_ask_next": questions,
+        "under_heard": under_heard,
+        "updated_at": _now().isoformat(),
+    }
+
+
 async def _merge_extraction_for_tick(
     *,
     gather_bundle: dict[str, Any],
     current_state: dict[str, Any],
     backfill: bool,
+    report_name: str,
+    brief: str,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     living_state = fresh_canvas_state(current_state)
     combined_detail: dict[str, Any] = {
@@ -500,8 +674,10 @@ async def _merge_extraction_for_tick(
         "concepts_changed": 0,
         "crux_changed": False,
         "story_changed": False,
+        "host_guide_changed": False,
         "concepts_removed": [],
         "rejections": [],
+        "conversation_outcomes": [],
     }
     conversations = [
         conv
@@ -513,20 +689,53 @@ async def _merge_extraction_for_tick(
     if not conversations:
         return living_state, combined_detail
 
-    bundles = (
-        [_single_conversation_bundle(gather_bundle, conv) for conv in conversations]
-        if backfill
-        else [gather_bundle]
-    )
-    for bundle in bundles:
-        extraction = await _extract_living_canvas_update(
-            gather_bundle=bundle,
-            current_state=living_state,
+    bundles: list[tuple[dict[str, Any], str, int | None, int]] = []
+    if backfill:
+        for conv in conversations:
+            windows = _windowed_conversation_bundles(gather_bundle, conv)
+            for window_index, bundle in enumerate(windows, start=1):
+                bundles.append((bundle, str(conv.get("id") or "unknown"), window_index, len(windows)))
+    else:
+        oversized = any(
+            sum(len(str(chunk.get("transcript") or "")) for chunk in _conversation_chunks(conv))
+            > CANVAS_TRANSCRIPT_WINDOW_CHARS
+            for conv in conversations
         )
+        if oversized:
+            for conv in conversations:
+                windows = _windowed_conversation_bundles(gather_bundle, conv)
+                for window_index, bundle in enumerate(windows, start=1):
+                    bundles.append(
+                        (bundle, str(conv.get("id") or "unknown"), window_index, len(windows))
+                    )
+        else:
+            bundles = [(gather_bundle, "recent", None, 1)]
+
+    for bundle, conv_id, window_index, window_count in bundles:
+        try:
+            extraction = await _extract_living_canvas_update(
+                gather_bundle=bundle,
+                current_state=living_state,
+                report_name=report_name,
+                brief=brief,
+            )
+        except Exception as exc:
+            label = f"backfill conv {_short_id(conv_id)}" if backfill else f"conv {_short_id(conv_id)}"
+            if window_index is not None and window_count > 1:
+                label += f" window {window_index}"
+            combined_detail["conversation_outcomes"].append(f"{label}: model error: {exc}")
+            continue
         living_state, detail = apply_model_extraction(
             living_state,
             bundle,
             extraction,
+        )
+        rejected = len(detail.get("rejections") or [])
+        label = f"backfill conv {_short_id(conv_id)}" if backfill else f"conv {_short_id(conv_id)}"
+        if window_index is not None and window_count > 1:
+            label += f" window {window_index}"
+        combined_detail["conversation_outcomes"].append(
+            f"{label}: {int(detail.get('quotes_added') or 0)} accepted / {rejected} rejected"
         )
         combined_detail["quotes_added"] += int(detail.get("quotes_added") or 0)
         combined_detail["concepts_changed"] += int(detail.get("concepts_changed") or 0)
@@ -538,6 +747,18 @@ async def _merge_extraction_for_tick(
         )
         combined_detail["concepts_removed"].extend(detail.get("concepts_removed") or [])
         combined_detail["rejections"].extend(detail.get("rejections") or [])
+    try:
+        host_guide = await _generate_host_guide(
+            report_name=report_name,
+            brief=brief,
+            current_state=living_state,
+            recent_activity=combined_detail,
+        )
+        if host_guide != living_state.get("host_guide"):
+            living_state["host_guide"] = host_guide
+            combined_detail["host_guide_changed"] = True
+    except Exception as exc:
+        combined_detail["rejections"].append(f"host guide model error: {exc}")
     return living_state, combined_detail
 
 
@@ -622,6 +843,8 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
                     gather_bundle=gather_bundle,
                     current_state=living_state,
                     backfill=cold_start_backfill,
+                    report_name=str(loop.get("name") or config.get("name") or config.get("brief") or "Canvas"),
+                    brief=str(config.get("brief") or ""),
                 )
             except Exception as exc:
                 run = await _create_run(
@@ -638,11 +861,25 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
                 "concepts_changed": 0,
                 "crux_changed": False,
                 "story_changed": False,
+                "host_guide_changed": False,
                 "concepts_removed": [],
                 "rejections": [],
+                "conversation_outcomes": [],
             }
             if cold_start_backfill:
                 ledger_detail["backfill_conversations"] = 0
+            try:
+                host_guide = await _generate_host_guide(
+                    report_name=str(loop.get("name") or config.get("name") or "Canvas"),
+                    brief=str(config.get("brief") or ""),
+                    current_state=living_state,
+                    recent_activity=ledger_detail,
+                )
+                if host_guide != living_state.get("host_guide"):
+                    living_state["host_guide"] = host_guide
+                    ledger_detail["host_guide_changed"] = True
+            except Exception as exc:
+                ledger_detail["rejections"].append(f"host guide model error: {exc}")
 
         if _state_is_empty_wall(living_state) and _contentful_generation(latest_ok):
             run = await _create_run(

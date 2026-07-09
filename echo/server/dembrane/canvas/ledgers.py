@@ -8,13 +8,14 @@ from datetime import datetime, timezone
 
 from dembrane.utils import generate_uuid
 
-CANVAS_TAB_SET_V1 = ("crux", "concept_cloud", "story")
+CANVAS_TAB_SET_V1 = ("crux", "concept_cloud", "story", "host_guide")
 CANVAS_TAB_LABELS = {
     "crux": "Crux",
     "concept_cloud": "Concept cloud",
     "story": "Story",
+    "host_guide": "Host guide",
 }
-HOST_TARGET_TABS = set(CANVAS_TAB_SET_V1)
+HOST_TARGET_TABS = set(CANVAS_TAB_SET_V1) - {"host_guide"}
 
 
 def utc_now_iso() -> str:
@@ -32,6 +33,7 @@ def fresh_canvas_state(loop: dict[str, Any] | None = None) -> dict[str, Any]:
         or {"question": "", "history": []},
         "host_items": _list(loop.get("host_items") or loop.get("canvas_host_items")),
         "story_slides": _list(loop.get("story_slides") or loop.get("canvas_story_slides")),
+        "host_guide": _dict(loop.get("host_guide") or loop.get("canvas_host_guide")),
     }
 
 
@@ -43,6 +45,7 @@ def state_patch(state: dict[str, Any]) -> dict[str, Any]:
         "canvas_crux": state.get("crux") or {"question": "", "history": []},
         "canvas_host_items": state.get("host_items") or [],
         "canvas_story_slides": state.get("story_slides") or [],
+        "canvas_host_guide": state.get("host_guide") or {},
     }
 
 
@@ -418,6 +421,8 @@ def _panel(tab: str, state: dict[str, Any]) -> str:
         body = _render_crux(state)
     elif tab == "concept_cloud":
         body = _render_cloud(state)
+    elif tab == "host_guide":
+        body = _render_host_guide(state)
     else:
         body = _render_story(state)
     return f'<section class="tabbed-canvas-panel tabbed-canvas-panel-{tab}" data-tab-panel="{tab}" aria-label="{label}">{body}</section>'
@@ -476,6 +481,44 @@ def _render_story(state: dict[str, Any]) -> str:
   <h2>{heading}</h2>
   <div class="tabbed-story-quotes">{slide_html}</div>
   {_render_host_items(state, "story")}
+</div>
+""".strip()
+
+
+def _render_host_guide(state: dict[str, Any]) -> str:
+    guide = state.get("host_guide") if isinstance(state.get("host_guide"), dict) else {}
+    where = str(guide.get("where_the_room_is") or "").strip()
+    questions = [
+        str(item).strip() for item in guide.get("what_to_ask_next") or [] if str(item).strip()
+    ][:3]
+    under_heard = [
+        str(item).strip() for item in guide.get("under_heard") or [] if str(item).strip()
+    ][:5]
+    if not where and not questions and not under_heard:
+        body = '<p class="tabbed-canvas-empty">The host guide is waiting for usable room receipts.</p>'
+    else:
+        where_html = (
+            f'<section class="tabbed-guide-block"><h3>Where the room is</h3><p>{html.escape(where)}</p></section>'
+            if where
+            else ""
+        )
+        questions_html = ""
+        if questions:
+            rows = "".join(f"<li>{html.escape(question)}</li>" for question in questions)
+            questions_html = (
+                f'<section class="tabbed-guide-block"><h3>What to ask next</h3><ol>{rows}</ol></section>'
+            )
+        under_heard_html = ""
+        if under_heard:
+            rows = "".join(f"<li>{html.escape(item)}</li>" for item in under_heard)
+            under_heard_html = (
+                f'<section class="tabbed-guide-block"><h3>Under-heard</h3><ul>{rows}</ul></section>'
+            )
+        body = where_html + questions_html + under_heard_html
+    return f"""
+<div class="tabbed-host-guide">
+  <p class="tabbed-canvas-kicker">Host guide</p>
+  {body}
 </div>
 """.strip()
 
@@ -619,11 +662,14 @@ _CSS = """
 .tabbed-canvas-panel{display:none}
 #canvas-tab-crux:checked~.tabbed-canvas-tabbar label[for=canvas-tab-crux],
 #canvas-tab-concept_cloud:checked~.tabbed-canvas-tabbar label[for=canvas-tab-concept_cloud],
-#canvas-tab-story:checked~.tabbed-canvas-tabbar label[for=canvas-tab-story]{color:var(--ink);border-bottom-color:var(--royal)}
+#canvas-tab-story:checked~.tabbed-canvas-tabbar label[for=canvas-tab-story],
+#canvas-tab-host_guide:checked~.tabbed-canvas-tabbar label[for=canvas-tab-host_guide]{color:var(--ink);border-bottom-color:var(--royal)}
 #canvas-tab-crux:checked~[data-tab-panel=crux],
 #canvas-tab-concept_cloud:checked~[data-tab-panel=concept_cloud],
-#canvas-tab-story:checked~[data-tab-panel=story]{display:block}
+#canvas-tab-story:checked~[data-tab-panel=story],
+#canvas-tab-host_guide:checked~[data-tab-panel=host_guide]{display:block}
 .tabbed-crux,.tabbed-story{max-width:1000px;min-height:70vh;margin:0 auto;display:flex;flex-direction:column;justify-content:center}
+.tabbed-host-guide{max-width:840px;min-height:70vh;margin:0 auto;display:flex;flex-direction:column;justify-content:center;gap:16px}
 .tabbed-crux h1,.tabbed-story h2{max-width:900px;margin:0;font-weight:500;line-height:1.14;text-wrap:balance}
 .tabbed-crux h1{font-size:clamp(32px,4.6vw,48px)}
 .tabbed-story h2{font-size:clamp(24px,3.4vw,36px)}
@@ -646,8 +692,13 @@ _CSS = """
 .tabbed-host-items{margin-top:22px;display:grid;gap:12px}
 .tabbed-host-item{border:1px solid var(--hairline);border-left:3px solid var(--royal);background:var(--card);padding:15px 18px}
 .tabbed-host-item p{margin:0;white-space:pre-wrap}
+.tabbed-guide-block{border:1px solid var(--hairline);background:var(--card);padding:16px 18px}
+.tabbed-guide-block h3{margin:0 0 10px;font-size:16px;font-weight:600}
+.tabbed-guide-block p{margin:0;color:var(--ink-soft);line-height:1.45}
+.tabbed-guide-block ol,.tabbed-guide-block ul{margin:0;padding-left:20px;color:var(--ink-soft);line-height:1.45}
+.tabbed-guide-block li+li{margin-top:8px}
 .tabbed-canvas-empty{color:var(--ink-soft)}
 @keyframes tabbedFloat{0%,100%{translate:0 0}50%{translate:0 -5px}}
 @media (prefers-reduced-motion:reduce){.tabbed-concept{animation:none}}
-@media (max-width:720px){.tabbed-canvas-frame{padding:14px 14px 60px}.tabbed-canvas-tabbar{gap:16px}.tabbed-crux,.tabbed-story{min-height:58vh}}
+@media (max-width:720px){.tabbed-canvas-frame{padding:14px 14px 60px}.tabbed-canvas-tabbar{gap:16px}.tabbed-crux,.tabbed-story,.tabbed-host-guide{min-height:58vh}}
 """

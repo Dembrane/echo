@@ -15,6 +15,7 @@ from dembrane.redis_async import get_redis_client
 from dembrane.canvas.ticks import (
     run_tick,
     _generate_html,
+    _generate_host_guide,
     _gather_has_transcript,
     _extract_living_canvas_update,
 )
@@ -282,10 +283,21 @@ async def preview_canvas(
             extraction = await _extract_living_canvas_update(
                 gather_bundle=gather_bundle,
                 current_state=living_state,
+                report_name=body.name,
+                brief=body.brief,
             )
         except Exception as exc:
             raise HTTPException(status_code=502, detail=f"Canvas extraction failed: {exc}") from exc
         living_state, _detail = apply_model_extraction(living_state, gather_bundle, extraction)
+        try:
+            living_state["host_guide"] = await _generate_host_guide(
+                report_name=body.name,
+                brief=body.brief,
+                current_state=living_state,
+                recent_activity=_detail,
+            )
+        except Exception:
+            pass
 
     raw_html = await _generate_html(
         brief=body.brief,
