@@ -12,6 +12,7 @@ class _FakeDirectus:
         return {
             "id": item_id,
             "name": "Panel day",
+            "workspace_id": "workspace-1",
             "context": "Testing context",
             "language": "en",
             "anonymize_transcripts": True,
@@ -41,6 +42,7 @@ class _EmptyDirectus:
         return {
             "id": item_id,
             "name": "Panel day",
+            "workspace_id": "workspace-1",
             "context": "Testing context",
             "language": "en",
             "anonymize_transcripts": False,
@@ -84,6 +86,7 @@ async def test_gather_verifies_reader_and_caps_transcript(monkeypatch) -> None:
 
     assert calls == [{"acting_directus_user_id": "du1", "project_id": "p1"}]
     assert bundle["project"]["name"] == "Panel day"
+    assert bundle["project"]["workspace_id"] == "workspace-1"
     assert bundle["project"]["goal"] == "Surface practical concerns."
     assert bundle["conversations"][0]["latest_transcript"] == "aaaaaaaaaa\n[truncated]"
     assert bundle["counts"]["truncated_conversations"] == 1

@@ -94,6 +94,7 @@ async def execute_gather_spec(
     project = await async_directus.get_item("project", project_id)
     project_context = {
         "id": project_id,
+        "workspace_id": (project or {}).get("workspace_id"),
         "name": (project or {}).get("name"),
         "context": (project or {}).get("context"),
         "goal": await get_current_project_goal_content(project_id),
