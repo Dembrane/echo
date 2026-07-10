@@ -1888,6 +1888,8 @@ def _dispatch_scheduled_task(row: dict) -> None:
         TASK_CANVAS_TICK,
         TASK_GENERATE_REPORT,
         TASK_REVOKE_STAFF_SUPPORT,
+        TASK_EXPIRE_SUPPORT_REQUEST,
+        TASK_SUPPORT_TOGGLE_REMINDER,
     )
 
     task_type = row.get("task_type")
@@ -1898,6 +1900,10 @@ def _dispatch_scheduled_task(row: dict) -> None:
         _run_generate_report(payload)
     elif task_type == TASK_CANVAS_TICK:
         _run_canvas_tick(payload)
+    elif task_type == TASK_EXPIRE_SUPPORT_REQUEST:
+        _run_expire_support_request(payload)
+    elif task_type == TASK_SUPPORT_TOGGLE_REMINDER:
+        _run_support_toggle_reminder(payload)
     else:
         raise ValueError(f"unknown scheduled_task type: {task_type!r}")
 
@@ -1912,6 +1918,104 @@ def _run_canvas_tick(payload: dict) -> None:
     run_async_in_new_loop(lambda: run_tick(str(loop_id), str(tick_kind)))
 
 
+async def _expire_support_request_async(request_id: str) -> bool:
+    """Expire a still-pending request and tell the requester. Status-guarded, so
+    an approval/denial that raced the timer wins and this is a no-op."""
+    from dembrane.directus_async import async_directus
+    from dembrane.support_access import (
+        REQUEST_COLLECTION,
+        EVENT_REQUEST_EXPIRED,
+        record_support_access_event,
+    )
+
+    req = await async_directus.get_item(REQUEST_COLLECTION, request_id)
+    if not req or req.get("status") != "pending":
+        return False
+    await async_directus.update_item(
+        REQUEST_COLLECTION,
+        request_id,
+        {"status": "expired", "resolved_at": get_utc_timestamp().isoformat()},
+    )
+    await record_support_access_event(
+        workspace_id=str(req.get("workspace_id")),
+        event_code=EVENT_REQUEST_EXPIRED,
+        staff_user_id=req.get("requested_by"),
+        params={"request_id": request_id},
+    )
+    return True
+
+
+def _run_expire_support_request(payload: dict) -> None:
+    """Handler: expire a pending support access request (idempotent)."""
+    task_logger = getLogger("dembrane.tasks.expire_support_request")
+    request_id = payload.get("request_id")
+    if not request_id:
+        raise ValueError("expire_support_access_request payload missing request_id")
+    expired = run_async_in_new_loop(_expire_support_request_async(str(request_id)))
+    task_logger.info(
+        "support access request %s %s",
+        request_id,
+        "expired" if expired else "already resolved; no-op",
+    )
+
+
+async def _support_toggle_reminder_async(workspace_id: str) -> Optional[datetime]:
+    """One reminder tick. Returns the next fire time while the toggle is on, or
+    None to stop. Nudges only when no staff session is active."""
+    from dembrane.inheritance import membership_access_expired
+    from dembrane.directus_async import async_directus
+    from dembrane.support_access import (
+        REMINDER_INTERVAL,
+        EVENT_REMINDER_SENT,
+        record_support_access_event,
+    )
+
+    ws = await async_directus.get_item("workspace", workspace_id)
+    if not ws or ws.get("deleted_at") or not ws.get("allow_support_access"):
+        return None
+    rows = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": workspace_id},
+                    "source": {"_eq": "staff_support"},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id", "expires_at"],
+                "limit": -1,
+            }
+        },
+    )
+    rows = rows if isinstance(rows, list) else []
+    active = [r for r in rows if not membership_access_expired(r.get("expires_at"))]
+    if not active:
+        await record_support_access_event(workspace_id=workspace_id, event_code=EVENT_REMINDER_SENT)
+    return datetime.now(timezone.utc) + REMINDER_INTERVAL
+
+
+def _run_support_toggle_reminder(payload: dict) -> None:
+    """Handler: weekly 'support access is still on' nudge; self-re-arming."""
+    from dembrane.scheduled_tasks import TASK_SUPPORT_TOGGLE_REMINDER, enqueue_task_sync
+
+    task_logger = getLogger("dembrane.tasks.support_toggle_reminder")
+    workspace_id = payload.get("workspace_id")
+    if not workspace_id:
+        raise ValueError("support_toggle_reminder payload missing workspace_id")
+    next_at = run_async_in_new_loop(_support_toggle_reminder_async(str(workspace_id)))
+    if next_at is None:
+        task_logger.info("reminder loop for workspace %s stopped", workspace_id)
+        return
+    with directus_client_context() as client:
+        enqueue_task_sync(
+            client,
+            task_type=TASK_SUPPORT_TOGGLE_REMINDER,
+            scheduled_at_iso=next_at.isoformat(),
+            payload={"workspace_id": str(workspace_id)},
+        )
+    task_logger.info("reminder for workspace %s re-armed for %s", workspace_id, next_at.isoformat())
+
+
 async def _revoke_staff_support_async(
     workspace_id: str, membership_id: str, org_id: Optional[str]
 ) -> bool:
@@ -1919,6 +2023,12 @@ async def _revoke_staff_support_async(
     Returns True if a row was actually revoked (False = already gone)."""
     from dembrane.cache_utils import invalidate_workspace_and_org_usage
     from dembrane.directus_async import async_directus
+    from dembrane.support_access import (
+        EVENT_STAFF_AUTO_REVOKED,
+        send_support_access_notice,
+        record_support_access_event,
+        maybe_auto_disable_support_access,
+    )
 
     revoked = False
     membership = await async_directus.get_item("workspace_membership", membership_id)
@@ -1935,6 +2045,21 @@ async def _revoke_staff_support_async(
             {"deleted_at": get_utc_timestamp().isoformat()},
         )
         revoked = True
+        staff_user_id = membership.get("user_id")
+        await record_support_access_event(
+            workspace_id=workspace_id,
+            event_code=EVENT_STAFF_AUTO_REVOKED,
+            staff_user_id=staff_user_id,
+            params={"membership_id": membership_id},
+            notify=False,
+        )
+        auto_disabled = await maybe_auto_disable_support_access(workspace_id=workspace_id)
+        if not auto_disabled:
+            await send_support_access_notice(
+                workspace_id=workspace_id,
+                event_code=EVENT_STAFF_AUTO_REVOKED,
+                staff_user_id=staff_user_id,
+            )
     # Always invalidate — seat/usage counts must reflect the revocation even if a
     # manual leave already removed the row.
     await invalidate_workspace_and_org_usage(workspace_id, org_id)

@@ -1,0 +1,12 @@
+{% extends "_layout.html" %}
+{% from "_layout.html" import cta_button %}
+{% block title %}Access request for {{ workspace_name }} {{ decision }}{% endblock %}
+{% block preview %}Your access request for {{ workspace_name }} was {{ decision }}.{% endblock %}
+{% block heading %}Request {{ decision }}{% endblock %}
+{% block body %}
+<p style="font-size:17px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight:400;">
+  Your access request for <em style="color:#4169E1; font-style:normal;">{{ workspace_name }}</em> was {{ decision }}.
+  {% if decision == "approved" %}You have admin access for 24 hours.{% endif %}
+</p>
+{% endblock %}
+{% block cta %}{% if decision == "approved" %}{{ cta_button("Open workspace", workspace_url) }}{% endif %}{% endblock %}

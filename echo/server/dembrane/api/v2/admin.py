@@ -1500,9 +1500,6 @@ async def reset_workspace_usage(
 # scheduled_task (so it survives restarts and is inspectable/cancellable in
 # Directus). Re-calling extends the window.
 
-SUPPORT_ACCESS_TTL = timedelta(hours=24)
-
-
 class JoinSupportResponse(BaseModel):
     status: Literal["joined", "extended", "already_member"]
     workspace_id: str
@@ -1510,50 +1507,6 @@ class JoinSupportResponse(BaseModel):
     role: str
     # null only when the caller was already a normal (non-support) member.
     expires_at: Optional[str] = None
-
-
-async def _reresolve_membership_after_join_race(
-    workspace_id: str, app_user_id: str, expires_iso: str
-) -> tuple[Optional[str], Optional[JoinSupportResponse]]:
-    """A concurrent join won the race: re-read the row that actually persisted so
-    we never schedule a revoke against the id we generated but failed to insert.
-
-    Returns (membership_id, None) to continue, or (None, response) to return when
-    the winner is a genuine member.
-    """
-    rows = await async_directus.get_items(
-        "workspace_membership",
-        {
-            "query": {
-                "filter": {
-                    "workspace_id": {"_eq": workspace_id},
-                    "user_id": {"_eq": app_user_id},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["id", "role", "source"],
-                "limit": 1,
-            }
-        },
-    )
-    row = rows[0] if isinstance(rows, list) and rows else None
-    if row is None:
-        # The row vanished again (extremely unlikely). Nothing safe to schedule.
-        raise HTTPException(
-            status_code=409, detail="Membership changed concurrently, please retry."
-        )
-    if row.get("source") != "staff_support":
-        return None, JoinSupportResponse(
-            status="already_member",
-            workspace_id=workspace_id,
-            membership_id=str(row["id"]),
-            role=row.get("role") or "",
-            expires_at=None,
-        )
-    membership_id = str(row["id"])
-    await async_directus.update_item(
-        "workspace_membership", membership_id, {"expires_at": expires_iso}
-    )
-    return membership_id, None
 
 
 @router.post("/workspaces/{workspace_id}/join-support", response_model=JoinSupportResponse)
@@ -1584,130 +1537,34 @@ async def join_workspace_support(
         )
 
     from dembrane.app_user import get_app_user_or_raise
-    from dembrane.cache_utils import invalidate_workspace_and_org_usage
-    from dembrane.scheduled_tasks import (
-        TASK_REVOKE_STAFF_SUPPORT,
-        schedule_task,
-        cancel_pending_tasks,
-    )
-    from dembrane.api.v2._invite_helpers import (
-        create_membership_row,
-        reactivate_membership_row,
+    from dembrane.support_access import (
+        EVENT_STAFF_JOINED,
+        EVENT_STAFF_EXTENDED,
+        grant_support_membership,
+        record_support_access_event,
     )
 
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
     org_id = ws.get("org_id")
 
-    now = datetime.now(timezone.utc)
-    expires_at = now + SUPPORT_ACCESS_TTL
-    expires_iso = expires_at.isoformat()
-
-    # Fetch active + soft-deleted rows for this (workspace, user) in one trip.
-    rows = await async_directus.get_items(
-        "workspace_membership",
-        {
-            "query": {
-                "filter": {
-                    "workspace_id": {"_eq": workspace_id},
-                    "user_id": {"_eq": app_user_id},
-                },
-                "fields": ["id", "role", "source", "deleted_at"],
-                "limit": -1,
-            }
-        },
+    status, membership_id, expires_iso = await grant_support_membership(
+        workspace_id=workspace_id, app_user_id=app_user_id, org_id=org_id
     )
-    active_row = None
-    deleted_row = None
-    if isinstance(rows, list):
-        for row in rows:
-            if row.get("deleted_at") is None and active_row is None:
-                active_row = row
-            elif row.get("deleted_at") is not None and deleted_row is None:
-                deleted_row = row
 
-    if active_row is not None and active_row.get("source") != "staff_support":
-        # Caller is already a real member (they belong to this org). Don't slap
-        # an expiry on a genuine membership — just report it.
-        return JoinSupportResponse(
-            status="already_member",
+    if status in ("joined", "extended"):
+        await record_support_access_event(
             workspace_id=workspace_id,
-            membership_id=str(active_row["id"]),
-            role=active_row.get("role") or "",
-            expires_at=None,
+            event_code=EVENT_STAFF_JOINED if status == "joined" else EVENT_STAFF_EXTENDED,
+            actor_user_id=app_user_id,
+            staff_user_id=app_user_id,
+            params={"membership_id": membership_id, "expires_at": expires_iso},
         )
 
-    if active_row is not None:
-        # Existing support row → extend the 24h window.
-        membership_id = str(active_row["id"])
-        await async_directus.update_item(
-            "workspace_membership", membership_id, {"expires_at": expires_iso}
-        )
-        status: Literal["joined", "extended"] = "extended"
-    elif deleted_row is not None:
-        membership_id = str(deleted_row["id"])
-        reactivated = await reactivate_membership_row(
-            async_directus,
-            "workspace_membership",
-            membership_id,
-            {
-                "deleted_at": None,
-                "role": "admin",
-                "source": "staff_support",
-                "expires_at": expires_iso,
-            },
-        )
-        if not reactivated:
-            resolved_id, raced_response = await _reresolve_membership_after_join_race(
-                workspace_id, app_user_id, expires_iso
-            )
-            if raced_response is not None:
-                return raced_response
-            assert resolved_id is not None  # guaranteed when raced_response is None
-            membership_id = resolved_id
-        status = "joined"
-    else:
-        membership_id = generate_uuid()
-        created = await create_membership_row(
-            async_directus,
-            "workspace_membership",
-            {
-                "id": membership_id,
-                "workspace_id": workspace_id,
-                "user_id": app_user_id,
-                "role": "admin",
-                "source": "staff_support",
-                "expires_at": expires_iso,
-            },
-        )
-        if not created:
-            resolved_id, raced_response = await _reresolve_membership_after_join_race(
-                workspace_id, app_user_id, expires_iso
-            )
-            if raced_response is not None:
-                return raced_response
-            assert resolved_id is not None  # guaranteed when raced_response is None
-            membership_id = resolved_id
-        status = "joined"
-
-    # Replace any prior pending revoke for this membership so extending doesn't
-    # leave an earlier timer that would revoke mid-session.
-    await cancel_pending_tasks(
-        task_type=TASK_REVOKE_STAFF_SUPPORT,
-        payload_match={"membership_id": membership_id},
-    )
-    await schedule_task(
-        task_type=TASK_REVOKE_STAFF_SUPPORT,
-        scheduled_at=expires_at,
-        payload={
-            "workspace_id": workspace_id,
-            "membership_id": membership_id,
-            "org_id": org_id,
-        },
-    )
-
-    # Seat/guest counts changed.
-    await invalidate_workspace_and_org_usage(workspace_id, org_id)
+    role = "admin"
+    if status == "already_member":
+        row = await async_directus.get_item("workspace_membership", membership_id)
+        role = (row or {}).get("role") or ""
 
     logger.info(
         "staff %s %s support access on workspace %s (membership=%s, expires=%s)",
@@ -1718,10 +1575,10 @@ async def join_workspace_support(
         expires_iso,
     )
     return JoinSupportResponse(
-        status=status,
+        status=status,  # type: ignore[arg-type]
         workspace_id=workspace_id,
         membership_id=membership_id,
-        role="admin",
+        role=role,
         expires_at=expires_iso,
     )
 
@@ -1812,6 +1669,31 @@ async def leave_workspace_support(
             task_type=TASK_REVOKE_STAFF_SUPPORT,
             payload_match={"membership_id": membership_id},
         )
+
+    from dembrane.support_access import (
+        EVENT_STAFF_LEFT,
+        send_support_access_notice,
+        record_support_access_event,
+        maybe_auto_disable_support_access,
+    )
+
+    for row in rows:
+        await record_support_access_event(
+            workspace_id=workspace_id,
+            event_code=EVENT_STAFF_LEFT,
+            actor_user_id=app_user["id"],
+            staff_user_id=app_user["id"],
+            params={"membership_id": str(row["id"])},
+            notify=False,
+        )
+    auto_disabled = await maybe_auto_disable_support_access(workspace_id=workspace_id)
+    if not auto_disabled:
+        await send_support_access_notice(
+            workspace_id=workspace_id,
+            event_code=EVENT_STAFF_LEFT,
+            staff_user_id=app_user["id"],
+        )
+
     await invalidate_workspace_and_org_usage(workspace_id, org_id)
     logger.info(
         "staff %s left support access on workspace %s (memberships=%s)",
@@ -1820,6 +1702,229 @@ async def leave_workspace_support(
         [str(r["id"]) for r in rows],
     )
     return SupportAccessStatus(active=False)
+
+
+# ── Staff support access requests (toggle-off hybrid flow) ──
+# One pending request per (workspace, staff); admins resolve it client-side.
+
+
+class SupportAccessRequestBody(BaseModel):
+    message: Optional[str] = None
+
+
+class SupportAccessRequestOut(BaseModel):
+    id: str
+    workspace_id: str
+    status: str
+    message: Optional[str] = None
+    created_at: Optional[str] = None
+    expires_at: Optional[str] = None
+
+
+class StaffSupportRequestStatus(BaseModel):
+    support_access_enabled: bool
+    request: Optional[SupportAccessRequestOut] = None
+
+
+def _request_out(row: dict) -> SupportAccessRequestOut:
+    return SupportAccessRequestOut(
+        id=str(row["id"]),
+        workspace_id=str(row.get("workspace_id") or ""),
+        status=row.get("status") or "",
+        message=row.get("message"),
+        created_at=row.get("created_at"),
+        expires_at=row.get("expires_at"),
+    )
+
+
+async def _own_requests(
+    workspace_id: str, app_user_id: str, status: Optional[str] = None
+) -> list[dict]:
+    from dembrane.support_access import REQUEST_COLLECTION
+
+    filter_: dict = {
+        "workspace_id": {"_eq": workspace_id},
+        "requested_by": {"_eq": app_user_id},
+    }
+    if status:
+        filter_["status"] = {"_eq": status}
+    rows = await async_directus.get_items(
+        REQUEST_COLLECTION,
+        {
+            "query": {
+                "filter": filter_,
+                "fields": [
+                    "id",
+                    "workspace_id",
+                    "requested_by",
+                    "status",
+                    "message",
+                    "created_at",
+                    "expires_at",
+                ],
+                "sort": ["-created_at"],
+                "limit": 1,
+            }
+        },
+    )
+    return rows if isinstance(rows, list) else []
+
+
+@router.post(
+    "/workspaces/{workspace_id}/support-access/request",
+    response_model=SupportAccessRequestOut,
+)
+async def request_workspace_support_access(
+    workspace_id: str,
+    body: SupportAccessRequestBody,
+    auth: DependencyDirectusSession,
+) -> SupportAccessRequestOut:
+    """Staff-only: request access while the toggle is off. Idempotent; 409 when
+    the toggle is already on (join directly instead)."""
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    ws = await async_directus.get_item("workspace", workspace_id)
+    if not ws or ws.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    if ws.get("allow_support_access"):
+        raise HTTPException(
+            status_code=409,
+            detail="Support access is already on for this workspace; join directly.",
+        )
+
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.support_access import (
+        REQUEST_TTL,
+        REQUEST_COLLECTION,
+        EVENT_REQUEST_CREATED,
+        record_support_access_event,
+    )
+    from dembrane.scheduled_tasks import TASK_EXPIRE_SUPPORT_REQUEST, schedule_task
+
+    app_user = await get_app_user_or_raise(auth.user_id)
+    app_user_id = app_user["id"]
+
+    existing = await _own_requests(workspace_id, app_user_id, status="pending")
+    if existing:
+        return _request_out(existing[0])
+
+    now = datetime.now(timezone.utc)
+    expires_at = now + REQUEST_TTL
+    message = (body.message or "").strip()[:2000] or None
+    request_id = generate_uuid()
+    row = {
+        "id": request_id,
+        "workspace_id": workspace_id,
+        "requested_by": app_user_id,
+        "status": "pending",
+        "message": message,
+        "created_at": now.isoformat(),
+        "expires_at": expires_at.isoformat(),
+    }
+    await async_directus.create_item(REQUEST_COLLECTION, row)
+    await schedule_task(
+        task_type=TASK_EXPIRE_SUPPORT_REQUEST,
+        scheduled_at=expires_at,
+        payload={"request_id": request_id, "workspace_id": workspace_id},
+    )
+    await record_support_access_event(
+        workspace_id=workspace_id,
+        event_code=EVENT_REQUEST_CREATED,
+        actor_user_id=app_user_id,
+        staff_user_id=app_user_id,
+        params={"request_id": request_id, "message": message},
+    )
+    logger.info(
+        "staff %s requested support access on workspace %s (request=%s)",
+        auth.user_id,
+        workspace_id,
+        request_id,
+    )
+    return _request_out(row)
+
+
+@router.get(
+    "/workspaces/{workspace_id}/support-access/request",
+    response_model=StaffSupportRequestStatus,
+)
+async def get_workspace_support_request(
+    workspace_id: str,
+    auth: DependencyDirectusSession,
+) -> StaffSupportRequestStatus:
+    """Staff-only: the caller's latest request plus the toggle state."""
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    ws = await async_directus.get_item("workspace", workspace_id)
+    if not ws or ws.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    from dembrane.app_user import get_app_user_or_raise
+
+    app_user = await get_app_user_or_raise(auth.user_id)
+    rows = await _own_requests(workspace_id, app_user["id"])
+    return StaffSupportRequestStatus(
+        support_access_enabled=bool(ws.get("allow_support_access")),
+        request=_request_out(rows[0]) if rows else None,
+    )
+
+
+@router.delete(
+    "/workspaces/{workspace_id}/support-access/request",
+    response_model=StaffSupportRequestStatus,
+)
+async def cancel_workspace_support_request(
+    workspace_id: str,
+    auth: DependencyDirectusSession,
+) -> StaffSupportRequestStatus:
+    """Staff-only: withdraw the caller's own pending request (idempotent)."""
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    ws = await async_directus.get_item("workspace", workspace_id)
+    if not ws or ws.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.support_access import (
+        REQUEST_COLLECTION,
+        EVENT_REQUEST_CANCELLED,
+        record_support_access_event,
+    )
+    from dembrane.scheduled_tasks import TASK_EXPIRE_SUPPORT_REQUEST, cancel_pending_tasks
+
+    app_user = await get_app_user_or_raise(auth.user_id)
+    app_user_id = app_user["id"]
+    pending = await _own_requests(workspace_id, app_user_id, status="pending")
+    if pending:
+        request_id = str(pending[0]["id"])
+        await async_directus.update_item(
+            REQUEST_COLLECTION,
+            request_id,
+            {
+                "status": "cancelled",
+                "resolved_at": datetime.now(timezone.utc).isoformat(),
+                "resolved_by": app_user_id,
+            },
+        )
+        await cancel_pending_tasks(
+            task_type=TASK_EXPIRE_SUPPORT_REQUEST,
+            payload_match={"request_id": request_id},
+        )
+        await record_support_access_event(
+            workspace_id=workspace_id,
+            event_code=EVENT_REQUEST_CANCELLED,
+            actor_user_id=app_user_id,
+            staff_user_id=app_user_id,
+            params={"request_id": request_id, "reason": "withdrawn"},
+            notify=False,
+        )
+    rows = await _own_requests(workspace_id, app_user_id)
+    return StaffSupportRequestStatus(
+        support_access_enabled=bool(ws.get("allow_support_access")),
+        request=_request_out(rows[0]) if rows else None,
+    )
 
 
 @router.get("/at-risk", response_model=list[AtRiskRow])

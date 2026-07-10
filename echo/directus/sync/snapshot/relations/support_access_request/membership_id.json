@@ -1,0 +1,25 @@
+{
+  "collection": "support_access_request",
+  "field": "membership_id",
+  "related_collection": "workspace_membership",
+  "meta": {
+    "junction_field": null,
+    "many_collection": "support_access_request",
+    "many_field": "membership_id",
+    "one_allowed_collections": null,
+    "one_collection": "workspace_membership",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": null,
+    "sort_field": null
+  },
+  "schema": {
+    "table": "support_access_request",
+    "column": "membership_id",
+    "foreign_key_table": "workspace_membership",
+    "foreign_key_column": "id",
+    "constraint_name": "support_access_request_membership_id_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "SET NULL"
+  }
+}

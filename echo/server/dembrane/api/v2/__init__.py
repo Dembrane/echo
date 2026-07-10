@@ -45,6 +45,7 @@ from dembrane.api.v2.admin_managed import router as admin_managed_router
 from dembrane.api.v2.notifications import router as notifications_router
 from dembrane.api.v2.admin_training import router as admin_training_router
 from dembrane.api.v2.invite_actions import router as invite_actions_router
+from dembrane.api.v2.support_access import router as support_access_router
 from dembrane.api.v2.access_requests import (
     router as access_requests_router,
     discover_router as access_requests_discover_router,
@@ -84,6 +85,9 @@ v2_router.include_router(
     workspace_settings_router, prefix="/workspaces", tags=["v2:workspace-settings"]
 )
 v2_router.include_router(access_requests_router, prefix="/workspaces", tags=["v2:access-requests"])
+v2_router.include_router(
+    support_access_router, prefix="/workspaces", tags=["v2:support-access"]
+)
 
 # Billing: self-serve checkout (auth'd) + Mollie webhook (public).
 v2_router.include_router(billing_router, tags=["v2:billing"])

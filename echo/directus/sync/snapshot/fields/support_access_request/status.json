@@ -1,0 +1,67 @@
+{
+  "collection": "support_access_request",
+  "field": "status",
+  "type": "string",
+  "meta": {
+    "collection": "support_access_request",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "status",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": "pending -> approved | denied | expired | cancelled.",
+    "options": {
+      "choices": [
+        {
+          "text": "Pending",
+          "value": "pending"
+        },
+        {
+          "text": "Approved",
+          "value": "approved"
+        },
+        {
+          "text": "Denied",
+          "value": "denied"
+        },
+        {
+          "text": "Expired",
+          "value": "expired"
+        },
+        {
+          "text": "Cancelled",
+          "value": "cancelled"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 4,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "half"
+  },
+  "schema": {
+    "name": "status",
+    "table": "support_access_request",
+    "data_type": "character varying",
+    "default_value": "pending",
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": false,
+    "is_unique": false,
+    "is_indexed": true,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

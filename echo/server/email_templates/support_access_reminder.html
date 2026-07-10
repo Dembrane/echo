@@ -1,0 +1,12 @@
+{% extends "_layout.html" %}
+{% from "_layout.html" import cta_button %}
+{% block title %}Support access to {{ workspace_name }} is still on{% endblock %}
+{% block preview %}No staff joined {{ workspace_name }} in the last 7 days.{% endblock %}
+{% block heading %}Support access is still on{% endblock %}
+{% block body %}
+<p style="font-size:17px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight:400;">
+  Support access for <em style="color:#4169E1; font-style:normal;">{{ workspace_name }}</em> is still on and no staff joined in the last 7 days.
+  Turn it off in workspace settings if you no longer need help. You can turn it back on at any time.
+</p>
+{% endblock %}
+{% block cta %}{{ cta_button("Open workspace settings", settings_url) }}{% endblock %}
