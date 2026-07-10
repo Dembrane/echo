@@ -1,0 +1,13 @@
+{% extends "_layout.html" %}
+{% from "_layout.html" import cta_button %}
+{% block title %}dembrane staff requested access to {{ workspace_name }}{% endblock %}
+{% block preview %}{{ staff_name }} asked to join {{ workspace_name }} for support.{% endblock %}
+{% block heading %}Staff access request{% endblock %}
+{% block body %}
+<p style="font-size:17px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight:400;">
+  {{ staff_name }} from dembrane asked to join <em style="color:#4169E1; font-style:normal;">{{ workspace_name }}</em> to help with support.
+  {% if note %}Their note: {{ note }}.{% endif %}
+  If you approve, their access ends automatically after 24 hours.
+</p>
+{% endblock %}
+{% block cta %}{{ cta_button("Review request", settings_url) }}{% endblock %}

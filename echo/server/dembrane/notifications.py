@@ -100,6 +100,9 @@ _SEVERITY_BY_EVENT: dict[str, NotificationSeverity] = {
     # surfaces the failure so the owner/admins fix the payment method.
     "PAYMENT_FAILED": "action_required",
     # PAYMENT_RECOVERED defaults to 'info' — the charge went through, no action.
+    # Support access: only a pending request and a stale toggle need action.
+    "SUPPORT_ACCESS_REQUESTED": "action_required",
+    "SUPPORT_ACCESS_REMINDER": "action_required",
 }
 
 

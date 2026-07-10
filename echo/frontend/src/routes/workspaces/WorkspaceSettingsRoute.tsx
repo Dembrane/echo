@@ -53,6 +53,7 @@ import { WorkspaceMethodologiesSection } from "@/components/methodology/Workspac
 import { WorkspaceTrainingPanel } from "@/components/training";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { SupportAccessSection } from "@/components/workspace/SupportAccessSection";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { UsageCard } from "@/components/workspace/UsageCard";
 import { WorkspaceDataOwnershipSection } from "@/components/workspace/WorkspaceDataOwnershipSection";
@@ -1455,6 +1456,7 @@ function PrivacyAndDefaultsSection({
 		onMutate: (value: boolean) => setAllowSupportAccess(value),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "support-access"] });
 			toast.success(t`Saved`);
 		},
 	});
@@ -1933,6 +1935,9 @@ function PrivacyAndDefaultsSection({
 					</Stack>
 				}
 			/>
+			{workspaceId && (
+				<SupportAccessSection workspaceId={workspaceId} canEdit={canEdit} />
+			)}
 			<UpgradeModal
 				opened={upgradeFeature !== null}
 				onClose={() => setUpgradeFeature(null)}

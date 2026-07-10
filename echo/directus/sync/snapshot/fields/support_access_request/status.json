@@ -1,41 +1,45 @@
 {
-  "collection": "scheduled_task",
-  "field": "task_type",
+  "collection": "support_access_request",
+  "field": "status",
   "type": "string",
   "meta": {
-    "collection": "scheduled_task",
+    "collection": "support_access_request",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "task_type",
+    "field": "status",
     "group": null,
     "hidden": false,
     "interface": "select-dropdown",
-    "note": "What to run when due.",
+    "note": "pending -> approved | denied | expired | cancelled.",
     "options": {
       "choices": [
         {
-          "text": "Revoke Staff Support",
-          "value": "revoke_staff_support"
+          "text": "Pending",
+          "value": "pending"
         },
         {
-          "text": "Generate Report",
-          "value": "generate_report"
+          "text": "Approved",
+          "value": "approved"
         },
         {
-          "text": "Support Toggle Reminder",
-          "value": "support_toggle_reminder"
+          "text": "Denied",
+          "value": "denied"
         },
         {
-          "text": "Expire Support Access Request",
-          "value": "expire_support_access_request"
+          "text": "Expired",
+          "value": "expired"
+        },
+        {
+          "text": "Cancelled",
+          "value": "cancelled"
         }
       ]
     },
     "readonly": false,
     "required": false,
     "searchable": true,
-    "sort": 2,
+    "sort": 4,
     "special": null,
     "translations": null,
     "validation": null,
@@ -43,16 +47,16 @@
     "width": "half"
   },
   "schema": {
-    "name": "task_type",
-    "table": "scheduled_task",
+    "name": "status",
+    "table": "support_access_request",
     "data_type": "character varying",
-    "default_value": "revoke_staff_support",
+    "default_value": "pending",
     "max_length": 255,
     "numeric_precision": null,
     "numeric_scale": null,
     "is_nullable": false,
     "is_unique": false,
-    "is_indexed": false,
+    "is_indexed": true,
     "is_primary_key": false,
     "is_generated": false,
     "generation_expression": null,

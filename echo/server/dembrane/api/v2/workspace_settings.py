@@ -396,13 +396,63 @@ async def update_workspace_settings(
 
     # Support access is a plain customer-controlled boolean. settings:manage
     # (required above) already restricts this to workspace admins/owners.
+    support_access_changed = False
     if body.allow_support_access is not None:
+        previous = bool(ctx.workspace.get("allow_support_access"))
+        support_access_changed = body.allow_support_access != previous
         payload["allow_support_access"] = body.allow_support_access
 
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")
 
     await async_directus.update_item("workspace", ctx.workspace_id, payload)
+
+    # Guarded so a scheduler/Directus hiccup can't 500 a write that committed.
+    if support_access_changed:
+        try:
+            from dembrane.support_access import (
+                REMINDER_INTERVAL,
+                EVENT_TOGGLE_ENABLED,
+                EVENT_TOGGLE_DISABLED,
+                record_support_access_event,
+                cancel_pending_requests_for_toggle_on,
+            )
+            from dembrane.scheduled_tasks import (
+                TASK_SUPPORT_TOGGLE_REMINDER,
+                schedule_task,
+                cancel_pending_tasks,
+            )
+
+            if body.allow_support_access:
+                await schedule_task(
+                    task_type=TASK_SUPPORT_TOGGLE_REMINDER,
+                    scheduled_at=datetime.now(timezone.utc) + REMINDER_INTERVAL,
+                    payload={"workspace_id": ctx.workspace_id},
+                )
+                await record_support_access_event(
+                    workspace_id=ctx.workspace_id,
+                    event_code=EVENT_TOGGLE_ENABLED,
+                    actor_user_id=ctx.app_user_id,
+                )
+                await cancel_pending_requests_for_toggle_on(
+                    workspace_id=ctx.workspace_id, actor_user_id=ctx.app_user_id
+                )
+            else:
+                await cancel_pending_tasks(
+                    task_type=TASK_SUPPORT_TOGGLE_REMINDER,
+                    payload_match={"workspace_id": ctx.workspace_id},
+                )
+                await record_support_access_event(
+                    workspace_id=ctx.workspace_id,
+                    event_code=EVENT_TOGGLE_DISABLED,
+                    actor_user_id=ctx.app_user_id,
+                )
+        except Exception:
+            logger.exception(
+                "support-access side effects failed after toggle write (ws=%s)",
+                ctx.workspace_id,
+            )
+
     return {"status": "success"}
 
 
