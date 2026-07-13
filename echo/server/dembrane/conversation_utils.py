@@ -134,11 +134,8 @@ def collect_unsummarized_conversations(limit: int = 50) -> List[str]:
     """
     Collect conversations that are fully transcribed but missing a summary.
     
-    Simple check: is_all_chunks_transcribed = True AND summary = null.
+    Simple check: is_all_chunks_transcribed = True AND summary = null AND has_empty_transcript != True.
     The transcribed flag is the source of truth for "ready for summarization".
-    We also exclude conversations where the summary is set to any special marker 
-    or we determine they shouldn't be retried (like empty ones, though empty ones 
-    usually have summary = "empty" or similar if we skip them cleanly).
     
     Args:
         limit: Maximum number of conversations to return (default 50).
@@ -153,6 +150,7 @@ def collect_unsummarized_conversations(limit: int = 50) -> List[str]:
                 "filter": {
                     "is_all_chunks_transcribed": True,
                     "summary": {"_null": True},
+                    "has_empty_transcript": {"_neq": True},
                     "deleted_at": {"_null": True},
                     "created_at": {
                         "_lte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()
