@@ -674,9 +674,16 @@ async def summarize_conversation(
     language = conversation_data["project_id"]["language"]
 
     if transcript_str == "":
+        # Update conversation in DB so summary is no longer null, preventing infinite retries by the catch-up scheduler
+        await run_in_thread_pool(
+            conversation_service.update,
+            conversation_id=conversation_id,
+            summary="empty",
+        )
         return {
             "status": "success",
             "message": "Transcript is empty, so no summary was generated",
+            "summary": "empty",
         }
     else:
         summary = await run_in_thread_pool(

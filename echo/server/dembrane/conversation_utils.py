@@ -136,6 +136,9 @@ def collect_unsummarized_conversations(limit: int = 50) -> List[str]:
     
     Simple check: is_all_chunks_transcribed = True AND summary = null.
     The transcribed flag is the source of truth for "ready for summarization".
+    We also exclude conversations where the summary is set to any special marker 
+    or we determine they shouldn't be retried (like empty ones, though empty ones 
+    usually have summary = "empty" or similar if we skip them cleanly).
     
     Args:
         limit: Maximum number of conversations to return (default 50).
