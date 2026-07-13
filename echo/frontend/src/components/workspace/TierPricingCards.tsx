@@ -166,12 +166,19 @@ function TierCard({
 			popularLabel={highlightLabel}
 		/>
 	);
+	// Coming-soon cards mute content per element instead of fading the card,
+	// so the "Coming soon" badge keeps full contrast.
+	const mutedText = comingSoon ? "gray.6" : undefined;
 	const specRows = card.specs.map((spec) => (
 		<Group key={spec} gap={7} wrap="nowrap" className={classes.specRow}>
 			<IconCheck
 				size={isWide ? 13 : 14}
 				stroke={1.5}
-				color="var(--mantine-color-primary-6)"
+				color={
+					comingSoon
+						? "var(--mantine-color-gray-5)"
+						: "var(--mantine-color-primary-6)"
+				}
 			/>
 			<Text size={isWide ? "xs" : "sm"} c="dimmed">
 				{spec}
@@ -193,7 +200,7 @@ function TierCard({
 			>
 				<Stack gap={0} className={classes.wideInner}>
 					<Group gap={8} wrap="nowrap">
-						<Text size="lg" className={classes.tierName}>
+						<Text size="lg" className={classes.tierName} c={mutedText}>
 							{card.tier}
 						</Text>
 						{badge}
@@ -216,7 +223,7 @@ function TierCard({
 							<Text
 								size="xl"
 								className={classes.priceAmount}
-								c="var(--app-text)"
+								c={mutedText ?? "var(--app-text)"}
 							>
 								{card.priceAmount}
 							</Text>
@@ -256,7 +263,7 @@ function TierCard({
 					gap={12}
 				>
 					<Group gap={8} wrap="nowrap">
-						<Text size="md" fw={500} className={classes.tierName}>
+						<Text size="md" fw={500} className={classes.tierName} c={mutedText}>
 							{card.tier}
 						</Text>
 						{badge}
@@ -266,7 +273,7 @@ function TierCard({
 							<Text
 								size="lg"
 								className={classes.priceAmount}
-								c="var(--app-text)"
+								c={mutedText ?? "var(--app-text)"}
 							>
 								{card.priceAmount}
 							</Text>

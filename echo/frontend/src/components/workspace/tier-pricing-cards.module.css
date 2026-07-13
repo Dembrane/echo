@@ -9,14 +9,15 @@
 		transform 0.15s ease;
 }
 
+/* Content is muted via per-element colors (not opacity) so the coming-soon
+   badge can stay at full contrast — child opacity can't exceed the parent's. */
 .comingSoonCard {
-	opacity: 0.5;
 	border-style: dashed;
 	background: var(--mantine-color-gray-0);
 	cursor: default;
 }
 
-.wrap:not(.selected):hover {
+.wrap:not(.selected):not(.comingSoonCard):hover {
 	border-color: var(--mantine-color-primary-4);
 	background: rgba(65, 105, 225, 0.02);
 }
