@@ -27,6 +27,9 @@ _ACTIVE_PREFIX = "monitor:active:"
 # Keep the index a little longer than the monitor lookback so a brief gap
 # doesn't drop a session; stale members are pruned on read anyway.
 _ACTIVE_TTL_SECONDS = 2100
+# Cap the per-project active index so a public flood of unique ids can't grow it
+# unbounded (which would bloat the Directus lookup). Well above any real project.
+_MAX_ACTIVE_MEMBERS = 2000
 
 
 def channel_for_project(project_id: str) -> str:
@@ -52,6 +55,8 @@ async def register_active_conversation(
         key = _active_key(project_id)
         await client.zadd(key, {conversation_id: score})
         await client.expire(key, _ACTIVE_TTL_SECONDS)
+        # Keep only the newest _MAX_ACTIVE_MEMBERS; drop the oldest beyond it.
+        await client.zremrangebyrank(key, 0, -(_MAX_ACTIVE_MEMBERS + 1))
     except Exception as exc:  # noqa: BLE001
         logger.warning("monitor active-index add failed for %s: %s", project_id, exc)
 
