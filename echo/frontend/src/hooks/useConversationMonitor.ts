@@ -122,7 +122,7 @@ export type MonitorResponse = {
 	live_window_seconds: number;
 };
 
-const EMPTY_FUNNEL: MonitorFunnel = { visitors: [], summary: { total: 0 } };
+const EMPTY_FUNNEL: MonitorFunnel = { summary: { total: 0 }, visitors: [] };
 
 const EMPTY_SUMMARY: MonitorSummary = {
 	catch_up_eta_seconds: 0,
@@ -135,19 +135,87 @@ const EMPTY_SUMMARY: MonitorSummary = {
 	with_errors: 0,
 };
 
-// The SSE stream is the primary channel: the server pushes a fresh snapshot on
-// connect and on every change (a participant ping, transcription, or finish
-// nudges it). React Query stays as a robust fallback — it does the very first
-// fetch and keeps a slow safety poll in case the stream can't connect.
+// SSE is the primary channel; React Query is the fallback (first fetch + poll).
 const FALLBACK_POLL_MS = 5000;
 const SAFETY_POLL_MS = 30000;
+
+type StreamState = { data: MonitorResponse | null; connected: boolean };
+
+// One EventSource per project, shared + ref-counted so multiple components on the
+// page reuse a single stream instead of each opening its own.
+type SharedConnection = {
+	refCount: number;
+	state: StreamState;
+	source: EventSource | null;
+	listeners: Set<(state: StreamState) => void>;
+};
+
+const connections = new Map<string, SharedConnection>();
+
+const notify = (conn: SharedConnection) => {
+	for (const listener of conn.listeners) listener(conn.state);
+};
+
+const openSource = (projectId: string, conn: SharedConnection) => {
+	const url = `${API_BASE_URL}/v2/bff/conversations/monitor/stream?project_id=${encodeURIComponent(
+		projectId,
+	)}`;
+	const source = new EventSource(url, { withCredentials: true });
+	conn.source = source;
+	source.addEventListener("snapshot", (event: Event) => {
+		if (!(event instanceof MessageEvent)) return;
+		try {
+			const data = JSON.parse(event.data) as MonitorResponse;
+			conn.state = { connected: true, data };
+			notify(conn);
+		} catch {
+			// Ignore a malformed frame; the next snapshot recovers.
+		}
+	});
+	source.onerror = () => {
+		// Auto-reconnects; mark down meanwhile so consumers fall back to the poll.
+		conn.state = { connected: false, data: conn.state.data };
+		notify(conn);
+	};
+};
+
+const subscribeToMonitor = (
+	projectId: string,
+	listener: (state: StreamState) => void,
+): (() => void) => {
+	let conn = connections.get(projectId);
+	if (!conn) {
+		conn = {
+			listeners: new Set(),
+			refCount: 0,
+			source: null,
+			state: { connected: false, data: null },
+		};
+		connections.set(projectId, conn);
+	}
+	const connection = conn;
+	connection.listeners.add(listener);
+	connection.refCount += 1;
+	if (connection.refCount === 1) openSource(projectId, connection);
+	listener(connection.state);
+	return () => {
+		connection.listeners.delete(listener);
+		connection.refCount -= 1;
+		if (connection.refCount <= 0) {
+			connection.source?.close();
+			connections.delete(projectId);
+		}
+	};
+};
 
 export const useConversationMonitor = (
 	projectId: string | undefined,
 	enabled = true,
 ) => {
-	const [streamData, setStreamData] = useState<MonitorResponse | null>(null);
-	const [streamConnected, setStreamConnected] = useState(false);
+	const [stream, setStream] = useState<StreamState>({
+		connected: false,
+		data: null,
+	});
 
 	const query = useQuery({
 		enabled: enabled && !!projectId,
@@ -156,51 +224,30 @@ export const useConversationMonitor = (
 				project_id: projectId,
 			}),
 		queryKey: ["v2", "conversation-monitor", projectId],
-		// Poll fast until the stream is live, then drop to a slow safety net.
-		refetchInterval: streamConnected ? SAFETY_POLL_MS : FALLBACK_POLL_MS,
+		// Fast poll until the stream is live, then a slow safety net.
+		refetchInterval: stream.connected ? SAFETY_POLL_MS : FALLBACK_POLL_MS,
 	});
 
 	useEffect(() => {
-		if (!enabled || !projectId) return;
-		// Reset per-project so a stale snapshot never bleeds across projects.
-		setStreamData(null);
-		setStreamConnected(false);
-
-		const url = `${API_BASE_URL}/v2/bff/conversations/monitor/stream?project_id=${encodeURIComponent(
-			projectId,
-		)}`;
-		const source = new EventSource(url, { withCredentials: true });
-
-		source.addEventListener("snapshot", (event: Event) => {
-			if (event instanceof MessageEvent) {
-				try {
-					setStreamData(JSON.parse(event.data) as MonitorResponse);
-					setStreamConnected(true);
-				} catch {
-					// Ignore a malformed frame; the next snapshot recovers.
-				}
-			}
-		});
-
-		source.onerror = () => {
-			// EventSource auto-reconnects; until it does, fall back to polling.
-			setStreamConnected(false);
-		};
-
-		return () => {
-			source.close();
-			setStreamConnected(false);
-		};
+		if (!enabled || !projectId) {
+			setStream({ connected: false, data: null });
+			return;
+		}
+		return subscribeToMonitor(projectId, setStream);
 	}, [enabled, projectId]);
 
-	const data = streamData ?? query.data;
+	// Stream wins while live; when it's down, prefer the poll so a dead stream
+	// can't freeze the view on a stale snapshot.
+	const data = stream.connected
+		? (stream.data ?? query.data)
+		: (query.data ?? stream.data);
 
 	return {
 		conversations: data?.conversations ?? [],
 		error: query.error ? query.error.message : null,
 		funnel: data?.funnel ?? EMPTY_FUNNEL,
-		isLoading: query.isLoading && !streamData,
-		isStreaming: streamConnected,
+		isLoading: query.isLoading && !data,
+		isStreaming: stream.connected,
 		summary: data?.summary ?? EMPTY_SUMMARY,
 	};
 };

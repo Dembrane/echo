@@ -590,6 +590,9 @@ async def _build_client(
         async def set(self, key, value, ex=None, nx=None):  # noqa: ANN001, ARG002
             return True
 
+        async def delete(self, *keys):  # noqa: ANN001, ARG002
+            return 0
+
     async def _fake_redis():
         return _NoCacheRedis()
 

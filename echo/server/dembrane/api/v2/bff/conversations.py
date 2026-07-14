@@ -1251,44 +1251,65 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
     return payload
 
 
-# The monitor snapshot is cached in Redis so Directus is hit at most ~once per
-# this many seconds PER PROJECT, no matter how many hosts are watching or how
-# often participants ping. Every reader (the poll endpoint and each SSE
-# connection) shares one computed snapshot; a thundering herd on expiry is
-# avoided with a short compute lock.
+# Shared Redis cache: Directus is hit at most ~once per TTL per project, no matter
+# how many hosts watch or how often participants ping.
 MONITOR_SNAPSHOT_CACHE_TTL_SECONDS = 3
 _MONITOR_SNAPSHOT_KEY_PREFIX = "monitor:snapshot:"
+# Single-flight: on a cache miss only the lock winner recomputes; other watchers
+# wait briefly for its result before falling back to computing themselves.
+_MONITOR_SNAPSHOT_LOCK_TTL_SECONDS = 5
+_MONITOR_SNAPSHOT_WAIT_SECONDS = 2.0
+_MONITOR_SNAPSHOT_WAIT_INTERVAL_SECONDS = 0.05
+
+
+async def _read_cached_snapshot(client: Any, key: str) -> Optional[dict]:
+    cached = await client.get(key)
+    if cached is None:
+        return None
+    text = cached.decode("utf-8") if isinstance(cached, (bytes, bytearray)) else cached
+    return json.loads(text)
 
 
 async def get_project_monitor_snapshot(project_id: str, window_seconds: int) -> dict:
-    """Return the monitor payload, served from a short-lived shared Redis cache.
+    """Return the monitor payload from a short-lived shared Redis cache.
 
-    This is the Directus-load valve: the expensive `gather_project_monitor`
-    read runs at most once per TTL per project, and its result is reused by
-    every concurrent watcher. All Redis use is best-effort — if the cache is
-    unavailable we simply compute directly.
+    Single-flight so the expensive gather runs ~once per TTL per project even under
+    concurrent watchers. Best-effort: on any Redis error we compute directly.
     """
     key = f"{_MONITOR_SNAPSHOT_KEY_PREFIX}{project_id}:{window_seconds}"
     lock_key = f"{key}:lock"
     client = None
     try:
         client = await get_redis_client()
-        cached = await client.get(key)
+        cached = await _read_cached_snapshot(client, key)
         if cached is not None:
-            text = cached.decode("utf-8") if isinstance(cached, (bytes, bytearray)) else cached
-            return json.loads(text)
+            return cached
     except Exception as exc:  # noqa: BLE001
         logger.warning("monitor snapshot cache read failed for %s: %s", project_id, exc)
         client = None
 
-    # Cache miss. Take a short lock so only one worker recomputes; if we can't
-    # get it, another worker is already computing, so recompute directly rather
-    # than block (correctness over a rare duplicate read).
+    # Cache miss: the lock winner recomputes; losers poll briefly for its result
+    # and only compute themselves if it doesn't land in time (so we never deadlock).
+    have_lock = False
     if client is not None:
         try:
-            await client.set(lock_key, b"1", nx=True, ex=5)
+            have_lock = bool(
+                await client.set(lock_key, b"1", nx=True, ex=_MONITOR_SNAPSHOT_LOCK_TTL_SECONDS)
+            )
         except Exception:  # noqa: BLE001
-            pass
+            have_lock = False
+
+        if not have_lock:
+            waited = 0.0
+            while waited < _MONITOR_SNAPSHOT_WAIT_SECONDS:
+                await asyncio.sleep(_MONITOR_SNAPSHOT_WAIT_INTERVAL_SECONDS)
+                waited += _MONITOR_SNAPSHOT_WAIT_INTERVAL_SECONDS
+                try:
+                    cached = await _read_cached_snapshot(client, key)
+                except Exception:  # noqa: BLE001
+                    break
+                if cached is not None:
+                    return cached
 
     payload = await gather_project_monitor(project_id, window_seconds)
 
@@ -1301,6 +1322,11 @@ async def get_project_monitor_snapshot(project_id: str, window_seconds: int) -> 
             )
         except Exception as exc:  # noqa: BLE001
             logger.warning("monitor snapshot cache write failed for %s: %s", project_id, exc)
+        if have_lock:
+            try:
+                await client.delete(lock_key)
+            except Exception:  # noqa: BLE001
+                pass
     return payload
 
 

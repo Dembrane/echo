@@ -22,7 +22,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
-
+import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
 import { I18nLink } from "@/components/common/i18nLink";
 import {
 	type MonitorConversation,
@@ -110,13 +110,13 @@ const AudioLevelMeter = ({ level }: { level: number }) => {
 					<Box
 						key={h}
 						style={{
-							width: 3,
-							height: h,
-							borderRadius: 1,
 							backgroundColor:
 								i < active
 									? "var(--mantine-color-green-6)"
 									: "var(--mantine-color-gray-3)",
+							borderRadius: 1,
+							height: h,
+							width: 3,
 						}}
 					/>
 				))}
@@ -145,7 +145,7 @@ const FadingTranscript = ({ text }: { text: string }) => {
 			size="sm"
 			c="dimmed"
 			lineClamp={2}
-			style={{ transition: "opacity 180ms ease", opacity: visible ? 1 : 0 }}
+			style={{ opacity: visible ? 1 : 0, transition: "opacity 180ms ease" }}
 		>
 			{shown}
 		</Text>
@@ -367,7 +367,12 @@ const MonitorRow = ({
 				</Group>
 
 				{conversation.has_error && conversation.error_message && (
-					<Tooltip label={conversation.error_message} multiline maw={360} withArrow>
+					<Tooltip
+						label={conversation.error_message}
+						multiline
+						maw={360}
+						withArrow
+					>
 						<Text size="xs" c="red.7" lineClamp={2}>
 							{conversation.error_message}
 						</Text>
@@ -454,8 +459,8 @@ const TagGroupSection = ({
 					<CaretRightIcon
 						size={14}
 						style={{
-							transition: "transform 150ms ease",
 							transform: opened ? "rotate(90deg)" : "none",
+							transition: "transform 150ms ease",
 						}}
 					/>
 				</ActionIcon>
@@ -514,13 +519,42 @@ export const LiveMonitorSection = ({
 	hideHeader?: boolean;
 }) => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
-	const { conversations, summary } = useConversationMonitor(projectId);
+	const { conversations, summary, isLoading, error, isStreaming } =
+		useConversationMonitor(projectId);
 	const groups = useMemo(() => groupByTag(conversations), [conversations]);
 	// Rows link to the conversation detail page when we know the workspace.
 	const base =
-		workspaceId && projectId
-			? `/w/${workspaceId}/projects/${projectId}`
-			: null;
+		workspaceId && projectId ? `/w/${workspaceId}/projects/${projectId}` : null;
+
+	// First load: spinner on the dedicated page, nothing when embedded (no flicker).
+	if (isLoading && summary.total === 0) {
+		if (!standalone) return null;
+		return (
+			<Card withBorder p="lg" radius="sm">
+				<Stack align="center">
+					<DembraneLoadingSpinner isLoading showMessage={false} />
+				</Stack>
+			</Card>
+		);
+	}
+
+	// Both channels failed with no data: say so instead of a misleading empty state.
+	if (error && summary.total === 0) {
+		if (!standalone) return null;
+		return (
+			<Card withBorder p="lg" radius="sm">
+				<Stack gap="xs" align="center">
+					<WarningCircleIcon size={24} />
+					<Text size="sm" fw={500}>
+						<Trans>Couldn't load live activity</Trans>
+					</Text>
+					<Text size="xs" ta="center" maw={420}>
+						<Trans>The connection dropped. Retrying automatically.</Trans>
+					</Text>
+				</Stack>
+			</Card>
+		);
+	}
 
 	if (summary.total === 0) {
 		if (!standalone) return null;
@@ -545,63 +579,73 @@ export const LiveMonitorSection = ({
 	return (
 		<Stack gap="lg">
 			{!hideHeader && (
-			<Group justify="space-between" align="center" gap="sm">
-				<Group gap="xs" align="center">
-					<BroadcastIcon size={16} />
-					<Text size="xs" c="dimmed" tt="uppercase">
-						<Trans>Live monitoring</Trans>
-					</Text>
-				</Group>
-				<Group gap="xs" align="center">
-					<Badge size="sm" color="primary" variant="light">
-						<Plural value={summary.live} one="# live" other="# live" />
-					</Badge>
-					{summary.not_receiving > 0 && (
-						<Badge
-							size="sm"
-							color="orange"
-							variant="filled"
-							leftSection={<WarningCircleIcon size={12} />}
-						>
-							<Plural
-								value={summary.not_receiving}
-								one="# audio stopped"
-								other="# audio stopped"
-							/>
+				<Group justify="space-between" align="center" gap="sm">
+					<Group gap="xs" align="center">
+						<BroadcastIcon size={16} />
+						<Text size="xs" c="dimmed" tt="uppercase">
+							<Trans>Live monitoring</Trans>
+						</Text>
+					</Group>
+					<Group gap="xs" align="center">
+						{!isStreaming && (
+							<Tooltip
+								label={t`Live stream disconnected. Updating on a slower poll until it reconnects.`}
+								withArrow
+							>
+								<Badge size="sm" color="orange" variant="light">
+									<Trans>Reconnecting</Trans>
+								</Badge>
+							</Tooltip>
+						)}
+						<Badge size="sm" color="primary" variant="light">
+							<Plural value={summary.live} one="# live" other="# live" />
 						</Badge>
-					)}
-					{summary.transcribing > 0 && (
-						<Badge size="sm" color="blue" variant="light">
-							<Plural
-								value={summary.transcribing}
-								one="# transcribing"
-								other="# transcribing"
-							/>
-						</Badge>
-					)}
-					{summary.with_errors > 0 && (
-						<Badge size="sm" color="red" variant="light">
-							<Plural
-								value={summary.with_errors}
-								one="# with errors"
-								other="# with errors"
-							/>
-						</Badge>
-					)}
-					{catchUpLabel(summary.catch_up_eta_seconds) && (
-						<Tooltip
-							label={t`Rough estimate to finish transcribing the backlog`}
-							withArrow
-						>
-							<Badge size="sm" color="orange" variant="light">
-								<Trans>
-									catch up {catchUpLabel(summary.catch_up_eta_seconds)}
-								</Trans>
+						{summary.not_receiving > 0 && (
+							<Badge
+								size="sm"
+								color="orange"
+								variant="filled"
+								leftSection={<WarningCircleIcon size={12} />}
+							>
+								<Plural
+									value={summary.not_receiving}
+									one="# audio stopped"
+									other="# audio stopped"
+								/>
 							</Badge>
-						</Tooltip>
-					)}
+						)}
+						{summary.transcribing > 0 && (
+							<Badge size="sm" color="blue" variant="light">
+								<Plural
+									value={summary.transcribing}
+									one="# transcribing"
+									other="# transcribing"
+								/>
+							</Badge>
+						)}
+						{summary.with_errors > 0 && (
+							<Badge size="sm" color="red" variant="light">
+								<Plural
+									value={summary.with_errors}
+									one="# with errors"
+									other="# with errors"
+								/>
+							</Badge>
+						)}
+						{catchUpLabel(summary.catch_up_eta_seconds) && (
+							<Tooltip
+								label={t`Rough estimate to finish transcribing the backlog`}
+								withArrow
+							>
+								<Badge size="sm" color="orange" variant="light">
+									<Trans>
+										catch up {catchUpLabel(summary.catch_up_eta_seconds)}
+									</Trans>
+								</Badge>
+							</Tooltip>
+						)}
+					</Group>
 				</Group>
-			</Group>
 			)}
 
 			<Stack gap="lg">
