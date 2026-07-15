@@ -24,7 +24,7 @@ import Cookies from "js-cookie";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
-
+import { ENABLE_MONITOR } from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
@@ -270,7 +270,8 @@ export const ParticipantConversationAudio = () => {
 	// session the moment it is initiated, and reflects pauses / verify without
 	// waiting for the next chunk. Best-effort; failures never disrupt recording.
 	useEffect(() => {
-		if (!conversationId) return;
+		// Monitor off: no host reads these, so don't collect/beacon telemetry.
+		if (!conversationId || !ENABLE_MONITOR) return;
 		let cancelled = false;
 		const sendPing = async () => {
 			// Stamp before the battery await so a ping delayed by getBattery keeps
@@ -308,7 +309,7 @@ export const ParticipantConversationAudio = () => {
 	// navigation), so a graceful exit shows as "left" on the host monitor
 	// instead of aging paused -> idle -> finished over minutes.
 	useEffect(() => {
-		if (!conversationId) return;
+		if (!conversationId || !ENABLE_MONITOR) return;
 		const onPageHide = () => pingConversationLeft(conversationId, projectId);
 		window.addEventListener("pagehide", onPageHide);
 		return () => window.removeEventListener("pagehide", onPageHide);
