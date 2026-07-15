@@ -20,6 +20,9 @@ class _FakeRedis:
         if ex is not None:
             self.expires[key] = ex
 
+    async def get(self, key: str) -> Optional[bytes]:
+        return self.store.get(key)
+
     async def mget(self, keys: list[str]) -> list[Optional[bytes]]:
         return [self.store.get(k) for k in keys]
 
@@ -52,6 +55,62 @@ def test_mark_sets_key_with_ttl(fake_redis: _FakeRedis) -> None:
     assert fake_redis.expires[key] == liveness.LIVENESS_TTL_SECONDS
     stored = json.loads(fake_redis.store[key].decode())
     assert stored["seen"] == now.isoformat()
+
+
+def test_sticky_states_use_longer_ttl(fake_redis: _FakeRedis) -> None:
+    # Non-capture states (left, paused, ...) must outlive the normal TTL so the
+    # monitor holds the calm state until the catch-up finishes it, rather than
+    # decaying into a misleading "offline".
+    now = datetime(2026, 7, 3, 10, 0, 0, tzinfo=timezone.utc)
+    assert liveness.STICKY_STATE_TTL_SECONDS > liveness.LIVENESS_TTL_SECONDS
+    for state in ("left", "paused"):
+        _run(
+            liveness.mark_conversation_seen(
+                f"conv-{state}", now=now, telemetry={"state": state}
+            )
+        )
+        assert (
+            fake_redis.expires[f"conversation_liveness:conv-{state}"]
+            == liveness.STICKY_STATE_TTL_SECONDS
+        )
+    # An active-capture state keeps the short TTL.
+    _run(liveness.mark_conversation_seen("conv-rec", now=now, telemetry={"state": "recording"}))
+    assert fake_redis.expires["conversation_liveness:conv-rec"] == liveness.LIVENESS_TTL_SECONDS
+
+
+def test_stale_ping_does_not_clobber_newer_state(fake_redis: _FakeRedis) -> None:
+    # A late in-flight ping (earlier client_ts) must not overwrite a newer
+    # terminal "left"; this is the left -> offline race on tab close.
+    now = datetime(2026, 7, 3, 10, 0, 0, tzinfo=timezone.utc)
+    _run(
+        liveness.mark_conversation_seen(
+            "c1", now=now, telemetry={"state": "left", "client_ts": 2000}
+        )
+    )
+    _run(
+        liveness.mark_conversation_seen(
+            "c1", now=now, telemetry={"state": "recording", "client_ts": 1000}
+        )
+    )
+    result = _run(liveness.get_telemetry_many(["c1"]))
+    assert result["c1"]["state"] == "left"
+
+
+def test_newer_ping_overrides_prior_state(fake_redis: _FakeRedis) -> None:
+    # A genuine later resume (newer client_ts) still wins over "left".
+    now = datetime(2026, 7, 3, 10, 0, 0, tzinfo=timezone.utc)
+    _run(
+        liveness.mark_conversation_seen(
+            "c1", now=now, telemetry={"state": "left", "client_ts": 1000}
+        )
+    )
+    _run(
+        liveness.mark_conversation_seen(
+            "c1", now=now, telemetry={"state": "recording", "client_ts": 3000}
+        )
+    )
+    result = _run(liveness.get_telemetry_many(["c1"]))
+    assert result["c1"]["state"] == "recording"
 
 
 def test_mark_persists_telemetry(fake_redis: _FakeRedis) -> None:

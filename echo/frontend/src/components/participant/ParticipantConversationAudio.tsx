@@ -33,9 +33,10 @@ import {
 	finishConversation,
 	type ParticipantPingTelemetry,
 	pingConversation,
+	pingConversationLeft,
 } from "@/lib/api";
-import { getVisitorId } from "@/lib/visitorId";
 import { testId } from "@/lib/testUtils";
+import { getVisitorId } from "@/lib/visitorId";
 import { I18nLink } from "../common/i18nLink";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
 import { toast } from "../common/Toaster";
@@ -65,12 +66,13 @@ const readNetworkTelemetry = (): ParticipantPingTelemetry["network"] => {
 		connection?: { effectiveType?: string; downlink?: number; rtt?: number };
 	};
 	const conn = nav.connection;
-	const online = typeof navigator.onLine === "boolean" ? navigator.onLine : undefined;
+	const online =
+		typeof navigator.onLine === "boolean" ? navigator.onLine : undefined;
 	if (!conn && online === undefined) return undefined;
 	return {
-		online,
-		effective_type: conn?.effectiveType,
 		downlink: conn?.downlink,
+		effective_type: conn?.effectiveType,
+		online,
 		rtt: conn?.rtt,
 	};
 };
@@ -84,7 +86,7 @@ const readBatteryTelemetry = async (): Promise<
 	if (typeof nav.getBattery !== "function") return undefined;
 	try {
 		const battery = await nav.getBattery();
-		return { level: battery.level, charging: battery.charging };
+		return { charging: battery.charging, level: battery.level };
 	} catch {
 		return undefined;
 	}
@@ -271,6 +273,9 @@ export const ParticipantConversationAudio = () => {
 		if (!conversationId) return;
 		let cancelled = false;
 		const sendPing = async () => {
+			// Stamp before the battery await so a ping delayed by getBattery keeps
+			// its initiation time and can't out-order a later "left" beacon.
+			const client_ts = Date.now();
 			const battery = await readBatteryTelemetry();
 			if (cancelled) return;
 			const rawLevel = getAudioLevelRef.current?.();
@@ -279,13 +284,14 @@ export const ParticipantConversationAudio = () => {
 					? Math.round(Math.min(1, Math.max(0, rawLevel)) * 100) / 100
 					: undefined;
 			void pingConversation(conversationId, {
-				project_id: projectId,
-				visitor_id: projectId ? getVisitorId(projectId) : undefined,
-				state: participantState,
-				mode: "voice",
 				audio_level,
-				network: readNetworkTelemetry(),
 				battery,
+				client_ts,
+				mode: "voice",
+				network: readNetworkTelemetry(),
+				project_id: projectId,
+				state: participantState,
+				visitor_id: projectId ? getVisitorId(projectId) : undefined,
 			});
 		};
 		void sendPing();
@@ -297,6 +303,16 @@ export const ParticipantConversationAudio = () => {
 			clearInterval(interval);
 		};
 	}, [conversationId, projectId, participantState]);
+
+	// Terminal "left" beacon on tab close (fires on real unload, not SPA
+	// navigation), so a graceful exit shows as "left" on the host monitor
+	// instead of aging paused -> idle -> finished over minutes.
+	useEffect(() => {
+		if (!conversationId) return;
+		const onPageHide = () => pingConversationLeft(conversationId, projectId);
+		window.addEventListener("pagehide", onPageHide);
+		return () => window.removeEventListener("pagehide", onPageHide);
+	}, [conversationId, projectId]);
 
 	// Monitor conversation status during recording - handle deletion mid-recording
 	useEffect(() => {

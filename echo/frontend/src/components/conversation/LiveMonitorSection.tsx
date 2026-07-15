@@ -60,6 +60,10 @@ const stateMeta = (state: ParticipantState): StateMeta => {
 			return { color: "gray", label: t`Waiting` };
 		case "initiated":
 			return { color: "gray", label: t`Just started` };
+		case "offline":
+			return { color: "red", label: t`Offline` };
+		case "left":
+			return { color: "gray", label: t`Left` };
 		default:
 			return { color: "gray", label: t`Idle` };
 	}
@@ -600,6 +604,20 @@ export const LiveMonitorSection = ({
 						<Badge size="sm" color="primary" variant="light">
 							<Plural value={summary.live} one="# live" other="# live" />
 						</Badge>
+						{summary.offline > 0 && (
+							<Badge
+								size="sm"
+								color="red"
+								variant="filled"
+								leftSection={<WifiSlashIcon size={12} />}
+							>
+								<Plural
+									value={summary.offline}
+									one="# offline"
+									other="# offline"
+								/>
+							</Badge>
+						)}
 						{summary.not_receiving > 0 && (
 							<Badge
 								size="sm"

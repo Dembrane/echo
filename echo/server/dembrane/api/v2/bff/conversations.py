@@ -649,76 +649,83 @@ MONITOR_MAX_CHUNKS = 500
 MONITOR_ERROR_MESSAGE_MAX_LEN = 240
 # Keep the surfaced live-transcript to a short, fading one-liner, not a wall.
 MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN = 280
-# A live conversation with no audio chunk in this many seconds is "stalled"
-# (dropped connection / broken upload) rather than benignly "waiting". Chunks
-# normally land every ~15-30s.
-MONITOR_RECORDING_STALL_SECONDS = 55
+# No ping for this many seconds (5 missed 3s heartbeats) means the device has
+# stopped talking to us. Foreground pings are reliable; the backgrounded case is
+# handled separately, so this does not false-alarm on transient dips.
+MONITOR_HEARTBEAT_GRACE_SECONDS = 15
+# A recent chunk also counts as "in contact" (protects older/text clients that
+# may not ping, and rides out normal chunk gaps).
+MONITOR_CONTACT_CHUNK_SECONDS = 60
+# Pinging but no audio chunk in this many seconds -> "stalled" (page alive, audio
+# stopped). Distinct from "offline" (no contact at all). Chunks land every ~15-30s.
+MONITOR_RECORDING_STALL_SECONDS = 45
 # Rough, conservative per-clip transcription time for the "catch up ~N min"
 # estimate. Tuned so a handful of pending clips reads ~2 min and a big backlog
 # ~15 min, erring long. Not a promise — surfaced as a vague "~N min".
 MONITOR_TRANSCRIBE_SECONDS_PER_CLIP = 20
 
 
-def _monitor_lifecycle_state(
-    *, is_finished: bool, reported_state: Any, is_live: bool, chunk_count: int
-) -> str:
-    """Fold participant-reported telemetry and observed activity into one state.
-
-    Precedence: an explicit finish wins; then whatever the portal last reported
-    (recording / paused / verifying / ...); then observed liveness (a recent
-    chunk implies recording); then whether any audio has landed at all.
-    """
-    if is_finished:
-        return "finished"
-    if isinstance(reported_state, str) and reported_state in VALID_PARTICIPANT_STATES:
-        return reported_state
-    if is_live:
-        return "recording"
-    if chunk_count > 0:
-        return "idle"
-    return "initiated"
-
-
-def _recording_health(
+def _monitor_status(
     *,
     is_finished: bool,
-    is_live: bool,
     reported_state: Any,
+    ping_fresh: bool,
+    contact_fresh: bool,
+    audio_fresh: bool,
     chunk_count: int,
-    last_chunk_dt: Optional[datetime],
-    now: datetime,
-    stall_seconds: int,
-) -> str:
-    """The host's first question: is the audio actually coming in?
+) -> tuple[str, str]:
+    """Fold the two contact signals into (state, recording_health).
 
-    - "finished" / "paused": expected, not a problem.
-    - "backgrounded": the portal reported the tab hidden / phone locked. Gentle,
-      not a scary alarm (iOS suspends the mic when backgrounded).
-    - "receiving": live and a chunk landed within the stall window. Healthy.
-    - "stalled": audio WAS flowing (chunk_count > 0) and then stopped — a
-      dropped connection or broken upload. This is the real alarm.
-    - "waiting": on the screen but no audio has ever come in yet. Benign — a
-      participant can sit here a long time (first chunk is ~45s p50, minutes at
-      p90), so we never alarm before audio has actually flowed.
-    - "idle": not live and not finished.
+    The reported state is trusted only while in contact, so a stale 'recording'
+    or 'paused' never lingers after the device goes silent. Shared short-circuits
+    (both fields agree): finished > left > backgrounded > offline. Past those the
+    device is still in contact: `state` mirrors the reported lifecycle and
+    `recording_health` reflects whether audio is actually flowing.
+
+    - offline: no ping and no recent chunk. Network drop or freeze. The alarm.
+    - left: the portal's close-beacon fired (tab closed without finishing).
+    - stalled: still pinging, but audio stopped (page alive, upload/mic broken).
+    - receiving: audio flowing. waiting/idle: benign pre-audio / not-live.
     """
     if is_finished:
-        return "finished"
+        return "finished", "finished"
+    if reported_state == "left":
+        return "left", "left"
     if reported_state == "backgrounded":
-        return "backgrounded"
+        return "backgrounded", "backgrounded"
+    if not contact_fresh:
+        # Contact lost. Only an actively-recording session that drops is the
+        # alarm ("offline"); a session that had stopped or moved past recording
+        # has simply "left" (no alarm). No telemetry but chunks present means it
+        # was recording on an older/text client that doesn't ping.
+        if reported_state == "recording" or (not reported_state and chunk_count > 0):
+            return "offline", "offline"
+        if reported_state:
+            return "left", "left"
+        return "initiated", "waiting"
+
+    # In contact: state follows the reported lifecycle, health follows audio.
+    if isinstance(reported_state, str) and reported_state in VALID_PARTICIPANT_STATES:
+        state = reported_state
+    elif audio_fresh:
+        state = "recording"
+    elif chunk_count > 0:
+        state = "idle"
+    else:
+        state = "initiated"
+
     if reported_state == "paused":
-        return "paused"
-    if not is_live:
-        return "idle" if chunk_count > 0 else "waiting"
-    stall_cutoff = now - timedelta(seconds=stall_seconds)
-    if last_chunk_dt is not None and last_chunk_dt > stall_cutoff:
-        return "receiving"
-    # Live, no recent chunk. Only alarm if audio had actually started and then
-    # stopped; a session that has never produced a chunk is still "waiting"
-    # (recording often starts long after the participant lands).
-    if chunk_count > 0:
-        return "stalled"
-    return "waiting"
+        health = "paused"
+    elif audio_fresh:
+        health = "receiving"
+    elif ping_fresh and chunk_count > 0:
+        health = "stalled"
+    elif chunk_count > 0:
+        health = "idle"
+    else:
+        health = "waiting"
+
+    return state, health
 
 
 def _parse_directus_timestamp(value: Any) -> Optional[datetime]:
@@ -791,7 +798,6 @@ def _build_monitor_payload(
     """
     telemetry = telemetry or {}
     tag_map = tag_map or {}
-    live_cutoff = now - timedelta(seconds=live_window_seconds)
 
     order: list[str] = []
     by_conv: dict[str, dict] = {}
@@ -881,22 +887,37 @@ def _build_monitor_payload(
     finished_count = 0
     transcribing_count = 0
     stalled_count = 0
+    offline_count = 0
     pending_total = 0
     for conv_id in order:
         entry = by_conv[conv_id]
         tele = telemetry.get(conv_id) or {}
-        # Liveness folds two signals: the participant ping (primary, arrives
-        # every few seconds) and audio-chunk arrival (chunks can be tens of
-        # seconds apart). Take the most recent of the two.
+        reported_state = tele.get("state")
         seen_dt = tele.get("seen") if isinstance(tele.get("seen"), datetime) else None
-        activity_dt = entry["last_chunk_dt"]
-        if seen_dt is not None and (activity_dt is None or seen_dt > activity_dt):
-            activity_dt = seen_dt
-        # The finish button is a definitive "ended" signal: a finished
-        # conversation is never live, even if a late ping/chunk lands after.
-        recent = activity_dt is not None and activity_dt > live_cutoff
-        is_live = recent and not entry["is_finished"]
-        last_seen_at = seen_dt.isoformat() if seen_dt is not None else None
+        last_chunk_dt = entry["last_chunk_dt"]
+
+        # Two independent signals: the ping heartbeat (primary "still here") and
+        # audio-chunk arrival. "In contact" = a fresh ping OR a recent chunk;
+        # "audio fresh" = a chunk within the stall window.
+        ping_fresh = seen_dt is not None and seen_dt > now - timedelta(
+            seconds=MONITOR_HEARTBEAT_GRACE_SECONDS
+        )
+        # A client that pings has an authoritative heartbeat: once it stops, we
+        # detect the drop within the grace rather than being dragged out by the
+        # slower chunk cadence. The wide chunk window only backstops older/text
+        # clients that never ping, so it doesn't delay offline for modern ones.
+        chunk_window = (
+            MONITOR_HEARTBEAT_GRACE_SECONDS
+            if seen_dt is not None
+            else MONITOR_CONTACT_CHUNK_SECONDS
+        )
+        chunk_in_contact = last_chunk_dt is not None and last_chunk_dt > now - timedelta(
+            seconds=chunk_window
+        )
+        contact_fresh = ping_fresh or chunk_in_contact
+        audio_fresh = last_chunk_dt is not None and last_chunk_dt > now - timedelta(
+            seconds=MONITOR_RECORDING_STALL_SECONDS
+        )
 
         chunk_count = int(chunk_counts.get(conv_id, 0) or 0)
         transcribed_count = min(int(transcribed_counts.get(conv_id, 0) or 0), chunk_count)
@@ -906,21 +927,23 @@ def _build_monitor_payload(
             chunk_count=chunk_count,
             transcribed_count=transcribed_count,
         )
-        state = _monitor_lifecycle_state(
+        state, recording_health = _monitor_status(
             is_finished=entry["is_finished"],
-            reported_state=tele.get("state"),
-            is_live=is_live,
+            reported_state=reported_state,
+            ping_fresh=ping_fresh,
+            contact_fresh=contact_fresh,
+            audio_fresh=audio_fresh,
             chunk_count=chunk_count,
         )
-        recording_health = _recording_health(
-            is_finished=entry["is_finished"],
-            is_live=is_live,
-            reported_state=tele.get("state"),
-            chunk_count=chunk_count,
-            last_chunk_dt=entry["last_chunk_dt"],
-            now=now,
-            stall_seconds=MONITOR_RECORDING_STALL_SECONDS,
-        )
+        # Live = still in contact and not ended. A finish is definitive; a
+        # departed session (left) is not live either.
+        is_live = contact_fresh and not entry["is_finished"] and recording_health != "left"
+        last_seen_at = seen_dt.isoformat() if seen_dt is not None else None
+
+        # Most-recent activity (chunk or ping) drives the sort below.
+        activity_dt = last_chunk_dt
+        if seen_dt is not None and (activity_dt is None or seen_dt > activity_dt):
+            activity_dt = seen_dt
 
         if is_live:
             live_count += 1
@@ -930,6 +953,8 @@ def _build_monitor_payload(
             error_count += 1
         if recording_health == "stalled":
             stalled_count += 1
+        if recording_health == "offline":
+            offline_count += 1
         if transcription_status == "transcribing":
             transcribing_count += 1
         pending_total += pending_transcription
@@ -981,6 +1006,7 @@ def _build_monitor_payload(
             "transcribing": transcribing_count,
             "with_errors": error_count,
             "not_receiving": stalled_count,
+            "offline": offline_count,
             "total": len(conversations),
             "pending_transcription": pending_total,
             # Deliberately rough + conservative: clips-behind x a per-clip

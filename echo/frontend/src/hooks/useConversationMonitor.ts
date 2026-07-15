@@ -23,6 +23,8 @@ export type ParticipantState =
 	| "finished"
 	| "text"
 	| "backgrounded"
+	| "offline"
+	| "left"
 	| "idle";
 
 // The host's first question: is audio actually coming in? "stalled" is the
@@ -32,6 +34,8 @@ export type RecordingHealth =
 	| "stalled"
 	| "paused"
 	| "backgrounded"
+	| "offline"
+	| "left"
 	| "waiting"
 	| "idle"
 	| "finished";
@@ -82,6 +86,7 @@ export type MonitorSummary = {
 	transcribing: number;
 	with_errors: number;
 	not_receiving: number;
+	offline: number;
 	total: number;
 	pending_transcription: number;
 	catch_up_eta_seconds: number;
@@ -129,6 +134,7 @@ const EMPTY_SUMMARY: MonitorSummary = {
 	finished: 0,
 	live: 0,
 	not_receiving: 0,
+	offline: 0,
 	pending_transcription: 0,
 	total: 0,
 	transcribing: 0,

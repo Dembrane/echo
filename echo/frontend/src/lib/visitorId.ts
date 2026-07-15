@@ -17,6 +17,10 @@ const randomId = (): string => {
 	return `v-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
 };
 
+// Fallback ids when localStorage is blocked, cached per project so repeated
+// calls return the same id (else each call re-randomises into phantom dots).
+const ephemeralIds: Record<string, string> = {};
+
 /** Stable visitor id for this device + project, minted once and reused. */
 export const getVisitorId = (projectId: string): string => {
 	try {
@@ -26,8 +30,8 @@ export const getVisitorId = (projectId: string): string => {
 		localStorage.setItem(visitorKey(projectId), fresh);
 		return fresh;
 	} catch {
-		// Private mode / storage disabled: fall back to an ephemeral id.
-		return randomId();
+		if (!ephemeralIds[projectId]) ephemeralIds[projectId] = randomId();
+		return ephemeralIds[projectId];
 	}
 };
 

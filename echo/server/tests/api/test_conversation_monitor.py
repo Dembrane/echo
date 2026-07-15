@@ -148,6 +148,7 @@ def test_monitor_empty_project() -> None:
         "transcribing": 0,
         "with_errors": 0,
         "not_receiving": 0,
+        "offline": 0,
         "total": 0,
         "pending_transcription": 0,
         "catch_up_eta_seconds": 0,
@@ -406,6 +407,81 @@ def test_monitor_backgrounded_is_gentle_not_stalled() -> None:
     entry = payload["conversations"][0]
     assert entry["recording_health"] == "backgrounded"
     assert payload["summary"]["not_receiving"] == 0
+
+
+def test_monitor_offline_when_contact_lost() -> None:
+    # Recording device dropped its network: no fresh ping and no recent chunk.
+    # Must read as "offline", not linger on the last reported "recording".
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    stale_chunk = _iso(now - timedelta(seconds=90))
+    recent_chunks = [
+        {"conversation_id": {"id": "c-off", "participant_name": "Ada"}, "timestamp": stale_chunk, "error": None},
+    ]
+    telemetry = {"c-off": {"seen": now - timedelta(seconds=30), "state": "recording"}}
+    payload = _build_monitor_payload(
+        recent_chunks, {"c-off": 3}, {"c-off": 3}, now, 45, telemetry
+    )
+    entry = payload["conversations"][0]
+    assert entry["state"] == "offline"
+    assert entry["recording_health"] == "offline"
+    assert entry["is_live"] is False
+    assert payload["summary"]["offline"] == 1
+
+
+def test_monitor_paused_then_contact_lost_reads_left_not_offline() -> None:
+    # Stop then close the tab: last reported state is "paused" and contact is
+    # lost. A stopped session that goes quiet has "left", it is not an "offline"
+    # alarm (which is reserved for a recording session that drops).
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    stale_chunk = _iso(now - timedelta(seconds=90))
+    recent_chunks = [
+        {"conversation_id": {"id": "c-stop", "participant_name": "Ada"}, "timestamp": stale_chunk, "error": None},
+    ]
+    telemetry = {"c-stop": {"seen": now - timedelta(seconds=30), "state": "paused"}}
+    payload = _build_monitor_payload(
+        recent_chunks, {"c-stop": 3}, {"c-stop": 3}, now, 45, telemetry
+    )
+    entry = payload["conversations"][0]
+    assert entry["state"] == "left"
+    assert entry["recording_health"] == "left"
+    assert entry["is_live"] is False
+    assert payload["summary"]["offline"] == 0
+
+
+def test_monitor_left_beacon_marks_conversation_left() -> None:
+    # The portal's close-beacon reported "left"; trusted even though the ping is
+    # stale. Shows "left", not a lingering "paused" or an "offline" alarm.
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    stale_chunk = _iso(now - timedelta(seconds=90))
+    recent_chunks = [
+        {"conversation_id": {"id": "c-left", "participant_name": "Ada"}, "timestamp": stale_chunk, "error": None},
+    ]
+    telemetry = {"c-left": {"seen": now - timedelta(seconds=40), "state": "left"}}
+    payload = _build_monitor_payload(
+        recent_chunks, {"c-left": 3}, {"c-left": 3}, now, 45, telemetry
+    )
+    entry = payload["conversations"][0]
+    assert entry["state"] == "left"
+    assert entry["recording_health"] == "left"
+    assert entry["is_live"] is False
+    assert payload["summary"]["offline"] == 0
+
+
+def test_monitor_backgrounded_beats_offline_when_stale() -> None:
+    # Phone locked: portal reported "backgrounded" and then pings stop (timers
+    # suspend). Must stay "backgrounded", not escalate to the "offline" alarm.
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    stale_chunk = _iso(now - timedelta(seconds=90))
+    recent_chunks = [
+        {"conversation_id": {"id": "c-bg", "participant_name": "Ada"}, "timestamp": stale_chunk, "error": None},
+    ]
+    telemetry = {"c-bg": {"seen": now - timedelta(seconds=30), "state": "backgrounded"}}
+    payload = _build_monitor_payload(
+        recent_chunks, {"c-bg": 4}, {"c-bg": 4}, now, 45, telemetry
+    )
+    entry = payload["conversations"][0]
+    assert entry["recording_health"] == "backgrounded"
+    assert payload["summary"]["offline"] == 0
 
 
 def test_monitor_seeds_initiated_conversation_without_chunks() -> None:
@@ -679,6 +755,7 @@ async def test_monitor_endpoint_empty_skips_count_query(monkeypatch) -> None:
         "transcribing": 0,
         "with_errors": 0,
         "not_receiving": 0,
+        "offline": 0,
         "total": 0,
         "pending_transcription": 0,
         "catch_up_eta_seconds": 0,
