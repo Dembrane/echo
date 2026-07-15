@@ -38,6 +38,7 @@ type StateMeta = {
 	color: string;
 	label: string;
 	pulse?: boolean;
+	darkText?: boolean;
 };
 
 const stateMeta = (state: ParticipantState): StateMeta => {
@@ -47,13 +48,13 @@ const stateMeta = (state: ParticipantState): StateMeta => {
 		case "paused":
 			return { color: "yellow", label: t`Paused` };
 		case "verifying":
-			return { color: "blue", label: t`Verifying` };
+			return { color: "primary", label: t`Verifying` };
 		case "refining":
 			return { color: "grape", label: t`Exploring` };
 		case "text":
-			return { color: "blue", label: t`Typing` };
+			return { color: "primary", label: t`Typing` };
 		case "finishing":
-			return { color: "blue", label: t`Finishing` };
+			return { color: "primary", label: t`Finishing` };
 		case "finished":
 			return { color: "primary", label: t`Finished` };
 		case "waiting":
@@ -61,9 +62,11 @@ const stateMeta = (state: ParticipantState): StateMeta => {
 		case "initiated":
 			return { color: "gray", label: t`Just started` };
 		case "offline":
-			return { color: "red", label: t`Offline` };
+			return { color: "salmon", darkText: true, label: t`Offline` };
 		case "left":
 			return { color: "gray", label: t`Left` };
+		case "backgrounded":
+			return { color: "gray", label: t`Away` };
 		default:
 			return { color: "gray", label: t`Idle` };
 	}
@@ -71,11 +74,17 @@ const stateMeta = (state: ParticipantState): StateMeta => {
 
 const StatePill = ({ state }: { state: ParticipantState }) => {
 	const meta = stateMeta(state);
+	const darkTextStyles = {
+		label: { color: "var(--app-text)" },
+		section: { color: "var(--app-text)" },
+	};
+	
 	return (
 		<Badge
 			size="sm"
 			color={meta.color}
 			variant="light"
+			styles={meta.darkText ? darkTextStyles : undefined}
 			leftSection={
 				<span
 					aria-hidden
@@ -246,7 +255,7 @@ const TranscriptionBadge = ({
 	if (conversation.transcription_status === "failing") return null;
 	if (conversation.transcription_status === "transcribing") {
 		return (
-			<Badge size="xs" color="blue" variant="light">
+			<Badge size="xs" color="primary" variant="light">
 				<Plural
 					value={conversation.pending_transcription}
 					one="Transcribing # clip"
@@ -370,17 +379,13 @@ const MonitorRow = ({
 					<LiveDuration conversation={conversation} />
 				</Group>
 
-				{conversation.has_error && conversation.error_message && (
-					<Tooltip
-						label={conversation.error_message}
-						multiline
-						maw={360}
-						withArrow
-					>
-						<Text size="xs" c="red.7" lineClamp={2}>
-							{conversation.error_message}
-						</Text>
-					</Tooltip>
+				{conversation.has_error && (
+					<Text size="xs" c="red.7">
+						<Trans>
+							Some of the recent audio couldn't be transcribed. The recording is
+							saved.
+						</Trans>
+					</Text>
 				)}
 			</Stack>
 		</Card>
@@ -475,7 +480,7 @@ const TagGroupSection = ({
 					{group.items.length}
 				</Text>
 				{group.liveCount > 0 && (
-					<Badge size="xs" color="red" variant="light">
+					<Badge size="xs" color="primary" variant="light">
 						<Plural value={group.liveCount} one="# live" other="# live" />
 					</Badge>
 				)}
@@ -607,8 +612,12 @@ export const LiveMonitorSection = ({
 						{summary.offline > 0 && (
 							<Badge
 								size="sm"
-								color="red"
-								variant="filled"
+								color="salmon"
+								variant="light"
+								styles={{
+									label: { color: "var(--app-text)" },
+									section: { color: "var(--app-text)" },
+								}}
 								leftSection={<WifiSlashIcon size={12} />}
 							>
 								<Plural
@@ -633,7 +642,7 @@ export const LiveMonitorSection = ({
 							</Badge>
 						)}
 						{summary.transcribing > 0 && (
-							<Badge size="sm" color="blue" variant="light">
+							<Badge size="sm" color="primary" variant="light">
 								<Plural
 									value={summary.transcribing}
 									one="# transcribing"

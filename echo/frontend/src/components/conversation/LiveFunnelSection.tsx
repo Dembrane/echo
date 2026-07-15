@@ -11,7 +11,6 @@ import {
 	Stack,
 	Text,
 	TextInput,
-	Tooltip,
 } from "@mantine/core";
 import {
 	BatteryLowIcon,
@@ -38,7 +37,9 @@ const weakNetwork = (
 ): boolean => {
 	if (!network) return false;
 	if (network.online === false) return true;
-	return network.effective_type === "2g" || network.effective_type === "slow-2g";
+	return (
+		network.effective_type === "2g" || network.effective_type === "slow-2g"
+	);
 };
 
 const lowBattery = (
@@ -62,12 +63,12 @@ type Selection =
 	| { kind: "conversation"; conversation: MonitorConversation };
 
 const STAGE_TIMELINE_ORDER: { stage: FunnelStage; label: string }[] = [
-	{ stage: "scanned", label: t`Scanned the QR` },
-	{ stage: "terms", label: t`Accepted terms` },
-	{ stage: "mic_ok", label: t`Mic checked` },
-	{ stage: "mic_skipped", label: t`Skipped mic check` },
-	{ stage: "mic_blocked", label: t`Mic blocked` },
-	{ stage: "profile", label: t`Entered details` },
+	{ label: t`Scanned the QR`, stage: "scanned" },
+	{ label: t`Accepted terms`, stage: "terms" },
+	{ label: t`Mic checked`, stage: "mic_ok" },
+	{ label: t`Skipped mic check`, stage: "mic_skipped" },
+	{ label: t`Mic blocked`, stage: "mic_blocked" },
+	{ label: t`Entered details`, stage: "profile" },
 ];
 
 const StageTimeline = ({ stages }: { stages: Record<string, string> }) => {
@@ -163,8 +164,8 @@ const ConversationDrilldown = ({
 		update.mutate(
 			{ id: conversation.id, payload: { participant_name: name.trim() } },
 			{
-				onSuccess: () => toast.success(t`Saved`),
 				onError: () => toast.error(t`Could not save`),
+				onSuccess: () => toast.success(t`Saved`),
 			},
 		);
 	};
@@ -191,9 +192,12 @@ const ConversationDrilldown = ({
 				<Text size="xs" c="dimmed" tt="capitalize">
 					{conversation.state}
 				</Text>
-				{conversation.has_error && conversation.error_message && (
-					<Text size="xs" c="red.7" lineClamp={1}>
-						{conversation.error_message}
+				{conversation.has_error && (
+					<Text size="xs" c="red.7">
+						<Trans>
+							Some of the recent audio couldn't be transcribed. The recording is
+							saved.
+						</Trans>
 					</Text>
 				)}
 			</Group>

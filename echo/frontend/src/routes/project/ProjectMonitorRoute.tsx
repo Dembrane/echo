@@ -1,6 +1,14 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Box, Divider, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
+import {
+	Box,
+	Divider,
+	Group,
+	Stack,
+	Text,
+	Title,
+	Tooltip,
+} from "@mantine/core";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { QRCode } from "@/components/common/QRCode";
@@ -31,7 +39,7 @@ export const ProjectMonitorRoute = () => {
 			<Stack gap="xl">
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Stack gap={4}>
-						<Title order={2} fw={500} style={{ color: "#2d2d2c" }}>
+						<Title order={2} fw={500}>
 							<Trans>Monitor</Trans>
 						</Title>
 						<Text size="sm" c="dimmed" maw={560}>
