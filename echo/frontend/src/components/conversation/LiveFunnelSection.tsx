@@ -18,6 +18,7 @@ import {
 	WifiSlashIcon,
 } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
+import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 
@@ -31,7 +32,7 @@ import {
 	useConversationMonitor,
 } from "@/hooks/useConversationMonitor";
 import { FunnelCanvas, type NodeDatum } from "./FunnelCanvas";
-import { StatePill } from "./LiveMonitorSection";
+import { isProblemState, StatePill } from "./LiveMonitorSection";
 
 const weakNetwork = (
 	network: { online?: boolean; effective_type?: string } | null,
@@ -144,9 +145,11 @@ const VisitorDrilldown = ({ visitor }: { visitor: FunnelVisitor }) => (
 const ConversationDrilldown = ({
 	conversation,
 	base,
+	projectId,
 }: {
 	conversation: MonitorConversation;
 	base: string | null;
+	projectId: string;
 }) => {
 	const [name, setName] = useState(conversation.label ?? "");
 	const update = useUpdateConversationByIdMutation();
@@ -160,7 +163,13 @@ const ConversationDrilldown = ({
 			{ id: conversation.id, payload: { participant_name: name.trim() } },
 			{
 				onError: () => toast.error(t`Could not save`),
-				onSuccess: () => toast.success(t`Saved`),
+				onSuccess: () => {
+					posthog.capture("monitor_participant_name_edited", {
+						conversation_id: conversation.id,
+						project_id: projectId,
+					});
+					toast.success(t`Saved`);
+				},
 			},
 		);
 	};
@@ -198,6 +207,16 @@ const ConversationDrilldown = ({
 				<I18nLink
 					to={`${base}/conversations/${conversation.id}`}
 					className="no-underline"
+					onClick={() =>
+						posthog.capture("monitor_conversation_opened", {
+							conversation_id: conversation.id,
+							from_problem_state: isProblemState(conversation),
+							participant_state: conversation.state,
+							project_id: projectId,
+							recording_health: conversation.recording_health,
+							transcription_status: conversation.transcription_status,
+						})
+					}
 				>
 					<Button variant="light" size="xs">
 						<Trans>Open conversation</Trans>
@@ -314,13 +333,19 @@ export const LiveFunnelSection = ({
 					<FunnelCanvas
 						nodes={nodes}
 						weights={weights}
-						onSelect={(node) =>
+						onSelect={(node) => {
+							posthog.capture("monitor_drilldown_opened", {
+								entity_type: node.kind === "visitor" ? "visitor" : "recording",
+								project_id: projectId,
+								stage_or_state:
+									node.kind === "visitor" ? node.data.stage : node.data.state,
+							});
 							setSelected(
 								node.kind === "visitor"
 									? { kind: "visitor", visitor: node.data }
 									: { conversation: node.data, kind: "conversation" },
-							)
-						}
+							);
+						}}
 						onHover={(node) =>
 							onHoverConversation?.(
 								node?.kind === "conversation" ? node.data.id : null,
@@ -348,6 +373,7 @@ export const LiveFunnelSection = ({
 					<ConversationDrilldown
 						conversation={selected.conversation}
 						base={base}
+						projectId={projectId}
 					/>
 				)}
 			</Modal>

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 
 import { API_BASE_URL } from "@/config";
@@ -155,12 +156,28 @@ type SharedConnection = {
 	state: StreamState;
 	source: EventSource | null;
 	listeners: Set<(state: StreamState) => void>;
+	degradedAt: number | null;
+	degradeTimer: ReturnType<typeof setTimeout> | null;
+	loadFailedFired: boolean;
 };
 
 const connections = new Map<string, SharedConnection>();
 
 const notify = (conn: SharedConnection) => {
 	for (const listener of conn.listeners) listener(conn.state);
+};
+
+// Dedupe on the shared connection so concurrent hook mounts emit this once.
+const reportLoadFailed = (projectId: string) => {
+	const conn = connections.get(projectId);
+	if (!conn || conn.loadFailedFired) return;
+	conn.loadFailedFired = true;
+	posthog.capture("monitor_load_failed", { project_id: projectId });
+};
+
+const clearLoadFailed = (projectId: string) => {
+	const conn = connections.get(projectId);
+	if (conn) conn.loadFailedFired = false;
 };
 
 const openSource = (projectId: string, conn: SharedConnection) => {
@@ -175,6 +192,18 @@ const openSource = (projectId: string, conn: SharedConnection) => {
 			const data = JSON.parse(event.data) as MonitorResponse;
 			conn.state = { connected: true, data };
 			notify(conn);
+			// Recovered: cancel a pending degrade; if one was reported, emit a paired reconnect.
+			if (conn.degradeTimer) {
+				clearTimeout(conn.degradeTimer);
+				conn.degradeTimer = null;
+			}
+			if (conn.degradedAt !== null) {
+				posthog.capture("monitor_stream_reconnected", {
+					downtime_seconds: Math.round((Date.now() - conn.degradedAt) / 1000),
+					project_id: projectId,
+				});
+				conn.degradedAt = null;
+			}
 		} catch {
 			// Ignore a malformed frame; the next snapshot recovers.
 		}
@@ -183,6 +212,14 @@ const openSource = (projectId: string, conn: SharedConnection) => {
 		// Auto-reconnects; mark down meanwhile so consumers fall back to the poll.
 		conn.state = { connected: false, data: conn.state.data };
 		notify(conn);
+		// Debounce ~3s so a brief reconnect flap doesn't emit a degrade/reconnect pair.
+		if (!conn.degradeTimer && conn.degradedAt === null) {
+			conn.degradeTimer = setTimeout(() => {
+				conn.degradedAt = Date.now();
+				posthog.capture("monitor_stream_degraded", { project_id: projectId });
+				conn.degradeTimer = null;
+			}, 3000);
+		}
 	};
 };
 
@@ -193,7 +230,10 @@ const subscribeToMonitor = (
 	let conn = connections.get(projectId);
 	if (!conn) {
 		conn = {
+			degradedAt: null,
+			degradeTimer: null,
 			listeners: new Set(),
+			loadFailedFired: false,
 			refCount: 0,
 			source: null,
 			state: { connected: false, data: null },
@@ -210,6 +250,10 @@ const subscribeToMonitor = (
 		connection.refCount -= 1;
 		if (connection.refCount <= 0) {
 			connection.source?.close();
+			if (connection.degradeTimer) {
+				clearTimeout(connection.degradeTimer);
+				connection.degradeTimer = null;
+			}
 			connections.delete(projectId);
 		}
 	};
@@ -248,6 +292,15 @@ export const useConversationMonitor = (
 	const data = stream.connected
 		? (stream.data ?? query.data)
 		: (query.data ?? stream.data);
+
+	// Primitive deps so this runs only on the failed <-> recovered flip, not every snapshot.
+	const hasError = !!query.error;
+	const hasData = !!data;
+	useEffect(() => {
+		if (!projectId) return;
+		if (hasError && !hasData) reportLoadFailed(projectId);
+		else clearLoadFailed(projectId);
+	}, [hasError, hasData, projectId]);
 
 	return {
 		conversations: data?.conversations ?? [],

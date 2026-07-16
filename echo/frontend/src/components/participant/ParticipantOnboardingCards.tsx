@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import posthog from "posthog-js";
 // Start of Selection
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 
 import "./ParticipantOnboardingCards.css";
@@ -265,6 +265,24 @@ const ParticipantOnboardingCards = ({
 	const allSlides = languageCards.flatMap((section) => section.slides);
 
 	const currentCard = allSlides[currentSlideIndex];
+
+	const micOutcomeReportedRef = useRef(false);
+	useEffect(() => {
+		if (micOutcomeReportedRef.current) return;
+		const outcome = micBlocked
+			? "blocked"
+			: micSkipped
+				? "skipped"
+				: micTestSuccess
+					? "granted"
+					: null;
+		if (!outcome) return;
+		micOutcomeReportedRef.current = true;
+		posthog.capture("mic_permission_resolved", {
+			outcome,
+			project_id: project.id,
+		});
+	}, [micBlocked, micSkipped, micTestSuccess, project.id]);
 
 	// The funnel stage this visitor is at, reported to the host monitor. Mic
 	// carries its outcome (ok / skipped / blocked) so a stuck participant is

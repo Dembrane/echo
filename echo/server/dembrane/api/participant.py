@@ -12,6 +12,7 @@ from dembrane.utils import generate_uuid
 from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
+from dembrane.analytics import capture_event
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.monitor_stream import (
@@ -269,7 +270,9 @@ async def get_project(
                     if ws.get("privacy_policy_url"):
                         project["privacy_policy_url"] = ws["privacy_policy_url"]
             except Exception as e:
-                logger.warning(f"Failed to resolve workspace settings for project {project_id}: {e}")
+                logger.warning(
+                    f"Failed to resolve workspace settings for project {project_id}: {e}"
+                )
 
         # Fallback to owner's user settings if workspace didn't provide legal_basis
         if not resolved_from_workspace:
@@ -294,7 +297,9 @@ async def get_project(
                         if not project.get("privacy_policy_url"):
                             project["privacy_policy_url"] = owner.get("privacy_policy_url")
                 except Exception as e:
-                    logger.warning(f"Failed to resolve owner settings for project {project_id}: {e}")
+                    logger.warning(
+                        f"Failed to resolve owner settings for project {project_id}: {e}"
+                    )
 
         return project
 
@@ -521,9 +526,7 @@ async def ping_conversation(
     if len(conversation_id) > _MAX_PING_ID_LEN:
         return {"ok": True}
     try:
-        await mark_conversation_seen(
-            conversation_id, telemetry=_build_ping_telemetry(body) or None
-        )
+        await mark_conversation_seen(conversation_id, telemetry=_build_ping_telemetry(body) or None)
     except Exception as exc:  # noqa: BLE001
         logger.warning("Liveness ping failed for %s: %s", conversation_id, exc)
         return {"ok": False}
@@ -531,9 +534,7 @@ async def ping_conversation(
         # Index the conversation as active so the monitor can show it the
         # instant it is initiated, before any audio chunk exists, then nudge
         # open streams to recompute.
-        await register_active_conversation(
-            body.project_id, conversation_id, score=time()
-        )
+        await register_active_conversation(body.project_id, conversation_id, score=time())
         await publish_monitor_dirty(body.project_id)
     return {"ok": True}
 
@@ -581,9 +582,7 @@ def _build_visitor_telemetry(body: Optional[VisitorPingRequest]) -> dict:
     return telemetry
 
 
-@ParticipantRouter.post(
-    "/projects/{project_id}/visitors/{visitor_id}/ping", response_model=dict
-)
+@ParticipantRouter.post("/projects/{project_id}/visitors/{visitor_id}/ping", response_model=dict)
 async def ping_visitor(
     project_id: str,
     visitor_id: str,
@@ -800,6 +799,11 @@ async def confirm_chunk_upload(
                         f"Upload may have failed or S3 is experiencing issues. Error: {e}",
                         exc_info=True,
                     )
+                    await capture_event(
+                        conversation_id,
+                        "server_chunk_not_found_in_s3",
+                        {"chunk_id": body.chunk_id},
+                    )
                     raise HTTPException(
                         status_code=400,
                         detail="File not found in S3. Upload may have failed. Please try again.",
@@ -837,6 +841,11 @@ async def confirm_chunk_upload(
             logger.info(
                 f"Chunk {body.chunk_id} marked with error 'Audio not playable' "
                 f"due to small file size ({file_size} bytes)"
+            )
+            await capture_event(
+                conversation_id,
+                "server_chunk_upload_bad",
+                {"chunk_id": body.chunk_id, "file_size": file_size},
             )
             # Update the returned chunk to include the error
             chunk["error"] = "Audio not playable"
