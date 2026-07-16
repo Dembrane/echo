@@ -31,10 +31,13 @@ import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import {
 	finishConversation,
-	type ParticipantPingTelemetry,
 	pingConversation,
 	pingConversationLeft,
 } from "@/lib/api";
+import {
+	readBatteryTelemetry,
+	readNetworkTelemetry,
+} from "@/lib/deviceTelemetry";
 import { testId } from "@/lib/testUtils";
 import { getVisitorId } from "@/lib/visitorId";
 import { I18nLink } from "../common/i18nLink";
@@ -57,40 +60,6 @@ import { useConversationArtefacts } from "./verify/hooks";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
-
-// Best-effort device telemetry for the host monitor. The Network Information
-// and Battery Status APIs are not on every browser (Safari/Firefox lack
-// Battery entirely), so both degrade to `undefined` and are simply omitted.
-const readNetworkTelemetry = (): ParticipantPingTelemetry["network"] => {
-	const nav = navigator as Navigator & {
-		connection?: { effectiveType?: string; downlink?: number; rtt?: number };
-	};
-	const conn = nav.connection;
-	const online =
-		typeof navigator.onLine === "boolean" ? navigator.onLine : undefined;
-	if (!conn && online === undefined) return undefined;
-	return {
-		downlink: conn?.downlink,
-		effective_type: conn?.effectiveType,
-		online,
-		rtt: conn?.rtt,
-	};
-};
-
-const readBatteryTelemetry = async (): Promise<
-	ParticipantPingTelemetry["battery"]
-> => {
-	const nav = navigator as Navigator & {
-		getBattery?: () => Promise<{ level: number; charging: boolean }>;
-	};
-	if (typeof nav.getBattery !== "function") return undefined;
-	try {
-		const battery = await nav.getBattery();
-		return { charging: battery.charging, level: battery.level };
-	} catch {
-		return undefined;
-	}
-};
 
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
@@ -277,7 +246,12 @@ export const ParticipantConversationAudio = () => {
 			// Stamp before the battery await so a ping delayed by getBattery keeps
 			// its initiation time and can't out-order a later "left" beacon.
 			const client_ts = Date.now();
-			const battery = await readBatteryTelemetry();
+			// Backgrounded/locked: skip the extra device reads (battery is an
+			// async native call, network reads sensor state) to avoid waking the
+			// device just to report telemetry nobody is looking at. Still send
+			// the lightweight state ping so the monitor sees "backgrounded".
+			const hidden = document.hidden;
+			const battery = hidden ? undefined : await readBatteryTelemetry();
 			if (cancelled) return;
 			const rawLevel = getAudioLevelRef.current?.();
 			const audio_level =
@@ -289,7 +263,7 @@ export const ParticipantConversationAudio = () => {
 				battery,
 				client_ts,
 				mode: "voice",
-				network: readNetworkTelemetry(),
+				network: hidden ? undefined : readNetworkTelemetry(),
 				project_id: projectId,
 				state: participantState,
 				visitor_id: projectId ? getVisitorId(projectId) : undefined,

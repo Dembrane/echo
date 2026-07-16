@@ -31,6 +31,7 @@ import {
 	useConversationMonitor,
 } from "@/hooks/useConversationMonitor";
 import { FunnelCanvas, type NodeDatum } from "./FunnelCanvas";
+import { StatePill } from "./LiveMonitorSection";
 
 const weakNetwork = (
 	network: { online?: boolean; effective_type?: string } | null,
@@ -78,15 +79,13 @@ const StageTimeline = ({ stages }: { stages: Record<string, string> }) => {
 	if (steps.length === 0) return null;
 	return (
 		<Stack gap={4}>
-			<Text size="xs" fw={600} tt="uppercase" c="dimmed">
+			<Text size="xs" fw={600} tt="uppercase">
 				<Trans>Timeline</Trans>
 			</Text>
 			{steps.map((step) => (
 				<Group key={step.stage} gap="xs" justify="space-between" wrap="nowrap">
 					<Text size="xs">{step.label}</Text>
-					<Text size="xs" c="dimmed">
-						{relativeTime(step.at)}
-					</Text>
+					<Text size="xs">{relativeTime(step.at)}</Text>
 				</Group>
 			))}
 		</Stack>
@@ -120,11 +119,7 @@ const VisitorDrilldown = ({ visitor }: { visitor: FunnelVisitor }) => (
 			</Group>
 		)}
 		<Group gap="lg">
-			{visitor.device && (
-				<Text size="xs" c="dimmed">
-					{visitor.device}
-				</Text>
-			)}
+			{visitor.device && <Text size="xs">{visitor.device}</Text>}
 			{weakNetwork(visitor.network) && (
 				<Group gap={4}>
 					<WifiSlashIcon size={14} className="text-orange-500" />
@@ -189,9 +184,7 @@ const ConversationDrilldown = ({
 				}
 			/>
 			<Group gap="md">
-				<Text size="xs" c="dimmed" tt="capitalize">
-					{conversation.state}
-				</Text>
+				<StatePill state={conversation.state} />
 				{conversation.has_error && (
 					<Text size="xs" c="red.7">
 						<Trans>
@@ -230,7 +223,7 @@ const StageLabel = ({
 		className="justify-center"
 		style={{ flexBasis: 0, flexGrow: weight }}
 	>
-		<Text size="xs" fw={600} tt="uppercase" c="dimmed">
+		<Text size="xs" fw={600} tt="uppercase">
 			{label}
 		</Text>
 		<Badge size="xs" variant="light" color="gray">
@@ -282,17 +275,17 @@ export const LiveFunnelSection = ({
 	return (
 		<Stack gap="md">
 			<Group justify="space-between" align="center">
-				<Text size="xs" c="dimmed" tt="uppercase">
+				<Text size="xs" tt="uppercase">
 					<Trans>Live participant flow</Trans>
 				</Text>
-				<Text size="xs" c="dimmed">
+				<Text size="xs">
 					<Plural value={totalActive} one="# active" other="# active" />
 				</Text>
 			</Group>
 
 			{totalActive === 0 ? (
 				<Card withBorder p="lg" radius="sm">
-					<Text size="sm" c="dimmed" ta="center">
+					<Text size="sm" ta="center">
 						<Trans>
 							When participants scan the QR code, they'll appear here and flow
 							across the stages in real time.

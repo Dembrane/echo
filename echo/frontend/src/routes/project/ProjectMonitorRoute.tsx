@@ -42,7 +42,7 @@ export const ProjectMonitorRoute = () => {
 						<Title order={2} fw={500}>
 							<Trans>Monitor</Trans>
 						</Title>
-						<Text size="sm" c="dimmed" maw={560}>
+						<Text size="sm" maw={560}>
 							<Trans>
 								Watch live recordings, transcription progress, and errors across
 								this project as they happen.

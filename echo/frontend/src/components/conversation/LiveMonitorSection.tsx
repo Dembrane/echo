@@ -72,13 +72,13 @@ const stateMeta = (state: ParticipantState): StateMeta => {
 	}
 };
 
-const StatePill = ({ state }: { state: ParticipantState }) => {
+export const StatePill = ({ state }: { state: ParticipantState }) => {
 	const meta = stateMeta(state);
 	const darkTextStyles = {
 		label: { color: "var(--app-text)" },
 		section: { color: "var(--app-text)" },
 	};
-	
+
 	return (
 		<Badge
 			size="sm"
@@ -156,7 +156,6 @@ const FadingTranscript = ({ text }: { text: string }) => {
 	return (
 		<Text
 			size="sm"
-			c="dimmed"
 			lineClamp={2}
 			style={{ opacity: visible ? 1 : 0, transition: "opacity 180ms ease" }}
 		>
@@ -220,11 +219,7 @@ const LiveDuration = ({
 	}, [ticking]);
 	const label = durationLabel(conversation);
 	if (!label) return null;
-	return (
-		<Text size="xs" c="dimmed">
-			{label}
-		</Text>
-	);
+	return <Text size="xs">{label}</Text>;
 };
 
 // A deliberately vague, conservative "time to finish the transcription
@@ -294,7 +289,7 @@ const MonitorRow = ({
 		<Card
 			withBorder
 			p="sm"
-			radius="md"
+			radius="sm"
 			className={`transition-colors ${to ? "hover:!border-primary-400 cursor-pointer" : ""} ${highlighted ? "!border-primary-500 ring-2 ring-primary-200" : ""}`}
 		>
 			<Stack gap={8}>
@@ -373,7 +368,7 @@ const MonitorRow = ({
 				)}
 
 				<Group gap="md" align="center">
-					<Text size="xs" c="dimmed">
+					<Text size="xs">
 						<Trans>Last activity {lastActivityLabel(conversation)}</Trans>
 					</Text>
 					<LiveDuration conversation={conversation} />
@@ -462,7 +457,16 @@ const TagGroupSection = ({
 				gap="xs"
 				align="center"
 				className="cursor-pointer select-none"
+				role="button"
+				tabIndex={0}
+				aria-expanded={opened}
 				onClick={toggle}
+				onKeyDown={(event) => {
+					if (event.key === "Enter" || event.key === " ") {
+						if (event.key === " ") event.preventDefault();
+						toggle();
+					}
+				}}
 			>
 				<ActionIcon variant="subtle" color="gray" size="sm" aria-hidden>
 					<CaretRightIcon
@@ -473,12 +477,10 @@ const TagGroupSection = ({
 						}}
 					/>
 				</ActionIcon>
-				<Text size="xs" fw={600} tt="uppercase" c="dimmed">
+				<Text size="xs" fw={600} tt="uppercase">
 					{group.label}
 				</Text>
-				<Text size="xs" c="dimmed">
-					{group.items.length}
-				</Text>
+				<Text size="xs">{group.items.length}</Text>
 				{group.liveCount > 0 && (
 					<Badge size="xs" color="primary" variant="light">
 						<Plural value={group.liveCount} one="# live" other="# live" />
@@ -498,9 +500,16 @@ const TagGroupSection = ({
 					{overflow > 0 && (
 						<Text
 							size="xs"
-							c="dimmed"
+							role="button"
+							tabIndex={0}
 							className="cursor-pointer select-none pl-1 hover:underline"
 							onClick={() => setExpanded(true)}
+							onKeyDown={(event) => {
+								if (event.key === "Enter" || event.key === " ") {
+									if (event.key === " ") event.preventDefault();
+									setExpanded(true);
+								}
+							}}
 						>
 							<Trans>Show {overflow} more</Trans>
 						</Text>
@@ -574,7 +583,7 @@ export const LiveMonitorSection = ({
 					<Text size="sm" fw={500}>
 						<Trans>No recent activity</Trans>
 					</Text>
-					<Text size="xs" c="dimmed" ta="center" maw={420}>
+					<Text size="xs" ta="center" maw={420}>
 						<Trans>
 							Live recordings, transcription progress, and errors show up here
 							as participants start recording in the portal.
@@ -591,7 +600,7 @@ export const LiveMonitorSection = ({
 				<Group justify="space-between" align="center" gap="sm">
 					<Group gap="xs" align="center">
 						<BroadcastIcon size={16} />
-						<Text size="xs" c="dimmed" tt="uppercase">
+						<Text size="xs" tt="uppercase">
 							<Trans>Live monitoring</Trans>
 						</Text>
 					</Group>

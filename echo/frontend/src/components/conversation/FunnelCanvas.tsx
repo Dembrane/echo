@@ -13,13 +13,47 @@ import type {
 // batched by colour (one fill per colour per frame), so a few thousand dots
 // stay smooth. Clicks hit-test to the nearest dot for the drilldown.
 
-const COLORS = {
-	scanned: "#adb5bd",
-	setup: "#4c6ef5",
+// Fallback hexes only kick in before the theme's CSS variables exist (SSR,
+// or a stylesheet that hasn't loaded yet). Live colours are sourced from the
+// Mantine theme so the funnel stays in sync with the rest of the monitor.
+const FALLBACK_COLORS = {
+	backgrounded: "#868e96",
 	blocked: "#fa5252",
 	recording: "#fa5252",
+	scanned: "#adb5bd",
+	setup: "#4169e1",
 	stalled: "#e8590c",
-	backgrounded: "#868e96",
+};
+
+let cachedColors: typeof FALLBACK_COLORS | null = null;
+
+const readCssVar = (name: string, fallback: string): string => {
+	if (typeof document === "undefined") return fallback;
+	const value = getComputedStyle(document.documentElement)
+		.getPropertyValue(name)
+		.trim();
+	return value || fallback;
+};
+
+// Reads the Mantine theme's CSS variables once and caches the result, so we
+// never touch getComputedStyle from the animation loop. Left uncached until
+// `document` exists so SSR doesn't freeze the fallback hexes permanently.
+const resolveColors = (): typeof FALLBACK_COLORS => {
+	if (cachedColors) return cachedColors;
+	if (typeof document === "undefined") return FALLBACK_COLORS;
+	const colors = {
+		backgrounded: readCssVar(
+			"--mantine-color-gray-6",
+			FALLBACK_COLORS.backgrounded,
+		),
+		blocked: readCssVar("--mantine-color-red-6", FALLBACK_COLORS.blocked),
+		recording: readCssVar("--mantine-color-red-6", FALLBACK_COLORS.recording),
+		scanned: readCssVar("--mantine-color-gray-5", FALLBACK_COLORS.scanned),
+		setup: readCssVar("--mantine-color-primary-6", FALLBACK_COLORS.setup),
+		stalled: readCssVar("--mantine-color-orange-7", FALLBACK_COLORS.stalled),
+	};
+	cachedColors = colors;
+	return colors;
 };
 
 export type NodeDatum =
@@ -47,15 +81,16 @@ const columnOf = (node: NodeDatum): number => {
 };
 
 const colorOf = (node: NodeDatum): string => {
+	const colors = resolveColors();
 	if (node.kind === "conversation") {
-		if (node.data.recording_health === "stalled") return COLORS.stalled;
+		if (node.data.recording_health === "stalled") return colors.stalled;
 		if (node.data.recording_health === "backgrounded")
-			return COLORS.backgrounded;
-		return COLORS.recording;
+			return colors.backgrounded;
+		return colors.recording;
 	}
-	if (node.data.stage === "mic_blocked") return COLORS.blocked;
-	if (node.data.stage === "scanned") return COLORS.scanned;
-	return COLORS.setup;
+	if (node.data.stage === "mic_blocked") return colors.blocked;
+	if (node.data.stage === "scanned") return colors.scanned;
+	return colors.setup;
 };
 
 export const FunnelCanvas = ({
@@ -78,7 +113,8 @@ export const FunnelCanvas = ({
 	const particles = useRef<Map<string, Particle>>(new Map());
 	const nodesRef = useRef<NodeDatum[]>(nodes);
 	const weightsRef = useRef<[number, number, number]>(weights);
-	const sizeRef = useRef<{ w: number; h: number }>({ w: 0, h: height });
+	const sizeRef = useRef<{ w: number; h: number }>({ h: height, w: 0 });
+	const lastHitTestRef = useRef(0);
 	nodesRef.current = nodes;
 	weightsRef.current = weights;
 
@@ -96,7 +132,7 @@ export const FunnelCanvas = ({
 		const resize = () => {
 			const w = wrap.clientWidth;
 			const h = height;
-			sizeRef.current = { w, h };
+			sizeRef.current = { h, w };
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 			canvas.width = Math.floor(w * dpr);
 			canvas.height = Math.floor(h * dpr);
@@ -146,7 +182,9 @@ export const FunnelCanvas = ({
 				const top = Math.max(spacing / 2, (h - rows * spacing) / 2);
 				const dotR = Math.max(2.5, Math.min(5, spacing * 0.4));
 				colNodes.forEach((node, i) => {
-					const id = node.data.id;
+					// Prefix with kind: visitors and conversations can share an
+					// underlying id, and the map key must not collide between them.
+					const id = `${node.kind}:${node.data.id}`;
 					live.add(id);
 					const row = Math.floor(i / perRow);
 					const column = i % perRow;
@@ -164,8 +202,8 @@ export const FunnelCanvas = ({
 							id,
 							kind: node.kind,
 							pulse:
-							node.kind === "conversation" &&
-							node.data.recording_health === "receiving",
+								node.kind === "conversation" &&
+								node.data.recording_health === "receiving",
 							r: dotR,
 							tx,
 							ty,
@@ -192,10 +230,32 @@ export const FunnelCanvas = ({
 			}
 		};
 
+		// Layout only needs to rerun when its inputs actually change (a new
+		// nodes/weights array from the data hook, or a resize) -- not on every
+		// animation frame. `nodes`/`weights` are memoized upstream, so a
+		// reference check is enough to catch real changes cheaply.
+		let dirtyNodes: NodeDatum[] | null = null;
+		let dirtyWeights: [number, number, number] | null = null;
+		let dirtyW = -1;
+		let dirtyH = -1;
+
 		let last = 0;
 		const frame = (time: number) => {
-			layout();
 			const { w, h } = sizeRef.current;
+			const currentNodes = nodesRef.current;
+			const currentWeights = weightsRef.current;
+			if (
+				currentNodes !== dirtyNodes ||
+				currentWeights !== dirtyWeights ||
+				w !== dirtyW ||
+				h !== dirtyH
+			) {
+				layout();
+				dirtyNodes = currentNodes;
+				dirtyWeights = currentWeights;
+				dirtyW = w;
+				dirtyH = h;
+			}
 			ctx.clearRect(0, 0, w, h);
 			const dt = last ? Math.min((time - last) / 16.67, 3) : 1;
 			last = time;
@@ -238,9 +298,11 @@ export const FunnelCanvas = ({
 		};
 	}, [height]);
 
-	const [hover, setHover] = useState<{ label: string; x: number; y: number } | null>(
-		null,
-	);
+	const [hover, setHover] = useState<{
+		label: string;
+		x: number;
+		y: number;
+	} | null>(null);
 
 	const nearest = (mx: number, my: number): NodeDatum | null => {
 		let best: { id: string; d: number } | null = null;
@@ -251,7 +313,10 @@ export const FunnelCanvas = ({
 		}
 		// Generous radius so tiny dots are still easy to hit.
 		if (!best || best.d > 18 * 18) return null;
-		return nodesRef.current.find((n) => n.data.id === best?.id) ?? null;
+		return (
+			nodesRef.current.find((n) => `${n.kind}:${n.data.id}` === best?.id) ??
+			null
+		);
 	};
 
 	const labelFor = (node: NodeDatum): string => {
@@ -270,12 +335,19 @@ export const FunnelCanvas = ({
 		<div ref={wrapRef} className="relative w-full">
 			<canvas
 				ref={canvasRef}
+				role="img"
+				aria-label={t`Live participant funnel: scanned, setting up, and recording counts`}
 				onClick={(event) => {
 					const { x, y } = mouseXY(event);
 					const node = nearest(x, y);
 					if (node) onSelect(node);
 				}}
 				onMouseMove={(event) => {
+					// Throttle the hit-test: it scans every live particle, so
+					// running it on every native mousemove event is wasted work.
+					const now = performance.now();
+					if (now - lastHitTestRef.current < 40) return;
+					lastHitTestRef.current = now;
 					const { x, y } = mouseXY(event);
 					const node = nearest(x, y);
 					onHover?.(node);
