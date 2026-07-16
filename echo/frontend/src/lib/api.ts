@@ -1,6 +1,6 @@
 // @FIXME: this file must be decomposed into @/components/xxx/api/index.ts
 
-import { readItems, updateItem } from "@directus/sdk";
+import { readItems } from "@directus/sdk";
 import axios, {
 	type AxiosError,
 	type AxiosRequestConfig,
@@ -372,6 +372,9 @@ export type ParticipantPingTelemetry = {
 	visitor_id?: string;
 	/** Live mic input level (0..1 RMS) so the host can see audio flowing. */
 	audio_level?: number;
+	/** Client-side send time (epoch ms), stamped when the ping is initiated, so
+	 * the server can drop an out-of-order ping and keep the newest state. */
+	client_ts?: number;
 	network?: {
 		online?: boolean;
 		effective_type?: string;
@@ -435,6 +438,40 @@ export const pingConversation = async (
 		);
 	} catch {
 		// Non-critical; the next ping (or a chunk upload) re-establishes liveness.
+	}
+};
+
+/**
+ * Terminal "left" beacon, fired when the participant closes the tab without
+ * finishing. Uses keepalive fetch (not axios) so the request survives page
+ * unload, with JSON to match the ping endpoint and its existing CORS. Without
+ * it a graceful close would read as "offline" via the heartbeat grace instead.
+ * Best-effort: any failure is swallowed.
+ */
+export const pingConversationLeft = (
+	conversationId: string,
+	projectId?: string,
+): void => {
+	try {
+		if (typeof fetch !== "function") return;
+		void fetch(
+			`${API_BASE_URL}/participant/conversations/${conversationId}/ping`,
+			{
+				// client_ts orders this against regular pings so a late in-flight
+				// ping can't clobber "left"; stamped now (the latest moment).
+				body: JSON.stringify({
+					client_ts: Date.now(),
+					project_id: projectId,
+					state: "left",
+				}),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				keepalive: true,
+				method: "POST",
+			},
+		).catch(() => {});
+	} catch {
+		// Best-effort; a blocked unload request just falls back to "offline".
 	}
 };
 

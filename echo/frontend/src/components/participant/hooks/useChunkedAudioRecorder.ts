@@ -265,16 +265,15 @@ const useChunkedAudioRecorder = ({
 			});
 
 			if (!navigator.mediaDevices?.enumerateDevices) {
-				console.log("enumerateDevices() not supported.");
-			} else {
-				// List cameras and microphones.
+				log("enumerateDevices() not supported.");
+			} else if (debug) {
+				// List cameras and microphones (debug only - device labels are
+				// semi-identifying and must never log unconditionally in production).
 				navigator.mediaDevices
 					.enumerateDevices()
 					.then((devices) => {
 						devices.forEach((device) => {
-							console.log(
-								`${device.kind}: ${device.label} id = ${device.deviceId}`,
-							);
+							log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
 						});
 					})
 					.catch((err) => {

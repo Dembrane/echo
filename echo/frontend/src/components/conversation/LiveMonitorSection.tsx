@@ -22,13 +22,17 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
-
+import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
 import { I18nLink } from "@/components/common/i18nLink";
+import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
 	type MonitorConversation,
 	type ParticipantState,
 	useConversationMonitor,
 } from "@/hooks/useConversationMonitor";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 
 // How many rows to render per tag group before collapsing the rest behind a
 // "show more" — keeps the page calm and bounded even for a busy tag.
@@ -38,6 +42,7 @@ type StateMeta = {
 	color: string;
 	label: string;
 	pulse?: boolean;
+	darkText?: boolean;
 };
 
 const stateMeta = (state: ParticipantState): StateMeta => {
@@ -47,31 +52,43 @@ const stateMeta = (state: ParticipantState): StateMeta => {
 		case "paused":
 			return { color: "yellow", label: t`Paused` };
 		case "verifying":
-			return { color: "blue", label: t`Verifying` };
+			return { color: "primary", label: t`Verifying` };
 		case "refining":
 			return { color: "grape", label: t`Exploring` };
 		case "text":
-			return { color: "blue", label: t`Typing` };
+			return { color: "primary", label: t`Typing` };
 		case "finishing":
-			return { color: "blue", label: t`Finishing` };
+			return { color: "primary", label: t`Finishing` };
 		case "finished":
 			return { color: "primary", label: t`Finished` };
 		case "waiting":
 			return { color: "gray", label: t`Waiting` };
 		case "initiated":
 			return { color: "gray", label: t`Just started` };
+		case "offline":
+			return { color: "salmon", darkText: true, label: t`Offline` };
+		case "left":
+			return { color: "gray", label: t`Left` };
+		case "backgrounded":
+			return { color: "gray", label: t`Away` };
 		default:
 			return { color: "gray", label: t`Idle` };
 	}
 };
 
-const StatePill = ({ state }: { state: ParticipantState }) => {
+export const StatePill = ({ state }: { state: ParticipantState }) => {
 	const meta = stateMeta(state);
+	const darkTextStyles = {
+		label: { color: "var(--app-text)" },
+		section: { color: "var(--app-text)" },
+	};
+
 	return (
 		<Badge
 			size="sm"
 			color={meta.color}
 			variant="light"
+			styles={meta.darkText ? darkTextStyles : undefined}
 			leftSection={
 				<span
 					aria-hidden
@@ -110,13 +127,13 @@ const AudioLevelMeter = ({ level }: { level: number }) => {
 					<Box
 						key={h}
 						style={{
-							width: 3,
-							height: h,
-							borderRadius: 1,
 							backgroundColor:
 								i < active
 									? "var(--mantine-color-green-6)"
 									: "var(--mantine-color-gray-3)",
+							borderRadius: 1,
+							height: h,
+							width: 3,
 						}}
 					/>
 				))}
@@ -143,9 +160,8 @@ const FadingTranscript = ({ text }: { text: string }) => {
 	return (
 		<Text
 			size="sm"
-			c="dimmed"
 			lineClamp={2}
-			style={{ transition: "opacity 180ms ease", opacity: visible ? 1 : 0 }}
+			style={{ opacity: visible ? 1 : 0, transition: "opacity 180ms ease" }}
 		>
 			{shown}
 		</Text>
@@ -207,11 +223,7 @@ const LiveDuration = ({
 	}, [ticking]);
 	const label = durationLabel(conversation);
 	if (!label) return null;
-	return (
-		<Text size="xs" c="dimmed">
-			{label}
-		</Text>
-	);
+	return <Text size="xs">{label}</Text>;
 };
 
 // A deliberately vague, conservative "time to finish the transcription
@@ -242,7 +254,7 @@ const TranscriptionBadge = ({
 	if (conversation.transcription_status === "failing") return null;
 	if (conversation.transcription_status === "transcribing") {
 		return (
-			<Badge size="xs" color="blue" variant="light">
+			<Badge size="xs" color="primary" variant="light">
 				<Plural
 					value={conversation.pending_transcription}
 					one="Transcribing # clip"
@@ -268,21 +280,26 @@ const MonitorRow = ({
 	conversation,
 	to,
 	highlighted,
+	onLockedClick,
 }: {
 	conversation: MonitorConversation;
 	to: string | null;
 	highlighted?: boolean;
+	onLockedClick?: () => void;
 }) => {
 	const label = conversation.label?.trim() || t`Anonymous participant`;
 	const weakNetwork = isWeakNetwork(conversation);
 	const lowBattery = isLowBattery(conversation);
+	const isLocked = conversation.locked;
+	// Locked rows open the upgrade modal; unlocked rows link to the conversation.
+	const clickable = isLocked || !!to;
 
 	const card = (
 		<Card
 			withBorder
 			p="sm"
-			radius="md"
-			className={`transition-colors ${to ? "hover:!border-primary-400 cursor-pointer" : ""} ${highlighted ? "!border-primary-500 ring-2 ring-primary-200" : ""}`}
+			radius="sm"
+			className={`transition-colors ${clickable ? "hover:!border-primary-400 cursor-pointer" : ""} ${highlighted ? "!border-primary-500 ring-2 ring-primary-200" : ""}`}
 		>
 			<Stack gap={8}>
 				<Group justify="space-between" align="center" wrap="nowrap">
@@ -355,27 +372,53 @@ const MonitorRow = ({
 					</Group>
 				</Group>
 
-				{conversation.latest_transcript && (
-					<FadingTranscript text={conversation.latest_transcript} />
+				{isLocked ? (
+					<LockedTranscriptOverlay compact variant="transcript" />
+				) : (
+					conversation.latest_transcript && (
+						<FadingTranscript text={conversation.latest_transcript} />
+					)
 				)}
 
 				<Group gap="md" align="center">
-					<Text size="xs" c="dimmed">
+					<Text size="xs">
 						<Trans>Last activity {lastActivityLabel(conversation)}</Trans>
 					</Text>
 					<LiveDuration conversation={conversation} />
 				</Group>
 
-				{conversation.has_error && conversation.error_message && (
-					<Tooltip label={conversation.error_message} multiline maw={360} withArrow>
-						<Text size="xs" c="red.7" lineClamp={2}>
-							{conversation.error_message}
-						</Text>
-					</Tooltip>
+				{conversation.has_error && (
+					<Text size="xs" c="red.7">
+						<Trans>
+							Some of the recent audio couldn't be transcribed. The recording is
+							saved.
+						</Trans>
+					</Text>
 				)}
 			</Stack>
 		</Card>
 	);
+
+	// Locked rows open the upgrade modal instead of the (also-gated) detail view.
+	if (isLocked) {
+		return (
+			<Box
+				role="button"
+				tabIndex={0}
+				className="block"
+				aria-label={t`Locked conversation, upgrade to view`}
+				onClick={onLockedClick}
+				onKeyDown={(event) => {
+					if (event.key === "Enter" || event.key === " ") {
+						event.preventDefault();
+						onLockedClick?.();
+					}
+				}}
+			>
+				{card}
+			</Box>
+		);
+	}
 
 	if (!to) return card;
 	return (
@@ -430,10 +473,12 @@ const TagGroupSection = ({
 	group,
 	base,
 	highlightedConversationId,
+	onLockedClick,
 }: {
 	group: TagGroup;
 	base: string | null;
 	highlightedConversationId?: string | null;
+	onLockedClick?: () => void;
 }) => {
 	const [opened, { toggle }] = useDisclosure(true);
 	const [expanded, setExpanded] = useState(false);
@@ -448,25 +493,32 @@ const TagGroupSection = ({
 				gap="xs"
 				align="center"
 				className="cursor-pointer select-none"
+				role="button"
+				tabIndex={0}
+				aria-expanded={opened}
 				onClick={toggle}
+				onKeyDown={(event) => {
+					if (event.key === "Enter" || event.key === " ") {
+						if (event.key === " ") event.preventDefault();
+						toggle();
+					}
+				}}
 			>
 				<ActionIcon variant="subtle" color="gray" size="sm" aria-hidden>
 					<CaretRightIcon
 						size={14}
 						style={{
-							transition: "transform 150ms ease",
 							transform: opened ? "rotate(90deg)" : "none",
+							transition: "transform 150ms ease",
 						}}
 					/>
 				</ActionIcon>
-				<Text size="xs" fw={600} tt="uppercase" c="dimmed">
+				<Text size="xs" fw={600} tt="uppercase">
 					{group.label}
 				</Text>
-				<Text size="xs" c="dimmed">
-					{group.items.length}
-				</Text>
+				<Text size="xs">{group.items.length}</Text>
 				{group.liveCount > 0 && (
-					<Badge size="xs" color="red" variant="light">
+					<Badge size="xs" color="primary" variant="light">
 						<Plural value={group.liveCount} one="# live" other="# live" />
 					</Badge>
 				)}
@@ -479,14 +531,22 @@ const TagGroupSection = ({
 							conversation={conversation}
 							to={base ? `${base}/conversations/${conversation.id}` : null}
 							highlighted={conversation.id === highlightedConversationId}
+							onLockedClick={onLockedClick}
 						/>
 					))}
 					{overflow > 0 && (
 						<Text
 							size="xs"
-							c="dimmed"
+							role="button"
+							tabIndex={0}
 							className="cursor-pointer select-none pl-1 hover:underline"
 							onClick={() => setExpanded(true)}
+							onKeyDown={(event) => {
+								if (event.key === "Enter" || event.key === " ") {
+									if (event.key === " ") event.preventDefault();
+									setExpanded(true);
+								}
+							}}
 						>
 							<Trans>Show {overflow} more</Trans>
 						</Text>
@@ -514,13 +574,44 @@ export const LiveMonitorSection = ({
 	hideHeader?: boolean;
 }) => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
-	const { conversations, summary } = useConversationMonitor(projectId);
+	const { workspace } = useWorkspace();
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	const { conversations, summary, isLoading, error, isStreaming } =
+		useConversationMonitor(projectId);
 	const groups = useMemo(() => groupByTag(conversations), [conversations]);
 	// Rows link to the conversation detail page when we know the workspace.
 	const base =
-		workspaceId && projectId
-			? `/w/${workspaceId}/projects/${projectId}`
-			: null;
+		workspaceId && projectId ? `/w/${workspaceId}/projects/${projectId}` : null;
+
+	// First load: spinner on the dedicated page, nothing when embedded (no flicker).
+	if (isLoading && summary.total === 0) {
+		if (!standalone) return null;
+		return (
+			<Card withBorder p="lg" radius="sm">
+				<Stack align="center">
+					<DembraneLoadingSpinner isLoading showMessage={false} />
+				</Stack>
+			</Card>
+		);
+	}
+
+	// Both channels failed with no data: say so instead of a misleading empty state.
+	if (error && summary.total === 0) {
+		if (!standalone) return null;
+		return (
+			<Card withBorder p="lg" radius="sm">
+				<Stack gap="xs" align="center">
+					<WarningCircleIcon size={24} />
+					<Text size="sm" fw={500}>
+						<Trans>Couldn't load live activity</Trans>
+					</Text>
+					<Text size="xs" ta="center" maw={420}>
+						<Trans>The connection dropped. Retrying automatically.</Trans>
+					</Text>
+				</Stack>
+			</Card>
+		);
+	}
 
 	if (summary.total === 0) {
 		if (!standalone) return null;
@@ -531,7 +622,7 @@ export const LiveMonitorSection = ({
 					<Text size="sm" fw={500}>
 						<Trans>No recent activity</Trans>
 					</Text>
-					<Text size="xs" c="dimmed" ta="center" maw={420}>
+					<Text size="xs" ta="center" maw={420}>
 						<Trans>
 							Live recordings, transcription progress, and errors show up here
 							as participants start recording in the portal.
@@ -543,77 +634,121 @@ export const LiveMonitorSection = ({
 	}
 
 	return (
-		<Stack gap="lg">
-			{!hideHeader && (
-			<Group justify="space-between" align="center" gap="sm">
-				<Group gap="xs" align="center">
-					<BroadcastIcon size={16} />
-					<Text size="xs" c="dimmed" tt="uppercase">
-						<Trans>Live monitoring</Trans>
-					</Text>
-				</Group>
-				<Group gap="xs" align="center">
-					<Badge size="sm" color="primary" variant="light">
-						<Plural value={summary.live} one="# live" other="# live" />
-					</Badge>
-					{summary.not_receiving > 0 && (
-						<Badge
-							size="sm"
-							color="orange"
-							variant="filled"
-							leftSection={<WarningCircleIcon size={12} />}
-						>
-							<Plural
-								value={summary.not_receiving}
-								one="# audio stopped"
-								other="# audio stopped"
-							/>
-						</Badge>
-					)}
-					{summary.transcribing > 0 && (
-						<Badge size="sm" color="blue" variant="light">
-							<Plural
-								value={summary.transcribing}
-								one="# transcribing"
-								other="# transcribing"
-							/>
-						</Badge>
-					)}
-					{summary.with_errors > 0 && (
-						<Badge size="sm" color="red" variant="light">
-							<Plural
-								value={summary.with_errors}
-								one="# with errors"
-								other="# with errors"
-							/>
-						</Badge>
-					)}
-					{catchUpLabel(summary.catch_up_eta_seconds) && (
-						<Tooltip
-							label={t`Rough estimate to finish transcribing the backlog`}
-							withArrow
-						>
-							<Badge size="sm" color="orange" variant="light">
-								<Trans>
-									catch up {catchUpLabel(summary.catch_up_eta_seconds)}
-								</Trans>
-							</Badge>
-						</Tooltip>
-					)}
-				</Group>
-			</Group>
-			)}
-
+		<>
 			<Stack gap="lg">
-				{groups.map((group) => (
-					<TagGroupSection
-						key={group.key}
-						group={group}
-						base={base}
-						highlightedConversationId={highlightedConversationId}
-					/>
-				))}
+				{!hideHeader && (
+					<Group justify="space-between" align="center" gap="sm">
+						<Group gap="xs" align="center">
+							<BroadcastIcon size={16} />
+							<Text size="xs" tt="uppercase">
+								<Trans>Live monitoring</Trans>
+							</Text>
+						</Group>
+						<Group gap="xs" align="center">
+							{!isStreaming && (
+								<Tooltip
+									label={t`Live stream disconnected. Updating on a slower poll until it reconnects.`}
+									withArrow
+								>
+									<Badge size="sm" color="orange" variant="light">
+										<Trans>Reconnecting</Trans>
+									</Badge>
+								</Tooltip>
+							)}
+							<Badge size="sm" color="primary" variant="light">
+								<Plural value={summary.live} one="# live" other="# live" />
+							</Badge>
+							{summary.offline > 0 && (
+								<Badge
+									size="sm"
+									color="salmon"
+									variant="light"
+									styles={{
+										label: { color: "var(--app-text)" },
+										section: { color: "var(--app-text)" },
+									}}
+									leftSection={<WifiSlashIcon size={12} />}
+								>
+									<Plural
+										value={summary.offline}
+										one="# offline"
+										other="# offline"
+									/>
+								</Badge>
+							)}
+							{summary.not_receiving > 0 && (
+								<Badge
+									size="sm"
+									color="orange"
+									variant="filled"
+									leftSection={<WarningCircleIcon size={12} />}
+								>
+									<Plural
+										value={summary.not_receiving}
+										one="# audio stopped"
+										other="# audio stopped"
+									/>
+								</Badge>
+							)}
+							{summary.transcribing > 0 && (
+								<Badge size="sm" color="primary" variant="light">
+									<Plural
+										value={summary.transcribing}
+										one="# transcribing"
+										other="# transcribing"
+									/>
+								</Badge>
+							)}
+							{summary.with_errors > 0 && (
+								<Badge size="sm" color="red" variant="light">
+									<Plural
+										value={summary.with_errors}
+										one="# with errors"
+										other="# with errors"
+									/>
+								</Badge>
+							)}
+							{catchUpLabel(summary.catch_up_eta_seconds) && (
+								<Tooltip
+									label={t`Rough estimate to finish transcribing the backlog`}
+									withArrow
+								>
+									<Badge size="sm" color="orange" variant="light">
+										<Trans>
+											catch up {catchUpLabel(summary.catch_up_eta_seconds)}
+										</Trans>
+									</Badge>
+								</Tooltip>
+							)}
+						</Group>
+					</Group>
+				)}
+
+				<Stack gap="lg">
+					{groups.map((group) => (
+						<TagGroupSection
+							key={group.key}
+							group={group}
+							base={base}
+							highlightedConversationId={highlightedConversationId}
+							onLockedClick={upgradeHandlers.open}
+						/>
+					))}
+				</Stack>
 			</Stack>
-		</Stack>
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				currentTier={(workspace?.tier ?? "free") as Tier}
+				requiredTier={SELLABLE_TIER}
+				featureName="Transcripts"
+				benefit={t`Upgrade your workspace to view transcripts for new conversations.`}
+				canRequestUpgrade={
+					workspace?.role === "admin" || workspace?.role === "owner"
+				}
+				workspaceId={workspace?.id ?? workspaceId ?? ""}
+				source="transcript_locked"
+			/>
+		</>
 	);
 };

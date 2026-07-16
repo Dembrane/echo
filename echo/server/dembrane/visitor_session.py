@@ -27,6 +27,9 @@ VISITOR_TTL_SECONDS = 45
 _VISITOR_KEY_PREFIX = "visitor:"
 _VISITOR_INDEX_PREFIX = "monitor:visitors:"
 _VISITOR_INDEX_TTL_SECONDS = 2100
+# Cap the per-project visitor index so a public flood of unique ids can't grow it
+# unbounded (which would bloat the host-side read). Well above any real crowd.
+_MAX_VISITOR_INDEX_MEMBERS = 2000
 # visitor_id -> conversation_id, written at initiate. Lets the funnel drop a
 # dot the instant it graduates into a conversation, before any recording ping.
 _LINK_KEY_PREFIX = "visitor_conversation:"
@@ -134,8 +137,11 @@ async def mark_visitor_seen(
 
     stamp = score if score is not None else (now or datetime.now(timezone.utc)).timestamp()
     await client.set(key, json.dumps(payload), ex=VISITOR_TTL_SECONDS)
-    await client.zadd(_index_key(project_id), {visitor_id: stamp})
-    await client.expire(_index_key(project_id), _VISITOR_INDEX_TTL_SECONDS)
+    index_key = _index_key(project_id)
+    await client.zadd(index_key, {visitor_id: stamp})
+    await client.expire(index_key, _VISITOR_INDEX_TTL_SECONDS)
+    # Keep only the newest _MAX_VISITOR_INDEX_MEMBERS; drop the oldest beyond it.
+    await client.zremrangebyrank(index_key, 0, -(_MAX_VISITOR_INDEX_MEMBERS + 1))
 
 
 async def get_active_visitor_ids(project_id: str, *, min_score: float) -> list[str]:

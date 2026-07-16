@@ -24,18 +24,22 @@ import Cookies from "js-cookie";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
-
+import { ENABLE_MONITOR } from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import {
 	finishConversation,
-	type ParticipantPingTelemetry,
 	pingConversation,
+	pingConversationLeft,
 } from "@/lib/api";
-import { getVisitorId } from "@/lib/visitorId";
+import {
+	readBatteryTelemetry,
+	readNetworkTelemetry,
+} from "@/lib/deviceTelemetry";
 import { testId } from "@/lib/testUtils";
+import { getVisitorId } from "@/lib/visitorId";
 import { I18nLink } from "../common/i18nLink";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
 import { toast } from "../common/Toaster";
@@ -56,39 +60,6 @@ import { useConversationArtefacts } from "./verify/hooks";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
-
-// Best-effort device telemetry for the host monitor. The Network Information
-// and Battery Status APIs are not on every browser (Safari/Firefox lack
-// Battery entirely), so both degrade to `undefined` and are simply omitted.
-const readNetworkTelemetry = (): ParticipantPingTelemetry["network"] => {
-	const nav = navigator as Navigator & {
-		connection?: { effectiveType?: string; downlink?: number; rtt?: number };
-	};
-	const conn = nav.connection;
-	const online = typeof navigator.onLine === "boolean" ? navigator.onLine : undefined;
-	if (!conn && online === undefined) return undefined;
-	return {
-		online,
-		effective_type: conn?.effectiveType,
-		downlink: conn?.downlink,
-		rtt: conn?.rtt,
-	};
-};
-
-const readBatteryTelemetry = async (): Promise<
-	ParticipantPingTelemetry["battery"]
-> => {
-	const nav = navigator as Navigator & {
-		getBattery?: () => Promise<{ level: number; charging: boolean }>;
-	};
-	if (typeof nav.getBattery !== "function") return undefined;
-	try {
-		const battery = await nav.getBattery();
-		return { level: battery.level, charging: battery.charging };
-	} catch {
-		return undefined;
-	}
-};
 
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
@@ -268,10 +239,19 @@ export const ParticipantConversationAudio = () => {
 	// session the moment it is initiated, and reflects pauses / verify without
 	// waiting for the next chunk. Best-effort; failures never disrupt recording.
 	useEffect(() => {
-		if (!conversationId) return;
+		// Monitor off: no host reads these, so don't collect/beacon telemetry.
+		if (!conversationId || !ENABLE_MONITOR) return;
 		let cancelled = false;
 		const sendPing = async () => {
-			const battery = await readBatteryTelemetry();
+			// Stamp before the battery await so a ping delayed by getBattery keeps
+			// its initiation time and can't out-order a later "left" beacon.
+			const client_ts = Date.now();
+			// Backgrounded/locked: skip the extra device reads (battery is an
+			// async native call, network reads sensor state) to avoid waking the
+			// device just to report telemetry nobody is looking at. Still send
+			// the lightweight state ping so the monitor sees "backgrounded".
+			const hidden = document.hidden;
+			const battery = hidden ? undefined : await readBatteryTelemetry();
 			if (cancelled) return;
 			const rawLevel = getAudioLevelRef.current?.();
 			const audio_level =
@@ -279,13 +259,14 @@ export const ParticipantConversationAudio = () => {
 					? Math.round(Math.min(1, Math.max(0, rawLevel)) * 100) / 100
 					: undefined;
 			void pingConversation(conversationId, {
-				project_id: projectId,
-				visitor_id: projectId ? getVisitorId(projectId) : undefined,
-				state: participantState,
-				mode: "voice",
 				audio_level,
-				network: readNetworkTelemetry(),
 				battery,
+				client_ts,
+				mode: "voice",
+				network: hidden ? undefined : readNetworkTelemetry(),
+				project_id: projectId,
+				state: participantState,
+				visitor_id: projectId ? getVisitorId(projectId) : undefined,
 			});
 		};
 		void sendPing();
@@ -297,6 +278,16 @@ export const ParticipantConversationAudio = () => {
 			clearInterval(interval);
 		};
 	}, [conversationId, projectId, participantState]);
+
+	// Terminal "left" beacon on tab close (fires on real unload, not SPA
+	// navigation), so a graceful exit shows as "left" on the host monitor
+	// instead of aging paused -> idle -> finished over minutes.
+	useEffect(() => {
+		if (!conversationId || !ENABLE_MONITOR) return;
+		const onPageHide = () => pingConversationLeft(conversationId, projectId);
+		window.addEventListener("pagehide", onPageHide);
+		return () => window.removeEventListener("pagehide", onPageHide);
+	}, [conversationId, projectId]);
 
 	// Monitor conversation status during recording - handle deletion mid-recording
 	useEffect(() => {

@@ -25,6 +25,16 @@ from dembrane.redis_async import get_redis_client
 # few missed pings or a brief network gap without flapping the live state.
 LIVENESS_TTL_SECONDS = 90
 
+# Non-capture states (stopped, moved past recording, backgrounded, or left) are
+# held far longer than a normal ping so the monitor keeps showing the calm state
+# until the catch-up finishes the conversation, instead of decaying into a
+# misleading "offline" once the 90s TTL lapses. ~30-min window; is_finished
+# overrides it once catch-up runs. Active-capture states keep the short TTL.
+STICKY_STATE_TTL_SECONDS = 30 * 60
+_STICKY_STATES = frozenset(
+    {"paused", "finishing", "verifying", "refining", "text", "backgrounded", "left"}
+)
+
 _LIVENESS_KEY_PREFIX = "conversation_liveness:"
 
 # Lifecycle states the portal may report. The monitor renders unknown values
@@ -42,13 +52,22 @@ VALID_PARTICIPANT_STATES = frozenset(
         "finished",
         "text",  # text-mode capture
         "backgrounded",  # tab hidden / phone locked (mic suspended)
+        "left",  # closed the tab without finishing (close-beacon)
     }
 )
 
 # Telemetry fields we persist beyond "seen". Everything is optional.
 # `audio_level` is the participant's live mic input level (0..1 RMS) — proof
 # that audio is actually flowing, and a way to spot a silent/muted mic.
-_TELEMETRY_FIELDS = ("state", "mode", "screen", "network", "battery", "audio_level")
+_TELEMETRY_FIELDS = (
+    "state",
+    "mode",
+    "screen",
+    "network",
+    "battery",
+    "audio_level",
+    "client_ts",
+)
 
 
 def _key(conversation_id: str) -> str:
@@ -121,8 +140,35 @@ async def mark_conversation_seen(
             value = telemetry.get(field)
             if value is not None:
                 payload[field] = value
+    ttl = (
+        STICKY_STATE_TTL_SECONDS
+        if payload.get("state") in _STICKY_STATES
+        else LIVENESS_TTL_SECONDS
+    )
     client = await get_redis_client()
-    await client.set(_key(conversation_id), json.dumps(payload), ex=LIVENESS_TTL_SECONDS)
+    key = _key(conversation_id)
+
+    # Drop an out-of-order ping so a late one (e.g. an in-flight recording ping)
+    # can't clobber a newer state such as a terminal "left". Ordering is by the
+    # client-stamped send time; a genuine later resume still wins (newer ts).
+    incoming_ts = payload.get("client_ts")
+    if isinstance(incoming_ts, int):
+        try:
+            existing_raw = await client.get(key)
+            if existing_raw:
+                text = (
+                    existing_raw.decode("utf-8")
+                    if isinstance(existing_raw, (bytes, bytearray))
+                    else str(existing_raw)
+                )
+                existing = json.loads(text)
+                existing_ts = existing.get("client_ts") if isinstance(existing, dict) else None
+                if isinstance(existing_ts, int) and incoming_ts < existing_ts:
+                    return
+        except Exception:  # noqa: BLE001
+            pass
+
+    await client.set(key, json.dumps(payload), ex=ttl)
 
 
 async def get_telemetry_many(

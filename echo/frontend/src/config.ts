@@ -185,6 +185,9 @@ export const ENABLE_AGENTIC_CHAT = byEnv({ production: false }, true);
 // environments just never render or download it. Widen to more envs by adding
 // keys here (e.g. local/testing) when ready to roll out further.
 export const ENABLE_AGENTATION = byEnv({ next: true }, false);
+// Host live-monitor (page, sidebar item, project-home block) and the portal
+// beacons that feed it. Kill switch: flip to false / byEnv to disable a env.
+export const ENABLE_MONITOR = true;
 
 export const getProductFeedbackUrl = (locale = "en-US") =>
 	`https://portal.dembrane.com/${locale}/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start?theme=dm-sans`;
