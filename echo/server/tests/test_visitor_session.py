@@ -68,7 +68,11 @@ def fake_redis(monkeypatch) -> _FakeRedis:
 
 
 def _run(coro):
-    return asyncio.new_event_loop().run_until_complete(coro)
+    loop = asyncio.new_event_loop()
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
 
 
 def test_mark_and_read_visitor(fake_redis: _FakeRedis) -> None:

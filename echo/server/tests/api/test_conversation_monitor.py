@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from types import SimpleNamespace
 from typing import Any
 from datetime import datetime, timezone, timedelta
@@ -7,7 +8,7 @@ from contextlib import asynccontextmanager
 
 import pytest
 from httpx import AsyncClient, ASGITransport
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 import dembrane.api.v2.bff.conversations as conv_bff
 from dembrane.api.dependency_auth import DirectusSession, require_directus_session
@@ -762,3 +763,268 @@ async def test_monitor_endpoint_empty_skips_count_query(monkeypatch) -> None:
     }
     # No conversation ids → no count queries.
     assert len(fake_directus.queries) == 1
+
+
+# ── snapshot cache: hit path + single-flight lock ─────────────────────
+
+
+class _FakeCacheRedis:
+    """Minimal in-memory stand-in for the Redis calls the snapshot cache
+    makes (get/set/delete). Behaves like a real cache: a value written by
+    `set` is returned by a later `get`."""
+
+    def __init__(self) -> None:
+        self.store: dict[str, Any] = {}
+
+    async def get(self, key: str) -> Any:
+        return self.store.get(key)
+
+    async def set(self, key: str, value: Any, ex: Any = None, nx: Any = None) -> bool:  # noqa: ARG002
+        if nx and key in self.store:
+            return False
+        self.store[key] = value
+        return True
+
+    async def delete(self, *keys: str) -> int:
+        removed = 0
+        for k in keys:
+            if k in self.store:
+                del self.store[k]
+                removed += 1
+        return removed
+
+
+@pytest.mark.asyncio
+async def test_snapshot_cache_hit_skips_recompute(monkeypatch) -> None:
+    fake_redis = _FakeCacheRedis()
+
+    async def _fake_redis_client() -> _FakeCacheRedis:
+        return fake_redis
+
+    monkeypatch.setattr(conv_bff, "get_redis_client", _fake_redis_client)
+
+    calls = {"n": 0}
+
+    async def _fake_gather(project_id: str, window_seconds: int) -> dict:  # noqa: ARG001
+        calls["n"] += 1
+        return {"conversations": [], "summary": {}, "live_window_seconds": window_seconds}
+
+    monkeypatch.setattr(conv_bff, "gather_project_monitor", _fake_gather)
+
+    first = await conv_bff.get_project_monitor_snapshot("p-cache", 45)
+    assert calls["n"] == 1
+
+    # Second call is a cache hit: gather_project_monitor must not run again.
+    second = await conv_bff.get_project_monitor_snapshot("p-cache", 45)
+    assert calls["n"] == 1
+    assert second == first
+
+
+class _LockHeldRedis:
+    """Simulates another worker already holding the single-flight lock: `set`
+    with nx=True always fails, and `get` on the snapshot key returns the
+    winner's cached result only after a couple of polls, so the caller's wait
+    loop (not a fresh `gather_project_monitor` call) is what returns data."""
+
+    def __init__(self, payload_json: str) -> None:
+        self._payload_json = payload_json
+        self._snapshot_gets = 0
+
+    async def get(self, key: str) -> Any:
+        if key.endswith(":lock"):
+            return None
+        self._snapshot_gets += 1
+        # First couple of polls still miss; the winner "finishes" after that.
+        if self._snapshot_gets <= 2:
+            return None
+        return self._payload_json
+
+    async def set(self, key: str, value: Any, ex: Any = None, nx: Any = None) -> bool:  # noqa: ARG002
+        if nx:
+            return False
+        return True
+
+    async def delete(self, *keys: str) -> int:  # noqa: ARG002
+        return 0
+
+
+@pytest.mark.asyncio
+async def test_snapshot_single_flight_reuses_lock_winner_result(monkeypatch) -> None:
+    import json as _json
+
+    payload = {"conversations": [], "summary": {}, "live_window_seconds": 45}
+    fake_redis = _LockHeldRedis(_json.dumps(payload))
+
+    async def _fake_redis_client() -> _LockHeldRedis:
+        return fake_redis
+
+    monkeypatch.setattr(conv_bff, "get_redis_client", _fake_redis_client)
+    # Speed up the poll loop so the test doesn't sit on the real wait window.
+    monkeypatch.setattr(conv_bff, "_MONITOR_SNAPSHOT_WAIT_INTERVAL_SECONDS", 0.01)
+    monkeypatch.setattr(conv_bff, "_MONITOR_SNAPSHOT_WAIT_SECONDS", 1.0)
+
+    calls = {"n": 0}
+
+    async def _fake_gather(project_id: str, window_seconds: int) -> dict:  # noqa: ARG001
+        calls["n"] += 1
+        return payload
+
+    monkeypatch.setattr(conv_bff, "gather_project_monitor", _fake_gather)
+
+    result = await conv_bff.get_project_monitor_snapshot("p-lock", 45)
+
+    assert result == payload
+    # The lock loser never computes its own snapshot — it picked up the
+    # lock-winner's cached result while waiting.
+    assert calls["n"] == 0
+
+
+# ── SSE stream endpoint: access gate + headers ────────────────────────
+#
+# httpx's ASGITransport buffers the whole response before returning (it
+# isn't a true streaming transport), so it can't exercise an intentionally
+# infinite SSE generator without hanging. Instead we call the route
+# coroutine directly (bypassing FastAPI's DI, which only matters for the
+# `Query(...)` defaults — both params are always passed explicitly below)
+# and drive its `StreamingResponse.body_iterator` by hand, pulling exactly
+# one event with a bounded `wait_for` and then closing it, which runs the
+# generator's `finally` cleanup (pub/sub unsubscribe).
+
+
+class _StreamStubPubSub:
+    async def subscribe(self, channel: str) -> None:  # noqa: ARG002
+        return None
+
+    async def get_message(self, *, ignore_subscribe_messages: bool = True, timeout: float = 0) -> None:  # noqa: ARG002
+        await asyncio.sleep(0)
+        return None
+
+    async def unsubscribe(self, channel: str) -> None:  # noqa: ARG002
+        return None
+
+    async def aclose(self) -> None:
+        return None
+
+
+class _StreamStubRedis:
+    """Backs the snapshot cache used by the SSE stream endpoint, plus a stub
+    pub/sub."""
+
+    def __init__(self) -> None:
+        self.store: dict[str, Any] = {}
+
+    async def get(self, key: str) -> Any:
+        return self.store.get(key)
+
+    async def set(self, key: str, value: Any, ex: Any = None, nx: Any = None) -> bool:  # noqa: ARG002
+        if nx and key in self.store:
+            return False
+        self.store[key] = value
+        return True
+
+    async def delete(self, *keys: str) -> int:
+        removed = 0
+        for k in keys:
+            if k in self.store:
+                del self.store[k]
+                removed += 1
+        return removed
+
+    def pubsub(self) -> _StreamStubPubSub:
+        return _StreamStubPubSub()
+
+
+class _FakeStreamRequest:
+    """Stand-in for the FastAPI `Request` the endpoint checks each loop tick;
+    never reports a disconnect so the generator only stops when we close it."""
+
+    async def is_disconnected(self) -> bool:
+        return False
+
+
+def _patch_monitor_stream_deps(monkeypatch, *, deny_access: bool = False) -> _StreamStubRedis:
+    fake_directus = _AsyncFakeDirectus([], {})
+    monkeypatch.setattr(conv_bff, "async_directus", fake_directus)
+
+    async def _fake_telemetry(conversation_ids: list[str]) -> dict:  # noqa: ARG001
+        return {}
+
+    monkeypatch.setattr(conv_bff, "get_telemetry_many", _fake_telemetry)
+
+    async def _fake_active(project_id: str, *, min_score: float) -> list:  # noqa: ARG001
+        return []
+
+    monkeypatch.setattr(conv_bff, "get_active_conversation_ids", _fake_active)
+
+    async def _fake_active_visitors(project_id: str, *, min_score: float) -> list:  # noqa: ARG001
+        return []
+
+    async def _fake_visitors_many(project_id: str, visitor_ids: list) -> dict:  # noqa: ARG001
+        return {}
+
+    monkeypatch.setattr(conv_bff, "get_active_visitor_ids", _fake_active_visitors)
+    monkeypatch.setattr(conv_bff, "get_visitors_many", _fake_visitors_many)
+
+    fake_redis = _StreamStubRedis()
+
+    async def _fake_redis_client() -> _StreamStubRedis:
+        return fake_redis
+
+    monkeypatch.setattr(conv_bff, "get_redis_client", _fake_redis_client)
+
+    if deny_access:
+
+        async def _fake_resolve_project_access(project_id: str, auth: Any) -> Any:  # noqa: ARG001
+            raise HTTPException(status_code=403, detail="Not allowed")
+
+    else:
+
+        async def _fake_resolve_project_access(project_id: str, auth: Any) -> Any:  # noqa: ARG001
+            return SimpleNamespace(require=lambda _policy: None, role="owner", project={})
+
+    monkeypatch.setattr(conv_bff, "resolve_project_access", _fake_resolve_project_access)
+
+    return fake_redis
+
+
+def _stream_auth() -> DirectusSession:
+    return DirectusSession(user_id="user-1", is_admin=False, access_token="t", client=None)
+
+
+@pytest.mark.asyncio
+async def test_monitor_stream_requires_access(monkeypatch) -> None:
+    _patch_monitor_stream_deps(monkeypatch, deny_access=True)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await conv_bff.monitor_conversations_stream(
+            request=_FakeStreamRequest(),
+            auth=_stream_auth(),
+            project_id="p-1",
+            window_seconds=45,
+        )
+    assert exc_info.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_monitor_stream_returns_sse_headers_and_first_event(monkeypatch) -> None:
+    _patch_monitor_stream_deps(monkeypatch)
+
+    response = await conv_bff.monitor_conversations_stream(
+        request=_FakeStreamRequest(),
+        auth=_stream_auth(),
+        project_id="p-1",
+        window_seconds=45,
+    )
+
+    assert response.media_type == "text/event-stream"
+    assert response.headers["cache-control"] == "no-cache"
+    assert response.headers["connection"] == "keep-alive"
+    assert response.headers["x-accel-buffering"] == "no"
+
+    # Pull exactly one event off the (otherwise infinite) generator, bounded
+    # so a regression that blocks forever fails the test instead of hanging.
+    first_chunk = await asyncio.wait_for(response.body_iterator.__anext__(), timeout=2)
+    assert first_chunk.startswith("event: snapshot\ndata:")
+
+    # Closing the generator runs its `finally` (pub/sub cleanup) without error.
+    await response.body_iterator.aclose()
