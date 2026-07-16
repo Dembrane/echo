@@ -641,6 +641,7 @@ async def summarize_conversation(
                 "filter": {"id": {"_eq": conversation_id}},
                 "fields": [
                     "id",
+                    "title",
                     "project_id.id",
                     "project_id.language",
                     "project_id.enable_ai_title_and_tags",
@@ -649,6 +650,9 @@ async def summarize_conversation(
             },
         },
     )
+
+    # If the user has manually set/edited a custom title, pass it down as optional summary context.
+    conversation_title = conversation_data_result[0].get("title") if conversation_data_result else None
 
     awaitable_list = [
         get_conversation_transcript(conversation_id, auth),
@@ -685,6 +689,7 @@ async def summarize_conversation(
             language if language else "en",
             project_context_str,
             verified_artifacts,
+            conversation_title,
         )
 
         # Prepare update data with summary
