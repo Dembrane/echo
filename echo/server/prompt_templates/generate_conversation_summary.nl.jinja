@@ -1,5 +1,12 @@
 U krijgt een reeks citaten uit een gesprekstranscript in chronologische volgorde.
 
+{% if conversation_title %}
+<conversation_title>
+De gebruiker/deelnemers hebben de titel van dit gesprek expliciet ingesteld op:
+{{ conversation_title }}
+</conversation_title>
+{% endif %}
+
 <quotes>
 {{ quote_text_joined }}
 </quotes>
