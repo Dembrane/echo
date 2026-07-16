@@ -801,7 +801,7 @@ async def confirm_chunk_upload(
                     )
                     await capture_event(
                         conversation_id,
-                        "server_chunk_not_found_in_s3",
+                        "server_chunk_missing_in_s3",
                         {"chunk_id": body.chunk_id},
                     )
                     raise HTTPException(
@@ -844,7 +844,7 @@ async def confirm_chunk_upload(
             )
             await capture_event(
                 conversation_id,
-                "server_chunk_upload_bad",
+                "server_chunk_upload_rejected",
                 {"chunk_id": body.chunk_id, "file_size": file_size},
             )
             # Update the returned chunk to include the error
