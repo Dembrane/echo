@@ -1,5 +1,12 @@
 You are given a series of quotes from a conversation transcript in chronological order.
 
+{% if conversation_title %}
+<conversation_title>
+The user/participants have explicitly set the title of this conversation to:
+{{ conversation_title }}
+</conversation_title>
+{% endif %}
+
 <quotes>
 {{ quote_text_joined }}
 </quotes>

@@ -1,5 +1,12 @@
 Ihnen wird eine Reihe von Zitaten aus einem Gesprächstranskript in chronologischer Reihenfolge vorgelegt.
 
+{% if conversation_title %}
+<conversation_title>
+Der Benutzer/die Teilnehmer haben den Titel dieses Gesprächs explizit festgelegt auf:
+{{ conversation_title }}
+</conversation_title>
+{% endif %}
+
 <quotes>
 {{ quote_text_joined }}
 </quotes>

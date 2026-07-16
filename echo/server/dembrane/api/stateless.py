@@ -31,6 +31,7 @@ def generate_summary(
     language: str | None,
     project_context: str | None = None,
     verified_artifacts: list[str] | None = None,
+    conversation_title: str | None = None,
 ) -> str:
     """
     Generate a summary of the transcript using LangChain and a custom API endpoint.
@@ -40,6 +41,7 @@ def generate_summary(
         language (str | None): The language of the transcript.
         project_context (str | None): Optional project context to include.
         verified_artifacts (list[str] | None): Optional list of verified artifacts.
+        conversation_title (str | None): Optional title of the conversation set by the user.
 
     Returns:
         str: The generated summary.
@@ -53,6 +55,7 @@ def generate_summary(
             "project_context": project_context,
             # Pass empty list instead of None for Jinja iteration safety
             "verified_artifacts": verified_artifacts or [],
+            "conversation_title": conversation_title,
         },
     )
 
