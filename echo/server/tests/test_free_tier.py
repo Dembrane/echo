@@ -287,3 +287,88 @@ class TestBuildFreeTierUsageBlock:
             primary_report_id=None,
         )
         assert block["active"] is False
+
+
+# ── live over-cap gate (workspace / project) ──────────────────────────
+
+
+class TestWorkspaceOverCapActive:
+    @pytest.mark.asyncio
+    async def test_paid_tier_short_circuits(self):
+        # Paid tiers are never hour-capped; no directus/cache read needed.
+        from dembrane.free_tier import workspace_over_cap_active
+
+        assert await workspace_over_cap_active("w1", "changemaker") is False
+
+    @pytest.mark.asyncio
+    async def test_none_tier_false(self):
+        from dembrane.free_tier import workspace_over_cap_active
+
+        assert await workspace_over_cap_active("w1", None) is False
+
+    @pytest.mark.asyncio
+    async def test_free_over_cap_true_when_hours_exceed(self):
+        # 2 hours of audio on Free (1-hour cap) -> over cap.
+        mock = _mock_directus(
+            {
+                "project": lambda _q: [{"id": "p1"}],
+                "conversation": lambda _q: [{"duration": 3600}, {"duration": 3600}],
+            }
+        )
+        with patch("dembrane.directus_async.async_directus", mock), patch(
+            "dembrane.cache_utils.cache_get_json", AsyncMock(return_value=None)
+        ), patch("dembrane.cache_utils.cache_set_json", AsyncMock()):
+            from dembrane.free_tier import workspace_over_cap_active
+
+            assert await workspace_over_cap_active("w1", "free") is True
+
+    @pytest.mark.asyncio
+    async def test_free_under_cap_false(self):
+        mock = _mock_directus(
+            {
+                "project": lambda _q: [{"id": "p1"}],
+                "conversation": lambda _q: [{"duration": 600}],  # 10 min
+            }
+        )
+        with patch("dembrane.directus_async.async_directus", mock), patch(
+            "dembrane.cache_utils.cache_get_json", AsyncMock(return_value=None)
+        ), patch("dembrane.cache_utils.cache_set_json", AsyncMock()):
+            from dembrane.free_tier import workspace_over_cap_active
+
+            assert await workspace_over_cap_active("w1", "free") is False
+
+    @pytest.mark.asyncio
+    async def test_cache_hit_skips_directus(self):
+        mock = _mock_directus({})
+        with patch("dembrane.directus_async.async_directus", mock), patch(
+            "dembrane.cache_utils.cache_get_json", AsyncMock(return_value=True)
+        ), patch("dembrane.cache_utils.cache_set_json", AsyncMock()):
+            from dembrane.free_tier import workspace_over_cap_active
+
+            assert await workspace_over_cap_active("w1", "free") is True
+            mock.get_items.assert_not_called()
+
+
+class TestResolveProjectGate:
+    @pytest.mark.asyncio
+    async def test_resolves_tier_and_over_cap(self):
+        # Used by the agentic monitor path (only project_id known). Resolves the
+        # tier through the workspace, then the live over-cap gate.
+        mock = _mock_directus(
+            {
+                "project": lambda _q: [{"id": "p1"}],
+                "conversation": lambda _q: [{"duration": 7200}],  # 2h -> over cap
+            }
+        )
+        mock.get_item = AsyncMock(return_value={"id": "p1", "workspace_id": "w1"})
+        with patch("dembrane.directus_async.async_directus", mock), patch(
+            "dembrane.billing_account.resolve_workspace_tier",
+            AsyncMock(return_value="free"),
+        ), patch(
+            "dembrane.cache_utils.cache_get_json", AsyncMock(return_value=None)
+        ), patch("dembrane.cache_utils.cache_set_json", AsyncMock()):
+            from dembrane.free_tier import resolve_project_gate
+
+            tier, over_cap = await resolve_project_gate("p1")
+            assert tier == "free"
+            assert over_cap is True

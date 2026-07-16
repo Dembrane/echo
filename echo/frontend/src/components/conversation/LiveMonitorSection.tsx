@@ -24,11 +24,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
 import { I18nLink } from "@/components/common/i18nLink";
+import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
 	type MonitorConversation,
 	type ParticipantState,
 	useConversationMonitor,
 } from "@/hooks/useConversationMonitor";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 
 // How many rows to render per tag group before collapsing the rest behind a
 // "show more" — keeps the page calm and bounded even for a busy tag.
@@ -276,21 +280,26 @@ const MonitorRow = ({
 	conversation,
 	to,
 	highlighted,
+	onLockedClick,
 }: {
 	conversation: MonitorConversation;
 	to: string | null;
 	highlighted?: boolean;
+	onLockedClick?: () => void;
 }) => {
 	const label = conversation.label?.trim() || t`Anonymous participant`;
 	const weakNetwork = isWeakNetwork(conversation);
 	const lowBattery = isLowBattery(conversation);
+	const isLocked = conversation.locked;
+	// Locked rows open the upgrade modal; unlocked rows link to the conversation.
+	const clickable = isLocked || !!to;
 
 	const card = (
 		<Card
 			withBorder
 			p="sm"
 			radius="sm"
-			className={`transition-colors ${to ? "hover:!border-primary-400 cursor-pointer" : ""} ${highlighted ? "!border-primary-500 ring-2 ring-primary-200" : ""}`}
+			className={`transition-colors ${clickable ? "hover:!border-primary-400 cursor-pointer" : ""} ${highlighted ? "!border-primary-500 ring-2 ring-primary-200" : ""}`}
 		>
 			<Stack gap={8}>
 				<Group justify="space-between" align="center" wrap="nowrap">
@@ -363,8 +372,12 @@ const MonitorRow = ({
 					</Group>
 				</Group>
 
-				{conversation.latest_transcript && (
-					<FadingTranscript text={conversation.latest_transcript} />
+				{isLocked ? (
+					<LockedTranscriptOverlay compact variant="transcript" />
+				) : (
+					conversation.latest_transcript && (
+						<FadingTranscript text={conversation.latest_transcript} />
+					)
 				)}
 
 				<Group gap="md" align="center">
@@ -385,6 +398,27 @@ const MonitorRow = ({
 			</Stack>
 		</Card>
 	);
+
+	// Locked rows open the upgrade modal instead of the (also-gated) detail view.
+	if (isLocked) {
+		return (
+			<Box
+				role="button"
+				tabIndex={0}
+				className="block"
+				aria-label={t`Locked conversation, upgrade to view`}
+				onClick={onLockedClick}
+				onKeyDown={(event) => {
+					if (event.key === "Enter" || event.key === " ") {
+						event.preventDefault();
+						onLockedClick?.();
+					}
+				}}
+			>
+				{card}
+			</Box>
+		);
+	}
 
 	if (!to) return card;
 	return (
@@ -439,10 +473,12 @@ const TagGroupSection = ({
 	group,
 	base,
 	highlightedConversationId,
+	onLockedClick,
 }: {
 	group: TagGroup;
 	base: string | null;
 	highlightedConversationId?: string | null;
+	onLockedClick?: () => void;
 }) => {
 	const [opened, { toggle }] = useDisclosure(true);
 	const [expanded, setExpanded] = useState(false);
@@ -495,6 +531,7 @@ const TagGroupSection = ({
 							conversation={conversation}
 							to={base ? `${base}/conversations/${conversation.id}` : null}
 							highlighted={conversation.id === highlightedConversationId}
+							onLockedClick={onLockedClick}
 						/>
 					))}
 					{overflow > 0 && (
@@ -537,6 +574,8 @@ export const LiveMonitorSection = ({
 	hideHeader?: boolean;
 }) => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
+	const { workspace } = useWorkspace();
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	const { conversations, summary, isLoading, error, isStreaming } =
 		useConversationMonitor(projectId);
 	const groups = useMemo(() => groupByTag(conversations), [conversations]);
@@ -595,105 +634,121 @@ export const LiveMonitorSection = ({
 	}
 
 	return (
-		<Stack gap="lg">
-			{!hideHeader && (
-				<Group justify="space-between" align="center" gap="sm">
-					<Group gap="xs" align="center">
-						<BroadcastIcon size={16} />
-						<Text size="xs" tt="uppercase">
-							<Trans>Live monitoring</Trans>
-						</Text>
-					</Group>
-					<Group gap="xs" align="center">
-						{!isStreaming && (
-							<Tooltip
-								label={t`Live stream disconnected. Updating on a slower poll until it reconnects.`}
-								withArrow
-							>
-								<Badge size="sm" color="orange" variant="light">
-									<Trans>Reconnecting</Trans>
-								</Badge>
-							</Tooltip>
-						)}
-						<Badge size="sm" color="primary" variant="light">
-							<Plural value={summary.live} one="# live" other="# live" />
-						</Badge>
-						{summary.offline > 0 && (
-							<Badge
-								size="sm"
-								color="salmon"
-								variant="light"
-								styles={{
-									label: { color: "var(--app-text)" },
-									section: { color: "var(--app-text)" },
-								}}
-								leftSection={<WifiSlashIcon size={12} />}
-							>
-								<Plural
-									value={summary.offline}
-									one="# offline"
-									other="# offline"
-								/>
-							</Badge>
-						)}
-						{summary.not_receiving > 0 && (
-							<Badge
-								size="sm"
-								color="orange"
-								variant="filled"
-								leftSection={<WarningCircleIcon size={12} />}
-							>
-								<Plural
-									value={summary.not_receiving}
-									one="# audio stopped"
-									other="# audio stopped"
-								/>
-							</Badge>
-						)}
-						{summary.transcribing > 0 && (
-							<Badge size="sm" color="primary" variant="light">
-								<Plural
-									value={summary.transcribing}
-									one="# transcribing"
-									other="# transcribing"
-								/>
-							</Badge>
-						)}
-						{summary.with_errors > 0 && (
-							<Badge size="sm" color="red" variant="light">
-								<Plural
-									value={summary.with_errors}
-									one="# with errors"
-									other="# with errors"
-								/>
-							</Badge>
-						)}
-						{catchUpLabel(summary.catch_up_eta_seconds) && (
-							<Tooltip
-								label={t`Rough estimate to finish transcribing the backlog`}
-								withArrow
-							>
-								<Badge size="sm" color="orange" variant="light">
-									<Trans>
-										catch up {catchUpLabel(summary.catch_up_eta_seconds)}
-									</Trans>
-								</Badge>
-							</Tooltip>
-						)}
-					</Group>
-				</Group>
-			)}
-
+		<>
 			<Stack gap="lg">
-				{groups.map((group) => (
-					<TagGroupSection
-						key={group.key}
-						group={group}
-						base={base}
-						highlightedConversationId={highlightedConversationId}
-					/>
-				))}
+				{!hideHeader && (
+					<Group justify="space-between" align="center" gap="sm">
+						<Group gap="xs" align="center">
+							<BroadcastIcon size={16} />
+							<Text size="xs" tt="uppercase">
+								<Trans>Live monitoring</Trans>
+							</Text>
+						</Group>
+						<Group gap="xs" align="center">
+							{!isStreaming && (
+								<Tooltip
+									label={t`Live stream disconnected. Updating on a slower poll until it reconnects.`}
+									withArrow
+								>
+									<Badge size="sm" color="orange" variant="light">
+										<Trans>Reconnecting</Trans>
+									</Badge>
+								</Tooltip>
+							)}
+							<Badge size="sm" color="primary" variant="light">
+								<Plural value={summary.live} one="# live" other="# live" />
+							</Badge>
+							{summary.offline > 0 && (
+								<Badge
+									size="sm"
+									color="salmon"
+									variant="light"
+									styles={{
+										label: { color: "var(--app-text)" },
+										section: { color: "var(--app-text)" },
+									}}
+									leftSection={<WifiSlashIcon size={12} />}
+								>
+									<Plural
+										value={summary.offline}
+										one="# offline"
+										other="# offline"
+									/>
+								</Badge>
+							)}
+							{summary.not_receiving > 0 && (
+								<Badge
+									size="sm"
+									color="orange"
+									variant="filled"
+									leftSection={<WarningCircleIcon size={12} />}
+								>
+									<Plural
+										value={summary.not_receiving}
+										one="# audio stopped"
+										other="# audio stopped"
+									/>
+								</Badge>
+							)}
+							{summary.transcribing > 0 && (
+								<Badge size="sm" color="primary" variant="light">
+									<Plural
+										value={summary.transcribing}
+										one="# transcribing"
+										other="# transcribing"
+									/>
+								</Badge>
+							)}
+							{summary.with_errors > 0 && (
+								<Badge size="sm" color="red" variant="light">
+									<Plural
+										value={summary.with_errors}
+										one="# with errors"
+										other="# with errors"
+									/>
+								</Badge>
+							)}
+							{catchUpLabel(summary.catch_up_eta_seconds) && (
+								<Tooltip
+									label={t`Rough estimate to finish transcribing the backlog`}
+									withArrow
+								>
+									<Badge size="sm" color="orange" variant="light">
+										<Trans>
+											catch up {catchUpLabel(summary.catch_up_eta_seconds)}
+										</Trans>
+									</Badge>
+								</Tooltip>
+							)}
+						</Group>
+					</Group>
+				)}
+
+				<Stack gap="lg">
+					{groups.map((group) => (
+						<TagGroupSection
+							key={group.key}
+							group={group}
+							base={base}
+							highlightedConversationId={highlightedConversationId}
+							onLockedClick={upgradeHandlers.open}
+						/>
+					))}
+				</Stack>
 			</Stack>
-		</Stack>
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				currentTier={(workspace?.tier ?? "free") as Tier}
+				requiredTier={SELLABLE_TIER}
+				featureName="Transcripts"
+				benefit={t`Upgrade your workspace to view transcripts for new conversations.`}
+				canRequestUpgrade={
+					workspace?.role === "admin" || workspace?.role === "owner"
+				}
+				workspaceId={workspace?.id ?? workspaceId ?? ""}
+				source="transcript_locked"
+			/>
+		</>
 	);
 };

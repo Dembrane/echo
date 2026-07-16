@@ -57,6 +57,7 @@ export type MonitorConversation = {
 	label: string | null;
 	is_live: boolean;
 	is_finished: boolean;
+	locked: boolean;
 	state: ParticipantState;
 	recording_health: RecordingHealth;
 	/** Live mic input level (0..1) from the participant's last beacon, or null

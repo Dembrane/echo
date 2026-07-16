@@ -38,6 +38,7 @@ from fastapi import Query, Request, APIRouter, HTTPException
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
+from dembrane.free_tier import resolve_project_gate, workspace_over_cap_active
 from dembrane.redis_async import get_redis_client
 from dembrane.tier_capacity import is_conversation_locked
 from dembrane.directus_async import async_directus
@@ -100,28 +101,32 @@ _CONVERSATION_SEARCH_FIELDS = [
 
 
 def _conversation_lock(
-    conv: dict, tier: Optional[str]
+    conv: dict, tier: Optional[str], over_cap_active: bool = False
 ) -> tuple[bool, Optional[str]]:
     """Resolve (locked, lock_reason) for a conversation. Single source of the
-    lock decision, shared by the list/detail enrich step and the chunk
-    endpoints so they cannot diverge.
+    lock decision, shared by the list/detail/chunk reads so they cannot diverge.
 
-    The hours cap locks over-cap conversations on hour-capped tiers (Free's
-    1-hour recording cap); paid and legacy (None) tiers never lock.
+    Finished conversations lock on the `is_over_cap` stamp (which preserves
+    grandfathering); still-recording ones have no stamp yet, so they lock on the
+    live `over_cap_active` gate. Paid and legacy (None) tiers never lock.
     """
     if is_conversation_locked(conv, tier):
+        return True, "hours_cap"
+    if over_cap_active and not conv.get("is_finished"):
         return True, "hours_cap"
     return False, None
 
 
-def _enrich_conversation(conv: dict, tier: Optional[str]) -> dict:
+def _enrich_conversation(
+    conv: dict, tier: Optional[str], over_cap_active: bool = False
+) -> dict:
     """Add derived `locked` + `lock_reason`, scrub gated text (summary +
     merged_transcript) on locked rows, strip raw `is_over_cap`.
 
     Chunk transcripts are scrubbed separately by the chunk endpoints /
     include_chunks path via `_scrub_chunk_transcript`.
     """
-    locked, reason = _conversation_lock(conv, tier)
+    locked, reason = _conversation_lock(conv, tier, over_cap_active)
     conv["locked"] = locked
     # Keep lock_reason symmetric with locked (always present) for stable
     # serialization; None when unlocked.
@@ -299,8 +304,10 @@ async def list_conversations(
         convs = [c for c in convs if c["id"] in kept]
 
     tier = access.tier
+    # Live over-cap gate, once per request; non-free short-circuits before any read.
+    over_cap_active = await workspace_over_cap_active(access.workspace_id, tier)
     for conv in convs:
-        _enrich_conversation(conv, tier)
+        _enrich_conversation(conv, tier, over_cap_active)
 
     if convs:
         conv_ids = [c["id"] for c in convs]
@@ -746,9 +753,7 @@ def _parse_directus_timestamp(value: Any) -> Optional[datetime]:
     return parsed.astimezone(timezone.utc)
 
 
-def _transcription_status(
-    *, has_error: bool, chunk_count: int, transcribed_count: int
-) -> str:
+def _transcription_status(*, has_error: bool, chunk_count: int, transcribed_count: int) -> str:
     """Derive a host-facing transcription state for a conversation.
 
     - "failing": at least one recent chunk carries a transcription error.
@@ -776,12 +781,18 @@ def _build_monitor_payload(
     telemetry: Optional[dict[str, dict]] = None,
     tag_map: Optional[dict[str, list[str]]] = None,
     extra_conversations: Optional[list[dict]] = None,
+    tier: Optional[str] = None,
+    over_cap_active: bool = False,
 ) -> dict:
     """Aggregate recent chunks into a per-conversation monitor view.
 
     `extra_conversations` seeds sessions that are pinging but have no audio
     chunk yet (just-initiated / waiting), so they appear instantly. Each is a
     dict with id, participant_name, is_finished, created_at, duration.
+
+    `tier` + `over_cap_active` drive the content gate (same `_conversation_lock`
+    decision as the detail view): a locked conversation has its
+    `latest_transcript` withheld so the monitor can't leak gated text.
 
     `recent_chunks` MUST be newest-first (sorted by -timestamp). Each row
     carries conversation_id (dict with id + participant_name, or a bare id
@@ -820,6 +831,7 @@ def _build_monitor_payload(
             "language": None,
             "created_at": extra.get("created_at"),
             "duration": extra.get("duration"),
+            "is_over_cap": bool(extra.get("is_over_cap")),
         }
         order.append(conv_id)
 
@@ -831,12 +843,14 @@ def _build_monitor_payload(
             is_finished = bool(conv.get("is_finished"))
             created_at = conv.get("created_at")
             duration = conv.get("duration")
+            is_over_cap = bool(conv.get("is_over_cap"))
         else:
             conv_id = conv
             participant_name = None
             is_finished = False
             created_at = None
             duration = None
+            is_over_cap = False
         if not conv_id:
             continue
 
@@ -854,6 +868,7 @@ def _build_monitor_payload(
                 "language": None,
                 "created_at": created_at,
                 "duration": duration,
+                "is_over_cap": is_over_cap,
             }
             by_conv[conv_id] = entry
             order.append(conv_id)
@@ -868,7 +883,11 @@ def _build_monitor_payload(
         # Rows are newest-first, so the first transcript / language we see for a
         # conversation is its most recent one — keep that.
         transcript = chunk.get("transcript")
-        if entry["latest_transcript"] is None and isinstance(transcript, str) and transcript.strip():
+        if (
+            entry["latest_transcript"] is None
+            and isinstance(transcript, str)
+            and transcript.strip()
+        ):
             entry["latest_transcript"] = transcript.strip()[:MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN]
         if entry["language"] is None:
             language = chunk.get("desired_language") or chunk.get("detected_language")
@@ -958,12 +977,16 @@ def _build_monitor_payload(
         if transcription_status == "transcribing":
             transcribing_count += 1
         pending_total += pending_transcription
+        # Withhold the transcript snippet on locked conversations; state still shows.
+        locked, _ = _conversation_lock(entry, tier, over_cap_active)
+        latest_transcript = None if locked else entry["latest_transcript"]
         conversations.append(
             {
                 "id": conv_id,
                 "label": entry["label"],
                 "is_live": is_live,
                 "is_finished": entry["is_finished"],
+                "locked": locked,
                 "state": state,
                 "recording_health": recording_health,
                 # Live mic level (0..1) from the participant's last beacon —
@@ -972,7 +995,7 @@ def _build_monitor_payload(
                 "mode": tele.get("mode"),
                 "tags": tag_map.get(conv_id, []),
                 "language": entry["language"],
-                "latest_transcript": entry["latest_transcript"],
+                "latest_transcript": latest_transcript,
                 "created_at": entry["created_at"],
                 "duration": entry["duration"],
                 "network": tele.get("network"),
@@ -1020,9 +1043,7 @@ def _build_monitor_payload(
 _FUNNEL_STAGES = ("scanned", "terms", "mic_ok", "mic_skipped", "mic_blocked", "profile")
 
 
-def _build_funnel(
-    visitors: dict[str, dict], graduated: set[str]
-) -> dict:
+def _build_funnel(visitors: dict[str, dict], graduated: set[str]) -> dict:
     """Shape pre-conversation visitor sessions into the host funnel.
 
     `visitors` maps visitor_id -> telemetry (with a `seen` datetime). `graduated`
@@ -1061,13 +1082,25 @@ def _build_funnel(
     return {"visitors": entries, "summary": {**counts, "total": len(entries)}}
 
 
-async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
+# Sentinel: caller didn't pre-resolve the gate, so gather resolves it itself.
+_GATE_UNRESOLVED = object()
+
+
+async def gather_project_monitor(
+    project_id: str,
+    window_seconds: int,
+    tier: Any = _GATE_UNRESOLVED,
+    over_cap_active: bool = False,
+) -> dict:
     """Assemble the live-monitor payload for a project (no access gate).
 
     Callers MUST enforce access before invoking this. Shared by the
     host-facing /monitor route and the agentic monitor endpoint so both
     return exactly the same shape. Portal-initiated conversations only
     (no DASHBOARD_UPLOAD / CLONE); a few bounded reads aggregated in Python.
+
+    Pass `tier`/`over_cap_active` when already resolved (host endpoints reuse
+    access.tier); leave `tier` as the sentinel and gather resolves them itself.
     """
     now = datetime.now(timezone.utc)
     lookback_cutoff = (now - timedelta(seconds=MONITOR_LOOKBACK_SECONDS)).isoformat()
@@ -1087,6 +1120,7 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
                     "conversation_id.is_finished",
                     "conversation_id.created_at",
                     "conversation_id.duration",
+                    "conversation_id.is_over_cap",
                     "timestamp",
                     "error",
                     "transcript",
@@ -1141,6 +1175,7 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
                             "is_finished",
                             "created_at",
                             "duration",
+                            "is_over_cap",
                         ],
                         "limit": len(ping_only_ids),
                     }
@@ -1241,6 +1276,9 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
         except Exception as exc:  # noqa: BLE001
             logger.warning("Monitor liveness ping read failed: %s", exc)
 
+    if tier is _GATE_UNRESOLVED:
+        tier, over_cap_active = await resolve_project_gate(project_id)
+
     payload = _build_monitor_payload(
         recent_chunks,
         chunk_counts,
@@ -1250,15 +1288,15 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
         telemetry,
         tag_map,
         extra_conversations,
+        tier=tier,
+        over_cap_active=over_cap_active,
     )
 
     # Pre-conversation funnel: visitors still onboarding (scan -> terms -> mic
     # -> profile), deduped against those that already graduated into a live
     # conversation (their recording ping carries the visitor_id).
     graduated: set[str] = {
-        str(tele["visitor_id"])
-        for tele in telemetry.values()
-        if tele.get("visitor_id")
+        str(tele["visitor_id"]) for tele in telemetry.values() if tele.get("visitor_id")
     }
     visitors: dict[str, dict] = {}
     try:
@@ -1296,11 +1334,19 @@ async def _read_cached_snapshot(client: Any, key: str) -> Optional[dict]:
     return json.loads(text)
 
 
-async def get_project_monitor_snapshot(project_id: str, window_seconds: int) -> dict:
+async def get_project_monitor_snapshot(
+    project_id: str,
+    window_seconds: int,
+    tier: Any = _GATE_UNRESOLVED,
+    over_cap_active: bool = False,
+) -> dict:
     """Return the monitor payload from a short-lived shared Redis cache.
 
     Single-flight so the expensive gather runs ~once per TTL per project even under
     concurrent watchers. Best-effort: on any Redis error we compute directly.
+
+    `tier` + `over_cap_active` forward to gather on a cache miss. The gate is
+    deterministic per project, so the cache stays keyed by (project_id, window).
     """
     key = f"{_MONITOR_SNAPSHOT_KEY_PREFIX}{project_id}:{window_seconds}"
     lock_key = f"{key}:lock"
@@ -1337,7 +1383,9 @@ async def get_project_monitor_snapshot(project_id: str, window_seconds: int) -> 
                 if cached is not None:
                     return cached
 
-    payload = await gather_project_monitor(project_id, window_seconds)
+    payload = await gather_project_monitor(
+        project_id, window_seconds, tier, over_cap_active
+    )
 
     if client is not None:
         try:
@@ -1376,7 +1424,11 @@ async def monitor_conversations(
     """
     access = await resolve_project_access(project_id, auth)
     access.require("conversation:read")
-    return await get_project_monitor_snapshot(project_id, window_seconds)
+    # Reuse the already-resolved tier; the gate short-circuits for non-free.
+    over_cap_active = await workspace_over_cap_active(access.workspace_id, access.tier)
+    return await get_project_monitor_snapshot(
+        project_id, window_seconds, access.tier, over_cap_active
+    )
 
 
 # How long the stream waits on the pub/sub channel before recomputing anyway.
@@ -1429,9 +1481,15 @@ async def monitor_conversations_stream(
                     break
 
                 try:
-                    # Shared cache: many connections to the same project reuse
-                    # one computed snapshot instead of each hitting Directus.
-                    payload = await get_project_monitor_snapshot(project_id, window_seconds)
+                    # Recompute each tick so a mid-stream cap crossing starts
+                    # gating; non-free short-circuits, free reads a cached bool.
+                    over_cap_active = await workspace_over_cap_active(
+                        access.workspace_id, access.tier
+                    )
+                    # Shared cache: connections to the same project reuse one snapshot.
+                    payload = await get_project_monitor_snapshot(
+                        project_id, window_seconds, access.tier, over_cap_active
+                    )
                     serialized = json.dumps(payload, default=str, sort_keys=True)
                 except Exception as exc:  # noqa: BLE001
                     logger.warning("monitor stream snapshot failed for %s: %s", project_id, exc)
@@ -1565,7 +1623,8 @@ async def get_conversation(
 ) -> dict:
     """Read a single conversation with optional embeds."""
     access, conv = await resolve_conversation_access(conversation_id, auth)
-    _enrich_conversation(conv, access.tier)
+    over_cap_active = await workspace_over_cap_active(access.workspace_id, access.tier)
+    _enrich_conversation(conv, access.tier, over_cap_active)
     is_locked = conv.get("locked", False)
 
     if include_chunks:
@@ -1815,7 +1874,8 @@ async def list_chunks(
     on the conversation detail view.
     """
     access, conv = await resolve_conversation_access(conversation_id, auth)
-    is_locked, _ = _conversation_lock(conv, access.tier)
+    over_cap_active = await workspace_over_cap_active(access.workspace_id, access.tier)
+    is_locked, _ = _conversation_lock(conv, access.tier, over_cap_active)
 
     default_fields = [
         "id",
@@ -1894,7 +1954,8 @@ async def get_chunk(
 ) -> dict:
     """Single-chunk read. Rare path — most callers go through the list."""
     access, chunk, conv = await resolve_conversation_chunk_access(chunk_id, auth)
-    locked, _ = _conversation_lock(conv, access.tier)
+    over_cap_active = await workspace_over_cap_active(access.workspace_id, access.tier)
+    locked, _ = _conversation_lock(conv, access.tier, over_cap_active)
     if locked:
         _scrub_chunk_transcript(chunk)
     return chunk
