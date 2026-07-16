@@ -988,6 +988,38 @@ async def test_monitor_endpoint_empty_skips_count_query(monkeypatch) -> None:
     assert len(fake_directus.queries) == 1
 
 
+@pytest.mark.asyncio
+async def test_monitor_endpoint_returns_empty_when_disabled(monkeypatch) -> None:
+    # Server-side kill switch: the host endpoint returns the idle shape without
+    # touching Directus, so flipping the flag sheds all monitor load. Chunks are
+    # present but must never be read.
+    now = datetime.now(timezone.utc)
+    recent_chunks = [
+        {
+            "conversation_id": {"id": "c1", "participant_name": "Ada"},
+            "timestamp": _iso(now),
+            "error": None,
+            "transcript": "should never be read",
+        },
+    ]
+    fake_settings = SimpleNamespace(feature_flags=SimpleNamespace(enable_monitor=False))
+    monkeypatch.setattr(conv_bff, "get_settings", lambda: fake_settings)
+
+    async with _build_client(monkeypatch, recent_chunks, {"c1": 1}) as (
+        client,
+        fake_directus,
+    ):
+        res = await client.get("/conversations/monitor", params={"project_id": "p-1"})
+
+    assert res.status_code == 200
+    body = res.json()
+    assert body["conversations"] == []
+    assert body["summary"]["total"] == 0
+    assert body["funnel"]["visitors"] == []
+    # Disabled path returns before any Directus read.
+    assert fake_directus.queries == []
+
+
 # ── snapshot cache: hit path + single-flight lock ─────────────────────
 
 
@@ -1268,4 +1300,36 @@ async def test_monitor_stream_returns_sse_headers_and_first_event(monkeypatch) -
     assert first_chunk.startswith("event: snapshot\ndata:")
 
     # Closing the generator runs its `finally` (pub/sub cleanup) without error.
+    await response.body_iterator.aclose()
+
+
+@pytest.mark.asyncio
+async def test_monitor_stream_disabled_emits_empty_snapshot(monkeypatch) -> None:
+    # Server-side kill switch: the stream still connects (so EventSource doesn't
+    # reconnect-loop) but emits one empty snapshot and never calls gather.
+    import json
+
+    _patch_monitor_stream_deps(monkeypatch)
+    fake_settings = SimpleNamespace(feature_flags=SimpleNamespace(enable_monitor=False))
+    monkeypatch.setattr(conv_bff, "get_settings", lambda: fake_settings)
+
+    async def _boom_gather(*args: Any, **kwargs: Any) -> dict:
+        raise AssertionError("gather must not run when the monitor is disabled")
+
+    monkeypatch.setattr(conv_bff, "gather_project_monitor", _boom_gather)
+
+    response = await conv_bff.monitor_conversations_stream(
+        request=_FakeStreamRequest(),
+        auth=_stream_auth(),
+        project_id="p-1",
+        window_seconds=45,
+    )
+
+    assert response.media_type == "text/event-stream"
+    first_chunk = await asyncio.wait_for(response.body_iterator.__anext__(), timeout=2)
+    assert first_chunk.startswith("event: snapshot\ndata:")
+    payload = json.loads(first_chunk.split("data: ", 1)[1])
+    assert payload["conversations"] == []
+    assert payload["summary"]["total"] == 0
+
     await response.body_iterator.aclose()

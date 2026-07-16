@@ -193,6 +193,22 @@ def test_ping_conversation_absurd_id_length_drops_silently(monkeypatch) -> None:
     assert calls == []
 
 
+def test_ping_conversation_monitor_disabled_drops_silently(monkeypatch) -> None:
+    """Server-side kill switch: the beacon no-ops (no Redis write) and reports ok."""
+    calls: list[str] = []
+
+    async def _fake_mark(conversation_id: str, *, telemetry: Any = None) -> None:  # noqa: ARG001
+        calls.append(conversation_id)
+
+    monkeypatch.setattr(participant, "mark_conversation_seen", _fake_mark)
+    monkeypatch.setattr(participant.settings.feature_flags, "enable_monitor", False)
+
+    result = _run(participant.ping_conversation("conv-1", _FakeRequest()))
+
+    assert result == {"ok": True}
+    assert calls == []
+
+
 # ── visitor ping ───────────────────────────────────────────────────────
 
 
@@ -286,6 +302,22 @@ def test_ping_visitor_absurd_id_length_drops_silently(monkeypatch) -> None:
 
     long_id = "y" * (participant._MAX_PING_ID_LEN + 1)
     result = _run(participant.ping_visitor(long_id, "vis-1", _FakeRequest()))
+
+    assert result == {"ok": True}
+    assert marked == []
+
+
+def test_ping_visitor_monitor_disabled_drops_silently(monkeypatch) -> None:
+    """Server-side kill switch: the funnel beacon no-ops and reports ok."""
+    marked: list[Any] = []
+
+    async def _fake_mark(project_id, visitor_id, *, telemetry=None, score=None):  # noqa: ANN001, ARG001
+        marked.append((project_id, visitor_id))
+
+    monkeypatch.setattr(participant, "mark_visitor_seen", _fake_mark)
+    monkeypatch.setattr(participant.settings.feature_flags, "enable_monitor", False)
+
+    result = _run(participant.ping_visitor("proj-1", "vis-1", _FakeRequest()))
 
     assert result == {"ok": True}
     assert marked == []

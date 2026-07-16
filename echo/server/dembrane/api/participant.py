@@ -512,6 +512,9 @@ async def ping_conversation(
     includes its project_id, we also nudge any open monitor streams so they
     refresh in near-real-time instead of waiting for the next poll tick.
     """
+    # Monitor off server-side: no host reads these, so no-op (never disturb recording).
+    if not settings.feature_flags.enable_monitor:
+        return {"ok": True}
     # Over-limit or absurd id: drop the beacon but report ok (never disturb recording).
     if not await _conversation_ping_rate_limiter.allow(_participant_client_ip(request)):
         return {"ok": True}
@@ -591,6 +594,9 @@ async def ping_visitor(
     visitor_id. Cheap: stamps a short-lived Redis key + per-project index and
     nudges open monitor streams. Swallows Redis errors so onboarding is never
     disrupted."""
+    # Monitor off server-side: no host reads these, so no-op (never disturb onboarding).
+    if not settings.feature_flags.enable_monitor:
+        return {"ok": True}
     # Over-limit or absurd id: drop the beacon but report ok (never disturb onboarding).
     if not await _visitor_ping_rate_limiter.allow(_participant_client_ip(request)):
         return {"ok": True}

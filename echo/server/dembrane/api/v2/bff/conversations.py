@@ -38,6 +38,7 @@ from fastapi import Query, Request, APIRouter, HTTPException
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
+from dembrane.settings import get_settings
 from dembrane.free_tier import resolve_project_gate, workspace_over_cap_active
 from dembrane.redis_async import get_redis_client
 from dembrane.tier_capacity import is_conversation_locked
@@ -1086,6 +1087,28 @@ def _build_funnel(visitors: dict[str, dict], graduated: set[str]) -> dict:
 _GATE_UNRESOLVED = object()
 
 
+def _empty_monitor_payload(window_seconds: int) -> dict:
+    """The monitor payload shape with zero activity. Returned when the monitor
+    is disabled server-side, so callers get the same structure gather produces
+    for an idle project and the client renders a clean 'no activity' state."""
+    return {
+        "conversations": [],
+        "summary": {
+            "live": 0,
+            "finished": 0,
+            "transcribing": 0,
+            "with_errors": 0,
+            "not_receiving": 0,
+            "offline": 0,
+            "total": 0,
+            "pending_transcription": 0,
+            "catch_up_eta_seconds": 0,
+        },
+        "live_window_seconds": window_seconds,
+        "funnel": _build_funnel({}, set()),
+    }
+
+
 async def gather_project_monitor(
     project_id: str,
     window_seconds: int,
@@ -1102,6 +1125,10 @@ async def gather_project_monitor(
     Pass `tier`/`over_cap_active` when already resolved (host endpoints reuse
     access.tier); leave `tier` as the sentinel and gather resolves them itself.
     """
+    # Kill switch: skip every Directus read and return the idle shape. Backstops
+    # any caller (e.g. the agentic monitor) that doesn't gate at the endpoint.
+    if not get_settings().feature_flags.enable_monitor:
+        return _empty_monitor_payload(window_seconds)
     now = datetime.now(timezone.utc)
     lookback_cutoff = (now - timedelta(seconds=MONITOR_LOOKBACK_SECONDS)).isoformat()
 
@@ -1424,6 +1451,9 @@ async def monitor_conversations(
     """
     access = await resolve_project_access(project_id, auth)
     access.require("conversation:read")
+    # Kill switch: return the idle shape without touching Directus/Redis.
+    if not get_settings().feature_flags.enable_monitor:
+        return _empty_monitor_payload(window_seconds)
     # Reuse the already-resolved tier; the gate short-circuits for non-free.
     over_cap_active = await workspace_over_cap_active(access.workspace_id, access.tier)
     return await get_project_monitor_snapshot(
@@ -1437,6 +1467,12 @@ async def monitor_conversations(
 MONITOR_STREAM_POLL_SECONDS = 2.0
 # Emit an SSE comment at least this often so proxies keep the connection open.
 MONITOR_STREAM_HEARTBEAT_SECONDS = 15.0
+
+_MONITOR_SSE_HEADERS = {
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+    "X-Accel-Buffering": "no",
+}
 
 
 @router.get("/monitor/stream")
@@ -1460,6 +1496,27 @@ async def monitor_conversations_stream(
     """
     access = await resolve_project_access(project_id, auth)
     access.require("conversation:read")
+
+    # Kill switch: keep the connection stable (so EventSource doesn't reconnect-
+    # loop) but do no work. One empty snapshot, then heartbeats only.
+    if not get_settings().feature_flags.enable_monitor:
+
+        async def disabled_stream() -> AsyncGenerator[str, None]:
+            empty = json.dumps(
+                _empty_monitor_payload(window_seconds), default=str, sort_keys=True
+            )
+            yield f"event: snapshot\ndata: {empty}\n\n"
+            while True:
+                await asyncio.sleep(MONITOR_STREAM_HEARTBEAT_SECONDS)
+                if await request.is_disconnected():
+                    break
+                yield ": keep-alive\n\n"
+
+        return StreamingResponse(
+            disabled_stream(),
+            media_type="text/event-stream",
+            headers=_MONITOR_SSE_HEADERS,
+        )
 
     async def event_stream() -> AsyncGenerator[str, None]:
         channel = channel_for_project(project_id)
@@ -1526,11 +1583,7 @@ async def monitor_conversations_stream(
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
+        headers=_MONITOR_SSE_HEADERS,
     )
 
 

@@ -272,6 +272,11 @@ class FeatureFlagSettings(BaseSettings):
         alias="ENABLE_WEBHOOKS",
         validation_alias=AliasChoices("ENABLE_WEBHOOKS", "FEATURE_FLAGS__ENABLE_WEBHOOKS"),
     )
+    enable_monitor: bool = Field(
+        default=True,
+        alias="ENABLE_MONITOR",
+        validation_alias=AliasChoices("ENABLE_MONITOR", "FEATURE_FLAGS__ENABLE_MONITOR"),
+    )
 
 
 class DirectusSettings(BaseSettings):
@@ -334,9 +339,7 @@ class EmailSettings(BaseSettings):
     upgrade_request_inbox: str = Field(
         default="upgrades@dembrane.com",
         alias="UPGRADE_REQUEST_INBOX",
-        validation_alias=AliasChoices(
-            "UPGRADE_REQUEST_INBOX", "EMAIL__UPGRADE_REQUEST_INBOX"
-        ),
+        validation_alias=AliasChoices("UPGRADE_REQUEST_INBOX", "EMAIL__UPGRADE_REQUEST_INBOX"),
     )
     # Where onboarding training follow-ups route (ISSUE-012). Pauline owns
     # training verification/scheduling. FOLLOW-UP: confirm Pauline's address;
@@ -731,7 +734,10 @@ def get_settings() -> AppSettings:
             (re.compile(r'"password":\s*"[^"]*"'), '"password": "[REDACTED]"'),
             (re.compile(r"'private_key':\s*'[^']*'"), "'private_key': '[REDACTED]'"),
             (re.compile(r"'api_key':\s*'[^']*'"), "'api_key': '[REDACTED]'"),
-            (re.compile(r"-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----", re.DOTALL), "[REDACTED_PRIVATE_KEY]"),
+            (
+                re.compile(r"-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----", re.DOTALL),
+                "[REDACTED_PRIVATE_KEY]",
+            ),
         ]
 
         def filter(self, record: logging.LogRecord) -> bool:
