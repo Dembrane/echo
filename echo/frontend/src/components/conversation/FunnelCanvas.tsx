@@ -362,7 +362,7 @@ export const FunnelCanvas = ({
 			/>
 			{hover && (
 				<div
-					className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded bg-slate-800 px-2 py-1 text-xs text-white shadow"
+					className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded bg-graphite px-2 py-1 text-xs text-parchment shadow"
 					style={{ left: hover.x, top: hover.y - 6 }}
 				>
 					{hover.label}

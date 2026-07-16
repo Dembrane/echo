@@ -1,4 +1,4 @@
-"""Tests for the server_chunk_upload_bad and server_chunk_not_found_in_s3
+"""Tests for the server_chunk_upload_rejected and server_chunk_missing_in_s3
 captures in confirm_chunk_upload."""
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ async def test_confirm_upload_captures_bad_chunk_when_too_small() -> None:
 
     capture.assert_any_await(
         "conv-1",
-        "server_chunk_upload_bad",
+        "server_chunk_upload_rejected",
         {"chunk_id": "chunk-1", "file_size": 512},
     )
 
@@ -69,6 +69,6 @@ async def test_confirm_upload_captures_s3_not_found_after_retries() -> None:
     assert exc_info.value.status_code == 400
     capture.assert_any_await(
         "conv-1",
-        "server_chunk_not_found_in_s3",
+        "server_chunk_missing_in_s3",
         {"chunk_id": "chunk-1"},
     )
