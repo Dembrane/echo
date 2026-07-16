@@ -20,6 +20,7 @@ import {
 	WifiSlashIcon,
 } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
+import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
@@ -75,6 +76,12 @@ const stateMeta = (state: ParticipantState): StateMeta => {
 			return { color: "gray", label: t`Idle` };
 	}
 };
+
+export const isProblemState = (conversation: MonitorConversation): boolean =>
+	conversation.recording_health === "stalled" ||
+	conversation.has_error ||
+	conversation.state === "offline" ||
+	conversation.transcription_status === "failing";
 
 export const StatePill = ({ state }: { state: ParticipantState }) => {
 	const meta = stateMeta(state);
@@ -281,11 +288,13 @@ const MonitorRow = ({
 	to,
 	highlighted,
 	onLockedClick,
+	onOpen,
 }: {
 	conversation: MonitorConversation;
 	to: string | null;
 	highlighted?: boolean;
 	onLockedClick?: () => void;
+	onOpen?: () => void;
 }) => {
 	const label = conversation.label?.trim() || t`Anonymous participant`;
 	const weakNetwork = isWeakNetwork(conversation);
@@ -422,7 +431,7 @@ const MonitorRow = ({
 
 	if (!to) return card;
 	return (
-		<I18nLink to={to} className="block no-underline">
+		<I18nLink to={to} className="block no-underline" onClick={onOpen}>
 			{card}
 		</I18nLink>
 	);
@@ -474,11 +483,13 @@ const TagGroupSection = ({
 	base,
 	highlightedConversationId,
 	onLockedClick,
+	onOpen,
 }: {
 	group: TagGroup;
 	base: string | null;
 	highlightedConversationId?: string | null;
-	onLockedClick?: () => void;
+	onLockedClick?: (conversation: MonitorConversation) => void;
+	onOpen?: (conversation: MonitorConversation) => void;
 }) => {
 	const [opened, { toggle }] = useDisclosure(true);
 	const [expanded, setExpanded] = useState(false);
@@ -531,7 +542,8 @@ const TagGroupSection = ({
 							conversation={conversation}
 							to={base ? `${base}/conversations/${conversation.id}` : null}
 							highlighted={conversation.id === highlightedConversationId}
-							onLockedClick={onLockedClick}
+							onLockedClick={() => onLockedClick?.(conversation)}
+							onOpen={() => onOpen?.(conversation)}
 						/>
 					))}
 					{overflow > 0 && (
@@ -731,7 +743,23 @@ export const LiveMonitorSection = ({
 							group={group}
 							base={base}
 							highlightedConversationId={highlightedConversationId}
-							onLockedClick={upgradeHandlers.open}
+							onLockedClick={(conversation) => {
+								posthog.capture("monitor_locked_row_clicked", {
+									conversation_id: conversation.id,
+									project_id: projectId,
+								});
+								upgradeHandlers.open();
+							}}
+							onOpen={(conversation) =>
+								posthog.capture("monitor_conversation_opened", {
+									conversation_id: conversation.id,
+									from_problem_state: isProblemState(conversation),
+									participant_state: conversation.state,
+									project_id: projectId,
+									recording_health: conversation.recording_health,
+									transcription_status: conversation.transcription_status,
+								})
+							}
 						/>
 					))}
 				</Stack>

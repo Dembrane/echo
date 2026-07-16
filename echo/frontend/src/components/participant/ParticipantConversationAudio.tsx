@@ -156,15 +156,25 @@ export const ParticipantConversationAudio = () => {
 
 	// Set up the interruption callback after audioRecorder is available
 	onRecordingInterruptedRef.current = () => {
-		// Capture the recording time before stopping
+		// Capture the recording time before stopping.
 		interruptionRecordingTimeRef.current = audioRecorder.recordingTime;
 
-		// Stop recording and release wake lock
+		// Fire at detection, not only if the user later reconnects.
+		const chunkHistory = audioRecorder.getChunkHistory();
+		posthog.capture("portal_recording_interrupted", {
+			conversation_id: conversationId,
+			project_id: projectId,
+			recording_time_seconds: interruptionRecordingTimeRef.current,
+			suspicious_chunk_count: chunkHistory.filter((c) => c.size < 1024).length,
+			total_chunks: chunkHistory.length,
+		});
+
+		// Stop recording and release wake lock.
 		audioRecorder.stopRecording();
 		wakeLock.releaseWakeLock();
 		wakeLock.disableAutoReacquire();
 
-		// Show the interruption modal
+		// Show the interruption modal.
 		openInterruptionModal();
 	};
 
@@ -216,6 +226,64 @@ export const ParticipantConversationAudio = () => {
 			window.removeEventListener("pagehide", onVisibility);
 		};
 	}, []);
+
+	// Snapshot of ticking state so the edge-triggered effects below don't re-subscribe each tick.
+	const recordingScreenStateRef = useRef({ isRecording, recordingTime });
+	recordingScreenStateRef.current = { isRecording, recordingTime };
+
+	// Backgrounding while recording is our proxy for a call/lock/tab-switch; edge-triggered per transition.
+	const backgroundedAtRef = useRef<number | null>(null);
+	useEffect(() => {
+		if (!conversationId) return;
+		if (documentHidden && isRecording && backgroundedAtRef.current === null) {
+			backgroundedAtRef.current = Date.now();
+			posthog.capture("portal_recording_backgrounded", {
+				conversation_id: conversationId,
+				project_id: projectId,
+				recording_time_seconds: recordingScreenStateRef.current.recordingTime,
+			});
+		} else if (!documentHidden && backgroundedAtRef.current !== null) {
+			posthog.capture("portal_recording_foregrounded", {
+				backgrounded_seconds: Math.round(
+					(Date.now() - backgroundedAtRef.current) / 1000,
+				),
+				conversation_id: conversationId,
+				project_id: projectId,
+			});
+			backgroundedAtRef.current = null;
+		}
+	}, [documentHidden, isRecording, conversationId, projectId]);
+
+	// Browser-level connectivity (radio drop), distinct from the per-chunk upload failures below.
+	const offlineAtRef = useRef<number | null>(null);
+	useEffect(() => {
+		if (!conversationId) return;
+		const onOffline = () => {
+			if (offlineAtRef.current !== null) return;
+			offlineAtRef.current = Date.now();
+			posthog.capture("portal_network_offline", {
+				conversation_id: conversationId,
+				effective_type: readNetworkTelemetry()?.effective_type,
+				project_id: projectId,
+				recording_time_seconds: recordingScreenStateRef.current.recordingTime,
+			});
+		};
+		const onOnline = () => {
+			if (offlineAtRef.current === null) return;
+			posthog.capture("portal_network_online", {
+				conversation_id: conversationId,
+				offline_seconds: Math.round((Date.now() - offlineAtRef.current) / 1000),
+				project_id: projectId,
+			});
+			offlineAtRef.current = null;
+		};
+		window.addEventListener("offline", onOffline);
+		window.addEventListener("online", onOnline);
+		return () => {
+			window.removeEventListener("offline", onOffline);
+			window.removeEventListener("online", onOnline);
+		};
+	}, [conversationId, projectId]);
 
 	// What the participant is doing right now, for the host monitor. Reported
 	// with every beacon so the monitor can show recording / paused / verifying
@@ -282,9 +350,26 @@ export const ParticipantConversationAudio = () => {
 	// Terminal "left" beacon on tab close (fires on real unload, not SPA
 	// navigation), so a graceful exit shows as "left" on the host monitor
 	// instead of aging paused -> idle -> finished over minutes.
+	const abandonStateRef = useRef({
+		isRecording,
+		participantState,
+		recordingTime,
+	});
+	abandonStateRef.current = { isRecording, participantState, recordingTime };
 	useEffect(() => {
 		if (!conversationId || !ENABLE_MONITOR) return;
-		const onPageHide = () => pingConversationLeft(conversationId, projectId);
+		const onPageHide = () => {
+			pingConversationLeft(conversationId, projectId);
+			if (abandonStateRef.current.isRecording) {
+				posthog.capture("portal_abandoned", {
+					conversation_id: conversationId,
+					participant_state: abandonStateRef.current.participantState,
+					pending_uploads: pendingUploadsRef.current.length,
+					project_id: projectId,
+					recording_time_seconds: abandonStateRef.current.recordingTime,
+				});
+			}
+		};
 		window.addEventListener("pagehide", onPageHide);
 		return () => window.removeEventListener("pagehide", onPageHide);
 	}, [conversationId, projectId]);
@@ -310,6 +395,10 @@ export const ParticipantConversationAudio = () => {
 					{ message: error?.message, status: httpStatus },
 				);
 				stopRecording();
+				posthog.capture("portal_conversation_deleted_during_recording", {
+					conversation_id: conversationId,
+					project_id: projectId,
+				});
 				setConversationDeletedDuringRecording(true);
 			} else {
 				console.warn(
@@ -325,6 +414,8 @@ export const ParticipantConversationAudio = () => {
 		conversationQuery.isFetching,
 		conversationQuery.error,
 		stopRecording,
+		conversationId,
+		projectId,
 	]);
 
 	// Auto-close refine info modal when threshold is reached
@@ -381,6 +472,12 @@ export const ParticipantConversationAudio = () => {
 
 				if (result === "timeout") {
 					console.warn("Upload wait timeout reached, proceeding anyway");
+					posthog.capture("portal_uploads_incomplete_on_finish", {
+						context: "finish",
+						conversation_id: conversationId,
+						pending_uploads: pendingUploadsRef.current.length,
+						project_id: projectId,
+					});
 				}
 			}
 
@@ -488,6 +585,12 @@ export const ParticipantConversationAudio = () => {
 
 				if (result === "timeout") {
 					console.warn("Upload wait timeout reached, proceeding anyway");
+					posthog.capture("portal_uploads_incomplete_on_finish", {
+						context: "reconnect",
+						conversation_id: conversationId,
+						pending_uploads: pendingUploadsRef.current.length,
+						project_id: projectId,
+					});
 				}
 			}
 

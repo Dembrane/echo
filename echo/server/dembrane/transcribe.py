@@ -25,6 +25,7 @@ from dembrane.prompts import render_prompt
 from dembrane.service import file_service, conversation_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
+from dembrane.analytics import capture_event_sync
 from dembrane.service.project import get_allowed_languages
 
 logger = logging.getLogger("transcribe")
@@ -210,9 +211,7 @@ def fetch_assemblyai_result(transcript_id: str) -> tuple[str, dict[str, Any]]:
     if status == "error":
         raise TranscriptionError(f"Transcript {transcript_id} failed: {data.get('error')}")
     if status != "completed":
-        raise TranscriptionError(
-            f"Transcript {transcript_id} not completed: status={status}"
-        )
+        raise TranscriptionError(f"Transcript {transcript_id} not completed: status={status}")
 
     text = data.get("text", "")
     fetch_logger.info("Fetched transcript %s (%d chars)", transcript_id, len(text))
@@ -424,9 +423,7 @@ def transcribe_audio_dembrane_26_01_redaction(
         logger.debug(f"transcript from assemblyai: {transcript}")
     except TranscriptionError as e:
         assemblyai_response_failed = True
-        logger.info(
-            f"Transcription failed with AssemblyAI. Continuing with empty transcript: {e}"
-        )
+        logger.info(f"Transcription failed with AssemblyAI. Continuing with empty transcript: {e}")
         transcript = "[Nothing to transcribe]"
 
     # Apply regex PII redaction BEFORE the correction workflow
@@ -533,6 +530,25 @@ def _is_recoverable_error(error: Exception) -> bool:
     return any(pattern in error_str for pattern in RECOVERABLE_ERRORS)
 
 
+def _report_transcription_failure(
+    conversation_chunk_id: str, error: Exception, conversation_id: Optional[str] = None
+) -> None:
+    """Fire-and-forget analytics for a chunk that failed transcription, keyed by conversation_id."""
+    error_str = str(error).lower()
+    recoverable = _is_recoverable_error(error)
+    reason = next((pattern for pattern in RECOVERABLE_ERRORS if pattern in error_str), "other")
+    capture_event_sync(
+        conversation_id or conversation_chunk_id,
+        "server_chunk_transcription_failed",
+        {
+            "chunk_id": conversation_chunk_id,
+            "conversation_id": conversation_id,
+            "recoverable": recoverable,
+            "error_reason": reason,
+        },
+    )
+
+
 def _build_whisper_prompt(conversation: dict, language: str) -> str:
     """Compose the whisper prompt from defaults and project-specific overrides."""
     default_prompt = render_prompt("default_whisper_prompt", language, {})
@@ -583,8 +599,10 @@ def transcribe_conversation_chunk(
         TranscriptionError: If the transcription fails.
     """
     logger = logging.getLogger("transcribe.transcribe_conversation_chunk")
+    conversation_id: Optional[str] = None
     try:
         chunk = _fetch_chunk(conversation_chunk_id)
+        conversation_id = chunk.get("conversation_id")
         conversation = _fetch_conversation(chunk["conversation_id"])
         language = conversation["project_id"]["language"] or "en"
 
@@ -679,6 +697,7 @@ def transcribe_conversation_chunk(
 
         # Always save the error to the chunk for visibility
         _save_chunk_error(conversation_chunk_id, error_message)
+        _report_transcription_failure(conversation_chunk_id, e, conversation_id)
 
         if _is_recoverable_error(e):
             # Recoverable errors: chunk has no usable content, but that's okay

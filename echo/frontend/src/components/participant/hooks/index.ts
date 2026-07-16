@@ -1,6 +1,7 @@
 import { createItem, readItems } from "@directus/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
+import posthog from "posthog-js";
 import { toast } from "@/components/common/Toaster";
 import {
 	confirmConversationChunkUpload,
@@ -13,6 +14,14 @@ import {
 	uploadConversationText,
 } from "@/lib/api";
 import { directus } from "@/lib/directus";
+
+const uploadFailureStage = (
+	message: string,
+): "presigned_url" | "s3_put" | "confirm" => {
+	if (message.includes("upload URL")) return "presigned_url";
+	if (message.includes("S3")) return "s3_put";
+	return "confirm";
+};
 
 export const useCreateProjectReportMetricOncePerDayMutation = () => {
 	return useMutation({
@@ -58,6 +67,12 @@ export const useConfirmConversationChunkUpload = () => {
 				`[Confirm Upload] Failed to confirm chunk ${variables.chunk_id}:`,
 				error,
 			);
+			posthog.capture("portal_chunk_upload_failed", {
+				attempts: 5,
+				chunk_id: variables.chunk_id,
+				conversation_id: variables.conversationId,
+				stage: "confirm",
+			});
 		},
 		onSuccess: (_data, variables) => {
 			console.log(
@@ -91,11 +106,16 @@ export const useUploadConversationChunk = () => {
 		mutationFn: uploadConversationChunk,
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
-		onError: (_err, variables, context) => {
+		onError: (err, variables, context) => {
 			queryClient.setQueryData(
 				["conversations", variables.conversationId, "chunks"],
 				(context as { previousChunks?: ConversationChunk[] })?.previousChunks,
 			);
+			posthog.capture("portal_chunk_upload_failed", {
+				attempts: 20,
+				conversation_id: variables.conversationId,
+				stage: uploadFailureStage((err as Error)?.message ?? ""),
+			});
 		},
 		// When mutate is called:
 		onMutate: async (variables) => {
