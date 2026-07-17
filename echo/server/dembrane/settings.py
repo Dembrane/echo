@@ -26,7 +26,7 @@ from dotenv import load_dotenv
 from pydantic import Field, BaseModel, AliasChoices, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-TranscriptionProvider = Literal["LiteLLM", "AssemblyAI", "Dembrane-25-09"]
+TranscriptionProvider = Literal["LiteLLM", "Dembrane-26-07"]
 
 _MODULE_BASE_DIR = Path(__file__).resolve().parent.parent
 _DEFAULT_ENV_PATH = _MODULE_BASE_DIR / ".env"
@@ -522,32 +522,6 @@ class TranscriptionSettings(BaseSettings):
         alias="GCP_SA_JSON",
         validation_alias=AliasChoices("GCP_SA_JSON", "TRANSCRIPTION__GCP_SA_JSON"),
     )
-    assemblyai_api_key: Optional[str] = Field(
-        default=None,
-        alias="ASSEMBLYAI_API_KEY",
-        validation_alias=AliasChoices("ASSEMBLYAI_API_KEY", "TRANSCRIPTION__ASSEMBLYAI__API_KEY"),
-    )
-    assemblyai_base_url: str = Field(
-        default="https://api.eu.assemblyai.com",
-        alias="ASSEMBLYAI_BASE_URL",
-        validation_alias=AliasChoices("ASSEMBLYAI_BASE_URL", "TRANSCRIPTION__ASSEMBLYAI__BASE_URL"),
-    )
-    assemblyai_webhook_url: Optional[str] = Field(
-        default=None,
-        alias="ASSEMBLYAI_WEBHOOK_URL",
-        validation_alias=AliasChoices(
-            "ASSEMBLYAI_WEBHOOK_URL",
-            "TRANSCRIPTION__ASSEMBLYAI__WEBHOOK_URL",
-        ),
-    )
-    assemblyai_webhook_secret: Optional[str] = Field(
-        default=None,
-        alias="ASSEMBLYAI_WEBHOOK_SECRET",
-        validation_alias=AliasChoices(
-            "ASSEMBLYAI_WEBHOOK_SECRET",
-            "TRANSCRIPTION__ASSEMBLYAI__WEBHOOK_SECRET",
-        ),
-    )
     litellm_model: Optional[str] = Field(
         default=None,
         alias="LITELLM_TRANSCRIPTION_MODEL",
@@ -583,12 +557,7 @@ class TranscriptionSettings(BaseSettings):
         return _coerce_service_account(value)
 
     def ensure_valid(self) -> None:
-        if self.provider == "AssemblyAI":
-            if not self.assemblyai_api_key:
-                raise ValueError(
-                    "ASSEMBLYAI_API_KEY must be set when TRANSCRIPTION_PROVIDER=AssemblyAI"
-                )
-        elif self.provider == "LiteLLM":
+        if self.provider == "LiteLLM":
             missing = [
                 name
                 for name, value in [
@@ -601,15 +570,10 @@ class TranscriptionSettings(BaseSettings):
                 raise ValueError(
                     "Missing required LiteLLM transcription configuration: " + ", ".join(missing)
                 )
-        elif self.provider == "Dembrane-25-09":
+        elif self.provider == "Dembrane-26-07":
             if self.gcp_sa_json is None:
                 raise ValueError(
-                    "GCP_SA_JSON must be provided when TRANSCRIPTION_PROVIDER=Dembrane-25-09"
-                )
-            if self.assemblyai_webhook_url and not self.assemblyai_webhook_secret:
-                raise ValueError(
-                    "ASSEMBLYAI_WEBHOOK_SECRET must be set when "
-                    "ASSEMBLYAI_WEBHOOK_URL is configured for TRANSCRIPTION_PROVIDER=Dembrane-25-09"
+                    "GCP_SA_JSON must be provided when TRANSCRIPTION_PROVIDER=Dembrane-26-07"
                 )
 
 
