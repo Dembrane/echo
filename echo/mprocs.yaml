@@ -6,7 +6,7 @@
 # Tip:  mprocs --names server,workers   to launch a subset
 procs:
   server:
-    shell: "uv run uvicorn dembrane.main:app --port 8000 --reload --loop asyncio"
+    shell: "uv run uvicorn dembrane.main:app --host 0.0.0.0 --port 8000 --reload --loop asyncio"
     cwd: server
 
   workers:
