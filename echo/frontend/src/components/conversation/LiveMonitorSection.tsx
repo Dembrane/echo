@@ -25,6 +25,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
 import { I18nLink } from "@/components/common/i18nLink";
+import { RedactedText } from "@/components/common/RedactedText";
 import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
@@ -170,7 +171,7 @@ const FadingTranscript = ({ text }: { text: string }) => {
 			lineClamp={2}
 			style={{ opacity: visible ? 1 : 0, transition: "opacity 180ms ease" }}
 		>
-			{shown}
+			<RedactedText>{shown}</RedactedText>
 		</Text>
 	);
 };
