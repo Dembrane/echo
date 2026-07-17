@@ -7,7 +7,7 @@ import time
 from typing import Any
 from datetime import datetime, timezone, timedelta
 
-from fastapi import Query, Request, APIRouter, HTTPException, status
+from fastapi import Query, Depends, Request, APIRouter, HTTPException, status
 from pydantic import Field, BaseModel
 from fastapi.responses import StreamingResponse
 
@@ -38,10 +38,11 @@ from dembrane.canvas.service import (
 )
 from dembrane.directus_async import async_directus
 from dembrane.canvas.sanitize import sanitize_canvas_html
+from dembrane.api.feature_flags import require_canvas_enabled
 from dembrane.api.v2.bff._access import resolve_report_access, resolve_project_access
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_canvas_enabled)])
 
 REFRESH_TTL_SECONDS = 30
 PREVIEW_TTL_SECONDS = 10

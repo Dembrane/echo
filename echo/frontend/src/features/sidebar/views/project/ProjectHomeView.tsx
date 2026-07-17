@@ -16,7 +16,7 @@ import { useLocation, useParams } from "react-router";
 import { useProjectChatsCountQuery } from "@/components/chat/hooks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
-import { ENABLE_MONITOR } from "@/config";
+import { ENABLE_CANVAS, ENABLE_MONITOR } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
@@ -88,12 +88,14 @@ export const ProjectHomeView = () => {
 					icon={BroadcastIcon}
 				/>
 			)}
-			<NavItem
-				to={`${base}/library`}
-				label={<Trans>Library</Trans>}
-				icon={BooksIcon}
-				active={libraryActive}
-			/>
+			{ENABLE_CANVAS && (
+				<NavItem
+					to={`${base}/library`}
+					label={<Trans>Library</Trans>}
+					icon={BooksIcon}
+					active={libraryActive}
+				/>
+			)}
 			<NavItem
 				to={`${base}/host-guide`}
 				label={<Trans>Host guide</Trans>}
