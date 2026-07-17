@@ -20,7 +20,7 @@ import { Verify } from "./components/participant/verify/Verify";
 import { VerifyArtefact } from "./components/participant/verify/VerifyArtefact";
 import { VerifySelection } from "./components/participant/verify/VerifySelection";
 import { ProjectAccessGuard } from "./components/project/ProjectAccessGuard";
-import { ENABLE_MONITOR } from "./config";
+import { ENABLE_CANVAS, ENABLE_MONITOR } from "./config";
 import {
 	ParticipantConversationAudioRoute,
 	ParticipantConversationTextRoute,
@@ -255,32 +255,40 @@ const projectRouteChildren = [
 						],
 						path: "conversations/:conversationId",
 					},
-					{
-						children: [
-							{
-								element: <ProjectLibraryAspect />,
-								path: "views/:viewId/aspects/:aspectId",
-							},
-							{
-								element: <ProjectLibraryView />,
-								path: "views/:viewId",
-							},
-							{
-								element: <LibraryRoute />,
-								index: true,
-							},
-						],
-						element: <ProjectLibraryLayout />,
-						path: "library",
-					},
+					...(ENABLE_CANVAS
+						? [
+								{
+									children: [
+										{
+											element: <ProjectLibraryAspect />,
+											path: "views/:viewId/aspects/:aspectId",
+										},
+										{
+											element: <ProjectLibraryView />,
+											path: "views/:viewId",
+										},
+										{
+											element: <LibraryRoute />,
+											index: true,
+										},
+									],
+									element: <ProjectLibraryLayout />,
+									path: "library",
+								},
+							]
+						: []),
 					{
 						element: <ProjectReportRoute />,
 						path: "report",
 					},
-					{
-						element: <CanvasRoute />,
-						path: "canvases/:canvasId",
-					},
+					...(ENABLE_CANVAS
+						? [
+								{
+									element: <CanvasRoute />,
+									path: "canvases/:canvasId",
+								},
+							]
+						: []),
 					{
 						element: <ProjectConversationsRoute />,
 						path: "conversations",

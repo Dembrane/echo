@@ -10,7 +10,7 @@ from logging import getLogger
 from datetime import datetime, timezone
 from contextlib import suppress
 
-from fastapi import Query, Request, APIRouter, HTTPException
+from fastapi import Query, Depends, Request, APIRouter, HTTPException
 from pydantic import Field, BaseModel
 from fastapi.responses import JSONResponse, StreamingResponse
 
@@ -48,6 +48,7 @@ from dembrane.agentic_runtime import (
     subscribe_live_events,
 )
 from dembrane.service.agentic import TERMINAL_RUN_STATUSES, AgenticRunNotFoundException
+from dembrane.api.feature_flags import require_canvas_enabled
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
 AgenticRouter = APIRouter(tags=["agentic"])
@@ -1585,7 +1586,10 @@ async def _get_project_chat_or_404(
     return chat
 
 
-@AgenticRouter.get("/projects/{project_id}/canvases")
+@AgenticRouter.get(
+    "/projects/{project_id}/canvases",
+    dependencies=[Depends(require_canvas_enabled)],
+)
 async def list_project_canvases(
     project_id: str,
     auth: DependencyDirectusSession,
@@ -1654,7 +1658,10 @@ async def _recent_loop_runs(loop_id: str, limit: int) -> list[dict[str, Any]]:
     ]
 
 
-@AgenticRouter.get("/projects/{project_id}/chats/{chat_id}/canvas-activity")
+@AgenticRouter.get(
+    "/projects/{project_id}/chats/{chat_id}/canvas-activity",
+    dependencies=[Depends(require_canvas_enabled)],
+)
 async def list_chat_canvas_activity(
     project_id: str,
     chat_id: str,
@@ -1709,7 +1716,10 @@ async def list_chat_canvas_activity(
     return {"canvases": canvases}
 
 
-@AgenticRouter.get("/projects/{project_id}/canvases/{canvas_id}")
+@AgenticRouter.get(
+    "/projects/{project_id}/canvases/{canvas_id}",
+    dependencies=[Depends(require_canvas_enabled)],
+)
 async def get_project_canvas(
     project_id: str,
     canvas_id: str,
@@ -1731,7 +1741,10 @@ async def get_project_canvas(
     }
 
 
-@AgenticRouter.get("/projects/{project_id}/canvases/{canvas_id}/history")
+@AgenticRouter.get(
+    "/projects/{project_id}/canvases/{canvas_id}/history",
+    dependencies=[Depends(require_canvas_enabled)],
+)
 async def get_project_canvas_history(
     project_id: str,
     canvas_id: str,
@@ -1750,7 +1763,10 @@ async def get_project_canvas_history(
     }
 
 
-@AgenticRouter.post("/projects/{project_id}/canvases/{canvas_id}/edit")
+@AgenticRouter.post(
+    "/projects/{project_id}/canvases/{canvas_id}/edit",
+    dependencies=[Depends(require_canvas_enabled)],
+)
 async def edit_project_canvas(
     project_id: str,
     canvas_id: str,
@@ -1778,7 +1794,10 @@ async def edit_project_canvas(
     }
 
 
-@AgenticRouter.post("/projects/{project_id}/canvases/{canvas_id}/host-items")
+@AgenticRouter.post(
+    "/projects/{project_id}/canvases/{canvas_id}/host-items",
+    dependencies=[Depends(require_canvas_enabled)],
+)
 async def add_project_canvas_host_item(
     project_id: str,
     canvas_id: str,
@@ -1801,7 +1820,10 @@ async def add_project_canvas_host_item(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@AgenticRouter.post("/projects/{project_id}/canvases/{canvas_id}/host-items/remove")
+@AgenticRouter.post(
+    "/projects/{project_id}/canvases/{canvas_id}/host-items/remove",
+    dependencies=[Depends(require_canvas_enabled)],
+)
 async def remove_project_canvas_host_item(
     project_id: str,
     canvas_id: str,
@@ -1819,7 +1841,10 @@ async def remove_project_canvas_host_item(
     )
 
 
-@AgenticRouter.post("/projects/{project_id}/canvases/{canvas_id}/loop/{action}")
+@AgenticRouter.post(
+    "/projects/{project_id}/canvases/{canvas_id}/loop/{action}",
+    dependencies=[Depends(require_canvas_enabled)],
+)
 async def update_project_canvas_loop(
     project_id: str,
     canvas_id: str,
