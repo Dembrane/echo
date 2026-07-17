@@ -11,7 +11,6 @@ from dembrane.api.verify import VerifyRouter
 from dembrane.api.agentic import AgenticRouter
 from dembrane.api.project import ProjectRouter
 from dembrane.api.template import TemplateRouter
-from dembrane.api.webhooks import WebhooksRouter
 from dembrane.api.stateless import StatelessRouter
 from dembrane.api.participant import ParticipantRouter
 from dembrane.api.conversation import ConversationRouter
@@ -40,4 +39,3 @@ api.include_router(SearchRouter)
 api.include_router(UserSettingsRouter, prefix="/user-settings")
 api.include_router(TemplateRouter, prefix="/templates")
 api.include_router(StatsRouter, prefix="/stats")
-api.include_router(WebhooksRouter)
