@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { displayRole, roleColor } from "@/lib/roles";
 
 export interface Workspace {
@@ -63,7 +64,14 @@ export const useMyAccess = () => {
  */
 export const MyAccessCard = () => {
 	const navigate = useI18nNavigate();
+	const { setWorkspace } = useWorkspace();
 	const { data, isLoading } = useMyAccess();
+
+	// Sync context first so workspace-scoped queries don't lag.
+	const openWorkspace = (id: string) => {
+		setWorkspace(id);
+		navigate(`/w/${id}/home`);
+	};
 
 	// Group workspaces under their organisation so the list reads as
 	// "organisation → workspaces in that organisation with your role."
@@ -176,7 +184,7 @@ export const MyAccessCard = () => {
 												justify="space-between"
 												wrap="nowrap"
 												style={{ cursor: "pointer" }}
-												onClick={() => navigate(`/w/${ws.id}/home`)}
+												onClick={() => openWorkspace(ws.id)}
 											>
 												<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
 													<Text size="sm" lineClamp={1}>
