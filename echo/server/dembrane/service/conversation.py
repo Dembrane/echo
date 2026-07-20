@@ -330,6 +330,7 @@ class ConversationService:
         is_finished: Any = _UNSET,
         is_all_chunks_transcribed: Any = _UNSET,
         is_over_cap: Any = _UNSET,
+        has_empty_transcript: Any = _UNSET,
     ) -> dict:
         update_data: dict[str, Any] = {}
         if participant_name is not _UNSET:
@@ -348,6 +349,8 @@ class ConversationService:
             update_data["is_all_chunks_transcribed"] = is_all_chunks_transcribed
         if is_over_cap is not _UNSET:
             update_data["is_over_cap"] = is_over_cap
+        if has_empty_transcript is not _UNSET:
+            update_data["has_empty_transcript"] = has_empty_transcript
 
         try:
             with self._client_context() as client:
