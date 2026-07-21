@@ -159,7 +159,7 @@ export const ProjectConversationRoute = () => {
 		<Stack gap="2rem" className="relative px-8 py-4">
 			<LoadingOverlay visible={conversationQuery.isLoading} />
 
-			{/* Header: name, title, tags. Created-on and duration live on the list page only. */}
+			{/* Header: name, title, created-at, tags. Duration lives on the list page only. */}
 			<Stack gap="xs" {...testId("conversation-detail-header")}>
 				<Group gap="sm" align="center" wrap="wrap">
 					<Title order={1}>{primary}</Title>
@@ -207,26 +207,40 @@ export const ProjectConversationRoute = () => {
 						{conversation.participant_name}
 					</Text>
 				)}
-				{tags.length > 0 && (
-					<Group gap={6} wrap="wrap">
-						{tags.map((tag) => {
-							const tagText = getTagText(tag);
-							if (!tagText) return null;
-							return (
-								<Badge
-									key={tag.id}
-									size="xs"
-									variant="light"
-									color="gray"
-									radius="sm"
-									classNames={{ label: "!text-graphite" }}
-								>
-									{tagText}
-								</Badge>
-							);
-						})}
-					</Group>
-				)}
+				<Group gap="sm" wrap="wrap" align="center">
+					{conversation?.created_at && (
+						<Text size="xs" c="dimmed">
+							<Trans>Created on</Trans>:{" "}
+							{new Date(conversation.created_at).toLocaleString(undefined, {
+								day: "numeric",
+								month: "short",
+								year: "numeric",
+								hour: "2-digit",
+								minute: "2-digit",
+							})}
+						</Text>
+					)}
+					{tags.length > 0 && (
+						<Group gap={6} wrap="wrap">
+							{tags.map((tag) => {
+								const tagText = getTagText(tag);
+								if (!tagText) return null;
+								return (
+									<Badge
+										key={tag.id}
+										size="xs"
+										variant="light"
+										color="gray"
+										radius="sm"
+										classNames={{ label: "!text-graphite" }}
+									>
+										{tagText}
+									</Badge>
+								);
+							})}
+						</Group>
+					)}
+				</Group>
 			</Stack>
 
 			{/*
