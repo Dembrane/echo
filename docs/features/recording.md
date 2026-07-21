@@ -27,9 +27,9 @@ through onboarding, consent, a mic check, and recording.
 
 You can also record yourself. From the dashboard you get the same recorder participants use,
 with the same pause, resume and stop controls - useful when you're the one in the room.
-[dembrane Go](./mobile-app-dembrane-go.md), the native iOS app, is the most robust option when
-connectivity is shaky: it records to the device first and uploads when it can, so a dead spot
-never costs you the conversation.
+[dembrane Go](./mobile-app-dembrane-go.md), the native iOS app (currently in beta), is the
+most robust option when connectivity is shaky: it records to the device first and uploads
+when it can, so a dead spot never costs you the conversation.
 
 ## The mic check
 
@@ -90,5 +90,5 @@ asked for them* in the [portal editor](./portal-editor.md), and transcripts can 
 - [Transcription](./transcription.md) - what happens to the audio once it's uploaded.
 - [The participant portal](./portal-and-participant-experience.md) - the no-account recording
   experience, end to end.
-- [dembrane Go (mobile)](./mobile-app-dembrane-go.md) - the native iOS recorder.
+- [dembrane Go (mobile)](./mobile-app-dembrane-go.md) - the native iOS recorder (beta).
 - [Tiers & billing](./tiers-and-billing.md) - recording hours and what's metered.

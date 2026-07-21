@@ -1,6 +1,6 @@
 ---
 title: Using dembrane Go on mobile
-description: A host's guide to the dembrane Go iOS app - when to record on mobile versus the web, what syncs, and what stays web-only.
+description: A host's guide to the dembrane Go iOS app - when to record on mobile versus the web, what syncs, and what stays web-only. Currently in beta, not yet on the App Store.
 audience: host
 ---
 
@@ -11,6 +11,11 @@ with your dembrane account, pick a project, and record - it captures locally and
 then syncs into the same [projects](./creating-a-project.md) you use on the web, on the same
 transcription back end. A recording made on your phone is indistinguishable from a browser
 one once it lands.
+
+> [!IMPORTANT]
+> dembrane Go is in *beta* - it isn't on the App Store yet. To record on your phone today,
+> email [sameer@dembrane.com](mailto:sameer@dembrane.com) and we'll invite you to the
+> TestFlight beta.
 
 For the role-neutral reference, see
 [dembrane Go (the mobile app)](../../features/mobile-app-dembrane-go.md).

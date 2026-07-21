@@ -23,7 +23,7 @@ Almost everything you do falls into three movements.
 [set up its portal](./portal-editor.md), and share a QR code or link so people can record.
 There are [several ways to collect](./collecting-conversations.md) - the portal, recording
 yourself, uploading text you already have, or recording on your phone with
-[dembrane Go](./using-dembrane-go-mobile.md).
+[dembrane Go](./using-dembrane-go-mobile.md) (currently in beta).
 
 *Understand.* Audio [transcribes automatically](../../features/transcription.md) and gets a
 summary. [Read and organise](./transcripts-and-conversations.md) what comes in, then
@@ -44,7 +44,7 @@ reading - the judgement stays yours.
 - [Collecting conversations](./collecting-conversations.md) - every way to gather input.
 - [Setting up the portal](./portal-editor.md) - configuring the page participants see.
 - [Transcripts & conversations](./transcripts-and-conversations.md) - reading and tidying what you've collected.
-- [Using dembrane Go on mobile](./using-dembrane-go-mobile.md) - recording from your phone.
+- [Using dembrane Go on mobile](./using-dembrane-go-mobile.md) - recording from your phone (beta).
 - [Getting help](./getting-help.md) - every way to reach the dembrane team when you're stuck.
 
 ## Related

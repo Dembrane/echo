@@ -321,6 +321,12 @@ No account required. Public/participant API in §10.4.
 
 ## 9. dembrane Go (iOS) - native SwiftUI app (`dembrane-go/`)
 
+*Distribution: BETA.* NOT on the App Store yet - distributed via TestFlight to invited
+testers only. Beta sign-up: email sameer@dembrane.com. Docs must not imply general
+availability; user-facing mentions carry a "beta" qualifier and the canonical pages
+(`features/mobile-app-dembrane-go.md`, `users/host/using-dembrane-go-mobile.md`) carry the
+contact callout. Drop all of this at App Store launch.
+
 Production env, email/password + 2FA login, register. Local-first chunked recording
 (30 s chunks, survives crash/kill, background capture, Live Activity / Dynamic Island,
 waveform, mic selector), audio-file import. Conversations list/detail (transcript, summary,
