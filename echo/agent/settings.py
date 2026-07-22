@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     echo_api_url: str = Field(default="http://localhost:8000/api", alias="ECHO_API_URL")
     # Vertex model id (no provider prefix). Gemini 3.x is served on the
     # global Vertex host only; see vertex_api_endpoint below.
-    llm_model: str = Field(default="gemini-3.5-flash", alias="LLM_MODEL")
+    llm_model: str = Field(default="gemini-3.6-flash", alias="LLM_MODEL")
     vertex_location: str = Field(default="eu", alias="VERTEX_LOCATION")
     # Pinning the global host while keeping locations/<region> in the request
     # path mirrors the server's LiteLLM config (validated in production):

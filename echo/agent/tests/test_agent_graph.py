@@ -159,7 +159,7 @@ def _fake_vertex_chat(monkeypatch):
 def test_build_llm_prefers_explicit_vertex_credentials(monkeypatch):
     get_settings.cache_clear()
     fake_chat, fake_creds = _fake_vertex_chat(monkeypatch)
-    monkeypatch.setenv("LLM_MODEL", "gemini-3.5-flash")
+    monkeypatch.setenv("LLM_MODEL", "gemini-3.6-flash")
     monkeypatch.setenv("VERTEX_PROJECT", "vertex-project")
     monkeypatch.setenv("VERTEX_LOCATION", "europe-west4")
     monkeypatch.setenv("VERTEX_CREDENTIALS", '{"type":"service_account","project_id":"explicit"}')
@@ -168,7 +168,7 @@ def test_build_llm_prefers_explicit_vertex_credentials(monkeypatch):
     llm = _build_llm()
 
     assert isinstance(llm, fake_chat)
-    assert llm.kwargs["model_name"] == "gemini-3.5-flash"
+    assert llm.kwargs["model_name"] == "gemini-3.6-flash"
     assert llm.kwargs["project"] == "vertex-project"
     assert llm.kwargs["location"] == "europe-west4"
     assert isinstance(llm.kwargs["credentials"], fake_creds)
@@ -198,7 +198,7 @@ def test_build_llm_falls_back_to_service_account_project_id(monkeypatch):
     fake_chat, fake_creds = _fake_vertex_chat(monkeypatch)
     monkeypatch.delenv("VERTEX_CREDENTIALS", raising=False)
     monkeypatch.delenv("VERTEX_PROJECT", raising=False)
-    monkeypatch.setenv("LLM_MODEL", "gemini-3.5-flash")
+    monkeypatch.setenv("LLM_MODEL", "gemini-3.6-flash")
     monkeypatch.setenv("VERTEX_LOCATION", "eu")
     monkeypatch.setenv("GCP_SA_JSON", '{"type":"service_account","project_id":"sa-project"}')
 
