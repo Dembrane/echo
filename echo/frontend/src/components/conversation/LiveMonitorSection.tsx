@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Badge,
 	Box,
 	Card,
 	Collapse,
@@ -16,6 +15,8 @@ import {
 	BatteryLowIcon,
 	BroadcastIcon,
 	CaretRightIcon,
+	MicrophoneIcon,
+	PencilSimpleIcon,
 	WarningCircleIcon,
 	WifiSlashIcon,
 } from "@phosphor-icons/react";
@@ -24,127 +25,68 @@ import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
-import { I18nLink } from "@/components/common/i18nLink";
 import { RedactedText } from "@/components/common/RedactedText";
 import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
 	type MonitorConversation,
-	type ParticipantState,
 	useConversationMonitor,
 } from "@/hooks/useConversationMonitor";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
+import { ConversationDrilldownModal } from "./ConversationDrilldownModal";
+import { MonitorBadge } from "./MonitorBadge";
+import { StatePill, stateColor } from "./StatePill";
 
 // How many rows to render per tag group before collapsing the rest behind a
 // "show more" — keeps the page calm and bounded even for a busy tag.
 const MAX_ROWS_PER_GROUP = 25;
 
-type StateMeta = {
-	color: string;
-	label: string;
-	pulse?: boolean;
-	darkText?: boolean;
-};
+// Stable keys for the meter segments (index drives the fill).
+const METER_SEGMENTS = ["s1", "s2", "s3", "s4", "s5"];
+// Voice RMS sits in this low band (nowhere near 1.0); normalize it to the full
+// meter so the bars use their whole range.
+const MIC_LEVEL_FLOOR = 0.03;
+const MIC_LEVEL_CEILING = 0.3;
 
-const stateMeta = (state: ParticipantState): StateMeta => {
-	switch (state) {
-		case "recording":
-			return { color: "red", label: t`Recording`, pulse: true };
-		case "paused":
-			return { color: "yellow", label: t`Paused` };
-		case "verifying":
-			return { color: "primary", label: t`Verifying` };
-		case "refining":
-			return { color: "grape", label: t`Exploring` };
-		case "text":
-			return { color: "primary", label: t`Typing` };
-		case "finishing":
-			return { color: "primary", label: t`Finishing` };
-		case "finished":
-			return { color: "primary", label: t`Finished` };
-		case "waiting":
-			return { color: "gray", label: t`Waiting` };
-		case "initiated":
-			return { color: "gray", label: t`Just started` };
-		case "offline":
-			return { color: "salmon", darkText: true, label: t`Offline` };
-		case "left":
-			return { color: "gray", label: t`Left` };
-		case "backgrounded":
-			return { color: "gray", label: t`Away` };
-		default:
-			return { color: "gray", label: t`Idle` };
-	}
-};
-
-export const isProblemState = (conversation: MonitorConversation): boolean =>
-	conversation.recording_health === "stalled" ||
-	conversation.has_error ||
-	conversation.state === "offline" ||
-	conversation.transcription_status === "failing";
-
-export const StatePill = ({ state }: { state: ParticipantState }) => {
-	const meta = stateMeta(state);
-	const darkTextStyles = {
-		label: { color: "var(--app-text)" },
-		section: { color: "var(--app-text)" },
-	};
-
-	return (
-		<Badge
-			size="sm"
-			color={meta.color}
-			variant="light"
-			styles={meta.darkText ? darkTextStyles : undefined}
-			leftSection={
-				<span
-					aria-hidden
-					className={`inline-block h-1.5 w-1.5 rounded-full bg-current ${
-						meta.pulse ? "animate-pulse" : ""
-					}`}
-				/>
-			}
-		>
-			{meta.label}
-		</Badge>
-	);
-};
-
-// Signal-meter bar heights (px). Keyed by value (not index) to keep biome
-// happy; the values are unique so that's stable.
-const METER_HEIGHTS = [5, 7, 9, 11, 13];
-
-/** A tiny 5-bar signal meter fed by the participant's live mic level (0..1).
- * Lifts low levels with a sqrt so quiet-but-present audio still reads, and
- * softly flags all-quiet ("is the mic muted?") without an alarm. */
+/** Mic-level meter. Mic glyph + equal-height segments read as loudness, not
+ * signal strength. */
 const AudioLevelMeter = ({ level }: { level: number }) => {
-	const scaled = Math.min(1, Math.sqrt(Math.max(0, level)));
-	const active = Math.round(scaled * METER_HEIGHTS.length);
+	const scaled = Math.min(
+		1,
+		Math.max(
+			0,
+			(level - MIC_LEVEL_FLOOR) / (MIC_LEVEL_CEILING - MIC_LEVEL_FLOOR),
+		),
+	);
+	const active = Math.round(scaled * METER_SEGMENTS.length);
 	return (
 		<Tooltip
 			label={
 				active > 0
 					? t`Audio is coming in`
-					: t`Very quiet right now — check the mic isn't muted`
+					: t`Very quiet right now. Check the mic isn't muted.`
 			}
 			withArrow
 		>
-			<Group gap={2} align="flex-end" wrap="nowrap" aria-hidden>
-				{METER_HEIGHTS.map((h, i) => (
-					<Box
-						key={h}
-						style={{
-							backgroundColor:
-								i < active
-									? "var(--mantine-color-green-6)"
-									: "var(--mantine-color-gray-3)",
-							borderRadius: 1,
-							height: h,
-							width: 3,
-						}}
-					/>
-				))}
+			<Group gap={3} align="center" wrap="nowrap" aria-hidden>
+				<MicrophoneIcon size={13} />
+				<Group gap={2} align="center" wrap="nowrap">
+					{METER_SEGMENTS.map((id, i) => (
+						<Box
+							key={id}
+							style={{
+								backgroundColor:
+									i < active
+										? "var(--mantine-color-green-6)"
+										: "var(--mantine-color-gray-3)",
+								borderRadius: 1,
+								height: 10,
+								width: 3,
+							}}
+						/>
+					))}
+				</Group>
 			</Group>
 		</Tooltip>
 	);
@@ -201,37 +143,66 @@ const formatClock = (totalSeconds: number): string => {
 		: `${minutes}:${pad(seconds)}`;
 };
 
-// Recorded length when we have it (set on finish), otherwise elapsed since the
-// session started. It can be a little behind for a live session; that's fine.
-const durationLabel = (conversation: MonitorConversation): string | null => {
-	if (typeof conversation.duration === "number" && conversation.duration > 0) {
-		return formatClock(conversation.duration);
-	}
-	if (conversation.created_at) {
-		const start = new Date(conversation.created_at).getTime();
-		if (!Number.isNaN(start)) return formatClock((Date.now() - start) / 1000);
-	}
-	return null;
-};
-
-// A duration that ticks up once a second for a live session, and reconciles to
-// the server's value on each snapshot. Finished sessions just show the final
-// duration (no ticking).
+// Recorded length only: server recorded_seconds (ticks while recording, frozen
+// when paused) or the final duration once finished. Never a wall-clock guess.
 const LiveDuration = ({
 	conversation,
 }: {
 	conversation: MonitorConversation;
 }) => {
-	const ticking = conversation.is_live && !conversation.is_finished;
-	const [, setTick] = useState(0);
+	const recording =
+		conversation.state === "recording" &&
+		conversation.is_live &&
+		!conversation.is_finished;
+	const serverSeconds = conversation.recorded_seconds;
+
+	// Local seconds accrued on top of the last server value while recording.
+	const [extra, setExtra] = useState(0);
+	// Reset the offset during render (not in an effect) when the server value or
+	// recording state changes, so the corrected time never paints a stale frame.
+	const [anchor, setAnchor] = useState({ recording, serverSeconds });
+	if (
+		anchor.serverSeconds !== serverSeconds ||
+		anchor.recording !== recording
+	) {
+		setAnchor({ recording, serverSeconds });
+		setExtra(0);
+	}
 	useEffect(() => {
-		if (!ticking) return;
-		const id = setInterval(() => setTick((value) => value + 1), 1000);
+		if (!recording) return;
+		const id = setInterval(() => setExtra((value) => value + 1), 1000);
 		return () => clearInterval(id);
-	}, [ticking]);
-	const label = durationLabel(conversation);
+	}, [recording]);
+
+	let label: string | null = null;
+	if (conversation.is_finished) {
+		// Final server duration is authoritative once finished.
+		if (
+			typeof conversation.duration === "number" &&
+			conversation.duration > 0
+		) {
+			label = formatClock(conversation.duration);
+		} else if (typeof serverSeconds === "number") {
+			label = formatClock(serverSeconds);
+		}
+	} else if (typeof serverSeconds === "number") {
+		label = formatClock(serverSeconds + (recording ? extra : 0));
+	}
 	if (!label) return null;
-	return <Text size="xs">{label}</Text>;
+	// State-colored dot (same colors as the StatePill) + graphite tabular clock.
+	const dotColor = stateColor(conversation.state);
+	return (
+		<Group gap={4} align="center" wrap="nowrap">
+			<span
+				aria-hidden
+				className="inline-block h-1.5 w-1.5 rounded-full"
+				style={{ backgroundColor: `var(--mantine-color-${dotColor}-6)` }}
+			/>
+			<Text size="xs" style={{ fontVariantNumeric: "tabular-nums" }}>
+				{label}
+			</Text>
+		</Group>
+	);
 };
 
 // A deliberately vague, conservative "time to finish the transcription
@@ -262,13 +233,13 @@ const TranscriptionBadge = ({
 	if (conversation.transcription_status === "failing") return null;
 	if (conversation.transcription_status === "transcribing") {
 		return (
-			<Badge size="xs" color="primary" variant="light">
+			<MonitorBadge size="xs" color="primary" variant="light">
 				<Plural
 					value={conversation.pending_transcription}
 					one="Transcribing # clip"
 					other="Transcribing # clips"
 				/>
-			</Badge>
+			</MonitorBadge>
 		);
 	}
 	if (
@@ -276,9 +247,9 @@ const TranscriptionBadge = ({
 		conversation.chunk_count > 0
 	) {
 		return (
-			<Badge size="xs" color="green" variant="light">
+			<MonitorBadge size="xs" color="green" variant="light">
 				<Trans>Transcribed</Trans>
-			</Badge>
+			</MonitorBadge>
 		);
 	}
 	return null;
@@ -286,23 +257,21 @@ const TranscriptionBadge = ({
 
 const MonitorRow = ({
 	conversation,
-	to,
 	highlighted,
 	onLockedClick,
-	onOpen,
+	onEdit,
 }: {
 	conversation: MonitorConversation;
-	to: string | null;
 	highlighted?: boolean;
 	onLockedClick?: () => void;
-	onOpen?: () => void;
+	onEdit?: () => void;
 }) => {
 	const label = conversation.label?.trim() || t`Anonymous participant`;
 	const weakNetwork = isWeakNetwork(conversation);
 	const lowBattery = isLowBattery(conversation);
 	const isLocked = conversation.locked;
-	// Locked rows open the upgrade modal; unlocked rows link to the conversation.
-	const clickable = isLocked || !!to;
+	// Locked rows open the upgrade modal; unlocked rows open the edit modal.
+	const clickable = isLocked || !!onEdit;
 
 	const card = (
 		<Card
@@ -318,6 +287,24 @@ const MonitorRow = ({
 						<Text size="sm" fw={500} truncate>
 							{label}
 						</Text>
+						{!isLocked && onEdit && (
+							<Tooltip label={t`Edit`} withArrow>
+								{/* Visual affordance only; the tile is the accessible
+								    control, and clicks here bubble to it. */}
+								<ActionIcon
+									component="div"
+									variant="subtle"
+									color="gray"
+									size="sm"
+									ml="xs"
+									aria-hidden
+									tabIndex={-1}
+									data-testid="monitor-row-edit"
+								>
+									<PencilSimpleIcon size={14} color="var(--app-text)" />
+								</ActionIcon>
+							</Tooltip>
+						)}
 					</Group>
 					<Group gap={6} align="center" wrap="nowrap">
 						{conversation.recording_health === "receiving" &&
@@ -331,14 +318,14 @@ const MonitorRow = ({
 								maw={280}
 								withArrow
 							>
-								<Badge
+								<MonitorBadge
 									size="xs"
 									color="orange"
 									variant="filled"
 									leftSection={<WarningCircleIcon size={12} />}
 								>
 									<Trans>Audio stopped?</Trans>
-								</Badge>
+								</MonitorBadge>
 							</Tooltip>
 						)}
 						{conversation.recording_health === "backgrounded" && (
@@ -348,15 +335,20 @@ const MonitorRow = ({
 								maw={280}
 								withArrow
 							>
-								<Badge size="xs" color="gray" variant="light">
+								<MonitorBadge size="xs" color="gray" variant="light">
 									<Trans>Screen locked</Trans>
-								</Badge>
+								</MonitorBadge>
 							</Tooltip>
 						)}
 						{conversation.language && (
-							<Badge size="xs" color="gray" variant="light" tt="uppercase">
+							<MonitorBadge
+								size="xs"
+								color="gray"
+								variant="light"
+								tt="uppercase"
+							>
 								{conversation.language}
-							</Badge>
+							</MonitorBadge>
 						)}
 						{weakNetwork && (
 							<Tooltip label={t`Weak network`} withArrow>
@@ -370,14 +362,14 @@ const MonitorRow = ({
 						)}
 						<TranscriptionBadge conversation={conversation} />
 						{conversation.has_error && (
-							<Badge
+							<MonitorBadge
 								size="xs"
 								color="red"
 								variant="filled"
 								leftSection={<WarningCircleIcon size={12} />}
 							>
 								<Trans>Error</Trans>
-							</Badge>
+							</MonitorBadge>
 						)}
 					</Group>
 				</Group>
@@ -430,11 +422,23 @@ const MonitorRow = ({
 		);
 	}
 
-	if (!to) return card;
+	if (!onEdit) return card;
 	return (
-		<I18nLink to={to} className="block no-underline" onClick={onOpen}>
+		<Box
+			role="button"
+			tabIndex={0}
+			className="block"
+			aria-label={t`Open ${label}`}
+			onClick={onEdit}
+			onKeyDown={(event) => {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					onEdit();
+				}
+			}}
+		>
 			{card}
-		</I18nLink>
+		</Box>
 	);
 };
 
@@ -445,6 +449,13 @@ type TagGroup = {
 	label: string;
 	items: MonitorConversation[];
 	liveCount: number;
+};
+
+// created_at as epoch ms for sorting; missing/invalid sinks to the end.
+const createdAtMs = (conversation: MonitorConversation): number => {
+	if (!conversation.created_at) return Number.POSITIVE_INFINITY;
+	const ms = new Date(conversation.created_at).getTime();
+	return Number.isNaN(ms) ? Number.POSITIVE_INFINITY : ms;
 };
 
 const groupByTag = (conversations: MonitorConversation[]): TagGroup[] => {
@@ -468,29 +479,33 @@ const groupByTag = (conversations: MonitorConversation[]): TagGroup[] => {
 		group.items.push(conversation);
 		if (conversation.is_live) group.liveCount += 1;
 	}
-	// Groups with live activity first; the Untagged bucket sinks to the end.
+	// Sort rows by created_at so they hold their place as state changes.
+	for (const group of groups.values()) {
+		group.items.sort((a, b) => createdAtMs(a) - createdAtMs(b));
+	}
+	// Group order by first-seen; Untagged sinks to the end.
+	const firstSeen = (group: TagGroup): number =>
+		group.items.length ? createdAtMs(group.items[0]) : Number.POSITIVE_INFINITY;
 	return order
 		.map((tag) => groups.get(tag) as TagGroup)
 		.sort((a, b) => {
 			if ((a.key === UNTAGGED) !== (b.key === UNTAGGED)) {
 				return a.key === UNTAGGED ? 1 : -1;
 			}
-			return b.liveCount - a.liveCount;
+			return firstSeen(a) - firstSeen(b);
 		});
 };
 
 const TagGroupSection = ({
 	group,
-	base,
 	highlightedConversationId,
 	onLockedClick,
-	onOpen,
+	onEdit,
 }: {
 	group: TagGroup;
-	base: string | null;
 	highlightedConversationId?: string | null;
 	onLockedClick?: (conversation: MonitorConversation) => void;
-	onOpen?: (conversation: MonitorConversation) => void;
+	onEdit?: (conversation: MonitorConversation) => void;
 }) => {
 	const [opened, { toggle }] = useDisclosure(true);
 	const [expanded, setExpanded] = useState(false);
@@ -530,9 +545,9 @@ const TagGroupSection = ({
 				</Text>
 				<Text size="xs">{group.items.length}</Text>
 				{group.liveCount > 0 && (
-					<Badge size="xs" color="primary" variant="light">
+					<MonitorBadge size="xs" color="primary" variant="light">
 						<Plural value={group.liveCount} one="# live" other="# live" />
-					</Badge>
+					</MonitorBadge>
 				)}
 			</Group>
 			<Collapse in={opened}>
@@ -541,10 +556,9 @@ const TagGroupSection = ({
 						<MonitorRow
 							key={conversation.id}
 							conversation={conversation}
-							to={base ? `${base}/conversations/${conversation.id}` : null}
 							highlighted={conversation.id === highlightedConversationId}
 							onLockedClick={() => onLockedClick?.(conversation)}
-							onOpen={() => onOpen?.(conversation)}
+							onEdit={onEdit ? () => onEdit(conversation) : undefined}
 						/>
 					))}
 					{overflow > 0 && (
@@ -589,9 +603,15 @@ export const LiveMonitorSection = ({
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const { workspace } = useWorkspace();
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	// Drilldown selection by id, so the open modal keeps reading fresh snapshots
+	// (and closes on its own once the row is deleted / ages out).
+	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const { conversations, summary, isLoading, error, isStreaming } =
 		useConversationMonitor(projectId);
 	const groups = useMemo(() => groupByTag(conversations), [conversations]);
+	const selected =
+		conversations.find((conversation) => conversation.id === selectedId) ??
+		null;
 	// Rows link to the conversation detail page when we know the workspace.
 	const base =
 		workspaceId && projectId ? `/w/${workspaceId}/projects/${projectId}` : null;
@@ -663,23 +683,20 @@ export const LiveMonitorSection = ({
 									label={t`Live stream disconnected. Updating on a slower poll until it reconnects.`}
 									withArrow
 								>
-									<Badge size="sm" color="orange" variant="light">
+									<MonitorBadge size="sm" color="orange" variant="light">
 										<Trans>Reconnecting</Trans>
-									</Badge>
+									</MonitorBadge>
 								</Tooltip>
 							)}
-							<Badge size="sm" color="primary" variant="light">
+							<MonitorBadge size="sm" color="primary" variant="light">
 								<Plural value={summary.live} one="# live" other="# live" />
-							</Badge>
+							</MonitorBadge>
 							{summary.offline > 0 && (
-								<Badge
+								<MonitorBadge
 									size="sm"
-									color="salmon"
-									variant="light"
-									styles={{
-										label: { color: "var(--app-text)" },
-										section: { color: "var(--app-text)" },
-									}}
+									color="mauve"
+									variant="filled"
+									styles={{ section: { color: "var(--app-text)" } }}
 									leftSection={<WifiSlashIcon size={12} />}
 								>
 									<Plural
@@ -687,10 +704,10 @@ export const LiveMonitorSection = ({
 										one="# offline"
 										other="# offline"
 									/>
-								</Badge>
+								</MonitorBadge>
 							)}
 							{summary.not_receiving > 0 && (
-								<Badge
+								<MonitorBadge
 									size="sm"
 									color="orange"
 									variant="filled"
@@ -701,36 +718,36 @@ export const LiveMonitorSection = ({
 										one="# audio stopped"
 										other="# audio stopped"
 									/>
-								</Badge>
+								</MonitorBadge>
 							)}
 							{summary.transcribing > 0 && (
-								<Badge size="sm" color="primary" variant="light">
+								<MonitorBadge size="sm" color="primary" variant="light">
 									<Plural
 										value={summary.transcribing}
 										one="# transcribing"
 										other="# transcribing"
 									/>
-								</Badge>
+								</MonitorBadge>
 							)}
 							{summary.with_errors > 0 && (
-								<Badge size="sm" color="red" variant="light">
+								<MonitorBadge size="sm" color="red" variant="light">
 									<Plural
 										value={summary.with_errors}
 										one="# with errors"
 										other="# with errors"
 									/>
-								</Badge>
+								</MonitorBadge>
 							)}
 							{catchUpLabel(summary.catch_up_eta_seconds) && (
 								<Tooltip
 									label={t`Rough estimate to finish transcribing the backlog`}
 									withArrow
 								>
-									<Badge size="sm" color="orange" variant="light">
+									<MonitorBadge size="sm" color="orange" variant="light">
 										<Trans>
 											catch up {catchUpLabel(summary.catch_up_eta_seconds)}
 										</Trans>
-									</Badge>
+									</MonitorBadge>
 								</Tooltip>
 							)}
 						</Group>
@@ -742,7 +759,6 @@ export const LiveMonitorSection = ({
 						<TagGroupSection
 							key={group.key}
 							group={group}
-							base={base}
 							highlightedConversationId={highlightedConversationId}
 							onLockedClick={(conversation) => {
 								posthog.capture("monitor_locked_row_clicked", {
@@ -751,20 +767,24 @@ export const LiveMonitorSection = ({
 								});
 								upgradeHandlers.open();
 							}}
-							onOpen={(conversation) =>
-								posthog.capture("monitor_conversation_opened", {
-									conversation_id: conversation.id,
-									from_problem_state: isProblemState(conversation),
-									participant_state: conversation.state,
+							onEdit={(conversation) => {
+								posthog.capture("monitor_drilldown_opened", {
+									entity_type: "recording",
 									project_id: projectId,
-									recording_health: conversation.recording_health,
-									transcription_status: conversation.transcription_status,
-								})
-							}
+									stage_or_state: conversation.state,
+								});
+								setSelectedId(conversation.id);
+							}}
 						/>
 					))}
 				</Stack>
 			</Stack>
+			<ConversationDrilldownModal
+				conversation={selected}
+				base={base}
+				projectId={projectId}
+				onClose={() => setSelectedId(null)}
+			/>
 			<UpgradeModal
 				opened={upgradeOpened}
 				onClose={upgradeHandlers.close}

@@ -48,6 +48,42 @@ def _run(coro):
         loop.close()
 
 
+def test_recording_started_at_stamped_once_and_carried(
+    fake_redis: _FakeRedis,
+) -> None:
+    import json
+
+    key = "conversation_liveness:c1"
+    t0 = datetime(2026, 7, 3, 10, 0, 0, tzinfo=timezone.utc)
+
+    # Not recording yet: no start stamp.
+    _run(liveness.mark_conversation_seen("c1", now=t0, telemetry={"state": "waiting"}))
+    assert "recording_started_at" not in json.loads(fake_redis.store[key].decode())
+
+    # First recording ping stamps the start (server time).
+    t1 = t0 + timedelta(seconds=5)
+    _run(
+        liveness.mark_conversation_seen("c1", now=t1, telemetry={"state": "recording"})
+    )
+    started = json.loads(fake_redis.store[key].decode())["recording_started_at"]
+    assert started == t1.isoformat()
+
+    # Pause then resume keeps the original start (not re-stamped).
+    _run(
+        liveness.mark_conversation_seen(
+            "c1", now=t1 + timedelta(seconds=3), telemetry={"state": "paused"}
+        )
+    )
+    _run(
+        liveness.mark_conversation_seen(
+            "c1", now=t1 + timedelta(seconds=8), telemetry={"state": "recording"}
+        )
+    )
+    assert (
+        json.loads(fake_redis.store[key].decode())["recording_started_at"] == started
+    )
+
+
 def test_mark_sets_key_with_ttl(fake_redis: _FakeRedis) -> None:
     import json
 

@@ -372,6 +372,11 @@ export type ParticipantPingTelemetry = {
 	visitor_id?: string;
 	/** Live mic input level (0..1 RMS) so the host can see audio flowing. */
 	audio_level?: number;
+	/** Accumulated recording seconds, excluding paused gaps (host timer reads it). */
+	recorded_seconds?: number;
+	/** Seconds into the current recording run (resets on resume), for the monitor's
+	 * ramp-up grace so it doesn't false-alarm "audio stopped" after a resume. */
+	segment_seconds?: number;
 	/** Client-side send time (epoch ms), stamped when the ping is initiated, so
 	 * the server can drop an out-of-order ping and keep the newest state. */
 	client_ts?: number;

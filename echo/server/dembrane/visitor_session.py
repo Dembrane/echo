@@ -30,10 +30,10 @@ _VISITOR_INDEX_TTL_SECONDS = 2100
 # Cap the per-project visitor index so a public flood of unique ids can't grow it
 # unbounded (which would bloat the host-side read). Well above any real crowd.
 _MAX_VISITOR_INDEX_MEMBERS = 2000
-# visitor_id -> conversation_id, written at initiate. Lets the funnel drop a
-# dot the instant it graduates into a conversation, before any recording ping.
+# visitor_id -> conversation_id: a short bridge from initiate to the first ping
+# (live conversations graduate via telemetry; a long TTL would suppress re-scans).
 _LINK_KEY_PREFIX = "visitor_conversation:"
-_LINK_TTL_SECONDS = 2 * 60 * 60
+_LINK_TTL_SECONDS = 120
 
 # Funnel stages the portal reports. Mic carries its outcome so the host can see
 # a skip or a block, not just "advanced".

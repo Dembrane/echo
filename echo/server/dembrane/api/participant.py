@@ -462,6 +462,11 @@ class ConversationPingRequest(BaseModel):
     # Live mic input level (0..1 RMS), sampled from the recorder. Lets the host
     # see audio is really flowing and spot a silent/muted mic.
     audio_level: Optional[float] = None
+    # Accumulated recording seconds, excluding paused gaps (host timer reads it).
+    recorded_seconds: Optional[float] = None
+    # Seconds into the current recording run (resets on resume), so the monitor
+    # can grant a ramp-up grace before flagging "audio stopped".
+    segment_seconds: Optional[float] = None
     # Client send time (epoch ms), stamped when the ping is initiated. Lets the
     # server drop an out-of-order ping so a late one can't clobber a newer state.
     client_ts: Optional[int] = None
@@ -489,6 +494,16 @@ def _build_ping_telemetry(body: Optional[ConversationPingRequest]) -> dict:
             telemetry["audio_level"] = round(max(0.0, min(1.0, float(level))), 2)
     if isinstance(body.client_ts, int) and body.client_ts > 0:
         telemetry["client_ts"] = body.client_ts
+    # Recorder timers: non-negative seconds, ignore NaN/inf from a bad client.
+    for field in ("recorded_seconds", "segment_seconds"):
+        value = getattr(body, field)
+        if (
+            isinstance(value, (int, float))
+            and value == value
+            and abs(value) != float("inf")
+            and value >= 0
+        ):
+            telemetry[field] = round(float(value), 1)
     if body.network is not None:
         network = body.network.model_dump(exclude_none=True)
         if isinstance(network.get("effective_type"), str):

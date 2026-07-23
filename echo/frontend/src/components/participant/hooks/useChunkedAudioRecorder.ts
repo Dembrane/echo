@@ -85,6 +85,7 @@ const useChunkedAudioRecorder = ({
 	const meterSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 	const analyserRef = useRef<AnalyserNode | null>(null);
 	const meterBufferRef = useRef<Uint8Array | null>(null);
+	const peakLevelRef = useRef(0);
 
 	// We create and "unlock" the Audio element during user gesture (startRecording),
 	// then reuse it for playback later when interruption is detected.
@@ -110,6 +111,38 @@ const useChunkedAudioRecorder = ({
 		isPausedRef.current = isPaused;
 		userPausedRef.current = userPaused;
 	}, [isRecording, isPaused, userPaused]);
+
+	// Sample the mic RMS frequently and accumulate the window max; the beacon
+	// reads and resets it via getAudioLevel. Gated on recording state.
+	useEffect(() => {
+		const SAMPLE_MS = 100;
+		const id = setInterval(() => {
+			const analyser = analyserRef.current;
+			const buffer = meterBufferRef.current;
+			if (
+				!analyser ||
+				!buffer ||
+				!isRecordingRef.current ||
+				isPausedRef.current
+			) {
+				peakLevelRef.current = 0;
+				return;
+			}
+			try {
+				analyser.getByteTimeDomainData(buffer);
+				let sumSquares = 0;
+				for (let i = 0; i < buffer.length; i++) {
+					const v = (buffer[i] - 128) / 128;
+					sumSquares += v * v;
+				}
+				const instant = Math.sqrt(sumSquares / buffer.length);
+				peakLevelRef.current = Math.max(instant, peakLevelRef.current);
+			} catch {
+				peakLevelRef.current = 0;
+			}
+		}, SAMPLE_MS);
+		return () => clearInterval(id);
+	}, []);
 
 	useEffect(() => {
 		return () => {
@@ -429,29 +462,13 @@ const useChunkedAudioRecorder = ({
 
 	// Current mic input level in [0, 1], the RMS of the time-domain waveform.
 	// Returns 0 when not actively recording or when the meter is unavailable.
-	// Read-only — reading the analyser never affects the captured audio.
+	// Returns the loudest RMS since the last read, then resets, so each beacon
+	// reflects the peak over its own window (not one instant that may be a gap).
 	const getAudioLevel = useCallback((): number => {
-		const analyser = analyserRef.current;
-		const buffer = meterBufferRef.current;
-		if (
-			!analyser ||
-			!buffer ||
-			!isRecordingRef.current ||
-			isPausedRef.current
-		) {
-			return 0;
-		}
-		try {
-			analyser.getByteTimeDomainData(buffer);
-			let sumSquares = 0;
-			for (let i = 0; i < buffer.length; i++) {
-				const v = (buffer[i] - 128) / 128;
-				sumSquares += v * v;
-			}
-			return Math.sqrt(sumSquares / buffer.length);
-		} catch {
-			return 0;
-		}
+		if (!isRecordingRef.current || isPausedRef.current) return 0;
+		const peak = peakLevelRef.current;
+		peakLevelRef.current = 0;
+		return peak;
 	}, []);
 
 	return {
