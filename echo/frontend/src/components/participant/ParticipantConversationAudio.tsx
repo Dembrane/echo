@@ -228,8 +228,24 @@ export const ParticipantConversationAudio = () => {
 	}, []);
 
 	// Snapshot of ticking state so the edge-triggered effects below don't re-subscribe each tick.
-	const recordingScreenStateRef = useRef({ isRecording, recordingTime });
-	recordingScreenStateRef.current = { isRecording, recordingTime };
+	const recordingScreenStateRef = useRef({
+		isRecording,
+		recordingTime,
+		stoppedRecordingTime,
+	});
+	recordingScreenStateRef.current = {
+		isRecording,
+		recordingTime,
+		stoppedRecordingTime,
+	};
+
+	// Recorded time when the current run started, so the beacon can report how
+	// long THIS run has been going (segment_seconds); resets on resume.
+	const segmentBaselineRef = useRef(0);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: capture recordingTime only at the recording (re)start edge
+	useEffect(() => {
+		if (isRecording) segmentBaselineRef.current = recordingTime;
+	}, [isRecording]);
 
 	// Backgrounding while recording is our proxy for a call/lock/tab-switch; edge-triggered per transition.
 	const backgroundedAtRef = useRef<number | null>(null);
@@ -326,6 +342,17 @@ export const ParticipantConversationAudio = () => {
 				typeof rawLevel === "number" && Number.isFinite(rawLevel)
 					? Math.round(Math.min(1, Math.max(0, rawLevel)) * 100) / 100
 					: undefined;
+			// Read from the ref so the 3s interval samples current values.
+			const live = recordingScreenStateRef.current;
+			const round1 = (n: number) => Math.round(n * 10) / 10;
+			// Pause resets recordingTime to 0 and freezes the length in
+			// stoppedRecordingTime, so report that while paused.
+			const recorded = live.stoppedRecordingTime ?? live.recordingTime;
+			const recorded_seconds =
+				live.isRecording || recorded > 0 ? round1(recorded) : undefined;
+			const segment_seconds = live.isRecording
+				? round1(Math.max(0, live.recordingTime - segmentBaselineRef.current))
+				: undefined;
 			void pingConversation(conversationId, {
 				audio_level,
 				battery,
@@ -333,6 +360,8 @@ export const ParticipantConversationAudio = () => {
 				mode: "voice",
 				network: hidden ? undefined : readNetworkTelemetry(),
 				project_id: projectId,
+				recorded_seconds,
+				segment_seconds,
 				state: participantState,
 				visitor_id: projectId ? getVisitorId(projectId) : undefined,
 			});

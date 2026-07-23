@@ -350,6 +350,112 @@ def test_monitor_flags_stalled_recording() -> None:
     assert payload["summary"]["not_receiving"] == 1
 
 
+def test_monitor_resume_grace_suppresses_false_stall() -> None:
+    # After a resume the last chunk predates the pause, so audio looks stale even
+    # though recording is fine. A fresh recording segment must NOT alarm; an old
+    # segment with the same stale audio still stalls.
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    stale = _iso(now - timedelta(seconds=90))
+    recent_chunks = [
+        {"conversation_id": {"id": "c1", "participant_name": "Ada"}, "timestamp": stale, "error": None},
+    ]
+
+    def _health(segment_seconds: float | None) -> str:
+        telemetry = {
+            "c1": {
+                "seen": now - timedelta(seconds=3),
+                "state": "recording",
+                "segment_seconds": segment_seconds,
+            }
+        }
+        payload = _build_monitor_payload(
+            recent_chunks, {"c1": 4}, {"c1": 4}, now, 45, telemetry
+        )
+        return payload["conversations"][0]["recording_health"]
+
+    # Just resumed (segment younger than the grace): no alarm.
+    assert _health(10.0) == "receiving"
+    # Long-running segment with stale audio: genuine stall still fires.
+    assert _health(300.0) == "stalled"
+    # Older client that never reports a segment: unchanged behavior (stalled).
+    assert _health(None) == "stalled"
+
+
+def test_monitor_surfaces_recorded_seconds() -> None:
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    fresh = _iso(now - timedelta(seconds=5))
+    recent_chunks = [
+        {"conversation_id": {"id": "c1", "participant_name": "Ada"}, "timestamp": fresh, "error": None},
+        {"conversation_id": {"id": "c2", "participant_name": "Bo"}, "timestamp": fresh, "error": None},
+    ]
+    telemetry = {"c1": {"seen": now - timedelta(seconds=2), "recorded_seconds": 123.4}}
+    payload = _build_monitor_payload(
+        recent_chunks, {"c1": 1, "c2": 1}, {"c1": 1, "c2": 1}, now, 45, telemetry
+    )
+    by_id = {c["id"]: c for c in payload["conversations"]}
+    assert by_id["c1"]["recorded_seconds"] == 123.4
+    # No telemetry timer reported -> null, not a wall-clock guess.
+    assert by_id["c2"]["recorded_seconds"] is None
+
+
+def test_monitor_surfaces_tag_ids() -> None:
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    fresh = _iso(now - timedelta(seconds=5))
+    recent_chunks = [
+        {"conversation_id": {"id": "c1", "participant_name": "Ada"}, "timestamp": fresh, "error": None},
+    ]
+    payload = _build_monitor_payload(
+        recent_chunks, {"c1": 1}, {"c1": 1}, now, 45,
+        tag_map={"c1": ["Team A"]},
+        tag_id_map={"c1": ["tag-1", "tag-2"]},
+    )
+    entry = payload["conversations"][0]
+    assert entry["tags"] == ["Team A"]
+    assert entry["tag_ids"] == ["tag-1", "tag-2"]
+
+
+def test_monitor_builds_timeline_journey_then_recording() -> None:
+    now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+    created = _iso(now - timedelta(minutes=5))
+    last_audio = _iso(now - timedelta(seconds=5))
+    recent_chunks = [
+        {
+            "conversation_id": {"id": "c1", "participant_name": "Ada", "created_at": created},
+            "timestamp": last_audio,
+            "error": None,
+        },
+        {"conversation_id": {"id": "c2", "participant_name": "Bo"}, "timestamp": last_audio, "error": None},
+    ]
+    visitor_stages = {
+        "c1": {
+            "scanned": _iso(now - timedelta(minutes=8)),
+            "profile": _iso(now - timedelta(minutes=6)),
+        }
+    }
+    # recording_started_at (stamped from the first "recording" ping) slots in
+    # between "created" and the recording markers.
+    telemetry = {
+        "c1": {
+            "seen": now - timedelta(seconds=2),
+            "recording_started_at": _iso(now - timedelta(minutes=4)),
+        }
+    }
+    payload = _build_monitor_payload(
+        recent_chunks, {"c1": 1, "c2": 1}, {"c1": 1, "c2": 1}, now, 45, telemetry,
+        visitor_stages=visitor_stages,
+    )
+    by_id = {c["id"]: c for c in payload["conversations"]}
+    assert [step["key"] for step in by_id["c1"]["timeline"]] == [
+        "scanned",
+        "profile",
+        "created",
+        "recording_started",
+        "last_audio",
+    ]
+    # No linked visitor stages, telemetry, or created_at: only the recording marker.
+    assert [step["key"] for step in by_id["c2"]["timeline"]] == ["last_audio"]
+
+
 def test_monitor_receiving_and_waiting_recording_health() -> None:
     now = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
     fresh = _iso(now - timedelta(seconds=5))

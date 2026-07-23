@@ -66,6 +66,8 @@ _TELEMETRY_FIELDS = (
     "network",
     "battery",
     "audio_level",
+    "recorded_seconds",
+    "segment_seconds",
     "client_ts",
 )
 
@@ -148,25 +150,37 @@ async def mark_conversation_seen(
     client = await get_redis_client()
     key = _key(conversation_id)
 
+    existing: Optional[dict[str, Any]] = None
+    try:
+        existing_raw = await client.get(key)
+        if existing_raw:
+            text = (
+                existing_raw.decode("utf-8")
+                if isinstance(existing_raw, (bytes, bytearray))
+                else str(existing_raw)
+            )
+            parsed = json.loads(text)
+            if isinstance(parsed, dict):
+                existing = parsed
+    except Exception:  # noqa: BLE001
+        existing = None
+
     # Drop an out-of-order ping so a late one (e.g. an in-flight recording ping)
     # can't clobber a newer state such as a terminal "left". Ordering is by the
     # client-stamped send time; a genuine later resume still wins (newer ts).
     incoming_ts = payload.get("client_ts")
-    if isinstance(incoming_ts, int):
-        try:
-            existing_raw = await client.get(key)
-            if existing_raw:
-                text = (
-                    existing_raw.decode("utf-8")
-                    if isinstance(existing_raw, (bytes, bytearray))
-                    else str(existing_raw)
-                )
-                existing = json.loads(text)
-                existing_ts = existing.get("client_ts") if isinstance(existing, dict) else None
-                if isinstance(existing_ts, int) and incoming_ts < existing_ts:
-                    return
-        except Exception:  # noqa: BLE001
-            pass
+    if isinstance(incoming_ts, int) and existing is not None:
+        existing_ts = existing.get("client_ts")
+        if isinstance(existing_ts, int) and incoming_ts < existing_ts:
+            return
+
+    # Stamp the first "recording" ping (server time) and carry it forward, so the
+    # monitor gets a real "recording started" without reading chunks.
+    existing_started = existing.get("recording_started_at") if existing else None
+    if existing_started:
+        payload["recording_started_at"] = existing_started
+    elif payload.get("state") == "recording":
+        payload["recording_started_at"] = payload["seen"]
 
     await client.set(key, json.dumps(payload), ex=ttl)
 

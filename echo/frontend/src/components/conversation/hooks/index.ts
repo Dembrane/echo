@@ -229,7 +229,11 @@ export const useDeleteConversationByIdMutation = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["conversations"],
 			});
-			toast.success("Conversation deleted successfully");
+			// Drop it from the live monitor without waiting for the next poll.
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "conversation-monitor"],
+			});
+			toast.success("Conversation deleted");
 		},
 	});
 };

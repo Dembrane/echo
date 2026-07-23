@@ -667,6 +667,10 @@ MONITOR_CONTACT_CHUNK_SECONDS = 60
 # Pinging but no audio chunk in this many seconds -> "stalled" (page alive, audio
 # stopped). Distinct from "offline" (no contact at all). Chunks land every ~15-30s.
 MONITOR_RECORDING_STALL_SECONDS = 45
+# After a resume the last chunk predates the pause, so audio looks stale until
+# the first new chunk lands. Don't flag "stalled" while the recording run is
+# younger than this; a genuine stall persists past it.
+MONITOR_RESUME_GRACE_SECONDS = MONITOR_RECORDING_STALL_SECONDS
 # Rough, conservative per-clip transcription time for the "catch up ~N min"
 # estimate. Tuned so a handful of pending clips reads ~2 min and a big backlog
 # ~15 min, erring long. Not a promise — surfaced as a vague "~N min".
@@ -681,6 +685,7 @@ def _monitor_status(
     contact_fresh: bool,
     audio_fresh: bool,
     chunk_count: int,
+    segment_seconds: Optional[float] = None,
 ) -> tuple[str, str]:
     """Fold the two contact signals into (state, recording_health).
 
@@ -694,6 +699,9 @@ def _monitor_status(
     - left: the portal's close-beacon fired (tab closed without finishing).
     - stalled: still pinging, but audio stopped (page alive, upload/mic broken).
     - receiving: audio flowing. waiting/idle: benign pre-audio / not-live.
+
+    `segment_seconds` suppresses a false "stalled" during the post-resume ramp-up;
+    absent (older clients) means no grace, so detection is unchanged.
     """
     if is_finished:
         return "finished", "finished"
@@ -722,14 +730,20 @@ def _monitor_status(
     else:
         state = "initiated"
 
+    # A freshly (re)started run hasn't had time to upload a chunk yet.
+    within_resume_grace = (
+        isinstance(segment_seconds, (int, float))
+        and segment_seconds < MONITOR_RESUME_GRACE_SECONDS
+    )
+
     if reported_state == "paused":
         health = "paused"
     elif audio_fresh:
         health = "receiving"
-    elif ping_fresh and chunk_count > 0:
+    elif ping_fresh and chunk_count > 0 and not within_resume_grace:
         health = "stalled"
     elif chunk_count > 0:
-        health = "idle"
+        health = "idle" if not within_resume_grace else "receiving"
     else:
         health = "waiting"
 
@@ -773,6 +787,27 @@ def _transcription_status(*, has_error: bool, chunk_count: int, transcribed_coun
     return "up_to_date"
 
 
+def _build_conversation_timeline(
+    stages: Any, created_at: Any, recording_started_at: Any, last_chunk_at: Any
+) -> list[dict]:
+    """Ordered {key, at} steps: visitor funnel journey then recording markers.
+    Steps with no timestamp are dropped; labels live on the frontend."""
+    steps: list[dict] = []
+    if isinstance(stages, dict):
+        for stage in _FUNNEL_STAGES:
+            at = stages.get(stage)
+            if isinstance(at, str) and at.strip():
+                steps.append({"key": stage, "at": at})
+    if isinstance(created_at, str) and created_at.strip():
+        steps.append({"key": "created", "at": created_at})
+    # First "recording" ping, stamped server-side.
+    if isinstance(recording_started_at, str) and recording_started_at.strip():
+        steps.append({"key": "recording_started", "at": recording_started_at})
+    if isinstance(last_chunk_at, str) and last_chunk_at.strip():
+        steps.append({"key": "last_audio", "at": last_chunk_at})
+    return steps
+
+
 def _build_monitor_payload(
     recent_chunks: list[dict],
     chunk_counts: dict[str, int],
@@ -784,6 +819,8 @@ def _build_monitor_payload(
     extra_conversations: Optional[list[dict]] = None,
     tier: Optional[str] = None,
     over_cap_active: bool = False,
+    tag_id_map: Optional[dict[str, list[str]]] = None,
+    visitor_stages: Optional[dict[str, dict]] = None,
 ) -> dict:
     """Aggregate recent chunks into a per-conversation monitor view.
 
@@ -810,6 +847,8 @@ def _build_monitor_payload(
     """
     telemetry = telemetry or {}
     tag_map = tag_map or {}
+    tag_id_map = tag_id_map or {}
+    visitor_stages = visitor_stages or {}
 
     order: list[str] = []
     by_conv: dict[str, dict] = {}
@@ -954,6 +993,7 @@ def _build_monitor_payload(
             contact_fresh=contact_fresh,
             audio_fresh=audio_fresh,
             chunk_count=chunk_count,
+            segment_seconds=tele.get("segment_seconds"),
         )
         # Live = still in contact and not ended. A finish is definitive; a
         # departed session (left) is not live either.
@@ -995,10 +1035,18 @@ def _build_monitor_payload(
                 "audio_level": tele.get("audio_level"),
                 "mode": tele.get("mode"),
                 "tags": tag_map.get(conv_id, []),
+                "tag_ids": tag_id_map.get(conv_id, []),
                 "language": entry["language"],
                 "latest_transcript": latest_transcript,
                 "created_at": entry["created_at"],
                 "duration": entry["duration"],
+                "recorded_seconds": tele.get("recorded_seconds"),
+                "timeline": _build_conversation_timeline(
+                    visitor_stages.get(conv_id, {}),
+                    entry["created_at"],
+                    tele.get("recording_started_at"),
+                    entry["last_chunk_at"],
+                ),
                 "network": tele.get("network"),
                 "battery": tele.get("battery"),
                 "last_chunk_at": entry["last_chunk_at"],
@@ -1137,7 +1185,12 @@ async def gather_project_monitor(
         {
             "query": {
                 "filter": {
-                    "conversation_id": {"project_id": {"_eq": project_id}},
+                    # deleted_at filter: a deleted conversation stops showing as
+                    # live even while its portal keeps uploading chunks.
+                    "conversation_id": {
+                        "project_id": {"_eq": project_id},
+                        "deleted_at": {"_null": True},
+                    },
                     "source": {"_nin": ["DASHBOARD_UPLOAD", "CLONE"]},
                     "timestamp": {"_gt": lookback_cutoff},
                 },
@@ -1269,7 +1322,9 @@ async def gather_project_monitor(
 
     # Tag labels for the active set, so the monitor can group by tag. Bounded:
     # the active set is already capped by the lookback + chunk cap above.
+    # Labels group the monitor; ids seed the drilldown tag editor.
     tag_map: dict[str, list[str]] = {}
+    tag_id_map: dict[str, list[str]] = {}
     if conv_ids:
         try:
             tag_rows = await async_directus.get_items(
@@ -1277,7 +1332,11 @@ async def gather_project_monitor(
                 {
                     "query": {
                         "filter": {"conversation_id": {"_in": conv_ids}},
-                        "fields": ["conversation_id", "project_tag_id.text"],
+                        "fields": [
+                            "conversation_id",
+                            "project_tag_id.id",
+                            "project_tag_id.text",
+                        ],
                         "limit": 2000,
                     }
                 },
@@ -1286,9 +1345,14 @@ async def gather_project_monitor(
                 for row in tag_rows:
                     cid = row.get("conversation_id")
                     project_tag = row.get("project_tag_id")
-                    text = project_tag.get("text") if isinstance(project_tag, dict) else None
-                    if cid and isinstance(text, str) and text.strip():
+                    if not cid or not isinstance(project_tag, dict):
+                        continue
+                    text = project_tag.get("text")
+                    tag_id = project_tag.get("id")
+                    if isinstance(text, str) and text.strip():
                         tag_map.setdefault(cid, []).append(text.strip())
+                    if tag_id:
+                        tag_id_map.setdefault(cid, []).append(str(tag_id))
         except Exception as exc:  # noqa: BLE001
             logger.warning("Monitor tag read failed: %s", exc)
 
@@ -1302,6 +1366,26 @@ async def gather_project_monitor(
             telemetry = await get_telemetry_many(conv_ids)
         except Exception as exc:  # noqa: BLE001
             logger.warning("Monitor liveness ping read failed: %s", exc)
+
+    # Join each conversation to its originating visitor's funnel stages (via the
+    # ping's visitor_id) for the drilldown timeline. Best-effort.
+    visitor_stages: dict[str, dict] = {}
+    conv_visitor_ids = {
+        cid: str(tele["visitor_id"])
+        for cid, tele in telemetry.items()
+        if tele.get("visitor_id")
+    }
+    if conv_visitor_ids:
+        try:
+            linked_visitors = await get_visitors_many(
+                project_id, list(set(conv_visitor_ids.values()))
+            )
+            for cid, vid in conv_visitor_ids.items():
+                stages = linked_visitors.get(vid, {}).get("stages")
+                if isinstance(stages, dict):
+                    visitor_stages[cid] = stages
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Monitor visitor-stage join failed: %s", exc)
 
     if tier is _GATE_UNRESOLVED:
         tier, over_cap_active = await resolve_project_gate(project_id)
@@ -1317,11 +1401,12 @@ async def gather_project_monitor(
         extra_conversations,
         tier=tier,
         over_cap_active=over_cap_active,
+        tag_id_map=tag_id_map,
+        visitor_stages=visitor_stages,
     )
 
-    # Pre-conversation funnel: visitors still onboarding (scan -> terms -> mic
-    # -> profile), deduped against those that already graduated into a live
-    # conversation (their recording ping carries the visitor_id).
+    # Pre-conversation funnel. A live conversation's ping carries its visitor_id,
+    # so that visitor graduates out of the funnel; when it ends the ping stops.
     graduated: set[str] = {
         str(tele["visitor_id"]) for tele in telemetry.values() if tele.get("visitor_id")
     }
@@ -1333,8 +1418,7 @@ async def gather_project_monitor(
         )
         if visitor_ids:
             visitors = await get_visitors_many(project_id, visitor_ids)
-            # A visitor that already initiated is linked to a conversation;
-            # drop it from the funnel immediately, before its recording ping.
+            # Link key bridges initiate -> first ping (short TTL).
             graduated |= await get_linked_visitor_ids(list(visitors.keys()))
     except Exception as exc:  # noqa: BLE001
         logger.warning("Monitor funnel read failed: %s", exc)
