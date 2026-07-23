@@ -12,6 +12,12 @@ from dembrane.utils import generate_uuid
 from dembrane.app_user import resolve_app_user, get_app_user_or_raise
 from dembrane.policies import TIER_ORDER
 from dembrane.settings import get_settings
+from dembrane.cache_utils import (
+    USAGE_SUMMARY_TTL_SECONDS,
+    cache_get_json,
+    cache_set_json,
+    usage_summary_cache_key,
+)
 from dembrane.seat_capacity import tier_hard_blocks_seats
 from dembrane.api.v2.schemas import (
     MemberPreview,
@@ -39,11 +45,15 @@ router = APIRouter()
 logger = getLogger("api.v2.workspaces")
 
 
-async def _get_workspace_usage(ws_id: str) -> WorkspaceUsage:
+async def _compute_workspace_usage(ws_id: str) -> Optional[WorkspaceUsage]:
     """Audio hours + conversation count (all-time and current month).
 
     Hours include soft-deleted rows (PRD §270: delete preserves billable
-    duration); counts exclude them.
+    duration); counts exclude them. DB-side aggregates: no conversation
+    rows cross the wire.
+
+    Returns None on any Directus error response so the caller never caches
+    a zeroed result in place of a real failure.
     """
     projects = await async_directus.get_items(
         "project",
@@ -57,47 +67,80 @@ async def _get_workspace_usage(ws_id: str) -> WorkspaceUsage:
             }
         },
     )
-    if not isinstance(projects, list) or len(projects) == 0:
+    if not isinstance(projects, list):
+        return None
+    if len(projects) == 0:
         return WorkspaceUsage()
 
     project_ids = [p["id"] for p in projects]
-
-    conversations = await async_directus.get_items(
-        "conversation",
-        {
-            "query": {
-                "filter": {
-                    "project_id": {"_in": project_ids},
-                },
-                "fields": ["duration", "created_at", "deleted_at"],
-                "limit": -1,
-            }
-        },
-    )
-    if not isinstance(conversations, list):
-        return WorkspaceUsage()
-
-    total_seconds = sum(c.get("duration") or 0 for c in conversations)
-    live_count = sum(1 for c in conversations if not c.get("deleted_at"))
-
     now = datetime.now(timezone.utc)
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
-    monthly_seconds = 0
-    monthly_live_count = 0
-    for c in conversations:
-        created_at = c.get("created_at")
-        if not created_at or created_at < month_start:
-            continue
-        monthly_seconds += c.get("duration") or 0
-        if not c.get("deleted_at"):
-            monthly_live_count += 1
+
+    def _agg(extra_filter: dict, aggregate: dict) -> dict:
+        return {
+            "query": {
+                "filter": {"project_id": {"_in": project_ids}, **extra_filter},
+                "aggregate": aggregate,
+            }
+        }
+
+    total_res, live_res, month_res, month_live_res = await asyncio.gather(
+        async_directus.get_items("conversation", _agg({}, {"sum": ["duration"]})),
+        async_directus.get_items(
+            "conversation", _agg({"deleted_at": {"_null": True}}, {"count": ["id"]})
+        ),
+        async_directus.get_items(
+            "conversation", _agg({"created_at": {"_gte": month_start}}, {"sum": ["duration"]})
+        ),
+        async_directus.get_items(
+            "conversation",
+            _agg(
+                {"created_at": {"_gte": month_start}, "deleted_at": {"_null": True}},
+                {"count": ["id"]},
+            ),
+        ),
+    )
+    # A partial failure (some aggregates real, some error dicts) must not
+    # produce a result that mixes real and zeroed fields.
+    if not all(isinstance(res, list) for res in (total_res, live_res, month_res, month_live_res)):
+        return None
+
+    def _agg_sum(res: object) -> float:
+        if isinstance(res, list) and res:
+            return float((res[0].get("sum") or {}).get("duration") or 0)
+        return 0.0
+
+    def _agg_count(res: object) -> int:
+        if isinstance(res, list) and res:
+            return int((res[0].get("count") or {}).get("id") or 0)
+        return 0
 
     return WorkspaceUsage(
-        audio_hours=round(total_seconds / 3600, 1),
-        conversation_count=live_count,
-        audio_hours_this_month=round(monthly_seconds / 3600, 1),
-        conversations_this_month=monthly_live_count,
+        audio_hours=round(_agg_sum(total_res) / 3600, 1),
+        conversation_count=_agg_count(live_res),
+        audio_hours_this_month=round(_agg_sum(month_res) / 3600, 1),
+        conversations_this_month=_agg_count(month_live_res),
     )
+
+
+async def _get_workspace_usage(ws_id: str) -> WorkspaceUsage:
+    """Cached wrapper: the workspace list recomputes this for every
+    workspace on every app load, so a 30-min Redis TTL (busted on tier
+    and membership changes via invalidate_workspace_usage) matches the
+    staleness the /usage endpoint already accepts."""
+    cache_key = usage_summary_cache_key(ws_id)
+    cached = await cache_get_json(cache_key)
+    if isinstance(cached, dict):
+        try:
+            return WorkspaceUsage(**cached)
+        except Exception:
+            pass
+    usage = await _compute_workspace_usage(ws_id)
+    if usage is None:
+        # Directus error path: return zeros for this request only, never cache it.
+        return WorkspaceUsage()
+    await cache_set_json(cache_key, usage.model_dump(), USAGE_SUMMARY_TTL_SECONDS)
+    return usage
 
 
 async def _get_member_previews(ws_id: str) -> list[MemberPreview]:

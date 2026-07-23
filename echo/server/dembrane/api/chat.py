@@ -212,7 +212,8 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
             message_text = message.get("text", "")
             tokens_count = message.get("tokens_count")
             if tokens_count is None:
-                tokens_count = token_counter(
+                tokens_count = await run_in_thread_pool(
+                    token_counter,
                     messages=[{"role": message_from, "content": message_text}],
                     model=get_completion_kwargs(CHAT_LLM)["model"],
                 )

@@ -201,37 +201,34 @@ async def _shared_private_project_ids(user_id: str) -> set[str]:
 async def _project_audio_hours(project_ids: list[str]) -> dict[str, float]:
     """Sum conversation.duration (seconds) per project, return hours.
 
-    Single batched fetch for all `project_ids`. Used by the projects
-    list so card rows can show "Xh · N conversations" without a second
-    request per row. Returns an empty map when given no ids.
+    One DB-side aggregate grouped by project_id; no conversation rows
+    cross the wire. Returns an empty map when given no ids.
     """
     if not project_ids:
         return {}
-    convs = (
-        await async_directus.get_items(
-            "conversation",
-            {
-                "query": {
-                    "filter": {
-                        "project_id": {"_in": project_ids},
-                        "deleted_at": {"_null": True},
-                    },
-                    "fields": ["project_id", "duration"],
-                    "limit": -1,
-                }
-            },
-        )
-        or []
+    rows = await async_directus.get_items(
+        "conversation",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_in": project_ids},
+                    "deleted_at": {"_null": True},
+                },
+                "aggregate": {"sum": ["duration"]},
+                "groupBy": ["project_id"],
+            }
+        },
     )
-    if not isinstance(convs, list):
+    if not isinstance(rows, list):
         return {}
-    seconds: dict[str, float] = {}
-    for row in convs:
+    hours: dict[str, float] = {}
+    for row in rows:
         pid = row.get("project_id")
         if not pid:
             continue
-        seconds[pid] = seconds.get(pid, 0.0) + float(row.get("duration") or 0)
-    return {pid: round(s / 3600, 1) for pid, s in seconds.items()}
+        seconds = float((row.get("sum") or {}).get("duration") or 0)
+        hours[pid] = round(seconds / 3600, 1)
+    return hours
 
 
 class V2ProjectSummary(BaseModel):

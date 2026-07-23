@@ -223,6 +223,15 @@ async def initiate_conversation(
         if body.visitor_id and isinstance(conversation, dict):
             await link_visitor_conversation(body.visitor_id, conversation.get("id"))
 
+        # Bust cached usage so conversation counts don't lag the cache TTL.
+        if isinstance(conversation, dict) and conversation.get("id"):
+            from dembrane.api.conversation import _invalidate_usage_cache_for_conversation
+
+            try:
+                await _invalidate_usage_cache_for_conversation(conversation["id"])
+            except Exception:
+                logger.warning("usage cache invalidation failed for new conversation")
+
         return conversation
     except ConversationNotOpenForParticipationException as e:
         raise HTTPException(
