@@ -12,13 +12,14 @@ from litellm.exceptions import ContentPolicyViolationError
 
 from dembrane.s3 import get_signed_url
 from dembrane.llms import MODELS, get_completion_kwargs
-from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
+from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.audio_utils import (
     sanitize_filename_component,
     merge_multiple_audio_files_and_save_to_s3,
 )
+from dembrane.cache_utils import cache_get_json, cache_set_json
 from dembrane.reply_utils import generate_reply_for_conversation
 from dembrane.api.stateless import (
     generate_summary,
@@ -536,8 +537,7 @@ async def get_conversation_emails(
     )
 
 
-# Initialize the cache
-token_count_cache = CacheWithExpiration(ttl=500)
+TOKEN_COUNT_TTL_SECONDS = 500
 
 
 @ConversationRouter.get("/{conversation_id}/token-count")
@@ -547,21 +547,21 @@ async def get_conversation_token_count(
 ) -> int:
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
-    # Try to get the token count from the cache
-    cached_count = await token_count_cache.get(conversation_id)
-    if cached_count is not None:
+    cache_key = f"tokcount:{conversation_id}"
+    cached_count = await cache_get_json(cache_key)
+    if isinstance(cached_count, int):
         return cached_count
 
-    # If not in cache, calculate the token count
     transcript = await get_conversation_transcript(conversation_id, auth)
 
-    token_count = token_counter(
+    # CPU-bound tokenization must not block the event loop.
+    token_count = await run_in_thread_pool(
+        token_counter,
         messages=[{"role": "user", "content": transcript}],
         model=get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
     )
 
-    # Store the result in the cache
-    await token_count_cache.set(conversation_id, token_count)
+    await cache_set_json(cache_key, token_count, TOKEN_COUNT_TTL_SECONDS)
 
     return token_count
 
