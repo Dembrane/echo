@@ -113,12 +113,23 @@ FORWARDED_AT_FIELD: dict[str, Any] = {
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-u", "--url", required=True)
-    parser.add_argument("-e", "--email", required=True)
-    parser.add_argument("-p", "--password", required=True)
+    parser.add_argument("-e", "--email")
+    parser.add_argument("-p", "--password")
+    parser.add_argument(
+        "-t",
+        "--token",
+        help="static admin token — alternative to email/password "
+        "(deployed envs expose DIRECTUS_ADMIN_TOKEN, not a login)",
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
-    token = login(args.url, args.email, args.password)
+    if args.token:
+        token = args.token
+    elif args.email and args.password:
+        token = login(args.url, args.email, args.password)
+    else:
+        parser.error("need either --token or --email + --password")
     dx = Directus(args.url, token, dry_run=args.dry_run)
 
     if dx.field_exists("support_request", "forwarded_at"):
