@@ -38,7 +38,7 @@ from dembrane.canvas.service import (
 )
 from dembrane.directus_async import async_directus
 from dembrane.canvas.sanitize import sanitize_canvas_html
-from dembrane.api.feature_flags import require_canvas_enabled
+from dembrane.api.feature_flags import require_canvas_enabled, require_project_canvas_enabled
 from dembrane.api.v2.bff._access import resolve_report_access, resolve_project_access
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
@@ -109,6 +109,7 @@ def _report_id(report: dict[str, Any]) -> str:
 
 async def _require_canvas(report_id: str, auth: DependencyDirectusSession) -> tuple[dict, Any]:
     access, report = await resolve_report_access(report_id, auth)
+    require_project_canvas_enabled(access.project)
     access.require("project:read")
     if report.get("kind") != "canvas":
         raise HTTPException(status_code=404, detail="Canvas not found")
@@ -218,6 +219,7 @@ async def list_canvases(
     project_id: str = Query(..., min_length=1),
 ) -> list[dict[str, Any]]:
     access = await resolve_project_access(project_id, auth)
+    require_project_canvas_enabled(access.project)
     access.require("project:read")
     return await list_canvas_summaries(project_id)
 
@@ -228,6 +230,7 @@ async def create_canvas_endpoint(
     auth: DependencyDirectusSession,
 ) -> dict:
     access = await resolve_project_access(body.project_id, auth)
+    require_project_canvas_enabled(access.project)
     access.require("project:update")
 
     now = datetime.now(timezone.utc)
@@ -265,6 +268,7 @@ async def preview_canvas(
     auth: DependencyDirectusSession,
 ) -> dict[str, str]:
     access = await resolve_project_access(body.project_id, auth)
+    require_project_canvas_enabled(access.project)
     access.require("project:update")
 
     client = await get_redis_client()
