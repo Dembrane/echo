@@ -37,16 +37,12 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 
 	const defaultName =
 		searchParams.get("participant_name") ||
-		searchParams.get("name") ||
 		searchParams.get("title") ||
 		"";
 	const defaultEmail =
-		searchParams.get("participant_email") || searchParams.get("email") || "";
+		searchParams.get("participant_email") || "";
 	const defaultTagsParam =
-		searchParams.get("tags") ||
-		searchParams.get("tag") ||
-		searchParams.get("tag_id_list") ||
-		"";
+		searchParams.get("tags") || "";
 
 	const defaultTagIdList = useMemo(() => {
 		if (!defaultTagsParam) return [];
