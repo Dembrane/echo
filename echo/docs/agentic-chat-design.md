@@ -11,7 +11,7 @@ agent to specific conversations (today's deep dive collapses into a scoped agent
 mode). The agent gains a per-workspace virtual file system containing the product
 docs and meta-skills, acts within the logged-in user's auth boundary (including
 writes like project settings and portal editor), auto-onboards new users, and serves
-as primary support. Model: gemini-3.5-flash.
+as primary support. Model: gemini-3.6-flash.
 
 ## Decisions taken
 
@@ -22,7 +22,7 @@ as primary support. Model: gemini-3.5-flash.
    CONFLICTING). Worth taking: server-side grep with chunk-level citations, citation
    rendering, agentic title generation, test suites. Not taking: the raw Vertex
    Anthropic model swap.
-3. Agent model goes through the LiteLLM router config (gemini-3.5-flash), replacing
+3. Agent model goes through the LiteLLM router config (gemini-3.6-flash), replacing
    both main's raw GEMINI_API_KEY client and the PR's raw Vertex Anthropic client.
    If a stronger reviewer tier is added later, the cheap model never decides to
    escalate on its own (scheduled or user-explicit only).

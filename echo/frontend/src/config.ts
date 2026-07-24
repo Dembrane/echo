@@ -177,7 +177,7 @@ export const ENABLE_ANNOUNCEMENTS = true;
 export const ENABLE_DISPLAY_CONVERSATION_LINKS = true;
 export const ENABLE_WEBHOOKS = true;
 // On everywhere except production: local, testing/dev, next/staging.
-// Re-enabled 2026-07-02 with the agent on gemini-3.5-flash via Vertex and the
+// Re-enabled 2026-07-02 with the agent on gemini-3.6-flash via Vertex and the
 // #573 harvest (server-side grep, chunk citations, titles) on main.
 export const ENABLE_AGENTIC_CHAT = byEnv({ production: false }, true);
 // Re-enabled on echo-next (2026-06-21). Runtime render gate only; the build
