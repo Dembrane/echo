@@ -70,10 +70,10 @@ const ParticipantOnboardingCards = ({
 
 	const { language } = useLanguage();
 
-	// Tables/tags preselected via the QR URL (?tags= / ?tag_id_list=), resolved
+	// Tables/tags preselected via the QR URL (?tags=), resolved
 	// to labels so the funnel can show them and mark them as preselected.
 	const preselectedTags = useMemo(() => {
-		const raw = searchParams.get("tags") ?? searchParams.get("tag_id_list");
+		const raw = searchParams.get("tags");
 		if (!raw) return [] as string[];
 		const wanted = raw
 			.split(",")
