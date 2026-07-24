@@ -277,7 +277,9 @@ class FeatureFlagSettings(BaseSettings):
         alias="ENABLE_MONITOR",
         validation_alias=AliasChoices("ENABLE_MONITOR", "FEATURE_FLAGS__ENABLE_MONITOR"),
     )
-    # Default on; production sets ENABLE_CANVAS=0 to pull the feature this release.
+    # Global kill switch. Even when on, canvas is opt-in per project via the
+    # experimental toggle (project.is_canvas_enabled, default false).
+    # Production sets ENABLE_CANVAS=0 this release (gitops values-prod.yaml).
     enable_canvas: bool = Field(
         default=True,
         alias="ENABLE_CANVAS",

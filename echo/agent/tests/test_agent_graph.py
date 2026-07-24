@@ -256,6 +256,22 @@ def test_create_agent_graph_binds_edit_canvas_tool():
     assert "removeFromCanvas" in tool_map
 
 
+def test_create_agent_graph_canvas_disabled_strips_tools_and_prompt():
+    llm = SequenceLLM(responses=[AIMessage(content="done")])
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        canvas_enabled=False,
+    )
+    tool_names = {tool.name for tool in llm.bound_tools}
+
+    assert not (agent.CANVAS_TOOL_NAMES & tool_names)
+    prompt = agent.system_prompt_for(False)
+    assert "canvas" not in prompt.lower()
+    assert agent.system_prompt_for(True) == SYSTEM_PROMPT
+
+
 @pytest.mark.asyncio
 async def test_create_agent_graph_nudge_flow_can_continue_via_progress_tool_call():
     llm = SequenceLLM(
