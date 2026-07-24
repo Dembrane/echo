@@ -48,7 +48,7 @@ AgentInsightKind = Literal["capability_gap", "friction", "wish", "praise"]
 #   listDocs, readDoc, grepDocs, readSkill, listProjectChats, readChat,
 #   getLiveConversationStatus, readMemory, readGoal, listMethodologies,
 #   listCanvases, get_project_scope).
-# - Write tools change durable state (editProjectTags, editCanvas, addToCanvas,
+# - Write tools change durable state (editCanvas, addToCanvas,
 #   removeFromCanvas, pauseCanvasLoop, resumeCanvasLoop, stopCanvasLoop,
 #   remember, amendMemory, forgetMemory, reachOutToDembraneSupport, noteInsight,
 #   editInsight, retractInsight). noteInsight, editInsight, and retractInsight
@@ -63,6 +63,7 @@ UI_TOOLS = frozenset(
         "proposeCanvas",
         "proposeGoal",
         "proposeProjectUpdate",
+        "proposeTagsUpdate",
         "noteInsight",
         "editInsight",
         "retractInsight",
@@ -71,7 +72,7 @@ UI_TOOLS = frozenset(
 )
 
 # Unregistered (with their prompt section stripped) when the chat's project has
-# canvas off — the per-project beta toggle, project.is_canvas_enabled.
+# canvas off (the per-project beta toggle, project.is_canvas_enabled).
 CANVAS_TOOL_NAMES = frozenset(
     {
         "proposeCanvas",
@@ -312,9 +313,11 @@ ask one focused question first.
   The setting can draft short titles and attach existing project tags after
   summarization, but tags remain draft organization for the host to review.
 - Tags are the host-visible portal vocabulary. When the host asks to add or
-  remove tags, read getProjectTags first, then use editProjectTags(add, remove)
-  and confirm in one sentence what changed. Only remove a tag the host names
-  explicitly; never clear tags participants may already be using on their own.
+  remove tags, read getProjectTags first, then use proposeTagsUpdate(add,
+  remove, summary). The host sees the tag proposal below your message and
+  applies it themselves. Say "I've suggested tag changes", never "I've updated
+  your tags". Only propose removing a tag the host names explicitly; never
+  clear tags participants may already be using on their own.
 - Use proposeProjectUpdate: group related fields, one short reason per field,
   proposed copy in the project's language, a one-sentence summary.
 - The host sees a diff and applies or rejects it themselves. You never apply
@@ -1316,31 +1319,70 @@ def create_agent_graph(
         }
 
     @tool
-    async def editProjectTags(
+    async def proposeTagsUpdate(
         add: list[str] | None = None,
         remove: list[str] | None = None,
+        summary: str = "",
     ) -> dict[str, Any]:
-        """Edit the project's host-visible tag vocabulary and return the updated
-        list. `add` creates tags that do not already exist; `remove` deletes
-        tags by exact text (case-insensitive). Read getProjectTags first, then
-        confirm in one sentence what changed. Tags are the portal vocabulary
-        hosts and participants see, so only remove a tag when the host asks for
-        that tag by name."""
-        add_list = [t.strip() for t in (add or []) if isinstance(t, str) and t.strip()]
-        remove_list = [t.strip() for t in (remove or []) if isinstance(t, str) and t.strip()]
+        """Propose tag vocabulary changes for the host to approve. Renders a
+        card in the chat UI.
+
+        `add` lists new tags to create; `remove` lists existing tags to delete
+        by exact text (case-insensitive). `summary` is one short sentence on
+        why. Read getProjectTags first. Tags are the portal vocabulary hosts
+        and participants see, so only propose removing a tag the host names
+        explicitly. The host sees the proposal in the chat and applies or
+        dismisses it; this tool never changes anything itself.
+        """
+        def _normalize(entries: list[str] | None) -> list[str]:
+            normalized: list[str] = []
+            seen: set[str] = set()
+            for entry in entries or []:
+                if not isinstance(entry, str):
+                    continue
+                text = entry.strip()
+                if not text or text.lower() in seen:
+                    continue
+                seen.add(text.lower())
+                normalized.append(text)
+            return normalized
+
+        add_list = _normalize(add)
+        remove_list = _normalize(remove)
         if not add_list and not remove_list:
             raise ValueError("Provide at least one tag to add or remove.")
 
         client = _create_echo_client()
         try:
-            result = await client.edit_project_tags(
-                project_id,
-                add=add_list,
-                remove=remove_list,
-            )
+            current = await client.list_project_tags(project_id)
         finally:
             await client.close()
-        return result
+
+        current_texts = [
+            str(tag.get("text", "")).strip()
+            for tag in current
+            if isinstance(tag, dict) and str(tag.get("text", "")).strip()
+        ]
+        current_lookup = {text.lower() for text in current_texts}
+
+        accepted_removals = [t for t in remove_list if t.lower() in current_lookup]
+        rejected_removals = [t for t in remove_list if t.lower() not in current_lookup]
+        if not add_list and not accepted_removals:
+            raise ValueError(
+                "None of the tags to remove exist in this project. "
+                f"Current tags: {sorted(current_texts)}"
+            )
+
+        return {
+            "kind": "tags_update_suggestion",
+            "project_id": project_id,
+            "summary": summary.strip(),
+            "add": add_list,
+            "remove": accepted_removals,
+            "current_tags": current_texts,
+            "rejected_removals": rejected_removals,
+            "visible_to_user": True,
+        }
 
     @tool
     async def getPortalLink() -> dict[str, Any]:
@@ -2156,10 +2198,10 @@ def create_agent_graph(
         readSkill,
         getProjectSettings,
         getProjectTags,
-        editProjectTags,
         getPortalLink,
         navigateTo,
         proposeProjectUpdate,
+        proposeTagsUpdate,
         proposeCustomVerificationTopic,
         proposeCanvas,
         sendProgressUpdate,

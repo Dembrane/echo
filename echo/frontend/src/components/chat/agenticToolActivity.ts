@@ -97,6 +97,8 @@ const buildHeadline = (toolName: string, context: ToolContext) => {
 	switch (toolName) {
 		case "proposeProjectUpdate":
 			return t`Suggesting project changes`;
+		case "proposeTagsUpdate":
+			return t`Suggesting tag changes`;
 		case "proposeCustomVerificationTopic":
 			return t`Suggesting a verification prompt`;
 		case "proposeCanvas":
@@ -142,6 +144,7 @@ const buildHeadline = (toolName: string, context: ToolContext) => {
 			return context.query
 				? t`Searching transcripts for "${context.query}"`
 				: t`Searching transcripts`;
+		// Retired direct-write tool; replayed histories still carry it.
 		case "editProjectTags":
 			return t`Updating project tags`;
 		case "noteInsight":
@@ -365,6 +368,47 @@ export const parseProjectUpdateSuggestion = (
 				reason: String(change.reason ?? ""),
 			})),
 			projectId: String(payload.project_id ?? ""),
+			summary: String(payload.summary ?? ""),
+		};
+	} catch {
+		return null;
+	}
+};
+
+export type ParsedTagsUpdateSuggestion = {
+	projectId: string;
+	summary: string;
+	add: string[];
+	remove: string[];
+	currentTags: string[];
+};
+
+const asStringArray = (value: unknown): string[] =>
+	Array.isArray(value)
+		? value
+				.filter((entry): entry is string => typeof entry === "string")
+				.map((entry) => entry.trim())
+				.filter(Boolean)
+		: [];
+
+/** Returns the structured suggestion when a completed tool activity is a
+ * proposeTagsUpdate result, else null. */
+export const parseTagsUpdateSuggestion = (
+	activity: ToolActivity,
+): ParsedTagsUpdateSuggestion | null => {
+	if (activity.toolName !== "proposeTagsUpdate") return null;
+	if (activity.status !== "completed" || !activity.rawOutput) return null;
+	try {
+		const payload = JSON.parse(activity.rawOutput);
+		if (payload?.kind !== "tags_update_suggestion") return null;
+		const add = asStringArray(payload.add);
+		const remove = asStringArray(payload.remove);
+		if (add.length === 0 && remove.length === 0) return null;
+		return {
+			add,
+			currentTags: asStringArray(payload.current_tags),
+			projectId: String(payload.project_id ?? ""),
+			remove,
 			summary: String(payload.summary ?? ""),
 		};
 	} catch {
