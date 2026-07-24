@@ -295,6 +295,9 @@ interface Project {
 	// matches server/dembrane/api/v2/workspace_projects.py.
 	visibility: "workspace" | "private" | null;
 	is_verify_enabled: boolean | null;
+	// Per-project opt-in for the living canvas beta. Null or false = off;
+	// canvas APIs 404 unless this AND the global ENABLE_CANVAS flag are on.
+	is_canvas_enabled: boolean | null;
 	is_verify_on_finish_enabled: boolean | null;
 	selected_verification_key_list: string | null;
 	conversations: string[] | Conversation[];

@@ -862,6 +862,10 @@ msgstr ""
 msgid "A friendly name to identify this webhook"
 msgstr "Een vriendelijke naam om dit webhook te identificeren"
 
+#: src/components/project/ProjectExperimentalSection.tsx:52
+msgid "A live page in your Library that regenerates while your session runs. Early beta: it may change or be removed."
+msgstr ""
+
 #: src/routes/project/report/ProjectReportRoute.tsx:564
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "Er wordt automatisch een nieuw rapport gegenereerd en gepubliceerd op het geplande tijdstip."
@@ -951,7 +955,7 @@ msgstr ""
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:702
 #: src/routes/project/CreateProjectRoute.tsx:256
 #: src/routes/project/CreateProjectRoute.tsx:345
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:117
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:120
 #: src/components/project/ProjectUsageAndSharing.tsx:190
 #: src/components/layout/ProjectOverviewLayout.tsx:52
 msgid "Access"
@@ -2246,6 +2250,7 @@ msgstr "Basis instellingen"
 #: src/components/report/CreateReportForm.tsx:235
 #: src/components/project/ProjectPortalEditor.tsx:1483
 #: src/components/project/ProjectPortalEditor.tsx:1564
+#: src/components/project/ProjectExperimentalSection.tsx:48
 #: src/components/conversation/RetranscribeConversation.tsx:151
 #: src/components/chat/ChatModeSelector.tsx:158
 #: src/components/chat/ChatModeBanner.tsx:45
@@ -3174,7 +3179,7 @@ msgstr "Gesprekslabels"
 msgid "conversations"
 msgstr "gesprekken"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:111
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:114
 #: src/components/workspace/OrganisationProjectsTable.tsx:219
 #: src/components/project/ProjectUsageAndSharing.tsx:453
 #: src/components/conversation/ProjectConversationsPanel.tsx:725
@@ -4357,6 +4362,10 @@ msgstr "Elk nieuw lid wordt per stoel in rekening gebracht volgens je abonnement
 #~ msgid "Earlier"
 #~ msgstr "Eerder"
 
+#: src/components/project/ProjectExperimentalSection.tsx:25
+msgid "Early features you can try on this project before they are ready for everyone."
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:1065
 msgid "participant.button.echo"
@@ -4707,10 +4716,10 @@ msgstr "Fout bij het maken van het rapport"
 #~ msgid "Error loading insights"
 #~ msgstr "Fout bij laden van inzichten"
 
-#: src/routes/project/ProjectRoutes.tsx:81
-#: src/routes/project/ProjectRoutes.tsx:168
-#: src/routes/project/ProjectRoutes.tsx:270
-#: src/routes/project/ProjectRoutes.tsx:309
+#: src/routes/project/ProjectRoutes.tsx:83
+#: src/routes/project/ProjectRoutes.tsx:177
+#: src/routes/project/ProjectRoutes.tsx:279
+#: src/routes/project/ProjectRoutes.tsx:318
 msgid "Error loading project"
 msgstr "Fout bij laden van project"
 
@@ -4838,8 +4847,9 @@ msgstr "Volledig scherm sluiten"
 msgid "Expand workspaces"
 msgstr "Werkruimtes uitvouwen"
 
-#~ msgid "Experimental"
-#~ msgstr "Experimenteel"
+#: src/components/project/ProjectExperimentalSection.tsx:23
+msgid "Experimental"
+msgstr "Experimenteel"
 
 #: src/components/billing/BillingManager.tsx:182
 msgid "Expired"
@@ -5828,7 +5838,7 @@ msgid "host guide"
 msgstr ""
 
 #: src/routes/project/ProjectHomeRoute.tsx:167
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:101
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:104
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:53
 msgid "Host guide"
 msgstr "Hostgids"
@@ -6646,7 +6656,7 @@ msgstr ""
 #: src/routes/project/library/ProjectLibraryView.tsx:32
 #: src/routes/project/library/ProjectLibraryAspect.tsx:43
 #: src/routes/project/library/LibraryRoute.tsx:132
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:94
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:97
 msgid "Library"
 msgstr "Bibliotheek"
 
@@ -6785,6 +6795,10 @@ msgstr ""
 
 #: src/components/chat/AgenticChatPanel.tsx:986
 msgid "Live stream interrupted. Falling back to polling."
+msgstr ""
+
+#: src/components/project/ProjectExperimentalSection.tsx:45
+msgid "Living canvas"
 msgstr ""
 
 #: src/components/chat/agenticToolActivity.ts:120
@@ -10382,7 +10396,7 @@ msgstr ""
 
 #: src/routes/project/ProjectHomeRoute.tsx:175
 #: src/routes/project/report/ProjectReportRoute.tsx:185
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:106
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:109
 #: src/components/report/ReportRenderer.tsx:75
 #: src/components/report/ReportModalNavigationButton.tsx:92
 msgid "Report"
@@ -11472,7 +11486,7 @@ msgstr ""
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:80
 #: src/features/sidebar/views/user/UserSettingsView.tsx:34
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:18
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:129
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:132
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:26
 #: src/features/sidebar/views/org/OrgHomeView.tsx:130
 #: src/features/sidebar/blocks/SettingsBlock.tsx:12
@@ -13800,7 +13814,7 @@ msgstr "URL is vereist"
 msgid "URL must start with http:// or https://"
 msgstr "URL moet beginnen met http:// of https://"
 
-#: src/features/sidebar/views/project/ProjectHomeView.tsx:122
+#: src/features/sidebar/views/project/ProjectHomeView.tsx:125
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:37
 #: src/components/project/ProjectUsageAndSharing.tsx:415
 #: src/components/layout/ProjectOverviewLayout.tsx:53
@@ -14297,7 +14311,7 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks zijn geautomatiseerde berichten die van een app naar een andere worden verzonden wanneer iets gebeurt. Denk aan ze als een \"notificatiesysteem\" voor uw andere tools."
 
-#: src/routes/project/ProjectRoutes.tsx:182
+#: src/routes/project/ProjectRoutes.tsx:191
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks zijn niet ingeschakeld voor deze omgeving."
 

@@ -13,6 +13,7 @@ import {
 } from "@/components/project/hooks";
 import ProjectBasicEdit from "@/components/project/ProjectBasicEdit";
 import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
+import { ProjectExperimentalSection } from "@/components/project/ProjectExperimentalSection";
 import { ProjectExportSection } from "@/components/project/ProjectExportSection";
 import { ProjectMoveWorkspace } from "@/components/project/ProjectMoveWorkspace";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
@@ -23,7 +24,7 @@ import {
 } from "@/components/project/ProjectUsageAndSharing";
 import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
 import { FeatureGate } from "@/components/workspace/FeatureGate";
-import { ENABLE_WEBHOOKS } from "@/config";
+import { ENABLE_CANVAS, ENABLE_WEBHOOKS } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { getProjectTranscriptsLink } from "@/lib/api";
 import type { Tier } from "@/lib/tiers";
@@ -58,6 +59,7 @@ export const ProjectSettingsRoute = () => {
 				"updated_at",
 				"language",
 				"is_conversation_allowed",
+				"is_canvas_enabled",
 				"default_conversation_ask_for_participant_name",
 			],
 		}),
@@ -111,6 +113,13 @@ export const ProjectSettingsRoute = () => {
 
 					<Divider />
 					{projectId && <ProjectMemorySection projectId={projectId} />}
+
+					{ENABLE_CANVAS && (
+						<>
+							<Divider />
+							<ProjectExperimentalSection project={projectQuery.data} />
+						</>
+					)}
 
 					<Divider />
 					<ProjectMoveWorkspace project={projectQuery.data} />
