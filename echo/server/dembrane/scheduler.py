@@ -81,6 +81,14 @@ scheduler.add_job(
 )
 
 scheduler.add_job(
+    func="dembrane.tasks:task_forward_support_requests.send",
+    trigger=CronTrigger(minute="*/2"),
+    id="task_forward_support_requests",
+    name="Forward new support_request rows to sam for #gen-engineering triage (ISSUE-034)",
+    replace_existing=True,
+)
+
+scheduler.add_job(
     func="dembrane.tasks:task_expire_workspace_tiers.send",
     trigger=CronTrigger(minute=0),
     id="task_expire_workspace_tiers",
