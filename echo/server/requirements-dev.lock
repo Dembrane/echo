@@ -169,6 +169,7 @@ click==8.1.8 \
     #   click-didyoumean
     #   click-plugins
     #   click-repl
+    #   dembrane
     #   litellm
     #   uvicorn
 click-didyoumean==0.3.1 \
@@ -288,7 +289,9 @@ dramatiq-workflow==0.2.0 \
 ecdsa==0.19.2 \
     --hash=sha256:62635b0ac1ca2e027f82122b5b81cb706edc38cd91c63dda28e4f3455a2bf930 \
     --hash=sha256:840f5dc5e375c68f36c1a7a5b9caad28f95daa65185c9253c0c08dd952bb7399
-    # via python-jose
+    # via
+    #   dembrane
+    #   python-jose
 email-validator==2.3.0 \
     --hash=sha256:80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4 \
     --hash=sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426
@@ -842,6 +845,7 @@ pyasn1==0.6.3 \
     --hash=sha256:697a8ecd6d98891189184ca1fa05d1bb00e2f84b5977c481452050549c8a72cf \
     --hash=sha256:a80184d120f0864a52a073acc6fc642847d0be408e7c7252f31390c0f4eadcde
     # via
+    #   dembrane
     #   pyasn1-modules
     #   python-jose
     #   rsa
