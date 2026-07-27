@@ -129,6 +129,32 @@ def test_ping_conversation_clamps_audio_level(monkeypatch) -> None:
     assert (_ping(float("inf")) or {}).get("audio_level") is None
 
 
+def test_ping_conversation_sanitises_recorder_timers(monkeypatch) -> None:
+    captured: list[Any] = []
+
+    async def _fake_mark(conversation_id: str, *, telemetry: Any = None) -> None:  # noqa: ARG001
+        captured.append(telemetry)
+
+    monkeypatch.setattr(participant, "mark_conversation_seen", _fake_mark)
+
+    def _ping(**kwargs: Any) -> Any:
+        _run(
+            participant.ping_conversation(
+                "c", _FakeRequest(), participant.ConversationPingRequest(**kwargs)
+            )
+        )
+        return captured[-1]
+
+    # Rounded to 0.1 and passed through.
+    good = _ping(recorded_seconds=42.37, segment_seconds=3.14)
+    assert good["recorded_seconds"] == 42.4
+    assert good["segment_seconds"] == 3.1
+    # Negative / NaN / inf are dropped, not stored as junk.
+    assert (_ping(recorded_seconds=-5.0) or {}).get("recorded_seconds") is None
+    assert (_ping(segment_seconds=float("nan")) or {}).get("segment_seconds") is None
+    assert (_ping(segment_seconds=float("inf")) or {}).get("segment_seconds") is None
+
+
 def test_ping_conversation_drops_unknown_state(monkeypatch) -> None:
     seen: list[Any] = []
 

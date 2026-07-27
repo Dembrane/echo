@@ -23,9 +23,10 @@ now, so you always know whether something you read about is actually available t
 
 | Feature | What it is | Where |
 |---|---|---|
-| *Agentic mode* (in Ask) | An assistant that works in steps - searching, reading transcripts, checking live status, answering from the docs, and proposing settings changes for your review. Ask opens as a home for your chats, with named citations and a Stop control. | [Chat & Ask → Agentic mode](./chat-and-ask.md#agentic-mode-in-more-detail) |
+| *The new Ask experience* | Ask opens as a home for your chats with one question bar, and the assistant works in steps - searching, reading transcripts, checking live status, answering from the docs, and proposing settings changes for your review - with named citations and a Stop control. The classic Specific Details chat stays one click away. | [Chat & Ask](./chat-and-ask.md#one-question-bar) |
 | *Assistant memory & context* | The assistant saves notes (you view and remove them in user, project, and workspace settings) and takes standing guidance from a workspace-wide *assistant context*. | [Account & security](./account-and-security.md#what-the-assistant-remembers-about-you), [managing your workspace](../users/host/managing-your-workspace.md#give-the-assistant-standing-context) |
 | *The Monitor* | A live view of a session: the participant flow from QR scan to recording, live recordings with audio warnings, and transcription progress. | [Recording → Watch it live](./recording.md#watch-it-live-the-monitor) |
+| *The living canvas* (beta) | A live page the assistant builds and regenerates during a session. Off by default for every project: a host opts a project in with the *Living canvas* switch under *Experimental* in project settings. | [The SMART loop](../building/smart-loop.md) |
 
 If the table is short, that's a good sign: most of dembrane is the same on next and
 production. Only genuinely in-progress features live here.

@@ -406,7 +406,7 @@ async def _workspace_hours_this_cycle(
     project_ids = [p["id"] for p in projects if p.get("id")]
     if not project_ids:
         return 0.0
-    convs = await async_directus.get_items(
+    rows = await async_directus.get_items(
         "conversation",
         {
             "query": {
@@ -415,14 +415,13 @@ async def _workspace_hours_this_cycle(
                     "created_at": {"_gte": effective_start, "_lt": cycle_end},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["duration"],
-                "limit": -1,
+                "aggregate": {"sum": ["duration"]},
             }
         },
     )
-    if not isinstance(convs, list):
+    if not isinstance(rows, list) or not rows:
         return 0.0
-    total_seconds = sum(float(c.get("duration") or 0) for c in convs)
+    total_seconds = float((rows[0].get("sum") or {}).get("duration") or 0)
     return round(total_seconds / 3600.0, 2)
 
 

@@ -245,6 +245,30 @@ export const useBulkMoveProjectsMutation = () => {
 	});
 };
 
+/** Creates a project tag through the BFF tags endpoint. Shared by the portal
+ * editor tag input mutation and the agentic tag-suggestion card. */
+export const createProjectTag = async (payload: {
+	projectId: string;
+	text: string;
+	sort?: number;
+}) => {
+	const res = await fetch(`${API_BASE_URL}/v2/bff/tags`, {
+		body: JSON.stringify({
+			project_id: payload.projectId,
+			text: payload.text,
+			sort: payload.sort,
+		}),
+		credentials: "include",
+		headers: { "Content-Type": "application/json" },
+		method: "POST",
+	});
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(data.detail || "Failed to create tag");
+	}
+	return res.json();
+};
+
 export const useCreateProjectTagMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -255,26 +279,12 @@ export const useCreateProjectTagMutation = () => {
 			};
 			text: string;
 			sort?: number;
-		}) => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/bff/tags`,
-				{
-					body: JSON.stringify({
-						project_id: payload.project_id.id,
-						text: payload.text,
-						sort: payload.sort,
-					}),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				},
-			);
-			if (!res.ok) {
-				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || "Failed to create tag");
-			}
-			return res.json();
-		},
+		}) =>
+			createProjectTag({
+				projectId: payload.project_id.id,
+				sort: payload.sort,
+				text: payload.text,
+			}),
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.project_id.id],

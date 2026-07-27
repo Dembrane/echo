@@ -3,8 +3,11 @@
 Used for:
 - Workspace usage rollups (30-min TTL). Re-computing hours means summing
   conversation.duration across a workspace's projects, which is O(N) in
-  conversations — cacheable for minutes without stale-data concerns
+  conversations, cacheable for minutes without stale-data concerns
   because "current calendar month hours" is the whole point.
+- Workspace usage summary for the workspace list view (`usage_summary:`
+  key, same 30-min TTL as above).
+- Conversation token counts (`tokcount:` key, 500s TTL).
 
 Caller conventions:
 - Cache keys include a namespace prefix ("usage:", "capacity:", ...) so
@@ -64,10 +67,15 @@ async def cache_delete(key: str) -> None:
 
 
 USAGE_TTL_SECONDS = 30 * 60  # 30 minutes
+USAGE_SUMMARY_TTL_SECONDS = 30 * 60
 
 
 def usage_cache_key(workspace_id: str) -> str:
     return f"usage:{workspace_id}"
+
+
+def usage_summary_cache_key(workspace_id: str) -> str:
+    return f"usage_summary:{workspace_id}"
 
 
 def org_usage_cache_key(org_id: str) -> str:
@@ -75,10 +83,11 @@ def org_usage_cache_key(org_id: str) -> str:
 
 
 async def invalidate_workspace_usage(workspace_id: str) -> None:
-    """Bust the cached usage rollup for a workspace. Call on tier changes
-    (upgrade/downgrade) so the next /usage read reflects new caps + rates
-    immediately instead of waiting for TTL expiry."""
+    """Bust the cached usage rollups (full response + list summary) for a
+    workspace. Call on tier changes so the next read reflects new caps +
+    rates immediately instead of waiting for TTL expiry."""
     await cache_delete(usage_cache_key(workspace_id))
+    await cache_delete(usage_summary_cache_key(workspace_id))
 
 
 async def invalidate_org_usage(org_id: str) -> None:

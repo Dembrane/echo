@@ -2022,6 +2022,170 @@ def task_expire_staff_support_memberships() -> None:
             task_logger.exception("failed to expire staff support membership %s", row.get("id"))
 
 
+def _support_forward_environment() -> str:
+    """Name the environment this deployment is, for the support payload.
+
+    Same exact-host derivation as analytics._resolve_posthog_token — the
+    admin dashboard URL is the one per-env value every deployment already
+    has, so no new env var (ISSUE-034 design). Unknown hosts (previews,
+    local with a configured webhook) report the host itself — sam's
+    receiver forwards what it gets, so an honest odd label beats a wrong
+    known one.
+    """
+    from urllib.parse import urlparse
+
+    raw = (get_settings().urls.admin_base_url or "").lower().strip()
+    host = urlparse(raw if "://" in raw else f"https://{raw}").hostname or ""
+    if host == "dashboard.dembrane.com":
+        return "production"
+    if host == "dashboard.echo-next.dembrane.com":
+        return "echo-next"
+    return host or "development"
+
+
+def build_support_request_forward_payload(
+    row: dict, org_id: Optional[str], environment: str
+) -> dict:
+    """The webhook payload for one support_request row.
+
+    Contract (mirrored in Dembrane/sam `src/recipes/product-support/
+    recipe.md` — keep both ends in sync): every field optional except
+    `id`, `environment`, `message`; absent fields are omitted, not sent
+    as null/empty. No transcript content, ever.
+    """
+    payload = {
+        "id": str(row["id"]),
+        "environment": environment,
+        # message is required on sam's side; a placeholder keeps a
+        # degenerate row deliverable instead of wedging the outbox.
+        "message": row.get("message") or "(empty message)",
+    }
+    for key in (
+        "page_context",
+        "created_at",
+        "chat_id",
+        "project_id",
+        "workspace_id",
+        "app_user_id",
+        "directus_user_id",
+    ):
+        value = row.get(key)
+        if value:
+            payload[key] = str(value)
+    if org_id:
+        payload["org_id"] = str(org_id)
+    workspace_id, project_id = row.get("workspace_id"), row.get("project_id")
+    if workspace_id and project_id:
+        admin_base_url = (get_settings().urls.admin_base_url or "").rstrip("/")
+        if admin_base_url:
+            payload["origin_link"] = (
+                f"{admin_base_url}/en-US/w/{workspace_id}/projects/{project_id}"
+            )
+    return payload
+
+
+@dramatiq.actor(queue_name="network", priority=40)
+def task_forward_support_requests() -> None:
+    """Outbox forwarder for assistant support requests (ISSUE-034).
+
+    The agentic chat's reachOutToDembraneSupport tool writes support_request
+    rows and tells the host "logged for the team". This catch-up makes that
+    true: rows with status=new and forwarded_at NULL are POSTed to sam's
+    webhook (sam posts them into #gen-engineering and triages in-thread),
+    and forwarded_at is stamped only on 2xx — at-least-once, with sam
+    deduping by id, so redelivery after a crash or non-2xx is safe.
+
+    No-op when SUPPORT_WEBHOOK_URL / ECHO_SUPPORT_WEBHOOK_TOKEN are unset
+    (the local default). Receiver semantics: 2xx delivered-or-duplicate →
+    stamp; 4xx payload bug → log loudly, leave unstamped, keep going (the
+    row re-forwards once the bug is fixed); 5xx/network → receiver is down,
+    stop the batch and let the next cron run retry.
+    """
+    import requests
+
+    task_logger = getLogger("dembrane.tasks.task_forward_support_requests")
+    support = get_settings().support
+    webhook_url, webhook_token = support.forward_webhook_url, support.forward_webhook_token
+    if not webhook_url or not webhook_token:
+        return
+
+    with directus_client_context() as client:
+        rows = client.get_items(
+            "support_request",
+            {
+                "query": {
+                    "filter": {
+                        "status": {"_eq": "new"},
+                        "forwarded_at": {"_null": True},
+                    },
+                    "fields": [
+                        "id",
+                        "message",
+                        "page_context",
+                        "created_at",
+                        "chat_id",
+                        "project_id",
+                        "workspace_id",
+                        "app_user_id",
+                        "directus_user_id",
+                    ],
+                    "sort": ["created_at"],
+                    "limit": 50,
+                }
+            },
+        )
+
+    if not isinstance(rows, list) or not rows:
+        return
+
+    environment = _support_forward_environment()
+    task_logger.info("forwarding %d support request(s) to sam", len(rows))
+    for row in rows:
+        # One workspace→org hop; support_request has no org_id column.
+        org_id = None
+        ws_id = row.get("workspace_id")
+        if ws_id:
+            with directus_client_context() as client:
+                ws = client.get_item("workspace", str(ws_id))
+            org_id = ws.get("org_id") if ws else None
+
+        payload = build_support_request_forward_payload(row, org_id, environment)
+        try:
+            response = requests.post(
+                webhook_url,
+                json=payload,
+                headers={"X-Echo-Support-Token": webhook_token},
+                timeout=(10, 30),
+            )
+        except requests.RequestException as e:
+            task_logger.warning(
+                "support forward: POST failed (%s); stopping batch, next run retries", e
+            )
+            break
+
+        if 200 <= response.status_code < 300:
+            with directus_client_context() as client:
+                client.update_item(
+                    "support_request",
+                    str(row["id"]),
+                    {"forwarded_at": get_utc_timestamp().isoformat()},
+                )
+        elif 400 <= response.status_code < 500:
+            task_logger.error(
+                "support forward: %s rejected with %s (%s) — payload/config bug, "
+                "row stays unstamped until it's fixed",
+                row.get("id"),
+                response.status_code,
+                response.text[:200],
+            )
+        else:
+            task_logger.warning(
+                "support forward: receiver returned %s; stopping batch, next run retries",
+                response.status_code,
+            )
+            break
+
+
 @dramatiq.actor(queue_name="network", priority=30)
 def task_send_downgrade_email(
     audience_app_user_ids: list[str],

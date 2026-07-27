@@ -277,7 +277,9 @@ class FeatureFlagSettings(BaseSettings):
         alias="ENABLE_MONITOR",
         validation_alias=AliasChoices("ENABLE_MONITOR", "FEATURE_FLAGS__ENABLE_MONITOR"),
     )
-    # Default on; production sets ENABLE_CANVAS=0 to pull the feature this release.
+    # Global kill switch. Even when on, canvas is opt-in per project via the
+    # experimental toggle (project.is_canvas_enabled, default false).
+    # Production sets ENABLE_CANVAS=0 this release (gitops values-prod.yaml).
     enable_canvas: bool = Field(
         default=True,
         alias="ENABLE_CANVAS",
@@ -629,6 +631,33 @@ class BillingSettings(BaseSettings):
         return self.mollie_test_mode and self.mollie_force_reconcile_failure
 
 
+class SupportSettings(BaseSettings):
+    """Support-request forwarding to sam, the engineering coworker bot
+    (ISSUE-034). The forwarder task no-ops unless BOTH are set — the local
+    default. The URL is sam's public edge function; the token is the shared
+    static secret sam validates (sent as `X-Echo-Support-Token`, since on
+    sam's ingress `Authorization` carries the GCP IAM identity token)."""
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
+
+    forward_webhook_url: Optional[str] = Field(
+        default=None,
+        alias="SUPPORT_WEBHOOK_URL",
+        validation_alias=AliasChoices("SUPPORT_WEBHOOK_URL", "SUPPORT__FORWARD_WEBHOOK_URL"),
+    )
+    forward_webhook_token: Optional[str] = Field(
+        default=None,
+        alias="ECHO_SUPPORT_WEBHOOK_TOKEN",
+        validation_alias=AliasChoices(
+            "ECHO_SUPPORT_WEBHOOK_TOKEN", "SUPPORT__FORWARD_WEBHOOK_TOKEN"
+        ),
+    )
+
+    @property
+    def forwarding_enabled(self) -> bool:
+        return bool(self.forward_webhook_url and self.forward_webhook_token)
+
+
 class AppSettings:
     """
     Aggregate application settings composed from modular sections.
@@ -651,6 +680,7 @@ class AppSettings:
         self.embedding = EmbeddingSettings()
         self.agentic = AgenticSettings()
         self.billing = BillingSettings()
+        self.support = SupportSettings()
 
         self.transcription.ensure_valid()
 

@@ -1,38 +1,20 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
-import {
-	ActionIcon,
-	Badge,
-	Box,
-	Button,
-	Card,
-	Group,
-	Modal,
-	Stack,
-	Text,
-	TextInput,
-} from "@mantine/core";
-import {
-	BatteryLowIcon,
-	PencilSimpleIcon,
-	WifiSlashIcon,
-} from "@phosphor-icons/react";
+import { Box, Card, Group, Modal, Stack, Text } from "@mantine/core";
+import { BatteryLowIcon, WifiSlashIcon } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
 import posthog from "posthog-js";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 
-import { I18nLink } from "@/components/common/i18nLink";
-import { toast } from "@/components/common/Toaster";
-import { useUpdateConversationByIdMutation } from "@/components/conversation/hooks";
 import {
 	type FunnelStage,
 	type FunnelVisitor,
-	type MonitorConversation,
 	useConversationMonitor,
 } from "@/hooks/useConversationMonitor";
+import { ConversationDrilldownModal } from "./ConversationDrilldownModal";
 import { FunnelCanvas, type NodeDatum } from "./FunnelCanvas";
-import { isProblemState, StatePill } from "./LiveMonitorSection";
+import { MonitorBadge } from "./MonitorBadge";
 
 const weakNetwork = (
 	network: { online?: boolean; effective_type?: string } | null,
@@ -59,10 +41,6 @@ const relativeTime = (stamp: string | null): string => {
 		return stamp;
 	}
 };
-
-type Selection =
-	| { kind: "visitor"; visitor: FunnelVisitor }
-	| { kind: "conversation"; conversation: MonitorConversation };
 
 const STAGE_TIMELINE_ORDER: { stage: FunnelStage; label: string }[] = [
 	{ label: t`Scanned the QR`, stage: "scanned" },
@@ -100,22 +78,22 @@ const VisitorDrilldown = ({ visitor }: { visitor: FunnelVisitor }) => (
 				{visitor.name?.trim() || t`Anonymous visitor`}
 			</Text>
 			{visitor.scan_count > 1 && (
-				<Badge size="xs" color="gray" variant="light">
+				<MonitorBadge size="xs" color="gray" variant="light">
 					<Trans>Scanned {visitor.scan_count} times</Trans>
-				</Badge>
+				</MonitorBadge>
 			)}
 		</Group>
 		{visitor.tags.length > 0 && (
 			<Group gap={4} wrap="wrap">
 				{visitor.tags.map((tag) => (
-					<Badge
+					<MonitorBadge
 						key={tag}
 						size="xs"
 						variant="light"
 						color={visitor.tags_preselected ? "primary" : "gray"}
 					>
 						{visitor.tags_preselected ? t`${tag} (preselected)` : tag}
-					</Badge>
+					</MonitorBadge>
 				))}
 			</Group>
 		)}
@@ -142,91 +120,6 @@ const VisitorDrilldown = ({ visitor }: { visitor: FunnelVisitor }) => (
 	</Stack>
 );
 
-const ConversationDrilldown = ({
-	conversation,
-	base,
-	projectId,
-}: {
-	conversation: MonitorConversation;
-	base: string | null;
-	projectId: string;
-}) => {
-	const [name, setName] = useState(conversation.label ?? "");
-	const update = useUpdateConversationByIdMutation();
-
-	useEffect(() => {
-		setName(conversation.label ?? "");
-	}, [conversation.label]);
-
-	const save = () => {
-		update.mutate(
-			{ id: conversation.id, payload: { participant_name: name.trim() } },
-			{
-				onError: () => toast.error(t`Could not save`),
-				onSuccess: () => {
-					posthog.capture("monitor_participant_name_edited", {
-						conversation_id: conversation.id,
-						project_id: projectId,
-					});
-					toast.success(t`Saved`);
-				},
-			},
-		);
-	};
-
-	return (
-		<Stack gap="sm">
-			<TextInput
-				label={t`Participant name`}
-				value={name}
-				onChange={(event) => setName(event.currentTarget.value)}
-				rightSection={
-					<ActionIcon
-						variant="subtle"
-						color="primary"
-						onClick={save}
-						loading={update.isPending}
-						aria-label={t`Save`}
-					>
-						<PencilSimpleIcon size={15} />
-					</ActionIcon>
-				}
-			/>
-			<Group gap="md">
-				<StatePill state={conversation.state} />
-				{conversation.has_error && (
-					<Text size="xs" c="red.7">
-						<Trans>
-							Some of the recent audio couldn't be transcribed. The recording is
-							saved.
-						</Trans>
-					</Text>
-				)}
-			</Group>
-			{base && (
-				<I18nLink
-					to={`${base}/conversations/${conversation.id}`}
-					className="no-underline"
-					onClick={() =>
-						posthog.capture("monitor_conversation_opened", {
-							conversation_id: conversation.id,
-							from_problem_state: isProblemState(conversation),
-							participant_state: conversation.state,
-							project_id: projectId,
-							recording_health: conversation.recording_health,
-							transcription_status: conversation.transcription_status,
-						})
-					}
-				>
-					<Button variant="light" size="xs">
-						<Trans>Open conversation</Trans>
-					</Button>
-				</I18nLink>
-			)}
-		</Stack>
-	);
-};
-
 const StageLabel = ({
 	label,
 	count,
@@ -245,9 +138,9 @@ const StageLabel = ({
 		<Text size="xs" fw={600} tt="uppercase">
 			{label}
 		</Text>
-		<Badge size="xs" variant="light" color="gray">
+		<MonitorBadge size="xs" variant="light" color="gray">
 			{count}
-		</Badge>
+		</MonitorBadge>
 	</Group>
 );
 
@@ -262,7 +155,16 @@ export const LiveFunnelSection = ({
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const base =
 		workspaceId && projectId ? `/w/${workspaceId}/projects/${projectId}` : null;
-	const [selected, setSelected] = useState<Selection | null>(null);
+	const [selectedVisitor, setSelectedVisitor] = useState<FunnelVisitor | null>(
+		null,
+	);
+	// Track by id so the shared modal reads fresh snapshots (and closes when the
+	// conversation is deleted / ages out).
+	const [selectedConversationId, setSelectedConversationId] = useState<
+		string | null
+	>(null);
+	const selectedConversation =
+		conversations.find((c) => c.id === selectedConversationId) ?? null;
 
 	const { nodes, counts, weights } = useMemo(() => {
 		const recording = conversations.filter((c) => c.is_live);
@@ -340,11 +242,11 @@ export const LiveFunnelSection = ({
 								stage_or_state:
 									node.kind === "visitor" ? node.data.stage : node.data.state,
 							});
-							setSelected(
-								node.kind === "visitor"
-									? { kind: "visitor", visitor: node.data }
-									: { conversation: node.data, kind: "conversation" },
-							);
+							if (node.kind === "visitor") {
+								setSelectedVisitor(node.data);
+							} else {
+								setSelectedConversationId(node.data.id);
+							}
 						}}
 						onHover={(node) =>
 							onHoverConversation?.(
@@ -356,27 +258,21 @@ export const LiveFunnelSection = ({
 			)}
 
 			<Modal
-				opened={selected !== null}
-				onClose={() => setSelected(null)}
-				title={
-					selected?.kind === "conversation"
-						? t`Conversation`
-						: t`Visitor details`
-				}
+				opened={selectedVisitor !== null}
+				onClose={() => setSelectedVisitor(null)}
+				title={t`Visitor details`}
 				centered
 				size="md"
 			>
-				{selected?.kind === "visitor" && (
-					<VisitorDrilldown visitor={selected.visitor} />
-				)}
-				{selected?.kind === "conversation" && (
-					<ConversationDrilldown
-						conversation={selected.conversation}
-						base={base}
-						projectId={projectId}
-					/>
-				)}
+				{selectedVisitor && <VisitorDrilldown visitor={selectedVisitor} />}
 			</Modal>
+
+			<ConversationDrilldownModal
+				conversation={selectedConversation}
+				base={base}
+				projectId={projectId}
+				onClose={() => setSelectedConversationId(null)}
+			/>
 		</Stack>
 	);
 };

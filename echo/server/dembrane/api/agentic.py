@@ -48,7 +48,7 @@ from dembrane.agentic_runtime import (
     subscribe_live_events,
 )
 from dembrane.service.agentic import TERMINAL_RUN_STATUSES, AgenticRunNotFoundException
-from dembrane.api.feature_flags import require_canvas_enabled
+from dembrane.api.feature_flags import require_canvas_enabled_for_project
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
 AgenticRouter = APIRouter(tags=["agentic"])
@@ -1588,7 +1588,7 @@ async def _get_project_chat_or_404(
 
 @AgenticRouter.get(
     "/projects/{project_id}/canvases",
-    dependencies=[Depends(require_canvas_enabled)],
+    dependencies=[Depends(require_canvas_enabled_for_project)],
 )
 async def list_project_canvases(
     project_id: str,
@@ -1660,7 +1660,7 @@ async def _recent_loop_runs(loop_id: str, limit: int) -> list[dict[str, Any]]:
 
 @AgenticRouter.get(
     "/projects/{project_id}/chats/{chat_id}/canvas-activity",
-    dependencies=[Depends(require_canvas_enabled)],
+    dependencies=[Depends(require_canvas_enabled_for_project)],
 )
 async def list_chat_canvas_activity(
     project_id: str,
@@ -1718,7 +1718,7 @@ async def list_chat_canvas_activity(
 
 @AgenticRouter.get(
     "/projects/{project_id}/canvases/{canvas_id}",
-    dependencies=[Depends(require_canvas_enabled)],
+    dependencies=[Depends(require_canvas_enabled_for_project)],
 )
 async def get_project_canvas(
     project_id: str,
@@ -1743,7 +1743,7 @@ async def get_project_canvas(
 
 @AgenticRouter.get(
     "/projects/{project_id}/canvases/{canvas_id}/history",
-    dependencies=[Depends(require_canvas_enabled)],
+    dependencies=[Depends(require_canvas_enabled_for_project)],
 )
 async def get_project_canvas_history(
     project_id: str,
@@ -1765,7 +1765,7 @@ async def get_project_canvas_history(
 
 @AgenticRouter.post(
     "/projects/{project_id}/canvases/{canvas_id}/edit",
-    dependencies=[Depends(require_canvas_enabled)],
+    dependencies=[Depends(require_canvas_enabled_for_project)],
 )
 async def edit_project_canvas(
     project_id: str,
@@ -1796,7 +1796,7 @@ async def edit_project_canvas(
 
 @AgenticRouter.post(
     "/projects/{project_id}/canvases/{canvas_id}/host-items",
-    dependencies=[Depends(require_canvas_enabled)],
+    dependencies=[Depends(require_canvas_enabled_for_project)],
 )
 async def add_project_canvas_host_item(
     project_id: str,
@@ -1822,7 +1822,7 @@ async def add_project_canvas_host_item(
 
 @AgenticRouter.post(
     "/projects/{project_id}/canvases/{canvas_id}/host-items/remove",
-    dependencies=[Depends(require_canvas_enabled)],
+    dependencies=[Depends(require_canvas_enabled_for_project)],
 )
 async def remove_project_canvas_host_item(
     project_id: str,
@@ -1843,7 +1843,7 @@ async def remove_project_canvas_host_item(
 
 @AgenticRouter.post(
     "/projects/{project_id}/canvases/{canvas_id}/loop/{action}",
-    dependencies=[Depends(require_canvas_enabled)],
+    dependencies=[Depends(require_canvas_enabled_for_project)],
 )
 async def update_project_canvas_loop(
     project_id: str,
