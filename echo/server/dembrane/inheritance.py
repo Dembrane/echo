@@ -311,87 +311,6 @@ async def user_can_access(workspace_id: str, user_id: str) -> Optional[tuple[str
     return None
 
 
-async def resolve_workspace_access(
-    workspace: dict, user_id: str
-) -> Optional[tuple[str, str, Optional[dict]]]:
-    """user_can_access for callers already holding the workspace row.
-
-    Returns (role, source, direct_membership_row) so the caller can read
-    custom_policies without a second membership query. Same resolution
-    order as user_can_access.
-
-    Caller must have already rejected deleted workspaces.
-    """
-    direct = await _get_direct_membership(workspace["id"], user_id)
-    if direct:
-        return direct["role"], "direct", direct
-
-    org_id = workspace.get("org_id")
-    if not org_id:
-        return None
-
-    org_role = await _get_org_role(org_id, user_id)
-    derived = derive_workspace_role(workspace, org_role, user_id)
-    if derived:
-        return derived, "inherited", None
-    return None
-
-
-def effective_members_from_rows(
-    workspace: dict, direct_rows: list[dict], org_rows: list[dict]
-) -> list[dict]:
-    """Pure core of get_effective_members: same output, no I/O.
-
-    direct_rows: active workspace_membership rows for this workspace
-    (staff_support rows are skipped here, so unfiltered rows are safe).
-    org_rows: active org_membership rows for the workspace's org.
-    """
-    out: list[dict] = []
-    direct_user_ids: set[str] = set()
-    for row in direct_rows:
-        uid = row.get("user_id")
-        if not uid or row.get("source") == "staff_support":
-            continue
-        direct_user_ids.add(uid)
-        out.append(
-            {
-                "user_id": uid,
-                "role": row.get("role", ""),
-                "source": "direct",
-                "custom_policies": row.get("custom_policies") or [],
-                "created_at": row.get("created_at"),
-            }
-        )
-
-    if not workspace.get("org_id"):
-        return out
-
-    follows_admins = workspace_follows_organisation_admins(workspace)
-    roles_in_scope = {"owner"}
-    if follows_admins:
-        roles_in_scope = {"owner", "admin"}
-        if workspace_follows_organisation_members(workspace):
-            roles_in_scope.add("member")
-
-    for row in org_rows:
-        uid = row.get("user_id")
-        role = row.get("role")
-        if not uid or uid in direct_user_ids or role not in roles_in_scope:
-            continue
-        if is_sticky_removed(workspace, uid):
-            continue
-        out.append(
-            {
-                "user_id": uid,
-                "role": "admin" if role in ("owner", "admin") else "member",
-                "source": "inherited",
-                "custom_policies": [],
-                "created_at": None,
-            }
-        )
-    return out
-
-
 async def get_effective_members(workspace_id: str) -> list[dict]:
     """Return every user with access to this workspace — direct + derived.
 
@@ -440,9 +359,26 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
     if not isinstance(direct_rows, list):
         direct_rows = []
 
+    out: list[dict] = []
+    direct_user_ids: set[str] = set()
+    for row in direct_rows:
+        uid = row.get("user_id")
+        if not uid:
+            continue
+        direct_user_ids.add(uid)
+        out.append(
+            {
+                "user_id": uid,
+                "role": row.get("role", ""),
+                "source": "direct",
+                "custom_policies": row.get("custom_policies") or [],
+                "created_at": row.get("created_at"),
+            }
+        )
+
     org_id = workspace.get("org_id")
     if not org_id:
-        return effective_members_from_rows(workspace, direct_rows, [])
+        return out
 
     # Organisation owners always derive access (organisation-owner carve-out in
     # user_can_access). Everyone else only derives on open workspaces.
@@ -474,7 +410,24 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
     if not isinstance(org_rows, list):
         org_rows = []
 
-    return effective_members_from_rows(workspace, direct_rows, org_rows)
+    for row in org_rows:
+        uid = row.get("user_id")
+        if not uid or uid in direct_user_ids:
+            continue
+        if is_sticky_removed(workspace, uid):
+            continue
+        derived_role = "admin" if row.get("role") in ("owner", "admin") else "member"
+        out.append(
+            {
+                "user_id": uid,
+                "role": derived_role,
+                "source": "inherited",
+                "custom_policies": [],  # no custom policies on derived slots
+                "created_at": None,
+            }
+        )
+
+    return out
 
 
 # ── Write-side transitions ──────────────────────────────────────────────

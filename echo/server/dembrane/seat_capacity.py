@@ -62,47 +62,6 @@ _OBSERVER_ROLE = "observer"  # free, read-only; excluded from the seat pool
 _HARD_BLOCK_SEAT_TIERS: frozenset[str] = frozenset()
 
 
-def seat_user_ids_from_members(members: list[dict]) -> set[str]:
-    """Pure core of effective_seat_user_ids: distinct direct seat-role users."""
-    user_ids: set[str] = set()
-    for m in members:
-        if m.get("source") != "direct":
-            continue
-        uid = m.get("user_id")
-        if uid and (m.get("role") or "") in _SEAT_ROLES:
-            user_ids.add(uid)
-    return user_ids
-
-
-def seat_state_from_members(members: list[dict]) -> tuple[int, int, int, int]:
-    """Pure core of compute_effective_seat_state.
-
-    Returns (seats_used, member_count, external_count, observer_count).
-    """
-    member_users: set[str] = set()
-    external_users: set[str] = set()
-    observer_users: set[str] = set()
-    for m in members:
-        if m.get("source") != "direct":
-            continue
-        uid = m.get("user_id")
-        if not uid:
-            continue
-        role = m.get("role") or ""
-        if role == _OBSERVER_ROLE:
-            observer_users.add(uid)
-        elif role == _EXTERNAL_ROLE:
-            external_users.add(uid)
-        elif role in _SEAT_ROLES:
-            member_users.add(uid)
-    return (
-        len(member_users) + len(external_users),
-        len(member_users),
-        len(external_users),
-        len(observer_users),
-    )
-
-
 def tier_hard_blocks_seats(tier: str) -> bool:
     """Whether a tier hard-caps seats. No tier does today (Free is uncapped on
     seats; paid tiers bill per seat). Unknown tiers don't block."""
@@ -117,7 +76,19 @@ async def effective_seat_user_ids(workspace_id: str) -> set[str]:
     pool seats across an account's workspaces and dedupe a user who is a member
     of several of them (otherwise they'd be counted once per workspace — the
     phantom-seat bug)."""
-    return seat_user_ids_from_members(await get_effective_members(workspace_id))
+    members = await get_effective_members(workspace_id)
+    user_ids: set[str] = set()
+    for m in members:
+        if m.get("source") != "direct":
+            continue
+        uid = m.get("user_id")
+        if not uid:
+            continue
+        # observer is intentionally absent from _SEAT_ROLES, so free
+        # read-only collaborators never enter the billed set this feeds.
+        if (m.get("role") or "") in _SEAT_ROLES:
+            user_ids.add(uid)
+    return user_ids
 
 
 async def compute_effective_seat_state(
@@ -135,7 +106,28 @@ async def compute_effective_seat_state(
     Only direct members occupy a seat; derived org-admin/owner access
     (source='inherited') grants oversight but does not (ADR-0004).
     """
-    return seat_state_from_members(await get_effective_members(workspace_id))
+    members = await get_effective_members(workspace_id)
+
+    member_users: set[str] = set()
+    external_users: set[str] = set()
+    observer_users: set[str] = set()
+    for m in members:
+        # Derived oversight access doesn't consume a seat.
+        if m.get("source") != "direct":
+            continue
+        uid = m.get("user_id")
+        if not uid:
+            continue
+        role = m.get("role") or ""
+        if role == _OBSERVER_ROLE:
+            observer_users.add(uid)  # free — never added to seats_used
+        elif role == _EXTERNAL_ROLE:
+            external_users.add(uid)
+        elif role in _SEAT_ROLES:
+            member_users.add(uid)
+
+    seats_used = len(member_users) + len(external_users)
+    return seats_used, len(member_users), len(external_users), len(observer_users)
 
 
 async def count_pending_invites(workspace_id: str) -> tuple[int, int, int]:

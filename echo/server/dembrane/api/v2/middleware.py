@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
 from logging import getLogger
 
 from fastapi import HTTPException
 
 from dembrane.app_user import resolve_app_user
 from dembrane.policies import has_policy, meets_tier
+from dembrane.inheritance import user_can_access
 from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
@@ -80,39 +80,49 @@ async def get_workspace_context(
             ctx.require_policy("project:read")
             ...
     """
-    app_user, workspace = await asyncio.gather(
-        resolve_app_user(auth.user_id),
-        async_directus.get_item("workspace", workspace_id),
-    )
+    app_user = await resolve_app_user(auth.user_id)
     if not app_user:
         raise HTTPException(status_code=403, detail="User not onboarded")
+
     app_user_id = app_user["id"]
 
+    workspace = await async_directus.get_item("workspace", workspace_id)
     if not workspace or workspace.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Workspace not found")
 
-    # Tier and commercial terms live on the billing account; access via
-    # the inheritance ladder. Both only need the row we already hold.
-    from dembrane.inheritance import resolve_workspace_access
+    # Tier and commercial terms live on the billing account. Resolve them onto
+    # the workspace dict so every downstream ctx check (has_policy, require_tier)
+    # reads the account, not a stale column.
     from dembrane.billing_account import resolve_workspace_billing
 
-    billing, resolved = await asyncio.gather(
-        resolve_workspace_billing(workspace_id, workspace=workspace),
-        resolve_workspace_access(workspace, app_user_id),
-    )
-    workspace.update(billing)
+    workspace.update(await resolve_workspace_billing(workspace_id))
 
+    resolved = await user_can_access(workspace_id, app_user_id)
     if resolved is None:
         raise HTTPException(status_code=403, detail="No access to this workspace")
-    role, source, membership = resolved
+
+    role, source = resolved
 
     # Direct rows can carry custom_policies. Inherited rows derive from
     # org role — they get the plain role preset, never external.
     custom_policies: list[str] = []
-    if source == "direct" and membership:
-        raw = membership.get("custom_policies")
-        if isinstance(raw, list):
-            custom_policies = raw
+    if source == "direct":
+        rows = await async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_eq": workspace_id},
+                        "user_id": {"_eq": app_user_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["custom_policies"],
+                    "limit": 1,
+                }
+            },
+        )
+        if isinstance(rows, list) and rows:
+            custom_policies = rows[0].get("custom_policies") or []
 
     # Normalize legacy role names at context build so every downstream
     # check — has_policy, role-hierarchy compares, UI serialisation — sees

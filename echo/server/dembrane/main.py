@@ -18,7 +18,6 @@ from dembrane.api.v2 import v2_router
 from dembrane.sentry import init_sentry
 from dembrane.api.api import api
 from dembrane.settings import get_settings
-from dembrane.gzip_middleware import SSEAwareGZipMiddleware
 
 # Enable nested event loops for Dramatiq workers calling async handlers
 nest_asyncio.apply()
@@ -89,8 +88,7 @@ middleware = [
         allow_headers=["*"],
         expose_headers=["*"],
         max_age=86400,
-    ),
-    Middleware(SSEAwareGZipMiddleware, minimum_size=1024),
+    )
 ]
 
 app = FastAPI(lifespan=lifespan, docs_url=docs_url, redoc_url=None, middleware=middleware)

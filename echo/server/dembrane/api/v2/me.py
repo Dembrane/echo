@@ -1,6 +1,5 @@
 """GET /v2/me — lightweight user profile with onboarding status."""
 
-import asyncio
 from typing import Any, Optional, cast
 from logging import getLogger
 from datetime import datetime, timezone
@@ -42,62 +41,74 @@ _accept_rate_limiter = create_user_rate_limiter(
 )
 
 
-async def _false() -> bool:
-    """Constant-False awaitable, used as a gather placeholder when email is empty."""
-    return False
+@router.get("", response_model=MeResponse)
+async def get_me(auth: DependencyDirectusSession) -> MeResponse:
+    """Lightweight user profile with onboarding status, org memberships,
+    and pending invite check."""
 
+    app_user = await resolve_app_user(auth.user_id)
+    directus_profile = await get_directus_user_profile(auth.user_id)
 
-async def _has_pending_invites(email: str) -> bool:
-    """Workspace invites first, org invites only when no ws hit. Org-only invites
-    must count here so onboarding doesn't show "name your organisation" to an
-    invited user."""
-    now_iso = datetime.now(timezone.utc).isoformat()
-    pending_ws = await async_directus.get_items(
-        "workspace_invite",
-        {
-            "query": {
-                "filter": {
-                    "email": {"_eq": email},
-                    "accepted_at": {"_null": True},
-                    "deleted_at": {"_null": True},
-                    "expires_at": {"_gt": now_iso},
+    if not directus_profile:
+        logger.warning(f"Directus user not found for id {auth.user_id}")
+        return MeResponse(
+            directus_user_id=auth.user_id,
+            email="",
+            display_name="",
+            onboarding_completed=False,
+            is_staff=bool(auth.is_admin),
+        )
+
+    email = directus_profile.get("email", "")
+
+    # Org-only invites must count here so onboarding doesn't show "name your organisation" to an invited user.
+    has_pending_invites = False
+    if email:
+        now_iso = datetime.now(timezone.utc).isoformat()
+        pending_ws = await async_directus.get_items(
+            "workspace_invite",
+            {
+                "query": {
+                    "filter": {
+                        "email": {"_eq": email},
+                        "accepted_at": {"_null": True},
+                        "deleted_at": {"_null": True},
+                        "expires_at": {"_gt": now_iso},
+                    },
+                    "fields": ["id"],
+                    "limit": 1,
+                }
+            },
+        )
+        if isinstance(pending_ws, list) and len(pending_ws) > 0:
+            has_pending_invites = True
+        else:
+            pending_org = await async_directus.get_items(
+                "org_invite",
+                {
+                    "query": {
+                        "filter": {
+                            "email": {"_eq": email},
+                            "accepted_at": {"_null": True},
+                            "deleted_at": {"_null": True},
+                            "expires_at": {"_gt": now_iso},
+                        },
+                        "fields": ["id"],
+                        "limit": 1,
+                    }
                 },
-                "fields": ["id"],
-                "limit": 1,
-            }
-        },
-    )
-    if isinstance(pending_ws, list) and len(pending_ws) > 0:
-        return True
+            )
+            has_pending_invites = isinstance(pending_org, list) and len(pending_org) > 0
 
-    pending_org = await async_directus.get_items(
-        "org_invite",
-        {
-            "query": {
-                "filter": {
-                    "email": {"_eq": email},
-                    "accepted_at": {"_null": True},
-                    "deleted_at": {"_null": True},
-                    "expires_at": {"_gt": now_iso},
-                },
-                "fields": ["id"],
-                "limit": 1,
-            }
-        },
-    )
-    return isinstance(pending_org, list) and len(pending_org) > 0
-
-
-async def _has_legacy_projects(directus_user_id: str) -> bool:
-    """Does this user have projects from before workspaces existed? Drives
-    the onboarding split: new users get signup-time organisation name, legacy
-    users get the "we've added organisations" migration screen."""
+    # Does this user have projects from before workspaces existed? Drives
+    # the onboarding split: new users get signup-time organisation name, legacy
+    # users get the "we've added organisations" migration screen.
     legacy_probe = await async_directus.get_items(
         "project",
         {
             "query": {
                 "filter": {
-                    "directus_user_id": {"_eq": directus_user_id},
+                    "directus_user_id": {"_eq": auth.user_id},
                     "workspace_id": {"_null": True},
                     "deleted_at": {"_null": True},
                 },
@@ -106,18 +117,28 @@ async def _has_legacy_projects(directus_user_id: str) -> bool:
             }
         },
     )
-    return isinstance(legacy_probe, list) and len(legacy_probe) > 0
+    has_legacy_projects = isinstance(legacy_probe, list) and len(legacy_probe) > 0
 
+    if not app_user:
+        return MeResponse(
+            directus_user_id=auth.user_id,
+            email=email,
+            display_name=directus_profile.get("display_name", ""),
+            avatar=directus_profile.get("avatar"),
+            onboarding_completed=False,
+            has_pending_invites=has_pending_invites,
+            has_legacy_projects=has_legacy_projects,
+            is_staff=bool(auth.is_admin),
+        )
 
-async def _org_summaries(app_user_id: str) -> list[OrgSummary]:
-    """Fetch org memberships and the orgs they point to."""
+    # Fetch org memberships
     orgs: list[OrgSummary] = []
     org_memberships = await async_directus.get_items(
         "org_membership",
         {
             "query": {
                 "filter": {
-                    "user_id": {"_eq": app_user_id},
+                    "user_id": {"_eq": app_user["id"]},
                     "deleted_at": {"_null": True},
                 },
                 "fields": ["org_id", "role"],
@@ -149,12 +170,13 @@ async def _org_summaries(app_user_id: str) -> list[OrgSummary]:
                         is_partner=bool(org.get("is_partner")),
                     )
                 )
-    return orgs
 
+    onboarding_answers = app_user.get("onboarding_answer_json")
+    if not isinstance(onboarding_answers, dict):
+        onboarding_answers = None
 
-async def _training_bits(app_user_id: str) -> tuple[TrainingStatus, bool]:
-    """Training (ISSUE-020): per-user license status + high-risk flag. Best-effort:
-    a training lookup hiccup must never fail the page-load /me call."""
+    # Training (ISSUE-020): per-user license status + high-risk flag. Best-effort:
+    # a training lookup hiccup must never fail the page-load /me call.
     training_status = TrainingStatus()
     high_risk_context = False
     try:
@@ -163,58 +185,11 @@ async def _training_bits(app_user_id: str) -> tuple[TrainingStatus, bool]:
             get_user_training_status,
         )
 
-        status_dict = await get_user_training_status(app_user_id)
+        status_dict = await get_user_training_status(app_user["id"])
         training_status = TrainingStatus(**status_dict)
-        high_risk_context = await is_high_risk_context(app_user_id)
+        high_risk_context = await is_high_risk_context(app_user["id"])
     except Exception:
-        logger.exception("training status lookup failed for %s", app_user_id)
-    return training_status, high_risk_context
-
-
-@router.get("", response_model=MeResponse)
-async def get_me(auth: DependencyDirectusSession) -> MeResponse:
-    """Lightweight user profile with onboarding status, org memberships,
-    and pending invite check."""
-    app_user, directus_profile, has_legacy_projects = await asyncio.gather(
-        resolve_app_user(auth.user_id),
-        get_directus_user_profile(auth.user_id),
-        _has_legacy_projects(auth.user_id),
-    )
-
-    if not directus_profile:
-        logger.warning(f"Directus user not found for id {auth.user_id}")
-        return MeResponse(
-            directus_user_id=auth.user_id,
-            email="",
-            display_name="",
-            onboarding_completed=False,
-            is_staff=bool(auth.is_admin),
-        )
-
-    email = directus_profile.get("email", "")
-
-    if not app_user:
-        has_pending_invites = await _has_pending_invites(email) if email else False
-        return MeResponse(
-            directus_user_id=auth.user_id,
-            email=email,
-            display_name=directus_profile.get("display_name", ""),
-            avatar=directus_profile.get("avatar"),
-            onboarding_completed=False,
-            has_pending_invites=has_pending_invites,
-            has_legacy_projects=has_legacy_projects,
-            is_staff=bool(auth.is_admin),
-        )
-
-    has_pending_invites, orgs, (training_status, high_risk_context) = await asyncio.gather(
-        _has_pending_invites(email) if email else _false(),
-        _org_summaries(app_user["id"]),
-        _training_bits(app_user["id"]),
-    )
-
-    onboarding_answers = app_user.get("onboarding_answer_json")
-    if not isinstance(onboarding_answers, dict):
-        onboarding_answers = None
+        logger.exception("training status lookup failed for %s", app_user["id"])
 
     return MeResponse(
         id=app_user["id"],

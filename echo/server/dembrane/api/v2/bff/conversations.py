@@ -289,9 +289,7 @@ async def list_conversations(
                             "conversation_id": {"_in": conv_ids},
                             "transcript": {"_nempty": True},
                         },
-                        "aggregate": {"count": ["id"]},
-                        "groupBy": ["conversation_id"],
-                        # Directus caps grouped rows at its default limit (100).
+                        "fields": ["conversation_id"],
                         "limit": -1,
                     }
                 },
@@ -338,87 +336,87 @@ async def list_conversations(
         for conv in convs:
             conv["conversation_artifacts"] = artifact_map.get(conv["id"], [])
 
-        # Derived chunk fields via grouped aggregates: no chunk rows cross
-        # the wire. last_chunk_at is max(coalesce(timestamp, created_at)),
-        # split into two aggregates because SQL max() can't coalesce here.
-        def _chunk_agg(extra_filter: dict, aggregate: dict) -> dict:
-            return {
-                "query": {
-                    "filter": {"conversation_id": {"_in": conv_ids}, **extra_filter},
-                    "aggregate": aggregate,
-                    "groupBy": ["conversation_id"],
-                    # Directus caps grouped rows at its default limit (100).
-                    "limit": -1,
-                }
-            }
-
-        (
-            count_rows,
-            non_text_rows,
-            transcript_rows,
-            error_rows,
-            ts_rows,
-            created_rows,
-        ) = await asyncio.gather(
-            async_directus.get_items("conversation_chunk", _chunk_agg({}, {"count": ["id"]})),
-            async_directus.get_items(
+        # Derived chunk fields (has_transcript, last_chunk_at,
+        # has_only_text_chunks) so list views don't need the full chunk embed.
+        lean_chunks = (
+            await async_directus.get_items(
                 "conversation_chunk",
-                _chunk_agg(
-                    # null source counts as "not text"; _neq alone skips NULLs
-                    {"_or": [{"source": {"_neq": "PORTAL_TEXT"}}, {"source": {"_null": True}}]},
-                    {"count": ["id"]},
-                ),
-            ),
-            async_directus.get_items(
-                "conversation_chunk",
-                _chunk_agg({"transcript": {"_nempty": True}}, {"count": ["id"]}),
-            ),
-            async_directus.get_items(
-                "conversation_chunk",
-                _chunk_agg(
-                    {"error": {"_nempty": True}, "transcript": {"_empty": True}},
-                    {"count": ["id"]},
-                ),
-            ),
-            async_directus.get_items(
-                "conversation_chunk",
-                _chunk_agg({"timestamp": {"_nnull": True}}, {"max": ["timestamp"]}),
-            ),
-            async_directus.get_items(
-                "conversation_chunk",
-                _chunk_agg({"timestamp": {"_null": True}}, {"max": ["created_at"]}),
-            ),
+                {
+                    "query": {
+                        "filter": {"conversation_id": {"_in": conv_ids}},
+                        "fields": ["conversation_id", "source", "timestamp", "created_at"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
         )
-
-        def _grouped_ids(rows: object) -> set[str]:
-            out: set[str] = set()
-            if isinstance(rows, list):
-                for row in rows:
-                    cid = row.get("conversation_id")
-                    if cid and int((row.get("count") or {}).get("id") or 0) > 0:
-                        out.add(cid)
-            return out
-
-        chunk_counts: dict[str, int] = {}
-        if isinstance(count_rows, list):
-            for row in count_rows:
+        transcript_hits = (
+            await async_directus.get_items(
+                "conversation_chunk",
+                {
+                    "query": {
+                        "filter": {
+                            "conversation_id": {"_in": conv_ids},
+                            "transcript": {"_nempty": True},
+                        },
+                        "fields": ["conversation_id"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        has_transcript_ids: set[str] = set()
+        if isinstance(transcript_hits, list):
+            for row in transcript_hits:
                 cid = row.get("conversation_id")
                 if cid:
-                    chunk_counts[cid] = int((row.get("count") or {}).get("id") or 0)
-        non_text_ids = _grouped_ids(non_text_rows)
-        has_transcript_ids = _grouped_ids(transcript_rows)
-        has_error_ids = _grouped_ids(error_rows)
+                    has_transcript_ids.add(cid)
 
-        last_chunk_at: dict[str, str] = {}
-        for rows, column in ((ts_rows, "timestamp"), (created_rows, "created_at")):
-            if not isinstance(rows, list):
-                continue
-            for row in rows:
+        # Genuinely-failed chunks: an error set AND no transcript. This
+        # excludes transient errors that were later superseded by a successful
+        # transcript on the same chunk, so the list badge flags real problems
+        # only. Source-agnostic on purpose, so dashboard uploads surface too
+        # (the live monitor is portal-only, this list is not).
+        error_hits = (
+            await async_directus.get_items(
+                "conversation_chunk",
+                {
+                    "query": {
+                        "filter": {
+                            "conversation_id": {"_in": conv_ids},
+                            "error": {"_nempty": True},
+                            "transcript": {"_empty": True},
+                        },
+                        "fields": ["conversation_id"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+        has_error_ids: set[str] = set()
+        if isinstance(error_hits, list):
+            for row in error_hits:
                 cid = row.get("conversation_id")
-                ts = (row.get("max") or {}).get(column)
-                if cid and ts and (cid not in last_chunk_at or ts > last_chunk_at[cid]):
+                if cid:
+                    has_error_ids.add(cid)
+        last_chunk_at: dict[str, str] = {}
+        chunk_counts: dict[str, int] = {}
+        non_text_ids: set[str] = set()
+        if isinstance(lean_chunks, list):
+            for ch in lean_chunks:
+                cid = ch.get("conversation_id")
+                if not cid:
+                    continue
+                chunk_counts[cid] = chunk_counts.get(cid, 0) + 1
+                # null source counts as "not text"
+                if ch.get("source") != "PORTAL_TEXT":
+                    non_text_ids.add(cid)
+                ts = ch.get("timestamp") or ch.get("created_at")
+                if ts and (cid not in last_chunk_at or ts > last_chunk_at[cid]):
                     last_chunk_at[cid] = ts
-
         for conv in convs:
             cid = conv["id"]
             conv["has_transcript"] = cid in has_transcript_ids
@@ -1282,8 +1280,6 @@ async def gather_project_monitor(
                 "query": {
                     "aggregate": {"count": "id"},
                     "groupBy": ["conversation_id"],
-                    # Directus caps grouped rows at its default limit (100).
-                    "limit": -1,
                     # Re-apply the portal-only source filter so counts match the
                     # live set and don't include dashboard/clone chunks.
                     "filter": {
@@ -1309,8 +1305,6 @@ async def gather_project_monitor(
                 "query": {
                     "aggregate": {"count": "id"},
                     "groupBy": ["conversation_id"],
-                    # Directus caps grouped rows at its default limit (100).
-                    "limit": -1,
                     "filter": {
                         "conversation_id": {"_in": conv_ids},
                         "source": {"_nin": ["DASHBOARD_UPLOAD", "CLONE"]},

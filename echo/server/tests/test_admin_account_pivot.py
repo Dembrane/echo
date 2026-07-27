@@ -33,19 +33,6 @@ def _auth(is_admin: bool = True) -> DirectusSession:
     return DirectusSession(user_id="staff-1", is_admin=is_admin)
 
 
-def _direct_members(prefix: str, *role_counts: tuple[str, int]) -> list[dict]:
-    """Build effective_members_from_rows-shaped direct rows: (role, count)
-    pairs with distinct ids, for stubbing _batch_rollup_maps' members_by_ws.
-    """
-    out = []
-    i = 0
-    for role, count in role_counts:
-        for _ in range(count):
-            out.append({"user_id": f"{prefix}-{role}-{i}", "role": role, "source": "direct"})
-            i += 1
-    return out
-
-
 # ── _all_active_workspaces flattens payment_mode + label ──
 
 
@@ -322,10 +309,11 @@ def _two_workspace_rollup(*, second_is_trial: bool):
 
 
 @pytest.mark.asyncio
-@patch("dembrane.api.v2.admin.cache_set_json", new_callable=AsyncMock)
-@patch("dembrane.api.v2.admin.cache_get_json", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin.count_account_seats", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._recent_login_count", new_callable=AsyncMock)
-@patch("dembrane.api.v2.admin._batch_rollup_maps", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin.compute_effective_seat_state", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._workspace_hours_this_cycle", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._workspace_admins", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._all_active_workspaces", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_partner_map", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_name_map", new_callable=AsyncMock)
@@ -333,28 +321,22 @@ async def test_trial_does_not_inflate_total(
     mock_org_names,
     mock_org_partner,
     mock_workspaces,
-    mock_batch_maps,
+    mock_admins,
+    mock_hours,
+    mock_seats,
     mock_logins,
-    mock_cache_get,
-    mock_cache_set,
+    mock_pooled_seats,
 ):
     from dembrane.api.v2.admin import billing_rollup
 
     mock_org_names.return_value = {"org-1": "Acme", "org-2": "Beta"}
     mock_org_partner.return_value = {}
+    mock_admins.return_value = []
+    mock_hours.return_value = 1.0
+    mock_seats.return_value = (1, 1, 0, 0)
     mock_logins.return_value = 0
-    mock_cache_get.return_value = None
-    # 1 direct member each on ws-1/ws-2 → 1 pooled seat per (single-workspace)
-    # account. Changemaker per-seat €75 → €75 per account.
-    mock_batch_maps.return_value = (
-        {"ws-1": 1.0, "ws-2": 1.0},
-        {
-            "ws-1": _direct_members("ws1", ("member", 1)),
-            "ws-2": _direct_members("ws2", ("member", 1)),
-        },
-        {},
-        False,
-    )
+    # 1 pooled seat per account. Changemaker per-seat €75 → €75 per account.
+    mock_pooled_seats.return_value = 1
 
     # Two paying accounts: total = 2 * 75.
     mock_workspaces.return_value = _two_workspace_rollup(second_is_trial=False)
@@ -381,10 +363,11 @@ async def test_trial_does_not_inflate_total(
 
 
 @pytest.mark.asyncio
-@patch("dembrane.api.v2.admin.cache_set_json", new_callable=AsyncMock)
-@patch("dembrane.api.v2.admin.cache_get_json", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin.count_account_seats", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._recent_login_count", new_callable=AsyncMock)
-@patch("dembrane.api.v2.admin._batch_rollup_maps", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin.compute_effective_seat_state", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._workspace_hours_this_cycle", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._workspace_admins", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._all_active_workspaces", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_partner_map", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_name_map", new_callable=AsyncMock)
@@ -392,29 +375,23 @@ async def test_rollup_pools_org_account_across_workspaces(
     mock_org_names,
     mock_org_partner,
     mock_workspaces,
-    mock_batch_maps,
+    mock_admins,
+    mock_hours,
+    mock_seats,
     mock_logins,
-    mock_cache_get,
-    mock_cache_set,
+    mock_pooled_seats,
 ):
     from dembrane.api.v2.admin import billing_rollup
 
     mock_org_names.return_value = {"org-1": "Acme"}
     mock_org_partner.return_value = {}
+    mock_admins.return_value = []
+    mock_hours.return_value = 1.0
+    mock_seats.return_value = (2, 2, 1, 0)  # 2 members + 1 external per workspace
     mock_logins.return_value = 0
-    mock_cache_get.return_value = None
-    # 2 members + 1 external per workspace, distinct ids across ws-a/ws-b so
-    # the pooled account count dedupes to 6 (not the 3+3 per-workspace sum
-    # doubled), matching the old count_account_seats pooling.
-    mock_batch_maps.return_value = (
-        {"ws-a": 1.0, "ws-b": 1.0},
-        {
-            "ws-a": _direct_members("wsa", ("member", 2), ("external", 1)),
-            "ws-b": _direct_members("wsb", ("member", 2), ("external", 1)),
-        },
-        {},
-        False,
-    )
+    # Pooled across the org account: 6 distinct billable seats (deduped), the
+    # canonical per-seat multiplier, not the 2+1 per-workspace sum doubled.
+    mock_pooled_seats.return_value = 6
     mock_workspaces.return_value = [
         {
             "id": "ws-a",
@@ -522,10 +499,11 @@ def test_full_discount_floors_forecast_to_zero_but_not_comped():
 
 
 @pytest.mark.asyncio
-@patch("dembrane.api.v2.admin.cache_set_json", new_callable=AsyncMock)
-@patch("dembrane.api.v2.admin.cache_get_json", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin.count_account_seats", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._recent_login_count", new_callable=AsyncMock)
-@patch("dembrane.api.v2.admin._batch_rollup_maps", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin.compute_effective_seat_state", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._workspace_hours_this_cycle", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._workspace_admins", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._all_active_workspaces", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_partner_map", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_name_map", new_callable=AsyncMock)
@@ -533,23 +511,21 @@ async def test_rollup_headline_forecast_and_mrr_are_discounted(
     mock_org_names,
     mock_org_partner,
     mock_workspaces,
-    mock_batch_maps,
+    mock_admins,
+    mock_hours,
+    mock_seats,
     mock_logins,
-    mock_cache_get,
-    mock_cache_set,
+    mock_pooled_seats,
 ):
     from dembrane.api.v2.admin import billing_rollup
 
     mock_org_names.return_value = {"org-1": "Acme"}
     mock_org_partner.return_value = {}
+    mock_admins.return_value = []
+    mock_hours.return_value = 1.0
+    mock_seats.return_value = (1, 1, 0, 0)
     mock_logins.return_value = 0
-    mock_cache_get.return_value = None
-    mock_batch_maps.return_value = (
-        {"ws-1": 1.0},
-        {"ws-1": _direct_members("ws1", ("member", 1))},
-        {},
-        False,
-    )
+    mock_pooled_seats.return_value = 1
     mock_workspaces.return_value = [
         {
             "id": "ws-1",
@@ -618,10 +594,11 @@ def test_five_seat_changemaker_annual_matches_monthly_equivalent():
 
 
 @pytest.mark.asyncio
-@patch("dembrane.api.v2.admin.cache_set_json", new_callable=AsyncMock)
-@patch("dembrane.api.v2.admin.cache_get_json", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin.count_account_seats", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._recent_login_count", new_callable=AsyncMock)
-@patch("dembrane.api.v2.admin._batch_rollup_maps", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin.compute_effective_seat_state", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._workspace_hours_this_cycle", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._workspace_admins", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._all_active_workspaces", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_partner_map", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_name_map", new_callable=AsyncMock)
@@ -629,23 +606,21 @@ async def test_rollup_headline_is_per_seat(
     mock_org_names,
     mock_org_partner,
     mock_workspaces,
-    mock_batch_maps,
+    mock_admins,
+    mock_hours,
+    mock_seats,
     mock_logins,
-    mock_cache_get,
-    mock_cache_set,
+    mock_pooled_seats,
 ):
     from dembrane.api.v2.admin import billing_rollup
 
     mock_org_names.return_value = {"org-1": "Acme"}
     mock_org_partner.return_value = {}
+    mock_admins.return_value = []
+    mock_hours.return_value = 1.0
+    mock_seats.return_value = (5, 5, 0, 0)
     mock_logins.return_value = 0
-    mock_cache_get.return_value = None
-    mock_batch_maps.return_value = (
-        {"ws-1": 1.0},
-        {"ws-1": _direct_members("ws1", ("member", 5))},
-        {},
-        False,
-    )
+    mock_pooled_seats.return_value = 5
     mock_workspaces.return_value = [
         {
             "id": "ws-1",
