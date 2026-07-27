@@ -87,22 +87,33 @@ def _rollup_settings():
     return SimpleNamespace(billing=billing)
 
 
+def _direct_members(prefix: str, *role_counts: tuple[str, int]) -> list[dict]:
+    """Build effective_members_from_rows-shaped direct rows: (role, count)
+    pairs with distinct ids, for stubbing _batch_rollup_maps' members_by_ws.
+    """
+    out = []
+    i = 0
+    for role, count in role_counts:
+        for _ in range(count):
+            out.append({"user_id": f"{prefix}-{role}-{i}", "role": role, "source": "direct"})
+            i += 1
+    return out
+
+
 @pytest.mark.asyncio
-@patch("dembrane.api.v2.admin.count_account_seats", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin.cache_set_json", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin.cache_get_json", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._recent_login_count", new_callable=AsyncMock)
-@patch("dembrane.api.v2.admin.compute_effective_seat_state", new_callable=AsyncMock)
-@patch("dembrane.api.v2.admin._workspace_hours_this_cycle", new_callable=AsyncMock)
-@patch("dembrane.api.v2.admin._workspace_admins", new_callable=AsyncMock)
+@patch("dembrane.api.v2.admin._batch_rollup_maps", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._all_active_workspaces", new_callable=AsyncMock)
 @patch("dembrane.api.v2.admin._org_name_map", new_callable=AsyncMock)
 async def test_forecast_is_base_only(
     mock_org_names,
     mock_workspaces,
-    mock_admins,
-    mock_hours,
-    mock_seats,
+    mock_batch_maps,
     mock_logins,
-    mock_pooled_seats,
+    mock_cache_get,
+    mock_cache_set,
 ):
     from dembrane.api.v2.admin import billing_rollup
 
@@ -121,12 +132,16 @@ async def test_forecast_is_base_only(
             "settings": {},
         }
     ]
-    mock_admins.return_value = []
+    mock_cache_get.return_value = None
     # Way over the cap: if hour/seat overage were still added this would inflate
     # forecast. The per-seat model has no overage, so it must not appear.
-    mock_hours.return_value = 9999.0
-    mock_seats.return_value = (50, 50, 20, 0)
-    mock_pooled_seats.return_value = 70  # 50 members + 20 external, pooled
+    # 50 members + 20 external, pooled to 70 distinct billable seats.
+    mock_batch_maps.return_value = (
+        {"ws-1": 9999.0},
+        {"ws-1": _direct_members("ws1", ("member", 50), ("external", 20))},
+        {},
+        False,
+    )
     mock_logins.return_value = 0
 
     result = await billing_rollup(_auth(), month_offset=0)

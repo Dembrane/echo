@@ -68,6 +68,11 @@ async def cache_delete(key: str) -> None:
 
 USAGE_TTL_SECONDS = 30 * 60  # 30 minutes
 USAGE_SUMMARY_TTL_SECONDS = 30 * 60
+ADMIN_ROLLUP_TTL_SECONDS = 5 * 60
+
+
+def admin_rollup_cache_key(month_offset: int) -> str:
+    return f"admin_rollup:{month_offset}"
 
 
 def usage_cache_key(workspace_id: str) -> str:
