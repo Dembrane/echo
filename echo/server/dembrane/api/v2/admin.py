@@ -17,6 +17,7 @@ don't need Directus admin access to do the job.
 
 from __future__ import annotations
 
+import asyncio
 from typing import Literal, Optional
 from logging import getLogger
 from datetime import datetime, timezone, timedelta
@@ -27,13 +28,19 @@ from pydantic import Field, BaseModel
 from dembrane import mollie
 from dembrane.utils import generate_uuid
 from dembrane.settings import get_settings
-from dembrane.seat_capacity import compute_effective_seat_state
+from dembrane.cache_utils import (
+    ADMIN_ROLLUP_TTL_SECONDS,
+    cache_get_json,
+    cache_set_json,
+    admin_rollup_cache_key,
+)
+from dembrane.inheritance import effective_members_from_rows
+from dembrane.seat_capacity import seat_state_from_members, seat_user_ids_from_members
 from dembrane.tier_capacity import get_capacity
 from dembrane.directus_async import async_directus
 from dembrane.billing_service import (
     BillingError,
     apply_discount,
-    count_account_seats,
     _per_interval_amount,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
@@ -239,39 +246,34 @@ def _month_window(now: datetime, offset: int = 0) -> tuple[str, str]:
 
 
 async def _recent_login_count(since_iso: str) -> int:
-    """Admins/owners (non-external) with a Directus users.last_access
-    newer than `since_iso`. Returns 0 on any error so the headline
-    doesn't blow up if the join fails."""
+    """Count app_users whose Directus last_access is newer than since_iso.
+    Returns 0 on any error so the headline doesn't blow up."""
     try:
-        rows = await async_directus.get_items(
-            "app_user",
-            {
-                "query": {
-                    "fields": ["id", "directus_user_id"],
-                    "filter": {"directus_user_id": {"_nnull": True}},
-                    "limit": -1,
-                }
-            },
-        )
-        if not isinstance(rows, list):
-            return 0
-        directus_ids = [r["directus_user_id"] for r in rows if r.get("directus_user_id")]
-        if not directus_ids:
-            return 0
         users = await async_directus.get_users(
             {
                 "query": {
-                    "filter": {
-                        "id": {"_in": directus_ids[:500]},
-                        "last_access": {"_gte": since_iso},
-                    },
+                    "filter": {"last_access": {"_gte": since_iso}},
                     "fields": ["id"],
                     "limit": -1,
                 }
             },
         )
-        return len(users) if isinstance(users, list) else 0
-    except Exception:  # noqa: BLE001 — best-effort headline metric
+        if not isinstance(users, list) or not users:
+            return 0
+        directus_ids = [u["id"] for u in users if u.get("id")]
+        agg = await async_directus.get_items(
+            "app_user",
+            {
+                "query": {
+                    "aggregate": {"count": ["id"]},
+                    "filter": {"directus_user_id": {"_in": directus_ids}},
+                }
+            },
+        )
+        if isinstance(agg, list) and agg:
+            return int((agg[0].get("count") or {}).get("id") or 0)
+        return 0
+    except Exception:  # noqa: BLE001 - best-effort headline metric
         return 0
 
 
@@ -287,6 +289,8 @@ async def _all_active_workspaces() -> list[dict]:
                     "id",
                     "name",
                     "org_id",
+                    # Needed by effective_members_from_rows' derivation ladder.
+                    "visibility",
                     # JSON column; staff "reset monthly usage" stamps
                     # settings.usage_reset_at here as a per-cycle floor.
                     "settings",
@@ -423,6 +427,172 @@ async def _workspace_hours_this_cycle(
         return 0.0
     total_seconds = float((rows[0].get("sum") or {}).get("duration") or 0)
     return round(total_seconds / 3600.0, 2)
+
+
+async def _batch_rollup_maps(
+    workspaces: list[dict],
+    cycle_start: str,
+    cycle_end: str,
+) -> tuple[dict[str, float], dict[str, list[dict]], dict[str, list[dict]], bool]:
+    """Batched inputs for the billing rollup: one _in query per collection
+    instead of ~7 queries per workspace.
+
+    Returns (hours_by_ws, members_by_ws, admin_rows_by_ws, degraded).
+    degraded=True when any Directus response was an error envelope; the
+    caller must then skip the cache write.
+    """
+    degraded = False
+    ws_ids = [w["id"] for w in workspaces if w.get("id")]
+    org_ids = list({w["org_id"] for w in workspaces if w.get("org_id")})
+
+    # effective_start per workspace: staff usage reset floors the cycle.
+    start_by_ws: dict[str, str] = {}
+    for ws in workspaces:
+        reset_at = (ws.get("settings") or {}).get("usage_reset_at")
+        effective_start = cycle_start
+        if reset_at and cycle_start <= reset_at < cycle_end:
+            effective_start = reset_at
+        start_by_ws[ws["id"]] = effective_start
+
+    projects_res, memberships_res, org_rows_res = await asyncio.gather(
+        async_directus.get_items(
+            "project",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_in": ws_ids},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id", "workspace_id"],
+                    "limit": -1,
+                }
+            },
+        ),
+        async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_in": ws_ids},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": [
+                        "workspace_id",
+                        "user_id",
+                        "role",
+                        "source",
+                        "custom_policies",
+                        "created_at",
+                    ],
+                    "limit": -1,
+                }
+            },
+        ),
+        async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_in": org_ids},
+                        "role": {"_in": ["owner", "admin", "member"]},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["org_id", "user_id", "role"],
+                    "limit": -1,
+                }
+            },
+        )
+        if org_ids
+        else _empty_list(),
+    )
+
+    if not isinstance(projects_res, list):
+        degraded, projects_res = True, []
+    if not isinstance(memberships_res, list):
+        degraded, memberships_res = True, []
+    if not isinstance(org_rows_res, list):
+        degraded, org_rows_res = True, []
+
+    ws_by_project = {
+        p["id"]: p["workspace_id"]
+        for p in projects_res
+        if p.get("id") and p.get("workspace_id")
+    }
+
+    # Hours: one grouped aggregate per distinct effective_start bucket
+    # (normally exactly one; staff resets add a bucket each).
+    project_ids_by_start: dict[str, list[str]] = {}
+    for pid, ws_id in ws_by_project.items():
+        project_ids_by_start.setdefault(start_by_ws.get(ws_id, cycle_start), []).append(pid)
+
+    hours_by_ws: dict[str, float] = {}
+    if project_ids_by_start:
+        bucket_results = await asyncio.gather(
+            *(
+                async_directus.get_items(
+                    "conversation",
+                    {
+                        "query": {
+                            "filter": {
+                                "project_id": {"_in": pids},
+                                "created_at": {"_gte": start, "_lt": cycle_end},
+                                "deleted_at": {"_null": True},
+                            },
+                            "aggregate": {"sum": ["duration"]},
+                            "groupBy": ["project_id"],
+                            # Directus caps grouped rows at its default limit (100).
+                            "limit": -1,
+                        }
+                    },
+                )
+                for start, pids in project_ids_by_start.items()
+            )
+        )
+        seconds_by_ws: dict[str, float] = {}
+        for rows in bucket_results:
+            if not isinstance(rows, list):
+                degraded = True
+                continue
+            for row in rows:
+                ws_id = ws_by_project.get(row.get("project_id") or "")
+                if not ws_id:
+                    continue
+                seconds = float((row.get("sum") or {}).get("duration") or 0)
+                seconds_by_ws[ws_id] = seconds_by_ws.get(ws_id, 0.0) + seconds
+        hours_by_ws = {
+            ws_id: round(seconds / 3600.0, 2) for ws_id, seconds in seconds_by_ws.items()
+        }
+
+    direct_by_ws: dict[str, list[dict]] = {}
+    for row in memberships_res:
+        ws_id = row.get("workspace_id")
+        if ws_id:
+            direct_by_ws.setdefault(ws_id, []).append(row)
+
+    org_rows_by_org: dict[str, list[dict]] = {}
+    for row in org_rows_res:
+        oid = row.get("org_id")
+        if oid:
+            org_rows_by_org.setdefault(oid, []).append(row)
+
+    members_by_ws: dict[str, list[dict]] = {}
+    admin_rows_by_ws: dict[str, list[dict]] = {}
+    for ws in workspaces:
+        ws_id = ws["id"]
+        direct_rows = direct_by_ws.get(ws_id, [])
+        members_by_ws[ws_id] = effective_members_from_rows(
+            ws, direct_rows, org_rows_by_org.get(ws.get("org_id") or "", [])
+        )
+        # Parity with _workspace_admins: role filter only, staff_support included.
+        admin_rows_by_ws[ws_id] = [
+            r for r in direct_rows if r.get("role") in ("admin", "owner")
+        ][:3]
+
+    return hours_by_ws, members_by_ws, admin_rows_by_ws, degraded
+
+
+async def _empty_list() -> list:
+    return []
 
 
 async def _workspace_admins(ws_id: str) -> list[BillingContact]:
@@ -667,11 +837,25 @@ async def billing_rollup(
     if not auth.is_admin:
         raise HTTPException(status_code=403, detail="Staff-only")
 
+    cache_key = admin_rollup_cache_key(month_offset)
+    cached = await cache_get_json(cache_key)
+    if isinstance(cached, dict):
+        try:
+            return BillingRollupResponse(**cached)
+        except Exception:  # noqa: BLE001 - stale shape falls through to recompute
+            pass
+
     cycle_start, cycle_end = _month_window(datetime.now(timezone.utc), month_offset)
     workspaces = await _all_active_workspaces()
     org_ids = [w["org_id"] for w in workspaces if w.get("org_id")]
     org_name_by_id = await _org_name_map(org_ids)
     org_partner_by_id = await _org_partner_map(org_ids)
+
+    hours_by_ws, members_by_ws, admin_rows_by_ws, degraded = await _batch_rollup_maps(
+        workspaces, cycle_start, cycle_end
+    )
+    # empty/errored workspace fetch must not be cached
+    degraded = degraded or not workspaces
 
     rows: list[BillingRow] = []
     total_base = 0.0
@@ -680,13 +864,15 @@ async def billing_rollup(
     # account id, for the account aggregation below.
     label_by_account: dict[str, Optional[str]] = {}
     payment_mode_by_account: dict[str, Optional[str]] = {}
+    # Admin user ids per workspace, resolved to BillingContact after the loop
+    # with one batched app_user fetch instead of one per workspace.
+    admin_uids_by_ws: dict[str, list[str]] = {}
 
     for ws in workspaces:
         ws_id = ws["id"]
         tier = ws.get("tier", "pioneer")
         cap = get_capacity(tier)
-        reset_at = (ws.get("settings") or {}).get("usage_reset_at")
-        hours = await _workspace_hours_this_cycle(ws_id, cycle_start, cycle_end, reset_at=reset_at)
+        hours = hours_by_ws.get(ws_id, 0.0)
         # Use the unified inheritance-aware count so billing arithmetic
         # matches what enforcement/usage endpoints see (derived org admins
         # included). Direct workspace_membership queries miss derived rows
@@ -696,7 +882,7 @@ async def billing_rollup(
             seat_count,
             external_count,
             observer_count,
-        ) = await compute_effective_seat_state(ws_id)
+        ) = seat_state_from_members(members_by_ws.get(ws_id, []))
 
         included_hours = cap.included_hours if cap else None
         included_seats = cap.included_seats if cap else None
@@ -730,7 +916,9 @@ async def billing_rollup(
         ) != ws.get("org_id")
         billed_to_name = org_name_by_id.get(billed_to) if billed_to else None
 
-        admins = await _workspace_admins(ws_id)
+        admin_uids_by_ws[ws_id] = [
+            r["user_id"] for r in admin_rows_by_ws.get(ws_id, []) if r.get("user_id")
+        ]
         # Active when there's usage this cycle OR real members. Everything
         # else is a shell that never turned into an engagement.
         is_active = hours > 0 or seat_count > 0 or external_count > 0
@@ -766,7 +954,7 @@ async def billing_rollup(
             downgraded_at=ws.get("downgraded_at"),
             downgraded_from_tier=ws.get("downgraded_from_tier"),
             is_active=is_active,
-            workspace_admins=admins,
+            workspace_admins=[],
             tier_expires_at=ws.get("tier_expires_at"),
             type_discount=ws.get("type_discount"),
             percent_discount=ws.get("percent_discount"),
@@ -781,6 +969,37 @@ async def billing_rollup(
         if base_price is not None:
             total_base += base_price
         total_overage += hour_overage_eur + seat_overage_eur
+
+    # Enrich workspace_admins with one batched app_user fetch instead of one
+    # per workspace.
+    all_admin_uids = {uid for uids in admin_uids_by_ws.values() for uid in uids}
+    admin_user_map: dict[str, dict] = {}
+    if all_admin_uids:
+        users = await async_directus.get_items(
+            "app_user",
+            {
+                "query": {
+                    "filter": {"id": {"_in": list(all_admin_uids)}},
+                    "fields": ["id", "display_name", "email"],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(users, list):
+            admin_user_map = {u["id"]: u for u in users}
+        else:
+            # non-list response silently empties every row's admins
+            degraded = True
+    for row in rows:
+        row.workspace_admins = [
+            BillingContact(
+                user_id=uid,
+                display_name=(admin_user_map.get(uid) or {}).get("display_name"),
+                email=(admin_user_map.get(uid) or {}).get("email"),
+            )
+            for uid in admin_uids_by_ws.get(row.workspace_id, [])
+            if uid in admin_user_map
+        ]
 
     # Sort: at-risk first, then by total forecast desc.
     def _risk(r: BillingRow) -> int:
@@ -797,13 +1016,21 @@ async def billing_rollup(
     # Pooled billable seats per account: distinct users across the account's
     # workspaces (members + externals share one pool), deduped so a user in two
     # pooled workspaces is one seat, not two. This is the canonical seat count
-    # the per-seat forecast multiplies by, matching count_account_seats.
-    pooled_seats_by_account: dict[str, int] = {}
-    for acc_id in {r.billing_account_id for r in rows if r.billing_account_id}:
-        try:
-            pooled_seats_by_account[acc_id] = await count_account_seats(acc_id)
-        except Exception:  # noqa: BLE001 - never let one account break the rollup
-            logger.exception("pooled seat count failed for account %s", acc_id)
+    # the per-seat forecast multiplies by, matching count_account_seats, but
+    # computed purely from the already-fetched members_by_ws (no extra queries).
+    ws_ids_by_account: dict[str, list[str]] = {}
+    for ws in workspaces:
+        acc_id = ws.get("billing_account_id")
+        if acc_id:
+            ws_ids_by_account.setdefault(acc_id, []).append(ws["id"])
+    pooled_seats_by_account = {
+        acc_id: len(
+            set().union(
+                *(seat_user_ids_from_members(members_by_ws.get(w, [])) for w in ws_list)
+            )
+        )
+        for acc_id, ws_list in ws_ids_by_account.items()
+    }
 
     # Pivot to the billing account: one row per account, seats pooled across its
     # workspaces, forecast = seats × per-seat × (1 - discount). Trials + comped
@@ -837,7 +1064,7 @@ async def billing_rollup(
     since = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
     logins_30d = await _recent_login_count(since)
 
-    return BillingRollupResponse(
+    response = BillingRollupResponse(
         cycle_start=cycle_start,
         cycle_end_exclusive=cycle_end,
         workspace_count=len(rows),
@@ -857,6 +1084,13 @@ async def billing_rollup(
         accounts=accounts,
         rows=rows,
     )
+
+    # Directus errors during the batch fetch must never be cached: degraded
+    # means we computed with empty maps for the affected piece, and caching
+    # that would serve zeros for ADMIN_ROLLUP_TTL_SECONDS.
+    if not degraded:
+        await cache_set_json(cache_key, response.model_dump(), ADMIN_ROLLUP_TTL_SECONDS)
+    return response
 
 
 class ReferralLedgerRow(BaseModel):

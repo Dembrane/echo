@@ -63,6 +63,26 @@ class ConversationService:
     ) -> ContextManager[DirectusClient]:
         return directus_client_context(override_client or self._directus_client)
 
+    def _clear_conversation_token_count(self, conversation_id: str) -> None:
+        """Transcript text changed: the persisted token count is stale."""
+        try:
+            with self._client_context() as client:
+                client.update_item("conversation", conversation_id, {"token_count": None})
+        except Exception:
+            logger.warning(
+                "failed to clear token_count for %s", conversation_id, exc_info=True
+            )
+        # Also drop the Redis layer so readers never see the pre-change count.
+        try:
+            from dembrane.cache_utils import cache_delete
+            from dembrane.async_helpers import run_async_in_new_loop
+
+            run_async_in_new_loop(cache_delete(f"tokcount:{conversation_id}"))
+        except Exception:
+            logger.warning(
+                "failed to clear tokcount cache for %s", conversation_id, exc_info=True
+            )
+
     @property
     def file_service(self) -> "FileService":
         if self._file_service is None:
@@ -161,7 +181,9 @@ class ConversationService:
         Optimized for the chat select_all feature - only fetches minimal required fields:
         - id: to identify conversations
         - participant_name: for display in UI
-        - chunks.transcript: to check if conversation has content
+        - is_over_cap: to check locked status
+        Content ("has_content") is now checked by the caller via a separate
+        grouped aggregate over conversation_chunk, not by embedding chunks here.
 
         Args:
             project_id: The project ID to filter by
@@ -199,20 +221,12 @@ class ConversationService:
             }
 
         # Minimal fields - only what's actually used in select_all
-        fields: List[str] = [
-            "id",
-            "participant_name",
-            "is_over_cap",
-            "chunks.transcript",
-        ]
-
-        deep: dict[str, Any] = {"chunks": {"_sort": "timestamp"}}
+        fields: List[str] = ["id", "participant_name", "is_over_cap"]
 
         # Build query dict
         query_dict: dict[str, Any] = {
             "filter": filter_query,
             "fields": fields,
-            "deep": deep,
             "limit": limit,
             "sort": sort,
         }
@@ -514,6 +528,9 @@ class ConversationService:
                 },
             )["data"]
 
+        if has_transcript:
+            self._clear_conversation_token_count(conversation["id"])
+
         # Only trigger background audio processing if there's a file to process
         if has_file:
             logger.info(f"Triggering background audio processing for chunk {chunk_id}")
@@ -593,6 +610,9 @@ class ConversationService:
                         update,
                     )["data"]
 
+                    if "transcript" in update:
+                        self._clear_conversation_token_count(chunk["conversation_id"])
+
                     return chunk
             except DirectusBadRequest as e:
                 raise ConversationServiceException(f"Failed to update chunk {chunk_id}: {e}") from e
@@ -603,8 +623,19 @@ class ConversationService:
         self,
         chunk_id: str,
     ) -> None:
+        conversation_id: Optional[str] = None
+        try:
+            with self._client_context() as client:
+                chunk = client.get_item("conversation_chunk", chunk_id, params={"fields": "conversation_id"})
+            conversation_id = chunk.get("conversation_id")
+        except Exception:
+            conversation_id = None
+
         with self._client_context() as client:
             client.delete_item("conversation_chunk", chunk_id)
+
+        if conversation_id:
+            self._clear_conversation_token_count(conversation_id)
 
     def get_chunk_counts(
         self,
