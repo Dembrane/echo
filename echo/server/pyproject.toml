@@ -7,7 +7,7 @@ dependencies = [
     # API server
     "fastapi==0.109.*",
     "uvicorn[standard]==0.27.*",
-    "gunicorn==21.2.*",
+    "gunicorn==22.0.*",
     "python-multipart==0.0.*",
     "pypdf==4.0.*",
     # SDKs for Models
