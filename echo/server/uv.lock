@@ -568,7 +568,7 @@ requires-dist = [
     { name = "scikit-learn", specifier = "==1.4.*" },
     { name = "sendgrid", specifier = ">=6.12.5" },
     { name = "sentry-dramatiq", specifier = "==0.3.*" },
-    { name = "sentry-sdk", specifier = "==2.2.1" },
+    { name = "sentry-sdk", specifier = "==2.8.0" },
     { name = "setuptools", specifier = "==75.8.0" },
     { name = "starlette", specifier = ">=0.36.3" },
     { name = "tenacity", specifier = "==8.3.*" },
@@ -2248,15 +2248,15 @@ wheels = [
 
 [[package]]
 name = "sentry-sdk"
-version = "2.2.1"
+version = "2.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "certifi" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/49/ec/47b10a8a18884b2838e55b58d4e3f3f6e106c74fcc979732c22eefe42f2f/sentry_sdk-2.2.1.tar.gz", hash = "sha256:8aa2ec825724d8d9d645cab68e6034928b1a6a148503af3e361db3fa6401183f", size = 266202, upload-time = "2024-05-21T11:15:31.475Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/9d/d61d64819ecb0481647229c3ee8ddc00887552acc23745fd65d0d4d066f3/sentry_sdk-2.8.0.tar.gz", hash = "sha256:aa4314f877d9cd9add5a0c9ba18e3f27f99f7de835ce36bd150e48a41c7c646f", size = 273663, upload-time = "2024-07-08T08:11:38.246Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/95/77/618705a558e61b51c883222ce365d562d4f528c8b2a8eaa43d4c3ae1a382/sentry_sdk-2.2.1-py2.py3-none-any.whl", hash = "sha256:7d617a1b30e80c41f3b542347651fcf90bb0a36f3a398be58b4f06b79c8d85bc", size = 281558, upload-time = "2024-05-21T11:15:28.449Z" },
+    { url = "https://files.pythonhosted.org/packages/80/f4/8e1be145ce63c4ef4e126ee362992ae1ada5e716723883912b74829583e7/sentry_sdk-2.8.0-py2.py3-none-any.whl", hash = "sha256:6051562d2cfa8087bb8b4b8b79dc44690f8a054762a29c07e22588b1f619bfb5", size = 300617, upload-time = "2024-07-08T08:11:33.904Z" },
 ]
 
 [[package]]
