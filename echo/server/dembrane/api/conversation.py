@@ -798,6 +798,12 @@ async def summarize_conversation(
     language = conversation_data["project_id"]["language"]
 
     if transcript_str == "":
+        if _conv and (_conv.get("is_all_chunks_transcribed") or _conv.get("is_finished")):
+            await async_directus.update_item(
+                "conversation",
+                conversation_id,
+                {"summary": "[No transcript available]"},
+            )
         return {
             "status": "success",
             "message": "Transcript is empty, so no summary was generated",

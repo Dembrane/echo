@@ -423,7 +423,7 @@ def task_summarize_conversation(conversation_id: str) -> None:
 
         conversation = conversation_service.get_by_id_or_raise(conversation_id)
 
-        if conversation["is_finished"] and conversation["summary"] is not None:
+        if conversation["is_finished"] and conversation.get("summary"):
             logger.info(f"Conversation {conversation_id} already summarized, skipping")
             return
 
