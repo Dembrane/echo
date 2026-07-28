@@ -20,6 +20,17 @@ run of interviews, anything past what you'd sit and read. For a handful, reading
 The full mechanics live in the canonical
 [Library & analysis](../../features/library-and-analysis.md) reference.
 
+## Living Canvas (Experimental Beta)
+
+The **Living Canvas** (and the Project Library analysis that drives it) is currently in **Beta** and gated behind a project-level toggle. In production, this experience is off by default for new projects.
+
+To enable the Living Canvas for your project:
+1. Open your project and click **Project Settings** (the gear icon next to your project name).
+2. Go to the **Experimental** tab.
+3. Turn on the **Living canvas (Beta)** toggle.
+
+Once enabled, the *Library* tab in your project sidebar will become available, and your workspace can begin using board primitives, interactive brief-driven extractions, and chat-to-canvas edits.
+
 ## Generate it
 
 Open your project and go to *Library*. If it hasn't been built, generate it - dembrane reads

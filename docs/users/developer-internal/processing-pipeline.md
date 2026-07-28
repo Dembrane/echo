@@ -18,7 +18,7 @@ backstop the pipeline.
 
 ```
 upload chunk → S3 (presigned)
-   → task_transcribe_chunk        (AssemblyAI webhook/poll, or LiteLLM)
+   → task_transcribe_chunk        (Gemini 3.5 Vertex AI EU, or LiteLLM fallback)
    → task_correct_transcript      (Gemini: hotwords + PII redaction)
    → decrement pending-chunks counter
         … when counter hits 0 AND conversation is finished:
@@ -40,8 +40,8 @@ conversation (`increment_pending_chunks`).
 
 Each chunk is transcribed independently. Two backends:
 
-- *AssemblyAI* - the chunk audio is submitted with `keyterms_prompt` hotwords (up to 1000). Results come back either by *webhook* (`ASSEMBLYAI_WEBHOOK_URL`, secured with the `X-AssemblyAI-Webhook-Secret` header → handled in `api/webhooks.py`) or by *polling* the transcript endpoint (3 s interval, 30 min cap). The raw response and word-level timestamps are stored on the chunk's `diarization` field under schema `Dembrane-25-09` (or `Dembrane-25-09-assemblyai-partial`).
-- *LiteLLM* - the multimodal fallback path, routed through the `MULTI_MODAL_*` groups.
+- *Gemini 3.5 Vertex AI EU* - The chunk audio is transcribed directly on Gemini 3.5 Flash deployed in Google Cloud Vertex AI `europe-west1` (EU) region via the `transcript_from_audio_workflow` function. This guarantees that all audio data and processing remain strictly within EU boundaries while dramatically reducing transcription latency. Word-level timestamps, speaker labeling, and transcription text are returned and stored in the chunk's `diarization` field under schema `Dembrane-26-05` (or `Dembrane-26-05-partial`).
+- *LiteLLM* - The fallback multimodal translation and transcription path, routed through the `MULTI_MODAL_*` model groups when required.
 
 ### 3. Correct - `task_correct_transcript` (priority 0, `network`)
 

@@ -70,10 +70,14 @@ engagement, or tracing a change nobody remembers making.
 
 ## Deleting your account
 
-You can close your account (the account itself, not just a workspace). First check what it
-means for any projects you own and for
-[data ownership](../../features/data-ownership-and-compliance.md) - hand over or move work
-others rely on before you do it.
+To comply with App Store and privacy guidelines, you can delete your account directly in-app under **Settings** > **Account & security** > **Delete Account**.
+
+Before you do, check what it means for any projects you own and for [data ownership](../../features/data-ownership-and-compliance.md) — make sure to hand over or move work others rely on before proceeding.
+
+When you initiate account deletion:
+- Your account is suspended immediately, which blocks logins and token refreshes.
+- This kicks off a **30-day soft-delete grace period** during which dembrane support staff can recover your account if requested.
+- After 30 days, your account and all associated personal data are permanently and irreversibly purged from our systems.
 
 ## Related
 

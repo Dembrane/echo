@@ -22,6 +22,13 @@ email. You'll be the *owner* of whatever you create, so you can do everything in
 on two-factor later in [account & security](../../features/account-and-security.md) -
 recommended, not required.)
 
+## Finding your way around (and the sidebar toggle)
+
+Once signed in, you will see your main dashboard:
+- **The Sidebar:** The sidebar on the left lets you quickly navigate between your Organisation, Workspaces, and Projects.
+- **Sidebar Collapse:** To give yourself more screen space when reading transcripts or analyzing data, you can collapse the sidebar entirely. Look for the **Sidebar Toggle icon** (the left-pointing chevron) at the bottom of the sidebar to slide it closed. Clicking the toggle again expands it back.
+- **Always-on Default:** The sidebar defaults to expanded, so you will always have clear navigation when you first sign in.
+
 ## 2. Create a project
 
 An onboarding wizard sets up the two containers everything lives in: a *workspace* (home for

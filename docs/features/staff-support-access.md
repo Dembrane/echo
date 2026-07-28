@@ -1,6 +1,10 @@
-# Staff support access
+---
+title: Staff support access
+description: Temporary, secure admin access for dembrane support staff to help troubleshoot your workspace - fully controlled by you and automatically self-expiring.
+audience: all
+---
 
-What this feature lets you do, from the perspective of the people using it.
+# Staff support access
 
 Sometimes a customer hits a problem that is faster to fix from inside their own
 workspace than to debug over email. Staff support access lets a customer open a

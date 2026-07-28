@@ -86,8 +86,12 @@ actually a member of, and as what?" To change any of it, you'd go through
 
 ## Deleting your account
 
-Account deletion is available if you no longer want a dembrane account. On the
-[dembrane Go](./mobile-app-dembrane-go.md) mobile app, deletion is completed in the browser.
+To comply with App Store and privacy guidelines, you can delete your account directly in-app under **Settings** > **Account & security** > **Delete Account**. On the [dembrane Go](./mobile-app-dembrane-go.md) mobile app, deletion is completed in the browser.
+
+When you initiate account deletion:
+- Your account is suspended immediately, which blocks logins and token refreshes.
+- This kicks off a **30-day soft-delete grace period** during which dembrane support staff can recover your account if requested.
+- After 30 days, your account and all associated personal data are permanently and irreversibly purged from our systems.
 
 ## Related
 

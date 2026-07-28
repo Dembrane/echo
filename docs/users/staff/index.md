@@ -45,6 +45,7 @@ is greyed out for you, you don't have it yet; everything else on this page you c
   ledger, external-led-orgs signal, and workspace handoff.
 - *[Trainings & licences](./trainings-and-licences.md)* - run the catalogue: schedule
   sessions, complete them to grant one-year licences, manage the roster.
+- *[Staff support access](../../features/staff-support-access.md)* - how to join customer workspaces temporarily for support, extend sessions, or request access when support access is toggled off.
 
 ## The customer side, for reference
 
@@ -59,6 +60,7 @@ Most actions here affect what customers experience on the dashboard:
 
 ## Related
 
+- [Staff support access](../../features/staff-support-access.md) - join or request access to a customer workspace.
 - [The admin panel](./admin-panel-overview.md) - how the panel is laid out and reached.
 - [Usage & billing rollup](./usage-and-billing-rollup.md) - the master table you start from.
 - [Feature pages](../../features/index.md) - what a customer sees, when you need to check.
