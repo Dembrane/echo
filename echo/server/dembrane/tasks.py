@@ -385,6 +385,7 @@ def task_finalize_conversation(conversation_id: str) -> None:
         # Trigger downstream tasks
         task_merge_conversation_chunks.send(conversation_id)
         task_summarize_conversation.send(conversation_id)
+        task_compute_conversation_token_count.send(conversation_id)
 
         # Clean up coordination data
         cleanup_conversation_coordination(conversation_id)
@@ -949,6 +950,81 @@ def task_catch_up_unsummarized_conversations() -> None:
         return
     except Exception as e:
         logger.error(f"Error catching up unsummarized conversations: {e}")
+        raise e from e
+
+
+@dramatiq.actor(queue_name="network", priority=40)
+def task_compute_conversation_token_count(conversation_id: str) -> None:
+    """Warm conversation.token_count off the request path.
+
+    Reuses the read endpoint (Redis -> column -> compute -> persist) with an
+    admin session so the number matches what any reader would compute. Best
+    effort: failures are logged, the catch-up sweep retries next tick.
+    """
+    logger = getLogger("dembrane.tasks.task_compute_conversation_token_count")
+
+    from dembrane.service import conversation_service
+    from dembrane.api.conversation import get_conversation_token_count
+    from dembrane.api.dependency_auth import DirectusSession
+
+    try:
+        conversation = conversation_service.get_by_id_or_raise(conversation_id)
+        if conversation.get("token_count") is not None:
+            logger.debug(f"Conversation {conversation_id} already counted, skipping")
+            return
+        session = DirectusSession(user_id="task_compute_conversation_token_count", is_admin=True)
+        count = run_async_in_new_loop(get_conversation_token_count(conversation_id, session))
+        logger.info(f"Warmed token_count={count} for conversation {conversation_id}")
+    except Exception as e:  # noqa: BLE001 - warm-up must never break the pipeline
+        logger.warning(f"Failed to warm token_count for {conversation_id}: {e}")
+
+
+@dramatiq.actor(queue_name="network")
+def task_catch_up_uncounted_conversations() -> None:
+    """Catch-up task for transcribed conversations missing a token count.
+
+    Simple check: is_all_chunks_transcribed = True AND token_count = null.
+    Backfills pre-column rows on its first runs, then permanently self-heals
+    stragglers (failed finalize warm-ups, post-edit/redaction clears).
+    Bounded per tick; the 5-minute cron drains any backlog incrementally.
+    """
+    logger = getLogger("dembrane.tasks.task_catch_up_uncounted_conversations")
+
+    try:
+        logger.info("running task_catch_up_uncounted_conversations @ %s", get_utc_timestamp())
+
+        with directus_client_context() as client:
+            rows = client.get_items(
+                "conversation",
+                {
+                    "query": {
+                        "filter": {
+                            "is_all_chunks_transcribed": {"_eq": True},
+                            "token_count": {"_null": True},
+                            "deleted_at": {"_null": True},
+                        },
+                        "fields": ["id"],
+                        "sort": ["-created_at"],
+                        "limit": 200,
+                    }
+                },
+            )
+
+        uncounted_ids = [r["id"] for r in rows if r.get("id")] if isinstance(rows, list) else []
+        if not uncounted_ids:
+            logger.debug("No uncounted conversations found")
+            return
+
+        logger.info(f"Found {len(uncounted_ids)} uncounted conversations")
+        group(
+            [
+                task_compute_conversation_token_count.message(conversation_id)
+                for conversation_id in uncounted_ids
+            ]
+        ).run()
+        return
+    except Exception as e:
+        logger.error(f"Error catching up uncounted conversations: {e}")
         raise e from e
 
 

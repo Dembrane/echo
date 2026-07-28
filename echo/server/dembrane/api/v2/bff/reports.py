@@ -155,6 +155,8 @@ async def get_report_timeline(
                 "query": {
                     "aggregate": {"count": "id"},
                     "groupBy": ["conversation_id"],
+                    # Directus caps grouped rows at its default limit (100).
+                    "limit": -1,
                     "filter": {"conversation_id": {"_in": conv_ids}},
                 }
             },
