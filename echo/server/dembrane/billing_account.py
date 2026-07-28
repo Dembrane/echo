@@ -283,13 +283,20 @@ async def update_workspace_billing(workspace_id: str, patch: dict[str, Any]) -> 
     return account_id
 
 
-async def resolve_workspace_billing(workspace_id: str) -> dict[str, Any]:
+async def resolve_workspace_billing(
+    workspace_id: str, workspace: Optional[dict[str, Any]] = None
+) -> dict[str, Any]:
     """Resolve a workspace's commercial fields through its billing account.
+    Accepts a pre-fetched workspace row to skip the extra read.
     Returns {} when the workspace or account is missing."""
-    ws = await directus_async.async_directus.get_item("workspace", workspace_id)
+    ws = workspace
+    if ws is None:
+        ws = await directus_async.async_directus.get_item("workspace", workspace_id)
     if not ws:
         return {}
     account_id = ws.get("billing_account_id")
+    if isinstance(account_id, dict):
+        account_id = account_id.get("id")
     if not account_id:
         return {}
     account = await directus_async.async_directus.get_item("billing_account", account_id)

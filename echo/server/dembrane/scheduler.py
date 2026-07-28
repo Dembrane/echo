@@ -49,6 +49,14 @@ scheduler.add_job(
 )
 
 scheduler.add_job(
+    func="dembrane.tasks:task_catch_up_uncounted_conversations.send",
+    trigger=CronTrigger(minute="*/5"),
+    id="task_catch_up_uncounted_conversations",
+    name="Catch up on conversations missing a token count",
+    replace_existing=True,
+)
+
+scheduler.add_job(
     func="dembrane.tasks:task_check_scheduled_reports.send",
     trigger=CronTrigger(minute="*/5"),
     id="task_check_scheduled_reports",

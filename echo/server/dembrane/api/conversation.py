@@ -32,7 +32,8 @@ from dembrane.api.exceptions import (
     NoContentFoundException,
     ConversationNotFoundException,
 )
-from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.directus_async import async_directus
+from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 from dembrane.service.conversation import ConversationService
 
 logger = getLogger("api.conversation")
@@ -232,13 +233,12 @@ async def raise_if_conversation_not_found_or_not_authorized(
     conversation_id: str,
     auth: DependencyDirectusSession,
     require: Optional[str] = None,
-) -> None:
+) -> dict:
     # v2 access gate, shared with the BFF layer (resolve_conversation_access
     # already enforces conversation:read; `require` adds a stricter policy
     # for mutations). Directus row ACL is admin-only post-lockdown, so all
     # data reads/writes after this gate MUST use the admin client; a
     # user-token client 403s on every collection.
-    from dembrane.directus_async import async_directus
     from dembrane.api.v2.bff._access import resolve_conversation_access
 
     # Staff admins bypass the app-layer model (they may have no app_user
@@ -247,11 +247,12 @@ async def raise_if_conversation_not_found_or_not_authorized(
         conversation = await async_directus.get_item("conversation", conversation_id)
         if not conversation or conversation.get("deleted_at"):
             raise HTTPException(status_code=404, detail="Conversation not found")
-        return
+        return conversation
 
-    access, _ = await resolve_conversation_access(conversation_id, auth)
+    access, conv = await resolve_conversation_access(conversation_id, auth)
     if require:
         access.require(require)
+    return conv
 
 
 def return_url_or_redirect(
@@ -545,12 +546,20 @@ async def get_conversation_token_count(
     conversation_id: str,
     auth: DependencyDirectusSession,
 ) -> int:
-    await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+    conversation = await raise_if_conversation_not_found_or_not_authorized(
+        conversation_id, auth
+    )
 
     cache_key = f"tokcount:{conversation_id}"
     cached_count = await cache_get_json(cache_key)
     if isinstance(cached_count, int):
         return cached_count
+
+    # Persisted layer under Redis: cleared whenever transcript text changes.
+    stored = conversation.get("token_count") if isinstance(conversation, dict) else None
+    if isinstance(stored, int):
+        await cache_set_json(cache_key, stored, TOKEN_COUNT_TTL_SECONDS)
+        return stored
 
     transcript = await get_conversation_transcript(conversation_id, auth)
 
@@ -562,8 +571,119 @@ async def get_conversation_token_count(
     )
 
     await cache_set_json(cache_key, token_count, TOKEN_COUNT_TTL_SECONDS)
+    # Persist to the durable column only if the transcript hasn't started
+    # changing under us. A concurrent new chunk clears the column and flips
+    # is_all_chunks_transcribed to False; writing our now-stale count there
+    # would outlive the 500s Redis bound (the column has no TTL). Re-read
+    # right before the write so the race window is a few ms, not the whole
+    # tokenize. When it is mid-change, the finalize warm-up recomputes.
+    try:
+        fresh = await async_directus.get_item(
+            "conversation",
+            conversation_id,
+            params={"fields": "is_all_chunks_transcribed"},
+        )
+        if isinstance(fresh, dict) and fresh.get("is_all_chunks_transcribed"):
+            await async_directus.update_item(
+                "conversation", conversation_id, {"token_count": token_count}
+            )
+    except Exception:  # noqa: BLE001 - persistence is best-effort
+        logger.warning("failed to persist token_count for %s", conversation_id)
 
     return token_count
+
+
+async def get_conversation_token_counts_bulk(
+    conversation_ids: list[str],
+    auth: DirectusSession,
+    project_id: str,
+) -> dict[str, int]:
+    """Token counts for many conversations at once.
+
+    Caller contract: the parent resource (chat) is already authorized, and
+    project_id is that resource's project. The column shortcut is scoped to
+    project_id + not-deleted so a caller can only bulk-read counts for
+    conversations in the project it authorized; any id outside that scope
+    (or a soft-deleted one) falls through to the per-id path, which
+    re-checks access. Failed ids are omitted; callers decide the fallback.
+
+    Note: the Redis fast-path serves cached counts without re-scoping, but
+    an entry only exists because some authorized read already computed it,
+    so the residual is a cached in-scope value, never fresh cross-tenant
+    disclosure.
+    """
+    result: dict[str, int] = {}
+    if not conversation_ids:
+        return result
+
+    cached = await asyncio.gather(
+        *(cache_get_json(f"tokcount:{cid}") for cid in conversation_ids)
+    )
+    missing = []
+    for cid, val in zip(conversation_ids, cached, strict=True):
+        if isinstance(val, int):
+            result[cid] = val
+        else:
+            missing.append(cid)
+    if not missing:
+        return result
+
+    to_compute = list(missing)
+    # Scope the column shortcut to the authorized project; out-of-scope ids
+    # get computed via the fully-authorized per-id path below instead.
+    rows = (
+        await async_directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {
+                        "id": {"_in": missing},
+                        "project_id": {"_eq": project_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id", "token_count"],
+                    "limit": -1,
+                }
+            },
+        )
+        if project_id
+        else None
+    )
+    if isinstance(rows, list):
+        found: dict[str, int] = {}
+        for row in rows:
+            tc = row.get("token_count")
+            if row.get("id") and isinstance(tc, int):
+                found[row["id"]] = tc
+        if found:
+            await asyncio.gather(
+                *(
+                    cache_set_json(f"tokcount:{cid}", tc, TOKEN_COUNT_TTL_SECONDS)
+                    for cid, tc in found.items()
+                )
+            )
+            result.update(found)
+            to_compute = [cid for cid in missing if cid not in found]
+
+    if to_compute:
+        # Bounded: an unbounded gather of cold computes stampedes Directus
+        # (observed transient failures at 150 concurrent on select-all).
+        compute_sem = asyncio.Semaphore(10)
+
+        async def _bounded(cid: str) -> int:
+            async with compute_sem:
+                return await get_conversation_token_count(cid, auth)
+
+        computed = await asyncio.gather(
+            *(_bounded(cid) for cid in to_compute),
+            return_exceptions=True,
+        )
+        for cid, value in zip(to_compute, computed, strict=True):
+            if isinstance(value, BaseException):
+                logger.warning("token count failed for %s: %s", cid, value)
+                continue
+            result[cid] = value
+    return result
 
 
 class GetReplyBodySchema(BaseModel):
