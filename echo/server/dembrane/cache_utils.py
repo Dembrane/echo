@@ -68,6 +68,22 @@ async def cache_delete(key: str) -> None:
 
 USAGE_TTL_SECONDS = 30 * 60  # 30 minutes
 USAGE_SUMMARY_TTL_SECONDS = 30 * 60
+ADMIN_ROLLUP_TTL_SECONDS = 5 * 60
+
+
+def admin_rollup_cache_key(month_offset: int) -> str:
+    return f"admin_rollup:{month_offset}"
+
+
+async def invalidate_admin_rollup() -> None:
+    """Bust every cached staff billing-rollup month (offsets 0..-12).
+
+    Call after any staff mutation that changes rollup output (discount,
+    partner flag, trial grant, usage reset, admin change) so the staff
+    member sees their own edit immediately instead of waiting out the
+    5-minute TTL on the screen they acted from."""
+    for offset in range(0, -13, -1):
+        await cache_delete(admin_rollup_cache_key(offset))
 
 
 def usage_cache_key(workspace_id: str) -> str:
