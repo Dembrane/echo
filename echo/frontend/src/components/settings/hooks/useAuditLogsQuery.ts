@@ -222,6 +222,8 @@ const fetchAuditLogOptions = async (): Promise<AuditLogMetadata> => {
 				},
 				groupBy: ["action"],
 				sort: ["action"],
+				// Directus caps grouped rows at its default limit (100).
+				limit: -1,
 			} as unknown as ActivitiesQuery),
 		),
 		directus.request<
@@ -236,6 +238,8 @@ const fetchAuditLogOptions = async (): Promise<AuditLogMetadata> => {
 				},
 				groupBy: ["collection"],
 				sort: ["collection"],
+				// Directus caps grouped rows at its default limit (100).
+				limit: -1,
 			} as unknown as ActivitiesQuery),
 		),
 	]);

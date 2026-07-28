@@ -21,6 +21,7 @@ import {
 	Switch,
 	Tabs,
 	Text,
+	Textarea,
 	TextInput,
 	Title,
 	Tooltip,
@@ -47,9 +48,12 @@ import {
 	PendingInvitesSection,
 } from "@/components/members";
 import { usePendingInvites } from "@/components/members/hooks";
+import { WorkspaceMemorySection } from "@/components/memory/WorkspaceMemorySection";
+import { WorkspaceMethodologiesSection } from "@/components/methodology/WorkspaceMethodologiesSection";
 import { WorkspaceTrainingPanel } from "@/components/training";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { SupportAccessSection } from "@/components/workspace/SupportAccessSection";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { UsageCard } from "@/components/workspace/UsageCard";
 import { WorkspaceDataOwnershipSection } from "@/components/workspace/WorkspaceDataOwnershipSection";
@@ -100,6 +104,7 @@ interface WorkspaceDetail {
 	inherit_organisation_members: boolean;
 	allow_support_access: boolean;
 	description: string | null;
+	context: string | null;
 	logo_url: string | null;
 	type_discount: string | null;
 	percent_discount: number | null;
@@ -224,6 +229,7 @@ async function updateWorkspace(
 	payload: {
 		name?: string;
 		description?: string;
+		context?: string;
 		logo_url?: string;
 		visibility?: "open_to_organisation" | "invite_only" | "private";
 		inherit_organisation_members?: boolean;
@@ -766,6 +772,9 @@ export const WorkspaceSettingsRoute = () => {
 											</Trans>
 										</Text>
 									)}
+									<Divider />
+									<WorkspaceMemorySection workspaceId={workspaceId} />
+									<WorkspaceMethodologiesSection workspaceId={workspaceId} />
 								</Stack>
 							</Tabs.Panel>
 
@@ -1381,6 +1390,25 @@ function PrivacyAndDefaultsSection({
 		},
 	});
 
+	// Assistant context autosaves on blur, mirroring description.
+	const [context, setContext] = useState<string>(settings.context ?? "");
+	// Escape triggers blur synchronously, before React re-renders with the
+	// reset value — the blur handler would still see (and save) the
+	// discarded draft. The ref tells it to skip that save.
+	const contextEscapedRef = useRef(false);
+	const contextMutation = useMutation({
+		mutationFn: (value: string) =>
+			updateWorkspace(workspaceId, { context: value }),
+		onError: (err: Error) => {
+			setContext(settings.context ?? "");
+			toast.error(err.message);
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			toast.success(t`Saved`);
+		},
+	});
+
 	const nameMutation = useMutation({
 		mutationFn: (value: string) =>
 			updateWorkspace(workspaceId, { name: value }),
@@ -1428,6 +1456,7 @@ function PrivacyAndDefaultsSection({
 		onMutate: (value: boolean) => setAllowSupportAccess(value),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "support-access"] });
 			toast.success(t`Saved`);
 		},
 	});
@@ -1534,6 +1563,34 @@ function PrivacyAndDefaultsSection({
 						}}
 						disabled={!canEdit || descriptionMutation.isPending}
 						maxLength={500}
+					/>
+					<Textarea
+						label={t`Assistant context`}
+						description={t`Standing guidance the assistant gets in every project chat in this workspace. Saves automatically.`}
+						placeholder={t`e.g. We are a research agency. Reports go to municipal clients, so keep summaries formal and in Dutch.`}
+						value={context}
+						onChange={(e) => setContext(e.currentTarget.value)}
+						onBlur={() => {
+							if (contextEscapedRef.current) {
+								contextEscapedRef.current = false;
+								return;
+							}
+							if (context !== (settings.context ?? "")) {
+								contextMutation.mutate(context);
+							}
+						}}
+						onKeyDown={(e) => {
+							if (e.key === "Escape") {
+								contextEscapedRef.current = true;
+								setContext(settings.context ?? "");
+								(e.currentTarget as HTMLTextAreaElement).blur();
+							}
+						}}
+						disabled={!canEdit || contextMutation.isPending}
+						autosize
+						minRows={3}
+						maxRows={8}
+						maxLength={4000}
 					/>
 					{(() => {
 						// Whitelabel branding is gated on tier (changemaker+).
@@ -1878,6 +1935,9 @@ function PrivacyAndDefaultsSection({
 					</Stack>
 				}
 			/>
+			{workspaceId && (
+				<SupportAccessSection workspaceId={workspaceId} canEdit={canEdit} />
+			)}
 			<UpgradeModal
 				opened={upgradeFeature !== null}
 				onClose={() => setUpgradeFeature(null)}

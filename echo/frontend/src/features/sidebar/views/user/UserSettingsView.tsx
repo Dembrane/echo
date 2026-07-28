@@ -4,6 +4,7 @@ import {
 	PaletteIcon,
 	ScalesIcon,
 	ShieldStarIcon,
+	SparkleIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
@@ -45,6 +46,11 @@ export const UserSettingsView = () => {
 				to="/settings/appearance"
 				label={<Trans>Appearance</Trans>}
 				icon={PaletteIcon}
+			/>
+			<NavItem
+				to="/settings/assistant"
+				label={<Trans>Assistant</Trans>}
+				icon={SparkleIcon}
 			/>
 			{!isExternalOnly && (
 				<NavItem

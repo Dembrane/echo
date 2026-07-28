@@ -49,10 +49,26 @@ scheduler.add_job(
 )
 
 scheduler.add_job(
+    func="dembrane.tasks:task_catch_up_uncounted_conversations.send",
+    trigger=CronTrigger(minute="*/5"),
+    id="task_catch_up_uncounted_conversations",
+    name="Catch up on conversations missing a token count",
+    replace_existing=True,
+)
+
+scheduler.add_job(
     func="dembrane.tasks:task_check_scheduled_reports.send",
     trigger=CronTrigger(minute="*/5"),
     id="task_check_scheduled_reports",
     name="Backfill scheduled_task rows for still-scheduled reports (reconciler)",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_reconcile_canvas_tick_tasks.send",
+    trigger=CronTrigger(minute="*/5"),
+    id="task_reconcile_canvas_tick_tasks",
+    name="Backfill scheduled_task rows for active canvas loops (reconciler)",
     replace_existing=True,
 )
 
@@ -69,6 +85,14 @@ scheduler.add_job(
     trigger=CronTrigger(minute="*/15"),
     id="task_expire_staff_support_memberships",
     name="Revoke overdue staff support memberships (catch-up for the 24h timer)",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_forward_support_requests.send",
+    trigger=CronTrigger(minute="*/2"),
+    id="task_forward_support_requests",
+    name="Forward new support_request rows to sam for #gen-engineering triage (ISSUE-034)",
     replace_existing=True,
 )
 

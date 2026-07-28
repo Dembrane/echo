@@ -6,11 +6,20 @@ import {
 	Collapse,
 	Divider,
 	Group,
+	Modal,
+	SimpleGrid,
+	Stack,
 	Text,
+	Title,
 	Tooltip,
 } from "@mantine/core";
-import { IconArrowUpRight, IconNotes } from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
 import { BookmarkSimple } from "@phosphor-icons/react";
+import {
+	IconArrowUpRight,
+	IconFileText,
+	IconMessages,
+} from "@tabler/icons-react";
 import { formatDate } from "date-fns";
 import type React from "react";
 import { Children, useMemo } from "react";
@@ -20,7 +29,9 @@ import { ChatMessage } from "@/components/chat/ChatMessage";
 import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { Markdown } from "@/components/common/Markdown";
+import { QRCode } from "@/components/common/QRCode";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
+import { PARTICIPANT_BASE_URL } from "@/config";
 import { cn } from "@/lib/utils";
 import { ReferencesIconButton } from "../common/ReferencesIconButton";
 import { References } from "./References";
@@ -30,7 +41,21 @@ import SourcesSearched from "./SourcesSearched";
 type ChatMode = "overview" | "deep_dive" | "agentic" | null;
 
 const isAgenticTranscriptHref = (href?: string) =>
-	typeof href === "string" && href.includes("/transcript");
+	typeof href === "string" &&
+	(href.includes("/conversations/") || href.includes("/transcript"));
+
+const isDocsHref = (href?: string) => {
+	if (typeof href !== "string") return false;
+	try {
+		const { hostname } = new URL(href);
+		return (
+			hostname === "docs.dembrane.com" ||
+			(hostname.startsWith("docs.") && hostname.endsWith(".dembrane.com"))
+		);
+	} catch {
+		return false;
+	}
+};
 
 const getLinkLabel = (children: React.ReactNode) => {
 	const text = Children.toArray(children)
@@ -44,6 +69,125 @@ const getLinkLabel = (children: React.ReactNode) => {
 		.trim();
 
 	return text || t`Transcript`;
+};
+
+// One readable link style for everything the agent cites: underlined text
+// with a small external-arrow, never a pill.
+const AGENTIC_LINK_CLASSES =
+	"not-prose inline-flex items-baseline gap-0.5 text-[var(--mantine-color-anchor)] underline underline-offset-2 transition-colors hover:text-[var(--mantine-color-blue-7)]";
+
+const URL_PATTERN = /https?:\/\/[^\s<>)\]]+/g;
+
+function ownPortalStartLink(content: string, projectId?: string): string | null {
+	if (!projectId) return null;
+	const portal = new URL(PARTICIPANT_BASE_URL);
+	const matches = content.match(URL_PATTERN) ?? [];
+	for (const match of matches) {
+		try {
+			const candidate = new URL(match.replace(/[.,;:!?]+$/, ""));
+			if (candidate.origin !== portal.origin) continue;
+			const segments = candidate.pathname.split("/").filter(Boolean);
+			if (
+				segments.length >= 3 &&
+				segments[1] === projectId &&
+				segments[2] === "start"
+			) {
+				return candidate.toString();
+			}
+		} catch {
+			continue;
+		}
+	}
+	return null;
+}
+
+const DocsChoiceCard = ({
+	description,
+	href,
+	icon,
+	title,
+}: {
+	description: React.ReactNode;
+	href: string;
+	icon: React.ReactNode;
+	title: React.ReactNode;
+}) => (
+	<a
+		href={href}
+		target="_blank"
+		rel="noreferrer"
+		className="block cursor-pointer rounded-xl border-2 border-gray-300 bg-white p-6 no-underline transition-all hover:border-[var(--mantine-color-primary-4)] hover:bg-[var(--mantine-color-primary-0)]"
+	>
+		<Stack gap="sm" align="center" className="justify-center py-2 text-center">
+			<Group gap="sm" align="center">
+				{icon}
+				<Title order={4} fw={600}>
+					{title}
+				</Title>
+				<IconArrowUpRight size={18} stroke={1.9} />
+			</Group>
+			<Text size="sm">{description}</Text>
+		</Stack>
+	</a>
+);
+
+/** A documentation citation. Clicking opens a small chooser: the cited page,
+ * or the documentation for the feature the host is using (Ask). Both open in
+ * a new tab. */
+const AgenticDocsLink = ({
+	children,
+	href,
+}: {
+	children: React.ReactNode;
+	href: string;
+}) => {
+	const [opened, { open, close }] = useDisclosure(false);
+	const chatDocsHref = (() => {
+		try {
+			return `${new URL(href).origin}/users/host/chat-and-ask.html`;
+		} catch {
+			return href;
+		}
+	})();
+
+	return (
+		<>
+			<a
+				href={href}
+				className={AGENTIC_LINK_CLASSES}
+				data-testid="agentic-docs-link"
+				onClick={(event) => {
+					event.preventDefault();
+					open();
+				}}
+			>
+				<span>{getLinkLabel(children)}</span>
+				<IconArrowUpRight size={12} stroke={1.9} className="self-center" />
+			</a>
+			<Modal
+				opened={opened}
+				onClose={close}
+				centered
+				size="lg"
+				title={<Trans>Documentation</Trans>}
+			>
+				<SimpleGrid cols={{ base: 1, xs: 2 }} spacing="md">
+					<DocsChoiceCard
+						href={href}
+						icon={<IconFileText size={28} stroke={1.7} />}
+						title={<Trans>Open documentation</Trans>}
+						description={<Trans>The page this answer refers to.</Trans>}
+					/>
+					<DocsChoiceCard
+						href={chatDocsHref}
+						icon={<IconMessages size={28} stroke={1.7} />}
+						title={<Trans>Open chat documentation</Trans>}
+						description={<Trans>How Ask works and what it can do.</Trans>}
+					/>
+				</SimpleGrid>
+			</Modal>
+		</>
+	);
 };
 
 export const ChatHistoryMessage = ({
@@ -62,45 +206,54 @@ export const ChatHistoryMessage = ({
 	onSaveAsTemplate?: (content: string) => void;
 }) => {
 	const { projectId } = useParams();
+	const portalStartLink =
+		message.role === "assistant"
+			? ownPortalStartLink(message.content, projectId)
+			: null;
 
 	const markdownComponents = useMemo<Components | undefined>(() => {
 		if (chatMode !== "agentic") return undefined;
 
 		return {
 			a({ children, className, href, ...props }) {
-				if (!isAgenticTranscriptHref(href)) {
+				if (isDocsHref(href)) {
 					return (
-						<a
-							href={href}
-							className={cn(
-								"text-[var(--mantine-color-anchor)] underline underline-offset-2 transition-colors hover:text-[var(--mantine-color-blue-7)]",
-								className,
-							)}
-							{...props}
-						>
-							{children}
-						</a>
+						<AgenticDocsLink href={href ?? ""}>{children}</AgenticDocsLink>
+					);
+				}
+
+				if (isAgenticTranscriptHref(href)) {
+					return (
+						<Tooltip label={<Trans>Open transcript</Trans>}>
+							<a
+								href={href}
+								className={cn(AGENTIC_LINK_CLASSES, className)}
+								aria-label={t`Open transcript`}
+								data-testid="agentic-transcript-link"
+								{...props}
+							>
+								<span>{getLinkLabel(children)}</span>
+								<IconArrowUpRight
+									size={12}
+									stroke={1.9}
+									className="self-center"
+								/>
+							</a>
+						</Tooltip>
 					);
 				}
 
 				return (
-					<Tooltip label={<Trans>Open transcript</Trans>}>
-						<a
-							href={href}
-							className={cn(
-								"not-prose inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50/90 px-2 py-0.5 text-[11px] font-medium text-sky-700 no-underline transition-all hover:-translate-y-px hover:border-sky-300 hover:bg-white hover:text-sky-800",
-								className,
-							)}
-							aria-label={t`Open transcript`}
-							data-testid="agentic-transcript-link"
-							title={t`Open transcript`}
-							{...props}
-						>
-							<IconNotes size={12} stroke={1.9} />
-							<span>{getLinkLabel(children)}</span>
-							<IconArrowUpRight size={11} stroke={1.9} />
-						</a>
-					</Tooltip>
+					<a
+						href={href}
+						className={cn(
+							"text-[var(--mantine-color-anchor)] underline underline-offset-2 transition-colors hover:text-[var(--mantine-color-blue-7)]",
+							className,
+						)}
+						{...props}
+					>
+						{children}
+					</a>
 				);
 			},
 		};
@@ -181,6 +334,19 @@ export const ChatHistoryMessage = ({
 							content={message.content}
 							components={markdownComponents}
 						/>
+						{portalStartLink ? (
+							<Box
+								mt="sm"
+								className="w-fit rounded-md bg-white p-2"
+								data-testid="assistant-portal-link-qr"
+							>
+								<QRCode
+									value={portalStartLink}
+									href={portalStartLink}
+									className="h-24 w-24"
+								/>
+							</Box>
+						) : null}
 
 						{/* Show citations inside the chat bubble when toggled */}
 						<Collapse in={isSelected} transitionDuration={200}>

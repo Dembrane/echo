@@ -3,21 +3,28 @@ import { Alert, Divider, LoadingOverlay, Stack } from "@mantine/core";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
+import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { ProjectMemorySection } from "@/components/memory/ProjectMemorySection";
+import { ProjectMethodologySection } from "@/components/methodology/ProjectMethodologySection";
 import {
 	useProjectById,
 	useVerificationTopicsQuery,
 } from "@/components/project/hooks";
 import ProjectBasicEdit from "@/components/project/ProjectBasicEdit";
 import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
+import { ProjectExperimentalSection } from "@/components/project/ProjectExperimentalSection";
 import { ProjectExportSection } from "@/components/project/ProjectExportSection";
 import { ProjectMoveWorkspace } from "@/components/project/ProjectMoveWorkspace";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
 import { ProjectUploadSection } from "@/components/project/ProjectUploadSection";
-import { ProjectAccess, ProjectUsage } from "@/components/project/ProjectUsageAndSharing";
+import {
+	ProjectAccess,
+	ProjectUsage,
+} from "@/components/project/ProjectUsageAndSharing";
 import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
 import { FeatureGate } from "@/components/workspace/FeatureGate";
-import { ENABLE_WEBHOOKS } from "@/config";
+import { ENABLE_CANVAS, ENABLE_WEBHOOKS } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { getProjectTranscriptsLink } from "@/lib/api";
 import type { Tier } from "@/lib/tiers";
@@ -48,9 +55,11 @@ export const ProjectSettingsRoute = () => {
 				"context",
 				"visibility",
 				"workspace_id",
+				"methodology_version_id",
 				"updated_at",
 				"language",
 				"is_conversation_allowed",
+				"is_canvas_enabled",
 				"default_conversation_ask_for_participant_name",
 			],
 		}),
@@ -91,6 +100,26 @@ export const ProjectSettingsRoute = () => {
               <ProjectConversationStatusSection projectId={projectId} />
             </>
           )} */}
+
+					{projectId && (
+						<>
+							<Divider />
+							<ProjectGoalSection projectId={projectId} />
+						</>
+					)}
+
+					<Divider />
+					<ProjectMethodologySection project={projectQuery.data} />
+
+					<Divider />
+					{projectId && <ProjectMemorySection projectId={projectId} />}
+
+					{ENABLE_CANVAS && (
+						<>
+							<Divider />
+							<ProjectExperimentalSection project={projectQuery.data} />
+						</>
+					)}
 
 					<Divider />
 					<ProjectMoveWorkspace project={projectQuery.data} />

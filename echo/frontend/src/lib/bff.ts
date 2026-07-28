@@ -35,7 +35,9 @@ async function parseError(res: Response): Promise<Error> {
 	const data = await res.json().catch(() => ({}));
 	const detail =
 		typeof data?.detail === "string" ? data.detail : `HTTP ${res.status}`;
-	return new Error(detail);
+	const error = new Error(detail) as Error & { status?: number };
+	error.status = res.status;
+	return error;
 }
 
 export const bff = {

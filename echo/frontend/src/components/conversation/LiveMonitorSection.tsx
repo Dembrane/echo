@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Badge,
+	Box,
 	Card,
 	Collapse,
 	Group,
@@ -15,73 +15,80 @@ import {
 	BatteryLowIcon,
 	BroadcastIcon,
 	CaretRightIcon,
+	MicrophoneIcon,
+	PencilSimpleIcon,
 	WarningCircleIcon,
 	WifiSlashIcon,
 } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
+import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
-
-import { I18nLink } from "@/components/common/i18nLink";
+import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
+import { RedactedText } from "@/components/common/RedactedText";
+import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
 	type MonitorConversation,
-	type ParticipantState,
 	useConversationMonitor,
 } from "@/hooks/useConversationMonitor";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
+import { ConversationDrilldownModal } from "./ConversationDrilldownModal";
+import { MonitorBadge } from "./MonitorBadge";
+import { StatePill, stateColor } from "./StatePill";
 
 // How many rows to render per tag group before collapsing the rest behind a
 // "show more" — keeps the page calm and bounded even for a busy tag.
 const MAX_ROWS_PER_GROUP = 25;
 
-type StateMeta = {
-	color: string;
-	label: string;
-	pulse?: boolean;
-};
+// Stable keys for the meter segments (index drives the fill).
+const METER_SEGMENTS = ["s1", "s2", "s3", "s4", "s5"];
+// Voice RMS sits in this low band (nowhere near 1.0); normalize it to the full
+// meter so the bars use their whole range.
+const MIC_LEVEL_FLOOR = 0.03;
+const MIC_LEVEL_CEILING = 0.3;
 
-const stateMeta = (state: ParticipantState): StateMeta => {
-	switch (state) {
-		case "recording":
-			return { color: "red", label: t`Recording`, pulse: true };
-		case "paused":
-			return { color: "yellow", label: t`Paused` };
-		case "verifying":
-			return { color: "blue", label: t`Verifying` };
-		case "refining":
-			return { color: "grape", label: t`Exploring` };
-		case "text":
-			return { color: "blue", label: t`Typing` };
-		case "finishing":
-			return { color: "blue", label: t`Finishing` };
-		case "finished":
-			return { color: "primary", label: t`Finished` };
-		case "waiting":
-			return { color: "gray", label: t`Waiting` };
-		case "initiated":
-			return { color: "gray", label: t`Just started` };
-		default:
-			return { color: "gray", label: t`Idle` };
-	}
-};
-
-const StatePill = ({ state }: { state: ParticipantState }) => {
-	const meta = stateMeta(state);
+/** Mic-level meter. Mic glyph + equal-height segments read as loudness, not
+ * signal strength. */
+const AudioLevelMeter = ({ level }: { level: number }) => {
+	const scaled = Math.min(
+		1,
+		Math.max(
+			0,
+			(level - MIC_LEVEL_FLOOR) / (MIC_LEVEL_CEILING - MIC_LEVEL_FLOOR),
+		),
+	);
+	const active = Math.round(scaled * METER_SEGMENTS.length);
 	return (
-		<Badge
-			size="sm"
-			color={meta.color}
-			variant="light"
-			leftSection={
-				<span
-					aria-hidden
-					className={`inline-block h-1.5 w-1.5 rounded-full bg-current ${
-						meta.pulse ? "animate-pulse" : ""
-					}`}
-				/>
+		<Tooltip
+			label={
+				active > 0
+					? t`Audio is coming in`
+					: t`Very quiet right now. Check the mic isn't muted.`
 			}
+			withArrow
 		>
-			{meta.label}
-		</Badge>
+			<Group gap={3} align="center" wrap="nowrap" aria-hidden>
+				<MicrophoneIcon size={13} />
+				<Group gap={2} align="center" wrap="nowrap">
+					{METER_SEGMENTS.map((id, i) => (
+						<Box
+							key={id}
+							style={{
+								backgroundColor:
+									i < active
+										? "var(--mantine-color-green-6)"
+										: "var(--mantine-color-gray-3)",
+								borderRadius: 1,
+								height: 10,
+								width: 3,
+							}}
+						/>
+					))}
+				</Group>
+			</Group>
+		</Tooltip>
 	);
 };
 
@@ -103,11 +110,10 @@ const FadingTranscript = ({ text }: { text: string }) => {
 	return (
 		<Text
 			size="sm"
-			c="dimmed"
 			lineClamp={2}
-			style={{ transition: "opacity 180ms ease", opacity: visible ? 1 : 0 }}
+			style={{ opacity: visible ? 1 : 0, transition: "opacity 180ms ease" }}
 		>
-			{shown}
+			<RedactedText>{shown}</RedactedText>
 		</Text>
 	);
 };
@@ -137,17 +143,75 @@ const formatClock = (totalSeconds: number): string => {
 		: `${minutes}:${pad(seconds)}`;
 };
 
-// Recorded length when we have it (set on finish), otherwise elapsed since the
-// session started. It can be a little behind for a live session; that's fine.
-const durationLabel = (conversation: MonitorConversation): string | null => {
-	if (typeof conversation.duration === "number" && conversation.duration > 0) {
-		return formatClock(conversation.duration);
+// Recorded length only: server recorded_seconds (ticks while recording, frozen
+// when paused) or the final duration once finished. Never a wall-clock guess.
+const LiveDuration = ({
+	conversation,
+}: {
+	conversation: MonitorConversation;
+}) => {
+	const recording =
+		conversation.state === "recording" &&
+		conversation.is_live &&
+		!conversation.is_finished;
+	const serverSeconds = conversation.recorded_seconds;
+
+	// Local seconds accrued on top of the last server value while recording.
+	const [extra, setExtra] = useState(0);
+	// Reset the offset during render (not in an effect) when the server value or
+	// recording state changes, so the corrected time never paints a stale frame.
+	const [anchor, setAnchor] = useState({ recording, serverSeconds });
+	if (
+		anchor.serverSeconds !== serverSeconds ||
+		anchor.recording !== recording
+	) {
+		setAnchor({ recording, serverSeconds });
+		setExtra(0);
 	}
-	if (conversation.created_at) {
-		const start = new Date(conversation.created_at).getTime();
-		if (!Number.isNaN(start)) return formatClock((Date.now() - start) / 1000);
+	useEffect(() => {
+		if (!recording) return;
+		const id = setInterval(() => setExtra((value) => value + 1), 1000);
+		return () => clearInterval(id);
+	}, [recording]);
+
+	let label: string | null = null;
+	if (conversation.is_finished) {
+		// Final server duration is authoritative once finished.
+		if (
+			typeof conversation.duration === "number" &&
+			conversation.duration > 0
+		) {
+			label = formatClock(conversation.duration);
+		} else if (typeof serverSeconds === "number") {
+			label = formatClock(serverSeconds);
+		}
+	} else if (typeof serverSeconds === "number") {
+		label = formatClock(serverSeconds + (recording ? extra : 0));
 	}
-	return null;
+	if (!label) return null;
+	// State-colored dot (same colors as the StatePill) + graphite tabular clock.
+	const dotColor = stateColor(conversation.state);
+	return (
+		<Group gap={4} align="center" wrap="nowrap">
+			<span
+				aria-hidden
+				className="inline-block h-1.5 w-1.5 rounded-full"
+				style={{ backgroundColor: `var(--mantine-color-${dotColor}-6)` }}
+			/>
+			<Text size="xs" style={{ fontVariantNumeric: "tabular-nums" }}>
+				{label}
+			</Text>
+		</Group>
+	);
+};
+
+// A deliberately vague, conservative "time to finish the transcription
+// backlog", bucketed and rounded up so we never over-promise.
+const catchUpLabel = (seconds: number): string | null => {
+	if (!seconds || seconds <= 0) return null;
+	const minutes = Math.ceil(seconds / 60);
+	const bucket = [1, 2, 5, 10, 15, 20, 30].find((value) => value >= minutes);
+	return bucket ? `~${bucket} min` : "~30+ min";
 };
 
 const lastActivityLabel = (conversation: MonitorConversation): string => {
@@ -169,13 +233,13 @@ const TranscriptionBadge = ({
 	if (conversation.transcription_status === "failing") return null;
 	if (conversation.transcription_status === "transcribing") {
 		return (
-			<Badge size="xs" color="blue" variant="light">
+			<MonitorBadge size="xs" color="primary" variant="light">
 				<Plural
 					value={conversation.pending_transcription}
 					one="Transcribing # clip"
 					other="Transcribing # clips"
 				/>
-			</Badge>
+			</MonitorBadge>
 		);
 	}
 	if (
@@ -183,9 +247,9 @@ const TranscriptionBadge = ({
 		conversation.chunk_count > 0
 	) {
 		return (
-			<Badge size="xs" color="green" variant="light">
+			<MonitorBadge size="xs" color="green" variant="light">
 				<Trans>Transcribed</Trans>
-			</Badge>
+			</MonitorBadge>
 		);
 	}
 	return null;
@@ -193,25 +257,28 @@ const TranscriptionBadge = ({
 
 const MonitorRow = ({
 	conversation,
-	to,
+	highlighted,
+	onLockedClick,
+	onEdit,
 }: {
 	conversation: MonitorConversation;
-	to: string | null;
+	highlighted?: boolean;
+	onLockedClick?: () => void;
+	onEdit?: () => void;
 }) => {
 	const label = conversation.label?.trim() || t`Anonymous participant`;
 	const weakNetwork = isWeakNetwork(conversation);
 	const lowBattery = isLowBattery(conversation);
+	const isLocked = conversation.locked;
+	// Locked rows open the upgrade modal; unlocked rows open the edit modal.
+	const clickable = isLocked || !!onEdit;
 
 	const card = (
 		<Card
 			withBorder
 			p="sm"
-			radius="md"
-			className={
-				to
-					? "transition-colors hover:!border-primary-400 cursor-pointer"
-					: undefined
-			}
+			radius="sm"
+			className={`transition-colors ${clickable ? "hover:!border-primary-400 cursor-pointer" : ""} ${highlighted ? "!border-primary-500 ring-2 ring-primary-200" : ""}`}
 		>
 			<Stack gap={8}>
 				<Group justify="space-between" align="center" wrap="nowrap">
@@ -220,12 +287,68 @@ const MonitorRow = ({
 						<Text size="sm" fw={500} truncate>
 							{label}
 						</Text>
+						{!isLocked && onEdit && (
+							<Tooltip label={t`Edit`} withArrow>
+								{/* Visual affordance only; the tile is the accessible
+								    control, and clicks here bubble to it. */}
+								<ActionIcon
+									component="div"
+									variant="subtle"
+									color="gray"
+									size="sm"
+									ml="xs"
+									aria-hidden
+									tabIndex={-1}
+									data-testid="monitor-row-edit"
+								>
+									<PencilSimpleIcon size={14} color="var(--app-text)" />
+								</ActionIcon>
+							</Tooltip>
+						)}
 					</Group>
 					<Group gap={6} align="center" wrap="nowrap">
+						{conversation.recording_health === "receiving" &&
+							typeof conversation.audio_level === "number" && (
+								<AudioLevelMeter level={conversation.audio_level} />
+							)}
+						{conversation.recording_health === "stalled" && (
+							<Tooltip
+								label={t`Audio was coming in but stopped — they may have lost connection or locked their phone.`}
+								multiline
+								maw={280}
+								withArrow
+							>
+								<MonitorBadge
+									size="xs"
+									color="orange"
+									variant="filled"
+									leftSection={<WarningCircleIcon size={12} />}
+								>
+									<Trans>Audio stopped?</Trans>
+								</MonitorBadge>
+							</Tooltip>
+						)}
+						{conversation.recording_health === "backgrounded" && (
+							<Tooltip
+								label={t`Their screen is locked or the tab is hidden — recording pauses until they come back.`}
+								multiline
+								maw={280}
+								withArrow
+							>
+								<MonitorBadge size="xs" color="gray" variant="light">
+									<Trans>Screen locked</Trans>
+								</MonitorBadge>
+							</Tooltip>
+						)}
 						{conversation.language && (
-							<Badge size="xs" color="gray" variant="light" tt="uppercase">
+							<MonitorBadge
+								size="xs"
+								color="gray"
+								variant="light"
+								tt="uppercase"
+							>
 								{conversation.language}
-							</Badge>
+							</MonitorBadge>
 						)}
 						{weakNetwork && (
 							<Tooltip label={t`Weak network`} withArrow>
@@ -239,49 +362,83 @@ const MonitorRow = ({
 						)}
 						<TranscriptionBadge conversation={conversation} />
 						{conversation.has_error && (
-							<Badge
+							<MonitorBadge
 								size="xs"
 								color="red"
 								variant="filled"
 								leftSection={<WarningCircleIcon size={12} />}
 							>
 								<Trans>Error</Trans>
-							</Badge>
+							</MonitorBadge>
 						)}
 					</Group>
 				</Group>
 
-				{conversation.latest_transcript && (
-					<FadingTranscript text={conversation.latest_transcript} />
+				{isLocked ? (
+					<LockedTranscriptOverlay compact variant="transcript" />
+				) : (
+					conversation.latest_transcript && (
+						<FadingTranscript text={conversation.latest_transcript} />
+					)
 				)}
 
 				<Group gap="md" align="center">
-					<Text size="xs" c="dimmed">
+					<Text size="xs">
 						<Trans>Last activity {lastActivityLabel(conversation)}</Trans>
 					</Text>
-					{durationLabel(conversation) && (
-						<Text size="xs" c="dimmed">
-							{durationLabel(conversation)}
-						</Text>
-					)}
+					<LiveDuration conversation={conversation} />
 				</Group>
 
-				{conversation.has_error && conversation.error_message && (
-					<Tooltip label={conversation.error_message} multiline maw={360} withArrow>
-						<Text size="xs" c="red.7" lineClamp={2}>
-							{conversation.error_message}
-						</Text>
-					</Tooltip>
+				{conversation.has_error && (
+					<Text size="xs" c="red.7">
+						<Trans>
+							Some of the recent audio couldn't be transcribed. The recording is
+							saved.
+						</Trans>
+					</Text>
 				)}
 			</Stack>
 		</Card>
 	);
 
-	if (!to) return card;
+	// Locked rows open the upgrade modal instead of the (also-gated) detail view.
+	if (isLocked) {
+		return (
+			<Box
+				role="button"
+				tabIndex={0}
+				className="block"
+				aria-label={t`Locked conversation, upgrade to view`}
+				onClick={onLockedClick}
+				onKeyDown={(event) => {
+					if (event.key === "Enter" || event.key === " ") {
+						event.preventDefault();
+						onLockedClick?.();
+					}
+				}}
+			>
+				{card}
+			</Box>
+		);
+	}
+
+	if (!onEdit) return card;
 	return (
-		<I18nLink to={to} className="block no-underline">
+		<Box
+			role="button"
+			tabIndex={0}
+			className="block"
+			aria-label={t`Open ${label}`}
+			onClick={onEdit}
+			onKeyDown={(event) => {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					onEdit();
+				}
+			}}
+		>
 			{card}
-		</I18nLink>
+		</Box>
 	);
 };
 
@@ -292,6 +449,13 @@ type TagGroup = {
 	label: string;
 	items: MonitorConversation[];
 	liveCount: number;
+};
+
+// created_at as epoch ms for sorting; missing/invalid sinks to the end.
+const createdAtMs = (conversation: MonitorConversation): number => {
+	if (!conversation.created_at) return Number.POSITIVE_INFINITY;
+	const ms = new Date(conversation.created_at).getTime();
+	return Number.isNaN(ms) ? Number.POSITIVE_INFINITY : ms;
 };
 
 const groupByTag = (conversations: MonitorConversation[]): TagGroup[] => {
@@ -315,23 +479,33 @@ const groupByTag = (conversations: MonitorConversation[]): TagGroup[] => {
 		group.items.push(conversation);
 		if (conversation.is_live) group.liveCount += 1;
 	}
-	// Groups with live activity first; the Untagged bucket sinks to the end.
+	// Sort rows by created_at so they hold their place as state changes.
+	for (const group of groups.values()) {
+		group.items.sort((a, b) => createdAtMs(a) - createdAtMs(b));
+	}
+	// Group order by first-seen; Untagged sinks to the end.
+	const firstSeen = (group: TagGroup): number =>
+		group.items.length ? createdAtMs(group.items[0]) : Number.POSITIVE_INFINITY;
 	return order
 		.map((tag) => groups.get(tag) as TagGroup)
 		.sort((a, b) => {
 			if ((a.key === UNTAGGED) !== (b.key === UNTAGGED)) {
 				return a.key === UNTAGGED ? 1 : -1;
 			}
-			return b.liveCount - a.liveCount;
+			return firstSeen(a) - firstSeen(b);
 		});
 };
 
 const TagGroupSection = ({
 	group,
-	base,
+	highlightedConversationId,
+	onLockedClick,
+	onEdit,
 }: {
 	group: TagGroup;
-	base: string | null;
+	highlightedConversationId?: string | null;
+	onLockedClick?: (conversation: MonitorConversation) => void;
+	onEdit?: (conversation: MonitorConversation) => void;
 }) => {
 	const [opened, { toggle }] = useDisclosure(true);
 	const [expanded, setExpanded] = useState(false);
@@ -346,27 +520,34 @@ const TagGroupSection = ({
 				gap="xs"
 				align="center"
 				className="cursor-pointer select-none"
+				role="button"
+				tabIndex={0}
+				aria-expanded={opened}
 				onClick={toggle}
+				onKeyDown={(event) => {
+					if (event.key === "Enter" || event.key === " ") {
+						if (event.key === " ") event.preventDefault();
+						toggle();
+					}
+				}}
 			>
 				<ActionIcon variant="subtle" color="gray" size="sm" aria-hidden>
 					<CaretRightIcon
 						size={14}
 						style={{
-							transition: "transform 150ms ease",
 							transform: opened ? "rotate(90deg)" : "none",
+							transition: "transform 150ms ease",
 						}}
 					/>
 				</ActionIcon>
-				<Text size="xs" fw={600} tt="uppercase" c="dimmed">
+				<Text size="xs" fw={600} tt="uppercase">
 					{group.label}
 				</Text>
-				<Text size="xs" c="dimmed">
-					{group.items.length}
-				</Text>
+				<Text size="xs">{group.items.length}</Text>
 				{group.liveCount > 0 && (
-					<Badge size="xs" color="red" variant="light">
+					<MonitorBadge size="xs" color="primary" variant="light">
 						<Plural value={group.liveCount} one="# live" other="# live" />
-					</Badge>
+					</MonitorBadge>
 				)}
 			</Group>
 			<Collapse in={opened}>
@@ -375,15 +556,24 @@ const TagGroupSection = ({
 						<MonitorRow
 							key={conversation.id}
 							conversation={conversation}
-							to={base ? `${base}/conversations/${conversation.id}` : null}
+							highlighted={conversation.id === highlightedConversationId}
+							onLockedClick={() => onLockedClick?.(conversation)}
+							onEdit={onEdit ? () => onEdit(conversation) : undefined}
 						/>
 					))}
 					{overflow > 0 && (
 						<Text
 							size="xs"
-							c="dimmed"
+							role="button"
+							tabIndex={0}
 							className="cursor-pointer select-none pl-1 hover:underline"
 							onClick={() => setExpanded(true)}
+							onKeyDown={(event) => {
+								if (event.key === "Enter" || event.key === " ") {
+									if (event.key === " ") event.preventDefault();
+									setExpanded(true);
+								}
+							}}
 						>
 							<Trans>Show {overflow} more</Trans>
 						</Text>
@@ -397,20 +587,64 @@ const TagGroupSection = ({
 export const LiveMonitorSection = ({
 	projectId,
 	standalone = false,
+	highlightedConversationId,
+	hideHeader = false,
 }: {
 	projectId: string;
 	/** On the dedicated Monitor page, show an empty state instead of
 	 * collapsing to nothing when there is no recent activity. */
 	standalone?: boolean;
+	/** Row to highlight (hovered from the funnel above). */
+	highlightedConversationId?: string | null;
+	/** Suppress the internal "Live monitoring" header + chips (when embedded
+	 * under a shared section header, e.g. the project home). */
+	hideHeader?: boolean;
 }) => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
-	const { conversations, summary } = useConversationMonitor(projectId);
+	const { workspace } = useWorkspace();
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+	// Drilldown selection by id, so the open modal keeps reading fresh snapshots
+	// (and closes on its own once the row is deleted / ages out).
+	const [selectedId, setSelectedId] = useState<string | null>(null);
+	const { conversations, summary, isLoading, error, isStreaming } =
+		useConversationMonitor(projectId);
 	const groups = useMemo(() => groupByTag(conversations), [conversations]);
+	const selected =
+		conversations.find((conversation) => conversation.id === selectedId) ??
+		null;
 	// Rows link to the conversation detail page when we know the workspace.
 	const base =
-		workspaceId && projectId
-			? `/w/${workspaceId}/projects/${projectId}`
-			: null;
+		workspaceId && projectId ? `/w/${workspaceId}/projects/${projectId}` : null;
+
+	// First load: spinner on the dedicated page, nothing when embedded (no flicker).
+	if (isLoading && summary.total === 0) {
+		if (!standalone) return null;
+		return (
+			<Card withBorder p="lg" radius="sm">
+				<Stack align="center">
+					<DembraneLoadingSpinner isLoading showMessage={false} />
+				</Stack>
+			</Card>
+		);
+	}
+
+	// Both channels failed with no data: say so instead of a misleading empty state.
+	if (error && summary.total === 0) {
+		if (!standalone) return null;
+		return (
+			<Card withBorder p="lg" radius="sm">
+				<Stack gap="xs" align="center">
+					<WarningCircleIcon size={24} />
+					<Text size="sm" fw={500}>
+						<Trans>Couldn't load live activity</Trans>
+					</Text>
+					<Text size="xs" ta="center" maw={420}>
+						<Trans>The connection dropped. Retrying automatically.</Trans>
+					</Text>
+				</Stack>
+			</Card>
+		);
+	}
 
 	if (summary.total === 0) {
 		if (!standalone) return null;
@@ -421,7 +655,7 @@ export const LiveMonitorSection = ({
 					<Text size="sm" fw={500}>
 						<Trans>No recent activity</Trans>
 					</Text>
-					<Text size="xs" c="dimmed" ta="center" maw={420}>
+					<Text size="xs" ta="center" maw={420}>
 						<Trans>
 							Live recordings, transcription progress, and errors show up here
 							as participants start recording in the portal.
@@ -433,44 +667,137 @@ export const LiveMonitorSection = ({
 	}
 
 	return (
-		<Stack gap="lg">
-			<Group justify="space-between" align="center" gap="sm">
-				<Group gap="xs" align="center">
-					<BroadcastIcon size={16} />
-					<Text size="xs" c="dimmed" tt="uppercase">
-						<Trans>Live monitoring</Trans>
-					</Text>
-				</Group>
-				<Group gap="xs" align="center">
-					<Badge size="sm" color="primary" variant="light">
-						<Plural value={summary.live} one="# live" other="# live" />
-					</Badge>
-					{summary.transcribing > 0 && (
-						<Badge size="sm" color="blue" variant="light">
-							<Plural
-								value={summary.transcribing}
-								one="# transcribing"
-								other="# transcribing"
-							/>
-						</Badge>
-					)}
-					{summary.with_errors > 0 && (
-						<Badge size="sm" color="red" variant="light">
-							<Plural
-								value={summary.with_errors}
-								one="# with errors"
-								other="# with errors"
-							/>
-						</Badge>
-					)}
-				</Group>
-			</Group>
-
+		<>
 			<Stack gap="lg">
-				{groups.map((group) => (
-					<TagGroupSection key={group.key} group={group} base={base} />
-				))}
+				{!hideHeader && (
+					<Group justify="space-between" align="center" gap="sm">
+						<Group gap="xs" align="center">
+							<BroadcastIcon size={16} />
+							<Text size="xs" tt="uppercase">
+								<Trans>Live monitoring</Trans>
+							</Text>
+						</Group>
+						<Group gap="xs" align="center">
+							{!isStreaming && (
+								<Tooltip
+									label={t`Live stream disconnected. Updating on a slower poll until it reconnects.`}
+									withArrow
+								>
+									<MonitorBadge size="sm" color="orange" variant="light">
+										<Trans>Reconnecting</Trans>
+									</MonitorBadge>
+								</Tooltip>
+							)}
+							<MonitorBadge size="sm" color="primary" variant="light">
+								<Plural value={summary.live} one="# live" other="# live" />
+							</MonitorBadge>
+							{summary.offline > 0 && (
+								<MonitorBadge
+									size="sm"
+									color="mauve"
+									variant="filled"
+									styles={{ section: { color: "var(--app-text)" } }}
+									leftSection={<WifiSlashIcon size={12} />}
+								>
+									<Plural
+										value={summary.offline}
+										one="# offline"
+										other="# offline"
+									/>
+								</MonitorBadge>
+							)}
+							{summary.not_receiving > 0 && (
+								<MonitorBadge
+									size="sm"
+									color="orange"
+									variant="filled"
+									leftSection={<WarningCircleIcon size={12} />}
+								>
+									<Plural
+										value={summary.not_receiving}
+										one="# audio stopped"
+										other="# audio stopped"
+									/>
+								</MonitorBadge>
+							)}
+							{summary.transcribing > 0 && (
+								<MonitorBadge size="sm" color="primary" variant="light">
+									<Plural
+										value={summary.transcribing}
+										one="# transcribing"
+										other="# transcribing"
+									/>
+								</MonitorBadge>
+							)}
+							{summary.with_errors > 0 && (
+								<MonitorBadge size="sm" color="red" variant="light">
+									<Plural
+										value={summary.with_errors}
+										one="# with errors"
+										other="# with errors"
+									/>
+								</MonitorBadge>
+							)}
+							{catchUpLabel(summary.catch_up_eta_seconds) && (
+								<Tooltip
+									label={t`Rough estimate to finish transcribing the backlog`}
+									withArrow
+								>
+									<MonitorBadge size="sm" color="orange" variant="light">
+										<Trans>
+											catch up {catchUpLabel(summary.catch_up_eta_seconds)}
+										</Trans>
+									</MonitorBadge>
+								</Tooltip>
+							)}
+						</Group>
+					</Group>
+				)}
+
+				<Stack gap="lg">
+					{groups.map((group) => (
+						<TagGroupSection
+							key={group.key}
+							group={group}
+							highlightedConversationId={highlightedConversationId}
+							onLockedClick={(conversation) => {
+								posthog.capture("monitor_locked_row_clicked", {
+									conversation_id: conversation.id,
+									project_id: projectId,
+								});
+								upgradeHandlers.open();
+							}}
+							onEdit={(conversation) => {
+								posthog.capture("monitor_drilldown_opened", {
+									entity_type: "recording",
+									project_id: projectId,
+									stage_or_state: conversation.state,
+								});
+								setSelectedId(conversation.id);
+							}}
+						/>
+					))}
+				</Stack>
 			</Stack>
-		</Stack>
+			<ConversationDrilldownModal
+				conversation={selected}
+				base={base}
+				projectId={projectId}
+				onClose={() => setSelectedId(null)}
+			/>
+			<UpgradeModal
+				opened={upgradeOpened}
+				onClose={upgradeHandlers.close}
+				currentTier={(workspace?.tier ?? "free") as Tier}
+				requiredTier={SELLABLE_TIER}
+				featureName="Transcripts"
+				benefit={t`Upgrade your workspace to view transcripts for new conversations.`}
+				canRequestUpgrade={
+					workspace?.role === "admin" || workspace?.role === "owner"
+				}
+				workspaceId={workspace?.id ?? workspaceId ?? ""}
+				source="transcript_locked"
+			/>
+		</>
 	);
 };

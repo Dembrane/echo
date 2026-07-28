@@ -1,5 +1,12 @@
 Se le proporciona una serie de citas de una transcripción de conversación en orden cronológico.
 
+{% if conversation_title %}
+<conversation_title>
+El usuario/los participantes han establecido explícitamente el título de esta conversación como:
+{{ conversation_title }}
+</conversation_title>
+{% endif %}
+
 <quotes>
 {{ quote_text_joined }}
 </quotes>

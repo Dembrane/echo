@@ -1,6 +1,6 @@
 ---
 title: Chat & Ask - for hosts
-description: As a host, ask questions of your conversations and get cited answers - choosing a mode (Overview or Specific Details), using templates, and what the preview agentic mode adds.
+description: As a host, ask questions of your conversations and get cited answers - one assistant that searches and shows its work, with the classic Specific Details chat one click away.
 audience: host
 ---
 
@@ -27,24 +27,39 @@ Each chat is a thread - read the answer, then follow up: *"say more about the se
 *"who said that?"*, *"now just the under-30s"*. Old chats stay in your history. This is the
 right tool for comparing viewpoints, finding quotes, or testing a hunch.
 
-## Choose a mode
+## One place to ask
 
-When you start an Ask you pick a *mode*, and the mode decides how dembrane reads your
-conversations.
+> [!NOTE]
+> The new Ask experience is live on *[dembrane next](../../features/dembrane-next.md)* and
+> reaches production with the next release.
 
-- *Overview* (beta) - reads across all the conversations in your project for themes and
-  patterns. Fast, and the right default for "what are the broad themes". It paraphrases, so it
-  isn't where you go for an exact quote.
-- *Specific Details* - you choose the conversations (one, a few, or all of them) and dembrane
-  finds exact quotes with citations from the full
-  [transcripts](../../features/conversations-and-transcripts.md). Reach for this when wording
-  matters, or when every answer should come from the same set (say, while drafting a report).
-  If you're already viewing one conversation when you start, it's selected for you.
+Ask opens as a home for your chats, with one input: *Where would you like to start?* Type
+your question and press Enter, and the assistant gets to work in steps - searching your
+conversations, reading [transcripts](../../features/conversations-and-transcripts.md), and
+chaining what it finds to answer harder questions (*"find every conversation where someone
+disagreed with the proposal and tell me why"*). Typing in the same bar also filters your
+earlier chats, so it's how you find last week's thread too. A *Templates* menu inserts a
+saved prompt.
+
+You watch the assistant's progress as it works, and *Stop* replaces *Send* so you can halt a
+run mid-way. Answers cite sources by name - *"Maria's conversation"* - and each link jumps to
+the exact spot in the transcript.
+
+## The classic chat: Specific Details
+
+Prefer to pick the conversations yourself? One click on *Prefer the old chat? Start a
+Specific Details chat* starts a classic chat: you choose the conversations (one, a few, or
+all of them) and dembrane answers in one pass with exact quotes and citations from the full
+transcripts. Reach for this when every answer should come from the same fixed set - say,
+while drafting a report. If you're already viewing one conversation when you start, it's
+selected for you.
 
 > [!TIP]
-> Map the territory in *Overview*, then switch to *Specific Details* (and narrow to the right
-> conversations) once you know which thread to pull. For a verbatim quote, always use *Specific
-> Details* - Overview paraphrases.
+> Map the territory by asking the assistant first, then start a *Specific Details* chat
+> narrowed to the right conversations once you know which thread to pull.
+
+The old *Overview* mode has been retired: its job - themes and patterns across all your
+conversations - is now just a question you ask the assistant.
 
 ## Check the sources
 
@@ -70,18 +85,22 @@ starting point, not a cage.
   so honest, specific context sharpens every answer.
 - Check the sources before you act on an answer.
 
-## Agentic mode
+## More than analysis
 
-> [!NOTE]
-> Agentic mode is *[dembrane next only](../../features/dembrane-next.md)* - it's a preview
-> feature, not in production yet. Most hosts won't see it as a third mode option.
+The assistant does more than answer questions about your data:
 
-Where *Overview* and *Specific Details* answer from the conversations you chose, agentic mode
-works in steps - searching across conversations, pulling keyword matches, and fetching specific
-transcripts, then chaining those to answer a harder question (*"find every conversation where
-someone disagreed with the proposal and tell me why"*). It runs through a separate service, so
-it takes longer. For everyday "what did people say about X", Overview or Specific Details is
-faster and plenty.
+- Ask *"is anyone recording right now?"* and it checks the same live status as the
+  [Monitor page](./collecting-conversations.md#watch-the-room-the-monitor-page).
+- Ask *"how do I set up verification?"* and it answers from this documentation, linking the
+  page it used.
+- Ask it to improve your setup and it *proposes* settings changes - you review and apply each
+  one; it never changes your project by itself.
+- If you're stuck, it can [log a question with the dembrane team](./getting-help.md).
+
+It also *remembers*: it can save notes about how you like to work and what the project is
+about, so your next chat starts smarter. You stay in charge of that memory - see and remove
+your own notes under *Settings → Assistant*, project notes in project settings, and workspace
+notes in [workspace settings](./managing-your-workspace.md#give-the-assistant-standing-context).
 
 ## What your plan gives you
 
@@ -107,5 +126,5 @@ If you hit a wall, that's a tier limit, not a bug. See
 - [Tiers, billing & usage](./tiers-billing-and-usage.md) - what each plan unlocks.
 - [MCP & bring-your-own-LLM](../../features/mcp-and-bring-your-own-llm.md) - connect your own
   model on Innovator (*coming soon*).
-- [dembrane next](../../features/dembrane-next.md) - preview features (like agentic mode) that
-  aren't in production yet.
+- [dembrane next](../../features/dembrane-next.md) - preview features (like the new Ask
+  experience) that aren't in production yet.

@@ -24,17 +24,22 @@ import Cookies from "js-cookie";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
-
+import { ENABLE_MONITOR } from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import {
 	finishConversation,
-	type ParticipantPingTelemetry,
 	pingConversation,
+	pingConversationLeft,
 } from "@/lib/api";
+import {
+	readBatteryTelemetry,
+	readNetworkTelemetry,
+} from "@/lib/deviceTelemetry";
 import { testId } from "@/lib/testUtils";
+import { getVisitorId } from "@/lib/visitorId";
 import { I18nLink } from "../common/i18nLink";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
 import { toast } from "../common/Toaster";
@@ -55,39 +60,6 @@ import { useConversationArtefacts } from "./verify/hooks";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
-
-// Best-effort device telemetry for the host monitor. The Network Information
-// and Battery Status APIs are not on every browser (Safari/Firefox lack
-// Battery entirely), so both degrade to `undefined` and are simply omitted.
-const readNetworkTelemetry = (): ParticipantPingTelemetry["network"] => {
-	const nav = navigator as Navigator & {
-		connection?: { effectiveType?: string; downlink?: number; rtt?: number };
-	};
-	const conn = nav.connection;
-	const online = typeof navigator.onLine === "boolean" ? navigator.onLine : undefined;
-	if (!conn && online === undefined) return undefined;
-	return {
-		online,
-		effective_type: conn?.effectiveType,
-		downlink: conn?.downlink,
-		rtt: conn?.rtt,
-	};
-};
-
-const readBatteryTelemetry = async (): Promise<
-	ParticipantPingTelemetry["battery"]
-> => {
-	const nav = navigator as Navigator & {
-		getBattery?: () => Promise<{ level: number; charging: boolean }>;
-	};
-	if (typeof nav.getBattery !== "function") return undefined;
-	try {
-		const battery = await nav.getBattery();
-		return { level: battery.level, charging: battery.charging };
-	} catch {
-		return undefined;
-	}
-};
 
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
@@ -184,15 +156,25 @@ export const ParticipantConversationAudio = () => {
 
 	// Set up the interruption callback after audioRecorder is available
 	onRecordingInterruptedRef.current = () => {
-		// Capture the recording time before stopping
+		// Capture the recording time before stopping.
 		interruptionRecordingTimeRef.current = audioRecorder.recordingTime;
 
-		// Stop recording and release wake lock
+		// Fire at detection, not only if the user later reconnects.
+		const chunkHistory = audioRecorder.getChunkHistory();
+		posthog.capture("portal_recording_interrupted", {
+			conversation_id: conversationId,
+			project_id: projectId,
+			recording_time_seconds: interruptionRecordingTimeRef.current,
+			suspicious_chunk_count: chunkHistory.filter((c) => c.size < 1024).length,
+			total_chunks: chunkHistory.length,
+		});
+
+		// Stop recording and release wake lock.
 		audioRecorder.stopRecording();
 		wakeLock.releaseWakeLock();
 		wakeLock.disableAutoReacquire();
 
-		// Show the interruption modal
+		// Show the interruption modal.
 		openInterruptionModal();
 	};
 
@@ -204,6 +186,11 @@ export const ParticipantConversationAudio = () => {
 		errored,
 		permissionError,
 	} = audioRecorder;
+
+	// Keep the latest audio-level reader in a ref so the (state-scoped) beacon
+	// effect can sample it each tick without re-subscribing every render.
+	const getAudioLevelRef = useRef(audioRecorder.getAudioLevel);
+	getAudioLevelRef.current = audioRecorder.getAudioLevel;
 
 	// iOS low battery mode fallback: play silent 1-pixel video only when wakelock fails
 	useVideoWakeLockFallback({
@@ -224,46 +211,197 @@ export const ParticipantConversationAudio = () => {
 
 	useWindowEvent("microphoneDeviceChanged", handleMicrophoneDeviceChanged);
 
+	// Tab hidden / phone locked — iOS suspends the mic, so recording effectively
+	// pauses. We report this as its own gentle state (not a scary "no audio"),
+	// and it fires an immediate beacon via the state-change effect below.
+	const [documentHidden, setDocumentHidden] = useState(
+		typeof document !== "undefined" ? document.hidden : false,
+	);
+	useEffect(() => {
+		const onVisibility = () => setDocumentHidden(document.hidden);
+		document.addEventListener("visibilitychange", onVisibility);
+		window.addEventListener("pagehide", onVisibility);
+		return () => {
+			document.removeEventListener("visibilitychange", onVisibility);
+			window.removeEventListener("pagehide", onVisibility);
+		};
+	}, []);
+
+	// Snapshot of ticking state so the edge-triggered effects below don't re-subscribe each tick.
+	const recordingScreenStateRef = useRef({
+		isRecording,
+		recordingTime,
+		stoppedRecordingTime,
+	});
+	recordingScreenStateRef.current = {
+		isRecording,
+		recordingTime,
+		stoppedRecordingTime,
+	};
+
+	// Recorded time when the current run started, so the beacon can report how
+	// long THIS run has been going (segment_seconds); resets on resume.
+	const segmentBaselineRef = useRef(0);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: capture recordingTime only at the recording (re)start edge
+	useEffect(() => {
+		if (isRecording) segmentBaselineRef.current = recordingTime;
+	}, [isRecording]);
+
+	// Backgrounding while recording is our proxy for a call/lock/tab-switch; edge-triggered per transition.
+	const backgroundedAtRef = useRef<number | null>(null);
+	useEffect(() => {
+		if (!conversationId) return;
+		if (documentHidden && isRecording && backgroundedAtRef.current === null) {
+			backgroundedAtRef.current = Date.now();
+			posthog.capture("portal_recording_backgrounded", {
+				conversation_id: conversationId,
+				project_id: projectId,
+				recording_time_seconds: recordingScreenStateRef.current.recordingTime,
+			});
+		} else if (!documentHidden && backgroundedAtRef.current !== null) {
+			posthog.capture("portal_recording_foregrounded", {
+				backgrounded_seconds: Math.round(
+					(Date.now() - backgroundedAtRef.current) / 1000,
+				),
+				conversation_id: conversationId,
+				project_id: projectId,
+			});
+			backgroundedAtRef.current = null;
+		}
+	}, [documentHidden, isRecording, conversationId, projectId]);
+
+	// Browser-level connectivity (radio drop), distinct from the per-chunk upload failures below.
+	const offlineAtRef = useRef<number | null>(null);
+	useEffect(() => {
+		if (!conversationId) return;
+		const onOffline = () => {
+			if (offlineAtRef.current !== null) return;
+			offlineAtRef.current = Date.now();
+			posthog.capture("portal_network_offline", {
+				conversation_id: conversationId,
+				effective_type: readNetworkTelemetry()?.effective_type,
+				project_id: projectId,
+				recording_time_seconds: recordingScreenStateRef.current.recordingTime,
+			});
+		};
+		const onOnline = () => {
+			if (offlineAtRef.current === null) return;
+			posthog.capture("portal_network_online", {
+				conversation_id: conversationId,
+				offline_seconds: Math.round((Date.now() - offlineAtRef.current) / 1000),
+				project_id: projectId,
+			});
+			offlineAtRef.current = null;
+		};
+		window.addEventListener("offline", onOffline);
+		window.addEventListener("online", onOnline);
+		return () => {
+			window.removeEventListener("offline", onOffline);
+			window.removeEventListener("online", onOnline);
+		};
+	}, [conversationId, projectId]);
+
 	// What the participant is doing right now, for the host monitor. Reported
 	// with every beacon so the monitor can show recording / paused / verifying
-	// / just-waiting between audio chunks.
+	// / backgrounded / just-waiting between audio chunks.
 	const participantState = isStopping
 		? "finishing"
-		: isOnVerifyRoute
-			? "verifying"
-			: isOnRefineRoute
-				? "refining"
-				: isRecording
-					? "recording"
-					: stoppedRecordingTime !== null
-						? "paused"
-						: "waiting";
+		: documentHidden && isRecording
+			? "backgrounded"
+			: isOnVerifyRoute
+				? "verifying"
+				: isOnRefineRoute
+					? "refining"
+					: isRecording
+						? "recording"
+						: stoppedRecordingTime !== null
+							? "paused"
+							: "waiting";
 
 	// Liveness + telemetry beacon. Runs the whole time the participant is on the
 	// conversation screen (not just while recording) so the monitor sees a
 	// session the moment it is initiated, and reflects pauses / verify without
 	// waiting for the next chunk. Best-effort; failures never disrupt recording.
 	useEffect(() => {
-		if (!conversationId) return;
+		// Monitor off: no host reads these, so don't collect/beacon telemetry.
+		if (!conversationId || !ENABLE_MONITOR) return;
 		let cancelled = false;
 		const sendPing = async () => {
-			const battery = await readBatteryTelemetry();
+			// Stamp before the battery await so a ping delayed by getBattery keeps
+			// its initiation time and can't out-order a later "left" beacon.
+			const client_ts = Date.now();
+			// Backgrounded/locked: skip the extra device reads (battery is an
+			// async native call, network reads sensor state) to avoid waking the
+			// device just to report telemetry nobody is looking at. Still send
+			// the lightweight state ping so the monitor sees "backgrounded".
+			const hidden = document.hidden;
+			const battery = hidden ? undefined : await readBatteryTelemetry();
 			if (cancelled) return;
+			const rawLevel = getAudioLevelRef.current?.();
+			const audio_level =
+				typeof rawLevel === "number" && Number.isFinite(rawLevel)
+					? Math.round(Math.min(1, Math.max(0, rawLevel)) * 100) / 100
+					: undefined;
+			// Read from the ref so the 3s interval samples current values.
+			const live = recordingScreenStateRef.current;
+			const round1 = (n: number) => Math.round(n * 10) / 10;
+			// Pause resets recordingTime to 0 and freezes the length in
+			// stoppedRecordingTime, so report that while paused.
+			const recorded = live.stoppedRecordingTime ?? live.recordingTime;
+			const recorded_seconds =
+				live.isRecording || recorded > 0 ? round1(recorded) : undefined;
+			const segment_seconds = live.isRecording
+				? round1(Math.max(0, live.recordingTime - segmentBaselineRef.current))
+				: undefined;
 			void pingConversation(conversationId, {
-				project_id: projectId,
-				state: participantState,
-				mode: "voice",
-				network: readNetworkTelemetry(),
+				audio_level,
 				battery,
+				client_ts,
+				mode: "voice",
+				network: hidden ? undefined : readNetworkTelemetry(),
+				project_id: projectId,
+				recorded_seconds,
+				segment_seconds,
+				state: participantState,
+				visitor_id: projectId ? getVisitorId(projectId) : undefined,
 			});
 		};
 		void sendPing();
-		const interval = setInterval(() => void sendPing(), 5000);
+		// A snappier beacon while on the recording screen so the host sees state
+		// changes in a few seconds rather than tens of seconds.
+		const interval = setInterval(() => void sendPing(), 3000);
 		return () => {
 			cancelled = true;
 			clearInterval(interval);
 		};
 	}, [conversationId, projectId, participantState]);
+
+	// Terminal "left" beacon on tab close (fires on real unload, not SPA
+	// navigation), so a graceful exit shows as "left" on the host monitor
+	// instead of aging paused -> idle -> finished over minutes.
+	const abandonStateRef = useRef({
+		isRecording,
+		participantState,
+		recordingTime,
+	});
+	abandonStateRef.current = { isRecording, participantState, recordingTime };
+	useEffect(() => {
+		if (!conversationId || !ENABLE_MONITOR) return;
+		const onPageHide = () => {
+			pingConversationLeft(conversationId, projectId);
+			if (abandonStateRef.current.isRecording) {
+				posthog.capture("portal_abandoned", {
+					conversation_id: conversationId,
+					participant_state: abandonStateRef.current.participantState,
+					pending_uploads: pendingUploadsRef.current.length,
+					project_id: projectId,
+					recording_time_seconds: abandonStateRef.current.recordingTime,
+				});
+			}
+		};
+		window.addEventListener("pagehide", onPageHide);
+		return () => window.removeEventListener("pagehide", onPageHide);
+	}, [conversationId, projectId]);
 
 	// Monitor conversation status during recording - handle deletion mid-recording
 	useEffect(() => {
@@ -286,6 +424,10 @@ export const ParticipantConversationAudio = () => {
 					{ message: error?.message, status: httpStatus },
 				);
 				stopRecording();
+				posthog.capture("portal_conversation_deleted_during_recording", {
+					conversation_id: conversationId,
+					project_id: projectId,
+				});
 				setConversationDeletedDuringRecording(true);
 			} else {
 				console.warn(
@@ -301,6 +443,8 @@ export const ParticipantConversationAudio = () => {
 		conversationQuery.isFetching,
 		conversationQuery.error,
 		stopRecording,
+		conversationId,
+		projectId,
 	]);
 
 	// Auto-close refine info modal when threshold is reached
@@ -357,6 +501,12 @@ export const ParticipantConversationAudio = () => {
 
 				if (result === "timeout") {
 					console.warn("Upload wait timeout reached, proceeding anyway");
+					posthog.capture("portal_uploads_incomplete_on_finish", {
+						context: "finish",
+						conversation_id: conversationId,
+						pending_uploads: pendingUploadsRef.current.length,
+						project_id: projectId,
+					});
 				}
 			}
 
@@ -464,6 +614,12 @@ export const ParticipantConversationAudio = () => {
 
 				if (result === "timeout") {
 					console.warn("Upload wait timeout reached, proceeding anyway");
+					posthog.capture("portal_uploads_incomplete_on_finish", {
+						context: "reconnect",
+						conversation_id: conversationId,
+						pending_uploads: pendingUploadsRef.current.length,
+						project_id: projectId,
+					});
 				}
 			}
 

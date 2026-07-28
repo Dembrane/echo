@@ -79,6 +79,21 @@ class RedisRateLimiter:
                 detail="Too many requests. Try again later.",
             )
 
+    async def allow(self, identifier: str) -> bool:
+        """Non-raising, fail-open variant of check(): False when over capacity,
+        True otherwise (and on any Redis error)."""
+        if not identifier:
+            return True
+        try:
+            client = await get_redis_client()
+            redis_key = f"{self.key}:{identifier}"
+            count = await client.incr(redis_key)
+            if count == 1:
+                await client.expire(redis_key, math.ceil(self.window_seconds))
+            return count <= self.capacity
+        except Exception:  # noqa: BLE001
+            return True
+
 
 def create_rate_limiter(*, name: str, capacity: int, window_seconds: float) -> RedisRateLimiter:
     """Create a generic rate limiter keyed by any identifier."""

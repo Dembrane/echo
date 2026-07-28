@@ -5,6 +5,7 @@ import {
 	useContext,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 } from "react";
 import { API_BASE_URL } from "@/config";
@@ -148,6 +149,9 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 			? sessionStorage.getItem(SESSION_KEY)
 			: null;
 	});
+	// Bumped by setWorkspace so same-id calls still re-render and re-read the URL
+	// (the provider mounts above the router, so navigation alone never re-renders it).
+	const [, setSyncEpoch] = useState(0);
 
 	const {
 		data: workspaces = [],
@@ -191,6 +195,23 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 		? (workspaces.find((w) => w.id === effectiveId) ?? null)
 		: null;
 
+	// URL-pinned workspace missing from the loaded list = access granted after the
+	// last fetch. Refetch once per id so name/role resolve without a manual refresh.
+	const missingPinnedId =
+		enabled &&
+		urlPinnedId &&
+		!isLoading &&
+		!workspaces.some((w) => w.id === urlPinnedId)
+			? urlPinnedId
+			: null;
+	const refetchedForRef = useRef<string | null>(null);
+	useEffect(() => {
+		if (missingPinnedId && refetchedForRef.current !== missingPinnedId) {
+			refetchedForRef.current = missingPinnedId;
+			refetch();
+		}
+	}, [missingPinnedId, refetch]);
+
 	const setWorkspace = useCallback(
 		(id: string) => {
 			sessionStorage.setItem(SESSION_KEY, id);
@@ -198,7 +219,9 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 			if (userId) {
 				localStorage.setItem(lastWorkspaceKey(userId), id);
 			}
-			setSelectedId(id); // triggers re-render
+			setSelectedId(id);
+			// A same-id setSelectedId bails out of rendering; always force one.
+			setSyncEpoch((epoch) => epoch + 1);
 		},
 		[userId],
 	);

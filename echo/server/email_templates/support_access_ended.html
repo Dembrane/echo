@@ -1,0 +1,12 @@
+{% extends "_layout.html" %}
+{% from "_layout.html" import cta_button %}
+{% block title %}Support access to {{ workspace_name }} turned off{% endblock %}
+{% block preview %}The support session in {{ workspace_name }} ended and staff access was turned off.{% endblock %}
+{% block heading %}Support session ended{% endblock %}
+{% block body %}
+<p style="font-size:17px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight:400;">
+  The support session in <em style="color:#4169E1; font-style:normal;">{{ workspace_name }}</em> ended and staff access was turned off.
+  Turn it back on in workspace settings if you need more help.
+</p>
+{% endblock %}
+{% block cta %}{{ cta_button("Open workspace settings", settings_url) }}{% endblock %}

@@ -41,9 +41,10 @@ def _common_monkeypatch(monkeypatch, cleared):
 
 
 def _raise_in_loop(exc):
-    def _run(coro):
-        # the actor passes summarize_conversation(...) coro here; close it to
-        # avoid an "un-awaited coroutine" warning, then raise as if it failed.
+    def _run(coro_or_factory):
+        # the actor passes a summarize_conversation factory here; close the
+        # created coroutine to avoid an "un-awaited coroutine" warning.
+        coro = coro_or_factory() if callable(coro_or_factory) else coro_or_factory
         try:
             coro.close()
         except Exception:
@@ -80,3 +81,30 @@ def test_summarize_genuine_error_still_retries(monkeypatch):
         tasks.task_summarize_conversation("conv-error")
     # ...and the lock must be retained (let TTL handle it during the retry window).
     assert cleared == []
+
+
+def test_summarize_delegates_retry_boundary_to_async_helper(monkeypatch):
+    cleared: list[str] = []
+    calls: list[str] = []
+    _common_monkeypatch(monkeypatch, cleared)
+    monkeypatch.setattr(
+        conversation_service,
+        "get_by_id_or_raise",
+        lambda cid: {"id": cid, "is_finished": False, "summary": None, "project_id": None},
+    )
+
+    def _run(coro_or_factory):
+        calls.append("run")
+        assert callable(coro_or_factory)
+        coro = coro_or_factory()
+        try:
+            coro.close()
+        except Exception:
+            pass
+        return None
+
+    monkeypatch.setattr(tasks, "run_async_in_new_loop", _run)
+
+    assert tasks.task_summarize_conversation("conv-shared-retry") is None
+    assert calls == ["run"]
+    assert cleared == ["conv-shared-retry"]

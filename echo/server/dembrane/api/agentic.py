@@ -5,12 +5,12 @@ import json
 import time
 import asyncio
 from uuid import uuid4
-from typing import Any, Optional, AsyncIterator
+from typing import Any, Literal, Optional, AsyncIterator
 from logging import getLogger
 from datetime import datetime, timezone
 from contextlib import suppress
 
-from fastapi import Query, Request, APIRouter, HTTPException
+from fastapi import Query, Depends, Request, APIRouter, HTTPException
 from pydantic import Field, BaseModel
 from fastapi.responses import JSONResponse, StreamingResponse
 
@@ -19,17 +19,36 @@ from dembrane.directus import directus
 from dembrane.settings import get_settings
 from dembrane.chat_utils import generate_title
 from dembrane.async_helpers import run_in_thread_pool
-from dembrane.agentic_worker import process_agentic_run
+from dembrane.methodologies import list_visible_methodologies
+from dembrane.project_goals import list_project_goal_revisions, get_current_project_goal_content
+from dembrane.agentic_worker import (
+    AGENT_CANCELLED_MESSAGE,
+    AGENT_CANCELLED_ERROR_CODE,
+    process_agentic_run,
+)
+from dembrane.canvas.history import build_canvas_history
+from dembrane.canvas.service import (
+    apply_loop_action,
+    get_latest_config,
+    get_loop_for_report,
+    add_canvas_host_item,
+    get_latest_generation,
+    list_canvas_summaries,
+    remove_canvas_host_item,
+    apply_direct_canvas_edit,
+)
 from dembrane.directus_async import async_directus
 from dembrane.agentic_runtime import (
     request_cancel,
     read_live_event,
     acquire_turn_lease,
+    publish_live_event,
     refresh_turn_lease,
     release_turn_lease,
     subscribe_live_events,
 )
 from dembrane.service.agentic import TERMINAL_RUN_STATUSES, AgenticRunNotFoundException
+from dembrane.api.feature_flags import require_canvas_enabled_for_project
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
 AgenticRouter = APIRouter(tags=["agentic"])
@@ -63,6 +82,53 @@ class AgenticSupportRequestSchema(BaseModel):
     message: str = Field(..., min_length=1)
     # A short note from the assistant about what the host was doing / needs.
     page_context: Optional[str] = None
+    chat_id: Optional[str] = None
+    app_user_id: Optional[str] = None
+    message_id: Optional[str] = None
+
+
+class AgenticInsightSchema(BaseModel):
+    kind: Literal["capability_gap", "friction", "wish", "praise"]
+    content: str = Field(..., min_length=1)
+    suggested_capability: Optional[str] = None
+    chat_id: Optional[str] = None
+    message_id: Optional[str] = None
+
+
+class AgenticInsightEditSchema(BaseModel):
+    # Partial update: every field optional, but at least one must be present.
+    content: Optional[str] = None
+    kind: Optional[Literal["capability_gap", "friction", "wish", "praise"]] = None
+    suggested_capability: Optional[str] = None
+
+
+class AgenticInsightRetractSchema(BaseModel):
+    reason: str = Field(..., min_length=1)
+
+
+class AgenticTagsEditSchema(BaseModel):
+    add: list[str] = Field(default_factory=list)
+    remove: list[str] = Field(default_factory=list)
+
+
+class AgenticCanvasEditSchema(BaseModel):
+    instruction: str = Field(..., min_length=1)
+    content_html: str = Field(..., min_length=1)
+    chat_id: Optional[str] = None
+
+
+class AgenticCanvasHostItemSchema(BaseModel):
+    text: str = Field(..., min_length=1, max_length=2000)
+    target_tab: str = Field(default="story", min_length=1, max_length=80)
+    person: Optional[str] = Field(default=None, max_length=160)
+    chat_id: Optional[str] = None
+    message_id: Optional[str] = None
+
+
+class AgenticCanvasRemoveHostItemSchema(BaseModel):
+    item: str = Field(..., min_length=1, max_length=2000)
+    chat_id: Optional[str] = None
+    message_id: Optional[str] = None
 
 
 # Agent memory: three scopes the agent both reads and writes. Private or
@@ -77,6 +143,10 @@ class AgenticMemoryWriteSchema(BaseModel):
     scope: str = Field(..., min_length=1)
     content: str = Field(..., min_length=1)
     memory_key: Optional[str] = None
+
+
+class AgenticMemoryAmendSchema(BaseModel):
+    content: str = Field(..., min_length=1)
 
 
 def _run_task_key(run_id: str, turn_seq: int) -> tuple[str, int]:
@@ -132,7 +202,9 @@ async def _assert_project_access(project_id: str, auth: DirectusSession) -> None
     access.require("chat:use")
 
 
-def _exclude_others_private_chats(base_filter: dict[str, Any], auth: DirectusSession) -> dict[str, Any]:
+def _exclude_others_private_chats(
+    base_filter: dict[str, Any], auth: DirectusSession
+) -> dict[str, Any]:
     """Hide chats that are private and owned by someone else.
 
     A chat is hidden when `is_private == true` AND `user_created != caller`.
@@ -266,19 +338,43 @@ def _to_non_empty_string(value: Any) -> Optional[str]:
     return normalized
 
 
+async def _get_workspace_context_for_project(project: dict[str, Any]) -> Optional[str]:
+    """The parent workspace's host-written context, if any. Best-effort:
+    a workspace read failure must not block starting a chat."""
+    workspace_id = _to_related_id(project.get("workspace_id"))
+    if not workspace_id:
+        return None
+    try:
+        workspace = await async_directus.get_item(
+            "workspace", workspace_id, params={"fields": "context"}
+        )
+    except Exception:  # noqa: BLE001
+        logger.warning("Workspace %s read failed while building prompt", workspace_id)
+        return None
+    if not isinstance(workspace, dict):
+        return None
+    return _to_non_empty_string(workspace.get("context"))
+
+
 def _build_initial_agent_prompt_content(
     *,
     project_name: Optional[str],
     project_context: Optional[str],
+    project_goal: Optional[str] = None,
     user_message: str,
+    workspace_context: Optional[str] = None,
 ) -> str:
     normalized_name = _to_non_empty_string(project_name) or "(none)"
     normalized_context = _to_non_empty_string(project_context) or "(none)"
+    normalized_goal = _to_non_empty_string(project_goal) or "(none)"
+    normalized_workspace_context = _to_non_empty_string(workspace_context) or "(none)"
     normalized_message = user_message.strip()
 
     return (
         f"Project Name: {normalized_name}\n"
-        f"Project Context: {normalized_context}\n\n"
+        f"Workspace Context: {normalized_workspace_context}\n"
+        f"Project Context: {normalized_context}\n"
+        f"Project Goal: {normalized_goal}\n\n"
         f"User Message: {normalized_message}"
     )
 
@@ -541,7 +637,9 @@ def _list_project_conversations_for_agent(
                 is_new_conversation = conversation_identifier not in conversations_by_id
                 if is_new_conversation and len(conversations_by_id) >= normalized_limit:
                     continue
-                existing_matches = conversations_by_id.get(conversation_identifier, {}).get("matches")
+                existing_matches = conversations_by_id.get(conversation_identifier, {}).get(
+                    "matches"
+                )
                 normalized_existing_matches = (
                     existing_matches if isinstance(existing_matches, list) else []
                 )
@@ -850,10 +948,14 @@ async def create_run(
     )
     project_name = _to_non_empty_string(project.get("name"))
     project_context = _to_non_empty_string(project.get("context"))
+    workspace_context = await _get_workspace_context_for_project(project)
+    project_goal = await get_current_project_goal_content(body.project_id)
     agent_prompt_content = _build_initial_agent_prompt_content(
         project_name=project_name,
         project_context=project_context,
+        project_goal=project_goal,
         user_message=body.message,
+        workspace_context=workspace_context,
     )
 
     await run_in_thread_pool(
@@ -881,9 +983,6 @@ async def append_message(
     _require_agent_token(auth)
     run = await run_in_thread_pool(_get_run_or_404, run_id)
     _assert_run_authorized(run, auth)
-
-    if run.get("status") in {"queued", "running"}:
-        raise HTTPException(status_code=409, detail="Run already in progress")
 
     # Matrix §8: continuing an agentic analysis is a host-side operation.
     project_id = run.get("project_id")
@@ -924,6 +1023,8 @@ async def append_message(
         body.message,
         body.language,
     )
+    if run.get("status") == "running":
+        return await run_in_thread_pool(_get_run_or_404, run_id)
     return await run_in_thread_pool(agentic_run_service.set_status, run_id, "queued")
 
 
@@ -949,6 +1050,116 @@ async def get_project_settings_for_agent(
     from dembrane.api.v2.bff.tags import ProjectUpdate
 
     return {field: project.get(field) for field in ProjectUpdate.model_fields}
+
+
+async def _list_project_tag_rows(project_id: str) -> list[dict[str, Any]]:
+    rows = await async_directus.get_items(
+        "project_tag",
+        {
+            "query": {
+                "filter": {"project_id": {"_eq": project_id}},
+                "fields": ["id", "created_at", "text", "sort"],
+                "sort": ["sort"],
+                "limit": -1,
+            }
+        },
+    )
+    return rows if isinstance(rows, list) else []
+
+
+@AgenticRouter.post("/projects/{project_id}/tags")
+async def edit_project_tags_for_agent(
+    project_id: str,
+    body: AgenticTagsEditSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Add and remove project tags on the host's behalf, then return the updated
+    vocabulary. Tags are the host-visible portal vocabulary participants can
+    select, so removals delete by exact text (case-insensitive) and only touch
+    tags the agent named; the conversation_project_tag junction is cleaned up
+    for any deleted tag so no orphaned references linger."""
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+
+    existing = await _list_project_tag_rows(project_id)
+    existing_by_lower: dict[str, dict[str, Any]] = {}
+    for row in existing:
+        text = str(row.get("text") or "").strip()
+        if text:
+            existing_by_lower.setdefault(text.lower(), row)
+
+    added: list[str] = []
+    seen_add_lower: set[str] = set()
+    max_sort = 0
+    for row in existing:
+        try:
+            max_sort = max(max_sort, int(row.get("sort") or 0))
+        except (TypeError, ValueError):
+            continue
+
+    for raw_tag in body.add:
+        text = str(raw_tag or "").strip()
+        if not text:
+            continue
+        lower = text.lower()
+        if lower in existing_by_lower or lower in seen_add_lower:
+            continue
+        seen_add_lower.add(lower)
+        max_sort += 1
+        created = await async_directus.create_item(
+            "project_tag",
+            {
+                "id": str(uuid4()),
+                "project_id": project_id,
+                "text": text,
+                "sort": max_sort,
+            },
+        )
+        if created:
+            added.append(text)
+
+    removed: list[str] = []
+    for raw_tag in body.remove:
+        text = str(raw_tag or "").strip()
+        if not text:
+            continue
+        row = existing_by_lower.get(text.lower())
+        if not row:
+            continue
+        tag_id = row.get("id")
+        if not tag_id:
+            continue
+        junctions = await async_directus.get_items(
+            "conversation_project_tag",
+            {
+                "query": {
+                    "filter": {"project_tag_id": {"_eq": tag_id}},
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(junctions, list):
+            for junction in junctions:
+                jid = junction.get("id") if isinstance(junction, dict) else None
+                if jid:
+                    try:
+                        await async_directus.delete_item("conversation_project_tag", jid)
+                    except Exception:  # noqa: BLE001
+                        logger.exception(
+                            "conversation_project_tag cleanup failed id=%s", jid
+                        )
+        await async_directus.delete_item("project_tag", tag_id)
+        removed.append(str(row.get("text") or text))
+
+    tags = await _list_project_tag_rows(project_id)
+    return {
+        "project_id": project_id,
+        "added": added,
+        "removed": removed,
+        "count": len(tags),
+        "tags": tags,
+    }
 
 
 @AgenticRouter.get("/projects/{project_id}/conversations")
@@ -1111,6 +1322,9 @@ async def create_support_request(
             "workspace_id": workspace_id,
             "project_id": project_id,
             "directus_user_id": auth.user_id,
+            "chat_id": body.chat_id,
+            "app_user_id": body.app_user_id,
+            "message_id": body.message_id,
             "message": body.message,
             "page_context": body.page_context,
             "status": "new",
@@ -1121,6 +1335,133 @@ async def create_support_request(
         status_code=201,
         content={"id": support_request_id, "status": "new"},
     )
+
+
+@AgenticRouter.post("/projects/{project_id}/insight")
+async def create_agent_insight(
+    project_id: str,
+    body: AgenticInsightSchema,
+    auth: DependencyDirectusSession,
+) -> JSONResponse:
+    """Record a quiet product-learning insight from an assistant turn."""
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+
+    content = body.content.strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="content is required")
+
+    suggested_capability = _to_non_empty_string(body.suggested_capability)
+    workspace_id = await _resolve_workspace_id_for_project(project_id)
+    created = await async_directus.create_item(
+        "agent_insight",
+        {
+            "workspace_id": workspace_id,
+            "project_id": project_id,
+            "chat_id": body.chat_id,
+            "message_id": body.message_id,
+            "kind": body.kind,
+            "content": content,
+            "suggested_capability": suggested_capability,
+            "status": "new",
+        },
+    )
+    created_row = created.get("data") if isinstance(created, dict) else {}
+    insight_id = _to_non_empty_string((created_row or {}).get("id"))
+    return JSONResponse(
+        status_code=201,
+        content={"id": insight_id, "status": "new"},
+    )
+
+
+async def _get_agent_insight_or_404(insight_id: str) -> dict[str, Any]:
+    """Load an agent_insight row or 404. The project it belongs to is the data
+    boundary, so the caller must still pass an ownership check on that project."""
+    try:
+        insight = await async_directus.get_item("agent_insight", insight_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Insight %s not found: %s", insight_id, exc)
+        raise HTTPException(status_code=404, detail="Insight not found") from exc
+    if not isinstance(insight, dict) or not insight.get("id"):
+        raise HTTPException(status_code=404, detail="Insight not found")
+    return insight
+
+
+def _agent_insight_payload(insight: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": _to_related_id(insight.get("id")),
+        "kind": insight.get("kind"),
+        "content": insight.get("content"),
+        "suggested_capability": insight.get("suggested_capability"),
+        "status": insight.get("status"),
+        "retracted_reason": insight.get("retracted_reason"),
+    }
+
+
+@AgenticRouter.patch("/insights/{insight_id}")
+async def edit_agent_insight(
+    insight_id: str,
+    body: AgenticInsightEditSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Amend a noted insight by id (partial update). Ownership follows the same
+    rule as every agentic write: the insight's project must be one the caller can
+    reach, so no host can edit another project's insights."""
+    _require_agent_token(auth)
+    insight = await _get_agent_insight_or_404(insight_id)
+    project_id = _to_related_id(insight.get("project_id"))
+    if not project_id:
+        raise HTTPException(status_code=404, detail="Insight not found")
+    await _assert_project_access(project_id, auth)
+
+    updates: dict[str, Any] = {}
+    if body.content is not None:
+        content = body.content.strip()
+        if not content:
+            raise HTTPException(status_code=400, detail="content cannot be blank")
+        updates["content"] = content
+    if body.kind is not None:
+        updates["kind"] = body.kind
+    if body.suggested_capability is not None:
+        updates["suggested_capability"] = _to_non_empty_string(body.suggested_capability)
+    if not updates:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide at least one of content, kind, or suggested_capability.",
+        )
+
+    await async_directus.update_item("agent_insight", insight_id, updates)
+    updated = await _get_agent_insight_or_404(insight_id)
+    return _agent_insight_payload(updated)
+
+
+@AgenticRouter.post("/insights/{insight_id}/retract")
+async def retract_agent_insight(
+    insight_id: str,
+    body: AgenticInsightRetractSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Retract a noted insight by id. The row is never deleted: retraction sets
+    status=retracted and stores the reason, because the dembrane team may already
+    have read it, so a withdrawal is itself signal."""
+    _require_agent_token(auth)
+    insight = await _get_agent_insight_or_404(insight_id)
+    project_id = _to_related_id(insight.get("project_id"))
+    if not project_id:
+        raise HTTPException(status_code=404, detail="Insight not found")
+    await _assert_project_access(project_id, auth)
+
+    reason = body.reason.strip()
+    if not reason:
+        raise HTTPException(status_code=400, detail="reason is required")
+
+    await async_directus.update_item(
+        "agent_insight",
+        insight_id,
+        {"status": "retracted", "retracted_reason": reason},
+    )
+    updated = await _get_agent_insight_or_404(insight_id)
+    return _agent_insight_payload(updated)
 
 
 async def _resolve_workspace_id_for_project(project_id: str) -> Optional[str]:
@@ -1166,6 +1507,366 @@ async def list_project_memory(
         "count": len(memories),
         "memories": memories,
     }
+
+
+@AgenticRouter.get("/projects/{project_id}/goal")
+async def get_project_goal_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    revisions = await list_project_goal_revisions(project_id)
+    return {
+        "project_id": project_id,
+        "current": revisions[0] if revisions else None,
+        "revisions": revisions,
+    }
+
+
+@AgenticRouter.get("/projects/{project_id}/methodologies")
+async def list_methodologies_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    workspace_id = await _resolve_workspace_id_for_project(project_id)
+    if workspace_id is None:
+        return {"project_id": project_id, "methodologies": []}
+    methodologies = await list_visible_methodologies(
+        workspace_id=workspace_id,
+        directus_user_id=auth.user_id,
+    )
+    return {"project_id": project_id, "methodologies": methodologies}
+
+
+def _loop_payload(loop: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "status": loop.get("status"),
+        "expires_at": loop.get("expires_at"),
+        "cadence_minutes": loop.get("cadence_minutes"),
+    }
+
+
+async def _get_project_canvas_or_404(project_id: str, canvas_id: str) -> dict[str, Any]:
+    report = await async_directus.get_item("project_report", canvas_id)
+    if (
+        not isinstance(report, dict)
+        or report.get("kind") != "canvas"
+        or _to_related_id(report.get("project_id")) != project_id
+        or report.get("deleted_at") is not None
+    ):
+        raise HTTPException(status_code=404, detail="Canvas not found")
+    return report
+
+
+async def _get_project_chat_or_404(
+    project_id: str,
+    chat_id: str,
+    auth: DirectusSession,
+) -> dict[str, Any]:
+    try:
+        chat = await async_directus.get_item("project_chat", chat_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Chat %s not found while reading canvas activity: %s", chat_id, exc)
+        raise HTTPException(status_code=404, detail="Chat not found") from exc
+    if (
+        not isinstance(chat, dict)
+        or _to_related_id(chat.get("project_id")) != project_id
+        or chat.get("deleted_at") is not None
+    ):
+        raise HTTPException(status_code=404, detail="Chat not found")
+    if (
+        not auth.is_admin
+        and bool(chat.get("is_private"))
+        and chat.get("user_created") != auth.user_id
+    ):
+        raise HTTPException(status_code=404, detail="Chat not found")
+    return chat
+
+
+@AgenticRouter.get(
+    "/projects/{project_id}/canvases",
+    dependencies=[Depends(require_canvas_enabled_for_project)],
+)
+async def list_project_canvases(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> list[dict[str, Any]]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    return await list_canvas_summaries(project_id)
+
+
+async def _project_report_names_by_id(report_ids: list[str]) -> dict[str, str]:
+    if not report_ids:
+        return {}
+    try:
+        rows = await async_directus.get_items(
+            "project_report",
+            {
+                "query": {
+                    "filter": {"id": {"_in": report_ids}},
+                    "fields": ["id", "user_instructions", "name"],
+                    "limit": -1,
+                }
+            },
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Failed to load canvas report names for agent activity: %s", exc)
+        return {}
+
+    names: dict[str, str] = {}
+    for row in rows if isinstance(rows, list) else []:
+        if not isinstance(row, dict):
+            continue
+        report_id = _to_non_empty_string(row.get("id"))
+        name = _to_non_empty_string(row.get("user_instructions")) or _to_non_empty_string(
+            row.get("name")
+        )
+        if report_id and name:
+            names[report_id] = name
+    return names
+
+
+async def _recent_loop_runs(loop_id: str, limit: int) -> list[dict[str, Any]]:
+    try:
+        rows = await async_directus.get_items(
+            "agent_loop_run",
+            {
+                "query": {
+                    "filter": {"loop_id": {"_eq": loop_id}},
+                    "fields": ["status", "detail", "started_at"],
+                    "sort": ["-started_at"],
+                    "limit": limit,
+                }
+            },
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Failed to load canvas activity for loop %s: %s", loop_id, exc)
+        return []
+
+    return [
+        {
+            "status": row.get("status"),
+            "detail": row.get("detail"),
+            "started_at": row.get("started_at"),
+        }
+        for row in (rows if isinstance(rows, list) else [])
+        if isinstance(row, dict)
+    ]
+
+
+@AgenticRouter.get(
+    "/projects/{project_id}/chats/{chat_id}/canvas-activity",
+    dependencies=[Depends(require_canvas_enabled_for_project)],
+)
+async def list_chat_canvas_activity(
+    project_id: str,
+    chat_id: str,
+    auth: DependencyDirectusSession,
+    limit: int = Query(default=5, ge=1),
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    await _get_project_chat_or_404(project_id, chat_id, auth)
+
+    run_limit = min(limit, 10)
+    try:
+        loops = await async_directus.get_items(
+            "agent_loop",
+            {
+                "query": {
+                    "filter": {"project_id": {"_eq": project_id}},
+                    "fields": ["id", "project_id", "report_id", "name"],
+                    "limit": -1,
+                }
+            },
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Failed to load canvas loops for project %s: %s", project_id, exc)
+        return {"canvases": []}
+
+    loop_rows = [row for row in (loops if isinstance(loops, list) else []) if isinstance(row, dict)]
+    report_ids = [
+        report_id
+        for report_id in (_to_related_id(row.get("report_id")) for row in loop_rows)
+        if report_id is not None
+    ]
+    report_names = await _project_report_names_by_id(report_ids)
+
+    canvases: list[dict[str, Any]] = []
+    for loop in loop_rows:
+        loop_id = _to_non_empty_string(loop.get("id"))
+        if loop_id is None:
+            continue
+        report_id = _to_related_id(loop.get("report_id"))
+        canvas_id = report_id or loop_id
+        canvases.append(
+            {
+                "id": canvas_id,
+                "name": _to_non_empty_string(loop.get("name"))
+                or (report_names.get(report_id) if report_id else None)
+                or "Canvas",
+                "recent_runs": await _recent_loop_runs(loop_id, run_limit),
+            }
+        )
+
+    return {"canvases": canvases}
+
+
+@AgenticRouter.get(
+    "/projects/{project_id}/canvases/{canvas_id}",
+    dependencies=[Depends(require_canvas_enabled_for_project)],
+)
+async def get_project_canvas(
+    project_id: str,
+    canvas_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    report = await _get_project_canvas_or_404(project_id, canvas_id)
+    loop = await get_loop_for_report(canvas_id)
+    config = await get_latest_config(canvas_id)
+    generation = await get_latest_generation(canvas_id)
+    return {
+        "id": canvas_id,
+        "name": (loop or {}).get("name") or report.get("user_instructions") or "Canvas",
+        "kind": "canvas",
+        "loop": _loop_payload(loop) if loop else None,
+        "latest_config": config,
+        "latest_generation": generation,
+    }
+
+
+@AgenticRouter.get(
+    "/projects/{project_id}/canvases/{canvas_id}/history",
+    dependencies=[Depends(require_canvas_enabled_for_project)],
+)
+async def get_project_canvas_history(
+    project_id: str,
+    canvas_id: str,
+    auth: DependencyDirectusSession,
+    limit: int = Query(default=30, ge=1),
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    report = await _get_project_canvas_or_404(project_id, canvas_id)
+    entries = await build_canvas_history(canvas_id, limit=min(limit, 100))
+    loop = await get_loop_for_report(canvas_id)
+    return {
+        "id": canvas_id,
+        "name": (loop or {}).get("name") or report.get("user_instructions") or "Canvas",
+        "history": entries,
+    }
+
+
+@AgenticRouter.post(
+    "/projects/{project_id}/canvases/{canvas_id}/edit",
+    dependencies=[Depends(require_canvas_enabled_for_project)],
+)
+async def edit_project_canvas(
+    project_id: str,
+    canvas_id: str,
+    body: AgenticCanvasEditSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    await _get_project_canvas_or_404(project_id, canvas_id)
+    try:
+        edited = await apply_direct_canvas_edit(
+            report_id=canvas_id,
+            edited_html=body.content_html,
+            instruction=body.instruction,
+            chat_id=body.chat_id,
+            created_by=auth.user_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {
+        "id": canvas_id,
+        "status": "edited",
+        "generation": edited["generation"],
+        "config_revision": edited["config_revision"],
+    }
+
+
+@AgenticRouter.post(
+    "/projects/{project_id}/canvases/{canvas_id}/host-items",
+    dependencies=[Depends(require_canvas_enabled_for_project)],
+)
+async def add_project_canvas_host_item(
+    project_id: str,
+    canvas_id: str,
+    body: AgenticCanvasHostItemSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    await _get_project_canvas_or_404(project_id, canvas_id)
+    try:
+        return await add_canvas_host_item(
+            report_id=canvas_id,
+            text=body.text,
+            target_tab=body.target_tab,
+            person=body.person,
+            chat_id=body.chat_id,
+            message_id=body.message_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@AgenticRouter.post(
+    "/projects/{project_id}/canvases/{canvas_id}/host-items/remove",
+    dependencies=[Depends(require_canvas_enabled_for_project)],
+)
+async def remove_project_canvas_host_item(
+    project_id: str,
+    canvas_id: str,
+    body: AgenticCanvasRemoveHostItemSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    await _get_project_canvas_or_404(project_id, canvas_id)
+    return await remove_canvas_host_item(
+        report_id=canvas_id,
+        item=body.item,
+        chat_id=body.chat_id,
+        message_id=body.message_id,
+    )
+
+
+@AgenticRouter.post(
+    "/projects/{project_id}/canvases/{canvas_id}/loop/{action}",
+    dependencies=[Depends(require_canvas_enabled_for_project)],
+)
+async def update_project_canvas_loop(
+    project_id: str,
+    canvas_id: str,
+    action: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    if action not in {"pause", "resume", "stop"}:
+        raise HTTPException(status_code=404, detail="Canvas loop action not found")
+    await _get_project_canvas_or_404(project_id, canvas_id)
+    loop = await get_loop_for_report(canvas_id)
+    if not loop:
+        raise HTTPException(status_code=404, detail="Canvas loop not found")
+    try:
+        updated = await apply_loop_action(loop, action)
+    except ValueError as exc:
+        detail = str(exc)
+        if detail == "This loop has ended":
+            raise HTTPException(status_code=409, detail=detail) from exc
+        raise HTTPException(status_code=400, detail=detail) from exc
+    return _loop_payload(updated)
 
 
 @AgenticRouter.post("/projects/{project_id}/memory")
@@ -1240,6 +1941,97 @@ async def write_project_memory(
     return {"id": created_id, "scope": scope, "action": "created"}
 
 
+async def _get_agent_memory_or_404(memory_id: str) -> dict[str, Any]:
+    try:
+        memory = await async_directus.get_item("agent_memory", memory_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Memory %s not found: %s", memory_id, exc)
+        raise HTTPException(status_code=404, detail="Memory not found") from exc
+    if not isinstance(memory, dict) or not memory.get("id"):
+        raise HTTPException(status_code=404, detail="Memory not found")
+    return memory
+
+
+async def _caller_in_workspace(workspace_id: str, auth: DirectusSession) -> bool:
+    """Whether the caller is a member of workspace_id. Mirrors the inheritance
+    resolution used by _visible_workspace_project_ids."""
+    if auth.is_admin:
+        return True
+    try:
+        from dembrane.app_user import get_app_user_or_raise
+        from dembrane.inheritance import user_can_access
+
+        app_user = await get_app_user_or_raise(auth.user_id)
+        resolved = await user_can_access(workspace_id, app_user["id"])
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Workspace membership check failed for %s: %s", workspace_id, exc)
+        return False
+    return resolved is not None
+
+
+async def _assert_memory_access(memory: dict[str, Any], auth: DirectusSession) -> None:
+    """A caller may mutate a memory only within a scope they can reach: their own
+    user memory, a project they can access, or a workspace they belong to.
+    Non-reachable memories 404, matching the existence-hiding ladder."""
+    if auth.is_admin:
+        return
+    scope = str(memory.get("scope") or "")
+    if scope == "user":
+        if _to_related_id(memory.get("directus_user_id")) != auth.user_id:
+            raise HTTPException(status_code=404, detail="Memory not found")
+        return
+    project_id = _to_related_id(memory.get("project_id"))
+    if project_id:
+        await _assert_project_access(project_id, auth)
+        return
+    workspace_id = _to_related_id(memory.get("workspace_id"))
+    if workspace_id and await _caller_in_workspace(workspace_id, auth):
+        return
+    raise HTTPException(status_code=404, detail="Memory not found")
+
+
+@AgenticRouter.patch("/memories/{memory_id}")
+async def amend_project_memory(
+    memory_id: str,
+    body: AgenticMemoryAmendSchema,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Amend an existing memory's content by id. The host corrects a remembered
+    fact by editing the same row, not by layering a contradicting one."""
+    _require_agent_token(auth)
+    memory = await _get_agent_memory_or_404(memory_id)
+    await _assert_memory_access(memory, auth)
+
+    content = body.content.strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="content is required")
+
+    await async_directus.update_item(
+        "agent_memory",
+        memory_id,
+        {
+            "content": content,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+    return {"id": memory_id, "scope": memory.get("scope"), "action": "amended"}
+
+
+@AgenticRouter.delete("/memories/{memory_id}")
+async def forget_project_memory(
+    memory_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Forget a memory by id. Hard delete is acceptable here: memory is
+    project-scoped working state, unlike insights (which retract, never delete)."""
+    _require_agent_token(auth)
+    memory = await _get_agent_memory_or_404(memory_id)
+    await _assert_memory_access(memory, auth)
+
+    await async_directus.delete_item("agent_memory", memory_id)
+    return {"id": memory_id, "deleted": True}
+
+
 @AgenticRouter.post("/runs/{run_id}/stream")
 async def stream_run(
     run_id: str,
@@ -1250,7 +2042,7 @@ async def stream_run(
     run = await run_in_thread_pool(_get_run_or_404, run_id)
     _assert_run_authorized(run, auth)
 
-    if run.get("status") not in TERMINAL_RUN_STATUSES:
+    if run.get("status") == "queued":
         latest_turn = await _latest_user_turn(run_id)
         if latest_turn is not None:
             turn_seq, user_message = latest_turn
@@ -1302,17 +2094,62 @@ async def stop_run(run_id: str, auth: DependencyDirectusSession) -> dict[str, An
     task = await _get_active_task(run_id, turn_seq)
     if task is not None and not task.done():
         task.cancel()
+        return {
+            "run_id": run_id,
+            "turn_seq": turn_seq,
+            "status": "stopping",
+        }
+
+    # No task in this replica to cancel: the turn is executing elsewhere, or
+    # its executor is gone (restart, lost lease). The cancel flag alone cannot
+    # recover a dead run, so the chat would show "Agent is working" forever
+    # with Stop doing nothing. Force the same terminal shape the worker's own
+    # cancel path produces; a turn that is in fact still alive sees the cancel
+    # flag at its next checkpoint and stops quietly.
+    if run.get("status") not in TERMINAL_RUN_STATUSES:
+        event = await run_in_thread_pool(
+            agentic_run_service.append_event,
+            run_id,
+            "run.failed",
+            {
+                "error_code": AGENT_CANCELLED_ERROR_CODE,
+                "message": AGENT_CANCELLED_MESSAGE,
+            },
+        )
+        try:
+            await publish_live_event(run_id, json.dumps(event, default=str))
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Failed to publish stop event for run %s: %s", run_id, exc)
+        await run_in_thread_pool(
+            agentic_run_service.set_status,
+            run_id,
+            "failed",
+            latest_error=AGENT_CANCELLED_MESSAGE,
+            latest_error_code=AGENT_CANCELLED_ERROR_CODE,
+        )
 
     return {
         "run_id": run_id,
         "turn_seq": turn_seq,
-        "status": "stopping",
+        "status": "stopped",
     }
 
 
 @AgenticRouter.get("/runs/{run_id}")
 async def get_run(run_id: str, auth: DependencyDirectusSession) -> dict[str, Any]:
     run = await run_in_thread_pool(_get_run_or_404, run_id)
+    _assert_run_authorized(run, auth)
+    return run
+
+
+@AgenticRouter.get("/chats/{project_chat_id}/latest-run")
+async def get_latest_chat_run(
+    project_chat_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    run = await run_in_thread_pool(agentic_run_service.get_latest_for_chat, project_chat_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="Agentic run not found")
     _assert_run_authorized(run, auth)
     return run
 

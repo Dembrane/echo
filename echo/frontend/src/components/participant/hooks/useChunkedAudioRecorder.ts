@@ -35,6 +35,9 @@ type UseAudioRecorderResult = {
 	permissionError: string | null;
 	hadInterruption: boolean;
 	getChunkHistory: () => ChunkInfo[];
+	/** Current mic input level in [0, 1] (RMS). 0 when not actively recording
+	 * or when the meter is unavailable. Read-only — never affects capture. */
+	getAudioLevel: () => number;
 };
 
 const preferredMimeTypes = ["audio/webm", "audio/wav", "video/mp4"];
@@ -74,6 +77,16 @@ const useChunkedAudioRecorder = ({
 	const audioContextRef = useRef<AudioContext | null>(null);
 	const audioProcessorRef = useRef<AudioWorkletNode | null>(null);
 
+	// Read-only VU meter: a passive AnalyserNode tap on the mic stream. It lives
+	// on its own AudioContext and is never connected to output, so it cannot
+	// disturb capture. Sampled by the host monitor (via the liveness beacon) to
+	// prove audio is really flowing and to catch a silent/muted mic.
+	const meterCtxRef = useRef<AudioContext | null>(null);
+	const meterSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+	const analyserRef = useRef<AnalyserNode | null>(null);
+	const meterBufferRef = useRef<Uint8Array | null>(null);
+	const peakLevelRef = useRef(0);
+
 	// We create and "unlock" the Audio element during user gesture (startRecording),
 	// then reuse it for playback later when interruption is detected.
 	const audioAlertRef = useRef<HTMLAudioElement | null>(null);
@@ -99,6 +112,38 @@ const useChunkedAudioRecorder = ({
 		userPausedRef.current = userPaused;
 	}, [isRecording, isPaused, userPaused]);
 
+	// Sample the mic RMS frequently and accumulate the window max; the beacon
+	// reads and resets it via getAudioLevel. Gated on recording state.
+	useEffect(() => {
+		const SAMPLE_MS = 100;
+		const id = setInterval(() => {
+			const analyser = analyserRef.current;
+			const buffer = meterBufferRef.current;
+			if (
+				!analyser ||
+				!buffer ||
+				!isRecordingRef.current ||
+				isPausedRef.current
+			) {
+				peakLevelRef.current = 0;
+				return;
+			}
+			try {
+				analyser.getByteTimeDomainData(buffer);
+				let sumSquares = 0;
+				for (let i = 0; i < buffer.length; i++) {
+					const v = (buffer[i] - 128) / 128;
+					sumSquares += v * v;
+				}
+				const instant = Math.sqrt(sumSquares / buffer.length);
+				peakLevelRef.current = Math.max(instant, peakLevelRef.current);
+			} catch {
+				peakLevelRef.current = 0;
+			}
+		}, SAMPLE_MS);
+		return () => clearInterval(id);
+	}, []);
+
 	useEffect(() => {
 		return () => {
 			if (streamRef.current) {
@@ -110,6 +155,14 @@ const useChunkedAudioRecorder = ({
 				audioContextRef.current.close();
 				audioContextRef.current = null;
 			}
+			meterSourceRef.current?.disconnect();
+			meterSourceRef.current = null;
+			if (meterCtxRef.current && meterCtxRef.current.state !== "closed") {
+				meterCtxRef.current.close();
+			}
+			meterCtxRef.current = null;
+			analyserRef.current = null;
+			meterBufferRef.current = null;
 			// Clean up audio alert element
 			if (audioAlertRef.current) {
 				audioAlertRef.current.pause();
@@ -245,16 +298,15 @@ const useChunkedAudioRecorder = ({
 			});
 
 			if (!navigator.mediaDevices?.enumerateDevices) {
-				console.log("enumerateDevices() not supported.");
-			} else {
-				// List cameras and microphones.
+				log("enumerateDevices() not supported.");
+			} else if (debug) {
+				// List cameras and microphones (debug only - device labels are
+				// semi-identifying and must never log unconditionally in production).
 				navigator.mediaDevices
 					.enumerateDevices()
 					.then((devices) => {
 						devices.forEach((device) => {
-							console.log(
-								`${device.kind}: ${device.label} id = ${device.deviceId}`,
-							);
+							log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
 						});
 					})
 					.catch((err) => {
@@ -264,6 +316,30 @@ const useChunkedAudioRecorder = ({
 
 			streamRef.current = stream;
 			log("Access to microphone granted.", { stream });
+
+			// Set up the passive VU meter on the captured stream (see refs above).
+			// Created here, inside the user gesture, so the AudioContext starts
+			// "running" (important on iOS). Best-effort: if Web Audio is missing
+			// the recorder works unchanged and the monitor just shows no level.
+			try {
+				const AudioCtx =
+					window.AudioContext ||
+					(window as unknown as { webkitAudioContext?: typeof AudioContext })
+						.webkitAudioContext;
+				if (AudioCtx) {
+					const meterCtx = new AudioCtx();
+					const source = meterCtx.createMediaStreamSource(stream);
+					const analyser = meterCtx.createAnalyser();
+					analyser.fftSize = 256;
+					source.connect(analyser);
+					meterCtxRef.current = meterCtx;
+					meterSourceRef.current = source;
+					analyserRef.current = analyser;
+					meterBufferRef.current = new Uint8Array(analyser.frequencyBinCount);
+				}
+			} catch (error) {
+				log("VU meter setup failed (non-fatal)", error);
+			}
 
 			log("Creating MediaRecorder instance");
 
@@ -331,6 +407,15 @@ const useChunkedAudioRecorder = ({
 		// close the audio context
 		audioContextRef.current?.close();
 		audioContextRef.current = null;
+		// tear down the VU meter tap
+		meterSourceRef.current?.disconnect();
+		meterSourceRef.current = null;
+		if (meterCtxRef.current && meterCtxRef.current.state !== "closed") {
+			meterCtxRef.current.close();
+		}
+		meterCtxRef.current = null;
+		analyserRef.current = null;
+		meterBufferRef.current = null;
 		streamRef.current?.getTracks().forEach((track) => {
 			track.stop();
 		});
@@ -375,8 +460,20 @@ const useChunkedAudioRecorder = ({
 		setUserPaused(false);
 	};
 
+	// Current mic input level in [0, 1], the RMS of the time-domain waveform.
+	// Returns 0 when not actively recording or when the meter is unavailable.
+	// Returns the loudest RMS since the last read, then resets, so each beacon
+	// reflects the peak over its own window (not one instant that may be a gap).
+	const getAudioLevel = useCallback((): number => {
+		if (!isRecordingRef.current || isPausedRef.current) return 0;
+		const peak = peakLevelRef.current;
+		peakLevelRef.current = 0;
+		return peak;
+	}, []);
+
 	return {
 		errored: false,
+		getAudioLevel,
 		getChunkHistory: () => chunkHistoryRef.current,
 		hadInterruption: hadConsecutiveSuspiciousChunksRef.current,
 		isPaused,

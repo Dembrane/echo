@@ -5,13 +5,26 @@ from dembrane.agentic_client import AgenticTimeoutError, AgenticUpstreamError
 from dembrane.agentic_worker import (
     TOOL_LIMIT_SAFETY_MESSAGE,
     AGENT_CANCELLED_ERROR_CODE,
+    RUN_TOOL_LIMIT_SAFETY_MESSAGE,
     process_agentic_run,
+    _sanitize_host_visible_assistant_content,
 )
 from dembrane.service.agentic import AgenticRunService
 
 
 def _build_service() -> AgenticRunService:
     return AgenticRunService(directus_client=InMemoryDirectus())
+
+
+def test_sanitize_host_visible_content_strips_stray_token_and_successfully() -> None:
+    assert (
+        _sanitize_host_visible_assistant_content("确定 (fetching transcript...)")
+        == "(fetching transcript...)"
+    )
+    assert (
+        _sanitize_host_visible_assistant_content("Successfully extracted Cesare's timeline")
+        == "Extracted Cesare's timeline"
+    )
 
 
 class _FakeChatService:
@@ -47,6 +60,7 @@ async def test_process_agentic_run_completes_persists_and_publishes(monkeypatch)
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, message_history)
         assert thread_id == run["id"]
@@ -108,6 +122,7 @@ async def test_process_agentic_run_handles_timeout(monkeypatch) -> None:
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         raise AgenticTimeoutError("timed out")
@@ -159,6 +174,7 @@ async def test_process_agentic_run_persists_partial_stream_before_upstream_failu
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {"type": "assistant.delta", "content": "hel"}
@@ -213,6 +229,7 @@ async def test_process_agentic_run_handles_cancel_request(monkeypatch) -> None:
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {"type": "assistant.delta", "content": "hel"}
@@ -255,7 +272,9 @@ async def test_process_agentic_run_handles_cancel_request(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthesis(monkeypatch) -> None:
+async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthesis(
+    monkeypatch,
+) -> None:
     service = _build_service()
     run = service.create_run(
         project_id="project-1",
@@ -276,6 +295,7 @@ async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthes
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, message_history)
         assert thread_id == run["id"]
@@ -287,16 +307,16 @@ async def test_process_agentic_run_suppresses_planning_prose_keeps_final_synthes
                         "content": [{"type": "text", "text": planning_content}],
                         "additional_kwargs": {
                             "function_call": {
-                                "name": "findConvosByKeywords",
-                                "arguments": "{\"keywords\":\"half time show\"}",
+                                "name": "findConversationsByKeywords",
+                                "arguments": '{"keywords":"half time show"}',
                             }
                         },
                     }
                 }
             },
         }
-        yield {"type": "on_tool_start", "name": "findConvosByKeywords"}
-        yield {"type": "on_tool_end", "name": "findConvosByKeywords", "data": {"output": {}}}
+        yield {"type": "on_tool_start", "name": "findConversationsByKeywords"}
+        yield {"type": "on_tool_end", "name": "findConversationsByKeywords", "data": {"output": {}}}
         yield {
             "type": "on_chat_model_end",
             "data": {
@@ -369,6 +389,7 @@ async def test_process_agentic_run_posts_no_synthetic_intro_when_model_has_no_pl
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {"type": "on_tool_start", "name": "listProjectConversations"}
@@ -435,6 +456,7 @@ async def test_process_agentic_run_logs_hidden_nudge_without_midpoint_fallback(m
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         for index in range(5):
@@ -512,7 +534,9 @@ async def test_process_agentic_run_logs_hidden_nudge_without_midpoint_fallback(m
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_update(monkeypatch) -> None:
+async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_update(
+    monkeypatch,
+) -> None:
     service = _build_service()
     run = service.create_run(
         project_id="project-1",
@@ -528,6 +552,7 @@ async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_upd
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {
@@ -625,7 +650,9 @@ async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_upd
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_uses_progress_tool_output_from_toolmessage_shape(monkeypatch) -> None:
+async def test_process_agentic_run_uses_progress_tool_output_from_toolmessage_shape(
+    monkeypatch,
+) -> None:
     service = _build_service()
     run = service.create_run(
         project_id="project-1",
@@ -641,6 +668,7 @@ async def test_process_agentic_run_uses_progress_tool_output_from_toolmessage_sh
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {"type": "on_tool_start", "name": "sendProgressUpdate"}
@@ -739,6 +767,7 @@ async def test_process_agentic_run_suppresses_midpoint_planning_prose(monkeypatc
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {
@@ -746,7 +775,9 @@ async def test_process_agentic_run_suppresses_midpoint_planning_prose(monkeypatc
             "data": {
                 "output": {
                     "kwargs": {
-                        "content": [{"type": "text", "text": "I will start by scanning project summaries."}],
+                        "content": [
+                            {"type": "text", "text": "I will start by scanning project summaries."}
+                        ],
                         "additional_kwargs": {
                             "function_call": {
                                 "name": "listProjectConversations",
@@ -764,19 +795,24 @@ async def test_process_agentic_run_suppresses_midpoint_planning_prose(monkeypatc
             "data": {
                 "output": {
                     "kwargs": {
-                        "content": [{"type": "text", "text": "Quick update: I have enough signal to focus on two transcripts."}],
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "Quick update: I have enough signal to focus on two transcripts.",
+                            }
+                        ],
                         "additional_kwargs": {
                             "function_call": {
-                                "name": "grepConvoSnippets",
-                                "arguments": "{\"query\":\"policy\"}",
+                                "name": "grepConversationSnippets",
+                                "arguments": '{"query":"policy"}',
                             }
                         },
                     }
                 }
             },
         }
-        yield {"type": "on_tool_start", "name": "grepConvoSnippets"}
-        yield {"type": "on_tool_end", "name": "grepConvoSnippets", "data": {"output": {}}}
+        yield {"type": "on_tool_start", "name": "grepConversationSnippets"}
+        yield {"type": "on_tool_end", "name": "grepConversationSnippets", "data": {"output": {}}}
         yield {
             "type": "on_chat_model_end",
             "data": {
@@ -845,6 +881,7 @@ async def test_process_agentic_run_keeps_tool_call_limit_safety(monkeypatch) -> 
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         for index in range(20):
@@ -884,9 +921,125 @@ async def test_process_agentic_run_keeps_tool_call_limit_safety(monkeypatch) -> 
     # One honest message at the limit; no verbatim repeat of earlier output.
     # The wording never exposes the internal "tool call" concept to the host.
     assert "tool" not in TOOL_LIMIT_SAFETY_MESSAGE.lower()
-    assert stored_run["latest_output"] == TOOL_LIMIT_SAFETY_MESSAGE
-    assert assistant_texts.count(TOOL_LIMIT_SAFETY_MESSAGE) == 1
-    assert assistant_events[-1]["payload"]["content"] == TOOL_LIMIT_SAFETY_MESSAGE
+    assert "tool" not in stored_run["latest_output"].lower()
+    assert 'request: "hello"' in stored_run["latest_output"]
+    assert "fresh pass" in stored_run["latest_output"]
+    assert assistant_texts.count(stored_run["latest_output"]) == 1
+    assert assistant_events[-1]["payload"]["content"] == stored_run["latest_output"]
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_resets_tool_budget_for_appended_turn(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    service.append_event(run["id"], "user.message", {"content": "first request"})
+
+    streams: list[str] = []
+
+    async def _fake_stream(
+        *,
+        user_message: str,
+        **_context: object,
+    ):
+        streams.append(user_message)
+        if user_message == "first request":
+            for index in range(19):
+                yield {"type": "on_tool_start", "name": f"first-{index + 1}"}
+                yield {"type": "on_tool_end", "name": f"first-{index + 1}", "data": {"output": {}}}
+            service.append_event(run["id"], "user.message", {"content": "second request"})
+            yield {"type": "assistant.message", "content": "first answer"}
+            return
+        for index in range(2):
+            yield {"type": "on_tool_start", "name": f"second-{index + 1}"}
+            yield {"type": "on_tool_end", "name": f"second-{index + 1}", "data": {"output": {}}}
+        yield {"type": "assistant.message", "content": "second answer"}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="first request",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+    second_turn_seq = int(service.get_latest_event(run["id"], event_type="user.message")["seq"])
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="second request",
+        bearer_token="token-1",
+        turn_seq=second_turn_seq,
+        owner_token="owner-2",
+        run_service=service,
+    )
+
+    stored_run = service.get_by_id_or_raise(run["id"])
+    assistant_texts = [
+        event["payload"]["content"]
+        for event in service.list_events(run["id"])
+        if event["event_type"] == "assistant.message"
+    ]
+
+    assert streams == ["first request", "second request"]
+    assert stored_run["status"] == "completed"
+    assert stored_run["latest_output"] == "second answer"
+    assert not any("fresh pass" in text for text in assistant_texts)
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_has_run_lifetime_backstop(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    for index in range(199):
+        service.append_event(run["id"], "on_tool_start", {"name": f"old-{index + 1}"})
+
+    async def _fake_stream(**_context: object):
+        yield {"type": "on_tool_start", "name": "new-tool"}
+        yield {"type": "on_tool_end", "name": "new-tool", "data": {"output": {}}}
+        yield {"type": "assistant.message", "content": "should not appear"}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="continue",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    stored_run = service.get_by_id_or_raise(run["id"])
+    assert stored_run["latest_output"] == RUN_TOOL_LIMIT_SAFETY_MESSAGE
+    assert "new chat" in stored_run["latest_output"]
 
 
 @pytest.mark.asyncio
@@ -901,6 +1054,7 @@ async def test_process_agentic_run_allows_19_non_exempt_tool_calls(monkeypatch) 
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         for index in range(19):
@@ -944,7 +1098,9 @@ async def test_process_agentic_run_allows_19_non_exempt_tool_calls(monkeypatch) 
 
 
 @pytest.mark.asyncio
-async def test_process_agentic_run_excludes_send_progress_update_from_tool_limit(monkeypatch) -> None:
+async def test_process_agentic_run_excludes_send_progress_update_from_tool_limit(
+    monkeypatch,
+) -> None:
     service = _build_service()
     run = service.create_run(project_id="project-1", directus_user_id="user-1")
 
@@ -955,6 +1111,7 @@ async def test_process_agentic_run_excludes_send_progress_update_from_tool_limit
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         for _ in range(30):
@@ -1012,6 +1169,7 @@ async def test_process_agentic_run_tool_limit_does_not_repeat_last_update(monkey
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {
@@ -1021,7 +1179,10 @@ async def test_process_agentic_run_tool_limit_does_not_repeat_last_update(monkey
                     "kwargs": {
                         "content": [{"type": "text", "text": "Current synthesis draft."}],
                         "additional_kwargs": {
-                            "function_call": {"name": "findConvosByKeywords", "arguments": "{\"keywords\":\"show\"}"}
+                            "function_call": {
+                                "name": "findConversationsByKeywords",
+                                "arguments": '{"keywords":"show"}',
+                            }
                         },
                     }
                 }
@@ -1062,7 +1223,10 @@ async def test_process_agentic_run_tool_limit_does_not_repeat_last_update(monkey
     # The turn ends with the single limit message. The model's pre-tool prose
     # ("Current synthesis draft.") rode alongside a tool call, so it is
     # suppressed rather than surfaced or repeated.
-    assert assistant_texts == [TOOL_LIMIT_SAFETY_MESSAGE]
+    assert len(assistant_texts) == 1
+    assert assistant_texts[0] != "Current synthesis draft."
+    assert 'request: "hello"' in assistant_texts[0]
+    assert "fresh pass" in assistant_texts[0]
     assert assistant_texts.count("Current synthesis draft.") == 0
 
 
@@ -1076,7 +1240,8 @@ async def test_process_agentic_run_passes_persisted_message_history(monkeypatch)
         {
             "content": "hello raw",
             "agent_prompt_content": (
-                "Project Name: Helix\nProject Context: politics\n\nUser Message: hello"
+                "Project Name: Helix\nProject Context: politics\nProject Goal: (none)\n\n"
+                "User Message: hello"
             ),
         },
     )
@@ -1092,6 +1257,7 @@ async def test_process_agentic_run_passes_persisted_message_history(monkeypatch)
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token)
         assert thread_id == run["id"]
@@ -1123,13 +1289,128 @@ async def test_process_agentic_run_passes_persisted_message_history(monkeypatch)
     )
 
     assert captured["message_history"] == [
-        {"role": "user", "content": "Project Name: Helix\nProject Context: politics\n\nUser Message: hello"},
+        {
+            "role": "user",
+            "content": (
+                "Project Name: Helix\nProject Context: politics\nProject Goal: (none)\n\n"
+                "User Message: hello"
+            ),
+        },
         {"role": "assistant", "content": "hello back"},
         {"role": "user", "content": "follow up"},
     ]
     stored_run = service.get_by_id_or_raise(run["id"])
     assert stored_run["status"] == "completed"
     assert stored_run["latest_output"] == "final answer"
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_skips_suppressed_assistant_turns_in_history(
+    monkeypatch,
+) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    service.append_event(run["id"], "user.message", {"content": "set up this project"})
+    service.append_event(
+        run["id"],
+        "assistant.message",
+        {"content": "Checking your project settings."},
+    )
+    service.append_event(run["id"], "user.message", {"content": "what next?"})
+
+    captured: dict[str, list[dict[str, str]] | None] = {"message_history": None}
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+        **_context: object,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id)
+        captured["message_history"] = message_history
+        yield {"type": "assistant.message", "content": "Use the Overview page."}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="what next?",
+        bearer_token="token-1",
+        turn_seq=3,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    assert captured["message_history"] == [
+        {"role": "user", "content": "set up this project"},
+        {"role": "user", "content": "what next?"},
+    ]
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_leaves_run_queued_when_newer_user_turn_arrives(
+    monkeypatch,
+) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    service.append_event(run["id"], "user.message", {"content": "current"})
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+        **_context: object,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        service.append_event(run["id"], "user.message", {"content": "queued-follow-up"})
+        yield {"type": "assistant.message", "content": "first answer"}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="current",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    stored_run = service.get_by_id_or_raise(run["id"])
+    assert stored_run["status"] == "queued"
+    assert stored_run["latest_output"] == "first answer"
 
 
 @pytest.mark.asyncio
@@ -1150,6 +1431,7 @@ async def test_process_agentic_run_retries_once_on_context_overflow(monkeypatch)
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id)
         assert message_history is not None
@@ -1211,6 +1493,7 @@ async def test_process_agentic_run_retries_once_on_transient_upstream_error(monk
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         state["calls"] += 1
@@ -1268,6 +1551,7 @@ async def test_process_agentic_run_does_not_retry_non_overflow_upstream_errors(m
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         state["calls"] += 1
@@ -1323,6 +1607,7 @@ async def test_process_agentic_run_does_not_retry_after_stream_events(monkeypatc
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         state["calls"] += 1
@@ -1362,17 +1647,78 @@ async def test_process_agentic_run_does_not_retry_after_stream_events(monkeypatc
     events = service.list_events(run["id"])
     assert stored_run["status"] == "failed"
     assert stored_run["latest_error_code"] == "AGENT_UPSTREAM_400"
-    assert [event["event_type"] for event in events] == ["user.message", "assistant.delta", "run.failed"]
+    assert [event["event_type"] for event in events] == [
+        "user.message",
+        "assistant.delta",
+        "run.failed",
+    ]
 
 
 def test_is_host_visible_assistant_content_rejects_placeholder_and_empty() -> None:
-    from dembrane.agentic_worker import _is_host_visible_assistant_content
+    from dembrane.agentic_worker import (
+        _is_host_visible_assistant_content,
+        _sanitize_host_visible_assistant_content,
+    )
 
     assert _is_host_visible_assistant_content("Here is the answer.") is True
     assert _is_host_visible_assistant_content("(calling tools)") is False
     assert _is_host_visible_assistant_content("  (calling tools)  ") is False
+    assert (
+        _is_host_visible_assistant_content("(I am checking the available project frameworks.)")
+        is False
+    )
     assert _is_host_visible_assistant_content("") is False
     assert _is_host_visible_assistant_content("   ") is False
+    assert _sanitize_host_visible_assistant_content("Let's start here!_") == "Let's start here!"
+    assert _sanitize_host_visible_assistant_content('Done."_') == 'Done."'
+
+
+def test_sanitize_host_visible_assistant_content_rejects_pure_status_narration() -> None:
+    from dembrane.agentic_worker import _sanitize_host_visible_assistant_content
+
+    leaked_first_turn = (
+        "I am looking at your current settings and project context. To help you set "
+        "up this project, I will start by guiding us to establish a clear project "
+        "goal.\n\nReviewing the onboarding playbook project context to draft a "
+        "tailored project goal."
+    )
+
+    assert _sanitize_host_visible_assistant_content(leaked_first_turn) is None
+    assert (
+        _sanitize_host_visible_assistant_content(
+            "Reviewing the onboarding playbook project context."
+        )
+        is None
+    )
+    assert _sanitize_host_visible_assistant_content("Checking your project settings.") is None
+    assert (
+        _sanitize_host_visible_assistant_content("Let me look at your current project context.")
+        is None
+    )
+    assert (
+        _sanitize_host_visible_assistant_content(
+            "I looked at your settings, and your portal is open to anyone with the link."
+        )
+        == "I looked at your settings, and your portal is open to anyone with the link."
+    )
+    assert (
+        _sanitize_host_visible_assistant_content(
+            "I am looking at your current settings. What are you hoping to learn?"
+        )
+        == "I am looking at your current settings. What are you hoping to learn?"
+    )
+    assert (
+        _sanitize_host_visible_assistant_content(
+            "Reviewing your setup.\n- Start with participant needs\n- Focus on policy ideas"
+        )
+        == "Reviewing your setup.\n- Start with participant needs\n- Focus on policy ideas"
+    )
+    assert (
+        _sanitize_host_visible_assistant_content(
+            "Looking at your transcripts, participants mostly praise the new flavor."
+        )
+        == "Looking at your transcripts, participants mostly praise the new flavor."
+    )
 
 
 @pytest.mark.asyncio
@@ -1394,6 +1740,7 @@ async def test_process_agentic_run_never_persists_calling_tools_placeholder(monk
         bearer_token: str,
         thread_id: str,
         message_history: list[dict[str, str]] | None = None,
+        **_context: object,
     ):
         _ = (project_id, user_message, bearer_token, thread_id, message_history)
         # A leaked placeholder turn riding alongside a tool call...
@@ -1474,3 +1821,69 @@ async def test_process_agentic_run_never_persists_calling_tools_placeholder(monk
     assert "(calling tools)" not in persisted_texts
     assert assistant_texts == ["Here is the real answer."]
     assert persisted_texts == ["Here is the real answer."]
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_sanitizes_host_visible_assistant_artifacts(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    fake_chat_service = _FakeChatService()
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+        **_context: object,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        yield {
+            "type": "assistant.message",
+            "content": "(I am checking the available project frameworks.)",
+        }
+        yield {
+            "type": "assistant.message",
+            "content": "Let's start here!_",
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", fake_chat_service)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    events = service.list_events(run["id"])
+    assistant_texts = [
+        event["payload"]["content"]
+        for event in events
+        if event["event_type"] == "assistant.message"
+    ]
+    persisted_texts = [message["text"] for message in fake_chat_service.created_messages]
+
+    assert assistant_texts == ["Let's start here!"]
+    assert persisted_texts == ["Let's start here!"]

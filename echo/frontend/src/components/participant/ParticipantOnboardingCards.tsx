@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import posthog from "posthog-js";
 // Start of Selection
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 
 import "./ParticipantOnboardingCards.css";
@@ -45,8 +45,16 @@ export interface LanguageCards {
 
 const ParticipantOnboardingCards = ({
 	project,
+	onFunnelStage,
 }: {
 	project: ParticipantProject;
+	/** Reports this participant's funnel stage up to the visitor beacon owned
+	 * by the landing route (so "scanned" can fire before this deck mounts). */
+	onFunnelStage?: (report: {
+		stage: string;
+		tags: string[];
+		tagsPreselected: boolean;
+	}) => void;
 }) => {
 	const [searchParams] = useSearchParams();
 	const skipOnboarding = searchParams.get("skipOnboarding");
@@ -57,8 +65,35 @@ const ParticipantOnboardingCards = ({
 	);
 	const [animationDirection, setAnimationDirection] = useState("");
 	const [micTestSuccess, setMicTestSuccess] = useState(false);
+	const [micSkipped, setMicSkipped] = useState(false);
+	const [micBlocked, setMicBlocked] = useState(false);
 
 	const { language } = useLanguage();
+
+	// Tables/tags preselected via the QR URL (?tags= / ?tag_id_list=), resolved
+	// to labels so the funnel can show them and mark them as preselected.
+	const preselectedTags = useMemo(() => {
+		const raw = searchParams.get("tags") ?? searchParams.get("tag_id_list");
+		if (!raw) return [] as string[];
+		const wanted = raw
+			.split(",")
+			.map((value) => value.trim())
+			.filter(Boolean);
+		const projectTags = project.tags ?? [];
+		return wanted
+			.map((value) => {
+				const match = projectTags.find(
+					(tag) =>
+						typeof tag === "object" &&
+						tag !== null &&
+						(tag.id === value || tag.text === value),
+				);
+				return typeof match === "object" && match !== null
+					? (match.text ?? value)
+					: value;
+			})
+			.filter(Boolean);
+	}, [searchParams, project.tags]);
 
 	const InitiateFormComponent = useMemo(
 		() => () => <ParticipantInitiateForm project={project} />,
@@ -71,6 +106,7 @@ const ParticipantOnboardingCards = ({
 			<MicrophoneTest
 				onContinue={(_id: string) => {}}
 				onMicTestSuccess={setMicTestSuccess}
+				onMicAccessDenied={setMicBlocked}
 			/>
 		),
 		[setMicTestSuccess],
@@ -230,6 +266,49 @@ const ParticipantOnboardingCards = ({
 
 	const currentCard = allSlides[currentSlideIndex];
 
+	const micOutcomeReportedRef = useRef(false);
+	useEffect(() => {
+		if (micOutcomeReportedRef.current) return;
+		const outcome = micBlocked
+			? "blocked"
+			: micSkipped
+				? "skipped"
+				: micTestSuccess
+					? "granted"
+					: null;
+		if (!outcome) return;
+		micOutcomeReportedRef.current = true;
+		posthog.capture("mic_permission_resolved", {
+			outcome,
+			project_id: project.id,
+		});
+	}, [micBlocked, micSkipped, micTestSuccess, project.id]);
+
+	// The funnel stage this visitor is at, reported to the host monitor. Mic
+	// carries its outcome (ok / skipped / blocked) so a stuck participant is
+	// visible. Monotonic-ish: furthest milestone reached wins.
+	const funnelStage =
+		skipOnboarding === "1" || currentSlideIndex === allSlides.length - 1
+			? "profile"
+			: micBlocked
+				? "mic_blocked"
+				: micSkipped
+					? "mic_skipped"
+					: micTestSuccess
+						? "mic_ok"
+						: currentSlideIndex > 0
+							? "terms"
+							: "scanned";
+	const tagsKey = preselectedTags.join("|");
+	// biome-ignore lint/correctness/useExhaustiveDependencies: preselectedTags folded into tagsKey; onFunnelStage identity is stable
+	useEffect(() => {
+		onFunnelStage?.({
+			stage: funnelStage,
+			tags: preselectedTags,
+			tagsPreselected: preselectedTags.length > 0,
+		});
+	}, [funnelStage, tagsKey]);
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be inspected
 	useEffect(() => {
 		const timer = setTimeout(() => setAnimationDirection(""), 300);
@@ -305,7 +384,10 @@ const ParticipantOnboardingCards = ({
 						>
 							{currentCard?.type === "microphone" && (
 								<Button
-									onClick={nextSlide}
+									onClick={() => {
+										setMicSkipped(true);
+										nextSlide();
+									}}
 									variant="subtle"
 									color="primary"
 									size="md"

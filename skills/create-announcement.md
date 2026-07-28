@@ -1,6 +1,10 @@
 # Skill: Create Announcement
 
-Push announcements to ECHO users via Directus MCP.
+Push in-app announcements to dembrane users. Announcements live in the Directus `announcement` + `announcement_translations` collections.
+
+Two push paths:
+1. **Directus MCP** (`mcp__directus__items`) — only if a Directus MCP server is configured in the session. Check with ToolSearch first; as of 2026-07-13 none is configured, so don't assume it.
+2. **Direct prod SQL** — insert into the prod Postgres that Directus reads from (see "Direct SQL Pattern" below). Directus serves DB rows directly; no sync step needed. This is the known-working path.
 
 ## Schema
 
@@ -12,22 +16,68 @@ Push announcements to ECHO users via Directus MCP.
 - `activity` - tracks which users have read it
 
 **`announcement_translations`**
+- `id` - integer autoincrement (omit when inserting via SQL)
+- `announcement_id` - FK to `announcement.id`
 - `languages_code` - `"en-US"`, `"nl-NL"`, `"de-DE"`
-- `title` - markdown text
+- `title` - plain text, sentence case
 - `message` - markdown text (main content)
+
+`announcement.user_created` is a FK to `directus_users` — set it via an email lookup so the record has an author in Directus.
 
 ## Fetch Methods
 
+Always check the last ~5 announcements before drafting — they are the source of truth for tone, level, expiry, and markdown conventions.
+
 ```
-# Check existing announcements
+# Via MCP (if configured)
 mcp__directus__items: action=read, collection=announcement
 query: { fields: ["*", "translations.*"], sort: ["-created_at"], limit: 5 }
 
-# Get schema
-mcp__directus__schema: keys=["announcement", "announcement_translations"]
+# Via SQL (known-working)
+SELECT a.id, a.created_at, a.expires_at, a.level, t.languages_code, t.title,
+       left(t.message, 300) AS preview
+FROM announcement a
+LEFT JOIN announcement_translations t ON t.announcement_id = a.id
+ORDER BY a.created_at DESC NULLS LAST, t.languages_code
+LIMIT 14;
 ```
 
-## Create Pattern
+## Direct SQL Pattern
+
+Connect to the prod Postgres (DigitalOcean managed cluster; find it with `doctl databases list`, get the URI with `doctl databases connection <cluster-id> --format URI --no-header`). No local psql needed — run it through the `postgres:16-alpine` container image.
+
+Write the SQL to a file and pipe it in (inline `-c` quoting mangles apostrophes). Dollar-quote the title/message bodies (`$t$...$t$`, `$m$...$m$`) so `don't` / `what's` survive.
+
+```sql
+BEGIN;
+
+WITH a AS (
+  INSERT INTO announcement (id, created_at, updated_at, expires_at, level, user_created)
+  VALUES (
+    gen_random_uuid(), now(), now(),
+    'YYYY-MM-DD 12:00:00', 'info',
+    (SELECT id FROM directus_users WHERE email = '<author-email>' LIMIT 1)
+  )
+  RETURNING id
+)
+INSERT INTO announcement_translations (announcement_id, languages_code, title, message)
+SELECT a.id, v.code, v.title, v.msg
+FROM a, (VALUES
+  ('en-US', $t$Title here$t$, $m$Message here$m$),
+  ('nl-NL', $t$Titel hier$t$, $m$Bericht hier$m$)
+) AS v(code, title, msg);
+
+COMMIT;
+
+-- verify
+SELECT a.id, a.level, a.expires_at, t.languages_code, t.title
+FROM announcement a
+JOIN announcement_translations t ON t.announcement_id = a.id
+WHERE a.created_at > now() - interval '5 minutes'
+ORDER BY t.languages_code;
+```
+
+## Create Pattern (MCP)
 
 ```json
 {
@@ -35,7 +85,7 @@ mcp__directus__schema: keys=["announcement", "announcement_translations"]
   "collection": "announcement",
   "data": [{
     "level": "info",
-    "expires_at": "2026-02-27T12:00:00",
+    "expires_at": "YYYY-MM-DDT12:00:00",
     "translations": [
       {
         "languages_code": "en-US",
@@ -54,13 +104,14 @@ mcp__directus__schema: keys=["announcement", "announcement_translations"]
 
 ## Workflow
 
-1. **Gather context** - fetch sprint summary or source material
-2. **Draft announcement** - write EN + NL versions
-3. **Save to file** - `announcement-draft.md` for user to edit
-4. **Open file** - `open /path/to/announcement-draft.md`
-5. **User edits** - wait for approval
-6. **Review changes** - note what user changed for learning
-7. **Push to Directus** - create via MCP
+1. **Check previous announcements** - last ~5, for tone/level/expiry/format conventions
+2. **Gather context** - fetch sprint summary or source material
+3. **Draft announcement** - write EN + NL versions
+4. **Save to file** - `announcement-draft.md` for user to edit
+5. **Open file** - `open /path/to/announcement-draft.md`
+6. **User edits** - wait for approval (skip 4-6 if the user hands you final copy — only fix obvious typos, and say which)
+7. **Push to Directus** - via MCP if configured, else direct SQL
+8. **Verify** - select the row back with both translations; report the announcement id
 
 ## Important Rules
 
@@ -70,12 +121,14 @@ mcp__directus__schema: keys=["announcement", "announcement_translations"]
 
 ### Feature names
 - Use **exact terminology** from the product
-- Check `.po` files: `echo/echo/frontend/src/locales/*.po`
+- Check `.po` files: `echo/frontend/src/locales/*.po`
 - Example: "Select all" not "Select all conversations"
 
 ### Level guidelines
-- `"info"` - feature announcements, general notices
-- `"urgent"` - outages, critical issues, breaking changes
+- `"info"` - feature announcements, general notices, ongoing degradations with a roadmap
+- `"urgent"` - active outages, critical issues, breaking changes
+
+Observed convention in prod history: `urgent` has only ever been used for same-day outages (expiry within hours); everything that lasts days or weeks — including service degradations — ships as `info`.
 
 ### Expiry guidelines
 - Info announcements: 2-4 weeks
@@ -120,7 +173,7 @@ mcp__directus__schema: keys=["announcement", "announcement_translations"]
 
 ### Naming
 - **dembrane** - always lowercase, even at start of sentence
-- **ECHO** - the platform feature, use sparingly in external contexts
+- Don't call the product "ECHO" in user-facing copy — the product is just dembrane
 
 ### Voice
 Warm but not gushing. Direct but not cold. Smart but not showing off.
@@ -161,4 +214,4 @@ Sound like a trusted colleague, not a corporate announcement.
 | We're fixing it | We zijn het aan het fixen |
 
 ### Full reference
-See `echo/echo/brand/STYLE_GUIDE.md` for complete guidelines.
+See `echo/brand/STYLE_GUIDE.md` for complete guidelines.

@@ -17,6 +17,7 @@ The canonical reference. Each page explains what a capability is, when you'd use
 it's for, and how it works.
 
 - [Feature catalogue](./features/index.md)
+- [5 ways to use dembrane](./features/five-ways-to-use-dembrane.md)
 - [Roles & permissions](./features/roles-and-permissions.md)
 - [Tiers & billing](./features/tiers-and-billing.md)
 - [Organisations & workspaces](./features/organisations-and-workspaces.md)
@@ -38,6 +39,7 @@ it's for, and how it works.
 - [Export & data portability](./features/export-and-data-portability.md)
 - [MCP & bring-your-own-LLM](./features/mcp-and-bring-your-own-llm.md)
 - [dembrane next (preview features)](./features/dembrane-next.md)
+- [Building now (user stories for upcoming features)](./building/index.md)
 - [Account & security](./features/account-and-security.md)
 - [Notifications](./features/notifications.md)
 - [dembrane Go (the mobile app)](./features/mobile-app-dembrane-go.md)
@@ -110,3 +112,4 @@ it's for, and how it works.
 - [Background jobs & scheduler](./users/developer-internal/background-jobs-and-scheduler.md)
 - [Local development](./users/developer-internal/local-development.md)
 - [Deployment & releases](./users/developer-internal/deployment-and-releases.md)
+- [Developing & maintaining the docs](./users/developer-internal/maintaining-docs.md)

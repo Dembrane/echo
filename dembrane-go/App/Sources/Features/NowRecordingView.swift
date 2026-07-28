@@ -1,0 +1,236 @@
+import SwiftUI
+import DembraneCore
+
+/// The Record sheet. Armed (not yet recording): a big Start button so capture
+/// never begins by surprise. Recording: name, big timer, live waveform,
+/// pause/resume, stop. "Done" collapses to the mini bar (recording continues).
+struct NowRecordingView: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
+    @State private var confirmDiscard = false
+    @State private var showTranscript = false
+    @State private var entryToast = false
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if model.isRecording {
+                    recordingContent
+                } else {
+                    armedContent
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .navigationTitle(model.isRecording ? "" : "Record")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if model.isRecording {
+                    ToolbarItem(placement: .topBarLeading) { micMenu }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(model.isRecording ? "Done" : "Cancel") { dismiss() }
+                }
+            }
+            .confirmationDialog("Discard this recording?",
+                                isPresented: $confirmDiscard, titleVisibility: .visible) {
+                Button("Discard", role: .destructive) {
+                    model.discardRecording()
+                    dismiss()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This deletes the audio without saving it.")
+            }
+        }
+        .presentationDragIndicator(.visible)
+        // Haptics for the core action: a firm cue on start/stop, a light tick on pause/resume.
+        .sensoryFeedback(trigger: model.isRecording) { _, recording in recording ? .start : .stop }
+        .sensoryFeedback(.selection, trigger: model.isPaused)
+        // Brief on-entry confirmation of the destination.
+        .overlay(alignment: .top) {
+            if entryToast, let project = model.selectedProject {
+                Text("Recording into \(project.name)…")
+                    .font(.subheadline.weight(.medium))
+                    .padding(.horizontal, 14).padding(.vertical, 8)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .overlay(Capsule().strokeBorder(.quaternary, lineWidth: 0.5))
+                    .padding(.top, 10)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .onAppear { if model.isRecording { triggerEntryToast() } }
+        .onChange(of: model.isRecording) { _, recording in if recording { triggerEntryToast() } }
+    }
+
+    /// Flash the "Recording into [project]…" confirmation for ~1s.
+    private func triggerEntryToast() {
+        withAnimation { entryToast = true }
+        Task {
+            try? await Task.sleep(for: .seconds(1.2))
+            withAnimation { entryToast = false }
+        }
+    }
+
+    // MARK: Armed (tap to start)
+
+    private var armedContent: some View {
+        VStack(spacing: 20) {
+            Spacer()
+            Button {
+                Task { await model.startRecording() }
+            } label: {
+                Image(systemName: "record.circle.fill")
+                    .font(.system(size: 120))
+                    .foregroundStyle(.red)
+                    .symbolRenderingMode(.hierarchical)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Start recording")
+
+            Text("Tap to record").font(.headline)
+            if let project = model.selectedProject {
+                Label("Saving to \(project.name)", systemImage: "folder")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+    }
+
+    // MARK: Recording
+
+    private var recordingContent: some View {
+        VStack(spacing: 16) {
+            // Hotlink to Ask, scoped to this in-progress recording. Recording
+            // keeps running in the background while you chat.
+            HStack {
+                Button { model.askAboutCurrentRecording() } label: {
+                    Label("Ask a question", systemImage: "sparkles")
+                }
+                .buttonStyle(.glass)
+                .tint(BrandColor.royalBlue)
+                Spacer()
+            }
+            .padding(.horizontal)
+
+            // Heading: the destination is primary (consent-sensitive — make it
+            // obvious where this lands), with the recording name beneath.
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Recording into \(model.selectedProject?.name ?? "…")")
+                    .font(.title2.weight(.semibold)).lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text(model.recordingName ?? "New recording")
+                    .font(.subheadline).foregroundStyle(.secondary).contentTransition(.opacity)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal)
+
+            liveTranscriptSection
+
+            Spacer(minLength: 12)
+
+            // Bottom cluster: status · waveform · timer · controls.
+            VStack(spacing: 16) {
+                Label(model.isPaused ? "Paused" : "Recording", systemImage: "circle.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(model.isPaused ? Color.secondary : Color.red)
+                    .symbolEffect(.pulse, options: .repeating, isActive: !model.isPaused)
+
+                WaveformView(levels: model.audioLevels)
+                    .frame(height: 72).padding(.horizontal)
+
+                Text(RecordingFormat.elapsed(model.recordingElapsed))
+                    .font(.system(size: 46, weight: .light, design: .rounded))
+                    .monospacedDigit().contentTransition(.numericText())
+
+                controlsRow
+
+                // Always-visible and distinct from Stop: a mis-tapped recording
+                // must never silently land in a consent-sensitive project, so
+                // discarding is one tap away (with a confirm), not buried in a menu.
+                Button(role: .destructive) { confirmDiscard = true } label: {
+                    Label("Discard", systemImage: "trash")
+                        .font(.subheadline.weight(.medium))
+                }
+                .buttonStyle(.glass)
+                .tint(.red)
+                .accessibilityHint("Deletes this recording without saving")
+            }
+            .padding(.bottom, 20)
+        }
+        .padding(.top, 8)
+    }
+
+    /// Live transcript — hidden by default, expandable. Lags behind by design
+    /// (chunks transcribe server-side after upload).
+    private var liveTranscriptSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button { withAnimation(.snappy) { showTranscript.toggle() } } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "text.alignleft")
+                    Text("Live transcript")
+                    Spacer()
+                    Image(systemName: showTranscript ? "chevron.down" : "chevron.right").font(.caption)
+                }
+                .font(.subheadline).foregroundStyle(.secondary)
+                .padding(.horizontal)
+            }
+            .buttonStyle(.plain)
+
+            if showTranscript {
+                ScrollView {
+                    Text(model.liveTranscript.isEmpty
+                         ? "Your transcript appears here as the recording is processed. It lags a little behind."
+                         : model.liveTranscript)
+                        .font(.callout)
+                        .foregroundStyle(model.liveTranscript.isEmpty ? .tertiary : .primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+                        .padding(.horizontal)
+                }
+                .frame(maxHeight: 240)
+            }
+        }
+    }
+
+    private var controlsRow: some View {
+        HStack(spacing: 44) {
+            Button {
+                model.isPaused ? model.resumeRecording() : model.pauseRecording()
+            } label: {
+                Image(systemName: model.isPaused ? "play.fill" : "pause.fill")
+                    .font(.title).frame(width: 72, height: 72)
+            }
+            .buttonStyle(.glass).clipShape(.circle)
+            .accessibilityLabel(model.isPaused ? "Resume" : "Pause")
+
+            Button {
+                Task { await model.stopAndUpload() }
+            } label: {
+                Image(systemName: "stop.fill")
+                    .font(.title).foregroundStyle(.white)
+                    .frame(width: 72, height: 72).background(.red, in: .circle)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Stop and save")
+        }
+    }
+
+    private var micMenu: some View {
+        Menu {
+            ForEach(model.availableInputs()) { input in
+                Button {
+                    model.selectInput(uid: input.id)
+                } label: {
+                    if input.id == model.currentInputUID {
+                        Label(input.name, systemImage: "checkmark")
+                    } else {
+                        Text(input.name)
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "mic")
+        }
+        .accessibilityLabel("Choose microphone")
+    }
+}

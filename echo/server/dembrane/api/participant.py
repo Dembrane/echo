@@ -4,7 +4,7 @@ from typing import List, Optional, Annotated
 from logging import getLogger
 from datetime import datetime
 
-from fastapi import Form, APIRouter, UploadFile, HTTPException
+from fastapi import Form, Request, APIRouter, UploadFile, HTTPException
 from pydantic import BaseModel
 
 from dembrane.s3 import get_sanitized_s3_key, get_file_size_bytes_from_s3
@@ -12,12 +12,19 @@ from dembrane.utils import generate_uuid
 from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
+from dembrane.analytics import capture_event
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.monitor_stream import (
     publish_monitor_dirty,
     register_active_conversation,
 )
 from dembrane.service.project import ProjectNotFoundException
+from dembrane.visitor_session import (
+    VALID_VISITOR_STAGES,
+    mark_visitor_seen,
+    link_visitor_conversation,
+)
 from dembrane.service.conversation import (
     ConversationServiceException,
     ConversationNotFoundException,
@@ -104,6 +111,8 @@ class InitiateConversationRequestBodySchema(BaseModel):
     user_agent: Optional[str] = None
     tag_id_list: Optional[List[str]] = []
     source: Optional[str] = None
+    # The pre-conversation funnel dot this conversation grew out of.
+    visitor_id: Optional[str] = None
 
 
 class GetUploadUrlRequest(BaseModel):
@@ -159,6 +168,36 @@ def check_rate_limit(conversation_id: str) -> bool:
     return True
 
 
+# Per-IP guard for the public, unauthenticated ping endpoints. Soft-limited: over
+# the limit we drop the beacon and still return ok, so recording is never affected.
+_PING_RATE_LIMIT_WINDOW_SECONDS = 60.0
+# Sized well above a large single-IP venue (phones ping every ~3s / ~10s).
+_conversation_ping_rate_limiter = create_rate_limiter(
+    name="participant_conversation_ping",
+    capacity=6000,
+    window_seconds=_PING_RATE_LIMIT_WINDOW_SECONDS,
+)
+_visitor_ping_rate_limiter = create_rate_limiter(
+    name="participant_visitor_ping",
+    capacity=3000,
+    window_seconds=_PING_RATE_LIMIT_WINDOW_SECONDS,
+)
+# Reject absurd id lengths so a crafted id can't bloat Redis (real ids are UUIDs).
+_MAX_PING_ID_LEN = 64
+
+
+def _participant_client_ip(request: Optional[Request]) -> str:
+    """Best-effort client IP, respecting X-Forwarded-For behind the proxy."""
+    if request is None:
+        return "unknown"
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    if request.client:
+        return request.client.host
+    return "unknown"
+
+
 @ParticipantRouter.post(
     "/projects/{project_id}/conversations/initiate",
     tags=["conversation"],
@@ -178,6 +217,20 @@ async def initiate_conversation(
             project_tag_id_list=body.tag_id_list,
             source=body.source,
         )
+
+        # Link the funnel dot to its new conversation so the monitor drops it
+        # from the pre-conversation lanes immediately (best-effort).
+        if body.visitor_id and isinstance(conversation, dict):
+            await link_visitor_conversation(body.visitor_id, conversation.get("id"))
+
+        # Bust cached usage so conversation counts don't lag the cache TTL.
+        if isinstance(conversation, dict) and conversation.get("id"):
+            from dembrane.api.conversation import _invalidate_usage_cache_for_conversation
+
+            try:
+                await _invalidate_usage_cache_for_conversation(conversation["id"])
+            except Exception:
+                logger.warning("usage cache invalidation failed for new conversation")
 
         return conversation
     except ConversationNotOpenForParticipationException as e:
@@ -226,7 +279,9 @@ async def get_project(
                     if ws.get("privacy_policy_url"):
                         project["privacy_policy_url"] = ws["privacy_policy_url"]
             except Exception as e:
-                logger.warning(f"Failed to resolve workspace settings for project {project_id}: {e}")
+                logger.warning(
+                    f"Failed to resolve workspace settings for project {project_id}: {e}"
+                )
 
         # Fallback to owner's user settings if workspace didn't provide legal_basis
         if not resolved_from_workspace:
@@ -251,7 +306,9 @@ async def get_project(
                         if not project.get("privacy_policy_url"):
                             project["privacy_policy_url"] = owner.get("privacy_policy_url")
                 except Exception as e:
-                    logger.warning(f"Failed to resolve owner settings for project {project_id}: {e}")
+                    logger.warning(
+                        f"Failed to resolve owner settings for project {project_id}: {e}"
+                    )
 
         return project
 
@@ -408,6 +465,20 @@ class ConversationPingRequest(BaseModel):
     state: Optional[str] = None
     mode: Optional[str] = None  # "voice" | "text"
     screen: Optional[str] = None
+    # The pre-conversation funnel dot this recording grew out of. Lets the
+    # monitor dedupe a visitor that has graduated into a live conversation.
+    visitor_id: Optional[str] = None
+    # Live mic input level (0..1 RMS), sampled from the recorder. Lets the host
+    # see audio is really flowing and spot a silent/muted mic.
+    audio_level: Optional[float] = None
+    # Accumulated recording seconds, excluding paused gaps (host timer reads it).
+    recorded_seconds: Optional[float] = None
+    # Seconds into the current recording run (resets on resume), so the monitor
+    # can grant a ramp-up grace before flagging "audio stopped".
+    segment_seconds: Optional[float] = None
+    # Client send time (epoch ms), stamped when the ping is initiated. Lets the
+    # server drop an out-of-order ping so a late one can't clobber a newer state.
+    client_ts: Optional[int] = None
     network: Optional[ConversationNetworkTelemetry] = None
     battery: Optional[ConversationBatteryTelemetry] = None
 
@@ -423,6 +494,25 @@ def _build_ping_telemetry(body: Optional[ConversationPingRequest]) -> dict:
         telemetry["mode"] = body.mode
     if body.screen:
         telemetry["screen"] = body.screen.strip()[:40]
+    if body.visitor_id:
+        telemetry["visitor_id"] = body.visitor_id.strip()[:64]
+    if body.audio_level is not None:
+        # Clamp to [0, 1] and round; ignore NaN/inf from a misbehaving client.
+        level = body.audio_level
+        if isinstance(level, (int, float)) and level == level and abs(level) != float("inf"):
+            telemetry["audio_level"] = round(max(0.0, min(1.0, float(level))), 2)
+    if isinstance(body.client_ts, int) and body.client_ts > 0:
+        telemetry["client_ts"] = body.client_ts
+    # Recorder timers: non-negative seconds, ignore NaN/inf from a bad client.
+    for field in ("recorded_seconds", "segment_seconds"):
+        value = getattr(body, field)
+        if (
+            isinstance(value, (int, float))
+            and value == value
+            and abs(value) != float("inf")
+            and value >= 0
+        ):
+            telemetry[field] = round(float(value), 1)
     if body.network is not None:
         network = body.network.model_dump(exclude_none=True)
         if isinstance(network.get("effective_type"), str):
@@ -438,7 +528,9 @@ def _build_ping_telemetry(body: Optional[ConversationPingRequest]) -> dict:
 
 @ParticipantRouter.post("/conversations/{conversation_id}/ping", response_model=dict)
 async def ping_conversation(
-    conversation_id: str, body: Optional[ConversationPingRequest] = None
+    conversation_id: str,
+    request: Request,
+    body: Optional[ConversationPingRequest] = None,
 ) -> dict:
     """Participant liveness + telemetry beacon, called every few seconds.
 
@@ -449,21 +541,101 @@ async def ping_conversation(
     includes its project_id, we also nudge any open monitor streams so they
     refresh in near-real-time instead of waiting for the next poll tick.
     """
+    # Monitor off server-side: no host reads these, so no-op (never disturb recording).
+    if not settings.feature_flags.enable_monitor:
+        return {"ok": True}
+    # Over-limit or absurd id: drop the beacon but report ok (never disturb recording).
+    if not await _conversation_ping_rate_limiter.allow(_participant_client_ip(request)):
+        return {"ok": True}
+    if len(conversation_id) > _MAX_PING_ID_LEN:
+        return {"ok": True}
     try:
-        await mark_conversation_seen(
-            conversation_id, telemetry=_build_ping_telemetry(body) or None
-        )
+        await mark_conversation_seen(conversation_id, telemetry=_build_ping_telemetry(body) or None)
     except Exception as exc:  # noqa: BLE001
         logger.warning("Liveness ping failed for %s: %s", conversation_id, exc)
         return {"ok": False}
-    if body is not None and body.project_id:
+    if body is not None and body.project_id and len(body.project_id) <= _MAX_PING_ID_LEN:
         # Index the conversation as active so the monitor can show it the
         # instant it is initiated, before any audio chunk exists, then nudge
         # open streams to recompute.
-        await register_active_conversation(
-            body.project_id, conversation_id, score=time()
-        )
+        await register_active_conversation(body.project_id, conversation_id, score=time())
         await publish_monitor_dirty(body.project_id)
+    return {"ok": True}
+
+
+class VisitorPingRequest(BaseModel):
+    """Pre-conversation funnel beacon: where a participant is during onboarding,
+    before a conversation exists. All optional and best-effort."""
+
+    stage: Optional[str] = None
+    name: Optional[str] = None
+    tags: Optional[List[str]] = None
+    tags_preselected: Optional[bool] = None
+    scan_count: Optional[int] = None
+    device: Optional[str] = None
+    network: Optional[ConversationNetworkTelemetry] = None
+    battery: Optional[ConversationBatteryTelemetry] = None
+
+
+def _build_visitor_telemetry(body: Optional[VisitorPingRequest]) -> dict:
+    if body is None:
+        return {}
+    telemetry: dict = {}
+    if body.stage and body.stage in VALID_VISITOR_STAGES:
+        telemetry["stage"] = body.stage
+    if body.name:
+        telemetry["name"] = body.name.strip()[:120]
+    if isinstance(body.tags, list) and body.tags:
+        telemetry["tags"] = [str(t).strip()[:80] for t in body.tags[:20] if str(t).strip()]
+    if body.tags_preselected is not None:
+        telemetry["tags_preselected"] = bool(body.tags_preselected)
+    if isinstance(body.scan_count, int):
+        telemetry["scan_count"] = max(1, min(body.scan_count, 999))
+    if body.device:
+        telemetry["device"] = body.device.strip()[:60]
+    if body.network is not None:
+        network = body.network.model_dump(exclude_none=True)
+        if isinstance(network.get("effective_type"), str):
+            network["effective_type"] = network["effective_type"][:12]
+        if network:
+            telemetry["network"] = network
+    if body.battery is not None:
+        battery = body.battery.model_dump(exclude_none=True)
+        if battery:
+            telemetry["battery"] = battery
+    return telemetry
+
+
+@ParticipantRouter.post("/projects/{project_id}/visitors/{visitor_id}/ping", response_model=dict)
+async def ping_visitor(
+    project_id: str,
+    visitor_id: str,
+    request: Request,
+    body: Optional[VisitorPingRequest] = None,
+) -> dict:
+    """Pre-conversation funnel beacon (public), keyed by a client-minted
+    visitor_id. Cheap: stamps a short-lived Redis key + per-project index and
+    nudges open monitor streams. Swallows Redis errors so onboarding is never
+    disrupted."""
+    # Monitor off server-side: no host reads these, so no-op (never disturb onboarding).
+    if not settings.feature_flags.enable_monitor:
+        return {"ok": True}
+    # Over-limit or absurd id: drop the beacon but report ok (never disturb onboarding).
+    if not await _visitor_ping_rate_limiter.allow(_participant_client_ip(request)):
+        return {"ok": True}
+    if len(project_id) > _MAX_PING_ID_LEN or len(visitor_id) > _MAX_PING_ID_LEN:
+        return {"ok": True}
+    try:
+        await mark_visitor_seen(
+            project_id,
+            visitor_id,
+            telemetry=_build_visitor_telemetry(body) or None,
+            score=time(),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Visitor ping failed for %s/%s: %s", project_id, visitor_id, exc)
+        return {"ok": False}
+    await publish_monitor_dirty(project_id)
     return {"ok": True}
 
 
@@ -651,6 +823,11 @@ async def confirm_chunk_upload(
                         f"Upload may have failed or S3 is experiencing issues. Error: {e}",
                         exc_info=True,
                     )
+                    await capture_event(
+                        conversation_id,
+                        "server_chunk_missing_in_s3",
+                        {"chunk_id": body.chunk_id},
+                    )
                     raise HTTPException(
                         status_code=400,
                         detail="File not found in S3. Upload may have failed. Please try again.",
@@ -688,6 +865,11 @@ async def confirm_chunk_upload(
             logger.info(
                 f"Chunk {body.chunk_id} marked with error 'Audio not playable' "
                 f"due to small file size ({file_size} bytes)"
+            )
+            await capture_event(
+                conversation_id,
+                "server_chunk_upload_rejected",
+                {"chunk_id": body.chunk_id, "file_size": file_size},
             )
             # Update the returned chunk to include the error
             chunk["error"] = "Audio not playable"

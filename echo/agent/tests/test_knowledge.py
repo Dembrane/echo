@@ -56,16 +56,14 @@ def test_skill_catalog_requires_full_frontmatter(knowledge_dirs):
     assert "Guide setup." in knowledge_dirs.prompt_section()
 
 
-def test_prompt_section_links_published_docs_when_base_url_set(knowledge_dirs, monkeypatch):
-    monkeypatch.setenv("DOCS_BASE_URL", "https://docs.echo-next.dembrane.com/")
-    section = knowledge_dirs.prompt_section()
+def test_prompt_section_links_published_docs_when_base_url_given(knowledge_dirs):
+    section = knowledge_dirs.prompt_section(docs_base_url="https://docs.echo-next.dembrane.com/")
     # Trailing slash is normalized; the .md -> .html mapping is spelled out.
     assert "https://docs.echo-next.dembrane.com/users/host/index.html" in section
     assert "Cite the doc path you used." not in section
 
 
-def test_prompt_section_cites_bare_paths_without_base_url(knowledge_dirs, monkeypatch):
-    monkeypatch.delenv("DOCS_BASE_URL", raising=False)
+def test_prompt_section_cites_bare_paths_without_base_url(knowledge_dirs):
     section = knowledge_dirs.prompt_section()
     assert "Cite the doc path you used." in section
 

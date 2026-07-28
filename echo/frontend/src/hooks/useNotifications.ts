@@ -170,6 +170,14 @@ export function resolveNotificationHref(
 			if (event_code === "MEMBERSHIP_REQUESTED") {
 				return `/w/${refs.workspace_id}/members`;
 			}
+			// Anchor deep-links to the support section further down the general tab.
+			if (event_code?.startsWith("SUPPORT_")) {
+				const anchor =
+					event_code === "SUPPORT_ACCESS_REQUESTED"
+						? "#support-access-requests"
+						: "#support-access";
+				return `/w/${refs.workspace_id}/settings/general${anchor}`;
+			}
 			return `/w/${refs.workspace_id}/settings/general`;
 		case "NAVIGATE_BILLING":
 			// Billing lives on the payer: a workspace-scoped account links to the

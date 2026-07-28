@@ -89,6 +89,27 @@ class AgenticRunService:
             raise AgenticRunNotFoundException(f"Run not found: {run_id}")
         return rows[0]
 
+    def get_latest_for_chat(self, project_chat_id: str) -> Optional[dict[str, Any]]:
+        try:
+            with self._client_context() as client:
+                rows = client.get_items(
+                    RUN_COLLECTION,
+                    {
+                        "query": {
+                            "filter": {"project_chat_id": {"_eq": project_chat_id}},
+                            "sort": "-created_at",
+                            "limit": 1,
+                        }
+                    },
+                )
+        except DirectusBadRequest as exc:
+            logger.error("Failed to read latest run for chat %s: %s", project_chat_id, exc)
+            raise AgenticRunServiceException("Failed to load latest chat run") from exc
+
+        if not rows:
+            return None
+        return rows[0]
+
     def set_status(
         self,
         run_id: str,

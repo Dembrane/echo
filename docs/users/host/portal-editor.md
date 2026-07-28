@@ -87,6 +87,21 @@ intend. Fix the wording until it reads cleanly to someone who knows nothing abou
 project. Then grab the *QR code* and *invite link* and you're into
 [collecting conversations](./collecting-conversations.md).
 
+## Leaving fields empty: the defaults
+
+An empty field is not broken - it means the built-in default applies. When you ask about
+your settings in [Ask](./chat-and-ask.md), unset fields read as *default*. What each
+default does:
+
+- *Title* and *description* empty - participants see only the built-in recording
+  instructions, with no custom heading or intro above them.
+- *Finish text* empty - the built-in thank-you screen, unchanged.
+- *Key terms* empty - transcription runs on general vocabulary only, so your topic's
+  names and jargon are more likely to be misspelled.
+- *Reply prompt* empty - replies follow the built-in behaviour for the selected reply mode.
+
+Fill a field to override its default; clear it to go back.
+
 ## A good default portal
 
 - Clear *title*, one-line *description*, warm *finish text*.

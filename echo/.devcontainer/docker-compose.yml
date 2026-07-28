@@ -66,10 +66,13 @@ services:
 
   agent:
     build:
-      context: ../agent
-      dockerfile: Dockerfile
+      context: ../../
+      dockerfile: echo/agent/Dockerfile
     ports:
       - 8001:8001
+    env_file:
+      - path: ../agent/.env
+        required: false
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - ECHO_API_URL=http://devcontainer:8000/api

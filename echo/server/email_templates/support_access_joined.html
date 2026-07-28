@@ -1,0 +1,12 @@
+{% extends "_layout.html" %}
+{% from "_layout.html" import cta_button %}
+{% block title %}dembrane staff joined {{ workspace_name }} for support{% endblock %}
+{% block preview %}{{ staff_name }} joined {{ workspace_name }} to help with support.{% endblock %}
+{% block heading %}Staff joined for support{% endblock %}
+{% block body %}
+<p style="font-size:17px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight:400;">
+  {{ staff_name }} from dembrane joined <em style="color:#4169E1; font-style:normal;">{{ workspace_name }}</em> to help with support.
+  Their access ends automatically after 24 hours. You can follow what happens in the access history in your workspace settings.
+</p>
+{% endblock %}
+{% block cta %}{{ cta_button("View access history", settings_url) }}{% endblock %}

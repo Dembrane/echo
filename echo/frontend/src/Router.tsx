@@ -20,6 +20,7 @@ import { Verify } from "./components/participant/verify/Verify";
 import { VerifyArtefact } from "./components/participant/verify/VerifyArtefact";
 import { VerifySelection } from "./components/participant/verify/VerifySelection";
 import { ProjectAccessGuard } from "./components/project/ProjectAccessGuard";
+import { ENABLE_CANVAS, ENABLE_MONITOR } from "./config";
 import {
 	ParticipantConversationAudioRoute,
 	ParticipantConversationTextRoute,
@@ -32,12 +33,12 @@ import { ProjectMonitorRoute } from "./routes/project/ProjectMonitorRoute";
 // Tab-based routes - import directly for now to debug
 import {
 	ProjectAccessRoute,
-	ProjectUsageRoute,
 	ProjectConversationsRoute,
 	ProjectIntegrationsRoute,
 	ProjectPortalSettingsRoute,
 	ProjectSettingsRoute,
 	ProjectUploadRoute,
+	ProjectUsageRoute,
 } from "./routes/project/ProjectRoutes";
 import { SidebarPreviewLayout } from "./routes/sidebar-preview/SidebarPreviewLayout";
 import { SidebarPreviewRoute } from "./routes/sidebar-preview/SidebarPreviewRoute";
@@ -48,9 +49,9 @@ const ProjectsHomeRoute = createLazyNamedRoute(
 	"ProjectsHomeRoute",
 );
 
-const ProjectLibraryRoute = createLazyNamedRoute(
-	() => import("./routes/project/library/ProjectLibrary"),
-	"ProjectLibraryRoute",
+const LibraryRoute = createLazyNamedRoute(
+	() => import("./routes/project/library/LibraryRoute"),
+	"LibraryRoute",
 );
 
 const ProjectLibraryView = createLazyNamedRoute(
@@ -98,6 +99,10 @@ const NewChatRoute = createLazyNamedRoute(
 const ProjectReportRoute = createLazyNamedRoute(
 	() => import("./routes/project/report/ProjectReportRoute"),
 	"ProjectReportRoute",
+);
+const CanvasRoute = createLazyNamedRoute(
+	() => import("./routes/project/canvas/CanvasRoute"),
+	"CanvasRoute",
 );
 const ParticipantReport = createLazyNamedRoute(
 	() => import("./routes/participant/ParticipantReport"),
@@ -174,10 +179,14 @@ const projectRouteChildren = [
 						element: <ProjectHomeRoute />,
 						path: "home",
 					},
-					{
-						element: <ProjectMonitorRoute />,
-						path: "monitor",
-					},
+					...(ENABLE_MONITOR
+						? [
+								{
+									element: <ProjectMonitorRoute />,
+									path: "monitor",
+								},
+							]
+						: []),
 					{
 						children: [
 							{
@@ -192,17 +201,17 @@ const projectRouteChildren = [
 								element: <ProjectPortalSettingsRoute />,
 								path: "portal-editor",
 							},
-								{
-									// "Access" tab — dedicated surface for project sharing,
-									// and the list of who can actually see the project.
-									element: <ProjectAccessRoute />,
-									path: "access",
-								},
-								{
-									// "Usage" tab — dedicated surface for per-project usage.
-									element: <ProjectUsageRoute />,
-									path: "usage",
-								},
+							{
+								// "Access" tab — dedicated surface for project sharing,
+								// and the list of who can actually see the project.
+								element: <ProjectAccessRoute />,
+								path: "access",
+							},
+							{
+								// "Usage" tab — dedicated surface for per-project usage.
+								element: <ProjectUsageRoute />,
+								path: "usage",
+							},
 							{
 								// /sharing tab retired 2026-04-23 — bookmark redirect
 								// now points at the new /access tab.
@@ -246,28 +255,40 @@ const projectRouteChildren = [
 						],
 						path: "conversations/:conversationId",
 					},
-					{
-						children: [
-							{
-								element: <ProjectLibraryAspect />,
-								path: "views/:viewId/aspects/:aspectId",
-							},
-							{
-								element: <ProjectLibraryView />,
-								path: "views/:viewId",
-							},
-							{
-								element: <ProjectLibraryRoute />,
-								index: true,
-							},
-						],
-						element: <ProjectLibraryLayout />,
-						path: "library",
-					},
+					...(ENABLE_CANVAS
+						? [
+								{
+									children: [
+										{
+											element: <ProjectLibraryAspect />,
+											path: "views/:viewId/aspects/:aspectId",
+										},
+										{
+											element: <ProjectLibraryView />,
+											path: "views/:viewId",
+										},
+										{
+											element: <LibraryRoute />,
+											index: true,
+										},
+									],
+									element: <ProjectLibraryLayout />,
+									path: "library",
+								},
+							]
+						: []),
 					{
 						element: <ProjectReportRoute />,
 						path: "report",
 					},
+					...(ENABLE_CANVAS
+						? [
+								{
+									element: <CanvasRoute />,
+									path: "canvases/:canvasId",
+								},
+							]
+						: []),
 					{
 						element: <ProjectConversationsRoute />,
 						path: "conversations",
@@ -442,18 +463,18 @@ export const mainRouter = createBrowserRouter([
 								element: <HostGuidePage />,
 								path: "projects/:projectId/host-guide",
 							},
-								{
-									// Splat so the tab lives in the path
-									// (/w/:workspaceId/settings/:tab). The component parses
-									// the trailing segment.
-									element: <WorkspaceSettingsRoute />,
-									path: "settings/*",
-								},
-								{
-									// Map /w/:workspaceId/members under the same component
-									element: <WorkspaceSettingsRoute />,
-									path: "members/*",
-								},
+							{
+								// Splat so the tab lives in the path
+								// (/w/:workspaceId/settings/:tab). The component parses
+								// the trailing segment.
+								element: <WorkspaceSettingsRoute />,
+								path: "settings/*",
+							},
+							{
+								// Map /w/:workspaceId/members under the same component
+								element: <WorkspaceSettingsRoute />,
+								path: "members/*",
+							},
 							{
 								children: projectRouteChildren,
 								path: "projects",

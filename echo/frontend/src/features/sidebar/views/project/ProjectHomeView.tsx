@@ -2,24 +2,24 @@ import { Trans } from "@lingui/react/macro";
 import {
 	AppWindowIcon,
 	BookOpenIcon,
+	BooksIcon,
 	BroadcastIcon,
 	ChartLineIcon,
 	ChatCircleDotsIcon,
 	ChatCircleTextIcon,
 	FileTextIcon,
 	GearIcon,
-	GraphIcon,
 	PaintBrushIcon,
 	UsersThreeIcon,
 } from "@phosphor-icons/react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { useProjectChatsCountQuery } from "@/components/chat/hooks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
+import { ENABLE_CANVAS, ENABLE_MONITOR } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
-import { NavButton } from "../../primitives/NavButton";
 import { NavItem } from "../../primitives/NavItem";
 
 export const ProjectHomeView = () => {
@@ -27,6 +27,7 @@ export const ProjectHomeView = () => {
 		workspaceId: string;
 		projectId: string;
 	}>();
+	const { pathname } = useLocation();
 	const { workspace } = useWorkspace();
 	// Observers are read-only and have no chat access. Hide the Ask tab and skip
 	// its count query (it 403s for them); passing "" disables the query.
@@ -35,7 +36,7 @@ export const ProjectHomeView = () => {
 	// context hasn't yet synced from the URL (saves a one-tick flash).
 	const projectQuery = useProjectById({
 		projectId: projectId ?? "",
-		query: { fields: ["id", "name"] },
+		query: { fields: ["id", "name", "is_canvas_enabled"] },
 	});
 	const conversationsCountQuery = useConversationsCountByProjectId(
 		projectId ?? "",
@@ -48,6 +49,9 @@ export const ProjectHomeView = () => {
 
 	if (!workspaceId || !projectId) return null;
 	const base = `/w/${workspaceId}/projects/${projectId}`;
+	const libraryActive =
+		pathname.includes(`/projects/${projectId}/library`) ||
+		pathname.includes(`/projects/${projectId}/canvases/`);
 
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
@@ -72,23 +76,29 @@ export const ProjectHomeView = () => {
 					badge={chatsCountQuery.data || undefined}
 				/>
 			)}
-			<NavButton
-				label={<Trans>Explore</Trans>}
-				icon={GraphIcon}
-				onClick={() => undefined}
-				badge={<Trans>Planned</Trans>}
-				disabled
-			/>
 			<NavItem
 				to={`${base}/portal-editor`}
 				label={<Trans>Portal editor</Trans>}
 				icon={PaintBrushIcon}
 			/>
-			<NavItem
-				to={`${base}/monitor`}
-				label={<Trans>Monitor</Trans>}
-				icon={BroadcastIcon}
-			/>
+			{ENABLE_MONITOR && (
+				<NavItem
+					to={`${base}/monitor`}
+					label={<Trans>Monitor</Trans>}
+					icon={BroadcastIcon}
+				/>
+			)}
+			{/* Library is the canvas surface: the env flag mounts the routes,
+			    but each project also opts in via the experimental toggle in
+			    project settings (is_canvas_enabled). */}
+			{ENABLE_CANVAS && project?.is_canvas_enabled && (
+				<NavItem
+					to={`${base}/library`}
+					label={<Trans>Library</Trans>}
+					icon={BooksIcon}
+					active={libraryActive}
+				/>
+			)}
 			<NavItem
 				to={`${base}/host-guide`}
 				label={<Trans>Host guide</Trans>}

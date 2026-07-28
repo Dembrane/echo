@@ -1,6 +1,6 @@
 // @FIXME: this file must be decomposed into @/components/xxx/api/index.ts
 
-import { readItems, updateItem } from "@directus/sdk";
+import { readItems } from "@directus/sdk";
 import axios, {
 	type AxiosError,
 	type AxiosRequestConfig,
@@ -184,6 +184,7 @@ export const initiateConversation = async (payload: {
 	pin: string;
 	source: string;
 	tagIdList: string[];
+	visitorId?: string;
 }) => {
 	return apiNoAuth.post<unknown, TConversation>(
 		`/participant/projects/${payload.projectId}/conversations/initiate`,
@@ -194,6 +195,7 @@ export const initiateConversation = async (payload: {
 			source: payload.source,
 			tag_id_list: payload.tagIdList,
 			user_agent: navigator.userAgent ?? undefined,
+			visitor_id: payload.visitorId ?? undefined,
 		},
 	);
 };
@@ -366,6 +368,18 @@ export type ParticipantPingTelemetry = {
 	state?: string;
 	mode?: "voice" | "text";
 	screen?: string;
+	/** The pre-conversation funnel dot this recording grew out of. */
+	visitor_id?: string;
+	/** Live mic input level (0..1 RMS) so the host can see audio flowing. */
+	audio_level?: number;
+	/** Accumulated recording seconds, excluding paused gaps (host timer reads it). */
+	recorded_seconds?: number;
+	/** Seconds into the current recording run (resets on resume), for the monitor's
+	 * ramp-up grace so it doesn't false-alarm "audio stopped" after a resume. */
+	segment_seconds?: number;
+	/** Client-side send time (epoch ms), stamped when the ping is initiated, so
+	 * the server can drop an out-of-order ping and keep the newest state. */
+	client_ts?: number;
 	network?: {
 		online?: boolean;
 		effective_type?: string;
@@ -373,6 +387,42 @@ export type ParticipantPingTelemetry = {
 		rtt?: number;
 	};
 	battery?: { level?: number; charging?: boolean };
+};
+
+export type VisitorPingTelemetry = {
+	stage?: string;
+	name?: string;
+	tags?: string[];
+	tags_preselected?: boolean;
+	scan_count?: number;
+	device?: string;
+	network?: {
+		online?: boolean;
+		effective_type?: string;
+		downlink?: number;
+		rtt?: number;
+	};
+	battery?: { level?: number; charging?: boolean };
+};
+
+/**
+ * Pre-conversation funnel beacon. Reports where a visitor is in onboarding
+ * (scanned / terms / mic / profile) before a conversation exists, keyed by a
+ * device-persistent visitor id. Best-effort; failures are swallowed.
+ */
+export const pingVisitor = async (
+	projectId: string,
+	visitorId: string,
+	telemetry?: VisitorPingTelemetry,
+): Promise<void> => {
+	try {
+		await apiNoAuth.post(
+			`/participant/projects/${projectId}/visitors/${visitorId}/ping`,
+			telemetry ?? undefined,
+		);
+	} catch {
+		// Non-critical; the next beacon re-establishes funnel presence.
+	}
 };
 
 /**
@@ -393,6 +443,40 @@ export const pingConversation = async (
 		);
 	} catch {
 		// Non-critical; the next ping (or a chunk upload) re-establishes liveness.
+	}
+};
+
+/**
+ * Terminal "left" beacon, fired when the participant closes the tab without
+ * finishing. Uses keepalive fetch (not axios) so the request survives page
+ * unload, with JSON to match the ping endpoint and its existing CORS. Without
+ * it a graceful close would read as "offline" via the heartbeat grace instead.
+ * Best-effort: any failure is swallowed.
+ */
+export const pingConversationLeft = (
+	conversationId: string,
+	projectId?: string,
+): void => {
+	try {
+		if (typeof fetch !== "function") return;
+		void fetch(
+			`${API_BASE_URL}/participant/conversations/${conversationId}/ping`,
+			{
+				// client_ts orders this against regular pings so a late in-flight
+				// ping can't clobber "left"; stamped now (the latest moment).
+				body: JSON.stringify({
+					client_ts: Date.now(),
+					project_id: projectId,
+					state: "left",
+				}),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				keepalive: true,
+				method: "POST",
+			},
+		).catch(() => {});
+	} catch {
+		// Best-effort; a blocked unload request just falls back to "offline".
 	}
 };
 
@@ -1147,6 +1231,10 @@ export const appendAgenticRunMessage = async (
 
 export const getAgenticRun = async (runId: string) => {
 	return api.get<unknown, AgenticRun>(`/agentic/runs/${runId}`);
+};
+
+export const getLatestAgenticRunForChat = async (chatId: string) => {
+	return api.get<unknown, AgenticRun>(`/agentic/chats/${chatId}/latest-run`);
 };
 
 export const getAgenticRunEvents = async (runId: string, afterSeq = 0) => {

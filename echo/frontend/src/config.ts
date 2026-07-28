@@ -146,6 +146,17 @@ export const LEGAL_PRIVACY_URL =
 	"https://www.dembrane.com/legal/privacy" as const;
 export const LEGAL_DPA_URL = "https://www.dembrane.com/legal/DPA" as const;
 
+// The new user documentation site only exists on echo-next today
+// (docs.dembrane.com still serves the old site with different paths), so the
+// "What can Ask do?" link hides everywhere else until the docs migrate.
+export const ASK_DOCS_URL = byEnv<string | null>(
+	{
+		local: "https://docs.echo-next.dembrane.com/users/host/chat-and-ask.html",
+		next: "https://docs.echo-next.dembrane.com/users/host/chat-and-ask.html",
+	},
+	null,
+);
+
 export const COMMUNITY_SLACK_URL =
 	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
 
@@ -174,6 +185,11 @@ export const ENABLE_AGENTIC_CHAT = byEnv({ production: false }, true);
 // environments just never render or download it. Widen to more envs by adding
 // keys here (e.g. local/testing) when ready to roll out further.
 export const ENABLE_AGENTATION = byEnv({ next: true }, false);
+// Host live-monitor (page, sidebar item, project-home block) and the portal
+// beacons that feed it. Kill switch: flip to false / byEnv to disable a env.
+export const ENABLE_MONITOR = true;
+// Project Library / dynamic canvases. Off in production this release; on elsewhere.
+export const ENABLE_CANVAS = byEnv({ production: false }, true);
 
 export const getProductFeedbackUrl = (locale = "en-US") =>
 	`https://portal.dembrane.com/${locale}/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start?theme=dm-sans`;

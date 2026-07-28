@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import re
 import json
 import asyncio
+from uuid import UUID
 from typing import Any, Optional, AsyncGenerator
 from logging import getLogger
 
@@ -15,19 +17,23 @@ from dembrane.agentic_client import (
 )
 from dembrane.agentic_runtime import clear_cancel, publish_live_event, is_cancel_requested
 from dembrane.service.agentic import AgenticRunService
+from dembrane.api.feature_flags import project_canvas_enabled
 
 logger = getLogger("dembrane.agentic_worker")
 
 AGENT_CANCELLED_ERROR_CODE = "AGENT_CANCELLED"
 AGENT_CANCELLED_MESSAGE = "Run cancelled by user"
-MAX_TOOL_CALLS_PER_RUN = 20
+MAX_TOOL_CALLS_PER_TURN = 20
+MAX_TOOL_CALLS_PER_RUN = MAX_TOOL_CALLS_PER_TURN * 10
 TOOL_LIMIT_EXEMPT_TOOL_NAMES = {"sendProgressUpdate"}
 # Host-facing, in the agent's own voice. "Tool calls" are an internal concept
-# and must never leak into what the host reads — frame it as a natural stopping
-# point with an invitation to go deeper.
+# and must never leak into what the host reads.
 TOOL_LIMIT_SAFETY_MESSAGE = (
-    "I've gone as far as I can in one pass, so I'll answer from what I've found "
-    "so far. If you'd like me to look deeper, just let me know."
+    "I need to pause this pass on your request. Send it again and I'll retry with a fresh pass."
+)
+RUN_TOOL_LIMIT_SAFETY_MESSAGE = (
+    "This chat has accumulated too much work in one live session. Please start a new chat "
+    "for the next request."
 )
 AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 4
 AUTOMATIC_NUDGE_TEMPLATE = (
@@ -43,13 +49,85 @@ OVERFLOW_RETRY_WINDOW_SIZE = 24
 # (see echo/agent/agent.py `_with_placeholder_content`). It is model-input
 # only and must never surface as a host-visible assistant message.
 INTERNAL_PLACEHOLDER_CONTENTS = {"(calling tools)"}
+TRAILING_CURSOR_ARTIFACT_RE = re.compile(r"([.!?…。！？][\"')\]}»”’]*)(?:[_▁▂▃▔|¦]+)$")
+LEADING_STRAY_TOKEN_CLUSTER_RE = re.compile(
+    r"^[\s\ufeff\x00-\x1f\u4e00-\u9fff\u3400-\u4dbf]+(?=\s*[\(\[]?[A-Za-z])"
+)
+SUCCESSFULLY_RE = re.compile(r"\bsuccessfully\s+", re.IGNORECASE)
+PARENTHETICAL_PLANNING_RE = re.compile(
+    r"^\(\s*(?:i(?:'m| am| will|'ll)|we(?:'re| are| will|'ll)|checking|reading|searching|looking)\b.*\)\s*$",
+    re.IGNORECASE | re.DOTALL,
+)
+STATUS_NARRATION_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\n+")
+STATUS_NARRATION_SENTENCE_RE = re.compile(
+    r"^\s*(?:"
+    r"i\s*(?:am|'m)\s+(?:looking|checking|reviewing|reading|searching)\b.*"
+    r"|let\s+me\s+(?:look|check|review|read|search)\b.*"
+    # Bare gerund openers count as narration only without a comma clause:
+    # "Reviewing the project context." is narration, but "Looking at your
+    # transcripts, three themes stand out." is an answer and must survive.
+    r"|(?:checking|reviewing|reading|searching|looking)\b[^,]*"
+    r"|to\s+help\s+you\b.*\bi\s*(?:will|'ll)\s+"
+    r"(?:start|begin|first|now|help|guide|look|check|review|read|search)\b.*"
+    r")\s*$",
+    re.IGNORECASE | re.DOTALL,
+)
+OPTION_LINE_RE = re.compile(r"^\s*(?:[-*]|\d+[.)])\s+\S+", re.MULTILINE)
+
+
+def _is_pure_status_narration(content: str) -> bool:
+    if "?" in content or OPTION_LINE_RE.search(content):
+        return False
+    sentences = [
+        chunk.strip() for chunk in STATUS_NARRATION_SPLIT_RE.split(content) if chunk.strip()
+    ]
+    if not sentences:
+        return False
+    return all(STATUS_NARRATION_SENTENCE_RE.match(sentence) for sentence in sentences)
+
+
+def _sanitize_host_visible_assistant_content(content: str) -> Optional[str]:
+    """Normalize assistant text before it becomes visible to a host."""
+    normalized = content.strip()
+    if not normalized or normalized in INTERNAL_PLACEHOLDER_CONTENTS:
+        return None
+    normalized = LEADING_STRAY_TOKEN_CLUSTER_RE.sub("", normalized).strip()
+    removed_successfully = bool(SUCCESSFULLY_RE.match(normalized))
+    normalized = SUCCESSFULLY_RE.sub("", normalized).strip()
+    if removed_successfully and normalized:
+        normalized = normalized[0].upper() + normalized[1:]
+    if PARENTHETICAL_PLANNING_RE.match(normalized):
+        return None
+    if _is_pure_status_narration(normalized):
+        return None
+    previous = None
+    while previous != normalized:
+        previous = normalized
+        normalized = TRAILING_CURSOR_ARTIFACT_RE.sub(r"\1", normalized).strip()
+    return normalized or None
+
+
+def _summarize_request_for_safety_message(user_message: str) -> str:
+    normalized = " ".join(user_message.split())
+    if len(normalized) > 140:
+        return f"{normalized[:137].rstrip()}..."
+    return normalized
+
+
+def _build_turn_tool_limit_message(user_message: str) -> str:
+    request_summary = _summarize_request_for_safety_message(user_message)
+    if not request_summary:
+        return TOOL_LIMIT_SAFETY_MESSAGE
+    return (
+        f"I need to pause this pass on your request: \"{request_summary}\". "
+        "Send it again and I'll retry with a fresh pass."
+    )
 
 
 def _is_host_visible_assistant_content(content: str) -> bool:
     """A turn is worth showing the host only if it carries real text — not an
     empty string and not an internal placeholder token."""
-    normalized = content.strip()
-    return bool(normalized) and normalized not in INTERNAL_PLACEHOLDER_CONTENTS
+    return _sanitize_host_visible_assistant_content(content) is not None
 
 
 class AgenticRunCancelledError(Exception):
@@ -291,6 +369,8 @@ async def _build_message_history(
                     content = _coerce_non_empty_text(payload.get("content"))
             else:
                 content = _coerce_non_empty_text(payload.get("content"))
+                if content is not None:
+                    content = _sanitize_host_visible_assistant_content(content)
 
             if content is None:
                 continue
@@ -299,7 +379,9 @@ async def _build_message_history(
         try:
             last_seq = int(events[-1].get("seq") or 0)
         except (TypeError, ValueError):
-            logger.warning("Failed to parse event sequence while building history for run %s", run_id)
+            logger.warning(
+                "Failed to parse event sequence while building history for run %s", run_id
+            )
             break
 
         if last_seq <= after_seq:
@@ -319,6 +401,10 @@ async def _stream_with_overflow_retry(
     bearer_token: str,
     thread_id: str,
     message_history: list[dict[str, str]],
+    chat_id: str | None = None,
+    app_user_id: str | None = None,
+    message_id: str | None = None,
+    canvas_enabled: bool = False,
 ) -> AsyncGenerator[dict[str, Any], None]:
     attempts: list[list[dict[str, str]]] = [message_history]
     if len(message_history) > OVERFLOW_RETRY_WINDOW_SIZE:
@@ -336,6 +422,10 @@ async def _stream_with_overflow_retry(
                     bearer_token=bearer_token,
                     thread_id=thread_id,
                     message_history=attempt_history,
+                    chat_id=chat_id,
+                    app_user_id=app_user_id,
+                    message_id=message_id,
+                    canvas_enabled=canvas_enabled,
                 ):
                     emitted_events = True
                     yield event
@@ -397,25 +487,26 @@ async def _append_assistant_message(
     run_id: str,
     content: str,
     project_chat_id: str,
-) -> None:
+) -> Optional[str]:
     # Never emit or persist internal placeholders / empty turns as host-facing
     # messages — they only fragment the chat and leak the Gemini crutch text.
-    if not _is_host_visible_assistant_content(content):
-        return
+    sanitized_content = _sanitize_host_visible_assistant_content(content)
+    if sanitized_content is None:
+        return None
     await _append_event_and_publish(
         svc,
         run_id,
         "assistant.message",
-        {"content": content},
+        {"content": sanitized_content},
     )
     if not project_chat_id:
-        return
+        return sanitized_content
     try:
         await run_in_thread_pool(
             chat_service.create_message,
             project_chat_id,
             "assistant",
-            content,
+            sanitized_content,
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning(
@@ -423,6 +514,7 @@ async def _append_assistant_message(
             project_chat_id,
             exc,
         )
+    return sanitized_content
 
 
 async def _chat_distinct_id(run: dict, run_id: str) -> str:
@@ -441,6 +533,87 @@ async def _chat_distinct_id(run: dict, run_id: str) -> str:
         return directus_user_id
 
 
+async def _resolve_run_app_user_id(run: dict) -> str | None:
+    directus_user_id = str(run.get("directus_user_id") or "")
+    if not directus_user_id:
+        return None
+    try:
+        UUID(directus_user_id)
+    except ValueError:
+        return None
+    try:
+        from dembrane.app_user import get_app_user_or_raise
+
+        app_user = await get_app_user_or_raise(directus_user_id)
+        return str(app_user.get("id") or "") or None
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Failed to resolve app_user for run user %s: %s", directus_user_id, exc)
+        return None
+
+
+async def _triggering_message_id(
+    *,
+    svc: AgenticRunService,
+    run_id: str,
+    turn_seq: int,
+) -> str | None:
+    if turn_seq <= 0:
+        return None
+    events = await run_in_thread_pool(
+        svc.list_events,
+        run_id,
+        after_seq=turn_seq - 1,
+        limit=1,
+    )
+    if not events:
+        return None
+    event = events[0]
+    if event.get("event_type") != "user.message":
+        return None
+    return str(event.get("id") or "") or None
+
+
+async def _latest_user_turn_seq(*, svc: AgenticRunService, run_id: str) -> int | None:
+    event = await run_in_thread_pool(
+        svc.get_latest_event,
+        run_id,
+        event_type="user.message",
+    )
+    if event is None:
+        return None
+    try:
+        seq = int(event.get("seq") or 0)
+    except (TypeError, ValueError):
+        return None
+    return seq if seq > 0 else None
+
+
+async def _count_persisted_non_exempt_tool_starts(
+    *, svc: AgenticRunService, run_id: str
+) -> int:
+    total = 0
+    after_seq = 0
+    while True:
+        events = await run_in_thread_pool(
+            svc.list_events,
+            run_id,
+            after_seq=after_seq,
+            limit=HISTORY_PAGE_SIZE,
+        )
+        if not events:
+            return total
+        for event in events:
+            after_seq = max(after_seq, int(event.get("seq") or 0))
+            if event.get("event_type") != "on_tool_start":
+                continue
+            payload = _payload_to_dict(event.get("payload"))
+            tool_name = str(payload.get("name") or "tool")
+            if tool_name not in TOOL_LIMIT_EXEMPT_TOOL_NAMES:
+                total += 1
+        if len(events) < HISTORY_PAGE_SIZE:
+            return total
+
+
 async def process_agentic_run(
     *,
     run_id: str,
@@ -455,6 +628,12 @@ async def process_agentic_run(
     run = await run_in_thread_pool(svc.get_by_id_or_raise, run_id)
     project_chat_id = str(run.get("project_chat_id") or "")
     chat_distinct_id = await _chat_distinct_id(run, run_id)
+    app_user_id = await _resolve_run_app_user_id(run)
+    message_id = await _triggering_message_id(
+        svc=svc,
+        run_id=run_id,
+        turn_seq=turn_seq,
+    )
 
     async def _emit_chat_error(error_code: str, message: str) -> None:
         await capture_event(
@@ -468,9 +647,14 @@ async def process_agentic_run(
                 "mode": "agentic",
             },
         )
+
     latest_output: str | None = None
     total_tool_start_count = 0
     counted_tool_start_count = 0
+    persisted_non_exempt_tool_starts = await _count_persisted_non_exempt_tool_starts(
+        svc=svc,
+        run_id=run_id,
+    )
     tool_calls_without_assistant_message = 0
     nudged_tool_call_milestones: set[int] = set()
     has_sent_progress_intro = False
@@ -484,6 +668,7 @@ async def process_agentic_run(
             svc=svc,
             run_id=run_id,
         )
+        canvas_enabled = await project_canvas_enabled(project_id)
 
         async for event in _stream_with_overflow_retry(
             project_id=project_id,
@@ -491,6 +676,10 @@ async def process_agentic_run(
             bearer_token=bearer_token,
             thread_id=run_id,
             message_history=message_history,
+            chat_id=project_chat_id or None,
+            app_user_id=app_user_id,
+            message_id=message_id,
+            canvas_enabled=canvas_enabled,
         ):
             await _raise_if_cancelled(run_id, turn_seq)
             event_type = str(event.get("type") or event.get("event") or "agent.event")
@@ -510,15 +699,16 @@ async def process_agentic_run(
                     if model_has_progress_tool_call:
                         has_sent_progress_intro = True
                 else:
-                    await _append_assistant_message(
+                    persisted_content = await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
                         content=model_text,
                         project_chat_id=project_chat_id,
                     )
-                    latest_output = model_text
-                    tool_calls_without_assistant_message = 0
-                    nudged_tool_call_milestones.clear()
+                    if persisted_content is not None:
+                        latest_output = persisted_content
+                        tool_calls_without_assistant_message = 0
+                        nudged_tool_call_milestones.clear()
 
             if event_type == "on_tool_start":
                 tool_name = str(event.get("name") or "tool")
@@ -537,8 +727,7 @@ async def process_agentic_run(
                     nudged_tool_call_milestones.clear()
                 else:
                     nudge_milestone = (
-                        tool_calls_without_assistant_message
-                        // AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
+                        tool_calls_without_assistant_message // AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
                     ) * AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
                     should_emit_nudge = (
                         tool_calls_without_assistant_message >= AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
@@ -563,19 +752,39 @@ async def process_agentic_run(
                             },
                         )
 
-                if counted_tool_start_count >= MAX_TOOL_CALLS_PER_RUN:
-                    await _append_assistant_message(
+                if persisted_non_exempt_tool_starts + counted_tool_start_count >= MAX_TOOL_CALLS_PER_RUN:
+                    persisted_content = await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
-                        content=TOOL_LIMIT_SAFETY_MESSAGE,
+                        content=RUN_TOOL_LIMIT_SAFETY_MESSAGE,
+                        project_chat_id=project_chat_id,
+                    )
+                    latest_output = persisted_content
+                    tool_calls_without_assistant_message = 0
+                    nudged_tool_call_milestones.clear()
+                    break
+
+                if counted_tool_start_count >= MAX_TOOL_CALLS_PER_TURN:
+                    persisted_content = await _append_assistant_message(
+                        svc=svc,
+                        run_id=run_id,
+                        content=_build_turn_tool_limit_message(user_message),
                         project_chat_id=project_chat_id,
                     )
                     # One honest message only. The last substantive assistant
                     # message is already in the chat; don't repeat it verbatim.
-                    latest_output = TOOL_LIMIT_SAFETY_MESSAGE
+                    latest_output = persisted_content
                     tool_calls_without_assistant_message = 0
                     nudged_tool_call_milestones.clear()
                     break
+
+            content = event.get("content")
+            if event_type == "assistant.message" and isinstance(content, str):
+                sanitized_content = _sanitize_host_visible_assistant_content(content)
+                if sanitized_content is None:
+                    continue
+                event = {**event, "content": sanitized_content}
+                content = sanitized_content
 
             await _append_event_and_publish(svc, run_id, event_type, event)
 
@@ -583,21 +792,17 @@ async def process_agentic_run(
                 progress_message = _extract_progress_message_from_tool_end(event)
                 if progress_message:
                     has_sent_progress_intro = True
-                    await _append_assistant_message(
+                    persisted_content = await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
                         content=progress_message,
                         project_chat_id=project_chat_id,
                     )
-                    tool_calls_without_assistant_message = 0
-                    nudged_tool_call_milestones.clear()
+                    if persisted_content is not None:
+                        tool_calls_without_assistant_message = 0
+                        nudged_tool_call_milestones.clear()
 
-            content = event.get("content")
-            if (
-                isinstance(content, str)
-                and event_type == "assistant.message"
-                and _is_host_visible_assistant_content(content)
-            ):
+            if isinstance(content, str) and event_type == "assistant.message":
                 latest_output = content
                 tool_calls_without_assistant_message = 0
                 nudged_tool_call_milestones.clear()
@@ -617,12 +822,21 @@ async def process_agentic_run(
                         )
 
         await _raise_if_cancelled(run_id, turn_seq)
-        await run_in_thread_pool(
-            svc.set_status,
-            run_id,
-            "completed",
-            latest_output=latest_output,
-        )
+        latest_user_seq = await _latest_user_turn_seq(svc=svc, run_id=run_id)
+        if latest_user_seq and latest_user_seq > turn_seq:
+            await run_in_thread_pool(
+                svc.set_status,
+                run_id,
+                "queued",
+                latest_output=latest_output,
+            )
+        else:
+            await run_in_thread_pool(
+                svc.set_status,
+                run_id,
+                "completed",
+                latest_output=latest_output,
+            )
         await capture_event(
             chat_distinct_id,
             "server_chat_response_received",

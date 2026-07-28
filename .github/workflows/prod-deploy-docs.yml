@@ -1,0 +1,58 @@
+# Publishes the user documentation site (docs/) to docs.dembrane.com when a
+# release tag is cut — the same gitops rhythm as the product: push to main
+# deploys docs.echo-next.dembrane.com (dev-deploy-docs.yml), a v*.*.* tag
+# deploys production.
+#
+# Built with the separately-tracked folder2website tool (same build as the
+# echo-next docs, different base URL). Deploys the static output to the
+# Vercel project that owns docs.dembrane.com via the Build Output API, so
+# no framework/build settings on the project can interfere.
+#
+# Required secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID_DOCS.
+name: prod-deploy-docs
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DOCS }}
+
+on:
+  workflow_dispatch:
+  push:
+    tags: [ "v*.*.*" ]
+
+concurrency:
+  group: prod-deploy-docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prod-deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # folder2website reads git history for page metadata
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Build docs site
+        run: bunx github:spashii/folder2website#main docs --out _docs-site --base-url https://docs.dembrane.com
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Stage prebuilt static output
+        run: |
+          mkdir -p .vercel/output/static
+          cp -R _docs-site/. .vercel/output/static/
+          echo '{"version": 3}' > .vercel/output/config.json
+
+      - name: Deploy to Vercel (docs.dembrane.com)
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

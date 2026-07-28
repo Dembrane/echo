@@ -12,26 +12,105 @@ from litellm.exceptions import ContentPolicyViolationError
 
 from dembrane.s3 import get_signed_url
 from dembrane.llms import MODELS, get_completion_kwargs
-from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
+from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.audio_utils import (
     sanitize_filename_component,
     merge_multiple_audio_files_and_save_to_s3,
 )
+from dembrane.cache_utils import cache_get_json, cache_set_json
 from dembrane.reply_utils import generate_reply_for_conversation
-from dembrane.api.stateless import generate_summary, generate_conversation_title
+from dembrane.api.stateless import (
+    generate_summary,
+    generate_conversation_title,
+    generate_conversation_tag_ids,
+)
 from dembrane.async_helpers import safe_gather, run_in_thread_pool
 from dembrane.stream_status import stream_with_status
 from dembrane.api.exceptions import (
     NoContentFoundException,
     ConversationNotFoundException,
 )
-from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.directus_async import async_directus
+from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 from dembrane.service.conversation import ConversationService
 
 logger = getLogger("api.conversation")
 ConversationRouter = APIRouter(tags=["conversation"])
+
+
+def _list_project_tags_for_assignment(project_id: str) -> list[dict[str, str]]:
+    rows = directus.get_items(
+        "project_tag",
+        {
+            "query": {
+                "filter": {"project_id": {"_eq": project_id}},
+                "fields": ["id", "text", "sort"],
+                "sort": ["sort"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return []
+
+    tags: list[dict[str, str]] = []
+    for row in rows:
+        tag_id = row.get("id")
+        text = row.get("text")
+        if isinstance(tag_id, str) and isinstance(text, str) and text.strip():
+            tags.append({"id": tag_id, "text": text.strip()})
+    return tags
+
+
+def _get_current_conversation_tag_ids(conversation_id: str) -> set[str]:
+    rows = directus.get_items(
+        "conversation_project_tag",
+        {
+            "query": {
+                "filter": {"conversation_id": {"_eq": conversation_id}},
+                "fields": ["id", "project_tag_id.id"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return set()
+
+    tag_ids: set[str] = set()
+    for row in rows:
+        tag_id = row.get("project_tag_id")
+        if isinstance(tag_id, dict):
+            tag_id = tag_id.get("id")
+        if isinstance(tag_id, str):
+            tag_ids.add(tag_id)
+    return tag_ids
+
+
+def _add_conversation_tags(conversation_id: str, tag_ids: list[str]) -> list[str]:
+    current_tag_ids = _get_current_conversation_tag_ids(conversation_id)
+    added: list[str] = []
+    for tag_id in tag_ids:
+        if tag_id in current_tag_ids:
+            continue
+        try:
+            directus.create_item(
+                "conversation_project_tag",
+                {
+                    "conversation_id": conversation_id,
+                    "project_tag_id": tag_id,
+                },
+            )
+            added.append(tag_id)
+            current_tag_ids.add(tag_id)
+        except Exception:  # noqa: BLE001
+            logger.exception(
+                "conversation_project_tag create failed conv=%s tag=%s",
+                conversation_id,
+                tag_id,
+            )
+    return added
 
 
 async def _invalidate_usage_cache_for_conversation(conversation_id: str) -> None:
@@ -154,13 +233,12 @@ async def raise_if_conversation_not_found_or_not_authorized(
     conversation_id: str,
     auth: DependencyDirectusSession,
     require: Optional[str] = None,
-) -> None:
+) -> dict:
     # v2 access gate, shared with the BFF layer (resolve_conversation_access
     # already enforces conversation:read; `require` adds a stricter policy
     # for mutations). Directus row ACL is admin-only post-lockdown, so all
     # data reads/writes after this gate MUST use the admin client; a
     # user-token client 403s on every collection.
-    from dembrane.directus_async import async_directus
     from dembrane.api.v2.bff._access import resolve_conversation_access
 
     # Staff admins bypass the app-layer model (they may have no app_user
@@ -169,11 +247,12 @@ async def raise_if_conversation_not_found_or_not_authorized(
         conversation = await async_directus.get_item("conversation", conversation_id)
         if not conversation or conversation.get("deleted_at"):
             raise HTTPException(status_code=404, detail="Conversation not found")
-        return
+        return conversation
 
-    access, _ = await resolve_conversation_access(conversation_id, auth)
+    access, conv = await resolve_conversation_access(conversation_id, auth)
     if require:
         access.require(require)
+    return conv
 
 
 def return_url_or_redirect(
@@ -459,8 +538,7 @@ async def get_conversation_emails(
     )
 
 
-# Initialize the cache
-token_count_cache = CacheWithExpiration(ttl=500)
+TOKEN_COUNT_TTL_SECONDS = 500
 
 
 @ConversationRouter.get("/{conversation_id}/token-count")
@@ -468,25 +546,144 @@ async def get_conversation_token_count(
     conversation_id: str,
     auth: DependencyDirectusSession,
 ) -> int:
-    await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+    conversation = await raise_if_conversation_not_found_or_not_authorized(
+        conversation_id, auth
+    )
 
-    # Try to get the token count from the cache
-    cached_count = await token_count_cache.get(conversation_id)
-    if cached_count is not None:
+    cache_key = f"tokcount:{conversation_id}"
+    cached_count = await cache_get_json(cache_key)
+    if isinstance(cached_count, int):
         return cached_count
 
-    # If not in cache, calculate the token count
+    # Persisted layer under Redis: cleared whenever transcript text changes.
+    stored = conversation.get("token_count") if isinstance(conversation, dict) else None
+    if isinstance(stored, int):
+        await cache_set_json(cache_key, stored, TOKEN_COUNT_TTL_SECONDS)
+        return stored
+
     transcript = await get_conversation_transcript(conversation_id, auth)
 
-    token_count = token_counter(
+    # CPU-bound tokenization must not block the event loop.
+    token_count = await run_in_thread_pool(
+        token_counter,
         messages=[{"role": "user", "content": transcript}],
         model=get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
     )
 
-    # Store the result in the cache
-    await token_count_cache.set(conversation_id, token_count)
+    await cache_set_json(cache_key, token_count, TOKEN_COUNT_TTL_SECONDS)
+    # Persist to the durable column only if the transcript hasn't started
+    # changing under us. A concurrent new chunk clears the column and flips
+    # is_all_chunks_transcribed to False; writing our now-stale count there
+    # would outlive the 500s Redis bound (the column has no TTL). Re-read
+    # right before the write so the race window is a few ms, not the whole
+    # tokenize. When it is mid-change, the finalize warm-up recomputes.
+    try:
+        fresh = await async_directus.get_item(
+            "conversation",
+            conversation_id,
+            params={"fields": "is_all_chunks_transcribed"},
+        )
+        if isinstance(fresh, dict) and fresh.get("is_all_chunks_transcribed"):
+            await async_directus.update_item(
+                "conversation", conversation_id, {"token_count": token_count}
+            )
+    except Exception:  # noqa: BLE001 - persistence is best-effort
+        logger.warning("failed to persist token_count for %s", conversation_id)
 
     return token_count
+
+
+async def get_conversation_token_counts_bulk(
+    conversation_ids: list[str],
+    auth: DirectusSession,
+    project_id: str,
+) -> dict[str, int]:
+    """Token counts for many conversations at once.
+
+    Caller contract: the parent resource (chat) is already authorized, and
+    project_id is that resource's project. The column shortcut is scoped to
+    project_id + not-deleted so a caller can only bulk-read counts for
+    conversations in the project it authorized; any id outside that scope
+    (or a soft-deleted one) falls through to the per-id path, which
+    re-checks access. Failed ids are omitted; callers decide the fallback.
+
+    Note: the Redis fast-path serves cached counts without re-scoping, but
+    an entry only exists because some authorized read already computed it,
+    so the residual is a cached in-scope value, never fresh cross-tenant
+    disclosure.
+    """
+    result: dict[str, int] = {}
+    if not conversation_ids:
+        return result
+
+    cached = await asyncio.gather(
+        *(cache_get_json(f"tokcount:{cid}") for cid in conversation_ids)
+    )
+    missing = []
+    for cid, val in zip(conversation_ids, cached, strict=True):
+        if isinstance(val, int):
+            result[cid] = val
+        else:
+            missing.append(cid)
+    if not missing:
+        return result
+
+    to_compute = list(missing)
+    # Scope the column shortcut to the authorized project; out-of-scope ids
+    # get computed via the fully-authorized per-id path below instead.
+    rows = (
+        await async_directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {
+                        "id": {"_in": missing},
+                        "project_id": {"_eq": project_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id", "token_count"],
+                    "limit": -1,
+                }
+            },
+        )
+        if project_id
+        else None
+    )
+    if isinstance(rows, list):
+        found: dict[str, int] = {}
+        for row in rows:
+            tc = row.get("token_count")
+            if row.get("id") and isinstance(tc, int):
+                found[row["id"]] = tc
+        if found:
+            await asyncio.gather(
+                *(
+                    cache_set_json(f"tokcount:{cid}", tc, TOKEN_COUNT_TTL_SECONDS)
+                    for cid, tc in found.items()
+                )
+            )
+            result.update(found)
+            to_compute = [cid for cid in missing if cid not in found]
+
+    if to_compute:
+        # Bounded: an unbounded gather of cold computes stampedes Directus
+        # (observed transient failures at 150 concurrent on select-all).
+        compute_sem = asyncio.Semaphore(10)
+
+        async def _bounded(cid: str) -> int:
+            async with compute_sem:
+                return await get_conversation_token_count(cid, auth)
+
+        computed = await asyncio.gather(
+            *(_bounded(cid) for cid in to_compute),
+            return_exceptions=True,
+        )
+        for cid, value in zip(to_compute, computed, strict=True):
+            if isinstance(value, BaseException):
+                logger.warning("token count failed for %s: %s", cid, value)
+                continue
+            result[cid] = value
+    return result
 
 
 class GetReplyBodySchema(BaseModel):
@@ -564,6 +761,7 @@ async def summarize_conversation(
                 "filter": {"id": {"_eq": conversation_id}},
                 "fields": [
                     "id",
+                    "title",
                     "project_id.id",
                     "project_id.language",
                     "project_id.enable_ai_title_and_tags",
@@ -572,6 +770,9 @@ async def summarize_conversation(
             },
         },
     )
+
+    # If the user has manually set/edited a custom title, pass it down as optional summary context.
+    conversation_title = conversation_data_result[0].get("title") if conversation_data_result else None
 
     awaitable_list = [
         get_conversation_transcript(conversation_id, auth),
@@ -597,6 +798,12 @@ async def summarize_conversation(
     language = conversation_data["project_id"]["language"]
 
     if transcript_str == "":
+        if _conv and (_conv.get("is_all_chunks_transcribed") or _conv.get("is_finished")):
+            await async_directus.update_item(
+                "conversation",
+                conversation_id,
+                {"summary": "[No transcript available]"},
+            )
         return {
             "status": "success",
             "message": "Transcript is empty, so no summary was generated",
@@ -608,17 +815,19 @@ async def summarize_conversation(
             language if language else "en",
             project_context_str,
             verified_artifacts,
+            conversation_title,
         )
 
         # Prepare update data with summary
         update_data: dict = {"summary": summary}
         title = None
+        assigned_tag_ids: list[str] = []
 
         # Generate title if AI title generation is enabled for this project
         project_data = conversation_data["project_id"]
-        enable_ai_title = project_data.get("enable_ai_title_and_tags", False)
+        enable_ai_title_and_tags = project_data.get("enable_ai_title_and_tags", False)
 
-        if enable_ai_title and summary:
+        if enable_ai_title_and_tags and summary:
             try:
                 # Fetch recent titles for style matching
                 existing_titles = await run_in_thread_pool(
@@ -644,6 +853,39 @@ async def summarize_conversation(
                 logger.error(f"Error generating title for conversation {conversation_id}: {e}")
                 # Continue without title if generation fails
 
+            try:
+                project_tags = await run_in_thread_pool(
+                    _list_project_tags_for_assignment,
+                    project_data["id"],
+                )
+                if project_tags:
+                    tag_ids = await run_in_thread_pool(
+                        generate_conversation_tag_ids,
+                        summary,
+                        language if language else "en",
+                        project_tags,
+                    )
+                    if tag_ids:
+                        assigned_tag_ids = await run_in_thread_pool(
+                            _add_conversation_tags,
+                            conversation_id,
+                            tag_ids,
+                        )
+                        if assigned_tag_ids:
+                            logger.info(
+                                "Assigned draft tags for conversation %s: %s",
+                                conversation_id,
+                                assigned_tag_ids,
+                            )
+                else:
+                    logger.info(
+                        "Skipping draft tag assignment for conversation %s: project has no tags",
+                        conversation_id,
+                    )
+            except Exception as e:
+                logger.error(f"Error assigning draft tags for conversation {conversation_id}: {e}")
+                # Continue without tags if assignment fails
+
         await run_in_thread_pool(
             directus.update_item,
             "conversation",
@@ -658,6 +900,8 @@ async def summarize_conversation(
         }
         if title:
             response["title"] = title
+        if assigned_tag_ids:
+            response["tag_ids"] = assigned_tag_ids
         return response
 
 

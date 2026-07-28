@@ -1,6 +1,6 @@
 ---
 title: Chat & Ask
-description: Ask questions across your conversations and get answers with cited sources, using built-in or your own language model.
+description: Ask questions across your conversations and get answers with cited sources - one assistant that searches, reads, and shows its work.
 audience: host
 ---
 
@@ -18,22 +18,57 @@ Treat it as a deep-dive, not a one-shot search:
 
 It's best for comparing viewpoints, finding quotes, and testing a hunch.
 
-## Modes
+## One question bar
 
-Click *Ask question* in a project, then choose a *mode* - it sets how dembrane reads your
-conversations:
+> [!NOTE]
+> The new Ask experience is live on *[dembrane next](./dembrane-next.md)* and reaches
+> production with the next release.
 
-- *Overview* (beta) - reads across all conversations in the project for themes and patterns.
-  Best for open-ended exploration; it paraphrases rather than quoting.
-- *Specific Details* - you pick the conversations (or select all), optionally filtering by
-  [tag](./conversations-and-transcripts.md#tags), and answers come back with exact quotes and
-  citations. Best when you want precision: one session, one cohort, exact wording. If you're
-  already viewing one conversation when you start, it's selected for you.
-- *Agentic* (*[dembrane next only](./dembrane-next.md)*) - multi-step analysis with live tool
-  execution: it can search across conversations, fetch transcripts, and chain steps to answer
-  harder questions. A preview feature, not in production yet.
+Click *Ask question* in a project and Ask opens as a home for all your chats, with one
+input: *Where would you like to start?* Press Enter and your question becomes a new chat;
+typing in the same bar also filters your earlier chats, so it finds an old thread as easily
+as it starts a new one. A *Templates* menu inserts a saved prompt.
 
-Specific Details is the usual move once a project gets large and you want precision over breadth.
+The assistant works in steps: it searches conversations, reads
+[transcripts](./conversations-and-transcripts.md), and chains what it finds to answer harder
+questions (*"find every conversation where someone disagreed with the proposal and tell me
+why"*). While it works you see its progress step by step, and a *Stop* control replaces
+*Send* so you can halt a run that's going the wrong way. Answers cite their sources by name -
+*"Maria's conversation"*, *"Maria's transcript excerpt"* - and each link jumps to the exact
+place in the transcript.
+
+## The classic chat: Specific Details
+
+Prefer to pick the conversations yourself? One click on *Prefer the old chat? Start a
+Specific Details chat* starts a classic chat: you choose the conversations (or select all),
+optionally filtering by [tag](./conversations-and-transcripts.md#tags), and answers come
+back in one pass with exact quotes and citations. Best when every answer should come from
+the same fixed set: one session, one cohort, exact wording. If you're already viewing one
+conversation when you start, it's selected for you.
+
+The old *Overview* mode has been retired: its job - themes and patterns across all
+conversations - is covered by simply asking the assistant.
+
+## More than analysis
+
+Beyond answering questions, the assistant can:
+
+- *Check what's live* - ask *"is anyone recording right now?"* and it reads the same live
+  status as the [monitor](./recording.md#watch-it-live-the-monitor).
+- *Read earlier chats* in the project (your colleagues' private chats stay private).
+- *Answer "how do I" questions* from this documentation, citing the page it used.
+- *Suggest settings changes* - it never edits your project itself; every change arrives as a
+  proposal you review and apply (or reject).
+- *Log a question with the dembrane team* when you're stuck - see
+  [getting help](../users/host/getting-help.md).
+- *Remember* - it can save notes about your preferences and the project so the next chat
+  starts smarter. You can see and remove everything it remembers: your own notes under
+  *Settings → Assistant*, project notes in project settings, workspace notes in
+  [workspace settings](./organisations-and-workspaces.md). The assistant writes these notes;
+  you can't edit them, only remove them.
+
+Hosts steer it with standing guidance too: the project *context* field, and a workspace-wide
+*assistant context* in workspace settings that reaches every project chat in the workspace.
 
 ## Cited sources
 
@@ -94,5 +129,6 @@ Most teams use all three: explore with Ask, see the landscape in the library, pu
 - [Tiers & billing](./tiers-and-billing.md) - Free limits, Innovator BYO, Changemaker+ built-in analysis.
 - [MCP & bring-your-own-LLM](./mcp-and-bring-your-own-llm.md) - connect your own model on
   Innovator (coming soon).
-- [dembrane next](./dembrane-next.md) - preview features like agentic mode, not in production yet.
+- [dembrane next](./dembrane-next.md) - preview features like the new Ask experience, not in
+  production yet.
 - For a host's walkthrough, see [chat & Ask for hosts](../users/host/chat-and-ask.md).

@@ -10,6 +10,7 @@ from httpx import AsyncClient, ASGITransport
 from fastapi import FastAPI, HTTPException
 
 import dembrane.api.agentic as agentic_api
+from dembrane.api import feature_flags as feature_flags_module
 from dembrane.api.v2.bff import _access as bff_access
 from tests.agentic.fakes import InMemoryDirectus
 from dembrane.api.agentic import AgenticRouter
@@ -56,7 +57,9 @@ class _FakeChatService:
         self.created_messages.append(message)
         return message
 
-    def get_by_id_or_raise(self, chat_id: str, with_used_conversations: bool = False) -> dict[str, Any]:  # noqa: ARG002
+    def get_by_id_or_raise(
+        self, chat_id: str, with_used_conversations: bool = False
+    ) -> dict[str, Any]:  # noqa: ARG002
         chat = self.chats.get(chat_id)
         if chat is None:
             raise ValueError("chat not found")
@@ -222,6 +225,15 @@ async def _build_api_client(
 
     monkeypatch.setattr(bff_access, "resolve_project_access", _fake_resolve_project_access)
 
+    # Canvas routes gate on the per-project beta toggle; tests opt in by
+    # default and re-patch to False to exercise the 404 path.
+    async def _fake_project_canvas_enabled(project_id: str) -> bool:  # noqa: ARG001
+        return True
+
+    monkeypatch.setattr(
+        feature_flags_module, "project_canvas_enabled", _fake_project_canvas_enabled
+    )
+
     # Hermetic seams: these hit Directus over the network in production.
     from dembrane import free_tier as free_tier_module
     from dembrane.api.v2 import middleware as middleware_module
@@ -237,6 +249,11 @@ async def _build_api_client(
     )
     monkeypatch.setattr(free_tier_module, "resolve_project_tier", _fake_resolve_project_tier)
     monkeypatch.setattr(agentic_api, "agentic_run_service", run_service)
+
+    async def _fake_current_goal(_project_id: str) -> None:
+        return None
+
+    monkeypatch.setattr(agentic_api, "get_current_project_goal_content", _fake_current_goal)
     if chat_service is not None:
         monkeypatch.setattr(agentic_api, "chat_service", chat_service)
 
@@ -297,7 +314,6 @@ async def _build_api_client(
         yield client
 
 
-
 def _make_session(
     *,
     user_id: str,
@@ -349,9 +365,50 @@ async def test_create_run_persists_user_message_without_dispatch(monkeypatch) ->
     assert events[0]["payload"]["content"] == "hello"
     assert events[0]["payload"]["agent_prompt_content"] == (
         "Project Name: Project project-1\n"
-        "Project Context: Context for project-1\n\n"
+        "Workspace Context: (none)\n"
+        "Project Context: Context for project-1\n"
+        "Project Goal: (none)\n\n"
         "User Message: hello"
     )
+
+
+def test_initial_prompt_includes_workspace_context() -> None:
+    from dembrane.api.agentic import _build_initial_agent_prompt_content
+
+    content = _build_initial_agent_prompt_content(
+        project_name="Street interviews",
+        project_context="Ask about the market",
+        user_message="hello",
+        workspace_context="Municipality of Utrecht listening programme",
+    )
+    assert "Workspace Context: Municipality of Utrecht listening programme" in content
+    assert content.index("Workspace Context:") < content.index("Project Context:")
+    assert "Project Goal: (none)" in content
+
+
+def test_initial_prompt_includes_project_goal_after_project_context() -> None:
+    from dembrane.api.agentic import _build_initial_agent_prompt_content
+
+    content = _build_initial_agent_prompt_content(
+        project_name="Street interviews",
+        project_context="Ask about the market",
+        project_goal="Surface practical concerns by neighbourhood.",
+        user_message="hello",
+    )
+    assert "Project Goal: Surface practical concerns by neighbourhood." in content
+    assert content.index("Project Context:") < content.index("Project Goal:")
+
+
+def test_initial_prompt_defaults_workspace_context_to_none_marker() -> None:
+    from dembrane.api.agentic import _build_initial_agent_prompt_content
+
+    content = _build_initial_agent_prompt_content(
+        project_name="Street interviews",
+        project_context=None,
+        user_message="hello",
+    )
+    assert "Workspace Context: (none)" in content
+    assert "Project Goal: (none)" in content
 
 
 @pytest.mark.asyncio
@@ -418,9 +475,15 @@ async def test_create_run_rejects_missing_passthrough_token(monkeypatch) -> None
 
 
 @pytest.mark.asyncio
-async def test_append_message_rejects_inflight_run(monkeypatch) -> None:
+async def test_append_message_persists_during_running_run_without_requeue(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
-    run = run_service.create_run(project_id="project-1", directus_user_id="user-1", status="running")
+    run = run_service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+        status="running",
+    )
+    fake_chat_service = _FakeChatService()
     session = _make_session(user_id="user-1")
 
     async with _build_api_client(
@@ -428,13 +491,26 @@ async def test_append_message_rejects_inflight_run(monkeypatch) -> None:
         session=session,
         run_service=run_service,
         owner_by_project_id={"project-1": "user-1"},
+        chat_service=fake_chat_service,
     ) as client:
         response = await client.post(
             f"/api/agentic/runs/{run['id']}/messages",
             json={"message": "hello-again"},
         )
 
-    assert response.status_code == 409
+    assert response.status_code == 200
+    assert response.json()["status"] == "running"
+    assert fake_chat_service.created_messages == [
+        {
+            "id": "msg-1",
+            "project_chat_id": "chat-1",
+            "message_from": "user",
+            "text": "hello-again",
+        }
+    ]
+    events = run_service.list_events(run["id"])
+    assert events[-1]["event_type"] == "user.message"
+    assert events[-1]["payload"]["content"] == "hello-again"
 
 
 @pytest.mark.asyncio
@@ -561,6 +637,73 @@ async def test_append_message_skips_title_generation_for_named_chat(monkeypatch)
 
 
 @pytest.mark.asyncio
+async def test_get_latest_chat_run_returns_newest_authorized_run(monkeypatch) -> None:
+    directus = InMemoryDirectus()
+    run_service = AgenticRunService(directus_client=directus)
+    older = run_service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+        status="completed",
+    )
+    newer = run_service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+        status="completed",
+    )
+    other_chat = run_service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-2",
+        directus_user_id="user-1",
+        status="completed",
+    )
+    directus.update_item(
+        "project_agentic_run",
+        older["id"],
+        {"created_at": "2026-07-08T09:00:00Z"},
+    )
+    directus.update_item(
+        "project_agentic_run",
+        newer["id"],
+        {"created_at": "2026-07-08T10:00:00Z"},
+    )
+    directus.update_item(
+        "project_agentic_run",
+        other_chat["id"],
+        {"created_at": "2026-07-08T11:00:00Z"},
+    )
+    session = _make_session(user_id="user-1")
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/chats/chat-1/latest-run")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == newer["id"]
+
+
+@pytest.mark.asyncio
+async def test_get_latest_chat_run_returns_404_when_none_exists(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/chats/chat-1/latest-run")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
 async def test_post_stream_claims_when_lease_acquired(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     run = run_service.create_run(project_id="project-1", directus_user_id="user-1", status="queued")
@@ -633,13 +776,20 @@ async def test_post_stream_uses_hidden_agent_prompt_content_when_available(monke
 @pytest.mark.asyncio
 async def test_post_stream_does_not_claim_when_lease_not_acquired(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
-    run = run_service.create_run(project_id="project-1", directus_user_id="user-1", status="running")
+    run = run_service.create_run(
+        project_id="project-1", directus_user_id="user-1", status="running"
+    )
     run_service.append_event(run["id"], "user.message", {"content": "hello"})
     run_service.set_status(run["id"], "completed", latest_output="hello")
 
     lease_calls: list[dict[str, Any]] = []
     start_calls: list[dict[str, Any]] = []
     session = _make_session(user_id="user-1")
+
+    async def _finite_stream(run_id: str, after_seq: int = 0):  # noqa: ARG001
+        yield "event: heartbeat\ndata: {}\n\n"
+
+    monkeypatch.setattr(agentic_api, "_stream_live_events", _finite_stream)
 
     async with _build_api_client(
         monkeypatch=monkeypatch,
@@ -654,6 +804,49 @@ async def test_post_stream_does_not_claim_when_lease_not_acquired(monkeypatch) -
 
     assert response.status_code == 200
     assert len(start_calls) == 0
+
+
+@pytest.mark.asyncio
+async def test_post_stream_does_not_claim_new_turn_while_run_is_running(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    run = run_service.create_run(
+        project_id="project-1", directus_user_id="user-1", status="running"
+    )
+    run_service.append_event(run["id"], "user.message", {"content": "current"})
+    run_service.append_event(run["id"], "user.message", {"content": "queued-follow-up"})
+
+    lease_calls: list[dict[str, Any]] = []
+    start_calls: list[dict[str, Any]] = []
+    session = _make_session(user_id="user-1")
+
+    async def _fake_acquire_turn_lease(
+        run_id: str,
+        turn_seq: int,
+        owner: str,
+        ttl_seconds: int,
+    ) -> bool:
+        lease_calls.append(
+            {
+                "run_id": run_id,
+                "turn_seq": turn_seq,
+                "owner": owner,
+                "ttl_seconds": ttl_seconds,
+            }
+        )
+        return True
+
+    async def _fake_start_claimed_turn(**kwargs: Any) -> None:
+        start_calls.append(kwargs)
+
+    monkeypatch.setattr(agentic_api, "agentic_run_service", run_service)
+    monkeypatch.setattr(agentic_api, "acquire_turn_lease", _fake_acquire_turn_lease)
+    monkeypatch.setattr(agentic_api, "_start_claimed_turn", _fake_start_claimed_turn)
+
+    response = await agentic_api.stream_run(run["id"], session)
+
+    assert response.status_code == 200
+    assert lease_calls == []
+    assert start_calls == []
 
 
 @pytest.mark.asyncio
@@ -738,6 +931,833 @@ async def test_get_project_settings_returns_whitelisted_fields(monkeypatch) -> N
 
     assert set(payload.keys()) == set(ProjectUpdate.model_fields)
     assert payload["name"] == "Project project-1"
+    assert "methodology_version_id" in payload
+
+
+@pytest.mark.asyncio
+async def test_agentic_goal_endpoint_requires_token_and_project_access(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    async def _revisions(project_id: str) -> list[dict[str, Any]]:
+        assert project_id == "project-1"
+        return [{"id": "goal-1", "content": "Find concerns.", "set_by": "host-edit"}]
+
+    monkeypatch.setattr(agentic_api, "list_project_goal_revisions", _revisions)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/goal")
+
+    assert response.status_code == 200
+    assert response.json()["current"]["id"] == "goal-1"
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1", access_token=None),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/goal")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_agentic_methodologies_endpoint_uses_project_workspace(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    async def _workspace(project_id: str) -> str:
+        assert project_id == "project-1"
+        return "ws-1"
+
+    async def _methodologies(*, workspace_id: str, directus_user_id: str) -> list[dict[str, Any]]:
+        assert workspace_id == "ws-1"
+        assert directus_user_id == "user-1"
+        return [{"id": "m1", "name": "dembrane", "latest_version": {"id": "v1"}}]
+
+    monkeypatch.setattr(agentic_api, "_resolve_workspace_id_for_project", _workspace)
+    monkeypatch.setattr(agentic_api, "list_visible_methodologies", _methodologies)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/methodologies")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "project_id": "project-1",
+        "methodologies": [{"id": "m1", "name": "dembrane", "latest_version": {"id": "v1"}}],
+    }
+
+
+@pytest.mark.asyncio
+async def test_agentic_list_canvases_requires_host_token_and_project_access(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    async def _list(project_id: str) -> list[dict[str, Any]]:
+        assert project_id == "project-1"
+        return [
+            {
+                "id": "canvas-1",
+                "name": "Pulse wall",
+                "kind": "canvas",
+                "created_at": "2026-07-07T10:00:00Z",
+                "latest_generation_at": None,
+                "loop": {"status": "active", "expires_at": "later", "cadence_minutes": 5},
+            }
+        ]
+
+    monkeypatch.setattr(agentic_api, "list_canvas_summaries", _list)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/canvases")
+
+    assert response.status_code == 200
+    assert response.json()[0]["id"] == "canvas-1"
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1", access_token=None),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/canvases")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_agentic_canvas_activity_returns_recent_loop_runs_and_caps_limit(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        def __init__(self) -> None:
+            self.run_limits: list[int] = []
+
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:
+            assert collection == "project_chat"
+            assert item_id == "chat-1"
+            return {"id": "chat-1", "project_id": {"id": "project-1"}, "user_created": "user-1"}
+
+        async def get_items(self, collection: str, params: dict[str, Any]) -> list[dict[str, Any]]:
+            query = params["query"]
+            if collection == "agent_loop":
+                assert query["filter"] == {"project_id": {"_eq": "project-1"}}
+                return [
+                    {"id": "loop-1", "report_id": "canvas-1", "name": None},
+                    {"id": "loop-2", "report_id": None, "name": "Loose loop"},
+                ]
+            if collection == "project_report":
+                assert query["filter"] == {"id": {"_in": ["canvas-1"]}}
+                return [{"id": "canvas-1", "user_instructions": "Pulse wall"}]
+            if collection == "agent_loop_run":
+                self.run_limits.append(query["limit"])
+                assert query["sort"] == ["-started_at"]
+                loop_id = query["filter"]["loop_id"]["_eq"]
+                if loop_id == "loop-1":
+                    return [
+                        {
+                            "status": "ok",
+                            "detail": "backfill: 5 conversations",
+                            "started_at": "2026-07-09T12:00:00Z",
+                            "ignored": "field",
+                        },
+                        {
+                            "status": "no_op",
+                            "detail": "No fresh quotes",
+                            "started_at": "2026-07-09T11:55:00Z",
+                        },
+                    ]
+                return []
+            raise AssertionError(f"unexpected collection {collection}")
+
+    fake_directus = _AsyncDirectus()
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get(
+            "/api/agentic/projects/project-1/chats/chat-1/canvas-activity?limit=999"
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "canvases": [
+            {
+                "id": "canvas-1",
+                "name": "Pulse wall",
+                "recent_runs": [
+                    {
+                        "status": "ok",
+                        "detail": "backfill: 5 conversations",
+                        "started_at": "2026-07-09T12:00:00Z",
+                    },
+                    {
+                        "status": "no_op",
+                        "detail": "No fresh quotes",
+                        "started_at": "2026-07-09T11:55:00Z",
+                    },
+                ],
+            },
+            {"id": "loop-2", "name": "Loose loop", "recent_runs": []},
+        ]
+    }
+    assert fake_directus.run_limits == [10, 10]
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1", access_token=None),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/chats/chat-1/canvas-activity")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_agentic_canvas_activity_requires_chat_in_project(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+
+    class _AsyncDirectus:
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:  # noqa: ARG002
+            return {"id": "chat-1", "project_id": "other-project", "user_created": "user-1"}
+
+    monkeypatch.setattr(agentic_api, "async_directus", _AsyncDirectus())
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/chats/chat-1/canvas-activity")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_agentic_canvas_activity_returns_empty_when_project_has_no_loops(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+
+    class _AsyncDirectus:
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:  # noqa: ARG002
+            return {"id": "chat-1", "project_id": "project-1", "user_created": "user-1"}
+
+        async def get_items(self, collection: str, params: dict[str, Any]) -> list[dict[str, Any]]:  # noqa: ARG002
+            assert collection == "agent_loop"
+            return []
+
+    monkeypatch.setattr(agentic_api, "async_directus", _AsyncDirectus())
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get("/api/agentic/projects/project-1/chats/chat-1/canvas-activity")
+
+    assert response.status_code == 200
+    assert response.json() == {"canvases": []}
+
+
+@pytest.mark.asyncio
+async def test_agentic_canvas_routes_404_when_project_not_opted_into_beta(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        async def _disabled(project_id: str) -> bool:  # noqa: ARG001
+            return False
+
+        monkeypatch.setattr(feature_flags_module, "project_canvas_enabled", _disabled)
+
+        response = await client.get("/api/agentic/projects/project-1/canvases")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_agentic_canvas_lifecycle_delegates_to_shared_service(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:  # noqa: ARG002
+            return {
+                "id": "canvas-1",
+                "kind": "canvas",
+                "project_id": {"id": "project-1"},
+                "deleted_at": None,
+            }
+
+    async def _loop(report_id: str) -> dict[str, Any]:
+        assert report_id == "canvas-1"
+        return {"id": "loop-1", "status": "active", "expires_at": "later", "cadence_minutes": 5}
+
+    async def _apply(loop: dict[str, Any], action: str) -> dict[str, Any]:
+        assert loop["id"] == "loop-1"
+        assert action == "pause"
+        return {"status": "paused", "expires_at": "later", "cadence_minutes": 5}
+
+    monkeypatch.setattr(agentic_api, "async_directus", _AsyncDirectus())
+    monkeypatch.setattr(agentic_api, "get_loop_for_report", _loop)
+    monkeypatch.setattr(agentic_api, "apply_loop_action", _apply)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.post("/api/agentic/projects/project-1/canvases/canvas-1/loop/pause")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "paused", "expires_at": "later", "cadence_minutes": 5}
+
+
+@pytest.mark.asyncio
+async def test_agentic_canvas_history_returns_shared_history(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:  # noqa: ARG002
+            return {
+                "id": "canvas-1",
+                "kind": "canvas",
+                "project_id": {"id": "project-1"},
+                "deleted_at": None,
+                "user_instructions": "Pulse wall",
+            }
+
+    async def _loop(report_id: str) -> dict[str, Any]:
+        assert report_id == "canvas-1"
+        return {"id": "loop-1", "name": "Pulse wall"}
+
+    async def _history(report_id: str, *, limit: int) -> list[dict[str, Any]]:
+        assert report_id == "canvas-1"
+        assert limit == 9
+        return [{"at": "2026-07-09T12:00:00Z", "kind": "run", "changes": ["added"]}]
+
+    monkeypatch.setattr(agentic_api, "async_directus", _AsyncDirectus())
+    monkeypatch.setattr(agentic_api, "get_loop_for_report", _loop)
+    monkeypatch.setattr(agentic_api, "build_canvas_history", _history)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.get(
+            "/api/agentic/projects/project-1/canvases/canvas-1/history?limit=9"
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": "canvas-1",
+        "name": "Pulse wall",
+        "history": [{"at": "2026-07-09T12:00:00Z", "kind": "run", "changes": ["added"]}],
+    }
+
+
+@pytest.mark.asyncio
+async def test_agentic_canvas_edit_delegates_to_direct_edit_service(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:  # noqa: ARG002
+            return {
+                "id": "canvas-1",
+                "kind": "canvas",
+                "project_id": {"id": "project-1"},
+                "deleted_at": None,
+            }
+
+    captured: dict[str, Any] = {}
+
+    async def _edit(**kwargs: Any) -> dict[str, Any]:
+        captured.update(kwargs)
+        return {
+            "generation": {"id": "gen-1", "tick_kind": "edited"},
+            "config_revision": {"id": "cfg-2", "brief": "Standing edits:\n- remove dividers"},
+        }
+
+    monkeypatch.setattr(agentic_api, "async_directus", _AsyncDirectus())
+    monkeypatch.setattr(agentic_api, "apply_direct_canvas_edit", _edit)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.post(
+            "/api/agentic/projects/project-1/canvases/canvas-1/edit",
+            json={
+                "instruction": "remove dividers",
+                "content_html": '<div class="canvas-shell"></div>',
+                "chat_id": "chat-1",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "edited"
+    assert response.json()["generation"]["tick_kind"] == "edited"
+    assert captured == {
+        "report_id": "canvas-1",
+        "edited_html": '<div class="canvas-shell"></div>',
+        "instruction": "remove dividers",
+        "chat_id": "chat-1",
+        "created_by": "user-1",
+    }
+
+
+@pytest.mark.asyncio
+async def test_agentic_insight_endpoint_persists_reach_back_context(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        def __init__(self) -> None:
+            self.created: list[tuple[str, dict[str, Any]]] = []
+
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:
+            assert collection == "project"
+            assert item_id == "project-1"
+            return {"id": "project-1", "workspace_id": "workspace-1"}
+
+        async def create_item(self, collection: str, payload: dict[str, Any]) -> dict[str, Any]:
+            self.created.append((collection, payload))
+            return {"data": {"id": "insight-1", **payload}}
+
+    fake_directus = _AsyncDirectus()
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.post(
+            "/api/agentic/projects/project-1/insight",
+            json={
+                "kind": "capability_gap",
+                "content": " The host needs canvas styling to be adjustable from chat. ",
+                "suggested_capability": "Canvas style controls",
+                "chat_id": "chat-1",
+                "message_id": "event-1",
+            },
+        )
+
+    assert response.status_code == 201
+    assert response.json() == {"id": "insight-1", "status": "new"}
+    assert fake_directus.created == [
+        (
+            "agent_insight",
+            {
+                "workspace_id": "workspace-1",
+                "project_id": "project-1",
+                "chat_id": "chat-1",
+                "message_id": "event-1",
+                "kind": "capability_gap",
+                "content": "The host needs canvas styling to be adjustable from chat.",
+                "suggested_capability": "Canvas style controls",
+                "status": "new",
+            },
+        )
+    ]
+
+
+class _StatefulRowDirectus:
+    """A tiny stateful directus fake: get_item returns the current row, and
+    update_item / delete_item mutate the stored copy. Used to exercise the
+    edit / retract / amend / forget by-id endpoints end to end."""
+
+    def __init__(self, rows: dict[str, dict[str, Any]]) -> None:
+        self.rows = {row_id: dict(row) for row_id, row in rows.items()}
+        self.updates: list[tuple[str, str, dict[str, Any]]] = []
+        self.deletes: list[tuple[str, str]] = []
+
+    async def get_item(self, collection: str, item_id: str, params: Any = None) -> dict[str, Any]:  # noqa: ARG002
+        row = self.rows.get(item_id)
+        if row is None:
+            return {}
+        return dict(row)
+
+    async def update_item(
+        self, collection: str, item_id: str, payload: dict[str, Any]
+    ) -> dict[str, Any]:
+        self.updates.append((collection, item_id, dict(payload)))
+        self.rows.setdefault(item_id, {})["id"] = item_id
+        self.rows[item_id].update(payload)
+        return {"data": dict(self.rows[item_id])}
+
+    async def delete_item(self, collection: str, item_id: str) -> dict[str, Any]:
+        self.deletes.append((collection, item_id))
+        self.rows.pop(item_id, None)
+        return {"status": "deleted"}
+
+
+@pytest.mark.asyncio
+async def test_edit_insight_partial_update_scopes_to_owning_project(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {
+            "insight-1": {
+                "id": "insight-1",
+                "project_id": "project-1",
+                "kind": "wish",
+                "content": "old content",
+                "suggested_capability": None,
+                "status": "new",
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.patch(
+            "/api/agentic/insights/insight-1",
+            json={"content": "The host needs bulk tag editing."},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == "insight-1"
+    assert body["content"] == "The host needs bulk tag editing."
+    assert body["kind"] == "wish"  # untouched by a partial update
+    # Only the content field was written.
+    assert fake_directus.updates == [
+        ("agent_insight", "insight-1", {"content": "The host needs bulk tag editing."})
+    ]
+
+
+@pytest.mark.asyncio
+async def test_edit_insight_requires_at_least_one_field(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {"insight-1": {"id": "insight-1", "project_id": "project-1", "status": "new"}}
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.patch("/api/agentic/insights/insight-1", json={})
+
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_edit_insight_requires_token(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {"insight-1": {"id": "insight-1", "project_id": "project-1", "status": "new"}}
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1", access_token=None),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.patch(
+            "/api/agentic/insights/insight-1", json={"content": "x"}
+        )
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_edit_insight_hides_other_projects_insight(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {"insight-1": {"id": "insight-1", "project_id": "project-1", "status": "new"}}
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-2"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.patch(
+            "/api/agentic/insights/insight-1", json={"content": "x"}
+        )
+
+    # Non-member of the owning project gets 404 (existence-hiding), no write.
+    assert response.status_code == 404
+    assert fake_directus.updates == []
+
+
+@pytest.mark.asyncio
+async def test_retract_insight_keeps_row_with_status_and_reason(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {
+            "insight-1": {
+                "id": "insight-1",
+                "project_id": "project-1",
+                "kind": "friction",
+                "content": "The host wanted bulk tag edit.",
+                "status": "new",
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.post(
+            "/api/agentic/insights/insight-1/retract",
+            json={"reason": "The host said it is not a real gap."},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "retracted"
+    assert body["retracted_reason"] == "The host said it is not a real gap."
+    assert body["content"] == "The host wanted bulk tag edit."  # row is preserved
+    # The row was updated, never deleted.
+    assert fake_directus.deletes == []
+    assert fake_directus.updates == [
+        (
+            "agent_insight",
+            "insight-1",
+            {"status": "retracted", "retracted_reason": "The host said it is not a real gap."},
+        )
+    ]
+
+
+@pytest.mark.asyncio
+async def test_amend_memory_updates_project_scoped_row(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {
+            "mem-1": {
+                "id": "mem-1",
+                "scope": "project",
+                "project_id": "project-1",
+                "workspace_id": "workspace-1",
+                "content": "old note",
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.patch(
+            "/api/agentic/memories/mem-1",
+            json={"content": "The owner's name is spelled Akshita."},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"id": "mem-1", "scope": "project", "action": "amended"}
+    assert len(fake_directus.updates) == 1
+    collection, item_id, payload = fake_directus.updates[0]
+    assert (collection, item_id) == ("agent_memory", "mem-1")
+    assert payload["content"] == "The owner's name is spelled Akshita."
+    assert "updated_at" in payload
+
+
+@pytest.mark.asyncio
+async def test_amend_memory_hides_row_from_non_member(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {
+            "mem-1": {
+                "id": "mem-1",
+                "scope": "project",
+                "project_id": "project-1",
+                "content": "old note",
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-2"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.patch(
+            "/api/agentic/memories/mem-1", json={"content": "x"}
+        )
+
+    assert response.status_code == 404
+    assert fake_directus.updates == []
+
+
+@pytest.mark.asyncio
+async def test_forget_memory_hard_deletes_by_id(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {
+            "mem-1": {
+                "id": "mem-1",
+                "scope": "project",
+                "project_id": "project-1",
+                "content": "old note",
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.request("DELETE", "/api/agentic/memories/mem-1")
+
+    assert response.status_code == 200
+    assert response.json() == {"id": "mem-1", "deleted": True}
+    assert fake_directus.deletes == [("agent_memory", "mem-1")]
+
+
+@pytest.mark.asyncio
+async def test_forget_memory_user_scope_requires_owner(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_directus = _StatefulRowDirectus(
+        {
+            "mem-1": {
+                "id": "mem-1",
+                "scope": "user",
+                "directus_user_id": "user-1",
+                "content": "private note",
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-2"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.request("DELETE", "/api/agentic/memories/mem-1")
+
+    assert response.status_code == 404
+    assert fake_directus.deletes == []
+
+
+@pytest.mark.asyncio
+async def test_edit_project_tags_adds_new_and_removes_by_case_insensitive_text(
+    monkeypatch,
+) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    session = _make_session(user_id="user-1")
+
+    class _AsyncDirectus:
+        def __init__(self) -> None:
+            self.tags: list[dict[str, Any]] = [
+                {"id": "tag-old", "project_id": "project-1", "text": "Old Tag", "sort": 1},
+                {"id": "tag-keep", "project_id": "project-1", "text": "keep", "sort": 2},
+            ]
+            self.junctions: list[dict[str, Any]] = [
+                {"id": "junction-1", "project_tag_id": "tag-old"},
+            ]
+            self.deleted: list[tuple[str, str]] = []
+
+        async def get_item(self, collection: str, item_id: str) -> dict[str, Any]:
+            return {"id": item_id, "workspace_id": "workspace-1"}
+
+        async def get_items(self, collection: str, params: dict[str, Any]) -> list[dict[str, Any]]:
+            if collection == "project_tag":
+                return [dict(row) for row in self.tags]
+            if collection == "conversation_project_tag":
+                tag_id = params["query"]["filter"]["project_tag_id"]["_eq"]
+                return [dict(j) for j in self.junctions if j["project_tag_id"] == tag_id]
+            return []
+
+        async def create_item(self, collection: str, payload: dict[str, Any]) -> dict[str, Any]:
+            assert collection == "project_tag"
+            self.tags.append(dict(payload))
+            return {"data": dict(payload)}
+
+        async def delete_item(self, collection: str, item_id: str) -> dict[str, Any]:
+            self.deleted.append((collection, item_id))
+            if collection == "project_tag":
+                self.tags = [row for row in self.tags if row["id"] != item_id]
+            if collection == "conversation_project_tag":
+                self.junctions = [j for j in self.junctions if j["id"] != item_id]
+            return {"status": "deleted"}
+
+    fake_directus = _AsyncDirectus()
+    monkeypatch.setattr(agentic_api, "async_directus", fake_directus)
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        response = await client.post(
+            "/api/agentic/projects/project-1/tags",
+            json={"add": ["climate", "keep"], "remove": ["OLD TAG"]},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    # "keep" already exists (skipped); "climate" is created; "OLD TAG" removed
+    # by case-insensitive text match, cleaning up its junction row too.
+    assert body["added"] == ["climate"]
+    assert body["removed"] == ["Old Tag"]
+    tag_texts = sorted(row["text"] for row in body["tags"])
+    assert tag_texts == ["climate", "keep"]
+    assert ("project_tag", "tag-old") in fake_directus.deleted
+    assert ("conversation_project_tag", "junction-1") in fake_directus.deleted
 
 
 @pytest.mark.asyncio
@@ -910,7 +1930,9 @@ async def test_list_project_conversations_transcript_query_scopes_to_project_and
 
 
 @pytest.mark.asyncio
-async def test_list_project_conversations_transcript_query_token_or_limit_and_order(monkeypatch) -> None:
+async def test_list_project_conversations_transcript_query_token_or_limit_and_order(
+    monkeypatch,
+) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
     directus_client = _FakeDirectusClient(
         rows_by_collection={
@@ -1013,10 +2035,13 @@ async def test_list_project_conversations_transcript_query_token_or_limit_and_or
     assert payload["conversations"][0]["matches"][0]["chunk_id"] == "chunk-1"
     assert payload["conversations"][1]["matches"][0]["chunk_id"] == "chunk-2"
 
+
 @pytest.mark.asyncio
 async def test_stop_run_sets_cancel_request(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
-    run = run_service.create_run(project_id="project-1", directus_user_id="user-1", status="running")
+    run = run_service.create_run(
+        project_id="project-1", directus_user_id="user-1", status="running"
+    )
     event = run_service.append_event(run["id"], "user.message", {"content": "hello"})
 
     cancel_calls: list[tuple[str, int]] = []
@@ -1049,7 +2074,9 @@ async def test_polling_events_respects_after_seq(monkeypatch) -> None:
         run_service=run_service,
         owner_by_project_id={"project-1": "user-1"},
     ) as client:
-        response = await client.get(f"/api/agentic/runs/{run['id']}/events", params={"after_seq": 1})
+        response = await client.get(
+            f"/api/agentic/runs/{run['id']}/events", params={"after_seq": 1}
+        )
 
     assert response.status_code == 200
     payload = response.json()

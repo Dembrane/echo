@@ -1,0 +1,46 @@
+{
+  "collection": "agent_loop",
+  "field": "report_id",
+  "type": "bigInteger",
+  "meta": {
+    "collection": "agent_loop",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "report_id",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown-m2o",
+    "note": null,
+    "options": null,
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 3,
+    "special": [
+      "m2o"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "report_id",
+    "table": "agent_loop",
+    "data_type": "bigint",
+    "default_value": null,
+    "max_length": null,
+    "numeric_precision": 64,
+    "numeric_scale": 0,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": "project_report",
+    "foreign_key_column": "id"
+  }
+}

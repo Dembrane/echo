@@ -247,6 +247,10 @@ class ProjectUpdate(BaseModel):
     is_get_reply_enabled: Optional[bool] = None
     is_verify_enabled: Optional[bool] = None
     is_verify_on_finish_enabled: Optional[bool] = None
+    # Per-project opt-in for the living canvas beta (experimental toggle
+    # in project settings). Pydantic drops unknown fields silently, so the
+    # toggle write no-ops unless this is whitelisted here.
+    is_canvas_enabled: Optional[bool] = None
     # CSV string, not a list: matches the text column and verify.py's
     # serialization (null clears the selection).
     selected_verification_key_list: Optional[str] = None
@@ -257,6 +261,7 @@ class ProjectUpdate(BaseModel):
     image_generation_model: Optional[str] = None
     tutorial_slug: Optional[str] = None
     host_guide: Optional[dict[str, Any]] = None
+    methodology_version_id: Optional[str] = None
 
 
 @project_router.get("")

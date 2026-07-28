@@ -2,6 +2,10 @@ import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Group, Text } from "@mantine/core";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
+import {
+	conversationReferencePath,
+	getChunkIdFromReference,
+} from "./conversationReferenceLinks";
 
 export const Sources = ({
 	metadata,
@@ -27,20 +31,29 @@ export const Sources = ({
 				</Text>
 			</Group>
 			<Group gap="xs" mt={10}>
-				{references.map((ref, index) => (
-					<I18nLink
-						// biome-ignore lint/suspicious/noArrayIndexKey: needs to be fixed
-						key={index}
-						to={`/w/${workspaceId}/projects/${projectId}/conversations/${ref?.conversation?.id || ref?.conversation}`}
-					>
-						<Badge className="cursor-pointer normal-case" variant="default">
-							{ref?.conversation_title ||
-								ref?.conversation?.participant_name || (
-									<Trans>Source {index + 1}</Trans>
-								)}
-						</Badge>
-					</I18nLink>
-				))}
+				{references.map((ref, index) => {
+					const conversationId = ref?.conversation?.id || ref?.conversation;
+					if (!workspaceId || !projectId || !conversationId) return null;
+					return (
+						<I18nLink
+							// biome-ignore lint/suspicious/noArrayIndexKey: needs to be fixed
+							key={index}
+							to={conversationReferencePath({
+								chunkId: getChunkIdFromReference(ref),
+								conversationId,
+								projectId,
+								workspaceId,
+							})}
+						>
+							<Badge className="cursor-pointer normal-case" variant="default">
+								{ref?.conversation_title ||
+									ref?.conversation?.participant_name || (
+										<Trans>Source {index + 1}</Trans>
+									)}
+							</Badge>
+						</I18nLink>
+					);
+				})}
 			</Group>
 		</Box>
 	);

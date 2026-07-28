@@ -60,6 +60,7 @@ def _patched(ws: dict | None, memberships: list[dict]):
         schedule=AsyncMock(return_value="task-1"),
         cancel=AsyncMock(return_value=0),
         invalidate=AsyncMock(),
+        record_event=AsyncMock(return_value="ev-1"),
     )
     with ExitStack() as stack:
         stack.enter_context(patch("dembrane.api.v2.admin.async_directus", mocks.directus))
@@ -84,6 +85,24 @@ def _patched(ws: dict | None, memberships: list[dict]):
                 "dembrane.api.v2._invite_helpers.reactivate_membership_row",
                 mocks.reactivate,
             )
+        )
+        stack.enter_context(
+            patch("dembrane.support_access.async_directus", mocks.directus)
+        )
+        stack.enter_context(
+            patch(
+                "dembrane.support_access.record_support_access_event",
+                mocks.record_event,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "dembrane.support_access.maybe_auto_disable_support_access",
+                AsyncMock(return_value=True),
+            )
+        )
+        stack.enter_context(
+            patch("dembrane.support_access.send_support_access_notice", AsyncMock())
         )
         yield mocks
 
@@ -240,6 +259,7 @@ def _patched_race(directus: AsyncMock):
         schedule=AsyncMock(return_value="task-1"),
         cancel=AsyncMock(return_value=0),
         invalidate=AsyncMock(),
+        record_event=AsyncMock(return_value="ev-1"),
     )
     with ExitStack() as stack:
         stack.enter_context(patch("dembrane.api.v2.admin.async_directus", mocks.directus))
@@ -264,6 +284,24 @@ def _patched_race(directus: AsyncMock):
                 "dembrane.api.v2._invite_helpers.reactivate_membership_row",
                 mocks.reactivate,
             )
+        )
+        stack.enter_context(
+            patch("dembrane.support_access.async_directus", mocks.directus)
+        )
+        stack.enter_context(
+            patch(
+                "dembrane.support_access.record_support_access_event",
+                mocks.record_event,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "dembrane.support_access.maybe_auto_disable_support_access",
+                AsyncMock(return_value=True),
+            )
+        )
+        stack.enter_context(
+            patch("dembrane.support_access.send_support_access_notice", AsyncMock())
         )
         yield mocks
 
@@ -383,3 +421,31 @@ async def test_create_lost_race_to_staff_support_extends_winning_row():
     # revoke timer points at the persisted row, not the discarded generated id
     m.schedule.assert_awaited_once()
     assert m.schedule.await_args.kwargs["payload"]["membership_id"] == "mem-staff"
+
+
+# ── audit events (support_access additions) ──────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_join_records_staff_joined_event():
+    ws = {"id": _WS_ID, "org_id": _ORG_ID, "allow_support_access": True}
+    with _patched(ws=ws, memberships=[]) as mocks:
+        res = await _post(_build_app(is_admin=True))
+    assert res.status_code == 200
+    assert res.json()["status"] == "joined"
+    kwargs = mocks.record_event.call_args.kwargs
+    assert kwargs["event_code"] == "staff_joined"
+    assert kwargs["staff_user_id"] == "au-staff"
+
+
+@pytest.mark.asyncio
+async def test_extend_records_staff_extended_event():
+    ws = {"id": _WS_ID, "org_id": _ORG_ID, "allow_support_access": True}
+    existing = [
+        {"id": "m-1", "role": "admin", "source": "staff_support", "deleted_at": None}
+    ]
+    with _patched(ws=ws, memberships=existing) as mocks:
+        res = await _post(_build_app(is_admin=True))
+    assert res.status_code == 200
+    assert res.json()["status"] == "extended"
+    assert mocks.record_event.call_args.kwargs["event_code"] == "staff_extended"

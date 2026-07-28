@@ -26,6 +26,7 @@ import {
 	Table,
 	Tabs,
 	Text,
+	Textarea,
 	TextInput,
 	Title,
 	Tooltip,
@@ -63,6 +64,7 @@ import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { StaffTrainingPanel } from "@/components/training";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { isOutsiderRole } from "@/lib/roles";
 import {
 	type BillingPeriod,
@@ -904,6 +906,7 @@ function BillingModeControl({
 function JoinSupportControl({ row }: { row: BillingRow }) {
 	const queryClient = useQueryClient();
 	const statusKey = ["v2", "admin", "support-access", row.workspace_id];
+	const { setWorkspace } = useWorkspace();
 
 	// Reflect the caller's current session so a reopened modal shows "active
 	// until <time>" + Extend instead of always offering a fresh join.
@@ -919,6 +922,75 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 				active: boolean;
 				expires_at: string | null;
 			}>;
+		},
+	});
+
+	const requestKey = ["v2", "admin", "support-request", row.workspace_id];
+	const { data: reqStatus } = useQuery({
+		queryKey: requestKey,
+		queryFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/support-access/request`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) throw new Error(`Failed (${res.status})`);
+			return res.json() as Promise<{
+				support_access_enabled: boolean;
+				request: {
+					id: string;
+					status: string;
+					created_at: string | null;
+				} | null;
+			}>;
+		},
+	});
+
+	const [requestModalOpened, { open: openRequestModal, close: closeRequestModal }] =
+		useDisclosure(false);
+	const [requestNote, setRequestNote] = useState("");
+
+	const requestMutation = useMutation({
+		mutationFn: async (message: string) => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/support-access/request`,
+				{
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+					body: JSON.stringify({ message }),
+				},
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json();
+		},
+		onError: (e) => toast.error((e as Error).message),
+		onSuccess: () => {
+			closeRequestModal();
+			setRequestNote("");
+			toast.success(t`Request sent. The workspace admins were notified.`);
+			queryClient.invalidateQueries({ queryKey: requestKey });
+		},
+	});
+
+	const cancelRequestMutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/support-access/request`,
+				{ credentials: "include", method: "DELETE" },
+			);
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Failed (${res.status})`);
+			}
+			return res.json();
+		},
+		onError: (e) => toast.error((e as Error).message),
+		onSuccess: () => {
+			toast.success(t`Request withdrawn.`);
+			queryClient.invalidateQueries({ queryKey: requestKey });
 		},
 	});
 
@@ -953,8 +1025,11 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 				);
 			}
 			queryClient.invalidateQueries({ queryKey: statusKey });
-			// Refresh the workspace list so the just-joined workspace resolves.
+			// Refresh the workspace + project lists so the just-joined workspace
+			// shows its projects without a manual refresh.
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
+			queryClient.invalidateQueries({ queryKey: ["projects"] });
 		},
 	});
 
@@ -978,7 +1053,14 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 	});
 
 	const active = status?.active ?? false;
-	const busy = joinMutation.isPending || leaveMutation.isPending;
+	const supportEnabled = reqStatus?.support_access_enabled ?? true;
+	const pendingRequest =
+		reqStatus?.request?.status === "pending" ? reqStatus.request : null;
+	const busy =
+		joinMutation.isPending ||
+		leaveMutation.isPending ||
+		requestMutation.isPending ||
+		cancelRequestMutation.isPending;
 	const endsAt = ((iso: string | null | undefined): string => {
 		if (!iso) return "";
 		const d = new Date(iso);
@@ -1020,6 +1102,7 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 								component={I18nLink}
 								to={`/w/${row.workspace_id}/home`}
 								size="xs"
+								onClick={() => setWorkspace(row.workspace_id)}
 							>
 								<Trans>Open workspace</Trans>
 							</Anchor>
@@ -1034,20 +1117,77 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 							</Button>
 						</>
 					)}
-					<Button
-						size="xs"
-						loading={joinMutation.isPending}
-						disabled={busy || isLoading}
-						onClick={() => joinMutation.mutate()}
-					>
-						{active ? (
-							<Trans>Extend 24h</Trans>
-						) : (
-							<Trans>Join for support (24h)</Trans>
-						)}
-					</Button>
+					{supportEnabled && (
+						<Button
+							size="xs"
+							loading={joinMutation.isPending}
+							disabled={busy || isLoading}
+							onClick={() => joinMutation.mutate()}
+						>
+							{active ? (
+								<Trans>Extend 24h</Trans>
+							) : (
+								<Trans>Join for support (24h)</Trans>
+							)}
+						</Button>
+					)}
+					{!supportEnabled && !active && pendingRequest && (
+						<>
+							<Text size="xs">
+								<Trans>Request sent. Waiting for the workspace admins.</Trans>
+							</Text>
+							<Button
+								size="xs"
+								variant="subtle"
+								loading={cancelRequestMutation.isPending}
+								disabled={busy}
+								onClick={() => cancelRequestMutation.mutate()}
+							>
+								<Trans>Cancel request</Trans>
+							</Button>
+						</>
+					)}
+					{!supportEnabled && !active && !pendingRequest && (
+						<Button size="xs" disabled={busy} onClick={openRequestModal}>
+							<Trans>Request access</Trans>
+						</Button>
+					)}
 				</Group>
 			</Stack>
+			<Modal
+				opened={requestModalOpened}
+				onClose={closeRequestModal}
+				title={t`Request support access`}
+				data-testid="support-access-request-modal"
+			>
+				<Stack gap="sm">
+					<Text size="sm">
+						<Trans>
+							Tell the workspace admins what you need access for. This note is
+							optional.
+						</Trans>
+					</Text>
+					<Textarea
+						value={requestNote}
+						onChange={(e) => setRequestNote(e.currentTarget.value)}
+						placeholder={t`e.g. investigating the report issue you emailed about`}
+						autosize
+						minRows={3}
+						data-testid="support-access-request-note"
+					/>
+					<Group justify="flex-end" gap="sm">
+						<Button variant="subtle" onClick={closeRequestModal}>
+							<Trans>Cancel</Trans>
+						</Button>
+						<Button
+							loading={requestMutation.isPending}
+							onClick={() => requestMutation.mutate(requestNote)}
+						>
+							<Trans>Send request</Trans>
+						</Button>
+					</Group>
+				</Stack>
+			</Modal>
 		</Paper>
 	);
 }

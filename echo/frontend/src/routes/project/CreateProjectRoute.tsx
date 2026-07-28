@@ -10,6 +10,7 @@ import {
 	Radio,
 	Stack,
 	Stepper,
+	Switch,
 	Text,
 	Textarea,
 	TextInput,
@@ -22,13 +23,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
-import { API_BASE_URL } from "@/config";
+import { API_BASE_URL, ENABLE_AGENTIC_CHAT } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCreateWorkspaceProject } from "@/hooks/useWorkspaceProjects";
 
 type Access = "workspace" | "private";
+
+const SETUP_INITIAL_MESSAGE = "Help me set up this project.";
+const ZERO_CONTEXT_INITIAL_MESSAGE =
+	"Help me figure out what this project is for.";
 
 async function setVisibility(projectId: string, visibility: Access) {
 	const res = await fetch(
@@ -69,6 +74,11 @@ export const CreateProjectRoute = () => {
 	const [name, setName] = useState("");
 	const [context, setContext] = useState("");
 	const [access, setAccess] = useState<Access>("workspace");
+	const [setupWithAssistant, setSetupWithAssistant] =
+		useState(ENABLE_AGENTIC_CHAT);
+	const [setupInitialMessage, setSetupInitialMessage] = useState(
+		SETUP_INITIAL_MESSAGE,
+	);
 
 	useDocumentTitle(t`New project | dembrane`);
 
@@ -113,7 +123,13 @@ export const CreateProjectRoute = () => {
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
 			posthog?.capture("project_created", { project_id: project.id });
 			toast.success(t`Project created`);
-			navigate(`/w/${workspaceId}/projects/${project.id}/home`);
+			if (ENABLE_AGENTIC_CHAT && setupWithAssistant) {
+				navigate(`/w/${workspaceId}/projects/${project.id}/chats/new`, {
+					state: { initialMessage: setupInitialMessage },
+				});
+			} else {
+				navigate(`/w/${workspaceId}/projects/${project.id}/home`);
+			}
 		},
 	});
 
@@ -198,10 +214,42 @@ export const CreateProjectRoute = () => {
 								description={t`A short note on what this project is about. You can edit it later.`}
 								placeholder={t`What are you trying to learn?`}
 								value={context}
-								onChange={(e) => setContext(e.currentTarget.value)}
+								onChange={(e) => {
+									setContext(e.currentTarget.value);
+									setSetupInitialMessage(SETUP_INITIAL_MESSAGE);
+								}}
 								minRows={3}
 								autosize
 							/>
+							{ENABLE_AGENTIC_CHAT ? (
+								<Button
+									variant="subtle"
+									size="xs"
+									className="self-start"
+									onClick={() => {
+										setContext("");
+										setSetupWithAssistant(true);
+										setSetupInitialMessage(ZERO_CONTEXT_INITIAL_MESSAGE);
+										setStep(1);
+									}}
+								>
+									<Trans>Help me figure it out</Trans>
+								</Button>
+							) : null}
+
+							{ENABLE_AGENTIC_CHAT ? (
+								<Switch
+									checked={setupWithAssistant}
+									onChange={(event) => {
+										setSetupWithAssistant(event.currentTarget.checked);
+										if (event.currentTarget.checked) {
+											setSetupInitialMessage(SETUP_INITIAL_MESSAGE);
+										}
+									}}
+									label={t`Set up with the assistant after creating`}
+									description={t`You'll land in a chat where dembrane helps shape the project before you collect conversations.`}
+								/>
+							) : null}
 						</Stack>
 					</Stepper.Step>
 
@@ -304,6 +352,20 @@ export const CreateProjectRoute = () => {
 											)}
 										</Text>
 									</Group>
+									{ENABLE_AGENTIC_CHAT ? (
+										<Group gap={12} align="baseline">
+											<Text size="xs" c="dimmed" w={100}>
+												<Trans>Setup</Trans>
+											</Text>
+											<Text size="sm">
+												{setupWithAssistant ? (
+													<Trans>Start in assistant chat</Trans>
+												) : (
+													<Trans>Go to project home</Trans>
+												)}
+											</Text>
+										</Group>
+									) : null}
 									<Group gap={12} align="baseline">
 										<Text size="xs" c="dimmed" w={100}>
 											<Trans>Tier</Trans>
