@@ -1838,6 +1838,8 @@ async def list_organisation_workspaces(
                 "query": {
                     "aggregate": {"count": "id"},
                     "groupBy": ["workspace_id"],
+                    # Directus caps grouped rows at its default limit (100).
+                    "limit": -1,
                     "filter": {
                         "workspace_id": {"_in": ws_ids},
                         "deleted_at": {"_null": True},
@@ -1858,6 +1860,8 @@ async def list_organisation_workspaces(
                 "query": {
                     "aggregate": {"count": "id"},
                     "groupBy": ["workspace_id"],
+                    # Directus caps grouped rows at its default limit (100).
+                    "limit": -1,
                     "filter": {
                         "workspace_id": {"_in": ws_ids},
                         "deleted_at": {"_null": True},
