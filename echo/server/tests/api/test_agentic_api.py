@@ -10,6 +10,7 @@ from httpx import AsyncClient, ASGITransport
 from fastapi import FastAPI, HTTPException
 
 import dembrane.api.agentic as agentic_api
+from dembrane.api import feature_flags as feature_flags_module
 from dembrane.api.v2.bff import _access as bff_access
 from tests.agentic.fakes import InMemoryDirectus
 from dembrane.api.agentic import AgenticRouter
@@ -223,6 +224,15 @@ async def _build_api_client(
         return SimpleNamespace(require=lambda _policy: None, role="owner", project={})
 
     monkeypatch.setattr(bff_access, "resolve_project_access", _fake_resolve_project_access)
+
+    # Canvas routes gate on the per-project beta toggle; tests opt in by
+    # default and re-patch to False to exercise the 404 path.
+    async def _fake_project_canvas_enabled(project_id: str) -> bool:  # noqa: ARG001
+        return True
+
+    monkeypatch.setattr(
+        feature_flags_module, "project_canvas_enabled", _fake_project_canvas_enabled
+    )
 
     # Hermetic seams: these hit Directus over the network in production.
     from dembrane import free_tier as free_tier_module
@@ -1170,6 +1180,26 @@ async def test_agentic_canvas_activity_returns_empty_when_project_has_no_loops(m
 
     assert response.status_code == 200
     assert response.json() == {"canvases": []}
+
+
+@pytest.mark.asyncio
+async def test_agentic_canvas_routes_404_when_project_not_opted_into_beta(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=_make_session(user_id="user-1"),
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+    ) as client:
+        async def _disabled(project_id: str) -> bool:  # noqa: ARG001
+            return False
+
+        monkeypatch.setattr(feature_flags_module, "project_canvas_enabled", _disabled)
+
+        response = await client.get("/api/agentic/projects/project-1/canvases")
+
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio

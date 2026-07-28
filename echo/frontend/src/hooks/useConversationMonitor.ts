@@ -53,6 +53,12 @@ export type MonitorBattery = {
 	charging?: boolean;
 };
 
+// A drilldown-timeline step; `key` maps to a translated label on the frontend.
+export type MonitorTimelineStep = {
+	key: string;
+	at: string;
+};
+
 export type MonitorConversation = {
 	id: string;
 	label: string | null;
@@ -66,10 +72,15 @@ export type MonitorConversation = {
 	audio_level: number | null;
 	mode: "voice" | "text" | null;
 	tags: string[];
+	/** Project-tag ids for the current tags, so the drilldown can edit them. */
+	tag_ids: string[];
 	language: string | null;
 	latest_transcript: string | null;
 	created_at: string | null;
 	duration: number | null;
+	/** Accumulated recording seconds (excludes paused gaps), or null. */
+	recorded_seconds: number | null;
+	timeline: MonitorTimelineStep[];
 	network: MonitorNetwork | null;
 	battery: MonitorBattery | null;
 	last_chunk_at: string | null;

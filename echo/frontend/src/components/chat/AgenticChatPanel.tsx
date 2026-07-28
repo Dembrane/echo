@@ -78,6 +78,7 @@ import {
 	parseInsightNote,
 	parseNavigationSuggestion,
 	parseProjectUpdateSuggestion,
+	parseTagsUpdateSuggestion,
 	type ToolActivity,
 } from "./agenticToolActivity";
 import { CanvasSuggestionCard } from "./CanvasSuggestionCard";
@@ -90,6 +91,7 @@ import { useChat as useProjectChat } from "./hooks";
 import { InsightNoteCard } from "./InsightNoteCard";
 import { NavigationSuggestionCard } from "./NavigationSuggestionCard";
 import { ProjectUpdateSuggestionCard } from "./ProjectUpdateSuggestionCard";
+import { TagsUpdateSuggestionCard } from "./TagsUpdateSuggestionCard";
 
 type AgenticChatPanelProps = {
 	chatId: string;
@@ -433,6 +435,7 @@ const tryParseTimelineSuggestion = (
 			insight: parseInsightNote(item),
 			navigation: parseNavigationSuggestion(item),
 			projectUpdate: parseProjectUpdateSuggestion(item),
+			tagsUpdate: parseTagsUpdateSuggestion(item),
 		};
 	} catch (error) {
 		console.warn("Failed to parse agentic timeline suggestion", error);
@@ -443,6 +446,7 @@ const tryParseTimelineSuggestion = (
 			insight: null,
 			navigation: null,
 			projectUpdate: null,
+			tagsUpdate: null,
 		};
 	}
 };
@@ -740,6 +744,11 @@ export const AgenticChatPanel = ({
 					item: Extract<TimelineItem, { kind: "tool" }>;
 			  }
 			| {
+					kind: "tags_suggestion";
+					id: string;
+					item: Extract<TimelineItem, { kind: "tool" }>;
+			  }
+			| {
 					kind: "verification_suggestion";
 					id: string;
 					item: Extract<TimelineItem, { kind: "tool" }>;
@@ -778,6 +787,10 @@ export const AgenticChatPanel = ({
 			const suggestions = tryParseTimelineSuggestion(item);
 			if (suggestions.projectUpdate) {
 				nodes.push({ id: item.id, item, kind: "suggestion" });
+				continue;
+			}
+			if (suggestions.tagsUpdate) {
+				nodes.push({ id: item.id, item, kind: "tags_suggestion" });
 				continue;
 			}
 			if (suggestions.customVerificationTopic) {
@@ -1537,6 +1550,20 @@ export const AgenticChatPanel = ({
 							return suggestion ? (
 								<div key={node.id}>
 									<ProjectUpdateSuggestionCard suggestion={suggestion} />
+								</div>
+							) : null;
+						}
+
+						if (node.kind === "tags_suggestion") {
+							const suggestion = parseTagsUpdateSuggestion(node.item);
+							return suggestion ? (
+								<div key={node.id}>
+									<TagsUpdateSuggestionCard
+										suggestion={{
+											...suggestion,
+											projectId: suggestion.projectId || projectId,
+										}}
+									/>
 								</div>
 							) : null;
 						}

@@ -1,15 +1,20 @@
 ---
 title: The SMART loop (building now)
-description: A user story for the dynamic canvas - a live, versioned page the assistant regenerates every few minutes during a session, improved by chat.
+description: A user story for the living canvas - a live, versioned page the assistant regenerates every few minutes during a session, improved by chat. The canvas is now in beta on dembrane next.
 audience: all
 ---
 
 # The SMART loop
 
 > [!IMPORTANT]
-> This feature is *being built*. Nothing on this page is available yet - not even on
-> [dembrane next](../features/dembrane-next.md). It's published so you can see what's
-> coming and tell us early if the story misses your reality.
+> The living canvas at the heart of this story is now in *beta* on
+> [dembrane next](../features/dembrane-next.md). It's off by default for every project: a
+> host opts a project in with the *Living canvas* switch (marked *Beta*) under
+> *Experimental* on the General page of project settings. With the switch off there are no
+> canvas pages, no canvas abilities in chat, and no background regeneration. The canvas is
+> not in production yet; making it production-ready is a separate, upcoming effort. The
+> rest of this story is still being built. It's published so you can see what's coming and
+> tell us early if it misses your reality.
 
 The idea in one line: your sessions produce living artifacts, and those artifacts feed back
 into the session while it's still running. The story below is the acceptance test - the
@@ -184,4 +189,4 @@ moves. Her next wall starts from everything everyone learned.
 - [Building now](./index.md) - everything else in progress.
 - [Chat & Ask](../features/chat-and-ask.md) - the assistant this builds on.
 - [Reports](../features/reports.md) - the shape artifacts borrow.
-- [dembrane next](../features/dembrane-next.md) - where this lands first when it ships.
+- [dembrane next](../features/dembrane-next.md) - where the canvas beta is live today.
