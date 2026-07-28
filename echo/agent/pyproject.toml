@@ -5,7 +5,7 @@ description = "Isolated CopilotKit runtime for Echo Agentic Chat"
 requires-python = ">=3.11"
 dependencies = [
     "copilotkit>=0.1.77",
-    "langgraph>=0.2",
+    "langgraph>=1.0.10rc1",
     "langchain-google-vertexai>=3.2.2",
     "google-auth>=2.35",
     "fastapi>=0.115",
