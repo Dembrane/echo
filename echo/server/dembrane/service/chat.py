@@ -51,7 +51,12 @@ class ChatService:
                     "used_conversations.conversation_id.participant_name",
                 ]
             )
-            deep["used_conversations"] = {"_sort": "id"}
+            # _limit -1: Directus caps nested rows at 100 by default. Without
+            # this, a chat with >100 attached conversations returns a truncated
+            # used_conversations, so callers building existing_ids (add-context /
+            # select-all) miscount already-attached rows as newly added and
+            # create duplicate junction rows (no unique constraint on the join).
+            deep["used_conversations"] = {"_sort": "id", "_limit": -1}
 
         try:
             with self._client_context() as client:
@@ -107,9 +112,12 @@ class ChatService:
                     "added_conversations.conversation_id.participant_name",
                 ]
             )
+            # _limit -1: Directus caps nested rows at 100 by default; unbound so
+            # chats with >100 attached conversations return the full set (see
+            # get_by_id_or_raise for why truncation corrupts add-context counts).
             deep = {
-                "used_conversations": {"_sort": "id"},
-                "added_conversations": {"_sort": "id"},
+                "used_conversations": {"_sort": "id", "_limit": -1},
+                "added_conversations": {"_sort": "id", "_limit": -1},
             }
 
         sort_value = "date_created" if order.lower() != "desc" else "-date_created"

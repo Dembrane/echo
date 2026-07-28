@@ -817,12 +817,40 @@ async def _merge_extraction_for_tick(
     return living_state, combined_detail
 
 
+async def _canvas_enabled_for_loop(loop: dict[str, Any]) -> bool:
+    """Canvas is opt-in per project; loops for non-opted-in projects no-op.
+
+    Deliberately reads through this module's async_directus (not the shared
+    feature-flags helper) so the tick pipeline stays self-contained and
+    test-fakeable.
+    """
+    if not get_settings().feature_flags.enable_canvas:
+        return False
+    project_id = _as_id(loop.get("project_id"))
+    if not project_id:
+        return False
+    try:
+        project = await async_directus.get_item("project", project_id)
+    except Exception:
+        return False
+    return bool(isinstance(project, dict) and project.get("is_canvas_enabled"))
+
+
 async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]:
     """Run one bounded gather -> generate -> sanitize -> store tick."""
     started_at = _now()
     loop = await async_directus.get_item("agent_loop", loop_id)
     if not loop:
         raise RuntimeError("Canvas loop not found")
+
+    if not await _canvas_enabled_for_loop(loop):
+        run = await _create_run(
+            loop_id=loop_id,
+            status="no_op",
+            detail="Canvas is disabled for this project",
+            started_at=started_at,
+        )
+        return {"status": "disabled", "run": run}
 
     expires_at = _parse_dt(loop.get("expires_at"))
     if expires_at and started_at >= expires_at:
@@ -1042,6 +1070,8 @@ async def run_tick(loop_id: str, tick_kind: str = "scheduled") -> dict[str, Any]
 
 async def reconcile_missing_canvas_tick_tasks() -> int:
     """Backfill one pending scheduled canvas tick for each active loop missing one."""
+    if not get_settings().feature_flags.enable_canvas:
+        return 0
     now = _now()
     loops = await async_directus.get_items(
         "agent_loop",

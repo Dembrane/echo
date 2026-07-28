@@ -48,7 +48,7 @@ AgentInsightKind = Literal["capability_gap", "friction", "wish", "praise"]
 #   listDocs, readDoc, grepDocs, readSkill, listProjectChats, readChat,
 #   getLiveConversationStatus, readMemory, readGoal, listMethodologies,
 #   listCanvases, get_project_scope).
-# - Write tools change durable state (editProjectTags, editCanvas, addToCanvas,
+# - Write tools change durable state (editCanvas, addToCanvas,
 #   removeFromCanvas, pauseCanvasLoop, resumeCanvasLoop, stopCanvasLoop,
 #   remember, amendMemory, forgetMemory, reachOutToDembraneSupport, noteInsight,
 #   editInsight, retractInsight). noteInsight, editInsight, and retractInsight
@@ -63,10 +63,27 @@ UI_TOOLS = frozenset(
         "proposeCanvas",
         "proposeGoal",
         "proposeProjectUpdate",
+        "proposeTagsUpdate",
         "noteInsight",
         "editInsight",
         "retractInsight",
         "sendProgressUpdate",
+    }
+)
+
+# Unregistered (with their prompt section stripped) when the chat's project has
+# canvas off (the per-project beta toggle, project.is_canvas_enabled).
+CANVAS_TOOL_NAMES = frozenset(
+    {
+        "proposeCanvas",
+        "listCanvases",
+        "readCanvasHistory",
+        "editCanvas",
+        "addToCanvas",
+        "removeFromCanvas",
+        "pauseCanvasLoop",
+        "resumeCanvasLoop",
+        "stopCanvasLoop",
     }
 )
 
@@ -104,7 +121,7 @@ NAVIGATION_LABELS: dict[str, str] = {
 # Note: the citation tag format below ([conversation_id:<id>;chunk_id:<id>]) is
 # parsed by the frontend (AgenticChatPanel.tsx). Do not change it without
 # updating that regex.
-SYSTEM_PROMPT = """You are the dembrane assistant. You help hosts explore and understand the
+SYSTEM_PROMPT_HEAD = """You are the dembrane assistant. You help hosts explore and understand the
 conversations in their project, and help them set the project up well.
 
 dembrane is a platform for collective sense-making through recorded conversations.
@@ -296,9 +313,11 @@ ask one focused question first.
   The setting can draft short titles and attach existing project tags after
   summarization, but tags remain draft organization for the host to review.
 - Tags are the host-visible portal vocabulary. When the host asks to add or
-  remove tags, read getProjectTags first, then use editProjectTags(add, remove)
-  and confirm in one sentence what changed. Only remove a tag the host names
-  explicitly; never clear tags participants may already be using on their own.
+  remove tags, read getProjectTags first, then use proposeTagsUpdate(add,
+  remove, summary). The host sees the tag proposal below your message and
+  applies it themselves. Say "I've suggested tag changes", never "I've updated
+  your tags". Only propose removing a tag the host names explicitly; never
+  clear tags participants may already be using on their own.
 - Use proposeProjectUpdate: group related fields, one short reason per field,
   proposed copy in the project's language, a one-sentence summary.
 - The host sees a diff and applies or rejects it themselves. You never apply
@@ -312,8 +331,11 @@ ask one focused question first.
   instruction to run, in the project's language. Mention that verification has
   to be enabled for it to run, and offer a proposeProjectUpdate to switch
   is_verify_enabled on if getProjectSettings shows it off.
+"""
 
-## Canvases
+# Appended to the system prompt only when the chat's project has canvas enabled
+# (the per-project beta toggle, project.is_canvas_enabled).
+CANVAS_PROMPT_SECTION = """## Canvases
 A canvas is a living page in the project Library. It regenerates on a loop until
 its expiry. Propose one when the host asks for a recurring or live artifact,
 such as a wall, pulse, dashboard, or page that keeps itself fresh. Always say the
@@ -386,8 +408,9 @@ recorder still on?"). Counterexamples: never ask permission to do something you
 can already do; never ask more than one question; never ask when there is no
 fork, silence is correct then. Ground any question in the injected run details
 only. Never invent canvas activity.
+"""
 
-## Project setup
+SYSTEM_PROMPT_TAIL = """## Project setup
 When the first message signals setup, or when readGoal shows this project has no
 goal, help with one lightweight question at a time. Read interviewing.md first
 and use that shape: no "interview" wording, no announced question count,
@@ -457,6 +480,32 @@ intent for reports and artifacts. Follow them, but they are not a research
 request. Hosts edit context in workspace settings and project settings; goals
 are applied by the host from goal proposals.
 """
+
+# Reconstructed so canvas-enabled chats see the exact prompt as before.
+SYSTEM_PROMPT = SYSTEM_PROMPT_HEAD + "\n" + CANVAS_PROMPT_SECTION + "\n" + SYSTEM_PROMPT_TAIL
+
+# Stripped alongside the canvas section when canvas is off for the project.
+CANVAS_INSIGHT_EXAMPLE = """- If the host says a canvas is hard to read and asks why you cannot change the
+  styling yourself, use kind capability_gap with content "The host needs generated
+  canvas styling to be easier to adjust from chat." and suggested_capability
+  "A canvas styling control or direct canvas-style proposal that can adjust
+  readability, contrast, and color."
+"""
+
+CANVAS_LIBRARY_LINE = "- Library: conversations, canvases, reports, and analysis materials."
+NO_CANVAS_LIBRARY_LINE = "- Library: conversations, reports, and analysis materials."
+
+
+def system_prompt_for(canvas_enabled: bool) -> str:
+    """The system prompt, with all canvas guidance stripped when the project's
+    canvas beta toggle is off so the model never learns canvas exists."""
+    if canvas_enabled:
+        return SYSTEM_PROMPT
+    prompt = SYSTEM_PROMPT_HEAD + "\n" + SYSTEM_PROMPT_TAIL
+    if CANVAS_INSIGHT_EXAMPLE not in prompt or CANVAS_LIBRARY_LINE not in prompt:
+        raise RuntimeError("Canvas prompt markers drifted; update system_prompt_for()")
+    prompt = prompt.replace(CANVAS_INSIGHT_EXAMPLE, "")
+    return prompt.replace(CANVAS_LIBRARY_LINE, NO_CANVAS_LIBRARY_LINE)
 
 
 def _memory_sort_key(memory: dict[str, Any]) -> str:
@@ -755,6 +804,7 @@ def create_agent_graph(
     chat_id: str = "",
     app_user_id: str = "",
     message_id: str = "",
+    canvas_enabled: bool = True,
 ):
     if not bearer_token:
         raise ValueError("bearer_token is required")
@@ -1269,31 +1319,70 @@ def create_agent_graph(
         }
 
     @tool
-    async def editProjectTags(
+    async def proposeTagsUpdate(
         add: list[str] | None = None,
         remove: list[str] | None = None,
+        summary: str = "",
     ) -> dict[str, Any]:
-        """Edit the project's host-visible tag vocabulary and return the updated
-        list. `add` creates tags that do not already exist; `remove` deletes
-        tags by exact text (case-insensitive). Read getProjectTags first, then
-        confirm in one sentence what changed. Tags are the portal vocabulary
-        hosts and participants see, so only remove a tag when the host asks for
-        that tag by name."""
-        add_list = [t.strip() for t in (add or []) if isinstance(t, str) and t.strip()]
-        remove_list = [t.strip() for t in (remove or []) if isinstance(t, str) and t.strip()]
+        """Propose tag vocabulary changes for the host to approve. Renders a
+        card in the chat UI.
+
+        `add` lists new tags to create; `remove` lists existing tags to delete
+        by exact text (case-insensitive). `summary` is one short sentence on
+        why. Read getProjectTags first. Tags are the portal vocabulary hosts
+        and participants see, so only propose removing a tag the host names
+        explicitly. The host sees the proposal in the chat and applies or
+        dismisses it; this tool never changes anything itself.
+        """
+        def _normalize(entries: list[str] | None) -> list[str]:
+            normalized: list[str] = []
+            seen: set[str] = set()
+            for entry in entries or []:
+                if not isinstance(entry, str):
+                    continue
+                text = entry.strip()
+                if not text or text.lower() in seen:
+                    continue
+                seen.add(text.lower())
+                normalized.append(text)
+            return normalized
+
+        add_list = _normalize(add)
+        remove_list = _normalize(remove)
         if not add_list and not remove_list:
             raise ValueError("Provide at least one tag to add or remove.")
 
         client = _create_echo_client()
         try:
-            result = await client.edit_project_tags(
-                project_id,
-                add=add_list,
-                remove=remove_list,
-            )
+            current = await client.list_project_tags(project_id)
         finally:
             await client.close()
-        return result
+
+        current_texts = [
+            str(tag.get("text", "")).strip()
+            for tag in current
+            if isinstance(tag, dict) and str(tag.get("text", "")).strip()
+        ]
+        current_lookup = {text.lower() for text in current_texts}
+
+        accepted_removals = [t for t in remove_list if t.lower() in current_lookup]
+        rejected_removals = [t for t in remove_list if t.lower() not in current_lookup]
+        if not add_list and not accepted_removals:
+            raise ValueError(
+                "None of the tags to remove exist in this project. "
+                f"Current tags: {sorted(current_texts)}"
+            )
+
+        return {
+            "kind": "tags_update_suggestion",
+            "project_id": project_id,
+            "summary": summary.strip(),
+            "add": add_list,
+            "remove": accepted_removals,
+            "current_tags": current_texts,
+            "rejected_removals": rejected_removals,
+            "visible_to_user": True,
+        }
 
     @tool
     async def getPortalLink() -> dict[str, Any]:
@@ -2109,10 +2198,10 @@ def create_agent_graph(
         readSkill,
         getProjectSettings,
         getProjectTags,
-        editProjectTags,
         getPortalLink,
         navigateTo,
         proposeProjectUpdate,
+        proposeTagsUpdate,
         proposeCustomVerificationTopic,
         proposeCanvas,
         sendProgressUpdate,
@@ -2139,7 +2228,11 @@ def create_agent_graph(
         amendMemory,
         forgetMemory,
     ]
-    system_prompt = SYSTEM_PROMPT + knowledge.prompt_section(docs_base_url=docs_base_url)
+    if not canvas_enabled:
+        tools = [tool for tool in tools if tool.name not in CANVAS_TOOL_NAMES]
+    system_prompt = system_prompt_for(canvas_enabled) + knowledge.prompt_section(
+        docs_base_url=docs_base_url
+    )
     configured_llm = llm or _build_llm()
     llm_with_tools = configured_llm.bind_tools(tools)
     tool_names = {tool.name for tool in tools}
@@ -2170,7 +2263,7 @@ def create_agent_graph(
         return ambient_memory_section
 
     async def _load_canvas_activity_section() -> str:
-        if not chat_id:
+        if not canvas_enabled or not chat_id:
             return ""
 
         client = _create_echo_client()

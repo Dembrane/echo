@@ -1,7 +1,7 @@
 import pytest
 from langchain_core.messages import AIMessage
 
-from agent import SYSTEM_PROMPT, create_agent_graph
+from agent import SYSTEM_PROMPT, UI_TOOLS, create_agent_graph
 
 
 class _CaptureLLM:
@@ -1765,12 +1765,12 @@ def test_edit_and_retract_by_id_prompt_rules_present():
     assert "forgetmemory" in prompt
 
 
-@pytest.mark.asyncio
-async def test_edit_project_tags_adds_and_removes_then_returns_updated_list():
+def _propose_tags_tools(project_tags_payload: list[dict] | None = None):
     llm = _CaptureLLM()
     factory = _FakeEchoClientFactory(
         search_payload={"conversations": []},
         transcripts={},
+        project_tags_payload=project_tags_payload,
     )
 
     create_agent_graph(
@@ -1779,39 +1779,96 @@ async def test_edit_project_tags_adds_and_removes_then_returns_updated_list():
         llm=llm,
         echo_client_factory=factory,
     )
-    tools = _tool_map(llm.bound_tools)
+    return _tool_map(llm.bound_tools), factory
 
-    result = await tools["editProjectTags"].ainvoke(
-        {"add": ["climate", "  "], "remove": ["old-tag"]}
+
+@pytest.mark.asyncio
+async def test_propose_tags_update_returns_proposal_without_writing():
+    tools, factory = _propose_tags_tools(
+        project_tags_payload=[
+            {"id": "tag-1", "text": "climate"},
+            {"id": "tag-2", "text": "old-tag"},
+        ]
     )
 
-    assert result["count"] == 1
-    assert result["tags"] == [{"id": "tag-1", "text": "climate"}]
-    # Blank entries are dropped before the call reaches the server.
-    assert factory.instances[0].edit_project_tags_calls == [
-        {"project_id": "project-1", "add": ["climate"], "remove": ["old-tag"]}
-    ]
+    result = await tools["proposeTagsUpdate"].ainvoke(
+        {
+            # Blank and duplicate entries are dropped during normalization.
+            "add": ["housing", "  ", "housing"],
+            "remove": ["old-tag"],
+            "summary": "Add housing and drop the retired tag.",
+        }
+    )
+
+    assert result["kind"] == "tags_update_suggestion"
+    assert result["project_id"] == "project-1"
+    assert result["add"] == ["housing"]
+    assert result["remove"] == ["old-tag"]
+    assert result["current_tags"] == ["climate", "old-tag"]
+    assert result["summary"] == "Add housing and drop the retired tag."
+    assert result["rejected_removals"] == []
+    assert result["visible_to_user"] is True
+    # The proposal only reads the current tags; the agent never writes them.
+    assert factory.instances[0].list_project_tags_calls == ["project-1"]
+    assert factory.instances[0].edit_project_tags_calls == []
     assert factory.instances[0].closed is True
 
 
 @pytest.mark.asyncio
-async def test_edit_project_tags_requires_at_least_one_change():
-    llm = _CaptureLLM()
-    factory = _FakeEchoClientFactory(
-        search_payload={"conversations": []},
-        transcripts={},
+async def test_propose_tags_update_rejects_removals_of_unknown_tags():
+    tools, factory = _propose_tags_tools(
+        project_tags_payload=[{"id": "tag-1", "text": "climate"}]
     )
 
+    result = await tools["proposeTagsUpdate"].ainvoke(
+        {"add": ["housing"], "remove": ["missing-tag"]}
+    )
+
+    # The unknown removal is reported back to the model, not silently dropped.
+    assert result["remove"] == []
+    assert result["rejected_removals"] == ["missing-tag"]
+    assert result["add"] == ["housing"]
+    assert factory.instances[0].edit_project_tags_calls == []
+
+
+@pytest.mark.asyncio
+async def test_propose_tags_update_raises_when_nothing_valid_remains():
+    tools, factory = _propose_tags_tools(
+        project_tags_payload=[{"id": "tag-1", "text": "climate"}]
+    )
+
+    with pytest.raises(ValueError):
+        await tools["proposeTagsUpdate"].ainvoke(
+            {"add": [], "remove": ["missing-tag"]}
+        )
+    assert factory.instances[0].edit_project_tags_calls == []
+
+
+@pytest.mark.asyncio
+async def test_propose_tags_update_requires_at_least_one_change():
+    tools, _factory = _propose_tags_tools()
+
+    with pytest.raises(ValueError):
+        await tools["proposeTagsUpdate"].ainvoke({"add": [], "remove": []})
+
+
+def test_propose_tags_update_is_a_registered_ui_tool():
+    assert "proposeTagsUpdate" in UI_TOOLS
+
+    llm = _CaptureLLM()
     create_agent_graph(
         project_id="project-1",
         bearer_token="token-1",
         llm=llm,
-        echo_client_factory=factory,
+        echo_client_factory=_FakeEchoClientFactory(
+            search_payload={"conversations": []},
+            transcripts={},
+        ),
     )
-    tools = _tool_map(llm.bound_tools)
-
-    with pytest.raises(ValueError):
-        await tools["editProjectTags"].ainvoke({"add": [], "remove": []})
+    tool_names = {tool.name for tool in llm.bound_tools}
+    assert "proposeTagsUpdate" in tool_names
+    # The direct-write tags tool is gone; the agent can only propose.
+    assert "editProjectTags" not in tool_names
 
 
 @pytest.mark.asyncio

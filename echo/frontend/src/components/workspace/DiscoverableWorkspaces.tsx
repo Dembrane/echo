@@ -129,6 +129,8 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 			["v2", "discoverable-workspaces", orgId],
 			["v2", "organisation", orgId, "workspaces"],
 			["v2", "workspace-usage"],
+			["v2", "workspace-projects"],
+			["projects"],
 		]) {
 			queryClient.invalidateQueries({ queryKey: key });
 		}

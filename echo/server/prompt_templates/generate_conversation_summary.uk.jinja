@@ -1,5 +1,12 @@
 Вам надано серію цитат із транскрипції розмови в хронологічному порядку.
 
+{% if conversation_title %}
+<conversation_title>
+Користувач/учасники явно встановили назву цієї розмови як:
+{{ conversation_title }}
+</conversation_title>
+{% endif %}
+
 <quotes>
 {{ quote_text_joined }}
 </quotes>

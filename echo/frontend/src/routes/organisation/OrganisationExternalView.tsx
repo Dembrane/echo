@@ -24,8 +24,14 @@ interface Props {
 // The admin pages (members / usage / etc.) 403 for them, so we render a
 // calmer "here's what you can do" page instead.
 export const OrganisationExternalView = ({ organisationId }: Props) => {
-	const { workspaces } = useWorkspace();
+	const { workspaces, setWorkspace } = useWorkspace();
 	const navigate = useNavigate();
+
+	// Sync context first so workspace-scoped queries don't lag.
+	const openWorkspace = (id: string) => {
+		setWorkspace(id);
+		navigate(`/w/${id}/home`);
+	};
 
 	const orgWorkspaces = workspaces.filter((w) => w.org_id === organisationId);
 	const first = orgWorkspaces[0];
@@ -86,7 +92,7 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 								p="md"
 								withBorder
 								className="cursor-pointer"
-								onClick={() => navigate(`/w/${ws.id}/home`)}
+								onClick={() => openWorkspace(ws.id)}
 							>
 								<Group justify="space-between" align="center" wrap="nowrap">
 									<Stack gap={2}>
@@ -109,7 +115,7 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 										size="xs"
 										onClick={(e) => {
 											e.stopPropagation();
-											navigate(`/w/${ws.id}/home`);
+											openWorkspace(ws.id);
 										}}
 									>
 										<Trans>Open</Trans>

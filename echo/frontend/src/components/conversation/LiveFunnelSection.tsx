@@ -1,44 +1,29 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
-import {
-	ActionIcon,
-	Badge,
-	Box,
-	Button,
-	Card,
-	Group,
-	Modal,
-	Stack,
-	Text,
-	TextInput,
-	Tooltip,
-} from "@mantine/core";
-import {
-	BatteryLowIcon,
-	PencilSimpleIcon,
-	WifiSlashIcon,
-} from "@phosphor-icons/react";
+import { Box, Card, Group, Modal, Stack, Text } from "@mantine/core";
+import { BatteryLowIcon, WifiSlashIcon } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import posthog from "posthog-js";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 
-import { I18nLink } from "@/components/common/i18nLink";
-import { toast } from "@/components/common/Toaster";
-import { useUpdateConversationByIdMutation } from "@/components/conversation/hooks";
 import {
 	type FunnelStage,
 	type FunnelVisitor,
-	type MonitorConversation,
 	useConversationMonitor,
 } from "@/hooks/useConversationMonitor";
+import { ConversationDrilldownModal } from "./ConversationDrilldownModal";
 import { FunnelCanvas, type NodeDatum } from "./FunnelCanvas";
+import { MonitorBadge } from "./MonitorBadge";
 
 const weakNetwork = (
 	network: { online?: boolean; effective_type?: string } | null,
 ): boolean => {
 	if (!network) return false;
 	if (network.online === false) return true;
-	return network.effective_type === "2g" || network.effective_type === "slow-2g";
+	return (
+		network.effective_type === "2g" || network.effective_type === "slow-2g"
+	);
 };
 
 const lowBattery = (
@@ -57,17 +42,13 @@ const relativeTime = (stamp: string | null): string => {
 	}
 };
 
-type Selection =
-	| { kind: "visitor"; visitor: FunnelVisitor }
-	| { kind: "conversation"; conversation: MonitorConversation };
-
 const STAGE_TIMELINE_ORDER: { stage: FunnelStage; label: string }[] = [
-	{ stage: "scanned", label: t`Scanned the QR` },
-	{ stage: "terms", label: t`Accepted terms` },
-	{ stage: "mic_ok", label: t`Mic checked` },
-	{ stage: "mic_skipped", label: t`Skipped mic check` },
-	{ stage: "mic_blocked", label: t`Mic blocked` },
-	{ stage: "profile", label: t`Entered details` },
+	{ label: t`Scanned the QR`, stage: "scanned" },
+	{ label: t`Accepted terms`, stage: "terms" },
+	{ label: t`Mic checked`, stage: "mic_ok" },
+	{ label: t`Skipped mic check`, stage: "mic_skipped" },
+	{ label: t`Mic blocked`, stage: "mic_blocked" },
+	{ label: t`Entered details`, stage: "profile" },
 ];
 
 const StageTimeline = ({ stages }: { stages: Record<string, string> }) => {
@@ -77,15 +58,13 @@ const StageTimeline = ({ stages }: { stages: Record<string, string> }) => {
 	if (steps.length === 0) return null;
 	return (
 		<Stack gap={4}>
-			<Text size="xs" fw={600} tt="uppercase" c="dimmed">
+			<Text size="xs" fw={600} tt="uppercase">
 				<Trans>Timeline</Trans>
 			</Text>
 			{steps.map((step) => (
 				<Group key={step.stage} gap="xs" justify="space-between" wrap="nowrap">
 					<Text size="xs">{step.label}</Text>
-					<Text size="xs" c="dimmed">
-						{relativeTime(step.at)}
-					</Text>
+					<Text size="xs">{relativeTime(step.at)}</Text>
 				</Group>
 			))}
 		</Stack>
@@ -99,31 +78,27 @@ const VisitorDrilldown = ({ visitor }: { visitor: FunnelVisitor }) => (
 				{visitor.name?.trim() || t`Anonymous visitor`}
 			</Text>
 			{visitor.scan_count > 1 && (
-				<Badge size="xs" color="gray" variant="light">
+				<MonitorBadge size="xs" color="gray" variant="light">
 					<Trans>Scanned {visitor.scan_count} times</Trans>
-				</Badge>
+				</MonitorBadge>
 			)}
 		</Group>
 		{visitor.tags.length > 0 && (
 			<Group gap={4} wrap="wrap">
 				{visitor.tags.map((tag) => (
-					<Badge
+					<MonitorBadge
 						key={tag}
 						size="xs"
 						variant="light"
 						color={visitor.tags_preselected ? "primary" : "gray"}
 					>
 						{visitor.tags_preselected ? t`${tag} (preselected)` : tag}
-					</Badge>
+					</MonitorBadge>
 				))}
 			</Group>
 		)}
 		<Group gap="lg">
-			{visitor.device && (
-				<Text size="xs" c="dimmed">
-					{visitor.device}
-				</Text>
-			)}
+			{visitor.device && <Text size="xs">{visitor.device}</Text>}
 			{weakNetwork(visitor.network) && (
 				<Group gap={4}>
 					<WifiSlashIcon size={14} className="text-orange-500" />
@@ -145,72 +120,6 @@ const VisitorDrilldown = ({ visitor }: { visitor: FunnelVisitor }) => (
 	</Stack>
 );
 
-const ConversationDrilldown = ({
-	conversation,
-	base,
-}: {
-	conversation: MonitorConversation;
-	base: string | null;
-}) => {
-	const [name, setName] = useState(conversation.label ?? "");
-	const update = useUpdateConversationByIdMutation();
-
-	useEffect(() => {
-		setName(conversation.label ?? "");
-	}, [conversation.label]);
-
-	const save = () => {
-		update.mutate(
-			{ id: conversation.id, payload: { participant_name: name.trim() } },
-			{
-				onSuccess: () => toast.success(t`Saved`),
-				onError: () => toast.error(t`Could not save`),
-			},
-		);
-	};
-
-	return (
-		<Stack gap="sm">
-			<TextInput
-				label={t`Participant name`}
-				value={name}
-				onChange={(event) => setName(event.currentTarget.value)}
-				rightSection={
-					<ActionIcon
-						variant="subtle"
-						color="primary"
-						onClick={save}
-						loading={update.isPending}
-						aria-label={t`Save`}
-					>
-						<PencilSimpleIcon size={15} />
-					</ActionIcon>
-				}
-			/>
-			<Group gap="md">
-				<Text size="xs" c="dimmed" tt="capitalize">
-					{conversation.state}
-				</Text>
-				{conversation.has_error && conversation.error_message && (
-					<Text size="xs" c="red.7" lineClamp={1}>
-						{conversation.error_message}
-					</Text>
-				)}
-			</Group>
-			{base && (
-				<I18nLink
-					to={`${base}/conversations/${conversation.id}`}
-					className="no-underline"
-				>
-					<Button variant="light" size="xs">
-						<Trans>Open conversation</Trans>
-					</Button>
-				</I18nLink>
-			)}
-		</Stack>
-	);
-};
-
 const StageLabel = ({
 	label,
 	count,
@@ -226,12 +135,12 @@ const StageLabel = ({
 		className="justify-center"
 		style={{ flexBasis: 0, flexGrow: weight }}
 	>
-		<Text size="xs" fw={600} tt="uppercase" c="dimmed">
+		<Text size="xs" fw={600} tt="uppercase">
 			{label}
 		</Text>
-		<Badge size="xs" variant="light" color="gray">
+		<MonitorBadge size="xs" variant="light" color="gray">
 			{count}
-		</Badge>
+		</MonitorBadge>
 	</Group>
 );
 
@@ -246,7 +155,16 @@ export const LiveFunnelSection = ({
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const base =
 		workspaceId && projectId ? `/w/${workspaceId}/projects/${projectId}` : null;
-	const [selected, setSelected] = useState<Selection | null>(null);
+	const [selectedVisitor, setSelectedVisitor] = useState<FunnelVisitor | null>(
+		null,
+	);
+	// Track by id so the shared modal reads fresh snapshots (and closes when the
+	// conversation is deleted / ages out).
+	const [selectedConversationId, setSelectedConversationId] = useState<
+		string | null
+	>(null);
+	const selectedConversation =
+		conversations.find((c) => c.id === selectedConversationId) ?? null;
 
 	const { nodes, counts, weights } = useMemo(() => {
 		const recording = conversations.filter((c) => c.is_live);
@@ -278,17 +196,17 @@ export const LiveFunnelSection = ({
 	return (
 		<Stack gap="md">
 			<Group justify="space-between" align="center">
-				<Text size="xs" c="dimmed" tt="uppercase">
+				<Text size="xs" tt="uppercase">
 					<Trans>Live participant flow</Trans>
 				</Text>
-				<Text size="xs" c="dimmed">
+				<Text size="xs">
 					<Plural value={totalActive} one="# active" other="# active" />
 				</Text>
 			</Group>
 
 			{totalActive === 0 ? (
 				<Card withBorder p="lg" radius="sm">
-					<Text size="sm" c="dimmed" ta="center">
+					<Text size="sm" ta="center">
 						<Trans>
 							When participants scan the QR code, they'll appear here and flow
 							across the stages in real time.
@@ -317,13 +235,19 @@ export const LiveFunnelSection = ({
 					<FunnelCanvas
 						nodes={nodes}
 						weights={weights}
-						onSelect={(node) =>
-							setSelected(
-								node.kind === "visitor"
-									? { kind: "visitor", visitor: node.data }
-									: { conversation: node.data, kind: "conversation" },
-							)
-						}
+						onSelect={(node) => {
+							posthog.capture("monitor_drilldown_opened", {
+								entity_type: node.kind === "visitor" ? "visitor" : "recording",
+								project_id: projectId,
+								stage_or_state:
+									node.kind === "visitor" ? node.data.stage : node.data.state,
+							});
+							if (node.kind === "visitor") {
+								setSelectedVisitor(node.data);
+							} else {
+								setSelectedConversationId(node.data.id);
+							}
+						}}
 						onHover={(node) =>
 							onHoverConversation?.(
 								node?.kind === "conversation" ? node.data.id : null,
@@ -334,26 +258,21 @@ export const LiveFunnelSection = ({
 			)}
 
 			<Modal
-				opened={selected !== null}
-				onClose={() => setSelected(null)}
-				title={
-					selected?.kind === "conversation"
-						? t`Conversation`
-						: t`Visitor details`
-				}
+				opened={selectedVisitor !== null}
+				onClose={() => setSelectedVisitor(null)}
+				title={t`Visitor details`}
 				centered
 				size="md"
 			>
-				{selected?.kind === "visitor" && (
-					<VisitorDrilldown visitor={selected.visitor} />
-				)}
-				{selected?.kind === "conversation" && (
-					<ConversationDrilldown
-						conversation={selected.conversation}
-						base={base}
-					/>
-				)}
+				{selectedVisitor && <VisitorDrilldown visitor={selectedVisitor} />}
 			</Modal>
+
+			<ConversationDrilldownModal
+				conversation={selectedConversation}
+				base={base}
+				projectId={projectId}
+				onClose={() => setSelectedConversationId(null)}
+			/>
 		</Stack>
 	);
 };
