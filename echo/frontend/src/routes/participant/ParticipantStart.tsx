@@ -7,6 +7,7 @@ import useSessionStorageState from "use-session-storage-state";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
 import { useParticipantProjectById } from "@/components/participant/hooks";
 import ParticipantOnboardingCards from "@/components/participant/ParticipantOnboardingCards";
+import { ENABLE_MONITOR } from "@/config";
 import { useVisitorBeacon } from "@/hooks/useVisitorBeacon";
 import { testId } from "@/lib/testUtils";
 
@@ -29,6 +30,7 @@ export const ParticipantStartRoute = () => {
 		tagsPreselected: false,
 	});
 	useVisitorBeacon(projectId, {
+		enabled: ENABLE_MONITOR,
 		stage: funnel.stage,
 		tags: funnel.tags,
 		tagsPreselected: funnel.tagsPreselected,

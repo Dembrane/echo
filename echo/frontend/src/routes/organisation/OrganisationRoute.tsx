@@ -412,7 +412,7 @@ export const OrganisationRoute = () => {
 	// The current user's full workspace list (provided by the app-level
 	// WorkspaceProvider). Used to detect external-only mode when the
 	// org-level fetches 403.
-	const { workspaces: userWorkspaces } = useWorkspace();
+	const { workspaces: userWorkspaces, setWorkspace } = useWorkspace();
 
 	// Free tier: one workspace per org. Gate the "New workspace" action on click
 	// (open the upgrade modal) rather than letting the user fill the create flow.
@@ -795,10 +795,15 @@ export const OrganisationRoute = () => {
 								workspaces={workspaces}
 								isManager={isAdmin}
 								atWorkspaceLimit={atWorkspaceLimit}
-								onOpenWorkspace={(id) => navigate(`/w/${id}/home`)}
-								onOpenProject={(wsId, projectId) =>
-									navigate(`/w/${wsId}/projects/${projectId}/home`)
-								}
+								onOpenWorkspace={(id) => {
+									// Sync context first so workspace-scoped queries don't lag.
+									setWorkspace(id);
+									navigate(`/w/${id}/home`);
+								}}
+								onOpenProject={(wsId, projectId) => {
+									setWorkspace(wsId);
+									navigate(`/w/${wsId}/projects/${projectId}/home`);
+								}}
 								onRequestWorkspace={() => {
 									if (atWorkspaceLimit) {
 										wsUpgradeHandlers.open();

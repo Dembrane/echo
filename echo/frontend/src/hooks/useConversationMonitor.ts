@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 
 import { API_BASE_URL } from "@/config";
@@ -23,6 +24,8 @@ export type ParticipantState =
 	| "finished"
 	| "text"
 	| "backgrounded"
+	| "offline"
+	| "left"
 	| "idle";
 
 // The host's first question: is audio actually coming in? "stalled" is the
@@ -32,6 +35,8 @@ export type RecordingHealth =
 	| "stalled"
 	| "paused"
 	| "backgrounded"
+	| "offline"
+	| "left"
 	| "waiting"
 	| "idle"
 	| "finished";
@@ -48,11 +53,18 @@ export type MonitorBattery = {
 	charging?: boolean;
 };
 
+// A drilldown-timeline step; `key` maps to a translated label on the frontend.
+export type MonitorTimelineStep = {
+	key: string;
+	at: string;
+};
+
 export type MonitorConversation = {
 	id: string;
 	label: string | null;
 	is_live: boolean;
 	is_finished: boolean;
+	locked: boolean;
 	state: ParticipantState;
 	recording_health: RecordingHealth;
 	/** Live mic input level (0..1) from the participant's last beacon, or null
@@ -60,10 +72,15 @@ export type MonitorConversation = {
 	audio_level: number | null;
 	mode: "voice" | "text" | null;
 	tags: string[];
+	/** Project-tag ids for the current tags, so the drilldown can edit them. */
+	tag_ids: string[];
 	language: string | null;
 	latest_transcript: string | null;
 	created_at: string | null;
 	duration: number | null;
+	/** Accumulated recording seconds (excludes paused gaps), or null. */
+	recorded_seconds: number | null;
+	timeline: MonitorTimelineStep[];
 	network: MonitorNetwork | null;
 	battery: MonitorBattery | null;
 	last_chunk_at: string | null;
@@ -82,6 +99,7 @@ export type MonitorSummary = {
 	transcribing: number;
 	with_errors: number;
 	not_receiving: number;
+	offline: number;
 	total: number;
 	pending_transcription: number;
 	catch_up_eta_seconds: number;
@@ -122,32 +140,144 @@ export type MonitorResponse = {
 	live_window_seconds: number;
 };
 
-const EMPTY_FUNNEL: MonitorFunnel = { visitors: [], summary: { total: 0 } };
+const EMPTY_FUNNEL: MonitorFunnel = { summary: { total: 0 }, visitors: [] };
 
 const EMPTY_SUMMARY: MonitorSummary = {
 	catch_up_eta_seconds: 0,
 	finished: 0,
 	live: 0,
 	not_receiving: 0,
+	offline: 0,
 	pending_transcription: 0,
 	total: 0,
 	transcribing: 0,
 	with_errors: 0,
 };
 
-// The SSE stream is the primary channel: the server pushes a fresh snapshot on
-// connect and on every change (a participant ping, transcription, or finish
-// nudges it). React Query stays as a robust fallback — it does the very first
-// fetch and keeps a slow safety poll in case the stream can't connect.
+// SSE is the primary channel; React Query is the fallback (first fetch + poll).
 const FALLBACK_POLL_MS = 5000;
 const SAFETY_POLL_MS = 30000;
+
+type StreamState = { data: MonitorResponse | null; connected: boolean };
+
+// One EventSource per project, shared + ref-counted so multiple components on the
+// page reuse a single stream instead of each opening its own.
+type SharedConnection = {
+	refCount: number;
+	state: StreamState;
+	source: EventSource | null;
+	listeners: Set<(state: StreamState) => void>;
+	degradedAt: number | null;
+	degradeTimer: ReturnType<typeof setTimeout> | null;
+	loadFailedFired: boolean;
+};
+
+const connections = new Map<string, SharedConnection>();
+
+const notify = (conn: SharedConnection) => {
+	for (const listener of conn.listeners) listener(conn.state);
+};
+
+// Dedupe on the shared connection so concurrent hook mounts emit this once.
+const reportLoadFailed = (projectId: string) => {
+	const conn = connections.get(projectId);
+	if (!conn || conn.loadFailedFired) return;
+	conn.loadFailedFired = true;
+	posthog.capture("monitor_load_failed", { project_id: projectId });
+};
+
+const clearLoadFailed = (projectId: string) => {
+	const conn = connections.get(projectId);
+	if (conn) conn.loadFailedFired = false;
+};
+
+const openSource = (projectId: string, conn: SharedConnection) => {
+	const url = `${API_BASE_URL}/v2/bff/conversations/monitor/stream?project_id=${encodeURIComponent(
+		projectId,
+	)}`;
+	const source = new EventSource(url, { withCredentials: true });
+	conn.source = source;
+	source.addEventListener("snapshot", (event: Event) => {
+		if (!(event instanceof MessageEvent)) return;
+		try {
+			const data = JSON.parse(event.data) as MonitorResponse;
+			conn.state = { connected: true, data };
+			notify(conn);
+			// Recovered: cancel a pending degrade; if one was reported, emit a paired reconnect.
+			if (conn.degradeTimer) {
+				clearTimeout(conn.degradeTimer);
+				conn.degradeTimer = null;
+			}
+			if (conn.degradedAt !== null) {
+				posthog.capture("monitor_stream_reconnected", {
+					downtime_seconds: Math.round((Date.now() - conn.degradedAt) / 1000),
+					project_id: projectId,
+				});
+				conn.degradedAt = null;
+			}
+		} catch {
+			// Ignore a malformed frame; the next snapshot recovers.
+		}
+	});
+	source.onerror = () => {
+		// Auto-reconnects; mark down meanwhile so consumers fall back to the poll.
+		conn.state = { connected: false, data: conn.state.data };
+		notify(conn);
+		// Debounce ~3s so a brief reconnect flap doesn't emit a degrade/reconnect pair.
+		if (!conn.degradeTimer && conn.degradedAt === null) {
+			conn.degradeTimer = setTimeout(() => {
+				conn.degradedAt = Date.now();
+				posthog.capture("monitor_stream_degraded", { project_id: projectId });
+				conn.degradeTimer = null;
+			}, 3000);
+		}
+	};
+};
+
+const subscribeToMonitor = (
+	projectId: string,
+	listener: (state: StreamState) => void,
+): (() => void) => {
+	let conn = connections.get(projectId);
+	if (!conn) {
+		conn = {
+			degradedAt: null,
+			degradeTimer: null,
+			listeners: new Set(),
+			loadFailedFired: false,
+			refCount: 0,
+			source: null,
+			state: { connected: false, data: null },
+		};
+		connections.set(projectId, conn);
+	}
+	const connection = conn;
+	connection.listeners.add(listener);
+	connection.refCount += 1;
+	if (connection.refCount === 1) openSource(projectId, connection);
+	listener(connection.state);
+	return () => {
+		connection.listeners.delete(listener);
+		connection.refCount -= 1;
+		if (connection.refCount <= 0) {
+			connection.source?.close();
+			if (connection.degradeTimer) {
+				clearTimeout(connection.degradeTimer);
+				connection.degradeTimer = null;
+			}
+			connections.delete(projectId);
+		}
+	};
+};
 
 export const useConversationMonitor = (
 	projectId: string | undefined,
 	enabled = true,
 ) => {
-	const [streamData, setStreamData] = useState<MonitorResponse | null>(null);
-	const [streamConnected, setStreamConnected] = useState(false);
+	const [stream, setStream] = useState<StreamState>({
+		connected: false,
+		data: null,
+	});
 
 	const query = useQuery({
 		enabled: enabled && !!projectId,
@@ -156,51 +286,39 @@ export const useConversationMonitor = (
 				project_id: projectId,
 			}),
 		queryKey: ["v2", "conversation-monitor", projectId],
-		// Poll fast until the stream is live, then drop to a slow safety net.
-		refetchInterval: streamConnected ? SAFETY_POLL_MS : FALLBACK_POLL_MS,
+		// Fast poll until the stream is live, then a slow safety net.
+		refetchInterval: stream.connected ? SAFETY_POLL_MS : FALLBACK_POLL_MS,
 	});
 
 	useEffect(() => {
-		if (!enabled || !projectId) return;
-		// Reset per-project so a stale snapshot never bleeds across projects.
-		setStreamData(null);
-		setStreamConnected(false);
-
-		const url = `${API_BASE_URL}/v2/bff/conversations/monitor/stream?project_id=${encodeURIComponent(
-			projectId,
-		)}`;
-		const source = new EventSource(url, { withCredentials: true });
-
-		source.addEventListener("snapshot", (event: Event) => {
-			if (event instanceof MessageEvent) {
-				try {
-					setStreamData(JSON.parse(event.data) as MonitorResponse);
-					setStreamConnected(true);
-				} catch {
-					// Ignore a malformed frame; the next snapshot recovers.
-				}
-			}
-		});
-
-		source.onerror = () => {
-			// EventSource auto-reconnects; until it does, fall back to polling.
-			setStreamConnected(false);
-		};
-
-		return () => {
-			source.close();
-			setStreamConnected(false);
-		};
+		if (!enabled || !projectId) {
+			setStream({ connected: false, data: null });
+			return;
+		}
+		return subscribeToMonitor(projectId, setStream);
 	}, [enabled, projectId]);
 
-	const data = streamData ?? query.data;
+	// Stream wins while live; when it's down, prefer the poll so a dead stream
+	// can't freeze the view on a stale snapshot.
+	const data = stream.connected
+		? (stream.data ?? query.data)
+		: (query.data ?? stream.data);
+
+	// Primitive deps so this runs only on the failed <-> recovered flip, not every snapshot.
+	const hasError = !!query.error;
+	const hasData = !!data;
+	useEffect(() => {
+		if (!projectId) return;
+		if (hasError && !hasData) reportLoadFailed(projectId);
+		else clearLoadFailed(projectId);
+	}, [hasError, hasData, projectId]);
 
 	return {
 		conversations: data?.conversations ?? [],
 		error: query.error ? query.error.message : null,
 		funnel: data?.funnel ?? EMPTY_FUNNEL,
-		isLoading: query.isLoading && !streamData,
-		isStreaming: streamConnected,
+		isLoading: query.isLoading && !data,
+		isStreaming: stream.connected,
 		summary: data?.summary ?? EMPTY_SUMMARY,
 	};
 };

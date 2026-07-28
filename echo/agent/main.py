@@ -64,6 +64,9 @@ async def copilotkit_endpoint(request: Request, project_id: str, path: Optional[
     chat_id = request.headers.get("x-dembrane-chat-id", "")
     app_user_id = request.headers.get("x-dembrane-app-user-id", "")
     message_id = request.headers.get("x-dembrane-message-id", "")
+    # The server resolves the project's canvas beta toggle and forwards the
+    # verdict; absent header means canvas stays off for this chat.
+    canvas_enabled = request.headers.get("x-dembrane-canvas-enabled", "").strip() == "1"
 
     agent = LangGraphAgent(
         name="default",
@@ -75,6 +78,7 @@ async def copilotkit_endpoint(request: Request, project_id: str, path: Optional[
             chat_id=chat_id,
             app_user_id=app_user_id,
             message_id=message_id,
+            canvas_enabled=canvas_enabled,
         ),
     )
     # CopilotKit currently rejects LangGraphAgent only for literal list inputs.

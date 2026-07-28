@@ -72,7 +72,7 @@ for outside clients. For an ordinary team workspace, leave it internal.
 ## Give the assistant standing context
 
 *[dembrane next only](../../features/dembrane-next.md).* If your team uses
-[Ask's agentic mode](./chat-and-ask.md#agentic-mode), the workspace *General* settings carry
+[Ask](./chat-and-ask.md#more-than-analysis), the workspace *General* settings carry
 two things for it:
 
 - *Assistant context* - guidance you write once that reaches every project chat in the

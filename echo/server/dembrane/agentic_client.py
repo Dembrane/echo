@@ -113,6 +113,7 @@ async def stream_agent_events(
     chat_id: Optional[str] = None,
     app_user_id: Optional[str] = None,
     message_id: Optional[str] = None,
+    canvas_enabled: bool = False,
     agent_service_url: Optional[str] = None,
     timeout_seconds: Optional[float] = None,
 ) -> AsyncGenerator[dict[str, Any], None]:
@@ -133,6 +134,9 @@ async def stream_agent_events(
         headers["X-Dembrane-App-User-Id"] = app_user_id
     if message_id:
         headers["X-Dembrane-Message-Id"] = message_id
+    # Always explicit so the agent never guesses: canvas tools and prompt
+    # sections exist only when the project's beta toggle is on.
+    headers["X-Dembrane-Canvas-Enabled"] = "1" if canvas_enabled else "0"
 
     payload: dict[str, Any] = {
         "threadId": thread_id,

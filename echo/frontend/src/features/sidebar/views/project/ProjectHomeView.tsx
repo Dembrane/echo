@@ -16,6 +16,7 @@ import { useLocation, useParams } from "react-router";
 import { useProjectChatsCountQuery } from "@/components/chat/hooks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
+import { ENABLE_CANVAS, ENABLE_MONITOR } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
@@ -35,7 +36,7 @@ export const ProjectHomeView = () => {
 	// context hasn't yet synced from the URL (saves a one-tick flash).
 	const projectQuery = useProjectById({
 		projectId: projectId ?? "",
-		query: { fields: ["id", "name"] },
+		query: { fields: ["id", "name", "is_canvas_enabled"] },
 	});
 	const conversationsCountQuery = useConversationsCountByProjectId(
 		projectId ?? "",
@@ -80,17 +81,24 @@ export const ProjectHomeView = () => {
 				label={<Trans>Portal editor</Trans>}
 				icon={PaintBrushIcon}
 			/>
-			<NavItem
-				to={`${base}/monitor`}
-				label={<Trans>Monitor</Trans>}
-				icon={BroadcastIcon}
-			/>
-			<NavItem
-				to={`${base}/library`}
-				label={<Trans>Library</Trans>}
-				icon={BooksIcon}
-				active={libraryActive}
-			/>
+			{ENABLE_MONITOR && (
+				<NavItem
+					to={`${base}/monitor`}
+					label={<Trans>Monitor</Trans>}
+					icon={BroadcastIcon}
+				/>
+			)}
+			{/* Library is the canvas surface: the env flag mounts the routes,
+			    but each project also opts in via the experimental toggle in
+			    project settings (is_canvas_enabled). */}
+			{ENABLE_CANVAS && project?.is_canvas_enabled && (
+				<NavItem
+					to={`${base}/library`}
+					label={<Trans>Library</Trans>}
+					icon={BooksIcon}
+					active={libraryActive}
+				/>
+			)}
 			<NavItem
 				to={`${base}/host-guide`}
 				label={<Trans>Host guide</Trans>}

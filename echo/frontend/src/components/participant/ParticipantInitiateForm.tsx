@@ -173,12 +173,6 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 	if (readyValues) {
 		return (
 			<Stack className="w-full" {...testId("portal-ready-to-record")}>
-				<Title order={2}>
-					<Trans>Ready to record</Trans>
-				</Title>
-				<Text size="lg">
-					<Trans>Start when you are ready.</Trans>
-				</Text>
 				<Button
 					size="lg"
 					loading={initiateConversationMutation.isPending}

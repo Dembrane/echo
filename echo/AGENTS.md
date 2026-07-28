@@ -160,7 +160,7 @@ Long-running progress streams via Server-Sent Events backed by Redis pub/sub (re
 
 Which group powers which feature is non-obvious, so don't downgrade silently.
 
-- `MULTI_MODAL_PRO` (Gemini 2.5 Pro): chat, report generation, transcript correction. **Do not downgrade chat to Flash**
+- `MULTI_MODAL_PRO` (Gemini 2.5 Pro): chat, report generation, transcription. **Do not downgrade chat to Flash**
 - `MULTI_MODAL_FAST` (Gemini 2.5 Flash): suggestions, verification, stateless endpoints
 - `TEXT_FAST` (Azure GPT-4.1): being deprecated, migrating to Gemini
 - Report prompt templates are written **in the target language**, not English with a "write in X" instruction
@@ -168,11 +168,12 @@ Which group powers which feature is non-obvious, so don't downgrade silently.
 
 ### Transcription
 
-- AssemblyAI `universal-3-pro` supports en, es, pt, fr, de, it
-- Dutch (`nl`) **requires** `universal-2` fallback; `universal-3-pro` does not support it
-- Production uses webhook mode (`ASSEMBLYAI_WEBHOOK_URL`); polling is only a fallback
-- After raw transcription, a Gemini pass corrects, normalizes hotwords, redacts PII, and adds recording feedback
+- Transcription runs as a single synchronous Gemini pass on `MULTI_MODAL_PRO` (Vertex `europe-west1`, EU). The `Dembrane-26-07` provider sends chunk audio directly to Gemini, which transcribes, normalizes hotwords, optionally redacts PII, and returns a recording-feedback note in one call
+- Gemini is natively multilingual (en, nl, de, fr, es, it, uk and more); there is no per-language model selection
+- When PII redaction or anonymization is requested, a dedicated second Gemini pass redacts the transcribed text (a single transcribe-and-redact pass under-redacts because verbatim transcription dominates). Anonymized conversations then run `regex_redact_pii` (`pii_regex.py`) as a deterministic post-pass and store no raw response
+- The redaction pass keeps the correction prompt's keyterms allow-list permanently empty on purpose: hotwords are passed as canonical_terms for normalization only, never as keyterms, so nothing is exempted and all PII (including names that are hotwords) is redacted. Do not wire hotwords into keyterms
 - Load S3 audio via the shared file service (`_get_audio_file_object`); signed URLs may expire mid-request
+- `LiteLLM`/whisper remains a configurable alternate provider
 
 ## Directus Rules (Critical)
 

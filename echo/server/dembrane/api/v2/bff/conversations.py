@@ -38,6 +38,8 @@ from fastapi import Query, Request, APIRouter, HTTPException
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
+from dembrane.settings import get_settings
+from dembrane.free_tier import resolve_project_gate, workspace_over_cap_active
 from dembrane.redis_async import get_redis_client
 from dembrane.tier_capacity import is_conversation_locked
 from dembrane.directus_async import async_directus
@@ -100,28 +102,32 @@ _CONVERSATION_SEARCH_FIELDS = [
 
 
 def _conversation_lock(
-    conv: dict, tier: Optional[str]
+    conv: dict, tier: Optional[str], over_cap_active: bool = False
 ) -> tuple[bool, Optional[str]]:
     """Resolve (locked, lock_reason) for a conversation. Single source of the
-    lock decision, shared by the list/detail enrich step and the chunk
-    endpoints so they cannot diverge.
+    lock decision, shared by the list/detail/chunk reads so they cannot diverge.
 
-    The hours cap locks over-cap conversations on hour-capped tiers (Free's
-    1-hour recording cap); paid and legacy (None) tiers never lock.
+    Finished conversations lock on the `is_over_cap` stamp (which preserves
+    grandfathering); still-recording ones have no stamp yet, so they lock on the
+    live `over_cap_active` gate. Paid and legacy (None) tiers never lock.
     """
     if is_conversation_locked(conv, tier):
+        return True, "hours_cap"
+    if over_cap_active and not conv.get("is_finished"):
         return True, "hours_cap"
     return False, None
 
 
-def _enrich_conversation(conv: dict, tier: Optional[str]) -> dict:
+def _enrich_conversation(
+    conv: dict, tier: Optional[str], over_cap_active: bool = False
+) -> dict:
     """Add derived `locked` + `lock_reason`, scrub gated text (summary +
     merged_transcript) on locked rows, strip raw `is_over_cap`.
 
     Chunk transcripts are scrubbed separately by the chunk endpoints /
     include_chunks path via `_scrub_chunk_transcript`.
     """
-    locked, reason = _conversation_lock(conv, tier)
+    locked, reason = _conversation_lock(conv, tier, over_cap_active)
     conv["locked"] = locked
     # Keep lock_reason symmetric with locked (always present) for stable
     # serialization; None when unlocked.
@@ -283,7 +289,9 @@ async def list_conversations(
                             "conversation_id": {"_in": conv_ids},
                             "transcript": {"_nempty": True},
                         },
-                        "fields": ["conversation_id"],
+                        "aggregate": {"count": ["id"]},
+                        "groupBy": ["conversation_id"],
+                        # Directus caps grouped rows at its default limit (100).
                         "limit": -1,
                     }
                 },
@@ -299,8 +307,10 @@ async def list_conversations(
         convs = [c for c in convs if c["id"] in kept]
 
     tier = access.tier
+    # Live over-cap gate, once per request; non-free short-circuits before any read.
+    over_cap_active = await workspace_over_cap_active(access.workspace_id, tier)
     for conv in convs:
-        _enrich_conversation(conv, tier)
+        _enrich_conversation(conv, tier, over_cap_active)
 
     if convs:
         conv_ids = [c["id"] for c in convs]
@@ -328,87 +338,87 @@ async def list_conversations(
         for conv in convs:
             conv["conversation_artifacts"] = artifact_map.get(conv["id"], [])
 
-        # Derived chunk fields (has_transcript, last_chunk_at,
-        # has_only_text_chunks) so list views don't need the full chunk embed.
-        lean_chunks = (
-            await async_directus.get_items(
-                "conversation_chunk",
-                {
-                    "query": {
-                        "filter": {"conversation_id": {"_in": conv_ids}},
-                        "fields": ["conversation_id", "source", "timestamp", "created_at"],
-                        "limit": -1,
-                    }
-                },
-            )
-            or []
-        )
-        transcript_hits = (
-            await async_directus.get_items(
-                "conversation_chunk",
-                {
-                    "query": {
-                        "filter": {
-                            "conversation_id": {"_in": conv_ids},
-                            "transcript": {"_nempty": True},
-                        },
-                        "fields": ["conversation_id"],
-                        "limit": -1,
-                    }
-                },
-            )
-            or []
-        )
-        has_transcript_ids: set[str] = set()
-        if isinstance(transcript_hits, list):
-            for row in transcript_hits:
-                cid = row.get("conversation_id")
-                if cid:
-                    has_transcript_ids.add(cid)
+        # Derived chunk fields via grouped aggregates: no chunk rows cross
+        # the wire. last_chunk_at is max(coalesce(timestamp, created_at)),
+        # split into two aggregates because SQL max() can't coalesce here.
+        def _chunk_agg(extra_filter: dict, aggregate: dict) -> dict:
+            return {
+                "query": {
+                    "filter": {"conversation_id": {"_in": conv_ids}, **extra_filter},
+                    "aggregate": aggregate,
+                    "groupBy": ["conversation_id"],
+                    # Directus caps grouped rows at its default limit (100).
+                    "limit": -1,
+                }
+            }
 
-        # Genuinely-failed chunks: an error set AND no transcript. This
-        # excludes transient errors that were later superseded by a successful
-        # transcript on the same chunk, so the list badge flags real problems
-        # only. Source-agnostic on purpose, so dashboard uploads surface too
-        # (the live monitor is portal-only, this list is not).
-        error_hits = (
-            await async_directus.get_items(
+        (
+            count_rows,
+            non_text_rows,
+            transcript_rows,
+            error_rows,
+            ts_rows,
+            created_rows,
+        ) = await asyncio.gather(
+            async_directus.get_items("conversation_chunk", _chunk_agg({}, {"count": ["id"]})),
+            async_directus.get_items(
                 "conversation_chunk",
-                {
-                    "query": {
-                        "filter": {
-                            "conversation_id": {"_in": conv_ids},
-                            "error": {"_nempty": True},
-                            "transcript": {"_empty": True},
-                        },
-                        "fields": ["conversation_id"],
-                        "limit": -1,
-                    }
-                },
-            )
-            or []
+                _chunk_agg(
+                    # null source counts as "not text"; _neq alone skips NULLs
+                    {"_or": [{"source": {"_neq": "PORTAL_TEXT"}}, {"source": {"_null": True}}]},
+                    {"count": ["id"]},
+                ),
+            ),
+            async_directus.get_items(
+                "conversation_chunk",
+                _chunk_agg({"transcript": {"_nempty": True}}, {"count": ["id"]}),
+            ),
+            async_directus.get_items(
+                "conversation_chunk",
+                _chunk_agg(
+                    {"error": {"_nempty": True}, "transcript": {"_empty": True}},
+                    {"count": ["id"]},
+                ),
+            ),
+            async_directus.get_items(
+                "conversation_chunk",
+                _chunk_agg({"timestamp": {"_nnull": True}}, {"max": ["timestamp"]}),
+            ),
+            async_directus.get_items(
+                "conversation_chunk",
+                _chunk_agg({"timestamp": {"_null": True}}, {"max": ["created_at"]}),
+            ),
         )
-        has_error_ids: set[str] = set()
-        if isinstance(error_hits, list):
-            for row in error_hits:
+
+        def _grouped_ids(rows: object) -> set[str]:
+            out: set[str] = set()
+            if isinstance(rows, list):
+                for row in rows:
+                    cid = row.get("conversation_id")
+                    if cid and int((row.get("count") or {}).get("id") or 0) > 0:
+                        out.add(cid)
+            return out
+
+        chunk_counts: dict[str, int] = {}
+        if isinstance(count_rows, list):
+            for row in count_rows:
                 cid = row.get("conversation_id")
                 if cid:
-                    has_error_ids.add(cid)
+                    chunk_counts[cid] = int((row.get("count") or {}).get("id") or 0)
+        non_text_ids = _grouped_ids(non_text_rows)
+        has_transcript_ids = _grouped_ids(transcript_rows)
+        has_error_ids = _grouped_ids(error_rows)
+
         last_chunk_at: dict[str, str] = {}
-        chunk_counts: dict[str, int] = {}
-        non_text_ids: set[str] = set()
-        if isinstance(lean_chunks, list):
-            for ch in lean_chunks:
-                cid = ch.get("conversation_id")
-                if not cid:
-                    continue
-                chunk_counts[cid] = chunk_counts.get(cid, 0) + 1
-                # null source counts as "not text"
-                if ch.get("source") != "PORTAL_TEXT":
-                    non_text_ids.add(cid)
-                ts = ch.get("timestamp") or ch.get("created_at")
-                if ts and (cid not in last_chunk_at or ts > last_chunk_at[cid]):
+        for rows, column in ((ts_rows, "timestamp"), (created_rows, "created_at")):
+            if not isinstance(rows, list):
+                continue
+            for row in rows:
+                cid = row.get("conversation_id")
+                ts = (row.get("max") or {}).get(column)
+                if cid and ts and (cid not in last_chunk_at or ts > last_chunk_at[cid]):
                     last_chunk_at[cid] = ts
+
         for conv in convs:
             cid = conv["id"]
             conv["has_transcript"] = cid in has_transcript_ids
@@ -649,76 +659,97 @@ MONITOR_MAX_CHUNKS = 500
 MONITOR_ERROR_MESSAGE_MAX_LEN = 240
 # Keep the surfaced live-transcript to a short, fading one-liner, not a wall.
 MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN = 280
-# A live conversation with no audio chunk in this many seconds is "stalled"
-# (dropped connection / broken upload) rather than benignly "waiting". Chunks
-# normally land every ~15-30s.
-MONITOR_RECORDING_STALL_SECONDS = 55
+# No ping for this many seconds (5 missed 3s heartbeats) means the device has
+# stopped talking to us. Foreground pings are reliable; the backgrounded case is
+# handled separately, so this does not false-alarm on transient dips.
+MONITOR_HEARTBEAT_GRACE_SECONDS = 15
+# A recent chunk also counts as "in contact" (protects older/text clients that
+# may not ping, and rides out normal chunk gaps).
+MONITOR_CONTACT_CHUNK_SECONDS = 60
+# Pinging but no audio chunk in this many seconds -> "stalled" (page alive, audio
+# stopped). Distinct from "offline" (no contact at all). Chunks land every ~15-30s.
+MONITOR_RECORDING_STALL_SECONDS = 45
+# After a resume the last chunk predates the pause, so audio looks stale until
+# the first new chunk lands. Don't flag "stalled" while the recording run is
+# younger than this; a genuine stall persists past it.
+MONITOR_RESUME_GRACE_SECONDS = MONITOR_RECORDING_STALL_SECONDS
 # Rough, conservative per-clip transcription time for the "catch up ~N min"
 # estimate. Tuned so a handful of pending clips reads ~2 min and a big backlog
 # ~15 min, erring long. Not a promise — surfaced as a vague "~N min".
 MONITOR_TRANSCRIBE_SECONDS_PER_CLIP = 20
 
 
-def _monitor_lifecycle_state(
-    *, is_finished: bool, reported_state: Any, is_live: bool, chunk_count: int
-) -> str:
-    """Fold participant-reported telemetry and observed activity into one state.
-
-    Precedence: an explicit finish wins; then whatever the portal last reported
-    (recording / paused / verifying / ...); then observed liveness (a recent
-    chunk implies recording); then whether any audio has landed at all.
-    """
-    if is_finished:
-        return "finished"
-    if isinstance(reported_state, str) and reported_state in VALID_PARTICIPANT_STATES:
-        return reported_state
-    if is_live:
-        return "recording"
-    if chunk_count > 0:
-        return "idle"
-    return "initiated"
-
-
-def _recording_health(
+def _monitor_status(
     *,
     is_finished: bool,
-    is_live: bool,
     reported_state: Any,
+    ping_fresh: bool,
+    contact_fresh: bool,
+    audio_fresh: bool,
     chunk_count: int,
-    last_chunk_dt: Optional[datetime],
-    now: datetime,
-    stall_seconds: int,
-) -> str:
-    """The host's first question: is the audio actually coming in?
+    segment_seconds: Optional[float] = None,
+) -> tuple[str, str]:
+    """Fold the two contact signals into (state, recording_health).
 
-    - "finished" / "paused": expected, not a problem.
-    - "backgrounded": the portal reported the tab hidden / phone locked. Gentle,
-      not a scary alarm (iOS suspends the mic when backgrounded).
-    - "receiving": live and a chunk landed within the stall window. Healthy.
-    - "stalled": audio WAS flowing (chunk_count > 0) and then stopped — a
-      dropped connection or broken upload. This is the real alarm.
-    - "waiting": on the screen but no audio has ever come in yet. Benign — a
-      participant can sit here a long time (first chunk is ~45s p50, minutes at
-      p90), so we never alarm before audio has actually flowed.
-    - "idle": not live and not finished.
+    The reported state is trusted only while in contact, so a stale 'recording'
+    or 'paused' never lingers after the device goes silent. Shared short-circuits
+    (both fields agree): finished > left > backgrounded > offline. Past those the
+    device is still in contact: `state` mirrors the reported lifecycle and
+    `recording_health` reflects whether audio is actually flowing.
+
+    - offline: no ping and no recent chunk. Network drop or freeze. The alarm.
+    - left: the portal's close-beacon fired (tab closed without finishing).
+    - stalled: still pinging, but audio stopped (page alive, upload/mic broken).
+    - receiving: audio flowing. waiting/idle: benign pre-audio / not-live.
+
+    `segment_seconds` suppresses a false "stalled" during the post-resume ramp-up;
+    absent (older clients) means no grace, so detection is unchanged.
     """
     if is_finished:
-        return "finished"
+        return "finished", "finished"
+    if reported_state == "left":
+        return "left", "left"
     if reported_state == "backgrounded":
-        return "backgrounded"
+        return "backgrounded", "backgrounded"
+    if not contact_fresh:
+        # Contact lost. Only an actively-recording session that drops is the
+        # alarm ("offline"); a session that had stopped or moved past recording
+        # has simply "left" (no alarm). No telemetry but chunks present means it
+        # was recording on an older/text client that doesn't ping.
+        if reported_state == "recording" or (not reported_state and chunk_count > 0):
+            return "offline", "offline"
+        if reported_state:
+            return "left", "left"
+        return "initiated", "waiting"
+
+    # In contact: state follows the reported lifecycle, health follows audio.
+    if isinstance(reported_state, str) and reported_state in VALID_PARTICIPANT_STATES:
+        state = reported_state
+    elif audio_fresh:
+        state = "recording"
+    elif chunk_count > 0:
+        state = "idle"
+    else:
+        state = "initiated"
+
+    # A freshly (re)started run hasn't had time to upload a chunk yet.
+    within_resume_grace = (
+        isinstance(segment_seconds, (int, float))
+        and segment_seconds < MONITOR_RESUME_GRACE_SECONDS
+    )
+
     if reported_state == "paused":
-        return "paused"
-    if not is_live:
-        return "idle" if chunk_count > 0 else "waiting"
-    stall_cutoff = now - timedelta(seconds=stall_seconds)
-    if last_chunk_dt is not None and last_chunk_dt > stall_cutoff:
-        return "receiving"
-    # Live, no recent chunk. Only alarm if audio had actually started and then
-    # stopped; a session that has never produced a chunk is still "waiting"
-    # (recording often starts long after the participant lands).
-    if chunk_count > 0:
-        return "stalled"
-    return "waiting"
+        health = "paused"
+    elif audio_fresh:
+        health = "receiving"
+    elif ping_fresh and chunk_count > 0 and not within_resume_grace:
+        health = "stalled"
+    elif chunk_count > 0:
+        health = "idle" if not within_resume_grace else "receiving"
+    else:
+        health = "waiting"
+
+    return state, health
 
 
 def _parse_directus_timestamp(value: Any) -> Optional[datetime]:
@@ -739,9 +770,7 @@ def _parse_directus_timestamp(value: Any) -> Optional[datetime]:
     return parsed.astimezone(timezone.utc)
 
 
-def _transcription_status(
-    *, has_error: bool, chunk_count: int, transcribed_count: int
-) -> str:
+def _transcription_status(*, has_error: bool, chunk_count: int, transcribed_count: int) -> str:
     """Derive a host-facing transcription state for a conversation.
 
     - "failing": at least one recent chunk carries a transcription error.
@@ -760,6 +789,27 @@ def _transcription_status(
     return "up_to_date"
 
 
+def _build_conversation_timeline(
+    stages: Any, created_at: Any, recording_started_at: Any, last_chunk_at: Any
+) -> list[dict]:
+    """Ordered {key, at} steps: visitor funnel journey then recording markers.
+    Steps with no timestamp are dropped; labels live on the frontend."""
+    steps: list[dict] = []
+    if isinstance(stages, dict):
+        for stage in _FUNNEL_STAGES:
+            at = stages.get(stage)
+            if isinstance(at, str) and at.strip():
+                steps.append({"key": stage, "at": at})
+    if isinstance(created_at, str) and created_at.strip():
+        steps.append({"key": "created", "at": created_at})
+    # First "recording" ping, stamped server-side.
+    if isinstance(recording_started_at, str) and recording_started_at.strip():
+        steps.append({"key": "recording_started", "at": recording_started_at})
+    if isinstance(last_chunk_at, str) and last_chunk_at.strip():
+        steps.append({"key": "last_audio", "at": last_chunk_at})
+    return steps
+
+
 def _build_monitor_payload(
     recent_chunks: list[dict],
     chunk_counts: dict[str, int],
@@ -769,12 +819,20 @@ def _build_monitor_payload(
     telemetry: Optional[dict[str, dict]] = None,
     tag_map: Optional[dict[str, list[str]]] = None,
     extra_conversations: Optional[list[dict]] = None,
+    tier: Optional[str] = None,
+    over_cap_active: bool = False,
+    tag_id_map: Optional[dict[str, list[str]]] = None,
+    visitor_stages: Optional[dict[str, dict]] = None,
 ) -> dict:
     """Aggregate recent chunks into a per-conversation monitor view.
 
     `extra_conversations` seeds sessions that are pinging but have no audio
     chunk yet (just-initiated / waiting), so they appear instantly. Each is a
     dict with id, participant_name, is_finished, created_at, duration.
+
+    `tier` + `over_cap_active` drive the content gate (same `_conversation_lock`
+    decision as the detail view): a locked conversation has its
+    `latest_transcript` withheld so the monitor can't leak gated text.
 
     `recent_chunks` MUST be newest-first (sorted by -timestamp). Each row
     carries conversation_id (dict with id + participant_name, or a bare id
@@ -791,7 +849,8 @@ def _build_monitor_payload(
     """
     telemetry = telemetry or {}
     tag_map = tag_map or {}
-    live_cutoff = now - timedelta(seconds=live_window_seconds)
+    tag_id_map = tag_id_map or {}
+    visitor_stages = visitor_stages or {}
 
     order: list[str] = []
     by_conv: dict[str, dict] = {}
@@ -814,6 +873,7 @@ def _build_monitor_payload(
             "language": None,
             "created_at": extra.get("created_at"),
             "duration": extra.get("duration"),
+            "is_over_cap": bool(extra.get("is_over_cap")),
         }
         order.append(conv_id)
 
@@ -825,12 +885,14 @@ def _build_monitor_payload(
             is_finished = bool(conv.get("is_finished"))
             created_at = conv.get("created_at")
             duration = conv.get("duration")
+            is_over_cap = bool(conv.get("is_over_cap"))
         else:
             conv_id = conv
             participant_name = None
             is_finished = False
             created_at = None
             duration = None
+            is_over_cap = False
         if not conv_id:
             continue
 
@@ -848,6 +910,7 @@ def _build_monitor_payload(
                 "language": None,
                 "created_at": created_at,
                 "duration": duration,
+                "is_over_cap": is_over_cap,
             }
             by_conv[conv_id] = entry
             order.append(conv_id)
@@ -862,7 +925,11 @@ def _build_monitor_payload(
         # Rows are newest-first, so the first transcript / language we see for a
         # conversation is its most recent one — keep that.
         transcript = chunk.get("transcript")
-        if entry["latest_transcript"] is None and isinstance(transcript, str) and transcript.strip():
+        if (
+            entry["latest_transcript"] is None
+            and isinstance(transcript, str)
+            and transcript.strip()
+        ):
             entry["latest_transcript"] = transcript.strip()[:MONITOR_TRANSCRIPT_SNIPPET_MAX_LEN]
         if entry["language"] is None:
             language = chunk.get("desired_language") or chunk.get("detected_language")
@@ -881,22 +948,37 @@ def _build_monitor_payload(
     finished_count = 0
     transcribing_count = 0
     stalled_count = 0
+    offline_count = 0
     pending_total = 0
     for conv_id in order:
         entry = by_conv[conv_id]
         tele = telemetry.get(conv_id) or {}
-        # Liveness folds two signals: the participant ping (primary, arrives
-        # every few seconds) and audio-chunk arrival (chunks can be tens of
-        # seconds apart). Take the most recent of the two.
+        reported_state = tele.get("state")
         seen_dt = tele.get("seen") if isinstance(tele.get("seen"), datetime) else None
-        activity_dt = entry["last_chunk_dt"]
-        if seen_dt is not None and (activity_dt is None or seen_dt > activity_dt):
-            activity_dt = seen_dt
-        # The finish button is a definitive "ended" signal: a finished
-        # conversation is never live, even if a late ping/chunk lands after.
-        recent = activity_dt is not None and activity_dt > live_cutoff
-        is_live = recent and not entry["is_finished"]
-        last_seen_at = seen_dt.isoformat() if seen_dt is not None else None
+        last_chunk_dt = entry["last_chunk_dt"]
+
+        # Two independent signals: the ping heartbeat (primary "still here") and
+        # audio-chunk arrival. "In contact" = a fresh ping OR a recent chunk;
+        # "audio fresh" = a chunk within the stall window.
+        ping_fresh = seen_dt is not None and seen_dt > now - timedelta(
+            seconds=MONITOR_HEARTBEAT_GRACE_SECONDS
+        )
+        # A client that pings has an authoritative heartbeat: once it stops, we
+        # detect the drop within the grace rather than being dragged out by the
+        # slower chunk cadence. The wide chunk window only backstops older/text
+        # clients that never ping, so it doesn't delay offline for modern ones.
+        chunk_window = (
+            MONITOR_HEARTBEAT_GRACE_SECONDS
+            if seen_dt is not None
+            else MONITOR_CONTACT_CHUNK_SECONDS
+        )
+        chunk_in_contact = last_chunk_dt is not None and last_chunk_dt > now - timedelta(
+            seconds=chunk_window
+        )
+        contact_fresh = ping_fresh or chunk_in_contact
+        audio_fresh = last_chunk_dt is not None and last_chunk_dt > now - timedelta(
+            seconds=MONITOR_RECORDING_STALL_SECONDS
+        )
 
         chunk_count = int(chunk_counts.get(conv_id, 0) or 0)
         transcribed_count = min(int(transcribed_counts.get(conv_id, 0) or 0), chunk_count)
@@ -906,21 +988,24 @@ def _build_monitor_payload(
             chunk_count=chunk_count,
             transcribed_count=transcribed_count,
         )
-        state = _monitor_lifecycle_state(
+        state, recording_health = _monitor_status(
             is_finished=entry["is_finished"],
-            reported_state=tele.get("state"),
-            is_live=is_live,
+            reported_state=reported_state,
+            ping_fresh=ping_fresh,
+            contact_fresh=contact_fresh,
+            audio_fresh=audio_fresh,
             chunk_count=chunk_count,
+            segment_seconds=tele.get("segment_seconds"),
         )
-        recording_health = _recording_health(
-            is_finished=entry["is_finished"],
-            is_live=is_live,
-            reported_state=tele.get("state"),
-            chunk_count=chunk_count,
-            last_chunk_dt=entry["last_chunk_dt"],
-            now=now,
-            stall_seconds=MONITOR_RECORDING_STALL_SECONDS,
-        )
+        # Live = still in contact and not ended. A finish is definitive; a
+        # departed session (left) is not live either.
+        is_live = contact_fresh and not entry["is_finished"] and recording_health != "left"
+        last_seen_at = seen_dt.isoformat() if seen_dt is not None else None
+
+        # Most-recent activity (chunk or ping) drives the sort below.
+        activity_dt = last_chunk_dt
+        if seen_dt is not None and (activity_dt is None or seen_dt > activity_dt):
+            activity_dt = seen_dt
 
         if is_live:
             live_count += 1
@@ -930,15 +1015,21 @@ def _build_monitor_payload(
             error_count += 1
         if recording_health == "stalled":
             stalled_count += 1
+        if recording_health == "offline":
+            offline_count += 1
         if transcription_status == "transcribing":
             transcribing_count += 1
         pending_total += pending_transcription
+        # Withhold the transcript snippet on locked conversations; state still shows.
+        locked, _ = _conversation_lock(entry, tier, over_cap_active)
+        latest_transcript = None if locked else entry["latest_transcript"]
         conversations.append(
             {
                 "id": conv_id,
                 "label": entry["label"],
                 "is_live": is_live,
                 "is_finished": entry["is_finished"],
+                "locked": locked,
                 "state": state,
                 "recording_health": recording_health,
                 # Live mic level (0..1) from the participant's last beacon —
@@ -946,10 +1037,18 @@ def _build_monitor_payload(
                 "audio_level": tele.get("audio_level"),
                 "mode": tele.get("mode"),
                 "tags": tag_map.get(conv_id, []),
+                "tag_ids": tag_id_map.get(conv_id, []),
                 "language": entry["language"],
-                "latest_transcript": entry["latest_transcript"],
+                "latest_transcript": latest_transcript,
                 "created_at": entry["created_at"],
                 "duration": entry["duration"],
+                "recorded_seconds": tele.get("recorded_seconds"),
+                "timeline": _build_conversation_timeline(
+                    visitor_stages.get(conv_id, {}),
+                    entry["created_at"],
+                    tele.get("recording_started_at"),
+                    entry["last_chunk_at"],
+                ),
                 "network": tele.get("network"),
                 "battery": tele.get("battery"),
                 "last_chunk_at": entry["last_chunk_at"],
@@ -981,6 +1080,7 @@ def _build_monitor_payload(
             "transcribing": transcribing_count,
             "with_errors": error_count,
             "not_receiving": stalled_count,
+            "offline": offline_count,
             "total": len(conversations),
             "pending_transcription": pending_total,
             # Deliberately rough + conservative: clips-behind x a per-clip
@@ -994,9 +1094,7 @@ def _build_monitor_payload(
 _FUNNEL_STAGES = ("scanned", "terms", "mic_ok", "mic_skipped", "mic_blocked", "profile")
 
 
-def _build_funnel(
-    visitors: dict[str, dict], graduated: set[str]
-) -> dict:
+def _build_funnel(visitors: dict[str, dict], graduated: set[str]) -> dict:
     """Shape pre-conversation visitor sessions into the host funnel.
 
     `visitors` maps visitor_id -> telemetry (with a `seen` datetime). `graduated`
@@ -1035,14 +1133,52 @@ def _build_funnel(
     return {"visitors": entries, "summary": {**counts, "total": len(entries)}}
 
 
-async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
+# Sentinel: caller didn't pre-resolve the gate, so gather resolves it itself.
+_GATE_UNRESOLVED = object()
+
+
+def _empty_monitor_payload(window_seconds: int) -> dict:
+    """The monitor payload shape with zero activity. Returned when the monitor
+    is disabled server-side, so callers get the same structure gather produces
+    for an idle project and the client renders a clean 'no activity' state."""
+    return {
+        "conversations": [],
+        "summary": {
+            "live": 0,
+            "finished": 0,
+            "transcribing": 0,
+            "with_errors": 0,
+            "not_receiving": 0,
+            "offline": 0,
+            "total": 0,
+            "pending_transcription": 0,
+            "catch_up_eta_seconds": 0,
+        },
+        "live_window_seconds": window_seconds,
+        "funnel": _build_funnel({}, set()),
+    }
+
+
+async def gather_project_monitor(
+    project_id: str,
+    window_seconds: int,
+    tier: Any = _GATE_UNRESOLVED,
+    over_cap_active: bool = False,
+) -> dict:
     """Assemble the live-monitor payload for a project (no access gate).
 
     Callers MUST enforce access before invoking this. Shared by the
     host-facing /monitor route and the agentic monitor endpoint so both
     return exactly the same shape. Portal-initiated conversations only
     (no DASHBOARD_UPLOAD / CLONE); a few bounded reads aggregated in Python.
+
+    Pass `tier`/`over_cap_active` when already resolved (host endpoints reuse
+    access.tier); leave `tier` as the sentinel and gather resolves them itself.
     """
+    # Kill switch: skip every Directus read and return the idle shape. Backstops
+    # any caller (e.g. the agentic monitor) that doesn't gate at the endpoint.
+    if not get_settings().feature_flags.enable_monitor:
+        return _empty_monitor_payload(window_seconds)
     now = datetime.now(timezone.utc)
     lookback_cutoff = (now - timedelta(seconds=MONITOR_LOOKBACK_SECONDS)).isoformat()
 
@@ -1051,7 +1187,12 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
         {
             "query": {
                 "filter": {
-                    "conversation_id": {"project_id": {"_eq": project_id}},
+                    # deleted_at filter: a deleted conversation stops showing as
+                    # live even while its portal keeps uploading chunks.
+                    "conversation_id": {
+                        "project_id": {"_eq": project_id},
+                        "deleted_at": {"_null": True},
+                    },
                     "source": {"_nin": ["DASHBOARD_UPLOAD", "CLONE"]},
                     "timestamp": {"_gt": lookback_cutoff},
                 },
@@ -1061,6 +1202,7 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
                     "conversation_id.is_finished",
                     "conversation_id.created_at",
                     "conversation_id.duration",
+                    "conversation_id.is_over_cap",
                     "timestamp",
                     "error",
                     "transcript",
@@ -1115,6 +1257,7 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
                             "is_finished",
                             "created_at",
                             "duration",
+                            "is_over_cap",
                         ],
                         "limit": len(ping_only_ids),
                     }
@@ -1139,6 +1282,8 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
                 "query": {
                     "aggregate": {"count": "id"},
                     "groupBy": ["conversation_id"],
+                    # Directus caps grouped rows at its default limit (100).
+                    "limit": -1,
                     # Re-apply the portal-only source filter so counts match the
                     # live set and don't include dashboard/clone chunks.
                     "filter": {
@@ -1164,6 +1309,8 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
                 "query": {
                     "aggregate": {"count": "id"},
                     "groupBy": ["conversation_id"],
+                    # Directus caps grouped rows at its default limit (100).
+                    "limit": -1,
                     "filter": {
                         "conversation_id": {"_in": conv_ids},
                         "source": {"_nin": ["DASHBOARD_UPLOAD", "CLONE"]},
@@ -1181,7 +1328,9 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
 
     # Tag labels for the active set, so the monitor can group by tag. Bounded:
     # the active set is already capped by the lookback + chunk cap above.
+    # Labels group the monitor; ids seed the drilldown tag editor.
     tag_map: dict[str, list[str]] = {}
+    tag_id_map: dict[str, list[str]] = {}
     if conv_ids:
         try:
             tag_rows = await async_directus.get_items(
@@ -1189,7 +1338,11 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
                 {
                     "query": {
                         "filter": {"conversation_id": {"_in": conv_ids}},
-                        "fields": ["conversation_id", "project_tag_id.text"],
+                        "fields": [
+                            "conversation_id",
+                            "project_tag_id.id",
+                            "project_tag_id.text",
+                        ],
                         "limit": 2000,
                     }
                 },
@@ -1198,9 +1351,14 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
                 for row in tag_rows:
                     cid = row.get("conversation_id")
                     project_tag = row.get("project_tag_id")
-                    text = project_tag.get("text") if isinstance(project_tag, dict) else None
-                    if cid and isinstance(text, str) and text.strip():
+                    if not cid or not isinstance(project_tag, dict):
+                        continue
+                    text = project_tag.get("text")
+                    tag_id = project_tag.get("id")
+                    if isinstance(text, str) and text.strip():
                         tag_map.setdefault(cid, []).append(text.strip())
+                    if tag_id:
+                        tag_id_map.setdefault(cid, []).append(str(tag_id))
         except Exception as exc:  # noqa: BLE001
             logger.warning("Monitor tag read failed: %s", exc)
 
@@ -1215,6 +1373,29 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
         except Exception as exc:  # noqa: BLE001
             logger.warning("Monitor liveness ping read failed: %s", exc)
 
+    # Join each conversation to its originating visitor's funnel stages (via the
+    # ping's visitor_id) for the drilldown timeline. Best-effort.
+    visitor_stages: dict[str, dict] = {}
+    conv_visitor_ids = {
+        cid: str(tele["visitor_id"])
+        for cid, tele in telemetry.items()
+        if tele.get("visitor_id")
+    }
+    if conv_visitor_ids:
+        try:
+            linked_visitors = await get_visitors_many(
+                project_id, list(set(conv_visitor_ids.values()))
+            )
+            for cid, vid in conv_visitor_ids.items():
+                stages = linked_visitors.get(vid, {}).get("stages")
+                if isinstance(stages, dict):
+                    visitor_stages[cid] = stages
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Monitor visitor-stage join failed: %s", exc)
+
+    if tier is _GATE_UNRESOLVED:
+        tier, over_cap_active = await resolve_project_gate(project_id)
+
     payload = _build_monitor_payload(
         recent_chunks,
         chunk_counts,
@@ -1224,15 +1405,16 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
         telemetry,
         tag_map,
         extra_conversations,
+        tier=tier,
+        over_cap_active=over_cap_active,
+        tag_id_map=tag_id_map,
+        visitor_stages=visitor_stages,
     )
 
-    # Pre-conversation funnel: visitors still onboarding (scan -> terms -> mic
-    # -> profile), deduped against those that already graduated into a live
-    # conversation (their recording ping carries the visitor_id).
+    # Pre-conversation funnel. A live conversation's ping carries its visitor_id,
+    # so that visitor graduates out of the funnel; when it ends the ping stops.
     graduated: set[str] = {
-        str(tele["visitor_id"])
-        for tele in telemetry.values()
-        if tele.get("visitor_id")
+        str(tele["visitor_id"]) for tele in telemetry.values() if tele.get("visitor_id")
     }
     visitors: dict[str, dict] = {}
     try:
@@ -1242,8 +1424,7 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
         )
         if visitor_ids:
             visitors = await get_visitors_many(project_id, visitor_ids)
-            # A visitor that already initiated is linked to a conversation;
-            # drop it from the funnel immediately, before its recording ping.
+            # Link key bridges initiate -> first ping (short TTL).
             graduated |= await get_linked_visitor_ids(list(visitors.keys()))
     except Exception as exc:  # noqa: BLE001
         logger.warning("Monitor funnel read failed: %s", exc)
@@ -1251,46 +1432,77 @@ async def gather_project_monitor(project_id: str, window_seconds: int) -> dict:
     return payload
 
 
-# The monitor snapshot is cached in Redis so Directus is hit at most ~once per
-# this many seconds PER PROJECT, no matter how many hosts are watching or how
-# often participants ping. Every reader (the poll endpoint and each SSE
-# connection) shares one computed snapshot; a thundering herd on expiry is
-# avoided with a short compute lock.
+# Shared Redis cache: Directus is hit at most ~once per TTL per project, no matter
+# how many hosts watch or how often participants ping.
 MONITOR_SNAPSHOT_CACHE_TTL_SECONDS = 3
 _MONITOR_SNAPSHOT_KEY_PREFIX = "monitor:snapshot:"
+# Single-flight: on a cache miss only the lock winner recomputes; other watchers
+# wait briefly for its result before falling back to computing themselves.
+_MONITOR_SNAPSHOT_LOCK_TTL_SECONDS = 5
+_MONITOR_SNAPSHOT_WAIT_SECONDS = 2.0
+_MONITOR_SNAPSHOT_WAIT_INTERVAL_SECONDS = 0.05
 
 
-async def get_project_monitor_snapshot(project_id: str, window_seconds: int) -> dict:
-    """Return the monitor payload, served from a short-lived shared Redis cache.
+async def _read_cached_snapshot(client: Any, key: str) -> Optional[dict]:
+    cached = await client.get(key)
+    if cached is None:
+        return None
+    text = cached.decode("utf-8") if isinstance(cached, (bytes, bytearray)) else cached
+    return json.loads(text)
 
-    This is the Directus-load valve: the expensive `gather_project_monitor`
-    read runs at most once per TTL per project, and its result is reused by
-    every concurrent watcher. All Redis use is best-effort — if the cache is
-    unavailable we simply compute directly.
+
+async def get_project_monitor_snapshot(
+    project_id: str,
+    window_seconds: int,
+    tier: Any = _GATE_UNRESOLVED,
+    over_cap_active: bool = False,
+) -> dict:
+    """Return the monitor payload from a short-lived shared Redis cache.
+
+    Single-flight so the expensive gather runs ~once per TTL per project even under
+    concurrent watchers. Best-effort: on any Redis error we compute directly.
+
+    `tier` + `over_cap_active` forward to gather on a cache miss. The gate is
+    deterministic per project, so the cache stays keyed by (project_id, window).
     """
     key = f"{_MONITOR_SNAPSHOT_KEY_PREFIX}{project_id}:{window_seconds}"
     lock_key = f"{key}:lock"
     client = None
     try:
         client = await get_redis_client()
-        cached = await client.get(key)
+        cached = await _read_cached_snapshot(client, key)
         if cached is not None:
-            text = cached.decode("utf-8") if isinstance(cached, (bytes, bytearray)) else cached
-            return json.loads(text)
+            return cached
     except Exception as exc:  # noqa: BLE001
         logger.warning("monitor snapshot cache read failed for %s: %s", project_id, exc)
         client = None
 
-    # Cache miss. Take a short lock so only one worker recomputes; if we can't
-    # get it, another worker is already computing, so recompute directly rather
-    # than block (correctness over a rare duplicate read).
+    # Cache miss: the lock winner recomputes; losers poll briefly for its result
+    # and only compute themselves if it doesn't land in time (so we never deadlock).
+    have_lock = False
     if client is not None:
         try:
-            await client.set(lock_key, b"1", nx=True, ex=5)
+            have_lock = bool(
+                await client.set(lock_key, b"1", nx=True, ex=_MONITOR_SNAPSHOT_LOCK_TTL_SECONDS)
+            )
         except Exception:  # noqa: BLE001
-            pass
+            have_lock = False
 
-    payload = await gather_project_monitor(project_id, window_seconds)
+        if not have_lock:
+            waited = 0.0
+            while waited < _MONITOR_SNAPSHOT_WAIT_SECONDS:
+                await asyncio.sleep(_MONITOR_SNAPSHOT_WAIT_INTERVAL_SECONDS)
+                waited += _MONITOR_SNAPSHOT_WAIT_INTERVAL_SECONDS
+                try:
+                    cached = await _read_cached_snapshot(client, key)
+                except Exception:  # noqa: BLE001
+                    break
+                if cached is not None:
+                    return cached
+
+    payload = await gather_project_monitor(
+        project_id, window_seconds, tier, over_cap_active
+    )
 
     if client is not None:
         try:
@@ -1301,6 +1513,11 @@ async def get_project_monitor_snapshot(project_id: str, window_seconds: int) -> 
             )
         except Exception as exc:  # noqa: BLE001
             logger.warning("monitor snapshot cache write failed for %s: %s", project_id, exc)
+        if have_lock:
+            try:
+                await client.delete(lock_key)
+            except Exception:  # noqa: BLE001
+                pass
     return payload
 
 
@@ -1324,7 +1541,14 @@ async def monitor_conversations(
     """
     access = await resolve_project_access(project_id, auth)
     access.require("conversation:read")
-    return await get_project_monitor_snapshot(project_id, window_seconds)
+    # Kill switch: return the idle shape without touching Directus/Redis.
+    if not get_settings().feature_flags.enable_monitor:
+        return _empty_monitor_payload(window_seconds)
+    # Reuse the already-resolved tier; the gate short-circuits for non-free.
+    over_cap_active = await workspace_over_cap_active(access.workspace_id, access.tier)
+    return await get_project_monitor_snapshot(
+        project_id, window_seconds, access.tier, over_cap_active
+    )
 
 
 # How long the stream waits on the pub/sub channel before recomputing anyway.
@@ -1333,6 +1557,12 @@ async def monitor_conversations(
 MONITOR_STREAM_POLL_SECONDS = 2.0
 # Emit an SSE comment at least this often so proxies keep the connection open.
 MONITOR_STREAM_HEARTBEAT_SECONDS = 15.0
+
+_MONITOR_SSE_HEADERS = {
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+    "X-Accel-Buffering": "no",
+}
 
 
 @router.get("/monitor/stream")
@@ -1357,6 +1587,27 @@ async def monitor_conversations_stream(
     access = await resolve_project_access(project_id, auth)
     access.require("conversation:read")
 
+    # Kill switch: keep the connection stable (so EventSource doesn't reconnect-
+    # loop) but do no work. One empty snapshot, then heartbeats only.
+    if not get_settings().feature_flags.enable_monitor:
+
+        async def disabled_stream() -> AsyncGenerator[str, None]:
+            empty = json.dumps(
+                _empty_monitor_payload(window_seconds), default=str, sort_keys=True
+            )
+            yield f"event: snapshot\ndata: {empty}\n\n"
+            while True:
+                await asyncio.sleep(MONITOR_STREAM_HEARTBEAT_SECONDS)
+                if await request.is_disconnected():
+                    break
+                yield ": keep-alive\n\n"
+
+        return StreamingResponse(
+            disabled_stream(),
+            media_type="text/event-stream",
+            headers=_MONITOR_SSE_HEADERS,
+        )
+
     async def event_stream() -> AsyncGenerator[str, None]:
         channel = channel_for_project(project_id)
         pubsub = None
@@ -1377,9 +1628,15 @@ async def monitor_conversations_stream(
                     break
 
                 try:
-                    # Shared cache: many connections to the same project reuse
-                    # one computed snapshot instead of each hitting Directus.
-                    payload = await get_project_monitor_snapshot(project_id, window_seconds)
+                    # Recompute each tick so a mid-stream cap crossing starts
+                    # gating; non-free short-circuits, free reads a cached bool.
+                    over_cap_active = await workspace_over_cap_active(
+                        access.workspace_id, access.tier
+                    )
+                    # Shared cache: connections to the same project reuse one snapshot.
+                    payload = await get_project_monitor_snapshot(
+                        project_id, window_seconds, access.tier, over_cap_active
+                    )
                     serialized = json.dumps(payload, default=str, sort_keys=True)
                 except Exception as exc:  # noqa: BLE001
                     logger.warning("monitor stream snapshot failed for %s: %s", project_id, exc)
@@ -1416,11 +1673,7 @@ async def monitor_conversations_stream(
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
+        headers=_MONITOR_SSE_HEADERS,
     )
 
 
@@ -1513,7 +1766,8 @@ async def get_conversation(
 ) -> dict:
     """Read a single conversation with optional embeds."""
     access, conv = await resolve_conversation_access(conversation_id, auth)
-    _enrich_conversation(conv, access.tier)
+    over_cap_active = await workspace_over_cap_active(access.workspace_id, access.tier)
+    _enrich_conversation(conv, access.tier, over_cap_active)
     is_locked = conv.get("locked", False)
 
     if include_chunks:
@@ -1763,7 +2017,8 @@ async def list_chunks(
     on the conversation detail view.
     """
     access, conv = await resolve_conversation_access(conversation_id, auth)
-    is_locked, _ = _conversation_lock(conv, access.tier)
+    over_cap_active = await workspace_over_cap_active(access.workspace_id, access.tier)
+    is_locked, _ = _conversation_lock(conv, access.tier, over_cap_active)
 
     default_fields = [
         "id",
@@ -1842,7 +2097,8 @@ async def get_chunk(
 ) -> dict:
     """Single-chunk read. Rare path — most callers go through the list."""
     access, chunk, conv = await resolve_conversation_chunk_access(chunk_id, auth)
-    locked, _ = _conversation_lock(conv, access.tier)
+    over_cap_active = await workspace_over_cap_active(access.workspace_id, access.tier)
+    locked, _ = _conversation_lock(conv, access.tier, over_cap_active)
     if locked:
         _scrub_chunk_transcript(chunk)
     return chunk
