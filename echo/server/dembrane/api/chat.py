@@ -28,7 +28,10 @@ from dembrane.async_helpers import run_in_thread_pool
 from dembrane.stream_status import stream_with_status
 from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.directus_async import async_directus
-from dembrane.api.conversation import get_conversation_token_count
+from dembrane.api.conversation import (
+    get_conversation_token_count,
+    get_conversation_token_counts_bulk,
+)
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
 ChatRouter = APIRouter(tags=["chat"])
@@ -274,19 +277,28 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
         is_locked = conversation_id in locked_conversations
         conversation_metadata.append((conversation_id, participant_name, is_locked))
 
-    # Fetch all token counts in parallel
+    # Fetch all token counts in one bulk call (chat already authorized above)
     if conversation_metadata:
-        token_count_tasks = [
-            get_conversation_token_count(conv_id, auth) for conv_id, _, _ in conversation_metadata
-        ]
-        token_counts = await asyncio.gather(*token_count_tasks)
+        token_counts_by_id = await get_conversation_token_counts_bulk(
+            [conv_id for conv_id, _, _ in conversation_metadata],
+            auth,
+            project_id=_chat_project_id(chat) or "",
+        )
+        # Fail closed: a missing count (transient compute failure) would make
+        # this conversation read as token_usage 0 and let the add-context gate
+        # admit past the context limit. The pre-bulk code raised here too.
+        missing = [cid for cid, _, _ in conversation_metadata if cid not in token_counts_by_id]
+        if missing:
+            raise HTTPException(
+                status_code=503,
+                detail="Could not compute chat context size. Please try again.",
+            )
     else:
-        token_counts = []
+        token_counts_by_id = {}
 
     # Build context objects with the fetched data
-    for (conversation_id, participant_name, is_locked), token_count in zip(
-        conversation_metadata, token_counts, strict=True
-    ):
+    for conversation_id, participant_name, is_locked in conversation_metadata:
+        token_count = token_counts_by_id.get(conversation_id, 0)
         chat_context_resource = ChatContextConversationSchema(
             conversation_id=conversation_id,
             conversation_participant_name=participant_name,
@@ -413,9 +425,56 @@ async def add_chat_context(
         workspace_tier = await _resolve_workspace_tier(project_id)
         from dembrane.free_tier import conversation_is_locked
 
+        # One grouped aggregate instead of fetching every chunk transcript.
+        # Guard the empty case: an empty _in has historically degenerated into
+        # a full-table grouped scan in Directus.
+        candidate_ids = [c["id"] for c in all_conversations if c.get("id")]
+        has_content_ids: set[str] = set()
+        if candidate_ids:
+            content_rows = await async_directus.get_items(
+                "conversation_chunk",
+                {
+                    "query": {
+                        "filter": {
+                            "conversation_id": {"_in": candidate_ids},
+                            "transcript": {"_nempty": True},
+                        },
+                        "aggregate": {"count": ["id"]},
+                        "groupBy": ["conversation_id"],
+                        # Directus caps grouped rows at its default limit (100).
+                        "limit": -1,
+                    }
+                },
+            )
+            # A non-list envelope is a Directus error, not "no content": surface
+            # it instead of silently marking every conversation empty.
+            if not isinstance(content_rows, list):
+                raise HTTPException(
+                    status_code=503,
+                    detail="Could not check conversation content. Please try again.",
+                )
+            for row in content_rows:
+                cid = row.get("conversation_id")
+                if cid and int((row.get("count") or {}).get("id") or 0) > 0:
+                    has_content_ids.add(cid)
+
+        # Bulk token counts for candidates that could still be added.
+        need_tokens = [
+            c["id"]
+            for c in all_conversations
+            if c.get("id")
+            and c["id"] not in existing_ids
+            and c["id"] in has_content_ids
+            and not conversation_is_locked(c, workspace_tier)
+        ]
+        token_counts_by_id = await get_conversation_token_counts_bulk(
+            need_tokens, auth, project_id=project_id
+        )
+
         added: List[SelectAllConversationResult] = []
         skipped: List[SelectAllConversationResult] = []
         context_limit_reached = False
+        to_attach: List[str] = []
 
         for conversation in all_conversations:
             conv_id = conversation.get("id")
@@ -448,10 +507,7 @@ async def add_chat_context(
                 continue
 
             # Check if conversation has content
-            chunks = conversation.get("chunks") or []
-            has_content = any(
-                chunk.get("transcript") and str(chunk.get("transcript")).strip() for chunk in chunks
-            )
+            has_content = conv_id in has_content_ids
 
             if not has_content:
                 skipped.append(
@@ -476,63 +532,8 @@ async def add_chat_context(
                 )
                 continue
 
-            try:
-                # Get token count for this conversation
-                token_count = await get_conversation_token_count(conv_id, auth)
-
-                # Check if single conversation is too long
-                if token_count > MAX_CHAT_CONTEXT_LENGTH:
-                    skipped.append(
-                        SelectAllConversationResult(
-                            conversation_id=conv_id,
-                            participant_name=participant_name,
-                            success=False,
-                            reason="too_long",
-                        )
-                    )
-                    continue
-
-                # Check if adding this conversation would exceed the context limit
-                conversation_usage = token_count / MAX_CHAT_CONTEXT_LENGTH
-                if current_token_usage + conversation_usage > 1:
-                    context_limit_reached = True
-                    skipped.append(
-                        SelectAllConversationResult(
-                            conversation_id=conv_id,
-                            participant_name=participant_name,
-                            success=False,
-                            reason="context_limit_reached",
-                        )
-                    )
-                    continue
-
-                # Add the conversation to context
-                await run_in_thread_pool(
-                    chat_svc.attach_conversations,
-                    chat_id,
-                    [conv_id],
-                )
-
-                # Update tracking
-                current_token_usage += conversation_usage
-                existing_ids.add(conv_id)
-
-                added.append(
-                    SelectAllConversationResult(
-                        conversation_id=conv_id,
-                        participant_name=participant_name,
-                        success=True,
-                        reason="added",
-                    )
-                )
-
-            except Exception as exc:
-                logger.warning(
-                    "Failed to add conversation %s to chat %s: %s",
-                    conv_id,
-                    chat_id,
-                    exc,
-                )
+            # Token count missing means the bulk compute failed for this id
+            if conv_id not in token_counts_by_id:
                 skipped.append(
                     SelectAllConversationResult(
                         conversation_id=conv_id,
@@ -540,6 +541,76 @@ async def add_chat_context(
                         success=False,
                         reason="error",
                     )
+                )
+                continue
+
+            # Get token count for this conversation
+            token_count = token_counts_by_id.get(conv_id, 0)
+
+            # Check if single conversation is too long
+            if token_count > MAX_CHAT_CONTEXT_LENGTH:
+                skipped.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="too_long",
+                    )
+                )
+                continue
+
+            # Check if adding this conversation would exceed the context limit
+            conversation_usage = token_count / MAX_CHAT_CONTEXT_LENGTH
+            if current_token_usage + conversation_usage > 1:
+                context_limit_reached = True
+                skipped.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="context_limit_reached",
+                    )
+                )
+                continue
+
+            # Update tracking
+            current_token_usage += conversation_usage
+            existing_ids.add(conv_id)
+            to_attach.append(conv_id)
+
+            added.append(
+                SelectAllConversationResult(
+                    conversation_id=conv_id,
+                    participant_name=participant_name,
+                    success=True,
+                    reason="added",
+                )
+            )
+
+        # Single bulk attach for everything accepted above.
+        if to_attach:
+            try:
+                await run_in_thread_pool(chat_svc.attach_conversations, chat_id, to_attach)
+            except Exception as exc:
+                logger.warning("Bulk attach failed for chat %s: %s", chat_id, exc)
+                added_snapshot = list(added)
+                attach_failed = set(to_attach)
+                added = [a for a in added if a.conversation_id not in attach_failed]
+                skipped.extend(
+                    SelectAllConversationResult(
+                        conversation_id=cid,
+                        participant_name=next(
+                            (
+                                a.participant_name
+                                for a in added_snapshot
+                                if a.conversation_id == cid
+                            ),
+                            "Unknown",
+                        ),
+                        success=False,
+                        reason="error",
+                    )
+                    for cid in to_attach
                 )
 
         return AddContextResponseSchema(
