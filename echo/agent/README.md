@@ -37,8 +37,8 @@ Tools defined in `agent.py` fall into three buckets:
 
 - **UI tools** render a card in the chat timeline. The `UI_TOOLS` frozenset in
   `agent.py` is the source of truth: `navigateTo`, `proposeCanvas`,
-  `proposeGoal`, `proposeProjectUpdate`, `noteInsight`, `editInsight`,
-  `retractInsight`, `sendProgressUpdate`. Each of these also carries a "renders a
+  `proposeGoal`, `proposeProjectUpdate`, `proposeTagsUpdate`, `noteInsight`,
+  `editInsight`, `retractInsight`, `sendProgressUpdate`. Each of these also carries a "renders a
   card in the chat UI" docstring line. `editInsight` and `retractInsight`
   re-render the insight card by id: an amended note gains an "updated" chip, a
   retracted one mutes with a "retracted" chip and the reason.
@@ -49,7 +49,7 @@ Tools defined in `agent.py` fall into three buckets:
   `getPortalLink`, `listDocs`, `readDoc`, `grepDocs`, `readSkill`,
   `listProjectChats`, `readChat`, `getLiveConversationStatus`, `readMemory`,
   `readGoal`, `listMethodologies`, `listCanvases`, `get_project_scope`.
-- **Write tools** change durable state: `editProjectTags`, `editCanvas`,
+- **Write tools** change durable state: `editCanvas`,
   `addToCanvas`, `removeFromCanvas`, `pauseCanvasLoop`, `resumeCanvasLoop`,
   `stopCanvasLoop`, `remember`, `amendMemory`, `forgetMemory`,
   `reachOutToDembraneSupport`, `noteInsight`, `editInsight`, `retractInsight`

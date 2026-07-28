@@ -3,18 +3,15 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type {
 	MonitorConversation,
 	ParticipantState,
 } from "@/hooks/useConversationMonitor";
-import {
-	isProblemState,
-	LiveMonitorSection,
-	StatePill,
-} from "./LiveMonitorSection";
+import { LiveMonitorSection } from "./LiveMonitorSection";
+import { isProblemState, StatePill } from "./StatePill";
 
 const captureMock = vi.hoisted(() => vi.fn());
 vi.mock("posthog-js", () => ({ default: { capture: captureMock } }));
@@ -57,8 +54,16 @@ vi.mock("@/hooks/useWorkspace", () => ({
 	}),
 }));
 
+// The drilldown modal reads the project's tags; keep it offline in tests.
+vi.mock("@/components/project/hooks", () => ({
+	useProjectById: () => ({ data: undefined }),
+}));
+
 i18n.load("en-US", {});
 i18n.activate("en-US");
+
+// Unmount between tests; some cases intentionally leave a modal open.
+afterEach(cleanup);
 
 // MantineProvider reads the OS color scheme on mount; jsdom has no
 // matchMedia, so stub a minimal (always non-matching) implementation.
@@ -142,9 +147,12 @@ const baseConversation = (
 		mode: "voice",
 		network: null,
 		pending_transcription: 0,
+		recorded_seconds: null,
 		recording_health: "receiving",
 		state: "recording",
+		tag_ids: [],
 		tags: [],
+		timeline: [],
 		transcribed_count: 1,
 		transcription_status: "up_to_date",
 		...over,
@@ -191,24 +199,20 @@ const renderSection = () =>
 	);
 
 describe("LiveMonitorSection click-through", () => {
-	it("captures monitor_conversation_opened with from_problem_state when a row is clicked", () => {
+	it("opens the edit modal when a row tile is clicked, without navigating", async () => {
 		captureMock.mockClear();
-		mockConversations = [
-			baseConversation({
-				has_error: true,
-				id: "c1",
-				recording_health: "stalled",
-			}),
-		];
+		mockConversations = [baseConversation({ id: "c1", label: "Ada" })];
 		const { getByText } = renderSection();
-		fireEvent.click(getByText("Anonymous participant"));
+		fireEvent.click(getByText("Ada"));
+		// Modal opens (Delete action visible); the tile does not navigate.
+		expect(await screen.findByText("Delete")).toBeTruthy();
 		expect(captureMock).toHaveBeenCalledWith(
+			"monitor_drilldown_opened",
+			expect.objectContaining({ entity_type: "recording", project_id: "p1" }),
+		);
+		expect(captureMock).not.toHaveBeenCalledWith(
 			"monitor_conversation_opened",
-			expect.objectContaining({
-				conversation_id: "c1",
-				from_problem_state: true,
-				project_id: "p1",
-			}),
+			expect.anything(),
 		);
 	});
 
@@ -224,5 +228,48 @@ describe("LiveMonitorSection click-through", () => {
 				project_id: "p1",
 			}),
 		);
+	});
+
+	it("opens the drilldown modal from the row pencil without navigating", async () => {
+		captureMock.mockClear();
+		mockConversations = [baseConversation({ id: "c1", label: "Ada" })];
+		const { getByTestId } = renderSection();
+		fireEvent.click(getByTestId("monitor-row-edit"));
+		// Modal is open (its Delete action is visible) and the row didn't navigate.
+		expect(await screen.findByText("Delete")).toBeTruthy();
+		expect(captureMock).not.toHaveBeenCalledWith(
+			"monitor_conversation_opened",
+			expect.anything(),
+		);
+	});
+});
+
+describe("LiveMonitorSection row ordering", () => {
+	it("orders rows within a group by created_at ascending", () => {
+		mockConversations = [
+			baseConversation({
+				created_at: "2026-07-02T12:00:03Z",
+				id: "b",
+				label: "Bravo",
+			}),
+			baseConversation({
+				created_at: "2026-07-02T12:00:01Z",
+				id: "c",
+				label: "Charlie",
+			}),
+			baseConversation({
+				created_at: "2026-07-02T12:00:02Z",
+				id: "a",
+				label: "Alpha",
+			}),
+		];
+		const { getByText } = renderSection();
+		const charlie = getByText("Charlie");
+		const alpha = getByText("Alpha");
+		const bravo = getByText("Bravo");
+		// Ascending created_at: Charlie (01) -> Alpha (02) -> Bravo (03).
+		const FOLLOWING = Node.DOCUMENT_POSITION_FOLLOWING;
+		expect(charlie.compareDocumentPosition(alpha) & FOLLOWING).toBeTruthy();
+		expect(alpha.compareDocumentPosition(bravo) & FOLLOWING).toBeTruthy();
 	});
 });

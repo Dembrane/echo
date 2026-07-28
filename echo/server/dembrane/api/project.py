@@ -136,6 +136,20 @@ async def delete_project(
         {"deleted_at": datetime.utcnow().isoformat()},
     )
 
+    # Bust cached usage so the deleted project's hours/counts drop immediately.
+    try:
+        from dembrane.cache_utils import invalidate_workspace_and_org_usage
+        from dembrane.directus_async import async_directus
+
+        proj = await async_directus.get_item(
+            "project", project_id, params={"fields": "workspace_id.id,workspace_id.org_id"}
+        )
+        workspace = (proj or {}).get("workspace_id") if isinstance(proj, dict) else None
+        if isinstance(workspace, dict) and workspace.get("id"):
+            await invalidate_workspace_and_org_usage(workspace["id"], workspace.get("org_id"))
+    except Exception:
+        logger.warning(f"usage cache invalidation failed for deleted project {project_id}")
+
     logger.info(f"Soft-deleted project {project_id} by user {auth.user_id}")
     return {"status": "success"}
 

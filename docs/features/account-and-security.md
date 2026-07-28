@@ -70,12 +70,12 @@ The wider picture of who owns the data is in
 
 ## What the assistant remembers about you
 
-*[dembrane next only](./dembrane-next.md).* If you use [Ask's agentic mode](./chat-and-ask.md),
+*[dembrane next only](./dembrane-next.md).* If you use [Ask](./chat-and-ask.md),
 the assistant can save notes about how you like to work - saved during your chats, read back at
 the start of the next one. *Settings → Assistant* shows every note it keeps about you; only you
 see these, and *Remove* makes it forget one for every future chat. The assistant writes the
 notes; you can't edit them, only remove them. (Project and workspace notes have their own
-surfaces - see [chat & Ask](./chat-and-ask.md#agentic-mode-in-more-detail).)
+surfaces - see [chat & Ask](./chat-and-ask.md#more-than-analysis).)
 
 ## Your access at a glance
 

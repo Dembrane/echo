@@ -244,9 +244,11 @@ Auth: `/login /register /check-your-email /verify-email /password-reset /request
   conversations; auto-select vs manual context; sources; templates (built-in + user templates);
   standard mode + *agentic mode* (tool use, separate agent service). Free-tier chat gate.
   `ENABLE_AGENTIC_CHAT = byEnv({production:false}, true)` - agentic OFF in production. Where
-  it's on, `/chats/new` is the *Ask home*: chat list + a question bar that filters chats and
-  creates one on Enter, a `Templates` insert menu, starter chips, and a
-  "Prefer the old chat? Start a Specific Details chat" escape hatch. Agentic runs show live
+  it's on, `/chats/new` is the *Ask home*: chat list + one question bar (headed "Where would
+  you like to start?") that filters chats and creates one on Enter, a `Templates` insert menu,
+  and a "Prefer the old chat? Start a Specific Details chat" escape hatch. The old Overview
+  mode is retired - unreachable in the new experience; Specific Details remains as the
+  classic fallback. Agentic runs show live
   progress, a Send↔Stop morph, named citation links ("{name}'s conversation" →
   `#chunk-` deep links), and documentation citations via a chooser modal
   ("Open documentation" / "Open chat documentation"). Agent tools (echo/agent, 20): inventory/

@@ -17,6 +17,7 @@ from dembrane.agentic_client import (
 )
 from dembrane.agentic_runtime import clear_cancel, publish_live_event, is_cancel_requested
 from dembrane.service.agentic import AgenticRunService
+from dembrane.api.feature_flags import project_canvas_enabled
 
 logger = getLogger("dembrane.agentic_worker")
 
@@ -403,6 +404,7 @@ async def _stream_with_overflow_retry(
     chat_id: str | None = None,
     app_user_id: str | None = None,
     message_id: str | None = None,
+    canvas_enabled: bool = False,
 ) -> AsyncGenerator[dict[str, Any], None]:
     attempts: list[list[dict[str, str]]] = [message_history]
     if len(message_history) > OVERFLOW_RETRY_WINDOW_SIZE:
@@ -423,6 +425,7 @@ async def _stream_with_overflow_retry(
                     chat_id=chat_id,
                     app_user_id=app_user_id,
                     message_id=message_id,
+                    canvas_enabled=canvas_enabled,
                 ):
                     emitted_events = True
                     yield event
@@ -665,6 +668,7 @@ async def process_agentic_run(
             svc=svc,
             run_id=run_id,
         )
+        canvas_enabled = await project_canvas_enabled(project_id)
 
         async for event in _stream_with_overflow_retry(
             project_id=project_id,
@@ -675,6 +679,7 @@ async def process_agentic_run(
             chat_id=project_chat_id or None,
             app_user_id=app_user_id,
             message_id=message_id,
+            canvas_enabled=canvas_enabled,
         ):
             await _raise_if_cancelled(run_id, turn_seq)
             event_type = str(event.get("type") or event.get("event") or "agent.event")

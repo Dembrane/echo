@@ -54,7 +54,7 @@ save repeating yourself and keep projects consistent for compliance. See
 ## Assistant
 
 *[dembrane next only](../../features/dembrane-next.md).* If you use
-[Ask's agentic mode](./chat-and-ask.md#agentic-mode), the assistant can save notes about how
+[Ask](./chat-and-ask.md#more-than-analysis), the assistant can save notes about how
 you like to work. The *Assistant* section shows everything it remembers about you - only you
 see these notes - and *Remove* makes it forget one for good. It writes the notes during your
 chats; you can't edit them here, only remove them.

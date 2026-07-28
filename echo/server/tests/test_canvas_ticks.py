@@ -23,7 +23,9 @@ class _FakeDirectus:
                     "acting_directus_user_id": "du1",
                     "failure_count": 0,
                 }
-            }
+            },
+            # Ticks only run for projects opted into the canvas beta.
+            "project": {"p1": {"id": "p1", "is_canvas_enabled": True}},
         }
         self.created: dict[str, list[dict[str, Any]]] = {}
         self.updated: list[tuple[str, str, dict[str, Any]]] = []
@@ -111,6 +113,21 @@ async def test_tick_no_op_when_no_new_content(monkeypatch) -> None:
 
     assert result["status"] == "no_op"
     assert fake.created["agent_loop_run"][0]["status"] == "no_op"
+    assert "canvas_generation" not in fake.created
+
+
+@pytest.mark.asyncio
+async def test_tick_no_ops_when_project_not_opted_into_canvas_beta(monkeypatch) -> None:
+    fake = _FakeDirectus()
+    fake.items["project"]["p1"]["is_canvas_enabled"] = False
+
+    monkeypatch.setattr(ticks, "async_directus", fake)
+
+    result = await ticks.run_tick("loop1", "scheduled")
+
+    assert result["status"] == "disabled"
+    assert fake.created["agent_loop_run"][0]["status"] == "no_op"
+    assert fake.created["agent_loop_run"][0]["detail"] == "Canvas is disabled for this project"
     assert "canvas_generation" not in fake.created
 
 
