@@ -660,7 +660,7 @@ export const ProjectConversationsPanel = ({
 			enabled:
 				selectionMode &&
 				ENABLE_CHAT_SELECT_ALL &&
-				chatMode === "deep_dive" &&
+				(chatMode === "deep_dive" || chatMode === "agentic") &&
 				!!selectionChatId,
 		},
 	);
@@ -840,7 +840,7 @@ export const ProjectConversationsPanel = ({
 
 				{selectionMode &&
 					ENABLE_CHAT_SELECT_ALL &&
-					chatMode === "deep_dive" &&
+					(chatMode === "deep_dive" || chatMode === "agentic") &&
 					allConversations.length > 0 && (
 						<Button
 							variant="outline"
