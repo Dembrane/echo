@@ -8,6 +8,7 @@ import {
 	Divider,
 	Group,
 	Loader,
+	Modal,
 	Paper,
 	Skeleton,
 	Stack,
@@ -19,6 +20,7 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { ChatCircleTextIcon } from "@phosphor-icons/react";
 import {
 	IconAlertCircle,
 	IconChevronDown,
@@ -37,10 +39,19 @@ import {
 	useState,
 } from "react";
 import { useLocation } from "react-router";
-import { useChatHistory, useUpdateChatMutation } from "@/components/chat/hooks";
+import {
+	useChatHistory,
+	useProjectChatContext,
+	useUpdateChatMutation,
+} from "@/components/chat/hooks";
 import { InsertTemplateMenu } from "@/components/chat/InsertTemplateMenu";
 import { consumeChatPrefill } from "@/components/chat/prefill";
-import { useConversationsByProjectId } from "@/components/conversation/hooks";
+import { ConversationLinks } from "@/components/conversation/ConversationLinks";
+import {
+	useClearChatContextMutation,
+	useConversationsByProjectId,
+} from "@/components/conversation/hooks";
+import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { GoalSuggestionCard } from "@/components/goal/GoalSuggestionCard";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
@@ -70,6 +81,7 @@ import {
 import { testId } from "@/lib/testUtils";
 import { CopyRichTextIconButton } from "../common/CopyRichTextIconButton";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
+import { focusedConversationIdsFromPayload } from "./agenticFocus";
 import {
 	extractTopLevelToolActivity,
 	parseCanvasSuggestion,
@@ -104,6 +116,7 @@ type RenderMessage = {
 	content: string;
 	timestamp: string;
 	sortSeq: number;
+	focusedConversationIds?: string[];
 };
 
 type TimelineItem =
@@ -254,6 +267,7 @@ const toMessage = ({
 				projectId,
 				workspaceId,
 			}),
+			focusedConversationIds: focusedConversationIdsFromPayload(payload),
 			id: `u-${event.seq}`,
 			role: "user",
 			sortSeq: event.seq,
@@ -607,6 +621,16 @@ export const AgenticChatPanel = ({
 	const queryClient = useQueryClient();
 	const chatQuery = useProjectChat(chatId);
 	const persistedHistoryQuery = useChatHistory(chatId);
+	const chatContextQuery = useProjectChatContext(chatId);
+	const focusedContextConversations = useMemo(
+		() =>
+			(chatContextQuery.data?.conversations ?? []).map((item) => ({
+				id: item.conversation_id,
+				participant_name: item.conversation_participant_name,
+			})),
+		[chatContextQuery.data?.conversations],
+	);
+	const clearChatContextMutation = useClearChatContextMutation();
 	const [runId, setRunId] = useState<string | null>(null);
 	const [runStatus, setRunStatus] = useState<AgenticRunStatus | null>(null);
 	const [afterSeq, setAfterSeq] = useState(0);
@@ -628,6 +652,8 @@ export const AgenticChatPanel = ({
 	const [expandedGroupIds, setExpandedGroupIds] = useState<
 		Record<string, boolean>
 	>({});
+	const [conversationPickerOpened, conversationPickerHandlers] =
+		useDisclosure(false);
 	const streamAbortRef = useRef<AbortController | null>(null);
 	const streamRunIdRef = useRef<string | null>(null);
 	const stopArmedRunIdRef = useRef<string | null>(null);
@@ -1535,8 +1561,35 @@ export const AgenticChatPanel = ({
 
 					{timelineNodes.map((node) => {
 						if (node.kind === "message") {
+							const focusedConversations = (
+								node.item.role === "user"
+									? (node.item.focusedConversationIds ?? [])
+									: []
+							)
+								.filter((id) => conversationNames.has(id))
+								.map((id) => ({
+									id,
+									participant_name: conversationNames.get(id) ?? "",
+								}));
 							return (
 								<div key={node.id}>
+									{focusedConversations.length > 0 && (
+										<Group
+											gap="xs"
+											align="baseline"
+											justify="flex-end"
+											className="mb-2 italic"
+										>
+											<Text size="xs" c="dimmed" fw={500}>
+												<Trans>Focusing on:</Trans>
+											</Text>
+											<ConversationLinks
+												conversations={
+													focusedConversations as unknown as Conversation[]
+												}
+											/>
+										</Group>
+									)}
 									<ChatHistoryMessage
 										message={toHistoryMessage(node.item)}
 										chatMode="agentic"
@@ -1741,7 +1794,6 @@ export const AgenticChatPanel = ({
 					{atTurnLimit && (
 						<ChatTurnLimitCard onUpgrade={upgradeHandlers.open} />
 					)}
-					<Divider />
 					<form
 						onSubmit={(event) => {
 							event.preventDefault();
@@ -1755,6 +1807,41 @@ export const AgenticChatPanel = ({
 								borderColor: "var(--mantine-color-primary-light)",
 							}}
 						>
+							{focusedContextConversations.length > 0 && (
+								<Group
+									gap="xs"
+									align="baseline"
+									wrap="wrap"
+									className="mb-2 border-0 border-b border-solid pb-2 italic"
+									style={{ borderColor: "var(--mantine-color-primary-light)" }}
+								>
+									<Text size="xs" c="dimmed" fw={500}>
+										<Trans>Focusing on:</Trans>
+									</Text>
+									<ConversationLinks
+										conversations={
+											focusedContextConversations as unknown as Conversation[]
+										}
+									/>
+									<Button
+										variant="subtle"
+										size="compact-xs"
+										className="not-italic"
+										onClick={() =>
+											clearChatContextMutation.mutate({
+												chatId,
+												conversationIds: focusedContextConversations.map(
+													(conversation) => conversation.id,
+												),
+											})
+										}
+										loading={clearChatContextMutation.isPending}
+										{...testId("agentic-clear-focus-button")}
+									>
+										<Trans>Clear all</Trans>
+									</Button>
+								</Group>
+							)}
 							<Textarea
 								variant="unstyled"
 								styles={{ input: { backgroundColor: "transparent" } }}
@@ -1779,9 +1866,18 @@ export const AgenticChatPanel = ({
 										workspaceId={workspaceId}
 										onInsert={(content) => setInput(content)}
 									/>
-									<Text size="xs" className="select-none">
-										<Trans>Enter to send, Shift+Enter for a new line</Trans>
-									</Text>
+									<Button
+										variant="subtle"
+										size="compact-xs"
+										aria-label={t`Select conversations`}
+										onClick={conversationPickerHandlers.open}
+										{...testId("agentic-select-conversations-button")}
+									>
+										<ChatCircleTextIcon size={14} />
+										<span className="ms-1.5 hidden md:inline">
+											<Trans>Select conversations</Trans>
+										</span>
+									</Button>
 								</Group>
 								<Group gap="xs" wrap="nowrap">
 									<Button
@@ -1805,8 +1901,37 @@ export const AgenticChatPanel = ({
 								</Group>
 							</Group>
 						</Box>
+						<Group
+							justify="space-between"
+							gap="sm"
+							wrap="wrap"
+							className="mt-1"
+						>
+							<Text size="xs" className="hidden italic md:block">
+								<Trans>Use Shift + Enter to add a new line</Trans>
+							</Text>
+							<Text size="xs" className="italic">
+								<Trans>
+									dembrane can make mistakes. Please double-check responses.
+								</Trans>
+							</Text>
+						</Group>
 					</form>
 				</Stack>
+				<Modal
+					opened={conversationPickerOpened}
+					onClose={conversationPickerHandlers.close}
+					title={t`Select conversations`}
+					size="xl"
+					padding="lg"
+				>
+					<ProjectConversationsPanel
+						projectId={projectId}
+						workspaceId={workspaceId}
+						selectionChatId={chatId}
+						selectionMode
+					/>
+				</Modal>
 			</Box>
 			<ChatUpgradeModal
 				opened={upgradeOpened}

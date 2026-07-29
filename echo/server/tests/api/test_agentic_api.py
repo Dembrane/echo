@@ -79,7 +79,7 @@ async def _wait_for_updated_titles(
     for _ in range(20):
         if len(chat_service.updated_titles) >= expected_count:
             return
-        await asyncio.sleep(0)
+        await asyncio.sleep(0.01)
 
     assert len(chat_service.updated_titles) >= expected_count
 
@@ -372,6 +372,48 @@ async def test_create_run_persists_user_message_without_dispatch(monkeypatch) ->
     )
 
 
+@pytest.mark.asyncio
+async def test_create_run_injects_focus_hint_from_chat_context(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    fake_chat_service = _FakeChatService(
+        chats={
+            "chat-1": {
+                "id": "chat-1",
+                "name": "Named chat",
+                "project_id": {"id": "project-1"},
+                "used_conversations": [
+                    {"id": 1, "conversation_id": {"id": "conv-1", "participant_name": "Alice"}},
+                    {"id": 2, "conversation_id": {"id": "conv-2", "participant_name": "Bob"}},
+                ],
+            }
+        }
+    )
+    session = _make_session(user_id="user-1")
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+        chat_service=fake_chat_service,
+    ) as client:
+        response = await client.post(
+            "/api/agentic/runs",
+            json={"project_id": "project-1", "project_chat_id": "chat-1", "message": "hello"},
+        )
+
+    assert response.status_code == 201
+    events = run_service.list_events(response.json()["id"])
+    assert len(events) == 1
+    payload = events[0]["payload"]
+    assert payload["content"] == "hello"
+    assert payload["focused_conversation_ids"] == ["conv-1", "conv-2"]
+    assert (
+        "The user wants you to focus on these conversations: "
+        "Alice (conv-1), Bob (conv-2). Prioritize them when gathering context."
+    ) in payload["agent_prompt_content"]
+
+
 def test_initial_prompt_includes_workspace_context() -> None:
     from dembrane.api.agentic import _build_initial_agent_prompt_content
 
@@ -409,6 +451,80 @@ def test_initial_prompt_defaults_workspace_context_to_none_marker() -> None:
     )
     assert "Workspace Context: (none)" in content
     assert "Project Goal: (none)" in content
+
+
+def test_initial_prompt_includes_focus_line_before_user_message() -> None:
+    from dembrane.api.agentic import _build_initial_agent_prompt_content
+
+    content = _build_initial_agent_prompt_content(
+        project_name="Street interviews",
+        project_context="Ask about the market",
+        user_message="hello",
+        focused_conversations=[
+            {"id": "conv-1", "name": "Alice"},
+            {"id": "conv-2", "name": ""},
+        ],
+    )
+    assert (
+        "The user wants you to focus on these conversations: "
+        "Alice (conv-1), conv-2. Prioritize them when gathering context."
+    ) in content
+    assert content.index("focus on these conversations") < content.index("User Message:")
+
+
+def test_initial_prompt_omits_focus_line_without_selection() -> None:
+    from dembrane.api.agentic import _build_initial_agent_prompt_content
+
+    content = _build_initial_agent_prompt_content(
+        project_name="Street interviews",
+        project_context="Ask about the market",
+        user_message="hello",
+        focused_conversations=None,
+    )
+    assert "focus on these conversations" not in content
+
+
+def test_followup_prompt_wraps_message_with_focus_line() -> None:
+    from dembrane.api.agentic import _build_followup_agent_prompt_content
+
+    content = _build_followup_agent_prompt_content(
+        "  and what about themes?  ",
+        [{"id": "conv-1", "name": "Alice"}],
+    )
+    assert content == (
+        "The user wants you to focus on these conversations: Alice (conv-1). "
+        "Prioritize them when gathering context.\n\n"
+        "User Message: and what about themes?"
+    )
+
+
+def test_get_focused_conversations_maps_links(monkeypatch) -> None:
+    fake_chat_service = _FakeChatService(
+        chats={
+            "chat-1": {
+                "id": "chat-1",
+                "used_conversations": [
+                    {"id": 1, "conversation_id": {"id": "conv-1", "participant_name": "Alice"}},
+                    {"id": 2, "conversation_id": {"id": "conv-2", "participant_name": None}},
+                    {"id": 3, "conversation_id": None},
+                    "garbage",
+                ],
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "chat_service", fake_chat_service)
+
+    assert agentic_api._get_focused_conversations("chat-1") == [
+        {"id": "conv-1", "name": "Alice"},
+        {"id": "conv-2", "name": ""},
+    ]
+
+
+def test_get_focused_conversations_degrades_to_empty(monkeypatch) -> None:
+    monkeypatch.setattr(agentic_api, "chat_service", _FakeChatService())
+
+    assert agentic_api._get_focused_conversations(None) == []
+    assert agentic_api._get_focused_conversations("missing-chat") == []
 
 
 @pytest.mark.asyncio
@@ -634,6 +750,82 @@ async def test_append_message_skips_title_generation_for_named_chat(monkeypatch)
 
     assert response.status_code == 200
     assert fake_chat_service.updated_titles == []
+
+
+@pytest.mark.asyncio
+async def test_append_message_injects_focus_hint_from_chat_context(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    run = run_service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+        status="completed",
+    )
+    fake_chat_service = _FakeChatService(
+        chats={
+            "chat-1": {
+                "id": "chat-1",
+                "name": "Named chat",
+                "project_id": {"id": "project-1"},
+                "used_conversations": [
+                    {"id": 1, "conversation_id": {"id": "conv-1", "participant_name": "Alice"}},
+                ],
+            }
+        }
+    )
+    session = _make_session(user_id="user-1")
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+        chat_service=fake_chat_service,
+    ) as client:
+        response = await client.post(
+            f"/api/agentic/runs/{run['id']}/messages",
+            json={"message": "what about themes?"},
+        )
+
+    assert response.status_code == 200
+    events = run_service.list_events(run["id"])
+    payload = events[-1]["payload"]
+    assert payload["content"] == "what about themes?"
+    assert payload["focused_conversation_ids"] == ["conv-1"]
+    assert payload["agent_prompt_content"] == (
+        "The user wants you to focus on these conversations: Alice (conv-1). "
+        "Prioritize them when gathering context.\n\n"
+        "User Message: what about themes?"
+    )
+
+
+@pytest.mark.asyncio
+async def test_append_message_payload_unchanged_without_focus(monkeypatch) -> None:
+    run_service = AgenticRunService(directus_client=InMemoryDirectus())
+    run = run_service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+        status="completed",
+    )
+    fake_chat_service = _FakeChatService()
+    session = _make_session(user_id="user-1")
+
+    async with _build_api_client(
+        monkeypatch=monkeypatch,
+        session=session,
+        run_service=run_service,
+        owner_by_project_id={"project-1": "user-1"},
+        chat_service=fake_chat_service,
+    ) as client:
+        response = await client.post(
+            f"/api/agentic/runs/{run['id']}/messages",
+            json={"message": "hello-again"},
+        )
+
+    assert response.status_code == 200
+    events = run_service.list_events(run["id"])
+    assert events[-1]["payload"] == {"content": "hello-again"}
 
 
 @pytest.mark.asyncio

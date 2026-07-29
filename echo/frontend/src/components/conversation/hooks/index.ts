@@ -496,6 +496,52 @@ export const useDeleteChatContextMutation = () => {
 	});
 };
 
+export const useClearChatContextMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (payload: {
+			chatId: string;
+			conversationIds: string[];
+		}) => {
+			const results = await Promise.allSettled(
+				payload.conversationIds.map((conversationId) =>
+					deleteChatContext(payload.chatId, conversationId),
+				),
+			);
+			const failed = results.filter((result) => result.status === "rejected");
+			return {
+				cleared: results.length - failed.length,
+				failed,
+				total: results.length,
+			};
+		},
+		mutationKey: ["chat-context", "clear"],
+		onError: (error) => {
+			posthog.captureException(error);
+			toast.error(t`Failed to clear conversations`);
+		},
+		onSettled: (_, __, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["chats", "context", variables.chatId],
+			});
+		},
+		onSuccess: ({ cleared, failed, total }) => {
+			if (failed.length === 0) {
+				toast.success(t`Conversations cleared`);
+				return;
+			}
+			for (const failure of failed) {
+				posthog.captureException(failure.reason);
+			}
+			if (cleared === 0) {
+				toast.error(t`Failed to clear conversations`);
+				return;
+			}
+			toast.error(t`Cleared ${cleared} of ${total} conversations`);
+		},
+	});
+};
+
 export const useSelectAllContextMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
