@@ -163,6 +163,7 @@ export const ConversationLinks = ({
 							size="md"
 							variant="light"
 							ml="xs"
+							c="graphite"
 							className="cursor-pointer not-italic"
 							onClick={() => setModalOpened(true)}
 						>

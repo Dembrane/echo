@@ -1,6 +1,7 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Menu, Text } from "@mantine/core";
-import { IconTemplate } from "@tabler/icons-react";
+import { CardsThreeIcon } from "@phosphor-icons/react";
 import { useUserTemplates } from "@/components/chat/hooks/useUserTemplates";
 
 /** Quiet insert-only entry point to saved templates: picking one drops its
@@ -20,12 +21,11 @@ export const InsertTemplateMenu = ({
 	return (
 		<Menu position="top-start" withinPortal shadow="md">
 			<Menu.Target>
-				<Button
-					variant="subtle"
-					size="xs"
-					leftSection={<IconTemplate size={14} />}
-				>
-					<Trans>Templates</Trans>
+				<Button variant="subtle" size="xs" aria-label={t`Templates`}>
+					<CardsThreeIcon size={14} />
+					<span className="ms-1.5 hidden md:inline">
+						<Trans>Templates</Trans>
+					</span>
 				</Button>
 			</Menu.Target>
 			<Menu.Dropdown className="max-w-md">
