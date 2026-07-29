@@ -1176,14 +1176,26 @@ export const AgenticChatPanel = ({
 	useEffect(() => {
 		hasScrolledInitiallyRef.current = false;
 	}, [chatId]);
-	// Streaming grows the LAST item's text without changing timeline.length, so
-	// keying the effect on length alone left the view pinned while the answer
-	// wrote itself off the bottom of the screen. Track the tail's size too.
+	// Streaming grows the LAST item without changing timeline.length, so keying
+	// the effect on length alone left the view pinned while the answer wrote
+	// itself off the bottom of the screen.
+	//
+	// The key identifies the tail AND how far along it is, rather than a bare
+	// size. A size alone collapses two different states into 0 (the tail is a
+	// tool activity, and the tail is a message that has not written a character
+	// yet), so neither one fires, and it cannot tell one message from the next
+	// that happens to be the same length. Including the id makes each of those
+	// a distinct key. A tool's own progress is its status, not a length.
+	//
 	// The reader protection above is unchanged: this still only scrolls when
 	// isAtBottomRef says they are already at the bottom.
 	const tail = timeline.at(-1);
-	const streamTailLength =
-		tail?.kind === "message" ? tail.content.length : 0;
+	const tailKey =
+		tail === undefined
+			? ""
+			: tail.kind === "message"
+				? `m:${tail.id}:${tail.content.length}`
+				: `t:${tail.id}:${tail.status}`;
 	useEffect(() => {
 		if (timeline.length === 0) return;
 		if (!hasScrolledInitiallyRef.current) {
@@ -1193,11 +1205,12 @@ export const AgenticChatPanel = ({
 		}
 		if (forceNextScrollRef.current || isAtBottomRef.current) {
 			forceNextScrollRef.current = false;
-			// "auto" while the tail is growing: a smooth animation per token
-			// queues up and stutters, which is worse on camera than no scroll.
-			scrollToBottom(streamTailLength > 0 ? "auto" : "smooth");
+			// "auto" mid-stream: a smooth animation per token queues up and
+			// stutters, which reads worse on camera than not scrolling. Once the
+			// run finishes, a single smooth scroll is the nicer motion.
+			scrollToBottom(isStreaming ? "auto" : "smooth");
 		}
-	}, [timeline.length, streamTailLength, scrollToBottom]);
+	}, [timeline.length, tailKey, isStreaming, scrollToBottom]);
 
 	useEffect(() => {
 		return () => {
