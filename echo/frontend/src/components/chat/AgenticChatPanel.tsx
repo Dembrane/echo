@@ -1196,6 +1196,7 @@ export const AgenticChatPanel = ({
 			: tail.kind === "message"
 				? `m:${tail.id}:${tail.content.length}`
 				: `t:${tail.id}:${tail.status}`;
+	// biome-ignore lint/correctness/useExhaustiveDependencies: tailKey is the trigger, not a read — it exists so a growing tail re-fires this effect
 	useEffect(() => {
 		if (timeline.length === 0) return;
 		if (!hasScrolledInitiallyRef.current) {
