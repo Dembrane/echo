@@ -151,7 +151,7 @@ def collect_unsummarized_conversations(limit: int = 50) -> List[str]:
                     "is_all_chunks_transcribed": True,
                     "_or": [
                         {"summary": {"_null": True}},
-                        {"summary": {"_eq": ""}},
+                        {"summary": {"_empty": True}},
                     ],
                     "deleted_at": {"_null": True},
                     "created_at": {
