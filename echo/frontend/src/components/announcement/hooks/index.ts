@@ -68,6 +68,13 @@ export const useLatestAnnouncement = () => {
 				throw error;
 			}
 		},
+		// The query is meaningless without a user: it filters `activity` by
+		// currentUser.id, and `announcement` is readable only by the Basic User
+		// policy. Firing it before auth resolves means an unauthenticated request
+		// that Directus answers 403, three times over because of `retry: 2`, and
+		// a red console error on every cold load. `useInfiniteAnnouncementActivity`
+		// in this same file already gates on the user; this one was missed.
+		enabled: !!currentUser?.id,
 		queryKey: ["announcements", "latest"],
 		retry: 2,
 		staleTime: 1000 * 60 * 5, // 5 minutes
