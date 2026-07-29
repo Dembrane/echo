@@ -112,8 +112,33 @@ const ValueText = ({
 	);
 };
 
-/**
- * Renders an agent-proposed settings change for the host to review.
+	/**
+	 * A local input component that prevents keystroke-by-keystroke re-renders
+	 * of the entire outer card and chat list. It buffers the value locally in state
+	 * and only flushes it to the parent state on blur or unmount.
+	 */
+	const BufferedTextarea = ({
+		initialValue,
+		onFlush,
+		...props
+	}: Omit<React.ComponentProps<typeof Textarea>, "value" | "onChange"> & {
+		initialValue: string;
+		onFlush: (val: string) => void;
+	}) => {
+		const [localVal, setLocalVal] = useState(initialValue);
+
+		return (
+			<Textarea
+				{...props}
+				value={localVal}
+				onChange={(event) => setLocalVal(event.currentTarget.value)}
+				onBlur={() => onFlush(localVal)}
+			/>
+		);
+	};
+
+	/**
+	 * Renders an agent-proposed settings change for the host to review.
  * The agent never writes; the host can fine-tune each proposed value, pick
  * which changes to keep, and apply them through the normal project PATCH
  * under their own session (the access ladder gates the write).
@@ -315,22 +340,22 @@ export const ProjectUpdateSuggestionCard = ({
 											<ValueText value={value} kind="new" />
 										) : null}
 									</Group>
-									{isEditable && !dismissed && (
-										<Textarea
-											size="xs"
-											autosize
-											minRows={1}
-											maxRows={6}
-											value={String(value ?? "")}
-											onChange={(event) =>
-												setEdited((prev) => ({
-													...prev,
-													[change.field]: event.currentTarget.value,
-												}))
-											}
-											{...testId(`suggestion-field-input-${change.field}`)}
-										/>
-									)}
+										{isEditable && !dismissed && (
+											<BufferedTextarea
+												size="xs"
+												autosize
+												minRows={1}
+												maxRows={6}
+												initialValue={String(value ?? "")}
+												onFlush={(val) =>
+													setEdited((prev) => ({
+														...prev,
+														[change.field]: val,
+													}))
+												}
+												{...testId(`suggestion-field-input-${change.field}`)}
+											/>
+										)}
 									{change.reason && (
 										<Text size="xs" fs="italic" c="graphite.6">
 											{change.reason}
