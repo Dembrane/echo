@@ -360,12 +360,7 @@ training (+ training_license); verification_topic; processing_status; notificati
 announcement; access_request; referral_ledger.
 
 ### 10.3 Processing pipeline
-Upload chunk → S3 (presigned) → `task_transcribe_chunk` (AssemblyAI webhook/poll OR LiteLLM)
-→ `task_correct_transcript` (Gemini: hotwords + PII redaction; diarization schema
-"Dembrane-25-09" / "…-26-01-redaction") → coordination counter → when 0 & finished →
-`task_finalize_conversation` → `task_merge_conversation_chunks` + `task_summarize_conversation`
-(Gemini). Reports = two-phase (fan-out summaries → generate). Chat: overview (summaries) vs
-deep_dive (transcripts). Redis locks for idempotency. SSE progress via Redis pub/sub.
+Upload chunk → S3 (presigned) → `task_transcribe_chunk` (Gemini 2.5 Pro via Vertex AI OR LiteLLM; single-pass transcription, hotword normalization, and optional PII redaction; diarization schema "Dembrane-26-07-gemini") → coordination counter → when 0 & finished → `task_finalize_conversation` → `task_merge_conversation_chunks` + `task_summarize_conversation` (Gemini). Reports = two-phase (fan-out summaries → generate). Chat: overview (summaries) vs deep_dive (transcripts). Redis locks for idempotency. SSE progress via Redis pub/sub.
 LLM via LiteLLM Router groups: MULTI_MODAL_PRO (Gemini 2.5 Pro), MULTI_MODAL_FAST (Flash),
 TEXT_FAST (legacy). Config `docs/litellm_config.md`, env `LLM__<GROUP>[_n]__*`.
 

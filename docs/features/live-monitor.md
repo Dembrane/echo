@@ -6,8 +6,6 @@ audience: all
 
 # The live monitor
 
-What this feature lets you do, from the perspective of the people using it.
-
 When you run a session (a workshop, a consultation, a set of interviews), people
 scan a QR code and record on their own phones, all at the same time. You cannot
 stand behind each of them. The live monitor is the room you watch instead: it

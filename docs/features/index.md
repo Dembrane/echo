@@ -28,6 +28,7 @@ How dembrane is organised, who can do what, and what each plan unlocks.
   workspaces.
 - *[Account & security](./account-and-security.md)* - your profile, password, two-factor,
   and audit logs.
+- *[Staff support access](./staff-support-access.md)* - how dembrane administrators access your workspace to help troubleshoot.
 
 ## Collecting conversations
 

@@ -25,9 +25,9 @@ recommended, not required.)
 ## Finding your way around (and the sidebar toggle)
 
 Once signed in, you will see your main dashboard:
-- **The Sidebar:** The sidebar on the left lets you quickly navigate between your Organisation, Workspaces, and Projects.
-- **Sidebar Collapse:** To give yourself more screen space when reading transcripts or analyzing data, you can collapse the sidebar entirely. Look for the **Sidebar Toggle icon** (the left-pointing chevron) at the bottom of the sidebar to slide it closed. Clicking the toggle again expands it back.
-- **Always-on Default:** The sidebar defaults to expanded, so you will always have clear navigation when you first sign in.
+- *The sidebar* - The sidebar on the left lets you quickly navigate between your Organisation, Workspaces, and Projects.
+- *Sidebar collapse* - To give yourself more screen space when reading transcripts or analysing data, you can collapse the sidebar entirely. Look for the *Sidebar Toggle* (the left-pointing chevron) in the sidebar header, top-right by the logo, to slide it closed. Clicking the toggle again expands it back.
+- *Collapse persistence* - The collapsed state persists (saved in your browser's local storage), so the sidebar stays exactly how you left it when you return or sign in again.
 
 ## 2. Create a project
 

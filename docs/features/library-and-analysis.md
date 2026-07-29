@@ -7,7 +7,7 @@ audience: host
 # Library & analysis
 
 > [!NOTE]
-> The Living Canvas and Library analysis views are currently in **Beta** and must be turned on per-project under **Project Settings** > **Experimental** > **Living canvas (Beta)**.
+> The *living canvas* and library analysis views are currently in *Beta* (available on the next-release *echo-next* environment only) and must be turned on per-project under *Project Settings* > *Experimental* > *Living canvas (Beta)*.
 
 The library lays out the whole landscape of a project. Where [Ask](./chat-and-ask.md) answers
 one question at a time, the library reads across all your
