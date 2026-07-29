@@ -15,10 +15,10 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
+import { ChatCircleTextIcon } from "@phosphor-icons/react";
 import { usePostHog } from "@posthog/react";
 import {
 	IconAlertCircle,
-	IconListDetails,
 	IconRefresh,
 	IconSend,
 	IconSquare,
@@ -35,10 +35,7 @@ import {
 import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatMessage } from "@/components/chat/ChatMessage";
-import {
-	ChatModeSelector,
-	MODE_COLORS,
-} from "@/components/chat/ChatModeSelector";
+import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
 import { ChatTemplatesMenu } from "@/components/chat/ChatTemplatesMenu";
 import { formatMessage } from "@/components/chat/chatUtils";
 import {
@@ -903,7 +900,7 @@ export const ProjectChatRoute = () => {
 							<Button
 								variant="light"
 								size="xs"
-								leftSection={<IconListDetails size={16} />}
+								leftSection={<ChatCircleTextIcon size={16} />}
 								onClick={() => setConversationPickerOpen(true)}
 								{...testId("chat-select-conversations-button")}
 							>
@@ -938,8 +935,6 @@ export const ProjectChatRoute = () => {
 										id: c.conversation_id,
 										participant_name: c.conversation_participant_name,
 									}))}
-									color="var(--app-text)"
-									hoverUnderlineColor={MODE_COLORS.deep_dive.primary}
 								/>
 							</Group>
 						</ChatMessage>

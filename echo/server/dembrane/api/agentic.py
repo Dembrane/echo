@@ -356,6 +356,57 @@ async def _get_workspace_context_for_project(project: dict[str, Any]) -> Optiona
     return _to_non_empty_string(workspace.get("context"))
 
 
+def _format_focused_conversations(focused: list[dict[str, str]]) -> str:
+    labels = ", ".join(
+        f"{item['name']} ({item['id']})" if item.get("name") else item["id"]
+        for item in focused
+    )
+    return (
+        "The user wants you to focus on these conversations: "
+        f"{labels}. Prioritize them when gathering context."
+    )
+
+
+def _build_followup_agent_prompt_content(
+    user_message: str,
+    focused_conversations: list[dict[str, str]],
+) -> str:
+    return (
+        f"{_format_focused_conversations(focused_conversations)}\n\n"
+        f"User Message: {user_message.strip()}"
+    )
+
+
+def _get_focused_conversations(project_chat_id: Optional[str]) -> list[dict[str, str]]:
+    """Conversations the host selected for this chat, as focus hints.
+
+    Agentic never preloads transcripts or locks context rows; the selection is
+    only folded into the prompt. Failures degrade to no hint, never a failed run."""
+    if not project_chat_id:
+        return []
+    try:
+        chat = chat_service.get_by_id_or_raise(project_chat_id, with_used_conversations=True)
+    except Exception:  # noqa: BLE001
+        logger.warning("Could not load chat %s for focus hint", project_chat_id)
+        return []
+
+    focused: list[dict[str, str]] = []
+    for link in chat.get("used_conversations") or []:
+        ref = link.get("conversation_id") if isinstance(link, dict) else None
+        if not isinstance(ref, dict):
+            continue
+        conversation_id = _to_non_empty_string(ref.get("id"))
+        if not conversation_id:
+            continue
+        focused.append(
+            {
+                "id": conversation_id,
+                "name": _to_non_empty_string(ref.get("participant_name")) or "",
+            }
+        )
+    return focused
+
+
 def _build_initial_agent_prompt_content(
     *,
     project_name: Optional[str],
@@ -363,18 +414,25 @@ def _build_initial_agent_prompt_content(
     project_goal: Optional[str] = None,
     user_message: str,
     workspace_context: Optional[str] = None,
+    focused_conversations: Optional[list[dict[str, str]]] = None,
 ) -> str:
     normalized_name = _to_non_empty_string(project_name) or "(none)"
     normalized_context = _to_non_empty_string(project_context) or "(none)"
     normalized_goal = _to_non_empty_string(project_goal) or "(none)"
     normalized_workspace_context = _to_non_empty_string(workspace_context) or "(none)"
     normalized_message = user_message.strip()
+    focus_block = (
+        f"{_format_focused_conversations(focused_conversations)}\n\n"
+        if focused_conversations
+        else ""
+    )
 
     return (
         f"Project Name: {normalized_name}\n"
         f"Workspace Context: {normalized_workspace_context}\n"
         f"Project Context: {normalized_context}\n"
         f"Project Goal: {normalized_goal}\n\n"
+        f"{focus_block}"
         f"User Message: {normalized_message}"
     )
 
@@ -950,22 +1008,32 @@ async def create_run(
     project_context = _to_non_empty_string(project.get("context"))
     workspace_context = await _get_workspace_context_for_project(project)
     project_goal = await get_current_project_goal_content(body.project_id)
+    focused_conversations = await run_in_thread_pool(
+        _get_focused_conversations, body.project_chat_id
+    )
     agent_prompt_content = _build_initial_agent_prompt_content(
         project_name=project_name,
         project_context=project_context,
         project_goal=project_goal,
         user_message=body.message,
         workspace_context=workspace_context,
+        focused_conversations=focused_conversations or None,
     )
+
+    event_payload: dict[str, Any] = {
+        "content": body.message,
+        "agent_prompt_content": agent_prompt_content,
+    }
+    if focused_conversations:
+        event_payload["focused_conversation_ids"] = [
+            item["id"] for item in focused_conversations
+        ]
 
     await run_in_thread_pool(
         agentic_run_service.append_event,
         run["id"],
         "user.message",
-        {
-            "content": body.message,
-            "agent_prompt_content": agent_prompt_content,
-        },
+        event_payload,
     )
     await run_in_thread_pool(_persist_chat_user_message, body.project_chat_id, body.message)
     _schedule_chat_title_generation(body.project_chat_id, body.message, body.language)
@@ -1007,11 +1075,24 @@ async def append_message(
         ):
             raise free_tier_limit_error("chat_turns")
 
+    focused_conversations = await run_in_thread_pool(
+        _get_focused_conversations,
+        _to_non_empty_string(run.get("project_chat_id")),
+    )
+    event_payload: dict[str, Any] = {"content": body.message}
+    if focused_conversations:
+        event_payload["agent_prompt_content"] = _build_followup_agent_prompt_content(
+            body.message, focused_conversations
+        )
+        event_payload["focused_conversation_ids"] = [
+            item["id"] for item in focused_conversations
+        ]
+
     await run_in_thread_pool(
         agentic_run_service.append_event,
         run_id,
         "user.message",
-        {"content": body.message},
+        event_payload,
     )
     await run_in_thread_pool(
         _persist_chat_user_message,
