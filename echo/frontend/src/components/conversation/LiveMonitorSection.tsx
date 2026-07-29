@@ -5,7 +5,10 @@ import {
 	Box,
 	Card,
 	Collapse,
+	Divider,
 	Group,
+	SegmentedControl,
+	SimpleGrid,
 	Stack,
 	Text,
 	Tooltip,
@@ -260,11 +263,13 @@ const MonitorRow = ({
 	highlighted,
 	onLockedClick,
 	onEdit,
+	viewMode = "detailed",
 }: {
 	conversation: MonitorConversation;
 	highlighted?: boolean;
 	onLockedClick?: () => void;
 	onEdit?: () => void;
+	viewMode?: "detailed" | "compressed";
 }) => {
 	const label = conversation.label?.trim() || t`Anonymous participant`;
 	const weakNetwork = isWeakNetwork(conversation);
@@ -273,7 +278,75 @@ const MonitorRow = ({
 	// Locked rows open the upgrade modal; unlocked rows open the edit modal.
 	const clickable = isLocked || !!onEdit;
 
-	const card = (
+	const card = viewMode === "compressed" ? (
+		<Card
+			withBorder
+			p="xs"
+			radius="sm"
+			className={`transition-colors h-full ${clickable ? "hover:!border-primary-400 cursor-pointer" : ""} ${highlighted ? "!border-primary-500 ring-2 ring-primary-200" : ""}`}
+		>
+			<Stack gap={6} justify="space-between" style={{ height: "100%", minWidth: 0 }}>
+				<Group justify="space-between" align="center" wrap="nowrap" gap={4}>
+					<StatePill state={conversation.state} />
+					<Group gap={4} align="center" wrap="nowrap">
+						{conversation.recording_health === "receiving" &&
+							typeof conversation.audio_level === "number" && (
+								<AudioLevelMeter level={conversation.audio_level} />
+							)}
+						{conversation.recording_health === "stalled" && (
+							<Tooltip
+								label={t`Audio was coming in but stopped — they may have lost connection or locked their phone.`}
+								multiline
+								maw={280}
+								withArrow
+							>
+								<span>
+									<WarningCircleIcon size={14} className="text-orange-500" />
+								</span>
+							</Tooltip>
+						)}
+						{conversation.recording_health === "backgrounded" && (
+							<Tooltip
+								label={t`Their screen is locked or the tab is hidden — recording pauses until they come back.`}
+								multiline
+								maw={280}
+								withArrow
+							>
+								<span className="text-gray-400 text-xs font-semibold">Away</span>
+							</Tooltip>
+						)}
+						{conversation.has_error && (
+							<Tooltip label={t`Error`} withArrow>
+								<span>
+									<WarningCircleIcon size={14} className="text-red-500 animate-pulse" />
+								</span>
+							</Tooltip>
+						)}
+					</Group>
+				</Group>
+
+				<Text size="sm" fw={600} truncate title={label}>
+					{label}
+				</Text>
+
+				<Group justify="space-between" align="center" wrap="nowrap" gap={4}>
+					<LiveDuration conversation={conversation} />
+					<Group gap={4} align="center" wrap="nowrap">
+						{weakNetwork && (
+							<Tooltip label={t`Weak network`} withArrow>
+								<WifiSlashIcon size={14} className="text-orange-500" />
+							</Tooltip>
+						)}
+						{lowBattery && (
+							<Tooltip label={t`Low battery`} withArrow>
+								<BatteryLowIcon size={14} className="text-orange-500" />
+							</Tooltip>
+						)}
+					</Group>
+				</Group>
+			</Stack>
+		</Card>
+	) : (
 		<Card
 			withBorder
 			p="sm"
@@ -501,11 +574,13 @@ const TagGroupSection = ({
 	highlightedConversationId,
 	onLockedClick,
 	onEdit,
+	viewMode = "detailed",
 }: {
 	group: TagGroup;
 	highlightedConversationId?: string | null;
 	onLockedClick?: (conversation: MonitorConversation) => void;
 	onEdit?: (conversation: MonitorConversation) => void;
+	viewMode?: "detailed" | "compressed";
 }) => {
 	const [opened, { toggle }] = useDisclosure(true);
 	const [expanded, setExpanded] = useState(false);
@@ -551,34 +626,69 @@ const TagGroupSection = ({
 				)}
 			</Group>
 			<Collapse in={opened}>
-				<Stack gap="xs">
-					{visible.map((conversation) => (
-						<MonitorRow
-							key={conversation.id}
-							conversation={conversation}
-							highlighted={conversation.id === highlightedConversationId}
-							onLockedClick={() => onLockedClick?.(conversation)}
-							onEdit={onEdit ? () => onEdit(conversation) : undefined}
-						/>
-					))}
-					{overflow > 0 && (
-						<Text
-							size="xs"
-							role="button"
-							tabIndex={0}
-							className="cursor-pointer select-none pl-1 hover:underline"
-							onClick={() => setExpanded(true)}
-							onKeyDown={(event) => {
-								if (event.key === "Enter" || event.key === " ") {
-									if (event.key === " ") event.preventDefault();
-									setExpanded(true);
-								}
-							}}
-						>
-							<Trans>Show {overflow} more</Trans>
-						</Text>
-					)}
-				</Stack>
+				{viewMode === "compressed" ? (
+					<Stack gap="xs">
+						<SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5, xl: 6 }} spacing="xs">
+							{visible.map((conversation) => (
+								<MonitorRow
+									key={conversation.id}
+									conversation={conversation}
+									viewMode="compressed"
+									highlighted={conversation.id === highlightedConversationId}
+									onLockedClick={() => onLockedClick?.(conversation)}
+									onEdit={onEdit ? () => onEdit(conversation) : undefined}
+								/>
+							))}
+						</SimpleGrid>
+						{overflow > 0 && (
+							<Text
+								size="xs"
+								role="button"
+								tabIndex={0}
+								className="cursor-pointer select-none pl-1 hover:underline"
+								onClick={() => setExpanded(true)}
+								onKeyDown={(event) => {
+									if (event.key === "Enter" || event.key === " ") {
+										if (event.key === " ") event.preventDefault();
+										setExpanded(true);
+									}
+								}}
+							>
+								<Trans>Show {overflow} more</Trans>
+							</Text>
+						)}
+					</Stack>
+				) : (
+					<Stack gap="xs">
+						{visible.map((conversation) => (
+							<MonitorRow
+								key={conversation.id}
+								conversation={conversation}
+								viewMode="detailed"
+								highlighted={conversation.id === highlightedConversationId}
+								onLockedClick={() => onLockedClick?.(conversation)}
+								onEdit={onEdit ? () => onEdit(conversation) : undefined}
+							/>
+						))}
+						{overflow > 0 && (
+							<Text
+								size="xs"
+								role="button"
+								tabIndex={0}
+								className="cursor-pointer select-none pl-1 hover:underline"
+								onClick={() => setExpanded(true)}
+								onKeyDown={(event) => {
+									if (event.key === "Enter" || event.key === " ") {
+										if (event.key === " ") event.preventDefault();
+										setExpanded(true);
+									}
+								}}
+							>
+								<Trans>Show {overflow} more</Trans>
+							</Text>
+						)}
+					</Stack>
+				)}
 			</Collapse>
 		</Stack>
 	);
@@ -603,10 +713,29 @@ export const LiveMonitorSection = ({
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const { workspace } = useWorkspace();
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
-	// Drilldown selection by id, so the open modal keeps reading fresh snapshots
-	// (and closes on its own once the row is deleted / ages out).
-	const [selectedId, setSelectedId] = useState<string | null>(null);
-	const { conversations, summary, isLoading, error, isStreaming } =
+			// Drilldown selection by id, so the open modal keeps reading fresh snapshots
+			// (and closes on its own once the row is deleted / ages out).
+			const [selectedId, setSelectedId] = useState<string | null>(null);
+
+			const [viewMode, setViewMode] = useState<"detailed" | "compressed">(() => {
+				try {
+					const saved = localStorage.getItem("echo_monitor_view_mode");
+					return (saved === "compressed" || saved === "detailed") ? saved : "detailed";
+				} catch {
+					return "detailed";
+				}
+			});
+
+			const handleViewModeChange = (val: string) => {
+				if (val === "compressed" || val === "detailed") {
+					setViewMode(val);
+					try {
+						localStorage.setItem("echo_monitor_view_mode", val);
+					} catch {}
+				}
+			};
+
+			const { conversations, summary, isLoading, error, isStreaming } =
 		useConversationMonitor(projectId);
 	const groups = useMemo(() => groupByTag(conversations), [conversations]);
 	const selected =
@@ -669,97 +798,117 @@ export const LiveMonitorSection = ({
 	return (
 		<>
 			<Stack gap="lg">
-				{!hideHeader && (
-					<Group justify="space-between" align="center" gap="sm">
-						<Group gap="xs" align="center">
-							<BroadcastIcon size={16} />
-							<Text size="xs" tt="uppercase">
-								<Trans>Live monitoring</Trans>
-							</Text>
-						</Group>
-						<Group gap="xs" align="center">
-							{!isStreaming && (
-								<Tooltip
-									label={t`Live stream disconnected. Updating on a slower poll until it reconnects.`}
-									withArrow
-								>
-									<MonitorBadge size="sm" color="orange" variant="light">
-										<Trans>Reconnecting</Trans>
-									</MonitorBadge>
-								</Tooltip>
-							)}
-							<MonitorBadge size="sm" color="primary" variant="light">
-								<Plural value={summary.live} one="# live" other="# live" />
-							</MonitorBadge>
-							{summary.offline > 0 && (
-								<MonitorBadge
-									size="sm"
-									color="mauve"
-									variant="filled"
-									styles={{ section: { color: "var(--app-text)" } }}
-									leftSection={<WifiSlashIcon size={12} />}
-								>
-									<Plural
-										value={summary.offline}
-										one="# offline"
-										other="# offline"
-									/>
-								</MonitorBadge>
-							)}
-							{summary.not_receiving > 0 && (
-								<MonitorBadge
-									size="sm"
-									color="orange"
-									variant="filled"
-									leftSection={<WarningCircleIcon size={12} />}
-								>
-									<Plural
-										value={summary.not_receiving}
-										one="# audio stopped"
-										other="# audio stopped"
-									/>
-								</MonitorBadge>
-							)}
-							{summary.transcribing > 0 && (
-								<MonitorBadge size="sm" color="primary" variant="light">
-									<Plural
-										value={summary.transcribing}
-										one="# transcribing"
-										other="# transcribing"
-									/>
-								</MonitorBadge>
-							)}
-							{summary.with_errors > 0 && (
-								<MonitorBadge size="sm" color="red" variant="light">
-									<Plural
-										value={summary.with_errors}
-										one="# with errors"
-										other="# with errors"
-									/>
-								</MonitorBadge>
-							)}
-							{catchUpLabel(summary.catch_up_eta_seconds) && (
-								<Tooltip
-									label={t`Rough estimate to finish transcribing the backlog`}
-									withArrow
-								>
-									<MonitorBadge size="sm" color="orange" variant="light">
-										<Trans>
-											catch up {catchUpLabel(summary.catch_up_eta_seconds)}
-										</Trans>
-									</MonitorBadge>
-								</Tooltip>
-							)}
-						</Group>
-					</Group>
-				)}
+					{!hideHeader && (
+						<Group justify="space-between" align="center" gap="sm">
+							<Group gap="xs" align="center">
+								<BroadcastIcon size={16} />
+								<Text size="xs" tt="uppercase">
+									<Trans>Live monitoring</Trans>
+								</Text>
+							</Group>
+							<Group gap="xs" align="center">
+								<SegmentedControl
+									size="xs"
+									value={viewMode}
+									onChange={handleViewModeChange}
+									data={[
+										{ label: t`Detailed`, value: "detailed" },
+										{ label: t`Compressed`, value: "compressed" },
+									]}
+									mr="xs"
+								/>
 
-				<Stack gap="lg">
-					{groups.map((group) => (
-						<TagGroupSection
-							key={group.key}
-							group={group}
-							highlightedConversationId={highlightedConversationId}
+								<Group gap="xs" align="center">
+									<MonitorBadge size="sm" color="primary" variant="light">
+										<Plural value={summary.live} one="# live" other="# live" />
+									</MonitorBadge>
+									{summary.offline > 0 && (
+										<MonitorBadge
+											size="sm"
+											color="mauve"
+											variant="filled"
+											styles={{ section: { color: "var(--app-text)" } }}
+											leftSection={<WifiSlashIcon size={12} />}
+										>
+											<Plural
+												value={summary.offline}
+												one="# offline"
+												other="# offline"
+											/>
+										</MonitorBadge>
+									)}
+									{summary.not_receiving > 0 && (
+										<MonitorBadge
+											size="sm"
+											color="orange"
+											variant="filled"
+											leftSection={<WarningCircleIcon size={12} />}
+										>
+											<Plural
+												value={summary.not_receiving}
+												one="# audio stopped"
+												other="# audio stopped"
+											/>
+										</MonitorBadge>
+									)}
+									{summary.transcribing > 0 && (
+										<MonitorBadge size="sm" color="primary" variant="light">
+											<Plural
+												value={summary.transcribing}
+												one="# transcribing"
+												other="# transcribing"
+											/>
+										</MonitorBadge>
+									)}
+									{summary.with_errors > 0 && (
+										<MonitorBadge size="sm" color="red" variant="light">
+											<Plural
+												value={summary.with_errors}
+												one="# with errors"
+												other="# with errors"
+											/>
+										</MonitorBadge>
+									)}
+								</Group>
+
+								{(!isStreaming || !!catchUpLabel(summary.catch_up_eta_seconds)) && (
+									<Group gap="xs" align="center" style={{ opacity: 0.65 }}>
+										<Divider orientation="vertical" h={14} />
+										{!isStreaming && (
+											<Tooltip
+												label={t`Live stream disconnected. Updating on a slower poll until it reconnects.`}
+												withArrow
+											>
+												<MonitorBadge size="sm" color="gray" variant="outline">
+													<Trans>Reconnecting</Trans>
+												</MonitorBadge>
+											</Tooltip>
+										)}
+										{catchUpLabel(summary.catch_up_eta_seconds) && (
+											<Tooltip
+												label={t`Rough estimate to finish transcribing the backlog`}
+												withArrow
+											>
+												<MonitorBadge size="sm" color="gray" variant="outline">
+													<Trans>
+														catch up {catchUpLabel(summary.catch_up_eta_seconds)}
+													</Trans>
+												</MonitorBadge>
+											</Tooltip>
+										)}
+									</Group>
+								)}
+							</Group>
+						</Group>
+					)}
+
+					<Stack gap="lg">
+						{groups.map((group) => (
+							<TagGroupSection
+								key={group.key}
+								group={group}
+								viewMode={viewMode}
+								highlightedConversationId={highlightedConversationId}
 							onLockedClick={(conversation) => {
 								posthog.capture("monitor_locked_row_clicked", {
 									conversation_id: conversation.id,
