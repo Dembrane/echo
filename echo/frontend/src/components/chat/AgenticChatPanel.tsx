@@ -1176,6 +1176,14 @@ export const AgenticChatPanel = ({
 	useEffect(() => {
 		hasScrolledInitiallyRef.current = false;
 	}, [chatId]);
+	// Streaming grows the LAST item's text without changing timeline.length, so
+	// keying the effect on length alone left the view pinned while the answer
+	// wrote itself off the bottom of the screen. Track the tail's size too.
+	// The reader protection above is unchanged: this still only scrolls when
+	// isAtBottomRef says they are already at the bottom.
+	const tail = timeline.at(-1);
+	const streamTailLength =
+		tail?.kind === "message" ? tail.content.length : 0;
 	useEffect(() => {
 		if (timeline.length === 0) return;
 		if (!hasScrolledInitiallyRef.current) {
@@ -1185,9 +1193,11 @@ export const AgenticChatPanel = ({
 		}
 		if (forceNextScrollRef.current || isAtBottomRef.current) {
 			forceNextScrollRef.current = false;
-			scrollToBottom("smooth");
+			// "auto" while the tail is growing: a smooth animation per token
+			// queues up and stutters, which is worse on camera than no scroll.
+			scrollToBottom(streamTailLength > 0 ? "auto" : "smooth");
 		}
-	}, [timeline.length, scrollToBottom]);
+	}, [timeline.length, streamTailLength, scrollToBottom]);
 
 	useEffect(() => {
 		return () => {
