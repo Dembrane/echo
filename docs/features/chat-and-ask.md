@@ -54,7 +54,7 @@ conversations - is covered by simply asking the assistant.
 Beyond answering questions, the assistant can:
 
 - *Check what's live* - ask *"is anyone recording right now?"* and it reads the same live
-  status as the [monitor](./recording.md#watch-it-live-the-monitor).
+  status as the [live monitor](./live-monitor.md).
 - *Read earlier chats* in the project (your colleagues' private chats stay private).
 - *Answer "how do I" questions* from this documentation, citing the page it used.
 - *Suggest settings changes* - it never edits your project itself; every change arrives as a

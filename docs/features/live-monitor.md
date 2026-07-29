@@ -1,4 +1,10 @@
-# Live monitor
+---
+title: The live monitor
+description: Watch participant flow, mic checks, and recording in real time during a session.
+audience: all
+---
+
+# The live monitor
 
 What this feature lets you do, from the perspective of the people using it.
 
