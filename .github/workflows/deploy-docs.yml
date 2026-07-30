@@ -1,10 +1,14 @@
 # Publishes the user documentation site (docs/) to GitHub Pages at
-# https://docs.echo-next.dembrane.com on every push to main.
+# https://docs.dembrane.com on every push to main.
 #
-# Built with the separately-tracked folder2website tool, same pattern as
-# dembrane/sam. One Pages site per repo: this serves the echo-next docs;
-# production docs (docs.dembrane.com) still deploy from echo-user-docs/.
-name: dev-deploy-docs
+# Built with the separately-tracked folder2website tool. This is now the only
+# docs deploy path: docs.dembrane.com used to be a Vercel project building the
+# old echo-user-docs/ (Nextra) site, and prod-deploy-docs.yml shipped this same
+# docs/ corpus to it via the Build Output API on release tags. Both are gone:
+# the Vercel project was deleted (2026-07-30) so this workflow's GitHub Pages
+# custom domain could take over docs.dembrane.com directly. docs updates now
+# ship on every merge to main rather than being gated to a release tag.
+name: deploy-docs
 
 on:
   push:
@@ -20,7 +24,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: dev-deploy-docs
+  group: deploy-docs
   cancel-in-progress: false
 
 jobs:
@@ -37,7 +41,7 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Build docs site
-        run: bunx github:spashii/folder2website#main docs --out _docs-site --base-url https://docs.echo-next.dembrane.com
+        run: bunx github:spashii/folder2website#main docs --out _docs-site --base-url https://docs.dembrane.com
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

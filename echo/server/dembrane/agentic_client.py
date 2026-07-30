@@ -29,17 +29,14 @@ MessageHistoryEntry = dict[str, str]
 
 
 def docs_base_url_for_env() -> str:
-    """The published docs site for this environment, derived in code from the
-    per-env ADMIN_BASE_URL that is already configured (same idea as the
-    frontend's byEnv(): no dedicated env var to wire through gitops).
-
-    Only echo-next publishes the docs/ corpus today (GitHub Pages, dembrane/echo
-    main). docs.dembrane.com still serves the old echo-user-docs site with
-    different paths, so prod, testing, and local resolve to empty and the agent
-    cites bare doc paths instead of links."""
+    """The published docs site, same for every environment now that
+    docs.dembrane.com (GitHub Pages, dembrane/echo main, docs/) is the one
+    corpus everyone reads, prod included. Local dev's ADMIN_BASE_URL is a bare
+    host with no dembrane.com suffix, so it still resolves to empty and cites
+    bare doc paths instead of links."""
     admin_host = httpx.URL(get_settings().urls.admin_base_url).host
-    if admin_host.endswith(".echo-next.dembrane.com"):
-        return "https://docs.echo-next.dembrane.com"
+    if admin_host.endswith("dembrane.com"):
+        return "https://docs.dembrane.com"
     return ""
 
 
