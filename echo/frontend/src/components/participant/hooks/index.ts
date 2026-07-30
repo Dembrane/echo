@@ -90,8 +90,8 @@ export const useConfirmConversationChunkUpload = () => {
 				],
 			});
 		},
-		retry: (failureCount, error: AxiosError) => {
-			const status = error?.response?.status;
+		retry: (failureCount, error: Error) => {
+			const status = (error as AxiosError)?.response?.status;
 			if (status && [404, 403, 410].includes(status as number)) {
 				return false;
 			}
@@ -215,8 +215,8 @@ export const useUploadConversationChunk = () => {
 				onProgress: variables.onProgress,
 			});
 		},
-		retry: (failureCount, error: AxiosError) => {
-			const status = error?.response?.status;
+		retry: (failureCount, error: Error) => {
+			const status = (error as AxiosError)?.response?.status;
 			if (status && [404, 403, 410].includes(status as number)) {
 				return false;
 			}
