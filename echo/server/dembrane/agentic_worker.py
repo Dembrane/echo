@@ -9,6 +9,7 @@ from logging import getLogger
 
 from dembrane.service import chat_service, agentic_run_service
 from dembrane.analytics import capture_event
+from dembrane.agentic_focus import strip_focus_blocks
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.agentic_client import (
     AgenticTimeoutError,
@@ -119,7 +120,7 @@ def _build_turn_tool_limit_message(user_message: str) -> str:
     if not request_summary:
         return TOOL_LIMIT_SAFETY_MESSAGE
     return (
-        f"I need to pause this pass on your request: \"{request_summary}\". "
+        f'I need to pause this pass on your request: "{request_summary}". '
         "Send it again and I'll retry with a fresh pass."
     )
 
@@ -342,6 +343,16 @@ async def _build_message_history(
     svc: AgenticRunService,
     run_id: str,
 ) -> list[dict[str, str]]:
+    """Replay this run's turns as model history.
+
+    User turns prefer the stored `agent_prompt_content` because it carries the
+    project framing the raw message lacks. That stored text also baked in the
+    focus selection that was current at the time, so every replayed turn used to
+    re-assert "prioritize these conversations" with nothing superseding it: after
+    the host cleared the focus, the agent kept narrowing to the old selection.
+    The current turn's focus governs the current turn, so stale focus blocks are
+    dropped from every earlier user turn.
+    """
     history: list[dict[str, str]] = []
     after_seq = 0
 
@@ -390,6 +401,20 @@ async def _build_message_history(
 
         if len(events) < HISTORY_PAGE_SIZE:
             break
+
+    # The last user turn is the one being answered now, so its focus block is
+    # current and stays. Anything earlier is history: keep the turn, drop its
+    # focus block.
+    latest_user_index = next(
+        (index for index in range(len(history) - 1, -1, -1) if history[index]["role"] == "user"),
+        None,
+    )
+    for index, message in enumerate(history):
+        if message["role"] != "user" or index == latest_user_index:
+            continue
+        stripped = strip_focus_blocks(message["content"]).strip()
+        if stripped:
+            message["content"] = stripped
 
     return history
 
@@ -588,9 +613,7 @@ async def _latest_user_turn_seq(*, svc: AgenticRunService, run_id: str) -> int |
     return seq if seq > 0 else None
 
 
-async def _count_persisted_non_exempt_tool_starts(
-    *, svc: AgenticRunService, run_id: str
-) -> int:
+async def _count_persisted_non_exempt_tool_starts(*, svc: AgenticRunService, run_id: str) -> int:
     total = 0
     after_seq = 0
     while True:
@@ -752,7 +775,10 @@ async def process_agentic_run(
                             },
                         )
 
-                if persisted_non_exempt_tool_starts + counted_tool_start_count >= MAX_TOOL_CALLS_PER_RUN:
+                if (
+                    persisted_non_exempt_tool_starts + counted_tool_start_count
+                    >= MAX_TOOL_CALLS_PER_RUN
+                ):
                     persisted_content = await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,

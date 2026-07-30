@@ -49,6 +49,11 @@ class ChatService:
                     "used_conversations.id",
                     "used_conversations.conversation_id.id",
                     "used_conversations.conversation_id.participant_name",
+                    # Callers must be able to drop soft-deleted conversations
+                    # (e.g. the agentic focus hint): a deleted conversation is
+                    # invisible everywhere else, so it must not be presented as
+                    # attached context.
+                    "used_conversations.conversation_id.deleted_at",
                 ]
             )
             # _limit -1: Directus caps nested rows at 100 by default. Without
@@ -141,7 +146,6 @@ class ChatService:
             raise ChatServiceException() from e
 
         return messages or []
-
 
     def set_chat_mode(self, chat_id: str, mode: str) -> dict:
         """Set the chat mode (overview, deep_dive, or agentic)."""

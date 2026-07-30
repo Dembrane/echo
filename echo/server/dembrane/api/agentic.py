@@ -18,6 +18,7 @@ from dembrane.service import chat_service, project_service, agentic_run_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
 from dembrane.chat_utils import generate_title
+from dembrane.agentic_focus import format_focus_block
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.methodologies import list_visible_methodologies
 from dembrane.project_goals import list_project_goal_revisions, get_current_project_goal_content
@@ -66,15 +67,22 @@ _ACTIVE_RUN_TASKS: dict[tuple[str, int], asyncio.Task[None]] = {}
 _ACTIVE_RUN_TASKS_LOCK = asyncio.Lock()
 
 
+# A turn is a typed question, not a document upload: hosts attach conversations
+# for bulk text. Bounding it keeps a single request from dominating the prompt
+# and caps the work every later turn does replaying it. Generous enough that no
+# real question comes close.
+MAX_AGENTIC_MESSAGE_LENGTH = 32_000
+
+
 class AgenticCreateRunSchema(BaseModel):
     project_id: str = Field(..., min_length=1)
     project_chat_id: Optional[str] = None
-    message: str = Field(..., min_length=1)
+    message: str = Field(..., min_length=1, max_length=MAX_AGENTIC_MESSAGE_LENGTH)
     language: str = Field(default="en", min_length=1)
 
 
 class AgenticAppendMessageSchema(BaseModel):
-    message: str = Field(..., min_length=1)
+    message: str = Field(..., min_length=1, max_length=MAX_AGENTIC_MESSAGE_LENGTH)
     language: str = Field(default="en", min_length=1)
 
 
@@ -356,41 +364,91 @@ async def _get_workspace_context_for_project(project: dict[str, Any]) -> Optiona
     return _to_non_empty_string(workspace.get("context"))
 
 
-def _format_focused_conversations(focused: list[dict[str, str]]) -> str:
-    labels = ", ".join(
-        f"{item['name']} ({item['id']})" if item.get("name") else item["id"]
-        for item in focused
-    )
-    return (
-        "The user wants you to focus on these conversations: "
-        f"{labels}. Prioritize them when gathering context."
-    )
-
-
 def _build_followup_agent_prompt_content(
     user_message: str,
     focused_conversations: list[dict[str, str]],
 ) -> str:
-    return (
-        f"{_format_focused_conversations(focused_conversations)}\n\n"
-        f"User Message: {user_message.strip()}"
-    )
+    return f"{format_focus_block(focused_conversations)}\n\nUser Message: {user_message.strip()}"
 
 
-def _get_focused_conversations(project_chat_id: Optional[str]) -> list[dict[str, str]]:
+def _raise_if_chat_project_mismatch(chat: dict[str, Any], project_id: Optional[str]) -> None:
+    """Reject a caller-supplied chat that isn't in the project we authorized.
+
+    Same guard (and same 400 shape) as chat.py::_raise_if_project_mismatch, for
+    the same reason: every chat read here runs on the ADMIN Directus client, so
+    row ACL cannot catch a chat id from another tenant. Without this, a caller
+    authorized for project A can pass project B's chat id and have B's
+    participant names and conversation ids interpolated into their own run
+    prompt, then read them back from that run's events."""
+    if not project_id:
+        # Fail closed. A caller-supplied chat id reaches this function, so
+        # "no project to compare against" is not a reason to skip the check,
+        # it is a reason to refuse: the run row's project_id is nullable, and
+        # treating null as "allow" would hand back the hole this closes.
+        raise HTTPException(
+            status_code=400,
+            detail="project_id is required to read this chat",
+        )
+    if _to_related_id(chat.get("project_id")) != project_id:
+        raise HTTPException(
+            status_code=400,
+            detail="project_id does not match this chat",
+        )
+
+
+def _assert_chat_belongs_to_project(project_chat_id: Optional[str], project_id: str) -> None:
+    """Verify a chat id that came from the request body, before anything is
+    written against it.
+
+    This is the one place the check has to fail closed. create_run goes on to
+    persist the host's message into this chat and to rename it, so letting an
+    unreadable chat through would leave those writes running against an id
+    nobody has authorized. Reads that happen later (the focus hint) can degrade
+    quietly, because by then the id has been through here."""
+    if not project_chat_id:
+        return
+    try:
+        chat = chat_service.get_by_id_or_raise(project_chat_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Could not load chat %s to verify it for this run", project_chat_id)
+        raise HTTPException(
+            status_code=503,
+            detail="Could not verify the chat for this request. Please try again.",
+        ) from exc
+
+    _raise_if_chat_project_mismatch(chat, project_id)
+
+
+def _get_focused_conversations(
+    project_chat_id: Optional[str],
+    *,
+    project_id: str,
+) -> list[dict[str, str]]:
     """Conversations the host selected for this chat, as focus hints.
 
+    `project_id` binds the chat to the project the caller was already authorized
+    for (see _raise_if_chat_project_mismatch); a mismatch fails the request
+    closed. It is required rather than optional so a new call site cannot get an
+    unguarded read by leaving it out.
+
     Agentic never preloads transcripts or locks context rows; the selection is
-    only folded into the prompt. Failures degrade to no hint, never a failed run."""
+    only folded into the prompt."""
     if not project_chat_id:
         return []
     try:
         chat = chat_service.get_by_id_or_raise(project_chat_id, with_used_conversations=True)
     except Exception:  # noqa: BLE001
+        # Safe to degrade here: every caller-supplied chat id is verified up
+        # front by _assert_chat_belongs_to_project, so an id that reaches this
+        # point is already known to belong to the caller's project. Losing the
+        # hint is better than failing a turn the host can otherwise complete.
         logger.warning("Could not load chat %s for focus hint", project_chat_id)
         return []
 
+    _raise_if_chat_project_mismatch(chat, project_id)
+
     focused: list[dict[str, str]] = []
+    seen_conversation_ids: set[str] = set()
     for link in chat.get("used_conversations") or []:
         ref = link.get("conversation_id") if isinstance(link, dict) else None
         if not isinstance(ref, dict):
@@ -398,6 +456,17 @@ def _get_focused_conversations(project_chat_id: Optional[str]) -> list[dict[str,
         conversation_id = _to_non_empty_string(ref.get("id"))
         if not conversation_id:
             continue
+        # The chat/conversation junction has no unique constraint (see
+        # service/chat.py get_by_id_or_raise), and duplicate rows have happened,
+        # which rendered as "Alice (c1), Alice (c1), Alice (c1)". Dedupe by id,
+        # keeping the host's original order.
+        if conversation_id in seen_conversation_ids:
+            continue
+        # Soft-deleted conversations are invisible to the agent's own list tool,
+        # so telling it to prioritize one sends it after context it cannot read.
+        if ref.get("deleted_at"):
+            continue
+        seen_conversation_ids.add(conversation_id)
         focused.append(
             {
                 "id": conversation_id,
@@ -422,9 +491,7 @@ def _build_initial_agent_prompt_content(
     normalized_workspace_context = _to_non_empty_string(workspace_context) or "(none)"
     normalized_message = user_message.strip()
     focus_block = (
-        f"{_format_focused_conversations(focused_conversations)}\n\n"
-        if focused_conversations
-        else ""
+        f"{format_focus_block(focused_conversations)}\n\n" if focused_conversations else ""
     )
 
     return (
@@ -647,6 +714,11 @@ def _list_project_conversations_for_agent(
 
         transcript_and_filters: list[dict[str, Any]] = [
             {"conversation_id": {"project_id": {"_eq": project_id}}},
+            # Pre-existing gap (not introduced by the focus feature): the
+            # transcript search filtered only on project, so a soft-deleted
+            # conversation's transcript stayed reachable by id even though the
+            # plain listing path below excludes it.
+            {"conversation_id": {"deleted_at": {"_null": True}}},
             {"_or": transcript_or_filters},
         ]
         if normalized_conversation_id:
@@ -978,6 +1050,23 @@ async def create_run(
 
     await _assert_project_access(body.project_id, auth)
 
+    # The chat id is caller-supplied and every read/write below it uses the admin
+    # client, so bind it to the project we just authorized before this request
+    # creates a run, writes a message, or renames anything. Fails closed: a
+    # foreign chat 400s, and a chat we cannot read at all 503s rather than
+    # proceeding unverified.
+    await run_in_thread_pool(
+        _assert_chat_belongs_to_project,
+        body.project_chat_id,
+        body.project_id,
+    )
+
+    focused_conversations = await run_in_thread_pool(
+        _get_focused_conversations,
+        body.project_chat_id,
+        project_id=body.project_id,
+    )
+
     # Matrix §8: agentic analysis is a host-side operation → Pilot hard-block.
     from dembrane.api.v2.middleware import check_no_pilot_block_for_project
 
@@ -1008,9 +1097,6 @@ async def create_run(
     project_context = _to_non_empty_string(project.get("context"))
     workspace_context = await _get_workspace_context_for_project(project)
     project_goal = await get_current_project_goal_content(body.project_id)
-    focused_conversations = await run_in_thread_pool(
-        _get_focused_conversations, body.project_chat_id
-    )
     agent_prompt_content = _build_initial_agent_prompt_content(
         project_name=project_name,
         project_context=project_context,
@@ -1025,9 +1111,7 @@ async def create_run(
         "agent_prompt_content": agent_prompt_content,
     }
     if focused_conversations:
-        event_payload["focused_conversation_ids"] = [
-            item["id"] for item in focused_conversations
-        ]
+        event_payload["focused_conversation_ids"] = [item["id"] for item in focused_conversations]
 
     await run_in_thread_pool(
         agentic_run_service.append_event,
@@ -1052,6 +1136,17 @@ async def append_message(
     run = await run_in_thread_pool(_get_run_or_404, run_id)
     _assert_run_authorized(run, auth)
 
+    # This path is authorized by run ownership alone and then reads/writes the
+    # run's chat with the admin client, so re-bind that chat to the run's own
+    # project before anything touches it. New runs can no longer be created with
+    # a foreign chat (see create_run), but runs created before that guard can
+    # still carry one.
+    focused_conversations = await run_in_thread_pool(
+        _get_focused_conversations,
+        _to_non_empty_string(run.get("project_chat_id")),
+        project_id=_to_non_empty_string(_project_id_from_run(run)),
+    )
+
     # Matrix §8: continuing an agentic analysis is a host-side operation.
     project_id = run.get("project_id")
     if project_id:
@@ -1075,18 +1170,12 @@ async def append_message(
         ):
             raise free_tier_limit_error("chat_turns")
 
-    focused_conversations = await run_in_thread_pool(
-        _get_focused_conversations,
-        _to_non_empty_string(run.get("project_chat_id")),
-    )
     event_payload: dict[str, Any] = {"content": body.message}
     if focused_conversations:
         event_payload["agent_prompt_content"] = _build_followup_agent_prompt_content(
             body.message, focused_conversations
         )
-        event_payload["focused_conversation_ids"] = [
-            item["id"] for item in focused_conversations
-        ]
+        event_payload["focused_conversation_ids"] = [item["id"] for item in focused_conversations]
 
     await run_in_thread_pool(
         agentic_run_service.append_event,
@@ -1227,9 +1316,7 @@ async def edit_project_tags_for_agent(
                     try:
                         await async_directus.delete_item("conversation_project_tag", jid)
                     except Exception:  # noqa: BLE001
-                        logger.exception(
-                            "conversation_project_tag cleanup failed id=%s", jid
-                        )
+                        logger.exception("conversation_project_tag cleanup failed id=%s", jid)
         await async_directus.delete_item("project_tag", tag_id)
         removed.append(str(row.get("text") or text))
 
