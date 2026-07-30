@@ -15,7 +15,11 @@ import {
 import { ConversationDrilldownModal } from "./ConversationDrilldownModal";
 import { FunnelCanvas, type NodeDatum } from "./FunnelCanvas";
 import { MonitorBadge } from "./MonitorBadge";
-import { isLiveRecording, isOnRecordingPage } from "./monitorGrouping";
+import {
+	isFinishedSession,
+	isLiveRecording,
+	isOnRecordingPage,
+} from "./monitorGrouping";
 
 const weakNetwork = (
 	network: { online?: boolean; effective_type?: string } | null,
@@ -168,10 +172,12 @@ export const LiveFunnelSection = ({
 		conversations.find((c) => c.id === selectedConversationId) ?? null;
 
 	const { nodes, counts, weights } = useMemo(() => {
-		// Two conversation columns: on the recording page (paused, away, left,
-		// waiting) and actually live. Finished and offline stay out of the funnel.
+		// Three conversation columns: on the recording page (waiting, paused,
+		// away), actually live, then finished (finished cleanly, or left without
+		// finishing). Offline is the one status with no column; see monitorGrouping.
 		const onPage = conversations.filter(isOnRecordingPage);
 		const live = conversations.filter(isLiveRecording);
+		const finished = conversations.filter(isFinishedSession);
 		const visitorNodes: NodeDatum[] = funnel.visitors.map((data) => ({
 			column: data.stage === "scanned" ? 0 : 1,
 			data,
@@ -187,16 +193,22 @@ export const LiveFunnelSection = ({
 			data,
 			kind: "conversation",
 		}));
+		const finishedNodes: NodeDatum[] = finished.map((data) => ({
+			column: 4,
+			data,
+			kind: "conversation",
+		}));
 		const scanned = funnel.visitors.filter((v) => v.stage === "scanned").length;
 		const setup = funnel.visitors.length - scanned;
 		return {
 			counts: {
+				finished: finished.length,
 				live: live.length,
 				onPage: onPage.length,
 				scanned,
 				setup,
 			},
-			nodes: [...visitorNodes, ...onPageNodes, ...liveNodes],
+			nodes: [...visitorNodes, ...onPageNodes, ...liveNodes, ...finishedNodes],
 			// Empty stages shrink; live carries extra weight so an all-recording
 			// view still gives the live column the most room.
 			weights: [
@@ -204,6 +216,7 @@ export const LiveFunnelSection = ({
 				Math.max(1, setup),
 				Math.max(1, onPage.length),
 				Math.max(2, live.length),
+				Math.max(1, finished.length),
 			],
 		};
 	}, [funnel.visitors, conversations]);
@@ -252,6 +265,11 @@ export const LiveFunnelSection = ({
 							label={t`Live`}
 							count={counts.live}
 							weight={weights[3]}
+						/>
+						<StageLabel
+							label={t`Finished`}
+							count={counts.finished}
+							weight={weights[4]}
 						/>
 					</Group>
 					<FunnelCanvas

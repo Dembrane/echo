@@ -14,23 +14,33 @@ export type MonitorStatusGroup =
 	| "offline"
 	| "finished";
 
-/** States that mean "the participant reached the recording page but audio is
- * not flowing right now": waiting to start, paused, screen locked (away), or
- * the tab closed without finishing. They sit apart from the active `live`
- * column so a host can see at a glance who might need a nudge. */
+/** States that mean "the participant is on the recording page right now, but
+ * audio is not flowing": waiting to start, paused, or screen locked (away).
+ * They sit apart from the active `live` column so a host can see at a glance
+ * who might need a nudge.
+ *
+ * `left` is deliberately not here. It means the tab was closed or the page was
+ * navigated away from without finishing, which is terminal: that participant is
+ * not still sitting on the recording page. It groups under `finished` instead,
+ * so a host can see how many sessions ended cleanly next to how many just
+ * stopped, without either being implied to be still present or hidden. */
 const RECORDING_PAGE_STATES: ReadonlySet<ParticipantState> = new Set([
 	"waiting",
 	"initiated",
 	"idle",
 	"paused",
 	"backgrounded",
-	"left",
 ]);
 
 export const monitorStatusGroup = (
 	conversation: MonitorConversation,
 ): MonitorStatusGroup => {
-	if (conversation.is_finished || conversation.state === "finished") {
+	if (
+		conversation.is_finished ||
+		conversation.state === "finished" ||
+		// Ended without finishing. A different outcome, but the same ending.
+		conversation.state === "left"
+	) {
 		return "finished";
 	}
 	// Contact lost mid-recording. The alarm, and its own bucket.
@@ -43,10 +53,15 @@ export const monitorStatusGroup = (
 };
 
 /** Fixed order. Group order never depends on counts or on live state, so the
- * sections themselves hold their place while conversations move between them. */
+ * sections themselves hold their place while conversations move between them.
+ *
+ * This follows the funnel's left-to-right progression (recording page -> live
+ * -> finished) so the grid below never contradicts the funnel above. `offline`
+ * has no funnel column of its own; it sits after `live` because that is what an
+ * offline session was a moment ago. */
 export const STATUS_GROUP_ORDER: MonitorStatusGroup[] = [
-	"live",
 	"recording_page",
+	"live",
 	"offline",
 	"finished",
 ];
@@ -64,13 +79,18 @@ export const statusGroupLabel = (group: MonitorStatusGroup): string => {
 	}
 };
 
-/** The two conversation columns of the live funnel. Finished and offline
- * conversations stay out of the funnel, same as before. */
+/** The three conversation columns of the live funnel: on the recording page,
+ * live, then finished. Offline is the one status with no column of its own; a
+ * dropped connection is not a stage of the journey, and it is already loud in
+ * the summary badges and the state pill. */
 export const isOnRecordingPage = (conversation: MonitorConversation): boolean =>
 	monitorStatusGroup(conversation) === "recording_page";
 
 export const isLiveRecording = (conversation: MonitorConversation): boolean =>
 	monitorStatusGroup(conversation) === "live";
+
+export const isFinishedSession = (conversation: MonitorConversation): boolean =>
+	monitorStatusGroup(conversation) === "finished";
 
 // ── Settling ──────────────────────────────────────────────────────────────
 //

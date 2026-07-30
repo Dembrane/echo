@@ -12,10 +12,12 @@ import type {
 } from "@/hooks/useConversationMonitor";
 import { groupByStatus, LiveMonitorSection } from "./LiveMonitorSection";
 import {
+	isFinishedSession,
 	isLiveRecording,
 	isOnRecordingPage,
 	monitorStatusGroup,
 	settleStatusGroups,
+	STATUS_GROUP_ORDER,
 } from "./monitorGrouping";
 import { isProblemState, StatePill, stateColor } from "./StatePill";
 
@@ -295,21 +297,31 @@ describe("LiveMonitorSection row ordering", () => {
 });
 
 describe("monitor status grouping", () => {
-	it("puts paused, away, left and waiting on the recording page", () => {
-		for (const state of [
-			"paused",
-			"backgrounded",
-			"left",
-			"waiting",
-		] as const) {
-			const conversation = baseConversation({
-				state,
-				is_live: state !== "left",
-			});
+	it("puts paused, away and waiting on the recording page", () => {
+		for (const state of ["paused", "backgrounded", "waiting"] as const) {
+			const conversation = baseConversation({ state, is_live: true });
 			expect(monitorStatusGroup(conversation)).toBe("recording_page");
 			expect(isOnRecordingPage(conversation)).toBe(true);
 			expect(isLiveRecording(conversation)).toBe(false);
+			expect(isFinishedSession(conversation)).toBe(false);
 		}
+	});
+
+	it("groups left with finished, not with the recording page", () => {
+		// Closing the tab is terminal. Saying someone is on the recording page
+		// when they navigated away would be a lie to the host.
+		const left = baseConversation({ state: "left", is_live: false });
+		expect(monitorStatusGroup(left)).toBe("finished");
+		expect(isFinishedSession(left)).toBe(true);
+		expect(isOnRecordingPage(left)).toBe(false);
+		expect(isLiveRecording(left)).toBe(false);
+	});
+
+	it("puts a cleanly finished session in the same group as left", () => {
+		const finished = baseConversation({ is_finished: true, is_live: false });
+		const left = baseConversation({ state: "left", is_live: false });
+		expect(monitorStatusGroup(finished)).toBe(monitorStatusGroup(left));
+		expect(isFinishedSession(finished)).toBe(true);
 	});
 
 	it("keeps an actively recording conversation in the live group", () => {
@@ -322,15 +334,12 @@ describe("monitor status grouping", () => {
 		expect(isOnRecordingPage(conversation)).toBe(false);
 	});
 
-	it("separates offline and finished from both funnel columns", () => {
+	it("keeps offline out of every funnel column", () => {
 		const offline = baseConversation({ state: "offline", is_live: false });
-		const finished = baseConversation({ is_finished: true, is_live: false });
 		expect(monitorStatusGroup(offline)).toBe("offline");
-		expect(monitorStatusGroup(finished)).toBe("finished");
-		for (const conversation of [offline, finished]) {
-			expect(isOnRecordingPage(conversation)).toBe(false);
-			expect(isLiveRecording(conversation)).toBe(false);
-		}
+		expect(isOnRecordingPage(offline)).toBe(false);
+		expect(isLiveRecording(offline)).toBe(false);
+		expect(isFinishedSession(offline)).toBe(false);
 	});
 
 	it("orders status groups by the fixed order, never by count", () => {
@@ -340,11 +349,11 @@ describe("monitor status grouping", () => {
 				baseConversation({ id: "b", label: "Bob" }),
 				baseConversation({ id: "c", label: "Cy" }),
 			],
-			(conversation) => (conversation.id === "a" ? "live" : "recording_page"),
+			(conversation) => (conversation.id === "a" ? "recording_page" : "live"),
 		);
 		expect(groups.map((group) => group.key)).toEqual([
-			"live",
 			"recording_page",
+			"live",
 		]);
 		// The bigger bucket does not jump to the front.
 		expect(groups[1].items).toHaveLength(2);
@@ -450,11 +459,20 @@ describe("LiveMonitorSection grouping dimension", () => {
 			project_id: "p1",
 		});
 
-		// Live group first, recording-page group second, whatever the counts.
+		// Recording-page group first, live group second, whatever the counts.
+		// Same left-to-right progression as the funnel above the grid.
 		const ada = getByText("Ada");
 		const bob = getByText("Bob");
 		expect(
-			ada.compareDocumentPosition(bob) & Node.DOCUMENT_POSITION_FOLLOWING,
+			bob.compareDocumentPosition(ada) & Node.DOCUMENT_POSITION_FOLLOWING,
 		).toBeTruthy();
+	});
+
+	it("orders grid groups the same way the funnel orders its columns", () => {
+		// The funnel reads scanned -> setting up -> recording page -> live ->
+		// finished. The grid has no visitor stages, but over the three statuses
+		// they share it must not contradict the funnel.
+		const shared = STATUS_GROUP_ORDER.filter((group) => group !== "offline");
+		expect(shared).toEqual(["recording_page", "live", "finished"]);
 	});
 });

@@ -5,10 +5,10 @@ import type {
 	FunnelVisitor,
 	MonitorConversation,
 } from "@/hooks/useConversationMonitor";
-import { isOnRecordingPage } from "./monitorGrouping";
+import { isFinishedSession, isOnRecordingPage } from "./monitorGrouping";
 
 // A particle funnel that scales to thousands of dots: one pile per stage
-// column (Scanned -> Setting up -> recording page -> live), each a pile like a
+// column (scanned -> setting up -> recording page -> live -> finished), a pile like a
 // gravity machine. Dots lerp toward their target slot, so a participant
 // visibly flows to the next column when their stage changes. Drawing is
 // batched by colour (one fill per colour per frame), so a few thousand dots
@@ -20,6 +20,7 @@ import { isOnRecordingPage } from "./monitorGrouping";
 const FALLBACK_COLORS = {
 	backgrounded: "#868e96",
 	blocked: "#fa5252",
+	finished: "#868e96",
 	recording: "#fa5252",
 	// Matches the yellow StatePill for paused / away / left.
 	recordingPage: "#fab005",
@@ -50,6 +51,7 @@ const resolveColors = (): typeof FALLBACK_COLORS => {
 			FALLBACK_COLORS.backgrounded,
 		),
 		blocked: readCssVar("--mantine-color-red-6", FALLBACK_COLORS.blocked),
+		finished: readCssVar("--mantine-color-gray-6", FALLBACK_COLORS.finished),
 		recording: readCssVar("--mantine-color-red-6", FALLBACK_COLORS.recording),
 		recordingPage: readCssVar(
 			"--mantine-color-yellow-6",
@@ -88,6 +90,14 @@ const colorOf = (node: NodeDatum): string => {
 	const colors = resolveColors();
 	if (node.kind === "conversation") {
 		if (isOnRecordingPage(node.data)) return colors.recordingPage;
+		// The finished column holds two outcomes. One count reads fine, but the
+		// dot keeps the state pill's colour, so a session that just stopped is
+		// still legible inside the column at no extra cost.
+		if (isFinishedSession(node.data)) {
+			return node.data.state === "left"
+				? colors.recordingPage
+				: colors.finished;
+		}
 		if (node.data.recording_health === "stalled") return colors.stalled;
 		if (node.data.recording_health === "backgrounded")
 			return colors.backgrounded;
@@ -101,7 +111,7 @@ const colorOf = (node: NodeDatum): string => {
 export const FunnelCanvas = ({
 	nodes,
 	height = 150,
-	weights = [1, 1, 1, 1],
+	weights = [1, 1, 1, 1, 1],
 	onSelect,
 	onHover,
 }: {
@@ -347,7 +357,7 @@ export const FunnelCanvas = ({
 			<canvas
 				ref={canvasRef}
 				role="img"
-				aria-label={t`Live participant funnel: scanned, setting up, on recording page, and live counts`}
+				aria-label={t`Live participant funnel: scanned, setting up, on recording page, live, and finished counts`}
 				onClick={(event) => {
 					const { x, y } = mouseXY(event);
 					const node = nearest(x, y);
