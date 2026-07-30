@@ -534,7 +534,11 @@ export const uploadConversationChunkWithPresignedUrl = async (payload: {
 		});
 	} catch (error) {
 		console.error("[Upload] Failed to get presigned URL:", error);
-		throw new Error("Failed to get upload URL from server. Please try again.");
+		const uploadError = new Error("Failed to get upload URL from server. Please try again.");
+		if (axios.isAxiosError(error) && error.response) {
+			(uploadError as any).status = error.response.status;
+		}
+		throw uploadError;
 	}
 
 	const { chunk_id, upload_url, fields, file_url } = presignedResponse;

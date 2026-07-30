@@ -622,3 +622,53 @@ def test_chunk_timestamp_edge_cases(project):
     assert ".500Z" in chunk4["timestamp"]
 
     conversation_service.delete(conversation["id"])
+
+
+def test_get_by_id_or_raise_deleted_at_filter():
+    """Assert the filter carries deleted_at: {_null: True} when include_deleted is False, and omits it when True."""
+    from unittest.mock import MagicMock, patch
+    from dembrane.service.conversation import ConversationService
+
+    # Create a dummy service with mock dependencies
+    dummy_directus = MagicMock()
+    service = ConversationService(
+        file_service=MagicMock(),
+        project_service=MagicMock(),
+        directus_client=dummy_directus,
+    )
+
+    mock_client = MagicMock()
+    mock_client.get_items.return_value = [{"id": "conv-1"}]
+
+    mock_ctx = MagicMock()
+    mock_ctx.__enter__ = MagicMock(return_value=mock_client)
+    mock_ctx.__exit__ = MagicMock(return_value=False)
+
+    with patch("dembrane.service.conversation.directus_client_context", return_value=mock_ctx) as mock_ctx_fn:
+        # Case 1: include_deleted = False (default)
+        res = service.get_by_id_or_raise("conv-1", include_deleted=False)
+        assert res == {"id": "conv-1"}
+
+        # Verify get_items was called with the filter "deleted_at": {"_null": True}
+        mock_client.get_items.assert_called_once()
+        args, kwargs = mock_client.get_items.call_args
+        assert args[0] == "conversation"
+        query_arg = args[1]
+        assert "filter" in query_arg["query"]
+        assert query_arg["query"]["filter"]["id"] == "conv-1"
+        assert query_arg["query"]["filter"]["deleted_at"] == {"_null": True}
+
+        mock_client.get_items.reset_mock()
+
+        # Case 2: include_deleted = True
+        res_deleted = service.get_by_id_or_raise("conv-1", include_deleted=True)
+        assert res_deleted == {"id": "conv-1"}
+
+        # Verify get_items was called WITHOUT "deleted_at" filter
+        mock_client.get_items.assert_called_once()
+        args, kwargs = mock_client.get_items.call_args
+        assert args[0] == "conversation"
+        query_arg = args[1]
+        assert "filter" in query_arg["query"]
+        assert query_arg["query"]["filter"]["id"] == "conv-1"
+        assert "deleted_at" not in query_arg["query"]["filter"]

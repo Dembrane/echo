@@ -209,7 +209,13 @@ export const useUploadConversationChunk = () => {
 				onProgress: variables.onProgress,
 			});
 		},
-		retry: 20,
+			retry: (failureCount, error) => {
+				// Don't retry on deleted or missing conversation errors (403, 404, 410)
+				if (error && (error as any).status >= 400 && (error as any).status < 500) {
+					return false;
+				}
+				return failureCount < 20;
+			},
 	});
 };
 

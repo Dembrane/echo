@@ -399,7 +399,7 @@ class ConversationService:
         but are excluded from read queries via deleted_at IS NULL filter.
         """
         with self._client_context() as client:
-            self.get_by_id_or_raise(conversation_id)
+            self.get_by_id_or_raise(conversation_id, include_deleted=True)
             client.update_item(
                 "conversation",
                 conversation_id,
