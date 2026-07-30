@@ -13,7 +13,7 @@ you can append the following query parameters to any portal start URL (like `htt
 | parameter | description | example |
 |---|---|---|
 | `skipOnboarding` | when set to `1`, skips the introductory tutorial slides and goes directly to the conversation start screen. | `skipOnboarding=1` |
-| `participant_name` or `name` | prefills the participant's name on the initiation page. if onboarding is skipped and the name is prefilled (or name is not required), the conversation will initiate *automatically*. | `participant_name=Alice` |
+| `participant_name`, `name` or `title` | prefills the participant's name (or session title, like a table number) on the initiation page. if onboarding is skipped and the name is prefilled (or name is not required), the conversation will initiate *automatically*. | `participant_name=Alice` |
 | `participant_email` or `email` | prefills the participant's e-mail address. this is automatically passed to the language model and database to associate the conversation with their e-mail. | `participant_email=alice@work.com` |
 | `tags` or `tag_id_list` | a comma-separated list of tag IDs or tag names to apply to the conversation. names are matched *case-insensitively* against the project's tags. | `tags=Bug,Feature` |
 | `general_feedback` or `feedback` | prefills the text input box for the conversation. if this parameter is present, the portal starts the participant *directly in text input mode* and presets this feedback. | `general_feedback=the+platform+is+very+easy+to+use` |
