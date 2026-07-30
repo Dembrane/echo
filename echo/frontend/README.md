@@ -1,4 +1,4 @@
-# Dembrane ECHO Frontend
+# dembrane frontend
 
 ## Getting Started
 

@@ -2,6 +2,8 @@
 
 dembrane is a transcription, analysis (sense-making) and reporting platform built for in-person, multilingual conversations. It's a complete solution for real-world stakeholder-engagement scenarios where reliability and ease of use matter. dembrane started under a "move fast and break things" philosophy while serving early partners. To better serve the public, we're moving to a privacy-first and security-first approach.
 
+> dembrane was formerly called ECHO. The old name still turns up in a few places, including this repository's name, its container images, and its Kubernetes namespaces.
+
 <table>
   <tr>
     <td align="center">
@@ -64,7 +66,7 @@ We offer several ways to get started:
 
 ## Documentation
 
-- [User guide / documentation](https://docs.dembrane.com) (built from the `echo-user-docs` folder)
+- [User guide / documentation](https://docs.dembrane.com) (built from the `docs` folder)
 - [Developer documentation](echo/readme.md)
 
 ## For those considering a fork

@@ -1,4 +1,4 @@
-# Echo Agent Service
+# dembrane agent service
 
 Isolated CopilotKit/LangGraph runtime for Agentic Chat.
 

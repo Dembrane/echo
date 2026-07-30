@@ -15,6 +15,9 @@ We build on one belief: *people know how.* Communities already hold the knowledg
 solve their own challenges. dembrane doesn't add intelligence to a group - it surfaces the
 intelligence already there, and keeps the humans in the room firmly in charge.
 
+dembrane was formerly called ECHO. The old name still turns up here and there, in file
+paths, image names, and older material.
+
 > [!NOTE]
 > New here? The fastest path is the *[Quick start for hosts](./users/host/getting-started.md)*.
 > Just here to record on someone's invitation? See *[for participants](./users/participant/index.md)*.
