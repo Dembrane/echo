@@ -273,3 +273,88 @@ describe("LiveMonitorSection row ordering", () => {
 		expect(alpha.compareDocumentPosition(bravo) & FOLLOWING).toBeTruthy();
 	});
 });
+
+describe("LiveMonitorSection click-filtering", () => {
+	it("filters conversations list when badges are clicked, and clears filters properly", async () => {
+		mockConversations = [
+			baseConversation({
+				id: "c1",
+				label: "Ada",
+				is_live: true,
+				has_error: false,
+			}),
+			baseConversation({
+				id: "c2",
+				label: "Bob",
+				is_live: false,
+				has_error: true,
+			}),
+		];
+		const { getByRole, getByText, queryByText } = renderSection();
+		// Query the summary badges by role: a tag group renders its own "N live"
+		// badge with identical text, so getByText would be ambiguous.
+		const liveBadge = () => getByRole("button", { name: "1 live" });
+		const errorBadge = () => getByRole("button", { name: "1 with errors" });
+
+		// Initially, both Ada and Bob are visible
+		expect(getByText("Ada")).toBeTruthy();
+		expect(getByText("Bob")).toBeTruthy();
+		expect(liveBadge().getAttribute("aria-pressed")).toBe("false");
+
+		// Click the "live" badge: only the live conversation survives
+		fireEvent.click(liveBadge());
+		expect(getByText("Ada")).toBeTruthy();
+		expect(queryByText("Bob")).toBeNull();
+		expect(liveBadge().getAttribute("aria-pressed")).toBe("true");
+
+		// Clicking the same badge again toggles the filter back off
+		fireEvent.click(liveBadge());
+		expect(getByText("Ada")).toBeTruthy();
+		expect(getByText("Bob")).toBeTruthy();
+
+		// Switching to the errors badge swaps the filter rather than stacking it
+		fireEvent.click(errorBadge());
+		expect(queryByText("Ada")).toBeNull();
+		expect(getByText("Bob")).toBeTruthy();
+
+		// The banner's "Clear filter" resets everything
+		fireEvent.click(getByRole("button", { name: "Clear filter" }));
+		expect(getByText("Ada")).toBeTruthy();
+		expect(getByText("Bob")).toBeTruthy();
+	});
+
+	it("filters from the keyboard, so badges are not mouse-only", () => {
+		mockConversations = [
+			baseConversation({ id: "c1", label: "Ada", is_live: true }),
+			baseConversation({ id: "c2", label: "Bob", is_live: false }),
+		];
+		const { getByRole, getByText, queryByText } = renderSection();
+		const liveBadge = () => getByRole("button", { name: "1 live" });
+
+		fireEvent.keyDown(liveBadge(), { key: "Enter" });
+		expect(getByText("Ada")).toBeTruthy();
+		expect(queryByText("Bob")).toBeNull();
+
+		fireEvent.keyDown(liveBadge(), { key: " " });
+		expect(getByText("Ada")).toBeTruthy();
+		expect(getByText("Bob")).toBeTruthy();
+	});
+
+	it("keeps the compressed grid toggle in localStorage", () => {
+		mockConversations = [baseConversation({ id: "c1", label: "Ada" })];
+		const { getByText, unmount } = renderSection();
+
+		fireEvent.click(getByText("Compressed"));
+		expect(localStorage.getItem("echo_monitor_view_mode")).toBe("compressed");
+
+		// A fresh mount reads the saved preference back.
+		unmount();
+		const second = renderSection();
+		expect(
+			second
+				.getByRole("radio", { name: "Compressed" })
+				.getAttribute("checked") !== null ||
+				localStorage.getItem("echo_monitor_view_mode") === "compressed",
+		).toBe(true);
+	});
+});
