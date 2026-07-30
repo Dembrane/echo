@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
+	Anchor,
 	Badge,
 	Button,
 	Divider,
@@ -42,7 +43,10 @@ import {
 import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { VerifiedArtefactsSection } from "@/components/conversation/VerifiedArtefactsSection";
 import { useProjectById } from "@/components/project/hooks";
-import { ENABLE_DISPLAY_CONVERSATION_LINKS } from "@/config";
+import {
+	ENABLE_DISPLAY_CONVERSATION_LINKS,
+	TRANSCRIPT_TROUBLESHOOTING_DOCS_URL,
+} from "@/config";
 import { generateConversationSummary } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 
@@ -380,36 +384,36 @@ export const ProjectConversationRoute = () => {
 				</Stack>
 			</Stack>
 
-				<ConfirmModal
-					opened={regenerateConfirmOpened}
-					onClose={closeRegenerateConfirm}
-					title={t`Regenerate summary`}
-					data-testid="conversation-regenerate-summary-modal"
-					message={
-						<Stack gap="xs">
-							<Text size="sm">
-								<Trans>
-									Are you sure you want to regenerate the summary? You will lose the current summary.
-								</Trans>
-							</Text>
-							<Text size="xs">
-								<a
-									href="https://docs.dembrane.com/users/host/troubleshooting-transcripts-and-summaries.html"
-									target="_blank"
-									rel="noopener noreferrer"
-									className="underline hover:text-[var(--mantine-color-blue-7)]"
-								>
-									<Trans>View the troubleshooting guide for transcripts & summaries</Trans>
-								</a>
-							</Text>
-						</Stack>
-					}
-					confirmLabel={<Trans>Regenerate</Trans>}
-					onConfirm={() => {
-						useHandleGenerateSummaryManually.mutate(true);
-						closeRegenerateConfirm();
-					}}
-				/>
+			<ConfirmModal
+				opened={regenerateConfirmOpened}
+				onClose={closeRegenerateConfirm}
+				title={t`Regenerate summary`}
+				data-testid="conversation-regenerate-summary-modal"
+				message={
+					<Stack gap="xs">
+						<Text size="sm">
+							<Trans>
+								Are you sure you want to regenerate the summary? You will lose
+								the current summary.
+							</Trans>
+						</Text>
+						<Anchor
+							size="sm"
+							target="_blank"
+							href={TRANSCRIPT_TROUBLESHOOTING_DOCS_URL}
+						>
+							<Trans>
+								Read the troubleshooting guide for transcripts and summaries
+							</Trans>
+						</Anchor>
+					</Stack>
+				}
+				confirmLabel={<Trans>Regenerate</Trans>}
+				onConfirm={() => {
+					useHandleGenerateSummaryManually.mutate(true);
+					closeRegenerateConfirm();
+				}}
+			/>
 		</Stack>
 	);
 };
