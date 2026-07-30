@@ -1,21 +1,19 @@
 import { t } from "@lingui/core/macro";
-import { ArrowDown } from "@phosphor-icons/react";
 import { ActionIcon, Tooltip } from "@mantine/core";
+import { ArrowDown } from "@phosphor-icons/react";
 
 interface ScrollToBottomButtonProps {
-	elementRef: React.RefObject<HTMLDivElement | null>;
-	isVisible: boolean;
+	onClick: () => void;
+	/** True means show the button. Note this is the opposite of the old
+	 * `isVisible` prop, which described the scroll sentinel. */
+	visible: boolean;
 }
 
 export const ScrollToBottomButton = ({
-	elementRef,
-	isVisible,
+	onClick,
+	visible,
 }: ScrollToBottomButtonProps) => {
-	const scrollToBottom = () => {
-		elementRef.current?.scrollIntoView({ behavior: "smooth" });
-	};
-
-	if (isVisible) return null; // Hide when visible
+	if (!visible) return null;
 
 	return (
 		<Tooltip label={t`Scroll to bottom`}>
@@ -26,7 +24,7 @@ export const ScrollToBottomButton = ({
 				aria-label={t`Scroll to bottom`}
 				className="rounded-full shadow-sm"
 				style={{ backgroundColor: "var(--app-background)" }}
-				onClick={scrollToBottom}
+				onClick={onClick}
 			>
 				<ArrowDown size="70%" weight="bold" />
 			</ActionIcon>

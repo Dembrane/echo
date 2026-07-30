@@ -1,12 +1,12 @@
+import { ActionIcon } from "@mantine/core";
+import { SidebarSimple } from "@phosphor-icons/react";
 import type { PropsWithChildren } from "react";
 import { Outlet } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { AppSidebar, useSidebarView } from "@/features/sidebar";
 import { AppBreadcrumbs } from "@/features/sidebar/breadcrumbs/AppBreadcrumbs";
-import { InboxView } from "@/features/sidebar/views/InboxView";
 import { useSidebarState } from "@/features/sidebar/hooks/useSidebarState";
-import { ActionIcon } from "@mantine/core";
-import { SidebarSimple } from "@phosphor-icons/react";
+import { InboxView } from "@/features/sidebar/views/InboxView";
 import { Toaster } from "../common/Toaster";
 import { ErrorBoundary } from "../error/ErrorBoundary";
 import { TransitionCurtainProvider } from "./TransitionCurtainProvider";
@@ -60,7 +60,7 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 							</div>
 						)}
 						{isAuthenticated ? <AppBreadcrumbs /> : null}
-						<div className="flex-1 overflow-auto">
+						<div className="flex-1 overflow-auto" data-app-scroll-root>
 							<Outlet />
 							{children}
 						</div>

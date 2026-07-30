@@ -23,11 +23,7 @@ import {
 	encodeTemplateKey,
 	type QuickAccessItem,
 } from "./templateKey";
-import {
-	agenticQuickAccessTemplates,
-	quickAccessTemplates,
-	Templates,
-} from "./templates";
+import { quickAccessTemplates, Templates } from "./templates";
 
 // Map icon names from API to Phosphor icons
 const SUGGESTION_ICONS: Record<string, Icon> = {
@@ -107,8 +103,6 @@ const TemplatePill = ({
 	testIdSuffix: string;
 }) => {
 	const colors = chatMode ? MODE_COLORS[chatMode] : null;
-	const isOverview = chatMode === "overview";
-	const isDeepDive = chatMode === "deep_dive";
 
 	return (
 		<Tooltip label={label} openDelay={500} disabled={label.length < 25}>
@@ -122,19 +116,15 @@ const TemplatePill = ({
 				style={{
 					alignItems: "center",
 					backgroundColor: isSelected ? undefined : "var(--app-background)",
-					borderColor: isOverview
-						? MODE_COLORS.overview.primary
-						: isDeepDive
-							? MODE_COLORS.deep_dive.primary
-							: undefined,
-					borderWidth: isOverview || isDeepDive ? 1 : undefined,
+					borderColor: colors ? colors.primary : undefined,
+					borderWidth: colors ? 1 : undefined,
 					display: "flex",
 					maxWidth: 160,
 				}}
 				onClick={onClick}
 				{...testId(`chat-template-${testIdSuffix}`)}
 			>
-				<Group gap={4} wrap="nowrap" align="flex-start">
+				<Group gap={4} wrap="nowrap" align="flex-start" style={{ minWidth: 0 }}>
 					{IconComponent && (
 						<IconComponent
 							size={12}
@@ -147,6 +137,7 @@ const TemplatePill = ({
 						fw={500}
 						c={colors ? MODE_COLORS.graphite : undefined}
 						truncate
+						style={{ minWidth: 0 }}
 					>
 						{label}
 					</Text>
@@ -195,8 +186,6 @@ export const ChatTemplatesMenu = ({
 
 	// Resolve quick-access templates from quickAccessItems (already resolved by parent)
 	const resolvedQuickAccessTemplates = useMemo(() => {
-		if (chatMode === "agentic") return agenticQuickAccessTemplates;
-
 		if (quickAccessItems.length === 0) {
 			return quickAccessTemplates;
 		}
@@ -224,7 +213,7 @@ export const ChatTemplatesMenu = ({
 			}
 		}
 		return resolved.length > 0 ? resolved : quickAccessTemplates;
-	}, [chatMode, quickAccessItems, userTemplates]);
+	}, [quickAccessItems, userTemplates]);
 
 	const handleTemplateSelect = (
 		template: { content: string; key: string },

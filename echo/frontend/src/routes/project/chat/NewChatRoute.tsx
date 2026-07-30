@@ -3,7 +3,6 @@ import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
-	Anchor,
 	Badge,
 	Box,
 	Button,
@@ -14,28 +13,44 @@ import {
 	Stack,
 	Text,
 	Textarea,
+	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
-import { IconAlertCircle, IconArrowUp } from "@tabler/icons-react";
+import {
+	useDebouncedValue,
+	useDisclosure,
+	useDocumentTitle,
+} from "@mantine/hooks";
+import {
+	IconAlertCircle,
+	IconSearch,
+	IconSend,
+	IconX,
+} from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import posthog from "posthog-js";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { useLocation, useParams } from "react-router";
+import { useLocation, useParams, useSearchParams } from "react-router";
+import { AgenticIntroModal } from "@/components/chat/AgenticIntroModal";
 import {
 	ChatAccordionItemMenu,
 	ChatModeIndicator,
 } from "@/components/chat/ChatAccordion";
+import {
+	ChatComposerShell,
+	ConversationFocusChips,
+	ConversationPickerButton,
+} from "@/components/chat/ChatComposer";
 import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
 import { ChatUpgradeModal } from "@/components/chat/FreeTierChatGate";
 import {
 	useInfiniteProjectChats,
 	useInitializeChatModeMutation,
 	usePrefetchSuggestions,
+	useProjectChatSearch,
 	useProjectChatsCount,
 } from "@/components/chat/hooks";
-import { InsertTemplateMenu } from "@/components/chat/InsertTemplateMenu";
 import { consumeChatPrefill } from "@/components/chat/prefill";
 import { BaseSkeleton } from "@/components/common/BaseSkeleton";
 import { NavigationButton } from "@/components/common/NavigationButton";
@@ -45,11 +60,7 @@ import {
 	useAttachChatConversationsMutation,
 	useCreateChatMutation,
 } from "@/components/project/hooks";
-import {
-	AGENTIC_CHAT_IS_DEFAULT,
-	ASK_DOCS_URL,
-	ENABLE_AGENTIC_CHAT,
-} from "@/config";
+import { AGENTIC_CHAT_IS_DEFAULT, ENABLE_AGENTIC_CHAT } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -57,6 +68,7 @@ import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import type { ChatMode } from "@/lib/api";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
+import { testId } from "@/lib/testUtils";
 
 const CHATS_PAGE_SIZE = 10;
 
@@ -70,11 +82,9 @@ const ChatsSectionSkeleton = () => (
 );
 
 const ProjectChatsSection = ({
-	filter,
 	projectId,
 	workspaceId,
 }: {
-	filter?: string;
 	projectId: string;
 	workspaceId: string;
 }) => {
@@ -86,6 +96,24 @@ const ProjectChatsSection = ({
 		hasMessages: true,
 		initialLimit: CHATS_PAGE_SIZE,
 	});
+
+	const [searchParams, setSearchParams] = useSearchParams();
+	const rawSearch = searchParams.get("chatq") ?? "";
+	const [debouncedSearch] = useDebouncedValue(rawSearch, 300);
+	const searchQuery = useProjectChatSearch(projectId, debouncedSearch);
+	const isSearching = debouncedSearch.trim().length > 0;
+
+	const setSearch = (next: string) => {
+		setSearchParams(
+			(current) => {
+				const params = new URLSearchParams(current);
+				if (next) params.set("chatq", next);
+				else params.delete("chatq");
+				return params;
+			},
+			{ replace: true },
+		);
+	};
 
 	useEffect(() => {
 		if (inView && chatsQuery.hasNextPage && !chatsQuery.isFetchingNextPage) {
@@ -106,37 +134,69 @@ const ProjectChatsSection = ({
 			}>
 		)?.flatMap((page) => page.chats) ?? [];
 
-	// The bar above doubles as a filter over your chats: typing narrows the
-	// list in place (gently, no layout jumps) while Enter still starts a new
-	// chat with the typed question.
-	const normalizedFilter = filter?.trim().toLowerCase() ?? "";
-	const visibleChats = useMemo(() => {
-		if (!normalizedFilter) return allChats;
-		return allChats.filter((chat) =>
-			(chat.name ?? "").toLowerCase().includes(normalizedFilter),
-		);
-	}, [allChats, normalizedFilter]);
+	const listedChats = isSearching ? (searchQuery.data?.chats ?? []) : allChats;
+	const shownCount = isSearching
+		? (searchQuery.data?.total ?? 0)
+		: (chatsCountQuery.data ?? 0);
 
-	const totalChats = chatsCountQuery.data ?? 0;
-	if (totalChats === 0) return null;
+	// Hide the whole section only when the project genuinely has no chats and
+	// the host is not searching; otherwise the empty states below do the talking.
+	if (!isSearching && (chatsCountQuery.data ?? 0) === 0) return null;
 
 	return (
 		<Stack gap="lg" className="pt-4 transition-opacity">
-			<Group gap="sm" align="center">
-				<Title order={2} fw={500} style={{ color: "var(--app-text)" }}>
-					<Trans>Chats</Trans>
-				</Title>
-				<Badge variant="light">{totalChats}</Badge>
+			<Group gap="sm" align="center" justify="space-between" wrap="wrap">
+				<Group gap="sm" align="center">
+					<Title order={2} fw={500} style={{ color: "var(--app-text)" }}>
+						<Trans>Chats</Trans>
+					</Title>
+					<Badge variant="light">{shownCount}</Badge>
+				</Group>
+				<TextInput
+					size="sm"
+					className="w-64"
+					value={rawSearch}
+					onChange={(event) => setSearch(event.currentTarget.value)}
+					placeholder={t`Search chats`}
+					aria-label={t`Search chats`}
+					leftSection={<IconSearch size={14} />}
+					rightSection={
+						rawSearch ? (
+							<ActionIcon
+								variant="subtle"
+								size="sm"
+								aria-label={t`Clear search`}
+								onClick={() => setSearch("")}
+							>
+								<IconX size={14} />
+							</ActionIcon>
+						) : null
+					}
+					{...testId("chats-search-input")}
+				/>
 			</Group>
 
-			{normalizedFilter && visibleChats.length === 0 && (
+			{isSearching && listedChats.length === 0 && !searchQuery.isFetching && (
 				<Text size="sm">
-					<Trans>No chats match. Press Enter to ask this as a new chat.</Trans>
+					<Trans>No chats match your search.</Trans>
+				</Text>
+			)}
+			{!isSearching && listedChats.length === 0 && (
+				<Text size="sm">
+					<Trans>No chats yet.</Trans>
+				</Text>
+			)}
+			{isSearching && shownCount > listedChats.length && (
+				<Text size="xs">
+					<Trans>
+						Showing the first {listedChats.length} of {shownCount} matches.
+						Narrow the search to see the rest.
+					</Trans>
 				</Text>
 			)}
 
 			<Stack gap="xs">
-				{visibleChats.map((item, index) => {
+				{listedChats.map((item, index) => {
 					const chatMode = (item as ProjectChat & { chat_mode?: string })
 						.chat_mode as
 						| "overview"
@@ -154,7 +214,11 @@ const ProjectChatsSection = ({
 									<ChatAccordionItemMenu chat={item as ProjectChat} />
 								</Group>
 							}
-							ref={index === visibleChats.length - 1 ? loadMoreRef : undefined}
+							ref={
+								!isSearching && index === listedChats.length - 1
+									? loadMoreRef
+									: undefined
+							}
 						>
 							<Stack gap={2}>
 								<Text size="sm" lineClamp={1}>
@@ -222,9 +286,9 @@ export const NewChatRoute = () => {
 	const [selectedConversationIds, setSelectedConversationIds] = useState<
 		string[]
 	>(() => {
-		const state = location.state as
-			| { selectedConversationIds?: unknown }
-			| null;
+		const state = location.state as {
+			selectedConversationIds?: unknown;
+		} | null;
 		return Array.isArray(state?.selectedConversationIds)
 			? state.selectedConversationIds.filter(
 					(id): id is string => typeof id === "string",
@@ -232,6 +296,7 @@ export const NewChatRoute = () => {
 			: [];
 	});
 	const [pickerOpened, pickerHandlers] = useDisclosure(false);
+	const [agenticIntroOpened, agenticIntroHandlers] = useDisclosure(false);
 
 	const handleModeSelected = async (
 		mode: ChatMode,
@@ -405,120 +470,96 @@ export const NewChatRoute = () => {
 						<Title order={2} fw={500}>
 							<Trans>Where would you like to start?</Trans>
 						</Title>
-						<Textarea
-							autosize
-							minRows={2}
-							maxRows={6}
-							radius="lg"
-							size="sm"
-							autoFocus
-							value={draft}
-							onChange={(event) => setDraft(event.currentTarget.value)}
-							onKeyDown={(event) => {
-								if (event.key === "Enter" && !event.shiftKey) {
-									event.preventDefault();
-									startChat();
-								}
-							}}
-							placeholder={t`Ask about your conversations, or type to find an earlier chat`}
-							disabled={isPending}
-							styles={{
-								input: { backgroundColor: "transparent", resize: "none" },
-							}}
-							className="rounded-lg border shadow-sm"
-							style={{
-								backgroundColor: "var(--app-background)",
-								borderColor: "var(--mantine-color-primary-light)",
-							}}
-							rightSectionWidth={52}
-							rightSection={
-								isPending ? (
-									<Loader size="xs" />
-								) : (
-									<ActionIcon
-										size="lg"
-										radius="xl"
-										aria-label={t`Start a chat`}
-										onClick={startChat}
-										disabled={draft.trim().length === 0}
-									>
-										<IconArrowUp size={18} />
-									</ActionIcon>
-								)
-							}
-							{...{ "data-testid": "ask-home-input" }}
-						/>
 						{/* The picker has to be reachable from an empty selection: this
 						    screen is where a host narrows the chat before it exists. */}
-						<Group gap="sm" align="center">
-							{selectedConversationIds.length > 0 ? (
-								<>
-									<Text size="sm">
-										{modeToStart === "agentic" ? (
-											<Plural
-												value={selectedConversationIds.length}
-												one="Focusing on # conversation"
-												other="Focusing on # conversations"
-											/>
-										) : (
-											<Plural
-												value={selectedConversationIds.length}
-												one="Using # conversation"
-												other="Using # conversations"
-											/>
-										)}
-									</Text>
-									<Button
-										variant="subtle"
-										size="xs"
+						<ChatComposerShell
+							chips={
+								selectedConversationIds.length > 0 ? (
+									<ConversationFocusChips
+										count={selectedConversationIds.length}
 										disabled={isPending}
-										onClick={pickerHandlers.open}
-									>
-										<Trans>Change</Trans>
-									</Button>
-									<Button
-										variant="subtle"
-										size="xs"
-										disabled={isPending}
-										onClick={() => setSelectedConversationIds([])}
-									>
-										<Trans>Clear</Trans>
-									</Button>
-								</>
-							) : (
-								<Button
-									variant="subtle"
-									size="xs"
+										label={
+											modeToStart === "agentic" ? (
+												<Plural
+													value={selectedConversationIds.length}
+													one="Focusing on # conversation"
+													other="Focusing on # conversations"
+												/>
+											) : (
+												<Plural
+													value={selectedConversationIds.length}
+													one="Using # conversation"
+													other="Using # conversations"
+												/>
+											)
+										}
+										onClearAll={() => setSelectedConversationIds([])}
+									/>
+								) : undefined
+							}
+							footerLeft={
+								<ConversationPickerButton
+									ariaLabel={t`Choose conversations`}
 									disabled={isPending}
+									label={<Trans>Choose conversations</Trans>}
 									onClick={pickerHandlers.open}
-									{...{ "data-testid": "ask-home-choose-conversations" }}
+									testId="ask-home-choose-conversations"
+								/>
+							}
+							footerRight={
+								<Button
+									type="button"
+									size="sm"
+									radius="md"
+									leftSection={
+										isPending ? <Loader size={14} /> : <IconSend size={14} />
+									}
+									disabled={isPending || draft.trim().length === 0}
+									onClick={startChat}
+									{...testId("ask-home-send-button")}
 								>
-									<Trans>Choose conversations</Trans>
+									<Trans>Send</Trans>
 								</Button>
-							)}
-						</Group>
-						<Group gap="lg">
-							<InsertTemplateMenu
-								workspaceId={workspaceId}
-								onInsert={(content) => setDraft(content)}
+							}
+						>
+							<Textarea
+								variant="unstyled"
+								styles={{
+									input: { backgroundColor: "transparent", resize: "none" },
+								}}
+								autosize
+								minRows={2}
+								maxRows={10}
+								autoFocus
+								value={draft}
+								onChange={(event) => setDraft(event.currentTarget.value)}
+								onKeyDown={(event) => {
+									if (event.key === "Enter" && !event.shiftKey) {
+										event.preventDefault();
+										startChat();
+									}
+								}}
+								placeholder={t`Ask about your conversations...`}
+								disabled={isPending}
+								{...testId("ask-home-input")}
 							/>
-							{ASK_DOCS_URL && (
-								<Anchor
-									size="xs"
-									href={ASK_DOCS_URL}
-									target="_blank"
-									rel="noreferrer"
-								>
-									<Trans>What can Ask do?</Trans>
-								</Anchor>
-							)}
-						</Group>
+						</ChatComposerShell>
 						<Group gap="xs" align="center">
 							<Button
 								variant="subtle"
 								size="xs"
 								disabled={isPending}
-								onClick={startAgentic}
+								leftSection={<ChatModeIndicator mode="agentic" size="xs" />}
+								styles={{
+									section: { marginRight: "var(--mantine-spacing-sm)" },
+								}}
+								onClick={() => {
+									posthog.capture("agentic_chat_intro_opened", {
+										source: "ask_home",
+									});
+									agenticIntroHandlers.open();
+								}}
+								{...testId("ask-home-try-agentic")}
 							>
 								<Trans>Try Agentic instead</Trans>
 							</Button>
@@ -543,7 +584,6 @@ export const NewChatRoute = () => {
 
 				<Suspense fallback={<ChatsSectionSkeleton />}>
 					<ProjectChatsSection
-						filter={ENABLE_AGENTIC_CHAT ? draft : undefined}
 						projectId={projectId}
 						workspaceId={workspaceId}
 					/>
@@ -571,6 +611,17 @@ export const NewChatRoute = () => {
 					/>
 				)}
 			</Modal>
+			<AgenticIntroModal
+				opened={agenticIntroOpened}
+				onClose={agenticIntroHandlers.close}
+				onConfirm={() => {
+					posthog.capture("agentic_chat_intro_confirmed", {
+						source: "ask_home",
+					});
+					agenticIntroHandlers.close();
+					startAgentic();
+				}}
+			/>
 		</PageContainer>
 	);
 };
