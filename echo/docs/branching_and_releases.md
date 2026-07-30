@@ -39,7 +39,7 @@ Until we can fully synchronize the Directus schema push and server deployment, p
 2. **Pre-release checks**:
    - Check for new env vars (`settings.py` fields, `config.ts` exports)
    - Run Directus data migrations if needed (see [database_migrations.md](database_migrations.md))
-   - Update deployment env vars in the GitOps repo if needed
+   - Update deployment env vars in the GitOps repo if needed. **Adding** a key is safe any time; **removing** one is release-gated, because GitOps `main` reaches production immediately while the code does not. See [incidents/gitops-env-removal-release-gate.md](incidents/gitops-env-removal-release-gate.md)
 3. **Tag and release** — create a GitHub release from a commit on `main`
 4. The release triggers **auto-deployment to production**:
    - Backend: new image tags are picked up by the GitOps repo (`dembrane/echo-gitops`, Argo CD auto-sync)
