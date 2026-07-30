@@ -1150,12 +1150,22 @@ def create_agent_graph(
         }
 
     @tool
-    async def listProjectConversations(limit: int = 20) -> dict[str, Any]:
-        """List conversations for the current project scope."""
+    async def listProjectConversations(limit: int = 20, offset: int = 0) -> dict[str, Any]:
+        """List conversations for the current project scope.
+
+        `limit` caps one call at 100. Use `offset` to page: pass the number of
+        conversations you have already seen. `has_more` says whether another
+        page exists, so you never have to guess.
+        """
         normalized_limit = max(1, min(limit, 100))
+        normalized_offset = max(0, offset)
         client = _create_echo_client()
         try:
-            payload = await client.list_project_conversations(project_id, normalized_limit)
+            payload = await client.list_project_conversations(
+                project_id,
+                normalized_limit,
+                offset=normalized_offset,
+            )
         finally:
             await client.close()
 
@@ -1168,7 +1178,52 @@ def create_agent_graph(
         return {
             "project_id": project_id,
             "count": int(payload.get("count") or len(conversations)),
+            "offset": normalized_offset,
+            "has_more": bool(payload.get("has_more")),
             "conversations": conversations,
+        }
+
+    @tool
+    async def listFocusedConversations(limit: int = 50, offset: int = 0) -> dict[str, Any]:
+        """List the conversations the host focused THIS chat on, paginated.
+
+        Use this when the focus block says it was truncated. It returns only
+        the host's selection, which the project-wide conversation list cannot
+        tell you. Pass `offset` from the truncation line, then keep paging
+        while `has_more` is true.
+        """
+        if not chat_id:
+            return {
+                "project_id": project_id,
+                "total": 0,
+                "count": 0,
+                "offset": 0,
+                "has_more": False,
+                "conversations": [],
+                "note": "This run has no chat, so there is no focus selection.",
+            }
+
+        normalized_limit = max(1, min(limit, 100))
+        normalized_offset = max(0, offset)
+        client = _create_echo_client()
+        try:
+            payload = await client.list_focused_conversations(
+                project_id,
+                chat_id,
+                limit=normalized_limit,
+                offset=normalized_offset,
+            )
+        finally:
+            await client.close()
+
+        conversations = payload.get("conversations")
+        return {
+            "project_id": project_id,
+            "total": int(payload.get("total") or 0),
+            "count": int(payload.get("count") or 0),
+            "offset": normalized_offset,
+            "has_more": bool(payload.get("has_more")),
+            "conversations": conversations if isinstance(conversations, list) else [],
         }
 
     @tool
@@ -2189,6 +2244,7 @@ def create_agent_graph(
         get_project_scope,
         findConversationsByKeywords,
         listProjectConversations,
+        listFocusedConversations,
         listConversationSummary,
         listConversationFullTranscript,
         grepConversationSnippets,

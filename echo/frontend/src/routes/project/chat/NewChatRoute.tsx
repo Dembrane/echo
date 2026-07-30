@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
@@ -41,7 +41,10 @@ import { BaseSkeleton } from "@/components/common/BaseSkeleton";
 import { NavigationButton } from "@/components/common/NavigationButton";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { useCreateChatMutation } from "@/components/project/hooks";
+import {
+	useAttachChatConversationsMutation,
+	useCreateChatMutation,
+} from "@/components/project/hooks";
 import {
 	AGENTIC_CHAT_IS_DEFAULT,
 	ASK_DOCS_URL,
@@ -195,6 +198,7 @@ export const NewChatRoute = () => {
 	const isObserver = isReadOnlyRole(workspace?.role);
 	const { language } = useLanguage();
 	const createChatMutation = useCreateChatMutation();
+	const attachConversationsMutation = useAttachChatConversationsMutation();
 	const initializeModeMutation = useInitializeChatModeMutation();
 	const prefetchSuggestions = usePrefetchSuggestions();
 	const [isInitializing, setIsInitializing] = useState(false);
@@ -244,16 +248,10 @@ export const NewChatRoute = () => {
 		setIsInitializing(true);
 
 		try {
-			// Step 1: Create the chat without mode, attaching any conversations
-			// picked up-front (awaited: they need to exist before the mode
-			// initializes and the first turn runs).
+			// Step 1: Create the chat. It has no mode yet.
 			const chat = await createChatMutation.mutateAsync({
 				navigateToNewChat: false, // Don't navigate yet
 				project_id: { id: projectId },
-				conversationIds:
-					selectedConversationIds.length > 0
-						? selectedConversationIds
-						: undefined,
 			});
 
 			if (!chat?.id) {
@@ -273,13 +271,27 @@ export const NewChatRoute = () => {
 				projectId,
 			});
 
-			// Step 3: For overview mode, prefetch suggestions (wait up to 5s for better UX)
+			// Step 3: Attach the conversations picked up-front, in one request,
+			// after the mode exists and before the first turn runs. Order
+			// matters: the server only skips the transcript token budget once it
+			// can see that the chat is agentic, so attaching first would make a
+			// long selection fail with "Conversation is too long" even for
+			// agentic.
+			if (selectedConversationIds.length > 0) {
+				await attachConversationsMutation.mutateAsync({
+					chatId: chat.id,
+					conversationIds: selectedConversationIds,
+					projectId,
+				});
+			}
+
+			// Step 4: For overview mode, prefetch suggestions (wait up to 5s for better UX)
 			// For deep_dive mode, navigate immediately - suggestions will be fetched when context changes
 			if (mode === "overview") {
 				await prefetchSuggestions(chat.id, language, 5000);
 			}
 
-			// Step 4: Navigate to the new chat; the panel sends the typed
+			// Step 5: Navigate to the new chat; the panel sends the typed
 			// question as the first message (router state, consumed once).
 			navigate(`/w/${workspaceId}/projects/${projectId}/chats/${chat.id}`, {
 				state: initialMessage ? { initialMessage } : undefined,
@@ -295,28 +307,35 @@ export const NewChatRoute = () => {
 		}
 	};
 
-	// "Open the old chat experience" from inside an agentic chat lands here
-	// with a preferred mode; start that chat right away, once.
+	// Two ways to land here with the choice already made:
+	//   - "Open the old chat experience" inside an agentic chat passes
+	//     preferMode: "deep_dive".
+	//   - Project creation with "Set up with the assistant" ticked passes
+	//     preferMode: "agentic" plus the seed question.
+	// Anything that arrives with only a seed follows the default mode rather
+	// than assuming agentic.
 	const preferredMode =
 		typeof (location.state as { preferMode?: unknown } | null)?.preferMode ===
 		"string"
 			? ((location.state as { preferMode: ChatMode }).preferMode as ChatMode)
 			: null;
-	const preferredModeStartedRef = useRef(false);
 	const queryPrefillStartedRef = useRef(false);
 	const initialMessage =
 		typeof (location.state as { initialMessage?: unknown } | null)
 			?.initialMessage === "string"
 			? (location.state as { initialMessage: string }).initialMessage
 			: null;
-	const initialMessageStartedRef = useRef(false);
+	const autoStartMode: ChatMode | null =
+		preferredMode ?? (initialMessage ? modeToStart : null);
+	const autoStartedRef = useRef(false);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: handleModeSelected is recreated per render; the ref guards a single run
 	useEffect(() => {
-		if (!preferredMode || preferredModeStartedRef.current) return;
-		preferredModeStartedRef.current = true;
+		if (!autoStartMode || autoStartedRef.current) return;
+		if (autoStartMode === "agentic" && !ENABLE_AGENTIC_CHAT) return;
+		autoStartedRef.current = true;
 		window.history.replaceState({}, "");
-		void handleModeSelected(preferredMode);
-	}, [preferredMode]);
+		void handleModeSelected(autoStartMode, initialMessage ?? undefined);
+	}, [autoStartMode]);
 
 	useEffect(() => {
 		if (queryPrefillStartedRef.current) return;
@@ -330,18 +349,6 @@ export const NewChatRoute = () => {
 		);
 		if (prefill) setDraft(prefill);
 	}, [location.hash, location.pathname, location.search]);
-
-	// Project creation lands on Ask home with a setup seed. Start the agentic
-	// chat immediately and pass the seed through to the chat panel, which sends
-	// it as the first user message.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: handleModeSelected is recreated per render; the ref guards a single run
-	useEffect(() => {
-		if (!ENABLE_AGENTIC_CHAT) return;
-		if (!initialMessage || initialMessageStartedRef.current) return;
-		initialMessageStartedRef.current = true;
-		window.history.replaceState({}, "");
-		void handleModeSelected("agentic", initialMessage);
-	}, [initialMessage]);
 
 	if (!projectId || !workspaceId) {
 		return (
@@ -377,6 +384,7 @@ export const NewChatRoute = () => {
 	const isPending =
 		isInitializing ||
 		createChatMutation.isPending ||
+		attachConversationsMutation.isPending ||
 		initializeModeMutation.isPending;
 
 	const startChat = () => {
@@ -440,37 +448,55 @@ export const NewChatRoute = () => {
 							}
 							{...{ "data-testid": "ask-home-input" }}
 						/>
-						{selectedConversationIds.length > 0 && (
-							<Group gap="sm" align="center">
-								<Text size="sm">
-									{modeToStart === "agentic" ? (
-										<Trans>
-											Focusing on {selectedConversationIds.length} conversations
-										</Trans>
-									) : (
-										<Trans>
-											Using {selectedConversationIds.length} conversations
-										</Trans>
-									)}
-								</Text>
+						{/* The picker has to be reachable from an empty selection: this
+						    screen is where a host narrows the chat before it exists. */}
+						<Group gap="sm" align="center">
+							{selectedConversationIds.length > 0 ? (
+								<>
+									<Text size="sm">
+										{modeToStart === "agentic" ? (
+											<Plural
+												value={selectedConversationIds.length}
+												one="Focusing on # conversation"
+												other="Focusing on # conversations"
+											/>
+										) : (
+											<Plural
+												value={selectedConversationIds.length}
+												one="Using # conversation"
+												other="Using # conversations"
+											/>
+										)}
+									</Text>
+									<Button
+										variant="subtle"
+										size="xs"
+										disabled={isPending}
+										onClick={pickerHandlers.open}
+									>
+										<Trans>Change</Trans>
+									</Button>
+									<Button
+										variant="subtle"
+										size="xs"
+										disabled={isPending}
+										onClick={() => setSelectedConversationIds([])}
+									>
+										<Trans>Clear</Trans>
+									</Button>
+								</>
+							) : (
 								<Button
 									variant="subtle"
 									size="xs"
 									disabled={isPending}
 									onClick={pickerHandlers.open}
+									{...{ "data-testid": "ask-home-choose-conversations" }}
 								>
-									<Trans>Change</Trans>
+									<Trans>Choose conversations</Trans>
 								</Button>
-								<Button
-									variant="subtle"
-									size="xs"
-									disabled={isPending}
-									onClick={() => setSelectedConversationIds([])}
-								>
-									<Trans>Clear</Trans>
-								</Button>
-							</Group>
-						)}
+							)}
+						</Group>
 						<Group gap="lg">
 							<InsertTemplateMenu
 								workspaceId={workspaceId}
@@ -502,6 +528,10 @@ export const NewChatRoute = () => {
 						</Group>
 					</Stack>
 				) : (
+					// Unreachable while ENABLE_AGENTIC_CHAT is true everywhere. Kept as
+					// the fallback entry screen if availability is ever narrowed again;
+					// ChatModeSelector is still live for mode-less chats in
+					// ProjectChatRoute, and five modules import its MODE_COLORS.
 					<ChatModeSelector
 						isNewChat
 						isCreating={isPending}

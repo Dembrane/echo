@@ -69,9 +69,7 @@ class ConversationService:
             with self._client_context() as client:
                 client.update_item("conversation", conversation_id, {"token_count": None})
         except Exception:
-            logger.warning(
-                "failed to clear token_count for %s", conversation_id, exc_info=True
-            )
+            logger.warning("failed to clear token_count for %s", conversation_id, exc_info=True)
         # Also drop the Redis layer so readers never see the pre-change count.
         try:
             from dembrane.cache_utils import cache_delete
@@ -79,9 +77,7 @@ class ConversationService:
 
             run_async_in_new_loop(cache_delete(f"tokcount:{conversation_id}"))
         except Exception:
-            logger.warning(
-                "failed to clear tokcount cache for %s", conversation_id, exc_info=True
-            )
+            logger.warning("failed to clear tokcount cache for %s", conversation_id, exc_info=True)
 
     @property
     def file_service(self) -> "FileService":
@@ -174,6 +170,7 @@ class ConversationService:
         search_text: Optional[str] = None,
         sort: str = "-created_at",
         limit: int = 1000,
+        conversation_ids: Optional[List[str]] = None,
     ) -> List[dict]:
         """
         List conversations for a project with advanced filtering options.
@@ -192,15 +189,26 @@ class ConversationService:
             search_text: Optional search text (uses Directus search)
             sort: Sort order (default: most recent first "-created_at")
             limit: Maximum number of conversations to return
+            conversation_ids: Optional explicit id list. Combined with the
+                project filter, so ids belonging to another project (or
+                already deleted) simply do not come back.
 
         Returns:
             List of conversation dicts with minimal fields for efficiency
         """
+        # An empty _in has historically degenerated into a full-table scan in
+        # Directus, so treat "asked for nothing" as "nothing".
+        if conversation_ids is not None and len(conversation_ids) == 0:
+            return []
+
         # Build filter query
         filter_query: dict[str, Any] = {
             "project_id": {"_eq": project_id},
             "deleted_at": {"_null": True},
         }
+
+        if conversation_ids:
+            filter_query["id"] = {"_in": conversation_ids}
 
         if tag_ids and len(tag_ids) > 0:
             filter_query["tags"] = {

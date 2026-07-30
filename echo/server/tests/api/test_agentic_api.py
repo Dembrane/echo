@@ -5,6 +5,7 @@ import asyncio
 from types import SimpleNamespace
 from typing import Any, AsyncIterator
 from contextlib import asynccontextmanager
+from unittest.mock import AsyncMock
 
 import pytest
 from httpx import AsyncClient, ASGITransport
@@ -19,8 +20,9 @@ from dembrane.agentic_focus import (
     FOCUS_BLOCK_OPEN,
     FOCUS_BLOCK_CLOSE,
     FOCUS_BLOCK_PREAMBLE,
+    FOCUS_LIST_TOOL_NAME,
+    MAX_FOCUS_BLOCK_CHARS,
     MAX_FOCUS_LABEL_LENGTH,
-    MAX_FOCUSED_CONVERSATIONS,
     strip_focus_blocks,
 )
 from dembrane.service.agentic import AgenticRunService
@@ -655,17 +657,45 @@ def test_focus_block_clamps_long_participant_name() -> None:
     assert clamped in format_focus_block([{"id": "conv-1", "name": "A" * 500}])
 
 
-def test_focus_block_caps_conversation_count() -> None:
+def test_focus_block_respects_char_budget() -> None:
+    """The block is re-injected every turn, so its cost is its rendered size,
+    not its item count. Bound the size and page the rest."""
     from dembrane.agentic_focus import format_focus_block
 
-    focused = [{"id": f"conv-{index}", "name": f"P{index}"} for index in range(200)]
+    focused = [{"id": f"conv-{index}", "name": f"P{index}"} for index in range(500)]
     block = format_focus_block(focused)
 
-    assert block.count("- id: conv-") == MAX_FOCUSED_CONVERSATIONS
-    assert f"- id: conv-{MAX_FOCUSED_CONVERSATIONS}" not in block
-    assert f"truncated: {200 - MAX_FOCUSED_CONVERSATIONS} more selected" in block
-    # The old uncapped block measured ~11k chars on every turn.
-    assert len(block) < 6000
+    assert len(block) <= MAX_FOCUS_BLOCK_CHARS
+    listed = block.count("- id: conv-")
+    assert 0 < listed < 500
+
+
+def test_focus_block_truncation_line_states_the_real_total_and_a_callable_next_step() -> None:
+    """Every number in the truncation line has to be true, and the instruction
+    has to be one the agent can actually follow."""
+    from dembrane.agentic_focus import format_focus_block
+
+    focused = [{"id": f"conv-{index}", "name": f"P{index}"} for index in range(500)]
+    block = format_focus_block(focused)
+    listed = block.count("- id: conv-")
+
+    assert "truncated: 500 conversations are focused" in block
+    assert f"{listed} listed above" in block
+    # Names the tool and the exact offset to resume from, not a vague "use your
+    # conversation list tool" (which lists the project, not the selection).
+    assert f"{FOCUS_LIST_TOOL_NAME}(offset={listed})" in block
+    assert f"remaining {500 - listed}" in block
+    assert "conversation list tool" not in block
+
+
+def test_focus_block_small_selection_is_listed_in_full() -> None:
+    from dembrane.agentic_focus import format_focus_block
+
+    focused = [{"id": f"conv-{index}", "name": f"P{index}"} for index in range(5)]
+    block = format_focus_block(focused)
+
+    assert block.count("- id: conv-") == 5
+    assert "truncated" not in block
 
 
 def test_get_focused_conversations_maps_links(monkeypatch) -> None:
@@ -754,6 +784,159 @@ def test_get_focused_conversations_without_a_chat_is_empty(monkeypatch) -> None:
     monkeypatch.setattr(agentic_api, "chat_service", _FakeChatService())
 
     assert agentic_api._get_focused_conversations(None, project_id="project-1") == []
+
+
+def _agent_session() -> DirectusSession:
+    return DirectusSession(user_id="agent", is_admin=True, access_token="token-1")
+
+
+def _focus_chat(count: int, project_id: str = "project-1") -> dict[str, Any]:
+    return {
+        "id": "chat-1",
+        "project_id": {"id": project_id},
+        "used_conversations": [
+            {
+                "id": index,
+                "conversation_id": {"id": f"conv-{index}", "participant_name": f"P{index}"},
+            }
+            for index in range(count)
+        ],
+    }
+
+
+@pytest.mark.asyncio
+async def test_list_focused_conversations_for_agent_pages_the_selection(monkeypatch) -> None:
+    """This is what makes the truncation line true: the focused set is
+    reachable a page at a time, and has_more says when to stop."""
+    monkeypatch.setattr(
+        agentic_api, "chat_service", _FakeChatService(chats={"chat-1": _focus_chat(25)})
+    )
+    monkeypatch.setattr(agentic_api, "_require_agent_token", lambda _auth: None)
+    monkeypatch.setattr(agentic_api, "_assert_project_access", AsyncMock(return_value=None))
+
+    first = await agentic_api.list_focused_conversations_for_agent(
+        project_id="project-1",
+        auth=_agent_session(),
+        project_chat_id="chat-1",
+        limit=10,
+        offset=0,
+    )
+    assert first["total"] == 25
+    assert first["count"] == 10
+    assert first["has_more"] is True
+    assert [c["id"] for c in first["conversations"]] == [f"conv-{i}" for i in range(10)]
+
+    last = await agentic_api.list_focused_conversations_for_agent(
+        project_id="project-1",
+        auth=_agent_session(),
+        project_chat_id="chat-1",
+        limit=10,
+        offset=20,
+    )
+    assert last["count"] == 5
+    assert last["has_more"] is False
+    assert [c["id"] for c in last["conversations"]] == [f"conv-{i}" for i in range(20, 25)]
+
+
+@pytest.mark.asyncio
+async def test_list_focused_conversations_for_agent_rejects_a_foreign_chat(monkeypatch) -> None:
+    """Same binding #906 put on every other focus read: a chat from another
+    project must not become readable through this route."""
+    monkeypatch.setattr(
+        agentic_api,
+        "chat_service",
+        _FakeChatService(chats={"chat-1": _focus_chat(3, project_id="project-2")}),
+    )
+    monkeypatch.setattr(agentic_api, "_require_agent_token", lambda _auth: None)
+    monkeypatch.setattr(agentic_api, "_assert_project_access", AsyncMock(return_value=None))
+
+    with pytest.raises(HTTPException) as excinfo:
+        await agentic_api.list_focused_conversations_for_agent(
+            project_id="project-1",
+            auth=_agent_session(),
+            project_chat_id="chat-1",
+            limit=10,
+            offset=0,
+        )
+
+    assert excinfo.value.status_code == 400
+
+
+class _RecordingDirectus:
+    """Captures the query so the offset/limit actually sent can be asserted."""
+
+    def __init__(self, rows: list[dict[str, Any]]) -> None:
+        self.rows = rows
+        self.queries: list[dict[str, Any]] = []
+
+    def get_items(self, collection: str, payload: dict[str, Any]) -> list[dict[str, Any]]:  # noqa: ARG002
+        query = payload["query"]
+        self.queries.append(query)
+        offset = int(query.get("offset") or 0)
+        limit = int(query.get("limit") or len(self.rows))
+        return self.rows[offset : offset + limit]
+
+
+def _conversation_rows(count: int) -> list[dict[str, Any]]:
+    return [
+        {
+            "id": f"conv-{index}",
+            "project_id": "project-1",
+            "participant_name": f"P{index}",
+            "summary": None,
+            "is_finished": True,
+            "is_all_chunks_transcribed": True,
+            "created_at": "2026-07-01T00:00:00Z",
+            "updated_at": "2026-07-01T00:00:00Z",
+        }
+        for index in range(count)
+    ]
+
+
+def test_list_project_conversations_for_agent_pages_with_offset() -> None:
+    """Without offset the per-call cap was a ceiling: rows past it could not be
+    reached at all, which is what made "call the list tool for the rest" false."""
+    directus_client = _RecordingDirectus(_conversation_rows(250))
+
+    first = agentic_api._list_project_conversations_for_agent(
+        project_id="project-1",
+        limit=100,
+        offset=0,
+        directus_client=directus_client,
+    )
+    assert [c["conversation_id"] for c in first["conversations"]] == [
+        f"conv-{i}" for i in range(100)
+    ]
+    assert first["offset"] == 0
+    assert first["has_more"] is True
+
+    third = agentic_api._list_project_conversations_for_agent(
+        project_id="project-1",
+        limit=100,
+        offset=200,
+        directus_client=directus_client,
+    )
+    assert [c["conversation_id"] for c in third["conversations"]] == [
+        f"conv-{i}" for i in range(200, 250)
+    ]
+    assert third["offset"] == 200
+    assert third["has_more"] is False
+
+
+def test_list_project_conversations_for_agent_still_caps_each_call() -> None:
+    """Offset makes it pageable; it does not lift the per-call ceiling."""
+    directus_client = _RecordingDirectus(_conversation_rows(500))
+
+    result = agentic_api._list_project_conversations_for_agent(
+        project_id="project-1",
+        limit=5000,
+        offset=0,
+        directus_client=directus_client,
+    )
+
+    assert len(result["conversations"]) == 100
+    # +1 is the has_more probe row, not a wider page.
+    assert directus_client.queries[-1]["limit"] == 101
 
 
 def test_assert_chat_belongs_to_project_fails_closed_when_unreadable(

@@ -1078,6 +1078,9 @@ export const addChatContext = async (
 	chatId: string,
 	options?: {
 		conversationId?: string;
+		/** An explicit pick. One request for the whole batch: the server walks
+		 * the token budget once and reports a reason per conversation. */
+		conversationIds?: string[];
 		select_all?: boolean;
 		project_id?: string;
 		tag_ids?: string[];
@@ -1087,6 +1090,7 @@ export const addChatContext = async (
 ) => {
 	return api.post<unknown, AddContextResponse>(`/chats/${chatId}/add-context`, {
 		conversation_id: options?.conversationId,
+		conversation_ids: options?.conversationIds,
 		project_id: options?.project_id,
 		search_text: options?.search_text,
 		select_all: options?.select_all,

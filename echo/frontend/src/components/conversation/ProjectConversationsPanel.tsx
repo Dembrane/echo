@@ -49,7 +49,6 @@ import { UploadConversationDropzone } from "@/components/dropzone/UploadConversa
 import { useProjectById } from "@/components/project/hooks";
 import { UploadLockedCard } from "@/components/project/UploadLockedCard";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
-import { ENABLE_CHAT_SELECT_ALL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
@@ -273,7 +272,7 @@ const ConversationRow = ({
 			checked={!!isSelected}
 			disabled={isLocked || conversation.has_transcript === false}
 			onChange={() => onToggleChecked(conversation.id)}
-			color={MODE_COLOR}
+			color="primary"
 			{...testId(`conversation-select-checkbox-${conversation.id}`)}
 		/>
 	) : null;
@@ -701,7 +700,6 @@ export const ProjectConversationsPanel = ({
 		{
 			enabled:
 				selectionMode &&
-				ENABLE_CHAT_SELECT_ALL &&
 				(chatMode === "deep_dive" || chatMode === "agentic") &&
 				!!selectionChatId,
 		},
@@ -881,7 +879,6 @@ export const ProjectConversationsPanel = ({
 				</Paper>
 
 				{selectionMode &&
-					ENABLE_CHAT_SELECT_ALL &&
 					(chatMode === "deep_dive" || chatMode === "agentic") &&
 					allConversations.length > 0 && (
 						<Button
@@ -1021,7 +1018,7 @@ export const ProjectConversationsPanel = ({
 				)}
 			</Modal>
 
-			{selectionMode && ENABLE_CHAT_SELECT_ALL && (
+			{selectionMode && (
 				<SelectAllConfirmationModal
 					opened={selectAllModalOpened}
 					onClose={() => setSelectAllModalOpened(false)}

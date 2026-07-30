@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Alert,
 	Box,
@@ -136,6 +136,12 @@ const storageKeyForChat = (chatId: string) => `agentic-run:${chatId}`;
 // Internal placeholders the agent/worker may have persisted before the
 // server-side guard landed. They are never meant to be shown to a host.
 const INTERNAL_ASSISTANT_PLACEHOLDERS = new Set(["(calling tools)"]);
+
+// Past this, naming every conversation above the composer is a wall of chips
+// that also implies the whole list reaches the assistant in one go. It does
+// not: the prompt carries a size-bounded head and the assistant pages through
+// the rest, so say that instead of listing them.
+const FOCUS_CHIP_LIMIT = 12;
 
 const isTerminalStatus = (status: AgenticRunStatus | null) =>
 	status === "completed" || status === "failed" || status === "timeout";
@@ -1840,13 +1846,26 @@ export const AgenticChatPanel = ({
 									style={{ borderColor: "var(--mantine-color-primary-light)" }}
 								>
 									<Text size="xs" c="dimmed" fw={500}>
-										<Trans>Focusing on:</Trans>
+										<Plural
+											value={focusedContextConversations.length}
+											one="Focusing on # conversation:"
+											other="Focusing on # conversations:"
+										/>
 									</Text>
-									<ConversationLinks
-										conversations={
-											focusedContextConversations as unknown as Conversation[]
-										}
-									/>
+									{focusedContextConversations.length <= FOCUS_CHIP_LIMIT ? (
+										<ConversationLinks
+											conversations={
+												focusedContextConversations as unknown as Conversation[]
+											}
+										/>
+									) : (
+										<Text size="xs">
+											<Trans>
+												Too many to list here. The assistant reads through them
+												in batches.
+											</Trans>
+										</Text>
+									)}
 									<Button
 										variant="subtle"
 										size="compact-xs"
