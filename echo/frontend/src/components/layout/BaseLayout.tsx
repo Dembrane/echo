@@ -6,7 +6,7 @@ import { AppBreadcrumbs } from "@/features/sidebar/breadcrumbs/AppBreadcrumbs";
 import { InboxView } from "@/features/sidebar/views/InboxView";
 import { useSidebarState } from "@/features/sidebar/hooks/useSidebarState";
 import { ActionIcon } from "@mantine/core";
-import { List } from "@phosphor-icons/react";
+import { SidebarSimple } from "@phosphor-icons/react";
 import { Toaster } from "../common/Toaster";
 import { ErrorBoundary } from "../error/ErrorBoundary";
 import { TransitionCurtainProvider } from "./TransitionCurtainProvider";
@@ -55,7 +55,7 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 									aria-label="Expand sidebar"
 									size={32}
 								>
-									<List size={20} />
+									<SidebarSimple size={20} />
 								</ActionIcon>
 							</div>
 						)}
