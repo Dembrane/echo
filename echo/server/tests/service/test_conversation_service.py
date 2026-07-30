@@ -208,11 +208,11 @@ def test_conversation_service_property_getters():
     """Test that service dependencies are properly set on initialization."""
     from dembrane.service.file import get_file_service
     from dembrane.service.project import ProjectService
-    
+
     # Create service instances
     file_service = get_file_service()
     project_svc = ProjectService()
-    
+
     # Create conversation service with dependencies
     service = ConversationService(
         file_service=file_service,

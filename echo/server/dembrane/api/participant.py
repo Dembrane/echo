@@ -407,12 +407,14 @@ async def upload_conversation_text(
 
         return chunk
 
-    except ConversationServiceException as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+    except ConversationNotFoundException as e:
+        raise HTTPException(status_code=404, detail="Conversation not found") from e
     except ConversationNotOpenForParticipationException as e:
         raise HTTPException(
             status_code=403, detail="Conversation not open for participation"
         ) from e
+    except ConversationServiceException as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @ParticipantRouter.post(
@@ -433,6 +435,8 @@ async def upload_conversation_chunk(
             source=source,
             file_obj=chunk,
         )
+    except ConversationNotFoundException as e:
+        raise HTTPException(status_code=404, detail="Conversation not found") from e
     except ConversationNotOpenForParticipationException as e:
         raise HTTPException(
             status_code=403, detail="Conversation not open for participation"
