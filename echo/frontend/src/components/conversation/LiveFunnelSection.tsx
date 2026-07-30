@@ -15,6 +15,11 @@ import {
 import { ConversationDrilldownModal } from "./ConversationDrilldownModal";
 import { FunnelCanvas, type NodeDatum } from "./FunnelCanvas";
 import { MonitorBadge } from "./MonitorBadge";
+import {
+	isFinishedSession,
+	isLiveRecording,
+	isOnRecordingPage,
+} from "./monitorGrouping";
 
 const weakNetwork = (
 	network: { online?: boolean; effective_type?: string } | null,
@@ -167,27 +172,52 @@ export const LiveFunnelSection = ({
 		conversations.find((c) => c.id === selectedConversationId) ?? null;
 
 	const { nodes, counts, weights } = useMemo(() => {
-		const recording = conversations.filter((c) => c.is_live);
+		// Three conversation columns: on the recording page (waiting, paused,
+		// away), actually live, then finished (finished cleanly, or left without
+		// finishing). Offline is the one status with no column; see monitorGrouping.
+		const onPage = conversations.filter(isOnRecordingPage);
+		const live = conversations.filter(isLiveRecording);
+		const finished = conversations.filter(isFinishedSession);
 		const visitorNodes: NodeDatum[] = funnel.visitors.map((data) => ({
+			column: data.stage === "scanned" ? 0 : 1,
 			data,
 			kind: "visitor",
 		}));
-		const recordingNodes: NodeDatum[] = recording.map((data) => ({
+		const onPageNodes: NodeDatum[] = onPage.map((data) => ({
+			column: 2,
+			data,
+			kind: "conversation",
+		}));
+		const liveNodes: NodeDatum[] = live.map((data) => ({
+			column: 3,
+			data,
+			kind: "conversation",
+		}));
+		const finishedNodes: NodeDatum[] = finished.map((data) => ({
+			column: 4,
 			data,
 			kind: "conversation",
 		}));
 		const scanned = funnel.visitors.filter((v) => v.stage === "scanned").length;
 		const setup = funnel.visitors.length - scanned;
 		return {
-			counts: { recording: recording.length, scanned, setup },
-			nodes: [...visitorNodes, ...recordingNodes],
-			// Empty stages shrink; recording carries extra weight so an
-			// all-recording view reads ~25/25/50.
+			counts: {
+				finished: finished.length,
+				live: live.length,
+				onPage: onPage.length,
+				scanned,
+				setup,
+			},
+			nodes: [...visitorNodes, ...onPageNodes, ...liveNodes, ...finishedNodes],
+			// Empty stages shrink; live carries extra weight so an all-recording
+			// view still gives the live column the most room.
 			weights: [
 				Math.max(1, scanned),
 				Math.max(1, setup),
-				Math.max(2, recording.length),
-			] as [number, number, number],
+				Math.max(1, onPage.length),
+				Math.max(2, live.length),
+				Math.max(1, finished.length),
+			],
 		};
 	}, [funnel.visitors, conversations]);
 
@@ -227,9 +257,19 @@ export const LiveFunnelSection = ({
 							weight={weights[1]}
 						/>
 						<StageLabel
-							label={t`Recording`}
-							count={counts.recording}
+							label={t`Recording page`}
+							count={counts.onPage}
 							weight={weights[2]}
+						/>
+						<StageLabel
+							label={t`Live`}
+							count={counts.live}
+							weight={weights[3]}
+						/>
+						<StageLabel
+							label={t`Finished`}
+							count={counts.finished}
+							weight={weights[4]}
 						/>
 					</Group>
 					<FunnelCanvas

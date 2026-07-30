@@ -29,17 +29,22 @@ const stateMeta = (state: ParticipantState): StateMeta => {
 			return { color: "primary", label: t`Finishing` };
 		case "finished":
 			return { color: "primary", label: t`Finished` };
+		// On the recording page but not capturing yet. Grey: nothing to act on.
 		case "waiting":
-			return { color: "gray", label: t`Waiting` };
+			return { color: "gray", label: t`On recording page` };
 		case "initiated":
 			return { color: "gray", label: t`Just started` };
 		// Solid fill so offline stands out (mauve's light tint is near-white).
 		case "offline":
 			return { color: "mauve", label: t`Offline`, variant: "filled" };
+		// left / backgrounded (away) join paused on yellow: the participant
+		// reached the recording page but audio is not flowing, so a host may want
+		// to walk over. This follows the existing `paused` treatment rather than
+		// introducing a new colour; accents stay decorative everywhere else.
 		case "left":
-			return { color: "gray", label: t`Left` };
+			return { color: "yellow", label: t`Left` };
 		case "backgrounded":
-			return { color: "gray", label: t`Away` };
+			return { color: "yellow", label: t`Away` };
 		default:
 			return { color: "gray", label: t`Idle` };
 	}
