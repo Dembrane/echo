@@ -73,7 +73,11 @@ import { useConversationsCountByProjectId } from "@/components/conversation/hook
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { useProjectById } from "@/components/project/hooks";
-import { API_BASE_URL, ENABLE_AGENTIC_CHAT } from "@/config";
+import {
+	AGENTIC_CHAT_IS_DEFAULT,
+	API_BASE_URL,
+	ENABLE_AGENTIC_CHAT,
+} from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
@@ -81,6 +85,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { FREE_TIER_MAX_CHAT_USER_TURNS } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
+import { resolveChatScreen } from "./chatModeRouting";
 import { testId } from "@/lib/testUtils";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
@@ -332,6 +337,18 @@ export const ProjectChatRoute = () => {
 	>(null);
 	const [conversationPickerOpen, setConversationPickerOpen] = useState(false);
 	const queryPrefillStartedRef = useRef(false);
+	// A question typed on the Ask home page arrives as router state. The
+	// agentic panel consumes this itself; this route consumes it for every
+	// other mode (deep_dive, legacy overview), so Specific Details (the new
+	// default) never silently drops what the host typed. Read once at mount,
+	// exactly like AgenticChatPanel's own initialMessageRef.
+	const initialMessageRef = useRef<string | null>(
+		typeof (location.state as { initialMessage?: unknown } | null)
+			?.initialMessage === "string"
+			? (location.state as { initialMessage: string }).initialMessage
+			: null,
+	);
+	const pendingInitialMessageRef = useRef<string | null>(null);
 
 	const handleSaveAsTemplate = (content: string) => {
 		setSaveAsTemplateContent(content);
@@ -344,6 +361,9 @@ export const ProjectChatRoute = () => {
 	const rawChatMode = chatContextQuery.data?.chat_mode;
 	const hasLockedConversations =
 		(chatContextQuery.data?.locked_conversation_id_list?.length ?? 0) > 0;
+	// Same legacy rule the screen resolver applies (see ./chatModeRouting):
+	// a mode-less chat that locked context predates chat_mode and renders as
+	// Specific Details.
 	const isLegacyChat = rawChatMode == null && hasLockedConversations;
 	const chatMode = isLegacyChat ? "deep_dive" : rawChatMode;
 	const isModeSelected = chatMode !== null && chatMode !== undefined;
@@ -496,6 +516,24 @@ export const ProjectChatRoute = () => {
 	} = useDembraneChat({ chatId: chatId ?? "" });
 	const normalizedInput = typeof input === "string" ? input : "";
 
+	// Which screen this chat opens on. Pure and unit-tested in
+	// ./chatModeRouting, because setting a mode is one-way: the server refuses
+	// to change chat_mode once set, so a wrong call here cannot be walked back.
+	const { screen: chatScreen } = resolveChatScreen({
+		agenticIsDefault: AGENTIC_CHAT_IS_DEFAULT,
+		hasLockedConversations,
+		messageCount: messages.length,
+		rawChatMode,
+	});
+
+	// Specific Details answers out of the conversations attached to the chat.
+	// Mirrors the "Select conversations to continue" alert further down.
+	const noConversationsSelected =
+		contextToBeAdded?.conversations?.length === 0 &&
+		contextToBeAdded?.locked_conversations?.length === 0;
+	const needsConversations =
+		chatMode !== "overview" && Boolean(noConversationsSelected);
+
 	useEffect(() => {
 		if (chatContextQuery.isLoading) return;
 		if (isAgenticMode) return;
@@ -536,16 +574,51 @@ export const ProjectChatRoute = () => {
 		handleSubmit();
 	};
 
+	// Step 1: once the chat is ready and its mode resolved, type the seeded
+	// question into the input, same as a host would. Runs once.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: setInput identity changes per render; the ref guards a single run
+	useEffect(() => {
+		if (!initialMessageRef.current) return;
+		if (isInitializing || chatQuery.isLoading || chatContextQuery.isLoading)
+			return;
+		if (isAgenticMode) return; // AgenticChatPanel seeds its own first message
+		if (!isModeSelected) return;
+		if (messages.length > 0) return;
+		const seed = initialMessageRef.current;
+		initialMessageRef.current = null;
+		window.history.replaceState({}, "");
+		pendingInitialMessageRef.current = seed;
+		setInput(seed);
+	}, [
+		isInitializing,
+		chatQuery.isLoading,
+		chatContextQuery.isLoading,
+		isAgenticMode,
+		isModeSelected,
+		messages.length,
+	]);
+
+	// Step 2: once the input reflects the seeded text, send it through the
+	// same path a manual Enter/Send would use (turn-limit guard, conversation
+	// lock, posthog capture). Consumed exactly once via the ref.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: guardedSubmit is recreated per render; the ref guards a single run
+	useEffect(() => {
+		if (!pendingInitialMessageRef.current) return;
+		if (normalizedInput !== pendingInitialMessageRef.current) return;
+		pendingInitialMessageRef.current = null;
+		// With nothing attached, Specific Details has no conversations to answer
+		// from. Leave the question in the box and let the alert below ask for a
+		// selection first, instead of firing an answerless turn.
+		if (needsConversations) return;
+		guardedSubmit();
+	}, [normalizedInput, needsConversations]);
+
 	// check if assistant is typing by determining if the last message is an assistant message and has a text part
 	const isAssistantTyping =
 		messages &&
 		messages.length > 0 &&
 		messages[messages.length - 1].role === "assistant" &&
 		messages[messages.length - 1].parts?.some((part) => part.type === "text");
-
-	const noConversationsSelected =
-		contextToBeAdded?.conversations?.length === 0 &&
-		contextToBeAdded?.locked_conversations?.length === 0;
 
 	const computedChatForCopy = useMemo(() => {
 		const messagesList = messages.map((message) =>
@@ -638,9 +711,11 @@ export const ProjectChatRoute = () => {
 		);
 	}
 
-	// Agentic-only experience: a chat without a mode (and without legacy
-	// markers) becomes agentic automatically; hosts never pick a mode.
-	if (!isModeSelected && ENABLE_AGENTIC_CHAT) {
+	// Only auto-assign a mode when agentic is the default, and only for a chat
+	// with nothing in it. Availability is not default-ness: thousands of chats
+	// still carry chat_mode NULL, and converting one on open would hide its
+	// existing thread behind the agentic panel with no way back.
+	if (chatScreen === "agentic-auto") {
 		return (
 			<AutoInitializeAgentic
 				chatId={chatId ?? ""}
@@ -650,8 +725,10 @@ export const ProjectChatRoute = () => {
 		);
 	}
 
-	// Legacy mode selector (environments where agentic chat is off)
-	if (!isModeSelected) {
+	// A mode-less chat with no messages has nothing to lose, so let the host
+	// pick. One that already has a thread falls through to it below and is
+	// never offered the choice.
+	if (chatScreen === "mode-picker") {
 		return (
 			<Box className="flex min-h-full items-center justify-center px-2 pr-4">
 				<ChatModeSelector
@@ -908,7 +985,7 @@ export const ProjectChatRoute = () => {
 							</Button>
 						</Group>
 					)}
-					{chatMode !== "overview" && noConversationsSelected && (
+					{needsConversations && (
 						<Alert
 							icon={<IconAlertCircle size="1rem" />}
 							title={t`Select conversations to continue`}

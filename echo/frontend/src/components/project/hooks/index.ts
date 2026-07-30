@@ -1,5 +1,5 @@
 import type { Query } from "@directus/sdk";
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import {
 	useInfiniteQuery,
 	useMutation,
@@ -7,11 +7,11 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
-import { useAddChatContextMutation } from "@/components/conversation/hooks";
 import { API_BASE_URL } from "@/config";
 import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
+	addChatContext,
 	api,
 	type CreateCustomTopicPayload,
 	cloneProjectById,
@@ -346,12 +346,10 @@ export const useDeleteTagByIdMutation = () => {
 export const useCreateChatMutation = () => {
 	const navigate = useI18nNavigate();
 	const queryClient = useQueryClient();
-	const addChatContextMutation = useAddChatContextMutation();
 	const { workspaceId } = useParams();
 	return useMutation({
 		mutationFn: async (payload: {
 			navigateToNewChat?: boolean;
-			conversationId?: string;
 			project_id: {
 				id: string;
 			};
@@ -376,20 +374,89 @@ export const useCreateChatMutation = () => {
 				);
 			}
 
-			if (payload.conversationId) {
-				addChatContextMutation.mutate({
-					chatId: chat.id,
-					conversationId: payload.conversationId,
-				});
-			}
-
 			return chat;
 		},
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.project_id.id, "chats"],
 			});
-			toast.success("Chat created successfully");
+			toast.success(t`Chat created`);
+		},
+	});
+};
+
+/**
+ * Attaches conversations picked before the chat existed, in one request.
+ *
+ * One call, not one per conversation. The server walks the whole batch in
+ * order against a single running token budget, so it can attach as much as
+ * fits and tell us exactly why it stopped. Firing a request per conversation
+ * instead lets each one read the same starting context and pass, which puts a
+ * Specific Details chat over its context limit and breaks its next message.
+ *
+ * Call this after initialize-mode: the server skips the budget for agentic
+ * chats, and it can only tell that a chat is agentic once chat_mode is set.
+ */
+export const useAttachChatConversationsMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (payload: {
+			chatId: string;
+			projectId: string;
+			conversationIds: string[];
+		}) => {
+			return addChatContext(payload.chatId, {
+				conversationIds: payload.conversationIds,
+				project_id: payload.projectId,
+			});
+		},
+		onError: () => {
+			// The chat itself is fine, so keep it and say what did not happen.
+			toast.error(t`Could not add your conversations to this chat`);
+		},
+		onSuccess: (response, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["chats", variables.chatId],
+			});
+
+			const skipped = response?.skipped ?? [];
+			if (skipped.length === 0) return;
+
+			// Say why, not just how many. The context limit is the one a host can
+			// act on (drop a conversation, or ask a narrower question).
+			const overLimit = skipped.filter(
+				(item) =>
+					item.reason === "context_limit_reached" || item.reason === "too_long",
+			).length;
+			const empty = skipped.filter((item) => item.reason === "empty").length;
+
+			if (overLimit > 0) {
+				toast.error(
+					plural(overLimit, {
+						one: "# conversation did not fit in this chat. Start another chat to cover the rest.",
+						other:
+							"# conversations did not fit in this chat. Start another chat to cover the rest.",
+					}),
+				);
+				return;
+			}
+
+			if (empty === skipped.length) {
+				toast.error(
+					plural(empty, {
+						one: "# conversation has no transcript yet, so it was left out.",
+						other: "# conversations have no transcript yet, so they were left out.",
+					}),
+				);
+				return;
+			}
+
+			toast.error(
+				plural(skipped.length, {
+					one: "# conversation could not be added to this chat.",
+					other: "# conversations could not be added to this chat.",
+				}),
+			);
 		},
 	});
 };

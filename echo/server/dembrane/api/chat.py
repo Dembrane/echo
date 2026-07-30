@@ -46,9 +46,12 @@ suggestions_rate_limiter = create_rate_limiter(
 logger = logging.getLogger("dembrane.chat")
 
 settings = get_settings()
-ENABLE_CHAT_SELECT_ALL = settings.feature_flags.enable_chat_select_all
 
 CONVERSATION_LOCKED_ERROR = "conversation_locked"
+
+# Upper bound on one add-context batch, for both select_all and an explicit
+# conversation_ids pick. Matches the ceiling select_all has always fetched at.
+MAX_ADD_CONTEXT_CONVERSATIONS = 1000
 
 
 async def _resolve_workspace_tier(project_id: str) -> Optional[str]:
@@ -241,7 +244,6 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
     used_conversation_links = chat.get("used_conversations") or []
     logger.debug("Used conversation links: %s", used_conversation_links)
 
-
     # Get chat mode (may be None if not yet selected)
     chat_mode = chat.get("chat_mode")
 
@@ -315,6 +317,10 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
 
 class ChatAddContextSchema(BaseModel):
     conversation_id: Optional[str] = None
+    # An explicit pick, e.g. the conversations chosen on the Ask screen before
+    # the chat existed. Attached in one request so the token budget is walked
+    # once, server-side, instead of once per parallel request.
+    conversation_ids: Optional[List[str]] = None
     select_all: Optional[bool] = None
     project_id: Optional[str] = None
     tag_ids: Optional[List[str]] = None
@@ -327,7 +333,8 @@ class SelectAllConversationResult(BaseModel):
     participant_name: str
     success: bool
     reason: Optional[str] = (
-        None  # "added", "already_in_context", "context_limit_reached", "empty", "too_long"
+        None  # "added", "already_in_context", "context_limit_reached", "empty",
+        # "too_long", "locked", "not_found", "error"
     )
 
 
@@ -338,130 +345,89 @@ class AddContextResponseSchema(BaseModel):
     context_limit_reached: Optional[bool] = None
 
 
-@ChatRouter.post("/{chat_id}/add-context", response_model=AddContextResponseSchema)
-async def add_chat_context(
+async def _attach_conversations_within_budget(
+    *,
     chat_id: str,
-    body: ChatAddContextSchema,
-    auth: DependencyDirectusSession,
+    chat: dict,
+    auth: DirectusSession,
+    project_id: str,
+    candidates: List[dict],
+    extra_skipped: Optional[List[SelectAllConversationResult]] = None,
 ) -> AddContextResponseSchema:
-    chat = await raise_if_chat_not_found_or_not_authorized(
-        chat_id,
-        auth,
-        include_used_conversations=True,
-    )
-    _raise_if_project_mismatch(chat, body.project_id)
+    """Attach as many of `candidates` as this chat can take, in order.
+
+    Shared by every batch entry point (filter-driven select_all and the
+    explicit conversation_ids pick) so the token budget is walked in exactly
+    one place: each conversation's cost accumulates, and once the budget runs
+    out the rest are reported as skipped rather than failing the whole batch.
+    That accumulation is the reason batches must not be split into parallel
+    single-conversation requests, which each read the same starting context.
+
+    Agentic chats preload nothing (the attached rows are only a focus hint the
+    agent reads on demand), so they skip the budget entirely. Same bypass the
+    single-conversation path uses.
+    """
+    from dembrane.free_tier import conversation_is_locked
 
     chat_svc = chat_service
-    conversation_svc = conversation_service
 
-    project_id: Optional[str] = body.project_id or _chat_project_id(chat)
+    enforce_budget = chat.get("chat_mode") != "agentic"
 
-    options_provided = sum(
-        [
-            body.conversation_id is not None,
-            body.select_all is not None,
-        ]
-    )
+    # Conversations already attached to this chat.
+    existing_ids = {
+        (link.get("conversation_id") or {}).get("id")
+        for link in (chat.get("used_conversations") or [])
+    }
 
-    if options_provided == 0:
-        raise HTTPException(
-            status_code=400,
-            detail="conversation_id or select_all is required",
-        )
-
-    if options_provided > 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Only one of conversation_id or select_all can be provided",
-        )
-
-    # Handle select_all
-    if body.select_all is True:
-        if not ENABLE_CHAT_SELECT_ALL:
-            raise HTTPException(
-                status_code=403,
-                detail="Chat select all feature is not enabled",
-            )
-
-        if not project_id:
-            raise HTTPException(
-                status_code=400,
-                detail="project_id is required when select_all is True",
-            )
-
-        try:
-            logger.info(
-                f"Select All: Fetching conversations - "
-                f"project_id={project_id}, tags={body.tag_ids}, verified={body.verified_only}, search='{body.search_text}'"
-            )
-
-            all_conversations = await run_in_thread_pool(
-                conversation_svc.list_by_project_with_filters,
-                project_id=project_id,
-                tag_ids=body.tag_ids,
-                verified_only=body.verified_only or False,
-                search_text=body.search_text,
-                sort="-created_at",
-                limit=1000,
-            )
-
-            logger.info(f"Select All: Fetched {len(all_conversations)} conversations")
-        except Exception as e:
-            logger.error(f"Failed to fetch conversations with filters: {e}")
-            raise
-
-        # Get existing conversation IDs in the chat
-        existing_ids = {
-            (link.get("conversation_id") or {}).get("id")
-            for link in (chat.get("used_conversations") or [])
-        }
-
-        # Get current chat context to track token usage
+    current_token_usage = 0.0
+    if enforce_budget:
         chat_context = await get_chat_context(chat_id, auth)
         current_token_usage = sum(
             conversation_entry.token_usage for conversation_entry in chat_context.conversations
         )
 
-        workspace_tier = await _resolve_workspace_tier(project_id)
-        from dembrane.free_tier import conversation_is_locked
+    workspace_tier = await _resolve_workspace_tier(project_id)
 
-        # One grouped aggregate instead of fetching every chunk transcript.
-        # Guard the empty case: an empty _in has historically degenerated into
-        # a full-table grouped scan in Directus.
-        candidate_ids = [c["id"] for c in all_conversations if c.get("id")]
-        has_content_ids: set[str] = set()
-        if candidate_ids:
-            content_rows = await async_directus.get_items(
-                "conversation_chunk",
-                {
-                    "query": {
-                        "filter": {
-                            "conversation_id": {"_in": candidate_ids},
-                            "transcript": {"_nempty": True},
-                        },
-                        "aggregate": {"count": ["id"]},
-                        "groupBy": ["conversation_id"],
-                        # Directus caps grouped rows at its default limit (100).
-                        "limit": -1,
-                    }
-                },
+    # One grouped aggregate instead of fetching every chunk transcript.
+    # Guard the empty case: an empty _in has historically degenerated into
+    # a full-table grouped scan in Directus.
+    candidate_ids = [c["id"] for c in candidates if c.get("id")]
+    has_content_ids: set[str] = set()
+    if candidate_ids:
+        content_rows = await async_directus.get_items(
+            "conversation_chunk",
+            {
+                "query": {
+                    "filter": {
+                        "conversation_id": {"_in": candidate_ids},
+                        "transcript": {"_nempty": True},
+                    },
+                    "aggregate": {"count": ["id"]},
+                    "groupBy": ["conversation_id"],
+                    # Directus caps grouped rows at its default limit (100).
+                    "limit": -1,
+                }
+            },
+        )
+        # A non-list envelope is a Directus error, not "no content": surface
+        # it instead of silently marking every conversation empty.
+        if not isinstance(content_rows, list):
+            raise HTTPException(
+                status_code=503,
+                detail="Could not check conversation content. Please try again.",
             )
-            # A non-list envelope is a Directus error, not "no content": surface
-            # it instead of silently marking every conversation empty.
-            if not isinstance(content_rows, list):
-                raise HTTPException(
-                    status_code=503,
-                    detail="Could not check conversation content. Please try again.",
-                )
-            for row in content_rows:
-                cid = row.get("conversation_id")
-                if cid and int((row.get("count") or {}).get("id") or 0) > 0:
-                    has_content_ids.add(cid)
+        for row in content_rows:
+            cid = row.get("conversation_id")
+            if cid and int((row.get("count") or {}).get("id") or 0) > 0:
+                has_content_ids.add(cid)
 
-        # Bulk token counts for candidates that could still be added.
+    # Bulk token counts for candidates that could still be added. Agentic
+    # never reads these, so don't pay for them.
+    token_counts_by_id: Dict[str, int] = {}
+    if enforce_budget:
         need_tokens = [
             c["id"]
-            for c in all_conversations
+            for c in candidates
             if c.get("id")
             and c["id"] not in existing_ids
             and c["id"] in has_content_ids
@@ -471,55 +437,54 @@ async def add_chat_context(
             need_tokens, auth, project_id=project_id
         )
 
-        added: List[SelectAllConversationResult] = []
-        skipped: List[SelectAllConversationResult] = []
-        context_limit_reached = False
-        to_attach: List[str] = []
+    added: List[SelectAllConversationResult] = []
+    skipped: List[SelectAllConversationResult] = list(extra_skipped or [])
+    context_limit_reached = False
+    to_attach: List[str] = []
 
-        for conversation in all_conversations:
-            conv_id = conversation.get("id")
-            participant_name = str(conversation.get("participant_name") or "Unknown")
+    for conversation in candidates:
+        conv_id = conversation.get("id")
+        participant_name = str(conversation.get("participant_name") or "Unknown")
 
-            if not conv_id:
-                continue
+        if not conv_id:
+            continue
 
-            if conversation_is_locked(conversation, workspace_tier):
-                skipped.append(
-                    SelectAllConversationResult(
-                        conversation_id=conv_id,
-                        participant_name=participant_name,
-                        success=False,
-                        reason="locked",
-                    )
+        if conversation_is_locked(conversation, workspace_tier):
+            skipped.append(
+                SelectAllConversationResult(
+                    conversation_id=conv_id,
+                    participant_name=participant_name,
+                    success=False,
+                    reason="locked",
                 )
-                continue
+            )
+            continue
 
-            # Skip if already in context
-            if conv_id in existing_ids:
-                skipped.append(
-                    SelectAllConversationResult(
-                        conversation_id=conv_id,
-                        participant_name=participant_name,
-                        success=False,
-                        reason="already_in_context",
-                    )
+        # Skip if already in context
+        if conv_id in existing_ids:
+            skipped.append(
+                SelectAllConversationResult(
+                    conversation_id=conv_id,
+                    participant_name=participant_name,
+                    success=False,
+                    reason="already_in_context",
                 )
-                continue
+            )
+            continue
 
-            # Check if conversation has content
-            has_content = conv_id in has_content_ids
-
-            if not has_content:
-                skipped.append(
-                    SelectAllConversationResult(
-                        conversation_id=conv_id,
-                        participant_name=participant_name,
-                        success=False,
-                        reason="empty",
-                    )
+        # Check if conversation has content
+        if conv_id not in has_content_ids:
+            skipped.append(
+                SelectAllConversationResult(
+                    conversation_id=conv_id,
+                    participant_name=participant_name,
+                    success=False,
+                    reason="empty",
                 )
-                continue
+            )
+            continue
 
+        if enforce_budget:
             # If context limit already reached, skip remaining conversations
             if context_limit_reached:
                 skipped.append(
@@ -544,7 +509,6 @@ async def add_chat_context(
                 )
                 continue
 
-            # Get token count for this conversation
             token_count = token_counts_by_id.get(conv_id, 0)
 
             # Check if single conversation is too long
@@ -573,51 +537,189 @@ async def add_chat_context(
                 )
                 continue
 
-            # Update tracking
             current_token_usage += conversation_usage
-            existing_ids.add(conv_id)
-            to_attach.append(conv_id)
 
-            added.append(
+        existing_ids.add(conv_id)
+        to_attach.append(conv_id)
+
+        added.append(
+            SelectAllConversationResult(
+                conversation_id=conv_id,
+                participant_name=participant_name,
+                success=True,
+                reason="added",
+            )
+        )
+
+    # Single bulk attach for everything accepted above.
+    if to_attach:
+        try:
+            await run_in_thread_pool(chat_svc.attach_conversations, chat_id, to_attach)
+        except Exception as exc:
+            logger.warning("Bulk attach failed for chat %s: %s", chat_id, exc)
+            added_snapshot = list(added)
+            attach_failed = set(to_attach)
+            added = [a for a in added if a.conversation_id not in attach_failed]
+            skipped.extend(
                 SelectAllConversationResult(
-                    conversation_id=conv_id,
-                    participant_name=participant_name,
-                    success=True,
-                    reason="added",
+                    conversation_id=cid,
+                    participant_name=next(
+                        (a.participant_name for a in added_snapshot if a.conversation_id == cid),
+                        "Unknown",
+                    ),
+                    success=False,
+                    reason="error",
                 )
+                for cid in to_attach
             )
 
-        # Single bulk attach for everything accepted above.
-        if to_attach:
-            try:
-                await run_in_thread_pool(chat_svc.attach_conversations, chat_id, to_attach)
-            except Exception as exc:
-                logger.warning("Bulk attach failed for chat %s: %s", chat_id, exc)
-                added_snapshot = list(added)
-                attach_failed = set(to_attach)
-                added = [a for a in added if a.conversation_id not in attach_failed]
-                skipped.extend(
-                    SelectAllConversationResult(
-                        conversation_id=cid,
-                        participant_name=next(
-                            (
-                                a.participant_name
-                                for a in added_snapshot
-                                if a.conversation_id == cid
-                            ),
-                            "Unknown",
-                        ),
-                        success=False,
-                        reason="error",
-                    )
-                    for cid in to_attach
-                )
+    return AddContextResponseSchema(
+        added=added,
+        skipped=skipped,
+        total_processed=len(candidates) + len(extra_skipped or []),
+        context_limit_reached=context_limit_reached,
+    )
 
-        return AddContextResponseSchema(
-            added=added,
-            skipped=skipped,
-            total_processed=len(all_conversations),
-            context_limit_reached=context_limit_reached,
+
+@ChatRouter.post("/{chat_id}/add-context", response_model=AddContextResponseSchema)
+async def add_chat_context(
+    chat_id: str,
+    body: ChatAddContextSchema,
+    auth: DependencyDirectusSession,
+) -> AddContextResponseSchema:
+    chat = await raise_if_chat_not_found_or_not_authorized(
+        chat_id,
+        auth,
+        include_used_conversations=True,
+    )
+    _raise_if_project_mismatch(chat, body.project_id)
+
+    chat_svc = chat_service
+    conversation_svc = conversation_service
+
+    project_id: Optional[str] = body.project_id or _chat_project_id(chat)
+
+    options_provided = sum(
+        [
+            body.conversation_id is not None,
+            body.conversation_ids is not None,
+            body.select_all is not None,
+        ]
+    )
+
+    if options_provided == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="One of conversation_id, conversation_ids or select_all is required",
+        )
+
+    if options_provided > 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Only one of conversation_id, conversation_ids or select_all can be provided",
+        )
+
+    # Handle select_all
+    if body.select_all is True:
+        if not project_id:
+            raise HTTPException(
+                status_code=400,
+                detail="project_id is required when select_all is True",
+            )
+
+        try:
+            logger.info(
+                f"Select All: Fetching conversations - "
+                f"project_id={project_id}, tags={body.tag_ids}, verified={body.verified_only}, search='{body.search_text}'"
+            )
+
+            all_conversations = await run_in_thread_pool(
+                conversation_svc.list_by_project_with_filters,
+                project_id=project_id,
+                tag_ids=body.tag_ids,
+                verified_only=body.verified_only or False,
+                search_text=body.search_text,
+                sort="-created_at",
+                limit=MAX_ADD_CONTEXT_CONVERSATIONS,
+            )
+
+            logger.info(f"Select All: Fetched {len(all_conversations)} conversations")
+        except Exception as e:
+            logger.error(f"Failed to fetch conversations with filters: {e}")
+            raise
+
+        return await _attach_conversations_within_budget(
+            chat_id=chat_id,
+            chat=chat,
+            auth=auth,
+            project_id=project_id,
+            candidates=all_conversations,
+        )
+
+    # An explicit pick, e.g. the conversations chosen on the Ask screen before
+    # the chat existed. One request for the whole batch, so the token budget is
+    # walked once and accumulates, instead of N parallel requests that each
+    # read the same empty context and all pass.
+    if body.conversation_ids is not None:
+        if not project_id:
+            raise HTTPException(
+                status_code=400,
+                detail="project_id is required when conversation_ids is provided",
+            )
+
+        requested_ids: List[str] = []
+        for requested_id in body.conversation_ids:
+            if requested_id and requested_id not in requested_ids:
+                requested_ids.append(requested_id)
+
+        if not requested_ids:
+            raise HTTPException(
+                status_code=400,
+                detail="conversation_ids cannot be empty",
+            )
+
+        if len(requested_ids) > MAX_ADD_CONTEXT_CONVERSATIONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot add more than {MAX_ADD_CONTEXT_CONVERSATIONS} conversations at once",
+            )
+
+        found = await run_in_thread_pool(
+            conversation_svc.list_by_project_with_filters,
+            project_id=project_id,
+            conversation_ids=requested_ids,
+            limit=len(requested_ids),
+        )
+        # The lookup is scoped to the chat's project, so anything missing here
+        # belongs to another project or no longer exists. Report it instead of
+        # dropping it silently. Order follows the host's pick, which is the
+        # order the budget is then spent in.
+        found_by_id = {
+            conversation["id"]: conversation for conversation in found if conversation.get("id")
+        }
+        candidates = [
+            found_by_id[requested_id]
+            for requested_id in requested_ids
+            if requested_id in found_by_id
+        ]
+        not_found = [
+            SelectAllConversationResult(
+                conversation_id=requested_id,
+                participant_name="Unknown",
+                success=False,
+                reason="not_found",
+            )
+            for requested_id in requested_ids
+            if requested_id not in found_by_id
+        ]
+
+        return await _attach_conversations_within_budget(
+            chat_id=chat_id,
+            chat=chat,
+            auth=auth,
+            project_id=project_id,
+            candidates=candidates,
+            extra_skipped=not_found,
         )
 
     if body.conversation_id is not None:
@@ -641,21 +743,27 @@ async def add_chat_context(
         if body.conversation_id in existing_ids:
             raise HTTPException(status_code=400, detail="Conversation already in the chat")
 
-        token_count = await get_conversation_token_count(body.conversation_id, auth)
-        if token_count > MAX_CHAT_CONTEXT_LENGTH:
-            raise HTTPException(status_code=400, detail="Conversation is too long")
+        # The transcript token budget only makes sense for deep_dive, which
+        # preloads full transcripts into the context window. Agentic preloads
+        # nothing: the attached rows are just a focus hint the agent reads on
+        # demand, so gating them against MAX_CHAT_CONTEXT_LENGTH would reject
+        # perfectly fine selections for no reason.
+        if chat.get("chat_mode") != "agentic":
+            token_count = await get_conversation_token_count(body.conversation_id, auth)
+            if token_count > MAX_CHAT_CONTEXT_LENGTH:
+                raise HTTPException(status_code=400, detail="Conversation is too long")
 
-        chat_context = await get_chat_context(chat_id, auth)
-        chat_context_token_usage = sum(
-            conversation_entry.token_usage for conversation_entry in chat_context.conversations
-        )
-
-        conversation_to_add_usage = token_count / MAX_CHAT_CONTEXT_LENGTH
-        if chat_context_token_usage + conversation_to_add_usage > 1:
-            raise HTTPException(
-                status_code=400,
-                detail="Chat context is too long. Remove other conversations to proceed.",
+            chat_context = await get_chat_context(chat_id, auth)
+            chat_context_token_usage = sum(
+                conversation_entry.token_usage for conversation_entry in chat_context.conversations
             )
+
+            conversation_to_add_usage = token_count / MAX_CHAT_CONTEXT_LENGTH
+            if chat_context_token_usage + conversation_to_add_usage > 1:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Chat context is too long. Remove other conversations to proceed.",
+                )
 
         await run_in_thread_pool(
             chat_svc.attach_conversations,
@@ -1087,15 +1195,14 @@ async def post_chat(
         formatted_messages = await build_formatted_messages(chat_context.conversation_id_list)
 
         # Resolve a distinct_id (email) so this server event merges with the
-        # user's frontend person. This is the prod chat path (agentic is gated
-        # off), so the server-side response/error events live here, not only in
-        # the agentic worker.
+        # user's frontend person. This endpoint serves every non-agentic chat
+        # (overview, deep_dive, and chats that predate chat_mode), so their
+        # server-side response/error events live here. Agentic runs emit their
+        # own from the agentic worker.
         from dembrane.app_user import resolve_app_user
 
         _chat_user = await resolve_app_user(auth.user_id)
-        chat_distinct_id = (
-            (_chat_user or {}).get("email") or ""
-        ).lower() or auth.user_id
+        chat_distinct_id = ((_chat_user or {}).get("email") or "").lower() or auth.user_id
 
         async def stream_response_async(
             formatted: List[Dict[str, str]],

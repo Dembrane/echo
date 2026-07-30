@@ -12,12 +12,28 @@ from __future__ import annotations
 import re
 from typing import Any, Mapping, Sequence
 
-# The agent's own conversation-list tool caps at 100 rows per call
-# (`GET /agentic/projects/{id}/conversations`, limit le=100), so promising more
-# than that in a focus hint asks for context the agent cannot fetch in one pass.
-# It also bounds the per-turn injection: a 200-conversation selection measured
-# ~11k chars (~2.8k tokens) on every turn; 100 halves that.
-MAX_FOCUSED_CONVERSATIONS = 100
+# Bound what goes INLINE, keep the rest REACHABLE. This block is rebuilt and
+# re-injected on EVERY turn, so its size is paid again on every call of the
+# session: that is the quadratic shape behind runaway per-session token bills,
+# and it is the reason the bound is on rendered size rather than item count.
+#
+# The old cap (100 conversations) was not actually a bound. 100 lines at the
+# 80-char label clamp render ~11k chars, which is the very number that cap
+# claimed to have halved. 4k chars is ~1k tokens per turn: over a 30-turn
+# session that is ~30k tokens of re-sent hint, against ~84k at the old size.
+#
+# Anything past the budget is not lost, it is paged: the truncation line names
+# the tool and the exact offset to call it with.
+MAX_FOCUS_BLOCK_CHARS = 4_000
+
+# The agent tool that returns THIS chat's focused set, paginated. Named here so
+# the truncation line and the tool cannot drift apart. Unlike the project-wide
+# conversation list, it can actually answer "which ones did the host pick".
+FOCUS_LIST_TOOL_NAME = "listFocusedConversations"
+
+# Room set aside for the truncation line, which is only rendered once and whose
+# length varies only by the digits in its counts.
+_TRUNCATION_LINE_RESERVE_CHARS = 260
 
 # Participant names are attacker-controlled: they come from the unauthenticated
 # portal endpoints in `dembrane.api.participant` with no length limit and no
@@ -60,21 +76,47 @@ def sanitize_focus_label(name: Any) -> str:
 
 
 def format_focus_block(focused: Sequence[Mapping[str, Any]]) -> str:
-    """Render the host's focus selection as one delimited, capped data block."""
+    """Render the host's focus selection as one delimited, size-bounded block.
+
+    Conversations are listed in the host's order until the character budget is
+    spent. The remainder is not dropped: the truncation line states the real
+    total, how many are listed here, and the exact tool call that returns the
+    next page. Every instruction in it is one the agent can actually carry out.
+    """
     lines = [FOCUS_BLOCK_OPEN, FOCUS_BLOCK_PREAMBLE]
-    for item in focused[:MAX_FOCUSED_CONVERSATIONS]:
+    # Derived from the constants themselves, so editing the preamble or the
+    # fence cannot silently push the rendered block past the budget.
+    overhead = (
+        len(FOCUS_BLOCK_OPEN)
+        + 1
+        + len(FOCUS_BLOCK_PREAMBLE)
+        + 1
+        + len(FOCUS_BLOCK_CLOSE)
+        + _TRUNCATION_LINE_RESERVE_CHARS
+    )
+    budget = max(0, MAX_FOCUS_BLOCK_CHARS - overhead)
+
+    used = 0
+    listed = 0
+    for item in focused:
         label = sanitize_focus_label(item.get("name"))
         line = f"- id: {item['id']}"
         if label:
             line = f'{line} label: "{label}"'
+        # +1 for the newline this line adds when the block is joined.
+        if used + len(line) + 1 > budget:
+            break
+        used += len(line) + 1
         lines.append(line)
+        listed += 1
 
-    omitted = len(focused) - MAX_FOCUSED_CONVERSATIONS
+    omitted = len(focused) - listed
     if omitted > 0:
         lines.append(
-            f"- (truncated: {omitted} more selected conversation(s) are not listed; "
-            f"the focus hint is capped at {MAX_FOCUSED_CONVERSATIONS}. "
-            "Use your conversation list tool to reach the rest.)"
+            f"- (truncated: {len(focused)} conversations are focused for this chat, "
+            f"{listed} listed above. Call {FOCUS_LIST_TOOL_NAME}(offset={listed}) "
+            f"to read the remaining {omitted}. It returns this chat's focused set, "
+            "not the whole project. Do not guess ids.)"
         )
 
     lines.append(FOCUS_BLOCK_CLOSE)

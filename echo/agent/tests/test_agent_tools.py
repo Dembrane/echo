@@ -73,6 +73,7 @@ class _FakeEchoClient:
         self.search_calls: list[dict[str, object]] = []
         self.transcript_calls: list[str] = []
         self.project_conversations_calls: list[dict[str, object]] = []
+        self.focused_conversations_calls: list[dict[str, object]] = []
         self.list_memory_calls: list[str] = []
         self.write_memory_calls: list[dict[str, object]] = []
         self.read_goal_calls: list[str] = []
@@ -108,17 +109,39 @@ class _FakeEchoClient:
     async def get_project_monitor(self, project_id: str, window_seconds: int = 45) -> dict:  # noqa: ARG002
         return type(self).monitor_payload
 
+    # Set on the class so a test can swap it in without touching the factory.
+    focused_conversations_payload: dict = {}
+
+    async def list_focused_conversations(
+        self,
+        project_id: str,
+        project_chat_id: str,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> dict:
+        self.focused_conversations_calls.append(
+            {
+                "project_id": project_id,
+                "project_chat_id": project_chat_id,
+                "limit": limit,
+                "offset": offset,
+            }
+        )
+        return type(self).focused_conversations_payload
+
     async def list_project_conversations(
         self,
         project_id: str,
         limit: int = 20,
         conversation_id: str | None = None,
         transcript_query: str | None = None,
+        offset: int = 0,
     ) -> dict:
         self.project_conversations_calls.append(
             {
                 "project_id": project_id,
                 "limit": limit,
+                "offset": offset,
                 "conversation_id": conversation_id,
                 "transcript_query": transcript_query,
             }
@@ -962,6 +985,7 @@ async def test_find_convos_by_keywords_filters_to_current_project():
         {
             "project_id": "project-1",
             "limit": 7,
+            "offset": 0,
             "conversation_id": None,
             "transcript_query": "policy",
         }
@@ -1023,6 +1047,7 @@ async def test_find_convos_by_keywords_uses_single_transcript_query_call_for_lon
         {
             "project_id": "project-1",
             "limit": 5,
+            "offset": 0,
             "conversation_id": None,
             "transcript_query": long_query,
         }
@@ -1240,6 +1265,7 @@ async def test_list_project_conversations_returns_project_scoped_cards():
         {
             "project_id": "project-1",
             "limit": 9,
+            "offset": 0,
             "conversation_id": None,
             "transcript_query": None,
         }
@@ -1284,6 +1310,7 @@ async def test_list_convo_full_transcript_uses_scoped_lookup_for_exact_id():
         {
             "project_id": "project-1",
             "limit": 1,
+            "offset": 0,
             "conversation_id": "conv-1",
             "transcript_query": None,
         }
@@ -2189,3 +2216,106 @@ def test_system_prompt_offers_dembrane_support_path():
     prompt = SYSTEM_PROMPT.lower()
     assert "getting help from the dembrane team" in prompt
     assert "the dembrane team" in prompt
+
+
+@pytest.mark.asyncio
+async def test_list_project_conversations_passes_offset_through():
+    """Paging is what makes "call the list tool for the rest" a real
+    instruction rather than a dead end at the per-call cap."""
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(
+        search_payload={"conversations": []},
+        transcripts={},
+        project_conversations_payload={
+            "project_id": "project-1",
+            "count": 1,
+            "has_more": True,
+            "conversations": [
+                {"conversation_id": "conv-101", "participant_name": "Alice", "status": "done"},
+            ],
+        },
+    )
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["listProjectConversations"].ainvoke({"limit": 100, "offset": 100})
+
+    assert result["offset"] == 100
+    assert result["has_more"] is True
+    assert factory.instances[0].project_conversations_calls == [
+        {
+            "project_id": "project-1",
+            "limit": 100,
+            "offset": 100,
+            "conversation_id": None,
+            "transcript_query": None,
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_list_focused_conversations_returns_the_chats_selection():
+    """The truncation line in the focus block points here, so this has to
+    return the host's selection for THIS chat, paged."""
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(search_payload={"conversations": []}, transcripts={})
+    _FakeEchoClient.focused_conversations_payload = {
+        "project_id": "project-1",
+        "project_chat_id": "chat-1",
+        "total": 250,
+        "count": 2,
+        "offset": 134,
+        "has_more": True,
+        "conversations": [{"id": "conv-134", "name": "Alice"}, {"id": "conv-135", "name": "Bob"}],
+    }
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+        chat_id="chat-1",
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["listFocusedConversations"].ainvoke({"limit": 50, "offset": 134})
+
+    assert result["total"] == 250
+    assert result["has_more"] is True
+    assert [c["id"] for c in result["conversations"]] == ["conv-134", "conv-135"]
+    assert factory.instances[0].focused_conversations_calls == [
+        {
+            "project_id": "project-1",
+            "project_chat_id": "chat-1",
+            "limit": 50,
+            "offset": 134,
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_list_focused_conversations_without_a_chat_says_so():
+    """A run with no chat has no selection. Say that rather than calling the
+    endpoint with an empty chat id."""
+    llm = _CaptureLLM()
+    factory = _FakeEchoClientFactory(search_payload={"conversations": []}, transcripts={})
+
+    create_agent_graph(
+        project_id="project-1",
+        bearer_token="token-1",
+        llm=llm,
+        echo_client_factory=factory,
+    )
+    tools = _tool_map(llm.bound_tools)
+
+    result = await tools["listFocusedConversations"].ainvoke({})
+
+    assert result["total"] == 0
+    assert result["conversations"] == []
+    assert factory.instances == []

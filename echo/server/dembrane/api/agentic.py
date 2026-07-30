@@ -690,11 +690,16 @@ def _list_project_conversations_for_agent(
     *,
     project_id: str,
     limit: int,
+    offset: int = 0,
     conversation_id: Optional[str] = None,
     transcript_query: Optional[str] = None,
     directus_client: Any,
 ) -> dict[str, Any]:
+    # `limit` stays a per-call cap; `offset` is what turns it into a page.
+    # Without it the cap was a ceiling and rows past it were unreachable, which
+    # made any "call the list tool for the rest" guidance untrue.
     normalized_limit = max(1, min(limit, 100))
+    normalized_offset = max(0, offset)
     normalized_conversation_id = _to_non_empty_string(conversation_id)
     normalized_transcript_query = _to_non_empty_string(transcript_query)
 
@@ -726,7 +731,8 @@ def _list_project_conversations_for_agent(
                 {"conversation_id": {"id": {"_eq": normalized_conversation_id}}}
             )
 
-        chunk_limit = min(max(normalized_limit * 25, 25), 250)
+        wanted = normalized_limit + normalized_offset
+        chunk_limit = min(max(wanted * 25, 25), 1000)
         chunk_rows = directus_client.get_items(
             "conversation_chunk",
             {
@@ -765,7 +771,7 @@ def _list_project_conversations_for_agent(
                 if conversation_identifier is None:
                     continue
                 is_new_conversation = conversation_identifier not in conversations_by_id
-                if is_new_conversation and len(conversations_by_id) >= normalized_limit:
+                if is_new_conversation and len(conversations_by_id) >= wanted:
                     continue
                 existing_matches = conversations_by_id.get(conversation_identifier, {}).get(
                     "matches"
@@ -787,10 +793,13 @@ def _list_project_conversations_for_agent(
                     continue
                 conversations_by_id[conversation_identifier] = card
 
-        conversations = list(conversations_by_id.values())
+        matched = list(conversations_by_id.values())
+        conversations = matched[normalized_offset : normalized_offset + normalized_limit]
         return {
             "project_id": project_id,
             "count": len(conversations),
+            "offset": normalized_offset,
+            "has_more": len(matched) > normalized_offset + len(conversations),
             "conversations": conversations,
         }
 
@@ -817,27 +826,34 @@ def _list_project_conversations_for_agent(
                     "updated_at",
                 ],
                 "sort": "-updated_at",
-                "limit": normalized_limit,
+                # One extra row is a cheap, exact has_more: no second COUNT
+                # query, and the agent can stop paging without guessing.
+                "limit": normalized_limit + 1,
+                "offset": normalized_offset,
             }
         },
     )
 
+    normalized_rows = rows if isinstance(rows, list) else []
+    has_more = len(normalized_rows) > normalized_limit
+
     conversation_cards: list[dict[str, Any]] = []
-    if isinstance(rows, list):
-        for row in rows:
-            if not isinstance(row, dict):
-                continue
-            card = _to_agent_conversation_card(
-                row,
-                project_id=project_id,
-                fallback_project_id=project_id,
-            )
-            if card is not None:
-                conversation_cards.append(card)
+    for row in normalized_rows[:normalized_limit]:
+        if not isinstance(row, dict):
+            continue
+        card = _to_agent_conversation_card(
+            row,
+            project_id=project_id,
+            fallback_project_id=project_id,
+        )
+        if card is not None:
+            conversation_cards.append(card)
 
     return {
         "project_id": project_id,
         "count": len(conversation_cards),
+        "offset": normalized_offset,
+        "has_more": has_more,
         "conversations": conversation_cards,
     }
 
@@ -1335,6 +1351,7 @@ async def list_project_conversations(
     project_id: str,
     auth: DependencyDirectusSession,
     limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     conversation_id: Optional[str] = Query(default=None),
     transcript_query: Optional[str] = Query(default=None),
 ) -> dict[str, Any]:
@@ -1351,10 +1368,57 @@ async def list_project_conversations(
         _list_project_conversations_for_agent,
         project_id=project_id,
         limit=limit,
+        offset=offset,
         conversation_id=conversation_id,
         transcript_query=transcript_query,
         directus_client=directus,
     )
+
+
+@AgenticRouter.get("/projects/{project_id}/focused-conversations")
+async def list_focused_conversations_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+    project_chat_id: str = Query(...),
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> dict[str, Any]:
+    """The conversations the host focused THIS chat on, paginated.
+
+    The focus block in the prompt is size-bounded, so on a large selection it
+    lists a head and points here for the rest. The project-wide conversation
+    list cannot answer this: it returns everything in the project and has no
+    idea which rows the host picked.
+
+    Authorization is unchanged from every other agent read: the agent token,
+    project access, and then the chat/project binding, which is enforced inside
+    _get_focused_conversations rather than around it so this route cannot get
+    an unguarded read.
+    """
+    _require_agent_token(auth)
+    await _assert_project_access(project_id, auth)
+    await run_in_thread_pool(
+        _assert_chat_belongs_to_project,
+        project_chat_id,
+        project_id,
+    )
+
+    focused = await run_in_thread_pool(
+        _get_focused_conversations,
+        project_chat_id,
+        project_id=project_id,
+    )
+
+    page = focused[offset : offset + limit]
+    return {
+        "project_id": project_id,
+        "project_chat_id": project_chat_id,
+        "total": len(focused),
+        "count": len(page),
+        "offset": offset,
+        "has_more": len(focused) > offset + len(page),
+        "conversations": page,
+    }
 
 
 @AgenticRouter.get("/projects/{project_id}/monitor")

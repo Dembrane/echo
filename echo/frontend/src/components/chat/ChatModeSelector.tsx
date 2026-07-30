@@ -51,12 +51,6 @@ export const MODE_COLORS = {
 };
 
 // Sample questions for each mode - wrapped in function to enable translation
-const getOverviewExamples = () => [
-	t`What are the main themes across all conversations?`,
-	t`Summarize key insights from my interviews`,
-	t`What patterns emerge from the data?`,
-];
-
 const getDeepDiveExamples = () => [
 	t`Summarize this interview into a shareable article`,
 	t`Pull out the most impactful quotes from this session`,
@@ -169,7 +163,7 @@ const ModeCard = ({
 										</Badge>
 									)}
 								</Group>
-								<Text size="sm" c="dimmed">
+								<Text size="sm">
 									{subtitle}
 								</Text>
 							</Stack>
@@ -180,7 +174,6 @@ const ModeCard = ({
 					<Stack gap="sm">
 						<Text
 							size="xs"
-							c="dimmed"
 							fw={600}
 							tt="uppercase"
 							style={{ letterSpacing: 0.5 }}
@@ -194,7 +187,7 @@ const ModeCard = ({
 									color="var(--app-text)"
 									style={{ flexShrink: 0, marginTop: 2 }}
 								/>
-								<Text size="sm" c="dimmed" lh={1.5}>
+								<Text size="sm" lh={1.5}>
 									{example}
 								</Text>
 							</Group>
@@ -272,12 +265,14 @@ export const ChatModeSelector = ({
 					>
 						<Trans>What would you like to explore?</Trans>
 					</Title>
-					<Text size="md" c="dimmed">
+					<Text size="md">
 						<Trans>Pick the approach that fits your question</Trans>
 					</Text>
 				</Stack>
 
-				{/* Mode Cards */}
+				{/* Mode Cards. Overview is no longer startable: chats that already
+				    have chat_mode="overview" keep working, but nothing creates a
+				    new one. */}
 				<Stack gap="lg">
 				{ENABLE_AGENTIC_CHAT && (
 					<ModeCard
@@ -305,29 +300,7 @@ export const ChatModeSelector = ({
 					isLoading={isLoading}
 					onSelectMode={handleSelectMode}
 				/>
-
-				<ModeCard
-					mode="overview"
-					title={t`Overview`}
-					subtitle={t`Explore themes & patterns across all conversations`}
-					examples={getOverviewExamples()}
-					icon={IconSparkles}
-					isBeta
-					atLimit={atChatLimit}
-					selectedMode={selectedMode}
-					isLoading={isLoading}
-					onSelectMode={handleSelectMode}
-				/>
 				</Stack>
-
-				{/* Loading message */}
-				{isLoading && selectedMode === "overview" && (
-					<Text size="sm" c="dimmed" ta="center" fs="italic">
-						<Trans>
-							Preparing your conversations... This may take a moment.
-						</Trans>
-					</Text>
-				)}
 			</Stack>
 		</Box>
 	);

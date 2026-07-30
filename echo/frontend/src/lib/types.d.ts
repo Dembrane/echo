@@ -203,11 +203,13 @@ type SelectAllConversationResult = {
 		| "context_limit_reached"
 		| "empty" // No transcript content
 		| "too_long" // Single conversation exceeds context
+		| "locked" // Over the tier's recording cap
+		| "not_found" // Not in this project, or already deleted
 		| "error"; // Processing error occurred
 };
 
 type AddContextResponse = {
-	// Optional fields populated when select_all is used
+	// Optional fields populated for the batch paths (select_all, conversation_ids)
 	added?: SelectAllConversationResult[];
 	skipped?: SelectAllConversationResult[];
 	total_processed?: number;
