@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useIsMobile } from "../hooks/useIsMobile";
 import {
 	SIDEBAR_WIDTH_DEFAULT,
 	SIDEBAR_WIDTH_MAX,
@@ -12,6 +13,7 @@ import {
 // without taking visual weight.
 export const ResizeHandle = () => {
 	const { width, setWidth } = useSidebarState();
+	const isMobile = useIsMobile();
 	const [dragging, setDragging] = useState(false);
 	const startXRef = useRef(0);
 	const startWidthRef = useRef(width);
@@ -64,7 +66,7 @@ export const ResizeHandle = () => {
 		}
 	};
 
-	if (width === 0) return null;
+	if (width === 0 || isMobile) return null;
 
 	return (
 		// biome-ignore lint/a11y/useSemanticElements: Resize grip needs pointer and keyboard handlers.
