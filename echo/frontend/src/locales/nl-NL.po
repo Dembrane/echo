@@ -4045,6 +4045,11 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr "dembrane, de standaard"
 
+#. placeholder {0}: new Date().getFullYear()
+#: src/components/layout/Footer.tsx:19
+msgid "dembrane B.V. {0}, all rights reserved."
+msgstr "dembrane B.V. {0}, alle rechten voorbehouden."
+
 #: src/routes/project/chat/ProjectChatRoute.tsx:1071
 #: src/routes/project/chat/ProjectChatRoute.tsx:1106
 #: src/components/chat/AgenticChatPanel.tsx:1957
