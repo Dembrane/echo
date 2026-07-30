@@ -95,17 +95,12 @@ isn't behaving as expected; they tell you exactly what the router parsed from yo
 ## Transcription
 
 Transcription is the first step of the [pipeline](../developer-internal/processing-pipeline.md).
-You choose the provider:
+You choose the provider via the `TRANSCRIPTION_PROVIDER` environment variable:
 
-- *AssemblyAI* - uploaded audio is transcribed by AssemblyAI (via webhook or polling).
-  Configure its API key in `server/.env`.
-- *A transcription model via LiteLLM* - route a speech-to-text model through the LiteLLM
-  configuration instead.
+- *Gemini Vertex AI (Dembrane-26-07)* - chunk audio is transcribed directly on Gemini 2.5 Pro deployed in Vertex AI (`europe-west1`). This is a single-pass workflow that performs transcription, hotword normalization, and optional PII redaction. Configure `GCP_SA_JSON` with your Google Cloud service account key.
+- *LiteLLM* - route a speech-to-text model through LiteLLM instead.
 
-After raw transcription, a Gemini correction pass applies your project's key terms (hotwords)
-and PII redaction, producing a diarised transcript. That correction pass uses the
-`MULTI_MODAL_*` groups, which is why those must support audio. See
-[transcription](../../features/transcription.md) for the host-facing view.
+See [transcription](../../features/transcription.md) for the host-facing view.
 
 ## Embeddings
 

@@ -28,6 +28,7 @@ How dembrane is organised, who can do what, and what each plan unlocks.
   workspaces.
 - *[Account & security](./account-and-security.md)* - your profile, password, two-factor,
   and audit logs.
+- *[Staff support access](./staff-support-access.md)* - how dembrane administrators access your workspace to help troubleshoot.
 
 ## Collecting conversations
 
@@ -36,6 +37,7 @@ Getting spoken (or written) input into dembrane.
 - *[Projects](./projects.md)* - where a body of conversations and its analysis lives.
 - *[Recording](./recording.md)* - capturing audio, in the browser or on mobile.
 - *[Transcription](./transcription.md)* - turning audio into accurate, multilingual text.
+- *[The live monitor](./live-monitor.md)* - watch participant flow, mic checks, and recording in real time.
 - *[The participant portal](./portal-and-participant-experience.md)* - the no-account
   experience people use to record for you.
 - *[The portal editor](./portal-editor.md)* - how you shape that experience.

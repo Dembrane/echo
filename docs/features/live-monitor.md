@@ -1,6 +1,10 @@
-# Live monitor
+---
+title: The live monitor
+description: Watch participant flow, mic checks, and recording in real time during a session.
+audience: all
+---
 
-What this feature lets you do, from the perspective of the people using it.
+# The live monitor
 
 When you run a session (a workshop, a consultation, a set of interviews), people
 scan a QR code and record on their own phones, all at the same time. You cannot

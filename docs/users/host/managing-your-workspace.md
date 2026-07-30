@@ -85,6 +85,10 @@ two things for it:
 Project-level guidance stays on the project: its *context* field and an *Assistant memory*
 section in project settings work the same way, one project at a time.
 
+## Staff support access
+
+If you hit a problem that is faster to troubleshoot from inside your workspace, you can temporarily grant dembrane staff admin-level support access. Access is fully controlled by you, off by default, and automatically expires after 24 hours. See [Staff support access](../../features/staff-support-access.md) for how to turn it on, approve incoming requests, and view access history.
+
 ## Other settings
 
 The rest of *Settings* is everyday setup: *name & logo* (per-workspace white-labelling is
@@ -96,6 +100,7 @@ workspace.
 
 ## Related
 
+- [Staff support access](../../features/staff-support-access.md) - grant temporary, secure support access to your workspace.
 - [Roles & permissions](../../features/roles-and-permissions.md) - every role and exactly what
   it can do.
 - [Invites & access](../../features/invites-and-access.md) - adding people by email or link, and

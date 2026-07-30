@@ -53,7 +53,7 @@ meter so you can see audio is actually arriving, and a live transcript snippet; 
 audio stops coming in you get an *Audio stopped?* warning, and a locked phone shows as
 *Screen locked*. Transcription progress and errors show
 per conversation, with a rough *catch up* estimate when a backlog builds. The project home
-shows the same thing in brief under *Live & recent*.
+shows the same thing in brief under *Live & recent*. For a detailed walkthrough of all stages, indicators, and warnings, see [the live monitor](../../features/live-monitor.md) feature guide.
 
 > [!TIP]
 > Put the Monitor on your laptop while the room records. The two warnings worth acting on in

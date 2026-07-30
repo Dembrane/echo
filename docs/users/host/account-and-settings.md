@@ -70,10 +70,13 @@ engagement, or tracing a change nobody remembers making.
 
 ## Deleting your account
 
-You can close your account (the account itself, not just a workspace). First check what it
-means for any projects you own and for
-[data ownership](../../features/data-ownership-and-compliance.md) - hand over or move work
-others rely on before you do it.
+To comply with App Store and privacy guidelines, you can delete your account directly in the dembrane Go mobile app.
+
+Before you do, check what it means for any projects you own and for [data ownership](../../features/data-ownership-and-compliance.md). Make sure to hand over or move work others rely on before proceeding.
+
+When you initiate account deletion:
+- Your account is suspended immediately, which blocks logins and token refreshes.
+- This marks the account for permanent removal, which is processed out-of-band by dembrane administrators within 30 days.
 
 ## Related
 

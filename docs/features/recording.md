@@ -63,9 +63,7 @@ it keeps growing as people speak.
 - *Transcription progress* - a *Transcribing* count per conversation, a rough *catch up*
   estimate when a backlog builds, and an *Error* badge when something needs attention.
 
-The project home page shows the same view in brief as *Live & recent*. See
-[collecting conversations](../users/host/collecting-conversations.md#watch-the-room-the-monitor-page)
-for how to use it mid-session.
+The project home page shows the same view in brief as *Live & recent*. See [the live monitor](./live-monitor.md) feature guide for a complete breakdown of stages and indicators, and [collecting conversations](../users/host/collecting-conversations.md#watch-the-room-the-monitor-page) for how to use it mid-session.
 
 ## Pause, resume, stop
 
