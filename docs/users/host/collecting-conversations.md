@@ -21,7 +21,7 @@ doesn't use recording time.
 | *Portal: QR or direct link* | The people themselves, on their own phones | Many people at once; self-service; in person or remote |
 | *Record yourself (browser)* | You, on a laptop | You're holding the conversation or interviewing |
 | *Upload text* | No one - you already have it | Migrating data, or audio captured elsewhere |
-| *dembrane Go (iOS)* | You, on your phone | Mobile, walking, or flaky-laptop situations |
+| *dembrane Go (iOS, beta)* | You, on your phone | Mobile, walking, or flaky-laptop situations |
 
 ## The portal: QR or direct link
 
@@ -99,6 +99,9 @@ away from a desk: local-first recording in 30-second chunks that survives a cras
 being killed, background recording, a Live Activity in the Dynamic Island, and a microphone
 selector. Sign in with your dembrane account, pick the project, and record - conversations
 sync to the same project and transcribe like browser recordings.
+
+dembrane Go is in *beta* - it isn't on the App Store yet. Email
+[sameer@dembrane.com](mailto:sameer@dembrane.com) to join the TestFlight beta.
 
 > [!IMPORTANT]
 > dembrane Go is a *recording* companion. Analysis, reports, the library, and project
