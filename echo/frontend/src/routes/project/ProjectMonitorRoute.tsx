@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Badge,
 	Box,
 	Divider,
 	Group,
@@ -76,9 +77,14 @@ export const ProjectMonitorRoute = () => {
 				{projectId && <MonitorSessionAnalytics projectId={projectId} />}
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Stack gap={4}>
-						<Title order={2} fw={500}>
-							<Trans>Monitor</Trans>
-						</Title>
+						<Group gap="xs" align="center">
+							<Title order={2} fw={500}>
+								<Trans>Monitor</Trans>
+							</Title>
+							<Badge size="sm" color="mauve" c="graphite">
+								<Trans>Beta</Trans>
+							</Badge>
+						</Group>
 						<Text size="sm" maw={560}>
 							<Trans>
 								Watch live recordings, transcription progress, and errors across

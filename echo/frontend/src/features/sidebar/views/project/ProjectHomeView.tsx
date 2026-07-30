@@ -86,6 +86,7 @@ export const ProjectHomeView = () => {
 					to={`${base}/monitor`}
 					label={<Trans>Monitor</Trans>}
 					icon={BroadcastIcon}
+					badge={<Trans>Beta</Trans>}
 				/>
 			)}
 			{/* Library is the canvas surface: the env flag mounts the routes,
