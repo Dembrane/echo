@@ -6,6 +6,15 @@ How dembrane ships a production release. Releases go out roughly every two weeks
 
 Everything below is dembrane's pipeline, not general practice. The phase order generalises to any team with a staging environment and a tag-triggered production deploy. The commands and paths do not; they are specific to this repo.
 
+## What this document is, and is not
+
+This is a record of how one release actually went, written down while it was fresh. It is not a claim that this is the right way to ship software, and it is not how anyone here would design the process from scratch.
+
+Quite a lot of what follows exists because something went wrong and we worked around it. Some of it is genuinely good practice. Some of it is a symptom: production drifting weeks behind the schema, a test step missing from continuous integration, knowledge living in one person's head instead of the repository. Those are problems to fix, not conventions to preserve.
+
+So read it as field notes rather than doctrine. If a step here looks wrong to you, it may well be. The point of writing it down is to have something concrete to argue with, and to fix together, rather than rediscovering the same traps one release at a time. Where a step exists only because of an underlying problem, that is called out so the fix is obvious later.
+
+
 ## What a tag actually sets off
 
 Worth holding in your head before you touch anything, because most of the sequencing rules fall out of it.
