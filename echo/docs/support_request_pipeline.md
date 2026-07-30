@@ -4,8 +4,8 @@ How a host's support request travels from the agentic chat to a triaged
 thread in Slack, and what each side guarantees. Built 2026-07-24
 (ISSUE-034, founder direction in the release-k-01-02 chat-trim thread).
 The user-facing description lives in the docs site
-(`echo-user-docs/pages/*/echo/first-aid.mdx`, "Asking the assistant for
-help").
+(`docs/users/host/getting-help.md`). It previously lived in
+`echo-user-docs/`, the old Nextra site, which was retired on 2026-07-30.
 
 Not to be confused with the staff workspace-access feature
 (`staff_support_access.md`, ECHO-863) — that also reads `support_request`
