@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 import asyncio
 from types import SimpleNamespace
 from typing import Any, AsyncIterator
@@ -15,9 +16,12 @@ from dembrane.api.v2.bff import _access as bff_access
 from tests.agentic.fakes import InMemoryDirectus
 from dembrane.api.agentic import AgenticRouter
 from dembrane.agentic_focus import (
+    FOCUS_BLOCK_OPEN,
+    FOCUS_BLOCK_CLOSE,
     FOCUS_BLOCK_PREAMBLE,
     MAX_FOCUS_LABEL_LENGTH,
     MAX_FOCUSED_CONVERSATIONS,
+    strip_focus_blocks,
 )
 from dembrane.service.agentic import AgenticRunService
 from dembrane.api.dependency_auth import DirectusSession, require_directus_session
@@ -337,7 +341,9 @@ def _make_session(
 @pytest.mark.asyncio
 async def test_create_run_persists_user_message_without_dispatch(monkeypatch) -> None:
     run_service = AgenticRunService(directus_client=InMemoryDirectus())
-    fake_chat_service = _FakeChatService()
+    fake_chat_service = _FakeChatService(
+        chats={"chat-1": {"id": "chat-1", "project_id": {"id": "project-1"}}}
+    )
     session = _make_session(user_id="user-1")
 
     async with _build_api_client(
@@ -667,6 +673,7 @@ def test_get_focused_conversations_maps_links(monkeypatch) -> None:
         chats={
             "chat-1": {
                 "id": "chat-1",
+                "project_id": {"id": "project-1"},
                 "used_conversations": [
                     {"id": 1, "conversation_id": {"id": "conv-1", "participant_name": "Alice"}},
                     {"id": 2, "conversation_id": {"id": "conv-2", "participant_name": None}},
@@ -678,7 +685,7 @@ def test_get_focused_conversations_maps_links(monkeypatch) -> None:
     )
     monkeypatch.setattr(agentic_api, "chat_service", fake_chat_service)
 
-    assert agentic_api._get_focused_conversations("chat-1") == [
+    assert agentic_api._get_focused_conversations("chat-1", project_id="project-1") == [
         {"id": "conv-1", "name": "Alice"},
         {"id": "conv-2", "name": ""},
     ]
@@ -691,6 +698,7 @@ def test_get_focused_conversations_dedupes_duplicate_junction_rows(monkeypatch) 
         chats={
             "chat-1": {
                 "id": "chat-1",
+                "project_id": {"id": "project-1"},
                 "used_conversations": [
                     {"id": 1, "conversation_id": {"id": "conv-1", "participant_name": "Alice"}},
                     {"id": 2, "conversation_id": {"id": "conv-1", "participant_name": "Alice"}},
@@ -702,7 +710,7 @@ def test_get_focused_conversations_dedupes_duplicate_junction_rows(monkeypatch) 
     )
     monkeypatch.setattr(agentic_api, "chat_service", fake_chat_service)
 
-    assert agentic_api._get_focused_conversations("chat-1") == [
+    assert agentic_api._get_focused_conversations("chat-1", project_id="project-1") == [
         {"id": "conv-1", "name": "Alice"},
         {"id": "conv-2", "name": "Bob"},
     ]
@@ -713,6 +721,7 @@ def test_get_focused_conversations_skips_soft_deleted(monkeypatch) -> None:
         chats={
             "chat-1": {
                 "id": "chat-1",
+                "project_id": {"id": "project-1"},
                 "used_conversations": [
                     {
                         "id": 1,
@@ -736,16 +745,76 @@ def test_get_focused_conversations_skips_soft_deleted(monkeypatch) -> None:
     )
     monkeypatch.setattr(agentic_api, "chat_service", fake_chat_service)
 
-    assert agentic_api._get_focused_conversations("chat-1") == [
+    assert agentic_api._get_focused_conversations("chat-1", project_id="project-1") == [
         {"id": "conv-2", "name": "Bob"},
     ]
 
 
-def test_get_focused_conversations_degrades_to_empty(monkeypatch) -> None:
+def test_get_focused_conversations_without_a_chat_is_empty(monkeypatch) -> None:
     monkeypatch.setattr(agentic_api, "chat_service", _FakeChatService())
 
-    assert agentic_api._get_focused_conversations(None) == []
-    assert agentic_api._get_focused_conversations("missing-chat") == []
+    assert agentic_api._get_focused_conversations(None, project_id="project-1") == []
+
+
+def test_assert_chat_belongs_to_project_fails_closed_when_unreadable(
+    monkeypatch,
+) -> None:
+    """A caller-supplied chat that cannot be read must not fall through as
+    "no focus": create_run goes on to write the user message into this chat id
+    and to rename it, so an unverified id would reach the write path."""
+    monkeypatch.setattr(agentic_api, "chat_service", _FakeChatService())
+
+    with pytest.raises(HTTPException) as excinfo:
+        agentic_api._assert_chat_belongs_to_project("missing-chat", "project-1")
+
+    assert excinfo.value.status_code == 503
+
+
+def test_assert_chat_belongs_to_project_rejects_another_projects_chat(
+    monkeypatch,
+) -> None:
+    fake_chat_service = _FakeChatService(
+        chats={
+            "chat-in-project-2": {
+                "id": "chat-in-project-2",
+                "project_id": {"id": "project-2"},
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "chat_service", fake_chat_service)
+
+    with pytest.raises(HTTPException) as excinfo:
+        agentic_api._assert_chat_belongs_to_project("chat-in-project-2", "project-1")
+
+    assert excinfo.value.status_code == 400
+    assert excinfo.value.detail == "project_id does not match this chat"
+
+    # Its own project passes, and no chat id at all is a no-op.
+    agentic_api._assert_chat_belongs_to_project("chat-in-project-2", "project-2")
+    agentic_api._assert_chat_belongs_to_project(None, "project-1")
+
+
+def test_get_focused_conversations_requires_a_project_to_compare_against(
+    monkeypatch,
+) -> None:
+    """project_agentic_run.project_id is nullable, so an empty project id must
+    refuse rather than skip the guard."""
+    fake_chat_service = _FakeChatService(
+        chats={
+            "chat-1": {
+                "id": "chat-1",
+                "project_id": {"id": "project-1"},
+                "used_conversations": [],
+            }
+        }
+    )
+    monkeypatch.setattr(agentic_api, "chat_service", fake_chat_service)
+
+    with pytest.raises(HTTPException) as excinfo:
+        agentic_api._get_focused_conversations("chat-1", project_id="")
+
+    assert excinfo.value.status_code == 400
+    assert excinfo.value.detail == "project_id is required to read this chat"
 
 
 def test_get_focused_conversations_rejects_chat_from_another_project(monkeypatch) -> None:
@@ -2686,3 +2755,35 @@ async def test_sse_stream_emits_heartbeat_when_idle(monkeypatch) -> None:
     await generator.aclose()
 
     assert first == "event: heartbeat\ndata: {}\n\n"
+
+
+def test_strip_focus_blocks_is_linear_on_unclosed_markers() -> None:
+    """Regression: the obvious regex for this (OPEN .*? CLOSE, DOTALL) restarts
+    a full lazy scan at every OPEN, so text that repeats OPEN and never closes
+    it is quadratic. Measured with the regex: 250KB took ~9s, 500KB took ~33s.
+    The turn message is caller-supplied and this runs inline on the API event
+    loop, so that is a stalled worker rather than one slow request."""
+    hostile = FOCUS_BLOCK_OPEN * 12_000  # ~276KB, no close marker
+
+    started = time.perf_counter()
+    result = strip_focus_blocks(hostile)
+    elapsed = time.perf_counter() - started
+
+    # Nothing to cut without a close marker, so the text survives intact.
+    assert result == hostile
+    # Generous: the linear walk is milliseconds, the regex was seconds.
+    assert elapsed < 1.0
+
+
+def test_strip_focus_blocks_keeps_user_text_that_mentions_the_markers() -> None:
+    """A host asking about the markers writes them mid-sentence. Only a block
+    that starts its own line is scaffolding."""
+    asked = f"what is the difference between {FOCUS_BLOCK_OPEN} and {FOCUS_BLOCK_CLOSE}?"
+
+    assert strip_focus_blocks(asked) == asked
+
+
+def test_strip_focus_blocks_removes_a_real_block_and_keeps_the_message() -> None:
+    content = f"{FOCUS_BLOCK_OPEN}\n- id: conv-1\n{FOCUS_BLOCK_CLOSE}\n\nUser Message: hello"
+
+    assert strip_focus_blocks(content) == "User Message: hello"

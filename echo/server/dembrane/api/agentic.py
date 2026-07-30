@@ -67,15 +67,22 @@ _ACTIVE_RUN_TASKS: dict[tuple[str, int], asyncio.Task[None]] = {}
 _ACTIVE_RUN_TASKS_LOCK = asyncio.Lock()
 
 
+# A turn is a typed question, not a document upload: hosts attach conversations
+# for bulk text. Bounding it keeps a single request from dominating the prompt
+# and caps the work every later turn does replaying it. Generous enough that no
+# real question comes close.
+MAX_AGENTIC_MESSAGE_LENGTH = 32_000
+
+
 class AgenticCreateRunSchema(BaseModel):
     project_id: str = Field(..., min_length=1)
     project_chat_id: Optional[str] = None
-    message: str = Field(..., min_length=1)
+    message: str = Field(..., min_length=1, max_length=MAX_AGENTIC_MESSAGE_LENGTH)
     language: str = Field(default="en", min_length=1)
 
 
 class AgenticAppendMessageSchema(BaseModel):
-    message: str = Field(..., min_length=1)
+    message: str = Field(..., min_length=1, max_length=MAX_AGENTIC_MESSAGE_LENGTH)
     language: str = Field(default="en", min_length=1)
 
 
@@ -373,8 +380,15 @@ def _raise_if_chat_project_mismatch(chat: dict[str, Any], project_id: Optional[s
     authorized for project A can pass project B's chat id and have B's
     participant names and conversation ids interpolated into their own run
     prompt, then read them back from that run's events."""
-    if project_id is None:
-        return
+    if not project_id:
+        # Fail closed. A caller-supplied chat id reaches this function, so
+        # "no project to compare against" is not a reason to skip the check,
+        # it is a reason to refuse: the run row's project_id is nullable, and
+        # treating null as "allow" would hand back the hole this closes.
+        raise HTTPException(
+            status_code=400,
+            detail="project_id is required to read this chat",
+        )
     if _to_related_id(chat.get("project_id")) != project_id:
         raise HTTPException(
             status_code=400,
@@ -382,25 +396,52 @@ def _raise_if_chat_project_mismatch(chat: dict[str, Any], project_id: Optional[s
         )
 
 
+def _assert_chat_belongs_to_project(project_chat_id: Optional[str], project_id: str) -> None:
+    """Verify a chat id that came from the request body, before anything is
+    written against it.
+
+    This is the one place the check has to fail closed. create_run goes on to
+    persist the host's message into this chat and to rename it, so letting an
+    unreadable chat through would leave those writes running against an id
+    nobody has authorized. Reads that happen later (the focus hint) can degrade
+    quietly, because by then the id has been through here."""
+    if not project_chat_id:
+        return
+    try:
+        chat = chat_service.get_by_id_or_raise(project_chat_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Could not load chat %s to verify it for this run", project_chat_id)
+        raise HTTPException(
+            status_code=503,
+            detail="Could not verify the chat for this request. Please try again.",
+        ) from exc
+
+    _raise_if_chat_project_mismatch(chat, project_id)
+
+
 def _get_focused_conversations(
     project_chat_id: Optional[str],
     *,
-    project_id: Optional[str] = None,
+    project_id: str,
 ) -> list[dict[str, str]]:
     """Conversations the host selected for this chat, as focus hints.
 
     `project_id` binds the chat to the project the caller was already authorized
-    for and must be passed on every request path (see
-    _raise_if_chat_project_mismatch); a mismatch fails the request closed.
+    for (see _raise_if_chat_project_mismatch); a mismatch fails the request
+    closed. It is required rather than optional so a new call site cannot get an
+    unguarded read by leaving it out.
 
     Agentic never preloads transcripts or locks context rows; the selection is
-    only folded into the prompt. A chat that cannot be read degrades to no hint,
-    never a failed run."""
+    only folded into the prompt."""
     if not project_chat_id:
         return []
     try:
         chat = chat_service.get_by_id_or_raise(project_chat_id, with_used_conversations=True)
     except Exception:  # noqa: BLE001
+        # Safe to degrade here: every caller-supplied chat id is verified up
+        # front by _assert_chat_belongs_to_project, so an id that reaches this
+        # point is already known to belong to the caller's project. Losing the
+        # hint is better than failing a turn the host can otherwise complete.
         logger.warning("Could not load chat %s for focus hint", project_chat_id)
         return []
 
@@ -1010,9 +1051,16 @@ async def create_run(
     await _assert_project_access(body.project_id, auth)
 
     # The chat id is caller-supplied and every read/write below it uses the admin
-    # client, so resolve the focus selection first: it binds the chat to the
-    # project we just authorized and 400s a foreign chat before this request
-    # creates a run, writes a message, or renames anything.
+    # client, so bind it to the project we just authorized before this request
+    # creates a run, writes a message, or renames anything. Fails closed: a
+    # foreign chat 400s, and a chat we cannot read at all 503s rather than
+    # proceeding unverified.
+    await run_in_thread_pool(
+        _assert_chat_belongs_to_project,
+        body.project_chat_id,
+        body.project_id,
+    )
+
     focused_conversations = await run_in_thread_pool(
         _get_focused_conversations,
         body.project_chat_id,
