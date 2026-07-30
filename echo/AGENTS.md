@@ -116,6 +116,9 @@ See [docs/branching_and_releases.md](docs/branching_and_releases.md) for the ful
 - **Releases**: tagged from `main` every ~2 weeks → auto-deploys to production
 - **Hotfixes**: branch off release tag → fix → new release → cherry-pick back into `main`
 - Always check for Directus data migrations before deploying. See [docs/database_migrations.md](docs/database_migrations.md)
+- **Config removals are release-gated.** GitOps `main` syncs to production in minutes, but production code only advances on a release tag. Remove the field from `settings.py`, ship the tag, then remove the key from gitops. See [docs/incidents/gitops-env-removal-release-gate.md](docs/incidents/gitops-env-removal-release-gate.md)
+- Never `kubectl scale` / `kubectl patch` production. Argo self-heal reverts it. See [docs/incidents/argo-self-heal-reverts-manual-changes.md](docs/incidents/argo-self-heal-reverts-manual-changes.md)
+- Adding a service to the Helm chart? Add its image to the `ci.yml` build matrix in the same change. See [docs/incidents/agent-missing-from-build-matrix.md](docs/incidents/agent-missing-from-build-matrix.md)
 
 ## Architecture
 
@@ -155,6 +158,7 @@ Long-running progress streams via Server-Sent Events backed by Redis pub/sub (re
 - `SkipRetryOnUnrecoverableError` middleware skips retries for `TypeError`, `SyntaxError`, `AttributeError`, `ImportError`, `NotImplementedError`
 - To invoke async code from a Dramatiq actor: `run_async_in_new_loop` from `dembrane.async_helpers`. Never `asyncio.run` (clashes with nested loops)
 - Wrap blocking I/O in async endpoints with `run_in_thread_pool` from `dembrane.async_helpers` (Directus, service-layer, S3, token counting). Don't wrap already-async calls (e.g. `rag.aquery`)
+- `run_async_in_new_loop` is a misnomer: it submits to ONE long-lived loop on a real OS thread, it does not make a loop. Never create/close a loop per call. Why these rules exist: [docs/incidents/dramatiq-actor-event-loops.md](docs/incidents/dramatiq-actor-event-loops.md)
 
 ### LLM Model Groups
 
@@ -183,6 +187,8 @@ Which group powers which feature is non-obvious, so don't downgrade silently.
 2. Run it step-by-step to verify each change against a local Directus
 3. Pull the schema: `cd directus && bash sync.sh -u http://directus:8055 -e admin@dembrane.com -p admin pull`
 4. Commit the snapshot JSON under `directus/sync/snapshot/`. That is the source of truth; the one-shot migration script does not need to be committed
+
+Narrow exception: a field's `schema.is_indexed` must be `true` in the snapshot whenever the column is indexed on production, even though a `pull` from a local database writes `false`. Getting this wrong aborts the entire `schema/apply` on production and nowhere else. See [docs/incidents/directus-sync-is-indexed.md](docs/incidents/directus-sync-is-indexed.md)
 
 ### Python DirectusClient
 
