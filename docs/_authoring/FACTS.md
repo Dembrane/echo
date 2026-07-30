@@ -17,9 +17,11 @@ and turns hours of dialogue into summaries, themes, reports, and a chat you can
 interrogate. Core belief: *"PEOPLE KNOW HOW"* - communities already hold the
 knowledge; dembrane surfaces it.
 
-"ECHO" is the historical name of the platform feature. It is *not* the brand and
-should be used sparingly. The brand is always *dembrane* (lowercase). In new docs,
-prefer "dembrane" / "the dashboard" / "the portal" over "ECHO".
+"ECHO" is the legacy platform name. The brand is always *dembrane* (lowercase); its
+parts are "the dashboard", "the portal", "the recorder". Do not use "ECHO" in docs
+prose. The single "formerly ECHO" note lives on `docs/README.md`. The one live
+exception is the participant record button, still labelled "ECHO" in the portal UI
+(msgid `participant.button.echo`): describe that button as the UI labels it.
 
 The product ships three ways:
 1. *Managed SaaS* at dembrane.com (dashboard.dembrane.com + portal.dembrane.com).
@@ -425,9 +427,11 @@ ADRs in `echo/docs/adr/`.
    Library, Reporting a Bug, Compliance & Trust), toggles for Setting-up a project /
    Recording / Analysing / Templates / Ready-Check-Go / Designing a session / Upload docs.
    Also links to docs.dembrane.com for First Aid + bug reporting.
-2. *docs.dembrane.com* = the Nextra site `echo-user-docs/` (en-US + nl-NL): Getting Started
-   (creating-project, collecting-data, analysis), Core Concepts, First Aid, Avoiding Pitfalls
-   (technical, social). Thin, "under construction", off-brand ("ECHO").
+2. *The retired Nextra site* `echo-user-docs/` (en-US + nl-NL), which served
+   docs.dembrane.com until 2026-07-30: Getting Started (creating-project, collecting-data,
+   analysis), Core Concepts, First Aid, Avoiding Pitfalls (technical, social). Thin, "under
+   construction", off-brand ("ECHO"). docs.dembrane.com now serves this `docs/` corpus,
+   published from `main` by `.github/workflows/deploy-docs.yml`.
 3. *echo/docs/* = developer/internal docs (ADRs, plans, issues, litellm config, migrations).
 
 These are the baseline our new docs replace: comprehensive, role-segmented, on-brand,
