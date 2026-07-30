@@ -51,7 +51,16 @@ def _get_item_for(tier: str, workspace_id: str = "ws-1"):
     return _side
 
 
-def _setup_mocks(mock_conv_svc, mock_proj_svc, _mock_directus, conversation, project, workspace, all_projects, all_conversations):
+def _setup_mocks(
+    mock_conv_svc,
+    mock_proj_svc,
+    _mock_directus,
+    conversation,
+    project,
+    workspace,
+    all_projects,
+    all_conversations,
+):
     """Wire up the mocked services and Directus client for _stamp_over_cap."""
     mock_conv_svc.get_by_id_or_raise.return_value = conversation
     mock_proj_svc.get_by_id_or_raise.return_value = project
@@ -96,9 +105,7 @@ class TestStampOverCapWiring:
 
         _stamp_over_cap("conv-1", mock_logger)
 
-        mock_conv_svc.update.assert_called_once_with(
-            conversation_id="conv-1", is_over_cap=True
-        )
+        mock_conv_svc.update.assert_called_once_with(conversation_id="conv-1", is_over_cap=True)
 
     @patch("dembrane.directus.directus_client_context")
     @patch("dembrane.directus.directus")
@@ -124,9 +131,7 @@ class TestStampOverCapWiring:
 
         _stamp_over_cap("conv-1", mock_logger)
 
-        mock_conv_svc.update.assert_called_once_with(
-            conversation_id="conv-1", is_over_cap=False
-        )
+        mock_conv_svc.update.assert_called_once_with(conversation_id="conv-1", is_over_cap=False)
 
     @patch("dembrane.directus.directus_client_context")
     @patch("dembrane.directus.directus")
@@ -152,9 +157,7 @@ class TestStampOverCapWiring:
 
         _stamp_over_cap("conv-1", mock_logger)
 
-        mock_conv_svc.update.assert_called_once_with(
-            conversation_id="conv-1", is_over_cap=False
-        )
+        mock_conv_svc.update.assert_called_once_with(conversation_id="conv-1", is_over_cap=False)
 
     @patch("dembrane.directus.directus_client_context")
     @patch("dembrane.directus.directus")
@@ -180,15 +183,11 @@ class TestStampOverCapWiring:
 
         _stamp_over_cap("conv-1", mock_logger)
 
-        mock_conv_svc.update.assert_called_once_with(
-            conversation_id="conv-1", is_over_cap=False
-        )
+        mock_conv_svc.update.assert_called_once_with(conversation_id="conv-1", is_over_cap=False)
 
     @patch("dembrane.service.project_service")
     @patch("dembrane.service.conversation_service")
-    def test_no_project_id_skips(
-        self, mock_conv_svc, mock_proj_svc, mock_logger
-    ):
+    def test_no_project_id_skips(self, mock_conv_svc, mock_proj_svc, mock_logger):
         """Conversation with no project_id skips the stamp gracefully."""
         mock_conv_svc.get_by_id_or_raise.return_value = {
             "id": "conv-1",
@@ -203,9 +202,7 @@ class TestStampOverCapWiring:
 
     @patch("dembrane.service.project_service")
     @patch("dembrane.service.conversation_service")
-    def test_no_workspace_id_skips(
-        self, mock_conv_svc, mock_proj_svc, mock_logger
-    ):
+    def test_no_workspace_id_skips(self, mock_conv_svc, mock_proj_svc, mock_logger):
         """Project with no workspace_id skips the stamp gracefully."""
         mock_conv_svc.get_by_id_or_raise.return_value = _make_conversation()
         mock_proj_svc.get_by_id_or_raise.return_value = {
@@ -241,9 +238,7 @@ class TestStampOverCapWiring:
 
         _stamp_over_cap("conv-1", mock_logger)
 
-        mock_conv_svc.update.assert_called_once_with(
-            conversation_id="conv-1", is_over_cap=True
-        )
+        mock_conv_svc.update.assert_called_once_with(conversation_id="conv-1", is_over_cap=True)
 
     @patch("dembrane.directus.directus_client_context")
     @patch("dembrane.directus.directus")
@@ -274,6 +269,55 @@ class TestStampOverCapWiring:
         _stamp_over_cap("conv-1", mock_logger)
 
         # 1.8h - 0.3h = 1.5h >= 1h cap → stamps True
-        mock_conv_svc.update.assert_called_once_with(
-            conversation_id="conv-1", is_over_cap=True
-        )
+        mock_conv_svc.update.assert_called_once_with(conversation_id="conv-1", is_over_cap=True)
+
+
+def test_get_by_id_or_raise_deleted_at_filter():
+    """Assert the filter carries deleted_at: {_null: True} when include_deleted is False, and omits it when True."""
+    from unittest.mock import MagicMock, patch
+
+    from dembrane.service.conversation import ConversationService
+
+    # Create a dummy service with mock dependencies
+    dummy_directus = MagicMock()
+    service = ConversationService(
+        file_service=MagicMock(),
+        project_service=MagicMock(),
+        directus_client=dummy_directus,
+    )
+
+    mock_client = MagicMock()
+    mock_client.get_items.return_value = [{"id": "conv-1"}]
+
+    mock_ctx = MagicMock()
+    mock_ctx.__enter__ = MagicMock(return_value=mock_client)
+    mock_ctx.__exit__ = MagicMock(return_value=False)
+
+    with patch("dembrane.service.conversation.directus_client_context", return_value=mock_ctx):
+        # Case 1: include_deleted = False (default)
+        res = service.get_by_id_or_raise("conv-1", include_deleted=False)
+        assert res == {"id": "conv-1"}
+
+        # Verify get_items was called with the filter "deleted_at": {"_null": True}
+        mock_client.get_items.assert_called_once()
+        args, kwargs = mock_client.get_items.call_args
+        assert args[0] == "conversation"
+        query_arg = args[1]
+        assert "filter" in query_arg["query"]
+        assert query_arg["query"]["filter"]["id"] == "conv-1"
+        assert query_arg["query"]["filter"]["deleted_at"] == {"_null": True}
+
+        mock_client.get_items.reset_mock()
+
+        # Case 2: include_deleted = True
+        res_deleted = service.get_by_id_or_raise("conv-1", include_deleted=True)
+        assert res_deleted == {"id": "conv-1"}
+
+        # Verify get_items was called WITHOUT "deleted_at" filter
+        mock_client.get_items.assert_called_once()
+        args, kwargs = mock_client.get_items.call_args
+        assert args[0] == "conversation"
+        query_arg = args[1]
+        assert "filter" in query_arg["query"]
+        assert query_arg["query"]["filter"]["id"] == "conv-1"
+        assert "deleted_at" not in query_arg["query"]["filter"]
