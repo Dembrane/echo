@@ -20,7 +20,6 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { ChatCircleTextIcon } from "@phosphor-icons/react";
 import {
 	IconAlertCircle,
 	IconChevronDown,
@@ -40,12 +39,17 @@ import {
 } from "react";
 import { useLocation } from "react-router";
 import {
+	ChatComposerShell,
+	ConversationFocusChips,
+	ConversationPickerButton,
+} from "@/components/chat/ChatComposer";
+import {
 	useChatHistory,
 	useProjectChatContext,
 	useUpdateChatMutation,
 } from "@/components/chat/hooks";
-import { InsertTemplateMenu } from "@/components/chat/InsertTemplateMenu";
 import { consumeChatPrefill } from "@/components/chat/prefill";
+import { useStickToBottom } from "@/components/common/useStickToBottom";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
 import {
 	useClearChatContextMutation,
@@ -54,8 +58,6 @@ import {
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { GoalSuggestionCard } from "@/components/goal/GoalSuggestionCard";
-import { useElementOnScreen } from "@/hooks/useElementOnScreen";
-import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
@@ -96,6 +98,7 @@ import {
 import { CanvasSuggestionCard } from "./CanvasSuggestionCard";
 import { ChatAccordionItemMenu } from "./ChatAccordion";
 import { ChatHistoryMessage } from "./ChatHistoryMessage";
+import { ChatTemplatesMenuConnected } from "./ChatTemplatesMenuConnected";
 import { CustomVerificationTopicSuggestionCard } from "./CustomVerificationTopicSuggestionCard";
 import { formatMessage } from "./chatUtils";
 import { ChatTurnLimitCard, ChatUpgradeModal } from "./FreeTierChatGate";
@@ -564,14 +567,14 @@ const ToolActivityGroup = ({
 					}
 					onClick={isSingle ? undefined : onToggle}
 				>
-					<Group justify="space-between" gap="xs" wrap="nowrap">
-						<Group gap={8} wrap="nowrap" className="min-w-0 flex-1">
+					<Group justify="flex-start" gap="lg" wrap="nowrap">
+						<Group gap={8} wrap="nowrap" className="min-w-0">
 							<Box
 								aria-hidden="true"
 								className={`h-1.5 w-1.5 shrink-0 rounded-full ${running ? "animate-pulse" : ""}`}
 								style={{ backgroundColor: dotColor }}
 							/>
-							<Text size="xs" fs="italic" className="min-w-0 flex-1 truncate">
+							<Text size="xs" fs="italic" className="min-w-0 truncate">
 								{summary}
 							</Text>
 						</Group>
@@ -616,7 +619,6 @@ export const AgenticChatPanel = ({
 	const { iso639_1, language } = useLanguage();
 	const { workspace, workspaceId } = useWorkspace();
 	const location = useLocation();
-	const navigate = useI18nNavigate();
 	// Seed question from the Ask home page (router state), consumed exactly once.
 	const initialMessageRef = useRef<string | null>(
 		typeof (location.state as { initialMessage?: unknown } | null)
@@ -665,11 +667,9 @@ export const AgenticChatPanel = ({
 	const stopArmedRunIdRef = useRef<string | null>(null);
 	const requestedStreamKeyRef = useRef<string | null>(null);
 	const currentRunIdRef = useRef<string | null>(null);
-	const [scrollTargetRef, isVisible] = useElementOnScreen({
-		root: null,
-		rootMargin: "-83px",
-		threshold: 0.1,
-	});
+	const threadScrollRef = useRef<HTMLDivElement>(null);
+	const { isAtBottomRef, scrollToBottom, showScrollButton } =
+		useStickToBottom(threadScrollRef);
 
 	useEffect(() => {
 		currentRunIdRef.current = runId;
@@ -1180,18 +1180,6 @@ export const AgenticChatPanel = ({
 		}
 	}, [runStatus, stopStream]);
 
-	const scrollToBottom = useCallback(
-		(behavior: ScrollBehavior = "smooth") => {
-			window.requestAnimationFrame(() => {
-				scrollTargetRef.current?.scrollIntoView({
-					behavior,
-					block: "end",
-				});
-			});
-		},
-		[scrollTargetRef],
-	);
-
 	// Stick to the bottom only when the reader is already there (or just sent a
 	// message). Someone scrolled up to read must never be yanked back down by a
 	// streaming event; the scroll-to-bottom button is their way back. Bottomness
@@ -1200,10 +1188,6 @@ export const AgenticChatPanel = ({
 	// bounced against the stream.
 	const hasScrolledInitiallyRef = useRef(false);
 	const forceNextScrollRef = useRef(false);
-	const isAtBottomRef = useRef(true);
-	useEffect(() => {
-		isAtBottomRef.current = isVisible;
-	}, [isVisible]);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: chatId is the trigger, not a read — switching chats re-arms the initial jump
 	useEffect(() => {
 		hasScrolledInitiallyRef.current = false;
@@ -1466,29 +1450,11 @@ export const AgenticChatPanel = ({
 						</ErrorBoundary>
 					</Group>
 				</Group>
-				<Group justify="flex-end" gap="sm">
-					<Tooltip
-						label={<Trans>This is the new chat experience</Trans>}
-						openDelay={300}
-					>
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() =>
-								navigate(`/w/${workspaceId}/projects/${projectId}/chats/new`, {
-									state: { preferMode: "deep_dive" },
-								})
-							}
-						>
-							<Trans>Open the old chat experience</Trans>
-						</Button>
-					</Tooltip>
-				</Group>
 				<Divider />
 			</Stack>
 
-			<Box className="min-h-0 flex-1 overflow-y-auto">
-				<Stack py="sm" pb="xl" className="relative min-h-full w-full">
+			<Box className="min-h-0 flex-1 overflow-y-auto" ref={threadScrollRef}>
+				<Stack className="relative min-h-full w-full pt-3 pb-6">
 					{error && (
 						<Alert
 							color="red"
@@ -1750,7 +1716,6 @@ export const AgenticChatPanel = ({
 							</div>
 						)}
 				</Stack>
-				<div ref={scrollTargetRef} aria-hidden="true" />
 			</Box>
 
 			<Box
@@ -1763,63 +1728,75 @@ export const AgenticChatPanel = ({
 						className="absolute bottom-[105%] right-4 z-50 hidden md:flex"
 					>
 						<ScrollToBottomButton
-							elementRef={scrollTargetRef}
-							isVisible={isVisible}
+							visible={showScrollButton}
+							onClick={() => scrollToBottom("smooth")}
 						/>
 					</Group>
 
 					{isRunInFlight && (
-						<Paper
-							className="self-start rounded-full px-3 py-1.5 shadow-none"
-							style={{ borderColor: "var(--mantine-color-primary-light)" }}
-							{...testId("agentic-run-indicator")}
-						>
-							<Group gap={8} wrap="nowrap">
-								<Box className="relative h-2 w-2 shrink-0">
-									<Box
-										className="absolute inset-0 rounded-full animate-ping"
-										style={{
-											backgroundColor:
-												"var(--agentic-tool-status-running-ping-dot)",
+						<Group justify="flex-start">
+							<Paper
+								className="rounded-full px-3 py-1.5 shadow-none"
+								style={{
+									borderColor: "var(--mantine-color-primary-light)",
+								}}
+								{...testId("agentic-run-indicator")}
+							>
+								<Group gap={8} wrap="nowrap">
+									<Box className="relative h-2 w-2 shrink-0">
+										<Box
+											className="absolute inset-0 rounded-full animate-ping"
+											style={{
+												backgroundColor:
+													"var(--agentic-tool-status-running-ping-dot)",
+											}}
+										/>
+										<Box
+											className="relative h-2 w-2 rounded-full"
+											style={{
+												backgroundColor:
+													"var(--agentic-tool-status-running-dot)",
+											}}
+										/>
+									</Box>
+									<Text
+										size="xs"
+										fw={500}
+										className="max-w-[min(70vw,32rem)] truncate"
+									>
+										{liveRunStatusText}
+									</Text>
+									<Button
+										type="button"
+										size="compact-xs"
+										radius="xl"
+										variant="subtle"
+										color="red"
+										aria-label={t`Cancel current run`}
+										onPointerDown={armStopControl}
+										onKeyDown={(event) => {
+											if (event.key === "Enter" || event.key === " ") {
+												armStopControl();
+											}
 										}}
-									/>
-									<Box
-										className="relative h-2 w-2 rounded-full"
-										style={{
-											backgroundColor: "var(--agentic-tool-status-running-dot)",
-										}}
-									/>
-								</Box>
-								<Text
-									size="xs"
-									fw={500}
-									className="max-w-[min(70vw,32rem)] truncate"
-								>
-									{liveRunStatusText}
-								</Text>
-								<Button
-									type="button"
-									size="compact-xs"
-									radius="xl"
-									variant="subtle"
-									color="red"
-									aria-label={t`Cancel current run`}
-									onPointerDown={armStopControl}
-									onKeyDown={(event) => {
-										if (event.key === "Enter" || event.key === " ") {
-											armStopControl();
-										}
-									}}
-									onClick={() => void handleStop()}
-									disabled={isStopping}
-									leftSection={isStopping ? <Loader size={12} /> : undefined}
-									{...testId("chat-stop-button")}
-								>
-									<Trans>Cancel</Trans>
-								</Button>
-							</Group>
-						</Paper>
+										onClick={() => void handleStop()}
+										disabled={isStopping}
+										leftSection={isStopping ? <Loader size={12} /> : undefined}
+										{...testId("chat-stop-button")}
+									>
+										<Trans>Cancel</Trans>
+									</Button>
+								</Group>
+							</Paper>
+						</Group>
 					)}
+
+					<ChatTemplatesMenuConnected
+						chatId={chatId}
+						chatMode="agentic"
+						projectId={projectId}
+						onTemplateSelect={({ content }) => setInput(content)}
+					/>
 
 					{atTurnLimit && (
 						<ChatTurnLimitCard onUpgrade={upgradeHandlers.open} />
@@ -1830,47 +1807,20 @@ export const AgenticChatPanel = ({
 							void handleSubmit();
 						}}
 					>
-						<Box
-							className="rounded-xl border px-3 pb-2 pt-2 shadow-sm transition-colors"
-							style={{
-								backgroundColor: "var(--app-background)",
-								borderColor: "var(--mantine-color-primary-light)",
-							}}
-						>
-							{focusedContextConversations.length > 0 && (
-								<Group
-									gap="xs"
-									align="baseline"
-									wrap="wrap"
-									className="mb-2 border-0 border-b border-solid pb-2 italic"
-									style={{ borderColor: "var(--mantine-color-primary-light)" }}
-								>
-									<Text size="xs" c="dimmed" fw={500}>
-										<Plural
-											value={focusedContextConversations.length}
-											one="Focusing on # conversation:"
-											other="Focusing on # conversations:"
-										/>
-									</Text>
-									{focusedContextConversations.length <= FOCUS_CHIP_LIMIT ? (
-										<ConversationLinks
-											conversations={
-												focusedContextConversations as unknown as Conversation[]
-											}
-										/>
-									) : (
-										<Text size="xs">
-											<Trans>
-												Too many to list here. The assistant reads through them
-												in batches.
-											</Trans>
-										</Text>
-									)}
-									<Button
-										variant="subtle"
-										size="compact-xs"
-										className="not-italic"
-										onClick={() =>
+						<ChatComposerShell
+							chips={
+								focusedContextConversations.length > 0 ? (
+									<ConversationFocusChips
+										conversations={focusedContextConversations}
+										isClearing={clearChatContextMutation.isPending}
+										label={
+											<Plural
+												value={focusedContextConversations.length}
+												one="Focusing on # conversation:"
+												other="Focusing on # conversations:"
+											/>
+										}
+										onClearAll={() =>
 											clearChatContextMutation.mutate({
 												chatId,
 												conversationIds: focusedContextConversations.map(
@@ -1878,16 +1828,47 @@ export const AgenticChatPanel = ({
 												),
 											})
 										}
-										loading={clearChatContextMutation.isPending}
-										{...testId("agentic-clear-focus-button")}
-									>
-										<Trans>Clear all</Trans>
-									</Button>
-								</Group>
-							)}
+										overflowNotice={
+											focusedContextConversations.length > FOCUS_CHIP_LIMIT ? (
+												<Trans>
+													Too many to list here. The assistant reads through
+													them in batches.
+												</Trans>
+											) : undefined
+										}
+									/>
+								) : undefined
+							}
+							footerLeft={
+								<ConversationPickerButton
+									ariaLabel={t`Focus on conversations`}
+									label={<Trans>Focus on conversations</Trans>}
+									onClick={conversationPickerHandlers.open}
+									testId="agentic-select-conversations-button"
+								/>
+							}
+							footerRight={
+								<Button
+									type="submit"
+									size="sm"
+									radius="md"
+									leftSection={
+										isSubmitting ? <Loader size={14} /> : <IconSend size={14} />
+									}
+									disabled={
+										isSubmitting || input.trim().length === 0 || atTurnLimit
+									}
+									{...testId("chat-send-button")}
+								>
+									<Trans>Send</Trans>
+								</Button>
+							}
+						>
 							<Textarea
 								variant="unstyled"
-								styles={{ input: { backgroundColor: "transparent" } }}
+								styles={{
+									input: { backgroundColor: "transparent", resize: "none" },
+								}}
 								autosize
 								minRows={2}
 								maxRows={10}
@@ -1903,47 +1884,7 @@ export const AgenticChatPanel = ({
 								}}
 								{...testId("chat-input-textarea")}
 							/>
-							<Group justify="space-between" align="center" gap="xs">
-								<Group gap="xs">
-									<InsertTemplateMenu
-										workspaceId={workspaceId}
-										onInsert={(content) => setInput(content)}
-									/>
-									<Button
-										variant="subtle"
-										size="compact-xs"
-										aria-label={t`Select conversations`}
-										onClick={conversationPickerHandlers.open}
-										{...testId("agentic-select-conversations-button")}
-									>
-										<ChatCircleTextIcon size={14} />
-										<span className="ms-1.5 hidden md:inline">
-											<Trans>Select conversations</Trans>
-										</span>
-									</Button>
-								</Group>
-								<Group gap="xs" wrap="nowrap">
-									<Button
-										type="submit"
-										size="sm"
-										radius="md"
-										leftSection={
-											isSubmitting ? (
-												<Loader size={14} />
-											) : (
-												<IconSend size={14} />
-											)
-										}
-										disabled={
-											isSubmitting || input.trim().length === 0 || atTurnLimit
-										}
-										{...testId("chat-send-button")}
-									>
-										<Trans>Send</Trans>
-									</Button>
-								</Group>
-							</Group>
-						</Box>
+						</ChatComposerShell>
 						<Group
 							justify="space-between"
 							gap="sm"
@@ -1964,7 +1905,7 @@ export const AgenticChatPanel = ({
 				<Modal
 					opened={conversationPickerOpened}
 					onClose={conversationPickerHandlers.close}
-					title={t`Select conversations`}
+					title={t`Focus on conversations`}
 					size="xl"
 					padding="lg"
 				>
