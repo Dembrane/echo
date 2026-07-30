@@ -66,7 +66,7 @@ transcription. Afterwards, *regenerate the summary* so it reflects the improved 
 
 > [!TIP]
 > A bad transcript is usually a missing-key-terms problem. Add the proper nouns and acronyms,
-> then retranscribe - the second pass is often markedly better.
+> then retranscribe - the second pass is often markedly better. For detailed steps on fixing bad transcripts or summaries, see our [Troubleshooting transcripts & summaries](./troubleshooting-transcripts-and-summaries.md) guide.
 
 ## Anonymisation
 

@@ -380,18 +380,36 @@ export const ProjectConversationRoute = () => {
 				</Stack>
 			</Stack>
 
-			<ConfirmModal
-				opened={regenerateConfirmOpened}
-				onClose={closeRegenerateConfirm}
-				title={t`Regenerate summary`}
-				data-testid="conversation-regenerate-summary-modal"
-				message={t`Are you sure you want to regenerate the summary? You will lose the current summary.`}
-				confirmLabel={<Trans>Regenerate</Trans>}
-				onConfirm={() => {
-					useHandleGenerateSummaryManually.mutate(true);
-					closeRegenerateConfirm();
-				}}
-			/>
+				<ConfirmModal
+					opened={regenerateConfirmOpened}
+					onClose={closeRegenerateConfirm}
+					title={t`Regenerate summary`}
+					data-testid="conversation-regenerate-summary-modal"
+					message={
+						<Stack gap="xs">
+							<Text size="sm">
+								<Trans>
+									Are you sure you want to regenerate the summary? You will lose the current summary.
+								</Trans>
+							</Text>
+							<Text size="xs">
+								<a
+									href="https://docs.dembrane.com/users/host/troubleshooting-transcripts-and-summaries.html"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="underline hover:text-[var(--mantine-color-blue-7)]"
+								>
+									<Trans>View the troubleshooting guide for transcripts & summaries</Trans>
+								</a>
+							</Text>
+						</Stack>
+					}
+					confirmLabel={<Trans>Regenerate</Trans>}
+					onConfirm={() => {
+						useHandleGenerateSummaryManually.mutate(true);
+						closeRegenerateConfirm();
+					}}
+				/>
 		</Stack>
 	);
 };

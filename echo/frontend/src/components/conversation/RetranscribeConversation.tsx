@@ -166,13 +166,27 @@ export const RetranscribeConversationModal = ({
 				</Stack>
 			) : (
 				<Stack>
-					<Alert>
-						<Trans>
-							This will create a new conversation with the same audio but a
-							fresh transcription. The original conversation will remain
-							unchanged.
-						</Trans>
-					</Alert>
+						<Alert>
+							<Stack gap="xs">
+								<Text size="sm">
+									<Trans>
+										This will create a new conversation with the same audio but a
+										fresh transcription. The original conversation will remain
+										unchanged.
+									</Trans>
+								</Text>
+								<Text size="xs">
+									<a
+										href="https://docs.dembrane.com/users/host/troubleshooting-transcripts-and-summaries.html"
+										target="_blank"
+										rel="noopener noreferrer"
+										className="underline hover:text-[var(--mantine-color-blue-7)]"
+									>
+										<Trans>View the troubleshooting guide for transcripts & summaries</Trans>
+									</a>
+								</Text>
+							</Stack>
+						</Alert>
 					<TextInput
 						label={t`New Conversation Name`}
 						placeholder={t`Enter a name for the new conversation`}
