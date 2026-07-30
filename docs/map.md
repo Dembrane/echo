@@ -57,6 +57,7 @@ it's for, and how it works.
 - [Collecting conversations](./users/host/collecting-conversations.md)
 - [Setting up the portal](./users/host/portal-editor.md)
 - [Transcripts & conversations](./users/host/transcripts-and-conversations.md)
+- [Troubleshooting transcripts & summaries](./users/host/troubleshooting-transcripts-and-summaries.md)
 - [Chat & Ask](./users/host/chat-and-ask.md)
 - [Library & analysis](./users/host/library-and-analysis.md)
 - [Reports](./users/host/reports.md)

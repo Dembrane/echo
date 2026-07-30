@@ -152,6 +152,11 @@ export const LEGAL_DPA_URL = "https://www.dembrane.com/legal/DPA" as const;
 export const ASK_DOCS_URL =
 	"https://docs.dembrane.com/users/host/chat-and-ask.html" as const;
 
+// Linked from the retranscribe and regenerate-summary modals, where hosts hit
+// the problems it covers.
+export const TRANSCRIPT_TROUBLESHOOTING_DOCS_URL =
+	"https://docs.dembrane.com/users/host/troubleshooting-transcripts-and-summaries.html" as const;
+
 export const COMMUNITY_SLACK_URL =
 	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
 
