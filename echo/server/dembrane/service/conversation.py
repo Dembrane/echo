@@ -100,6 +100,7 @@ class ConversationService:
         conversation_id: str,
         with_tags: bool = False,
         with_chunks: bool = False,
+        include_deleted: bool = False,
     ) -> dict:
         try:
             with self._client_context() as client:
@@ -113,13 +114,17 @@ class ConversationService:
                     fields.append("chunks.*")
                     deep["chunks"] = {"_sort": "-timestamp", "_limit": 1200}
 
+                filter_query: dict[str, Any] = {
+                    "id": conversation_id,
+                }
+                if not include_deleted:
+                    filter_query["deleted_at"] = {"_null": True}
+
                 conversation = client.get_items(
                     "conversation",
                     {
                         "query": {
-                            "filter": {
-                                "id": conversation_id,
-                            },
+                            "filter": filter_query,
                             "fields": fields,
                             "deep": deep,
                         }
