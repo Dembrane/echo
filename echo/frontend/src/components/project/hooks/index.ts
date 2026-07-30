@@ -7,11 +7,11 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
-import { useAddChatContextMutation } from "@/components/conversation/hooks";
 import { API_BASE_URL } from "@/config";
 import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
+	addChatContext,
 	api,
 	type CreateCustomTopicPayload,
 	cloneProjectById,
@@ -346,12 +346,13 @@ export const useDeleteTagByIdMutation = () => {
 export const useCreateChatMutation = () => {
 	const navigate = useI18nNavigate();
 	const queryClient = useQueryClient();
-	const addChatContextMutation = useAddChatContextMutation();
 	const { workspaceId } = useParams();
 	return useMutation({
 		mutationFn: async (payload: {
 			navigateToNewChat?: boolean;
-			conversationId?: string;
+			/** Conversations picked before the chat existed. Attached and awaited
+			 * here, so the rows are in place before the first turn runs. */
+			conversationIds?: string[];
 			project_id: {
 				id: string;
 			};
@@ -376,11 +377,20 @@ export const useCreateChatMutation = () => {
 				);
 			}
 
-			if (payload.conversationId) {
-				addChatContextMutation.mutate({
-					chatId: chat.id,
-					conversationId: payload.conversationId,
-				});
+			const conversationIds = payload.conversationIds ?? [];
+			if (conversationIds.length > 0) {
+				const results = await Promise.allSettled(
+					conversationIds.map((conversationId) =>
+						addChatContext(chat.id, { conversationId }),
+					),
+				);
+				const failed = results.filter((r) => r.status === "rejected").length;
+				if (failed > 0) {
+					// The chat itself is fine, so keep it and say what was dropped.
+					toast.error(
+						t`Could not add ${failed} of ${conversationIds.length} conversations to this chat`,
+					);
+				}
 			}
 
 			return chat;
@@ -389,7 +399,7 @@ export const useCreateChatMutation = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.project_id.id, "chats"],
 			});
-			toast.success("Chat created successfully");
+			toast.success(t`Chat created`);
 		},
 	});
 };

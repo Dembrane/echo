@@ -171,10 +171,18 @@ export const ENABLE_CONVERSATION_HEALTH = true;
 export const ENABLE_ANNOUNCEMENTS = true;
 export const ENABLE_DISPLAY_CONVERSATION_LINKS = true;
 export const ENABLE_WEBHOOKS = true;
-// On everywhere except production: local, testing/dev, next/staging.
-// Re-enabled 2026-07-02 with the agent on gemini-3.5-flash via Vertex and the
-// #573 harvest (server-side grep, chunk citations, titles) on main.
-export const ENABLE_AGENTIC_CHAT = byEnv({ production: false }, true);
+// Availability of agentic chat: on in every environment, production included.
+//
+// Availability and default-ness are deliberately two separate constants. Each
+// chat persists its own chat_mode, so agentic chats already exist in the data;
+// switching this to false would strand them on the legacy chat UI, which posts
+// to /chats/{id} and is rejected for agentic chats. Only flip this off if you
+// also have a story for those chats.
+export const ENABLE_AGENTIC_CHAT = true;
+// Which mode a new chat starts in. False means hosts get Specific Details by
+// default and opt in to Agentic from the Ask entry screen. Linear ECHO-898
+// decides when (and under what name) agentic becomes the default.
+export const AGENTIC_CHAT_IS_DEFAULT = false;
 // Re-enabled on echo-next (2026-06-21). Runtime render gate only; the build
 // always ships the (lazy) agentation chunk and JSX source metadata — other
 // environments just never render or download it. Widen to more envs by adding

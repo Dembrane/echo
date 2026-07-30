@@ -332,6 +332,18 @@ export const ProjectChatRoute = () => {
 	>(null);
 	const [conversationPickerOpen, setConversationPickerOpen] = useState(false);
 	const queryPrefillStartedRef = useRef(false);
+	// A question typed on the Ask home page arrives as router state. The
+	// agentic panel consumes this itself; this route consumes it for every
+	// other mode (deep_dive, legacy overview), so Specific Details (the new
+	// default) never silently drops what the host typed. Read once at mount,
+	// exactly like AgenticChatPanel's own initialMessageRef.
+	const initialMessageRef = useRef<string | null>(
+		typeof (location.state as { initialMessage?: unknown } | null)
+			?.initialMessage === "string"
+			? (location.state as { initialMessage: string }).initialMessage
+			: null,
+	);
+	const pendingInitialMessageRef = useRef<string | null>(null);
 
 	const handleSaveAsTemplate = (content: string) => {
 		setSaveAsTemplateContent(content);
@@ -535,6 +547,41 @@ export const ProjectChatRoute = () => {
 		}
 		handleSubmit();
 	};
+
+	// Step 1: once the chat is ready and its mode resolved, type the seeded
+	// question into the input, same as a host would. Runs once.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: setInput identity changes per render; the ref guards a single run
+	useEffect(() => {
+		if (!initialMessageRef.current) return;
+		if (isInitializing || chatQuery.isLoading || chatContextQuery.isLoading)
+			return;
+		if (isAgenticMode) return; // AgenticChatPanel seeds its own first message
+		if (!isModeSelected) return;
+		if (messages.length > 0) return;
+		const seed = initialMessageRef.current;
+		initialMessageRef.current = null;
+		window.history.replaceState({}, "");
+		pendingInitialMessageRef.current = seed;
+		setInput(seed);
+	}, [
+		isInitializing,
+		chatQuery.isLoading,
+		chatContextQuery.isLoading,
+		isAgenticMode,
+		isModeSelected,
+		messages.length,
+	]);
+
+	// Step 2: once the input reflects the seeded text, send it through the
+	// same path a manual Enter/Send would use (turn-limit guard, conversation
+	// lock, posthog capture). Consumed exactly once via the ref.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: guardedSubmit is recreated per render; the ref guards a single run
+	useEffect(() => {
+		if (!pendingInitialMessageRef.current) return;
+		if (normalizedInput !== pendingInitialMessageRef.current) return;
+		pendingInitialMessageRef.current = null;
+		guardedSubmit();
+	}, [normalizedInput]);
 
 	// check if assistant is typing by determining if the last message is an assistant message and has a text part
 	const isAssistantTyping =

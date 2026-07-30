@@ -10,6 +10,7 @@ import {
 	Center,
 	Group,
 	Loader,
+	Modal,
 	Stack,
 	Text,
 	Textarea,
@@ -38,9 +39,14 @@ import { InsertTemplateMenu } from "@/components/chat/InsertTemplateMenu";
 import { consumeChatPrefill } from "@/components/chat/prefill";
 import { BaseSkeleton } from "@/components/common/BaseSkeleton";
 import { NavigationButton } from "@/components/common/NavigationButton";
+import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useCreateChatMutation } from "@/components/project/hooks";
-import { ASK_DOCS_URL, ENABLE_AGENTIC_CHAT } from "@/config";
+import {
+	AGENTIC_CHAT_IS_DEFAULT,
+	ASK_DOCS_URL,
+	ENABLE_AGENTIC_CHAT,
+} from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -198,6 +204,30 @@ export const NewChatRoute = () => {
 	const atChatLimit = Boolean(
 		freeTier?.active && freeTier.chats_used >= freeTier.chats_limit,
 	);
+	// Which mode the primary Start button (and the count line's wording)
+	// targets. Agentic stays available via the "Try Agentic instead" link
+	// regardless of this default.
+	const modeToStart: ChatMode = AGENTIC_CHAT_IS_DEFAULT
+		? "agentic"
+		: "deep_dive";
+
+	// Conversations picked before the chat exists, from either this screen's
+	// own "Change" picker or the "Ask about these" action on the Conversations
+	// page (router state). Held here, not written through, until the chat is
+	// created.
+	const [selectedConversationIds, setSelectedConversationIds] = useState<
+		string[]
+	>(() => {
+		const state = location.state as
+			| { selectedConversationIds?: unknown }
+			| null;
+		return Array.isArray(state?.selectedConversationIds)
+			? state.selectedConversationIds.filter(
+					(id): id is string => typeof id === "string",
+				)
+			: [];
+	});
+	const [pickerOpened, pickerHandlers] = useDisclosure(false);
 
 	const handleModeSelected = async (
 		mode: ChatMode,
@@ -214,10 +244,16 @@ export const NewChatRoute = () => {
 		setIsInitializing(true);
 
 		try {
-			// Step 1: Create the chat without mode
+			// Step 1: Create the chat without mode, attaching any conversations
+			// picked up-front (awaited: they need to exist before the mode
+			// initializes and the first turn runs).
 			const chat = await createChatMutation.mutateAsync({
 				navigateToNewChat: false, // Don't navigate yet
 				project_id: { id: projectId },
+				conversationIds:
+					selectedConversationIds.length > 0
+						? selectedConversationIds
+						: undefined,
 			});
 
 			if (!chat?.id) {
@@ -345,6 +381,11 @@ export const NewChatRoute = () => {
 
 	const startChat = () => {
 		if (isPending) return;
+		void handleModeSelected(modeToStart, draft.trim() || undefined);
+	};
+
+	const startAgentic = () => {
+		if (isPending) return;
 		void handleModeSelected("agentic", draft.trim() || undefined);
 	};
 
@@ -353,23 +394,9 @@ export const NewChatRoute = () => {
 			<Stack gap="xl">
 				{ENABLE_AGENTIC_CHAT ? (
 					<Stack gap="lg" className="pb-4 pt-10">
-						<Group justify="space-between" align="baseline" gap="sm">
-							<Title order={2} fw={500}>
-								<Trans>Where would you like to start?</Trans>
-							</Title>
-							{/* Escape hatch to the classic experience while the new
-							    chat matures. */}
-							<Button
-								variant="subtle"
-								size="xs"
-								disabled={isPending}
-								onClick={() => void handleModeSelected("deep_dive")}
-							>
-								<Trans>
-									Prefer the old chat? Start a Specific Details chat
-								</Trans>
-							</Button>
-						</Group>
+						<Title order={2} fw={500}>
+							<Trans>Where would you like to start?</Trans>
+						</Title>
 						<Textarea
 							autosize
 							minRows={2}
@@ -413,6 +440,37 @@ export const NewChatRoute = () => {
 							}
 							{...{ "data-testid": "ask-home-input" }}
 						/>
+						{selectedConversationIds.length > 0 && (
+							<Group gap="sm" align="center">
+								<Text size="sm">
+									{modeToStart === "agentic" ? (
+										<Trans>
+											Focusing on {selectedConversationIds.length} conversations
+										</Trans>
+									) : (
+										<Trans>
+											Using {selectedConversationIds.length} conversations
+										</Trans>
+									)}
+								</Text>
+								<Button
+									variant="subtle"
+									size="xs"
+									disabled={isPending}
+									onClick={pickerHandlers.open}
+								>
+									<Trans>Change</Trans>
+								</Button>
+								<Button
+									variant="subtle"
+									size="xs"
+									disabled={isPending}
+									onClick={() => setSelectedConversationIds([])}
+								>
+									<Trans>Clear</Trans>
+								</Button>
+							</Group>
+						)}
 						<Group gap="lg">
 							<InsertTemplateMenu
 								workspaceId={workspaceId}
@@ -428,6 +486,19 @@ export const NewChatRoute = () => {
 									<Trans>What can Ask do?</Trans>
 								</Anchor>
 							)}
+						</Group>
+						<Group gap="xs" align="center">
+							<Button
+								variant="subtle"
+								size="xs"
+								disabled={isPending}
+								onClick={startAgentic}
+							>
+								<Trans>Try Agentic instead</Trans>
+							</Button>
+							<Badge size="sm" color="mauve" c="graphite">
+								<Trans>Beta</Trans>
+							</Badge>
 						</Group>
 					</Stack>
 				) : (
@@ -453,6 +524,23 @@ export const NewChatRoute = () => {
 				onClose={upgradeHandlers.close}
 				reason="chats"
 			/>
+			<Modal
+				opened={pickerOpened}
+				onClose={pickerHandlers.close}
+				title={t`Select conversations`}
+				size="xl"
+				padding="lg"
+			>
+				{projectId && (
+					<ProjectConversationsPanel
+						projectId={projectId}
+						workspaceId={workspaceId}
+						selectionMode
+						selection={selectedConversationIds}
+						onSelectionChange={setSelectedConversationIds}
+					/>
+				)}
+			</Modal>
 		</PageContainer>
 	);
 };

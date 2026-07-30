@@ -641,21 +641,27 @@ async def add_chat_context(
         if body.conversation_id in existing_ids:
             raise HTTPException(status_code=400, detail="Conversation already in the chat")
 
-        token_count = await get_conversation_token_count(body.conversation_id, auth)
-        if token_count > MAX_CHAT_CONTEXT_LENGTH:
-            raise HTTPException(status_code=400, detail="Conversation is too long")
+        # The transcript token budget only makes sense for deep_dive, which
+        # preloads full transcripts into the context window. Agentic preloads
+        # nothing: the attached rows are just a focus hint the agent reads on
+        # demand, so gating them against MAX_CHAT_CONTEXT_LENGTH would reject
+        # perfectly fine selections for no reason.
+        if chat.get("chat_mode") != "agentic":
+            token_count = await get_conversation_token_count(body.conversation_id, auth)
+            if token_count > MAX_CHAT_CONTEXT_LENGTH:
+                raise HTTPException(status_code=400, detail="Conversation is too long")
 
-        chat_context = await get_chat_context(chat_id, auth)
-        chat_context_token_usage = sum(
-            conversation_entry.token_usage for conversation_entry in chat_context.conversations
-        )
-
-        conversation_to_add_usage = token_count / MAX_CHAT_CONTEXT_LENGTH
-        if chat_context_token_usage + conversation_to_add_usage > 1:
-            raise HTTPException(
-                status_code=400,
-                detail="Chat context is too long. Remove other conversations to proceed.",
+            chat_context = await get_chat_context(chat_id, auth)
+            chat_context_token_usage = sum(
+                conversation_entry.token_usage for conversation_entry in chat_context.conversations
             )
+
+            conversation_to_add_usage = token_count / MAX_CHAT_CONTEXT_LENGTH
+            if chat_context_token_usage + conversation_to_add_usage > 1:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Chat context is too long. Remove other conversations to proceed.",
+                )
 
         await run_in_thread_pool(
             chat_svc.attach_conversations,
