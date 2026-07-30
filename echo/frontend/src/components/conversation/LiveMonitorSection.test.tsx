@@ -10,8 +10,14 @@ import type {
 	MonitorConversation,
 	ParticipantState,
 } from "@/hooks/useConversationMonitor";
-import { LiveMonitorSection } from "./LiveMonitorSection";
-import { isProblemState, StatePill } from "./StatePill";
+import { groupByStatus, LiveMonitorSection } from "./LiveMonitorSection";
+import {
+	isLiveRecording,
+	isOnRecordingPage,
+	monitorStatusGroup,
+	settleStatusGroups,
+} from "./monitorGrouping";
+import { isProblemState, StatePill, stateColor } from "./StatePill";
 
 const captureMock = vi.hoisted(() => vi.fn());
 vi.mock("posthog-js", () => ({ default: { capture: captureMock } }));
@@ -118,9 +124,24 @@ describe("StatePill", () => {
 		expect(getByText("Left")).toBeTruthy();
 	});
 
+	it("renders On recording page for the waiting state", () => {
+		const { getByText } = renderPill("waiting");
+		expect(getByText("On recording page")).toBeTruthy();
+	});
+
 	it("renders Idle for an unknown/idle state", () => {
 		const { getByText } = renderPill("idle");
 		expect(getByText("Idle")).toBeTruthy();
+	});
+
+	it("puts left, backgrounded and away on yellow alongside paused", () => {
+		expect(stateColor("paused")).toBe("yellow");
+		expect(stateColor("left")).toBe("yellow");
+		expect(stateColor("backgrounded")).toBe("yellow");
+	});
+
+	it("keeps waiting grey", () => {
+		expect(stateColor("waiting")).toBe("gray");
 	});
 });
 
@@ -230,16 +251,15 @@ describe("LiveMonitorSection click-through", () => {
 		);
 	});
 
-	it("opens the drilldown modal from the row pencil without navigating", async () => {
+	it("opens the drilldown from the keyboard, so tiles are not mouse-only", async () => {
 		captureMock.mockClear();
 		mockConversations = [baseConversation({ id: "c1", label: "Ada" })];
-		const { getByTestId } = renderSection();
-		fireEvent.click(getByTestId("monitor-row-edit"));
-		// Modal is open (its Delete action is visible) and the row didn't navigate.
+		const { getByLabelText } = renderSection();
+		fireEvent.keyDown(getByLabelText("Open Ada"), { key: "Enter" });
 		expect(await screen.findByText("Delete")).toBeTruthy();
-		expect(captureMock).not.toHaveBeenCalledWith(
-			"monitor_conversation_opened",
-			expect.anything(),
+		expect(captureMock).toHaveBeenCalledWith(
+			"monitor_drilldown_opened",
+			expect.objectContaining({ entity_type: "recording", project_id: "p1" }),
 		);
 	});
 });
@@ -274,15 +294,119 @@ describe("LiveMonitorSection row ordering", () => {
 	});
 });
 
-describe("LiveMonitorSection click-filtering", () => {
-	it("filters conversations list when badges are clicked, and clears filters properly", async () => {
+describe("monitor status grouping", () => {
+	it("puts paused, away, left and waiting on the recording page", () => {
+		for (const state of [
+			"paused",
+			"backgrounded",
+			"left",
+			"waiting",
+		] as const) {
+			const conversation = baseConversation({
+				state,
+				is_live: state !== "left",
+			});
+			expect(monitorStatusGroup(conversation)).toBe("recording_page");
+			expect(isOnRecordingPage(conversation)).toBe(true);
+			expect(isLiveRecording(conversation)).toBe(false);
+		}
+	});
+
+	it("keeps an actively recording conversation in the live group", () => {
+		const conversation = baseConversation({
+			state: "recording",
+			is_live: true,
+		});
+		expect(monitorStatusGroup(conversation)).toBe("live");
+		expect(isLiveRecording(conversation)).toBe(true);
+		expect(isOnRecordingPage(conversation)).toBe(false);
+	});
+
+	it("separates offline and finished from both funnel columns", () => {
+		const offline = baseConversation({ state: "offline", is_live: false });
+		const finished = baseConversation({ is_finished: true, is_live: false });
+		expect(monitorStatusGroup(offline)).toBe("offline");
+		expect(monitorStatusGroup(finished)).toBe("finished");
+		for (const conversation of [offline, finished]) {
+			expect(isOnRecordingPage(conversation)).toBe(false);
+			expect(isLiveRecording(conversation)).toBe(false);
+		}
+	});
+
+	it("orders status groups by the fixed order, never by count", () => {
+		const groups = groupByStatus(
+			[
+				baseConversation({ id: "a", label: "Ada" }),
+				baseConversation({ id: "b", label: "Bob" }),
+				baseConversation({ id: "c", label: "Cy" }),
+			],
+			(conversation) => (conversation.id === "a" ? "live" : "recording_page"),
+		);
+		expect(groups.map((group) => group.key)).toEqual([
+			"live",
+			"recording_page",
+		]);
+		// The bigger bucket does not jump to the front.
+		expect(groups[1].items).toHaveLength(2);
+	});
+});
+
+describe("settleStatusGroups", () => {
+	const recording = baseConversation({ id: "c1", state: "recording" });
+	const paused = baseConversation({ id: "c1", state: "paused" });
+
+	it("adopts a status immediately on first sighting", () => {
+		const settled = settleStatusGroups(new Map(), [recording], 0);
+		expect(settled.get("c1")?.group).toBe("live");
+	});
+
+	it("holds a tile in place until the new status has settled", () => {
+		let settled = settleStatusGroups(new Map(), [recording], 0);
+		settled = settleStatusGroups(settled, [paused], 1000);
+		// Still rendered under live: the change has not held long enough yet.
+		expect(settled.get("c1")?.group).toBe("live");
+		expect(settled.get("c1")?.pending).toBe("recording_page");
+
+		settled = settleStatusGroups(settled, [paused], 5000);
+		expect(settled.get("c1")?.group).toBe("recording_page");
+	});
+
+	it("cancels a pending move when the status flaps back", () => {
+		let settled = settleStatusGroups(new Map(), [recording], 0);
+		settled = settleStatusGroups(settled, [paused], 1000);
+		settled = settleStatusGroups(settled, [recording], 2000);
+		expect(settled.get("c1")?.group).toBe("live");
+		expect(settled.get("c1")?.pending).toBeNull();
+
+		// And the settle clock restarts, so the flap buys no head start.
+		settled = settleStatusGroups(settled, [paused], 3000);
+		settled = settleStatusGroups(settled, [paused], 6000);
+		expect(settled.get("c1")?.group).toBe("live");
+	});
+
+	it("forgets conversations that dropped out of the snapshot", () => {
+		const settled = settleStatusGroups(
+			settleStatusGroups(new Map(), [recording], 0),
+			[],
+			1000,
+		);
+		expect(settled.size).toBe(0);
+	});
+});
+
+describe("LiveMonitorSection grid-only view", () => {
+	it("has no view toggle and writes no view-mode preference", () => {
+		localStorage.removeItem("echo_monitor_view_mode");
+		mockConversations = [baseConversation({ id: "c1", label: "Ada" })];
+		const { queryByText } = renderSection();
+		expect(queryByText("Detailed")).toBeNull();
+		expect(queryByText("Compressed")).toBeNull();
+		expect(localStorage.getItem("echo_monitor_view_mode")).toBeNull();
+	});
+
+	it("renders the summary badges as informational, not filters", () => {
 		mockConversations = [
-			baseConversation({
-				id: "c1",
-				label: "Ada",
-				is_live: true,
-				has_error: false,
-			}),
+			baseConversation({ id: "c1", label: "Ada", is_live: true }),
 			baseConversation({
 				id: "c2",
 				label: "Bob",
@@ -290,71 +414,47 @@ describe("LiveMonitorSection click-filtering", () => {
 				has_error: true,
 			}),
 		];
-		const { getByRole, getByText, queryByText } = renderSection();
-		// Query the summary badges by role: a tag group renders its own "N live"
-		// badge with identical text, so getByText would be ambiguous.
-		const liveBadge = () => getByRole("button", { name: "1 live" });
-		const errorBadge = () => getByRole("button", { name: "1 with errors" });
-
-		// Initially, both Ada and Bob are visible
-		expect(getByText("Ada")).toBeTruthy();
-		expect(getByText("Bob")).toBeTruthy();
-		expect(liveBadge().getAttribute("aria-pressed")).toBe("false");
-
-		// Click the "live" badge: only the live conversation survives
-		fireEvent.click(liveBadge());
-		expect(getByText("Ada")).toBeTruthy();
-		expect(queryByText("Bob")).toBeNull();
-		expect(liveBadge().getAttribute("aria-pressed")).toBe("true");
-
-		// Clicking the same badge again toggles the filter back off
-		fireEvent.click(liveBadge());
-		expect(getByText("Ada")).toBeTruthy();
-		expect(getByText("Bob")).toBeTruthy();
-
-		// Switching to the errors badge swaps the filter rather than stacking it
-		fireEvent.click(errorBadge());
-		expect(queryByText("Ada")).toBeNull();
-		expect(getByText("Bob")).toBeTruthy();
-
-		// The banner's "Clear filter" resets everything
-		fireEvent.click(getByRole("button", { name: "Clear filter" }));
+		const { getByText, queryByRole } = renderSection();
+		// The badges are no longer buttons, and nothing gets filtered out.
+		expect(queryByRole("button", { name: "1 live" })).toBeNull();
+		expect(queryByRole("button", { name: "1 with errors" })).toBeNull();
 		expect(getByText("Ada")).toBeTruthy();
 		expect(getByText("Bob")).toBeTruthy();
 	});
+});
 
-	it("filters from the keyboard, so badges are not mouse-only", () => {
+describe("LiveMonitorSection grouping dimension", () => {
+	it("regroups by status and reports the change once", () => {
+		captureMock.mockClear();
 		mockConversations = [
-			baseConversation({ id: "c1", label: "Ada", is_live: true }),
-			baseConversation({ id: "c2", label: "Bob", is_live: false }),
+			baseConversation({
+				created_at: "2026-07-02T12:00:02Z",
+				id: "c2",
+				is_live: true,
+				label: "Bob",
+				state: "paused",
+			}),
+			baseConversation({
+				created_at: "2026-07-02T12:00:01Z",
+				id: "c1",
+				is_live: true,
+				label: "Ada",
+				state: "recording",
+			}),
 		];
-		const { getByRole, getByText, queryByText } = renderSection();
-		const liveBadge = () => getByRole("button", { name: "1 live" });
+		const { getByText } = renderSection();
+		fireEvent.click(getByText("By status"));
 
-		fireEvent.keyDown(liveBadge(), { key: "Enter" });
-		expect(getByText("Ada")).toBeTruthy();
-		expect(queryByText("Bob")).toBeNull();
+		expect(captureMock).toHaveBeenCalledWith("monitor_grouping_changed", {
+			group_by: "status",
+			project_id: "p1",
+		});
 
-		fireEvent.keyDown(liveBadge(), { key: " " });
-		expect(getByText("Ada")).toBeTruthy();
-		expect(getByText("Bob")).toBeTruthy();
-	});
-
-	it("keeps the compressed grid toggle in localStorage", () => {
-		mockConversations = [baseConversation({ id: "c1", label: "Ada" })];
-		const { getByText, unmount } = renderSection();
-
-		fireEvent.click(getByText("Compressed"));
-		expect(localStorage.getItem("echo_monitor_view_mode")).toBe("compressed");
-
-		// A fresh mount reads the saved preference back.
-		unmount();
-		const second = renderSection();
+		// Live group first, recording-page group second, whatever the counts.
+		const ada = getByText("Ada");
+		const bob = getByText("Bob");
 		expect(
-			second
-				.getByRole("radio", { name: "Compressed" })
-				.getAttribute("checked") !== null ||
-				localStorage.getItem("echo_monitor_view_mode") === "compressed",
-		).toBe(true);
+			ada.compareDocumentPosition(bob) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
 	});
 });
