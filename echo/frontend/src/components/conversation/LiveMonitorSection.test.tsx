@@ -269,7 +269,59 @@ describe("LiveMonitorSection row ordering", () => {
 		const bravo = getByText("Bravo");
 		// Ascending created_at: Charlie (01) -> Alpha (02) -> Bravo (03).
 		const FOLLOWING = Node.DOCUMENT_POSITION_FOLLOWING;
-		expect(charlie.compareDocumentPosition(alpha) & FOLLOWING).toBeTruthy();
-		expect(alpha.compareDocumentPosition(bravo) & FOLLOWING).toBeTruthy();
+			expect(charlie.compareDocumentPosition(alpha) & FOLLOWING).toBeTruthy();
+			expect(alpha.compareDocumentPosition(bravo) & FOLLOWING).toBeTruthy();
+		});
 	});
-});
+
+	describe("LiveMonitorSection click-filtering", () => {
+		it("filters conversations list when badges are clicked, and clears filters properly", async () => {
+			mockConversations = [
+				baseConversation({
+					id: "c1",
+					label: "Ada",
+					is_live: true,
+					has_error: false,
+				}),
+				baseConversation({
+					id: "c2",
+					label: "Bob",
+					is_live: false,
+					has_error: true,
+				}),
+			];
+			const { getByText, queryByText } = renderSection();
+
+			// Initially, both Ada and Bob are visible
+			expect(getByText("Ada")).toBeTruthy();
+			expect(getByText("Bob")).toBeTruthy();
+
+			// Click the "live" badge (rendered as "1 live")
+			fireEvent.click(getByText("1 live"));
+
+			// Now only Ada is visible
+			expect(getByText("Ada")).toBeTruthy();
+			expect(queryByText("Bob")).toBeNull();
+
+			// Click "live" badge again to clear filter
+			fireEvent.click(getByText("1 live"));
+
+			// Both are visible again
+			expect(getByText("Ada")).toBeTruthy();
+			expect(getByText("Bob")).toBeTruthy();
+
+			// Click the "errors" badge (rendered as "1 with errors")
+			fireEvent.click(getByText("1 with errors"));
+
+			// Only Bob is visible
+			expect(queryByText("Ada")).toBeNull();
+			expect(getByText("Bob")).toBeTruthy();
+
+			// Click "Clear filter" button to clear filter
+			fireEvent.click(getByText("Clear filter"));
+
+			// Both are visible again
+			expect(getByText("Ada")).toBeTruthy();
+			expect(getByText("Bob")).toBeTruthy();
+		});
+	});

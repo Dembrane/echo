@@ -712,38 +712,64 @@ export const LiveMonitorSection = ({
 }) => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const { workspace } = useWorkspace();
-	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
-			// Drilldown selection by id, so the open modal keeps reading fresh snapshots
-			// (and closes on its own once the row is deleted / ages out).
-			const [selectedId, setSelectedId] = useState<string | null>(null);
+		const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
+		// Drilldown selection by id, so the open modal keeps reading fresh snapshots
+		// (and closes on its own once the row is deleted / ages out).
+		const [selectedId, setSelectedId] = useState<string | null>(null);
 
-			const [viewMode, setViewMode] = useState<"detailed" | "compressed">(() => {
+		const [viewMode, setViewMode] = useState<"detailed" | "compressed">(() => {
+			try {
+				const saved = localStorage.getItem("echo_monitor_view_mode");
+				return (saved === "compressed" || saved === "detailed") ? saved : "detailed";
+			} catch {
+				return "detailed";
+			}
+		});
+
+		const handleViewModeChange = (val: string) => {
+			if (val === "compressed" || val === "detailed") {
+				setViewMode(val);
 				try {
-					const saved = localStorage.getItem("echo_monitor_view_mode");
-					return (saved === "compressed" || saved === "detailed") ? saved : "detailed";
-				} catch {
-					return "detailed";
+					localStorage.setItem("echo_monitor_view_mode", val);
+				} catch {}
+			}
+		};
+
+		// Filter state: "live" | "offline" | "not_receiving" | "transcribing" | "with_errors" | null
+		const [activeFilter, setActiveFilter] = useState<
+			"live" | "offline" | "not_receiving" | "transcribing" | "with_errors" | null
+		>(null);
+
+		const { conversations, summary, isLoading, error, isStreaming } =
+			useConversationMonitor(projectId);
+
+		const filteredConversations = useMemo(() => {
+			if (!activeFilter) return conversations;
+			return conversations.filter((conversation) => {
+				switch (activeFilter) {
+					case "live":
+						return conversation.is_live;
+					case "offline":
+						return conversation.recording_health === "offline";
+					case "not_receiving":
+						return conversation.recording_health === "stalled";
+					case "transcribing":
+						return conversation.transcription_status === "transcribing";
+					case "with_errors":
+						return conversation.has_error;
+					default:
+						return true;
 				}
 			});
+		}, [conversations, activeFilter]);
 
-			const handleViewModeChange = (val: string) => {
-				if (val === "compressed" || val === "detailed") {
-					setViewMode(val);
-					try {
-						localStorage.setItem("echo_monitor_view_mode", val);
-					} catch {}
-				}
-			};
-
-			const { conversations, summary, isLoading, error, isStreaming } =
-		useConversationMonitor(projectId);
-	const groups = useMemo(() => groupByTag(conversations), [conversations]);
-	const selected =
-		conversations.find((conversation) => conversation.id === selectedId) ??
-		null;
-	// Rows link to the conversation detail page when we know the workspace.
-	const base =
-		workspaceId && projectId ? `/w/${workspaceId}/projects/${projectId}` : null;
+		const groups = useMemo(() => groupByTag(filteredConversations), [filteredConversations]);
+		const selected =
+			conversations.find((conversation) => conversation.id === selectedId) ??
+			null;
+		// Rows link to the conversation detail page when we know the workspace.
+		const base =
+			workspaceId && projectId ? `/w/${workspaceId}/projects/${projectId}` : null;
 
 	// First load: spinner on the dedicated page, nothing when embedded (no flicker).
 	if (isLoading && summary.total === 0) {
@@ -818,58 +844,100 @@ export const LiveMonitorSection = ({
 									mr="xs"
 								/>
 
-								<Group gap="xs" align="center">
-									<MonitorBadge size="sm" color="primary" variant="light">
-										<Plural value={summary.live} one="# live" other="# live" />
-									</MonitorBadge>
-									{summary.offline > 0 && (
+									<Group gap="xs" align="center">
 										<MonitorBadge
 											size="sm"
-											color="mauve"
-											variant="filled"
-											styles={{ section: { color: "var(--app-text)" } }}
-											leftSection={<WifiSlashIcon size={12} />}
+											color="primary"
+											variant={activeFilter === "live" ? "filled" : "light"}
+											style={{
+												cursor: "pointer",
+												transition: "all 0.2s",
+												opacity: activeFilter && activeFilter !== "live" ? 0.4 : 1,
+											}}
+											onClick={() => setActiveFilter(activeFilter === "live" ? null : "live")}
 										>
-											<Plural
-												value={summary.offline}
-												one="# offline"
-												other="# offline"
-											/>
+											<Plural value={summary.live} one="# live" other="# live" />
 										</MonitorBadge>
-									)}
-									{summary.not_receiving > 0 && (
-										<MonitorBadge
-											size="sm"
-											color="orange"
-											variant="filled"
-											leftSection={<WarningCircleIcon size={12} />}
-										>
-											<Plural
-												value={summary.not_receiving}
-												one="# audio stopped"
-												other="# audio stopped"
-											/>
-										</MonitorBadge>
-									)}
-									{summary.transcribing > 0 && (
-										<MonitorBadge size="sm" color="primary" variant="light">
-											<Plural
-												value={summary.transcribing}
-												one="# transcribing"
-												other="# transcribing"
-											/>
-										</MonitorBadge>
-									)}
-									{summary.with_errors > 0 && (
-										<MonitorBadge size="sm" color="red" variant="light">
-											<Plural
-												value={summary.with_errors}
-												one="# with errors"
-												other="# with errors"
-											/>
-										</MonitorBadge>
-									)}
-								</Group>
+										{summary.offline > 0 && (
+											<MonitorBadge
+												size="sm"
+												color="mauve"
+												variant="filled"
+												styles={{ section: { color: "var(--app-text)" } }}
+												leftSection={<WifiSlashIcon size={12} />}
+												style={{
+													cursor: "pointer",
+													transition: "all 0.2s",
+													opacity: activeFilter && activeFilter !== "offline" ? 0.4 : 1,
+												}}
+												onClick={() => setActiveFilter(activeFilter === "offline" ? null : "offline")}
+											>
+												<Plural
+													value={summary.offline}
+													one="# offline"
+													other="# offline"
+												/>
+											</MonitorBadge>
+										)}
+										{summary.not_receiving > 0 && (
+											<MonitorBadge
+												size="sm"
+												color="orange"
+												variant="filled"
+												leftSection={<WarningCircleIcon size={12} />}
+												style={{
+													cursor: "pointer",
+													transition: "all 0.2s",
+													opacity: activeFilter && activeFilter !== "not_receiving" ? 0.4 : 1,
+												}}
+												onClick={() => setActiveFilter(activeFilter === "not_receiving" ? null : "not_receiving")}
+											>
+												<Plural
+													value={summary.not_receiving}
+													one="# audio stopped"
+													other="# audio stopped"
+												/>
+											</MonitorBadge>
+										)}
+										{summary.transcribing > 0 && (
+											<MonitorBadge
+												size="sm"
+												color="primary"
+												variant={activeFilter === "transcribing" ? "filled" : "light"}
+												style={{
+													cursor: "pointer",
+													transition: "all 0.2s",
+													opacity: activeFilter && activeFilter !== "transcribing" ? 0.4 : 1,
+												}}
+												onClick={() => setActiveFilter(activeFilter === "transcribing" ? null : "transcribing")}
+											>
+												<Plural
+													value={summary.transcribing}
+													one="# transcribing"
+													other="# transcribing"
+												/>
+											</MonitorBadge>
+										)}
+										{summary.with_errors > 0 && (
+											<MonitorBadge
+												size="sm"
+												color="red"
+												variant={activeFilter === "with_errors" ? "filled" : "light"}
+												style={{
+													cursor: "pointer",
+													transition: "all 0.2s",
+													opacity: activeFilter && activeFilter !== "with_errors" ? 0.4 : 1,
+												}}
+												onClick={() => setActiveFilter(activeFilter === "with_errors" ? null : "with_errors")}
+											>
+												<Plural
+													value={summary.with_errors}
+													one="# with errors"
+													other="# with errors"
+												/>
+											</MonitorBadge>
+										)}
+									</Group>
 
 								{(!isStreaming || !!catchUpLabel(summary.catch_up_eta_seconds)) && (
 									<Group gap="xs" align="center" style={{ opacity: 0.65 }}>
@@ -902,31 +970,77 @@ export const LiveMonitorSection = ({
 						</Group>
 					)}
 
-					<Stack gap="lg">
-						{groups.map((group) => (
-							<TagGroupSection
-								key={group.key}
-								group={group}
-								viewMode={viewMode}
-								highlightedConversationId={highlightedConversationId}
-							onLockedClick={(conversation) => {
-								posthog.capture("monitor_locked_row_clicked", {
-									conversation_id: conversation.id,
-									project_id: projectId,
-								});
-								upgradeHandlers.open();
-							}}
-							onEdit={(conversation) => {
-								posthog.capture("monitor_drilldown_opened", {
-									entity_type: "recording",
-									project_id: projectId,
-									stage_or_state: conversation.state,
-								});
-								setSelectedId(conversation.id);
-							}}
-						/>
-					))}
-				</Stack>
+						<Stack gap="lg">
+							{activeFilter && (
+								<Group justify="space-between" bg="var(--mantine-color-gray-1)" p="xs" px="sm" style={{ borderRadius: "4px" }}>
+									<Group gap="xs">
+										<Text size="xs" fw={500}>
+											<Trans>
+												Filtering by:{" "}
+												<Text span fw={700}>
+													{activeFilter === "live" && t`Live`}
+													{activeFilter === "offline" && t`Offline`}
+													{activeFilter === "not_receiving" && t`Audio stopped`}
+													{activeFilter === "transcribing" && t`Transcribing`}
+													{activeFilter === "with_errors" && t`With errors`}
+												</Text>
+											</Trans>
+										</Text>
+									</Group>
+									<Text
+										size="xs"
+										fw={500}
+										className="cursor-pointer hover:underline"
+										onClick={() => setActiveFilter(null)}
+										style={{ color: "var(--mantine-color-blue-6)" }}
+									>
+										<Trans>Clear filter</Trans>
+									</Text>
+								</Group>
+							)}
+
+							{groups.length === 0 ? (
+								<Card withBorder p="lg" radius="sm">
+									<Stack gap="xs" align="center" py="md">
+										<Text size="sm" fw={500} ta="center">
+											<Trans>No conversations match the active filter</Trans>
+										</Text>
+										<Text
+											size="xs"
+											className="cursor-pointer hover:underline"
+											onClick={() => setActiveFilter(null)}
+											style={{ color: "var(--mantine-color-blue-6)" }}
+										>
+											<Trans>Clear filter</Trans>
+										</Text>
+									</Stack>
+								</Card>
+							) : (
+								groups.map((group) => (
+									<TagGroupSection
+										key={group.key}
+										group={group}
+										viewMode={viewMode}
+										highlightedConversationId={highlightedConversationId}
+										onLockedClick={(conversation) => {
+											posthog.capture("monitor_locked_row_clicked", {
+												conversation_id: conversation.id,
+												project_id: projectId,
+											});
+											upgradeHandlers.open();
+										}}
+										onEdit={(conversation) => {
+											posthog.capture("monitor_drilldown_opened", {
+												entity_type: "recording",
+												project_id: projectId,
+												stage_or_state: conversation.state,
+											});
+											setSelectedId(conversation.id);
+										}}
+									/>
+								))
+							)}
+						</Stack>
 			</Stack>
 			<ConversationDrilldownModal
 				conversation={selected}
