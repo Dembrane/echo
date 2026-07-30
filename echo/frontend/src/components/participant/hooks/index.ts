@@ -90,7 +90,13 @@ export const useConfirmConversationChunkUpload = () => {
 				],
 			});
 		},
-		retry: 5,
+		retry: (failureCount, error: AxiosError) => {
+			const status = error?.response?.status;
+			if (status && [404, 403, 410].includes(status as number)) {
+				return false;
+			}
+			return failureCount < 5;
+		},
 		retryDelay: (attemptIndex) => {
 			// Exponential backoff: 2s, 4s, 8s, 16s, 32s (capped at 30s)
 			return Math.min(2000 * 2 ** attemptIndex, 30000);
@@ -209,13 +215,13 @@ export const useUploadConversationChunk = () => {
 				onProgress: variables.onProgress,
 			});
 		},
-			retry: (failureCount, error) => {
-				// Don't retry on deleted or missing conversation errors (403, 404, 410)
-				if (error && (error as any).status >= 400 && (error as any).status < 500) {
-					return false;
-				}
-				return failureCount < 20;
-			},
+		retry: (failureCount, error: AxiosError) => {
+			const status = error?.response?.status;
+			if (status && [404, 403, 410].includes(status as number)) {
+				return false;
+			}
+			return failureCount < 20;
+		},
 	});
 };
 

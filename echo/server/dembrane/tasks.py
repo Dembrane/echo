@@ -310,12 +310,12 @@ def task_finalize_conversation(conversation_id: str) -> None:
     logger = getLogger("dembrane.tasks.task_finalize_conversation")
 
     from dembrane.service import conversation_service
-    from dembrane.service.conversation import ConversationNotFoundException
     from dembrane.coordination import (
         get_pending_chunks,
         mark_finalize_in_progress,
         cleanup_conversation_coordination,
     )
+    from dembrane.service.conversation import ConversationNotFoundException
 
     try:
         logger.info(f"Finalizing conversation: {conversation_id}")
@@ -585,9 +585,9 @@ def _stamp_over_cap(conversation_id: str, logger: Any) -> None:
     Only fires on free + pilot; pioneer+ always evaluates to False.
     """
     from dembrane.service import project_service, conversation_service
-    from dembrane.service.conversation import ConversationNotFoundException
     from dembrane.directus import directus, directus_client_context
     from dembrane.tier_capacity import compute_is_over_cap
+    from dembrane.service.conversation import ConversationNotFoundException
 
     try:
         conversation = conversation_service.get_by_id_or_raise(conversation_id)
@@ -778,8 +778,8 @@ def task_process_conversation_chunk(
     logger = getLogger("dembrane.tasks.task_process_conversation_chunk")
     try:
         from dembrane.service import conversation_service
-        from dembrane.service.conversation import ConversationNotFoundException
         from dembrane.coordination import increment_pending_chunks
+        from dembrane.service.conversation import ConversationNotFoundException
 
         chunk = conversation_service.get_chunk_by_id_or_raise(chunk_id)
         conversation_id = chunk["conversation_id"]
@@ -833,7 +833,9 @@ def task_process_conversation_chunk(
         return
 
     except ConversationNotFoundException:
-        logger.info(f"Conversation not found for chunk {chunk_id} (likely deleted), skipping chunk processing")
+        logger.info(
+            f"Conversation not found for chunk {chunk_id} (likely deleted), skipping chunk processing"
+        )
         return
     except Exception as e:
         from dembrane.audio_utils import FileTooSmallError
@@ -981,9 +983,9 @@ def task_compute_conversation_token_count(conversation_id: str) -> None:
     logger = getLogger("dembrane.tasks.task_compute_conversation_token_count")
 
     from dembrane.service import conversation_service
-    from dembrane.service.conversation import ConversationNotFoundException
     from dembrane.api.conversation import get_conversation_token_count
     from dembrane.api.dependency_auth import DirectusSession
+    from dembrane.service.conversation import ConversationNotFoundException
 
     try:
         conversation = conversation_service.get_by_id_or_raise(conversation_id)
