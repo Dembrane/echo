@@ -11,18 +11,21 @@ type LogoProps = {
 	hideLogo?: boolean;
 	hideTitle?: boolean;
 	alwaysDembrane?: boolean;
+	hideEnvBadge?: boolean;
 } & GroupProps;
 
 export const LogoDembrane = ({
 	hideLogo,
 	hideTitle,
 	alwaysDembrane,
+	hideEnvBadge,
 	...props
 }: LogoProps) => {
 	const { logoUrl } = useWhitelabelLogo();
 	const effectiveLogoUrl = alwaysDembrane ? null : logoUrl;
 	// Show an env badge everywhere except production.
-	const hostEnv = APP_ENVIRONMENT === "production" ? null : APP_ENVIRONMENT;
+	const hostEnv =
+		hideEnvBadge || APP_ENVIRONMENT === "production" ? null : APP_ENVIRONMENT;
 
 	return (
 		<Group gap="sm" h="32px" align="center" {...props}>
@@ -52,7 +55,13 @@ export const LogoDembrane = ({
 	);
 };
 
-const LogoAiCoNL = ({ hideLogo, hideTitle, ...props }: LogoProps) => (
+const LogoAiCoNL = ({
+	hideLogo,
+	hideTitle,
+	alwaysDembrane: _alwaysDembrane,
+	hideEnvBadge: _hideEnvBadge,
+	...props
+}: LogoProps) => (
 	<Group gap="sm" h="30px" {...props}>
 		{!hideLogo && (
 			<img

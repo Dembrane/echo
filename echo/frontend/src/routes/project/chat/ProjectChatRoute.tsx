@@ -733,7 +733,7 @@ export const ProjectChatRoute = () => {
 						<Stack gap="xs">
 							<Group>
 								<Box className="animate-spin">
-									<Logo hideTitle alwaysDembrane h="20px" my={4} />
+									<Logo hideTitle hideEnvBadge alwaysDembrane h="20px" my={4} />
 								</Box>
 								<Text
 									size="sm"
