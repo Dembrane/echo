@@ -37,7 +37,6 @@ import {
 } from "@/components/chat/ChatComposer";
 import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
-import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
 import { ChatTemplatesMenuConnected } from "@/components/chat/ChatTemplatesMenuConnected";
 import { formatMessage } from "@/components/chat/chatUtils";
@@ -60,7 +59,6 @@ import { Logo } from "@/components/common/Logo";
 import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { toast } from "@/components/common/Toaster";
 import { useStickToBottom } from "@/components/common/useStickToBottom";
-import { ConversationLinks } from "@/components/conversation/ConversationLinks";
 import {
 	useClearChatContextMutation,
 	useConversationsCountByProjectId,
@@ -89,11 +87,6 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
 	const [templateKey, setTemplateKey] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	// Local stand-in for the server's "dembrane" context-added message, shown
-	// instantly instead of waiting on a history refetch (see customHandleSubmit).
-	const [pendingContextAnnouncement, setPendingContextAnnouncement] = useState<
-		TProjectChatContext["conversations"]
-	>([]);
 
 	const addChatMessageMutation = useAddChatMessageMutation();
 	const lockConversationsMutation = useLockConversationsMutation();
@@ -209,19 +202,17 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const customHandleSubmit = async () => {
 		lastInput.current = input;
 		setIsSubmitting(true);
-		setPendingContextAnnouncement([]);
-
-		// Snapshot the not-yet-locked conversations before locking, so the
-		// announcement can render instantly instead of waiting on a refetch.
-		const conversationsBeingAdded = contextToBeAdded?.conversations ?? [];
 
 		try {
 			// Lock conversations first
 			await lockConversationsMutation.mutateAsync({ chatId });
-			await chatContextQuery.refetch();
-
-			if (conversationsBeingAdded.length > 0) {
-				setPendingContextAnnouncement(conversationsBeingAdded);
+			const [, refreshedHistory] = await Promise.all([
+				chatContextQuery.refetch(),
+				chatHistoryQuery.refetch({ cancelRefetch: false }),
+			]);
+			if (refreshedHistory.data) {
+				// @ts-expect-error chatHistoryQuery.data is not typed
+				setMessages(refreshedHistory.data);
 			}
 
 			// Submit the chat
@@ -255,8 +246,6 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		) {
 			// @ts-expect-error chatHistoryQuery.data is not typed
 			setMessages(chatHistoryQuery.data ?? messages);
-			// Real message has arrived; drop the stand-in so it doesn't double up.
-			setPendingContextAnnouncement([]);
 		}
 	}, [
 		chatHistoryQuery.data,
@@ -278,7 +267,6 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		lastInputRef: lastInput,
 		lastMessageRef,
 		messages,
-		pendingContextAnnouncement,
 		reload,
 		setInput,
 		setTemplateKey,
@@ -403,7 +391,6 @@ export const ProjectChatRoute = () => {
 		error,
 		contextToBeAdded,
 		lastMessageRef,
-		pendingContextAnnouncement,
 		setInput,
 		handleInputChange,
 		handleSubmit,
@@ -720,27 +707,6 @@ export const ProjectChatRoute = () => {
 								/>
 							</div>
 						))}
-
-					{pendingContextAnnouncement.length > 0 &&
-						messages.length > 0 &&
-						(messages[messages.length - 1].role === "user" || isLoading) && (
-							// biome-ignore lint/a11y/useValidAriaRole: role is a component prop for styling, not an ARIA attribute
-							<ChatMessage role="dembrane">
-								<Group gap="xs" align="baseline">
-									<Text size="xs" fw={500}>
-										<Trans>Context added:</Trans>
-									</Text>
-									<ConversationLinks
-										conversations={
-											pendingContextAnnouncement.map((c) => ({
-												id: c.conversation_id,
-												participant_name: c.conversation_participant_name,
-											})) as unknown as Conversation[]
-										}
-									/>
-								</Group>
-							</ChatMessage>
-						)}
 
 					{messages &&
 						messages.length > 0 &&
