@@ -312,7 +312,7 @@ export const VerifyArtefact = () => {
 							{...testId("portal-verify-artefact-revising")}
 						>
 							<div className="animate-spin">
-								<Logo hideTitle alwaysDembrane h="48px" />
+								<Logo hideTitle hideEnvBadge alwaysDembrane h="48px" />
 							</div>
 							<Stack gap="sm" align="center">
 								<Text size="xl" fw={600}>
