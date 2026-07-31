@@ -27,7 +27,7 @@ import {
 	IconSend,
 	IconSparkles,
 } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
 import {
 	type CSSProperties,
@@ -70,8 +70,10 @@ import type {
 import {
 	appendAgenticRunMessage,
 	createAgenticRun,
+	dismissAgentInsight,
 	getAgenticRun,
 	getAgenticRunEvents,
+	getDismissedAgentInsightIds,
 	getLatestAgenticRunForChat,
 	stopAgenticRun,
 	streamAgenticRun,
@@ -658,6 +660,23 @@ export const AgenticChatPanel = ({
 		[chatContextQuery.data?.conversations],
 	);
 	const clearChatContextMutation = useClearChatContextMutation();
+	// Insight cards replay from run events, which carry no current status, so
+	// the dismissed ids come from the project.
+	const dismissedInsightsQuery = useQuery({
+		queryKey: ["agentic", "dismissed-insights", projectId],
+		queryFn: () => getDismissedAgentInsightIds(projectId),
+	});
+	const dismissInsightMutation = useMutation({
+		mutationFn: (insightId: string) => dismissAgentInsight(insightId),
+		onSuccess: () =>
+			queryClient.invalidateQueries({
+				queryKey: ["agentic", "dismissed-insights", projectId],
+			}),
+	});
+	const dismissedInsightIds = useMemo(
+		() => new Set(dismissedInsightsQuery.data ?? []),
+		[dismissedInsightsQuery.data],
+	);
 	const [runId, setRunId] = useState<string | null>(null);
 	const [runStatus, setRunStatus] = useState<AgenticRunStatus | null>(null);
 	const [afterSeq, setAfterSeq] = useState(0);
@@ -1685,7 +1704,23 @@ export const AgenticChatPanel = ({
 							const note = parseInsightNote(node.item);
 							return note ? (
 								<div key={node.id}>
-									<InsightNoteCard note={note} />
+									<InsightNoteCard
+										note={note}
+										dismissed={
+											note.insightId
+												? dismissedInsightIds.has(note.insightId)
+												: false
+										}
+										isDismissing={
+											dismissInsightMutation.isPending &&
+											dismissInsightMutation.variables === note.insightId
+										}
+										onDismiss={
+											note.insightId
+												? () => dismissInsightMutation.mutate(note.insightId!)
+												: undefined
+										}
+									/>
 								</div>
 							) : null;
 						}
@@ -1858,10 +1893,10 @@ export const AgenticChatPanel = ({
 							footerRight={
 								<Button
 									type="submit"
-									size="sm"
+									size="md"
 									radius="md"
-									leftSection={
-										isSubmitting ? <Loader size={14} /> : <IconSend size={14} />
+									rightSection={
+										isSubmitting ? <Loader size={18} /> : <IconSend size={18} />
 									}
 									disabled={
 										isSubmitting || input.trim().length === 0 || atTurnLimit

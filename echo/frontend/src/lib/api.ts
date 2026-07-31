@@ -1357,6 +1357,20 @@ export const stopAgenticRun = async (runId: string) => {
 	);
 };
 
+export const dismissAgentInsight = async (insightId: string) => {
+	return api.post<unknown, { id: string; status: string }>(
+		`/agentic/insights/${insightId}/dismiss`,
+	);
+};
+
+export const getDismissedAgentInsightIds = async (projectId: string) => {
+	const response = await api.get<
+		unknown,
+		{ project_id: string; insight_ids: string[] }
+	>(`/agentic/projects/${projectId}/dismissed-insights`);
+	return response.insight_ids ?? [];
+};
+
 export const getChatSuggestions = async (
 	chatId: string,
 	language = "en",

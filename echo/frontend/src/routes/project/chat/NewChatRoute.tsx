@@ -499,9 +499,9 @@ export const NewChatRoute = () => {
 							}
 							footerLeft={
 								<ConversationPickerButton
-									ariaLabel={t`Choose conversations`}
+									ariaLabel={t`Select conversations`}
 									disabled={isPending}
-									label={<Trans>Choose conversations</Trans>}
+									label={<Trans>Select conversations</Trans>}
 									onClick={pickerHandlers.open}
 									testId="ask-home-choose-conversations"
 								/>
@@ -509,10 +509,10 @@ export const NewChatRoute = () => {
 							footerRight={
 								<Button
 									type="button"
-									size="sm"
+									size="md"
 									radius="md"
-									leftSection={
-										isPending ? <Loader size={14} /> : <IconSend size={14} />
+									rightSection={
+										isPending ? <Loader size={18} /> : <IconSend size={18} />
 									}
 									disabled={isPending || draft.trim().length === 0}
 									onClick={startChat}
@@ -547,9 +547,11 @@ export const NewChatRoute = () => {
 						<Group gap="xs" align="center">
 							<Button
 								variant="subtle"
-								size="xs"
+								size="sm"
 								disabled={isPending}
-								leftSection={<ChatModeIndicator mode="agentic" size="xs" />}
+								leftSection={
+									<ChatModeIndicator mode="agentic" size="compact-sm" />
+								}
 								styles={{
 									section: { marginRight: "var(--mantine-spacing-sm)" },
 								}}
@@ -563,7 +565,7 @@ export const NewChatRoute = () => {
 							>
 								<Trans>Try Agentic instead</Trans>
 							</Button>
-							<Badge size="sm" color="mauve" c="graphite">
+							<Badge size="md" color="mauve" c="graphite">
 								<Trans>Beta</Trans>
 							</Badge>
 						</Group>

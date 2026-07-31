@@ -1696,6 +1696,57 @@ async def retract_agent_insight(
     return _agent_insight_payload(updated)
 
 
+@AgenticRouter.post("/insights/{insight_id}/dismiss")
+async def dismiss_agent_insight(
+    insight_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Hide a noted insight from the host's chat. Host-callable (no agent token):
+    this is the host clearing their own view, not the assistant withdrawing a
+    note. The row is never deleted, status moves to archived, because the
+    dembrane team may already have read it."""
+    insight = await _get_agent_insight_or_404(insight_id)
+    project_id = _to_related_id(insight.get("project_id"))
+    if not project_id:
+        raise HTTPException(status_code=404, detail="Insight not found")
+    await _assert_project_access(project_id, auth)
+
+    await async_directus.update_item("agent_insight", insight_id, {"status": "archived"})
+    updated = await _get_agent_insight_or_404(insight_id)
+    return _agent_insight_payload(updated)
+
+
+@AgenticRouter.get("/projects/{project_id}/dismissed-insights")
+async def list_dismissed_agent_insights(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Ids of insights the host dismissed in this project, so a reloaded chat
+    keeps showing them as removed. Insight cards are rendered from replayed run
+    events, which never carry the row's current status."""
+    await _assert_project_access(project_id, auth)
+
+    rows = await async_directus.get_items(
+        "agent_insight",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_eq": project_id},
+                    "status": {"_eq": "archived"},
+                },
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    )
+    ids = (
+        [row["id"] for row in rows if isinstance(row, dict) and row.get("id")]
+        if isinstance(rows, list)
+        else []
+    )
+    return {"project_id": project_id, "insight_ids": ids}
+
+
 async def _resolve_workspace_id_for_project(project_id: str) -> Optional[str]:
     """Resolve the workspace a project belongs to. Workspace is the data
     boundary, so it is never taken from the agent; the server derives it."""

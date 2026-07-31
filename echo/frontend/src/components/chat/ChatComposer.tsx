@@ -114,13 +114,13 @@ export const ConversationPickerButton = ({
 }) => (
 	<Button
 		variant="subtle"
-		size="compact-xs"
+		size="compact-sm"
 		disabled={disabled}
 		onClick={onClick}
 		aria-label={ariaLabel}
 		{...(id ? testId(id) : {})}
 	>
-		<ChatCircleTextIcon size={14} />
+		<ChatCircleTextIcon size={18} />
 		<span className="ms-1.5 hidden md:inline">{label}</span>
 	</Button>
 );

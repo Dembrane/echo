@@ -94,7 +94,7 @@ export const ProjectMonitorRoute = () => {
 					</Stack>
 					{sharingLink && (
 						<Tooltip label={t`Scan to join this project`} withArrow>
-							<Box className="w-[92px] shrink-0">
+							<Box className="w-[140px] shrink-0">
 								<QRCode value={sharingLink} />
 							</Box>
 						</Tooltip>
