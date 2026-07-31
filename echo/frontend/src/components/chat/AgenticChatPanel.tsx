@@ -194,6 +194,25 @@ const buildTranscriptLink = ({
 	return `/${language}/w/${workspaceId}/projects/${projectId}/conversations/${encodedConversationId}${hash}`;
 };
 
+const FocusedOnLine = ({
+	conversations,
+}: {
+	conversations: { id: string; participant_name?: string }[];
+}) => {
+	if (conversations.length === 0) return null;
+
+	return (
+		<Group gap="xs" align="baseline" justify="flex-end" className="mb-2 italic">
+			<Text size="xs" c="dimmed" fw={500}>
+				<Trans>Focusing on:</Trans>
+			</Text>
+			<ConversationLinks
+				conversations={conversations as unknown as Conversation[]}
+			/>
+		</Group>
+	);
+};
+
 const enrichAgenticContent = ({
 	content,
 	conversationNames,
@@ -649,6 +668,7 @@ export const AgenticChatPanel = ({
 	// hit send, before the run persists and streams it back.
 	const [pendingUserMessage, setPendingUserMessage] = useState<{
 		content: string;
+		focusedConversations: { id: string; participant_name?: string }[];
 		timestamp: string;
 	} | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1258,6 +1278,7 @@ export const AgenticChatPanel = ({
 		setInput("");
 		setPendingUserMessage({
 			content: message,
+			focusedConversations: focusedContextConversations,
 			timestamp: new Date().toISOString(),
 		});
 		// Sending is the one moment the host always wants the bottom.
@@ -1569,23 +1590,7 @@ export const AgenticChatPanel = ({
 								}));
 							return (
 								<div key={node.id}>
-									{focusedConversations.length > 0 && (
-										<Group
-											gap="xs"
-											align="baseline"
-											justify="flex-end"
-											className="mb-2 italic"
-										>
-											<Text size="xs" c="dimmed" fw={500}>
-												<Trans>Focusing on:</Trans>
-											</Text>
-											<ConversationLinks
-												conversations={
-													focusedConversations as unknown as Conversation[]
-												}
-											/>
-										</Group>
-									)}
+									<FocusedOnLine conversations={focusedConversations} />
 									<ChatHistoryMessage
 										message={toHistoryMessage(node.item)}
 										chatMode="agentic"
@@ -1703,6 +1708,9 @@ export const AgenticChatPanel = ({
 								item.content === pendingUserMessage.content,
 						) && (
 							<div key="pending-user-message">
+								<FocusedOnLine
+									conversations={pendingUserMessage.focusedConversations}
+								/>
 								<ChatHistoryMessage
 									message={toHistoryMessage({
 										content: pendingUserMessage.content,
