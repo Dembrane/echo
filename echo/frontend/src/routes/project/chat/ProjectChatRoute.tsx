@@ -1,6 +1,7 @@
 import { useChat } from "@ai-sdk/react";
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
+import { ChatCircleText as ChatCircleTextIcon } from "@phosphor-icons/react";
 import {
 	Alert,
 	Badge,
@@ -836,21 +837,25 @@ export const ProjectChatRoute = () => {
 					{needsConversations && (
 						<Alert
 							icon={<IconAlertCircle size="1rem" />}
+							p="xs"
+							styles={{
+								wrapper: { alignItems: "center" },
+								title: { marginBottom: 0 },
+							}}
 							title={
-								<Group gap={6} wrap="nowrap">
-									<Text component="span" inherit>
-										<Trans>Select conversations to continue:</Trans>
+								<Group gap="xl" wrap="nowrap" align="center">
+									<Text component="span" inherit c="graphite">
+										<Trans>Select a conversation to continue</Trans>
 									</Text>
-									<Text
-										component="span"
-										size="sm"
-										fw={400}
-										style={{ color: "var(--app-text)" }}
+									<Button
+										variant="subtle"
+										size="compact-sm"
+										leftSection={<ChatCircleTextIcon size={18} />}
+										onClick={() => setConversationPickerOpen(true)}
+										{...testId("chat-no-conversations-alert-select-button")}
 									>
-										<Trans>
-											Specific Details needs at least one conversation.
-										</Trans>
-									</Text>
+										<Trans>Select conversations</Trans>
+									</Button>
 								</Group>
 							}
 							color="orange"
@@ -923,9 +928,9 @@ export const ProjectChatRoute = () => {
 							footerRight={
 								<Button
 									type="submit"
-									size="sm"
+									size="md"
 									radius="md"
-									rightSection={<IconSend size={14} />}
+									rightSection={<IconSend size={18} />}
 									disabled={
 										normalizedInput.trim() === "" ||
 										isLoading ||

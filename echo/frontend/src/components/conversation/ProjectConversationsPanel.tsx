@@ -91,8 +91,10 @@ type ProjectConversationsPanelProps = {
 	 * `selectionChatId` instead to write straight through to an existing chat. */
 	selection?: string[];
 	onSelectionChange?: (conversationIds: string[]) => void;
-	/** Renders the "Ask about these" action above the list. */
+	/** Renders the "Ask about these" action in the row above the list. */
 	onAskAboutSelection?: () => void;
+	/** Renders the selection on/off toggle in that same row. */
+	onToggleSelectionMode?: () => void;
 };
 
 const lineClampStyle = {
@@ -536,6 +538,7 @@ export const ProjectConversationsPanel = ({
 	selection,
 	onSelectionChange,
 	onAskAboutSelection,
+	onToggleSelectionMode,
 }: ProjectConversationsPanelProps) => {
 	const navigate = useI18nNavigate();
 	const { ref: loadMoreRef, inView } = useInView();
@@ -901,34 +904,55 @@ export const ProjectConversationsPanel = ({
 							)}
 						</Button>
 					)}
-
-				{isLocalSelectionMode && onAskAboutSelection && (
-					<Group gap="sm" align="center">
-						<Text size="sm" fw={500}>
-							<Trans>{conversationCount} selected</Trans>
-						</Text>
-						<Button
-							size="xs"
-							disabled={selectedConversationIds.size === 0}
-							onClick={onAskAboutSelection}
-							{...testId("conversations-ask-about-selection")}
-						>
-							<Trans>Ask about these</Trans>
-						</Button>
-						{selectedConversationIds.size > 0 && (
-							<Button
-								variant="subtle"
-								size="xs"
-								onClick={() => onSelectionChange?.([])}
-							>
-								<Trans>Clear</Trans>
-							</Button>
-						)}
-					</Group>
-				)}
 			</Stack>
 
 			<Divider />
+
+			{(onToggleSelectionMode ||
+				(isLocalSelectionMode && onAskAboutSelection)) && (
+				<Group gap="sm" align="center" justify="space-between">
+					{isLocalSelectionMode && onAskAboutSelection ? (
+						<Group gap="sm" align="center">
+							<Text size="sm" fw={500}>
+								<Trans>{conversationCount} selected</Trans>
+							</Text>
+							<Button
+								size="xs"
+								disabled={selectedConversationIds.size === 0}
+								onClick={onAskAboutSelection}
+								{...testId("conversations-ask-about-selection")}
+							>
+								<Trans>Ask about these</Trans>
+							</Button>
+							{selectedConversationIds.size > 0 && (
+								<Button
+									variant="subtle"
+									size="xs"
+									onClick={() => onSelectionChange?.([])}
+								>
+									<Trans>Clear</Trans>
+								</Button>
+							)}
+						</Group>
+					) : (
+						<Box />
+					)}
+					{onToggleSelectionMode && (
+						<Button
+							variant="outline"
+							size="xs"
+							onClick={onToggleSelectionMode}
+							{...testId("conversations-toggle-selection-mode")}
+						>
+							{selectionMode ? (
+								<Trans>Cancel selection</Trans>
+							) : (
+								<Trans>Select conversations</Trans>
+							)}
+						</Button>
+					)}
+				</Group>
+			)}
 
 			<Stack gap="sm">
 				{conversationsQuery.isLoading && (

@@ -79,10 +79,10 @@ export const AgenticIntroModal = ({
 				</Button>
 				<Button
 					onClick={onConfirm}
-					aria-label={t`Switch to Agentic`}
+					aria-label={t`Start a new chat`}
 					{...testId("agentic-intro-modal-confirm")}
 				>
-					<Trans>Switch to Agentic</Trans>
+					<Trans>Start a new chat</Trans>
 				</Button>
 			</Group>
 		</Stack>

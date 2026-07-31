@@ -1,12 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import {
-	Alert,
-	Button,
-	Divider,
-	Group,
-	LoadingOverlay,
-	Stack,
-} from "@mantine/core";
+import { Alert, Divider, LoadingOverlay, Stack } from "@mantine/core";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
@@ -54,22 +47,6 @@ export const ProjectConversationsRoute = () => {
 	return (
 		<PageContainer width="xl">
 			<Stack gap="md">
-				<Group justify="flex-end">
-					<Button
-						variant="outline"
-						size="xs"
-						onClick={() => {
-							if (pickerMode) setSelectedConversationIds([]);
-							setPickerMode((current) => !current);
-						}}
-					>
-						{pickerMode ? (
-							<Trans>Cancel selection</Trans>
-						) : (
-							<Trans>Select conversations</Trans>
-						)}
-					</Button>
-				</Group>
 				<ProjectConversationsPanel
 					projectId={projectId}
 					workspaceId={workspaceId}
@@ -77,6 +54,10 @@ export const ProjectConversationsRoute = () => {
 					selectionMode={pickerMode}
 					selection={selectedConversationIds}
 					onSelectionChange={setSelectedConversationIds}
+					onToggleSelectionMode={() => {
+						if (pickerMode) setSelectedConversationIds([]);
+						setPickerMode((current) => !current);
+					}}
 					onAskAboutSelection={() => {
 						navigate(`/w/${workspaceId}/projects/${projectId}/chats/new`, {
 							state: { selectedConversationIds },

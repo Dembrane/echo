@@ -1,7 +1,9 @@
 import { t } from "@lingui/core/macro";
-import { Badge, Group, Stack, Text } from "@mantine/core";
-import { LightbulbIcon } from "@phosphor-icons/react";
+import { Trans } from "@lingui/react/macro";
+import { Badge, Button, Group, Stack, Text } from "@mantine/core";
+import { LightbulbIcon, TrashIcon } from "@phosphor-icons/react";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
+import { testId } from "@/lib/testUtils";
 import type { ParsedInsightNote } from "./agenticToolActivity";
 
 // Kept lowercase per brand: these read as quiet chips, not headings.
@@ -27,29 +29,37 @@ const shortInsightId = (insightId: string): string =>
 /** A calm, read-only card showing what the assistant noted for the dembrane
  * team: the kind chip, a short id suffix the host can reference, the restated
  * need, and any suggested capability. An amended note carries an "updated" chip;
- * a withdrawn one mutes and shows a "retracted" chip with the reason. There is
- * nothing to apply here, so no button. */
-export const InsightNoteCard = ({ note }: { note: ParsedInsightNote }) => {
+ * a withdrawn one mutes and shows a "retracted" chip with the reason. The host
+ * can remove the card, which archives the row rather than deleting it. */
+export const InsightNoteCard = ({
+	note,
+	dismissed = false,
+	onDismiss,
+	isDismissing = false,
+}: {
+	note: ParsedInsightNote;
+	dismissed?: boolean;
+	onDismiss?: () => void;
+	isDismissing?: boolean;
+}) => {
 	const retracted = note.mode === "retracted";
+	const muted = retracted || dismissed;
 	const edited = note.mode === "edited";
+	const canDismiss = Boolean(onDismiss) && !dismissed && note.insightId;
 	return (
 		<SuggestionCardFrame compact testId="agentic-insight-note">
 			<Stack gap="xs">
 				<Group gap="xs" wrap="nowrap">
-					<LightbulbIcon
-						size={16}
-						aria-hidden="true"
-						opacity={retracted ? 0.5 : 1}
-					/>
+					<LightbulbIcon size={16} aria-hidden="true" opacity={muted ? 0.5 : 1} />
 					<Badge
 						size="xs"
 						variant="outline"
 						radius="sm"
-						c={retracted ? "dimmed" : undefined}
+						c={muted ? "dimmed" : undefined}
 					>
 						{kindLabel(note.kind)}
 					</Badge>
-					{edited ? (
+					{edited && !dismissed ? (
 						<Badge size="xs" variant="light" radius="sm">
 							{t`updated`}
 						</Badge>
@@ -64,11 +74,29 @@ export const InsightNoteCard = ({ note }: { note: ParsedInsightNote }) => {
 							{t`insight ${shortInsightId(note.insightId)}`}
 						</Text>
 					) : null}
+					{canDismiss ? (
+						<Button
+							variant="outline"
+							color="red"
+							size="compact-xs"
+							ml="auto"
+							mt={10}
+							loading={isDismissing}
+							rightSection={<TrashIcon size={14} />}
+							aria-label={t`Remove`}
+							onClick={onDismiss}
+							{...testId("agentic-insight-note-remove")}
+						>
+							<Trans>Remove</Trans>
+						</Button>
+					) : null}
 				</Group>
-				<Text size="sm" c={retracted ? "dimmed" : undefined}>
-					{note.content}
-				</Text>
-				{note.suggestedCapability && !retracted ? (
+				{!dismissed ? (
+					<Text size="sm" c={muted ? "dimmed" : undefined}>
+						{note.content}
+					</Text>
+				) : null}
+				{note.suggestedCapability && !muted ? (
 					<Text size="xs" c="dimmed">
 						{note.suggestedCapability}
 					</Text>
@@ -78,10 +106,12 @@ export const InsightNoteCard = ({ note }: { note: ParsedInsightNote }) => {
 						{t`reason: ${note.reason}`}
 					</Text>
 				) : null}
-				<Text size="xs" c="dimmed">
-					{retracted
-						? t`retracted for the dembrane team`
-						: t`noted for the dembrane team`}
+				<Text size="xs" c={dismissed ? "red" : "dimmed"}>
+					{dismissed
+						? t`This insight has been deleted`
+						: retracted
+							? t`retracted for the dembrane team`
+							: t`noted for the dembrane team`}
 				</Text>
 			</Stack>
 		</SuggestionCardFrame>
