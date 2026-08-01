@@ -70,7 +70,9 @@ import type {
 import {
 	appendAgenticRunMessage,
 	createAgenticRun,
+	createAgentInsight,
 	dismissAgentInsight,
+	getAgentInsights,
 	getAgenticRun,
 	getAgenticRunEvents,
 	getDismissedAgentInsightIds,
@@ -677,6 +679,23 @@ export const AgenticChatPanel = ({
 		() => new Set(dismissedInsightsQuery.data ?? []),
 		[dismissedInsightsQuery.data],
 	);
+	// The assistant only drafts an insight; the host sends it. A replayed draft
+	// card cannot know whether it was already sent, so it checks the live list.
+	const sentInsightsQuery = useQuery({
+		queryKey: ["agentic", "insights", projectId],
+		queryFn: () => getAgentInsights(projectId),
+	});
+	const sendInsightMutation = useMutation({
+		mutationFn: (body: {
+			kind: string;
+			content: string;
+			suggested_capability?: string | null;
+		}) => createAgentInsight(projectId, body),
+		onSuccess: () =>
+			queryClient.invalidateQueries({
+				queryKey: ["agentic", "insights", projectId],
+			}),
+	});
 	const [runId, setRunId] = useState<string | null>(null);
 	const [runStatus, setRunStatus] = useState<AgenticRunStatus | null>(null);
 	const [afterSeq, setAfterSeq] = useState(0);
@@ -1706,6 +1725,15 @@ export const AgenticChatPanel = ({
 								<div key={node.id}>
 									<InsightNoteCard
 										note={note}
+										sentInsights={sentInsightsQuery.data ?? []}
+										isSending={sendInsightMutation.isPending}
+										onSend={(content, suggestedCapability) =>
+											sendInsightMutation.mutate({
+												kind: note.kind,
+												content,
+												suggested_capability: suggestedCapability,
+											})
+										}
 										dismissed={
 											note.insightId
 												? dismissedInsightIds.has(note.insightId)

@@ -1609,29 +1609,21 @@ async def test_record_insight_sends_contextual_agent_insight_for_current_chat():
         }
     )
 
-    assert result["recorded"] is True
-    assert result["agent_insight_id"] == "insight-1"
+    # Consent is structural: noteInsight DRAFTS and must never write. If this
+    # assertion ever flips back to a recorded row, the host has lost the choice.
+    assert result["recorded"] is False
+    assert "agent_insight_id" not in result
+    assert factory.instances == []
+
     # The card in the chat reads these fields off the tool output.
-    assert result["type"] == "agent_insight_note"
+    assert result["type"] == "agent_insight_proposal"
+    assert result["mode"] == "proposed"
     assert result["insight_kind"] == "wish"
     assert result["content"] == "The host wants chat to open a specific dashboard tab."
     assert result["suggested_capability"] == (
         "Dashboard navigation suggestions with internal tab links."
     )
     assert result["visible_to_user"] is True
-    assert factory.instances[0].agent_insight_calls == [
-        {
-            "project_id": "project-1",
-            "kind": "wish",
-            "content": "The host wants chat to open a specific dashboard tab.",
-            "suggested_capability": (
-                "Dashboard navigation suggestions with internal tab links."
-            ),
-            "chat_id": "chat-1",
-            "message_id": "run-event-1",
-        }
-    ]
-    assert factory.instances[0].closed is True
 
 
 def _insight_memory_tools():
@@ -1780,8 +1772,11 @@ def test_edit_and_retract_by_id_prompt_rules_present():
     # Normalize wrapped whitespace so multi-word rules match regardless of line
     # breaks in the prompt source.
     prompt = " ".join(SYSTEM_PROMPT.lower().split())
-    # Insights: amend by id, never re-note, confirm what changed, keep the row.
-    assert "amend it by id in the same turn" in prompt
+    # Insights: nothing is recorded by the agent, and edit/retract apply only
+    # after the host has sent it.
+    assert "before they send it, there is no id" in prompt
+    assert "never call editinsight or retractinsight on an unsent draft" in prompt
+    assert "after they send it" in prompt
     assert "editinsight" in prompt
     assert "retractinsight" in prompt
     assert "never re-note a corrected insight" in prompt
