@@ -397,12 +397,12 @@ msgid "{0, plural, one {# with errors} other {# with errors}}"
 msgstr ""
 
 #. placeholder {0}: diff?.addedWords ?? 0
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:273
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:299
 msgid "{0, plural, one {# word added} other {# words added}}"
 msgstr ""
 
 #. placeholder {0}: diff?.removedWords ?? 0
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:279
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:305
 msgid "{0, plural, one {# word removed} other {# words removed}}"
 msgstr ""
 
@@ -439,7 +439,7 @@ msgid "{0, plural, one {Move # project to another workspace.} other {Move # proj
 msgstr ""
 
 #. placeholder {0}: suggestion.changes.length
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:735
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:756
 msgid "{0, plural, one {Show what changes (# field)} other {Show what changes (# fields)}}"
 msgstr ""
 
@@ -840,7 +840,7 @@ msgstr ""
 #~ msgid "{selectedCount, plural, one {# selected} other {# selected}}"
 #~ msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:665
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:686
 msgid "{selectedCount} of {totalCount} fields selected. Accept applies only the ticked ones."
 msgstr ""
 
@@ -1192,7 +1192,7 @@ msgstr ""
 msgid "a workspace"
 msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:472
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:499
 msgid "About the suggested project update: {hostNote}"
 msgstr ""
 
@@ -1213,7 +1213,7 @@ msgstr ""
 #~ msgid "Absolute https URL. Workspace-level logo overrides when set."
 #~ msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:771
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:792
 msgid "Accept"
 msgstr ""
 
@@ -1403,8 +1403,8 @@ msgstr ""
 msgid "Add a name, description, and framing."
 msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:684
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:751
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:705
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:772
 msgid "Add a note"
 msgstr ""
 
@@ -2844,7 +2844,7 @@ msgstr ""
 #: src/components/common/ImageCropModal.tsx:145
 #: src/components/common/FeedbackPortalModal.tsx:124
 #: src/components/common/ConfirmModal.tsx:44
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:701
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:722
 #: src/components/chat/AgenticChatPanel.tsx:1882
 msgid "Cancel"
 msgstr "Cancelar"
@@ -3062,7 +3062,7 @@ msgstr ""
 msgid "Change your own role?"
 msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:458
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:485
 msgid "Changes applied. You can fine-tune them anytime in project settings."
 msgstr ""
 
@@ -3241,8 +3241,8 @@ msgstr ""
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:133
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:514
-msgid "cleared"
-msgstr ""
+#~ msgid "cleared"
+#~ msgstr ""
 
 #: src/components/conversation/hooks/index.ts:540
 msgid "Cleared {cleared} of {total} conversations"
@@ -3717,7 +3717,7 @@ msgstr ""
 msgid "Could not apply all the tag changes."
 msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:461
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:488
 msgid "Could not apply the changes. Nothing was saved."
 msgstr ""
 
@@ -4078,7 +4078,7 @@ msgstr ""
 msgid "Crop Logo"
 msgstr "Recortar logo"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:289
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:315
 msgid "Current"
 msgstr ""
 
@@ -4597,7 +4597,7 @@ msgstr ""
 #~ msgstr ""
 
 #: src/components/goal/GoalSuggestionCard.tsx:104
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:761
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:782
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:155
 #: src/components/chat/CanvasSuggestionCard.tsx:328
 msgid "Dismiss"
@@ -4610,7 +4610,7 @@ msgstr ""
 msgid "Dismissed"
 msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:534
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:564
 msgid "Dismissed. Nothing was changed."
 msgstr ""
 
@@ -4668,7 +4668,7 @@ msgstr ""
 #: src/routes/onboarding/OnboardingRoute.tsx:530
 #: src/components/project/ProjectSharingModal.tsx:268
 #: src/components/invite/InviteModal.tsx:811
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:624
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:645
 #: src/components/chat/AgenticChatPanel.tsx:381
 msgid "Done"
 msgstr ""
@@ -4855,7 +4855,7 @@ msgstr "ECHO"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:647
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:234
 #: src/components/chat/TemplatesModal.tsx:608
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:624
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:645
 msgid "Edit"
 msgstr "Editar"
 
@@ -4981,9 +4981,14 @@ msgstr "Emoji"
 msgid "Emoji shown next to the topic e.g. 💡 🔍 📊"
 msgstr "Emoji mostrado junto al tema, por ejemplo: 💡 🔍 📊"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:133
-msgid "empty"
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:160
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:544
+msgid "emptied out"
 msgstr ""
+
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:133
+#~ msgid "empty"
+#~ msgstr ""
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:117
 msgid "Empty"
@@ -6363,7 +6368,7 @@ msgstr "Ocultar datos de revisión"
 msgid "Hide steps"
 msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:733
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:754
 msgid "Hide the changes"
 msgstr ""
 
@@ -8807,6 +8812,10 @@ msgstr ""
 msgid "Nothing here for you yet."
 msgstr ""
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:158
+msgid "nothing here yet"
+msgstr ""
+
 #: src/components/chat/InsightNoteCard.tsx:102
 msgid "Nothing is sent until you send it. Edit anything below first."
 msgstr ""
@@ -8856,9 +8865,9 @@ msgstr ""
 msgid "Observers are only available in workspaces for an external client. Pick only external-client workspaces, or choose a different role."
 msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:142
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:323
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:510
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:170
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:349
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:540
 msgid "off"
 msgstr ""
 
@@ -8879,9 +8888,9 @@ msgstr ""
 msgid "Oldest First"
 msgstr "Más antiguos primero"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:140
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:323
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:508
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:168
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:349
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:538
 msgid "on"
 msgstr ""
 
@@ -10582,7 +10591,7 @@ msgstr ""
 msgid "Prompt"
 msgstr "Prompt"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:302
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:328
 msgid "Proposed"
 msgstr ""
 
@@ -11507,7 +11516,7 @@ msgid "Review activity for your workspace. Filter by collection or action, and e
 msgstr "Revisa la actividad de tu espacio de trabajo. Filtra por colección o acción, y exporta la vista actual para una investigación más detallada."
 
 #: src/components/goal/GoalSuggestionCard.tsx:112
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:542
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:572
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:164
 #: src/components/chat/CanvasSuggestionCard.tsx:336
 msgid "Review again"
@@ -12174,7 +12183,7 @@ msgstr ""
 msgid "Send invites"
 msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:710
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:731
 msgid "Send note"
 msgstr ""
 
@@ -12491,7 +12500,7 @@ msgstr "Mostrar más"
 msgid "Show more versions"
 msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:345
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:371
 msgid "Show only what changed"
 msgstr ""
 
@@ -12517,7 +12526,7 @@ msgstr "Mostrar datos de revisión"
 msgid "Show steps"
 msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:347
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:373
 msgid "Show the full text"
 msgstr ""
 
@@ -13307,7 +13316,7 @@ msgstr ""
 #~ msgid "The assistant is preparing this canvas."
 #~ msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:553
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:583
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr ""
 
@@ -13505,7 +13514,7 @@ msgstr "Hubo un error al crear tu informe. Por favor, inténtalo de nuevo o cont
 #~ msgid "These are your default view templates. Once you create your library these will be your first two views."
 #~ msgstr "Estas son tus plantillas de vista predeterminadas. Una vez que crees tu biblioteca, estas serán tus primeras dos vistas."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:486
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:513
 msgid "These changes are applied to your project."
 msgstr ""
 
@@ -13611,7 +13620,7 @@ msgstr "Este correo electrónico ya está en la lista."
 msgid "participant.modal.refine.info.available.in"
 msgstr "Esta función estará disponible en {remainingTime} segundos."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:267
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:293
 msgid "This field already holds the proposed value."
 msgstr ""
 
@@ -14475,7 +14484,7 @@ msgstr "Desuscribirse"
 msgid "Untagged"
 msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:577
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:598
 msgid "Untick a field to leave it exactly as it is."
 msgstr ""
 
@@ -15428,7 +15437,7 @@ msgstr ""
 #~ msgid "What patterns emerge from the data?"
 #~ msgstr "¿Qué patrones salen de los datos?"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:685
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:706
 msgid "What should be different about this?"
 msgstr ""
 

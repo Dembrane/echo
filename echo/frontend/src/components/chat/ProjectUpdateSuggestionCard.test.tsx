@@ -62,6 +62,18 @@ const renderCard = (
 		</I18nProvider>,
 	);
 
+/**
+ * Every way this card could still be rendering slanted text: Mantine's `fs`
+ * prop lands as an inline style or a CSS variable, Tailwind's as a class.
+ */
+const italicNodes = (container: HTMLElement) =>
+	Array.from(container.querySelectorAll<HTMLElement>("*")).filter((node) => {
+		const style = node.getAttribute("style") ?? "";
+		return (
+			style.includes("italic") || node.className.toString().includes("italic")
+		);
+	});
+
 const CURRENT_CONTEXT =
 	"We are asking residents about the neighbourhood park, what they use it for, what keeps them away, and what they would change about it if the council asked.";
 const PROPOSED_CONTEXT =
@@ -169,27 +181,62 @@ describe("ProjectUpdateSuggestionCard", () => {
 		fireEvent.click(screen.getByTestId("suggestion-expand-button"));
 		const removed = screen.getByText("Old title");
 		const added = screen.getByText("New title");
-		expect(removed.className).toContain("line-through");
 		expect(added.className).toContain("text-green-900");
-		// Both sides are marked before colour is decoded: the removal is struck
-		// through, the addition sits on a background, same as the word diff.
 		expect(removed.className).toContain("bg-red-100");
 		expect(added.className).toContain("bg-green-100");
+		// Both sides carry a shape, not just a tint. The green background is
+		// about 97% luminance, so an addition marked by colour alone disappears
+		// in greyscale and for a colour-blind reader; the underline mirrors the
+		// strikethrough so the marking survives without colour.
+		expect(removed.className).toContain("line-through");
+		expect(added.className).toContain("underline");
 	});
 
-	it("says what a change to the project context reaches, exactly once", () => {
+	it("marks the added words with a shape in the word diff too", () => {
+		renderCard(contextSuggestion);
+		fireEvent.click(screen.getByTestId("suggestion-expand-button"));
+
+		const added = screen
+			.getAllByText("and shopkeepers", { exact: false })
+			.find((node) => node.className.includes("bg-green-100"));
+		expect(added?.className).toContain("underline");
+		// And the prose the edit sits inside stands back, so the two changed
+		// words are the first thing in the box the eye lands on.
+		const unchanged = screen
+			.getAllByText(/what keeps them away/)
+			.find((node) => node.tagName === "SPAN");
+		expect(unchanged?.className).toContain("text-slate-500");
+	});
+
+	it("says what a change to the project context reaches, only once expanded", () => {
 		renderCard(contextSuggestion);
 		const impact = /read by transcription, chat answers and canvas generation/;
-		// Collapsed, the resting block is the only place it can be said.
-		expect(screen.getAllByText(impact).length).toBe(1);
+		// At rest the card says what is changing and why, and stops. The impact
+		// sentence used to sit here too, restating the assistant's own message
+		// from a few lines above in different words.
+		expect(screen.queryByText(impact)).toBeNull();
 
-		// Expanded, the copy beside the field carries it and the resting one
-		// stands down. Both used to render, the same sentence twice on one card.
+		// Expanded, it sits beside the field it describes, where it is the
+		// answer to a question the host has just asked. Once, not twice.
 		fireEvent.click(screen.getByTestId("suggestion-expand-button"));
 		expect(screen.getAllByText(impact).length).toBe(1);
 
 		fireEvent.click(screen.getByTestId("suggestion-expand-button"));
-		expect(screen.getAllByText(impact).length).toBe(1);
+		expect(screen.queryByText(impact)).toBeNull();
+	});
+
+	it("rests on the headline, the reason and the actions, and nothing else", () => {
+		const { container } = renderCard(contextSuggestion, vi.fn());
+		expect(screen.getByText(/Waiting on you/)).toBeTruthy();
+		expect(screen.getByText("One change to the project context.")).toBeTruthy();
+		expect(screen.getByTestId("suggestion-expand-button")).toBeTruthy();
+
+		// Nothing on this card leans on slant. Italics multiplied the number of
+		// type treatments a reader has to tell apart without carrying meaning
+		// any of them could not carry another way.
+		expect(italicNodes(container).length).toBe(0);
+		fireEvent.click(screen.getByTestId("suggestion-expand-button"));
+		expect(italicNodes(container).length).toBe(0);
 	});
 
 	it("does not offer to untick the only field there is", () => {

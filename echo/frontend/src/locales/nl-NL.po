@@ -231,12 +231,12 @@ msgid "{0, plural, one {# with errors} other {# with errors}}"
 msgstr "{0, plural, one {# met fouten} other {# met fouten}}"
 
 #. placeholder {0}: diff?.addedWords ?? 0
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:273
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:299
 msgid "{0, plural, one {# word added} other {# words added}}"
 msgstr ""
 
 #. placeholder {0}: diff?.removedWords ?? 0
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:279
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:305
 msgid "{0, plural, one {# word removed} other {# words removed}}"
 msgstr ""
 
@@ -270,7 +270,7 @@ msgid "{0, plural, one {Move # project to another workspace.} other {Move # proj
 msgstr "{0, plural, one {Verplaats # project naar een andere werkruimte.} other {Verplaats # projecten naar een andere werkruimte.}}"
 
 #. placeholder {0}: suggestion.changes.length
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:735
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:756
 msgid "{0, plural, one {Show what changes (# field)} other {Show what changes (# fields)}}"
 msgstr ""
 
@@ -654,7 +654,7 @@ msgstr "{seats} plekken"
 #~ msgid "{selectedCount, plural, one {# selected} other {# selected}}"
 #~ msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:665
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:686
 msgid "{selectedCount} of {totalCount} fields selected. Accept applies only the ticked ones."
 msgstr ""
 
@@ -982,7 +982,7 @@ msgstr "Een korte notitie over waar dit project over gaat. Je kunt dit later aan
 msgid "a workspace"
 msgstr "een werkruimte"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:472
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:499
 msgid "About the suggested project update: {hostNote}"
 msgstr ""
 
@@ -1001,7 +1001,7 @@ msgstr "Over jou"
 #~ msgid "Absolute https URL. Workspace-level logo overrides when set."
 #~ msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:771
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:792
 msgid "Accept"
 msgstr ""
 
@@ -1185,8 +1185,8 @@ msgstr "Voeg een naam en een prompt toe voordat je dit toepast."
 msgid "Add a name, description, and framing."
 msgstr "Voeg een naam, beschrijving en framing toe."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:684
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:751
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:705
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:772
 msgid "Add a note"
 msgstr ""
 
@@ -2603,7 +2603,7 @@ msgstr "kan lezen"
 #: src/components/common/ImageCropModal.tsx:145
 #: src/components/common/FeedbackPortalModal.tsx:124
 #: src/components/common/ConfirmModal.tsx:44
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:701
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:722
 #: src/components/chat/AgenticChatPanel.tsx:1882
 msgid "Cancel"
 msgstr "Annuleren"
@@ -2813,7 +2813,7 @@ msgstr "Werkruimterol wijzigen?"
 msgid "Change your own role?"
 msgstr "Je eigen rol wijzigen?"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:458
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:485
 msgid "Changes applied. You can fine-tune them anytime in project settings."
 msgstr "Wijzigingen toegepast. Je kunt ze altijd bijstellen in de projectinstellingen."
 
@@ -2990,8 +2990,8 @@ msgstr "Zoekopdracht wissen"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:133
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:514
-msgid "cleared"
-msgstr "gewist"
+#~ msgid "cleared"
+#~ msgstr "gewist"
 
 #: src/components/conversation/hooks/index.ts:540
 msgid "Cleared {cleared} of {total} conversations"
@@ -3453,7 +3453,7 @@ msgstr "Kon je gesprekken niet aan deze chat toevoegen"
 msgid "Could not apply all the tag changes."
 msgstr "Kon niet alle tagwijzigingen toepassen."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:461
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:488
 msgid "Could not apply the changes. Nothing was saved."
 msgstr "Kon de wijzigingen niet toepassen. Er is niets opgeslagen."
 
@@ -3810,7 +3810,7 @@ msgstr "Logo bijsnijden"
 msgid "Crop Logo"
 msgstr "Logo bijsnijden"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:289
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:315
 msgid "Current"
 msgstr ""
 
@@ -4315,7 +4315,7 @@ msgstr "Vindbaar in deze organisatie"
 #~ msgstr ""
 
 #: src/components/goal/GoalSuggestionCard.tsx:104
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:761
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:782
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:155
 #: src/components/chat/CanvasSuggestionCard.tsx:328
 msgid "Dismiss"
@@ -4328,7 +4328,7 @@ msgstr "Negeren"
 msgid "Dismissed"
 msgstr "Genegeerd"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:534
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:564
 msgid "Dismissed. Nothing was changed."
 msgstr ""
 
@@ -4394,7 +4394,7 @@ msgstr "Wordt niet vanzelf bijgewerkt. Bijgewerkt {updatedAgo}."
 #: src/routes/onboarding/OnboardingRoute.tsx:530
 #: src/components/project/ProjectSharingModal.tsx:268
 #: src/components/invite/InviteModal.tsx:811
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:624
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:645
 #: src/components/chat/AgenticChatPanel.tsx:381
 msgid "Done"
 msgstr "Klaar"
@@ -4575,7 +4575,7 @@ msgstr "ECHO"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:647
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:234
 #: src/components/chat/TemplatesModal.tsx:608
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:624
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:645
 msgid "Edit"
 msgstr "Bewerken"
 
@@ -4692,9 +4692,14 @@ msgstr "Emoji"
 msgid "Emoji shown next to the topic e.g. 💡 🔍 📊"
 msgstr "Emoji getoond naast het onderwerp bijvoorbeeld 💡 🔍 📊"
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:160
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:544
+msgid "emptied out"
+msgstr ""
+
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:133
-msgid "empty"
-msgstr "leeg"
+#~ msgid "empty"
+#~ msgstr "leeg"
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:117
 msgid "Empty"
@@ -6035,7 +6040,7 @@ msgstr "Revisiegegevens verbergen"
 msgid "Hide steps"
 msgstr "Stappen verbergen"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:733
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:754
 msgid "Hide the changes"
 msgstr ""
 
@@ -8380,6 +8385,10 @@ msgstr "Op dit moment niets van dembrane."
 msgid "Nothing here for you yet."
 msgstr "Hier is nog niets voor je."
 
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:158
+msgid "nothing here yet"
+msgstr ""
+
 #: src/components/chat/InsightNoteCard.tsx:102
 msgid "Nothing is sent until you send it. Edit anything below first."
 msgstr ""
@@ -8429,9 +8438,9 @@ msgstr "Observers zijn gratis gasten die alleen kunnen meelezen. Wil je ze laten
 msgid "Observers are only available in workspaces for an external client. Pick only external-client workspaces, or choose a different role."
 msgstr "Waarnemers zijn alleen beschikbaar in werkruimtes voor een externe klant. Kies alleen werkruimtes van externe klanten, of kies een andere rol."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:142
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:323
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:510
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:170
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:349
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:540
 msgid "off"
 msgstr "uit"
 
@@ -8452,9 +8461,9 @@ msgstr "Oudste eerst"
 msgid "Oldest First"
 msgstr "Oudste eerst"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:140
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:323
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:508
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:168
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:349
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:538
 msgid "on"
 msgstr "aan"
 
@@ -10144,7 +10153,7 @@ msgstr "Projecten verschijnen hier zodra iemand in de organisatie er een met je 
 msgid "Prompt"
 msgstr "Prompt"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:302
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:328
 msgid "Proposed"
 msgstr ""
 
@@ -11026,7 +11035,7 @@ msgid "Review activity for your workspace. Filter by collection or action, and e
 msgstr "Bekijk de activiteiten van je werkruimte. Filter op collectie of actie en exporteer de huidige weergave voor verder onderzoek."
 
 #: src/components/goal/GoalSuggestionCard.tsx:112
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:542
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:572
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:164
 #: src/components/chat/CanvasSuggestionCard.tsx:336
 msgid "Review again"
@@ -11687,7 +11696,7 @@ msgstr "Uitnodiging versturen"
 msgid "Send invites"
 msgstr "Uitnodigingen versturen"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:710
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:731
 msgid "Send note"
 msgstr ""
 
@@ -11984,7 +11993,7 @@ msgstr "Meer tonen"
 msgid "Show more versions"
 msgstr "Meer versies tonen"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:345
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:371
 msgid "Show only what changed"
 msgstr ""
 
@@ -12010,7 +12019,7 @@ msgstr "Revisiegegevens tonen"
 msgid "Show steps"
 msgstr "Stappen tonen"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:347
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:373
 msgid "Show the full text"
 msgstr ""
 
@@ -12758,7 +12767,7 @@ msgstr "De assistent vergeet dit in elke toekomstige chat."
 #~ msgid "The assistant is preparing this canvas."
 #~ msgstr ""
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:553
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:583
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr ""
 
@@ -12950,7 +12959,7 @@ msgstr "Er is een fout opgetreden bij het maken van uw rapport. Probeer het alst
 #~ msgid "These are your default view templates. Once you create your library these will be your first two views."
 #~ msgstr "Dit zijn uw standaard weergave sjablonen. Zodra u uw bibliotheek hebt gemaakt, zullen deze uw eerste twee weergaven zijn."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:486
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:513
 msgid "These changes are applied to your project."
 msgstr "Deze wijzigingen zijn toegepast op je project."
 
@@ -13055,7 +13064,7 @@ msgstr "Deze e-mail is al in de lijst."
 msgid "participant.modal.refine.info.available.in"
 msgstr "Deze functie is beschikbaar over {remainingTime} seconden."
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:267
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:293
 msgid "This field already holds the proposed value."
 msgstr ""
 
@@ -13917,7 +13926,7 @@ msgstr "Afmelden"
 msgid "Untagged"
 msgstr "Zonder tag"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:577
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:598
 msgid "Untick a field to leave it exactly as it is."
 msgstr ""
 
@@ -14829,7 +14838,7 @@ msgstr ""
 #~ msgid "What patterns emerge from the data?"
 #~ msgstr "Welke patronen zie je in de data?"
 
-#: src/components/chat/ProjectUpdateSuggestionCard.tsx:685
+#: src/components/chat/ProjectUpdateSuggestionCard.tsx:706
 msgid "What should be different about this?"
 msgstr ""
 

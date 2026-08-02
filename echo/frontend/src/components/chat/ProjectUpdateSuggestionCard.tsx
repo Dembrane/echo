@@ -113,6 +113,27 @@ const COARSE_TAP_TARGET = "[@media(pointer:coarse)]:min-h-11";
 const VALUE_BOX =
 	"max-h-64 overflow-y-auto rounded-md border border-slate-200 px-2 py-1.5";
 
+/**
+ * The three ways a fragment can read inside a value box, and the only place
+ * they are defined. The word diff and the short-value line both pull from
+ * here, so a marking can never drift between the long and short paths.
+ *
+ * Each mark carries a shape as well as a colour: the removal is struck
+ * through, the addition is underlined. A background alone does not survive
+ * greyscale (the green sits at about 97% luminance) or a colour-blind reader,
+ * and the addition used to have nothing but that background.
+ *
+ * Unchanged text recedes on purpose. Marked and unmarked prose used to sit at
+ * the same contrast, so a two word edit inside a paragraph read as one flat
+ * block; dropping the surround to a mid grey makes the edit the first thing
+ * the eye lands on, without inventing a colour the card does not already use.
+ */
+const REMOVED_MARK =
+	"bg-red-100 text-red-900 line-through decoration-red-500 decoration-2";
+const ADDED_MARK =
+	"bg-green-100 text-green-900 underline decoration-green-600 decoration-2";
+const UNCHANGED_TEXT = "text-slate-500";
+
 const asDisplayString = (value: unknown) => {
 	if (typeof value === "string") return value;
 	if (value === null || value === undefined) return "";
@@ -128,9 +149,16 @@ const ValueText = ({
 	kind: "old" | "new";
 }) => {
 	if (isEmptyValue(value)) {
+		// A description of the value, not the value itself. Italics used to carry
+		// that difference and carried it to nobody; the words say it instead, and
+		// the dimmed colour keeps them from reading as content.
 		return (
-			<Text size="sm" component="span" fs="italic">
-				{kind === "old" ? <Trans>empty</Trans> : <Trans>cleared</Trans>}
+			<Text size="sm" component="span" c="dimmed">
+				{kind === "old" ? (
+					<Trans>nothing here yet</Trans>
+				) : (
+					<Trans>emptied out</Trans>
+				)}
 			</Text>
 		);
 	}
@@ -148,15 +176,7 @@ const ValueText = ({
 		<Text
 			size="sm"
 			component="span"
-			// Same marking as the word diff path. The removal carries a shape
-			// signal in the strikethrough; without a background the addition
-			// carried none, so it vanished in greyscale and for a colour-blind
-			// reader. Both sides now read as marked before colour is decoded.
-			className={
-				kind === "old"
-					? "break-words bg-red-100 text-red-900 line-through decoration-red-400"
-					: "break-words bg-green-100 text-green-900"
-			}
+			className={`break-words ${kind === "old" ? REMOVED_MARK : ADDED_MARK}`}
 		>
 			{display}
 		</Text>
@@ -168,6 +188,11 @@ const ValueText = ({
  * "current" side hides additions and strikes removals, the "proposed" side
  * hides removals and highlights additions. Reading them top to bottom shows
  * the previous version, the new version, and exactly which words moved.
+ *
+ * Everything here is one size and one weight. What separates the edit from
+ * its surroundings is contrast and shape, not type: the untouched prose sits
+ * back in grey, the edited words come forward in full contrast on a tint,
+ * struck through or underlined.
  */
 const WordDiffSide = ({
 	chunks,
@@ -180,13 +205,14 @@ const WordDiffSide = ({
 		{chunks.map((chunk, index) => {
 			if (side === "current" && chunk.added) return null;
 			if (side === "proposed" && chunk.removed) return null;
+			// An elided run reads as ordinary unchanged text. The " … " it carries
+			// and the "show the full text" button already say it was shortened,
+			// which is what the italics were for.
 			const className = chunk.removed
-				? "bg-red-100 text-red-900 line-through decoration-red-400"
+				? REMOVED_MARK
 				: chunk.added
-					? "bg-green-100 text-green-900"
-					: chunk.elided
-						? "italic"
-						: undefined;
+					? ADDED_MARK
+					: UNCHANGED_TEXT;
 			return (
 				// biome-ignore lint/suspicious/noArrayIndexKey: chunks are positional and the list is rebuilt whole
 				<span key={index} className={className}>
@@ -263,7 +289,7 @@ const ChangeDetail = ({
 	return (
 		<Stack gap={6}>
 			{unchanged ? (
-				<Text size="sm" fs="italic" c="dimmed">
+				<Text size="sm" c="dimmed">
 					<Trans>This field already holds the proposed value.</Trans>
 				</Text>
 			) : null}
@@ -356,8 +382,12 @@ const ChangeDetail = ({
 /**
  * Renders an agent-proposed settings change for the host to review.
  *
- * The card rests collapsed: it names what would change, says it is waiting on
- * the host, and offers accept, dismiss and a note back to the assistant.
+ * The card rests on three things and nothing else: a headline naming what
+ * would change, the assistant's own reason for proposing it, and the row of
+ * actions. What a field reaches into is said beside that field once expanded,
+ * never at rest, where it competed with the assistant's message a few lines
+ * above saying the same thing in different words.
+ *
  * Expanding shows, per field, the value the project holds now, the value being
  * proposed, and the words that differ between them. The agent never writes;
  * the host applies through the normal project PATCH under their own session
@@ -370,6 +400,12 @@ const ChangeDetail = ({
  *
  * Applied state is stateless: the card compares the live project values to the
  * proposal, so a reload still shows "Applied" truthfully.
+ *
+ * Type here is deliberately thin: two sizes, two weights, no italics. Body for
+ * anything read as content, small and dimmed for labels that name it, semibold
+ * only on the headline and the field names. Emphasis that used to come from
+ * slant now comes from colour and shape, which is the only kind a diff can
+ * afford to lean on.
  */
 export const ProjectUpdateSuggestionCard = ({
 	suggestion,
@@ -434,15 +470,6 @@ export const ProjectUpdateSuggestionCard = ({
 	const selectedCount = selectedChanges.length;
 	const totalCount = suggestion.changes.length;
 
-	// The one impact worth saying before the host expands anything. Context wins
-	// when it is in the set: it is the field that reaches furthest.
-	const restingImpact = useMemo(() => {
-		const field = changedFields.includes("context")
-			? "context"
-			: changedFields.find((name) => FIELD_IMPACT[name]);
-		return field ? fieldImpact(field) : null;
-	}, [changedFields]);
-
 	const handleApply = async () => {
 		if (selectedChanges.length === 0) return;
 		const payload = Object.fromEntries(
@@ -499,7 +526,10 @@ export const ProjectUpdateSuggestionCard = ({
 							const value = effectiveValue(change);
 							return (
 								<Stack key={change.field} gap={2}>
-									<Text size="xs" fw={600}>
+									{/* Same label treatment as "Current" and "Proposed" below:
+									    small and dimmed, so the value it names is the thing
+									    being read. */}
+									<Text size="xs" c="dimmed">
 										{fieldLabel(change.field)}
 									</Text>
 									<Text size="sm" lineClamp={3}>
@@ -510,8 +540,8 @@ export const ProjectUpdateSuggestionCard = ({
 												<Trans>off</Trans>
 											)
 										) : isEmptyValue(value) ? (
-											<Text component="span" size="sm" fs="italic">
-												<Trans>cleared</Trans>
+											<Text component="span" size="sm" c="dimmed">
+												<Trans>emptied out</Trans>
 											</Text>
 										) : (
 											asDisplayString(value)
@@ -556,15 +586,6 @@ export const ProjectUpdateSuggestionCard = ({
 				</Text>
 				{suggestion.summary ? (
 					<Text size="sm">{suggestion.summary}</Text>
-				) : null}
-				{/* The impact sentence is said once. Collapsed, this is the only
-				    place it can be said at all; expanded, the per-field copy sits
-				    beside the field it describes, and keeping this one would print
-				    the same sentence twice on one card. */}
-				{restingImpact && !expanded ? (
-					<Text size="sm" fs="italic">
-						{restingImpact}
-					</Text>
 				) : null}
 
 				<div id={panelId} hidden={!expanded}>
@@ -630,7 +651,7 @@ export const ProjectUpdateSuggestionCard = ({
 												<Text size="sm">{change.reason}</Text>
 											) : null}
 											{impact ? (
-												<Text size="sm" fs="italic">
+												<Text size="sm" c="dimmed">
 													{impact}
 												</Text>
 											) : null}
