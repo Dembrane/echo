@@ -281,7 +281,7 @@ ALLOWED_UPLOAD_CONTENT_TYPES = ("audio/", "video/", "application/octet-stream")
 STATELESS_CONVERSATION_SOURCE = "STATELESS_TRANSCRIPTION"
 # There is no participant on a stateless call. A fixed label keeps these rows
 # self-describing to anyone who finds one in the database.
-STATELESS_PARTICIPANT_NAME = "Stateless transcription"
+STATELESS_PARTICIPANT_NAME = "Voice note"
 
 
 class StatelessTranscriptionResponse(BaseModel):
