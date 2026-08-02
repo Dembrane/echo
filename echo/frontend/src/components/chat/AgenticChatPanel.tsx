@@ -934,6 +934,22 @@ export const AgenticChatPanel = ({
 		return nodes;
 	}, [timeline]);
 
+	// Which tool group is allowed to keep showing itself as live.
+	//
+	// A run can post an assistant message and then carry on working, so "the last
+	// node in the timeline" stops being the tool group the moment any message
+	// renders beneath it. Keying on that made the chip settle to a green
+	// past-tense summary mid-run while the composer still read "Working on your
+	// answer...", which is the same contradiction the live chip was added to fix,
+	// arriving a few seconds later. Key on the newest TOOL GROUP instead: it is
+	// the one doing the work, wherever it sits in the list.
+	const newestToolGroupIndex = useMemo(() => {
+		for (let index = timelineNodes.length - 1; index >= 0; index -= 1) {
+			if (timelineNodes[index].kind === "tool_group") return index;
+		}
+		return -1;
+	}, [timelineNodes]);
+
 	// Drop the optimistic echo once the persisted user message arrives.
 	useEffect(() => {
 		if (!pendingUserMessage) return;
@@ -1632,7 +1648,6 @@ export const AgenticChatPanel = ({
 						)}
 
 					{timelineNodes.map((node, nodeIndex) => {
-						const isNewestNode = nodeIndex === timelineNodes.length - 1;
 						if (node.kind === "message") {
 							const focusedConversations = (
 								node.item.role === "user"
@@ -1782,7 +1797,7 @@ export const AgenticChatPanel = ({
 								items={node.items}
 								expanded={Boolean(expandedGroupIds[node.id])}
 								onToggle={() => toggleGroupDetails(node.id)}
-								stillWorking={isNewestNode && isRunInFlight}
+								stillWorking={nodeIndex === newestToolGroupIndex && isRunInFlight}
 							/>
 						);
 					})}
