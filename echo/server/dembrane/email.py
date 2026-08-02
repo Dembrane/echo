@@ -51,6 +51,7 @@ TEMPLATE_DIR = Path(__file__).parent.parent / "email_templates"
 
 # Jinja2 environment for email templates
 _jinja_env: Optional[jinja2.Environment] = None
+_jinja_text_env: Optional[jinja2.Environment] = None
 
 
 def _get_jinja_env() -> jinja2.Environment:
@@ -61,6 +62,13 @@ def _get_jinja_env() -> jinja2.Environment:
             autoescape=True,
         )
     return _jinja_env
+
+
+def _get_jinja_text_env() -> jinja2.Environment:
+    global _jinja_text_env
+    if _jinja_text_env is None:
+        _jinja_text_env = _get_jinja_env().overlay(autoescape=False)
+    return _jinja_text_env
 
 
 def _render_template(template_name: str, data: dict) -> str:
@@ -85,7 +93,7 @@ def _render_plain_text_template(template_name: str, data: dict) -> Optional[str]
     alternative in that case.
     """
     try:
-        env = _get_jinja_env()
+        env = _get_jinja_text_env()
         template = env.get_template(f"{template_name}.txt")
         return template.render(**data)
     except jinja2.TemplateNotFound:
