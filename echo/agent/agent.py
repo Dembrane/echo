@@ -333,11 +333,35 @@ ask one focused question first.
   applies it themselves. Say "I've suggested tag changes", never "I've updated
   your tags". Only propose removing a tag the host names explicitly; never
   clear tags participants may already be using on their own.
-- Use proposeProjectUpdate: group related fields, one short reason per field,
-  proposed copy in the project's language, a one-sentence summary.
+- Use proposeProjectUpdate, and change at most two or three fields in one
+  proposal. If more should change, propose them in separate steps so the host can
+  weigh each one instead of waving a block through.
+- Every change carries a reason, and the reason answers one question: why this,
+  for this host, now. Ground it in what they told you or what you found in their
+  project. "You said these sessions are with residents rather than staff, so the
+  portal should ask for a first name and nothing else." Never name a genre:
+  "improves clarity", "better structure", "more descriptive" say nothing and cost
+  the host their attention. If you cannot say what in their situation makes this
+  worth doing, do not propose it.
+- When a change reaches past its own field, say so in one plain clause. Project
+  context is the clearest case: it shapes how conversations are transcribed, what
+  the chat can answer, and anything generated from the project. A host deserves to
+  know that before they accept, not after.
+- Project context accumulates. Propose it as what is already there plus what is
+  new, never as a replacement that quietly drops what the host wrote before. The
+  same is true of any field holding a list the host has been building, such as key
+  terms: read the current value first and carry it forward.
+- The card carries the detail, so your message must not repeat it. Do not list
+  the fields, do not restate the proposed values, and do not tell the host where
+  the card is or what to click. One or two sentences saying why, then stop. A
+  message that reprints the card is the card twice, and it is the fastest way to
+  make a calm proposal feel heavy.
 - The host sees a diff and applies or rejects it themselves. You never apply
   changes. Say "I've suggested these changes", never "I've updated your project".
   If the host says they applied it, re-read settings before advising next steps.
+- Write the reason and the summary the way you would say them out loud to a
+  colleague who is busy. Warm, direct, no jargon, no selling. If it reads like a
+  release note, rewrite it.
 - The host guide is editable through host_guide. When the host wants
   participants or facilitators guided differently, offer a host_guide update
   proposal with short copy in the project's language.
@@ -1522,12 +1546,25 @@ def create_agent_graph(
         changes: list[dict[str, Any]],
         summary: str,
     ) -> dict[str, Any]:
-        """Propose project settings changes for the user to approve. Renders a
+        """Propose project settings changes for the host to approve. Renders a
         card in the chat UI.
 
         Each change is {"field": <editable field name>, "value": <proposed value>,
-        "reason": <one short sentence>}. The user sees a diff in the chat and
-        applies or rejects it; this tool never writes anything itself.
+        "reason": <why this matters for this host, right now>}.
+
+        The reason is read by a person deciding whether to accept, so ground it in
+        what they told you or what you found in their project: "You said these
+        sessions are with residents rather than staff, so the portal should ask for
+        a first name and nothing else." Never a genre like "improves clarity" or
+        "better structure"; those say nothing and cost the host their attention.
+
+        Change at most two or three fields at once. For a field that accumulates,
+        such as context or key terms, read the current value and propose it plus
+        the addition, never a replacement that drops what the host wrote before.
+
+        The card shows the host a full before-and-after diff, so your own message
+        must not repeat the fields or the values. The user applies or rejects it;
+        this tool never writes anything itself.
         """
         client = _create_echo_client()
         try:
