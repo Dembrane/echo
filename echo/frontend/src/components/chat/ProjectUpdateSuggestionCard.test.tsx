@@ -99,6 +99,9 @@ describe("ProjectUpdateSuggestionCard", () => {
 		renderCard(contextSuggestion);
 		expect(screen.getByText(/Waiting on you/)).toBeTruthy();
 		expect(screen.getByText(/Project context/)).toBeTruthy();
+		// The headline and the button say this already; the card does not
+		// narrate itself a third time.
+		expect(screen.queryByText(/Nothing changes until you accept/)).toBeNull();
 		// The diff itself is not built until the host asks for it.
 		expect(screen.queryByText("Current")).toBeNull();
 		expect(screen.queryByText("Proposed")).toBeNull();
@@ -164,17 +167,59 @@ describe("ProjectUpdateSuggestionCard", () => {
 			summary: "",
 		});
 		fireEvent.click(screen.getByTestId("suggestion-expand-button"));
-		expect(screen.getByText("Old title").className).toContain("line-through");
-		expect(screen.getByText("New title").className).toContain("text-green-900");
+		const removed = screen.getByText("Old title");
+		const added = screen.getByText("New title");
+		expect(removed.className).toContain("line-through");
+		expect(added.className).toContain("text-green-900");
+		// Both sides are marked before colour is decoded: the removal is struck
+		// through, the addition sits on a background, same as the word diff.
+		expect(removed.className).toContain("bg-red-100");
+		expect(added.className).toContain("bg-green-100");
 	});
 
-	it("says what a change to the project context reaches", () => {
+	it("says what a change to the project context reaches, exactly once", () => {
 		renderCard(contextSuggestion);
-		expect(
-			screen.getByText(
-				/read by transcription, chat answers and canvas generation/,
-			),
-		).toBeTruthy();
+		const impact = /read by transcription, chat answers and canvas generation/;
+		// Collapsed, the resting block is the only place it can be said.
+		expect(screen.getAllByText(impact).length).toBe(1);
+
+		// Expanded, the copy beside the field carries it and the resting one
+		// stands down. Both used to render, the same sentence twice on one card.
+		fireEvent.click(screen.getByTestId("suggestion-expand-button"));
+		expect(screen.getAllByText(impact).length).toBe(1);
+
+		fireEvent.click(screen.getByTestId("suggestion-expand-button"));
+		expect(screen.getAllByText(impact).length).toBe(1);
+	});
+
+	it("does not offer to untick the only field there is", () => {
+		renderCard(contextSuggestion);
+		fireEvent.click(screen.getByTestId("suggestion-expand-button"));
+		// Unticking the single field only disables Accept, which reads as a
+		// broken card rather than a choice.
+		expect(screen.queryByText(/Untick a field/)).toBeNull();
+	});
+
+	it("offers to untick a field once there is more than one", () => {
+		renderCard(twoFieldSuggestion);
+		fireEvent.click(screen.getByTestId("suggestion-expand-button"));
+		expect(screen.getByText(/Untick a field/)).toBeTruthy();
+	});
+
+	it("gives the note the action row rather than stacking a second one", () => {
+		renderCard(contextSuggestion, vi.fn());
+		fireEvent.click(screen.getByTestId("suggestion-note-button"));
+
+		expect(screen.getByTestId("suggestion-note-input")).toBeTruthy();
+		// One submit on screen at a time: accept, dismiss and the expand toggle
+		// stand down while the note is being written.
+		expect(screen.queryByTestId("suggestion-apply-button")).toBeNull();
+		expect(screen.queryByTestId("suggestion-dismiss-button")).toBeNull();
+		expect(screen.queryByTestId("suggestion-expand-button")).toBeNull();
+
+		fireEvent.click(screen.getByTestId("suggestion-note-cancel-button"));
+		expect(screen.getByTestId("suggestion-apply-button")).toBeTruthy();
+		expect(screen.queryByTestId("suggestion-note-input")).toBeNull();
 	});
 
 	it("lets a field be left out and blocks accept when nothing is ticked", () => {
