@@ -3,6 +3,7 @@ import re
 import json
 from typing import Any, Annotated
 from logging import getLogger
+from datetime import datetime
 
 import nest_asyncio
 from fastapi import Form, APIRouter, UploadFile, HTTPException
@@ -12,8 +13,13 @@ from dembrane.s3 import delete_from_s3, get_signed_url, save_to_s3_from_file_lik
 from dembrane.llms import MODELS, router_completion
 from dembrane.utils import generate_uuid
 from dembrane.prompts import render_prompt
+from dembrane.directus import directus
+from dembrane.free_tier import workspace_over_cap_active
 from dembrane.transcribe import TranscriptionError, transcribe_audio_dembrane_26_07
+from dembrane.audio_utils import get_duration_from_s3
+from dembrane.cache_utils import invalidate_workspace_and_org_usage
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.directus_async import async_directus
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 # Enable nested event loops for sync-to-async bridges
@@ -269,11 +275,16 @@ STATELESS_SIGNED_URL_EXPIRY_SECONDS = 3600
 # webm/mp4 recordings often carry a video/* content type; octet-stream covers
 # clients that don't set one at all.
 ALLOWED_UPLOAD_CONTENT_TYPES = ("audio/", "video/", "application/octet-stream")
+# Conversation source for stateless runs. Rows are created already soft-deleted:
+# invisible to every deleted_at-filtered listing, but still summed into workspace
+# usage (the duration rollups deliberately include deleted rows).
+STATELESS_CONVERSATION_SOURCE = "STATELESS"
 
 
 class StatelessTranscriptionResponse(BaseModel):
     transcript: str
     note: str
+    conversation_id: str | None = None
 
 
 def _parse_hotwords(hotwords: str | None) -> list[str] | None:
@@ -289,32 +300,76 @@ def _stateless_upload_key(filename: str | None) -> str:
     return f"{STATELESS_UPLOAD_S3_PREFIX}/{generate_uuid()}{extension}"
 
 
+async def _resolve_project_access(project_id: str, auth: DependencyDirectusSession) -> Any:
+    """Lazy import: _access pulls in the whole v2 package, which imports this
+    module back (api.conversation reuses the summary helpers above)."""
+    from dembrane.api.v2.bff._access import resolve_project_access
+
+    return await resolve_project_access(project_id, auth)
+
+
+def _probe_duration_seconds(s3_key: str) -> float | None:
+    """Best effort: a failed probe must not fail the transcription, only the billing."""
+    try:
+        return get_duration_from_s3(s3_key)
+    except Exception:
+        logger.exception(f"Failed to probe duration for stateless audio: {s3_key}")
+        return None
+
+
+def _record_stateless_conversation(project_id: str, duration: float | None) -> str:
+    """Persist the usage record: a conversation born soft-deleted.
+
+    deleted_at keeps it out of every listing and read path; duration still counts
+    toward the workspace's audio hours because the usage rollups sum deleted rows.
+    """
+    conversation = directus.create_item(
+        "conversation",
+        item_data={
+            "id": generate_uuid(),
+            "project_id": project_id,
+            "source": STATELESS_CONVERSATION_SOURCE,
+            "duration": duration,
+            "is_finished": True,
+            "deleted_at": datetime.utcnow().isoformat(),
+        },
+    )["data"]
+    return conversation["id"]
+
+
 def _run_stateless_transcription(
     file: UploadFile | None,
     audio_file_uri: str | None,
+    project_id: str,
     language: str | None,
     hotwords: list[str] | None,
     use_pii_redaction: bool,
     anonymize_transcripts: bool,
     custom_guidance_prompt: str | None,
     prompt_override: str | None,
-) -> tuple[str, dict[str, Any]]:
-    """Blocking pipeline: (optionally) park the upload in S3, transcribe, clean up.
+) -> tuple[str, dict[str, Any], str | None]:
+    """Blocking pipeline: (optionally) park the upload in S3, transcribe, record
+    the usage conversation, clean up.
 
     Runs in the thread pool; exactly one of file / audio_file_uri is set (the
-    endpoint validates that).
+    endpoint validates that). Returns (transcript, meta, conversation_id).
     """
     s3_key: str | None = None
+    duration: float | None = None
 
     if file is not None:
         s3_key = _stateless_upload_key(file.filename)
         save_to_s3_from_file_like(file, s3_key, public=False, size_limit_mb=STATELESS_UPLOAD_MAX_MB)
+        duration = _probe_duration_seconds(s3_key)
         audio_url = get_signed_url(s3_key, expires_in_seconds=STATELESS_SIGNED_URL_EXPIRY_SECONDS)
     elif audio_file_uri and audio_file_uri.startswith(("http://", "https://")):
-        # Full URLs (external or already signed) pass through untouched.
+        # Full URLs (external or already signed) pass through untouched. Duration
+        # can't be probed without pulling the file, so these bill as 0 seconds;
+        # this input is admin-only for that reason (among others).
         audio_url = audio_file_uri
     elif audio_file_uri:
         # Bare bucket keys get signed, mirroring transcribe_conversation_chunk.
+        duration = _probe_duration_seconds(audio_file_uri)
         audio_url = get_signed_url(
             audio_file_uri, expires_in_seconds=STATELESS_SIGNED_URL_EXPIRY_SECONDS
         )
@@ -322,7 +377,7 @@ def _run_stateless_transcription(
         raise ValueError("No audio input provided")
 
     try:
-        return transcribe_audio_dembrane_26_07(
+        transcript, meta = transcribe_audio_dembrane_26_07(
             audio_url,
             language=language,
             hotwords=hotwords,
@@ -331,6 +386,10 @@ def _run_stateless_transcription(
             custom_guidance_prompt=custom_guidance_prompt,
             prompt_override=prompt_override,
         )
+        # Only successful runs bill; a failed transcription leaves no record. If
+        # this insert fails the request fails too, so usage can't go unrecorded.
+        conversation_id = _record_stateless_conversation(project_id, duration)
+        return transcript, meta, conversation_id
     finally:
         # Stateless means no residue: drop the parked upload even when the
         # transcription failed. Caller-provided URIs are never deleted.
@@ -344,10 +403,11 @@ def _run_stateless_transcription(
 @StatelessRouter.post(
     "/transcribe",
     response_model=StatelessTranscriptionResponse,
-    summary="Transcribe one audio file synchronously, storing nothing",
+    summary="Transcribe one audio file synchronously, storing only a usage record",
 )
 async def transcribe_stateless(
     session: DependencyDirectusSession,
+    project_id: Annotated[str, Form()],
     file: UploadFile | None = None,
     audio_file_uri: Annotated[str | None, Form()] = None,
     language: Annotated[str | None, Form()] = "en",
@@ -358,22 +418,56 @@ async def transcribe_stateless(
     prompt_override: Annotated[str | None, Form()] = None,
 ) -> StatelessTranscriptionResponse:
     """Run the Dembrane-26-07 transcription pipeline on one audio input and return the
-    transcript in the response. Nothing is written to the database.
+    transcript in the response.
 
-    Provide exactly one of:
+    Neither the audio nor the transcript is kept. The only thing written is a
+    usage record: a conversation under project_id with source STATELESS, the audio
+    duration, and deleted_at pre-set, so the run counts toward workspace hours
+    without ever appearing in the dashboard.
+
+    Registered users need edit access to the project; free-tier workspaces past
+    their included hours get a 402. Provide exactly one of:
     - file: multipart audio upload. It is parked in S3 for the duration of the request
       and deleted afterwards, whether transcription worked or not.
-    - audio_file_uri: an S3 key (signed automatically) or a full URL. Never deleted.
+    - audio_file_uri (admin-only): an S3 key (signed automatically) or a full URL.
+      Never deleted.
 
     hotwords is a comma-separated list. custom_guidance_prompt is appended to the
     default transcription prompt; prompt_override replaces that prompt entirely (the
     PII redaction pass keeps its own dedicated prompt either way).
     """
-    if not session.is_admin:
-        raise HTTPException(status_code=403, detail="Admin access required")
-
     if (file is None) == (audio_file_uri is None):
         raise HTTPException(status_code=400, detail="Provide exactly one of file or audio_file_uri")
+
+    # Signing arbitrary bucket keys or fetching arbitrary URLs is an
+    # exfiltration/SSRF vector, so that input stays admin-only.
+    if audio_file_uri is not None and not session.is_admin:
+        raise HTTPException(status_code=403, detail="audio_file_uri is admin-only; upload a file")
+
+    workspace_id: str | None = None
+    org_id: str | None = None
+    if session.is_admin:
+        project = await async_directus.get_item(
+            "project",
+            project_id,
+            params={"fields": "id,deleted_at,workspace_id.id,workspace_id.org_id"},
+        )
+        if not isinstance(project, dict) or project.get("deleted_at"):
+            raise HTTPException(status_code=404, detail="Project not found")
+        workspace = project.get("workspace_id")
+        if isinstance(workspace, dict):
+            workspace_id = workspace.get("id")
+            org_id = workspace.get("org_id")
+    else:
+        access = await _resolve_project_access(project_id, session)
+        access.require("project:update")
+        workspace_id = access.workspace_id
+        org_id = access.org_id
+        if await workspace_over_cap_active(workspace_id, access.tier):
+            raise HTTPException(
+                status_code=402,
+                detail="Workspace is over its included audio hours",
+            )
 
     if file is not None:
         if file.content_type and not file.content_type.startswith(ALLOWED_UPLOAD_CONTENT_TYPES):
@@ -392,10 +486,11 @@ async def transcribe_stateless(
             )
 
     try:
-        transcript, meta = await run_in_thread_pool(
+        transcript, meta, conversation_id = await run_in_thread_pool(
             _run_stateless_transcription,
             file,
             audio_file_uri,
+            project_id,
             language,
             _parse_hotwords(hotwords),
             use_pii_redaction,
@@ -409,4 +504,11 @@ async def transcribe_stateless(
     except TranscriptionError as e:
         raise HTTPException(status_code=502, detail=str(e)) from e
 
-    return StatelessTranscriptionResponse(transcript=transcript, note=meta.get("note") or "")
+    if workspace_id:
+        await invalidate_workspace_and_org_usage(workspace_id, org_id)
+
+    return StatelessTranscriptionResponse(
+        transcript=transcript,
+        note=meta.get("note") or "",
+        conversation_id=conversation_id,
+    )
