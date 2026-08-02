@@ -579,6 +579,34 @@ def test_project_setup_tools_include_project_tags_reader():
     assert "navigateTo" in tools
 
 
+def test_report_read_tools_are_registered():
+    # Registering is the whole feature: a tool defined but left out of the list
+    # fails silently, and the assistant simply keeps being blind to reports.
+    tools = _make_doc_tools()
+
+    assert "listReports" in tools
+    assert "readReport" in tools
+
+
+def test_report_tools_are_reads_not_writes():
+    # The host creates and regenerates reports; report generation is the most
+    # expensive operation in the product and it stays behind their own click.
+    tools = _make_doc_tools()
+
+    assert "createReport" not in tools
+    assert "generateReport" not in tools
+    assert "proposeReport" not in tools
+
+
+def test_prompt_tells_the_agent_it_can_read_reports():
+    prompt = " ".join(SYSTEM_PROMPT.lower().split())
+
+    assert "listreports" in prompt
+    assert "readreport" in prompt
+    # It must not imply it can make one.
+    assert "you cannot create or regenerate one" in prompt
+
+
 @pytest.mark.asyncio
 async def test_get_portal_link_returns_project_link_from_settings_language():
     llm = _CaptureLLM()

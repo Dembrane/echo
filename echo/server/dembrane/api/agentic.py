@@ -1791,6 +1791,102 @@ async def list_agent_insights(
     return {"project_id": project_id, "insights": insights}
 
 
+# Reports are a host's deliverable, and until now the assistant could not see one.
+# It would describe the Report page while being unable to say what was on it, and
+# would happily propose work the host had already published. These two reads close
+# that gap. Both are read-only; nothing here creates or regenerates a report.
+#
+# `kind` is filtered explicitly because a canvas is also a project_report row
+# (kind='canvas'), and the host-facing list endpoints omit that filter, so canvases
+# surface there as untitled reports. Do not copy that omission.
+REPORT_LIST_FIELDS = [
+    "id",
+    "status",
+    "date_created",
+    "language",
+    "user_instructions",
+]
+
+REPORT_VISIBLE_STATUSES = ["published", "scheduled", "draft", "archived"]
+
+
+def _report_title(content: Optional[str]) -> Optional[str]:
+    """First markdown H1, which is how the dashboard titles a report."""
+    for line in (content or "").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("# "):
+            return stripped[2:].strip() or None
+    return None
+
+
+@AgenticRouter.get("/projects/{project_id}/reports")
+async def list_project_reports_for_agent(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """Reports in this project, newest first, without their content.
+
+    Content is deliberately omitted: a report is long, and listing five of them
+    would crowd out everything else in the turn. Read one by id when the host is
+    actually talking about it."""
+    await _assert_project_access(project_id, auth)
+
+    rows = await async_directus.get_items(
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
+                    "status": {"_in": REPORT_VISIBLE_STATUSES},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": REPORT_LIST_FIELDS,
+                "sort": "-date_created",
+                "limit": 20,
+            }
+        },
+    )
+    reports = (
+        [row for row in rows if isinstance(row, dict) and row.get("id") is not None]
+        if isinstance(rows, list)
+        else []
+    )
+    return {"project_id": project_id, "reports": reports}
+
+
+@AgenticRouter.get("/projects/{project_id}/reports/{report_id}")
+async def get_project_report_for_agent(
+    project_id: str,
+    report_id: str,
+    auth: DependencyDirectusSession,
+) -> dict[str, Any]:
+    """One report, with its content and the instructions that shaped it."""
+    await _assert_project_access(project_id, auth)
+
+    rows = await async_directus.get_items(
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "id": {"_eq": report_id},
+                    "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": [*REPORT_LIST_FIELDS, "content"],
+                "limit": 1,
+            }
+        },
+    )
+    report = rows[0] if isinstance(rows, list) and rows else None
+    if not isinstance(report, dict):
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    report["title"] = _report_title(report.get("content"))
+    return report
+
+
 async def _resolve_workspace_id_for_project(project_id: str) -> Optional[str]:
     """Resolve the workspace a project belongs to. Workspace is the data
     boundary, so it is never taken from the agent; the server derives it."""

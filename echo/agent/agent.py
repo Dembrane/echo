@@ -47,7 +47,7 @@ AgentInsightKind = Literal["capability_gap", "friction", "wish", "praise"]
 #   listProjectConversations, getProjectSettings, getProjectTags, getPortalLink,
 #   listDocs, readDoc, grepDocs, readSkill, listProjectChats, readChat,
 #   getLiveConversationStatus, readMemory, readGoal, listMethodologies,
-#   listCanvases, get_project_scope).
+#   listCanvases, listReports, readReport, get_project_scope).
 # - Write tools change durable state (editCanvas, addToCanvas,
 #   removeFromCanvas, pauseCanvasLoop, resumeCanvasLoop, stopCanvasLoop,
 #   remember, amendMemory, forgetMemory, reachOutToDembraneSupport, noteInsight,
@@ -201,7 +201,13 @@ When intent is unclear, ask one focused question instead of guessing.
 - Monitor: live participant recording and transcription health.
 - Library: conversations, canvases, reports, and analysis materials.
 - Host guide: guidance for sharing the portal and running collection.
-- Report: report creation, editing, and sharing.
+- Report: report creation, editing, and sharing. You can read what is there:
+  listReports for what exists and what the host asked each one to focus on, and
+  readReport for one in full. Do that before discussing reports, so you are
+  talking about their actual deliverable rather than reports in general, and so
+  you never redo analysis a published report already covers. You cannot create or
+  regenerate one; the host does that from the Report page, where "Guide the
+  report" is where they steer what it focuses on.
 - Conversations: the conversation list, transcripts, tags, and status.
 - Settings: project configuration and access controls.
 Never describe dashboard navigation beyond these surfaces. When sharing the
@@ -1347,6 +1353,40 @@ def create_agent_graph(
         return knowledge.read_skill(path)
 
     @tool
+    async def listReports() -> dict[str, Any]:
+        """List the reports in this project, newest first, without their text.
+
+        Use this before saying anything about reports: whether one exists, what
+        the host already asked for, whether one is still generating. Each entry
+        carries its id, status, when it was made, its language, and the
+        instructions that shaped it. Read one by id when the host is discussing
+        it. You cannot create or regenerate a report; the host does that from the
+        Report page."""
+        client = _create_echo_client()
+        try:
+            reports = await client.list_project_reports(project_id)
+        finally:
+            await client.close()
+        return {"reports": reports, "count": len(reports)}
+
+    @tool
+    async def readReport(report_id: str) -> dict[str, Any]:
+        """Read one report in full: its content, and the instructions behind it.
+
+        Use this when the host asks what a report says, wants it summarized, or
+        wants to build on it. Quote it as their report, not as your own finding.
+        If the host is asking for something the report already covers, say so
+        instead of redoing the work."""
+        normalized_id = str(report_id).strip()
+        if not normalized_id:
+            raise ValueError("report_id is required")
+        client = _create_echo_client()
+        try:
+            return await client.get_project_report(project_id, normalized_id)
+        finally:
+            await client.close()
+
+    @tool
     async def getProjectSettings() -> dict[str, Any]:
         """Read the project's current editable settings (portal, language, context).
 
@@ -2259,6 +2299,8 @@ def create_agent_graph(
         readDoc,
         grepDocs,
         readSkill,
+        listReports,
+        readReport,
         getProjectSettings,
         getProjectTags,
         getPortalLink,
