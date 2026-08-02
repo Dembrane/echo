@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import math
 import time
@@ -627,6 +628,71 @@ def probe_from_s3(file_name: str, input_format: str) -> dict:
 
 def get_duration_from_s3(file_name: str) -> float:
     probe_data = probe_from_s3(file_name, get_file_format_from_file_path(file_name))
+    if "format" in probe_data and "duration" in probe_data["format"]:
+        return float(probe_data["format"]["duration"])
+    else:
+        raise ValueError("Duration not found in ffprobe output")
+
+
+# ffprobe's own error text echoes the URL it was given, and the URLs we probe are
+# presigned: the query string is the credential. Strip it before anything is logged.
+def _redact_query(text: str) -> str:
+    return re.sub(r"\?\S*", "?<redacted>", text)
+
+
+# ffprobe reads a remote file over range requests, so a probe is cheap on a large
+# object. It is not free on an unreachable host, hence the wall-clock ceiling.
+PROBE_URL_TIMEOUT_SECONDS = 120
+
+
+def probe_from_url(url: str, timeout_seconds: int = PROBE_URL_TIMEOUT_SECONDS) -> dict:
+    """Run ffprobe against an http(s) URL without downloading the file into memory.
+
+    Unlike probe_from_bytes this needs no format hint, because ffprobe detects the
+    container from the stream. That matters for callers holding a presigned URL or an
+    upload whose filename carries no usable extension.
+
+    The protocol whitelist is load-bearing: without it a redirect or a playlist could
+    point ffprobe at file:// and turn a URL probe into a local file read.
+    """
+    if not url.startswith(("http://", "https://")):
+        raise ValueError("probe_from_url only accepts http(s) URLs")
+
+    cmd = [
+        "ffprobe",
+        "-hide_banner",
+        "-loglevel",
+        "warning",
+        "-protocol_whitelist",
+        "http,https,tcp,tls,crypto",
+        "-print_format",
+        "json",
+        "-show_format",
+        "-show_streams",
+        url,
+    ]
+
+    process = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout_seconds
+    )
+
+    stderr_output = _redact_query(process.stderr.decode().strip())
+    if stderr_output:
+        logger.debug(f"ffprobe stderr: {stderr_output}")
+
+    if process.returncode != 0:
+        raise ValueError(f"ffprobe failed on url: {stderr_output or 'Unknown error'}")
+
+    output = process.stdout.decode()
+    if not output:
+        raise ValueError("ffprobe returned empty output")
+
+    return json.loads(output)
+
+
+def get_duration_from_url(url: str, timeout_seconds: int = PROBE_URL_TIMEOUT_SECONDS) -> float:
+    """Audio duration in seconds for an http(s) URL, via ffprobe."""
+    probe_data = probe_from_url(url, timeout_seconds=timeout_seconds)
     if "format" in probe_data and "duration" in probe_data["format"]:
         return float(probe_data["format"]["duration"])
     else:

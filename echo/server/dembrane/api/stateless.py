@@ -3,7 +3,9 @@ import re
 import json
 from typing import Any, Annotated
 from logging import getLogger
+from datetime import datetime, timezone
 
+import sentry_sdk
 import nest_asyncio
 from fastapi import Form, APIRouter, UploadFile, HTTPException
 from pydantic import BaseModel
@@ -13,8 +15,10 @@ from dembrane.llms import MODELS, router_completion
 from dembrane.utils import generate_uuid
 from dembrane.prompts import render_prompt
 from dembrane.transcribe import TranscriptionError, transcribe_audio_dembrane_26_07
+from dembrane.audio_utils import get_duration_from_url
 from dembrane.async_helpers import run_in_thread_pool
-from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.directus_async import async_directus
+from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
 # Enable nested event loops for sync-to-async bridges
 nest_asyncio.apply()
@@ -270,10 +274,111 @@ STATELESS_SIGNED_URL_EXPIRY_SECONDS = 3600
 # clients that don't set one at all.
 ALLOWED_UPLOAD_CONTENT_TYPES = ("audio/", "video/", "application/octet-stream")
 
+# Marker on the metering row. conversation.source is a plain varchar whose choices
+# are a Directus UI hint, not a database constraint, so a new value needs no
+# migration; the snapshot's source.json carries the same value so the admin
+# dropdown stays truthful.
+STATELESS_CONVERSATION_SOURCE = "STATELESS_TRANSCRIPTION"
+# There is no participant on a stateless call. A fixed label keeps these rows
+# self-describing to anyone who finds one in the database.
+STATELESS_PARTICIPANT_NAME = "Stateless transcription"
+
 
 class StatelessTranscriptionResponse(BaseModel):
     transcript: str
     note: str
+
+
+async def _assert_project_access(project_id: str, session: DirectusSession) -> None:
+    """Gate the endpoint on write access to the named project.
+
+    Mirrors agentic._assert_project_access: staff admins bypass the app-layer model
+    (they may have no app_user row) and non-members get 404 rather than 403, matching
+    the access ladder's don't-confirm-existence rule.
+
+    The policy is project:update, not conversation:read, because this call spends the
+    workspace's audio hours. Read-only observers can see a project's conversations and
+    must not be able to bill against it.
+    """
+    if session.is_admin:
+        return
+
+    from dembrane.api.v2.bff._access import resolve_project_access
+
+    access = await resolve_project_access(project_id, session)
+    access.require("project:update")
+
+
+def _probe_duration_seconds(audio_url: str) -> float | None:
+    """Audio duration in seconds, or None when it cannot be established.
+
+    The transcription pipeline returns only {"note", "raw", "error"} and no duration,
+    so this is the same ffprobe read the normal recording path uses when it stamps
+    conversation.duration after merging chunks.
+
+    None is deliberate rather than 0.0: a metering row carrying a made-up duration is
+    worse than one carrying a gap, because a written number gets believed.
+    """
+    try:
+        duration = get_duration_from_url(audio_url)
+    except Exception:
+        logger.exception("Failed to probe audio duration for stateless transcription")
+        return None
+
+    if duration <= 0:
+        logger.error(
+            "ffprobe returned a non-positive duration (%s) for a stateless transcription",
+            duration,
+        )
+        return None
+    return duration
+
+
+async def _record_stateless_usage(project_id: str, duration_seconds: float | None) -> str:
+    """Meter one stateless transcription as a conversation row that is born deleted.
+
+    Billing sums conversation.duration across a workspace *including* soft-deleted rows
+    (free_tier._workspace_lifetime_audio_hours: "delete preserves billable duration"),
+    so setting deleted_at at creation makes the row count for hours while staying out of
+    every listing, which all filter on deleted_at.
+
+    Deliberately not conversation_service.create. That helper raises
+    ConversationNotOpenForParticipationException when the project is closed to
+    participants, which is a portal toggle and has nothing to do with a host
+    transcribing their own audio, and it dispatches a conversation.started webhook,
+    which would be a lie for a conversation that never started.
+
+    Returns the new conversation id.
+    """
+    conversation_id = generate_uuid()
+
+    await async_directus.create_item(
+        "conversation",
+        {
+            "id": conversation_id,
+            "project_id": project_id,
+            "participant_name": STATELESS_PARTICIPANT_NAME,
+            "source": STATELESS_CONVERSATION_SOURCE,
+            "duration": duration_seconds,
+            "is_finished": True,
+            "deleted_at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+
+    # New duration → bust usage cache, same as the participant upload path, so hours
+    # don't wait out the cache TTL before they surface.
+    try:
+        from dembrane.api.conversation import _invalidate_usage_cache_for_conversation
+
+        await _invalidate_usage_cache_for_conversation(conversation_id)
+    except Exception as exc:
+        logger.warning(
+            "usage cache invalidation failed for stateless conversation %s: %s",
+            conversation_id,
+            exc,
+        )
+
+    return conversation_id
 
 
 def _parse_hotwords(hotwords: str | None) -> list[str] | None:
@@ -298,11 +403,15 @@ def _run_stateless_transcription(
     anonymize_transcripts: bool,
     custom_guidance_prompt: str | None,
     prompt_override: str | None,
-) -> tuple[str, dict[str, Any]]:
+) -> tuple[str, dict[str, Any], float | None]:
     """Blocking pipeline: (optionally) park the upload in S3, transcribe, clean up.
 
     Runs in the thread pool; exactly one of file / audio_file_uri is set (the
     endpoint validates that).
+
+    Returns (transcript, metadata, duration_seconds). The duration is probed here
+    rather than by the caller because a parked upload only exists inside this
+    function: the finally below deletes it.
     """
     s3_key: str | None = None
 
@@ -322,7 +431,7 @@ def _run_stateless_transcription(
         raise ValueError("No audio input provided")
 
     try:
-        return transcribe_audio_dembrane_26_07(
+        transcript, meta = transcribe_audio_dembrane_26_07(
             audio_url,
             language=language,
             hotwords=hotwords,
@@ -331,6 +440,9 @@ def _run_stateless_transcription(
             custom_guidance_prompt=custom_guidance_prompt,
             prompt_override=prompt_override,
         )
+        # After transcription so a probe failure can never cost the caller a
+        # transcript, and before the finally so the parked upload is still there.
+        return transcript, meta, _probe_duration_seconds(audio_url)
     finally:
         # Stateless means no residue: drop the parked upload even when the
         # transcription failed. Caller-provided URIs are never deleted.
@@ -349,6 +461,7 @@ def _run_stateless_transcription(
 async def transcribe_stateless(
     session: DependencyDirectusSession,
     file: UploadFile | None = None,
+    project_id: Annotated[str | None, Form()] = None,
     audio_file_uri: Annotated[str | None, Form()] = None,
     language: Annotated[str | None, Form()] = "en",
     hotwords: Annotated[str | None, Form()] = None,
@@ -358,19 +471,27 @@ async def transcribe_stateless(
     prompt_override: Annotated[str | None, Form()] = None,
 ) -> StatelessTranscriptionResponse:
     """Run the Dembrane-26-07 transcription pipeline on one audio input and return the
-    transcript in the response. Nothing is written to the database.
+    transcript in the response. No transcript, audio or conversation content is stored.
 
     Provide exactly one of:
     - file: multipart audio upload. It is parked in S3 for the duration of the request
       and deleted afterwards, whether transcription worked or not.
     - audio_file_uri: an S3 key (signed automatically) or a full URL. Never deleted.
 
+    project_id names the project to bill. Any caller with write access to it may use
+    this endpoint; the audio duration is metered against that project's workspace as a
+    soft-deleted conversation row, which counts for hours and shows up nowhere. Staff
+    admins may omit project_id, which is how the endpoint originally worked, and such
+    calls are not metered because there is no project to bill.
+
     hotwords is a comma-separated list. custom_guidance_prompt is appended to the
     default transcription prompt; prompt_override replaces that prompt entirely (the
     PII redaction pass keeps its own dedicated prompt either way).
     """
-    if not session.is_admin:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    if project_id:
+        await _assert_project_access(project_id, session)
+    elif not session.is_admin:
+        raise HTTPException(status_code=403, detail="project_id is required")
 
     if (file is None) == (audio_file_uri is None):
         raise HTTPException(status_code=400, detail="Provide exactly one of file or audio_file_uri")
@@ -392,7 +513,7 @@ async def transcribe_stateless(
             )
 
     try:
-        transcript, meta = await run_in_thread_pool(
+        transcript, meta, duration_seconds = await run_in_thread_pool(
             _run_stateless_transcription,
             file,
             audio_file_uri,
@@ -408,5 +529,33 @@ async def transcribe_stateless(
         raise HTTPException(status_code=400, detail=str(e)) from e
     except TranscriptionError as e:
         raise HTTPException(status_code=502, detail=str(e)) from e
+
+    if project_id:
+        if duration_seconds is None:
+            # The row is still written: it records that the workspace spent a
+            # transcription, and a null duration is queryable as "unknown" in a way
+            # that a zero never would be. Loud, because this under-bills.
+            logger.error(
+                "Metering a stateless transcription for project %s with no duration: "
+                "ffprobe could not read the audio",
+                project_id,
+            )
+            sentry_sdk.capture_message(
+                "stateless transcription metered without a duration",
+                level="error",
+            )
+        try:
+            conversation_id = await _record_stateless_usage(project_id, duration_seconds)
+            logger.info(
+                "Metered stateless transcription for project %s as conversation %s (%s s)",
+                project_id,
+                conversation_id,
+                duration_seconds,
+            )
+        except Exception as exc:
+            # The caller did the work and gets the transcript. Losing the metering row
+            # is our problem to fix, not theirs to retry.
+            logger.exception("Failed to meter stateless transcription for project %s", project_id)
+            sentry_sdk.capture_exception(exc)
 
     return StatelessTranscriptionResponse(transcript=transcript, note=meta.get("note") or "")
