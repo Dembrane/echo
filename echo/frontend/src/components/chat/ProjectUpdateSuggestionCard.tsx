@@ -148,10 +148,14 @@ const ValueText = ({
 		<Text
 			size="sm"
 			component="span"
+			// Same marking as the word diff path. The removal carries a shape
+			// signal in the strikethrough; without a background the addition
+			// carried none, so it vanished in greyscale and for a colour-blind
+			// reader. Both sides now read as marked before colour is decoded.
 			className={
 				kind === "old"
-					? "break-words text-red-900 line-through decoration-red-400"
-					: "break-words text-green-900"
+					? "break-words bg-red-100 text-red-900 line-through decoration-red-400"
+					: "break-words bg-green-100 text-green-900"
 			}
 		>
 			{display}
@@ -259,13 +263,13 @@ const ChangeDetail = ({
 	return (
 		<Stack gap={6}>
 			{unchanged ? (
-				<Text size="sm" fs="italic">
+				<Text size="sm" fs="italic" c="dimmed">
 					<Trans>This field already holds the proposed value.</Trans>
 				</Text>
 			) : null}
 
 			{chunks ? (
-				<Text size="xs">
+				<Text size="xs" c="dimmed">
 					<Plural
 						value={diff?.addedWords ?? 0}
 						one="# word added"
@@ -281,7 +285,7 @@ const ChangeDetail = ({
 			) : null}
 
 			<Stack gap={2}>
-				<Text size="xs">
+				<Text size="xs" c="dimmed">
 					<Trans>Current</Trans>
 				</Text>
 				<Box className={VALUE_BOX}>
@@ -294,7 +298,7 @@ const ChangeDetail = ({
 			</Stack>
 
 			<Stack gap={2}>
-				<Text size="xs">
+				<Text size="xs" c="dimmed">
 					<Trans>Proposed</Trans>
 				</Text>
 				{editing ? (
@@ -553,24 +557,26 @@ export const ProjectUpdateSuggestionCard = ({
 				{suggestion.summary ? (
 					<Text size="sm">{suggestion.summary}</Text>
 				) : null}
-				{restingImpact ? (
+				{/* The impact sentence is said once. Collapsed, this is the only
+				    place it can be said at all; expanded, the per-field copy sits
+				    beside the field it describes, and keeping this one would print
+				    the same sentence twice on one card. */}
+				{restingImpact && !expanded ? (
 					<Text size="sm" fs="italic">
 						{restingImpact}
 					</Text>
 				) : null}
-				<Text size="xs">
-					<Trans>
-						Nothing changes until you accept. Open the changes to see the
-						current value next to the proposed one.
-					</Trans>
-				</Text>
 
 				<div id={panelId} hidden={!expanded}>
 					{expanded ? (
 						<Stack gap="lg" className="pt-1">
-							<Text size="xs">
-								<Trans>Untick a field to leave it exactly as it is.</Trans>
-							</Text>
+							{/* With one field there is nothing to leave out: unticking
+							    only disables Accept, which reads as a broken card. */}
+							{suggestion.changes.length > 1 ? (
+								<Text size="xs" c="dimmed">
+									<Trans>Untick a field to leave it exactly as it is.</Trans>
+								</Text>
+							) : null}
 							{suggestion.changes.map((change) => {
 								const value = effectiveValue(change);
 								const impact = fieldImpact(change.field);
@@ -654,6 +660,20 @@ export const ProjectUpdateSuggestionCard = ({
 					) : null}
 				</div>
 
+				{selectedCount !== totalCount ? (
+					<Text size="xs" c="dimmed">
+						<Trans>
+							{selectedCount} of {totalCount} fields selected. Accept applies
+							only the ticked ones.
+						</Trans>
+					</Text>
+				) : null}
+
+				{/* Writing a note is its own step, so it takes the action row over
+				    rather than stacking a second one on top of it. Stacked, the
+				    card offered four verbs and two submit buttons at once and it
+				    was not obvious which one sent the note. Cancel puts the
+				    original row back untouched. */}
 				{noteOpen ? (
 					<Stack gap="xs">
 						<Textarea
@@ -676,6 +696,7 @@ export const ProjectUpdateSuggestionCard = ({
 									setNoteOpen(false);
 									setNote("");
 								}}
+								{...testId("suggestion-note-cancel-button")}
 							>
 								<Trans>Cancel</Trans>
 							</Button>
@@ -690,77 +711,68 @@ export const ProjectUpdateSuggestionCard = ({
 							</Button>
 						</Group>
 					</Stack>
-				) : null}
-
-				{selectedCount !== totalCount ? (
-					<Text size="xs">
-						<Trans>
-							{selectedCount} of {totalCount} fields selected. Accept applies
-							only the ticked ones.
-						</Trans>
-					</Text>
-				) : null}
-
-				<Group justify="space-between" gap="xs" wrap="wrap">
-					<Button
-						variant="subtle"
-						size="xs"
-						className={COARSE_TAP_TARGET}
-						aria-expanded={expanded}
-						aria-controls={panelId}
-						leftSection={
-							expanded ? (
-								<IconChevronUp size={14} aria-hidden />
-							) : (
-								<IconChevronDown size={14} aria-hidden />
-							)
-						}
-						onClick={() => setExpanded((prev) => !prev)}
-						{...testId("suggestion-expand-button")}
-					>
-						{expanded ? (
-							<Trans>Hide the changes</Trans>
-						) : (
-							<Plural
-								value={suggestion.changes.length}
-								one="Show what changes (# field)"
-								other="Show what changes (# fields)"
-							/>
-						)}
-					</Button>
-					<Group gap="xs" wrap="wrap">
-						{onSendNote && !noteOpen ? (
-							<Button
-								variant="subtle"
-								size="xs"
-								className={COARSE_TAP_TARGET}
-								onClick={() => setNoteOpen(true)}
-								{...testId("suggestion-note-button")}
-							>
-								<Trans>Add a note</Trans>
-							</Button>
-						) : null}
+				) : (
+					<Group justify="space-between" gap="xs" wrap="wrap">
 						<Button
 							variant="subtle"
 							size="xs"
 							className={COARSE_TAP_TARGET}
-							onClick={() => setDismissed(true)}
-							{...testId("suggestion-dismiss-button")}
+							aria-expanded={expanded}
+							aria-controls={panelId}
+							leftSection={
+								expanded ? (
+									<IconChevronUp size={14} aria-hidden />
+								) : (
+									<IconChevronDown size={14} aria-hidden />
+								)
+							}
+							onClick={() => setExpanded((prev) => !prev)}
+							{...testId("suggestion-expand-button")}
 						>
-							<Trans>Dismiss</Trans>
+							{expanded ? (
+								<Trans>Hide the changes</Trans>
+							) : (
+								<Plural
+									value={suggestion.changes.length}
+									one="Show what changes (# field)"
+									other="Show what changes (# fields)"
+								/>
+							)}
 						</Button>
-						<Button
-							size="xs"
-							className={COARSE_TAP_TARGET}
-							loading={updateProjectMutation.isPending}
-							disabled={selectedChanges.length === 0}
-							onClick={() => void handleApply()}
-							{...testId("suggestion-apply-button")}
-						>
-							<Trans>Accept</Trans>
-						</Button>
+						<Group gap="xs" wrap="wrap">
+							{onSendNote ? (
+								<Button
+									variant="subtle"
+									size="xs"
+									className={COARSE_TAP_TARGET}
+									onClick={() => setNoteOpen(true)}
+									{...testId("suggestion-note-button")}
+								>
+									<Trans>Add a note</Trans>
+								</Button>
+							) : null}
+							<Button
+								variant="subtle"
+								size="xs"
+								className={COARSE_TAP_TARGET}
+								onClick={() => setDismissed(true)}
+								{...testId("suggestion-dismiss-button")}
+							>
+								<Trans>Dismiss</Trans>
+							</Button>
+							<Button
+								size="xs"
+								className={COARSE_TAP_TARGET}
+								loading={updateProjectMutation.isPending}
+								disabled={selectedChanges.length === 0}
+								onClick={() => void handleApply()}
+								{...testId("suggestion-apply-button")}
+							>
+								<Trans>Accept</Trans>
+							</Button>
+						</Group>
 					</Group>
-				</Group>
+				)}
 			</Stack>
 		</SuggestionCardFrame>
 	);
