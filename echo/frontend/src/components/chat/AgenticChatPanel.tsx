@@ -686,10 +686,16 @@ export const AgenticChatPanel = ({
 		queryFn: () => getAgentInsights(projectId),
 	});
 	const sendInsightMutation = useMutation({
+		// chat_id and message_id are what let the team see which conversation
+		// produced a piece of feedback. The old auto-write carried them from the
+		// tool's closure; sending from the card has to pass them explicitly or
+		// the row lands unlinked.
 		mutationFn: (body: {
 			kind: string;
 			content: string;
 			suggested_capability?: string | null;
+			chat_id?: string | null;
+			message_id?: string | null;
 		}) => createAgentInsight(projectId, body),
 		onSuccess: () =>
 			queryClient.invalidateQueries({
@@ -1732,6 +1738,8 @@ export const AgenticChatPanel = ({
 												kind: note.kind,
 												content,
 												suggested_capability: suggestedCapability,
+												chat_id: chatId ?? null,
+												message_id: node.id ?? null,
 											})
 										}
 										dismissed={
