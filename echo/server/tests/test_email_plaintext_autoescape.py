@@ -1,5 +1,4 @@
-import jinja2
-from dembrane.email import _render_plain_text_template, TEMPLATE_DIR
+from dembrane.email import TEMPLATE_DIR, _render_plain_text_template
 
 
 class SafeMockContext(dict):
