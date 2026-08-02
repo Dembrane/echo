@@ -1,4 +1,4 @@
-Your daily digest — {{ item_count }} notification{{ "s" if item_count != 1 else "" }}
+Your daily digest: {{ item_count }} notification{{ "s" if item_count != 1 else "" }}
 
 {% for item in items %}
 • {{ item.summary }} ({{ item.timestamp }})
@@ -9,4 +9,4 @@ Individual emails will resume when volume drops below the batching threshold.
 Review from the admin panel:
 {{ admin_url }}
 
-— the dembrane team
+The dembrane team
