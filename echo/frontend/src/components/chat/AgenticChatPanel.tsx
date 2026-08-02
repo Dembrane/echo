@@ -1659,7 +1659,10 @@ export const AgenticChatPanel = ({
 							const suggestion = parseProjectUpdateSuggestion(node.item);
 							return suggestion ? (
 								<div key={node.id}>
-									<ProjectUpdateSuggestionCard suggestion={suggestion} />
+									<ProjectUpdateSuggestionCard
+										suggestion={suggestion}
+										onSendNote={(message) => handleSubmit(message)}
+									/>
 								</div>
 							) : null;
 						}
