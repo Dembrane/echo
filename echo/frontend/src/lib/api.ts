@@ -1371,6 +1371,47 @@ export const getDismissedAgentInsightIds = async (projectId: string) => {
 	return response.insight_ids ?? [];
 };
 
+export type SentAgentInsight = {
+	id: string;
+	kind: string;
+	content: string;
+	suggested_capability: string | null;
+	chat_id: string | null;
+	message_id: string | null;
+	status: string;
+};
+
+/** Sends an insight the assistant drafted. The assistant never writes one
+ * itself, so this runs under the host's own session, on their click. */
+export const createAgentInsight = async (
+	projectId: string,
+	body: {
+		kind: string;
+		content: string;
+		suggested_capability?: string | null;
+		chat_id?: string | null;
+		message_id?: string | null;
+	},
+) => {
+	return api.post<unknown, { id: string; status: string }>(
+		`/agentic/projects/${projectId}/insight`,
+		body,
+	);
+};
+
+/** Insights already sent in this project. Cards replay from run events that
+ * carry no row, so this is how a reloaded card knows it was already sent and
+ * does not offer to send the same thing twice. */
+export const getAgentInsights = async (projectId: string, chatId?: string) => {
+	const response = await api.get<
+		unknown,
+		{ project_id: string; insights: SentAgentInsight[] }
+	>(`/agentic/projects/${projectId}/insights`, {
+		params: chatId ? { chat_id: chatId } : undefined,
+	});
+	return response.insights ?? [];
+};
+
 export const getChatSuggestions = async (
 	chatId: string,
 	language = "en",
