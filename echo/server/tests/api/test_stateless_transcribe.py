@@ -209,7 +209,7 @@ async def test_registered_user_with_project_access_can_transcribe(
         )
 
     assert response.status_code == 200
-    assert fake_access.required == ["project:update"]
+    assert fake_access.required == ["chat:use"]
     assert len(fake_directus.created) == 1
 
 

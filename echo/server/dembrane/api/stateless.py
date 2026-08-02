@@ -425,8 +425,8 @@ async def transcribe_stateless(
     duration, and deleted_at pre-set, so the run counts toward workspace hours
     without ever appearing in the dashboard.
 
-    Registered users need edit access to the project; free-tier workspaces past
-    their included hours get a 402. Provide exactly one of:
+    Registered users need chat access to the project (chat:use); free-tier
+    workspaces past their included hours get a 402. Provide exactly one of:
     - file: multipart audio upload. It is parked in S3 for the duration of the request
       and deleted afterwards, whether transcription worked or not.
     - audio_file_uri (admin-only): an S3 key (signed automatically) or a full URL.
@@ -459,8 +459,11 @@ async def transcribe_stateless(
             workspace_id = workspace.get("id")
             org_id = workspace.get("org_id")
     else:
+        # chat:use, not project:update: this powers dictation in the chat box,
+        # so anyone who can chat in the project (members, external collaborators,
+        # project editors) can transcribe. Read-only observers cannot.
         access = await _resolve_project_access(project_id, session)
-        access.require("project:update")
+        access.require("chat:use")
         workspace_id = access.workspace_id
         org_id = access.org_id
         if await workspace_over_cap_active(workspace_id, access.tier):
