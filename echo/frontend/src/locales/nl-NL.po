@@ -252,7 +252,7 @@ msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# werkruimte} other {# werkruimtes}}"
 
 #. placeholder {0}: focusedContextConversations.length
-#: src/components/chat/AgenticChatPanel.tsx:1863
+#: src/components/chat/AgenticChatPanel.tsx:1899
 msgid "{0, plural, one {Focusing on # conversation:} other {Focusing on # conversations:}}"
 msgstr "{0, plural, one {Focus op # gesprek:} other {Focus op # gesprekken:}}"
 
@@ -601,11 +601,11 @@ msgstr "{liveProjectCount, plural, one {Verwijder het # project in deze werkruim
 msgid "{MONTHLY_BILLING_PREMIUM_PCT}% off"
 msgstr "{MONTHLY_BILLING_PREMIUM_PCT}% korting"
 
-#: src/components/chat/AgenticChatPanel.tsx:236
+#: src/components/chat/AgenticChatPanel.tsx:238
 msgid "{name}'s conversation"
 msgstr "Gesprek van {name}"
 
-#: src/components/chat/AgenticChatPanel.tsx:235
+#: src/components/chat/AgenticChatPanel.tsx:237
 msgid "{name}'s transcript excerpt"
 msgstr "Transcriptfragment van {name}"
 
@@ -658,7 +658,7 @@ msgstr "{seats} plekken"
 msgid "{selectedCount} of {totalCount} fields selected. Accept applies only the ticked ones."
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:246
+#: src/routes/onboarding/OnboardingRoute.tsx:251
 #: src/components/organisation/CreateOrganisationModal.tsx:129
 msgid "{sent} invites sent"
 msgstr "{sent} uitnodigingen verstuurd"
@@ -887,7 +887,7 @@ msgstr "8 uur"
 #~ msgid "80%+ of included hours used this month"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:447
+#: src/routes/onboarding/OnboardingRoute.tsx:452
 msgid "A couple of quick questions and you're in."
 msgstr "Een paar korte vragen en je bent binnen."
 
@@ -990,8 +990,8 @@ msgstr ""
 #~ msgid "About the suggested project update: {trimmed}"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:116
-#: src/routes/onboarding/OnboardingRoute.tsx:117
+#: src/routes/onboarding/OnboardingRoute.tsx:121
+#: src/routes/onboarding/OnboardingRoute.tsx:122
 msgid "About you"
 msgstr "Over jou"
 
@@ -1484,8 +1484,8 @@ msgstr "Geavanceerde instellingen"
 #~ msgid "Agent is working..."
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:333
-#: src/components/chat/AgenticChatPanel.tsx:360
+#: src/components/chat/AgenticChatPanel.tsx:335
+#: src/components/chat/AgenticChatPanel.tsx:362
 msgid "Agent run failed"
 msgstr "Agent-run mislukt"
 
@@ -1595,7 +1595,7 @@ msgstr "Geef dembrane-medewerkers toegang tot deze werkruimte voor support"
 msgid "Allow participants using the link to start new conversations"
 msgstr "Sta deelnemers toe om met behulp van de link nieuwe gesprekken te starten"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:444
+#: src/routes/onboarding/OnboardingRoute.tsx:449
 msgid "Almost ready"
 msgstr "Bijna klaar"
 
@@ -1784,6 +1784,11 @@ msgstr "Is er iets dat we beter hadden kunnen doen?"
 
 #~ msgid "Anything we should know? Team size, timelines, intended use."
 #~ msgstr ""
+
+#: src/components/chat/InsightNoteCard.tsx:121
+#: src/components/chat/InsightNoteCard.tsx:122
+msgid "Anything you want to add"
+msgstr ""
 
 #: src/routes/settings/UserSettingsRoute.tsx:139
 #: src/features/sidebar/views/user/UserSettingsView.tsx:47
@@ -1983,7 +1988,7 @@ msgstr "Vragen | dembrane"
 msgid "Ask a organisation admin to request this upgrade."
 msgstr "Vraag een organisatie-admin om deze upgrade aan te vragen."
 
-#: src/components/chat/AgenticChatPanel.tsx:1556
+#: src/components/chat/AgenticChatPanel.tsx:1581
 msgid "Ask a question about the conversations in this project, or get help setting it up. Any change is proposed for review first, and nothing is saved until it's approved."
 msgstr "Stel een vraag over de gesprekken in dit project, of vraag hulp bij het opzetten ervan. Elke wijziging wordt eerst ter beoordeling voorgesteld en er wordt niets opgeslagen totdat je het goedkeurt."
 
@@ -2014,7 +2019,7 @@ msgstr "Hierover vragen"
 #~ msgstr "Vraag iets over je gesprekken, of typ om een eerdere chat te vinden"
 
 #: src/routes/project/chat/NewChatRoute.tsx:542
-#: src/components/chat/AgenticChatPanel.tsx:1923
+#: src/components/chat/AgenticChatPanel.tsx:1959
 msgid "Ask about your conversations..."
 msgstr "Vraag iets over je gesprekken..."
 
@@ -2273,7 +2278,7 @@ msgstr "Afwezig"
 #: src/routes/project/report/ProjectReportRoute.tsx:604
 #: src/routes/organisation/OrganisationRoute.tsx:694
 #: src/routes/organisation/OrganisationRoute.tsx:717
-#: src/routes/onboarding/OnboardingRoute.tsx:434
+#: src/routes/onboarding/OnboardingRoute.tsx:439
 #: src/routes/auth/Register.tsx:240
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:334
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:371
@@ -2599,7 +2604,7 @@ msgstr "kan lezen"
 #: src/components/common/FeedbackPortalModal.tsx:124
 #: src/components/common/ConfirmModal.tsx:44
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:680
-#: src/components/chat/AgenticChatPanel.tsx:1833
+#: src/components/chat/AgenticChatPanel.tsx:1869
 msgid "Cancel"
 msgstr "Annuleren"
 
@@ -2632,7 +2637,7 @@ msgstr "Annuleren"
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr "Annuleer wanneer je wilt. Je houdt toegang tot het einde van de periode."
 
-#: src/components/chat/AgenticChatPanel.tsx:1821
+#: src/components/chat/AgenticChatPanel.tsx:1857
 msgid "Cancel current run"
 msgstr "Huidige run stoppen"
 
@@ -2716,7 +2721,7 @@ msgstr "Canvassen die voor dit project zijn gemaakt, staan hier."
 #~ msgid "Canvases the assistant builds for this project live here. Ask for one in chat."
 #~ msgstr ""
 
-#: src/components/chat/InsightNoteCard.tsx:13
+#: src/components/chat/InsightNoteCard.tsx:15
 msgid "capability gap"
 msgstr "ontbrekende mogelijkheid"
 
@@ -2829,7 +2834,7 @@ msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resulta
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:262
-#: src/components/chat/AgenticChatPanel.tsx:1400
+#: src/components/chat/AgenticChatPanel.tsx:1425
 msgid "Chat"
 msgstr "Chat"
 
@@ -3065,7 +3070,7 @@ msgstr "Cloud Act-veilig"
 msgid "Cloud Act safe. EU-sovereign stack for the strictest compliance."
 msgstr "Cloud Act-veilig. EU-soevereine stack voor de strengste naleving."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:331
+#: src/routes/onboarding/OnboardingRoute.tsx:336
 #: src/components/organisation/CreateOrganisationModal.tsx:215
 msgid "Colleagues you invite can explore conversations, share insights, and build reports with you."
 msgstr "Collega's die je uitnodigt kunnen gesprekken verkennen, inzichten delen en samen met jou rapporten maken."
@@ -3237,8 +3242,8 @@ msgstr "Context toegevoegd:"
 msgid "Contextual suggestions"
 msgstr "Contextuele suggesties"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:525
-#: src/routes/onboarding/OnboardingRoute.tsx:639
+#: src/routes/onboarding/OnboardingRoute.tsx:530
+#: src/routes/onboarding/OnboardingRoute.tsx:662
 #: src/routes/auth/Register.tsx:212
 #: src/components/organisation/CreateOrganisationModal.tsx:207
 #: src/components/language/LanguagePicker.tsx:157
@@ -4123,7 +4128,7 @@ msgstr "dembrane B.V. {0}, alle rechten voorbehouden."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:982
 #: src/routes/project/chat/ProjectChatRoute.tsx:992
-#: src/components/chat/AgenticChatPanel.tsx:1944
+#: src/components/chat/AgenticChatPanel.tsx:1980
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane kan fouten maken. Controleer antwoorden altijd even."
 
@@ -4341,7 +4346,7 @@ msgstr "Weergavenaam"
 msgid "Do I need this?"
 msgstr "Ben ik dit nodig?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:454
+#: src/routes/onboarding/OnboardingRoute.tsx:459
 msgid "Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?"
 msgstr "Ben je van plan dembrane te gebruiken in de zorg, het onderwijs, werving, het beheer van kritieke infrastructuur, rechtshandhaving of de rechtspraak?"
 
@@ -4386,11 +4391,11 @@ msgstr "Wordt niet vanzelf bijgewerkt."
 msgid "Does not update on its own. Updated {updatedAgo}."
 msgstr "Wordt niet vanzelf bijgewerkt. Bijgewerkt {updatedAgo}."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:525
+#: src/routes/onboarding/OnboardingRoute.tsx:530
 #: src/components/project/ProjectSharingModal.tsx:268
 #: src/components/invite/InviteModal.tsx:811
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:618
-#: src/components/chat/AgenticChatPanel.tsx:379
+#: src/components/chat/AgenticChatPanel.tsx:381
 msgid "Done"
 msgstr "Klaar"
 
@@ -4449,6 +4454,10 @@ msgstr "DPA"
 #: src/components/chat/ChatModeSelector.tsx:63
 msgid "Draft next actions and organize them by priority"
 msgstr "Ontwerp volgende acties en organiseer ze op basis van prioriteit"
+
+#: src/components/chat/agenticToolActivity.ts:152
+msgid "Drafting a note you can send to the dembrane team"
+msgstr ""
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:598
 msgid "Drag audio files here or click to select files"
@@ -4872,8 +4881,8 @@ msgstr "Gegevens ingevuld"
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
 #: src/components/conversation/LiveMonitorSection.tsx:269
-#: src/components/chat/AgenticChatPanel.tsx:384
-#: src/components/chat/AgenticChatPanel.tsx:1502
+#: src/components/chat/AgenticChatPanel.tsx:386
+#: src/components/chat/AgenticChatPanel.tsx:1527
 msgid "Error"
 msgstr "Fout"
 
@@ -5308,11 +5317,11 @@ msgstr "Fout bij het herzien van het resultaat. Probeer het opnieuw."
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fout bij het stoppen van de opname bij wijziging van het apparaat. Probeer het opnieuw."
 
-#: src/components/chat/AgenticChatPanel.tsx:1392
+#: src/components/chat/AgenticChatPanel.tsx:1417
 msgid "Failed to stop run"
 msgstr "De run stoppen is mislukt"
 
-#: src/components/chat/AgenticChatPanel.tsx:1351
+#: src/components/chat/AgenticChatPanel.tsx:1376
 msgid "Failed to submit agentic message"
 msgstr "Bericht versturen is mislukt"
 
@@ -5499,16 +5508,16 @@ msgstr "Fixture"
 msgid "Focus"
 msgstr "Focus"
 
-#: src/components/chat/AgenticChatPanel.tsx:1890
-#: src/components/chat/AgenticChatPanel.tsx:1891
-#: src/components/chat/AgenticChatPanel.tsx:1954
+#: src/components/chat/AgenticChatPanel.tsx:1926
+#: src/components/chat/AgenticChatPanel.tsx:1927
+#: src/components/chat/AgenticChatPanel.tsx:1990
 msgid "Focus on conversations"
 msgstr "Focus op gesprekken"
 
 #~ msgid "Focus your report (optional)"
 #~ msgstr "Focus je rapport (optioneel)"
 
-#: src/components/chat/AgenticChatPanel.tsx:209
+#: src/components/chat/AgenticChatPanel.tsx:211
 msgid "Focusing on:"
 msgstr "Gericht op:"
 
@@ -5570,6 +5579,10 @@ msgstr "Voor facturen, een gedeeld contract, om een samenwerking te bespreken of
 #~ msgid "For small teams and single projects"
 #~ msgstr ""
 
+#: src/components/chat/InsightNoteCard.tsx:98
+msgid "for the dembrane team"
+msgstr ""
+
 #: src/features/sidebar/views/InboxView.tsx:121
 #: src/components/inbox/Inbox.tsx:213
 msgid "For you"
@@ -5624,7 +5637,7 @@ msgstr "Gratis, alleen-lezen. Ziet projecten, gesprekken en rapporten. Kan niet 
 msgid "French"
 msgstr "Frans"
 
-#: src/components/chat/InsightNoteCard.tsx:15
+#: src/components/chat/InsightNoteCard.tsx:17
 msgid "friction"
 msgstr "wrijving"
 
@@ -5733,7 +5746,7 @@ msgstr "Krijg direct een reactie van dembrane om het gesprek te verdiepen."
 msgid "participant.refine.go.deeper.description"
 msgstr "Krijg direct een reactie van dembrane om het gesprek te verdiepen."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:668
+#: src/routes/onboarding/OnboardingRoute.tsx:691
 #: src/features/sidebar/views/user/UserHomeView.tsx:81
 msgid "Get started"
 msgstr "Aan de slag"
@@ -5920,7 +5933,7 @@ msgstr "Begeleid"
 msgid "Has verified artifacts"
 msgstr "Bevat geverifieerde artefacten"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:476
+#: src/routes/onboarding/OnboardingRoute.tsx:481
 msgid "Have you completed a training?"
 msgstr "Heb je een training afgerond?"
 
@@ -6018,7 +6031,7 @@ msgstr "Projecten verbergen"
 msgid "Hide revision data"
 msgstr "Revisiegegevens verbergen"
 
-#: src/components/chat/AgenticChatPanel.tsx:587
+#: src/components/chat/AgenticChatPanel.tsx:589
 msgid "Hide steps"
 msgstr "Stappen verbergen"
 
@@ -6103,11 +6116,11 @@ msgstr ""
 #~ msgid "I accept the <0>terms</0>"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1670
+#: src/components/chat/AgenticChatPanel.tsx:1695
 msgid "I applied the canvas."
 msgstr "Ik heb het canvas toegepast."
 
-#: src/components/chat/AgenticChatPanel.tsx:1686
+#: src/components/chat/AgenticChatPanel.tsx:1711
 msgid "I applied the goal."
 msgstr "Ik heb het doel toegepast."
 
@@ -6183,7 +6196,7 @@ msgstr "Als je je bij een bestaande organisatie wilt aansluiten, maak dan geen n
 msgid "Image style"
 msgstr "Beeldstijl"
 
-#: src/components/chat/AgenticChatPanel.tsx:1580
+#: src/components/chat/AgenticChatPanel.tsx:1605
 msgid "Improve my setup"
 msgstr "Verbeter mijn instellingen"
 
@@ -6256,7 +6269,7 @@ msgstr "Innovator of hoger"
 #~ msgstr "Voer algemene context in"
 
 #. placeholder {0}: shortInsightId(note.insightId)
-#: src/components/chat/InsightNoteCard.tsx:74
+#: src/components/chat/InsightNoteCard.tsx:185
 msgid "insight {0}"
 msgstr "inzicht {0}"
 
@@ -6315,7 +6328,7 @@ msgstr "Uitnodiging"
 msgid "Invitations waiting for you. Accept to get started."
 msgstr "Er staan uitnodigingen voor je klaar. Accepteer om aan de slag te gaan."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:117
+#: src/routes/onboarding/OnboardingRoute.tsx:122
 #: src/components/organisation/CreateOrganisationModal.tsx:175
 msgid "Invite"
 msgstr "Uitnodigen"
@@ -6381,7 +6394,7 @@ msgstr "Uitnodiging opnieuw verstuurd"
 msgid "Invite revoked"
 msgstr "Uitnodiging ingetrokken"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:246
+#: src/routes/onboarding/OnboardingRoute.tsx:251
 #: src/components/organisation/CreateOrganisationModal.tsx:129
 msgid "Invite sent"
 msgstr "Uitnodiging verstuurd"
@@ -6413,7 +6426,7 @@ msgstr "Nodig uit voor deze werkruimte, of alleen voor de organisatie."
 #~ msgid "Invite your organisation"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:328
+#: src/routes/onboarding/OnboardingRoute.tsx:333
 msgid "Invite your team"
 msgstr "Nodig je team uit"
 
@@ -6937,7 +6950,7 @@ msgstr "Link naar de privacyverklaring van uw organisatie die aan deelnemers wor
 #~ msgid "LinkedIn Post (Experimental)"
 #~ msgstr "LinkedIn Post (Experimenteel)"
 
-#: src/components/chat/AgenticChatPanel.tsx:1570
+#: src/components/chat/AgenticChatPanel.tsx:1595
 msgid "List my conversations"
 msgstr "Toon mijn gesprekken"
 
@@ -6945,7 +6958,7 @@ msgstr "Toon mijn gesprekken"
 #~ msgid "List project conversations"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1571
+#: src/components/chat/AgenticChatPanel.tsx:1596
 msgid "List the conversations in this project."
 msgstr "Toon de gesprekken in dit project."
 
@@ -7011,7 +7024,7 @@ msgstr "Live opnames, voortgang van transcriptie en fouten verschijnen hier zodr
 msgid "Live stream disconnected. Updating on a slower poll until it reconnects."
 msgstr "Live verbinding verbroken. We werken minder vaak bij tot de verbinding terug is."
 
-#: src/components/chat/AgenticChatPanel.tsx:1070
+#: src/components/chat/AgenticChatPanel.tsx:1095
 msgid "Live stream interrupted. Falling back to polling."
 msgstr "Live verbinding onderbroken. We halen updates nu periodiek op."
 
@@ -7092,7 +7105,7 @@ msgstr "Projecten laden..."
 #~ msgid "Loading projects…"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1513
+#: src/components/chat/AgenticChatPanel.tsx:1538
 msgid "Loading this chat..."
 msgstr "Deze chat laden..."
 
@@ -7639,7 +7652,7 @@ msgstr "Noem het naar het onderwerp, de opdracht of de vraag die je verkent."
 msgid "Name updated"
 msgstr "Naam bijgewerkt"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:616
+#: src/routes/onboarding/OnboardingRoute.tsx:639
 msgid "Name your organisation to get started. You can invite members right after, or join other organisations later from settings."
 msgstr "Geef je organisatie een naam om te beginnen. Je kunt daarna meteen leden uitnodigen, of later via instellingen lid worden van andere organisaties."
 
@@ -7814,8 +7827,8 @@ msgstr "Volgende factuur"
 #~ msgid "Next tier: {0} · {1}"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:467
-#: src/routes/onboarding/OnboardingRoute.tsx:481
+#: src/routes/onboarding/OnboardingRoute.tsx:472
+#: src/routes/onboarding/OnboardingRoute.tsx:486
 msgid "No"
 msgstr "Nee"
 
@@ -8317,17 +8330,21 @@ msgstr "Niet ingepland"
 msgid "Not set"
 msgstr "Niet ingesteld"
 
+#: src/components/chat/InsightNoteCard.tsx:138
+msgid "Not this one"
+msgstr ""
+
 #: src/components/training/TrainingRoster.tsx:78
 msgid "Not trained"
 msgstr "Niet getraind"
 
-#: src/components/chat/InsightNoteCard.tsx:21
+#: src/components/chat/InsightNoteCard.tsx:23
 msgid "note"
 msgstr "notitie"
 
 #: src/components/chat/InsightNoteCard.tsx:114
-msgid "noted for the dembrane team"
-msgstr "genoteerd voor het dembrane-team"
+#~ msgid "noted for the dembrane team"
+#~ msgstr "genoteerd voor het dembrane-team"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2361
 #: src/components/training/StaffTrainingPanel.tsx:157
@@ -8363,6 +8380,10 @@ msgstr "Op dit moment niets van dembrane."
 msgid "Nothing here for you yet."
 msgstr "Hier is nog niets voor je."
 
+#: src/components/chat/InsightNoteCard.tsx:102
+msgid "Nothing is sent until you send it. Edit anything below first."
+msgstr ""
+
 #: src/components/workspace/OrganisationUsageRollup.tsx:755
 msgid "Nothing matches the filter."
 msgstr "Niets komt overeen met het filter."
@@ -8380,8 +8401,8 @@ msgid "Notify participants when a report is published."
 msgstr "Deelnemers melden wanneer een rapport wordt gepubliceerd."
 
 #: src/components/chat/agenticToolActivity.ts:152
-msgid "Noting this for the dembrane team"
-msgstr "Dit noteren voor het dembrane-team"
+#~ msgid "Noting this for the dembrane team"
+#~ msgstr "Dit noteren voor het dembrane-team"
 
 #~ msgid "Now"
 #~ msgstr "Nu"
@@ -8808,7 +8829,7 @@ msgstr "Alleen organisatie"
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:112
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:459
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:682
-#: src/routes/onboarding/OnboardingRoute.tsx:117
+#: src/routes/onboarding/OnboardingRoute.tsx:122
 #: src/features/sidebar/views/org/OrgHomeView.tsx:76
 #: src/features/sidebar/hooks/useSearchHits.ts:134
 #: src/components/training/StaffTrainingPanel.tsx:139
@@ -8845,7 +8866,7 @@ msgid "Organisation members appear here once they join a workspace. Invites are 
 msgstr "Organisatieleden verschijnen hier zodra ze deelnemen aan een werkruimte. Uitnodigingen worden verstuurd vanaf het tabblad Leden van elke werkruimte."
 
 #: src/routes/organisation/OrganisationRoute.tsx:1099
-#: src/routes/onboarding/OnboardingRoute.tsx:653
+#: src/routes/onboarding/OnboardingRoute.tsx:676
 #: src/components/organisation/CreateOrganisationModal.tsx:194
 msgid "Organisation name"
 msgstr "Organisatienaam"
@@ -9762,7 +9783,7 @@ msgstr "Postcode"
 #~ msgid "Powered by"
 #~ msgstr "Gemaakt met ❤️ door"
 
-#: src/components/chat/InsightNoteCard.tsx:19
+#: src/components/chat/InsightNoteCard.tsx:21
 msgid "praise"
 msgstr "compliment"
 
@@ -10201,7 +10222,7 @@ msgstr "Vragen over hoe dembrane werkt, niet alleen over je data."
 #~ msgstr "Quotes"
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:558
+#: src/components/chat/AgenticChatPanel.tsx:560
 msgid "Ran {0} steps at once"
 msgstr "{0} stappen tegelijk uitgevoerd"
 
@@ -10311,7 +10332,7 @@ msgstr "Klaar om je tools te verbinden? Voeg een webhook toe om automatisch gesp
 #~ msgstr "Reden"
 
 #. placeholder {0}: note.reason
-#: src/components/chat/InsightNoteCard.tsx:106
+#: src/components/chat/InsightNoteCard.tsx:216
 msgid "reason: {0}"
 msgstr "reden: {0}"
 
@@ -10531,8 +10552,8 @@ msgstr "Herinnering verstuurd: supporttoegang staat nog aan"
 #: src/components/memory/MemoryList.tsx:98
 #: src/components/memory/MemoryList.tsx:118
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:201
-#: src/components/chat/InsightNoteCard.tsx:86
-#: src/components/chat/InsightNoteCard.tsx:90
+#: src/components/chat/InsightNoteCard.tsx:196
+#: src/components/chat/InsightNoteCard.tsx:200
 msgid "Remove"
 msgstr "Verwijderen"
 
@@ -10629,7 +10650,7 @@ msgstr "Naam wijzigen"
 #~ msgstr "Naam wijzigen"
 
 #: src/components/chat/ChatAccordion.tsx:153
-#: src/components/chat/AgenticChatPanel.tsx:1463
+#: src/components/chat/AgenticChatPanel.tsx:1488
 msgid "Rename chat"
 msgstr "Chat hernoemen"
 
@@ -10943,11 +10964,11 @@ msgstr "Abonnement hervatten"
 msgid "Resume updates"
 msgstr "Updates hervatten"
 
-#: src/components/chat/InsightNoteCard.tsx:69
+#: src/components/chat/InsightNoteCard.tsx:180
 msgid "retracted"
 msgstr "ingetrokken"
 
-#: src/components/chat/InsightNoteCard.tsx:113
+#: src/components/chat/InsightNoteCard.tsx:223
 msgid "retracted for the dembrane team"
 msgstr "ingetrokken voor het dembrane-team"
 
@@ -11030,7 +11051,7 @@ msgstr "Controleer voordat je aanmaakt."
 msgid "Review files before uploading"
 msgstr "Bestanden bekijken voordat u uploadt"
 
-#: src/components/chat/AgenticChatPanel.tsx:1581
+#: src/components/chat/AgenticChatPanel.tsx:1606
 msgid "Review my project settings and suggest improvements."
 msgstr "Bekijk mijn projectinstellingen en stel verbeteringen voor."
 
@@ -11110,7 +11131,7 @@ msgstr "Rijen per pagina"
 #~ msgid "Run status:"
 #~ msgstr "Uitvoeringsstatus:"
 
-#: src/components/chat/AgenticChatPanel.tsx:389
+#: src/components/chat/AgenticChatPanel.tsx:391
 msgid "Running"
 msgstr "Bezig"
 
@@ -11644,7 +11665,7 @@ msgstr "Self-serve"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:942
 #: src/routes/project/chat/NewChatRoute.tsx:521
-#: src/components/chat/AgenticChatPanel.tsx:1909
+#: src/components/chat/AgenticChatPanel.tsx:1945
 msgid "Send"
 msgstr "Verzenden"
 
@@ -11661,7 +11682,7 @@ msgstr "{0} uitnodigingen versturen"
 msgid "Send invite"
 msgstr "Uitnodiging versturen"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:361
+#: src/routes/onboarding/OnboardingRoute.tsx:366
 #: src/components/organisation/CreateOrganisationModal.tsx:234
 msgid "Send invites"
 msgstr "Uitnodigingen versturen"
@@ -11678,6 +11699,10 @@ msgstr "Verzoek versturen"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:854
 msgid "Send Slack/Teams notifications when new conversations are completed"
 msgstr "Stuur Slack/Teams notificaties wanneer nieuwe gesprekken zijn voltooid"
+
+#: src/components/chat/InsightNoteCard.tsx:152
+msgid "Send to dembrane"
+msgstr ""
 
 #~ msgid "sent"
 #~ msgstr ""
@@ -11696,6 +11721,10 @@ msgstr "Verstuurd"
 #: src/components/invite/InviteModal.tsx:508
 msgid "Sent {sentCount} of {0}. Check the list below."
 msgstr "{sentCount} van {0} verstuurd. Bekijk de lijst hieronder."
+
+#: src/components/chat/InsightNoteCard.tsx:224
+msgid "sent to the dembrane team"
+msgstr ""
 
 #~ msgid "Sentiment"
 #~ msgstr "Gevoel"
@@ -11749,7 +11778,7 @@ msgstr "Werkruimte instellen"
 msgid "Set up your first organisation"
 msgstr "Stel je eerste organisatie in"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:587
+#: src/routes/onboarding/OnboardingRoute.tsx:592
 #: src/features/sidebar/views/user/UserHomeView.tsx:127
 msgid "Set up your organisation"
 msgstr "Stel je organisatie in"
@@ -11757,7 +11786,7 @@ msgstr "Stel je organisatie in"
 #~ msgid "Set up your team"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:149
+#: src/routes/onboarding/OnboardingRoute.tsx:154
 msgid "Set up your workspace | dembrane"
 msgstr "Stel je werkruimte in | dembrane"
 
@@ -11765,7 +11794,7 @@ msgstr "Stel je werkruimte in | dembrane"
 msgid "Set who can see and join."
 msgstr "Bepaal wie het kan zien en kan deelnemen."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:293
+#: src/routes/onboarding/OnboardingRoute.tsx:298
 msgid "Setting things up for you"
 msgstr "We zetten alles voor je klaar"
 
@@ -11977,7 +12006,7 @@ msgstr "Toon referenties"
 msgid "Show revision data"
 msgstr "Revisiegegevens tonen"
 
-#: src/components/chat/AgenticChatPanel.tsx:587
+#: src/components/chat/AgenticChatPanel.tsx:589
 msgid "Show steps"
 msgstr "Stappen tonen"
 
@@ -12023,8 +12052,8 @@ msgstr "Wordt getoond in de organisatiekop en in onderwerpregels van e-mails."
 #~ msgid "Sign in with Google"
 #~ msgstr "Inloggen met Google"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:350
-#: src/routes/onboarding/OnboardingRoute.tsx:516
+#: src/routes/onboarding/OnboardingRoute.tsx:355
+#: src/routes/onboarding/OnboardingRoute.tsx:521
 #: src/components/organisation/CreateOrganisationModal.tsx:227
 msgid "Skip"
 msgstr "Overslaan"
@@ -12091,7 +12120,7 @@ msgstr "Iets blokkeert je verbinding. Je audio wordt niet opgeslagen tenzij dit 
 #: src/routes/project/report/ProjectReportRoute.tsx:852
 #: src/routes/project/report/ProjectReportRoute.tsx:933
 #: src/routes/project/report/ProjectReportRoute.tsx:1404
-#: src/routes/onboarding/OnboardingRoute.tsx:184
+#: src/routes/onboarding/OnboardingRoute.tsx:189
 #: src/routes/auth/Login.tsx:241
 #: src/components/project/ProjectAccessGuard.tsx:87
 #: src/components/participant/ParticipantInitiateForm.tsx:205
@@ -13037,7 +13066,7 @@ msgstr ""
 msgid "This information is anonymized"
 msgstr "Deze informatie is anoniem"
 
-#: src/components/chat/InsightNoteCard.tsx:111
+#: src/components/chat/InsightNoteCard.tsx:221
 msgid "This insight has been deleted"
 msgstr "Dit inzicht is verwijderd"
 
@@ -13431,7 +13460,7 @@ msgstr "Te groot"
 msgid "Too long"
 msgstr "Te lang"
 
-#: src/components/chat/AgenticChatPanel.tsx:1879
+#: src/components/chat/AgenticChatPanel.tsx:1915
 msgid "Too many to list here. The assistant reads through them in batches."
 msgstr "Te veel om hier te tonen. De assistent leest ze in delen door."
 
@@ -13537,7 +13566,7 @@ msgstr "Trainingen"
 msgid "Transcribing..."
 msgstr "Transcriptie wordt uitgevoerd..."
 
-#: src/components/chat/AgenticChatPanel.tsx:239
+#: src/components/chat/AgenticChatPanel.tsx:241
 msgid "transcript"
 msgstr "transcript"
 
@@ -13553,7 +13582,7 @@ msgstr "Transcriptie"
 msgid "Transcript copied to clipboard"
 msgstr "Transcript gekopieerd naar klembord"
 
-#: src/components/chat/AgenticChatPanel.tsx:238
+#: src/components/chat/AgenticChatPanel.tsx:240
 msgid "transcript excerpt"
 msgstr "transcriptfragment"
 
@@ -13964,7 +13993,7 @@ msgstr "Updateritme"
 #~ msgid "Update your team's name and branding. Workspace-level settings live on each workspace's own settings page."
 #~ msgstr ""
 
-#: src/components/chat/InsightNoteCard.tsx:64
+#: src/components/chat/InsightNoteCard.tsx:175
 msgid "updated"
 msgstr "bijgewerkt"
 
@@ -14255,7 +14284,7 @@ msgstr "Gebruik deze cyclus"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:979
 #: src/routes/project/chat/ProjectChatRoute.tsx:989
-#: src/components/chat/AgenticChatPanel.tsx:1941
+#: src/components/chat/AgenticChatPanel.tsx:1977
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 
@@ -14662,7 +14691,7 @@ msgstr "We testen je microfoon om de beste ervaring voor iedereen in de sessie t
 msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 msgstr "We horen wat stilte. Probeer harder te spreken zodat je stem duidelijk blijft."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:610
+#: src/routes/onboarding/OnboardingRoute.tsx:633
 msgid "We've added organisations so you can organize projects and share them with colleagues. Everything you had before is still here. We just need a name for your organisation."
 msgstr "We hebben organisaties toegevoegd zodat je projecten kunt ordenen en delen met collega's. Alles wat je eerder had, is er nog. We hebben alleen een naam voor je organisatie nodig."
 
@@ -14703,7 +14732,7 @@ msgstr "Webhooks zijn geautomatiseerde berichten die van een app naar een andere
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks zijn niet ingeschakeld voor deze omgeving."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:116
+#: src/routes/onboarding/OnboardingRoute.tsx:121
 #: src/components/participant/ParticipantBody.tsx:130
 msgid "Welcome"
 msgstr "Welkom"
@@ -14712,7 +14741,7 @@ msgstr "Welkom"
 msgid "Welcome back"
 msgstr "Welkom terug"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:583
+#: src/routes/onboarding/OnboardingRoute.tsx:588
 msgid "Welcome back, {displayName}"
 msgstr "Welkom terug, {displayName}"
 
@@ -14722,7 +14751,7 @@ msgstr "Welkom terug, {displayName}"
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Welkom in Big Picture Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Specific Details mode."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:580
+#: src/routes/onboarding/OnboardingRoute.tsx:585
 #: src/routes/auth/Login.tsx:142
 msgid "Welcome to dembrane"
 msgstr "Welkom bij dembrane"
@@ -14751,8 +14780,8 @@ msgstr "Welkom in Overview Mode! Ik heb samenvattingen van al je gesprekken klaa
 #~ msgid "Welcome to Your Home! Here you can see all your projects and get access to tutorial resources. Currently, you have no projects. Click \"Create\" to configure to get started!"
 #~ msgstr "Welkom op je Home! Hier kun je al je projecten bekijken en toegang krijgen tot tutorialbronnen. Momenteel heb je nog geen projecten. Klik op \"Maak\" om te beginnen!"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:578
-#: src/routes/onboarding/OnboardingRoute.tsx:585
+#: src/routes/onboarding/OnboardingRoute.tsx:583
+#: src/routes/onboarding/OnboardingRoute.tsx:590
 msgid "Welcome, {displayName}"
 msgstr "Welkom, {displayName}"
 
@@ -14780,7 +14809,7 @@ msgstr "Wat wil je te weten komen?"
 msgid "What data is sent?"
 msgstr "Wat gegevens worden verzonden?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:490
+#: src/routes/onboarding/OnboardingRoute.tsx:495
 msgid "What do you plan to use dembrane for?"
 msgstr "Waarvoor wil je dembrane gebruiken?"
 
@@ -14788,6 +14817,10 @@ msgstr "Waarvoor wil je dembrane gebruiken?"
 #: src/components/participant/verify/VerifySelection.tsx:241
 msgid "participant.verify.selection.title"
 msgstr "Wat wil je verifiëren?"
+
+#: src/components/chat/InsightNoteCard.tsx:112
+msgid "What gets sent"
+msgstr ""
 
 #~ msgid "What kind of question do you want to ask for this document?"
 #~ msgstr "Wat voor soort vraag wil je stellen voor dit document?"
@@ -14807,11 +14840,11 @@ msgstr "Wat moet ECHO analyseren of genereren uit de gesprekken?"
 #~ msgid "What should this report focus on?"
 #~ msgstr "Waar moet dit rapport zich op richten?"
 
-#: src/components/chat/AgenticChatPanel.tsx:1576
+#: src/components/chat/AgenticChatPanel.tsx:1601
 msgid "What themes came up across the conversations in this project?"
 msgstr "Welke thema's kwamen naar voren in de gesprekken in dit project?"
 
-#: src/components/chat/AgenticChatPanel.tsx:1575
+#: src/components/chat/AgenticChatPanel.tsx:1600
 msgid "What themes came up?"
 msgstr "Welke thema's kwamen naar voren?"
 
@@ -14893,7 +14926,7 @@ msgid "Where would you like to go?"
 msgstr "Waar wil je naartoe?"
 
 #: src/routes/project/chat/NewChatRoute.tsx:471
-#: src/components/chat/AgenticChatPanel.tsx:1553
+#: src/components/chat/AgenticChatPanel.tsx:1578
 msgid "Where would you like to start?"
 msgstr "Waar wil je beginnen?"
 
@@ -14935,7 +14968,7 @@ msgstr "Wie in je team een actuele trainingslicentie heeft. Boek een training vi
 msgid "will be included in your report"
 msgstr "wordt in je rapport opgenomen"
 
-#: src/components/chat/InsightNoteCard.tsx:17
+#: src/components/chat/InsightNoteCard.tsx:19
 msgid "wish"
 msgstr "wens"
 
@@ -14946,27 +14979,27 @@ msgstr "wens"
 #~ msgid "With errors"
 #~ msgstr "Met fouten"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:502
+#: src/routes/onboarding/OnboardingRoute.tsx:507
 msgid "With external clients"
 msgstr "Met externe klanten"
 
 #~ msgid "With partners"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:497
+#: src/routes/onboarding/OnboardingRoute.tsx:502
 msgid "Within my organisation"
 msgstr "Binnen mijn organisatie"
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:559
+#: src/components/chat/AgenticChatPanel.tsx:561
 msgid "Worked through {0} steps"
 msgstr "{0} stappen doorlopen"
 
-#: src/components/chat/AgenticChatPanel.tsx:1425
+#: src/components/chat/AgenticChatPanel.tsx:1450
 msgid "Working on your answer..."
 msgstr "Bezig met je antwoord..."
 
-#: src/components/chat/AgenticChatPanel.tsx:554
+#: src/components/chat/AgenticChatPanel.tsx:556
 msgid "Working..."
 msgstr "Bezig..."
 
@@ -15106,8 +15139,8 @@ msgstr "Wilt u deze tag toevoegen aan uw huidige filters?"
 msgid "Wrong address? Change email"
 msgstr "Verkeerd adres? E-mail wijzigen"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:466
-#: src/routes/onboarding/OnboardingRoute.tsx:480
+#: src/routes/onboarding/OnboardingRoute.tsx:471
+#: src/routes/onboarding/OnboardingRoute.tsx:485
 msgid "Yes"
 msgstr "Ja"
 
@@ -15139,7 +15172,7 @@ msgstr "Je bent al afgemeld of je link is ongeldig."
 msgid "You are the data owner"
 msgstr "Jij bent de data-eigenaar"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:652
+#: src/routes/onboarding/OnboardingRoute.tsx:675
 #: src/components/organisation/CreateOrganisationModal.tsx:195
 msgid "You can change this anytime in settings."
 msgstr "Je kunt dit altijd aanpassen in de instellingen."
@@ -15287,7 +15320,7 @@ msgstr "Je wordt als admin toegevoegd aan {0} privéwerkruimtes. Ze verschijnen 
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Je wordt als admin toegevoegd aan {singleName}. Die verschijnt daarna meteen in je zijbalk."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:673
+#: src/routes/onboarding/OnboardingRoute.tsx:696
 msgid "You'll find all your projects waiting for you."
 msgstr "Al je projecten staan voor je klaar."
 
@@ -15386,12 +15419,22 @@ msgid "You're the only admin. Promote someone else before changing your role."
 msgstr "Je bent de enige beheerder. Maak iemand anders beheerder voordat je je rol wijzigt."
 
 #. placeholder {0}: inviteOrganisations.length
+#: src/routes/onboarding/OnboardingRoute.tsx:605
+msgid "You've been invited to collaborate with {0} organisations. We'll take you in once you continue."
+msgstr ""
+
+#. placeholder {0}: inviteOrganisations[0]
 #: src/routes/onboarding/OnboardingRoute.tsx:599
+msgid "You've been invited to collaborate with <0>{0}</0>. We'll take you there in a moment."
+msgstr ""
+
+#. placeholder {0}: inviteOrganisations.length
+#: src/routes/onboarding/OnboardingRoute.tsx:622
 msgid "You've been invited to join {0} organisations. We'll take you in once you continue."
 msgstr "Je bent uitgenodigd voor {0} organisaties. We nemen je mee zodra je doorgaat."
 
 #. placeholder {0}: inviteOrganisations[0]
-#: src/routes/onboarding/OnboardingRoute.tsx:593
+#: src/routes/onboarding/OnboardingRoute.tsx:616
 msgid "You've been invited to join <0>{0}</0>. We'll take you there in a moment."
 msgstr "Je bent uitgenodigd voor <0>{0}</0>. We brengen je er zo naartoe."
 
@@ -15531,11 +15574,11 @@ msgstr "Uw naam"
 msgid "Your organisation is on the free plan by default. One plan covers every workspace, billed per seat once you upgrade."
 msgstr "Je organisatie zit standaard op het gratis abonnement. Eén abonnement dekt elke werkruimte, per plek gefactureerd zodra je upgradet."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:604
+#: src/routes/onboarding/OnboardingRoute.tsx:627
 msgid "Your organisation is waiting for you. Click continue to join."
 msgstr "Je organisatie staat voor je klaar. Klik op doorgaan om mee te doen."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:655
+#: src/routes/onboarding/OnboardingRoute.tsx:678
 #: src/components/organisation/CreateOrganisationModal.tsx:196
 msgid "Your organisation or company"
 msgstr "Je organisatie of bedrijf"
@@ -15625,6 +15668,10 @@ msgstr "Je weergaven"
 
 #~ msgid "Your workspace is ready."
 #~ msgstr ""
+
+#: src/routes/onboarding/OnboardingRoute.tsx:610
+msgid "Your workspace is waiting for you. Click continue to collaborate."
+msgstr ""
 
 #~ msgid "Yours"
 #~ msgstr "Van jou"

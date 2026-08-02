@@ -420,7 +420,7 @@ msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr ""
 
 #. placeholder {0}: focusedContextConversations.length
-#: src/components/chat/AgenticChatPanel.tsx:1863
+#: src/components/chat/AgenticChatPanel.tsx:1899
 msgid "{0, plural, one {Focusing on # conversation:} other {Focusing on # conversations:}}"
 msgstr ""
 
@@ -784,11 +784,11 @@ msgstr ""
 msgid "{MONTHLY_BILLING_PREMIUM_PCT}% off"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:236
+#: src/components/chat/AgenticChatPanel.tsx:238
 msgid "{name}'s conversation"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:235
+#: src/components/chat/AgenticChatPanel.tsx:237
 msgid "{name}'s transcript excerpt"
 msgstr ""
 
@@ -844,7 +844,7 @@ msgstr ""
 msgid "{selectedCount} of {totalCount} fields selected. Accept applies only the ticked ones."
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:246
+#: src/routes/onboarding/OnboardingRoute.tsx:251
 #: src/components/organisation/CreateOrganisationModal.tsx:129
 msgid "{sent} invites sent"
 msgstr ""
@@ -1091,7 +1091,7 @@ msgstr ""
 #~ msgid "80%+ of included hours used this month"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:447
+#: src/routes/onboarding/OnboardingRoute.tsx:452
 msgid "A couple of quick questions and you're in."
 msgstr ""
 
@@ -1200,8 +1200,8 @@ msgstr ""
 #~ msgid "About the suggested project update: {trimmed}"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:116
-#: src/routes/onboarding/OnboardingRoute.tsx:117
+#: src/routes/onboarding/OnboardingRoute.tsx:121
+#: src/routes/onboarding/OnboardingRoute.tsx:122
 msgid "About you"
 msgstr ""
 
@@ -1719,8 +1719,8 @@ msgstr "Configuración Avanzada"
 #~ msgid "Agent is working..."
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:333
-#: src/components/chat/AgenticChatPanel.tsx:360
+#: src/components/chat/AgenticChatPanel.tsx:335
+#: src/components/chat/AgenticChatPanel.tsx:362
 msgid "Agent run failed"
 msgstr ""
 
@@ -1826,7 +1826,7 @@ msgstr ""
 msgid "Allow participants using the link to start new conversations"
 msgstr "Permitir a los participantes usar el enlace para iniciar nuevas conversaciones"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:444
+#: src/routes/onboarding/OnboardingRoute.tsx:449
 msgid "Almost ready"
 msgstr ""
 
@@ -2016,6 +2016,11 @@ msgstr ""
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:599
 #~ msgid "Anything we should know? Team size, timelines, intended use."
 #~ msgstr ""
+
+#: src/components/chat/InsightNoteCard.tsx:121
+#: src/components/chat/InsightNoteCard.tsx:122
+msgid "Anything you want to add"
+msgstr ""
 
 #: src/routes/settings/UserSettingsRoute.tsx:139
 #: src/features/sidebar/views/user/UserSettingsView.tsx:47
@@ -2214,7 +2219,7 @@ msgstr ""
 msgid "Ask a organisation admin to request this upgrade."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1556
+#: src/components/chat/AgenticChatPanel.tsx:1581
 msgid "Ask a question about the conversations in this project, or get help setting it up. Any change is proposed for review first, and nothing is saved until it's approved."
 msgstr ""
 
@@ -2243,7 +2248,7 @@ msgstr ""
 #~ msgstr ""
 
 #: src/routes/project/chat/NewChatRoute.tsx:542
-#: src/components/chat/AgenticChatPanel.tsx:1923
+#: src/components/chat/AgenticChatPanel.tsx:1959
 msgid "Ask about your conversations..."
 msgstr ""
 
@@ -2497,7 +2502,7 @@ msgstr ""
 #: src/routes/project/report/ProjectReportRoute.tsx:604
 #: src/routes/organisation/OrganisationRoute.tsx:694
 #: src/routes/organisation/OrganisationRoute.tsx:717
-#: src/routes/onboarding/OnboardingRoute.tsx:434
+#: src/routes/onboarding/OnboardingRoute.tsx:439
 #: src/routes/auth/Register.tsx:240
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:334
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:371
@@ -2840,7 +2845,7 @@ msgstr ""
 #: src/components/common/FeedbackPortalModal.tsx:124
 #: src/components/common/ConfirmModal.tsx:44
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:680
-#: src/components/chat/AgenticChatPanel.tsx:1833
+#: src/components/chat/AgenticChatPanel.tsx:1869
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -2873,7 +2878,7 @@ msgstr "Cancelar"
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1821
+#: src/components/chat/AgenticChatPanel.tsx:1857
 msgid "Cancel current run"
 msgstr ""
 
@@ -2962,7 +2967,7 @@ msgstr ""
 #~ msgid "Canvases the assistant builds for this project live here. Ask for one in chat."
 #~ msgstr ""
 
-#: src/components/chat/InsightNoteCard.tsx:13
+#: src/components/chat/InsightNoteCard.tsx:15
 msgid "capability gap"
 msgstr ""
 
@@ -3078,7 +3083,7 @@ msgstr "Cambiar el idioma durante una conversación activa puede provocar result
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:262
-#: src/components/chat/AgenticChatPanel.tsx:1400
+#: src/components/chat/AgenticChatPanel.tsx:1425
 msgid "Chat"
 msgstr "Chat"
 
@@ -3317,7 +3322,7 @@ msgstr ""
 msgid "Cloud Act safe. EU-sovereign stack for the strictest compliance."
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:331
+#: src/routes/onboarding/OnboardingRoute.tsx:336
 #: src/components/organisation/CreateOrganisationModal.tsx:215
 msgid "Colleagues you invite can explore conversations, share insights, and build reports with you."
 msgstr ""
@@ -3497,8 +3502,8 @@ msgstr "Contexto añadido:"
 msgid "Contextual suggestions"
 msgstr "Sugerencias contextuales"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:525
-#: src/routes/onboarding/OnboardingRoute.tsx:639
+#: src/routes/onboarding/OnboardingRoute.tsx:530
+#: src/routes/onboarding/OnboardingRoute.tsx:662
 #: src/routes/auth/Register.tsx:212
 #: src/components/organisation/CreateOrganisationModal.tsx:207
 #: src/components/language/LanguagePicker.tsx:157
@@ -4390,7 +4395,7 @@ msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:982
 #: src/routes/project/chat/ProjectChatRoute.tsx:992
-#: src/components/chat/AgenticChatPanel.tsx:1944
+#: src/components/chat/AgenticChatPanel.tsx:1980
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr ""
 
@@ -4625,7 +4630,7 @@ msgstr "Nombre para mostrar"
 msgid "Do I need this?"
 msgstr "¿Necesito esto?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:454
+#: src/routes/onboarding/OnboardingRoute.tsx:459
 msgid "Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?"
 msgstr ""
 
@@ -4660,11 +4665,11 @@ msgstr ""
 msgid "Does not update on its own. Updated {updatedAgo}."
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:525
+#: src/routes/onboarding/OnboardingRoute.tsx:530
 #: src/components/project/ProjectSharingModal.tsx:268
 #: src/components/invite/InviteModal.tsx:811
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:618
-#: src/components/chat/AgenticChatPanel.tsx:379
+#: src/components/chat/AgenticChatPanel.tsx:381
 msgid "Done"
 msgstr ""
 
@@ -4724,6 +4729,10 @@ msgstr ""
 #: src/components/chat/ChatModeSelector.tsx:63
 msgid "Draft next actions and organize them by priority"
 msgstr "Borrador de acciones siguientes y organizarlas por prioridad"
+
+#: src/components/chat/agenticToolActivity.ts:152
+msgid "Drafting a note you can send to the dembrane team"
+msgstr ""
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:598
 msgid "Drag audio files here or click to select files"
@@ -5165,8 +5174,8 @@ msgstr ""
 #: src/components/dropzone/UploadConversationDropzone.tsx:734
 #: src/components/dropzone/UploadConversationDropzone.tsx:842
 #: src/components/conversation/LiveMonitorSection.tsx:269
-#: src/components/chat/AgenticChatPanel.tsx:384
-#: src/components/chat/AgenticChatPanel.tsx:1502
+#: src/components/chat/AgenticChatPanel.tsx:386
+#: src/components/chat/AgenticChatPanel.tsx:1527
 msgid "Error"
 msgstr "Error"
 
@@ -5614,11 +5623,11 @@ msgstr "Error al revisar el resultado. Por favor, inténtalo de nuevo."
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Error al detener la grabación al cambiar el dispositivo. Por favor, inténtalo de nuevo."
 
-#: src/components/chat/AgenticChatPanel.tsx:1392
+#: src/components/chat/AgenticChatPanel.tsx:1417
 msgid "Failed to stop run"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1351
+#: src/components/chat/AgenticChatPanel.tsx:1376
 msgid "Failed to submit agentic message"
 msgstr ""
 
@@ -5805,9 +5814,9 @@ msgstr ""
 msgid "Focus"
 msgstr "Enfoque"
 
-#: src/components/chat/AgenticChatPanel.tsx:1890
-#: src/components/chat/AgenticChatPanel.tsx:1891
-#: src/components/chat/AgenticChatPanel.tsx:1954
+#: src/components/chat/AgenticChatPanel.tsx:1926
+#: src/components/chat/AgenticChatPanel.tsx:1927
+#: src/components/chat/AgenticChatPanel.tsx:1990
 msgid "Focus on conversations"
 msgstr ""
 
@@ -5815,7 +5824,7 @@ msgstr ""
 #~ msgid "Focus your report (optional)"
 #~ msgstr "Enfoca tu informe (opcional)"
 
-#: src/components/chat/AgenticChatPanel.tsx:209
+#: src/components/chat/AgenticChatPanel.tsx:211
 msgid "Focusing on:"
 msgstr ""
 
@@ -5884,6 +5893,10 @@ msgstr ""
 #~ msgid "For small teams and single projects"
 #~ msgstr ""
 
+#: src/components/chat/InsightNoteCard.tsx:98
+msgid "for the dembrane team"
+msgstr ""
+
 #: src/features/sidebar/views/InboxView.tsx:121
 #: src/components/inbox/Inbox.tsx:213
 msgid "For you"
@@ -5941,7 +5954,7 @@ msgstr ""
 msgid "French"
 msgstr "Francés"
 
-#: src/components/chat/InsightNoteCard.tsx:15
+#: src/components/chat/InsightNoteCard.tsx:17
 msgid "friction"
 msgstr ""
 
@@ -6053,7 +6066,7 @@ msgstr "Obtén una respuesta inmediata de dembrane para ayudarte a profundizar e
 msgid "participant.refine.go.deeper.description"
 msgstr "Obtén una respuesta inmediata de dembrane para ayudarte a profundizar en la conversación."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:668
+#: src/routes/onboarding/OnboardingRoute.tsx:691
 #: src/features/sidebar/views/user/UserHomeView.tsx:81
 msgid "Get started"
 msgstr ""
@@ -6250,7 +6263,7 @@ msgstr "Guiado"
 msgid "Has verified artifacts"
 msgstr "Tiene artefactos verificados"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:476
+#: src/routes/onboarding/OnboardingRoute.tsx:481
 msgid "Have you completed a training?"
 msgstr ""
 
@@ -6346,7 +6359,7 @@ msgstr ""
 msgid "Hide revision data"
 msgstr "Ocultar datos de revisión"
 
-#: src/components/chat/AgenticChatPanel.tsx:587
+#: src/components/chat/AgenticChatPanel.tsx:589
 msgid "Hide steps"
 msgstr ""
 
@@ -6439,11 +6452,11 @@ msgstr ""
 #~ msgid "I accept the <0>terms</0>"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1670
+#: src/components/chat/AgenticChatPanel.tsx:1695
 msgid "I applied the canvas."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1686
+#: src/components/chat/AgenticChatPanel.tsx:1711
 msgid "I applied the goal."
 msgstr ""
 
@@ -6521,7 +6534,7 @@ msgstr ""
 msgid "Image style"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1580
+#: src/components/chat/AgenticChatPanel.tsx:1605
 msgid "Improve my setup"
 msgstr ""
 
@@ -6595,7 +6608,7 @@ msgstr ""
 #~ msgstr ""
 
 #. placeholder {0}: shortInsightId(note.insightId)
-#: src/components/chat/InsightNoteCard.tsx:74
+#: src/components/chat/InsightNoteCard.tsx:185
 msgid "insight {0}"
 msgstr ""
 
@@ -6656,7 +6669,7 @@ msgstr ""
 msgid "Invitations waiting for you. Accept to get started."
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:117
+#: src/routes/onboarding/OnboardingRoute.tsx:122
 #: src/components/organisation/CreateOrganisationModal.tsx:175
 msgid "Invite"
 msgstr ""
@@ -6729,7 +6742,7 @@ msgstr ""
 msgid "Invite revoked"
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:246
+#: src/routes/onboarding/OnboardingRoute.tsx:251
 #: src/components/organisation/CreateOrganisationModal.tsx:129
 msgid "Invite sent"
 msgstr ""
@@ -6766,7 +6779,7 @@ msgstr ""
 #~ msgid "Invite your organisation"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:328
+#: src/routes/onboarding/OnboardingRoute.tsx:333
 msgid "Invite your team"
 msgstr ""
 
@@ -7308,7 +7321,7 @@ msgstr "Enlace a la política de privacidad de tu organización que se mostrará
 #~ msgid "LinkedIn Post (Experimental)"
 #~ msgstr "Publicación LinkedIn (Experimental)"
 
-#: src/components/chat/AgenticChatPanel.tsx:1570
+#: src/components/chat/AgenticChatPanel.tsx:1595
 msgid "List my conversations"
 msgstr ""
 
@@ -7316,7 +7329,7 @@ msgstr ""
 #~ msgid "List project conversations"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1571
+#: src/components/chat/AgenticChatPanel.tsx:1596
 msgid "List the conversations in this project."
 msgstr ""
 
@@ -7382,7 +7395,7 @@ msgstr ""
 msgid "Live stream disconnected. Updating on a slower poll until it reconnects."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1070
+#: src/components/chat/AgenticChatPanel.tsx:1095
 msgid "Live stream interrupted. Falling back to polling."
 msgstr ""
 
@@ -7465,7 +7478,7 @@ msgstr ""
 #~ msgid "Loading projects…"
 #~ msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1513
+#: src/components/chat/AgenticChatPanel.tsx:1538
 msgid "Loading this chat..."
 msgstr ""
 
@@ -8038,7 +8051,7 @@ msgstr ""
 msgid "Name updated"
 msgstr "Nombre actualizado"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:616
+#: src/routes/onboarding/OnboardingRoute.tsx:639
 msgid "Name your organisation to get started. You can invite members right after, or join other organisations later from settings."
 msgstr ""
 
@@ -8224,8 +8237,8 @@ msgstr ""
 #~ msgid "Next tier: {0} · {1}"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:467
-#: src/routes/onboarding/OnboardingRoute.tsx:481
+#: src/routes/onboarding/OnboardingRoute.tsx:472
+#: src/routes/onboarding/OnboardingRoute.tsx:486
 msgid "No"
 msgstr ""
 
@@ -8744,17 +8757,21 @@ msgstr ""
 msgid "Not set"
 msgstr ""
 
+#: src/components/chat/InsightNoteCard.tsx:138
+msgid "Not this one"
+msgstr ""
+
 #: src/components/training/TrainingRoster.tsx:78
 msgid "Not trained"
 msgstr ""
 
-#: src/components/chat/InsightNoteCard.tsx:21
+#: src/components/chat/InsightNoteCard.tsx:23
 msgid "note"
 msgstr ""
 
 #: src/components/chat/InsightNoteCard.tsx:114
-msgid "noted for the dembrane team"
-msgstr ""
+#~ msgid "noted for the dembrane team"
+#~ msgstr ""
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2361
 #: src/components/training/StaffTrainingPanel.tsx:157
@@ -8790,6 +8807,10 @@ msgstr ""
 msgid "Nothing here for you yet."
 msgstr ""
 
+#: src/components/chat/InsightNoteCard.tsx:102
+msgid "Nothing is sent until you send it. Edit anything below first."
+msgstr ""
+
 #: src/components/workspace/OrganisationUsageRollup.tsx:755
 msgid "Nothing matches the filter."
 msgstr ""
@@ -8807,8 +8828,8 @@ msgid "Notify participants when a report is published."
 msgstr "Notificar a los participantes cuando se publique un informe."
 
 #: src/components/chat/agenticToolActivity.ts:152
-msgid "Noting this for the dembrane team"
-msgstr ""
+#~ msgid "Noting this for the dembrane team"
+#~ msgstr ""
 
 #~ msgid "Now"
 #~ msgstr "Ahora"
@@ -9267,7 +9288,7 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:112
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:459
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:682
-#: src/routes/onboarding/OnboardingRoute.tsx:117
+#: src/routes/onboarding/OnboardingRoute.tsx:122
 #: src/features/sidebar/views/org/OrgHomeView.tsx:76
 #: src/features/sidebar/hooks/useSearchHits.ts:134
 #: src/components/training/StaffTrainingPanel.tsx:139
@@ -9305,7 +9326,7 @@ msgid "Organisation members appear here once they join a workspace. Invites are 
 msgstr ""
 
 #: src/routes/organisation/OrganisationRoute.tsx:1099
-#: src/routes/onboarding/OnboardingRoute.tsx:653
+#: src/routes/onboarding/OnboardingRoute.tsx:676
 #: src/components/organisation/CreateOrganisationModal.tsx:194
 msgid "Organisation name"
 msgstr ""
@@ -10182,7 +10203,7 @@ msgstr ""
 #~ msgid "Powered by"
 #~ msgstr "Propulsado por"
 
-#: src/components/chat/InsightNoteCard.tsx:19
+#: src/components/chat/InsightNoteCard.tsx:21
 msgid "praise"
 msgstr ""
 
@@ -10646,7 +10667,7 @@ msgstr ""
 #~ msgstr "Citas"
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:558
+#: src/components/chat/AgenticChatPanel.tsx:560
 msgid "Ran {0} steps at once"
 msgstr ""
 
@@ -10756,7 +10777,7 @@ msgstr "¿Listo para conectar tus herramientas? Agrega un webhook para recibir a
 #~ msgstr ""
 
 #. placeholder {0}: note.reason
-#: src/components/chat/InsightNoteCard.tsx:106
+#: src/components/chat/InsightNoteCard.tsx:216
 msgid "reason: {0}"
 msgstr ""
 
@@ -10984,8 +11005,8 @@ msgstr ""
 #: src/components/memory/MemoryList.tsx:98
 #: src/components/memory/MemoryList.tsx:118
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:201
-#: src/components/chat/InsightNoteCard.tsx:86
-#: src/components/chat/InsightNoteCard.tsx:90
+#: src/components/chat/InsightNoteCard.tsx:196
+#: src/components/chat/InsightNoteCard.tsx:200
 msgid "Remove"
 msgstr "Eliminar"
 
@@ -11090,7 +11111,7 @@ msgstr "Renombrar"
 #~ msgstr "Renombrar"
 
 #: src/components/chat/ChatAccordion.tsx:153
-#: src/components/chat/AgenticChatPanel.tsx:1463
+#: src/components/chat/AgenticChatPanel.tsx:1488
 msgid "Rename chat"
 msgstr "Renombrar chat"
 
@@ -11424,11 +11445,11 @@ msgstr ""
 msgid "Resume updates"
 msgstr ""
 
-#: src/components/chat/InsightNoteCard.tsx:69
+#: src/components/chat/InsightNoteCard.tsx:180
 msgid "retracted"
 msgstr ""
 
-#: src/components/chat/InsightNoteCard.tsx:113
+#: src/components/chat/InsightNoteCard.tsx:223
 msgid "retracted for the dembrane team"
 msgstr ""
 
@@ -11512,7 +11533,7 @@ msgstr ""
 msgid "Review files before uploading"
 msgstr "Revisar archivos antes de subir"
 
-#: src/components/chat/AgenticChatPanel.tsx:1581
+#: src/components/chat/AgenticChatPanel.tsx:1606
 msgid "Review my project settings and suggest improvements."
 msgstr ""
 
@@ -11592,7 +11613,7 @@ msgstr "Filas por página"
 #~ msgid "Run status:"
 #~ msgstr "Estado de la ejecución:"
 
-#: src/components/chat/AgenticChatPanel.tsx:389
+#: src/components/chat/AgenticChatPanel.tsx:391
 msgid "Running"
 msgstr ""
 
@@ -12131,7 +12152,7 @@ msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:942
 #: src/routes/project/chat/NewChatRoute.tsx:521
-#: src/components/chat/AgenticChatPanel.tsx:1909
+#: src/components/chat/AgenticChatPanel.tsx:1945
 msgid "Send"
 msgstr "Enviar"
 
@@ -12148,7 +12169,7 @@ msgstr ""
 msgid "Send invite"
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:361
+#: src/routes/onboarding/OnboardingRoute.tsx:366
 #: src/components/organisation/CreateOrganisationModal.tsx:234
 msgid "Send invites"
 msgstr ""
@@ -12165,6 +12186,10 @@ msgstr ""
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:854
 msgid "Send Slack/Teams notifications when new conversations are completed"
 msgstr "Enviar notificaciones de Slack/Teams cuando se completen nuevas conversaciones"
+
+#: src/components/chat/InsightNoteCard.tsx:152
+msgid "Send to dembrane"
+msgstr ""
 
 #: src/components/workspace/ReferralsPanel.tsx:117
 #~ msgid "sent"
@@ -12185,6 +12210,10 @@ msgstr ""
 #. placeholder {0}: rows.length
 #: src/components/invite/InviteModal.tsx:508
 msgid "Sent {sentCount} of {0}. Check the list below."
+msgstr ""
+
+#: src/components/chat/InsightNoteCard.tsx:224
+msgid "sent to the dembrane team"
 msgstr ""
 
 #~ msgid "Sentiment"
@@ -12240,7 +12269,7 @@ msgstr ""
 msgid "Set up your first organisation"
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:587
+#: src/routes/onboarding/OnboardingRoute.tsx:592
 #: src/features/sidebar/views/user/UserHomeView.tsx:127
 msgid "Set up your organisation"
 msgstr ""
@@ -12249,7 +12278,7 @@ msgstr ""
 #~ msgid "Set up your team"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:149
+#: src/routes/onboarding/OnboardingRoute.tsx:154
 msgid "Set up your workspace | dembrane"
 msgstr ""
 
@@ -12257,7 +12286,7 @@ msgstr ""
 msgid "Set who can see and join."
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:293
+#: src/routes/onboarding/OnboardingRoute.tsx:298
 msgid "Setting things up for you"
 msgstr ""
 
@@ -12484,7 +12513,7 @@ msgstr "Mostrar referencias"
 msgid "Show revision data"
 msgstr "Mostrar datos de revisión"
 
-#: src/components/chat/AgenticChatPanel.tsx:587
+#: src/components/chat/AgenticChatPanel.tsx:589
 msgid "Show steps"
 msgstr ""
 
@@ -12534,8 +12563,8 @@ msgstr ""
 #~ msgid "Sign in with Google"
 #~ msgstr "Iniciar sesión con Google"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:350
-#: src/routes/onboarding/OnboardingRoute.tsx:516
+#: src/routes/onboarding/OnboardingRoute.tsx:355
+#: src/routes/onboarding/OnboardingRoute.tsx:521
 #: src/components/organisation/CreateOrganisationModal.tsx:227
 msgid "Skip"
 msgstr "Omitir"
@@ -12608,7 +12637,7 @@ msgstr "Algo está bloqueando tu conexión. Tu audio no se guardará a menos que
 #: src/routes/project/report/ProjectReportRoute.tsx:852
 #: src/routes/project/report/ProjectReportRoute.tsx:933
 #: src/routes/project/report/ProjectReportRoute.tsx:1404
-#: src/routes/onboarding/OnboardingRoute.tsx:184
+#: src/routes/onboarding/OnboardingRoute.tsx:189
 #: src/routes/auth/Login.tsx:241
 #: src/components/project/ProjectAccessGuard.tsx:87
 #: src/components/participant/ParticipantInitiateForm.tsx:205
@@ -13594,7 +13623,7 @@ msgstr ""
 msgid "This information is anonymized"
 msgstr "Esta información está anónima"
 
-#: src/components/chat/InsightNoteCard.tsx:111
+#: src/components/chat/InsightNoteCard.tsx:221
 msgid "This insight has been deleted"
 msgstr ""
 
@@ -13986,7 +14015,7 @@ msgstr "Demasiado grande"
 msgid "Too long"
 msgstr "Demasiado largo"
 
-#: src/components/chat/AgenticChatPanel.tsx:1879
+#: src/components/chat/AgenticChatPanel.tsx:1915
 msgid "Too many to list here. The assistant reads through them in batches."
 msgstr ""
 
@@ -14092,7 +14121,7 @@ msgstr ""
 msgid "Transcribing..."
 msgstr "Transcribiendo..."
 
-#: src/components/chat/AgenticChatPanel.tsx:239
+#: src/components/chat/AgenticChatPanel.tsx:241
 msgid "transcript"
 msgstr ""
 
@@ -14108,7 +14137,7 @@ msgstr "Transcripción"
 msgid "Transcript copied to clipboard"
 msgstr "Transcripción copiada al portapapeles"
 
-#: src/components/chat/AgenticChatPanel.tsx:238
+#: src/components/chat/AgenticChatPanel.tsx:240
 msgid "transcript excerpt"
 msgstr ""
 
@@ -14529,7 +14558,7 @@ msgstr ""
 #~ msgid "Update your team's name and branding. Workspace-level settings live on each workspace's own settings page."
 #~ msgstr ""
 
-#: src/components/chat/InsightNoteCard.tsx:64
+#: src/components/chat/InsightNoteCard.tsx:175
 msgid "updated"
 msgstr ""
 
@@ -14831,7 +14860,7 @@ msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:979
 #: src/routes/project/chat/ProjectChatRoute.tsx:989
-#: src/components/chat/AgenticChatPanel.tsx:1941
+#: src/components/chat/AgenticChatPanel.tsx:1977
 msgid "Use Shift + Enter to add a new line"
 msgstr "Usa Shift + Enter para agregar una nueva línea"
 
@@ -15259,7 +15288,7 @@ msgstr "Vamos a probar tu micrófono para asegurarnos de que todos tengan la mej
 msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 msgstr "Estamos escuchando algo de silencio. Intenta hablar más fuerte para que tu voz salga claramente."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:610
+#: src/routes/onboarding/OnboardingRoute.tsx:633
 msgid "We've added organisations so you can organize projects and share them with colleagues. Everything you had before is still here. We just need a name for your organisation."
 msgstr ""
 
@@ -15301,7 +15330,7 @@ msgstr "Los webhooks son mensajes automatizados enviados de una aplicación a ot
 msgid "Webhooks are not enabled for this environment."
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:116
+#: src/routes/onboarding/OnboardingRoute.tsx:121
 #: src/components/participant/ParticipantBody.tsx:130
 msgid "Welcome"
 msgstr "Bienvenido"
@@ -15310,7 +15339,7 @@ msgstr "Bienvenido"
 msgid "Welcome back"
 msgstr "Bienvenido de nuevo"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:583
+#: src/routes/onboarding/OnboardingRoute.tsx:588
 msgid "Welcome back, {displayName}"
 msgstr ""
 
@@ -15321,7 +15350,7 @@ msgstr ""
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Bienvenido al modo Big Picture! Tengo resúmenes de todas tus conversaciones cargados. Pregúntame sobre patrones, temas e insights en tus datos. Para citas exactas, inicia un nuevo chat en el modo Específico."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:580
+#: src/routes/onboarding/OnboardingRoute.tsx:585
 #: src/routes/auth/Login.tsx:142
 msgid "Welcome to dembrane"
 msgstr ""
@@ -15353,8 +15382,8 @@ msgstr "Bienvenido al modo Resumen. Tengo cargados los resúmenes de todas tus c
 #~ msgid "Welcome to Your Home! Here you can see all your projects and get access to tutorial resources. Currently, you have no projects. Click \"Create\" to configure to get started!"
 #~ msgstr "¡Bienvenido a Tu Inicio! Aquí puedes ver todos tus proyectos y acceder a recursos de tutorial. Actualmente, no tienes proyectos. Haz clic en \"Crear\" para configurar para comenzar!"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:578
-#: src/routes/onboarding/OnboardingRoute.tsx:585
+#: src/routes/onboarding/OnboardingRoute.tsx:583
+#: src/routes/onboarding/OnboardingRoute.tsx:590
 msgid "Welcome, {displayName}"
 msgstr ""
 
@@ -15382,7 +15411,7 @@ msgstr ""
 msgid "What data is sent?"
 msgstr "¿Qué datos se envían?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:490
+#: src/routes/onboarding/OnboardingRoute.tsx:495
 msgid "What do you plan to use dembrane for?"
 msgstr ""
 
@@ -15390,6 +15419,10 @@ msgstr ""
 #: src/components/participant/verify/VerifySelection.tsx:241
 msgid "participant.verify.selection.title"
 msgstr "¿Qué desea verificar?"
+
+#: src/components/chat/InsightNoteCard.tsx:112
+msgid "What gets sent"
+msgstr ""
 
 #: src/components/chat/ChatModeSelector.tsx:57
 #~ msgid "What patterns emerge from the data?"
@@ -15408,11 +15441,11 @@ msgstr "¿Qué debe ECHO analizar o generar a partir de las conversaciones?"
 #~ msgid "What should this report focus on?"
 #~ msgstr "¿En qué debe centrarse este informe?"
 
-#: src/components/chat/AgenticChatPanel.tsx:1576
+#: src/components/chat/AgenticChatPanel.tsx:1601
 msgid "What themes came up across the conversations in this project?"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1575
+#: src/components/chat/AgenticChatPanel.tsx:1600
 msgid "What themes came up?"
 msgstr ""
 
@@ -15498,7 +15531,7 @@ msgid "Where would you like to go?"
 msgstr ""
 
 #: src/routes/project/chat/NewChatRoute.tsx:471
-#: src/components/chat/AgenticChatPanel.tsx:1553
+#: src/components/chat/AgenticChatPanel.tsx:1578
 msgid "Where would you like to start?"
 msgstr ""
 
@@ -15544,7 +15577,7 @@ msgstr ""
 msgid "will be included in your report"
 msgstr "se incluirá en tu informe"
 
-#: src/components/chat/InsightNoteCard.tsx:17
+#: src/components/chat/InsightNoteCard.tsx:19
 msgid "wish"
 msgstr ""
 
@@ -15556,7 +15589,7 @@ msgstr ""
 #~ msgid "With errors"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:502
+#: src/routes/onboarding/OnboardingRoute.tsx:507
 msgid "With external clients"
 msgstr ""
 
@@ -15564,20 +15597,20 @@ msgstr ""
 #~ msgid "With partners"
 #~ msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:497
+#: src/routes/onboarding/OnboardingRoute.tsx:502
 msgid "Within my organisation"
 msgstr ""
 
 #. placeholder {0}: items.length
-#: src/components/chat/AgenticChatPanel.tsx:559
+#: src/components/chat/AgenticChatPanel.tsx:561
 msgid "Worked through {0} steps"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:1425
+#: src/components/chat/AgenticChatPanel.tsx:1450
 msgid "Working on your answer..."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:554
+#: src/components/chat/AgenticChatPanel.tsx:556
 msgid "Working..."
 msgstr ""
 
@@ -15725,8 +15758,8 @@ msgstr "¿Te gustaría añadir esta etiqueta a tus filtros actuales?"
 msgid "Wrong address? Change email"
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:466
-#: src/routes/onboarding/OnboardingRoute.tsx:480
+#: src/routes/onboarding/OnboardingRoute.tsx:471
+#: src/routes/onboarding/OnboardingRoute.tsx:485
 msgid "Yes"
 msgstr ""
 
@@ -15759,7 +15792,7 @@ msgstr "Ya estás desuscribido o tu enlace es inválido."
 msgid "You are the data owner"
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:652
+#: src/routes/onboarding/OnboardingRoute.tsx:675
 #: src/components/organisation/CreateOrganisationModal.tsx:195
 msgid "You can change this anytime in settings."
 msgstr ""
@@ -15902,7 +15935,7 @@ msgstr ""
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:673
+#: src/routes/onboarding/OnboardingRoute.tsx:696
 msgid "You'll find all your projects waiting for you."
 msgstr ""
 
@@ -16007,12 +16040,22 @@ msgid "You're the only admin. Promote someone else before changing your role."
 msgstr ""
 
 #. placeholder {0}: inviteOrganisations.length
+#: src/routes/onboarding/OnboardingRoute.tsx:605
+msgid "You've been invited to collaborate with {0} organisations. We'll take you in once you continue."
+msgstr ""
+
+#. placeholder {0}: inviteOrganisations[0]
 #: src/routes/onboarding/OnboardingRoute.tsx:599
+msgid "You've been invited to collaborate with <0>{0}</0>. We'll take you there in a moment."
+msgstr ""
+
+#. placeholder {0}: inviteOrganisations.length
+#: src/routes/onboarding/OnboardingRoute.tsx:622
 msgid "You've been invited to join {0} organisations. We'll take you in once you continue."
 msgstr ""
 
 #. placeholder {0}: inviteOrganisations[0]
-#: src/routes/onboarding/OnboardingRoute.tsx:593
+#: src/routes/onboarding/OnboardingRoute.tsx:616
 msgid "You've been invited to join <0>{0}</0>. We'll take you there in a moment."
 msgstr ""
 
@@ -16154,11 +16197,11 @@ msgstr "Su nombre"
 msgid "Your organisation is on the free plan by default. One plan covers every workspace, billed per seat once you upgrade."
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:604
+#: src/routes/onboarding/OnboardingRoute.tsx:627
 msgid "Your organisation is waiting for you. Click continue to join."
 msgstr ""
 
-#: src/routes/onboarding/OnboardingRoute.tsx:655
+#: src/routes/onboarding/OnboardingRoute.tsx:678
 #: src/components/organisation/CreateOrganisationModal.tsx:196
 msgid "Your organisation or company"
 msgstr ""
@@ -16254,6 +16297,10 @@ msgstr "Tus Vistas"
 #: src/routes/project/ProjectsHome.tsx:280
 #~ msgid "Your workspace is ready."
 #~ msgstr ""
+
+#: src/routes/onboarding/OnboardingRoute.tsx:610
+msgid "Your workspace is waiting for you. Click continue to collaborate."
+msgstr ""
 
 #: src/components/chat/CommunityTemplateCard.tsx:128
 #~ msgid "Yours"

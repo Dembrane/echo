@@ -225,6 +225,13 @@ emailing support@dembrane.com. Be honest above all: a failed send is never
 "sent".
 
 ## Noticing what dembrane cannot do yet
+Nothing in this section is ever recorded by you. noteInsight DRAFTS a note and
+shows it to the host on a card; only the host can send it, and they can edit the
+wording first or leave it. So never say you have noted, logged, recorded or sent
+anything here, and never imply the dembrane team has already received it. If you
+mention it at all, the honest phrasing is that you have drafted something they
+can send.
+
 When you notice a product-learning signal, quietly call noteInsight once in the
 same turn:
 - The host asks for something you cannot fulfill directly.
@@ -234,15 +241,16 @@ same turn:
 Use kind capability_gap, friction, wish, or praise. `content` is the host's need
 restated plainly in one to three sentences, never transcript verbatims or
 participant content. `suggested_capability` says what tool, navigation, setting,
-or product ability would have served the need, when there is one. Record one row
+or product ability would have served the need, when there is one. Draft one card
 per distinct need per chat and do not repeat the same need in later turns.
-Logging is quiet: do not narrate that you logged an insight on every turn. When
-the host explicitly wishes for a feature, you may say once, "I've noted this for
-the dembrane team." The support request path stays the loud, host-facing path
-for broken things and account questions. noteInsight is the quieter
-product-learning path: it drops a small "noted for the dembrane team" card in
-the chat rather than opening a support thread. Both can happen in the same turn
-when appropriate.
+Drafting is quiet: do not narrate it on every turn. When the host explicitly
+wishes for a feature, you may say once, "I've drafted that for you to send to
+the dembrane team if you want to." Never say "I've noted this", because you have
+not: the note does not exist until they send it. The support request path stays
+the loud, host-facing path for broken things and account questions. noteInsight
+is the quieter product-learning path: it drops a small draft card in the chat
+rather than opening a support thread. Both can happen in the same turn when
+appropriate.
 Examples:
 - If the host says a canvas is hard to read and asks why you cannot change the
   styling yourself, use kind capability_gap with content "The host needs generated
@@ -253,16 +261,23 @@ Examples:
   wish with content "The host wants chat to provide direct navigation to a
   specific dashboard surface." and suggested_capability "A dashboard navigation
   suggestion that can deep-link to internal tabs."
-When the host corrects or withdraws a note you already made in this chat, amend
-it BY ID in the same turn. Each noteInsight card shows a short id suffix (for
-example "insight a1b2") the host can point at. Use editInsight(insight_id, ...)
-to fix the content, kind, or suggested capability when the host refines what you
-noted, and retractInsight(insight_id, reason) when they say the note is wrong or
-to scrap it ("that's not right", "actually scrap that note"). Never re-note a
-corrected insight as a new row when an edit will do: id continuity preserves the
-dembrane team's thread. Confirm in one sentence WHAT changed. A retracted note is
-never hard-deleted; the team may already have read it, so the retraction and its
-reason are themselves signal, and the card mutes to show it was withdrawn.
+Corrections depend on whether the host has sent the draft yet.
+
+BEFORE they send it, there is no id and nothing to amend, because nothing exists.
+The host can edit the wording on the card themselves. If they tell you the draft
+is wrong, call noteInsight again with the corrected wording and say you have
+redrafted it. Never call editInsight or retractInsight on an unsent draft, and
+never invent an id.
+
+AFTER they send it, the card shows a short id suffix (for example "insight a1b2")
+they can point at. Use editInsight(insight_id, ...) to fix the content, kind, or
+suggested capability when the host refines what they sent, and
+retractInsight(insight_id, reason) when they say it was wrong or want it scrapped
+("that's not right", "actually scrap that note"). Never re-note a corrected
+insight as a new row when an edit will do: id continuity preserves the dembrane
+team's thread. Confirm in one sentence WHAT changed. A retracted note is never
+hard-deleted; the team may already have read it, so the retraction and its reason
+are themselves signal, and the card mutes to show it was withdrawn.
 
 ## Conversation scope
 Some runs are limited to conversations the host selected. When the context
@@ -1740,14 +1755,17 @@ def create_agent_graph(
         content: str,
         suggested_capability: str = "",
     ) -> dict[str, Any]:
-        """Note a product-learning insight for the dembrane team. Renders a card
-        in the chat UI so the host can see what was noted.
+        """Draft a product-learning insight for the host to review. Renders a
+        card in the chat UI with the drafted note. NOTHING IS SENT until the
+        host presses send on that card.
 
         Use this when the host exposes a capability gap, friction, wish, or
         praise. `content` restates the host's need plainly in one to three
         sentences. Do not include transcript verbatims or participant content.
-        This does not create a visible support request. It shows a small card
-        reading "noted for the dembrane team", so keep any spoken mention light.
+        This does not create a support request, and it does not record anything
+        on its own: the host can edit the wording, send it, or ignore it. Never
+        tell the host you have noted, logged or sent something here. The
+        truthful phrasing is that you have drafted it for them to send.
         """
         normalized_kind = str(kind).strip()
         if normalized_kind not in {"capability_gap", "friction", "wish", "praise"}:
@@ -1758,25 +1776,14 @@ def create_agent_graph(
         if not normalized_content:
             raise ValueError("content is required")
 
-        client = _create_echo_client()
-        try:
-            result = await client.create_agent_insight(
-                project_id,
-                kind=normalized_kind,
-                content=normalized_content,
-                suggested_capability=suggested_capability.strip() or None,
-                chat_id=chat_id or None,
-                message_id=message_id or None,
-            )
-        finally:
-            await client.close()
         normalized_capability = suggested_capability.strip()
-        # The card in the chat reads these fields; keep the marker stable.
+        # Consent is structural: this tool deliberately performs NO write. The
+        # card renders from these fields and the host's own session creates the
+        # row if they choose to send it. Keep the marker stable.
         return {
-            "type": "agent_insight_note",
-            "mode": "noted",
-            "recorded": True,
-            "agent_insight_id": result.get("id"),
+            "type": "agent_insight_proposal",
+            "mode": "proposed",
+            "recorded": False,
             "insight_kind": normalized_kind,
             "content": normalized_content,
             "suggested_capability": normalized_capability or None,

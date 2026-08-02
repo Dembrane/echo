@@ -1747,6 +1747,50 @@ async def list_dismissed_agent_insights(
     return {"project_id": project_id, "insight_ids": ids}
 
 
+@AgenticRouter.get("/projects/{project_id}/insights")
+async def list_agent_insights(
+    project_id: str,
+    auth: DependencyDirectusSession,
+    chat_id: Optional[str] = None,
+) -> dict[str, Any]:
+    """Insights already sent to the dembrane team in this project, optionally
+    scoped to one chat.
+
+    The assistant only drafts an insight; the host sends it. Cards replay from
+    run events that carry no row, so without this a reloaded card cannot tell a
+    draft from something already sent, and the host could send it twice."""
+    await _assert_project_access(project_id, auth)
+
+    query_filter: dict[str, Any] = {"project_id": {"_eq": project_id}}
+    if chat_id:
+        query_filter["chat_id"] = {"_eq": chat_id}
+
+    rows = await async_directus.get_items(
+        "agent_insight",
+        {
+            "query": {
+                "filter": query_filter,
+                "fields": [
+                    "id",
+                    "kind",
+                    "content",
+                    "suggested_capability",
+                    "chat_id",
+                    "message_id",
+                    "status",
+                ],
+                "limit": -1,
+            }
+        },
+    )
+    insights = (
+        [row for row in rows if isinstance(row, dict) and row.get("id")]
+        if isinstance(rows, list)
+        else []
+    )
+    return {"project_id": project_id, "insights": insights}
+
+
 async def _resolve_workspace_id_for_project(project_id: str) -> Optional[str]:
     """Resolve the workspace a project belongs to. Workspace is the data
     boundary, so it is never taken from the agent; the server derives it."""
