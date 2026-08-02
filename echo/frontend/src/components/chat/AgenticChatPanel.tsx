@@ -530,12 +530,19 @@ const ToolActivityGroup = ({
 	items,
 	expanded,
 	onToggle,
+	stillWorking = false,
 }: {
 	items: ToolActivityItem[];
 	expanded: boolean;
 	onToggle: () => void;
+	/** True for the newest group while the run is still in flight. Between tool
+	 * calls, and while the model writes its answer, no tool has status
+	 * "running", so this group would otherwise settle to a green past-tense
+	 * summary while the composer still says "Working on your answer...". Two
+	 * indicators disagreeing, and the one nearest the answer is the wrong one. */
+	stillWorking?: boolean;
 }) => {
-	const running = items.some((i) => i.status === "running");
+	const running = items.some((i) => i.status === "running") || stillWorking;
 	const errored = items.some((i) => i.status === "error");
 	const runningItem = items.find((i) => i.status === "running");
 	const isSingle = items.length === 1;
@@ -551,7 +558,11 @@ const ToolActivityGroup = ({
 			),
 		);
 	const summary = running
-		? (runningItem?.headline ?? t`Working...`)
+		? // A named step wins. Otherwise the model is thinking or writing between
+			// steps, and the honest line is present tense, not a count of what is
+			// finished.
+			(runningItem?.headline ??
+				(isSingle ? t`Working...` : t`Working through a couple steps...`))
 		: isSingle
 			? items[0].headline
 			: ranAllAtOnce
@@ -1595,7 +1606,8 @@ export const AgenticChatPanel = ({
 							</Stack>
 						)}
 
-					{timelineNodes.map((node) => {
+					{timelineNodes.map((node, nodeIndex) => {
+						const isNewestNode = nodeIndex === timelineNodes.length - 1;
 						if (node.kind === "message") {
 							const focusedConversations = (
 								node.item.role === "user"
@@ -1731,6 +1743,7 @@ export const AgenticChatPanel = ({
 								items={node.items}
 								expanded={Boolean(expandedGroupIds[node.id])}
 								onToggle={() => toggleGroupDetails(node.id)}
+								stillWorking={isNewestNode && isRunInFlight}
 							/>
 						);
 					})}
