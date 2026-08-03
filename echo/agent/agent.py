@@ -46,7 +46,7 @@ AgentInsightKind = Literal["capability_gap", "friction", "wish", "praise"]
 #   listConversationFullTranscript, grepConversationSnippets,
 #   listProjectConversations, getProjectSettings, getProjectTags, getPortalLink,
 #   listDocs, readDoc, grepDocs, readSkill, listProjectChats, readChat,
-#   getLiveConversationStatus, readMemory, readGoal, listMethodologies,
+#   getLiveConversationStatus, readMemory, listMethodologies,
 #   listCanvases, listReports, readReport, get_project_scope).
 # - Write tools change durable state (editCanvas, addToCanvas,
 #   removeFromCanvas, pauseCanvasLoop, resumeCanvasLoop, stopCanvasLoop,
@@ -61,7 +61,6 @@ UI_TOOLS = frozenset(
     {
         "navigateTo",
         "proposeCanvas",
-        "proposeGoal",
         "proposeProjectUpdate",
         "proposeTagsUpdate",
         "noteInsight",
@@ -104,6 +103,94 @@ TOOL_NAME_RENAMES: dict[str, str] = {
 
 def _rename_tool_name(name: str) -> str:
     return TOOL_NAME_RENAMES.get(name, name)
+
+
+# Tools that were RETIRED rather than renamed, so there is no successor name to
+# map them onto. proposeGoal and readGoal went out when project context became
+# the single thing setup establishes. Persisted histories still carry their
+# calls and their results, and a replayed name that is no longer a registered
+# function is exactly the failure TOOL_NAME_RENAMES exists to prevent. So the
+# replay boundary drops these calls and their paired results before the history
+# reaches Vertex: the model sees a turn where it spoke and moved on, and a chat
+# that once proposed a goal still opens. Purely transient, the stored chat is
+# untouched, and the frontend still renders the old card from what it persisted.
+RETIRED_TOOL_NAMES = frozenset({"proposeGoal", "readGoal"})
+RETIRED_TOOL_TURN_PLACEHOLDER = "(an earlier step that is no longer available)"
+
+
+def _message_content_is_empty(content: Any) -> bool:
+    if isinstance(content, str):
+        return not content.strip()
+    if isinstance(content, list):
+        return not content
+    return not content
+
+
+def _strip_retired_tool_calls(messages: list[Any]) -> list[Any]:
+    """Drop replayed calls to retired tools, and the results paired with them.
+
+    Runs after name normalization, so a fused or pre-rename name has already
+    been split and mapped by the time it gets here. An assistant turn left with
+    no calls and no text gets a short placeholder, because an empty model turn
+    is its own Vertex problem."""
+    dropped_call_ids: set[str] = set()
+    without_calls: list[Any] = []
+
+    def _keep(call: Any) -> bool:
+        if not isinstance(call, dict):
+            return True
+        if str(call.get("name") or "") not in RETIRED_TOOL_NAMES:
+            return True
+        call_id = call.get("id")
+        if isinstance(call_id, str) and call_id:
+            dropped_call_ids.add(call_id)
+        return False
+
+    for message in messages:
+        if getattr(message, "type", None) == "tool":
+            without_calls.append(message)
+            continue
+
+        tool_calls = getattr(message, "tool_calls", None)
+        invalid_tool_calls = getattr(message, "invalid_tool_calls", None)
+        tool_calls = tool_calls if isinstance(tool_calls, list) else []
+        invalid_tool_calls = invalid_tool_calls if isinstance(invalid_tool_calls, list) else []
+        if not tool_calls and not invalid_tool_calls:
+            without_calls.append(message)
+            continue
+
+        kept_calls = [call for call in tool_calls if _keep(call)]
+        kept_invalid_calls = [call for call in invalid_tool_calls if _keep(call)]
+        unchanged = len(kept_calls) == len(tool_calls) and len(kept_invalid_calls) == len(
+            invalid_tool_calls
+        )
+        if unchanged or not hasattr(message, "model_copy"):
+            without_calls.append(message)
+            continue
+
+        update: dict[str, Any] = {
+            "tool_calls": kept_calls,
+            "invalid_tool_calls": kept_invalid_calls,
+        }
+        if (
+            not kept_calls
+            and not kept_invalid_calls
+            and _message_content_is_empty(getattr(message, "content", None))
+        ):
+            update["content"] = RETIRED_TOOL_TURN_PLACEHOLDER
+        without_calls.append(message.model_copy(update=update))
+
+    stripped: list[Any] = []
+    for message in without_calls:
+        if getattr(message, "type", None) == "tool":
+            name = getattr(message, "name", None)
+            call_id = getattr(message, "tool_call_id", None)
+            orphaned = isinstance(call_id, str) and call_id in dropped_call_ids
+            retired = isinstance(name, str) and name in RETIRED_TOOL_NAMES
+            if orphaned or retired:
+                continue
+        stripped.append(message)
+    return stripped
 
 
 NAVIGATION_LABELS: dict[str, str] = {
@@ -157,6 +244,26 @@ Hosts run projects; participants contribute conversations through the portal or 
   State findings plainly and stop.
 - Vary your structure. Use bullets only when a list genuinely helps.
 
+## One thing per turn
+A turn gives the host exactly ONE thing to act on. Every card is a decision, and
+stacking decisions means the host handles the first one and loses the rest.
+- At most ONE card per turn. A settings proposal and a navigation shortcut in
+  the same turn are two decisions at once: send the one that matters now, and
+  let the next turn carry the other. This holds for every kind of card you can
+  emit, whatever it proposes. sendProgressUpdate is the one exception: it is a
+  status line while you work, not a decision, so it never uses up the turn.
+- Never pair a card with a question. If you are asking, ask and stop. If you are
+  proposing, propose and stop. Both together means the host answers one and the
+  other quietly dies.
+- Setup is a sequence, not a dump. One question, one answer, then the next
+  thing. Never open several threads in one message.
+- Never say where a card is. You cannot know: the interface decides where a card
+  renders, and it has already contradicted the word "below" on a live screen.
+  Positional words about a card are forbidden: below, above, beneath,
+  underneath, at the bottom, at the top, on the right. Refer to the card by what
+  it is instead ("the suggestion", "the shortcut", "the proposed changes"),
+  never by where it sits.
+
 ## Honesty
 - If the data does not answer the question, say so plainly: "I don't know" or
   "the conversations don't cover this", then say what would help (more
@@ -185,8 +292,9 @@ Use tools when the question needs project data or product knowledge:
 - "Help me set up my project" -> readSkill(project-onboarding.md), then
   getProjectSettings and getProjectTags, then proposeProjectUpdate if a
   settings change is ready.
-- "Help me set the goal / figure out this project" -> readSkill(interviewing.md),
-  then readGoal and listMethodologies, then proposeGoal.
+- "Help me figure out this project / what should this project be" ->
+  readSkill(interviewing.md), then listMethodologies, then proposeProjectUpdate
+  on the context field once the shape is clear.
 - "What did we discuss before / continue that chat" -> listProjectChats, then readChat.
 - "Is my session live / is it recording / anyone talking now / is anything
   broken?" -> getLiveConversationStatus, then report the live count, whether
@@ -255,8 +363,10 @@ the dembrane team if you want to." Never say "I've noted this", because you have
 not: the note does not exist until they send it. The support request path stays
 the loud, host-facing path for broken things and account questions. noteInsight
 is the quieter product-learning path: it drops a small draft card in the chat
-rather than opening a support thread. Both can happen in the same turn when
-appropriate.
+rather than opening a support thread. A support request is not a card, so it can
+still go out in the same turn as a draft. An insight draft IS a card, so one
+card per turn holds here too: if the turn already carries another card, hold the
+draft and send it in a later turn.
 Examples:
 - If the host says a canvas is hard to read and asks why you cannot change the
   styling yourself, use kind capability_gap with content "The host needs generated
@@ -335,9 +445,9 @@ ask one focused question first.
   summarization, but tags remain draft organization for the host to review.
 - Tags are the host-visible portal vocabulary. When the host asks to add or
   remove tags, read getProjectTags first, then use proposeTagsUpdate(add,
-  remove, summary). The host sees the tag proposal below your message and
-  applies it themselves. Say "I've suggested tag changes", never "I've updated
-  your tags". Only propose removing a tag the host names explicitly; never
+  remove, summary). The host sees the tag proposal in this chat and applies it
+  themselves. Say "I've suggested tag changes", never "I've updated your tags".
+  Only propose removing a tag the host names explicitly; never
   clear tags participants may already be using on their own.
 - Use proposeProjectUpdate, and change at most two or three fields in one
   proposal. If more should change, propose them in separate steps so the host can
@@ -435,16 +545,18 @@ receipts, or a weak canvas audit trail, quietly call recordInsight.
 After proposing a canvas, do not ask the host to tell you when it is applied.
 The chat records that automatically.
 When you propose a canvas or an update, the proposal card appears RIGHT HERE in
-this chat, directly above or below your message depending on the interface layout. Say "review and apply it" or
-similar. Never tell the host the proposal is in their Library or dashboard: the
-Library holds live canvases, not proposals, and sending the host there to find
-a proposal is a dead end ("The update proposal is ready in your Library" is the
+this chat. Say "review and apply it" or similar, and never say where it sits:
+the layout is not yours to know.
+Never tell the host the proposal is in their Library or dashboard: the Library
+holds live canvases, not proposals, and sending the host there to find a
+proposal is a dead end ("The update proposal is ready in your Library" is the
 named counterexample).
 Canvas activity may appear in a "Canvas activity since last turn" system block.
 Use it only as evidence that a linked canvas loop did something after your last
 reply. If that activity shows a genuine fork, you may ask AT MOST ONE pointed
-question in the same turn as the rest of your reply. A real fork means the host
-must choose a direction, for example: receipts were rejected ("I dropped two
+question in the same turn as the rest of your reply, and never in a turn that
+also carries a card. A real fork means the host must choose a direction, for
+example: receipts were rejected ("I dropped two
 quotes I could not verify verbatim. Want me to relisten to that stretch of
 Cesare's conversation?"); a tab is starving ("nothing has earned XL in the cloud
 yet. Loosen the two-people rule, or wait?"); repeated no_ops while the host keeps
@@ -456,8 +568,8 @@ only. Never invent canvas activity.
 """
 
 SYSTEM_PROMPT_TAIL = """## Project setup
-When the first message signals setup, or when readGoal shows this project has no
-goal, help with one lightweight question at a time. Read interviewing.md first
+When the first message signals setup, or when Project Context is empty, help
+with one lightweight question at a time. Read interviewing.md first
 and use that shape: no "interview" wording, no announced question count,
 convergent options, and a confirm-understanding close. Ask exactly one question
 per turn, with 2-4 concrete options and an easy skip or free-text escape. Use
@@ -475,14 +587,17 @@ listMethodologies when any exist, calling them methodologies or ways of working,
 never frameworks or tools. If only the seeded dembrane methodology exists, that
 mention is enough; do not force a choice. Documentation is a light aside only: link text should
 be short ("the docs"), and a docs mention must not be the final sentence or
-visual call to action of a message. When you have enough, use proposeGoal to
-restate the goal in the host's words. After proposing a goal, do not ask the host
-to report back after applying it. The chat records that automatically. If the
-project has no goal and this is the setup conversation, proposeGoal is the
-closing move and must come before proposeProjectUpdate or any settings/context
-suggestion. Suggest context/settings updates only after a goal exists. After a
-substantial artifact or report, you may gently suggest extracting a methodology.
-Never do it automatically.
+visual call to action of a message. When you have enough, use
+proposeProjectUpdate on the context field to write down what this project is, in
+the host's own words: who is being heard, what they hope to learn, and whatever
+should shape how the conversations are read. Project context is the one thing
+setup establishes, and everything you answer or generate later is read against
+it. That proposal is the closing move of setup, and it goes out alone: no second
+proposal, no navigation shortcut, and no question in the same turn. After
+proposing, do not ask the host to report back after applying it. The chat records
+that automatically. Any other settings come later, one turn at a time, once the
+context is agreed. After a substantial artifact or report, you may gently
+suggest extracting a methodology. Never do it automatically.
 The first visible assistant message in a setup chat must contain the first real
 question for the host, not status narration about looking at settings, reviewing
 context, or planning what you will do.
@@ -518,12 +633,11 @@ Memories are visible to hosts in their settings, and hosts can delete them
 there. If a host asks to change or remove a memory, point them there as well.
 
 ## Project context
-The first message may include Project Name, Workspace Context, Project Context,
-and Project Goal. Workspace and project context are written by hosts as standing
-guidance and background for you. The project goal is the current versioned
-intent for reports and artifacts. Follow them, but they are not a research
-request. Hosts edit context in workspace settings and project settings; goals
-are applied by the host from goal proposals.
+The first message may include Project Name, Workspace Context, and Project
+Context. Workspace and project context are written by hosts as standing
+guidance and background for you. Follow them, but they are not a research
+request. Hosts edit context in workspace settings and project settings, and they
+can apply a context proposal from you.
 """
 
 # Reconstructed so canvas-enabled chats see the exact prompt as before.
@@ -1978,31 +2092,6 @@ def create_agent_graph(
         return {"memories": memories if isinstance(memories, list) else []}
 
     @tool
-    async def readGoal() -> dict[str, Any]:
-        """Read the current project goal and recent goal revision history."""
-        client = _create_echo_client()
-        try:
-            payload = await client.get_project_goal(project_id)
-        finally:
-            await client.close()
-        return dict(payload)
-
-    @tool
-    async def proposeGoal(content: str) -> dict[str, Any]:
-        """Propose a project goal after helping the host define the setup.
-        Renders a card in the chat UI. Restate the goal in the host's words.
-        This never writes anything: the host applies it."""
-        normalized_content = content.strip()
-        if not normalized_content:
-            raise ValueError("content is required")
-        return {
-            "type": "goal_proposal",
-            "content": normalized_content,
-            "project_id": project_id,
-            "visible_to_user": True,
-        }
-
-    @tool
     async def listMethodologies() -> dict[str, Any]:
         """List methodologies the host can choose from for this project setup."""
         client = _create_echo_client()
@@ -2355,8 +2444,6 @@ def create_agent_graph(
         editInsight,
         retractInsight,
         readMemory,
-        readGoal,
-        proposeGoal,
         listMethodologies,
         listCanvases,
         readCanvasHistory,
@@ -2380,8 +2467,11 @@ def create_agent_graph(
     tool_names = {tool.name for tool in tools}
     # The fused-call splitter and history normalization also recognize the OLD
     # tool names, so a replayed history that concatenated or named an old tool
-    # still splits and renames to the registered name.
-    recognized_tool_names = tool_names | set(TOOL_NAME_RENAMES.keys())
+    # still splits and renames to the registered name. Retired names join them
+    # so a fused old call splits cleanly before its retired half is dropped.
+    recognized_tool_names = (
+        tool_names | set(TOOL_NAME_RENAMES.keys()) | set(RETIRED_TOOL_NAMES)
+    )
 
     async def _load_ambient_memory_section() -> str:
         nonlocal ambient_memory_section
@@ -2448,13 +2538,16 @@ def create_agent_graph(
         raw_messages = state.get("messages", [])
         # Normalize OLD tool names in replayed history (both AI tool_calls and
         # tool-result messages) before invoking Vertex, or it 400s on a function
-        # name it no longer knows.
-        messages = [
-            _normalize_message_tool_names(
-                _with_placeholder_content(message), recognized_tool_names
-            )
-            for message in raw_messages
-        ]
+        # name it no longer knows. Retired tools have no new name to take, so
+        # their calls and results are dropped instead, then what is left gets
+        # the empty-turn placeholder.
+        normalized_messages = _strip_retired_tool_calls(
+            [
+                _normalize_message_tool_names(message, recognized_tool_names)
+                for message in raw_messages
+            ]
+        )
+        messages = [_with_placeholder_content(message) for message in normalized_messages]
         memory_section = await _load_ambient_memory_section()
         canvas_activity_section = await _load_canvas_activity_section()
         system_sections = [
