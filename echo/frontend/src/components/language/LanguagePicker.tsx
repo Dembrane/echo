@@ -127,6 +127,7 @@ export const LanguagePicker = () => {
 					allowDeselect={false}
 					withCheckIcon={false}
 					comboboxProps={{ offset: 2 }}
+					maxDropdownHeight={360}
 					classNames={{ option: classes.option }}
 					styles={{
 						dropdown: {
