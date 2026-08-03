@@ -183,6 +183,15 @@ async def count_chat_user_turns(chat_id: str) -> int:
     )
 
 
+# A canvas is stored as a project_report row with kind='canvas', so every
+# report count and resolver here must say which kind it means. Without the
+# filter a free workspace spends its single lifetime report allowance the
+# moment the host opens a canvas, and the "primary" report the upgrade
+# prompt points at can be a canvas the host never thinks of as a report.
+# `kind` is NOT NULL with default 'report', so _eq hides nothing.
+REPORT_KIND_FILTER = {"kind": {"_eq": "report"}}
+
+
 async def count_workspace_reports(
     workspace_id: Optional[str], project_ids: Optional[list[str]] = None
 ) -> int:
@@ -191,7 +200,11 @@ async def count_workspace_reports(
         return 0
     return await _agg_count(
         "project_report",
-        {"project_id": {"_in": project_ids}, "deleted_at": {"_null": True}},
+        {
+            "project_id": {"_in": project_ids},
+            "deleted_at": {"_null": True},
+            **REPORT_KIND_FILTER,
+        },
     )
 
 
@@ -203,7 +216,11 @@ async def resolve_workspace_primary_report_id(
         return None
     return await _oldest_id(
         "project_report",
-        {"project_id": {"_in": project_ids}, "deleted_at": {"_null": True}},
+        {
+            "project_id": {"_in": project_ids},
+            "deleted_at": {"_null": True},
+            **REPORT_KIND_FILTER,
+        },
         "date_created",
     )
 

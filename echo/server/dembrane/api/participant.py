@@ -967,6 +967,9 @@ async def get_public_report_latest(
     project_id: str,
 ) -> Optional[PublicReportLatestResponse]:
     """Get the latest published report for a project. No auth required."""
+    # kind matters here: a canvas is a project_report row created
+    # status='published', so the newest one would shadow the host's actual
+    # published report and the portal would offer participants an empty page.
     reports = await run_in_thread_pool(
         directus.get_items,
         "project_report",
@@ -974,6 +977,7 @@ async def get_public_report_latest(
             "query": {
                 "filter": {
                     "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
                     "status": {"_eq": "published"},
                 },
                 "fields": ["id", "status", "project_id", "show_portal_link"],
@@ -999,6 +1003,7 @@ async def get_public_report_detail(
                 "filter": {
                     "id": {"_eq": report_id},
                     "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
                     "status": {"_eq": "published"},
                 },
                 "fields": ["id", "content", "status", "project_id", "show_portal_link"],
@@ -1057,6 +1062,7 @@ async def create_public_report_metric(
                 "filter": {
                     "id": {"_eq": body.project_report_id},
                     "project_id": {"_eq": project_id},
+                    "kind": {"_eq": "report"},
                     "status": {"_eq": "published"},
                 },
                 "fields": ["id"],
