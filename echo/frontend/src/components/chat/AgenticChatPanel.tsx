@@ -582,9 +582,10 @@ const ToolActivityGroup = ({
 		<Box className="flex justify-start">
 			<Paper
 				// The theme defaults Paper to withBorder; tool activity is ambient,
-				// not a card, so it stays borderless.
+				// not a card, so it stays borderless. No w-full either: the row
+				// ends where its text ends, and max-w is only a ceiling.
 				withBorder={false}
-				className="w-full max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
+				className="max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
 				style={{
 					backgroundColor:
 						"color-mix(in srgb, var(--app-background) 88%, var(--mantine-color-primary-1))",
@@ -669,16 +670,15 @@ const LiveRunIndicator = ({
 	<Box className="flex justify-start" {...testId("agentic-run-indicator")}>
 		<Paper
 			withBorder={false}
-			className="w-full max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
+			className="max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
 			style={{
 				backgroundColor:
 					"color-mix(in srgb, var(--app-background) 88%, var(--mantine-color-primary-1))",
 			}}
 		>
-			{/* flex-start, not space-between: on wide screens space-between
-			    strands Cancel at the far edge of the row, visually orphaned
-			    from the status it cancels. Left-aligned also matches the
-			    settled ToolActivityGroup this row swaps into (#938, #945). */}
+			{/* Cancel sits next to the headline it cancels, not flung to a far
+			    column edge: the row hugs its content, so there is no gap to
+			    space-between across. */}
 			<Group justify="flex-start" gap="md" wrap="nowrap">
 				<Group gap={8} wrap="nowrap" className="min-w-0">
 					<Box
