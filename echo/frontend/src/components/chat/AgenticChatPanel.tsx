@@ -399,7 +399,6 @@ const AGENTIC_TOOL_STATUS_VARS = {
 	"--agentic-tool-status-error-dot": "var(--mantine-color-red-6)",
 	"--agentic-tool-status-error-text": "var(--mantine-color-red-8)",
 	"--agentic-tool-status-running-dot": "var(--mantine-color-yellow-6)",
-	"--agentic-tool-status-running-ping-dot": "var(--mantine-color-yellow-4)",
 	"--agentic-tool-status-running-text": "var(--mantine-color-yellow-8)",
 } as CSSProperties;
 
@@ -532,21 +531,19 @@ const ToolActivityGroup = ({
 	items,
 	expanded,
 	onToggle,
-	stillWorking = false,
 }: {
 	items: ToolActivityItem[];
 	expanded: boolean;
 	onToggle: () => void;
-	/** True for the newest group while the run is still in flight. Between tool
-	 * calls, and while the model writes its answer, no tool has status
-	 * "running", so this group would otherwise settle to a green past-tense
-	 * summary while the composer still says "Working on your answer...". Two
-	 * indicators disagreeing, and the one nearest the answer is the wrong one. */
-	stillWorking?: boolean;
 }) => {
-	const running = items.some((i) => i.status === "running") || stillWorking;
-	const errored = items.some((i) => i.status === "error");
+	// A group speaks only for its own steps. It has no idea whether a run is in
+	// flight, and it must not: twice now a group was handed run state and twice
+	// a finished turn reverted to the present tense when a later turn started.
+	// The live part of the thread is LiveRunIndicator, which renders once, at
+	// the end, and disappears when the run ends. See #938 and #945.
 	const runningItem = items.find((i) => i.status === "running");
+	const running = runningItem !== undefined;
+	const errored = items.some((i) => i.status === "error");
 	const isSingle = items.length === 1;
 	// Steps whose start/end ranges overlap ran at the same time; say so
 	// instead of pretending they were sequential.
@@ -559,12 +556,8 @@ const ToolActivityGroup = ({
 					(item.startSeq < other.endSeq && other.startSeq < item.endSeq),
 			),
 		);
-	const summary = running
-		? // A named step wins. Otherwise the model is thinking or writing between
-			// steps, and the honest line is present tense, not a count of what is
-			// finished.
-			(runningItem?.headline ??
-				(isSingle ? t`Working...` : t`Working through a couple steps...`))
+	const summary = runningItem
+		? runningItem.headline
 		: isSingle
 			? items[0].headline
 			: ranAllAtOnce
@@ -645,6 +638,78 @@ const ToolActivityGroup = ({
 		</Box>
 	);
 };
+
+/** The one live thing in the thread. It is appended at the end of the timeline
+ * while a run is in flight, after the newest user message, so the wait sits in
+ * chronological position instead of floating by the composer. It says what the
+ * current step is when a tool is running, and stays honestly present tense in
+ * the gaps between steps and while the model writes. When the run reaches a
+ * terminal state it disappears, and the completed tool group renders in its
+ * place, which is why it borrows the group's shape: the swap is a settling, not
+ * a jump. Cancel lives here because this is the only place still working. */
+const LiveRunIndicator = ({
+	headline,
+	isStopping,
+	onArmStop,
+	onStop,
+}: {
+	headline: string;
+	isStopping: boolean;
+	onArmStop: () => void;
+	onStop: () => void;
+}) => (
+	<Box className="flex justify-start" {...testId("agentic-run-indicator")}>
+		<Paper
+			withBorder={false}
+			className="w-full max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
+			style={{
+				backgroundColor:
+					"color-mix(in srgb, var(--app-background) 88%, var(--mantine-color-primary-1))",
+			}}
+		>
+			<Group justify="space-between" gap="lg" wrap="nowrap">
+				<Group gap={8} wrap="nowrap" className="min-w-0">
+					<Box
+						aria-hidden="true"
+						className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full"
+						style={{
+							backgroundColor: "var(--agentic-tool-status-running-dot)",
+						}}
+					/>
+					<Text
+						size="xs"
+						fs="italic"
+						className="min-w-0 truncate"
+						aria-live="polite"
+					>
+						{headline}
+					</Text>
+				</Group>
+				<Button
+					type="button"
+					size="compact-xs"
+					radius="xl"
+					variant="subtle"
+					color="red"
+					className="shrink-0"
+					aria-label={t`Cancel current run`}
+					onPointerDown={onArmStop}
+					onKeyDown={(event) => {
+						if (event.key === "Enter" || event.key === " ") {
+							onArmStop();
+						}
+					}}
+					onClick={onStop}
+					disabled={isStopping}
+					leftSection={isStopping ? <Loader size={12} /> : undefined}
+					{...testId("chat-stop-button")}
+				>
+					<Trans>Cancel</Trans>
+				</Button>
+			</Group>
+		</Paper>
+	</Box>
+);
 
 export const AgenticChatPanel = ({
 	chatId,
@@ -745,6 +810,10 @@ export const AgenticChatPanel = ({
 	const threadScrollRef = useRef<HTMLDivElement>(null);
 	const { isAtBottomRef, scrollToBottom, showScrollButton } =
 		useStickToBottom(threadScrollRef);
+	// Declared here rather than next to the render because the stick-to-bottom
+	// effect below depends on it: the live indicator is a timeline node, so its
+	// arrival and departure change the thread's height.
+	const isRunInFlight = isInFlightStatus(runStatus);
 
 	useEffect(() => {
 		currentRunIdRef.current = runId;
@@ -933,22 +1002,6 @@ export const AgenticChatPanel = ({
 		}
 		return nodes;
 	}, [timeline]);
-
-	// Which tool group is allowed to keep showing itself as live.
-	//
-	// A run can post an assistant message and then carry on working, so "the last
-	// node in the timeline" stops being the tool group the moment any message
-	// renders beneath it. Keying on that made the chip settle to a green
-	// past-tense summary mid-run while the composer still read "Working on your
-	// answer...", which is the same contradiction the live chip was added to fix,
-	// arriving a few seconds later. Key on the newest TOOL GROUP instead: it is
-	// the one doing the work, wherever it sits in the list.
-	const newestToolGroupIndex = useMemo(() => {
-		for (let index = timelineNodes.length - 1; index >= 0; index -= 1) {
-			if (timelineNodes[index].kind === "tool_group") return index;
-		}
-		return -1;
-	}, [timelineNodes]);
 
 	// Drop the optimistic echo once the persisted user message arrives.
 	useEffect(() => {
@@ -1296,6 +1349,10 @@ export const AgenticChatPanel = ({
 	//
 	// The reader protection above is unchanged: this still only scrolls when
 	// isAtBottomRef says they are already at the bottom.
+	//
+	// isRunInFlight is a trigger too, because the live indicator is a node at the
+	// end of the thread: it appears when a run starts and is removed when the run
+	// ends, and both change the thread's height without changing the timeline.
 	const tail = timeline.at(-1);
 	const tailKey =
 		tail === undefined
@@ -1303,7 +1360,7 @@ export const AgenticChatPanel = ({
 			: tail.kind === "message"
 				? `m:${tail.id}:${tail.content.length}`
 				: `t:${tail.id}:${tail.status}`;
-	// biome-ignore lint/correctness/useExhaustiveDependencies: tailKey is the trigger, not a read — it exists so a growing tail re-fires this effect
+	// biome-ignore lint/correctness/useExhaustiveDependencies: tailKey and isRunInFlight are triggers, not reads. They exist so a growing tail and the live indicator re-fire this effect.
 	useEffect(() => {
 		if (timeline.length === 0) return;
 		if (!hasScrolledInitiallyRef.current) {
@@ -1318,7 +1375,7 @@ export const AgenticChatPanel = ({
 			// run finishes, a single smooth scroll is the nicer motion.
 			scrollToBottom(isStreaming ? "auto" : "smooth");
 		}
-	}, [timeline.length, tailKey, isStreaming, scrollToBottom]);
+	}, [timeline.length, tailKey, isRunInFlight, isStreaming, scrollToBottom]);
 
 	useEffect(() => {
 		return () => {
@@ -1448,7 +1505,6 @@ export const AgenticChatPanel = ({
 		}
 	};
 
-	const isRunInFlight = isInFlightStatus(runStatus);
 	const chatTitle = chatQuery.data?.name ?? t`Chat`;
 	const updateChatMutation = useUpdateChatMutation();
 	const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -1647,7 +1703,7 @@ export const AgenticChatPanel = ({
 							</Stack>
 						)}
 
-					{timelineNodes.map((node, nodeIndex) => {
+					{timelineNodes.map((node) => {
 						if (node.kind === "message") {
 							const focusedConversations = (
 								node.item.role === "user"
@@ -1797,7 +1853,6 @@ export const AgenticChatPanel = ({
 								items={node.items}
 								expanded={Boolean(expandedGroupIds[node.id])}
 								onToggle={() => toggleGroupDetails(node.id)}
-								stillWorking={nodeIndex === newestToolGroupIndex && isRunInFlight}
 							/>
 						);
 					})}
@@ -1825,6 +1880,20 @@ export const AgenticChatPanel = ({
 								/>
 							</div>
 						)}
+
+					{/* Last node in the thread, after the newest user message, for as
+					    long as the run is in flight. There is no second indicator by
+					    the composer: one live thing, in the place the eye already is.
+					    Not while the chat is still loading, so the skeleton and the
+					    live line never claim the same space. */}
+					{!showExistingChatLoading && isRunInFlight && (
+						<LiveRunIndicator
+							headline={liveRunStatusText}
+							isStopping={isStopping}
+							onArmStop={armStopControl}
+							onStop={() => void handleStop()}
+						/>
+					)}
 				</Stack>
 			</Box>
 
@@ -1842,64 +1911,6 @@ export const AgenticChatPanel = ({
 							onClick={() => scrollToBottom("smooth")}
 						/>
 					</Group>
-
-					{isRunInFlight && (
-						<Group justify="flex-start">
-							<Paper
-								className="rounded-full px-3 py-1.5 shadow-none"
-								style={{
-									borderColor: "var(--mantine-color-primary-light)",
-								}}
-								{...testId("agentic-run-indicator")}
-							>
-								<Group gap={8} wrap="nowrap">
-									<Box className="relative h-2 w-2 shrink-0">
-										<Box
-											className="absolute inset-0 rounded-full animate-ping"
-											style={{
-												backgroundColor:
-													"var(--agentic-tool-status-running-ping-dot)",
-											}}
-										/>
-										<Box
-											className="relative h-2 w-2 rounded-full"
-											style={{
-												backgroundColor:
-													"var(--agentic-tool-status-running-dot)",
-											}}
-										/>
-									</Box>
-									<Text
-										size="xs"
-										fw={500}
-										className="max-w-[min(70vw,32rem)] truncate"
-									>
-										{liveRunStatusText}
-									</Text>
-									<Button
-										type="button"
-										size="compact-xs"
-										radius="xl"
-										variant="subtle"
-										color="red"
-										aria-label={t`Cancel current run`}
-										onPointerDown={armStopControl}
-										onKeyDown={(event) => {
-											if (event.key === "Enter" || event.key === " ") {
-												armStopControl();
-											}
-										}}
-										onClick={() => void handleStop()}
-										disabled={isStopping}
-										leftSection={isStopping ? <Loader size={12} /> : undefined}
-										{...testId("chat-stop-button")}
-									>
-										<Trans>Cancel</Trans>
-									</Button>
-								</Group>
-							</Paper>
-						</Group>
-					)}
 
 					<ChatTemplatesMenuConnected
 						chatId={chatId}
